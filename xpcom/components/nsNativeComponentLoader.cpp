@@ -202,19 +202,35 @@ nsNativeComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
         // Get library name
         nsXPIDLCString library;
         rv = node->GetNameUTF8(getter_Copies(library));
+
         if (NS_FAILED(rv)) continue;
+
+        char* uLibrary;
+        char* eLibrary = (char*)library.operator const char*();
+        PRUint32 length = strlen(eLibrary);
+        rv = mRegistry->UnescapeKey((PRUint8*)eLibrary, 1, &length, (PRUint8**)&uLibrary);
+        
+        if (NS_FAILED(rv)) continue;
+
+        if (uLibrary == nsnull)
+            uLibrary = eLibrary;
 
         // Get key associated with library
         nsRegistryKey libKey;
         rv = node->GetKey(&libKey);
-        if (NS_FAILED(rv)) continue;
+        if (!NS_FAILED(rv)) //  Cannot continue here, because we have to free unescape
+        {
+            // Create nsDll with this name
+            nsDll *dll = NULL;
+            PRInt64 lastModTime;
+            PRInt64 fileSize;
+            GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
+            rv = CreateDll(NULL, uLibrary, &lastModTime, &fileSize, &dll);
+        }
+        if (uLibrary != eLibrary
+                && uLibrary != nsnull)
+            nsAllocator::Free(uLibrary);
 
-        // Create nsDll with this name
-        nsDll *dll = NULL;
-        PRInt64 lastModTime;
-        PRInt64 fileSize;
-        GetRegistryDllInfo(libKey, &lastModTime, &fileSize);
-        rv = CreateDll(NULL, library, &lastModTime, &fileSize, &dll);
         if (NS_FAILED(rv)) continue;
     }
 
@@ -337,7 +353,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
         if (proc)
         {
             canUnload = proc(serviceMgr);
-            rv = NS_OK;	// No error status returned by call.
+            rv = NS_OK;    // No error status returned by call.
         }
         else
         {
@@ -527,13 +543,13 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
     nsCAutoString errorMsg(aNsprErrorMsg);
 
 #if defined(MOZ_DEMANGLE_SYMBOLS)
-	// Demangle undefined symbols
-	nsCAutoString undefinedMagicString("undefined symbol:");
+    // Demangle undefined symbols
+    nsCAutoString undefinedMagicString("undefined symbol:");
     
-	PRInt32 offset = errorMsg.Find(undefinedMagicString, PR_TRUE);
+    PRInt32 offset = errorMsg.Find(undefinedMagicString, PR_TRUE);
     
-	if (offset != kNotFound)
-	{
+    if (offset != kNotFound)
+    {
         nsCAutoString symbol(errorMsg);
         nsCAutoString demangledSymbol("");
         
@@ -563,8 +579,8 @@ nsNativeComponentLoader::DumpLoadError(nsDll *dll,
             tmp += demangledSymbol;
             
             errorMsg = tmp;
-        }	  
-	}
+        }    
+    }
 #endif // MOZ_DEMANGLE_SYMBOLS
     
     // Do NSPR log
@@ -708,24 +724,24 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
 
 #ifdef  XP_MAC  // sdagley dougt fix
     // rjc - on Mac, check the file's type code (skip checking the creator code)
-
-	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);
-	if (localFileMac)
-	{
-		OSType	type;
-		OSType	creator;
-		rv = localFileMac->GetFileTypeAndCreator(&type, &creator);
-		if (NS_SUCCEEDED(rv))
-		{
-	        // on Mac, Mozilla shared libraries are of type 'shlb'
-	        // Note: we don't check the creator (which for Mozilla is 'MOZZ')
-	        // so that 3rd party shared libraries will be noticed!
-			if (type == 'shlb')
-			{
-            	validExtension = PR_TRUE;
-			}
-		}
-	}
+    
+    nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(component);
+    if (localFileMac)
+    {
+    OSType    type;
+    OSType    creator;
+    rv = localFileMac->GetFileTypeAndCreator(&type, &creator);
+    if (NS_SUCCEEDED(rv))
+    {
+    // on Mac, Mozilla shared libraries are of type 'shlb'
+    // Note: we don't check the creator (which for Mozilla is 'MOZZ')
+    // so that 3rd party shared libraries will be noticed!
+    if (type == 'shlb')
+    {
+                validExtension = PR_TRUE;
+    }
+    }
+    }
 
 #else
     char *leafName = NULL;
@@ -934,12 +950,25 @@ nsNativeComponentLoader::GetRegistryDllInfo(const char *aLocation,
                                             PRInt64 *fileSize)
 {
     nsresult rv;
+    PRUint32 length = strlen(aLocation);
+    char* eLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
+    if (rv != NS_OK)
+    {
+    return rv;
+    }
+    if (eLocation == nsnull)    //  No escaping required
+    eLocation = (char*)aLocation;
+
 
     nsRegistryKey key;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, eLocation, &key);
     if (NS_FAILED(rv)) return rv;
 
-    return GetRegistryDllInfo(key, lastModifiedTime, fileSize);
+    rv = GetRegistryDllInfo(key, lastModifiedTime, fileSize);
+    if (aLocation != eLocation)
+        nsAllocator::Free(eLocation);
+    return rv;
 }
 
 nsresult
@@ -955,8 +984,7 @@ nsNativeComponentLoader::GetRegistryDllInfo(nsRegistryKey key,
     PRInt64 fsize;
     rv = mRegistry->GetLongLong(key, fileSizeValueName, &fsize);
     if (NS_FAILED(rv)) return rv;
-    *fileSize = fsize;
-
+        *fileSize = fsize;
     return NS_OK;
 }
 
@@ -966,20 +994,46 @@ nsNativeComponentLoader::SetRegistryDllInfo(const char *aLocation,
                                             PRInt64 *fileSize)
 {
     nsresult rv;
+    PRUint32 length = strlen(aLocation);
+    char* eLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
+    if (rv != NS_OK)
+    {
+        return rv;
+    }
+    if (eLocation == nsnull)    //  No escaping required
+    eLocation = (char*)aLocation;
+
     nsRegistryKey key;
-    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, aLocation, &key);
+    rv = mRegistry->GetSubtreeRaw(mXPCOMKey, eLocation, &key);
     if (NS_FAILED(rv)) return rv;
 
     rv = mRegistry->SetLongLong(key, lastModValueName, lastModifiedTime);
     if (NS_FAILED(rv)) return rv;
     rv = mRegistry->SetLongLong(key, fileSizeValueName, fileSize);
+    if (aLocation != eLocation)
+        nsAllocator::Free(eLocation);
     return rv;
 }
 
 nsresult
 nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
 {
-    return mRegistry->RemoveSubtree(mXPCOMKey, aLocation);
+    nsresult rv;
+    PRUint32 length = strlen(aLocation);
+    char* eLocation;
+    rv = mRegistry->EscapeKey((PRUint8*)aLocation, 1, &length, (PRUint8**)&eLocation);
+    if (rv != NS_OK)
+    {
+        return rv;
+    }
+    if (eLocation == nsnull)    //  No escaping required
+    eLocation = (char*)aLocation;
+
+    rv = mRegistry->RemoveSubtree(mXPCOMKey, eLocation);
+    if (aLocation != eLocation)
+        nsAllocator::Free(eLocation);
+    return rv;
 }
 
 //
@@ -988,18 +1042,18 @@ nsNativeComponentLoader::RemoveRegistryDllInfo(const char *aLocation)
 // be called in multiple situations:
 //
 // 1. Autoregister will create one for each dll it is trying to register. This
-//		call will be passing a spec in.
-//		{spec, NULL, 0, 0}
+//    call will be passing a spec in.
+//    {spec, NULL, 0, 0}
 //
 // 2. GetFactory() This will call CreateDll() with a null spec but will give
-//		the registry represented name of the dll. If modtime and size are zero,
-//		we will go the registry to find the right modtime and size.
-//		{NULL, rel:libpref.so, 0, 0}
+//    the registry represented name of the dll. If modtime and size are zero,
+//    we will go the registry to find the right modtime and size.
+//    {NULL, rel:libpref.so, 0, 0}
 //
 // 3. Prepopulation of dllCache A dll object created off a registry entry.
-//		Specifically dll name is stored	in rel: or abs: or lib: formats in the
-//		registry along with its	lastModTime and fileSize.
-//		{NULL, rel:libpref.so, 8985659, 20987}
+//    Specifically dll name is stored    in rel: or abs: or lib: formats in the
+//    registry along with its    lastModTime and fileSize.
+//    {NULL, rel:libpref.so, 8985659, 20987}
 nsresult
 nsNativeComponentLoader::CreateDll(nsIFile *aSpec, const char *aLocation,
                                    PRInt64 *modificationTime, PRInt64 *fileSize,

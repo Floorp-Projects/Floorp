@@ -51,11 +51,17 @@ interface nsIRegistry : nsISupports
     string getStringUTF8(in nsRegistryKey baseKey, in string path);
     void setStringUTF8(in nsRegistryKey baseKey, in string path, in string value);
 
+    void getBytesUTF8(in nsRegistryKey baseKey, in string path, out PRUint32 length, [retval, array, size_is(length)] out PRUint8 valueArray);
+    void setBytesUTF8(in nsRegistryKey baseKey, in string path, in PRUint32 length, [array, size_is(length)] in PRUint8 valueArray);
     PRInt32 getInt(in nsRegistryKey baseKey, in string path);
     void setInt(in nsRegistryKey baseKey, in string path, in PRInt32 value);
     PRInt64 getLongLong(in nsRegistryKey baseKey, in string path);
     void setLongLong(in nsRegistryKey baseKey, in string path, inout PRInt64 value);
 
+    /**
+     * addSubtree() and friends need to be renamed to addKeyUTF8().
+     * If you are using these forms make sure you pass UTF8 data
+     */
     nsRegistryKey addSubtree(in nsRegistryKey baseKey, in string path);
     void removeSubtree(in nsRegistryKey baseKey, in string path);
     nsRegistryKey getSubtree(in nsRegistryKey baseKey, in string path);
@@ -76,6 +82,13 @@ interface nsIRegistry : nsISupports
     unsigned long getValueType(in nsRegistryKey baseKey, in string path);
     PRUint32 getValueLength(in nsRegistryKey baseKey, in string path);
     void deleteValue(in nsRegistryKey baseKey, in string path);
+
+    /**
+     * escapeKey() takes arbitrary binary data and converts it into
+     * valid ASCII which can be used as registry key or value names
+     */
+    void escapeKey([array, size_is(length)] in PRUint8 key, in PRUint32 terminator, inout PRUint32 length, [retval, array, size_is(length)] out PRUint8 escaped); 
+    void unescapeKey([array, size_is(length)] in PRUint8 escaped, in PRUint32 terminator, inout PRUint32 length, [retval, array, size_is(length)] out PRUint8 key); 
 
     attribute string currentUserName;
 

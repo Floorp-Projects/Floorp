@@ -260,24 +260,29 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
 
 nsStringKey::nsStringKey(const char* str)
 {
+	MOZ_COUNT_CTOR(nsStringKey);
 	mStr.AssignWithConversion(str);
 }
 
 nsStringKey::nsStringKey(const PRUnichar* str)
 {
+	MOZ_COUNT_CTOR(nsStringKey);
 	mStr.Assign(str);
 }
 
 nsStringKey::nsStringKey(const nsString& str) {
+	MOZ_COUNT_CTOR(nsStringKey);
 	mStr.Assign(str);
 }
 
 nsStringKey::nsStringKey(const nsCString& str) {
+	MOZ_COUNT_CTOR(nsStringKey);
 	mStr.AssignWithConversion(str);
 }
 
 nsStringKey::~nsStringKey(void)
 {
+	MOZ_COUNT_DTOR(nsStringKey);
 }
 
 PRUint32 nsStringKey::HashValue(void) const

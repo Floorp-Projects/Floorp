@@ -73,9 +73,9 @@ struct nsRegistry : public nsIRegistry {
 protected:
     HREG   mReg; // Registry handle.
 #ifdef EXTRA_THREADSAFE
-    PRLock *mregLock;	// libreg isn't threadsafe. Use locks to synchronize.
+    PRLock *mregLock;    // libreg isn't threadsafe. Use locks to synchronize.
 #endif
-    char *mCurRegFile;	// these are to prevent open from opening the registry again
+    char *mCurRegFile;    // these are to prevent open from opening the registry again
     nsWellKnownRegistry mCurRegID;
 
     NS_IMETHOD Close();
@@ -167,7 +167,7 @@ struct nsRegistryNode : public nsIRegistryNode {
 protected:
     HREG    mReg;  // Handle to registry this node is part of.
     char    mName[MAXREGPATHLEN]; // Buffer to hold name.
-    RKEY    mChildKey;	// Key corresponding to mName
+    RKEY    mChildKey;    // Key corresponding to mName
 #ifdef EXTRA_THREADSAFE
     PRLock *mregLock;
 #endif
@@ -735,6 +735,94 @@ NS_IMETHODIMP nsRegistry::SetStringUTF8( nsRegistryKey baseKey, const char *path
     return regerr2nsresult( err );
 }
 
+/*---------------------------- nsRegistry::GetBytesUTF8 ------------------------------
+| This function is just shorthand for fetching a char array.  We  |
+| implement it "manually" using NR_RegGetEntry                                 |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::GetBytesUTF8( nsRegistryKey baseKey, const char *path, PRUint32* length, PRUint8** result) {
+    nsresult rv = NS_OK;
+    REGERR err = REGERR_OK;
+    
+    if ( !result )
+        return NS_ERROR_NULL_POINTER;
+
+    char   regStr[MAXREGPATHLEN];
+
+    // initialize the return value
+    *length = 0;
+    *result = 0;
+
+    // Get info about the requested entry.
+    PRUint32 type;
+    rv = GetValueType( baseKey, path, &type );
+    // See if that worked.
+    if( rv == NS_OK ) 
+    {
+            // Make sure the entry is an PRInt8 array.
+        if( type == Bytes ) 
+        {
+            // Attempt to get string into our fixed buffer
+            PR_Lock(mregLock);
+            uint32 length2 = sizeof regStr;
+            err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path), regStr, &length2);
+            PR_Unlock(mregLock);
+
+            if ( err == REGERR_OK )
+            {
+                *length = length2;
+                *result = (PRUint8*)(nsCRT::strdup(regStr));
+                if (!*result)
+                {
+                    rv = NS_ERROR_OUT_OF_MEMORY;
+                    *length = 0;
+                }
+                else
+                {
+                    *length = length2;
+                }
+            }
+            else if ( err == REGERR_BUFTOOSMALL ) 
+            {
+            // find the real size and malloc it
+                rv = GetValueLength( baseKey, path, length );
+                // See if that worked.
+                if( rv == NS_OK ) 
+                {
+                    *result = NS_REINTERPRET_CAST(PRUint8*,nsAllocator::Alloc( *length ));
+                    if( *result ) 
+                    {
+                        // Get bytes from registry into result field.
+                        PR_Lock(mregLock);
+                        length2 = *length;
+                        err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path), *result, &length2);
+                        *length = length2;
+                        PR_Unlock(mregLock);
+                        // Convert status.
+                        rv = regerr2nsresult( err );
+                        if ( rv != NS_OK )
+                        {
+                            // Didn't get result, free buffer
+                            nsCRT::free( NS_REINTERPRET_CAST(char*, *result) );
+                            *result = 0;
+                            *length = 0;
+                        }
+                    }
+                    else
+                    {
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                    }
+                }
+            }
+        } 
+        else 
+        {
+            // They asked for the wrong type of value.
+            rv = NS_ERROR_REG_BADTYPE;
+        }
+    }
+    return rv;
+}
+
 /*---------------------------- nsRegistry::GetInt ------------------------------
 | This function is just shorthand for fetching a 1-element PRInt32 array.  We  |
 | implement it "manually" using NR_RegGetEntry                                 |
@@ -788,6 +876,24 @@ NS_IMETHODIMP nsRegistry::GetLongLong( nsRegistryKey baseKey, const char *path, 
     // Convert status.
     return regerr2nsresult( err );
 }
+/*---------------------------- nsRegistry::SetBytesUTF8 ------------------------------
+| Write out the value as a char array, using NR_RegSetEntry.      |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::SetBytesUTF8( nsRegistryKey baseKey, const char *path, PRUint32 length, PRUint8* value) {
+    REGERR err = REGERR_OK;
+    // Set the contents.
+    PR_Lock(mregLock);
+    err = NR_RegSetEntry( mReg,
+                (RKEY)baseKey,
+                (char*)path,
+                           REGTYPE_ENTRY_BYTES,
+                           (char*)value,
+                           length);
+    PR_Unlock(mregLock);
+    // Convert result.
+    return regerr2nsresult( err );
+}
+
 /*---------------------------- nsRegistry::SetInt ------------------------------
 | Write out the value as a one-element PRInt32 array, using NR_RegSetEntry.      |
 ------------------------------------------------------------------------------*/
@@ -862,8 +968,8 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
 
-	// libreg doesn't delete keys if there are subkeys under the key
-	// Hence we have to recurse through to delete the subtree
+    // libreg doesn't delete keys if there are subkeys under the key
+    // Hence we have to recurse through to delete the subtree
 
     RKEY key;
 
@@ -871,13 +977,13 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
     err = NR_RegGetKey(mReg, baseKey, (char *)path, &key);
     PR_Unlock(mregLock);
     if (err != REGERR_OK)
-	{
-		rv = regerr2nsresult( err );
+    {
+        rv = regerr2nsresult( err );
         return rv;
-	}
+    }
 
     // Now recurse through and delete all keys under hierarchy
-	
+    
     char subkeyname[MAXREGPATHLEN+1];
     REGENUM state = 0;
     subkeyname[0] = '\0';
@@ -885,7 +991,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
            REGENUM_NORMAL) == REGERR_OK)
     {
 #ifdef DEBUG_dp
-		printf("...recursing into %s\n", subkeyname);
+        printf("...recursing into %s\n", subkeyname);
 #endif /* DEBUG_dp */
         // Even though this is not a "Raw" API the subkeys may still, in fact,
         // *be* raw. Since we're recursively deleting this will work either way.
@@ -899,15 +1005,15 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
     if (err == REGERR_OK)
     {
 #ifdef DEBUG_dp
-		printf("...deleting %s\n", path);
+        printf("...deleting %s\n", path);
 #endif /* DEBUG_dp */
         PR_Lock(mregLock);
         err = NR_RegDeleteKey(mReg, baseKey, (char *)path);
         PR_Unlock(mregLock);
     }
 
-	// Convert result.
-  	rv = regerr2nsresult( err );
+    // Convert result.
+      rv = regerr2nsresult( err );
     return rv;
 }
 
@@ -919,8 +1025,8 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *k
     nsresult rv = NS_OK;
     REGERR err = REGERR_OK;
 
-	// libreg doesn't delete keys if there are subkeys under the key
-	// Hence we have to recurse through to delete the subtree
+    // libreg doesn't delete keys if there are subkeys under the key
+    // Hence we have to recurse through to delete the subtree
 
     RKEY key;
     char subkeyname[MAXREGPATHLEN+1];
@@ -931,18 +1037,18 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *k
     err = NR_RegGetKeyRaw(mReg, baseKey, (char *)keyname, &key);
     PR_Unlock(mregLock);
     if (err != REGERR_OK)
-	{
-		rv = regerr2nsresult( err );
+    {
+        rv = regerr2nsresult( err );
         return rv;
-	}
+    }
 
     // Now recurse through and delete all keys under hierarchy
-	
+    
     subkeyname[0] = '\0';
     while (NR_RegEnumSubkeys(mReg, key, &state, subkeyname, n, REGENUM_NORMAL) == REGERR_OK)
     {
 #ifdef DEBUG_dp
-		printf("...recursing into %s\n", subkeyname);
+        printf("...recursing into %s\n", subkeyname);
 #endif /* DEBUG_dp */
         err = RemoveSubtreeRaw(key, subkeyname);
         if (err != REGERR_OK) break;
@@ -952,15 +1058,15 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *k
     if (err == REGERR_OK)
     {
 #ifdef DEBUG_dp
-		printf("...deleting %s\n", keyname);
+        printf("...deleting %s\n", keyname);
 #endif /* DEBUG_dp */
         PR_Lock(mregLock);
         err = NR_RegDeleteKeyRaw(mReg, baseKey, (char *)keyname);
         PR_Unlock(mregLock);
     }
 
-	// Convert result.
-  	rv = regerr2nsresult( err );
+    // Convert result.
+      rv = regerr2nsresult( err );
     return rv;
 }
 /*-------------------------- nsRegistry::GetSubtree ----------------------------
@@ -1193,6 +1299,157 @@ NS_IMETHODIMP nsRegistry::Pack() {
     PR_Unlock(mregLock);
     // Convert result.
     rv = regerr2nsresult( err );
+    return rv;
+}
+
+/*----------------------------- nsRegistry::EscapeKey -------------------------------
+| Escape a binary key so that the registry works OK, since it expects UTF8
+| with no slashes or control characters.  This is probably better than raw.
+| If no escaping is required, then the method is successful and a null is
+| returned, indicating that the caller should use the original string.
+------------------------------------------------------------------------------*/
+static const char sEscapeKeyHex[] = "0123456789abcdef0123456789ABCDEF";
+NS_IMETHODIMP nsRegistry::EscapeKey(PRUint8* key, PRUint32 termination, PRUint32* length, PRUint8** escaped)
+{
+    nsresult rv = NS_OK;
+    char* value = (char*)key;
+    char* b = value;
+    char* e = b + *length;
+    int escapees = 0;
+    while (b < e)    //    Count characters outside legal range or slash
+    {
+        int c = *b++;
+        if (c <= ' '
+            || c > '~'
+            || c == '/'
+            || c == '%')
+        {
+            escapees++;
+        }
+    }
+    if (escapees == 0)    //    If no escapees, then no results
+    {
+        *length = 0;
+        *escaped = nsnull;
+        return NS_OK;
+    }
+    //    New length includes two extra chars for escapees.
+    *length += escapees * 2;
+    *escaped = (PRUint8*)nsAllocator::Alloc(*length + termination);
+    if (*escaped == nsnull)
+    {
+        *length = 0;
+        *escaped = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    char* n = (char*)*escaped;
+    b = value;
+    while (escapees && b < e)
+    {
+        char c = *b++;
+        if (c < ' '
+            || c > '~'
+            || c == '/'
+            || c == '%')
+        {
+            *(n++) = '%';
+            *(n++) = sEscapeKeyHex[ 0xF & (c >> 4) ];
+            *(n++) = sEscapeKeyHex[ 0xF & c ];
+            escapees--;
+        }
+        else
+        {
+            *(n++) = c;
+        }
+    }
+    e += termination;
+    if (b < e)
+    {
+        strncpy(n, b, e - b);
+    }
+    return rv;
+}
+
+/*----------------------------- nsRegistry::UnescapeKey -------------------------------
+| Unscape a binary key so that the registry works OK, since it expects UTF8
+| with no slashes or control characters.  This is probably better than raw.
+| If no escaping is required, then the method is successful and a null is
+| returned, indicating that the caller should use the original string.
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::UnescapeKey(PRUint8* escaped, PRUint32 termination, PRUint32* length, PRUint8** key)
+{
+    nsresult rv = NS_OK;
+    char* value = (char*)escaped;
+    char* b = value;
+    char* e = b + *length;
+    int escapees = 0;
+    while (b < e)    //    Count characters outside legal range or slash
+    {
+        if (*b++ == '%')
+        {
+            escapees++;
+        }
+    }
+    if (escapees == 0)    //    If no escapees, then no results
+    {
+        *length = 0;
+        *key = nsnull;
+        return NS_OK;
+    }
+    //    New length includes two extra chars for escapees.
+    *length -= escapees * 2;
+    *key = (PRUint8*)nsAllocator::Alloc(*length + termination);
+    if (*key == nsnull)
+    {
+        *length = 0;
+        *key = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    char* n = (char*)*key;
+    b = value;
+    while (escapees && b < e)
+    {
+        char c = *(b++);
+        if (c == '%')
+        {
+            if (e - b >= 2)
+            {
+                char* c1 = strchr(sEscapeKeyHex, *(b++));
+                char* c2 = strchr(sEscapeKeyHex, *(b++));
+                if (c1 != nsnull
+                    && c2 != nsnull)
+                {
+                    *(n++) = ((c2 - sEscapeKeyHex) & 0xF)
+                        | (((c1 - sEscapeKeyHex) & 0xF) << 4);
+                }
+                else
+                {
+                    escapees = -1;
+                }
+            }
+            else
+            {
+                escapees = -1;
+            }
+            escapees--;
+        }
+        else
+        {
+            *(n++) = c;
+        }
+    }
+    if (escapees < 0)
+    {
+        nsAllocator::Free(*key);
+        *length = 0;
+        *key = nsnull;
+        return NS_ERROR_INVALID_ARG;
+    }
+    e += termination;
+    if (b < e)
+    {
+        strncpy(n, b, e - b);
+    }
     return rv;
 }
 
@@ -1437,7 +1694,7 @@ NS_IMETHODIMP nsRegistryNode::GetNameUTF8( char **result ) {
 }
 
 /*-------------------------- nsRegistryNode::GetKey ----------------------------
-| Get the subkey corresponding to this node                                    |						
+| Get the subkey corresponding to this node                                    |                        
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistryNode::GetKey( nsRegistryKey *r_key ) {

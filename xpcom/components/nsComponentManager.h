@@ -170,8 +170,9 @@ protected:
  * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
  * alpha0.90 : using nsIComponentLoader, abs:/rel:/lib:, shaver-cleanup
  * alpha0.92 : restructured registry keys
+ * alpha0.93 : changed component names to native strings instead of UTF8
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.92"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.93"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
