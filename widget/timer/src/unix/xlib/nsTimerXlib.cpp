@@ -271,7 +271,10 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
       return 1;
     }
     else {
-      aTimer->tv_sec -= timer->mFireTime.tv_sec;
+      if (aTimer->tv_sec < timer->mFireTime.tv_sec)
+        aTimer->tv_sec = timer->mFireTime.tv_sec - aTimer->tv_sec;
+      else 
+        aTimer->tv_sec = 0;
       // handle the overflow case
       if (aTimer->tv_usec < timer->mFireTime.tv_usec) {
         aTimer->tv_usec = timer->mFireTime.tv_usec - aTimer->tv_usec;
