@@ -1627,18 +1627,15 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
 
   nsAutoString imageSrc;
   mView->GetImageSrc(aRowIndex, aCol, imageSrc);
-  nsCOMPtr<imgIRequest> styleRequest;
   if (!aUseContext && !imageSrc.IsEmpty()) {
     aAllowImageRegions = PR_FALSE;
   }
   else {
     // Obtain the URL from the style context.
     aAllowImageRegions = PR_TRUE;
-    styleRequest = aStyleContext->GetStyleList()->mListStyleImage;
-    if (!styleRequest)
+    nsIURI* uri = aStyleContext->GetStyleList()->mListStyleImage;
+    if (!uri)
       return NS_OK;
-    nsCOMPtr<nsIURI> uri;
-    styleRequest->GetURI(getter_AddRefs(uri));
     nsCAutoString spec;
     uri->GetSpec(spec);
     CopyUTF8toUTF16(spec, imageSrc);
@@ -1679,35 +1676,30 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, nsTreeColumn* aCol, PRBool aUseCont
     listener->AddCell(aRowIndex, aCol);
     nsCOMPtr<imgIDecoderObserver> imgDecoderObserver = listener;
 
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
+    if (!doc)
+      // The page is currently being torn down.  Why bother.
+      return NS_ERROR_FAILURE;
+
+    baseURI = mContent->GetBaseURI();
+
+    nsCOMPtr<nsIURI> srcURI;
+    // XXX origin charset needed
+    NS_NewURI(getter_AddRefs(srcURI), imageSrc, nsnull, baseURI);
+    if (!srcURI)
+      return NS_ERROR_FAILURE;
     nsCOMPtr<imgIRequest> imageRequest;
-    if (styleRequest) {
-      styleRequest->Clone(imgDecoderObserver, getter_AddRefs(imageRequest));
-    } else {
-      nsCOMPtr<nsIURI> baseURI;
-      nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-      if (!doc)
-        // The page is currently being torn down.  Why bother.
-        return NS_ERROR_FAILURE;
 
-      baseURI = mContent->GetBaseURI();
+    nsresult rv;
+    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
+    if (NS_FAILED(rv))
+      return rv;
 
-      nsCOMPtr<nsIURI> srcURI;
-      // XXX origin charset needed
-      NS_NewURI(getter_AddRefs(srcURI), imageSrc, nsnull, baseURI);
-      if (!srcURI)
-        return NS_ERROR_FAILURE;
-
-      nsresult rv;
-      nsCOMPtr<imgILoader> il =
-        do_GetService("@mozilla.org/image/loader;1", &rv);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // XXX: initialDocumentURI is NULL!
-      rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURI(), nsnull,
-                         imgDecoderObserver, doc, nsIRequest::LOAD_NORMAL,
-                         nsnull, nsnull, getter_AddRefs(imageRequest));
-    }
+    // XXX: initialDocumentURI is NULL!
+    rv = il->LoadImage(srcURI, nsnull, doc->GetDocumentURI(), nsnull,
+                       imgDecoderObserver, doc, nsIRequest::LOAD_NORMAL,
+                       nsnull, nsnull, getter_AddRefs(imageRequest));
     listener->UnsuppressInvalidation();
 
     if (!imageRequest)
