@@ -42,6 +42,9 @@ create table repositories (
     id smallint not null auto_increment primary key,
     name varchar(255) not null,
     cvsroot varchar(255) not null,
+    ownersrepository smallint,
+    ownerspath varchar(255),
+    
     
     unique(name)
 );
@@ -53,6 +56,8 @@ create table partitions (
     repositoryid smallint not null,
     state enum("Open", "Restricted", "Closed"),
     branchid mediumint,
+    newsgroups mediumtext,
+    doclinks mediumtext,
 
     index(name),
     index(repositoryid)
@@ -101,6 +106,7 @@ create table users (
     disabled enum("No", "Yes"),
     voucher mediumint not null,
     signedform enum("No", "Yes"),
+    bugzillaid mediumint not null,
 
     unique(email)
 );

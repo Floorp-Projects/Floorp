@@ -1,0 +1,30 @@
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000"
+LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000"
+MARGINHEIGHT=0 MARGINWIDTH=0>
+
+<H1 ALIGN=CENTER>module owners</H1><P>
+
+An <I>Owner</I> is responsible for fielding bug reports, enhancement requests,
+patch submissions, and so on.  The owner should facilitate good development,
+as defined by the developer community.  Most of the owners below happen to work
+for Netscape, but that's not a prerequisite.  For example, we'd be delighted to
+find an owner from outside Netscape for the <A href='#Berkeley'>Berkeley-DB</A>
+code (really, for a newer version of it that works on all our platforms).
+<P>
+A <I>Module</I> is a collection of source files that form a coherent bundle,
+probably a library (whether DLL/DSO or static).  Some modules, notably the
+Front Ends, link as executables.  We would like most modules to use
+<A href='#XP-COM'>XP-COM</A>, but only a few have been converted and released
+to mozilla.org so far.
+<P>
+A <I>Platform</I> is pragmatically defined by the kind of code you have to
+port, which is mostly UI code in the <A href='#StubFE'>Front Ends</A>.
+CPU architecture and OS dependencies are mostly abstracted by
+<A href='#NSPR'>NSPR</A>.  If you're contemplating a port (e.g., to BeOS on one
+or more hardware platforms), please mail <A href='mailto:brendan@netscape.com'>brendan</A>,
+nominate some peers, and provide some documents.
+<P>
+(FE = Front End, BE = Back End, XP = Cross Platform)
+<P>
+
+%%DATA%%

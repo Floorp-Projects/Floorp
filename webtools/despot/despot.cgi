@@ -660,10 +660,11 @@ sub EditPartition() {
         $partitionid = $F::id;
     }
     my $canchange = CanChangePartition($partitionid);
-    my $query = Query("select partitions.name,partitions.description,state,repositories.name,repositories.id,branches.name from partitions,repositories,branches where partitions.id = $partitionid and repositories.id = repositoryid and branches.id = branchid");
+    my $query = Query("select partitions.name,partitions.description,state,repositories.name,repositories.id,branches.name,newsgroups,doclinks from partitions,repositories,branches where partitions.id = $partitionid and repositories.id = repositoryid and branches.id = branchid");
     @row = $query->fetchrow();
 
-    my ($partname,$partdesc,$state,$repname,$repid,$branchname) = (@row);
+    my ($partname,$partdesc,$state,$repname,$repid,$branchname,$newsgroups,
+        $doclinks) = (@row);
     print h1(($canchange ? "Edit" : "View") . " partition -- $partname");
     if (!$canchange) {
         print p(b("You can't change anything here!") .
@@ -682,6 +683,20 @@ sub EditPartition() {
                                                     -default=>$partdesc,
                                                     -rows=>4,
                                                     -columns=>50))));
+
+    push(@list, Tr(th("Newsgroups:"),
+                   td(textfield(-name=>'newsgroups',
+                                -default=>$newsgroups,
+                                -size=>30,
+                                -override=>1))));
+
+    push(@list, Tr(th("Doc links:"),
+                   td(textarea(-name=>'doclinks',
+                               -default=>$doclinks,
+                               -rows=>10,
+                               -columns=>50,
+                               -override=>1))));
+                                                  
 
     push(@list,
          Tr(th(a({-href=>"help.html#state"},"State:")) .
@@ -790,7 +805,13 @@ sub ChangePartition {
         @row = $query->fetchrow();
     }
     my $branchid = $row[0];
-    Query("update partitions set description=" . $::db->quote($F::description) . ", branchid=$branchid, state='$F::state' where id=$F::partitionid");
+    Query("update partitions set description=" .
+          $::db->quote($F::description) .
+          ", branchid=$branchid, state='$F::state', newsgroups=" .
+          $::db->quote($F::newsgroups) .
+          ", doclinks=" .
+          $::db->quote($F::doclinks) .
+          " where id=$F::partitionid");
 
     Query("delete from files where partitionid=$F::partitionid");
     foreach my $f2 (@files) {
