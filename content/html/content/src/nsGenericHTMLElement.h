@@ -66,6 +66,7 @@ class nsIURI;
 class nsIFormControlFrame;
 class nsIForm;
 class nsIPresState;
+class nsIScrollableView;
 struct nsRect;
 
 extern void GetGenericHTMLElementIIDs(nsVoidArray& aArray);
@@ -104,27 +105,39 @@ public:
                                  nsIDOMNodeList** aReturn);
 
   // Implementation for nsIDOMHTMLElement
-  NS_METHOD GetId(nsAWritableString& aId);
-  NS_METHOD SetId(const nsAReadableString& aId);
-  NS_METHOD GetTitle(nsAWritableString& aTitle);
-  NS_METHOD SetTitle(const nsAReadableString& aTitle);
-  NS_METHOD GetLang(nsAWritableString& aLang);
-  NS_METHOD SetLang(const nsAReadableString& aLang);
-  NS_METHOD GetDir(nsAWritableString& aDir);
-  NS_METHOD SetDir(const nsAReadableString& aDir);
-  NS_METHOD GetClassName(nsAWritableString& aClassName);
-  NS_METHOD SetClassName(const nsAReadableString& aClassName);
-  NS_METHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  NS_METHOD GetOffsetTop(PRInt32* aOffsetTop);
-  NS_METHOD GetOffsetLeft(PRInt32* aOffsetLeft);
-  NS_METHOD GetOffsetWidth(PRInt32* aOffsetWidth);
-  NS_METHOD GetOffsetHeight(PRInt32* aOffsetHeight);
-  NS_METHOD GetOffsetParent(nsIDOMElement** aOffsetParent);
-  NS_METHOD GetInnerHTML(nsAWritableString& aInnerHTML);
-  NS_METHOD SetInnerHTML(const nsAReadableString& aInnerHTML);
-  NS_METHOD GetOffsetRect(nsRect& aRect, 
+  nsresult GetId(nsAWritableString& aId);
+  nsresult SetId(const nsAReadableString& aId);
+  nsresult GetTitle(nsAWritableString& aTitle);
+  nsresult SetTitle(const nsAReadableString& aTitle);
+  nsresult GetLang(nsAWritableString& aLang);
+  nsresult SetLang(const nsAReadableString& aLang);
+  nsresult GetDir(nsAWritableString& aDir);
+  nsresult SetDir(const nsAReadableString& aDir);
+  nsresult GetClassName(nsAWritableString& aClassName);
+  nsresult SetClassName(const nsAReadableString& aClassName);
+  nsresult GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  nsresult GetOffsetTop(PRInt32* aOffsetTop);
+  nsresult GetOffsetLeft(PRInt32* aOffsetLeft);
+  nsresult GetOffsetWidth(PRInt32* aOffsetWidth);
+  nsresult GetOffsetHeight(PRInt32* aOffsetHeight);
+  nsresult GetOffsetParent(nsIDOMElement** aOffsetParent);
+  nsresult GetInnerHTML(nsAWritableString& aInnerHTML);
+  nsresult SetInnerHTML(const nsAReadableString& aInnerHTML);
+  nsresult GetScrollTop(PRInt32* aScrollTop);
+  nsresult SetScrollTop(PRInt32 aScrollTop);
+  nsresult GetScrollLeft(PRInt32* aScrollLeft);
+  nsresult SetScrollLeft(PRInt32 aScrollLeft);
+  nsresult GetScrollHeight(PRInt32* aScrollHeight);
+  nsresult GetScrollWidth(PRInt32* aScrollWidth);
+  nsresult GetClientHeight(PRInt32* aClientHeight);
+  nsresult GetClientWidth(PRInt32* aClientWidth);
+  nsresult ScrollIntoView(PRBool aTop);
+
+  nsresult GetOffsetRect(nsRect& aRect, 
                          nsIAtom* aOffsetParentTag,
                          nsIContent** aOffsetParent);
+  nsresult GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
+                         float *aT2P);
 
   // Implementation for nsIContent
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,

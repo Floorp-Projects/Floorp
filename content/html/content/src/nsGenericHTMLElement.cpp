@@ -70,6 +70,8 @@
 #include "nsNetUtil.h"
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
+#include "nsIScrollableView.h"
 #include "nsRange.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -1185,6 +1187,293 @@ nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
   nsCOMPtr<nsIDOMNode> tmpNode;
   return thisNode->AppendChild(df, getter_AddRefs(tmpNode));
 }
+
+nsresult
+nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
+                                    float *aP2T, float *aT2P)
+{
+  *aScrollableView = nsnull;
+  *aP2T = 0.0f;
+  *aT2P = 0.0f;
+
+  // Get the the document
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(*getter_AddRefs(doc));
+  if (!doc) {
+    return NS_OK;
+  }
+
+  // Get the presentation shell
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell) {
+    return NS_OK;
+  }
+
+  // Get the primary frame for this element
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(this, &frame);
+  if (!frame) {
+    return NS_OK;
+  }
+
+  // Get the presentation context
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext) {
+    return NS_OK;
+  }
+
+  presContext->GetPixelsToTwips(aP2T);
+  presContext->GetTwipsToPixels(aT2P);
+
+  // Get the scrollable frame
+  nsIScrollableFrame *scrollFrame = nsnull;
+  CallQueryInterface(frame, &scrollFrame);
+  if (!scrollFrame) {
+    return NS_OK;
+  }
+
+  // Get the scrollable view
+  scrollFrame->GetScrollableView(presContext, aScrollableView);
+
+  return NS_OK;
+}
+
+
+nsresult
+nsGenericHTMLElement::GetScrollTop(PRInt32* aScrollTop)
+{
+  NS_ENSURE_ARG_POINTER(aScrollTop);
+  *aScrollTop = 0;
+
+  nsIScrollableView *view = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+
+  if (view) {
+    nscoord xPos, yPos;
+    rv = view->GetScrollPosition(xPos, yPos);
+
+    *aScrollTop = NSTwipsToIntPixels(yPos, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::SetScrollTop(PRInt32 aScrollTop)
+{
+  nsIScrollableView *view = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+
+  if (view) {
+    nscoord xPos, yPos;
+
+    rv = view->GetScrollPosition(xPos, yPos);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = view->ScrollTo(xPos, NSIntPixelsToTwips(aScrollTop, p2t),
+                          NS_VMREFRESH_IMMEDIATE);
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetScrollLeft(PRInt32* aScrollLeft)
+{
+  NS_ENSURE_ARG_POINTER(aScrollLeft);
+  *aScrollLeft = 0;
+
+  nsIScrollableView *view = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+
+  if (view) {
+    nscoord xPos, yPos;
+    rv = view->GetScrollPosition(xPos, yPos);
+
+    *aScrollLeft = NSTwipsToIntPixels(xPos, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::SetScrollLeft(PRInt32 aScrollLeft)
+{
+  nsIScrollableView *view = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&view, &p2t, &t2p);
+
+  if (view) {
+    nscoord xPos, yPos;
+    rv = view->GetScrollPosition(xPos, yPos);
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = view->ScrollTo(NSIntPixelsToTwips(aScrollLeft, p2t),
+                          yPos, NS_VMREFRESH_IMMEDIATE);
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetScrollHeight(PRInt32* aScrollHeight)
+{
+  NS_ENSURE_ARG_POINTER(aScrollHeight);
+  *aScrollHeight = 0;
+
+  nsIScrollableView *scrollView = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&scrollView, &p2t, &t2p);
+
+  if (scrollView) {
+    // xMax and yMax is the total length of our container
+    nscoord xMax, yMax;
+    rv = scrollView->GetContainerSize(&xMax, &yMax);
+
+    const nsIView *view = nsnull;
+    nscoord xClip, yClip;
+
+    scrollView->GetClipView(&view);
+
+    view->GetDimensions(&xClip, &yClip);
+
+    *aScrollHeight = NSTwipsToIntPixels(yMax - yClip, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
+{
+  NS_ENSURE_ARG_POINTER(aScrollWidth);
+  *aScrollWidth = 0;
+
+  nsIScrollableView *scrollView = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&scrollView, &p2t, &t2p);
+
+  if (scrollView) {
+    nscoord xMax, yMax;
+    rv = scrollView->GetContainerSize(&xMax, &yMax);
+
+    const nsIView *view = nsnull;
+    nscoord xClip, yClip;
+
+    scrollView->GetClipView(&view);
+
+    view->GetDimensions(&xClip, &yClip);
+
+    *aScrollWidth = NSTwipsToIntPixels(xMax - xClip, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
+{
+  NS_ENSURE_ARG_POINTER(aClientHeight);
+  *aClientHeight = 0;
+
+  nsIScrollableView *scrollView = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&scrollView, &p2t, &t2p);
+
+  if (scrollView) {
+    const nsIView *view = nsnull;
+    nscoord xClip, yClip;
+
+    scrollView->GetClipView(&view);
+
+    view->GetDimensions(&xClip, &yClip);
+
+    *aClientHeight = NSTwipsToIntPixels(yClip, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
+{
+  NS_ENSURE_ARG_POINTER(aClientWidth);
+  *aClientWidth = 0;
+
+  nsIScrollableView *scrollView = nsnull;
+  nsresult rv = NS_OK;
+  float p2t, t2p;
+
+  GetScrollInfo(&scrollView, &p2t, &t2p);
+
+  if (scrollView) {
+    const nsIView *view = nsnull;
+    nscoord xClip, yClip;
+
+    scrollView->GetClipView(&view);
+
+    view->GetDimensions(&xClip, &yClip);
+
+    *aClientWidth = NSTwipsToIntPixels(xClip, t2p);
+  }
+
+  return rv;
+}
+
+nsresult
+nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
+{
+  // Get the the document
+  nsCOMPtr<nsIDocument> doc;
+  GetDocument(*getter_AddRefs(doc));
+  if (!doc) {
+    return NS_OK;
+  }
+
+  // Get the presentation shell
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell) {
+    return NS_OK;
+  }
+
+  // Get the primary frame for this element
+  nsIFrame *frame = nsnull;
+  presShell->GetPrimaryFrameFor(this, &frame);
+  if (!frame) {
+    return NS_OK;
+  }
+
+  PRIntn vpercent = aTop ? NS_PRESSHELL_SCROLL_TOP :
+    NS_PRESSHELL_SCROLL_ANYWHERE;
+
+  presShell->ScrollFrameIntoView(frame, vpercent,
+                                 NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  return NS_OK;
+}
+
 
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
