@@ -96,27 +96,6 @@
 #define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), &(a))
 #endif
 
-/* The pthread_t handle used to identify a thread can vary in size
- * with different implementations of pthreads.  This macro defines
- * a way to get a unique identifier from the handle.  This may be
- * more of a problem as we adapt to more pthreads implementations.
- */
-#if defined(_PR_DCETHREADS)
-#define _PT_PTHREAD_ZERO_THR_HANDLE(t)        memset(&(t), 0, sizeof(pthread_t))
-#define _PT_PTHREAD_THR_HANDLE_IS_ZERO(t) \
-	(!memcmp(&(t), &pt_zero_tid, sizeof(pthread_t)))
-#define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
-#elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
-	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
-	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
-	|| defined(VMS) || defined(NTO) || defined(RHAPSODY)
-#define _PT_PTHREAD_ZERO_THR_HANDLE(t)        (t) = 0
-#define _PT_PTHREAD_THR_HANDLE_IS_ZERO(t)     (t) == 0
-#define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
-#else 
-#error "pthreads is not supported for this architecture"
-#endif
-
 #if defined(_PR_DCETHREADS)
 #define _PT_PTHREAD_ATTR_INIT            pthread_attr_create
 #define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_delete
