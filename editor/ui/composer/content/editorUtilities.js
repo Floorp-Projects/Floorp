@@ -859,7 +859,10 @@ function Clone(obj)
   var clone = {};
   for (var i in obj)
   {
-    clone[i] = obj[i];
+    if( typeof obj[i] == 'object')
+      clone[i] = Clone(obj[i]);
+    else
+      clone[i] = obj[i];
   }
   return clone;
 }
