@@ -45,7 +45,7 @@
 
 #include "nsISupports.h"
 #include "nsRect.h"
-#include <QuickDraw.h>
+#include <Quickdraw.h>
 
 
 // IID for the nsIImage interface
