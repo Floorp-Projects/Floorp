@@ -86,7 +86,6 @@ export libs install clobber clobber_all clean::
 !if "$(MOZ_BITS)" != "16"
 export::
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\*.h $(DIST)\include
-	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\md\*.h $(DIST)\include\md
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\obsolete\*.h $(DIST)\include\obsolete
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\include\private\*.h $(DIST)\include\private
 	$(MAKE_INSTALL) $(XPDIST)\$(PR_OBJDIR)\lib\*.lib $(DIST)\lib
