@@ -112,6 +112,7 @@ PRInt32 IsFileLocal(HANDLE hFile);
 static PRInt32 _md_MakeNonblock(HANDLE);
 
 static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *addrlen, PRIntervalTime);
+static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int addrlen, PRIntervalTime);
 static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime);
 static PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
 static PRInt32 _nt_nonblock_writev(PRFileDesc *fd, const PRIOVec *iov, int size, PRIntervalTime);
@@ -1155,110 +1156,42 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
                PRIntervalTime timeout)
 {
     PRInt32 osfd = fd->secret->md.osfd;
-    PRThread *me = _PR_MD_CURRENT_THREAD();
-    PRInt32 rv;
-    PRThread *cThread;
-    struct connect_data_s cd;
+    PRInt32 rv, err;
+    u_long nbio;
+    PRInt32 rc;
 
     if (fd->secret->nonblocking) {
-        PRInt32 rv;
-        fd_set wd;
-        struct timeval tv, *tvp;
-
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
             PR_ASSERT(0 != rv);
             fd->secret->md.io_model_committed = PR_TRUE;
         }
 
-        while ((rv = connect(osfd, (struct sockaddr *) addr, addrlen)) == -1) {
-            rv = WSAGetLastError();
-            if ((!fd->secret->nonblocking) && ((rv == WSAEWOULDBLOCK) ||
-                (rv == WSAEALREADY) ||
-                (rv == WSAEINVAL) /* for winsock1.1, it reports EALREADY as EINVAL */)) {
-                if (timeout == PR_INTERVAL_NO_TIMEOUT)
-                    tvp = NULL;
-                else {
-                    tv.tv_sec = PR_IntervalToSeconds(timeout);
-                    tv.tv_usec = PR_IntervalToMicroseconds(
-                    timeout - PR_SecondsToInterval(tv.tv_sec));
-                    tvp = &tv;
-                }
-
-                FD_ZERO(&wd);
-                FD_SET((SOCKET)osfd, &wd);
-                rv = select(osfd + 1, NULL, &wd, NULL, tvp);
-                if (rv > 0) {
-                    /*
-                     * Call Sleep(0) to work around a Winsock timing bug.
-                     */
-                    Sleep(0);
-                } else if (rv == 0) {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    return(-1);
-                } else if (rv < 0) {
-                    rv = WSAGetLastError();
-            		_PR_MD_MAP_SELECT_ERROR(rv);
-                    return(-1);
-                }
-            } else if ((rv == WSAEISCONN)) {
-                /* Success! */
-                return 0;
-            } else {
-                _PR_MD_MAP_CONNECT_ERROR(rv);
-                return -1;
-            }
+        if ((rv = connect(osfd, (struct sockaddr *) addr, addrlen)) == -1) {
+            err = WSAGetLastError();
+            _PR_MD_MAP_CONNECT_ERROR(err);
         }
         return rv;
     }
 
-    /* If we are a native thread, just make the blocking IO call */
-    if (_PR_IS_NATIVE_THREAD(me)) {
-        rv = connect(osfd, (struct sockaddr *)addr, addrlen);
-		if (rv == -1) {
-        	rv = WSAGetLastError();
-            _PR_MD_MAP_CONNECT_ERROR(rv);
-			return -1;
-		} else
-			return rv;
-    }
-
-    /* NT doesn't provide a nice way to do asynchronous 
-     * connect.  The proxy team invented a huge chunk of code which has
-     * a single thread multiplexing multiple connect requests via 
-     * WSAAsyncSelect().  That is a better solution, but I'm not doing that
-     * now.  At this point, just create a real thread to do the work.
-     *
-     * Rumor has it that on nt3.51, all the WSA library does is create 
-     * a thread to call a blocking connect() anyway.  On 4.0 they've fixed
-     * that.  -mbelshe
+    /*
+     * Temporarily make the socket non-blocking so that we can
+     * initiate a non-blocking connect and wait for its completion
+     * (with a timeout) in select.
      */
-    cd.osfd = osfd;
-    cd.addr = (struct sockaddr *)addr;
-    cd.addrlen = addrlen;
-    cd.timeout = timeout;
-    cThread = PR_CreateThread(PR_SYSTEM_THREAD,
-                              _PR_MD_connect_thread,
-                              (void *)&cd,
-                              PR_PRIORITY_NORMAL,
-                              PR_GLOBAL_THREAD,
-                              PR_JOINABLE_THREAD,
-                              0);
+    PR_ASSERT(!fd->secret->md.io_model_committed);
+    nbio = 1;
+    rv = ioctlsocket((SOCKET)osfd, FIONBIO, &nbio);
+    PR_ASSERT(0 == rv);
 
-    if (cThread == NULL) {
-        return -1;
-    }
+    rc = _nt_nonblock_connect(fd, (struct sockaddr *) addr, addrlen, timeout);
 
-    PR_JoinThread(cThread);
+    /* Set the socket back to blocking. */
+    nbio = 0;
+    rv = ioctlsocket((SOCKET)osfd, FIONBIO, &nbio);
+    PR_ASSERT(0 == rv);
 
-    rv = cd.status;
-
-    if (rv == SOCKET_ERROR) {
-        _PR_MD_MAP_CONNECT_ERROR(cd.error);
-        return -1;
-    }
-
-    return 0;
+    return rc;
 }
 
 PRInt32
@@ -3837,6 +3770,59 @@ retry:
         }
     }
     return(rv);
+}
+
+static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int addrlen, PRIntervalTime timeout)
+{
+    PRInt32 osfd = fd->secret->md.osfd;
+    PRInt32 rv;
+    int err;
+    fd_set wr, ex;
+    struct timeval tv, *tvp;
+    int len;
+
+    if ((rv = connect(osfd, addr, addrlen)) == -1) {
+        if ((err = WSAGetLastError()) == WSAEWOULDBLOCK) {
+            if ( timeout == PR_INTERVAL_NO_TIMEOUT ) {
+                tvp = NULL;
+            } else {
+                tv.tv_sec = PR_IntervalToSeconds(timeout);
+                tv.tv_usec = PR_IntervalToMicroseconds(
+                    timeout - PR_SecondsToInterval(tv.tv_sec));
+                tvp = &tv;
+            }
+            FD_ZERO(&wr);
+            FD_ZERO(&ex);
+            FD_SET((SOCKET)osfd, &wr);
+            FD_SET((SOCKET)osfd, &ex);
+            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wr, &ex,
+                    tvp)) == -1) {
+                _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
+                return rv;
+            }
+            if (rv == 0) {
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                return -1;
+            }
+            /* Call Sleep(0) to work around a Winsock timeing bug. */
+            Sleep(0);
+            if (FD_ISSET((SOCKET)osfd, &ex)) {
+                len = sizeof(err);
+                if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                        (char *) &err, &len) == SOCKET_ERROR) {
+                    _PR_MD_MAP_GETSOCKOPT_ERROR(WSAGetLastError());
+                    return -1;
+                }
+                _PR_MD_MAP_CONNECT_ERROR(err);
+                return -1;
+            } 
+            PR_ASSERT(FD_ISSET((SOCKET)osfd, &wr));
+            rv = 0;
+        } else {
+            _PR_MD_MAP_CONNECT_ERROR(err);
+        }
+    }
+    return rv;
 }
 
 static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime timeout)
