@@ -458,11 +458,17 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         wd->ww->DumpViews();
       }
       break;
-    case VIEWER_DUMP_STYLE:
+    case VIEWER_DUMP_STYLE_SHEETS:
       if ((nsnull != wd) && (nsnull != wd->ww)) {
-        wd->ww->DumpStyle();
+        wd->ww->DumpStyleSheets();
       }
       break;
+    case VIEWER_DUMP_STYLE_CONTEXTS:
+      if ((nsnull != wd) && (nsnull != wd->ww)) {
+        wd->ww->DumpStyleContexts();
+      }
+      break;
+
     case VIEWER_DEBUGROBOT_UPDATE:
       bVisual = PR_TRUE;
     case VIEWER_DEBUGROBOT:
@@ -476,6 +482,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
          }
       }
       break;
+
     case VIEWER_ONE_COLUMN:
     case VIEWER_TWO_COLUMN:
     case VIEWER_THREE_COLUMN:
