@@ -1773,6 +1773,7 @@ sub BuildExtensionsProjects()
 
     StartBuildModule("extensions");
 
+    my($components_dir) = "$dist_dir" . "Components:";
     my($chrome_subdir) = "Chrome:";
     my($chrome_dir) = "$dist_dir"."$chrome_subdir";
     my($packages_chrome_dir) = "$chrome_dir" . "packages:";
@@ -1780,13 +1781,13 @@ sub BuildExtensionsProjects()
     # Chatzilla
     if ($main::options{chatzilla})
     {
-      InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS",     "${dist_dir}Components");
+      InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS", "$components_dir");
     }
     
     # XML-RPC
     if ($main::options{xml_rpc})
     {
-      InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+      InstallFromManifest(":mozilla:extensions:xml-rpc:src:MANIFEST_COMPONENTS", "$components_dir");
     }
     
     # Transformiix
@@ -1805,7 +1806,7 @@ sub BuildExtensionsProjects()
 
         if ($main::options{ldap_experimental})
         {
-            InstallResources(":mozilla:directory:xpcom:datasource:MANIFEST_COMPONENTS", "${dist_dir}Components");
+            InstallResources(":mozilla:directory:xpcom:datasource:MANIFEST_COMPONENTS", "$components_dir");
         }
     }
     
@@ -1828,7 +1829,7 @@ sub BuildExtensionsProjects()
     {
         BuildOneProject(":mozilla:extensions:vixen:macbuild:vixen.mcp", "vixen$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
-        InstallResources(":mozilla:extensions:vixen:base:src:MANIFEST_COMPONENTS", "${dist_dir}Components");
+        InstallResources(":mozilla:extensions:vixen:base:src:MANIFEST_COMPONENTS", "$components_dir");
     }
     
     # Document Inspector
@@ -1847,6 +1848,8 @@ sub BuildExtensionsProjects()
     if ($main::options{jsdebugger})
     {
         BuildOneProject(":mozilla:js:jsd:macbuild:JSD.mcp", "jsdService$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+        InstallResources(":mozilla:extensions:venkman:js:MANIFEST_COMPONENTS", "$components_dir");
     }
     
     EndBuildModule("extensions");
