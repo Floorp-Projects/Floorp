@@ -508,6 +508,7 @@ protected:
     nsDTDContext*       mTempContext;
     PRInt32             mOpenHeadCount;
     PRInt32             mOpenMapCount;
+    PRInt32             mOpenFormCount;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer;
     nsDTDMode           mDTDMode;
