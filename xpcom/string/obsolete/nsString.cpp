@@ -468,7 +468,8 @@ void nsString::ToUCS2(PRInt32 aStartOffset){
     chartype* end = cp + mLength;
     while (cp < end) {
       unsigned char ch = (unsigned char)*cp;
-      *cp=gToUCS2[ch];
+      if( 0x0080 == (0xFFE0 & (*cp)) ) // limit to only 0x0080 to 0x009F
+        *cp=gToUCS2[ch];
       cp++;
     }
   }
