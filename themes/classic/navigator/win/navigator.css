@@ -6,6 +6,8 @@
 @import url(chrome://navigator/skin/personalToolbar.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /********** resource bundle binding **********/
 
 #resource_bundle_navigator
@@ -17,14 +19,12 @@
   {
     border-left           : 1px solid ThreeDDarkShadow;
     border-top            : 1px solid ThreeDDarkShadow;
-    border-right          : 1px solid ThreeDFace;
-    border-bottom         : 1px solid ThreeDFace;
+    border-bottom         : 1px solid ThreeDLightShadow;
   }
 
 #browser
   {
     border-left           : 1px solid ThreeDShadow;
-    border-right          : 1px solid ThreeDHighlight;
   }  
   
 #nav-bar-inner
@@ -219,11 +219,6 @@
 .autocomplete-outlinerbody:-moz-outliner-cell-text(value) 
   {
     padding-left        : 15px;
-  }
-
-.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) 
-  {
-    font-style          : italic;
   }
 
 .autocomplete-history-button 
