@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) pref-proxies.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-publish.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) pref-smart_browsing.dtd  $(DIST)\bin\chrome\pref\locale\en-US
+	$(MAKE_INSTALL) pref-smartupdate.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) PrefsWindow.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 	$(MAKE_INSTALL) preftree.dtd  $(DIST)\bin\chrome\pref\locale\en-US
 
