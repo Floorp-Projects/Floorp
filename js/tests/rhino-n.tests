@@ -64,6 +64,7 @@ js1_5/Regress/regress-111557.js
 js1_5/Regress/regress-44009.js
 js1_5/Object/regress-90596-001.js
 js1_5/Object/regress-96284-001.js
+js1_5/Regress/regress-192465.js
 #Rhino doesn't implement the (non-ECMA) uneval() function
 js1_5/Object/regress-90596-002.js
 js1_5/Object/regress-96284-002.js
