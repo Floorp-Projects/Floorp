@@ -247,6 +247,7 @@ function MsgAccountManager()
 function MsgSubscribe()
 {
     dump('open subscribe window.\n');
+    window.openDialog("chrome://messenger/content/subscribe.xul", "subscribe", "chrome");
 }
 
 function MsgOpenAttachment() {}
