@@ -366,6 +366,10 @@ function Startup()
     // Perform default browser checking.
     checkForDefaultBrowser();
   }
+
+  if (document.getElementById("main-window").getAttribute("fullScreen") == "true") {
+    BrowserFullScreenEnter();
+  }
 }
 
 function Shutdown()
@@ -940,6 +944,52 @@ function OpenMessenger()
 function OpenAddressbook()
 {
   open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
+}
+
+var gFullScreen = false;
+
+function BrowserFullScreenToggle()
+{
+  // toggle the attributes as indicated in the fullScreenElementChanges table
+  var idx, attribute, value;
+  var element, currentValue
+  var fullScreenElementChanges = document.getElementById("fullScreenElementChanges");
+  var next = fullScreenElementChanges.firstChild;
+  while (next) {
+    idx = next.getAttribute("idx");
+    attribute = next.getAttribute("attribute");
+    value = next.getAttribute("value");
+
+    element = document.getElementById(idx);
+    currentValue =  element.getAttribute(attribute);
+
+    if (value) {
+      element.setAttribute(attribute, value);
+    } else {
+      element.removeAttribute(attribute);
+    }
+    next.setAttribute("value", currentValue);
+
+    next = next.nextSibling;
+  }
+
+  // toggle and save the fullScreen indicator
+  gFullScreen = !gFullScreen;
+  document.getElementById("main-window").setAttribute("fullScreen", gFullScreen?"true":"false");
+}
+
+function BrowserFullScreenEnter()
+{
+  if (!gFullScreen) {
+    BrowserFullScreenToggle();
+  }
+}
+
+function BrowserFullScreenExit()
+{
+  if (gFullScreen) {
+    BrowserFullScreenToggle();
+  }
 }
 
 function BrowserViewSource()

@@ -79,6 +79,10 @@
     </menu>
   </menupopup>
 
+  <data id="fullScreenElementChanges">
+    <data idx="linktoolbar" attribute="hidden" value="true"/>
+  </data>
+
   <toolbox id="navigator-toolbox">
     <toolbar id="linktoolbar" class="chromeclass-directories"
         onclick="event.preventBubble(); return linkToolbarUI.clicked(event);"

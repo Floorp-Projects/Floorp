@@ -59,6 +59,8 @@
 <!ENTITY useStyleSheetNone.label "None">
 <!ENTITY showImagesCmd.label "Show Images">
 <!ENTITY showImagesCmd.accesskey "g">
+<!ENTITY fullScreenCmd.label "Full Screen">
+<!ENTITY fullScreenCmd.accesskey "f">
 <!ENTITY pageSourceCmd.label "Page Source">
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.commandkey "u">
@@ -283,6 +285,8 @@
 <!ENTITY reloadButton.tooltip         "Reload current page">
 <!ENTITY stopButton.label             "Stop">
 <!ENTITY stopButton.tooltip           "Stop loading this page">
+<!ENTITY exitFullScreenButton.label   "Normal Screen">
+<!ENTITY exitFullScreenButton.tooltip "Exit full-screen mode">
 <!ENTITY searchButton.label           "Search">
 <!ENTITY searchButton.tooltip         "Type a word in the field to the left, then click Search">
 <!ENTITY goButton.label               "Go">
