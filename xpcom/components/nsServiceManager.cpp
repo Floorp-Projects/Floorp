@@ -425,6 +425,16 @@ nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 }
 
 nsresult
+nsServiceManager::ShutdownGlobalServiceManager(nsIServiceManager* *result)
+{
+    if (mGlobalServiceManager != NULL) {
+        NS_RELEASE(mGlobalServiceManager);
+        mGlobalServiceManager = NULL;
+    }
+    return NS_OK;
+}
+
+nsresult
 nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)

@@ -173,6 +173,10 @@ public:
     // release it.
     static nsresult GetGlobalServiceManager(nsIServiceManager* *result);
 
+    // This method can be called when shutting down the application. It  
+    // releases all the global services, and deletes the global service manager.
+    static nsresult ShutdownGlobalServiceManager(nsIServiceManager* *result);
+
     static nsIServiceManager* mGlobalServiceManager;
 
 };
