@@ -48,7 +48,7 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
    mBackupCount(aNumBackupCopies)
 {
     nsCAutoString tempFileName;  
-    char *        temp;
+    const char *  temp;
     nsresult      rv;
 
     // determine the actual filename (less the extension)
@@ -56,14 +56,14 @@ nsSafeSaveFile::nsSafeSaveFile(nsIFile *aTargetFile, PRInt32 aNumBackupCopies)
     if (NS_FAILED(rv)) // yikes! out of memory
         return;
 
-    temp = strrchr(mTargetFileName, '.');
+    temp = strrchr(mTargetFileName.get(), '.');
     if (temp)
-       mTargetNameLen = temp - mTargetFileName;
+       mTargetNameLen = temp - mTargetFileName.get();
     else
-       mTargetNameLen = strlen(mTargetFileName);
+       mTargetNameLen = strlen(mTargetFileName.get());
 
     // create a new file object that points to the temp file
-    tempFileName.Assign(mTargetFileName, mTargetNameLen);
+    tempFileName.Assign(mTargetFileName.get(), mTargetNameLen);
     tempFileName += ".tmp";
     rv = aTargetFile->Clone(getter_AddRefs(mTempFile));
     if (NS_SUCCEEDED(rv))
@@ -104,14 +104,14 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
 
     if (mBackupCount > 0) {
         // kill the (oldest) backup copy, if necessary
-        fileName.Assign(mTargetFileName, mTargetNameLen);
+        fileName.Assign(mTargetFileName.get(), mTargetNameLen);
         fileName += BACKUP_FILE_EXTENSION;
         if (mBackupCount > 1)
             fileName.AppendInt(mBackupCount - 1);
         backupFile->SetLeafName(fileName.get());
     } else {
         // no backups desired, delete the previous save
-        backupFile->SetLeafName(mTargetFileName);
+        backupFile->SetLeafName(mTargetFileName.get());
     }
 
     // remove the file as determined by the logic above
@@ -120,7 +120,7 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
     // now manage the backup copies
     if (mBackupCount > 0) {
         PRInt32 backupCount = mBackupCount;
-        fileName.Assign(mTargetFileName, mTargetNameLen);
+        fileName.Assign(mTargetFileName.get(), mTargetNameLen);
         fileName += BACKUP_FILE_EXTENSION;
         while (--backupCount > 0) {
             // bump all of the redundant backups up one (i.e. bak -> bak1, bak1 -> bak2, etc.)
@@ -138,14 +138,14 @@ nsresult nsSafeSaveFile::PostProcessSave(void)
         };
 
         // rename the previous save to .bak (i.e. <filename.js> to <filename.bak>)
-        backupFile->SetLeafName(mTargetFileName);
+        backupFile->SetLeafName(mTargetFileName.get());
         rv = backupFile->MoveTo(0, fileName.get());
         if (NS_FAILED(rv))
             return rv;
     }
 
     // finally rename the temp file to the original name (i.e. <filename.tmp> to <filename.js>)
-    rv = mTempFile->MoveTo(0, mTargetFileName);
+    rv = mTempFile->MoveTo(0, mTargetFileName.get());
     return rv;
 }
 
@@ -166,7 +166,7 @@ nsresult nsSafeSaveFile::PurgeOldestBackup(void)
         return NS_ERROR_FILE_NOT_FOUND;
 
     PRInt32 backupCount = mBackupCount;
-    fileName.Assign(mTargetFileName, mTargetNameLen);
+    fileName.Assign(mTargetFileName.get(), mTargetNameLen);
     fileName += BACKUP_FILE_EXTENSION;
     while (--backupCount >= 0) {
         if (backupCount)
