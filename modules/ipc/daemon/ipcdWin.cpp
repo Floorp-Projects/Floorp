@@ -198,6 +198,9 @@ IPC_PlatformSendMsg(ipcClient  *client, ipcMessage *msg)
     LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
         client->ID(), client->PID()));
 
+    // XXX use PostMessage to make this asynchronous; otherwise we might get
+    // some wierd SendMessage recursion between processes.
+
     COPYDATASTRUCT cd;
     cd.dwData = GetCurrentProcessId();
     cd.cbData = (DWORD) msg->MsgLen();
