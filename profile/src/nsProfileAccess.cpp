@@ -1889,7 +1889,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
 
                         // kill(pid,0) is a neat trick to check if a
                         // process exists
-                        if (kill(pid, 0) == 0 || errno == ESRCH)
+                        if (kill(pid, 0) == 0 || errno != ESRCH)
                         {
                             // Local process appears to be alive, ass-u-me it
                             // is another Mozilla instance, or a compatible
