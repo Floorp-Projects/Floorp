@@ -563,10 +563,10 @@ void nsWidget::CreateGC()
     else if (GTK_IS_LAYOUT(mWidget)) {
       if (!GTK_LAYOUT(mWidget)->bin_window) {
         gtk_widget_realize(mWidget);
-        mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+        mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
       }
       else
-        mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+        mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
     }
     else if (!GTK_WIDGET(mWidget)->window) {
       gtk_widget_realize(mWidget);

@@ -49,6 +49,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   gtk_init (argc, &argv);
 
   gdk_rgb_init();
+  gdk_rgb_set_verbose(PR_TRUE);
 
 //  gtk_rc_init();
 

@@ -418,7 +418,6 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
       case NS_NATIVE_WINDOW:
-        g_print("nsWindow::GetNativeData(NS_NATIVE_WINDOW)\n");
 	return (void *)GTK_LAYOUT(mWidget)->bin_window;
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
@@ -743,13 +742,6 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 //-----------------------------------------------------
 //
 
-gint nsWindow_ResetResize_Callback(gpointer p)
-{
-    nsWindow* widgetWindow = (nsWindow*)p;
-    widgetWindow->SetResized(PR_FALSE);
-    return FALSE;
-}
-
 gint nsWindow_Refresh_Callback(gpointer p)
 {
     nsWindow* widgetWindow = (nsWindow*)p;
@@ -771,7 +763,7 @@ gint nsWindow_Refresh_Callback(gpointer p)
     pevent.rect = (nsRect *)&bounds;
     widgetWindow->OnPaint(pevent);
 
-    gtk_timeout_add (50, (GtkFunction)nsWindow_ResetResize_Callback, widgetWindow);
+    gtk_timeout_add (50, (GtkFunction)nsGtkWidget_ResetResize_Callback, widgetWindow);
 }
 
 //
