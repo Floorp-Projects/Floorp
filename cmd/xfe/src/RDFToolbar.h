@@ -87,8 +87,8 @@ protected:
     virtual void    updateAppearance          ();
 
 private:
+
     XFE_Frame *	    _frame;
-    XFE_Toolbox *   _toolbox;
     Widget          _toolbar;
 
   // callbacks
