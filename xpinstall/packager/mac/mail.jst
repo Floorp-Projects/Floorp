@@ -28,18 +28,25 @@ if (verifyDiskSpace(fProgram, srDest))
 
     logComment("addDirectory() returned: " + err);
 
-    err = registerChrome(CONTENT | DELAYED_CHROME, 
+    registerChrome(CONTENT | DELAYED_CHROME, 
                          getFolder("Chrome","messenger.jar"),
-                         "content/messenger/");
-    err = registerChrome(CONTENT | DELAYED_CHROME, 
+                         "content/messenger/")
+
+    registerChrome(CONTENT | DELAYED_CHROME, 
                          getFolder("Chrome","messenger.jar"),
                          "content/messenger-region/");
-    
+
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-smime/");
 
-    logComment("registerChrome() returned: " + err);
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-mdn/");
+
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-views/");
 
     if (err==SUCCESS)
     {
