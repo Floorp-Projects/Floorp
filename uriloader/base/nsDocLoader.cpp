@@ -101,24 +101,6 @@ static NS_DEFINE_CID(kGenericFactoryCID,           NS_GENERICFACTORY_CID);
 class nsDocLoaderImpl;
 
 
-class nsChannelListener : public nsIStreamListener
-{
-public:
-  nsChannelListener();
-
-  nsresult Init(nsIStreamListener *aListener);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-
-protected:
-  virtual ~nsChannelListener();
-
-  nsCOMPtr<nsIStreamListener> mNextListener;
-};
-
-
 /* 
  * The nsDocumentBindInfo contains the state required when a single document
  * is being loaded...  Each instance remains alive until its target URL has 
@@ -170,7 +152,6 @@ protected:
 
 class nsDocLoaderImpl : public nsIDocumentLoader, 
                         public nsIStreamObserver,
-                        public nsILoadGroupListenerFactory,
                         public nsSupportsWeakReference
 {
 public:
@@ -220,10 +201,6 @@ public:
 	NS_IMETHOD GetLoadGroup(nsILoadGroup** aResult);
 
     NS_IMETHOD Destroy();
-
-    // nsILoadGroupListenerFactory methods...
-    NS_IMETHOD CreateLoadGroupListener(nsIStreamListener *aListener,
-                                       nsIStreamListener **aResult);
 
     // nsIStreamObserver methods: (for observing the load group)
     NS_DECL_NSISTREAMOBSERVER
@@ -315,8 +292,8 @@ nsDocLoaderImpl::Init(nsDocLoaderImpl *aParent)
     PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
            ("DocLoader:%p: load group %x.\n", this, mLoadGroup.get()));
 
-    rv = mLoadGroup->SetGroupListenerFactory(this);
-    if (NS_FAILED(rv)) return rv;
+///    rv = mLoadGroup->SetGroupListenerFactory(this);
+///    if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewISupportsArray(getter_AddRefs(mChildList));
     if (NS_FAILED(rv)) return rv;
@@ -366,11 +343,6 @@ nsDocLoaderImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     }
     if (aIID.Equals(kIDocumentLoaderIID)) {
         *aInstancePtr = (void*)(nsIDocumentLoader*)this;
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsILoadGroupListenerFactory>::GetIID())) {
-        *aInstancePtr = (void*)(nsILoadGroupListenerFactory*)this;
         NS_ADDREF_THIS();
         return NS_OK;
     }
@@ -937,25 +909,6 @@ nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
 }
 
 
-NS_IMETHODIMP
-nsDocLoaderImpl::CreateLoadGroupListener(nsIStreamListener *aListener,
-                                         nsIStreamListener **aResult)
-{
-  nsChannelListener *newListener;
- 
-  NS_NEWXPCOM(newListener, nsChannelListener);
-  if (nsnull == newListener) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(newListener);
-  newListener->Init(aListener);
-
-  *aResult = newListener;
-
-  return NS_OK;
-}
-
-
 void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
 {
   if (mParent) { 
@@ -1509,110 +1462,6 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ct
 
     return rv;
 }
-
-
-
-NS_IMPL_ISUPPORTS2(nsChannelListener, nsIStreamObserver, nsIStreamListener);
-
-nsChannelListener::nsChannelListener()
-{
-  NS_INIT_REFCNT();
-}
-
-nsresult nsChannelListener::Init(nsIStreamListener *aListener)
-{
-  mNextListener = aListener;
-
-  return NS_OK;
-}
-
-nsChannelListener::~nsChannelListener()
-{
-  mNextListener = null_nsCOMPtr();
-}
-
-NS_IMETHODIMP
-nsChannelListener::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext)
-{
-  nsresult rv;
-
-  ///////////////////////////////
-  // STREAM CONVERTERS
-  ///////////////////////////////
-
-  nsXPIDLCString contentType;
-  rv = aChannel->GetContentType(getter_Copies(contentType));
-  if (NS_FAILED(rv)) return rv;
-
-  // if we are using the uri loader, it handles the stream converter work for us!
-
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv); 
-  PRBool useURILoader = PR_FALSE;
-  if (NS_SUCCEEDED(rv))
-    prefs->GetBoolPref("browser.uriloader", &useURILoader);
-
-  if (!useURILoader)
-  {
-    PRBool conversionRequired = PR_FALSE;
-    nsAutoString from, to;
-
-    // Let's shanghai this channelListener's mNextListener if we want to convert the stream.
-    if (!nsCRT::strcasecmp(contentType, "message/rfc822"))
-    {
-	    from = "message/rfc822";
-	    to = "text/xul";
-	    conversionRequired = PR_TRUE;
-    }
-    else if (!nsCRT::strcasecmp(contentType, "multipart/x-mixed-replace")) 
-    {
-  	  from = "multipart/x-mixed-replace";
-	    to = "text/html";
-	    conversionRequired = PR_TRUE;
-    }
-  
-    if (conversionRequired)
-    {
-  
-	    NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
-	    if (NS_FAILED(rv)) return rv;
-
-      // The following call binds this channelListener's mNextListener (typically
-      // the nsDocumentBindInfo) to the underlying stream converter, and returns
-      // the underlying stream converter which we then set to be this channelListener's
-      // mNextListener. This effectively nestles the stream converter down right
-      // in between the raw stream and the final listener.
-      nsIStreamListener *converterListener = nsnull;
-      rv = StreamConvService->AsyncConvertData(from.GetUnicode(), to.GetUnicode(), mNextListener, aChannel,
-                                               &converterListener);
-      mNextListener = converterListener;
-	    NS_IF_RELEASE(converterListener);
-    }
-  } 
-  //////////////////////////////
-  // END STREAM CONVERTERS
-  //////////////////////////////
-  
-  // Pass the notification to the next listener...
-  return mNextListener->OnStartRequest(aChannel, aContext);
-}
-
-NS_IMETHODIMP
-nsChannelListener::OnStopRequest(nsIChannel *aChannel, nsISupports *aContext,
-                                 nsresult aStatus, const PRUnichar *aMsg)
-{
-  return mNextListener->OnStopRequest(aChannel, aContext, aStatus, aMsg);
-}
-
-NS_IMETHODIMP
-nsChannelListener::OnDataAvailable(nsIChannel *aChannel, nsISupports *aContext,
-                                   nsIInputStream *aInStream, PRUint32 aOffset,
-                                   PRUint32 aCount)
-{
-  return mNextListener->OnDataAvailable(aChannel, aContext, aInStream, 
-                                        aOffset, aCount);
-}
-
-
 
 
 
