@@ -1917,7 +1917,7 @@ nsNntpIncomingServer::SelectionChanged()
 NS_IMETHODIMP 
 nsNntpIncomingServer::CycleCell(PRInt32 row, nsITreeColumn* col)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
