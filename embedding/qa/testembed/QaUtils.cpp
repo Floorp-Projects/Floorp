@@ -213,6 +213,30 @@ void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode)
 	}
 }
 
+void FormatAndPrintOutput(const char *theInput, double theVar, int outputMode) 
+{
+	nsCString outStr;
+	CString strMsg;
+
+	outStr = theInput;
+	outStr.AppendFloat(theVar);
+
+	strMsg = outStr.get();
+
+	switch (outputMode)
+	{
+	case 0:
+		AfxMessageBox(strMsg); 
+		break;
+	case 1:
+		WriteToOutputFile(outStr.get());
+		break;
+	case 2:
+		WriteToOutputFile(outStr.get());
+		AfxMessageBox(strMsg); 
+		break;
+	}
+}
 
 // stringMsg is returned in case embeddor wishes to use it in the calling method.
 void RequestName(nsIRequest *request, nsCString &stringMsg, 
