@@ -1687,7 +1687,7 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
   // merge text node with like sibling, if any
   nsCOMPtr<nsIDOMNode> sibling;
   textNode->GetNextSibling(getter_AddRefs(sibling));
-  if (sibling)
+  if (sibling && mEditor->IsTextNode(sibling) && mEditor->IsEditable(sibling))
   {
     res = mEditor->JoinNodes(textNode,sibling,p);
     if (NS_FAILED(res)) return res;
