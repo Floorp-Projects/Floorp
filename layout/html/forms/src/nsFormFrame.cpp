@@ -620,7 +620,6 @@ char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder*
    char* res = nsnull;
    if(NS_SUCCEEDED(encoder->Reset()))
    {
-      nsresult rv = NS_OK;
       PRInt32 maxByteLen = 0;
       if(NS_SUCCEEDED(encoder->GetMaxLength(aSrc, (PRInt32) aLen, &maxByteLen))) 
       {
@@ -721,7 +720,6 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
 {
   *encoder = nsnull;
   nsAutoString charset;
-  nsIDocument* doc = nsnull;
   nsresult rv = NS_OK;
   GetSubmitCharset(charset);
   

@@ -435,7 +435,7 @@ void SamplePrintWordWithBreak()
       PRUint32 start = 0;
       for(PRUint32 j = 0; ! done ; j++)
       {
-            nsAutoString tmp("");
+            tmp="";
             fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
             result.Append("^");
@@ -443,7 +443,7 @@ void SamplePrintWordWithBreak()
             wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
       }
 
-      nsAutoString tmp("");
+      tmp="";
       fragText.Mid(tmp, start, fragText.Length() - start);
       result.Append(tmp);
 
