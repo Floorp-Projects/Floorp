@@ -367,7 +367,7 @@ class basic_nsAReadableString
     sometimes will.
   */
 
-#define NS_READABLE_CAST(CharT, expr)  (NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, (expr)))
+#define NS_READABLE_CAST(CharT, expr)  (NS_STATIC_CAST(const basic_nsAReadableString<CharT>, (expr)))
 
 template <class CharT>
 inline
@@ -1102,7 +1102,12 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
+#ifdef _MSC_VER
+        // XXX Visual C++ can't stomach 'typename' where it rightfully should
         nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+#else
+        nsCharTraits<typename OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+#endif
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);
