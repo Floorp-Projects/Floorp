@@ -28,8 +28,6 @@ ifdef MOZ_STRIP_NOT_EXPORTED
 DEFINES += -DXMLTOKAPI="__attribute__ ((dllexport))"
 endif
 
-DEFINES += -DXML_DTD
-
 CSRCS = \
 	xmltok.c \
 	xmlrole.c \

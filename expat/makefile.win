@@ -6,8 +6,6 @@ DIRS= xmltok xmlparse
 MODULE=raptor
 LIBRARY_NAME=expat
 
-DEFINES=-DXML_DTD
-
 OBJS=                                          \
 	.\xmlparse\$(OBJDIR)\hashtable.obj      \
 	.\xmlparse\$(OBJDIR)\xmlparse.obj      \

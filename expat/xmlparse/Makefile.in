@@ -28,8 +28,6 @@ ifdef MOZ_STRIP_NOT_EXPORTED
 DEFINES += -DXMLPARSEAPI="__attribute__ ((dllexport))"
 endif
 
-DEFINES += -DXML_DTD
-
 CSRCS = \
 	hashtable.c \
 	xmlparse.c \
