@@ -746,7 +746,7 @@ PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 PRIVATE si_SignonURLStruct *
 si_GetURL(const char * passwordRealm) {
   si_SignonURLStruct * url;
-  if (!passwordRealm || !*passwordRealm) {
+  if (!passwordRealm) {
     /* no passwordRealm specified, return first URL (returns NULL if not URLs) */
     if (LIST_COUNT(si_signon_list)==0) {
       return NULL;
@@ -758,8 +758,8 @@ si_GetURL(const char * passwordRealm) {
   if (urlCount) {
     // If the last char of passwordRealm is '/' then strip it before making comparison.
     nsCAutoString realmWithoutTrailingSlash(passwordRealm);
-    if (realmWithoutTrailingSlash.Last() == '/')
-      realmWithoutTrailingSlash.SetLength(realmWithoutTrailingSlash.Length()-1);
+    if (!realmWithoutTrailingSlash.IsEmpty() && realmWithoutTrailingSlash.Last() == '/')
+      realmWithoutTrailingSlash.Truncate(realmWithoutTrailingSlash.Length()-1);
 
     for (PRInt32 i=0; i<urlCount; i++) {
       url = NS_STATIC_CAST(si_SignonURLStruct*, si_signon_list->ElementAt(i));
