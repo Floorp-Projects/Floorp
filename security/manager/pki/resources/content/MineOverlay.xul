@@ -61,7 +61,7 @@
                    class="outlinercol-header outlinercell-inset-header" 
                    flex="1"/>
       <outlinercol id="certdbkeycol" collapsed="true" flex="1"/>
-      <outlinerbody flex="1"/>
+      <outlinerbody flex="1" ondblclick="viewCerts();"/>
     </outliner>
     <hbox>
       <button id="mine_viewButton" class="normal" 
