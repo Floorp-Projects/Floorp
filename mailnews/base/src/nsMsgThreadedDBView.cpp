@@ -221,8 +221,18 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   nsresult rv;
 
   PRInt32 rowCountBeforeSort = GetSize();
-  if (!rowCountBeforeSort)
+
+  if (!rowCountBeforeSort) {
+    // still need to setup our flags even when no articles - bug 98183.
+    m_sortType = sortType;
+    if (sortType == nsMsgViewSortType::byThread)
+      m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
+    else
+      m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
+    SaveSortInfo(sortType, sortOrder);
     return NS_OK;
+  }
+
   
   nsMsgKeyArray preservedSelection;
   SaveAndClearSelection(&preservedSelection);
