@@ -115,6 +115,7 @@ public:
 
   static nsresult GetValue(nsIContent* aContent, nsString* aResult);
   static nsresult GetName(nsIContent* aContent, nsString* aResult);
+  static nsresult GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue);
 
  /** 
   * Utility to convert a string to a PRBool
@@ -328,8 +329,7 @@ public:
     * @param aPresContext the presentation context
     * @param aRenderingContext the rendering context
     * @param aDirtyRect rectangle requiring update
-    * @param aWidth width the checkmark border in TWIPS
-    * @param aHeight height of the checkmark border in TWIPS
+    * @param aRect  x,y, width, and height of the button in TWIPS
     * @param aShift if PR_TRUE offset button as if it were pressed
     * @param aShowFocus if PR_TRUE draw focus rectangle over button
     * @param aStyleContext style context used for drawing button background 
@@ -339,11 +339,11 @@ public:
 
   static void PaintRectangularButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect, PRUint32 aWidth, 
-                            PRUint32 aHeight, PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
-							PRBool aDrawOutline,
-							nsIStyleContext* aOutlineStyle,
-							nsIStyleContext* aFocusStyle,
+                            const nsRect& aDirtyRect, const nsRect& aRect, 
+                            PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
+							              PRBool aDrawOutline,
+							              nsIStyleContext* aOutlineStyle,
+							              nsIStyleContext* aFocusStyle,
                             nsIStyleContext* aStyleContext, nsString& aLabel, 
                             nsIFrame* aForFrame);
    /**

@@ -78,11 +78,11 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
-
+  PRBool HasWidget();
+ 
   // nsIFormMouseListener
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  //static PRInt32 gSpacing;
 
 protected:
   nsIWidget* GetWindowTemp(nsIView *aView); // XXX temporary

@@ -71,10 +71,16 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
  
+  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect,
+                                     nsFramePaintLayer aWhichLayer);
+ 
   virtual void PaintTextControl(nsIPresContext& aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect, nsString& aText,
-                                nsIStyleContext* aStyleContext);
+                                nsIStyleContext* aStyleContext,
+                                nsRect& aRect);
 
   // Utility methods to get and set current widget state
   void GetTextControlFrameState(nsString& aValue);

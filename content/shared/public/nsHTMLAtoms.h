@@ -122,6 +122,8 @@ public:
   static nsIAtom* face;
   static nsIAtom* fieldset;
   static nsIAtom* fieldsetContentPseudo;
+  static nsIAtom* fileTextStylePseudo;
+  static nsIAtom* fileButtonStylePseudo;
   static nsIAtom* firstLetterPseudo;
   static nsIAtom* firstLinePseudo;
   static nsIAtom* font;

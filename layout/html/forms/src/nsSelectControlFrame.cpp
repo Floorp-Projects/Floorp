@@ -1140,7 +1140,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
 
 NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
-#ifdef XP_PC
+#ifndef XP_MAC
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {
     PRInt32 error = 0;

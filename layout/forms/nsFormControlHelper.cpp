@@ -692,16 +692,15 @@ nsFormControlHelper::PaintFocus(nsIRenderingContext& aRenderingContext,
 void 
 nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect, PRUint32 aWidth, 
-                            PRUint32 aHeight, 
-							PRBool aPressed, 
-							PRBool aShowFocus, 
-							PRBool aDisabled,
-							PRBool aDrawOutline,
-							nsIStyleContext* outlineStyle,
-							nsIStyleContext* focusStyle,
+                            const nsRect& aDirtyRect, const nsRect& aRect, 
+                            PRBool aPressed, 
+                            PRBool aShowFocus, 
+                            PRBool aDisabled,
+                            PRBool aDrawOutline,
+                            nsIStyleContext* outlineStyle,
+                            nsIStyleContext* focusStyle,
                             nsIStyleContext* aStyleContext, 
-							nsString& aLabel, 
+                            nsString& aLabel, 
                             nsIFrame* aForFrame)
                           
 {
@@ -720,7 +719,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
 
 	
-    nsRect rect(0, 0, aWidth, aHeight);
+    nsRect rect(aRect.x, aRect.y, aRect.width, aRect.height);
 
 	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
   	const nsStyleSpacing* focus = (const nsStyleSpacing*)focusStyle->GetStyleData(eStyleStruct_Spacing);
@@ -742,8 +741,8 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
 		int b = bottom - focusBorder.bottom;
 		int r = right - focusBorder.right;
 
-		int w = aWidth - (l + r);
-		int h = aHeight - (t + b);
+		int w = aRect.width - (l + r);
+		int h = aRect.height - (t + b);
 
 		nsRect focusRect(l, t, w, h);
 
@@ -757,8 +756,8 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
 		int b = bottom - outlineBorder.bottom;
 		int r = right - outlineBorder.right;
 
-		int w = aWidth - (l + r);
-		int h = aHeight - (t + b);
+		int w = aRect.width - (l + r);
+		int h = aRect.height - (t + b);
 
 		nsRect outlineRect(l, t, w, h);
 
@@ -784,7 +783,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-    nsRect outside(0, 0, aWidth, aHeight);
+    nsRect outside(aRect.x, aRect.y, aRect.width, aRect.height);
     outside.Deflate(border);
     outside.Deflate(onePixel, onePixel);
 
@@ -1022,6 +1021,25 @@ nsFormControlHelper::GetValue(nsIContent* aContent, nsString* aResult)
       }
       NS_RELEASE(formControl);
     }
+  }
+  return result;
+}
+
+nsresult
+nsFormControlHelper::GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue)
+{
+  nsresult result = NS_OK;
+  nsIDOMHTMLInputElement* inputElem = nsnull;
+  result = aContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElem);
+  if ((NS_OK == result) && inputElem) {
+    if (PR_TRUE == aInitialValue) {
+      result = inputElem->GetDefaultValue(*aText);
+    }
+    else {
+      result = inputElem->GetValue(*aText);
+    }
+
+    NS_RELEASE(inputElem);
   }
   return result;
 }
