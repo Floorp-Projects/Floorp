@@ -66,6 +66,7 @@
 #include "nsMsgUtils.h"
 
 #include "mimeebod.h"
+#include "mimeeobj.h"
 
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -270,7 +271,7 @@ static  PRInt32     attIndex = 0;
 
 nsresult
 BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
-                    const char *aMessageURL)
+                    const char *aMessageURL, PRBool addExternalBodiesOnly)
 {
   char                  *disp;
   PRInt32               i;
@@ -310,9 +311,23 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     PRBool isAnAppleDoublePart = mime_typep(child, (MimeObjectClass *) &mimeMultipartAppleDoubleClass) &&
                                  ((MimeContainer *)child)->nchildren == 2;
     
-    if (!isAnAppleDoublePart && !isAnInlineMessage)
-      if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL)) )
+    PRBool fetchExternalBodiesFromChildren = addExternalBodiesOnly; // inherit from our parent.
+    // whenever we encounter an inlined message, we want to only fetch external bodies from that point
+    // forward
+    if (!addExternalBodiesOnly && isAnInlineMessage)
+      fetchExternalBodiesFromChildren = PR_TRUE;  
+
+    if (!isAnAppleDoublePart /* && !isAnInlineMessage */)
+      if ( NS_FAILED(BuildAttachmentList((MimeObject *)child, aAttachData, aMessageURL, fetchExternalBodiesFromChildren)) )
         return NS_OK;
+
+    // okay, if the current recursive call only wants us to list external body attachments
+    // then kick out of this method if we are an inlined part and our child class isn't an 
+    // external body!
+    
+    if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) )
+        return NS_OK;
+
 
     if (!part) 
       return NS_ERROR_OUT_OF_MEMORY;
@@ -494,7 +509,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
   nsCRT::memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   
   // Now, build the list!
-  return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL);
+  return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL, PR_FALSE);
 }
 
 extern "C" void
