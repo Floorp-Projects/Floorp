@@ -341,18 +341,20 @@ void initMathObject(JS2Metadata *meta)
         { "round",  1,    Math_round },
         { "sin",    1,    Math_sin },
         { "sqrt",   1,    Math_sqrt },
-        { "tan",    1,    Math_tan },    
+        { "tan",    1,    Math_tan },
+        { NULL },
     };
 
+    meta->env.addFrame(meta->mathClass);
     PrototypeFunction *pf = &prototypeFunctions[0];
     while (pf->name) {
         FixedInstance *fInst = new FixedInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
-        InstanceMember *m = new InstanceMethod(fInst);
-        meta->defineInstanceMember(meta->mathClass, &meta->cxt, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
+        meta->defineStaticMember(&meta->env, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         pf++;
     }
-
+    meta->env.removeTopFrame();
 
 
 

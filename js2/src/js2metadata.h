@@ -92,18 +92,13 @@ public:
     void resetMark()        { size &= 0x7FFFFFFF; }
     void mark()             { size |= 0x80000000; }
     bool isMarked()         { return ((size & 0x80000000) != 0); }
-    uint32 getSize()        { return size & 0x3FFFFFFF; }
-    void setSize(uint32 sz) { ASSERT((sz & 0xC000000) == 0); size = (sz & 0x3FFFFFFF); }
-    void setIsJS2Object()   { size |= 0x40000000; }
-    bool isJS2Object()      { return ((size & 0x30000000) != 0); }
+    uint32 getSize()        { return size & 0x7FFFFFFF; }
+    void setSize(uint32 sz) { ASSERT((sz & 0x8000000) == 0); size = (sz & 0x7FFFFFFF); }
 
     Pond *owner;    // for a piece of scum in use, this points to it's own Pond
                     // otherwise it's a link to the next item on the free list
 private:
     uint32 size;    // The high bit is used as the gc mark flag
-                    // The next highest bit indicates that the object is a JS2Object
-                    // or just raw memory (with the implication of not containing
-                    // pointers to gc-able data)
 };
 
 // A pond is a place to get chunks of PondScum from and to return them to
@@ -113,7 +108,7 @@ class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
     
-    void *allocFromPond(int32 sz, bool isJS2Object);
+    void *allocFromPond(int32 sz);
     void returnToPond(PondScum *p);
 
     void resetMarks();
@@ -148,12 +143,13 @@ public:
 
     static void gc(JS2Metadata *meta);
     static RootIterator addRoot(void *t);   // pass the address of any JS2Object pointer
+                                            // Note: Not the address of a JS2VAL!
     static void removeRoot(RootIterator ri);
 
-    static void *alloc(size_t s, bool isJS2Object = false);
+    static void *alloc(size_t s);
     static void unalloc(void *p);
 
-    void *operator new(size_t s)    { return alloc(s, true); }
+    void *operator new(size_t s)    { return alloc(s); }
     void operator delete(void *p)   { unalloc(p); }
 
     virtual void markChildren()     { }

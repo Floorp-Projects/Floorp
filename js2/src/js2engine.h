@@ -60,11 +60,16 @@ enum JS2Op {
     eGreater,
     eLessEqual,
     eGreaterEqual,
-    eXor,
     eLogicalXor,
     eMinus,
     ePlus,
     eComplement,
+    eLeftShift,
+    eRightShift,
+    eLogicalRightShift,
+    eBitwiseAnd,
+    eBitwiseXor,
+    eBitwiseOr,
     eTrue,
     eFalse,
     eNull,
@@ -169,9 +174,9 @@ public:
     float64 *float64Table[256];
     js2val allocNumber(float64 x); 
     js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
-    void *gc_alloc_8();
 private:
     float64 *newDoubleValue(float64 x);
+    js2val retval;
 
 public:
 

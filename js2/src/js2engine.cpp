@@ -75,7 +75,7 @@ namespace MetaData {
     // Execute the opcode sequence at pc.
     js2val JS2Engine::interpreterLoop()
     {
-        js2val retval = JS2VAL_VOID;
+        retval = JS2VAL_VOID;
         while (true) {
             JS2Op op = (JS2Op)*pc++;
             switch (op) {
@@ -88,12 +88,6 @@ namespace MetaData {
             JS2Object::gc(meta);        // XXX temporarily, for testing
         }
         return retval;
-    }
-
-    // return a pointer to an 8 byte chunk in the gc heap
-    void *JS2Engine::gc_alloc_8()
-    {
-        return JS2Object::alloc(8);
     }
 
     // See if the double value is in the hash table, return it's pointer if so
@@ -111,13 +105,13 @@ namespace MetaData {
             if (*float64Table[hash] == x)
                 return float64Table[hash];
             else {
-                float64 *p = (float64 *)gc_alloc_8();
+                float64 *p = (float64 *)malloc(sizeof(float64));
                 *p = x;
                 return p;
             }
         }
         else {
-            float64 *p = (float64 *)gc_alloc_8();
+            float64 *p = (float64 *)malloc(sizeof(float64));
             float64Table[hash] = p;
             *p = x;
             return p;
@@ -276,6 +270,7 @@ namespace MetaData {
                 : pc(NULL),
                   bCon(NULL),
                   meta(NULL),
+                  retval(JS2VAL_VOID),
                   INIT_STRINGATOM(true),
                   INIT_STRINGATOM(false),
                   INIT_STRINGATOM(null),
@@ -318,8 +313,13 @@ namespace MetaData {
         case eGreater:
         case eLessEqual:
         case eGreaterEqual:
-        case eXor:
         case eLogicalXor:
+        case eLeftShift:
+        case eRightShift:
+        case eLogicalRightShift:
+        case eBitwiseAnd:
+        case eBitwiseXor:
+        case eBitwiseOr:
             return -1;  
 
         case eMinus:        // pop one, push one
@@ -493,6 +493,10 @@ namespace MetaData {
         for (uint32 i = 0; i < 256; i++) {
             if (float64Table[i])
                 JS2Object::mark(float64Table[i]);
+        }
+        if (JS2VAL_IS_OBJECT(retval)) {
+            JS2Object *obj = JS2VAL_TO_OBJECT(retval);
+            GCMARKOBJECT(obj)
         }
     }
 

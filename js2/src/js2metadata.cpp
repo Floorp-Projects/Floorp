@@ -1145,6 +1145,18 @@ namespace MetaData {
         case ExprNode::logicalAnd:
         case ExprNode::logicalXor:
         case ExprNode::logicalOr:
+        case ExprNode::leftShift:
+        case ExprNode::rightShift:
+        case ExprNode::logicalRightShift:
+        case ExprNode::bitwiseAnd:
+        case ExprNode::bitwiseXor:
+        case ExprNode::bitwiseOr:
+        case ExprNode::leftShiftEquals:
+        case ExprNode::rightShiftEquals:
+        case ExprNode::logicalRightShiftEquals:
+        case ExprNode::bitwiseAndEquals:
+        case ExprNode::bitwiseXorEquals:
+        case ExprNode::bitwiseOrEquals:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
                 ValidateExpression(cxt, env, b->op1);
@@ -1247,6 +1259,24 @@ namespace MetaData {
                     reportError(Exception::semanticError, "Assignment needs an lValue", p->pos);
             }
             break;
+        case ExprNode::leftShiftEquals:
+            op = eLeftShift;
+            goto doAssignBinary;
+        case ExprNode::rightShiftEquals:
+            op = eRightShift;
+            goto doAssignBinary;
+        case ExprNode::logicalRightShiftEquals:
+            op = eLogicalRightShift;
+            goto doAssignBinary;
+        case ExprNode::bitwiseAndEquals:
+            op = eBitwiseAnd;
+            goto doAssignBinary;
+        case ExprNode::bitwiseXorEquals:
+            op = eBitwiseXor;
+            goto doAssignBinary;
+        case ExprNode::bitwiseOrEquals:
+            op = eBitwiseOr;
+            goto doAssignBinary;
         case ExprNode::addEquals:
             op = eAdd;
             goto doAssignBinary;
@@ -1302,16 +1332,16 @@ doAssignBinary:
             op = eRightShift;
             goto doBinary;
         case ExprNode::logicalRightShift:
-            op = eUShiftRight;
+            op = eLogicalRightShift;
             goto doBinary;
         case ExprNode::bitwiseAnd:
-            op = BitAnd;
+            op = eBitwiseAnd;
             goto doBinary;
         case ExprNode::bitwiseXor:
-            op = BitXor;
+            op = eBitwiseXor;
             goto doBinary;
         case ExprNode::bitwiseOr:
-            op = BitOr;
+            op = eBitwiseOr;
             goto doBinary;
 
         case ExprNode::add:
@@ -2783,6 +2813,7 @@ readClassProperty:
         // that are meant to be never collected?
         GCMARKOBJECT(publicNamespace);
         GCMARKOBJECT(forbiddenMember);
+        GCMARKOBJECT(objectClass);
         GCMARKOBJECT(undefinedClass);
         GCMARKOBJECT(nullClass);
         GCMARKOBJECT(booleanClass);
@@ -2790,13 +2821,15 @@ readClassProperty:
         GCMARKOBJECT(numberClass);
         GCMARKOBJECT(characterClass);
         GCMARKOBJECT(stringClass);
-        GCMARKOBJECT(objectClass);
         GCMARKOBJECT(namespaceClass);
-        GCMARKOBJECT(classClass);
-        GCMARKOBJECT(packageClass);
-        GCMARKOBJECT(prototypeClass);
         GCMARKOBJECT(attributeClass);
+        GCMARKOBJECT(classClass);
         GCMARKOBJECT(functionClass);
+        GCMARKOBJECT(prototypeClass);
+        GCMARKOBJECT(packageClass);
+        GCMARKOBJECT(dateClass);
+        GCMARKOBJECT(regexpClass);
+        GCMARKOBJECT(mathClass);
 
         if (bCon)
             bCon->mark();
@@ -2853,7 +2886,7 @@ readClassProperty:
     }
     
     // Allocate from this or the next Pond (make a new one if necessary)
-    void *Pond::allocFromPond(int32 sz, bool isJS2Object)
+    void *Pond::allocFromPond(int32 sz)
     {
         // Try scannning the free list...
         PondScum *p = freeHeader;
@@ -2867,8 +2900,6 @@ readClassProperty:
                     freeHeader = (PondScum *)(p->owner);
                 p->owner = this;
                 p->resetMark();      // might have lingering mark from previous gc
-                if (isJS2Object)
-                    p->setIsJS2Object();
 #ifdef DEBUG
                 memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
 #endif
@@ -2882,13 +2913,11 @@ readClassProperty:
         if (sz > (pondSize - (pondTop - pondBase))) {
             if (nextPond == NULL)
                 nextPond = new Pond(sz, nextPond);
-            return nextPond->allocFromPond(sz, isJS2Object);
+            return nextPond->allocFromPond(sz);
         }
         p = (PondScum *)pondTop;
         p->owner = this;
         p->setSize(sz);
-        if (isJS2Object)
-            p->setIsJS2Object();
         pondTop += sz;
 #ifdef DEBUG
         memset((p + 1), 0xB7, sz - sizeof(PondScum));
@@ -2963,6 +2992,7 @@ readClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void JS2Class::markChildren()
     {
+        Frame::markChildren();
         GCMARKOBJECT(super)
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
@@ -3281,16 +3311,13 @@ readClassProperty:
     void JS2Object::gc(JS2Metadata *meta)
     {
         pond.resetMarks();
+        // Anything on the root list is a pointer to a JS2Object.
         for (std::list<PondScum **>::iterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
             if (**i) {
                 PondScum *p = (**i) - 1;
                 ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-                if (p->isJS2Object()) {
-                    JS2Object *obj = (JS2Object *)(p + 1);
-                    GCMARKOBJECT(obj)
-                }
-                else
-                    p->mark();
+                JS2Object *obj = (JS2Object *)(p + 1);
+                GCMARKOBJECT(obj)
             }
         }
         meta->mark();
@@ -3298,13 +3325,13 @@ readClassProperty:
     }
 
     // Allocate a chink of size s and mark whether it's a JS2Object or not
-    void *JS2Object::alloc(size_t s, bool isJS2Object)
+    void *JS2Object::alloc(size_t s)
     {
         s += sizeof(PondScum);
         // make sure that the thing is 8-byte aligned
         if (s & 0x7) s += 8 - (s & 0x7);
         ASSERT(s <= 0x7FFFFFFF);
-        return pond.allocFromPond((int32)s, isJS2Object);
+        return pond.allocFromPond((int32)s);
     }
 
     // Release a chunk back to it's pond

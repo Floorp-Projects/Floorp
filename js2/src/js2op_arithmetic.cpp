@@ -49,7 +49,52 @@
     case eComplement:
         {
 	    js2val a = pop();
-            pushNumber(~toInt32(toNumber(a)));
+            pushNumber(~toInteger(a));
+        }
+        break;    
+    case eLeftShift:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            int32 count = toInteger(b) & 0x1F;
+            pushNumber(toInteger(a) << count);
+        }
+        break;
+    case eRightShift:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            int32 count = toInteger(b) & 0x1F;
+            pushNumber(toInteger(a) >> count);
+        }
+        break;
+    case eLogicalRightShift:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            int32 count = toInteger(b) & 0x1F;
+            pushNumber(toUInt32(toInteger(a)) >> count);
+        }
+        break;
+    case eBitwiseAnd:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            pushNumber(toInteger(a) & toInteger(b));
+        }
+        break;
+    case eBitwiseXor:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            pushNumber(toInteger(a) ^ toInteger(b));
+        }
+        break;
+    case eBitwiseOr:
+        {
+	    js2val b = pop();
+	    js2val a = pop();
+            pushNumber(toInteger(a) | toInteger(b));
         }
         break;
 
@@ -117,16 +162,6 @@
             else
 #endif
             pushNumber(fd::fmod(anum, bnum));
-        }
-        break;
-
-    case eXor: 
-        {
-	    js2val b = pop();
-	    js2val a = pop();
-            float64 anum = toNumber(a);
-            float64 bnum = toNumber(b);
-            pushNumber(toInt32(anum) ^ toInt32(bnum));
         }
         break;
 
@@ -345,6 +380,39 @@
                 }
                 break;
 
+            case eLeftShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) << count);
+                }
+                break;
+            case eRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) >> count);
+                }
+                break;
+            case eLogicalRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                }
+                break;
+            case eBitwiseAnd:
+                {
+                    rval = allocNumber(toInteger(a) & toInteger(b));
+                }
+                break;
+            case eBitwiseXor:
+                {
+                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                }
+                break;
+            case eBitwiseOr:
+                {
+                    rval = allocNumber(toInteger(a) | toInteger(b));
+                }
+                break;
             }
             meta->env.lexicalWrite(meta, mn, rval, true, phase);
             push(rval);
@@ -389,6 +457,113 @@
             float64 num = toNumber(rval);
             rval = pushNumber(num - 1.0);
             meta->env.lexicalWrite(meta, mn, rval, true, phase);
+        }
+        break;
+
+    case eDotAssignOp:
+        {
+            op = (JS2Op)*pc++;
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+	    js2val b = pop();
+            js2val baseVal = pop();
+            js2val a;
+            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            js2val rval;
+            switch (op) {
+            case eAdd:
+                {
+	            a = toPrimitive(a);
+	            b = toPrimitive(b);
+	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
+	                String *astr = toString(a);
+	                String *bstr = toString(b);
+                        String *c = new String(*astr);
+                        *c += *bstr;
+	                rval = STRING_TO_JS2VAL(c);
+	            }
+	            else {
+                        float64 anum = toNumber(a);
+                        float64 bnum = toNumber(b);
+                        rval = allocNumber(anum + bnum);
+	            }
+                }
+                break;
+            case eSubtract:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum - bnum);
+                }
+                break;
+            case eMultiply:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum * bnum);
+                }
+                break;
+
+            case eDivide:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum / bnum);
+                }
+                break;
+
+            case eModulo:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+#ifdef XP_PC
+            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
+                        rval = anum;
+                    else
+#endif
+                    rval = allocNumber(fd::fmod(anum, bnum));
+                }
+                break;
+
+            case eLeftShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) << count);
+                }
+                break;
+            case eRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) >> count);
+                }
+                break;
+            case eLogicalRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                }
+                break;
+            case eBitwiseAnd:
+                {
+                    rval = allocNumber(toInteger(a) & toInteger(b));
+                }
+                break;
+            case eBitwiseXor:
+                {
+                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                }
+                break;
+            case eBitwiseOr:
+                {
+                    rval = allocNumber(toInteger(a) | toInteger(b));
+                }
+                break;
+            }
+            meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
+            push(rval);
         }
         break;
 
@@ -448,7 +623,116 @@
             meta->writeProperty(baseVal, mn, &lookup, true, rval, RunPhase);
         }
         break;
-    case eBracketPostInc:
+
+    case eBracketAssignOp:
+        {
+            op = (JS2Op)*pc++;
+            LookupKind lookup(false, NULL);
+	    js2val b = pop();
+            js2val indexVal = pop();
+            js2val baseVal = pop();
+            js2val a;
+            String *indexStr = toString(indexVal);
+            Multiname mn(meta->world.identifiers[*indexStr], meta->publicNamespace);
+            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
+                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
+            js2val rval;
+            switch (op) {
+            case eAdd:
+                {
+	            a = toPrimitive(a);
+	            b = toPrimitive(b);
+	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
+	                String *astr = toString(a);
+	                String *bstr = toString(b);
+                        String *c = new String(*astr);
+                        *c += *bstr;
+	                rval = STRING_TO_JS2VAL(c);
+	            }
+	            else {
+                        float64 anum = toNumber(a);
+                        float64 bnum = toNumber(b);
+                        rval = allocNumber(anum + bnum);
+	            }
+                }
+                break;
+            case eSubtract:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum - bnum);
+                }
+                break;
+            case eMultiply:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum * bnum);
+                }
+                break;
+
+            case eDivide:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+                    rval = allocNumber(anum / bnum);
+                }
+                break;
+
+            case eModulo:
+                {
+                    float64 anum = toNumber(a);
+                    float64 bnum = toNumber(b);
+#ifdef XP_PC
+            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
+                        rval = anum;
+                    else
+#endif
+                    rval = allocNumber(fd::fmod(anum, bnum));
+                }
+                break;
+
+            case eLeftShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) << count);
+                }
+                break;
+            case eRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toInteger(a) >> count);
+                }
+                break;
+            case eLogicalRightShift:
+                {
+                    int32 count = toInteger(b) & 0x1F;
+                    rval = allocNumber(toUInt32(toInteger(a)) >> count);
+                }
+                break;
+            case eBitwiseAnd:
+                {
+                    rval = allocNumber(toInteger(a) & toInteger(b));
+                }
+                break;
+            case eBitwiseXor:
+                {
+                    rval = allocNumber(toInteger(a) ^ toInteger(b));
+                }
+                break;
+            case eBitwiseOr:
+                {
+                    rval = allocNumber(toInteger(a) | toInteger(b));
+                }
+                break;
+            }
+            meta->writeProperty(baseVal, &mn, &lookup, true, rval, RunPhase);
+            push(rval);
+        }
+        break;
+
+case eBracketPostInc:
         {
             LookupKind lookup(false, NULL);
             js2val indexVal = pop();
