@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#filter substitution
+
 // We need to override the default values of these preferences since all.js
 // assumes these are in the navigator package, which for us is non-existant.
 // XXX(darin): perhaps all.js should not be seamonkey specific
