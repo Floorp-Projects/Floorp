@@ -59,6 +59,7 @@ function filterEditorOnLoad()
 
     gFilterNameElement.focus();
     doSetOKCancel(onOk, null);
+	moveToAlertPosition();
 }
 
 function onOk()

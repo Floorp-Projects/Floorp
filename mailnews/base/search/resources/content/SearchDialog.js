@@ -46,6 +46,7 @@ function searchOnLoad()
         selectFolder(window.arguments[0].folder);
     
     onMore(null);
+	moveToAlertPosition();
 
 }
 

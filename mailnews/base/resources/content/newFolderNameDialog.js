@@ -35,6 +35,7 @@ function newFolderNameOnLoad(pickerDOMID)
 	var picker = document.getElementById(pickerID);
 	if(picker)
 		MsgFolderPickerOnLoad(pickerID);
+	moveToAlertPosition();
 }
 
 function newFolderNameOKButtonCallback()
@@ -64,6 +65,7 @@ function newFolderNameCancelButtonCallback()
 function renameFolderNameOnLoad(pickerDOMID)
 {
 	doSetOKCancel(renameFolderNameOKButtonCallback, renameFolderNameCancelButtonCallback);
+	moveToAlertPosition();
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {

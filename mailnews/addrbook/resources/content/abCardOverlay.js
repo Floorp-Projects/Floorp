@@ -82,6 +82,7 @@ function OnLoadNewCard()
 	var firstName = document.getElementById('FirstName');
 	if ( firstName )
 		firstName.focus();
+	moveToAlertPosition();
 }
 
 

@@ -40,6 +40,7 @@ function onLoad()
     window.arguments[0].opval = 2;
   }
   doSetOKCancel(0, onCancel, 0, 0);
+  moveToAlertPosition();
 }
 
 function onOpen()

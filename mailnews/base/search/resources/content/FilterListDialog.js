@@ -56,6 +56,7 @@ function onLoad()
     }
     
     selectServer(firstItem);
+	moveToAlertPosition();
 }
 
 function onOk()

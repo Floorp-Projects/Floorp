@@ -22,6 +22,7 @@ function abNameOnLoad()
 	var name = document.getElementById('name');
 	if ( name )
 		name.focus();
+	moveToAlertPosition();
 }
 
 function abNameOKButton()

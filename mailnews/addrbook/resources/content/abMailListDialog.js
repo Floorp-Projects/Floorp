@@ -195,6 +195,7 @@ function OnLoadMailList()
 	var listName = document.getElementById('ListName');
 	if ( listName )
 		listName.focus();
+	moveToAlertPosition();
 }
 
 function EditListOKButton()
@@ -264,6 +265,7 @@ dump("*** editList.Count = "+total+"\n");
 	var listName = document.getElementById('ListName');
 	if ( listName )
 		listName.focus();
+	moveToAlertPosition();
 }
 
 function AppendnewRowAndSetFocus()
