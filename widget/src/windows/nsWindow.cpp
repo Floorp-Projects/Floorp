@@ -107,6 +107,10 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
+#include "prprf.h"
+
+static const char *kMozHeapDumpMessageString = "MOZ_HeapDump";
+
 #define kWindowPositionSlop 20
 
 #ifndef SPI_GETWHEELSCROLLLINES
@@ -176,6 +180,7 @@ UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
 UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
+UINT nsWindow::uWM_HEAP_DUMP       = 0; // Heap Dump to a file
 
 PRBool nsWindow::sSkipWMCHARProcessing; // enables the skipping of WM_CHAR processing the key press
 
@@ -636,6 +641,9 @@ nsWindow::nsWindow() : nsBaseWidget()
 
     // mouse message of MSIME98/2000
     nsWindow::uWM_MSIME_MOUSE     = ::RegisterWindowMessage(RWM_MOUSE);
+
+    // Heap dump
+    nsWindow::uWM_HEAP_DUMP = ::RegisterWindowMessage(kMozHeapDumpMessageString);
   }
 
   mNativeDragTarget = nsnull;
@@ -3193,6 +3201,67 @@ void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves)
 
 #define WM_XP_THEMECHANGED                 0x031A
 
+// Static helper functions for heap dumping
+static nsresult HeapDump(const char *filename, const char *heading)
+{
+
+  // Make sure heapwalk() is available
+  typedef BOOL WINAPI HeapWalkProc(HANDLE hHeap, LPPROCESS_HEAP_ENTRY lpEntry);
+  typedef DWORD WINAPI GetProcessHeapsProc(DWORD NumberOfHeaps, PHANDLE ProcessHeaps);
+
+  static PRBool firstTime = PR_TRUE;
+  static HeapWalkProc *heapWalkP = NULL;
+  static GetProcessHeapsProc *getProcessHeapsP = NULL;
+  
+  if (firstTime) {
+    firstTime = PR_FALSE;
+    HMODULE kernel = GetModuleHandle("kernel32.dll");
+    if (kernel) {
+      heapWalkP = (HeapWalkProc *)
+        GetProcAddress(kernel, "HeapWalk");
+      getProcessHeapsP = (GetProcessHeapsProc *)
+        GetProcAddress(kernel, "GetProcessHeaps");
+    }
+  }
+
+  if (!heapWalkP)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  PRFileDesc *prfd = PR_Open(filename, PR_CREATE_FILE | PR_APPEND | PR_WRONLY, 0777);
+  if (!prfd)
+    return NS_ERROR_FAILURE;
+
+  char buf[1024];
+  PRUint32 n;
+  PRUint32 written = 0;
+  HANDLE heapHandle[64];
+  DWORD nheap = (*getProcessHeapsP)(64, heapHandle);
+  if (nheap == 0 || nheap > 64) {
+    return NS_ERROR_FAILURE;
+  }
+
+  n = PR_snprintf(buf, sizeof buf, "BEGIN HEAPDUMP : %s\n", heading);
+  PR_Write(prfd, buf, n);
+  for (DWORD i = 0; i < nheap; i++) {
+    // Dump each heap
+    PROCESS_HEAP_ENTRY ent = {0};
+    n = PR_snprintf(buf, sizeof buf, "Processing heap %d : %p\n", i+1, heapHandle[i]);
+    PR_Write(prfd, buf, n);
+    ent.lpData = NULL;
+    while ((*heapWalkP)(heapHandle[i], &ent)) {
+      n = PR_snprintf(buf, sizeof buf, "%6s block at %08p of size %6d overhead %2d\n",
+                      (ent.wFlags & PROCESS_HEAP_UNCOMMITTED_RANGE) ? "FREE" : "USED",
+                      ent.lpData, ent.cbData, ent.cbOverhead);
+      PR_Write(prfd, buf, n);
+    }
+  }
+  n = PR_snprintf(buf, sizeof buf, "END HEAPDUMP : %s\n", heading);
+  PR_Write(prfd, buf, n);
+
+  PR_Close(prfd);
+  return NS_OK;
+}
+
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
     static UINT vkKeyCached = 0;              // caches VK code fon WM_KEYDOWN
@@ -4061,6 +4130,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         
         else if ((msg == nsWindow::uWM_ATOK_RECONVERT) || (msg == nsWindow::uWM_MSIME_RECONVERT)) {
           result = OnIMERequest(wParam, lParam, aRetValue, PR_TRUE);
+        }
+        else if (msg == nsWindow::uWM_HEAP_DUMP) {
+          // XXX for now we use c:\heapdump.txt until we figure out how to
+          // XXX pass in message parameters.
+          HeapDump("c:\\heapdump.txt", "whatever");
+          result = PR_TRUE;
         }
 
       } break;

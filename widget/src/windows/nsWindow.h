@@ -495,6 +495,9 @@ protected:
     static UINT uWM_MSIME_MOUSE;     // mouse messge for MSIME
     static UINT uWM_ATOK_RECONVERT;  // reconvert messge for ATOK
 
+    // Heap dump
+    static UINT uWM_HEAP_DUMP;       // Dump heap to a file
+
 #ifdef ACCESSIBILITY
     IAccessible* mRootAccessible;
     static BOOL gIsAccessibilityOn;
