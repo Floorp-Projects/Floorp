@@ -399,7 +399,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
   while (ch && index <= limit) {
     // printf("Checking size of:%c  index:%d\n", ch & 0x00FF, index);
     rv = aRenderingContext.GetBoundingMetrics(&ch, 1, bm);
-    if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); getchar(); return rv; }
+    if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
     h = bm.ascent - bm.descent;
     w = bm.width;
  
