@@ -83,7 +83,8 @@ nsFormFillController::nsFormFillController() :
   mMaxRows(0),
   mDisableAutoComplete(PR_FALSE), 
   mCompleteDefaultIndex(PR_FALSE),
-  mForceComplete(PR_FALSE)
+  mForceComplete(PR_FALSE),
+  mSuppressOnInput(PR_FALSE)
 {
   mController = do_CreateInstance("@mozilla.org/autocomplete/controller;1");
 
@@ -377,7 +378,9 @@ nsFormFillController::GetTextValue(nsAString & aTextValue)
 NS_IMETHODIMP
 nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
+  mSuppressOnInput = PR_TRUE;
   mFocusedInput->SetValue(aTextValue);
+  mSuppressOnInput = PR_FALSE;
   return NS_OK;
 }
 
@@ -592,6 +595,9 @@ nsFormFillController::Select(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsFormFillController::Input(nsIDOMEvent* aEvent)
 {
+  if (mSuppressOnInput)
+    return NS_OK;
+
   return mController->HandleText();
 }
 
