@@ -27,6 +27,8 @@ require "CGI.pl";
 
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
+my $cgi = Bugzilla->cgi;
+
 use vars qw($template $vars);
 
 
@@ -62,10 +64,8 @@ unless (UserInGroup("editkeywords")) {
 }
 
 
-my $action  = trim($::FORM{action}  || '');
+my $action  = trim($cgi->param('action')  || '');
 $vars->{'action'} = $action;
-
-detaint_natural($::FORM{id});
 
 
 if ($action eq "") {
@@ -115,8 +115,8 @@ if ($action eq 'add') {
 if ($action eq 'new') {
     # Cleanups and valididy checks
 
-    my $name = trim($::FORM{name} || '');
-    my $description  = trim($::FORM{description}  || '');
+    my $name = trim($cgi->param('name') || '');
+    my $description  = trim($cgi->param('description')  || '');
 
     Validate($name, $description);
     
@@ -173,7 +173,9 @@ if ($action eq 'new') {
 #
 
 if ($action eq 'edit') {
-    my $id  = trim($::FORM{id} || 0);
+    my $id = trim(cgi->param('id'));
+    detaint_natural($id);
+
     # get data of keyword
     SendSQL("SELECT name,description
              FROM keyworddefs
@@ -211,9 +213,11 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    my $id = $::FORM{id};
-    my $name  = trim($::FORM{name} || '');
-    my $description  = trim($::FORM{description}  || '');
+    my $id = $cgi->param('id');
+    detaint_natural($id);
+
+    my $name  = trim($cgi->param('name') || '');
+    my $description  = trim($cgi->param('description')  || '');
 
     Validate($name, $description);
 
@@ -246,12 +250,13 @@ if ($action eq 'update') {
 
 
 if ($action eq 'delete') {
-    my $id = $::FORM{id};
+    my $id = $cgi->param('id');
+    detaint_natural($id);
 
     SendSQL("SELECT name FROM keyworddefs WHERE id=$id");
     my $name = FetchOneColumn();
 
-    if (!$::FORM{reallydelete}) {
+    if (!$cgi->param('reallydelete')) {
         SendSQL("SELECT count(*)
                  FROM keywords
                  WHERE keywordid = $id");
