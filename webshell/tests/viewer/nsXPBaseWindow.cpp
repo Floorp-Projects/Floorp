@@ -69,7 +69,6 @@
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
-static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
 
 
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
@@ -214,13 +213,8 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
 
   // Create top level window
   nsresult rv;
-  if (aType == eXPBaseWindowType_window) {
-    rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
+  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                              (void**)&mWindow);
-  } else {
-    rv= nsComponentManager::CreateInstance(kDialogCID, nsnull, kIWidgetIID,
-                                             (void**)&mWindow);
-  }
 
   if (NS_OK != rv) {
     return rv;

@@ -733,7 +733,6 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kButtonCID,      NS_BUTTON_CID);
 static NS_DEFINE_IID(kTextFieldCID,   NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kWindowCID,      NS_WINDOW_CID);
-static NS_DEFINE_IID(kDialogCID,      NS_DIALOG_CID);
 static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kLabelCID,       NS_LABEL_CID);
 
@@ -883,7 +882,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsRect rect;
   rect.SetRect(0, 0, dialogWidth, 162);  
 
-  nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
+  nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull, kIBrowserWindowIID, (void**)&mRobotDialog);
   if (nsnull == mRobotDialog)
   	return PR_FALSE;
   
@@ -1261,7 +1260,8 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     rect.SetRect(0, 0, dialogWidth, 125);  
 
     nsIWidget* widget = nsnull;
-    nsComponentManager::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
+    nsComponentManager::CreateInstance(kBrowserWindowCID, nsnull, 
+                                       kIBrowserWindowIID, (void**)&mSiteDialog);
     if (nsnull == mSiteDialog)
       return PR_FALSE;
     
