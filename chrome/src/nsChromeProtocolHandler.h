@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,36 +35,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#ifndef nsChromeProtocolHandler_h___
+#define nsChromeProtocolHandler_h___
 
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsIChromeRegistry.h"
-#include "nscore.h"
-#include "rdf.h"
-#include "nsChromeProtocolHandler.h"
-#include "nsChromeRegistry.h"
+#include "nsIProtocolHandler.h"
+#include "nsWeakReference.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsChromeRegistry, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
+#define NS_CHROMEPROTOCOLHANDLER_CID                 \
+{ /* 61ba33c0-3031-11d3-8cd0-0060b0fc14a3 */         \
+    0x61ba33c0,                                      \
+    0x3031,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
-// The list of components we register
-static const nsModuleComponentInfo components[] = 
+class nsChromeProtocolHandler : public nsIProtocolHandler, public nsSupportsWeakReference
 {
-    { "Chrome Registry", 
-      NS_CHROMEREGISTRY_CID,
-      NS_CHROMEREGISTRY_CONTRACTID, 
-      nsChromeRegistryConstructor
-    },
+public:
+    NS_DECL_ISUPPORTS
 
-    { "Chrome Protocol Handler", 
-      NS_CHROMEPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", 
-      nsChromeProtocolHandlerConstructor
-    }
+    // nsIProtocolHandler methods:
+    NS_DECL_NSIPROTOCOLHANDLER
+
+    // nsChromeProtocolHandler methods:
+    nsChromeProtocolHandler() {}
+    ~nsChromeProtocolHandler() {}
 };
 
-NS_IMPL_NSGETMODULE(nsChromeModule, components)
-
+#endif /* nsChromeProtocolHandler_h___ */
