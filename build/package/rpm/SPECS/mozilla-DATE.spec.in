@@ -142,7 +142,8 @@ BUILD_OFFICIAL=1 ./configure --prefix=%{_prefix} --enable-optimize \
 	--enable-extensions=default,irc \
 	--without-mng \
 	--enable-crypto \
-	--disable-xprint
+	--disable-xprint \
+	--disable-freetype2
 
 #BUILD_OFFICIAL=1 make -s export
 #BUILD_OFFICIAL=1 make -j$CPUS -s libs
@@ -541,6 +542,9 @@ fi
 
 
 %changelog
+* Fri Feb 22 2002 Christopher Blizzard <blizzard@redhat.com>
+- Add --disable-freetype2 so that we don't build the freetype code.
+
 * Sat Dec 29 2001 Christopher Blizzard <blizzard@redhat.com>
 - Add mozilla-xremote-client to the package in /usr/bin
 
