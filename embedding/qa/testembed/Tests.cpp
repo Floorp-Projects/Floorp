@@ -39,10 +39,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+
 // File Overview....
 //
 // These are QA test case implementations
 //
+
 
 #include "stdafx.h"
 #include "TestEmbed.h"
@@ -292,12 +294,12 @@ CTests::CTests(nsIWebBrowser* mWebBrowser,
 	qaWebBrowser = mWebBrowser;
 	qaBaseWindow = mBaseWindow;
 	qaWebNav = mWebNav;
-
 	qaBrowserImpl = mpBrowserImpl;
 }
 
 CTests::~CTests()
 {
+
 }
 
 
@@ -326,7 +328,6 @@ void CTests::OnTestsChangeUrl()
 	}
 	else
 		QAOutput("Change URL test not executed.", 1);
-
 }
 
 // *********************************************************
@@ -394,6 +395,7 @@ void CTests::OnTestsGlobalHistory()
 void CTests::OnTestsCreateFile()
 {
    	//nsresult rv;
+
 	PRBool exists;
     nsCOMPtr<nsILocalFile> theTestFile(do_GetService(NS_LOCAL_FILE_CONTRACTID));
 
@@ -408,8 +410,8 @@ void CTests::OnTestsCreateFile()
 
 	rv = theTestFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\theFile.txt"));
 	rv = theTestFile->Exists(&exists);
-
 	QAOutput("File (theFile.txt) doesn't exist. We'll create it.\r\n", 1);
+
 	rv = theTestFile->Create(nsIFile::NORMAL_FILE_TYPE, 0777);
 	RvTestResult(rv, "File Create() test", 2);
 }
@@ -433,6 +435,7 @@ void CTests::OnTestsCreateprofile()
 	   QAOutput("Start Profile switch test.", 2);
 
 	   QAOutput("Retrieved profile service.", 2);
+
        rv = theProfServ->SetCurrentProfile(myDialog.m_SelectedProfile.get());
 	   RvTestResult(rv, "SetCurrentProfile() (profile switching) test", 2);
 
@@ -440,7 +443,6 @@ void CTests::OnTestsCreateprofile()
     }
 	else
 	   QAOutput("Profile switch test not executed.", 2);
-
 }
 
 // *********************************************************
@@ -449,8 +451,8 @@ void CTests::OnTestsAddWebProgListener()
 {
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
-
+ 
+	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add Web Prog Lstnr test", 2);
 }
 
@@ -459,8 +461,10 @@ void CTests::OnTestsAddWebProgListener()
 void CTests::OnTestsAddHistoryListener()
 {
    // addSHistoryListener test
+
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
+
 	rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add History Lstnr test", 2);
 }
@@ -470,8 +474,10 @@ void CTests::OnTestsAddHistoryListener()
 void CTests::OnTestsRemovehistorylistener()
 {
   // RemoveSHistoryListener test
+
 	nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsISHistoryListener*, qaBrowserImpl))));
+
 	rv = qaWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsISHistoryListener));
 	RvTestResult(rv, "RemoveWebBrowserListener(). Remove History Lstnr test", 2);
 }
@@ -482,8 +488,8 @@ void CTests::OnTestsAddUriContentListenerByWebBrowser()
 {
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIURIContentListener));
 	RvTestResult(rv, "AddWebBrowserListener(). add nsIURIContentListener test", 2);
 }
 
@@ -493,11 +499,14 @@ void CTests::OnTestsAddUriContentListenerByUriLoader()
 {
 	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
 	RvTestResult(rv, "nsIURILoader() object test", 1);
+
 	if (!myLoader) {
 		QAOutput("Didn't get urILoader object. test failed", 2);
 		return;
 	}
+
 	nsCOMPtr<nsIURIContentListener> cntListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+
 	if (!cntListener) {
 		QAOutput("Didn't get urIContentListener object. test failed", 2);
 		return;
@@ -514,6 +523,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 {
 	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
 	RvTestResult(rv, "nsIURILoader() object test", 1);
+
 	if (!myLoader) {
 		QAOutput("Didn't get urILoader object. test failed", 2);
 		return;
@@ -564,6 +574,7 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 		   QAOutput("We didn't get the Channel for AsyncOpen(). Test failed.", 1);
 		   return;
 		}
+
 		QAOutput("AynchOpen() test.", 2);
 		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
@@ -571,6 +582,7 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 
 		if (!listener)
 			QAOutput("listener object is null for AsyncOpen().", 1);
+
 		// this calls nsIStreamListener::OnDataAvailable()
 		rv = theChannel->AsyncOpen(listener, nsnull);
 		RvTestResult(rv, "AsyncOpen()", 2);
@@ -586,13 +598,16 @@ void CTests::OnTestsIOServiceNewURI()
 		QAOutput("We didn't get the IOService object.", 2);
 		return;
 	}
+
 	if (myDialog.DoModal() == IDOK)
 	{
 		nsCAutoString theStr, retURI;
 
 		theStr = myDialog.m_urlfield;
+
 		rv = ioService->NewURI(theStr, nsnull, nsnull, getter_AddRefs(theURI));
 		RvTestResult(rv, "ioService->NewURI() test", 2);
+
 		if (!theURI)
 			QAOutput("We didn't get the nsIURI object for IOService test.", 2);
 		else {
@@ -607,6 +622,7 @@ void CTests::OnTestsIOServiceNewURI()
 void CTests::OnTestsProtocolHandlerNewURI()
 {
 	nsCOMPtr<nsIIOService> ioService(do_GetIOService(&rv));
+
 	if (!ioService) {
 		QAOutput("We didn't get the IOService object.", 2);
 		return;
@@ -636,8 +652,11 @@ void CTests::OnTestsProtocolHandlerNewURI()
 			QAOutput("We didn't get the original nsIURI object.", 2);
 		else if (!theReturnURI)
 			QAOutput("We didn't get the output nsIURI object.", 2);
+
 		RvTestResult(rv, "protocolHandler->NewURI() test", 2);
+
 	    retStr = GetTheUri(theReturnURI, 1);
+
 	   // simple string compare to see if input & output URLs match
 	    if (strcmp(myDialog.m_urlfield, retStr.get()) == 0)
 		   QAOutput("The in/out URIs MATCH.", 1);
@@ -645,20 +664,23 @@ void CTests::OnTestsProtocolHandlerNewURI()
 		   QAOutput("The in/out URIs don't MATCH.", 1);
 	}
 }
+
 // *********************************************************
 // *********************************************************
 //					TOOLS to help us
 
-
 void CTests::OnToolsRemoveGHPage()
+
 {
 	PRBool theRetVal = PR_FALSE;
 	nsCOMPtr<nsIGlobalHistory> myGHistory(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
+
 	if (!myGHistory)
 	{
 		QAOutput("Could not get the global history object.", 2);
 		return;
 	}
+
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
 	if(NS_FAILED(rv)) {
 		QAOutput("Could not get the history object.", 2);
@@ -694,6 +716,7 @@ void CTests::OnToolsRemoveAllGH()
 		QAOutput("Could not get the global history object.", 2);
 		return;
 	}
+
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
 	if(NS_FAILED(rv)) {
 		QAOutput("Could not get the history object.", 2);
@@ -706,13 +729,14 @@ void CTests::OnToolsRemoveAllGH()
 	RvTestResult(rv, "removeAllPages().", 2);
 
 	QAOutput("End removal of all pages from the GH file.", 2);
-
 }
 
 // ***********************************************************************
+
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+
 	if (myDialog.DoModal() == IDOK)
 	{
 		rv = qaWebNav->GetCurrentURI(getter_AddRefs(theURI));
@@ -721,6 +745,7 @@ void CTests::OnToolsTestYourMethod()
 }
 
 // ***********************************************************************
+
 void CTests::OnToolsTestYourMethod2()
 {
 	// place your test code here
@@ -744,8 +769,8 @@ void CTests::OnVerifybugs90195()
 {
     nsWeakPtr weakling(
         dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsITooltipListener*, qaBrowserImpl))));
-    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
 
+    rv = qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsITooltipListener));
 	RvTestResult(rv, "AddWebBrowserListener(). Add Tool Tip Lstnr test", 2);
 
 /*	nsCOMPtr<nsITooltipTextProvider> oTooltipTextProvider = do_GetService(NS_TOOLTIPTEXTPROVIDER_CONTRACTID) ;
@@ -760,16 +785,20 @@ void CTests::OnVerifybugs169617()
 	nsCAutoString theStr;
 
 	QAOutput("Verification for bug 169617!", 2);
+
 	theStr = "file://C|/Program Files";
 	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 	RvTestResult(rv, "NS_NewURI() test for file url", 1);
+
 	GetTheUri(theURI, 1);
+
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for file url", 1);
 
 	nsCOMPtr<nsISupports> mySupports = do_QueryInterface(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
 	rv = myLoader->OpenURI(theChannel, PR_TRUE, mySupports);
 	RvTestResult(rv, "nsIUriLoader->OpenURI() test for file url", 2);
+
 }
 
 void CTests::OnVerifybugs170274()
@@ -778,10 +807,13 @@ void CTests::OnVerifybugs170274()
 	nsCAutoString theStr;
 
 	QAOutput("Verification for bug 170274!", 2);
+
 	theStr = "data:text/plain;charset=iso-8859-7,%be%fg%be";
 	rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 	RvTestResult(rv, "NS_NewURI() test for data url", 1);
+
 	GetTheUri(theURI, 1);
+
 	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 	RvTestResult(rv, "NS_NewChannel() test for data url", 1);
 
@@ -796,7 +828,7 @@ BOOL CTests::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHa
 {
    // To handle Menu handlers add here. Don't have to do if not handling
    // menu handlers
-	nCommandID = nID ;
+	nCommandID = nID;
 
 	return CWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
@@ -815,7 +847,7 @@ void CTests::OnInterfacesNsidirectoryservice()
 
 void CTests::OnInterfacesNsidomwindow()
 {
-	CDomWindow oDomWindow(qaWebBrowser) ;
+	CDomWindow oDomWindow(qaWebBrowser);
 	oDomWindow.OnStartTests(nCommandID);
 }
 
@@ -837,7 +869,6 @@ void CTests::OnInterfacesNsishistory()
 	oHistory.OnStartTests(nCommandID);
 }
 
-
 void CTests::OnInterfacesNsiwebnav()
 {
 	CNsIWebNav oWebNav(qaWebNav);
@@ -851,13 +882,11 @@ void CTests::OnInterfacesNsiclipboardcommands()
 	oClipCmd.OnStartTests(nCommandID);
 }
 
-
 void CTests::OnInterfacesNsiobserverservice()
 {
 	CnsIObserServ oObserv;
 	oObserv.OnStartTests(nCommandID);
 }
-
 
 void CTests::OnInterfacesNsifile()
 {
@@ -902,18 +931,28 @@ void CTests::OnInterfacesNsicmdparams()
 }
 
 
+//Run all interface test cases in automation
 
-//Run all interface test cases in autonation
 void CTests::OnInterfacesRunalltestcases() 
 {
+	CNsIFile oFile ;
+	oFile.OnStartTests(ID_INTERFACES_NSIFILE_RUNALLTESTS);
 
-	CNsIRequest oNsIRequest(qaWebBrowser,/*qaBaseWindow,qaWebNav,*/ qaBrowserImpl);
-	oNsIRequest.OnStartTests(ID_INTERFACES_NSIREQUEST_RUNALLTESTS);
+	CNsIHistory oHistory(qaWebNav);
+	oHistory.OnStartTests(ID_INTERFACES_NSISHISTORY_RUNALLTESTS);
+
+
+	// Can only be run manually
+//	CNsIWebNav oWebNav(qaWebNav);
+//	oWebNav.OnStartTests(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS);
+
+
+	CnsIObserServ oObserv;
+	oObserv.OnStartTests(ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS);
 
 
 	CNsIDirectoryService oNsIDirectoryService;
 	oNsIDirectoryService.StartTests(ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS);
-
 
 
 	CDomWindow oDomWindow(qaWebBrowser) ;
@@ -925,21 +964,8 @@ void CTests::OnInterfacesRunalltestcases()
 	//oSelection.OnStartTests(ID_INTERFACES_NSISELECTION_RUNALLTESTS);
 
 
-
 	CProfile oProfile(qaWebBrowser);
 	oProfile.OnStartTests(ID_INTERFACES_NSIPROFILE_RUNALLTESTS);
-
-
-
-	CNsIHistory oHistory(qaWebNav);
-	oHistory.OnStartTests(ID_INTERFACES_NSISHISTORY_RUNALLTESTS);
-
-
-
-
-	CNsIWebNav oWebNav(qaWebNav);
-	oWebNav.OnStartTests(ID_INTERFACES_NSIWEBNAV_RUNALLTESTS);
-
 
 
 	// Can only be run manually
@@ -947,20 +973,12 @@ void CTests::OnInterfacesRunalltestcases()
 	//oClipCmd.OnStartTests(nCommandID);
 
 
-
-	CnsIObserServ oObserv;
-	oObserv.OnStartTests(ID_INTERFACES_NSIOBSERVERSERVICE_RUNALLTESTS);
-
-
-
-	CNsIFile oFile ;
-	oFile.OnStartTests(ID_INTERFACES_NSIFILE_RUNALLTESTS);
-
+	CNsIRequest oNsIRequest(qaWebBrowser,/*qaBaseWindow,qaWebNav,*/ qaBrowserImpl);
+	oNsIRequest.OnStartTests(ID_INTERFACES_NSIREQUEST_RUNALLTESTS);
 
 
 	CNsIWebBrowser oWebBrowser(qaWebBrowser, qaBrowserImpl);
 	oWebBrowser.OnStartTests(ID_INTERFACES_NSIWEBBROWSER_RUNALLTESTS);
-
 
 
 	CnsiWebProg oWebProgress(qaWebBrowser, qaBrowserImpl);
@@ -971,19 +989,14 @@ void CTests::OnInterfacesRunalltestcases()
 	oWebBrowFind.OnStartTests(ID_INTERFACES_NSIWEBBROWSERFIND_RUNALLTESTS);
 
 
-
 	CnsIEditSession oEditSession(qaWebBrowser);
 	oEditSession.OnStartTests(ID_INTERFACES_NSIEDITINGSESSION_RUNALLTESTS);
-
 
 
 	CnsICommandMgr oCommandMgr(qaWebBrowser);
 	oCommandMgr.OnStartTests(ID_INTERFACES_NSICOMMANDMANAGER_RUNALLTESTS);
 
 
-
 	CnsICmdParams oCmdParams(qaWebBrowser);
 	oCmdParams.OnStartTests(ID_INTERFACES_NSICOMMANDPARAMS_RUNALLTESTS);
-
-	
 }
