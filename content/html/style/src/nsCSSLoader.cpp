@@ -50,6 +50,7 @@
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsIScriptSecurityManager.h"
 
 #include <iostream.h>
 
@@ -1281,6 +1282,17 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   if (! mDocument) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  
+  //-- Make sure this page is allowed to load this URL
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsIURI* docURI;
+  rv = mDocument->GetBaseURL(docURI);
+  if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
+  rv = secMan->CheckLoadURI(docURI, aURL, PR_FALSE);
+  NS_IF_RELEASE(docURI);
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   // XXX need to add code to cancel any pending sheets for element
   nsresult result = NS_ERROR_NULL_POINTER;

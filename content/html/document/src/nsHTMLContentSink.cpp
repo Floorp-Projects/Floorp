@@ -3374,6 +3374,17 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 void 
 HTMLContentSink::ProcessBaseHref(const nsString& aBaseHref)
 {
+  //-- Make sure this page is allowed to load this URL
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return;
+  nsCOMPtr<nsIURI> baseHrefURI;
+  rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
+  if (NS_FAILED(rv)) return;
+  rv = securityManager->CheckLoadURI(mDocumentBaseURL, baseHrefURI, PR_FALSE);
+  if (NS_FAILED(rv)) return;
+
   if (nsnull == mBody) {  // still in real HEAD
     mHTMLDocument->SetBaseURL(aBaseHref);
     NS_RELEASE(mDocumentBaseURL);

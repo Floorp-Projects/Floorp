@@ -440,6 +440,8 @@ pref("security.policy.default.element.setattribute", "sameOrigin");
 pref("security.policy.default.element.setattributenode", "sameOrigin");
 pref("security.policy.default.element.tagname", "sameOrigin");
 
+pref("security.policy.default.htmlelement.innerhtml", "sameOrigin");
+
 pref("security.policy.default.nshtmlformelement.nameditem", "sameOrigin");
 
 pref("security.policy.default.history.current.read", "UniversalBrowserRead");
