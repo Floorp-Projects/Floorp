@@ -482,7 +482,7 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
 
   if (prefValue) {
     // this is the progid prefix that all the command line handlers register
-    nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
+    nsCAutoString progID("component://netscape/commandlinehandler/general-startup-");
     progID += (prefName + prefixLen);
 
 #ifdef DEBUG_CMD_LINE
@@ -560,7 +560,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
       printf("XXX argv[%d] = %s\n",i,argv[i]);
 #endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
-        nsCAutoString progID = "component://netscape/commandlinehandler/general-startup-";
+        nsCAutoString progID("component://netscape/commandlinehandler/general-startup-");
 
         // skip over the - (or / on windows)
         char *command = argv[i] + 1;
