@@ -93,7 +93,6 @@ protected:
 protected:
   nsFrameList mPopupFrames;
   PRBool mMenuOpen;
-  nsMenuBarFrame* mMenuBar;
   nsIMenuParent* mMenuParent; // Our parent menu.
 }; // class nsMenuFrame
 
