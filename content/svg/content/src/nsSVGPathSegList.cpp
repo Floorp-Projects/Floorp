@@ -68,8 +68,8 @@ public:
   NS_DECL_NSIDOMSVGPATHSEGLIST
 
   // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -123,7 +123,7 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGPathSegList::SetValueString(const nsAReadableString& aValue)
+nsSVGPathSegList::SetValueString(const nsAString& aValue)
 {
   WillModify();
   
@@ -150,7 +150,7 @@ nsSVGPathSegList::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGPathSegList::GetValueString(nsAWritableString& aValue)
+nsSVGPathSegList::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
 

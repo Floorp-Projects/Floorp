@@ -67,15 +67,15 @@ class nsISVGValue : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISVGVALUE_IID; return iid; }
   
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue)=0;
-  NS_IMETHOD GetValueString(nsAWritableString& aValue)=0;
+  NS_IMETHOD SetValueString(const nsAString& aValue)=0;
+  NS_IMETHOD GetValueString(nsAString& aValue)=0;
 
   NS_IMETHOD AddObserver(nsISVGValueObserver* observer)=0;
   NS_IMETHOD RemoveObserver(nsISVGValueObserver* observer)=0;
 };
 
 extern nsresult
-NS_CreateSVGGenericStringValue(const nsAReadableString& aValue, nsISVGValue** aResult);
+NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);
 
 #endif // __NS_ISVGVALUE_H__
 

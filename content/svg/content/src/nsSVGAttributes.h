@@ -88,7 +88,7 @@ public:
   // create a generic string attribute:
   static nsresult
   Create(nsINodeInfo* aNodeInfo,
-         const nsAReadableString& value,
+         const nsAString& value,
          nsSVGAttribute** aResult);
 
 protected:
@@ -122,7 +122,7 @@ public:
   
   // other implementation functions
   nsINodeInfo* GetNodeInfo()const { return mNodeInfo; }
-  void GetQualifiedName(nsAWritableString& aQualifiedName)const;
+  void GetQualifiedName(nsAString& aQualifiedName)const;
 
   nsISVGValue* GetValue() { return mValue; }
 
@@ -164,15 +164,15 @@ public:
   PRInt32 Count() const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                      nsIAtom*& aPrefix,
-                     nsAWritableString& aResult);
+                     nsAString& aResult);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                        PRBool aNotify);
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID,
                               nsIAtom* aName) const;
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
                            PRInt32& aNameSpaceID, 

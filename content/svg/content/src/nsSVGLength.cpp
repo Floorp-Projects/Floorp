@@ -74,8 +74,8 @@ public:
   NS_DECL_NSIDOMSVGLENGTH
 
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -83,7 +83,7 @@ protected:
   float UserUnitsPerPixel();
   float mmPerPixel();
   float ViewportDimension();
-  void  GetUnitString(nsAWritableString& unit);
+  void  GetUnitString(nsAString& unit);
   PRUint16 GetUnitTypeForString(const char* unitStr);
   PRBool IsValidUnitType(PRUint16 unit);
   
@@ -149,13 +149,13 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGLength::SetValueString(const nsAReadableString& aValue)
+nsSVGLength::SetValueString(const nsAString& aValue)
 {
   return SetValueAsString(aValue);
 }
 
 NS_IMETHODIMP
-nsSVGLength::GetValueString(nsAWritableString& aValue)
+nsSVGLength::GetValueString(nsAString& aValue)
 {
   return GetValueAsString(aValue);
 }
@@ -277,7 +277,7 @@ nsSVGLength::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
 
 /* attribute DOMString valueAsString; */
 NS_IMETHODIMP
-nsSVGLength::GetValueAsString(nsAWritableString & aValueAsString)
+nsSVGLength::GetValueAsString(nsAString & aValueAsString)
 {
   aValueAsString.Truncate();
 
@@ -293,7 +293,7 @@ nsSVGLength::GetValueAsString(nsAWritableString & aValueAsString)
 }
 
 NS_IMETHODIMP
-nsSVGLength::SetValueAsString(const nsAReadableString & aValueAsString)
+nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
 {
   nsresult rv = NS_OK;
   
@@ -528,7 +528,7 @@ float nsSVGLength::ViewportDimension()
   return d;
 }
 
-void nsSVGLength::GetUnitString(nsAWritableString& unit)
+void nsSVGLength::GetUnitString(nsAString& unit)
 {
   nsIAtom* UnitAtom = nsnull;
   

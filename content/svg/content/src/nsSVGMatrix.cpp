@@ -337,14 +337,14 @@ NS_IMETHODIMP nsSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGMatrix::SetValueString(const nsAReadableString& aValue)
+nsSVGMatrix::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSVGMatrix::GetValueString(nsAWritableString& aValue)
+nsSVGMatrix::GetValueString(nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;

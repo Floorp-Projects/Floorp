@@ -66,8 +66,8 @@ public:
   NS_DECL_NSIDOMSVGTRANSFORM
 
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -129,14 +129,14 @@ NS_INTERFACE_MAP_END
 //----------------------------------------------------------------------
 // nsISVGValue methods:
 NS_IMETHODIMP
-nsSVGTransform::SetValueString(const nsAReadableString& aValue)
+nsSVGTransform::SetValueString(const nsAString& aValue)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
-nsSVGTransform::GetValueString(nsAWritableString& aValue)
+nsSVGTransform::GetValueString(nsAString& aValue)
 {
   aValue.Truncate();
   PRUnichar buf[256];

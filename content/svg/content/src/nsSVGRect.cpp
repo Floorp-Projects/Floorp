@@ -61,8 +61,8 @@ public:
   NS_DECL_NSIDOMSVGRECT
 
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -107,13 +107,13 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGRect::SetValueString(const nsAReadableString& aValue)
+nsSVGRect::SetValueString(const nsAString& aValue)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSVGRect::GetValueString(nsAWritableString& aValue)
+nsSVGRect::GetValueString(nsAString& aValue)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -203,8 +203,8 @@ public:
   NS_DECL_NSIDOMSVGRECT
 
   // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
   
   
 protected:
@@ -275,7 +275,7 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGRectPrototypeWrapper::SetValueString(const nsAReadableString& aValue)
+nsSVGRectPrototypeWrapper::SetValueString(const nsAString& aValue)
 {
   EnsureBody();
   nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBody);
@@ -285,7 +285,7 @@ nsSVGRectPrototypeWrapper::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGRectPrototypeWrapper::GetValueString(nsAWritableString& aValue)
+nsSVGRectPrototypeWrapper::GetValueString(nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> val = do_QueryInterface( Delegate() );
   NS_ASSERTION(val, "missing interface on body");

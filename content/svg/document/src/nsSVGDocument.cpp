@@ -90,18 +90,18 @@ nsSVGDocument::StartDocumentLoad(const char* aCommand,
 // nsIDOMSVGDocument
 
 NS_IMETHODIMP
-nsSVGDocument::GetTitle(nsAWritableString& aTitle) {
+nsSVGDocument::GetTitle(nsAString& aTitle) {
   return nsXMLDocument::GetTitle(aTitle);
 }
 
 NS_IMETHODIMP
-nsSVGDocument::GetReferrer(nsAWritableString& aReferrer) {
+nsSVGDocument::GetReferrer(nsAString& aReferrer) {
   aReferrer.Assign(mReferrer);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGDocument::GetDomain(nsAWritableString& aDomain) {
+nsSVGDocument::GetDomain(nsAString& aDomain) {
   if (!mDocumentURL) {
     aDomain.Truncate();
   } else {
@@ -116,7 +116,7 @@ nsSVGDocument::GetDomain(nsAWritableString& aDomain) {
 }
 
 NS_IMETHODIMP
-nsSVGDocument::GetURL(nsAWritableString& aURL) {
+nsSVGDocument::GetURL(nsAString& aURL) {
   if (!mDocumentURL) {
     aURL.Truncate();
   } else {

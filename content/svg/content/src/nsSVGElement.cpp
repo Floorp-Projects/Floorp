@@ -324,7 +324,7 @@ nsSVGElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsSVGElement::NormalizeAttrString(const nsAReadableString& aStr,
+nsSVGElement::NormalizeAttrString(const nsAString& aStr,
                                        nsINodeInfo*& aNodeInfo)
 {
   return mAttributes->NormalizeAttrString(aStr, aNodeInfo);
@@ -332,7 +332,7 @@ nsSVGElement::NormalizeAttrString(const nsAReadableString& aStr,
 
 NS_IMETHODIMP
 nsSVGElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
     nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -348,7 +348,7 @@ nsSVGElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMETHODIMP
 nsSVGElement::SetAttr(nsINodeInfo* aNodeInfo,
-                      const nsAReadableString& aValue,
+                      const nsAString& aValue,
                       PRBool aNotify)
 {
   return mAttributes->SetAttr(aNodeInfo, aValue, aNotify);  
@@ -356,7 +356,7 @@ nsSVGElement::SetAttr(nsINodeInfo* aNodeInfo,
 
 NS_IMETHODIMP
 nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           nsAWritableString& aResult) const
+                           nsAString& aResult) const
 {
   nsCOMPtr<nsIAtom> prefix;
   return GetAttr(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
@@ -365,7 +365,7 @@ nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 NS_IMETHODIMP
 nsSVGElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                       nsIAtom*& aPrefix,
-                      nsAWritableString& aResult) const
+                      nsAString& aResult) const
 {
   return mAttributes->GetAttr(aNameSpaceID, aName, aPrefix, aResult);
 }
@@ -500,20 +500,20 @@ nsSVGElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModTy
 // nsIDOMNode methods
 
 NS_IMETHODIMP
-nsSVGElement::GetNodeName(nsAWritableString& aNodeName)
+nsSVGElement::GetNodeName(nsAString& aNodeName)
 {
   return mNodeInfo->GetQualifiedName(aNodeName);
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetNodeValue(nsAWritableString& aNodeValue)
+nsSVGElement::GetNodeValue(nsAString& aNodeValue)
 {
   aNodeValue.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGElement::SetNodeValue(const nsAReadableString& aNodeValue)
+nsSVGElement::SetNodeValue(const nsAString& aNodeValue)
 {
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
@@ -614,25 +614,25 @@ nsSVGElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsSVGElement::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetPrefix(nsAWritableString& aPrefix)
+nsSVGElement::GetPrefix(nsAString& aPrefix)
 {
   return nsGenericElement::GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsSVGElement::SetPrefix(const nsAReadableString& aPrefix)
+nsSVGElement::SetPrefix(const nsAString& aPrefix)
 {
   return nsGenericElement::SetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsSVGElement::GetLocalName(nsAWritableString& aLocalName)
+nsSVGElement::GetLocalName(nsAString& aLocalName)
 {
   return nsGenericElement::GetLocalName(aLocalName);
 }
@@ -687,7 +687,7 @@ nsSVGElement::Normalize()
 }
 
 NS_IMETHODIMP
-nsSVGElement::IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn)
+nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -717,12 +717,12 @@ nsSVGElement::HasAttributes(PRBool* aReturn)
 // nsIDOMSVGElement methods
 
 /* attribute DOMString id; */
-NS_IMETHODIMP nsSVGElement::GetId(nsAWritableString & aId)
+NS_IMETHODIMP nsSVGElement::GetId(nsAString & aId)
 {
   return GetAttribute(NS_LITERAL_STRING("id"), aId);
 }
 
-NS_IMETHODIMP nsSVGElement::SetId(const nsAReadableString & aId)
+NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)
 {
   return SetAttribute(NS_LITERAL_STRING("id"), aId);
 }

@@ -76,7 +76,7 @@ nsSVGAttribute::Create(nsINodeInfo* aNodeInfo,
 
 nsresult
 nsSVGAttribute::Create(nsINodeInfo* aNodeInfo,
-                       const nsAReadableString& value,
+                       const nsAString& value,
                        nsSVGAttribute** aResult)
 {
   nsCOMPtr<nsISVGValue> svg_value;
@@ -123,20 +123,20 @@ NS_INTERFACE_MAP_END
 // nsIDOMNode interface
 
 NS_IMETHODIMP
-nsSVGAttribute::GetNodeName(nsAWritableString& aNodeName)
+nsSVGAttribute::GetNodeName(nsAString& aNodeName)
 {
   GetQualifiedName(aNodeName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::GetNodeValue(nsAWritableString& aNodeValue)
+nsSVGAttribute::GetNodeValue(nsAString& aNodeValue)
 {
   return GetValue()->GetValueString(aNodeValue);
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::SetNodeValue(const nsAReadableString& aNodeValue)
+nsSVGAttribute::SetNodeValue(const nsAString& aNodeValue)
 {
   return SetValue(aNodeValue);
 }
@@ -205,19 +205,19 @@ nsSVGAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsSVGAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::GetPrefix(nsAWritableString& aPrefix)
+nsSVGAttribute::GetPrefix(nsAString& aPrefix)
 {
   return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::SetPrefix(const nsAReadableString& aPrefix)
+nsSVGAttribute::SetPrefix(const nsAString& aPrefix)
 {
   // XXX: Validate the prefix string!
   
@@ -238,7 +238,7 @@ nsSVGAttribute::SetPrefix(const nsAReadableString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::GetLocalName(nsAWritableString& aLocalName)
+nsSVGAttribute::GetLocalName(nsAString& aLocalName)
 {
   return mNodeInfo->GetLocalName(aLocalName);
 }
@@ -297,8 +297,8 @@ nsSVGAttribute::Normalize()
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::IsSupported(const nsAReadableString& aFeature,
-                            const nsAReadableString& aVersion,
+nsSVGAttribute::IsSupported(const nsAString& aFeature,
+                            const nsAString& aVersion,
                             PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -309,7 +309,7 @@ nsSVGAttribute::IsSupported(const nsAReadableString& aFeature,
 // nsIDOMAttr interface
 
 NS_IMETHODIMP
-nsSVGAttribute::GetName(nsAWritableString& aName)
+nsSVGAttribute::GetName(nsAString& aName)
 {
   GetQualifiedName(aName);
   return NS_OK;
@@ -324,13 +324,13 @@ nsSVGAttribute::GetSpecified(PRBool* aSpecified)
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::GetValue(nsAWritableString& aValue)
+nsSVGAttribute::GetValue(nsAString& aValue)
 {
   return GetValue()->GetValueString(aValue);
 }
 
 NS_IMETHODIMP
-nsSVGAttribute::SetValue(const nsAReadableString& aValue)
+nsSVGAttribute::SetValue(const nsAString& aValue)
 {
   if (mOwner) {
     return mOwner->SetAttr(mNodeInfo, aValue, PR_TRUE);
@@ -390,7 +390,7 @@ nsSVGAttribute::DidModifySVGObservable (nsISVGValue* observable)
 // Implementation functions
 
 void
-nsSVGAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)const
+nsSVGAttribute::GetQualifiedName(nsAString& aQualifiedName)const
 {
   mNodeInfo->GetQualifiedName(aQualifiedName);
 }
@@ -535,7 +535,7 @@ nsSVGAttributes::Count() const
 NS_IMETHODIMP
 nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                          nsIAtom*& aPrefix,
-                         nsAWritableString& aResult)
+                         nsAString& aResult)
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {
@@ -576,7 +576,7 @@ nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMETHODIMP
 nsSVGAttributes::SetAttr(nsINodeInfo* aNodeInfo,
-                         const nsAReadableString& aValue,
+                         const nsAString& aValue,
                          PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -765,7 +765,7 @@ nsSVGAttributes::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
 }
 
 NS_IMETHODIMP
-nsSVGAttributes::NormalizeAttrString(const nsAReadableString& aStr,
+nsSVGAttributes::NormalizeAttrString(const nsAString& aStr,
                                      nsINodeInfo*& aNodeInfo)
 {
   PRInt32 indx, count = Count();
@@ -886,7 +886,7 @@ nsSVGAttributes::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsSVGAttributes::GetNamedItem(const nsAReadableString& aName,
+nsSVGAttributes::GetNamedItem(const nsAString& aName,
                               nsIDOMNode** aReturn)
 {
   NS_PRECONDITION(aReturn != nsnull, "null ptr");
@@ -923,7 +923,7 @@ nsSVGAttributes::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsSVGAttributes::RemoveNamedItem(const nsAReadableString& aName,
+nsSVGAttributes::RemoveNamedItem(const nsAString& aName,
                                  nsIDOMNode** aReturn)
 {
   nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
@@ -946,8 +946,8 @@ nsSVGAttributes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsSVGAttributes::GetNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                const nsAReadableString& aLocalName,
+nsSVGAttributes::GetNamedItemNS(const nsAString& aNamespaceURI, 
+                                const nsAString& aLocalName,
                                 nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -962,8 +962,8 @@ nsSVGAttributes::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsSVGAttributes::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, 
-                                   const nsAReadableString& aLocalName,
+nsSVGAttributes::RemoveNamedItemNS(const nsAString& aNamespaceURI, 
+                                   const nsAString& aLocalName,
                                    nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");

@@ -61,8 +61,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsISVGValue interface: 
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGStyleValue interface:
   NS_IMETHOD GetStyleRule(nsIDocument* baseDoc, nsIStyleRule** rule);
@@ -108,7 +108,7 @@ NS_IMPL_ISUPPORTS2(nsSVGStyleValue,
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGStyleValue::SetValueString(const nsAReadableString& aValue)
+nsSVGStyleValue::SetValueString(const nsAString& aValue)
 {
   WillModify();
   mValue = aValue;
@@ -118,7 +118,7 @@ nsSVGStyleValue::SetValueString(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsSVGStyleValue::GetValueString(nsAWritableString& aValue)
+nsSVGStyleValue::GetValueString(nsAString& aValue)
 {
   aValue = mValue;
   return NS_OK;

@@ -65,8 +65,8 @@ public:
   NS_DECL_NSIDOMSVGANIMATEDRECT
 
   // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAReadableString& aValue);
-  NS_IMETHOD GetValueString(nsAWritableString& aValue);
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
 
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
@@ -119,14 +119,14 @@ NS_IMPL_ISUPPORTS4(nsSVGAnimatedRect,
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::SetValueString(const nsAReadableString& aValue)
+nsSVGAnimatedRect::SetValueString(const nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
   return value->SetValueString(aValue);
 }
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::GetValueString(nsAWritableString& aValue)
+nsSVGAnimatedRect::GetValueString(nsAString& aValue)
 {
   nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
   return value->GetValueString(aValue);
