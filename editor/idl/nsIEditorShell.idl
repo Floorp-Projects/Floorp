@@ -68,11 +68,6 @@ interface nsIEditorShell : nsISupports
   attribute wstring              editorType;
   attribute string               contentsMIMEType;
 
-  /** XXX Temporary: editorShell must know when we are in HTML Source mode
-   *   for proper command disabling in nsComposerCommands.cpp
-   */
-  attribute boolean HTMLSourceMode;
-           
   readonly attribute nsIEditor editor;
   
 %{C++
@@ -84,7 +79,10 @@ interface nsIEditorShell : nsISupports
 %}
   readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
+
+  /** Use attribute boolean isDocumentEditable in nsIEditor instead of documentEditable */
   readonly attribute boolean              documentEditable;   // do we have a doc and editor yet?
+
   readonly attribute long                 documentLength;
   attribute long                          wrapColumn;
    

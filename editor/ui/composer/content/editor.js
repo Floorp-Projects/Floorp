@@ -44,18 +44,21 @@
 
 var gEditor;
 var editorShell;   // XXX THIS NEEDS TO DIE
+var gComposerWindowControllerID = -1;
 var documentModified;
 var prefAuthorString = "";
 
 // These must match enums in nsIEditorShell.idl:
-const gDisplayModePreview = 0;
-const gDisplayModeNormal = 1;
-const gDisplayModeAllTags = 2;
-const gDisplayModeSource = 3;
-const gBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
-const gNormalStyleSheet = "chrome://editor/content/EditorContent.css";
-const gAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
-const gParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
+const kDisplayModePreview = 0;
+const kDisplayModeNormal = 1;
+const kDisplayModeAllTags = 2;
+const kDisplayModeSource = 3;
+const kBaseEditorStyleSheet = "chrome://editor/content/EditorOverride.css";
+const kNormalStyleSheet = "chrome://editor/content/EditorContent.css";
+const kAllTagsStyleSheet = "chrome://editor/content/EditorAllTags.css";
+const kParagraphMarksStyleSheet = "chrome://editor/content/EditorParagraphMarks.css";
+const kTextMimeType = "text/plain";
+const kHTMLMimeType = "text/html";
 
 var gPreviousNonSourceDisplayMode = 1;
 var gEditorDisplayMode = -1;
@@ -199,7 +202,7 @@ function PageIsEmptyAndUntouched()
 
 function IsInHTMLSourceMode()
 {
-  return (gEditorDisplayMode == gDisplayModeSource);
+  return (gEditorDisplayMode == kDisplayModeSource);
 }
 
 // are we editing HTML (i.e. neither in HTML source mode, nor editing a text file)
@@ -237,39 +240,12 @@ function addEditorClickEventListener()
 
 function DoWindowCommandControllerSetting(aEditor)
 {
-  // the following is similar to GetEditorController() in ComposerCommands.js but we need 
-  // the nsIEditorController not the nsIControllerCommandManager
-  // Also note that it gets the controllers from the window not window._content
-
-  var editorController;
-  var numControllers = window.controllers.getControllerCount();
-    
-  // count down to find a controller that supplies a nsIControllerCommandManager interface
-  for (var i = numControllers-1; i >= 0 ; i --)
+  // Get the window command controller created in SetupComposerWindowCommands()
+  if (gComposerWindowControllerID != -1)
   {
-    var commandManager = null;
-    
     try { 
-      var controller = window.controllers.getControllerAt(i);
-      
-      var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
-      if (commandManager)
-      {
-        i = -1;  // get out of loop
-        editorController = controller.QueryInterface(Components.interfaces.nsIEditorController);
-      }
-    }
-    catch(ex) { }
-  }
-
-  // if we find an editor controller, set the command refcon to the editor
-  if (editorController)
-  {
-    var ISupportsEditor;
-    try {
-      ISupportsEditor = aEditor.QueryInterface(Components.interfaces.nsISupports);
-      editorController.SetCommandRefCon(ISupportsEditor);
+      var controller = window.controllers.getControllerById(gComposerWindowControllerID);
+      controller.SetCommandRefCon(aEditor.QueryInterface(Components.interfaces.nsISupports));
     } catch (e) {}
   }
 }
@@ -282,12 +258,21 @@ var MessageComposeDocumentStateListener =
 
     // do all of our QI'ing here so we don't need to do it elsewhere
     DoAllQueryInterfaceOnEditor();
+    try {
+      gEditor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
+    } catch(e) {}
+
+    // XXX Temporary: This should be set during startup 
+    //  once we finish transition from nsIEditorShell is to nsIEditorSession
+    try {
+      gEditor.contentsMIMEType = gIsHTMLEditor ? kHTMLMimeType : kTextMimeType;
+    } catch(e) {}
 
     addEditorClickEventListener();
 
     try {
       // Add the base sheet for editor cursor etc.
-      gEditor.addOverrideStyleSheet(gBaseEditorStyleSheet);
+      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
     } catch (e) {}
   },
 
@@ -333,6 +318,12 @@ var DocumentStateListener =
     // do all of our QI'ing here so we don't need to do it elsewhere
     DoAllQueryInterfaceOnEditor();
 
+    // XXX Temporary: This should be set during startup 
+    //  once we finish transition from nsIEditorShell is to nsIEditorSession
+    try {
+      gEditor.contentsMIMEType = gIsHTMLEditor ? kHTMLMimeType : kTextMimeType;
+    } catch(e) {}
+
     // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
     EditorSetDefaultPrefsAndDoctype();
     EditorInitToolbars();
@@ -359,11 +350,11 @@ var DocumentStateListener =
 
     try {
       // Add the base sheet for editor cursor etc.
-      gEditor.addOverrideStyleSheet(gBaseEditorStyleSheet);
+      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
     } catch (e) {}
 
     // Start in "Normal" edit mode
-    SetDisplayMode(gDisplayModeNormal);
+    SetDisplayMode(kDisplayModeNormal);
   },
 
     // note that the editor seems to be gone at this point 
@@ -483,12 +474,12 @@ function EditorSharedStartup()
   // So we can't use gEditor.AddDocumentStateListener here.
   if (gIsHTMLEditor)
   {
-    editorShell.contentsMIMEType = "text/html";
+    editorShell.contentsMIMEType = kHTMLMimeType;
     SetupHTMLEditorCommands();
   }
   else
   {
-    editorShell.contentsMIMEType = "text/plain";
+    editorShell.contentsMIMEType = kTextMimeType;
     SetupTextEditorCommands();
   }
 
@@ -697,9 +688,9 @@ function CheckAndSaveDocument(command, allowDontSave)
     // Save to local disk
     var contentsMIMEType;
     if (isHTMLEditor())
-      contentsMIMEType = "text/html";
+      contentsMIMEType = kHTMLMimeType;
     else
-      contentsMIMEType = "text/plain";
+      contentsMIMEType = kTextMimeType;
     var success = SaveDocument(false, false, contentsMIMEType);
     return success;
   }
@@ -1443,7 +1434,7 @@ function EditorClick(event)
   // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && isHTMLEditor() && gEditorDisplayMode == gDisplayModeAllTags)
+  if (event.target && isHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
   {
     try
     {
@@ -1467,7 +1458,7 @@ function EditorClick(event)
 //  but will accept a parent link, list, or table cell if inside one
 function GetObjectForProperties()
 {
-  if (!isHTMLEditor())
+  if (!gEditor || !isHTMLEditor())
     return null;
 
   var element = gEditor.getSelectedElement("");
@@ -1531,7 +1522,7 @@ function SetEditMode(mode)
   if (!SetDisplayMode(mode))
     return;
 
-  if (mode == gDisplayModeSource)
+  if (mode == kDisplayModeSource)
   {
     // Display the DOCTYPE as a non-editable string above edit area
     var domdoc;
@@ -1568,7 +1559,7 @@ function SetEditMode(mode)
 
     } catch (e) {}
 
-    var source = gEditor.outputToString("text/html", flags);
+    var source = gEditor.outputToString(kHTMLMimeType, flags);
     var start = source.search(/<html/i);
     if (start == -1) start = 0;
     gSourceContentWindow.value = source.slice(start);
@@ -1578,7 +1569,7 @@ function SetEditMode(mode)
     gSourceContentWindow.addEventListener("input", oninputHTMLSource, false);
     gHTMLSourceChanged = false;
   }
-  else if (previousMode == gDisplayModeSource)
+  else if (previousMode == kDisplayModeSource)
   {
     // Only rebuild document if a change was made in source window
     if (gHTMLSourceChanged)
@@ -1681,8 +1672,8 @@ function FinishHTMLSource()
       {
         AlertWithTitle(GetString("Alert"), GetString("NoHeadTag"));
         //cheat to force back to Source Mode
-        gEditorDisplayMode = gDisplayModePreview;
-        SetDisplayMode(gDisplayModeSource);
+        gEditorDisplayMode = kDisplayModePreview;
+        SetDisplayMode(kDisplayModeSource);
         throw Components.results.NS_ERROR_FAILURE;
       }
 
@@ -1691,8 +1682,8 @@ function FinishHTMLSource()
       {
         AlertWithTitle(GetString("Alert"), GetString("NoBodyTag"));
         //cheat to force back to Source Mode
-        gEditorDisplayMode = gDisplayModePreview;
-        SetDisplayMode(gDisplayModeSource);
+        gEditorDisplayMode = kDisplayModePreview;
+        SetDisplayMode(kDisplayModeSource);
         throw Components.results.NS_ERROR_FAILURE;
       }
     }
@@ -1728,45 +1719,41 @@ function SetDisplayMode(mode)
   try {
     var editor = GetCurrentEditor();
 
-    if (mode == gDisplayModePreview)
+    if (mode == kDisplayModePreview)
     {
       // Disable all extra "edit mode" style sheets 
-      editor.enableStyleSheet(gNormalStyleSheet, false);
-      editor.enableStyleSheet(gAllTagsStyleSheet, false);
+      editor.enableStyleSheet(kNormalStyleSheet, false);
+      editor.enableStyleSheet(kAllTagsStyleSheet, false);
     }
-    else if (mode == gDisplayModeNormal)
+    else if (mode == kDisplayModeNormal)
     {
-      editor.addOverrideStyleSheet(gNormalStyleSheet);
+      editor.addOverrideStyleSheet(kNormalStyleSheet);
 
       // Disable ShowAllTags mode if that was the previous mode
-      if (gPreviousNonSourceDisplayMode == gDisplayModeAllTags)
-        editor.enableStyleSheet(gAllTagsStyleSheet, false);
+      if (gPreviousNonSourceDisplayMode == kDisplayModeAllTags)
+        editor.enableStyleSheet(kAllTagsStyleSheet, false);
     }
-    else if (mode == gDisplayModeAllTags)
+    else if (mode == kDisplayModeAllTags)
     {
-      editor.addOverrideStyleSheet(gNormalStyleSheet);
-      editor.addOverrideStyleSheet(gAllTagsStyleSheet);
+      editor.addOverrideStyleSheet(kNormalStyleSheet);
+      editor.addOverrideStyleSheet(kAllTagsStyleSheet);
     }
   } catch(e) {}
 
-  //XXX We still have to tell editorShell if we are in HTMLSource mode
-  //    because commands in nsComposerCommands.cpp can't access JS command results yet
-  editorShell.HTMLSourceMode = (mode == gDisplayModeSource);
-
   // Save the last non-source mode so we can cancel source editing easily
-  if (mode != gDisplayModeSource)
+  if (mode != kDisplayModeSource)
     gPreviousNonSourceDisplayMode = mode;
 
   // Set the UI states
   var selectedTab = null;
-  if (mode == gDisplayModePreview) selectedTab = gPreviewModeButton;
-  if (mode == gDisplayModeNormal) selectedTab = gNormalModeButton;
-  if (mode == gDisplayModeAllTags) selectedTab = gTagModeButton;
-  if (mode == gDisplayModeSource) selectedTab = gSourceModeButton;
+  if (mode == kDisplayModePreview) selectedTab = gPreviewModeButton;
+  if (mode == kDisplayModeNormal) selectedTab = gNormalModeButton;
+  if (mode == kDisplayModeAllTags) selectedTab = gTagModeButton;
+  if (mode == kDisplayModeSource) selectedTab = gSourceModeButton;
   if (selectedTab)
     document.getElementById("EditModeTabs").selectedItem = selectedTab;
 
-  if (mode == gDisplayModeSource)
+  if (mode == kDisplayModeSource)
   {
     // Switch to the sourceWindow (second in the deck)
     gContentWindowDeck.setAttribute("selectedIndex","1");
@@ -1806,16 +1793,16 @@ function SetDisplayMode(mode)
   var menuID;
   switch(mode)
   {
-    case gDisplayModePreview:
+    case kDisplayModePreview:
       menuID = "viewPreviewMode";
       break;
-    case gDisplayModeNormal:
+    case kDisplayModeNormal:
       menuID = "viewNormalMode";
       break;
-    case gDisplayModeAllTags:
+    case kDisplayModeAllTags:
       menuID = "viewAllTagsMode";
       break;
-    case gDisplayModeSource:
+    case kDisplayModeSource:
       menuID = "viewSourceMode";
       break;
   }
@@ -1836,9 +1823,9 @@ function EditorToggleParagraphMarks()
     var checked = menuItem.getAttribute("checked");
     try {
       if (checked == "true")
-        GetCurrentEditor().addOverrideStyleSheet(gParagraphMarksStyleSheet);
+        GetCurrentEditor().addOverrideStyleSheet(kParagraphMarksStyleSheet);
       else
-        GetCurrentEditor().enableStyleSheet(gParagraphMarksStyleSheet, false);
+        GetCurrentEditor().enableStyleSheet(kParagraphMarksStyleSheet, false);
     }
     catch(e) { return; }
   }

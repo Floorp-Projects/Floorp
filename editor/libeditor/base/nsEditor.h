@@ -193,6 +193,8 @@ protected:
   NS_IMETHOD GetProperties(nsVoidArray *aPropList);
   */
   
+  nsCString mContentMIMEType;       // MIME type of the doc we are editing.
+
   /** create a transaction for setting aAttribute to aValue on aElement
     */
   NS_IMETHOD CreateTxnForSetAttribute(nsIDOMElement *aElement, 
