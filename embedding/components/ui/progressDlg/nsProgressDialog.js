@@ -644,7 +644,7 @@ nsProgressDialog.prototype = {
                 if ( enableButtons ) {
                     this.enable( "reveal" );
                     try {
-                        if ( this.target && !this.target.isExecutable() ) {
+                        if ( this.target ) {
                             this.enable( "launch" );
                         }
                     } catch(e) {
