@@ -49,47 +49,46 @@
   
   <box flex="1">
   
-    <tree multiple="true" flex="1" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
-      <template>
-        <treechildren>
-          <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
-            <treerow>
-              <treecell class="treecell-indent" crop="right" 
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                        value="rdf:http://home.netscape.com/NC-rdf#Name" />
-            </treerow>
-          </treeitem>
-        </treechildren>
-      </template>
-    
-      <treecolgroup>
-        <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
-      </treecolgroup>
-    
-      <treehead>
-        <treerow>
-          <treecell class="treecell-header sortDirectionIndicator outset" observes="NameColumn"
-                    value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name"
-                    sortActive="true" sortDirection="ascending"
-                    onclick="return doSort('NameColumn', null);" />
-        </treerow>
-      </treehead>
-
-      <treechildren flex="1"/>
-    </tree>
     <box orient="vertical" flex="1">
-      <box flex="1">
-        <box orient="vertical">
-  		    <spring flex="1"/>
-          <button class="dialog right" id="add-button" oncommand="return AddEngine()" value="&add.label;" />
-          <button class="dialog left" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
-          <spring flex="1"/>
-  	    </box>
+      <tree multiple="true" flex="1" class="inset" id="allengines" ref="NC:SearchEngineRoot" datasources="rdf:internetsearch">
+        <template>
+          <treechildren>
+            <treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading">
+              <treerow>
+                <treecell class="treecell-indent" crop="right" 
+                          src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                          value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </template>
+    
+        <treecolgroup>
+          <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" flex="1"/>
+        </treecolgroup>
+    
+        <treehead>
+          <treerow>
+            <treecell class="treecell-header sortDirectionIndicator outset" observes="NameColumn"
+                      value="&allengines.label;" resource="http://home.netscape.com/NC-rdf#Name"
+                      sortActive="true" sortDirection="ascending"
+                      onclick="return doSort('NameColumn', null);" />
+          </treerow>
+        </treehead>
+
+        <treechildren flex="1"/>
+      </tree>
+      <box>
+        <button class="dialog" id="add-button" oncommand="return AddEngine()" value="&add.label;" />
+      </box>
+    </box>
+    
+    <separator class="groove" orient="vertical" style="width: 0px;"/>
         
-	<box orient="vertical" flex="1">
-		<titledbox orient="vertical">
-        <title><text value="&category.label;"/></title>
-      	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null">
+  	<box orient="vertical" flex="1">
+      <box autostretch="never">
+        <text class="label" value="&category.label;"/>
+      	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null" flex="1">
           <template>
             <menupopup>
               <menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
@@ -99,14 +98,18 @@
           </template>
           <menupopup id="categoryPopup"/>
         </menulist>
-        <box>
-          <button class="dialog" id="new-category-button" oncommand="NewCategory()" value="&new.category.label;"/>
-          <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;"/>
-          <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;"/>
-        </box>
-      </titledbox>
-						
-		<tree class="inset" multiple="true" flex="1" id="engineList" 
+      </box>
+      
+      <box>
+        <button class="dialog" id="new-category-button" oncommand="NewCategory()" value="&new.category.label;" flex="1"/>
+        <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;" flex="1"/>
+        <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;" flex="1"/>
+      </box>
+      
+      <separator class="thin"/>
+
+      <box flex="1">
+    		<tree class="inset" multiple="true" flex="1" id="engineList" style="height: 0px;"
               datasources="rdf:internetsearch" onselect="doMoveDirectionEnabling()">
           <template>
             <treechildren>
@@ -114,14 +117,13 @@
                 <treerow>
                   <treecell class="treecell-iconic" crop="right" 
                             src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                            value="rdf:http://home.netscape.com/NC-rdf#Name" />
+                            value="rdf:http://home.netscape.com/NC-rdf#Name" flex="1" />
                 </treerow>
               </treeitem>
             </treechildren>
           </template>
           
           <treecol id="EngineColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1" />
-        
           <treehead>
             <treerow>
               <treecell class="treecell-header sortDirectionIndicator outset" observes="EngineColumn"
@@ -133,41 +135,22 @@
           <treechildren flex="1"/>
           
         </tree>
-		</box>
         <box orient="vertical">
           <spring flex="1"/>
        	  <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
       		<button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
           <spring flex="1"/>
         </box>
-       
-      </box>
-
-   <!--   <titledbox orient="vertical">
-        <title>&category.label;</title>
-      	<menulist id="categoryList" ref="NC:SearchCategoryRoot" datasources="rdf:null">
-          <template>
-            <menupopup>
-              <menuitem uri="rdf:*" oncommand="return chooseCategory(this);"
-                        data="rdf:http://home.netscape.com/NC-rdf#category"
-                        value="rdf:http://home.netscape.com/NC-rdf#title"/>
-            </menupopup>
-          </template>
-          <menupopup id="categoryPopup"/>
-        </menulist>
-        <box>
-          <button class="dialog" id="new-category-button" oncommand="NewCategory()" value="&new.category.label;"/>
-          <button class="dialog" id="rename-category-button" oncommand="RenameCategory()" value="&rename.category.label;"/>
-          <button class="dialog" id="remove-category.buttom" oncommand="RemoveCategory()" value="&remove.category.label;"/>
-        </box>
-      </titledbox> -->
+      </box>          
+      <box>
+        <button class="dialog" id="remove-button" oncommand="return RemoveEngine()" value="&remove.label;" />
+      </box>		
+      
     </box>
-  </box>
-    
-  <separator class="groove"/>
-  <box id="okCancelButtonsRight"/>
   
+  </box>
 
-
+  <separator/>
+  <box id="okCancelButtonsRight"/>
 
 </window>
