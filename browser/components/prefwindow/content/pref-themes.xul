@@ -48,15 +48,15 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
-      onload="parent.initPanel('chrome://browser/content/pref/pref-themes.xul'); Startup()"
+      onload="parent.initPanel('chrome://browser/content/pref/pref-themes.xul');"
       headertitle="&lHeader;">
 
   <stringbundle id="bundle_prefutilities"
                 src="chrome://browser/locale/pref/prefutilities.properties"/>
   <stringbundle id="bundle_brand"
                 src="chrome://global/locale/brand.properties"/>
-  <stringbundle id="bundle_navigator"
-                src="chrome://navigator/locale/navigator.properties"/>
+  <stringbundle id="bundle_browser"
+                src="chrome://browser/locale/browser.properties"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-themes.js"/>
 
