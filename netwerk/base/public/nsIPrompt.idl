@@ -45,6 +45,9 @@
  * which it is gotten. This interface is identical to nsIPromptService
  * but without the parent nsIDOMWindow parameter. See nsIPromptService
  * for all documentation.
+ *
+ * Accesskeys can be attached to buttons and checkboxes by inserting
+ * an & before the accesskey character. For a real &, use && instead.
  */  
 
 #include "nsISupports.idl"

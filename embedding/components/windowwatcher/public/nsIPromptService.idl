@@ -41,6 +41,9 @@
    nsIPrompt, each method modified to take a parent window parameter.
    See nsIPrompt for all documentation and ancillary documentation.
 
+   Accesskeys can be attached to buttons and checkboxes by inserting
+   an & before the accesskey character. For a real &, use && instead.
+
    One note: in all cases, the parent window parameter can be null.
    However, these windows are all intended to have parents. So when
    no parent is specified, the implementation should try hard to find
