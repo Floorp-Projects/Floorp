@@ -108,10 +108,11 @@
 		// top left corner somewhere below that, but not if that'll put it off the monitor. There
     // is no way that we can go off the top of the monitor because cocoa won't let us position a window
     // that way
-		if ( point.y - 20 - textSize.height > NSMinY(screenFrame) )
-      point.y -= 20;
+    const int kVOffset = 20;
+		if ( point.y - kVOffset - textSize.height > NSMinY(screenFrame) )
+      point.y -= kVOffset;
     else
-      point.y += 20;
+      point.y += kVOffset;
 		[mPanel setFrameTopLeftPoint: point];
 		
 		//  if it goes off the edge of the screen, shift around to put it all on the screen
