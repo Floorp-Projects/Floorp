@@ -135,7 +135,6 @@ LDAP_CFLAGS=-I$(XPDIST)\include\ldap
 CFGFILE=$(OBJDIR)\cmd.cfg
 INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 
-!ifdef MOZ_TRACK_MODULE_DEPS
 
 !ifdef REQUIRES
 
@@ -152,7 +151,6 @@ REQINCS1=REQINCS=-I $(XPDIST)/include/$(REQUIRES: = -I$(XPDIST^)/include/)
 !endif
 
 INCS=$(INCS) -I$(XPDIST)\include $(REQINCS)
-!endif
 
 !if "$(MOZ_BITS)" == "16"
 CFLAGS=$(MOZ_JAVA_FLAG) -DEDITOR $(OS_CFLAGS) $(MOZ_CFLAGS)
