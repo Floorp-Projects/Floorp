@@ -98,7 +98,7 @@
 <!ENTITY dcharIso4Cmd.label "Baltic (ISO-8859-4)">
 <!ENTITY dcharIso9Cmd.label "Turkish (ISO-8859-9)">
 <!ENTITY dcharIso10Cmd.label "Nordic (ISO-8859-10)">
-<!ENTITY dcharIso13Cmd.label "Greek (ISO-8859-13)">
+<!ENTITY dcharIso13Cmd.label "Baltic (ISO-8859-13)">
 <!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
 <!ENTITY dcharIso15Cmd.label "Western (ISO-8859-15)">
 <!ENTITY dcharWinLat2Cmd.label "Central European (Windows-1250)"> 
