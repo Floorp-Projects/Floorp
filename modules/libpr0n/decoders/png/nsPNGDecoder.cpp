@@ -208,8 +208,10 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
-      if (aGamma < 0)
+      if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
           aGamma = 0.45455;
+          png_set_gAMA(png_ptr, info_ptr, aGamma);
+      }
       png_set_gamma(png_ptr, 2.2, aGamma);
   }
   else
