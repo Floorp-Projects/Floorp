@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -36,6 +36,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
+#include "nsIDOMWindowInternal.h"
 
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
@@ -60,6 +63,10 @@ nsWebBrowser::~nsWebBrowser()
 
 NS_IMETHODIMP nsWebBrowser::InternalDestroy()
 {
+
+  if (mInternalWidget)
+    mInternalWidget->SetClientData(0);
+
    SetDocShell(nsnull);
 
    if(mDocShellTreeOwner)
@@ -556,7 +563,8 @@ NS_IMETHODIMP nsWebBrowser::Create()
       widgetInit.mWindowType = eWindowType_child;
       nsRect bounds(mInitInfo->x, mInitInfo->y, mInitInfo->cx, mInitInfo->cy);
       
-      mInternalWidget->Create(mParentNativeWindow, bounds, nsnull /* was nsWebShell::HandleEvent*/,
+      mInternalWidget->SetClientData(NS_STATIC_CAST(nsWebBrowser *, this));
+      mInternalWidget->Create(mParentNativeWindow, bounds, nsWebBrowser::HandleEvent,
          deviceContext, nsnull, nsnull, &widgetInit);  
       }
 
@@ -1054,5 +1062,106 @@ NS_IMETHODIMP nsWebBrowser::EnsureContentListener()
    return NS_OK;
 }
 
+/* static */
+nsEventStatus PR_CALLBACK nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
+{
+  nsEventStatus  result = nsEventStatus_eIgnore;
+  nsWebBrowser  *browser = nsnull;
+  void          *data = nsnull;
 
+  if (!aEvent->widget)
+    return result;
 
+  aEvent->widget->GetClientData(data);
+  if (!data)
+    return result;
+
+  browser = NS_STATIC_CAST(nsWebBrowser *, data);
+
+  switch(aEvent->message) {
+
+  case NS_ACTIVATE: {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    browser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+      if(privateDOMWindow)
+        privateDOMWindow->Activate();
+    }
+    break;
+  }
+
+  case NS_DEACTIVATE: {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    browser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+      if(privateDOMWindow)
+        privateDOMWindow->Deactivate();
+    }
+    break;
+  }
+
+  case NS_GOTFOCUS: {
+    // try to set focus on the last focused window as stored in the
+    // focus controller object.
+    nsCOMPtr<nsIDOMWindow> domWindowExternal;
+    browser->GetContentDOMWindow(getter_AddRefs(domWindowExternal));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    domWindow = do_QueryInterface(domWindowExternal);
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
+    nsCOMPtr<nsIFocusController> focusController;
+    piWin->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController) {
+      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+      focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+      if (focusedWindow) {
+        focusController->SetSuppressFocus(PR_TRUE);
+        domWindow->Focus(); // This sets focus, but we'll ignore it.  
+                           // A subsequent activate will cause us to stop suppressing.
+        break;
+      }
+    }
+
+    // If there wasn't a focus controller and focused window just set
+    // focus on the primary content shell.  If that wasn't focused,
+    // try and just set it on the toplevel DOM window.
+    nsCOMPtr<nsIDOMWindowInternal> contentDomWindow;
+    browser->GetPrimaryContentWindow(getter_AddRefs(contentDomWindow));
+    if (contentDomWindow)
+      contentDomWindow->Focus();
+    else if (domWindow)
+      domWindow->Focus();
+    break;
+  }
+
+  default:
+    break;
+  }
+
+  return result;
+    
+  
+}
+
+NS_IMETHODIMP nsWebBrowser::GetPrimaryContentWindow(nsIDOMWindowInternal **aDOMWindow)
+{
+  *aDOMWindow = 0;
+
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  mDocShellTreeOwner->GetPrimaryContentShell(getter_AddRefs(item));
+  NS_ENSURE_TRUE(item, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShell> docShell;
+  docShell = do_QueryInterface(item);
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  domWindow = do_GetInterface(docShell);
+  NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
+
+  *aDOMWindow = domWindow;
+  NS_ADDREF(*aDOMWindow);
+  return NS_OK;
+  
+}

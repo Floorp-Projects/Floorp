@@ -95,6 +95,9 @@ protected:
     NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
     NS_IMETHOD EnsureDocShellTreeOwner();
     NS_IMETHOD EnsureContentListener();
+    NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);
+
+    static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;
@@ -115,7 +118,11 @@ protected:
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;
-   nsIDocShellTreeItem*       mParent;           
+   nsIDocShellTreeItem*       mParent; 
+
+          
 };
 
 #endif /* nsWebBrowser_h__ */
+
+
