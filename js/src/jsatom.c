@@ -94,6 +94,7 @@ char   js_setter_str[]            = "setter";
 char   js_set_str[]               = "set";
 char   js_toSource_str[]          = "toSource";
 char   js_toString_str[]          = "toString";
+char   js_toLocaleString_str[]    = "toLocaleString";
 char   js_valueOf_str[]           = "valueOf";
 
 #define HASH_OBJECT(o)  ((JSHashNumber)(o) >> JSVAL_TAGBITS)
