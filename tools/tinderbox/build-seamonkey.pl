@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.66 $ ';
+$::Version = '$Revision: 1.67 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -315,13 +315,13 @@ sub run_tests {
 
     # Mozilla alive test
     print_log "Running AliveTest ...\n";
-    my $build_status = RunAliveTest($binary, 60);
+    my $build_status = RunAliveTest($build_dir, $binary, 60);
     return $build_status if $build_status ne 'success';
 
     # Viewer alive test
     if ($Settings::ViewerTest) {
         print_log "Running ViewerTest ...\n";
-        $build_status = RunAliveTest("$binary_dir/viewer", 60);
+        $build_status = RunAliveTest($build_dir, "$binary_dir/viewer", 60);
         return $build_status if $build_status ne 'success';
     }
     
@@ -477,7 +477,7 @@ sub RunAliveTest {
         select STDOUT; $| = 1;  # make STDOUT unbuffered
         select STDERR; $| = 1;  # make STDERR unbuffered
         exec $binary_basename
-          or die "Couldn't exec()";
+          or die "Could not exec: $binary_basename from $binary_dir";
     }
     
     # Parent - Wait $testTimeoutSec seconds then check on child
