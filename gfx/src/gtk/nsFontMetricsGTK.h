@@ -343,6 +343,8 @@ public:
 
   virtual GdkFont* GetCurrentGDKFont(void);
 
+  virtual nsresult SetRightToLeftText(PRBool aIsRTL);
+
   static nsresult FamilyExists(nsIDeviceContext *aDevice, const nsString& aName);
   static PRUint32 GetHints(void);
 

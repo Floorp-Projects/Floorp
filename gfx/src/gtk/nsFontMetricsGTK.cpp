@@ -4599,6 +4599,12 @@ nsFontMetricsGTK::GetCurrentGDKFont(void)
   return mCurrentFont->GetGDKFont();
 }
 
+nsresult
+nsFontMetricsGTK::SetRightToLeftText(PRBool aIsRTL)
+{
+    return NS_OK;
+}
+
 PR_BEGIN_EXTERN_C
 static int
 CompareSizes(const void* aArg1, const void* aArg2, void *data)

@@ -449,7 +449,7 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     // Make sure that the pixel size is at least greater than zero
     if (mPixelSize < 1) {
 #ifdef DEBUG
-        printf("*** Warning: nsFontMetricsXft was passed a pixel size of %d\n",
+        printf("*** Warning: nsFontMetricsXft was passed a pixel size of %f\n",
                mPixelSize);
 #endif
         mPixelSize = 1;
@@ -764,6 +764,12 @@ GdkFont*
 nsFontMetricsXft::GetCurrentGDKFont(void)
 {
     return nsnull;
+}
+
+nsresult
+nsFontMetricsXft::SetRightToLeftText(PRBool aIsRTL)
+{
+    return NS_OK;
 }
 
 PRUint32

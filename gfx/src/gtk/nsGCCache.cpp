@@ -248,98 +248,42 @@ void nsGCCache::ReuseGC(GCCacheEntry *entry, GdkGCValues *gcv, GdkGCValuesMask f
   // We have old GC, reuse it and check what
   // we have to change
 
-  XGCValues xvalues;
-  unsigned long xvalues_mask=0;
+  GdkGCValues xvalues;
+  int xvalues_mask = 0;
 
   if (entry->clipRegion) {
     // set it to none here and then set the clip region with
     // gdk_gc_set_clip_region in GetGC()
     xvalues.clip_mask = None;
-    xvalues_mask |= GCClipMask;
+    xvalues_mask |= GDK_GC_CLIP_MASK;
     gdk_region_destroy(entry->clipRegion);
     entry->clipRegion = NULL;
   }
 
   if (entry->gcv.foreground.pixel != gcv->foreground.pixel) {
-    xvalues.foreground = gcv->foreground.pixel;
-    xvalues_mask |= GCForeground;
+    xvalues.foreground.pixel = gcv->foreground.pixel;
+    xvalues_mask |= GDK_GC_FOREGROUND;
   }
 
   if (entry->gcv.function != gcv->function) {
-    switch (gcv->function) {
-    case GDK_COPY:
-      xvalues.function = GXcopy;
-      break;
-    case GDK_INVERT:
-      xvalues.function = GXinvert;
-      break;
-    case GDK_XOR:
-      xvalues.function = GXxor;
-      break;
-    case GDK_CLEAR:
-      xvalues.function = GXclear;
-      break;
-    case GDK_AND:
-      xvalues.function = GXand;
-      break;
-    case GDK_AND_REVERSE:
-      xvalues.function = GXandReverse;
-      break;
-    case GDK_AND_INVERT:
-      xvalues.function = GXandInverted;
-      break;
-    case GDK_NOOP:
-      xvalues.function = GXnoop;
-      break;
-    case GDK_OR:
-      xvalues.function = GXor;
-      break;
-    case GDK_EQUIV:
-      xvalues.function = GXequiv;
-      break;
-    case GDK_OR_REVERSE:
-      xvalues.function = GXorReverse;
-      break;
-    case GDK_COPY_INVERT:
-      xvalues.function = GXcopyInverted;
-      break;
-    case GDK_OR_INVERT:
-      xvalues.function = GXorInverted;
-      break;
-    case GDK_NAND:
-      xvalues.function = GXnand;
-      break;
-    case GDK_SET:
-      xvalues.function = GXset;
-      break;
-    }
-    xvalues_mask |= GCFunction;
+    xvalues.function = gcv->function;
+    xvalues_mask |= GDK_GC_FUNCTION;
   }
 
   if(entry->gcv.font != gcv->font && flags & GDK_GC_FONT) {
-    xvalues.font =  ((XFontStruct *)GDK_FONT_XFONT(gcv->font))->fid;
-    xvalues_mask |= GCFont;
+    xvalues.font = gcv->font;
+    xvalues_mask |= GDK_GC_FONT;
   }
 
   if (entry->gcv.line_style != gcv->line_style) {
-    switch (gcv->line_style) {
-    case GDK_LINE_SOLID:
-      xvalues.line_style = LineSolid;
-      break;
-    case GDK_LINE_ON_OFF_DASH:
-      xvalues.line_style = LineOnOffDash;
-      break;
-    case GDK_LINE_DOUBLE_DASH:
-      xvalues.line_style = LineDoubleDash;
-      break;
-    }
-    xvalues_mask |= GCLineStyle;
+    xvalues.line_style = gcv->line_style;
+    xvalues_mask |= GDK_GC_LINE_STYLE;
   }
 
   if (xvalues_mask != 0) {
-    XChangeGC(GDK_GC_XDISPLAY(entry->gc), GDK_GC_XGC(entry->gc),
-              xvalues_mask, &xvalues);
+    gdk_gc_set_values(entry->gc, &xvalues, (GdkGCValuesMask)xvalues_mask);
   }
+
   entry->flags = flags;
   entry->gcv = *gcv;
 }

@@ -61,6 +61,9 @@
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
 #endif
+#ifdef MOZ_ENABLE_PANGO
+#include "nsFontMetricsPango.h"
+#endif
 #ifdef MOZ_ENABLE_XFT
 #include "nsFontMetricsXft.h"
 #endif
@@ -111,6 +114,13 @@ nsFontMetricsConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
 
+#ifdef MOZ_ENABLE_PANGO
+  if (NS_IsPangoEnabled()) {
+    result = new nsFontMetricsPango();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+#endif
 #ifdef MOZ_ENABLE_XFT
   if (NS_IsXftEnabled()) {
     result = new nsFontMetricsXft();
@@ -124,6 +134,9 @@ nsFontMetricsConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
       return NS_ERROR_OUT_OF_MEMORY;
 #endif
 #ifdef MOZ_ENABLE_XFT
+  }
+#endif
+#ifdef MOZ_ENABLE_PANGO
   }
 #endif
 
@@ -147,6 +160,13 @@ nsFontEnumeratorConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
 
+#ifdef MOZ_ENABLE_PANGO
+  if (NS_IsPangoEnabled()) {
+    result = new nsFontEnumeratorPango();
+    if (!result)
+      return NS_ERROR_OUT_OF_MEMORY;
+  } else {
+#endif
 #ifdef MOZ_ENABLE_XFT
   if (NS_IsXftEnabled()) {
     result = new nsFontEnumeratorXft();
@@ -160,6 +180,9 @@ nsFontEnumeratorConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
       return NS_ERROR_OUT_OF_MEMORY;
 #endif
 #ifdef MOZ_ENABLE_XFT
+  }
+#endif
+#ifdef MOZ_ENABLE_PANGO
   }
 #endif
 

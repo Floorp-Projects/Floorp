@@ -202,6 +202,8 @@ public:
 
     virtual GdkFont* GetCurrentGDKFont(void);
 
+    virtual nsresult SetRightToLeftText(PRBool aIsRTL);
+
     // get hints for the font
     static PRUint32    GetHints  (void);
 
