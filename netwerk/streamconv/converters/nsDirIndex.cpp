@@ -99,6 +99,6 @@ nsDirIndex::SetDescription(const PRUnichar* aDescription) {
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsDirIndex, Size, PRUint32, mSize)
+NS_IMPL_GETSET(nsDirIndex, Size, PRInt64, mSize)
 NS_IMPL_GETSET(nsDirIndex, LastModified, PRInt64, mLastModified)
 

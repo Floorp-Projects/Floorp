@@ -75,7 +75,7 @@ public:
 
 protected:
     
-    void FormatSizeString(PRUint32 inSize, nsString& outSizeString);
+    void FormatSizeString(PRInt64 inSize, nsString& outSizeString);
     nsresult FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, const nsAString &aBuffer); 
 
 protected:

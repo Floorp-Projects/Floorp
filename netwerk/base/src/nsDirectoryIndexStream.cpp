@@ -350,9 +350,6 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         PRInt64 fileSize = LL_Zero();
         current->GetFileSize( &fileSize );
 
-        PROffset32 fileInfoSize;
-        LL_L2I( fileInfoSize,fileSize );
-        
         PRInt64 tmpTime = LL_Zero();
         PRInt64 fileInfoModifyTime = LL_Zero();
         current->GetLastModifiedTime( &tmpTime );
@@ -394,7 +391,7 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         }
 
             // The "content-length" field
-            mBuf.AppendInt(fileInfoSize, 10);
+            mBuf.AppendInt(fileSize, 10);
             mBuf.Append(' ');
 
             // The "last-modified" field

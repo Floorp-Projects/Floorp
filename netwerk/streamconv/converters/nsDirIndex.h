@@ -43,7 +43,7 @@
 class nsDirIndex : public nsIDirIndex {
 public:
     nsDirIndex();
-    virtual ~nsDirIndex();
+    ~nsDirIndex();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDIRINDEX
@@ -53,6 +53,6 @@ protected:
     nsXPIDLCString mContentType;
     nsXPIDLCString mLocation;
     nsString mDescription;
-    PRUint32 mSize;
+    PRInt64 mSize;
     PRInt64 mLastModified;
 };
