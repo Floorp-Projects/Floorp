@@ -62,3 +62,7 @@ all clean distclean::
 	for dir in $$sd; do		\
 	  ( cd $$dir ; $(MAKE) $@ );	\
 	done
+
+run::
+	java -classpath $(CLASSPATH) grendel.Main
+
