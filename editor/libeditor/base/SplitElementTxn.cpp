@@ -163,8 +163,7 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   nsresult result;
   nsCOMPtr<nsIDOMNode>resultNode;
   // first, massage the existing node so it is in its post-split state
-  nsCOMPtr<nsIDOMCharacterData>rightNodeAsText;
-  rightNodeAsText = do_QueryInterface(mExistingRightNode);
+  nsCOMPtr<nsIDOMCharacterData>rightNodeAsText = do_QueryInterface(mExistingRightNode);
   if (rightNodeAsText)
   {
     result = rightNodeAsText->DeleteData(0, mOffset);
@@ -217,8 +216,8 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
 
 NS_IMETHODIMP SplitElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 

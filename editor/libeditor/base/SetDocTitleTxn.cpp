@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "SetDocTitleTxn.h"
-#include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -93,12 +92,11 @@ nsresult SetDocTitleTxn::SetDocTitle(const nsAString& aTitle)
   NS_ASSERTION(mEditor, "bad state");
   if (!mEditor) return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIDOMDocument>  domDoc;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMDocument> domDoc;
   nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
   if (NS_FAILED(rv)) return rv;
-  if (!domDoc) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
   if (!HTMLDoc) return NS_ERROR_FAILURE;
 
@@ -107,17 +105,13 @@ nsresult SetDocTitleTxn::SetDocTitle(const nsAString& aTitle)
 
 nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 {
-  nsCOMPtr<nsIDOMDocument>  domDoc;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMDocument> domDoc;
   nsresult res = editor->GetDocument(getter_AddRefs(domDoc));
-  
   if (!domDoc) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNodeList> titleList;
-  nsCOMPtr<nsIDOMNode>titleNode;
-  nsCOMPtr<nsIDOMNode>headNode;
-  nsCOMPtr<nsIDOMNode> resultNode;
   res = domDoc->GetElementsByTagName(NS_LITERAL_STRING("title"), getter_AddRefs(titleList));
   if (NS_FAILED(res)) return res;
 
@@ -125,6 +119,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   // (transaction will not be pushed on stack)
   mIsTransient = PR_TRUE;
 
+  nsCOMPtr<nsIDOMNode>titleNode;
   if(titleList)
   {
     res = titleList->Item(0, getter_AddRefs(titleNode));
@@ -164,6 +159,7 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
   if (NS_FAILED(res)) return res;
   if (!headList) return NS_ERROR_FAILURE;
   
+  nsCOMPtr<nsIDOMNode>headNode;
   headList->Item(0, getter_AddRefs(headNode));
   if (!headNode) return NS_ERROR_FAILURE;
 
@@ -197,13 +193,13 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
     nsCOMPtr<nsIDOMText> textNode;
     res = domDoc->CreateTextNode(aTitle, getter_AddRefs(textNode));
     if (NS_FAILED(res)) return res;
-    if (!textNode) return NS_ERROR_FAILURE;
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(textNode);
     if (!newNode) return NS_ERROR_FAILURE;
 
     if (newTitleNode)
     {
       // Not undoable: We will insert newTitleNode below
+      nsCOMPtr<nsIDOMNode> resultNode;
       res = titleNode->AppendChild(newNode, getter_AddRefs(resultNode));
     } 
     else 
@@ -224,8 +220,8 @@ nsresult SetDocTitleTxn::SetDomTitle(const nsAString& aTitle)
 
 NS_IMETHODIMP SetDocTitleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 
@@ -242,3 +238,4 @@ NS_IMETHODIMP SetDocTitleTxn::GetIsTransient(PRBool *aIsTransient)
   *aIsTransient = mIsTransient;
   return NS_OK;
 }
+
