@@ -206,11 +206,23 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 	PRUint8 *pthis = (PRUint8 *)array_ptr;
 	NS_ABORT_IF_FALSE(pthis, "Don't have a valid array to fill!");
 	PRBool rc = PR_TRUE;
-	// We handle T_U8 specially as a string.
+	// We handle T_U8 specially as a string/Unicode.
 	// If it is NOT a string, we just fall through and allow the standard
 	// sequence unpack code process it (just slower!)
-	if ( (array_type & XPT_TDP_TAGMASK) == nsXPTType::T_U8 && PyString_Check(sequence_ob)) {
+	if ( (array_type & XPT_TDP_TAGMASK) == nsXPTType::T_U8 && 
+        (PyString_Check(sequence_ob) || PyUnicode_Check(sequence_ob))) {
+            
+        PRBool release_seq;
+        if (PyUnicode_Check(sequence_ob)) {
+            release_seq = PR_TRUE;
+            sequence_ob = PyObject_Str(sequence_ob);
+        } else
+            release_seq = PR_FALSE;
+        if (!sequence_ob) // presumably a memory error, or Unicode encoding error.
+            return PR_FALSE;
 		nsCRT::memcpy(pthis, PyString_AS_STRING(sequence_ob), sequence_size);
+        if (release_seq)
+            Py_DECREF(sequence_ob);
 		return PR_TRUE;
 	}
 
