@@ -58,14 +58,14 @@ class NS_COM nsString : public nsStr {
 /**
  * Default constructor. 
  */
-nsString(eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAgent=0);
+nsString(nsIMemoryAgent* anAgent=0);
 
 
 /**
  * This constructor accepts an isolatin string
  * @param   aCString is a ptr to a 1-byte cstr
  */
-nsString(const char* aCString,eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAgent=0);
+nsString(const char* aCString,nsIMemoryAgent* anAgent=0);
 
 /**
  * This constructor accepts a unichar string
@@ -77,7 +77,7 @@ nsString(const PRUnichar* aString,nsIMemoryAgent* anAgent=0);
  * This is a copy constructor that accepts an nsStr
  * @param   reference to another nsString
  */
-nsString(const nsStr&,eCharSize aCharSize=kDefaultCharSize,nsIMemoryAgent* anAgent=0);
+nsString(const nsStr&,nsIMemoryAgent* anAgent=0);
 
 /**
  * This is our copy constructor 
@@ -752,7 +752,7 @@ static  PRBool IsAlpha(PRUnichar ch);
 static  PRBool IsDigit(PRUnichar ch);
 
 static  void        Recycle(nsString* aString);
-static  nsString*  CreateString(eCharSize aCharSize=eTwoByte);
+static  nsString*  CreateString(void);
 
 
   nsIMemoryAgent* mAgent;
@@ -773,7 +773,7 @@ extern NS_COM int fputs(const nsString& aString, FILE* out);
 class NS_COM nsAutoString : public nsString {
 public: 
 
-    nsAutoString(eCharSize aCharSize=eTwoByte);
+    nsAutoString();
     nsAutoString(const char* aCString,PRInt32 aLength=-1);
     nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
 

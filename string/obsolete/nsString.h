@@ -529,7 +529,6 @@ PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffs
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 Find(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
@@ -563,7 +562,6 @@ PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOff
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 RFind(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
@@ -720,6 +718,7 @@ public:
     char mBuffer[kDefaultStringSize];
 };
 
+
 /***************************************************************
   The subsumestr class is very unusual. 
   It differs from a normal string in that it doesn't use normal
@@ -738,8 +737,8 @@ public:
   nsSubsumeCStr(nsStr& aString);
   nsSubsumeCStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
   nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength=-1);
-};
 
+};
 
 
 #endif

@@ -36,7 +36,6 @@ static const char* kWhitespace="\b\t\r\n ";
 
 
 
-
 static void CSubsume(nsStr& aDest,nsStr& aSource){
   if(aSource.mStr && aSource.mLength) {
     if(aSource.mOwnsBuffer){
@@ -1221,20 +1220,6 @@ PRInt32 nsCString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset
   return result;
 }
 
-/**
- *  Search for given string within this string
- *  
- *  @update  gess 3/25/98
- *  @param   aSTring -- buffer to be found
- *  @param   aIgnoreCase
- *  @param   anOffset
- *  @return  offset in string, or -1 (kNotFound)
- */
-PRInt32 nsCString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
-  PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
-  return result;
-}
-
 
 /**
  *  Search for a given char, starting at given offset
@@ -1347,23 +1332,6 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
   }
   return result;
 }
-
-/**
- *  Reverse search for char
- *  
- *  @update  gess 3/25/98
- *  @param   aChar
- *  @param   aIgnoreCase
- *  @param   anOffset - tells us where to begin the search
- *  @return  offset of substring or -1
- */
-#if 0
-PRInt32 nsCString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
-  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
-  return result;
-}
-#endif
-
 
 /**
  *  Reverse search for char
@@ -1859,13 +1827,13 @@ nsSubsumeCStr::nsSubsumeCStr(nsStr& aString) : nsCString() {
 
 nsSubsumeCStr::nsSubsumeCStr(PRUnichar* aString,PRBool assumeOwnership,PRInt32 aLength) : nsCString() {
   mUStr=aString;
-  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength-1;
+  mCapacity=mLength=(-1==aLength) ? nsCRT::strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
 }
  
 nsSubsumeCStr::nsSubsumeCStr(char* aString,PRBool assumeOwnership,PRInt32 aLength) : nsCString() {
   mStr=aString;
-  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength-1;
+  mCapacity=mLength=(-1==aLength) ? strlen(aString) : aLength;
   mOwnsBuffer=assumeOwnership;
 }
 

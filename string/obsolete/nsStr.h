@@ -39,7 +39,7 @@
  ***********************************************************************/
 
 /***********************************************************************
-  GENERAL STRING ISSUES:
+  ASSUMPTIONS:
 
     1. nsStrings and nsAutoString are always null terminated. 
     2. If you try to set a null char (via SetChar()) a new length is set
@@ -54,6 +54,109 @@
     8. Calls to ToNewCString() and ToNewUnicode() should be matched with calls to Recycle().
 
  ***********************************************************************/
+
+
+/**********************************************************************************
+  
+ AND NOW FOR SOME GENERAL DOCUMENTATION ON STRING USAGE...
+
+    The fundamental datatype in the string library is nsStr. It's a structure that
+    provides the buffer storage and meta-info. It also provides a C-style library
+    of functions for direct manipulation (for those of you who prefer K&R to Bjarne). 
+
+    Here's a diagram of the class hierarchy: 
+
+      nsStr
+        |___nsString
+        |      |
+        |      ------nsAutoString
+        |
+        |___nsCString
+               |
+               ------nsCAutoString
+
+    Why so many string classes? The 4 variants give you the control you need to 
+    determine the best class for your purpose. There are 2 dimensions to this 
+    flexibility: 1) stack vs. heap; and 2) 1-byte chars vs. 2-byte chars.
+
+    Note: While nsAutoString and nsCAutoString begin life using stack-based storage,
+          they may not stay that way. Like all nsString classes, autostrings will
+          automatically grow to contain the data you provide. When autostrings
+          grow beyond their intrinsic buffer, they switch to heap based allocations.
+          (We avoid alloca to avoid considerable platform difficulties; see the 
+           GNU documentation for more details).
+
+    I should also briefly mention that all the string classes use a "memory agent" 
+    object to perform memory operations. This class proxies the standard nsAllocator
+    for actual memory calls, but knows the structure of nsStr making heap operations
+    more localized.
+    
+
+  CHOOSING A STRING CLASS:
+
+    In order to choose a string class for you purpose, use this handy table:
+
+                        heap-based    stack-based
+                    -----------------------------------
+        ascii data  |   nsCString     nsCAutoString   |
+                    |----------------------------------
+      unicode data  |    nsString      nsAutoString   |
+                    ----------------------------------- 
+    
+  
+    Note: The i18n folks will stenously object if we get too carried away with the
+          use of nsCString's that pass interface boundaries. Try to limit your
+          use of these to external interfaces that demand them, or for your own
+          private purposes in cases where they'll never be seen by humans. 
+
+    
+  PERFORMANCE CONSIDERATIONS:
+
+    Here are a few tricks to know in order to get better string performance: 
+    
+      1) Try to limit conversions between ascii and unicode; By sticking with nsString
+         wherever possible your code will be i18n-compliant.
+
+
+      2) Preallocating your string buffer cuts down trips to the allocator. So if you
+         have need for an arbitrarily large buffer, pre-size it like this:
+
+         {
+           nsString mBuffer;
+           mBuffer.SetCapacity(aReasonableSize);
+         }
+
+      3) Allocating nsAutoString or nsCAutoString on the heap is memory inefficient
+         (after all, the whole point is to avoid a heap allocation of the buffer).
+
+
+      4) Consider using nsString to write into your arbitrarily-sized stack buffers, rather
+         than it's own buffers.
+
+         For example, let's say you're going to call printf() to emit pretty-printed debug output 
+         of your object. You know from experience that the pretty-printed version of your object 
+         exceeds the capacity of an autostring. Ignoring memory considerations, you could simply 
+         use nsCString, appending the stringized version of each of your class's data members. 
+         This will probably result in calls to the heap manager. 
+
+         But there's a way to do this without necessarily having to call the heap manager.
+         All you do is declare a stack based buffer and instruct nsCString to use that instead 
+         of it's own internal buffer by using the CBufDescriptor class:
+         
+         {
+           char theBuffer[256];
+           CBufDescritor theBufDecriptor( theBuffer, PR_TRUE, sizeof(theBuffer), 0);
+           nsCAutoString s3( theBufDescriptor );
+           s3="HELLO, my name is inigo montoya, you killed my father, prepare to die!.";
+         }
+
+         The assignment statment to s3 will cause the given string to be written to your
+         stack-based buffer via the normal nsString interfaces. Cool, huh?  Note however
+         that just like any other nsString use, if you write more data than will fit in
+         the buffer, nsString *will* go to the heap. 
+     
+
+ **********************************************************************************/
 
 
 #ifndef _nsStr
