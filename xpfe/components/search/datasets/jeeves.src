@@ -14,7 +14,7 @@
 
 <input name="q" user>
 <input name="o" value="0">
-<input name="qsrc" value="0">
+<input name="qsrc" value="64">
 <input name="askbutton.x" value="0">
 <input name="askbutton.y" value="0">
 
