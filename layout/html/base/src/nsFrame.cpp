@@ -824,14 +824,13 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
     rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
                                               nsITransferable::GetIID(), getter_AddRefs(trans2)); 
     if ( trans && trans2 ) {
-      nsString* flavor = new nsString("text/plain");
-      trans->AddDataFlavor(flavor);                                    // transferable consumes the flavor
+      nsString textPlainFlavor ( "text/plain" );
+      trans->AddDataFlavor(&textPlainFlavor);
       nsString dragText = "Drag Text";
       PRUint32 len = 9; 
       trans->SetTransferData(flavor, dragText.ToNewCString(), len);   // transferable consumes the data
 
-      nsString* flavor2 = new nsString("text/plain");
-      trans2->AddDataFlavor(flavor2);                                    // transferable consumes the flavor
+      trans2->AddDataFlavor(&textPlainFlavor);
       nsString dragText2 = "More Drag Text";
       len = 14; 
       trans2->SetTransferData(flavor2, dragText2.ToNewCString(), len);   // transferable consumes the data

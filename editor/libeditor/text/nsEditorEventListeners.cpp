@@ -1165,8 +1165,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       if ( NS_SUCCEEDED(rv) && trans ) {
         // Add the text Flavor to the transferable, 
         // because that is the only type of data we are looking for at the moment
-        nsString* textMime = new nsString(kTextMime);
-        trans->AddDataFlavor(textMime);     // transferable consumes flavor type
+        nsAutoString textMime (kTextMime);
+        trans->AddDataFlavor(&textMime);
         //trans->AddDataFlavor(mImageDataFlavor);
 
         // Fill the transferable with data for each drag item in succession
@@ -1183,7 +1183,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
               // Note: the transferable owns the pointer to the data
               char *str = 0;
               PRUint32 len;
-              trans->GetAnyTransferData(textMime, (void **)&str, &len);
+              trans->GetAnyTransferData(&textMime, (void **)&str, &len);
 
               // If the string was not empty then paste it in
               if (str) {
