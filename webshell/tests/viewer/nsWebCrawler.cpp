@@ -249,6 +249,10 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
             if (mRegressing) {
               PerformRegressionTest(regressionFileName);
             }
+            else {
+              fputs(regressionFileName, stdout);
+              printf(" - being written\n");
+            }
           }
           else {
             const char* file;
