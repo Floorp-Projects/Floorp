@@ -365,15 +365,15 @@ nsFieldSetFrame::Reflow(nsPresContext*          aPresContext,
     if (reason == eReflowReason_Dirty) 
     {
       if (reflowContent) {
-        reflowContent =
+        reflowContent = mContentFrame ?
           (mContentFrame->GetStateBits()
-           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0 : PR_FALSE;
       }
 
       if (reflowLegend) {
-        reflowLegend =
+        reflowLegend = mLegendFrame ?
           (mLegendFrame->GetStateBits()
-           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0;
+           & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN)) != 0 : PR_FALSE;
       }
     }
 
