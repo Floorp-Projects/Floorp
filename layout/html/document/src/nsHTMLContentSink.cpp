@@ -16,7 +16,7 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
+ * 
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
@@ -498,6 +498,7 @@ HTMLContentSink::SinkTraceNode(PRUint32 aBit,
 }
 #endif
 
+#if 0
 void
 HTMLContentSink::ReduceEntities(nsString& aString)
 {
@@ -561,8 +562,7 @@ HTMLContentSink::ReduceEntities(nsString& aString)
             aString.Insert(PRUnichar(ch), start);
             i = start + 1;
           }
-          else if (((e >= 'A') && (e <= 'Z')) ||
-                   ((e >= 'a') && (e <= 'z'))) {
+          else if (((e >= 'A') && (e <= 'Z')) || ((e >= 'a') && (e <= 'z'))) {
             // Convert a named entity
             i++;
             char* cp = cbuf;
@@ -613,6 +613,86 @@ HTMLContentSink::ReduceEntities(nsString& aString)
     }
   }
 }
+
+#else
+
+void HTMLContentSink::ReduceEntities(nsString& aString) {
+  if (mParser) {
+    nsCOMPtr<nsIDTD> dtd;
+
+    nsresult rv = mParser->GetDTD(getter_AddRefs(dtd));
+
+    if (NS_SUCCEEDED(rv)) {
+
+      // XXX Note: as coded today, this will only convert well formed
+      // entities.  This may not be compatible enough.
+      // XXX there is a table in navigator that translates some numeric entities
+      // should we be doing that? If so then it needs to live in two places (bad)
+      // so we should add a translate numeric entity method from the parser...
+
+      nsAutoString  theOutString;
+      nsAutoString  theNCRStr;
+
+      PRInt32 theLen=aString.Length();
+      PRInt32 theAmpPos = aString.FindChar('&');
+      PRInt32 theStartPos=0;
+      const PRUnichar *theBuf=aString.GetUnicode();
+
+      while(-1!=theAmpPos) { 
+
+        if(theStartPos<theAmpPos) {
+          //we have real data to copy to output string before doing our first conversion          
+          theOutString.Append(&theBuf[theStartPos],theAmpPos-theStartPos);
+        }
+
+        PRInt32 theSemiPos=aString.FindChar(';',PR_FALSE,theAmpPos+1);
+        
+        if(-1!=theSemiPos) {
+          //having found a semi, copy chars between amppos and semipos;
+          aString.Mid(theNCRStr,theAmpPos+1,theSemiPos-theAmpPos-1);
+        }
+        else {
+          aString.Mid(theNCRStr,theAmpPos+1,theLen-theAmpPos-1);
+          theSemiPos=theLen;
+        }
+
+        theStartPos=theSemiPos+1;
+
+        PRUnichar theChar=aString.CharAt(theAmpPos+1);
+        PRUnichar theEntity=0;
+        PRInt32   theErr=0;
+        PRInt32   theNCRValue=0;
+
+        switch(theChar) {
+          case '#':
+            theNCRValue=theNCRStr.ToInteger(&theErr,kAutoDetect);
+            theEntity=PRUnichar(theNCRValue);
+            break;
+          case '{':
+              //XXX Write ME!
+            break;
+          default:
+            if(nsCRT::IsAsciiAlpha(theChar)) {
+              dtd->ConvertEntityToUnicode(theNCRStr, &theNCRValue);
+              theEntity=PRUnichar(theNCRValue);
+            }
+            break;
+        } //switch
+
+        theOutString.Append(theEntity);
+        theAmpPos = aString.FindChar('&',PR_FALSE,theSemiPos+1);
+
+      } //while
+
+      if(0<theOutString.Length()) {
+        aString=theOutString;
+      }      
+
+    } //if
+  } //if
+}  
+
+#endif
 
 // Temporary factory code to create content objects
 
