@@ -329,9 +329,10 @@ nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 	if (NS_FAILED(rv)) return rv;
 	
     rv = CreateSubFolders(path);
+    if (NS_FAILED(rv)) return rv;
 
 	// force ourselves to get initialized from cache
-    UpdateSummaryTotals(PR_FALSE); 
+    rv = UpdateSummaryTotals(PR_FALSE); 
     if (NS_FAILED(rv)) return rv;
 
     mInitialized = PR_TRUE;      // XXX do this on failure too?
@@ -358,7 +359,7 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
-		nsresult rv;
+    nsresult rv;
 	if (!mDatabase)
 	{
 		nsCOMPtr<nsIFileSpec> pathSpec;
@@ -370,7 +371,7 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 
 		rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 		if (NS_SUCCEEDED(rv) && newsDBFactory) {
-			folderOpen = newsDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+			rv = newsDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 		}
 
 		if (mDatabase) {
@@ -400,15 +401,19 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 NS_IMETHODIMP
 nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-  GetDatabase(aWindow);	// want this cached...
-  if (mDatabase)
+  nsresult rv = GetDatabase(aWindow);	// want this cached...
+  if (NS_SUCCEEDED(rv))
   {
+    if (mDatabase)
+    {
     nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
     nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
     if (NS_SUCCEEDED(rv))
       rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+    }
+    rv = GetNewMessages(aWindow);
   }
-  return GetNewMessages(aWindow);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -873,19 +878,22 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 	//We need to read this info from the database
-	ReadDBFolderInfo(force);
+	nsresult ret = ReadDBFolderInfo(force);
 
-	//Need to notify listeners that total count changed.
-	if(oldTotalMessages != mNumTotalMessages) {
-		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
-	}
+    if (NS_SUCCEEDED(ret))
+    {
+        //Need to notify listeners that total count changed.
+      if(oldTotalMessages != mNumTotalMessages) {
+          NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, mNumTotalMessages);
+      }
 
-	if(oldUnreadMessages != mNumUnreadMessages) {
-		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
-	}
+      if(oldUnreadMessages != mNumUnreadMessages) {
+          NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, mNumUnreadMessages);
+      }
 
-  FlushToFolderCache();
-	return NS_OK;
+    FlushToFolderCache();
+    }
+    return ret;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetExpungedBytesCount(PRUint32 *count)
