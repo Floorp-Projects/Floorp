@@ -2254,11 +2254,18 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
   }
 
-  if (aNotify && (nsnull != mDocument)) {
-    if (NS_SUCCEEDED(rv)) {
+  if (mDocument && NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIBindingManager> bindingManager;
+    mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+    if (binding)
+      binding->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
+
+    if (aNotify) {
       mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+      mDocument->EndUpdate();
     }
-    mDocument->EndUpdate();
   }
 
   return rv;
@@ -2334,9 +2341,18 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
       }
     }
 
-    if (NS_SUCCEEDED(rv) && found && aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
-      mDocument->EndUpdate();
+    if (NS_SUCCEEDED(rv) && found && mDocument) {
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      nsCOMPtr<nsIXBLBinding> binding;
+      bindingManager->GetBinding(mContent, getter_AddRefs(binding));
+      if (binding)
+        binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+
+      if (aNotify) {
+        mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+        mDocument->EndUpdate();
+      }
     }
   }
 
