@@ -3641,7 +3641,14 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
   NS_ENSURE_SUCCESS(rv,rv);
 
   SetNotifyDownloadedLines(PR_TRUE); 
-  return imapService->DownloadMessagesForOffline(messageIds.get(), this, nsnull, window);
+  rv = AcquireSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
+  if (NS_FAILED(rv))
+  {
+    ThrowAlertMsg("operationFailedFolderBusy", window);
+    return rv;
+  }
+
+  return imapService->DownloadMessagesForOffline(messageIds.get(), this, this, window);
 }
 
 NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
@@ -3659,6 +3666,12 @@ NS_IMETHODIMP nsImapMailFolder::DownloadAllForOffline(nsIUrlListener *listener, 
     GetDatabase(msgWindow);
     m_downloadingFolderForOfflineUse = PR_TRUE;
 
+    rv = AcquireSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
+    if (NS_FAILED(rv))
+    {
+      ThrowAlertMsg("operationFailedFolderBusy", msgWindow);
+      return rv;
+    }
     SetNotifyDownloadedLines(PR_TRUE); 
     nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -3732,7 +3745,6 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
 {
   nsresult res = NS_OK;
   PRBool commit = PR_FALSE;
-  PRBool needMsgID = PR_FALSE;
   if (m_offlineHeader)
   {
     EndNewOfflineMessage();
@@ -3748,16 +3760,16 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
   res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
 
   if (msgHdr && markRead)
-      {
-        PRBool isRead;
-        msgHdr->GetIsRead(&isRead);
-              if (!isRead)
-              {
-            msgHdr->MarkRead(PR_TRUE);
-            commit = PR_TRUE;
-          }
-        }
-
+  {
+    PRBool isRead;
+    msgHdr->GetIsRead(&isRead);
+    if (!isRead)
+    {
+      msgHdr->MarkRead(PR_TRUE);
+      commit = PR_TRUE;
+    }
+  }
+  
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 
@@ -4008,44 +4020,14 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 {
   const char *doomedKeyString = msgIdString;
 
-  PRBool showDeletedMessages = ShowDeletedMessages();
-
   if (deleteAllMsgs)
-  {
-#ifdef HAVE_PORT    
-    TNeoFolderInfoTransfer *originalInfo = nsnull;
-    nsIMsgDatabase *folderDB;
-    if (ImapMailDB::Open(GetPathname(), PR_FALSE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
-    {
-      originalInfo = new TNeoFolderInfoTransfer(*folderDB->m_neoFolderInfo);
-      folderDB->ForceClosed();
-    }
-      
-    // Remove summary file.
-    XP_FileRemove(GetPathname(), xpMailFolderSummary);
-    
-    // Create a new summary file, update the folder message counts, and
-    // Close the summary file db.
-    if (ImapMailDB::Open(GetPathname(), PR_TRUE, &folderDB, GetMaster(), &wasCreated) == eSUCCESS)
-    {
-      if (originalInfo)
-      {
-        originalInfo->TransferFolderInfo(*folderDB->m_neoFolderInfo);
-        delete originalInfo;
-      }
-      SummaryChanged();
-      folderDB->Close();
-    }
-#endif
-    // ### DMB - how to do this? Reload any thread pane because it's invalid now.
     return NS_OK;
-  }
 
   char *keyTokenString = PL_strdup(doomedKeyString);
   nsMsgKeyArray affectedMessages;
   ParseUidString(keyTokenString, affectedMessages);
 
-  if (doomedKeyString && !showDeletedMessages)
+  if (doomedKeyString && !ShowDeletedMessages())
   {
     if (affectedMessages.GetSize() > 0) // perhaps Search deleted these messages
     {
@@ -4061,7 +4043,7 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
     if (mDatabase)
       SetIMAPDeletedFlag(mDatabase, affectedMessages, nsnull);
   }
-  PR_FREEIF(keyTokenString);
+  PR_Free(keyTokenString);
   return NS_OK;
 }
 
@@ -4113,16 +4095,15 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
 PRBool nsImapMailFolder::DeleteIsMoveToTrash()
 {
   nsresult err;
-    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+  nsCOMPtr<nsIImapHostSessionList> hostSession = 
              do_GetService(kCImapHostSessionList, &err);
   PRBool rv = PR_TRUE;
 
     if (NS_SUCCEEDED(err) && hostSession)
   {
-        char *serverKey = nsnull;
-        GetServerKey(&serverKey);
-        err = hostSession->GetDeleteIsMoveToTrashForHost(serverKey, rv);
-        PR_FREEIF(serverKey);
+    nsXPIDLCString serverKey;
+    GetServerKey(getter_Copies(serverKey));
+    err = hostSession->GetDeleteIsMoveToTrashForHost(serverKey.get(), rv);
   }
   return rv;
 }
@@ -4202,7 +4183,7 @@ nsImapMailFolder::GetMessageSizeFromDB(const char *id, PRBool idIsUid, PRUint32 
     if (NS_SUCCEEDED(rv) && mailHdr)
       rv = mailHdr->GetMessageSize(size);
   }
-    return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -4291,7 +4272,10 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         nsImapAction imapAction = nsIImapUrl::nsImapTest;
         imapUrl->GetImapAction(&imapAction);
         if (imapAction == nsIImapUrl::nsImapMsgFetch || imapAction == nsIImapUrl::nsImapMsgDownloadForOffline)
+        {
+          ReleaseSemaphore(NS_STATIC_CAST(nsIMsgImapMailFolder*, this));
           SetNotifyDownloadedLines(PR_FALSE);
+        }
 
         switch(imapAction)
         {
