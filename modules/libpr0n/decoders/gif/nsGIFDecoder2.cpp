@@ -40,8 +40,9 @@ NS_IMPL_ISUPPORTS2(nsGIFDecoder2, imgIDecoder, nsIOutputStream);
 nsGIFDecoder2::nsGIFDecoder2()
 {
   NS_INIT_ISUPPORTS();
-  memset(&mGIFStruct, 0, sizeof(gif_struct));
   mImageFrame = nsnull;
+  
+  mGIFStruct = nsnull;
 
   mAlphaLine = nsnull;
 }
@@ -50,6 +51,11 @@ nsGIFDecoder2::~nsGIFDecoder2(void)
 {
   if (mAlphaLine)
     nsMemory::Free(mAlphaLine);
+
+  if (mGIFStruct) {
+    gif_destroy(mGIFStruct);
+    mGIFStruct = nsnull;
+  }
 }
 
 //******************************************************************************
@@ -64,15 +70,18 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
   mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
 
   aRequest->GetImage(getter_AddRefs(mImageContainer));
-  
 
   /* do gif init stuff */
   /* Always decode to 24 bit pixdepth */
   
+  PRBool created = gif_create(&mGIFStruct);
+
+  NS_ASSERTION(created, "gif_create failed");
+
   // Call GIF decoder init routine
   GIFInit(
+    mGIFStruct,
     this,
-    &mGIFStruct,
     NewPixmap,
     BeginGIF,
     EndGIF,
@@ -84,6 +93,7 @@ NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
     DestroyTransparentPixel,
     HaveDecodedRow,
     HaveImageAll);
+
   return NS_OK;
 }
 
@@ -106,8 +116,10 @@ NS_IMETHODIMP nsGIFDecoder2::GetRequest(imgIRequest * *aRequest)
 /* void close (); */
 NS_IMETHODIMP nsGIFDecoder2::Close()
 {
-  //if (mPNG)
-  //  png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
+  if (mGIFStruct) {
+    gif_destroy(mGIFStruct);
+    mGIFStruct = nsnull;
+  }
 
   return NS_OK;
 }
@@ -148,8 +160,8 @@ PRUint32 nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
   // First we ask if the gif decoder is ready for more data, and if so, push it.
   // In the new decoder, we should always be able to process more data since
   // we don't wait to decode each frame in an animation now.
-  if(gif_write_ready(&mGIFStruct)) {
-    gif_write(&mGIFStruct, data, count);
+  if(gif_write_ready(mGIFStruct)) {
+    gif_write(mGIFStruct, data, count);
   }
     
 
@@ -259,10 +271,10 @@ int BeginImageFrame(
   nsGIFDecoder2* decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   
   decoder->mImageFrame = nsnull; // clear out our current frame reference
-  decoder->mGIFStruct.x_offset = aFrameXOffset;
-  decoder->mGIFStruct.y_offset = aFrameYOffset;
-  decoder->mGIFStruct.width = aFrameWidth;
-  decoder->mGIFStruct.height = aFrameHeight;
+  decoder->mGIFStruct->x_offset = aFrameXOffset;
+  decoder->mGIFStruct->y_offset = aFrameYOffset;
+  decoder->mGIFStruct->width = aFrameWidth;
+  decoder->mGIFStruct->height = aFrameHeight;
 
   return 0;
 }
@@ -326,7 +338,7 @@ int HaveDecodedRow(
   // How annoying.
   if(! decoder->mImageFrame) {
     gfx_format format = gfxIFormats::RGB;
-    if (decoder->mGIFStruct.is_transparent)
+    if (decoder->mGIFStruct->is_transparent)
       format = gfxIFormats::RGB_A1;
 
 #ifdef XP_PC
@@ -337,8 +349,8 @@ int HaveDecodedRow(
     // initalize the frame and append it to the container
     decoder->mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
     decoder->mImageFrame->Init(
-      decoder->mGIFStruct.x_offset, decoder->mGIFStruct.y_offset, 
-      decoder->mGIFStruct.width, decoder->mGIFStruct.height, format);
+      decoder->mGIFStruct->x_offset, decoder->mGIFStruct->y_offset, 
+      decoder->mGIFStruct->width, decoder->mGIFStruct->height, format);
       
     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
 
@@ -370,12 +382,12 @@ int HaveDecodedRow(
     // XXX map the data into colors
     int cmapsize;
     GIF_RGB* cmap;
-    if(decoder->mGIFStruct.local_colormap) {
-      cmapsize = decoder->mGIFStruct.local_colormap_size;
-      cmap = decoder->mGIFStruct.local_colormap;
+    if(decoder->mGIFStruct->local_colormap) {
+      cmapsize = decoder->mGIFStruct->local_colormap_size;
+      cmap = decoder->mGIFStruct->local_colormap;
     } else {
-      cmapsize = decoder->mGIFStruct.global_colormap_size;
-      cmap = decoder->mGIFStruct.global_colormap;
+      cmapsize = decoder->mGIFStruct->global_colormap_size;
+      cmap = decoder->mGIFStruct->global_colormap;
     }
 
     PRUint8* rgbRowIndex = aRGBrowBufPtr;
@@ -384,7 +396,7 @@ int HaveDecodedRow(
     switch (format) {
     case gfxIFormats::RGB:
       {
-        while(rowBufIndex != decoder->mGIFStruct.rowend) {
+        while(rowBufIndex != decoder->mGIFStruct->rowend) {
 #ifdef XP_MAC
           *rgbRowIndex++ = 0; // Mac is always 32bits per pixel, this is pad
 #endif
@@ -399,7 +411,7 @@ int HaveDecodedRow(
       break;
     case gfxIFormats::BGR:
       {
-        while(rowBufIndex != decoder->mGIFStruct.rowend) {
+        while(rowBufIndex != decoder->mGIFStruct->rowend) {
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;
           *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].red;
@@ -416,7 +428,7 @@ int HaveDecodedRow(
         memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;
         for (PRUint32 x=0; x<iwidth; x++) {
-          if (*rowBufIndex != decoder->mGIFStruct.tpixel) {
+          if (*rowBufIndex != decoder->mGIFStruct->tpixel) {
 #ifdef XP_PC
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].blue;
             *rgbRowIndex++ = cmap[PRUint8(*rowBufIndex)].green;

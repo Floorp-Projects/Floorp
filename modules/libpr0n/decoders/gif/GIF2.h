@@ -207,11 +207,16 @@ typedef struct gif_struct {
                                    the number of animation loops a GIF renders. */
 } gif_struct;
 
+
+/* Create a new gif_struct */
+extern PRBool gif_create(gif_struct **gs);
+
 /* These are the APIs that the client calls to intialize,
 push data to, and shut down the GIF decoder. */
 PRBool GIFInit(
-  void* aClientData,
   gif_struct* gs,
+
+  void* aClientData,
   
   int (*PR_CALLBACK GIFCallback_NewPixmap)(),
   
@@ -262,12 +267,13 @@ PRBool GIFInit(
     void* aClientData)
   );
 
+extern void gif_destroy(gif_struct* aGIFStruct);
+
 int gif_write(gif_struct* aGIFStruct, const PRUint8 * buf, PRUint32 numbytes);
 
 PRUint8 gif_write_ready(gif_struct* aGIFStruct);
 
 extern void gif_complete(gif_struct** aGIFStruct);
-extern void gif_abort(gif_struct* aGIFStruct);
 extern void gif_delay_time_callback(/* void *closure */);
 
 
