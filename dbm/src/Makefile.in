@@ -51,11 +51,11 @@ CSRCS		= \
 ifeq ($(OS_ARCH),WINNT)
 CSRCS		+= memmove.c snprintf.c
 else
-ifeq (,$(filter -DHAVE_MEMMOVE=1,$(DEFS)))
+ifeq (,$(filter -DHAVE_MEMMOVE=1,$(ACDEFINES)))
 CSRCS += memmove.c
 endif
 
-ifeq (,$(filter -DHAVE_SNPRINTF=1,$(DEFS)))
+ifeq (,$(filter -DHAVE_SNPRINTF=1,$(ACDEFINES)))
 CSRCS += snprintf.c
 endif
 endif # WINNT
