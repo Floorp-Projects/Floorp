@@ -402,9 +402,6 @@ public:
 
     PRBool
     IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, nsIRDFResource* aType);
-
-    void
-    NotifyError(nsresult aResult, const PRUnichar* aErrorMsg);
 };
 
 PRInt32         RDFXMLDataSourceImpl::gRefCnt = 0;
@@ -612,7 +609,8 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         if (NS_FAILED(rv))
             break;
     }
-    aConsumer->OnStopRequest(channel, nsnull, NS_OK, nsnull);
+
+    aConsumer->OnStopRequest(channel, nsnull, rv, nsnull);
 
 	// don't leak proxy!
 	proxy->Close();
@@ -808,7 +806,7 @@ RDFXMLDataSourceImpl::Flush(void)
         return NS_ERROR_NOT_INITIALIZED;
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] flush(%s) %sblocking", this, mURLSpec));
+           ("rdfxml[%p] flush(%s)", this, mURLSpec));
 
     nsresult rv;
 
@@ -916,19 +914,11 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     if (NS_FAILED(rv)) return rv;
 
     if (aBlocking) {
-        // Manually bracket with [Begin|End]Load() so that observers
-        // (if there are any) get notified.
-        (void) BeginLoad();
-
         rv = rdf_BlockingParse(mURL, this);
 
-        if (NS_SUCCEEDED(rv)) {
-            (void) EndLoad();
-        }
-        else {
-            NotifyError(rv, nsnull);
-            return rv;
-        }
+        mParser = nsnull; // release the parser
+
+        if (NS_FAILED(rv)) return rv;
     }
     else {
         // Null LoadGroup ?
@@ -1073,7 +1063,10 @@ RDFXMLDataSourceImpl::OnStopRequest(nsIChannel *channel,
                                     const PRUnichar *errorMsg)
 {
     if (NS_FAILED(status)) {
-        NotifyError(status, errorMsg);
+        for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
+            nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
+            (void) obs->OnError(this, status, errorMsg);
+        }
     }
 
     nsresult rv;
@@ -1699,11 +1692,3 @@ RDFXMLDataSourceImpl::IsA(nsIRDFDataSource* aDataSource, nsIRDFResource* aResour
 }
 
 
-void
-RDFXMLDataSourceImpl::NotifyError(nsresult status, const PRUnichar* errorMsg)
-{
-    for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-        nsIRDFXMLSinkObserver* obs = (nsIRDFXMLSinkObserver*) mObservers[i];
-        (void) obs->OnError(this, status, errorMsg);
-    }
-}
