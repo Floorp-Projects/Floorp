@@ -255,14 +255,14 @@ void nsCaret::DrawCaret()
 			domSelection->GetFocusNodeAndOffset(getter_doesnt_AddRef(focusNode), &focusOffset);
 			
 			// is this a text node?
-			nsCOMPtr<nsIDOMCharacterData>	nodeAsText(focusNode);
+			nsCOMPtr<nsIDOMCharacterData>	nodeAsText(do_QueryInterface(focusNode));
 			if (nodeAsText)
 			{
 				PRInt32 contentOffset = focusOffset;
 				
 				if (focusNode)
 				{
-		      nsCOMPtr<nsIContent>contentNode(focusNode);
+		      nsCOMPtr<nsIContent>contentNode(do_QueryInterface(focusNode));
 		      
 					if (contentNode)
 					{

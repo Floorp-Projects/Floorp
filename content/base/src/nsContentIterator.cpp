@@ -185,7 +185,7 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   aRange->GetStartParent(getter_AddRefs(dN));
   if (!dN) 
     return NS_ERROR_ILLEGAL_VALUE;
-  cN = dN;
+  cN = do_QueryInterface(dN);
   if (!cN) 
     return NS_ERROR_FAILURE;
   
@@ -232,7 +232,7 @@ nsresult nsContentIterator::Init(nsIDOMRange* aRange)
   aRange->GetEndParent(getter_AddRefs(dN));
   if (!dN) 
     return NS_ERROR_ILLEGAL_VALUE;
-  cN = dN;
+  cN = do_QueryInterface(dN);
   if (!cN) 
     return NS_ERROR_FAILURE;
 
@@ -507,7 +507,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   aRange->GetStartParent(getter_AddRefs(dN));
   if (!dN) 
     return NS_ERROR_ILLEGAL_VALUE;
-  cN = dN;
+  cN = do_QueryInterface(dN);
   if (!cN) 
     return NS_ERROR_FAILURE;
   
@@ -572,7 +572,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   aRange->GetEndParent(getter_AddRefs(dN));
   if (!dN) 
     return NS_ERROR_ILLEGAL_VALUE;
-  cN = dN;
+  cN = do_QueryInterface(dN);
   if (!cN) 
     return NS_ERROR_FAILURE;
 

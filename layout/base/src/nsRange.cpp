@@ -218,7 +218,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
     // end of the root node, becasue it has no parent.
     // so instead represent it by (node,0) and (node,numChildren)
     *outParent = aNode;
-    nsCOMPtr<nsIContent> cN(*outParent);
+    nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
     if (!cN)
       return false;
     cN->ChildCount(indx);
@@ -229,7 +229,7 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
   }
   else
   {
-    nsCOMPtr<nsIContent> cN(*outParent);
+    nsCOMPtr<nsIContent> cN(do_QueryInterface(*outParent));
     if (!NS_SUCCEEDED(cN->IndexOf(aNode, indx)))
       return false;
     *outStartOffset = indx;
@@ -1251,7 +1251,7 @@ nsRange::CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode, PRInt32 nodeOffset
   // Make clone of parent:
   if (parentNode == commonParent || !parentNode)
   {
-    parentClone = docfrag;
+    parentClone = do_QueryInterface(docfrag);
   }
   else
   {

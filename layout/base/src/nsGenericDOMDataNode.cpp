@@ -501,8 +501,8 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
           nsCOMPtr<nsIContent> startContent;
           nsCOMPtr<nsIContent> endContent;
-          startContent = startNode;
-          endContent = endNode;
+          startContent = do_QueryInterface(startNode);
+          endContent = do_QueryInterface(endNode);
 
 
           nsString  buffer;

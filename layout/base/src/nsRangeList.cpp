@@ -522,7 +522,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
     nsCOMPtr<nsIContent> content;
     if (NS_FAILED(aFrame->GetContent(getter_AddRefs(content))) || !content)
       return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMNode> domnode(content);
+    nsCOMPtr<nsIDOMNode> domnode(do_QueryInterface(content));
     if (!domnode)
       return NS_ERROR_FAILURE;
 
@@ -634,10 +634,10 @@ compareFrames(nsIFrame *aBegin, nsIFrame *aEnd)
     return 0;
   nsCOMPtr<nsIContent> beginContent;
   if (NS_SUCCEEDED(aBegin->GetContent(getter_AddRefs(beginContent))) && beginContent){
-    nsCOMPtr<nsIDOMNode>beginNode (beginContent);
+    nsCOMPtr<nsIDOMNode>beginNode (do_QueryInterface(beginContent));
     nsCOMPtr<nsIContent> endContent;
     if (NS_SUCCEEDED(aEnd->GetContent(getter_AddRefs(endContent))) && endContent){
-      nsCOMPtr<nsIDOMNode>endNode (endContent);
+      nsCOMPtr<nsIDOMNode>endNode (do_QueryInterface(endContent));
       PRBool storage;
       PRInt32 int1;
       PRInt32 int2;
@@ -700,7 +700,7 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
   if (NS_SUCCEEDED(aFrame->GetContent(getter_AddRefs(content))) && content){
-    domNode = content;
+    domNode = do_QueryInterface(content);
     nsCOMPtr<nsIDOMNode> parent;
     nsCOMPtr<nsIDOMNode> parent2;
     if (NS_FAILED(domNode->GetParentNode(getter_AddRefs(parent))) || !parent)
@@ -752,11 +752,11 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         else if (frame){ //we need to check to see what the order is.
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
-            nsCOMPtr<nsIDOMNode> oldDomNode(oldContent);
+            nsCOMPtr<nsIDOMNode> oldDomNode(do_QueryInterface(oldContent));
             if (oldDomNode && (oldDomNode == GetFocusNode())) {
               nsCOMPtr<nsIContent> anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
-                nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);
+                nsCOMPtr<nsIDOMNode>anchorDomNode(do_QueryInterface(anchorContent));
                 if (anchorDomNode && anchorDomNode == GetAnchorNode()) {
 
 
@@ -919,10 +919,10 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
     range->GetStartOffset(&startOffset);
     range->GetEndParent(getter_AddRefs(endNode));
     range->GetEndOffset(&endOffset);
-    nsCOMPtr<nsIContent> startContent(startNode);
+    nsCOMPtr<nsIContent> startContent(do_QueryInterface(startNode));
     result = findFrameFromContent(aStartFrame, startContent,PR_TRUE);
     if (result){
-      nsCOMPtr<nsIContent> endContent(endNode);
+      nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
       if (endContent == startContent){
         if (startContent == frameContent)
           frameOffset = GetFocusOffset();
@@ -995,7 +995,7 @@ nsresult nsRangeList::NotifySelectionListeners()
   for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
   {
   	nsCOMPtr<nsISupports>	thisEntry(mSelectionListeners->ElementAt(i));
-    nsCOMPtr<nsIDOMSelectionListener> thisListener(thisEntry);
+    nsCOMPtr<nsIDOMSelectionListener> thisListener(do_QueryInterface(thisEntry));
     if (thisListener)
     	thisListener->NotifySelectionChanged();
   }

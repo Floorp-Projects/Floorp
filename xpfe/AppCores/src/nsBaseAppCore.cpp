@@ -175,6 +175,6 @@ nsCOMPtr<nsIDOMNode> nsBaseAppCore::GetParentNodeFromDOMDoc(nsIDOMDocument * aDO
   nsCOMPtr<nsIDOMElement> element;
   aDOMDoc->GetDocumentElement(getter_AddRefs(element));
   if (element)
-    return nsCOMPtr<nsIDOMNode>(element);
+    return nsCOMPtr<nsIDOMNode>(do_QueryInterface(element));
   return node;
 } // nsToolbarCore::GetParentNodeFromDOMDoc
