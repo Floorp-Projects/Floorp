@@ -37,6 +37,7 @@ Rights Reserved.
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newMessage"/>
+	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_close" oncommand="CloseMessenger()"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -82,6 +83,7 @@ Rights Reserved.
 					<menuitem id="menu_newNavigator"/>
 					<menuitem id="menu_newMessage"/>
 					<menuitem id="cmd_newCard"/>
+					<menuitem id="menu_newEditor"/>
 				</menupopup>
 			</menu>
 			<menuitem value="&openAttachmentCmd.label;" disabled="true" oncommand="MsgOpenAttachment();"/>

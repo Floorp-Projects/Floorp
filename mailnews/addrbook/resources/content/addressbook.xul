@@ -60,6 +60,7 @@ Rights Reserved.
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
 	<broadcaster id="cmd_newNavigator"/>
+	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_newMessage"/>
 	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()" disabled="true"/>
  	<broadcaster id="cmd_close" oncommand="AbClose()"/>
@@ -112,6 +113,7 @@ Rights Reserved.
 						<menuitem id="menu_newNavigator"/>
 						<menuitem id="menu_newMessage"/>
 						<menuitem id="cmd_newCard"/>
+  					<menuitem id="menu_newEditor"/>
 					</menupopup>
 				</menu>
 				<menuseparator/>
