@@ -105,6 +105,8 @@ CPPSRCS = \
 	NativeWrapperFactory.cpp \
 	EmbedWindow.cpp \
 	EmbedProgress.cpp \
+	EventRegistrationImpl.cpp \
+	HttpHeaderVisitorImpl.cpp \
 	NativeEventThread.cpp \
 	NavigationImpl.cpp \
 	ns_util.cpp \

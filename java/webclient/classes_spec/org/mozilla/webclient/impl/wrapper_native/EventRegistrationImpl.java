@@ -29,7 +29,10 @@ import org.mozilla.util.ParameterCheck;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.Collection;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.BrowserControlCanvas;
@@ -37,6 +40,7 @@ import org.mozilla.webclient.EventRegistration2;
 import org.mozilla.webclient.impl.WrapperFactory;
 import org.mozilla.webclient.DocumentLoadEvent;
 import org.mozilla.webclient.DocumentLoadListener;
+import org.mozilla.webclient.PageInfoListener;
 import org.mozilla.webclient.NewWindowEvent;
 import org.mozilla.webclient.NewWindowListener;
 import java.awt.event.MouseListener;
@@ -116,6 +120,16 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
     getWrapperFactory().verifyInitialized();
     
     synchronized(documentLoadListeners) {
+	if (listener instanceof PageInfoListener) {
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		    public Object run() {
+			nativeSetCapturePageInfo(getNativeBrowserControl(),
+						 true);
+			return null;
+		    }
+		});
+	}
+	
 	documentLoadListeners.add(listener);
     }
 }
@@ -124,9 +138,20 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
     getWrapperFactory().verifyInitialized();
-
+    
     synchronized(documentLoadListeners) {
 	documentLoadListeners.remove(listener);
+	
+	if (0 == documentLoadListeners.size()) {
+	    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		    public Object run() {
+			nativeSetCapturePageInfo(getNativeBrowserControl(),
+						 false);
+			return null;
+		    }
+		});
+	}
+	
     }
 }
 
@@ -244,7 +269,9 @@ void nativeEventOccurred(String targetClassName, long eventType,
     WebclientEvent event = null;
 
     if (DocumentLoadListener.class.getName().equals(targetClassName)) {
-        event = new DocumentLoadEvent(this, eventType, eventData);
+        event = new DocumentLoadEvent(this, eventType, 
+				      // PENDING(edburns: new URIToStringMap((Map)eventData));
+				      eventData);
     }
     else if (MouseListener.class.getName().equals(targetClassName)) {
         // We create a plain vanilla WebclientEvent, which the
@@ -264,6 +291,9 @@ void nativeEventOccurred(String targetClassName, long eventType,
     eventPump.queueEvent(event);
     eventPump.V();
 }
+
+private native void nativeSetCapturePageInfo(int webShellPtr, 
+					     boolean newState);
 
 public class BrowserToJavaEventPump extends Thread {
     private boolean keepRunning = false;
@@ -348,6 +378,79 @@ public class BrowserToJavaEventPump extends Thread {
     }
 
 } // end of class BrowserToJavaEventPump
+
+class URIToStringMap extends Object implements Map {
+    private Map map = null;
+
+    URIToStringMap(Map yourMap) {
+	map = yourMap;
+    }
+
+    public String toString() {
+	Object result = null;
+	if (null == map || null == (result = map.get("URI"))) {
+	    result = "";
+	}
+	return result.toString();
+    }
+	    
+    public void clear() {
+	throw new UnsupportedOperationException();
+    }
+
+    public boolean containsKey(Object key) {
+	return map.containsKey(key);
+    }
+
+    public boolean containsValue(Object value) {
+	return map.containsValue(value);
+    }
+
+    public Set entrySet() {
+	return map.entrySet();
+    }
+    
+    public boolean equals(Object o) {
+	return map.equals(o);
+    }
+
+    public Object get(Object key) {
+	return map.get(key);
+    }
+
+    public int hashCode() {
+	return map.hashCode();
+    }
+
+    public boolean isEmpty() {
+	return map.isEmpty();
+    }
+
+    public Set keySet() {
+	return map.keySet();
+    }
+
+    public Object put(Object key, Object value) {
+	return map.put(key, value);
+    }
+    
+    public void putAll(Map t) {
+	map.putAll(t);
+    }
+
+    public Object remove(Object key) {
+	return map.remove(key);
+    }
+
+    public int size() {
+	return map.size();
+    }
+    
+    public Collection values() {
+	return map.values();
+    }
+    
+}
 
 
 } // end of class EventRegistrationImpl

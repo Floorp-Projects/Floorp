@@ -33,9 +33,11 @@
 
 #include "NativeBrowserControl.h"
 
+#include "HttpHeaderVisitorImpl.h"
+
 #include "ns_globals.h" // for prLogModuleInfo
 
-EmbedProgress::EmbedProgress(void)
+EmbedProgress::EmbedProgress(void) : mCapturePageInfo(JNI_FALSE)
 {
   mOwner = nsnull;
   mEventRegistration = nsnull;
@@ -84,6 +86,13 @@ EmbedProgress::SetEventRegistration(jobject yourEventRegistration)
     return rv;
 }
 
+nsresult 
+EmbedProgress::SetCapturePageInfo(jboolean newState)
+{
+    mCapturePageInfo = newState;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     nsIRequest     *aRequest,
@@ -91,12 +100,26 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
 			     nsresult        aStatus)
 {
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
-    
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
     const char * uriCStr = (const char *) uriString;
-    jstring uriJstr = ::util_NewStringUTF(env, (nsnull != uriCStr 
-						? uriCStr : ""));
+    // don't report "about:" URL events.
+    if (uriString && 5 < uriString.Length() && 
+	0 == strncmp("about:", uriCStr, 6)) {
+	return NS_OK;
+    }
+
+    jstring uriJstr = (jstring) ::util_NewGlobalRef(env,
+					  ::util_NewStringUTF(env, (nsnull != uriCStr 
+								    ? uriCStr : "")));
+
+    jobject properties = ::util_NewGlobalRef(env,
+					     ::util_CreatePropertiesObject(env, 
+									   (jobject)
+									   &(mOwner->GetWrapperFactory()->shareContext)));
+    ::util_StoreIntoPropertiesObject(env, properties, URI_VALUE, uriJstr,
+				     (jobject)
+				     &(mOwner->GetWrapperFactory()->shareContext));
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnStateChange: URI: %s\n",
@@ -111,31 +134,27 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     if ((aStateFlags & STATE_IS_NETWORK) && 
 	(aStateFlags & STATE_START)) {
 	
-	if (channel) {
-	    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-		   ("EmbedProgress::OnStateChange: have nsIHttpChannel at START_DOCUMENT_LOAD\n"));
-	}
+	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	       ("EmbedProgress::OnStateChange: START_DOCUMENT_LOAD\n"));
 
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			     DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
-			     uriJstr);
+			     properties);
     }
 
     // and for stop, too
     if ((aStateFlags & STATE_IS_NETWORK) && 
 	(aStateFlags & STATE_STOP)) {
-	if (channel) {
-	    PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-		   ("EmbedProgress::OnStateChange: have nsIHttpChannel at END_DOCUMENT_LOAD\n"));
-	}
+	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	       ("EmbedProgress::OnStateChange: END_DOCUMENT_LOAD\n"));
 
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			     DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
-			     uriJstr);
+			     properties);
 	
     }
 
@@ -143,22 +162,39 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     // request states
     //
     if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
+	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	       ("EmbedProgress::OnStateChange: START_URL_LOAD\n"));
+
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			     DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
-			     uriJstr);
+			     properties);
     }
 
     if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_REQUEST)) {
+	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+	       ("EmbedProgress::OnStateChange: END_URL_LOAD\n"));
+
+	if (channel && mCapturePageInfo) {
+	    HttpHeaderVisitorImpl *visitor = 
+		new HttpHeaderVisitorImpl(env, 
+					  properties, (jobject)
+					  &(mOwner->GetWrapperFactory()->shareContext));
+	    channel->VisitResponseHeaders(visitor);
+	    delete visitor;
+	}
+
 	util_SendEventToJava(nsnull, 
 			     mEventRegistration, 
 			     DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			     DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], 
-			     uriJstr);
+			     properties);
     }
 
-    ::util_DeleteStringUTF(env, uriJstr);
+    //    ::util_DestroyPropertiesObject(env, properties, nsnull);
+
+    //    ::util_DeleteStringUTF(env, uriJstr);
     
     return NS_OK;
 }
@@ -174,10 +210,31 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
     
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
+    const char * uriCStr = (const char *) uriString;
     PRInt32 percentComplete = 0;
     nsCAutoString name;
     nsAutoString autoName;
     nsresult rv = NS_OK;
+
+    // don't report "about:" URL events.
+    if (uriString && 5 < uriString.Length() && 
+	0 == strncmp("about:", (const char *) uriString, 6)) {
+	return NS_OK;
+    }
+
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    jstring uriJstr = (jstring) ::util_NewGlobalRef(env,
+						    ::util_NewStringUTF(env, (nsnull != uriCStr 
+									      ? uriCStr : "")));
+    
+    jobject properties = ::util_NewGlobalRef(env,
+					     ::util_CreatePropertiesObject(env, 
+									   (jobject)
+									   &(mOwner->GetWrapperFactory()->shareContext)));
+    ::util_StoreIntoPropertiesObject(env, properties, URI_VALUE, uriJstr,
+				     (jobject)
+				     &(mOwner->GetWrapperFactory()->shareContext));
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnProgressChange: URI: %s\n\taCurSelfProgress: %d\n\taMaxSelfProgress: %d\n\taCurTotalProgress: %d\n\taMaxTotalProgress: %d\n",
@@ -199,19 +256,19 @@ EmbedProgress::OnProgressChange(nsIWebProgress *aWebProgress,
     autoName.AppendInt(percentComplete);
     autoName.AppendWithConversion("%");
     
-    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+    jstring msgJStr = (jstring) ::util_NewGlobalRef(env, 
+						    ::util_NewString(env, autoName.get(), autoName.Length()));
     
-    jstring msgJStr = ::util_NewString(env, autoName.get(), autoName.Length());
+    ::util_StoreIntoPropertiesObject(env, properties, MESSAGE_VALUE, msgJStr,
+				     (jobject)
+				     &(mOwner->GetWrapperFactory()->shareContext));
+
     util_SendEventToJava(nsnull, 
 			 mEventRegistration, 
 			 DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			 DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
-			 msgJStr);
+			 properties);
     
-    if (msgJStr) {
-        ::util_DeleteString(env, msgJStr);
-    }
-  
     return NS_OK;
 }
 
@@ -247,8 +304,29 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
     
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
-    jstring msgJstr = ::util_NewString(env, aMessage,
-				       nsCRT::strlen(aMessage));
+    const char * uriCStr = (const char *) uriString;
+
+    // don't report "about:" URL events.
+    if (uriString && 5 < uriString.Length() && 
+	0 == strncmp("about:", uriString, 6)) {
+	return NS_OK;
+    }
+
+    jstring uriJstr = (jstring) ::util_NewGlobalRef(env,
+						    ::util_NewStringUTF(env, (nsnull != uriCStr 
+									      ? uriCStr : "")));
+    
+    jobject properties = ::util_NewGlobalRef(env,
+					     ::util_CreatePropertiesObject(env, 
+									   (jobject)
+									   &(mOwner->GetWrapperFactory()->shareContext)));
+    ::util_StoreIntoPropertiesObject(env, properties, URI_VALUE, uriJstr,
+				     (jobject)
+				     &(mOwner->GetWrapperFactory()->shareContext));
+    
+    jstring msgJstr = (jstring) ::util_NewGlobalRef(env,
+						    ::util_NewString(env, aMessage,
+								     nsCRT::strlen(aMessage)));
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnStatusChange: URI: %s\n",
@@ -258,11 +336,7 @@ EmbedProgress::OnStatusChange(nsIWebProgress  *aWebProgress,
 			 mEventRegistration, 
 			 DOCUMENT_LOAD_LISTENER_CLASSNAME,
 			 DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
-			 msgJstr);
-    
-    if (msgJstr) {
-	::util_DeleteString(env, msgJstr);
-    }
+			 properties);
     
     return NS_OK;
 }
@@ -274,6 +348,12 @@ EmbedProgress::OnSecurityChange(nsIWebProgress *aWebProgress,
 {
     nsXPIDLCString uriString;
     RequestToURIString(aRequest, getter_Copies(uriString));
+
+    // don't report "about:" URL events.
+    if (uriString && 5 < uriString.Length() && 
+	0 == strncmp("about:", (const char *) uriString, 6)) {
+	return NS_OK;
+    }
     
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	   ("EmbedProgress::OnSecurityChange: URI: %s\n",

@@ -71,6 +71,9 @@ jobject TRUE_VALUE;
 jobject FALSE_VALUE;
 jobject ONE_VALUE;
 jobject TWO_VALUE;
+jobject URI_VALUE;
+jobject HEADERS_VALUE;
+jobject MESSAGE_VALUE;
 jobject BM_ADD_DATE_VALUE;
 jobject BM_LAST_MODIFIED_DATE_VALUE;
 jobject BM_LAST_VISIT_DATE_VALUE;
@@ -234,6 +237,21 @@ jboolean util_InitStringConstants()
     if (nsnull == (TWO_VALUE = 
                    ::util_NewGlobalRef(env, (jobject)
                                        ::util_NewStringUTF(env, "2")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (URI_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "URI")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (HEADERS_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "headers")))) {
+        return JNI_FALSE;
+    }
+    if (nsnull == (MESSAGE_VALUE = 
+                   ::util_NewGlobalRef(env, (jobject)
+                                       ::util_NewStringUTF(env, "message")))) {
         return JNI_FALSE;
     }
     if (nsnull == (BM_ADD_DATE_VALUE = 

@@ -61,12 +61,14 @@ NativeBrowserControl::~NativeBrowserControl()
 }
 
 nsresult
-NativeBrowserControl::Init()
+NativeBrowserControl::Init(NativeWrapperFactory *yourWrapperFactory)
 {
 
     if (!util_StringConstantsAreInitialized()) {
         util_InitStringConstants();
     }
+
+    wrapperFactory = yourWrapperFactory;
 
     // Create our embed window, and create an owning reference to it and
     // initialize it.  It is assumed that this window will be destroyed
@@ -232,6 +234,11 @@ NativeBrowserControl::Destroy(void)
     mProgress = nsnull;
     
     parentHWnd = nsnull;
+}
+
+NativeWrapperFactory *NativeBrowserControl::GetWrapperFactory()
+{
+    return wrapperFactory;
 }
 
 jobject NativeBrowserControl::QueryInterfaceJava(WEBCLIENT_INTERFACES interface)

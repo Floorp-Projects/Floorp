@@ -42,6 +42,7 @@
 
 class EmbedProgress;
 class EmbedWindow;
+class NativeWrapperFactory;
 
 /**
  * <p>Native analog to BrowserControl.  Hosts per-window things.  Maps
@@ -60,7 +61,7 @@ public:
     // public API
     // 
     
-    nsresult    Init            ();
+    nsresult    Init            (NativeWrapperFactory *yourWrapperFactory);
     nsresult    Realize         (jobject javaBrowserControl,
                                  void* parentWinPtr, 
                                  PRBool *aAlreadyRealized, 
@@ -71,6 +72,8 @@ public:
     void        Resize          (PRUint32 x, PRUint32 y,
                                  PRUint32 aWidth, PRUint32 aHeight);
     void        Destroy         (void);
+
+    NativeWrapperFactory * GetWrapperFactory();
 
     jobject     QueryInterfaceJava(WEBCLIENT_INTERFACES interface);
 
@@ -104,6 +107,8 @@ public:
     PRBool                         mIsDestroyed;
 
     jobject                        mJavaBrowserControl;
+
+    NativeWrapperFactory *         wrapperFactory;
 
 };
 

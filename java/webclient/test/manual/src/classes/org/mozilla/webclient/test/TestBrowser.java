@@ -28,6 +28,8 @@ import javax.swing.SwingConstants;
 import java.io.File;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.Map;
+import java.util.Iterator;
 
 import org.mozilla.webclient.*;
 
@@ -216,8 +218,9 @@ public class TestBrowser extends JPanel {
             return;
         }
 	
-        eventRegistration.addDocumentLoadListener(new DocumentLoadListener() {
+        eventRegistration.addDocumentLoadListener(new PageInfoListener() {
 		public void eventDispatched(WebclientEvent event) {
+		    Map map = (Map) event.getEventData();
 		    if (event instanceof DocumentLoadEvent) {
 			switch ((int) event.getType()) {
 			case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
@@ -229,11 +232,22 @@ public class TestBrowser extends JPanel {
 			    updateStatusInfo("Loading completed.");
 			    
 			    if (event.getEventData() != null) {
-				jAddressTextField.setText(event.getEventData().toString());
+				jAddressTextField.setText(map.get("URI").toString());
+			    }
+			    break;
+			case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+			    if (map.get("headers") instanceof Map) {
+				Iterator iter = (map = (Map) map.get("headers")).keySet().iterator();
+				while (iter.hasNext()) {
+				    String curName = iter.next().toString();
+				    System.out.println("\t" + curName + 
+						       ": " + 
+						       map.get(curName));
+				}
 			    }
 			    break;
 			case ((int) DocumentLoadEvent.PROGRESS_URL_LOAD_EVENT_MASK):
-			    // updateStatusInfo("Loading in progress...");
+			    updateStatusInfo(map.get("message").toString());
 			    break;
 			case ((int) DocumentLoadEvent.FETCH_INTERRUPT_EVENT_MASK):
 			    updateStatusInfo("Loading error.");

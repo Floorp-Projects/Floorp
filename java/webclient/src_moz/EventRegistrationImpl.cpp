@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+ * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -17,23 +17,26 @@
  * Copyright (C) 1999 Kirk Baker and Ian Wilkinson. All
  * Rights Reserved.
  *
- * Contributor(s):  Daniel Park <daepark@apmindsf.com>
- *                  Kyle Yuan <kyle.yuan@sun.com>
+ * Contributor(s): Kirk Baker <kbaker@eb.com>
+ *               Ian Wilkinson <iw@ennoble.com>
+ *               Mark Lin <mark.lin@eng.sun.com>
+ *               Mark Goddard
+ *               Ed Burns <edburns@acm.org>
+ *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  */
 
-package org.mozilla.webclient;
+#include "org_mozilla_webclient_impl_wrapper_0005fnative_EventRegistrationImpl.h"
 
+#include "ns_util.h"
+#include "NativeBrowserControl.h"
+#include "EmbedProgress.h"
 
-public interface CurrentPage2 extends CurrentPage
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_EventRegistrationImpl_nativeSetCapturePageInfo
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jboolean newState)
 {
-    public Selection getSelection();
 
-    public void highlightSelection(Selection selection);
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    nativeBrowserControl->mProgress->SetCapturePageInfo(newState);
 
-    public void clearAllSelections();
-
-    public void print();
-
-    public void printPreview(boolean preview);
 }
-// end of interface CurrentPage2
+

@@ -124,7 +124,7 @@
   <target name="compile.javah.headers" depends="compile.classes_spec,compile.javah.canvas.headers">
 
     <javah destdir="${basedir}/src_share"
-           class="org.mozilla.webclient.impl.wrapper_native.BookmarksImpl,org.mozilla.webclient.impl.wrapper_native.ProfileManagerImpl,org.mozilla.webclient.impl.wrapper_native.PreferencesImpl,org.mozilla.webclient.impl.wrapper_native.CurrentPageImpl,org.mozilla.webclient.impl.wrapper_native.HistoryImpl,org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl,org.mozilla.webclient.impl.wrapper_native.NavigationImpl,org.mozilla.webclient.impl.wrapper_native.RDFEnumeration,org.mozilla.webclient.impl.wrapper_native.RDFTreeNode,org.mozilla.webclient.impl.wrapper_native.ISupportsPeer,org.mozilla.webclient.impl.wrapper_native.WindowControlImpl,org.mozilla.webclient.impl.wrapper_native.NativeEventThread">
+           class="org.mozilla.webclient.impl.wrapper_native.BookmarksImpl,org.mozilla.webclient.impl.wrapper_native.ProfileManagerImpl,org.mozilla.webclient.impl.wrapper_native.PreferencesImpl,org.mozilla.webclient.impl.wrapper_native.CurrentPageImpl,org.mozilla.webclient.impl.wrapper_native.HistoryImpl,org.mozilla.webclient.impl.wrapper_native.WrapperFactoryImpl,org.mozilla.webclient.impl.wrapper_native.NavigationImpl,org.mozilla.webclient.impl.wrapper_native.RDFEnumeration,org.mozilla.webclient.impl.wrapper_native.RDFTreeNode,org.mozilla.webclient.impl.wrapper_native.ISupportsPeer,org.mozilla.webclient.impl.wrapper_native.WindowControlImpl,org.mozilla.webclient.impl.wrapper_native.NativeEventThread,org.mozilla.webclient.impl.wrapper_native.EventRegistrationImpl">
       <classpath refid="compile.classpath"/>
     </javah>
   </target>

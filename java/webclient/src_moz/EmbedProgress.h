@@ -40,6 +40,8 @@ class EmbedProgress : public nsIWebProgressListener,
 
   nsresult SetEventRegistration(jobject eventRegistration);
 
+  nsresult SetCapturePageInfo(jboolean newState);
+
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -51,6 +53,8 @@ class EmbedProgress : public nsIWebProgressListener,
   NativeBrowserControl *mOwner;
     
   jobject mEventRegistration;
+
+  jboolean mCapturePageInfo;
 };
 
 #endif /* __EmbedProgress_h */

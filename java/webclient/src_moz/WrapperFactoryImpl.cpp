@@ -350,7 +350,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFa
                                     "NULL nativeBCPtr passed to nativeInitBrowserControl.");
         return;
     }
-    rv = nativeBrowserControl->Init();
+    rv = nativeBrowserControl->Init(nativeWrapperFactory);
     if (NS_FAILED(rv)) {
 	    ::util_ThrowExceptionToJava(env, 
                                     errorMessages[3]);

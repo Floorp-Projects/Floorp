@@ -59,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.44 2003/06/09 20:05:36 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.45 2004/09/09 20:17:16 edburns%acm.org Exp $
  *
  * @see org.mozilla.webclient.BrowserControlFactory
 
@@ -719,7 +719,7 @@ public void eventDispatched(WebclientEvent event)
         case ((int) DocumentLoadEvent.START_DOCUMENT_LOAD_EVENT_MASK):
             stopButton.setEnabled(true);
             refreshButton.setEnabled(true);
-            currentURL = (String) event.getEventData();
+            currentURL = event.getEventData().toString();
             System.out.println("debug: edburns: Currently Viewing: " +
                                currentURL);
             statusLabel.setText("Starting to load " + currentURL);
@@ -754,11 +754,11 @@ public void eventDispatched(WebclientEvent event)
             statusLabel.setText(status);
             break;
         case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
-            status = (String) event.getEventData();
+            status = event.getEventData().toString();
             urlStatusLabel.setText("startURL: " + status);
             break;
         case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
-            status = (String) event.getEventData();
+            status = event.getEventData().toString();
             urlStatusLabel.setText(" endURL: " + status);
             break;
         }
