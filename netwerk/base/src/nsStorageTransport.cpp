@@ -282,15 +282,15 @@ nsStorageTransport::GetSecurityInfo(nsISupports **aSecurityInfo)
 }
 
 NS_IMETHODIMP
-nsStorageTransport::GetProgressEventSink(nsIProgressEventSink **aSink)
+nsStorageTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
-    NS_ENSURE_ARG_POINTER(aSink);
-    *aSink = nsnull;
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    *aCallbacks = nsnull;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStorageTransport::SetProgressEventSink(nsIProgressEventSink *aSink)
+nsStorageTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks, PRBool isBackground)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
