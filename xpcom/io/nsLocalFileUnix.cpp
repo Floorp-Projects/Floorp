@@ -366,6 +366,9 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
 static int exclusive_create(const char * path, mode_t mode) {
   return open(path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, mode);
 }
+static int exclusive_mkdir(const char * path, mode_t mode) {
+  return mkdir(path, mode);
+}
 
 NS_IMETHODIMP
 nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
@@ -381,7 +384,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
 #else
     int (*creationFunc)(const char *, mode_t) =
 #endif
-        type == NORMAL_FILE_TYPE ? exclusive_create : mkdir;
+        type == NORMAL_FILE_TYPE ? exclusive_create : exclusive_mkdir;
 
     result = creationFunc((const char *)mPath, permissions);
 
