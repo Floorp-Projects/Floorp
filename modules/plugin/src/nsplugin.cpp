@@ -311,7 +311,6 @@ nsPluginManager::GetLiveconnect(const nsIID& aIID)
  		      threadAttached = PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
 	     }
       NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-      nsresult err    = NS_OK;
       err = nsRepository::CreateInstance(kCLiveconnectCID, 
                                          (nsIPluginManager*)this,    /* outer */
                                          kISupportsIID,
