@@ -33,6 +33,7 @@ DIRS=						\
 	traversal				\
 	range					\
 	xbl					\
+	xpath					\
 !ifdef MOZ_SVG
 	svg					\
 !endif
