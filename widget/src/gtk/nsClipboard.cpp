@@ -54,6 +54,12 @@
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
 
+// Define this to enable the obsolete X cut buffer mechanism
+// In general, a bad idea (see http://www.jwz.org/doc/x-cut-and-paste.html)
+// but it might have its uses for backwards compatibility.
+#undef USE_CUTBUFFERS
+
+
 static GdkAtom GDK_SELECTION_CLIPBOARD;
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
@@ -216,6 +222,7 @@ NS_IMETHODIMP nsClipboard::SetData(nsITransferable * aTransferable,
   case kGlobalClipboard:
     mGlobalOwner = anOwner;
     mGlobalTransferable = aTransferable;
+    SetCutBuffer();
     break;
   }
 
@@ -838,7 +845,9 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   // Make sure we have a transferable:
   if (!transferable) {
+#ifdef DEBUG_CLIPBOARD
     g_print("Clipboard has no transferable!\n");
+#endif
     return;
   }
 #ifdef DEBUG_CLIPBOARD
@@ -1200,6 +1209,44 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
     return PR_FALSE;
 
   return PR_TRUE;
+}
+
+void nsClipboard::SetCutBuffer()
+{
+#ifdef USE_CUTBUFFERS
+  void *clipboardData;
+  PRUint32 dataLength;
+  nsresult rv;
+
+  nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(kGlobalClipboard)));
+
+  // Make sure we have a transferable:
+  if (!transferable) {
+#ifdef DEBUG_CLIPBOARD
+    g_print("Clipboard has no transferable!\n");
+#endif
+    return;
+  }
+
+  nsCOMPtr<nsISupports> genericDataWrapper;
+  rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(genericDataWrapper), &dataLength);
+  nsPrimitiveHelpers::CreateDataFromPrimitive(kUnicodeMime, genericDataWrapper, &clipboardData, dataLength);
+  if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
+    char* plainTextData = nsnull;
+    PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, clipboardData);
+    PRInt32 plainTextLen = 0;
+    nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText (castedUnicode, dataLength / 2,
+                                                           &plainTextData, &plainTextLen);
+    if (clipboardData) {
+      nsMemory::Free(NS_REINTERPRET_CAST(char*, clipboardData));
+      clipboardData = plainTextData;
+      dataLength = plainTextLen;
+    }
+  }
+
+  XRotateBuffers(GDK_DISPLAY(), 1);
+  XStoreBytes(GDK_DISPLAY(), (const char *) clipboardData, nsCRT::strlen((const char *)clipboardData));
+#endif
 }
 
 void nsClipboard::SendClipPing()

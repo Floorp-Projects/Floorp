@@ -147,6 +147,8 @@ private:
   void SendClipPing();
   PRBool FindSelectionNotifyEvent();
 
+
+  void SetCutBuffer();
 };
 
 #endif // nsClipboard_h__
