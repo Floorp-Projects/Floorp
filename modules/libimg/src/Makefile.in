@@ -28,8 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= img
 LIBRARY_NAME	= img_s
 
-LOCAL_INCLUDES	= -I$(srcdir) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
-EXTRA_LIBS	= $(PNG_LIBS) $(ZLIB_LIBS)
+LOCAL_INCLUDES	= -I$(srcdir)
 
 CPPSRCS		= \
 	ilNetReader.cpp \
@@ -47,9 +46,6 @@ CPPSRCS		+= xpcompat.cpp \
 		  $(NULL)
 
 REQUIRES	+= util img xpcom
-
-EXTRA_LIBS	+= $(NSPR_LIBS)
-
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 

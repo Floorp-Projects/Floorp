@@ -28,6 +28,4 @@ endif
 
 DIRS += public public_com src gifcom pngcom jpgcom
 
-EXTRA_LIBS = $(PNG_LIBS) $(ZLIB_LIBS)
-
 include $(topsrcdir)/config/rules.mk

@@ -63,15 +63,11 @@ GECKO_LIBS = \
 LIBS		= \
 		$(GECKO_LIBS) \
 		-lmozjs \
-		-ljsdom \
 		-lraptorgfx \
 		-lxpcom \
-		-lxp \
-		-ljsurl \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(NET_LIBS) \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

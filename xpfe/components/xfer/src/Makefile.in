@@ -37,7 +37,6 @@ EXTRA_DSO_LDOPTS = \
 		-lxpcom \
 		-lmozjs \
 		-lneckoutil_s \
-		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

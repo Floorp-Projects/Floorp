@@ -40,6 +40,10 @@ EXPORTS = zipfile.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-EXTRA_DSO_LDOPTS = $(ZLIB_LIBS) -L$(DIST)/bin -lxp
+EXTRA_DSO_LDOPTS =\
+		-L$(DIST)/bin \
+		-lxp \
+		$(ZLIB_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
