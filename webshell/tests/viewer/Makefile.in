@@ -26,9 +26,9 @@ VPATH			= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS			= public
+DIRS			:= public
 
-PROGRAM			= viewer
+PROGRAM			:= viewer
 
 CPPSRCS			= \
 			$(TOOLKIT_CPPSRCS) \
@@ -78,7 +78,7 @@ EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
 
 ifeq (,$(filter beos os2 rhapsody photon,$(MOZ_WIDGET_TOOLKIT)))
 DIRS			+= unix
-UNIX_VIEWER_TK_LIBS	= $(DIST)/lib/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
+UNIX_VIEWER_TK_LIBS	= unix/$(MOZ_WIDGET_TOOLKIT)/libviewer_$(MOZ_WIDGET_TOOLKIT)_s.a
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
 BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
@@ -160,19 +160,31 @@ install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/mozilla-viewer.sh $(DIST)/bin
 
-$(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_gtk_s.a
+unix/gtk/libviewer_gtk_s.a:
+	@$(MAKE) -C $(@D) $(@F)
+
+unix/motif/libviewer_motif_s.a:
+	@$(MAKE) -C $(@D) $(@F)
+
+unix/qt/libviewer_qt_s.a:
+	@$(MAKE) -C $(@D) $(@F)
+
+unix/xlib/libviewer_xlib_s.a:
+	@$(MAKE) -C $(@D) $(@F)
+
+$(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/gtk/libviewer_gtk_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
-$(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_motif_s.a
+$(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/motif/libviewer_motif_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
-$(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_qt_s.a
+$(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/qt/libviewer_qt_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
-$(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_xlib_s.a
+$(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/xlib/libviewer_xlib_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 

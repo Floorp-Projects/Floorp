@@ -31,21 +31,24 @@ DIRS		= xlib
 endif
 
 ifdef MOZ_ENABLE_GTK_MOZILLA
-all:: export libs install
+all:: export install
 
 export depend::
 
-libs::
-	@cd gtk && $(MAKE) && cd ..
-
 install::
-	@cd gtk && $(MAKE) install && cd ..
+	@$(CONTINUE_ON_ERROR) \
+	$(MAKE) -C gtk install; \
+	$(EXIT_ON_ERROR)
 
 clean clobber clobber_all realclean::
-	@cd gtk && $(MAKE) clean && cd ..
+	@$(CONTINUE_ON_ERROR) \
+	$(MAKE) -C gtk clean; \
+	$(EXIT_ON_ERROR)
 
 distclean::
-	@cd gtk && $(MAKE) distclean && cd ..
+	@$(CONTINUE_ON_ERROR) \
+	$(MAKE) -C gtk distclean; \
+	$(EXIT_ON_ERROR)
 endif
 
 include $(topsrcdir)/config/rules.mk

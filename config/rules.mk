@@ -369,8 +369,7 @@ endif
 export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
 
-ifndef LIBS_NEQ_INSTALL
-libs install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
 ifdef IS_COMPONENT
@@ -405,66 +404,6 @@ ifdef SIMPLE_PROGRAMS
 	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
-else
-libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(SHARED_LIBRARY_LIBS)
-ifndef NO_STATIC_LIB
-ifdef LIBRARY
-ifdef IS_COMPONENT
-	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib/components
-else
-	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
-endif
-endif
-endif
-ifdef SHARED_LIBRARY
-ifdef IS_COMPONENT
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
-ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
-endif
-ifdef NEED_BASE_DLL_NAME_ALSO
-	@cd $(DIST)/lib/components; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
-	@cd $(DIST)/bin/components; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
-endif
-else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
-ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
-endif
-ifdef NEED_BASE_DLL_NAME_ALSO
-	@cd $(DIST)/lib; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
-	@cd $(DIST)/bin; ln -s $(SHARED_LIBRARY) lib$(LIBRARY_NAME).so
-endif
-endif
-endif
-	+$(LOOP_OVER_DIRS)
-
-install:: $(SUBMAKEFILES) $(PROGRAM) $(SIMPLE_PROGRAMS)
-ifdef MAPS
-	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
-endif
-ifdef PROGRAM
-	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
-ifeq ($(OS_ARCH),BeOS)
-	-rm components add-ons lib
-	ln -sf $(DIST)/bin/components components
-	ln -sf $(DIST)/bin add-ons
-	ln -sf $(DIST)/bin lib
-endif
-endif
-ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
-ifeq ($(OS_ARCH),BeOS)
-	-rm components add-ons lib
-	ln -sf $(DIST)/bin/components components
-	ln -sf $(DIST)/bin add-ons
-	ln -sf $(DIST)/bin lib
-endif
-endif
-	+$(LOOP_OVER_DIRS)
-endif
 
 checkout:
 	cd $(topsrcdir); $(MAKE) -f client.mk checkout
