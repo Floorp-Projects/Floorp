@@ -32,6 +32,7 @@ REQUIRES	= xpcom \
 		  string \
 		  mimetype \
 		  pref \
+ 		  intl \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -655,10 +655,41 @@ nsGopherChannel::SendRequest(nsITransport* aTransport)
                     return NS_ERROR_FAILURE;
                 }
             }
+
+            if (!mStringBundle) {
+
+                nsCOMPtr<nsIStringBundleService> bundleSvc =
+                        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = bundleSvc->CreateBundle(NECKO_MSGS_URL, getter_AddRefs(mStringBundle));
+                if (NS_FAILED(rv)) return rv;
+
+            }
+
+            nsXPIDLString  promptTitle;
+            nsXPIDLString  promptText;
+
+            if (mStringBundle)
+                rv = mStringBundle->GetStringFromName(NS_LITERAL_STRING("GopherPromptTitle").get(),
+                                                      getter_Copies(promptTitle));
+
+            if (NS_FAILED(rv) || !mStringBundle)
+                promptTitle.Assign(NS_LITERAL_STRING("Search"));
+
+
+            if (mStringBundle)
+                rv = mStringBundle->GetStringFromName(NS_LITERAL_STRING("GopherPromptText").get(),
+                                                      getter_Copies(promptText));
+
+            if (NS_FAILED(rv) || !mStringBundle)
+                promptText.Assign(NS_LITERAL_STRING("Enter a search term:"));
+
+
             nsXPIDLString search;
             PRBool res;
-            mPrompter->Prompt(NS_LITERAL_STRING("Search").get(),
-                              NS_LITERAL_STRING("Enter a search term:").get(),
+            mPrompter->Prompt(promptTitle.get(),
+                              promptText.get(),
                               getter_Copies(search),
                               NULL,
                               NULL,

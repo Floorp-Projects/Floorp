@@ -40,6 +40,7 @@
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
 #include "nsIDirectoryListing.h"
+#include "nsIStringBundle.h"
 
 class nsGopherChannel : public nsIChannel,
                         public nsIStreamListener,
@@ -90,6 +91,7 @@ protected:
     nsCOMPtr<nsIRequest>                mTransportRequest;
     nsCOMPtr<nsIProxyInfo>              mProxyInfo;
     nsresult                            mStatus;
+    nsCOMPtr<nsIStringBundle>           mStringBundle;
 
     nsresult SendRequest(nsITransport* aTransport);
 
