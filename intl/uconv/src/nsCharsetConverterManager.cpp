@@ -30,6 +30,9 @@
 #include "nsUConvDll.h"
 #include "registryhack1.h"
 
+// just for CIDs
+#include "nsIUnicodeEncodeHelper.h"
+
 // XXX to be moved with its own factory
 #include "nsIUnicodeDecodeUtil.h"
 #include "nsUnicodeDecodeUtil.h"
@@ -44,7 +47,7 @@ struct ConverterInfo
 
   ConverterInfo() {}
 
-  ~ConverterInfo ()
+  ~ConverterInfo()
   {
     if (mCharset != NULL) delete mCharset;
   }
