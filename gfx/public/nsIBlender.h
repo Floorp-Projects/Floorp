@@ -95,6 +95,15 @@ public:
                    nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
                    nsIRenderingContext *aSecondSrc = nsnull, nscolor aSrcBackColor = NS_RGB(0, 0, 0),
                    nscolor aSecondSrcBackColor = NS_RGB(0, 0, 0)) = 0;
+
+  /**
+   GetAlphas computes an array of alpha values for a rectangle of pixels, using
+   the drawn-onto-black and the drawn-onto-white images. The pixels are
+   returned in a new'ed array of aRect.width*aRect.height elements, in row-major
+   order. This array must be freed by the caller.
+  */
+  NS_IMETHOD GetAlphas(const nsRect& aRect, nsDrawingSurface aBlack,
+                       nsDrawingSurface aWhite, PRUint8** aAlphas) = 0;
 };
 
 #endif
