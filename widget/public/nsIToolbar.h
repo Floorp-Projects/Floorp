@@ -34,12 +34,12 @@ class nsIToolbarItem;
    {0x92, 0x48, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
 
 enum nsToolbarBorderType {   
-                  ///no border
+                  // no border
                 eToolbarBorderType_none,
-                  ///draws partial border
+                  // draws partial border
                 eToolbarBorderType_partial,
-                  ///draws border on all sides
-                eToolbarBorderType_full,
+                  // draws border on all sides
+                eToolbarBorderType_full
               }; 
 
 class nsIToolbar : public nsISupports
