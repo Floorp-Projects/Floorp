@@ -1515,9 +1515,6 @@
         <body>
           <![CDATA[
             this.fillStringsForChildren(menulist.firstChild, bundle);
-
-            // to work around bug #78429
-            menulist.setAttribute("label", menulist.selectedItem.getAttribute('label'));           
           ]]>
         </body>
       </method>
