@@ -372,7 +372,7 @@ resource 'STR ' ( mPREFS_DUPLICATE_MIME, "Duplicate mimetype", purgeable ) {
 data 'xlat' (128, "ISO1 -> MACR", purgeable) {
 /*      translation ISO 8859-1 -> Macintosh                     */
 /*        x0x1 x2x3 x4x5 x6x7 x8x9 xAxB xCxD xExF       */
-/*8x*/  $"DB2A E2C4 E3C9 A0E0 F6E4 53DC CE2A 2A2A"
+/*8x*/  $"2A2A E2C4 E3C9 A0E0 F6E4 53DC CE2A 2A2A"
 /*9x*/  $"2AD4 D5D2 D3A5 D0D1 F7AA 73DD CF2A 2AD9"
 /*Ax*/  $"CAC1 A2A3 DBB4 7CA4 ACA9 BBC7 C2D0 A8F8"
 /*Bx*/  $"A1B1 3233 ABB5 A6E1 FC31 BCC8 2A2A 2AC0"
@@ -391,7 +391,7 @@ data 'xlat' (129, "MACR -> ISO1", purgeable) {
 /*Ax*/  $"DDB0 A2A3 A795 B6DF AEA9 99B4 A82A C6D8"
 /*Bx*/  $"2AB1 2A2A A5B5 2A2A 2A2A 2AAA BA2A E6F8"
 /*Cx*/  $"BFA1 AC2A 833D 2AAB BB85 A0C0 C3D5 8C9C"
-/*Dx*/  $"9697 9394 9192 F72A FF9F 2F80 D0F0 DEFE"
+/*Dx*/  $"9697 9394 9192 F72A FF9F 2FA4 D0F0 DEFE"
 /*Ex*/  $"FDB7 8284 89C2 CAC1 CBC8 CDCE CFCC D3D4"
 /*Fx*/  $"2AD2 DADB D969 8898 AF2A B7B0 B82A 2A2A"
 };
