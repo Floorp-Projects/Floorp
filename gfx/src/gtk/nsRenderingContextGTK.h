@@ -157,6 +157,7 @@ public:
   NS_IMETHOD CommonInit();
 
 protected:
+  nsDrawingSurfaceGTK   *mOffscreenSurface;  
   nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
   nsIFontMetrics        *mFontMetrics;
