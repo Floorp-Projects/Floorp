@@ -1,9 +1,9 @@
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
 
-  <RDF:Bag ID="NC:SoftwareUpdateRoot">
+  <RDF:Bag about="NC:SoftwareUpdateRoot">
     <RDF:li>
-       <RDF:Bag ID="NC:NewSoftwareToday" NC:title="New Software">
+       <RDF:Bag about="NC:NewSoftwareToday" NC:title="New Software">
 
     <RDF:li>
         <RDF:Description ID="AimUpdate344">
