@@ -43,8 +43,6 @@
 #include "nsNetUtil.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -58,30 +56,32 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 nsDataChannel::nsDataChannel() {
     NS_INIT_REFCNT();
 
+    mStatus = NS_OK;
     mContentLength = -1;
+    mLoadFlags = nsIRequest::LOAD_NORMAL;
 }
 
 nsDataChannel::~nsDataChannel() {
 }
 
-NS_IMPL_ISUPPORTS3(nsDataChannel,
+NS_IMPL_ISUPPORTS5(nsDataChannel,
                    nsIDataChannel,
                    nsIChannel,
-                   nsIRequest)
+                   nsIRequest,
+                   nsIRequestObserver,
+                   nsIStreamListener)
 
 nsresult
 nsDataChannel::Init(nsIURI* uri)
 {
-    // we don't care about event sinks in data
     nsresult rv;
 
     // Data urls contain all the data within the url string itself.
     mUrl = uri;
 
     rv = ParseData();
-    if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    return rv;
 }
 
 typedef struct _writeData {
@@ -247,21 +247,28 @@ nsDataChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsDataChannel::GetName(PRUnichar* *result)
 {
-    NS_NOTREACHED("nsDataChannel::GetName");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsXPIDLCString name;
+
+    if (mUrl) {
+        mUrl->GetSpec(getter_Copies(name));
+    }
+    *result = ToNewUnicode(name);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDataChannel::IsPending(PRBool *result)
 {
-    NS_NOTREACHED("nsDataChannel::IsPending");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // This request is pending if there is an active stream listener...
+
+    *result = (mListener) ? PR_TRUE : PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDataChannel::GetStatus(nsresult *status)
 {
-    *status = NS_OK;
+    *status = mStatus;
     return NS_OK;
 }
 
@@ -269,22 +276,23 @@ NS_IMETHODIMP
 nsDataChannel::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    NS_NOTREACHED("nsDataChannel::Cancel");
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    mStatus = status;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDataChannel::Suspend(void)
 {
-    NS_NOTREACHED("nsDataChannel::Suspend");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // This channel is not suspendable...
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsDataChannel::Resume(void)
 {
-    NS_NOTREACHED("nsDataChannel::Resume");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // This channel is not resumable...
+    return NS_ERROR_FAILURE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,21 +347,35 @@ nsDataChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 
     // we'll just fire everything off at once because we've already got all
     // the data.
-    rv = NS_NewAsyncStreamListener(getter_AddRefs(listener), aListener, eventQ);
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(listener), this, eventQ);
     if (NS_FAILED(rv)) return rv;
 
-    rv = listener->OnStartRequest(this, ctxt);
-    if (NS_FAILED(rv)) return rv;
+    // Hold onto the real consumer...
+    mListener = aListener;
 
-    PRUint32 streamLen;
-    rv = mDataStream->Available(&streamLen);
-    if (NS_FAILED(rv)) return rv;
+    // Add the request to the loadgroup (if available)
+    if (mLoadGroup) {
+        mLoadGroup->AddRequest(this, nsnull);
+    }
 
-    rv = listener->OnDataAvailable(this, ctxt, mDataStream, 0, streamLen);
-    if (NS_FAILED(rv)) return rv;
+    // Next, queue up asynchronous stream notifications for OnStartRequest,
+    // a single OnDataAvailable (containing all of the data) and an
+    // OnStopRequest...
+    //
+    // These notifications will be processed when control returns to the
+    // message pump and the PLEvents are processed...
+    //
+    mStatus = listener->OnStartRequest(this, ctxt);
 
-    rv = listener->OnStopRequest(this, ctxt, NS_OK);
-    return rv;
+    // Only fire OnDataAvailable(...) if OnStartRequest(...) succeeded!
+    if (NS_SUCCEEDED(mStatus)) {
+        mStatus = listener->OnDataAvailable(this, ctxt, mDataStream,
+                                            0, mContentLength);
+    }
+    // Always fire OnStopRequest(...) even if an error occurred!
+    (void) listener->OnStopRequest(this, ctxt, mStatus);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -459,4 +481,60 @@ nsDataChannel::GetSecurityInfo(nsISupports **sec)
     NS_ENSURE_ARG_POINTER(sec);
     *sec = nsnull;
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIRequestObserver methods:
+
+NS_IMETHODIMP
+nsDataChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+{
+    if (NS_SUCCEEDED(mStatus)) {
+        mStatus = mListener->OnStartRequest(request, ctxt);
+    }
+
+    return mStatus;
+}
+
+NS_IMETHODIMP
+nsDataChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+                             nsresult status)
+{
+    // If the request has already failed for some reason, then pass out that
+    // failure code...
+    //
+    if (NS_SUCCEEDED(mStatus)) {
+        mStatus = status;
+    }
+
+    if (mListener) {
+        (void) mListener->OnStopRequest(request, ctxt, mStatus);
+    }
+
+    // Drop the reference to the stream listener -- it is no longer needed.
+    mListener = nsnull;
+
+    // Remove this request from the load group -- it is complete.
+    if (mLoadGroup) {
+        mLoadGroup->RemoveRequest(this, nsnull, mStatus);
+    }
+
+    return NS_OK;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+
+NS_IMETHODIMP
+nsDataChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
+                               nsIInputStream *input,
+                               PRUint32 offset, PRUint32 count)
+{
+    if (NS_SUCCEEDED(mStatus)) {
+        mStatus = mListener->OnDataAvailable(request, ctxt, input,
+                                             offset, count);
+    }
+
+    return mStatus;
 }

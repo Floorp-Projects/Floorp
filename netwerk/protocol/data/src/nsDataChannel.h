@@ -43,7 +43,6 @@
 #include "nsIDataChannel.h"
 #include "nsIURI.h"
 #include "nsString.h"
-#include "nsIEventQueue.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
@@ -51,12 +50,15 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCOMPtr.h"
 
-class nsDataChannel : public nsIDataChannel {
+class nsDataChannel : public nsIDataChannel,
+                      public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIDATACHANNEL
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
     // nsFTPChannel methods:
     nsDataChannel();
@@ -74,11 +76,13 @@ protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIInputStream>            mDataStream;
+    nsresult                            mStatus;
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
+    nsCOMPtr<nsIStreamListener>         mListener;
 };
 
 #endif /* nsFTPChannel_h___ */
