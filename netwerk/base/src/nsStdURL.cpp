@@ -142,8 +142,8 @@ nsStdURL::Clone(nsIURI **o_URI)
     return rv;
 }
 
-NS_IMETHODIMP
-nsStdURL::Parse()
+nsresult
+nsStdURL::Parse(void)
 {
     NS_PRECONDITION( (nsnull != mSpec), "Parse called on empty url!");
     if (!mSpec)
