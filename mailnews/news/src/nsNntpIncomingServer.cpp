@@ -775,12 +775,8 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	if (!name) return NS_ERROR_NULL_POINTER;
 	if (!nsCRT::strlen(name)) return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIFolder> folder;
-	rv = GetRootFolder(getter_AddRefs(folder));
-	if (NS_FAILED(rv)) return rv;
-	if (!folder) return NS_ERROR_FAILURE;
-	
-	nsCOMPtr<nsIMsgFolder> msgfolder = do_QueryInterface(folder, &rv);
+	nsCOMPtr<nsIMsgFolder> msgfolder;
+	rv = GetRootMsgFolder(getter_AddRefs(msgfolder));
 	if (NS_FAILED(rv)) return rv;
 	if (!msgfolder) return NS_ERROR_FAILURE;
 
@@ -1199,15 +1195,8 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIFolder> rootFolder;
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
-  if (NS_FAILED(rv)) 
-    return rv;
-
-  if (!rootFolder) 
-    return NS_ERROR_FAILURE;
-  
-  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+  nsCOMPtr <nsIMsgFolder> serverFolder;
+  rv = GetRootMsgFolder(getter_AddRefs(serverFolder));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1542,13 +1531,10 @@ nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
   NS_ENSURE_ARG_POINTER(result);
 
   nsresult rv;
-  nsCOMPtr<nsIFolder> rootFolder;
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  nsCOMPtr <nsIMsgFolder> serverFolder;
+  rv = GetRootMsgFolder(getter_AddRefs(serverFolder));
   NS_ENSURE_SUCCESS(rv,rv);
-  if (!rootFolder) return NS_ERROR_FAILURE;
 
-  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
   if (!serverFolder) return NS_ERROR_FAILURE;
 
   nsCOMPtr <nsIFolder> subFolder;
@@ -2012,15 +1998,13 @@ nsNntpIncomingServer::OnUserOrHostNameChanged(const char *oldName, const char *n
   // 3.Unsubscribe and then subscribe the existing groups to clean up the article numbers
   //   in the rc file (this is because the old and new servers may maintain different 
   //   numbers for the same articles if both servers handle the same groups).
-  nsCOMPtr<nsIFolder> rootFolder;
   nsCOMPtr<nsIEnumerator> subFolders;
 
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
-  NS_ENSURE_SUCCESS(rv,rv);
-  nsCOMPtr <nsIMsgFolder> serverFolder = do_QueryInterface(rootFolder, &rv);
+  nsCOMPtr <nsIMsgFolder> serverFolder;
+  rv = GetRootMsgFolder(getter_AddRefs(serverFolder));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+  rv = serverFolder->GetSubFolders(getter_AddRefs(subFolders));
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsStringArray groupList;
