@@ -81,6 +81,11 @@ public:
     // Hooks to methods that need layout atoms (static vars in layout)
     NS_IMETHOD GetStyleContextForFrame(nsIFrame* aFrame,
                                        nsIStyleContext** aStyleContext) = 0;
+
+    // Hooks to ::GetStyleData<T>(nsCOMPtr<nsIStyleContext>, const nsStyleText**)
+    // and calls nsStyleText->WhiteSpaceIsSignificant();
+    NS_IMETHOD IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
+                                       PRBool *aIsSignificant) = 0;
 };
 
 #endif /* nsIInspectorCSSUtils_h___ */

@@ -154,11 +154,10 @@ inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
                             getter_AddRefs(styleContext));
 
   if (styleContext) {
-    const nsStyleText* text = nsnull;
-    ::GetStyleData(styleContext, &text);
-    NS_ASSERTION(text, "Could not get a style struct!");
+    PRBool significant = PR_FALSE;
+    mCSSUtils->IsWhiteSpaceSignificant(styleContext, &significant);
 
-    *aReturn = !text->WhiteSpaceIsSignificant();
+    *aReturn = !significant;
   }
   else {
     // No style context.  Let's just assume the default value of

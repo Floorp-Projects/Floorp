@@ -59,6 +59,8 @@ public:
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
     NS_IMETHOD GetStyleContextForFrame(nsIFrame* aFrame,
                                        nsIStyleContext** aStyleContext);
+    NS_IMETHOD IsWhiteSpaceSignificant(nsIStyleContext* aStyleContext,
+                                       PRBool *aIsSignificant);
 };
 
 #endif /* nsInspectorCSSUtils_h___ */
