@@ -691,12 +691,13 @@ nsresult nsAbPalmHotSync::OpenABDBForHotSync(PRBool aCreate)
     (strncmp(mDirServerInfo->uri, "ldaps:", 6) == 0)) {
         nsCAutoString bridgeURI;
         bridgeURI = NS_LITERAL_CSTRING(kLDAPDirectoryRoot) + nsDependentCString(mDirServerInfo->prefName);
-        rv = rdfService->GetResource(bridgeURI.get(), getter_AddRefs(resource));
+        rv = rdfService->GetResource(bridgeURI, getter_AddRefs(resource));
         if (NS_FAILED(rv)) 
             return rv;
     }
     else {
-        rv = rdfService->GetResource(mDirServerInfo->uri, getter_AddRefs(resource));
+        rv = rdfService->GetResource(nsDependentCString(mDirServerInfo->uri),
+                                     getter_AddRefs(resource));
         if (NS_FAILED(rv)) 
             return rv;
     }
@@ -913,7 +914,8 @@ nsresult nsAbPalmHotSync::DeleteAB(unsigned long aCategoryId, PRUnichar * aAbNam
 
   // Parent nsIABDirectory: like "moz-abdirectory://".
   nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource("moz-abdirectory://", getter_AddRefs(resource));
+  rv = rdfService->GetResource(NS_LITERAL_CSTRING("moz-abdirectory://"),
+                               getter_AddRefs(resource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIAbDirectory> parentDirectory = do_QueryInterface(resource, &rv);
@@ -923,7 +925,7 @@ nsresult nsAbPalmHotSync::DeleteAB(unsigned long aCategoryId, PRUnichar * aAbNam
 
   // Selected folder nsIABDirectory: like "moz-abmdbdirectory://abook-1.mab"
   nsCOMPtr <nsIRDFResource> childResource;
-  rv = rdfService->GetResource(aABUrl, getter_AddRefs(childResource));
+  rv = rdfService->GetResource(nsDependentCString(aABUrl), getter_AddRefs(childResource));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr <nsIAbDirectory> selectedDirectory = do_QueryInterface(childResource, &rv);
