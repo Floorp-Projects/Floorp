@@ -1,0 +1,96 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is the Hendrix Feedback System.
+  #
+  # The Initial Developer of the Original Code is
+  # Gervase Markham.
+  # Portions created by the Initial Developer are Copyright (C) 2004
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #
+  # ***** END LICENSE BLOCK ***** %]
+  
+[% PROCESS header.html.tmpl 
+   title = "Hendrix - mozilla.org Feedback System" 
+%]
+
+<p>This is Hendrix - the mozilla.org system for leaving quick and general feedback. If you have a specific and detailed bug report, please file it in 
+<a href="http://bugzilla.mozilla.org/enter_bug.cgi">Bugzilla</a>.</p>
+
+<form id="feedback-form" method="GET">
+  <table id="feedback-table">
+    <tr>
+      <td class="label">Name:</td>
+      <td class="widget">
+        <input id="name" name="name" type="text" 
+               value="[% form.email FILTER html %]"/>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">Email (optional):</td>
+      <td class="widget">
+        <input id="email" name="email" type="text"
+               value="[% form.email FILTER html %]"/>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">
+        Product: 
+      </td>
+      <td class="widget">
+        <select id="product" name="product">
+          <option name="Firefox">Firefox</option>
+          <option name="Thunderbird">Thunderbird</option>
+          <option name="Mozilla Suite">Mozilla Suite</option>
+          <option name="Camino">Camino</option>
+          <option name="Other">Other (please state)</option>
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">
+        Feedback Summary: 
+      </td>
+      <td class="widget">
+        <input id="subject" name="subject" type="text"
+               value="[% form.subject FILTER html %]"/>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">
+        Detailed Comments: 
+      </td>
+      <td class="widget">
+        <textarea id="comments" name="comments" wrap="hard"
+        >[% form.comments FILTER html %]</textarea>
+      </td>
+    </tr>
+  </table>
+  <input type="hidden" name="action" value="submit"/>
+  
+  [%# Add JS to only enable button when form is filled in %]
+  
+  <input id="send-feedback" type="submit" value="Send Feedback"/>
+</form>
+
+<p>Information from this form is placed in the newsgroup 
+<tt>[% newsgroup %]</tt> where it can be viewed by any mozilla.org contributor.
+</p>
+
+<p class="footnote">Why "Hendrix"? The late 
+<a href="http://en.wikipedia.org/wiki/Jimi_Hendrix">Jimi Hendrix</a>
+is credited with making popular the technique of making feedback useful in the creation of music :-).</p>
+
+[% PROCESS footer.html.tmpl %]
