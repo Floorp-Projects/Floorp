@@ -28,10 +28,17 @@
                 onget="return this.getAttribute('group');"
                 onset="this.setAttribute('group', val); return val;"/>
 
-      <property name="open"
-                onget="return this.hasAttribute('open');"
-                onset="if (val) this.setAttribute('open', 'true');
-                       else this.removeAttribute('open'); return val;"/>
+      <property name="open" onget="return this.hasAttribute('open');">
+        <setter><![CDATA[
+          // Note that the QI may throw if we're not a menu, but we want that
+          // to happen, since in that case setting our "open" property is
+          // somewhat bogus
+          this.boxObject
+              .QueryInterface(Components.interfaces.nsIMenuBoxObject)
+              .openMenu(val);
+          return val;
+        ]]></setter>
+      </property>
 
       <property name="checked" onget="return this.hasAttribute('checked');">
         <setter><![CDATA[
