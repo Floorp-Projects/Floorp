@@ -690,6 +690,9 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",                         "$distdirectory:dom:");
     InstallFromManifest(":mozilla:dom:src:base:MANIFEST",                          "$distdirectory:dom:");
 
+    #ACCESSIBLE
+    InstallFromManifest(":mozilla:accessible:public:MANIFEST",                     "$distdirectory:accessible:");
+    
     #JSURL
     InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST_IDL",                     "$distdirectory:idl:");
 
@@ -1020,6 +1023,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:content:macbuild:contentIDL.mcp",                       "content");
 
     BuildIDLProject(":mozilla:layout:macbuild:layoutIDL.mcp",                       "layout");
+
+    BuildIDLProject(":mozilla:accessible:macbuild:accessibleIDL.mcp",               "accessible"); 
 
     BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",                             "rdf");
 
@@ -1515,10 +1520,29 @@ sub BuildLayoutProjects()
     if (!($main::PROFILE)) {
         BuildOneProject(":mozilla:xpinstall:wizard:mac:macbuild:MIW.mcp",           "Mozilla Installer$D", 0, 0, 0);
     }
-
+    
     EndBuildModule("nglayout");
 }
 
+#//--------------------------------------------------------------------------------------------------
+#// Build Accessiblity Projects
+#//--------------------------------------------------------------------------------------------------
+sub BuildAccessiblityProjects()
+{
+    unless( $main::build{accessiblity} ) { return; }
+
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+
+    StartBuildModule("accessiblity");    
+    
+    if ($main::options{accessible})
+    {
+      BuildOneProject(":mozilla:accessible:macbuild:accessible.mcp",   "accessible$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    EndBuildModule("accessiblity");
+} # imglib2
 
 #//--------------------------------------------------------------------------------------------------
 #// Build Editor Projects
@@ -1913,6 +1937,7 @@ sub BuildProjects()
     BuildBrowserUtilsProjects();        
     BuildInternationalProjects();
     BuildLayoutProjects();
+    BuildAccessiblityProjects();
     BuildEditorProjects();
     BuildEmbeddingProjects();
     BuildViewerProjects();
