@@ -915,79 +915,56 @@
     </content>
     
     <implementation>
-       <method name="buildPopup">
-         <parameter name="aPopup"/>
-         <body>
-           <![CDATA[
-             var currCol = this.parentNode.firstChild;
+      <method name="buildPopup">
+        <parameter name="aPopup"/>
+        <body>
+          <![CDATA[
+            // we no longer cache the picker content.
+            // remove the old content
+            while (aPopup.hasChildNodes())
+              aPopup.removeChild(aPopup.lastChild);
 
-             // we no longer cache the picker content.  
-             // remove the old content
-             while (aPopup.childNodes.length)
-               aPopup.removeChild(aPopup.childNodes[0]);
-
-             while (currCol) {
-               while (currCol && currCol.localName != "outlinercol")
-                 currCol = currCol.nextSibling;
- 
-               if (currCol && (currCol != this)) {
-                 // Construct an entry for each cell in the row, unless
-                 // it is not being show
-                 if (!currCol.hasAttribute("ignoreincolumnpicker")) {
-                     var columnName = currCol.getAttribute("label");
-                     var popupChild = document.createElement("menuitem");
-                     popupChild.setAttribute("type", "checkbox");
-                     if (columnName == "") {
-                       var display = currCol.getAttribute("display");
-                       popupChild.setAttribute("label", display);
-                     }
-                     else {
-                       popupChild.setAttribute("label", columnName);
-                     }
-                     popupChild.setAttribute("colid", currCol.id);
-                     popupChild.setAttribute("oncommand",
-                                             "this.parentNode.parentNode.toggleColumnState(this);");
-                     if (currCol.getAttribute("hidden") != "true")
-                       popupChild.setAttribute("checked", "true");
-                     if (currCol.getAttribute("primary") == "true")
-                       popupChild.setAttribute("disabled", "true");
-
-
-                     aPopup.appendChild(popupChild);
-                 }
-              } 
-              if (currCol) 
-                currCol = currCol.nextSibling;
+            for (var currCol = this.parentNode.firstChild; currCol; currCol = currCol.nextSibling) {
+              // Construct an entry for each column in the row, unless
+              // it is not being shown
+              if (currCol.localName == "outlinercol" && !currCol.hasAttribute("ignoreincolumnpicker")) {
+                var popupChild = document.createElement("menuitem");
+                popupChild.setAttribute("type", "checkbox");
+                var columnName = currCol.getAttribute("display") || currCol.getAttribute("label");
+                popupChild.setAttribute("label", columnName);
+                popupChild.setAttribute("colid", currCol.id);
+                if (currCol.getAttribute("hidden") != "true")
+                  popupChild.setAttribute("checked", "true");
+                if (currCol.getAttribute("primary") == "true")
+                  popupChild.setAttribute("disabled", "true");
+                aPopup.appendChild(popupChild);
+              }
             }
-           ]]>
+          ]]>
         </body>
-       </method>
-       
-       <method name="toggleColumnState">
-         <parameter name="aPopup"/>
-         <body>
-           <![CDATA[
-             var colid = aPopup.getAttribute("colid");
-             var colNode = document.getElementById(colid);
-             if (colNode) {
-               var checkedState = aPopup.getAttribute("checked");
-               if (checkedState == "true")
-                 colNode.setAttribute("hidden", "false");
-               else
-                 colNode.setAttribute("hidden", "true");
-             }
-           ]]>
-         </body>
-       </method>
-     </implementation>
-     
-     <handlers>
-      <handler event="mousedown"><![CDATA[
-        var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
-        this.buildPopup(popup);
-        popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
-      ]]></handler>
-     </handlers>
-   </binding>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="command">
+        <![CDATA[
+          if (event.originalTarget == this) {
+            var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
+            this.buildPopup(popup);
+            popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
+          } else {
+            var colid = event.originalTarget.getAttribute("colid");
+            var colNode = document.getElementById(colid);
+            if (colNode) {
+              if (colNode.getAttribute("hidden") == "true")
+                colNode.setAttribute("hidden", "false");
+              else
+                colNode.setAttribute("hidden", "true");
+            }
+          }
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
 </bindings>
 
