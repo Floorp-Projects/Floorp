@@ -113,8 +113,8 @@
         </tree>
         <box orient="vertical">
           <spring flex="1"/>
-       	  <button class="up" oncommand="MoveUp();" id="up"/>
-      		<button class="down" oncommand="MoveDown();" id="down"/>
+       	  <button class="up plain" oncommand="MoveUp();" id="up"/>
+      		<button class="down plain" oncommand="MoveDown();" id="down"/>
           <spring flex="1"/>
         </box>
       </box>

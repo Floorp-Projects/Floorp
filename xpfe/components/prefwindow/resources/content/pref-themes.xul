@@ -69,8 +69,15 @@
     </template>
   </tree>
 
-  <tabcontrol orient="vertical">
+  <tabcontrol id="skinsTabcontrol" orient="vertical">
+    <tabbox>
+      <tab selected="true" value="&preview.label;"/>
+      <tab value="&general.label;"/>
+    </tabbox>
     <tabpanel>
+      <box class="inset" style="overflow: auto; height: 8em;">
+        <image id="previewImage"/>
+      </box>
       <grid flex="1">
         <columns>
           <column/>
@@ -96,14 +103,7 @@
           </row>
         </rows>
       </grid>
-      <box class="inset" style="overflow: auto; height: 8em;">
-        <image id="previewImage"/>
-      </box>
     </tabpanel>
-    <tabbox>
-      <tab value="&general.label;"/>
-      <tab value="&preview.label;"/>
-    </tabbox>
   </tabcontrol>
 
   <separator class="thin"/>
