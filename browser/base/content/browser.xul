@@ -937,7 +937,9 @@ Contributor(s):
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                  onclick="displayPageInfo()"/>    
+                  onclick="displayPageInfo()"/>
+    <statusbarpanel id="page-report-button" class="statusbarpanel-iconic"
+                  onclick="displayPageReport();"/>     
     <statusbarpanel id="statusbar-display" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

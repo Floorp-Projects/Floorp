@@ -748,6 +748,15 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   display: -moz-box;
 }
 
+#page-report-button {
+  display: none;
+}
+
+#page-report-button[blocked] {
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/info-small.png");
+}
+
 /* ::::: throbber ::::: */
 
 #navigator-throbber {

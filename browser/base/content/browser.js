@@ -3130,6 +3130,12 @@ function displayPageInfo()
                       "dialog=no", null, "securityTab");
 }
 
+function displayPageReport()
+{
+    window.openDialog("chrome://browser/content/pageReport.xul", "_blank",
+                      "dialog=no");
+}
+
 const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
 const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
 
