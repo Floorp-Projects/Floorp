@@ -92,9 +92,11 @@
  *
  * The easiest way to distinguish the ports collection gcc from the system
  * gcc is that the system gcc defines __FreeBSD_cc_version.  This variable
- * can also identify the period of time that 4.0-CURRENT used thunks.
+ * can also identify versions that use thunks. This includes some 4.x versions
+ * and now newer 5.x versions.
  */
 #if defined(__FreeBSD_cc_version) && \
+    (__FreeBSD_cc_version < 500003) && \
     (__FreeBSD_cc_version < 400002 || __FreeBSD_cc_version > 400003)
 #define CFRONT_STYLE_THIS_ADJUST
 #else
