@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAboutModule.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
@@ -123,20 +124,20 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     if (NS_FAILED(rv)) return rv;
     
     // look up a handler to deal with "whatStr"
-    nsAutoString contractID; contractID.AssignWithConversion(NS_ABOUT_MODULE_CONTRACTID_PREFIX);
-    nsAutoString what; what.AssignWithConversion(whatStr);
+    nsCAutoString contractID(NS_ABOUT_MODULE_CONTRACTID_PREFIX);
+    nsCAutoString what(whatStr);
     nsCRT::free(whatStr);
 
     // only take up to a question-mark if there is one:
-    PRInt32 amt = what.Find("?");
-      // STRING USE WARNING: this use needs to be examined -- scc
-    contractID.Append(what.GetUnicode(), amt);   // if amt == -1, take it all
-    
-    char* contractIDStr = contractID.ToNewCString();
-    if (contractIDStr == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_WITH_SERVICE(nsIAboutModule, aboutMod, contractIDStr, &rv);
-    nsCRT::free(contractIDStr);
+    nsReadingIterator<char> begin, end;
+    what.BeginReading(begin);
+    what.EndReading(end);
+    FindCharInReadable('?', begin, end); // moves begin to first '?' or to end
+    end = begin;
+    what.BeginReading(begin);
+    contractID.Append(Substring(what, begin, end));
+
+    NS_WITH_SERVICE(nsIAboutModule, aboutMod, contractID.get(), &rv);
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(uri, result);
