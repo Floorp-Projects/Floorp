@@ -230,17 +230,17 @@ ContainsEventName(const char *eventName, const nsAFlatCString& events)
 //*****************************************************************************
 
 GlobalWindowImpl::GlobalWindowImpl()
-  : mJSObject(nsnull),
+  : mFirstDocumentLoad(PR_TRUE),
+    mIsScopeClear(PR_TRUE),
+    mFullScreen(PR_FALSE),
+    mIsClosed(PR_FALSE), 
+    mOpenerWasCleared(PR_FALSE),
+    mIsPopupSpam(PR_FALSE),
+    mJSObject(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
-    mFirstDocumentLoad(PR_TRUE),
-    mIsScopeClear(PR_TRUE),
-    mFullScreen(PR_FALSE),
-    mIsClosed(PR_FALSE),
-    mOpenerWasCleared(PR_FALSE),
-    mIsPopupSpam(PR_FALSE),
     mLastMouseButtonAction(LL_ZERO),
     mGlobalObjectOwner(nsnull),
     mDocShell(nsnull),
@@ -2215,33 +2215,34 @@ GlobalWindowImpl::IsCallerChrome()
   return NS_SUCCEEDED(rv) ? isChrome : PR_FALSE;
 }
 
+// static
 void
-GlobalWindowImpl::MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle)
+GlobalWindowImpl::MakeScriptDialogTitle(const nsAString &aInTitle,
+                                        nsAString &aOutTitle)
 {
-  aOutTitle.Truncate(0);
+  aOutTitle.Truncate();
 
   // Load the string to be prepended to titles for script
   // confirm/alert/prompt boxes.
 
-  nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-     do_GetService(kCStringBundleServiceCID, &rv);
+     do_GetService(kCStringBundleServiceCID);
 
-  if (NS_SUCCEEDED(rv) && stringBundleService) {
+  if (stringBundleService) {
     nsCOMPtr<nsIStringBundle> stringBundle;
-    rv = stringBundleService->CreateBundle(kDOMBundleURL,
-       getter_AddRefs(stringBundle));
+    stringBundleService->CreateBundle(kDOMBundleURL,
+                                      getter_AddRefs(stringBundle));
 
     if (stringBundle) {
       nsAutoString inTitle(aInTitle);
       nsXPIDLString tempString;
       const PRUnichar *formatStrings[1];
       formatStrings[0] = inTitle.get();
-      rv = stringBundle->FormatStringFromName(
-        NS_LITERAL_STRING("ScriptDlgTitle").get(),
-        formatStrings, 1, getter_Copies(tempString));
-      if (tempString)
-        aOutTitle = tempString.get();
+      stringBundle->FormatStringFromName(NS_LITERAL_STRING("ScriptDlgTitle").get(),
+                                         formatStrings, 1,
+                                         getter_Copies(tempString));
+
+      aOutTitle = tempString;
     }
   }
 
@@ -3244,7 +3245,7 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
   }
 
   rv = OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
-                      _retval);
+                    _retval);
   if (NS_SUCCEEDED(rv)) {
     if (abuseLevel >= openControlled) {
       GlobalWindowImpl *opened = NS_STATIC_CAST(GlobalWindowImpl*, *_retval);
