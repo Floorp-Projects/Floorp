@@ -141,8 +141,6 @@
 
 // Class ID's
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kCToolboxCID, NS_TOOLBARMANAGER_CID);
-static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
@@ -223,9 +221,7 @@ static NS_DEFINE_IID(kLocaleFactoryCID,           NS_LOCALEFACTORY_CID); // do w
 extern "C" void
 NS_SetupRegistry()
 {
-  nsRepository::RegisterFactory(kCToolboxCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCTreeViewCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCWindowIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollbarIID, WIDGET_DLL, PR_FALSE, PR_FALSE);
