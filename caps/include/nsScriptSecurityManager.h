@@ -263,9 +263,6 @@ class nsScriptSecurityManager : public nsIScriptSecurityManager,
                                 public nsIObserver
 {
 public:
-    nsScriptSecurityManager();
-    virtual ~nsScriptSecurityManager();
-
     static void Shutdown();
     
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_SCRIPTSECURITYMANAGER_CID)
@@ -291,6 +288,10 @@ public:
                         PRBool* result);
 
 private:
+
+    // GetScriptSecurityManager is the only call that can make one
+    nsScriptSecurityManager();
+    virtual ~nsScriptSecurityManager();
 
     static JSBool JS_DLL_CALLBACK
     CheckJSFunctionCallerAccess(JSContext *cx, JSObject *obj,
@@ -369,6 +370,9 @@ private:
     CheckXPCPermissions(nsISupports* aObj,
                         const char* aObjectSecurityLevel);
 
+    nsresult
+    Init();
+    
     nsresult
     InitPrefs();
 
