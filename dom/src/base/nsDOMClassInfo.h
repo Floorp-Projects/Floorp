@@ -770,6 +770,9 @@ protected:
                                nsAWritableString& aResult);
 
 public:
+  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoID aID)
   {
     return new nsHistorySH(aID);
