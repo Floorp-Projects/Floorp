@@ -93,7 +93,32 @@ PRIVATE PRBool uCheckAndGen2ByteGRPrefix8EA2(
 		PRUint32*				outlen
 );
 
+PRIVATE PRBool uCheckAndGenAlways2ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
 
+PRIVATE PRBool uCheckAndGenAlways4Byte(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
+
+PRIVATE PRBool uCheckAndGenAlways4ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+);
 PRIVATE PRBool uGenAlways2Byte(
 		PRUint16 				in,
 		unsigned char*		out
@@ -129,6 +154,9 @@ PRIVATE uGeneratorFunc m_generator[uNumOfCharsetType] =
 	uCheckAndGenAlways2ByteShiftGR,
 	uCheckAndGen2ByteGRPrefix8F,
 	uCheckAndGen2ByteGRPrefix8EA2,
+	uCheckAndGenAlways2ByteSwap,
+	uCheckAndGenAlways4Byte,
+	uCheckAndGenAlways4ByteSwap,
 };
 
 /*=================================================================================
@@ -384,3 +412,71 @@ PRIVATE PRBool uCheckAndGen2ByteGRPrefix8EA2( uShiftTable 			*shift,
 }
 
 
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndGenAlways2ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 2)
+		return PR_FALSE;
+	else
+	{
+		*outlen = 2;
+		out[0] = in  & 0xff;
+		out[1] = ((in >> 8 ) & 0xff);
+		return PR_TRUE;
+	}
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndGenAlways4Byte(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 4)
+		return PR_FALSE;
+	else
+	{
+		*outlen = 4;
+                out[0] = out[1] = 0x00;
+		out[2] = ((in >> 8 ) & 0xff);
+		out[3] = in  & 0xff;
+		return PR_TRUE;
+	}
+}
+/*=================================================================================
+
+=================================================================================*/
+PRIVATE PRBool uCheckAndGenAlways4ByteSwap(
+		uShiftTable 			*shift,
+		PRInt32*				state,
+		PRUint16				in,
+		unsigned char*		out,
+		PRUint32 				outbuflen,
+		PRUint32*				outlen
+)
+{
+	if(outbuflen < 4)
+		return PR_FALSE;
+	else
+	{
+		*outlen = 4;
+		out[0] = ((in >> 8 ) & 0xff);
+		out[1] = in  & 0xff;
+                out[2] = out[3] = 0x00;
+		return PR_TRUE;
+	}
+}
