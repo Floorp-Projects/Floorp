@@ -155,14 +155,14 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
   *_retval = nsnull;
   
   nsresult rv;
-  nsAutoString str = "unknown";
+  nsAutoString str; str.AssignWithConversion("unknown");
   if (aSource == kNC_DOMRoot) {
     if (aProperty == kNC_Name)
-      str="DOMRoot";
+      str.AssignWithConversion("DOMRoot");
     else if (aProperty == kNC_Value)
-      str="DOMRootValue";
+      str.AssignWithConversion("DOMRootValue");
     else if (aProperty == kNC_Type)
-      str = "DOMRootType";
+      str.AssignWithConversion("DOMRootType");
     rv = NS_OK;
   } else {
     // try the different objects we know about:
@@ -203,7 +203,7 @@ nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
 #endif
   }
   else if (aProperty == kNC_Type)
-    str = "frame";
+    str.AssignWithConversion("frame");
 
   return createLiteral(str, aResult);
 }
@@ -242,7 +242,7 @@ nsRDFDOMDataSource::createContentTarget(nsIContent *content,
 
   } else if (aProperty == kNC_Type) {
 
-    str = "content";
+    str.AssignWithConversion("content");
   }
 
   return createLiteral(str, aResult);
@@ -378,7 +378,7 @@ nsRDFDOMDataSource::createContentMiscArcs(nsIContent *content,
   nsAutoString value;
 
   // namespace
-  name="namespace";
+  name.AssignWithConversion("namespace");
 
   PRInt32 namespaceID;
   content->GetNameSpaceID(namespaceID);
@@ -387,20 +387,20 @@ nsRDFDOMDataSource::createContentMiscArcs(nsIContent *content,
   appendLeafObject(name, value, arcs);
 
   // cancontainchildren
-  name = "Can contain children";
+  name.AssignWithConversion("Can contain children");
   
   PRBool containerCapability;
   content->CanContainChildren(containerCapability);
-  value = containerCapability ? "yes" : "no";
+  value.AssignWithConversion(containerCapability ? "yes" : "no");
  
   appendLeafObject(name, value, arcs);
 
   // syntetic
-  name = "synthetic";
+  name.AssignWithConversion("synthetic");
   
   PRBool synthetic;
   content->IsSynthetic(synthetic);
-  value = synthetic ? "yes" : "no";
+  value.AssignWithConversion(synthetic ? "yes" : "no");
 
   appendLeafObject(name, value, arcs);
 
@@ -447,7 +447,7 @@ nsRDFDOMDataSource::createStyledContentClassArcs(nsIStyledContent *content,
     nsAutoString value;
     atom->ToString(value);
 
-    nsAutoString name("class");
+    nsAutoString name; name.AssignWithConversion("class");
     appendLeafObject(name, value, arcs);
   }
   return NS_OK;
@@ -460,13 +460,13 @@ nsRDFDOMDataSource::getDOMCSSStyleDeclTarget(nsIDOMCSSStyleDeclaration *decl,
 {
   nsAutoString str;
   if (property == kNC_Name)
-    str = "DOM CSS Style Declaration";
+    str.AssignWithConversion("DOM CSS Style Declaration");
   
   else if (property == kNC_Value)
     decl->GetCssText(str);
   
   else if (property == kNC_Type)
-    str = "domcssstyledecl";
+    str.AssignWithConversion("domcssstyledecl");
 
   return createLiteral(str, aResult);
 }
@@ -481,17 +481,17 @@ nsRDFDOMDataSource::getCSSStyleRuleTarget(nsICSSStyleRule *rule,
 
   nsAutoString str;
   if (property == kNC_Name)
-    str = "DOM CSS Style Rule";
+    str.AssignWithConversion("DOM CSS Style Rule");
   
   else if (property == kNC_Value) {
     decl = rule->GetDeclaration();
     if (decl) {
       decl->ToString(str);
     } else
-      str = "<unavailable>";
+      str.AssignWithConversion("<unavailable>");
     
   } else if (property == kNC_Type)
-    str="domcssstylerule";
+    str.AssignWithConversion("domcssstylerule");
     
   return createLiteral(str, aResult);
 
@@ -504,11 +504,11 @@ nsRDFDOMDataSource::getDOMCSSRuleTarget(nsIDOMCSSRule *rule,
 {
   nsAutoString str;
   if (property == kNC_Name)
-    str = "DOM CSS Rule";
+    str.AssignWithConversion("DOM CSS Rule");
   else if (property == kNC_Value)
     rule->GetCssText(str);
   else
-    str = "domcssrule";
+    str.AssignWithConversion("domcssrule");
 
   return createLiteral(str, aResult);
 }
@@ -530,11 +530,11 @@ nsRDFDOMDataSource::getCSSRuleTarget(nsICSSRule *rule,
 {
   nsAutoString str;
   if (property == kNC_Name)
-    str = "CSSRule";
+    str.AssignWithConversion("CSSRule");
   else if (property == kNC_Value)
-    str = "<unavailable>";
+    str.AssignWithConversion("<unavailable>");
   else if (property == kNC_Type)
-    str = "cssrule";
+    str.AssignWithConversion("cssrule");
 
   return createLiteral(str, aResult);
 }
@@ -546,11 +546,11 @@ nsRDFDOMDataSource::getStyleRuleTarget(nsIStyleRule *rule,
 {
   nsAutoString str;
   if (property == kNC_Name)
-    str = "styleRule";
+    str.AssignWithConversion("styleRule");
   else if (property == kNC_Value)
-    str = "<unavailable>";
+    str.AssignWithConversion("<unavailable>");
   else if (property == kNC_Type) {
-    str = "stylerule";
+    str.AssignWithConversion("stylerule");
   }
 
   return createLiteral(str, aResult);
@@ -941,7 +941,7 @@ nsRDFDOMDataSource::appendLeafObject(nsString& name,
   nsIRDFDOMViewerObject* viewerObject;
   rv = NS_NewDOMViewerObject(NS_GET_IID(nsIRDFDOMViewerObject), (void **)&viewerObject);
 
-  nsAutoString type("leaf");
+  nsAutoString type; type.AssignWithConversion("leaf");
   viewerObject->SetTargetLiteral(kNC_Name, name);
   viewerObject->SetTargetLiteral(kNC_Value, value);
   viewerObject->SetTargetLiteral(kNC_Type, type);
