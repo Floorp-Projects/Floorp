@@ -21,6 +21,10 @@
 
 DEPTH=..\..
 
+include <$(DEPTH)\config\config.mak>
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
 DIRS=content locale
+!endif
 
 include <$(DEPTH)\config\rules.mak>

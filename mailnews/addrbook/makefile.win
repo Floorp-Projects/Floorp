@@ -21,6 +21,12 @@
 
 DEPTH=..\..
 
-DIRS=public src prefs build resources
+include <$(DEPTH)\config\config.mak>
+
+DIRS=public src prefs build
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+DIRS=$(DIRS) resources
+!endif
 
 include <$(DEPTH)\config\rules.mak>

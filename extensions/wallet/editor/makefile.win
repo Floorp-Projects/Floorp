@@ -53,6 +53,10 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+clobber::
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\interview.html
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\index.html
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\privacy.html
@@ -93,3 +97,5 @@ install:: $(DLL)
         $(MAKE_INSTALL) WalletEditor.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
         $(MAKE_INSTALL) privacy.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) privacy.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+
+!endif

@@ -20,9 +20,13 @@
 #
 
 DEPTH		= ..\..\..\..
-THEME_ROOT_DEPTH = ..\..
 
 include <$(DEPTH)\config\rules.mak>
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+THEME_ROOT_DEPTH = ..\..
+
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 install:: 
@@ -40,3 +44,4 @@ install::
 clobber::
 	rm -f $(DIST)\chrome\$(THEME)\communicator\skin\*.*
 
+!endif

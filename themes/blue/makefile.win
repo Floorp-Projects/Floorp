@@ -22,18 +22,24 @@
 DEPTH=..\..
 THEME_ROOT_DEPTH = .
 
-DIRS=communicator editor global messenger navigator
-
+include <$(DEPTH)\config\config.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-CHROME_DIR = skins\$(THEME)
-CHROME_MISC_DIR = .
 CHROME_TYPE = skin
+CHROME_DIR = skins\$(THEME)
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+DIRS=communicator editor global messenger navigator
+
+CHROME_MISC_DIR = .
 
 CHROME_MISC = \
 	.\manifest.rdf \
 	.\preview.png \
         $(NULL)
+
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -31,3 +31,4 @@ install::
 
 clobber::
 	rm -f $(DIST)\bin\chrome\locales\en-US\necko\locale\*.*
+

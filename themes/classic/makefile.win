@@ -22,13 +22,17 @@
 DEPTH=..\..
 THEME_ROOT_DEPTH = .
 
-DIRS=communicator editor global messenger navigator
-
+include <$(DEPTH)\config\config.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-CHROME_DIR = skins\$(THEME)
-CHROME_MISC_DIR = .
 CHROME_TYPE = skin
+CHROME_DIR = skins\$(THEME)
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+DIRS=communicator editor global messenger navigator
+
+CHROME_MISC_DIR = .
 
 CHROME_MISC = \
 	.\manifest.rdf \
@@ -37,11 +41,19 @@ CHROME_MISC = \
 
 include <$(DEPTH)\config\rules.mak>
 
-
 # choose Classic skin as default
 chrome::
     echo skin,install,select,classic/1.0 >>$(DIST)\bin\chrome\installed-chrome.txt
 
-	
-	
-	
+!else
+
+DIRS =  communicator\search\win  \
+        communicator\sidebar\win \
+        communicator\win         \
+        global\win               \
+        messenger\win            \
+        navigator\win
+
+include <$(DEPTH)\config\rules.mak>
+
+!endif

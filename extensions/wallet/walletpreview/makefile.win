@@ -53,6 +53,10 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+clobber::
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\WalletPreview.xul
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\WalletPreview.js
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\WalletPreview.properties
@@ -61,3 +65,5 @@ install:: $(DLL)
         $(MAKE_INSTALL) WalletPreview.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) WalletPreview.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) WalletPreview.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+
+!endif

@@ -53,6 +53,10 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+clobber::
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\CookieViewer.xul
         rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\CookieViewer.js
         rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\CookieViewer.properties
@@ -63,3 +67,5 @@ install:: $(DLL)
         $(MAKE_INSTALL) CookieViewer.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
         $(MAKE_INSTALL) CookieViewer.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
         $(MAKE_INSTALL) CookieViewer.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
+
+!endif

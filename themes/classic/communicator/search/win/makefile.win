@@ -20,9 +20,13 @@
 #
 
 DEPTH		= ..\..\..\..\..
-THEME_ROOT_DEPTH = ..\..\..
 
 include <$(DEPTH)\config\rules.mak>
+
+!ifdef MOZ_DISABLE_JAR_PACKAGING
+
+THEME_ROOT_DEPTH = ..\..\..
+
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
 clobber::
@@ -35,3 +39,5 @@ install::
 	$(MAKE_INSTALL) internetresults.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
 	$(MAKE_INSTALL) search-editor.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
 	$(MAKE_INSTALL) search.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\search
+
+!endif
