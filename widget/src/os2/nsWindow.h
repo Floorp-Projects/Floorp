@@ -231,9 +231,7 @@ protected:
 //   virtual PRBool OnActivateMenu( HWND aMenu, BOOL aActivate);
    // called after param has been set...
    virtual PRBool OnPresParamChanged( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr);
-   virtual PRBool OnDragLeave( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnDrop( MPARAM mp1, MPARAM mp2);
+   virtual PRBool OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr);
 
    static BOOL sIsRegistered;
 
@@ -246,7 +244,6 @@ protected:
    PSWP      mSWPs;           // SWPs for deferred window positioning
    ULONG     mlHave, mlUsed;  // description of mSWPs array
    HPOINTER  mFrameIcon;      // current frame icon
-   BOOL      mNativeDrag;     // is the drag from outside Mozilla
    VDKEY     mDeadKey;        // dead key from previous keyevent
    BOOL      mHaveDeadKey;    // is mDeadKey valid [0 may be a valid dead key, for all I know]
    HWND      mHackDestroyWnd; // access GetMainWindow() window from destructor
@@ -257,6 +254,7 @@ protected:
    BOOL      mChromeHidden;
    nsContentType mContentType;
    HPS       mDragHps;        // retrieved by DrgGetPS() during a drag
+   PRUint32  mDragStatus;     // set while this object is being dragged over
 
    HWND      GetParentHWND() const;
    HWND      GetHWND() const   { return mWnd; }
@@ -300,8 +298,8 @@ protected:
    void    DeferPosition( HWND, HWND, long, long, long, long, ULONG);
    void ConstrainZLevel(HWND *aAfter);
 
-   PRUint32 GetDragStatus(PRUint32 aState, HPS * oHps);
-   PRBool   ReleaseIfDragHPS(HPS hps);
+   PRBool   CheckDragStatus(PRUint32 aAction, HPS * oHps);
+   PRBool   ReleaseIfDragHPS(HPS aHps);
 
    // Enumeration of the methods which are accessable on the PM thread
    enum {

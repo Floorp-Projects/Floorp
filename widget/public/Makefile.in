@@ -51,6 +51,7 @@ EXPORTS		= \
 		nsIDragSessionGTK.h \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \
+		nsIDragSessionOS2.h \
 		nsIXRemoteWidgetHelper.h \
 		nsIPluginWidget.h \
 		$(NULL)
