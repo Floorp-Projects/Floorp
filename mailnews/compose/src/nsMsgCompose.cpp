@@ -30,6 +30,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
+#include "nsICharsetConverterManager.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgSend.h"
 #include "nsIMessenger.h"	//temporary!
@@ -671,6 +672,16 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
                                     msgBody.GetUnicode(), &outCString);
 		    if (NS_SUCCEEDED(rv) && NULL != outCString) 
 		    {
+          // body contains multilingual data, confirm send to the user
+          if (NS_ERROR_UENC_NOMAPPING == rv) {
+            PRBool proceedTheSend;
+            rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+            if (!proceedTheSend) {
+              PR_FREEIF(outCString);
+              return NS_ERROR_BUT_DONT_SHOW_ALERT;
+            }
+          }
+
           mEntityConversionDone = PR_TRUE;
 			    m_compFields->SetBody(outCString);
 			    PR_Free(outCString);

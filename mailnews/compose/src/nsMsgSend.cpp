@@ -42,6 +42,7 @@
 #include "nsMsgEncoders.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgI18N.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
@@ -1278,6 +1279,19 @@ nsMsgComposeAndSend::GetBodyFromEditor()
                                 aCharset, bodyText, &outCString);
     if (NS_SUCCEEDED(rv)) 
     {
+      // body contains multilingual data, confirm send to the user
+      // do this only for text/plain
+      if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
+        PRBool proceedTheSend;
+        rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+        if (!proceedTheSend) {
+          PR_FREEIF(attachment1_body);
+          PR_FREEIF(outCString);
+          Recycle(bodyText);
+          return NS_ERROR_BUT_DONT_SHOW_ALERT;
+        }
+      }
+
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
       Recycle(bodyText);
@@ -2543,7 +2557,9 @@ nsMsgComposeAndSend::Init(
   }
   else if (GetMultipartRelatedCount() == 0) // Only do this if there are not embedded objects
   {
-    GetBodyFromEditor();
+    rv = GetBodyFromEditor();
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   return HackAttachments(attachments, preloaded_attachments);
