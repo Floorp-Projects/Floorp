@@ -7,3 +7,5 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifierseperator) : DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifierseperator " - ">
 <!ENTITY mainWindow.preface "Source of: ">
+
+<!ENTITY menu_wrapLongLines.title "Wrap Long Lines"> 
