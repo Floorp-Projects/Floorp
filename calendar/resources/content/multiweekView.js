@@ -297,17 +297,8 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
          eventBox.setAttribute( "id", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "multiweek-view-event-box-"+calendarEventDisplay.event.id );
          //eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
-         //eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
-	 //eventBox.setAttribute( "class", "month-day-event-box-class" );
           
-               // start calendar color change by CofC
-        var containerName = gCalendarWindow.calendarManager.getCalendarByName(
-                                               calendarEventDisplay.event.parent.server ).subject.split(":")[2];
-
-        // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-        eventBox.setAttribute("class", "multiweek-day-event-box-class " + containerName );
-
-               // end calendar color change by CofC
+         this.setEventboxClass( eventBox, calendarEventDisplay.event, "multiweek-view");
                     
          eventBox.setAttribute( "eventbox", "multiweekview" );
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
@@ -421,7 +412,7 @@ MultiweekView.prototype.getToDoBox = function multiweekView_getToDoBox( calendar
   eventBox.setAttribute( "id", "multiweek-view-todo-box-"+calendarToDo.id );
   eventBox.setAttribute( "name", "multiweek-view-todo-box-"+calendarToDo.id );
 //  eventBox.setAttribute( "event"+calendarToDo.id, true );
-  eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
+  this.setEventboxClass( eventBox, calendarToDo, "multiweek-view");
 
 //   if( calendarToDo.categories && calendarToDo.categories != "" )
 //   {
@@ -994,7 +985,7 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
   // Make a box item to hold the event
   var eventBox = document.createElement( "box" );
   eventBox.setAttribute( "id", "multiweek-view-event-box-fictitious" );
-  eventBox.setAttribute( "class", "multiweek-day-event-box-class" );
+  eventBox.setAttribute( "class", "multiweek-view-event-class" );
   eventBox.setAttribute( "eventbox", "multiweekview" );
   dayBoxItem.appendChild( eventBox );
   // Make a text item to show the event title

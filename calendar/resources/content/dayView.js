@@ -267,9 +267,6 @@ DayView.prototype.compareAllDayEvents = function dayview_compareAllDayEvents( a,
 *   This creates an all day event box for the day view
 */
 DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( calendarEventDisplay ) {
-   var containerName = this.calendarWindow.calendarManager.getCalendarByName(
-                         calendarEventDisplay.event.parent.server ).subject.split(":")[2];
-
    // build up the label and image for the eventbox
    var eventText = calendarEventDisplay.event.title;
    var locationText = calendarEventDisplay.event.location;
@@ -290,8 +287,7 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
    eventBox.appendChild( newLabel );
    eventBox.setAttribute( "name", "day-view-event-box-" + calendarEventDisplay.event.id );
    
-   // set calendar name as attribute to enable calendar specific colors
-   eventBox.setAttribute( "class", "day-view-all-day-event-class " + containerName);
+   this.setEventboxClass( eventBox, calendarEventDisplay.event, "day-view-all-day");
    
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
@@ -318,9 +314,6 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
 */
 DayView.prototype.createEventBox = function dayview_createEventBox( calendarEventDisplay ) {
    //if you change this class, you have to change calendarViewDNDObserver in calendarDragDrop.js
-   var containerName = this.calendarWindow.calendarManager.getCalendarByName(
-                         calendarEventDisplay.event.parent.server ).subject.split(":")[2];
-   
    var displayDateObject = new Date( calendarEventDisplay.displayDate );
    var startHour = displayDateObject.getHours();
    var startMinutes = displayDateObject.getMinutes();
@@ -359,13 +352,15 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    var eventDescription = document.createElement( "description" );
    eventDescription.setAttribute( "class", "day-view-event-description-class" );
    eventDescription.appendChild( eventText );
-   
+
    //create actual eventbox
    var eventBox = document.createElement( "vbox" );
    eventBox.calendarEventDisplay = calendarEventDisplay;
    eventBox.setAttribute( "name", "day-view-event-box-"+calendarEventDisplay.event.id );
-   // set calendar name as attribute to enable calendar specific colors
-   eventBox.setAttribute("class", "day-view-event-class " + containerName );
+
+   // set the event box to be of class day-view-event-class and the appropriate calendar-color class
+   this.setEventboxClass( eventBox, calendarEventDisplay.event, "day-view");
+
    eventBox.setAttribute( "top", eventTop );
    eventBox.setAttribute( "left", eventLeft );
    eventBox.setAttribute( "height", eventHeight );
@@ -613,4 +608,3 @@ function debug( Text )
 {
    dump( "\ndayView.js: "+ Text);
 }
-

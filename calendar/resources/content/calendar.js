@@ -131,6 +131,37 @@ logMessage("application : " + applicationName);
 *  G L O B A L     C A L E N D A R      F U N C T I O N S
 */
 
+/**
+ * This obsevers changes in calendar color prefs.
+ * It removes all the style rules, and creates them
+ * all again
+ */
+
+var categoryPrefObserver =
+{
+   mCalendarStyleSheet: null,
+   observe: function(aSubject, aTopic, aPrefName)
+   {
+      var i;
+      for (i = 0; i < this.mCalendarStyleSheet.cssRules.length ; ++i) {
+        if (this.mCalendarStyleSheet.cssRules[i].selectorText.indexOf(".event-category-") == 0) {
+          dump(this.mCalendarStyleSheet.cssRules+" "+this.mCalendarStyleSheet.cssRules[i].selectorText+"\n");
+          this.mCalendarStyleSheet.deleteRule(i);
+          --i;
+        }
+      }
+
+      var catergoryPrefBranch = prefService.getBranch("calendar.category.color.");
+      var prefCount = { value: 0 };
+      var prefArray = catergoryPrefBranch.getChildList("", prefCount);
+      for (i = 0; i < prefArray.length; ++i) {
+         var prefName = prefArray[i];
+         var prefValue = catergoryPrefBranch.getCharPref(prefName);
+         this.mCalendarStyleSheet.insertRule(".event-category-" + prefName + " { border-color: " + prefValue +" !important; }", 1);
+      }
+   }
+}
+
 /** 
 * Called from calendar.xul window onload.
 */
@@ -175,10 +206,10 @@ function calendarInit()
    for (i=0; i<document.styleSheets.length; i++)
    {
       if (document.styleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
-	  {
+      {
           gCalendarStyleSheet = document.styleSheets[i];
-		  break;
-	  }
+          break;
+      }
    }
 
    var calendarNode;
@@ -198,7 +229,7 @@ function calendarInit()
      // grab the container name and use it for the name of the style rule
      containerName = list[i].subject.split(":")[2];
 
-	 // obtain calendar color from the rdf datasource
+     // obtain calendar color from the rdf datasource
      calendarColor = calendarNode.getAttribute("http://home.netscape.com/NC-rdf#color");
 
      // if the calendar had a color attribute create a style sheet for it
@@ -233,7 +264,14 @@ function calendarInit()
        }
      }
    }
-   // CofC Calendar Coloring Change
+
+   // Setup css classes for category colors
+   var catergoryPrefBranch = prefService.getBranch("");
+   var pbi = catergoryPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+   pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
+   categoryPrefObserver.mCalendarStyleSheet = gCalendarStyleSheet;
+   categoryPrefObserver.observe(null, null, "");
+
    if( ("arguments" in window) &&
        (window.arguments.length) &&
        (typeof(window.arguments[0]) == "object") &&
@@ -281,6 +319,10 @@ function calendarFinish()
    finishCalendarUnifinder();
    
    finishCalendarToDoUnifinder();
+
+   var pbi = prefService.getBranch("");
+   pbi = pbi.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+   pbi.removeObserver("calendar.category.color.", categoryPrefObserver);
 
    gCalendarWindow.close();
 

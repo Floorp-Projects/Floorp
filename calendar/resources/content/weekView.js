@@ -318,15 +318,9 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay )
                  - 2;
    eventBox.setAttribute( "left", boxLeft );
    
-   // start calendar color change by CofC
-   var containerName = gCalendarWindow.calendarManager.getCalendarByName(
-                         calendarEventDisplay.event.parent.server ).subject.split(":")[2];
-   
    // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-   eventBox.setAttribute("class", "week-view-event-class " + containerName );
-   
-   // end calendar color change by CofC
-   
+   this.setEventboxClass( eventBox, calendarEventDisplay.event, "week-view");
+  
    eventBox.setAttribute( "eventbox", "weekview" );
    eventBox.setAttribute( "dayindex", index+1 );
    eventBox.setAttribute( "onclick", "weekEventItemClick( this, event )" );
@@ -338,7 +332,7 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay )
    eventBox.setAttribute( "name", "week-view-event-box-"+calendarEventDisplay.event.id );
    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
    eventBox.setAttribute( "tooltip", "eventTooltip" );
-   
+
    // The event description. This doesn't go multi line, but does crop properly.
    var eventDescriptionElement = document.createElement( "label" );
    eventDescriptionElement.calendarEventDisplay = calendarEventDisplay;

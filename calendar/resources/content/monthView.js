@@ -271,14 +271,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
          //eventBox.setAttribute( "event"+toString(calendarEventDisplay.event.id), true );
 	   
-		// start calendar color change by CofC
-        var containerName = gCalendarWindow.calendarManager.getCalendarByName(
-						calendarEventDisplay.event.parent.server ).subject.split(":")[2];
-
-        // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-        eventBox.setAttribute("class", "month-day-event-box-class " + containerName );
-
-		// end calendar color change by CofC
+         this.setEventboxClass( eventBox, calendarEventDisplay.event, "month-view");
 
          eventBox.setAttribute( "eventbox", "monthview" );
          eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
@@ -349,7 +342,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          
          if( dotBoxHolder.childNodes.length < kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
          {
-            eventDotBox = document.createElement( "box" );
+            var eventDotBox = document.createElement( "box" );
             eventDotBox.setAttribute( "eventbox", "monthview" );
             
             //show a dot representing an event.
@@ -1118,4 +1111,3 @@ function debug( Text )
    dump( "\nmonthView.js: "+ Text);
 
 }
-

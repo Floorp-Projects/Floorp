@@ -460,7 +460,7 @@
    text-decoration        : line-through;
 }
 
-.multiweek-day-event-box-class
+.multiweek-view-event-class
 {
   border	       : 1px solid #1D7AB5;
   margin               : 1px;
@@ -471,12 +471,12 @@
   cursor               : pointer;
 }
 
-.multiweek-day-event-box-class:hover
+.multiweek-view-event-class:hover
 {
   border		: 1px solid #003366;
 }
 
-.multiweek-day-event-box-class[eventselected="true"]
+.multiweek-view-event-class[eventselected="true"]
 {
    background-color     :  #D5E3F2;  
    border	        : 2px solid #990000;
@@ -703,7 +703,7 @@
    cursor               : pointer;
 }
 
-.month-day-event-box-class
+.month-view-event-class
 {
    border               : 1px solid #1D7AB5;
    margin               : 1px;
@@ -714,12 +714,12 @@
    cursor               : pointer;
 }
 
-.month-day-event-box-class:hover
+.month-view-event-class:hover
 {
    border	        : 1px solid #003366;
 }
 
-.month-day-event-box-class[eventselected="true"]
+.month-view-event-class[eventselected="true"]
 {
    background-color     :  #D5E3F2;  
    border	        : 2px solid #990000;

@@ -41,7 +41,7 @@ function calendarPrefObserver( CalendarPreferences )
    this.CalendarPreferences = CalendarPreferences;
    try {
      var pbi = rootPrefNode.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-     pbi.addObserver("calendar", this, false);
+     pbi.addObserver("calendar.", this, false);
      window.addEventListener("unload", this, false);
   } catch(ex) {
     dump("Calendar: Failed to observe prefs: " + ex + "\n");

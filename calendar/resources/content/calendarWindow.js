@@ -658,6 +658,31 @@ CalendarView.prototype.refresh = function calView_refresh( ShowEvent )
    this.refreshEvents()
 }
 
+/**
+ * PUBLIC
+ * Set classes on a eventbox
+ */
+
+CalendarView.prototype.setEventboxClass = function calView_setEventboxClass(aEventBox, aEvent, aViewType)
+{
+   var containerName = gCalendarWindow.calendarManager.getCalendarByName(
+                           aEvent.parent.server ).subject.split(":")[2];
+
+   // set the event box to be of class <aViewType>-event-class
+   // and the appropriate calendar-color class
+   var categoriesClassList = "";
+   if( aEvent.categories != null ) {
+      var categoriesList = aEvent.categories.split(",");
+      for ( var i=0; i<categoriesList.length; ++i ) {
+         // Remove illegal chars.
+         categoriesList[i].replace( /[ -_.*?"']/g, "" );
+
+         categoriesClassList = categoriesClassList + "event-category-" + categoriesList[i].toLowerCase();
+      }
+   }
+   aEventBox.setAttribute("class", aViewType + "-event-class " + containerName + " " + categoriesClassList);
+}
+
 /** PRIVATE
  * 
  * Calculate startHour (the first hour of 'date' that has events, 
