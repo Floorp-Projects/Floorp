@@ -584,42 +584,46 @@ nsCommonWidget::SetFont(const nsFont&)
 NS_IMETHODIMP
 nsCommonWidget::Invalidate(PRBool aIsSynchronous)
 {
-    if (mContainer) {
 #ifdef DEBUG_WIDGETS
-        qDebug("invalidate 1");
+    qDebug("nsCommonWidget::Invalidate1 container=%p widget=%p", (void*)mContainer, (void*)mWidget);
 #endif
-        if (aIsSynchronous)
-            mContainer->update();
-        else
-            mContainer->repaint();
-    }
+    if (!mWidget)
+        return NS_OK;
+
+    if (aIsSynchronous)
+        mWidget->repaint();
+    else
+        mWidget->update();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCommonWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-    if (mContainer) {
 #ifdef DEBUG_WIDGETS
-        qDebug("invalidate 2");
+    qDebug("nsCommonWidget::Invalidate2 container=%p widget=%p", (void*)mContainer, (void*)mWidget);
 #endif
-        if (aIsSynchronous)
-            mContainer->update(aRect.x, aRect.y, aRect.width, aRect.height);
-        else
-            mContainer->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
-    }
+    if (!mWidget)
+        return NS_OK;
+
+    if (aIsSynchronous)
+        mWidget->repaint(aRect.x, aRect.y, aRect.width, aRect.height);
+    else
+        mWidget->update(aRect.x, aRect.y, aRect.width, aRect.height);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCommonWidget::Update()
 {
-    //qDebug("Update!!!!!!");
-    if (mContainer) {
-        mContainer->update();
-    } else if (mWidget) {
-        mWidget->update();
-    }
+#ifdef DEBUG_WIDGETS
+    qDebug("nsCommonWidget::Update container=%p widget=%p", (void*)mContainer, (void*)mWidget);
+#endif
+    if (!mWidget)
+        return NS_OK;
+    mWidget->update();
 
     return NS_OK;
 }
