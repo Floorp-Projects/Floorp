@@ -143,7 +143,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // Set the geometric and content parent for each of the child frames. 
   // The legend is handled differently and removed from aChildList
   nsIFrame* lastFrame = nsnull;
-  for (nsIFrame* frame = aChildList; nsnull != frame; frame->GetNextSibling(frame)) {
+  for (nsIFrame* frame = aChildList; nsnull != frame;) {
     nsIFrame* legendFrame = nsnull;
     nsresult result = frame->QueryInterface(kLegendFrameCID, (void**)&legendFrame);
     if ((NS_OK == result) && legendFrame) {
@@ -159,9 +159,11 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
       mFirstChild->SetNextSibling(frame);
       mLegendFrame = frame;
       mLegendFrame->SetNextSibling(nsnull);
+      frame = nextFrame;
      } else {
       frame->SetGeometricParent(mFirstChild);
       frame->SetContentParent(mFirstChild);
+      frame->GetNextSibling(frame);
     }
     lastFrame = frame;
   }
