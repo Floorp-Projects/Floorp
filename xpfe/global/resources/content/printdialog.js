@@ -118,22 +118,6 @@ function doEnablePrintToFile(value)
   }
 }
 
-function createMenuItem(aDataObject, aPrinterNameStr, aPopupNode, isExtended)
-{
-  var itemNode = document.createElement("menuitem");
-  itemNode.setAttribute("value", aPrinterNameStr);
-  itemNode.setAttribute("label", aPrinterNameStr);
-  aPopupNode.appendChild(itemNode);
-  if (aDataObject != null && isExtended) {
-    itemNode.setAttribute("oncommand", "printerSelected();"); 
-    var infoObj = aDataObject.getNext();
-    infoObj = infoObj.QueryInterface(Components.interfaces.nsISupportsWString);
-    var infoStr = infoObj.toString();
-    gExtendedArray[aPrinterNameStr] = infoStr;
-  }
-
-}
-
 //---------------------------------------------------
 function listElement(aListElement)
   {
@@ -150,29 +134,31 @@ listElement.prototype =
         },
 
     appendPrinterNames: 
-      function (aDataObject, strDefaultPrinterName, isExtended) 
+      function (aDataObject, isExtended) 
         { 
           var popupNode = document.createElement("menupopup"); 
-
-          if (strDefaultPrinterName != "") {
-            createMenuItem(null, strDefaultPrinterName, popupNode, false);
-          }
+          var strDefaultPrinterName = "";
+          var printerName;
 
           // build popup menu from printer names
           while (aDataObject.hasMoreElements()) {
-            var printerName = aDataObject.getNext();
+            printerName = aDataObject.getNext();
             printerName = printerName.QueryInterface(Components.interfaces.nsISupportsWString);
             var printerNameStr = printerName.toString();
-            if (printerNameStr == strDefaultPrinterName) {
+            if (strDefaultPrinterName == "")
+               strDefaultPrinterName = printerNameStr;
+            var itemNode = document.createElement("menuitem");
+            itemNode.setAttribute("value", printerNameStr);
+            itemNode.setAttribute("label", printerNameStr);
+            popupNode.appendChild(itemNode);
+            if (isExtended) {
+              itemNode.setAttribute("oncommand", "printerSelected();"); 
               var infoObj = aDataObject.getNext();
               infoObj = infoObj.QueryInterface(Components.interfaces.nsISupportsWString);
               var infoStr = infoObj.toString();
               gExtendedArray[printerNameStr] = infoStr;
-            } else {
-              createMenuItem(aDataObject, printerNameStr, popupNode, isExtended);
             }
           }
-
           if (strDefaultPrinterName != "") {
             this.listElement.removeAttribute("disabled");
           } else {
@@ -199,13 +185,12 @@ listElement.prototype =
 //---------------------------------------------------
 function getPrinters()
 {
-  var printerEnumerator     = printService.availablePrinters();
-  var strDefaultPrinterName = printService.defaultPrinterName;
+  var printerEnumerator = printService.availablePrinters();
   gIsExtended = printService.isExtended;
 
   var selectElement = new listElement(dialog.printerList);
   selectElement.clearList();
-  selectElement.appendPrinterNames(printerEnumerator, strDefaultPrinterName, gIsExtended);
+  var strDefaultPrinterName = selectElement.appendPrinterNames(printerEnumerator, gIsExtended);
 
   var printerObj = gExtendedArray[gPrinterName];
   if (printerObj) {
