@@ -86,9 +86,18 @@ NS_INTERFACE_MAP_END
 ///////////////////////////////////////////////////////////////////////////////
 // nsIInterfaceRequestor
 
-NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *result)
+NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & aIID, void * *result)
 {
-    return QueryInterface(uuid, result);
+    *result = 0;
+    if (aIID.Equals(NS_GET_IID(nsIDOMWindow)))
+    {
+        if (mOwner && mOwner->mWebBrowser)
+        {
+            return mOwner->mWebBrowser->GetContentDOMWindow((nsIDOMWindow **) result);
+        }
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+    return QueryInterface(aIID, result);
 }
 
 

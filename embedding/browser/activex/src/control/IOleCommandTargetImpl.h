@@ -174,7 +174,7 @@ public:
                     if (pszTextToCopy)
                     {
                         // Don't exceed the provided buffer size
-                        int nTextLen = wcslen(pszTextToCopy);
+                        size_t nTextLen = wcslen(pszTextToCopy);
                         if (nTextLen > pCmdText->cwBuf)
                         {
                             nTextLen = pCmdText->cwBuf;
