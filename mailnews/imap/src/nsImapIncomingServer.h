@@ -70,7 +70,7 @@ private:
                                    nsIImapProtocol** aImapConnection);
 	nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 
                                            nsIImapProtocol ** aImapConnection);
-	nsresult RequestOverrideInfo();
+	nsresult RequestOverrideInfo(nsIMsgWindow *aMsgWindow);
 
     PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;

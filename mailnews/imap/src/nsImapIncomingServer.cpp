@@ -397,11 +397,12 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     nsCOMPtr<nsIImapProtocol> freeConnection;
     PRBool isBusy = PR_FALSE;
     PRBool isInboxConnection = PR_FALSE;
-	PRBool isAOLServer = PR_FALSE;
+	nsXPIDLCString redirectorType;
 
     PR_CEnterMonitor(this);
 
-	GetIsAOLServer(&isAOLServer);
+	GetRedirectorType(getter_Copies(redirectorType));
+	PRBool redirectLogon = ((const char *) redirectorType && nsCRT::strlen((const char *) redirectorType) > 0);
 
     PRInt32 maxConnections = 5; // default to be five
     rv = GetMaximumConnectionsNumber(&maxConnections);
@@ -448,7 +449,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     if (ConnectionTimeOut(freeConnection))
         freeConnection = null_nsCOMPtr();
 
-	if (isAOLServer && (!connection || !canRunUrl))
+	if (redirectLogon && (!connection || !canRunUrl))
 	{
 		// here's where we'd start the asynchronous process of requesting a connection to the 
 		// AOL Imap server and getting back an ip address, port #, and cookie.
@@ -457,7 +458,12 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 		if (!m_waitingForConnectionInfo)
 		{
 			m_waitingForConnectionInfo = PR_TRUE;
-			RequestOverrideInfo();
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+			nsCOMPtr<nsIMsgWindow> aMsgWindow;
+			if (NS_SUCCEEDED(rv)) 
+				rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
+
+			RequestOverrideInfo(aMsgWindow);
 			hasToWait = PR_TRUE;
 		}
 	}
@@ -1551,7 +1557,7 @@ NS_IMETHODIMP nsImapIncomingServer::CreatePRUnicharStringFromUTF7(const char * a
 	return CreateUnicodeStringFromUtf7(aSourceString, aUnicodeStr);
 }
 
-nsresult nsImapIncomingServer::RequestOverrideInfo()
+nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 {
 
 	nsresult rv;
@@ -1574,6 +1580,9 @@ nsresult nsImapIncomingServer::RequestOverrideInfo()
 
 			GetUsername(getter_Copies(userName));
 			GetPassword(getter_Copies(password));
+
+			if (!((const char *) password) || nsCRT::strlen((const char *) password) == 0)
+				PromptForPassword(getter_Copies(password), aMsgWindow);
 			rv = redirector->Logon(userName, password, logonRedirectorRequester);
 		}
 	}
