@@ -447,7 +447,10 @@ extern PRStatus _PR_KillOS2Process(struct PRProcess *process);
 
 #define _MD_CLEANUP_BEFORE_EXIT()
 #define _MD_EXIT                          (_PR_MD_EXIT)
-#define _MD_INIT_CONTEXT
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status) \
+    PR_BEGIN_MACRO \
+    *status = PR_TRUE; \
+    PR_END_MACRO
 #define _MD_SWITCH_CONTEXT
 #define _MD_RESTORE_CONTEXT
 
