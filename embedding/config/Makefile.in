@@ -29,12 +29,16 @@ include $(topsrcdir)/config/rules.mk
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   BASEBROWSER = basebrowser-mac-macho
 else
+ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
+  BASEBROWSER = basebrowser-win
+else
   BASEBROWSER = basebrowser-unix
+endif
 endif
 
 embed_chrome: embed-jar.mn
 ifneq (jar,$(MOZ_CHROME_FILE_FORMAT))
-	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/bin/chrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/bin/chrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/bin/chrome < $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 else
@@ -45,7 +49,7 @@ else
 		$(NSINSTALL) -D $(DIST)/Embed/tmpchrome/$$b ;\
 		unzip -o -d $(DIST)/Embed/tmpchrome/$$b $$f ; \
 	done
-	$(PERL) $(MOZILLA_DIR)/embedding/config/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
+	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/embedding/config/embed-jar.mn -mozpath $(MOZILLA_DIR) -chrome $(DIST)/Embed/tmpchrome > $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/Embed/tmpchrome < $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/embed-tmp.mn
 	-$(RM) -rf $(DIST)/Embed/tmpchrome
