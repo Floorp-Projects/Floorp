@@ -78,37 +78,37 @@ NS_IMPL_ISUPPORTS4(nsMailboxService, nsIMailboxService, nsIMsgMessageService, ns
 nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
-	nsCOMPtr<nsIMailboxUrl> mailboxurl;
-	nsresult rv = NS_OK;
-
-    rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                            nsnull,
-                                            NS_GET_IID(nsIMailboxUrl),
-                                            (void **) getter_AddRefs(mailboxurl));
-	if (NS_SUCCEEDED(rv) && mailboxurl)
-	{
-		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(mailboxurl);
-		// okay now generate the url string
-		nsFilePath filePath(aMailboxPath); // convert to file url representation...
-		url->SetUpdatingFolder(PR_TRUE);
-		url->SetMsgWindow(aMsgWindow);
-        char *temp = PR_smprintf("mailbox://%s", (const char *) filePath);
-        url->SetSpec(nsDependentCString(temp));
-        PR_Free(temp);
-		mailboxurl->SetMailboxParser(aMailboxParser);
-		if (aUrlListener)
-			url->RegisterListener(aUrlListener);
-
-		RunMailboxUrl(url, nsnull);
-
-		if (aURL)
-		{
-			*aURL = url;
-			NS_IF_ADDREF(*aURL);
-		}
-	}
-
-	return rv;
+  nsCOMPtr<nsIMailboxUrl> mailboxurl;
+  nsresult rv = NS_OK;
+  
+  rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+    nsnull,
+    NS_GET_IID(nsIMailboxUrl),
+    (void **) getter_AddRefs(mailboxurl));
+  if (NS_SUCCEEDED(rv) && mailboxurl)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(mailboxurl);
+    // okay now generate the url string
+    nsFilePath filePath(aMailboxPath); // convert to file url representation...
+    url->SetUpdatingFolder(PR_TRUE);
+    url->SetMsgWindow(aMsgWindow);
+    char *temp = PR_smprintf("mailbox://%s", (const char *) filePath);
+    url->SetSpec(nsDependentCString(temp));
+    PR_Free(temp);
+    mailboxurl->SetMailboxParser(aMailboxParser);
+    if (aUrlListener)
+      url->RegisterListener(aUrlListener);
+    
+    RunMailboxUrl(url, nsnull);
+    
+    if (aURL)
+    {
+      *aURL = url;
+      NS_IF_ADDREF(*aURL);
+    }
+  }
+  
+  return rv;
 }
 						 
 nsresult nsMailboxService::CopyMessage(const char * aSrcMailboxURI,
