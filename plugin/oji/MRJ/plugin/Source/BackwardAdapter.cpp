@@ -36,7 +36,8 @@
 #include "nsDebug.h"
 
 #ifdef XP_MAC
-#include "jGNE.h"
+#include "EventFilter.h"
+#include <MacWindows.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,10 +285,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-	AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result)
-    {
-    	return NS_ERROR_NOT_IMPLEMENTED;
-	}
+	AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result);
 
 	/**
      * Deallocates a menu ID (for the Mac).
@@ -425,11 +423,16 @@ private:
 	};
 
 	static RegisteredWindow* theRegisteredWindows;
+	static RegisteredWindow* theActiveWindow;
+	
 	static RegisteredWindow** GetRegisteredWindow(nsPluginPlatformWindowRef window);
+	static RegisteredWindow* FindRegisteredWindow(nsPluginPlatformWindowRef window);
 
 #ifdef XP_MAC
-	Boolean mEventFilterInstalled;
+	Boolean mEventFiltersInstalled;
+
 	static Boolean EventFilter(EventRecord* event);
+	static Boolean MenuFilter(long menuSelection);
 #endif
 };
 
@@ -1328,7 +1331,7 @@ CPluginManager::CPluginManager(void)
     mLiveconnect = NULL;
 
 #ifdef XP_MAC
-    mEventFilterInstalled = false;
+    mEventFiltersInstalled = false;
 #endif
 }
 
@@ -1337,8 +1340,8 @@ CPluginManager::~CPluginManager(void)
 	NS_IF_RELEASE(mLiveconnect);
 
 #ifdef XP_MAC	
-	if (mEventFilterInstalled)
-		RemoveEventFilter();
+	if (mEventFiltersInstalled)
+		RemoveEventFilters();
 #endif
 }
 
@@ -1494,6 +1497,7 @@ CPluginManager::GetValue(nsPluginManagerVariable variable, void *value)
 //////////////////////////////
 
 CPluginManager::RegisteredWindow* CPluginManager::theRegisteredWindows = NULL;
+CPluginManager::RegisteredWindow* CPluginManager::theActiveWindow = NULL;
 
 CPluginManager::RegisteredWindow** CPluginManager::GetRegisteredWindow(nsPluginPlatformWindowRef window)
 {
@@ -1508,6 +1512,12 @@ CPluginManager::RegisteredWindow** CPluginManager::GetRegisteredWindow(nsPluginP
 	return NULL;
 }
 
+CPluginManager::RegisteredWindow* CPluginManager::FindRegisteredWindow(nsPluginPlatformWindowRef window)
+{
+	RegisteredWindow** link = GetRegisteredWindow(window);
+	return (link != NULL ? *link : NULL);
+}
+
 NS_METHOD
 CPluginManager::RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window)
 {
@@ -1515,8 +1525,10 @@ CPluginManager::RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowR
 	
 #ifdef XP_MAC
 	// use jGNE to obtain events for registered windows.
-	if (!mEventFilterInstalled)
-		::InstallEventFilter(&EventFilter);
+	if (!mEventFiltersInstalled) {
+		::InstallEventFilters(&EventFilter, &MenuFilter);
+		mEventFiltersInstalled = true;
+	}
 
 	// plugin expect the window to be shown and selected at this point.
 	::ShowWindow(window);
@@ -1532,6 +1544,8 @@ CPluginManager::UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindo
 	RegisteredWindow** link = GetRegisteredWindow(window);
 	if (link != NULL) {
 		RegisteredWindow* registeredWindow = *link;
+		if (registeredWindow == theActiveWindow)
+			theActiveWindow = NULL;
 		*link = registeredWindow->mNext;
 		delete registeredWindow;
 	}
@@ -1541,8 +1555,8 @@ CPluginManager::UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindo
 
 	// if no windows registered, remove the filter.
 	if (theRegisteredWindows == NULL) {
-		::RemoveEventFilter();
-		mEventFilterInstalled = false;
+		::RemoveEventFilters();
+		mEventFiltersInstalled = false;
 	}
 #endif
 
@@ -1551,30 +1565,160 @@ CPluginManager::UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindo
 
 #ifdef XP_MAC
 
+static EventRecord* makeActivateEvent(EventRecord* event, WindowRef window, Boolean active)
+{
+	::OSEventAvail(0, event);
+	event->what = activateEvt;
+	event->message = UInt32(window);
+	if (active)
+		event->modifiers |= activeFlag;
+	else
+		event->modifiers &= ~activeFlag;
+	return event;
+}
+
+/**
+ * This method filters events using a very low-level mechanism known as a jGNE filter.
+ * This filter gets first crack at all events before they are returned by WaitNextEvent
+ * or EventAvail. One trickiness is that the filter runs in all processes, so care
+ * must be taken not to act on events if the browser's process isn't current.
+ * So far, with activates, updates, and mouse clicks, it works quite well.
+ */
 Boolean CPluginManager::EventFilter(EventRecord* event)
 {
 	Boolean filteredEvent = false;
 
-    nsPluginEvent pluginEvent = { event, NULL };
+	WindowRef window = WindowRef(event->message);
+    nsPluginEvent pluginEvent = { event, window };
+    EventRecord simulatedEvent;
+
+    RegisteredWindow* registeredWindow;
+	PRBool handled = PR_FALSE;
+    
 	// see if this event is for one of our registered windows.
 	switch (event->what) {
-	case updateEvt:
-		WindowRef window = WindowRef(event->message);
-		RegisteredWindow** link = GetRegisteredWindow(window);
-		if (link != NULL) {
-			RegisteredWindow* registeredWindow = *link;
-			nsIEventHandler* handler = registeredWindow->mHandler;
+	case keyDown:
+	case keyUp:
+	case autoKey:
+		// See if the frontmost window is one of our registered windows.
+		window = ::FrontWindow();
+		registeredWindow = FindRegisteredWindow(window);
+		if (registeredWindow != NULL) {
 			pluginEvent.window = window;
-			PRBool handled = PR_FALSE;
+			registeredWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+			filteredEvent = true;
+		}
+		break;
+	case mouseDown:
+		// use FindWindow to see if the click was in one our registered windows.
+		short partCode = FindWindow(event->where, &window);
+		switch (partCode) {
+		case inContent:
+		case inDrag:
+		case inGrow:
+		case inGoAway:
+		case inZoomIn:
+		case inZoomOut:
+		case inCollapseBox:
+		case inProxyIcon:
+			registeredWindow = FindRegisteredWindow(window);
+			if (registeredWindow != NULL) {
+				pluginEvent.window = window;
+				registeredWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+				filteredEvent = true;
+			} else if (theActiveWindow != NULL) {
+				// a click is going into an unregistered window, if we are active,
+				// the browser doesn't seem to be generating a deactivate event.
+				// I think this is because PowerPlant is managing the windows, dang it.
+				window = theActiveWindow->mWindow;
+				pluginEvent.event = makeActivateEvent(&simulatedEvent, window, false);
+				pluginEvent.window = window;
+				::HiliteWindow(window, false);
+				theActiveWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+				theActiveWindow = NULL;
+			}
+			break;
+		}
+		break;
+	case activateEvt:
+		registeredWindow = FindRegisteredWindow(window);
+		if (registeredWindow != NULL) {
+			registeredWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+			filteredEvent = true;
+			theActiveWindow = registeredWindow;
+		}
+		break;
+	case updateEvt:
+		registeredWindow = FindRegisteredWindow(window);
+		if (registeredWindow != NULL) {
 			GrafPtr port; GetPort(&port); SetPort(window); BeginUpdate(window);
-				handler->HandleEvent(&pluginEvent, &handled);
+				registeredWindow->mHandler->HandleEvent(&pluginEvent, &handled);
 			EndUpdate(window); SetPort(port);
 			filteredEvent = true;
+		}
+		break;
+	case osEvt:
+		if ((event->message & osEvtMessageMask) == (suspendResumeMessage << 24)) {
+			registeredWindow = theActiveWindow;
+			if (registeredWindow != NULL) {
+				window = registeredWindow->mWindow;
+				Boolean active = (event->message & resumeFlag) != 0;
+				pluginEvent.event = makeActivateEvent(&simulatedEvent, window, active);
+				pluginEvent.window = window;
+				registeredWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+				::HiliteWindow(window, active);
+			}
 		}
 		break;
 	}
 	
 	return filteredEvent;
+}
+
+// TODO:  find out what range of menus Communicator et. al. uses.
+enum {
+	kBaseMenuID = 20000,
+	kBaseSubMenuID = 200
+};
+
+static PRInt16 nextMenuID = kBaseMenuID;
+static PRInt16 nextSubMenuID = kBaseSubMenuID;
+
+Boolean CPluginManager::MenuFilter(long menuSelection)
+{
+	if (theActiveWindow != NULL) {
+		UInt16 menuID = (menuSelection >> 16);
+		if ((menuID >= kBaseMenuID && menuID < nextMenuID) || (menuID >= kBaseSubMenuID && menuID < nextSubMenuID)) {
+			EventRecord menuEvent;
+			::OSEventAvail(0, &menuEvent);
+			menuEvent.what = nsPluginEventType_MenuCommandEvent;
+			menuEvent.message = menuSelection;
+
+			WindowRef window = theActiveWindow->mWindow;
+	    	nsPluginEvent pluginEvent = { &menuEvent, window };
+			PRBool handled = PR_FALSE;
+			theActiveWindow->mHandler->HandleEvent(&pluginEvent, &handled);
+			
+			return handled;
+		}
+	}
+	return false;
+}
+
+NS_METHOD
+CPluginManager::AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result)
+{
+	*result = (isSubmenu ? nextSubMenuID++ : nextMenuID++);
+
+	return NS_OK;
+}
+
+#else /* !XP_MAC */
+
+NS_METHOD
+CPluginManager::AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 #endif /* XP_MAC */
