@@ -73,6 +73,7 @@ public:
   static nsresult SetBoolInverted(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetString(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetInt(void* aTransform, nsIPrefBranch* aBranch);
+  static nsresult SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetDownloadFolder(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetDownloadHandlers(void* aTransform, nsIPrefBranch* aBranch);
   static nsresult SetDownloadRetention(void* aTransform, nsIPrefBranch* aBranch);

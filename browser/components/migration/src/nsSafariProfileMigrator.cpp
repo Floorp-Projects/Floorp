@@ -179,6 +179,7 @@ nsSafariProfileMigrator::PREFTRANSFORM gTransforms[] = {
   { CFSTR("AutoOpenSafeDownloads"),       _SPM(BOOL),   "", _SPM(SetDownloadHandlers), PR_FALSE, -1 },
   { CFSTR("DownloadsClearingPolicy"),     _SPM(INT),    "", _SPM(SetDownloadRetention), PR_FALSE, -1 },
   { CFSTR("RecentSearchStrings"),         _SPM(STRING), "", _SPM(SetGoogleBar), PR_FALSE, -1 },
+  { CFSTR("WebKitDefaultTextEncodingName"),_SPM(STRING), "", _SPM(SetDefaultEncoding), PR_FALSE, -1 },
   { CFSTR("WebKitStandardFont"),          _SPM(STRING), "", _SPM(SetString), PR_FALSE, -1 },
   { CFSTR("WebKitDefaultFontSize"),       _SPM(INT),    "", _SPM(SetInt), PR_FALSE, -1 },
   { CFSTR("WebKitFixedFont"),             _SPM(STRING), "", _SPM(SetString), PR_FALSE, -1 },
@@ -221,6 +222,65 @@ nsSafariProfileMigrator::SetInt(void* aTransform, nsIPrefBranch* aBranch)
 {
   PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
   return aBranch->SetIntPref(xform->targetPrefName, !xform->intValue);
+}
+
+nsresult
+nsSafariProfileMigrator::SetDefaultEncoding(void* aTransform, nsIPrefBranch* aBranch)
+{
+  PREFTRANSFORM* xform = (PREFTRANSFORM*)aTransform;
+  
+  nsCAutoString encodingSuffix;
+  nsDependentCString encoding(xform->stringValue);
+  if (encoding.Equals(NS_LITERAL_CSTRING("MACINTOSH")) || 
+      encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-1")))
+    encodingSuffix = "x-western";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("UTF-8")))
+    encodingSuffix = "x-unicode";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("SHIFT_JIS")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("ISO-2822-JP")) |
+           encoding.Equals(NS_LITERAL_CSTRING("EUC-JP"))) 
+    encodingSuffix = "ja";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("BIG5")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("CP950")))
+    encodingSuffix = "zh-TW";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("Big5-HKSCS")))
+    encodingSuffix = "zh-HK";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-2022-KR")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-KOREAN")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("CP949")))
+    encodingSuffix = "ko";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-6")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1256")))
+    encodingSuffix = "ar";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-8")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1255")))
+    encodingSuffix = "he";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-7")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1253")))
+    encodingSuffix = "el";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-5")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-CYRILLIC")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("KOI8-R")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1251")))
+    encodingSuffix = "x-cyrillic";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("CP874")))
+    encodingSuffix = "th";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("GB_2312-80")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("HZ-GB-2312")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("GB18030")))
+    encodingSuffix = "zh-CN";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-2")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("X-MAC-CENTRALEURROMAN")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1250")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-4")))
+    encodingSuffix = "x-central-euro";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("ISO-8859-9")) ||
+           encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1254")))
+    encodingSuffix = "tr";
+  else if (encoding.Equals(NS_LITERAL_CSTRING("WINDOWS-1257")))
+    encodingSuffix = "x-baltic";
+  
+  return aBranch->SetCharPref("migration.fontEncodingSuffix", encodingSuffix.get());
 }
 
 nsresult
