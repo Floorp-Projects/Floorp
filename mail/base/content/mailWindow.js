@@ -198,6 +198,7 @@ function InitMsgWindow()
   msgWindow.msgHeaderSink = messageHeaderSink;
   msgWindow.SetDOMWindow(window);
   mailSession.AddMsgWindow(msgWindow);
+  document.getElementById("messagepane").docShell.allowAuth = false;
 }
 
 function AddDataSources()
