@@ -113,7 +113,8 @@ void CNsIWebNav::OnStartTests(UINT nMenuID)
 			GoToIndexTest();
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_LOADURI :
-			LoadUriTest(UrlTable[0].theUri, UrlTable[0].theFlag);
+			LoadUriTest(UrlTable[0].theUri, UrlTable[1].theFlag);
+			FormatAndPrintOutput("the loadFlag = ", nsIWebNavigation::LOAD_FLAGS_MASK, 2);
 			break ;
 		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
 			ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);

@@ -88,6 +88,9 @@ protected:
     PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;
 
     nsCOMPtr<nsIWebBrowser> mWebBrowser;
+	nsCOMPtr<nsISupports> mLoadCookie;						// de: used for nsIURIContentListener
+	nsCOMPtr<nsIURIContentListener> mParentContentListener;	// de: used for nsIURIContentListener
+	PRUint32 mChromeMask;
 };
 
 #endif //_BROWSERIMPL_H
