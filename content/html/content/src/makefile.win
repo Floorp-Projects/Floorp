@@ -24,6 +24,7 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=				\
 	nsCommentNode.cpp		\
+	nsGenericDOMDataNode.cpp	\
 	nsGenericHTMLElement.cpp	\
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
@@ -83,10 +84,12 @@ CPPSRCS=				\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	nsHTMLWBRElement.cpp		\
+	nsTextNode.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCommentNode.obj			\
+	.\$(OBJDIR)\nsGenericDOMDataNode.obj		\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\
 	.\$(OBJDIR)\nsHTMLAppletElement.obj		\
@@ -146,6 +149,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
 	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
+	.\$(OBJDIR)\nsTextNode.obj			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
