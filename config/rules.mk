@@ -618,7 +618,7 @@ tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	    $(UPDATE_TITLE) \
 	    $(MAKE) -C $$d libs; \
 	done
-		
+
 
 #
 # Rule to create list of libraries for final link
@@ -1536,6 +1536,24 @@ endif
 install:: $(EXTRA_COMPONENTS)
 ifndef NO_INSTALL
 	$(SYSINSTALL) $(IFLAGS2) $^ $(DESTDIR)$(mozappdir)/components
+endif
+endif
+
+ifdef EXTRA_PP_COMPONENTS
+libs:: $(EXTRA_PP_COMPONENTS)
+ifndef NO_DIST_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/components/`basename $$i`; \
+	done
+endif
+
+install:: $(EXTRA_PP_COMPONENTS)
+ifndef NO_INSTALL
+	$(EXIT_ON_ERROR) \
+	for i in $^; \
+	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/components/`basename $$i`; \
+	done
 endif
 endif
 
