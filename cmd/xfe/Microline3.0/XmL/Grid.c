@@ -9421,6 +9421,28 @@ XmLGridDeleteColumns(Widget w,
 		}
 	redraw = 0;
 
+	if (XtHasCallbacks(w, XmNdeleteCallback) == XtCallbackHasSome)
+		for (i = position; i < position + count; i++)
+			{
+			rowCount = XmLArrayGetCount(g->grid.rowArray);
+			for (j = 0; j < rowCount; j++)
+				{
+				row = (XmLGridRow)XmLArrayGet(g->grid.rowArray, j);
+				cbs.reason = XmCR_DELETE_CELL;
+				cbs.rowType = RowPosToType(g, j);
+                cbs.row = RowPosToTypePos(g, cbs.rowType, i);
+				cbs.columnType = type;
+                cbs.column = RowPosToTypePos(g, cbs.columnType, j);
+				cbs.object = XmLArrayGet(XmLGridRowCells(row), i);
+				XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
+				}
+			cbs.reason = XmCR_DELETE_COLUMN;
+			cbs.columnType = type;
+            cbs.column = RowPosToTypePos(g, cbs.columnType, i);
+			cbs.object = XmLArrayGet(g->grid.colArray, i);
+			XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
+			}
+
 	/* adjust count */
 	if (type == XmHEADING)
 		{
@@ -9444,24 +9466,7 @@ XmLGridDeleteColumns(Widget w,
 			g->grid.hiddenColCount--;
 		redraw |= ColIsVisible(g, i);
 		}
-	if (XtHasCallbacks(w, XmNdeleteCallback) == XtCallbackHasSome)
-		for (i = position; i < position + count; i++)
-			{
-			rowCount = XmLArrayGetCount(g->grid.rowArray);
-			for (j = 0; j < rowCount; j++)
-				{
-				row = (XmLGridRow)XmLArrayGet(g->grid.rowArray, j);
-				cbs.reason = XmCR_DELETE_CELL;
-				cbs.rowType = RowPosToType(g, j);
-				cbs.columnType = type;
-				cbs.object = XmLArrayGet(XmLGridRowCells(row), i);
-				XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
-				}
-			cbs.reason = XmCR_DELETE_COLUMN;
-			cbs.columnType = type;
-			cbs.object = XmLArrayGet(g->grid.colArray, i);
-			XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
-			}
+
 	/* delete columns */
 	for (i = position; i < position + count; i++)
 		{
@@ -9542,6 +9547,28 @@ XmLGridDeleteRows(Widget w,
 		}
 	redraw = 0;
 
+	if (XtHasCallbacks(w, XmNdeleteCallback) == XtCallbackHasSome)
+		for (i = position; i < position + count; i++)
+			{
+			row = (XmLGridRow)XmLArrayGet(g->grid.rowArray, i);
+			colCount = XmLArrayGetCount(g->grid.colArray);
+			for (j = 0; j < colCount; j++)
+				{
+				cbs.reason = XmCR_DELETE_CELL;
+				cbs.rowType = type;
+                cbs.row = RowPosToTypePos(g, cbs.rowType, i);
+				cbs.columnType = ColPosToType(g, j);
+                cbs.column = ColPosToTypePos(g, cbs.columnType, j);
+				cbs.object = XmLArrayGet(XmLGridRowCells(row), j);
+				XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
+				}
+			cbs.reason = XmCR_DELETE_ROW;
+			cbs.rowType = type;
+            cbs.row = RowPosToTypePos(g, cbs.rowType, i);
+			cbs.object = (void *)row;
+			XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
+			}
+
 	/* adjust count */
 	if (type == XmHEADING)
 		{
@@ -9565,24 +9592,7 @@ XmLGridDeleteRows(Widget w,
 			g->grid.hiddenRowCount--;
 		redraw |= RowIsVisible(g, i);
 		}
-	if (XtHasCallbacks(w, XmNdeleteCallback) == XtCallbackHasSome)
-		for (i = position; i < position + count; i++)
-			{
-			row = (XmLGridRow)XmLArrayGet(g->grid.rowArray, i);
-			colCount = XmLArrayGetCount(g->grid.colArray);
-			for (j = 0; j < colCount; j++)
-				{
-				cbs.reason = XmCR_DELETE_CELL;
-				cbs.rowType = type;
-				cbs.columnType = ColPosToType(g, j);
-				cbs.object = XmLArrayGet(XmLGridRowCells(row), j);
-				XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
-				}
-			cbs.reason = XmCR_DELETE_ROW;
-			cbs.rowType = type;
-			cbs.object = (void *)row;
-			XtCallCallbackList(w, g->grid.deleteCallback, (XtPointer)&cbs);
-			}
+
 	/* delete rows and cells */
 	for (i = position; i < position + count; i++)
 		{

@@ -44,14 +44,11 @@ LIBRARY_NAME	= XmL
 ifdef XFE_WIDGETS_BUILD_UNUSED
 UNUSED_CSRCS	= \
 				Progress.c \
-				Tree.c \
 				$(NULL)
 
 UNUSED_EXPORTS	= \
 				Progress.h \
 				ProgressP.h \
-				Tree.h \
-				TreeP.h \
 				$(NULL)
 endif
 
@@ -59,6 +56,7 @@ CSRCS			= \
 				$(UNUSED_CSRCS) \
 				Folder.c \
 				Grid.c \
+				Tree.c \
 				XmL.c \
 				$(NULL)
 
@@ -70,7 +68,10 @@ EXPORTS			= \
 				FolderP.h \
 				Grid.h \
 				GridP.h \
+				Tree.h \
+				TreeP.h \
 				XmL.h \
 				$(NULL)
 
 include $(DEPTH)/config/rules.mk
+include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk

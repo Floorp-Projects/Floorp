@@ -1319,3 +1319,35 @@ XmLTreeAddRows(Widget w,
 			XmNlayoutFrozen, False,
 			NULL);
 	}
+
+
+
+void
+XmLTreeDeleteChildren(Widget w,
+                      int row)
+{
+	XmLTreeWidget t;
+	XmLTreeRow rowp;
+	int ii, jj, level, rows;
+
+	t = WidgetToTree(w, "XmLTreeDeleteChildren()");
+
+	rowp = (XmLTreeRow)XmLGridGetRow(w, XmCONTENT, row);
+    level = rowp->tree.level;
+
+	rows = t->grid.rowCount;
+
+	ii = row + 1;
+	while (ii < rows)
+	{
+		rowp = (XmLTreeRow)XmLGridGetRow(w, XmCONTENT, ii);
+		if (rowp->tree.level <= level)
+			break;
+		ii++;
+	}
+	jj = ii - row - 1;
+
+    if (jj > 0)
+        XmLGridDeleteRows(w, XmCONTENT, row + 1, jj);
+}
+

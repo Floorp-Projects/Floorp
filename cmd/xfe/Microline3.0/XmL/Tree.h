@@ -48,6 +48,7 @@ void XmLTreeAddRow(Widget w, int level, Boolean expands, Boolean isExpaned,
 	int position, Pixmap pixmap, Pixmap pixmask, XmString string);
 void XmLTreeAddRows(Widget w, XmLTreeRowDefinition *rows,
 	int count, int position);
+void XmLTreeDeleteChildren(Widget w, int position);
 
 #ifdef XmL_CPP
 }
