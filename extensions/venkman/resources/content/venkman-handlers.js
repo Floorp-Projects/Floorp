@@ -33,12 +33,19 @@
  *
  */
 
-/* Alphabetical order, please. */
-
 console.displayUsageError =
 function con_dusage (command)
 {
     display (command.name + " " + command.usage, MT_ERROR);
+}
+
+console.onDebugTrap =
+function con_ondt ()
+{
+    var frame = getCurrentFrame();
+    focusSource (frame.script.fileName, frame.line);
+    console._stackOutlinerView.setStack(console.frames);
+    console._stackOutlinerView.setCurrentFrame (getCurrentFrameIndex());
 }
 
 console.onLoad =
@@ -48,6 +55,15 @@ function con_load (e)
 
     init();
     
+}
+
+console.onFrameChanged =
+function con_fchanged (currentFrame, currentFrameIndex)
+{
+    if (currentFrame)
+        console._stackOutlinerView.setCurrentFrame (currentFrameIndex);
+    else
+        console._stackOutlinerView.setStack(null);
 }
 
 console.onInputCommand =
@@ -122,15 +138,7 @@ function cli_ibreak(e)
         if (getBreakpoint (fileName, ary[2]))
             display(MSN_BP_EXISTS, [fileName, ary[2]], MT_INFO);
         else
-        {
-            var bpList = setBreakpoint (fileName, ary[2]);
-            if (bpList.length)
-                display (getMsg(MSN_BP_CREATED,
-                                [fileName, ary[2], bpList.length]));
-            else
-                display (getMsg(MSN_ERR_BP_NOLINE, [fileName, ary[2]]),
-                         MT_ERROR);
-        }
+            setBreakpoint (fileName, ary[2]);
     }
     
     return true;
@@ -147,27 +155,11 @@ function cli_iclear (e)
         return false;
     }
 
-    var bp;
-    var matches;
-    var fileName;
-    
     if (ary[1])
     {
         /* disable by breakpoint number */
         var idx = Number(ary[1]);
-        if (!console._breakpoints[idx])
-        {
-            display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
-            return false;
-        }
-
-        fileName = console._breakpoints[idx].fileName;
-        var line = console._breakpoints[idx].line;
-        
-        matches = clearBreakpointByNumber (idx);        
-
-        display (getMsg(MSN_BP_DISABLED, [fileName, line, matches]));
-        return true;
+        return clearBreakpointByNumber (idx);
     }
 
     /* else disable breakpoint by filename pattern and line number */
@@ -179,14 +171,7 @@ function cli_iclear (e)
     }
 
     for (var i in matchingFiles)
-    {
-        fileName = matchingFiles[i];
-        matches = clearBreakpoint (fileName, ary[3]);
-        if (matches == 0)
-            display (getMsg(MSN_ERR_BP_NODICE, [fileName, ary[3]]), MT_ERROR);
-        else
-            display (getMsg(MSN_BP_DISABLED, [fileName, ary[3], matches]));
-    }
+        return clearBreakpoint (fileName, ary[3]);
     
     return true;
 }
@@ -206,10 +191,7 @@ function cli_icommands (e)
         display (MSG_ERR_NO_STACK, MT_ERROR);
         return false;
     }
-
-    console.jsds.exitNestedEventLoop();
-
-    return true;
+    cont();
 }
     
 console.onInputCompleteLine =
@@ -305,7 +287,6 @@ function cli_ifbreak(e)
     else
     {
         setFutureBreakpoint (filePattern, line);
-        display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
     }
     
     return true;
@@ -331,31 +312,11 @@ function cli_ifclear (e)
             display (getMsg(MSN_ERR_BP_NOINDEX, idx, MT_ERROR));
             return false;
         }
-
-        filePattern = console._futureBreaks[idx].filePattern;
-        var line = console._futureBreaks[idx].line;
-        
-        arrayRemoveAt (console._futureBreaks, idx);
-
-        display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
+        clearFutureBreakpointByNumber(idx);
         return true;
     }
 
-    var filePattern = ary[2];
-    var line = ary[3];
-    
-    for (var i = 0; i < console._futureBreaks.length; ++i)
-    {
-        if (console._futureBreaks[i].filePattern == filePattern &&
-            console._futureBreaks[i].line == line)
-        {
-            arrayRemoveAt(console._futureBreaks, i);
-            display (getMsg(MSN_FBP_DISABLED, [filePattern, line]));
-            return true;
-        }
-    }
-    
-    display (getMsg(MSN_ERR_BP_NODICE, [filePattern, line]), MT_ERROR);
+    clearFutureBreakpoint (ary[2], ary[3]);
     
     return true;
 }
@@ -371,14 +332,13 @@ function con_iframe (e)
 
     var idx = parseInt(e.inputData);
     
-    if (idx >= 0)
-    {
-        console.currentFrameIndex = idx;
-        displayFrame (console.frames[idx], idx, true);
-    }
-    else
-        displayFrame (console.frames[console.currentFrameIndex], 
-                      console.currentFrameIndex, true);
+    if (idx < 0)
+        idx = getCurrentFrameIndex();
+
+    setCurrentFrameByIndex(idx);
+    
+    displayFrame (console.frames[idx], idx, true);
+    focusSource (console.frames[idx].script.fileName, console.frames[idx].line);
     
     return true;
 }
@@ -499,10 +459,7 @@ function con_slkeypress (e)
             if (!e.target.value)
                 return;
             
-            ev = new Object();
-            ev.keyEvent = e;
-            ev.line = e.target.value;
-            console.onInputCompleteLine (ev);
+            dispatchCommand(e.target.value);
             e.target.value = "";
             break;
 
@@ -552,6 +509,117 @@ function con_slkeypress (e)
             console._incompleteLine = e.target.value;
             break;
     }
+}
+
+console.onStackClick =
+function con_stackclick (e)
+{
+    var target = e.originalTarget;
+    
+    if (target.localName == "outlinerbody")
+    {
+        var row = new Object();
+        var colID = new Object();
+        var childElt = new Object();
+        
+        var obo = console._stackOutliner.outlinerBoxObject;
+        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        
+        colID = colID.value;
+        row = row.value;
+        
+        if (e.detail == 2 && console.frames)
+        {
+            setCurrentFrameByIndex(row);
+            displayFrame (console.frames[row], row, true);
+            focusSource (console.frames[row].script.fileName,
+                         console.frames[row].line);
+        }
+    }
+}
+
+console.onScriptClick =
+function con_stackclick (e)
+{
+    var target = e.originalTarget;
+    
+    if (target.localName == "outlinercol")
+    {
+        console._scriptsOutlinerView.setScripts(console._scripts);
+    }
+    else if (e.detail == 2 && target.localName == "outlinerbody")
+    {
+        var row = new Object();
+        var colID = new Object();
+        var childElt = new Object();
+        
+        var obo = console._scriptsOutliner.outlinerBoxObject;
+        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        
+        row = row.value;
+        var fileName = console._scriptsOutlinerView.scripts[row].fileName;
+        
+        if (console._sources[fileName])
+        {
+            focusSource(url, 0);
+        }
+        else
+        {
+            function cb (data, url)
+            {
+                focusSource(url, 0);
+            }
+            loadSource (fileName, cb);
+        }
+    }
+
+}
+
+console.onSourceClick =
+function con_sourceclick (e)
+{
+    var target = e.originalTarget;
+    
+    if (target.localName == "outlinerbody")
+    {
+        var row = new Object();
+        var colID = new Object();
+        var childElt = new Object();
+        
+        var obo = console._sourceOutliner.outlinerBoxObject;
+        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        
+        colID = colID.value;
+        row = row.value;
+        
+        if (colID == "breakpoint-col")
+        {
+            var line = row + 1;
+            var url = console._sourceOutlinerView.url;
+            if (url)
+            {
+                if (getBreakpoint(url, line))
+                {
+                    clearBreakpoint (url, line);
+                    if (isFutureBreakpoint (url, line))
+                        clearFutureBreakpoint (url, line);
+                }
+                else if (isFutureBreakpoint (url, line))
+                {
+                    clearFutureBreakpoint (url, line);
+                }
+                else
+                {
+                    if (console._scripts[url])
+                        setBreakpoint (url, line);
+                    else
+                        setFutureBreakpoint (url, line);
+                }
+                obo.invalidateRow(row);
+            }
+        }
+    }
+
 }
 
 console.onTabCompleteRequest =
