@@ -240,12 +240,13 @@ sub BuildDist()
     [":mozilla:modules:plugin:nglsrc:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:public:MANIFEST", "$distdirectory:plugin:"],
     [":mozilla:modules:plugin:src:MANIFEST", "$distdirectory:plugin:"],
-#//PARSE
-#//	[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
+# IS THIS STILL NEEDED
+#PARSE
+	[":mozilla:lib:libparse:MANIFEST",			"$distdirectory:libparse:"],
 #//OLD LAYOUT
-#//	[":mozilla:lib:layout:MANIFEST",	"$distdirectory:layout:"],
-#//STYLE
-#//	[":mozilla:lib:libstyle:MANIFEST",	 "$distdirectory:libstyle:"],
+	[":mozilla:lib:layout:MANIFEST",	"$distdirectory:layout:"],
+#STYLE
+	[":mozilla:lib:libstyle:MANIFEST",	 "$distdirectory:libstyle:"],
 #LAYERS
 	[":mozilla:lib:liblayer:include:MANIFEST",	"$distdirectory:layers:"],
 #NETWORK
@@ -271,6 +272,7 @@ sub BuildDist()
     [":mozilla:network:protocol:remote:MANIFEST", "$distdirectory:network:"],
     [":mozilla:network:protocol:smtp:MANIFEST", "$distdirectory:network:"],
     [":mozilla:network:module:MANIFEST","$distdirectory:network:module"],
+    [":mozilla:modules:progress:public:MANIFEST","$distdirectory:network:module"],
 #BASE
     [":mozilla:base:src:MANIFEST", "$distdirectory:base:"],
     [":mozilla:base:public:MANIFEST", "$distdirectory:base:"],
@@ -280,7 +282,7 @@ sub BuildDist()
     [":mozilla:layout:base:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:base:src:MANIFEST", "$distdirectory:layout:"],
-    [":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
+#    //[":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:base:src:MANIFEST", "$distdirectory:layout:"],
 	[":mozilla:layout:events:public:MANIFEST", "$distdirectory:layout:"],
 	[":mozilla:layout:events:src:MANIFEST", "$distdirectory:layout:"],
