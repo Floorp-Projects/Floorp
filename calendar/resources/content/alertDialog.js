@@ -286,48 +286,45 @@ function modifyEventDialogResponse( calendarEvent )
    gICalLib.modifyEvent( calendarEvent );
 }
 
-
+/**
+*   Read snooze length and units from dialog, run event.setSnooze
+*   TODO: snoozelength only accepts decimal point (not comma)
+*/
 function snoozeAlarm( Event )
 {
    var OuterBox = document.getElementById( Event.id );
    
-   var SnoozeInteger = OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value;
-
-   SnoozeInteger = parseInt( SnoozeInteger );
+   var snoozeLength= OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value;
+   snoozeLength= parseFloat( snoozeLength );
 
    var SnoozeUnits = document.getElementsByAttribute( "name", "alarm-length-units" )[0].value;
 
-   var Now = new Date();
-
-   Now = Now.getTime();
+   var Now = ( new Date() ).getTime();
 
    var TimeToNextAlarm;
    
    switch (SnoozeUnits )
    {
       case "minutes":
-         TimeToNextAlarm = 1000 * 60 * SnoozeInteger;
+         TimeToNextAlarm = parseInt( kDate_MillisecondsInMinute * snoozeLength );
          break;
 
       case "hours":
-         TimeToNextAlarm = 1000 * 60 * 60 * SnoozeInteger;
+         TimeToNextAlarm = parseInt( kDate_MillisecondsInHour * snoozeLength );
          break;
 
       case "days":
-         TimeToNextAlarm = 1000 * 60 * 60 * 24 * SnoozeInteger;
+         TimeToNextAlarm = parseInt( kDate_MillisecondsInDay * snoozeLength );
          break;
    }
    
-   var MSOfNextAlarm = Now + TimeToNextAlarm; //10 seconds.
-   
-   var DateObjOfNextAlarm = new Date( MSOfNextAlarm );
+   var DateObjOfNextAlarm = new Date( Now + TimeToNextAlarm);
    
    Event.setSnoozeTime( DateObjOfNextAlarm );
    
    var calendarEventService = opener.gEventSource;
    
    gICalLib = calendarEventService.getICalLib();
-
    gICalLib.modifyEvent( Event );
 
    var Id = getArrayId( Event )
