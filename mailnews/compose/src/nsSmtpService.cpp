@@ -272,19 +272,37 @@ nsSmtpService::loadSmtpServers()
     char *newStr;
     char *pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
     while (pref) {
-        nsCOMPtr<nsISmtpServer> smtpServer;
-        rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_PROGID,
-                                                nsnull,
-                                                NS_GET_IID(nsISmtpServer),
-                                                (void **)getter_AddRefs(smtpServer));
-        if (NS_SUCCEEDED(rv)) {
-            smtpServer->SetKey(pref);
-            mSmtpServers->AppendElement(smtpServer);
-        }
+
+        rv = createKeyedServer(pref);
         
         pref = nsCRT::strtok(newStr, ", ", &newStr);
     }
 
+    return NS_OK;
+}
+
+nsresult
+nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
+{
+    if (!key) return NS_ERROR_NULL_POINTER;
+    
+    nsCOMPtr<nsISmtpServer> server;
+    
+    nsresult rv;
+    rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_PROGID,
+                                            nsnull,
+                                            NS_GET_IID(nsISmtpServer),
+                                            (void **)getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+    
+    server->SetKey(NS_CONST_CAST(char *,key));
+    mSmtpServers->AppendElement(server);
+    // XXX todo: append this server to the prefs list
+
+    if (aResult) {
+        *aResult = server;
+        NS_IF_ADDREF(*aResult);
+    }
     return NS_OK;
 }
 
@@ -376,13 +394,8 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
         
     } while (!unique);
 
-    rv = nsComponentManager::CreateInstance(NS_SMTPSERVER_PROGID,
-                                            nsnull,
-                                            NS_GET_IID(nsISmtpServer),
-                                            (void **)aResult);
-    if (NS_SUCCEEDED(rv))
-        (*aResult)->SetKey(key);
-            
+    rv = createKeyedServer(key, aResult);
+    
     return rv;
 }
 

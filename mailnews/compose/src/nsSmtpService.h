@@ -58,6 +58,8 @@ protected:
     
 private:
     static PRBool findServerByKey (nsISupports *element, void *aData);
+    nsresult createKeyedServer(const char* key,
+                               nsISmtpServer **aResult = nsnull);
     nsCOMPtr<nsISupportsArray> mSmtpServers;
     nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
 };
