@@ -136,13 +136,24 @@ namespace MetaData {
                                 // the prior invocation deal with it.
                                 throw jsx;
                             }
+                            // we need to clean up each activation as we pop it off
+                            // - basically this means just resetting it's frame
                             curAct = --activationStackTop;
-                        } while (hndlr->mActivation != curAct);
+                            localFrame = activationStackTop->localFrame;
+                            parameterFrame = activationStackTop->parameterFrame;
+                            if (hndlr->mActivation != curAct) {
+                                while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
+                                    activationStackTop->newEnv->removeTopFrame();
+                                meta->env = activationStackTop->env;                        
+                            }
+                            else
+                                break;
+                        } while (true);
                         if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
                             x = pop();
                         activationStackTop = prev;      // need the one before the target function to 
                                                         // be at the top, because of postincrement
-                        bCon = curAct->bCon;
+                        meta->env = activationStackTop->env;
                     }
                     else {
                         if (jsx.hasKind(Exception::userException))
@@ -857,7 +868,7 @@ namespace MetaData {
             return 0;
 
         case eVoid:         // remove top item, push undefined
-            return 1;      
+            return 0;      
 
         case eDup:          // duplicate top item
             return 1;      

@@ -124,24 +124,19 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
 
 static void initErrorClass(JS2Metadata *meta, JS2Class *c, Constructor *constructor)
 {
-// XXX Or make 'name' a static class member?
     c->construct = constructor;
-    c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, JS2VAL_NULL, c));
-    js2val nameVal = meta->engine->allocString(c->getName());
-    QualifiedName qName(meta->publicNamespace, &meta->world.identifiers["name"]);
-    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &qName, nameVal, ReadAccess, true, true);
+    c->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->errorClass->prototype, meta->errorClass));
+
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["name"], meta->engine->allocString(c->getName()), ReadAccess, true, true);
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(c->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
+
+    meta->initBuiltinClass(c, NULL, NULL, constructor, constructor);
 }
 
 void initErrorObject(JS2Metadata *meta)
 {
 
-    typedef struct {
-        char *name;
-        uint16 length;
-        NativeCode *code;
-    } PrototypeFunction;
-
-    PrototypeFunction errorProtos[] = 
+   FunctionData errorProtos[] = 
     {
         { "toString",           0, Error_toString },
         { NULL }
@@ -150,19 +145,11 @@ void initErrorObject(JS2Metadata *meta)
     NamespaceList publicNamespaceList;
     publicNamespaceList.push_back(meta->publicNamespace);
 
+    meta->errorClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->errorClass));
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["name"], meta->engine->allocString("Error"), ReadAccess, true, true);
+    meta->createDynamicProperty(JS2VAL_TO_OBJECT(meta->errorClass->prototype), &meta->world.identifiers["message"], meta->engine->allocString("Message"), ReadAccess, true, true);
+    meta->initBuiltinClass(meta->errorClass, errorProtos, NULL, Error_Constructor, Error_Constructor);
 
-    PrototypeFunction *pf = &errorProtos[0];
-    while (pf->name) {
-        FunctionInstance *fInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
-    
-        Multiname *mn = new Multiname(&meta->world.identifiers[pf->name], &publicNamespaceList);
-        InstanceMember *m = new InstanceMethod(mn, fInst, true, false);
-        meta->defineInstanceMember(meta->errorClass, &meta->cxt, mn->name, *mn->nsList, Attribute::NoOverride, false, m, 0);
-        pf++;
-    }
-
-    initErrorClass(meta, meta->errorClass, Error_Constructor);
 
     initErrorClass(meta, meta->evalErrorClass, EvalError_Constructor);
     initErrorClass(meta, meta->rangeErrorClass, RangeError_Constructor);

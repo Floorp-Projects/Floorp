@@ -229,8 +229,11 @@ namespace MetaData {
         if (limit->readPublic(this, &thisValue, limit, fnName, RunPhase, &fnVal)) {
             if (JS2VAL_IS_OBJECT(fnVal)) {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
-                result = invokeFunction(fnObj, thisValue, NULL, 0);
-                return true;
+                if ((fnObj->kind == SimpleInstanceKind)
+                        && ((checked_cast<SimpleInstance *>(fnObj))->type == functionClass)) {
+                    result = invokeFunction(fnObj, thisValue, NULL, 0);
+                    return true;
+                }
             }
         }
         return false;

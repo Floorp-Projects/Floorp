@@ -286,7 +286,7 @@ static js2val Math_tan(JS2Metadata *meta, const js2val /*thisValue*/, js2val *ar
 }
 
 
-void initMathObject(JS2Metadata *meta)
+void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject)
 {
     struct {
         char *name;
@@ -303,13 +303,13 @@ void initMathObject(JS2Metadata *meta)
     };
 
     uint32 i;
-    meta->env->addFrame(meta->mathClass);
     for (i = 0; i < M_CONSTANTS_COUNT; i++)
     {
-        Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+//        Variable *v = new Variable(meta->numberClass, meta->engine->allocNumber(MathObjectConstants[i].value), true);
+//        meta->defineLocalMember(meta->env, &meta->world.identifiers[MathObjectConstants[i].name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+
+        meta->createDynamicProperty(mathObject, &meta->world.identifiers[MathObjectConstants[i].name], meta->engine->allocNumber(MathObjectConstants[i].value), ReadAccess, true, false);
     }
-    meta->env->removeTopFrame();
 
     FunctionData prototypeFunctions[] =
     {
@@ -334,23 +334,23 @@ void initMathObject(JS2Metadata *meta)
         { NULL },
     };
 
-    meta->env->addFrame(meta->mathClass);
     FunctionData *pf = &prototypeFunctions[0];
     while (pf->name) {
         FunctionInstance *callInst = new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass);
         callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code, meta->env);
-        Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
-        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+
+        meta->createDynamicProperty(mathObject, &meta->world.identifiers[pf->name], OBJECT_TO_JS2VAL(callInst), ReadAccess, true, false);
+
+
+
+//        Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
+//        meta->defineLocalMember(meta->env, &meta->world.identifiers[pf->name], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
 
         // XXX add 'length' as a dynamic property of the method
         meta->createDynamicProperty(callInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(pf->length), ReadAccess, true, false);
         
         pf++;
     }
-    meta->env->removeTopFrame();
-
-
-
 
 }    
 

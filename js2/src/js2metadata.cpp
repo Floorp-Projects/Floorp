@@ -3583,14 +3583,14 @@ static const uint8 urlCharType[256] =
 
     static js2val Object_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
     {
-        if (argc) {
+        if ((argc == 0) || JS2VAL_IS_NULL(argv[0]) || JS2VAL_IS_UNDEFINED(argv[0]))
+            return OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass));
+        else {
             if (JS2VAL_IS_OBJECT(argv[0]))
                 return argv[0];     // XXX special handling for host objects?
             else
                 return meta->toObject(argv[0]);
         }
-        else
-            return OBJECT_TO_JS2VAL(new SimpleInstance(meta, meta->objectClass->prototype, meta->objectClass));
     }
 
     static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
@@ -3702,6 +3702,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // Function properties of the Object prototype object
         objectClass->prototype = OBJECT_TO_JS2VAL(new SimpleInstance(this, NULL, objectClass));
         objectClass->construct = Object_Constructor;
+        objectClass->call = Object_Constructor;
         // Adding "prototype" as a static member of the class - not a dynamic property
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
@@ -3767,11 +3768,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         defineLocalMember(env, &world.identifiers["Boolean"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initBooleanObject(this);
 
-/*** ECMA 3  Math Class ***/
-        MAKEBUILTINCLASS(mathClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Math"]), JS2VAL_NULL);
-        v = new Variable(classClass, OBJECT_TO_JS2VAL(mathClass), true);
+/*** ECMA 3  Math Object ***/
+        SimpleInstance *mathObject = new SimpleInstance(this, objectClass->prototype, objectClass);
+        v = new Variable(objectClass, OBJECT_TO_JS2VAL(mathObject), true);
         defineLocalMember(env, &world.identifiers["Math"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        initMathObject(this);
+        initMathObject(this, mathObject);
 
 /*** ECMA 3  Array Class ***/
         MAKEBUILTINCLASS(arrayClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Array"]), JS2VAL_NULL);
@@ -3785,22 +3786,22 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(errorClass), true);
         defineLocalMember(env, &world.identifiers["Error"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(evalErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(evalErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["EvalError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(evalErrorClass), true);
         defineLocalMember(env, &world.identifiers["EvalError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(rangeErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(rangeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["RangeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(rangeErrorClass), true);
         defineLocalMember(env, &world.identifiers["RangeError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(referenceErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(referenceErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["ReferenceError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(referenceErrorClass), true);
         defineLocalMember(env, &world.identifiers["ReferenceError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(syntaxErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(syntaxErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["SyntaxError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(syntaxErrorClass), true);
         defineLocalMember(env, &world.identifiers["SyntaxError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(typeErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(typeErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["TypeError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(typeErrorClass), true);
         defineLocalMember(env, &world.identifiers["TypeError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-        MAKEBUILTINCLASS(uriErrorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(uriErrorClass, errorClass, true, true, engine->allocStringPtr(&world.identifiers["UriError"]), JS2VAL_NULL);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(uriErrorClass), true);
         defineLocalMember(env, &world.identifiers["UriError"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initErrorObject(this);
@@ -4237,7 +4238,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKOBJECT(packageClass);
         GCMARKOBJECT(dateClass);
         GCMARKOBJECT(regexpClass);
-        GCMARKOBJECT(mathClass);
         GCMARKOBJECT(arrayClass);
         GCMARKOBJECT(errorClass);
         GCMARKOBJECT(evalErrorClass);

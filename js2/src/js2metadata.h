@@ -90,7 +90,7 @@ js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
-extern void initMathObject(JS2Metadata *meta);
+extern void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject);
 extern void initArrayObject(JS2Metadata *meta);
 extern void initRegExpObject(JS2Metadata *meta);
 extern void initNumberObject(JS2Metadata *meta);
@@ -1456,7 +1456,6 @@ public:
     JS2Class *packageClass;
     JS2Class *dateClass;
     JS2Class *regexpClass;
-    JS2Class *mathClass;
     JS2Class *arrayClass;
     JS2Class *errorClass;
     JS2Class *evalErrorClass;

@@ -38,7 +38,8 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            
+            if (JS2VAL_IS_NULL(b))
+                meta->reportError(Exception::referenceError, "Null base", errorPos());            
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
@@ -78,6 +79,8 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
+            if (JS2VAL_IS_NULL(b))
+                meta->reportError(Exception::referenceError, "Null base", errorPos());
             if (JS2VAL_IS_OBJECT(b) && (JS2VAL_TO_OBJECT(b)->kind == LimitedInstanceKind)) {
                 LimitedInstance *li = checked_cast<LimitedInstance *>(JS2VAL_TO_OBJECT(b));
                 b = OBJECT_TO_JS2VAL(li->instance);
