@@ -92,7 +92,7 @@ public class Codegen extends Interpreter {
             * so that the call optimizer can access the class name & parameter
             * count for any call it encounters
             */
-            if (tree.getType() == TokenStream.SCRIPT) {
+            if (tree.getType() == Token.SCRIPT) {
                 int functionCount = tree.getFunctionCount();
                 for (int i = 0; i != functionCount; ++i) {
                     OptFunctionNode fn;
@@ -273,7 +273,7 @@ public class Codegen extends Interpreter {
     {
         String superClassName;
         this.scriptOrFn = scriptOrFn;
-        if (scriptOrFn.getType() == TokenStream.FUNCTION) {
+        if (scriptOrFn.getType() == Token.FUNCTION) {
             inFunction = true;
             fnCurrent = (OptFunctionNode)scriptOrFn;
             inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
@@ -281,7 +281,7 @@ public class Codegen extends Interpreter {
             superClassName = FUNCTION_SUPER_CLASS_NAME;
         } else {
             // better be a script
-            if (scriptOrFn.getType() != TokenStream.SCRIPT) badTree();
+            if (scriptOrFn.getType() != Token.SCRIPT) badTree();
             inFunction = false;
             boolean isPrimary = (nameHelper.getTargetExtends() == null
                                  && nameHelper.getTargetImplements() == null);
@@ -402,7 +402,7 @@ public class Codegen extends Interpreter {
             int linenum = scriptOrFn.getEndLineno();
             if (linenum != -1)
               classFile.addLineNumberEntry((short)linenum);
-            scriptOrFn.addChildToBack(new Node(TokenStream.RETURN));
+            scriptOrFn.addChildToBack(new Node(Token.RETURN));
             codegenBase = scriptOrFn;
         }
 
@@ -1019,9 +1019,9 @@ public class Codegen extends Interpreter {
         int type = node.getType();
         Node child = node.getFirstChild();
         switch (type) {
-              case TokenStream.LOOP:
-              case TokenStream.WITH:
-              case TokenStream.LABEL:
+              case Token.LOOP:
+              case Token.WITH:
+              case Token.LABEL:
                 visitStatement(node);
                 while (child != null) {
                     generateCodeFromNode(child, node);
@@ -1029,14 +1029,14 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.CASE:
-              case TokenStream.DEFAULT:
+              case Token.CASE:
+              case Token.DEFAULT:
                 // XXX shouldn't these be StatementNodes?
 
-              case TokenStream.SCRIPT:
-              case TokenStream.BLOCK:
-              case TokenStream.VOID:
-              case TokenStream.NOP:
+              case Token.SCRIPT:
+              case Token.BLOCK:
+              case Token.VOID:
+              case Token.NOP:
                 // no-ops.
                 visitStatement(node);
                 while (child != null) {
@@ -1045,8 +1045,8 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.FUNCTION:
-                if (inFunction || parent.getType() != TokenStream.SCRIPT) {
+              case Token.FUNCTION:
+                if (inFunction || parent.getType() != Token.SCRIPT) {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     OptFunctionNode fn;
                     fn = (OptFunctionNode)scriptOrFn.getFunctionNode(fnIndex);
@@ -1057,45 +1057,45 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.NAME:
+              case Token.NAME:
                 visitName(node);
                 break;
 
-              case TokenStream.NEW:
-              case TokenStream.CALL:
+              case Token.NEW:
+              case Token.CALL:
                 visitCall(node, type, child);
                 break;
 
-              case TokenStream.NUMBER:
-              case TokenStream.STRING:
+              case Token.NUMBER:
+              case Token.STRING:
                 visitLiteral(node);
                 break;
 
-              case TokenStream.PRIMARY:
+              case Token.PRIMARY:
                 visitPrimary(node);
                 break;
 
-              case TokenStream.REGEXP:
+              case Token.REGEXP:
                 visitObject(node);
                 break;
 
-              case TokenStream.TRY:
+              case Token.TRY:
                 visitTryCatchFinally(node, child);
                 break;
 
-              case TokenStream.THROW:
+              case Token.THROW:
                 visitThrow(node, child);
                 break;
 
-              case TokenStream.RETURN:
+              case Token.RETURN:
                 visitReturn(node, child);
                 break;
 
-              case TokenStream.SWITCH:
+              case Token.SWITCH:
                 visitSwitch(node, child);
                 break;
 
-              case TokenStream.COMMA: {
+              case Token.COMMA: {
                 Node next = child.getNext();
                 while (next != null) {
                     generateCodeFromNode(child, node);
@@ -1107,34 +1107,34 @@ public class Codegen extends Interpreter {
                 break;
               }
 
-              case TokenStream.NEWSCOPE:
+              case Token.NEWSCOPE:
                 addScriptRuntimeInvoke("newScope",
                                        "()Lorg/mozilla/javascript/Scriptable;");
                 break;
 
-              case TokenStream.ENTERWITH:
+              case Token.ENTERWITH:
                 visitEnterWith(node, child);
                 break;
 
-              case TokenStream.LEAVEWITH:
+              case Token.LEAVEWITH:
                 visitLeaveWith(node, child);
                 break;
 
-              case TokenStream.ENUMINIT:
+              case Token.ENUMINIT:
                 visitEnumInit(node, child);
                 break;
 
-              case TokenStream.ENUMNEXT:
+              case Token.ENUMNEXT:
                 visitEnumNext(node, child);
                 break;
 
-              case TokenStream.ENUMDONE:
+              case Token.ENUMDONE:
                 visitEnumDone(node, child);
                 break;
 
-              case TokenStream.POP:
+              case Token.POP:
                 visitStatement(node);
-                if (child.getType() == TokenStream.SETVAR) {
+                if (child.getType() == Token.SETVAR) {
                     /* special case this so as to avoid unnecessary
                     load's & pop's */
                     visitSetVar(child, child.getFirstChild(), false);
@@ -1151,7 +1151,7 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.POPV:
+              case Token.POPV:
                 visitStatement(node);
                 while (child != null) {
                     generateCodeFromNode(child, node);
@@ -1160,41 +1160,41 @@ public class Codegen extends Interpreter {
                 astore(scriptResultLocal);
                 break;
 
-              case TokenStream.TARGET:
+              case Token.TARGET:
                 visitTarget(node);
                 break;
 
-              case TokenStream.JSR:
-              case TokenStream.GOTO:
-              case TokenStream.IFEQ:
-              case TokenStream.IFNE:
+              case Token.JSR:
+              case Token.GOTO:
+              case Token.IFEQ:
+              case Token.IFNE:
                 visitGOTO(node, type, child);
                 break;
 
-              case TokenStream.UNARYOP:
+              case Token.UNARYOP:
                 visitUnary(node, child);
                 break;
 
-              case TokenStream.TYPEOF:
+              case Token.TYPEOF:
                 visitTypeof(node, child);
                 break;
 
-              case TokenStream.INC:
+              case Token.INC:
                 visitIncDec(node, true);
                 break;
 
-              case TokenStream.DEC:
+              case Token.DEC:
                 visitIncDec(node, false);
                 break;
 
-              case TokenStream.OR:
-              case TokenStream.AND: {
+              case Token.OR:
+              case Token.AND: {
                     generateCodeFromNode(child, node);
                     addByteCode(ByteCode.DUP);
                     addScriptRuntimeInvoke("toBoolean",
                                            "(Ljava/lang/Object;)Z");
                     int falseTarget = acquireLabel();
-                    if (type == TokenStream.AND)
+                    if (type == Token.AND)
                         addByteCode(ByteCode.IFEQ, falseTarget);
                     else
                         addByteCode(ByteCode.IFNE, falseTarget);
@@ -1204,7 +1204,7 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.ADD: {
+              case Token.ADD: {
                     generateCodeFromNode(child, node);
                     generateCodeFromNode(child.getNext(), node);
                     switch (node.getIntProp(Node.ISNUMBER_PROP, -1)) {
@@ -1228,31 +1228,31 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.MUL:
+              case Token.MUL:
                 visitArithmetic(node, ByteCode.DMUL, child, parent);
                 break;
 
-              case TokenStream.SUB:
+              case Token.SUB:
                 visitArithmetic(node, ByteCode.DSUB, child, parent);
                 break;
 
-              case TokenStream.DIV:
-              case TokenStream.MOD:
-                visitArithmetic(node, type == TokenStream.DIV
+              case Token.DIV:
+              case Token.MOD:
+                visitArithmetic(node, type == Token.DIV
                                       ? ByteCode.DDIV
                                       : ByteCode.DREM, child, parent);
                 break;
 
-              case TokenStream.BITOR:
-              case TokenStream.BITXOR:
-              case TokenStream.BITAND:
-              case TokenStream.LSH:
-              case TokenStream.RSH:
-              case TokenStream.URSH:
+              case Token.BITOR:
+              case Token.BITXOR:
+              case Token.BITAND:
+              case Token.LSH:
+              case Token.RSH:
+              case Token.URSH:
                 visitBitOp(node, type, child);
                 break;
 
-              case TokenStream.CONVERT: {
+              case Token.CONVERT: {
                     Object toType = node.getProp(Node.TYPE_PROP);
                     if (toType == ScriptRuntime.NumberClass) {
                         addByteCode(ByteCode.NEW, "java/lang/Double");
@@ -1269,7 +1269,7 @@ public class Codegen extends Interpreter {
                     } else if (toType == ScriptRuntime.ObjectClass) {
                         // convert from double
                         int prop = -1;
-                        if (child.getType() == TokenStream.NUMBER) {
+                        if (child.getType() == Token.NUMBER) {
                             prop = child.getIntProp(Node.ISNUMBER_PROP, -1);
                         }
                         if (prop != -1) {
@@ -1288,20 +1288,20 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.RELOP:
+              case Token.RELOP:
                 // need a result Object
                 visitRelOp(node, child);
                 break;
 
-              case TokenStream.EQOP:
+              case Token.EQOP:
                 visitEqOp(node, child);
                 break;
 
-              case TokenStream.GETPROP:
+              case Token.GETPROP:
                 visitGetProp(node, child);
                 break;
 
-              case TokenStream.GETELEM:
+              case Token.GETELEM:
                 while (child != null) {
                     generateCodeFromNode(child, node);
                     child = child.getNext();
@@ -1324,7 +1324,7 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.GETVAR: {
+              case Token.GETVAR: {
                 OptLocalVariable lVar
                         = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
                 visitGetVar(lVar,
@@ -1333,19 +1333,19 @@ public class Codegen extends Interpreter {
               }
               break;
 
-              case TokenStream.SETVAR:
+              case Token.SETVAR:
                 visitSetVar(node, child, true);
                 break;
 
-              case TokenStream.SETNAME:
+              case Token.SETNAME:
                 visitSetName(node, child);
                 break;
 
-              case TokenStream.SETPROP:
+              case Token.SETPROP:
                 visitSetProp(node, child);
                 break;
 
-              case TokenStream.SETELEM:
+              case Token.SETELEM:
                 while (child != null) {
                     generateCodeFromNode(child, node);
                     child = child.getNext();
@@ -1371,7 +1371,7 @@ public class Codegen extends Interpreter {
                 }
                 break;
 
-              case TokenStream.DELPROP:
+              case Token.DELPROP:
                 aload(contextLocal);
                 aload(variableObjectLocal);
                 while (child != null) {
@@ -1386,44 +1386,43 @@ public class Codegen extends Interpreter {
                                        +")Ljava/lang/Object;");
                 break;
 
-              case TokenStream.BINDNAME:
-              case TokenStream.GETBASE:
+              case Token.BINDNAME:
+              case Token.GETBASE:
                 visitBind(node, type, child);
                 break;
 
-              case TokenStream.GETTHIS:
+              case Token.GETTHIS:
                 generateCodeFromNode(child, node);
                 addScriptRuntimeInvoke("getThis",
                                        "(Lorg/mozilla/javascript/Scriptable;"
                                        +")Lorg/mozilla/javascript/Scriptable;");
                 break;
 
-              case TokenStream.PARENT:
+              case Token.PARENT:
                 generateCodeFromNode(child, node);
                 addScriptRuntimeInvoke("getParent",
                                        "(Ljava/lang/Object;"
                                        +")Lorg/mozilla/javascript/Scriptable;");
                 break;
 
-              case TokenStream.NEWTEMP:
+              case Token.NEWTEMP:
                 visitNewTemp(node, child);
                 break;
 
-              case TokenStream.USETEMP:
+              case Token.USETEMP:
                 visitUseTemp(node, child);
                 break;
 
-              case TokenStream.NEWLOCAL:
+              case Token.NEWLOCAL:
                 visitNewLocal(node, child);
                 break;
 
-              case TokenStream.USELOCAL:
+              case Token.USELOCAL:
                 visitUseLocal(node, child);
                 break;
 
               default:
-                throw new RuntimeException("Unexpected node type " +
-                          TokenStream.tokenToName(type));
+                throw new RuntimeException("Unexpected node type "+type);
         }
 
     }
@@ -1439,17 +1438,17 @@ public class Codegen extends Interpreter {
         boolean jumpIsDone = false;
 
         switch (type) {
-          case TokenStream.UNARYOP:
-            if (node.getOperation() == TokenStream.NOT) {
+          case Token.UNARYOP:
+            if (node.getOperation() == Token.NOT) {
                 generateIfJump(child, node, falseLabel, trueLabel);
                 jumpIsDone = true;
             }
             break;
 
-          case TokenStream.OR:
-          case TokenStream.AND: {
+          case Token.OR:
+          case Token.AND: {
             int interLabel = acquireLabel();
-            if (type == TokenStream.AND) {
+            if (type == Token.AND) {
                 generateIfJump(child, node, interLabel, falseLabel);
             }
             else {
@@ -1462,12 +1461,12 @@ public class Codegen extends Interpreter {
             break;
           }
 
-          case TokenStream.RELOP:
+          case Token.RELOP:
             visitIfJumpRelOp(node, child, trueLabel, falseLabel);
             jumpIsDone = true;
             break;
 
-          case TokenStream.EQOP:
+          case Token.EQOP:
             visitIfJumpEqOp(node, child, trueLabel, falseLabel);
             jumpIsDone = true;
             break;
@@ -1554,20 +1553,20 @@ public class Codegen extends Interpreter {
         }
         int fallThruLabel = acquireLabel();
 
-        if ((type == TokenStream.IFEQ) || (type == TokenStream.IFNE)) {
+        if ((type == Token.IFEQ) || (type == Token.IFNE)) {
             if (child == null) {
                 // can have a null child from visitSwitch which
                 // has already generated the code for the child
                 // and just needs the GOTO code emitted
                 addScriptRuntimeInvoke("toBoolean",
                                        "(Ljava/lang/Object;)Z");
-                if (type == TokenStream.IFEQ)
+                if (type == Token.IFEQ)
                     addByteCode(ByteCode.IFNE, targetLabel);
                 else
                     addByteCode(ByteCode.IFEQ, targetLabel);
             }
             else {
-                if (type == TokenStream.IFEQ)
+                if (type == Token.IFEQ)
                     generateIfJump(child, node, targetLabel, fallThruLabel);
                 else
                     generateIfJump(child, node, fallThruLabel, targetLabel);
@@ -1578,7 +1577,7 @@ public class Codegen extends Interpreter {
                 generateCodeFromNode(child, node);
                 child = child.getNext();
             }
-            if (type == TokenStream.JSR)
+            if (type == Token.JSR)
                 addByteCode(ByteCode.JSR, targetLabel);
             else
                 addByteCode(ByteCode.GOTO, targetLabel);
@@ -1651,7 +1650,7 @@ public class Codegen extends Interpreter {
 
     private void resetTargets(Node node)
     {
-        if (node.getType() == TokenStream.TARGET) {
+        if (node.getType() == Token.TARGET) {
             node.removeProp(Node.LABEL_PROP);
         }
         Node child = node.getFirstChild();
@@ -1702,7 +1701,7 @@ public class Codegen extends Interpreter {
             aload(contextLocal);
             addByteCode(ByteCode.SWAP);
 
-            if (type == TokenStream.NEW)
+            if (type == Token.NEW)
                 addByteCode(ByteCode.ACONST_NULL);
             else {
                 child = child.getNext();
@@ -1718,7 +1717,7 @@ public class Codegen extends Interpreter {
             child = child.getNext();
             while (child != null) {
                 boolean handled = false;
-                if ((child.getType() == TokenStream.GETVAR)
+                if ((child.getType() == Token.GETVAR)
                         && inDirectCallFunction) {
                     OptLocalVariable lVar
                         = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
@@ -1752,7 +1751,7 @@ public class Codegen extends Interpreter {
                     "emptyArgs", "[Ljava/lang/Object;");
 
             addVirtualInvoke(target.getClassName(),
-                             (type == TokenStream.NEW)
+                             (type == Token.NEW)
                                  ? "constructDirect" : "callDirect",
                              target.getDirectCallMethodSignature());
 
@@ -1789,21 +1788,21 @@ public class Codegen extends Interpreter {
 
     */
         Node callBase = callNode.getFirstChild();
-        if (callBase.getType() == TokenStream.GETPROP) {
+        if (callBase.getType() == Token.GETPROP) {
             Node callBaseChild = callBase.getFirstChild();
-            if (callBaseChild.getType() == TokenStream.NEWTEMP) {
+            if (callBaseChild.getType() == Token.NEWTEMP) {
                 Node callBaseID = callBaseChild.getNext();
                 Node tempChild = callBaseChild.getFirstChild();
-                if (tempChild.getType() == TokenStream.GETBASE) {
+                if (tempChild.getType() == Token.GETBASE) {
                     String functionName = tempChild.getString();
                     if (callBaseID != null
-                        && callBaseID.getType() == TokenStream.STRING)
+                        && callBaseID.getType() == Token.STRING)
                     {
                         if (functionName.equals(callBaseID.getString())) {
                             Node thisChild = callBase.getNext();
-                            if (thisChild.getType() == TokenStream.GETTHIS) {
+                            if (thisChild.getType() == Token.GETTHIS) {
                                 Node useChild = thisChild.getFirstChild();
-                                if (useChild.getType() == TokenStream.USETEMP) {
+                                if (useChild.getType() == Token.USETEMP) {
                                     if (useChild.getProp(Node.TEMP_PROP)
                                          == callBaseChild)
                                     {
@@ -1866,7 +1865,7 @@ public class Codegen extends Interpreter {
         OptFunctionNode target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
         Node chelsea = child;
         int childCount = 0;
-        int argSkipCount = (type == TokenStream.NEW) ? 1 : 2;
+        int argSkipCount = (type == Token.NEW) ? 1 : 2;
         while (child != null) {
             childCount++;
             child = child.getNext();
@@ -1885,13 +1884,13 @@ public class Codegen extends Interpreter {
         else
             aload(contextLocal);
 
-        if (firstArgDone && (type == TokenStream.NEW))
+        if (firstArgDone && (type == Token.NEW))
             constructArgArray(childCount - argSkipCount);
 
         int callType = node.getIntProp(Node.SPECIALCALL_PROP,
                                        Node.NON_SPECIALCALL);
         boolean isSimpleCall = false;
-        if (!firstArgDone && type != TokenStream.NEW) {
+        if (!firstArgDone && type != Token.NEW) {
             String simpleCallName = getSimpleCallName(node);
             if (simpleCallName != null && callType == Node.NON_SPECIALCALL) {
                 isSimpleCall = true;
@@ -1917,7 +1916,7 @@ public class Codegen extends Interpreter {
     to be treated as not in a Number context, so we set the flag off.
 */
                     boolean handled = false;
-                    if ((child.getType() == TokenStream.GETVAR)
+                    if ((child.getType() == Token.GETVAR)
                             && inDirectCallFunction) {
                         OptLocalVariable lVar
                           = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
@@ -1957,7 +1956,7 @@ public class Codegen extends Interpreter {
 
         if (callType != Node.NON_SPECIALCALL) {
             className = "org/mozilla/javascript/optimizer/OptRuntime";
-            if (type == TokenStream.NEW) {
+            if (type == Token.NEW) {
                 methodName = "newObjectSpecial";
                 callSignature = "(Lorg/mozilla/javascript/Context;"
                                 +"Ljava/lang/Object;"
@@ -1997,7 +1996,7 @@ public class Codegen extends Interpreter {
         } else {
             className = "org/mozilla/javascript/ScriptRuntime";
             aload(variableObjectLocal);
-            if (type == TokenStream.NEW) {
+            if (type == Token.NEW) {
                 methodName = "newObject";
                 callSignature = "(Lorg/mozilla/javascript/Context;"
                                 +"Ljava/lang/Object;"
@@ -2234,20 +2233,20 @@ public class Codegen extends Interpreter {
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +")Ljava/lang/Boolean;");
-            Node target = new Node(TokenStream.TARGET);
+            Node target = new Node(Token.TARGET);
             thisCase.replaceChild(first, target);
-            generateGOTO(TokenStream.IFEQ, target);
+            generateGOTO(Token.IFEQ, target);
         }
 
         Node defaultNode = (Node) node.getProp(Node.DEFAULT_PROP);
         if (defaultNode != null) {
-            Node defaultTarget = new Node(TokenStream.TARGET);
+            Node defaultTarget = new Node(Token.TARGET);
             defaultNode.getFirstChild().addChildToFront(defaultTarget);
-            generateGOTO(TokenStream.GOTO, defaultTarget);
+            generateGOTO(Token.GOTO, defaultTarget);
         }
 
         Node breakTarget = (Node) node.getProp(Node.BREAK_PROP);
-        generateGOTO(TokenStream.GOTO, breakTarget);
+        generateGOTO(Token.GOTO, breakTarget);
     }
 
     private void generateGOTO(int type, Node target)
@@ -2261,7 +2260,7 @@ public class Codegen extends Interpreter {
     {
         int op = node.getOperation();
         switch (op) {
-          case TokenStream.NOT: {
+          case Token.NOT: {
             int trueTarget = acquireLabel();
             int falseTarget = acquireLabel();
             int beyond = acquireLabel();
@@ -2279,17 +2278,17 @@ public class Codegen extends Interpreter {
             break;
           }
 
-          case TokenStream.TYPEOF:
+          case Token.TYPEOF:
             visitTypeof(node, child);
             break;
 
-          case TokenStream.VOID:
+          case Token.VOID:
             generateCodeFromNode(child, node);
             addByteCode(ByteCode.POP);
             pushUndefined();
             break;
 
-          case TokenStream.BITNOT:
+          case Token.BITNOT:
             addByteCode(ByteCode.NEW, "java/lang/Double");
             addByteCode(ByteCode.DUP);
             generateCodeFromNode(child, node);
@@ -2300,13 +2299,13 @@ public class Codegen extends Interpreter {
             addDoubleConstructor();
             break;
 
-          case TokenStream.ADD:
-          case TokenStream.SUB:
+          case Token.ADD:
+          case Token.SUB:
             addByteCode(ByteCode.NEW, "java/lang/Double");
             addByteCode(ByteCode.DUP);
             generateCodeFromNode(child, node);
             addScriptRuntimeInvoke("toNumber", "(Ljava/lang/Object;)D");
-            if (op == TokenStream.SUB) {
+            if (op == Token.SUB) {
                 addByteCode(ByteCode.DNEG);
             }
             addDoubleConstructor();
@@ -2319,7 +2318,7 @@ public class Codegen extends Interpreter {
 
     private void visitTypeof(Node node, Node child)
     {
-        if (node.getType() == TokenStream.UNARYOP) {
+        if (node.getType() == Token.UNARYOP) {
             generateCodeFromNode(child, node);
             addScriptRuntimeInvoke("typeof",
                                    "(Ljava/lang/Object;"
@@ -2367,7 +2366,7 @@ public class Codegen extends Interpreter {
                     = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
             String routine = (isInc) ? "postIncrement" : "postDecrement";
             int childType = child.getType();
-            if (hasVarsInRegs && childType == TokenStream.GETVAR) {
+            if (hasVarsInRegs && childType == Token.GETVAR) {
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
                 if (lVar.getJRegister() == -1)
@@ -2378,7 +2377,7 @@ public class Codegen extends Interpreter {
                                        "(Ljava/lang/Object;"
                                        +")Ljava/lang/Object;");
                 astore(lVar.getJRegister());
-            } else if (childType == TokenStream.GETPROP) {
+            } else if (childType == Token.GETPROP) {
                 Node getPropChild = child.getFirstChild();
                 generateCodeFromNode(getPropChild, node);
                 generateCodeFromNode(getPropChild.getNext(), node);
@@ -2388,7 +2387,7 @@ public class Codegen extends Interpreter {
                                        +"Ljava/lang/String;"
                                        +"Lorg/mozilla/javascript/Scriptable;"
                                        +")Ljava/lang/Object;");
-            } else if (childType == TokenStream.GETELEM) {
+            } else if (childType == Token.GETELEM) {
                 routine += "Elem";
                 Node getPropChild = child.getFirstChild();
                 generateCodeFromNode(getPropChild, node);
@@ -2413,10 +2412,10 @@ public class Codegen extends Interpreter {
     private static boolean isArithmeticNode(Node node)
     {
         int type = node.getType();
-        return (type == TokenStream.SUB)
-                  || (type == TokenStream.MOD)
-                        || (type == TokenStream.DIV)
-                              || (type == TokenStream.MUL);
+        return (type == Token.SUB)
+                  || (type == Token.MOD)
+                        || (type == Token.DIV)
+                              || (type == Token.MUL);
     }
 
     private void visitArithmetic(Node node, byte opCode, Node child,
@@ -2459,7 +2458,7 @@ public class Codegen extends Interpreter {
         // special-case URSH; work with the target arg as a long, so
         // that we can return a 32-bit unsigned value, and call
         // toUint32 instead of toInt32.
-        if (type == TokenStream.URSH) {
+        if (type == Token.URSH) {
             addScriptRuntimeInvoke("toUint32", "(Ljava/lang/Object;)J");
             generateCodeFromNode(child.getNext(), node);
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
@@ -2483,19 +2482,19 @@ public class Codegen extends Interpreter {
             addScriptRuntimeInvoke("toInt32", "(D)I");
         }
         switch (type) {
-          case TokenStream.BITOR:
+          case Token.BITOR:
             addByteCode(ByteCode.IOR);
             break;
-          case TokenStream.BITXOR:
+          case Token.BITXOR:
             addByteCode(ByteCode.IXOR);
             break;
-          case TokenStream.BITAND:
+          case Token.BITAND:
             addByteCode(ByteCode.IAND);
             break;
-          case TokenStream.RSH:
+          case Token.RSH:
             addByteCode(ByteCode.ISHR);
             break;
-          case TokenStream.LSH:
+          case Token.LSH:
             addByteCode(ByteCode.ISHL);
             break;
           default:
@@ -2509,7 +2508,7 @@ public class Codegen extends Interpreter {
 
     private boolean nodeIsDirectCallParameter(Node node)
     {
-        if (node.getType() == TokenStream.GETVAR) {
+        if (node.getType() == Token.GETVAR) {
             OptLocalVariable lVar
                     = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
             if (lVar != null && lVar.isParameter() && inDirectCallFunction &&
@@ -2524,19 +2523,19 @@ public class Codegen extends Interpreter {
     private void genSimpleCompare(int op, int trueGOTO, int falseGOTO)
     {
         switch (op) {
-            case TokenStream.LE :
+            case Token.LE :
                 addByteCode(ByteCode.DCMPG);
                 addByteCode(ByteCode.IFLE, trueGOTO);
                 break;
-            case TokenStream.GE :
+            case Token.GE :
                 addByteCode(ByteCode.DCMPL);
                 addByteCode(ByteCode.IFGE, trueGOTO);
                 break;
-            case TokenStream.LT :
+            case Token.LT :
                 addByteCode(ByteCode.DCMPG);
                 addByteCode(ByteCode.IFLT, trueGOTO);
                 break;
-            case TokenStream.GT :
+            case Token.GT :
                 addByteCode(ByteCode.DCMPL);
                 addByteCode(ByteCode.IFGT, trueGOTO);
                 break;
@@ -2555,7 +2554,7 @@ public class Codegen extends Interpreter {
             generateCodeFromNode(child.getNext(), node);
             genSimpleCompare(op, trueGOTO, falseGOTO);
         } else {
-            if (op == TokenStream.INSTANCEOF) {
+            if (op == Token.INSTANCEOF) {
                 aload(variableObjectLocal);
                 generateCodeFromNode(child, node);
                 generateCodeFromNode(child.getNext(), node);
@@ -2567,7 +2566,7 @@ public class Codegen extends Interpreter {
                     +")Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
                 addByteCode(ByteCode.GOTO, falseGOTO);
-            } else if (op == TokenStream.IN) {
+            } else if (op == Token.IN) {
                 generateCodeFromNode(child, node);
                 generateCodeFromNode(child.getNext(), node);
                 aload(variableObjectLocal);
@@ -2656,18 +2655,18 @@ public class Codegen extends Interpreter {
                 generateCodeFromNode(child, node);
                 generateCodeFromNode(rChild, node);
                 if (childNumberFlag == -1) {
-                    if (op == TokenStream.GE || op == TokenStream.GT) {
+                    if (op == Token.GE || op == Token.GT) {
                         addByteCode(ByteCode.SWAP);
                     }
-                    String routine = ((op == TokenStream.LT)
-                              || (op == TokenStream.GT)) ? "cmp_LT" : "cmp_LE";
+                    String routine = ((op == Token.LT)
+                              || (op == Token.GT)) ? "cmp_LT" : "cmp_LE";
                     addScriptRuntimeInvoke(routine,
                                            "(Ljava/lang/Object;"
                                            +"Ljava/lang/Object;"
                                            +")I");
                 } else {
                     boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                    if (op == TokenStream.GE || op == TokenStream.GT) {
+                    if (op == Token.GE || op == Token.GT) {
                         if (doubleThenObject) {
                             addByteCode(ByteCode.DUP_X2);
                             addByteCode(ByteCode.POP);
@@ -2678,8 +2677,8 @@ public class Codegen extends Interpreter {
                             doubleThenObject = true;
                         }
                     }
-                    String routine = ((op == TokenStream.LT)
-                             || (op == TokenStream.GT)) ? "cmp_LT" : "cmp_LE";
+                    String routine = ((op == Token.LT)
+                             || (op == Token.GT)) ? "cmp_LT" : "cmp_LE";
                     if (doubleThenObject)
                         addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)I");
                     else
@@ -2699,16 +2698,16 @@ public class Codegen extends Interpreter {
         int op = node.getOperation();
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
         if (childNumberFlag == Node.BOTH
-                || op == TokenStream.INSTANCEOF
-                || op == TokenStream.IN)
+                || op == Token.INSTANCEOF
+                || op == Token.IN)
         {
-            if (op == TokenStream.INSTANCEOF)
+            if (op == Token.INSTANCEOF)
                 aload(variableObjectLocal);
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             int trueGOTO = acquireLabel();
             int skip = acquireLabel();
-            if (op == TokenStream.INSTANCEOF) {
+            if (op == Token.INSTANCEOF) {
                 addScriptRuntimeInvoke(
                     "instanceOf",
                     "(Lorg/mozilla/javascript/Scriptable;"
@@ -2716,7 +2715,7 @@ public class Codegen extends Interpreter {
                     +"Ljava/lang/Object;"
                     +")Z");
                 addByteCode(ByteCode.IFNE, trueGOTO);
-            } else if (op == TokenStream.IN) {
+            } else if (op == Token.IN) {
                 aload(variableObjectLocal);
                 addScriptRuntimeInvoke(
                     "in",
@@ -2738,12 +2737,12 @@ public class Codegen extends Interpreter {
             classFile.adjustStackTop(-1);   // only have 1 of true/false
         }
         else {
-            String routine = ((op == TokenStream.LT)
-                     || (op == TokenStream.GT)) ? "cmp_LTB" : "cmp_LEB";
+            String routine = ((op == Token.LT)
+                     || (op == Token.GT)) ? "cmp_LTB" : "cmp_LEB";
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             if (childNumberFlag == -1) {
-                if (op == TokenStream.GE || op == TokenStream.GT) {
+                if (op == Token.GE || op == Token.GT) {
                     addByteCode(ByteCode.SWAP);
                 }
                 addScriptRuntimeInvoke(routine,
@@ -2753,7 +2752,7 @@ public class Codegen extends Interpreter {
             }
             else {
                 boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                if (op == TokenStream.GE || op == TokenStream.GT) {
+                if (op == Token.GE || op == Token.GT) {
                     if (doubleThenObject) {
                         addByteCode(ByteCode.DUP_X2);
                         addByteCode(ByteCode.POP);
@@ -2779,11 +2778,11 @@ public class Codegen extends Interpreter {
 
     private Node getConvertToObjectOfNumberNode(Node node)
     {
-        if (node.getType() == TokenStream.CONVERT) {
+        if (node.getType() == Token.CONVERT) {
             Object toType = node.getProp(Node.TYPE_PROP);
             if (toType == ScriptRuntime.ObjectClass) {
                 Node convertChild = node.getFirstChild();
-                if (convertChild.getType() == TokenStream.NUMBER)
+                if (convertChild.getType() == Token.NUMBER)
                     return convertChild;
             }
         }
@@ -2794,10 +2793,10 @@ public class Codegen extends Interpreter {
     {
         int op = node.getOperation();
         Node rightChild = child.getNext();
-        boolean isStrict = op == TokenStream.SHEQ ||
-                           op == TokenStream.SHNE;
-        if (rightChild.getType() == TokenStream.PRIMARY &&
-            rightChild.getOperation() == TokenStream.NULL)
+        boolean isStrict = op == Token.SHEQ ||
+                           op == Token.SHNE;
+        if (rightChild.getType() == Token.PRIMARY &&
+            rightChild.getOperation() == Token.NULL)
         {
             generateCodeFromNode(child, node);
             if (isStrict) {
@@ -2808,7 +2807,7 @@ public class Codegen extends Interpreter {
                 pushUndefined();
                 addByteCode(ByteCode.IF_ACMPEQ, 10);
             }
-            if ((op == TokenStream.EQ) || (op == TokenStream.SHEQ))
+            if ((op == Token.EQ) || (op == Token.SHEQ))
                 classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                         "FALSE", "Ljava/lang/Boolean;");
             else
@@ -2820,7 +2819,7 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.GOTO, 7);
                 addByteCode(ByteCode.POP);
             }
-            if ((op == TokenStream.EQ) || (op == TokenStream.SHEQ))
+            if ((op == Token.EQ) || (op == Token.SHEQ))
                 classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                         "TRUE", "Ljava/lang/Boolean;");
             else
@@ -2835,19 +2834,19 @@ public class Codegen extends Interpreter {
         // JavaScript 1.2 uses shallow equality for == and !=
         String name;
         switch (op) {
-          case TokenStream.EQ:
+          case Token.EQ:
             name = version == Context.VERSION_1_2 ? "seqB" : "eqB";
             break;
 
-          case TokenStream.NE:
+          case Token.NE:
             name = version == Context.VERSION_1_2 ? "sneB" : "neB";
             break;
 
-          case TokenStream.SHEQ:
+          case Token.SHEQ:
             name = "seqB";
             break;
 
-          case TokenStream.SHNE:
+          case Token.SHNE:
             name = "sneB";
             break;
 
@@ -2866,13 +2865,13 @@ public class Codegen extends Interpreter {
     {
         int op = node.getOperation();
         Node rightChild = child.getNext();
-        boolean isStrict = op == TokenStream.SHEQ ||
-                           op == TokenStream.SHNE;
+        boolean isStrict = op == Token.SHEQ ||
+                           op == Token.SHNE;
 
-        if (rightChild.getType() == TokenStream.PRIMARY &&
-            rightChild.getOperation() == TokenStream.NULL)
+        if (rightChild.getType() == Token.PRIMARY &&
+            rightChild.getOperation() == Token.NULL)
         {
-            if (op != TokenStream.EQ && op != TokenStream.SHEQ) {
+            if (op != Token.EQ && op != Token.SHEQ) {
                 // invert true and false.
                 int temp = trueGOTO;
                 trueGOTO = falseGOTO;
@@ -2893,7 +2892,7 @@ public class Codegen extends Interpreter {
                 don't generate a lot of code and don't have side-effects.
                 For now, 'simple' means GETVAR
             */
-            boolean simpleChild = (child.getType() == TokenStream.GETVAR);
+            boolean simpleChild = (child.getType() == Token.GETVAR);
             if (!simpleChild) addByteCode(ByteCode.DUP);
             int popGOTO = acquireLabel();
             addByteCode(ByteCode.IFNULL,
@@ -2928,7 +2927,7 @@ public class Codegen extends Interpreter {
                 dload((short)(lVar1.getJRegister() + 1));
                 push(convertChild.getDouble());
                 addByteCode(ByteCode.DCMPL);
-                if (op == TokenStream.EQ)
+                if (op == Token.EQ)
                     addByteCode(ByteCode.IFEQ, trueGOTO);
                 else
                     addByteCode(ByteCode.IFNE, trueGOTO);
@@ -2943,7 +2942,7 @@ public class Codegen extends Interpreter {
 
         String name;
         switch (op) {
-          case TokenStream.EQ:
+          case Token.EQ:
             name = version == Context.VERSION_1_2 ? "shallowEq" : "eq";
             addScriptRuntimeInvoke(name,
                                    "(Ljava/lang/Object;"
@@ -2951,7 +2950,7 @@ public class Codegen extends Interpreter {
                                    +")Z");
             break;
 
-          case TokenStream.NE:
+          case Token.NE:
             name = version == Context.VERSION_1_2 ? "shallowNeq" : "neq";
             addOptRuntimeInvoke(name,
                                 "(Ljava/lang/Object;"
@@ -2959,7 +2958,7 @@ public class Codegen extends Interpreter {
                                 +")Z");
             break;
 
-          case TokenStream.SHEQ:
+          case Token.SHEQ:
             name = "shallowEq";
             addScriptRuntimeInvoke(name,
                                    "(Ljava/lang/Object;"
@@ -2967,7 +2966,7 @@ public class Codegen extends Interpreter {
                                    +")Z");
             break;
 
-          case TokenStream.SHNE:
+          case Token.SHNE:
             name = "shallowNeq";
             addOptRuntimeInvoke(name,
                                 "(Ljava/lang/Object;"
@@ -2985,7 +2984,7 @@ public class Codegen extends Interpreter {
 
     private void visitLiteral(Node node)
     {
-        if (node.getType() == TokenStream.STRING) {
+        if (node.getType() == Token.STRING) {
             // just load the string constant
             push(node.getString());
         } else {
@@ -3023,29 +3022,29 @@ public class Codegen extends Interpreter {
         int op = node.getOperation();
         switch (op) {
 
-          case TokenStream.THIS:
+          case Token.THIS:
             aload(thisObjLocal);
             break;
 
-          case TokenStream.THISFN:
+          case Token.THISFN:
             classFile.add(ByteCode.ALOAD_0);
             break;
 
-          case TokenStream.NULL:
+          case Token.NULL:
             addByteCode(ByteCode.ACONST_NULL);
             break;
 
-          case TokenStream.TRUE:
+          case Token.TRUE:
             classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                     "TRUE", "Ljava/lang/Boolean;");
             break;
 
-          case TokenStream.FALSE:
+          case Token.FALSE:
             classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                     "FALSE", "Ljava/lang/Boolean;");
             break;
 
-          case TokenStream.UNDEFINED:
+          case Token.UNDEFINED:
             pushUndefined();
             break;
 
@@ -3226,8 +3225,8 @@ public class Codegen extends Interpreter {
         }
 
         // default: just treat like any other name lookup
-        child.setType(TokenStream.BINDNAME);
-        node.setType(TokenStream.SETNAME);
+        child.setType(Token.BINDNAME);
+        node.setType(Token.SETNAME);
         visitSetName(node, child);
         if (!needValue)
             addByteCode(ByteCode.POP);
@@ -3265,13 +3264,13 @@ public class Codegen extends Interpreter {
         */
         generateCodeFromNode(child, node);      // the object
         generateCodeFromNode(nameChild, node);  // the name
-        if (nameChild.getType() == TokenStream.STRING) {
-            if ((child.getType() == TokenStream.PRIMARY
-                 && child.getOperation() == TokenStream.THIS)
-                || (child.getType() == TokenStream.NEWTEMP
-                    && child.getFirstChild().getType() == TokenStream.PRIMARY
+        if (nameChild.getType() == Token.STRING) {
+            if ((child.getType() == Token.PRIMARY
+                 && child.getOperation() == Token.THIS)
+                || (child.getType() == Token.NEWTEMP
+                    && child.getFirstChild().getType() == Token.PRIMARY
                     && child.getFirstChild().getOperation()
-                           == TokenStream.THIS))
+                           == Token.THIS))
             {
                 aload(variableObjectLocal);
                 addOptRuntimeInvoke(
@@ -3351,7 +3350,7 @@ public class Codegen extends Interpreter {
         aload(variableObjectLocal);             // get variable object
         push(node.getString());                 // push name
         addScriptRuntimeInvoke(
-            type == TokenStream.BINDNAME ? "bind" : "getBase",
+            type == Token.BINDNAME ? "bind" : "getBase",
             "(Lorg/mozilla/javascript/Scriptable;"
             +"Ljava/lang/String;"
             +")Lorg/mozilla/javascript/Scriptable;");
@@ -3364,8 +3363,8 @@ public class Codegen extends Interpreter {
             // for NEWLOCAL & USELOCAL, use the next pre-allocated
             // register, otherwise for NEWTEMP & USETEMP, get the
             // next available from the pool
-            local = ((node.getType() == TokenStream.NEWLOCAL)
-                                || (node.getType() == TokenStream.USELOCAL)) ?
+            local = ((node.getType() == Token.NEWLOCAL)
+                                || (node.getType() == Token.USELOCAL)) ?
                             itsLocalAllocationBase++ : getNewWordLocal();
 
             node.putIntProp(Node.LOCAL_PROP, local);

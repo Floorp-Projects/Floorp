@@ -62,7 +62,7 @@ public class NodeTransformer {
     {
         loops = new ObjArray();
         loopEnds = new ObjArray();
-        inFunction = tree.getType() == TokenStream.FUNCTION;
+        inFunction = tree.getType() == Token.FUNCTION;
 
         // to save against upchecks if no finally blocks are used.
         boolean hasFinally = false;
@@ -75,7 +75,7 @@ public class NodeTransformer {
           typeswitch:
             switch (type) {
 
-              case TokenStream.FUNCTION:
+              case Token.FUNCTION:
                 if (node != tree) {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     FunctionNode fnNode = tree.getFunctionNode(fnIndex);
@@ -84,7 +84,7 @@ public class NodeTransformer {
                 }
                 break;
 
-              case TokenStream.LABEL:
+              case Token.LABEL:
               {
                 Node child = node.getFirstChild();
                 node.removeChild(child);
@@ -93,7 +93,7 @@ public class NodeTransformer {
                 // check against duplicate labels...
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
-                    if (n.getType() == TokenStream.LABEL) {
+                    if (n.getType() == Token.LABEL) {
                         String otherId = (String)n.getProp(Node.LABEL_PROP);
                         if (id.equals(otherId)) {
                             Object[] messageArgs = { id };
@@ -110,19 +110,19 @@ public class NodeTransformer {
                  * node.  And in the LABEL node, so breaks get the
                  * right target.
                  */
-                Node breakTarget = new Node(TokenStream.TARGET);
+                Node breakTarget = new Node(Token.TARGET);
                 Node parent = iter.getCurrentParent();
                 Node next = node.getNext();
                 while (next != null &&
-                       (next.getType() == TokenStream.LABEL ||
-                        next.getType() == TokenStream.TARGET))
+                       (next.getType() == Token.LABEL ||
+                        next.getType() == Token.TARGET))
                     next = next.getNext();
                 if (next == null)
                     break;
                 parent.addChildAfter(breakTarget, next);
                 node.putProp(Node.BREAK_PROP, breakTarget);
 
-                if (next.getType() == TokenStream.LOOP) {
+                if (next.getType() == Token.LOOP) {
                     node.putProp(Node.CONTINUE_PROP,
                                  next.getProp(Node.CONTINUE_PROP));
                 }
@@ -133,9 +133,9 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.SWITCH:
+              case Token.SWITCH:
               {
-                Node breakTarget = new Node(TokenStream.TARGET);
+                Node breakTarget = new Node(Token.TARGET);
                 Node parent = iter.getCurrentParent();
                 parent.addChildAfter(breakTarget, node);
 
@@ -157,11 +157,11 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.DEFAULT:
-              case TokenStream.CASE:
+              case Token.DEFAULT:
+              case Token.CASE:
               {
                 Node sw = (Node) loops.peek();
-                if (type == TokenStream.CASE) {
+                if (type == Token.CASE) {
                     ObjArray cases = (ObjArray) sw.getProp(Node.CASES_PROP);
                     cases.add(node);
                 } else {
@@ -170,16 +170,16 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.NEWLOCAL :
+              case Token.NEWLOCAL :
                   tree.incrementLocalCount();
                 break;
 
-              case TokenStream.LOOP:
+              case Token.LOOP:
                 loops.push(node);
                 loopEnds.push(node.getProp(Node.BREAK_PROP));
                 break;
 
-              case TokenStream.WITH:
+              case Token.WITH:
               {
                 if (inFunction) {
                     // With statements require an activation object.
@@ -187,14 +187,14 @@ public class NodeTransformer {
                 }
                 loops.push(node);
                 Node leave = node.getNext();
-                if (leave.getType() != TokenStream.LEAVEWITH) {
+                if (leave.getType() != Token.LEAVEWITH) {
                     throw new RuntimeException("Unexpected tree");
                 }
                 loopEnds.push(leave);
                 break;
               }
 
-              case TokenStream.TRY:
+              case Token.TRY:
               {
                 Node finallytarget = (Node)node.getProp(Node.FINALLY_PROP);
                 if (finallytarget != null) {
@@ -206,15 +206,15 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.TARGET:
-              case TokenStream.LEAVEWITH:
+              case Token.TARGET:
+              case Token.LEAVEWITH:
                 if (!loopEnds.isEmpty() && loopEnds.peek() == node) {
                     loopEnds.pop();
                     loops.pop();
                 }
                 break;
 
-              case TokenStream.RETURN:
+              case Token.RETURN:
               {
                 /* If we didn't support try/finally, it wouldn't be
                  * necessary to put LEAVEWITH nodes here... but as
@@ -229,21 +229,21 @@ public class NodeTransformer {
                 for (int i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
-                    if (elemtype == TokenStream.TRY) {
-                        Node jsrnode = new Node(TokenStream.JSR);
+                    if (elemtype == Token.TRY) {
+                        Node jsrnode = new Node(Token.JSR);
                         Object jsrtarget = n.getProp(Node.FINALLY_PROP);
                         jsrnode.putProp(Node.TARGET_PROP, jsrtarget);
                         iter.addBeforeCurrent(jsrnode);
-                    } else if (elemtype == TokenStream.WITH) {
-                        Node leave = new Node(TokenStream.LEAVEWITH);
+                    } else if (elemtype == Token.WITH) {
+                        Node leave = new Node(Token.LEAVEWITH);
                         iter.addBeforeCurrent(leave);
                     }
                 }
                 break;
               }
 
-              case TokenStream.BREAK:
-              case TokenStream.CONTINUE:
+              case Token.BREAK:
+              case Token.CONTINUE:
               {
                 Node loop = null;
                 boolean labelled = node.hasChildren();
@@ -259,18 +259,18 @@ public class NodeTransformer {
                 for (i=loops.size()-1; i >= 0; i--) {
                     Node n = (Node) loops.get(i);
                     int elemtype = n.getType();
-                    if (elemtype == TokenStream.WITH) {
-                        Node leave = new Node(TokenStream.LEAVEWITH);
+                    if (elemtype == Token.WITH) {
+                        Node leave = new Node(Token.LEAVEWITH);
                         iter.addBeforeCurrent(leave);
-                    } else if (elemtype == TokenStream.TRY) {
-                        Node jsrFinally = new Node(TokenStream.JSR);
+                    } else if (elemtype == Token.TRY) {
+                        Node jsrFinally = new Node(Token.JSR);
                         Object jsrTarget = n.getProp(Node.FINALLY_PROP);
                         jsrFinally.putProp(Node.TARGET_PROP, jsrTarget);
                         iter.addBeforeCurrent(jsrFinally);
                     } else if (!labelled &&
-                               (elemtype == TokenStream.LOOP ||
-                                (elemtype == TokenStream.SWITCH &&
-                                 type == TokenStream.BREAK)))
+                               (elemtype == Token.LOOP ||
+                                (elemtype == Token.SWITCH &&
+                                 type == Token.BREAK)))
                     {
                         /* if it's a simple break/continue, break from the
                          * nearest enclosing loop or switch
@@ -278,14 +278,14 @@ public class NodeTransformer {
                         loop = n;
                         break;
                     } else if (labelled &&
-                               elemtype == TokenStream.LABEL &&
+                               elemtype == Token.LABEL &&
                                id.equals((String)n.getProp(Node.LABEL_PROP)))
                     {
                         loop = n;
                         break;
                     }
                 }
-                int propType = type == TokenStream.BREAK
+                int propType = type == Token.BREAK
                                ? Node.BREAK_PROP
                                : Node.CONTINUE_PROP;
                 Node target = loop == null
@@ -296,7 +296,7 @@ public class NodeTransformer {
                     Object[] messageArgs = null;
                     if (!labelled) {
                         // didn't find an appropriate target
-                        if (type == TokenStream.CONTINUE) {
+                        if (type == Token.CONTINUE) {
                             messageId = "msg.continue.outside";
                         } else {
                             messageId = "msg.bad.break";
@@ -308,15 +308,15 @@ public class NodeTransformer {
                         messageId = "msg.undef.label";
                     }
                     reportError(messageId, messageArgs, node, tree);
-                    node.setType(TokenStream.NOP);
+                    node.setType(Token.NOP);
                     break;
                 }
-                node.setType(TokenStream.GOTO);
+                node.setType(Token.GOTO);
                 node.putProp(Node.TARGET_PROP, target);
                 break;
               }
 
-              case TokenStream.CALL: {
+              case Token.CALL: {
                 int callType = getSpecialCallType(tree, node);
                 if (callType != Node.NON_SPECIALCALL) {
                     node.putIntProp(Node.SPECIALCALL_PROP, callType);
@@ -325,7 +325,7 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.NEW: {
+              case Token.NEW: {
                 int callType = getSpecialCallType(tree, node);
                 if (callType != Node.NON_SPECIALCALL) {
                     node.putIntProp(Node.SPECIALCALL_PROP, callType);
@@ -334,20 +334,20 @@ public class NodeTransformer {
                 break;
               }
 
-              case TokenStream.DOT:
+              case Token.DOT:
               {
                 Node right = node.getLastChild();
-                right.setType(TokenStream.STRING);
+                right.setType(Token.STRING);
                 break;
               }
 
-              case TokenStream.EXPRSTMT:
-                node.setType(inFunction ? TokenStream.POP : TokenStream.POPV);
+              case Token.EXPRSTMT:
+                node.setType(inFunction ? Token.POP : Token.POPV);
                 break;
 
-              case TokenStream.VAR:
+              case Token.VAR:
               {
-                Node result = new Node(TokenStream.BLOCK);
+                Node result = new Node(Token.BLOCK);
                 for (Node cursor = node.getFirstChild(); cursor != null;) {
                     // Move cursor to next before createAssignment get chance
                     // to change n.next
@@ -358,22 +358,22 @@ public class NodeTransformer {
                     Node init = n.getFirstChild();
                     n.removeChild(init);
                     Node asn = (Node) irFactory.createAssignment(
-                                        TokenStream.NOP, n, init, null,
+                                        Token.NOP, n, init, null,
                                         false);
-                    Node pop = new Node(TokenStream.POP, asn, node.getLineno());
+                    Node pop = new Node(Token.POP, asn, node.getLineno());
                     result.addChildToBack(pop);
                 }
                 iter.replaceCurrent(result);
                 break;
               }
 
-              case TokenStream.DELPROP:
-              case TokenStream.SETNAME:
+              case Token.DELPROP:
+              case Token.SETNAME:
               {
                 if (!inFunction || inWithStatement())
                     break;
                 Node bind = node.getFirstChild();
-                if (bind == null || bind.getType() != TokenStream.BINDNAME)
+                if (bind == null || bind.getType() != Token.BINDNAME)
                     break;
                 String name = bind.getString();
                 Context cx = Context.getCurrentContext();
@@ -382,20 +382,20 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 if (tree.hasParamOrVar(name)) {
-                    if (type == TokenStream.SETNAME) {
-                        node.setType(TokenStream.SETVAR);
-                        bind.setType(TokenStream.STRING);
+                    if (type == Token.SETNAME) {
+                        node.setType(Token.SETVAR);
+                        bind.setType(Token.STRING);
                     } else {
                         // Local variables are by definition permanent
-                        Node n = new Node(TokenStream.PRIMARY,
-                                          TokenStream.FALSE);
+                        Node n = new Node(Token.PRIMARY,
+                                          Token.FALSE);
                         iter.replaceCurrent(n);
                     }
                 }
                 break;
               }
 
-              case TokenStream.GETPROP:
+              case Token.GETPROP:
                 if (inFunction) {
                     Node n = node.getFirstChild().getNext();
                     String name = n == null ? "" : n.getString();
@@ -411,7 +411,7 @@ public class NodeTransformer {
                 }
                 break;
 
-              case TokenStream.NAME:
+              case Token.NAME:
               {
                 if (!inFunction || inWithStatement())
                     break;
@@ -422,7 +422,7 @@ public class NodeTransformer {
                     ((FunctionNode) tree).setRequiresActivation(true);
                 }
                 if (tree.hasParamOrVar(name)) {
-                    node.setType(TokenStream.GETVAR);
+                    node.setType(Token.GETVAR);
                 }
                 break;
               }
@@ -459,22 +459,22 @@ public class NodeTransformer {
             argCount++;
         }
         boolean addGetThis = false;
-        if (left.getType() == TokenStream.NAME) {
+        if (left.getType() == Token.NAME) {
             String name = left.getString();
             if (inFunction && tree.hasParamOrVar(name)
                 && !inWithStatement())
             {
                 // call to a var. Transform to Call(GetVar("a"), b, c)
-                left.setType(TokenStream.GETVAR);
+                left.setType(Token.GETVAR);
                 // fall through to code to add GetParent
             } else {
                 // transform to Call(GetProp(GetBase("a"), "a"), b, c)
 
                 node.removeChild(left);
-                left.setType(TokenStream.GETBASE);
+                left.setType(Token.GETBASE);
                 Node str = left.cloneNode();
-                str.setType(TokenStream.STRING);
-                Node getProp = new Node(TokenStream.GETPROP, left, str);
+                str.setType(Token.STRING);
+                Node getProp = new Node(Token.GETPROP, left, str);
                 node.addChildToFront(getProp);
                 left = getProp;
 
@@ -491,14 +491,14 @@ public class NodeTransformer {
                 // fall through to GETPROP code
             }
         }
-        if (left.getType() != TokenStream.GETPROP &&
-            left.getType() != TokenStream.GETELEM)
+        if (left.getType() != Token.GETPROP &&
+            left.getType() != Token.GETELEM)
         {
             node.removeChild(left);
             Node tmp = irFactory.createNewTemp(left);
             Node use = irFactory.createUseTemp(tmp);
             use.putProp(Node.TEMP_PROP, tmp);
-            Node parent = new Node(TokenStream.PARENT, use);
+            Node parent = new Node(Token.PARENT, use);
             node.addChildToFront(parent);
             node.addChildToFront(tmp);
             return;
@@ -510,14 +510,14 @@ public class NodeTransformer {
         Node use = irFactory.createUseTemp(tmp);
         use.putProp(Node.TEMP_PROP, tmp);
         if (addGetThis)
-            use = new Node(TokenStream.GETTHIS, use);
+            use = new Node(Token.GETTHIS, use);
         node.addChildAfter(use, left);
     }
 
     protected boolean inWithStatement() {
         for (int i=loops.size()-1; i >= 0; i--) {
             Node n = (Node) loops.get(i);
-            if (n.getType() == TokenStream.WITH)
+            if (n.getType() == Token.WITH)
                 return true;
         }
         return false;
@@ -530,7 +530,7 @@ public class NodeTransformer {
     private int getSpecialCallType(Node tree, Node node) {
         Node left = node.getFirstChild();
         int type = Node.NON_SPECIALCALL;
-        if (left.getType() == TokenStream.NAME) {
+        if (left.getType() == Token.NAME) {
             String name = left.getString();
             if (name.equals("eval")) {
                 type = Node.SPECIALCALL_EVAL;
@@ -538,7 +538,7 @@ public class NodeTransformer {
                 type = Node.SPECIALCALL_WITH;
             }
         } else {
-            if (left.getType() == TokenStream.GETPROP) {
+            if (left.getType() == Token.GETPROP) {
                 String name = left.getLastChild().getString();
                 if (name.equals("eval")) {
                     type = Node.SPECIALCALL_EVAL;

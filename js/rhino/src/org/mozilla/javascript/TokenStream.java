@@ -74,361 +74,29 @@ public class TokenStream {
     private final static int
         EOF_CHAR = -1;
 
-    /**
-     * Token types.  These values correspond to JSTokenType values in
-     * jsscan.c.
-     */
-
-    public final static int
-    // start enum
-        ERROR       = -1, // well-known as the only code < EOF
-        EOF         = 0,  // end of file token - (not EOF_CHAR)
-        EOL         = 1,  // end of line
-
-        // Beginning here are interpreter bytecodes.
-        POPV        = 2,
-        ENTERWITH   = 3,
-        LEAVEWITH   = 4,
-        RETURN      = 5,
-        GOTO        = 6,
-        IFEQ        = 7,
-        IFNE        = 8,
-        DUP         = 9,
-        SETNAME     = 10,
-        BITOR       = 11,
-        BITXOR      = 12,
-        BITAND      = 13,
-        EQ          = 14,
-        NE          = 15,
-        LT          = 16,
-        LE          = 17,
-        GT          = 18,
-        GE          = 19,
-        LSH         = 20,
-        RSH         = 21,
-        URSH        = 22,
-        ADD         = 23,
-        SUB         = 24,
-        MUL         = 25,
-        DIV         = 26,
-        MOD         = 27,
-        BITNOT      = 28,
-        NEG         = 29,
-        NEW         = 30,
-        DELPROP     = 31,
-        TYPEOF      = 32,
-        NAMEINC     = 33,
-        PROPINC     = 34,
-        ELEMINC     = 35,
-        NAMEDEC     = 36,
-        PROPDEC     = 37,
-        ELEMDEC     = 38,
-        GETPROP     = 39,
-        SETPROP     = 40,
-        GETELEM     = 41,
-        SETELEM     = 42,
-        CALL        = 43,
-        NAME        = 44,
-        NUMBER      = 45,
-        STRING      = 46,
-        ZERO        = 47,
-        ONE         = 48,
-        NULL        = 49,
-        THIS        = 50,
-        FALSE       = 51,
-        TRUE        = 52,
-        SHEQ        = 53,   // shallow equality (===)
-        SHNE        = 54,   // shallow inequality (!==)
-        CLOSURE     = 55,
-        REGEXP      = 56,
-        POP         = 57,
-        POS         = 58,
-        VARINC      = 59,
-        VARDEC      = 60,
-        BINDNAME    = 61,
-        THROW       = 62,
-        IN          = 63,
-        INSTANCEOF  = 64,
-        CALLSPECIAL = 65,
-        GETTHIS     = 66,
-        NEWTEMP     = 67,
-        USETEMP     = 68,
-        GETBASE     = 69,
-        GETVAR      = 70,
-        SETVAR      = 71,
-        UNDEFINED   = 72,
-        TRY         = 73,
-        NEWSCOPE    = 74,
-        TYPEOFNAME  = 75,
-        ENUMINIT    = 76,
-        ENUMNEXT    = 77,
-        GETPROTO    = 78,
-        GETPARENT   = 79,
-        SETPROTO    = 80,
-        SETPARENT   = 81,
-        SCOPE       = 82,
-        GETSCOPEPARENT = 83,
-        THISFN      = 84,
-
-        // End of interpreter bytecodes
-        SEMI        = 85,  // semicolon
-        LB          = 86,  // left and right brackets
-        RB          = 87,
-        LC          = 88,  // left and right curlies (braces)
-        RC          = 89,
-        LP          = 90,  // left and right parentheses
-        RP          = 91,
-        COMMA       = 92,  // comma operator
-        ASSIGN      = 93, // assignment ops (= += -= etc.)
-        HOOK        = 94, // conditional (?:)
-        COLON       = 95,
-        OR          = 96, // logical or (||)
-        AND         = 97, // logical and (&&)
-        EQOP        = 98, // equality ops (== !=)
-        RELOP       = 99, // relational ops (< <= > >=)
-        SHOP        = 100, // shift ops (<< >> >>>)
-        UNARYOP     = 101, // unary prefix operator
-        INC         = 102, // increment/decrement (++ --)
-        DEC         = 103,
-        DOT         = 104, // member operator (.)
-        PRIMARY     = 105, // true, false, null, this
-        FUNCTION    = 106, // function keyword
-        EXPORT      = 107, // export keyword
-        IMPORT      = 108, // import keyword
-        IF          = 109, // if keyword
-        ELSE        = 110, // else keyword
-        SWITCH      = 111, // switch keyword
-        CASE        = 112, // case keyword
-        DEFAULT     = 113, // default keyword
-        WHILE       = 114, // while keyword
-        DO          = 115, // do keyword
-        FOR         = 116, // for keyword
-        BREAK       = 117, // break keyword
-        CONTINUE    = 118, // continue keyword
-        VAR         = 119, // var keyword
-        WITH        = 120, // with keyword
-        CATCH       = 121, // catch keyword
-        FINALLY     = 122, // finally keyword
-        RESERVED    = 123, // reserved keywords
-
-        /** Added by Mike - these are JSOPs in the jsref, but I
-         * don't have them yet in the java implementation...
-         * so they go here.  Also whatever I needed.
-
-         * Most of these go in the 'op' field when returning
-         * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
-         */
-        NOP         = 124, // NOP
-        NOT         = 125, // etc.
-        PRE         = 126, // for INC, DEC nodes.
-        POST        = 127,
-
-        /**
-         * For JSOPs associated with keywords...
-         * eg. op = THIS; token = PRIMARY
-         */
-
-        VOID        = 128,
-
-        /* types used for the parse tree - these never get returned
-         * by the scanner.
-         */
-        BLOCK       = 129, // statement block
-        ARRAYLIT    = 130, // array literal
-        OBJLIT      = 131, // object literal
-        LABEL       = 132, // label
-        TARGET      = 133,
-        LOOP        = 134,
-        ENUMDONE    = 135,
-        EXPRSTMT    = 136,
-        PARENT      = 137,
-        CONVERT     = 138,
-        JSR         = 139,
-        NEWLOCAL    = 140,
-        USELOCAL    = 141,
-        SCRIPT      = 142,   // top-level node for entire script
-
-        LAST_TOKEN  = 142;
-
-    // end enum
-
-
-    public static String tokenToName(int token) {
-        if (Context.printTrees || Context.printICode) {
-            switch (token) {
-            case ERROR:           return "error";
-            case EOF:             return "eof";
-            case EOL:             return "eol";
-            case POPV:            return "popv";
-            case ENTERWITH:       return "enterwith";
-            case LEAVEWITH:       return "leavewith";
-            case RETURN:          return "return";
-            case GOTO:            return "goto";
-            case IFEQ:            return "ifeq";
-            case IFNE:            return "ifne";
-            case DUP:             return "dup";
-            case SETNAME:         return "setname";
-            case BITOR:           return "bitor";
-            case BITXOR:          return "bitxor";
-            case BITAND:          return "bitand";
-            case EQ:              return "eq";
-            case NE:              return "ne";
-            case LT:              return "lt";
-            case LE:              return "le";
-            case GT:              return "gt";
-            case GE:              return "ge";
-            case LSH:             return "lsh";
-            case RSH:             return "rsh";
-            case URSH:            return "ursh";
-            case ADD:             return "add";
-            case SUB:             return "sub";
-            case MUL:             return "mul";
-            case DIV:             return "div";
-            case MOD:             return "mod";
-            case BITNOT:          return "bitnot";
-            case NEG:             return "neg";
-            case NEW:             return "new";
-            case DELPROP:         return "delprop";
-            case TYPEOF:          return "typeof";
-            case NAMEINC:         return "nameinc";
-            case PROPINC:         return "propinc";
-            case ELEMINC:         return "eleminc";
-            case NAMEDEC:         return "namedec";
-            case PROPDEC:         return "propdec";
-            case ELEMDEC:         return "elemdec";
-            case GETPROP:         return "getprop";
-            case SETPROP:         return "setprop";
-            case GETELEM:         return "getelem";
-            case SETELEM:         return "setelem";
-            case CALL:            return "call";
-            case NAME:            return "name";
-            case NUMBER:          return "number";
-            case STRING:          return "string";
-            case ZERO:            return "zero";
-            case ONE:             return "one";
-            case NULL:            return "null";
-            case THIS:            return "this";
-            case FALSE:           return "false";
-            case TRUE:            return "true";
-            case SHEQ:            return "sheq";
-            case SHNE:            return "shne";
-            case CLOSURE:         return "closure";
-            case REGEXP:          return "object";
-            case POP:             return "pop";
-            case POS:             return "pos";
-            case VARINC:          return "varinc";
-            case VARDEC:          return "vardec";
-            case BINDNAME:        return "bindname";
-            case THROW:           return "throw";
-            case IN:              return "in";
-            case INSTANCEOF:      return "instanceof";
-            case CALLSPECIAL:     return "callspecial";
-            case GETTHIS:         return "getthis";
-            case NEWTEMP:         return "newtemp";
-            case USETEMP:         return "usetemp";
-            case GETBASE:         return "getbase";
-            case GETVAR:          return "getvar";
-            case SETVAR:          return "setvar";
-            case UNDEFINED:       return "undefined";
-            case TRY:             return "try";
-            case NEWSCOPE:        return "newscope";
-            case TYPEOFNAME:      return "typeofname";
-            case ENUMINIT:        return "enuminit";
-            case ENUMNEXT:        return "enumnext";
-            case GETPROTO:        return "getproto";
-            case GETPARENT:       return "getparent";
-            case SETPROTO:        return "setproto";
-            case SETPARENT:       return "setparent";
-            case SCOPE:           return "scope";
-            case GETSCOPEPARENT:  return "getscopeparent";
-            case THISFN:          return "thisfn";
-            case SEMI:            return "semi";
-            case LB:              return "lb";
-            case RB:              return "rb";
-            case LC:              return "lc";
-            case RC:              return "rc";
-            case LP:              return "lp";
-            case RP:              return "rp";
-            case COMMA:           return "comma";
-            case ASSIGN:          return "assign";
-            case HOOK:            return "hook";
-            case COLON:           return "colon";
-            case OR:              return "or";
-            case AND:             return "and";
-            case EQOP:            return "eqop";
-            case RELOP:           return "relop";
-            case SHOP:            return "shop";
-            case UNARYOP:         return "unaryop";
-            case INC:             return "inc";
-            case DEC:             return "dec";
-            case DOT:             return "dot";
-            case PRIMARY:         return "primary";
-            case FUNCTION:        return "function";
-            case EXPORT:          return "export";
-            case IMPORT:          return "import";
-            case IF:              return "if";
-            case ELSE:            return "else";
-            case SWITCH:          return "switch";
-            case CASE:            return "case";
-            case DEFAULT:         return "default";
-            case WHILE:           return "while";
-            case DO:              return "do";
-            case FOR:             return "for";
-            case BREAK:           return "break";
-            case CONTINUE:        return "continue";
-            case VAR:             return "var";
-            case WITH:            return "with";
-            case CATCH:           return "catch";
-            case FINALLY:         return "finally";
-            case RESERVED:        return "reserved";
-            case NOP:             return "nop";
-            case NOT:             return "not";
-            case PRE:             return "pre";
-            case POST:            return "post";
-            case VOID:            return "void";
-            case BLOCK:           return "block";
-            case ARRAYLIT:        return "arraylit";
-            case OBJLIT:          return "objlit";
-            case LABEL:           return "label";
-            case TARGET:          return "target";
-            case LOOP:            return "loop";
-            case ENUMDONE:        return "enumdone";
-            case EXPRSTMT:        return "exprstmt";
-            case PARENT:          return "parent";
-            case CONVERT:         return "convert";
-            case JSR:             return "jsr";
-            case NEWLOCAL:        return "newlocal";
-            case USELOCAL:        return "uselocal";
-            case SCRIPT:          return "script";
-            }
-            return "<unknown="+token+">";
-        }
-        return "";
-    }
-
     /* This function uses the cached op, string and number fields in
      * TokenStream; if getToken has been called since the passed token
      * was scanned, the op or string printed may be incorrect.
      */
     public String tokenToString(int token) {
-        if (Context.printTrees) {
-            String name = tokenToName(token);
+        if (Token.printTrees) {
+            String name = Token.name(token);
 
             switch (token) {
-            case UNARYOP:
-            case ASSIGN:
-            case PRIMARY:
-            case EQOP:
-            case SHOP:
-            case RELOP:
-                return name + " " + tokenToName(this.op);
+            case Token.UNARYOP:
+            case Token.ASSIGN:
+            case Token.PRIMARY:
+            case Token.EQOP:
+            case Token.SHOP:
+            case Token.RELOP:
+                return name + " " + Token.name(this.op);
 
-            case STRING:
-            case REGEXP:
-            case NAME:
+            case Token.STRING:
+            case Token.REGEXP:
+            case Token.NAME:
                 return name + " `" + this.string + "'";
 
-            case NUMBER:
+            case Token.NUMBER:
                 return "NUMBER " + this.number;
             }
 
@@ -439,69 +107,69 @@ public class TokenStream {
 
     private int stringToKeyword(String name) {
 // #string_id_map#
-// The following assumes that EOF == 0
+// The following assumes that Token.EOF == 0
         final int
-            Id_break         = BREAK,
-            Id_case          = CASE,
-            Id_continue      = CONTINUE,
-            Id_default       = DEFAULT,
-            Id_delete        = DELPROP,
-            Id_do            = DO,
-            Id_else          = ELSE,
-            Id_export        = EXPORT,
-            Id_false         = PRIMARY | (FALSE << 8),
-            Id_for           = FOR,
-            Id_function      = FUNCTION,
-            Id_if            = IF,
-            Id_in            = RELOP | (IN << 8),
-            Id_new           = NEW,
-            Id_null          = PRIMARY | (NULL << 8),
-            Id_return        = RETURN,
-            Id_switch        = SWITCH,
-            Id_this          = PRIMARY | (THIS << 8),
-            Id_true          = PRIMARY | (TRUE << 8),
-            Id_typeof        = UNARYOP | (TYPEOF << 8),
-            Id_var           = VAR,
-            Id_void          = UNARYOP | (VOID << 8),
-            Id_while         = WHILE,
-            Id_with          = WITH,
+            Id_break         = Token.BREAK,
+            Id_case          = Token.CASE,
+            Id_continue      = Token.CONTINUE,
+            Id_default       = Token.DEFAULT,
+            Id_delete        = Token.DELPROP,
+            Id_do            = Token.DO,
+            Id_else          = Token.ELSE,
+            Id_export        = Token.EXPORT,
+            Id_false         = Token.PRIMARY | (Token.FALSE << 8),
+            Id_for           = Token.FOR,
+            Id_function      = Token.FUNCTION,
+            Id_if            = Token.IF,
+            Id_in            = Token.RELOP | (Token.IN << 8),
+            Id_new           = Token.NEW,
+            Id_null          = Token.PRIMARY | (Token.NULL << 8),
+            Id_return        = Token.RETURN,
+            Id_switch        = Token.SWITCH,
+            Id_this          = Token.PRIMARY | (Token.THIS << 8),
+            Id_true          = Token.PRIMARY | (Token.TRUE << 8),
+            Id_typeof        = Token.UNARYOP | (Token.TYPEOF << 8),
+            Id_var           = Token.VAR,
+            Id_void          = Token.UNARYOP | (Token.VOID << 8),
+            Id_while         = Token.WHILE,
+            Id_with          = Token.WITH,
 
             // the following are #ifdef RESERVE_JAVA_KEYWORDS in jsscan.c
-            Id_abstract      = RESERVED,
-            Id_boolean       = RESERVED,
-            Id_byte          = RESERVED,
-            Id_catch         = CATCH,
-            Id_char          = RESERVED,
-            Id_class         = RESERVED,
-            Id_const         = RESERVED,
-            Id_debugger      = RESERVED,
-            Id_double        = RESERVED,
-            Id_enum          = RESERVED,
-            Id_extends       = RESERVED,
-            Id_final         = RESERVED,
-            Id_finally       = FINALLY,
-            Id_float         = RESERVED,
-            Id_goto          = RESERVED,
-            Id_implements    = RESERVED,
-            Id_import        = IMPORT,
-            Id_instanceof    = RELOP | (INSTANCEOF << 8),
-            Id_int           = RESERVED,
-            Id_interface     = RESERVED,
-            Id_long          = RESERVED,
-            Id_native        = RESERVED,
-            Id_package       = RESERVED,
-            Id_private       = RESERVED,
-            Id_protected     = RESERVED,
-            Id_public        = RESERVED,
-            Id_short         = RESERVED,
-            Id_static        = RESERVED,
-            Id_super         = RESERVED,
-            Id_synchronized  = RESERVED,
-            Id_throw         = THROW,
-            Id_throws        = RESERVED,
-            Id_transient     = RESERVED,
-            Id_try           = TRY,
-            Id_volatile      = RESERVED;
+            Id_abstract      = Token.RESERVED,
+            Id_boolean       = Token.RESERVED,
+            Id_byte          = Token.RESERVED,
+            Id_catch         = Token.CATCH,
+            Id_char          = Token.RESERVED,
+            Id_class         = Token.RESERVED,
+            Id_const         = Token.RESERVED,
+            Id_debugger      = Token.RESERVED,
+            Id_double        = Token.RESERVED,
+            Id_enum          = Token.RESERVED,
+            Id_extends       = Token.RESERVED,
+            Id_final         = Token.RESERVED,
+            Id_finally       = Token.FINALLY,
+            Id_float         = Token.RESERVED,
+            Id_goto          = Token.RESERVED,
+            Id_implements    = Token.RESERVED,
+            Id_import        = Token.IMPORT,
+            Id_instanceof    = Token.RELOP | (Token.INSTANCEOF << 8),
+            Id_int           = Token.RESERVED,
+            Id_interface     = Token.RESERVED,
+            Id_long          = Token.RESERVED,
+            Id_native        = Token.RESERVED,
+            Id_package       = Token.RESERVED,
+            Id_private       = Token.RESERVED,
+            Id_protected     = Token.RESERVED,
+            Id_public        = Token.RESERVED,
+            Id_short         = Token.RESERVED,
+            Id_static        = Token.RESERVED,
+            Id_super         = Token.RESERVED,
+            Id_synchronized  = Token.RESERVED,
+            Id_throw         = Token.THROW,
+            Id_throws        = Token.RESERVED,
+            Id_transient     = Token.RESERVED,
+            Id_try           = Token.TRY,
+            Id_volatile      = Token.RESERVED;
 
         int id;
         String s = name;
@@ -602,7 +270,7 @@ public class TokenStream {
         }
 // #/generated#
 // #/string_id_map#
-        if (id == 0) { return EOF; }
+        if (id == 0) { return Token.EOF; }
         this.op = id >> 8;
         return id & 0xff;
     }
@@ -611,7 +279,7 @@ public class TokenStream {
                        Scriptable scope, String sourceName, int lineno)
     {
         this.scope = scope;
-        this.pushbackToken = EOF;
+        this.pushbackToken = Token.EOF;
         this.sourceName = sourceName;
         this.lineno = lineno;
         this.flags = 0;
@@ -696,7 +364,8 @@ public class TokenStream {
 
     public final void ungetToken(int tt) {
         // Can not unread more then one token
-        if (this.pushbackToken != EOF && tt != ERROR) Context.codeBug();
+        if (this.pushbackToken != Token.EOF && tt != Token.ERROR)
+            Context.codeBug();
         this.pushbackToken = tt;
         tokenno--;
     }
@@ -723,10 +392,10 @@ public class TokenStream {
         tokenno++;
 
         // Check for pushed-back token
-        if (this.pushbackToken != EOF) {
+        if (this.pushbackToken != Token.EOF) {
             int result = this.pushbackToken;
-            this.pushbackToken = EOF;
-            if (result != EOL || (flags & TSF_NEWLINES) != 0) {
+            this.pushbackToken = Token.EOF;
+            if (result != Token.EOL || (flags & TSF_NEWLINES) != 0) {
                 return result;
             }
         }
@@ -737,11 +406,11 @@ public class TokenStream {
             for (;;) {
                 c = getChar();
                 if (c == EOF_CHAR) {
-                    return EOF;
+                    return Token.EOF;
                 } else if (c == '\n') {
                     flags &= ~TSF_DIRTYLINE;
                     if ((flags & TSF_NEWLINES) != 0) {
-                        return EOL;
+                        return Token.EOL;
                     }
                 } else if (!isJSSpace(c)) {
                     if (c != '-') {
@@ -794,7 +463,7 @@ public class TokenStream {
                         if (escapeVal < 0) {
                             reportCurrentLineError(
                                 "msg.invalid.escape", null);
-                            return ERROR;
+                            return Token.ERROR;
                         }
                         addToString(escapeVal);
                         isUnicodeEscapeStart = false;
@@ -808,7 +477,7 @@ public class TokenStream {
                             } else {
                                 reportCurrentLineError(
                                     "msg.illegal.character", null);
-                                return ERROR;
+                                return Token.ERROR;
                             }
                         } else {
                             if (c == EOF_CHAR
@@ -829,8 +498,8 @@ public class TokenStream {
 
                     // Return the corresponding token if it's a keyword
                     int result = stringToKeyword(str);
-                    if (result != EOF) {
-                        if (result != RESERVED) {
+                    if (result != Token.EOF) {
+                        if (result != Token.RESERVED) {
                             return result;
                         }
                         else if (!Context.getContext().hasFeature(
@@ -849,7 +518,7 @@ public class TokenStream {
                     }
                 }
                 this.string = (String)allStrings.intern(str);
-                return NAME;
+                return Token.NAME;
             }
 
             // is it a number?
@@ -914,7 +583,7 @@ public class TokenStream {
                         if (!isDigit(c)) {
                             reportCurrentLineError(
                                 "msg.missing.exponent", null);
-                            return ERROR;
+                            return Token.ERROR;
                         }
                         do {
                             addToString(c);
@@ -935,14 +604,14 @@ public class TokenStream {
                         Object[] errArgs = { ex.getMessage() };
                         reportCurrentLineError(
                             "msg.caught.nfe", errArgs);
-                        return ERROR;
+                        return Token.ERROR;
                     }
                 } else {
                     dval = ScriptRuntime.stringToNumber(numString, 0, base);
                 }
 
                 this.number = dval;
-                return NUMBER;
+                return Token.NUMBER;
             }
 
             // is it a string?
@@ -961,7 +630,7 @@ public class TokenStream {
                         ungetChar(c);
                         reportCurrentLineError(
                             "msg.unterminated.string.lit", null);
-                        return ERROR;
+                        return Token.ERROR;
                     }
 
                     if (c == '\\') {
@@ -1050,72 +719,72 @@ public class TokenStream {
 
                 String str = getStringFromBuffer();
                 this.string = (String)allStrings.intern(str);
-                return STRING;
+                return Token.STRING;
             }
 
             switch (c) {
-            case ';': return SEMI;
-            case '[': return LB;
-            case ']': return RB;
-            case '{': return LC;
-            case '}': return RC;
-            case '(': return LP;
-            case ')': return RP;
-            case ',': return COMMA;
-            case '?': return HOOK;
-            case ':': return COLON;
-            case '.': return DOT;
+            case ';': return Token.SEMI;
+            case '[': return Token.LB;
+            case ']': return Token.RB;
+            case '{': return Token.LC;
+            case '}': return Token.RC;
+            case '(': return Token.LP;
+            case ')': return Token.RP;
+            case ',': return Token.COMMA;
+            case '?': return Token.HOOK;
+            case ':': return Token.COLON;
+            case '.': return Token.DOT;
 
             case '|':
                 if (matchChar('|')) {
-                    return OR;
+                    return Token.OR;
                 } else if (matchChar('=')) {
-                    this.op = BITOR;
-                    return ASSIGN;
+                    this.op = Token.BITOR;
+                    return Token.ASSIGN;
                 } else {
-                    return BITOR;
+                    return Token.BITOR;
                 }
 
             case '^':
                 if (matchChar('=')) {
-                    this.op = BITXOR;
-                    return ASSIGN;
+                    this.op = Token.BITXOR;
+                    return Token.ASSIGN;
                 } else {
-                    return BITXOR;
+                    return Token.BITXOR;
                 }
 
             case '&':
                 if (matchChar('&')) {
-                    return AND;
+                    return Token.AND;
                 } else if (matchChar('=')) {
-                    this.op = BITAND;
-                    return ASSIGN;
+                    this.op = Token.BITAND;
+                    return Token.ASSIGN;
                 } else {
-                    return BITAND;
+                    return Token.BITAND;
                 }
 
             case '=':
                 if (matchChar('=')) {
                     if (matchChar('='))
-                        this.op = SHEQ;
+                        this.op = Token.SHEQ;
                     else
-                        this.op = EQ;
-                    return EQOP;
+                        this.op = Token.EQ;
+                    return Token.EQOP;
                 } else {
-                    this.op = NOP;
-                    return ASSIGN;
+                    this.op = Token.NOP;
+                    return Token.ASSIGN;
                 }
 
             case '!':
                 if (matchChar('=')) {
                     if (matchChar('='))
-                        this.op = SHNE;
+                        this.op = Token.SHNE;
                     else
-                        this.op = NE;
-                    return EQOP;
+                        this.op = Token.NE;
+                    return Token.EQOP;
                 } else {
-                    this.op = NOT;
-                    return UNARYOP;
+                    this.op = Token.NOT;
+                    return Token.UNARYOP;
                 }
 
             case '<':
@@ -1132,19 +801,19 @@ public class TokenStream {
                 }
                 if (matchChar('<')) {
                     if (matchChar('=')) {
-                        this.op = LSH;
-                        return ASSIGN;
+                        this.op = Token.LSH;
+                        return Token.ASSIGN;
                     } else {
-                        this.op = LSH;
-                        return SHOP;
+                        this.op = Token.LSH;
+                        return Token.SHOP;
                     }
                 } else {
                     if (matchChar('=')) {
-                        this.op = LE;
-                        return RELOP;
+                        this.op = Token.LE;
+                        return Token.RELOP;
                     } else {
-                        this.op = LT;
-                        return RELOP;
+                        this.op = Token.LT;
+                        return Token.RELOP;
                     }
                 }
 
@@ -1152,37 +821,37 @@ public class TokenStream {
                 if (matchChar('>')) {
                     if (matchChar('>')) {
                         if (matchChar('=')) {
-                            this.op = URSH;
-                            return ASSIGN;
+                            this.op = Token.URSH;
+                            return Token.ASSIGN;
                         } else {
-                            this.op = URSH;
-                            return SHOP;
+                            this.op = Token.URSH;
+                            return Token.SHOP;
                         }
                     } else {
                         if (matchChar('=')) {
-                            this.op = RSH;
-                            return ASSIGN;
+                            this.op = Token.RSH;
+                            return Token.ASSIGN;
                         } else {
-                            this.op = RSH;
-                            return SHOP;
+                            this.op = Token.RSH;
+                            return Token.SHOP;
                         }
                     }
                 } else {
                     if (matchChar('=')) {
-                        this.op = GE;
-                        return RELOP;
+                        this.op = Token.GE;
+                        return Token.RELOP;
                     } else {
-                        this.op = GT;
-                        return RELOP;
+                        this.op = Token.GT;
+                        return Token.RELOP;
                     }
                 }
 
             case '*':
                 if (matchChar('=')) {
-                    this.op = MUL;
-                    return ASSIGN;
+                    this.op = Token.MUL;
+                    return Token.ASSIGN;
                 } else {
-                    return MUL;
+                    return Token.MUL;
                 }
 
             case '/':
@@ -1198,7 +867,7 @@ public class TokenStream {
                         if (c == EOF_CHAR) {
                             reportCurrentLineError(
                                 "msg.unterminated.comment", null);
-                            return ERROR;
+                            return Token.ERROR;
                         } else if (c == '*') {
                             lookForSlash = true;
                         } else if (c == '/') {
@@ -1219,7 +888,7 @@ public class TokenStream {
                             ungetChar(c);
                             reportCurrentLineError(
                                 "msg.unterminated.re.lit", null);
-                            return ERROR;
+                            return Token.ERROR;
                         }
                         if (c == '\\') {
                             addToString(c);
@@ -1244,49 +913,49 @@ public class TokenStream {
                     if (isAlpha(peekChar())) {
                         reportCurrentLineError(
                             "msg.invalid.re.flag", null);
-                        return ERROR;
+                        return Token.ERROR;
                     }
 
                     this.string = new String(stringBuffer, 0, reEnd);
                     this.regExpFlags = new String(stringBuffer, reEnd,
                                                   stringBufferTop - reEnd);
-                    return REGEXP;
+                    return Token.REGEXP;
                 }
 
 
                 if (matchChar('=')) {
-                    this.op = DIV;
-                    return ASSIGN;
+                    this.op = Token.DIV;
+                    return Token.ASSIGN;
                 } else {
-                    return DIV;
+                    return Token.DIV;
                 }
 
             case '%':
-                this.op = MOD;
+                this.op = Token.MOD;
                 if (matchChar('=')) {
-                    return ASSIGN;
+                    return Token.ASSIGN;
                 } else {
-                    return MOD;
+                    return Token.MOD;
                 }
 
             case '~':
-                this.op = BITNOT;
-                return UNARYOP;
+                this.op = Token.BITNOT;
+                return Token.UNARYOP;
 
             case '+':
                 if (matchChar('=')) {
-                    this.op = ADD;
-                    return ASSIGN;
+                    this.op = Token.ADD;
+                    return Token.ASSIGN;
                 } else if (matchChar('+')) {
-                    return INC;
+                    return Token.INC;
                 } else {
-                    return ADD;
+                    return Token.ADD;
                 }
 
             case '-':
                 if (matchChar('=')) {
-                    this.op = SUB;
-                    c = ASSIGN;
+                    this.op = Token.SUB;
+                    c = Token.ASSIGN;
                 } else if (matchChar('-')) {
                     if (0 == (flags & TSF_DIRTYLINE)) {
                         // treat HTML end-comment after possible whitespace
@@ -1296,9 +965,9 @@ public class TokenStream {
                             continue retry;
                         }
                     }
-                    c = DEC;
+                    c = Token.DEC;
                 } else {
-                    c = SUB;
+                    c = Token.SUB;
                 }
                 flags |= TSF_DIRTYLINE;
                 return c;
@@ -1306,7 +975,7 @@ public class TokenStream {
             default:
                 reportCurrentLineError(
                     "msg.illegal.character", null);
-                return ERROR;
+                return Token.ERROR;
             }
         }
     }

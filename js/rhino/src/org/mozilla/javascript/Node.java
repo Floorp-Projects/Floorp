@@ -49,7 +49,7 @@ public class Node implements Cloneable {
     private static class NumberNode extends Node {
 
         NumberNode(double number) {
-            super(TokenStream.NUMBER);
+            super(Token.NUMBER);
             this.number = number;
         }
 
@@ -127,7 +127,7 @@ public class Node implements Cloneable {
     }
 
     public static Node newString(String str) {
-        return new StringNode(TokenStream.STRING, str);
+        return new StringNode(Token.STRING, str);
     }
 
     public static Node newString(int type, String str) {
@@ -328,7 +328,7 @@ public class Node implements Cloneable {
         SPECIALCALL_WITH = 2;
 
     private static final String propToString(int propType) {
-        if (Context.printTrees) {
+        if (Token.printTrees) {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
             switch (propType) {
@@ -443,10 +443,10 @@ public class Node implements Cloneable {
 
     public int getOperation() {
         switch (type) {
-            case TokenStream.EQOP:
-            case TokenStream.RELOP:
-            case TokenStream.UNARYOP:
-            case TokenStream.PRIMARY:
+            case Token.EQOP:
+            case Token.RELOP:
+            case Token.UNARYOP:
+            case Token.PRIMARY:
                 return intDatum;
         }
         Context.codeBug();
@@ -455,16 +455,16 @@ public class Node implements Cloneable {
 
     public int getLineno() {
         switch (type) {
-            case TokenStream.EQOP:
-            case TokenStream.RELOP:
-            case TokenStream.UNARYOP:
-            case TokenStream.PRIMARY:
+            case Token.EQOP:
+            case Token.RELOP:
+            case Token.UNARYOP:
+            case Token.PRIMARY:
                 Context.codeBug();
         }
         return intDatum;
     }
 
-    /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
+    /** Can only be called when <tt>getType() == Token.NUMBER</tt> */
     public double getDouble() {
         return ((NumberNode)this).number;
     }
@@ -489,8 +489,8 @@ public class Node implements Cloneable {
     }
 
     public String toString() {
-        if (Context.printTrees) {
-            StringBuffer sb = new StringBuffer(TokenStream.tokenToName(type));
+        if (Token.printTrees) {
+            StringBuffer sb = new StringBuffer(Token.name(type));
             if (this instanceof StringNode) {
                 sb.append(' ');
                 sb.append(getString());
@@ -511,10 +511,10 @@ public class Node implements Cloneable {
                 sb.append("] [end line: ");
                 sb.append(sof.getEndLineno());
                 sb.append(']');
-            } else if (type == TokenStream.TARGET) {
+            } else if (type == Token.TARGET) {
                 sb.append(' ');
                 sb.append(hashCode());
-            } else if (type == TokenStream.NUMBER) {
+            } else if (type == Token.NUMBER) {
                 sb.append(' ');
                 sb.append(getDouble());
             }
@@ -555,7 +555,7 @@ public class Node implements Cloneable {
     }
 
     public String toStringTree(ScriptOrFnNode treeTop) {
-        if (Context.printTrees) {
+        if (Token.printTrees) {
             StringBuffer sb = new StringBuffer();
             toStringTreeHelper(treeTop, this, 0, sb);
             return sb.toString();
@@ -566,7 +566,7 @@ public class Node implements Cloneable {
     private static void toStringTreeHelper(ScriptOrFnNode treeTop, Node n,
                                            int level, StringBuffer sb)
     {
-        if (Context.printTrees) {
+        if (Token.printTrees) {
             for (int i = 0; i != level; ++i) {
                 sb.append("    ");
             }
@@ -575,7 +575,7 @@ public class Node implements Cloneable {
             for (Node cursor = n.getFirstChild(); cursor != null;
                  cursor = cursor.getNext())
             {
-                if (cursor.getType() == TokenStream.FUNCTION) {
+                if (cursor.getType() == Token.FUNCTION) {
                     int fnIndex = cursor.getExistingIntProp(Node.FUNCTION_PROP);
                     FunctionNode fn = treeTop.getFunctionNode(fnIndex);
                     toStringTreeHelper(fn, fn, level + 1, sb);
@@ -586,7 +586,7 @@ public class Node implements Cloneable {
         }
     }
 
-    int type;              // type of the node; TokenStream.NAME for example
+    int type;              // type of the node; Token.NAME for example
     Node next;             // next sibling
     private Node first;    // first element of a linked list of children
     private Node last;     // last element of a linked list of children

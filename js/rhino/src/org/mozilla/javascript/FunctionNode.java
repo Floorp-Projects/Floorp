@@ -41,7 +41,7 @@ import java.util.*;
 public class FunctionNode extends ScriptOrFnNode {
 
     public FunctionNode(String name) {
-        super(TokenStream.FUNCTION);
+        super(Token.FUNCTION);
         functionName = name;
     }
 
@@ -127,19 +127,18 @@ public class FunctionNode extends ScriptOrFnNode {
                 // function to initialize a local variable of the
                 // function's name to the function value.
                 addVar(name);
-                Node setFn = new Node(TokenStream.POP,
-                                new Node(TokenStream.SETVAR,
-                                    Node.newString(name),
-                                    new Node(TokenStream.PRIMARY,
-                                             TokenStream.THISFN)));
+                Node setFn = new Node(Token.POP,
+                                new Node(Token.SETVAR, Node.newString(name),
+                                         new Node(Token.PRIMARY,
+                                                  Token.THISFN)));
                 stmts.addChildrenToFront(setFn);
             }
         }
 
         // Add return to end if needed.
         Node lastStmt = stmts.getLastChild();
-        if (lastStmt == null || lastStmt.getType() != TokenStream.RETURN) {
-            stmts.addChildToBack(new Node(TokenStream.RETURN));
+        if (lastStmt == null || lastStmt.getType() != Token.RETURN) {
+            stmts.addChildToBack(new Node(Token.RETURN));
         }
     }
 

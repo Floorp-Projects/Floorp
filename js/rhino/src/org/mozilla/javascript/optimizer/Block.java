@@ -75,14 +75,14 @@ public class Block {
 
         for (int i = 0; i < statementNodes.length; i++) {
             switch (statementNodes[i].getType()) {
-                case TokenStream.TARGET :
+                case Token.TARGET :
                     {
                         if (i != beginNodeIndex) {
                             FatBlock fb = new FatBlock(irFactory,
                                                        beginNodeIndex, i - 1,
                                                        statementNodes);
                             if (statementNodes[beginNodeIndex].getType()
-                                                        == TokenStream.TARGET)
+                                                        == Token.TARGET)
                                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
                             theBlocks.add(fb);
                              // start the next block at this node
@@ -90,15 +90,15 @@ public class Block {
                         }
                     }
                     break;
-                case TokenStream.IFNE :
-                case TokenStream.IFEQ :
-                case TokenStream.GOTO :
+                case Token.IFNE :
+                case Token.IFEQ :
+                case Token.GOTO :
                     {
                         FatBlock fb = new FatBlock(irFactory,
                                                    beginNodeIndex, i,
                                                    statementNodes);
                         if (statementNodes[beginNodeIndex].getType()
-                                                       == TokenStream.TARGET)
+                                                       == Token.TARGET)
                             theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
                         theBlocks.add(fb);
                             // start the next block at the next node
@@ -113,7 +113,7 @@ public class Block {
                                        beginNodeIndex,
                                        statementNodes.length - 1,
                                        statementNodes);
-            if (statementNodes[beginNodeIndex].getType() == TokenStream.TARGET)
+            if (statementNodes[beginNodeIndex].getType() == Token.TARGET)
                 theTargetBlocks.put(statementNodes[beginNodeIndex], fb);
             theBlocks.add(fb);
         }
@@ -126,7 +126,7 @@ public class Block {
             Node blockEndNode = fb.getEndNode();
             int blockEndNodeType = blockEndNode.getType();
 
-            if ((blockEndNodeType != TokenStream.GOTO)
+            if ((blockEndNodeType != Token.GOTO)
                                          && (i < (theBlocks.size() - 1))) {
                 FatBlock fallThruTarget = (FatBlock)(theBlocks.get(i + 1));
                 fb.addSuccessor(fallThruTarget);
@@ -134,9 +134,9 @@ public class Block {
             }
 
 
-            if ( (blockEndNodeType == TokenStream.IFNE)
-                        || (blockEndNodeType == TokenStream.IFEQ)
-                                || (blockEndNodeType == TokenStream.GOTO) ) {
+            if ( (blockEndNodeType == Token.IFNE)
+                        || (blockEndNodeType == Token.IFEQ)
+                                || (blockEndNodeType == Token.GOTO) ) {
                 Node target = (Node)(blockEndNode.getProp(Node.TARGET_PROP));
                 FatBlock branchTargetBlock
                                     = (FatBlock)(theTargetBlocks.get(target));
@@ -202,7 +202,7 @@ public class Block {
                                   OptFunctionNode fn)
     {
         switch (n.getType()) {
-            case TokenStream.SETVAR :
+            case Token.SETVAR :
                 {
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
@@ -214,7 +214,7 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.CALL : {
+            case Token.CALL : {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         lookForVariablesAndCalls(child, liveSet, fn);
@@ -226,7 +226,7 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.GETVAR :
+            case Token.GETVAR :
                 {
                     Object theVarProp = n.getProp(Node.VARIABLE_PROP);
                     if (theVarProp != null) {
@@ -277,11 +277,11 @@ public class Block {
     void lookForVariableAccess(Node n, Node lastUse[])
     {
         switch (n.getType()) {
-            case TokenStream.DEC :
-            case TokenStream.INC :
+            case Token.DEC :
+            case Token.INC :
                 {
                     Node child = n.getFirstChild();
-                    if (child.getType() == TokenStream.GETVAR) {
+                    if (child.getType() == Token.GETVAR) {
                         Object theVarProp = child.getProp(Node.VARIABLE_PROP);
                         if (theVarProp != null) {
                             int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
@@ -292,7 +292,7 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.SETVAR :
+            case Token.SETVAR :
                 {
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
@@ -307,7 +307,7 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.GETVAR :
+            case Token.GETVAR :
                 {
                     Object theVarProp = n.getProp(Node.VARIABLE_PROP);
                     if (theVarProp != null) {
@@ -377,7 +377,7 @@ public class Block {
     int findExpressionType(Node n)
     {
         switch (n.getType()) {
-            case TokenStream.NUMBER : {
+            case Token.NUMBER : {
 /* distinguish between integers & f.p.s ?
                     Number num = ((NumberNode)n).getNumber();
                     if ((num instanceof Byte)
@@ -389,34 +389,34 @@ public class Block {
 */
                     return TypeEvent.NumberType;
                 }
-            case TokenStream.NEW :
-            case TokenStream.CALL :
+            case Token.NEW :
+            case Token.CALL :
                 return TypeEvent.NoType;
 
-            case TokenStream.GETELEM :
+            case Token.GETELEM :
                return TypeEvent.AnyType;
 
-            case TokenStream.GETVAR : {
+            case Token.GETVAR : {
                     OptLocalVariable theVar = (OptLocalVariable)
                                       (n.getProp(Node.VARIABLE_PROP));
                     if (theVar != null)
                         return theVar.getTypeUnion();
                 }
 
-            case TokenStream.INC :
-            case TokenStream.DEC :
-            case TokenStream.DIV:
-            case TokenStream.MOD:
-            case TokenStream.BITOR:
-            case TokenStream.BITXOR:
-            case TokenStream.BITAND:
-            case TokenStream.LSH:
-            case TokenStream.RSH:
-            case TokenStream.URSH:
-            case TokenStream.SUB : {
+            case Token.INC :
+            case Token.DEC :
+            case Token.DIV:
+            case Token.MOD:
+            case Token.BITOR:
+            case Token.BITXOR:
+            case Token.BITAND:
+            case Token.LSH:
+            case Token.RSH:
+            case Token.URSH:
+            case Token.SUB : {
                     return TypeEvent.NumberType;
                 }
-            case TokenStream.ADD : {
+            case Token.ADD : {
                     // if the lhs & rhs are known to be numbers, we can be sure that's
                     // the result, otherwise it could be a string.
                     Node child = n.getFirstChild();
@@ -452,8 +452,8 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.DEC :
-            case TokenStream.INC : {
+            case Token.DEC :
+            case Token.INC : {
                     Node firstChild = n.getFirstChild();
                     OptLocalVariable theVar = (OptLocalVariable)
                                       (firstChild.getProp(Node.VARIABLE_PROP));
@@ -464,12 +464,12 @@ public class Block {
                 }
                 break;
 
-            case TokenStream.SETPROP : {
+            case Token.SETPROP : {
                     Node baseChild = n.getFirstChild();
                     Node nameChild = baseChild.getNext();
                     Node rhs = nameChild.getNext();
                     if (baseChild != null) {
-                        if (baseChild.getType() == TokenStream.GETVAR) {
+                        if (baseChild.getType() == Token.GETVAR) {
                             OptLocalVariable theVar = (OptLocalVariable)
                                               (baseChild.getProp(Node.VARIABLE_PROP));
                             if (theVar != null)
@@ -482,7 +482,7 @@ public class Block {
                 }
                 break;
 
-            case TokenStream.SETVAR : {
+            case Token.SETVAR : {
                     Node firstChild = n.getFirstChild();
                     OptLocalVariable theVar = (OptLocalVariable)
                                       (n.getProp(Node.VARIABLE_PROP));
@@ -510,29 +510,29 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.DEC :
-            case TokenStream.INC : {
+            case Token.DEC :
+            case Token.INC : {
                     Node child = n.getFirstChild();
-                    if (child.getType() == TokenStream.GETPROP) {
+                    if (child.getType() == Token.GETPROP) {
                         Node nameChild = child.getFirstChild().getNext();
-                        if (nameChild.getType() == TokenStream.STRING)
+                        if (nameChild.getType() == Token.STRING)
                             theCSETable.remove(nameChild.getString());
                         else
                             theCSETable.clear();
                     }
                     else
-                        if (child.getType() != TokenStream.GETVAR)
+                        if (child.getType() != Token.GETVAR)
                             theCSETable.clear();
                 }
                 break;
-            case TokenStream.SETPROP : {
+            case Token.SETPROP : {
                     Node baseChild = n.getFirstChild();
                     Node nameChild = baseChild.getNext();
                     Node rhs = nameChild.getNext();
                     if (baseChild != null) localCSE(n, baseChild, theCSETable, theFunction);
                     if (nameChild != null) localCSE(n, nameChild, theCSETable, theFunction);
                     if (rhs != null) localCSE(n, rhs, theCSETable, theFunction);
-                    if (nameChild.getType() == TokenStream.STRING) {
+                    if (nameChild.getType() == Token.STRING) {
                         theCSETable.remove(nameChild.getString());
 //                        System.out.println("clear at SETPROP " + ((StringNode)nameChild).getString());
                     }
@@ -542,16 +542,16 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.GETPROP : {
+            case Token.GETPROP : {
                     Node baseChild = n.getFirstChild();
                     if (baseChild != null) {
                         localCSE(n, baseChild, theCSETable, theFunction);
                     }
-                    if (baseChild.getType() == TokenStream.PRIMARY
-                        && baseChild.getOperation() == TokenStream.THIS)
+                    if (baseChild.getType() == Token.PRIMARY
+                        && baseChild.getOperation() == Token.THIS)
                     {
                         Node nameChild = baseChild.getNext();
-                        if (nameChild.getType() == TokenStream.STRING) {
+                        if (nameChild.getType() == Token.STRING) {
                             String theName = nameChild.getString();
 //            System.out.println("considering " + theName);
                             Object cse = theCSETable.get(theName);
@@ -589,7 +589,7 @@ public class Block {
                     }
                 }
                 break;
-            case TokenStream.SETELEM : {
+            case Token.SETELEM : {
                     Node lhsBase = n.getFirstChild();
                     Node lhsIndex = lhsBase.getNext();
                     Node rhs = lhsIndex.getNext();
@@ -600,7 +600,7 @@ public class Block {
 //System.out.println("clear all at SETELEM");
                 }
                 break;
-            case TokenStream.CALL : {
+            case Token.CALL : {
                     Node child = n.getFirstChild();
                     while (child != null) {
                         localCSE(n, child, theCSETable, theFunction);

@@ -41,7 +41,7 @@ import java.lang.reflect.*;
 import java.io.*;
 
 /**
- * This class reflects Java methods into the JavaScript environment and 
+ * This class reflects Java methods into the JavaScript environment and
  * handles overloading of methods.
  *
  * @author Mike Shaver

@@ -73,7 +73,7 @@ class OptTransformer extends NodeTransformer {
 
     private void detectDirectCall(Node node, ScriptOrFnNode tree)
     {
-        if (tree.getType() == TokenStream.FUNCTION) {
+        if (tree.getType() == Token.FUNCTION) {
             Node left = node.getFirstChild();
 
             // count the arguments
@@ -102,9 +102,9 @@ class OptTransformer extends NodeTransformer {
              */
             if (possibleDirectCalls != null) {
                 String targetName = null;
-                if (left.getType() == TokenStream.NAME) {
+                if (left.getType() == Token.NAME) {
                     targetName = left.getString();
-                } else if (left.getType() == TokenStream.GETPROP) {
+                } else if (left.getType() == Token.GETPROP) {
                     targetName = left.getFirstChild().getNext().getString();
                 }
                 if (targetName != null) {

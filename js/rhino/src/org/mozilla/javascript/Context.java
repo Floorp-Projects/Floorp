@@ -1873,10 +1873,6 @@ public class Context {
         return new String(buffer, 0, cursor);
     }
 
-    // debug flags
-    static final boolean printTrees = false;
-    static final boolean printICode = false;
-
     /**
      * Compile a script.
      *
@@ -1936,7 +1932,7 @@ public class Context {
 
         tree = compiler.transform(this, irf, tree);
 
-        if (printTrees) { System.out.println(tree.toStringTree(tree)); }
+        if (Token.printTrees) { System.out.println(tree.toStringTree(tree)); }
 
         if (returnFunction) {
             int functionCount = tree.getFunctionCount();

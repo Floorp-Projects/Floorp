@@ -640,11 +640,9 @@ public class ScriptRuntime {
     }
 
     /**
-     *
      * See ECMA 9.6.
+     * @return long value representing 32 bits unsigned integer
      */
-
-    // must return long to hold an _unsigned_ int
     public static long toUint32(double d) {
         long l = (long)d;
         if (l == d) {

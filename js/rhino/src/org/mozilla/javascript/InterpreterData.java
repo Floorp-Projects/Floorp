@@ -72,7 +72,7 @@ final class InterpreterData implements Serializable, DebuggableScript {
 
     byte[] itsICode;
     int itsICodeTop;
-    
+
     int[] itsExceptionTable;
 
     int itsMaxVars;
