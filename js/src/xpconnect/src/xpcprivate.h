@@ -1587,7 +1587,8 @@ class AutoJSRequest
 public:
     AutoJSRequest(JSContext* aCX)
       : mCX(JS_GetContextThread(aCX) ? (JS_BeginRequest(aCX), aCX) : nsnull) {}
-    ~AutoJSRequest() { if(mCX) JS_EndRequest(mCX); }
+    ~AutoJSRequest() {EndRequest();}
+    void EndRequest(){if(mCX){JS_EndRequest(mCX); mCX = nsnull;}}
 private:
     JSContext* mCX;    
 };
