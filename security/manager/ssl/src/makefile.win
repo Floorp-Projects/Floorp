@@ -52,6 +52,7 @@ CFLAGS = $(CFLAGS) -DNSS_USE_STATIC_LIBS
 LINCS = $(LINCS)     \
     -I$(PUBLIC)      \
     -I$(XPDIST)/public/security \
+    -I$(XPDIST)/private/security \
     $(NULL)
 
 LLIBS   = \
