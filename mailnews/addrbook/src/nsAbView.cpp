@@ -609,7 +609,29 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
     SortClosure closure;
     SetSortClosure(sortColumn.get(), sortDirection.get(), this, &closure);
     
+    nsCOMPtr <nsISupportsArray> selectedCards;
+    rv = GetSelectedCards(getter_AddRefs(selectedCards));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIAbCard> indexCard;
+
+    if (mOutlinerSelection) {
+      PRInt32 currentIndex = -1;
+
+      rv = mOutlinerSelection->GetCurrentIndex(&currentIndex);
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      if (currentIndex != -1) {
+        rv = GetCardFromRow(currentIndex, getter_AddRefs(indexCard));
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+    }
+
     mCards.Sort(inplaceSortCallback, (void *)(&closure));
+    
+    rv = ReselectCards(selectedCards, indexCard);
+    NS_ENSURE_SUCCESS(rv,rv);
+
     mSortColumn = sortColumn.get();
     mSortDirection = sortDirection.get();
   }
@@ -966,45 +988,98 @@ NS_IMETHODIMP nsAbView::GetSortColumn(PRUnichar **column)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::DeleteSelectedCards()
+nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
 {
-  if (mOutlinerSelection)
-  {
-    PRInt32 selectionCount; 
-    nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
-    NS_ENSURE_SUCCESS(rv,rv);
+  PRUint32 count;
+	PRUint32 i;
 
-    if (!selectionCount)
-      return NS_OK;
+  if (!mOutlinerSelection)
+    return NS_OK;
 
-    nsCOMPtr <nsISupportsArray> cardsToDelete;
-    NS_NewISupportsArray(getter_AddRefs(cardsToDelete));
+  nsresult rv = mOutlinerSelection->ClearSelection();
+  NS_ENSURE_SUCCESS(rv,rv);
 
-    for (PRInt32 i = 0; i < selectionCount; i++)
-    {
-      PRInt32 startRange;
-      PRInt32 endRange;
-      rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
-      NS_ENSURE_SUCCESS(rv, NS_OK); 
-      PRInt32 totalCards = mCards.Count();
-      if (startRange >= 0 && startRange < totalCards)
-      {
-        for (PRInt32 rangeIndex = startRange; rangeIndex <= endRange && rangeIndex < totalCards; rangeIndex++) {
-          nsCOMPtr<nsIAbCard> abCard;
-          rv = GetCardFromRow(rangeIndex, getter_AddRefs(abCard));
-          NS_ENSURE_SUCCESS(rv,rv);
+  rv = cards->Count(&count);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-          nsCOMPtr<nsISupports> supports = do_QueryInterface(abCard, &rv);
-          NS_ENSURE_SUCCESS(rv,rv);
-
-          rv = cardsToDelete->AppendElement(supports);
-          NS_ENSURE_SUCCESS(rv,rv);
-        }
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> cardSupports;
+    cardSupports = getter_AddRefs(cards->ElementAt(i));
+    nsCOMPtr <nsIAbCard> card = do_QueryInterface(cardSupports);
+    if (card) {
+      PRInt32 index = FindIndexForCard(card);
+      if (index != CARD_NOT_FOUND) {
+        mOutlinerSelection->RangedSelect(index, index, PR_TRUE /* augment */);
       }
     }
+  }
 
-    rv = mDirectory->DeleteCards(cardsToDelete);
-    NS_ENSURE_SUCCESS(rv,rv);
+  // reset the index card, and ensure it is visible
+  if (indexCard) {
+    PRInt32 currentIndex = FindIndexForCard(indexCard);
+    rv = mOutlinerSelection->SetCurrentIndex(currentIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    if (mOutliner) {
+      rv = mOutliner->EnsureRowIsVisible(currentIndex);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::DeleteSelectedCards()
+{
+  nsCOMPtr <nsISupportsArray> cardsToDelete;
+  
+  nsresult rv = GetSelectedCards(getter_AddRefs(cardsToDelete));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = mDirectory->DeleteCards(cardsToDelete);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
+{
+  *selectedCards = nsnull;
+  if (!mOutlinerSelection)
+    return NS_OK;
+
+  nsresult rv = NS_NewISupportsArray(selectedCards);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRInt32 selectionCount; 
+  rv = mOutlinerSelection->GetRangeCount(&selectionCount);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (!selectionCount)
+    return NS_OK;
+  
+  NS_NewISupportsArray(selectedCards);
+  
+  for (PRInt32 i = 0; i < selectionCount; i++)
+  {
+    PRInt32 startRange;
+    PRInt32 endRange;
+    rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
+    NS_ENSURE_SUCCESS(rv, NS_OK); 
+    PRInt32 totalCards = mCards.Count();
+    if (startRange >= 0 && startRange < totalCards)
+    {
+      for (PRInt32 rangeIndex = startRange; rangeIndex <= endRange && rangeIndex < totalCards; rangeIndex++) {
+        nsCOMPtr<nsIAbCard> abCard;
+        rv = GetCardFromRow(rangeIndex, getter_AddRefs(abCard));
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        nsCOMPtr<nsISupports> supports = do_QueryInterface(abCard, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        rv = (*selectedCards)->AppendElement(supports);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+    }
   }
   return NS_OK;
 }

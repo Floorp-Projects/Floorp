@@ -91,6 +91,8 @@ private:
   nsresult AddPrefObservers();
   nsresult RemovePrefObservers();
   nsresult SetGeneratedNameFormatFromPrefs();
+  nsresult GetSelectedCards(nsISupportsArray **cards);
+  nsresult ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard);
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;
