@@ -137,6 +137,9 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
                                            GdkEventWindowState *event);
 static gboolean property_notify_event_cb  (GtkWidget *widget,
                                            GdkEventProperty *event);
+static void     style_set_cb              (GtkWidget *widget,
+                                           GtkStyle *previous_style,
+                                           gpointer data);
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -1718,6 +1721,32 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
     DispatchEvent(&event, status);
 }
 
+void
+nsWindow::ThemeChanged()
+{
+    nsGUIEvent event(NS_THEMECHANGED, this);
+    nsEventStatus status = nsEventStatus_eIgnore;
+    DispatchEvent(&event, status);
+
+    if (!mDrawingarea)
+        return;
+
+    // Dispatch NS_THEMECHANGED to all child windows
+    GList *children = 
+        gdk_window_peek_children(mDrawingarea->inner_window);
+    while (children) {
+        GdkWindow *gdkWin = GDK_WINDOW(children->data);
+
+        nsWindow *win = (nsWindow*) g_object_get_data(G_OBJECT(gdkWin),
+                                                      "nsWindow");
+
+        if (win && win != this)   // guard against infinite recursion
+            win->ThemeChanged();
+
+        children = children->next;
+    }
+}
+
 gboolean
 nsWindow::OnDragMotionEvent(GtkWidget *aWidget,
                             GdkDragContext *aDragContext,
@@ -2216,6 +2245,8 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                          G_CALLBACK(window_state_event_cb), NULL);
         g_signal_connect(G_OBJECT(mShell), "property_notify_event",
                          G_CALLBACK(property_notify_event_cb), NULL);
+        g_signal_connect(G_OBJECT(mShell), "style_set",
+                         G_CALLBACK(style_set_cb), NULL);
     }
 
     if (mContainer) {
@@ -3718,6 +3749,15 @@ property_notify_event_cb  (GtkWidget *widget, GdkEventProperty *event)
     nsGtkMozRemoteHelper::HandlePropertyChange(widget, event, nswidget);
 
     return FALSE;
+}
+
+/* static */
+void
+style_set_cb (GtkWidget *widget, GtkStyle *previous_style, gpointer data)
+{
+    nsWindow *window = get_window_for_gtk_widget(widget);
+    if (window)
+        window->ThemeChanged();
 }
 
 //////////////////////////////////////////////////////////////////////

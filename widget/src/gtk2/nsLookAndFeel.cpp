@@ -61,11 +61,7 @@ PRBool  nsLookAndFeel::sColorsInitialized = PR_FALSE;
 //-------------------------------------------------------------------------
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
-    mWidget = gtk_invisible_new();
-    gtk_object_ref(GTK_OBJECT(mWidget));
-    gtk_object_sink(GTK_OBJECT(mWidget));
-    gtk_widget_ensure_style(mWidget);
-    mStyle = gtk_widget_get_style(mWidget);
+    InitWidget();
 
     if (!sColorsInitialized)
         InitColors();
@@ -521,4 +517,28 @@ nsLookAndFeel::InitColors()
         GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
 
     gtk_widget_destroy(window);
+}
+
+void
+nsLookAndFeel::InitWidget()
+{
+    mWidget = gtk_invisible_new();
+    gtk_object_ref(GTK_OBJECT(mWidget));
+    gtk_object_sink(GTK_OBJECT(mWidget));
+    gtk_widget_ensure_style(mWidget);
+    mStyle = gtk_widget_get_style(mWidget);
+}
+
+NS_IMETHODIMP
+nsLookAndFeel::LookAndFeelChanged()
+{
+    nsXPLookAndFeel::LookAndFeelChanged();
+
+    if (mWidget)
+        gtk_widget_unref(mWidget);
+ 
+    InitWidget();
+    InitColors();
+
+    return NS_OK;
 }

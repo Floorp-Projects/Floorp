@@ -51,6 +51,7 @@ public:
     nsresult NativeGetColor(const nsColorID aID, nscolor &aColor);
     NS_IMETHOD GetMetric(const nsMetricID aID, PRInt32 & aMetric);
     NS_IMETHOD GetMetric(const nsMetricFloatID aID, float & aMetric);
+    NS_IMETHOD LookAndFeelChanged();
 
 protected:
     GtkStyle *mStyle;
@@ -69,6 +70,7 @@ protected:
     static nscolor sButtonInnerDarkBorder;
 
     static void InitColors();
+    inline void InitWidget();
 };
 
 #endif
