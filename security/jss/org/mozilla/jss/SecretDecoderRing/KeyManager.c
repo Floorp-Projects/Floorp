@@ -283,6 +283,7 @@ Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupUniqueNamedKeyNative
                     keys_found++;
                 }
             }
+            PORT_Free(name);
         }
 
         nextSymKey = PK11_GetNextSymKey( /* symmetric key */  symKey );
@@ -295,7 +296,6 @@ Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupUniqueNamedKeyNative
     /* case 1:  the token is empty */
     if( count == 0 ) {
         /* the specified token is empty */
-        symKeyObj = NULL;
         goto finish;
     }
 
@@ -303,41 +303,41 @@ Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupUniqueNamedKeyNative
     if( ( keyname != NULL ) &&
         ( keys_found == 0 ) ) {
         /* the key called "keyname" could not be found */
-        symKeyObj = NULL;
         goto finish;
     }
 
     /* case 3:  the specified key exists more than once on this token */
     if( keys_found != 1 ) {
         /* more than one key called "keyname" was found on this token */
-        symKeyObj = NULL;
         JSS_throwMsgPrErr(env, TOKEN_EXCEPTION,
             "Duplicate named keys exist on this token");
         goto finish;
-    } else {
-        /* Re-initialize the symmetric key list. */
-        symKey = PK11_ListFixedKeysInSlot(
-                 /* slot     */            slot,
-                 /* nickname */            NULL,
-                 /* wincx    */            NULL );
+    }
 
-        /* Reiterate through the symmetric key list once more, */
-        /* this time returning an actual reference to the key. */
-        while( symKey != NULL ) {
-            name = PK11_GetSymKeyNickname( /* symmetric key */  symKey );
-            if( name != NULL ) {
-                if( keyname != NULL ) {
-                    if( PL_strcmp( keyname, name ) == 0 ) {
-                        symKeyObj = JSS_PK11_wrapSymKey(env, &symKey);
-                        goto finish;
-                    }
+    /* Re-initialize the symmetric key list. */
+    symKey = PK11_ListFixedKeysInSlot(
+             /* slot     */            slot,
+             /* nickname */            NULL,
+             /* wincx    */            NULL );
+
+    /* Reiterate through the symmetric key list once more, */
+    /* this time returning an actual reference to the key. */
+    while( symKey != NULL ) {
+        name = PK11_GetSymKeyNickname( /* symmetric key */  symKey );
+        if( name != NULL ) {
+            if( keyname != NULL ) {
+                if( PL_strcmp( keyname, name ) == 0 ) {
+                    symKeyObj = JSS_PK11_wrapSymKey(env, &symKey);
+                    PORT_Free(name);
+                    goto finish;
                 }
             }
-
-            nextSymKey = PK11_GetNextSymKey( /* symmetric key */  symKey );
-            PK11_FreeSymKey( /* symmetric key */  symKey );
-            symKey = nextSymKey;
+            PORT_Free(name);
         }
+
+        nextSymKey = PK11_GetNextSymKey( /* symmetric key */  symKey );
+        PK11_FreeSymKey( /* symmetric key */  symKey );
+        symKey = nextSymKey;
     }
 
 
