@@ -398,3 +398,5 @@ pref("mailnews.max_header_display_length",3); // number of addresses to show
 pref("messenger.throbber.url","http://www.mozilla.org");
 pref("compose.throbber.url","http://www.mozilla.org");
 pref("addressbook.throbber.url","http://www.mozilla.org");
+
+pref("mailnews.send_plaintext_flowed", true); // RFC 2646=======
