@@ -31,11 +31,13 @@
 //-------------------------------------------------------------------------
 nsMacControl::nsMacControl() : nsWindow()
 {
-  mValue					= 0;
-  mWidgetArmed		= PR_FALSE;
-  mMouseInButton	= PR_FALSE;
-  mControl				= nsnull;
-  mControlType		= pushButProc;
+	mValue			= 0;
+	mMin			= 0;
+	mMax			= 1;
+	mWidgetArmed	= PR_FALSE;
+	mMouseInButton	= PR_FALSE;
+	mControl		= nsnull;
+	mControlType	= pushButProc;
 
 	mLastLabel = "";
 	mLastBounds.SetRect(0,0,0,0);
@@ -256,7 +258,9 @@ NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
 		if (mControl)
 			::DisposeControl(mControl);
 
-		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, 0, 0, 1, inControlType, nil);
+		StartDraw();
+		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, mValue, mMin, mMax, inControlType, nil);
+  		EndDraw();
 		
 		// need to reset the font now
 		// XXX to do: transfer the text in the old control over too

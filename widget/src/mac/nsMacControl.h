@@ -63,8 +63,10 @@ protected:
 	PRBool					mMouseInButton;
 
 	PRInt32					mValue;
-	ControlHandle		mControl;
-	short						mControlType;
+	PRInt32					mMin;
+	PRInt32					mMax;
+	ControlHandle			mControl;
+	short					mControlType;
 
 	nsString				mLastLabel;
 	nsRect					mLastBounds;
