@@ -67,7 +67,7 @@ function MsgDeleteMessage(fromToolbar)
 	// if from the toolbar, return right away if this is a news message
 	// only allow cancel from the menu:  "Edit | Cancel / Delete Message"
 	if (fromToolbar) {
-		uri = srcFolder.getAttribute('id');
+		uri = srcFolder.getAttribute('ref');
 		//dump("uri[0:6]=" + uri.substring(0,6) + "\n");
 		if (uri.substring(0,6) == "news:/") {
 			//dump("delete ignored!\n");

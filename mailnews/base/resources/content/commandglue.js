@@ -279,8 +279,8 @@ function SetFolderCharset(folderResource, aCharset)
 function RefreshThreadTreeView()
 {
 	var currentFolder = GetThreadTreeFolder();  
-	var currentFolderID = currentFolder.getAttribute('id');
-	currentFolder.setAttribute('id', currentFolderID);
+	var currentFolderID = currentFolder.getAttribute('ref');
+	currentFolder.setAttribute('ref', currentFolderID);
 }
 
 function ToggleTwisty(treeItem)
