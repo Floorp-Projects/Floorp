@@ -121,6 +121,9 @@ sub new {
             'substr' => [\&substr_filter_factory, 1], # substring function
             'uri' => \&uri_light_filter, # ensuring a theoretically valid URI
             'uriparameter' => \&uri_heavy_filter, # for use in embedding strings into a URI
+            'padleft' => [\&pad_left_filter_factory, 1], # space padding string function
+            'padright' => [\&pad_right_filter_factory, 1], # space padding string function
+            'indentlines' => [\&indent_lines_filter_factory, 1], # different indents on different lines
         }
     });
     if (defined($self)) {
@@ -368,4 +371,40 @@ sub uri_heavy_filter {
     $URI_ESCAPES ||= { map { (chr($_), sprintf("%%%02X", $_)) } (0..255) };
     $text =~ s/([^A-Za-z0-9_.])/$URI_ESCAPES->{$1}/g;
     $text;
+}
+
+sub pad_left_filter_factory {
+    my ($context, $width1, $width2) = @_;
+    return pad_filter_factory($context, $width1, $width2, '%*s');
+}
+
+sub pad_right_filter_factory {
+    my ($context, $width1, $width2) = @_;
+    return pad_filter_factory($context, $width1, $width2, '%-*s');
+}
+
+sub pad_filter_factory {
+    my ($context, $width1, $width2, $format) = @_;
+    $width1 = 0 unless defined $width1;
+    $width2 = $width1 unless defined $width2;
+    return sub {
+        my $text = shift;
+        $text = '' unless defined $text;
+        my @lines = split(/\n/, $text);
+        my $line1 = sprintf($format, $width1, shift @lines);
+        return join("\n", $line1, map{ sprintf($format, $width2, $_) } @lines);
+    }
+}
+
+sub indent_lines_filter_factory {
+    my ($context, $indent1, $indent2) = @_;
+    $indent1 = 0 unless defined $indent1;
+    $indent2 = $indent1 unless defined $indent2;
+    return sub {
+        my $text = shift;
+        $text = '' unless defined $text;
+        my @lines = split(/\n/, $text);
+        my $line1 = (' ' x $indent1) . shift @lines;
+        return join("\n", $line1, map{ (' ' x $indent2) . $_ } @lines);
+    }
 }
