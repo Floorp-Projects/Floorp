@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:31:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:04 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -278,7 +278,7 @@ nssCKFWObject_Destroy
   (void)nssCKFWMutex_Destroy(fwObject->mutex);
 
   if( (void *)NULL != (void *)fwObject->mdObject->Destroy ) {
-    fwObject->mdObject->Finalize(fwObject->mdObject, fwObject,
+    fwObject->mdObject->Destroy(fwObject->mdObject, fwObject,
       fwObject->mdSession, fwObject->fwSession, fwObject->mdToken,
       fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
   }

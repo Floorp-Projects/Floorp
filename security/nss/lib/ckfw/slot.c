@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.2 $ $Date: 2000/04/20 03:14:29 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -656,6 +656,7 @@ nssCKFWSlot_GetToken
     }
 
     fwToken = nssCKFWToken_Create(fwSlot, mdToken, pError);
+    fwSlot->fwToken = fwToken;
   } else {
     fwToken = fwSlot->fwToken;
   }
