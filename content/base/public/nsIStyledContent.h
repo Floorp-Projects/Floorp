@@ -42,7 +42,7 @@ public:
 
   NS_IMETHOD GetID(nsIAtom*& aResult) const = 0;
   NS_IMETHOD GetClasses(nsVoidArray& aArray) const = 0;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const = 0;
+  NS_IMETHOD HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 
   NS_IMETHOD WalkContentStyleRules(nsIRuleWalker* aRuleWalker) = 0;
   NS_IMETHOD WalkInlineStyleRules(nsIRuleWalker* aRuleWalker) = 0;

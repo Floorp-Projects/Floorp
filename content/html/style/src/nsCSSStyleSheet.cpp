@@ -83,6 +83,24 @@
 
 //#define DEBUG_RULES
 //#define EVENT_DEBUG
+//#define DEBUG_HASH
+
+#ifdef DEBUG_HASH
+static void DebugHashCount(PRBool hash) {
+  static gCountHash = 0;
+  static gCountCompStr = 0;
+  if (hash) {
+    if (++gCountHash % 100 == 0) {
+      printf("gCountHash   = %ld\n", gCountHash);
+    }
+  }
+  else {
+    if (++gCountCompStr % 100 == 0) {
+      printf("gCountCompStr = %ld\n", gCountCompStr);
+    }
+  }
+}
+#endif //DEBUG_HASH
 
 
 // ----------------------
@@ -97,7 +115,9 @@ class AtomKey_base : public nsHashKey {
 public:
   virtual PRUint32 HashCode(void) const;
   virtual PRBool Equals(const nsHashKey *aKey) const;
+  virtual void SetKeyCaseSensitive(PRBool aCaseSensitive);
   nsIAtom*  mAtom;
+  PRBool    mCaseSensitive;
 };
 
 class AtomKey : public AtomKey_base {
@@ -108,11 +128,13 @@ public:
   virtual nsHashKey *Clone(void) const;
 };
 
+
 class DependentAtomKey : public AtomKey_base {
 public:
   DependentAtomKey(nsIAtom* aAtom)
     {
       mAtom = aAtom;
+      SetKeyCaseSensitive(PR_TRUE);
     }
   DependentAtomKey(const DependentAtomKey& aKey);
   virtual ~DependentAtomKey(void)
@@ -121,26 +143,60 @@ public:
   virtual nsHashKey *Clone(void) const;
 };
 
+void AtomKey_base::SetKeyCaseSensitive(PRBool aCaseSensitive)
+{
+  mCaseSensitive = aCaseSensitive;
+}
+
 PRUint32 AtomKey_base::HashCode(void) const
 {
-  return NS_PTR_TO_INT32(mAtom);
+  if (mCaseSensitive) {
+    return NS_PTR_TO_INT32(mAtom);
+  }
+  else {
+#ifdef DEBUG_HASH
+  DebugHashCount(PR_TRUE);
+#endif
+    nsAutoString myStr;
+    mAtom->ToString(myStr);
+    myStr.ToUpperCase();
+    return nsCRT::HashCode(myStr.get());
+  }
 }
 
 PRBool AtomKey_base::Equals(const nsHashKey* aKey) const
 {
-  return PRBool (((AtomKey_base*)aKey)->mAtom == mAtom);
+  if (mCaseSensitive) {
+    return PRBool (((AtomKey_base*)aKey)->mAtom == mAtom);
+  }
+
+#ifdef DEBUG_HASH
+  DebugHashCount(PR_FALSE);
+#endif
+  const PRUnichar *myStr = nsnull;
+  mAtom->GetUnicode(&myStr);
+
+  nsIAtom* theirAtom = ((AtomKey_base*)aKey)->mAtom; 
+
+  const PRUnichar *theirStr = nsnull;
+  theirAtom->GetUnicode(&theirStr);
+
+  return nsCRT::strcasecmp(myStr, theirStr) == 0;
 }
+
 
 AtomKey::AtomKey(nsIAtom* aAtom)
 {
   mAtom = aAtom;
   NS_ADDREF(mAtom);
+  SetKeyCaseSensitive(PR_TRUE);
 }
 
 AtomKey::AtomKey(const AtomKey_base& aKey)
 {
   mAtom = aKey.mAtom;
   NS_ADDREF(mAtom);
+  SetKeyCaseSensitive(PR_TRUE);
 }
 
 AtomKey::~AtomKey(void)
@@ -158,6 +214,7 @@ DependentAtomKey::DependentAtomKey(const DependentAtomKey& aKey)
 {
   NS_NOTREACHED("Should never clone to a dependent atom key.");
   mAtom = aKey.mAtom;
+  SetKeyCaseSensitive(PR_TRUE);
 }
 
 nsHashKey* DependentAtomKey::Clone(void) const
@@ -248,9 +305,10 @@ public:
                          RuleEnumFunc aFunc, void* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
+  void SetCaseSensitive(PRBool aCaseSensitive) {mCaseSensitive = aCaseSensitive;};
 
 protected:
-  void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule);
+  void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive = PR_TRUE);
   void AppendRuleToTable(nsHashtable& aTable, PRInt32 aNameSpace, nsICSSStyleRule* aRule);
 
   PRInt32     mRuleCount;
@@ -262,6 +320,7 @@ protected:
   RuleValue** mEnumList;
   PRInt32     mEnumListSize;
   RuleValue   mEndValue;
+  PRBool      mCaseSensitive;
 
 #ifdef RULE_HASH_STATS
   PRUint32    mUniversalSelectors;
@@ -287,7 +346,8 @@ RuleHash::RuleHash(void)
   : mRuleCount(0),
     mIdTable(), mClassTable(), mTagTable(), mNameSpaceTable(),
     mEnumList(nsnull), mEnumListSize(0),
-    mEndValue(nsnull, -1)
+    mEndValue(nsnull, -1),
+    mCaseSensitive(PR_TRUE)
 #ifdef RULE_HASH_STATS
     ,
     mUniversalSelectors(0),
@@ -357,11 +417,12 @@ RuleHash::~RuleHash(void)
   }
 }
 
-void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule)
+void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive)
 {
   NS_ASSERTION(nsnull != aAtom, "null hash key");
 
   DependentAtomKey key(aAtom);
+  key.SetKeyCaseSensitive(aCaseSensitive);
   RuleValue*  value = (RuleValue*)aTable.Get(&key);
 
   if (nsnull == value) {
@@ -403,13 +464,13 @@ void RuleHash::AppendRule(nsICSSStyleRule* aRule)
 {
   nsCSSSelector*  selector = aRule->FirstSelector();
   if (nsnull != selector->mIDList) {
-    AppendRuleToTable(mIdTable, selector->mIDList->mAtom, aRule);
+    AppendRuleToTable(mIdTable, selector->mIDList->mAtom, aRule, mCaseSensitive);
 #ifdef RULE_HASH_STATS
     ++mIdSelectors;
 #endif
   }
   else if (nsnull != selector->mClassList) {
-    AppendRuleToTable(mClassTable, selector->mClassList->mAtom, aRule);
+    AppendRuleToTable(mClassTable, selector->mClassList->mAtom, aRule, mCaseSensitive);
 #ifdef RULE_HASH_STATS
     ++mClassSelectors;
 #endif
@@ -507,6 +568,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   }
   if (nsnull != aID) {
     DependentAtomKey idKey(aID);
+    idKey.SetKeyCaseSensitive(mCaseSensitive);
     RuleValue* value = (RuleValue*)mIdTable.Get(&idKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
@@ -521,6 +583,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
   for (index = 0; index < classCount; index++) {
     nsIAtom* classAtom = (nsIAtom*)aClassList.ElementAt(index);
     DependentAtomKey classKey(classAtom);
+    classKey.SetKeyCaseSensitive(mCaseSensitive);
     RuleValue* value = (RuleValue*)mClassTable.Get(&classKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
@@ -648,7 +711,7 @@ public:
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
 protected:
-  RuleCascadeData* GetRuleCascade(nsIAtom* aMedium);
+  RuleCascadeData* GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium);
 
   static PRBool CascadeSheetRulesInto(nsISupports* aSheet, void* aData);
 
@@ -3635,6 +3698,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       ((nsnull != aSelector->mIDList) || (nsnull != aSelector->mClassList))) {  // test for ID & class match
     result = localFalse;
     if (data.mStyledContent) {
+      PRBool isCaseSensitive = !data.mIsQuirkMode; // bug 93371
       nsAtomList* IDList = aSelector->mIDList;
       if (nsnull == IDList) {
         result = PR_TRUE;
@@ -3642,7 +3706,18 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       else if (nsnull != data.mContentID) {
         result = PR_TRUE;
         while (nsnull != IDList) {
-          if (localTrue == (IDList->mAtom != data.mContentID)) {
+          PRBool dontMatch;
+          if (isCaseSensitive) {
+            dontMatch = (IDList->mAtom != data.mContentID);
+          }
+          else {
+            nsAutoString s1;
+            nsAutoString s2;
+            IDList->mAtom->ToString(s1);
+            data.mContentID->ToString(s2);
+            dontMatch = !s1.EqualsIgnoreCase(s2);
+          }
+          if (localTrue == dontMatch) {
             result = PR_FALSE;
             break;
           }
@@ -3653,7 +3728,7 @@ static PRBool SelectorMatches(SelectorMatchesData &data,
       if (result) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
-          if (localTrue == (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom))) {
+          if (localTrue == (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
             result = PR_FALSE;
             break;
           }
@@ -3828,7 +3903,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aContent, "null arg");
   NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
-  RuleCascadeData* cascade = GetRuleCascade(aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
 
   if (cascade) {
     nsIAtom* idAtom = nsnull;
@@ -3942,7 +4017,7 @@ CSSRuleProcessor::RulesMatching(nsIPresContext* aPresContext,
   NS_PRECONDITION(nsnull != aPseudoTag, "null arg");
   NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
 
-  RuleCascadeData* cascade = GetRuleCascade(aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
 
   if (cascade) {
     PseudoEnumData data(aPresContext, aParentContent, aPseudoTag, aComparator, aRuleWalker);
@@ -3993,7 +4068,7 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
 {
   PRBool isStateful = PR_FALSE;
 
-  RuleCascadeData* cascade = GetRuleCascade(aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext, aMedium);
 
   if (cascade) {
     // look up content in state rule list
@@ -4142,8 +4217,8 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     nsCOMPtr<nsIAtom> tag2 = getter_AddRefs(NS_NewAtom("RuleCascade"));
     CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
     for (RuleCascadeData *cascadeData = mRuleCascades;
-	 cascadeData;
-	 cascadeData = cascadeData->mNext) {
+   cascadeData;
+   cascadeData = cascadeData->mNext) {
       CascadeSizeEnumFunc(cascadeData, &data);
     }
   }
@@ -4353,7 +4428,7 @@ static void PutRulesInList(nsSupportsHashtable* aRuleArrays,
 }
 
 RuleCascadeData*
-CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
+CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
 {
   RuleCascadeData **cascadep = &mRuleCascades;
   RuleCascadeData *cascade;
@@ -4372,6 +4447,11 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
       mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
       PutRulesInList(&data.mRuleArrays, cascade->mWeightedRules);
 
+      nsCompatibility quirkMode = eCompatibility_Standard;
+      aPresContext->GetCompatibilityMode(&quirkMode);
+      PRBool isQuirksMode = (eCompatibility_Standard == quirkMode ? PR_FALSE : PR_TRUE);
+
+      cascade->mRuleHash.SetCaseSensitive(!isQuirksMode);
       cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
       cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
     }
