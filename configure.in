@@ -3111,7 +3111,7 @@ then
     fi
     MOC=$HOST_MOC
 
-    QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR"
+    QT_CFLAGS="-I${QTDIR}${QTINCDIR} -DQT_GENUINE_STR -DQT_NO_STL"
     QT_LIBS="-L/usr/X11R6/lib -L${QTDIR}/lib -lqt -lXext -lX11"
 dnl    AM_PATH_QT($QT_VERSION,,
 dnl      AC_MSG_ERROR(Test for QT failed.))
