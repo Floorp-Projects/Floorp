@@ -845,7 +845,7 @@ js_Dequeue(JSThinLock *tl)
     js_ResumeThread(tl);
 }
 
-static JS_INLINE void
+JS_INLINE void
 js_Lock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
@@ -859,7 +859,7 @@ js_Lock(JSThinLock *tl, jsword me)
 #endif
 }
 
-static JS_INLINE void
+JS_INLINE void
 js_Unlock(JSThinLock *tl, jsword me)
 {
     JS_ASSERT(me == CurrentThreadId());
