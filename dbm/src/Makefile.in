@@ -34,12 +34,15 @@ CSRCS		= \
 		hash.c \
 		hash_buf.c \
 		hsearch.c \
-		memmove.c \
 		mktemp.c \
 		ndbm.c \
 		strerror.c \
 		nsres.c \
 		$(NULL)
+
+ifeq (,$(filter -DHAVE_MEMMOVE=1,$(DEFS)))
+CSRC += memmove.c
+endif
 
 ifeq (,$(filter -DHAVE_SNPRINTF=1,$(DEFS)))
 CSRC += snprintf.c
