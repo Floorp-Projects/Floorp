@@ -31,7 +31,7 @@ use strict; # require strict adherence to perl standards
 use vars qw($AUTOLOAD);  # it's a package global
 use Carp qw(cluck confess); # stack trace versions of warn and die
 my $DEBUG = 9; # level of warnings and dumps to print to STDERR (none go to user)
-my $USER = 3; # level of errors to report to user (all go to STDERR)
+my $USER = 1; # level of errors to report to user (all go to STDERR)
 my @FATAL = (); # a list of pointers to functions that want to report errors to the user
 my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 1;
@@ -39,15 +39,18 @@ my $LOCKED = 0; # set to '1' while we are calling the error reporting code
 # PLIF = Program Logic Insulation Framework
 
 # Levels are assumed to be something along the following:
+# Things that should never come up during normal operation:
 #  0 = total failure: e.g. no input or output devices
 #  1 = fatal errors: e.g. missing databases, broken connections, out of disk space
 #  2 = security: e.g. warnings about repeated cracking attempts
 #  3 = non-fatal errors: e.g. propagation of eval() errors as warnings
 #  4 = important warnings (e.g. unexpected but possibly legitimate lack of data)
+#
+# Useful debugging information:
 #  5 = important events (e.g. application started)
 #  6 =
 #  7 = typical checkpoints (e.g. someone tried to do some output)
-#  8 = 
+#  8 =
 #  9 = verbose debugging information
 # 10 = ridiculously verbose debugging spam
 
