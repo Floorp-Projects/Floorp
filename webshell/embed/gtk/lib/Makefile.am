@@ -41,14 +41,11 @@ IMGLIB_LIBS =        \
         -limg        \
         $(NULL)
 
-NETLIB_LIBS=-lneckoutil_s
-
 JSJ_LIB =
 TK_LIBS = 
 
 ALL_MOZ_LIBS =                 \
         $(GECKO_LIBS)  \
-        $(NETLIB_LIBS) \
         $(IMGLIB_LIBS) \
         $(BASE_LIBS)   \
         $(JSJ_LIB)     \
