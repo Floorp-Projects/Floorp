@@ -585,7 +585,7 @@ nsNativeAppSupportWin::CheckConsole() {
                     ||
                     strcmp( "/server", __argv[i] ) == 0 ) {         
             // Start in server mode (and suppress splash screen).   
-            SetIsServerMode( PR_TRUE );                             
+            mStartupServerMode = PR_TRUE;
             __argv[i] = "-nosplash"; // Bit of a hack, but it works!
             // Ignore other args.                                   
             break;                                                  
@@ -1730,9 +1730,7 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
                delete [] exitACPText ;
             }     
         }
-        else {
-            ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_QUIT, exitText.get() );
-        }
+
     }
     
     // Add the tray icon.
@@ -1758,6 +1756,7 @@ nsNativeAppSupportWin::RemoveSysTrayIcon() {
 //     - Pass magic arg to cause window to close in onload handler.
 NS_IMETHODIMP
 nsNativeAppSupportWin::StartServerMode() {
+
     // Turn on system tray icon.
     SetupSysTrayIcon();
 
@@ -1811,6 +1810,9 @@ nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
     // If it is being turned off, remove systray icon.
     if ( mServerMode && !isServerMode ) {
         RemoveSysTrayIcon();
+    }
+    else if ( !mServerMode && isServerMode) {
+        SetupSysTrayIcon();
     }
     return nsNativeAppSupportBase::SetIsServerMode( isServerMode );
 }

@@ -78,6 +78,7 @@
 #include "nsXRemoteClientCID.h"
 #include "nsIXRemoteClient.h"
 #endif
+#define TURBO_PREF "browser.turbo.enabled"
 
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
@@ -826,13 +827,13 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
     {
       // If starting up in server mode, then we do things differently.
       nsCOMPtr<nsINativeAppSupport> nativeApp;
-      PRBool serverMode;
+      PRBool serverMode = PR_FALSE;
       rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
-      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsServerMode(&serverMode)) && serverMode) {
-        // Create special Nav window.
-        nativeApp->StartServerMode();
-        return NS_OK;
-      }
+      // Create special Nav window.
+      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsStartupServerMode(&serverMode)) && serverMode) {
+         nativeApp->StartServerMode();
+         return NS_OK;
+      } 
 
       // No window exists so lets create a browser one
       PRInt32 height  = NS_SIZETOCONTENT;
@@ -1268,10 +1269,22 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   //      if the profile manager ever switches to using nsIDOMWindowInternal stuff, this might have to change
   appShell->CreateHiddenWindow();
 
-	// This will go away once Components are handling there own commandlines
-	// if we have no command line arguments, we need to heed the
-	// "general.startup.*" prefs
-	// if we had no command line arguments, argc == 1.
+  nsCOMPtr<nsINativeAppSupport> nativeApps;
+  rv = GetNativeAppSupport(getter_AddRefs(nativeApps));
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && prefs) {
+      PRBool serverMode = PR_FALSE;
+      prefs->GetBoolPref(TURBO_PREF, &serverMode);
+      nativeApps->SetIsServerMode(serverMode);
+    }
+  }
+    
+  // This will go away once Components are handling there own commandlines
+  // if we have no command line arguments, we need to heed the
+  // "general.startup.*" prefs
+  // if we had no command line arguments, argc == 1.
+
 #ifdef XP_MAC
 	// if we do no command line args on the mac, it says argc is 0, and not 1
 	rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)) );

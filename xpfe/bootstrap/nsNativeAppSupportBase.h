@@ -53,6 +53,7 @@ public:
     nsrefcnt mRefCnt;
     nsCOMPtr<nsISplashScreen> mSplash;
     PRBool   mServerMode;
+    PRBool   mStartupServerMode;
     PRBool   mNeedsProfileUI;
 }; // class nsSplashScreenWin
 
