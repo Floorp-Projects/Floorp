@@ -429,27 +429,31 @@ NS_IMETHODIMP nsXPBaseWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* a
 }
 
 //-----------------------------------------------------------------
-NS_IMETHODIMP nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
+
+NS_IMETHODIMP
+nsXPBaseWindow::FindWebShellWithName(const PRUnichar* aName,
+                                     nsIWebShell*& aResult)
 {
   aResult = nsnull;
+
   nsString aNameStr(aName);
 
-  nsIWebShell *ws;
-    
-  if (NS_OK == GetWebShell(ws)) {
+  nsCOMPtr<nsIWebShell> webShell;
+  GetWebShell(*getter_AddRefs(webShell));
+  if (webShell) {
     const PRUnichar *name;
-    if (NS_OK == ws->GetName(&name)) {
+    if (NS_SUCCEEDED(webShell->GetName(&name))) {
       if (aNameStr.Equals(name)) {
-        aResult = ws;
+        aResult = webShell;
         NS_ADDREF(aResult);
         return NS_OK;
       }
     }      
-  }
 
-  if (NS_OK == ws->FindChildWithName(aName, aResult)) {
-    if (nsnull != aResult) {
-      return NS_OK;
+    if (NS_OK == webShell->FindChildWithName(aName, aResult)) {
+      if (nsnull != aResult) {
+        return NS_OK;
+      }
     }
   }
 
