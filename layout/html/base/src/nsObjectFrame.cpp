@@ -2468,7 +2468,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 		nsPluginEvent pluginEvent;
     GUItoWinEvent(anEvent, pluginEvent);
 		PRBool eventHandled = PR_FALSE;
-		mInstance->HandleEvent(pluginEvent, &eventHandled);
+		mInstance->HandleEvent(&pluginEvent, &eventHandled);
 		if (eventHandled)
 			rv = nsEventStatus_eConsumeNoDefault;
 #endif
