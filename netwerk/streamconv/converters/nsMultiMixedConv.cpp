@@ -212,10 +212,13 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
     if (mProcessingHeaders) {
         bufAmt = bufLen;
     } else {
-        // if the data ends in a linefeed, we
-        // know the token can't cross it, thus
-        // we know there's no token left - don't buffer
-        if (!(cursor[bufLen-1] == LF))
+        // if the data ends in a linefeed, and we're in the middle
+        // of a "part" (ie. mPartChannel exists) don't bother
+        // buffering, go ahead and send the data we have. Otherwise
+        // if we don't have a channel already, then we don't even
+        // have enough info to start a part, go ahead and buffer
+        // enough to collect a boundary token.
+        if (!mPartChannel || !(cursor[bufLen-1] == LF) )
             bufAmt = PR_MIN(mTokenLen - 1, bufLen);
     }
 
