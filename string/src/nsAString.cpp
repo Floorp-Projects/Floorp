@@ -255,7 +255,7 @@ nsAString::AssignFromPromise( const self_type& aReadable )
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AssignFromElementPtrLength(buffer, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
@@ -325,7 +325,7 @@ nsAString::AppendFromPromise( const self_type& aReadable )
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AppendFromElementPtrLength(buffer, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
@@ -390,7 +390,7 @@ nsAString::InsertFromPromise( const self_type& aReadable, index_type atPosition 
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_InsertFromElementPtrLength(buffer, atPosition, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert
       }
@@ -479,7 +479,7 @@ nsAString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const s
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_ReplaceFromReadable(cutStart, cutLength, nsDependentString(buffer, length));
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
@@ -754,7 +754,7 @@ nsACString::AssignFromPromise( const self_type& aReadable )
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AssignFromElementPtrLength(buffer, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
@@ -824,7 +824,7 @@ nsACString::AppendFromPromise( const self_type& aReadable )
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_AppendFromElementPtrLength(buffer, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
@@ -889,7 +889,7 @@ nsACString::InsertFromPromise( const self_type& aReadable, index_type atPosition
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_InsertFromElementPtrLength(buffer, atPosition, length);
-            delete buffer;
+            delete[] buffer;
           }
         // else assert
       }
@@ -978,7 +978,7 @@ nsACString::ReplaceFromPromise( index_type cutStart, size_type cutLength, const 
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
             do_ReplaceFromReadable(cutStart, cutLength, nsDependentCString(buffer, length));
-            delete buffer;
+            delete[] buffer;
           }
         // else assert?
       }
