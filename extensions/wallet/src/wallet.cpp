@@ -1481,7 +1481,7 @@ Wallet_SimpleGet(nsInputFileStream& strm) {
 char* schemaValueFileName = nsnull;
 
 const char URLFileName[] = "URL.tbl";
-const char allFileName[] = "wallet1.html";
+const char allFileName[] = "wallet.tbl";
 const char fieldSchemaFileName[] = "FieldSchema.tbl";
 const char URLFieldSchemaFileName[] = "URLFieldSchema.tbl";
 const char schemaConcatFileName[] = "SchemaConcat.tbl";
