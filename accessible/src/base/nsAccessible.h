@@ -66,7 +66,7 @@ struct nsStateMapEntry
 enum ENameRule {
   eNoName,
   eNameFromSubtree,  // Collect name from text & img descendents; use title if resulting name is "".
-  eNameFromTitle,    // Use the title attribute for a name
+  eNameFromTitle     // Use the title attribute for a name
 };
 
 enum EValueRule {
