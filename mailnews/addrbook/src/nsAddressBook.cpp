@@ -274,14 +274,15 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewer> viewer;
 
-  if (!mWebShell) {
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  if (!docShell) {
 #ifdef DEBUG_seth
         printf("can't print, there is no webshell\n");
 #endif
         return rv;
   }
 
-  mWebShell->GetContentViewer(getter_AddRefs(viewer));
+  docShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer) 
   {
