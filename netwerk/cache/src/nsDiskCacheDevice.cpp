@@ -520,6 +520,15 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
     return ClientIDFromCacheKey(nsLiteralCString(mMetaDataFile.mKey), clientID);
 }
 
+
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
+{
+    NS_ENSURE_ARG_POINTER(deviceID);
+    *deviceID = nsCRT::strdup(DISK_CACHE_DEVICE_ID);
+    return *deviceID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(char ** clientKey)
 {
     NS_ENSURE_ARG_POINTER(clientKey);
