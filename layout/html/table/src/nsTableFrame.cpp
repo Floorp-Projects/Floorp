@@ -149,6 +149,10 @@ public:
     eColWidthType_Proportional = 3       // (int) value has proportional meaning
   };
 
+#ifdef DEBUG
+  void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
+
 private:
   PRInt32  mColCounts [4];
   PRInt32 *mColIndexes[4];
@@ -251,6 +255,23 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
       break;
   }
 }
+
+#ifdef DEBUG
+void ColumnInfoCache::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
+{
+  NS_PRECONDITION(aResult, "null OUT parameter pointer");
+  PRUint32 sum = sizeof(*this);
+
+  // Now add in the space talen up by the arrays
+  for (int i = 0; i < 4; i++) {
+    if (mColIndexes[i]) {
+      sum += mNumColumns * sizeof(PRInt32);
+    }
+  }
+
+  *aResult = sum;
+}
+#endif
 
 NS_IMETHODIMP
 nsTableFrame::GetFrameType(nsIAtom** aType) const
@@ -5509,9 +5530,11 @@ nsTableFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   // Add in the amount of space for the column width array
   sum += mColumnWidthsLength * sizeof(PRInt32);
 
-  // And the column info cache
+  // And in size of column info cache
   if (mColCache) {
-    sum += sizeof(*mColCache);
+    PRUint32 colCacheSize;
+    mColCache->SizeOf(aHandler, &colCacheSize);
+    aHandler->AddSize(nsLayoutAtoms::tableColCache, colCacheSize);
   }
 
   // Add in size of cell map
