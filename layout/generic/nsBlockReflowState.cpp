@@ -1542,18 +1542,17 @@ NS_IMETHODIMP
 nsBlockFrame::ListTag(FILE* out) const
 {
   if ((nsnull != mGeometricParent) && IsPseudoFrame()) {
-    fprintf(out, "*block<");
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    if (nsnull != atom) {
-      nsAutoString tmp;
-      atom->ToString(tmp);
-      fputs(tmp, out);
-    }
-    fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
-  } else {
-    nsBlockFrameSuper::ListTag(out);
+    fprintf(out, "*");
   }
+  fprintf(out, "Block<");
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if (nsnull != atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    fputs(tmp, out);
+  }
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;
 }
 
@@ -4118,9 +4117,6 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
     }
   }
 
-  // Get the band of available space
-  GetAvailableSpace();
-
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
   const nsStyleSpacing* floaterSpacing;
@@ -4128,6 +4124,15 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
                         (const nsStyleStruct*&)floaterDisplay);
   floater->GetStyleData(eStyleStruct_Spacing,
                         (const nsStyleStruct*&)floaterSpacing);
+
+  // See if the floater should clear any preceeding floaters...
+  if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
+    ClearFloaters(floaterDisplay->mBreakType);
+  }
+  else {
+    // Get the band of available space
+    GetAvailableSpace();
+  }
 
   // Get the floaters bounding box and margin information
   nsRect region;
