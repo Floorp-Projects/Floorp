@@ -13,7 +13,7 @@ function GetAddressBooksAndURIs(abArray, uriArray)
 	var numAddressBooks = 0;
 	var selected = 0;
 	var body = document.getElementById('dirTreeBody')
-	DumpDOM(body);
+
 	if ( body )
 	{
 		var treeitems = body.getElementsByTagName('treeitem');
