@@ -1012,7 +1012,7 @@ sub GetLongDescriptionAsText {
     my $result = "";
     my $count = 0;
     my $anyprivate = 0;
-    my ($query) = ("SELECT profiles.login_name, DATE_FORMAT(longdescs.bug_when,'%Y.%d.%m %H:%i'), " .
+    my ($query) = ("SELECT profiles.login_name, DATE_FORMAT(longdescs.bug_when,'%Y.%m.%d %H:%i'), " .
                    "       longdescs.thetext, longdescs.isprivate " .
                    "FROM   longdescs, profiles " .
                    "WHERE  profiles.userid = longdescs.who " .
