@@ -170,7 +170,7 @@ public:
     eColWidthType_Auto         = 0,      // width based on contents
     eColWidthType_Percent      = 1,      // (float) 1.0 == 100%
     eColWidthType_Coord        = 2,      // (nscoord) value is twips
-    eColWidthType_Proportional = 3,      // (int) value has proportional meaning
+    eColWidthType_Proportional = 3       // (int) value has proportional meaning
   };
 
 private:

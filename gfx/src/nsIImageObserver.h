@@ -48,7 +48,7 @@ typedef enum {
                                       // observer related cleanup.
   nsImageNotification_kAborted,       // Image decode was aborted by either
                                       // the network library or Interrupt().
-  nsImageNotification_kInternalImage, // Internal image icon.
+  nsImageNotification_kInternalImage // Internal image icon.
 } nsImageNotification;
 
 /// Image group notifications
