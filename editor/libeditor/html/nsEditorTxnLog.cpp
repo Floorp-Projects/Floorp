@@ -340,7 +340,7 @@ nsEditorTxnLog::WriteTransaction(nsITransaction *aTransaction)
   if (txn) {
     txn->GetTxnDescription(str);
     if (str.IsEmpty())
-      str.Assign(NS_LITERAL_STRING("<NULL>"));
+      str.AssignLiteral("<NULL>");
   }
 
   return Write(NS_LossyConvertUCS2toASCII(str).get());

@@ -768,7 +768,7 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   }  
   if ( aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
        (nsHTMLEditUtils::IsBig(aNode) || nsHTMLEditUtils::IsSmall(aNode)) &&
-       aAttribute->Equals(NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
+       aAttribute->LowerCaseEqualsLiteral("size"))       
   {
     res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
   }
@@ -798,7 +798,7 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
     if (attrString.Equals(*aAttribute,nsCaseInsensitiveStringComparator())) continue;
     // if it's a special _moz... attribute, keep looking
     attrString.Left(tmp,4);
-    if (tmp.Equals(NS_LITERAL_STRING("_moz"),nsCaseInsensitiveStringComparator())) continue;
+    if (tmp.LowerCaseEqualsLiteral("_moz")) continue;
     // otherwise, it's another attribute, so return false
     return PR_FALSE;
   }
@@ -1367,7 +1367,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
             // remove is applied; but we found no element in the ancestors of startNode
             // carrying specified styles; assume it comes from a rule and let's try to
             // insert a span "inverting" the style
-            nsAutoString value; value.AssignWithConversion("-moz-editor-invert-value");
+            nsAutoString value; value.AssignLiteral("-moz-editor-invert-value");
             PRInt32 startOffset, endOffset;
             range->GetStartOffset(&startOffset);
             range->GetEndOffset(&endOffset);
@@ -1430,7 +1430,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
               // carrying specified styles; assume it comes from a rule and let's try to
               // insert a span "inverting" the style
               if (mHTMLCSSUtils->IsCSSInvertable(aProperty, aAttribute)) {
-                nsAutoString value; value.AssignWithConversion("-moz-editor-invert-value");
+                nsAutoString value; value.AssignLiteral("-moz-editor-invert-value");
                 SetInlinePropertyOnNode(node, aProperty, aAttribute, &value);
               }
             }
@@ -1711,8 +1711,8 @@ nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange,
 
   nsresult res = NS_OK;
   nsAutoString tag;
-  if (aSizeChange == 1) tag.Assign(NS_LITERAL_STRING("big"));
-  else tag.Assign(NS_LITERAL_STRING("small"));
+  if (aSizeChange == 1) tag.AssignLiteral("big");
+  else tag.AssignLiteral("small");
   nsCOMPtr<nsIDOMNodeList> childNodes;
   PRInt32 j;
   PRUint32 childCount;
@@ -1774,8 +1774,8 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
   nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> tmp;
   nsAutoString tag;
-  if (aSizeChange == 1) tag.Assign(NS_LITERAL_STRING("big"));
-  else tag.Assign(NS_LITERAL_STRING("small"));
+  if (aSizeChange == 1) tag.AssignLiteral("big");
+  else tag.AssignLiteral("small");
   
   // is it the opposite of what we want?  
   if ( ((aSizeChange == 1) && nsHTMLEditUtils::IsSmall(aNode)) || 

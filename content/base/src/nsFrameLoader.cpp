@@ -168,7 +168,7 @@ nsFrameLoader::LoadFrame()
   src.Trim(" \t\n\r");
 
   if (src.IsEmpty()) {
-    src.Assign(NS_LITERAL_STRING("about:blank"));
+    src.AssignLiteral("about:blank");
   }
 
   // Make an absolute URI

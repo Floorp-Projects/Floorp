@@ -256,9 +256,9 @@ NS_IMETHODIMP nsXULDropmarkerAccessible::GetActionName(PRUint8 index, nsAString&
 {
   if (index == eAction_Click) {
     if (DropmarkerOpen(PR_FALSE))
-      aResult = NS_LITERAL_STRING("close");
+      aResult.AssignLiteral("close");
     else
-      aResult = NS_LITERAL_STRING("open");
+      aResult.AssignLiteral("open");
     return NS_OK;
   }
 
@@ -337,9 +337,9 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetActionName(PRUint8 index, nsAString& _
     GetState(&state);
 
     if (state & STATE_CHECKED)
-      _retval = NS_LITERAL_STRING("uncheck");
+      _retval.AssignLiteral("uncheck");
     else
-      _retval = NS_LITERAL_STRING("check");
+      _retval.AssignLiteral("check");
 
     return NS_OK;
   }
@@ -464,7 +464,7 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetValue(nsAString& _retval)
   NS_ASSERTION(element, "No element for DOM node!");
   element->GetAttribute(NS_LITERAL_STRING("value"), _retval);
   if (!_retval.IsEmpty() && _retval.Last() != '%')
-    _retval.Append(NS_LITERAL_STRING("%"));
+    _retval.AppendLiteral("%");
   return NS_OK;
 }
 

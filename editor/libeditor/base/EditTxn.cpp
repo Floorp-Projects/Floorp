@@ -77,7 +77,7 @@ NS_IMETHODIMP EditTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 
 NS_IMETHODIMP EditTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("EditTxn"));
+  aString.AssignLiteral("EditTxn");
   return NS_OK;
 }
 

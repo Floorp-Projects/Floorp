@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.40 2004/04/27 23:04:34 gerv%gerv.net Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.41 2004/06/17 00:13:16 roc+%cs.cmu.edu Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -407,7 +407,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     // We're going to add the .p12 extension to the file name just like
     // Communicator used to.  We create a new nsILocalFile and initialize
     // it with the new patch.
-    filePath.Append(NS_LITERAL_STRING(".p12"));
+    filePath.AppendLiteral(".p12");
     localFileRef = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) goto finish;
     localFileRef->InitWithPath(filePath);

@@ -2558,12 +2558,12 @@ nsresult PresShell::SetPrefFocusRules(void)
         ///////////////////////////////////////////////////////////////
         // - focus: '*:focus
         ColorToString(focusText,strColor);
-        strRule.Append(NS_LITERAL_STRING("*:focus,*:focus>font {color: "));
+        strRule.AppendLiteral("*:focus,*:focus>font {color: ");
         strRule.Append(strColor);
-        strRule.Append(NS_LITERAL_STRING(" !important; background-color: "));
+        strRule.AppendLiteral(" !important; background-color: ");
         ColorToString(focusBackground,strColor);
         strRule.Append(strColor);
-        strRule.Append(NS_LITERAL_STRING(" !important; } "));
+        strRule.AppendLiteral(" !important; } ");
         // insert the rules
         result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
       }
@@ -2574,26 +2574,26 @@ nsresult PresShell::SetPrefFocusRules(void)
         PRUint32 index = 0;
         nsAutoString strRule;
         if (!focusRingOnAnything)
-          strRule.Append(NS_LITERAL_STRING("*|*:link:focus, *|*:visited"));    // If we only want focus rings on the normal things like links
-        strRule.Append(NS_LITERAL_STRING(":focus {-moz-outline: "));     // For example 3px dotted WindowText (maximum 4)
+          strRule.AppendLiteral("*|*:link:focus, *|*:visited");    // If we only want focus rings on the normal things like links
+        strRule.AppendLiteral(":focus {-moz-outline: ");     // For example 3px dotted WindowText (maximum 4)
         strRule.AppendInt(focusRingWidth);
-        strRule.Append(NS_LITERAL_STRING("px dotted WindowText !important; } "));     // For example 3px dotted WindowText
+        strRule.AppendLiteral("px dotted WindowText !important; } ");     // For example 3px dotted WindowText
         // insert the rules
         result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
         NS_ENSURE_SUCCESS(result, result);
         if (focusRingWidth != 1) {
           // If the focus ring width is different from the default, fix buttons with rings
-          strRule.Assign(NS_LITERAL_STRING("button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner,"));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]::-moz-focus-inner, "));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"submit\"]::-moz-focus-inner { padding: 1px 2px 1px 2px; border: "));
+          strRule.AssignLiteral("button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner,");
+          strRule.AppendLiteral("input[type=\"button\"]::-moz-focus-inner, ");
+          strRule.AppendLiteral("input[type=\"submit\"]::-moz-focus-inner { padding: 1px 2px 1px 2px; border: ");
           strRule.AppendInt(focusRingWidth);
-          strRule.Append(NS_LITERAL_STRING("px dotted transparent !important; } "));
+          strRule.AppendLiteral("px dotted transparent !important; } ");
           result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
           NS_ENSURE_SUCCESS(result, result);
           
-          strRule.Assign(NS_LITERAL_STRING("button:focus::-moz-focus-inner, input[type=\"reset\"]:focus::-moz-focus-inner,"));
-          strRule.Append(NS_LITERAL_STRING("input[type=\"button\"]:focus::-moz-focus-inner, input[type=\"submit\"]:focus::-moz-focus-inner {"));
-          strRule.Append(NS_LITERAL_STRING("border-color: ButtonText !important; }"));
+          strRule.AssignLiteral("button:focus::-moz-focus-inner, input[type=\"reset\"]:focus::-moz-focus-inner,");
+          strRule.AppendLiteral("input[type=\"button\"]:focus::-moz-focus-inner, input[type=\"submit\"]:focus::-moz-focus-inner {");
+          strRule.AppendLiteral("border-color: ButtonText !important; }");
           result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);
         }
       }
@@ -4155,7 +4155,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     
     // Scroll to the top/left if the anchor can not be
     // found and it is labelled top (quirks mode only). @see bug 80784
-    if ((NS_LossyConvertUCS2toASCII(aAnchorName).EqualsIgnoreCase("top")) &&
+    if ((NS_LossyConvertUCS2toASCII(aAnchorName).LowerCaseEqualsLiteral("top")) &&
         (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)) {
       rv = NS_OK;
       // Check |aScroll| after setting |rv| so we set |rv| to the same

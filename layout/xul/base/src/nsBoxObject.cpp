@@ -402,7 +402,7 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
     return NS_ERROR_FAILURE;
     
   nsAutoString property(aPropertyName);
-  if (property.EqualsIgnoreCase("scrollbarStyle")) {
+  if (property.LowerCaseEqualsLiteral("scrollbarstyle")) {
     PRInt32 metricResult;
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollArrowStyle, metricResult);
     switch (metricResult) {
@@ -420,7 +420,7 @@ nsBoxObject::GetLookAndFeelMetric(const PRUnichar* aPropertyName,
         break;   
     } 
   }
-  else if (property.EqualsIgnoreCase("thumbStyle")) {
+  else if (property.LowerCaseEqualsLiteral("thumbstyle")) {
     PRInt32 metricResult;
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ScrollSliderStyle, metricResult);
     if ( metricResult == nsILookAndFeel::eMetric_ScrollThumbStyleNormal )

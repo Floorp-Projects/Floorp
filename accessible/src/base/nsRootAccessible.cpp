@@ -334,7 +334,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   targetNode->GetLocalName(localName);
 #ifdef DEBUG_aleventhal
   // Very useful for debugging, please leave this here.
-  if (eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
+  if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
     printf("debugging events");
   }
   if (localName.EqualsIgnoreCase("tree")) {
@@ -402,9 +402,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 #ifndef MOZ_ACCESSIBILITY_ATK
 #ifdef MOZ_XUL
   // tree event
-  if (treeItemAccessible && (eventType.EqualsIgnoreCase("DOMMenuItemActive") ||
-      eventType.EqualsIgnoreCase("select") ||
-      eventType.EqualsIgnoreCase("focus"))) {
+  if (treeItemAccessible && (eventType.LowerCaseEqualsLiteral("dommenuitemactive") ||
+      eventType.LowerCaseEqualsLiteral("select") ||
+      eventType.LowerCaseEqualsLiteral("focus"))) {
     FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
     privAcc = do_QueryInterface(treeItemAccessible);
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
@@ -415,19 +415,19 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
   
-  if (eventType.EqualsIgnoreCase("unload")) {
+  if (eventType.LowerCaseEqualsLiteral("unload")) {
     nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = 
       do_QueryInterface(accessible);
     if (privateAccDoc) {
       privateAccDoc->Destroy();
     }
   }
-  else if (eventType.EqualsIgnoreCase("focus") || 
-           eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
+  else if (eventType.LowerCaseEqualsLiteral("focus") || 
+           eventType.LowerCaseEqualsLiteral("dommenuitemactive")) { 
     if (optionTargetNode &&
         NS_SUCCEEDED(mAccService->GetAccessibleInShell(optionTargetNode, eventShell,
                                                        getter_AddRefs(accessible)))) {
-      if (eventType.EqualsIgnoreCase("focus")) {
+      if (eventType.LowerCaseEqualsLiteral("focus")) {
         nsCOMPtr<nsIAccessible> selectAccessible;
         mAccService->GetAccessibleInShell(targetNode, eventShell,
                                           getter_AddRefs(selectAccessible));
@@ -440,15 +440,15 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else
       FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.EqualsIgnoreCase("ValueChange")) { 
+  else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);
   }
-  else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
+  else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                               accessible, nsnull);
   }
-  else if (eventType.EqualsIgnoreCase("RadioStateChange") ) {
+  else if (eventType.LowerCaseEqualsLiteral("radiostatechange") ) {
     // first the XUL radio buttons
     if (targetNode &&
         NS_SUCCEEDED(mAccService->GetAccessibleInShell(targetNode, eventShell,
@@ -462,9 +462,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                                 accessible, nsnull);
     }
   }
-  else if (eventType.EqualsIgnoreCase("DOMMenuBarActive")) 
+  else if (eventType.LowerCaseEqualsLiteral("dommenubaractive")) 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
-  else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
+  else if (eventType.LowerCaseEqualsLiteral("dommenubarinactive")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
     GetFocusedChild(getter_AddRefs(accessible));
     if (accessible) {
@@ -475,9 +475,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   else {
     // Menu popup events
     PRUint32 menuEvent = 0;
-    if (eventType.EqualsIgnoreCase("popupshowing"))
+    if (eventType.LowerCaseEqualsLiteral("popupshowing"))
       menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPSTART;
-    else if (eventType.EqualsIgnoreCase("popuphiding"))
+    else if (eventType.LowerCaseEqualsLiteral("popuphiding"))
       menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
     if (menuEvent) {
       PRUint32 role = ROLE_NOTHING;
@@ -488,15 +488,15 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.EqualsIgnoreCase("unload")) {
+  if (eventType.LowerCaseEqualsLiteral("unload")) {
     nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = 
       do_QueryInterface(accessible);
     if (privateAccDoc) {
       privateAccDoc->Destroy();
     }
   }
-  else if (eventType.EqualsIgnoreCase("focus") || 
-      eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
+  else if (eventType.LowerCaseEqualsLiteral("focus") || 
+      eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
@@ -517,37 +517,37 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     else
       FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.EqualsIgnoreCase("select")) {
+  else if (eventType.LowerCaseEqualsLiteral("select")) {
     if (treeItemAccessible) { // it's a XUL <tree>
       // use EVENT_FOCUS instead of EVENT_ATK_SELECTION_CHANGE
       privAcc = do_QueryInterface(treeItemAccessible);
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, 
                                 treeItemAccessible, nsnull);
-      }
+    }
   }
 #if 0
   // XXX todo: value change events for ATK are done with 
   // AtkPropertyChange, PROP_VALUE. Need the old and new value.
   // Not sure how we'll get the old value.
-  else if (eventType.EqualsIgnoreCase("ValueChange")) { 
+  else if (eventType.LowerCaseEqualsLiteral("valuechange")) { 
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, 
                               accessible, nsnull);
   }
 #endif
-  else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
-           eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
+  else if (eventType.LowerCaseEqualsLiteral("checkboxstatechange") || // it's a XUL <checkbox>
+           eventType.LowerCaseEqualsLiteral("radiostatechange")) { // it's a XUL <radio>
     accessible->GetState(&stateData.state);
     stateData.enable = (stateData.state & STATE_CHECKED) != 0;
     stateData.state = STATE_CHECKED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
-    if (eventType.EqualsIgnoreCase("RadioStateChange")) {
+    if (eventType.LowerCaseEqualsLiteral("radiostatechange")) {
       FireAccessibleFocusEvent(accessible, targetNode);
     }
   }
-  else if (eventType.EqualsIgnoreCase("popupshowing")) {
+  else if (eventType.LowerCaseEqualsLiteral("popupshowing")) {
     FireAccessibleFocusEvent(accessible, targetNode);
   }
-  else if (eventType.EqualsIgnoreCase("popuphiding")) {
+  else if (eventType.LowerCaseEqualsLiteral("popuphiding")) {
     //FireAccessibleFocusEvent(accessible, targetNode);
   }
 #endif

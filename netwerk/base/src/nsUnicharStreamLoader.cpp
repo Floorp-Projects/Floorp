@@ -231,7 +231,7 @@ nsUnicharStreamLoader::WriteSegmentFun(nsIInputStream *aInputStream,
     
     if (NS_FAILED(rv) || self->mCharset.IsEmpty()) {
       // The observer told us nothing useful
-      self->mCharset = NS_LITERAL_CSTRING("ISO-8859-1");
+      self->mCharset.AssignLiteral("ISO-8859-1");
     }
 
     NS_ASSERTION(IsASCII(self->mCharset),

@@ -405,9 +405,9 @@ static void ReportUnexpectedToken(nsCSSScanner *sc,
   // Flatten the string so we don't append to a concatenation, since
   // that goes into an infinite loop.  See bug 70083.
   nsAutoString error(err);
-  error += NS_LITERAL_STRING(" '");
+  error.AppendLiteral(" '");
   tok.AppendToString(error);
-  error += NS_LITERAL_STRING("'.");
+  error.AppendLiteral("'.");
   sc->AddToError(error);
 }
 
@@ -953,39 +953,39 @@ PRBool CSSParserImpl::ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFu
                                   void* aData)
 {
   if ((mSection <= eCSSSection_Charset) && 
-      (mToken.mIdent.EqualsIgnoreCase("charset"))) {
+      (mToken.mIdent.LowerCaseEqualsLiteral("charset"))) {
     if (ParseCharsetRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_Import;  // only one charset allowed
       return PR_TRUE;
     }
   }
   if ((mSection <= eCSSSection_Import) && 
-      mToken.mIdent.EqualsIgnoreCase("import")) {
+      mToken.mIdent.LowerCaseEqualsLiteral("import")) {
     if (ParseImportRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_Import;
       return PR_TRUE;
     }
   }
   if ((mSection <= eCSSSection_NameSpace) && 
-      mToken.mIdent.EqualsIgnoreCase("namespace")) {
+      mToken.mIdent.LowerCaseEqualsLiteral("namespace")) {
     if (ParseNameSpaceRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_NameSpace;
       return PR_TRUE;
     }
   }
-  if (mToken.mIdent.EqualsIgnoreCase("media")) {
+  if (mToken.mIdent.LowerCaseEqualsLiteral("media")) {
     if (ParseMediaRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
     }
   }
-  if (mToken.mIdent.EqualsIgnoreCase("font-face")) {
+  if (mToken.mIdent.LowerCaseEqualsLiteral("font-face")) {
     if (ParseFontFaceRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
     }
   }
-  if (mToken.mIdent.EqualsIgnoreCase("page")) {
+  if (mToken.mIdent.LowerCaseEqualsLiteral("page")) {
     if (ParsePageRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
       return PR_TRUE;
@@ -1111,7 +1111,7 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
     }
   }
   else if ((eCSSToken_Function == mToken.mType) && 
-           (mToken.mIdent.EqualsIgnoreCase("url"))) {
+           (mToken.mIdent.LowerCaseEqualsLiteral("url"))) {
     if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
       if (GetURLToken(aErrorCode, PR_TRUE)) {
         if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
@@ -1258,7 +1258,7 @@ PRBool CSSParserImpl::ParseNameSpaceRule(nsresult& aErrorCode,
     }
   }
   else if ((eCSSToken_Function == mToken.mType) && 
-           (mToken.mIdent.EqualsIgnoreCase("url"))) {
+           (mToken.mIdent.LowerCaseEqualsLiteral("url"))) {
     if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
       if (GetURLToken(aErrorCode, PR_TRUE)) {
         if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
@@ -2547,7 +2547,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
       }
       break;
     case eCSSToken_Function:
-      if (mToken.mIdent.EqualsIgnoreCase("rgb")) {
+      if (mToken.mIdent.LowerCaseEqualsLiteral("rgb")) {
         // rgb ( component , component , component )
         PRUint8 r, g, b;
         PRInt32 type = COLOR_TYPE_UNKNOWN;
@@ -2560,7 +2560,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;  // already pushed back
       }
-      else if (mToken.mIdent.EqualsIgnoreCase("-moz-rgba")) {
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-rgba")) {
         // rgba ( component , component , component , opacity )
         PRUint8 r, g, b, a;
         PRInt32 type = COLOR_TYPE_UNKNOWN;
@@ -2574,7 +2574,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;  // already pushed back
       }
-      else if (mToken.mIdent.EqualsIgnoreCase("hsl")) {
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl")) {
         // hsl ( hue , saturation , lightness )
         // "hue" is a number, "saturation" and "lightness" are percentages.
         if (ParseHSLColor(aErrorCode, rgba, ')')) {
@@ -2583,7 +2583,7 @@ PRBool CSSParserImpl::ParseColor(nsresult& aErrorCode, nsCSSValue& aValue)
         }
         return PR_FALSE;
       }
-      else if (mToken.mIdent.EqualsIgnoreCase("-moz-hsla")) {
+      else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-hsla")) {
         // hsla ( hue , saturation , lightness , opacity )
         // "hue" is a number, "saturation" and "lightness" are percentages,
         // "opacity" is a number.
@@ -2958,7 +2958,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
           return PR_FALSE;
         }
         if ((eCSSToken_Ident != tk->mType) ||
-            !tk->mIdent.EqualsIgnoreCase("important")) {
+            !tk->mIdent.LowerCaseEqualsLiteral("important")) {
           REPORT_UNEXPECTED_TOKEN(
             NS_LITERAL_STRING("Expected 'important' but found"));
           OUTPUT_ERROR();
@@ -3424,7 +3424,7 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
   }
   if (((aVariantMask & VARIANT_URL) != 0) &&
       (eCSSToken_Function == tk->mType) && 
-      tk->mIdent.EqualsIgnoreCase("url")) {
+      tk->mIdent.LowerCaseEqualsLiteral("url")) {
     if (ParseURL(aErrorCode, aValue)) {
       return PR_TRUE;
     }
@@ -3435,10 +3435,10 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
     		(eCSSToken_ID == tk->mType) || 
         (eCSSToken_Ident == tk->mType) ||
         ((eCSSToken_Function == tk->mType) && 
-         (tk->mIdent.EqualsIgnoreCase("rgb") ||
-          tk->mIdent.EqualsIgnoreCase("hsl") ||
-          tk->mIdent.EqualsIgnoreCase("-moz-rgba") ||
-          tk->mIdent.EqualsIgnoreCase("-moz-hsla")))) {
+         (tk->mIdent.LowerCaseEqualsLiteral("rgb") ||
+          tk->mIdent.LowerCaseEqualsLiteral("hsl") ||
+          tk->mIdent.LowerCaseEqualsLiteral("-moz-rgba") ||
+          tk->mIdent.LowerCaseEqualsLiteral("-moz-hsla")))) {
       // Put token back so that parse color can get it
       UngetToken();
       if (ParseColor(aErrorCode, aValue)) {
@@ -3463,8 +3463,8 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
   }
   if (((aVariantMask & VARIANT_COUNTER) != 0) &&
       (eCSSToken_Function == tk->mType) &&
-      (tk->mIdent.EqualsIgnoreCase("counter") || 
-       tk->mIdent.EqualsIgnoreCase("counters"))) {
+      (tk->mIdent.LowerCaseEqualsLiteral("counter") || 
+       tk->mIdent.LowerCaseEqualsLiteral("counters"))) {
 #ifdef ENABLE_COUNTERS
     if (ParseCounter(aErrorCode, aValue)) {
       return PR_TRUE;
@@ -3474,7 +3474,7 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
   }
   if (((aVariantMask & VARIANT_ATTR) != 0) &&
       (eCSSToken_Function == tk->mType) &&
-      tk->mIdent.EqualsIgnoreCase("attr")) {
+      tk->mIdent.LowerCaseEqualsLiteral("attr")) {
     
     if (ParseAttr(aErrorCode, aValue)) {
       return PR_TRUE;
@@ -3489,7 +3489,7 @@ PRBool CSSParserImpl::ParseVariant(nsresult& aErrorCode, nsCSSValue& aValue,
 
 PRBool CSSParserImpl::ParseCounter(nsresult& aErrorCode, nsCSSValue& aValue)
 {
-  nsCSSUnit unit = (mToken.mIdent.EqualsIgnoreCase("counter") ? 
+  nsCSSUnit unit = (mToken.mIdent.LowerCaseEqualsLiteral("counter") ? 
                     eCSSUnit_Counter : eCSSUnit_Counters);
 
   if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
@@ -4900,7 +4900,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, nsresult& aErrorCode)
         break;
     }
   } else if ((eCSSToken_Function == mToken.mType) && 
-             mToken.mIdent.EqualsIgnoreCase("rect")) {
+             mToken.mIdent.LowerCaseEqualsLiteral("rect")) {
     if (!ExpectSymbol(aErrorCode, '(', PR_TRUE)) {
       return PR_FALSE;
     }
@@ -4997,21 +4997,21 @@ PRBool CSSParserImpl::ParseCounterData(nsresult& aErrorCode,
   if (nsnull == ident) {
     return PR_FALSE;
   }
-  if (ident->EqualsIgnoreCase("none")) {
+  if (ident->LowerCaseEqualsLiteral("none")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
                                    nsCSSValue(eCSSUnit_None));
     }
     return PR_FALSE;
   }
-  else if (ident->EqualsIgnoreCase("inherit")) {
+  else if (ident->LowerCaseEqualsLiteral("inherit")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
                                    nsCSSValue(eCSSUnit_Inherit));
     }
     return PR_FALSE;
   }
-  else if (ident->EqualsIgnoreCase("-moz-initial")) {
+  else if (ident->LowerCaseEqualsLiteral("-moz-initial")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
                                    nsCSSValue(eCSSUnit_Initial));

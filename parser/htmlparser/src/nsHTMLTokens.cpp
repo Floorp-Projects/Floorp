@@ -376,7 +376,7 @@ void CEndToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEndToken::AppendSourceTo(nsAString& anOutputString){
-  anOutputString.Append(NS_LITERAL_STRING("</"));
+  anOutputString.AppendLiteral("</");
   if(!mTextValue.IsEmpty())
     anOutputString.Append(mTextValue);
   else
@@ -699,7 +699,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
           switch(aChar) {
             case kCR:
               result=aScanner.GetChar(aChar); //strip off the \r
-              mTextValue.Append(NS_LITERAL_STRING("\n\n"));
+              mTextValue.AppendLiteral("\n\n");
               mNewlineCount += 2;
               break;
             case kNewLine:
@@ -707,7 +707,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
               result=aScanner.GetChar(aChar); //strip off the \n
                   //now fall through on purpose...
             default:
-              mTextValue.Append(NS_LITERAL_STRING("\n"));
+              mTextValue.AppendLiteral("\n");
               mNewlineCount++;
               break;
           } //switch
@@ -1409,9 +1409,9 @@ void CAttributeToken::GetSource(nsString& anOutputString){
 void CAttributeToken::AppendSourceTo(nsAString& anOutputString){
   AppendUnicodeTo(mTextKey, anOutputString);
   if(mTextValue.Length() || mHasEqualWithoutValue) 
-    anOutputString.Append(NS_LITERAL_STRING("="));
+    anOutputString.AppendLiteral("=");
   anOutputString.Append(mTextValue);
-  // anOutputString.Append(NS_LITERAL_STRING(";"));
+  // anOutputString.AppendLiteral(";");
 }
 
 static void AppendNCR(nsString& aString, PRInt32 aNCRValue);
@@ -1521,7 +1521,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
         result = aScanner.Peek(ch);
         if (NS_SUCCEEDED(result)) {
           if(ch == kNewLine) {
-            aString.Append(NS_LITERAL_STRING("\r\n"));
+            aString.AppendLiteral("\r\n");
             aScanner.GetChar(ch);
           }
           else {
@@ -2079,7 +2079,7 @@ const nsAString& CEntityToken::GetStringValue(void)
  *  @return  nada
  */
 void CEntityToken::GetSource(nsString& anOutputString){
-  anOutputString.Append(NS_LITERAL_STRING("&"));
+  anOutputString.AppendLiteral("&");
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -2092,7 +2092,7 @@ void CEntityToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CEntityToken::AppendSourceTo(nsAString& anOutputString){
-  anOutputString.Append(NS_LITERAL_STRING("&"));
+  anOutputString.AppendLiteral("&");
   anOutputString+=mTextValue;
   //anOutputString+=";";
 }
@@ -2215,7 +2215,7 @@ CInstructionToken::CInstructionToken(const nsAString& aString) : CHTMLToken(eHTM
  *  @return  
  */
 nsresult CInstructionToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aFlag){
-  mTextValue.Assign(NS_LITERAL_STRING("<?"));
+  mTextValue.AssignLiteral("<?");
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
   return result;
 }

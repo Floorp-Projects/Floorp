@@ -39,7 +39,7 @@
 
 nsButton::nsButton() : nsWidget()
 {
-  mName.Assign(NS_LITERAL_STRING("nsButton"));
+  mName.AssignLiteral("nsButton");
 }
 
 nsButton::~nsButton()

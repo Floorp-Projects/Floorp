@@ -5792,13 +5792,13 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
   while (fragOffset < n) {
     PRUnichar ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
-      aBuf.Append(NS_LITERAL_STRING("\\r"));
+      aBuf.AppendLiteral("\\r");
     } else if (ch == '\n') {
-      aBuf.Append(NS_LITERAL_STRING("\\n"));
+      aBuf.AppendLiteral("\\n");
     } else if (ch == '\t') {
-      aBuf.Append(NS_LITERAL_STRING("\\t"));
+      aBuf.AppendLiteral("\\t");
     } else if ((ch < ' ') || (ch >= 127)) {
-      aBuf.Append(NS_LITERAL_STRING("\\0"));
+      aBuf.AppendLiteral("\\0");
       aBuf.AppendInt((PRInt32)ch, 8);
     } else {
       aBuf.Append(ch);

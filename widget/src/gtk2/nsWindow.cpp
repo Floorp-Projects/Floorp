@@ -943,7 +943,7 @@ nsWindow::SetIcon(const nsAString& aIconSpec)
     // Now take input path...
     nsAutoString iconSpec(aIconSpec);
     // ...append ".xpm" to it
-    iconSpec.Append(NS_LITERAL_STRING(".xpm"));
+    iconSpec.AppendLiteral(".xpm");
 
     // ...and figure out where /chrome/... is within that
     // (and skip the "resource:///chrome" part).
@@ -2621,7 +2621,7 @@ nsWindow::SetDefaultIcon(void)
     nsAutoString defaultPath;
     chromeDir->GetPath(defaultPath);
             
-    defaultPath.Append(NS_LITERAL_STRING("/icons/default/default.xpm"));
+    defaultPath.AppendLiteral("/icons/default/default.xpm");
 
     nsCOMPtr<nsILocalFile> defaultPathConverter;
     rv = NS_NewLocalFile(defaultPath, PR_TRUE,

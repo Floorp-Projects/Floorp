@@ -114,7 +114,7 @@ public:
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-    aResult = NS_LITERAL_STRING("nsTextControlFrame");
+    aResult.AssignLiteral("nsTextControlFrame");
     return NS_OK;
   }
 #endif

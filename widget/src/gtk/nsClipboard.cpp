@@ -641,7 +641,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+      platformCharset.AssignLiteral("ISO-8859-1");
       
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
@@ -973,7 +973,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
       if (NS_SUCCEEDED(rv))
         rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
       if (NS_FAILED(rv))
-        platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+        platformCharset.AssignLiteral("ISO-8859-1");
       
       // get the encoder
       nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
@@ -1512,7 +1512,7 @@ void GetHTMLCharset(char* data, PRInt32 dataLength, nsACString& str)
   // if detect "FFFE" or "FEFF", assume utf-16
   PRUnichar* beginChar =  (PRUnichar*)data;
   if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
-    str.Assign(NS_LITERAL_CSTRING("UTF-16"));
+    str.AssignLiteral("UTF-16");
     return;
   }
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -1558,6 +1558,6 @@ void GetHTMLCharset(char* data, PRInt32 dataLength, nsACString& str)
   // TODO: it may also be "text/html" without "charset".
   // can't distinguish between them. Sochoose OLD-MOZILLA here to
   // make compitable with old-version mozilla
-  str.Assign(NS_LITERAL_CSTRING("OLD-MOZILLA"));
+  str.AssignLiteral("OLD-MOZILLA");
 }
 

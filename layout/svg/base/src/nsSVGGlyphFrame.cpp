@@ -912,7 +912,7 @@ nsSVGGlyphFrame::BuildGlyphFragmentTree(PRUint32 charNum, PRBool lastBranch)
 #ifdef DEBUG
     printf("Glyph frame with zero length text\n");
 #endif
-    mCharacterData = NS_LITERAL_STRING("");
+    mCharacterData.AssignLiteral("");
     return charNum;
   }
 

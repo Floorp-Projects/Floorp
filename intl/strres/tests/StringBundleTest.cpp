@@ -147,7 +147,7 @@ main(int argc, char *argv[])
 
   // file
   nsString strfile;
-  strfile.Assign(NS_LITERAL_STRING("file"));
+  strfile.AssignLiteral("file");
   const PRUnichar *ptrFile = strfile.get();
   ret = bundle->GetStringFromName(ptrFile, &ptrv);
   if (NS_FAILED(ret)) {

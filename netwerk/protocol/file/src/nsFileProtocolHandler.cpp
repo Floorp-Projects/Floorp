@@ -68,7 +68,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
 NS_IMETHODIMP
 nsFileProtocolHandler::GetScheme(nsACString &result)
 {
-    result = NS_LITERAL_CSTRING("file");
+    result.AssignLiteral("file");
     return NS_OK;
 }
 

@@ -121,8 +121,8 @@ nsDataChannel::ParseData() {
 
     if (comma == buffer) {
         // nothing but data
-        mContentType = NS_LITERAL_CSTRING("text/plain");
-        mContentCharset = NS_LITERAL_CSTRING("US-ASCII");
+        mContentType.AssignLiteral("text/plain");
+        mContentCharset.AssignLiteral("US-ASCII");
     } else {
         // everything else is content type
         char *semiColon = (char *) strchr(buffer, ';');
@@ -131,7 +131,7 @@ nsDataChannel::ParseData() {
         
         if (semiColon == buffer || base64 == buffer) {
           // there is no content type, but there are other parameters
-          mContentType = NS_LITERAL_CSTRING("text/plain");
+          mContentType.AssignLiteral("text/plain");
         } else {
           mContentType = buffer;
           ToLowerCase(mContentType);

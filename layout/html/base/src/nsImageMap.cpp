@@ -862,19 +862,19 @@ nsImageMap::AddArea(nsIContent* aArea)
 
   Area* area;
   if (shape.IsEmpty() ||
-      shape.EqualsIgnoreCase("rect") ||
-      shape.EqualsIgnoreCase("rectangle")) {
+      shape.LowerCaseEqualsLiteral("rect") ||
+      shape.LowerCaseEqualsLiteral("rectangle")) {
     area = new RectArea(aArea);
   }
-  else if (shape.EqualsIgnoreCase("poly") ||
-           shape.EqualsIgnoreCase("polygon")) {
+  else if (shape.LowerCaseEqualsLiteral("poly") ||
+           shape.LowerCaseEqualsLiteral("polygon")) {
     area = new PolyArea(aArea);
   }
-  else if (shape.EqualsIgnoreCase("circle") ||
-           shape.EqualsIgnoreCase("circ")) {
+  else if (shape.LowerCaseEqualsLiteral("circle") ||
+           shape.LowerCaseEqualsLiteral("circ")) {
     area = new CircleArea(aArea);
   }
-  else if (shape.EqualsIgnoreCase("default")) {
+  else if (shape.LowerCaseEqualsLiteral("default")) {
     area = new DefaultArea(aArea);
   }
   else {

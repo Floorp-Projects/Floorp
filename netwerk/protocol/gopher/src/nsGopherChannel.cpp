@@ -351,67 +351,67 @@ nsGopherChannel::GetContentType(nsACString &aContentType)
     switch(mType) {
     case '0':
     case 'h':
-        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+        aContentType.AssignLiteral(TEXT_HTML);
         break;
     case '1':
         switch (mListFormat) {
         case nsIDirectoryListing::FORMAT_RAW:
-            aContentType = NS_LITERAL_CSTRING("text/gopher-dir");
+            aContentType.AssignLiteral("text/gopher-dir");
             break;
         default:
             NS_WARNING("Unknown directory type");
             // fall through
         case nsIDirectoryListing::FORMAT_HTML:
-            aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+            aContentType.AssignLiteral(TEXT_HTML);
             break;
         case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-            aContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+            aContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
             break;
         }
         break;
     case '2': // CSO search - unhandled, should not be selectable
-        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+        aContentType.AssignLiteral(TEXT_HTML);
         break;
     case '3': // "Error" - should not be selectable
-        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+        aContentType.AssignLiteral(TEXT_HTML);
         break;
     case '4': // "BinHexed Macintosh file"
-        aContentType = NS_LITERAL_CSTRING(APPLICATION_BINHEX);
+        aContentType.AssignLiteral(APPLICATION_BINHEX);
         break;
     case '5':
         // "DOS binary archive of some sort" - is the mime-type correct?
-        aContentType = NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM);
+        aContentType.AssignLiteral(APPLICATION_OCTET_STREAM);
         break;
     case '6':
-        aContentType = NS_LITERAL_CSTRING(APPLICATION_UUENCODE);
+        aContentType.AssignLiteral(APPLICATION_UUENCODE);
         break;
     case '7': // search - returns a directory listing
-        aContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+        aContentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     case '8': // telnet - type doesn't make sense
-        aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
+        aContentType.AssignLiteral(TEXT_PLAIN);
         break;
     case '9': // "Binary file!"
-        aContentType = NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM);
+        aContentType.AssignLiteral(APPLICATION_OCTET_STREAM);
         break;
     case 'g':
-        aContentType = NS_LITERAL_CSTRING(IMAGE_GIF);
+        aContentType.AssignLiteral(IMAGE_GIF);
         break;
     case 'i': // info line- should not be selectable
-        aContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+        aContentType.AssignLiteral(TEXT_HTML);
         break;
     case 'I':
-        aContentType = NS_LITERAL_CSTRING(IMAGE_GIF);
+        aContentType.AssignLiteral(IMAGE_GIF);
         break;
     case 'T': // tn3270 - type doesn't make sense
-        aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
+        aContentType.AssignLiteral(TEXT_PLAIN);
         break;
     default:
         if (!mContentTypeHint.IsEmpty()) {
             aContentType = mContentTypeHint;
         } else {
             NS_WARNING("Unknown gopher type");
-            aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+            aContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
         }
         break;
     }
@@ -640,7 +640,7 @@ nsGopherChannel::SendRequest()
                                                       getter_Copies(promptTitle));
 
             if (NS_FAILED(rv) || !mStringBundle)
-                promptTitle.Assign(NS_LITERAL_STRING("Search"));
+                promptTitle.AssignLiteral("Search");
 
 
             if (mStringBundle)
@@ -648,7 +648,7 @@ nsGopherChannel::SendRequest()
                                                       getter_Copies(promptText));
 
             if (NS_FAILED(rv) || !mStringBundle)
-                promptText.Assign(NS_LITERAL_STRING("Enter a search term:"));
+                promptText.AssignLiteral("Enter a search term:");
 
 
             nsXPIDLString search;

@@ -106,9 +106,9 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
   if (gInfo_deprecated && !(locale.IsEmpty())) {
     nsAutoString platformLocaleKey;
     // note: NS_LITERAL_STRING("locale." OSTYPE ".") does not compile on AIX
-    platformLocaleKey.Assign(NS_LITERAL_STRING("locale."));
+    platformLocaleKey.AssignLiteral("locale.");
     platformLocaleKey.AppendWithConversion(OSTYPE);
-    platformLocaleKey.Append(NS_LITERAL_STRING("."));
+    platformLocaleKey.AppendLiteral(".");
     platformLocaleKey.Append(locale);
 
     nsAutoString charset;
@@ -118,7 +118,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
       return NS_OK;
     }
     nsAutoString localeKey;
-    localeKey.Assign(NS_LITERAL_STRING("locale.all."));
+    localeKey.AssignLiteral("locale.all.");
     localeKey.Append(locale);
     res = gInfo_deprecated->Get(localeKey, charset);
     if (NS_SUCCEEDED(res))  {
@@ -127,8 +127,8 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
     }
    }
    NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
-   mCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
-   oResult.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+   mCharset.AssignLiteral("ISO-8859-1");
+   oResult.AssignLiteral("ISO-8859-1");
    return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
@@ -165,8 +165,8 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   // 
   if (mLocale.Equals(localeName) ||
     // support the 4.x behavior
-    (mLocale.EqualsIgnoreCase("en_US") && 
-     localeName.Equals(NS_LITERAL_STRING("C"),nsCaseInsensitiveStringComparator()))) {
+    (mLocale.LowerCaseEqualsLiteral("en_us") && 
+     localeName.LowerCaseEqualsLiteral("c"))) {
     oResult = mCharset;
     return NS_OK;
   }
@@ -206,7 +206,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
     return res;
 
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
-  oResult.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+  oResult.AssignLiteral("ISO-8859-1");
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 
@@ -240,9 +240,9 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     if (!gNLInfo) {
       nsCAutoString propertyURL;
       // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
-      propertyURL.Assign(NS_LITERAL_CSTRING("resource://gre/res/unixcharset."));
+      propertyURL.AssignLiteral("resource://gre/res/unixcharset.");
       propertyURL.Append(OSARCH);
-      propertyURL.Append(NS_LITERAL_CSTRING(".properties"));
+      propertyURL.AppendLiteral(".properties");
       nsURLProperties *info;
       info = new nsURLProperties( propertyURL );
       NS_ASSERTION( info, "cannot create nsURLProperties");
@@ -270,9 +270,9 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     //
     const char *glibc_version = gnu_get_libc_version();
     if ((glibc_version != nsnull) && (strlen(glibc_version))) {
-      localeKey.Assign(NS_LITERAL_STRING("nllic."));
+      localeKey.AssignLiteral("nllic.");
       localeKey.AppendWithConversion(glibc_version);
-      localeKey.Append(NS_LITERAL_STRING("."));
+      localeKey.AppendLiteral(".");
       localeKey.AppendWithConversion(nl_langinfo_codeset);
       nsAutoString uCharset;
       res = gNLInfo->Get(localeKey, uCharset);
@@ -290,7 +290,7 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     //
     // look for a charset specific charset remap
     //
-    localeKey.Assign(NS_LITERAL_STRING("nllic."));
+    localeKey.AssignLiteral("nllic.");
     localeKey.AppendWithConversion(nl_langinfo_codeset);
     nsAutoString uCharset;
     res = gNLInfo->Get(localeKey, uCharset);
@@ -342,7 +342,7 @@ nsPlatformCharset::Init()
     if (NS_FAILED(res))
       return res;
   } else {
-    mLocale.Assign(NS_LITERAL_STRING("en-US"));
+    mLocale.AssignLiteral("en_US");
   }
 
   res = InitGetCharset(charset);
@@ -353,7 +353,7 @@ nsPlatformCharset::Init()
 
   // last resort fallback
   NS_ASSERTION(0, "unable to convert locale to charset using deprecated config");
-  mCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+  mCharset.AssignLiteral("ISO-8859-1");
   return NS_SUCCESS_USING_FALLBACK_LOCALE;
 }
 

@@ -1310,7 +1310,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
               nsAutoString type;
               rv = inputElement->GetType(type);
               if (NS_SUCCEEDED(rv) &&
-                  type.Equals(NS_LITERAL_STRING("image"), nsCaseInsensitiveStringComparator()))
+                  type.LowerCaseEqualsLiteral("image"))
                 inputElement->GetSrc(href);
             } else {
               // XLink ?

@@ -502,7 +502,7 @@ nsSubDocumentFrame::AttributeChanged(nsIPresContext* aPresContext,
         parentAsItem->GetItemType(&parentType);
         PRBool is_primary_content =
           parentType == nsIDocShellTreeItem::typeChrome &&
-          value.EqualsIgnoreCase("content-primary");
+          value.LowerCaseEqualsLiteral("content-primary");
 
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary_content,
                                            value.get());

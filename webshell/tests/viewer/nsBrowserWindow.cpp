@@ -845,9 +845,9 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       PRIntn ix = aID - VIEWER_DEMO0;
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.Append(NS_LITERAL_STRING("/test"));
+      url.AppendLiteral("/test");
       url.AppendInt(ix, 10);
-      url.Append(NS_LITERAL_STRING(".html"));
+      url.AppendLiteral(".html");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
     }
@@ -856,7 +856,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_XPTOOLKITTOOLBAR1:
     {
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.Append(NS_LITERAL_STRING("/toolbarTest1.xul"));
+      url.AppendLiteral("/toolbarTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
@@ -864,7 +864,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_XPTOOLKITTREE1:
     {
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
-      url.Append(NS_LITERAL_STRING("/treeTest1.xul"));
+      url.AppendLiteral("/treeTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
       break;
@@ -1259,7 +1259,7 @@ nsBrowserWindow::nsBrowserWindow()
     gTitleSuffix = GetTitleSuffix();
 #endif
     if ( (gTitleSuffix = new nsString) != 0 )
-      gTitleSuffix->Assign(NS_LITERAL_STRING(" - Raptor"));
+      gTitleSuffix->AssignLiteral(" - Raptor");
   }
   AddBrowser(this);
 }
@@ -2031,10 +2031,10 @@ nsBrowserWindow::OnProgress(nsIRequest* request, nsISupports *ctxt,
       aURL->GetSpec(str);
       AppendUTF8toUTF16(str, url);
     }
-    url.Append(NS_LITERAL_STRING(": progress "));
+    url.AppendLiteral(": progress ");
     url.AppendInt(aProgress, 10);
     if (0 != aProgressMax) {
-      url.Append(NS_LITERAL_STRING(" (out of "));
+      url.AppendLiteral(" (out of ");
       url.AppendInt(aProgressMax, 10);
       url.Append(NS_LITERAL_STRING(")"));
     }

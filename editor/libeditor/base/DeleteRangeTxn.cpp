@@ -223,7 +223,7 @@ NS_IMETHODIMP DeleteRangeTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
 
 NS_IMETHODIMP DeleteRangeTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("DeleteRangeTxn"));
+  aString.AssignLiteral("DeleteRangeTxn");
   return NS_OK;
 }
 

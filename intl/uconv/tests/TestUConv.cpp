@@ -410,22 +410,22 @@ nsresult nsTestUConv::DisplayCharsets()
     
     printf(" ");
 
-    prop.Assign(NS_LITERAL_STRING(".notForBrowser"));
+    prop.AssignLiteral(".notForBrowser");
     res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("B"); 
     else printf("X");
 
-    prop.Assign(NS_LITERAL_STRING(".notForComposer"));
+    prop.AssignLiteral(".notForComposer");
     res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("C"); 
     else printf("X");
 
-    prop.Assign(NS_LITERAL_STRING(".notForMailView"));
+    prop.AssignLiteral(".notForMailView");
     res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((dec != NULL) && (NS_FAILED(res))) printf ("V"); 
     else printf("X");
 
-    prop.Assign(NS_LITERAL_STRING(".notForMailEdit"));
+    prop.AssignLiteral(".notForMailEdit");
     res = ccMan->GetCharsetData(charset->get(), prop.get(), str);
     if ((enc != NULL) && (NS_FAILED(res))) printf ("E"); 
     else printf("X");

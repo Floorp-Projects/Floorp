@@ -71,7 +71,7 @@ static void ConvertNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
     if (*start < 128) {
       out.Append(*start++);
     } else {
-      out.Append(NS_LITERAL_STRING("&#x"));
+      out.AppendLiteral("&#x");
       nsAutoString hex;
       hex.AppendInt(*start++, 16);
       out.Append(hex);
@@ -175,7 +175,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         nsCAutoString path;
         rv = uri->GetPath(path);
         if (NS_FAILED(rv)) return rv;
-        if (baseUri.Last() != '/' && !path.EqualsIgnoreCase("/%2F")) {
+        if (baseUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f")) {
             baseUri.Append('/');
             path.Append('/');
             uri->SetPath(path);
@@ -196,11 +196,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
              if (NS_FAILED(rv)) return rv;
              rv = newUri->GetAsciiSpec(titleUri);
              if (NS_FAILED(rv)) return rv;
-             if (titleUri.Last() != '/' && !path.EqualsIgnoreCase("/%2F"))
+             if (titleUri.Last() != '/' && !path.LowerCaseEqualsLiteral("/%2f"))
                  titleUri.Append('/');
         }
 
-        if (!path.Equals("//") && !path.EqualsIgnoreCase("/%2F")) {
+        if (!path.Equals("//") && !path.LowerCaseEqualsLiteral("/%2f")) {
             rv = uri->Resolve(NS_LITERAL_CSTRING(".."),parentStr);
             if (NS_FAILED(rv)) return rv;
         }
@@ -257,7 +257,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     }
 
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0\" encoding=\""));
+    buffer.AssignLiteral("<?xml version=\"1.0\" encoding=\"");
     
     // Get the encoding from the parser
     // XXX - this won't work for any encoding set via a 301: line in the
@@ -278,7 +278,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // Anything but a gopher url needs to end in a /,
     // otherwise we end up linking to file:///foo/dirfile
 
-    buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
+    buffer.AppendLiteral("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>");
 
     nsXPIDLString title;
 
@@ -312,9 +312,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     ConvertNonAsciiToNCR(title, strNCR);
     buffer.Append(strNCR);
 
-    buffer.Append(NS_LITERAL_STRING("</title><base href=\""));    
+    buffer.AppendLiteral("</title><base href=\"");    
     AppendASCIItoUTF16(baseUri, buffer);
-    buffer.Append(NS_LITERAL_STRING("\"/>\n"));
+    buffer.AppendLiteral("\"/>\n");
 
     buffer.Append(NS_LITERAL_STRING("<style type=\"text/css\">\n") +
                   NS_LITERAL_STRING("img { border: 0; padding: 0 2px; vertical-align: text-bottom; }\n") +
@@ -324,7 +324,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                   NS_LITERAL_STRING("a.symlink { font-style: italic; }\n") +
                   NS_LITERAL_STRING("</style>\n"));
 
-    buffer.Append(NS_LITERAL_STRING("</head>\n<body>\n<h1>"));
+    buffer.AppendLiteral("</head>\n<body>\n<h1>");
     
     const PRUnichar* formatHeading[] = {
         htmlEscSpec.get()
@@ -338,9 +338,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     
     ConvertNonAsciiToNCR(title, strNCR);
     buffer.Append(strNCR);
-    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr/><table>\n"));
+    buffer.AppendLiteral("</h1>\n<hr/><table>\n");
 
-    //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
+    //buffer.AppendLiteral("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n");
 
     if (!parentStr.IsEmpty()) {
         nsXPIDLString parentText;
@@ -349,7 +349,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         if (NS_FAILED(rv)) return rv;
         
         ConvertNonAsciiToNCR(parentText, strNCR);
-        buffer.Append(NS_LITERAL_STRING("<tr><td colspan=\"3\"><a href=\""));
+        buffer.AppendLiteral("<tr><td colspan=\"3\"><a href=\"");
         AppendASCIItoUTF16(parentStr, buffer);
         buffer.Append(NS_LITERAL_STRING("\">") +
                       strNCR +
@@ -372,7 +372,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     nsresult rv = NS_OK;
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("</table><hr/></body></html>\n"));
+    buffer.AssignLiteral("</table><hr/></body></html>\n");
 
     rv = FormatInputStream(request, aContext, buffer);
     if (NS_FAILED(rv)) return rv;
@@ -476,15 +476,15 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         return NS_ERROR_NULL_POINTER;
 
     nsString pushBuffer;
-    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td><a"));
+    pushBuffer.AppendLiteral("<tr>\n <td><a");
 
     PRUint32 type;
     aIndex->GetType(&type);
     if (type == nsIDirIndex::TYPE_SYMLINK) {
-        pushBuffer.Append(NS_LITERAL_STRING(" class=\"symlink\""));
+        pushBuffer.AppendLiteral(" class=\"symlink\"");
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING(" href=\""));
+    pushBuffer.AppendLiteral(" href=\"");
 
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
@@ -526,19 +526,19 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
   
     AppendUTF8toUTF16(escapeBuf, pushBuffer);
     
-    pushBuffer.Append(NS_LITERAL_STRING("\"><img src=\""));
+    pushBuffer.AppendLiteral("\"><img src=\"");
 
     switch (type) {
     case nsIDirIndex::TYPE_DIRECTORY:
     case nsIDirIndex::TYPE_SYMLINK:
-        pushBuffer.Append(NS_LITERAL_STRING("resource://gre/res/html/gopher-menu.gif\" alt=\"Directory: "));
+        pushBuffer.AppendLiteral("resource://gre/res/html/gopher-menu.gif\" alt=\"Directory: ");
         break;
     case nsIDirIndex::TYPE_FILE:
     case nsIDirIndex::TYPE_UNKNOWN:
-        pushBuffer.Append(NS_LITERAL_STRING("resource://gre/res/html/gopher-unknown.gif\" alt=\"File: "));
+        pushBuffer.AppendLiteral("resource://gre/res/html/gopher-unknown.gif\" alt=\"File: ");
         break;
     }
-    pushBuffer.Append(NS_LITERAL_STRING("\"/>"));
+    pushBuffer.AppendLiteral("\"/>");
 
     nsXPIDLString tmp;
     aIndex->GetDescription(getter_Copies(tmp));
@@ -546,7 +546,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     pushBuffer.Append(escaped);
     nsMemory::Free(escaped);
 
-    pushBuffer.Append(NS_LITERAL_STRING("</a></td>\n <td>"));
+    pushBuffer.AppendLiteral("</a></td>\n <td>");
 
     PRInt64 size;
     aIndex->GetSize(&size);
@@ -559,13 +559,13 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.Append(sizeString);
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
+    pushBuffer.AppendLiteral("</td>\n <td>");
 
     PRTime t;
     aIndex->GetLastModified(&t);
 
     if (t == -1) {
-        pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
+        pushBuffer.AppendLiteral("</td>\n <td>");
     } else {
         nsAutoString formatted;
         nsAutoString strNCR;    // use NCR to show date in any doc charset
@@ -576,7 +576,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
                                 formatted);
         ConvertNonAsciiToNCR(formatted, strNCR);
         pushBuffer.Append(strNCR);
-        pushBuffer.Append(NS_LITERAL_STRING("</td>\n <td>"));
+        pushBuffer.AppendLiteral("</td>\n <td>");
         mDateTime->FormatPRTime(nsnull,
                                 kDateFormatNone,
                                 kTimeFormatSeconds,
@@ -586,12 +586,12 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.Append(strNCR);
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n</tr>\n"));
+    pushBuffer.AppendLiteral("</td>\n</tr>\n");
 
     // Split this up to avoid slow layout performance with large tables
     // - bug 85381
     if (++mRowCount > ROWS_PER_TABLE) {
-        pushBuffer.Append(NS_LITERAL_STRING("</table>\n<table>\n"));
+        pushBuffer.AppendLiteral("</table>\n<table>\n");
         mRowCount = 0;
     }
     
@@ -628,7 +628,7 @@ void nsIndexedToHTML::FormatSizeString(PRInt64 inSize, nsString& outSizeString)
         // round up to the nearest Kilobyte
         PRInt64  upperSize = (size + nsInt64(1023)) / nsInt64(1024);
         outSizeString.AppendInt(upperSize);
-        outSizeString.Append(NS_LITERAL_STRING(" KB"));
+        outSizeString.AppendLiteral(" KB");
     }
 }
 

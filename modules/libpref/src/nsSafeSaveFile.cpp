@@ -99,7 +99,7 @@ nsresult nsSafeSaveFile::OnSaveFinished(PRBool aSaveSucceeded, PRBool aBackupTar
       PRInt32 pos = backupFilename.RFindChar('.');
       if (pos != -1)
         backupFilename.Truncate(pos);
-      backupFilename.Append(NS_LITERAL_CSTRING(".bak"));
+      backupFilename.AppendLiteral(".bak");
       
       // Find a unique name for the backup by using CreateUnique
       nsCOMPtr<nsIFile> uniqueFile;

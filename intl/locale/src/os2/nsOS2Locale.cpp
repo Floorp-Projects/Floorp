@@ -106,7 +106,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
 
   if (os2Locale!=nsnull) {
     if (strcmp(os2Locale,"C")==0 || strcmp(os2Locale,"OS2")==0) {
-      locale.Assign(NS_LITERAL_STRING("en-US"));
+      locale.AssignLiteral("en-US");
       return NS_OK;
     }
     if (!ParseLocaleString(os2Locale,lang_code,country_code,extra,'_')) {

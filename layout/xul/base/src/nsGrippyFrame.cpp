@@ -103,7 +103,7 @@ nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent)
         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, oldState))
         {
             if (oldState.Equals(newState))
-                newState.Assign(NS_LITERAL_STRING("open"));
+                newState.AssignLiteral("open");
         }
 
         content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, newState, PR_TRUE);

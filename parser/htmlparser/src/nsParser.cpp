@@ -294,7 +294,7 @@ nsParser::nsParser() {
   }
 #endif
 
-  mCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+  mCharset.AssignLiteral("ISO-8859-1");
   mParserContext=0;
   mStreamStatus=0;
   mCharsetSource=kCharsetUninitialized;
@@ -1680,12 +1680,12 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
   PRUint32 theIndex = 0;
   
   while (theIndex++ < theCount){
-    theContext.Append(NS_LITERAL_STRING("<"));
+    theContext.AppendLiteral("<");
     theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex));
-    theContext.Append(NS_LITERAL_STRING(">"));
+    theContext.AppendLiteral(">");
   }
   
-  theContext.Append(NS_LITERAL_STRING("<endnote>"));       //XXXHack! I'll make this better later.
+  theContext.AppendLiteral("<endnote>");       //XXXHack! I'll make this better later.
     
   //now it's time to try to build the model from this fragment
 
@@ -2452,12 +2452,12 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     //What we'll do (for now at least) is construct a blank HTML document.
     if (!mParserContext->mMimeType.EqualsLiteral(kPlainTextContentType))
     {
-      temp.Assign(NS_LITERAL_STRING("<html><body></body></html>"));
+      temp.AssignLiteral("<html><body></body></html>");
     }
     // XXX: until bug #108067 has been fixed we must ensure that *something*
     //      is in the scanner!  so, for now just put in a single space.
     else {
-      temp.Assign(NS_LITERAL_STRING(" "));
+      temp.AssignLiteral(" ");
     }
     mParserContext->mScanner->Append(temp);
     result=ResumeParse(PR_TRUE,PR_TRUE);    

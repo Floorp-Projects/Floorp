@@ -122,35 +122,35 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
       {
         float val = NSTwipsToFloatPixels(mValue.mTwips, mT2P);
         tmpStr.AppendFloat(val);
-        tmpStr.Append(NS_LITERAL_STRING("px"));
+        tmpStr.AppendLiteral("px");
         break;
       }
     case CSS_CM :
       {
         float val = NS_TWIPS_TO_CENTIMETERS(mValue.mTwips);
         tmpStr.AppendFloat(val);
-        tmpStr.Append(NS_LITERAL_STRING("cm"));
+        tmpStr.AppendLiteral("cm");
         break;
       }
     case CSS_MM :
       {
         float val = NS_TWIPS_TO_MILLIMETERS(mValue.mTwips);
         tmpStr.AppendFloat(val);
-        tmpStr.Append(NS_LITERAL_STRING("mm"));
+        tmpStr.AppendLiteral("mm");
         break;
       }
     case CSS_IN :
       {
         float val = NS_TWIPS_TO_INCHES(mValue.mTwips);
         tmpStr.AppendFloat(val);
-        tmpStr.Append(NS_LITERAL_STRING("in"));
+        tmpStr.AppendLiteral("in");
         break;
       }
     case CSS_PT :
       {
         float val = NSTwipsToFloatPoints(mValue.mTwips);
         tmpStr.AppendFloat(val);
-        tmpStr.Append(NS_LITERAL_STRING("pt"));
+        tmpStr.AppendLiteral("pt");
         break;
       }
     case CSS_IDENT :
@@ -197,7 +197,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         NS_NAMED_LITERAL_STRING(comma, ", ");
         nsCOMPtr<nsIDOMCSSPrimitiveValue> sideCSSValue;
         nsAutoString sideValue;
-        tmpStr = NS_LITERAL_STRING("rect(");
+        tmpStr.AssignLiteral("rect(");
         // get the top
         result = mValue.mRect->GetTop(getter_AddRefs(sideCSSValue));
         if (NS_FAILED(result))
@@ -238,7 +238,7 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
         NS_NAMED_LITERAL_STRING(comma, ", ");
         nsCOMPtr<nsIDOMCSSPrimitiveValue> colorCSSValue;
         nsAutoString colorValue;
-        tmpStr = NS_LITERAL_STRING("rgb(");
+        tmpStr.AssignLiteral("rgb(");
 
         // get the red component
         result = mValue.mColor->GetRed(getter_AddRefs(colorCSSValue));

@@ -184,7 +184,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
 
   aReturn.Truncate();
   if (decl && decl->GetValueIsImportant(aPropertyName)) {
-    aReturn.Assign(NS_LITERAL_STRING("important"));    
+    aReturn.AssignLiteral("important");    
   }
 
   return result;

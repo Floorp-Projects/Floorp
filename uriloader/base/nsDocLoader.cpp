@@ -88,7 +88,7 @@ void GetURIStringFromRequest(nsIRequest* request, nsACString &name)
     if (request)
         request->GetName(name);
     else
-        name = NS_LITERAL_CSTRING("???");
+        name.AssignLiteral("???");
 }
 #endif /* DEBUG */
 

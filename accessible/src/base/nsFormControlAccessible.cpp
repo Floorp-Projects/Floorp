@@ -71,7 +71,7 @@ NS_IMETHODIMP nsFormControlAccessible::GetState(PRUint32 *_retval)
     htmlFormElement->GetDisabled(&disabled);
     nsAutoString typeString;
     htmlFormElement->GetType(typeString);
-    if (typeString.EqualsIgnoreCase("password"))
+    if (typeString.LowerCaseEqualsLiteral("password"))
       *_retval |= STATE_PROTECTED;
   }
   else {

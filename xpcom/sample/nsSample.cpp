@@ -171,7 +171,7 @@ nsSampleImpl::WriteValue(const char* aPrefix)
     nsEmbedCString foopy2;
     GetStringValue(foopy2);
 
-    //foopy2.Append(NS_LITERAL_CSTRING("foopy"));
+    //foopy2.AppendLiteral("foopy");
     const char* f2 = foopy2.get();
     PRUint32 l2 = foopy2.Length();
 

@@ -168,7 +168,7 @@ nsTextNode::Tag() const
 NS_IMETHODIMP
 nsTextNode::GetNodeName(nsAString& aNodeName)
 {
-  aNodeName.Assign(NS_LITERAL_STRING("#text"));
+  aNodeName.AssignLiteral("#text");
   return NS_OK;
 }
 

@@ -91,7 +91,7 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
   {
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(NS_LITERAL_STRING("type"), typeAttrVal);
-    if (NS_SUCCEEDED(res) && (typeAttrVal.EqualsIgnoreCase("_moz")))
+    if (NS_SUCCEEDED(res) && (typeAttrVal.LowerCaseEqualsLiteral("_moz")))
       return PR_TRUE;
   }
   return PR_FALSE;

@@ -224,7 +224,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     name.SetLength(nsUnescapeCount(name.BeginWriting()));
 
     // All tokens are case-insensitive - http://www.mozilla.org/projects/netlib/dirindexformat.html
-    if (name.EqualsIgnoreCase("description"))
+    if (name.LowerCaseEqualsLiteral("description"))
       mHasDescription = PR_TRUE;
     
     for (Field* i = gFieldTable; i->mName; ++i) {

@@ -73,14 +73,14 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
       if (mIsForMail) {
         nsAutoString cite;
         if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mTypeAtom, cite))) {
-          *_retval = cite.EqualsIgnoreCase("cite");
+          *_retval = cite.LowerCaseEqualsLiteral("cite");
         }
       }
     } else if (tag == mPreAtom || tag == mSpanAtom) {
       if (mIsForMail) {
         nsAutoString mozQuote;
         if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mMozQuoteAtom, mozQuote))) {
-          *_retval = mozQuote.EqualsIgnoreCase("true");            
+          *_retval = mozQuote.LowerCaseEqualsLiteral("true");            
         }
       }         
     } else if (tag == mScriptAtom ||

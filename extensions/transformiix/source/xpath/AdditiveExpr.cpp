@@ -88,18 +88,18 @@ void
 AdditiveExpr::toString(nsAString& str)
 {
     if ( leftExpr ) leftExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
     switch ( op ) {
         case SUBTRACTION:
-            str.Append(NS_LITERAL_STRING(" - "));
+            str.AppendLiteral(" - ");
             break;
         default:
-            str.Append(NS_LITERAL_STRING(" + "));
+            str.AppendLiteral(" + ");
             break;
     }
     if ( rightExpr ) rightExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
 }
 #endif

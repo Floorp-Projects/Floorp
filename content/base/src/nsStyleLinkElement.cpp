@@ -250,7 +250,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
   GetStyleSheetInfo(title, type, media, &isAlternate);
 
-  if (!type.EqualsIgnoreCase("text/css")) {
+  if (!type.LowerCaseEqualsLiteral("text/css")) {
     return NS_OK;
   }
 

@@ -118,7 +118,7 @@ myspAffixMgr::Load(const nsString& aDictionary)
 
   //get the affix file
   nsString affName=aDictionary;
-  affName.Append(NS_LITERAL_STRING(".aff"));
+  affName.AppendLiteral(".aff");
   res=affFile->Append(affName);
   if(NS_FAILED(res)) return res; 
   res = affFile->Exists(&fileExists);
@@ -127,7 +127,7 @@ myspAffixMgr::Load(const nsString& aDictionary)
 
   //get the dictionary file
   nsString dicName=aDictionary;
-  dicName.Append(NS_LITERAL_STRING(".dic"));
+  dicName.AppendLiteral(".dic");
   res=dicFile->Append(dicName);
   if(NS_FAILED(res)) return res; 
   res = dicFile->Exists(&fileExists);

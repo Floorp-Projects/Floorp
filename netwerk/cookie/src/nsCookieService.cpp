@@ -623,7 +623,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
       // if we've already added a cookie to the return list, append a "; " so
       // that subsequent cookies are delimited in the final list.
       if (!cookieData.IsEmpty()) {
-        cookieData += NS_LITERAL_CSTRING("; ");
+        cookieData.AppendLiteral("; ");
       }
 
       if (!cookie->Name().IsEmpty()) {

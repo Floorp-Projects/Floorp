@@ -127,7 +127,7 @@ nsXMLCDATASection::IsContentOfType(PRUint32 aFlags) const
 NS_IMETHODIMP
 nsXMLCDATASection::GetNodeName(nsAString& aNodeName)
 {
-  aNodeName.Assign(NS_LITERAL_STRING("#cdata-section"));
+  aNodeName.AssignLiteral("#cdata-section");
   return NS_OK;
 }
 

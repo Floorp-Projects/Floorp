@@ -204,7 +204,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 nsWindow::nsWindow() : nsWidget()
 {
-  mName.Assign(NS_LITERAL_STRING("nsWindow"));
+  mName.AssignLiteral("nsWindow");
   mBackground = NS_RGB(255, 255, 255);
   mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
   mBorderRGB = NS_RGB(255,255,255);
@@ -741,7 +741,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
   
   if (NS_FAILED(rv))
-    platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+    platformCharset.AssignLiteral("ISO-8859-1");
 
   /* get the encoder */
   nsCOMPtr<nsICharsetConverterManager> ccm = 
@@ -797,7 +797,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
 
 ChildWindow::ChildWindow(): nsWindow()
 {
-  mName.Assign(NS_LITERAL_STRING("nsChildWindow"));
+  mName.AssignLiteral("nsChildWindow");
 }
 
 

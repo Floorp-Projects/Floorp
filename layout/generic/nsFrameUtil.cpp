@@ -477,7 +477,7 @@ nsFrameUtil::Tag::ToString(nsString& aResult)
       aResult.Append(PRUnichar(' '));
       aResult.AppendWithConversion(attributes[i]);
       if (values[i]) {
-        aResult.Append(NS_LITERAL_STRING("=\""));
+        aResult.AppendLiteral("=\"");
         aResult.AppendWithConversion(values[i]);
         aResult.Append(PRUnichar('\"'));
       }

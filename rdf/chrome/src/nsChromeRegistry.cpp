@@ -2322,8 +2322,8 @@ nsChromeRegistry::InstallProvider(const nsACString& aProviderType,
   // Get the literal for our loc type.
   nsAutoString locstr;
   if (aUseProfile)
-    locstr.Assign(NS_LITERAL_STRING("profile"));
-  else locstr.Assign(NS_LITERAL_STRING("install"));
+    locstr.AssignLiteral("profile");
+  else locstr.AssignLiteral("install");
   nsCOMPtr<nsIRDFLiteral> locLiteral;
   rv = mRDFService->GetLiteral(locstr.get(), getter_AddRefs(locLiteral));
   if (NS_FAILED(rv)) return rv;

@@ -999,25 +999,25 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     case NS_ERROR_FILE_DISK_FULL:
     case NS_ERROR_FILE_NO_DEVICE_SPACE:
         // Out of space on target volume.
-        msgId = NS_LITERAL_STRING("diskFull");
+        msgId.AssignLiteral("diskFull");
         break;
 
     case NS_ERROR_FILE_READ_ONLY:
         // Attempt to write to read/only file.
-        msgId = NS_LITERAL_STRING("readOnly");
+        msgId.AssignLiteral("readOnly");
         break;
 
     case NS_ERROR_FILE_ACCESS_DENIED:
         // Attempt to write without sufficient permissions.
-        msgId = NS_LITERAL_STRING("accessError");
+        msgId.AssignLiteral("accessError");
         break;
 
     default:
         // Generic read/write error message.
         if (aIsReadError)
-            msgId = NS_LITERAL_STRING("readError");
+            msgId.AssignLiteral("readError");
         else
-            msgId = NS_LITERAL_STRING("writeError");
+            msgId.AssignLiteral("writeError");
         break;
     }
     // Get properties file bundle and extract status string.
@@ -2715,8 +2715,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
 
                 // Store the link for fix up if it says "stylesheet"
                 if (Substring(startWord, current)
-                        .Equals(NS_LITERAL_STRING("stylesheet"),
-                                nsCaseInsensitiveStringComparator()))
+                        .LowerCaseEqualsLiteral("stylesheet"))
                 {
                     StoreURIAttribute(aNode, "href");
                     return NS_OK;
@@ -2743,7 +2742,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             {
                 nsXPIDLString ext;
                 GetDocumentExtension(content, getter_Copies(ext));
-                data->mSubFrameExt.Assign(NS_LITERAL_STRING("."));
+                data->mSubFrameExt.AssignLiteral(".");
                 data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
@@ -2766,7 +2765,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             {
                 nsXPIDLString ext;
                 GetDocumentExtension(content, getter_Copies(ext));
-                data->mSubFrameExt.Assign(NS_LITERAL_STRING("."));
+                data->mSubFrameExt.AssignLiteral(".");
                 data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
@@ -2841,7 +2840,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
                 nsAutoString href;
                 nodeAsBase->GetHref(href); // Doesn't matter if this fails
                 nsCOMPtr<nsIDOMComment> comment;
-                nsAutoString commentText; commentText.Assign(NS_LITERAL_STRING(" base "));
+                nsAutoString commentText; commentText.AssignLiteral(" base ");
                 if (!href.IsEmpty())
                 {
                     commentText += NS_LITERAL_STRING("href=\"") + href + NS_LITERAL_STRING("\" ");
@@ -3282,7 +3281,7 @@ nsWebBrowserPersist::SaveSubframeContent(
     nsAutoString newFrameDataPath(aData->mFilename);
 
     // Append _data
-    newFrameDataPath.Append(NS_LITERAL_STRING("_data"));
+    newFrameDataPath.AppendLiteral("_data");
     rv = AppendPathToURI(frameDataURI, newFrameDataPath);
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 

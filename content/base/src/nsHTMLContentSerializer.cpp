@@ -124,13 +124,13 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows
-    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
+    mLineBreak.AssignLiteral("\r\n");
   }
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
-    mLineBreak.Assign(NS_LITERAL_STRING("\r"));
+    mLineBreak.AssignLiteral("\r");
   }
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) { // Unix/DOM
-    mLineBreak.Assign(NS_LITERAL_STRING("\n"));
+    mLineBreak.AssignLiteral("\n");
   }
   else {
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
@@ -1303,7 +1303,7 @@ nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
     if (currElement) {
       nsAutoString tagName;
       currElement->GetTagName(tagName);
-      if (tagName.EqualsIgnoreCase("LI")) {
+      if (tagName.LowerCaseEqualsLiteral("li")) {
         currElement->GetAttribute(NS_LITERAL_STRING("value"), valueStr);
         if (valueStr.IsEmpty())
           offset++;
@@ -1351,7 +1351,7 @@ nsHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement){
   else
     return PR_FALSE;
   
-  if (parentName.EqualsIgnoreCase("OL")) {
+  if (parentName.LowerCaseEqualsLiteral("ol")) {
     olState defaultOLState(0, PR_FALSE);
     olState* state = nsnull;
     if (mOLStateStack.Count() > 0) 

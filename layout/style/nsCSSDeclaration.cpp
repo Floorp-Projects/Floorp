@@ -202,7 +202,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
                        "Top inherit or initial, left isn't.  Fix the parser!");
           AppendCSSValueToString(aProperty, rect->mTop, aResult);
         } else {
-          aResult.Append(NS_LITERAL_STRING("rect("));
+          aResult.AppendLiteral("rect(");
           AppendCSSValueToString(aProperty, rect->mTop, aResult);
           NS_NAMED_LITERAL_STRING(comma, ", ");
           aResult.Append(comma);
@@ -269,7 +269,7 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
             }
             if (AppendCSSValueToString(aProperty, shadow->mRadius, aResult) &&
                 shadow->mNext)
-              aResult.Append(NS_LITERAL_STRING(", "));
+              aResult.AppendLiteral(", ");
             shadow = shadow->mNext;
           }
         }
@@ -292,11 +292,11 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
 
   if ((eCSSUnit_String <= unit) && (unit <= eCSSUnit_Counters)) {
     switch (unit) {
-      case eCSSUnit_Attr:     aResult.Append(NS_LITERAL_STRING("attr("));
+      case eCSSUnit_Attr:     aResult.AppendLiteral("attr(");
         break;
-      case eCSSUnit_Counter:  aResult.Append(NS_LITERAL_STRING("counter("));
+      case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");
         break;
-      case eCSSUnit_Counters: aResult.Append(NS_LITERAL_STRING("counters("));
+      case eCSSUnit_Counters: aResult.AppendLiteral("counters(");
         break;
       default:  break;
     }
@@ -397,7 +397,7 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     nsAutoString tmpStr;
     nscolor color = aValue.GetColorValue();
 
-    aResult.Append(NS_LITERAL_STRING("rgb("));
+    aResult.AppendLiteral("rgb(");
 
     NS_NAMED_LITERAL_STRING(comma, ", ");
 
@@ -432,11 +432,11 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
 
   switch (unit) {
     case eCSSUnit_Null:         break;
-    case eCSSUnit_Auto:         aResult.Append(NS_LITERAL_STRING("auto"));     break;
-    case eCSSUnit_Inherit:      aResult.Append(NS_LITERAL_STRING("inherit"));  break;
-    case eCSSUnit_Initial:      aResult.Append(NS_LITERAL_STRING("initial"));  break;
-    case eCSSUnit_None:         aResult.Append(NS_LITERAL_STRING("none"));     break;
-    case eCSSUnit_Normal:       aResult.Append(NS_LITERAL_STRING("normal"));   break;
+    case eCSSUnit_Auto:         aResult.AppendLiteral("auto");     break;
+    case eCSSUnit_Inherit:      aResult.AppendLiteral("inherit");  break;
+    case eCSSUnit_Initial:      aResult.AppendLiteral("initial");  break;
+    case eCSSUnit_None:         aResult.AppendLiteral("none");     break;
+    case eCSSUnit_Normal:       aResult.AppendLiteral("normal");   break;
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:          break;
@@ -450,37 +450,37 @@ PRBool nsCSSDeclaration::AppendCSSValueToString(nsCSSProperty aProperty, const n
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
 
-    case eCSSUnit_Inch:         aResult.Append(NS_LITERAL_STRING("in"));   break;
-    case eCSSUnit_Foot:         aResult.Append(NS_LITERAL_STRING("ft"));   break;
-    case eCSSUnit_Mile:         aResult.Append(NS_LITERAL_STRING("mi"));   break;
-    case eCSSUnit_Millimeter:   aResult.Append(NS_LITERAL_STRING("mm"));   break;
-    case eCSSUnit_Centimeter:   aResult.Append(NS_LITERAL_STRING("cm"));   break;
-    case eCSSUnit_Meter:        aResult.Append(NS_LITERAL_STRING("m"));    break;
-    case eCSSUnit_Kilometer:    aResult.Append(NS_LITERAL_STRING("km"));   break;
-    case eCSSUnit_Point:        aResult.Append(NS_LITERAL_STRING("pt"));   break;
-    case eCSSUnit_Pica:         aResult.Append(NS_LITERAL_STRING("pc"));   break;
-    case eCSSUnit_Didot:        aResult.Append(NS_LITERAL_STRING("dt"));   break;
-    case eCSSUnit_Cicero:       aResult.Append(NS_LITERAL_STRING("cc"));   break;
+    case eCSSUnit_Inch:         aResult.AppendLiteral("in");   break;
+    case eCSSUnit_Foot:         aResult.AppendLiteral("ft");   break;
+    case eCSSUnit_Mile:         aResult.AppendLiteral("mi");   break;
+    case eCSSUnit_Millimeter:   aResult.AppendLiteral("mm");   break;
+    case eCSSUnit_Centimeter:   aResult.AppendLiteral("cm");   break;
+    case eCSSUnit_Meter:        aResult.AppendLiteral("m");    break;
+    case eCSSUnit_Kilometer:    aResult.AppendLiteral("km");   break;
+    case eCSSUnit_Point:        aResult.AppendLiteral("pt");   break;
+    case eCSSUnit_Pica:         aResult.AppendLiteral("pc");   break;
+    case eCSSUnit_Didot:        aResult.AppendLiteral("dt");   break;
+    case eCSSUnit_Cicero:       aResult.AppendLiteral("cc");   break;
 
-    case eCSSUnit_EM:           aResult.Append(NS_LITERAL_STRING("em"));   break;
-    case eCSSUnit_EN:           aResult.Append(NS_LITERAL_STRING("en"));   break;
-    case eCSSUnit_XHeight:      aResult.Append(NS_LITERAL_STRING("ex"));   break;
-    case eCSSUnit_CapHeight:    aResult.Append(NS_LITERAL_STRING("cap"));  break;
-    case eCSSUnit_Char:         aResult.Append(NS_LITERAL_STRING("ch"));   break;
+    case eCSSUnit_EM:           aResult.AppendLiteral("em");   break;
+    case eCSSUnit_EN:           aResult.AppendLiteral("en");   break;
+    case eCSSUnit_XHeight:      aResult.AppendLiteral("ex");   break;
+    case eCSSUnit_CapHeight:    aResult.AppendLiteral("cap");  break;
+    case eCSSUnit_Char:         aResult.AppendLiteral("ch");   break;
 
-    case eCSSUnit_Pixel:        aResult.Append(NS_LITERAL_STRING("px"));   break;
+    case eCSSUnit_Pixel:        aResult.AppendLiteral("px");   break;
 
-    case eCSSUnit_Proportional: aResult.Append(NS_LITERAL_STRING("*"));   break;
+    case eCSSUnit_Proportional: aResult.AppendLiteral("*");   break;
 
-    case eCSSUnit_Degree:       aResult.Append(NS_LITERAL_STRING("deg"));  break;
-    case eCSSUnit_Grad:         aResult.Append(NS_LITERAL_STRING("grad")); break;
-    case eCSSUnit_Radian:       aResult.Append(NS_LITERAL_STRING("rad"));  break;
+    case eCSSUnit_Degree:       aResult.AppendLiteral("deg");  break;
+    case eCSSUnit_Grad:         aResult.AppendLiteral("grad"); break;
+    case eCSSUnit_Radian:       aResult.AppendLiteral("rad");  break;
 
-    case eCSSUnit_Hertz:        aResult.Append(NS_LITERAL_STRING("Hz"));   break;
-    case eCSSUnit_Kilohertz:    aResult.Append(NS_LITERAL_STRING("kHz"));  break;
+    case eCSSUnit_Hertz:        aResult.AppendLiteral("Hz");   break;
+    case eCSSUnit_Kilohertz:    aResult.AppendLiteral("kHz");  break;
 
     case eCSSUnit_Seconds:      aResult.Append(PRUnichar('s'));    break;
-    case eCSSUnit_Milliseconds: aResult.Append(NS_LITERAL_STRING("ms"));   break;
+    case eCSSUnit_Milliseconds: aResult.AppendLiteral("ms");   break;
   }
 
   return PR_TRUE;
@@ -736,7 +736,7 @@ void
 nsCSSDeclaration::AppendImportanceToString(PRBool aIsImportant, nsAString& aString) const
 {
   if (aIsImportant) {
-   aString.Append(NS_LITERAL_STRING(" ! important"));
+   aString.AppendLiteral(" ! important");
   }
 }
 
@@ -748,11 +748,11 @@ nsCSSDeclaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
   NS_ASSERTION(0 <= aProperty && aProperty < eCSSProperty_COUNT_no_shorthands,
                "property enum out of range");
   AppendASCIItoUTF16(nsCSSProps::GetStringValue(aPropertyName), aResult);
-  aResult.Append(NS_LITERAL_STRING(": "));
+  aResult.AppendLiteral(": ");
   AppendValueToString(aProperty, aResult);
   PRBool  isImportant = GetValueIsImportant(aProperty);
   AppendImportanceToString(isImportant, aResult);
-  aResult.Append(NS_LITERAL_STRING("; "));
+  aResult.AppendLiteral("; ");
 }
 
 PRBool
@@ -804,7 +804,7 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
   }
   if (border) {
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_border), aString);
-    aString.Append(NS_LITERAL_STRING(": "));
+    aString.AppendLiteral(": ");
 
     AppendValueToString(eCSSProperty_border_top_width, aString);
     aString.Append(PRUnichar(' '));
@@ -822,7 +822,7 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
       aString.Append(valueString);
     }
     AppendImportanceToString(isImportant, aString);
-    aString.Append(NS_LITERAL_STRING("; "));
+    aString.AppendLiteral("; ");
   }
   return border;
 }
@@ -839,7 +839,7 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
                                   0, 0, 0,
                                   isImportant)) {
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(aShorthand), aString);
-    aString.Append(NS_LITERAL_STRING(": "));
+    aString.AppendLiteral(": ");
 
     AppendValueToString(OrderValueAt(aBorderWidth-1), aString);
 
@@ -849,11 +849,11 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
     nsAutoString valueString;
     AppendValueToString(OrderValueAt(aBorderColor-1), valueString);
     if (!valueString.EqualsLiteral("-moz-use-text-color")) {
-      aString.Append(NS_LITERAL_STRING(" "));
+      aString.AppendLiteral(" ");
       aString.Append(valueString);
     }
     AppendImportanceToString(isImportant, aString);
-    aString.Append(NS_LITERAL_STRING("; "));
+    aString.AppendLiteral("; ");
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -876,7 +876,7 @@ nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
                                   isImportant)) {
     // all 4 properties are set, we can output a shorthand
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(aShorthand), aString);
-    aString.Append(NS_LITERAL_STRING(": "));
+    aString.AppendLiteral(": ");
     nsCSSValue topValue, bottomValue, leftValue, rightValue;
     nsCSSProperty topProp    = OrderValueAt(aTop-1);
     nsCSSProperty bottomProp = OrderValueAt(aBottom-1);
@@ -903,7 +903,7 @@ nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
       aTop = 0; aBottom = 0; aLeft = 0; aRight = 0;
     }
     AppendImportanceToString(isImportant, aString);
-    aString.Append(NS_LITERAL_STRING("; "));
+    aString.AppendLiteral("; ");
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -926,7 +926,7 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
       AllPropertiesSameImportance(aBgColor, aBgImage, aBgRepeat, aBgAttachment,
                                   aBgPositionX, aBgPositionY, isImportant)) {
     AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_background), aString);
-    aString.Append(NS_LITERAL_STRING(": "));
+    aString.AppendLiteral(": ");
 
     AppendValueToString(eCSSProperty_background_color, aString);
     aBgColor = 0;
@@ -946,7 +946,7 @@ nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
     aString.Append(PRUnichar(' '));
     UseBackgroundPosition(aString, aBgPositionX, aBgPositionY);
     AppendImportanceToString(isImportant, aString);
-    aString.Append(NS_LITERAL_STRING("; "));
+    aString.AppendLiteral("; ");
   }
 }
 
@@ -1198,10 +1198,10 @@ nsCSSDeclaration::ToString(nsAString& aString) const
             AllPropertiesSameImportance(bgPositionX, bgPositionY,
                                         0, 0, 0, 0, isImportant)) {
           AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_background_position), aString);
-          aString.Append(NS_LITERAL_STRING(": "));
+          aString.AppendLiteral(": ");
           UseBackgroundPosition(aString, bgPositionX, bgPositionY);
           AppendImportanceToString(isImportant, aString);
-          aString.Append(NS_LITERAL_STRING("; "));
+          aString.AppendLiteral("; ");
         }
         else if (eCSSProperty_background_x_position == property && bgPositionX) {
           AppendPropertyAndValueToString(eCSSProperty_background_x_position, aString);

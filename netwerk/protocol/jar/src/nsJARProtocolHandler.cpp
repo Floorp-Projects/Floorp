@@ -127,7 +127,7 @@ nsJARProtocolHandler::GetJARCache(nsIZipReaderCache* *result)
 NS_IMETHODIMP
 nsJARProtocolHandler::GetScheme(nsACString &result)
 {
-    result = NS_LITERAL_CSTRING("jar");
+    result.AssignLiteral("jar");
     return NS_OK;
 }
 

@@ -78,7 +78,7 @@
   if (nsnull != ptr) { delete ptr; ptr = nsnull; }
 
 #define NS_IF_NEGATED_START(bool,str)  \
-  if (bool) { str.Append(NS_LITERAL_STRING(":not(")); }
+  if (bool) { str.AppendLiteral(":not("); }
 
 #define NS_IF_NEGATED_END(bool,str)  \
   if (bool) { str.Append(PRUnichar(')')); }
@@ -525,7 +525,7 @@ static PRBool IsPseudoElement(nsIAtom* aAtom)
 
 void nsCSSSelector::AppendNegationToString(nsAString& aString)
 {
-  aString.Append(NS_LITERAL_STRING(":not("));
+  aString.AppendLiteral(":not(");
 }
 
 //
@@ -780,7 +780,7 @@ nsCSSSelectorList::ToString(nsAString& aResult, nsICSSStyleSheet* aSheet)
     p = p->mNext;
     if (!p)
       break;
-    aResult.Append(NS_LITERAL_STRING(", "));
+    aResult.AppendLiteral(", ");
   }
 }
 
@@ -1480,7 +1480,7 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
   if (mSelector)
     mSelector->ToString(buffer, mSheet);
 
-  buffer.Append(NS_LITERAL_STRING(" "));
+  buffer.AppendLiteral(" ");
   fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   if (nsnull != mDeclaration) {
     mDeclaration->List(out);

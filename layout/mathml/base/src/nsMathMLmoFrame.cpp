@@ -516,8 +516,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
   // don't process them here
 
   nsAutoString kfalse, ktrue;
-  kfalse.Assign(NS_LITERAL_STRING("false"));
-  ktrue.Assign(NS_LITERAL_STRING("true"));
+  kfalse.AssignLiteral("false");
+  ktrue.AssignLiteral("true");
 
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,

@@ -689,7 +689,7 @@ void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsCString& str)
     // if detect "FFFE" or "FEFF", assume UTF-16
     PRUnichar* beginChar =  (PRUnichar*)data;
     if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
-        str.Assign(NS_LITERAL_CSTRING("UTF-16"));
+        str.AssignLiteral("UTF-16");
         return;
     }
     // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -726,7 +726,7 @@ void GetHTMLCharset(guchar * data, PRInt32 dataLength, nsCString& str)
 #endif
         return;
     }
-    str.Assign(NS_LITERAL_CSTRING("UNKNOWN"));
+    str.AssignLiteral("UNKNOWN");
 }
 
 static void

@@ -756,7 +756,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     nsresult rv = NS_OK;
 
     if (mContentType.IsEmpty())
-        mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+        mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
 
     // if we already have an mPartChannel, that means we never sent a Stop()
     // before starting up another "part." that would be bad.
@@ -921,20 +921,20 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             headerVal.CompressWhitespace();
 
             // examine header
-            if (headerStr.EqualsIgnoreCase("content-type")) {
+            if (headerStr.LowerCaseEqualsLiteral("content-type")) {
                 mContentType = headerVal;
-            } else if (headerStr.EqualsIgnoreCase("content-length")) {
+            } else if (headerStr.LowerCaseEqualsLiteral("content-length")) {
                 mContentLength = atoi(headerVal.get());
-            } else if (headerStr.EqualsIgnoreCase("content-disposition")) {
+            } else if (headerStr.LowerCaseEqualsLiteral("content-disposition")) {
                 mContentDisposition = headerVal;
-            } else if (headerStr.EqualsIgnoreCase("set-cookie")) {
+            } else if (headerStr.LowerCaseEqualsLiteral("set-cookie")) {
                 nsCOMPtr<nsIHttpChannelInternal> httpInternal =
                     do_QueryInterface(aChannel);
                 if (httpInternal) {
                     httpInternal->SetCookie(headerVal.get());
                 }
-            } else if (headerStr.EqualsIgnoreCase("content-range") || 
-                       headerStr.EqualsIgnoreCase("range") ) {
+            } else if (headerStr.LowerCaseEqualsLiteral("content-range") || 
+                       headerStr.LowerCaseEqualsLiteral("range") ) {
                 // something like: Content-range: bytes 7000-7999/8000
                 char* tmpPtr;
 

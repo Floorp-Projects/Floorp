@@ -357,7 +357,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 
 NS_IMETHODIMP nsIconChannel::GetContentType(nsACString &aContentType) 
 {
-  aContentType = NS_LITERAL_CSTRING("image/x-icon");
+  aContentType.AssignLiteral("image/x-icon");
   return NS_OK;
 }
 

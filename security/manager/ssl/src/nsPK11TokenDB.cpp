@@ -88,11 +88,11 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
 
     // Set the Hardware Version field
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.major);
-    mTokenHWVersion.Append(NS_LITERAL_STRING("."));
+    mTokenHWVersion.AppendLiteral(".");
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.minor);
     // Set the Firmware Version field
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.major);
-    mTokenFWVersion.Append(NS_LITERAL_STRING("."));
+    mTokenFWVersion.AppendLiteral(".");
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.minor);
     // Set the Serial Number field
     const char *ccSerial = (const char*)tok_info.serialNumber;

@@ -144,44 +144,44 @@ void CnsiWebProg::ConvertWPFlagToString(PRUint32 theFlag,
 	switch(theFlag)
 	{
 	case nsIWebProgress::NOTIFY_STATE_REQUEST:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_REQUEST"));
+		flagName.AssignLiteral("NOTIFY_STATE_REQUEST");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_DOCUMENT:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT"));
+		flagName.AssignLiteral("NOTIFY_STATE_DOCUMENT");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_NETWORK:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_NETWORK"));
+		flagName.AssignLiteral("NOTIFY_STATE_NETWORK");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_WINDOW:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_WINDOW"));
+		flagName.AssignLiteral("NOTIFY_STATE_WINDOW");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_ALL:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_ALL"));
+		flagName.AssignLiteral("NOTIFY_STATE_ALL");
 		break;
 	case nsIWebProgress::NOTIFY_PROGRESS:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_PROGRESS"));
+		flagName.AssignLiteral("NOTIFY_PROGRESS");
 		break;
 	case nsIWebProgress::NOTIFY_STATUS:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATUS"));
+		flagName.AssignLiteral("NOTIFY_STATUS");
 		break;
 	case nsIWebProgress::NOTIFY_SECURITY:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_SECURITY"));
+		flagName.AssignLiteral("NOTIFY_SECURITY");
 		break;
 	case nsIWebProgress::NOTIFY_LOCATION:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_LOCATION"));
+		flagName.AssignLiteral("NOTIFY_LOCATION");
 		break;
 	case nsIWebProgress::NOTIFY_ALL:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_ALL"));
+		flagName.AssignLiteral("NOTIFY_ALL");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_DOCUMENT | nsIWebProgress::NOTIFY_STATE_REQUEST:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT&REQUEST"));
+		flagName.AssignLiteral("NOTIFY_STATE_DOCUMENT&REQUEST");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_DOCUMENT | nsIWebProgress::NOTIFY_STATE_REQUEST
 					| nsIWebProgress::NOTIFY_STATE_NETWORK	:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_DOCUMENT&REQUEST&NETWORK"));
+		flagName.AssignLiteral("NOTIFY_STATE_DOCUMENT&REQUEST&NETWORK");
 		break;
 	case nsIWebProgress::NOTIFY_STATE_NETWORK | nsIWebProgress::NOTIFY_STATE_WINDOW:
-		flagName.Assign(NS_LITERAL_CSTRING("NOTIFY_STATE_NETWORK&WINDOW"));
+		flagName.AssignLiteral("NOTIFY_STATE_NETWORK&WINDOW");
 		break;
 	}
 }

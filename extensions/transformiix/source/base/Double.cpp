@@ -283,13 +283,13 @@ void Double::toString(double aValue, nsAString& aDest)
     // check for special cases
 
     if (isNaN(aValue)) {
-        aDest.Append(NS_LITERAL_STRING("NaN"));
+        aDest.AppendLiteral("NaN");
         return;
     }
     if (isInfinite(aValue)) {
         if (aValue < 0)
             aDest.Append(PRUnichar('-'));
-        aDest.Append(NS_LITERAL_STRING("Infinity"));
+        aDest.AppendLiteral("Infinity");
         return;
     }
 

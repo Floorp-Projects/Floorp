@@ -496,7 +496,7 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
 
 void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
 {
-  oCharset.Assign(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
+  oCharset.AssignLiteral("UTF-8"); // default to utf-8
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first
   // see 17.3 The FORM element in HTML 4 for details

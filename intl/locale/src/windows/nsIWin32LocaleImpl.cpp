@@ -674,7 +674,7 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
   // didn't find any match. fall back to en-US, which is better 
   // than unusable buttons without 'OK', 'Cancel', etc (bug 224546)       
   //
-  locale.Assign(NS_LITERAL_STRING("en-US")); 
+  locale.AssignLiteral("en-US"); 
   return NS_OK;
 
 }

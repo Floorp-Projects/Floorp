@@ -192,7 +192,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   nsCString lastArgument;
 
   FindLastInList(argument, lastArgument, &index);
-  if (lastArgument.EqualsIgnoreCase("noraise")) {
+  if (lastArgument.LowerCaseEqualsLiteral("noraise")) {
     argument.Truncate(index);
     raiseWindow = PR_FALSE;
   }
@@ -253,7 +253,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
       // check to see if it has a type on it
       index = 0;
       FindLastInList(argument, lastArgument, &index);
-      if (lastArgument.EqualsIgnoreCase("html")) {
+      if (lastArgument.LowerCaseEqualsLiteral("html")) {
 	argument.Truncate(index);
 	rv = NS_ERROR_NOT_IMPLEMENTED;
       }
@@ -691,7 +691,7 @@ XRemoteService::MayOpenURL(const nsCString &aURL)
 
     // empty URLs will be treated as about:blank by OpenURL
     if (aURL.IsEmpty()) {
-      scheme = NS_LITERAL_CSTRING("about");
+      scheme.AssignLiteral("about");
     }
     else {
       nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
@@ -733,9 +733,9 @@ XRemoteService::OpenURL(nsCString &aArgument,
   PRUint32  index = 0;
   FindLastInList(aArgument, lastArgument, &index);
 
-  newTab = lastArgument.EqualsIgnoreCase("new-tab");
+  newTab = lastArgument.LowerCaseEqualsLiteral("new-tab");
 
-  if (newTab || lastArgument.EqualsIgnoreCase("new-window")) {
+  if (newTab || lastArgument.LowerCaseEqualsLiteral("new-window")) {
     aArgument.Truncate(index);
     // only open new windows if it's OK to do so
     if (!newTab && aOpenBrowser)
@@ -743,7 +743,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
     // recheck for a possible noraise argument since it might have
     // been before the new-window argument
     FindLastInList(aArgument, lastArgument, &index);
-    if (lastArgument.EqualsIgnoreCase("noraise"))
+    if (lastArgument.LowerCaseEqualsLiteral("noraise"))
       aArgument.Truncate(index);
   }
 
@@ -960,7 +960,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
   arg->SetData(NS_ConvertUTF8toUCS2(restArgument));
 
   // someone requested opening mail/news
-  if (aArgument.EqualsIgnoreCase("openinbox")) {
+  if (aArgument.LowerCaseEqualsLiteral("openinbox")) {
 
     // check to see if it's already running
     nsCOMPtr<nsIDOMWindowInternal> domWindow;
@@ -991,7 +991,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
   }
 
   // open a new browser window
-  else if (aArgument.EqualsIgnoreCase("openbrowser")) {
+  else if (aArgument.LowerCaseEqualsLiteral("openbrowser")) {
     nsXPIDLCString browserLocation;
     GetBrowserLocation(getter_Copies(browserLocation));
     if (!browserLocation)
@@ -1003,7 +1003,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
   }
 
   // open a new compose window
-  else if (aArgument.EqualsIgnoreCase("composemessage")) {
+  else if (aArgument.LowerCaseEqualsLiteral("composemessage")) {
     /*
      *  Here we change to OpenChromeWindow instead of OpenURL so as to
      *  pass argument values to the compose window, especially attachments

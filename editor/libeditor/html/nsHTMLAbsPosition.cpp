@@ -729,9 +729,9 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
           if (r >= BLACK_BG_RGB_TRIGGER &&
               g >= BLACK_BG_RGB_TRIGGER &&
               b >= BLACK_BG_RGB_TRIGGER)
-            aReturn = NS_LITERAL_STRING("black");
+            aReturn.AssignLiteral("black");
           else
-            aReturn = NS_LITERAL_STRING("white");
+            aReturn.AssignLiteral("white");
           return NS_OK;
         }
       }

@@ -863,27 +863,27 @@ static void Test_nsLocale()
 
   nsCOMPtr<nsIMacLocale> win32Locale = do_CreateInstance(kMacLocaleFactoryCID);
   if (macLocale) {
-    localeName = NS_LITERAL_STRING("en-US");
+    localeName.AssignLiteral("en-US");
     res = macLocale->GetPlatformLocale(localeName, &script, &lang);
     printf("script for en-US is 0\n");
     printf("result: script = %d lang = %d\n", script, lang);
 
-    localeName = NS_LITERAL_STRING("en-GB");
+    localeName.AssignLiteral("en-GB");
     res = macLocale->GetPlatformLocale(localeName, &script, &lang);
     printf("script for en-GB is 0\n");
     printf("result: script = %d lang = %d\n", script, lang);
 
-    localeName = NS_LITERAL_STRING("fr-FR");
+    localeName.AssignLiteral("fr-FR");
     res = macLocale->GetPlatformLocale(localeName, &script, &lang);
     printf("script for fr-FR is 0\n");
     printf("result: script = %d lang = %d\n", script, lang);
 
-    localeName = NS_LITERAL_STRING("de-DE");
+    localeName.AssignLiteral("de-DE");
     res = macLocale->GetPlatformLocale(localeName, &script, &lang);
     printf("script for de-DE is 0\n");
     printf("result: script = %d lang = %d\n", script, lang);
 
-    localeName = NS_LITERAL_STRING("ja-JP");
+    localeName.AssignLiteral("ja-JP");
     res = macLocale->GetPlatformLocale(localeName, &script, &lang);
     printf("script for ja-JP is 1\n");
     printf("result: script = %d lang = %d\n", script, lang);
@@ -895,27 +895,27 @@ static void Test_nsLocale()
 
   nsCOMPtr<nsIWin32Locale> win32Locale = do_CreateInstance(kWin32LocaleFactoryCID);
   if (win32Locale) {
-    localeName = NS_LITERAL_STRING("en-US");
+    localeName.AssignLiteral("en-US");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for en-US is 1033\n");
     printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
-    localeName = NS_LITERAL_STRING("en-GB");
+    localeName.AssignLiteral("en-GB");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for en-GB is 2057\n");
     printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
-    localeName = NS_LITERAL_STRING("fr-FR");
+    localeName.AssignLiteral("fr-FR");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for fr-FR is 1036\n");
     printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
-    localeName = NS_LITERAL_STRING("de-DE");
+    localeName.AssignLiteral("de-DE");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for de-DE is 1031\n");
     printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
-    localeName = NS_LITERAL_STRING("ja-JP");
+    localeName.AssignLiteral("ja-JP");
     res = win32Locale->GetPlatformLocale(localeName, &lcid);
     printf("LCID for ja-JP is 1041\n");
     printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
@@ -929,23 +929,23 @@ static void Test_nsLocale()
 
   nsCOMPtr<nsIPosixLocale> posixLocale = do_CreateInstance(kPosixLocaleFactoryCID);
   if (posixLocale) {
-    localeName = NS_LITERAL_STRING("en-US");
+    localeName.AssignLiteral("en-US");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
     printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
-    localeName = NS_LITERAL_STRING("en-GB");
+    localeName.AssignLiteral("en-GB");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
     printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
-    localeName = NS_LITERAL_STRING("fr-FR");
+    localeName.AssignLiteral("fr-FR");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
     printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
-    localeName = NS_LITERAL_STRING("de-DE");
+    localeName.AssignLiteral("de-DE");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
     printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
-    localeName = NS_LITERAL_STRING("ja-JP");
+    localeName.AssignLiteral("ja-JP");
     res = posixLocale->GetPlatformLocale(localeName, locale, length);
     printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 

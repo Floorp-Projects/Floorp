@@ -106,8 +106,8 @@
  *   // Put an entry
  *   DictionaryEntry* a = d.AddEntry(NS_LITERAL_STRING("doomed"));
  *   if (!a) return 1;
- *   a->mDefinition = NS_LITERAL_STRING("The state you get in when a Mozilla release is pending");
- *   a->mPronunciation = NS_LITERAL_STRING("doom-d");
+ *   a->mDefinition.AssignLiteral("The state you get in when a Mozilla release is pending");
+ *   a->mPronunciation.AssignLiteral("doom-d");
  *
  *   // Get the entry
  *   DictionaryEntry* b = d.GetEntry(NS_LITERAL_STRING("doomed"));

@@ -378,7 +378,7 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
   }
   // If we don't have a prefix, create one
   else if (aPrefix.IsEmpty()) {
-    aPrefix.Assign(NS_LITERAL_STRING("a"));
+    aPrefix.AssignLiteral("a");
     char buf[128];
     PR_snprintf(buf, sizeof(buf), "%d", mPrefixIndex++);
     AppendASCIItoUTF16(buf, aPrefix);
@@ -865,7 +865,7 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
     aStr += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;
   }
 
-  aStr += NS_LITERAL_STRING("?>");
+  aStr.AppendLiteral("?>");
   mAddNewline = PR_TRUE;
 
   return NS_OK;

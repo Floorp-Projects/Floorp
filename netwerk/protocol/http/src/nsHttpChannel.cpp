@@ -2169,7 +2169,7 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         host = mConnectionInfo->ProxyHost();
         port = mConnectionInfo->ProxyPort();
         ident = &mProxyIdent;
-        scheme = NS_LITERAL_CSTRING("http");
+        scheme.AssignLiteral("http");
     }
     else {
         host = mConnectionInfo->Host();
@@ -2409,7 +2409,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
     key.AssignWithConversion(host);
     key.Append(PRUnichar(':'));
     key.AppendInt(port);
-    key.AppendWithConversion(" (");
+    key.AppendLiteral(" (");
     key.AppendWithConversion(realm);
     key.Append(PRUnichar(')'));
 
@@ -2451,7 +2451,7 @@ nsHttpChannel::PromptForIdentity(const char *scheme,
         // prepend "scheme://" displayHost
         nsAutoString schemeU;
         schemeU.AssignWithConversion(scheme);
-        schemeU.Append(NS_LITERAL_STRING("://"));
+        schemeU.AppendLiteral("://");
         displayHost.Insert(schemeU, 0);
 
         const PRUnichar *strings[] = { realmU.get(), displayHost.get() };
@@ -2901,7 +2901,7 @@ nsHttpChannel::GetContentType(nsACString &value)
     }
 
     
-    value = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+    value.AssignLiteral(UNKNOWN_CONTENT_TYPE);
     return NS_OK;
 }
 
@@ -4082,7 +4082,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"),
                                       start,
                                       end)) {
-        aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_GZIP);
+        aNextEncoding.AssignLiteral(APPLICATION_GZIP);
         haveType = PR_TRUE;
     }
 
@@ -4091,7 +4091,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("compress"),
                                           start,
                                           end)) {
-            aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_COMPRESS);
+            aNextEncoding.AssignLiteral(APPLICATION_COMPRESS);
                                            
             haveType = PR_TRUE;
         }
@@ -4102,7 +4102,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("deflate"),
                                           start,
                                           end)) {
-            aNextEncoding = NS_LITERAL_CSTRING(APPLICATION_ZIP);
+            aNextEncoding.AssignLiteral(APPLICATION_ZIP);
             haveType = PR_TRUE;
         }
     }

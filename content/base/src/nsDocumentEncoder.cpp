@@ -181,7 +181,7 @@ NS_INTERFACE_MAP_END
 nsDocumentEncoder::nsDocumentEncoder()
 {
 
-  mMimeType.Assign(NS_LITERAL_STRING("text/plain"));
+  mMimeType.AssignLiteral("text/plain");
 
   mFlags = 0;
   mWrapColumn = 72;
@@ -951,7 +951,7 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
                                                    getter_AddRefs(mUnicodeEncoder));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mMimeType.EqualsIgnoreCase("text/plain")) {
+  if (mMimeType.LowerCaseEqualsLiteral("text/plain")) {
     rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1072,7 +1072,7 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
   mIsCopying = PR_TRUE;
   mDocument = aDocument;
 
-  mMimeType = NS_LITERAL_STRING("text/html");
+  mMimeType.AssignLiteral("text/html");
   
   // Make all links absolute when copying
   // (see related bugs #57296, #41924, #58646, #32768)
@@ -1150,7 +1150,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   if (mIsTextWidget) 
   {
     mSelection = aSelection;
-    mMimeType = NS_LITERAL_STRING("text/plain");
+    mMimeType.AssignLiteral("text/plain");
     return NS_OK;
   }
   

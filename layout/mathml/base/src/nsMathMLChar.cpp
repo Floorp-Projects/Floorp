@@ -210,10 +210,10 @@ LoadProperties(const nsString& aName,
                nsCOMPtr<nsIPersistentProperties>& aProperties)
 {
   nsAutoString uriStr;
-  uriStr.Assign(NS_LITERAL_STRING("resource://gre/res/fonts/mathfont"));
+  uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
   uriStr.Append(aName);
   uriStr.StripWhitespace(); // that may come from aName
-  uriStr.Append(NS_LITERAL_STRING(".properties"));
+  uriStr.AppendLiteral(".properties");
   return NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(aProperties), 
                                                 NS_ConvertUTF16toUTF8(uriStr));
 }
@@ -375,10 +375,10 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
 #ifdef NS_DEBUG
     nsCAutoString uriStr;
-    uriStr.Assign(NS_LITERAL_CSTRING("resource://gre/res/fonts/mathfont"));
+    uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
     LossyAppendUTF16toASCII(*mFontName[0], uriStr);
     uriStr.StripWhitespace(); // that may come from mFontName
-    uriStr.Append(NS_LITERAL_CSTRING(".properties"));
+    uriStr.AppendLiteral(".properties");
     printf("Loading %s ... %s\n",
             uriStr.get(),
             (NS_FAILED(rv)) ? "Failed" : "Done");
@@ -393,7 +393,7 @@ nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUin
     nsCAutoString key;
     nsAutoString value;
     for (PRInt32 i = 1; ; i++) {
-      key.Assign(NS_LITERAL_CSTRING("external."));
+      key.AssignLiteral("external.");
       key.AppendInt(i, 10);
       rv = mGlyphProperties->GetStringProperty(key, value);
       if (NS_FAILED(rv)) break;
@@ -1130,11 +1130,11 @@ MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
    // XXX In principle, the mathfont-family list in the mathfont.properties file
    // is customizable depending on the platform. For now, this is here since there
    // is no need to alert Linux users about TrueType fonts specific to Windows.
-   if (aFamily.EqualsIgnoreCase("MT Extra"))
+   if (aFamily.LowerCaseEqualsLiteral("mt extra"))
      return PR_TRUE; // continue to try other fonts
 //#endif
     if (!missingFamilyList->IsEmpty()) {
-      missingFamilyList->Append(NS_LITERAL_STRING(", "));
+      missingFamilyList->AppendLiteral(", ");
     }
     missingFamilyList->Append(aFamily);
   }
@@ -1205,7 +1205,7 @@ InitGlobals(nsIPresContext* aPresContext)
   if (NS_FAILED(rv)) return rv;
 
   // Load the "mathfontPUA.properties" file
-  value.Assign(NS_LITERAL_STRING("PUA"));
+  value.AssignLiteral("PUA");
   rv = LoadProperties(value, gPUAProperties);
   if (NS_FAILED(rv)) return rv;
 

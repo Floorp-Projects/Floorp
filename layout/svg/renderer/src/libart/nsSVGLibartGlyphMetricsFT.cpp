@@ -364,14 +364,14 @@ FindFont(const nsString& aFamily, PRBool aGeneric, void *aData)
     nsFont::GetGenericID(aFamily, &id);
     switch (id) {
       case kGenericFont_serif:
-        family_name = NS_LITERAL_CSTRING("times new roman");
+        family_name.AssignLiteral("times new roman");
         break;
       case kGenericFont_monospace:
-        family_name = NS_LITERAL_CSTRING("courier new");
+        family_name.AssignLiteral("courier new");
         break;
       case kGenericFont_sans_serif:
       default:
-        family_name = NS_LITERAL_CSTRING("arial");
+        family_name.AssignLiteral("arial");
         break;
     }
   }

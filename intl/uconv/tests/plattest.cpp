@@ -73,7 +73,7 @@ main(int argc, const char** argv)
 
     printf("DefaultCharset for %s is %s\n", NS_LossyConvertUTF16toASCII(category).get(), charset.get());
 
-    category.Assign(NS_LITERAL_STRING("en-US"));
+    category.AssignLiteral("en-US");
     rv = platform_charset->GetDefaultCharsetForLocale(category, charset);
     if (NS_FAILED(rv)) return -1;
 

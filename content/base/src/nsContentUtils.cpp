@@ -1338,8 +1338,7 @@ static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
 {
   nsAutoString autocomplete;
   aElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-  return autocomplete.Equals(NS_LITERAL_STRING("off"),
-                             nsCaseInsensitiveStringComparator());
+  return autocomplete.LowerCaseEqualsLiteral("off");
 }
 
 /*static*/ nsresult

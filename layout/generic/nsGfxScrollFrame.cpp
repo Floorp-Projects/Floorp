@@ -705,7 +705,7 @@ void nsGfxScrollFrameInner::ReloadChildFrames()
           if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
                                                             nsXULAtoms::orient, value)) {
             // probably a scrollbar then
-            if (value.EqualsIgnoreCase("horizontal")) {
+            if (value.LowerCaseEqualsLiteral("horizontal")) {
               NS_ASSERTION(!mHScrollbarBox, "Found multiple horizontal scrollbars?");
               mHScrollbarBox = box;
             } else {

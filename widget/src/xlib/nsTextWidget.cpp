@@ -39,7 +39,7 @@
 
 nsTextWidget::nsTextWidget() : nsTextHelper()
 {
-  mName.Assign(NS_LITERAL_STRING("nsTextWidget"));
+  mName.AssignLiteral("nsTextWidget");
 }
 
 nsTextWidget::~nsTextWidget()

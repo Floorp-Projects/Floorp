@@ -934,7 +934,7 @@ OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
 {
   nsAutoString a;
   a.Append(aBaseName);
-  a.Append(NS_LITERAL_STRING("/"));
+  a.AppendLiteral("/");
   a.Append(aOutputName);
   char* fn = ToNewCString(a);
   FILE* fp = fopen(fn, "r");

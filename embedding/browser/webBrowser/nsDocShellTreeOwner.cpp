@@ -224,11 +224,11 @@ nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
   /* special cases */
   if(name.IsEmpty())
     return NS_OK;
-  if(name.EqualsIgnoreCase("_blank"))
+  if(name.LowerCaseEqualsLiteral("_blank"))
     return NS_OK;
   // _main is an IE target which should be case-insensitive but isn't
   // see bug 217886 for details
-  if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main")) {
+  if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main")) {
     *aFoundItem = mWebBrowser->mDocShellAsItem;
     NS_IF_ADDREF(*aFoundItem);
     return NS_OK;
@@ -1608,7 +1608,7 @@ ChromeContextMenuListener::ContextMenu(nsIDOMEvent* aMouseEvent)
           if (inputElement) {
             nsAutoString inputElemType;
             inputElement->GetType(inputElemType);
-            if (inputElemType.Equals(NS_LITERAL_STRING("image"), nsCaseInsensitiveStringComparator()))
+            if (inputElemType.LowerCaseEqualsLiteral("image"))
               flags2 |= nsIContextMenuListener2::CONTEXT_IMAGE;
           }
         }

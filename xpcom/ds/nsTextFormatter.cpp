@@ -983,10 +983,10 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     const PRUnichar *fmt0;
 
     nsAutoString hex;
-    hex.Assign(NS_LITERAL_STRING("0123456789abcdef"));
+    hex.AssignLiteral("0123456789abcdef");
 
     nsAutoString HEX;
-    HEX.Assign(NS_LITERAL_STRING("0123456789ABCDEF"));
+    HEX.AssignLiteral("0123456789ABCDEF");
 
     const PRUnichar *hexp;
     int rv, i;

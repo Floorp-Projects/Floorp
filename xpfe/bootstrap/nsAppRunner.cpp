@@ -1275,7 +1275,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   
 	if (obsService)
   {
-    nsAutoString userMessage; userMessage.AssignWithConversion("Creating first window...");
+    nsAutoString userMessage; userMessage.AssignLiteral("Creating first window...");
     obsService->NotifyObservers(nsnull, "startup_user_notifcations", userMessage.get());
   }
   

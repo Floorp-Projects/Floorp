@@ -1385,7 +1385,7 @@ XPCConvert::JSErrorToXPCException(XPCCallContext& ccx,
         }
         else
         {
-            bestMessage = NS_LITERAL_STRING("JavaScript Error");
+            bestMessage.AssignLiteral("JavaScript Error");
         }
 
         data = new nsScriptError();

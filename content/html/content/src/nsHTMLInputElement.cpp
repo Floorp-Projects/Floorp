@@ -281,7 +281,7 @@ protected:
 
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, tmp);
 
-    return tmp.EqualsIgnoreCase("image");
+    return tmp.LowerCaseEqualsLiteral("image");
   }
 
   /**
@@ -630,7 +630,7 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   if (rv == NS_CONTENT_ATTR_NOT_THERE &&
       (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
     // The default value of a radio or checkbox input is "on".
-    aValue.Assign(NS_LITERAL_STRING("on"));
+    aValue.AssignLiteral("on");
 
     return NS_OK;
   }
@@ -2226,7 +2226,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
           nsCAutoString contentType;
           rv = MIMEService->GetTypeFromFile(file, contentType);
           if (NS_FAILED(rv)) {
-            contentType = NS_LITERAL_CSTRING("application/octet-stream");
+            contentType.AssignLiteral("application/octet-stream");
           }
 
           //

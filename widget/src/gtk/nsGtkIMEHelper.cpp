@@ -134,7 +134,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
     charset.Truncate();
     result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
     if (NS_FAILED(result) || charset.IsEmpty()) {
-      charset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));   // default
+      charset.AssignLiteral("ISO-8859-1");   // default
     }
     nsICharsetConverterManager* manager = nsnull;
     nsresult res = nsServiceManager::

@@ -6138,7 +6138,7 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
 
     nsAutoString msg;
     msg.AssignWithConversion(pluginname);
-    msg.Append(NS_LITERAL_STRING("\n\n"));
+    msg.AppendLiteral("\n\n");
     msg.Append(message);
 
     PRInt32 buttonPressed;

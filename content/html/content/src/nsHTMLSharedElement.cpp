@@ -376,10 +376,10 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::type);
       if (value && value->Type() == nsAttrValue::eString) {
         nsAutoString tmp(value->GetStringValue());
-        if (tmp.EqualsIgnoreCase("line") ||
-            tmp.EqualsIgnoreCase("vert") ||
-            tmp.EqualsIgnoreCase("vertical") ||
-            tmp.EqualsIgnoreCase("block")) {
+        if (tmp.LowerCaseEqualsLiteral("line") ||
+            tmp.LowerCaseEqualsLiteral("vert") ||
+            tmp.LowerCaseEqualsLiteral("vertical") ||
+            tmp.LowerCaseEqualsLiteral("block")) {
           // This is not strictly 100% compatible: if the spacer is given
           // a width of zero then it is basically ignored.
           aData->mDisplayData->mDisplay = NS_STYLE_DISPLAY_BLOCK;

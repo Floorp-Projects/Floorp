@@ -273,7 +273,7 @@ MyNotifications::OnProgress(nsIRequest *req, nsISupports *ctx,
 int getStrLine(const char *src, char *str, int ind, int max) {
   char c = src[ind];
   int i=0;
-  globalStream.Assign(NS_LITERAL_STRING("\0"));
+  globalStream.AssignLiteral("\0");
   while(c!='\n' && c!='\0' && i<max) {
     str[i] = src[ind];
     i++; ind++;

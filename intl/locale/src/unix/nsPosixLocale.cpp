@@ -107,7 +107,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsAString& locale)
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
-      locale.Assign(NS_LITERAL_STRING("en-US"));
+      locale.AssignLiteral("en-US");
       return NS_OK;
     }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,extra,'_')) {

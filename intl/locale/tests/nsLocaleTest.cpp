@@ -352,7 +352,7 @@ win32locale_test(void)
 	//
 	// test with a simple locale
 	//
-    locale = NS_LITERAL_STRING("en-US");
+    locale.AssignLiteral("en-US");
 	loc_id = 0;
 
 	result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
@@ -371,7 +371,7 @@ win32locale_test(void)
 	//
 	// test with a not so simple locale
 	//
-	locale = NS_LITERAL_STRING("x-netscape");
+	locale.AssignLiteral("x-netscape");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -380,7 +380,7 @@ win32locale_test(void)
 		"nsLocaleTest: GetPlatformLocale failed.");
 
 
-	locale = NS_LITERAL_STRING("en");
+	locale.AssignLiteral("en");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -409,7 +409,7 @@ win32locale_conversion_test(void)
 	//
 	// check english variants
 	//
-	locale = NS_LITERAL_STRING("en");	// generic english
+	locale.AssignLiteral("en");	// generic english
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -417,7 +417,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("en-US");	// US english
+	locale.AssignLiteral("en-US");	// US english
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -425,7 +425,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("en-GB");	// UK english
+	locale.AssignLiteral("en-GB");	// UK english
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -433,7 +433,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_UK),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("en-CA");	// Canadian english
+	locale.AssignLiteral("en-CA");	// Canadian english
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -444,7 +444,7 @@ win32locale_conversion_test(void)
 	//
 	// japanese
 	//
-	locale = NS_LITERAL_STRING("ja");
+	locale.AssignLiteral("ja");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -452,7 +452,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("ja-JP");
+	locale.AssignLiteral("ja-JP");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -463,7 +463,7 @@ win32locale_conversion_test(void)
 	//
 	// chinese Locales
 	//
-	locale = NS_LITERAL_STRING("zh");
+	locale.AssignLiteral("zh");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -471,7 +471,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_CHINESE,SUBLANG_DEFAULT),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("zh-CN");
+	locale.AssignLiteral("zh-CN");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -479,7 +479,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_CHINESE,SUBLANG_CHINESE_SIMPLIFIED),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("zh-TW");
+	locale.AssignLiteral("zh-TW");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -490,7 +490,7 @@ win32locale_conversion_test(void)
 	//
 	// german and variants
 	//
-	locale = NS_LITERAL_STRING("de");
+	locale.AssignLiteral("de");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -498,7 +498,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_DEFAULT),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("de-DE");
+	locale.AssignLiteral("de-DE");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -506,7 +506,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_GERMAN),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("de-AT");
+	locale.AssignLiteral("de-AT");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -517,7 +517,7 @@ win32locale_conversion_test(void)
 	//
 	// french and it's variants
 	//
-	locale = NS_LITERAL_STRING("fr");
+	locale.AssignLiteral("fr");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -525,7 +525,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("fr-FR");
+	locale.AssignLiteral("fr-FR");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -533,7 +533,7 @@ win32locale_conversion_test(void)
 	NS_ASSERTION(loc_id==MAKELCID(MAKELANGID(LANG_FRENCH,SUBLANG_FRENCH),SORT_DEFAULT),
 		"nsLocaleTest: GetPlatformLocale failed.");
 
-	locale = NS_LITERAL_STRING("fr-CA");
+	locale.AssignLiteral("fr-CA");
 	loc_id = 0;
 
 	result = win32Locale->GetPlatformLocale(locale,&loc_id);
@@ -679,7 +679,7 @@ posixlocale_test(void)
 	//
 	// test with a simple locale
 	//
-	locale = NS_LITERAL_STRING("en-US");
+	locale.AssignLiteral("en-US");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_string,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.\n");
   NS_ASSERTION(strcmp("en_US",posix_locale_string)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -687,7 +687,7 @@ posixlocale_test(void)
 	//
 	// test with a not so simple locale
 	//
-	locale = NS_LITERAL_STRING("x-netscape");
+	locale.AssignLiteral("x-netscape");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_string,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.\n");
   NS_ASSERTION(strcmp("C",posix_locale_string)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -695,7 +695,7 @@ posixlocale_test(void)
   //
   // test with a generic locale
   //
-	locale = NS_LITERAL_STRING("en");
+	locale.AssignLiteral("en");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_string,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.\n");
   NS_ASSERTION(strcmp("en",posix_locale_string)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -725,22 +725,22 @@ posixlocale_conversion_test()
 	//
 	// check english variants
 	//
-	locale = NS_LITERAL_STRING("en");	// generic english
+	locale.AssignLiteral("en");	// generic english
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("en",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("en-US");	// US english
+	locale.AssignLiteral("en-US");	// US english
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("en_US",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("en-GB");	// UK english
+	locale.AssignLiteral("en-GB");	// UK english
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("en_GB",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("en-CA");	// Canadian english
+	locale.AssignLiteral("en-CA");	// Canadian english
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("en_CA",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -748,12 +748,12 @@ posixlocale_conversion_test()
 	//
 	// japanese
 	//
-	locale = NS_LITERAL_STRING("ja");
+	locale.AssignLiteral("ja");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("ja",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("ja-JP");
+	locale.AssignLiteral("ja-JP");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("ja_JP",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -761,17 +761,17 @@ posixlocale_conversion_test()
 	//
 	// chinese Locales
 	//
-	locale = NS_LITERAL_STRING("zh");
+	locale.AssignLiteral("zh");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("zh",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("zh-CN");
+	locale.AssignLiteral("zh-CN");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("zh_CN",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("zh-TW");
+	locale.AssignLiteral("zh-TW");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("zh_TW",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -779,17 +779,17 @@ posixlocale_conversion_test()
 	//
 	// german and variants
 	//
-	locale = NS_LITERAL_STRING("de");
+	locale.AssignLiteral("de");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("de",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("de-DE");
+	locale.AssignLiteral("de-DE");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("de_DE",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("de-AT");
+	locale.AssignLiteral("de-AT");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("de_AT",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -797,17 +797,17 @@ posixlocale_conversion_test()
 	//
 	// french and it's variants
 	//
-	locale = NS_LITERAL_STRING("fr");
+	locale.AssignLiteral("fr");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("fr",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("fr-FR");
+	locale.AssignLiteral("fr-FR");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("fr_FR",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
 
-	locale = NS_LITERAL_STRING("fr-CA");
+	locale.AssignLiteral("fr-CA");
 	result = posix_locale->GetPlatformLocale(locale,posix_locale_result,9);
 	NS_ASSERTION(NS_SUCCEEDED(result),"nsLocaleTest: GetPlatformLocale failed.");
 	NS_ASSERTION(strcmp("fr_CA",posix_locale_result)==0,"nsLocaleTest: GetPlatformLocale failed.\n");
@@ -875,7 +875,7 @@ posixlocale_test_special(void)
   //
   // settup strings
   //
-  locale = NS_LITERAL_STRING("en");
+  locale.AssignLiteral("en");
   result_locale = new nsString();
   lc_message = new nsString("NSILOCALE_MESSAGES");
 

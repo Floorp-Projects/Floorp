@@ -219,7 +219,7 @@ NS_METHOD nsTextWidget::Paint(nsIRenderingContext& aRenderingContext,
     nsString astricks;
     PRInt32 i;
     for (i=0;i<mText.Length();i++) {
-      astricks.Append(NS_LITERAL_STRING("*"));
+      astricks.AppendLiteral("*");
     }
     aRenderingContext.DrawString(astricks, x, y);
 

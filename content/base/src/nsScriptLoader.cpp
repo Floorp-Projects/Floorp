@@ -301,8 +301,7 @@ nsScriptLoader::IsScriptEventHandler(nsIDOMHTMLScriptElement *aScriptElement)
 
   const nsAString& for_str = nsContentUtils::TrimWhitespace(str);
 
-  if (!for_str.Equals(NS_LITERAL_STRING("window"),
-                      nsCaseInsensitiveStringComparator())) {
+  if (!for_str.LowerCaseEqualsLiteral("window")) {
     return PR_TRUE;
   }
 
@@ -405,8 +404,8 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
     nsAutoString  params;
     nsParserUtils::SplitMimeType(type, mimeType, params);
 
-    isJavaScript = mimeType.EqualsIgnoreCase("application/x-javascript") || 
-                   mimeType.EqualsIgnoreCase("text/javascript");
+    isJavaScript = mimeType.LowerCaseEqualsLiteral("application/x-javascript") || 
+                   mimeType.LowerCaseEqualsLiteral("text/javascript");
     if (isJavaScript) {
       JSVersion jsVersion = JSVERSION_DEFAULT;
       if (params.Find("version=", PR_TRUE) == 0) {
@@ -818,7 +817,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (characterSet.IsEmpty()) {
       // fall back to ISO-8859-1, see bug 118404
-      characterSet = NS_LITERAL_CSTRING("ISO-8859-1");
+      characterSet.AssignLiteral("ISO-8859-1");
     }
     
     nsCOMPtr<nsICharsetConverterManager> charsetConv =

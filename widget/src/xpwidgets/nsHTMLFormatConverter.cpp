@@ -329,9 +329,9 @@ NS_IMETHODIMP
 nsHTMLFormatConverter::ConvertFromHTMLToAOLMail(const nsAutoString & aFromStr,
                                                 nsAutoString & aToStr)
 {
-  aToStr.Assign(NS_LITERAL_STRING("<HTML>"));
+  aToStr.AssignLiteral("<HTML>");
   aToStr.Append(aFromStr);
-  aToStr.Append(NS_LITERAL_STRING("</HTML>"));
+  aToStr.AppendLiteral("</HTML>");
 
   return NS_OK;
 }

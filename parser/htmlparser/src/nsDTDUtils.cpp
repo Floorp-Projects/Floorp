@@ -878,7 +878,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
     const nsAString& theKey=aNode.GetKeyAt(theIndex);
     const nsAString& theValue=aNode.GetValueAt(theIndex);
 
-    if(theKey.Equals(NS_LITERAL_STRING("name"), nsCaseInsensitiveStringComparator())){
+    if(theKey.LowerCaseEqualsLiteral("name")){
       theEntity=GetEntity(theValue);
       if(!theEntity) {
         theEntity=RegisterEntity(theValue,theValue);
@@ -886,10 +886,10 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       aTag=eHTMLTag_userdefined;
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("noincr"), nsCaseInsensitiveStringComparator())){
+    else if(theKey.LowerCaseEqualsLiteral("noincr")){
       theIncrValue=0;
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("format"), nsCaseInsensitiveStringComparator())){
+    else if(theKey.LowerCaseEqualsLiteral("format")){
       nsAString::const_iterator start;
       
       PRUnichar theChar=*theValue.BeginReading(start);
@@ -908,7 +908,7 @@ PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag,nsIParserNode& aNode,nsStr
       }
       //determine numbering style
     }
-    else if(theKey.Equals(NS_LITERAL_STRING("value"), nsCaseInsensitiveStringComparator())){
+    else if(theKey.LowerCaseEqualsLiteral("value")){
       PRInt32 err=0;
       theNewValue=atoi(NS_LossyConvertUCS2toASCII(theValue).get());
       if(!err) {

@@ -181,11 +181,11 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    /* Special Cases */
    if(name.IsEmpty())
       return NS_OK;
-   if(name.EqualsIgnoreCase("_blank"))
+   if(name.LowerCaseEqualsLiteral("_blank"))
       return NS_OK;
    // _main is an IE target which should be case-insensitive but isn't
    // see bug 217886 for details
-   if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main"))
+   if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
       {
       fIs_Content = PR_TRUE;
       mXULWindow->GetPrimaryContentShell(aFoundItem);
@@ -278,7 +278,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 7);
     saveString = PR_TRUE;
   } else if (aPersistPosition && index < 0) {
-    persistString.Append(NS_LITERAL_STRING(" screenX"));
+    persistString.AppendLiteral(" screenX");
     saveString = PR_TRUE;
   }
   // Set Y
@@ -287,7 +287,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 7);
     saveString = PR_TRUE;
   } else if (aPersistPosition && index < 0) {
-    persistString.Append(NS_LITERAL_STRING(" screenY"));
+    persistString.AppendLiteral(" screenY");
     saveString = PR_TRUE;
   }
   // Set CX
@@ -296,7 +296,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 5);
     saveString = PR_TRUE;
   } else if (aPersistSize && index < 0) {
-    persistString.Append(NS_LITERAL_STRING(" width"));
+    persistString.AppendLiteral(" width");
     saveString = PR_TRUE;
   }
   // Set CY
@@ -305,7 +305,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 6);
     saveString = PR_TRUE;
   } else if (aPersistSize && index < 0) {
-    persistString.Append(NS_LITERAL_STRING(" height"));
+    persistString.AppendLiteral(" height");
     saveString = PR_TRUE;
   }
   // Set SizeMode
@@ -314,7 +314,7 @@ nsContentTreeOwner::SetPersistence(PRBool aPersistPosition,
     persistString.Cut(index, 8);
     saveString = PR_TRUE;
   } else if (aPersistSizeMode && (index < 0)) {
-    persistString.Append(NS_LITERAL_STRING(" sizemode"));
+    persistString.AppendLiteral(" sizemode");
     saveString = PR_TRUE;
   }
 
@@ -680,22 +680,22 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
   nsAutoString newvalue;
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR))
-    newvalue.Append(NS_LITERAL_STRING("menubar "));
+    newvalue.AppendLiteral("menubar ");
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR))
-    newvalue.Append(NS_LITERAL_STRING("toolbar "));
+    newvalue.AppendLiteral("toolbar ");
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR))
-    newvalue.Append(NS_LITERAL_STRING("location "));
+    newvalue.AppendLiteral("location ");
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR))
-    newvalue.Append(NS_LITERAL_STRING("directories "));
+    newvalue.AppendLiteral("directories ");
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR))
-    newvalue.Append(NS_LITERAL_STRING("status "));
+    newvalue.AppendLiteral("status ");
 
   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA))
-    newvalue.Append(NS_LITERAL_STRING("extrachrome"));
+    newvalue.AppendLiteral("extrachrome");
 
 
   // Get the old value, to avoid useless style reflows if we're just

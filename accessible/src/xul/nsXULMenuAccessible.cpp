@@ -139,9 +139,9 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyboardShortcut(nsAString& _retval)
         }
         nsAutoString propertyKey;
         switch (gMenuAccesskeyModifier) {
-          case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey = NS_LITERAL_STRING("VK_CONTROL"); break;
-          case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey = NS_LITERAL_STRING("VK_ALT"); break;
-          case nsIDOMKeyEvent::DOM_VK_META: propertyKey = NS_LITERAL_STRING("VK_META"); break;
+          case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey.AssignLiteral("VK_CONTROL"); break;
+          case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey.AssignLiteral("VK_ALT"); break;
+          case nsIDOMKeyEvent::DOM_VK_META: propertyKey.AssignLiteral("VK_META"); break;
         }
         if (!propertyKey.IsEmpty())
           nsAccessible::GetFullKeyName(propertyKey, accesskey, _retval);
@@ -372,7 +372,7 @@ NS_IMETHODIMP nsXULMenubarAccessible::GetState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULMenubarAccessible::GetName(nsAString& _retval)
 {
-  _retval = NS_LITERAL_STRING("Application");
+  _retval.AssignLiteral("Application");
 
   return NS_OK;
 }

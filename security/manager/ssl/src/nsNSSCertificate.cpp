@@ -248,14 +248,14 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     if (NS_SUCCEEDED(x509Proxy->GetSerialNumber(temp1)) && !temp1.IsEmpty()) {
-      details.Append(NS_LITERAL_STRING("  "));
+      details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", info))) {
         details.Append(info);
-        details.Append(NS_LITERAL_STRING(": "));
+        details.AppendLiteral(": ");
       }
       details.Append(temp1);
 
-      nickWithSerial.Append(NS_LITERAL_STRING(" ["));
+      nickWithSerial.AppendLiteral(" [");
       nickWithSerial.Append(temp1);
       nickWithSerial.Append(PRUnichar(']'));
 
@@ -276,7 +276,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       }
 
       if (validity) {
-        details.Append(NS_LITERAL_STRING("  "));
+        details.AppendLiteral("  ");
         if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoValid", info))) {
           details.Append(info);
         }
@@ -305,10 +305,10 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
     PRUint32 tempInt = 0;
     if (NS_SUCCEEDED(x509Proxy->GetUsagesString(PR_FALSE, &tempInt, temp1)) && !temp1.IsEmpty()) {
-      details.Append(NS_LITERAL_STRING("  "));
+      details.AppendLiteral("  ");
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoPurposes", info))) {
         details.Append(info);
-        details.Append(NS_LITERAL_STRING(": "));
+        details.AppendLiteral(": ");
       }
       details.Append(temp1);
       details.Append(PRUnichar('\n'));
@@ -1061,7 +1061,7 @@ nsNSSCertificate::GetUsagesString(PRBool ignoreOcsp,
   rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
   _usages.Truncate();
   for (PRUint32 i=0; i<tmpCount; i++) {
-    if (i>0) _usages.Append(NS_LITERAL_STRING(","));
+    if (i>0) _usages.AppendLiteral(",");
     _usages.Append(tmpUsages[i]);
     nsMemory::Free(tmpUsages[i]);
   }

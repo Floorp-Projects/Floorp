@@ -1402,17 +1402,17 @@ nsFtpState::SetContentType()
     switch (mListFormat) {
     case nsIDirectoryListing::FORMAT_RAW:
         {
-            contentType = NS_LITERAL_CSTRING("text/ftp-dir-");
+            contentType.AssignLiteral("text/ftp-dir-");
         }
         break;
     default:
         NS_WARNING("Unknown directory type");
         // fall through
     case nsIDirectoryListing::FORMAT_HTML:
-        contentType = NS_LITERAL_CSTRING(TEXT_HTML);
+        contentType.AssignLiteral(TEXT_HTML);
         break;
     case nsIDirectoryListing::FORMAT_HTTP_INDEX:
-        contentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+        contentType.AssignLiteral(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     }
 

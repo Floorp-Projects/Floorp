@@ -44,7 +44,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  mCharset = NS_LITERAL_CSTRING("UTF-8");
+  mCharset.AssignLiteral("UTF-8");
 }
 
 nsPlatformCharset::~nsPlatformCharset()

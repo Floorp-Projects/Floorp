@@ -208,7 +208,7 @@ nsJVMManager::ShowJavaConsole(void)
                     nsMemory::Free((void *)messageUni);
                     
                     msg.Append(PRUnichar(' '));
-                    msg.Append(NS_LITERAL_STRING("application/x-java-vm"));
+                    msg.AppendLiteral("application/x-java-vm");
                     chrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, 
                                       msg.get());
                 }

@@ -221,9 +221,9 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
         nsAutoString logMessage;
         if (report)
         {
-            logMessage.Assign(NS_LITERAL_STRING("Line: "));
+            logMessage.AssignLiteral("Line: ");
             logMessage.AppendInt(report->lineno, 10);
-            logMessage.Append(NS_LITERAL_STRING("\t"));
+            logMessage.AppendLiteral("\t");
             if (report->ucmessage)
                 logMessage.Append( NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage) );
             else

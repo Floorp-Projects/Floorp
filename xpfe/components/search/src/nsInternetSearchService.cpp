@@ -1156,15 +1156,15 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
         nsAutoString name;
 
         if (source == kNC_SearchCommand_AddToBookmarks)
-          name = NS_LITERAL_STRING("addtobookmarks");
+          name.AssignLiteral("addtobookmarks");
         else if (source == kNC_SearchCommand_AddQueryToBookmarks)
-          name = NS_LITERAL_STRING("addquerytobookmarks");
+          name.AssignLiteral("addquerytobookmarks");
         else if (source == kNC_SearchCommand_FilterResult)
-          name = NS_LITERAL_STRING("excludeurl");
+          name.AssignLiteral("excludeurl");
         else if (source == kNC_SearchCommand_FilterSite)
-          name = NS_LITERAL_STRING("excludedomain");
+          name.AssignLiteral("excludedomain");
         else if (source == kNC_SearchCommand_ClearFilters)
-          name = NS_LITERAL_STRING("clearfilters");
+          name.AssignLiteral("clearfilters");
 
         rv = bundle->GetStringFromName(name.get(), getter_Copies(valUni));
         if (NS_SUCCEEDED(rv) && valUni && *valUni) {
@@ -2626,7 +2626,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
 
 	// we can only handle HTTP GET
-	if (!method.EqualsIgnoreCase("get"))	return(NS_ERROR_UNEXPECTED);
+	if (!method.LowerCaseEqualsLiteral("get"))	return(NS_ERROR_UNEXPECTED);
 	// HTTP Get method support
 	action += NS_LITERAL_STRING("?") + input;
 
@@ -3144,7 +3144,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		
 		if (!attrib.IsEmpty() && !value.IsEmpty())
 		{
-			if (attrib.EqualsIgnoreCase("engine"))
+			if (attrib.LowerCaseEqualsLiteral("engine"))
 			{
 				if ((value.Find(kEngineProtocol) == 0) ||
 					(value.Find(kURINC_SearchCategoryEnginePrefix) == 0))
@@ -3156,7 +3156,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 					}
 				}
 			}
-			else if (attrib.EqualsIgnoreCase("text"))
+			else if (attrib.LowerCaseEqualsLiteral("text"))
 			{
 				text = value;
 			}
@@ -3462,14 +3462,14 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 			// if we have a ".hqx" extension, strip it off
 			nsAutoString	extension;
 			updateStr.Right(extension, 4);
-			if (extension.EqualsIgnoreCase(".hqx"))
+			if (extension.LowerCaseEqualsLiteral(".hqx"))
 			{
 				updateStr.Truncate(updateStr.Length() - 4);
 			}
 
 			// now, either way, ensure that we have a ".src" file
 			updateStr.Right(extension, 4);
-      if (!extension.EqualsIgnoreCase(".src"))
+      if (!extension.LowerCaseEqualsLiteral(".src"))
 			{
 				// and if we don't, toss it
 				updateStr.Truncate();
@@ -3640,7 +3640,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding,
     stringEncoding = defCharset;
   else
     // make "ISO-8859-1" as the default (not "UTF-8")
-    stringEncoding.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+    stringEncoding.AssignLiteral("ISO-8859-1");
 
   return(NS_OK);
 }
@@ -3821,7 +3821,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!fullURL.IsEmpty())
 	{
 		action.Assign(fullURL);
-		methodStr.Assign(NS_LITERAL_STRING("get"));
+		methodStr.AssignLiteral("get");
 	}
 	else
 	{
@@ -3892,7 +3892,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		}
 	}
 
-	if (fullURL.IsEmpty() && methodStr.EqualsIgnoreCase("get"))
+	if (fullURL.IsEmpty() && methodStr.LowerCaseEqualsLiteral("get"))
 	{
     if (NS_FAILED(rv = GetInputs(dataUni, userVar, textTemp, input, 0, 0, 0)))  return(rv);
 		if (input.IsEmpty())				return(NS_ERROR_UNEXPECTED);
@@ -3926,7 +3926,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			// get it just from the cache if we can (do not validate)
 			channel->SetLoadFlags(nsIRequest::LOAD_FROM_CACHE);
 
-			if (methodStr.EqualsIgnoreCase("post"))
+			if (methodStr.LowerCaseEqualsLiteral("post"))
 			{
 				nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 				if (httpChannel)
@@ -4042,7 +4042,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if ((extensionOffset = basename.RFindChar(PRUnichar('.'))) > 0)
 	{
 		basename.Truncate(extensionOffset);
-		basename.Append(NS_LITERAL_STRING(".src"));
+		basename.AppendLiteral(".src");
 	}
 
   nsCAutoString filePath;
@@ -4059,7 +4059,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 	if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
 	{
 		searchURL.Truncate(extensionOffset);
-		searchURL.Append(NS_LITERAL_STRING(".src"));
+		searchURL.AppendLiteral(".src");
 	}
 
 	if (NS_FAILED(rv = gRDFService->GetUnicodeResource(searchURL,
@@ -4101,7 +4101,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		nsCAutoString  fileURL;
 		if (NS_FAILED(rv = NS_GetURLSpecFromFile(file,fileURL)))
 			return(rv);
-		iconURL.Assign(NS_LITERAL_STRING("moz-icon:"));
+		iconURL.AssignLiteral("moz-icon:");
 		iconURL.Append(NS_ConvertUTF8toUCS2(fileURL));
 	}
 #endif
@@ -4284,7 +4284,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 
 		// check the extension (must be ".src")
 		nsAutoString	extension;
-		if ((uri.Right(extension, 4) != 4) || (!extension.EqualsIgnoreCase(".src")))
+		if ((uri.Right(extension, 4) != 4) || (!extension.LowerCaseEqualsLiteral(".src")))
 		{
 			continue;
 		}
@@ -4434,7 +4434,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 	PRBool		inSection = PR_FALSE;
 
 	nsAutoString	section;
-	section.Assign(NS_LITERAL_STRING("<"));
+	section.AssignLiteral("<");
 	section.AppendWithConversion(sectionToFind);
 
 	while(!buffer.IsEmpty())
@@ -4677,10 +4677,10 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 			{
 				if (!input.IsEmpty())
 				{
-					input.Append(NS_LITERAL_STRING("&"));
+					input.AppendLiteral("&");
 				}
 				input += nameAttrib;
-        input.Append(NS_LITERAL_STRING("="));
+        input.AppendLiteral("=");
         if (!inDirInput)
 				input += valueAttrib;
         else
@@ -5216,7 +5216,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 		nsAutoString	nameStartStr, nameEndStr;
 		nsAutoString	emailStartStr, emailEndStr;
 		nsAutoString	browserResultTypeStr;
-		browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));		// default to "result"
+		browserResultTypeStr.AssignLiteral("result");		// default to "result"
 
 		// use a nsDependentString so that "htmlPage" data isn't copied
 		nsDependentString  htmlResults(htmlPage, htmlPageSize);
@@ -5233,7 +5233,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			GetData(dataUni, "interpret", interpretSectionNum, "bannerStart", bannerStartStr);
 			GetData(dataUni, "interpret", interpretSectionNum, "bannerEnd", bannerEndStr);
 			GetData(dataUni, "interpret", interpretSectionNum, "skiplocal", skiplocalStr);
-			skipLocalFlag = (skiplocalStr.EqualsIgnoreCase("true")) ? PR_TRUE : PR_FALSE;
+			skipLocalFlag = (skiplocalStr.LowerCaseEqualsLiteral("true")) ? PR_TRUE : PR_FALSE;
 
 			// shopping channel support
 			GetData(dataUni, "interpret", interpretSectionNum, "priceStart", priceStartStr);
@@ -5255,7 +5255,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			GetData(dataUni, "interpret", interpretSectionNum, "browserResultType", browserResultTypeStr);
 			if (browserResultTypeStr.IsEmpty())
 			{
-				browserResultTypeStr.Assign(NS_LITERAL_STRING("result"));	// default to "result"
+				browserResultTypeStr.AssignLiteral("result");	// default to "result"
 			}
 		}
 
@@ -5321,7 +5321,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 		// if resultItemStartStr is not specified, try making it just be "HREF="
 		if (resultItemStartStr.IsEmpty())
 		{
-			resultItemStartStr.Assign(NS_LITERAL_STRING("HREF="));
+			resultItemStartStr.AssignLiteral("HREF=");
 			trimItemStart = PR_FALSE;
 		}
 
@@ -5799,7 +5799,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				}
 				if (relItem.IsEmpty())
 				{
-					relItem.Assign(NS_LITERAL_STRING("-"));
+					relItem.AssignLiteral("-");
 				}
 
 				const PRUnichar *relItemUni = relItem.get();
@@ -5822,7 +5822,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 
 					// left-pad with "0"s and set special sorting value
 					nsAutoString	zero;
-					zero.Assign(NS_LITERAL_STRING("000"));
+					zero.AssignLiteral("000");
 					if (relItem.Length() < 3)
 					{
 						relItem.Insert(zero.get(), 0, zero.Length() - relItem.Length()); 
@@ -5830,7 +5830,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				}
 				else
 				{
-					relItem.Assign(NS_LITERAL_STRING("000"));
+					relItem.AssignLiteral("000");
 				}
 
 				const PRUnichar	*relSortUni = relItem.get();
@@ -5875,10 +5875,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			// if no branding icon, use some default icons
 			nsAutoString	iconChromeDefault;
 
-			if (browserResultTypeStr.EqualsIgnoreCase("category"))
-				iconChromeDefault.Assign(NS_LITERAL_STRING("chrome://communicator/skin/search/category.gif"));
-			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
-				iconChromeDefault.Assign(NS_LITERAL_STRING("chrome://communicator/skin/search/result.gif"));
+			if (browserResultTypeStr.LowerCaseEqualsLiteral("category"))
+				iconChromeDefault.AssignLiteral("chrome://communicator/skin/search/category.gif");
+			else if ((browserResultTypeStr.LowerCaseEqualsLiteral("result")) && (!engineIconNode))
+				iconChromeDefault.AssignLiteral("chrome://communicator/skin/search/result.gif");
 
 			if (!iconChromeDefault.IsEmpty())
 			{
@@ -6029,106 +6029,106 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 		nameStr.Cut(ampOffset, semiOffset-ampOffset+1);
 
 		PRUnichar	entityChar = 0;
-		if (entityStr.EqualsIgnoreCase("&quot;"))	entityChar = PRUnichar('\"');
-		else if (entityStr.EqualsIgnoreCase("&amp;"))	entityChar = PRUnichar('&');
-		else if (entityStr.EqualsIgnoreCase("&nbsp;"))	entityChar = PRUnichar(' ');
-		else if (entityStr.EqualsIgnoreCase("&lt;"))		entityChar = PRUnichar('<');
-		else if (entityStr.EqualsIgnoreCase("&gt;"))		entityChar = PRUnichar('>');
-		else if (entityStr.EqualsIgnoreCase("&iexcl;"))	entityChar = PRUnichar(161);
-		else if (entityStr.EqualsIgnoreCase("&cent;"))	entityChar = PRUnichar(162);
-		else if (entityStr.EqualsIgnoreCase("&pound;"))	entityChar = PRUnichar(163);
-		else if (entityStr.EqualsIgnoreCase("&curren;"))	entityChar = PRUnichar(164);
-		else if (entityStr.EqualsIgnoreCase("&yen;"))	entityChar = PRUnichar(165);
-		else if (entityStr.EqualsIgnoreCase("&brvbar;"))	entityChar = PRUnichar(166);
-		else if (entityStr.EqualsIgnoreCase("&sect;"))	entityChar = PRUnichar(167);
-		else if (entityStr.EqualsIgnoreCase("&uml;"))	entityChar = PRUnichar(168);
-		else if (entityStr.EqualsIgnoreCase("&copy;"))	entityChar = PRUnichar(169);
-		else if (entityStr.EqualsIgnoreCase("&ordf;"))	entityChar = PRUnichar(170);
-		else if (entityStr.EqualsIgnoreCase("&laquo;"))	entityChar = PRUnichar(171);
-		else if (entityStr.EqualsIgnoreCase("&not;"))	entityChar = PRUnichar(172);
-		else if (entityStr.EqualsIgnoreCase("&shy;"))	entityChar = PRUnichar(173);
-		else if (entityStr.EqualsIgnoreCase("&reg;"))	entityChar = PRUnichar(174);
-		else if (entityStr.EqualsIgnoreCase("&macr;"))	entityChar = PRUnichar(175);
-		else if (entityStr.EqualsIgnoreCase("&deg;"))	entityChar = PRUnichar(176);
-		else if (entityStr.EqualsIgnoreCase("&plusmn;"))	entityChar = PRUnichar(177);
-		else if (entityStr.EqualsIgnoreCase("&sup2;"))	entityChar = PRUnichar(178);
-		else if (entityStr.EqualsIgnoreCase("&sup3;"))	entityChar = PRUnichar(179);
-		else if (entityStr.EqualsIgnoreCase("&acute;"))	entityChar = PRUnichar(180);
-		else if (entityStr.EqualsIgnoreCase("&micro;"))	entityChar = PRUnichar(181);
-		else if (entityStr.EqualsIgnoreCase("&para;"))	entityChar = PRUnichar(182);
-		else if (entityStr.EqualsIgnoreCase("&middot;"))	entityChar = PRUnichar(183);
-		else if (entityStr.EqualsIgnoreCase("&cedil;"))	entityChar = PRUnichar(184);
-		else if (entityStr.EqualsIgnoreCase("&sup1;"))	entityChar = PRUnichar(185);
-		else if (entityStr.EqualsIgnoreCase("&ordm;"))	entityChar = PRUnichar(186);
-		else if (entityStr.EqualsIgnoreCase("&raquo;"))	entityChar = PRUnichar(187);
-		else if (entityStr.EqualsIgnoreCase("&frac14;"))	entityChar = PRUnichar(188);
-		else if (entityStr.EqualsIgnoreCase("&frac12;"))	entityChar = PRUnichar(189);
-		else if (entityStr.EqualsIgnoreCase("&frac34;"))	entityChar = PRUnichar(190);
-		else if (entityStr.EqualsIgnoreCase("&iquest;"))	entityChar = PRUnichar(191);
-		else if (entityStr.EqualsIgnoreCase("&Agrave;"))	entityChar = PRUnichar(192);
-		else if (entityStr.EqualsIgnoreCase("&Aacute;"))	entityChar = PRUnichar(193);
-		else if (entityStr.EqualsIgnoreCase("&Acirc;"))	entityChar = PRUnichar(194);
-		else if (entityStr.EqualsIgnoreCase("&Atilde;"))	entityChar = PRUnichar(195);
-		else if (entityStr.EqualsIgnoreCase("&Auml;"))	entityChar = PRUnichar(196);
-		else if (entityStr.EqualsIgnoreCase("&Aring;"))	entityChar = PRUnichar(197);
-		else if (entityStr.EqualsIgnoreCase("&AElig;"))	entityChar = PRUnichar(198);
-		else if (entityStr.EqualsIgnoreCase("&Ccedil;"))	entityChar = PRUnichar(199);
-		else if (entityStr.EqualsIgnoreCase("&Egrave;"))	entityChar = PRUnichar(200);
-		else if (entityStr.EqualsIgnoreCase("&Eacute;"))	entityChar = PRUnichar(201);
-		else if (entityStr.EqualsIgnoreCase("&Ecirc;"))	entityChar = PRUnichar(202);
-		else if (entityStr.EqualsIgnoreCase("&Euml;"))	entityChar = PRUnichar(203);
-		else if (entityStr.EqualsIgnoreCase("&Igrave;"))	entityChar = PRUnichar(204);
-		else if (entityStr.EqualsIgnoreCase("&Iacute;"))	entityChar = PRUnichar(205);
-		else if (entityStr.EqualsIgnoreCase("&Icirc;"))	entityChar = PRUnichar(206);
-		else if (entityStr.EqualsIgnoreCase("&Iuml;"))	entityChar = PRUnichar(207);
-		else if (entityStr.EqualsIgnoreCase("&ETH;"))	entityChar = PRUnichar(208);
-		else if (entityStr.EqualsIgnoreCase("&Ntilde;"))	entityChar = PRUnichar(209);
-		else if (entityStr.EqualsIgnoreCase("&Ograve;"))	entityChar = PRUnichar(210);
-		else if (entityStr.EqualsIgnoreCase("&Oacute;"))	entityChar = PRUnichar(211);
-		else if (entityStr.EqualsIgnoreCase("&Ocirc;"))	entityChar = PRUnichar(212);
-		else if (entityStr.EqualsIgnoreCase("&Otilde;"))	entityChar = PRUnichar(213);
-		else if (entityStr.EqualsIgnoreCase("&Ouml;"))	entityChar = PRUnichar(214);
-		else if (entityStr.EqualsIgnoreCase("&times;"))	entityChar = PRUnichar(215);
-		else if (entityStr.EqualsIgnoreCase("&Oslash;"))	entityChar = PRUnichar(216);
-		else if (entityStr.EqualsIgnoreCase("&Ugrave;"))	entityChar = PRUnichar(217);
-		else if (entityStr.EqualsIgnoreCase("&Uacute;"))	entityChar = PRUnichar(218);
-		else if (entityStr.EqualsIgnoreCase("&Ucirc;"))	entityChar = PRUnichar(219);
-		else if (entityStr.EqualsIgnoreCase("&Uuml;"))	entityChar = PRUnichar(220);
-		else if (entityStr.EqualsIgnoreCase("&Yacute;"))	entityChar = PRUnichar(221);
-		else if (entityStr.EqualsIgnoreCase("&THORN;"))	entityChar = PRUnichar(222);
-		else if (entityStr.EqualsIgnoreCase("&szlig;"))	entityChar = PRUnichar(223);
-		else if (entityStr.EqualsIgnoreCase("&agrave;"))	entityChar = PRUnichar(224);
-		else if (entityStr.EqualsIgnoreCase("&aacute;"))	entityChar = PRUnichar(225);
-		else if (entityStr.EqualsIgnoreCase("&acirc;"))	entityChar = PRUnichar(226);
-		else if (entityStr.EqualsIgnoreCase("&atilde;"))	entityChar = PRUnichar(227);
-		else if (entityStr.EqualsIgnoreCase("&auml;"))	entityChar = PRUnichar(228);
-		else if (entityStr.EqualsIgnoreCase("&aring;"))	entityChar = PRUnichar(229);
-		else if (entityStr.EqualsIgnoreCase("&aelig;"))	entityChar = PRUnichar(230);
-		else if (entityStr.EqualsIgnoreCase("&ccedil;"))	entityChar = PRUnichar(231);
-		else if (entityStr.EqualsIgnoreCase("&egrave;"))	entityChar = PRUnichar(232);
-		else if (entityStr.EqualsIgnoreCase("&eacute;"))	entityChar = PRUnichar(233);
-		else if (entityStr.EqualsIgnoreCase("&ecirc;"))	entityChar = PRUnichar(234);
-		else if (entityStr.EqualsIgnoreCase("&euml;"))	entityChar = PRUnichar(235);
-		else if (entityStr.EqualsIgnoreCase("&igrave;"))	entityChar = PRUnichar(236);
-		else if (entityStr.EqualsIgnoreCase("&iacute;"))	entityChar = PRUnichar(237);
-		else if (entityStr.EqualsIgnoreCase("&icirc;"))	entityChar = PRUnichar(238);
-		else if (entityStr.EqualsIgnoreCase("&iuml;"))	entityChar = PRUnichar(239);
-		else if (entityStr.EqualsIgnoreCase("&eth;"))	entityChar = PRUnichar(240);
-		else if (entityStr.EqualsIgnoreCase("&ntilde;"))	entityChar = PRUnichar(241);
-		else if (entityStr.EqualsIgnoreCase("&ograve;"))	entityChar = PRUnichar(242);
-		else if (entityStr.EqualsIgnoreCase("&oacute;"))	entityChar = PRUnichar(243);
-		else if (entityStr.EqualsIgnoreCase("&ocirc;"))	entityChar = PRUnichar(244);
-		else if (entityStr.EqualsIgnoreCase("&otilde;"))	entityChar = PRUnichar(245);
-		else if (entityStr.EqualsIgnoreCase("&ouml;"))	entityChar = PRUnichar(246);
-		else if (entityStr.EqualsIgnoreCase("&divide;"))	entityChar = PRUnichar(247);
-		else if (entityStr.EqualsIgnoreCase("&oslash;"))	entityChar = PRUnichar(248);
-		else if (entityStr.EqualsIgnoreCase("&ugrave;"))	entityChar = PRUnichar(249);
-		else if (entityStr.EqualsIgnoreCase("&uacute;"))	entityChar = PRUnichar(250);
-		else if (entityStr.EqualsIgnoreCase("&ucirc;"))	entityChar = PRUnichar(251);
-		else if (entityStr.EqualsIgnoreCase("&uuml;"))	entityChar = PRUnichar(252);
-		else if (entityStr.EqualsIgnoreCase("&yacute;"))	entityChar = PRUnichar(253);
-		else if (entityStr.EqualsIgnoreCase("&thorn;"))	entityChar = PRUnichar(254);
-		else if (entityStr.EqualsIgnoreCase("&yuml;"))	entityChar = PRUnichar(255);
+		if (entityStr.LowerCaseEqualsLiteral("&quot;"))	entityChar = PRUnichar('\"');
+		else if (entityStr.LowerCaseEqualsLiteral("&amp;"))	entityChar = PRUnichar('&');
+		else if (entityStr.LowerCaseEqualsLiteral("&nbsp;"))	entityChar = PRUnichar(' ');
+		else if (entityStr.LowerCaseEqualsLiteral("&lt;"))		entityChar = PRUnichar('<');
+		else if (entityStr.LowerCaseEqualsLiteral("&gt;"))		entityChar = PRUnichar('>');
+		else if (entityStr.LowerCaseEqualsLiteral("&iexcl;"))	entityChar = PRUnichar(161);
+		else if (entityStr.LowerCaseEqualsLiteral("&cent;"))	entityChar = PRUnichar(162);
+		else if (entityStr.LowerCaseEqualsLiteral("&pound;"))	entityChar = PRUnichar(163);
+		else if (entityStr.LowerCaseEqualsLiteral("&curren;"))	entityChar = PRUnichar(164);
+		else if (entityStr.LowerCaseEqualsLiteral("&yen;"))	entityChar = PRUnichar(165);
+		else if (entityStr.LowerCaseEqualsLiteral("&brvbar;"))	entityChar = PRUnichar(166);
+		else if (entityStr.LowerCaseEqualsLiteral("&sect;"))	entityChar = PRUnichar(167);
+		else if (entityStr.LowerCaseEqualsLiteral("&uml;"))	entityChar = PRUnichar(168);
+		else if (entityStr.LowerCaseEqualsLiteral("&copy;"))	entityChar = PRUnichar(169);
+		else if (entityStr.LowerCaseEqualsLiteral("&ordf;"))	entityChar = PRUnichar(170);
+		else if (entityStr.LowerCaseEqualsLiteral("&laquo;"))	entityChar = PRUnichar(171);
+		else if (entityStr.LowerCaseEqualsLiteral("&not;"))	entityChar = PRUnichar(172);
+		else if (entityStr.LowerCaseEqualsLiteral("&shy;"))	entityChar = PRUnichar(173);
+		else if (entityStr.LowerCaseEqualsLiteral("&reg;"))	entityChar = PRUnichar(174);
+		else if (entityStr.LowerCaseEqualsLiteral("&macr;"))	entityChar = PRUnichar(175);
+		else if (entityStr.LowerCaseEqualsLiteral("&deg;"))	entityChar = PRUnichar(176);
+		else if (entityStr.LowerCaseEqualsLiteral("&plusmn;"))	entityChar = PRUnichar(177);
+		else if (entityStr.LowerCaseEqualsLiteral("&sup2;"))	entityChar = PRUnichar(178);
+		else if (entityStr.LowerCaseEqualsLiteral("&sup3;"))	entityChar = PRUnichar(179);
+		else if (entityStr.LowerCaseEqualsLiteral("&acute;"))	entityChar = PRUnichar(180);
+		else if (entityStr.LowerCaseEqualsLiteral("&micro;"))	entityChar = PRUnichar(181);
+		else if (entityStr.LowerCaseEqualsLiteral("&para;"))	entityChar = PRUnichar(182);
+		else if (entityStr.LowerCaseEqualsLiteral("&middot;"))	entityChar = PRUnichar(183);
+		else if (entityStr.LowerCaseEqualsLiteral("&cedil;"))	entityChar = PRUnichar(184);
+		else if (entityStr.LowerCaseEqualsLiteral("&sup1;"))	entityChar = PRUnichar(185);
+		else if (entityStr.LowerCaseEqualsLiteral("&ordm;"))	entityChar = PRUnichar(186);
+		else if (entityStr.LowerCaseEqualsLiteral("&raquo;"))	entityChar = PRUnichar(187);
+		else if (entityStr.LowerCaseEqualsLiteral("&frac14;"))	entityChar = PRUnichar(188);
+		else if (entityStr.LowerCaseEqualsLiteral("&frac12;"))	entityChar = PRUnichar(189);
+		else if (entityStr.LowerCaseEqualsLiteral("&frac34;"))	entityChar = PRUnichar(190);
+		else if (entityStr.LowerCaseEqualsLiteral("&iquest;"))	entityChar = PRUnichar(191);
+		else if (entityStr.LowerCaseEqualsLiteral("&agrave;"))	entityChar = PRUnichar(192);
+		else if (entityStr.LowerCaseEqualsLiteral("&aacute;"))	entityChar = PRUnichar(193);
+		else if (entityStr.LowerCaseEqualsLiteral("&acirc;"))	entityChar = PRUnichar(194);
+		else if (entityStr.LowerCaseEqualsLiteral("&atilde;"))	entityChar = PRUnichar(195);
+		else if (entityStr.LowerCaseEqualsLiteral("&auml;"))	entityChar = PRUnichar(196);
+		else if (entityStr.LowerCaseEqualsLiteral("&aring;"))	entityChar = PRUnichar(197);
+		else if (entityStr.LowerCaseEqualsLiteral("&aelig;"))	entityChar = PRUnichar(198);
+		else if (entityStr.LowerCaseEqualsLiteral("&ccedil;"))	entityChar = PRUnichar(199);
+		else if (entityStr.LowerCaseEqualsLiteral("&egrave;"))	entityChar = PRUnichar(200);
+		else if (entityStr.LowerCaseEqualsLiteral("&eacute;"))	entityChar = PRUnichar(201);
+		else if (entityStr.LowerCaseEqualsLiteral("&ecirc;"))	entityChar = PRUnichar(202);
+		else if (entityStr.LowerCaseEqualsLiteral("&euml;"))	entityChar = PRUnichar(203);
+		else if (entityStr.LowerCaseEqualsLiteral("&igrave;"))	entityChar = PRUnichar(204);
+		else if (entityStr.LowerCaseEqualsLiteral("&iacute;"))	entityChar = PRUnichar(205);
+		else if (entityStr.LowerCaseEqualsLiteral("&icirc;"))	entityChar = PRUnichar(206);
+		else if (entityStr.LowerCaseEqualsLiteral("&iuml;"))	entityChar = PRUnichar(207);
+		else if (entityStr.LowerCaseEqualsLiteral("&eth;"))	entityChar = PRUnichar(208);
+		else if (entityStr.LowerCaseEqualsLiteral("&ntilde;"))	entityChar = PRUnichar(209);
+		else if (entityStr.LowerCaseEqualsLiteral("&ograve;"))	entityChar = PRUnichar(210);
+		else if (entityStr.LowerCaseEqualsLiteral("&oacute;"))	entityChar = PRUnichar(211);
+		else if (entityStr.LowerCaseEqualsLiteral("&ocirc;"))	entityChar = PRUnichar(212);
+		else if (entityStr.LowerCaseEqualsLiteral("&otilde;"))	entityChar = PRUnichar(213);
+		else if (entityStr.LowerCaseEqualsLiteral("&ouml;"))	entityChar = PRUnichar(214);
+		else if (entityStr.LowerCaseEqualsLiteral("&times;"))	entityChar = PRUnichar(215);
+		else if (entityStr.LowerCaseEqualsLiteral("&oslash;"))	entityChar = PRUnichar(216);
+		else if (entityStr.LowerCaseEqualsLiteral("&ugrave;"))	entityChar = PRUnichar(217);
+		else if (entityStr.LowerCaseEqualsLiteral("&uacute;"))	entityChar = PRUnichar(218);
+		else if (entityStr.LowerCaseEqualsLiteral("&ucirc;"))	entityChar = PRUnichar(219);
+		else if (entityStr.LowerCaseEqualsLiteral("&uuml;"))	entityChar = PRUnichar(220);
+		else if (entityStr.LowerCaseEqualsLiteral("&yacute;"))	entityChar = PRUnichar(221);
+		else if (entityStr.LowerCaseEqualsLiteral("&thorn;"))	entityChar = PRUnichar(222);
+		else if (entityStr.LowerCaseEqualsLiteral("&szlig;"))	entityChar = PRUnichar(223);
+		else if (entityStr.LowerCaseEqualsLiteral("&agrave;"))	entityChar = PRUnichar(224);
+		else if (entityStr.LowerCaseEqualsLiteral("&aacute;"))	entityChar = PRUnichar(225);
+		else if (entityStr.LowerCaseEqualsLiteral("&acirc;"))	entityChar = PRUnichar(226);
+		else if (entityStr.LowerCaseEqualsLiteral("&atilde;"))	entityChar = PRUnichar(227);
+		else if (entityStr.LowerCaseEqualsLiteral("&auml;"))	entityChar = PRUnichar(228);
+		else if (entityStr.LowerCaseEqualsLiteral("&aring;"))	entityChar = PRUnichar(229);
+		else if (entityStr.LowerCaseEqualsLiteral("&aelig;"))	entityChar = PRUnichar(230);
+		else if (entityStr.LowerCaseEqualsLiteral("&ccedil;"))	entityChar = PRUnichar(231);
+		else if (entityStr.LowerCaseEqualsLiteral("&egrave;"))	entityChar = PRUnichar(232);
+		else if (entityStr.LowerCaseEqualsLiteral("&eacute;"))	entityChar = PRUnichar(233);
+		else if (entityStr.LowerCaseEqualsLiteral("&ecirc;"))	entityChar = PRUnichar(234);
+		else if (entityStr.LowerCaseEqualsLiteral("&euml;"))	entityChar = PRUnichar(235);
+		else if (entityStr.LowerCaseEqualsLiteral("&igrave;"))	entityChar = PRUnichar(236);
+		else if (entityStr.LowerCaseEqualsLiteral("&iacute;"))	entityChar = PRUnichar(237);
+		else if (entityStr.LowerCaseEqualsLiteral("&icirc;"))	entityChar = PRUnichar(238);
+		else if (entityStr.LowerCaseEqualsLiteral("&iuml;"))	entityChar = PRUnichar(239);
+		else if (entityStr.LowerCaseEqualsLiteral("&eth;"))	entityChar = PRUnichar(240);
+		else if (entityStr.LowerCaseEqualsLiteral("&ntilde;"))	entityChar = PRUnichar(241);
+		else if (entityStr.LowerCaseEqualsLiteral("&ograve;"))	entityChar = PRUnichar(242);
+		else if (entityStr.LowerCaseEqualsLiteral("&oacute;"))	entityChar = PRUnichar(243);
+		else if (entityStr.LowerCaseEqualsLiteral("&ocirc;"))	entityChar = PRUnichar(244);
+		else if (entityStr.LowerCaseEqualsLiteral("&otilde;"))	entityChar = PRUnichar(245);
+		else if (entityStr.LowerCaseEqualsLiteral("&ouml;"))	entityChar = PRUnichar(246);
+		else if (entityStr.LowerCaseEqualsLiteral("&divide;"))	entityChar = PRUnichar(247);
+		else if (entityStr.LowerCaseEqualsLiteral("&oslash;"))	entityChar = PRUnichar(248);
+		else if (entityStr.LowerCaseEqualsLiteral("&ugrave;"))	entityChar = PRUnichar(249);
+		else if (entityStr.LowerCaseEqualsLiteral("&uacute;"))	entityChar = PRUnichar(250);
+		else if (entityStr.LowerCaseEqualsLiteral("&ucirc;"))	entityChar = PRUnichar(251);
+		else if (entityStr.LowerCaseEqualsLiteral("&uuml;"))	entityChar = PRUnichar(252);
+		else if (entityStr.LowerCaseEqualsLiteral("&yacute;"))	entityChar = PRUnichar(253);
+		else if (entityStr.LowerCaseEqualsLiteral("&thorn;"))	entityChar = PRUnichar(254);
+		else if (entityStr.LowerCaseEqualsLiteral("&yuml;"))	entityChar = PRUnichar(255);
 
 		startOffset = ampOffset;
 		if (entityChar != 0)

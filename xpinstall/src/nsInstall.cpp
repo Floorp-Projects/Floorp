@@ -454,7 +454,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     if (!subdirectory.IsEmpty())
     {
-        subdirectory.Append(NS_LITERAL_STRING("/"));
+        subdirectory.AppendLiteral("/");
     }
 
 
@@ -480,7 +480,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
         nsString *thisPath = (nsString *)paths->ElementAt(i);
 
         nsString newJarSource = aJarSource;
-        newJarSource.Append(NS_LITERAL_STRING("/"));
+        newJarSource.AppendLiteral("/");
         newJarSource += *thisPath;
 
         nsString newSubDir;
@@ -616,7 +616,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     }
 
     if (qualifiedVersion.IsEmpty())
-        qualifiedVersion.Assign(NS_LITERAL_STRING("0.0.0.0"));
+        qualifiedVersion.AssignLiteral("0.0.0.0");
 
 
     if ( aRegName.IsEmpty() )
@@ -2434,11 +2434,11 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
         prefBranch->GetCharPref("profile.name", getter_Copies(profname));
     }
 
-    userRegNode.Assign(NS_LITERAL_STRING("/Netscape/Users/"));
+    userRegNode.AssignLiteral("/Netscape/Users/");
     if ( !profname.IsEmpty() )
     {
         userRegNode.AppendWithConversion(profname);
-        userRegNode.Append(NS_LITERAL_STRING("/"));
+        userRegNode.AppendLiteral("/");
     }
 }
 
@@ -2652,7 +2652,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
                 // We found the extension;
                 newLeafName.Truncate(extpos + 1); //strip off the old extension
             }
-            newLeafName.Append(NS_LITERAL_STRING("new"));
+            newLeafName.AppendLiteral("new");
 
             //Now reset the leafname
             tempFile->SetLeafName(newLeafName);

@@ -1569,25 +1569,25 @@ nsDOMEvent::AllocateEvent(const nsAString& aEventType)
 {
   //Allocate internal event
   nsAutoString eventType(aEventType);
-  if (eventType.EqualsIgnoreCase("MouseEvents")) {
+  if (eventType.LowerCaseEqualsLiteral("mouseevents")) {
     mEvent = new nsMouseEvent();
   }
-  else if (eventType.EqualsIgnoreCase("MouseScrollEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("mousescrollevents")) {
     mEvent = new nsMouseScrollEvent();
   }
-  else if (eventType.EqualsIgnoreCase("KeyEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("keyevents")) {
     mEvent = new nsKeyEvent();
   }
-  else if (eventType.EqualsIgnoreCase("MutationEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("mutationevents")) {
     mEvent = new nsMutationEvent();
   }
-  else if (eventType.EqualsIgnoreCase("PopupEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("popupevents")) {
     mEvent = new nsGUIEvent();
   }
-  else if (eventType.EqualsIgnoreCase("PopupBlockedEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("popupblockedevents")) {
     mEvent = new nsPopupBlockedEvent();
   }
-  else if (eventType.EqualsIgnoreCase("UIEvents")) {
+  else if (eventType.LowerCaseEqualsLiteral("uievents")) {
     mEvent = new nsDOMUIEvent();
   }
   else {

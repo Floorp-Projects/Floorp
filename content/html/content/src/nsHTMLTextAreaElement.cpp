@@ -349,7 +349,7 @@ NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
 NS_IMETHODIMP 
 nsHTMLTextAreaElement::GetType(nsAString& aType)
 {
-  aType.Assign(NS_LITERAL_STRING("textarea"));
+  aType.AssignLiteral("textarea");
 
   return NS_OK;
 }

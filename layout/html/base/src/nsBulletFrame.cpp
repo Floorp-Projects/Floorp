@@ -277,7 +277,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
 
         if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
           text.Cut(0, 1);
-          text.Append(NS_LITERAL_STRING("."));
+          text.AppendLiteral(".");
         }
         break;
       }
@@ -1124,7 +1124,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
   // XXX For some of these systems, "." is wrong!  This should really be
   // pushed down into the individual cases!
   if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-    result.Append(NS_LITERAL_STRING("."));
+    result.AppendLiteral(".");
   }
 #endif // IBMBIDI
 
@@ -1346,7 +1346,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
 #ifdef IBMBIDI
   if (NS_STYLE_DIRECTION_RTL != vis->mDirection)
 #endif // IBMBIDI
-  result.Append(NS_LITERAL_STRING("."));
+  result.AppendLiteral(".");
   return success;
 }
 

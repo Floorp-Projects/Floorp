@@ -951,22 +951,22 @@ BookmarkParser::Unescape(nsString &text)
 
     while((offset = text.FindChar((PRUnichar('&')), offset)) >= 0)
     {
-        if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()))
+        if (Substring(text, offset, 4).LowerCaseEqualsLiteral("&lt;"))
         {
             text.Cut(offset, 4);
             text.Insert(PRUnichar('<'), offset);
         }
-        else if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()))
+        else if (Substring(text, offset, 4).LowerCaseEqualsLiteral("&gt;"))
         {
             text.Cut(offset, 4);
             text.Insert(PRUnichar('>'), offset);
         }
-        else if (Substring(text, offset, 5).Equals(NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()))
+        else if (Substring(text, offset, 5).LowerCaseEqualsLiteral("&amp;"))
         {
             text.Cut(offset, 5);
             text.Insert(PRUnichar('&'), offset);
         }
-        else if (Substring(text, offset, 6).Equals(NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()))
+        else if (Substring(text, offset, 6).LowerCaseEqualsLiteral("&quot;"))
         {
             text.Cut(offset, 6);
             text.Insert(PRUnichar('\"'), offset);
@@ -1001,7 +1001,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     aLine.Mid(httpEquiv, start, end - start);
 
     // if HTTP-EQUIV isn't "Content-Type", just ignore the META tag
-    if (!httpEquiv.EqualsIgnoreCase("Content-Type"))
+    if (!httpEquiv.LowerCaseEqualsLiteral("content-type"))
         return NS_OK;
 
     // get the CONTENT attribute
@@ -1718,7 +1718,7 @@ nsBookmarksService::Init()
                                             getter_Copies(mPersonalToolbarName));
             if (NS_FAILED(rv) || mPersonalToolbarName.IsEmpty()) {
               // no preference, so fallback to a well-known name
-              mPersonalToolbarName.Assign(NS_LITERAL_STRING("Personal Toolbar Folder"));
+              mPersonalToolbarName.AssignLiteral("Personal Toolbar Folder");
             }
         }
     }
@@ -1758,7 +1758,7 @@ nsBookmarksService::Init()
         rv = mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarks_default_root").get(),
                                         getter_Copies(mBookmarksRootName));
         if (NS_FAILED(rv) || mBookmarksRootName.IsEmpty()) {
-            mBookmarksRootName.Assign(NS_LITERAL_STRING("Bookmarks"));
+            mBookmarksRootName.AssignLiteral("Bookmarks");
         }
     }
 
@@ -2392,7 +2392,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                 {
                     nsAutoString    promptStr;
                     getLocaleString("WebPageUpdated", promptStr);
-                    if (!promptStr.IsEmpty())   promptStr.Append(NS_LITERAL_STRING("\n\n"));
+                    if (!promptStr.IsEmpty())   promptStr.AppendLiteral("\n\n");
 
                     nsCOMPtr<nsIRDFNode>    nameNode;
                     if (NS_SUCCEEDED(mInner->GetTarget(busyResource, kNC_Name,
@@ -2408,12 +2408,12 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                 nsAutoString    info;
                                 getLocaleString("WebPageTitle", info);
                                 promptStr += info;
-                                promptStr.Append(NS_LITERAL_STRING(" "));
+                                promptStr.AppendLiteral(" ");
                                 promptStr += nameUni;
-                                promptStr.Append(NS_LITERAL_STRING("\n"));
+                                promptStr.AppendLiteral("\n");
                                 getLocaleString("WebPageURL", info);
                                 promptStr += info;
-                                promptStr.Append(NS_LITERAL_STRING(" "));
+                                promptStr.AppendLiteral(" ");
                             }
                         }
                     }
@@ -2423,7 +2423,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                     getLocaleString("WebPageAskDisplay", temp);
                     if (!temp.IsEmpty())
                     {
-                        promptStr.Append(NS_LITERAL_STRING("\n\n"));
+                        promptStr.AppendLiteral("\n\n");
                         promptStr += temp;
                     }
 

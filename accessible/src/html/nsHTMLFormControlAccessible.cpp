@@ -186,7 +186,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
-  if (buttonType.EqualsIgnoreCase("submit"))
+  if (buttonType.LowerCaseEqualsLiteral("submit"))
     *_retval |= STATE_DEFAULT;
 
   return NS_OK;
@@ -271,7 +271,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
 
   nsAutoString buttonType;
   element->GetAttribute(NS_LITERAL_STRING("type"), buttonType);
-  if (buttonType.EqualsIgnoreCase("submit"))
+  if (buttonType.LowerCaseEqualsLiteral("submit"))
     *_retval |= STATE_DEFAULT;
 
   return NS_OK;

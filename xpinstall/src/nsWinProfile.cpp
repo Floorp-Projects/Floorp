@@ -53,7 +53,7 @@ nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsSt
 
   if(mFilename.Last() != '\\')
   {
-      mFilename.Append(NS_LITERAL_STRING("\\"));
+      mFilename.AppendLiteral("\\");
   }
   mFilename.Append(file);
 

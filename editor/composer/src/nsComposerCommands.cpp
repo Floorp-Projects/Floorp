@@ -283,12 +283,12 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
 
     if (tagName.EqualsLiteral("sub"))
     {
-      removeName.AssignWithConversion("sup");
+      removeName.AssignLiteral("sup");
       rv = RemoveTextProperty(aEditor,tagName.get(), nsnull);
     } 
     else if (tagName.EqualsLiteral("sup"))
     {
-      removeName.AssignWithConversion("sub");
+      removeName.AssignLiteral("sub");
       rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
     }
     if (NS_SUCCEEDED(rv))
@@ -1052,19 +1052,19 @@ nsAlignCommand::GetCurrentState(nsIEditor *aEditor, nsICommandParams *aParams)
   {
     default:
     case nsIHTMLEditor::eLeft:
-      outStateString.Assign(NS_LITERAL_STRING("left"));
+      outStateString.AssignLiteral("left");
       break;
       
     case nsIHTMLEditor::eCenter:
-      outStateString.Assign(NS_LITERAL_STRING("center"));
+      outStateString.AssignLiteral("center");
       break;
       
     case nsIHTMLEditor::eRight:
-      outStateString.Assign(NS_LITERAL_STRING("right"));
+      outStateString.AssignLiteral("right");
       break;
 
     case nsIHTMLEditor::eJustify:
-      outStateString.Assign(NS_LITERAL_STRING("justify"));
+      outStateString.AssignLiteral("justify");
       break;
   }
   nsCAutoString tOutStateString;
@@ -1133,7 +1133,7 @@ nsAbsolutePositioningCommand::GetCurrentState(nsIEditor *aEditor, const char* aT
 
   nsAutoString outStateString;
   if (elt)
-    outStateString.Assign(NS_LITERAL_STRING("absolute"));
+    outStateString.AssignLiteral("absolute");
 
   aParams->SetBooleanValue(STATE_MIXED,PR_FALSE);
   aParams->SetCStringValue(STATE_ATTRIBUTE, NS_ConvertUCS2toUTF8(outStateString).get());
@@ -1567,9 +1567,9 @@ nsInsertTagCommand::DoCommandParams(const char *aCommandName,
   // filter out tags we don't know how to insert
   nsAutoString attributeType;
   if (0 == nsCRT::strcmp(mTagName, "a")) {
-    attributeType = NS_LITERAL_STRING("href");
+    attributeType.AssignLiteral("href");
   } else if (0 == nsCRT::strcmp(mTagName, "img")) {
-    attributeType = NS_LITERAL_STRING("src");
+    attributeType.AssignLiteral("src");
   } else {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1632,11 +1632,11 @@ GetListState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retval)
       {
         nsAutoString tagStr;
         if (bOL) 
-          tagStr.AssignWithConversion("ol");
+          tagStr.AssignLiteral("ol");
         else if (bUL) 
-          tagStr.AssignWithConversion("ul");
+          tagStr.AssignLiteral("ul");
         else if (bDL) 
-          tagStr.AssignWithConversion("dl");
+          tagStr.AssignLiteral("dl");
         *_retval = ToNewUnicode(tagStr);
       }
     }  

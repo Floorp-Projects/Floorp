@@ -549,7 +549,7 @@ void nsFilePicker::GetFileSystemCharset(nsCString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign(NS_LITERAL_CSTRING("IBM850"));
+		  aCharset.AssignLiteral("IBM850");
   }
   fileSystemCharset = aCharset;
 }

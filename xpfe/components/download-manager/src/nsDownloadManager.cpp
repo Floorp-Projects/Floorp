@@ -328,9 +328,9 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
   // update progress mode
   nsAutoString progressMode;
   if (state == DOWNLOADING)
-    progressMode.Assign(NS_LITERAL_STRING("normal"));
+    progressMode.AssignLiteral("normal");
   else
-    progressMode.Assign(NS_LITERAL_STRING("none"));
+    progressMode.AssignLiteral("none");
 
   gRDFService->GetLiteral(progressMode.get(), getter_AddRefs(literal));
 
@@ -354,15 +354,15 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
 
   nsAutoString strKey;
   if (state == NOTSTARTED)
-    strKey.Assign(NS_LITERAL_STRING("notStarted"));
+    strKey.AssignLiteral("notStarted");
   else if (state == DOWNLOADING)
-    strKey.Assign(NS_LITERAL_STRING("downloading"));
+    strKey.AssignLiteral("downloading");
   else if (state == FINISHED)
-    strKey.Assign(NS_LITERAL_STRING("finished"));
+    strKey.AssignLiteral("finished");
   else if (state == FAILED)
-    strKey.Assign(NS_LITERAL_STRING("failed"));
+    strKey.AssignLiteral("failed");
   else if (state == CANCELED)
-    strKey.Assign(NS_LITERAL_STRING("canceled"));
+    strKey.AssignLiteral("canceled");
 
   nsXPIDLString value;
   rv = mBundle->GetStringFromName(strKey.get(), getter_Copies(value));    

@@ -199,22 +199,22 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
            (eStyleUnit_Enumerated == mUnit) ||
            (eStyleUnit_Integer == mUnit)) {
     aBuffer.AppendInt(mValue.mInt, 10);
-    aBuffer.Append(NS_LITERAL_STRING("[0x"));
+    aBuffer.AppendLiteral("[0x");
     aBuffer.AppendInt(mValue.mInt, 16);
     aBuffer.Append(PRUnichar(']'));
   }
 
   switch (mUnit) {
-    case eStyleUnit_Null:         aBuffer.Append(NS_LITERAL_STRING("Null"));     break;
-    case eStyleUnit_Coord:        aBuffer.Append(NS_LITERAL_STRING("tw"));       break;
-    case eStyleUnit_Percent:      aBuffer.Append(NS_LITERAL_STRING("%"));        break;
-    case eStyleUnit_Factor:       aBuffer.Append(NS_LITERAL_STRING("f"));        break;
-    case eStyleUnit_Normal:       aBuffer.Append(NS_LITERAL_STRING("Normal"));   break;
-    case eStyleUnit_Auto:         aBuffer.Append(NS_LITERAL_STRING("Auto"));     break;
-    case eStyleUnit_Proportional: aBuffer.Append(NS_LITERAL_STRING("*"));        break;
-    case eStyleUnit_Enumerated:   aBuffer.Append(NS_LITERAL_STRING("enum"));     break;
-    case eStyleUnit_Integer:      aBuffer.Append(NS_LITERAL_STRING("int"));      break;
-    case eStyleUnit_Chars:        aBuffer.Append(NS_LITERAL_STRING("chars"));    break;
+    case eStyleUnit_Null:         aBuffer.AppendLiteral("Null");     break;
+    case eStyleUnit_Coord:        aBuffer.AppendLiteral("tw");       break;
+    case eStyleUnit_Percent:      aBuffer.AppendLiteral("%");        break;
+    case eStyleUnit_Factor:       aBuffer.AppendLiteral("f");        break;
+    case eStyleUnit_Normal:       aBuffer.AppendLiteral("Normal");   break;
+    case eStyleUnit_Auto:         aBuffer.AppendLiteral("Auto");     break;
+    case eStyleUnit_Proportional: aBuffer.AppendLiteral("*");        break;
+    case eStyleUnit_Enumerated:   aBuffer.AppendLiteral("enum");     break;
+    case eStyleUnit_Integer:      aBuffer.AppendLiteral("int");      break;
+    case eStyleUnit_Chars:        aBuffer.AppendLiteral("chars");    break;
   }
   aBuffer.Append(PRUnichar(' '));
 }
@@ -269,19 +269,19 @@ void nsStyleSides::AppendToString(nsString& aBuffer) const
   nsStyleCoord  temp;
 
   GetLeft(temp);
-  aBuffer.Append(NS_LITERAL_STRING("left: "));
+  aBuffer.AppendLiteral("left: ");
   temp.AppendToString(aBuffer);
 
   GetTop(temp);
-  aBuffer.Append(NS_LITERAL_STRING("top: "));
+  aBuffer.AppendLiteral("top: ");
   temp.AppendToString(aBuffer);
 
   GetRight(temp);
-  aBuffer.Append(NS_LITERAL_STRING("right: "));
+  aBuffer.AppendLiteral("right: ");
   temp.AppendToString(aBuffer);
 
   GetBottom(temp);
-  aBuffer.Append(NS_LITERAL_STRING("bottom: "));
+  aBuffer.AppendLiteral("bottom: ");
   temp.AppendToString(aBuffer);
 }
 

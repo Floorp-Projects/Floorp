@@ -212,10 +212,10 @@ void nsFont::GetFirstFamily(nsString& aFamily) const
 void nsFont::GetGenericID(const nsString& aGeneric, PRUint8* aID)
 {
   *aID = kGenericFont_NONE;
-  if (aGeneric.EqualsIgnoreCase("-moz-fixed"))      *aID = kGenericFont_moz_fixed;
-  else if (aGeneric.EqualsIgnoreCase("serif"))      *aID = kGenericFont_serif;
-  else if (aGeneric.EqualsIgnoreCase("sans-serif")) *aID = kGenericFont_sans_serif;
-  else if (aGeneric.EqualsIgnoreCase("cursive"))    *aID = kGenericFont_cursive;
-  else if (aGeneric.EqualsIgnoreCase("fantasy"))    *aID = kGenericFont_fantasy;
-  else if (aGeneric.EqualsIgnoreCase("monospace"))  *aID = kGenericFont_monospace;
+  if (aGeneric.LowerCaseEqualsLiteral("-moz-fixed"))      *aID = kGenericFont_moz_fixed;
+  else if (aGeneric.LowerCaseEqualsLiteral("serif"))      *aID = kGenericFont_serif;
+  else if (aGeneric.LowerCaseEqualsLiteral("sans-serif")) *aID = kGenericFont_sans_serif;
+  else if (aGeneric.LowerCaseEqualsLiteral("cursive"))    *aID = kGenericFont_cursive;
+  else if (aGeneric.LowerCaseEqualsLiteral("fantasy"))    *aID = kGenericFont_fantasy;
+  else if (aGeneric.LowerCaseEqualsLiteral("monospace"))  *aID = kGenericFont_monospace;
 }

@@ -668,7 +668,7 @@ ProcessTime(PRTime dispTime, const PRUnichar *displayName,
                               &explodedTime, tempString);
 
   text.Append(tempString);
-  text.Append(NS_LITERAL_STRING("\n("));
+  text.AppendLiteral("\n(");
 
   PRExplodedTime explodedTimeGMT;
   PR_ExplodeTime(dispTime, PR_GMTParameters, &explodedTimeGMT);

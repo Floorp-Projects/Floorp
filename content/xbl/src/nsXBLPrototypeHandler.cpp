@@ -810,7 +810,7 @@ nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
   
   if (aEvent.IsEmpty() && (mType & NS_HANDLER_TYPE_XUL))
     // If no type is specified for a XUL <key> element, let's assume that we're "keypress".
-    aEvent = NS_LITERAL_STRING("keypress");
+    aEvent.AssignLiteral("keypress");
 }
 
 void

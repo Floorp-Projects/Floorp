@@ -111,9 +111,9 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
 static PRBool
 IsVisualCharset(const nsCAutoString& aCharset)
 {
-  if (aCharset.EqualsIgnoreCase("ibm864")             // Arabic//ahmed
-      || aCharset.EqualsIgnoreCase("ibm862")          // Hebrew
-      || aCharset.EqualsIgnoreCase("iso-8859-8") ) {  // Hebrew
+  if (aCharset.LowerCaseEqualsLiteral("ibm864")             // Arabic//ahmed
+      || aCharset.LowerCaseEqualsLiteral("ibm862")          // Hebrew
+      || aCharset.LowerCaseEqualsLiteral("iso-8859-8") ) {  // Hebrew
     return PR_TRUE; // visual text type
   }
   else {

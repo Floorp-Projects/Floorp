@@ -1015,10 +1015,10 @@ nsHTMLSelectElement::GetType(nsAString& aType)
   PRBool isMultiple;
   GetMultiple(&isMultiple);
   if (isMultiple) {
-    aType.Assign(NS_LITERAL_STRING("select-multiple"));
+    aType.AssignLiteral("select-multiple");
   }
   else {
-    aType.Assign(NS_LITERAL_STRING("select-one"));
+    aType.AssignLiteral("select-one");
   }
 
   return NS_OK;

@@ -438,7 +438,7 @@ void SamplePrintWordWithBreak()
             tmp.Truncate();
             fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
-            result.Append(NS_LITERAL_STRING("^"));
+            result.AppendLiteral("^");
             start = cur;
             wbk->NextWord(fragText.get(), fragText.Length(), cur, &cur, &done);
       }
@@ -460,7 +460,7 @@ void SamplePrintWordWithBreak()
                                   &canBreak
                                 );
         if(canBreak)
-            result.Append(NS_LITERAL_STRING("^"));
+            result.AppendLiteral("^");
 
         fragText = nextFragText;
       }

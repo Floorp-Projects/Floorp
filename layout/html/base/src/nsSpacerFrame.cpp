@@ -173,12 +173,12 @@ SpacerFrame::GetType()
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
       mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-    if (value.EqualsIgnoreCase("line") ||
-        value.EqualsIgnoreCase("vert") ||
-        value.EqualsIgnoreCase("vertical")) {
+    if (value.LowerCaseEqualsLiteral("line") ||
+        value.LowerCaseEqualsLiteral("vert") ||
+        value.LowerCaseEqualsLiteral("vertical")) {
       return TYPE_LINE;
     }
-    if (value.EqualsIgnoreCase("block")) {
+    if (value.LowerCaseEqualsLiteral("block")) {
       return TYPE_IMAGE;
     }
   }

@@ -341,7 +341,7 @@ void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
 
   if (eCSSProperty_UNKNOWN < aPropID) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
   }
 
   mTop.AppendToString(buffer);
@@ -359,22 +359,22 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
 
   if (eCSSUnit_Null != mTop.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mTop.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mRight.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mRight.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mBottom.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mBottom.AppendToString(buffer); 
   }
   if (eCSSUnit_Null != mLeft.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mLeft.AppendToString(buffer);
   }
 
@@ -427,7 +427,7 @@ void nsCSSValueListRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent)
 
   if (eCSSProperty_UNKNOWN < aPropID) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
   }
 
   mTop.AppendToString(buffer);
@@ -447,22 +447,22 @@ void nsCSSValueListRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aT
 
   if (eCSSUnit_Null != mTop.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mTop.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mRight.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mRight.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mBottom.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mBottom.AppendToString(buffer); 
   }
   if (eCSSUnit_Null != mLeft.GetUnit()) {
     buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]).get());
-    buffer.Append(NS_LITERAL_STRING(": "));
+    buffer.AppendLiteral(": ");
     mLeft.AppendToString(buffer);
   }
 

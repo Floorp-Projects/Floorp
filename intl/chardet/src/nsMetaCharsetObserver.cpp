@@ -100,8 +100,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      const PRUnichar* valueArray[])
 {
   
-    if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("META"),
-                                       nsCaseInsensitiveStringComparator())) 
+    if(!nsDependentString(aTag).LowerCaseEqualsLiteral("meta")) 
         return NS_ERROR_ILLEGAL_VALUE;
     else
         return Notify(aDocumentID, numOfAttributes, nameArray, valueArray);
@@ -147,8 +146,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
   nsresult result = NS_OK;
   // bug 125317 - document.write content is already an unicode content.
   if (!(aFlags & nsIElementObserver::IS_DOCUMENT_WRITE)) {
-    if(!nsDependentString(aTag).Equals(NS_LITERAL_STRING("META"),
-                                       nsCaseInsensitiveStringComparator())) {
+    if(!nsDependentString(aTag).LowerCaseEqualsLiteral("meta")) {
         result = NS_ERROR_ILLEGAL_VALUE;
     }
     else {
@@ -219,14 +217,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
         while(IS_SPACE_CHARS(*keyStr)) 
           keyStr++;
 
-        if(Substring(keyStr, keyStr+10).Equals(NS_LITERAL_STRING("HTTP-EQUIV"),
-                                               nsCaseInsensitiveStringComparator()))
+        if(Substring(keyStr, keyStr+10).LowerCaseEqualsLiteral("http-equiv"))
               httpEquivValue = values->StringAt(i)->get();
-        else if(Substring(keyStr, keyStr+7).Equals(NS_LITERAL_STRING("content"),
-                                                   nsCaseInsensitiveStringComparator()))
+        else if(Substring(keyStr, keyStr+7).LowerCaseEqualsLiteral("content"))
               contentValue = values->StringAt(i)->get();
-        else if (Substring(keyStr, keyStr+7).Equals(NS_LITERAL_STRING("charset"),
-                                                    nsCaseInsensitiveStringComparator()))
+        else if (Substring(keyStr, keyStr+7).LowerCaseEqualsLiteral("charset"))
               charsetValue = values->StringAt(i)->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
@@ -351,8 +346,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
     // e.g. <META charset="ISO-8859-1">
     PRInt32 numOfAttributes = keys->Count();
     if ((numOfAttributes >= 3) &&
-        (keys->StringAt(0)->Equals(NS_LITERAL_STRING("charset"),
-                                   nsCaseInsensitiveStringComparator())))
+        (keys->StringAt(0)->LowerCaseEqualsLiteral("charset")))
     {
       nsAutoString srcStr((values->StringAt(numOfAttributes-2))->get());
       PRInt32 err;

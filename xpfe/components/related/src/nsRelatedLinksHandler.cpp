@@ -561,22 +561,22 @@ RelatedLinksStreamListener::Unescape(nsString &text)
 
 	while((offset = text.FindChar((PRUnichar('&')), offset)) >= 0)
 	{
-		if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()))
+		if (Substring(text, offset, 4).LowerCaseEqualsLiteral("&lt;"))
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('<'), offset);
 		}
-		else if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()))
+		else if (Substring(text, offset, 4).LowerCaseEqualsLiteral("&gt;"))
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('>'), offset);
 		}
-		else if (Substring(text, offset, 5).Equals(NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()))
+		else if (Substring(text, offset, 5).LowerCaseEqualsLiteral("&amp;"))
 		{
 			text.Cut(offset, 5);
 			text.Insert(PRUnichar('&'), offset);
 		}
-		else if (Substring(text, offset, 6).Equals(NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()))
+		else if (Substring(text, offset, 6).LowerCaseEqualsLiteral("&quot;"))
 		{
 			text.Cut(offset, 6);
 			text.Insert(PRUnichar('\"'), offset);
@@ -655,7 +655,7 @@ RelatedLinksHandlerImpl::Init()
 			else
 			{
 				// no preference, so fallback to a well-known URL
-				mRLServerURL->Assign(NS_LITERAL_STRING("http://www-rl.netscape.com/wtgn?"));
+				mRLServerURL->AssignLiteral("http://www-rl.netscape.com/wtgn?");
 			}
 		}
 	}

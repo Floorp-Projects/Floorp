@@ -132,7 +132,7 @@ nsUnicodeFontMappingMac* nsFontMetricsMac::GetUnicodeFontMapping()
   	if (mLangGroup)
   		mLangGroup->ToString(langGroup);
     else
-      langGroup.Assign(NS_LITERAL_STRING("ja"));
+      langGroup.AssignLiteral("ja");
       
   	nsString lang;
     mFontMapping = new nsUnicodeFontMappingMac(mFont, mContext, langGroup, lang);
@@ -159,33 +159,33 @@ static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFo
   }
   
   NS_ASSERTION(0, "Failed to find a font");
-  aFontFace.Assign(NS_LITERAL_STRING("Times"));
+  aFontFace.AssignLiteral("Times");
 	
   /*
   // fall back onto hard-coded font names
-  if (aGenericFamily.EqualsIgnoreCase("serif"))
+  if (aGenericFamily.LowerCaseEqualsLiteral("serif"))
   {
-    aFontFace.Assign(NS_LITERAL_STRING("Times"));
+    aFontFace.AssignLiteral("Times");
   }
-  else if (aGenericFamily.EqualsIgnoreCase("sans-serif"))
+  else if (aGenericFamily.LowerCaseEqualsLiteral("sans-serif"))
   {
-    aFontFace.Assign(NS_LITERAL_STRING("Helvetica"));
+    aFontFace.AssignLiteral("Helvetica");
   }
-  else if (aGenericFamily.EqualsIgnoreCase("cursive"))
+  else if (aGenericFamily.LowerCaseEqualsLiteral("cursive"))
   {
-     aFontFace.Assign(NS_LITERAL_STRING("Apple Chancery"));
+     aFontFace.AssignLiteral("Apple Chancery");
   }
-  else if (aGenericFamily.EqualsIgnoreCase("fantasy"))
+  else if (aGenericFamily.LowerCaseEqualsLiteral("fantasy"))
   {
-    aFontFace.Assign(NS_LITERAL_STRING("Gadget"));
+    aFontFace.AssignLiteral("Gadget");
   }
-  else if (aGenericFamily.EqualsIgnoreCase("monospace"))
+  else if (aGenericFamily.LowerCaseEqualsLiteral("monospace"))
   {
-    aFontFace.Assign(NS_LITERAL_STRING("Courier"));
+    aFontFace.AssignLiteral("Courier");
   }
-  else if (aGenericFamily.EqualsIgnoreCase("-moz-fixed"))
+  else if (aGenericFamily.LowerCaseEqualsLiteral("-moz-fixed"))
   {
-    aFontFace.Assign(NS_LITERAL_STRING("Courier"));
+    aFontFace.AssignLiteral("Courier");
   }
   */
 }
@@ -237,7 +237,7 @@ void nsFontMetricsMac::RealizeFont()
 		if (mLangGroup)
 			mLangGroup->ToString(theLangGroupString);
 		else
-			theLangGroupString.Assign(NS_LITERAL_STRING("ja"));
+			theLangGroupString.AssignLiteral("ja");
 
 		theScriptCode = unicodeMappingUtil->MapLangGroupToScriptCode(
 		    NS_ConvertUCS2toUTF8(theLangGroupString).get());

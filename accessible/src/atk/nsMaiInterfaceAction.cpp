@@ -214,7 +214,7 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
         }
     }
     else  //don't have accesskey
-        allKeyBinding = NS_LITERAL_STRING(";");
+        allKeyBinding.AssignLiteral(";");
 
     //get shortcut
     nsAutoString keyBinding, subShortcut;
@@ -235,8 +235,8 @@ getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
                 keyBinding.Mid(subString, oldPos, curPos - oldPos);
       
                 //change "Ctrl" to "Control"
-                if (subString.EqualsIgnoreCase("ctrl"))
-                    subString = NS_LITERAL_STRING("Control");
+                if (subString.LowerCaseEqualsLiteral("ctrl"))
+                    subString.AssignLiteral("Control");
       
                 subShortcut += NS_LITERAL_STRING("<") + subString +
                                NS_LITERAL_STRING(">");

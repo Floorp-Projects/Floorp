@@ -2871,10 +2871,10 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   nsAutoString itemType;
   if (aItemType) 
     itemType = *aItemType;
-  else if (aListType->Equals(NS_LITERAL_STRING("dl"),nsCaseInsensitiveStringComparator()))
-    itemType.Assign(NS_LITERAL_STRING("dd"));
+  else if (aListType->LowerCaseEqualsLiteral("dl"))
+    itemType.AssignLiteral("dd");
   else
-    itemType.Assign(NS_LITERAL_STRING("li"));
+    itemType.AssignLiteral("li");
     
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate
@@ -6907,7 +6907,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
     else if (IsInlineNode(curNode))
     {
       // if curNode is a non editable, drop it if we are going to <pre>
-      if (tString.Equals(NS_LITERAL_STRING("pre"),nsCaseInsensitiveStringComparator()) 
+      if (tString.LowerCaseEqualsLiteral("pre") 
         && (!mHTMLEditor->IsEditable(curNode)))
         continue; // do nothing to this block
       

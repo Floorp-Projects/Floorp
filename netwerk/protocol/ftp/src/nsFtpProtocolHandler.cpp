@@ -165,7 +165,7 @@ nsFtpProtocolHandler::Init()
 NS_IMETHODIMP
 nsFtpProtocolHandler::GetScheme(nsACString &result)
 {
-    result = NS_LITERAL_CSTRING("ftp");
+    result.AssignLiteral("ftp");
     return NS_OK;
 }
 

@@ -153,10 +153,10 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       aBuffer.Append(mIdent);
       break;
     case eCSSToken_Includes:
-      aBuffer.Append(NS_LITERAL_STRING("~="));
+      aBuffer.AppendLiteral("~=");
       break;
     case eCSSToken_Dashmatch:
-      aBuffer.Append(NS_LITERAL_STRING("|="));
+      aBuffer.AppendLiteral("|=");
       break;
 
     default:
@@ -507,7 +507,7 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
       if (LookAhead(aErrorCode, '-')) {
         if (LookAhead(aErrorCode, '-')) {
           aToken.mType = eCSSToken_HTMLComment;
-          aToken.mIdent.Assign(NS_LITERAL_STRING("<!--"));
+          aToken.mIdent.AssignLiteral("<!--");
           return PR_TRUE;
         }
         Pushback('-');
@@ -519,7 +519,7 @@ PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
     if (LookAhead(aErrorCode, '-')) {
       if (LookAhead(aErrorCode, '>')) {
         aToken.mType = eCSSToken_HTMLComment;
-        aToken.mIdent.Assign(NS_LITERAL_STRING("-->"));
+        aToken.mIdent.AssignLiteral("-->");
         return PR_TRUE;
       }
       Pushback('-');

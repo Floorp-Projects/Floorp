@@ -270,7 +270,7 @@ PRBool test_replace_substr_2()
   {
     const char *oldName = nsnull;
     const char *newName = "user";
-    nsString acctName = NS_LITERAL_STRING("forums.foo.com");
+    nsString acctName; acctName.AssignLiteral("forums.foo.com");
     nsAutoString newAcctName, oldVal, newVal;
     oldVal.AssignWithConversion(oldName);
     newVal.AssignWithConversion(newName);
@@ -301,7 +301,7 @@ PRBool test_strip_ws()
 PRBool test_equals_ic()
   {
     nsCString s;
-    PRBool r = s.EqualsIgnoreCase("view-source");
+    PRBool r = s.LowerCaseEqualsLiteral("view-source");
     if (r)
       printf("[r=%d]\n", r);
     return !r;
@@ -424,9 +424,9 @@ PRBool test_xpidl_string()
 PRBool test_empty_assign()
   {
     nsCString a;
-    a = NS_LITERAL_CSTRING("");
+    a.AssignLiteral("");
 
-    a += NS_LITERAL_CSTRING("");
+    a.AppendLiteral("");
 
     nsCString b;
     b.SetCapacity(0);

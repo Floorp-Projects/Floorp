@@ -442,9 +442,9 @@ nsFormHistory::OpenDatabase()
 
   /* // TESTING: Add a row to the database
   nsAutoString foopy;
-  foopy.AssignWithConversion("foopy");
+  foopy.AssignLiteral("foopy");
   nsAutoString oogly;
-  oogly.AssignWithConversion("oogly");
+  oogly.AssignLiteral("oogly");
   AppendRow(foopy, oogly, nsnull);
   Flush(); */
   

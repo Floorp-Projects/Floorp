@@ -98,7 +98,7 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
 
   nsAutoString separator;
   if (mCommaDelimited) {
-    separator.Assign(NS_LITERAL_STRING(", "));
+    separator.AssignLiteral(", ");
   }
   else {
     separator.Assign(PRUnichar(' '));

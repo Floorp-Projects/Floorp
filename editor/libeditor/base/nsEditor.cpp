@@ -2315,7 +2315,7 @@ nsresult nsEditor::GetTextNodeTag(nsAString& aOutString)
   {
     if ( (gTextNodeTag = new nsString) == 0 )
       return NS_ERROR_OUT_OF_MEMORY;
-    gTextNodeTag->Assign(NS_LITERAL_STRING("special text node tag"));
+    gTextNodeTag->AssignLiteral("special text node tag");
   }
   aOutString = *gTextNodeTag;
   return NS_OK;
@@ -3555,7 +3555,7 @@ nsEditor::TagCanContain(const nsAString &aParentTag, nsIDOMNode* aChild)
   
   if (IsTextNode(aChild)) 
   {
-    childStringTag.Assign(NS_LITERAL_STRING("__moz_text"));
+    childStringTag.AssignLiteral("__moz_text");
   }
   else
   {

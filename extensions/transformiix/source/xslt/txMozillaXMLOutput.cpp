@@ -585,7 +585,7 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't set http-equiv on meta");
         nsAutoString metacontent;
         metacontent.Append(mOutputFormat.mMediaType);
-        metacontent.Append(NS_LITERAL_STRING("; charset="));
+        metacontent.AppendLiteral("; charset=");
         metacontent.Append(mOutputFormat.mEncoding);
         rv = meta->SetAttribute(NS_LITERAL_STRING("content"),
                                 metacontent);
@@ -770,7 +770,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
         NS_ENSURE_SUCCESS(rv, rv);
         nsAutoString qName;
         if (mOutputFormat.mMethod == eHTMLOutput) {
-            qName.Assign(NS_LITERAL_STRING("html"));
+            qName.AssignLiteral("html");
         }
         else {
             qName.Assign(aName);

@@ -366,7 +366,7 @@ nsXULDocument::nsXULDocument(void)
     // bother initializing members to 0.
 
     // Override the default in nsDocument
-    mCharacterSet.Assign(NS_LITERAL_CSTRING("UTF-8"));
+    mCharacterSet.AssignLiteral("UTF-8");
 }
 
 nsXULDocument::~nsXULDocument()
@@ -511,7 +511,7 @@ nsXULDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsXULDocument::GetContentType(nsAString& aContentType)
 {
-    aContentType.Assign(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml"));
+    aContentType.AssignLiteral("application/vnd.mozilla.xul+xml");
     return NS_OK;
 }
 
@@ -3802,7 +3802,7 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
             rv = mObservesElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
             if (NS_FAILED(rv)) return;
 
-            attribute.Assign(NS_LITERAL_STRING("*"));
+            attribute.AssignLiteral("*");
         }
 
         nsAutoString tagStr;
@@ -3925,7 +3925,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         listener = do_QueryInterface(aElement);
 
-        attribute.Assign(NS_LITERAL_STRING("*"));
+        attribute.AssignLiteral("*");
     }
 
     // Make sure we got a valid listener.

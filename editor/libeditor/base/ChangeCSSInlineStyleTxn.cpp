@@ -316,12 +316,12 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBoo
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("ChangeCSSInlineStyleTxn: [mRemoveProperty == "));
+  aString.AssignLiteral("ChangeCSSInlineStyleTxn: [mRemoveProperty == ");
 
   if (!mRemoveProperty)
-    aString += NS_LITERAL_STRING("false] ");
+    aString.AppendLiteral("false] ");
   else
-    aString += NS_LITERAL_STRING("true] ");
+    aString.AppendLiteral("true] ");
   nsAutoString tempString;
   mProperty->ToString(tempString);
   aString += tempString;
@@ -343,8 +343,7 @@ NS_IMETHODIMP
 ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAString & aValues, const nsAString & aNewValue)
 {
   if (aValues.IsEmpty()
-      || aValues.Equals(NS_LITERAL_STRING("none"),
-                        nsCaseInsensitiveStringComparator())) {
+      || aValues.LowerCaseEqualsLiteral("none")) {
     // the list of values is empty of the value is 'none'
     aValues.Assign(aNewValue);
   }

@@ -240,11 +240,11 @@ nsAboutCache::VisitEntry(const char *deviceID,
 
     // Generate a about:cache-entry URL for this entry...
     nsCAutoString url;
-    url += NS_LITERAL_CSTRING("about:cache-entry?client=");
+    url.AppendLiteral("about:cache-entry?client=");
     url += clientID;
-    url += NS_LITERAL_CSTRING("&amp;sb=");
+    url.AppendLiteral("&amp;sb=");
     url += streamBased ? "1" : "0";
-    url += NS_LITERAL_CSTRING("&amp;key=");
+    url.AppendLiteral("&amp;key=");
     char* escapedKey = nsEscapeHTML(key);
     url += escapedKey; // key
 

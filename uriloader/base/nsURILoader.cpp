@@ -422,7 +422,7 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       // RFC 2183, section 2.8 says that an unknown disposition
       // value should be treated as "attachment"
       if (NS_FAILED(rv) || 
-          (!dispToken.EqualsIgnoreCase("inline") &&
+          (!dispToken.LowerCaseEqualsLiteral("inline") &&
           // Broken sites just send
           // Content-Disposition: filename="file"
           // without a disposition token... screen those out.

@@ -81,11 +81,11 @@ nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
     nsXPIDLString langGroupStr;
 
     if (lowered.EqualsLiteral("en-us")) {
-      langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
+      langGroupStr.AssignLiteral("x-western");
     } else if (lowered.EqualsLiteral("de-de")) {
-      langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
+      langGroupStr.AssignLiteral("x-western");
     } else if (lowered.EqualsLiteral("ja-jp")) {
-      langGroupStr.Assign(NS_LITERAL_STRING("ja"));
+      langGroupStr.AssignLiteral("ja");
     } else {
       if (!mLangGroups) {
         if (NS_FAILED(InitLangGroupTable())) {
@@ -103,10 +103,10 @@ nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
           truncated.Truncate(hyphen);
           res = mLangGroups->GetStringFromName(truncated.get(), getter_Copies(langGroupStr));
           if (NS_FAILED(res)) {
-            langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
+            langGroupStr.AssignLiteral("x-western");
           }
         } else {
-          langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
+          langGroupStr.AssignLiteral("x-western");
         }
       }
     }

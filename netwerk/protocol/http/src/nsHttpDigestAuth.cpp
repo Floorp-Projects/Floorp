@@ -125,7 +125,7 @@ nsHttpDigestAuth::GetMethodAndPath(nsIHttpChannel *httpChannel,
       // is HTTPS, then we are really using a CONNECT method.
       //
       if (isSecure && isProxyAuth) {
-        httpMethod = NS_LITERAL_CSTRING("CONNECT");
+        httpMethod.AssignLiteral("CONNECT");
         //
         // generate hostname:port string. (unfortunately uri->GetHostPort
         // leaves out the port if it matches the default value, so we can't
@@ -340,11 +340,11 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   nsCAutoString authString("Digest ");
   authString += "username=\"";
   authString += cUser;
-  authString += NS_LITERAL_CSTRING("\", realm=\"");
+  authString.AppendLiteral("\", realm=\"");
   authString += realm;
-  authString += NS_LITERAL_CSTRING("\", nonce=\"");
+  authString.AppendLiteral("\", nonce=\"");
   authString += nonce;
-  authString += NS_LITERAL_CSTRING("\", uri=\"");
+  authString.AppendLiteral("\", uri=\"");
   authString += path;
   if (algorithm & ALGO_SPECIFIED) {
     authString += "\", algorithm=";
@@ -428,9 +428,9 @@ nsHttpDigestAuth::CalculateResponse(const char * ha1_digest,
     contents.Append(cnonce);
     contents.Append(':');
     if (qop & QOP_AUTH_INT)
-      contents.Append(NS_LITERAL_CSTRING("auth-int:"));
+      contents.AppendLiteral("auth-int:");
     else
-      contents.Append(NS_LITERAL_CSTRING("auth:"));
+      contents.AppendLiteral("auth:");
   }
 
   contents.Append(ha2_digest, EXPANDED_DIGEST_LENGTH);

@@ -118,10 +118,10 @@ void txOutputFormat::setFromDefaults()
         case eXMLOutput:
         {
             if (mVersion.IsEmpty())
-                mVersion.Append(NS_LITERAL_STRING("1.0"));
+                mVersion.AppendLiteral("1.0");
 
             if (mEncoding.IsEmpty())
-                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
+                mEncoding.AppendLiteral("UTF-8");
 
             if (mOmitXMLDeclaration == eNotSet)
                 mOmitXMLDeclaration = eFalse;
@@ -130,33 +130,33 @@ void txOutputFormat::setFromDefaults()
                 mIndent = eFalse;
 
             if (mMediaType.IsEmpty())
-                mMediaType.Append(NS_LITERAL_STRING("text/xml"));
+                mMediaType.AppendLiteral("text/xml");
 
             break;
         }
         case eHTMLOutput:
         {
             if (mVersion.IsEmpty())
-                mVersion.Append(NS_LITERAL_STRING("4.0"));
+                mVersion.AppendLiteral("4.0");
 
             if (mEncoding.IsEmpty())
-                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
+                mEncoding.AppendLiteral("UTF-8");
 
             if (mIndent == eNotSet)
                 mIndent = eTrue;
 
             if (mMediaType.IsEmpty())
-                mMediaType.Append(NS_LITERAL_STRING("text/html"));
+                mMediaType.AppendLiteral("text/html");
 
             break;
         }
         case eTextOutput:
         {
             if (mEncoding.IsEmpty())
-                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
+                mEncoding.AppendLiteral("UTF-8");
 
             if (mMediaType.IsEmpty())
-                mMediaType.Append(NS_LITERAL_STRING("text/plain"));
+                mMediaType.AppendLiteral("text/plain");
 
             break;
         }

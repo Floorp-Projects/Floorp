@@ -2408,22 +2408,22 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
         }
 
         if ( exitText.IsEmpty() )
-            exitText = NS_LITERAL_STRING( "E&xit Mozilla" );
+            exitText.AssignLiteral( "E&xit Mozilla" );
 
         if ( disableText.IsEmpty() )
-            disableText = NS_LITERAL_STRING( "&Disable Quick Launch" );
+            disableText.AssignLiteral( "&Disable Quick Launch" );
 
         if ( navigatorText.IsEmpty() )
-            navigatorText = NS_LITERAL_STRING( "&Navigator" );
+            navigatorText.AssignLiteral( "&Navigator" );
 
         if ( editorText.IsEmpty() )
-            editorText = NS_LITERAL_STRING( "&Composer" );
+            editorText.AssignLiteral( "&Composer" );
 
         if ( isMail ) {
             if ( mailText.IsEmpty() )
-              mailText = NS_LITERAL_STRING( "&Mail && Newsgroups" );
+              mailText.AssignLiteral( "&Mail && Newsgroups" );
             if ( addressbookText.IsEmpty() )
-              addressbookText = NS_LITERAL_STRING( "&Address Book" );
+              addressbookText.AssignLiteral( "&Address Book" );
         }
         // Create menu and add item.
         mTrayIconMenu = ::CreatePopupMenu();

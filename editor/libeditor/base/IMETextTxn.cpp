@@ -191,7 +191,7 @@ NS_IMETHODIMP IMETextTxn::MarkFixed(void)
 
 NS_IMETHODIMP IMETextTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("IMETextTxn: "));
+  aString.AssignLiteral("IMETextTxn: ");
   aString += mStringToInsert;
   return NS_OK;
 }

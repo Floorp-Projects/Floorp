@@ -90,18 +90,18 @@ void
 BooleanExpr::toString(nsAString& str)
 {
     if ( leftExpr ) leftExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
     switch ( op ) {
         case OR:
-            str.Append(NS_LITERAL_STRING(" or "));
+            str.AppendLiteral(" or ");
             break;
         default:
-            str.Append(NS_LITERAL_STRING(" and "));
+            str.AppendLiteral(" and ");
             break;
     }
     if ( rightExpr ) rightExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
 }
 #endif

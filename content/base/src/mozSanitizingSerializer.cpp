@@ -607,8 +607,7 @@ mozSanitizingHTMLSerializer::SanitizeAttrValue(nsHTMLTag aTag,
 
   // Check img src scheme
   if (aTag == eHTMLTag_img && 
-      anAttrName.Equals(NS_LITERAL_STRING("src"),
-                        nsCaseInsensitiveStringComparator()))
+      anAttrName.LowerCaseEqualsLiteral("src"))
   {
     nsresult rv;
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);

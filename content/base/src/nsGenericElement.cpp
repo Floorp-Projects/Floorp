@@ -3481,7 +3481,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent) const
     mAttrsAndChildren.GetSafeAttrNameAt(index)->GetQualifiedName(buffer);
 
     // value
-    buffer.Append(NS_LITERAL_STRING("="));
+    buffer.AppendLiteral("=");
     nsAutoString value;
     mAttrsAndChildren.AttrAt(index)->ToString(value);
     buffer.Append(value);

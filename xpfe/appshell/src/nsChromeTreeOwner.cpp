@@ -178,11 +178,11 @@ NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
    /* Special Cases */
    if(name.IsEmpty())
       return NS_OK;
-   if(name.EqualsIgnoreCase("_blank"))
+   if(name.LowerCaseEqualsLiteral("_blank"))
       return NS_OK;
    // _main is an IE target which should be case-insensitive but isn't
    // see bug 217886 for details
-   if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main"))
+   if(name.LowerCaseEqualsLiteral("_content") || name.EqualsLiteral("_main"))
       {
       fIs_Content = PR_TRUE;
       mXULWindow->GetPrimaryContentShell(aFoundItem);

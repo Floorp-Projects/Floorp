@@ -226,7 +226,7 @@ NS_IMETHODIMP nsDocAccessible::GetDocType(nsAString& aDocType)
 #ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
-    aDocType = NS_LITERAL_STRING("window"); // doctype not implemented for XUL at time of writing - causes assertion
+    aDocType.AssignLiteral("window"); // doctype not implemented for XUL at time of writing - causes assertion
     return NS_OK;
   } else
 #endif

@@ -184,7 +184,7 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) {
     // Windows
-    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
+    mLineBreak.AssignLiteral("\r\n");
   }
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) {
     // Mac
@@ -803,7 +803,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::type, value);
 
     PRBool isInCiteBlockquote =
-      NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite");
+      NS_SUCCEEDED(rv) && value.LowerCaseEqualsLiteral("cite");
     // Push
     PushBool(mIsInCiteBlockquote, isInCiteBlockquote);
     if (isInCiteBlockquote) {
@@ -1058,7 +1058,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_a && !currentNodeIsConverted && !mURL.IsEmpty()) {
     nsAutoString temp; 
-    temp.Assign(NS_LITERAL_STRING(" <"));
+    temp.AssignLiteral(" <");
     temp += mURL;
     temp.Append(PRUnichar('>'));
     Write(temp);
