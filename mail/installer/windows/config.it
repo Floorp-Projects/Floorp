@@ -234,11 +234,10 @@ C1=Component Mail
 C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
-C5=Component US region pack
-C6=Component RSS
+C5=Component RSS
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C7=Component QFA
+C6=Component QFA
 
 [Setup Type1]
 ;*** LOCALIZE ME BABY ***
@@ -254,13 +253,12 @@ C1=Component Mail
 C2=Component Uninstaller
 C3=Component US English Profile Defaults
 C4=Component En US lang pack
-C5=Component US region pack
-C6=Component Offline
-C7=Component RSS
+C5=Component Offline
+C6=Component RSS
 ;C7=Component ADT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C8=Component QFA
+C7=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -691,19 +689,6 @@ $InstallSizeSystem$
 $InstallSizeArchive$:langenus.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
-FileCount=$FileCount$
-
-[Component US region pack]
-;*** LOCALIZE ME BABY ***
-Description Short=US Region Pack
-;*** LOCALIZE ME BABY ***
-Description Long=Regional content for US users
-Archive=regus.xpi
-$InstallSize$:regus
-$InstallSizeSystem$
-$InstallSizeArchive$:regus.xpi
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\US.jar
 FileCount=$FileCount$
 
 [Component QFA]
