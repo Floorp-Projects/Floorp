@@ -2125,21 +2125,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	{
 
 #ifdef XP_WIN // actually load a dll on Windows
-/*
-    nsPluginsDir pluginsDir;
-    if (! pluginsDir.Valid())
-      return NS_ERROR_FAILURE;
-    char * path = (char *)pluginsDir.GetCString();
-    PRInt32 len = PL_strlen(path) + PL_strlen(pluginTag->mFileName) + 2;
-    char * fullname = new char[len];
-    if(fullname == NULL)
-      return NS_ERROR_FAILURE;
-    PL_strcpy(fullname, path);
-    PL_strcat(fullname, "\\");
-    PL_strcat(fullname, pluginTag->mFileName);
-    nsFileSpec file(fullname);
-    delete fullname;
-*/
+
     nsFileSpec file(pluginTag->mFileName);
 
     nsPluginFile pluginFile(file);
