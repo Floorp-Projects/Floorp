@@ -123,6 +123,7 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 RESOURCES =					\
 		$(srcdir)/broken-image.gif	\
+		$(srcdir)/loading-image.gif	\
 		$(srcdir)/gopher-audio.gif	\
 		$(srcdir)/gopher-binary.gif	\
 		$(srcdir)/gopher-find.gif	\
