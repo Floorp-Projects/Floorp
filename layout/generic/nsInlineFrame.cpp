@@ -93,13 +93,17 @@ nsPositionedInlineFrame::AppendFrames(nsIPresContext& aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
 {
+  nsresult  rv;
+  
   if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX Temporary code until area frame is updated...
-    return nsFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    rv = mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
+                                         aFrameList);
+  } else {
+    rv = nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName,
+                                     aFrameList);
   }
 
-  return nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName,
-                                     aFrameList);
+  return rv;
 }
   
 NS_IMETHODIMP
@@ -109,14 +113,17 @@ nsPositionedInlineFrame::InsertFrames(nsIPresContext& aPresContext,
                                       nsIFrame*       aPrevFrame,
                                       nsIFrame*       aFrameList)
 {
+  nsresult  rv;
+
   if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX Temporary code until area frame is updated...
-    return nsFrame::InsertFrames(aPresContext, aPresShell, aListName,
-                                 aPrevFrame, aFrameList);
+    rv = mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
+                                         aPrevFrame, aFrameList);
+  } else {
+    rv = nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame,
+                                     aFrameList);
   }
 
-  return nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame,
-                                     aFrameList);
+  return rv;
 }
   
 NS_IMETHODIMP
@@ -125,12 +132,15 @@ nsPositionedInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
 {
+  nsresult  rv;
+
   if (nsLayoutAtoms::absoluteList == aListName) {
-    // XXX Temporary code until area frame is updated...
-    return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+    rv = mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+  } else {
+    rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
   }
 
-  return nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  return rv;
 }
 
 NS_IMETHODIMP
