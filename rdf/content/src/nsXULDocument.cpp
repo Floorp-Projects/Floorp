@@ -3000,11 +3000,32 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
 
     // Our root is firstChild. Suck all of this
     // content into our document.
-    popupDoc->SetRootContent(firstChild);
+    // We need to make the XUL builder instantiate this node.
+    // Retrieve the resource that corresponds to this node.
+    nsAutoString idValue;
+    nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(firstChild);
+    domRoot->GetAttribute("id", idValue);
+    const char* url;
+    mDocumentURL->GetSpec(&url);
+    rdf_PossiblyMakeAbsolute(url, idValue);
 
-    // XXX Need to make it so that the parent link can't be
-    // followed.  Could sever it, but would then have to know
-    // how to put it back.  Will have to think about this.
+    // Use the absolute URL to retrieve a resource from the RDF
+    // service that corresponds to the root content.
+    nsCOMPtr<nsIRDFResource> rootResource;
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(idValue.GetUnicode(), 
+                                                       getter_AddRefs(rootResource)))) {
+      NS_ERROR("Uh-oh. Couldn't obtain the resource for the popup doc root.");
+      return rv;
+    }
+
+    // Tell the builder to create its root from this resrouce.
+    popupDoc->mXULBuilder->CreateRootContent(rootResource);
+
+    // Now the popup will happily use its own XUL builder to churn out nodal
+    // clones of the popup content.  They will get their own event handlers
+    // (properly scoped to the new global popup window context), and will have
+    // belong to the popup document instead.  If this works, it will be
+    // more righteous than Star Wars Episode I.
 
     // Return the doc
     *aResult = popupDoc;
