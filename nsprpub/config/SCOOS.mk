@@ -24,8 +24,7 @@
 include $(MOD_DEPTH)/config/UNIX.mk
 
 CC			= cc -b elf -KPIC
-CCC			= g++ -b elf -I/usr/local/lib/g++-include
-# CCC			= $(DEPTH)/build/hcpp +.cpp +w
+CCC			= $(NSDEPTH)/build/hcpp CC +.cpp +w
 RANLIB			= /bin/true
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
@@ -38,38 +37,11 @@ OS_CFLAGS		= -DSYSV -D_SVID3 -DHAVE_STRERROR -D_PR_NEED_H_ERRNO -DSCO -Dsco
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
 
-XINC			= /usr/include/X11
-MOTIFLIB		= -lXm
-INCLUDES		+= -I$(XINC)
-
 CPU_ARCH		= x86
-GFX_ARCH		= x
 ARCH			= sco
-
-LOCALE_MAP		= $(DEPTH)/cmd/xfe/intl/sco.lm
-EN_LOCALE		= C
-DE_LOCALE		= de_DE.ISO8859-1
-FR_LOCALE		= fr_FR.ISO8859-1
-JP_LOCALE		= ja
-SJIS_LOCALE		= ja_JP.SJIS
-KR_LOCALE		= ko_KR.EUC
-CN_LOCALE		= zh
-TW_LOCALE		= zh
-I2_LOCALE		= i2
-
-LOC_LIB_DIR		= /usr/lib/X11
 
 NOSUCHFILE		= /no-such-file
 
 BSDECHO			= /bin/echo
 
-#
-# These defines are for building unix plugins
-#
-BUILD_UNIX_PLUGINS	= 1
-#DSO_LDOPTS		= -b elf -G -z defs
 DSO_LDOPTS		= -b elf -G
-DSO_LDFLAGS		= -nostdlib -L/lib -L/usr/lib -lXm -lXt -lX11 -lgen
-
-# Used for Java compiler
-EXPORT_FLAGS = -W l,-Bexport
