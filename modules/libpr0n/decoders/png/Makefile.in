@@ -32,6 +32,10 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPNGDecoderModule
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
@@ -43,6 +47,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsPNGDecoder.cpp nsPNGFactory.cpp
 
 EXTRA_DSO_LDOPTS = $(PNG_LIBS) $(ZLIB_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

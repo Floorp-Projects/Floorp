@@ -32,6 +32,10 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPPMDecoderModule
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
@@ -41,6 +45,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsPPMDecoder.cpp nsPPMFactory.cpp
 
 EXTRA_DSO_LDOPTS = \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

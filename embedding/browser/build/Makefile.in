@@ -47,6 +47,10 @@ REQUIRES	= xpcom \
 		  webbrowserpersist \
 		  $(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 CPPSRCS		= \
 		nsWebBrowserModule.cpp		\
 		$(NULL)
@@ -57,6 +61,7 @@ SHARED_LIBRARY_LIBS= \
 
 EXTRA_DSO_LDOPTS= \
 		$(LIBS_DIR) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

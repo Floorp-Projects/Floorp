@@ -30,6 +30,10 @@ EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGDecoderModule
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
@@ -42,6 +46,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsMNGDecoder.cpp nsMNGFactory.cpp imgContainerMNG.cpp
 
 EXTRA_DSO_LDOPTS = $(MNG_LIBS) $(JPEG_LIBS) $(ZLIB_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

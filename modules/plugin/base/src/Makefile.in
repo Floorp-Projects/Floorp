@@ -89,9 +89,12 @@ EXPORTS		= \
 		nsIPluginInstanceOwner.h \
 		$(NULL)
 
-EXTRA_DSO_LIBS  += gkgfx
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	+= gkgfx
+endif
 
 EXTRA_DSO_LDOPTS = \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_NECKO_UTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)

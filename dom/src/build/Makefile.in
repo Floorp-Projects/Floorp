@@ -48,6 +48,10 @@ REQUIRES	= xpcom \
 IS_COMPONENT    = 1
 MODULE_NAME	= DOM_components
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 CPPSRCS		= \
 		nsDOMFactory.cpp \
 		nsScriptNameSpaceManager.cpp \
@@ -59,6 +63,7 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
