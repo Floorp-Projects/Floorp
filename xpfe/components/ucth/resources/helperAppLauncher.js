@@ -23,8 +23,8 @@
 
 function nsHelperAppLauncherDialog() {
     // Initialize data properties.
-    this.chosenApp  = null;
-    this.chosenFile = null;
+    this.userChoseApp = false;
+    this.chosenApp    = null;
 
     try {
         // App launcher is passed as dialog argument.
@@ -46,17 +46,39 @@ nsHelperAppLauncherDialog.prototype= {
 
     // Fill dialog from app launcher attributes.
     initDialog : function () {
+        // "Always ask me" is always set (or else we wouldn't have got here!).
         document.getElementById( "alwaysAskMe" ).checked = true;
-        if ( this.appLauncher.MIMEInfo.preferredApplicationHandler ) {
-            // Run this app unless requested otherwise.
+
+        // Pre-select the choice the user made last time.
+        if ( this.appLauncher.MIMEInfo.preferredAction != this.nsIHelperAppLauncher.saveToDisk ) {
+            // Run app.
             document.getElementById( "runApp" ).checked = true;
 
             this.chosenApp = this.appLauncher.MIMEInfo.preferredApplicationHandler;
 
-            document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+            if ( this.chosenApp ) {
+                // If a user-chosen application, show its path.
+                document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
+            } else {
+                // If a system-specified one, show description.
+                document.getElementById( "appName" ).value = this.appLauncher.MIMEInfo.applicationDescription;
+            }
         } else {
             // Save to disk.
             document.getElementById( "saveToDisk" ).checked = true;
+            // Disable choose app button.
+            document.getElementById( "choseApp" ).setAttribute( "disabled", "true" );
+        }
+
+        // Put content type into dialog text.
+        var html = document.getElementById( "intro" );
+        if ( html && html.childNodes && html.childNodes.length ) {
+            // Get raw text.
+            var text = html.childNodes[ 0 ].nodeValue;
+            // Substitute content type for "#1".
+            text = text.replace( /#1/, this.appLauncher.MIMEInfo.MIMEType );
+            // Replace text in document.
+            html.childNodes[ 0 ].nodeValue = text;
         }
 
         // Set up dialog button callbacks.
@@ -67,12 +89,17 @@ nsHelperAppLauncherDialog.prototype= {
 
     // If the user presses OK, we do as requested...
     onOK : function () {
+        // Get boolean switch from checkbox.
         var dontAskNextTime = !document.getElementById( "alwaysAskMe" ).checked;
     
         if ( document.getElementById( "runApp" ).checked ) {
+            // Update preferred action if the user chose an app.
+            if ( this.userChoseApp ) {
+                this.appLauncher.MIMEInfo.preferredAction = this.nsIHelperAppLauncher.useHelperApp;
+            }
             this.appLauncher.launchWithApplication( this.chosenApp, dontAskNextTime );
         } else {
-            this.appLauncher.saveToDisk( this.chosenFile, dontAskNextTime );
+            this.appLauncher.saveToDisk( null, dontAskNextTime );
         }
     
         window.close();
@@ -81,10 +108,25 @@ nsHelperAppLauncherDialog.prototype= {
     // If the user presses cancel, tell the app launcher and close the dialog...
     onCancel : function () {
         // Cancel app launcher.
-        this.appLauncher.Cancel();
+        try {
+            this.appLauncher.Cancel();
+        } catch( exception ) {
+        }
     
         // Close up dialog by returning true.
         return true;
+    },
+
+    // Enable pick app button if the user chooses that option.
+    toggleChoice : function () {
+        // See what option is checked.
+        if ( document.getElementById( "runApp" ).checked ) {
+            // We can enable the pick app button.
+            document.getElementById( "chooseApp" ).removeAttribute( "disabled" );
+        } else {
+            // We can disable the pick app button.
+            document.getElementById( "chooseApp" ).setAttribute( "disabled", "true" );
+        }
     },
 
     // Choose a new/different app...
@@ -97,23 +139,11 @@ nsHelperAppLauncherDialog.prototype= {
         fp.appendFilters( this.nsIFilePicker.filterAll );
     
         if ( fp.show() == this.nsIFilePicker.returnOK && fp.file ) {
-            this.chosenApp = fp.file;
+            // Remember the file they chose to run.
+            this.userChoseApp = true;
+            this.chosenApp    = fp.file;
+            // Update dialog.
             document.getElementById( "appName" ).value = this.chosenApp.unicodePath;
-        }
-    },
-
-    // Choose a file to save to...
-    chooseFile : function () {
-        var fp = Components.classes["component://mozilla/filepicker"].createInstance( this.nsIFilePicker );
-        fp.init( window,
-                 this.getString( "chooseFileFilePickerTitle" ),
-                 this.nsIFilePicker.modeSave );
-        // XXX - Can we set this to filter on extension of file to be saved?
-        fp.appendFilters( this.nsIFilePicker.filterAll );
-    
-        if ( fp.show() == this.nsIFilePicker.returnOK && fp.file ) {
-            this.chosenFile = fp.file;
-            document.getElementById( "fileName" ).value = this.chosenFile.unicodePath;
         }
     },
 
