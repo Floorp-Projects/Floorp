@@ -74,8 +74,8 @@ checkbox > .internal-box > .checkbox-icon {
 /* ::::: checkmark image ::::: */
 
 checkbox > .internal-box > .checkmark-box > .checkbox-check {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
   

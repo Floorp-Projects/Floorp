@@ -64,7 +64,6 @@ menulist > menupopup,
   border: 1px solid black;
   padding: 0px;
   min-width: 0px;
-  font: message-box;
 }
     
 .menulist-menupopup > .popup-internal-box,

@@ -66,17 +66,14 @@
   border: none;
 }
     
-.button-toolbar:hover:active,
-.button-toolbar[open="true"] {
-  color: inherit;
-}
-
 .button-toolbar:hover {
   border: 1px outset #C7D0D9;
 }
 
-.button-toolbar:hover:active {
-  border-style: inset;
+.button-toolbar:hover:active,
+.button-toolbar[open="true"] {
+  border: 1px inset #C7D0D9;
+  color: inherit;
 }
 
 .button-toolbar:hover:active > .button-internal-box {
@@ -90,6 +87,7 @@
 .button-toolbar[disabled="true"],
 .button-toolbar[disabled="true"]:hover,
 .button-toolbar[disabled="true"]:hover:active {
+  border: 1px solid transparent;
   color: #999999;
 }
 

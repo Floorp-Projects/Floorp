@@ -319,3 +319,7 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
 .box-texttab[last-panel="true"] {
   border-bottom: 1px solid #8998AA;
 }
+
+.box-texttab[first-panel-after-selected="true"] {
+  border-top: 1px solid #D6E0EA;
+}

@@ -502,11 +502,11 @@ statusbarpanel,
 #msgHeaderView {
   border-top: 1px solid #000000;
   border-right: 1px solid #7B969C;
+  border-bottom: 1px solid #FFFFFF;
   border-left: 1px solid #000000;
 }
 
 #messagepane {
-  border-top: 1px solid #FFFFFF;
   border-right: 1px solid #FFFFFF;
   border-bottom: 1px solid #C7D0D9;
   border-left: 1px solid #000000;
@@ -514,6 +514,10 @@ statusbarpanel,
 
 #messagepanebox[focusring="true"] > #messagepane {
   border-color: #000000;
+}
+
+#messagepanebox[focusring="true"] > #msgHeaderView {
+  border-bottom-color: #000000;
 }
 
 /* ..... account central adjustments ..... */

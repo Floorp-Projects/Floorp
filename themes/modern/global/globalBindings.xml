@@ -91,7 +91,7 @@
 
         <xul:box class="menulist-text-box" autostretch="never">
          <xul:image class="menulist-icon-mid" inherits="src"/>
-         <xul:text class="menulist-text-mid" inherits="value=label,crop,accesskey"/>
+         <xul:text class="menulist-text-mid" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
        </xul:box>
      </xul:stack>
       

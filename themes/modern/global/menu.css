@@ -154,10 +154,13 @@ popup > menuitem[menuactive="true"] {
 /* ::::: menu/menuitems in menulist popups ::::: */
 
 .menulist-menupopup > menuitem,
-menulist > menupopup > menuitem {
+menulist > menupopup > menuitem,
+.menulist-menupopup > menu,
+menulist > menupopup > menu {
   padding-right: 12px;
   padding-top: 1px;
   padding-bottom: 1px;
+  font: message-box;
 }
     
 /* ..... selected state ..... */

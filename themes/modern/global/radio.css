@@ -54,7 +54,7 @@ radio > .internal-box {
 }
 
 radio > .internal-box > .checkmark-box {
-  margin: 3px;
+  margin: 1px 2px 1px 3px;
 }
 
 /* ::::: radio icon and label ::::: */
@@ -72,8 +72,8 @@ radio.iconic > .internal-box > .checkbox-label {
 /* ::::: checkmark image ::::: */
 
 radio > .internal-box > .checkmark-box > .checkbox-check {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   list-style-image: url("chrome://global/skin/radio/radio.gif");
 }
 

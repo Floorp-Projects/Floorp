@@ -117,6 +117,8 @@ outlinercol.readColumnHeader {
 
 outlinerbody:-moz-outliner-image(unreadButtonColHeader) {
   list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  padding-left: 0px;
+  padding-right: 4px;
 }
 
 outlinerbody:-moz-outliner-image(unreadButtonColHeader, unread) {
@@ -131,6 +133,8 @@ outlinercol.flagColumnHeader {
 
 outlinerbody:-moz-outliner-image(flaggedCol) {
   list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
+  padding-left: 0px;
+  padding-right: 4px;
 }
 
 outlinerbody:-moz-outliner-image(flaggedCol, flagged) {

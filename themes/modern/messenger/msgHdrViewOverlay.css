@@ -34,10 +34,6 @@
   min-width: 1px;
 }
 
-#msgHeaderView {
-  border-bottom: 1px solid #000000;
-}
-
 .header-part1 {
   background-color: #C7D0D9;
   color: #000000;
@@ -72,6 +68,7 @@
 
 #collapsedHeaderView,
 #expandedHeaderView {
+  border-bottom: 1px solid #000000;
   min-width: 1px;
 }
 
@@ -160,6 +157,7 @@ mail-emailaddress {
 
 #collapseddateValue {
   margin-left: .7em;
+  margin-right: 1em;
 }
 
 #collapsedfromBox {
@@ -179,7 +177,6 @@ text.collapsedHeaderDisplayName {
 .collapsedAttachmentButton {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
   margin-right: .5em;
-  margin-left: 1em;
 }
 
 [hide] {
