@@ -23,10 +23,11 @@
         onclick="sidebarCustomize();" />
     </splitter>
 
-    <box id="sidebar-panels" align="vertical" flex="100%"
+    <box id="sidebar-panels" align="vertical" flex="100%">
+    <!--
       datasources="chrome://sidebar/content/sidebar.rdf" 
       ref="NC:SidebarRoot">
-      <!--<template>
+      <template>
         <rule>
           <box uri="rdf:*" align="vertical">
           <splitter class="panel-bar"
@@ -41,9 +42,9 @@
           <html:iframe class="panel-frame"
            src="rdf:http://home.netscape.com/NC-rdf#content"/>
           </box>
-
         </rule>
-      </template>-->
+      </template>
+      -->
     </box>
 
     <splitter id="alerts-splitter" class="panel-bar"
