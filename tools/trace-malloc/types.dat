@@ -161,6 +161,12 @@ js_NewArrayObject
 JS_malloc
 js_NewFunction
 
+<JS-function>
+JS_malloc
+js_NewObject
+js_CloneFunctionObject
+JS_CloneFunctionObject
+
 <JS-atom>
 JS_malloc
 js_NewStringCopyN
@@ -169,6 +175,22 @@ js_AtomizeString
 <JS-script>
 JS_malloc
 js_NewScript
+
+<JS-script>
+JS_malloc
+JS_strdup
+js_NewScriptFromParams
+js_NewScriptFromCG
+
+<JS-script>
+JS_malloc
+js_FinishTakingSrcNotes
+js_NewScriptFromCG
+
+<JS-script>
+JS_malloc
+js_InitAtomMap
+js_NewScriptFromCG
 
 <JS-function>
 JS_malloc
@@ -319,6 +341,12 @@ PL_ArenaFinish
 PL_HashTableRawAdd
 NS_NewAtom(basic_nsAReadableString<unsigned short> const &)
 
+<AtomImpl>
+PR_Malloc
+PL_ArenaFinish
+PL_HashTableRawAdd
+NS_NewAtom(nsAString const &)
+
 <nsCSSSelector>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -404,6 +432,27 @@ PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), in
 nsHashtable::nsHashtable(unsigned int, int)
 RuleHash::RuleHash(void)
 CSSRuleProcessor::GetRuleCascade(nsIAtom *)
+
+<CSSRuleProcessor>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+RuleHash::AppendRuleToTable(nsHashtable &, nsIAtom *, nsICSSStyleRule *, int)
+
+<CSSRuleProcessor>
+__builtin_new
+RuleHash::AppendRuleToTable(nsHashtable &, nsIAtom *, nsICSSStyleRule *, int)
+RuleHash::AppendRule(nsICSSStyleRule *)
+CSSRuleProcessor::ClearRuleCascades(void)
+
+<CSSRuleProcessor>
+__builtin_new
+__builtin_vec_new
+nsSupportsArray::GrowArrayBy(int)
+nsSupportsArray::InsertElementAt(nsISupports *, unsigned int)
+nsSupportsArray::AppendElement(nsISupports *)
+CSSRuleProcessor::CascadeSheetRulesInto(nsISupports *, void *)
 
 <CSSNameSpaceRuleImpl>
 PR_Malloc
@@ -499,6 +548,19 @@ PR_LoadLibraryWithFlags
 PR_LoadLibrary
 nsLocalFile::Load(PRLibrary **)
 
+<nsLocalFile>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewCString(nsACString const &)
+nsLocalFile::AppendRelativePath(char const *)
+
+<nsLocalFile>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Clone(void const *, unsigned int)
+nsLocalFile::InitWithPath(char const *)
+
 <nsXULAttribute>
 __builtin_new
 nsXULAttribute::operator new(unsigned int)
@@ -522,6 +584,13 @@ nsXULElement::Create(nsINodeInfo *, nsIContent **)
 __builtin_new
 nsXULElement::EnsureSlots(void)
 
+<nsXULElement>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+nsXULElement::AppendChildTo(nsIContent *, int, int)
+
 <sscanf>
 iconv_close
 
@@ -539,6 +608,14 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty)
 <CSSDeclarationImpl>
 __builtin_new
 CSSDeclarationImpl::operator new(unsigned int)
+
+<CSSDeclarationImpl>
+PR_Malloc
+nsVoidArray::SizeTo(int)
+nsAutoVoidArray::SizeTo(int)
+nsVoidArray::GrowArrayBy(int)
+nsVoidArray::InsertElementAt(void *, int)
+CSSDeclarationImpl::AppendValue(nsCSSProperty, nsCSSValue const &)
 
 <nsVoidArray>
 __builtin_new
@@ -637,6 +714,11 @@ InMemoryDataSource::AllocEntry(void *, void const *)
 PL_HashTableRawAdd
 PL_HashTableAdd
 InMemoryDataSource::SetForwardArcs(nsIRDFResource *, Assertion *)
+
+<InMemoryDataSource>
+PL_DHashAllocTable
+PL_DHashTableInit
+InMemoryDataSource::Init(void)
 
 <RDFXMLDataSource>
 PR_Malloc
@@ -825,6 +907,13 @@ PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), in
 nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent *)
+
+<nsXBLPrototypeBinding>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::AddBucket(unsigned int)
+nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
+nsXBLPrototypeBinding::nsXBLPrototypeBinding(nsACString const &, nsIXBLDocumentInfo *)
 
 # The frame arena
 <FrameArena>
@@ -1408,6 +1497,13 @@ PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsComponentManagerImpl::ContractIDToClassID(char const *, nsID *)
 
+<nsComponentManagerImpl>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsComponentManagerImpl::HashContractID(char const *, nsFactoryEntry *)
+
 <nsZipArchive>
 __builtin_new
 nsZipArchive::BuildFileList(void)
@@ -1555,6 +1651,15 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableRawAdd
 nsHashtable::Put(nsHashKey *, void *)
 nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsChromeRegistry::LoadDataSource(nsCString const &, nsIRDFDataSource **, int, char const *)
+
+<nsChromeRegistry>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewCString(nsACString const &)
+nsStdURL::GetSpec(char **)
+RDFXMLDataSourceImpl::Init(char const *)
 nsChromeRegistry::LoadDataSource(nsCString const &, nsIRDFDataSource **, int, char const *)
 
 <nsZipReaderCache>
@@ -2019,6 +2124,13 @@ PL_ArenaFinish
 PL_NewHashTable
 nsPersistentProperties::nsPersistentProperties(void)
 
+<nsPersistentProperties>
+PR_Malloc
+nsMemoryImpl::Alloc(unsigned int)
+nsMemory::Alloc(unsigned int)
+ToNewUnicode(nsAString const &)
+nsPersistentProperties::SetStringProperty(nsAString const &, nsAString &, nsAString &)
+
 <nsCSSValue>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -2279,6 +2391,13 @@ nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
 nsGenericModule::nsGenericModule(char const *, unsigned int, nsModuleComponentInfo *, void (*)(nsIModule *))
 
+<nsGenericModule>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::nsHashtable(unsigned int, int)
+nsGenericModule::nsGenericModule(char const *, unsigned int, nsModuleComponentInfo *, unsigned int (*)(nsIModule *), void (*)(nsIModule *))
+
 <nsUNIXCharset>
 gettext
 gettext
@@ -2356,6 +2475,11 @@ nsGenericXMLElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigne
 __builtin_new
 nsGenericContainerElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
 nsXMLElement::SetAttribute(nsINodeInfo *, basic_nsAReadableString<unsigned short> const &, int)
+
+<nsXMLElement>
+__builtin_new
+nsGenericContainerElement::SetAttr(nsINodeInfo *, nsAString const &, int)
+nsXMLElement::SetAttr(nsINodeInfo *, nsAString const &, int)
 
 <nsGCCache>
 __builtin_new
@@ -2475,6 +2599,14 @@ PL_HashTableFinalize(PLHashTable *)
 PL_HashTableInit(PLHashTable *, unsigned int, unsigned int (*)(void const *), int (*)(void const *, void const *), int (*)(void const *, void const *), PLHashAllocOps const *, void *)
 nsHashtable::nsHashtable(unsigned int, int)
 nsSupportsHashtable::nsSupportsHashtable(unsigned int, int)
+nsBindingManager::SetInsertionParent(nsIContent *, nsIContent *)
+
+<nsBindingManager>>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
 nsBindingManager::SetInsertionParent(nsIContent *, nsIContent *)
 
 <nsBindingManager>
@@ -3321,22 +3453,29 @@ __builtin_new
 __builtin_vec_new
 nsDiskCacheBlockFile::Open(nsILocalFile *, unsigned int)
 
-<nsConflictSet::binding-table>
+<nsConflictSet>
 __builtin_new
 __builtin_vec_new
 nsConflictSet::AllocBindingTable(void *, unsigned int)
 
-<nsConflictSet::cluster-table>
+<nsConflictSet>
 __builtin_new
 __builtin_vec_new
 nsConflictSet::AllocClusterTable(void *, unsigned int)
 
-<nsConflictSet::support-table>
+<nsConflictSet>
 __builtin_new
 __builtin_vec_new
 nsConflictSet::AllocSupportTable(void *, unsigned int)
 
-<nsXULPrototypeNode*>
+<nsConflictSet>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::AddBucket(unsigned int)
+nsFixedSizeAllocator::Init(char const *, unsigned int const *, int, int, int)
+nsConflictSet::Init(void)
+
+<nsXULPrototypeNode>
 __builtin_new
 __builtin_vec_new
 XULContentSinkImpl::CloseContainer(nsIParserNode const &)
@@ -3445,6 +3584,15 @@ PL_HashTableRawAdd
 PL_HashTableAdd
 nsElementMap::Add(nsAString const &, nsIContent *)
 
+<nsXULDocument::mElementMap>
+PR_Malloc
+PL_ArenaAllocate
+nsFixedSizeAllocator::Alloc(unsigned int)
+NS_NewControllerCommandManager(nsIControllerCommandManager **)
+PL_HashTableRawAdd
+PL_HashTableAdd
+nsElementMap::Add(nsAString const &, nsIContent *)
+
 <nsHTMLValue::mValue.mString>
 PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
@@ -3465,7 +3613,7 @@ PR_Malloc
 nsMemoryImpl::Alloc(unsigned int)
 nsMemory::Alloc(unsigned int)
 ExtractURLScheme
-nsStdURL::Resolve(char const *, char **)[dist/bin/mozilla-bin +0x50DBDF]
+nsStdURL::Resolve(char const *, char **)
 
 <css-unclassified>
 PR_Malloc
@@ -3545,3 +3693,19 @@ PR_Malloc
 PL_ArenaAllocate
 nsFixedSizeAllocator::Alloc(unsigned int)
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent *)
+
+<nsRuleNode>
+PR_Malloc
+PL_HashTableFinalize(PLHashTable *)
+PL_HashTableRawAdd
+nsHashtable::Put(nsHashKey *, void *)
+nsSupportsHashtable::Put(nsHashKey *, nsISupports *, nsISupports **)
+nsRuleNode::Transition(nsIStyleRule *, nsIRuleNode **)
+
+<nsBookmarksService>
+PL_DHashAllocTable
+PL_DHashTableFinish
+PL_DHashTableOperate
+InMemoryDataSource::LockedAssert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
+InMemoryDataSource::Assert(nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int)
+BookmarkParser::updateAtom(nsIRDFDataSource *, nsIRDFResource *, nsIRDFResource *, nsIRDFNode *, int *)
