@@ -58,8 +58,8 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
         *aResult = nsnull;                                           \
         return NS_ERROR_NO_AGGREGATION;                              \
     }                                                                \
-    nsI##_name* inst;                                                \
-    nsresult rv = NS_New##_name(&inst);                              \
+    nsCOMPtr<nsI##_name> inst;                                       \
+    nsresult rv = NS_New##_name(getter_AddRefs(inst));               \
     if (NS_FAILED(rv)) {                                             \
         *aResult = nsnull;                                           \
         return rv;                                                   \
@@ -68,7 +68,6 @@ CreateNew##_name(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
     if (NS_FAILED(rv)) {                                             \
         *aResult = nsnull;                                           \
     }                                                                \
-    NS_RELEASE(inst);             /* get rid of extra refcnt */      \
     return rv;                                                       \
 }
 
