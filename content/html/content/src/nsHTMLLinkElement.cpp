@@ -26,13 +26,19 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIDOMStyleSheet.h"
+#include "nsIStyleSheet.h"
+#include "nsIStyleSheetLinkingElement.h"
 
 static NS_DEFINE_IID(kIDOMHTMLLinkElementIID, NS_IDOMHTMLLINKELEMENT_IID);
+static NS_DEFINE_IID(kIStyleSheetLinkingElementIID, NS_ISTYLESHEETLINKINGELEMENT_IID);
+static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 
 class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent,
+                          public nsIStyleSheetLinkingElement
 {
 public:
   nsHTMLLinkElement(nsIAtom* aTag);
@@ -82,8 +88,13 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIStyleSheetLinkingElement  
+  NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
+
 protected:
   nsGenericHTMLLeafElement mInner;
+  nsIStyleSheet* mStyleSheet;
 };
 
 nsresult
@@ -104,10 +115,12 @@ nsHTMLLinkElement::nsHTMLLinkElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mStyleSheet = nsnull;
 }
 
 nsHTMLLinkElement::~nsHTMLLinkElement()
 {
+  NS_IF_RELEASE(mStyleSheet);
 }
 
 NS_IMPL_ADDREF(nsHTMLLinkElement)
@@ -120,6 +133,12 @@ nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLLinkElementIID)) {
     nsIDOMHTMLLinkElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIStyleSheetLinkingElementIID)) {
+    nsIStyleSheetLinkingElement* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -138,7 +157,45 @@ nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMPL_BOOL_ATTR(nsHTMLLinkElement, Disabled, disabled)
+NS_IMETHODIMP
+nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
+{
+  nsresult result = NS_OK;
+  
+  if (nsnull != mStyleSheet) {
+    nsIDOMStyleSheet* ss;
+    
+    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    if (NS_OK == result) {
+      result = ss->GetDisabled(aDisabled);
+      NS_RELEASE(ss);
+    }
+  }
+  else {
+    *aDisabled = PR_FALSE;
+  }
+  
+  return result;
+}
+
+NS_IMETHODIMP 
+nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
+{
+  nsresult result = NS_OK;
+  
+  if (nsnull != mStyleSheet) {
+    nsIDOMStyleSheet* ss;
+    
+    result = mStyleSheet->QueryInterface(kIDOMStyleSheetIID, (void**)&ss);
+    if (NS_OK == result) {
+      result = ss->SetDisabled(aDisabled);
+      NS_RELEASE(ss);
+    }
+  }
+  
+  return result;
+}
+
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
@@ -147,6 +204,26 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
+
+NS_IMETHODIMP 
+nsHTMLLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
+{
+  NS_IF_RELEASE(mStyleSheet);
+
+  mStyleSheet = aStyleSheet;
+  NS_IF_ADDREF(mStyleSheet);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLLinkElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
+{
+  aStyleSheet = mStyleSheet;
+  NS_IF_ADDREF(aStyleSheet);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLLinkElement::StringToAttribute(nsIAtom* aAttribute,
@@ -199,3 +276,4 @@ nsHTMLLinkElement::GetStyleHintForAttributeChange(
   nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
 }
+

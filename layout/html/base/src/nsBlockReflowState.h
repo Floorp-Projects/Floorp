@@ -43,6 +43,7 @@
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
+#include "nsComPtr.h"
 
 // XXX temporary for :first-letter support
 #include "nsITextContent.h"
@@ -239,9 +240,6 @@ public:
 
   nsLineBox* mCurrentLine;
   nsLineBox* mPrevLine;
-
-  // The next list ordinal for counting list bullets
-  PRInt32 mNextListOrdinal;
 
   nsBlockBandData mCurrentBand;
   nsRect mAvailSpaceRect;
@@ -1170,7 +1168,7 @@ nsBlockFrame::PrepareInitialReflow(nsBlockReflowState& aState)
   DrainOverflowLines();
   PrepareResizeReflow(aState);
   ComputeTextRuns(aState);
-  RenumberLists(aState);
+  RenumberLists();
   return NS_OK;
 }
 
@@ -1178,7 +1176,7 @@ nsBlockFrame::PrepareInitialReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::PrepareFrameAppendedReflow(nsBlockReflowState& aState)
 {
-  RenumberLists(aState);
+  RenumberLists();
   nsresult rv = ComputeTextRuns(aState);
   return rv;
 }
@@ -1188,7 +1186,7 @@ nsresult
 nsBlockFrame::PrepareFrameInsertedReflow(nsBlockReflowState& aState)
 {
   nsresult rv = PrepareResizeReflow(aState);
-  RenumberLists(aState);
+  RenumberLists();
   rv = ComputeTextRuns(aState);
   return rv;
 }
@@ -1198,7 +1196,7 @@ nsresult
 nsBlockFrame::PrepareFrameRemovedReflow(nsBlockReflowState& aState)
 {
   nsresult rv = PrepareResizeReflow(aState);
-  RenumberLists(aState);
+  RenumberLists();
   rv = ComputeTextRuns(aState);
   return rv;
 }
@@ -1992,6 +1990,76 @@ ListTag(stdout); printf(": MoveInSpaceManager: d=%d,%d\n", aDeltaX, aDeltaY);
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aHint)
+{
+  nsresult rv = nsBlockFrameSuper::AttributeChanged(aPresContext, aChild,
+                                                    aAttribute, aHint);
+
+  if (NS_OK != rv) {
+    return rv;
+  }
+  if (nsHTMLAtoms::start == aAttribute) {
+    RenumberLists();
+
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::ContentChanged,
+                                 nsnull,
+                                 aAttribute);
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+  else if (nsHTMLAtoms::value == aAttribute) {
+    const nsStyleDisplay* styleDisplay;
+    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
+    if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
+      nsIFrame* nextAncestor = mParent;
+      nsBlockFrame* blockParent = nsnull;
+      
+      // Search for the closest ancestor that's a block frame. We
+      // make the assumption that all related list items share a
+      // common block parent.
+      while (nextAncestor != nsnull) {
+        if (NS_OK == nextAncestor->QueryInterface(kBlockFrameCID, 
+                                                  (void**)&blockParent)) {
+          break;
+        }
+        nextAncestor->GetParent(&nextAncestor);
+      }
+
+      // Tell the enclosing block frame to renumber list items within
+      // itself
+      if (nsnull != blockParent) {
+        blockParent->RenumberLists();
+
+        nsCOMPtr<nsIPresShell> shell;
+        aPresContext->GetShell(getter_AddRefs(shell));
+        
+        nsIReflowCommand* reflowCmd;
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, blockParent,
+                                     nsIReflowCommand::ContentChanged,
+                                     nsnull,
+                                     aAttribute);
+        if (NS_SUCCEEDED(rv)) {
+          shell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
+      }
+    }
+  }
+
+  return rv;
 }
 
 nsBlockFrame*
@@ -3086,7 +3154,7 @@ nsBlockFrame::AppendFrames(nsIPresContext& aPresContext,
   }
   nsresult rv = AppendNewFrames(aPresContext, aFrameList);
   if (NS_SUCCEEDED(rv)) {
-//    RenumberLists(aState);
+//    RenumberLists();
 //    rv = ComputeTextRuns(aState);
 
     nsIReflowCommand* reflowCmd = nsnull;
@@ -3248,6 +3316,17 @@ nsBlockFrame::InsertFrames(nsIPresContext& aPresContext,
     return nsFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
   }
   nsresult rv = InsertNewFrames(aPresContext, aFrameList, aPrevFrame);
+
+  // XXX Temporary code to ensure that that right things
+  // get marked direty. Kipp will replace this with better
+  // code.
+  // Mark everything dirty
+  nsLineBox* line = mLines;
+  while (nsnull != line) {
+    line->MarkDirty();
+    line = line->mNext;
+  }
+
   if (NS_SUCCEEDED(rv)) {
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
@@ -3433,6 +3512,17 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
     return nsFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
   }
   nsresult rv = DoRemoveFrame(aPresContext, aOldFrame);
+
+  // XXX Temporary code to ensure that that right things
+  // get marked direty. Kipp will replace this with better
+  // code.
+  // Mark everything dirty
+  nsLineBox* line = mLines;
+  while (nsnull != line) {
+    line->MarkDirty();
+    line = line->mNext;
+  }
+
   if (NS_SUCCEEDED(rv)) {
     nsIReflowCommand* reflowCmd = nsnull;
     nsresult rv;
@@ -4459,7 +4549,7 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
 }
 
 void
-nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
+nsBlockFrame::RenumberLists()
 {
   // Setup initial list ordinal value
   PRInt32 ordinal = 1;
@@ -4477,7 +4567,6 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
     }
     NS_RELEASE(hc);
   }
-  aState.mNextListOrdinal = ordinal;
 
   // Get to first-in-flow
   nsBlockFrame* block = this;
@@ -4503,8 +4592,8 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
         if (NS_OK == frame->QueryInterface(kBlockFrameCID,
                                            (void**) &listItem)) {
           if (nsnull != listItem->mBullet) {
-            aState.mNextListOrdinal =
-              listItem->mBullet->SetListItemOrdinal(aState.mNextListOrdinal);
+            ordinal =
+              listItem->mBullet->SetListItemOrdinal(ordinal);
           }
         }
       }

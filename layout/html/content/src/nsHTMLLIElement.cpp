@@ -212,6 +212,17 @@ nsHTMLLIElement::GetStyleHintForAttributeChange(
     const nsIAtom* aAttribute,
     PRInt32 *aHint) const
 {
-  nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  if (aAttribute == nsHTMLAtoms::value) {
+    *aHint = NS_STYLE_HINT_CONTENT;
+  }
+  else if (aAttribute == nsHTMLAtoms::type) {
+    // XXX This shouldn't require a frame change, just a reapplication
+    // of style down the tree (and a reflow). The style changes aren't 
+    // percolating down far enough.
+    *aHint = NS_STYLE_HINT_FRAMECHANGE;
+  }
+  else {
+    nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
+  }
   return NS_OK;
 }
