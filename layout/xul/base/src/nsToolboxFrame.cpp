@@ -32,6 +32,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
+#include "nsXULAtoms.h"
 
 
 //
@@ -243,6 +244,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   // start with a reasonable desired size (in twips), which will be changed to 
   // the size of our children plus some other stuff below.
   mSumOfToolbarHeights = 0;
+  mNumToolbars = 0;
   aDesiredSize.width = 6000;
   aDesiredSize.height = 3000;
   aDesiredSize.ascent = 3000;
@@ -252,9 +254,13 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
 
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
   // Resize our frame based on our children (remember to leave room for the grippy on the right)
   nsIFrame* childFrame = mFrames.FirstChild();
-  nsPoint offset ( kGrippyWidthInTwips, 0 );
+  nsPoint offset ( kGrippyWidthInPixels * onePixel, 0 );
   PRUint32 grippyIndex = 0;
   PRBool anyCollapsedToolbars = PR_FALSE;
   while ( childFrame ) {
@@ -274,10 +280,10 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
     nsRect rect(offset.x, offset.y, aDesiredSize.width, aDesiredSize.height);
     childFrame->SetRect(rect);
 
-    nsRect grippyBounds(0, offset.y, kGrippyWidthInTwips, aDesiredSize.height);
+    nsRect grippyBounds(0, offset.y, kGrippyWidthInPixels * onePixel, aDesiredSize.height);
     TabInfo & grippy = mGrippies[grippyIndex];
     grippy.mToolbar = childFrame;
-    grippy.mBoundingRect = nsRect(0, offset.y, kGrippyWidthInTwips, aDesiredSize.height);
+    grippy.mBoundingRect = nsRect(0, offset.y, kGrippyWidthInPixels * onePixel, aDesiredSize.height);
     grippy.mCollapsed = PR_FALSE;
     grippy.mToolbarHeight = aDesiredSize.height;
 
@@ -447,25 +453,14 @@ nsToolboxFrame :: OnMouseExit ( )
 void
 nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab ) 
 {
-#if 0
-  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
-  if ( widget ) {
-    // mark the tab as collapsed. We don't actually have to set the new
-    // bounding rect because that will be done for us when the bars are
-    // relaid out.
-    inTab.mCollapsed = PR_TRUE;
-    ++mTabsCollapsed;
-    
-    // hide the toolbar
-    widget->Show(PR_FALSE);
-    
-    DoLayout();
-    
-    if ( mListener )
-      mListener->NotifyToolbarManagerChangedSize(this);
-  } 
-#endif
- 
+  const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
+   
+  nsIContent* toolbar = nsnull;
+  inTab.mToolbar->GetContent ( toolbar );
+  if ( toolbar )
+    toolbar->SetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, "true", PR_TRUE );
+  NS_IF_RELEASE(toolbar);
+  
 } // CollapseToolbar
 
 
@@ -478,22 +473,8 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
 void
 nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab ) 
 {
-#if 0
-  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
-  if ( widget ) {
-    // mark the tab as expanded. We don't actually have to set the new
-    // bounding rect because that will be done for us when the bars are
-    // relaid out.
-    inTab.mCollapsed = PR_FALSE;
-    --mTabsCollapsed;
+  const nsCOMPtr<nsIAtom> kSelectedAtom ( dont_AddRef( NS_NewAtom("collapsed")) );
     
-    // show the toolbar
-    widget->Show(PR_TRUE);
-    
-    DoLayout();
-    
-    if ( mListener )
-      mListener->NotifyToolbarManagerChangedSize(this);
-  } 
-#endif
+  mContent->UnsetAttribute ( nsXULAtoms::nameSpaceID, kSelectedAtom, PR_TRUE );
+
 } // ExpandToolbar

@@ -38,7 +38,9 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIStyleContext.h"
+#include "nsIContent.h"
 #include "nsCOMPtr.h"
+
 
 class nsToolboxFrame : public nsHTMLContainerFrame
 {
@@ -65,12 +67,13 @@ public:
                               nsIFrame**     aFrame);
 
 protected:
-  enum { kGrippyWidthInTwips = 200 } ;
+  enum { kGrippyWidthInPixels = 10 } ;
   enum { kNoGrippyHilighted = -1 } ;
 
   struct TabInfo {
     TabInfo ( ) : mCollapsed(PR_TRUE), mToolbarHeight(0), mToolbar(nsnull) { };
   
+//    nsCOMPtr<nsIContent>  mToolbar;
     nsIFrame*             mToolbar;
     nsRect                mBoundingRect;
     PRBool                mCollapsed;
