@@ -105,8 +105,7 @@ nsJAR::Init(nsFileSpec& zipFile)
 NS_IMETHODIMP
 nsJAR::Open()
 {
-  const char* path = mZipFile.GetNativePathCString();
-  PRInt32 err = mZip.OpenArchive(path);
+  PRInt32 err = mZip.OpenArchive( nsNSPRPath(mZipFile) );
   return ziperr2nsresult(err);
 }
 
@@ -120,8 +119,7 @@ nsJAR::Close()
 NS_IMETHODIMP
 nsJAR::Extract(const char *zipEntry, nsFileSpec& outFile)
 {
-  const char* path = outFile.GetNativePathCString();
-  PRInt32 err = mZip.ExtractFile(zipEntry, path);
+  PRInt32 err = mZip.ExtractFile(zipEntry, nsNSPRPath(outFile));
   return ziperr2nsresult(err);
 }
 
