@@ -439,13 +439,20 @@ BodyFixupRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCont
   }
 
   // XXX do any other body processing here
+  
+  const nsStyleColor* styleColor;
+  styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
 
+  // Fixup default presentation colors (NAV QUIRK)
+  if (nsnull != styleColor) {
+    aPresContext->SetDefaultColor(styleColor->mColor);
+    aPresContext->SetDefaultBackgroundColor(styleColor->mBackgroundColor);
+  }
+  
   // Use the CSS precedence rules for dealing with BODY background: if the value
   // of the 'background' property for the HTML element is different from
   // 'transparent' then use it, else use the value of the 'background' property
   // for the BODY element
-  const nsStyleColor* styleColor;
-  styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
 
   // See if the BODY has a background specified
   if (!styleColor->BackgroundIsTransparent()) {
