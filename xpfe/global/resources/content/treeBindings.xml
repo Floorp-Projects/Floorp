@@ -61,6 +61,19 @@
     </content>
   </binding>
 
+  <binding id="treecell">
+    <content autostretch="never">
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
+  <binding id="treecell-align-right">
+    <content autostretch="never">
+      <xul:spring flex="5"/>
+      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+    </content>
+  </binding>
+
   <binding id="treecell-iconic">
     <content autostretch="never">
       <xul:image class="tree-cell-icon" inherits="src"/>
@@ -73,13 +86,7 @@
       <xul:image class="tree-cell-image" inherits="src"/>
     </content>
   </binding>
-  
-  <binding id="treecell">
-    <content autostretch="never">
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
-    </content>
-  </binding>
-  
+ 
   <binding id="treecell-header">
     <content autostretch="never">
       <xul:image class="tree-header-image" inherits="src"/>
@@ -87,7 +94,7 @@
       <xul:image class="tree-header-sortdirection"/>
     </content>
   </binding>
-
+  
   <binding id="tree">
     <content>
       <children/>

@@ -231,8 +231,6 @@ menupopup, popup {
 /******** Tree widget **********/
 
 tree {
- /*display: table;
- table-layout: fixed;*/
  width: 200px;
  height: 200px;
  min-width: 0px;
@@ -247,26 +245,11 @@ tree > treechildren {
 }
 
 treeitem { 
-/* display: table-row-group; */
  behavior: url("chrome://global/content/treeBindings.xml#treeitem");
 } 
 
-/*
-treerow {
- display: table-row;
-}
-
-treehead { 
- display: table-header-group; 
-} 
-
-treechildren { 
- display: table-row-group;
-} 
-*/
 
 treecell { 
-/* display: table-cell;*/
  vertical-align: middle;
  behavior: url("chrome://global/content/treeBindings.xml#treecell");
 } 
@@ -291,24 +274,18 @@ treeitem[container="true"] > treerow > .treecell-indent {
   behavior: url("chrome://global/content/treeBindings.xml#treecell-header");
 }
 
+.treecell-align-right {
+  behavior: url("chrome://global/content/treeBindings.xml#treecell-align-right");
+}
+
 treeitem > treechildren {
   display: none;
 }
 
 treeitem[open="true"] > treechildren {
-/*  display: table-row-group;*/
   display: block;
 }
 
-/*
-treecol {
- display: table-column;
-}
-
-treecolgroup {
-  display: table-column-group;
-}
-*/
 
 /********** Tab widget *********/
 
