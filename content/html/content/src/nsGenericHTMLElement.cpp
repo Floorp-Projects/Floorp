@@ -330,27 +330,29 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
       NS_ENSURE_SUCCESS(rv, rv);
       rv = GetAttr(namespace_id, name, value);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = aDst->SetAttr(namespace_id, name, value, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+      if (name == nsHTMLAtoms::style && namespace_id == kNameSpaceID_None) {
+        // We can't just set this as a string, because that will fail
+        // to reparse the string into style data until the node is
+        // inserted into the document.  Clone the HTMLValue instead.
+        nsHTMLValue val;
+        rv = GetHTMLAttribute(nsHTMLAtoms::style, val);
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
+            val.GetUnit() == eHTMLUnit_ISupports) {
+          nsCOMPtr<nsISupports> supports(dont_AddRef(val.GetISupportsValue()));
+          nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
 
-    if (NS_SUCCEEDED(rv)) {
-      nsHTMLValue val;
-      rv = aDst->GetHTMLAttribute(nsHTMLAtoms::style, val);
+          if (rule) {
+            nsCOMPtr<nsICSSRule> ruleClone;
 
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          val.GetUnit() == eHTMLUnit_ISupports) {
-        nsCOMPtr<nsISupports> supports(dont_AddRef(val.GetISupportsValue()));
-        nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
+            rv = rule->Clone(*getter_AddRefs(ruleClone));
 
-        if (rule) {
-          nsCOMPtr<nsICSSRule> ruleClone;
-
-          rv = rule->Clone(*getter_AddRefs(ruleClone));
-
-          val.SetISupportsValue(ruleClone);
-          aDst->SetHTMLAttribute(nsHTMLAtoms::style, val, PR_FALSE);
+            val.SetISupportsValue(ruleClone);
+            aDst->SetHTMLAttribute(nsHTMLAtoms::style, val, PR_FALSE);
+          }
         }
+      } else {
+        rv = aDst->SetAttr(namespace_id, name, value, PR_FALSE);
+        NS_ENSURE_SUCCESS(rv, rv);
       }
     }
   }
