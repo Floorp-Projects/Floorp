@@ -2133,6 +2133,9 @@ nsAbSync::AddNewUsers()
       }
     }
 
+    // Now do the phone numbers...they are special???
+    ProcessPhoneNumbersTheyAreSpecial(newCard);
+
     // Ok, now we need to add the card!
     rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &localID);
 
