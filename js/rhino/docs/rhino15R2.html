@@ -1,0 +1,84 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Norris Boyd">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
+   <meta name="KeyWords" content="Rhino, JavaScript, Java">
+   <title>Rhino 1.5 Release 2</title>
+</head>
+<body bgcolor="#FFFFFF">
+
+<center>
+<h1>
+What's New in Rhino 1.5 Release 2</h1></center>
+This is a log of significant changes since the release of Rhino 1.5 Release
+1.
+<br>&nbsp;
+<h2>
+Graphical debugger</h2>
+Thanks to a contribution by Christopher Oliver, Rhino now has a graphical
+debugger. See <a href="debugger.html">Rhino Debugger</a> for more details.
+<br>&nbsp;
+<h2>
+Footprint reductions</h2>
+Igor Bukanov has provided a wealth of changes to reduce the number and
+size of objects required by Rhino. In particular, he introduced a new way
+to represent the built-in objects like Date and RegExp that reduces the
+amount of memory required and speeds up <tt>Context.initStandardObjects</tt>.
+<br>&nbsp;
+<h2>
+Interpreted mode performance improvements</h2>
+Igor Bukanov also made a number of improvements to interpreter mode performance.
+<br>&nbsp;
+<h2>
+JS/CORBA Adapter</h2>
+Matthias Radestock wrote a module that allows JavaScript code to interact
+with CORBA. See <a href="http://sourceforge.net/projects/jscorba">http://sourceforge.net/projects/jscorba</a>
+for more details.
+<br>&nbsp;
+<h2>
+Directory restructuring and Ant buildfile</h2>
+I've restructured the the Rhino directory and written an <a href="http://jakarta.apache.org/ant/index.html">Ant</a>
+buildfile. This should make building easier and more consistent with other
+open source Java projects.
+<br>&nbsp;
+<h2>
+FlattenedObject deprecated</h2>
+I wrote FlattenedObject to provide a means for dealing with JavaScript
+<br>objects in prototype chains. Where Scriptable defines the primitive
+<br>operations, FlattenedObject defines the aggregate operations of
+<br>manipulating properties that may be defined in an object or in an object
+<br>reachable by a succession of getPrototype calls.
+<p>However, I now believe that I designed FlattenedObject poorly. Perhaps
+<br>it should have been a clue that I was never satisfied with the name:
+if
+<br>it's hard to express the name of the object it may mean the function
+the
+<br>object is supposed to fulfill is not well defined either. The problem
+is
+<br>that it is inefficient since it requires an extra object creation,
+and
+<br>balky because of that extra level of wrapping.
+<p>So I've checked in changes that deprecate FlattenedObject. I've
+<br>introduced new static methods in ScriptableObject (thanks to
+<br>beard@netscape.com for the idea) that replace the functionality. These
+<br>methods perform the get, put, and delete operations on a Scriptable
+<br>object passed in without the overhead of creating a new object.
+<h2>
+WrapHandler interface</h2>
+Embeddings that wish to provide their own custom wrappings for Java objects
+may implement this interface and
+<br>call Context.setWrapHandler. See WrapHandler javadoc.
+<br>&nbsp;
+<h2>
+ClassOutput interface</h2>
+An interface embedders can implement in order to control the placement
+of generated class bytecodes. See the javadoc.
+<h3>
+
+<hr WIDTH="100%"><br>
+<a href="index.html">back to top</a></h3>
+
+</body>
+</html>

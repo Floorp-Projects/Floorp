@@ -3,7 +3,7 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="Author" content="Norris Boyd">
-   <meta name="GENERATOR" content="Mozilla/4.7 [en] (WinNT; U) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.75 [en] (Windows NT 5.0; U) [Netscape]">
    <meta name="KeyWords" content="Rhino, JavaScript, Java">
    <title>Change Log</title>
 </head>
@@ -13,113 +13,8 @@
 <h1>
 Change Log for Significant Rhino Changes</h1></center>
 This is a log of significant changes since the release of Rhino 1.5 Release
-1.
-<h2>
-Script Debugger</h2>
-Well, there were a couple of rainy days on my vacation last week, so
-<br>I've written the core of a debugger for the interpretive mode of Rhino.
-<br>It just uses a simple command-line interface when invoked with "-debug"
-<br>on the command line. "#" is the debugger prompt; entering "#" at the
-<br>shell prompt drops you into the debugger (rginda's idea).
-<p>For an example, consider the file test.js:
-<blockquote><tt>function f(a) {</tt>
-<br><tt>&nbsp;return g(a+1);</tt>
-<br><tt>}</tt><tt></tt>
-<p><tt>function g(a) {</tt>
-<br><tt>&nbsp;return h(a+1);</tt>
-<br><tt>}</tt><tt></tt>
-<p><tt>function h(a) {</tt>
-<br><tt>&nbsp;return a+1;</tt>
-<br><tt>}</tt><tt></tt>
-<p><tt>function t(a) {</tt>
-<br><tt>&nbsp;throw a;</tt>
-<br><tt>}</tt></blockquote>
-We can debug it as follows:
-<p><tt>[rhino] java org.mozilla.javascript.tools.shell.Main -debug</tt>
-<br><tt># c</tt>
-<br><tt>js> load("test.js")</tt>
-<br><tt>js> #</tt>
-<br><tt># b g</tt>
-<br><tt>Breakpoint placed at line 5</tt>
-<br><tt>5: function g(a) {</tt>
-<br><tt># c</tt>
-<br><tt>js> f(0)</tt>
-<br><tt>Hit breakpoint at function g ("test.js"; line 5)</tt>
-<br><tt>5: function g(a) {</tt>
-<br><tt># where</tt>
-<br><tt>function g ("test.js"; line 5)</tt>
-<br><tt>5: function g(a) {</tt>
-<br><tt>function f ("test.js"; line 2)</tt>
-<br><tt>2:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return g(a+1);</tt>
-<br><tt>script ("&lt;stdin>"; line 2)</tt>
-<br><tt># n</tt>
-<br><tt>6:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return h(a+1);</tt>
-<br><tt># s</tt>
-<br><tt>9: function h(a) {</tt>
-<br><tt>#</tt>
-<br><tt>10:&nbsp;&nbsp;&nbsp;&nbsp; return a+1;</tt>
-<br><tt># p a</tt>
-<br><tt>2</tt>
-<br><tt># c</tt>
-<br><tt>3</tt>
-<br><tt>js> t("a string")</tt>
-<br><tt>Encountered exception a string in function t ("test.js"; line 14)</tt>
-<br><tt>14:&nbsp;&nbsp;&nbsp;&nbsp; throw a;</tt><tt></tt>
-<p><tt># p a</tt>
-<br><tt>a string</tt>
-<br><tt># p typeof a</tt>
-<br><tt>string</tt>
-<br><tt># c</tt>
-<br><tt>Encountered exception a string in script ("&lt;stdin>"; line 3)</tt><tt></tt>
-<p><tt># c</tt>
-<br><tt>js: "&lt;stdin>", line 1: uncaught JavaScript exception: a string</tt>
-<br><tt>js></tt>
-<p>I'm hoping this initial work I've done will encourage others to go in
-<br>and complete it. The debugger shell itself is pretty simple-minded
-in
-<br>the way that it works: you can say "b" but not "br" or "break", for
-<br>instance. There are also missing features like removing breakpoints.
-I
-<br>hope the modifications to the core engine are sufficient, although
-I'm
-<br>not happy with the way that source is handled for printing out. And
-of
-<br>course it would be great if someone with some UI skill (i.e., not me)
-<br>could write a swing-based ui for debugging scripts.
-<br>&nbsp;
-<br>&nbsp;
-<h2>
-FlattenedObject deprecated</h2>
-I wrote FlattenedObject to provide a means for dealing with JavaScript
-<br>objects in prototype chains. Where Scriptable defines the primitive
-<br>operations, FlattenedObject defines the aggregate operations of
-<br>manipulating properties that may be defined in an object or in an object
-<br>reachable by a succession of getPrototype calls.
-<p>However, I now believe that I designed FlattenedObject poorly. Perhaps
-<br>it should have been a clue that I was never satisfied with the name:
-if
-<br>it's hard to express the name of the object it may mean the function
-the
-<br>object is supposed to fulfill is not well defined either. The problem
-is
-<br>that it is inefficient since it requires an extra object creation,
-and
-<br>balky because of that extra level of wrapping.
-<p>So I've checked in changes that deprecate FlattenedObject. I've
-<br>introduced new static methods in ScriptableObject (thanks to
-<br>beard@netscape.com for the idea) that replace the functionality. These
-<br>methods perform the get, put, and delete operations on a Scriptable
-<br>object passed in without the overhead of creating a new object.
-<h2>
-WrapHandler interface</h2>
-Embeddings that wish to provide their own custom wrappings for Java objects
-may implement this interface and
-<br>call Context.setWrapHandler. See WrapHandler javadoc.
-<br>&nbsp;
-<h2>
-ClassOutput interface</h2>
-An interface embedders can implement in order to control the placement
-of generated class bytecodes. See the javadoc.
+2.
+<p><i>None yet!</i>
 <h3>
 
 <hr WIDTH="100%"><br>
