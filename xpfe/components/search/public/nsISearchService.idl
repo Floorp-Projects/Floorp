@@ -29,6 +29,8 @@
 #include "nsISupports.idl"
 #include "nsIRDFDataSource.idl"
 
+interface	nsIUnicodeDecoder;
+
 [scriptable, uuid(1222e6f0-a5e3-11d2-8b7c-00805f8a7db6)]
 interface nsILocalSearchService : nsISupports
 {
@@ -49,9 +51,11 @@ interface nsIInternetSearchService : nsISupports
 [scriptable, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
 interface nsIInternetSearchContext : nsISupports
 {
+	nsIUnicodeDecoder	GetUnicodeDecoder();
 	nsIRDFResource		GetParent();
 	nsIRDFResource		GetEngine();
 	void			AppendBytes(in string buffer, in long numBytes);
+	void			AppendUnicodeBytes(in wstring buffer, in long numUniBytes);
 	void			GetBuffer(out wstring buffer);
 	void			Truncate();
 };
