@@ -798,16 +798,19 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.mMaximumWidth = kidSize.mMaximumWidth;
     if (NS_UNCONSTRAINEDSIZE != aDesiredSize.mMaximumWidth) {
       aDesiredSize.mMaximumWidth += leftInset + rightInset;
+      aDesiredSize.mMaximumWidth = nsTableFrame::RoundToPixel(aDesiredSize.mMaximumWidth, p2t);
     }
   }
   if (aDesiredSize.maxElementSize) {
     *aDesiredSize.maxElementSize = *pMaxElementSize;
-    if (0 != pMaxElementSize->height) {
+    if ((0 != pMaxElementSize->height) && (NS_UNCONSTRAINEDSIZE != pMaxElementSize->height)) {
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
+      aDesiredSize.maxElementSize->height = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->height, p2t);
     }
     aDesiredSize.maxElementSize->width = PR_MAX(smallestMinWidth, aDesiredSize.maxElementSize->width); 
     if (NS_UNCONSTRAINEDSIZE != aDesiredSize.maxElementSize->width) {
       aDesiredSize.maxElementSize->width += leftInset + rightInset;
+      aDesiredSize.maxElementSize->width = nsTableFrame::RoundToPixel(aDesiredSize.maxElementSize->width, p2t);
     }
   }
   // remember my desired size for this reflow
