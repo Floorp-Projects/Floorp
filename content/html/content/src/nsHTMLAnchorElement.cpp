@@ -37,7 +37,6 @@
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIURL.h"
-
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsNetUtil.h"
@@ -398,12 +397,9 @@ nsHTMLAnchorElement::GetTarget(nsAWritableString& aValue)
   rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_HTML,
                                                         nsHTMLAtoms::target,
                                                         aValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    nsCOMPtr<nsIHTMLDocument>doc(do_QueryInterface(mDocument));
-    if (doc) {
-      rv = doc->GetBaseTarget(aValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+  if (rv == NS_CONTENT_ATTR_NOT_THERE && mDocument) {
+    rv = mDocument->GetBaseTarget(aValue);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
 }

@@ -49,6 +49,7 @@
 #include "nsHashtable.h"
 #include "nsIWordBreakerFactory.h"
 #include "nsILineBreakerFactory.h"
+#include "nsIURI.h"
 
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
@@ -259,6 +260,13 @@ public:
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
    */
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
+  NS_IMETHOD SetBaseURL(nsIURI* aURL);
+
+  /**
+   * Get/Set the base target of a link in a document.
+   */
+  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget);
+  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget);
 
   /**
    * Return a standard name for the document's character set. This will
@@ -557,6 +565,7 @@ protected:
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURI* mDocumentURL;
+  nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsIPrincipal* mPrincipal;
   nsWeakPtr mDocumentLoadGroup;
   nsString mCharacterSet;

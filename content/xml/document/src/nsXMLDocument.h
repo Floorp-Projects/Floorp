@@ -32,7 +32,7 @@
 class nsIParser;
 class nsIDOMNode;
 class nsICSSLoader;
-
+class nsIURI;
 
 class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
@@ -61,6 +61,9 @@ public:
                                PRBool aReset = PR_TRUE);
 
   NS_IMETHOD EndLoad();
+
+  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget);
+  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget);
 
   // nsIDOMNode interface
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
@@ -105,8 +108,10 @@ protected:
   virtual void InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex);
 
   // For HTML elements in our content model
+  // XXX This is not clean, but is there a better way? 
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mInlineStyleSheet;
+  nsString mBaseTarget;
 
   nsIParser *mParser;
   nsICSSLoader* mCSSLoader;

@@ -124,6 +124,13 @@ public:
    * Return the base URL for realtive URLs in the document. May return null (or the document URL).
    */
   NS_IMETHOD GetBaseURL(nsIURI*& aURL) const = 0;
+  NS_IMETHOD SetBaseURL(nsIURI* aURL) = 0;
+
+  /**
+   * Get/Set the base target of a link in a document.
+   */
+  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget)=0;
+  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget)=0;
 
   /**
    * Return the content (mime) type of this document.

@@ -58,11 +58,6 @@ public:
 
   NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;
 
-  NS_IMETHOD SetBaseURL(const nsAReadableString& aURLSpec) = 0;
-
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aTarget) const = 0;
-  NS_IMETHOD SetBaseTarget(const nsAReadableString& aTarget) = 0;
-
   NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified) = 0;
   NS_IMETHOD SetReferrer(const nsAReadableString& aReferrer) = 0;
 

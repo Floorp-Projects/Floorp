@@ -1918,12 +1918,7 @@ nsGenericHTMLElement::GetBaseTarget(nsAWritableString& aBaseTarget) const
     }
   }
   if (nsnull != mDocument) {
-    nsIHTMLDocument* htmlDoc;
-    result = mDocument->QueryInterface(NS_GET_IID(nsIHTMLDocument), (void**)&htmlDoc);
-    if (NS_SUCCEEDED(result)) {
-      result = htmlDoc->GetBaseTarget(aBaseTarget);
-      NS_RELEASE(htmlDoc);
-    }
+    result = mDocument->GetBaseTarget(aBaseTarget);
   }
   else {
     aBaseTarget.Truncate();

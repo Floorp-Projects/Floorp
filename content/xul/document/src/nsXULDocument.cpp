@@ -807,9 +807,43 @@ nsXULDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const
 NS_IMETHODIMP
 nsXULDocument::GetBaseURL(nsIURI*& aURL) const
 {
-    aURL = mDocumentURL;
-    NS_IF_ADDREF(aURL);
-    return NS_OK;
+  if (mDocumentBaseURL) {    
+    aURL = mDocumentBaseURL.get();
+    NS_ADDREF(aURL);
+  }
+  else {
+    aURL = GetDocumentURL();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetBaseURL(nsIURI* aURL)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                  NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = securityManager->CheckLoadURI(mDocumentURL, aURL, nsIScriptSecurityManager::STANDARD);
+    if (NS_SUCCEEDED(rv)) {
+      mDocumentBaseURL = aURL;
+    }
+  }
+
+  return rv;  
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetBaseTarget(nsAWritableString &aBaseTarget)
+{
+  aBaseTarget.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::SetBaseTarget(const nsAReadableString &aBaseTarget)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3560,9 +3594,9 @@ NS_IMETHODIMP
 nsXULDocument::GetBaseURI(nsAWritableString &aURI)
 {
   aURI.Truncate();
-  if (mDocumentURL) {
+  if (mDocumentBaseURL) {
     nsXPIDLCString spec;
-    mDocumentURL->GetSpec(getter_Copies(spec)); // XUL documents do not have base URL?
+    mDocumentBaseURL->GetSpec(getter_Copies(spec));
     if (spec) {
       CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
     }

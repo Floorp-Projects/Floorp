@@ -54,8 +54,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsICSSLoader.h"
 #include "nsCOMPtr.h"
-#include "nsIURI.h"
 #include "nsXPIDLString.h"
+#include "nsIURI.h"
 #include "nsIHTTPChannel.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetAlias.h"
@@ -143,6 +143,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   NS_ENSURE_SUCCESS(rv, rv);
 
   doc->SetDocumentURL(aBaseURI);
+  doc->SetBaseURL(aBaseURI);
 
   if (aDoctype) {
     nsCOMPtr<nsIDOMNode> tmpNode;
@@ -178,12 +179,10 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
   return doc->QueryInterface(NS_GET_IID(nsIDocument), (void**) aInstancePtrResult);
 }
 
-nsXMLDocument::nsXMLDocument()
+nsXMLDocument::nsXMLDocument() 
+  : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
+    mParser(nsnull), mCSSLoader(nsnull)
 {
-  mParser = nsnull;
-  mAttrStyleSheet = nsnull;
-  mInlineStyleSheet = nsnull;
-  mCSSLoader = nsnull;
 }
 
 nsXMLDocument::~nsXMLDocument()
@@ -261,6 +260,8 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   result = SetDefaultStylesheets(url);
+
+  mBaseTarget.Truncate();
 
   return result;
 }
@@ -343,8 +344,10 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (NS_FAILED(secMan->CheckLoadURIFromScript(nsnull, uri)))
     return NS_ERROR_FAILURE;
 
-  // Reset the document URL to the new URL
+  // Partial Reset
   SetDocumentURL(uri);
+  SetBaseURL(uri);
+  mBaseTarget.Truncate();
 
   // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);
@@ -991,7 +994,7 @@ nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
 }
 
 static nsIContent *
-MatchName(nsIContent *aContent, const nsAReadableString& aName)
+MatchId(nsIContent *aContent, const nsAReadableString& aName)
 {
   nsAutoString value;
   nsIContent *result = nsnull;
@@ -1001,10 +1004,6 @@ MatchName(nsIContent *aContent, const nsAReadableString& aName)
   if (kNameSpaceID_HTML == ns) {
     if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
         aName.Equals(value)) {
-      return aContent;
-    }
-    else if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value)) &&
-             aName.Equals(value)) {
       return aContent;
     }
   }
@@ -1025,7 +1024,7 @@ MatchName(nsIContent *aContent, const nsAReadableString& aName)
   for (i = 0; i < count && result == nsnull; i++) {
     nsIContent *child;
     aContent->ChildAt(i, child);
-    result = MatchName(child, aName);
+    result = MatchId(child, aName);
     NS_RELEASE(child);
   }  
 
@@ -1051,7 +1050,7 @@ nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
 
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
-  nsCOMPtr<nsIContent> content(do_QueryInterface(MatchName(mRootContent,aElementId)));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(MatchId(mRootContent,aElementId)));
 
   nsresult rv = NS_OK;
   if (content) {
@@ -1108,6 +1107,20 @@ nsXMLDocument::SetTitle(const PRUnichar *aTitle)
     }
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::SetBaseTarget(const nsAReadableString &aBaseTarget)
+{
+  mBaseTarget.Assign(aBaseTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::GetBaseTarget(nsAWritableString &aBaseTarget)
+{
+  aBaseTarget.Assign(mBaseTarget);
   return NS_OK;
 }
 
