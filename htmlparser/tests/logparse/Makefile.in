@@ -19,14 +19,14 @@
 # Contributor(s): 
 #
 
-DEPTH		  = ../../..
-topsrcdir	= y:/mozilla
-srcdir		= y:/mozilla/htmlparser/tests/logparse
-VPATH		  = y:/mozilla/htmlparser/tests/logparse
+DEPTH		= ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= logparse.exe
+PROGRAM		= logparse$(BIN_SUFFIX)
 
 REQUIRES	= \
    xpcom \
@@ -43,6 +43,8 @@ LIBS		= \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir)/../../src
 
 include $(topsrcdir)/config/rules.mk
 
