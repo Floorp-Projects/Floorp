@@ -238,13 +238,13 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
             {
               result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
               if (txn)
-                txn->Init(currentNode, -1);
+                txn->Init(mEditor, currentNode, -1);
             }
             else                    // split the element so there are 2 children in the first half
             {
               result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
               if (txn)
-               txn->Init(currentNode, 1);
+               txn->Init(mEditor, currentNode, 1);
             }
             if (txn)
               mEditor->Do(txn);        
@@ -409,7 +409,6 @@ nsEditorMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 nsresult
 nsEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  mEditor->MouseClick(0,0);
   return NS_OK;
 }
 

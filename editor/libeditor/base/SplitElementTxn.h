@@ -22,6 +22,7 @@
 #include "EditTxn.h"
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
+#include "nsIEditor.h"
 
 #define SPLIT_ELEMENT_TXN_IID \
 {/* 690c6290-ac48-11d2-86d8-000064657374 */ \
@@ -36,7 +37,8 @@ class SplitElementTxn : public EditTxn
 {
 public:
 
-  virtual nsresult Init (nsIDOMNode *aNode,
+  virtual nsresult Init (nsIEditor  *aEditor,
+                         nsIDOMNode *aNode,
                          PRInt32     aOffset);
 protected:
   SplitElementTxn();
@@ -74,6 +76,7 @@ protected:
 
   /** the parent shared by mExistingRightNode and mNewLeftNode */
   nsCOMPtr<nsIDOMNode> mParent;
+  nsCOMPtr<nsIEditor>  mEditor;
 
   friend class TransactionFactory;
 

@@ -38,6 +38,7 @@
 #include "nsICollection.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
+#include "nsVoidArray.h"
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -58,7 +59,8 @@ static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDOMRangeIID,          NS_IDOMRANGE_IID);
+static NS_DEFINE_IID(kIDOMRangeIID,         NS_IDOMRANGE_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
@@ -188,7 +190,7 @@ nsEditor::~nsEditor()
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  nsresult t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
+  nsresult t_result = mDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
   if (NS_SUCCEEDED( t_result )) 
   {
     erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
@@ -231,20 +233,25 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult 
-nsEditor::GetDomInterface(nsIDOMDocument **aDomInterface)
+nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
-  *aDomInterface = mDomInterfaceP; return NS_OK;
+  *aDoc = nsnull; // init out param
+  NS_PRECONDITION(mDoc, "bad state, null mDoc");
+  if (!mDoc)
+    return NS_ERROR_NULL_POINTER;
+  return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
 }
 
 
 
 nsresult
-nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
+nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 {
-  if ((nsnull==aDomInterface) || (nsnull==aPresShell))
+  NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
+  if ((nsnull==aDoc) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-  mDomInterfaceP = aDomInterface;
+  mDoc = aDoc;
   mPresShell = aPresShell;
   NS_ADDREF(mPresShell);
   mViewManager = mPresShell->GetViewManager();
@@ -264,7 +271,7 @@ nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
     return t_result;
   }
   nsCOMPtr<nsIDOMEventReceiver> erP;
-  t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
+  t_result = mDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
   if (NS_OK != t_result) 
   {
     mKeyListenerP = 0;
@@ -277,61 +284,74 @@ nsEditor::Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell)
 
   /* fire up the transaction manager */
 
-  /*
-  now to handle selection
-  */
-  /*
-  nsCOMPtr<nsIDocument> document;
-  if (NS_SUCCEEDED(t_result = mDomInterfaceP->QueryInterface(kIDocumentIID, getter_AddRefs(document))))
-  {
-    if (!NS_SUCCEEDED(t_result = document->GetSelection(*getter_AddRefs(mSelectionP))))
-    {
-      NS_NOTREACHED("query interface");
-      return t_result;
-    }
-  }
-  else
-  {
-    NS_NOTREACHED("query interface");
-    return t_result;
-  }
-*/
-
-  nsISupports  *isup          = 0;
-  nsresult result;
-
-  result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
-                                        kITransactionManagerIID, &isup);
-
-  if (NS_FAILED(result) || !isup) {
-    printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  result = isup->QueryInterface(kITransactionManagerIID, (void **)&mTxnMgr);
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
-    return result;
-  }
-
-  if (!mTxnMgr) {
-    printf("ERROR: QueryInterface() returned NULL pointer.\n");
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_POSTCONDITION(mDoc && mPresShell, "bad state");
   
   return NS_OK;
 }
 
-
-
 nsresult
-nsEditor::InsertString(nsString *aString)
+nsEditor::EnableUndo(PRBool aEnable)
 {
+  nsISupports  *isup = 0;
+  nsresult result=NS_OK;
+
+  if (PR_TRUE==aEnable)
+  {
+    if (!mTxnMgr)
+    {
+      result = nsServiceManager::GetService(kCTransactionManagerFactoryCID,
+                                            kITransactionManagerIID, &isup);
+      if (NS_FAILED(result) || !isup) {
+        printf("ERROR: Failed to get TransactionManager nsISupports interface.\n");
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+      result = isup->QueryInterface(kITransactionManagerIID, (void **)&mTxnMgr);
+      if (NS_FAILED(result) || !mTxnMgr) {
+        printf("ERROR: Failed to get TransactionManager interface. (%d)\n", result);
+        return result;
+      }
+    }
+  }
+  else
+  { // disable the transaction manager if it is enabled
+    if (mTxnMgr)
+    {
+      mTxnMgr = nsnull;
+    }
+  }
+
+  return result;
+}
+
+nsresult nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
+{
+  aIsEnabled = ((PRBool)(mTxnMgr));
+  if (aIsEnabled)
+  {
+    PRInt32 numTxns=0;
+    mTxnMgr->GetNumberOfUndoItems(&numTxns);
+    aCanUndo = ((PRBool)(0==numTxns));
+  }
+  else {
+    aCanUndo = PR_FALSE;
+  }
   return NS_OK;
 }
 
-
+nsresult nsEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
+{
+  aIsEnabled = ((PRBool)(mTxnMgr));
+  if (aIsEnabled)
+  {
+    PRInt32 numTxns=0;
+    mTxnMgr->GetNumberOfRedoItems(&numTxns);
+    aCanRedo = ((PRBool)(0==numTxns));
+  }
+  else {
+    aCanRedo = PR_FALSE;
+  }
+  return NS_OK;
+}
 
 nsresult
 nsEditor::SetProperties(Properties aProperties)
@@ -447,26 +467,6 @@ nsEditor::Commit(PRBool aCtrlKey)
 //END nsIEditorInterfaces
 
 
-//BEGIN nsEditor Calls from public
-PRBool
-nsEditor::KeyDown(int aKeycode)
-{
-  return PR_TRUE;
-}
-
-
-
-PRBool
-nsEditor::MouseClick(int aX,int aY)
-{
-  return PR_FALSE;
-}
-
-
-
-//END nsEditor Calls from public
-
-
 
 //BEGIN nsEditor Private methods
 
@@ -476,10 +476,12 @@ nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
 {
   if (!aNode)
     return NS_ERROR_NULL_POINTER;
+  if (!mDoc)
+    return NS_ERROR_NULL_POINTER;
   /* If no node set, get first text node */
   nsCOMPtr<nsIDOMElement> docNode;
 
-  if (NS_SUCCEEDED(mDomInterfaceP->GetDocumentElement(getter_AddRefs(docNode))))
+  if (NS_SUCCEEDED(mDoc->GetDocumentElement(getter_AddRefs(docNode))))
   {
     return docNode->QueryInterface(kIDOMNodeIID,(void **) aNode);
   }
@@ -491,6 +493,8 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
 {
   nsresult result=NS_OK;
 
+  if (!mDoc)
+    return NS_ERROR_NULL_POINTER;
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
@@ -500,7 +504,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDO
 
   if (nsnull==aStartNode)
   {
-    mDomInterfaceP->GetDocumentElement(getter_AddRefs(element));
+    mDoc->GetDocumentElement(getter_AddRefs(element));
     result = element->QueryInterface(kIDOMNodeIID,getter_AddRefs(node));
     if (NS_FAILED(result))
       return result;
@@ -666,10 +670,6 @@ nsEditor::EndUpdate()
   return NS_OK;
 }
 
-nsresult nsEditor::Delete(PRBool aForward, PRUint32 aCount)
-{
-  return NS_OK;
-}
 
 nsresult nsEditor::CreateElement(const nsString& aTag,
                                  nsIDOMNode *    aParent,
@@ -694,7 +694,7 @@ nsresult nsEditor::CreateTxnForCreateElement(const nsString& aTag,
     result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)aTxn);
     if (nsnull != *aTxn)
     {
-      (*aTxn)->Init(mDomInterfaceP, aTag, aParent, aPosition);
+      result = (*aTxn)->Init(mDoc, aTag, aParent, aPosition);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
@@ -723,7 +723,7 @@ nsresult nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aParent,
     result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)aTxn);
     if (nsnull!=*aTxn)
     {
-      (*aTxn)->Init(aElement, aParent);
+      result = (*aTxn)->Init(aElement, aParent);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
@@ -777,7 +777,7 @@ nsresult nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
               result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
               if (nsnull!=*aTxn)
               {
-                (*aTxn)->Init(nodeAsText, offset, aStringToInsert);
+                result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert);
               }
               else
                 result = NS_ERROR_OUT_OF_MEMORY;
@@ -817,13 +817,91 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
     result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)aTxn);
     if (nsnull!=*aTxn)
     {
-      (*aTxn)->Init(aElement, aOffset, aLength);
+      result = (*aTxn)->Init(aElement, aOffset, aLength);
     }
     else
       result = NS_ERROR_OUT_OF_MEMORY;
   }
   return result;
 }
+
+// operates on selection
+// deletes the selection (if not collapsed) and splits the current element
+// or an ancestor of the current element
+/* context-dependent behaviors
+   SELECTION       ACTION
+   text node       split text node (or a parent)
+   block element   insert a <BR>
+   H1-H6           if at end, create a <P> following the header
+*/
+#if 0   // THIS CODE WILL BE REMOVED.  WE ARE GOING TO IMPLEMENT
+        // A GENERIC HANDLER SYSTEM.
+nsresult nsEditor::CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn)
+{
+  // allocate the out-param transaction
+  nsresult result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
+  if (NS_FAILED(result))
+  {
+    return result;
+  }
+  nsISelection* selection;
+  result = mPresShell->GetSelection(&selection);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=selection))
+  {
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = selection;
+    if (enumerator)
+    {
+      // XXX: need to handle mutliple ranges here, probably by
+      // disallowing the operation
+      for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
+      {
+        nsISupports *currentItem=nsnull;
+        result = enumerator->CurrentItem(&currentItem);
+        if ((NS_SUCCEEDED(result)) && (currentItem))
+        {
+          nsCOMPtr<nsIDOMRange> range(currentItem);
+          PRBool isCollapsed;
+          range->GetIsCollapsed(&isCollapsed);
+          if(PR_FALSE==isCollapsed)
+          {
+            EditAggregateTxn *delSelTxn;
+            result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
+            if ((NS_SUCCEEDED(result)) && (delSelTtxn)) {
+              (*aTxn)->AppendChild(delSelTtxn); 
+            }
+          }
+          // at this point, we have a collapsed selection
+          if (NS_SUCCEEDED(result))
+          {
+            nsCOMPtr<nsIDOMNode> node;
+            result = range->GetStartParent(getter_AddRefs(node));
+            if (NS_SUCCEEDED(result))
+            {
+              nsVoidArray parentFrameList;
+              result = GetParentFrameList(node, &parentFrameList);
+              if (NS_SUCCEEDED(result))
+              {
+                EditAggregateTxn *enterKeyTxn;
+                result = CreateTxnForEnterKeyAtInsertionPoint(range, &enterKeyTxn));
+                if ((NS_SUCCEEDED(result)) && (enterKeyTxn)) {
+                  (*aTxn)->AppendChild(enterKeyTxn); 
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // if anything along the way failed, delete the out-param transaction
+  if (NS_FAILED(result)) {
+    NS_IF_RELEASE(*aTxn);
+  }
+  return result;
+}
+#endif
 
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
@@ -854,7 +932,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
     enumerator = selection;
     if (enumerator)
     {
-      for (enumerator->First();NS_OK != enumerator->IsDone() ; enumerator->Next())
+      for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
       {
         nsISupports *currentItem=nsnull;
         result = enumerator->CurrentItem(&currentItem);
@@ -863,7 +941,6 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
           nsCOMPtr<nsIDOMRange> range(currentItem);
           PRBool isCollapsed;
           range->GetIsCollapsed(&isCollapsed);
-          printf("GetIsCollapsed returned %d\n", isCollapsed);
           if (PR_FALSE==isCollapsed)
           {
             DeleteRangeTxn *txn;
@@ -888,12 +965,6 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
     result = NS_ERROR_NULL_POINTER;
 
   // if we didn't build the transaction correctly, destroy the out-param transaction so we don't leak it.
-  if (NS_FAILED(result))
-  {
-    printf ("new result = %d, NS_FAILED=%d, macro expanded out=%d\n",
-             result, NS_FAILED(result), ((result) & 0x80000000));
-  }
-  
   if (NS_FAILED(result))
   {
     NS_IF_RELEASE(*aTxn);
@@ -1149,6 +1220,41 @@ nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
   return result;
 }
 
+nsresult nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
+                                         PRUint32    aOffset,
+                                         SplitElementTxn **aTxn)
+{
+  nsresult result=NS_ERROR_NULL_POINTER;
+  if (nsnull != aNode)
+  {
+    result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
+    {
+      result = (*aTxn)->Init(this, aNode, aOffset);
+    }
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
+  }
+  return result;
+}
+
+nsresult nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+                                        nsIDOMNode  *aRightNode,
+                                        JoinElementTxn **aTxn)
+{
+  nsresult result=NS_ERROR_NULL_POINTER;
+  if ((nsnull != aLeftNode) && (nsnull != aRightNode))
+  {
+    result = TransactionFactory::GetNewTransaction(kJoinElementTxnIID, (EditTxn **)aTxn);
+    if (nsnull!=*aTxn)
+    {
+      result = (*aTxn)->Init(this, aLeftNode, aRightNode);
+    }
+    else
+      result = NS_ERROR_OUT_OF_MEMORY;
+  }
+  return result;
+}
 
 nsresult 
 nsEditor::SplitNode(nsIDOMNode * aExistingRightNode,

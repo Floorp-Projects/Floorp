@@ -40,6 +40,8 @@ class CreateElementTxn;
 class DeleteElementTxn;
 class InsertTextTxn;
 class DeleteTextTxn;
+class SplitElementTxn;
+class JoinElementTxn;
 class EditAggregateTxn;
 
 //This is the monitor for the editor.
@@ -222,6 +224,16 @@ protected:
   nsresult CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
                                             nsIEditor::Direction aDir, 
                                             EditAggregateTxn    *aTxn);
+
+  nsresult CreateTxnForSplitNode(nsIDOMNode *aNode,
+                                 PRUint32    aOffset,
+                                 SplitElementTxn **aTxn);
+
+  nsresult CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+                                nsIDOMNode  *aRightNode,
+                                JoinElementTxn **aTxn);
+
+  nsresult CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
 
   nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 

@@ -40,6 +40,8 @@ class CreateElementTxn;
 class DeleteElementTxn;
 class InsertTextTxn;
 class DeleteTextTxn;
+class SplitElementTxn;
+class JoinElementTxn;
 class EditAggregateTxn;
 
 //This is the monitor for the editor.
@@ -57,7 +59,7 @@ private:
   nsIPresShell   *mPresShell;
   nsIViewManager *mViewManager;
   PRUint32        mUpdateCount;
-  nsCOMPtr<nsIDOMDocument>      mDomInterfaceP;
+  nsCOMPtr<nsIDOMDocument>      mDoc;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 //  nsCOMPtr<nsISelection>        mSelectionP;
@@ -82,9 +84,9 @@ public:
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDOMDocument *aDomInterface, nsIPresShell* aPresShell);
+  virtual nsresult Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell);
 
-  virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface);
+  virtual nsresult GetDocument(nsIDOMDocument **aDoc);
 
   virtual nsresult SetProperties(Properties aProperties);
 
@@ -101,11 +103,40 @@ public:
 
   virtual nsresult RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
 
+  virtual nsresult CreateElement(const nsString& aTag,
+                                 nsIDOMNode *    aParent,
+                                 PRInt32         aPosition);
+
+  virtual nsresult DeleteElement(nsIDOMNode * aParent,
+                                 nsIDOMNode * aChild);
+
+  virtual nsresult DeleteSelection(nsIEditor::Direction aDir);
+
+  virtual nsresult InsertText(const nsString& aStringToInsert);
+
+  virtual nsresult SplitNode(nsIDOMNode * aExistingRightNode,
+                             PRInt32      aOffset,
+                             nsIDOMNode * aNewLeftNode,
+                             nsIDOMNode * aParent);
+
+  virtual nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
+                            nsIDOMNode * aNodeToJoin,
+                            nsIDOMNode * aParent,
+                            PRBool       aNodeToKeepIsFirst);
+  
+  virtual nsresult Commit(PRBool aCtrlKey);
+
+  virtual nsresult EnableUndo(PRBool aEnable);
+
   virtual nsresult Do(nsITransaction *aTxn);
 
   virtual nsresult Undo(PRUint32 aCount);
 
+  virtual nsresult CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo);
+
   virtual nsresult Redo(PRUint32 aCount);
+
+  virtual nsresult CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo);
 
   virtual nsresult BeginUpdate();
 
@@ -113,23 +144,6 @@ public:
 
 /*END nsIEditor interfaces*/
 
-/*BEGIN nsEditor interfaces*/
-
-
-/*KeyListener Methods*/
-  /** KeyDown is called from the key event lister "probably"
-   *  @param int aKeycode the keycode or ascii
-   *  value of the key that was hit for now
-   *  @return False if ignored
-   */
-  PRBool KeyDown(int aKeycode);
-
-/*MouseListener Methods*/
-  /** MouseClick
-   *  @param int x the xposition of the click
-   *  @param int y the yposition of the click
-   */
-  PRBool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
 
 /*BEGIN private methods used by the implementations of the above functions*/
 
@@ -156,72 +170,59 @@ public:
    */
   nsresult GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
 
-  nsresult CreateElement(const nsString& aTag,
-                         nsIDOMNode *    aParent,
-                         PRInt32         aPosition);
-
-  nsresult DeleteElement(nsIDOMNode * aParent,
-                         nsIDOMNode * aElement);
-
-  nsresult DeleteSelection(nsIEditor::Direction aDir);
-
-  nsresult InsertText(const nsString& aStringToInsert);
-
-  nsresult DeleteText(nsIDOMCharacterData *aElement,
-                      PRUint32             aOffset,
-                      PRUint32             aLength);
-
-  static  nsresult SplitNode(nsIDOMNode * aExistingRightNode,
-                             PRInt32      aOffset,
-                             nsIDOMNode * aNewLeftNode,
-                             nsIDOMNode * aParent);
-
-  static nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
-                            nsIDOMNode * aNodeToJoin,
-                            nsIDOMNode * aParent,
-                            PRBool       aNodeToKeepIsFirst);
-
-  nsresult Delete(PRBool aForward, PRUint32 aCount);
-
-  virtual nsresult InsertString(nsString *aString);
-  
-  virtual nsresult Commit(PRBool aCtrlKey);
 
 /*END private methods of nsEditor*/
 
 protected:
-  nsresult CreateTxnForSetAttribute(nsIDOMElement *aElement, 
-                                    const nsString& aAttribute, 
-                                    const nsString& aValue,
-                                    ChangeAttributeTxn ** aTxn);
+  virtual nsresult CreateTxnForSetAttribute(nsIDOMElement *aElement, 
+                                            const nsString& aAttribute, 
+                                            const nsString& aValue,
+                                            ChangeAttributeTxn ** aTxn);
 
-  nsresult CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
-                                       const nsString& aAttribute,
-                                       ChangeAttributeTxn ** aTxn);
+  virtual nsresult CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
+                                               const nsString& aAttribute,
+                                               ChangeAttributeTxn ** aTxn);
 
-  nsresult CreateTxnForCreateElement(const nsString& aTag,
-                                     nsIDOMNode     *aParent,
-                                     PRInt32         aPosition,
-                                     CreateElementTxn ** aTxn);
+  virtual nsresult CreateTxnForCreateElement(const nsString& aTag,
+                                             nsIDOMNode     *aParent,
+                                             PRInt32         aPosition,
+                                             CreateElementTxn ** aTxn);
 
-  nsresult CreateTxnForDeleteElement(nsIDOMNode * aParent,
-                                     nsIDOMNode * aElement,
-                                     DeleteElementTxn ** aTxn);
+  virtual nsresult CreateTxnForDeleteElement(nsIDOMNode * aParent,
+                                             nsIDOMNode * aElement,
+                                             DeleteElementTxn ** aTxn);
 
-  nsresult CreateTxnForInsertText(const nsString & aStringToInsert,
-                                  InsertTextTxn ** aTxn);
+  virtual nsresult CreateTxnForInsertText(const nsString & aStringToInsert,
+                                          InsertTextTxn ** aTxn);
 
-  nsresult CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
-                                  PRUint32             aOffset,
-                                  PRUint32             aLength,
-                                  DeleteTextTxn      **aTxn);
 
-  nsresult CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
-                                       EditAggregateTxn  ** aTxn);
+  virtual nsresult DeleteText(nsIDOMCharacterData *aElement,
+                              PRUint32             aOffset,
+                              PRUint32             aLength);
 
-  nsresult CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
+  virtual nsresult CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
+                                          PRUint32             aOffset,
+                                          PRUint32             aLength,
+                                          DeleteTextTxn      **aTxn);
+
+  virtual nsresult CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
+                                               EditAggregateTxn  ** aTxn);
+
+  virtual nsresult CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
                                             nsIEditor::Direction aDir, 
                                             EditAggregateTxn    *aTxn);
+
+  virtual nsresult CreateTxnForSplitNode(nsIDOMNode *aNode,
+                                         PRUint32    aOffset,
+                                         SplitElementTxn **aTxn);
+
+  virtual nsresult CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
+                                        nsIDOMNode  *aRightNode,
+                                        JoinElementTxn **aTxn);
+
+#if 0
+  nsresult CreateTxnToHandleEnterKey(EditAggregateTxn **aTxn);
+#endif
 
   nsresult GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode);
 

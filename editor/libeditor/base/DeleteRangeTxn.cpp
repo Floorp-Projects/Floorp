@@ -465,6 +465,7 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
   return result;
 }
 
+// XXX: probably want to move this to editor as a standard support method
 nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *aList)
 {
   nsresult result=NS_OK;

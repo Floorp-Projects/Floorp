@@ -60,6 +60,7 @@ public:
 
 protected:
 
+  //XXX: if this was an nsISupportsArray, it would handle refcounting for us
   nsVoidArray *mChildren;
 
 };
