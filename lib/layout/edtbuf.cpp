@@ -3433,9 +3433,7 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
         }
     }
     else {
-        StartTyping(TRUE);
         result = InternalReturnKey(TRUE);
-//        DoneTyping();     // Set note above
     }
 
 END_RETURN:
@@ -12984,8 +12982,8 @@ EDT_ClipboardResult CEditBuffer::PasteText( char *pText, XP_Bool bMailQuote, XP_
         // the next element is far enough. (Lloyd and I think it has to be.)
         CEditElement* pEnd = m_pCurrent->NextLeaf();
         // if the end of the paragraph ends in a break, we need to relayout further.
-        if( pEnd && pEnd->IsBreak()
-            || ( pEnd->GetNextSibling() && pEnd->GetNextSibling()->IsBreak() ) ){
+        if( pEnd && ( pEnd->IsBreak()
+            || ( pEnd->GetNextSibling() && pEnd->GetNextSibling()->IsBreak() ) ) ){
             pEnd = m_pRoot->GetLastMostChild(); // This is almost always too far, but it is safe.
         }
 
