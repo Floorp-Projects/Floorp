@@ -1522,7 +1522,8 @@ foreach my $id (@idlist) {
             LogActivityEntry($duplicate,"cc","",DBID_to_name($reporter));
             SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($duplicate) . ")");
         }
-        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 1);
+        # Bug 171639 - Duplicate notifications do not need to be private. 
+        AppendComment($duplicate, $::COOKIE{'Bugzilla_login'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***", 0);
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         
