@@ -30,15 +30,19 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.3 $ $Date: 2001/10/11 17:41:43 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config34.mk,v $ $Revision: 1.1 $ $Date: 2001/10/11 17:41:43 $ $Name:  $"
 
-include manifest.mn
-include $(CORE_DEPTH)/coreconf/config.mk
-ifdef PURE_STAN_BUILD
-include config.mk
-else
-include config34.mk
+ifdef BUILD_IDG
+DEFINES += -DNSSDEBUG
 endif
-include $(CORE_DEPTH)/coreconf/rules.mk
 
-export:: private_export
+#
+#  Override TARGETS variable so that only static libraries
+#  are specifed as dependencies within rules.mk.
+#
+
+TARGETS        = $(LIBRARY)
+SHARED_LIBRARY =
+IMPORT_LIBRARY =
+PROGRAM        =
+
