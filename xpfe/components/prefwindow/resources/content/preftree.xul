@@ -129,8 +129,14 @@
         <treeitem>
           <treerow>
             <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-cookies.xul"
-                      value="&cookies.label;" valueWithImages="&cookies.labelWithImages;"
+                      value="&cookies.label;"
                       id="cookiesCell"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://communicator/content/pref/pref-images.xul"
+                      value="&images.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
