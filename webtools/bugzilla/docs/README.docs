@@ -8,7 +8,7 @@ xml/		# The original XML doc sources (edit these)
 
 A note about the XML:
   The documentation is written in DocBook 4.1.2, and attempts to adhere
-to the LinuxDoc standards everywhere applicable (http://www.tldp.org).
+to the LinuxDoc standards where applicable (http://www.tldp.org).
 Please consult "The LDP Author Guide" at tldp.org for details on how
 to set up your personal environment for compiling XML files.
   If you need to make corrections to typographical errors, or other minor
