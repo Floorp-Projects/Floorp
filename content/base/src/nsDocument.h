@@ -502,8 +502,6 @@ public:
   // virtual nsIPrincipal* GetPrincipal();
   // Already declared in nsIDocument
 
-  static void Shutdown();
-
   virtual nsresult Init();
   
   virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement);
@@ -512,10 +510,6 @@ public:
                               PRInt32 aNamespaceID,
                               PRBool aDocumentDefaultType,
                               nsIContent **aResult);
-
-  PRBool IsOrphan(nsIContent* aContent);
-  PRBool AddOrphan(nsIContent* aContent);
-  void RemoveOrphan(nsIContent* aContent);
 
 protected:
 
@@ -606,11 +600,6 @@ private:
   nsDocument& operator=(const nsDocument& aOther);
 
   nsXPathDocumentTearoff* mXPathDocument;
-
-  void RemoveOrphans();
-  nsIContent *mOrphanCache;
-
-  static PLDHashTable sOrphans;
 };
 
 

@@ -1594,6 +1594,8 @@ SinkContext::AddComment(const nsIParserNode& aNode)
 
   domComment->AppendData(aNode.GetText());
 
+  comment->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
+
   NS_ASSERTION(mStackPos > 0, "stack out of bounds");
   if (mStackPos <= 0) {
     return NS_ERROR_FAILURE;
@@ -1859,6 +1861,9 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
       NS_ENSURE_SUCCESS(rv, rv);
 
       mLastTextNode = textContent;
+
+      // Set the content's document
+      mLastTextNode->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       // Set the text in the text node
       mLastTextNode->SetText(mText, mTextLength, PR_FALSE);
@@ -3169,6 +3174,7 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
   text->SetText(mTitle, PR_TRUE);
 
   it->AppendChildTo(text, PR_FALSE, PR_FALSE);
+  text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
   mHead->AppendChildTo(it, PR_FALSE, PR_FALSE);
 
@@ -4219,6 +4225,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     text->SetText(script, PR_TRUE);
 
     element->AppendChildTo(text, PR_FALSE, PR_FALSE);
+    text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   }
 
   nsCOMPtr<nsIScriptLoader> loader;

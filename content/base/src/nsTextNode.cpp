@@ -136,12 +136,8 @@ NS_NewTextNode(nsITextContent** aInstancePtrResult,
 {
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsITextContent> instance = new nsTextNode(aOwnerDocument);
+  nsCOMPtr<nsITextContent> instance = new nsTextNode(nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   instance.swap(*aInstancePtrResult);
 
@@ -214,7 +210,7 @@ nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 already_AddRefed<nsITextContent>
 nsTextNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
 {
-  nsTextNode* it = new nsTextNode(aOwnerDocument);
+  nsTextNode* it = new nsTextNode(nsnull);
   if (!it)
     return nsnull;
 
@@ -223,10 +219,6 @@ nsTextNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
   }
 
   NS_ADDREF(it);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(it)) {
-    NS_RELEASE(it);
-  }
 
   return it;
 }

@@ -464,8 +464,6 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
-    mAttrsAndChildren.Clear();
-
     if (mPrototype)
         mPrototype->Release();
 

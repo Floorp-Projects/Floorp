@@ -58,8 +58,8 @@
 #include "prprf.h"
 
 nsGenericDOMDataNode::nsGenericDOMDataNode(nsIDocument *aDocument)
+  : mDocument(aDocument)
 {
-  mParentPtrBits = NS_REINTERPRET_CAST(PtrBits, aDocument);
 }
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
@@ -72,13 +72,6 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
   if (HasRangeList()) {
     PL_DHashTableOperate(&nsGenericElement::sRangeListsHash,
                          this, PL_DHASH_REMOVE);
-  }
-
-  if (ParentIsDocument()) {
-    nsIDocument *document = ParentPtrBitsAsDocument();
-    if (document) {
-      document->RemoveOrphan(this);
-    }
   }
 }
 
@@ -121,11 +114,11 @@ nsGenericDOMDataNode::GetParentNode(nsIDOMNode** aParentNode)
   if (parent) {
     rv = CallQueryInterface(parent, aParentNode);
   }
+  else if (mDocument) {
+    rv = CallQueryInterface(mDocument, aParentNode);
+  }
   else {
-    nsIDocument *doc = ParentPtrBitsAsDocument();
-    if (doc && !doc->IsOrphan(this)) {
-      rv = CallQueryInterface(doc, aParentNode);
-    }
+    *aParentNode = nsnull;
   }
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Must be a DOM Node");
@@ -146,13 +139,10 @@ nsGenericDOMDataNode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
       sibling = parent->GetChildAt(pos - 1);
     }
   }
-  else {
-    nsIDocument *doc = ParentPtrBitsAsDocument();
-    if (doc) {
-      PRInt32 pos = doc->IndexOf(this);
-      if (pos > 0) {
-        sibling = doc->GetChildAt(pos - 1);
-      }
+  else if (mDocument) {
+    PRInt32 pos = mDocument->IndexOf(this);
+    if (pos > 0) {
+      sibling = mDocument->GetChildAt(pos - 1);
     }
   }
 
@@ -179,13 +169,10 @@ nsGenericDOMDataNode::GetNextSibling(nsIDOMNode** aNextSibling)
       sibling = parent->GetChildAt(pos + 1);
     }
   }
-  else {
-    nsIDocument *doc = ParentPtrBitsAsDocument();
-    if (doc) {
-      PRInt32 pos = doc->IndexOf(this);
-      if (pos > 0) {
-        sibling = doc->GetChildAt(pos + 1);
-      }
+  else if (mDocument) {
+    PRInt32 pos = mDocument->IndexOf(this);
+    if (pos > 0) {
+      sibling = mDocument->GetChildAt(pos + 1);
     }
   }
 
@@ -598,67 +585,17 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 nsIDocument*
 nsGenericDOMDataNode::GetDocument() const
 {
-  nsIContent *parent = GetParent();
-  if (parent) {
-    return parent->GetDocument();
-  }
-
-  nsIDocument *document = ParentPtrBitsAsDocument();
-  if (document &&
-      document->IsOrphan(NS_CONST_CAST(nsGenericDOMDataNode*, this))) {
-    return nsnull;
-  }
-
-  return document;
+  return GetCurrentDoc();
 }
 
 void
 nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
                                   PRBool aCompileEventHandlers)
 {
-  if (aDocument) {
-    if (ParentIsDocument()) {
-      nsIDocument *document = ParentPtrBitsAsDocument();
-      if (document) {
-        document->RemoveOrphan(this);
-      }
-
-      mParentPtrBits =
-        NS_REINTERPRET_CAST(PtrBits, aDocument) |
-        (mParentPtrBits & PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER);
-    }
-
-    if (mText.IsBidi()) {
-      aDocument->SetBidiEnabled(PR_TRUE);
-    }
+  mDocument = aDocument;
+  if (mDocument && mText.IsBidi()) {
+    aDocument->SetBidiEnabled(PR_TRUE);
   }
-  else if (ParentIsDocument()) {
-    // XXX We should call AddOrphan here, but we first need ClearDocumentPointer
-    //     so that RemoveOrphan/RemoveOrphans don't end up here.
-    mParentPtrBits &= nsIContent::kParentBitMask;
-  }
-}
-
-nsIDocument*
-nsGenericDOMDataNode::GetOwnerDoc() const
-{
-  nsIContent *parent = GetParent();
-
-  return parent ? parent->GetOwnerDoc() : ParentPtrBitsAsDocument();
-}
-
-PRBool
-nsGenericDOMDataNode::IsInDoc() const
-{
-  nsIContent *parent = GetParent();
-  if (parent) {
-    return parent->IsInDoc();
-  }
-
-  nsIDocument *document = ParentPtrBitsAsDocument();
-
-  return document && !document->IsOrphan(NS_CONST_CAST(nsGenericDOMDataNode*,
-                                                       this));
 }
 
 void
@@ -666,28 +603,9 @@ nsGenericDOMDataNode::SetParent(nsIContent* aParent)
 {
   PtrBits new_bits = NS_REINTERPRET_CAST(PtrBits, aParent);
 
-  if (aParent) {
-    if (ParentIsDocument()) {
-      nsIDocument *document = ParentPtrBitsAsDocument();
-      if (document) {
-        document->RemoveOrphan(this);
-      }
-    }
+  new_bits |= mParentPtrBits & nsIContent::kParentBitMask;
 
-    new_bits |= PARENT_BIT_BITPTR_IS_CONTENT;
-  }
-  else {
-    nsIContent *parent = GetParent();
-    if (parent) {
-      nsIDocument *document = parent->GetOwnerDoc();
-      if (document && document->AddOrphan(this)) {
-        new_bits = NS_REINTERPRET_CAST(PtrBits, document);
-      }
-    }
-  }
-
-  mParentPtrBits = new_bits |
-                   (mParentPtrBits & PARENT_BIT_RANGELISTS_OR_LISTENERMANAGER);
+  mParentPtrBits = new_bits;
 }
 
 PRBool
@@ -1041,9 +959,8 @@ nsGenericDOMDataNode::GetBaseURI() const
   }
 
   nsIURI *uri;
-  nsIDocument *document = ParentPtrBitsAsDocument();
-  if (document) {
-    NS_IF_ADDREF(uri = document->GetBaseURI());
+  if (mDocument) {
+    NS_IF_ADDREF(uri = mDocument->GetBaseURI());
   }
   else {
     uri = nsnull;

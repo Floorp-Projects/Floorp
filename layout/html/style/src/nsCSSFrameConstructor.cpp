@@ -1489,6 +1489,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
 
           // Set aContent as the parent content so that event handling works.
           content->SetParent(aContent);
+          content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
           content->SetNativeAnonymous(PR_TRUE);
           content->SetBindingParent(content);
 
@@ -1552,6 +1553,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsPresContext*       aPresContext
   
       // Set aContent as the parent content so that event handling works.
       textContent->SetParent(aContent);
+      textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
       textContent->SetNativeAnonymous(PR_TRUE);
       textContent->SetBindingParent(textContent);
       
@@ -10172,6 +10174,7 @@ nsCSSFrameConstructor::ConstructAlternateFrame(nsIPresShell*    aPresShell,
   
   // Set aContent as the parent content.
   altTextContent->SetParent(aContent);
+  altTextContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
   // Create either an inline frame, block frame, or area frame
   nsIFrame* containerFrame;

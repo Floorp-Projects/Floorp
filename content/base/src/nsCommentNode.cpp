@@ -82,12 +82,8 @@ NS_NewCommentNode(nsIContent** aInstancePtrResult, nsIDocument *aOwnerDocument)
 {
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsIContent> instance = new nsCommentNode(aOwnerDocument);
+  nsCOMPtr<nsIContent> instance = new nsCommentNode(nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   instance.swap(*aInstancePtrResult);
 
@@ -162,7 +158,7 @@ nsCommentNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 already_AddRefed<nsITextContent>
 nsCommentNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
 {
-  nsCommentNode* it = new nsCommentNode(aOwnerDocument);
+  nsCommentNode* it = new nsCommentNode(nsnull);
   if (!it)
     return nsnull;
 
@@ -171,10 +167,6 @@ nsCommentNode::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
   }
 
   NS_ADDREF(it);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(it)) {
-    NS_RELEASE(it);
-  }
 
   return it;
 }

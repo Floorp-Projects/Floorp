@@ -122,7 +122,7 @@ public:
    * Get the parent content for this content.
    * @return the parent, or null if no parent
    */
-  virtual nsIContent* GetParent() const
+  nsIContent* GetParent() const
   {
     return NS_REINTERPRET_CAST(nsIContent *, mParentPtrBits & ~kParentBitMask);
   }

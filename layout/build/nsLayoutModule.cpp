@@ -147,7 +147,6 @@
 #include "nsScriptNameSpaceManager.h"
 #include "nsIControllerContext.h"
 #include "nsDOMScriptObjectFactory.h"
-#include "nsDocument.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -356,7 +355,6 @@ Shutdown()
 
   gInitialized = PR_FALSE;
 
-  nsDocument::Shutdown();
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
   nsEventListenerManager::Shutdown();

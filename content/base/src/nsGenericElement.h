@@ -362,7 +362,7 @@ public:
   }
   nsIDocument *GetOwnerDoc() const
   {
-    return mNodeInfo->GetDocument();
+    return nsContentUtils::GetDocument(mNodeInfo);
   }
   virtual void SetParent(nsIContent* aParent);
   virtual PRBool IsNativeAnonymous() const;

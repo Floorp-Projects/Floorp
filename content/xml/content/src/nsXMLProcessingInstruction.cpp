@@ -57,12 +57,8 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
 
   nsCOMPtr<nsIContent> instance;
   instance = new nsXMLProcessingInstruction(aTarget, aData,
-                                            aOwnerDocument);
+                                            nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   instance.swap(*aInstancePtrResult);
 
@@ -171,13 +167,9 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   nsIDocument *document = GetOwnerDoc();
   nsXMLProcessingInstruction *pi =
-    new nsXMLProcessingInstruction(mTarget, data, document);
+    new nsXMLProcessingInstruction(mTarget, data, nsnull);
   if (!pi) {
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (document) {
-    document->AddOrphan(pi);
   }
 
   NS_ADDREF(*aReturn = pi);

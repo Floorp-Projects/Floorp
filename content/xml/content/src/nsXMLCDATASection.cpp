@@ -84,12 +84,8 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 {
   *aInstancePtrResult = nsnull;
 
-  nsCOMPtr<nsIContent> instance = new nsXMLCDATASection(aOwnerDocument);
+  nsCOMPtr<nsIContent> instance = new nsXMLCDATASection(nsnull);
   NS_ENSURE_TRUE(instance, NS_ERROR_OUT_OF_MEMORY);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(instance)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   instance.swap(*aInstancePtrResult);
 
@@ -170,7 +166,7 @@ nsXMLCDATASection::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 already_AddRefed<nsITextContent> 
 nsXMLCDATASection::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
 {
-  nsXMLCDATASection* it = new nsXMLCDATASection(aOwnerDocument);
+  nsXMLCDATASection* it = new nsXMLCDATASection(nsnull);
   if (!it)
     return nsnull;
 
@@ -179,10 +175,6 @@ nsXMLCDATASection::CloneContent(PRBool aCloneText, nsIDocument *aOwnerDocument)
   }
 
   NS_ADDREF(it);
-
-  if (aOwnerDocument && !aOwnerDocument->AddOrphan(it)) {
-    NS_RELEASE(it);
-  }
 
   return it;
 }

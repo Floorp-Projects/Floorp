@@ -72,9 +72,7 @@ nsAttrAndChildArray::~nsAttrAndChildArray()
     return;
   }
 
-  NS_ASSERTION(!mImpl->mMappedAttrs &&
-               mImpl->mAttrAndChildCount == 0,
-               "Call nsAttrAndChildArray::Clear() before destruction.");
+  Clear();
 
   PR_Free(mImpl);
 }
