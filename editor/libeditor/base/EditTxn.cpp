@@ -38,9 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "EditTxn.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMNodeList.h"
 
 NS_IMPL_ISUPPORTS2(EditTxn, nsITransaction, nsPIEditorTransaction)
 
@@ -69,7 +66,7 @@ NS_IMETHODIMP EditTxn::RedoTransaction(void)
 
 NS_IMETHODIMP EditTxn::GetIsTransient(PRBool *aIsTransient)
 {
-  if (nsnull!=aIsTransient)
+  if (aIsTransient)
     *aIsTransient = PR_FALSE;
   return NS_OK;
 }

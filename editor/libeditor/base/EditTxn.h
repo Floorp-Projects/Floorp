@@ -40,7 +40,6 @@
 #define EditTxn_h__
 
 #include "nsITransaction.h"
-#include "nsIOutputStream.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsPIEditorTransaction.h"
