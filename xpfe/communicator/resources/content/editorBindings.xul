@@ -4,72 +4,72 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="editorKeySet">
-    <key id="key_home" keycode="VK_HOME" shift="false" control="false" alt="false"
+    <key id="key_home" keycode="VK_HOME" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_beginLine');
             controller.doCommand('cmd_beginLine');"/>
-    <key id="key_end" keycode="VK_END" shift="false" control="false" alt="false"
+    <key id="key_end" keycode="VK_END" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_endLine');
             controller.doCommand('cmd_endLine');"/>
-    <key id="key_left" keycode="VK_LEFT" shift="false" control="false" alt="false"
+    <key id="key_left" keycode="VK_LEFT" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_charPrevious');
             controller.doCommand('cmd_charPrevious');"/>
-    <key id="key_right" keycode="VK_RIGHT" shift="false" control="false" alt="false"
+    <key id="key_right" keycode="VK_RIGHT" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_charNext');
             controller.doCommand('cmd_charNext');"/>
-    <key id="key_homeshift" keycode="VK_HOME" shift="true" control="false" alt="false"
+    <key id="key_homeshift" keycode="VK_HOME" shift="true" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectBeginLine');
             controller.doCommand('cmd_selectBeginLine');"/>
-    <key id="key_endshift" keycode="VK_END" shift="true" control="false" alt="false"
+    <key id="key_endshift" keycode="VK_END" shift="true" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectEndLine');
             controller.doCommand('cmd_selectEndLine');"/>
-    <key id="key_leftshift" keycode="VK_LEFT" shift="true" control="false" alt="false"
+    <key id="key_leftshift" keycode="VK_LEFT" shift="true" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectCharPrevious');
             controller.doCommand('cmd_selectCharPrevious');"/>
-    <key id="key_rightshift" keycode="VK_RIGHT" shift="true" control="false" alt="false"
+    <key id="key_rightshift" keycode="VK_RIGHT" shift="true" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectCharNext');
             controller.doCommand('cmd_selectCharNext');"/>
-    <key id="key_pageup" keycode="VK_PAGE_UP" shift="false" control="false" alt="false"
+    <key id="key_pageup" keycode="VK_PAGE_UP" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
             controller.doCommand('cmd_scrollPageUp');"/>
-    <key id="key_pagedown" keycode="VK_PAGE_DOWN" shift="false" control="false" alt="false"
+    <key id="key_pagedown" keycode="VK_PAGE_DOWN" shift="false" control="false" alt="false"  meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
-    <key id="key_left" keycode="VK_UP" shift="false" control="false" alt="false"
+    <key id="key_left" keycode="VK_UP" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_linePrevious');
             controller.doCommand('cmd_linePrevious');"/>
-    <key id="key_right" keycode="VK_DOWN" shift="false" control="false" alt="false"
+    <key id="key_right" keycode="VK_DOWN" shift="false" control="false" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_lineNext');
             controller.doCommand('cmd_lineNext');"/>
-    <key id="key_left_shift" keycode="VK_UP" shift="true" alt="false"
+    <key id="key_left_shift" keycode="VK_UP" shift="true" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectLinePrevious');
             controller.doCommand('cmd_selectLinePrevious');"/>
-    <key id="key_right_shift" keycode="VK_DOWN" shift="true" alt="false"
+    <key id="key_right_shift" keycode="VK_DOWN" shift="true" alt="false" meta="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_selectLineNext');
