@@ -549,6 +549,13 @@ PresShell::~PresShell()
   if (mDocument) {
     mDocument->DeleteShell(this);
   }
+
+  // We hold a reference to the pres context, and it holds a weak link back
+  // to us. To avoid the pres context having a dangling reference, set its 
+  // pres shell to NULL
+  if (mPresContext) {
+    mPresContext->SetShell(nsnull);
+  }
   mRefCnt = 0;
 
   if (mViewEventListener) {
