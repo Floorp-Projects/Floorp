@@ -121,7 +121,7 @@ function filterInterfaces()
     function filterAll (rec)
     {
         if (rec.isHidden)
-            rec.show();
+            rec.unHide();
         cview.visibleInterfaces++;
     }
         
@@ -130,7 +130,7 @@ function filterInterfaces()
         if (rec.name.search(cview.interfaceFilter) != -1)
         {
             if (rec.isHidden)
-                rec.show();
+                rec.unHide();
             cview.visibleInterfaces++;
         }
         else
@@ -145,7 +145,7 @@ function filterInterfaces()
         if (rec.name.search(cview.interfaceFilter) == 0)
         {
             if (rec.isHidden)
-                rec.show();
+                rec.unHide();
             cview.visibleInterfaces++;
         }
         else
