@@ -28,11 +28,11 @@ class IdlTypedef;
 class IdlStruct;
 class IdlEnum;
 class IdlUnion;
-class IdlConst;
 class IdlException;
 class IdlAttribute;
 class IdlFunction;
 class IdlParameter;
+class IdlVariable;
 
 class IdlParser {
 private:
@@ -53,7 +53,7 @@ protected:
   IdlStruct*      ParseStruct(IdlSpecification &aSpecification);
   IdlEnum*        ParseEnum(IdlSpecification &aSpecification);
   IdlUnion*       ParseUnion(IdlSpecification &aSpecification);
-  IdlConst*       ParseConst(IdlSpecification &aSpecification);
+  IdlVariable*    ParseConst(IdlSpecification &aSpecification);
   IdlException*   ParseException(IdlSpecification &aSpecification);
   IdlAttribute*   ParseAttribute(IdlSpecification &aSpecification, int aTokenID);
   IdlFunction*    ParseFunction(IdlSpecification &aSpecification, Token &aToken);

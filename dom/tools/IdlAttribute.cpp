@@ -17,6 +17,19 @@
  */
 
 #include "IdlAttribute.h"
+#include <ostream.h>
+
+ostream& operator<<(ostream &s, IdlAttribute &aAttribute)
+{
+  if (aAttribute.GetReadOnly()) {
+    s << "readonly ";
+  }
+  s << "attribute ";
+
+  char type[128];
+  aAttribute.GetTypeAsString(type, 128);
+  return s << type << " " << aAttribute.GetName() << ";";
+}
 
 IdlAttribute::IdlAttribute()
 {

@@ -43,7 +43,7 @@ void IdlVariable::SetType(Type aType)
   mType = aType;
 }
 
-Type IdlVariable::GeType()
+Type IdlVariable::GetType()
 {
   return mType;
 }
@@ -67,24 +67,87 @@ char* IdlVariable::GetTypeName()
   return mTypeName;
 }
 
+void IdlVariable::GetTypeAsString(char *aString, size_t aStringSize)
+{
+  switch(mType) {
+    case TYPE_BOOLEAN:
+      if (aStringSize > 7) {
+        strcpy(aString, "boolean");
+      }
+      break;
+    case TYPE_FLOAT:
+      if (aStringSize > 5) {
+        strcpy(aString, "float");
+      }
+      break;
+    case TYPE_DOUBLE:
+      if (aStringSize > 6) {
+        strcpy(aString, "double");
+      }
+      break;
+    case TYPE_LONG:
+      if (aStringSize > 4) {
+        strcpy(aString, "long");
+      }
+      break;
+    case TYPE_SHORT:
+      if (aStringSize > 5) {
+        strcpy(aString, "short");
+      }
+      break;
+    case TYPE_ULONG:
+      if (aStringSize > 13) {
+        strcpy(aString, "unsigned long");
+      }
+      break;
+    case TYPE_USHORT:
+      if (aStringSize > 14) {
+        strcpy(aString, "unsigned short");
+      }
+      break;
+    case TYPE_CHAR:
+      if (aStringSize > 4) {
+        strcpy(aString, "char");
+      }
+      break;
+    case TYPE_INT:
+      if (aStringSize > 3) {
+        strcpy(aString, "int");
+      }
+      break;
+    case TYPE_UINT:
+      if (aStringSize > 12) {
+        strcpy(aString, "unsigned int");
+      }
+      break;
+    case TYPE_STRING:
+      if (aStringSize > 6) {
+        strcpy(aString, "wstring");
+      }
+      break;
+    case TYPE_OBJECT:
+      if (aStringSize > strlen(mTypeName)) {
+        strcpy(aString, mTypeName);
+      }
+      break;
+  }
+}
+
 void IdlVariable::SetValue(unsigned long aValue)
 {
   DeleteStringType();
-  mType = TYPE_ULONG;
   mValue.vLong = aValue;
 }
 
 void IdlVariable::SetValue(char aValue)
 {
   DeleteStringType();
-  mType = TYPE_CHAR;
   mValue.vChar = aValue;
 }
 
 void IdlVariable::SetValue(char *aValue)
 {
   DeleteStringType();
-  mType = TYPE_STRING;
   size_t length = strlen(aValue) + 1;
   mValue.vString = new char[length];
   strcpy(mValue.vString, aValue);
@@ -93,14 +156,12 @@ void IdlVariable::SetValue(char *aValue)
 void IdlVariable::SetValue(double aValue)
 {
   DeleteStringType();
-  mType = TYPE_DOUBLE;
   mValue.vDouble = aValue;
 }
 
 void IdlVariable::SetValue(void *aValue)
 {
   DeleteStringType();
-  mType = TYPE_OBJECT;
   mValue.vObject = aValue;
 }
 

@@ -35,7 +35,6 @@ public:
 #define IdlTypedef      IdlObject
 #define IdlStruct       IdlObject
 #define IdlUnion        IdlObject
-#define IdlConst        IdlObject
 #define IdlException    IdlObject
 
 #endif

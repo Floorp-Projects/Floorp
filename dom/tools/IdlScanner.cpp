@@ -740,8 +740,8 @@ void IdlScanner::OKeywords(char *aCurrentPos, Token *aToken)
 }
 
 //
-// 'readonly' is the only keyword starting with 'r'.
-// If that is not it, it must be an identifier
+// it's either 'readonly' or 'raises' if it is a keyword.
+// Otherwise, it must be an identifier
 //
 void IdlScanner::RKeywords(char *aCurrentPos, Token *aToken)
 {
@@ -771,6 +771,29 @@ void IdlScanner::RKeywords(char *aCurrentPos, Token *aToken)
       aToken->SetToken(READONLY_TOKEN);
     }
   }
+  else if (c != EOF && c == 'a' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 's' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'e' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 's' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(RAISES_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(RAISES_TOKEN);
+    }
+  }
   else {
     // it must be an identifier
     KeywordMismatch(c, aCurrentPos, aToken);
@@ -786,7 +809,7 @@ void IdlScanner::SKeywords(char *aCurrentPos, Token *aToken)
   int c = mInputFile->get();
   // chaeck for 'tr' 
   if (c != EOF && c == 't' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
-      c != EOF && c == 'r' && (*aCurrentPos++ = c)) {
+      c != EOF && c == 'r' && (*aCurrentPos++ = c) && (c = mInputFile->get())) {
 
     if (c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
         c != EOF && c == 'n' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
@@ -1058,6 +1081,9 @@ void IdlScanner::Number(int aStartChar, Token *aToken)
 
     if (aStartChar == '.') {
       // double. Deal with it later
+    }
+    else {
+      mInputFile->putback(aStartChar);
     }
 
     aToken->SetTokenValue(INTEGER_CONSTANT, value * sign);

@@ -37,5 +37,8 @@ public:
   IdlVariable*    GetEnumeratorAt(long aIndex);
 };
 
+class ostream;
+ostream& operator<<(ostream &s, IdlEnum &aEnum);
+
 #endif
 

@@ -22,6 +22,16 @@
 #include "nsVoidArray.h"
 
 #include <string.h>
+#include <ostream.h>
+
+ostream& operator<<(ostream &s, IdlSpecification &aSpecification)
+{
+  for (int i = 0; i < aSpecification.InterfaceCount(); i++) {
+    s << *(aSpecification.GetInterfaceAt(i)) << '\n';
+  }
+  return s;
+}
+
 
 IdlSpecification::IdlSpecification()
 {

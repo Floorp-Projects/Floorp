@@ -90,6 +90,13 @@ public:
           ~ParameterParsingException() {}
 };
 
+class ConstParsingException : public ParserException
+{
+public:
+          ConstParsingException(char *aMessage) : ParserException(aMessage) {}
+          ~ConstParsingException() {}
+};
+
 class EndOfFileException : public Exception
 {
 public:

@@ -40,5 +40,8 @@ public:
 
 };
 
+class ostream;
+ostream& operator<<(ostream &s, IdlSpecification &aSpecification);
+
 #endif
 

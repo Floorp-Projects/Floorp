@@ -48,5 +48,8 @@ public:
   char*           GetExceptionAt(long aIndex);
 };
 
+class ostream;
+ostream& operator<<(ostream &s, IdlFunction &aFunction);
+
 #endif
 
