@@ -214,21 +214,8 @@ static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 
 #ifdef PR_LOGGING
 
-#ifdef NS_DEBUG
-// PR_LOGGING is force to always be on (even in release builds)
-// but we only want some of it on,
-#define EXTENDED_DEBUG_PRINTING 
-#endif
-
-#define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
-
 static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 #define PR_PL(_p1)  PR_LOG(kPrintingLogMod, PR_LOG_DEBUG, _p1);
-
-#ifdef EXTENDED_DEBUG_PRINTING
-static PRUint32 gDumpFileNameCnt   = 0;
-static PRUint32 gDumpLOFileNameCnt = 0;
-#endif
 
 #define PRT_YESNO(_p) ((_p)?"YES":"NO")
 #else
