@@ -25,13 +25,16 @@
 
 #include "nsIDOMKeyEvent.h"
 #include "nsIScriptEventListener.h"
+#include "nsIJSEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "jsapi.h"
 
 //nsIDOMMouseListener interface
-class nsJSEventListener : public nsIDOMEventListener {
+class nsJSEventListener : public nsIDOMEventListener,
+                          public nsIJSEventListener
+{
 public:
-  nsJSEventListener(JSContext *aContext, JSObject *aObj);
+  nsJSEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner* aOwner);
   virtual ~nsJSEventListener();
 
   NS_DECL_ISUPPORTS
@@ -40,11 +43,13 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
   //nsIJSEventListener interface
+  NS_IMETHOD GetEventTarget(nsIScriptContext** aContext, nsIScriptObjectOwner** aOwner);
+  
 protected:
-  JSContext *mContext;
-  JSObject *mJSObj;
-
+  nsIScriptContext* mContext;
+  nsIScriptObjectOwner* mOwner;
 };
 
 
 #endif //nsJSEventListener_h__
+
