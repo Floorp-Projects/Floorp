@@ -1317,7 +1317,9 @@ wallet_ReadFromURLFieldToSchemaFile
 
 void
 wallet_FetchFromNetCenter(char* from, char* to) {
-return;
+
+//return; // !!!!! temporary until bug 10456 is fixed !!!!!!!!!!!!
+
     nsIInputStream* newStream;
     nsIInputStream* *aNewStream = &newStream;
     nsresult rv;
