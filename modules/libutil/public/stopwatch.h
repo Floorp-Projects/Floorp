@@ -1,5 +1,29 @@
 const double gTicks = 1.0e-7;
 
+#ifdef RAPTOR_PERF_METRICS
+#  define NS_RESET_AND_START_STOPWATCH(_sw)          \
+    _sw.Start(PR_TRUE);
+
+#  define NS_START_STOPWATCH(_sw)                    \
+    _sw.Start(PR_FALSE);
+
+#  define NS_STOP_STOPWATCH(_sw)                     \
+    _sw.Stop();
+
+#  define NS_SAVE_STOPWATCH_STATE(_sw)               \
+    _sw.SaveState();
+
+#  define NS_RESTORE_STOPWATCH_STATE(_sw)            \
+    _sw.RestoreState();
+
+#else
+#  define NS_RESET_AND_START_STOPWATCH(_sw) 
+#  define NS_START_STOPWATCH(_sw)
+#  define NS_STOP_STOPWATCH(_sw)
+#  define NS_SAVE_STOPWATCH_STATE(_sw)
+#  define NS_RESTORE_STOPWATCH_STATE(_sw)
+#endif
+
 class Stopwatch {
 
 private:
