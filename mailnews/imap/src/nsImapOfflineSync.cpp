@@ -103,7 +103,10 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
     m_curTempFile->Delete(PR_FALSE);
     m_curTempFile = nsnull;
   }
-  if (NS_SUCCEEDED(exitCode))
+  // NS_BINDING_ABORTED is used for the user pressing stop, which
+  // should cause us to abort the offline process. Other errors
+  // should allow us to continue.
+  if (exitCode != NS_BINDING_ABORTED)
     rv = ProcessNextOperation();
   else if (m_listener)  // notify main observer.
     m_listener->OnStopRunningUrl(url, exitCode);
@@ -207,18 +210,18 @@ void nsImapOfflineSync::AdvanceToFirstIMAPFolder()
 
 void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *currentOp)
 {
-	nsMsgKeyArray matchingFlagKeys;
-	PRUint32 currentKeyIndex = m_KeyIndex;
-	imapMessageFlagsType matchingFlags;
+  nsMsgKeyArray matchingFlagKeys;
+  PRUint32 currentKeyIndex = m_KeyIndex;
+  imapMessageFlagsType matchingFlags;
   currentOp->GetNewFlags(&matchingFlags);
   imapMessageFlagsType flagOperation;
   imapMessageFlagsType newFlags;
 	
-	do
+  do
   {	// loop for all messsages with the same flags
     nsMsgKey curKey;
     currentOp->GetMessageKey(&curKey);
-		matchingFlagKeys.Add(curKey);
+    matchingFlagKeys.Add(curKey);
     currentOp->ClearOperation(nsIMsgOfflineImapOperation::kFlagsChanged);
     currentOp = nsnull;
     if (++currentKeyIndex < m_CurrentKeys.GetSize())
@@ -229,20 +232,20 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *current
       currentOp->GetFlagOperation(&flagOperation);
       currentOp->GetNewFlags(&newFlags);
     }
-	} while (currentOp && (flagOperation & nsIMsgOfflineImapOperation::kFlagsChanged) && (newFlags == matchingFlags) );
+  } while (currentOp && (flagOperation & nsIMsgOfflineImapOperation::kFlagsChanged) && (newFlags == matchingFlags) );
 	
   currentOp = nsnull;
 	
   if (matchingFlagKeys.GetSize() > 0)
   {
     nsCAutoString uids;
-	  nsImapMailFolder::AllocateUidStringFromKeys(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), uids);
+    nsImapMailFolder::AllocateUidStringFromKeys(matchingFlagKeys.GetArray(), matchingFlagKeys.GetSize(), uids);
     PRUint32 curFolderFlags;
     m_currentFolder->GetFlags(&curFolderFlags);
 
-	  if (uids.get() && (curFolderFlags & MSG_FOLDER_FLAG_IMAPBOX)) 
-	  {
-	    nsresult rv = NS_OK;
+    if (uids.get() && (curFolderFlags & MSG_FOLDER_FLAG_IMAPBOX)) 
+    {
+      nsresult rv = NS_OK;
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_currentFolder);
       nsCOMPtr <nsIURI> uriToSetFlags;
       if (imapFolder)
@@ -255,8 +258,7 @@ void nsImapOfflineSync::ProcessFlagOperation(nsIMsgOfflineImapOperation *current
             mailnewsUrl->RegisterListener(this);
         }
       }
-
-	  }
+    }
   }
   else
     ProcessNextOperation();
@@ -550,19 +552,19 @@ void nsImapOfflineSync::ProcessEmptyTrash(nsIMsgOfflineImapOperation *currentOp)
 // returns PR_TRUE if we found a folder to create, PR_FALSE if we're done creating folders.
 PRBool nsImapOfflineSync::CreateOfflineFolders()
 {
-	while (m_currentFolder)
-	{
-		PRUint32 flags;
+  while (m_currentFolder)
+  {
+    PRUint32 flags;
     m_currentFolder->GetFlags(&flags);
-		PRBool offlineCreate = (flags & MSG_FOLDER_FLAG_CREATED_OFFLINE) != 0;
-		if (offlineCreate)
-		{
-			if (CreateOfflineFolder(m_currentFolder))
-				return PR_TRUE;
-		}
-		AdvanceToNextFolder();
-	}
-	return PR_FALSE;
+    PRBool offlineCreate = (flags & MSG_FOLDER_FLAG_CREATED_OFFLINE) != 0;
+    if (offlineCreate)
+    {
+      if (CreateOfflineFolder(m_currentFolder))
+        return PR_TRUE;
+    }
+    AdvanceToNextFolder();
+  }
+  return PR_FALSE;
 }
 
 PRBool nsImapOfflineSync::CreateOfflineFolder(nsIMsgFolder *folder)
@@ -962,9 +964,34 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
           rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
           if (inbox)
           {
-            rv = inbox->GetNewMessages(m_window, this);
-            if (NS_SUCCEEDED(rv))
-              return rv; // otherwise, fall through.
+            nsCOMPtr <nsIMsgFolder> offlineImapFolder;
+            nsCOMPtr <nsIMsgImapMailFolder> imapInbox = do_QueryInterface(inbox);
+            if (imapInbox)
+            {
+              rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_OFFLINE, 1, &numFolders, getter_AddRefs(offlineImapFolder));
+              if (!offlineImapFolder)
+              {
+                // no imap folders configured for offline use - check if the account is set up
+                // so that we always download inbox msg bodies for offline use
+                nsCOMPtr <nsIImapIncomingServer> imapServer = do_QueryInterface(m_currentServer);
+                if (imapServer)
+                {
+                  PRBool downloadBodiesOnGetNewMail = PR_FALSE;
+                  imapServer->GetDownloadBodiesOnGetNewMail(&downloadBodiesOnGetNewMail);
+                  if (downloadBodiesOnGetNewMail)
+                    offlineImapFolder = inbox;
+                }
+              }
+            }
+            // if this isn't an imap inbox, or we have an offline imap sub-folder, then update the inbox.
+            // otherwise, it's an imap inbox for an account with no folders configured for offline use,
+            // so just advance to the next server.
+            if (!imapInbox || offlineImapFolder)
+            {
+              rv = inbox->GetNewMessages(m_window, this);
+              if (NS_SUCCEEDED(rv))
+                return rv; // otherwise, fall through.
+            }
           }
         }
       }
@@ -978,8 +1005,8 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
   }
   AdvanceToNextFolder();
 
-	while (m_currentFolder)
-	{
+  while (m_currentFolder)
+  {
     PRUint32 folderFlags;
 
     m_currentDB = nsnull;
