@@ -1985,7 +1985,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 					++staticCount;
 				}
 			}
-			if (NS_SUCCEEDED(rv = container->GetAttr(kNameSpaceID_None, kStaticsSortLastHintAtom, valueStr))
+			if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, kStaticsSortLastHintAtom, valueStr))
 				&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (valueStr.EqualsIgnoreCase(*trueStr)))
 			{
 				// indicate that static XUL comes after RDF-generated content by making negative
