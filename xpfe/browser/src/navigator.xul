@@ -87,7 +87,7 @@
 <!ENTITY dcharMacCenEuroCmd.label "Macintosh Central European">
 <!ENTITY dcharMacTurCmd.label "Macintosh Turkish">
 <!ENTITY dcharMacCroaCmd.label "Macintosh Croatian">
-<!ENTITY dcharMacRomCmd.label "Macintosh Romanian">
+<!ENTITY dcharMacRomanianCmd.label "Macintosh Romanian">
 <!ENTITY dcharMacIceCmd.label "Macintosh Icelandic">
 <!ENTITY dcharJapanCmd.label "Japanese JIS (ISO-2022-JP)">
 <!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
@@ -404,7 +404,7 @@
 	         <menuitem name="&dcharMacCenEuroCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-ce');"/>
 	         <menuitem name="&dcharMacTurCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-turkish');"/>
 	         <menuitem name="&dcharMacCroaCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
-	         <menuitem name="&dcharMacRomCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
+	         <menuitem name="&dcharMacRomanianCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
 	         <menuitem name="&dcharMacIceCmd.label;" onclick="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
                  <separator />
 	         <menuitem name="&dcharJapanCmd.label;" onclick="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
