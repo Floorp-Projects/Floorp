@@ -48,10 +48,10 @@
       <spring style="height: 10px;"/>
       <box id="system1" flex="100%" align="horizontal">
         <spring style="width: 7px;"/>
-        <html style="width: 195px;">
+        <html>
           <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
-             style="height: 250px; width: 195px;" align="vertical" onclick="ViewEntries();">
+             style="height: 250px;" align="vertical" onclick="ViewEntries();">
             <treecolgroup>
               <treecol flex="1"/>
             </treecolgroup>
@@ -65,10 +65,10 @@
           </box>
         </html>
         <spring style="width: 7px;"/>
-        <html style="width: 195px;">
+        <html>
           <text class="label" id="entrytext" value2="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
-            style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
+            style="height: 113px;" align="vertical" onclick="ViewSynonyms();">
             <treecolgroup>
               <treecol flex="1"/>
             </treecolgroup>
@@ -77,7 +77,7 @@
           <spring style="height: 7px;"/>
           <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
-            style="height: 113px; width: 195px;" align="vertical" onclick="SynonymSelected();">
+            style="height: 113px;" align="vertical" onclick="SynonymSelected();">
             <treecolgroup>
               <treecol flex="1"/>
             </treecolgroup>
@@ -85,7 +85,7 @@
           </tree>
         </html>
         <spring style="width: 7px;"/>
-        <html style="width: 120px;">
+        <html>
           <box align="vertical">
             <spring style="height: 15px;"/>
             <button id="removeEntry" class="dialog push" disabled="true" value="&button.remove.label;" onclick="DeleteEntry();"/>

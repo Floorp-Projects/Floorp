@@ -399,8 +399,8 @@ function SynonymSelected()
 function SchemaDeselected()
 {
   // hide buttons next to entry tree
-  document.getElementById("addEntry").setAttribute("style", "display: none")
-  document.getElementById("removeEntry").setAttribute("style", "display: none")
+//  document.getElementById("addEntry").setAttribute("style", "display: none")
+//  document.getElementById("removeEntry").setAttribute("style", "display: none")
 
   // hide captions above entry tree and synonym tree
   document.getElementById("entrytext").setAttribute("value", "")
@@ -415,8 +415,8 @@ function SchemaDeselected()
 function EntryDeselected()
 {
   // hide buttons next to synonym tree
-  document.getElementById("addSynonym").setAttribute("style", "display: none")
-  document.getElementById("removeSynonym").setAttribute("style", "display: none")
+//  document.getElementById("addSynonym").setAttribute("style", "display: none")
+//  document.getElementById("removeSynonym").setAttribute("style", "display: none")
 
   // disable certain buttons
   document.getElementById("removeEntry").setAttribute("disabled", "true")
