@@ -522,7 +522,7 @@
 <rdf:Description about="#mail-doc-read">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plugins"  nc:link="chrome://help/locale/mail_help.html#scripts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plug-ins"  nc:link="chrome://help/locale/mail_help.html#scripts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -2500,7 +2500,7 @@ nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
     <nc:subheadings>
       <rdf:Seq>
         <rdf:li> 
-	<rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plugins"
+	<rdf:Description ID="advanced_pref_scripts" nc:name="Scripts &amp; Plug-ins"
   		nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#Scripts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
