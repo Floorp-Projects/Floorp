@@ -81,9 +81,7 @@
                 oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>                
 
-    <commandset id="tasksCommands"/>
-    <commandset id="bookmarksItems"/>
-  
+    <commandset id="tasksCommands"/> 
 
     <!-- File Menu -->
     <command id="cmd_newNavigator"/>
