@@ -519,7 +519,7 @@ a:focus img {
   outline: 1px dotted black;
 }
 
-select[mulitple]:focus {
+select[multiple]:focus {
   border: 1px dotted black;
 }
 
