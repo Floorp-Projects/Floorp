@@ -2564,44 +2564,6 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
         // Who has ownership of the listener?
     }
 
-    // If we're an observes node, then we need to add our parent element
-    // as a broadcast listener.
-    if (aTagName == kObservesAtom) {
-      // Find the node that we're supposed to be
-      // observing and perform the hookup.
-      nsAutoString elementValue;
-      nsAutoString attributeValue;
-      
-      nsCOMPtr<nsIDOMElement> domContent;
-      domContent = do_QueryInterface(element);
-
-      domContent->GetAttribute("element",
-                               elementValue);
-      
-      domContent->GetAttribute("attribute",
-                               attributeValue);
-
-      nsCOMPtr<nsIDOMXULDocument> xulDocument( do_QueryInterface(mDocument) );
-      nsCOMPtr<nsIDOMElement> domElement;
-      xulDocument->GetElementById(elementValue, getter_AddRefs(domElement));
-      
-      if (domElement) {
-        // We have a DOM element to bind to.  Add a broadcast
-        // listener to that element, but only if it's a XUL element.
-        // XXX: Handle context nodes.
-        nsCOMPtr<nsIDOMNode> parentElement;
-        domContent->GetParentNode(getter_AddRefs(parentElement));
-        nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
-        nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(parentElement) );
-        
-        if (listener)
-        {
-            broadcaster->AddBroadcastListener(attributeValue,
-                                              listener);
-        }
-      }
-    }
-
     // Finally, assign the newly constructed element to the result
     // pointer and addref it for the trip home.
     *aResult = element;

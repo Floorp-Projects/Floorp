@@ -560,12 +560,6 @@ RDFElementImpl::~RDFElementImpl()
         }
     }
 
-    // XXX This never even gets set! It's unused right now! This is not good.
-    if (mBroadcaster != nsnull)
-    {
-        mBroadcaster->RemoveBroadcastListener("*", this);
-    }
-
     NS_IF_RELEASE(mController);
 
     // Delete the aggregated interface, if one exists.
@@ -1616,6 +1610,47 @@ NS_IMETHODIMP
 RDFElementImpl::SetParent(nsIContent* aParent)
 {
     mParent = aParent; // no refcount
+
+    // This is the point where we teach an observes node's parent that it is a broadcast
+    // listener.
+    
+    // If we're an observes node, then we need to add our parent element
+    // as a broadcast listener.
+    nsCOMPtr<nsIAtom> tagName;
+    GetTag(*getter_AddRefs(tagName));
+
+    if (tagName && tagName.get() == kObservesAtom) {
+      // Find the node that we're supposed to be
+      // observing and perform the hookup.
+      nsAutoString elementValue;
+      nsAutoString attributeValue;
+      
+      GetAttribute("element",
+                   elementValue);
+      
+      GetAttribute("attribute",
+                   attributeValue);
+
+      nsCOMPtr<nsIDOMXULDocument> xulDocument( do_QueryInterface(mDocument) );
+      nsCOMPtr<nsIDOMElement> domElement;
+      xulDocument->GetElementById(elementValue, getter_AddRefs(domElement));
+      
+      if (domElement) {
+        // We have a DOM element to bind to.  Add a broadcast
+        // listener to that element, but only if it's a XUL element.
+        // XXX: Handle context nodes.
+        nsCOMPtr<nsIDOMNode> parentElement = do_QueryInterface(aParent);
+        nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
+        nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(parentElement) );
+        
+        if (listener)
+        {
+            broadcaster->AddBroadcastListener(attributeValue,
+                                              listener);
+        }
+      }
+    }
+
     return NS_OK;
 }
 
