@@ -78,8 +78,10 @@
 
 #include "nsIDOMXULDocument.h"
 
-#define	XUL_TEMPLATES			1
-#define	XUL_TEMPLATES_ASSERTIONS	1
+// Remove this to try running without the C++ builders. This will
+// inhibit delegation to the fallback builder for constructing content
+// (but still relies on it for determining the correct tagset to use).
+#define FALLBACK_BUILDERS 1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -602,11 +604,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 
             for (loop=0; loop<numElements; loop+=2)
             {
-#ifdef XUL_TEMPLATES
-		rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
-#else
-                rv = AddWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
-#endif
+                rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             }
 
@@ -1262,10 +1260,12 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 		rv = PopulateWidgetItemSubtree(aTemplate, aTemplate, children, aElement,
 				PR_TRUE, aProperty, aValue, aNaturalOrderPos);
 	}
+#ifdef FALLBACK_BUILDERS
 	else
 	{
 		rv = AddWidgetItem(aElement, aProperty, aValue, aNaturalOrderPos);
 	}
+#endif
 
 	return(rv);
 }
@@ -1476,11 +1476,13 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
                 rv = UpdateWidgetItemAttribute(templateNode, element, eSet, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#ifdef FALLBACK_BUILDERS
             else {
                 // fall through if node wasn't created by a XUL template
                 rv = SetWidgetAttribute(element, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#endif
         }
     }
     return NS_OK;
@@ -1582,10 +1584,12 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
                 rv = UpdateWidgetItemAttribute(templateNode, element, eClear, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#ifdef FALLBACK_BUILDERS
             else {
                 rv = UnsetWidgetAttribute(element, aProperty, aTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#endif
         }
     }
     return NS_OK;
@@ -1700,10 +1704,12 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
                 rv = UpdateWidgetItemAttribute(templateNode, element, eSet, aProperty, aNewTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#ifdef FALLBACK_BUILDERS
             else {
                 rv = SetWidgetAttribute(element, aProperty, aNewTarget);
                 if (NS_FAILED(rv)) return rv;
             }
+#endif
         }
     }
     return NS_OK;
