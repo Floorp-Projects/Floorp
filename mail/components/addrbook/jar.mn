@@ -2,10 +2,11 @@ classic.jar:
 +   skin/classic/messenger/addressbook/addressbook.css          (skin/addressbook.css)
 +   skin/classic/messenger/addressbook/abContactsPanel.css      (skin/abContactsPanel.css)
 +   skin/classic/messenger/addressbook/cardDialog.css           (skin/cardDialog.css)
+    skin/classic/messenger/addressbook/icons/addressbook-16.gif (skin/icons/addressbook-16.gif)
 
 messenger.jar:
-*+   content/messenger/addressbook/abCardViewOverlay.js         (content/abCardViewOverlay.js)
-*+   content/messenger/addressbook/addressbook.js               (content/addressbook.js)
+*+  content/messenger/addressbook/abCardViewOverlay.js          (content/abCardViewOverlay.js)
+*+  content/messenger/addressbook/addressbook.js                (content/addressbook.js)
 *+  content/messenger/addressbook/addressbook.xul               (content/addressbook.xul)
 *+  content/messenger/addressbook/abCardOverlay.js              (content/abCardOverlay.js)
 +   content/messenger/addressbook/abAddressBookNameDialog.js    (content/abAddressBookNameDialog.js)
