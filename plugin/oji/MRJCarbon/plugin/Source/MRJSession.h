@@ -73,7 +73,7 @@ public:
 	MRJSession();
 	virtual ~MRJSession();
 	
-	OSStatus open();
+	OSStatus open(const char* consolePath);
 	OSStatus close();
 	
 	JNIEnv* getCurrentEnv();
@@ -112,9 +112,10 @@ private:
 	
 	typedef std::vector<FSRef> MRJClassPath;
 	MRJClassPath mClassPath;
-
+	
 	JNIEnv* mMainEnv;
 	JavaVM* mJavaVM;
+	jclass mSession;
 
 	// Message queue.
 	NativeMessage* mFirst;
