@@ -18,12 +18,20 @@
 # Build the Mozilla client.
 #
 # This needs CVSROOT set to work, e.g.
+# setenv CVSROOT :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+#  --or--
 # setenv CVSROOT :pserver:$(USER)%netscape.com@cvs.mozilla.org:/cvsroot
-#
+# 
 # Usage:
 # Pull the source:
 #   cvs update mozilla/client.mk
 #   gmake -f mozilla/client.mk checkout
+#
+# Build NSPR, maybe only once:
+#   gmake -f mozilla/client.mk nspr
+#
+# Build the client:
+#   gmake -f mozilla/client.mk build
 #
 
 DEPTH=mozilla
