@@ -1001,7 +1001,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
   if ( NS_SUCCEEDED(transferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
   {
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
-    nsAutoString flavor(bestFlavor);
+    nsAutoString flavor;
+    flavor.AssignWithConversion(bestFlavor);
     nsAutoString stuffToPaste;
 #ifdef DEBUG_clipboard
     printf("Got flavor [%s]\n", bestFlavor);
