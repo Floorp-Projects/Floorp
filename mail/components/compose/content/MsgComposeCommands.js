@@ -2598,7 +2598,10 @@ nsAttachmentOpener.prototype =
 
   getInterface: function(iid)
   {
-    return this.QueryInterface(iid);
+    if (iid.equals(Components.interfaces.nsIDOMWindowInternal))
+      return window;
+    else
+      return this.QueryInterface(iid);
   },
 
   loadCookie: null,
