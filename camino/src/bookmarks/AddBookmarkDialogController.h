@@ -39,6 +39,7 @@
 
 extern NSString* const kAddBookmarkItemURLKey;
 extern NSString* const kAddBookmarkItemTitleKey;
+extern NSString* const kAddBookmarkItemPrimaryTabKey;   // NSNumber with book, true for frontmost tab
 
 @class BookmarkFolder;
 @class BookmarkViewController;

@@ -44,14 +44,15 @@
 #import "AddBookmarkDialogController.h"
 
 
-NSString* const kAddBookmarkItemURLKey    = @"url";
-NSString* const kAddBookmarkItemTitleKey  = @"title";
-
+NSString* const kAddBookmarkItemURLKey        = @"url";
+NSString* const kAddBookmarkItemTitleKey      = @"title";
+NSString* const kAddBookmarkItemPrimaryTabKey = @"primary";
 
 @interface AddBookmarkDialogController(Private)
 
 + (NSString*)bookmarkUrlForItem:(NSDictionary*)inItem;
 + (NSString*)bookmarkTitleForItem:(NSDictionary*)inItem;
++ (NSDictionary*)primaryBookmarkItem:(NSArray*)inItems;
 
 - (void)buildBookmarksFolderPopup;
 - (void)createBookmarks;
@@ -134,7 +135,7 @@ NSString* const kAddBookmarkItemTitleKey  = @"title";
   if (mCreatingFolder)
     titleString = NSLocalizedString(@"NewBookmarkFolder", @"");
   else
-    titleString  = [AddBookmarkDialogController bookmarkTitleForItem:[inItems objectAtIndex:0]];
+    titleString  = [AddBookmarkDialogController bookmarkTitleForItem:[AddBookmarkDialogController primaryBookmarkItem:inItems]];
 
   [mTitleField setStringValue:titleString];
 
@@ -175,6 +176,22 @@ NSString* const kAddBookmarkItemTitleKey  = @"title";
     bookmarkTitle = [AddBookmarkDialogController bookmarkUrlForItem:inItem];
   return bookmarkTitle;
 }
+
++ (NSDictionary*)primaryBookmarkItem:(NSArray*)inItems
+{
+  NSEnumerator* itemsEnum = [inItems objectEnumerator];
+  id curItem;
+  while ((curItem = [itemsEnum nextObject]))
+  {
+    if ([[curItem objectForKey:kAddBookmarkItemPrimaryTabKey] boolValue])
+      return curItem;
+  }
+  
+  if ([inItems count] > 0)
+    return [inItems objectAtIndex:0];
+ 
+  return nil;
+ }
 
 - (void)buildBookmarksFolderPopup
 {
@@ -221,20 +238,19 @@ NSString* const kAddBookmarkItemTitleKey  = @"title";
       for (unsigned int i = 0; i < numItems; i++)
       {
         id curItem = [mBookmarkItems objectAtIndex:i];
-        NSString* itemTitle = [AddBookmarkDialogController bookmarkTitleForItem:curItem];
         NSString* itemURL   = [AddBookmarkDialogController bookmarkUrlForItem:curItem];
+        NSString* itemTitle = [AddBookmarkDialogController bookmarkTitleForItem:curItem];
 
         newItem = [newGroup addBookmark:itemTitle url:itemURL inPosition:i isSeparator:NO];
       }
     }
     else
     {
-      id curItem = [mBookmarkItems objectAtIndex:0];
+      id curItem = [AddBookmarkDialogController primaryBookmarkItem:mBookmarkItems];
 
-      NSString* itemTitle = [AddBookmarkDialogController bookmarkTitleForItem:curItem];
       NSString* itemURL   = [AddBookmarkDialogController bookmarkUrlForItem:curItem];
 
-      newItem = [parentFolder addBookmark:itemTitle url:itemURL inPosition:[parentFolder count] isSeparator:NO];
+      newItem = [parentFolder addBookmark:titleString url:itemURL inPosition:[parentFolder count] isSeparator:NO];
     }  
   }
   

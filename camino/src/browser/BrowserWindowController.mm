@@ -1905,10 +1905,16 @@ enum BWCOpenDest {
     NSString* hrefString = nil;
     [self bookmarkableTitle:&curTitleString URL:&hrefString forWrapper:browserWrapper];
 
-    NSDictionary* itemInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+    NSMutableDictionary* itemInfo = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                           curTitleString, kAddBookmarkItemTitleKey,
                                               hrefString, kAddBookmarkItemURLKey,
                                                           nil];
+
+    if (browserWrapper == mBrowserView)
+    {
+      [itemInfo setObject:[NSNumber numberWithBool:YES] forKey:kAddBookmarkItemPrimaryTabKey];
+    }
+    
     [itemsArray addObject:itemInfo];
   }
   
