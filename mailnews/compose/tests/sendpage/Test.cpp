@@ -198,6 +198,38 @@ SetupRegistry(void)
   return NS_OK;
 }
 
+nsIMsgIdentity *
+GetHackIdentity()
+{
+nsresult rv;
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure on Mail Session Init!\n");
+    return nsnull;
+  }  
+
+  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  nsCOMPtr<nsIMsgAccountManager>  accountManager;
+
+  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting account Manager!\n");
+    return nsnull;
+  }  
+
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting Identity!\n");
+    return nsnull;
+  }  
+
+  return identity;
+}
+
 //
 // This is a test stub for the send web page interface.
 //
@@ -209,9 +241,9 @@ main(int argc, char *argv[])
   nsresult            rv = NS_OK;
 
   // Before anything, do some sanity checking :-)
-  if (argc < 3)
+  if (argc < 4)
   {
-    printf("Usage: %s <recipients> <web_page_url>\n", argv[0]);
+    printf("Usage: %s <recipients> <web_page_url> <email_subject>\n", argv[0]);
     exit(0);
   }
   SetupRegistry();
@@ -261,13 +293,30 @@ main(int argc, char *argv[])
     if (NS_SUCCEEDED(rv) && pMsgCompFields) 
     if (rv == NS_OK && pMsgCompFields)
     { 
-      pMsgCompFields->SetFrom("tester@netscape.com", NULL);
+      nsIMsgIdentity  *ident = GetHackIdentity();
+      char            *email = nsnull;
+
+      if (ident)
+        ident->GetEmail(&email);
+
+      if (!email)
+        email = "rhp@netscape.com";
+
+      pMsgCompFields->SetFrom(email, NULL);
       pMsgCompFields->SetTo(argv[1], NULL);
 
-      pMsgCompFields->SetSubject(argv[2], NULL);
+      pMsgCompFields->SetSubject(argv[3], NULL);
       pMsgCompFields->SetBody(argv[2], NULL);
 
       nsIURI    *url;
+      char      *ptr = argv[2];
+      while (*ptr)
+      {
+        if (*ptr == '\\')
+          *ptr = '/';
+        ++ptr;
+      }
+
       nsMsgNewURL(&url, argv[2]);
       if (!url)
       {
@@ -308,8 +357,10 @@ main(int argc, char *argv[])
 #endif
 
   printf("Releasing the interface now...\n");
-  pMsgSend->Release(); 
-  pMsgCompFields->Release(); 
+  if (pMsgSend)
+    pMsgSend->Release(); 
+  if (pMsgCompFields)
+    pMsgCompFields->Release(); 
 
   return 0; 
 }
