@@ -28,6 +28,9 @@ public:
    * Render the border for an element using css rendering rules
    * for borders. aSkipSides is a bitmask of the sides to skip
    * when rendering. If 0 then no sides are skipped.
+   *
+   * Both aDirtyRect and aBounds are in the local coordinate space
+   * of aForFrame
    */
   static void PaintBorder(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,

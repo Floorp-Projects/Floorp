@@ -1066,7 +1066,8 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *spacing, 0);
+                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
+                                *spacing, 0);
   }
 
   // for debug...

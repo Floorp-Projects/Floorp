@@ -91,7 +91,8 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                     aDirtyRect, mRect, *myColor);
 
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *mySpacing, 0);
+                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
+                                *mySpacing, 0);
   }
 
   // for debug...

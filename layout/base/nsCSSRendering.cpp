@@ -792,7 +792,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   }
 
 
-  nsRect inside(0, 0, aBounds.width, aBounds.height);
+  nsRect inside(aBounds);
   nsRect outside(inside);
   outside.Deflate(border);
 

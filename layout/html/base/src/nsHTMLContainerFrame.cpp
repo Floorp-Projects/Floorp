@@ -69,7 +69,8 @@ NS_METHOD nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, mRect, *color);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, mRect, *spacing, skipSides);
+                                aDirtyRect, nsRect(0, 0, mRect.width, mRect.height),
+                                *spacing, skipSides);
   }
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect);
