@@ -371,7 +371,7 @@ NS_CheckThreadSafe(void* owningThread, const char* msg)
     check = gCheckThreadSafeDefault || getenv("XPCOM_CHECK_THREADSAFE") != 0;
   }
   if (check) {
-    //NS_ASSERTION(owningThread == NS_CurrentThread(), msg);
+    NS_ASSERTION(owningThread == NS_CurrentThread(), msg);
   }
 }
 
