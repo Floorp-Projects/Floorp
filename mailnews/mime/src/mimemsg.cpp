@@ -455,14 +455,14 @@ HG09091
 
     if (obj->options->override_charset && obj->options->default_charset && *obj->options->default_charset)
       input_charset = obj->options->default_charset;
-    else if ( (text) && (text->charset) && (*(text->charset)) )
+    else if (!text->charsetOverridable)
       input_charset = text->charset;
     else 
     {
       if (obj->options->default_charset)
         input_charset = obj->options->default_charset;
       else
-        input_charset = text->defaultCharset;
+        input_charset = text->charset;
     }
 
     // Store the charset used for the conversion, so we can put a menu check mark.  

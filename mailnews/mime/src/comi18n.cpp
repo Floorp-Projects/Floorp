@@ -1648,6 +1648,7 @@ MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
   nsCAutoString detector_contractid(theBufDecriptor);
   nsXPIDLString detector_name;
   nsCOMPtr<nsIStringCharsetDetector> detector;
+  *aCharset = nsnull;
 
   detector_contractid.Assign(NS_STRCDETECTOR_CONTRACTID_BASE);
 
@@ -1666,8 +1667,6 @@ MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
       if (NS_SUCCEEDED(res) && (eBestAnswer == oConfident || eSureAnswer == oConfident)) {
         return NS_OK;
       }
-      else
-        *aCharset = nsnull;
     }
   }
   return res;

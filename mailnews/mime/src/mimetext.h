@@ -91,7 +91,7 @@ struct MimeInlineText {
   char *charset;			/* The charset from the content-type of this
 							           object, or the caller-specified overrides
 							           or defaults. */
-  char *defaultCharset; /* This is a charset to use when all else fails */
+  PRBool charsetOverridable; 
   char *cbuffer;			/* Buffer used for charset conversion. */
   PRInt32 cbuffer_size;
   
