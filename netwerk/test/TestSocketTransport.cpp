@@ -164,7 +164,7 @@ InputConsumer::~InputConsumer()
 
 
 
-NS_IMPL_ISUPPORTS(InputConsumer,nsIStreamListener::GetIID());
+NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
 
 
 NS_IMETHODIMP
@@ -268,7 +268,7 @@ OutputObserver::~OutputObserver()
 }
 
 
-NS_IMPL_ISUPPORTS(OutputObserver,nsIStreamObserver::GetIID());
+NS_IMPL_ISUPPORTS(OutputObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 
 NS_IMETHODIMP
@@ -372,7 +372,7 @@ TestConnection::~TestConnection()
   }
 }
 
-NS_IMPL_ISUPPORTS(TestConnection,nsIRunnable::GetIID());
+NS_IMPL_ISUPPORTS(TestConnection,nsCOMTypeInfo<nsIRunnable>::GetIID());
 
 NS_IMETHODIMP
 TestConnection::Run(void)

@@ -240,7 +240,7 @@ int main(int argc, char **argv)
         = service->NewURI(argv[i], nsnull, &uri);
         if (NS_FAILED(result)) return result;
 
-        result = uri->QueryInterface(nsIURL::GetIID(), (void**)&pURL);
+        result = uri->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&pURL);
         NS_RELEASE(uri);
         if (NS_FAILED(result)) return result;
 #endif // NECKO

@@ -173,13 +173,13 @@ nsReader::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
     } 
-    if (aIID.Equals(nsIRunnable::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
     } 
-    if (aIID.Equals(nsIStreamListener::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this); 
         NS_ADDREF_THIS(); 
         return NS_OK; 
@@ -208,7 +208,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     rv = NS_NewTypicalInputFileStream(&fs, spec);
     if (NS_FAILED(rv)) goto done;
 
-    rv = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&fileStr);
+    rv = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&fileStr);
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
@@ -277,7 +277,7 @@ SerialReadTest(char* dirName)
         NS_ASSERTION(NS_SUCCEEDED(rv), "init failed");
 
         nsIStreamListener* listener;
-        reader->QueryInterface(nsIStreamListener::GetIID(), (void**)&listener);
+        reader->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
 
         rv = Simulated_nsFileTransport_Run(reader, spec);
@@ -340,7 +340,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(NS_SUCCEEDED(rv), "init failed");
 
         nsIStreamListener* listener;
-        reader->QueryInterface(nsIStreamListener::GetIID(), (void**)&listener);
+        reader->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
     
         nsIChannel* trans;

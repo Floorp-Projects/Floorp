@@ -67,7 +67,7 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsIOService, nsIIOService::GetIID());
+NS_IMPL_ISUPPORTS(nsIOService, nsCOMTypeInfo<nsIIOService>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     progID.ToCString(buf, MAX_NET_PROGID_LENGTH);
 
     nsIProtocolHandler* handler;
-    rv = nsServiceManager::GetService(buf, nsIProtocolHandler::GetIID(),
+    rv = nsServiceManager::GetService(buf, nsCOMTypeInfo<nsIProtocolHandler>::GetIID(),
                                       (nsISupports**)&handler);
     
     if (NS_FAILED(rv)) return rv;
@@ -313,7 +313,7 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
     if (NS_FAILED(rv)) return rv;
 
     nsIFileProtocolHandler* fileHandler = nsnull;
-    rv = handler->QueryInterface(nsIFileProtocolHandler::GetIID(), 
+    rv = handler->QueryInterface(nsCOMTypeInfo<nsIFileProtocolHandler>::GetIID(), 
                                  (void**)&fileHandler);
     NS_RELEASE(handler);
     if (NS_FAILED(rv)) return rv;
@@ -330,7 +330,7 @@ nsIOService::NewChannelFromNativePath(const char *nativePath, nsIFileChannel **r
 NS_IMETHODIMP
 nsIOService::NewLoadGroup(nsILoadGroup **result)
 {
-    return nsLoadGroup::Create(nsnull, nsILoadGroup::GetIID(), 
+    return nsLoadGroup::Create(nsnull, nsCOMTypeInfo<nsILoadGroup>::GetIID(), 
                                (void**)result);
 }
 

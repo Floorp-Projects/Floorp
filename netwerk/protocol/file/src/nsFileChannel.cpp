@@ -70,7 +70,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (getter) {
-        rv = getter->GetEventSink(verb, nsIStreamListener::GetIID(), (nsISupports**)&mListener);
+        rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIStreamListener>::GetIID(), (nsISupports**)&mListener);
         // ignore the failure -- we can live without having an event sink
     }
 
@@ -110,8 +110,8 @@ NS_IMETHODIMP
 nsFileChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsIFileChannel::GetIID()) ||
-        aIID.Equals(nsIChannel::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIFileChannel>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIChannel>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIFileChannel*, this);
         NS_ADDREF_THIS();
@@ -278,7 +278,7 @@ protected:
     PRUint32                    mOffset;
 };
 
-NS_IMPL_ISUPPORTS(nsAsyncOutputStream, nsIBufferOutputStream::GetIID());
+NS_IMPL_ISUPPORTS(nsAsyncOutputStream, nsCOMTypeInfo<nsIBufferOutputStream>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIChannel
@@ -363,7 +363,7 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     nsISupports* str;
     rv = NS_NewTypicalOutputFileStream(&str, mSpec);
     if (NS_FAILED(rv)) return rv;
-    rv = str->QueryInterface(nsIOutputStream::GetIID(), (void**)result);
+    rv = str->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)result);
     NS_RELEASE(str);
     return rv;
 
@@ -497,7 +497,7 @@ nsFileChannel::Process(void)
           mStatus = NS_NewTypicalInputFileStream(&fs, mSpec);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = fs->QueryInterface(nsIInputStream::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIInputStream>::GetIID(), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
@@ -539,7 +539,7 @@ nsFileChannel::Process(void)
           mStatus = NS_NewTypicalOutputFileStream(&fs, mSpec);
           if (NS_FAILED(mStatus)) goto error;
 
-          mStatus = fs->QueryInterface(nsIOutputStream::GetIID(), (void**)&mFileStream);
+          mStatus = fs->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)&mFileStream);
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
@@ -722,7 +722,7 @@ protected:
     nsIFileChannel*             mNext;
 };
 
-NS_IMPL_ISUPPORTS(nsDirEnumerator, nsISimpleEnumerator::GetIID());
+NS_IMPL_ISUPPORTS(nsDirEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID());
 
 NS_IMETHODIMP
 nsFileChannel::GetChildren(nsISimpleEnumerator * *aChildren)
@@ -785,7 +785,7 @@ nsFileChannel::MoveFrom(nsIURI *src)
 #if 0
     nsresult rv;
     nsIFileChannel* fc;
-    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&fc);
+    rv = src->QueryInterface(nsCOMTypeInfo<nsIFileChannel>::GetIID(), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
         rv = fc->moveToDir(this);
         NS_RELEASE(fc);
@@ -807,7 +807,7 @@ nsFileChannel::CopyFrom(nsIURI *src)
 #if 0
     nsresult rv;
     nsIFileChannel* fc;
-    rv = src->QueryInterface(nsIFileChannel::GetIID(), (void**)&fc);
+    rv = src->QueryInterface(nsCOMTypeInfo<nsIFileChannel>::GetIID(), (void**)&fc);
     if (NS_SUCCEEDED(rv)) {
         rv = fc->copyToDir(this);
         NS_RELEASE(fc);
@@ -866,7 +866,7 @@ nsFileChannel::Execute(const char *args)
     
     if (args == nsnull) {
         nsIURL* url;
-        rv = mURI->QueryInterface(nsIURL::GetIID(), (void**)&url);
+        rv = mURI->QueryInterface(nsCOMTypeInfo<nsIURL>::GetIID(), (void**)&url);
         if (NS_SUCCEEDED(rv)) {
             rv = url->GetQuery(&queryArgs);
             NS_RELEASE(url);

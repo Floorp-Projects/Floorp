@@ -39,7 +39,7 @@ NS_IMPL_RELEASE(nsFtpConnectionThread);
 NS_IMETHODIMP
 nsFtpConnectionThread::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
     NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(nsIRunnable::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ) {
         *aInstancePtr = NS_STATIC_CAST(nsFtpConnectionThread*, this);
         NS_ADDREF_THIS();

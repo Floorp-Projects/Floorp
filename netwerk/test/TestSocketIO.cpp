@@ -174,7 +174,7 @@ TestWriteObserver::~TestWriteObserver()
 }
 
 
-NS_IMPL_ISUPPORTS(TestWriteObserver,nsIStreamObserver::GetIID());
+NS_IMPL_ISUPPORTS(TestWriteObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 
 NS_IMETHODIMP

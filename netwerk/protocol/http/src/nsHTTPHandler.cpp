@@ -138,7 +138,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
 
         if (eventSinkGetter) {
-            rv = eventSinkGetter->GetEventSink(verb, nsIHTTPEventSink::GetIID(),
+            rv = eventSinkGetter->GetEventSink(verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
                                               (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
             if (NS_FAILED(rv)) return rv;
         }
@@ -149,7 +149,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         if (pChannel) {
             NS_ADDREF(pChannel);
             pChannel->Init();
-            rv = pChannel->QueryInterface(nsIChannel::GetIID(), (void**)o_Instance);
+            rv = pChannel->QueryInterface(nsCOMTypeInfo<nsIChannel>::GetIID(), (void**)o_Instance);
             // add this instance to the active list of connections
             // TODO!
             NS_RELEASE(pChannel);
@@ -172,17 +172,17 @@ nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = NULL;
     
-    if (aIID.Equals(nsIProtocolHandler::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIProtocolHandler>::GetIID())) {
         *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIHTTPHandler::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIHTTPHandler>::GetIID())) {
         *aInstancePtr = (void*) ((nsIHTTPHandler*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIProxy::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIProxy>::GetIID())) {
         *aInstancePtr = (void*) ((nsIProxy*)this);
         NS_ADDREF_THIS();
         return NS_OK;
@@ -215,14 +215,14 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     if (aBaseURI)
         rv = aBaseURI->Clone(&url);
     else
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsIURI::GetIID(), (void**)&url);
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
     if (NS_FAILED(rv)) return rv;
 
     rv = url->SetSpec((char*)aSpec);
 
     nsIURI* realUrl = nsnull;
     
-    rv = url->QueryInterface(nsIURI::GetIID(), (void**)&realUrl);
+    rv = url->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&realUrl);
     if (NS_FAILED(rv)) return rv;
 
     *result= realUrl;

@@ -23,7 +23,7 @@
 //////////////////////////////
 //// nsISupports
 //////////////////////////////
-NS_IMPL_ISUPPORTS(nsNetModRegEntry, nsINetModRegEntry::GetIID());
+NS_IMPL_ISUPPORTS(nsNetModRegEntry, nsCOMTypeInfo<nsINetModRegEntry>::GetIID());
 
 
 //////////////////////////////

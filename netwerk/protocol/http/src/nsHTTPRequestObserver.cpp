@@ -33,7 +33,7 @@ nsHTTPRequestObserver::~nsHTTPRequestObserver()
         NS_RELEASE(m_pTransport);
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPRequestObserver,nsIStreamObserver::GetIID());
+NS_IMPL_ISUPPORTS(nsHTTPRequestObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
 
 NS_IMETHODIMP
 nsHTTPRequestObserver::OnStartBinding(nsISupports* /*i_pContext*/)
