@@ -25,6 +25,7 @@ use diagnostics;
 use strict;
 
 require "globals.pl";
+require "defparams.pl";
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -35,15 +36,35 @@ sub sillyness {
 }
 
 my $verbose = 0;
-if ($#ARGV >= 0 && $ARGV[0] eq '-v') {
-    $verbose = 1;
+my $syncall = 0;
+
+sub Usage {
+    print "Usage: syncshadowdb [-v] [-syncall]\n";
+    exit;
+}
+
+foreach my $opt (@ARGV) {
+    if ($opt eq '-v') {
+        $verbose = 1;
+    } elsif ($opt eq '-syncall') {
+        $syncall = 1;
+        $verbose = 1;
+    } else {
+        Usage();
+    }
 }
 $| = 1;
+
+my $logtostderr = 0;
 
 sub Verbose ($) {
     my ($str) = (@_);
     if ($verbose) {
-        print $str, "\n";
+        if ($logtostderr) {
+            print STDERR $str, "\n";
+        } else {
+            print $str, "\n";
+        }
     }
 }
     
@@ -55,9 +76,16 @@ if (!Param("shadowdb")) {
     exit;
 }
 
-ConnectToDatabase(1);
-$::dbwritesallowed = 1;
+my $wasusing = Param("queryagainstshadowdb");
 
+$::param{'queryagainstshadowdb'} = 1; # Force us to be able to use the
+                                      # shadowdb, even if other processes
+                                      # are not supposed to.
+
+
+ConnectToDatabase(1);
+
+Verbose("Aquiring lock.");
 SendSQL("SELECT GET_LOCK('synclock', 1)");
 if (!FetchOneColumn()) {
     Verbose("Couldn't get the lock to do the shadow database syncing.");
@@ -66,21 +94,45 @@ if (!FetchOneColumn()) {
 
 my $shadowtable = "$db_name.shadowlog";
 
-SendSQL("SELECT id FROM $shadowtable " .
-        "WHERE reflected = 0 AND command = 'SYNCUP'");
+if (!$syncall) {
+    Verbose("Looking for requests to sync the whole database.");
+    SendSQL("SELECT id FROM $shadowtable " .
+            "WHERE reflected = 0 AND command = 'SYNCUP'");
+    if (FetchOneColumn()) {
+        $syncall = 1;
+    }
+}
 
-if (FetchOneColumn()) {
+if ($syncall) {
     Verbose("Syncing up the shadow database by copying entire database in.");
+    if ($wasusing) {
+        $::param{'queryagainstshadowdb'} = 0;
+        WriteParams();
+        Verbose("Disabled reading from the shadowdb. Sleeping 10 seconds to let other procs catch up.");
+        sleep(10);
+        $::param{'queryagainstshadowdb'} = 1;
+    }
     my @tables;
     SendSQL("SHOW TABLES");
+    my $query = "";
     while (MoreSQLData()) {
         my $table = FetchOneColumn();
         push(@tables, $table);
+        if ($query) {
+            $query .= ", $table WRITE";
+        } else {
+            $query = "LOCK TABLES $table WRITE";
+        }
     }
-    foreach my $table (@tables) {
-        Verbose("Dropping old shadow table $table");
-        SendSQL("DROP TABLE $table");
-    }
+    if (@tables) {
+        Verbose("Locking entire shadow database");
+        SendSQL($query);
+        foreach my $table (@tables) {
+            Verbose("Dropping old shadow table $table");
+            SendSQL("DROP TABLE $table");
+        }
+        SendSQL("UNLOCK TABLES");
+    }    
     # Carefully lock the whole real database for reading, except for the
     # shadowlog table, which we lock for writing.  Then dump everything
     # into the shadowdb database.  Then mark everything in the shadowlog
@@ -89,7 +141,7 @@ if (FetchOneColumn()) {
     SendSQL("USE $db_name");
     SendSQL("SHOW TABLES");
     @tables = ();
-    my $query = "LOCK TABLES shadowlog WRITE";
+    $query = "LOCK TABLES shadowlog WRITE";
     while (MoreSQLData()) {
         my $table = FetchOneColumn();
         if ($table ne "shadowlog") {
@@ -100,12 +152,15 @@ if (FetchOneColumn()) {
     Verbose("Locking entire database");
     SendSQL($query);
     my $tablelist = join(' ', @tables);
-    Verbose("Doing the actual sync (can take a real long time!)");
+    my $tempfile = "data/tmpsyncshadow.$$";
+    Verbose("Dumping database to a temp file ($tempfile).");
+    system("mysqldump -l -e $db_name $tablelist > $tempfile");
+    Verbose("Restoring from tempfile into shadowdb");
     my $extra = "";
     if ($verbose) {
         $extra = "-v";
     }
-    open(MYSQL, "mysqldump -l -e $db_name $tablelist | mysql $extra " .
+    open(MYSQL, "cat $tempfile | mysql $extra " .
          Param("shadowdb") . "|") || die "Couldn't do db copy";
     my $count = 0;
     while (<MYSQL>) {
@@ -116,14 +171,23 @@ if (FetchOneColumn()) {
         }
     }
     close(MYSQL);
+    unlink($tempfile);
     Verbose("");
     
     
+    $::dbwritesallowed = 1;
     SendSQL("UPDATE shadowlog SET reflected = 1 WHERE reflected = 0", 1);
     SendSQL("UNLOCK TABLES");
+    if ($wasusing) {
+        Verbose("Reenabling other processes to read from the shadow db");
+        $::param{'queryagainstshadowdb'} = 1;
+        WriteParams();
+    }
     Verbose("OK, done.");
 }
 
+Verbose("Looking for commands to execute.");
+$::dbwritesallowed = 1;
 while (1) {
     SendSQL("SELECT id, command FROM $shadowtable WHERE reflected = 0 " .
             "ORDER BY id LIMIT 1");
@@ -136,4 +200,5 @@ while (1) {
     SendSQL("UPDATE $shadowtable SET reflected = 1 WHERE id = $id", 1);
 }
 
+Verbose("Releasing lock.");
 SendSQL("SELECT RELEASE_LOCK('synclock')");

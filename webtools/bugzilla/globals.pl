@@ -79,7 +79,7 @@ sub ConnectToDatabase {
     my ($useshadow) = (@_);
     if (!defined $::db) {
         my $name = $db_name;
-        if ($useshadow && Param("shadowdb")) {
+        if ($useshadow && Param("shadowdb") && Param("queryagainstshadowdb")) {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
@@ -89,7 +89,7 @@ sub ConnectToDatabase {
 }
 
 sub ReconnectToShadowDatabase {
-    if (Param("shadowdb")) {
+    if (Param("shadowdb") && Param("queryagainstshadowdb")) {
         SendSQL("USE " . Param("shadowdb"));
         $::dbwritesallowed = 0;
     }
@@ -127,7 +127,7 @@ sub SendSQL {
     if ($iswrite && !$::dbwritesallowed) {
         die "Evil code attempted to write stuff to the shadow database.";
     }
-    if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/) {
+    if ($str =~ /^LOCK TABLES/i && $str !~ /shadowlog/ && $::dbwritesallowed) {
         $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /i;
     }
     SqlLog($str);
