@@ -41,7 +41,7 @@ Rights Reserved.
 </html:div>
 <box align="vertical">
   <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail"/>
+    <html:input type="radio" name="acctyperadio" id="mailaccount" value="mail" checked="1"/>
     &accountTypeMail.label;
   </html:div>
   <html:div>

@@ -41,11 +41,11 @@ Rights Reserved.
 </html:div>
 <box align="vertical">
   <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount"/>
+    <html:input type="radio" name="acctyperadio" value="webmail" id="webmail"/>
     &mailTypeWebMail.label;
   </html:div>
   <html:div>
-    <html:input type="radio" name="acctyperadio" id="mailaccount"/>
+    <html:input type="radio" name="acctyperadio" value="mail" id="mail" checked="1"/>
     &mailTypeOtherMail.label;
   </html:div>
 </box>
