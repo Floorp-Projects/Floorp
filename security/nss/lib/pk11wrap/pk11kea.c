@@ -99,18 +99,25 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	    privKeyHandle = PK11_MatchItem(slot,pubKeyHandle,CKO_PRIVATE_KEY);
 	}
 
-	/* if no key exits, generate a key pair */
+	/* if no key exists, generate a key pair */
 	if (privKeyHandle == CK_INVALID_KEY) {
-	    unsigned int     keyLength = PK11_GetKeyLength(symKey);
+	    unsigned int     symKeyLength = PK11_GetKeyLength(symKey);
 	    PK11RSAGenParams rsaParams;
 
+	    if (symKeyLength > 60) /* bytes */ {
+		/* we'd have to generate an RSA key pair > 512 bits long,
+		** and that's too costly.  Don't even try. 
+		*/
+		PORT_SetError( SEC_ERROR_CANNOT_MOVE_SENSITIVE_KEY );
+		goto rsa_failed;
+	    }
 	    rsaParams.keySizeInBits = 
-		((keyLength == 0) || (keyLength > 16)) ? 512 : 256;
+	        (symKeyLength > 28 || symKeyLength == 0) ? 512 : 256;
 	    rsaParams.pe  = 0x10001;
 	    privKey = PK11_GenerateKeyPair(slot,CKM_RSA_PKCS_KEY_PAIR_GEN, 
-		&rsaParams, &pubKey,PR_FALSE,PR_TRUE,symKey->cx);
+			    &rsaParams, &pubKey,PR_FALSE,PR_TRUE,symKey->cx);
 	} else {
-	    /* if key's exist, build SECKEY data structures for them */
+	    /* if keys exist, build SECKEY data structures for them */
 	    privKey = PK11_MakePrivKey(slot,nullKey, PR_TRUE, privKeyHandle,
 					symKey->cx);
 	    if (privKey != NULL) {
