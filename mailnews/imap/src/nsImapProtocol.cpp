@@ -1342,20 +1342,23 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
     {
         case NS_ERROR_UNKNOWN_HOST:
             AlertUserEventUsingId(IMAP_UNKNOWN_HOST_ERROR);
-            killThread = PR_TRUE;
             break;
         case NS_ERROR_CONNECTION_REFUSED:
             AlertUserEventUsingId(IMAP_CONNECTION_REFUSED_ERROR);
-            killThread = PR_TRUE;
             break;
         case NS_ERROR_NET_TIMEOUT:
             AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
-            killThread = PR_TRUE;
             break;
         default:
             break;
     }
 
+  }
+  // if aStatus is successful, but we never saw a greeting, the server
+  // must have dropped us while establishing the connection.
+  else if (! (m_flags & IMAP_RECEIVED_GREETING))
+  {
+    AlertUserEventUsingId(IMAP_SERVER_DROPPED_CONNECTION);
   }
 
   PR_CEnterMonitor(this);
