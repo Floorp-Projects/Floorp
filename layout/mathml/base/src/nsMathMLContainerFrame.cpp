@@ -893,7 +893,6 @@ nsMathMLContainerFrame::AppendFrames(nsIPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aFrameList)
 {
-NS_ASSERTION(0,"XXXrbs break - AppendFrames");
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -912,7 +911,6 @@ nsMathMLContainerFrame::InsertFrames(nsIPresContext* aPresContext,
                                      nsIFrame*       aPrevFrame,
                                      nsIFrame*       aFrameList)
 {
-NS_ASSERTION(0,"XXXrbs break - InsertFrames");
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -931,7 +929,6 @@ nsMathMLContainerFrame::RemoveFrame(nsIPresContext* aPresContext,
                                     nsIAtom*        aListName,
                                     nsIFrame*       aOldFrame)
 {
-NS_ASSERTION(0,"XXXrbs break - RemoveFrame");
   if (aListName) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -982,7 +979,6 @@ nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                      nsIFrame*       aOldFrame,
                                      nsIFrame*       aNewFrame)
 {
-NS_ASSERTION(0,"XXXrbs break - ReplaceFrame");
   if (aListName || !aOldFrame || !aNewFrame) {
     return NS_ERROR_INVALID_ARG;
   }
