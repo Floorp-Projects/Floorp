@@ -845,8 +845,8 @@ sub rdfchannel {
     return if (!$output);
 
     my $channelpart = "";
-    if ($output =~ s@<channel>.*</channel>@@si) {
-        $channelpart = $&;
+    if ($output =~ m@<channel>(.*)</channel>@si) {
+        $channelpart = $1;
     }
     $output =~ s@<image>.*</image>@@si;
 
@@ -860,8 +860,8 @@ sub rdfchannel {
     }
 
     my @list;
-    while ($output =~ m@<title>(.+?)</title>@sig) {
-        push(@list, $1);
+    while ($output =~ m@<item>(.*?)<title>(.+?)</title>(.*?)</item>@sig) {
+        push(@list, $2);
     }
     $rdf_items{$url} = \@list;
 
