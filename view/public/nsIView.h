@@ -391,12 +391,6 @@ public:
   NS_IMETHOD GetDirtyRegion(nsIRegion *&aRegion) const = 0;
 
   /**
-   * Sets the dirty region associated with this view. Used by the view
-   * manager.
-   */
-  NS_IMETHOD SetDirtyRegion(nsIRegion *aRegion) = 0;
-
-  /**
    * Create a widget to associate with this view. This is a helper
    * function for SetWidget.
    * @param aWindowIID IID for Widget type that this view
@@ -430,16 +424,23 @@ public:
    * If we believe that all cutout view have a native widget, this
    * could be a replacement.
    * @param aWidget out parameter for widget that this view contains,
-    *       or nsnull if there is none.
+   *        or nsnull if there is none.
    */
   NS_IMETHOD GetWidget(nsIWidget *&aWidget) const = 0;
+
+
+  /**
+   * Returns PR_TRUE if the view has a widget associated with it.
+   * @param aHasWidget out parameter that indicates whether a view has a widget.
+   */
+  NS_IMETHOD HasWidget(PRBool *aHasWidget) const = 0;
 
   /**
    * Output debug info to FILE
    * @param out output file handle
    * @param aIndent indentation depth
    */
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
    * Set flags on view to allow customization of view behavior during

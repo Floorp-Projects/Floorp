@@ -1570,11 +1570,11 @@ void nsScrollPortView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, 
     if (nsnull == scrollWidget)
     {
       // if we don't have a scroll widget then we must just update.
-      mViewManager->UpdateView(this, nsnull, 0);
+      mViewManager->UpdateView(this, 0);
 
     } else if (CannotBitBlt(aScrolledView)) {
         // we can't blit for some reason just update the view and adjust any heavy weight widgets
-        mViewManager->UpdateView(this, nsnull, 0);
+        mViewManager->UpdateView(this, 0);
         AdjustChildWidgets(this, aScrolledView, 0, 0, scale);
     } else { // if we can blit and have a scrollwidget then scroll.
       // Scroll the contents of the widget by the specfied amount, and scroll

@@ -1631,7 +1631,7 @@ PresShell::ProcessReflowCommands()
       // see it.
       nsIView* rootView;
       mViewManager->GetRootView(rootView);
-      mViewManager->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
+      mViewManager->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
 
       mInVerifyReflow = PR_TRUE;
       PRBool ok = VerifyIncrementalReflow();

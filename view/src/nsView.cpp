@@ -40,6 +40,8 @@
 #include "nsIRegion.h"
 #include "nsIClipView.h"
 
+static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
+
 //mmptemp
 
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
@@ -1305,18 +1307,20 @@ NS_IMETHODIMP nsView :: GetWidget(nsIWidget *&aWidget) const
   return NS_OK;
 }
 
+NS_IMETHODIMP nsView::HasWidget(PRBool *aHasWidget) const
+{
+	*aHasWidget = (mWindow != nsnull);
+	return NS_OK;
+}
+
 //
 // internal window creation functions
 //
 nsresult nsView :: LoadWidget(const nsCID &aClassIID)
 {
-  nsresult rv;
+  nsresult rv = nsComponentManager::CreateInstance(aClassIID, nsnull, NS_GET_IID(nsIWidget), (void**)&mWindow);
 
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-  rv = nsComponentManager::CreateInstance(aClassIID, nsnull, kIWidgetIID, (void**)&mWindow);
-
-  if (NS_OK == rv)
-  {
+  if (NS_OK == rv) {
     // Set the widget's client data
     mWindow->SetClientData((void*)this);
   }
@@ -1324,7 +1328,7 @@ nsresult nsView :: LoadWidget(const nsCID &aClassIID)
   return rv;
 }
 
-void nsView :: List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -1362,6 +1366,8 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: SetViewFlags(PRUint32 aFlags)
@@ -1412,19 +1418,27 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetDirtyRegion(nsIRegion *&aRegion) const
+NS_IMETHODIMP nsView::GetDirtyRegion(nsIRegion *&aRegion) const
 {
-  aRegion = mDirtyRegion;
-  NS_IF_ADDREF(aRegion);
-  return NS_OK;
-}
+	if (nsnull == mDirtyRegion) {
+		// The view doesn't have a dirty region so create one
+		nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
+		                               nsnull, 
+		                               NS_GET_IID(nsIRegion), 
+		                               (void**) &mDirtyRegion);
 
-NS_IMETHODIMP nsView :: SetDirtyRegion(nsIRegion *aRegion)
-{
-  NS_IF_RELEASE(mDirtyRegion);
-  mDirtyRegion = aRegion;
-  NS_IF_ADDREF(mDirtyRegion);
-  return NS_OK;
+		if (NS_FAILED(rv))
+			return rv;
+		
+		rv = mDirtyRegion->Init();
+		if (NS_FAILED(rv))
+			return rv;
+	}
+
+	aRegion = mDirtyRegion;
+	NS_ADDREF(aRegion);
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsView :: GetScratchPoint(nsPoint **aPoint)

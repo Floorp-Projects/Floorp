@@ -37,8 +37,7 @@
 
 class nsISupportsArray;
 
-class nsViewManager : public nsIViewManager
-{
+class nsViewManager : public nsIViewManager {
 public:
   nsViewManager();
 
@@ -61,8 +60,7 @@ public:
 
   NS_IMETHOD  Composite(void);
 
-  NS_IMETHOD  UpdateView(nsIView *aView, nsIRegion *aRegion,
-                         PRUint32 aUpdateFlags);
+  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags);
   NS_IMETHOD  UpdateAllViews(PRUint32 aUpdateFlags);
 
@@ -121,8 +119,8 @@ public:
   NS_IMETHOD  BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(void);
 
-  NS_IMETHOD SetRootScrollableView(nsIScrollableView *aScrollable);
-  NS_IMETHOD GetRootScrollableView(nsIScrollableView **aScrollable);
+  NS_IMETHOD  SetRootScrollableView(nsIScrollableView *aScrollable);
+  NS_IMETHOD  GetRootScrollableView(nsIScrollableView **aScrollable);
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
@@ -135,37 +133,50 @@ protected:
   virtual ~nsViewManager();
 
 private:
-  nsIRenderingContext *CreateRenderingContext(nsIView &aView);
-  void AddRegionToDirtyRegion(nsIView* aView, const nsIRegion *aRegion) const;
-  void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
-  void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
-  void UpdateTransCnt(nsIView *oldview, nsIView *newview);
+	nsIRenderingContext *CreateRenderingContext(nsIView &aView);
+	void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
+	void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
+	void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
-  void ProcessPendingUpdates(nsIView *aView);
-  void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
+	void ProcessPendingUpdates(nsIView *aView);
+	void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);
 
-  void Refresh(nsIView *aView, nsIRenderingContext *aContext,
-               nsIRegion *region, PRUint32 aUpdateFlags);
-  void Refresh(nsIView* aView, nsIRenderingContext *aContext,
-               const nsRect *rect, PRUint32 aUpdateFlags);
-  void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
-                   PRBool &aResult);
-  void RenderView(nsIView *aView, nsIRenderingContext &aRC,
-                  const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
-  PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
-                           nsIView *aRealView, const nsRect *aDamageRect = nsnull,
-                           nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
-                           nscoord aX = 0, nscoord aY = 0);
-//  void FlattenViewTreeUp(nsIView *aView, PRInt32 *aIndex, const nsRect *aDamageRect,
-//                         nsIView *aStartView, nsVoidArray *aArray);
-  PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
-                          nsIView *aView, nsRect &aRect, PRUint32 aFlags);
-  void ShowDisplayList(PRInt32 flatlen);
-  void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
-  PRBool DoesViewHaveNativeWidget(nsIView &aView);
-  void PauseTimer(void);
-  void RestartTimer(void);
+	void Refresh(nsIView *aView, nsIRenderingContext *aContext,
+	             nsIRegion *region, PRUint32 aUpdateFlags);
+	void Refresh(nsIView* aView, nsIRenderingContext *aContext,
+	             const nsRect *rect, PRUint32 aUpdateFlags);
+	void RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect,
+					 PRBool &aResult);
+	void RenderView(nsIView *aView, nsIRenderingContext &aRC,
+					const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult);
+	PRBool CreateDisplayList(nsIView *aView, PRInt32 *aIndex, nscoord aOriginX, nscoord aOriginY,
+	                       nsIView *aRealView, const nsRect *aDamageRect = nsnull,
+	                       nsIView *aTopView = nsnull, nsVoidArray *aArray = nsnull,
+	                       nscoord aX = 0, nscoord aY = 0);
+	PRBool AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex,
+	                      nsIView *aView, nsRect &aRect, PRUint32 aFlags);
+	void ShowDisplayList(PRInt32 flatlen);
+	void ComputeViewOffset(nsIView *aView, nscoord *aX, nscoord *aY, PRInt32 aFlag);
+	PRBool DoesViewHaveNativeWidget(nsIView &aView);
+	void PauseTimer(void);
+	void RestartTimer(void);
 
+	// Utilities
+
+	/**
+	 * Returns the nearest parent view with an attached widget. Can be the
+	 * same view as passed-in.
+	 */
+	nsIView* GetWidgetView(nsIView *aView);
+
+	/**
+	 * Transforms a rectangle from specified view's coordinate system to
+	 * the first parent that has an attached widget.
+	 */
+	void ViewToWidget(nsIView *aView, nsIView* aWidgetView, nsRect &aRect);
+	// void WidgetToView(nsIView* aView, nsRect &aWidgetRect);
+
+private:
   nsIDeviceContext  *mContext;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;

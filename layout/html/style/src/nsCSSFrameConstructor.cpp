@@ -6500,7 +6500,7 @@ SyncAndInvalidateView(nsIView* aView, nsIFrame* aFrame,
   if (viewIsVisible) {
     aViewManager->SetViewContentTransparency(aView, viewHasTransparentContent);
     aViewManager->SetViewVisibility(aView, nsViewVisibility_kShow);
-    aViewManager->UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
+    aViewManager->UpdateView(aView, NS_VMREFRESH_NO_SYNC);
   }
   else {
     aViewManager->SetViewVisibility(aView, nsViewVisibility_kHide); 
