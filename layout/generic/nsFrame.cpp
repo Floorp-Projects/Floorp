@@ -969,7 +969,9 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   nsresult rv;
   nsCOMPtr<nsISelectionController> selCon;
   rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-  if (NS_SUCCEEDED(rv) && selCon) {
+//get the selection controller
+  if (NS_SUCCEEDED(rv) && selCon) 
+  {
     selCon->GetDisplaySelection(&displayresult);
     if (displayresult == nsISelectionController::SELECTION_OFF)
       return NS_OK;//nothing to do we cannot affect selection from here
@@ -997,14 +999,10 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
                                  getter_AddRefs(newContent),
                                  startPos, contentOffsetEnd, beginContent)))
     {
+//get the frame selection from sel controller
       nsCOMPtr<nsIFrameSelection> frameselection;
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
-      if (NS_SUCCEEDED(rv) && selCon)
-      {
-        frameselection = do_QueryInterface(selCon); //this MAY implement
-      }
-      if (!frameselection)
+      frameselection = do_QueryInterface(selCon); //this MAY implement
+      if (!frameselection)//if we must get it from the pres shell's
         rv = shell->GetFrameSelection(getter_AddRefs(frameselection));
       if (NS_SUCCEEDED(rv) && frameselection)
       {

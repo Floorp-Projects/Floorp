@@ -800,7 +800,7 @@ nsGenericHTMLElement::GetInnerHTML(nsString& aInnerHTML)
   // Frist we create XIF for the children of this node...
   nsAutoString buf;
   nsCOMPtr<nsIXIFConverter> xifc;
-  nsresult res = nsComponentManager::CreateInstance(kXIFConverterCID,
+  nsComponentManager::CreateInstance(kXIFConverterCID,
                            nsnull,
                            NS_GET_IID(nsIXIFConverter),
                            getter_AddRefs(xifc));
