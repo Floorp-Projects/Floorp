@@ -294,7 +294,8 @@ function getFirstItemByTag(root, tag)
     return null;
 }
 
-function selectFolder(folder) {
+function selectFolder(folder) 
+{
     var folderURI;
     if (!folder) {
         // walk folders to find first item
@@ -306,8 +307,8 @@ function selectFolder(folder) {
     updateSearchFolderPicker(folderURI);
 }
 
-function updateSearchFolderPicker(folderURI) {
- 
+function updateSearchFolderPicker(folderURI) 
+{ 
     SetFolderPicker(folderURI, gFolderPicker.id);
 
     // use the URI to get the real folder
