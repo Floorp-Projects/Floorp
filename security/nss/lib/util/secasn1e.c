@@ -35,7 +35,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.5 2002/01/14 23:20:43 ian.mcgreer%sun.com Exp $
+ * $Id: secasn1e.c,v 1.6 2002/01/22 22:48:26 ian.mcgreer%sun.com Exp $
  */
 
 #include "secasn1.h"
@@ -689,9 +689,26 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	 * will treat numbers going in and out of the ASN.1 encoder as
 	 * unsigned, so the encoder must handle the conversion.
 	 */
-	len = ((SECItem *)src)->len;
-	if (len > 0 && ((SECItem *)src)->data[0] & 0x80) {
-	    len++; /* will add leading 0 */
+	{
+	    unsigned char *buf = ((SECItem *)src)->data;
+	    len = ((SECItem *)src)->len;
+	    while (len > 0) {
+		if (*buf != 0) {
+		    if (*buf & 0x80) {
+			len++; /* leading zero needed */
+		    }
+		    break; /* reached beginning of number */
+		}
+		if (len == 1) {
+		    break; /* the number 0 */
+		}
+		if (buf[1] & 0x80) {
+		    break; /* leading zero already present */
+		} 
+		/* extraneous leading zero, keep going */
+		buf++;
+		len--;
+	    }
 	}
 	break;
 
@@ -995,17 +1012,34 @@ sec_asn1e_write_contents (sec_asn1e_state *state,
 	    * unsigned, so the encoder must handle the conversion.
 	    */
 	    {
-		SECItem *item;
-
-		item = (SECItem *)state->src;
-		if (item->len > 0 && item->data[0] & 0x80) 
-		{
-		    char zero = 0; /* write a leading 0 */
-		    sec_asn1e_write_contents_bytes (state, &zero, 1);
+		unsigned int blen;
+		unsigned char *buf;
+		blen = ((SECItem *)state->src)->len;
+		buf = ((SECItem *)state->src)->data;
+		while (blen > 0) {
+		    if (*buf & 0x80) {
+			char zero = 0; /* write a leading 0 */
+			sec_asn1e_write_contents_bytes(state, &zero, 1);
+			/* and then the remaining buffer */
+			sec_asn1e_write_contents_bytes(state, 
+			                               (char *)buf, blen); 
+			break;
+		    } 
+		    if (*buf != 0 || blen == 1) {
+			/* no leading zeros, msb of MSB is not 1, so write
+			 * the remaining buffer (0 itself also goes here)
+			 */
+			sec_asn1e_write_contents_bytes(state, 
+			                               (char *)buf, blen); 
+			break;
+		    }
+		    /* byte is 0, continue */
+		    buf++;
+		    blen--;
 		}
 	    }
-	    /* fall through to write the content */
-	    goto process_string;
+	    /* done with this content */
+	    break;
 			
 process_string:			
 	  default:
