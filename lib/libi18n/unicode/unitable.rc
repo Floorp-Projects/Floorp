@@ -164,4 +164,12 @@ BEGIN
 #include "utotbl\\armscii.ut"
 END
 
+cp874.uf RCDATA
+BEGIN
+#include "ufrmtbl\\cp874.uf"
+END
+cp874.ut RCDATA
+BEGIN
+#include "utotbl\\cp874.ut"
+END
 	// #endif // ALL_UNICODE_TABLE
