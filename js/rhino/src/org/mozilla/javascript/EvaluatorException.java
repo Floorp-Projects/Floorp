@@ -53,6 +53,12 @@ public class EvaluatorException extends RuntimeException
     public EvaluatorException(String detail)
     {
         super(detail);
+        Context cx = Context.getCurrentContext();
+        if (cx!= null) {
+            int[] linep = { 0 };
+            this.sourceName = cx.getSourcePositionFromStack(linep);
+            this.lineNumber = linep[0];
+        }
     }
 
     /**
