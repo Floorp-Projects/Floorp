@@ -24,7 +24,6 @@
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsBodyFrame.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsCSSRendering.h"
@@ -49,7 +48,8 @@ class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
-                  nsIFrame*        aParent,
+                  nsIFrame*        aGeometricParent,
+                  nsIFrame*        aContentParent,
                   nsIStyleContext* aContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
@@ -81,11 +81,13 @@ private:
 NS_IMETHODIMP
 nsScrollFrame::Init(nsIPresContext&  aPresContext,
                     nsIContent*      aContent,
-                    nsIFrame*        aParent,
+                    nsIFrame*        aGeometricParent,
+                    nsIFrame*        aContentParent,
                     nsIStyleContext* aStyleContext)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,
-                                            aParent, aStyleContext);
+                                            aGeometricParent, aContentParent,
+                                            aStyleContext);
 
   // Create the scrolling view
   CreateScrollingView();

@@ -131,7 +131,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                                                             nsHTMLAtoms::fieldsetContentPseudo,
                                                                             mStyleContext);
-  mFirstChild->Init(aPresContext, mContent, this, styleContext);
+  mFirstChild->Init(aPresContext, mContent, this, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
   nsIFrame* newChildList = aChildList;

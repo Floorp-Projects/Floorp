@@ -109,6 +109,18 @@ public:
 
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent) = 0;
 
+  /**
+   * Get/Set the placeholder frame associated with the specified frame.
+   *
+   * Out of flow frames (e.g., absolutely positioned frames and floated frames)
+   * can have placeholder frames that are inserted into the flow and indicate
+   * where the frame would be if it were part of the flow
+   */
+  NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
+                                    nsIFrame*& aPlaceholderFrame) const = 0;
+  NS_IMETHOD SetPlaceholderFrameFor(nsIFrame* aFrame,
+                                    nsIFrame* aPlaceholderFrame) = 0;
+
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand) = 0;
 
   virtual void ProcessReflowCommands() = 0;

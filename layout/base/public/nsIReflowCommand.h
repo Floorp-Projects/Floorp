@@ -197,6 +197,13 @@ public:
   NS_IMETHOD GetChildListName(nsIAtom*& aListName) const = 0;
 
   /**
+   * Sets the name of the child list to which the child frame belongs.
+   * Only used for reflow command types FrameAppended, FrameInserted, and
+   * FrameRemoved
+   */
+  NS_IMETHOD SetChildListName(nsIAtom* aListName) = 0;
+
+  /**
    * Get the previous sibling frame associated with the reflow command.
    * This is used for FrameInserted reflow commands.
    */

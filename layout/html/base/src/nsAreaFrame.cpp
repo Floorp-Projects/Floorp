@@ -29,7 +29,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsViewsCID.h"
-#include "nsAbsoluteFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
@@ -62,24 +61,6 @@ nsAreaFrame::~nsAreaFrame()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// nsISupports
-
-nsresult
-nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kIAbsoluteItemsIID)) {
-    nsIAbsoluteItems* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    return NS_OK;
-  }
-  return nsBlockFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
 NS_IMETHODIMP
@@ -87,6 +68,23 @@ nsAreaFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
   DeleteFrameList(aPresContext, &mAbsoluteFrames);
   return nsBlockFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList)
+{
+  nsresult  rv;
+
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    mAbsoluteFrames = aChildList;
+    rv = NS_OK;
+  } else {
+    rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -247,6 +245,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
                   aReflowState.maxSize.height,
                   aReflowState.reason));
 
+  nsresult  rv = NS_OK;
+
   // Make a copy of the reflow state so we can set the space manager
   nsHTMLReflowState reflowState(aReflowState);
   reflowState.spaceManager = mSpaceManager;
@@ -254,9 +254,40 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   // Clear the spacemanager's regions.
   mSpaceManager->ClearRegions();
 
-  // XXX We need to peek at incremental reflow commands and see if the next
-  // frame is one of the absolutely positioned frames...
-  nsresult  rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+  // See if the reflow command is for an absolutely positioned frame
+  PRBool  wasHandled = PR_FALSE;
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    nsIFrame* targetFrame;
+
+    aReflowState.reflowCommand->GetTarget(targetFrame);
+    if (this == targetFrame) {
+      nsIAtom*  listName;
+
+      aReflowState.reflowCommand->GetChildListName(listName);
+      if (nsLayoutAtoms::absoluteList == listName) {
+        nsIReflowCommand::ReflowType  type;
+
+        aReflowState.reflowCommand->GetType(type);
+        NS_ASSERTION(nsIReflowCommand::FrameAppended == type, "unexpected reflow type");
+
+        // Add the frames to our list of absolutely position frames
+        nsIFrame* childFrames;
+        aReflowState.reflowCommand->GetChildFrame(childFrames);
+        NS_ASSERTION(nsnull != childFrames, "null child list");
+        AddAbsoluteFrame(childFrames);
+
+        // Indicate we handled the reflow command
+        wasHandled = PR_TRUE;      
+      }
+      NS_IF_RELEASE(listName);
+    }
+  }
+
+  if (!wasHandled) {
+    // XXX We need to peek at incremental reflow commands and see if the next
+    // frame is one of the absolutely positioned frames...
+    rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+  }
 
   // Reflow any absolutely positioned frames that need reflowing
   // XXX We shouldn't really be doing this for all incremental reflow commands
@@ -286,13 +317,10 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_STYLE_OVERFLOW_HIDDEN != display->mOverflow) {
-    for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
-      // Get the anchor frame
-      nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
-      nsIFrame*         absoluteFrame = anchorFrame->GetAbsoluteFrame();
-      nsRect            rect;
+    for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
+      nsRect  rect;
   
-      absoluteFrame->GetRect(rect);
+      f->GetRect(rect);
       nscoord xmost = rect.XMost();
       nscoord ymost = rect.YMost();
       if (xmost > aDesiredSize.width) {
@@ -369,7 +397,7 @@ nsAreaFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
   cf->SetFlags(mFlags);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;
@@ -392,49 +420,21 @@ void nsAreaFrame::AddAbsoluteFrame(nsIFrame* aFrame)
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-// nsIAbsoluteItems
-
-NS_METHOD nsAreaFrame::AddAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
-{
-  // Add the absolute anchor frame to our list of absolutely positioned
-  // items.
-  mAbsoluteItems.AppendElement(aAnchorFrame);
-  return NS_OK;
-}
-
-PRBool
-nsAreaFrame::IsAbsoluteFrame(nsIFrame* aFrame)
-{
-  // Check whether the frame is in our list of absolutely positioned frames
-  for (nsIFrame* f = mAbsoluteFrames; nsnull != f; f->GetNextSibling(f)) {
-    if (f == aFrame) {
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
-NS_METHOD nsAreaFrame::RemoveAbsoluteItem(nsAbsoluteFrame* aAnchorFrame)
-{
-  NS_NOTYETIMPLEMENTED("removing an absolutely positioned frame");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // Called at the end of the Reflow() member function so we can process
 // any abolutely positioned items that need to be reflowed
 void
 nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
-  for (PRInt32 i = 0; i < mAbsoluteItems.Count(); i++) {
-    // Get the anchor frame and its absolutely positioned frame
-    nsAbsoluteFrame*  anchorFrame = (nsAbsoluteFrame*)mAbsoluteItems[i];
-    nsIFrame*         absoluteFrame = anchorFrame->GetAbsoluteFrame();
+  for (nsIFrame* absoluteFrame = mAbsoluteFrames;
+       nsnull != absoluteFrame; absoluteFrame->GetNextSibling(absoluteFrame)) {
+
     PRBool            placeFrame = PR_FALSE;
+#if 0
     PRBool            reflowFrame = PR_FALSE;
+#else
+    PRBool            reflowFrame = PR_TRUE;
+#endif
     nsReflowReason    reflowReason = eReflowReason_Resize;
 
     // Get its style information
@@ -444,6 +444,7 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
     absoluteFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     absoluteFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
 
+#if 0
     // See whether the frame is a newly added frame
     if (!IsAbsoluteFrame(absoluteFrame)) {
       // The absolutely position item hasn't yet been added to our child list
@@ -463,6 +464,7 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
       placeFrame = reflowFrame = PR_TRUE;
 
     } else {
+#endif
       // We need to place the frame if the left-offset or the top-offset are
       // auto or a percentage
       if ((eStyleUnit_Coord != position->mLeftOffset.GetUnit()) ||
@@ -476,12 +478,15 @@ nsAreaFrame::ReflowAbsoluteItems(nsIPresContext& aPresContext,
           (eStyleUnit_Coord != position->mHeight.GetUnit())) {
         reflowFrame = PR_TRUE;
       }
+#if 0
     }
+#endif
 
     if (placeFrame || reflowFrame) {
       // Get the rect for the absolutely positioned element
       nsRect  rect;
-      ComputeAbsoluteFrameBounds(anchorFrame, aReflowState, position, rect);
+      ComputeAbsoluteFrameBounds(aPresContext, absoluteFrame, aReflowState,
+                                 position, rect);
   
       nsIHTMLReflow*  htmlReflow;
       if (NS_OK == absoluteFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
@@ -541,7 +546,8 @@ void nsAreaFrame::TranslatePoint(nsIFrame* aFrameFrom, nsPoint& aPoint) const
   }
 }
 
-void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFrame,
+void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresContext,
+                                             nsIFrame*                aFrame,
                                              const nsHTMLReflowState& aReflowState,
                                              const nsStylePosition*   aPosition,
                                              nsRect&                  aRect) const
@@ -552,11 +558,20 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIFrame*                aAnchorFra
   //
   // If either the left or top are 'auto' then get the offset of the anchor
   // frame from this frame
-  nsPoint offset;
+  nsPoint offset(0, 0);
   if ((eStyleUnit_Auto == aPosition->mLeftOffset.GetUnit()) ||
       (eStyleUnit_Auto == aPosition->mTopOffset.GetUnit())) {
-    aAnchorFrame->GetOrigin(offset);
-    TranslatePoint(aAnchorFrame, offset);
+    // Get the placeholder frame
+    nsIFrame*     placeholderFrame;
+    nsIPresShell* presShell = aPresContext.GetShell();
+
+    presShell->GetPlaceholderFrameFor(aFrame, placeholderFrame);
+    NS_RELEASE(presShell);
+    NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
+    if (nsnull != placeholderFrame) {
+      placeholderFrame->GetOrigin(offset);
+      TranslatePoint(placeholderFrame, offset);
+    }
   }
 
   // left-offset

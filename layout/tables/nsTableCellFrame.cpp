@@ -561,7 +561,7 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
   cf->AppendToFlow(this);
   cf->InitCellFrame(GetColIndex());
   aContinuingFrame = cf;

@@ -25,7 +25,6 @@
 #include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
-#include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLIIDs.h"
@@ -4166,7 +4165,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
       NS_RELEASE(kidSC);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mBullet->Init(aPresContext, mContent, this, kidSC);
+    mBullet->Init(aPresContext, mContent, this, this, kidSC);
     NS_RELEASE(kidSC);
 
     // If the list bullet frame should be positioned inside then add
@@ -4329,7 +4328,7 @@ nsBlockFrame::CreateContinuingFrame(nsIPresContext& aPresContext,
   if (nsnull == cf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  cf->Init(aPresContext, mContent, aParent, aStyleContext);
+  cf->Init(aPresContext, mContent, aParent, mContentParent, aStyleContext);
   cf->SetFlags(mFlags);
   cf->AppendToFlow(this);
   aContinuingFrame = cf;

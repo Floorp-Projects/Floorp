@@ -44,6 +44,7 @@
 #include "nsIWebShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -207,6 +208,49 @@ nsHashKey* AttributeKey::Clone(void) const
 
 // -----------------------------------------------------------
 
+// Structure used when constructing formatting object trees. Contains
+// state information needed for absolutely positioned elements
+struct nsAbsoluteItems {
+  nsIFrame* const containingBlock;  // containing block for absolutely positioned elements
+  nsIFrame*       childList;        // list of absolutely positioned child frames
+
+  nsAbsoluteItems(nsIFrame* aContainingBlock);
+
+  // Adds a child frame to the list of absolutely positioned child frames
+  void  AddAbsolutelyPositionedChild(nsIFrame* aChildFrame);
+};
+
+nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
+  : containingBlock(aContainingBlock)
+{
+  childList = nsnull;
+}
+
+void
+nsAbsoluteItems::AddAbsolutelyPositionedChild(nsIFrame* aChildFrame)
+{
+#ifdef NS_DEBUG
+  nsIFrame* parent;
+  aChildFrame->GetGeometricParent(parent);
+  NS_PRECONDITION(parent == containingBlock, "bad geometric parent");
+#endif
+
+  if (nsnull == childList) {
+    childList = aChildFrame;
+  } else {
+    // Get the last frane in the list
+    nsIFrame* lastChild = nsnull;
+
+    for (nsIFrame* f = childList; nsnull != f; f->GetNextSibling(f)) {
+      lastChild = f;
+    }
+
+    lastChild->SetNextSibling(aChildFrame);
+  }
+}
+
+// -----------------------------------------------------------
+
 class HTMLStyleSheetImpl : public nsIHTMLStyleSheet,
                            public nsIStyleFrameConstruction {
 public:
@@ -264,10 +308,9 @@ public:
   NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIHTMLContent* aContent, 
                                nsIHTMLAttributes*& aAttributes);
 
-  NS_IMETHOD ConstructFrame(nsIPresContext* aPresContext,
-                            nsIContent*     aContent,
-                            nsIFrame*       aParentFrame,
-                            nsIFrame*&      aFrameSubTree);
+  NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
+                                nsIContent*     aDocElement,
+                                nsIFrame*&      aNewFrame);
 
   NS_IMETHODIMP ReconstructFrames(nsIPresContext* aPresContext,
                                   nsIContent*     aContent,
@@ -333,9 +376,11 @@ protected:
                               PRInt32 aAttrCount,
                               nsIHTMLAttributes*& aAttributes);
 
-  nsresult ConstructRootFrame(nsIPresContext* aPresContext,
-                              nsIContent*     aDocElement,
-                              nsIFrame*&      aNewFrame);
+  nsresult ConstructFrame(nsIPresContext*  aPresContext,
+                          nsIContent*      aContent,
+                          nsIFrame*        aParentFrame,
+                          nsAbsoluteItems& aAbsoluteItems,
+                          nsIFrame*&       aFrameSubTree);
 
   nsresult ConstructDocElementFrame(nsIPresContext*  aPresContext,
                                     nsIContent*      aDocElement,
@@ -347,37 +392,49 @@ protected:
                                nsIContent*      aContent,
                                nsIFrame*        aParentFrame,
                                nsIStyleContext* aStyleContext,
+                               nsAbsoluteItems& aAboluteItems,
                                nsIFrame*&       aNewFrame);
 
   nsresult ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsIFrame*        aParentFrame,
                                    nsIStyleContext* aStyleContext,
+                                   nsAbsoluteItems& aAbsoluteItems,
                                    nsIFrame*&       aNewFrame);
+
+  nsresult CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
+                                     nsIContent*      aContent,
+                                     nsIFrame*        aFrame,
+                                     nsIStyleContext* aStyleContext,
+                                     nsIFrame*        aParentFrame,
+                                     nsIFrame*&       aPlaceholderFrame);
 
   nsresult ConstructFrameByTag(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
                                nsIFrame*        aParentFrame,
                                nsIAtom*         aTag,
                                nsIStyleContext* aStyleContext,
+                               nsAbsoluteItems& aAbsoluteItems,
                                nsIFrame*&       aNewFrame);
 
-  nsresult ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
-                                       const nsStyleDisplay*  aDisplay,
-                                       nsIContent*      aContent,
-                                       nsIFrame*        aParentFrame,
-                                       nsIStyleContext* aStyleContext,
-                                       nsIFrame*&       aNewFrame);
+  nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
+                                       const nsStyleDisplay* aDisplay,
+                                       nsIContent*           aContent,
+                                       nsIFrame*             aParentFrame,
+                                       nsIStyleContext*      aStyleContext,
+                                       nsAbsoluteItems&      aAbsoluteItems,
+                                       nsIFrame*&            aNewFrame);
 
   nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
                                   PRUint8    aChildDisplayType,
                                   nsIFrame*& aNewParentFrame);
 
 
-  nsresult ProcessChildren(nsIPresContext* aPresContext,
-                           nsIFrame*       aFrame,
-                           nsIContent*     aContent,
-                           nsIFrame*&      aChildList);
+  nsresult ProcessChildren(nsIPresContext*  aPresContext,
+                           nsIContent*      aContent,
+                           nsIFrame*        aFrame,
+                           nsAbsoluteItems& aAbsoluteItems,
+                           nsIFrame*&       aChildList);
 
   nsresult CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame);
 
@@ -385,6 +442,9 @@ protected:
 
   nsIFrame* GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
                         nsIContent* aContent);
+
+  nsIFrame* GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame);
 
 protected:
   PRUint32 mInHeap : 1;
@@ -397,6 +457,7 @@ protected:
   HTMLAnchorRule*     mActiveRule;
   nsHashtable         mAttrTable;
   nsIHTMLAttributes*  mRecycledAttrs;
+  nsIFrame*           mInitialContainingBlock;
 };
 
 
@@ -443,7 +504,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
     mActiveRule(nsnull),
-    mRecycledAttrs(nsnull)
+    mRecycledAttrs(nsnull),
+    mInitialContainingBlock(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -931,11 +993,23 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
 
 }
 
+/**
+ * Request to process the child content elements and create frames.
+ *
+ * @param   aContent the content object whose child elements to process
+ * @param   aFrame the the associated with aContent. This will be the
+ *            parent frame (both content and geometric) for the flowed
+ *            child frames
+ * @param   aState the state information associated with the current process
+ * @param   aChildList an OUT parameter. This is the list of flowed child
+ *            frames that should go in the principal child list
+ */
 nsresult
-HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
-                                    nsIFrame*       aFrame,
-                                    nsIContent*     aContent,
-                                    nsIFrame*&      aChildList)
+HTMLStyleSheetImpl::ProcessChildren(nsIPresContext*  aPresContext,
+                                    nsIContent*      aContent,
+                                    nsIFrame*        aFrame,
+                                    nsAbsoluteItems& aAbsoluteItems,
+                                    nsIFrame*&       aChildList)
 {
   // Initialize OUT parameter
   aChildList = nsnull;
@@ -943,6 +1017,7 @@ HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
   // Iterate the child content objects and construct a frame
   nsIFrame* lastChildFrame = nsnull;
   PRInt32   count;
+
   aContent->ChildCount(count);
   for (PRInt32 i = 0; i < count; i++) {
     nsIContent* childContent;
@@ -952,19 +1027,18 @@ HTMLStyleSheetImpl::ProcessChildren(nsIPresContext* aPresContext,
       nsIFrame* childFrame;
 
       // Construct a child frame
-      ConstructFrame(aPresContext, childContent, aFrame, childFrame);
+      ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems, childFrame);
+      NS_RELEASE(childContent);
 
       if (nsnull != childFrame) {
-        // Link the frame into the child list
-        if (nsnull == lastChildFrame) {
+        // Append the child frame to the list of child frames
+        if (nsnull == aChildList) {
           aChildList = childFrame;
         } else {
           lastChildFrame->SetNextSibling(childFrame);
         }
         lastChildFrame = childFrame;
       }
-
-      NS_RELEASE(childContent);
     }
   }
 
@@ -1024,6 +1098,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,
                                         nsIFrame*        aParentFrame,
                                         nsIStyleContext* aStyleContext,
+                                        nsAbsoluteItems& aAbsoluteItems,
                                         nsIFrame*&       aNewFrame)
 {
   nsIFrame* childList;
@@ -1037,7 +1112,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned
-  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+  aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame, aStyleContext);
   nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                            aStyleContext, PR_FALSE);
 
@@ -1052,7 +1127,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
                                                 nsHTMLAtoms::tablePseudo,
                                                 aStyleContext);
   */
-  innerFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
+  innerFrame->Init(*aPresContext, aContent, aNewFrame, aNewFrame, aStyleContext);
   // this should be "innerTableStyleContext" but I haven't tested that thoroughly yet
 
   // Iterate the child content
@@ -1080,10 +1155,12 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         // Have we already created a caption? If so, ignore this caption
         if (nsnull == captionFrame) {
           NS_NewAreaFrame(captionFrame, NS_BODY_NO_AUTO_MARGINS);
-          captionFrame->Init(*aPresContext, childContent, aNewFrame, childStyleContext);
+          captionFrame->Init(*aPresContext, childContent, aNewFrame,
+                             aNewFrame, childStyleContext);
           // Process the caption's child content and set the initial child list
           nsIFrame* captionChildList;
-          ProcessChildren(aPresContext, captionFrame, childContent, captionChildList);
+          ProcessChildren(aPresContext, childContent, captionFrame,
+                          aAbsoluteItems, captionChildList);
           captionFrame->SetInitialChildList(*aPresContext, nsnull, captionChildList);
 
           // Prepend the caption frame to the outer frame's child list
@@ -1095,7 +1172,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
       case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
         NS_NewTableRowGroupFrame(frame);
-        frame->Init(*aPresContext, childContent, innerFrame, childStyleContext);
+        frame->Init(*aPresContext, childContent, innerFrame, innerFrame,
+                    childStyleContext);
         break;
 
       case NS_STYLE_DISPLAY_TABLE_ROW:
@@ -1112,12 +1190,13 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         NS_NewTableRowGroupFrame(frame);
         NS_RELEASE(childStyleContext); // we can't use this resolved style, so get rid of it
         childStyleContext = rowGroupStyleContext;  // the row group style context will get set to childStyleContext after the switch ends.
-        frame->Init(*aPresContext, childContent, innerFrame, childStyleContext);
+        frame->Init(*aPresContext, childContent, innerFrame,
+                    innerFrame, childStyleContext);
         // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
         rowStyleContext = aPresContext->ResolveStyleContextFor(childContent, rowGroupStyleContext);
         nsIFrame *rowFrame;
         NS_NewTableRowFrame(rowFrame);
-        rowFrame->Init(*aPresContext, childContent, frame, rowStyleContext); 
+        rowFrame->Init(*aPresContext, childContent, frame, frame, rowStyleContext); 
         rowFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
         grandChildList = rowFrame;
         break;
@@ -1163,12 +1242,12 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         NS_NewTableColGroupFrame(frame);
         NS_RELEASE(childStyleContext);  // we can't use this resolved style, so get rid of it
         childStyleContext = colGroupStyleContext;  // the col group style context will get set to childStyleContext after the switch ends.
-        frame->Init(*aPresContext, childContent, innerFrame, childStyleContext);
+        frame->Init(*aPresContext, childContent, innerFrame, innerFrame, childStyleContext);
         // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
         colStyleContext = aPresContext->ResolveStyleContextFor(childContent, colGroupStyleContext);
         nsIFrame *colFrame;
         NS_NewTableColFrame(colFrame);
-        colFrame->Init(*aPresContext, childContent, frame, colStyleContext); 
+        colFrame->Init(*aPresContext, childContent, frame, frame, colStyleContext); 
         colFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
         grandChildList = colFrame;
         break;
@@ -1176,7 +1255,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
 
       case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
         NS_NewTableColGroupFrame(frame);
-        frame->Init(*aPresContext, childContent, innerFrame, childStyleContext);
+        frame->Init(*aPresContext, childContent, innerFrame, innerFrame, childStyleContext);
         break;
 
       default:
@@ -1190,14 +1269,13 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       if (nsnull != frame) {
         // Process the children, and set the frame's initial child list
         nsIFrame* childChildList;
-        if (nsnull==grandChildList)
-        {
-          ProcessChildren(aPresContext, frame, childContent, childChildList);
+        if (nsnull==grandChildList) {
+          ProcessChildren(aPresContext, childContent, frame, aAbsoluteItems,
+                          childChildList);
           grandChildList = childChildList;
-        }
-        else
-        {
-          ProcessChildren(aPresContext, grandChildList, childContent, childChildList);
+        } else {
+          ProcessChildren(aPresContext, childContent, grandChildList,
+                          aAbsoluteItems, childChildList);
           grandChildList->SetInitialChildList(*aPresContext, nsnull, childChildList);
         }
         frame->SetInitialChildList(*aPresContext, nsnull, grandChildList);
@@ -1229,6 +1307,7 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
                                             nsIContent*      aContent,
                                             nsIFrame*        aParentFrame,
                                             nsIStyleContext* aStyleContext,
+                                            nsAbsoluteItems& aAbsoluteItems,
                                             nsIFrame*&       aNewFrame)
 {
   nsresult  rv;
@@ -1237,7 +1316,7 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
   rv = NS_NewTableCellFrame(aNewFrame);
   if (NS_SUCCEEDED(rv)) {
     // Initialize the table cell frame
-    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame, aStyleContext);
 
     // Create an area frame that will format the cell's content
     nsIFrame*   cellBodyFrame;
@@ -1252,12 +1331,13 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
     // Resolve pseudo style and initialize the body cell frame
     nsIStyleContext*  bodyPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
                                           nsHTMLAtoms::cellContentPseudo, aStyleContext);
-    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, bodyPseudoStyle);
+    cellBodyFrame->Init(*aPresContext, aContent, aNewFrame, aNewFrame, bodyPseudoStyle);
     NS_RELEASE(bodyPseudoStyle);
 
     // Process children and set the body cell frame's initial child list
     nsIFrame* childList;
-    rv = ProcessChildren(aPresContext, cellBodyFrame, aContent, childList);
+    rv = ProcessChildren(aPresContext, aContent, cellBodyFrame, aAbsoluteItems,
+                         childList);
     if (NS_SUCCEEDED(rv)) {
       cellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childList);
     }
@@ -1286,11 +1366,13 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // the root frame.
     // XXX We only need the scroll frame if it's print preview...
     NS_NewScrollFrame(scrollFrame);
-    scrollFrame->Init(*aPresContext, nsnull, aRootFrame, aRootStyleContext);
+    scrollFrame->Init(*aPresContext, nsnull, aRootFrame, aRootFrame,
+                      aRootStyleContext);
 
     // The page sequence frame needs a view, because it's a scrolled frame
     NS_NewSimplePageSequenceFrame(pageSequenceFrame);
-    pageSequenceFrame->Init(*aPresContext, nsnull, scrollFrame, aRootStyleContext);
+    pageSequenceFrame->Init(*aPresContext, nsnull, scrollFrame, scrollFrame,
+                            aRootStyleContext);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
                                              aRootStyleContext, PR_TRUE);
 
@@ -1301,7 +1383,8 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // Initialize the page and force it to have a view. This makes printing of
     // the pages easier and faster.
     // XXX Use a PAGE style context...
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, aRootStyleContext);
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, pageSequenceFrame,
+                    aRootStyleContext);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
                                              aRootStyleContext, PR_TRUE);
 
@@ -1309,20 +1392,28 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     nsIStyleContext*  styleContext;
     styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aRootStyleContext);
 
-    // Create an area frame for the document element. This serves as the
-    // "initial containing block"
+    // Create an area frame for the document element
     nsIFrame* areaFrame;
 
     NS_NewAreaFrame(areaFrame, 0);
-    areaFrame->Init(*aPresContext, aDocElement, pageFrame, styleContext);
+    areaFrame->Init(*aPresContext, aDocElement, pageFrame, pageFrame, styleContext);
     NS_RELEASE(styleContext);
 
+    // The area frame is the "initial containing block"
+    mInitialContainingBlock = areaFrame;
+
     // Process the child content
-    nsIFrame* childList = nsnull;
-    ProcessChildren(aPresContext, areaFrame, aDocElement, childList);
+    nsAbsoluteItems  absoluteItems(areaFrame);
+    nsIFrame*        childList;
+
+    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems, childList);
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    if (nsnull != absoluteItems.childList) {
+      areaFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                     absoluteItems.childList);
+    }
     pageFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
     pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
     scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
@@ -1363,7 +1454,8 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
   
     if (NS_STYLE_OVERFLOW_HIDDEN != scrolling) {
       NS_NewScrollFrame(scrollFrame);
-      scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, styleContext);
+      scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, aRootFrame,
+                        styleContext);
   
       // The scrolled frame gets a pseudo element style context
       nsIStyleContext*  scrolledPseudoStyle =
@@ -1381,18 +1473,28 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
     NS_NewAreaFrame(areaFrame, NS_BODY_THE_BODY);
-    areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
-                    aRootFrame, styleContext);
+    nsIFrame* parentFrame = scrollFrame ? scrollFrame : aRootFrame;
+    areaFrame->Init(*aPresContext, aDocElement, parentFrame, parentFrame,
+                    styleContext);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
     NS_RELEASE(styleContext);
+
+    // The area frame is the "initial containing block"
+    mInitialContainingBlock = areaFrame;
     
     // Process the child content
-    nsIFrame* childList = nsnull;
-    ProcessChildren(aPresContext, areaFrame, aDocElement, childList);
+    nsAbsoluteItems  absoluteItems(areaFrame);
+    nsIFrame*        childList;
+
+    ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems, childList);
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    if (nsnull != absoluteItems.childList) {
+      areaFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                     absoluteItems.childList);
+    }
     if (nsnull != scrollFrame) {
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
     }
@@ -1403,7 +1505,7 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
                                        nsIContent*     aDocElement,
                                        nsIFrame*&      aNewFrame)
@@ -1431,7 +1533,7 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
                       nsHTMLAtoms::rootPseudo, nsnull);
 
   // Initialize the root frame. It has a NULL content object
-  rootFrame->Init(*aPresContext, nsnull, nsnull, rootPseudoStyle);
+  rootFrame->Init(*aPresContext, nsnull, nsnull, nsnull, rootPseudoStyle);
 
   // Bind the root frame to the root view
   nsIPresShell*   presShell = aPresContext->GetShell();
@@ -1443,7 +1545,7 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
   rootFrame->SetView(rootView);
   NS_RELEASE(viewManager);
   
-  // Create frames for the document element and its child content
+  // Create frames for the document element and its child elements
   nsIFrame* docElementFrame;
   ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
                            rootPseudoStyle, docElementFrame);
@@ -1457,15 +1559,50 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
 }
 
 nsresult
+HTMLStyleSheetImpl::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
+                                              nsIContent*      aContent,
+                                              nsIFrame*        aFrame,
+                                              nsIStyleContext* aStyleContext,
+                                              nsIFrame*        aParentFrame,
+                                              nsIFrame*&       aPlaceholderFrame)
+{
+  nsIFrame* placeholderFrame;
+  nsresult  rv;
+
+  rv = NS_NewEmptyFrame(&placeholderFrame);
+
+  if (NS_SUCCEEDED(rv)) {
+    // The placeholder frame gets a pseudo style context
+    nsIStyleContext*  placeholderPseudoStyle =
+      aPresContext->ResolvePseudoStyleContextFor(aContent,
+                      nsHTMLAtoms::placeholderPseudo, aStyleContext);
+    placeholderFrame->Init(*aPresContext, aContent, aParentFrame,
+                           aParentFrame, placeholderPseudoStyle);
+    NS_RELEASE(placeholderPseudoStyle);
+  
+    // Add mapping from absolutely positioned frame to its placeholder frame
+    nsIPresShell* presShell = aPresContext->GetShell();
+    presShell->SetPlaceholderFrameFor(aFrame, placeholderFrame);
+    NS_RELEASE(presShell);
+  
+    aPlaceholderFrame = placeholderFrame;
+  }
+
+  return rv;
+}
+
+nsresult
 HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,
                                         nsIFrame*        aParentFrame,
                                         nsIAtom*         aTag,
                                         nsIStyleContext* aStyleContext,
+                                        nsAbsoluteItems& aAbsoluteItems,
                                         nsIFrame*&       aNewFrame)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
+  PRBool    isAbsolutelyPositioned = PR_FALSE;
 
   // Initialize OUT parameter
   aNewFrame = nsnull;
@@ -1475,8 +1612,18 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   }
   else {
     nsIHTMLContent *htmlContent;
+
+    // Ignore the tag if it's not HTML content
     rv = aContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
     if (NS_SUCCEEDED(rv)) {
+      // See if the element is absolutely positioned
+      const nsStylePosition* position = (const nsStylePosition*)
+        aStyleContext->GetStyleData(eStyleStruct_Position);
+      if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+        isAbsolutelyPositioned = PR_TRUE;
+      }
+
+      // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
         rv = NS_NewImageFrame(aNewFrame);
       }
@@ -1511,13 +1658,15 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (nsHTMLAtoms::legend == aTag) {
         rv = NS_NewLegendFrame(aNewFrame);
         processChildren = PR_TRUE;
+        isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::object == aTag) {
         rv = NS_NewObjectFrame(aNewFrame);
         //rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
         nsIFrame *blockFrame;
         NS_NewBlockFrame(blockFrame, 0);
-        blockFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
+        blockFrame->Init(*aPresContext, aContent, aNewFrame, aNewFrame,
+                         aStyleContext);
         aNewFrame = blockFrame;
         processChildren = PR_TRUE;
       }
@@ -1526,12 +1675,14 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::frameset == aTag) {
         rv = NS_NewHTMLFramesetFrame(aNewFrame);
+        isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::iframe == aTag) {
         rv = NS_NewHTMLFrameOuterFrame(aNewFrame);
       }
       else if (nsHTMLAtoms::spacer == aTag) {
         rv = NS_NewSpacerFrame(aNewFrame);
+        isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::button == aTag) {
         rv = NS_NewHTMLButtonControlFrame(aNewFrame);
@@ -1543,16 +1694,15 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       NS_RELEASE(htmlContent);
     }
-    else {
-      aNewFrame = nsnull;
-      rv = NS_OK;
-    }
   }
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
-    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
+    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                         aParentFrame;
+    aNewFrame->Init(*aPresContext, aContent, geometricParent, aParentFrame,
+                    aStyleContext);
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
@@ -1561,11 +1711,27 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
     // Process the child content if requested
     nsIFrame* childList = nsnull;
     if (processChildren) {
-      rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
+      rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
+                           childList);
     }
 
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+
+    // If the frame is absolutely positioned then create a placeholder frame
+    if (isAbsolutelyPositioned) {
+      nsIFrame* placeholderFrame;
+
+      CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                aParentFrame, placeholderFrame);
+
+      // Add the absolutely positioned frame to its containing block's list
+      // of child frames
+      aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+      // Add the placeholder frame to the flow
+      aNewFrame = placeholderFrame;
+    }
   }
 
   return rv;
@@ -1577,143 +1743,264 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
                                                 nsIContent*           aContent,
                                                 nsIFrame*             aParentFrame,
                                                 nsIStyleContext*      aStyleContext,
+                                                nsAbsoluteItems&      aAbsoluteItems,
                                                 nsIFrame*&            aNewFrame)
 {
-  PRBool    processChildren = PR_FALSE;  // whether we should process child content
-  nsIFrame* wrapperFrame = nsnull;
-  nsresult  rv = NS_OK;
+  const nsStylePosition* position = (const nsStylePosition*)
+                           aStyleContext->GetStyleData(eStyleStruct_Position);
+  PRBool                 isAbsolutelyPositioned = PR_FALSE;
+  PRBool                 isBlock = aDisplay->IsBlockLevel();
+  nsresult               rv = NS_OK;
 
   // Initialize OUT parameter
   aNewFrame = nsnull;
 
-  // If the element is floated and it's a block or inline, then we need to
-  // wrap it in a area frame
-  if (((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
-       (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay)) &&
-      (NS_STYLE_FLOAT_NONE != aDisplay->mFloats)) {
-
-    // The area wrapper frame gets the original style context
-    NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
-    wrapperFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
-                                             aStyleContext, PR_FALSE);
-
-    // The wrapped frame gets a pseudo style context that inherits the
-    // display property
-    nsIStyleContext*  wrappedPseudoStyle;
-    wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                          nsHTMLAtoms::wrappedFramePseudo, aStyleContext);
-    aParentFrame = wrapperFrame;
-    aStyleContext = wrappedPseudoStyle;
+  // The frame is also a block if it's an inline frame that's floated or
+  // absolutely positioned
+  if ((NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) &&
+      ((NS_STYLE_FLOAT_NONE != aDisplay->mFloats) ||
+       (NS_STYLE_POSITION_ABSOLUTE == position->mPosition))) {
+    isBlock = PR_TRUE;
   }
 
-  switch (aDisplay->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-  case NS_STYLE_DISPLAY_RUN_IN:
-  case NS_STYLE_DISPLAY_COMPACT:
-    rv = NS_NewBlockFrame(aNewFrame, 0);
-    processChildren = PR_TRUE;
-    break;
+  // If the frame is a block-level frame and is scrollable then wrap it
+  // in a scroll frame.
+  // XXX Applies to replaced elements, too, but how to tell if the element
+  // is replaced?
+  // XXX Ignore tables for the time being
+  if ((isBlock && (aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE)) &&
+      IsScrollable(aPresContext, aDisplay)) {
 
-  case NS_STYLE_DISPLAY_INLINE:
-    rv = NS_NewInlineFrame(aNewFrame);
-    processChildren = PR_TRUE;
-    break;
+    // See if it's absolutely positioned
+    isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
 
-  case NS_STYLE_DISPLAY_TABLE:
-    rv = ConstructTableFrame(aPresContext, aContent, aParentFrame,
-                             aStyleContext, aNewFrame);
-    // Note: table construction function takes care of initializing the frame,
-    // processing children, and setting the initial child list
-    return rv;
+    // Create a scroll frame
+    nsIFrame* scrollFrame;
+    NS_NewScrollFrame(scrollFrame);
 
-  case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
-  case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
-  case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
-    // XXX We should check for being inside of a table. If there's a missing
-    // table then create an anonynmous table frame
-    // XXX: see ConstructTableFrame for a prototype of how this should be done,
-    //      and propagate similar logic to other table elements
-    {
-      nsIFrame *parentFrame;
-      rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
-      if (NS_SUCCEEDED(rv))
-      {
-        rv = NS_NewTableRowGroupFrame(aNewFrame);
-        processChildren = PR_TRUE;
+    // Initialize it
+    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                         aParentFrame;
+    scrollFrame->Init(*aPresContext, aContent, geometricParent, aParentFrame,
+                      aStyleContext);
+
+    // The scroll frame gets the original style context, and the scrolled
+    // frame gets a SCROLLED-CONTENT pseudo element style context that
+    // inherits the background properties
+    nsIStyleContext*  scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                        (aContent, nsHTMLAtoms::scrolledContentPseudo, aStyleContext);
+
+    // Create an area container for the frame
+    nsIFrame* scrolledFrame;
+    NS_NewAreaFrame(scrolledFrame, NS_BODY_SHRINK_WRAP);
+
+    // Initialize the frame and force it to have a view
+    scrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrollFrame,
+                       scrolledPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, scrolledFrame,
+                                             scrolledPseudoStyle, PR_TRUE);
+    NS_RELEASE(scrolledPseudoStyle);
+
+    // Process children
+    if (isAbsolutelyPositioned) {
+      nsAbsoluteItems  absoluteItems(scrolledFrame);
+      nsIFrame*        childList;
+      ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
+                      childList);
+  
+      // Set the initial child lists
+      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+      if (nsnull != absoluteItems.childList) {
+        scrolledFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                           absoluteItems.childList);
       }
+
+    } else {
+      nsIFrame* childList;
+      ProcessChildren(aPresContext, aContent, scrolledFrame, aAbsoluteItems,
+                      childList);
+  
+      // Set the initial child lists
+      scrolledFrame->SetInitialChildList(*aPresContext, nsnull, childList);
     }
-    break;
+    scrollFrame->SetInitialChildList(*aPresContext, nsnull, scrolledFrame);
+    aNewFrame = scrollFrame;
 
-  case NS_STYLE_DISPLAY_TABLE_COLUMN:
-    // XXX We should check for being inside of a table column group...
-    rv = NS_NewTableColFrame(aNewFrame);
-    processChildren = PR_TRUE;
-    break;
+  // See if the frame is absolutely positioned
+  } else if ((NS_STYLE_POSITION_ABSOLUTE == position->mPosition) &&
+             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+              (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
+              (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
 
-  case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
-    // XXX We should check for being inside of a table...
-    {
-      nsIFrame *parentFrame;
-      rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
-      if (NS_SUCCEEDED(rv))
-      {
-        rv = NS_NewTableColGroupFrame(aNewFrame);
-        processChildren = PR_TRUE;
-      }
-    }
-    break;
+    isAbsolutelyPositioned = PR_TRUE;
 
-  case NS_STYLE_DISPLAY_TABLE_ROW:
-    // XXX We should check for being inside of a table row group...
-    rv = NS_NewTableRowFrame(aNewFrame);
-    processChildren = PR_TRUE;
-    break;
+    // Create an area frame
+    NS_NewAreaFrame(aNewFrame, NS_BODY_SHRINK_WRAP);
+    aNewFrame->Init(*aPresContext, aContent, aAbsoluteItems.containingBlock,
+                    aParentFrame, aStyleContext);
 
-  case NS_STYLE_DISPLAY_TABLE_CELL:
-    // XXX We should check for being inside of a table row frame...
-    rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame,
-                                 aStyleContext, aNewFrame);
-    // Note: table construction function takes care of initializing the frame,
-    // processing children, and setting the initial child list
-    return rv;
-
-  case NS_STYLE_DISPLAY_TABLE_CAPTION:
-    // XXX We should check for being inside of a table row frame...
-    rv = NS_NewAreaFrame(aNewFrame, NS_BODY_NO_AUTO_MARGINS);
-    processChildren = PR_TRUE;
-    break;
-
-  default:
-    // Don't create any frame for content that's not displayed...
-    break;
-  }
-
-  // If we succeeded in creating a frame then initialize the frame,
-  // process children (if requested), and initialize the frame
-  if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
-    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
-
-    // See if we need to create a view, e.g. the frame is absolutely positioned
+    // Create a view
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                              aStyleContext, PR_FALSE);
 
-    // Process the child content if requested
-    nsIFrame* childList = nsnull;
-    if (processChildren) {
-      rv = ProcessChildren(aPresContext, aNewFrame, aContent, childList);
-    }
+    // Process the child content
+    nsAbsoluteItems  absoluteItems(aNewFrame);
+    nsIFrame*        childList = nsnull;
+    ProcessChildren(aPresContext, aContent, aNewFrame, absoluteItems, childList);
 
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    if (nsnull != absoluteItems.childList) {
+      aNewFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
+                                     absoluteItems.childList);
+    }
+
+  // See if the frame is floated, and it's a block or inline frame
+  } else if ((NS_STYLE_FLOAT_NONE != aDisplay->mFloats) &&
+             ((NS_STYLE_DISPLAY_BLOCK == aDisplay->mDisplay) ||
+              (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
+              (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
+
+    // Create an area frame
+    NS_NewAreaFrame(aNewFrame, NS_BODY_SHRINK_WRAP);
+
+    // Initialize the frame
+    aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame,
+                    aStyleContext);
+
+    // See if we need to create a view
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Process the child content
+    nsIFrame* childList = nsnull;
+    ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems, childList);
+
+    // Set the frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+
+  } else {
+    PRBool  processChildren = PR_FALSE;  // whether we should process child content
+
+    // Use the 'display' property to chose a frame type
+    switch (aDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_BLOCK:
+    case NS_STYLE_DISPLAY_LIST_ITEM:
+    case NS_STYLE_DISPLAY_RUN_IN:
+    case NS_STYLE_DISPLAY_COMPACT:
+      rv = NS_NewBlockFrame(aNewFrame, 0);
+      processChildren = PR_TRUE;
+      break;
+  
+    case NS_STYLE_DISPLAY_INLINE:
+      rv = NS_NewInlineFrame(aNewFrame);
+      processChildren = PR_TRUE;
+      break;
+  
+    case NS_STYLE_DISPLAY_TABLE:
+      rv = ConstructTableFrame(aPresContext, aContent, aParentFrame, aStyleContext,
+                               aAbsoluteItems, aNewFrame);
+      // Note: table construction function takes care of initializing the frame,
+      // processing children, and setting the initial child list
+      return rv;
+  
+    case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+      // XXX We should check for being inside of a table. If there's a missing
+      // table then create an anonynmous table frame
+      // XXX: see ConstructTableFrame for a prototype of how this should be done,
+      //      and propagate similar logic to other table elements
+      {
+        nsIFrame *parentFrame;
+        rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = NS_NewTableRowGroupFrame(aNewFrame);
+          processChildren = PR_TRUE;
+        }
+      }
+      break;
+  
+    case NS_STYLE_DISPLAY_TABLE_COLUMN:
+      // XXX We should check for being inside of a table column group...
+      rv = NS_NewTableColFrame(aNewFrame);
+      processChildren = PR_TRUE;
+      break;
+  
+    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+      // XXX We should check for being inside of a table...
+      {
+        nsIFrame *parentFrame;
+        rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
+        if (NS_SUCCEEDED(rv))
+        {
+          rv = NS_NewTableColGroupFrame(aNewFrame);
+          processChildren = PR_TRUE;
+        }
+      }
+      break;
+  
+    case NS_STYLE_DISPLAY_TABLE_ROW:
+      // XXX We should check for being inside of a table row group...
+      rv = NS_NewTableRowFrame(aNewFrame);
+      processChildren = PR_TRUE;
+      break;
+  
+    case NS_STYLE_DISPLAY_TABLE_CELL:
+      // XXX We should check for being inside of a table row frame...
+      rv = ConstructTableCellFrame(aPresContext, aContent, aParentFrame,
+                                   aStyleContext, aAbsoluteItems, aNewFrame);
+      // Note: table construction function takes care of initializing the frame,
+      // processing children, and setting the initial child list
+      return rv;
+  
+    case NS_STYLE_DISPLAY_TABLE_CAPTION:
+      // XXX We should check for being inside of a table row frame...
+      rv = NS_NewAreaFrame(aNewFrame, NS_BODY_NO_AUTO_MARGINS);
+      processChildren = PR_TRUE;
+      break;
+  
+    default:
+      // Don't create any frame for content that's not displayed...
+      break;
+    }
+
+    // If we succeeded in creating a frame then initialize the frame and
+    // process children if requested
+    if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
+      aNewFrame->Init(*aPresContext, aContent, aParentFrame, aParentFrame,
+                      aStyleContext);
+
+      // See if we need to create a view, e.g. the frame is absolutely positioned
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                               aStyleContext, PR_FALSE);
+
+      // Process the child content if requested
+      nsIFrame* childList = nsnull;
+      if (processChildren) {
+        rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
+                             childList);
+      }
+
+      // Set the frame's initial child list
+      aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+    }
   }
 
-  // If there's a wrapper frame then set its initial child list, and return the
-  // wrapper frame as the new frame
-  if (nsnull != wrapperFrame) {
-    wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aNewFrame);
-    aNewFrame = wrapperFrame;
+  // If the frame is absolutely positioned then create a placeholder frame
+  if (isAbsolutelyPositioned) {
+    nsIFrame* placeholderFrame;
+
+    CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                              aParentFrame, placeholderFrame);
+
+    // Add the absolutely positioned frame to its containing block's list
+    // of child frames
+    aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+    // Add the placeholder frame to the flow
+    aNewFrame = placeholderFrame;
   }
 
   return rv;
@@ -1787,177 +2074,69 @@ HTMLStyleSheetImpl::IsScrollable(nsIPresContext*       aPresContext,
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsIFrame*        aParentFrame,
+                                   nsAbsoluteItems& aAbsoluteItems,
                                    nsIFrame*&       aFrameSubTree)
 {
+  NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
+
   nsresult  rv;
 
   // Initialize OUT paremeter
   aFrameSubTree = nsnull;
 
-  // See if we're constructing a frame for the document element
-  if (nsnull == aParentFrame) {
-    // The root frame has only a single child frame, which is the frame for
-    // the document element
-    rv = ConstructRootFrame(aPresContext, aContent, aFrameSubTree);
+  // Get the element's tag
+  nsIAtom*  tag;
+  aContent->GetTag(tag);
 
+  // Resolve the style context based on the content object and the parent
+  // style context
+  nsIStyleContext* styleContext;
+  nsIStyleContext* parentStyleContext;
+
+  aParentFrame->GetStyleContext(parentStyleContext);
+  if (nsnull == tag) {
+    // Use a special pseudo element style context for text
+    nsIContent* parentContent = nsnull;
+    if (nsnull != aParentFrame) {
+      aParentFrame->GetContent(parentContent);
+    }
+    styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
+                                                              nsHTMLAtoms::textPseudo, 
+                                                              parentStyleContext);
+    rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    NS_IF_RELEASE(parentContent);
   } else {
-    // Get the element's tag
-    nsIAtom*  tag;
-    aContent->GetTag(tag);
-  
-    // Resolve the style context based on the content object and the parent
-    // style context
-    nsIStyleContext* styleContext;
-    nsIStyleContext* parentStyleContext;
+    styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
+    rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+  }
+  NS_IF_RELEASE(parentStyleContext);
 
-    aParentFrame->GetStyleContext(parentStyleContext);
-    if (nsnull == tag) {
-      // Use a special pseudo element style context for text
-      nsIContent* parentContent = nsnull;
-      if (nsnull != aParentFrame) {
-        aParentFrame->GetContent(parentContent);
+  if (NS_SUCCEEDED(rv)) {
+    // Pre-check for display "none" - if we find that, don't create
+    // any frame at all
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      styleContext->GetStyleData(eStyleStruct_Display);
+
+    if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
+      // Handle specific frame types
+      rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame, tag,
+                               styleContext, aAbsoluteItems, aFrameSubTree);
+
+      if (NS_SUCCEEDED(rv) && (nsnull == aFrameSubTree)) {
+        // When there is no explicit frame to create, assume it's a
+        // container and let display style dictate the rest
+        rv = ConstructFrameByDisplayType(aPresContext, display, aContent, aParentFrame,
+                                         styleContext, aAbsoluteItems, aFrameSubTree);
       }
-      styleContext = aPresContext->ResolvePseudoStyleContextFor(parentContent, 
-                                                                nsHTMLAtoms::textPseudo, 
-                                                                parentStyleContext);
-      rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-      NS_IF_RELEASE(parentContent);
-    } else {
-      styleContext = aPresContext->ResolveStyleContextFor(aContent, parentStyleContext);
-      rv = (nsnull == styleContext) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
-    NS_IF_RELEASE(parentStyleContext);
-
-    if (NS_SUCCEEDED(rv)) {
-      // Pre-check for display "none" - if we find that, don't create
-      // any frame at all
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        styleContext->GetStyleData(eStyleStruct_Display);
-
-      if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
-        // If the frame is a block-level frame and is scrollable then wrap it
-        // in a scroll frame.
-        // XXX Applies to replaced elements, too, but how to tell if the element
-        // is replaced?
-        nsIFrame* scrollFrame = nsnull;
-        nsIFrame* wrapperFrame = nsnull;
-
-        if ((display->mDisplay!=NS_STYLE_DISPLAY_TABLE) && display->IsBlockLevel() &&
-            IsScrollable(aPresContext, display)) {
-
-          // Create a scroll frame which will wrap the frame that needs to
-          // be scrolled
-          if (NS_SUCCEEDED(NS_NewScrollFrame(scrollFrame))) {
-            nsIStyleContext*  scrolledPseudoStyle;
-            
-            // The scroll frame gets the original style context, and the scrolled
-            // frame gets a SCROLLED-CONTENT pseudo element style context that
-            // inherits the background properties
-            scrollFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
-            scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                    (aContent, nsHTMLAtoms::scrolledContentPseudo,
-                                     styleContext);
-            NS_RELEASE(styleContext);
-            
-            // If the content element can contain children then wrap it in a
-            // area frame
-            PRBool  isContainer;
-            aContent->CanContainChildren(isContainer);
-            if (isContainer) {
-              NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
-
-              // Initialize the frame and force it to have a view
-              wrapperFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle);
-              nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
-                                                       scrolledPseudoStyle, PR_TRUE);
-
-              // The wrapped frame also gets a pseudo style context, but it doesn't
-              // inherit any background properties. It does inherit the 'display'
-              // property (it's very important that it does)
-              nsIStyleContext*  wrappedPseudoStyle;
-              wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                     (aContent, nsHTMLAtoms::wrappedFramePseudo,
-                                      scrolledPseudoStyle);
-              NS_RELEASE(scrolledPseudoStyle);
-              aParentFrame = wrapperFrame;
-              styleContext = wrappedPseudoStyle;
-
-            } else {
-              aParentFrame = scrollFrame;
-              styleContext = scrolledPseudoStyle;
-            }
-          }
-        }
-  
-        // See if the element is absolutely positioned
-        const nsStylePosition* position = (const nsStylePosition*)
-          styleContext->GetStyleData(eStyleStruct_Position);
-  
-        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-          // If it can contain children then wrap it in an area frame.
-          // XxX Don't wrap tables, because that causes all sort of problems.
-          // We need to figure out how to wrap tables...
-          PRBool  isContainer;
-          aContent->CanContainChildren(isContainer);
-
-          if ((NS_STYLE_DISPLAY_TABLE != display->mDisplay) && isContainer) {
-            // The area wrapper frame gets the original style context
-            NS_NewAreaFrame(wrapperFrame, NS_BODY_SHRINK_WRAP);
-            wrapperFrame->Init(*aPresContext, aContent, aParentFrame, styleContext);
-            nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
-                                                     styleContext, PR_FALSE);
-
-            // The wrapped frame gets a pseudo style context that inherits the
-            // display property
-            nsIStyleContext*  wrappedPseudoStyle;
-            wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                                  nsHTMLAtoms::wrappedFramePseudo, styleContext);
-            NS_RELEASE(styleContext);
-            aParentFrame = wrapperFrame;
-            styleContext = wrappedPseudoStyle;
-          }
-        }
-
-        // Handle specific frame types
-        rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame,
-                                 tag, styleContext, aFrameSubTree);
-
-        if (NS_SUCCEEDED(rv) && (nsnull == aFrameSubTree)) {
-          // When there is no explicit frame to create, assume it's a
-          // container and let display style dictate the rest
-          rv = ConstructFrameByDisplayType(aPresContext, display,
-                                           aContent, aParentFrame,
-                                           styleContext, aFrameSubTree);
-        }
-
-        // If there's a scroll frame or a wrapper frame then set their initial
-        // child lists, and return that frame as the frame sub-tree.
-        // Because SetInitialChildList() is called bottom-up we need to wait
-        // until after we've created the frame sub-tree
-        if (nsnull != scrollFrame) {
-          if (nsnull != wrapperFrame) {
-            wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
-            scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
-          } else {
-            scrollFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
-          }
-         aFrameSubTree = scrollFrame;
-
-        } else if (nsnull != wrapperFrame) {
-          wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
-          aFrameSubTree = wrapperFrame;
-        }
-      }
-      NS_RELEASE(styleContext);
-    }
-    
-    NS_IF_RELEASE(tag);
+    NS_RELEASE(styleContext);
   }
   
+  NS_IF_RELEASE(tag);
   return rv;
 }
 
@@ -2044,6 +2223,47 @@ HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresC
   return frame;
 }
 
+nsIFrame*
+HTMLStyleSheetImpl::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
+                                               nsIFrame*       aFrame)
+{
+  // For the time being just return the initial containing block
+  NS_PRECONDITION(nsnull != mInitialContainingBlock, "no initial containing block");
+  return mInitialContainingBlock;
+  
+  // XXX TROY
+#if 0
+  // Look for a containing frame that is absolutely positioned. If we don't
+  // find one then use the initial containg block which is the BODY
+  nsIFrame* lastFrame = (nsIFrame*)this;
+  nsIFrame* result;
+
+  GetContentParent(result);
+  while (nsnull != result) {
+    const nsStylePosition* position;
+
+    // Get the style data
+    result->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+    if (position->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
+      // XXX This needs cleaning up...
+      // Make sure the frame supports the nsIAbsoluteItems interface. If not,
+      // walk the geometric parent hierarchy and find the nearest one that does...
+      nsIAbsoluteItems* interface;
+      while ((nsnull != result) &&
+             NS_FAILED(result->QueryInterface(kIAbsoluteItemsIID, (void**)&interface))) {
+        result->GetGeometricParent(result);
+      }
+      break;
+    }
+
+    // Get the next contentual parent
+    lastFrame = result;
+    result->GetContentParent(result);
+  }
+#endif
+}
+
 NS_IMETHODIMP
 HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
                                     nsIContent*     aContainer,
@@ -2067,10 +2287,15 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       }
     }
 
+    // Get the containing block for absolutely positioned elements
+    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                   parentFrame);
+
     // Create some new frames
-    PRInt32   count;
-    nsIFrame* lastChildFrame = nsnull;
-    nsIFrame* firstAppendedFrame = nsnull;
+    PRInt32         count;
+    nsIFrame*       lastChildFrame = nsnull;
+    nsIFrame*       firstAppendedFrame = nsnull;
+    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
 
     aContainer->ChildCount(count);
 
@@ -2079,7 +2304,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       nsIFrame*   frame;
 
       aContainer->ChildAt(i, child);
-      ConstructFrame(aPresContext, child, parentFrame, frame);
+      ConstructFrame(aPresContext, child, parentFrame, absoluteItems, frame);
 
       if (nsnull != frame) {
         // Link the frame into the child frame list
@@ -2115,6 +2340,21 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(result)) {
         shell->AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
+      }
+
+      // If there are new absolutely positioned child frames then send a reflow
+      // command for them, too.
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (nsnull != absoluteItems.childList) {
+        result = NS_NewHTMLReflowCommand(&reflowCmd, absoluteItems.containingBlock,
+                                         nsIReflowCommand::FrameAppended,
+                                         absoluteItems.childList);
+        if (NS_SUCCEEDED(result)) {
+          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+          shell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
       }
     }
   }
@@ -2230,8 +2470,13 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
   // Construct a new frame
   nsresult  rv = NS_OK;
   if (nsnull != parentFrame) {
-    nsIFrame* newFrame;
-    rv = ConstructFrame(aPresContext, aChild, parentFrame, newFrame);
+    // Get the containing block for absolutely positioned elements
+    nsIFrame* absoluteContainingBlock = GetAbsoluteContainingBlock(aPresContext,
+                                                                   parentFrame);
+
+    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
+    nsIFrame*       newFrame;
+    rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems, newFrame);
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
       nsIReflowCommand* reflowCmd = nsnull;
@@ -2245,10 +2490,24 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
         // Generate a FrameInserted reflow command
         rv = NS_NewHTMLReflowCommand(&reflowCmd, parentFrame, newFrame, prevSibling);
       }
-
       if (NS_SUCCEEDED(rv)) {
         shell->AppendReflowCommand(reflowCmd);
         NS_RELEASE(reflowCmd);
+      }
+
+      // If there are new absolutely positioned child frames then send a reflow
+      // command for them, too.
+      // XXX We can't just assume these frames are being appended, we need to
+      // determine where in the list they should be inserted...
+      if (nsnull != absoluteItems.childList) {
+        rv = NS_NewHTMLReflowCommand(&reflowCmd, absoluteItems.containingBlock,
+                                     nsIReflowCommand::FrameAppended,
+                                     absoluteItems.childList);
+        if (NS_SUCCEEDED(rv)) {
+          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+          shell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
       }
     }
   }

@@ -80,7 +80,8 @@ public:
 
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
                   nsIContent*      aContent,
-                  nsIFrame*        aParent,
+                  nsIFrame*        aGeometricParent,
+                  nsIFrame*        aContentParent,
                   nsIStyleContext* aContext);
 
 

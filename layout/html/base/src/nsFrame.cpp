@@ -272,12 +272,14 @@ nsrefcnt nsFrame::Release(void)
 NS_IMETHODIMP
 nsFrame::Init(nsIPresContext&  aPresContext,
               nsIContent*      aContent,
-              nsIFrame*        aParent,
+              nsIFrame*        aGeometricParent,
+              nsIFrame*        aContentParent,
               nsIStyleContext* aContext)
 {
   mContent = aContent;
   NS_IF_ADDREF(mContent);
-  mGeometricParent = mContentParent = aParent;
+  mGeometricParent = aGeometricParent;
+  mContentParent = aContentParent;
   return SetStyleContext(&aPresContext, aContext);
 }
 

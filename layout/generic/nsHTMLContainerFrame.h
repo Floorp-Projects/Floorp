@@ -35,8 +35,6 @@ public:
                     nsFramePaintLayer aWhichLayer);
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
-  nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
-                                                  nsIFrame*       aAbsoluteFrame);
 
   // If the frame should be floated or absolutely positioned creates a placeholder
   // frame and returns PR_TRUE. The sibling list is modified so aFrame's next

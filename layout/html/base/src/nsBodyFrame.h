@@ -19,7 +19,6 @@
 #define nsBodyFrame_h___
 
 #include "nsBlockFrame.h"
-#include "nsIAbsoluteItems.h"
 #include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 
