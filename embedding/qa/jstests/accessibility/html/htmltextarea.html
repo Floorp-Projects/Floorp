@@ -116,7 +116,7 @@ function constructResults()
   if (varaccFocused == expectedaccFocused)  row6[3] = "PASS"; else row6[3] = "FAIL";
   if (newnumActions.match(expectednumActions)) row7[3] = "PASS"; else row7[3] = "FAIL";
 
-  appendTableResHTML();
+  appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else

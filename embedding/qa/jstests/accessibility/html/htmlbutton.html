@@ -131,7 +131,7 @@ function constructResults()
   if (actionName == expectedactionName)     row8[3] = "PASS"; else row8[3] = "FAIL";
   if (nodeClick == expectednodeClick)       row9[3] = "PASS"; else row9[3] = "FAIL";
 
-  appendTableResHTML();
+  appendTableRes();
   if(!isRunningStandalone())
     WriteResults(res);
   else
