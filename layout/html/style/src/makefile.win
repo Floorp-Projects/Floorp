@@ -24,8 +24,10 @@ REQUIRES=xpcom raptor dom js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 EXPORTS =			\
+	nsCSSKeywords.h 		\
+	nsCSSKeywordList.h 		\
 	nsCSSProps.h 		\
-	nsCSSPropIDs.h 		\
+	nsCSSPropList.h 		\
 	nsCSSValue.h 		\
 	nsICSSRule.h 	\
 	nsICSSGroupRule.h 	\
@@ -49,7 +51,6 @@ CPPSRCS=				\
   nsCSSLoader.cpp   \
 	nsCSSParser.cpp 		\
 	nsCSSProps.cpp			\
-	nsCSSProps2.cpp 		\
 	nsCSSRendering.cpp 		\
 	nsCSSScanner.cpp 		\
 	nsCSSRule.cpp 		\
@@ -73,7 +74,6 @@ CPP_OBJS =					\
   .\$(OBJDIR)\nsCSSLoader.obj  \
 	.\$(OBJDIR)\nsCSSParser.obj 		\
 	.\$(OBJDIR)\nsCSSProps.obj 		\
-	.\$(OBJDIR)\nsCSSProps2.obj 		\
 	.\$(OBJDIR)\nsCSSRendering.obj 		\
 	.\$(OBJDIR)\nsCSSScanner.obj 		\
 	.\$(OBJDIR)\nsCSSRule.obj 		\

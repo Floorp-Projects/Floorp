@@ -19,22 +19,36 @@
 #define nsCSSKeywords_h___
 
 #include "nslayout.h"
-#include "nsCSSKeywordIDs.h"
+
+struct nsStr;
+class nsCString;
+
+/*
+   Declare the enum list using the magic of preprocessing
+   enum values are "eCSSKeyword_foo" (where foo is the keyword)
+
+   To change the list of keywords, see nsCSSKeywordList.h
+
+ */
+#define CSS_KEY(_key) eCSSKeyword_##_key,
+enum nsCSSKeyword {
+  eCSSKeyword_UNKNOWN = -1,
+#include "nsCSSKeywordList.h"
+  eCSSKeyword_COUNT
+};
+#undef CSS_KEY
+
 
 class NS_LAYOUT nsCSSKeywords {
 public:
-  // Given a null terminated string of 7 bit characters, return the
-  // tag id (see nsHTMLTagIDs.h) for the tag or -1 if the tag is not
-  // known. The lookup function uses a perfect hash.
-  static PRInt32 LookupName(const char* str);
+  static void AddRefTable(void);
+  static void ReleaseTable(void);
 
-  struct NameTableEntry {
-    const char* name;
-    PRInt32 id;
-  };
+  // Given a keyword string, return the enum value
+  static nsCSSKeyword LookupKeyword(const nsStr& aKeyword);
 
-  // A table whose index is the tag id (from LookupName)
-  static const NameTableEntry kNameTable[];
+  // Given a keyword enum, get the string value
+  static const nsCString& GetStringValue(nsCSSKeyword aKeyword);
 };
 
 #endif /* nsCSSKeywords_h___ */

@@ -1,6 +1,8 @@
 nsDOMCSSDeclaration.h
+nsCSSKeywords.h
+nsCSSKeywordList.h
 nsCSSProps.h
-nsCSSPropIDs.h
+nsCSSPropList.h
 nsCSSValue.h
 nsICSSRule.h
 nsICSSGroupRule.h

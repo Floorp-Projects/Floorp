@@ -19,33 +19,48 @@
 #define nsCSSProps_h___
 
 #include "nslayout.h"
-#include "nsCSSPropIDs.h"
+
+struct nsStr;
+class nsCString;
+
+/*
+   Declare the enum list using the magic of preprocessing
+   enum values are "eCSSProperty_foo" (where foo is the property)
+
+   To change the list of properties, see nsCSSPropList.h
+
+ */
+#define CSS_PROP(_prop, _hint) eCSSProperty_##_prop,
+enum nsCSSProperty {
+  eCSSProperty_UNKNOWN = -1,
+#include "nsCSSPropList.h"
+  eCSSProperty_COUNT
+};
+#undef CSS_PROP
+
 
 class NS_LAYOUT nsCSSProps {
 public:
-  // Given a null terminated string of 7 bit characters, return the
-  // tag id (see nsCSSPropIDs.h) for the tag or -1 if the tag is not
-  // known. The lookup function uses a perfect hash.
-  static PRInt32 LookupName(const char* str);
+  static void AddRefTable(void);
+  static void ReleaseTable(void);
 
-    
-  // Given a CSS Property ID and an Property Value Index
-  // Return back a const char* representation of the 
-  // value. Return back nsnull if no value is found
-  static const char* LookupProperty(PRInt32 aProp, PRInt32 aIndex);
+  // Given a property string, return the enum value
+  static nsCSSProperty LookupProperty(const nsStr& aProperty);
 
-  struct NameTableEntry {
-    const char* name;
-    PRInt32 id;
-  };
+  // Given a property enum, get the string value
+  static const nsCString& GetStringValue(nsCSSProperty aProperty);
 
-   // A table whose index is the tag id (from nsCSSPropIDs)
-  static const NameTableEntry kNameTable[];
+  // Given a CSS Property and a Property Enum Value
+  // Return back a const nsString& representation of the 
+  // value. Return back nullstr if no value is found
+  static const nsCString& LookupPropertyValue(nsCSSProperty aProperty, PRInt32 aValue);
 
   static const PRInt32  kHintTable[];
 
   // Keyword/Enum value tables
   static const PRInt32 kAzimuthKTable[];
+  static const PRInt32 kAutoSelectKTable[];
+  static const PRInt32 kAutoTabKTable[];
   static const PRInt32 kBackgroundAttachmentKTable[];
   static const PRInt32 kBackgroundColorKTable[];
   static const PRInt32 kBackgroundRepeatKTable[];
@@ -53,6 +68,7 @@ public:
   static const PRInt32 kBorderColorKTable[];
   static const PRInt32 kBorderStyleKTable[];
   static const PRInt32 kBorderWidthKTable[];
+  static const PRInt32 kBoxSizingKTable[];
   static const PRInt32 kCaptionSideKTable[];
   static const PRInt32 kClearKTable[];
   static const PRInt32 kContentKTable[];
@@ -62,14 +78,17 @@ public:
   static const PRInt32 kElevationKTable[];
   static const PRInt32 kEmptyCellsKTable[];
   static const PRInt32 kFloatKTable[];
+  static const PRInt32 kFloatEdgeKTable[];
   static const PRInt32 kFontKTable[];
   static const PRInt32 kFontSizeKTable[];
   static const PRInt32 kFontStretchKTable[];
   static const PRInt32 kFontStyleKTable[];
   static const PRInt32 kFontVariantKTable[];
   static const PRInt32 kFontWeightKTable[];
+  static const PRInt32 kKeyEquivalentKTable[];
   static const PRInt32 kListStylePositionKTable[];
   static const PRInt32 kListStyleKTable[];
+  static const PRInt32 kModifyContentKTable[];
   static const PRInt32 kOutlineColorKTable[];
   static const PRInt32 kOverflowKTable[];
   static const PRInt32 kPageBreakKTable[];
@@ -79,6 +98,8 @@ public:
   static const PRInt32 kPitchKTable[];
   static const PRInt32 kPlayDuringKTable[];
   static const PRInt32 kPositionKTable[];
+  static const PRInt32 kResizerKTable[];
+  static const PRInt32 kSelectionStyleKTable[];
   static const PRInt32 kSpeakKTable[];
   static const PRInt32 kSpeakHeaderKTable[];
   static const PRInt32 kSpeakNumeralKTable[];
@@ -89,6 +110,7 @@ public:
   static const PRInt32 kTextDecorationKTable[];
   static const PRInt32 kTextTransformKTable[];
   static const PRInt32 kUnicodeBidiKTable[];
+  static const PRInt32 kUserInputKTable[];
   static const PRInt32 kVerticalAlignKTable[];
   static const PRInt32 kVisibilityKTable[];
   static const PRInt32 kVolumeKTable[];
