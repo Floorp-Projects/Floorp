@@ -59,6 +59,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
+#include "nsDummyLayoutRequest.h"
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
@@ -621,12 +622,16 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
  */
 MOZ_DECL_CTOR_COUNTER(ImageEvent)
 
-struct ImageEvent : PLEvent {
+struct ImageEvent : PLEvent
+{
   ImageEvent(nsIPresContext* aPresContext, nsIContent* aContent,
-             const nsAString& aMessage)
+             const nsAString& aMessage, nsILoadGroup *aLoadGroup,
+             nsIRequest *aRequest)
     : mPresContext(aPresContext),
       mContent(aContent),
-      mMessage(aMessage)
+      mMessage(aMessage),
+      mLoadGroup(aLoadGroup),
+      mDummyRequest(aRequest)
   {
     MOZ_COUNT_CTOR(ImageEvent);
   }
@@ -638,6 +643,8 @@ struct ImageEvent : PLEvent {
   nsCOMPtr<nsIPresContext> mPresContext;
   nsCOMPtr<nsIContent> mContent;
   nsString mMessage;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsCOMPtr<nsIRequest> mDummyRequest;
 };
 
 PR_STATIC_CALLBACK(void*)
@@ -656,6 +663,8 @@ HandleImagePLEvent(PLEvent* aEvent)
 
   evt->mContent->HandleDOMEvent(evt->mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &estatus);
+
+  evt->mLoadGroup->RemoveRequest(evt->mDummyRequest, nsnull, NS_OK);
   
   return nsnull;
 }
@@ -673,8 +682,13 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   // We have to fire the event asynchronously so that we won't go into infinite
   // loops in cases when onLoad handlers reset the src and the new src is in
   // cache.
-  
-  nsresult rv;
+
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = GetOurDocument(getter_AddRefs(document));
+  if (!document) {
+    // no use to fire events if there is no document....
+    return rv;
+  }                                                                             
   nsCOMPtr<nsIEventQueueService> eventQService =
     do_GetService("@mozilla.org/event-queue-service;1", &rv);
   NS_ENSURE_TRUE(eventQService, rv);
@@ -686,26 +700,39 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
                                            getter_AddRefs(eventQ));
   NS_ENSURE_TRUE(eventQ, rv);
 
-  nsCOMPtr<nsIDocument> document;
-  rv = GetOurDocument(getter_AddRefs(document));
-  if (!document) {
-    // no use to fire events if there is no document....
-    return rv;
-  }                                                                             
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  document->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+  nsCOMPtr<nsIRequest> dummyRequest;
+  rv = nsDummyLayoutRequest::Create(getter_AddRefs(dummyRequest), nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPresShell> shell;
   document->GetShellAt(0, getter_AddRefs(shell));
   NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIPresContext> presContext;
   shell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIContent> ourContent = do_QueryInterface(this);
   
-  ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType);
-  
+  ImageEvent* evt = new ImageEvent(presContext, ourContent, aEventType,
+                                   loadGroup, dummyRequest);
+
   NS_ENSURE_TRUE(evt, NS_ERROR_OUT_OF_MEMORY);
 
   PL_InitEvent(evt, this, ::HandleImagePLEvent, ::DestroyImagePLEvent);
 
-  return eventQ->PostEvent(evt);
+  rv = eventQ->PostEvent(evt);
+
+  if (rv == PR_SUCCESS) {
+    // Add the dummy request to the load group only after all the early
+    // returns here!
+    loadGroup->AddRequest(dummyRequest, nsnull);
+  } else {
+    PL_DestroyEvent(evt);
+  }
+
+  return rv;
 }

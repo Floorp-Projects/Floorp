@@ -780,11 +780,13 @@ NS_IMPL_QUERY_INTERFACE2(nsDummyLayoutRequest, nsIRequest, nsIChannel);
 nsresult
 nsDummyLayoutRequest::Create(nsIRequest** aResult, nsIPresShell* aPresShell)
 {
-  nsDummyLayoutRequest* request = new nsDummyLayoutRequest(aPresShell);
-  if (!request)
+  *aResult = new nsDummyLayoutRequest(aPresShell);
+  if (!*aResult)
       return NS_ERROR_OUT_OF_MEMORY;
 
-  return request->QueryInterface(NS_GET_IID(nsIRequest), (void**) aResult); 
+  NS_ADDREF(*aResult);
+
+  return NS_OK; 
 }
 
 
