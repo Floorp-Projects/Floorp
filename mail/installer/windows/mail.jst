@@ -467,7 +467,6 @@ if(verifyDiskSpace(fProgram, srDest))
     
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/autoconfig/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/necko/");
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/cookie/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/wallet/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","mail.jar"),"content/xbl-marquee/");
 
@@ -530,12 +529,6 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "chrome\\installed-chrome.txt");
     logComment("Installing: "    + fProgram + "chrome\\chrome.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\cookie\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\cookie\\content\\overlays.rdf");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector");
-    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\inspector\\content");
-    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\inspector\\content\\overlays.rdf");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
     logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
     logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
