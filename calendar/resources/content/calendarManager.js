@@ -157,8 +157,6 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       CalendarObject.remotePath = CalendarObject.path;
       CalendarObject.path = profileFile.path;
       
-      this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
-
       dump( "Remote Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
    else
@@ -182,6 +180,8 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    this.updateServerArrayText();
 
    this.addCalendarToListBox( CalendarObject );
+
+   this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 }
 
 
@@ -478,6 +478,20 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
    else
    {
       //calendarSubscribed is the subscribed calendar object.
+      if( calendarSubscribed.active == false )
+      {
+         calendarSubscribed.active = true;
+
+         gCalendarWindow.calendarManager.addCalendar( calendarSubscribed );
+      
+         document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
+
+         refreshEventTree( false );
+
+         refreshToDoTree( false );
+   
+         gCalendarWindow.currentView.refreshEvents();
+      }
    }
 }
 
@@ -523,12 +537,16 @@ function switchCalendar( event )
    if( event.currentTarget.childNodes[0].getAttribute( "checked" ) != "true" )
    {
       gCalendarWindow.calendarManager.addCalendar( event.currentTarget.calendarObject );
+
+      event.currentTarget.calendarObject.active = true;
       
-      event.currentTarget.childNodes[0].setAttribute( "checked", "true" )
+      event.currentTarget.childNodes[0].setAttribute( "checked", "true" );
    }
    else
    {
       gCalendarWindow.calendarManager.removeCalendar( event.currentTarget.calendarObject );
+
+      event.currentTarget.calendarObject.active = false;
       
       event.currentTarget.childNodes[0].removeAttribute( "checked" );
    }
