@@ -251,6 +251,8 @@ private:
 									 INTL_CharSetInfo	char_set_info);
 
 
+	void setItemLabelString(Widget menu,BM_Entry * entry);
+
 	void createPixmaps();
 
 	Widget	getLastMoreMenu		(Widget menu);

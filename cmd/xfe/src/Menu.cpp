@@ -414,34 +414,21 @@ Widget
 XFE_Menu::createPulldown(char *cascadeName, MenuSpec *, Widget parent_menu, 
 						 XP_Bool is_fancy)
 {
-	Widget cascade, pulldown;
-	Arg av[10];
-	int ac;
-	Visual *v = 0;
-	Colormap cmap = 0;
-	Cardinal depth = 0;
+	Widget		cascade;
+	Widget		pulldown;
 	WidgetClass wc = is_fancy ? ITEM_FANCY_CASCADE_CLASS : ITEM_CASCADE_CLASS;
 
-	XtVaGetValues(m_parentFrame->getBaseWidget(),
-				  XtNvisual, &v, 
-				  XtNcolormap, &cmap,
-				  XtNdepth, &depth, 
-				  0);
-	
-	ac = 0;
-	XtSetArg(av[ac], XmNvisual, v); ac++;
-	XtSetArg(av[ac], XmNcolormap, cmap); ac++;
-	XtSetArg(av[ac], XmNdepth, depth); ac++;
-	
-	pulldown = XmCreatePulldownMenu(parent_menu,
-									"pulldown",
-									av, ac);
-	
-	cascade = XtVaCreateWidget(cascadeName,
-							   wc,
-							   parent_menu,
-							   XmNsubMenuId, pulldown,
-							   NULL);
+	// Create a pulldown pane (cascade + pulldown)
+	XfeMenuCreatePulldownPane(parent_menu,
+							  m_parentFrame->getBaseWidget(),
+							  cascadeName,
+							  "pulldown",
+							  wc,
+							  False,
+							  NULL,
+							  0,
+							  &cascade,
+							  &pulldown);
 	
 #if DELAYED_MENU_CREATION
 	XtAddCallback(cascade, XmNcascadingCallback, delayed_create_pulldown, this);

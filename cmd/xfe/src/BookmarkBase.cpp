@@ -51,6 +51,10 @@
 #define MENU_PANE_SEPARATOR_NAME	"menuPaneSeparator"
 #define TOOL_BAR_SEPARATOR_NAME		"toolBarSeparator"
 
+#define CASCADE_WC(fancy) \
+( (fancy) ? xfeBmCascadeWidgetClass : xmCascadeButtonWidgetClass )
+
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Used to pass data to the callbacks
@@ -973,61 +977,54 @@ XFE_BookmarkBase::createCascadeButton(Widget		menu,
 	XP_ASSERT( XfeIsAlive(menu) );
 	XP_ASSERT( XmIsRowColumn(menu) );
 
-	Widget						non_full_menu;
-	Widget						cascade;
-	Widget						submenu = NULL;
-	Arg							av[20];
-	Cardinal					ac;
-	XmString					xmname;
-	BookmarkCallbackStruct *	data = NULL;
-	XP_Bool						has_header_children;
+	Widget						cascade = NULL;
+	Widget						pulldown = NULL;
 
-	xmname = XFE_BookmarkBase::entryToXmString(_bookmarkContext,
-											   entry,
-											   _charSetInfo);
+	Widget						non_full_menu;
+
+	String						pulldown_name = NULL;
+
+	BookmarkCallbackStruct *	data = NULL;
+
+	XP_Bool						has_header_children;
 
 	non_full_menu = getLastMoreMenu(menu);
 
 	XP_ASSERT( XfeIsAlive(non_full_menu) );
-
+	
 	// Determne if we have at least one header child
 	has_header_children = XFE_BookmarkBase::BM_EntryHasHeaderChildren(entry);
 
-	// Create sub menu only if needed (children exits and not only eaders)
+	// Create the sub menu pane only if children exits for the given folder
 	if (BM_GetChildren(entry) && 
 		!(_onlyHeaders && !has_header_children) &&
 		!ignore_children)
 	{
-		Visual *	visual = XfeVisual(non_full_menu);
-		Colormap	cmap = XfeColormap(non_full_menu);
-		Cardinal	depth = XfeDepth(non_full_menu);
-		
-		ac = 0;
-		XtSetArg(av[ac],XmNvisual,		visual);	ac++;
-		XtSetArg(av[ac],XmNdepth,		depth);		ac++;
-		XtSetArg(av[ac],XmNcolormap,	cmap);		ac++;
-
-  		submenu = XmCreatePulldownMenu(non_full_menu,"bookmarkPulldown",av,ac);
+		pulldown_name = "bookmarkPulldown";
 	}
 
-	ac = 0;
-	XtSetArg(av[ac],XmNlabelString,	xmname);	ac++;
+	// Create the item
+	XfeMenuCreatePulldownPane(non_full_menu,
+							  non_full_menu,
+							  "bookmarkCascadeButton",
+							  pulldown_name,
+							  CASCADE_WC(_fancyItems),
+							  False,
+							  NULL,
+							  0,
+							  &cascade,
+							  &pulldown);
 
-	if (XfeIsAlive(submenu))
-	{
-		XtSetArg(av[ac],XmNsubMenuId,	submenu);	ac++;
-	}
-
+	// Set the item's label
+	setItemLabelString(cascade,entry);
+	
+	// Configure the new cascade button
 	if (_fancyItems)
 	{
- 		cascade = XfeCreateBmCascade(non_full_menu,"bookmarkCascadeButton",av,ac);
-
 		configureXfeBmCascade(cascade,entry);
 	}
 	else
 	{
-		cascade = XmCreateCascadeButton(non_full_menu,"bookmarkCascadeButton",av,ac);
-
 		configureCascade(cascade,entry);
 	}
 
@@ -1052,45 +1049,33 @@ XFE_BookmarkBase::createCascadeButton(Widget		menu,
 				  &XFE_BookmarkBase::item_free_data_cb,
 				  (XtPointer) data);
 
-	if (xmname)
-	{
-		XmStringFree(xmname);
-	}
-
 	return cascade;
 }
 //////////////////////////////////////////////////////////////////////////
 Widget 
 XFE_BookmarkBase::createMoreButton(Widget menu)
 {
-	XP_ASSERT( XfeIsAlive(menu) );
-	XP_ASSERT( XmIsRowColumn(menu) );
+	Widget		cascade = NULL;
+	Widget		pulldown = NULL;
 
-	Widget		cascade;
-	Widget		submenu = NULL;
-	Arg			av[20];
-	Cardinal	ac = 0;
-
-	ac = 0;
-	XtSetArg(av[ac],XmNvisual,		XfeVisual(menu));	ac++;
-	XtSetArg(av[ac],XmNdepth,		XfeDepth(menu));	ac++;
-	XtSetArg(av[ac],XmNcolormap,	XfeColormap(menu));	ac++;
-	
-	submenu = XmCreatePulldownMenu(menu,MORE_PULLDOWN_NAME,av,ac);
-
-	ac = 0;
-	XtSetArg(av[ac],XmNsubMenuId,	submenu);	ac++;
+    // Create a pulldown pane (cascade + pulldown)
+    XfeMenuCreatePulldownPane(menu,
+                              menu,
+                              MORE_BUTTON_NAME,
+                              MORE_PULLDOWN_NAME,
+                              CASCADE_WC(_fancyItems),
+                              False,
+                              NULL,
+                              0,
+                              &cascade,
+                              &pulldown);
 
 	if (_fancyItems)
 	{
- 		cascade = XfeCreateBmCascade(menu,MORE_BUTTON_NAME,av,ac);
-
 		configureXfeBmCascade(cascade,NULL);
 	}
 	else
 	{
-		cascade = XmCreateCascadeButton(menu,MORE_BUTTON_NAME,av,ac);
-
 		configureCascade(cascade,NULL);
 	}
 
@@ -1105,17 +1090,7 @@ XFE_BookmarkBase::createPushButton(Widget menu,BM_Entry * entry)
 
 	Widget						non_full_menu;
 	Widget						button;
-	Arg							av[20];
-	Cardinal					ac;
-	XmString					xmname;
 	BookmarkCallbackStruct *	data = NULL;
-
-	xmname = XFE_BookmarkBase::entryToXmString(_bookmarkContext,
-											   entry,
-											   _charSetInfo);
-
-	ac = 0;
-	XtSetArg(av[ac], XmNlabelString,	xmname);	ac++;
 
 	non_full_menu = getLastMoreMenu(menu);
 
@@ -1124,16 +1099,19 @@ XFE_BookmarkBase::createPushButton(Widget menu,BM_Entry * entry)
 	// must be xfeCmdOpenTargetUrl or sensitivity becomes a problem
 	if (_fancyItems)
 	{
-		button = XfeCreateBmButton(non_full_menu,xfeCmdOpenTargetUrl,av,ac);
+		button = XfeCreateBmButton(non_full_menu,xfeCmdOpenTargetUrl,NULL,0);
 
 		configureXfeBmButton(button,entry);
 	}
 	else
 	{
-		button = XmCreatePushButton(non_full_menu,xfeCmdOpenTargetUrl,av,ac);
+		button = XmCreatePushButton(non_full_menu,xfeCmdOpenTargetUrl,NULL,0);
 
 		configureButton(button,entry);
 	}
+
+	// Set the item's label
+	setItemLabelString(button,entry);
 
 	// Create a new bookmark data structure for the callbacks
 	data = XP_NEW_ZAP(BookmarkCallbackStruct);
@@ -1160,11 +1138,6 @@ XFE_BookmarkBase::createPushButton(Widget menu,BM_Entry * entry)
 				  XmNdestroyCallback,
 				  &XFE_BookmarkBase::item_free_data_cb,
 				  (XtPointer) data);
-
-	if (xmname)
-	{
-		XmStringFree(xmname);
-	}
 
 	return button;
 }
@@ -1243,26 +1216,17 @@ XFE_BookmarkBase::createXfeCascade(Widget parent,BM_Entry * entry)
 
 	Widget						cascade;
 	Widget						submenu;
-	Arg							av[20];
+	Arg							av[5];
 	Cardinal					ac;
-	XmString					xmname;
 	BookmarkCallbackStruct *	data = NULL;
 
-	xmname = XFE_BookmarkBase::entryToXmString(_bookmarkContext,
-											   entry,
-											   _charSetInfo);
-
-	// No submenu needed if the entry has no children
-// 	if (!BM_GetChildren(entry))
-// 	{
-// 		// fix me
-// 	}
-
 	ac = 0;
-	XtSetArg(av[ac],XmNlabelString,		xmname);				ac++;
 	XtSetArg(av[ac],XmNuserData,		entry);					ac++;
 
 	cascade = XfeCreateCascade(parent,"bookmarkCascade",av,ac);
+
+	// Set the item's label
+	setItemLabelString(cascade,entry);
 
 	configureXfeCascade(cascade,entry);
 
@@ -1282,11 +1246,6 @@ XFE_BookmarkBase::createXfeCascade(Widget parent,BM_Entry * entry)
 				  &XFE_BookmarkBase::item_free_data_cb,
 				  (XtPointer) data);
 
-	if (xmname)
-	{
-		XmStringFree(xmname);
-	}
-
 	// Obtain the cascade's submenu
 	XtVaGetValues(cascade,XmNsubMenuId,&submenu,NULL);
 
@@ -1304,18 +1263,15 @@ XFE_BookmarkBase::createXfeButton(Widget parent,BM_Entry * entry)
 	Widget						button;
 	Arg							av[20];
 	Cardinal					ac;
-	XmString					xmname;
 	BookmarkCallbackStruct *	data = NULL;
 
-	xmname = XFE_BookmarkBase::entryToXmString(_bookmarkContext,
-											   entry,
-											   _charSetInfo);
-
 	ac = 0;
-	XtSetArg(av[ac],XmNlabelString,		xmname);					ac++;
 	XtSetArg(av[ac],XmNuserData,		entry);						ac++;
 
 	button = XfeCreateButton(parent,"bookmarkButton",av,ac);
+
+	// Set the item's label
+	setItemLabelString(button,entry);
 
 	configureXfeButton(button,entry);
 
@@ -1354,11 +1310,6 @@ XFE_BookmarkBase::createXfeButton(Widget parent,BM_Entry * entry)
 				  XmNdestroyCallback,
 				  &XFE_BookmarkBase::item_free_data_cb,
 				  (XtPointer) data);
-
-	if (xmname)
-	{
-		XmStringFree(xmname);
-	}
 
 	return button;
 }
@@ -1976,5 +1927,28 @@ XFE_BookmarkBase::formatItem(MWContext *	bookmarkContext,
   if (xmhead) XmStringFree (xmhead);
   if (xmtail) XmStringFree (xmtail);
   return (xmcombo);
+}
+//////////////////////////////////////////////////////////////////////////
+void 
+XFE_BookmarkBase::setItemLabelString(Widget item,BM_Entry * entry)
+{
+	XP_ASSERT( XfeIsAlive(item) );
+	XP_ASSERT( entry != NULL );
+
+	XP_ASSERT( XmIsLabel(item) || 
+			   XmIsLabelGadget(item) ||
+			   XfeIsLabel(item) );
+
+	// Create am XmString from the entry
+	XmString xmname = XFE_BookmarkBase::entryToXmString(_bookmarkContext,
+														entry,
+														_charSetInfo);
+	
+	if (xmname != NULL)
+	{
+		XtVaSetValues(item,XmNlabelString,xmname,NULL);
+
+		XmStringFree(xmname);
+	}
 }
 //////////////////////////////////////////////////////////////////////////

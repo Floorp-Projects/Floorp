@@ -483,47 +483,36 @@ XFE_Button::setMenuSpec(MenuSpec * spec)
 
 		case DYNA_CASCADEBUTTON:
 		case DYNA_FANCY_CASCADEBUTTON:
-		{
-			XP_ASSERT( cur_spec != NULL );
-			XP_ASSERT( cur_spec->generateProc != NULL );
+            {
+				Widget		cascade;
+                Widget		pulldown;
+				WidgetClass	wc = NULL;
+				
+				if (cur_spec->tag == DYNA_FANCY_CASCADEBUTTON)
+				{
+					wc = xfeBmCascadeWidgetClass;
+				}
+				else
+				{
+					wc = xmCascadeButtonWidgetClass;
+				}
 
-			Widget		top_level = m_toplevel->getBaseWidget();
-			Visual *	visual = XfeVisual(top_level);
-			Colormap	cmap = XfeColormap(top_level);
-			Cardinal	depth = XfeDepth(top_level);
-			Arg			av[10];
-			Cardinal	ac = 0;
-			Widget		pulldown;
-			Widget		cascade;
-			WidgetClass	wc = NULL;
-
-			ac = 0;
-			XtSetArg(av[ac],XmNvisual,		visual);	ac++;
-			XtSetArg(av[ac],XmNcolormap,	cmap);		ac++;
-			XtSetArg(av[ac],XmNdepth,		depth);		ac++;
-			
-			pulldown = XmCreatePulldownMenu(sub_menu_id,"pulldown",av,ac);
-
-			if (cur_spec->tag == DYNA_FANCY_CASCADEBUTTON)
-			{
-				wc = xfeBmCascadeWidgetClass;
+				// Create a pulldown pane (cascade + pulldown)
+				XfeMenuCreatePulldownPane(sub_menu_id,
+										  m_toplevel->getBaseWidget(),
+										  cur_spec->menuItemName,
+										  "pulldown",
+										  wc,
+										  True,
+										  NULL,
+										  0,
+										  &cascade,
+										  &pulldown);
+				
+				(*cur_spec->generateProc)(cascade,
+										  cur_spec->callData,
+										  (XFE_Frame *) m_toplevel);
 			}
-			else
-			{
-				wc = xmCascadeButtonWidgetClass;
-			}
-
-			cascade = XtVaCreateManagedWidget(cur_spec->menuItemName,
-											  wc,
-											  sub_menu_id,
-											  XmNsubMenuId, pulldown,
-											  NULL);
-
-			
-			(*cur_spec->generateProc)(cascade,
-									  cur_spec->callData,
-									  (XFE_Frame *) m_toplevel);
-		}
 		break;
 
 		default:
