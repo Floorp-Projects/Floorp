@@ -252,10 +252,11 @@ nsForm::~nsForm()
   for (int i = 0; i < numChildren; i++) {
     nsIFormControl* child = GetFormControlAt(i);
     if (child) {
-      RemoveFormControl(child, PR_FALSE);
       child->SetFormManager(nsnull, PR_FALSE);
     }
   }
+  mChildren.Clear();
+
   if (nsnull != mAction) delete mAction;
   if (nsnull != mEncoding) delete mEncoding;
   if (nsnull != mTarget) delete mTarget;
