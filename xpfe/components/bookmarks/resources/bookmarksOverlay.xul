@@ -35,8 +35,11 @@
   </stringbundleset>
          
   <popupset id="bookmarksPopupset">
+    <!-- the toolbar buttons in the personal toolbar have -moz-user-focus:ignore
+         we have to focus them manually -->
     <popup id="bmContext" 
-           onpopupshowing="gBookmarksShell.createContextMenu(event);"/>
+           onpopupshowing="gBookmarksShell.doFocus(); gBookmarksShell.createContextMenu(event);"
+           onpopuphidden="if (content) content.focus()"/>
   </popupset>
 
   <commands id="commands">

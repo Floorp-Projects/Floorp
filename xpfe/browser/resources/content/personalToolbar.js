@@ -472,7 +472,13 @@ BookmarksToolbar.prototype = {
     onCommandUpdate: function ()
     {
     }
+  },
+
+  doFocus: function ()
+  {
+    document.getElementById("PersonalToolbar").focus();
   }
+
 };
 
 function BM_navigatorLoad(aEvent)
