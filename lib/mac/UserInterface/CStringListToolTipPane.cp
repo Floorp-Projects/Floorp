@@ -40,7 +40,6 @@ CStringListToolTipPane::CStringListToolTipPane(LStream* inStream)
 
 void CStringListToolTipPane::CalcTipText(
 	LWindow*				/* inOwningWindow */,
-	LPane*					/* inOwningPane */,
 	const EventRecord&		/* inMacEvent */,
 	StringPtr				outTipText)
 {

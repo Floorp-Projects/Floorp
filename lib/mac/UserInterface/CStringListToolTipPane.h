@@ -37,7 +37,6 @@ class CStringListToolTipPane : public CToolTipPane
 
 		virtual	void 		CalcTipText(
 									LWindow*				inOwningWindow,
-									LPane*					inOwningPane,
 									const EventRecord&		inMacEvent,
 									StringPtr				outTipText);
 };
