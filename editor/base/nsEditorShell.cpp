@@ -1023,8 +1023,10 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
       if (modCount > 0)
       {
         // Ask user if they want to save current changes
+        nsString tmp1 = GetString("Save");
+        nsString tmp2 = GetString("DontSave");
         EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), GetString("SaveFilePrompt"),
-                                                  &GetString("Save"), &GetString("DontSave"));
+                                                  &tmp1, &tmp2);
         if (result == eCancel)
         {
           *_retval = PR_FALSE;
