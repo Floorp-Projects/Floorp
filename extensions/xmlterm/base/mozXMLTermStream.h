@@ -41,10 +41,7 @@ class mozXMLTermStream : public mozIXMLTermStream
   NS_DECL_ISUPPORTS
 
   // nsIInputStream interface
-  NS_IMETHOD Close(void);
-
-  NS_IMETHOD Available(PRUint32 *_retval);
-  NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval);
+  NS_DECL_NSIINPUTSTREAM
 
   // mozIXMLTermStream interface
 
