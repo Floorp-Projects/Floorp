@@ -535,8 +535,8 @@ public abstract class ScriptableObject implements Scriptable {
                         hint = "number";
                     else {
                         Object[] args = { typeHint.toString() };
-                        throw Context.reportRuntimeError(Context.getMessage
-                                                         ("msg.invalid.type", args));
+                        throw Context.reportRuntimeError(
+                            Context.getMessage("msg.invalid.type", args));
                     }
                     Function fun = getFunctionProperty(f, "valueOf");
                     if (fun == null)
@@ -544,7 +544,8 @@ public abstract class ScriptableObject implements Scriptable {
                     Object[] args = { hint };
                     if (cx == null)
                         cx = Context.getContext();
-                    val = fun.call(cx, fun.getParentScope(), f.getObject(), args);
+                    val = fun.call(cx, fun.getParentScope(), f.getObject(), 
+                                   args);
                 }
                 if (val != null && (val == Undefined.instance ||
                                     !(val instanceof Scriptable) ||
@@ -552,6 +553,13 @@ public abstract class ScriptableObject implements Scriptable {
                                     typeHint == Function.class))
                 {
                     return val;
+                }
+                if (val instanceof Wrapper) {
+                    // Let a wrapped java.lang.String pass for a primitive 
+                    // string.
+                    Object u = ((Wrapper) val).unwrap();
+                    if (u instanceof String)
+                        return u;
                 }
             }
             // fall through to error 
