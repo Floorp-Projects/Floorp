@@ -881,7 +881,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
           // Apply entity conversion then convert to a mail charset. 
           PRBool isAsciiOnly;
           rv = nsMsgI18NSaveAsCharset(attachment1_type, m_compFields->GetCharacterSet(), 
-                                      NS_ConvertASCIItoUCS2(bodyString).get(), &outCString,
+                                      NS_ConvertUTF8toUTF16(bodyString).get(), &outCString,
                                       nsnull, &isAsciiOnly);
           if (NS_SUCCEEDED(rv)) 
           {
