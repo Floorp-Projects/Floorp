@@ -53,6 +53,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/ssl.lib \
 	$(DIST)/lib/sectool.lib \
 	$(DIST)/lib/pkcs7.lib \
+	$(DIST)/lib/pkcs12.lib \
 	$(DIST)/lib/certhi.lib \
 	$(DIST)/lib/cryptohi.lib \
 	$(DIST)/lib/pk11wrap.lib \
@@ -92,6 +93,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libssl.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsectool.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpkcs7.$(LIB_SUFFIX) \
+	$(DIST)/lib/libpkcs12.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcerthi.$(LIB_SUFFIX) \
 	$(DIST)/lib/libpk11wrap.$(LIB_SUFFIX) \
 	$(DIST)/lib/libcryptohi.$(LIB_SUFFIX) \
