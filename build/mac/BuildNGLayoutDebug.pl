@@ -106,7 +106,7 @@ $CLOBBER_LIBS			= 1;	# turn on to clobber existing libs and .xSYM files before
 								# building each project							
 # The following two options will delete all dist files (if you have $build{dist} turned on),
 # but leave the directory structure intact.
-$CLOBBER_DIST_ALL 		= 1;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
+$CLOBBER_DIST_ALL 		= 0;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber only aliases/files for libraries/sym files in dist
 $CLOBBER_IDL_PROJECTS	= 0;	# turn on to clobber all IDL projects.
 
