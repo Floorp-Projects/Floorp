@@ -48,8 +48,8 @@
 <box align="horizontal">
   <html flex="1">&smtpListDesc.label;</html>
 </box>
-<box align="horizontal">
-  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" style="height: 0em">
+<box align="horizontal" style="min-height: 10em; min-width: 30em">
+  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1">
     <treechildren id="smtpTreeChildren"/>
   </tree>
   <box align="vertical">
