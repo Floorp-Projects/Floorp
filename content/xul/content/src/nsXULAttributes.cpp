@@ -610,7 +610,7 @@ NS_IMPL_ADDREF(nsXULAttributes);
 nsrefcnt
 nsXULAttributes::Release()
 {
-    --mRefCnt;
+    mRefCnt--;
     NS_LOG_RELEASE(this, mRefCnt, "nsXULAttributes");
     if (mRefCnt == 0) {
         mRefCnt = 1;            // stabilize (necessary for this class?)
