@@ -25,9 +25,11 @@
     padding: 0px;
     border: none;
     background-color: #003366;
+    behavior: 
+        url("chrome://communicator/skin/sidebar/sidebarSplitterBindings.xml#sidebar-splitter");
 }
 
-#sidebar-topright-cap {
+.sidebar-splitter-topright-cap {
     min-height: 8px; 
     background-repeat: no-repeat;
     background-position: 100% 0%;
@@ -35,7 +37,7 @@
         url("chrome://communicator/skin/sidebar/sidebar-topright-cap.gif"); 
 }
 
-#sidebar-bottomright-cap {
+.sidebar-splitter-bottomright-cap {
     min-height: 8px; 
     background-repeat: no-repeat;
     background-position: 100% 100%;
@@ -43,7 +45,7 @@
         url("chrome://communicator/skin/sidebar/sidebar-bottomright-cap.gif"); 
 }
 
-#sidebar-splitter > grippy {
+.sidebar-splitter-grippy {
     margin: 0px;
     padding: 0px;
     border: 2px solid #003366;
@@ -54,20 +56,20 @@
     background-position: 50% 50%;
 }
 
-#sidebar-splitter > grippy:hover,
-#sidebar-splitter > grippy:active {
+.sidebar-splitter-grippy:hover,
+.sidebar-splitter-grippy:active {
     background-color: #99CCFF;
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-left-hover.gif"); 
 }
 
-#sidebar-splitter[collapsed="true"] > grippy {
+#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy {
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right.gif"); 
 }
 
-#sidebar-splitter[collapsed="true"] > grippy:hover,
-#sidebar-splitter[collapsed="true"] > grippy:active {
+#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy:hover,
+#sidebar-splitter[collapsed="true"] .sidebar-splitter-grippy:active {
     background-image:
        url("chrome://communicator/skin/sidebar/sbgrippy-right-hover.gif"); 
 }
@@ -162,22 +164,22 @@ sidebarheader[type="splitter"] {
     display: none;
 }
 
-.texttab.texttab-sidebar {
+.texttab-sidebar {
     background-color: #CCCCCC;
     padding: 0px;
     margin: 0px;
 }
-.texttab.texttab-sidebar[top-panel="true"],
-.texttab.texttab-sidebar[first-panel-after-selected="true"] {
+.texttab-sidebar[top-panel="true"],
+.texttab-sidebar[first-panel-after-selected="true"] {
     background-color: white;
 }
-.texttab.texttab-sidebar > .remain-space {
+.texttab-sidebar > .remain-space {
     width: 30px;
     min-width: 1px;
 }
-.texttab.texttab-sidebar[last-panel="true"] > .remain-space {
+.texttab-sidebar[last-panel="true"] > .remain-space {
   border-bottom: none;
 }
-.texttab.texttab-sidebar[last-panel="true"][selected="true"] > .remain-space {
+.texttab-sidebar[last-panel="true"][selected="true"] > .remain-space {
   border-bottom: 1px solid black;
 }

@@ -42,6 +42,7 @@ EXPORT_RESOURCE_SAMPLES = \
         list-down.gif \
         sidebar-bottomright-cap.gif \
         sidebarOverlay.css \
+        sidebarSplitterBindings.xml \
 	sbgrippy-left-hover.gif \
 	sbgrippy-left.gif \
 	sbgrippy-right-hover.gif \
