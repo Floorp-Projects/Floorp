@@ -38,8 +38,8 @@ menuitem[menuactive="true"][disabled="true"]
 menupopup, popup 
   {
     background-color      : Menu;
-    border-left           : thin solid white;
-    border-top            : thin solid white;
+    border-left           : thin solid black;
+    border-top            : thin solid black;
     border-right          : 3px ridge black;
     border-bottom         : 3px ridge black;
     -moz-user-focus			  : ignore;
@@ -224,10 +224,10 @@ menuitem[checked="true"][menuactive="true"]
 .tooltip
   {
     background-color      : InfoBackground;
-    border                : none;
+    border                : 1px solid #000000;
     color                 : InfoText;
     font                  : message-box;
-    padding               : 0px 5px 3px 4px;
+    padding               : 2px 3px 2px 3px;
     margin				  : 0px;
   }
 
