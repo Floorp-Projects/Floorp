@@ -493,6 +493,8 @@ function FindThreadPaneColumnBySortResource(sortID)
 		return "UnreadColumn";
 	else if(sortID == "http://home.netscape.com/NC-rdf#TotalMessages")
 		return "TotalColumn";
+	else if(sortID == "http://home.netscape.com/NC-rdf#OrderReceived")
+		return "OrderReceivedColumn";
 
 	return null;
 

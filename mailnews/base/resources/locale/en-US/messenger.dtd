@@ -103,7 +103,7 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.label "by Status">  
 <!ENTITY sortBySubjectCmd.label "by Subject">  
 <!ENTITY sortByUnreadCmd.label ".by Unread">  
-<!ENTITY sortByOrderReceivedCmd.label ".by Order Received">  
+<!ENTITY sortByOrderReceivedCmd.label "by Order Received">  
 <!ENTITY sortAscendCmd.label ".Ascending">  
 <!ENTITY sortDescendCmd.label ".Descending">  
 <!ENTITY msgsMenu.label ".Messages"> 
