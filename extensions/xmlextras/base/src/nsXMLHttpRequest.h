@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
+#include "nsIURI.h"
 #include "nsIHTTPChannel.h"
 #include "nsIDocument.h"
 #include "nsISupportsArray.h"
@@ -69,6 +70,7 @@ protected:
 
   nsCOMPtr<nsIHTTPChannel> mChannel;
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIDocument> mBaseDocument;
   nsCOMPtr<nsISupportsArray> mLoadEventListeners;
   nsCOMPtr<nsISupportsArray> mErrorEventListeners;

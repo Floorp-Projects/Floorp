@@ -42,6 +42,8 @@
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 
 static const char* kLoadAsData = "loadAsData";
 static const char* kLoadStr = "load";
@@ -146,6 +148,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
 {
   NS_INIT_ISUPPORTS();
   mComplete = PR_FALSE;
+  mAsync = PR_TRUE;
 }
 
 nsXMLHttpRequest::~nsXMLHttpRequest()
@@ -527,7 +530,7 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   NS_ENSURE_ARG(url);
   
   nsresult rv;
-  nsCOMPtr<nsIURI> uri, baseURI; 
+  nsCOMPtr<nsIURI> uri; 
   nsCOMPtr<nsILoadGroup> loadGroup;
   PRBool authp = PR_FALSE;
 
@@ -535,19 +538,18 @@ nsXMLHttpRequest::OpenRequest(const char *method,
 
   // If we have a base document, use it for the base URL and loadgroup
   if (mBaseDocument) {
-    baseURI = dont_AddRef(mBaseDocument->GetDocumentURL());
     rv = mBaseDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
     if (NS_FAILED(rv)) return rv;
   }
 
   nsAutoString urlStr(url);
-  rv = NS_NewURI(getter_AddRefs(uri), urlStr, baseURI);
+  rv = NS_NewURI(getter_AddRefs(uri), urlStr, mBaseURI);
   if (NS_FAILED(rv)) return rv;
 
   // Only http URLs are allowed
   nsXPIDLCString protocol;
   uri->GetScheme(getter_Copies(protocol)); 
-  if (nsCRT::strcmp("http", (const char*)protocol) != 0) {
+  if (nsCRT::strncmp("http", (const char*)protocol, 4) != 0) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -572,11 +574,12 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   }
 
   mChannel->SetAuthTriedWithPrehost(authp);
+
   nsCOMPtr<nsIAtom> methodAtom = dont_AddRef(NS_NewAtom(method));
   if (methodAtom) {
     rv = mChannel->SetRequestMethod(methodAtom);
   }
-
+  
   return rv;
 }
 
@@ -607,6 +610,19 @@ nsXMLHttpRequest::Open(const char *method, const PRUnichar *url)
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                    NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrincipal> principal;
+      rv = secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+        if (codebase) {
+          codebase->GetURI(getter_AddRefs(mBaseURI));
+        }
+      }
+    }
 
     if (argc > 2) {
       JSBool bool;
@@ -710,8 +726,6 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
 NS_IMETHODIMP 
 nsXMLHttpRequest::Send(nsISupports *body)
 {
-  NS_ENSURE_ARG(body);
-
   nsresult rv;
   nsCOMPtr<nsIInputStream> postDataStream;
 
@@ -719,53 +733,55 @@ nsXMLHttpRequest::Send(nsISupports *body)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(body);
-  if (doc) {
-    // Get an XML serializer
-    nsCOMPtr<nsIDOMSerializer> serializer = do_CreateInstance(NS_XMLSERIALIZER_PROGID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
-
-    // Serialize the current document to string
-    nsXPIDLString serial;
-    rv = serializer->SerializeToString(doc, getter_Copies(serial));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-    // Convert to a byte stream
-    rv = GetStreamForWString((const PRUnichar*)serial, 
-                             nsCRT::strlen((const PRUnichar*)serial),
-                             getter_AddRefs(postDataStream));
-    if (NS_FAILED(rv)) return rv;
-  }
-  else {
-    nsCOMPtr<nsIInputStream> stream = do_QueryInterface(body);
-    if (stream) {
-      postDataStream = stream;
+  if (body) {
+    nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(body);
+    if (doc) {
+      // Get an XML serializer
+      nsCOMPtr<nsIDOMSerializer> serializer = do_CreateInstance(NS_XMLSERIALIZER_PROGID, &rv);
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;  
+      
+      // Serialize the current document to string
+      nsXPIDLString serial;
+      rv = serializer->SerializeToString(doc, getter_Copies(serial));
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+      
+      // Convert to a byte stream
+      rv = GetStreamForWString((const PRUnichar*)serial, 
+                               nsCRT::strlen((const PRUnichar*)serial),
+                               getter_AddRefs(postDataStream));
+      if (NS_FAILED(rv)) return rv;
     }
     else {
-      nsCOMPtr<nsISupportsWString> wstr = do_QueryInterface(body);
-      if (wstr) {
-        nsXPIDLString holder;
-        wstr->GetData(getter_Copies(holder));
-        rv = GetStreamForWString((const PRUnichar*)holder, 
-                                 nsCRT::strlen((const PRUnichar*)holder),
-                                 getter_AddRefs(postDataStream));
-        if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIInputStream> stream = do_QueryInterface(body);
+      if (stream) {
+        postDataStream = stream;
+      }
+      else {
+        nsCOMPtr<nsISupportsWString> wstr = do_QueryInterface(body);
+        if (wstr) {
+          nsXPIDLString holder;
+          wstr->GetData(getter_Copies(holder));
+          rv = GetStreamForWString((const PRUnichar*)holder, 
+                                   nsCRT::strlen((const PRUnichar*)holder),
+                                   getter_AddRefs(postDataStream));
+          if (NS_FAILED(rv)) return rv;
+        }
       }
     }
-  }
 
-  if (postDataStream) {
-    rv = mChannel->SetUploadStream(postDataStream);
+    if (postDataStream) {
+      rv = mChannel->SetUploadStream(postDataStream);
+    }
   }
 
   // Get and initialize a DOMImplementation
   nsCOMPtr<nsIDOMDOMImplementation> implementation = do_CreateInstance(kIDOMDOMImplementationCID, &rv);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
-  if (mBaseDocument) {
+  if (mBaseURI) {
     nsCOMPtr<nsIPrivateDOMImplementation> privImpl = do_QueryInterface(implementation);
     if (privImpl) {
-      privImpl->Init(mBaseDocument);
+      privImpl->Init(mBaseURI);
     }
   }
 
