@@ -143,7 +143,7 @@ void CreationTest(char* creationPath, char* appendPath,
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
-    rv = file->Append(appendPath);
+    rv = file->AppendRelativePath(appendPath);
     VerifyResult(rv);
     
     printf("Check For Existence\n");
@@ -171,6 +171,59 @@ void CreationTest(char* creationPath, char* appendPath,
     }
     
 }    
+
+void CreateUniqueTest(char* creationPath, char* appendPath,
+                 PRInt32 whatToCreate, PRInt32 perm)
+{
+    nsCOMPtr<nsILocalFile> file;
+    nsresult rv = 
+    nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                              nsnull, 
+                                              NS_GET_IID(nsILocalFile), 
+                                              (void **)getter_AddRefs(file));
+
+    if (NS_FAILED(rv) || (!file)) 
+    {
+        printf("create nsILocalFile failed\n");
+        return;
+    }
+
+    Banner("Creation Test");
+    printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
+
+    rv = file->InitWithPath(creationPath);
+    VerifyResult(rv);
+ 
+    printf("Appending %s\n", appendPath);
+    rv = file->Append(appendPath);
+    VerifyResult(rv);
+    
+    printf("Check For Existence\n");
+
+    PRBool exists;
+    file->Exists(&exists);
+
+    if (exists)
+        printf("Yup!\n");
+    else
+        printf("no.\n");
+
+
+    rv = file->CreateUnique(appendPath, whatToCreate, perm);  
+    VerifyResult(rv);
+
+    rv = file->Exists(&exists);
+    VerifyResult(rv);
+
+    
+    if (!exists)
+    {
+        Failed("Did not create file system object!");
+        return;
+    }
+    
+}    
+
 
 void
 CopyTest(char *testFile, char *targetDir)
@@ -271,13 +324,22 @@ int main(void)
 
 #ifdef XP_PC
     InitTest("c:\\temp\\", "sub1/sub2/");
-    InitTest("d:\\temp\\", "sub1/sub2/");
+    InitTest("d:\\temp\\", "sub1\\sub2\\");
 
     CreationTest("c:\\temp\\", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
     DeletionTest("c:\\temp\\", "file.txt", PR_FALSE);
 
-    CreationTest("c:\\temp\\", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
+    CreationTest("c:\\temp\\", "mumble\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\k\\", nsIFile::DIRECTORY_TYPE, 0644);
     DeletionTest("c:\\temp\\", "mumble", PR_TRUE);
+
+    CreateUniqueTest("c:\\temp\\", "foo", nsIFile::NORMAL_FILE_TYPE, 0644);
+    CreateUniqueTest("c:\\temp\\", "foo", nsIFile::NORMAL_FILE_TYPE, 0644);
+    CreateUniqueTest("c:\\temp\\", "bar.xx", nsIFile::DIRECTORY_TYPE, 0644);
+    CreateUniqueTest("c:\\temp\\", "bar.xx", nsIFile::DIRECTORY_TYPE, 0644);
+    DeletionTest("c:\\temp\\", "foo", PR_TRUE);
+    DeletionTest("c:\\temp\\", "foo-1", PR_TRUE);
+    DeletionTest("c:\\temp\\", "bar.xx", PR_TRUE);
+    DeletionTest("c:\\temp\\", "bar-1.xx", PR_TRUE);
 
 #else
 #ifdef XP_UNIX
