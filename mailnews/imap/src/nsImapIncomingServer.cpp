@@ -843,12 +843,13 @@ nsImapIncomingServer::CloseCachedConnections()
 
     nsresult rv = m_connectionCache->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
+
     for (PRUint32 i = cnt; i>0; i--)
 	{
         aSupport = getter_AddRefs(m_connectionCache->ElementAt(i-1));
         connection = do_QueryInterface(aSupport);
 		if (connection)
-			rv = connection->TellThreadToDie(PR_TRUE);
+        connection->TellThreadToDie(PR_TRUE);
 	}
     
     PR_CExitMonitor(this);
@@ -1100,6 +1101,16 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 	// subscribe UI started the url, and need to pass that through to discovery done.
 
 //	m_haveDiscoveredAllFolders = PR_TRUE;
+
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if (NS_SUCCEEDED(rv) && rootFolder)
+  {
+	  if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+      if (rootMsgFolder)
+        rootMsgFolder->SetPrefFlag();
+  }
 
 	PRInt32 numUnverifiedFolders;
 	nsCOMPtr<nsISupportsArray> unverifiedFolders;
