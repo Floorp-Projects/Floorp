@@ -362,7 +362,7 @@ endif # IS_COMPONENT
 # MacOS X specific stuff
 #
 
-ifeq ($(OS_ARCH),Rhapsody)
+ifeq ($(OS_ARCH),Darwin)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS	+= -bundle
 else
