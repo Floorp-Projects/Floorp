@@ -15,6 +15,7 @@ en-US.jar:
 +  locale/en-US/global/finddialog.dtd
 +  locale/en-US/global/finddialog.properties
 +  locale/en-US/global/intl.css
++  locale/en-US/global/intl.properties
 +  locale/en-US/global/keys.properties
 +  locale/en-US/global/languageNames.properties
 +  locale/en-US/global/regionNames.properties
@@ -26,14 +27,17 @@ en-US.jar:
 
 en-win.jar:
 +  locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
+   locale/en-US/global-platform/intl.properties         (win/intl.properties)
 +  locale/en-US/global-platform/platformKeys.properties
 
 en-unix.jar:
 +  locale/en-US/global-platform/contents.rdf 		(contents-platform.rdf)
+   locale/en-US/global-platform/intl.properties         (unix/intl.properties)
 +  locale/en-US/global-platform/platformKeys.properties
 
 en-mac.jar:
 +  locale/en-US/global-platform/contents.rdf		(contents-platform.rdf)
+   locale/en-US/global-platform/intl.properties         (mac/intl.properties)
 +  locale/en-US/global-platform/platformKeys.properties (platformKeys-mac.properties)
 
 US.jar:

@@ -45,7 +45,7 @@ pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
-pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
+pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.vendor", "Firebird");
 pref("general.useragent.vendorSub", "0.7+");
@@ -458,26 +458,30 @@ pref("network.enableIDN",                   false); // Turn on/off IDN (Internat
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 pref("imageblocker.enabled",                true);
-pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
-pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.collationOption",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.menuitems.alwaysappendacceskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more1",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
+
+// l12n and i18n
+pref("intl.accept_languages", "chrome://global/locale/intl.properties");
+pref("intl.accept_charsets",  "iso-8859-1,*,utf-8");
+// collationOption is only set on linux for japanese. see bug 18338 and 62015
+// we need to check if this pref is still useful.
+pref("intl.collationOption",  "chrome://global-platform/locale/intl.properties");
+pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache.size", 5);
-pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
-pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
-pref("intl.locale.matchOS",                 false);
+pref("intl.charset.detector", "chrome://global/locale/intl.properties");
+pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
+pref("intl.content.langcode", "chrome://communicator-region/locale/region.properties");
+pref("intl.locale.matchOS",   false);
 // fallback charset list for Unicode conversion (converting from Unicode)
 // currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
-pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
+pref("font.language.group", "chrome://global/locale/intl.properties");
+pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 
 // -- folders (Mac: these are binary aliases.)
 pref("security.directory",              "");
