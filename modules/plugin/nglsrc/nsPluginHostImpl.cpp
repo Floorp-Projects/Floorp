@@ -30,6 +30,7 @@
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h" 
 #include "nsIHTTPHeader.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -110,14 +111,6 @@
 
 #define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
 
-//uncomment this to use netlib to determine what the
-//user agent string is. we really *want* to do this,
-//can't today since netlib returns 4.05, but this
-//version of plugin functionality really supports
-//5.0 level features. once netlib is returning
-//5.0x, then we can turn this on again. MMP
-//#define USE_NETLIB_FOR_USER_AGENT
-
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
@@ -130,6 +123,7 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 static NS_DEFINE_IID(kIFileUtilitiesIID, NS_IFILEUTILITIES_IID);
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
@@ -1543,31 +1537,45 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   return LoadPlugins();
 }
 
+#define NS_RETURN_UASTRING_SIZE 128
+
 nsresult nsPluginHostImpl::UserAgent(const char **retstring)
 {
+  static char resultString[NS_RETURN_UASTRING_SIZE];
   nsresult res;
 
-#ifdef USE_NETLIB_FOR_USER_AGENT
-  nsString ua;
-  nsINetService *service = nsnull;
+  nsCOMPtr<nsIHTTPProtocolHandler> http = do_GetService(kHTTPHandlerCID, &res);
+  if (NS_FAILED(res)) 
+    return res;
 
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &res);
+  PRUnichar *UAString = nsnull;
+  res = http->GetUserAgent(&UAString);
 
-  if ((NS_OK == res) && (nsnull != service))
+  if (NS_SUCCEEDED(res)) 
   {
-    res = service->GetUserAgent(ua);
-
-    if (NS_OK == res)
-      *retstring = ua.ToNewCString();
-    else
+    nsAutoString ua(UAString);
+    char * newString = ua.ToNewCString();
+    if (!newString) 
+    {
       *retstring = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    if(NS_RETURN_UASTRING_SIZE > PL_strlen(newString))
+    {
+      PL_strcpy(resultString, newString);
+      *retstring = resultString;
+    }
+    else
+    {
+      *retstring = nsnull;
+      res = NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    NS_RELEASE(service);
-  }
-#else //TODO fix this -Gagan
-  *retstring = (const char *)"Mozilla/5.0 [en] (Windows;I)";
-  res = NS_OK;
-#endif
+    nsCRT::free(newString);
+  } 
+  else
+    *retstring = nsnull;
 
   return res;
 }
