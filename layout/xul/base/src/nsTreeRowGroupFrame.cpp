@@ -170,7 +170,8 @@ nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
   nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aRowContent);
   while (currContent && (currContent.get() != mContent)) {
     mContentChain->InsertElementAt(currContent, 0);
-    currContent->GetParent(*getter_AddRefs(currContent));
+    nsCOMPtr<nsIContent> otherContent = currContent;
+    otherContent->GetParent(*getter_AddRefs(currContent));
   }
 
   NS_ASSERTION(currContent.get() == mContent, "Disaster! Content not contained in our tree!\n");
