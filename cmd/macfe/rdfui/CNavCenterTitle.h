@@ -27,39 +27,101 @@
 #include "htrdf.h"
 #include "CGrayBevelView.h"
 #include "CImageIconMixin.h"
+#include "CColorCaption.h"
+
+extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
 
-class CNavCenterTitle 
-	: public CGrayBevelView, public LListener, public CTiledImageMixin
+class CNavCenterStrip 
+	: public CGrayBevelView, public CTiledImageMixin
 {
-public:
-	
-	enum { class_ID = 'hbar', pane_ID = 'hbar', kTitlePaneID = 'titl',
-			kCloseBoxPaneID = 'clos' } ;
-	enum { msg_CloseShelfNow = 'clos' } ;
-	
+	enum {
+		msg_ActiveSelectorChanged	= 'selc'		// broadcast when view changes
+	};
+
 		// Construction, Destruction
-	CNavCenterTitle(LStream *inStream);
-	~CNavCenterTitle();
+	CNavCenterStrip(LStream *inStream);
+	~CNavCenterStrip();
 
 protected:
 
+		// override to use various RDF properties
+	virtual void* BackgroundURLProperty ( ) const = 0;
+	virtual void* BackgroundColorProperty ( ) const = 0;
+	virtual void* ForegroundColorProperty ( ) const = 0;
+	
+		// override to change properties based on a new view
+	virtual void SetView ( HT_View inView ) = 0;
+	virtual HT_View GetView ( ) const { return mView; }
+		
 		// PowerPlant overrides
 	virtual void ListenToMessage ( MessageT inMessage, void* ioParam ) ;
-	virtual void FinishCreateSelf ( ) ;
 
-		// Provide access to the LCaption that displays the title
-	LCaption& TitleCaption ( ) { return *mTitle; }
-	const LCaption& TitleCaption ( ) const { return *mTitle; }
-	
 	virtual	void DrawBeveledFill ( ) ;
 	virtual void DrawStandby ( const Point & inTopLeft, 
 								const IconTransformType inTransform ) const;
 	virtual void EraseBackground ( HT_Resource inTopNode ) const ;
+	virtual void ImageIsReady ( ) ;
+	
+private:
+
+	HT_View		mView;				// ref back to current view for custom drawing 
+		
+}; // class CNavCenterTitle
+
+
+
+
+class CNavCenterTitle : public CNavCenterStrip
+{
+public:	
+	enum { class_ID = 'hbar', kTitlePaneID = 'titl' };
+
+	CNavCenterTitle(LStream *inStream);
+	~CNavCenterTitle();
+
+		// Provide access to the LCaption that displays the title
+	CChameleonCaption& TitleCaption ( ) { return *mTitle; }
+	const CChameleonCaption& TitleCaption ( ) const { return *mTitle; }
+	
+protected:
+
+	virtual void SetView ( HT_View inView ) ;
+	virtual void FinishCreateSelf ( ) ;
+	
+	virtual void* BackgroundURLProperty ( ) const { return gNavCenter->titleBarBGURL; }
+	virtual void* BackgroundColorProperty ( ) const { return gNavCenter->titleBarBGColor; }
+	virtual void* ForegroundColorProperty ( ) const { return gNavCenter->titleBarFGColor; } 
 
 private:
 
-	LCaption*	mTitle;
-	HT_View		mView;			// ref back to current view for custom drawing 
-		
+	CChameleonCaption*	mTitle;
+
 }; // class CNavCenterTitle
+
+
+
+class CNavCenterCommandStrip : public CNavCenterStrip
+{
+public:
+	enum { class_ID = 'tcmd', kDetailsPaneID = 'deta', kClosePaneID = 'clos' } ;
+	enum { msg_CloseShelfNow = 'clos', msg_ModeSwitch = 'mode' } ;
+
+		// Construction, Destruction
+	CNavCenterCommandStrip(LStream *inStream);
+	~CNavCenterCommandStrip();
+	
+private:
+
+	virtual void SetView ( HT_View inView ) ;
+	virtual void FinishCreateSelf ( ) ;
+	virtual void ListenToMessage ( MessageT inMessage, void* ioParam );	
+
+	virtual void* BackgroundURLProperty ( ) const { return gNavCenter->controlStripBGURL; }
+	virtual void* BackgroundColorProperty ( ) const { return gNavCenter->controlStripBGColor; }
+	virtual void* ForegroundColorProperty ( ) const { return gNavCenter->controlStripFGColor; } 
+
+	CChameleonCaption*	mDetails;
+	CChameleonCaption*	mClose;
+	
+}; // class CNavCenterCommandStrip

@@ -28,81 +28,71 @@
 #include "CNavCenterSelectorPane.h"		// for message id's
 #include "URDFUtilities.h"
 
-extern RDF_NCVocab gNavCenter;			// RDF vocab struct for NavCenter
 
-
-CNavCenterTitle :: CNavCenterTitle ( LStream *inStream )
+CNavCenterStrip :: CNavCenterStrip ( LStream *inStream )
 	: CGrayBevelView (inStream),
-		mTitle(NULL), mView(NULL)
+		mView(NULL)
 {
 
 }
 
 
-CNavCenterTitle :: ~CNavCenterTitle()
+CNavCenterStrip :: ~CNavCenterStrip()
 {
 	// nothing to do 
 }
 
 
 //
-// FinishCreateSelf
-//
-// Last minute setup stuff....
-//
-void
-CNavCenterTitle :: FinishCreateSelf ( )
-{
-	mTitle = dynamic_cast<LCaption*>(FindPaneByID(kTitlePaneID));
-	Assert_(mTitle != NULL);
-	
-} // FinishCreateSelf
-
-
-//
 // ListenToMessage
 //
 // We want to know when the selected workspace changes so that we can update the
-// title string. The RDFCoordinator sets us up as a listener to the selector pane
-// which will broadcast when things change.
+// title string, etc. The RDFCoordinator sets us up as a listener which will broadcast,
+// when things change.
 //
 void
-CNavCenterTitle :: ListenToMessage ( MessageT inMessage, void* ioParam ) 
+CNavCenterStrip :: ListenToMessage ( MessageT inMessage, void* ioParam ) 
 {
 	switch ( inMessage ) {
 	
-		case CNavCenterSelectorPane::msg_ActiveSelectorChanged:
+		case msg_ActiveSelectorChanged:
 		{
 			mView = reinterpret_cast<HT_View>(ioParam);
-			if ( mView ) {
-				// do not delete |buffer|
-				const char* buffer = HT_GetViewName ( mView );
-				TitleCaption().SetDescriptor(LStr255(buffer));
-				
-				// if we're in the middle of a drag and drop, draw NOW, not
-				// when we get a refresh event.
-				if ( ::StillDown() ) {
-					FocusDraw();
-					Draw(nil);
-				}
+			if ( mView )
+				SetView(mView);
+
+			// if we're in the middle of a drag and drop, draw NOW, not
+			// when we get a refresh event.
+			if ( ::StillDown() ) {
+				FocusDraw();
+				Draw(nil);
 			}
 		}
+		
+		default:
+			CTiledImageMixin::ListenToMessage ( inMessage, ioParam );
 	
 	} // case of which message
 
 } // ListenToMessage
 
 
+//
+// DrawBeveledFill
+//
+// If the HT_View currently has a bg image specified, draw it (or at least kick off the load)
+// otherwise try to erase with the specified bg color.
+//
 void
-CNavCenterTitle :: DrawBeveledFill ( )
+CNavCenterStrip :: DrawBeveledFill ( )
 {
 	StColorState saved;
 	
 	if ( mView ) {
-		HT_Resource topNode = HT_TopNode(mView);
+		HT_Resource topNode = HT_TopNode(GetView());
 		if ( topNode ) {
 			char* url = NULL;
-			PRBool success = HT_GetNodeData ( topNode, gNavCenter->titleBarBGURL, HT_COLUMN_STRING, &url );
+			PRBool success = HT_GetTemplateData ( topNode, BackgroundURLProperty(), HT_COLUMN_STRING, &url );
 			if ( success && url ) {
 				// draw the background image tiled to fill the whole pane
 				Point topLeft = { 0, 0 };
@@ -123,12 +113,26 @@ CNavCenterTitle :: DrawBeveledFill ( )
 
 
 //
+// ImageIsReady
+//
+// Called when the bg image is done loading and is ready to draw. Force a redraw and
+// we'll pick it up
+//
+void
+CNavCenterStrip :: ImageIsReady ( )
+{
+	Refresh();
+
+} // ImageIsReady
+
+
+//
 // DrawStandby
 //
 // Draw correctly when the image has yet to load.
 //
 void
-CNavCenterTitle :: DrawStandby ( const Point & /*inTopLeft*/, 
+CNavCenterStrip :: DrawStandby ( const Point & /*inTopLeft*/, 
 									const IconTransformType /*inTransform*/ ) const
 {
 	// we're just waiting for the image to come in, who cares if we don't use
@@ -145,12 +149,12 @@ CNavCenterTitle :: DrawStandby ( const Point & /*inTopLeft*/,
 // correct AM color, or the default GA implementation (if we are before AM 1.1).
 //
 void
-CNavCenterTitle :: EraseBackground ( HT_Resource inTopNode ) const
+CNavCenterStrip :: EraseBackground ( HT_Resource inTopNode ) const
 {
 	// when we can get the right AM bg color (in AM 1.1), use that but for now just ignore it
-	if ( !inTopNode || ! URDFUtilities::SetupBackgroundColor(inTopNode, gNavCenter->titleBarBGColor,
+	if ( !inTopNode || ! URDFUtilities::SetupBackgroundColor(inTopNode, BackgroundColorProperty(),
 											kThemeListViewSortColumnBackgroundBrush) ) {
-		CNavCenterTitle* self = const_cast<CNavCenterTitle*>(this);		// hack
+		CNavCenterStrip* self = const_cast<CNavCenterStrip*>(this);		// hack
 		self->CGrayBevelView::DrawBeveledFill();
 	}
 	else {
@@ -160,3 +164,127 @@ CNavCenterTitle :: EraseBackground ( HT_Resource inTopNode ) const
 		::EraseRect(&bounds);
 	}
 } // EraseBackground
+
+
+#pragma mark -
+
+
+CNavCenterTitle :: CNavCenterTitle ( LStream *inStream )
+	: CNavCenterStrip (inStream),
+		mTitle(NULL)
+{
+
+}
+
+
+CNavCenterTitle :: ~CNavCenterTitle()
+{
+	// nothing to do 
+}
+
+
+//
+// FinishCreateSelf
+//
+// Last minute setup stuff....
+//
+void
+CNavCenterTitle :: FinishCreateSelf ( )
+{
+	mTitle = dynamic_cast<CChameleonCaption*>(FindPaneByID(kTitlePaneID));
+	Assert_(mTitle != NULL);
+	
+} // FinishCreateSelf
+
+
+
+//
+// SetView
+//
+// Set the caption to the title of the current view
+//
+void
+CNavCenterTitle :: SetView ( HT_View inView )
+{
+	// do not delete |buffer|
+	const char* buffer = HT_GetViewName ( GetView() );
+	TitleCaption().SetDescriptor(LStr255(buffer));
+	
+	RGBColor textColor;
+	if ( URDFUtilities::GetColor(HT_TopNode(GetView()), ForegroundColorProperty(), &textColor) )
+		TitleCaption().SetColor ( textColor );
+		
+} // SetView
+
+
+#pragma mark -
+
+
+CNavCenterCommandStrip :: CNavCenterCommandStrip ( LStream *inStream )
+	: CNavCenterStrip (inStream),
+		mDetails(NULL), mClose(NULL)
+{
+
+}
+
+
+CNavCenterCommandStrip :: ~CNavCenterCommandStrip()
+{
+	// nothing to do 
+}
+
+
+//
+// FinishCreateSelf
+//
+// Last minute setup stuff....
+//
+void
+CNavCenterCommandStrip :: FinishCreateSelf ( )
+{
+	mDetails = dynamic_cast<CChameleonCaption*>(FindPaneByID(kDetailsPaneID));
+	Assert_(mDetails != NULL);
+
+	// close command not always present
+	mClose = dynamic_cast<CChameleonCaption*>(FindPaneByID(kClosePaneID));
+	
+} // FinishCreateSelf
+
+
+//
+// SetView
+//
+// Update the text colors to those of the current view
+//
+void
+CNavCenterCommandStrip :: SetView ( HT_View inView )
+{
+	RGBColor textColor;
+	if ( URDFUtilities::GetColor(HT_TopNode(GetView()), ForegroundColorProperty(), &textColor) ) {
+		mDetails->SetColor ( textColor );
+		if ( mClose )
+			mClose->SetColor ( textColor );
+	}
+
+} // SetView
+
+
+//
+// ListenToMessage
+//
+// Handle mode switches between navigation and management.
+//
+void
+CNavCenterCommandStrip :: ListenToMessage ( MessageT inMessage, void* ioParam )
+{
+	switch ( inMessage ) {
+		case msg_ModeSwitch:
+			//еее set the title of the "show details" caption
+			Refresh();
+			break;
+		
+		default:
+			CNavCenterStrip::ListenToMessage ( inMessage, ioParam );
+	}
+
+} // ListenToMessage
