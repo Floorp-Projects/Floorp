@@ -23,25 +23,23 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 MODULE=msgcompose
 
-# nsIMsgCompose.idl nsIMsgSend.idl soon
 XPIDLSRCS = \
+		nsIMsgComposeService.idl	\
+		nsIMsgCompose.idl	\
+		nsIMsgCompFields.idl	\
+		nsIMsgSendLater.idl	\
 		$(NULL)
 
 EXPORTS = \
-		nsIMsgCompose.h \
 		nsMsgComposeFact.h \
-		nsIMsgCompFields.h	\
 		nsMsgCompFieldsFact.h	\
 		nsIMsgSend.h \
 		nsMsgSendFact.h \
 		nsMsgSendLaterFact.h \
 		nsISmtpUrl.h	\
 		nsIMsgSend.h	\
-		nsIMsgSendLater.h	\
 		nsISmtpService.h \
 		MsgCompGlue.h \
-		nsIDOMComposeAppCore.h	\
-		nsIComposer.h	\
 		nsMsgComposeBE.h	\
 		$(NULL)
 

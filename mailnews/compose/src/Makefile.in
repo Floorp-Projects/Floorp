@@ -28,8 +28,6 @@ EXPORTS = \
 	nsSmtpUrl.h	\
 	nsSmtpProtocol.h \
 	nsSmtpService.h \
-	nsComposeAppCore.h \
-	nsComposer.h \
 	nsMsgCompPrefs.h \
 	nsMsgZapIt.h \
 	nsMsgCreate.h \
@@ -39,6 +37,9 @@ EXPORTS = \
 	nsMsgComposeStringBundle.h \
 	nsMsgEncoders.h \
 	nsMsgCompUtils.h \
+	nsMsgComposeService.h \
+	nsMsgCompose.h \
+	nsMsgCompFields.h \
 	nsMsgI18N.h \
 	nsMsgAttachmentHandler.h \
 	nsMsgPrompts.h \
@@ -53,12 +54,7 @@ CPPSRCS = \
 	nsMsgSend.cpp \
 	nsMsgSendPart.cpp \
 	nsSmtpService.cpp \
-	nsJSComposeAppCore.cpp \
-	nsComposeAppCore.cpp \
-	nsComposer.cpp \
-	nsComposerNameSet.cpp \
 	nsMsgCompPrefs.cpp \
-	nsIComposer.cpp	\
 	nsMsgZapIt.cpp	\
 	nsMsgCreate.cpp	\
 	nsMsgCopy.cpp \
@@ -70,6 +66,8 @@ CPPSRCS = \
 	nsMsgI18N.cpp \
 	nsMsgAttachmentHandler.cpp \
 	nsMsgPrompts.cpp \
+	nsMsgComposeService.cpp \
+	nsMsgCompose.cpp \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
