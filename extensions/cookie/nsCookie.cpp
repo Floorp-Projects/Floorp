@@ -1327,6 +1327,50 @@ permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save) {
   return NS_OK;
 }
 
+PRIVATE void
+permission_Unblock(char * host, PRInt32 type) {
+
+  /* nothing to do if permission list does not exist */
+  if(!cookie_permissionList) {
+    return;
+  }
+
+  /* find existing entry for host */
+  permission_HostStruct * hostStruct;
+  PRInt32 count = cookie_permissionList->Count();
+  for (PRInt32 hostIndex = 0; hostIndex < count; ++hostIndex) {
+    hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(hostIndex));
+    if (hostStruct && PL_strcasecmp(host, hostStruct->host)==0) {
+      /* host found in list, see if it has an entry for this type */
+      permission_TypeStruct * typeStruct;
+      PRInt32 count2 = hostStruct->permissionList->Count();
+      for (PRInt32 typeIndex=0; typeIndex<count2; typeIndex++) {
+        typeStruct = NS_STATIC_CAST
+          (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
+        if (typeStruct && typeStruct->type == type) {
+          /* type found.  Remove the permission if it is PR_FALSE */
+          if (typeStruct->permission == PR_FALSE) {
+            hostStruct->permissionList->RemoveElementAt(typeIndex);
+            /* if no more types are present, remove the entry */
+            PRInt32 count2 = hostStruct->permissionList->Count();
+            if (count2 == 0) {
+              PR_FREEIF(hostStruct->permissionList);
+              cookie_permissionList->RemoveElementAt(hostIndex);
+              PR_FREEIF(hostStruct->host);
+              PR_Free(hostStruct);
+            }
+            permission_Save();
+            return;
+          }
+          break;
+        }
+      }
+      break;
+    }
+  }
+  return;
+}
+
 MODULE_PRIVATE PRBool
 cookie_IsFromHost(cookie_CookieStruct *cookie_s, char *host) {
   if (!cookie_s || !(cookie_s->host)) {
@@ -2375,7 +2419,7 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
       cookie = NS_STATIC_CAST(cookie_CookieStruct*, cookie_cookieList->ElementAt(count));
       NS_ASSERTION(cookie, "corrupt cookie list");
       if (cookie_InSequence(gone, count)) {
-        if (block[0] != '\0' && block[0] == 't' && cookie->host) {
+        if (block[0] == 't' && cookie->host) {
           char * hostname = nsnull;
           char * hostnameAfterDot = cookie->host;
           while (*hostnameAfterDot == '.') {
@@ -2537,17 +2581,33 @@ Image_Block(nsString imageURL) {
 }
 
 PUBLIC void
-Permission_Add(nsString imageURL, PRBool permission, PRInt32 type) {
-  if (imageURL.Length() == 0) {
+Permission_Add(nsString& objectURL, PRBool permission, PRInt32 type) {
+  if (objectURL.IsEmpty()) {
     return;
   }
-  char * imageURLCString = imageURL.ToNewCString();
-  char *host = cookie_ParseURL(imageURLCString, GET_HOST_PART);
-  Recycle(imageURLCString);
-  char * hostname = nsnull;
-  StrAllocCopy(hostname, host);
-  Recycle(host);
-  permission_Add(hostname, permission, type, PR_TRUE);
+  char * objectURLCString = objectURL.ToNewCString();
+  char *host = cookie_ParseURL(objectURLCString, GET_HOST_PART);
+  Recycle(objectURLCString);
+
+  /*
+   * if permission is false, it will be added to the permission list
+   * if permission is true, any false permissions will be removed rather than a
+   *    true permission being added
+   */
+  if (permission) {
+    char * hostPtr = host;
+    while (PR_TRUE) {
+      permission_Unblock(hostPtr, type);
+      hostPtr = PL_strchr(hostPtr, '.');
+      if (!hostPtr) {
+        break;
+      }
+      hostPtr++; /* get passed the period */
+    }
+    Recycle(host);
+    return;
+  }
+  permission_Add(host, permission, type, PR_TRUE);
 }
 
 MODULE_PRIVATE time_t 
