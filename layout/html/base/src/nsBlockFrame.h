@@ -21,10 +21,10 @@
 
 #include "nsHTMLContainerFrame.h"
 
-class  nsTextRun;
-class  BulletFrame;
-struct LineData;
-struct nsBlockReflowState;
+class nsBlockReflowState;
+class nsBulletFrame;
+class nsLineBox;
+class nsTextRun;
 
 /**
  * Child list name indices
@@ -34,14 +34,16 @@ struct nsBlockReflowState;
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX  1
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX    NS_BLOCK_FRAME_BULLET_LIST_INDEX
 
-#define nsBlockFrameSuper nsHTMLContainerFrame
+#define nsBaseIBFrameSuper nsHTMLContainerFrame
 
-class nsBlockFrame : public nsBlockFrameSuper
+// Additional nsBaseIBFrame.mFlags bit:
+// This is really an inline frame, not a block frame
+#define BLOCK_IS_INLINE 0x100
+
+// Base class for block and inline frames
+class nsBaseIBFrame : public nsBaseIBFrameSuper
 {
 public:
-  nsBlockFrame();
-  ~nsBlockFrame();
-
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -49,23 +51,20 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
-                                   nsIStyleContext* aParentContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
-  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom*& aListName) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
+  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aParentContext);
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aPresContext,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
-                                   nsIFrame*&       aContinuingFrame);
+                                   nsIFrame*&       aContinuingFrame) = 0;
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsString& aResult) const = 0;
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
@@ -78,13 +77,6 @@ public:
                                 nsISpaceManager* aSpaceManager,
                                 nscoord aDeltaX, nscoord aDeltaY);
 
-  // nsBlockFrame
-  void TakeRunInFrames(nsBlockFrame* aRunInFrame);
-  PRBool ShouldPlaceBullet(LineData* aLine);
-  void PlaceBullet(nsBlockReflowState& aState,
-                   nscoord aMaxAscent,
-                   nscoord aTopMargin);
-
 #ifdef DO_SELECTION
   NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
@@ -94,7 +86,7 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
 
-  nsIFrame * FindHitFrame(nsBlockFrame * aBlockFrame, 
+  nsIFrame * FindHitFrame(nsBaseIBFrame * aBlockFrame, 
                           const nscoord aX, const nscoord aY,
                           const nsPoint & aPoint);
 
@@ -103,107 +95,145 @@ public:
   virtual PRBool DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                         nsIFrame* aNextInFlow);
 
-  void RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame);
+protected:
+  nsBaseIBFrame();
+  virtual ~nsBaseIBFrame();
 
   void SetFlags(PRUint32 aFlags) {
     mFlags = aFlags;
   }
 
-  void RecoverLineMargins(nsBlockReflowState& aState,
-                          LineData* aPrevLine,
-                          nscoord& aTopMarginResult,
-                          nscoord& aBottomMarginResult);
-
-  PRUintn CalculateMargins(nsBlockReflowState& aState,
-                           LineData* aLine,
-                           PRBool aInlineContext,
-                           nscoord& aTopMarginResult,
-                           nscoord& aBottomMarginResult);
-
   void SlideFrames(nsIPresContext& aPresContext,
                    nsISpaceManager* aSpaceManager,
-                   LineData* aLine, nscoord aDY);
+                   nsLineBox* aLine, nscoord aDY);
 
   PRBool DrainOverflowLines();
 
-  PRBool RemoveChild(LineData* aLines, nsIFrame* aChild);
+  PRBool RemoveChild(nsLineBox* aLines, nsIFrame* aChild);
 
-  PRIntn GetSkipSides() const;
+  virtual PRIntn GetSkipSides() const;
 
-  nsresult InitialReflow(nsBlockReflowState& aState);
-
-  nsresult FrameAppendedReflow(nsBlockReflowState& aState);
+  virtual void ComputeFinalSize(nsBlockReflowState&  aState,
+                                nsHTMLReflowMetrics& aMetrics);
 
   nsresult InsertNewFrame(nsIPresContext&  aPresContext,
-                          nsBlockFrame*    aParentFrame,
-                          nsIFrame*        aNewFrame,
-                          nsIFrame*        aPrevSibling);
-  nsresult FrameInsertedReflow(nsBlockReflowState& aState);
+                          nsBaseIBFrame* aParentFrame,
+                          nsIFrame* aNewFrame,
+                          nsIFrame* aPrevSibling);
 
-  nsresult FrameRemovedReflow(nsBlockReflowState& aState);
+  nsresult RemoveFrame(nsBlockReflowState& aState,
+                       nsBaseIBFrame* aParentFrame,
+                       nsIFrame* aDeletedFrame,
+                       nsIFrame* aPrevSibling);
 
-  nsresult StyleChangedReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
 
-  nsresult FindTextRuns(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameAppendedReflow(nsBlockReflowState& aState);
 
-  nsresult ChildIncrementalReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameInsertedReflow(nsBlockReflowState& aState);
 
-  nsresult ResizeReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameRemovedReflow(nsBlockReflowState& aState);
 
-  void ComputeFinalSize(nsBlockReflowState&  aState,
-                        nsHTMLReflowMetrics& aMetrics);
+  virtual nsresult PrepareStyleChangedReflow(nsBlockReflowState& aState);
 
-  void BuildFloaterList();
+  virtual nsresult PrepareChildIncrementalReflow(nsBlockReflowState& aState);
 
-  nsresult ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine);
+  virtual nsresult PrepareResizeReflow(nsBlockReflowState& aState);
 
-  PRBool ReflowLine(nsBlockReflowState& aState,
-                    LineData* aLine,
-                    nsReflowStatus& aReflowResult);
+  virtual nsresult ReflowDirtyLines(nsBlockReflowState& aState);
 
-  PRBool PlaceLine(nsBlockReflowState& aState,
-                   LineData* aLine,
-                   nsReflowStatus aReflowStatus);
+  nsresult RecoverStateFrom(nsBlockReflowState& aState,
+                            nsLineBox* aLine);
 
-  PRBool IsLastLine(nsBlockReflowState& aState,
-                    LineData* aLine,
-                    nsReflowStatus aReflowStatus);
+  //----------------------------------------
+  // Methods for line reflow
 
-  void FindFloaters(LineData* aLine);
+  virtual void WillReflowLine(nsBlockReflowState& aState,
+                              nsLineBox* aLine);
 
-  void PrepareInlineReflow(nsBlockReflowState& aState, nsIFrame* aFrame, PRBool aIsBlock);
+  virtual nsresult ReflowLine(nsBlockReflowState& aState,
+                              nsLineBox* aLine,
+                              PRBool& aKeepGoing);
 
-  PRBool ReflowInlineFrame(nsBlockReflowState& aState,
-                           LineData* aLine,
-                           nsIFrame* aFrame,
-                           nsReflowStatus& aResult,
-                           PRBool& aAddedToLine);
+  virtual void DidReflowLine(nsBlockReflowState& aState,
+                             nsLineBox* aLine,
+                             PRBool aKeepGoing);
 
-  nsresult SplitLine(nsBlockReflowState& aState,
-                     LineData* aLine,
-                     nsIFrame* aFrame);
+  nsresult PlaceLine(nsBlockReflowState& aState,
+                     nsLineBox* aLine,
+                     PRBool& aKeepGoing);
 
-  nsBlockFrame* FindFollowingBlockFrame(nsIFrame* aFrame);
+  // XXX blech
+  void PostPlaceLine(nsBlockReflowState& aState,
+                     nsLineBox* aLine,
+                     const nsSize& aMaxElementSize);
 
-  PRBool ReflowBlockFrame(nsBlockReflowState& aState,
-                          LineData* aLine,
-                          nsIFrame* aFrame,
-                          nsReflowStatus& aResult);
+  virtual void DidPlaceLine(nsBlockReflowState& aState,
+                            nsLineBox* aLine,
+                            nscoord aTopMargin, nscoord aBottomMargin,
+                            PRBool aKeepGoing);
 
-  PRBool PullFrame(nsBlockReflowState& aState,
-                   LineData* aToLine,
-                   LineData** aFromList,
-                   PRBool aUpdateGeometricParent,
-                   nsReflowStatus& aResult,
-                   PRBool& aAddedToLine);
+  // XXX where to go
+  PRBool ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine);
 
-  void PushLines(nsBlockReflowState& aState);
+  void FindFloaters(nsLineBox* aLine);
+
+  //----------------------------------------
+  // Methods for individual frame reflow
+
+  virtual void WillReflowFrame(nsBlockReflowState& aState,
+                               nsLineBox* aLine,
+                               nsIFrame* aFrame);
+
+  nsresult ReflowBlockFrame(nsBlockReflowState& aState,
+                            nsLineBox* aLine,
+                            PRBool& aKeepGoing);
+
+  nsresult ReflowInlineFrame(nsBlockReflowState& aState,
+                             nsLineBox* aLine,
+                             nsIFrame* aFrame,
+                             PRBool& aKeepLineGoing,
+                             PRBool& aKeepReflowGoing);
+
+  virtual void DidReflowFrame(nsBlockReflowState& aState,
+                              nsLineBox* aLine,
+                              nsIFrame* aFrame,
+                              nsReflowStatus aStatus);
 
   void ReflowFloater(nsIPresContext& aPresContext,
                      nsBlockReflowState& aState,
                      nsIFrame* aFloaterFrame,
                      nsHTMLReflowState& aFloaterReflowState);
 
+  //----------------------------------------
+  // Methods for pushing/pulling lines/frames
+
+  virtual nsresult CreateContinuationFor(nsBlockReflowState& aState,
+                                         nsLineBox* aLine,
+                                         nsIFrame* aFrame,
+                                         PRBool& aMadeNewFrame);
+
+  nsresult SplitLine(nsBlockReflowState& aState,
+                     nsLineBox* aLine,
+                     nsIFrame* aFrame);
+
+  nsBaseIBFrame* FindFollowingBlockFrame(nsIFrame* aFrame);
+
+  nsresult PullFrame(nsBlockReflowState& aState,
+                     nsLineBox* aLine,
+                     nsIFrame*& aFrameResult);
+
+  nsresult PullFrame(nsBlockReflowState& aState,
+                     nsLineBox* aToLine,
+                     nsLineBox** aFromList,
+                     PRBool aUpdateGeometricParent,
+                     nsIFrame*& aFrameResult,
+                     PRBool& aStopPulling);
+
+  void PushLines(nsBlockReflowState& aState);
+
+  //----------------------------------------
+  //XXX
   void PaintChildren(nsIPresContext& aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
@@ -213,34 +243,126 @@ public:
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
-  void RenumberLists(nsBlockReflowState& aState);
+  nsLineBox* FindLineFor(nsIFrame* aFrame, PRBool& aIsFloaterResult);
+
+  void PropogateReflowDamage(nsBlockReflowState& aState,
+                             nsLineBox* aLine,
+                             nscoord aDeltaY);
+
+  nsresult IsComplete();
 
 #ifdef NS_DEBUG
   PRBool IsChild(nsIFrame* aFrame);
 #endif
 
-  nsIStyleContext* mFirstLineStyle;
-  nsIStyleContext* mFirstLetterStyle;
+  nsLineBox* mLines;
 
-  LineData* mLines;
+  nsLineBox* mOverflowLines;
 
-  LineData* mOverflowLines;
-
-  // Text run information
-  nsTextRun* mTextRuns;
-
-  // For list-item frames, this is the bullet frame.
-  BulletFrame* mBullet;
-
-  // List of all floaters in this block
-  nsIFrame* mFloaters;
-
-  // Body configuration flags passed into this block when this block
-  // is used by the body.
+  // XXX subclass!
   PRUint32 mFlags;
 
   static nsIAtom* gFloaterAtom;
   static nsIAtom* gBulletAtom;
+
+  friend class nsBlockReflowState;
+};
+
+//----------------------------------------------------------------------
+
+#define nsBlockFrameSuper nsBaseIBFrame
+
+class nsBlockFrame : public nsBlockFrameSuper
+{
+public:
+  friend nsresult NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags);
+
+  // nsISupports overrides
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  // nsIFrame overrides
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom*& aListName) const;
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD ReResolveStyleContext(nsIPresContext* aPresContext,
+                                   nsIStyleContext* aParentContext);
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext& aCX,
+                                   nsIFrame* aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*& aContinuingFrame);
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+
+  // nsIHTMLReflow overrides
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+
+protected:
+  nsBlockFrame();
+  virtual ~nsBlockFrame();
+
+  // nsContainerFrame overrides
+  virtual void PaintChildren(nsIPresContext&      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect);
+
+  // nsBaseIBFrame overrides
+  virtual void ComputeFinalSize(nsBlockReflowState&  aState,
+                                nsHTMLReflowMetrics& aMetrics);
+  virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameAppendedReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameInsertedReflow(nsBlockReflowState& aState);
+  virtual nsresult PrepareFrameRemovedReflow(nsBlockReflowState& aState);
+  virtual nsresult ReflowDirtyLines(nsBlockReflowState& aState);
+  virtual void WillReflowLine(nsBlockReflowState& aState,
+                              nsLineBox* aLine);
+  virtual void DidPlaceLine(nsBlockReflowState& aState,
+                            nsLineBox* aLine,
+                            nscoord aTopMargin, nscoord aBottomMargin,
+                            PRBool aLineReflowStatus);
+  virtual void WillReflowFrame(nsBlockReflowState& aState,
+                               nsLineBox* aLine,
+                               nsIFrame* aFrame);
+
+  void TakeRunInFrames(nsBlockFrame* aRunInFrame);
+
+  nsresult FindTextRuns(nsBlockReflowState& aState);
+
+  void BuildFloaterList();
+
+  void RenumberLists(nsBlockReflowState& aState);
+
+  PRBool ShouldPlaceBullet(nsLineBox* aLine);
+
+  void PlaceBullet(nsBlockReflowState& aState,
+                   nscoord aMaxAscent,
+                   nscoord aTopMargin);
+
+  void RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame);
+
+  nsIStyleContext* mFirstLineStyle;
+
+  nsIStyleContext* mFirstLetterStyle;
+
+  // Text run information
+  nsTextRun* mTextRuns;
+
+  // List of all floaters in this block
+  nsIFrame* mFloaters;
+
+  // XXX_fix_me: subclass one more time!
+  // For list-item frames, this is the bullet frame.
+  nsBulletFrame* mBullet;
+
+  //friend class nsBaseIBFrame;
 };
 
 #endif /* nsBlockFrame_h___ */
