@@ -55,11 +55,11 @@ PRUnichar ToUpperCase(PRUnichar);
 PRUnichar ToLowerCase(PRUnichar);
 
 inline PRBool IsUpperCase(PRUnichar c) {
-    return ToUpperCase(c) == c;
+    return ToLowerCase(c) != c;
 }
 
 inline PRBool IsLowerCase(PRUnichar c) {
-    return ToLowerCase(c) == c;
+    return ToUpperCase(c) != c;
 }
 
 #define IS_HIGH_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xd800 && (PRUnichar)(u) <= (PRUnichar)0xdbff)
