@@ -628,7 +628,23 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     }
 
     arg_count = 0;
-    PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
+    if (mWindowType == eWindowType_dialog)
+    {
+    	// center on parent
+    	if (parentWidget)
+    	{
+    		PtCalcAbsPosition(parentWidget, NULL, &dim, &pos);
+	    	PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
+    	}
+	}
+    else if ((mWindowType == eWindowType_toplevel) && parentWidget)
+    {
+        PhPoint_t p = nsToolkit::GetConsoleOffset();
+        pos.x += p.x;
+        pos.y += p.y;
+    	PtSetArg( &arg[arg_count++], Pt_ARG_POS, &pos, 0 );
+    }
+
     PtSetArg( &arg[arg_count++], Pt_ARG_DIM, &dim, 0 );
     PtSetArg( &arg[arg_count++], Pt_ARG_RESIZE_FLAGS, 0, Pt_RESIZE_XY_BITS );
 
@@ -688,6 +704,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_SENSE,    sense | Ph_EV_DRAG|Ph_EV_EXPOSE, sense | Ph_EV_DRAG|Ph_EV_EXPOSE);
         PtSetArg( &arg[arg_count++], Pt_ARG_REGION_OPAQUE,   sense | Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW, sense |Ph_EV_DRAG|Ph_EV_EXPOSE|Ph_EV_DRAW);
         PtSetArg( &arg[arg_count++], Pt_ARG_RAW_CALLBACKS,   &callback, 1 );
+        //PtSetArg( &arg[arg_count++], Pt_ARG_BORDER_WIDTH,   1, 0 );
+        //PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS,   Pt_HIGHLIGHTED, Pt_HIGHLIGHTED);
         PtSetArg( &args[arg_count++], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
         // briane
         //mWidget = PtCreateWidget( PtRegion, parentWidget, arg_count, arg);
@@ -1274,6 +1292,14 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   if( mWidget )
   {
     EnableDamage( mWidget, PR_FALSE );
+
+// briane
+  	if (mWindowType == eWindowType_dialog)
+  	{
+	PhPoint_t p;
+	PtCalcAbsPosition(PtWidgetParent(mWidget), NULL, &dim, &p);
+	Move(p.x, p.y);
+	}
 
     PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
     PtSetResources( mWidget, 1, &arg );
@@ -2458,7 +2484,29 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
 NS_METHOD nsWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 {
-  return NS_OK;
+	char *p = getenv("PHIG");
+	int inp_grp = 1;
+	PhRid_t rid;
+	PhRect_t rect;
+
+	if (p)
+	  	inp_grp = atoi(p);
+
+	PhQueryRids( 0, 0, inp_grp, Ph_GRAFX_REGION, 0, 0, 0, &rid, 1 );
+	PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
+
+	if (*aX < rect.ul.x)
+		*aX += rect.ul.x;
+	else if (*aX > rect.lr.x)
+		*aX = rect.ul.x;
+	if (*aY < rect.ul.y)
+		*aY += rect.ul.y;
+	else if (*aY > rect.lr.y)
+		*aY = rect.ul.y;
+
+	printf("!!!!!!! Constrain Position\n");
+
+  	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -2476,70 +2524,6 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
   /* Keep a untouched version of the coordinates laying around for comparison */
   origX=aX;
   origY=aY;
-
-#if defined(DEBUG) && 0
-  if (mWindowType==eWindowType_popup)
-  {
-    /* For Pop-Up Windows print out Area Ancestry */
-    int count = 1;
-    PhArea_t area;
-    PtWidget_t *top;
-    PhPoint_t offset;
-    
-    PtWidgetArea(mWidget, &area);
-    PtWidgetOffset(mWidget, &offset );
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget offset=<%d,%d>", count, offset.x,offset.y));
-    count++;
-    top = PtWidgetParent(mWidget);
-    while(top)
-    {
-      PtWidgetArea(top, &area);
-      PtWidgetOffset(top, &offset );
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d parent area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d parent offset=<%d,%d>", count, offset.x,offset.y));
-      count++;
-      top = PtWidgetParent(top);    
-    }
-  }
-#endif
-
-#if defined(DEBUG) && 0
-  if (mWindowType==eWindowType_popup)
-  {
-    /* For Pop-Up Windows print out Area Ancestry */
-    int count = 1;
-    PhArea_t area;
-    PtWidget_t *top, *last=nsnull;
-    PhPoint_t offset;
-        
-    PtWidgetArea(mWidget, &area);
-    PtWidgetOffset(mWidget, &offset );
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d mWidget offset=<%d,%d>", count, offset.x,offset.y));
-    count++;
-    top = PtFindDisjoint(mWidget);
-    while((top != last) && top)
-    {
-      PtWidgetArea(top, &area);
-      PtWidgetOffset(top, &offset );
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d disjoint area=<%d,%d,%d,%d>\n", count, area.pos.x,area.pos.y,area.size.w,area.size.h));
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move %d disjoint offset=<%d,%d>", count, offset.x,offset.y));
-      if (PtWidgetIsClass(top, PtWindow))
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move disjoint window is a PtWindow\n"));
-      if (PtWidgetIsClass(top, PtRegion))
-          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move disjoint window is a PtRegion\n"));
-      count++;
-      last = top;
-      PtWidget_t *tmp = PtWidgetParent(top);
-      if (tmp)
-        top = PtFindDisjoint(tmp);    
-      else
-        top = tmp;
-    }
-  }
-#endif
-
 
   if (mWindowType==eWindowType_popup)
   {
@@ -2590,18 +2574,18 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
       aY += offset.y;    
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) to (%ld,%ld) \n", this, aX, aY ));
-
  /* Offset to the current virtual console */
-  if ( (mWindowType == eWindowType_dialog)
-	   || (mWindowType == eWindowType_toplevel)
-	 )
+//  if ( (mWindowType == eWindowType_dialog) || (mWindowType == eWindowType_toplevel) )
+// briane
+  if ( (mWindowType == eWindowType_toplevel) )
   {
-  PhPoint_t offset = nsToolkit::GetConsoleOffset();
+  	PhPoint_t offset = nsToolkit::GetConsoleOffset();
   
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move toplevel console offset=(%d,%d)\n", offset.x, offset.y));
      aX += offset.x;
      aY += offset.y;
+
+     printf("*** MOVE: %d, %d, %d, %d\n", aX, aY, offset.x, offset.y);
   }
 
   /* Subtract off the console offset that got added earlier in this method */
@@ -2614,8 +2598,6 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
      aY -= offset.y;  
   
   }
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Move this=(%p) after console offset to (%ld,%ld) \n", this, aX, aY ));
 
   /* Call my base class */
   nsresult res = nsWidget::Move(aX, aY);
