@@ -64,7 +64,8 @@
 #include "nspr.h"
 PRLogModuleInfo *PALMSYNC;
 
-#define  kPABDirectory  2  // defined in nsDirPrefs.h
+#define kPABDirectory  2  // defined in nsDirPrefs.h
+#define kMAPIDirectory 3
 
 CPalmSyncImp::CPalmSyncImp()
 : m_cRef(1),
@@ -149,11 +150,40 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
   {
     // Get the total number of addrbook.
     PRInt16 count=0;
+    nsCOMPtr<nsISupports> item;
     if (NS_SUCCEEDED(subDirectories->First()))
-    do
     {
-      count++;
-    } while (NS_SUCCEEDED(subDirectories->Next()));
+      do
+      {
+        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        {
+          directory = do_QueryInterface(item, &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+              nsCOMPtr <nsIAbDirectoryProperties> properties;
+              nsXPIDLCString fileName;
+              rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+              if(NS_FAILED(rv)) 
+                continue;
+              rv = properties->GetFileName(getter_Copies(fileName));
+              if(NS_FAILED(rv)) 
+                continue;
+              PRUint32 dirType;
+              rv = properties->GetDirType(&dirType);
+              nsCAutoString prefName;
+              directory->GetDirPrefId(prefName);
+              prefName.Append(".disablePalmSync");
+              PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
+              // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
+              if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
+                   strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
+                    (dirType != kPABDirectory && dirType != kMAPIDirectory))
+                    continue;
+          }
+        }
+        count++;
+      } while (NS_SUCCEEDED(subDirectories->Next()));
+    }
 
     if (!count)
       return E_FAIL;  // should not happen but just in case.
@@ -168,7 +198,6 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     *aABCatIndexList = catIndexList;
 
     // For each valid addrbook collect info.
-    nsCOMPtr<nsISupports> item;
     if (NS_SUCCEEDED(subDirectories->First()))
     {
       do
@@ -204,13 +233,16 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             directory->GetDirPrefId(prefName);
             prefName.Append(".disablePalmSync");
             PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
-            // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
+            // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
             if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
-                 strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
-                  (dirType == kPABDirectory))
+                 strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
+                  (dirType != kPABDirectory && dirType != kMAPIDirectory))
+            {
               continue;
+            }
 
-            if(aIsUnicode) {
+            if(aIsUnicode) 
+            {
               // convert uri to Unicode
               nsAutoString abUrl;
               rv = ConvertToUnicode("UTF-8", uri.get(), abUrl);
@@ -253,7 +285,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
         return E_FAIL;
     }
   }
-    return S_OK;
+  return S_OK;
 }
 
 // Synchronize the Address Book represented by the aCategoryIndex and/or corresponding aABName in Mozilla
@@ -281,20 +313,31 @@ STDMETHODIMP CPalmSyncImp::nsSynchronizeAB(BOOL aIsUnicode, long aCategoryIndex,
 }
 
 // All records from a AB represented by aCategoryIndex and aABName into a new Mozilla AB
-STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
+STDMETHODIMP CPalmSyncImp::nsAddAllABRecords(BOOL aIsUnicode, BOOL replaceExisting, long aCategoryIndex, LPTSTR aABName,
                             int aRemoteRecCount, lpnsABCOMCardStruct aRemoteRecList)
 {
     // since we are not returning any data we don't need to keep the nsAbPalmHotSync reference
     // in order to free the returned data in its destructor. Just create a local nsAbPalmHotSync var.
     nsAbPalmHotSync palmHotSync(aIsUnicode, aABName, (const char*)aABName, aCategoryIndex, -1);
 
-    nsresult rv = palmHotSync.AddAllRecordsInNewAB(aRemoteRecCount, aRemoteRecList);
+    nsresult rv = palmHotSync.AddAllRecordsToAB(replaceExisting, aRemoteRecCount, aRemoteRecList);
 
     if (NS_FAILED(rv))
         return E_FAIL;
 
     return S_OK;
 }
+
+STDMETHODIMP CPalmSyncImp::nsGetABDeleted(LPTSTR aABName, BOOL *abDeleted)
+{
+  nsCAutoString prefName("ldap_2.servers.");
+  prefName.Append((const char *)aABName);
+  prefName.Append(".position");
+  PRInt32 position = GetIntPref(prefName.get(), -1);
+  *abDeleted = (position == 0);
+  return S_OK;
+}
+
 
 // Get All records from a Mozilla AB
 STDMETHODIMP CPalmSyncImp::nsGetAllABCards(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
@@ -408,26 +451,26 @@ void CPalmSyncImp::CopyCString(LPTSTR *destStr, nsCString srcStr)
 }
 
 
-PRBool CPalmSyncImp::GetBoolPref(const char *prefName, PRBool defaultVal)
+/* static */PRBool CPalmSyncImp::GetBoolPref(const char *prefName, PRBool defaultVal)
 {
   PRBool boolVal = defaultVal;
   
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs) 
-  {
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-
-    (void) prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (prefBranch)
-    {
-
-      PRBool bVal = PR_FALSE;
-      prefBranch->GetBoolPref(prefName, &boolVal);
-    }
-  }
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetBoolPref(prefName, &boolVal);
   return boolVal;
 }
+
+/* static */PRInt32 CPalmSyncImp::GetIntPref(const char *prefName, PRInt32 defaultVal)
+{
+  PRInt32 intVal = defaultVal;
+  
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetIntPref(prefName, &intVal);
+  return intVal;
+}
+
 
 STDMETHODIMP CPalmSyncImp::nsUseABHomeAddressForPalmAddress(BOOL *aUseHomeAddress)
 {

@@ -184,14 +184,6 @@ nsresult nsAbPalmHotSync::GetABInterface()
   if (NS_FAILED(directory->GetChildNodes(getter_AddRefs(subDirectories))) || !subDirectories)
     return E_FAIL;
 
-  // Get the total number of addrbook.
-  PRInt16 count=0;
-  if (NS_SUCCEEDED(subDirectories->First()))
-  do
-  {
-    count++;
-  } while (NS_SUCCEEDED(subDirectories->Next()));
-
   // Check each valid addrbook.
   nsCOMPtr<nsISupports> item;
   if (NS_SUCCEEDED(subDirectories->First()))
@@ -223,8 +215,8 @@ nsresult nsAbPalmHotSync::GetABInterface()
 
           // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
           if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
-              strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) &&
-              (dirType == kPABDirectory))
+              strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
+              (dirType != kPABDirectory && dirType != kMAPIDirectory))
             continue;
 
           // If Palm category is already assigned to AB then just check that (ie, was synced before).
@@ -270,21 +262,39 @@ nsresult nsAbPalmHotSync::Initialize()
     return NS_OK;
 }
 
-nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStruct aPalmRecords)
+nsresult nsAbPalmHotSync::AddAllRecordsToAB(PRBool existingAB, PRInt32 aCount, lpnsABCOMCardStruct aPalmRecords)
 {
     NS_ENSURE_ARG_POINTER(aPalmRecords);
-
+    nsresult rv;
     // Create the new AB dir before adding cards/records.
-    nsresult rv = NewAB(mAbName);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (existingAB)
+    {
+      rv = Initialize();  
+      NS_ENSURE_SUCCESS(rv, rv); 
+      rv = OpenABDBForHotSync(PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // lets try deleting the db out from under ourselves. 
+      nsFileSpec *abFileSpec;
+      rv = mABDB->GetDbPath(&abFileSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mABDB->ForceClosed();
+      mDBOpen = PR_FALSE;
+      mABDB = nsnull;
+      abFileSpec->Delete(PR_FALSE);
+      delete abFileSpec;
+    }
+    else
+    {
+      nsresult rv = NewAB(mAbName);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = Initialize(); // Find the new AB and and init some vars (set mDirectory etc).
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = Initialize(); // Find the new AB and and init some vars (set mDirectory etc).
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     // open the Moz AB database
     rv = OpenABDBForHotSync(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
-
     // we are just storing the pointer array here not record arrays
     for (PRInt32 i=0; i < aCount; i++)
         mPalmRecords.AppendElement(&aPalmRecords[i]);
@@ -807,10 +817,19 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
         LL_L2F(f, l);
         PR_cnvtf(recordIDBuf, 128, 0, f);
 
-        // if the card already exist
+        // if the card already exists
         nsCOMPtr<nsIAbCard> existingCard;
         rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_PALMID, recordIDBuf,
                                              PR_FALSE, getter_AddRefs(existingCard));
+        if (!existingCard)
+        {
+          rv = mABDB->GetCardFromAttribute(nsnull, CARD_ATTRIB_DISPLAY, NS_ConvertUCS2toUTF8(palmRec->displayName).get(),
+                                             PR_FALSE, getter_AddRefs(existingCard));
+          // if card with this display name exists, just continue;
+          if (NS_SUCCEEDED(rv) && existingCard)
+            continue;
+
+        }
         if(NS_SUCCEEDED(rv) && existingCard) 
         {
             // Archived is the same as deleted in palm.
@@ -1004,7 +1023,7 @@ nsresult nsAbPalmHotSync::RenameAB(long aCategoryIndex, const char * aABUrl)
   NS_ENSURE_SUCCESS(rv,rv);
   rv = properties->SetURI(aABUrl);
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = properties->SetDirType(kMAPIDirectory); // MAPI dir type for PalmSync
+  rv = properties->SetDirType(kPABDirectory); // pab dir type for PalmSync
   NS_ENSURE_SUCCESS(rv,rv);
   rv = properties->SetCategoryId(aCategoryIndex);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1024,7 +1043,7 @@ nsresult nsAbPalmHotSync::NewAB(const nsString& aAbName)
 
   nsCOMPtr <nsIAbDirectoryProperties> properties = do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  properties->SetDirType(kMAPIDirectory);  // MAPI addrbook type
+  properties->SetDirType(kPABDirectory);  
   properties->SetDescription(aAbName);
 
   return(ab->NewAddressBook(properties));
@@ -1032,7 +1051,7 @@ nsresult nsAbPalmHotSync::NewAB(const nsString& aAbName)
 
 nsresult nsAbPalmHotSync::UpdateABInfo(PRUint32 aModTime, PRInt32 aCategoryIndex)
 {
-  // Fill in perperty info and call ModifyAB().
+  // Fill in property info and call ModifyAB().
   nsresult rv;
   nsCOMPtr <nsIAbDirectoryProperties> properties(do_CreateInstance(NS_ABDIRECTORYPROPERTIES_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv,rv);

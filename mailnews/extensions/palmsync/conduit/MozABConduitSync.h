@@ -96,8 +96,9 @@ protected:
     long PerformSlowSync();
     long CopyHHtoPC();
     long CopyPCtoHH();
-    // utility method
-    BOOL CategoryExists(CPString &mozABName);
+    // utility methods
+    BOOL CategoryExists(CPString &mozABName, CPString &mozABURL);
+    BOOL CategoryNameMatches(CPString &catName, CPString &cutOffMozABName, CPString &mozABURL);
 
 private:
     CSyncProperties m_rSyncProperties;

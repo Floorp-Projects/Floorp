@@ -229,8 +229,8 @@ long MozABPCManager::SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPStri
     return retval;
 }
 
-// this will add all records in a Palm category into a new Mozilla AB 
-long MozABPCManager::AddRecords(LONG categoryIndex, CPString & categoryName,
+// this will add all records in a Palm category into a new or existing Mozilla AB 
+long MozABPCManager::AddRecords(BOOL replaceExisting, LONG categoryIndex, CPString & categoryName,
 					DWORD updatedPalmRecCount, CPalmRecord ** updatedPalmRecList)
 {
     long        retval = 0;
@@ -255,7 +255,7 @@ long MozABPCManager::AddRecords(LONG categoryIndex, CPString & categoryName,
             updatedPalmRecList++;
         }
         // get the ABList
-        HRESULT hres = pNsPalmSync->nsAddAllABRecords(FALSE, categoryIndex, categoryName.GetBuffer(0),
+        HRESULT hres = pNsPalmSync->nsAddAllABRecords(FALSE, replaceExisting, categoryIndex, categoryName.GetBuffer(0),
                                                 updatedPalmRecCount, palmCardList);
         if (hres != S_OK)
             retval = (long) hres;
@@ -274,6 +274,17 @@ long MozABPCManager::AddRecords(LONG categoryIndex, CPString & categoryName,
     return retval;
 }
 
+bool MozABPCManager::PCABDeleted(CPString &ABName)
+{
+    IPalmSync     *pNsPalmSync = NULL;
+    // get the interface 
+    if (!InitMozPalmSyncInstance(&pNsPalmSync))
+        return false;
+    BOOL abDeleted;
+    HRESULT hres = pNsPalmSync->nsGetABDeleted(ABName.GetBuffer(0), &abDeleted);
+    return (hres == S_OK) ? abDeleted : false; // assume false;
+
+}
 // this load all records in an Moz AB
 // this function allocates the mozlist as well as the mozRecs, caller should free list and delete recs
 long MozABPCManager::LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, CPalmRecord *** pPCRecList)

@@ -61,8 +61,8 @@ public:
 	long SynchronizePCAB(LONG categoryIndex, LONG categoryId, CPString & categoryName,
 						DWORD updatedPalmRecCount, CPalmRecord ** updatedPalmRecList,
 						DWORD * pUpdatedPCRecList, CPalmRecord *** updatedPCRecList);
-	// this will add all records in a Palm category into a new Mozilla AB 
-	long AddRecords(LONG categoryIndex, CPString & categoryName,
+	// this will add all records in a Palm category into a new or existing Mozilla AB 
+	long AddRecords(BOOL replaceExisting, LONG categoryIndex, CPString & categoryName,
 						DWORD updatedPalmRecCount, CPalmRecord ** updatedPalmRecList);
     // this load all records in an Moz AB
 	long LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, CPalmRecord *** pPCRecList);
@@ -76,6 +76,7 @@ public:
   // Rename an Moz AB
   long RenamePCAB(LONG categoryIndex, CPString & categoryName, CPString & categoryUrl);
 
+  bool PCABDeleted(CPString &abName);
   static BOOL gUseHomeAddress;
   static BOOL gPreferHomePhone;
 

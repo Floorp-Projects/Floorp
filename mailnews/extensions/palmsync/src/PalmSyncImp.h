@@ -74,7 +74,7 @@ public :
                         int aModRemoteRecCount, lpnsABCOMCardStruct aModRemoteRecList,
                         int * aModMozRecCount, lpnsABCOMCardStruct * aModMozRecList);
 
-    STDMETHODIMP nsAddAllABRecords(BOOL aIsUnicode, long aCategoryIndex, LPTSTR aABName,
+    STDMETHODIMP nsAddAllABRecords(BOOL aIsUnicode, BOOL replaceExisting, long aCategoryIndex, LPTSTR aABName,
                             int aRemoteRecCount, lpnsABCOMCardStruct aRemoteRecList);
 
 
@@ -93,7 +93,10 @@ public :
 
     STDMETHODIMP nsPreferABHomePhoneForPalmPhone(BOOL *aPreferHomePhone);
 
+    STDMETHODIMP nsGetABDeleted(LPTSTR aABName, BOOL *abDeleted);
+
     static PRBool GetBoolPref(const char *prefName, PRBool defaultVal);
+    static PRInt32 GetIntPref(const char *prefName, PRInt32 defaultVal);
     static PRBool nsUseABHomeAddressForPalmAddress();
     static PRBool nsPreferABHomePhoneForPalmPhone();
 private :
