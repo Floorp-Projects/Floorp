@@ -71,7 +71,7 @@
 
 <box autostretch="never" style="margin-top: 5px">
   <text value="File name:"/>
-  <textfield id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
+  <textfield id="textInput" onkeypress="if (event.keyCode == 13) { onOK(); }" flex="1"/>
 </box>
 
 <box autostretch="never">
