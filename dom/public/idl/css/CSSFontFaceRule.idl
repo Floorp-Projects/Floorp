@@ -1,4 +1,4 @@
 
-   interface FontFaceRuleSimple : CSSStyleRule {
+   interface CSSFontFaceRule : CSSStyleRule {
      attribute CSSStyleDeclaration style;
    };
