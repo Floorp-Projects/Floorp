@@ -29,5 +29,6 @@ nsMsgAccountManager.h
 nsMsgRDFDataSource.h
 nsMsgBiffManager.h
 nsMsgNotificationManager.h
+nsCopyMessageStreamListener.h
 
 

@@ -56,7 +56,7 @@
 #include "nsMsgRDFUtils.h"
 
 #include "nsINetService.h"
-#include "nsCopyMessageStreamListener.h"
+#include "nsICopyMessageStreamListener.h"
 #include "nsICopyMessageListener.h"
 
 #include "nsIMessageView.h"
@@ -81,7 +81,8 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
-  static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
+static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
+static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -555,24 +556,29 @@ nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *
 	if(!srcFolderElement || !dstFolderElement || !nodeList)
 		return NS_ERROR_NULL_POINTER;
 
-	nsIRDFResource *srcResource, *dstResource;
-	nsICopyMessageListener *dstFolder;
-	nsIMsgFolder *srcFolder;
-	nsISupportsArray *resourceArray;
+	nsCOMPtr<nsIRDFResource> srcResource, dstResource;
+	nsCOMPtr<nsICopyMessageListener> dstFolder;
+	nsCOMPtr<nsIMsgFolder> srcFolder;
+	nsCOMPtr<nsISupportsArray> resourceArray;
 
-	if(NS_FAILED(rv = dstFolderElement->GetResource(&dstResource)))
+	rv = dstFolderElement->GetResource(getter_AddRefs(dstResource));
+	if(NS_FAILED(rv))
 		return rv;
 
-	if(NS_FAILED(rv = dstResource->QueryInterface(nsICopyMessageListener::GetIID(), (void**)&dstFolder)))
+	dstFolder = do_QueryInterface(dstResource);
+	if(!dstFolder)
+		return NS_ERROR_NO_INTERFACE;
+
+	rv = srcFolderElement->GetResource(getter_AddRefs(srcResource));
+	if(NS_FAILED(rv))
 		return rv;
 
-	if(NS_FAILED(rv = srcFolderElement->GetResource(&srcResource)))
-		return rv;
+	srcFolder = do_QueryInterface(srcResource);
+	if(!srcFolder)
+		return NS_ERROR_NO_INTERFACE;
 
-	if(NS_FAILED(rv = srcResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)&srcFolder)))
-		return rv;
-
-	if(NS_FAILED(rv =ConvertDOMListToResourceArray(nodeList, &resourceArray)))
+	rv =ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
+	if(NS_FAILED(rv))
 		return rv;
 
 	//Call the mailbox service to copy first message.  In the future we should call CopyMessages.
@@ -583,28 +589,35 @@ nsMessenger::CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *
     rv = resourceArray->Count(&cnt);
     if (NS_SUCCEEDED(rv) && cnt > 0)
 	{
-		nsIRDFResource * firstMessage = (nsIRDFResource*)resourceArray->ElementAt(0);
+		nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(resourceArray->ElementAt(0));
+		nsCOMPtr<nsIRDFResource> firstMessage(do_QueryInterface(msgSupports));
 		char *uri;
 		firstMessage->GetValue(&uri);
-		nsCopyMessageStreamListener* copyStreamListener = new nsCopyMessageStreamListener(srcFolder, dstFolder, nsnull);
+		nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
+		rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
+												nsICopyMessageStreamListener::GetIID(),
+												getter_AddRefs(copyStreamListener)); 
+		if(NS_FAILED(rv))
+			return rv;
 
+		rv = copyStreamListener->Init(srcFolder, dstFolder, nsnull);
+		if(NS_FAILED(rv))
+			return rv;
 		nsIMsgMessageService * messageService = nsnull;
 		rv = GetMessageServiceFromURI(uri, &messageService);
 
 		if (NS_SUCCEEDED(rv) && messageService)
 		{
 			nsIURL * url = nsnull;
-			messageService->CopyMessage(uri, copyStreamListener, isMove, nsnull, &url);
+			nsCOMPtr<nsIStreamListener> streamListener(do_QueryInterface(copyStreamListener));
+			if(!streamListener)
+				return NS_ERROR_NO_INTERFACE;
+			messageService->CopyMessage(uri, streamListener, isMove, nsnull, &url);
 			ReleaseMessageServiceFromURI(uri, messageService);
 		}
 
 	}
 
-	NS_RELEASE(srcResource);
-	NS_RELEASE(srcFolder);
-	NS_RELEASE(dstResource);
-	NS_RELEASE(dstFolder);
-	NS_RELEASE(resourceArray);
 	return rv;
 }
 

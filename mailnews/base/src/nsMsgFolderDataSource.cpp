@@ -802,7 +802,8 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
   nsCOMPtr<nsIEnumerator> messages;
   nsresult rv = folder->GetMessages(getter_AddRefs(messages));
   if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
-    if (NS_SUCCEEDED(messages->First())) {
+	rv = messages->First();
+    if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsISupports> firstMessage;
       rv = messages->CurrentItem(getter_AddRefs(firstMessage));
       if (NS_SUCCEEDED(rv)) {
@@ -844,10 +845,10 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 		}
 	}
 	PRUint32 cnt;
-  rv = messageArray->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, txnMgr);
+	rv = messageArray->Count(&cnt);
+	if (NS_FAILED(rv)) return rv;
+	if (cnt > 0)
+		rv = folder->DeleteMessages(messageArray, txnMgr, PR_FALSE);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

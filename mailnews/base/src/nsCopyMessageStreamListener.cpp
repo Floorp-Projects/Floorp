@@ -25,10 +25,44 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewCopyMessageStreamListener(const nsIID& iid, void **result)
+{
+	nsCopyMessageStreamListener *listener = new nsCopyMessageStreamListener();
+	if(!listener)
+		return NS_ERROR_OUT_OF_MEMORY;
+	return listener->QueryInterface(iid, result);
+}
+
+NS_END_EXTERN_C
+
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ADDREF(nsCopyMessageStreamListener)
 NS_IMPL_RELEASE(nsCopyMessageStreamListener)
-NS_IMPL_QUERY_INTERFACE(nsCopyMessageStreamListener, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
+
+NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;
+	if (aIID.Equals(nsIStreamListener::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
+	}              
+	else if(aIID.Equals(nsICopyMessageStreamListener::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageStreamListener*, this);
+	}
+
+	if(*aInstancePtr)
+	{
+		AddRef();
+		return NS_OK;
+	}
+
+	return NS_ERROR_NO_INTERFACE;
+}
 
 static nsresult GetMessage(nsIURL *aURL, nsIMessage **message)
 {
@@ -96,26 +130,28 @@ static nsresult DeleteMessage(nsIURL *aURL, nsIMsgFolder *srcFolder)
 		nsCOMPtr<nsISupportsArray> messageArray;
 		NS_NewISupportsArray(getter_AddRefs(messageArray));
 		messageArray->AppendElement(message);
-		rv = srcFolder->DeleteMessages(messageArray, nsnull);
+		rv = srcFolder->DeleteMessages(messageArray, nsnull, PR_TRUE);
 	}
 	return rv;
 }
 
-nsCopyMessageStreamListener::nsCopyMessageStreamListener(nsIMsgFolder *srcFolder,
-														 nsICopyMessageListener *destination,
-														 nsISupports *listenerData)
+nsCopyMessageStreamListener::nsCopyMessageStreamListener()
 {
   /* the following macro is used to initialize the ref counting data */
 	NS_INIT_REFCNT();
-
-	mSrcFolder = dont_QueryInterface(srcFolder);
-	mDestination = dont_QueryInterface(destination);
-	mListenerData = dont_QueryInterface(listenerData);
 }
 
 nsCopyMessageStreamListener::~nsCopyMessageStreamListener()
 {
 	//All member variables are nsCOMPtr's.
+}
+
+NS_IMETHODIMP nsCopyMessageStreamListener::Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData)
+{
+	mSrcFolder = dont_QueryInterface(srcFolder);
+	mDestination = dont_QueryInterface(destination);
+	mListenerData = dont_QueryInterface(listenerData);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsCopyMessageStreamListener::GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo)

@@ -43,6 +43,7 @@ EXPORTS = \
 	nsMsgRDFDataSource.h \
 	nsMsgBiffManager.h \
 	nsMsgNotificationManager.h \
+	nsCopyMessageStreamListener.h \
 	$(NULL)
 
 CPPSRCS = \

@@ -19,19 +19,22 @@
 #ifndef NSCOPYMESSAGESTREAMLISTENER_H
 #define NSCOPYMESSAGESTREAMLISTENER_H
 
+#include "nsICopyMessageStreamListener.h"
 #include "nsIStreamListener.h"
 #include "nsIMsgFolder.h"
 #include "nsICopyMessageListener.h"
 #include "nsCOMPtr.h"
 
-class nsCopyMessageStreamListener : public nsIStreamListener {
+class nsCopyMessageStreamListener : public nsIStreamListener, public nsICopyMessageStreamListener {
 
 public:
-	nsCopyMessageStreamListener(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination,
-								nsISupports *listenerData);
+	nsCopyMessageStreamListener();
 	virtual ~nsCopyMessageStreamListener();
 
 	NS_DECL_ISUPPORTS
+
+	//nsICopyMessageStreamListener
+	NS_IMETHOD Init(nsIMsgFolder *srcFolder, nsICopyMessageListener *destination, nsISupports *listenerData);
 
 	//nsIStreamListener implementation
 	NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* aInfo);
@@ -51,5 +54,12 @@ protected:
 	nsCOMPtr<nsIMsgFolder> mSrcFolder;
 
 };
+
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewCopyMessageStreamListener(const nsIID& iid, void **result);
+
+NS_END_EXTERN_C
 
 #endif
