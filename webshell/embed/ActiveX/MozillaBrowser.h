@@ -173,8 +173,10 @@ protected:
 	// List of registered browser helper objects
 	ObjectList				m_cBrowserHelperList;
 
+	virtual HRESULT SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr);
 	virtual HRESULT CreateWebShell();
 	virtual HRESULT GetDOMDocument(nsIDOMDocument **pDocument);
+	virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
 	virtual BOOL IsValid();
 
 	virtual HRESULT LoadBrowserHelpers();

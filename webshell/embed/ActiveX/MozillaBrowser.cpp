@@ -16,15 +16,29 @@
  * Reserved.
  */
 
-// MozillaBrowser.cpp : Implementation of CMozillaBrowser
 #include "stdafx.h"
-
 #include <string.h>
 #include <string>
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
 #include "IEHtmlDocument.h"
+
+
+static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
+static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
+
+#define RETURN_ERROR(message, hr) \
+	SetErrorInfo(message, hr); \
+	return hr;
+
+#define RETURN_E_INVALIDARG() \
+	RETURN_ERROR(c_szInvalidArg, E_INVALIDARG);
+
+#define RETURN_E_UNEXPECTED() \
+	RETURN_ERROR(c_szUninitialized, E_UNEXPECTED);
+
+
 
 extern "C" void NS_SetupRegistry();
 
@@ -129,6 +143,8 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 	static const IID* arr[] = 
 	{
 		&IID_IWebBrowser,
+		&IID_IWebBrowser2,
+		&IID_IWebBrowserApp
 	};
 	for (int i=0;i<sizeof(arr)/sizeof(arr[0]);i++)
 	{
@@ -139,6 +155,39 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 }
 
 
+int CMozillaBrowser::MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption, UINT nType)
+{
+	// Let the doc host display it's own message box if it can
+	CIPtr(IDocHostShowUI) spIDocHostShowUI = m_spClientSite;
+	if (spIDocHostShowUI)
+	{
+		USES_CONVERSION;
+		LRESULT lResult = 0;
+		HRESULT hr = spIDocHostShowUI->ShowMessage(m_hWnd,
+						T2OLE(lpszText), T2OLE(lpszCaption), nType, NULL, 0, &lResult);
+		if (hr == S_OK)
+		{
+			return lResult;
+		}
+	}
+
+	// Do the default message box
+	return CWindow::MessageBox(lpszText, lpszCaption, nType);
+}
+
+
+HRESULT CMozillaBrowser::SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr)
+{
+	USES_CONVERSION;
+	return AtlSetErrorInfo(GetObjectCLSID(), T2OLE(lpszDesc), 0, NULL, GUID_NULL, hr, NULL);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Message handlers
+
+
+// Handle WM_CREATE windows message
 LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnCreate);
@@ -148,6 +197,8 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
     // Create the NGLayout WebShell
     CreateWebShell();
+
+	// TODO create and register a drop target
 
 	// Control is ready
 	m_nBrowserReadyState = READYSTATE_LOADED;
@@ -170,12 +221,15 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 }
 
 
+// Handle WM_DESTROY window message
 LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnDestroy);
 
 	// Unload browser helpers
 	UnloadBrowserHelpers();
+
+	// TODO unregister drop target
 
  	// Destroy the htmldoc
  	if (m_pDocument != NULL)
@@ -209,6 +263,7 @@ LRESULT CMozillaBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 }
 
 
+// Handle WM_SIZE windows message
 LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnSize);
@@ -222,6 +277,21 @@ LRESULT CMozillaBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& b
 }
 
 
+// Handle WM_PAINT windows message (and IViewObject::Draw) 
+HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
+{
+    if (m_pIWebShell == nsnull)
+	{
+		RECT& rc = *(RECT*)di.prcBounds;
+		Rectangle(di.hdcDraw, rc.left, rc.top, rc.right, rc.bottom);
+		DrawText(di.hdcDraw, m_sErrorMessage.c_str(), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+	}
+
+	return S_OK;
+}
+
+
+// Handle ID_PAGESETUP command
 LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	MessageBox(_T("No page setup yet!"), _T("Control Message"), MB_OK);
@@ -230,6 +300,7 @@ LRESULT CMozillaBrowser::OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, B
 }
 
 
+// Handle ID_PRINT command
 LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	// Print the contents
@@ -247,6 +318,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 }
 
 
+// Handle ID_VIEWSOURCE command
 LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {	
 	// Get the url from the web shell
@@ -307,25 +379,15 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 }
 
 
+// Test if the browser is in a valid state
 BOOL CMozillaBrowser::IsValid()
 {
 	return (m_pIWebShell == nsnull) ? FALSE : TRUE;
 }
 
 
-HRESULT CMozillaBrowser::OnDraw(ATL_DRAWINFO& di)
-{
-    if (m_pIWebShell == nsnull)
-	{
-		RECT& rc = *(RECT*)di.prcBounds;
-		Rectangle(di.hdcDraw, rc.left, rc.top, rc.right, rc.bottom);
-		DrawText(di.hdcDraw, m_sErrorMessage.c_str(), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	}
-
-	return S_OK;
-}
-
 /////////////////////////////////////////////////////////////////////////////
+
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 
@@ -334,6 +396,7 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 #endif /* USE_NGPREF */
 
+
 HRESULT CMozillaBrowser::CreateWebShell() 
 {
 	NG_TRACE_METHOD(CMozillaBrowser::CreateWebShell);
@@ -341,7 +404,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	if (m_pIWebShell != nsnull)
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	RECT rcLocation;
@@ -408,6 +471,7 @@ HRESULT CMozillaBrowser::CreateWebShell()
 	return S_OK;
 }
 
+
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
 	if (pDocument == NULL)
@@ -450,7 +514,7 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 }
 
 
-const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
+static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Browser Helper Objects");
 
 HRESULT CMozillaBrowser::LoadBrowserHelpers()
 {
@@ -550,8 +614,8 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 /////////////////////////////////////////////////////////////////////////////
 // IOleObject overrides
 
-// This is an almost verbatim copy of the standard InPlaceActivate but with
-// a few lines commented out.
+// This is an almost verbatim copy of the standard ATL implementation of
+// IOleObject::InPlaceActivate but with a few lines commented out.
 
 HRESULT CMozillaBrowser::InPlaceActivate(LONG iVerb, const RECT* prcPosRect)
 {
@@ -718,7 +782,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoBack(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (m_pIWebShell->CanBack() == NS_OK)
@@ -737,7 +801,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoForward(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (m_pIWebShell->CanForward() == NS_OK)
@@ -756,7 +820,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	USES_CONVERSION;
@@ -790,7 +854,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoSearch(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	USES_CONVERSION;
@@ -818,7 +882,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// Extract the URL parameter
@@ -827,7 +891,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	if (URL == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	else
 	{
@@ -853,7 +917,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		if (vFlags.ChangeType(VT_I4, Flags) != S_OK)
 		{
 			NG_ASSERT(0);
-			return E_INVALIDARG;
+			RETURN_E_INVALIDARG();
 		}
 		lFlags = vFlags.lVal;
 	}
@@ -939,7 +1003,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// Reload the page
@@ -955,7 +1019,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_NULL_OR_POINTER(Level, VARIANT);
@@ -968,7 +1032,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		if (vLevelAsInt.ChangeType(VT_I4, Level) != S_OK)
 		{
 			NG_ASSERT(0);
-			return E_INVALIDARG;
+			RETURN_E_UNEXPECTED();
 		}
 		iRefreshLevel = (OLECMDID_REFRESHFLAG) vLevelAsInt.iVal;
 	}
@@ -990,7 +1054,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	default:
 		// No idea what refresh type this is supposed to be
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_UNEXPECTED();
 	}
 
 	m_pIWebShell->Reload(type);
@@ -1006,7 +1070,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	m_pIWebShell->Stop();
@@ -1022,13 +1086,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Application(IDispatch __RPC_FAR *
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// Return a pointer to this controls dispatch interface
@@ -1045,13 +1109,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Parent(IDispatch __RPC_FAR *__RPC
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// Attempt to get the parent object of this control
@@ -1072,17 +1136,17 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Container(IDispatch __RPC_FAR *__
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*ppDisp = NULL;
-	return E_NOINTERFACE;
+	RETURN_E_UNEXPECTED();
 }
 
 
@@ -1093,13 +1157,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(ppDisp, sizeof(IDispatch *)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_UNEXPECTED();
 	}
 
 	*ppDisp = NULL;
@@ -1108,7 +1172,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
 	nsIDOMDocument *pIDOMDocument = nsnull;
 	if (FAILED(GetDOMDocument(&pIDOMDocument)) || pIDOMDocument == nsnull)
 	{
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (m_pDocument == NULL)
@@ -1116,7 +1180,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Document(IDispatch __RPC_FAR *__R
  		CIEHtmlDocumentInstance::CreateInstance(&m_pDocument);
   		if (m_pDocument == NULL)
  		{
- 			return E_OUTOFMEMORY;
+			RETURN_ERROR(_T("Refresh2: called while browser is invalid"), E_OUTOFMEMORY);
  		}
  		
 		// addref it so it doesn't go away on us.
@@ -1141,13 +1205,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TopLevelContainer(VARIANT_BOOL __
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(pBool, sizeof(VARIANT_BOOL)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pBool = VARIANT_TRUE;
@@ -1162,9 +1226,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Type(BSTR __RPC_FAR *Type)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
-	return E_FAIL;
+
+	RETURN_ERROR(_T("get_Type: failed"), E_FAIL);
 }
 
 
@@ -1175,13 +1240,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Left(long __RPC_FAR *pl)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pl == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pl = 0;
 	return S_OK;
@@ -1195,7 +1260,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Left(long Left)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 	return S_OK;
 }
@@ -1208,13 +1273,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Top(long __RPC_FAR *pl)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pl == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pl = 0;
 	return S_OK;
@@ -1228,7 +1293,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Top(long Top)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 	return S_OK;
 }
@@ -1241,13 +1306,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Width(long __RPC_FAR *pl)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pl == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pl = 0;
 	return S_OK;
@@ -1261,7 +1326,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Width(long Width)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 	return S_OK;
 }
@@ -1273,12 +1338,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Height(long __RPC_FAR *pl)
 
     if (!IsValid())
 	{
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pl == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pl = 0;
 	return S_OK;
@@ -1292,7 +1357,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Height(long Height)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 	return S_OK;
 }
@@ -1305,12 +1370,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (LocationName == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// Get the url from the web shell
@@ -1318,7 +1383,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationName(BSTR __RPC_FAR *Loca
 	m_pIWebShell->GetTitle(&pszLocationName);
 	if (pszLocationName == nsnull)
 	{
-		return E_FAIL;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// Convert the string to a BSTR
@@ -1337,13 +1402,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (LocationURL == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// Get the url from the web shell
@@ -1372,13 +1437,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Busy(VARIANT_BOOL __RPC_FAR *pBoo
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (!NgIsValidAddress(pBool, sizeof(*pBool)))
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pBool = (m_bBusy) ? VARIANT_TRUE : VARIANT_FALSE;
@@ -1397,7 +1462,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Quit(void)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// TODO fire quit event
@@ -1412,7 +1477,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ClientToWindow(int __RPC_FAR *pcx, in
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// TODO convert points to be relative to browser
@@ -1427,12 +1492,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::PutProperty(BSTR szProperty, VARIANT 
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (szProperty == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	PropertyList::iterator i;
 	for (i = m_PropertyList.begin(); i != m_PropertyList.end(); i++)
@@ -1462,7 +1527,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT(Property);
@@ -1470,7 +1535,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetProperty(BSTR Property, VARIANT __
 	
 	if (Property == NULL || pvtValue == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	
 	VariantInit(pvtValue);
@@ -1496,13 +1561,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Name(BSTR __RPC_FAR *Name)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(Name, BSTR);
 	if (Name == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*Name = SysAllocString(L""); // TODO get Mozilla's executable name
 	return S_OK;
@@ -1516,13 +1581,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_HWND(long __RPC_FAR *pHWND)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(pHWND, HWND);
 	if (pHWND == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pHWND = NULL;
@@ -1537,13 +1602,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullName(BSTR __RPC_FAR *FullName
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(FullName, BSTR);
 	if (FullName == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*FullName = SysAllocString(L""); // TODO get Mozilla's executable name
 	return S_OK;
@@ -1557,13 +1622,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Path(BSTR __RPC_FAR *Path)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(Path, BSTR);
 	if (Path == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*Path = SysAllocString(L""); // TODO get Mozilla's path
 	return S_OK;
@@ -1577,13 +1642,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Visible(VARIANT_BOOL __RPC_FAR *p
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(pBool, int);
 	if (pBool == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pBool = VARIANT_FALSE;
 	return S_OK;
@@ -1597,7 +1662,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Visible(VARIANT_BOOL Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1611,13 +1676,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusBar(VARIANT_BOOL __RPC_FAR 
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(pBool, int);
 	if (pBool == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pBool = VARIANT_FALSE;
 	return S_OK;
@@ -1631,7 +1696,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusBar(VARIANT_BOOL Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1645,13 +1710,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_StatusText(BSTR __RPC_FAR *Status
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(StatusText, BSTR);
 	if (StatusText == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*StatusText = SysAllocString(L""); // TODO
 	return S_OK;
@@ -1665,7 +1730,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_StatusText(BSTR StatusText)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1679,13 +1744,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ToolBar(int __RPC_FAR *Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(Value, int);
 	if (Value == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*Value = FALSE;
 	return S_OK;
@@ -1699,7 +1764,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_ToolBar(int Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// No toolbar in control!
@@ -1714,13 +1779,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_MenuBar(VARIANT_BOOL __RPC_FAR *V
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(Value, int);
 	if (Value == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*Value = VARIANT_FALSE;
 	return S_OK;
@@ -1734,7 +1799,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_MenuBar(VARIANT_BOOL Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// No menu in control!
@@ -1749,13 +1814,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_FullScreen(VARIANT_BOOL __RPC_FAR
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	NG_ASSERT_POINTER(pbFullScreen, VARIANT_BOOL);
 	if (pbFullScreen == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 	*pbFullScreen = VARIANT_FALSE;
 	return S_OK;
@@ -1769,7 +1834,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_FullScreen(VARIANT_BOOL bFullScre
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// No fullscreen mode in control!
@@ -1788,19 +1853,19 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate2(VARIANT __RPC_FAR *URL, VAR
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (URL == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	CComVariant vURLAsString;
 	if (vURLAsString.ChangeType(VT_BSTR, URL) != S_OK)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	return Navigate(vURLAsString.bstrVal, Flags, TargetFrameName, PostData, Headers);
@@ -1814,12 +1879,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::QueryStatusWB(OLECMDID cmdID, OLECMDF
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pcmdf == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// Call through to IOleCommandTarget::QueryStatus
@@ -1845,7 +1910,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ExecWB(OLECMDID cmdID, OLECMDEXECOPT 
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// Call through to IOleCommandTarget::Exec
@@ -1862,7 +1927,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::ShowBrowserBar(VARIANT __RPC_FAR *pva
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1876,7 +1941,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_ReadyState(READYSTATE __RPC_FAR *
 	if (plReadyState == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*plReadyState = m_nBrowserReadyState;
@@ -1892,13 +1957,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Offline(VARIANT_BOOL __RPC_FAR *p
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pbOffline == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pbOffline = VARIANT_FALSE;
@@ -1913,7 +1978,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Offline(VARIANT_BOOL bOffline)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1927,12 +1992,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Silent(VARIANT_BOOL __RPC_FAR *pb
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pbSilent == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pbSilent = VARIANT_FALSE;
@@ -1947,7 +2012,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Silent(VARIANT_BOOL bSilent)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// IGNORE
@@ -1962,13 +2027,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsBrowser(VARIANT_BOOL __
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pbRegister == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pbRegister = VARIANT_FALSE;
@@ -1983,7 +2048,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsBrowser(VARIANT_BOOL bR
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -1997,13 +2062,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_RegisterAsDropTarget(VARIANT_BOOL
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pbRegister == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*pbRegister = VARIANT_FALSE; // TODO check if registered
@@ -2018,7 +2083,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_RegisterAsDropTarget(VARIANT_BOOL
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	// TODO register the window as a drop target
@@ -2034,13 +2099,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_TheaterMode(VARIANT_BOOL __RPC_FA
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (pbRegister == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	// No theatermode!
@@ -2057,7 +2122,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_TheaterMode(VARIANT_BOOL bRegiste
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -2071,12 +2136,12 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_AddressBar(VARIANT_BOOL __RPC_FAR
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (Value == NULL)
 	{
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*Value = VARIANT_FALSE;
@@ -2091,7 +2156,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_AddressBar(VARIANT_BOOL Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
@@ -2105,13 +2170,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_Resizable(VARIANT_BOOL __RPC_FAR 
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	if (Value == NULL)
 	{
 		NG_ASSERT(0);
-		return E_INVALIDARG;
+		RETURN_E_INVALIDARG();
 	}
 
 	*Value = VARIANT_FALSE;
@@ -2126,7 +2191,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
     if (!IsValid())
 	{
 		NG_ASSERT(0);
-		return E_UNEXPECTED;
+		RETURN_E_UNEXPECTED();
 	}
 
 	return S_OK;
