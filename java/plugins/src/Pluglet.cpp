@@ -163,7 +163,7 @@ int Pluglet::Compare(const char *mimeType) {
         }
         p1 = p2 ;
         if (p2 != NULL) {
-            p2 = strchr(p2,';');
+            p2 = strchr(++p2,';');
             p1++;
         }
     }
