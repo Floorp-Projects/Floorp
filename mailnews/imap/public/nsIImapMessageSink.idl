@@ -72,4 +72,6 @@ interface nsIImapMessageSink : nsISupports {
 
     void SetContentModified(in nsIImapUrl aImapUrl, in nsImapContentModifiedType modified);
     void SetImageCacheSessionForUrl(in nsIMsgMailNewsUrl aMailUrl);
+    
+    boolean isCurMoveCopyMessageRead(in nsIImapUrl runningUrl);
 };

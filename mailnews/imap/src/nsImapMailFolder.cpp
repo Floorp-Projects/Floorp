@@ -4030,6 +4030,26 @@ nsImapMailFolder::SetImageCacheSessionForUrl(nsIMsgMailNewsUrl *mailurl)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::IsCurMoveCopyMessageRead(nsIImapUrl *runningUrl, PRBool *aResult)
+{
+  nsCOMPtr <nsISupports> copyState;
+  runningUrl->GetCopyState(getter_AddRefs(copyState));
+  if (copyState)
+  {
+    nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState);
+    if (mailCopyState)
+    {
+      PRUint32 flags;
+      if (mailCopyState->m_message)
+      {
+        mailCopyState->m_message->GetFlags(&flags);
+        *aResult =(flags & MSG_FLAG_READ) != 0;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImapMailFolder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
   return NS_OK;

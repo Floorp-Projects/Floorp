@@ -4683,25 +4683,11 @@ void nsImapProtocol::OnAppendMsgFromFile()
         if (mailboxName)
         {
           imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
-          nsCOMPtr <nsISupports> copyState;
-          m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-          if (copyState)
-          {
-            nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState, &rv);
-            if (mailCopyState)
-            {
-              nsCOMPtr <nsIMsgDBHdr> curMsg = mailCopyState->m_message;
-              PRUint32 flags;
-
-              if (curMsg)
-              {
-                curMsg->GetFlags(&flags);
-                if (! (flags & MSG_FLAG_READ))
+          PRBool read;
+          if (m_imapMessageSink)
+            m_imapMessageSink->IsCurMoveCopyMessageRead(m_runningUrl, &read);
+          if (!read)
                   flagsToSet &= ~MSG_FLAG_READ;
-              }
-
-            }
-          }
           UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
           PR_Free( mailboxName );
         }
