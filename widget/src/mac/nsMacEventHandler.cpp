@@ -546,6 +546,20 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 				mLastWidgetHit->AddDeleteObserver(this);
 			break;
 		}
+
+
+		case inZoomIn:
+		case inZoomOut:
+		{
+			// Now that we have found the partcode it is ok to actually zoom the window
+			ZoomWindow(whichWindow, partCode, (whichWindow == FrontWindow()));
+			
+			Rect macRect = whichWindow->portRect;
+			::LocalToGlobal(&topLeft(macRect));
+			::LocalToGlobal(&botRight(macRect));
+			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+			break;
+		}
 	}
 	return retVal;
 }
