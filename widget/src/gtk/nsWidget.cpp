@@ -96,7 +96,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   }
   if (mWidget) {
     // see if we need to destroy the old size information
-    old_size = gtk_object_get_data(GTK_OBJECT(mWidget), "mozilla.old_size");
+    old_size = (GtkAllocation *) gtk_object_get_data(GTK_OBJECT(mWidget), "mozilla.old_size");
     if (old_size) {
       g_free(old_size);
     }
