@@ -215,6 +215,24 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 // sampling the clock too often.
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
 
+typedef nsresult (*contentCreatorCallback)(nsIHTMLContent**, nsINodeInfo*);
+
+nsresult
+NS_NewHTMLNOTUSEDElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
+{
+  NS_NOTREACHED("The element ctor should never be called");
+  return NS_ERROR_FAILURE;
+}
+
+#define HTML_TAG(_tag, _classname) NS_NewHTML##_classname##Element,
+#define HTML_OTHER(_tag, _classname) NS_NewHTML##_classname##Element,
+static const contentCreatorCallback sContentCreatorCallbacks[] = {
+  NS_NewHTMLUnknownElement,
+#include "nsHTMLTagList.h"
+};
+#undef HTML_TAG
+#undef HTML_OTHER
+
 class SinkContext;
 
 class HTMLContentSink : public nsIHTMLContentSink,
@@ -903,17 +921,15 @@ static void
 SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
+  NS_ASSERTION(formControl, "nsIDOMHTMLFormElement doesnt implement nsIFormControl?");
 
-  if (formControl) {
-    formControl->SetForm(aForm);
-  }
+  formControl->SetForm(aForm);
 }
 
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIDocShell* aDocShell,
-                  nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
-                  PRBool aFromParser);
+                  nsIDOMHTMLFormElement* aForm, nsIHTMLContent** aResult,
+                  PRBool aInsideNoXXXTag, PRBool aFromParser);
 
 /**
  * Factory subroutine to create all of the html content objects.
@@ -965,7 +981,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   // Make the content object
-  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aDocShell, aResult,
+  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aResult,
                          !!mInsideNoXXXTag, PR_TRUE);
 
   if (aNodeType == eHTMLTag_textarea && !mSkippedContent.IsEmpty()) {
@@ -1028,7 +1044,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
   }
 
   if (aCaseSensitive) {
-    rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull, nsnull,
+    rv = MakeContentObject(nsHTMLTag(id), aNodeInfo, nsnull,
                            aResult, PR_FALSE, PR_FALSE);
   } else {
     // Revese map id to name to get the correct character case in
@@ -1052,7 +1068,7 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
       }
     }
 
-    rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, nsnull, aResult,
+    rv = MakeContentObject(nsHTMLTag(id), nodeInfo, nsnull, aResult,
                            PR_FALSE, PR_FALSE);
   }
 
@@ -1117,305 +1133,56 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
   return rv;
 }
 
-// XXX compare switch statement against nsHTMLTags.h's list
 nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIDocShell* aDocShell,
-                  nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
-                  PRBool aFromParser)
+                  nsIDOMHTMLFormElement* aForm, nsIHTMLContent** aResult,
+                  PRBool aInsideNoXXXTag, PRBool aFromParser)
 {
-  nsresult rv = NS_OK;
 
-  switch (aNodeType) {
-  case eHTMLTag_a:
-    rv = NS_NewHTMLAnchorElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_applet:
-    rv = NS_NewHTMLAppletElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_area:
-    rv = NS_NewHTMLAreaElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_base:
-    rv = NS_NewHTMLBaseElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_basefont:
-    rv = NS_NewHTMLBaseFontElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_blockquote:
-    rv = NS_NewHTMLQuoteElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_body:
-    rv = NS_NewHTMLBodyElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_br:
-    rv = NS_NewHTMLBRElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_button:
-    rv = NS_NewHTMLButtonElement(aResult, aNodeInfo);
-    if (!aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-
-    break;
-  case eHTMLTag_caption:
-    rv = NS_NewHTMLTableCaptionElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_col:
-    rv = NS_NewHTMLTableColElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_colgroup:
-    rv = NS_NewHTMLTableColGroupElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_dir:
-    rv = NS_NewHTMLDirectoryElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_del:
-    rv = NS_NewHTMLDelElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_div:
-  case eHTMLTag_marquee:
-  case eHTMLTag_noembed:
-  case eHTMLTag_noframes:
-  case eHTMLTag_noscript:
-  case eHTMLTag_parsererror:
-  case eHTMLTag_sourcetext:
-    rv = NS_NewHTMLDivElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_dl:
-    rv = NS_NewHTMLDListElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_embed:
-    rv = NS_NewHTMLEmbedElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_fieldset:
-    rv = NS_NewHTMLFieldSetElement(aResult, aNodeInfo);
-    if (!aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-
-    break;
-  case eHTMLTag_font:
-    rv = NS_NewHTMLFontElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_form:
-    // the form was already created
+  if (aNodeType == eHTMLTag_form) {
     if (aForm) {
-      rv = CallQueryInterface(aForm, aResult);
-    } else {
-      rv = NS_NewHTMLFormElement(aResult, aNodeInfo);
+      // the form was already created
+      return CallQueryInterface(aForm, aResult);
     }
+    return NS_NewHTMLFormElement(aResult, aNodeInfo);
+  }
 
-    break;
-  case eHTMLTag_frame:
-    rv = NS_NewHTMLFrameElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_frameset:
-    rv = NS_NewHTMLFrameSetElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_h1:
-  case eHTMLTag_h2:
-  case eHTMLTag_h3:
-  case eHTMLTag_h4:
-  case eHTMLTag_h5:
-  case eHTMLTag_h6:
-    rv = NS_NewHTMLHeadingElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_head:
-    rv = NS_NewHTMLHeadElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_hr:
-    rv = NS_NewHTMLHRElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_html:
-    rv = NS_NewHTMLHtmlElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_iframe:
-    rv = NS_NewHTMLIFrameElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_img:
-    rv = NS_NewHTMLImageElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_input:
+  nsresult rv;
+  // The "creator" functions for input and select elements don't have
+  // the usual prototype and hence are not in the creator callback
+  // table
+  if (aNodeType == eHTMLTag_input) {
     rv = NS_NewHTMLInputElement(aResult, aNodeInfo, aFromParser);
     if (!aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
+    return rv;
+  }
 
-    break;
-  case eHTMLTag_ins:
-    rv = NS_NewHTMLInsElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_isindex:
-    rv = NS_NewHTMLIsIndexElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_label:
-    rv = NS_NewHTMLLabelElement(aResult, aNodeInfo);
-    if (!aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-
-    break;
-  case eHTMLTag_legend:
-    rv = NS_NewHTMLLegendElement(aResult, aNodeInfo);
-    if (!aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-
-    break;
-  case eHTMLTag_li:
-    rv = NS_NewHTMLLIElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_link:
-    rv = NS_NewHTMLLinkElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_map:
-    rv = NS_NewHTMLMapElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_menu:
-    rv = NS_NewHTMLMenuElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_meta:
-    rv = NS_NewHTMLMetaElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_object:
-    rv = NS_NewHTMLObjectElement(aResult, aNodeInfo);
-    if (!aInsideNoXXXTag) {
-      SetForm(*aResult, aForm);
-    }
-
-    break;
-  case eHTMLTag_ol:
-    rv = NS_NewHTMLOListElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_optgroup:
-    rv = NS_NewHTMLOptGroupElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_option:
-    rv = NS_NewHTMLOptionElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_p:
-    rv = NS_NewHTMLParagraphElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_pre:
-    rv = NS_NewHTMLPreElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_param:
-    rv = NS_NewHTMLParamElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_q:
-    rv = NS_NewHTMLQuoteElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_script:
-    rv = NS_NewHTMLScriptElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_select:
+  if (aNodeType == eHTMLTag_select) {
     rv = NS_NewHTMLSelectElement(aResult, aNodeInfo, aFromParser);
     if (!aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
+    return rv;
+  }
 
-    break;
-  case eHTMLTag_spacer:
-    rv = NS_NewHTMLSpacerElement(aResult, aNodeInfo);
+  rv = sContentCreatorCallbacks[aNodeType](aResult, aNodeInfo);
 
-    break;
-  case eHTMLTag_style:
-    rv = NS_NewHTMLStyleElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_table:
-    rv = NS_NewHTMLTableElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_tbody:
-  case eHTMLTag_thead:
-  case eHTMLTag_tfoot:
-    rv = NS_NewHTMLTableSectionElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_td:
-  case eHTMLTag_th:
-    rv = NS_NewHTMLTableCellElement(aResult, aNodeInfo);
-
-    break;
+  switch (aNodeType) {
+  case eHTMLTag_button:
+  case eHTMLTag_fieldset:
+  case eHTMLTag_label:
+  case eHTMLTag_legend:
+  case eHTMLTag_object:
   case eHTMLTag_textarea:
-    rv = NS_NewHTMLTextAreaElement(aResult, aNodeInfo);
     if (!aInsideNoXXXTag) {
       SetForm(*aResult, aForm);
     }
-
-    break;
-  case eHTMLTag_title:
-    rv = NS_NewHTMLTitleElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_tr:
-    rv = NS_NewHTMLTableRowElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_ul:
-    rv = NS_NewHTMLUListElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_wbr:
-    rv = NS_NewHTMLWBRElement(aResult, aNodeInfo);
-
-    break;
-  case eHTMLTag_unknown:
-  case eHTMLTag_userdefined:
-    rv = NS_NewHTMLUnknownElement(aResult, aNodeInfo);
-
-    break;
-  default:
-    rv = NS_NewHTMLSpanElement(aResult, aNodeInfo);
-
-    break;
   }
 
   return rv;
 }
-
 
 //----------------------------------------------------------------------
 
