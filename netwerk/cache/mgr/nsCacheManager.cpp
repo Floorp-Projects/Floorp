@@ -38,7 +38,7 @@
 #define MAX_DISK_CACHE_ENTRIES  3200
 
 // Cache capacities in MB, overridable via APIs
-#define DEFAULT_MEMORY_CACHE_CAPACITY  100
+#define DEFAULT_MEMORY_CACHE_CAPACITY  1024
 #define DEFAULT_DISK_CACHE_CAPACITY   10000
 
 #define CACHE_HIGH_WATER_MARK(capacity) ((PRUint32)(0.98 * (capacity)))
