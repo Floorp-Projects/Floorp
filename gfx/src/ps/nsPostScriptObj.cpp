@@ -1993,6 +1993,10 @@ FILE *f;
   initlanggroup();
 
   fprintf(f, "%%%%EndProlog\n");
+#ifdef MOZ_ENABLE_FREETYPE2
+  AddCIDCheckCode(f);
+#endif
+
 }
 
 /** ---------------------------------------------------
