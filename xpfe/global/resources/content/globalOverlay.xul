@@ -14,6 +14,9 @@
 		<menuitem name="&quitApplicationCmd.label;" onclick="goQuitApplication()"/>
 	</menu>
 	
+	<!-- Page Setup menu item -->
+	<menuitem id="pageSetup" name="&pageSetupCmd.label;" onclick="goPageSetup()"/>
+
 	<!-- Help Menu -->
 	<menu id="helpMenu" name="&helpMenu.label;">
 		<menuitem name="&helpContentCmd.label;" onclick="goHelp()"/>

@@ -1,5 +1,7 @@
 <!-- extracted from globalOverlay.xul -->
 
+<!ENTITY pageSetupCmd.label					".Page Setup...">  
+
 <!ENTITY quitApplicationCmd.label			"Exit"> 
 
 <!ENTITY helpMenu.label					"Help"> 

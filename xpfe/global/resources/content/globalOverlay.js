@@ -1,3 +1,8 @@
+function goPageSetup()
+{
+}
+
+
 function goQuitApplication()
 {
 	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
