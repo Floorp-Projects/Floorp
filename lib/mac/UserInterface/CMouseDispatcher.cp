@@ -84,8 +84,25 @@ void CMouseDispatcher::ExecuteSelf(
 	SMouseTrackParms theMouseParms;
 	theMouseParms.portMouse = thePortMouse;
 	theMouseParms.macEvent = *theEvent;
+	theMouseParms.paneOfAttachment = nil; // will be changed by an attachment to show it's there.
 
-	if (theCurrentPane != theLastPane)
+	// At this point, even if theCurrentPane and theLastPane are different, it
+	// might be because theCurrentPane is a tooltip pane, put there by the
+	// attachment.  This is no reason for doing "mouse left" processing.
+	// Use theLastPane instead.
+	if (theCurrentPane != theLastPane
+	&& theLastPane  && theLastPane->Contains(thePortMouse.h, thePortMouse.v))
+		{
+		if (theLastPane->ExecuteAttachments(msg_MouseWithin, &theMouseParms)
+		&& theMouseParms.paneOfAttachment == theCurrentPane)
+			{
+			theLastPane->MouseWithin(thePortMouse, *theEvent);
+			if (theCurrentPane != nil) // see explanation below.
+				theCurrentPane = FindPaneHitBy(theEvent->where);
+			}
+		}
+	if ((!theCurrentPane || theMouseParms.paneOfAttachment != theCurrentPane)
+	&& theCurrentPane != theLastPane)
 		{
 		if (theLastPane != nil)
 			{
@@ -126,7 +143,8 @@ void CMouseDispatcher::ExecuteSelf(
 CMouseTrackAttachment::CMouseTrackAttachment()
 	:	LAttachment(msg_AnyMessage)
 	,	mOwningPane(nil)
-	,	mMustBeActive(true)
+	,	mPaneMustBeActive(true)
+	,	mWindowMustBeActive(true)
 	,	mMustBeEnabled(true)
 {
 	SetExecuteHost(true);
@@ -139,7 +157,8 @@ CMouseTrackAttachment::CMouseTrackAttachment()
 CMouseTrackAttachment::CMouseTrackAttachment(LStream* inStream)
 	:	LAttachment(inStream)
 	,	mOwningPane(nil)
-	,	mMustBeActive(true)
+	,	mPaneMustBeActive(true)
+	,	mWindowMustBeActive(true)
 	,	mMustBeEnabled(true)
 {
 }
@@ -154,7 +173,19 @@ Boolean CMouseTrackAttachment::EnsureOwningPane()
 	{
 		mOwningPane = dynamic_cast<LPane*>(GetOwnerHost());
 		Assert_(mOwningPane); 	// you didn't attach to an LPane* derivative
-		if (!mOwningPane)
+	}
+	if (!mOwningPane)
+		return false;
+	if (mMustBeEnabled && !mOwningPane->IsEnabled())
+		return false;
+	if (mPaneMustBeActive && !mOwningPane->IsActive())
+		return false;
+	if (mWindowMustBeActive)
+	{
+		LWindow* win
+			= dynamic_cast<LWindow*>(
+				LWindow::FetchWindowObject(mOwningPane->GetMacPort()));
+		if (!win || !win->IsActive())
 			return false;
 	}
 	return true;
@@ -172,23 +203,19 @@ void CMouseTrackAttachment::ExecuteSelf(
 
 	if (!EnsureOwningPane())
 		return;
-
-	if (mMustBeEnabled && !mOwningPane->IsEnabled())
-		return;
-		
-	if (mMustBeActive && !mOwningPane->IsActive())
-		return;
 		
 	switch (inMessage)
 		{
 		case msg_MouseEntered:
 			Assert_(theTrackParms != nil);
-			MouseEnter(theTrackParms->portMouse, theTrackParms->macEvent);
+			if ( theTrackParms )
+				MouseEnter(theTrackParms->portMouse, theTrackParms->macEvent);
 			break;
 			
 		case msg_MouseWithin:
 			Assert_(theTrackParms != nil);
-			MouseWithin(theTrackParms->portMouse, theTrackParms->macEvent);
+			if ( theTrackParms )
+				MouseWithin(theTrackParms->portMouse, theTrackParms->macEvent);
 			break;
 			
 		case msg_MouseLeft:
@@ -196,5 +223,4 @@ void CMouseTrackAttachment::ExecuteSelf(
 			break;	
 		}
 };
-
 

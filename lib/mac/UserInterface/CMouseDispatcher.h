@@ -27,6 +27,7 @@ const MessageT	msg_MouseLeft			=	'MsLt';
 typedef struct SMouseTrackParms {
 	Point			portMouse;
 	EventRecord		macEvent;
+	LPane*			paneOfAttachment;
 } SMouseTrackParms;
 
 
@@ -76,12 +77,14 @@ class CMouseTrackAttachment : public LAttachment
 									Point				inPortPt,
 									const EventRecord&	inMacEvent) = 0;
 
-		virtual void		MouseLeave(void) = 0;
+		virtual void		MouseLeave() = 0;
 
 		Boolean				EnsureOwningPane();
 
+	public:
 		LPane*				mOwningPane;
-		Boolean				mMustBeActive;
+		Boolean				mPaneMustBeActive;
+		Boolean				mWindowMustBeActive;
 		Boolean				mMustBeEnabled;
 };
 
