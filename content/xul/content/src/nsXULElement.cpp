@@ -1248,15 +1248,6 @@ nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
             // -weren't- generated from RDF. Ugh. Forget it.
         }
 
-        if (mSlots->mNameSpace) {
-            // Copy namespace stuff.
-            nsCOMPtr<nsIXMLContent> xmlcontent = do_QueryInterface(result);
-            if (xmlcontent) {
-                rv = xmlcontent->SetContainingNameSpace(mSlots->mNameSpace);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-
         // Note that we're _not_ copying mBroadcastListeners,
         // mControllers, mInnerXULElement.
     }
@@ -1679,67 +1670,6 @@ nsXULElement::GetElementsByAttribute(const nsAReadableString& aAttribute,
 
 //----------------------------------------------------------------------
 // nsIXMLContent interface
-
-NS_IMETHODIMP
-nsXULElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
-{
-    nsresult rv;
-
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    mSlots->mNameSpace = dont_QueryInterface(aNameSpace);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
-{
-    nsresult rv;
-
-    if (NameSpace()) {
-        // If we have a namespace, return it.
-        aNameSpace = NameSpace();
-        NS_ADDREF(aNameSpace);
-        return NS_OK;
-    }
-
-    // Next, try our parent.
-    nsCOMPtr<nsIContent> parent( dont_QueryInterface(mParent) );
-    while (parent) {
-        nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(parent) );
-        if (xml)
-            return xml->GetContainingNameSpace(aNameSpace);
-
-        nsCOMPtr<nsIContent> temp = parent;
-        rv = temp->GetParent(*getter_AddRefs(parent));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get parent");
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    // Allright, we walked all the way to the top of our containment
-    // hierarchy and couldn't find a parent that supported
-    // nsIXMLContent. If we're in a document, try to doc's root
-    // element.
-    if (mDocument) {
-        nsCOMPtr<nsIContent> docroot;
-        mDocument->GetRootContent(getter_AddRefs(docroot));
-
-        // Wow! Nasty cast to get an unambiguous, non-const
-        // nsISupports pointer. We want to make sure that we're not
-        // the docroot (this would otherwise spin off into infinity).
-        nsISupports* me = NS_STATIC_CAST(nsIStyledContent*, NS_CONST_CAST(nsXULElement*, this));
-
-        if (docroot && !::SameCOMIdentity(docroot, me)) {
-            nsCOMPtr<nsIXMLContent> xml( do_QueryInterface(docroot) );
-            if (xml)
-                return xml->GetContainingNameSpace(aNameSpace);
-        }
-    }
-
-    aNameSpace = nsnull;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
@@ -4688,7 +4618,6 @@ nsXULElement::EnsureSlots()
     if (!mPrototype)
         return NS_OK;
 
-    mSlots->mNameSpace       = mPrototype->mNameSpace;
     NS_ASSERTION(mPrototype->mNodeInfo, "prototype has null nodeinfo!");
     mSlots->mNodeInfo        = mPrototype->mNodeInfo;
 

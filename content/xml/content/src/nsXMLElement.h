@@ -69,8 +69,6 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsGenericContainerElement::)
 
   // nsIXMLContent
-  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
-  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
   NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
@@ -95,7 +93,6 @@ public:
 
 protected:
   PRBool mIsLink;
-  nsINameSpace* mNameSpace;
 };
 
 #endif // nsXMLElement_h___

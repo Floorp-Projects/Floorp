@@ -57,10 +57,7 @@ class nsIURI;
  */
 class nsIXMLContent : public nsIStyledContent {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IXMLCONTENT_IID; return iid; }
-  
-  NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace) = 0;
-  NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const = 0;
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
   
   /**
    * Give this element a change to fire its links that should be fired

@@ -82,9 +82,6 @@ public:
     Finish();
 
     static nsresult
-    AttachTextNode(nsIContent* parent, nsIRDFNode* value);
-    
-    static nsresult
     FindChildByTag(nsIContent *aElement,
                    PRInt32 aNameSpaceID,
                    nsIAtom* aTag,
@@ -105,12 +102,6 @@ public:
     GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult);
 
     static nsresult
-    GetElementLogString(nsIContent* aElement, nsAWritableString& aResult);
-
-    static nsresult
-    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult);
-
-    static nsresult
     MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI);
 
     static nsresult
@@ -118,9 +109,6 @@ public:
 
     static nsresult
     MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID);
-
-    static PRBool
-    IsContainedBy(nsIContent* aElement, nsIContent* aContainer);
 
     static nsresult
     GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult);

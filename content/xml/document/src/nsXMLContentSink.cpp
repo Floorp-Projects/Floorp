@@ -897,12 +897,6 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
     }
   }
   nsINameSpace* nameSpace = PopNameSpaces();
-  if (content) {
-    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(content);
-    if (xmlContent) {
-      xmlContent->SetContainingNameSpace(nameSpace);
-    }
-  }
   NS_IF_RELEASE(nameSpace);
 
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {

@@ -1393,20 +1393,12 @@ nsresult
 XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
-    nsresult rv;
-
     nsXULPrototypeElement* element = new nsXULPrototypeElement(/* line number */ -1);
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 
     element->mNodeInfo    = aNodeInfo;
     element->mDocument    = mPrototype;
-
-    nsCOMPtr<nsINameSpace> ns;
-    rv = GetTopNameSpace(address_of(ns));
-    if (NS_SUCCEEDED(rv)) {
-        element->mNameSpace = ns;
-    }
 
     *aResult = element;
     return NS_OK;

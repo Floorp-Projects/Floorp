@@ -239,7 +239,6 @@ public:
     PRInt32                  mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
 
-    nsCOMPtr<nsINameSpace>   mNameSpace;          // [OWNER]
     nsCOMPtr<nsINodeInfo>    mNodeInfo;           // [OWNER]
 
     PRInt32                  mNumAttributes;
@@ -425,8 +424,6 @@ public:
     NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
     // nsIXMLContent
-    NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
-    NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
     NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
@@ -547,7 +544,6 @@ protected:
         Slots(nsXULElement* mElement);
         ~Slots();
 
-        nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
         nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
 
@@ -621,7 +617,6 @@ protected:
     // Internal accessors. These shadow the 'Slots', and return
     // appropriate default values if there are no slots defined in the
     // delegate.
-    nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
     nsINodeInfo*               NodeInfo() const        { return mSlots ? mSlots->mNodeInfo              : mPrototype->mNodeInfo; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
