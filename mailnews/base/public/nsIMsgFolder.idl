@@ -127,6 +127,10 @@ interface nsIMsgFolder : nsIFolder {
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void GetNewMessages();
 	attribute wstring charset;
+	attribute unsigned long BiffState;
+	attribute long NumNewMessages;
+
+	readonly attribute wstring NewMessagesNotificationDescription;
 };
 
 

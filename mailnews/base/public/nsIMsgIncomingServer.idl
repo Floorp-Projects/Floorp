@@ -41,4 +41,6 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute string serverURI;
 
   attribute nsIFolder RootFolder;
+
+  void PerformBiff();
 };
