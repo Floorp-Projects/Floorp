@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.h,v 1.5 2001/05/22 21:19:31 ddrinan%netscape.com Exp $
+ * $Id: nsPKCS12Blob.h,v 1.6 2001/06/19 05:29:54 javi%netscape.com Exp $
  */
 
 #ifndef _NS_PKCS12BLOB_H_
@@ -89,6 +89,7 @@ private:
   // NSPR file I/O for temporary digest file
   PRFileDesc *mTmpFile;
   char       *mTmpFilePath;
+  PRBool      mTokenSet;
 
   // C-style callback functions for the NSS PKCS#12 library
   static SECStatus PR_CALLBACK digest_open(void *, PRBool);
