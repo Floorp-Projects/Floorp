@@ -60,8 +60,6 @@ public:
 
         mEventQueue->EventLoop();
 
-        while (PR_TRUE) {
-        }
         printf("quitting\n");
         return NS_OK;
     }
@@ -222,6 +220,8 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
 
     rv = NS_NewByteBufferInputStream(&bufStr, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) goto done;
+
+    if ( spec.GetFileSize() == 0) goto done;
 
     while (PR_TRUE) {
         PRUint32 amt;
