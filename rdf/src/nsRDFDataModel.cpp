@@ -51,8 +51,17 @@ char* gNavCenterDataSources1[15] = {
 ////////////////////////////////////////////////////////////////////////
 
 nsRDFDataModel::nsRDFDataModel(void)
-    : mDB(NULL), mWidget(NULL)
+    : mDB(NULL),
+      mRoot(NULL),
+      mWidget(NULL),
+      mArcProperty(NULL)
 {
+    PR_ASSERT(gCoreVocab);
+    if (gCoreVocab) {
+        mArcProperty = gCoreVocab->RDF_parent;
+        mArcType     = eRDFArcType_Inbound;
+    }
+
     NS_INIT_REFCNT();
 }
 
@@ -75,9 +84,40 @@ NS_IMPL_QUERY_INTERFACE(nsRDFDataModel, kIDataModelIID);
 // nsIDataModel interface
 
 NS_IMETHODIMP
-nsRDFDataModel::InitFromURL(const nsString& url)
+nsRDFDataModel::InitFromURL(const nsString& aUrl)
 {
-    Initialize(url);
+    // XXX A ghastly simplification of HT_PaneFromURL()
+    char* url = aUrl.ToNewCString();
+
+    const char* dbstr[2];
+    dbstr[0] = getBaseURL(url);
+    dbstr[1] = NULL;
+
+    mDB = RDF_GetDB(dbstr);
+    PL_strfree(const_cast<char*>(dbstr[0]));
+
+    // XXX now we try to find the top-level resource in the
+    // database. PR_FALSE indicates that, if it ain't there, don't
+    // create it.
+    RDF_Resource r = RDF_GetResource(mDB, url, PR_FALSE);
+    delete url;
+
+    PR_ASSERT(r);
+    if (! r)
+        return NS_ERROR_UNEXPECTED;
+
+    nsRDFDataModelItem* item = new nsRDFDataModelItem(*this, r);
+    PR_ASSERT(item);
+    if (! item)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    if (mRoot)
+        mRoot->Release();
+
+    mRoot = item;
+    mRoot->AddRef();
+    mRoot->SetOpenState(PR_TRUE);
+
     return NS_OK;
 }
 
@@ -121,24 +161,3 @@ nsRDFDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) co
 
 ////////////////////////////////////////////////////////////////////////
 
-void
-nsRDFDataModel::Initialize(const nsString& aUrl)
-{
-    // XXX A ghastly simplification of HT_PaneFromURL()
-    char* url = aUrl.ToNewCString();
-
-    const char* dbstr[2];
-    dbstr[0] = getBaseURL(url);
-    dbstr[1] = NULL;
-
-    mDB = RDF_GetDB(dbstr);
-    PL_strfree(const_cast<char*>(dbstr[0]));
-
-    RDF_Resource r = RDF_GetResource(mDB, url, PR_TRUE);
-    if ((mRoot = new nsRDFDataModelItem(*this, r)) != NULL) {
-        mRoot->AddRef();
-        mRoot->SetOpenState(PR_TRUE);
-    }
-
-    delete url;
-}
