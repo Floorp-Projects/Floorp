@@ -23,7 +23,10 @@ sub Help {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    $self->checkSpelling($event, $message);
+    if ($self->checkSpelling($event, $message)) {
+        # we checked the spelling, abort
+        return 0;
+    }
     return $self->SUPER::Heard(@_);
 }
 
@@ -46,7 +49,9 @@ sub checkSpelling {
         my $word = $1;
         # XXX escape $word
         $self->getURI($event, "http://www.m-w.com/cgi-bin/dictionary?va=$word", 'word', $1); # XXX should be configurable!
+        return 1;
     }
+    return 0;
 }
 
 sub GotURI {
