@@ -187,6 +187,7 @@ protected:
     PRBool            mIsDirty;       // true if the document should be written back
     nsVoidArray       mObservers;     // WEAK REFERENCES
     PRBool            mIsLoading;     // true while the document is loading
+    PRBool            mLoadPending;   // true if a load is pending
     NameSpaceMap*     mNameSpaces;
     nsCOMPtr<nsIURI>  mURL;
     char*             mURLSpec;
@@ -411,6 +412,7 @@ RDFXMLDataSourceImpl::RDFXMLDataSourceImpl(void)
       mIsWritable(PR_TRUE),
       mIsDirty(PR_FALSE),
       mIsLoading(PR_FALSE),
+      mLoadPending(PR_FALSE),
       mNameSpaces(nsnull),
       mURLSpec(nsnull)
 {
@@ -860,6 +862,18 @@ RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 {
+    // If an asynchronous load is already pending, then just let it do
+    // the honors.
+    if (mLoadPending) {
+        if (aBlocking) {
+            NS_WARNING("blocking load requested when async load pending");
+            return NS_ERROR_FAILURE;
+        }
+        else {
+            return NS_OK;
+        }
+    }
+
     nsresult rv;
 
     nsCOMPtr<nsINameSpaceManager> nsmgr;
@@ -920,17 +934,18 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 
     if (aBlocking) {
         rv = rdf_BlockingParse(mURL, lsnr);
+        if (NS_FAILED(rv)) return rv;
     }
     else {
-#ifdef NECKO
         // Null LoadGroup ?
         rv = NS_OpenURI(lsnr, nsnull, mURL, nsnull);
-#else
-        rv = NS_OpenURL(mURL, lsnr);
-#endif
+        if (NS_FAILED(rv)) return rv;
+
+        // So we don't try to issue two asynchronous loads at once.
+        mLoadPending = PR_TRUE;
     }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -967,6 +982,7 @@ RDFXMLDataSourceImpl::Resume(void)
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
+    mLoadPending = PR_FALSE;
     mIsLoading = PR_FALSE;
     nsCOMPtr<nsIRDFPurgeableDataSource> gcable = do_QueryInterface(mInner);
     if (gcable) {
