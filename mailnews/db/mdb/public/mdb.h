@@ -423,7 +423,7 @@ public:
 **| same method name is not necessary here, and potentially less clear.)
 |*/
 class mdbErrorHook { // env callback handler to report errors
-
+public:
 // { ===== begin mdbErrorHook methods =====
    mdb_err OnErrorString(nsIMdbEnv* ev, const char* inAscii) ;
    mdb_err OnErrorYarn(nsIMdbEnv* ev, const mdbYarn* inYarn) ;
@@ -438,7 +438,7 @@ class mdbErrorHook { // env callback handler to report errors
 **| Order() method should make no attempt to modify the yarn content.
 |*/
 class mdbCompare { // caller-supplied yarn comparison
-
+public:
 // { ===== begin mdbCompare methods =====
    mdb_err Order(nsIMdbEnv* ev,      // compare first to second yarn
     const mdbYarn* inFirst,   // first yarn in comparison
