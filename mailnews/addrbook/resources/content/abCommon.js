@@ -2,12 +2,46 @@
 
 function AbNewCardDialog()
 {
-	var dialog = window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
-								   "",
-								   "chrome",
-								   {abURI:document.getElementById('resultsTree').getAttribute('ref')});
+	window.openDialog("chrome://addressbook/content/abNewCardDialog.xul",
+					  "",
+					  "chrome",
+					  {GetAddressBooksAndURIs:GetAddressBooksAndURIs});
+}
 
-	return dialog;
+function GetAddressBooksAndURIs(abArray, uriArray)
+{
+	var numAddressBooks = 0;
+	var selected = 0;
+	var body = document.getElementById('dirTreeBody')
+	DumpDOM(body);
+	if ( body )
+	{
+		var treeitems = body.getElementsByTagName('treeitem');
+		if ( treeitems )
+		{
+			var name, uri, item;
+			
+			for ( var index = 0; index < treeitems.length; index++ ) 
+			{ 
+				item = treeitems[index];
+				uri = item.getAttribute('id');
+				if ( item.getAttribute('selected') )
+					selected = numAddressBooks;
+				var buttons = item.getElementsByTagName('titledbutton');
+				if ( uri && buttons && buttons.length == 1 )
+				{
+					name = buttons[0].getAttribute('value');
+					if ( name )
+					{
+						abArray[numAddressBooks] = name;
+						uriArray[numAddressBooks] = uri;
+						numAddressBooks++;
+					}
+				}
+			}
+		}
+	}
+	return selected;
 }
 
 function AbEditCardDialog(card, okCallback)

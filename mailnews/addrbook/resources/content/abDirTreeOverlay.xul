@@ -57,7 +57,8 @@ Rights Reserved.
 				</treerow>
 			</treehead>
 
-			<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child"
+			<treechildren id="dirTreeBody"
+						  rdf:containment="http://home.netscape.com/NC-rdf#child"
 						  rdf:ignore="http://home.netscape.com/NC-rdf#CardChild"
 						  open="true">
 				<treeitem ref="abdirectory://" open="true">

@@ -13,12 +13,26 @@ function OnLoadNewCard()
 	
 	editCard.card = 0;
 	editCard.okCallback = 0;
-	
+	editCard.titlePrefix = newCardTitlePrefix;
+
 	if (window.arguments && window.arguments[0])
 	{
-		if ( window.arguments[0].abURI )
-			editCard.abURI = window.arguments[0].abURI;
+		if ( window.arguments[0].GetAddressBooksAndURIs )
+			editCard.GetAddressBooksAndURIs = window.arguments[0].GetAddressBooksAndURIs;
 	}
+	
+	var abArray = new Array();
+	var uriArray = new Array();
+	var selected = editCard.GetAddressBooksAndURIs(abArray, uriArray);
+
+	// fill popup with address book names
+	var popup = document.getElementById('chooseAddressBook');
+	for ( var index = 0; index < abArray.length; index++ )
+	{
+		var option = new Option(abArray[index], uriArray[index]);
+		popup.add(option, null);
+	}
+	popup.value = uriArray[selected]
 }
 
 
@@ -27,6 +41,8 @@ function OnLoadEditCard()
 	InitEditCard();
 	
 	doSetOKCancel(EditCardOKButton, 0);
+
+	editCard.titlePrefix = editCardTitlePrefix;
 
 	if (window.arguments && window.arguments[0])
 	{
@@ -49,7 +65,7 @@ function OnLoadEditCard()
 	
 	GetCardValues(editCard.card, document);
 		
-	//top.window.setAttribute('title', editCardTitlePrefix + editCard.card.DisplayName);
+	top.window.title = editCard.titlePrefix + editCard.card.DisplayName;
 }
 
 function InitEditCard()
@@ -90,20 +106,24 @@ function InitEditCard()
 
 function NewCardOKButton()
 {
-	var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
-	cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
-	dump("cardproperty = " + cardproperty + "\n");
-
-	if ( cardproperty )
+	var popup = document.getElementById('chooseAddressBook');
+	if ( popup )
 	{
-		SetCardValues(cardproperty, document);
-	
-		cardproperty.AddCardToDatabase(editCard.abURI);
-	}
+		var uri = popup.value;
+
+		var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+		cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+
+		if ( cardproperty )
+		{
+			SetCardValues(cardproperty, document);
+		
+			cardproperty.AddCardToDatabase(uri);
+		}
+	}	
 	
 	return true;	// close the window
 }
-
 
 function EditCardOKButton()
 {
@@ -262,10 +282,7 @@ function GenerateDisplayName()
 			displayName = firstNameField.value + separator + lastNameField.value;
 			
 		displayNameField.value = displayName;
-		if ( editCard.card )
-			top.window.title = editCardTitlePrefix + displayName;
-		else
-			top.window.title = newCardTitlePrefix + displayName;
+		top.window.title = editCard.titlePrefix + displayName;
 	}
 }
 
@@ -273,4 +290,8 @@ function DisplayNameChanged()
 {
 	// turn off generateDisplayName if the user changes the display name
 	editCard.generateDisplayName = false;
+	
+	var title = editCard.titlePrefix + document.getElementById('DisplayName').value;
+	if ( top.window.title != title )
+		top.window.title = title;
 }

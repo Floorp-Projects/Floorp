@@ -29,7 +29,7 @@ Rights Reserved.
 <!ENTITY newMessageCmd.label					"Message">  
 <!ENTITY newCardCmd.label					"New Card...">  
 <!ENTITY newListCmd.label					".New List...">  
-<!ENTITY newAddressBookCmd.label			".New Address Book...">  
+<!ENTITY newAddressBookCmd.label			"New Address Book...">  
 <!ENTITY newDirectoryCmd.label				".New Directory...">  
 <!ENTITY importCmd.label					".Import..."> 
 <!ENTITY exportCmd.label					".Export...">  

@@ -35,11 +35,11 @@ Rights Reserved.
 		style="padding:0px"
 		align="vertical">
 
+<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
 
 	<box align="horizontal">
 		<html:label for="chooseAddressBook">&chooseAddressBook.label;</html:label>
 		<html:select id="chooseAddressBook">
-			<html:option>Personal Address Book</html:option>
 		</html:select>
 		<spring flex="100%"/>
 	</box>
