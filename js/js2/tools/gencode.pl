@@ -509,12 +509,14 @@ sub get_print_body {
             push (@oplist, "\"R\" << mOp$op.first");
         } elsif ($type eq "Label*") {
             push (@oplist, "\"Offset \" << ((mOp$op) ? mOp$op->mOffset : NotAnOffset)")
-        } elsif ($type =~ /String|JSClass\*/) {
+        } elsif ($type =~ /String/) {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
         } elsif ($type =~ /ICodeModule/) {
             push (@oplist, "\"ICodeModule\"");
+        } elsif ($type =~ /JSClass\*/) {
+            push (@oplist, "mOp$op->getName()");
         } else {
             push (@oplist, "mOp$op");
         }
