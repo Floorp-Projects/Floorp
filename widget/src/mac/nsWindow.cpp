@@ -348,6 +348,38 @@ nsIMenuBar* nsWindow::GetMenuBar()
   return mMenuBar;
 }
 
+
+//
+// SetCursor
+//
+// Override to set the cursor on the mac
+//
+NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
+{
+  nsBaseWidget::SetCursor(aCursor);
+	
+  // mac specific cursor manipulation
+  switch ( aCursor ) {
+    case eCursor_standard:
+      ::InitCursor();
+      break;
+    case eCursor_wait:
+      ::SetCursor(*(::GetCursor(watchCursor)));
+       break;
+    case eCursor_select:
+      ::SetCursor(*(::GetCursor(iBeamCursor)));
+      break;
+    case eCursor_hyperlink:    
+      //еее For now. We need a way to get non-os cursors here.
+      ::SetCursor(*(::GetCursor(plusCursor))); 
+      break;
+  }
+  
+  return NS_OK;
+  
+} // nsWindow :: SetCursor
+    
+
 #pragma mark -
 //-------------------------------------------------------------------------
 //
