@@ -2480,6 +2480,7 @@ main(int argc, char **argv)
     if ((certutil.commands[cmd_AddCert].activated ||
          certutil.commands[cmd_DeleteCert].activated ||
          certutil.commands[cmd_DeleteKey].activated ||
+	 certutil.commands[cmd_DumpChain].activated ||
          certutil.commands[cmd_ModifyCertTrust].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated ||
          certutil.commands[cmd_CheckCertValidity].activated) &&
