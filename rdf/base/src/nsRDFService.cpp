@@ -40,6 +40,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "prlog.h"
+#include "nsIRDFXMLDataSource.h"
 
 #if 0
 #ifdef XP_MAC
@@ -858,76 +859,79 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     // Nope. So go to the repository to try to create it.
     nsresult rv;
 	nsAutoString rdfName(uri);
-    PRInt32 pos = rdfName.Find(':');
-    if (pos < 0) {
-        NS_WARNING("bad URI for data source, missing ':'");
-        return NS_ERROR_FAILURE;       // bad URI
-    }
+    if (rdfName.Find("rdf:") == 0) {    // if this is a datasource component
+        PRInt32 pos = 3;
+        nsAutoString dataSourceName;
+        rdfName.Right(dataSourceName, rdfName.Length() - (pos + 1));
 
-    nsAutoString dataSourceName;
-    rdfName.Right(dataSourceName, rdfName.Length() - (pos + 1));
+        nsAutoString progIDStr(NS_RDF_DATASOURCE_PROGID_PREFIX);
+        progIDStr.Append(dataSourceName);
 
-    nsAutoString progIDStr(NS_RDF_DATASOURCE_PROGID_PREFIX);
-    progIDStr.Append(dataSourceName);
+        // Safely convert it to a C-string for the XPCOM APIs
+        char buf[64];
+        char* progID = buf;
+        if (progIDStr.Length() >= sizeof(buf))
+            progID = new char[progIDStr.Length() + 1];
 
-    // Safely convert it to a C-string for the XPCOM APIs
-    char buf[64];
-    char* progID = buf;
-    if (progIDStr.Length() >= sizeof(buf))
-        progID = new char[progIDStr.Length() + 1];
+        if (progID == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
 
-    if (progID == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    progIDStr.ToCString(progID, progIDStr.Length() + 1);
+        progIDStr.ToCString(progID, progIDStr.Length() + 1);
 
 #if HACK_DONT_USE_LIBREG
-    nsIServiceManager* servMgr;
-    nsServiceManager::GetGlobalServiceManager(&servMgr);
-    nsIFactory* fact;
-    nsCID cid;
-    if (dataSourceName.Equals("bookmarks"))
-        cid = kRDFBookmarkDataSourceCID;
-    else if (dataSourceName.Equals("composite-datasource"))
-        cid = kRDFCompositeDataSourceCID;
-    else if (dataSourceName.Equals("in-memory-datasource"))
-        cid = kRDFInMemoryDataSourceCID;
-    else if (dataSourceName.Equals("xml-datasource"))
-        cid = kRDFXMLDataSourceCID;
-    else if (dataSourceName.Equals("xul-datasource"))
-        cid = kXULDataSourceCID;
-    else {
-        NS_ERROR("unknown data source");
-    }
+        nsIServiceManager* servMgr;
+        nsServiceManager::GetGlobalServiceManager(&servMgr);
+        nsIFactory* fact;
+        nsCID cid;
+        if (dataSourceName.Equals("bookmarks"))
+            cid = kRDFBookmarkDataSourceCID;
+        else if (dataSourceName.Equals("composite-datasource"))
+            cid = kRDFCompositeDataSourceCID;
+        else if (dataSourceName.Equals("in-memory-datasource"))
+            cid = kRDFInMemoryDataSourceCID;
+        else if (dataSourceName.Equals("xml-datasource"))
+            cid = kRDFXMLDataSourceCID;
+        else if (dataSourceName.Equals("xul-datasource"))
+            cid = kXULDataSourceCID;
+        else {
+            NS_ERROR("unknown data source");
+        }
 
-    rv = NSGetFactory(servMgr, cid,
-                      "", progID, &fact);
-    if (rv == NS_OK) {
-        rv = fact->CreateInstance(nsnull, nsIRDFDataSource::GetIID(),
-                                  (void**)aDataSource);
-        NS_RELEASE(fact);
-    }
+        rv = NSGetFactory(servMgr, cid,
+                          "", progID, &fact);
+        if (rv == NS_OK) {
+            rv = fact->CreateInstance(nsnull, nsIRDFDataSource::GetIID(),
+                                      (void**)&ds);
+            NS_RELEASE(fact);
+        }
 #else
-    rv = nsComponentManager::CreateInstance(progID, nsnull,
-                                      nsIRDFDataSource::GetIID(),
-                                      (void**)aDataSource);
+        rv = nsComponentManager::CreateInstance(progID, nsnull,
+                                                nsIRDFDataSource::GetIID(),
+                                                (void**)&ds);
 #endif
 
-    if (progID != buf)
-        delete[] progID;
+        if (progID != buf)
+            delete[] progID;
 
-    if (NS_FAILED(rv)) {
-        // XXX only a warning, because the URI may have been ill-formed.
-        NS_WARNING("unable to create data source");
-        return rv;
+        if (NS_FAILED(rv)) {
+            // XXX only a warning, because the URI may have been ill-formed.
+            NS_WARNING("unable to create data source");
+            return rv;
+        }
+    }
+    else {
+        // else try to load it as a file and create an xml datasource
+        rv = NS_NewRDFXMLDataSource((nsIRDFXMLDataSource**)&ds);
+        if (NS_FAILED(rv)) return rv;
     }
 
-    rv = (*aDataSource)->Init(uri);
+    rv = ds->Init(uri);
     if (NS_FAILED(rv)) {
+        NS_RELEASE(ds);
         NS_ERROR("unable to initialize data source");
         return rv;
     }
-
+    *aDataSource = ds;
     return NS_OK;
 }
 
