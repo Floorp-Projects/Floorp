@@ -41,7 +41,6 @@ Contributors:
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
   <broadcaster id="broadcaster_doBiff"/>
-  <broadcaster id="broadcaster_limitMessageSize"/>
   
   <text hidden="true" wsm_persist="true" id="server.type"/>
 
@@ -134,17 +133,6 @@ Contributors:
               pref="true" preftype="bool" prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
   </box>
-  <box iscontrolcontainer="true" autostretch="never">
-    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" label="&maxMessageSizePrefix.label;"
-              oncommand="setupLimitMessageSizeUI();" id="server.limitMessageSize"
-              pref="true" preftype="bool" prefattribute="value"
-              prefstring="mail.server.%serverkey%.limit_message_size"/>
-    <textbox wsm_persist="true" id="server.maxMessageSize" size="3" observes="broadcaster_limitMessageSize"
-             pref="true" preftype="int" prefattribute="value"
-             prefstring="mail.server.%serverkey%.max_size"/>
-    <text value="&maxMessageSizePostfix.label;" for="server.limitMessageSize" class="label" observes="broadcaster_limitMessageSize"/>
-  </box>
-  <separator class="thin"/>
   <!-- IMAP -->
   <box iscontrolcontainer="true" autostretch="never">
     <text class="label" value="&deleteMessagePrefix.label;"/>
