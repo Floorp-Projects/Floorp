@@ -50,6 +50,8 @@ public:
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult);
 
+  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
+
   // nsIDOMDocument interface
   NS_IMETHOD    GetMasterDoc(nsIDOMDocument **aDocument)
   { return nsDocument::GetMasterDoc(aDocument); }
