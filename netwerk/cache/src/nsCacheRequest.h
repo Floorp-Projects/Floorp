@@ -55,7 +55,7 @@ private:
     
     virtual ~nsCacheRequest()
     {
-        delete mKey;
+        // delete mKey;
         // XXX need to do anything with mListLink?
     }
     
