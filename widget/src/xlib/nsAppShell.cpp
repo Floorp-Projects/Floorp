@@ -351,8 +351,6 @@ nsresult nsAppShell::Run()
 
 NS_METHOD nsAppShell::Spindown()
 {
-  Release();
-
   if (mEventQueue) {
     ListenToEventQueue(mEventQueue, PR_FALSE);
     mEventQueue->ProcessPendingEvents();
