@@ -121,6 +121,7 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
         return NS_ERROR_FAILURE;
     }
 
+    return rv;
 #endif
 }
 
