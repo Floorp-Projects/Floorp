@@ -230,7 +230,7 @@ void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFO pBitMapInfo, nsCStri
       iconBuffer.Append((char) blueValue);
       iconBuffer.Append((char) greenValue);
       iconBuffer.Append((char) redValue);
-      pos += bytesPerPixel;
+      pos += 3;
       if (pos == unalignedBytesPerRow && numBytesPaddingPerRow) // if we have reached the end of a current row, add padding to force dword alignment
       {
         pos = 0;
