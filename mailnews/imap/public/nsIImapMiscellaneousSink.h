@@ -66,8 +66,6 @@ public:
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
 													 TunnelInfo *aInfo) = 0;
-	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
-													 nsIImapIncomingServer *incomingServer) = 0;
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                    nsISupports* copyState) = 0;
   NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,

@@ -49,8 +49,6 @@ interface nsIImapIncomingServer : nsISupports {
                                            in nsIImapUrl aImapUrl,
                                            in nsISupports aConsumer);
 
-  void LoadNextQueuedUrl();
-
   void RemoveConnection(in nsIImapProtocol aImapConnection);
   void ResetNamespaceReferences();
 };

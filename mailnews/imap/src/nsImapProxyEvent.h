@@ -94,49 +94,6 @@ public:
     nsIImapMailFolderSink* m_realImapMailFolderSink;
 };
 
-class nsImapMessageSinkProxy : public nsIImapMessageSink, 
-                           public nsImapProxyBase
-{
-public:
-    nsImapMessageSinkProxy(nsIImapMessageSink* aImapMessageSink,
-                       nsIImapProtocol* aProtocol,
-                       nsIEventQueue* aEventQ,
-                       PRThread* aThread);
-    virtual ~nsImapMessageSinkProxy();
-
-    NS_DECL_ISUPPORTS 
-
-    // set up messge download output stream
-    // FE calls nsIImapProtocol::SetMessageDownloadOutputStream 
-    NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
-
-    NS_IMETHOD ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    // message move/copy related methods
-    NS_IMETHOD OnlineCopyReport(nsIImapProtocol* aProtocol,
-                                ImapOnlineCopyState* aCopyState);
-    NS_IMETHOD BeginMessageUpload(nsIImapProtocol* aProtocol);
-    NS_IMETHOD UploadMessageFile(nsIImapProtocol* aProtocol,
-                                 UploadMessageInfo* aMsgInfo);
-
-    // message flags operation
-    NS_IMETHOD NotifyMessageFlags(nsIImapProtocol* aProtocol,
-                                  FlagsKeyStruct* aKeyStruct);
-
-    NS_IMETHOD NotifyMessageDeleted(nsIImapProtocol* aProtocol,
-                                    delete_message_struct* aStruct);
-    NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
-                                    MessageSizeInfo* sizeInfo);
-
-    nsIImapMessageSink* m_realImapMessageSink;
-};
-
 class nsImapExtensionSinkProxy : public nsIImapExtensionSink, 
                              public nsImapProxyBase
 {
@@ -208,9 +165,6 @@ public:
 														 msg_line_info* aInfo);
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
-
-    NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
-                             nsIImapIncomingServer *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
                                      nsISupports* copyState);
 
@@ -321,97 +275,6 @@ struct AbortHeaderParseStreamProxyEvent : public nsImapMailFolderSinkProxyEvent
     AbortHeaderParseStreamProxyEvent(nsImapMailFolderSinkProxy* aProxy);
     virtual ~AbortHeaderParseStreamProxyEvent();
     NS_IMETHOD HandleEvent();
-};
-
-struct nsImapMessageSinkProxyEvent : nsImapEvent
-{
-    nsImapMessageSinkProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
-    virtual ~nsImapMessageSinkProxyEvent();
-    nsImapMessageSinkProxy* m_proxy;
-};
-
-struct SetupMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
-{
-    SetupMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                  StreamInfo* aStreamInfo);
-    virtual ~SetupMsgWriteStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-    StreamInfo m_streamInfo;
-};
-
-struct ParseAdoptedMsgLineProxyEvent : nsImapMessageSinkProxyEvent
-{
-    ParseAdoptedMsgLineProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                  msg_line_info* aMsgLineInfo);
-    virtual ~ParseAdoptedMsgLineProxyEvent();
-    NS_IMETHOD HandleEvent();
-    msg_line_info m_msgLineInfo;
-};
-
-struct NormalEndMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
-{
-    NormalEndMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
-    virtual ~NormalEndMsgWriteStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct AbortMsgWriteStreamProxyEvent : nsImapMessageSinkProxyEvent
-{
-    AbortMsgWriteStreamProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
-    virtual ~AbortMsgWriteStreamProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct OnlineCopyReportProxyEvent : nsImapMessageSinkProxyEvent
-{
-    OnlineCopyReportProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                               ImapOnlineCopyState* aCopyState);
-    virtual ~OnlineCopyReportProxyEvent();
-    NS_IMETHOD HandleEvent();
-    ImapOnlineCopyState m_copyState;
-};
-
-struct BeginMessageUploadProxyEvent : nsImapMessageSinkProxyEvent
-{
-    BeginMessageUploadProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy);
-    virtual ~BeginMessageUploadProxyEvent();
-    NS_IMETHOD HandleEvent();
-};
-
-struct UploadMessageFileProxyEvent : nsImapMessageSinkProxyEvent
-{
-    UploadMessageFileProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                UploadMessageInfo* aMsgInfo);
-    virtual ~UploadMessageFileProxyEvent();
-    NS_IMETHOD HandleEvent();
-    UploadMessageInfo m_msgInfo;
-};
-
-struct NotifyMessageFlagsProxyEvent : nsImapMessageSinkProxyEvent
-{
-    NotifyMessageFlagsProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                 FlagsKeyStruct* aKeyStruct);
-    virtual ~NotifyMessageFlagsProxyEvent();
-    NS_IMETHOD HandleEvent();
-    FlagsKeyStruct m_keyStruct;
-};
-
-struct NotifyMessageDeletedProxyEvent : nsImapMessageSinkProxyEvent
-{
-    NotifyMessageDeletedProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                   delete_message_struct* aStruct);
-    virtual ~NotifyMessageDeletedProxyEvent();
-    NS_IMETHOD HandleEvent();
-    delete_message_struct m_deleteMessageStruct;
-};
-
-struct GetMessageSizeFromDBProxyEvent : nsImapMessageSinkProxyEvent
-{
-    GetMessageSizeFromDBProxyEvent(nsImapMessageSinkProxy* aImapMessageSinkProxy,
-                                   MessageSizeInfo* sizeInfo);
-    virtual ~GetMessageSizeFromDBProxyEvent();
-    NS_IMETHOD HandleEvent();
-    MessageSizeInfo *m_sizeInfo; // pass in handle we don't own it
 };
 
 struct nsImapExtensionSinkProxyEvent : nsImapEvent
@@ -612,15 +475,6 @@ struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     virtual ~ProcessTunnelProxyEvent();
     NS_IMETHOD HandleEvent();
     TunnelInfo m_tunnelInfo;
-};
-
-struct LoadNextQueuedUrlProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    LoadNextQueuedUrlProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                            nsIImapIncomingServer *aInfo);
-    virtual ~LoadNextQueuedUrlProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsCOMPtr <nsIImapIncomingServer> m_imapIncomingServer;
 };
 
 struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent

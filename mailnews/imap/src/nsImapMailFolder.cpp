@@ -2202,8 +2202,7 @@ void nsImapMailFolder::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMsgDBHdr 
 }    
 
 NS_IMETHODIMP
-nsImapMailFolder::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
-                                      StreamInfo* aStreamInfo)
+nsImapMailFolder::SetupMsgWriteStream()
 {
 	// create a temp file to write the message into. We need to do this because
 	// we don't have pluggable converters yet. We want to let mkfile do the work of 
@@ -2217,21 +2216,20 @@ nsImapMailFolder::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP 
-nsImapMailFolder::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
-                                      msg_line_info* aMsgLineInfo)
+nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey uidOfMessage)
 {
 	PRUint32 count = 0;
 	// remember the uid of the message we're downloading.
-	m_curMsgUid = aMsgLineInfo->uidOfMessage;
+	m_curMsgUid = uidOfMessage;
 	if (m_tempMessageStream)
-	   m_tempMessageStream->Write(aMsgLineInfo->adoptedMessageLine, 
-								  PL_strlen(aMsgLineInfo->adoptedMessageLine), &count);
+	   m_tempMessageStream->Write(adoptedMessageLine, 
+								  PL_strlen(adoptedMessageLine), &count);
                                                                                                                                                   
      return NS_OK;                                                               
 }
     
 NS_IMETHODIMP
-nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
+nsImapMailFolder::NormalEndMsgWriteStream()
 {
 	nsresult res = NS_OK;
 	if (m_tempMessageStream)
@@ -2239,61 +2237,18 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
         nsCOMPtr<nsISupports> aSupport;
 		m_tempMessageStream->Close();
 
-		res = aProtocol->GetStreamConsumer(getter_AddRefs(aSupport));
-        if (NS_SUCCEEDED(res))
-        {
-            nsCOMPtr<nsIWebShell> webShell;
-            webShell = do_QueryInterface(aSupport, &res);
-            if (NS_SUCCEEDED(res) && webShell)
-            {
-                nsFileURL  fileURL(m_tempMsgFileSpec);
-                char * message_path_url = PL_strdup(fileURL.GetAsString());
-                res = webShell->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE);
-				if (NS_SUCCEEDED(res))
-				{
-					// now mark the message as read in the db.
-					nsCOMPtr<nsIMsgDBHdr> msgHdr;
-
-					res = GetMessageHeader(getter_AddRefs(msgHdr));
-					if (NS_SUCCEEDED(res))
-						msgHdr->MarkRead(PR_TRUE);
-				}
-
-                PR_FREEIF(message_path_url);
-			}
-            else
-            {
-                nsCOMPtr<nsIStreamListener> streamListener;
-                streamListener = do_QueryInterface(aSupport, &res);
-                if (NS_SUCCEEDED(res) && streamListener)
-                {
-                    nsCOMPtr<nsIURI> aUrl;
-                    res = aProtocol->GetRunningUrl(getter_AddRefs(aUrl));
-					nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aUrl);
-                    nsInputFileStream *inputFileStream = nsnull;
-                    nsCOMPtr<nsIInputStream> inputStream;
-                    inputFileStream = new nsInputFileStream(m_tempMsgFileSpec);
-                    if (!inputFileStream) return NS_ERROR_OUT_OF_MEMORY;
-                    inputStream =
-                        do_QueryInterface(inputFileStream->GetIStream(), &res);
-                    PRUint32 fileSize = 0;
-                    res = inputStream->Available(&fileSize);
-                    streamListener->OnStartRequest(nsnull, aCtxt);
-                    streamListener->OnDataAvailable(nsnull /* channel */, aCtxt, inputStream, 0 /* offset */, 
-                                                    fileSize);
-                    streamListener->OnStopRequest(nsnull, aCtxt, 0, nsnull);
-                    inputStream = null_nsCOMPtr();
-                    delete inputFileStream;
-                }
-            }
-        }
 	}
+	nsCOMPtr<nsIMsgDBHdr> msgHdr;
+
+	res = GetMessageHeader(getter_AddRefs(msgHdr));
+	if (NS_SUCCEEDED(res))
+		msgHdr->MarkRead(PR_TRUE);
 
 	return res;
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
+nsImapMailFolder::AbortMsgWriteStream()
 {
     return NS_ERROR_FAILURE;
 }
@@ -2320,32 +2275,22 @@ nsresult nsImapMailFolder::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     
     // message move/copy related methods
 NS_IMETHODIMP 
-nsImapMailFolder::OnlineCopyReport(nsIImapProtocol* aProtocol,
-                                   ImapOnlineCopyState* aCopyState)
+nsImapMailFolder::OnlineCopyReport(ImapOnlineCopyState aCopyState)
 {
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::BeginMessageUpload(nsIImapProtocol* aProtocol)
+nsImapMailFolder::BeginMessageUpload()
 {
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsImapMailFolder::UploadMessageFile(nsIImapProtocol* aProtocol,
-                                    UploadMessageInfo* aMsgInfo)
-{
-    return NS_ERROR_FAILURE;
-}
 
     // message flags operation
 NS_IMETHODIMP
-nsImapMailFolder::NotifyMessageFlags(nsIImapProtocol* aProtocol,
-                                     FlagsKeyStruct* aKeyStruct)
+nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 {
-    nsMsgKey msgKey = aKeyStruct->key;
-    imapMessageFlagsType flags = aKeyStruct->flags;
 	if (NS_SUCCEEDED(GetDatabase()) && mDatabase)
     {
         mDatabase->MarkRead(msgKey, (flags & kImapMsgSeenFlag) != 0, nsnull);
@@ -2356,11 +2301,9 @@ nsImapMailFolder::NotifyMessageFlags(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
-                                       delete_message_struct* aStruct)
+nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool deleteAllMsgs, const char *msgIdString)
 {
-	PRBool deleteAllMsgs = aStruct->deleteAllMsgs;
-	const char *doomedKeyString = aStruct->msgIdString;
+	const char *doomedKeyString = msgIdString;
 
 	PRBool showDeletedMessages = ShowDeletedMessages();
 
@@ -2522,19 +2465,18 @@ void nsImapMailFolder::SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKey
 
 
 NS_IMETHODIMP
-nsImapMailFolder::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
-                                       MessageSizeInfo* sizeInfo)
+nsImapMailFolder::GetMessageSizeFromDB(const char *id, const char *folderName, PRBool idIsUid, PRUint32 *size)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-	if (sizeInfo && sizeInfo->id && mDatabase)
+	if (id && mDatabase)
 	{
-		PRUint32 key = atoi(sizeInfo->id);
+		PRUint32 key = atoi(id);
 		nsCOMPtr<nsIMsgDBHdr> mailHdr;
-		NS_ASSERTION(sizeInfo->idIsUid, "ids must be uids to get message size");
-		if (sizeInfo->idIsUid)
+		NS_ASSERTION(idIsUid, "ids must be uids to get message size");
+		if (idIsUid)
 			rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(mailHdr));
 		if (NS_SUCCEEDED(rv) && mailHdr)
-			rv = mailHdr->GetMessageSize(&sizeInfo->size);
+			rv = mailHdr->GetMessageSize(size);
 	}
     return rv;
 }
@@ -2890,13 +2832,6 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
                                 TunnelInfo *aInfo)
 {
     return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsImapMailFolder::LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
-													 nsIImapIncomingServer *incomingServer)
-{
-    return incomingServer->LoadNextQueuedUrl();
 }
 
 NS_IMETHODIMP

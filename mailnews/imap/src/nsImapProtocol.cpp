@@ -421,11 +421,16 @@ nsImapProtocol::SetupSinkProxy()
             res = m_runningUrl->GetImapMessageSink(getter_AddRefs(aImapMessageSink));
             if (NS_SUCCEEDED(res) && aImapMessageSink)
             {
-                nsImapMessageSinkProxy * messageSink = new nsImapMessageSinkProxy(aImapMessageSink,
-                                                       this,
-                                                       m_sinkEventQueue,
-                                                       m_thread);
-				m_imapMessageSink = do_QueryInterface(messageSink);
+				NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &res);
+    
+				if (NS_FAILED(res)) 
+					return;
+
+				res = proxyManager->GetProxyObject(  m_sinkEventQueue,
+														 nsCOMTypeInfo<nsIImapMessageSink>::GetIID(),
+														 aImapMessageSink,
+														 PROXY_SYNC | PROXY_ALWAYS,
+														 getter_AddRefs(m_imapMessageSink));
             }
         }
         if (!m_imapExtensionSink)
@@ -983,13 +988,9 @@ void nsImapProtocol::ProcessCurrentURL()
 	m_runningUrl = null_nsCOMPtr();
 
 	// now try queued urls, now that we've released this connection.
-	if (m_server && m_imapMiscellaneousSink && GetConnectionStatus() >= 0)
+	if (m_imapServerSink && GetConnectionStatus() >= 0)
 	{
-		nsCOMPtr<nsIImapIncomingServer>	aImapServer  = do_QueryInterface(m_server, &rv);
-		if (NS_SUCCEEDED(rv))
-		{
-			rv = m_imapMiscellaneousSink->LoadNextQueuedUrl(this, aImapServer);
-		}
+		rv = m_imapServerSink->LoadNextQueuedUrl();
 	}
 	// release the url as we are done with it...
 	ReleaseUrlState();
@@ -1654,11 +1655,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						}
 					}
 
-					deleteMsg->onlineFolderName = convertedCanonicalName;
-					deleteMsg->deleteAllMsgs = PR_FALSE;
-                    deleteMsg->msgIdString   = messageIdString.ToNewCString();	// storage adopted, do not delete
 					if (m_imapMessageSink)
-                    	m_imapMessageSink->NotifyMessageDeleted(this, deleteMsg);
+                    	m_imapMessageSink->NotifyMessageDeleted(convertedCanonicalName, PR_FALSE, messageIdString);
 					// notice we don't wait for this to finish...
                 }
                 else
@@ -1679,8 +1677,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
 						Expunge();      // expunge messages with deleted flag
 					if (GetServerStateParser().LastCommandSuccessful())
 					{
-						delete_message_struct *deleteMsg = (delete_message_struct *) PR_Malloc (sizeof(delete_message_struct));
-
 						// convert name back from utf7
 						utf_name_struct *nameStruct = (utf_name_struct *) PR_Malloc(sizeof(utf_name_struct));
 						char *convertedCanonicalName = NULL;
@@ -1695,12 +1691,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
 							}
 						}
 
-						deleteMsg->onlineFolderName = convertedCanonicalName;
-						deleteMsg->deleteAllMsgs = PR_TRUE;
-						deleteMsg->msgIdString   = nsnull;
-
 						if (m_imapMessageSink)
-                    		m_imapMessageSink->NotifyMessageDeleted(this, deleteMsg);
+                    		m_imapMessageSink->NotifyMessageDeleted(convertedCanonicalName, PR_TRUE, nsnull);
 					}
                 
 				}
@@ -1783,12 +1775,12 @@ void nsImapProtocol::ProcessSelectedStateURL()
                     PR_FREEIF( destinationMailbox);
 					ImapOnlineCopyState copyState;
 					if (DeathSignalReceived())
-						copyState = kInterruptedState;
+						copyState = ImapOnlineCopyStateType::kInterruptedState;
 					else
 						copyState = GetServerStateParser().LastCommandSuccessful() ? 
-                                kSuccessfulCopy : kFailedCopy;
+                                ImapOnlineCopyStateType::kSuccessfulCopy : ImapOnlineCopyStateType::kFailedCopy;
 					if (m_imapMessageSink)
-						m_imapMessageSink->OnlineCopyReport(this, &copyState);
+						m_imapMessageSink->OnlineCopyReport(copyState);
                     
                     if (GetServerStateParser().LastCommandSuccessful() &&
                         (imapAction == nsIImapUrl::nsImapOnlineMove))
@@ -1800,8 +1792,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
                         	
 						if (m_imapMessageSink)
 						{
-							copyState = storeSuccessful ? kSuccessfulDelete : kFailedDelete;
-							m_imapMessageSink->OnlineCopyReport(this, &copyState);
+							copyState = storeSuccessful ? ImapOnlineCopyStateType::kSuccessfulDelete : ImapOnlineCopyStateType::kFailedDelete;
+							m_imapMessageSink->OnlineCopyReport(copyState);
 						}
                     }
                 }
@@ -1940,8 +1932,7 @@ void nsImapProtocol::BeginMessageDownLoad(
             }
 			else if (m_imapMessageSink) 
             {
-                m_imapMessageSink->SetupMsgWriteStream(this, si);
-				WaitForFEEventCompletion();
+                m_imapMessageSink->SetupMsgWriteStream();
 			}
             PL_strfree(si->content_type);
         }
@@ -2530,11 +2521,12 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
        PRUint32 count = 0;
        char * line = downloadLineDontDelete->adoptedMessageLine;
 	   m_channelOutputStream->Write(line, PL_strlen(line), &count);
+		if (m_imapMessageSink && downloadLineDontDelete)
+		{
+			m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
+				downloadLineDontDelete->uidOfMessage);
+		}
     }
-    else if (m_imapMessageSink && downloadLineDontDelete)
-	{
-        m_imapMessageSink->ParseAdoptedMsgLine(this, downloadLineDontDelete);
-	}
 
     // ***** We need to handle the psuedo interrupt here *****
 }
@@ -2679,11 +2671,9 @@ void nsImapProtocol::NormalMessageEndDownload()
 		m_channelInputStream->Available(&inlength);
 		if (inlength > 0) // broadcast our batched up ODA changes
 			m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
-    }
-	else if (m_imapMessageSink)
-    {
-        m_imapMessageSink->NormalEndMsgWriteStream(this);
-        WaitForFEEventCompletion();
+		// need to know if we're downloading for display or not.
+		if (m_imapMessageSink)
+			m_imapMessageSink->NormalEndMsgWriteStream();
     }
 
 }
@@ -2707,7 +2697,7 @@ void nsImapProtocol::AbortMessageDownLoad()
 			m_imapMailFolderSink->AbortHeaderParseStream(this);
 	}
 	else if (m_imapMessageSink)
-        m_imapMessageSink->AbortMsgWriteStream(this);
+        m_imapMessageSink->AbortMsgWriteStream();
 
 }
 
@@ -3133,60 +3123,48 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
 PRUint32 nsImapProtocol::GetMessageSize(nsCString &messageId, 
                                         PRBool idsAreUids)
 {
-	MessageSizeInfo *sizeInfo = 
-        (MessageSizeInfo *)PR_CALLOC(sizeof(MessageSizeInfo));
-	if (sizeInfo)
+	const char *folderFromParser =
+        GetServerStateParser().GetSelectedMailboxName(); 
+	if (folderFromParser)
 	{
-		const char *folderFromParser =
-            GetServerStateParser().GetSelectedMailboxName(); 
-		if (folderFromParser)
+		char *id = (char *)PR_CALLOC(messageId.Length() + 1);
+		char *folderName;
+		PRUint32 size;
+
+		PL_strcpy(id, messageId.GetBuffer());
+
+		nsIMAPNamespace *nsForMailbox = nsnull;
+        const char *userName = GetImapUserName();
+        m_hostSessionList->GetNamespaceForMailboxForHost(
+            GetImapHostName(), userName, folderFromParser,
+            nsForMailbox);
+
+		char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, PR_FALSE);
+		if (nonUTF7ConvertedName)
+			folderFromParser = nonUTF7ConvertedName;
+
+		if (nsForMailbox)
+            m_runningUrl->AllocateCanonicalPath(
+                folderFromParser, nsForMailbox->GetDelimiter(),
+                &folderName);
+		else
+             m_runningUrl->AllocateCanonicalPath(
+                folderFromParser,kOnlineHierarchySeparatorUnknown,
+                &folderName);
+		PR_FREEIF(nonUTF7ConvertedName);
+
+		if (id && folderName)
 		{
-			sizeInfo->id = (char *)PR_CALLOC(messageId.Length() + 1);
-			PL_strcpy(sizeInfo->id, messageId.GetBuffer());
-			sizeInfo->idIsUid = idsAreUids;
-
-			nsIMAPNamespace *nsForMailbox = nsnull;
-            const char *userName = GetImapUserName();
-            m_hostSessionList->GetNamespaceForMailboxForHost(
-                GetImapHostName(), userName, folderFromParser,
-                nsForMailbox);
-
-			char *nonUTF7ConvertedName = CreateUtf7ConvertedString(folderFromParser, PR_FALSE);
-			if (nonUTF7ConvertedName)
-				folderFromParser = nonUTF7ConvertedName;
-
-			if (nsForMailbox)
-                m_runningUrl->AllocateCanonicalPath(
-                    folderFromParser, nsForMailbox->GetDelimiter(),
-                    &sizeInfo->folderName);
-			else
-                 m_runningUrl->AllocateCanonicalPath(
-                    folderFromParser,kOnlineHierarchySeparatorUnknown,
-                    &sizeInfo->folderName);
-			PR_FREEIF(nonUTF7ConvertedName);
-
-			if (sizeInfo->id && sizeInfo->folderName)
-			{
-                if (m_imapMessageSink)
-                {
-                    m_imapMessageSink->GetMessageSizeFromDB(this, sizeInfo);
-                    WaitForFEEventCompletion();
-                }
-
-			}
-            PR_FREEIF(sizeInfo->id);
-            PR_FREEIF(sizeInfo->folderName);
-
-			int32 rv = 0;
-			if (!DeathSignalReceived())
-				rv = sizeInfo->size;
-			PR_Free(sizeInfo);
-			return rv;
+            if (m_imapMessageSink)
+                m_imapMessageSink->GetMessageSizeFromDB(id, folderName, idsAreUids, &size);
 		}
-    }
-	else
-	{
-		HandleMemoryFailure();
+        PR_FREEIF(id);
+        PR_FREEIF(folderName);
+
+		PRUint32 rv = 0;
+		if (!DeathSignalReceived())
+			rv = size;
+		return rv;
 	}
     return 0;
 }
@@ -3536,11 +3514,8 @@ nsImapProtocol::SetConnectionStatus(PRInt32 status)
 void
 nsImapProtocol::NotifyMessageFlags(imapMessageFlagsType flags, nsMsgKey key)
 {
-    FlagsKeyStruct aKeyStruct;
-    aKeyStruct.flags = flags;
-    aKeyStruct.key = key;
     if (m_imapMessageSink)
-        m_imapMessageSink->NotifyMessageFlags(this, &aKeyStruct);
+        m_imapMessageSink->NotifyMessageFlags(flags, key);
 }
 
 void

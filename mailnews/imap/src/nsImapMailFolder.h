@@ -183,33 +183,9 @@ public:
     NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
     
     // nsIImapMessageSink methods
-    NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
+	NS_DECL_NSIIMAPMESSAGESINK
 
-    NS_IMETHOD ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    // message move/copy related methods
-    NS_IMETHOD OnlineCopyReport(nsIImapProtocol* aProtocol,
-                                ImapOnlineCopyState* aCopyState);
-    NS_IMETHOD BeginMessageUpload(nsIImapProtocol* aProtocol);
-    NS_IMETHOD UploadMessageFile(nsIImapProtocol* aProtocol,
-                                 UploadMessageInfo* aMsgInfo);
-
-    // message flags operation
-    NS_IMETHOD NotifyMessageFlags(nsIImapProtocol* aProtocol,
-                                  FlagsKeyStruct* aKeyStruct);
-
-    NS_IMETHOD NotifyMessageDeleted(nsIImapProtocol* aProtocol,
-                                    delete_message_struct* aStruct);
-    NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
-                                    MessageSizeInfo* sizeInfo);
-
-	//nsICopyMessageListener
+    //nsICopyMessageListener
 	NS_IMETHOD BeginCopy(nsIMessage *message);
 	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
 	NS_IMETHOD EndCopy(PRBool copySucceeded);
@@ -264,8 +240,6 @@ public:
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
-	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
-                                 nsIImapIncomingServer *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
                                      nsISupports* copyState);
     NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,

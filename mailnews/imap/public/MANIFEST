@@ -21,7 +21,6 @@ nsIImapProtocol.h
 nsIImapLog.h
 nsIIMAPHostSessionList.h
 nsIImapMailfolderSink.h
-nsIImapMessageSink.h
 nsIImapExtensionSink.h
 nsIImapMiscellaneousSink.h
 nsIImapService.h

@@ -197,13 +197,6 @@ typedef struct _StatusMessageInfo {
 	char * extraInfo;
 } StatusMessageInfo;
 
-typedef struct _UploadMessageInfo {
-	PRUint32 newMsgID;
-	// XP_File	fileId; *** need to be changed
-	char *dataBuffer;
-	PRInt32 bytesRemain;
-} UploadMessageInfo;
-
 typedef struct _utf_name_struct {
 	PRBool toUtf7Imap;
 	unsigned char *sourceString;
@@ -216,11 +209,6 @@ typedef struct _msg_line_info {
     PRUint32 uidOfMessage;
 } msg_line_info;
 
-
-typedef struct _FlagsKeyStruct {
-    imapMessageFlagsType flags;
-    nsMsgKey key;
-} FlagsKeyStruct;
 
 typedef struct _TunnelInfo {
 	PRInt32 maxSize;
@@ -244,17 +232,6 @@ typedef enum {
 } EIMAPSubscriptionUpgradeState;
 
 typedef enum {
-	kInProgress,
-	kSuccessfulCopy,
-	kFailedCopy,
-	kSuccessfulDelete,
-	kFailedDelete,
-	kReadyForAppendData,
-	kFailedAppend,
-	kInterruptedState
-} ImapOnlineCopyState;
-
-typedef enum {
     	eContinue,
 		eContinueNew,
     	eListMyChildren,
@@ -262,13 +239,6 @@ typedef enum {
     	eCancelled 
 } EMailboxDiscoverStatus;
 
-typedef struct _MessageSizeInfo
-{
-	char *id;
-	char *folderName;
-	PRBool idIsUid;
-	PRUint32 size;
-} MessageSizeInfo;
 
 
 // This class is only used for passing data

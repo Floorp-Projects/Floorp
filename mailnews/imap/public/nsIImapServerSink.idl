@@ -33,6 +33,7 @@ interface nsIImapServerSink : nsISupports {
 	void SubscribeUpgradeFinished(in boolean bringUpSubscribeUI);
 
 	void SetCapability(in unsigned long capability);
+	void LoadNextQueuedUrl();
 
 	void GetImapStringByID(in long aMsgId, out wstring aString);
 	void FEAlert(in wstring aString);
