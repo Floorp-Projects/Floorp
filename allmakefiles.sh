@@ -462,9 +462,6 @@ END_NGMAKEFILES
 if [ "$MOZ_EDITOR" ]; then
   add_makefiles <<END_EDITOR_MAKEFILES
 editor/base/Makefile
-editor/guimgr/Makefile
-editor/guimgr/src/Makefile
-editor/guimgr/public/Makefile
 editor/ui/Makefile
 editor/ui/composer/Makefile
 editor/ui/composer/content/Makefile
