@@ -1371,7 +1371,7 @@ tabcontrol {
   border: none; 
 }
 
-deck, tabpanel {
+deck.tabpanel, tabpanel {
   border-top: 1px solid white;
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;

@@ -28,7 +28,7 @@
     </box>
     <spring flex="100%"/>
   </toolbar>
-  <box id="contentsink" flex="100%">
+  <box id="contentarea" flex="100%">
   	<html:iframe src="about:blank" style="width: 400px; height: 200px;" name="content"  id="content" scrolling="auto" flex="100%"/>
   </box>
 	<box id="wizardButtons"/>
