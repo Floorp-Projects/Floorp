@@ -66,7 +66,7 @@
 
 static void hex_out(unsigned char *buf, PRUint32 n, FILE *f, PRUint32 *pos);
 
-static void flatten_name(char *aToName);
+static void spaces_to_underlines(char *aToName);
 static int FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
                                     const PRUnichar *aCharIDs, int aLen,
                                     const char *aFontName,
@@ -193,7 +193,7 @@ FT2ToType1FontName(FT_Face aFace, int aWmode)
   }
   sprintf(fontname, "%s.%s.%ld.%d", aFace->family_name, aFace->style_name,
                                     aFace->face_index, aWmode?1:0);
-  flatten_name(fontname);
+  spaces_to_underlines(fontname);
   return fontname;
 }
 
@@ -587,14 +587,10 @@ FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
 }
 
 static void
-flatten_name(char *aString)
+spaces_to_underlines(char *aString)
 {
   for (; *aString; aString++) {
     if (*aString == ' ')
-      *aString = '_';
-    else if (*aString == '(')
-      *aString = '_';
-    else if (*aString == ')')
       *aString = '_';
   }
 }

@@ -72,8 +72,7 @@ void
 WriteCidCharMap(const PRUnichar *aCharIDs, PRUint32 *aCIDs,
                 int aLen, FILE *aFile)
 {
-  int i, j, blk_len;
-  int fix_len = 0; // older versions of Ghostscript do not like a len of 2
+  int i, blk_len;
 
   while (aLen) {
     /* determine the # of lines in this block */
@@ -82,19 +81,10 @@ WriteCidCharMap(const PRUnichar *aCharIDs, PRUint32 *aCIDs,
     else
       blk_len = aLen;
 
-    if (blk_len == 2) {
-      fix_len = 1;
-      fprintf(aFile, "%% add an extra dummy value to the end of this block "
-              " since older versions of\n");
-      fprintf(aFile, "%% Ghostscript do not like a block len of 2\n");
-    }
-
     /* output the block */
-    fprintf(aFile, "%d begincidchar\n", blk_len+fix_len);
+    fprintf(aFile, "%d begincidchar\n", blk_len);
     for (i=0; i<blk_len; i++)
       fprintf(aFile, "<%04X> %d\n", aCharIDs[i], aCIDs[i]);
-    for (j=0; j<fix_len; j++) // repeat the old value
-      fprintf(aFile, "<%04X> %d\n", aCharIDs[i-1], aCIDs[i-1]);
     fprintf(aFile, "endcidchar\n\n");
 
     /* setup for next block */
