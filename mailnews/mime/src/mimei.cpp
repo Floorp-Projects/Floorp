@@ -1047,7 +1047,7 @@ mime_find_security_info_of_part(const char *part, MimeObject *obj,
    it replaces it.
  */
 char *
-mime_set_url_part(const char *url, char *part, PRBool append_p)
+mime_set_url_part(const char *url, const char *part, PRBool append_p)
 {
   const char *part_begin = 0;
   const char *part_end = 0;
@@ -1126,7 +1126,7 @@ mime_set_url_part(const char *url, char *part, PRBool append_p)
    Strips off any previous *IMAP* part numbers, since they are absolute, not relative.
  */
 char *
-mime_set_url_imap_part(const char *url, char *imappart, char *libmimepart)
+mime_set_url_imap_part(const char *url, const char *imappart, const char *libmimepart)
 {
   char *result = 0;
   char *whereCurrent = PL_strstr(url, "/;section=");
