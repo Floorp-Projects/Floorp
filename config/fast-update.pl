@@ -28,7 +28,7 @@ my $dir = '';
 
 &GetOptions('d=s' => \$dir, 'h=s' => \$hours, 'm=s' => \$module, 'r=s' => \$branch);
 
-print "dir = ($dir), hours = ($hours), module = ($module), branch = ($branch)\n";
+#print "dir = ($dir), hours = ($hours), module = ($module), branch = ($branch)\n";
 if ($dir) {
   chdir '..';
   chdir $dir;
@@ -48,7 +48,6 @@ open REPOSITORY, "<CVS/Repository";
 $rootdir = <REPOSITORY>;
 chop $rootdir;
 close REPOSITORY;
-print "Current dir = $rootdir\n";
 
 # try to guess the current branch by looking at all the
 # files in CVS/Entries
@@ -107,7 +106,7 @@ print "Contacting bonsai for updates to ${module} ";
 print "on the ${branch} branch " if ($branch);
 print "in the last ${hours} hours ";
 print "within the $rootdir directory..\n" if ($rootdir);
-print "url = $url\n";
+#print "url = $url\n";
 
 # first try wget, then try lynx
 
@@ -130,7 +129,7 @@ if (!$have_checkins) {
 $have_checkins || die "Couldn't get checkins\n";
 
 open REALOUT, ">.fast-update.bonsai.html" || die "argh $!\n";
-print "Processing checkins..\n";
+print "Processing checkins...";
 while (<CHECKINS>) {
   print REALOUT $_;
   
@@ -141,6 +140,7 @@ while (<CHECKINS>) {
   }
 }
 
+print "done.\n";
 close REALOUT;
 unlink '.fast-update.bonsai.html';
 
@@ -187,13 +187,13 @@ if (scalar(@uniquedirs)) {
     $dirlist .= "\"$dir\" ";
     $i++;
     if ($i == 5) {
-      $status |= system "cvs up -l -d $dirlist\n";
+      $status |= spawn("cvs up -l -d $dirlist\n");
       $dirlist = "";
       $i=0;
     }
   }
   if ($i) {
-    $status |= system "cvs up -l -d $dirlist\n";
+    $status |= spawn("cvs up -l -d $dirlist\n");
   }
 }
 else {
@@ -224,7 +224,6 @@ sub cvs_up_parent {
   if (!-d $pdir) {
     cvs_up_parent($pdir);
   }
-  print "dir = ($dir), pdir = ($pdir)\n";
   $status |= system "cvs up -d -l $pdir\n";
 }
 
@@ -266,7 +265,7 @@ sub get_last_update_time {
   if (!defined(line)) {
     return undef;
   }
-  print "line = $line";
+#  print "line = $line";
   $line =~ /^(\d+):/;
   return $1;
 }
@@ -283,4 +282,9 @@ sub escape {
   my ($toencode) = @_;
   $toencode=~s/([^a-zA-Z0-9_.-])/uc sprintf("%%%02x",ord($1))/eg;
   return $toencode;
+}
+
+sub spawn {
+  my ($procname) = @_;
+  return system "$procname";
 }
