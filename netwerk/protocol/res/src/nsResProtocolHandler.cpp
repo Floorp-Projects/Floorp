@@ -85,6 +85,87 @@ nsResProtocolHandler::Init()
                        );
     if (NS_FAILED(rv)) return rv;
 
+    // Set up the "Resource" root to point to the old resource location 
+    // such that:
+    //     resource://<path>  ==  res://Resource/<path>
+#ifdef XP_PC
+
+    // XXX why is this one inconsistent -- Mac Unix and BeOS seem to look inthe current process dir
+    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
+    if (NS_FAILED(rv)) return rv;
+
+#elif defined (XP_MAC)
+
+    rv = SetSpecialDir("Resource", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    if (NS_FAILED(rv)) return rv;
+
+#elif defined(XP_UNIX)
+    
+    // first add $MOZILLA_FIVE_HOME if it exists
+    char* path = PR_GetEnv("MOZILLA_FIVE_HOME");
+    if (path) {
+        char* fileURL = PR_smprintf("file:///%s", path);
+        PR_Free(path);
+        rv = AppendSubstitution("Resource", fileURL);
+        PR_Free(fileURL);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // then add pwd
+    char homepath[MAXPATHLEN];
+    FILE* pp;
+    if (!(pp = popen("pwd", "r"))) {
+        NS_WARNING("res protocol: can't open pwd");
+        return NS_ERROR_FAILURE;
+    }
+    if (fgets(homepath, MAXPATHLEN, pp)) {
+        homepath[PL_strlen(homepath)-1] = 0;
+    }
+    else {
+        NS_WARNING("res protocol: can't get homepath");
+
+        pclose(pp);
+        return NS_ERROR_FAILURE;
+    }
+    pclose(pp);
+    char* fileURL = PR_smprintf("file:///%s", homepath);
+    rv = AppendSubstitution("Resource", fileURL);
+    PR_Free(fileURL);
+    if (NS_FAILED(rv)) return rv;
+
+#elif defined(XP_BEOS)
+
+    // first add $MOZILLA_FIVE_HOME if it exists
+    const char *moz5 = getenv("MOZILLA_FIVE_HOME");
+    if (moz5) {
+        char* fileURL = PR_smprintf("file:///%s", moz5);
+        rv = AppendSubstitution("Resource", fileURL);
+        PR_Free(fileURL);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // then add pwd
+    static char buf[MAXPATHLEN];
+    int32 cookie = 0;
+    image_info info;
+    char *p;
+    *buf = 0;
+    if (get_next_image_info(0, &cookie, &info) != B_OK) {
+        NS_WARNING("res protocol: get_next_image_info failed");
+        return NS_ERROR_FAILURE;
+    }
+    strcpy(buf, info.name);
+    if ((p = strrchr(buf, '/')) == 0) {
+        NS_WARNING("res protocol: no slash in working dir");
+        return NS_ERROR_FAILURE;
+    }
+    *p = 0;
+    char* fileURL = PR_smprintf("file:///%s", buf);
+    rv = AppendSubstitution("Resource", fileURL);
+    if (NS_FAILED(rv)) return rv;
+
+#endif
+
     return rv;
 }
 
