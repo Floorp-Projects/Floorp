@@ -43,7 +43,7 @@ public:
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
 
-  void SetTopLevelWidget(GtkWidget* w);
+  static void SetTopLevelWidget(GtkWidget* w);
 
 
 protected:
@@ -52,12 +52,9 @@ protected:
 
   PRBool              mIgnoreEmptyNotification;
 
-  nsIClipboardOwner *mClipboardOwner;
-  nsITransferable   *mTransferable;
   nsIWidget         *mWindow;
-  GtkWidget         *mWidget;
+  static GtkWidget  *sWidget;
 
-private:
   static void SelectionRequestCB( GtkWidget *widget, 
                                   GtkSelectionData *selection_data,
                                   guint info,
@@ -69,7 +66,6 @@ private:
   static void SelectionReceivedCB(GtkWidget *aWidget,
                                   GtkSelectionData *aSelectionData,
                                   gpointer aData);
-
 };
 
 #endif // nsClipboard_h__
