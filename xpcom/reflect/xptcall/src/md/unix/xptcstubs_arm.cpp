@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Russell King  <rmk@arm.linux.org.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,6 +43,9 @@
 #if !defined(LINUX) || !defined(__arm__)
 #error "This code is for Linux ARM only. Please check if it works for you, too.\nDepends strongly on gcc behaviour."
 #endif
+
+/* Specify explicitly a symbol for this function, don't try to guess the c++ mangled symbol.  */
+static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args) asm("_PrepareAndDispatch");
 
 static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
@@ -117,73 +121,118 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
     return result;
 }
 
+/*
+ * This is our shared stub.
+ *
+ * r0 = Self.
+ *
+ * The Rules:
+ *   We pass an (undefined) number of arguments into this function.
+ *   The first 3 C++ arguments are in r1 - r3, the rest are built
+ *   by the calling function on the stack.
+ *
+ *   We are allowed to corrupt r0 - r3, ip, and lr.
+ *
+ * Other Info:
+ *   We pass the stub number in using `ip'.
+ *
+ * Implementation:
+ * - We save r1 to r3 inclusive onto the stack, which will be
+ *   immediately below the caller saved arguments.
+ * - setup r2 (PrepareAndDispatch's args pointer) to point at
+ *   the base of all these arguments
+ * - Save LR (for the return address)
+ * - Set r1 (PrepareAndDispatch's methodindex argument) from ip
+ * - r0 is passed through (self)
+ * - Call PrepareAndDispatch
+ * - When the call returns, we return by loading the PC off the
+ *   stack, and undoing the stack (one instruction)!
+ *
+ */
+__asm__ ("\n\
+SharedStub:							\n\
+	stmfd	sp!, {r1, r2, r3}				\n\
+	mov	r2, sp						\n\
+	str	lr, [sp, #-4]!					\n\
+	mov	r1, ip						\n\
+	bl	_PrepareAndDispatch	                        \n\
+	ldr	pc, [sp], #16");
 
-/* The easiest way to implement this is to do it as a c++ method. This means that
- * the compiler will same some registers to the stack as soon as this method is
- * entered. We have to be aware of that and have to know the number of registers
- * that will be pushed to the stack for now.
- * The compiler passes arguments to functions/methods in r1-r3 and the rest is on the
- * stack. r0 is (self).
+/*
+ * Create sets of stubs to call the SharedStub.
+ * We don't touch the stack here, nor any registers, other than IP.
+ * IP is defined to be corruptable by a called function, so we are
+ * safe to use it.
  *
- *
- * !!! IMPORTANT !!!
- * This code will *not* work if compiled without optimization (-O / -O2) because
- * the compiler overwrites the registers r0-r3 (it thinks it's called without 
- * parameters) and perhaps reserves more stack space than we think.
- *
- *
- * Since we don't know the number of parameters we have to pass to the required
- * method we use the following scheme:
- * 1.) Save method parameters that are passed in r1-r3 to a secure location
- * 2.) copy the stack space that is reserved at method entry to a secure location
- * 3.) copy the method arguments that formerly where in r1-r3 right in front of the
- *     other arguments (if any). PrepareAndDispatch needs all arguments in an array.
- *     It will sort out the correct argument passing convention using the InterfaceInfo's.
- * 4.) Call PrepareAndDispatch
- * 5.) Copy the stack contents from our method entry back in place to exit cleanly.
- * 
- * The easier way would be to completly implement this in assembler. This way one could get rid
- * of the compiler generated function prologue.
+ * This will work with or without optimisation.
+ */
+#if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
+/*
+ * Note : As G++3 ABI contains the length of the functionname in the
+ *  mangled name, it is difficult to get a generic assembler mechanism like
+ *  in the G++ 2.95 case.
+ *  Create names would be like :
+ *    _ZN14nsXPTCStubBase5Stub9Ev
+ *    _ZN14nsXPTCStubBase6Stub13Ev
+ *    _ZN14nsXPTCStubBase7Stub144Ev
+ *  Use the assembler directives to get the names right...
  */
 
-#define STUB_ENTRY(n)								   \
-nsresult nsXPTCStubBase::Stub##n()						   \
-{ 										   \
-  register nsresult result;							   \
-  __asm__ __volatile__(								   \
-    "sub 	sp, sp, #32	\n\t"    /* correct stack for pushing all args	*/ \
-    "str	r1, [sp]	\n\t"    /* push all args in r1-r3 to stack	*/ \
-    "str   	r2, [sp, #4]	\n\t"    /* 					*/ \
-    "str	r3, [sp, #8]	\n\t"	 /* 					*/ \
-    "add	r1, sp, #32	\n\t"	 /* copy saved registers:		*/ \
-    "ldr	r2, [r1]	\n\t"	 /* The scene is as follows - 		*/ \
-    "str	r2, [sp, #12]	\n\t"    /* sl, fp, ip, lr, pc get saved to the */ \
-    "ldr        r2, [r1, # 4]   \n\t"    /* stack, and behind that is the rest	*/ \
-    "str        r2, [sp, #16]   \n\t"    /* of our function parameters.		*/ \
-    "ldr        r2, [r1, # 8]   \n\t"    /*					*/ \
-    "str        r2, [sp, #20]   \n\t"    /*					*/ \
-    "ldr        r2, [r1, #12]   \n\t"    \
-    "str        r2, [sp, #24]   \n\t"    \
-    "ldr        r2, [r1, #16]   \n\t"    \
-    "str        r2, [sp, #28]   \n\t"    \
-    "ldmia	sp, {r1, r2, r3}\n\t"	 /* Copy method arguments to the right  */ \
-    "add	lr, sp, #40	\n\t"	 /* location.				*/ \
-    "stmia	lr, {r1, r2, r3}\n\t"	 \
-    "add	sp, sp, #12	\n\t"	 \
-    "mov	r1, #"#n"	\n\t"    /* = methodIndex 			*/ \
-    "mov	r2, lr		\n\t"	 /* = &(args)				*/ \
-    "bl	PrepareAndDispatch__FP14nsXPTCStubBaseUiPUi   \n\t" /*PrepareAndDispatch*/ \
-    "mov	%0, r0		\n\t"	 /* Result				*/ \
-    "add	r0, sp, #20	\n\t"	 /* copy everything back in place for	*/ \
-    "ldmia	sp!, {r1,r2,r3} \n\t"	 /* the normal c++ m,ethod exit		*/ \
-    "stmia	r0!, {r1,r2,r3}	\n\t"	 \
-    "ldmia	sp!, {r1, r2}	\n\t"	 \
-    "stmia	r0, {r1, r2}	\n\t"	 \
-    : "=r" (result)								   \
-    : 										   \
-    : "r0", "r1", "r2", "r3", "lr" );						   \
-    return result;								   \
+#define STUB_ENTRY(n)						\
+  __asm__(							\
+	".section \".text\"\n"					\
+"	.align 2\n"						\
+"	.iflt ("#n" - 10)\n"                                    \
+"	.globl	_ZN14nsXPTCStubBase5Stub"#n"Ev\n"		\
+"	.type	_ZN14nsXPTCStubBase5Stub"#n"Ev,#function\n"	\
+"_ZN14nsXPTCStubBase5Stub"#n"Ev:\n"				\
+"	.else\n"                                                \
+"	.iflt  ("#n" - 100)\n"                                  \
+"	.globl	_ZN14nsXPTCStubBase6Stub"#n"Ev\n"		\
+"	.type	_ZN14nsXPTCStubBase6Stub"#n"Ev,#function\n"	\
+"_ZN14nsXPTCStubBase6Stub"#n"Ev:\n"				\
+"	.else\n"                                                \
+"	.iflt ("#n" - 1000)\n"                                  \
+"	.globl	_ZN14nsXPTCStubBase7Stub"#n"Ev\n"		\
+"	.type	_ZN14nsXPTCStubBase7Stub"#n"Ev,#function\n"	\
+"_ZN14nsXPTCStubBase7Stub"#n"Ev:\n"				\
+"	.else\n"                                                \
+"	.err \"stub number "#n"> 1000 not yet supported\"\n"    \
+"	.endif\n"                                               \
+"	.endif\n"                                               \
+"	.endif\n"                                               \
+"	mov	ip, #"#n"\n"					\
+"	b	SharedStub\n\t");
+
+#if 0
+/*
+ * This part is left in as comment : this is how the method definition
+ * should look like.
+ */
+
+#define STUB_ENTRY(n)  \
+nsresult nsXPTCStubBase::Stub##n ()  \
+{ \
+  __asm__ (	  		        \
+"	mov	ip, #"#n"\n"					\
+"	b	SharedStub\n\t");                               \
+  return 0; /* avoid warnings */                                \
 }
+#endif
+
+#else /* G++2.95 ABI */
+
+#define STUB_ENTRY(n)						\
+  __asm__(							\
+	".section \".text\"\n"					\
+"	.align\n"						\
+"	.globl	Stub"#n"__14nsXPTCStubBase\n"			\
+"	.type	Stub"#n"__14nsXPTCStubBase,#function\n\n"	\
+"Stub"#n"__14nsXPTCStubBase:\n"					\
+"	mov	ip, #"#n"\n"					\
+"	b	SharedStub\n\t");
+
+#endif
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \

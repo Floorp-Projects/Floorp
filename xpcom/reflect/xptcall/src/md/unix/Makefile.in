@@ -110,7 +110,7 @@ endif
 # Linux/ARM
 #
 ifeq ($(OS_ARCH),Linux)
-ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+ifneq (,$(filter arm% sa110,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_arm.cpp xptcstubs_arm.cpp
 CXXFLAGS += -O2
 endif
@@ -119,7 +119,7 @@ endif
 # NetBSD/ARM
 #
 ifeq ($(OS_ARCH),NetBSD)
-ifneq (,$(filter arm32 armv4l sa110,$(OS_TEST)))
+ifneq (,$(filter arm% sa110,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_arm_netbsd.cpp xptcstubs_arm_netbsd.cpp
 endif
 endif
