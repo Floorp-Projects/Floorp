@@ -1195,12 +1195,7 @@ nsGenericDOMDataNode::IsOnlyWhitespace()
 void
 nsGenericDOMDataNode::AppendTextTo(nsAString& aResult)
 {
-  if (mText.Is2b()) {
-    aResult.Append(mText.Get2b(), mText.GetLength());
-  } else {
-    const char *str = mText.Get1b();
-    AppendASCIItoUTF16(Substring(str, str + mText.GetLength()), aResult);
-  }
+  mText.AppendTo(aResult);
 }
 
 void
