@@ -550,9 +550,6 @@ static void InitTraceLog(void)
     if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- unable to log specific classes\n");
     }
-    else if (!gAllocLog && !gRefcntsLog) {
-      fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- but neither XPCOM_MEM_REFCNT_LOG nor XPCOM_MEM_ALLOC_LOG are defined\n");
-    }
     else {
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- only logging these classes: ");
       const char* cp = classes;
