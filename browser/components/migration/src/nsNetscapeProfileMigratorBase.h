@@ -85,7 +85,7 @@ protected:
   nsresult CopyFile(const nsAString& aSourceFileName, const nsAString& aTargetFileName);
 
   nsresult ImportNetscapeBookmarks(const nsAString& aBookmarksFileName,
-                                   const PRUnichar* aImportFolderTitleKey);
+                                   const PRUnichar* aImportSourceNameKey);
 
 protected:
   nsCOMPtr<nsILocalFile> mSourceProfile;
