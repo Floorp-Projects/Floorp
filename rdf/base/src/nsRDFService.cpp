@@ -823,7 +823,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
 
         rv = nsComponentManager::CreateInstance(progID, nsnull,
                                                 nsIRDFDataSource::GetIID(),
-                                                (void**)aDataSource);
+                                                (void**)&ds);
         if (progID != buf)
             delete[] progID;
     }
@@ -832,13 +832,13 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                                 nsnull,
                                                 nsIRDFDataSource::GetIID(),
-                                                (void**)aDataSource);
+                                                (void**) &ds);
 
         // XXX hack for now: make sure that the data source is
         // synchronously loaded. In the long run, we should factor out
         // the "loading" from the "creating". See nsRDFXMLDataSource::Init().
         if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(*aDataSource));
+            nsCOMPtr<nsIRDFXMLDataSource> rdfxmlDataSource(do_QueryInterface(ds));
             NS_ASSERTION(rdfxmlDataSource, "not an RDF/XML data source!");
             if (rdfxmlDataSource) {
                 rv = rdfxmlDataSource->SetSynchronous(PR_TRUE);
