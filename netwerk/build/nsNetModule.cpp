@@ -171,6 +171,11 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "mzAboutMozilla.h"
 #include "nsKeywordProtocolHandler.h"
 
+#ifdef MOZ_NEW_CACHE
+#include "nsAboutCacheEntry.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsFTPDirListingConv.h"
@@ -829,6 +834,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
       nsAboutCache::Create
     },
+#ifdef MOZ_NEW_CACHE
+    { "about:cache-entry",
+      NS_ABOUT_CACHE_ENTRY_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache-entry",
+      nsAboutCacheEntryConstructor
+    },
+#endif
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
