@@ -19,8 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
+ *
+ * Contributor(s):
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -120,6 +122,12 @@ NS_IMETHODIMP nsMenuDismissalListener::ShouldRollupOnMouseWheelEvent(PRBool *aSh
 
 // uggggh.
 
+// a menu should not roll up if activated by a mouse activate message (eg. X-mouse)
+NS_IMETHODIMP nsMenuDismissalListener::ShouldRollupOnMouseActivate(PRBool *aShouldRollup) 
+{ 
+  *aShouldRollup = PR_FALSE; 
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsMenuDismissalListener::GetSubmenuWidgetChain(nsISupportsArray **_retval)

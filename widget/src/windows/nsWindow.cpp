@@ -1034,10 +1034,7 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
           {
             // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
             // must be enabled in Windows.
-            // Assume that if the popup doesn't roll up on mouse wheel events,
-            // then it shouldn't roll up on this event either.  This allows the
-            // menu to stay open when it's activated by X-Mouse.
-            gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
+            gRollupListener->ShouldRollupOnMouseActivate(&rollup);
             if (!rollup)
             {
               *outResult = MA_NOACTIVATE;

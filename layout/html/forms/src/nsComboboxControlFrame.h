@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -204,9 +205,12 @@ public:
    // the popup area
   NS_IMETHOD ShouldRollupOnMouseWheelEvent(PRBool *aShouldRollup)
     { *aShouldRollup = PR_TRUE; return NS_OK;}
-
   //NS_IMETHOD ShouldRollupOnMouseWheelEvent(nsIWidget *aWidget, PRBool *aShouldRollup) 
   //{ *aShouldRollup = PR_FALSE; return NS_OK;}
+
+  // a combobox should not roll up if activated by a mouse activate message (eg. X-mouse)
+  NS_IMETHOD ShouldRollupOnMouseActivate(PRBool *aShouldRollup)
+    { *aShouldRollup = PR_FALSE; return NS_OK;}
 
   NS_IMETHOD SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
     { mFrameConstructor = aConstructor; return NS_OK;} // not owner - do not addref!
