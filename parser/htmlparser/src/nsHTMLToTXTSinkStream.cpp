@@ -17,7 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *     Greg Kostello (original structure)
+ *     Akkana Peck <akkana@netscape.com>
+ *     Daniel Brattell <bratell@lysator.liu.se>
+ *     Ben Bucksch <mozilla@bucksch.org>
  */
 
 /**
@@ -478,7 +482,9 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
         if (NS_SUCCEEDED(err))
         {
           SetWrapColumn((PRUint32)col);
+#ifdef DEBUG_akkana
           printf("Set wrap column to %d based on style\n", mWrapColumn);
+#endif
         }
       }
     } else {
@@ -558,23 +564,23 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_pre)
   {
-    EnsureVerticalSpace(0);
+    EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_a)
   {
     nsAutoString url;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url)))
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "href", url))
+        && !url.IsEmpty())
       mURL = url;
-    else
-      mURL.Truncate();
   }
   else if (type == eHTMLTag_img)
   {
     nsAutoString url;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", url)))
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", url)) && !url.IsEmpty())
     {
       nsAutoString temp, desc;
-      if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc)))
+      if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc))
+          && !desc.IsEmpty())
       {
         temp += " (";
         temp += desc;
@@ -633,6 +639,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
         EnsureVerticalSpace(0);
     } else if ((type == eHTMLTag_tr) ||
                (type == eHTMLTag_li) ||
+               (type == eHTMLTag_pre) ||
                (type == eHTMLTag_blockquote)) {
       EnsureVerticalSpace(0);
     } else {
@@ -694,6 +701,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       temp += mURL;
       temp += ">";
       Write(temp);
+      mURL.Truncate();
     }
   }
   else if (type == eHTMLTag_sup)
