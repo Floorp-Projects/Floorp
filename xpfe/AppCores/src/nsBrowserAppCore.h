@@ -66,6 +66,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    WalletEditor();
     NS_IMETHOD    WalletSafeFillin();
     NS_IMETHOD    WalletQuickFillin();
+    NS_IMETHOD    WalletSamples();
 #endif
 
     NS_IMETHOD    LoadUrl(const nsString& aUrl);

@@ -224,6 +224,9 @@ nsBrowserAppCore::Forward()
 //#define WALLET_EDITOR_URL "http://peoplestage/morse/wallet/walleted.html"
 #define WALLET_EDITOR_URL "http://people.netscape.com/morse/wallet/walleted.html"
 
+#define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples"
+//#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples"
+
 PRInt32
 newWindow(char* urlName) {
   nsresult rv;
@@ -271,6 +274,7 @@ newWindow(char* urlName) {
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
   appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
               nsnull, nsnull, 615, 650);
+
   NS_RELEASE(url);
   
 done:
@@ -379,6 +383,15 @@ nsBrowserAppCore::WalletQuickFillin()
 
   return NS_OK;
 }
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletSamples()
+{
+  /* bring up the samples in a new window */
+  mContentAreaWebShell->LoadURL(nsString(WALLET_SAMPLES_URL), nsnull, nsnull);
+  return NS_OK;
+}
+
 #endif
 
 NS_IMETHODIMP    

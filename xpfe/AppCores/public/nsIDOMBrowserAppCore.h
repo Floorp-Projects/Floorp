@@ -43,6 +43,7 @@ public:
   NS_IMETHOD    WalletEditor()=0;
   NS_IMETHOD    WalletSafeFillin()=0;
   NS_IMETHOD    WalletQuickFillin()=0;
+  NS_IMETHOD    WalletSamples()=0;
 #endif
 
   NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
