@@ -322,6 +322,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   PRTime notAfter, notBefore, timeToUse;
   nsCOMPtr<nsIX509CertValidity> validity;
   const char *key;
+  const char *titleKey;
 
   *_retval = PR_FALSE;
 
@@ -343,13 +344,16 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 
   if (LL_CMP(now, >, notAfter)) {
     key       = "serverCertExpiredMsg1"; 
+    titleKey  = "serverCertExpiredTitle";
     timeToUse = notAfter; 
   } else {
     key = "serverCertNotYetValedMsg1";
+    titleKey  = "serverCertNotYetValidTitle";
     timeToUse = notBefore;
   }
 
   nsXPIDLString message1;
+  nsXPIDLString title;
   PRUnichar *commonName=nsnull;
   nsString formattedDate;
 
@@ -366,14 +370,18 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
   PRUnichar *formattedDatePR = formattedDate.ToNewUnicode();
   const PRUnichar *formatStrings[2] = { commonName, formattedDatePR }; 
   nsString keyString = NS_ConvertASCIItoUCS2(key);
+  nsString titleKeyString = NS_ConvertASCIItoUCS2(titleKey);
   mPIPStringBundle->FormatStringFromName(keyString.get(), formatStrings, 
                                          2, getter_Copies(message1));
+  mPIPStringBundle->FormatStringFromName(titleKeyString.get(), formatStrings,
+                                         2, getter_Copies(title));
   
   Recycle(commonName);
   Recycle(formattedDatePR);
 
   nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
   rv = dialogBlock->SetString(1,message1); 
+  rv = dialogBlock->SetString(2,title);
 
   if (NS_FAILED(rv))
     return rv;
