@@ -1180,7 +1180,7 @@ nsFtpConnectionThread::S_list() {
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
-    return event->Fire();
+    return event->Fire(mEventQueue);
 }
 
 FTP_STATE
@@ -1210,7 +1210,7 @@ nsFtpConnectionThread::S_retr() {
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // listener callbacks will be handled by the transport.
-    return event->Fire();
+    return event->Fire(mEventQueue);
 }
 
 FTP_STATE
@@ -1261,7 +1261,7 @@ nsFtpConnectionThread::S_stor() {
                                                            mObserverContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
     mFireCallbacks = PR_FALSE; // observer callbacks will be handled by the transport.
-    return event->Fire();
+    return event->Fire(mEventQueue);
 }
 
 FTP_STATE
