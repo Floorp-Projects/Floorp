@@ -93,16 +93,13 @@
 
 NS_IMPL_ISUPPORTS1(nsDogbertProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsDogbertProfileMigrator::nsDogbertProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsDogbertProfileMigrator::~nsDogbertProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

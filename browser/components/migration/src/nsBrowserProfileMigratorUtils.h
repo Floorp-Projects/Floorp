@@ -44,8 +44,7 @@
 #define MIGRATION_ENDED             "Migration:Ended"
 
 #define NOTIFY_OBSERVERS(message, item) \
-  if (sObserverService) \
-    sObserverService->NotifyObservers(nsnull, message, item)
+  mObserverService->NotifyObservers(nsnull, message, item)
 
 #define COPY_DATA(func, replace, itemIndex) \
   if (NS_SUCCEEDED(rv) && (aItems & itemIndex || !aItems)) { \

@@ -39,6 +39,7 @@
 #define safariprofilemigrator___h___
 
 #include "nsIBrowserProfileMigrator.h"
+#include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
 
@@ -85,6 +86,7 @@ protected:
   nsresult CopyBookmarks(PRBool aReplace);
 
 private:
+  nsCOMPtr<nsIObserverService> mObserverService;
 };
  
 #endif

@@ -49,16 +49,13 @@
 
 NS_IMPL_ISUPPORTS1(nsCaminoProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsCaminoProfileMigrator::nsCaminoProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsCaminoProfileMigrator::~nsCaminoProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -69,16 +69,13 @@
 
 NS_IMPL_ISUPPORTS1(nsSeamonkeyProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsSeamonkeyProfileMigrator::nsSeamonkeyProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsSeamonkeyProfileMigrator::~nsSeamonkeyProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -49,16 +49,13 @@
 
 NS_IMPL_ISUPPORTS1(nsOmniWebProfileMigrator, nsIBrowserProfileMigrator)
 
-static nsIObserverService* sObserverService = nsnull;
-
 nsOmniWebProfileMigrator::nsOmniWebProfileMigrator()
 {
-  CallGetService("@mozilla.org/observer-service;1", &sObserverService);
+  mObserverService = do_GetService("@mozilla.org/observer-service;1");
 }
 
 nsOmniWebProfileMigrator::~nsOmniWebProfileMigrator()
 {
-  NS_IF_RELEASE(sObserverService);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
