@@ -45,4 +45,7 @@
 <!ENTITY certmgr.edit.label "Edit">
 <!ENTITY certmgr.add.label "Add">
 <!ENTITY certmgr.delete.label "Delete">
+<!ENTITY certmgr.backup.label "Backup">
+<!ENTITY certmgr.backupall.label "Backup All">
+<!ENTITY certmgr.restore.label "Restore">
 

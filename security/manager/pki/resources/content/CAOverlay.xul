@@ -34,7 +34,7 @@
 
   <box id="CACerts" orient="vertical">
     <tree id="ca_treeset" debug="false" flex="0" multiple="true"
-          height="100" onselect="enableButtons()">
+          height="100" onselect="ca_enableButtons()">
       <treecolgroup>
         <treecol flex="1"/>
         <treecol collapsed="true" flex="1"/>
@@ -68,21 +68,21 @@
         </treeitem>
       </treechildren>
     </tree>
-<!--
-    <box orient="horizontal">
-      <button id="viewButton" class="normal" 
+    <box>
+      <button id="ca_viewButton" class="normal" 
               value="&certmgr.view.label;" orient="horizontal" 
               disabled="true" onclick="viewCerts();"/>
-      <button id="editButton" class="normal" 
+      <button id="ca_editButton" class="normal" 
               value="&certmgr.edit.label;" orient="horizontal" 
-              disabled="true" onclick="viewCerts();"/>
-      <button id="deleteButton" class="normal" 
+              disabled="true" onclick="editCerts();"/>
+<!-- future - import a DER cert?
+      <button id="ca_addButton" class="normal" 
+              value="&certmgr.add.label;" orient="horizontal" 
+              onclick="addCerts();"/>
+-->
+      <button id="ca_deleteButton" class="normal" 
               value="&certmgr.delete.label;" orient="horizontal" 
               disabled="true" onclick="deleteCerts();"/>
-      <button id="addButton" class="normal" 
-              value="&certmgr.add.label;" orient="horizontal" 
-              disabled="true" onclick="deleteCerts();"/>
     </box>
--->
   </box>
 </overlay>
