@@ -101,15 +101,17 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
 		else
 		{
 			// 3 cases: Offline IMAP, POP, or we are dealing with a news message....
+			// Offline cases should be same as local mail cases, since we're going
+			// to store offline messages in berkeley format folders.
 			if (m_db)
 			{
 				length = GetNextLocalLine (buf, bufSize); // (2) POP
 			}
 		}
 
-		if (length > 0)
+		if (length >= 0)
 			length = ApplyTransformations (buf, length, eatThisLine);
-	} while (eatThisLine && length);  // if we hit eof, make sure we break out of this loop. Bug #:
+	} while (eatThisLine && length >= 0);  // if we hit eof, make sure we break out of this loop. Bug #:
 	return length;  
 }
 void nsMsgBodyHandler::OpenLocalFolder()
@@ -159,9 +161,10 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, PRUint32 bufSize)
 			return (PRInt32) numBytesCopied;
 		}
 	}
-	return 0;
+	return -1;
 }
 
+// return -1 if no more local lines, length of next line otherwise.
 
 PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 // returns number of bytes copied
@@ -172,11 +175,14 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 		if (m_passedHeaders)
 			m_numLocalLines--; // the line count is only for body lines
 		// do we need to check the return value here?
+		if (m_scope->m_fileStream->eof())
+			return -1;
+
 		if (m_scope->m_fileStream->readline(buf, bufSize))
 			return nsCRT::strlen(buf);
 	}
 
-	return 0;
+	return -1;
 }
 
 

@@ -701,7 +701,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 
 		while (!endOfFile && result == boolContinueLoop)
 		{
-			if (bodyHan->GetNextLine(buf, kBufSize))
+			if (bodyHan->GetNextLine(buf, kBufSize) >= 0)
 			{
 				// Do in-place decoding of quoted printable
 				if (isQuotedPrintable)
