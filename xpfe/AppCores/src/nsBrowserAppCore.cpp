@@ -363,7 +363,6 @@ nsBrowserAppCore::Stop()
 }
 
 #ifdef ClientWallet
-#define WALLET_EDITOR_NAME "walleted.html"
 
 #define WALLET_SAMPLES_URL "http://people.netscape.com/morse/wallet/samples/"
 //#define WALLET_SAMPLES_URL "http://peoplestage/morse/wallet/samples/"
@@ -898,7 +897,7 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "resource:/res/samples/WalletEditor.html";
+    char *urlstr = "resource:/res/samples/WalletEditor.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -951,7 +950,7 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "resource:/res/samples/SignonViewer.html";
+    char * urlstr = "resource:/res/samples/SignonViewer.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -1003,7 +1002,7 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char *urlstr = "resource:/res/samples/CookieViewer.html";
+    char *urlstr = "resource:/res/samples/CookieViewer.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
@@ -1085,7 +1084,7 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
     window = nsnull;
 
     nsCOMPtr<nsIURI> urlObj;
-    char * urlstr = "resource:/res/samples/WalletPreview.html";
+    char * urlstr = "resource:/res/samples/WalletPreview.xul";
 #ifndef NECKO
     rv = NS_NewURL(getter_AddRefs(urlObj), urlstr);
 #else
