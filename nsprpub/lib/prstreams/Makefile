@@ -29,9 +29,8 @@ ifeq ($(OS_ARCH),SunOS)
 endif
 
 ifeq ($(OS_ARCH), IRIX)
-    CFLAGS += -KPIC
     ifneq ($(OS_RELEASE),5.3)
-        CFLAGS += -exceptions
+        CCC_ONLY_FLAGS += -exceptions
     endif
 endif
 
