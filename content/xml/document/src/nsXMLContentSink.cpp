@@ -211,8 +211,6 @@ nsXMLContentSink::nsXMLContentSink()
   mDocumentBaseURL = nsnull;
   mParser = nsnull;
   mDocElement = nsnull;
-  mContentStack = nsnull;
-  mNameSpaceStack = nsnull;
   mText = nsnull;
   mTextLength = 0;
   mTextSize = 0;
@@ -233,15 +231,11 @@ nsXMLContentSink::~nsXMLContentSink()
   NS_IF_RELEASE(mDocumentBaseURL);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mDocElement);
-  if (nsnull != mNameSpaceStack) {
-    // There shouldn't be any here except in an error condition
-    PRInt32 index = mNameSpaceStack->Count();
-    while (0 < index--) {
-      nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-      NS_RELEASE(nameSpace);
-    }
-    delete mNameSpaceStack;
-  }
+  // XXXbz we'd like to assert that mNameSpaceStack.Count() == 0... but the XBL
+  // content sink never calls our HandleEndElement() for some of the magical
+  // XBL tags, while it _always_ calls HandleStartElement().  Hence
+  // mNameSpaceStack will in fact _NOT_ be empty here, until we fix the XBL
+  // sink.
   if (nsnull != mText) {
     PR_FREEIF(mText);
   }
@@ -757,7 +751,7 @@ nsXMLContentSink::AddContentAsLeaf(nsIContent *aContent)
     domDoc->AppendChild(child, getter_AddRefs(trash));
   }
   else {
-    nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
+    nsCOMPtr<nsIContent> parent = GetCurrentContent();
 
     if (parent) {
       result = parent->AppendChildTo(aContent, PR_FALSE, PR_FALSE);
@@ -1282,70 +1276,70 @@ PRInt32
 nsXMLContentSink::GetNameSpaceId(nsIAtom* aPrefix)
 {
   PRInt32 id = aPrefix ? kNameSpaceID_Unknown : kNameSpaceID_None;
+  PRInt32 count = mNameSpaceStack.Count();
 
-  if (mNameSpaceStack && mNameSpaceStack->Count() > 0) {
-    PRInt32 index = mNameSpaceStack->Count() - 1;
-    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-    nameSpace->FindNameSpaceID(aPrefix, &id);
+  if (count > 0) {
+    mNameSpaceStack[count - 1]->FindNameSpaceID(aPrefix, &id);
   }
 
   return id;
 }
 
-nsINameSpace*
+already_AddRefed<nsINameSpace>
 nsXMLContentSink::PopNameSpaces()
 {
-  if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-    PRInt32 index = mNameSpaceStack->Count() - 1;
-    nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-    mNameSpaceStack->RemoveElementAt(index);
-    return nameSpace;
+  PRInt32 count = mNameSpaceStack.Count();
+
+  if (count == 0) {
+    return nsnull;
   }
 
-  return nsnull;
+  NS_ASSERTION(count > 0, "Bogus Count()");
+  
+  nsINameSpace* nameSpace = mNameSpaceStack[count - 1];
+  NS_ADDREF(nameSpace);
+  mNameSpaceStack.RemoveObjectAt(count - 1);
+  return nameSpace;
 }
 
 nsIContent*
 nsXMLContentSink::GetCurrentContent()
 {
-  if (nsnull != mContentStack) {
-    PRUint32 count;
-    mContentStack->Count(&count);
-    PR_ASSERT(count);
-    if (count) {
-      return (nsIContent *)mContentStack->ElementAt(count-1);
-    }
+  PRInt32 count = mContentStack.Count();
+
+  if (count == 0) {
+    return nsnull;
   }
-  return nsnull;
+
+  NS_ASSERTION(count > 0, "Bogus Count()");
+
+  return mContentStack[count-1];
 }
 
 PRInt32
 nsXMLContentSink::PushContent(nsIContent *aContent)
 {
-  PRUint32 count;
-  if (nsnull == mContentStack) {
-    NS_NewISupportsArray(getter_AddRefs(mContentStack));
-  }
-
-  mContentStack->AppendElement(aContent);
-  mContentStack->Count(&count);
-
-  return count;
+  NS_PRECONDITION(aContent, "Null content being pushed!");
+  mContentStack.AppendObject(aContent);
+  return mContentStack.Count();
 }
 
-nsIContent*
+already_AddRefed<nsIContent>
 nsXMLContentSink::PopContent()
 {  
-  nsIContent* content = nsnull;
-  if (nsnull != mContentStack) {
-    PRUint32 index, count;
-    mContentStack->Count(&count);
-    index =  count - 1;
-    content = (nsIContent *)mContentStack->ElementAt(index);
-    mContentStack->RemoveElementAt(index);
+  PRInt32 count = mContentStack.Count();
+
+  if (count == 0) {
+    NS_WARNING("Popping empty stack");
+    return nsnull;
   }
 
-  // The caller should NS_RELEASE the returned content object.
+  NS_ASSERTION(count > 0, "Bogus Count()");
+
+  nsIContent* content = mContentStack[count - 1];
+  NS_IF_ADDREF(content);
+  mContentStack.RemoveObjectAt(count - 1);
+  
   return content;
 }
 
@@ -1444,12 +1438,15 @@ nsXMLContentSink::ScriptAvailable(nsresult aResult,
                                   PRInt32 aLineNo,
                                   const nsAString& aScript)
 {
+  PRInt32 count = mScriptElements.Count();
+
+  if (count == 0) {
+    return NS_OK;
+  }
+
   // Check if this is the element we were waiting for
-  PRUint32 count;
-  mScriptElements.Count(&count);
-  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
-  if (aElement != scriptElement.get()) {
+  nsIDOMHTMLScriptElement* scriptElement = mScriptElements[count - 1];
+  if (aElement != scriptElement) {
     return NS_OK;
   }
 
@@ -1465,7 +1462,7 @@ nsXMLContentSink::ScriptAvailable(nsresult aResult,
   mNeedToBlockParser = PR_FALSE;
 
   if (NS_FAILED(aResult)) {
-    mScriptElements.RemoveElementAt(count-1);
+    mScriptElements.RemoveObjectAt(count-1);
      
     if(mParser && aWasPending){
       // Loading external script failed!. So, resume
@@ -1485,16 +1482,18 @@ nsXMLContentSink::ScriptEvaluated(nsresult aResult,
                                   PRBool aWasPending)
 {
   // Check if this is the element we were waiting for
-  PRUint32 count;
-  mScriptElements.Count(&count);
-  nsCOMPtr<nsISupports> sup(dont_AddRef(mScriptElements.ElementAt(count-1)));
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(sup));
-  if (aElement != scriptElement.get()) {
+  PRInt32 count = mScriptElements.Count();
+  if (count == 0) {
+    return NS_OK;
+  }
+  
+  nsIDOMHTMLScriptElement* scriptElement = mScriptElements[count-1];
+  if (aElement != scriptElement) {
     return NS_OK;
   }
 
   // Pop the script element stack
-  mScriptElements.RemoveElementAt(count-1); 
+  mScriptElements.RemoveObjectAt(count-1); 
 
   if(mParser && mParser->IsParserEnabled() && aWasPending){
     mParser->ContinueParsing();
@@ -1771,7 +1770,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
       }
     }
     else if (appendContent) {
-      nsCOMPtr<nsIContent> parent = dont_AddRef(GetCurrentContent());
+      nsCOMPtr<nsIContent> parent = GetCurrentContent();
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
       parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
@@ -1805,7 +1804,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
 
   FlushText();
 
-  nsCOMPtr<nsIContent> content = dont_AddRef(PopContent());
+  nsCOMPtr<nsIContent> content = PopContent();
   NS_ASSERTION(content, "failed to pop content");
 
   result = CloseElement(content, &appendContent);
@@ -1815,13 +1814,13 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
     mState = eXMLContentSinkState_InEpilog;
   }
   else if (appendContent) {
-    nsCOMPtr<nsIContent> parent = getter_AddRefs(GetCurrentContent());
+    nsCOMPtr<nsIContent> parent = GetCurrentContent();
     NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
     parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
   }
 
-  nsINameSpace* nameSpace = PopNameSpaces();
+  nsINameSpace* nameSpace = PopNameSpaces().get();
   NS_IF_RELEASE(nameSpace);
 
   if (mNeedToBlockParser || (mParser && !mParser->IsParserEnabled())) {
@@ -2086,9 +2085,8 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
   nsCOMPtr<nsINameSpace> nameSpace;
   nsresult rv = NS_OK;
 
-  if (mNameSpaceStack && (0 < mNameSpaceStack->Count())) {
-    nameSpace =
-      (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
+  if (0 < mNameSpaceStack.Count()) {
+    nameSpace = mNameSpaceStack[mNameSpaceStack.Count() - 1];
   } else {
     rv = nsContentUtils::GetNSManagerWeakRef()->
         CreateRootNameSpace(getter_AddRefs(nameSpace));
@@ -2141,17 +2139,8 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
     aAtts += 2;
   }
 
-  if (!mNameSpaceStack) {
-    mNameSpaceStack = new nsAutoVoidArray();
 
-    if (!mNameSpaceStack) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  nsINameSpace *tmp = nameSpace;
-  mNameSpaceStack->AppendElement(tmp);
-  NS_ADDREF(tmp);
+  mNameSpaceStack.AppendObject(nameSpace);
 
   return NS_OK;
 }
@@ -2279,7 +2268,7 @@ nsXMLContentSink::ProcessEndSCRIPTTag(nsIContent* aContent)
 
   nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(aContent));
   NS_ASSERTION(scriptElement, "null script element in XML content sink");
-  mScriptElements.AppendElement(scriptElement);
+  mScriptElements.AppendObject(scriptElement);
 
   nsCOMPtr<nsIScriptElement> sele(do_QueryInterface(aContent));
   if (sele) {
