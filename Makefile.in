@@ -89,7 +89,6 @@ DIRS	+= $(tier_99_dirs)
 tier_0_dirs = \
 	config \
 	build \
-	include \
 	$(NULL)
 
 #
