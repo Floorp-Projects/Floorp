@@ -1750,6 +1750,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
              * whichever consumes less space.                                 \
              */                                                               \
             if (_delta >= (uintN)(2 + ((_line > SN_3BYTE_OFFSET_MASK)<<1))) { \
+                JS_ASSERT(_line != 0);                                        \
                 if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)_line) < 0)\
                     return JS_FALSE;                                          \
             } else {                                                          \
