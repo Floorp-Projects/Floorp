@@ -140,12 +140,6 @@ nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aVi
   nsIWidget *win = aView->GetWidget();
   nsresult            rv;
 
-  mSurface = new nsDrawingSurfaceUnix();
-
-  mSurface->display =  (Display *)win->GetNativeData(NS_NATIVE_DISPLAY);
-  mSurface->drawable = (Drawable)win->GetNativeData(NS_NATIVE_WINDOW);
-  mSurface->gc       = (GC)win->GetNativeData(NS_NATIVE_GRAPHIC);
-
   static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
   static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
 
