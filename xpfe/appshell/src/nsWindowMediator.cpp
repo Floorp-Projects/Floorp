@@ -939,6 +939,9 @@ nsWindowMediator::GetSources(nsIRDFResource* property,
                              PRBool tv,
                              nsISimpleEnumerator** sources)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->GetSources(property, target, tv, sources);
 }
 
@@ -950,6 +953,9 @@ nsWindowMediator::GetTargets(nsIRDFResource* source,
                              PRBool tv,
                              nsISimpleEnumerator** targets)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->GetTargets(source, property, tv, targets);
 }
 
@@ -961,6 +967,9 @@ nsWindowMediator::GetSource(nsIRDFResource* property,
                             PRBool tv,
                             nsIRDFResource** source)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->GetSource(property, target, tv, source);
 }
 
@@ -993,6 +1002,10 @@ nsWindowMediator::GetTarget(nsIRDFResource* source,
 
     return(CallQueryInterface(indexInt, target));
   }
+
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->GetTarget(source, property, tv, target);
 }
 
@@ -1005,6 +1018,9 @@ nsWindowMediator::HasAssertion(nsIRDFResource* source,
                                PRBool tv,
                                PRBool* hasAssertion)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->HasAssertion(source, property, target, tv, hasAssertion);
 }
 
@@ -1015,6 +1031,9 @@ nsWindowMediator::HasArcIn(nsIRDFNode *aNode,
                            nsIRDFResource *aArc,
                            PRBool *_retval)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->HasArcIn(aNode, aArc, _retval);
 }
 
@@ -1025,6 +1044,9 @@ nsWindowMediator::HasArcOut(nsIRDFResource *aSource,
                             nsIRDFResource *aArc,
                             PRBool *_retval)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->HasArcOut(aSource, aArc, _retval);
 }
 
@@ -1034,6 +1056,9 @@ NS_IMETHODIMP
 nsWindowMediator::ArcLabelsIn( nsIRDFNode* node,
                                nsISimpleEnumerator** labels)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->ArcLabelsIn(node, labels);
 }
 
@@ -1043,6 +1068,9 @@ NS_IMETHODIMP
 nsWindowMediator::ArcLabelsOut( nsIRDFResource* source,
                                 nsISimpleEnumerator** labels)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->ArcLabelsOut(source, labels);
 }
 
@@ -1051,6 +1079,9 @@ nsWindowMediator::ArcLabelsOut( nsIRDFResource* source,
 NS_IMETHODIMP
 nsWindowMediator::GetAllResources(nsISimpleEnumerator** aCursor)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   return mInner->GetAllResources(aCursor);
 }
 
@@ -1062,6 +1093,9 @@ nsWindowMediator::Assert(nsIRDFResource* aSource,
                          nsIRDFNode* aTarget,
                          PRBool aTruthValue)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   // XXX TODO: filter out asserts we don't care about
   return mInner->Assert(aSource, aProperty, aTarget, aTruthValue);
 }
@@ -1073,6 +1107,9 @@ nsWindowMediator::Unassert(nsIRDFResource* aSource,
                            nsIRDFResource* aProperty,
                            nsIRDFNode* aTarget)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   // XXX TODO: filter out unasserts we don't care about
   return mInner->Unassert(aSource, aProperty, aTarget);
 }
@@ -1085,6 +1122,9 @@ nsWindowMediator::Change(nsIRDFResource* aSource,
                          nsIRDFNode* aOldTarget,
                          nsIRDFNode* aNewTarget)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   // XXX TODO: filter out changes we don't care about
   return mInner->Change(aSource, aProperty, aOldTarget, aNewTarget);
 }
@@ -1097,6 +1137,9 @@ nsWindowMediator::Move(nsIRDFResource* aOldSource,
                        nsIRDFResource* aProperty,
                        nsIRDFNode* aTarget)
 {
+  if (!mInner)
+    return(NS_ERROR_UNEXPECTED);
+
   // XXX TODO: filter out changes we don't care about
   return mInner->Move(aOldSource, aNewSource, aProperty, aTarget);
 }
