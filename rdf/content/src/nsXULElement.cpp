@@ -573,6 +573,9 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
              IsFocusableContent()) {
         *result = NS_STATIC_CAST(nsIFocusableContent*, this);
     }
+    else if (iid.Equals(NS_GET_IID(nsIBindableContent))) {
+        *result = NS_STATIC_CAST(nsIBindableContent*, this);
+    }
     else if (iid.Equals(NS_GET_IID(nsIStyleRule))) {
         *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
@@ -3581,6 +3584,24 @@ PRBool
 nsXULElement::IsFocusableContent()
 {
     return (Tag() == kTitledButtonAtom) || (Tag() == kTreeAtom);
+}
+
+// nsIBindableContent Interface
+
+NS_IMETHODIMP
+nsXULElement::SetBinding(nsIXBLBinding* aBinding) 
+{
+  EnsureSlots();
+  mSlots->mBinding = aBinding; // nsCOMPtr handles addrefing.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULElement::GetBinding(nsIXBLBinding** aResult)
+{
+  *aResult = Binding();
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
 }
 
 // nsIStyleRule interface

@@ -51,6 +51,8 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIStyleRule.h"
 #include "nsIStyledContent.h"
+#include "nsIBindableContent.h"
+#include "nsIXBLBinding.h"
 #include "nsIURI.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
@@ -309,6 +311,7 @@ class nsXULElement : public nsIStyledContent,
                      public nsIXMLContent,
                      public nsIXULContent,
                      public nsIFocusableContent,
+                     public nsIBindableContent,
                      public nsIDOMXULElement,
                      public nsIDOMEventReceiver,
                      public nsIScriptObjectOwner,
@@ -429,6 +432,10 @@ public:
     // nsIFocusableContent interface
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
+    // nsIBindableContent interface
+    NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
+    NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
 
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_IDOMNODE
@@ -561,6 +568,7 @@ protected:
         nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;           // [OWNER]
         nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
         nsXULAttributes*                    mAttributes;
+        nsCOMPtr<nsIXBLBinding>             mBinding;            // [OWNER]
 
         // An unreferenced bare pointer to an aggregate that can
         // implement element-specific APIs.
@@ -587,7 +595,7 @@ protected:
     nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
-
+    nsIXBLBinding*             Binding() const         { return mSlots ? mSlots->mBinding                     : nsnull; }
 };
 
 
