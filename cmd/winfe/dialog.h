@@ -332,6 +332,7 @@ class  CDefaultBrowserDlg : public  CDefaultBrowserDlgBase
 	// Generated message map functions
 	//{{AFX_MSG(CDefaultBrowserDlg)
 	afx_msg void OnNo();
+    afx_msg void OnDetails();
 	afx_msg void OnPaint();
 	//}}AFX_MSG
 	

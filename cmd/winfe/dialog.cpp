@@ -756,6 +756,7 @@ BEGIN_MESSAGE_MAP(CDefaultBrowserDlg, CDefaultBrowserDlgBase)
 	//{{AFX_MSG_MAP(CDefaultBrowserDlg)
 	ON_BN_CLICKED(ID_NO, OnNo)
 	ON_WM_PAINT()
+    ON_BN_CLICKED(IDC_SHOW_DESKTOP_PREFS,OnDetails)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -833,6 +834,31 @@ void CDefaultBrowserDlg::OnNo()
 	}  /* end if */
 	
 } // END OF	FUNCTION CDefaultBrowserDlg::OnNo()
+
+/****************************************************************************
+*
+*	CDefaultBrowserDlg::OnDetails
+*
+*	PARAMETERS:
+*		None
+*
+*	RETURNS:
+*		void
+*
+*	DESCRIPTION:
+*		This handles the 'Details...' button. We treat it just like OnOK, except
+*		for the return value.
+*
+****************************************************************************/
+
+void CDefaultBrowserDlg::OnDetails() 
+{
+	if (UpdateData(TRUE))
+	{
+		EndDialog(IDC_SHOW_DESKTOP_PREFS);
+	}  /* end if */
+	
+} // END OF	FUNCTION CDefaultBrowserDlg::OnDetails()
 
 /****************************************************************************
 *
