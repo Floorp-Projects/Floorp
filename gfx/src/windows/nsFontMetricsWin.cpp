@@ -92,7 +92,7 @@ nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
   //don't addref this to avoid circular refs
-  mDeviceContext = aContext;
+  mDeviceContext = (nsDeviceContextWin *)aContext;
   RealizeFont();
   return NS_OK;
 }
@@ -186,10 +186,11 @@ nsFontMetricsWin::RealizeFont()
   logFont.lfWeight = ((400 < mFont->weight) ? FW_BOLD : FW_NORMAL);  // XXX could be smarter
   logFont.lfItalic = (mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
     ? TRUE : FALSE;   // XXX need better oblique support
-  float app2dev, app2twip;
+  float app2dev, app2twip, scale;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
   mDeviceContext->GetDevUnitsToTwips(app2twip);
-  app2twip *= app2dev;
+  mDeviceContext->GetCanonicalPixelScale(scale);
+  app2twip *= app2dev * scale;
 
   float rounded = ((float)NSIntPointsToTwips(NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip)))) / app2twip;
 
@@ -209,11 +210,18 @@ nsFontMetricsWin::RealizeFont()
   // Create font handle from font spec
   mFontHandle = ::CreateFontIndirect(&logFont);
 
-  // Find font metrics and character widths
-  nsNativeWidget  widget;
-  mDeviceContext->GetNativeWidget(widget);
-  HWND win = (HWND)widget;
-  HDC dc = ::GetDC(win);
+  HWND win = NULL;
+  HDC dc = NULL;
+
+  if (NULL != mDeviceContext->mDC)
+    dc = mDeviceContext->mDC;
+  else
+  {
+    // Find font metrics and character widths
+    win = mDeviceContext->mWidget;
+    dc = ::GetDC(win);
+  }
+
   HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
 
   // Get font metrics
@@ -255,7 +263,10 @@ nsFontMetricsWin::RealizeFont()
   mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
 
-  ::ReleaseDC(win, dc);
+  ::SelectObject(dc, oldfont);
+
+  if (NULL != win)
+    ::ReleaseDC(win, dc);
 }
 
 NS_IMETHODIMP
@@ -294,90 +305,6 @@ nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
   aSize = mUnderlineSize;
   return NS_OK;
 }
-
-#if 0
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(char ch, nscoord& aWidth)
-{
-  char buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
-}
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
-{
-  PRUnichar buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
-}
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(const char* aString, nscoord& aWidth)
-{
-  return GetWidth(aString, strlen(aString), aWidth);
-}
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(const char* aString,
-                             PRUint32 aLength,
-                             nscoord& aWidth)
-{
-  if (nsnull == mDeviceContext) {
-    aWidth = 0;
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsNativeWidget widget;
-  mDeviceContext->GetNativeWidget(widget);
-  HWND win = (HWND)widget;
-  HDC  hdc = ::GetDC(win);
-  HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
-  SIZE size;
-  BOOL status = GetTextExtentPoint32(hdc, aString, aLength, &size);
-  ::ReleaseDC(win, hdc);
-
-  float  dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
-
-  aWidth = NSToCoordRound(float(size.cx) * dev2app);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(const nsString& aString, nscoord& aWidth)
-{
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
-}
-
-NS_IMETHODIMP
-nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
-                             PRUint32 aLength,
-                             nscoord &aWidth)
-{
-  if (nsnull == mDeviceContext) {
-    aWidth = 0;
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsNativeWidget widget;
-  mDeviceContext->GetNativeWidget(widget);
-  HWND win = (HWND)widget;
-  HDC  hdc = ::GetDC(win);
-  HFONT oldfont = (HFONT)::SelectObject(hdc, (HGDIOBJ) mFontHandle);
-  SIZE size;
-  BOOL status = GetTextExtentPoint32W(hdc, aString, aLength, &size);
-  ::ReleaseDC(win, hdc);
-
-  float  dev2app;
-  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
-
-  aWidth = NSToCoordRound(float(size.cx) * dev2app);
-  return NS_OK;
-}
-
-#endif
 
 NS_IMETHODIMP
 nsFontMetricsWin :: GetHeight(nscoord &aHeight)

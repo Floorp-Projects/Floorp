@@ -27,6 +27,7 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+#include "nsDeviceContextWin.h"
 
 class nsFontMetricsWin : public nsIFontMetrics
 {
@@ -50,15 +51,6 @@ public:
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult);
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize);
   NS_IMETHOD  GetUnderline(nscoord& aOffset, nscoord& aSize);
-#if 0
-  NS_IMETHOD  GetWidth(char aC, nscoord& aWidth);
-  NS_IMETHOD  GetWidth(PRUnichar aC, nscoord& aWidth);
-  NS_IMETHOD  GetWidth(const nsString& aString, nscoord& aWidth);
-  NS_IMETHOD  GetWidth(const char* aString, nscoord& aWidth);
-  NS_IMETHOD  GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth);
-  NS_IMETHOD  GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                       nscoord& aWidth);
-#endif
 
   NS_IMETHOD  GetHeight(nscoord &aHeight);
   NS_IMETHOD  GetLeading(nscoord &aLeading);
@@ -71,24 +63,23 @@ public:
 protected:
   void RealizeFont();
 
-  nsIDeviceContext* mDeviceContext;
-
-  nsFont            *mFont;
-  nscoord           mHeight;
-  nscoord           mAscent;
-  nscoord           mDescent;
-  nscoord           mLeading;
-  nscoord           mMaxAscent;
-  nscoord           mMaxDescent;
-  nscoord           mMaxAdvance;
-  nscoord           mXHeight;
-  nscoord           mSuperscriptOffset;
-  nscoord           mSubscriptOffset;
-  nscoord           mStrikeoutSize;
-  nscoord           mStrikeoutOffset;
-  nscoord           mUnderlineSize;
-  nscoord           mUnderlineOffset;
-  HFONT             mFontHandle;
+  nsDeviceContextWin  *mDeviceContext;
+  nsFont              *mFont;
+  nscoord             mHeight;
+  nscoord             mAscent;
+  nscoord             mDescent;
+  nscoord             mLeading;
+  nscoord             mMaxAscent;
+  nscoord             mMaxDescent;
+  nscoord             mMaxAdvance;
+  nscoord             mXHeight;
+  nscoord             mSuperscriptOffset;
+  nscoord             mSubscriptOffset;
+  nscoord             mStrikeoutSize;
+  nscoord             mStrikeoutOffset;
+  nscoord             mUnderlineSize;
+  nscoord             mUnderlineOffset;
+  HFONT               mFontHandle;
 };
 
 #endif

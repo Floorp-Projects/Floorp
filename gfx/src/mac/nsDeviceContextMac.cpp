@@ -90,6 +90,23 @@ NS_IMETHODIMP nsDeviceContextMac :: Init(nsNativeWidget aNativeWidget)
 
 //------------------------------------------------------------------------
 
+NS_IMETHODIMP nsDeviceContextMac :: CreateRenderingContext(nsIRenderingContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
+{
+  //XXX it is very critical that this not lie!! MMP
+  aSupportsWidgets = PR_FALSE;
+
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
   // XXX Should we push this to widget library
@@ -164,6 +181,57 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 		return NS_OK;
 	else
 		return NS_ERROR_FAILURE;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  aWidth = 1;
+  aHeight = 1;
+
+  return NS_ERROR_FAILURE;
+}
+
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                      nsIDeviceContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
+
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::BeginDocument(void)
+{
+  return NS_OK;
+}
+
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::EndDocument(void)
+{
+  return NS_OK;
+}
+
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
+{
+  return NS_OK;
+}
+
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
+{
+  return NS_OK;
 }
 
 

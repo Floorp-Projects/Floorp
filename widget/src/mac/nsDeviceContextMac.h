@@ -34,6 +34,9 @@ public:
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
 
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
+
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
 	void SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
@@ -46,7 +49,17 @@ public:
   NS_IMETHOD GetDepth(PRUint32& aDepth);
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
+  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+
+  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                 nsIDeviceContext *&aContext);
+
+  NS_IMETHOD BeginDocument(void);
+  NS_IMETHOD EndDocument(void);
+
+  NS_IMETHOD BeginPage(void);
+  NS_IMETHOD EndPage(void);
+
 
 protected:
   virtual ~nsDeviceContextMac();
@@ -54,6 +67,8 @@ protected:
   nsDrawingSurface 			mSurface ;
   PRUint32 							mDepth;
 
+public:
+  static bool GetMacFontNumber(const nsString& aFontName, short &fontNum);
 };
 
 #endif /* nsDeviceContextMac_h___ */

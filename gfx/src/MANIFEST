@@ -23,3 +23,5 @@ nsIBlender.h
 nsGfxCIID.h
 nsIRegion.h
 nsDeviceContext.h
+nsIDeviceContextSpec.h
+nsIDeviceContextSpecFactory.h

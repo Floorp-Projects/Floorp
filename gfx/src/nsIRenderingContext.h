@@ -77,7 +77,7 @@ public:
    * @param aWidget the widget to hook up to
    * @result The result of the initialization, NS_Ok if no errors
    */
-  NS_IMETHOD Init(nsIDeviceContext* aContext,nsIWidget *aWidget) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget) = 0;
 
   /**
    * Initialize the RenderingContext
@@ -85,7 +85,7 @@ public:
    * @param aSurface the surface to draw into
    * @result The result of the initialization, NS_Ok if no errors
    */
-  NS_IMETHOD Init(nsIDeviceContext* aContext,nsDrawingSurface aSurface) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface) = 0;
 
   /**
    * Reset the rendering context

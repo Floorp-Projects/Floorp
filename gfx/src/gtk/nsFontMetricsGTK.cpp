@@ -233,8 +233,9 @@ char * nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts, i
 
 void nsFontMetricsGTK::RealizeFont()
 {
-  nsNativeWidget  widget;
-  mContext->GetNativeWidget(widget);
+//XXX this API is dead... MMP
+//  nsNativeWidget  widget;
+//  mContext->GetNativeWidget(widget);
   XFontStruct *fontInfo;
 
   fontInfo = (XFontStruct *)GDK_FONT_XFONT(mFontHandle);

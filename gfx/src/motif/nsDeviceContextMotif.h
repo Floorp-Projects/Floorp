@@ -55,6 +55,9 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
+  NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
+
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
@@ -71,6 +74,17 @@ public:
 
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
+  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+
+  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                 nsIDeviceContext *&aContext);
+
+  NS_IMETHOD BeginDocument(void);
+  NS_IMETHOD EndDocument(void);
+
+  NS_IMETHOD BeginPage(void);
+  NS_IMETHOD EndPage(void);
+
 
 protected:
   ~nsDeviceContextMotif();
@@ -78,7 +92,6 @@ protected:
   uint8 AllocColor(uint8 aRed, uint8 aGreen, 
                    uint8 aBlue, PRBool aCanAlloc);
 
-  Display *GetDisplay();
 
 
   nsDrawingSurfaceMotif * mSurface ;
@@ -99,6 +112,7 @@ public:
   void InstallColormap(Display* aDisplay, Drawable aDrawable);
   void SetDrawingSurface(nsDrawingSurfaceMotif * aSurface) { mSurface = aSurface; }
   nsDrawingSurface GetDrawingSurface();
+  Display *GetDisplay();
 
 private:
   PRUint32 mRedMask;

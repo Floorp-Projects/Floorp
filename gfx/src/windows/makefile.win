@@ -41,6 +41,8 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsImageWin.obj          \
 	.\$(OBJDIR)\nsBlenderWin.obj				\
 	.\$(OBJDIR)\nsRegionWin.obj          \
+	.\$(OBJDIR)\nsDeviceContextSpecWin.obj          \
+	.\$(OBJDIR)\nsDeviceContextSpecFactoryWin.obj          \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
 
@@ -77,6 +79,7 @@ LLIBS=				\
  ole32.lib \
  $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
 !endif
+ comdlg32.lib \
  $(LIBNSPR)  
 
 LLFLAGS = \

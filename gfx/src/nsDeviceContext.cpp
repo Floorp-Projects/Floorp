@@ -114,12 +114,17 @@ DeviceContextImpl :: ~DeviceContextImpl()
 
 NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
 {
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    mGammaTable[cnt] = cnt;
-
   mWidget = aWidget;
 
+  CommonInit();
+
   return NS_OK;
+}
+
+void DeviceContextImpl :: CommonInit(void)
+{
+  for (PRInt32 cnt = 0; cnt < 256; cnt++)
+    mGammaTable[cnt] = cnt;
 }
 
 NS_IMETHODIMP DeviceContextImpl :: GetTwipsToDevUnits(float &aTwipsToDevUnits) const
@@ -155,6 +160,12 @@ NS_IMETHODIMP DeviceContextImpl :: GetAppUnitsToDevUnits(float &aAppUnits) const
 NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToAppUnits(float &aDevUnits) const
 {
   aDevUnits = mDevUnitsToAppUnits;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) const
+{
+  aScale = 1.0f;
   return NS_OK;
 }
 
@@ -207,7 +218,7 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
 
 NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
-  return (aContext->Init(this, aWin));
+  return aContext->Init(this, aWin);
 }
 
 nsresult DeviceContextImpl::CreateFontCache()
@@ -279,12 +290,6 @@ void DeviceContextImpl :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, f
 
   for (PRInt32 cnt = 0; cnt < 256; cnt++)
     aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
-}
-
-NS_IMETHODIMP DeviceContextImpl :: GetNativeWidget(nsNativeWidget &aNativeWidget)
-{
-  aNativeWidget = mWidget;
-  return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetDepth(PRUint32& aDepth)

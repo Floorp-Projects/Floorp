@@ -48,6 +48,7 @@ EXPORTS=nsColor.h nsColorNames.h nsCoord.h nsFont.h nsRect.h nsPoint.h \
     nsSize.h nsMargin.h nsTransform2D.h nsIRenderingContext.h \
     nsIFontMetrics.h nsIImageManager.h nsIImageGroup.h nsIImageRequest.h \
     nsIImageObserver.h nsIDeviceContext.h nsIImage.h nsIBlender.h \
-    nsGfxCIID.h nsIRegion.h nsDeviceContext.h
+    nsGfxCIID.h nsIRegion.h nsDeviceContext.h nsIDeviceContextSpec.h \
+    nsIDeviceContextSpecFactory.h
 
 include $(DEPTH)/config/rules.mk

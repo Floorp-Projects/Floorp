@@ -26,6 +26,8 @@
 #include "nsDeviceContextWin.h"
 #include "nsRegionWin.h"
 #include "nsBlenderWin.h"
+#include "nsDeviceContextSpecWin.h"
+#include "nsDeviceContextSpecFactoryWin.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -33,6 +35,8 @@ static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -151,6 +155,16 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
     nsBlenderWin* blender;
     NS_NEWXPCOM(blender, nsBlenderWin);
     inst = (nsISupports *)blender;
+  }
+  else if (mClassID.Equals(kCDeviceContextSpec)) {
+    nsDeviceContextSpecWin* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecWin);
+    inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+    nsDeviceContextSpecFactoryWin* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryWin);
+    inst = (nsISupports *)dcs;
   }
 
   if (inst == NULL) {  

@@ -234,8 +234,8 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
         ::ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
         NS_RELEASE(mDCOwner);
       }
-      else
-        ::DeleteDC(mDC);
+//      else
+//        ::DeleteDC(mDC);
 
       mDC = NULL;
     }
@@ -1520,7 +1520,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
   }
 
 	mTMatrix->TransformCoord(&x, &y);
-
   ::ExtTextOut(mDC, x, y, 0, NULL, aString, aLength, aSpacing ? dx0 : NULL);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {

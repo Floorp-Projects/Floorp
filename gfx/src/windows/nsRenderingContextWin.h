@@ -224,8 +224,6 @@ protected:
 #endif
 
   void* mScriptObject;
-
-
 };
 
 class nsDrawingSurfaceWin : public nsISupports

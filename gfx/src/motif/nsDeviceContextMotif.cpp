@@ -125,6 +125,19 @@ NS_IMETHODIMP nsDeviceContextMotif :: Init(nsNativeWidget aNativeWidget)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextMotif :: CreateRenderingContext(nsIRenderingContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDeviceContextMotif :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
+{
+  //XXX it is very critical that this not lie!! MMP
+  aSupportsWidgets = PR_TRUE;
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsDeviceContextMotif :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
@@ -558,24 +571,36 @@ NS_IMETHODIMP nsDeviceContextMotif::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsDeviceContextMotif::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
+{
+  aWidth = 1;
+  aHeight = 1;
 
+  return NS_ERROR_FAILURE;
+}
 
+NS_IMETHODIMP nsDeviceContextMotif::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                        nsIDeviceContext *&aContext)
+{
+  return NS_ERROR_FAILURE;
+}
 
+NS_IMETHODIMP nsDeviceContextMotif::BeginDocument(void)
+{
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsDeviceContextMotif::EndDocument(void)
+{
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsDeviceContextMotif::BeginPage(void)
+{
+  return NS_OK;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+NS_IMETHODIMP nsDeviceContextMotif::EndPage(void)
+{
+  return NS_OK;
+}
