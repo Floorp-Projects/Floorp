@@ -441,6 +441,13 @@ NS_METHOD nsMenu::GetNativeData(void **aData)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::SetNativeData(void * aData)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::SetNativeData - Not Implemented\n"));
+  return NS_OK;
+}
+
 PtWidget_t *nsMenu::GetNativeParent()
 {
 //  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsMenu::GetNativeParent\n"));
