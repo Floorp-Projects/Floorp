@@ -1415,20 +1415,26 @@ if test "$USE_PTHREADS"x != x
 then
 	case "$target" in
 	    *-*-solaris*) 
-    		AC_DEFINE(_REENTRANT) 
+    			AC_DEFINE(_REENTRANT) 
 			;;
 
-		*-*-linux*) 
+	    *-*-linux*) 
 			AC_DEFINE(_REENTRANT) 
 			;;
 
-		alpha*-*-osf*)
+	    alpha*-*-osf*)
 			AC_DEFINE(_REENTRANT)
-
 			if test ! "$GNU_CC"; then
 				CFLAGS="$CFLAGS -pthread" 
 				CXXFLAGS="$CXXFLAGS -pthread" 
 			fi
+			;;
+
+	    *-*-freebsd*)
+			AC_DEFINE(_REENTRANT)
+			AC_DEFINE(_THREAD_SAFE)
+			CFLAGS="$CFLAGS -pthread"
+			CXXFLAGS="$CXXFLAGS -pthread"
 			;;
 	esac
 fi
