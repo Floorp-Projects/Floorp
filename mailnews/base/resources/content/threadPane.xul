@@ -49,26 +49,19 @@ Rights Reserved.
     <treechildren flex="1">
         <treeitem uri="..." id="threadTreeTemplateTreeItem">
 
-              <treerow class="tree-thread-row" IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread" >
-                <treecell class="treecell-image threadcol" value="rdf:http://home.netscape.com/NC-rdf#ThreadState"/>
-                <treecell class="treecell-indent tree-cell-threadpane-icon"
-                  indent="true"
-                  value="rdf:http://home.netscape.com/NC-rdf#Subject"
-                  Status="rdf:http://home.netscape.com/NC-rdf#Status"
-                  HasAttachment="rdf:http://home.netscape.com/NC-rdf#HasAttachment"
-                  IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
-                  MessageType="rdf:http://home.netscape.com/NC-rdf#MessageType"/>
+              <treerow class="tree-thread-row unread-rdf:http://home.netscape.com/NC-rdf#IsUnread" >
+                <treecell class="treecell-image threadcol-rdf:http://home.netscape.com/NC-rdf#ThreadState"/>
+                <treecell class="treecell-indent tree-cell-threadpane-icon status-rdf:http://home.netscape.com/NC-rdf#Status message-type-rdf:http://home.netscape.com/NC-rdf#MessageType has-attachment-rdf:http://home.netscape.com/NC-rdf#HasAttachment is-imap-deleted-rdf:http://home.netscape.com/NC-rdf#IsImapDeleted"
+                  value="rdf:http://home.netscape.com/NC-rdf#Subject" />
             	<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Sender" id ="SenderColumnTemplate"/>
-				<treecell class="treecell-image unreadcol" 
-                  allowevents="true"
-                  value="rdf:http://home.netscape.com/NC-rdf#IsUnread"/>
+				<treecell class="treecell-image unreadcol-rdf:http://home.netscape.com/NC-rdf#IsUnread" 
+                  allowevents="true" />
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#Date"/>
-				<treecell class="tree-cell-image prioritycol" 
-  		            Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
+				<treecell class="tree-cell-image prioritycol-rdf:http://home.netscape.com/NC-rdf#Priority"
                   value="rdf:http://home.netscape.com/NC-rdf#PriorityString"/>
-				<treecell class="flagcol treecell-image" 
-                  allowevents="true"
-                  value="rdf:http://home.netscape.com/NC-rdf#Flagged" />
+				<treecell class="treecell-image flagcol-rdf:http://home.netscape.com/NC-rdf#Flagged" 
+                  allowevents="true" />
+
 				<treecell class="treecell-text" value="rdf:http://home.netscape.com/NC-rdf#StatusString"/>
 				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#Size"/>
 				<treecell class="treecell-align-right" value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>

@@ -18,27 +18,27 @@
  * Rights Reserved.
  */
 
-.tree-thread-row[IsUnread="true"] 
+.tree-thread-row.unread-true
   {
 	  font-weight           : bold;
   }
 
-.prioritycol[Priority="highest"]
+.prioritycol-highest
   {
 	  color                 : red;
   }
 
-.prioritycol[Priority="high"]
+.prioritycol-high
   {
 	  color                 : rgb(128, 0, 0);
   }
 
-.prioritycol[Priority="lowest"]
+.prioritycol-lowest
   {
 	  color                 : rgb(170, 170, 170);
   }
 
-.prioritycol[Priority="low"]
+.prioritycol-low
   {
 	  color                 : rgb(85, 85, 85);
   }
@@ -49,66 +49,66 @@
     min-height            : 14px;
   }
 
-.tree-cell-threadpane-icon[Status="new"] 
+.tree-cell-threadpane-icon.status-new
   {
     list-style-image      : url("chrome://messenger/skin/message-mail-new.gif");
   }
 
-.tree-cell-threadpane-icon[MessageType="news"] 
+.tree-cell-threadpane-icon.message-type-news
   {
     list-style-image      : url("chrome://messenger/skin/message-news.gif");
   }
 
-.tree-cell-threadpane-icon[MessageType="news"][Status="new"] 
+.tree-cell-threadpane-icon.message-type-news.status-new
   {
     list-style-image      : url("chrome://messenger/skin/message-news-new.gif");
   }
 
-.tree-cell-threadpane-icon[MessageType="mail"][HasAttachment="true"] 
+.tree-cell-threadpane-icon.message-type-mail.has-attachment-true
   {
     list-style-image      : url("chrome://messenger/skin/message-mail-attach.gif");
   }
 
-.tree-cell-threadpane-icon[IsImapDeleted="true"] 
+.tree-cell-threadpane-icon.is-imap-deleted-true
   {
     list-style-image      : url("chrome://messenger/skin/message-mail-imapdelete.gif");
   }
 
-.unreadcol 
+.unreadcol-false
   {
     list-style-image      : url("chrome://messenger/skin/readmail.gif");
     min-height            : 14px;
   }
 
-.unreadcol[value="true"] 
+.unreadcol-true
   {
     list-style-image      : url("chrome://messenger/skin/unreadmail.gif");  
   }
 
-.flagcol  
+.flagcol-unflagged
   {
     list-style-image      : url("chrome://messenger/skin/readmail.gif");
     min-height            : 14px;
   }
 
-.flagcol[value="flagged"] 
+.flagcol-flagged
   {
     list-style-image      : url("chrome://messenger/skin/flaggedmail.gif");
   }
 
-treeitem > treerow > .threadcol[value="thread"]{
+treeitem > treerow > .threadcol-thread{
   list-style-image: url("chrome://messenger/skin/thread-closed.gif");
 }
 
-treeitem[open="true"] > treerow > .threadcol[value="thread"]{
+treeitem[open="true"] > treerow > .threadcol-thread{
   list-style-image: url("chrome://messenger/skin/thread-open.gif");
 }
 
-treeitem > treerow > .threadcol[value="threadWithUnread"]{
+treeitem > treerow > .threadcol-threadWithUnread{
   list-style-image: url("chrome://messenger/skin/thread-new-closed.gif");
 }
 
-treeitem[open="true"] > treerow > .threadcol[value="threadWithUnread"]{
+treeitem[open="true"] > treerow > .threadcol-threadWithUnread{
   list-style-image: url("chrome://messenger/skin/thread-new-open.gif");
 }
 
