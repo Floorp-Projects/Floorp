@@ -578,6 +578,7 @@ const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
 };
 
 const PRInt32 nsCSSProps::kUserFocusKTable[] = {
+  eCSSKeyword_ignore,         NS_STYLE_USER_FOCUS_IGNORE,
   eCSSKeyword_select_all,     NS_STYLE_USER_FOCUS_SELECT_ALL,
   eCSSKeyword_select_before,  NS_STYLE_USER_FOCUS_SELECT_BEFORE,
   eCSSKeyword_select_after,   NS_STYLE_USER_FOCUS_SELECT_AFTER,
