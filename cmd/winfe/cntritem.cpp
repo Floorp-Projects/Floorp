@@ -146,9 +146,9 @@ void CNetscapeCntrItem::OnChange(OLE_NOTIFICATION nCode, DWORD dwParam)
         if (pContext->compositor) {
             XP_Rect rect;
             
-            CL_GetLayerBbox(pLayoutData->layer, &rect);
-            CL_UpdateLayerRect(CL_GetLayerCompositor(pLayoutData->layer),
-                               pLayoutData->layer, &rect, PR_FALSE);
+            CL_GetLayerBbox(pLayoutData->objTag.layer, &rect);
+            CL_UpdateLayerRect(CL_GetLayerCompositor(pLayoutData->objTag.layer),
+                               pLayoutData->objTag.layer, &rect, PR_FALSE);
         }
         else
             pContext->funcs->DisplayEmbed(pContext, FE_VIEW, pLayoutData);
@@ -187,11 +187,11 @@ void CNetscapeCntrItem::OnGetItemPosition(CRect& rectPos)   {
     //  Now, we need to figure out where it is located in the view.
     HDC hdc = pWinCX->GetContextDC();
 
-    long lLeft = pWinCX->m_pSelected->x + pWinCX->m_pSelected->x_offset - pWinCX->GetOriginX();
-    long lRight = lLeft + pWinCX->m_pSelected->width;
+    long lLeft = pWinCX->m_pSelected->objTag.x + pWinCX->m_pSelected->objTag.x_offset - pWinCX->GetOriginX();
+    long lRight = lLeft + pWinCX->m_pSelected->objTag.width;
 
-    long lTop = pWinCX->m_pSelected->y + pWinCX->m_pSelected->y_offset - pWinCX->GetOriginY();
-    long lBottom = lTop + pWinCX->m_pSelected->height;
+    long lTop = pWinCX->m_pSelected->objTag.y + pWinCX->m_pSelected->objTag.y_offset - pWinCX->GetOriginY();
+    long lBottom = lTop + pWinCX->m_pSelected->objTag.height;
 
     //  Convert our twips into pixels.
     RECT crConvert;
