@@ -198,6 +198,7 @@ BEGIN
                                                     NOINVERT
     "O",            ID_FILE_OPENURL,        VIRTKEY, CONTROL, NOINVERT
     "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_OPTIONS_TOGGLEPROFILE, VIRTKEY, CONTROL, ALT, NOINVERT
     "Q",            ID_APP_EXIT,            VIRTKEY, CONTROL, NOINVERT
     "R",            ID_NAVIGATE_RELOAD,     VIRTKEY, CONTROL, NOINVERT
     "S",            ID_NETSCAPE_SAVE_AS,    VIRTKEY, CONTROL, NOINVERT

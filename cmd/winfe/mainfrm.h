@@ -131,6 +131,7 @@ protected:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
     afx_msg void OnDestroy();
 	afx_msg void OnOptionsTogglenetdebug();
+    afx_msg void OnOptionsToggleProfile();
 	afx_msg void OnShowTransferStatus();
 	afx_msg void OnUpdateToggleImageLoad(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateShowTransferStatus(CCmdUI* pCmdUI);

@@ -43,6 +43,7 @@
 #include "prefapi.h"
 #include "prefInfo.h"
 #include "medit.h"
+#include "profile.h"
 
 #include "np.h"
 #include "npapi.h"			// for NPWindow
@@ -52,6 +53,8 @@
 #elif defined(JAVA)
 #include "java.h"
 #endif
+
+#include "timing.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -363,6 +366,12 @@ void CMainFrame::OnOptionsTogglenetdebug()
 		XP_FREE(rv);
 		NET_ToggleTrace();
 	}
+}
+
+
+void CMainFrame::OnOptionsToggleProfile()
+{
+    TimingSetEnabled(! TimingIsEnabled());
 }
 
 

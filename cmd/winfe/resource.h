@@ -2229,6 +2229,7 @@
 #define ID_POPUP_COPYEMBEDDATA          33114
 #define ID_OPTIONS_TIPS                 33125
 #define ID_REMOVE_FONTFACE              33126
+#define ID_OPTIONS_TOGGLEPROFILE        33127
 #define ID_FILE_OPENFOLDER              34000
 #define ID_FILE_OPENFOLDERNEW           34001
 #define ID_FILE_OPENFOLDERREUSE         34002
