@@ -284,7 +284,14 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
     }
 #endif
 
-    RestoreModTime(item, outFile);  // non-fatal if this fails, ignore errors
+    PRTime prtime = item->GetModTime();
+    // nsIFile needs usecs.
+    PRTime conversion = LL_ZERO;
+    PRTime newTime = LL_ZERO;
+    LL_I2L(conversion, PR_USEC_PER_MSEC);
+    LL_DIV(newTime, prtime, conversion);
+    // non-fatal if this fails, ignore errors
+    outFile->SetLastModifiedTime(newTime);
   }
 
   return ziperr2nsresult(err);
@@ -865,34 +872,6 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
 #endif
 }
 
-nsresult
-nsJAR::RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile)
-{
-  if (!aItem || !aExtractedFile)
-    return NS_ERROR_NULL_POINTER;
-  
-  char *timestr;
-  PRTime prtime;
-  nsresult rv = NS_OK;
-  
-  timestr = aItem->GetModTime();
-  if (timestr)
-  {
-    if (PR_SUCCESS == PR_ParseTimeString(timestr, PR_FALSE, &prtime))
-    {
-    	PRTime conversion = LL_ZERO;
-    	PRTime newTime = LL_ZERO;
-    	LL_I2L(conversion, PR_USEC_PER_MSEC);
-    	LL_DIV(newTime, prtime, conversion);
-        // nsIFile needs usecs.
-      	rv = aExtractedFile->SetLastModifiedTime(newTime);
-	}
-
-    JAR_NULLFREE(timestr);
-  }
-
-  return rv;
-}
 
 nsresult nsJAR::CalculateDigest(nsISignatureVerifier* verifier,
                                 const char* aInBuf, PRUint32 aLen,

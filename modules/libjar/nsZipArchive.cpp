@@ -41,6 +41,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prprf.h"
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
 #include "zlib.h"
@@ -1850,67 +1851,21 @@ static PRBool IsSymlink(PRUint32 ext_attr)
   return (((ext_attr>>16) & S_IFMT) == S_IFLNK) ? PR_TRUE : PR_FALSE;
 }
 
-/*
- *  d o s d a t e
- *
- *  Based on standard MS-DOS format date.
- *  Tweaked to be Y2K compliant and NSPR friendly.
- */
-static void dosdate (char *aOutDateStr, PRUint16 aDate)
-  {
-  PRUint16 y2kCompliantYear = (aDate >> 9) + 1980;
-
-  sprintf (aOutDateStr, "%02d/%02d/%02d",
-     ((aDate >> 5) & 0x0F), (aDate & 0x1F), y2kCompliantYear);
-
-  return;
-  }
-
-/*
- *  d o s t i m e
- *
- *  Standard MS-DOS format time.
- */
-static void dostime (char *aOutTimeStr, PRUint16 aTime)
-  {
-  sprintf (aOutTimeStr, "%02d:%02d",
-     ((aTime >> 11) & 0x1F), ((aTime >> 5) & 0x3F));
-
-  return;
-  }
-
-char *
+#ifndef STANDALONE
+PRTime
 nsZipItem::GetModTime()
 {
-    char *timestr;    /* e.g. 21:07                        */
-    char *datestr;    /* e.g. 06/20/1995                   */
-    char *nsprstr;    /* e.g. 06/20/1995 21:07             */
-                      /* NSPR bug parsing dd/mm/yyyy hh:mm */
-                      /*        so we use mm/dd/yyyy hh:mm */
+  char buffer[17];
 
-    timestr = (char *) PR_Malloc(6 * sizeof(char));
-    datestr = (char *) PR_Malloc(11 * sizeof(char));
-    nsprstr = (char *) PR_Malloc(17 * sizeof(char));
-    if (!timestr || !datestr || !nsprstr)
-    {
-        PR_FREEIF(timestr);
-        PR_FREEIF(datestr);
-        PR_FREEIF(nsprstr);
-        return 0;
-    }
+  PRUint16 aDate = this->date;
+  PRUint16 aTime = this->time;
 
-    memset(timestr, 0, 6);
-    memset(datestr, 0, 11);
-    memset(nsprstr, 0, 17);
+  PR_snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d %02d:%02d",
+        ((aDate >> 5) & 0x0F), (aDate & 0x1F), (aDate >> 9) + 1980,
+        ((aTime >> 11) & 0x1F), ((aTime >> 5) & 0x3F));
 
-    dosdate(datestr, this->date);
-    dostime(timestr, this->time);
-
-    sprintf(nsprstr, "%s %s", datestr, timestr);
-
-    PR_FREEIF(timestr);
-    PR_FREEIF(datestr);
-
-    return nsprstr;
+  PRTime result;
+  PR_ParseTimeString(buffer, PR_FALSE, &result);
+  return result;
 }
-
+#endif
