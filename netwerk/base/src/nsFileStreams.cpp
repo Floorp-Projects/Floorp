@@ -487,3 +487,105 @@ nsFileOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsFileOutputStream
+
+NS_IMPL_ISUPPORTS_INHERITED3(nsSafeFileOutputStream, 
+                             nsFileOutputStream,
+                             nsISafeFileOutputStream,
+                             nsIOutputStream,
+                             nsIFileOutputStream)
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
+                             PRInt32 behaviorFlags)
+{
+    nsresult rv = file->Exists(&mTargetFileExists);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Can't tell if target file exists");
+        mTargetFileExists = PR_TRUE; // Safer to assume it exists - we just do more work.
+    }
+
+    nsCOMPtr<nsIFile> tempResult;
+    rv = file->Clone(getter_AddRefs(tempResult));
+    if (NS_SUCCEEDED(rv) && mTargetFileExists) {
+        PRUint32 origPerm;
+        if (NS_FAILED(file->GetPermissions(&origPerm))) {
+            NS_ERROR("Can't get permissions of target file");
+            origPerm = perm;
+        }
+        // XXX What if |perm| is more restrictive then |origPerm|?
+        // This leaves the user supplied permssions as they were.
+        rv = tempResult->CreateUnique(nsIFile::NORMAL_FILE_TYPE, origPerm);
+    }
+    if (NS_SUCCEEDED(rv)) {
+        mTempFile = tempResult;
+        mTargetFile = file;
+        rv = nsFileOutputStream::Init(mTempFile, ioFlags, perm, behaviorFlags);
+    }
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::SetWriteSucceeded(PRBool aWriteSucceeded)
+{
+    mWriteSucceeded = aWriteSucceeded;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::GetWriteSucceeded(PRBool *aWriteSucceeded)
+{
+    *aWriteSucceeded = mWriteSucceeded && mInternalWriteSucceeded;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::Close()
+{
+    nsresult rv = nsFileOutputStream::Close();
+
+    // if there is no temp file, don't try to move it over the original target.
+    // It would destroy the targetfile if close() is called twice.
+    if (!mTempFile)
+        return NS_OK;
+
+    // Only overwrite if everything was ok, and the temp file could be closed.
+    if (mWriteSucceeded && mInternalWriteSucceeded && NS_SUCCEEDED(rv)) {
+        NS_ENSURE_STATE(mTargetFile);
+
+        if (!mTargetFileExists) {
+            // If the target file did not exist when we were initialized, then the
+            // temp file we gave out was actually a reference to the target file.
+            // since we succeeded in writing to the temp file (and hence succeeded
+            // in writing to the target file), there is nothing more to do.
+#ifdef DEBUG      
+            PRBool equal;
+            if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
+                NS_ERROR("mTempFile not equal to mTargetFile");
+#endif
+            return NS_OK;      
+        }
+
+        nsCAutoString targetFilename;
+        rv = mTargetFile->GetNativeLeafName(targetFilename);
+    
+        if (NS_SUCCEEDED(rv))
+            rv = mTempFile->MoveToNative(nsnull, targetFilename); // This will replace target
+    }
+    else {
+        rv = mTempFile->Remove(PR_FALSE);
+    }
+    mTempFile = nsnull;
+    return rv;
+}
+
+NS_IMETHODIMP
+nsSafeFileOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *result)
+{
+    nsresult rv = nsFileOutputStream::Write(buf, count, result);
+    if (NS_FAILED(rv) || count != *result)
+        mInternalWriteSucceeded = PR_FALSE;
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////

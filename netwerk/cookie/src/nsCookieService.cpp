@@ -1039,7 +1039,7 @@ nsCookieService::Write()
 
   nsresult rv;
   nsCOMPtr<nsIOutputStream> fileOutputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutputStream), mCookieFile);
+  rv = NS_NewSafeLocalFileOutputStream(getter_AddRefs(fileOutputStream), mCookieFile);
   if (NS_FAILED(rv)) {
     NS_ERROR("failed to open cookies.txt for writing");
     return rv;
@@ -1114,6 +1114,12 @@ nsCookieService::Write()
     bufferedOutputStream->Write(cookie->Value().get(), cookie->Value().Length(), &rv);
     bufferedOutputStream->Write(kNew, sizeof(kNew) - 1, &rv);
   }
+
+  // All went ok. Maybe except for problems in Write(), but the stream detects
+  // that for us
+  nsCOMPtr<nsISafeFileOutputStream> safeStream = do_QueryInterface(fileOutputStream);
+  if (safeStream)
+    safeStream->SetWriteSucceeded(PR_TRUE);
 
   mCookieChanged = PR_FALSE;
   return NS_OK;
