@@ -225,6 +225,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
 
       // hard-coded split node test:  works on first <P> in the document
       case nsIDOMEvent::VK_S:
+        if (PR_TRUE==ctrlKey)
         {
           nsAutoString pTag("P");
           nsCOMPtr<nsIDOMNode> currentNode;
@@ -248,8 +249,8 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
             if (txn)
               mEditor->Do(txn);        
           }
+          aProcessed=PR_TRUE;
         }
-        aProcessed=PR_TRUE;
         break;
 
 
