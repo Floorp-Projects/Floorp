@@ -28,6 +28,8 @@
 #include "nsIImapIncomingServer.h"
 #include "nsMsgBaseCID.h"
 
+#include "nsMsgUtils.h"
+
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsresult
@@ -77,7 +79,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	sep += PR_GetDirectorySeparator();
 
 	nsAutoString sbdSep;
-	/* sspitzer: is this ok for mail and news? */
+
 	rv = nsGetMailFolderSeparator(sbdSep);
 	if (NS_FAILED(rv)) 
 		return rv;
@@ -140,13 +142,16 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
       {
           parentName.Right(leafName, parentName.Length() - dirEnd -1);
           parentName.Truncate(dirEnd);
+          NS_MsgHashIfNecessary(parentName);
           parentName += sbdSep;
           pathResult += parentName;
           parentName = leafName;
           dirEnd = parentName.Find('/');
       }
-      if (leafName != "")
-          pathResult += leafName;
+      if (leafName != "") {
+        NS_MsgHashIfNecessary(leafName);
+        pathResult += leafName;
+      }
   }
 
 	return NS_OK;

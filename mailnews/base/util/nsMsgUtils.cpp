@@ -219,3 +219,58 @@ nsresult NS_MsgGetUntranslatedPriorityName (nsMsgPriority p, nsString2 *outName)
 	return NS_OK;
 }
 
+/* this used to be XP_StringHash2 from xp_hash.c */
+/* phong's linear congruential hash  */
+static PRUint32 StringHash(const char *ubuf)
+{
+  unsigned char * buf = (unsigned char*) ubuf;
+  PRUint32 h=1;
+  while(*buf) {
+    h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
+    buf++;
+  }
+  return h;
+}
+
+nsresult NS_MsgHashIfNecessary(nsString &name)
+{
+#if defined(XP_WIN16) || defined(XP_OS2)
+  const PRUint32 MAX_LEN = 8;
+#elif defined(XP_MAC)
+  // mac sucks.  32 has to cover name + sbdSep.
+  const PRUint32 MAX_LEN = 28;
+#elif defined(XP_UNIX) || defined(XP_PC)
+  const PRUint32 MAX_LEN = 55;
+#else
+#error need_to_define_your_max_filename_length
+#endif
+  nsAutoString str(name, eOneByte);
+
+#ifdef DEBUG_sspitzer
+  printf("in: %s\n",str.GetBuffer());
+#endif
+
+  // Given a name, use either that name, if it fits on our
+  // filesystem, or a hashified version of it, if the name is too
+  // long to fit.
+  char hashedname[MAX_LEN + 1];
+  PRBool needshash = PL_strlen(str.GetBuffer()) > MAX_LEN;
+#if defined(XP_WIN16)  || defined(XP_OS2)
+  if (!needshash) {
+    needshash = PL_strchr(str.GetBuffer(), '.') != NULL ||
+      PL_strchr(str.GetBuffer(), ':') != NULL;
+  }
+#endif
+  PL_strncpy(hashedname, str.GetBuffer(), MAX_LEN + 1);
+  if (needshash) {
+    PR_snprintf(hashedname + MAX_LEN - 8, 9, "%08lx",
+                (unsigned long) StringHash(str.GetBuffer()));
+  }
+  name = hashedname;
+#ifdef DEBUG_sspitzer
+  printf("out: %s\n",hashedname);
+#endif
+  
+  return NS_OK;
+}
+

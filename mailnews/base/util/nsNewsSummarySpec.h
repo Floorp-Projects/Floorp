@@ -39,9 +39,6 @@ public:
 protected:
   void	CreateSummaryFileName();
   
-private:
-  /* Phong's linear congruential hash  */
-  PRUint32 StringHash(const char *ubuf);
 };
 
-#endif
+#endif /* _nsNewsSummarySpec_H */

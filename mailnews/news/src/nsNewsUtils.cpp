@@ -26,6 +26,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
@@ -53,9 +54,9 @@ nsGetNewsRoot(const char *hostname, nsFileSpec &result)
 
 #ifdef DEBUG_NEWS
   if (hosts->Count() <= 0)
-    fprintf(stderr, "Augh, no nntp server named %s?\n", hostname);
+    printf("Augh, no nntp server named %s?\n", hostname);
   if (!serverSupports)
-    fprintf(stderr, "Huh, serverSupports returned nsnull\n");
+    printf("Huh, serverSupports returned nsnull\n");
 #endif
 
   // if there are no nntp servers, how did we get here?
@@ -184,6 +185,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // can't do pathResult += "host-"; pathresult += hostname; 
   // because += on a nsFileSpec inserts a separator
   // so we'd end up with host-/hostname and not host-hostname
+  NS_MsgHashIfNecessary(alteredHost);
   pathResult += alteredHost;
 
   // create pathResult if it doesn't exist
@@ -193,6 +195,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     pathResult.CreateDir();
   
   if (newsgroup != "") {
+    NS_MsgHashIfNecessary(newsgroup);
     pathResult += newsgroup;
   }
 

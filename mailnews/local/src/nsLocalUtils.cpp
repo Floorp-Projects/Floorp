@@ -28,6 +28,8 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsMsgBaseCID.h"
 
+#include "nsMsgUtils.h"
+
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
@@ -60,7 +62,7 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
 
 #ifdef DEBUG_alecf
   if (!serverSupports)
-    fprintf(stderr, "Huh, serverSupports returned nsnull\n");
+    printf("Huh, serverSupports returned nsnull\n");
 #endif
 
   // if there are no pop servers, how did we get here?
@@ -149,10 +151,15 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
       token = nsCRT::strtok(newStr, "/", &newStr);
       
       // check if we're the last entry
-      if (token)
+      if (token) {
+        NS_MsgHashIfNecessary(dir);
         dir += sbdSep;            // no, we're not, so append .sbd
-      
-      pathResult += dir;
+        pathResult += dir;
+      }
+      else {
+        NS_MsgHashIfNecessary(dir);
+        pathResult += dir;
+      }
     }
     PL_strfree(temp);
   }

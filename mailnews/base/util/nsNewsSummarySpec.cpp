@@ -50,50 +50,11 @@ void nsNewsSummarySpec::CreateSummaryFileName()
 {
 	char *leafName = GetLeafName();
 
-#if defined(XP_WIN16) || defined(XP_OS2)
-    const PRUint32 MAX_LEN = 8;
-#elif defined(XP_MAC)
-    const PRUint32 MAX_LEN = 25;
-#else
-    const PRUint32 MAX_LEN = 55;
-#endif
-    // Given a name, use either that name, if it fits on our
-    // filesystem, or a hashified version of it, if the name is too
-    // long to fit.
-    char hashedname[MAX_LEN + 1];
-    PRBool needshash = PL_strlen(leafName) > MAX_LEN;
-#if defined(XP_WIN16)  || defined(XP_OS2)
-    if (!needshash) {
-      needshash = PL_strchr(leafName, '.') != NULL ||
-        PL_strchr(leafName, ':') != NULL;
-    }
-#endif
-    PL_strncpy(hashedname, leafName, MAX_LEN + 1);
-    if (needshash) {
-      PR_snprintf(hashedname + MAX_LEN - 8, 9, "%08lx",
-                  (unsigned long) StringHash(leafName));
-    }
-    
-	nsAutoString fullLeafName(hashedname, MAX_LEN + 1, eOneByte);
+    nsAutoString fullLeafName(leafName, PL_strlen(leafName), eOneByte);
 
 	// Append .msf (message summary file) 
 	fullLeafName += ".msf";	
 
 	SetLeafName(fullLeafName.GetBuffer());
 	PL_strfree(leafName);
-}
-
-/* this used to be XP_StringHash2 from xp_hash.c */
-/* phong's linear congruential hash  */
-PRUint32
-nsNewsSummarySpec::StringHash(const char *ubuf)
-{
-  unsigned char * buf = (unsigned char*) ubuf;
-  PRUint32 h=1;
-  while(*buf)
-    {
-      h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
-      buf++;
-    }
-  return h;
 }
