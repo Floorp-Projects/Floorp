@@ -32,6 +32,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
+#include "nsLocalFolderSummarySpec.h"
 
 #if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
@@ -295,7 +296,10 @@ nsresult nsMsgDBFolder::GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, ns
 	if (!fileSpec || !cacheElement)
 		return NS_ERROR_NULL_POINTER;
 	nsCOMPtr <nsIMsgFolderCache> folderCache;
-
+#ifdef DEBUG_bienvenu
+	PRBool exists;
+	NS_ASSERTION(NS_SUCCEEDED(fileSpec->Exists(&exists)) && exists, "whoops, file doesn't exist, mac will break");
+#endif
 	NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
 	if(NS_SUCCEEDED(result))
 	{
@@ -322,13 +326,14 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	// and, we might get stale info, so don't do it.
 	if (!(mPrefFlags & MSG_FOLDER_PREF_CACHED))
 	{
-		nsCOMPtr <nsIFileSpec> path;
-		GetPath(getter_AddRefs(path));
+		nsCOMPtr <nsIFileSpec> dbPath;
 
-		if (path)
+		result = GetFolderCacheKey(getter_AddRefs(dbPath));
+
+		if (dbPath)
 		{
 			nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-			result = GetFolderCacheElemFromFileSpec(path, getter_AddRefs(cacheElement));
+			result = GetFolderCacheElemFromFileSpec(dbPath, getter_AddRefs(cacheElement));
 			if (NS_SUCCEEDED(result) && cacheElement)
 			{
 				result = ReadFromFolderCacheElem(cacheElement);
@@ -696,6 +701,36 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	return rv;
 }
 
+nsresult nsMsgDBFolder::GetFolderCacheKey(nsIFileSpec **aFileSpec)
+{
+	nsresult rv;
+	nsCOMPtr <nsIFileSpec> path;
+	rv = GetPath(getter_AddRefs(path));
+
+	// now we put a new file spec in aFileSpec, because we're going to change it.
+	rv = NS_NewFileSpec(aFileSpec);
+
+	if (NS_SUCCEEDED(rv) && *aFileSpec)
+	{
+		nsIFileSpec *dbPath = *aFileSpec;
+		dbPath->FromFileSpec(path);
+		// if not a server, we need to convert to a db Path with .msf on the end
+		PRBool isServer = PR_FALSE;
+		GetIsServer(&isServer);
+
+		// if it's a server, we don't need the .msf appended to the name
+		if (!isServer)
+		{
+			nsFileSpec		folderName;
+			dbPath->GetFileSpec(&folderName);
+			nsLocalFolderSummarySpec	summarySpec(folderName);
+
+			dbPath->SetFromFileSpec(summarySpec);
+		}
+	}
+	return rv;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {
 	nsCOMPtr <nsIEnumerator> aEnumerator;
@@ -707,13 +742,17 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 	if (folderCache)
 	{
 		nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-		nsCOMPtr <nsIFileSpec> path;
-		rv = GetPath(getter_AddRefs(path));
-		nsXPIDLCString persistentPath;
+		nsCOMPtr <nsIFileSpec> dbPath;
 
-		if (NS_SUCCEEDED(rv) && path)
+		rv = GetFolderCacheKey(getter_AddRefs(dbPath));
+#ifdef DEBUG_bienvenu
+		PRBool exists;
+		NS_ASSERTION(NS_SUCCEEDED(dbPath->Exists(&exists)) && exists, "file spec we're adding to cache should exist");
+#endif
+		if (NS_SUCCEEDED(rv) && dbPath)
 		{
-			path->GetPersistentDescriptorString(getter_Copies(persistentPath));
+			nsXPIDLCString persistentPath;
+			dbPath->GetPersistentDescriptorString(getter_Copies(persistentPath));
 			rv = folderCache->GetCacheElement(persistentPath, PR_TRUE, getter_AddRefs(cacheElement));
 			if (NS_SUCCEEDED(rv) && cacheElement)
 				rv = WriteToFolderCacheElem(cacheElement);

@@ -83,6 +83,7 @@ protected:
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
 	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
 
+	nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
 	nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  
