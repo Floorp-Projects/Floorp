@@ -1417,12 +1417,14 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetDocument()));
+  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetCurrentDoc()));
 
   KeyAppendInt(partID, aKey);  // first append a partID
   PRBool generatedUniqueKey = PR_FALSE;
 
   if (htmlDocument) {
+    // Flush our content model so it'll be up to date
+    aContent->GetCurrentDoc()->FlushPendingNotifications(Flush_Content);
     nsCOMPtr<nsIDOMHTMLDocument> domHtmlDocument(do_QueryInterface(htmlDocument));
     nsCOMPtr<nsIDOMHTMLCollection> forms;
     domHtmlDocument->GetForms(getter_AddRefs(forms));
@@ -1503,16 +1505,9 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
         // Hash by index of control in doc (we are not in a form)
         // These are important as they are unique, and type/name may not be.
 
-        // We don't refresh the form control list here (passing PR_TRUE
-        // for aFlush), although we really should. Forcing a flush
-        // causes a signficant pageload performance hit. See bug
-        // 166636. Doing this wrong means you will see the assertion
-        // below being hit.
+        // Note that we've already flushed content, so there's no
+        // reason to flush it again.
         index = htmlFormControls->IndexOf(aContent, PR_FALSE);
-        NS_ASSERTION(index > -1,
-                     "nsFrameManager::GenerateStateKey didn't find content "
-                     "by type! See bug 139568");
-
         if (index > -1) {
           KeyAppendInt(index, aKey);
           generatedUniqueKey = PR_TRUE;
