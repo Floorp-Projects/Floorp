@@ -51,6 +51,10 @@
 #include <dlfcn.h>
 #endif
 
+#if defined(XP_MAC) && !TARGET_CARBON
+#include "macstdlibextras.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM void 
@@ -473,6 +477,10 @@ static PRBool LogThisType(const char* aTypeName)
 
 static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
 {
+#ifdef GC_LEAK_DETECTOR
+  // need to disguise this pointer, so the table won't keep the object alive.
+  aPtr = (void*) ~PLHashNumber(aPtr);
+#endif
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
   if (hep && *hep) {
     return PRInt32((*hep)->value);
@@ -488,6 +496,10 @@ static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
 
 static void RecycleSerialNumberPtr(void* aPtr)
 {
+#ifdef GC_LEAK_DETECTOR
+  // need to disguise this pointer, so the table won't keep the object alive.
+  aPtr = (void*) ~PLHashNumber(aPtr);
+#endif
   PL_HashTableRemove(gSerialNumbers, aPtr);
 }
 
@@ -540,6 +552,11 @@ static void InitTraceLog(void)
 {
   if (gInitialized) return;
   gInitialized = PR_TRUE;
+
+#if defined(XP_MAC) && !TARGET_CARBON
+  // this can get called before Toolbox has been initialized.
+  InitializeMacToolbox();
+#endif
 
   PRBool defined;
   defined = InitLog("XPCOM_MEM_BLOAT_LOG", "bloat/leaks", &gBloatLog);
@@ -906,15 +923,12 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
  * Stack walking code for the Mac OS.
  */
 
-extern "C" {
-int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset);
-void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
-}
+#include "gc_fragments.h"
 
-static asm void *GetSP() 
-{
-	mr		r3, sp
-	blr
+#include <typeinfo>
+
+extern "C" {
+void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
 }
 
 struct traceback_table {
@@ -925,7 +939,6 @@ struct traceback_table {
 	short nameLength;
 	char name[2];
 };
-typedef struct traceback_table traceback_table;
 
 static char* pc2name(long* pc, char name[], long size)
 {
@@ -952,33 +965,47 @@ static char* pc2name(long* pc, char name[], long size)
 	return name;
 }
 
+struct stack_frame {
+	stack_frame*	next;				// savedSP
+	void*			savedCR;
+	void*			savedLR;
+	void*			reserved0;
+	void*			reserved1;
+	void*			savedTOC;
+};
+
+static asm stack_frame* getStackFrame() 
+{
+	mr		r3, sp
+	blr
+}
+
 NS_COM void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-	void* currentSP;
-	
-	currentSP = GetSP();				// WalkTheStack's frame.
-	currentSP = *((void **)currentSP);	// WalkTheStack's caller's frame.
-	currentSP = *((void **)currentSP);	// WalkTheStack's caller's caller's frame.
-	
+    stack_frame* currentFrame = getStackFrame();    // WalkTheStack's frame.
+	currentFrame = currentFrame->next;	            // WalkTheStack's caller's frame.
+	currentFrame = currentFrame->next;              // WalkTheStack's caller's caller's frame.
+    
 	while (true) {
-		long** linkageArea = (long**)currentSP;
 		// LR saved at 8(SP) in each frame. subtract 4 to get address of calling instruction.
-		long* pc = linkageArea[2] - 1;
+		void* pc = currentFrame->savedLR;
 
 		// convert PC to name, unmangle it, and generate source location, if possible.
-		static char name[1024], unmangled_name[1024], file_name[256]; UInt32 file_offset;
-		pc2name(pc, name, sizeof(name));
-		MWUnmangle(name, unmangled_name, sizeof(unmangled_name));
+		static char symbol_name[1024], unmangled_name[1024], file_name[256]; UInt32 file_offset;
 		
-     	if (GC_address_to_source((char*)pc, file_name, &file_offset))
+     	if (GC_address_to_source((char*)pc, symbol_name, file_name, &file_offset)) {
+			MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
      		fprintf(aStream, "%s[%s,%ld]\n", unmangled_name, file_name, file_offset);
-     	else
-     		fprintf(aStream, "%s(0x%08X)\n", unmangled_name, pc);
-		
-		currentSP = *((void **)currentSP);
-		// the bottom-most frame is marked as pointing to NULL.
-		if (currentSP == NULL || UInt32(currentSP) & 0x1)
+     	} else {
+ 		    pc2name((long*)pc, symbol_name, sizeof(symbol_name));
+			MWUnmangle(symbol_name, unmangled_name, sizeof(unmangled_name));
+    		fprintf(aStream, "%s(0x%08X)\n", unmangled_name, pc);
+     	}
+
+		currentFrame = currentFrame->next;
+		// the bottom-most frame is marked as pointing to NULL, or is ODD if a 68K transition frame.
+		if (currentFrame == NULL || UInt32(currentFrame) & 0x1)
 			break;
 	}
 }
@@ -1119,7 +1146,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     InitTraceLog();
   if (gLogging) {
     LOCK_TRACELOG();
-    
+
     if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClazz, classSize);
       if (entry) {
