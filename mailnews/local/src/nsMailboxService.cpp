@@ -62,7 +62,7 @@ nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStrea
 
 			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
 			if (protocol)
-				protocol->LoadURL(url);
+				protocol->LoadURL(url, nsnull /* no consumers for this type of url */);
 
 			if (aURL)
 				*aURL = url;
@@ -76,8 +76,45 @@ nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStrea
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessage(const nsFilePath& aMailboxPath, PRUint32 aStartByte, PRUint32 aEndByte, 
-										  nsISupports * aDisplayConsumer, nsIURL ** aURL)
+nsresult nsMailboxService::DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+										  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-	return NS_OK;
+	nsMailboxUrl * mailboxUrl = nsnull;
+	nsIMailboxUrl * url = nsnull;
+	nsresult rv = NS_OK;
+	NS_LOCK_INSTANCE();
+
+	mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
+	if (mailboxUrl)
+	{
+		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &url);
+		if (NS_SUCCEEDED(rv) && url)
+		{
+			// okay now generate the url string
+			char * urlSpec = nsnull;
+			if (aMessageID) 
+				urlSpec = PR_smprintf("mailboxMessage://%s?messageId=%s&number=%d", (const char *) aMailboxPath, aMessageKey);
+			else
+				urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) aMailboxPath, aMessageKey);
+			
+			url->SetSpec(urlSpec);
+			PR_FREEIF(urlSpec);
+			if (aUrlListener)
+				url->RegisterListener(aUrlListener);
+
+			// create a protocol instance to run the url..
+			nsMailboxProtocol * protocol = new nsMailboxProtocol(url);
+			if (protocol)
+				protocol->LoadURL(url, aDisplayConsumer);
+
+			if (aURL)
+				*aURL = url;
+			else
+				NS_IF_RELEASE(url); // otherwise release our ref count on it...
+		}
+	}
+
+	NS_UNLOCK_INSTANCE();
+
+	return rv;
 }
