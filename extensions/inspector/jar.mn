@@ -78,7 +78,6 @@ inspector.jar:
   content/inspector/viewers/jsObject/jsObject.xul                     (resources/content/viewers/jsObject/jsObject.xul)
   content/inspector/viewers/jsObject/evalExprDialog.js                (resources/content/viewers/jsObject/evalExprDialog.js)
   content/inspector/viewers/jsObject/evalExprDialog.xul               (resources/content/viewers/jsObject/evalExprDialog.xul)
-  content/inspector/viewers/jsObject/jsObjectView.js                  (resources/content/viewers/jsObject/jsObjectView.js)
   content/inspector/viewers/domNode/domNode.js                        (resources/content/viewers/domNode/domNode.js)
   content/inspector/viewers/domNode/domNode.xul                       (resources/content/viewers/domNode/domNode.xul)
   content/inspector/viewers/styleRules/commandOverlay.xul             (resources/content/viewers/styleRules/commandOverlay.xul)
