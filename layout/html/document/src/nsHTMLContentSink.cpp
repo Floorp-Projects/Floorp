@@ -334,7 +334,6 @@ public:
   nsString            mPreferredStyle;
   PRInt32             mStyleSheetCount;
   nsICSSLoader*       mCSSLoader;
-  PRUint32            mContentIDCounter;
   PRInt32             mInsideNoXXXTag;
   PRInt32             mInMonolithicContainer;
 
@@ -970,6 +969,10 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     }
     rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
                            aResult, &content);
+
+    PRInt32 id;
+    mDocument->GetAndIncrementContentID(&id);
+    (*aResult)->SetContentID(id);
     
     NS_RELEASE(atom);
   }
@@ -1261,7 +1264,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   if (NS_OK != rv) {
     return rv;
   }
-  content->SetContentID(mSink->mContentIDCounter++);
 
   nsresult srv;
   nsCOMPtr<nsISelectElement> select = do_QueryInterface(content, &srv);
@@ -1617,8 +1619,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
                                       &content);
       if (NS_OK != rv) {
         return rv;
-      }
-      content->SetContentID(mSink->mContentIDCounter++);
+      }      
 
       // Set the content's document
       content->SetDocument(mSink->mDocument, PR_FALSE);
@@ -2070,8 +2071,7 @@ HTMLContentSink::HTMLContentSink() {
     gSinkLogModuleInfo = PR_NewLogModule("htmlcontentsink");
   }
 #endif
-  mNotAtRef        = PR_TRUE;
-  mContentIDCounter = NS_CONTENT_ID_COUNTER_BASE;
+  mNotAtRef        = PR_TRUE;  
   mInScript = 0;
   mInNotification = 0;
   mInMonolithicContainer = 0;
@@ -3202,8 +3202,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     rv = CreateContentObject(aNode, nodeType, nsnull, nsnull, &area);
     if (NS_FAILED(rv)) {
       return rv;
-    }
-    area->SetContentID(mContentIDCounter++);
+    }    
 
     // Set the content's document and attributes
     area->SetDocument(mDocument, PR_FALSE);
@@ -3279,7 +3278,9 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     nsCOMPtr<nsIHTMLContent> element;
     result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
     if (NS_SUCCEEDED(result)) {
-      element->SetContentID(mContentIDCounter++);
+      PRInt32 id;
+      mDocument->GetAndIncrementContentID(&id);
+      element->SetContentID(id);
 
       // Add in the attributes and add the style content object to the
       // head container.
@@ -3619,7 +3620,9 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     nsIHTMLContent* element = nsnull;
     result = NS_CreateHTMLElement(&element, tag);
     if (NS_SUCCEEDED(result)) {
-      element->SetContentID(mContentIDCounter++);
+      PRInt32 id;
+      mDocument->GetAndIncrementContentID(&id);      
+      element->SetContentID(id);
 
       // Add in the attributes and add the style content object to the
       // head container.    
@@ -4245,7 +4248,9 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   nsIHTMLContent* element = nsnull;
   rv = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(rv)) {
-    element->SetContentID(mContentIDCounter++);
+    PRInt32 id;
+    mDocument->GetAndIncrementContentID(&id);    
+    element->SetContentID(id);
 
     // Add in the attributes and add the style content object to the
     // head container.
@@ -4373,7 +4378,9 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     nsIHTMLContent* element = nsnull;
     rv = NS_CreateHTMLElement(&element, tag);
     if (NS_SUCCEEDED(rv)) {
-      element->SetContentID(mContentIDCounter++);
+      PRInt32 id;
+      mDocument->GetAndIncrementContentID(&id);    
+      element->SetContentID(id);
 
       // Add in the attributes and add the style content object to the
       // head container.

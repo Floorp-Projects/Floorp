@@ -1213,6 +1213,7 @@ nsHTMLDocument::CreateElement(const nsString& aTagName,
   nsCOMPtr<nsIHTMLContent> content;
   nsresult rv = NS_CreateHTMLElement(getter_AddRefs(content), aTagName);
   if (NS_SUCCEEDED(rv)) {
+    content->SetContentID(mNextContentID++);
     rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   }
   return rv;

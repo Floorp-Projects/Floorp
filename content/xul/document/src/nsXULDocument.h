@@ -248,6 +248,8 @@ public:
 
     NS_IMETHOD FlushPendingNotifications();
 
+    NS_IMETHOD GetAndIncrementContentID(PRInt32* aID);
+
     virtual void BeginConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
 
     virtual void ConvertChildrenToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);

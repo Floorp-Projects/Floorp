@@ -736,6 +736,9 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   }
   
   if (NS_OK == result) {
+    PRInt32 id;
+    mDocument->GetAndIncrementContentID(&id);
+    content->SetContentID(id);
     content->SetDocument(mDocument, PR_FALSE);
 
     // Set the attributes on the new content element

@@ -80,6 +80,12 @@ public:
 };
 #endif
 
+// The base value for the content ID counter.
+// This counter is used by the document to 
+// assign a monotonically increasing ID to each content
+// object it creates
+#define NS_CONTENT_ID_COUNTER_BASE 10000
+
 //----------------------------------------------------------------------
 
 // Document interface
@@ -311,9 +317,9 @@ public:
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus) = 0;
 
-
   NS_IMETHOD FlushPendingNotifications() = 0;
 
+  NS_IMETHOD GetAndIncrementContentID(PRInt32* aID) = 0;
 };
 
 

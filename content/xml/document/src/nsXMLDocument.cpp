@@ -690,6 +690,7 @@ nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName,
   if (NS_OK != rv) {
     return rv;
   }
+  content->SetContentID(mNextContentID++);
   rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   
   return rv;
