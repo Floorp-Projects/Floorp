@@ -78,7 +78,7 @@
 
 ////////////////////////////////////////////////////////////////////////
 
-static const char kNameSpaceSeparator[] = ":";
+static const char kNameSpaceSeparator = ':';
 static const char kNameSpaceDef[] = "xmlns";
 
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
@@ -838,7 +838,7 @@ RDFContentSinkImpl::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 nsIAtom*
 RDFContentSinkImpl::CutNameSpacePrefix(nsString& aString)
 {
-    PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+    PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
 
     if (nsoffset >= 0) {
         nsAutoString prefix;

@@ -84,7 +84,7 @@
 
 #include "nsHTMLTokens.h" // XXX so we can use nsIParserNode::GetTokenType()
 
-static const char kNameSpaceSeparator[] = ":";
+static const char kNameSpaceSeparator = ':';
 static const char kNameSpaceDef[] = "xmlns";
 static const char kXULID[] = "id";
 
@@ -1894,7 +1894,7 @@ nsIAtom*
 XULContentSinkImpl::CutNameSpacePrefix(nsString& aString)
 {
     nsAutoString  prefix;
-    PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+    PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
     if (-1 != nsoffset) {
         aString.Left(prefix, nsoffset);
         aString.Cut(0, nsoffset+1);

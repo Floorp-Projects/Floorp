@@ -1774,11 +1774,11 @@ RDFElementImpl::ParseAttributeString(const nsString& aStr,
                                      nsIAtom*& aName, 
                                      PRInt32& aNameSpaceID)
 {
-static char kNameSpaceSeparator[] = ":";
+static char kNameSpaceSeparator = ':';
 
     nsAutoString prefix;
     nsAutoString name(aStr);
-    PRInt32 nsoffset = name.Find(kNameSpaceSeparator);
+    PRInt32 nsoffset = name.FindChar(kNameSpaceSeparator);
     if (-1 != nsoffset) {
         name.Left(prefix, nsoffset);
         name.Cut(0, nsoffset+1);

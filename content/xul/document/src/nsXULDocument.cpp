@@ -4205,7 +4205,7 @@ XULDocumentImpl::ParseTagString(const nsString& aTagName, nsIAtom*& aName, PRInt
     // assigning "no namespace") in the case that there is no
     // namespace prefix present.
 
-static char kNameSpaceSeparator[] = ":";
+static char kNameSpaceSeparator = ':';
 
     // XXX this is a gross hack, but it'll carry us for now. We parse
     // the tag name using the root content, which presumably has all
@@ -4228,7 +4228,7 @@ static char kNameSpaceSeparator[] = ":";
 
     nsAutoString prefix;
     nsAutoString name(aTagName);
-    PRInt32 nsoffset = name.Find(kNameSpaceSeparator);
+    PRInt32 nsoffset = name.FindChar(kNameSpaceSeparator);
     if (-1 != nsoffset) {
         name.Left(prefix, nsoffset);
         name.Cut(0, nsoffset+1);
