@@ -299,6 +299,9 @@ JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp);
 JS_EXPORT_API(JSBool)
 JSJ_ConvertJSValueToJavaObject(JSContext *cx, jsval js_val, jobject *vp);
 
+JS_EXPORT_API(JSBool)
+JSJ_IsJSCallApplet();
+
 JS_END_EXTERN_C
 
 #endif  /* _JSJAVA_H */

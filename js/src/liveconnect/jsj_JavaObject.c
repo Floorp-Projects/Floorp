@@ -654,6 +654,10 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     java_obj = java_wrapper->java_obj;
     field_val = method_val = JSVAL_VOID;
 
+    if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
+        JSIsCallingApplet = JS_TRUE;
+    }
+
     /* If a field member, get the value of the field */
     if (member_descriptor->field) {
         success = jsj_GetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, &field_val);
@@ -777,6 +781,11 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
     java_obj = java_wrapper->java_obj;
+
+    if (jaApplet && (*jEnv)->IsInstanceOf(jEnv, java_obj, jaApplet)) {
+        JSIsCallingApplet = JS_TRUE;
+    }
+
     result = jsj_SetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, *vp);
     jsj_ExitJava(jsj_env);
     return result;

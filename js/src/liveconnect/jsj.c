@@ -55,6 +55,8 @@
 #    include "prmon.h"
 #endif
 
+JSBool JSIsCallingApplet = JS_FALSE;
+
 /*
  * At certain times during initialization, there may be no JavaScript context
  * available to direct error reports to, in which case the error messages
@@ -103,6 +105,7 @@ jclass jlClass;                         /* java.lang.Class */
 jclass jlBoolean;                       /* java.lang.Boolean */
 jclass jlDouble;                        /* java.lang.Double */
 jclass jlString;                        /* java.lang.String */
+jclass jaApplet;                        /* java.applet.Applet */
 jclass njJSObject;                      /* netscape.javascript.JSObject */
 jclass njJSException;                   /* netscape.javascript.JSException */
 jclass njJSUtil;                        /* netscape.javascript.JSUtil */
@@ -260,6 +263,8 @@ init_java_VM_reflection(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
     LOAD_CLASS(java/lang/Double,                jlDouble);
     LOAD_CLASS(java/lang/String,                jlString);
     LOAD_CLASS(java/lang/Void,                  jlVoid);
+
+    LOAD_CLASS(java/applet/Applet,              jaApplet);
 
     LOAD_METHOD(java.lang.Class,            getMethods,         "()[Ljava/lang/reflect/Method;",jlClass);
     LOAD_METHOD(java.lang.Class,            getConstructors,    "()[Ljava/lang/reflect/Constructor;",jlClass);
@@ -592,6 +597,7 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
             UNLOAD_CLASS(java/lang/Double,                jlDouble);
             UNLOAD_CLASS(java/lang/String,                jlString);
             UNLOAD_CLASS(java/lang/Void,                  jlVoid);
+            UNLOAD_CLASS(java/applet/Applet,              jaApplet);
             UNLOAD_CLASS(netscape/javascript/JSObject,    njJSObject);
             UNLOAD_CLASS(netscape/javascript/JSException, njJSException);
             UNLOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
@@ -868,4 +874,11 @@ JSJ_ConvertJSValueToJavaObject(JSContext *cx, jsval v, jobject *vp)
         return JS_TRUE;
     }
     return JS_FALSE;
+}
+
+
+JS_EXPORT_API(JSBool)
+JSJ_IsJSCallApplet()
+{
+    return JSIsCallingApplet;
 }
