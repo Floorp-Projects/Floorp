@@ -234,7 +234,7 @@ foreach $revision (@revisions)
 
     $output .= $anchor;
 
-    $output .= "'>$revision</A>"
+    $output .= ">$revision</A>"
         .'&nbsp' x ($max_rev_length - length($revision)).'</TD>';
 
     $output .= "<TD>".$author
