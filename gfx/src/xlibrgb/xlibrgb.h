@@ -35,6 +35,18 @@
  * license information at http://www.mozilla.org/MPL/
  */
 
+/* This code is copyright the following authors:
+ * Raph Levien          <raph@acm.org>
+ * Manish Singh         <manish@gtk.org>
+ * Tim Janik            <timj@gtk.org>
+ * Peter Mattis         <petm@xcf.berkeley.edu>
+ * Spencer Kimball      <spencer@xcf.berkeley.edu>
+ * Josh MacDonald       <jmacd@xcf.berkeley.edu>
+ * Christopher Blizzard <blizzard@redhat.com>
+ * Owen Taylor          <otaylor@redhat.com>
+ * Shawn T. Amundson    <amundson@gtk.org>
+*/
+
 
 #ifndef __XLIB_RGB_H__
 #define __XLIB_RGB_H__
