@@ -73,32 +73,32 @@ public:
 
     NS_COM void Empty();               // frees all segments
 
-    NS_COM PRUint32 GetSegmentCount() {
+    inline PRUint32 GetSegmentCount() {
         if (mFirstSegmentIndex <= mLastSegmentIndex)
             return mLastSegmentIndex - mFirstSegmentIndex;
         else 
             return mSegmentArrayCount + mLastSegmentIndex - mFirstSegmentIndex;
     }
 
-    NS_COM PRUint32 GetSegmentSize() { return mSegmentSize; }
-    PRUint32 GetMaxSize() { return mMaxSize; }
-    PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
+    inline PRUint32 GetSegmentSize() { return mSegmentSize; }
+    inline PRUint32 GetMaxSize() { return mMaxSize; }
+    inline PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
 
-    NS_COM char* GetSegment(PRUint32 indx) {
+    inline char* GetSegment(PRUint32 indx) {
         NS_ASSERTION(indx < GetSegmentCount(), "index out of bounds");
         PRInt32 i = ModSegArraySize(mFirstSegmentIndex + (PRInt32)indx);
         return mSegmentArray[i];
     }
 
 protected:
-    PRInt32 ModSegArraySize(PRInt32 n) {
+    inline PRInt32 ModSegArraySize(PRInt32 n) {
         PRUint32 result = n & (mSegmentArrayCount - 1);
         NS_ASSERTION(result == n % mSegmentArrayCount,
                      "non-power-of-2 mSegmentArrayCount");
         return result;
     }
 
-   PRBool IsFull() {
+   inline PRBool IsFull() {
         return ModSegArraySize(mLastSegmentIndex + 1) == mFirstSegmentIndex;
     }
 
