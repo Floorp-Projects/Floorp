@@ -1214,7 +1214,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
 {
   // XXX: aText is currently unused!
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE) 
+  if (disp->mVisible) 
   {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
@@ -1975,20 +1975,13 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsGfxTextControlFrame::Reflow: aMaxSize=%d,%d",
                   aReflowState.availableWidth, aReflowState.availableHeight));
+
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
-
-
-  nsresult skiprv = SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
-                                     aDesiredSize, aReflowState, aStatus);
-  if (NS_SUCCEEDED(skiprv)) {
-    return skiprv;
-  }
-
 
   // Figure out if we are doing Quirks or Standard
   nsCompatibility mode;
@@ -2050,8 +2043,6 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     }
     aStatus = NS_FRAME_COMPLETE;
   }
-
-  SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
 
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
@@ -2243,7 +2234,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 // This code below will soon be changed over for NSPR logging
 // It is used to figure out what font and font size the textarea or text field
 // are and compares it to the know NavQuirks size
-#ifdef DEBUG_rodsXXX
+#ifdef DEBUG_rods
 //#ifdef NS_DEBUG
   {
     nsFont font(aPresContext->GetDefaultFixedFontDeprecated());

@@ -24,7 +24,6 @@
 #include "nsIButton.h"
 #include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
-#include "nsFormControlFrame.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
@@ -326,15 +325,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
-#if 0
-  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
-                                                         aDesiredSize, aReflowState, aStatus);
-
-  if (NS_SUCCEEDED(skiprv)) {
-    return skiprv;
-  }
-#endif
-
   if ((kSuggestedNotSet != mSuggestedWidth) || 
       (kSuggestedNotSet != mSuggestedHeight)) {
     nsHTMLReflowState suggestedReflowState(aReflowState);
@@ -368,10 +358,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
   COMPARE_QUIRK_SIZE("nsGfxButtonControlFrame", 84, 24) // with the text "Press Me" in it
 #endif
   aStatus = NS_FRAME_COMPLETE;
-
-#if 0
-  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-#endif
 
   return rv;
 }

@@ -245,10 +245,6 @@ protected:
   // XXX temprary only until full system mouse capture works
   PRBool mIsScrollbarVisible;
 
-  //Resize Reflow OpitmizationSize;
-  nsSize       mCacheSize;
-  nsSize       mCachedMaxElementSize;
-
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }

@@ -51,7 +51,6 @@
 class nsIFrame;
 class nsIDOMSelection;
 
-#define OPTIMIZE_RESIZE_RELOW
 
 class nsGfxTextControlFrame;
 
@@ -656,6 +655,7 @@ protected:
 private:  // frames are not refcounted
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
+
 
 };
 

@@ -155,10 +155,6 @@ protected:
   nsRect mTranslatedRect;
   PRBool mDidInit;
   nsButtonFrameRenderer mRenderer;
-
-  //Resize Reflow OpitmizationSize;
-  nsSize                mCacheSize;
-  nsSize                mCachedMaxElementSize;
 };
 
 #endif

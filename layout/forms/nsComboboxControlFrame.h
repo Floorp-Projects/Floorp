@@ -23,6 +23,8 @@
 #ifndef nsComboboxControlFrame_h___
 #define nsComboboxControlFrame_h___
 
+#define OPTIMIZE_RESIZE_RELOW
+
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
@@ -209,9 +211,11 @@ protected:
   nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
   PRBool                mIgnoreFocus;             // Tells the combo to ignore all focus notifications
 
-  //Resize Reflow OpitmizationSize;
+// XXX Temporary Fix for too many resize reflows
+#ifdef OPTIMIZE_RESIZE_RELOW
   nsSize                mCacheSize;
   nsSize                mCachedMaxElementSize;
+#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
