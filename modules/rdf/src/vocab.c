@@ -271,11 +271,14 @@ createNavCenterVocab () {
   gNavCenter->cookiePath  = newResource("cookiePath", 0 /* XXX */);
   gNavCenter->cookieSecure = newResource("cookieSecure", 0 /* XXX */);
   gNavCenter->cookieExpires = newResource("cookieExpiration", 0 /* XXX */);
-  gNavCenter->from = newResource("mail:From", 0 );
+  gNavCenter->from = newResource("mail:From", 0 );  
   gNavCenter->to   = newResource("mail:To", 0 );
   gNavCenter->subject = newResource("mail:Subject", 0 /* XXX */);
   gNavCenter->date = newResource("mail:Date", 0 /* XXX */);
-
+  remoteStoreAdd(gRemoteStore, gNavCenter->from, gCoreVocab->RDF_name, copyString("from"), RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gRemoteStore, gNavCenter->to, gCoreVocab->RDF_name, copyString("to"), RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gRemoteStore, gNavCenter->subject, gCoreVocab->RDF_name, copyString("subject"), RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gRemoteStore, gNavCenter->date, gCoreVocab->RDF_name, copyString("date"), RDF_STRING_TYPE, 1);
 #endif /* MOZILLA_CLIENT */
 }
 

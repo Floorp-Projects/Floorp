@@ -519,7 +519,7 @@ PR_PUBLIC_API(HT_DropAction)   HT_DropURLAtPos(HT_Resource dropTarget, char* url
 					       PRBool before); 
 PR_PUBLIC_API(HT_DropAction)   HT_DropURLAndTitleAtPos(HT_Resource dropTarget,
 							char* url, char *title, PRBool before);
-
+PR_PUBLIC_API(PRBool) HT_IsDropTarget(HT_Resource dropTarget);
 
 /*-----------------------------------------------------------------------*/
 /*                    Editing                                            */

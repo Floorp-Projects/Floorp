@@ -1274,7 +1274,8 @@ HT_PaneFromURL(char *url, HT_Notification n, PRBool autoFlush, int32 param_count
             column->tokenType = HT_COLUMN_STRING;
             *columnList = column;
             columnList = &(column->next);
-            column->name = copyString(param_value);
+            column->name = (strchr(param_value, ':') ? copyString(strchr(param_value, ':')+1) :
+                            copyString(param_value));
             HT_SetColumnVisibility(view, r,  HT_COLUMN_STRING, 0);
           } 
           pn++;
@@ -3655,7 +3656,7 @@ htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd,
 			case	HT_CMD_DELETE_FILE:
 			if (node == NULL)			return(false);
 			type = resourceType(node->parent->node);
-			if (type != LFS_RT && type != ES_RT && type != FTP_RT)
+			if (type != LFS_RT && type != ES_RT && type != FTP_RT && type != PM_RT)
 								return(false);
 			if (HT_IsContainer(node))		return(false);
 			break;
@@ -7849,7 +7850,11 @@ HT_MakeNewContainer(HT_Resource parent, char* name)
 	return (hnc);
 }
 
-
+PR_PUBLIC_API(PRBool) 
+HT_IsDropTarget(HT_Resource dropTarget) {
+  return (dropTarget && (HT_IsContainer(dropTarget) || (resourceType(dropTarget->node) == PMF_RT)));
+}
+       
 
 PR_PUBLIC_API(HT_DropAction)
 HT_CanDropHTROn(HT_Resource dropTarget, HT_Resource obj)
@@ -8746,7 +8751,9 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 	targetType  = resourceType(dropTarget->node);
 	objType     = resourceType(dropObject->node);
 
-	if (!containerp(dropTarget->node))
+	FE_Trace(resourceID(dropTarget->node));
+	FE_Trace("\n");
+	if (!containerp(dropTarget->node) && (targetType != PMF_RT))
 	{
 		return dropOnSmartNode(dropTarget, dropObject, justAction);
 	}
@@ -8768,6 +8775,14 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 		return(DROP_NOT_ALLOWED);
 		break;
 
+#ifdef SMART_MAIL
+                case PMF_RT:
+                 if (objType != PM_RT) return(DROP_NOT_ALLOWED);
+                 if (justAction) return (COPY_MOVE_CONTENT);
+                 MoveMessage(resourceID(dropTarget->node), resourceID(dropObject->parent->node), 
+                             dropObject->node->pdata);
+                 break; 
+#endif
 		case LFS_RT:
 #ifdef XP_WIN32
 		if (objType == LFS_RT)

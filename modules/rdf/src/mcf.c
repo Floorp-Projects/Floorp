@@ -1129,7 +1129,7 @@ sendNotifications2 (RDFT r, RDF_EventType opType, RDF_Resource u, RDF_Resource s
 {
   RDFL rl = r->rdf;
 
-  if ((opType == RDF_ASSERT_NOTIFY) &&
+  if ((opType == RDF_ASSERT_NOTIFY) && gLocalStore &&
       (nlocalStoreHasAssertion(gLocalStore, u, s, v, type, !tv))) {
 	  return;
   }

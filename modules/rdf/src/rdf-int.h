@@ -79,7 +79,7 @@ XP_BEGIN_PROTOS
 #define	ATALKVIRTUAL_RT 13
 #define COOKIE_RT       14
 #define JSEC_RT 15
-
+#define PMF_RT  16
 
 #define CHECK_VAR(var, return_value) {if (var == NULL) {XP_ASSERT(var); return return_value;}}
 #define CHECK_VAR1(var) {if (var == NULL) {XP_ASSERT(var); return;}}
@@ -397,6 +397,7 @@ PRBool remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* 
 PRBool remoteStoreHasAssertionInt (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 PRBool  nlocalStoreAddChildAt(RDFT mcf, RDF_Resource obj, RDF_Resource ref, RDF_Resource _new, 
 		      PRBool beforep);
+RDFT getTranslator (char* url);
 
 RDFT MakeCookieStore (char* url);
 
