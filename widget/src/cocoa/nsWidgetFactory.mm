@@ -105,7 +105,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #ifdef ACCESSIBILITY
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
 #endif
-s
 
 static nsModuleComponentInfo components[] =
 {
