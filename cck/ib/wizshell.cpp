@@ -38,7 +38,7 @@ void CreateRshell (void)
 //	FILE* rshell = theApp.OpenAFile(CDdir +"rshell.ini", "w");
 
 	ofstream rshell(Rsh);
-	CString captionValue = "Netscape 7.0" ;
+	CString captionValue = GetGlobal("BrowserName");
 	CString netscapeValue = "Netscape by ";
 	CString fvalue1=GetGlobal("ShellTitleText");
 	CString fvalue2=GetGlobal("ShellBgBitmap");
