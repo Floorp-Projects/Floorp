@@ -86,7 +86,7 @@ nsNNTPArticleList::Initialize(const nsINNTPHost * newsHost,
 #endif
 	m_idsOnServer.set = nsNNTPArticleSet::Create();
 #ifdef HAVE_PANES
-	MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
+	nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(host, groupName, PR_FALSE);
 	if (newsFolder)
 	{
 		char *url = newsFolder->BuildUrl(NULL, MSG_MESSAGEKEYNONE);

@@ -402,7 +402,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsINNTPHost* host,
 			if (!m_getOldMessages && !m_promptedAlready && notifyMaxExceededOn)
 			{
 #ifdef HAVE_PANES
-				MSG_FolderInfoNews *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
+				nsINNTPNewsgroup *newsFolder = m_pane->GetMaster()->FindNewsFolder(m_host, m_groupName, PR_FALSE);
 				PRBool result = FE_NewsDownloadPrompt(m_pane->GetContext(),
 													*last - *first + 1,
 													&m_downloadAll, newsFolder);
