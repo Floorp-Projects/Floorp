@@ -3702,23 +3702,29 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       else if (nsnull != data.mContentID) {
         result = PR_TRUE;
-        while (nsnull != IDList) {
-          PRBool dontMatch;
-          if (isCaseSensitive) {
-            dontMatch = (IDList->mAtom != data.mContentID);
-          }
-          else {
-            nsAutoString s1;
-            nsAutoString s2;
-            IDList->mAtom->ToString(s1);
-            data.mContentID->ToString(s2);
-            dontMatch = !s1.EqualsIgnoreCase(s2);
-          }
-          if (localTrue == dontMatch) {
-            result = PR_FALSE;
-            break;
-          }
-          IDList = IDList->mNext;
+        if (isCaseSensitive) {
+          do {
+            if (localTrue == (IDList->mAtom != data.mContentID)) {
+              result = PR_FALSE;
+              break;
+            }
+            IDList = IDList->mNext;
+          } while (IDList);
+        } else {
+          const PRUnichar* id1Str;
+          data.mContentID->GetUnicode(&id1Str);
+          nsDependentString id1(id1Str);
+          do {
+            const PRUnichar* id2Str;
+            IDList->mAtom->GetUnicode(&id2Str);
+            nsDependentString id2(id2Str);
+            if (localTrue ==
+                (Compare(id1, id2, nsCaseInsensitiveStringComparator()) != 0)) {
+              result = PR_FALSE;
+              break;
+            }
+            IDList = IDList->mNext;
+          } while (IDList);
         }
       }
       
@@ -3859,17 +3865,16 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   if (SelectorMatches(*data, selector, PR_TRUE, 0)) {
     selector = selector->mNext;
     if (SelectorMatchesTree(*data, selector)) {
-      nsIStyleRule* iRule;
-      if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
-        data->mRuleWalker->Forward(iRule);
-        NS_RELEASE(iRule);
-        /*
-        iRule = aRule->GetImportantRule();
-        if (nsnull != iRule) {
-          data->mRuleWalker->Forward(iRule); // XXXdwh Deal with !important rules!
-          NS_RELEASE(iRule);
-        }*/
-      }
+      // for performance, require that every implementation of
+      // nsICSSStyleRule return the same pointer for nsIStyleRule (why
+      // would anything multiply inherit nsIStyleRule anyway?)
+#ifdef DEBUG
+      nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
+      NS_ASSERTION(NS_STATIC_CAST(nsIStyleRule*, aRule) == iRule.get(),
+                   "Please fix QI so this performance optimization is valid");
+#endif
+      data->mRuleWalker->Forward(NS_STATIC_CAST(nsIStyleRule*, aRule));
+      // nsStyleSet will deal with the !important rule
     }
   }
 }
@@ -3951,11 +3956,16 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
       return; // remaining selectors didn't match
     }
 
-    nsIStyleRule* iRule;
-    if (NS_OK == aRule->QueryInterface(NS_GET_IID(nsIStyleRule), (void**)&iRule)) {
-      data->mRuleWalker->Forward(iRule);
-      NS_RELEASE(iRule);
-    }
+    // for performance, require that every implementation of
+    // nsICSSStyleRule return the same pointer for nsIStyleRule (why
+    // would anything multiply inherit nsIStyleRule anyway?)
+#ifdef DEBUG
+    nsCOMPtr<nsIStyleRule> iRule = do_QueryInterface(aRule);
+    NS_ASSERTION(NS_STATIC_CAST(nsIStyleRule*, aRule) == iRule.get(),
+                 "Please fix QI so this performance optimization is valid");
+#endif
+    data->mRuleWalker->Forward(NS_STATIC_CAST(nsIStyleRule*, aRule));
+    // nsStyleSet will deal with the !important rule
   }
 }
 
