@@ -559,11 +559,11 @@ sub BuildCommonProjects()
 
 	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
-	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"brprof$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 0);
-    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "chrome$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"brprof$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "chrome$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
     
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
-#	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 0);
+#	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
 }
 
 
@@ -622,9 +622,6 @@ sub MakeResouceAliases()
 	my($samples_dir) = "$resource_dir" . "samples:";
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
-
-	my($chrome_dir) = "$resource_dir" . "chrome:";
-	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:chrome:",			"$chrome_dir");
 	
 	my($toolbar_dir) = "$resource_dir" . "toolbar:";
 	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:toolbar:",			"$toolbar_dir");
@@ -639,6 +636,9 @@ sub MakeResouceAliases()
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
+
+	my($chrome_dir) = "$dist_dir" . "chrome:";
+	BuildFolderResourceAliases(":mozilla:rdf:chrome:build:",			"$chrome_dir");
 }
 
 
