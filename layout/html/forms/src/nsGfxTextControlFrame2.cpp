@@ -1375,7 +1375,12 @@ nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
     // Tell the content the final value
     nsCOMPtr<nsITextControlElement> control = do_QueryInterface(mContent);
     if (control) {
-      control->SetValueInternal(value);
+      // This really shouldn't be commented out, this is a workaround
+      // to fix a problem with input's losing their values when
+      // demoting a container
+      // (HTMLContentSink::DemoteContainer()). This is a workaround
+      // for blocker bug 108175.
+//      control->SetValueInternal(value);
     }
     mEditor->PreDestroy();
   }
