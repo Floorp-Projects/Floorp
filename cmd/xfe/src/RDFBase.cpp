@@ -79,7 +79,7 @@ XFE_RDFBase::newPaneFromURL(MWContext *context,
 {
     startPaneCreate();
 
-    _ht_pane = HT_PaneFromURL(context, url, _ht_ns, 0,
+    _ht_pane = HT_PaneFromURL(context, url, NULL/*template_url*/ ,  _ht_ns, 0,
                               param_count, param_names, param_values);
 
     finishPaneCreate();
@@ -153,15 +153,16 @@ XFE_RDFBase::deletePane()
 {
     if (_ht_ns)
     {
-        delete _ht_ns;
-        _ht_ns = NULL;
-
         XP_ASSERT(_ht_pane);
 
         if (_ht_pane)
         {
+            _ht_ns->data = NULL;
             HT_DeletePane(_ht_pane);
         }
+
+        delete _ht_ns;
+        _ht_ns = NULL;
     }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -278,6 +279,13 @@ XFE_RDFBase::notify_cb(HT_Notification ns, HT_Resource n,
                        void * /*token*/, uint32 /*tokenType*/)
 {
   XFE_RDFBase * xfe_rdfpane_obj = (XFE_RDFBase *)ns->data;
+
+  // Check if we are deleting the pane
+  if (xfe_rdfpane_obj == NULL)
+  {  
+      // Ignore the events if we are. */
+      return;
+  }
 
   // HT is so great.  It start call us with events before we have
   // even returned from the pane creation function.  Thus, _ht_pane,
