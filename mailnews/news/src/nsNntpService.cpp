@@ -1289,7 +1289,7 @@ nsNntpService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
 NS_IMETHODIMP nsNntpService::GetProtocolFlags(PRUint32 *aUritype)
 {
     NS_ENSURE_ARG_POINTER(aUritype);
-    *aUritype = URI_NORELATIVE;
+    *aUritype = URI_NORELATIVE | ALLOWS_PROXY;
     return NS_OK;
 }
 

@@ -60,6 +60,7 @@
 class nsIPrompt;
 class nsIMsgMailNewsUrl;
 class nsMsgFilePostHelper;
+class nsIProxyInfo;
 
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
@@ -107,6 +108,7 @@ protected:
   virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName,
                                              PRInt32 aGetPort,
                                              const char *connectionType,
+                                             nsIProxyInfo *aProxyInfo,
                                              nsIInterfaceRequestor* callbacks);
   // helper routine
   nsresult GetFileFromURL(nsIURI * aURL, nsIFile **aResult);

@@ -561,10 +561,14 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     if (server)
       server->GetRealHostName(getter_Copies(hostName));
 
+    nsCOMPtr<nsIProxyInfo> proxyInfo;
+    rv = NS_ExamineForProxy("nntp", hostName.get(), port, getter_AddRefs(proxyInfo));
+    if (NS_FAILED(rv)) proxyInfo = nsnull;
+
     if (isSecure)
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", ir);
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", proxyInfo, ir);
     else
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, ir);
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, proxyInfo, ir);
 
 	NS_ENSURE_SUCCESS(rv,rv);
 	m_nextState = NNTP_LOGIN_RESPONSE;

@@ -68,6 +68,7 @@
 #include "nsMsgUtils.h"
 #include "nsIPipe.h"
 #include "nsMsgSimulateError.h"
+#include "nsNetUtil.h"
 
 #include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
@@ -1777,7 +1778,12 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(m_runningURL));
   if (smtpUrl)
       smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull, callbacks);
+
+  nsCOMPtr<nsIProxyInfo> proxyInfo;
+  rv = NS_ExamineForProxy("mailto", hostCStr.get(), aPort, getter_AddRefs(proxyInfo));
+  if (NS_FAILED(rv)) proxyInfo = nsnull;
+
+  rv = OpenNetworkSocketWithInfo(hostCStr.get(), aPort, nsnull, proxyInfo, callbacks);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);

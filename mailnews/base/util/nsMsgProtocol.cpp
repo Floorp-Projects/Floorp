@@ -56,6 +56,8 @@
 #include "nsIPrompt.h"
 #include "prprf.h"
 #include "nsIStringBundle.h"
+#include "nsIProtocolProxyService.h"
+#include "nsIProxyInfo.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -114,6 +116,7 @@ nsresult
 nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
                                          PRInt32 aGetPort,
                                          const char *connectionType,
+                                         nsIProxyInfo *aProxyInfo,
                                          nsIInterfaceRequestor* callbacks)
 {
   NS_ENSURE_ARG(aHostName);
@@ -127,7 +130,7 @@ nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
   m_startPosition = 0;
 
   rv = socketService->CreateTransportOfType(connectionType, aHostName,
-                                            aGetPort, nsnull, 0, 0,
+                                            aGetPort, aProxyInfo, 0, 0,
                                             getter_AddRefs(m_transport));
   if (NS_FAILED(rv)) return rv;
 
@@ -149,7 +152,46 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
   aURL->GetPort(&port);
   aURL->GetHost(getter_Copies(hostName));
 
-  return OpenNetworkSocketWithInfo(hostName, port, connectionType, callbacks);
+  nsCOMPtr<nsIProxyInfo> proxyInfo;
+
+  nsCOMPtr<nsIProtocolProxyService> pps =
+      do_GetService("@mozilla.org/network/protocol-proxy-service;1");
+
+  NS_ASSERTION(pps, "Couldn't get the protocol proxy service!");
+
+  if (pps) {
+      nsresult rv = NS_OK;
+
+      // Yes, this is ugly. But necko needs to grap a protocol handler
+      // to ask for flags, and smtp isn't registered as a handler, only
+      // mailto.
+      // Note that I cannot just clone, and call SetSpec, since Clone on
+      // nsSmtpUrl calls nsStandardUrl's clone method, which fails
+      // because smtp isn't a registered protocol.
+      // So we cheat. Whilst creating a uri manually is valid here,
+      // do _NOT_ copy this to use in your own code - bbaetz
+      nsCOMPtr<nsIURI> proxyUri = aURL;
+      PRBool isSMTP = PR_FALSE;
+      if (NS_SUCCEEDED(aURL->SchemeIs("smtp", &isSMTP)) && isSMTP) {
+          nsXPIDLCString spec;
+          rv = aURL->GetSpec(getter_Copies(spec));
+          if (NS_SUCCEEDED(rv)) {
+              static NS_DEFINE_CID(kSTDURLCID, NS_STANDARDURL_CID);    
+              proxyUri = do_CreateInstance(kSTDURLCID, &rv);
+          }
+          if (NS_SUCCEEDED(rv))
+              rv = proxyUri->SetSpec(spec.get());
+          if (NS_SUCCEEDED(rv))
+              rv = proxyUri->SetScheme("mailto");
+      }
+      if (NS_SUCCEEDED(rv))
+          rv = pps->ExamineForProxy(proxyUri, getter_AddRefs(proxyInfo));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully call ExamineForProxy");
+      if (NS_FAILED(rv)) proxyInfo = nsnull;
+  }
+
+  return OpenNetworkSocketWithInfo(hostName, port, connectionType,
+                                   proxyInfo, callbacks);
 }
 
 nsresult nsMsgProtocol::GetFileFromURL(nsIURI * aURL, nsIFile **aResult)

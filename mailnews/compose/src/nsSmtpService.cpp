@@ -297,7 +297,7 @@ nsSmtpService::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
 
 NS_IMETHODIMP nsSmtpService::GetProtocolFlags(PRUint32 *result)
 {
-    *result = URI_NORELATIVE;
+    *result = URI_NORELATIVE | ALLOWS_PROXY;
     return NS_OK; 	
 }
 

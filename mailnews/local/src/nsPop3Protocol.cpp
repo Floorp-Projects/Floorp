@@ -469,10 +469,14 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     if (server)
       server->GetRealHostName(getter_Copies(hostName));
 
+    nsCOMPtr<nsIProxyInfo> proxyInfo;
+    rv = NS_ExamineForProxy("pop", hostName.get(), port, getter_AddRefs(proxyInfo));
+    if (NS_FAILED(rv)) proxyInfo = nsnull;
+
     if (isSecure)
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", ir);
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, "ssl-forcehandshake", proxyInfo, ir);
     else
-      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, ir);
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, proxyInfo, ir);
 
 	if(NS_FAILED(rv))
 		return rv;

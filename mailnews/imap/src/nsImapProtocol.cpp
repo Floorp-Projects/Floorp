@@ -92,6 +92,7 @@ PRLogModuleInfo *IMAP;
 #include "nsImapUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIStreamConverterService.h"
+#include "nsIProxyInfo.h"
 
 #if 0
 #include "nsIHashAlgorithm.h"
@@ -630,10 +631,14 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
           connectionType = "ssl-forcehandshake";
 
+        nsCOMPtr<nsIProxyInfo> proxyInfo;
+        rv = NS_ExamineForProxy("imap", hostName.get(), port, getter_AddRefs(proxyInfo));
+        if (NS_FAILED(rv)) proxyInfo = nsnull;
+
         if (m_overRideUrlConnectionInfo)
-            rv = socketService->CreateTransportOfType(connectionType, m_logonHost.get(), m_logonPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+            rv = socketService->CreateTransportOfType(connectionType, m_logonHost.get(), m_logonPort, proxyInfo, 0, 0, getter_AddRefs(m_channel));
         else
-            rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
+            rv = socketService->CreateTransportOfType(connectionType, hostName, port, proxyInfo, 0, 0, getter_AddRefs(m_channel));
         
         // Ensure that the socket can get the notification callbacks
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
