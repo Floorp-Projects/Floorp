@@ -80,7 +80,6 @@
 	#include "CStringListToolTipPane.h"	
 	#include "CSaveProgress.h"	
 	#include "CPatternProgressBar.h"
-	#include "CScrollerWithArrows.h"
 	#include "CTargetFramer.h"
 	
 #ifdef MOZ_MAIL_NEWS
@@ -103,14 +102,12 @@
 	#include "PopupBox.h"
 	#include "CPersonalToolbarTable.h"
 	#include "CNavCenterWindow.h"
-	#include "CNavCenterSelectorPane.h"
 	#include "CNavCenterContextMenuAtt.h"
 	#include "CNavCenterTitle.h"
 	#include "CInlineEditField.h"
 
 	#include "CConfigActiveScroller.h"
 	#include "CTSMEditField.h"
-//	#include "VEditField.h"
 //	#include "CSimpleTextView.h"
 	
 	#include "CDownloadProgressWindow.h"
@@ -149,7 +146,6 @@
 	
 	#include "CEditorWindow.h"
 
-//	#include "mhistory.h"
 	#include "CContextMenuAttachment.h"
 	
 	#include "CHyperTreeFlexTable.h"
@@ -194,8 +190,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LTabGroup);
 	RegisterClass_(LActiveScroller);
 
-	//LRegistrar::RegisterClass('prto', (ClassCreatorFunc);LPrintout::CreateOldPrintoutStream);
-
 #ifdef PP_NewClasses
 	#include <LCicnButton.h>
 	#include <LOffscreenView.h>
@@ -239,8 +233,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CMenuTable);
 	RegisterClass_(CPaneEnabler);
 	RegisterClass_(CSlaveEnabler);
-	RegisterClass_(CScrollerWithArrows);
-	RegisterClass_(CScrollArrowControl);
 	RegisterClass_(CTargetFramer);
 	
 #ifdef MOZ_MAIL_NEWS
@@ -280,7 +272,6 @@ void RegisterAllBrowserClasses(void)
 	
 	RegisterClass_(CConfigActiveScroller);
 	RegisterClass_(CTSMEditField);
-//	REGISTERV(EditField);
 	
 	RegisterClass_(CDownloadProgressWindow);
 	RegisterClass_(CBrowserWindow);
@@ -300,8 +291,8 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CMiniSecurityButton);
 	
 	RegisterClass_(CHyperTreeFlexTable);
-	RegisterClass_(CNavCenterSelectorPane);
 	RegisterClass_(CRDFCoordinator);
+	RegisterClass_(CDockedRDFCoordinator);
 	RegisterClass_(CHyperTreeHeader);
 	RegisterClass_(CInlineEditField);
 
@@ -310,7 +301,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CPluginView);
 	RegisterClass_(LDividedView);
 	RegisterClass_(CNavCenterContextMenuAttachment);
-	RegisterClass_(CNavCenterSelectorContextMenuAttachment);
 	RegisterClass_(CNavCenterTitle);
 	
 #ifdef EDITOR
