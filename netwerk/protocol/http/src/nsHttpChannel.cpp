@@ -993,6 +993,10 @@ nsHttpChannel::CloseCacheEntry(nsresult status)
             mCachedResponseHead = 0;
         }
 
+        // make sure the cache transport isn't holding a reference back to us
+        if (mCacheTransport)
+            mCacheTransport->SetNotificationCallbacks(nsnull, 0);
+
         mCacheReadRequest = 0;
         mCacheTransport = 0;
         mCacheEntry = 0;
