@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #include <math.h>
@@ -78,7 +79,7 @@ float nsStyleUtil::GetScalingFactor(PRInt32 aScaler)
 
 static PRBool gNavAlgorithmPref = PR_FALSE;
 
-static int NavAlgorithmPrefChangedCallback(const char * name, void * closure)
+static int PR_CALLBACK NavAlgorithmPrefChangedCallback(const char * name, void * closure)
 {
 	nsresult rv;
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);

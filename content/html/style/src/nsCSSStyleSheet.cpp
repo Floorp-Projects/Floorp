@@ -19,13 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
- * 
- * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
- * described herein are Copyright (c) International Business Machines Corporation, 2000.
- * Modifications to Mozilla code or documentation identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
+ *   IBM Corp.
  */
 
 #include "nsICSSStyleSheet.h"
@@ -3484,7 +3478,7 @@ PRBool PR_CALLBACK StateSelectorsSizeEnumFunc( void *aSelector, void *aData )
 }
 
 static 
-PRBool PR_CALLBACK WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
+PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
 {
   nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
   CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;

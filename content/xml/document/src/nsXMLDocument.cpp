@@ -101,7 +101,7 @@ static const char* kLoadAsData = "loadAsData";
 // ==================================================================
 
 
-static int
+static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
