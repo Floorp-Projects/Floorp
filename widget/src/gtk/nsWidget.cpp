@@ -750,13 +750,13 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
   }
 #endif // NS_DEBUG
 
+  mUpdateArea->SetTo(0, 0, mBounds.width, mBounds.height);
+
   if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
   } else {
     ::gtk_widget_queue_draw(mWidget);
   }
-
-  mUpdateArea->SetTo(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
 
   return NS_OK;
 }
@@ -786,7 +786,6 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   }
 #endif // NS_DEBUG
 
-#if 0
   if (aIsSynchronous)
   {
     GdkRectangle nRect;
@@ -796,15 +795,11 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   }
   else
   {
-#endif
-
     gtk_widget_queue_draw_area(mWidget,
                                aRect.x, aRect.y,
                                aRect.width, aRect.height);
-
-#if 0
   }
-#endif
+
   return NS_OK;
 }
 
@@ -812,6 +807,12 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
   nsRegionRectSet *regionRectSet = nsnull;
+
+  if (!GTK_IS_WIDGET(mWidget))
+    return NS_ERROR_FAILURE;
+
+  if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
+    return NS_ERROR_FAILURE;
 
   mUpdateArea->Union(*aRegion);
 
@@ -831,9 +832,34 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
   {
     nsRegionRect *r = &(regionRectSet->mRects[i]);
 
-    gtk_widget_queue_draw_area(mWidget,
-                               r->x, r->y,
-                               r->width, r->height);
+
+#ifdef NS_DEBUG
+    if (CAPS_LOCK_IS_ON)
+    {
+      nsRect rect(r->x, r->y, r->width, r->height);
+      debug_DumpInvalidate(stdout,
+                           this,
+                           &rect,
+                           aIsSynchronous,
+                           debug_GetName(mWidget),
+                           debug_GetRenderXID(mWidget));
+    }
+#endif // NS_DEBUG
+
+
+    if (aIsSynchronous)
+    {
+      GdkRectangle nRect;
+      nRect.x = r->x;
+      nRect.y = r->y;
+      nRect.width = r->width;
+      nRect.height = r->height;
+      gtk_widget_draw(mWidget, &nRect);
+    } else {
+      gtk_widget_queue_draw_area(mWidget,
+                                 r->x, r->y,
+                                 r->width, r->height);
+    }
   }
 
   // drop the const.. whats the right thing to do here?
@@ -847,23 +873,17 @@ NS_IMETHODIMP nsWidget::Update(void)
 {
   if (!mWidget)
     return NS_OK;
-#if 0
-  if (mUpdateArea->width && mUpdateArea->height) {
-    if (!mIsDestroying) {
-      Invalidate(mUpdateArea, PR_TRUE);
 
-      mUpdateArea.SetRect(0, 0, 0, 0);
-      return NS_OK;
-    }
-    else {
-      return NS_ERROR_FAILURE;
-    }
-  }
-  else {
-    //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
-  }
-#endif
-  return NS_OK;
+  if (!GTK_IS_WIDGET(mWidget))
+    return NS_ERROR_FAILURE;
+
+  if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
+    return NS_ERROR_FAILURE;
+
+  //  printf("nsWidget::Update()\n");
+
+  // this will Union() again, but so what?
+  return InvalidateRegion(mUpdateArea, PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
