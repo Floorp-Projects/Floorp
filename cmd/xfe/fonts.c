@@ -435,6 +435,16 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_CNS11643_1110, FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_UCS2_SWAP    , FE_FONT_TYPE_X16   , FE_FONT_INFO_X16      },
     { CS_IMAP4_UTF7   , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_850       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_852       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_855       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_857       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_862       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_864       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_866       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_874       , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_1257      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_CP_1258      , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
 };
 
 static unsigned char *fe_LocaleCharSets = NULL;
