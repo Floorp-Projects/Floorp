@@ -47,6 +47,10 @@
     overflow:auto;
 }
 
+#calendar-bar > .toolbar-holder > .toolbar-primary-icon {                       
+  background-image: url("chrome://calendar/skin/calendar_topbar.gif");          
+}                                                                               
+
 /*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
  *-------------------------------------------------------------------*/
