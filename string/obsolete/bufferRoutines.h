@@ -65,6 +65,8 @@
 #include "nsUnicharUtilCIID.h"
 #include "nsIServiceManager.h"
 #include "nsICaseConversion.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #endif
 #endif /* XPCOM_STANDALONE */
 
@@ -176,44 +178,52 @@ static const PRUnichar kIsoLatin1ToUCS2_2[256] = {
 };
 
 #if !defined(RICKG_TESTBED) && !defined(STANDALONE_STRING_TESTS)
-class HandleCaseConversionShutdown3 : public nsIShutdownListener {
+class HandleCaseConversionShutdown : public nsIObserver {
 public :
-   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
-   HandleCaseConversionShutdown3(void) { NS_INIT_REFCNT(); }
-   virtual ~HandleCaseConversionShutdown3(void) {}
+   HandleCaseConversionShutdown(void) { NS_INIT_REFCNT(); }
+   virtual ~HandleCaseConversionShutdown(void) {}
    NS_DECL_ISUPPORTS
+   NS_DECL_NSIOBSERVER
 };
 
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 static nsICaseConversion * gCaseConv = 0; 
 
-NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown3, nsIShutdownListener);
+NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown, nsIObserver);
 
-nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports* service) {
-    if (cid.Equals(kUnicharUtilCID)) {
-        NS_ASSERTION(service == gCaseConv, "wrong service!");
-        if(gCaseConv){
-          gCaseConv->Release();
-          gCaseConv = 0;
-        }
-    }
+NS_IMETHODIMP
+HandleCaseConversionShutdown::Observe(nsISupports *aSubject,
+                                      const char* aTopic,
+                                      const PRUnichar *aData)
+{
+    NS_IF_RELEASE(gCaseConv);
     return NS_OK;
 }
 
 static nsresult
 NS_InitCaseConversion()
 {
-  if (! gCaseConv) {
-    HandleCaseConversionShutdown3* listener = new HandleCaseConversionShutdown3();
-    if (!listener) return NS_ERROR_FAILURE;
+  if (gCaseConv) return NS_OK;
+  
+  nsresult rv;
     
-    nsresult rv = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion), (nsISupports**) &gCaseConv, listener);
-    if (NS_FAILED(rv)) {
-      delete listener;
-      return rv;
+  rv = nsServiceManager::GetService(kUnicharUtilCID,
+                                    NS_GET_IID(nsICaseConversion),
+                                    (nsISupports**) &gCaseConv);
+
+  // try to release it on shutdown
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIObserverService> obs =
+      do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+
+      HandleCaseConversionShutdown* observer =
+        new HandleCaseConversionShutdown();
+
+      if (observer)
+        obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     }
   }
-  
   return NS_OK;
 }
 
