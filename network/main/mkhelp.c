@@ -994,9 +994,13 @@ NET_HTMLHelpMapToURL(int         format_out,
       }
 
     memset(obj, 0, sizeof(html_help_map_stream));
-
-	if(URL_s->cache_file || URL_s->memory_copy)
-		obj->file_is_local = TRUE;
+#ifdef NU_CACHE
+    if (URL_s->cache_file || URL_s->cache_object)
+        obj->file_is_local = TRUE;
+#else
+    if(URL_s->cache_file || URL_s->memory_copy)
+        obj->file_is_local = TRUE;
+#endif
 	else
 		obj->file_is_local = NET_IsLocalFileURL(URL_s->address);
 	

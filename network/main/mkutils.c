@@ -63,6 +63,9 @@
 #include "pics.h"
 #endif
 
+#ifdef NU_CACHE
+#include "CacheStubs.h"
+#endif
 
 typedef struct {
   char *buffer;
@@ -1376,12 +1379,17 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				found_one = TRUE;
               }
 			else if(!PL_strncasecmp(name,"EXT-CACHE:",10))
-			  {
+#ifdef NU_CACHE
+            {
+                PR_ASSERT(0);
+		/* Cool find... somebody uses this? let me know -Gagan */
+            }
+#else
+			{
 #ifdef MOZILLA_CLIENT
                 char * next_arg = strtok(value, ";");
 				char * name=0;
 				char * instructions=0;
-
 				found_one = TRUE;
 
 				while(next_arg)
@@ -1409,6 +1417,7 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
 				PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
               }
+#endif /* NU_CACHE */
 			else if (!PL_strncasecmp(name, "ETAG:",5))
 			{
 				/* Weak Validators are skipped for now*/
@@ -3505,8 +3514,12 @@ NET_GetURLQuick (URL_Struct * URL_s,
         MWContext * context,
         Net_GetUrlExitFunc*	exit_routine)
 {
-	if (!NET_FindURLInMemCache(URL_s, context) &&
+#ifdef NU_CACHE
+    if (!CacheManager_Contains(URL_s->address))
+#else
+    if (!NET_FindURLInMemCache(URL_s, context) &&
 		!NET_FindURLInExtCache(URL_s, context))
+#endif
 	{
 		/* default */
 		return NET_GetURL(
