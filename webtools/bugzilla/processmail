@@ -148,9 +148,8 @@ ConnectToDatabase
 
 
 set template "From: bugzilla-daemon
-To: terry@netscape.com
-X-Real-To: %s
-X-Real-Cc: %s
+To: %s
+Cc: %s
 Subject: \[Bug %s\] %s - %s
 
 http://bugzilla.mozilla.org/bugzilla/show_bug.cgi?id=%s
