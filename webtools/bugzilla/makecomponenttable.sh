@@ -45,7 +45,7 @@ insert into components (value, program, initialowner) values ("Aurora/RDF BE", "
 insert into components (value, program, initialowner) values ("Berkeley DB", "Mozilla", "montulli@netscape.com");
 insert into components (value, program, initialowner) values ("Browser Hooks", "Mozilla", "ebina@netscape.com");
 insert into components (value, program, initialowner) values ("Build Config", "Mozilla", "briano@netscape.com");
-insert into components (value, program, initialowner) values ("Composer", "Mozilla", "brade@netscape.com");
+insert into components (value, program, initialowner) values ("Composer", "Mozilla", "akkana@netscape.com");
 insert into components (value, program, initialowner) values ("Compositor Library", "Mozilla", "vidur@netscape.com");
 insert into components (value, program, initialowner) values ("Dialup", "Mozilla", "selmer@netscape.com");
 insert into components (value, program, initialowner) values ("FontLib", "Mozilla", "dp@netscape.com");
