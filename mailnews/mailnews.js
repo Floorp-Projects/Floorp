@@ -311,3 +311,8 @@ pref("mail.content_disposition_type", 0);
 
 pref("mailnews.show_send_progress", true); //Will show a progress dialog when saving or sending a message
 pref("mail.server.default.retainBy", 1);
+
+// for manual upgrades of certain UI features.
+// 1 -> 2 is for the folder pane outliner landing, to hide the
+// unread and total columns, see msgMail3PaneWindow.js
+pref("mail.ui.folderpane.version", 1);

@@ -622,8 +622,29 @@ function OnFolderUnreadColAttrModified(event)
     }
 }
 
+// builds prior to 8-14-2001 did not have the unread and total columns
+// in the folder pane.  so if a user ran an old build, and then
+// upgraded, they get the new columns, and this causes problems
+// because it looks like all the folder names are gone (see bug #96979)
+// to work around this, we hide those columns once, using the 
+// "mail.ui.folderpane.version" pref.
+function UpgradeFolderPaneUI()
+{
+  var folderPaneUIVersion = pref.GetIntPref("mail.ui.folderpane.version");
+
+  if (folderPaneUIVersion == 1) {
+    var folderUnreadCol = document.getElementById("folderUnreadCol");
+    folderUnreadCol.setAttribute("hidden", "true");
+    var folderTotalCol = document.getElementById("folderTotalCol");
+    folderTotalCol.setAttribute("hidden", "true");
+    pref.SetIntPref("mail.ui.folderpane.version", 2);
+  }
+}
+
 function OnLoadFolderPane()
 {
+    UpgradeFolderPaneUI();
+
     var folderUnreadCol = document.getElementById("folderUnreadCol");
     var hidden = folderUnreadCol.getAttribute("hidden");
     if (!hidden)
