@@ -73,6 +73,7 @@
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsXULAtoms.h"
 #include "prlog.h"
 #include "prtime.h"
 #include "rdf.h"
@@ -106,9 +107,6 @@ protected:
     static nsIRDFService* gRDF;
     static nsINameSpaceManager* gNameSpaceManager;
     static nsIDateTimeFormat* gFormat;
-
-    static nsIAtom* kEventsAtom;
-    static nsIAtom* kTargetsAtom;
 
     struct EventHandlerMapEntry {
         const char*  mAttributeName;
@@ -189,9 +187,6 @@ nsrefcnt nsXULContentUtils::gRefCnt;
 nsIRDFService* nsXULContentUtils::gRDF;
 nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
-
-nsIAtom* nsXULContentUtils::kEventsAtom;
-nsIAtom* nsXULContentUtils::kTargetsAtom;
 
 nsXULContentUtils::EventHandlerMapEntry
 nsXULContentUtils::kEventHandlerMap[] = {
@@ -283,9 +278,6 @@ nsXULContentUtils::Init()
 
         if (NS_FAILED(rv)) return rv;
 
-        kEventsAtom  = NS_NewAtom("events");
-        kTargetsAtom = NS_NewAtom("targets");
-
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
             entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
@@ -298,6 +290,8 @@ nsXULContentUtils::Init()
             prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
             prefs->RegisterCallback(kDisableXULCachePref, DisableXULCacheChangedCallback, nsnull);
         }
+
+        nsXULAtoms::AddRef();
     }
     return NS_OK;
 }
@@ -319,14 +313,13 @@ nsXULContentUtils::~nsXULContentUtils()
         NS_IF_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gFormat);
 
-        NS_IF_RELEASE(kEventsAtom);
-        NS_IF_RELEASE(kTargetsAtom);
-
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
             NS_IF_RELEASE(entry->mAttributeAtom);
             ++entry;
         }
+
+        nsXULAtoms::Release();
     }
 }
 
@@ -484,8 +477,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     PRUnichar buf[128];
     nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
-    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("id")) );
-    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, id);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
 
@@ -519,8 +511,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     PRUnichar buf[128];
     nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
-    nsCOMPtr<nsIAtom> kIdAtom( dont_AddRef(NS_NewAtom("ref")) );
-    rv = aElement->GetAttribute(kNameSpaceID_None, kIdAtom, uri);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::ref, uri);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
 
@@ -950,13 +941,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
         return NS_ERROR_UNEXPECTED;
 
     nsAutoString events;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kEventsAtom, events);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::events, events);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
         events.Assign(NS_LITERAL_STRING("*"));
 
     nsAutoString targets;
-    rv = aElement->GetAttribute(kNameSpaceID_None, kTargetsAtom, targets);
+    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::targets, targets);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
         targets.Assign(NS_LITERAL_STRING("*"));
