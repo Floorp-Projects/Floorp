@@ -57,7 +57,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(nsIDOMElement *aElement,
-                  const nsAReadableString& aPseudoElt,
+                  const nsAString& aPseudoElt,
                   nsIPresShell *aPresShell);
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION
