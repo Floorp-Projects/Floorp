@@ -34,7 +34,7 @@
 #include "nsIIOService.h"
 #include "nsXPIDLString.h"
 #include "nsHTTPAtoms.h"
-
+#include "nsNetUtil.h"
 #include "nsIHttpNotify.h"
 #include "nsINetModRegEntry.h"
 #include "nsProxyObjectManager.h"
