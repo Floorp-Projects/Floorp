@@ -47,7 +47,10 @@ import java.util.Enumeration;
  */
 public interface DebuggableScript {
   
-    //public boolean isFunction();  // XXX
+    /**
+     * Returns true if this is a function, false if it is a script.
+     */
+    public boolean isFunction();
     
     /**
      * Get the Scriptable object (Function or Script) that is 

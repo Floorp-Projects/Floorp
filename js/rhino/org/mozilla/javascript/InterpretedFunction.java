@@ -40,8 +40,7 @@ import org.mozilla.javascript.debug.DebuggableScript;
 
 class InterpretedFunction extends NativeFunction implements DebuggableScript {
     
-    InterpretedFunction(InterpreterData theData, Context cx)
-    {
+    InterpretedFunction(InterpreterData theData, Context cx) {
         itsData = theData;
         init(cx);
     }
@@ -81,6 +80,10 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
         if (itsData.itsNeedsActivation)
             scope = ScriptRuntime.initVarObj(cx, scope, this, thisObj, args);
         return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);
+    }
+    
+    public boolean isFunction() {
+        return true;
     }
     
     public Scriptable getScriptable() {

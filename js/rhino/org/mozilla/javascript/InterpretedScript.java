@@ -67,6 +67,10 @@ public class InterpretedScript extends NativeScript implements DebuggableScript 
         return Interpreter.interpret(cx, scope, thisObj, args, this, itsData);    
     }
     
+    public boolean isFunction() {
+        return false;
+    }
+    
     public Scriptable getScriptable() {
         return this;
     }
