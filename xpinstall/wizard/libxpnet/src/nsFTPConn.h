@@ -92,7 +92,7 @@ private:
 };
 
 #ifndef NULL
-#define NULL (void*)0L
+#define NULL 0
 #endif
 
 #ifndef TRUE
