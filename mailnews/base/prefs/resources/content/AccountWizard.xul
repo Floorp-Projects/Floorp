@@ -28,6 +28,7 @@ Rights Reserved.
 <window id="account-wizard-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="New Messenger Account Wizard"
+    height="350" width="450"
     onload="onLoad();">
 
 <html:script language="JavaScript" src="AccountWizard.js"/>
