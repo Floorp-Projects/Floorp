@@ -709,17 +709,22 @@ nsContentIterator::GetNextSibling(nsIContent *aNode,
     }
     else mCachedIndex = indx;
   }
-  else if (parent != mCommonParent)
+  else
   {
-    if (aIndexes)
+    if (parent != mCommonParent)
     {
-      // pop node off the stack, go up one level and return parent or fail.
-      // Don't leave the index empty, especially if we're
-      // returning NULL.  This confuses other parts of the code.
-      if (aIndexes->Count() > 1)
-        aIndexes->RemoveElementAt(aIndexes->Count()-1);
+      if (aIndexes)
+      {
+        // pop node off the stack, go up one level and return parent or fail.
+        // Don't leave the index empty, especially if we're
+        // returning NULL.  This confuses other parts of the code.
+        if (aIndexes->Count() > 1)
+          aIndexes->RemoveElementAt(aIndexes->Count()-1);
+      }
     }
-    return GetNextSibling(parent, aIndexes);
+
+    // ok to leave cache out of date here if parent == mCommonParent?
+    sib = GetNextSibling(parent, aIndexes);
   }
   
   return sib;
@@ -1240,8 +1245,11 @@ protected:
 
   nsCOMPtr<nsIDOMRange> mRange;
   // these arrays all typically are used and have elements
+#if 0
   nsAutoVoidArray mStartNodes;
   nsAutoVoidArray mStartOffsets;
+#endif
+
   nsAutoVoidArray mEndNodes;
   nsAutoVoidArray mEndOffsets;
 };
@@ -1342,8 +1350,10 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   }
   
   // cache ancestors
+#if 0
   nsContentUtils::GetAncestorsAndOffsets(startParent, startIndx,
                                          &mStartNodes, &mStartOffsets);
+#endif
   nsContentUtils::GetAncestorsAndOffsets(endParent, endIndx,
                                          &mEndNodes, &mEndOffsets);
 
@@ -1503,14 +1513,15 @@ nsContentSubtreeIterator::Next()
     mIsDone = PR_TRUE;
     return;
   }
-  
-  nsCOMPtr<nsIContent> nextNode = GetNextSibling(mCurNode, nsnull);
+
+  nsIContent *nextNode = GetNextSibling(mCurNode, nsnull);
+  NS_ASSERTION(nextNode, "No next sibling!?! This could mean deadlock!");
 
 /*
   nextNode = GetDeepFirstChild(nextNode);
   return GetTopAncestorInRange(nextNode, address_of(mCurNode));
 */
-  PRInt32 i = mEndNodes.IndexOf((void*)nextNode);
+  PRInt32 i = mEndNodes.IndexOf(nextNode);
   while (i != -1)
   {
     // as long as we are finding ancestors of the endpoint of the range,
@@ -1529,10 +1540,15 @@ nsContentSubtreeIterator::Next()
     // then the previous node should have been the last, which was
     // was tested at top of routine.
     nextNode = cChild;
-    i = mEndNodes.IndexOf(nextNode.get());
+    i = mEndNodes.IndexOf(nextNode);
   }
 
   mCurNode = nextNode;
+
+  // This shouldn't be needed, but since our selection code can put us
+  // in a situation where mLast is in generated content, we need this
+  // to stop the iterator when we've walked past past the last node!
+  mIsDone = mCurNode == nsnull;
 
   return;
 }
@@ -1557,6 +1573,11 @@ nsContentSubtreeIterator::Prev()
   prevNode = GetDeepLastChild(prevNode, nsnull);
   
   GetTopAncestorInRange(prevNode, address_of(mCurNode));
+
+  // This shouldn't be needed, but since our selection code can put us
+  // in a situation where mFirst is in generated content, we need this
+  // to stop the iterator when we've walked past past the first node!
+  mIsDone = mCurNode == nsnull;
 }
 
 
