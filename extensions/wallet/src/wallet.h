@@ -45,8 +45,11 @@ WLLT_PostEdit(nsAutoString walletList);
 extern void
 WLLT_PrefillReturn(nsAutoString results);
 
+extern void
+WLLT_RequestToCapture(nsIPresShell* shell);
+
 extern nsresult
-WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick);
+WLLT_Prefill(nsIPresShell* shell, PRBool quick);
 
 extern void
 WLLT_GetNopreviewListForViewer (nsString& aNopreviewList);

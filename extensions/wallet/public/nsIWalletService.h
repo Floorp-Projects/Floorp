@@ -49,7 +49,8 @@ struct nsIWalletService : public nsISupports
   NS_IMETHOD WALLET_PreEdit(nsAutoString& walletList) = 0;
   NS_IMETHOD WALLET_PostEdit(nsAutoString walletList) = 0;
   NS_IMETHOD WALLET_ChangePassword() = 0;
-  NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick) = 0;
+  NS_IMETHOD WALLET_RequestToCapture(nsIPresShell* shell) = 0;
+  NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick) = 0;
   NS_IMETHOD WALLET_PrefillReturn(nsAutoString results) = 0;
   NS_IMETHOD WALLET_FetchFromNetCenter() = 0;
 

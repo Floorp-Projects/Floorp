@@ -258,6 +258,17 @@
     }
   }
 
+  function WalletRequestToCapture()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+      dump("Wallet Request To Capture\n");
+      appCore.walletRequestToCapture();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function WalletSamples()
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
@@ -364,6 +375,7 @@
       <menu name="Wallet"> 
           <menuitem name="Safe Form Fill" onclick="WalletSafeFillin();"/> 
           <menuitem name="Quick Form Fill" onclick="WalletQuickFillin();"/> 
+          <menuitem name="Capture Form" onclick="WalletRequestToCapture();"/> 
           <separator /> 
           <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
           <separator /> 

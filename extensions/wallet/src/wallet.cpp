@@ -1922,6 +1922,27 @@ wallet_InitializeURLList() {
     wallet_URLListInitialized = PR_TRUE;
   }
 }
+
+nsString
+wallet_GetHostFile(nsIURI * url) {
+  nsAutoString urlName = nsAutoString("");
+  char* host;
+  nsresult rv = url->GetHost(&host);
+  if (NS_FAILED(rv)) {
+    return nsAutoString("");
+  }
+  urlName = urlName + host;
+  nsCRT::free(host);
+  char* file;
+  rv = url->GetPath(&file);
+  if (NS_FAILED(rv)) {
+    return nsAutoString("");
+  }
+  urlName = urlName + file;
+  nsCRT::free(file);
+  return urlName;
+}
+
 /*
  * initialization for current URL
  */
@@ -1943,31 +1964,11 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
   }
 
   /* get host+file */
-#ifdef NECKO
-  char* host;
-#else
-  const char* host;
-#endif
-  nsresult rv = url->GetHost(&host);
-  if (NS_FAILED(rv)) {
+  nsAutoString urlName = wallet_GetHostFile(url);
+  NS_RELEASE(url);
+  if (urlName.Length() == 0) {
     return;
   }
-  nsAutoString urlName = nsAutoString(host);
-#ifdef NECKO
-  nsCRT::free(host);
-#endif
-#ifdef NECKO
-  char* file;
-  url->GetPath(&file);
-#else
-  const char* file;
-  url->GetFile(&file);
-#endif
-  urlName = urlName + file;
-#ifdef NECKO
-  nsCRT::free(file);
-#endif
-  NS_RELEASE(url);
 
   /* get field/schema mapping specific to current url */
   wallet_MapElement * ptr;
@@ -2114,10 +2115,10 @@ Wallet_SignonViewerReturn (nsAutoString results) {
     delete[] gone;
 }
 
+#ifdef AutoCapture
 /*
  * see if user wants to capture data on current page
  */
-
 PRIVATE PRBool
 wallet_OKToCapture(char* urlName) {
   nsAutoString * url = new nsAutoString(urlName);
@@ -2154,6 +2155,7 @@ wallet_OKToCapture(char* urlName) {
   PR_FREEIF(message);
   return result;
 }
+#endif
 
 /*
  * capture the value of a form element
@@ -2438,7 +2440,7 @@ WLLT_PrefillReturn(nsAutoString results) {
     nsAutoString * url = new nsAutoString(urlName);
     nsVoidArray* dummy;
     nsAutoString * value = new nsAutoString("nn");
-    if (!url || !value) {
+    if (value && url) {
       wallet_ReadFromList(*url, *value, dummy, wallet_URL_list);
       value->SetCharAt('y', NO_PREVIEW);
       wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
@@ -2554,7 +2556,8 @@ WLLT_PrefillReturn(nsAutoString results) {
  * get the form elements on the current page and prefill them if possible
  */
 PUBLIC nsresult
-WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
+WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
+  nsAutoString urlName = nsAutoString("");
 
   /* create list of elements that can be prefilled */
   nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
@@ -2568,6 +2571,12 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     nsIDocument* doc = nsnull;
     result = shell->GetDocument(&doc);
     if (NS_SUCCEEDED(result)) {
+      nsIURI* url;
+      url = doc->GetDocumentURL();
+      if (url) {
+        urlName = wallet_GetHostFile(url);
+        NS_RELEASE(url);
+      }
       wallet_Initialize();
       wallet_InitializeCurrentURL(doc);
       nsIDOMHTMLDocument* htmldoc = nsnull;
@@ -2671,12 +2680,10 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     wallet_InitializeURLList();
     nsVoidArray* dummy;
     nsAutoString * value = new nsAutoString("nn");
-    nsAutoString * urlPtr = new nsAutoString(url);
-    if (!value || !urlPtr) {
-      wallet_ReadFromList(*urlPtr, *value, dummy, wallet_URL_list);
+    if (value && (urlName.Length() != 0)) {
+      wallet_ReadFromList(urlName, *value, dummy, wallet_URL_list);
       noPreview = (value->CharAt(NO_PREVIEW) == 'y');
       delete value;
-      delete urlPtr;
     }
   }
 
@@ -2701,7 +2708,7 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
   } else {
     /* let user preview and verify the prefills first */
     wallet_list = wallet_PrefillElement_list;
-    wallet_url = url;
+    wallet_url = urlName;
 #ifdef DEBUG
 wallet_DumpStopwatch();
 wallet_ClearStopwatch();
@@ -2719,6 +2726,124 @@ wallet_ClearStopwatch();
 extern void
 SINGSIGN_RememberSignonData
   (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
+
+PUBLIC void
+WLLT_RequestToCapture(nsIPresShell* shell) {
+  /* starting with the present shell, get each form element and put them on a list */
+  nsresult result;
+  if (nsnull != shell) {
+    nsIDocument* doc = nsnull;
+    result = shell->GetDocument(&doc);
+    if (NS_SUCCEEDED(result)) {
+      wallet_Initialize();
+      wallet_InitializeCurrentURL(doc);
+      nsIDOMHTMLDocument* htmldoc = nsnull;
+      result = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
+      if ((NS_SUCCEEDED(result)) && (nsnull != htmldoc)) {
+        nsIDOMHTMLCollection* forms = nsnull;
+        htmldoc->GetForms(&forms);
+        if (nsnull != forms) {
+          PRUint32 numForms;
+          forms->GetLength(&numForms);
+          for (PRUint32 formX = 0; formX < numForms; formX++) {
+            nsIDOMNode* formNode = nsnull;
+            forms->Item(formX, &formNode);
+            if (nsnull != formNode) {
+              PRInt32 count = 0;
+              nsIDOMHTMLFormElement* formElement = nsnull;
+              result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
+              if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
+                nsIDOMHTMLCollection* elements = nsnull;
+                result = formElement->GetElements(&elements);
+                if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
+
+                  /* got to the form elements at long last */
+                  /* now find out how many text fields are on the form */
+                  PRUint32 numElements;
+                  elements->GetLength(&numElements);
+                  for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+                    nsIDOMNode* elementNode = nsnull;
+                    elements->Item(elementX, &elementNode);
+                    if (nsnull != elementNode) {
+                      nsIDOMHTMLInputElement* inputElement;  
+                      result =
+                        elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+                      if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+                        nsAutoString type;
+                        result = inputElement->GetType(type);
+                        if (NS_SUCCEEDED(result)) {
+                          PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
+                          PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
+                          if (isText) {
+                            count++;
+                          }
+                        }
+                        NS_RELEASE(inputElement);
+                      }
+                      NS_RELEASE(elementNode);
+                    }
+                  }
+
+                  /* save form if it meets all necessary conditions */
+                  if (wallet_GetFormsCapturingPref() && (count>=3)) {
+
+                    /* conditions all met, now save it */
+                    for (PRUint32 elementY = 0; elementY < numElements; elementY++) {
+                      nsIDOMNode* elementNode = nsnull;
+                      elements->Item(elementY, &elementNode);
+                      if (nsnull != elementNode) {
+                        nsIDOMHTMLInputElement* inputElement;  
+                        result =
+                          elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+                        if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+
+                          /* it's an input element */
+                          nsAutoString type;
+                          result = inputElement->GetType(type);
+                          if ((NS_SUCCEEDED(result)) &&
+                              ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                            nsAutoString field;
+                            result = inputElement->GetName(field);
+                            if (NS_SUCCEEDED(result)) {
+                              nsAutoString value;
+                              result = inputElement->GetValue(value);
+                              if (NS_SUCCEEDED(result)) {
+
+                                /* get schema name from vcard attribute if it exists */
+                                nsAutoString vcardValue("");
+                                nsIDOMElement * element;
+                                result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
+                                if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
+                                  nsAutoString vcardName("VCARD_NAME");
+                                  result = element->GetAttribute(vcardName, vcardValue);
+                                  NS_RELEASE(element);
+                                }
+                                wallet_Capture(doc, field, value, vcardValue);
+                              }
+                            }
+                          }
+                          NS_RELEASE(inputElement);
+                        }
+                        NS_RELEASE(elementNode);
+                      }
+                    }
+                  }
+                  NS_RELEASE(elements);
+                }
+                NS_RELEASE(formElement);
+              }
+              NS_RELEASE(formNode);
+            }
+          }
+          NS_RELEASE(forms);
+        }
+        NS_RELEASE(htmldoc);
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+}
 
 PUBLIC void
 WLLT_OnSubmit(nsIContent* formNode) {
@@ -2749,7 +2874,9 @@ WLLT_OnSubmit(nsIContent* formNode) {
 #endif
 
   /* get to the form elements */
+#ifdef AutoCapture
   PRInt32 count = 0;
+#endif
   nsIDOMHTMLFormElement* formElement = nsnull;
   nsresult result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
   if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
@@ -2763,8 +2890,10 @@ WLLT_OnSubmit(nsIContent* formNode) {
       PRInt32 value_cnt = 0;
 
       /* got to the form elements at long last */
-      /* now find out how many text fields are on the form */
-      /* also build arrays for single signon */
+      /* now build arrays for single signon */
+#ifdef AutoCapture
+      /* also find out how many text fields are on the form */
+#endif
       PRUint32 numElements;
       elements->GetLength(&numElements);
       for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
@@ -2780,9 +2909,11 @@ WLLT_OnSubmit(nsIContent* formNode) {
             if (NS_SUCCEEDED(result)) {
               PRBool isText = ((type == "") || (type.Compare("text", PR_TRUE)==0));
               PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
+#ifdef AutoCapture
               if (isText) {
                 count++;
               }
+#endif
               if (value_cnt < MAX_ARRAY_SIZE) {
                 if (isText) {
                   type_array[value_cnt] = FORM_TYPE_TEXT;
@@ -2812,6 +2943,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
       SINGSIGN_RememberSignonData
         (URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
 
+#ifdef AutoCaputure
       /* save form if it meets all necessary conditions */
       if (wallet_GetFormsCapturingPref() && (count>=3) && wallet_OKToCapture(URLName)) {
 
@@ -2856,6 +2988,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
           }
         }
       }
+#endif
+
       NS_RELEASE(elements);
     }
     NS_RELEASE(formElement);

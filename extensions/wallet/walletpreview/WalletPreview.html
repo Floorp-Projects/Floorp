@@ -113,7 +113,7 @@
       var url = top.frames[button_frame].document.buttons.url;
       var skip = top.frames[button_frame].document.buttons.skip;
       list.value = prefillList[prefillList.length-2];
-      url.value = "prefillList[prefillList.length-1]";
+      url.value = prefillList[prefillList.length-1];
       var fillins = top.frames[button_frame].document.buttons.fillins;
       fillins.value = "";
       for (i=0; !(i>=selname.length); i++) {

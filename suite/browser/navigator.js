@@ -760,6 +760,16 @@ function OpenSearch(tabName, searchStr)
     }
   }
 
+  function WalletRequestToCapture()
+  {
+    if (appCore != null) {
+      dump("Wallet Request To Capture\n");
+      appCore.walletRequestToCapture(window.content);
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
   function WalletSamples()
   {
     if (appCore != null) {

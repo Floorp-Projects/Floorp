@@ -32,6 +32,7 @@
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
 <!ENTITY walletQuickFillCmd.label "Quick Form Fill">
+<!ENTITY walletRequestToCaptureCmd.label "Capture Form">
 <!ENTITY walletContentsCmd.label "Wallet Contents">
 <!ENTITY walletDisplaySignonsCmd.label "Display Signons">
 <!ENTITY walletDisplayCookiesCmd.label "Display Cookies">

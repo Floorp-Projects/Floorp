@@ -101,12 +101,17 @@ NS_IMETHODIMP nsWalletlibService::WALLET_PostEdit(nsAutoString walletList) {
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
-    ::WLLT_ChangePassword();
-    return NS_OK;
+  ::WLLT_ChangePassword();
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
-  return ::WLLT_Prefill(shell, url, quick);
+NS_IMETHODIMP nsWalletlibService::WALLET_RequestToCapture(nsIPresShell* shell) {
+  ::WLLT_RequestToCapture(shell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::WALLET_Prefill(nsIPresShell* shell, PRBool quick) {
+  return ::WLLT_Prefill(shell, quick);
 }
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PrefillReturn(nsAutoString results){

@@ -104,6 +104,7 @@ Contributor(s): ______________________________________. -->
           <menupopup>
 		  <menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
           <menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
+          <menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();"/> 
           <menuseparator /> 
           <menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
           <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 

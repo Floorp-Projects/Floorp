@@ -177,6 +177,7 @@ Contributor(s): ______________________________________. -->
 		    <menupopup> 
 			  <menuitem value="&walletSafeFillCmd.label;" oncommand="WalletSafeFillin();"/> 
 			  <menuitem value="&walletQuickFillCmd.label;" oncommand="WalletQuickFillin();"/> 
+			  <menuitem value="&walletRequestToCaptureCmd.label;" oncommand="WalletRequestToCapture();"/> 
 			  <menuseparator /> 
 			  <menuitem value="&walletContentsCmd.label;" oncommand="WalletEditor();"/> 
 			  <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="SignonViewer();"/> 
@@ -184,7 +185,7 @@ Contributor(s): ______________________________________. -->
 			  <menuseparator /> 
 			  <menuitem value="&walletSamplesCmd.label;" oncommand="WalletSamples();"/> 
 			  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletChangePassword();"/>
-			</menupopup> 
+		    </menupopup> 
 		  </menu> 
 		  <menuseparator /> 
 		  <menuitem value="&selectAllCmd.label;" oncommand="BrowserReload();"/> 
