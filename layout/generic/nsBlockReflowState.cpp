@@ -337,6 +337,16 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     aResult.x = mAvailSpaceRect.x + borderPadding.left;
     aResult.width = mAvailSpaceRect.width;
   }
+
+  // Override any computed width if this is supposed to be unconstrained.
+  // Otherwise, a finite width may be used when an infinite one should be,
+  // leading to children attempting to align themselves on the first "size
+  // finding" pass of a shrink wrap reflow (where size is set in the second
+  // pass).  If they align themselves, they return the wrong size (width +
+  // offset instead of just width) for the second pass.  See Bug 97777.
+  if (GetFlag(BRS_SHRINKWRAPWIDTH))
+    aResult.width = NS_UNCONSTRAINEDSIZE;
+
 #ifdef REALLY_NOISY_REFLOW
   printf("  CBAS: result %d %d %d %d\n", aResult.x, aResult.y, aResult.width, aResult.height);
 #endif
