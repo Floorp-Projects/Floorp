@@ -22,7 +22,7 @@
   #%]
 
 [%# INTERFACE:
-  # username: string. The login name of the user, if any.
+  # This template has no interface.
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -64,9 +64,9 @@ function addSidebar() {
   <a href="enter_bug.cgi">Enter a new [% terms.bug %] report</a><br>
   <a href="report.cgi">Summary reports and charts</a><br>
   </p><p>
-[% IF username %]
+[% IF user.id %]
   <a href="userprefs.cgi">Change password or user preferences</a><br>
-  <a href="relogin.cgi">Logout [% username FILTER html %]</a><br>
+  <a href="relogin.cgi">Logout [% user.login FILTER html %]</a><br>
 [% ELSE %]
   <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
   [% IF Param('createemailregexp') %]

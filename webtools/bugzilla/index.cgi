@@ -21,10 +21,6 @@
 # Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
 #
 
-# Suppress silly "used only once" warnings
-use vars qw{ %COOKIE };
-
-
 ###############################################################################
 # Script Initialization
 ###############################################################################
@@ -37,7 +33,6 @@ use lib ".";
 require "CGI.pl";
 
 use vars qw(
-  $template
   $vars
 );
 
@@ -52,8 +47,7 @@ quietly_check_login('permit_anonymous');
 ###############################################################################
 
 my $cgi = Bugzilla->cgi;
-
-$vars->{'username'} = $::COOKIE{'Bugzilla_login'} || '';
+my $template = Bugzilla->template;
 
 # Return the appropriate HTTP response headers.
 print $cgi->header();
