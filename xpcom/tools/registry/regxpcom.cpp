@@ -71,7 +71,7 @@ nsresult Register(const char *path)
       return NS_ERROR_FAILURE;
   }
 
-  rv = spec->InitWithPath((char *)path);
+  rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
   rv = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
   return rv;
@@ -91,7 +91,7 @@ nsresult Unregister(const char *path)
       return NS_ERROR_FAILURE;
   }
 
-  rv = spec->InitWithPath((char *)path);
+  rv = spec->InitWithPath(path);
   if (NS_FAILED(rv)) return rv;
   rv = nsComponentManager::AutoUnregisterComponent(nsIComponentManager::NS_Startup, spec);
   return rv;
