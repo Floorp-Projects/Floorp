@@ -1061,6 +1061,16 @@ CMD: for ($::FORM{'cmdtype'}) {
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::FORM{'namedcmd'});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
+        # Now remove this query from the footer
+        my $count = 0;
+        foreach my $q (@{$::vars->{'user'}{'queries'}}) {
+            if ($q->{'name'} eq $::FORM{'namedcmd'}) {
+                splice(@{$::vars->{'user'}{'queries'}}, $count, 1);
+                last;
+            }
+            $count++;
+        }
+
         print "Content-Type: text/html\n\n";
         # Generate and return the UI (HTML page) from the appropriate template.
         $vars->{'title'} = "Query is gone";
