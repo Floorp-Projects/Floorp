@@ -218,7 +218,7 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", CalendarObject.path);
       node.setAttribute("http://home.netscape.com/NC-rdf#path", profileFile.path);
       
-      this.retrieveAndSaveRemoteCalendar( node, onResponseAndRefresh );
+      this.retrieveAndSaveRemoteCalendar( node );
       
       dump( "Remote Calendar Number "+this.rootContainer.getSubNodes().length+" Added" );
    }
@@ -309,27 +309,41 @@ calendarManager.prototype.getSelectedCalendar = function calMan_getSelectedCalen
 }
 
 
-var xmlhttprequest;
-var request;
-var calendarToGet = null;
-
-calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject, onResponse )
+calendarManager.prototype.retrieveAndSaveRemoteCalendar = function calMan_retrieveAndSaveRemoteCalendar( ThisCalendarObject )
 {
    //the image doesn't always exist. If it doesn't exist, it causes problems, so check for it here
    if( document.getElementById( "calendar-list-image-"+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ) )
       document.getElementById( "calendar-list-image-"+ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ).setAttribute( "synching", "true" );
 
-   calendarToGet = ThisCalendarObject;
-   // make a request
-   xmlhttprequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-   request =  xmlhttprequest.createInstance( Components.interfaces.nsIXMLHttpRequest );
-    
-   request.addEventListener( "load", onResponse, false );
-   request.addEventListener( "error", onError, false );
+   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
    
-   request.open( "GET", ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ), false );    // true means async
+   var Channel = ioService.newChannel( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#remotePath" ), null, null );
+
+   var CalendarManager = this;
    
-   request.send( null );
+   var onResponse = function( CalendarData )
+   {
+      //save the stream to a file.
+      saveDataToFile( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ), CalendarData, "UTF-8" );
+      
+      CalendarManager.removeCalendar( ThisCalendarObject );
+   
+      if( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#active" ) == "true" )
+      {
+         CalendarManager.addCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      }
+      
+      refreshEventTree( getAndSetEventTable() );
+      
+      refreshToDoTree( false );
+      
+      CalendarManager.CalendarWindow.currentView.refreshEvents();
+   
+      //document.getElementById( "calendar-list-image-"+calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ).removeAttribute( "synching" );
+   }
+
+   var CalendarData = this.getRemoteCalendarText( Channel, onResponse, null );
+   
 }
 
 
@@ -344,7 +358,7 @@ calendarManager.prototype.refreshAllRemoteCalendars = function calMan_refreshAll
       //check their remote attribute, if its true, call retrieveAndSaveRemoteCalendar()
       if( SubNodes[i].getAttribute( "http://home.netscape.com/NC-rdf#remote" ) == "true" )
       {
-         this.retrieveAndSaveRemoteCalendar( SubNodes[i], onResponseAndRefresh );
+         this.retrieveAndSaveRemoteCalendar( SubNodes[i] );
       }
    }
 }
@@ -381,71 +395,11 @@ calendarManager.prototype.isURLAlreadySubscribed = function calMan_isCalendarSub
 calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( Channel )
 {
    var calendarSubscribed = this.isURLAlreadySubscribed( Channel.URI.spec );
-
+   
    if( calendarSubscribed === false )
    {
-      if( Channel.URI.spec.indexOf( "imap://" ) != -1 )
-      {
-         var Listener =
-         {
-            onStreamComplete: function(loader, ctxt, status, resultLength, result)
-            {
-               //check to make sure its actually a calendar file, if not return.
-               if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
-                  return false;
-
-               //if we have only one event, open the event dialog.
-               var BeginEventText = "BEGIN:VEVENT";
-               var firstMatchLocation = result.indexOf( BeginEventText );
-               if( firstMatchLocation == -1 )
-                  return false;
-               else
-               {
-                  if( result.indexOf( BeginEventText, firstMatchLocation + BeginEventText.length + 1 ) == -1 )
-                  {
-                     var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-                     var calendarEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-                     calendarEvent.parseIcalString( result );
-                     
-                     /* EDITING AN EXISTING EVENT IS NOT WORKING
-                     
-                     //only 1 event
-                     var Result = gCalendarWindow.eventSource.gICalLib.fetchEvent( calendarEvent.id );
-                                          
-                     if( Result )
-                     {
-                        editEvent( calendarEvent );
-                     }
-                     else
-                     {
-                        //if we have the event already, edit the event
-                        //otherwise, open up a new event dialog
-                        */
-                     editNewEvent( calendarEvent, null );
-                     //}
-                  }
-                  else
-                  {
-                     //if we have > 1 event, prompt the user to subscribe to the event.
-                     var profileFile = gCalendarWindow.calendarManager.getProfileDirectory();
-
-                     profileFile.append("Calendar");
-                     profileFile.append("Email"+gCalendarWindow.calendarManager.rootContainer.getSubNodes().length+".ics");
-                      
-                     FilePath = profileFile.path;
-                     saveDataToFile(FilePath, result, null);
-
-                     gCalendarWindow.calendarManager.launchAddCalendarDialog( CalendarName, FilePath );
-                  }
-               }
-            }
-         }
-          
-         var myInstance = Components.classes["@mozilla.org/network/stream-loader;1"].createInstance(Components.interfaces.nsIStreamLoader);
-        
-         myInstance.init( Channel, Listener, null );
-      }
-      else
+      if( Channel.URI.spec.indexOf( "http://" ) != -1 || Channel.URI.spec.indexOf( "https://" ) != -1
+          || Channel.URI.spec.indexOf( "ftp://" ) != -1 || Channel.URI.spec.indexOf( "webcal://" ) != -1 )
       {
          //not subscribed, prompt the user to do so.
          var arrayForNames = Channel.URI.spec.split( "/" );
@@ -453,6 +407,54 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
          var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
 
          this.launchAddCalendarDialog( CalendarName, Channel.URI.spec );
+
+      }
+      else
+      {
+         var CalendarManager = this;
+      
+         var onResponse = function( CalendarData )
+         {
+            var BeginEventText = "BEGIN:VEVENT";
+            var firstMatchLocation = CalendarData.indexOf( BeginEventText );
+            if( CalendarData.indexOf( BeginEventText, firstMatchLocation + BeginEventText.length + 1 ) == -1 )
+            {
+               var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+               var calendarEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+               calendarEvent.parseIcalString( CalendarData );
+               
+               /* EDITING AN EXISTING EVENT IS NOT WORKING
+               
+               //only 1 event
+               var Result = gCalendarWindow.eventSource.gICalLib.fetchEvent( calendarEvent.id );
+                                    
+               if( Result )
+               {
+                  editEvent( calendarEvent );
+               }
+               else
+               {
+                  //if we have the event already, edit the event
+                  //otherwise, open up a new event dialog
+                  */
+               editNewEvent( calendarEvent, null );
+               //}
+            }
+            else
+            {
+               //if we have > 1 event, prompt the user to subscribe to the event.
+               var profileFile = CalendarManager.getProfileDirectory();
+      
+               profileFile.append("Calendar");
+               profileFile.append("Email"+CalendarManager.rootContainer.getSubNodes().length+".ics");
+                
+               FilePath = profileFile.path;
+               saveDataToFile(FilePath, CalendarData, null);
+      
+               CalendarManager.launchAddCalendarDialog( CalendarName, FilePath );
+            }
+         }
+         var result = this.getRemoteCalendarText( Channel, onResponse, null );
       }
    }
    else
@@ -462,7 +464,7 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
       {
          calendarSubscribed.active = true;
 
-         gCalendarWindow.calendarManager.addCalendar( calendarSubscribed );
+         this.addCalendar( calendarSubscribed );
       
          document.getElementById( "calendar-list-item-"+calendarSubscribed.serverNumber ).setAttribute( "checked", "true" );
 
@@ -470,11 +472,46 @@ calendarManager.prototype.checkCalendarURL = function calMan_checkCalendarURL( C
 
          refreshToDoTree( false );
    
-         gCalendarWindow.currentView.refreshEvents();
+         this.CalendarWindow.currentView.refreshEvents();
       }
    }
 }
 
+
+calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalendarText( Channel, onResponse, onError )
+{
+   var Listener =
+   {
+      onStreamComplete: function(loader, ctxt, status, resultLength, result)
+      {
+         window.setCursor( "default" );
+         //check to make sure its actually a calendar file, if not return.
+         if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
+         {
+            alert( "This doesn't appear to be a valid file. Here's what I got back from\n"+Channel.URI.spec+":\nResult:"+result );
+            return false;
+         }
+
+         //if we have only one event, open the event dialog.
+         var BeginEventText = "BEGIN:VEVENT";
+         var firstMatchLocation = result.indexOf( BeginEventText );
+         if( firstMatchLocation == -1 )
+         {
+            alert( "There are no events in this file. Here's what I got from\n"+Channel.URI.spec+"\nResult: "+result );
+            return false;
+         }
+         else
+         {
+            onResponse( result );
+         }
+      }
+   }
+   
+   var myInstance = Components.classes["@mozilla.org/network/stream-loader;1"].createInstance(Components.interfaces.nsIStreamLoader);
+   dump( "init channel, \nChannel is "+Channel+"\nURL is "+Channel.URI.spec+"\n" );
+   window.setCursor( "wait" );
+   myInstance.init( Channel, Listener, null );
+}
 
 calendarManager.prototype.getProfileDirectory = function calMan_getProfileDirectory()
 {
@@ -604,40 +641,6 @@ calendarManager.prototype.getAndConvertAllOldCalendars = function calMan_getAllC
       prefService.getBranch( "calendar." ).clearUserPref( "servers.count" );
    } catch( e ) {
    }
-}
-
-function onResponseAndRefresh( )
-{
-   //check to make sure this is a real calendar file first.
-   //if its not, it causes Mozilla to crash.
-   if( request.responseText.indexOf( "BEGIN:VCALENDAR" ) == -1 )
-   {
-      return;
-   }
-
-   //save the stream to a file.
-   saveDataToFile( calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#path" ), request.responseText, "UTF-8" );
-   
-   gCalendarWindow.calendarManager.removeCalendar( calendarToGet );
-
-   if( calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#active" ) == "true" )
-   {
-      gCalendarWindow.calendarManager.addCalendar( calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
-      calendarToGet = null;
-   }
-
-   refreshEventTree( getAndSetEventTable() );
-
-   refreshToDoTree( false );
-
-   gCalendarWindow.currentView.refreshEvents();
-
-   //document.getElementById( "calendar-list-image-"+calendarToGet.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) ).removeAttribute( "synching" );
-}
-
-function onError( )
-{
-   alert( "error: Could not load remote calendar" );
 }
 
 /*

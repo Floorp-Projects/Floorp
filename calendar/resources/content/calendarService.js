@@ -136,8 +136,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
         w = ass.hiddenDOMWindow;
 
         var args = new Object ();
-        args.url = channel.URI.spec;
-        dump( "\n\nURL IS "+args.url );
+        args.channel = channel;
         w.openDialog("chrome://calendar/content/calendar.xul", "calendar", "chrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", args);
     }
     

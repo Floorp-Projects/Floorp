@@ -249,7 +249,9 @@
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
 </popup>
 
-<popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
+<popup id="oe-date-picker-popup"  position="after_start" value="">
+   <datepicker id="oe-date-picker" valud="" ondatepick="gCalendarWindow.goToDay( date )"/>
+</popup>
 
 <commandset id="commands"/>
 
@@ -263,7 +265,7 @@
           <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltiptext="&calendar.choosedate.button.tooltip;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup"/>
+          <toolbarbutton class="toolbarbutton-1" id="calendar-choose-date-button"    label="&calendar.choosedate.button.label;"      tooltiptext="&calendar.choosedate.button.tooltip;"   popup="oe-date-picker-popup"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-go-to-today-button"    label="&calendar.gototoday.button.label;"       tooltiptext="&calendar.gototoday.button.tooltip;"    observes="go_today_command"/>
           <toolbarseparator class="toolbarseparator-primary"/>
           <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>

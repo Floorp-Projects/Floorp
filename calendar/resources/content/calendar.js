@@ -154,9 +154,9 @@ function calendarInit()
    	
 	checkForMailNews();
 
-   if( window.arguments && window.arguments[0].url )
+   if( window.arguments && window.arguments[0].channel )
    {
-      gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].url );
+      gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].channel );
    }
 
    //a bit of a hack since the menulist doesn't remember the selected value     
@@ -847,7 +847,7 @@ function selectAllEvents()
 {
    gSelectAll = true;
 
-   gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.getCurrentEvents() );
+   gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.currentEvents );
 }
 
 function closeCalendar()
