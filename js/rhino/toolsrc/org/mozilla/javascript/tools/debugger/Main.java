@@ -1887,20 +1887,23 @@ class EnterInterrupt implements Runnable
     Main main;
     StackFrame lastFrame;
     String threadTitle;
+    String alertMessage;
 
-    EnterInterrupt(Main main, StackFrame lastFrame, String threadTitle)
+    EnterInterrupt(Main main, StackFrame lastFrame, String threadTitle,
+                   String alertMessage)
     {
         this.main = main;
         this.lastFrame = lastFrame;
         this.threadTitle = threadTitle;
+        this.alertMessage = alertMessage;
     }
 
     public void run()
     {
-        main.statusBar.setText("Thread: " + threadTitle);
-
         String lastFrameUrl = lastFrame.getUrl();
         int line = lastFrame.getLineNumber();
+        main.statusBar.setText("Thread: " + threadTitle);
+
         if (lastFrameUrl != null && !lastFrameUrl.equals("<stdin>")) {
             FileWindow w = main.getFileWindow(lastFrameUrl);
             if (w != null) {
@@ -1913,6 +1916,13 @@ class EnterInterrupt implements Runnable
             if (main.console.isVisible()) {
                 main.console.show();
             }
+        }
+
+        if (alertMessage != null) {
+            MessageDialogWrapper.showMessageDialog(main,
+                                                   alertMessage,
+                                                   "Exception in Script",
+                                                   JOptionPane.ERROR_MESSAGE);
         }
 
         JMenu menu = main.getJMenuBar().getMenu(0);
@@ -2026,7 +2036,8 @@ class LoadFile implements Runnable {
     }
 }
 
-class ContextData {
+class ContextData
+{
     static ContextData get(Context cx) {
         return (ContextData)cx.getDebuggerContextData();
     }
@@ -2051,6 +2062,7 @@ class ContextData {
     boolean breakNextLine;
     int stopAtFrameDepth = -1;
     boolean eventThreadFlag;
+    Throwable lastProcessedException;
 }
 
 class StackFrame implements DebugFrame {
@@ -2561,43 +2573,42 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     void handleBreakpointHit(StackFrame frame, Context cx) {
         breakFlag = false;
-        interrupted(frame, cx);
+        interrupted(cx, frame, null);
     }
 
-    private static String exceptionString(Throwable ex) {
+    private static String exceptionString(StackFrame frame, Throwable ex)
+    {
+        String details;
         if (ex instanceof JavaScriptException) {
             JavaScriptException jse = (JavaScriptException)ex;
-            return ScriptRuntime.toString(jse.getValue());
+            details = ScriptRuntime.toString(jse.getValue());
         } else if (ex instanceof EcmaError) {
-            return ex.toString();
-        } else if (ex instanceof WrappedException) {
-            Throwable wrapped = ((WrappedException)ex).getWrappedException();
-            if (wrapped != null) {
-                ex = wrapped;
+            details = ex.toString();
+        } else {
+            if (ex instanceof WrappedException) {
+                Throwable wrapped
+                    = ((WrappedException)ex).getWrappedException();
+                if (wrapped != null) {
+                    ex = wrapped;
+                }
+            }
+            details = ex.toString();
+            if (details == null || details.length() == 0) {
+                details = ex.getClass().toString();
             }
         }
-        String msg = ex.toString();
-        if (msg == null || msg.length() == 0) {
-            msg = ex.getClass().toString();
-        }
-        return msg;
+        String url = frame.getUrl();
+        int lineNumber = frame.getLineNumber();
+        return details+" (" + url + ", line " + lineNumber + ")";
     }
 
     void handleExceptionThrown(Context cx, Throwable ex, StackFrame frame) {
         if (breakOnExceptions) {
-            String url = frame.getUrl();
-            int lineNumber = frame.getLineNumber();
-            FileWindow w = getFileWindow(url);
-            String msg = exceptionString(ex);
-            msg += " (" + url + ", line " + lineNumber + ")";
-            if (w != null) {
-                swingInvoke(new SetFilePosition(this, w, lineNumber));
+            ContextData cd = frame.contextData();
+            if (cd.lastProcessedException != ex) {
+                interrupted(cx, frame, ex);
+                cd.lastProcessedException = ex;
             }
-            MessageDialogWrapper.showMessageDialog(this,
-                                                   msg,
-                                                   "Exception in Script",
-                                                   JOptionPane.ERROR_MESSAGE);
-            interrupted(frame, cx);
         }
     }
 
@@ -2814,7 +2825,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return currentContextData;
     }
 
-    void interrupted(StackFrame frame, Context cx)
+    void interrupted(Context cx, StackFrame frame, Throwable scriptException)
     {
         boolean eventThreadFlag = SwingUtilities.isEventDispatchThread();
         ContextData contextData = frame.contextData();
@@ -2874,7 +2885,13 @@ public class Main extends JFrame implements Debugger, ContextListener {
             this.frameIndex = frameCount -1;
 
             String threadTitle = Thread.currentThread().toString();
-            Runnable enterAction = new EnterInterrupt(this, frame, threadTitle);
+            String alertMessage = null;
+            if (scriptException != null) {
+                alertMessage = exceptionString(frame, scriptException);
+            }
+
+            Runnable enterAction
+                = new EnterInterrupt(this, frame, threadTitle, alertMessage);
             int returnValue = -1;
             if (!eventThreadFlag) {
                 synchronized (monitor) {

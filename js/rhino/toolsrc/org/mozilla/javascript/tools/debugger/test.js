@@ -64,7 +64,7 @@ function make_thread(thread_title, repeat_count, loop_body)
 	return thread;
 }
 
-function make_thread2(thread_title, repeat_count)
+function make_thread2(thread_title, repeat_count, loop_body, loop_end)
 {
 	var Thread = java.lang.Thread;
 	var thread = new Thread(function() {
@@ -72,7 +72,7 @@ function make_thread2(thread_title, repeat_count)
 		for (var i = 0; i < repeat_count; ++i) {
 			loop_body(i, thread_title);
 		}
-		print("[DONE] Thread "+thread_title);
+		loop_end(thread_title);
 	});
 	return thread;
 }
@@ -83,8 +83,13 @@ var loop_body;
 eval("loop_body = "+loop_body_text);
 
 var thread1 = make_thread("A", 5, loop_body);
-var thread2 = make_thread("B", 5, loop_body);
-var thread3 = make_thread2("C", 5, loop_body);
+var thread2 = make_thread("B", 1000, loop_body);
+var thread3 = make_thread2("C", 2, loop_body, 
+		function loop_end(thread_title) {
+			print("[DONE] Thread "+thread_title);
+			// Do somethig to throw exception
+			Math.xxxx();
+	        });
 
 thread1.start();
 thread2.start();
