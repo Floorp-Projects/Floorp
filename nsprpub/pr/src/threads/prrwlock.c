@@ -249,7 +249,6 @@ int err;
 PR_IMPLEMENT(void)
 PR_RWLock_Wlock(PRRWLock *rwlock)
 {
-PRInt32 lock_acquired = 0;
 #if defined(DEBUG)
 PRThread *me = PR_GetCurrentThread();
 #endif

@@ -393,6 +393,8 @@ extern PRInt32		_MD_socketavailable(PRFileDesc *fd);
 extern PRInt64		_MD_socketavailable64(PRFileDesc *fd);
 #define	_MD_SOCKETAVAILABLE64		_MD_socketavailable64
 
+#define	_MD_PIPEAVAILABLE		_MD_socketavailable
+
 extern PRInt32 _MD_pr_poll(PRPollDesc *pds, PRIntn npds,
 												PRIntervalTime timeout);
 #define _MD_PR_POLL		_MD_pr_poll
@@ -434,6 +436,9 @@ extern PRStatus _MD_set_fd_inheritable(PRFileDesc *fd, PRBool inheritable);
 
 extern PRStatus _MD_gethostname(char *name, PRUint32 namelen);
 #define _MD_GETHOSTNAME		_MD_gethostname
+
+extern PRStatus _MD_getsysinfo(PRSysInfo cmd, char *name, PRUint32 namelen);
+#define _MD_GETSYSINFO		_MD_getsysinfo
 
 extern int _MD_unix_get_nonblocking_connect_error(int osfd);
 

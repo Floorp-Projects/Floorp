@@ -41,7 +41,9 @@ typedef struct _DataRecord {
 
 #define MAX_THREAD_CNT		100
 #define DEFAULT_THREAD_CNT	4
-#define DEFAULT_DATA_CNT	4
+#define DEFAULT_DATA_CNT	100
+#define DEFAULT_LOOP_CNT	10000
+
 /*
  * sum of the first n numbers using the formula n*(n+1)/2
  */
@@ -52,6 +54,7 @@ typedef struct stack_data {
 	PRStack		*list2;
 	PRInt32		initial_data_value;
 	PRInt32		data_cnt;
+	PRInt32		loops;
 } stack_data;
 
 static void stackop(void *arg);
@@ -71,11 +74,12 @@ PRIntn main(PRIntn argc, char **argv)
 
 	PRInt32 thread_cnt = DEFAULT_THREAD_CNT;
 	PRInt32 data_cnt = DEFAULT_DATA_CNT;
+	PRInt32 loops = DEFAULT_LOOP_CNT;
 	PRThread **threads;
 	stack_data *thread_args;
 
 	PLOptStatus os;
-	PLOptState *opt = PL_CreateOptState(argc, argv, "dt:c:");
+	PLOptState *opt = PL_CreateOptState(argc, argv, "dt:c:l:");
 
 	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
     {
@@ -90,6 +94,9 @@ PRIntn main(PRIntn argc, char **argv)
             break;
         case 'c':  /* data count */
             data_cnt = atoi(opt->value);
+            break;
+        case 'l':  /* loop count */
+            loops = atoi(opt->value);
             break;
          default:
             break;
@@ -127,6 +134,7 @@ PRIntn main(PRIntn argc, char **argv)
 
 		thread_args[cnt].list1 = list1;
 		thread_args[cnt].list2 = list2;
+		thread_args[cnt].loops = loops;
 		thread_args[cnt].data_cnt = data_cnt;	
 		thread_args[cnt].initial_data_value = 1 + cnt * data_cnt;
 
@@ -211,7 +219,7 @@ PRIntn main(PRIntn argc, char **argv)
 
 static void stackop(void *thread_arg)
 {
-    PRInt32 val, cnt, index;
+    PRInt32 val, cnt, index, loops;
 	DataRecord	*Items, *Item;
 	PRStack		*list1, *list2;
 	PRStackElem	*node;
@@ -219,6 +227,7 @@ static void stackop(void *thread_arg)
 
 	val = arg->initial_data_value;
 	cnt = arg->data_cnt;
+	loops = arg->loops;
 	list1 = arg->list1;
 	list2 = arg->list2;
 
@@ -244,6 +253,22 @@ static void stackop(void *thread_arg)
 		index++;
 	}
 
+	/*
+	 * pop data records from list1 and add them back to list1
+	 * generates contention for the stack accesses
+	 */
+	while (loops-- > 0) {
+		cnt = arg->data_cnt;
+		while (cnt-- > 0) {
+			node = PR_StackPop(list1);
+			if (node == NULL) {
+				PR_fprintf(errhandle, "Error - PR_StackPop returned NULL\n");
+				PR_ASSERT(node != NULL);
+				PR_ProcessExit(3);
+			}
+			PR_StackPush(list1, node);
+		}
+	}
 	/*
 	 * remove the data records from list1 and add them to list2
 	 */

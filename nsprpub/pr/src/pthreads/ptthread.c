@@ -593,7 +593,7 @@ PR_IMPLEMENT(PRThreadPriority) PR_GetThreadPriority(const PRThread *thred)
 
 PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri)
 {
-    PRIntn rv;
+    PRIntn rv = -1;
 
     PR_ASSERT(NULL != thred);
 
@@ -605,7 +605,6 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
 #if defined(_PR_DCETHREADS)
     rv = pthread_setprio(thred->id, pt_PriorityMap(newPri));
     /* pthread_setprio returns the old priority */
-    PR_ASSERT(-1 != rv);
 #elif defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     if (EPERM != pt_schedpriv)
     {
@@ -613,19 +612,23 @@ PR_IMPLEMENT(void) PR_SetThreadPriority(PRThread *thred, PRThreadPriority newPri
         struct sched_param schedule;
 
         rv = pthread_getschedparam(thred->id, &policy, &schedule);
-        PR_ASSERT(0 == rv);
-        schedule.sched_priority = pt_PriorityMap(newPri);
-        rv = pthread_setschedparam(thred->id, policy, &schedule);
-        if (EPERM == rv)
-        {
-            pt_schedpriv = EPERM;
-            PR_LOG(_pr_thread_lm, PR_LOG_MIN,
-                ("PR_SetThreadPriority: no thread scheduling privilege"));
-        }
+        if(0 == rv) {
+			schedule.sched_priority = pt_PriorityMap(newPri);
+			rv = pthread_setschedparam(thred->id, policy, &schedule);
+			if (EPERM == rv)
+			{
+				pt_schedpriv = EPERM;
+				PR_LOG(_pr_thread_lm, PR_LOG_MIN,
+					("PR_SetThreadPriority: no thread scheduling privilege"));
+			}
+		}
+		if (rv != 0)
+			rv = -1;
     }
 #endif
 
-    thred->priority = newPri;
+	if (rv != -1)
+    	thred->priority = newPri;
 }  /* PR_SetThreadPriority */
 
 #if 0

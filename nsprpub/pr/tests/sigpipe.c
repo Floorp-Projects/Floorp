@@ -66,6 +66,7 @@ int main()
         fprintf(stderr, "write to broken pipe failed but with wrong errno: %d\n", errno);
         exit(1);
     }
+    close(pipefd[1]);
     printf("write to broken pipe failed with EPIPE, as expected\n");
     printf("PASSED\n");
     return 0;

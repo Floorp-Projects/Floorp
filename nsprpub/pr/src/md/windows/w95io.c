@@ -874,51 +874,27 @@ _PR_MD_RMDIR(const char *name)
 PRStatus
 _PR_MD_LOCKFILE(PRInt32 f)
 {
-	PRInt32   rv;
+    PRStatus  rc = PR_SUCCESS;
+	DWORD     rv;
 
-	/*
-     * loop trying to LockFile(),
-     * pause for a few miliseconds when can't get the lock
-     * and try again
-     */
-    for( rv = FALSE; rv == FALSE; /* do nothing */ )
-    {
-    
-	    rv = LockFile( (HANDLE) f,
-			0l, 0l,
-			0x7fffffff, 0xffffffff ); 
-		if ( rv == FALSE )
-        {
-        	DWORD rc = GetLastError();
-            Sleep( 50 );  // Sleep() a few milisecs and try again.
-        }            
-    } /* end for() */
-    return PR_SUCCESS;
+	rv = LockFile( (HANDLE)f,
+		0l, 0l,
+		0x0l, 0xffffffffl ); 
+	if ( rv == 0 ) {
+        DWORD rc = GetLastError();
+        PR_LOG( _pr_io_lm, PR_LOG_ERROR,
+            ("_PR_MD_LOCKFILE() failed. Error: %d", rc ));
+        rc = PR_FAILURE;
+    }
+
+    return rc;
 } /* end _PR_MD_LOCKFILE() */
 
 PRStatus
 _PR_MD_TLOCKFILE(PRInt32 f)
 {
-	PRInt32   rv;
-    
-	/*
-     * loop trying to LockFile(),
-     * pause for a few miliseconds when can't get the lock
-     * and try again
-     */
-    for( rv = FALSE; rv == FALSE; /* do nothing */ )
-    {
-    
-	    rv = LockFile( (HANDLE) f,
-			0l, 0l,
-			0x7fffffff, 0xffffffff ); 
-		if ( rv == FALSE )
-        {
-        	DWORD rc = GetLastError();
-            Sleep( 50 );  // Sleep() a few milisecs and try again.
-        }            
-    } /* end for() */
-    return PR_SUCCESS;
+    PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
+    return PR_FAILURE;
 } /* end _PR_MD_TLOCKFILE() */
 
 
@@ -929,7 +905,7 @@ _PR_MD_UNLOCKFILE(PRInt32 f)
     
     rv = UnlockFile( (HANDLE) f,
     		0l, 0l,
-            0x7fffffff, 0xffffffff ); 
+            0x0l, 0xffffffffl ); 
             
     if ( rv )
     {
@@ -937,7 +913,7 @@ _PR_MD_UNLOCKFILE(PRInt32 f)
     }
     else
     {
-    	int err = GetLastError();
+		_PR_MD_MAP_DEFAULT_ERROR(GetLastError());
 		return PR_FAILURE;
     }
 } /* end _PR_MD_UNLOCKFILE() */

@@ -66,12 +66,22 @@ int main()
         exit(1);
     }
 
+    status = PR_SetFDInheritable(in_pipe[0], PR_FALSE);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_SetFDInheritable failed\n");
+        exit(1);
+    }
     status = PR_SetFDInheritable(in_pipe[1], PR_TRUE);
     if (status == PR_FAILURE) {
         fprintf(stderr, "PR_SetFDInheritable failed\n");
         exit(1);
     }
     status = PR_SetFDInheritable(out_pipe[0], PR_TRUE);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_SetFDInheritable failed\n");
+        exit(1);
+    }
+    status = PR_SetFDInheritable(out_pipe[1], PR_FALSE);
     if (status == PR_FAILURE) {
         fprintf(stderr, "PR_SetFDInheritable failed\n");
         exit(1);

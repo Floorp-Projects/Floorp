@@ -24,8 +24,11 @@ CSRCS =          \
 	uxproces.c \
 	uxshm.c \
 	uxwrap.c \
-	uxpoll.c \
 	$(NULL)
+
+ifneq ($(USE_PTHREADS),1)
+CSRCS += uxpoll.c
+endif
 
 PTH_USER_CSRCS =          \
 	pthreads_user.c \

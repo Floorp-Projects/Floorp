@@ -551,6 +551,75 @@ PRStatus _MD_WindowsGetHostName(char *name, PRUint32 namelen)
     return PR_FAILURE;
 }
 
+PRStatus _MD_WindowsGetSysInfo(PRSysInfo cmd, char *name, PRUint32 namelen)
+{
+	OSVERSIONINFO osvi;
+
+	PR_ASSERT((cmd == PR_SI_SYSNAME) || (cmd == PR_SI_RELEASE));
+
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+	if (! GetVersionEx (&osvi) ) {
+		_PR_MD_MAP_DEFAULT_ERROR(GetLastError());
+    	return PR_FAILURE;
+	}
+
+	switch (osvi.dwPlatformId) {
+		case VER_PLATFORM_WIN32_NT:
+			if (PR_SI_SYSNAME == cmd)
+				(void)PR_snprintf(name, namelen, "Windows_NT");
+			else if (PR_SI_RELEASE == cmd)
+				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
+            							osvi.dwMinorVersion);
+			break;
+		case VER_PLATFORM_WIN32_WINDOWS:
+			if (PR_SI_SYSNAME == cmd) {
+				if ((osvi.dwMajorVersion > 4) || 
+					((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion > 0)))
+					(void)PR_snprintf(name, namelen, "Windows_98");
+				else
+					(void)PR_snprintf(name, namelen, "Windows_95");
+			} else if (PR_SI_RELEASE == cmd) {
+				(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
+            							osvi.dwMinorVersion);
+			}
+			break;
+   		default:
+			if (PR_SI_SYSNAME == cmd)
+				(void)PR_snprintf(name, namelen, "Windows_Unknown");
+			else if (PR_SI_RELEASE == cmd)
+				(void)PR_snprintf(name, namelen, "%d.%d",0,0);
+			break;
+	}
+	return PR_SUCCESS;
+}
+
+PRStatus _MD_WindowsGetReleaseName(char *name, PRUint32 namelen)
+{
+	OSVERSIONINFO osvi;
+
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+	if (! GetVersionEx (&osvi) ) {
+		_PR_MD_MAP_DEFAULT_ERROR(GetLastError());
+    	return PR_FAILURE;
+	}
+
+	switch (osvi.dwPlatformId) {
+		case VER_PLATFORM_WIN32_NT:
+		case VER_PLATFORM_WIN32_WINDOWS:
+			(void)PR_snprintf(name, namelen, "%d.%d",osvi.dwMajorVersion, 
+            							osvi.dwMinorVersion);
+			break;
+   		default:
+			(void)PR_snprintf(name, namelen, "%d.%d",0,0);
+			break;
+	}
+	return PR_SUCCESS;
+}
+
 /*
  **********************************************************************
  *

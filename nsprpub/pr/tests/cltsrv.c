@@ -765,6 +765,7 @@ static void PR_CALLBACK Server(void *arg)
 
     server->listener = PR_Socket(domain, SOCK_STREAM, protocol);
 
+    memset(&serverAddress, 0, sizeof(serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrAny, DEFAULT_PORT, &serverAddress);
 
     rv = PR_Bind(server->listener, &serverAddress);

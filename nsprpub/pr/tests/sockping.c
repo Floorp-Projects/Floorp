@@ -59,6 +59,12 @@ int main()
         exit(1);
     }
 
+    status = PR_SetFDInheritable(sock[0], PR_FALSE);
+    if (status == PR_FAILURE) {
+        fprintf(stderr, "PR_SetFDInheritable failed: (%d, %d)\n",
+                PR_GetError(), PR_GetOSError());
+        exit(1);
+    }
     status = PR_SetFDInheritable(sock[1], PR_TRUE);
     if (status == PR_FAILURE) {
         fprintf(stderr, "PR_SetFDInheritable failed: (%d, %d)\n",
