@@ -176,6 +176,8 @@ interface nsIMsgAccountManager : nsISupports {
 
   void setSpecialFolders();
 
+  void loadVirtualFolders();
+
   /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
 

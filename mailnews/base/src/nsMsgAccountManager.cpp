@@ -162,7 +162,8 @@ nsMsgAccountManager::nsMsgAccountManager() :
   m_cleanupInboxInProgress(PR_FALSE),
   m_haveShutdown(PR_FALSE),
   m_shutdownInProgress(PR_FALSE),
-  m_userAuthenticated(PR_FALSE)
+  m_userAuthenticated(PR_FALSE),
+  m_loadingVirtualFolders(PR_FALSE)
 {
 }
 
@@ -1457,8 +1458,6 @@ nsMsgAccountManager::LoadAccounts()
       token = nsCRT::strtok(newStr, ",", &newStr);
     }
 
-    
-    LoadVirtualFolders();
     nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
 
     if (NS_SUCCEEDED(rv))
@@ -2827,12 +2826,14 @@ nsresult nsMsgAccountManager::GetVirtualFoldersFile(nsCOMPtr<nsILocalFile>& file
   return rv;
 }
 
-nsresult nsMsgAccountManager::LoadVirtualFolders()
+NS_IMETHODIMP nsMsgAccountManager::LoadVirtualFolders()
 {
   nsCOMPtr <nsILocalFile> file;
   GetVirtualFoldersFile(file);
   if (!file)
     return NS_ERROR_FAILURE;
+
+  m_loadingVirtualFolders = PR_TRUE;
 
   nsresult rv;
   nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
@@ -2895,9 +2896,11 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
                 rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
               else
                 continue;
-              rv =  parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
 
+              parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
               virtualFolder->SetFlag(MSG_FOLDER_FLAG_VIRTUAL);
+              if (childFolder)
+                parentFolder->NotifyItemAdded(childFolder);
             }
           }
         }
@@ -2940,6 +2943,9 @@ nsresult nsMsgAccountManager::LoadVirtualFolders()
       }
     }
   }
+
+  m_loadingVirtualFolders = PR_FALSE;
+
   return rv;
 }
 
@@ -3036,7 +3042,7 @@ NS_IMETHODIMP nsMsgAccountManager::OnItemAdded(nsIRDFResource *parentItem, nsISu
   folder->GetFlags(&folderFlags);
   nsresult rv = NS_OK;
   // need to make sure this isn't happening during loading of virtualfolders.dat
-  if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+  if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL && !m_loadingVirtualFolders)
   {
     // When a new virtual folder is added, need to create a db Listener for it.
     nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
