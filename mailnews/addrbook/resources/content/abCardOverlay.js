@@ -29,7 +29,10 @@ function OnLoadNewCard()
 
 	doSetOKCancel(NewCardOKButton, 0);
 	
-	editCard.card = 0;
+	var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
+	cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
+
+	editCard.card = cardproperty;
 	editCard.okCallback = 0;
 	editCard.titlePrefix = editCard.newCardTitlePrefix;
 
@@ -49,6 +52,8 @@ function OnLoadNewCard()
 			abPopup.value = "abdirectory://abook.mab";
 	}
 	
+	GetCardValues(editCard.card, document);
+
 	//// FIX ME - looks like we need to focus on both the text field and the tab widget
 	//// probably need to do the same in the addressing widget
 	
@@ -150,14 +155,11 @@ function NewCardOKButton()
 			return false;  // don't close window
 		// -----
 		
-		var cardproperty = Components.classes["component://netscape/addressbook/cardproperty"].createInstance();
-		cardproperty = cardproperty.QueryInterface(Components.interfaces.nsIAbCard);
-
-		if ( cardproperty )
+		if ( editCard.card )
 		{
-			SetCardValues(cardproperty, document);
+			SetCardValues(editCard.card, document);
 		
-			cardproperty.addCardToDatabase(uri);
+			editCard.card.addCardToDatabase(uri);
 		}
 	}	
 	

@@ -131,7 +131,7 @@ nsAbCardProperty::nsAbCardProperty(void)
 	m_Note = "";
 	m_LastModDate = 0;
 
-	m_bSendPlainText = PR_FALSE;
+	m_bSendPlainText = PR_TRUE;
 
 	m_dbTableID = 0;
 	m_dbRowID = 0;
