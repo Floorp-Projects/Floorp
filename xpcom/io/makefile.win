@@ -60,7 +60,7 @@ XPIDLSRCS =                         \
         .\nsIDirectoryService.idl   \
         .\nsIByteArrayInputStream.idl  \
         .\nsIInputStreamTee.idl \
-		$(NULL)
+        $(NULL)
 
 ################################################################################
 ## library
