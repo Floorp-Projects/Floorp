@@ -1,0 +1,41 @@
+<!ELEMENT bugzilla (bug+)>
+<!ATTLIST bugzilla exporter CDATA #IMPLIED>
+<!ATTLIST bugzilla version CDATA #REQUIRED>
+<!ATTLIST bugzilla urlbase CDATA #REQUIRED>
+<!ATTLIST bugzilla maintainer CDATA #REQUIRED>
+<!ELEMENT bug (bug_id, exporter, urlbase, bug_status, resolution?, product, 
+priority, version, rep_platform, assigned_to, delta_ts, component, 
+reporter, target_milestone?, bug_severity, creation_ts, qa_contact?, 
+status_whiteboard?, op_sys, short_desc?, keywords*, dependson*, 
+blocks*, cc*, long_desc?, attachment*)>
+<!ELEMENT bug_id (#PCDATA)>
+<!ELEMENT short_desc (#PCDATA)>
+<!ELEMENT bug_status (#PCDATA)>
+<!ELEMENT dependson (#PCDATA)>
+<!ELEMENT blocks (#PCDATA)>
+<!ELEMENT product (#PCDATA)>
+<!ELEMENT priority (#PCDATA)>
+<!ELEMENT version (#PCDATA)>
+<!ELEMENT cc (#PCDATA)>
+<!ELEMENT rep_platform (#PCDATA)>
+<!ELEMENT assigned_to (#PCDATA)>
+<!ELEMENT delta_ts (#PCDATA)>
+<!ELEMENT component (#PCDATA)>
+<!ELEMENT reporter (#PCDATA)>
+<!ELEMENT target_milestone (#PCDATA)>
+<!ELEMENT bug_severity (#PCDATA)>
+<!ELEMENT creation_ts (#PCDATA)>
+<!ELEMENT qa_contact (#PCDATA)>
+<!ELEMENT op_sys (#PCDATA)>
+<!ELEMENT keywords (#PCDATA)>
+<!ELEMENT status_whiteboard (#PCDATA)>
+<!ELEMENT long_desc (who, bug_when, thetext)>
+<!ELEMENT who (#PCDATA)>
+<!ELEMENT bug_when (#PCDATA)>
+<!ELEMENT thetext (#PCDATA)>
+<!ELEMENT attachment (id, date, attach_desc, type, data)>
+<!ELEMENT id (#PCDATA)>
+<!ELEMENT date (#PCDATA)>
+<!ELEMENT desc (#PCDATA)>
+<!ELEMENT type (#PCDATA)>
+<!ELEMENT data (#PCDATA)>
