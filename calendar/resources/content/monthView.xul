@@ -94,11 +94,13 @@
 			<label id="2-month-title" onclick="gCalendarWindow.goToNext( 2 )"/>
 		    </vbox>
 	        </hbox>
+<!-- Eric modification : the year is now included in the 0-month-title by the JS file
 		<hbox id="year-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
    			<label id="0-year-title"/>
 		    </vbox>
 		</hbox>
+-->
 	    </vbox>
 
 
@@ -116,17 +118,17 @@
 	    <box id="month-grid-box" flex="1">    
          <grid id="month-grid" flex="1">
 		    <columns>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
-   			<column class="month-column-class" flex="1"/>
+   			<column id="month-view-column-1" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-2" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-3" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-4" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-5" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-6" class="month-column-class" flex="1"/>
+   			<column id="month-view-column-7" class="month-column-class" flex="1"/>
 		    </columns>
 
 		    <rows >
-			<row flex="1">
+			<row id="month-week-header-row" flex="1">
 			    <vbox class="month-column-center-day-class">
 				   <label class="month-view-header-days" id="month-view-header-day-1"/>
 			    </vbox>
@@ -150,7 +152,7 @@
 			    </vbox>
 			</row>
 
-			<row flex="1"  >
+			<row id="month-week-1-row" flex="1"  >
 			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-1-box">
 				    <label class="month-day-number-class" id="month-week-1-day-1"/>
 			    </vbox>    
@@ -300,7 +302,7 @@
 			    </vbox>    
 			</row>
 
-			<row flex="1">
+			<row id="month-week-6-row" flex="1">
 			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-1-box">
 				    <label class="month-day-number-class" id="month-week-6-day-1"/>
 			    </vbox>    

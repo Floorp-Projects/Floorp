@@ -347,6 +347,33 @@ CalendarEventDataSource.prototype.getEventsForMonth = function calEvent_getEvent
 
    return eventDisplays;
 }
+/** PRIVATE
+*
+*   CalendarEventDataSource/getEventsDisplayForRange.
+*
+* PARAMETERS
+*      startdate     - Date object, startdate 
+*      enddate     - Date object, enddate 
+*                .
+* RETURN
+*      array    - of events for the month
+*/
+
+CalendarEventDataSource.prototype.getEventsDisplayForRange = function calEvent_getEventsDisplayForRange( startdate,enddate )
+{
+   var eventDisplays =  new Array();
+
+   var eventList = this.gICalLib.getEventsForRange( startdate, enddate);
+   
+   while( eventList.hasMoreElements() )
+   {
+      eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEventDisplay);
+   }
+
+   eventDisplays.sort( this.orderEventsByDisplayDate );
+
+   return eventDisplays;
+}
 
 /** PUBLIC
 *

@@ -77,7 +77,9 @@
    windowtype="calendarMainWindow"
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   persist="screenX screenY width height sizemode"> 
+   persist="screenX screenY width height sizemode"
+	height="550"
+	width="710"> 
  
 <commandset id="calendar_commands">
    <command id="new_command" oncommand="newEventCommand( event )"/>
@@ -265,19 +267,24 @@
    <menubar id="main-menubar" persist="collapsed"/>
 
    <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar" persist="collapsed" tbalign="stretch">
-          <!--<toolbarbutton class="toolbarbutton-1" id="calendar-new-task-button"   label="&calendar.newtask.button.label;"         tooltiptext="&calendar.newtask.button.tooltip;"      observes="new_todo_command"/>-->
-          <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     observes="new_command"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
-          <toolbarseparator class="toolbarseparator-primary"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
-          <toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
-          <spacer flex="1"/>
-          <hbox id="throbber-box" align="center">
-             <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
-                 tooltiptext="&throbber.tooltip;"/>
-          </hbox>
+		<!--<toolbarbutton class="toolbarbutton-1" id="calendar-new-task-button"   label="&calendar.newtask.button.label;"         tooltiptext="&calendar.newtask.button.tooltip;"      observes="new_todo_command"/>-->
+      <toolbarbutton class="toolbarbutton-1" id="calendar-new-event-button"      label="&calendar.newevent.button.label;"        tooltiptext="&calendar.newevent.button.tooltip;"     observes="new_command"/>
+      <toolbarbutton class="toolbarbutton-1" id="calendar-edit-event-button"     label="&calendar.edit.button.label;"            tooltiptext="&calendar.edit.button.tooltip;"         observes="modify_command"/>
+		<toolbarbutton class="toolbarbutton-1" id="calendar-delete-event-button"   label="&calendar.delete.button.label;"          tooltiptext="&calendar.delete.button.tooltip;"       observes="delete_command"/>
+		<toolbarseparator class="toolbarseparator-primary"/>
+		<toolbarbutton class="toolbarbutton-1" id="calendar-day-view-button"       label="&calendar.dayview.button.label;"         tooltiptext="&calendar.dayview.button.tooltip;"      observes="day_view_command"/>
+		<toolbarbutton class="toolbarbutton-1" id="calendar-week-view-button"      label="&calendar.weekview.button.label;"        tooltiptext="&calendar.weekview.button.tooltip;"     observes="week_view_command"/>
+		<toolbarbutton class="toolbarbutton-1" id="calendar-month-view-button"     label="&calendar.monthview.button.label;"       tooltiptext="&calendar.monthview.button.tooltip;"    observes="month_view_command"/>
+		<toolbarseparator class="toolbarseparator-primary" collapsed="true"/>
+      <hbox align="center" collapsed="true">
+			<checkbox id="only-workday-checkbox" label="&calendar.onlyworkday.checkbox.label;" flex="1" crop="end" oncommand="gCalendarWindow.currentView.refreshDisplay( )" persist="checked"/>
+      </hbox>
+
+		<spacer flex="1"/>
+		<hbox id="throbber-box" align="center">
+		 <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
+			  tooltiptext="&throbber.tooltip;"/>
+		</hbox>
    </toolbar>
 </toolbox>
 

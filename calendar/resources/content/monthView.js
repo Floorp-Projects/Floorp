@@ -96,6 +96,8 @@
 *            dayBoxItem.numEvents  - The number of events for the day, used to limit the number displayed
 *                                    since there is only room for 3.
 * 
+*            dayBoxItem.date       - Date of the Box.
+* 
 */
 
 // Make MonthView inherit from CalendarView
@@ -215,7 +217,7 @@ function MonthView( calendarWindow )
 MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 {
    // get this month's events and display them
-   var monthEventList = this.calendarWindow.eventSource.getEventsForMonth( this.calendarWindow.getSelectedDate() );
+   var monthEventList = this.calendarWindow.eventSource.getEventsDisplayForRange( this.firstDateOfView,this.lastDateOfView );
    
    // remove old event boxes
    var eventBoxList = document.getElementsByAttribute( "eventbox", "monthview" );
@@ -244,9 +246,9 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       
       var eventDate = new Date( calendarEventDisplay.displayDate );
       // get the day box for the calendarEvent's day
-      var eventDayInMonth = eventDate.getDate();
+       var eventDayInView = Math.floor( (eventDate - this.firstDateOfView ) / (1000 * 60 * 60 * 24) ) ;
       
-      var dayBoxItem = this.dayBoxItemByDateArray[ eventDayInMonth ];
+       var dayBoxItem = this.dayBoxItemArray[ eventDayInView ];       
             
       if( !dayBoxItem )
          break;
@@ -291,7 +293,26 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          var eventBoxText = document.createElement( "label" );
          eventBoxText.setAttribute( "crop", "end" );
          eventBoxText.setAttribute( "class", "month-day-event-text-class" );
-         eventBoxText.setAttribute( "value", this.calendarWindow.dateFormater.getFormatedTime( new Date( calendarEventDisplay.event.start.getTime() ) )+" "+calendarEventDisplay.event.title );
+         //Eric
+         //eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
+         if ( calendarEventDisplay.event.allDay == true )
+         {
+          eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
+          // Create an image
+          newImage = document.createElement("image");
+          newImage.setAttribute( "class", "all-day-event-class" );
+          eventBox.appendChild( newImage );
+         }
+         else
+         {
+          // To format the starting time of the event
+          var eventStartTime = new Date( calendarEventDisplay.event.start.getTime()) ;
+          var StartFormattedTime = this.calendarWindow.dateFormater.getFormatedTime( eventStartTime );
+          // display as "12:15 titleevent"
+          eventBoxText.setAttribute( "value",  StartFormattedTime+' '+calendarEventDisplay.event.title);
+         }
+         //End Eric	 
+
          //you need this flex in order for text to crop
          eventBoxText.setAttribute( "flex", "1" );
          eventBoxText.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
@@ -305,11 +326,11 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       else
       {
          //if there is not a box to hold the little dots for this day...
-         if ( !document.getElementById( "dotboxholder"+calendarEventDisplay.event.start.day ) )
+         if ( !document.getElementById( "dotboxholder"+eventDayInView ) )
          {
             //make one
             dotBoxHolder = document.createElement( "hbox" );
-            dotBoxHolder.setAttribute( "id", "dotboxholder"+calendarEventDisplay.event.start.day );
+            dotBoxHolder.setAttribute( "id", "dotboxholder"+eventDayInView );
             dotBoxHolder.setAttribute( "eventbox", "monthview" );
                         
             //add the box to the day.
@@ -318,7 +339,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
          else
          {
             //otherwise, get the box
-            dotBoxHolder = document.getElementById( "dotboxholder"+calendarEventDisplay.event.start.day );
+            dotBoxHolder = document.getElementById( "dotboxholder"+eventDayInView );
          }
          
          if( dotBoxHolder.childNodes.length < kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW )
@@ -420,7 +441,11 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
       var idName = i + "-month-title";
       document.getElementById( idName ).setAttribute( "value" , titleMonthArray[i] );
    }
-	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
+   //Eric modification begin
+   //document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
+   document.getElementById( "0-month-title" ).setAttribute( "value" , titleMonthArray[0] + " " + newYear );
+   //Eric modification end
+  
    
    var categoriesStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    var defaultWeekStart = categoriesStringBundle.GetStringFromName("defaultWeekStart" );
@@ -445,12 +470,14 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    for( i = 1; i <= 7; i++ )
    {
       document.getElementById( "month-view-header-day-"+i ).value = NewArrayOfDayNames[ (i-1) ];
+       //Eric addition
+       document.getElementById( "month-view-column-"+i ).removeAttribute( "collapsed" );
    }
    
 
    // Write in all the day numbers and create the dayBoxItemByDateArray, see notes above
    
-   // figure out first and last days of the month
+   // figure out first and last days of the month, first and last date of view
    
    var firstDate = new Date( newYear, newMonth, 1 );
    var firstDayOfWeek = firstDate.getDay() - Offset;
@@ -458,6 +485,8 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
       firstDayOfWeek+=7;
 
    var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
+   this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDayOfWeek, 0, 0, 0 );
+   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDayOfWeek, 0, 0, 0 );
    
    // prepare the dayBoxItemByDateArray, we will be filling this in
    
@@ -466,12 +495,43 @@ MonthView.prototype.refreshDisplay = function monthView_refreshDisplay( )
    // loop through all the day boxes
    
    var dayNumber = 1;
+
+   //Eric modification begin
+   var Checked = document.getElementById( "only-workday-checkbox" ).checked;
+
+   if( Checked === true )
+   {
+       for( i = 0; i <= 1; i++ ){
+	   ni = i - Offset ;
+	   ni = (ni >0)? ni : ni + 7;
+	   document.getElementById( "month-view-column-"+ni ).setAttribute( "collapsed", "true" );
+	   //	   document.getElementById( "month-view-header-day-"+ni ).value = null;
+       }
+       if( Offset <= 1 && firstDayOfWeek >= 6-Offset)
+	   document.getElementById( "month-week-1-row" ).setAttribute( "collapsed", "true" );
+   }
+   else
+   {
+       document.getElementById( "month-week-1-row" ).removeAttribute( "collapsed" );
+   }
+
+   if(this.dayNumberItemArray.length-firstDayOfWeek-lastDayOfMonth >= 7)
+   {
+       document.getElementById( "month-week-6-row" ).setAttribute( "collapsed", "true" );
+   }
+   else
+   {
+       document.getElementById( "month-week-6-row" ).removeAttribute( "collapsed" );
+   }
+   //Eric modification end
    
    for( var dayIndex = 0; dayIndex < this.dayNumberItemArray.length; ++dayIndex )
    {
       var dayNumberItem = this.dayNumberItemArray[ dayIndex ];
       var dayBoxItem = this.dayBoxItemArray[ dayIndex ];
       var thisDate;
+
+      dayBoxItem.removeAttribute( "collapsed" );
 
       if( dayIndex < firstDayOfWeek || dayNumber > lastDayOfMonth )
       {
@@ -910,16 +970,26 @@ var monthViewEventDragAndDropObserver  = {
   onDrop: function (evt,dropdata,session){
     //get the date of the current event box.
     //dump( "\n\nDROP EVNET->\n"+gEventBeingDragged.start );
-    var newDay = gBoxBeingDroppedOn.dayNumber;
-    if( newDay == null )
+
+    if( gBoxBeingDroppedOn.date == null )
         return;
     
-    var OldStartDate = new Date( gEventBeingDragged.start.getTime() );
-    var newStartDate = new Date( OldStartDate.getTime() );
-    newStartDate.setDate( newDay );
+    var newDay = new Date(gBoxBeingDroppedOn.date) ;
 
-    var Difference = newStartDate.getTime() - OldStartDate.getTime();
+    var oldStartDate = new Date( gEventBeingDragged.start.getTime() );
     var oldEndDate = new Date( gEventBeingDragged.end.getTime() );
+
+    var newStartDate = new Date( oldStartDate.getTime() ) ;
+    newStartDate.setFullYear( newDay.getFullYear());
+    //call setMonth() twice necessary, because of a bug ? observed in Mozilla 1.2.1. :
+    //     - the bug consequence is that an event drag from month 0 (Jan.) to month 1 (Feb)
+    //       is set by a single call to month 2 (Mar). 
+    newStartDate.setMonth( newDay.getMonth() );
+    newStartDate.setMonth( newDay.getMonth() );
+    newStartDate.setDate( newDay.getDate());
+
+    var Difference = newStartDate.getTime() - oldStartDate.getTime();
+    
     var newEndDate = oldEndDate.getTime() + Difference;
 
     gEventBeingDragged.start.setTime( newStartDate.getTime() );
