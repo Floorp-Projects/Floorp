@@ -526,7 +526,10 @@ function setCookiePermissions(action) {
                             .getService(Components.interfaces.nsIIOService);
   var uri = ioService.newURI(url, null, null);
   
-  permissionmanager.add(uri, dialogType, action);
+  // only set the permission if the permission doesn't already exist
+  if (permissionmanager.testPermission(uri, dialogType) != action)
+    permissionmanager.add(uri, dialogType, action);
+
   site.focus();
   site.value = "";
 }
