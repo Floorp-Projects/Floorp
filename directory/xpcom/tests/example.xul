@@ -28,14 +28,19 @@
                   datasources="rdf:ldap"
                   ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??one?(objectclass=*)"
                   flex="1"
-                  containment="http://home.netscape.com/NC-rdf#recursiveChild">
+                  containment="http://home.netscape.com/NC-rdf#recursiveChild"
+                  flags="dont-build-content">
       <template>
-        <outlinerrow uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
-          <outlinercell ref="description"
-                        label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
-          <outlinercell ref="cn"
-                        label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
-        </outlinerrow>
+        <outlinerchildren>
+          <outlineritem uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
+            <outlinerrow>
+              <outlinercell ref="description"
+                            label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
+              <outlinercell ref="cn"
+                            label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
+            </outlinerrow>
+          </outlineritem>
+        </outlinerchildren>
       </template>
     </outlinerbody>
   </outliner>
