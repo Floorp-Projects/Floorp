@@ -192,12 +192,11 @@ void CreateNewsMenu(void)
 	CString newsDomainName = GetGlobal("nDomainName");
 	CString newsPrettyName = GetGlobal("nPrettyName");
 	CString newsLongName = GetGlobal("nLongName");
-	CString newsInServer = GetGlobal("nIncomingServer");
-	CString newsOutServer = GetGlobal("nOutgoingServer");
+	CString newsServer = GetGlobal("nServer");
 	CString newsPortNumber = GetGlobal("nPortNumber");
 
 	// newsaccount.rdf file is created only if values are entered for all the fields in the CCK News UI		
-	if (!( (newsDomainName.IsEmpty()) || (newsPrettyName.IsEmpty()) || (newsLongName.IsEmpty()) || (newsInServer.IsEmpty()) || (newsOutServer.IsEmpty()) || (newsPortNumber.IsEmpty()) ))
+	if (!( (newsDomainName.IsEmpty()) || (newsPrettyName.IsEmpty()) || (newsLongName.IsEmpty()) || (newsServer.IsEmpty()) || (newsPortNumber.IsEmpty()) ))
 	{
 		CString NewsFile = NewsPath +"newsaccount.rdf";
 		ofstream News(NewsFile);
@@ -225,7 +224,7 @@ void CreateNewsMenu(void)
 			News <<"   <NC:incomingServer>\n";
 			News <<"    <NC:nsIMsgIncomingServer>\n";
 			News <<"     <NC:prettyName>" << newsPrettyName << "</NC:prettyName>\n";
-			News <<"     <NC:hostName>" << newsInServer << "</NC:hostName>\n";
+			News <<"     <NC:hostName>" << newsServer << "</NC:hostName>\n";
 			News <<"     <NC:type>nntp</NC:type>\n";
 			News <<"     <NC:port>" << newsPortNumber << "</NC:port>\n";
 			News <<"     <NC:rememberPassword>false</NC:rememberPassword>\n";
@@ -239,16 +238,6 @@ void CreateNewsMenu(void)
 			News <<"     <NC:bccSelf>false</NC:bccSelf>\n";
 			News <<"    </NC:nsIMsgIdentity>\n";
 			News <<"   </NC:identity>\n\n";
-
-			News <<"   <NC:smtp>\n";
-			News <<"    <NC:nsISmtpServer>\n";
-			News <<"     <NC:hostname>" << newsOutServer << "</NC:hostname>\n";
-			News <<"    </NC:nsISmtpServer>\n";
-			News <<"   </NC:smtp>\n\n";
-
-			News <<"   <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>\n";
-			News <<"   <NC:smtpCreateNewServer>ture</NC:smtpCreateNewServer>\n";
-			News <<"   <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>\n\n";
 
 			News <<"   <NC:wizardSkipPanels>true</NC:wizardSkipPanels>\n";
 			News <<"   <NC:wizardShortName>" << shortname << "</NC:wizardShortName>\n";
