@@ -103,6 +103,30 @@ NS_IMETHODIMP imgCache::RemoveEntry(nsIURI *uri)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
+/* imgIRequest findEntry(in nsIURI uri); */
+NS_IMETHODIMP imgCache::FindEntryProperties(nsIURI *uri, nsIProperties **_retval)
+{
+  PRBool expired;
+  // This is an owning reference that must be released.
+  imgRequest *request = nsnull;
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+
+  // addrefs request
+  imgCache::Get(uri, &expired, &request, getter_AddRefs(entry));
+
+  *_retval = nsnull;
+
+  if (request) {
+    *_retval = request->Properties();
+    NS_ADDREF(*_retval);
+  }
+
+  NS_IF_RELEASE(request);
+
+  return NS_OK;
+}
+
+
 static nsCOMPtr<nsICacheSession> gSession = nsnull;
 static nsCOMPtr<nsICacheSession> gChromeSession = nsnull;
 

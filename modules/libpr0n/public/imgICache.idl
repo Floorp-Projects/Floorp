@@ -40,15 +40,17 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface imgIRequest;
+interface nsIProperties;
 
 /**
  * imgICache interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.0
+ * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(075e424c-1dd2-11b2-97bc-e5beb94b874e)]
+[scriptable, uuid(f1b74aae-5661-4753-a21c-66dd644afebc)]
 interface imgICache : nsISupports
 {
   /**
@@ -67,4 +69,17 @@ interface imgICache : nsISupports
    *         NS_ERROR_NOT_AVAILABLE if \a uri was unable to be removed from the cache.
    */
   void removeEntry(in nsIURI uri);
+
+  /**
+   * Find Properties
+   * Used to get properties such as 'type' and 'content-disposition'
+   * 'type' is a nsISupportsCString containing the images' mime type such as 'image/png'
+   * 'content-disposition' will be a nsISupportsCString containing the header
+   * If you call this before any data has been loaded from a URI, it will succeed,
+   * but come back empty.
+   *
+   * @param uri The URI to look up.
+   * @returns NULL if the URL was not found in the cache
+   */
+  nsIProperties findEntryProperties(in nsIURI uri);
 };
