@@ -455,7 +455,7 @@ void
 nsJVMMgr::ReportJVMError(nsresult err)
 {
     MWContext* cx = XP_FindSomeContext();
-    char *s;
+    char *s = NULL;
     switch (err) {
       case NS_JVM_ERROR_NO_CLASSES: {
           s = PR_smprintf(XP_GetString(XP_JAVA_NO_CLASSES));
