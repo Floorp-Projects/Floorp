@@ -19,21 +19,48 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   dbragg@netscape.com
- *   sspitzer@netscape.com
- *   disttsc@bart.nl
  */
 
+var migrator;
+var browser;
+var dialog;
+
 function onLoad(oldProfilePath, newProfilePath) {
+  //dialog = new Object;
+  //dialog.title     = document.getElementByID( "xpi.process" );
+  //dialog.current   = document.getElementByID( "xpi.currentlyprocessing");
+  //dialog.newWindow   = document.getElementById( "dialog.newWindow" );
+
+	
   dump("start of pref migration\n");
   window.focus();
   var prefmigrator = Components.classes['@mozilla.org/profile/migration;1'].createInstance(Components.interfaces.nsIPrefMigration);
-  if (prefmigrator) {
-    try {
-      prefmigrator.ProcessPrefsFromJS();
+  if (prefmigrator) 
+  {
+	try {
+    	prefmigrator.ProcessPrefsFromJS();
     }
     catch (ex) {
-      dump("failed to migrate: ex="+ ex + "\n");
-    }
+		dump("failed to migrate: ex="+ ex + "\n");
+	}
   }
 }
+
+
+function open() {
+   if ( dialog.ok.disabled ) {
+      return;
+   }
+
+	var url = dialog.input.value;
+
+	browser.loadUrl( url );
+
+	/* Close dialog. */
+        window.close();
+}
+
+function cancel() {
+        window.close();
+}
+
