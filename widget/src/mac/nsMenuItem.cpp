@@ -184,16 +184,19 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
                              PRUint32        aCommand)
 {
   mPopUpParent = aParent;
-  NS_ADDREF(mPopUpParent);
+  if ( mPopUpParent ) {
+  	
+    NS_ADDREF(mPopUpParent);
 
-  nsIWidget * widget = nsnull;
-  /*if (NS_OK != aParent->GetParent(widget)) {
-    widget = nsnull;
-  }*/
+    nsIWidget * widget = nsnull;
+    /*if (NS_OK != aParent->GetParent(widget)) {
+      widget = nsnull;
+    }*/
 
-  //Create(widget, GetNativeParent(), aLabel, aCommand);
-  aParent->AddItem(this);
-
+    //Create(widget, GetNativeParent(), aLabel, aCommand);
+    aParent->AddItem(this);
+  }
+  
   return NS_OK;
 }
 
