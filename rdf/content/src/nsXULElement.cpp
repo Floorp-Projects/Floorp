@@ -113,6 +113,7 @@
 #include "nsXULDocument.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsXULAtoms.h"
 
 // Used for the temporary DOM Level2 hack
 #include "nsIPref.h"
@@ -292,35 +293,6 @@ nsIXULContentUtils*  nsXULElement::gXULUtils;
 PRInt32              nsXULElement::kNameSpaceID_RDF;
 PRInt32              nsXULElement::kNameSpaceID_XUL;
 
-nsIAtom*             nsXULElement::kClassAtom;
-nsIAtom*             nsXULElement::kContextAtom;
-nsIAtom*             nsXULElement::kHeightAtom;
-nsIAtom*             nsXULElement::kHiddenAtom;
-nsIAtom*             nsXULElement::kIdAtom;
-nsIAtom*             nsXULElement::kObservesAtom;
-nsIAtom*             nsXULElement::kOpenAtom;
-nsIAtom*             nsXULElement::kPopupAtom;
-nsIAtom*             nsXULElement::kMenuPopupAtom;
-nsIAtom*             nsXULElement::kRefAtom;
-nsIAtom*             nsXULElement::kSelectedAtom;
-nsIAtom*             nsXULElement::kStyleAtom;
-nsIAtom*             nsXULElement::kTooltipAtom;
-nsIAtom*             nsXULElement::kTreeAtom;
-nsIAtom*             nsXULElement::kTreeCellAtom;
-nsIAtom*             nsXULElement::kTreeChildrenAtom;
-nsIAtom*             nsXULElement::kTreeColAtom;
-nsIAtom*             nsXULElement::kTreeItemAtom;
-nsIAtom*             nsXULElement::kTreeRowAtom;
-nsIAtom*             nsXULElement::kValueAtom;
-nsIAtom*             nsXULElement::kWidthAtom;
-nsIAtom*             nsXULElement::kWindowAtom;
-nsIAtom*             nsXULElement::kMenuListAtom;
-nsIAtom*             nsXULElement::kMenuAtom;
-nsIAtom*             nsXULElement::kPopupSetAtom;
-nsIAtom*             nsXULElement::kBrowserAtom;
-nsIAtom*             nsXULElement::kEditorAtom;
-nsIAtom*             nsXULElement::kIFrameAtom;
-
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
 PRUint32             nsXULPrototypeAttribute::gNumAttributes;
@@ -372,35 +344,6 @@ nsXULElement::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
        
-        kClassAtom          = NS_NewAtom("class");
-        kContextAtom        = NS_NewAtom("context");
-        kHeightAtom         = NS_NewAtom("height");
-        kHiddenAtom         = NS_NewAtom("hidden");
-        kIdAtom             = NS_NewAtom("id");
-        kObservesAtom       = NS_NewAtom("observes");
-        kOpenAtom           = NS_NewAtom("open");
-        kPopupAtom          = NS_NewAtom("popup");
-        kMenuPopupAtom      = NS_NewAtom("menupopup");
-        kRefAtom            = NS_NewAtom("ref");
-        kSelectedAtom       = NS_NewAtom("selected");
-        kStyleAtom          = NS_NewAtom("style");
-        kTooltipAtom        = NS_NewAtom("tooltip");
-        kTreeAtom           = NS_NewAtom("tree");
-        kTreeCellAtom       = NS_NewAtom("treecell");
-        kTreeChildrenAtom   = NS_NewAtom("treechildren");
-        kTreeColAtom        = NS_NewAtom("treecol");
-        kTreeItemAtom       = NS_NewAtom("treeitem");
-        kTreeRowAtom        = NS_NewAtom("treerow");
-        kValueAtom          = NS_NewAtom("value");
-        kWidthAtom          = NS_NewAtom("width");
-        kWindowAtom         = NS_NewAtom("window");
-        kMenuListAtom       = NS_NewAtom("menulist");
-        kMenuAtom           = NS_NewAtom("menu");
-        kPopupSetAtom       = NS_NewAtom("popupset");
-        kBrowserAtom        = NS_NewAtom("browser");
-        kIFrameAtom         = NS_NewAtom("iframe");
-        kEditorAtom         = NS_NewAtom("editor");
-
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
                                                 kINameSpaceManagerIID,
@@ -419,6 +362,8 @@ nsXULElement::Init()
                                           (nsISupports**) &gXULUtils);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get XUL content utils");
         if (NS_FAILED(rv)) return rv;
+
+        nsXULAtoms::AddRef();
     }
 
     return NS_OK;
@@ -452,41 +397,14 @@ nsXULElement::~nsXULElement()
             gRDFService = nsnull;
         }
         
-        NS_IF_RELEASE(kClassAtom);
-        NS_IF_RELEASE(kContextAtom);
-        NS_IF_RELEASE(kHeightAtom);
-        NS_IF_RELEASE(kHiddenAtom);
-        NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kObservesAtom);
-        NS_IF_RELEASE(kOpenAtom);
-        NS_IF_RELEASE(kPopupAtom);
-        NS_IF_RELEASE(kMenuPopupAtom);
-        NS_IF_RELEASE(kRefAtom);
-        NS_IF_RELEASE(kSelectedAtom);
-        NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kTooltipAtom);
-        NS_IF_RELEASE(kTreeAtom);
-        NS_IF_RELEASE(kTreeCellAtom);
-        NS_IF_RELEASE(kTreeChildrenAtom);
-        NS_IF_RELEASE(kTreeColAtom);
-        NS_IF_RELEASE(kTreeItemAtom);
-        NS_IF_RELEASE(kTreeRowAtom);
-        NS_IF_RELEASE(kValueAtom);
-        NS_IF_RELEASE(kWidthAtom);
-        NS_IF_RELEASE(kWindowAtom);
-        NS_IF_RELEASE(kMenuListAtom);
-        NS_IF_RELEASE(kMenuAtom);
-        NS_IF_RELEASE(kPopupSetAtom);
-        NS_IF_RELEASE(kBrowserAtom);
-        NS_IF_RELEASE(kIFrameAtom);
-        NS_IF_RELEASE(kEditorAtom);
-
         NS_IF_RELEASE(gNameSpaceManager);
 
         if (gXULUtils) {
             nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
             gXULUtils = nsnull;
         }
+
+        nsXULAtoms::Release();
     }
 }
 
@@ -548,9 +466,9 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                 }
 
                 // Check for popup attributes
-                if (attr->mNodeInfo->Equals(kPopupAtom) ||
-                    attr->mNodeInfo->Equals(kTooltipAtom) ||
-                    attr->mNodeInfo->Equals(kContextAtom)) {
+                if (attr->mNodeInfo->Equals(nsXULAtoms::popup) ||
+                    attr->mNodeInfo->Equals(nsXULAtoms::tooltip) ||
+                    attr->mNodeInfo->Equals(nsXULAtoms::context)) {
                     rv = element->AddPopupListener(name);
                     if (NS_FAILED(rv)) return rv;
                 }
@@ -648,7 +566,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kMenuListAtom) {
+      if (tag.get() == nsXULAtoms::menulist) {
         // We delegate XULMenuListElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -670,7 +588,7 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       PRInt32 dummy;
       NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
       xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag.get() == kTreeAtom) {
+      if (tag.get() == nsXULAtoms::tree) {
         // We delegate XULTreeElement APIs to an aggregate object
         if (! InnerXULElement()) {
             rv = EnsureSlots();
@@ -1820,7 +1738,7 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REF
         if (NS_FAILED(rv)) return rv;
     }
 
-    if (NodeInfo()->Equals(kWindowAtom)) {
+    if (NodeInfo()->Equals(nsXULAtoms::window)) {
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;
@@ -2015,11 +1933,11 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
         xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
 
         const char* rootname;
-        if (tag.get() == kTreeAtom) {
+        if (tag.get() == nsXULAtoms::tree) {
             fn = NS_NewScriptXULTreeElement;
             rootname = "nsXULTreeElement::mScriptObject";
         }
-        else if (tag.get() == kMenuListAtom) {
+        else if (tag.get() == nsXULAtoms::menulist) {
             fn = NS_NewScriptXULMenuListElement;
             rootname = "nsXULMenuListElement::mScriptObject";
         }
@@ -2364,10 +2282,10 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
                     }
 
                     if (! reset) {
-                        if ((attr.get() == kPopupAtom) ||
-                            (attr.get() == kTooltipAtom) ||
-                            (attr.get() == kContextAtom) ||
-                            (attr.get() == kStyleAtom)) {
+                        if ((attr.get() == nsXULAtoms::popup) ||
+                            (attr.get() == nsXULAtoms::tooltip) ||
+                            (attr.get() == nsXULAtoms::context) ||
+                            (attr.get() == nsXULAtoms::style)) {
                             reset = PR_TRUE;
                         }
                     }
@@ -2625,8 +2543,8 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     // are selected (and therefore need to be deselected). We need to account for this.
     nsCOMPtr<nsIAtom> tag;
     oldKid->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag.get() == kTreeChildrenAtom || tag.get() == kTreeItemAtom ||
-                tag.get() == kTreeCellAtom)) {
+    if (tag && (tag.get() == nsXULAtoms::treechildren || tag.get() == nsXULAtoms::treeitem ||
+                tag.get() == nsXULAtoms::treecell)) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
@@ -2648,7 +2566,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
             itemList->Item(i, getter_AddRefs(node));
             if (IsAncestor(parentKid, node)) {
               nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-              content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_FALSE);
+              content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::selected, PR_FALSE);
               length--;
               i--;
               fireSelectionHandler = PR_TRUE;
@@ -2797,14 +2715,14 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
 
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
-    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kClassAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == nsXULAtoms::clazz)) {
         Attributes()->UpdateClassList(aValue);
     }
 
     // Check to see if the STYLE attribute is being set.  If so, we need to create a new
     // style rule based off the value of this attribute, and we need to let the document
     // know about the StyleRule change.
-    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kStyleAtom) && (mDocument != nsnull)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == nsXULAtoms::style) && (mDocument != nsnull)) {
         nsCOMPtr <nsIURI> docURL;
         mDocument->GetBaseURL(*getter_AddRefs(docURL));
         Attributes()->UpdateStyleRule(docURL, aValue);
@@ -2819,7 +2737,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
     if (mDocument && (aNameSpaceID == kNameSpaceID_None)) {
       // See if we're a treeitem atom.
       nsCOMPtr<nsIRDFNodeList> nodeList;
-      if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
+      if (tag && (tag.get() == nsXULAtoms::treeitem) && (aName == nsXULAtoms::selected)) {
         nsCOMPtr<nsIDOMXULTreeElement> treeElement;
         GetParentTree(getter_AddRefs(treeElement));
         if (treeElement) {
@@ -2839,7 +2757,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
     // Check to see if the POPUP attribute is being set.  If so, we need to attach
     // a new instance of our popup handler to the node.
     if (mDocument && (aNameSpaceID == kNameSpaceID_None) && 
-        (aName == kPopupAtom || aName == kTooltipAtom || aName == kContextAtom))
+        (aName == nsXULAtoms::popup || aName == nsXULAtoms::tooltip || aName == nsXULAtoms::context))
     {
         AddPopupListener(aName);
     }
@@ -2907,7 +2825,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
                 NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
 
             if (xulListener->ObservingAttribute(attribute) && 
-               (aName != kIdAtom)) {
+               (aName != nsXULAtoms::id)) {
                 // XXX Should have a function that knows which attributes are special.
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
@@ -3035,13 +2953,13 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
     // XXXbe fuse common (mDocument && aNameSpaceId == kNameSpaceID_None)
     if (mDocument &&
         (aNameSpaceID == kNameSpaceID_None) &&
-        (aName == kClassAtom)) {
+        (aName == nsXULAtoms::clazz)) {
         Attributes()->UpdateClassList(nsAutoString());
     }
     
     if (mDocument &&
         (aNameSpaceID == kNameSpaceID_None) &&
-        aName == kStyleAtom) {
+        aName == nsXULAtoms::style) {
 
         nsCOMPtr <nsIURI> docURL;
         mDocument->GetBaseURL(*getter_AddRefs(docURL));
@@ -3062,7 +2980,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
         // I can QI to for additions and removals of nodes.  For now
         // do an evil cast.
         nsCOMPtr<nsIRDFNodeList> nodeList;
-        if (tag && (tag.get() == kTreeItemAtom) && (aName == kSelectedAtom)) {
+        if (tag && (tag.get() == nsXULAtoms::treeitem) && (aName == nsXULAtoms::selected)) {
             nsCOMPtr<nsIDOMXULTreeElement> treeElement;
             GetParentTree(getter_AddRefs(treeElement));
             if (treeElement) {
@@ -3111,7 +3029,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
         // need to remove ourselves completely.
         if (mDocument &&
             (aNameSpaceID == kNameSpaceID_None) && 
-            (aName == kObservesAtom))
+            (aName == nsXULAtoms::observes))
         {
             // Do a getElementById to retrieve the broadcaster.
             nsCOMPtr<nsIDOMElement> broadcaster;
@@ -3134,7 +3052,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
                 nsAutoString str;
                 aName->ToString(str);
                 if (xulListener->ObservingAttribute(str) && 
-                   (aName != kIdAtom)) {
+                   (aName != nsXULAtoms::id)) {
                     // XXX Should have a function that knows which attributes are special.
                     // Unset the attribute in the broadcast listener.
                     nsCOMPtr<nsIDOMElement> element;
@@ -3559,7 +3477,7 @@ nsXULElement::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElemen
             for (PRInt32 i = Attributes()->Count() - 1; i >= 0; --i) {
                 nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, Attributes()->ElementAt(i));
                 nsINodeInfo *ni = attr->GetNodeInfo();
-                if (ni->Equals(kIdAtom, kNameSpaceID_None))
+                if (ni->Equals(nsXULAtoms::id, kNameSpaceID_None))
                     continue;
 
                 // We aren't the id atom, so it's ok to set us in the listener.
@@ -3633,11 +3551,11 @@ nsXULElement::GetResource(nsIRDFResource** aResource)
     nsresult rv;
 
     nsAutoString id;
-    rv = GetAttribute(kNameSpaceID_None, kRefAtom, id);
+    rv = GetAttribute(kNameSpaceID_None, nsXULAtoms::ref, id);
     if (NS_FAILED(rv)) return rv;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = GetAttribute(kNameSpaceID_None, kIdAtom, id);
+        rv = GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -3934,7 +3852,7 @@ nsXULElement::GetID(nsIAtom*& aResult) const
             nsXULAttribute* attr =
                 NS_REINTERPRET_CAST(nsXULAttribute*, mSlots->mAttributes->ElementAt(i));
 
-            if (attr->GetNodeInfo()->Equals(kIdAtom, kNameSpaceID_None)) {
+            if (attr->GetNodeInfo()->Equals(nsXULAtoms::id, kNameSpaceID_None)) {
                 nsIAtom* result;
                 attr->GetValueAsAtom(&result);
                 aResult = result; // transfer refcnt
@@ -3946,7 +3864,7 @@ nsXULElement::GetID(nsIAtom*& aResult) const
         PRInt32 count = mPrototype->mNumAttributes;
         for (PRInt32 i = 0; i < count; i++) {
             nsXULPrototypeAttribute* attr = &(mPrototype->mAttributes[i]);
-            if (attr->mNodeInfo->Equals(kIdAtom, kNameSpaceID_None)) {
+            if (attr->mNodeInfo->Equals(nsXULAtoms::id, kNameSpaceID_None)) {
                 aResult = NS_NewAtom(attr->mValue);
                 break;
             }
@@ -4018,19 +3936,26 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
-    if (NodeInfo()->Equals(kTreeItemAtom)) {
+    if (aAttribute == nsXULAtoms::style) {
+        // well, okay, "style=" maps to style. This is totally
+        // non-optimal, because it's very likely that the frame
+        // *won't* change. Oh well, you're a tool for setting the
+        // "style" attribute anyway.
+        aHint = NS_STYLE_HINT_FRAMECHANGE;
+    }
+    else if (NodeInfo()->Equals(nsXULAtoms::treeitem)) {
         // Force a framechange if the 'open' atom changes on a <treeitem>
-        if (kOpenAtom == aAttribute)
+        if (nsXULAtoms::open == aAttribute)
             aHint = NS_STYLE_HINT_FRAMECHANGE;
     }
-    else if (NodeInfo()->Equals(kTreeColAtom)) {
+    else if (NodeInfo()->Equals(nsXULAtoms::treecol)) {
         // Ignore 'width' and 'hidden' on a <treecol>
-        if (kWidthAtom == aAttribute || kHiddenAtom == aAttribute)
+        if (nsXULAtoms::width == aAttribute || nsXULAtoms::hidden == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;
     }
-    else if (NodeInfo()->Equals(kWindowAtom)) {
+    else if (NodeInfo()->Equals(nsXULAtoms::window)) {
         // Ignore 'width' and 'height' on a <window>
-        if (kWidthAtom == aAttribute || kHeightAtom == aAttribute)
+        if (nsXULAtoms::width == aAttribute || nsXULAtoms::height == aAttribute)
             aHint = NS_STYLE_HINT_NONE;
     }
 
@@ -4098,17 +4023,17 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
   
   nsCAutoString progID("component://netscape/layout/xul-boxobject");
-  if (tag.get() == kBrowserAtom)
+  if (tag.get() == nsXULAtoms::browser)
     progID += "-browser";
-  else if (tag.get() == kEditorAtom)
+  else if (tag.get() == nsXULAtoms::editor)
     progID += "-editor";
-  else if (tag.get() == kIFrameAtom)
+  else if (tag.get() == nsXULAtoms::iframe)
     progID += "-iframe";
-  else if (tag.get() == kMenuAtom)
+  else if (tag.get() == nsXULAtoms::menu)
     progID += "-menu";
-  else if (tag.get() == kPopupSetAtom)
+  else if (tag.get() == nsXULAtoms::popupset)
     progID += "-popupset";
-  else if (tag.get() == kTreeAtom)
+  else if (tag.get() == nsXULAtoms::tree)
     progID += "-tree";
 
   mBoxObject = do_CreateInstance(progID);
@@ -4169,7 +4094,7 @@ nsXULElement::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
   while (current) {
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag.get() == kTreeAtom)) {
+    if (tag && (tag.get() == nsXULAtoms::tree)) {
       nsCOMPtr<nsIDOMXULTreeElement> element = do_QueryInterface(current);
       *aTreeElement = element;
       NS_IF_ADDREF(*aTreeElement);
@@ -4324,10 +4249,10 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (NS_FAILED(rv)) return rv;
 
     XULPopupType popupType;
-    if (aName == kTooltipAtom) {
+    if (aName == nsXULAtoms::tooltip) {
         popupType = eXULPopupType_tooltip;
     }
-    else if (aName == kContextAtom) {
+    else if (aName == nsXULAtoms::context) {
         popupType = eXULPopupType_context;
     }
     else {

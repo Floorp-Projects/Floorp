@@ -330,36 +330,6 @@ protected:
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
 
-    static nsIAtom*             kClassAtom;
-    static nsIAtom*             kContextAtom;
-    static nsIAtom*             kHeightAtom;
-    static nsIAtom*             kHiddenAtom;
-    static nsIAtom*             kIdAtom;
-    static nsIAtom*             kObservesAtom;
-    static nsIAtom*             kOpenAtom;
-    static nsIAtom*             kPopupAtom;
-    static nsIAtom*             kMenuPopupAtom;
-    static nsIAtom*             kRefAtom;
-    static nsIAtom*             kSelectedAtom;
-    static nsIAtom*             kStyleAtom;
-    static nsIAtom*             kCheckboxAtom;
-    static nsIAtom*             kTooltipAtom;
-    static nsIAtom*             kTreeAtom;
-    static nsIAtom*             kTreeCellAtom;
-    static nsIAtom*             kTreeChildrenAtom;
-    static nsIAtom*             kTreeColAtom;
-    static nsIAtom*             kTreeItemAtom;
-    static nsIAtom*             kTreeRowAtom;
-    static nsIAtom*             kValueAtom;
-    static nsIAtom*             kIFrameAtom;
-    static nsIAtom*             kBrowserAtom;
-    static nsIAtom*             kEditorAtom;
-    static nsIAtom*             kWidthAtom;
-    static nsIAtom*             kWindowAtom;
-    static nsIAtom*             kMenuListAtom;
-    static nsIAtom*             kMenuAtom;
-    static nsIAtom*             kPopupSetAtom;
-
 public:
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, PRBool aIsScriptable, nsIContent** aResult);

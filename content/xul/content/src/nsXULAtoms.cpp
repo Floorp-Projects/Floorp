@@ -34,9 +34,11 @@
 
 #ifdef NS_XULATOM
 #undef NS_XULATOM
+#undef NS_XULATOM2
 #endif
 
 #define NS_XULATOM(__atom) nsIAtom* nsXULAtoms::__atom
+#define NS_XULATOM2(__atom, __value) nsIAtom* nsXULAtoms::__atom
 #include "nsXULAtoms.inc"
 
 nsrefcnt nsXULAtoms::gRefCnt = 0;
@@ -47,7 +49,9 @@ nsXULAtoms::AddRef()
 {
     if (++gRefCnt == 1) {
 #undef NS_XULATOM
+#undef NS_XULATOM2
 #define NS_XULATOM(__atom) __atom = NS_NewAtom(#__atom)
+#define NS_XULATOM2(__atom, __value) __atom = NS_NewAtom(__value)
 #include "nsXULAtoms.inc"
 
         Template = NS_NewAtom("template");
@@ -62,7 +66,9 @@ nsXULAtoms::Release()
 {
     if (--gRefCnt == 0) {
 #undef NS_XULATOM
+#undef NS_XULATOM2
 #define NS_XULATOM(__atom) NS_RELEASE(__atom)
+#define NS_XULATOM2(__atom, __value) NS_RELEASE(__atom)
 #include "nsXULAtoms.inc"
 
         NS_RELEASE(Template);
