@@ -383,7 +383,7 @@ AC_ARG_ENABLE(dom,
 AC_ARG_ENABLE(pthreads,
 [  --enable-pthreads       enable native pthreads support],
         [if test "$enableval" = "yes"; then
-	    AC_CHECK_LIB(pthread, pthread_create, USE_PTHREADS=1)
+	    AC_CHECK_LIB(pthread, pthread_create, NSPR_LIBS=-lpthread USE_PTHREADS=1)
         fi] )
 
 AC_ARG_ENABLE(mail-compose,
