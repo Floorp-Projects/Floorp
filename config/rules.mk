@@ -1008,7 +1008,7 @@ ifdef PERL
 # The script has an advantage over including the *.pp files directly
 # because it handles missing header files. 'make' would complain that
 # there is no way to build missing headers.
-$(MDDEPDIR)/.all.pp: $(MDDEPEND_FILES)
+$(MDDEPDIR)/.all.pp: FORCE
 	@$(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) >$@
 -include $(MDDEPDIR)/.all.pp
 else
