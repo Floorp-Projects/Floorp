@@ -102,5 +102,11 @@ interface nsIMsgComposeService : nsISupports {
   [noscript] boolean determineComposeHTML(in nsIMsgIdentity aIdentity, in MSG_ComposeFormat aFormat);
   [noscript] void cacheWindow(in nsIDOMWindowInternal aWindow, in boolean aComposeHTML, in nsIMsgComposeRecyclingListener listener);
   boolean isCachedWindow(in nsIDOMWindowInternal aWindow);
+
+  /** 
+   * given a mailto url, parse the attributes and turn them into a nsIMsgComposeParams object
+   * @return nsIMsgComposeParams which corresponds to the passed in mailto url
+   */
+  nsIMsgComposeParams getParamsForMailto(in nsIURI aURI); 
 };
 

@@ -498,7 +498,7 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
   return rv;
 }
 
-NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgComposeWindowURL, nsIURI * aURI)
+NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgComposeParams ** aParams)
 {
   nsresult rv = NS_OK;
   if (aURI)
@@ -593,7 +593,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
         nsCOMPtr<nsIMsgCompFields> pMsgCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
         if (pMsgCompFields)
         {
-       //ugghh more conversion work!!!!
+          //ugghh more conversion work!!!!
           pMsgCompFields->SetTo(NS_ConvertUTF8toUCS2(aToPart).get());
           pMsgCompFields->SetCc(NS_ConvertUTF8toUCS2(aCcPart).get());
           pMsgCompFields->SetBcc(NS_ConvertUTF8toUCS2(aBccPart).get());
@@ -602,12 +602,24 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
           pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody.get() : rawBody.get());
           pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
-          rv = OpenComposeWindowWithParams(aMsgComposeWindowURL, pMsgComposeParams);
+          NS_ADDREF(*aParams = pMsgComposeParams);
+          return NS_OK;
         }
-      }
-    }
-  }
+      } // if we created msg compose params....
+    } // if we had a mailto url
+  } // if we had a url...
 
+  // if we got here we must have encountered an error
+  *aParams = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgComposeWindowURL, nsIURI * aURI)
+{
+  nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams;
+  nsresult rv = GetParamsForMailto(aURI, getter_AddRefs(pMsgComposeParams));
+  if (NS_SUCCEEDED(rv))
+    rv = OpenComposeWindowWithParams(aMsgComposeWindowURL, pMsgComposeParams);
   return rv;
 }
 
