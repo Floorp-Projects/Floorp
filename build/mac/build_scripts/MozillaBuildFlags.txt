@@ -60,7 +60,8 @@ lowmem          0      MOZ_MAC_LOWMEM
 accessible      1      ACCESSIBILITY
 bidi            1      IBMBIDI
 p3p             0
-jsdebugger      0
+jsd             1
+venkman         1
 moz_logging     1      MOZ_LOGGING
 chatzilla       1
 content_packs   1
