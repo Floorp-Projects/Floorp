@@ -2193,7 +2193,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 	nsPluginsDir pluginsDir4x(PLUGINS_DIR_LOCATION_4DOTX);
 	nsPluginsDir pluginsDirMoz(PLUGINS_DIR_LOCATION_MOZ_LOCAL);
 
-  if(!pluginsDir4x.Valid() || !pluginsDirMoz.Valid())
+  if(!pluginsDir4x.Valid() && !pluginsDirMoz.Valid())
   	return NS_ERROR_FAILURE;
 
 	// firts, make a list from MOZ_LOCAL installation
