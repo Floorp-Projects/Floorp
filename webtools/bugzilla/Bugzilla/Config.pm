@@ -28,39 +28,6 @@
 
 package Bugzilla::Config;
 
-=head1 NAME
-
-Bugzilla::Config - Configuration parameters for Bugzilla
-
-=head1 SYNOPSIS
-
-  # Getting parameters
-  use Bugzilla::Config;
-
-  my $fooSetting = Param('foo');
-
-  # Administration functions
-  use Bugzilla::Config qw(:admin);
-
-  my @valid_params = GetParamList();
-  my @removed_params = UpgradeParams();
-  SetParam($param, $value);
-  WriteParams();
-
-  # Localconfig variables may also be imported
-  use Bugzilla::Config qw(:db);
-  print "Connecting to $db_name as $db_user with $db_pass\n";
-
-  # This variable does not belong in localconfig, and needs to go
-  # somewhere better
-  use Bugzilla::Config($contenttypes)
-
-=head1 DESCRIPTION
-
-This package contains ways to access Bugzilla configuration parameters.
-
-=cut
-
 use strict;
 
 use base qw(Exporter);
@@ -86,16 +53,20 @@ Exporter::export_ok_tags('admin', 'db');
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.17";
 
-use Data::Dumper;
-
-# This only has an affect for Data::Dumper >= 2.12 (ie perl >= 5.8.0)
-# Its just cosmetic, though, so that doesn't matter
-$Data::Dumper::Sortkeys = 1;
-
-use File::Temp;
 use Safe;
 
 use vars qw(@param_list);
+
+# Data::Dumper is required as needed, below. The problem is that then when
+# the code locally sets $Data::Dumper::Foo, this triggers 'used only once'
+# warnings.
+# We can't predeclare another package's vars, though, so just use them
+{
+    local $Data::Dumper::Sortkeys;
+    local $Data::Dumper::Terse;
+    local $Data::Dumper::Indent;
+}
+
 my %param;
 
 # INITIALISATION CODE
@@ -146,21 +117,6 @@ foreach my $item (@param_list) {
 
 # Subroutines go here
 
-=head1 FUNCTIONS
-
-=head2 Parameters
-
-Parameters can be set, retrieved, and updated.
-
-=over 4
-
-=item C<Param($name)>
-
-Returns the Param with the specified name. Either a string, or, in the case
-of multiple-choice parameters, an array reference.
-
-=cut
-
 sub Param {
     my ($param) = @_;
 
@@ -170,25 +126,9 @@ sub Param {
     return $param{$param};
 }
 
-=item C<GetParamList()>
-
-Returns the list of known parameter types, from defparams.pl. Users should not
-rely on this method; it is intended for editparams/doeditparams only
-
-The format for the list is specified in defparams.pl
-
-=cut
-
 sub GetParamList {
     return @param_list;
 }
-
-=item C<SetParam($name, $value)>
-
-Sets the param named $name to $value. Values are checked using the checker
-function for the given param if one exists.
-
-=cut
 
 sub SetParam {
     my ($name, $value) = @_;
@@ -205,18 +145,6 @@ sub SetParam {
 
     $param{$name} = $value;
 }
-
-=item C<UpdateParams()>
-
-Updates the parameters, by transitioning old params to new formats, setting
-defaults for new params, and removing obsolete ones.
-
-Any removed params are returned in a list, with elements [$item, $oldvalue]
-where $item is the entry in the param list.
-
-This change is not flushed to disk, use L<C<WriteParams()>> for that.
-
-=cut
 
 sub UpdateParams {
     # --- PARAM CONVERSION CODE ---
@@ -249,6 +177,8 @@ sub UpdateParams {
     # Remove any old params
     foreach my $item (keys %param) {
         if (!grep($_ eq $item, map ($_->{'name'}, @param_list))) {
+            require Data::Dumper;
+
             local $Data::Dumper::Terse = 1;
             local $Data::Dumper::Indent = 0;
             push (@oldparams, [$item, Data::Dumper->Dump([$param{$item}])]);
@@ -259,13 +189,14 @@ sub UpdateParams {
     return @oldparams;
 }
 
-=item C<WriteParams()>
-
-Writes the parameters to disk.
-
-=cut
-
 sub WriteParams {
+    require Data::Dumper;
+
+    # This only has an affect for Data::Dumper >= 2.12 (ie perl >= 5.8.0)
+    # Its just cosmetic, though, so that doesn't matter
+    local $Data::Dumper::Sortkeys = 1;
+
+    require File::Temp;
     my ($fh, $tmpname) = File::Temp::tempfile('params.XXXXX',
                                               DIR => 'data' );
 
@@ -296,6 +227,117 @@ sub ChmodDataFile {
     chmod $perm,$file;
 }
 
+sub check_multi {
+    my ($value, $param) = (@_);
+
+    if ($param->{'type'} eq "s") {
+        unless (lsearch($param->{'choices'}, $value) >= 0) {
+            return "Invalid choice '$value' for single-select list param '$param'";
+        }
+
+        return "";
+    }
+    elsif ($param->{'type'} eq "m") {
+        foreach my $chkParam (@$value) {
+            unless (lsearch($param->{'choices'}, $chkParam) >= 0) {
+                return "Invalid choice '$chkParam' for multi-select list param '$param'";
+            }
+        }
+
+        return "";
+    }
+    else {
+        return "Invalid param type '$param->{'type'}' for check_multi(); " .
+          "contact your Bugzilla administrator";
+    }
+}
+
+sub check_numeric {
+    my ($value) = (@_);
+    if ($value !~ /^[0-9]+$/) {
+        return "must be a numeric value";
+    }
+    return "";
+}
+
+sub check_regexp {
+    my ($value) = (@_);
+    eval { qr/$value/ };
+    return $@;
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Bugzilla::Config - Configuration parameters for Bugzilla
+
+=head1 SYNOPSIS
+
+  # Getting parameters
+  use Bugzilla::Config;
+
+  my $fooSetting = Param('foo');
+
+  # Administration functions
+  use Bugzilla::Config qw(:admin);
+
+  my @valid_params = GetParamList();
+  my @removed_params = UpgradeParams();
+  SetParam($param, $value);
+  WriteParams();
+
+  # Localconfig variables may also be imported
+  use Bugzilla::Config qw(:db);
+  print "Connecting to $db_name as $db_user with $db_pass\n";
+
+  # This variable does not belong in localconfig, and needs to go
+  # somewhere better
+  use Bugzilla::Config($contenttypes)
+
+=head1 DESCRIPTION
+
+This package contains ways to access Bugzilla configuration parameters.
+
+=head1 FUNCTIONS
+
+=head2 Parameters
+
+Parameters can be set, retrieved, and updated.
+
+=over 4
+
+=item C<Param($name)>
+
+Returns the Param with the specified name. Either a string, or, in the case
+of multiple-choice parameters, an array reference.
+
+=item C<GetParamList()>
+
+Returns the list of known parameter types, from defparams.pl. Users should not
+rely on this method; it is intended for editparams/doeditparams only
+
+The format for the list is specified in defparams.pl
+
+=item C<SetParam($name, $value)>
+
+Sets the param named $name to $value. Values are checked using the checker
+function for the given param if one exists.
+
+=item C<UpdateParams()>
+
+Updates the parameters, by transitioning old params to new formats, setting
+defaults for new params, and removing obsolete ones.
+
+Any removed params are returned in a list, with elements [$item, $oldvalue]
+where $item is the entry in the param list.
+
+=item C<WriteParams()>
+
+Writes the parameters to disk.
+
 =back
 
 =head2 Parameter checking functions
@@ -323,61 +365,13 @@ Functions should return error text, or the empty string if there was no error.
 Checks that a multi-valued parameter (ie type C<s> or type C<m>) satisfies
 its contraints.
 
-=cut
-
-sub check_multi {
-    my ($value, $param) = (@_);
-
-    if ($param->{'type'} eq "s") {
-        unless (lsearch($param->{'choices'}, $value) >= 0) {
-            return "Invalid choice '$value' for single-select list param '$param'";
-        }
-
-        return "";
-    }
-    elsif ($param->{'type'} eq "m") {
-        foreach my $chkParam (@$value) {
-            unless (lsearch($param->{'choices'}, $chkParam) >= 0) {
-                return "Invalid choice '$chkParam' for multi-select list param '$param'";
-            }
-        }
-
-        return "";
-    }
-    else {
-        return "Invalid param type '$param->{'type'}' for check_multi(); " .
-          "contact your Bugzilla administrator";
-    }
-}
-
 =item C<check_numeric>
 
 Checks that the value is a valid number
-
-=cut
-
-sub check_numeric {
-    my ($value) = (@_);
-    if ($value !~ /^[0-9]+$/) {
-        return "must be a numeric value";
-    }
-    return "";
-}
 
 =item C<check_regexp>
 
 Checks that the value is a valid regexp
 
-=cut
-
-sub check_regexp {
-    my ($value) = (@_);
-    eval { qr/$value/ };
-    return $@;
-}
-
 =back
 
-=cut
-
-1;
