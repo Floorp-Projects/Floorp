@@ -24,7 +24,6 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsISessionHistory.idl"
 
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {
@@ -42,7 +41,6 @@ interface nsIBrowserInstance : nsISupports {
     void backButtonPopup();
     void forwardButtonPopup();
     void gotoHistoryIndex(in PRInt32 index);
-    readonly attribute nsISessionHistory SessionHistory;
     
     // Wallet (should reside elsewhere, somehow).
     void walletPreview(in nsIDOMWindow win, in nsIDOMWindow form);
