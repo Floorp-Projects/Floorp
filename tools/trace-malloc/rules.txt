@@ -69,7 +69,7 @@
 #
 
 # ===========================================================================
-# Leaf rules. We cagegorize them out first.
+# Leaf rules. We categorize them out first.
 # All allocations matching these rules DO belong to the category.
 # ===========================================================================
 
@@ -331,7 +331,7 @@ nsXBLStreamListener::OnDataAvailable
 <necko>
 nsIOService::NewURI
 
-<necko-uri>
+<necko>
 nsIOService::NewChannelFromURI
 
 # Catchalls to help categorize
