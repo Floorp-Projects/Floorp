@@ -123,9 +123,9 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
     /*
      * Find out how large the command line buffer should be.
      */
-    cmdLineSize = 0;
+    cmdLineSize = 1; /* final null */
     for (arg = argv+1; *arg; arg++) {
-        cmdLineSize += strlen(*arg) + 1; /* space in between, or final null */
+        cmdLineSize += strlen(*arg) + 1; /* space in between */
     }
     *cmdLine = PR_MALLOC(cmdLineSize);
     if (*cmdLine == NULL) {
@@ -238,7 +238,7 @@ PRProcess * _PR_CreateOS2Process(
 {
     PRProcess *proc = NULL;
     char *cmdLine = NULL;
-    char **newEnvp;
+    char **newEnvp = NULL;
     char *envBlock = NULL;
    
     STARTDATA startData = {0};
