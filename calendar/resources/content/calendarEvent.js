@@ -489,6 +489,37 @@ CalendarEventDataSource.prototype.getICalLib = function()
    return this.gICalLib;
 }
 
+/* TO DO STUFF */
+CalendarEventDataSource.prototype.getAllToDos = function()
+{
+   var Checked = document.getElementById( "only-completed-checkbox" ).checked;
+
+   if( Checked )
+   {
+      var now = new Date();
+
+      this.gICalLib.filter.completed.setTime( now );
+   }
+   else
+   {
+      this.gICalLib.resetFilter()
+   }
+
+   var eventList = this.gICalLib.getAllTodos( );
+   
+   var eventArray = new Array();
+   
+   while( eventList.hasMoreElements() )
+   {
+      var tmpevent = eventList.getNext().QueryInterface(Components.interfaces.oeIICalTodo);
+      
+      eventArray[ eventArray.length ] = tmpevent;
+   }
+   //eventArray.sort( this.orderRawEventsByDate );
+
+   return eventArray;
+}
+
 /** PACKAGE STATIC
 *   CalendarEvent orderEventsByDate.
 * 

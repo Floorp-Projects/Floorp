@@ -22,6 +22,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com> 
+   -                 Chris Charabaruk <ccharabaruk@meldstar.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -75,6 +76,7 @@
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarEventDialogAttachFile.js"/>
 
 <!-- Data used in JS from dtd -->
 
@@ -102,7 +104,17 @@
         
         <vbox id="standard-dialog-content"  flex="1">
         
-            <!-- Form elements -->
+            <tabbox>
+               <tabs>
+                <tab label="New Event"/>
+                <tab label="Recurrence"/>
+                <tab label="Contacts"/>
+                <tab label="Files"/>
+               </tabs>
+               <tabpanels>
+                <tabpanel>
+                  
+         <!-- Form elements -->
             
             <grid>
             
@@ -192,6 +204,18 @@
                     </row>
                     
             
+                    <!-- URI/URL -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label for="uri-field" value="&newevent.uri.label;"/>
+                        </hbox>
+                        <hbox>
+                          <textbox id="uri-field" flex="1"/>
+                          <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
+                        </hbox>
+                    </row>
+                    
+            
                     <!-- Private -->    
                     <row collapsed="true" align="center">
                         <spacer />
@@ -224,21 +248,11 @@
 									</hbox>       
                         </vbox>
                     </row>
-             
-                    <!-- Invite -->    
-                    <row collapsed="true" align="center">
-                        <spacer />
-                        <vbox>
-									<hbox id="invite-box" align="center">
-										 <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
-										 <textbox id="invite-email-field" size="39" disabled="true"/>
-									</hbox>
-                        </vbox>
-                    </row>
-             
-                    <!-- Repeat -->    
-                    <row align="center">
-                        <spacer />
+                  </rows>
+               </grid>
+                </tabpanel>
+                <tabpanel>
+                        <!-- Repeat -->    
                         <vbox>
                           <hbox id="repeat-box" align="center">
                             <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
@@ -323,10 +337,30 @@
                             </groupbox>
                           </hbox>
                         </vbox>
-                    </row> 
-						  <!-- /Repeat -->   
-                </rows>        
-            </grid>
+                    <!-- /Repeat -->   
+            </tabpanel>
+            <tabpanel>
+               <!-- Invite -->    
+                  <vbox>
+                     <hbox id="invite-box" align="center">
+                         <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
+                         <textbox id="invite-email-field" size="39" disabled="true"/>
+                     </hbox>
+                  </vbox>
+                   
+            </tabpanel>
+            <tabpanel>
+               <listbox id="attachmentBucket" flex="1" rows="8"
+                   onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
+                   onclick="AttachmentBucketClicked(event);"
+                   ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
+                   ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
+                   ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
+               <button onclick="AttachFile()" label="Choose File"/>
+            </tabpanel>
+         </tabpanels>
+         </tabbox>
+
             
          </vbox> <!-- standard-dialog-content -->
     

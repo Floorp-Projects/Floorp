@@ -21,7 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com> 
- *                 Chris Charabaruk <coldacid@meldstar.com>
+ *                 Chris Charabaruk <ccharabaruk@meldstar.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -167,6 +167,7 @@ function loadCalendarEventDialog()
    setFieldValue( "title-field", gEvent.title  );
    setFieldValue( "description-field", gEvent.description );
    setFieldValue( "location-field", gEvent.location );
+   setFieldValue( "uri-field", gEvent.url );
    
    setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
    setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
@@ -273,6 +274,8 @@ function onOKCommand()
    gEvent.end.hour = endTime.getHours();
    gEvent.end.minute = endTime.getMinutes();
    
+   gEvent.url = getFieldValue( "uri-field" );
+
    gEvent.privateEvent = getFieldValue( "private-checkbox", "checked" );
    
    if( getFieldValue( "invite-checkbox", "checked" ) )
@@ -1227,6 +1230,44 @@ function getWeekNumberText( weekNumber )
    }
 
 }
+
+
+
+/* 
+   FILES
+   
+   Add files to the event 
+*/
+function launchFilePicker()
+{
+   const nsIFilePicker = Components.interfaces.nsIFilePicker;
+   
+   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+     
+   fp.init(window, "Open", nsIFilePicker.modeOpen);
+	
+   fp.appendFilter( "All Files", "*.*" );
+   
+   fp.show();
+
+   if (fp.file && fp.file.path.length > 0) 
+   {
+      alert( "add "+fp.file.path+" to the event" );
+      //add the file fp.file to the event. 
+   }
+}
+
+
+/* URL */
+function launchBrowser()
+{
+   //get the URL from the text box
+   var UrlToGoTo = document.getElementById( "uri-field" ).value;
+   
+   //launch the browser to that URL
+   window.open( UrlToGoTo, "calendar-opened-window" );
+}
+
 
 
 /**

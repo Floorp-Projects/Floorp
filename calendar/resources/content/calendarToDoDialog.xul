@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Colin Phillips <colinp@oeone.com> 
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
+
+<!-- CSS File with all styles specific to the dialog -->
+<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<window
+   id="calendar-new-eventwindow"
+   title="Calendar Event"
+   onload="loadCalendarToDoDialog()"
+   persist="screenX screenY"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   >
+    
+   
+<!-- Javascript DTD To Variable -->
+<script type="application/x-javascript">
+   var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
+   var neRecurErrorAlertMessage     = "&newevent.recurendtimeerror.alertmessage;";
+</script>
+
+<!-- Javascript includes -->
+
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarToDoDialog.js"/>
+
+<!-- Data used in JS from dtd -->
+
+<dataset>
+    <data id="data-todo-title-new"             value="&todo.title.new;" />
+    <data id="data-todo-title-edit"            value="&todo.title.edit;" />
+</dataset>
+
+
+<!-- Picker popups -->
+
+ <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" value=""/>
+ 
+ <keyset id="dialogKeys"/>
+
+  <!-- The dialog -->
+    
+    <!-- dialog-box: from dialogOverlay.xul -->
+    
+    <vbox id="dialog-box" flex="1">  
+   
+        <!-- standard-dialog-content: from dialogOverlay.xul  -->
+        
+        <vbox id="standard-dialog-content"  flex="1">
+        
+            <!-- Form elements -->
+            
+            <grid>
+            
+                <columns>
+                    <column />
+                    <column flex="1"/>
+                </columns>
+                
+                <rows>
+            
+                    <!-- Title -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label for="title-field" value="&newevent.title.label;"/>
+                        </hbox>
+                        <textbox id="title-field"/>
+                    </row>
+        
+                    <!--  Due Date -->    
+                    <row align="center">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newtodo.duedate.label;"/>
+                        </hbox>
+                        <hbox  id="due-date-box" align="center">
+                            <textbox class="date-text-class" id="due-date-text" readonly="true"                 onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                            <image id="start-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('due-date-text')" popup="oe-date-picker-popup" position="after_start" />
+                        </hbox>
+                    </row>
+                    
+                    <!-- Description -->    
+                    <row flex="1" align="start">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label for="description-field" value="&newevent.description.label;"/>
+                        </hbox>
+                        <textbox id="description-field" multiline="true" rows="3" cols="30" />
+                    </row>
+                    
+            
+                    <!-- Private -->    
+                    <row collapsed="true" align="center">
+                        <spacer />
+                        <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
+                    </row>
+            
+                    <!-- Priority -->    
+                    <row align="center" collapsed="true">
+                        <hbox class="field-label-box-class" pack="end">
+                            <label value="&newtodo.priority.label;"/>
+                        </hbox>
+                        <menulist>
+                          <menupopup>
+                              <menuitem label="1" value="1"/>
+                              <menuitem label="2" value="2"/>
+                              <menuitem label="3" value="3"/>
+                              <menuitem label="4" value="4"/>
+                              <menuitem label="5" value="5"/>
+                          </menupopup>
+                        </menulist>
+                    </row>
+            
+                    <!-- Completed -->    
+                    <row align="center">
+                        <label value="&newtodo.completed.label;" for="completed-checkbox"/>
+                        <hbox align="center">
+                           <checkbox id="completed-checkbox" oncommand="updateCompletedItemEnabled()"/>
+                           <textbox disabled="true" class="date-text-class" id="completed-date-text" readonly="true" value=""      onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                           <image disabled="true" id="completed-date-button" class="event-date-button-class" onmousedown="prepareDatePicker('completed-date-text')" popup="oe-date-picker-popup" position="after_start"/>
+                        </hbox>
+                    </row>
+
+                    <!-- Alarm -->    
+                    <row align="center" collapsed="true">
+                        <spacer />
+                        <vbox>
+									<hbox id="alarm-box" align="center">
+										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
+										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
+                               
+                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural">
+											  <menupopup>
+													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
+													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
+													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
+											  </menupopup>
+										 </menulist>
+										 
+										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+                               
+									</hbox>
+									<hbox id="alarm-box-email" collapsed="true" align="center">
+										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
+										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
+									</hbox>       
+                        </vbox>
+                    </row>
+                </rows>        
+            </grid>
+            
+         </vbox> <!-- standard-dialog-content -->
+    
+        
+         <!-- Bottom Box -->    
+        <box id="okCancelButtonsRight"/>        
+        
+    </vbox> <!-- dialog-box -->
+
+</window>

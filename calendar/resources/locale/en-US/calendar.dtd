@@ -65,6 +65,8 @@
 <!ENTITY newevent.end.label          "End" >
 <!ENTITY newevent.alldayevent.label  "This event lasts all day." >
 <!ENTITY newevent.description.label  "Note" >
+<!ENTITY newevent.uri.label          "URL" >
+<!ENTITY newevent.uri.visit.label    "Visit URL" >
 <!ENTITY newevent.private.label      "Private" >
 <!ENTITY newevent.private.note       "This event is private." >
 <!ENTITY newevent.alarm.label        "Alarm" >
@@ -85,6 +87,11 @@
                                        
 <!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
 <!ENTITY newevent.recurendtimeerror.alertmessage "Your event's repeat time cannot be before the event end time. Please fix this, or disable repeating." >
+
+<!ENTITY newtodo.completed.label "Completed">
+<!ENTITY newtodo.duedate.label "Due Date">
+<!ENTITY newtodo.priority.label "Priority">
+
 <!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Are you sure you want to delete this untitled event?" >
 
@@ -93,6 +100,9 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "New Event" >
 <!ENTITY event.title.edit        "Edit Event" >
+
+<!ENTITY todo.title.new         "New To Do Item" >
+<!ENTITY todo.title.edit        "Edit To Do Item" >
 
 <!ENTITY event.tip.new         "Create a new event." >
 <!ENTITY event.tip.edit        "Edit an existing event." >
@@ -114,7 +124,15 @@
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
 
 <!ENTITY calendar.unifinder.withalarms.label      "With Alarms" >
-<!ENTITY calendar.unifinder.todayandfuture.label  "Today And Future" >
+<!ENTITY calendar.unifinder.todayandfuture.label  "Hide Past Events" >
+<!ENTITY calendar.unifinder.todoitems.label       "To Do Items" >
+<!ENTITY calendar.unifinder.hidecompletedtodos.label "Hide Completed To Do Items">
+
+<!ENTITY calendar.unifinder.listbox.done.label "Done">
+<!ENTITY calendar.unifinder.listbox.priority.label "Priority">
+<!ENTITY calendar.unifinder.listbox.title.label "Title">
+<!ENTITY calendar.unifinder.listbox.duedate.label "Due Date">
+
 
 <!ENTITY calendar.gototoday.button.tooltip        "Go to today" >
 <!ENTITY calendar.choosedate.button.tooltip       "Choose date to go to" >

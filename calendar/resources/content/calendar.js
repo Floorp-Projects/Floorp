@@ -155,6 +155,8 @@ function calendarInit()
    
    prepareCalendarUnifinder( );
 
+   prepareCalendarToDoUnifinder( );
+   
    update_date( );
    	
 	checkForMailNews();
@@ -184,6 +186,8 @@ function update_date( )
 function calendarFinish()
 {
    finishCalendarUnifinder( );
+   
+   finishCalendarToDoUnifinder( );
    
    gCalendarWindow.close( );
 }
@@ -423,7 +427,7 @@ function newEventCommand()
 
 function newToDoCommand()
 {
-   var calendarEvent = createToDo();
+   var calendarToDo = createToDo();
 
    var dueDate = gCalendarWindow.currentView.getNewEventDate();
    
@@ -438,12 +442,12 @@ function newToDoCommand()
                        0);
    
 
-   calendarEvent.due.setTime( dueDate );
+   calendarToDo.due.setTime( dueDate );
    
    var args = new Object();
    args.mode = "new";
    args.onOk =  self.addToDoDialogResponse;
-   args.calendarEvent = calendarEvent;
+   args.calendarToDo = calendarToDo;
 
    // open the dialog modally
    openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditEvent", "chrome,modal", args );
@@ -540,7 +544,7 @@ function addEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
 
 function addToDoDialogResponse( calendarToDo )
 {
-   gICalLib.addToDo( calendarToDo );
+   gICalLib.addTodo( calendarToDo );
 }
 
 
@@ -577,7 +581,7 @@ function editToDo( calendarToDo )
    args.mode = "edit";
    args.onOk = self.modifyToDoDialogResponse;           
    args.calendarToDo = calendarToDo;
-
+   
    // open the dialog modally
    
    openDialog("chrome://calendar/content/calendarToDoDialog.xul", "caEditToDo", "chrome,modal", args );
@@ -615,7 +619,7 @@ function modifyEventDialogResponse( calendarEvent, ArrayOfExceptionDates )
 
 function modifyToDoDialogResponse( calendarToDo )
 {
-   gICalLib.modifyToDo( calendarToDo );
+   gICalLib.modifyTodo( calendarToDo );
 }
 
 
