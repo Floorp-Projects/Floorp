@@ -731,7 +731,7 @@ END
             print "\n\n";
             print "*** It appears that you still have an old index.html hanging\n";
             print "    around.  The contents of this file should be moved into a\n";
-            print "    template and placed in the 'template/custom' directory.\n\n";
+            print "    template and placed in the 'template/en/custom' directory.\n\n";
         }
         close HTML;
     }
