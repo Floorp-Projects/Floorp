@@ -25,6 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 FILES=\
 	profileMigrationProgress.dtd	\
+    no_space.dtd                    \
         $(NULL)
 
 install::
