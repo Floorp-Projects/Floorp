@@ -1,0 +1,48 @@
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+GOOD:after  { content: inherit; } 
+GOOD:before { content: "Border Collie"; } 
+GOOD:after  { content: "Border 'Collie'"; } 
+GOOD:before { content: "Border \"Collie\""; } 
+GOOD:after  { content: 'Border "Collie"'; } 
+GOOD:before { content: 'Border \'Collie\''; } 
+GOOD:before { content: "Border\A Collie" }
+GOOD:after  { content: A[TITLE="splitting the str\
+ing in the middle"] {/*...*/}"; } 
+GOOD:before { content: A[TITLE="The Vatican Rag"]; } 
+GOOD:after  { content: url("http://www.rotten.com/today/"); } 
+GOOD:after  { content: url("beautiful-music.wav") }
+GOOD:before { content: counter(x, none); } 
+GOOD:after  { content: counter(y, 10); } 
+GOOD:before { content: counter(number, upper-roman)}
+GOOD:after  { content: attr(enigma) }
+GOOD:before { content: open-quote }
+GOOD:after  { content: close-quote }
+GOOD:before { content: no-open-quote }
+GOOD:after  { content: no-close-quote }
+GOOD:before { content: open-quote "Border\A Collie" close-quote } 
+GOOD:before { content: "a string of text" open-quote url("http://www.rotten.com/today/") no-open-quote counter(number, upper-roman) no-close-quote attr(enigma) close-quote } 
+BAD:after  { content: this is a string; }
+BAD:before { content: "this is a "string""; } 
+BAD:after  { content: "this is a "string'"; } 
+BAD:before { content: 'this is a "string""; } 
+BAD:after  { content: quote }
+BAD:before { content: url(beautiful-music.wav) }
+BAD:after  { content: counter(y, 10) inherit }
+BAD:before { content: open-quote "some kinda string' close-quote }
+  
