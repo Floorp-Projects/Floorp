@@ -931,9 +931,9 @@ nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 a
         theValues[index] = intValue.GetUnicode();
 	  	  index++;
       }
+      nsAutoString theDTDKey("X_COMMAND");
+      nsAutoString theDTDValue(aCommand);
       if(index < 50) {
-        nsAutoString theDTDKey("X_COMMAND");
-        nsAutoString theDTDValue(aCommand);
         theKeys[index]=theDTDKey.GetUnicode();
         theValues[index]=theDTDValue.GetUnicode();
         index++;
