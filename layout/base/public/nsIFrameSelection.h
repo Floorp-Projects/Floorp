@@ -66,6 +66,11 @@ public:
    */
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame) = 0;
 
+  /** EnableFrameNotification
+   *  mutch like start batching, except all dirty calls are ignored. no notifications will go 
+   *  out until enableNotifications with a PR_TRUE is called
+   */
+  NS_IMETHOD EnableFrameNotification(PRBool aEnable) = 0;
 };
 
 

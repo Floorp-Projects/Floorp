@@ -74,6 +74,7 @@ public:
   NS_IMETHOD HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, nsIFrame *aFrame);
   NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection);
   NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame);
+  NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
 /*END nsIFrameSelection interfacse*/
 
 /*BEGIN nsIDOMSelection interface implementations*/
@@ -88,6 +89,8 @@ public:
 
   NS_IMETHOD AddSelectionListener(nsIDOMSelectionListener* inNewListener);
   NS_IMETHOD RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove);
+  NS_IMETHOD StartBatchChanges();
+  NS_IMETHOD EndBatchChanges();
 
 /*END nsIDOMSelection interface implementations*/
 
@@ -114,6 +117,9 @@ private:
   nsIDOMNode*  GetFocusNode();  //where is the carret
   PRInt32      GetFocusOffset();
   void         setFocus(nsIDOMNode*, PRInt32);
+  PRBool       GetBatching(){return mBatching;}
+  PRBool       GetNotifyFrames(){return mNotifyFrames;}
+  void         SetDirty(PRBool aDirty=PR_TRUE){if (mBatching) mChangesDuringBatching = aDirty;}
 
   nsresult     NotifySelectionListeners();			// add parameters to say collapsed etc?
 
@@ -124,8 +130,13 @@ private:
   nsCOMPtr<nsIDOMNode> mFocusNode; //where is the carret
   PRInt32 mFocusOffset;
 
-  nsCOMPtr<nsISupportsArray> mSelectionListeners;
+  //batching
+  PRBool mBatching;
+  PRBool mChangesDuringBatching;
+  PRBool mNotifyFrames;
 
+
+  nsCOMPtr<nsISupportsArray> mSelectionListeners;
 };
 
 class nsRangeListIterator : public nsIEnumerator
@@ -136,21 +147,21 @@ see the nsIEnumerator for more details*/
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult First();
+  NS_IMETHOD First();
 
-  virtual nsresult Last();
+  NS_IMETHOD Last();
 
-  virtual nsresult Next();
+  NS_IMETHOD Next();
 
-  virtual nsresult Prev();
+  NS_IMETHOD Prev();
 
-  virtual nsresult CurrentItem(nsISupports **aRange);
+  NS_IMETHOD CurrentItem(nsISupports **aRange);
 
-  virtual nsresult IsDone();
+  NS_IMETHOD IsDone();
 
 /*END nsIEnumerator interfaces*/
 /*BEGIN Helper Methods*/
-  virtual nsresult CurrentItem(nsIDOMRange **aRange);
+  NS_IMETHOD CurrentItem(nsIDOMRange **aRange);
 /*END Helper Methods*/
 private:
   friend class nsRangeList;
@@ -207,7 +218,7 @@ nsRangeListIterator::~nsRangeListIterator()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::Next()
 {
   mIndex++;
@@ -218,7 +229,7 @@ nsRangeListIterator::Next()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::Prev()
 {
   mIndex--;
@@ -229,7 +240,7 @@ nsRangeListIterator::Prev()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::First()
 {
   if (!mRangeList)
@@ -240,7 +251,7 @@ nsRangeListIterator::First()
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::Last()
 {
   if (!mRangeList)
@@ -251,7 +262,7 @@ nsRangeListIterator::Last()
 
 
 
-nsresult 
+NS_IMETHODIMP 
 nsRangeListIterator::CurrentItem(nsISupports **aItem)
 {
   if (!aItem)
@@ -265,7 +276,7 @@ nsRangeListIterator::CurrentItem(nsISupports **aItem)
 
 
 
-nsresult 
+NS_IMETHODIMP 
 nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 {
   if (!aItem)
@@ -279,7 +290,7 @@ nsRangeListIterator::CurrentItem(nsIDOMRange **aItem)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::IsDone()
 {
   if (mIndex >= 0 && mIndex < (PRInt32)mRangeList->mRangeArray->Count() ) { 
@@ -296,7 +307,7 @@ NS_IMPL_RELEASE(nsRangeListIterator)
 
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
@@ -341,6 +352,9 @@ nsRangeList::nsRangeList()
   NS_INIT_REFCNT();
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
+  mBatching = PR_FALSE;
+  mChangesDuringBatching = PR_FALSE;
+  mNotifyFrames = PR_TRUE;
 }
 
 
@@ -376,7 +390,7 @@ NS_IMPL_ADDREF(nsRangeList)
 NS_IMPL_RELEASE(nsRangeList)
 
 
-nsresult
+NS_IMETHODIMP
 nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
@@ -532,33 +546,37 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
     if (!domnode)
       return NS_ERROR_FAILURE;
 
-    //DUMMY CHECKING. CAN BE REMOVED.  MAYBE IT WILL FOR SPEED PURPOSES
     PRBool selected;
     PRInt32 beginoffset;
     PRInt32 endoffset;
     PRInt32 contentoffset;
-    //check to make sure the frame REALLY has the focus point.
-    if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset))){
-      if (domnode != mFocusNode  || (contentoffset + endoffset) != mFocusOffset) //not really the insertion frame
-        return NS_ERROR_FAILURE;
+    nsresult result = NS_OK;
+    result = aFrame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset);
+    if (NS_FAILED(result)){
+        return result;
     }
 
     nsKeyEvent *keyEvent = (nsKeyEvent *)aGuiEvent; //this is ok. It really is a keyevent
     nsIFrame *resultFrame;
     PRInt32   frameOffset;
     PRInt32   contentOffset;
+    PRInt32   offsetused = beginoffset;
     switch (keyEvent->keyCode){
       case nsIDOMEvent::VK_LEFT  : 
         //we need to look for the previous PAINTED location to move the cursor to.
         printf("debug vk left\n");
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirPrevious, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (endoffset < beginoffset)
+          offsetused = endoffset;
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
         printf("debug vk right\n");
-        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirNext, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (endoffset > beginoffset)
+          offsetused = endoffset;
+        if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
           return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
       case nsIDOMEvent::VK_UP : 
@@ -705,6 +723,8 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
 {
   if (!aTracker || !aFrame)
     return NS_ERROR_NULL_POINTER;
+  if (GetBatching())
+    return NS_ERROR_FAILURE;
   //HACKHACKHACK
   nsCOMPtr<nsIContent> content;
   nsCOMPtr<nsIDOMNode> domNode;
@@ -741,7 +761,12 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         direction = PR_TRUE; //slecting "english" right
         aFrame->SetSelected(PR_TRUE,aOffset,aOffset,PR_FALSE);
         aTracker->SetFocus(aFrame,aFrame);
+        PRBool batching = mBatching;//hack to use the collapse code.
+        PRBool changes = mChangesDuringBatching;
+        mBatching = PR_TRUE;
         Collapse(domNode, aContentOffset + aOffset);
+        mBatching = batching;
+        mChangesDuringBatching = changes;
       }
       else {
         if (aFrame == frame){ //drag to same frame
@@ -908,6 +933,12 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
   PRInt32 endOffset;
   nsIFrame *result;
   nsCOMPtr<nsIDOMRange> range;
+  if (!GetNotifyFrames())
+    return NS_OK;
+  if (GetBatching()){
+    SetDirty();
+    return NS_OK;
+  }
   //we will need to check if any "side" is the anchor and send a direction order to the frames.
   if (!mRangeArray)
     return NS_ERROR_FAILURE;
@@ -985,7 +1016,7 @@ NS_METHOD nsRangeList::AddSelectionListener(nsIDOMSelectionListener* inNewListen
 
 
 
-NS_METHOD nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
+NS_IMETHODIMP nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
@@ -996,26 +1027,58 @@ NS_METHOD nsRangeList::RemoveSelectionListener(nsIDOMSelectionListener* inListen
 }
 
 
+
+NS_IMETHODIMP nsRangeList::StartBatchChanges()
+{
+  nsresult result(NS_OK);
+  if (PR_TRUE == mBatching)
+    result = NS_ERROR_FAILURE; 
+  mBatching = PR_TRUE;
+  return result;
+}
+
+
+ 
+NS_IMETHODIMP nsRangeList::EndBatchChanges()
+{
+  nsresult result(NS_OK);
+  if (PR_FALSE == mBatching)
+    result = NS_ERROR_FAILURE; 
+  mBatching = PR_FALSE;
+  if (mChangesDuringBatching){
+    mChangesDuringBatching = PR_FALSE;
+    NotifySelectionListeners();
+  }
+  return result;
+}
+
+  
+  
 nsresult nsRangeList::NotifySelectionListeners()
 {
   if (!mSelectionListeners)
     return NS_ERROR_FAILURE;
-
+ 
+  if (GetBatching()){
+    SetDirty();
+    return NS_OK;
+  }
   for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
   {
-  	nsCOMPtr<nsISupports>	thisEntry(dont_QueryInterface(mSelectionListeners->ElementAt(i)));
-    nsCOMPtr<nsIDOMSelectionListener> thisListener(do_QueryInterface(thisEntry));
+    nsCOMPtr<nsIDOMSelectionListener> thisListener;
+    thisListener = do_QueryInterface(mSelectionListeners->ElementAt(i));
     if (thisListener)
     	thisListener->NotifySelectionChanged();
   }
-
 	return NS_OK;
 }
 
 //END nsIFrameSelection methods
 
 //BEGIN nsIDOMSelection interface implementations
+#ifdef XP_MAC
 #pragma mark -
+#endif
 
 /** ClearSelection zeroes the selection
  */
@@ -1047,13 +1110,15 @@ nsRangeList::AddRange(nsIDOMRange* aRange)
   // Also need to notify the frames!
 }
 
+
+
 /*
  * Collapse sets the whole selection to be one point.
  */
 NS_IMETHODIMP
 nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 {
-  nsresult res;
+  nsresult result;
 
   // Delete all of the current ranges
   if (!mRangeArray)
@@ -1061,27 +1126,29 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   Clear();
 
   nsCOMPtr<nsIDOMRange> range;
-  res = nsRepository::CreateInstance(kRangeCID, nsnull,
+  result = nsRepository::CreateInstance(kRangeCID, nsnull,
                                      kIDOMRangeIID,
                                      getter_AddRefs(range));
-  if (!NS_SUCCEEDED(res))
-    return res;
+  if (NS_FAILED(result))
+    return result;
 
-  if (! range)
+  if (! range){
+    NS_ASSERTION(PR_FALSE,"Create Instance Failed nsRangeList::Collapse");
     return NS_ERROR_UNEXPECTED;
-  res = range->SetEnd(aParentNode, aOffset);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = range->SetStart(aParentNode, aOffset);
-  if (!NS_SUCCEEDED(res))
-    return res;
+  }
+  result = range->SetEnd(aParentNode, aOffset);
+  if (NS_FAILED(result))
+    return result;
+  result = range->SetStart(aParentNode, aOffset);
+  if (NS_FAILED(result))
+    return result;
 
   setAnchor(aParentNode, aOffset);
   setFocus(aParentNode, aOffset);
 
-  res = AddItem(range);
-  if (!NS_SUCCEEDED(res))
-    return res;
+  result = AddItem(range);
+  if (NS_FAILED(result))
+    return result;
     
 	return NotifySelectionListeners();
 }
