@@ -24,15 +24,21 @@
 ######################################################################
 
 ARCH			:= rhapsody
-CPU_ARCH		:= ppc
-GFX_ARCH		:= x
+ifeq (86,$(findstring 86,$(OS_TEST)))
+OS_REL_CFLAGS           = -mno-486 -Di386
+CPU_ARCH                = i386
+else
+OS_REL_CFLAGS           = -Dppc
+CPU_ARCH                = ppc
+endif
 
 OS_INCLUDES		=
-G++INCLUDES		=
+G++INCLUDES		= -I/usr/include/g++
 LOC_LIB_DIR		= 
 MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
+NO_X11          = 1
 
 PLATFORM_FLAGS		= -DRHAPSODY -Wall -pipe
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
@@ -69,12 +75,12 @@ endif
 CC			= cc
 AR			= libtool -static -o $@
 
-EMACS			= /usr/bin/true
-PERL			= /usr/bin/true
-RANLIB			= /usr/bin/true
+EMACS			= /usr/bin/emacs
+PERL			= /usr/bin/perl
+RANLIB			= ranlib
 
 # Comment out MKSHLIB to build only static libraries.
-MKSHLIB                 = $(CC) -arch ppc -dynamiclib -compatibility_version 1 -current_version 1 -all_load
+MKSHLIB                 = $(CC) -arch $(CPU_ARCH) -dynamiclib -compatibility_version 1 -current_version 1 -all_load
 DLL_SUFFIX              = dylib
 
 ######################################################################
