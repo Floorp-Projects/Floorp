@@ -44,15 +44,6 @@
 #include "inCSSValueSearch.h"
 #include "inFileSearch.h"
 #include "inDOMUtils.h"
-#include "inBitmap.h"
-#include "inBitmapDepot.h"
-#include "inBitmapDecoder.h"
-#include "inBitmapProtocolHandler.h"
-#include "inPNGEncoder.h"
-
-#ifdef WIN32
-  #include "inScreenCapturer.h"
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDeepTreeWalker)
@@ -60,15 +51,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inFlasher)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inFileSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inBitmap)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inBitmapDepot)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inBitmapDecoder)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inBitmapProtocolHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(inPNGEncoder)
-
-#ifdef WIN32
-  NS_GENERIC_FACTORY_CONSTRUCTOR(inScreenCapturer)
-#endif
 
 // {FB5C1775-1BBD-4b9c-ABB0-AE7ACD29E87E}
 #define IN_DOMVIEW_CID \
@@ -93,32 +75,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inPNGEncoder)
 // {40B22006-5DD5-42f2-BFE7-7DBF0757AB8B}
 #define IN_DOMUTILS_CID \
 { 0x40b22006, 0x5dd5, 0x42f2, { 0xbf, 0xe7, 0x7d, 0xbf, 0x7, 0x57, 0xab, 0x8b } }
-
-// {C4E47704-4C71-43f7-A37C-EF9FCD9ABBC2}
-#define IN_BITMAP_CID \
-{ 0xc4e47704, 0x4c71, 0x43f7, { 0xa3, 0x7c, 0xef, 0x9f, 0xcd, 0x9a, 0xbb, 0xc2 } }
-
-// {99B8BA1F-B6B2-40ed-8BA4-F5EBC9BC1F10}
-#define IN_BITMAPDEPOT_CID \
-{ 0x99b8ba1f, 0xb6b2, 0x40ed, { 0x8b, 0xa4, 0xf5, 0xeb, 0xc9, 0xbc, 0x1f, 0x10 } }
-
-// {9ED21085-3122-45bf-A275-61228EC5B8F2}
-#define IN_BITMAPDECODER_CID \
-{ 0x9ed21085, 0x3122, 0x45bf, { 0xa2, 0x75, 0x61, 0x22, 0x8e, 0xc5, 0xb8, 0xf2 } }
-
-// {D08C5593-6C55-4d69-A0E9-4848D88CDCDA}
-#define IN_BITMAPPROTOCOLHANDLER_CID \
-{ 0xd08c5593, 0x6c55, 0x4d69, { 0xa0, 0xe9, 0x48, 0x48, 0xd8, 0x8c, 0xdc, 0xda } }
-
-// {243533EA-446E-4a7e-A27A-C27890417DEE}
-#define IN_PNGENCODER_CID \
-{ 0x243533ea, 0x446e, 0x4a7e, { 0xa2, 0x7a, 0xc2, 0x78, 0x90, 0x41, 0x7d, 0xee } }
-
-#ifdef WIN32
-// {ECE14DF2-FC83-469f-83AC-684D5F06B6CE}
-#define IN_SCREENCAPTURER_CID \
-{ 0xece14df2, 0xfc83, 0x469f, { 0x83, 0xac, 0x68, 0x4d, 0x5f, 0x6, 0xb6, 0xce } }
-#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -150,40 +106,7 @@ static const nsModuleComponentInfo components[] =
   { "DOM Utils", 
     IN_DOMUTILS_CID, 
     "@mozilla.org/inspector/dom-utils;1", 
-    inDOMUtilsConstructor },
-
-#ifdef WIN32
-  { "Screen Capturer", 
-    IN_SCREENCAPTURER_CID, 
-    "@mozilla.org/inspector/screen-capturer;1",
-    inScreenCapturerConstructor },
-#endif
-
-  { "Bitmap",
-    IN_BITMAP_CID, 
-    "@mozilla.org/inspector/bitmap;1",
-    inBitmapConstructor },
-
-  { "Bitmap Depot",
-    IN_BITMAPDEPOT_CID, 
-    "@mozilla.org/inspector/bitmap-depot;1",
-    inBitmapDepotConstructor },
-
-  { "Bitmap Channel",
-    IN_BITMAPDECODER_CID, 
-    "@mozilla.org/image/decoder;2?type=image/inspector-bitmap",
-    inBitmapDecoderConstructor },
-
-  { "Bitmap Protocol Handler",
-    IN_BITMAPPROTOCOLHANDLER_CID,
-    NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "moz-bitmap",
-    inBitmapProtocolHandlerConstructor },
-
-  { "PNG Encoder",
-    IN_PNGENCODER_CID,
-    "@mozilla.org/inspector/png-encoder;1",
-    inPNGEncoderConstructor }
+    inDOMUtilsConstructor }
 };
-
 
 NS_IMPL_NSGETMODULE(nsInspectorModule, components)

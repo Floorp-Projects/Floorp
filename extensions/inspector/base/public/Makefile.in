@@ -38,11 +38,6 @@ XPIDLSRCS = inIDOMView.idl \
             inICSSValueSearch.idl \
             inIFileSearch.idl \
             inIDOMUtils.idl \
-            inIScreenCapturer.idl \
-            inIBitmap.idl \
-            inIBitmapDepot.idl \
-            inIBitmapURI.idl \
-            inIPNGEncoder.idl \
 	    $(NULL)
 
 include $(topsrcdir)/config/rules.mk

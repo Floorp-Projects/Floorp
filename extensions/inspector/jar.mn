@@ -73,7 +73,6 @@ inspector.jar:
   content/inspector/viewers/dom/pseudoClassDialog.xul                 (resources/content/viewers/dom/pseudoClassDialog.xul)
   content/inspector/viewers/boxModel/boxModel.js                      (resources/content/viewers/boxModel/boxModel.js)
   content/inspector/viewers/boxModel/boxModel.xul                     (resources/content/viewers/boxModel/boxModel.xul)
-  content/inspector/viewers/boxModel/colorPicker.xul                  (resources/content/viewers/boxModel/colorPicker.xul)
   content/inspector/viewers/jsObject/jsObject.js                      (resources/content/viewers/jsObject/jsObject.js)
   content/inspector/viewers/jsObject/jsObject.xul                     (resources/content/viewers/jsObject/jsObject.xul)
   content/inspector/viewers/jsObject/evalExprDialog.js                (resources/content/viewers/jsObject/evalExprDialog.js)
