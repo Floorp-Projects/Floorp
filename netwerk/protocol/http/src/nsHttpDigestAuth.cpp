@@ -273,6 +273,24 @@ nsHttpDigestAuth::AreCredentialsReusable(PRBool *result)
 }
 
 NS_IMETHODIMP
+nsHttpDigestAuth::ChallengeRequiresUserPass(const char *challenge,
+                                            PRBool *result)
+{
+  nsCAutoString realm, domain, nonce, opaque;
+  PRBool stale;
+  PRUint16 algorithm, qop;
+
+  nsresult rv = ParseChallenge(challenge, realm, domain, nonce, opaque,
+                               &stale, &algorithm, &qop);
+  if (NS_FAILED(rv)) {
+    *result = PR_TRUE;
+    return rv;
+  }
+  *result = !stale;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpDigestAuth::AllocateMetaData(nsISupports **result)
 {
   nsresult rv;

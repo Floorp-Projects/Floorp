@@ -120,6 +120,14 @@ nsHttpBasicAuth::AreCredentialsReusable(PRBool *result)
 }
 
 NS_IMETHODIMP
+nsHttpBasicAuth::ChallengeRequiresUserPass(const char *challenge,
+                                           PRBool *result)
+{
+    *result = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHttpBasicAuth::AllocateMetaData(nsISupports **result)
 {
     *result = nsnull;

@@ -50,6 +50,13 @@ interface nsIHttpAuthenticator : nsISupports
     boolean areCredentialsReusable();
 
     /**
+     * indicates if the challenge requires a new username/password (e.g.,
+     * if the response was invalid because the nonce has timed out, then
+     * the old username/password is still valid).
+     */
+    boolean challengeRequiresUserPass(in string challenge);
+
+    /**
      * allocate authenticator specific metadata implementation.  implementations
      * that don't need to store extra data in the auth cache can simply return NULL.
      */
