@@ -1535,6 +1535,13 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   }
   (void)nsEditor::EndTransaction();
   
+// XXXX: Horrible hack! We are doing this because
+// of an error in Gecko which is not rendering the
+// document after a change via the DOM - gpk 2/13/99
+  // BEGIN HACK!!!
+  HACKForceRedraw();
+  // END HACK
+
   return result;
 }
 
