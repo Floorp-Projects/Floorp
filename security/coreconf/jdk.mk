@@ -256,6 +256,7 @@ ifeq ($(OS_ARCH), AIX)
 	JAVA_ARCH = aix
 
 	INCLUDES += -I$(JAVA_HOME)/include
+	INCLUDES += -I$(JAVA_HOME)/include/$(JAVA_ARCH)
 
 	# (3) specify "linker" information
 	JAVA_CPU = aix
