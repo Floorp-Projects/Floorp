@@ -50,6 +50,7 @@
 #include "plbase64.h"
 #include "nsEscape.h"
 #include "nsMsgUtils.h"
+#include "nsIPipe.h"
 
 #include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
@@ -358,51 +359,35 @@ NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
 
 PRInt32 nsSmtpProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line)
 {
-	// I haven't looked into writing this yet. We have a couple of possibilities:
-	// (1) insert ReadLine *yuck* into here or better yet into the nsIInputStream
-	// then we can just turn around and call it here. 
-	// OR
-	// (2) we write "protocol" specific code for news which looks for a CRLF in the incoming
-	// stream. If it finds it, that's our new line that we put into @param line. We'd
-	// need a buffer (m_dataBuf) to store extra info read in from the stream.....
+  nsCOMPtr<nsISearchableInputStream> bufferInputStr = do_QueryInterface(inputStream);
+  PRUint32 numBytesLastRead = 0;  // total number of bytes read into the current line
 
-	// read out everything we've gotten back and return it in line...this won't work for much but it does
-	// get us going...
+  if (bufferInputStr)
+  {
+    // only try to read out an entire line...if we don't have a full line yet then wait for
+    // more data....
+    PRBool found = PR_FALSE;
+    PRUint32 offset = 0;
+    bufferInputStr->Search("\n", PR_TRUE,  &found, &offset); 
+    if (found && offset < OUTPUT_BUFFER_SIZE - 1)
+    {
+	    m_dataBuf[0] = '\0';
+      inputStream->Read(m_dataBuf, offset + 1 /* + 1 to read past the \n */, &numBytesLastRead);
+      m_dataBuf[numBytesLastRead] = '\0';
 
-	// XXX: please don't hold this quick "algorithm" against me. I just want to read just one
-	// line for the stream. I promise this is ONLY temporary to test out NNTP. We need a generic
-	// way to read one line from a stream. For now I'm going to read out one character at a time.
-	// (I said it was only temporary =)) and test for newline...
-
-	PRUint32 numBytesToRead = 0;  // MAX # bytes to read from the stream
-	PRUint32 numBytesRead = 0;	  // total number bytes we have read from the stream during this call
-	inputStream->Available(&length); // refresh the length in case it has changed...
-
-	if (length > OUTPUT_BUFFER_SIZE)
-		numBytesToRead = OUTPUT_BUFFER_SIZE;
+      *line = m_dataBuf;
+    }
 	else
-		numBytesToRead = length;
+      return -1; // inform caller to block
 
-	m_dataBuf[0] = '\0';
-	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
-	do
-	{
-		inputStream->Read(m_dataBuf + numBytesRead, 1 /* read just one byte */, &numBytesLastRead);
-		numBytesRead += numBytesLastRead;
-	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != '\n');
-
-	m_dataBuf[numBytesRead] = '\0'; // null terminate the string.
-
-	// oops....we also want to eat up the '\n' and the \r'...
-	if (numBytesRead > 1 && m_dataBuf[numBytesRead-2] == '\r')
-		m_dataBuf[numBytesRead-2] = '\0'; // hit both cr and lf...
+  }
 	else
-		if (numBytesRead > 0 && (m_dataBuf[numBytesRead-1] == '\r' || m_dataBuf[numBytesRead-1] == '\n'))
-			m_dataBuf[numBytesRead-1] = '\0';
+  {
+    NS_ASSERTION(0, "uhoh.....our input stream is no longer searchable");
+    return 0; 
+  }
 
-	if (line)
-		*line = m_dataBuf;
-	return numBytesRead;
+  return numBytesLastRead;
 }
 
 void nsSmtpProtocol::UpdateStatus(PRInt32 aStatusID)
@@ -439,31 +424,12 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 
   status = ReadLine(inputStream, length, &line);
 
-  if(status == 0)
+  if (status < 0) // we are blocked waiting for more data...
   {
-    m_nextState = SMTP_ERROR_DONE;
-    ClearFlag(SMTP_PAUSE_FOR_READ);
-
-	  nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
-
-    m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-    return(NS_ERROR_SMTP_SERVER_ERROR);
-  }
-
-    /* if TCP error of if there is not a full line yet return
-     */
-  if(status < 0)
-	{
-    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
-	  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
-
-	  m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
-    /* return TCP error */
-	  return(NS_ERROR_TCP_READ_ERROR);
+     m_nextState = SMTP_RESPONSE;
+     SetFlag(SMTP_PAUSE_FOR_READ);
+     return 0; 
 	}
-	else if(!line)
-	  return status;
 	
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
 	cont_char = ' '; /* default */
