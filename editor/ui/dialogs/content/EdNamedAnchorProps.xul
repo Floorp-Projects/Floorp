@@ -6,7 +6,6 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    width="260" height="140"
     align="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
@@ -16,7 +15,6 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
-  <div flex="100%">
   <table>
     <tr>
       <td>
@@ -41,5 +39,4 @@
       </td>
     </tr>
   </table>
-  </div>
 </xul:window>
