@@ -1544,7 +1544,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
         try {
             Object fun = getProperty(obj, methodName);
             if (fun == NOT_FOUND)
-                fun = Undefined.instance;
+                fun = methodName;
             return ScriptRuntime.call(cx, fun, obj, args, getTopLevelScope(obj));
         } finally {
           Context.exit();
