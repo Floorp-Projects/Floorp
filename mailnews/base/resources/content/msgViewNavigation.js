@@ -49,10 +49,22 @@ function GoNextMessage(nextFunction, startFromBeginning)
 	var tree = GetThreadTree();
 	
 	var selArray = tree.selectedItems;
-	if ( selArray && (selArray.length == 1) )
+	var length = selArray.length;
+
+	if ( selArray && ((length == 0) || (length == 1)) )
 	{
-		var nextMessage = GetNextMessage(selArray[0], nextFunction, startFromBeginning);
-		ChangeSelection(tree, nextMessage);
+		var currentMessage;
+
+		if(length == 0)
+			currentMessage = null;
+		else
+			currentMessage = selArray[0];
+
+		var nextMessage = GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning);
+
+		//Only change the selection if there's a valid nextMessage
+		if(nextMessage && (nextMessage != currentMessage))
+			ChangeSelection(tree, nextMessage);
 	}
 }
 
@@ -63,25 +75,40 @@ function GoNextMessage(nextFunction, startFromBeginning)
   startFromBeginning is a boolean that states whether or not we should start looking at the beginning
   if we reach then end 
 */
-function GetNextMessage(currentMessage, nextFunction, startFromBeginning)
+function GetNextMessage(tree, currentMessage, nextFunction, startFromBeginning)
 {
 	var foundMessage = false;
 
-	
-	var nextMessage = currentMessage.nextSibling;
+	var nextMessage;
+
+	if(currentMessage)
+		nextMessage = currentMessage.nextSibling;
+	else
+		nextMessage = FindFirstMessage(tree);
+
+	//In case we are currently the bottom message
+	if(!nextMessage && startFromBeginning)
+	{
+		dump('no next message\n');
+		var parent = currentMessage.parentNode;
+		nextMessage = parent.firstChild;
+	}
+
+
 	while(nextMessage && (nextMessage != currentMessage))
 	{
 		if(nextFunction(nextMessage))
 		 break;
 		nextMessage = nextMessage.nextSibling;
 		/*If there's no nextMessage we may have to start from top.*/
-		if(!nextMessage && startFromBeginning)
+		if(!nextMessage && (nextMessage!= currentMessage) && startFromBeginning)
 		{
 			dump('We need to start from the top\n');
 			var parent = currentMessage.parentNode;
 			nextMessage = parent.firstChild;
 		}
 	}
+
 	if(nextMessage)
 	{
 		var id = nextMessage.getAttribute('id');
@@ -106,8 +133,11 @@ function GoPreviousMessage(previousFunction, startFromEnd)
 	var selArray = tree.selectedItems;
 	if ( selArray && (selArray.length == 1) )
 	{
-		var previousMessage = GetPreviousMessage(selArray[0], previousFunction, startFromEnd);
-		ChangeSelection(tree, previousMessage);
+		var currentMessage = selArray[0];
+		var previousMessage = GetPreviousMessage(currentMessage, previousFunction, startFromEnd);
+		//Only change selection if there's a valid previous message.
+		if(previousMessage && (previousMessage != currentMessage))
+			ChangeSelection(tree, previousMessage);
 	}
 }
 
@@ -124,6 +154,14 @@ function GetPreviousMessage(currentMessage, previousFunction, startFromEnd)
 
 	
 	var previousMessage = currentMessage.previousSibling;
+
+	//In case we're already at the top
+	if(!previousMessage && startFromEnd)
+	{
+		var parent = currentMessage.parentNode;
+		previousMessage = parent.lastChild;
+	}
+
 	while(previousMessage && (previousMessage != currentMessage))
 	{
 		if(previousFunction(previousMessage))
@@ -155,3 +193,18 @@ function ChangeSelection(tree, newMessage)
 		tree.selectItem(newMessage);
 	}
 }
+
+function FindFirstMessage(tree)
+{
+	var treeChildren = tree.getElementsByTagName('treechildren');
+	if(treeChildren.length > 1)
+	{
+		//The first treeChildren will be for the template.
+		return treeChildren[1].firstChild;
+
+	}
+
+	return null;	
+
+}
+
