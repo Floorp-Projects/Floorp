@@ -992,7 +992,7 @@ sub do_action {
   my $err = 0;
   $build_vars->{PACKAGES} = {};
   # Do not build distributions unless we built
-  if (1 || $build_vars->{SHOULD_BUILD}) {
+  if ($build_vars->{SHOULD_BUILD}) {
     #
     # Build distributions
     #
