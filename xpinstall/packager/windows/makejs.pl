@@ -71,6 +71,7 @@ $outTempFile      = $inJstFileSplit[0];
 $outTempFile     .= ".template";
 
 system("copy ..\\common\\share.t $outTempFile");
+system("type windows.t >> $outTempFile");  # append windows specific functions
 system("type $inJstFile >> $outTempFile");
 
 # Open the input .template file

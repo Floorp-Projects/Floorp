@@ -3,6 +3,14 @@ var srDest;
 var err;
 var fProgram;
 
+// This list contains filenames that are long filenames ( > 8.3) critical during installation time.
+// Unfortunately, it is statically created.  If there are new files that are suspected to be
+// locked in memory during installation of this .xpi file, then they should be listed here.
+// The filenames should include paths relative to the Netscape 6 folder.
+// '/' must be used as path delimiters regardless of platform.
+var listLongFilePaths = ["components/nsAB4xUpgrader.dll",
+                         "chrome/messenger.jar"];
+
 srDest = $SpaceRequired$:bin;
 err    = initInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("initInstall: " + err);
@@ -13,6 +21,11 @@ logComment("fProgram: " + fProgram);
 if(verifyDiskSpace(fProgram, srDest))
 {
   setPackageFolder(fProgram);
+
+  // Ren8dot3 process needs to be done before any files have been installed
+  // (this includes the temp files during the prepare phase)
+  prepareRen8dot3(listLongFilePaths);
+
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
