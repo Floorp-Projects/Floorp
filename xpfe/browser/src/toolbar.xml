@@ -3,23 +3,31 @@
 <!DOCTYPE window> 
 
 <window>
-        <xul:toolbar>
-                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
-                                <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
-                </html:button>
-                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
-                                <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:BR/>Forward
-                </html:button>
-                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
-                                <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:BR/>Reload
-                </html:button>
-                <html:button cmd="nsCmd:loadURL" style="background-color:rgb(192,192,192)">
-                                <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:BR/>Stop
-                </html:button>
-                <html:input cols=30 style="width: 295px;"></html:input>
-                <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
-                        <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
-                </html:a>
-        </xul:toolbar>
+  <xul:commands>
+    <xul:command name="nsCmd:BrowserBack" onCommand="window.back();"/>
+    <xul:command name="nsCmd:BrowserForward" onCommand="window.forward();"/>
+    <xul:command name="nsCmd:BrowserReload" onCommand="window.reload();"/>
+    <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
+    <!-- other parameters of command are assumed to have
+      some useful initial value -->
+  </xul:commands>
+  <xul:toolbar>
+          <html:button cmd="nsCmd:BrowserBack" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Back.gif"/><html:BR/>Back
+          </html:button>
+          <html:button cmd="nsCmd:BrowserForward" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Forward.gif"/><html:BR/>Forward
+          </html:button>
+          <html:button cmd="nsCmd:BrowserReload" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Reload.gif"/><html:BR/>Reload
+          </html:button>
+          <html:button cmd="nsCmd:BrowserStop" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Stop.gif"/><html:BR/>Stop
+          </html:button>
+          <html:input cols=30 style="width: 295px;"></html:input>
+          <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
+                  <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
+          </html:a>
+  </xul:toolbar>
 </window>
 
