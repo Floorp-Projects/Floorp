@@ -104,8 +104,6 @@
 
 #include "nsContentUtils.h"
 
-//#define DEBUG_RULES
-//#define EVENT_DEBUG
 //#define DEBUG_HASH
  
 #ifdef DEBUG_HASH
@@ -178,7 +176,7 @@ PRUint32 AtomKey_base::HashCode(void) const
   }
   else {
 #ifdef DEBUG_HASH
-  DebugHashCount(PR_TRUE);
+    DebugHashCount(PR_TRUE);
 #endif
     nsAutoString myStr;
     mAtom->ToString(myStr);
@@ -330,6 +328,12 @@ struct RuleValue {
 #define PRINT_UNIVERSAL_RULES
 #endif
 
+#ifdef RULE_HASH_STATS
+#define RULE_HASH_STAT_INCREMENT(var_) PR_BEGIN_MACRO ++(var_); PR_END_MACRO
+#else
+#define RULE_HASH_STAT_INCREMENT(var_) PR_BEGIN_MACRO PR_END_MACRO
+#endif
+
 // Enumerator callback function.
 typedef void (*RuleEnumFunc)(nsICSSStyleRule* aRule, void *aData);
 
@@ -343,7 +347,9 @@ public:
                          RuleEnumFunc aFunc, void* aData);
   void EnumerateTagRules(nsIAtom* aTag,
                          RuleEnumFunc aFunc, void* aData);
-  void SetCaseSensitive(PRBool aCaseSensitive) {mCaseSensitive = aCaseSensitive;};
+  void SetCaseSensitive(PRBool aCaseSensitive) {
+    mCaseSensitive = aCaseSensitive;
+  }
 
 protected:
   void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive = PR_TRUE);
@@ -455,6 +461,12 @@ RuleHash::~RuleHash(void)
   PL_FinishArenaPool(&mArena);
 }
 
+// XXX When this is converted to pldhash, it will be quite easy to
+// convert this to |PrependRuleToTable|, which would fix the worst-case
+// O(N^2) nature of appending all the rules.  Then we could just
+// |EnumerateBackwards| instead of |EnumerateForwards| when calling
+// |BuildRuleHashAndStateSelectors|.
+
 void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive)
 {
   NS_ASSERTION(nsnull != aAtom, "null hash key");
@@ -503,38 +515,36 @@ void RuleHash::AppendRule(nsICSSStyleRule* aRule)
   nsCSSSelector*  selector = aRule->FirstSelector();
   if (nsnull != selector->mIDList) {
     AppendRuleToTable(mIdTable, selector->mIDList->mAtom, aRule, mCaseSensitive);
-#ifdef RULE_HASH_STATS
-    ++mIdSelectors;
-#endif
+    RULE_HASH_STAT_INCREMENT(mIdSelectors);
   }
   else if (nsnull != selector->mClassList) {
     AppendRuleToTable(mClassTable, selector->mClassList->mAtom, aRule, mCaseSensitive);
-#ifdef RULE_HASH_STATS
-    ++mClassSelectors;
-#endif
+    RULE_HASH_STAT_INCREMENT(mClassSelectors);
   }
   else if (nsnull != selector->mTag) {
     AppendRuleToTable(mTagTable, selector->mTag, aRule);
-#ifdef RULE_HASH_STATS
-    ++mTagSelectors;
-#endif
+    RULE_HASH_STAT_INCREMENT(mTagSelectors);
   }
   else if (kNameSpaceID_Unknown != selector->mNameSpace) {
     AppendRuleToTable(mNameSpaceTable, selector->mNameSpace, aRule);
-#ifdef RULE_HASH_STATS
-    ++mNameSpaceSelectors;
-#endif
+    RULE_HASH_STAT_INCREMENT(mNameSpaceSelectors);
   }
   else {  // universal tag selector
     AppendRuleToTable(mTagTable, nsCSSAtoms::universalSelector, aRule);
-#ifdef RULE_HASH_STATS
-    ++mUniversalSelectors;
-#endif
+    RULE_HASH_STAT_INCREMENT(mUniversalSelectors);
   }
 }
 
 // this should cover practically all cases so we don't need to reallocate
 #define MIN_ENUM_LIST_SIZE 8
+
+#ifdef RULE_HASH_STATS
+#define RULE_HASH_STAT_INCREMENT_LIST_COUNT(list_, var_) \
+  do { ++(var_); (list_) = (list_)->mNext; } while ((list_) != &mEndValue)
+#else
+#define RULE_HASH_STAT_INCREMENT_LIST_COUNT(list_, var_) \
+  PR_BEGIN_MACRO PR_END_MACRO
+#endif
 
 void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
                                  nsIAtom* aID, const nsVoidArray& aClassList,
@@ -560,21 +570,14 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
 
   PRInt32 index;
   PRInt32 valueCount = 0;
-#ifdef RULE_HASH_STATS
-  ++mElementsMatched;
-#endif
+  RULE_HASH_STAT_INCREMENT(mElementsMatched);
 
   { // universal tag rules
     DependentAtomKey universalKey(nsCSSAtoms::universalSelector);
     RuleValue*  value = (RuleValue*)mTagTable.Get(&universalKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
-#ifdef RULE_HASH_STATS
-      do {
-        ++mElementUniversalCalls;
-        value = value->mNext;
-      } while (value != &mEndValue);
-#endif
+      RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementUniversalCalls);
     }
   }
   // universal rules within the namespace
@@ -583,12 +586,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     RuleValue* value = (RuleValue*)mNameSpaceTable.Get(&nameSpaceKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
-#ifdef RULE_HASH_STATS
-      do {
-        ++mElementNameSpaceCalls;
-        value = value->mNext;
-      } while (value != &mEndValue);
-#endif
+      RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementNameSpaceCalls);
     }
   }
   if (nsnull != aTag) {
@@ -596,12 +594,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     RuleValue* value = (RuleValue*)mTagTable.Get(&tagKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
-#ifdef RULE_HASH_STATS
-      do {
-        ++mElementTagCalls;
-        value = value->mNext;
-      } while (value != &mEndValue);
-#endif
+      RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementTagCalls);
     }
   }
   if (nsnull != aID) {
@@ -610,12 +603,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     RuleValue* value = (RuleValue*)mIdTable.Get(&idKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
-#ifdef RULE_HASH_STATS
-      do {
-        ++mElementIdCalls;
-        value = value->mNext;
-      } while (value != &mEndValue);
-#endif
+      RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementIdCalls);
     }
   }
   for (index = 0; index < classCount; index++) {
@@ -625,12 +613,7 @@ void RuleHash::EnumerateAllRules(PRInt32 aNameSpace, nsIAtom* aTag,
     RuleValue* value = (RuleValue*)mClassTable.Get(&classKey);
     if (nsnull != value) {
       mEnumList[valueCount++] = value;
-#ifdef RULE_HASH_STATS
-      do {
-        ++mElementClassCalls;
-        value = value->mNext;
-      } while (value != &mEndValue);
-#endif
+      RULE_HASH_STAT_INCREMENT_LIST_COUNT(value, mElementClassCalls);
     }
   }
   NS_ASSERTION(valueCount <= testCount, "values exceeded list size");
@@ -671,14 +654,10 @@ void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
   DependentAtomKey tagKey(aTag);
   RuleValue*  tagValue = (RuleValue*)mTagTable.Get(&tagKey);
 
-#ifdef RULE_HASH_STATS
-  ++mPseudosMatched;
-#endif
+  RULE_HASH_STAT_INCREMENT(mPseudosMatched);
   if (tagValue) {
     do {
-#ifdef RULE_HASH_STATS
-      ++mPseudoTagCalls;
-#endif
+      RULE_HASH_STAT_INCREMENT(mPseudoTagCalls);
       (*aFunc)(tagValue->mRule, aData);
       tagValue = tagValue->mNext;
     } while (&mEndValue != tagValue);
@@ -2453,7 +2432,7 @@ ListRules(nsISupportsArray* aRules, FILE* aOut, PRInt32 aIndent)
   PRUint32 index;
   if (aRules) {
     aRules->Count(&count);
-    for (index = 0; index < count; index++) {
+    for (index = count - 1; index >= 0; --index) {
       nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)aRules->ElementAt(index));
       rule->List(aOut, aIndent);
     }
@@ -3925,14 +3904,6 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
   }
 }
 
-#ifdef DEBUG_RULES
-static PRBool ContentEnumWrap(nsISupports* aRule, void* aData)
-{
-  ContentEnumFunc((nsICSSStyleRule*)aRule, aData);
-  return PR_TRUE;
-}
-#endif
-
 NS_IMETHODIMP
 CSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
                                 nsIAtom* aMedium)
@@ -3950,21 +3921,6 @@ CSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
       styledContent->GetClasses(classArray);
 
     cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID, aData->mContentTag, aData->mContentID, classArray, ContentEnumFunc, aData);
-
-#ifdef DEBUG_RULES
-    nsISupportsArray* list1;
-    nsISupportsArray* list2;
-    NS_NewISupportsArray(&list1);
-    NS_NewISupportsArray(&list2);
-
-    aData->mResults = list1;
-    cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID, aData->mContentTag, aData->mContentID, classArray, ContentEnumFunc, &data);
-    aData->mResults = list2;
-    cascade->mWeightedRules->EnumerateBackwards(ContentEnumWrap, &data);
-    NS_ASSERTION(list1->Equals(list2), "lists not equal");
-    NS_RELEASE(list1);
-    NS_RELEASE(list2);
-#endif
   }
   return NS_OK;
 }
@@ -4015,14 +3971,6 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
   }
 }
 
-#ifdef DEBUG_RULES
-static PRBool PseudoEnumWrap(nsISupports* aRule, void* aData)
-{
-  PseudoEnumFunc((nsICSSStyleRule*)aRule, aData);
-  return PR_TRUE;
-}
-#endif
-
 NS_IMETHODIMP
 CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
                                 nsIAtom* aMedium)
@@ -4036,20 +3984,6 @@ CSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
   if (cascade) {
     cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag,
                                          PseudoEnumFunc, aData);
-
-#ifdef DEBUG_RULES
-    nsISupportsArray* list1;
-    nsISupportsArray* list2;
-    NS_NewISupportsArray(&list1);
-    NS_NewISupportsArray(&list2);
-    aData->mResults = list1;
-    cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag, PseudoEnumFunc, aData);
-    aData->mResults = list2;
-    cascade->mWeightedRules->EnumerateBackwards(PseudoEnumWrap, aData);
-    NS_ASSERTION(list1->Equals(list2), "lists not equal");
-    NS_RELEASE(list1);
-    NS_RELEASE(list2);
-#endif
   }
   return NS_OK;
 }
@@ -4079,7 +4013,17 @@ CSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
 
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
-  // Look up content in state rule list.  If enumeration stopped, have state.
+  // Look up the content node in the state rule list, which points to
+  // any (CSS2 definition) simple selector (whether or not it is the
+  // subject) that has a state pseudo-class on it.  This means that this
+  // code will be matching selectors that aren't real selectors in any
+  // stylesheet (e.g., if there is a selector "body > p:hover > a", then
+  // "body > p:hover" will be in |cascade->mStateSelectors|).  Note that
+  // |IsStateSelector| below determines which selectors are in
+  // |cascade->mStateSelectors|.
+  // The enumeration function signals the presence of state by stopping
+  // the enumeration, which is reflected in the return value from
+  // |EnumerateForwards|.
   *aResult = cascade &&
              !cascade->mStateSelectors.EnumerateForwards(StateEnumFunc, aData);
 
@@ -4249,32 +4193,18 @@ CSSRuleProcessor::ClearRuleCascades(void)
 }
 
 
-static
-PRBool BuildHashEnum(nsISupports* aRule, void* aHash)
-{
-  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
-  RuleHash* hash = (RuleHash*)aHash;
-  hash->AppendRule(rule);
-  return PR_TRUE;
-}
-
+// This function should return true only for selectors that need to be
+// checked by |HasStateDependentStyle|.
 inline
 PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
   nsAtomList* pseudoClass = aSelector.mPseudoClassList;
   while (pseudoClass) {
     if ((pseudoClass->mAtom == nsCSSAtoms::activePseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::anyLinkPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::checkedPseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::disabledPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::dragOverPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::dragPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::enabledPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::focusPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::linkPseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::selectionPseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::visitedPseudo)) {
+        (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo)) {
       return PR_TRUE;
     }
     pseudoClass = pseudoClass->mNext;
@@ -4282,20 +4212,20 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
   return PR_FALSE;
 }
 
-static
-PRBool BuildStateEnum(nsISupports* aRule, void* aArray)
+static PRBool
+BuildRuleHashAndStateSelectors(nsISupports* aRule, void* aCascade)
 {
-  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
-  nsVoidArray* array = (nsVoidArray*)aArray;
+  nsICSSStyleRule* rule = NS_STATIC_CAST(nsICSSStyleRule*, aRule);
+  RuleCascadeData *cascade = NS_STATIC_CAST(RuleCascadeData*, aCascade);
 
-  nsCSSSelector* selector = rule->FirstSelector();
+  cascade->mRuleHash.AppendRule(rule);
 
-  while (selector) {
-    if (IsStateSelector(*selector)) {
+  nsVoidArray* array = &cascade->mStateSelectors;
+  for (nsCSSSelector* selector = rule->FirstSelector();
+           selector; selector = selector->mNext)
+    if (IsStateSelector(*selector))
       array->AppendElement(selector);
-    }
-    selector = selector->mNext;
-  }
+
   return PR_TRUE;
 }
 
@@ -4375,7 +4305,7 @@ PR_STATIC_CALLBACK(int) CompareArrayData(const void* aArg1, const void* aArg2,
 {
   const RuleArrayData* arg1 = NS_STATIC_CAST(const RuleArrayData*, aArg1);
   const RuleArrayData* arg2 = NS_STATIC_CAST(const RuleArrayData*, aArg2);
-  return arg2->mWeight - arg1->mWeight; // put higher weight first
+  return arg1->mWeight - arg2->mWeight; // put lower weight first
 }
 
 
@@ -4403,17 +4333,10 @@ PR_STATIC_CALLBACK(PRBool) FillArray(nsHashKey* aKey, void* aData,
   return PR_TRUE;
 }
 
-static PRBool AppendRuleToArray(nsISupports* aElement, void* aData)
-{
-  nsISupportsArray* ruleArray = NS_STATIC_CAST(nsISupportsArray*, aData);
-  ruleArray->AppendElement(aElement);
-  return PR_TRUE;
-}
-
 /**
  * Takes the hashtable of arrays (keyed by weight, in order sort) and
  * puts them all in one big array which has a primary sort by weight
- * and secondary sort by reverse order.
+ * and secondary sort by order.
  */
 static void PutRulesInList(nsSupportsHashtable* aRuleArrays,
                            nsISupportsArray* aWeightedRules)
@@ -4424,12 +4347,8 @@ static void PutRulesInList(nsSupportsHashtable* aRuleArrays,
   aRuleArrays->Enumerate(FillArray, &faData);
   NS_QuickSort(arrayData, arrayCount, sizeof(RuleArrayData),
                CompareArrayData, nsnull);
-  PRInt32 i;
-  for (i = 0; i < arrayCount; i++) {
-    // append the array in reverse
-    arrayData[i].mRuleArray->EnumerateBackwards(AppendRuleToArray,
-                                                aWeightedRules);
-  }
+  for (PRInt32 i = 0; i < arrayCount; ++i)
+    aWeightedRules->AppendElements(arrayData[i].mRuleArray);
 
   delete [] arrayData;
 }
@@ -4456,11 +4375,10 @@ CSSRuleProcessor::GetRuleCascade(nsIPresContext* aPresContext, nsIAtom* aMedium)
 
       nsCompatibility quirkMode = eCompatibility_Standard;
       aPresContext->GetCompatibilityMode(&quirkMode);
-      PRBool isQuirksMode = (eCompatibility_Standard == quirkMode ? PR_FALSE : PR_TRUE);
 
-      cascade->mRuleHash.SetCaseSensitive(!isQuirksMode);
-      cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
-      cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
+      cascade->mRuleHash.SetCaseSensitive(eCompatibility_Standard == quirkMode);
+      cascade->mWeightedRules->EnumerateForwards(
+                                      BuildRuleHashAndStateSelectors, cascade);
     }
   }
   return cascade;
