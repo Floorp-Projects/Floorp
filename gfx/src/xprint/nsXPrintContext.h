@@ -35,7 +35,6 @@
 #include "nsString.h"
 #include "nsIImage.h"
 
-#include "nsImageXlib.h" // nsGCCache.h wants this
 #include "nsGCCache.h"
 
 #include "nsIDeviceContextSpecXPrint.h"

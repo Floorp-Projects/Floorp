@@ -37,7 +37,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextXlib, nsIRenderingContext)
 
 static PRLogModuleInfo * RenderingContextXlibLM = PR_NewLogModule("RenderingContextXlib");
 
-static nsGCCache *gcCache = nsnull;
+static nsGCCacheXlib *gcCache = nsnull;
 
 class GraphicsState
 {
@@ -401,7 +401,7 @@ void nsRenderingContextXlib::UpdateGC()
    }
  
    if (!gcCache) {
-     gcCache = new nsGCCache();
+     gcCache = new nsGCCacheXlib();
      if (!gcCache) return;
    }
 
