@@ -17,33 +17,31 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsIXMLDocument_h___
-#define nsIXMLDocument_h___
+#ifndef nsIDocumentTransformer_h___
+#define nsIDocumentTransformer_h___
 
 #include "nsISupports.h"
-#include "nsString.h"
 
-class nsIAtom;
-class nsICSSLoader;
-#ifdef XSL
-class nsITransformMediator;
-#endif
+class nsIDOMElement;
+class nsIDOMDocument;
+class nsIObserver;
 
-#define NS_IXMLDOCUMENT_IID \
- { 0xa6cf90ca, 0x15b3, 0x11d2, \
- { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
+/* 3fbff728-2d20-11d3-aef3-00108300ff91 */
+#define NS_IDOCUMENT_TRANSFORMER_IID \
+{ 0x3fbff728, 0x2d20, 0x11d3, {0xae, 0xf3, 0x00, 0x10, 0x83, 0x00, 0xff, 0x91} }
 
 /**
- * XML document extensions to nsIDocument
+ * This interface should be implemented by any object that wants to
+ * transform the content model of the current document before the
+ * document is displayed.  One possible implementor of this interface
+ * is an XSL processor. 
  */
-class nsIXMLDocument : public nsISupports {
-public:
-  // XXX This (or a variant thereof) should be in a DOM interface.
-  // Since it isn't, we add it here temporarily
-  NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent)=0;
-#ifdef XSL
-  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator)=0;
-#endif
+class nsIDocumentTransformer : public nsISupports {
+public:  
+  NS_IMETHOD TransformDocument(nsIDOMElement* aSourceDOM, 
+                               nsIDOMElement* aStyleDOM,
+                               nsIDOMDocument* aOutputDoc,
+                               nsIObserver* aObserver)=0;
 };
 
-#endif // nsIXMLDocument_h___
+#endif // nsIDocumentTransformer_h___

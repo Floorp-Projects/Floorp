@@ -31,32 +31,44 @@ public:
   nsXSLContentSink();
   ~nsXSLContentSink();
 
+  nsresult Init(nsITransformMediator* aTM,
+                nsIDocument* aDoc,
+                nsIURL* aURL,
+                nsIWebShell* aContainer);
+
   // nsISupports
-  NS_DECL_ISUPPORTS
+  //NS_DECL_ISUPPORTS
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
   NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
-  NS_IMETHOD WillInterrupt(void);
-  NS_IMETHOD WillResume(void);
-  NS_IMETHOD SetParser(nsIParser* aParser);  
+  //NS_IMETHOD WillInterrupt(void);
+  //NS_IMETHOD WillResume(void);
+  //NS_IMETHOD SetParser(nsIParser* aParser);  
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-  NS_IMETHOD NotifyError(nsresult aErrorResult);
+  NS_IMETHOD NotifyError(const nsParserError* aError);
 
   // nsIXMLContentSink
-  NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
-  NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
-  NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
-  NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
-  NS_IMETHOD AddNotation(const nsIParserNode& aNode);
-  NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
-  
+  //NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
+  //NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode);
+  //NS_IMETHOD AddCharacterData(const nsIParserNode& aNode);
+  //NS_IMETHOD AddUnparsedEntity(const nsIParserNode& aNode);
+  //NS_IMETHOD AddNotation(const nsIParserNode& aNode);
+  //NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
+
 protected:
 
 };
 
+
+nsresult
+NS_NewXSLContentSink(nsIXMLContentSink** aResult,
+                     nsITransformMediator* aTM,
+                     nsIDocument* aDoc,
+                     nsIURL* aURL,
+                     nsIWebShell* aWebShell);
 #endif // nsXSLContentSink_h__

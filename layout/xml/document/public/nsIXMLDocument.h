@@ -25,6 +25,9 @@
 
 class nsIAtom;
 class nsICSSLoader;
+#ifdef XSL
+class nsITransformMediator;
+#endif
 
 #define NS_IXMLDOCUMENT_IID \
  { 0xa6cf90ca, 0x15b3, 0x11d2, \
@@ -38,6 +41,9 @@ public:
   // XXX This (or a variant thereof) should be in a DOM interface.
   // Since it isn't, we add it here temporarily
   NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent)=0;
+#ifdef XSL
+  NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator)=0;
+#endif
 };
 
 #endif // nsIXMLDocument_h___

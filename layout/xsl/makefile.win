@@ -15,12 +15,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..
+DEPTH=..\..
 
-DIRS=base html xml xul events build \
-!if defined(MOZ_XSL)
-xsl                                 \
-!endif
-
+DIRS=document
 
 include <$(DEPTH)\config\rules.mak>

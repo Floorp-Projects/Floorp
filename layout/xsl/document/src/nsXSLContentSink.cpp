@@ -18,12 +18,16 @@
  */
 
 #include "nsXSLContentSink.h"
-
+#include "nsIDOMElement.h"
+#include "nsIContent.h"
+#include "nsITransformMediator.h"
 
 static NS_DEFINE_IID(kIXMLContentSinkIID, NS_IXMLCONTENT_SINK_IID);
+static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 
 nsresult
 NS_NewXSLContentSink(nsIXMLContentSink** aResult,
+                     nsITransformMediator* aTM,
                      nsIDocument* aDoc,
                      nsIURI* aURL,
                      nsIWebShell* aWebShell)
@@ -37,7 +41,7 @@ NS_NewXSLContentSink(nsIXMLContentSink** aResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult rv = it->Init(aDoc, aURL, aWebShell);
+  nsresult rv = it->Init(aTM, aDoc, aURL, aWebShell);
   if (NS_OK != rv) {
     delete it;
     return rv;
@@ -47,24 +51,27 @@ NS_NewXSLContentSink(nsIXMLContentSink** aResult,
 
 nsXSLContentSink::nsXSLContentSink()
 {
-  NS_INIT_REFCNT();
+  // Empty
 }
 
 nsXSLContentSink::~nsXSLContentSink()
 {
-
+  // Empty
 }
 
-/*
+
 nsresult
-nsXSLContentSink::Init(nsIDocument* aDoc,
+nsXSLContentSink::Init(nsITransformMediator* aTM,
+                       nsIDocument* aDoc,
                        nsIURI* aURL,
                        nsIWebShell* aContainer)
 {
-  // We'll use nsXMLContentSink::Init() for now...
-}
-*/
+  nsresult rv;
+  rv = nsXMLContentSink::Init(aDoc, aURL, aContainer);
+  mXSLTransformMediator = aTM;
 
+  return rv;
+}
 
 // nsIContentSink
 NS_IMETHODIMP 
@@ -76,6 +83,16 @@ nsXSLContentSink::WillBuildModel(void)
 NS_IMETHODIMP 
 nsXSLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {  
+  nsIDOMElement* style;
+  nsresult rv;
+
+  rv = mDocElement->QueryInterface(kIDOMElementIID, (void **) &style);
+  if (NS_SUCCEEDED(rv) && mXSLTransformMediator) {
+    // Pass the style content model to the tranform mediator.
+    mXSLTransformMediator->SetStyleSheetContentModel(style);
+    NS_RELEASE(style);
+  }
+  
   return NS_OK;
 }
 
@@ -142,14 +159,18 @@ nsXSLContentSink::AddComment(const nsIParserNode& aNode)
 NS_IMETHODIMP 
 nsXSLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
-  return NS_OK;
+  nsresult result = NS_OK;
+
+  result = nsXMLContentSink::AddProcessingInstruction(aNode);
+  return result;
 }
 
 NS_IMETHODIMP
-nsXSLContentSink::NotifyError(nsresult aErrorResult)
+nsXSLContentSink::NotifyError(const nsParserError* aError)
 {
-  printf("nsXSLContentSink::NotifyError\n");
-  return NS_OK;
+  nsresult result = NS_OK;
+  result = nsXMLContentSink::NotifyError(aError);
+  return result;
 }
 
 

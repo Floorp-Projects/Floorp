@@ -581,6 +581,9 @@ public:
 
     // nsIXMLDocument interface
     NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
+#ifdef XSL
+    NS_IMETHOD SetTransformMediator(nsITransformMediator* aMediator);
+#endif
 
     // nsIRDFDocument interface
     NS_IMETHOD SetRootResource(nsIRDFResource* resource);
@@ -2337,6 +2340,14 @@ XULDocumentImpl::GetContentById(const nsString& aName, nsIContent** aContent)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef XSL
+NS_IMETHODIMP 
+XULDocumentImpl::SetTransformMediator(nsITransformMediator* aMediator)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDocument interface
