@@ -114,7 +114,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
 {
     JSDScript*        jsdscript;
     JSScript*         jsscript;
-    JSBool            hookresult;
+    JSBool            hookresult = JS_TRUE;
     
     if (!jsdc || !jsdc->inited)
         return JS_FALSE;
