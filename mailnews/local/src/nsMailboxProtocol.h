@@ -60,7 +60,7 @@ class nsMailboxProtocol : public nsIStreamListener
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
-	nsMailboxProtocol(nsIURL * aURL, nsITransport * transportLayer);
+	nsMailboxProtocol(nsIURL * aURL);
 	
 	virtual ~nsMailboxProtocol();
 
@@ -131,7 +131,7 @@ private:
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
 	// initialization function given a new url and transport layer
-	void Initialize(nsIURL * aURL, nsITransport * transportLayer);
+	void Initialize(nsIURL * aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol

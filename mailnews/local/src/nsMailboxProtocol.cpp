@@ -22,6 +22,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsINetService.h"
 
 #include "rosetta.h"
 
@@ -30,6 +31,8 @@
 #include "prlog.h"
 #include "prerror.h"
 #include "prprf.h"
+
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
@@ -55,11 +58,11 @@ NS_IMPL_ADDREF(nsMailboxProtocol)
 NS_IMPL_RELEASE(nsMailboxProtocol)
 NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::IID()); /* we need to pass in the interface ID of this interface */
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL, nsITransport * transportLayer)
+nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  Initialize(aURL, transportLayer);
+  Initialize(aURL);
 }
 
 nsMailboxProtocol::~nsMailboxProtocol()
@@ -76,28 +79,32 @@ nsMailboxProtocol::~nsMailboxProtocol()
 	NS_IF_RELEASE(m_transport);
 }
 
-void nsMailboxProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
+void nsMailboxProtocol::Initialize(nsIURL * aURL)
 {
 	NS_PRECONDITION(aURL, "invalid URL passed into MAILBOX Protocol");
 
 	m_flags = 0;
 
-	// grab a reference to the transport interface
-	if (transportLayer)
-		NS_ADDREF(transportLayer);
-
-	m_transport = transportLayer;
-
 	// query the URL for a nsIMAILBOXUrl
-	m_runningUrl = NULL; // initialize to NULL
+	m_runningUrl = nsnull; // initialize to NULL
+	m_transport = nsnull;
 
 	if (aURL)
 	{
 		nsresult rv = aURL->QueryInterface(nsIMailboxUrl::IID(), (void **)&m_runningUrl);
 		if (NS_SUCCEEDED(rv) && m_runningUrl)
 		{
-			// okay, now fill in our event sinks...Note that each getter ref counts before
-			// it returns the interface to us...we'll release when we are done
+			// extract the file name and create a file transport...
+			const char * fileName = nsnull;
+			nsINetService * pNetService = nsnull;
+
+			rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::IID(), (nsISupports **)&pNetService);
+			if (NS_SUCCEEDED(rv) && pNetService)
+			{
+				m_runningUrl->GetFile(&fileName);
+				rv = pNetService->CreateFileSocketTransport(&m_transport, fileName);
+				nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+			}
 		}
 	}
 	
@@ -158,16 +165,19 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  
+	m_runningUrl->SetRunningUrlFlag(PR_FALSE);
 
 	if (m_nextState == MAILBOX_READ_FOLDER && m_mailboxParser)
 	{
 		// we need to inform our mailbox parser that there is no more incoming data...
 		m_mailboxParser->OnStopBinding(aURL, 0, nsnull);
-
 	}
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
-	// available for another url if there is one....
+	// available for another url if there is one.
+	
+	// mscott --> maybe we should set our state to done because we don't run multiple urls in a mailbox
+	// protocol connection....
 
 	return NS_OK;
 
@@ -299,6 +309,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 			PRBool transportOpen = PR_FALSE;
 			m_transport->IsTransportOpen(&transportOpen);
 			m_urlInProgress = PR_TRUE;
+			m_runningUrl->SetRunningUrlFlag(PR_TRUE);
 			if (transportOpen == PR_FALSE)
 			{
 				m_transport->Open(m_runningUrl);  // opening the url will cause to get notified when the connection is established
@@ -307,7 +318,7 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL)
 			{
 				// mscott - I think mailbox urls always come in fresh for each mailbox protocol connection
 				// so we should always be calling m_transport->open(our url)....
-				NS_ASSERTION(0, "mscott -- I don't think we should get here for mailbox urls");
+				NS_ASSERTION(0, "I don't think we should get here for mailbox urls");
 				status = ProcessMailboxState(m_runningUrl, nsnull, 0); 
 			}
 		} // if we received an MAILBOX url...
@@ -368,6 +379,7 @@ PRInt32 nsMailboxProtocol::ReadFolderResponse(nsIInputStream * inputStream, PRUi
 				break;
 			case MAILBOX_DONE:
 				m_urlInProgress = PR_FALSE;
+				m_runningUrl->SetRunningUrlFlag(PR_FALSE);
 	            m_nextState = MAILBOX_FREE;
 				break;
         
