@@ -46,6 +46,7 @@
 #include "nsFileLocations.h"
 
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include <unistd.h>
 
@@ -214,12 +215,12 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
   rv = aURI->Clone(getter_AddRefs(chromeURI));        // don't mangle the original
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString spec;
-  rv = reg->ConvertChromeURL(chromeURI, getter_Copies(spec));
+  nsXPIDLCString cspec;
+  rv = reg->ConvertChromeURL(chromeURI, getter_Copies(cspec));
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-  serv->NewURI(spec, nsnull, getter_AddRefs(chromeURI));
+  serv->NewURI(cspec, nsnull, getter_AddRefs(chromeURI));
   if (NS_FAILED(rv)) return rv;
   
   if (elib && alib)
