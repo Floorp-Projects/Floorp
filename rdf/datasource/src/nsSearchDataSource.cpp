@@ -165,6 +165,7 @@ private:
 	static nsIRDFResource		*kNC_URL;
 	static nsIRDFResource		*kRDF_InstanceOf;
 	static nsIRDFResource		*kRDF_type;
+	static nsIRDFResource		*kNC_loading;
 
 protected:
 	static nsIRDFDataSource		*mInner;
@@ -273,6 +274,7 @@ nsIRDFResource			*SearchDataSource::kNC_Name;
 nsIRDFResource			*SearchDataSource::kNC_URL;
 nsIRDFResource			*SearchDataSource::kRDF_InstanceOf;
 nsIRDFResource			*SearchDataSource::kRDF_type;
+nsIRDFResource			*SearchDataSource::kNC_loading;
 
 PRInt32				SearchDataSourceCallback::gRefCnt;
 
@@ -345,9 +347,9 @@ SearchDataSource::SearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "data",             &kNC_Data);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",             &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",              &kNC_URL);
-
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",      &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",            &kRDF_type);
+		gRDFService->GetResource(NC_NAMESPACE_URI "loading",          &kNC_loading);
 
 		gSearchDataSource = this;
 	}
@@ -369,6 +371,7 @@ SearchDataSource::~SearchDataSource (void)
 		NS_RELEASE(kNC_URL);
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
+		NS_RELEASE(kNC_loading);
 
 		NS_IF_RELEASE(mInner);
 
@@ -1225,6 +1228,17 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 	}
 #endif
 
+	// start "loading" animation for this search engine
+	if (NS_SUCCEEDED(rv) && (mInner))
+	{
+		nsAutoString		trueStr("true");
+		nsCOMPtr<nsIRDFLiteral>	literal;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), getter_AddRefs(literal))))
+		{
+			mInner->Assert(engine, kNC_loading, literal, PR_TRUE);
+		}
+	}
+
 	delete [] searchURL;
 	searchURL = nsnull;
 	return(rv);
@@ -1837,7 +1851,12 @@ SearchDataSourceCallback::OnStartRequest(nsIURI *aURL, const char *aContentType)
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
 	{
 		mDataSource->Assert(mParent, kNC_loading, literal, PR_TRUE);
-		mDataSource->Assert(mEngine, kNC_loading, literal, PR_TRUE);
+		
+		// Don't starting loading animation for engine here.
+		// Instead, we now do it when the URI is initially opened
+		// which gives a longer and more accurate animation period
+
+//		mDataSource->Assert(mEngine, kNC_loading, literal, PR_TRUE);
 		NS_RELEASE(literal);
 	}
 	return(NS_OK);
@@ -2157,7 +2176,7 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		mParent->GetValueConst(&parentURI);
 		if (!parentURI)	break;
 		
-		// save HREF attribute as URL (crap)
+		// save HREF attribute as URL
 		if (NS_SUCCEEDED(rv = CreateAnonymousResource(&res)))
 		{
 			const PRUnichar	*hrefUni = hrefStr.GetUnicode();
