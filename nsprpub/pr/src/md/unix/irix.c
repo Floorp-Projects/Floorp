@@ -990,6 +990,7 @@ PRThread *me = _PR_MD_CURRENT_THREAD();
 	}
 }
 
+#if 0  /* wtc: comment out */
 /*
  * Override the exit() function in libc to cause the process to exit
  * when the primodial/main nspr thread calls exit. Calls to exit by any
@@ -1002,12 +1003,10 @@ void exit(int status)
 {
 PRThread *me, *thr;
 PRCList *qp;
-#if 0  /* wtc: comment out */
-void __exit(int status);
+void __exit(int status);  /* XXX some IRIX machines don't have this symbol */
 
 	if (!_pr_initialized) 
 		__exit(status);
-#endif /* 0 */
 
 	me = _PR_MD_CURRENT_THREAD();
 
@@ -1082,6 +1081,7 @@ void __exit(int status);
 		(*libc_exit)(status);
 	}
 }
+#endif /* 0 */
 
 
 void
