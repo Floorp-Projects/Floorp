@@ -128,12 +128,50 @@ public:
 nsString nsParser::gHackMetaCharset = "";
 nsString nsParser::gHackMetaCharsetURL = "";
 
-//----------------------------------------
+//-------------------------------------------------------------------------
 
 CSharedParserObjects& GetSharedObjects() {
   static CSharedParserObjects gSharedParserObjects;
   return gSharedParserObjects;
 }
+
+
+/**********************************************************************************
+  This class is used as an interface between an external agent (like the DOM) and
+  the parser. It will contain a stack full of tagnames, which is used in our
+  parser/paste API's.
+ **********************************************************************************/
+
+class nsTagStack : public nsITagStack {
+public:
+  nsTagStack() : nsITagStack(), mTags(0) {
+  }
+
+  virtual void Push(PRUnichar* aTag){
+    mTags.Push(aTag);
+  }
+  
+  virtual PRUnichar*  Pop(void){
+    PRUnichar* result=(PRUnichar*)mTags.Pop();
+    return result;
+  }
+  
+  virtual PRUnichar*  TagAt(PRUint32 anIndex){
+    PRUnichar* result=0;
+    if(anIndex<(PRUint32)mTags.GetSize())
+      result=(PRUnichar*)mTags.ObjectAt(anIndex);
+    return result;
+  }
+
+  virtual PRUint32    GetSize(void){
+    return mTags.GetSize();
+  }
+
+  nsDeque mTags;  //will hold a deque of prunichars...
+};
+
+
+//-------------------------------------------------------------------------
 
 /** 
  *  default constructor
@@ -1135,32 +1173,15 @@ void nsParser::DebugDumpSource(ostream& aStream) {
   }
 }
 
-
-/**********************************************************************************
-  This class is used as an interface between an external agent (like the DOM) and
-  the parser. It will contain a stack full of tagnames, which is used in our
-  parser/paste API's.
- **********************************************************************************/
-
-nsTagStack::nsTagStack() : nsITagStack(), mTags(0) {
-}
-
-void nsTagStack::Push(PRUnichar* aTag) {
-  mTags.Push(aTag);
-}
-
-PRUnichar* nsTagStack::Pop(void) {
-  PRUnichar* result=(PRUnichar*)mTags.Pop();
-  return result;
-}
-
-PRUnichar* nsTagStack::TagAt(PRUint32 anIndex) {
-  PRUnichar* result=0;
-  if(anIndex<(PRUint32)mTags.GetSize())
-    result=(PRUnichar*)mTags.ObjectAt(anIndex);
-  return result;
-}
-
-PRUint32 nsTagStack::GetSize(void) {
-  return mTags.GetSize();
+/**
+ * Call this to get a newly constructed tagstack
+ * @update	gess 5/05/99
+ * @param   aTagStack is an out parm that will contain your result
+ * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
+ */
+nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
+  *aTagStack=new nsTagStack();
+  if(*aTagStack)
+    return NS_OK;
+  return NS_ERROR_HTMLPARSER_MEMORYFAILURE;
 }

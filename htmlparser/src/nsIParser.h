@@ -83,7 +83,7 @@ enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
 class nsITagStack {
 public:
   virtual void        Push(PRUnichar* aTag)=0;
-  virtual PRUnichar*  Pop(PRUnichar* aTag)=0;
+  virtual PRUnichar*  Pop(void)=0;
   virtual PRUnichar*  TagAt(PRUint32 anIndex)=0;
   virtual PRUint32    GetSize(void)=0;
 };
@@ -147,6 +147,13 @@ class nsIParser : public nsISupports {
      */
     virtual void SetDocumentCharset(nsString& aCharset, nsCharsetSource aSource)=0;
 
+    /**
+     * Call this to get a newly constructed tagstack
+     * @update	gess 5/05/99
+     * @param   aTagStack is an out parm that will contain your result
+     * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
+     */
+    virtual nsresult  CreateTagStack(nsITagStack** aTagStack)=0;
 
 
     /******************************************************************************************
@@ -198,23 +205,14 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_BADURL                NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1005)
 #define NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1006)
 #define NS_ERROR_HTMLPARSER_INTERRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1007)
-#define NS_ERROR_HTMLPARSER_BADTOKENIZER          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
-#define NS_ERROR_HTMLPARSER_BADATTRIBUTE          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1009)
-#define NS_ERROR_HTMLPARSER_UNRESOLVEDDTD         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1010)
-#define NS_ERROR_HTMLPARSER_MISPLACED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1011)
+#define NS_ERROR_HTMLPARSER_BLOCK                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
+#define NS_ERROR_HTMLPARSER_BADTOKENIZER          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1009)
+#define NS_ERROR_HTMLPARSER_BADATTRIBUTE          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1010)
+#define NS_ERROR_HTMLPARSER_UNRESOLVEDDTD         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1011)
+#define NS_ERROR_HTMLPARSER_MISPLACED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1012)
+#define NS_ERROR_HTMLPARSER_MEMORYFAILURE         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1013)
 
-
-/**
- * Return codes for parsing routines.
- * @update vidur 12/11/98
- *
- * NS_ERROR_HTMLPARSER_BLOCK indicates that the parser should
- * block further parsing until it gets a Unblock() method call.
- * NS_ERROR_HTMLPARSER_CONTINUE indicates that the parser should
- * continue parsing
- */
-#define NS_ERROR_HTMLPARSER_BLOCK       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
-#define NS_ERROR_HTMLPARSER_CONTINUE    NS_OK
+#define NS_ERROR_HTMLPARSER_CONTINUE              NS_OK
 
 
 const PRInt32   kEOF              = NS_ERROR_HTMLPARSER_EOF;
