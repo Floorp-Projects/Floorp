@@ -4,7 +4,7 @@ browser.jar:
 *       content/browser/browser.js                    (content/browser.js)
         content/browser/browser.css                   (content/browser.css)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)
-        content/browser/about.gif                     (content/about.gif)
+        content/browser/about.png                     (content/about.png)
 *       content/browser/aboutDialog.xul               (content/aboutDialog.xul)
 *       content/browser/openLocation.xul              (content/openLocation.xul)
 *       content/browser/openLocation.js               (content/openLocation.js)

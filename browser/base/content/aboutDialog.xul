@@ -50,7 +50,8 @@
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        width="300" height="335"> 
+        width="306" height="381"
+        style="padding: 0px;"> 
     
     <script type="application/x-javascript">
       <![CDATA[
@@ -61,23 +62,25 @@
       ]]>
     </script>
 
-    <vbox align="center" flex="1">
-      <image src="chrome://browser/content/about.gif"/>
-      <separator class="thin"/>
-      <hbox>
-        <label value="&brandShortName;" style="font-weight: bold;"/>
-        <label value="&version;"/>
-      </hbox>
-      <spacer flex="1"/>
-      <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
-      <spacer flex="1"/>
-      /* XXXBlake This is a workaround.  I find that if I try to use href and I open
-                  About as a modal dialog, a new browser window opens when I click the link
-                  but the page doesn't load in it. */
-      <html:a onclick="window.openDialog('chrome://browser/content', 'Mozilla Firebird', 'chrome,all,dialog=no', '&copyrightLink;');"
-              href=""
-              style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
-      <spacer flex="1"/>
+    <vbox flex="1">
+      <image src="chrome://browser/content/about.png"/>
+      <vbox style="padding: 8px 10px 10px 8px;" align="center" flex="1">
+        <separator class="thin"/>
+        <hbox>
+          <label value="&brandShortName;" style="font-weight: bold;"/>
+          <label value="&version;"/>
+        </hbox>
+        <spacer flex="1"/>
+        <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
+        <spacer flex="1"/>
+        /* XXXBlake This is a workaround.  I find that if I try to use href and I open
+                    About as a modal dialog, a new browser window opens when I click the link
+                    but the page doesn't load in it. */
+        <html:a onclick="window.openDialog('chrome://browser/content', 'Mozilla Firebird', 'chrome,all,dialog=no', '&copyrightLink;');"
+                href=""
+                style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
+        <spacer flex="1"/>
+      </vbox>
     </vbox>
     <separator class="groove"/>
 </dialog>
