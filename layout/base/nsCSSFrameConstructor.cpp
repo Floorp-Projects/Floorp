@@ -2095,14 +2095,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
                                                 nsIStyleContext*         aParentStyleContext,
                                                 nsIFrame*&               aNewFrame)
 {
-      // how the root frame hierarchy should look
+    // how the root frame hierarchy should look
 
     /*
 
 ---------------No Scrollbars------
 
 
-     AreaFrame or BoxFrame (FixedContainingBlock)
+     AreaFrame or BoxFrame (InitialContainingBlock)
   
 
 
@@ -2110,11 +2110,11 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
 
 
-     ScrollFrame(FixedContainingBlock)
+     ScrollFrame
 
          ^
          |
-     AreaFrame or BoxFrame
+     AreaFrame or BoxFrame (InitialContainingBlock)
   
 
 ---------------Gfx Scrollbars ------
@@ -2124,13 +2124,32 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
 
          ^
          |
-     ScrollPort(FixedContainingBlock) 
+     ScrollPort
 
          ^
          |
-     AreaFrame or BoxFrame
+     AreaFrame or BoxFrame (InitialContainingBlock)
           
 */    
+
+  // ----- reattach gfx scrollbars ------
+  // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
+  // new style sheet was loaded so lets reattach the frames to their content.
+    if (mGfxScrollFrame)
+    {
+        nsIFrame* scrollPort = nsnull;
+        mGfxScrollFrame->FirstChild(nsnull, &scrollPort);
+
+        nsIFrame* gfxScrollbarFrame1 = nsnull;
+        nsIFrame* gfxScrollbarFrame2 = nsnull;
+        nsresult rv = scrollPort->GetNextSibling(&gfxScrollbarFrame1);
+        rv = gfxScrollbarFrame1->GetNextSibling(&gfxScrollbarFrame2);
+        nsCOMPtr<nsIContent> content;
+        gfxScrollbarFrame1->GetContent(getter_AddRefs(content));
+        aState.mFrameManager->SetPrimaryFrameFor(content, gfxScrollbarFrame1);
+        gfxScrollbarFrame2->GetContent(getter_AddRefs(content));
+        aState.mFrameManager->SetPrimaryFrameFor(content, gfxScrollbarFrame2);
+    }
 
   // --------- CREATE AREA OR BOX FRAME -------
   nsCOMPtr<nsIStyleContext>  styleContext;
@@ -2296,7 +2315,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
 
 
-     ViewPortFrame <---- RootView
+     ViewPortFrame (FixedContainingBlock) <---- RootView
 
          ^
          |
@@ -2308,11 +2327,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
 
 
-     ViewPortFrame <---- RootView
+     ViewPortFrame (FixedContainingBlock) <---- RootView
 
          ^
          |
-     ScrollFrame(FixedContainingBlock) <--- RootScrollableView
+     ScrollFrame <--- RootScrollableView
 
          ^
          |
@@ -2322,7 +2341,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 ---------------Gfx Scrollbars ------
 
 
-     ViewPortFrame <---- RootView
+     ViewPortFrame (FixedContainingBlock) <---- RootView
 
          ^
          |
@@ -2330,7 +2349,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
 
          ^
          |
-     ScrollPort(FixedContainingBlock) <--- RootScrollableView
+     ScrollPort <--- RootScrollableView
 
          ^
          |
@@ -2486,6 +2505,13 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
       view->QueryInterface(kScrollViewIID, (void**)&scrollableView);
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
+
+      // if gfx scrollbars store them
+      if (HasGfxScrollbars(aPresContext)) {
+          mGfxScrollFrame = newFrame;
+      } else {
+          mGfxScrollFrame = nsnull;
+      }
   } else {
     aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo,
                                                viewportPseudoStyle,
@@ -2538,6 +2564,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   viewportFrame->SetInitialChildList(*aPresContext, nsnull, newFrame);
   
   aNewFrame = viewportFrame;
+
+
+
   return NS_OK;  
 }
 
@@ -3914,69 +3943,9 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 }
 #endif
 
-/**
- * Called to wrap a scrollframe or gfx scrollframe around a frame. The hierarchy will look like this
- *
- *  ------ for native scrollbars -----
- *
- *
- *            ScrollFrame
- *                 ^
- *                 |
- *               Frame (scrolled frame you passed in)
- *
- *
- * ------- for gfx scrollbars ------
- *
- *
- *            GfxScrollFrame
- *                 ^
- *                 |
- *              ScrollPort
- *                 ^
- *                 |
- *               Frame (scrolled frame you passed in)
- *
- *
- *-----------------------------------
- * LEGEND:
- * 
- * ScrollFrame: This is a frame that has a view that manages native scrollbars. It implements
- *              nsIScrollableView. It also manages clipping and scrolling of native widgets by 
- *              having a native scrolling window.
- *
- * GfxScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
- *
- * ScrollPort: This is similar to the ScrollFrame above in that is clips and scrolls its children
- *             with a native scrolling window. But because it is contained in a GfxScrollFrame
- *             it does not have any code to do scrollbars so it is much simpler. Infact it only has
- *             1 view attached to it. Where the ScrollFrame above has 5! 
- *             
- *-----------------------------------
- *
- * PARAMETERS:
-
- * aContent - the content node of the child to wrap.
- * aScrolledFrame - The frame of the content to wrap. This should not be
- *                    Initialized. This method will initialize it with a scrolled pseudo
- *                    and no nsIContent. The content will be attached to the scrollframe 
- *                    returned.
- * aContentStyle - the style context that has already been resolved for the content being passed in.
- *
- * aParentFrame - The parent to attach the scroll frame to
- *
- * aScrolledPseudo - The pseudo element to be used for the scrolled frame passed in.
- *
- * RETURNS:
- * aNewFrame - The new scrollframe or gfx scrollframe that we create. It will contain the
- *             scrolled frame you passed in.
- * aScrollableFrame - the frame that we created inside that has a view that implements nsIScrollableView
- *                    it will be either the ScrollFrame or the ScrollPort.
- */
-
 
 nsresult
-nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*          aPresContext,
+nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*         aPresContext,
                                                nsFrameConstructorState& aState,
                                                nsIContent*              aContent,
                                                nsIStyleContext*         aContentStyle,
@@ -4031,17 +4000,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*          aPresCo
                                           aScrolledPseudo,
                                           aContentStyle, PR_FALSE,
                                           getter_AddRefs(scrolledPseudoStyle));
-/*
-  
-  aScrolledFrame->Init(*aPresContext, aContent, scrollFrame, scrolledPseudoStyle,
-                       nsnull);
 
-  nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aScrolledFrame,
-                                           scrolledPseudoStyle, PR_TRUE);
-
-  // the the scroll frames child list
-  scrollFrame->SetInitialChildList(*aPresContext, nsnull, aScrolledFrame);
-  */
 
   aScrollableFrame = scrollFrame;
   
@@ -4051,11 +4010,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresContext*          aPresCo
      gfxScrollFrame->SetInitialChildList(*aPresContext, nsnull, anonymousItems.childList);
   }
 
-  /*
-  if (aContent != nsnull)
-     aState.mFrameManager->SetPrimaryFrameFor(aContent, aScrolledFrame);
-     
-*/
+
   aScrolledChildStyle = scrolledPseudoStyle;
 
 
@@ -4086,7 +4041,56 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIPresContext*      aPresConte
  
 
 /**
- * Simpler builder. Assumed the pseudo style is nsLayoutAtoms::scrolledContentPseudo
+ * Called to wrap a scrollframe or gfx scrollframe around a frame. The hierarchy will look like this
+ *
+ *  ------ for native scrollbars -----
+ *
+ *
+ *            ScrollFrame
+ *                 ^
+ *                 |
+ *               Frame (scrolled frame you passed in)
+ *
+ *
+ * ------- for gfx scrollbars ------
+ *
+ *
+ *            GfxScrollFrame
+ *                 ^
+ *                 |
+ *              ScrollPort
+ *                 ^
+ *                 |
+ *               Frame (scrolled frame you passed in)
+ *
+ *
+ *-----------------------------------
+ * LEGEND:
+ * 
+ * ScrollFrame: This is a frame that has a view that manages native scrollbars. It implements
+ *              nsIScrollableView. It also manages clipping and scrolling of native widgets by 
+ *              having a native scrolling window.
+ *
+ * GfxScrollFrame: This is a frame that manages gfx cross platform frame based scrollbars.
+ *
+ * ScrollPort: This is similar to the ScrollFrame above in that is clips and scrolls its children
+ *             with a native scrolling window. But because it is contained in a GfxScrollFrame
+ *             it does not have any code to do scrollbars so it is much simpler. Infact it only has
+ *             1 view attached to it. Where the ScrollFrame above has 5! 
+ *             
+ *
+ * @param aContent the content node of the child to wrap.
+ * @param aScrolledFrame The frame of the content to wrap. This should not be
+ *                    Initialized. This method will initialize it with a scrolled pseudo
+ *                    and no nsIContent. The content will be attached to the scrollframe 
+ *                    returned.
+ * @param aContentStyle the style context that has already been resolved for the content being passed in.
+ *
+ * @param aParentFrame The parent to attach the scroll frame to
+ *
+ * @param aNewFrame The new scrollframe or gfx scrollframe that we create. It will contain the
+ *                  scrolled frame you passed in. (returned)
+ * @param aScrolledContentStyle the style that was resolved for the scrolled frame. (returned)
  */
 nsresult
 nsCSSFrameConstructor::BuildScrollFrame       (nsIPresContext*          aPresContext,

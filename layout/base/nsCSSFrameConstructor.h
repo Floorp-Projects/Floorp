@@ -802,6 +802,7 @@ protected:
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
+
 };
 
 #endif /* nsCSSFrameConstructor_h___ */
