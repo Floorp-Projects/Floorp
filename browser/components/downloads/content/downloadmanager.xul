@@ -152,7 +152,7 @@
                    persist="width hidden sortActive sortDirection"/>
     </treecols>
     <template>
-      <rule nc:DownloadState="1" parseType="Integer">
+      <rule nc:DownloadState="1" parsetype="Integer">
         <treechildren>
           <treeitem uri="rdf:*">
             <treerow>
@@ -167,7 +167,7 @@
           </treeitem>
         </treechildren>
       </rule>
-      <rule nc:DownloadState="2" parseType="Integer">
+      <rule nc:DownloadState="2" parsetype="Integer">
         <treechildren>
           <treeitem uri="rdf:*">
             <treerow>
@@ -182,7 +182,7 @@
           </treeitem>
         </treechildren>
       </rule>
-      <rule nc:DownloadState="3" parseType="Integer">
+      <rule nc:DownloadState="3" parsetype="Integer">
         <treechildren>
           <treeitem uri="rdf:*">
             <treerow>

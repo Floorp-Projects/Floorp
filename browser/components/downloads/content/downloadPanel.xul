@@ -16,7 +16,7 @@
         datasources="rdf:null" ref="NC:DownloadsRoot"
         ondragdrop="nsDragAndDrop.drop(event, downloadDNDObserver);">
     <template>
-      <rule nc:DownloadState="0" parseType="Integer">
+      <rule nc:DownloadState="0" parsetype="Integer">
           <download uri="rdf:*"
                     image="moz-icon:rdf:http://home.netscape.com/NC-rdf#File"
                     target="rdf:http://home.netscape.com/NC-rdf#Name"
