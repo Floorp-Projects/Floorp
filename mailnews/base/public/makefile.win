@@ -18,6 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
+
 IDLSRCS =							\
 			nsIMsgHost.idl			\
 			nsIMsgGroupRecord.idl	\
@@ -31,6 +32,7 @@ EXPORTS =	 						\
 			nsMsgMessageFlags.h		\
 			nsIMsgHost.h			\
 			nsIMsgGroupRecord.h		\
+			nsIMsgFolder.h				\
 			$(NULL)
 
 MODULE=mailnews

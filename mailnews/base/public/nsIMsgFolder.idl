@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,26 +15,88 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-/*
- * strawman nsIMsgFolder - putterman has the real one, but at least
- * we can use this to compile (though not link) for now
- */
-
-
+ 
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
+#include "nsIRDFNode.idl"
+
+enum FolderType {
+  FOLDER_MAIL,
+  FOLDER_IMAPMAIL,
+  FOLDER_NEWSGROUP,
+  FOLDER_CONTAINERONLY,
+  FOLDER_CATEGORYCONTAINER,
+  FOLDER_IMAPSERVERCONTAINER,
+  FOLDER_UNKNOWN
+};  
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
-interface nsIMsgFolder : nsISupports {
+interface nsIMsgFolder : nsIRDFResource {
+
+  readonly attribute FolderType type;
+  readonly attribute string prettyName;
+  readonly attribute string name;  
+  void SetName(in string name);
+  readonly attribute string prettiestName;
+
+  string GetNameFromPathName(in string pathName);
+  boolean HasSubFolders();
+  long GetNumSubFolders() ;
+  long GetNumSubFoldersToDisplay();
+  nsIMsgFolder GetSubFolder(in long which) ;
+  nsISupportsArray  GetSubFolders();
+  void AddSubFolder(in nsIMsgFolder folder);
+  void RemoveSubFolder (in nsIMsgFolder folder);
+
+  readonly attribute boolean deleteIsMoveToTrash;
+  readonly attribute boolean showDeletedMessages;
+  
+  void OnCloseFolder ();
+  void Delete ();
+
+  void PropagateDelete(inout nsIMsgFolder folder, in boolean deleteStorage);
+  void RecursiveDelete(in boolean deleteStorage);
+
+  void CreateSubfolder(in string leafNameFromUser, out nsIMsgFolder outFolder, out long outPos);
+
+  void Rename(in string name);
+  void Adopt(in nsIMsgFolder srcFolder, out long outPos);
+
+  boolean ContainsChildNamed(in string name);
+  nsIMsgFolder FindChildNamed(in string name);
+  nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
+  boolean IsParentOf(in nsIMsgFolder folder, in boolean deep);
+
+  string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
 
   attribute long depth;
-  nsISupportsArray GetSubFolders();
-  nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
-  
-  void AddSubfolder(in nsIMsgFolder newSubfolder);
+
+  void UpdateSummaryTotals();
+  void SummaryChanged();
+  long GetNumUnread(in boolean deep);
+  long GetTotalMessages(in boolean deep);
+
+  readonly attribute long expungedBytesCount;
+  readonly attribute boolean deletable;
+  readonly attribute boolean canCreateChildren;
+  readonly attribute boolean canBeRenamed;
+  readonly attribute boolean requiresCleanup;
+
+  void ClearRequiresCleanup();
+
+  readonly attribute boolean knowsSearchNntpExtension;
+  readonly attribute boolean allowsPosting;
+
+  readonly attribute string relativePathName;
+  readonly attribute long sizeOnDisk;
+
+  void RememberPassword(in string password);
+  string GetRememberedPassword();
+  boolean UserNeedsToAuthenticateForFolder(in boolean displayOnly);
+  string GetUserName();
+  string GetHostName();
+
   void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);
-  void RemoveSubfolder(in nsIMsgFolder folder);
   void ReplaceSubfolder(in nsIMsgFolder oldFolder,
                         in nsIMsgFolder newFolder);
   
