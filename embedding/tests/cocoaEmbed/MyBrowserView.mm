@@ -23,6 +23,8 @@
   defaultStatus = NULL;
   loadingStatus = DOCUMENT_DONE_STRING;
   [status setStringValue:loadingStatus];
+
+  [progress setControlTint:NSClearControlTint];
 }
 
 - (void)setFrame:(NSRect)frameRect
@@ -39,6 +41,7 @@
     defaultStatus = NULL;
   }
 
+  [progress setControlTint:NSDefaultControlTint];
   [progress setIndeterminate:YES];
   [progress startAnimation:self];
 
@@ -54,6 +57,7 @@
 {
   [progress setIndeterminate:YES];
   [progress stopAnimation:self];
+  [progress setControlTint:NSClearControlTint];
 
   loadingStatus = DOCUMENT_DONE_STRING;
   if (defaultStatus) {
