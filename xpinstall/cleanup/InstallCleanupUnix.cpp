@@ -94,7 +94,7 @@ int main(int argc,char* argv[])
             do {
                 status = PerformScheduledTasks(reg);
                 if (status != DONE)
-                   sleep(15000);
+                   sleep(1000);
             } while (status == TRY_LATER);
             NR_RegClose(&reg);
         }
