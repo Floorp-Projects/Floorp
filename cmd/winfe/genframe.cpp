@@ -559,18 +559,32 @@ void CGenericFrame::BuildDirectoryMenu(CMenu * pMenu)
 			label = NULL;
 		}
     }
-}            
-
+}       
+// Temp put this utility function 
+// Becareful to use it. This is ONLY good for UTF8 text (from HT_xxx) to Menu. 
+//     
+static char* UTF8ToMenuText(char* utf8)
+{
+	if( (NULL == utf8) || (NULL == *utf8))
+			return NULL;
+	return (char*) INTL_ConvertLineWithoutAutoDetect(CS_UTF8, 
+				INTL_GetCharSetID(INTL_MenuCsidSel),
+				(unsigned char*)utf8, 
+				strlen((char*)utf8));
+}
 void CGenericFrame::BuildFileBookmarkMenu(CTreeMenu* pMenu, HT_Resource pRoot) 
 {
-	char *entryName;
+	char *entryName = UTF8ToMenuText( HT_GetNodeName(pRoot) );
+	char* lpszShortName = NULL;
 
-	entryName = HT_GetNodeName(pRoot);
-
-	if(strcmp(entryName, "") == 0)
-		entryName = szLoadString(IDS_UNTITLED_FOLDER);
-
-	CTreeItem *item= new CTreeItem(NULL, NULL, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, CString(entryName));
+	if(NULL == entryName)
+		lpszShortName = fe_MiddleCutString(szLoadString(IDS_UNTITLED_FOLDER) , MAX_MENU_ITEM_LENGTH);
+	else
+		lpszShortName = fe_MiddleCutString(entryName , MAX_MENU_ITEM_LENGTH);
+		
+	CTreeItem *item= new CTreeItem(NULL, NULL, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, 
+						CString(FEU_EscapeAmpersand(CString(lpszShortName))));
+	XP_FREEIF(entryName);
 
 	pMenu->AddItem(item, 0, NULL);
 	m_pHotlistMenuMap->SetAt(FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems++,  pRoot);
@@ -586,12 +600,18 @@ void CGenericFrame::BuildFileBookmarkMenu(CTreeMenu* pMenu, HT_Resource pRoot)
 	{
 		if(HT_IsContainer(pEntry))
 		{
-			entryName = HT_GetNodeName(pEntry);
-			
-			if(strcmp(entryName, "") == 0)
-				entryName = szLoadString(IDS_UNTITLED_FOLDER);
+			lpszShortName = NULL;
+			entryName = UTF8ToMenuText(HT_GetNodeName(pEntry));
 
-			pItem= new CTreeItem(NULL, NULL, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, FEU_EscapeAmpersand(CString(entryName)));
+			if(NULL == entryName)
+				lpszShortName = fe_MiddleCutString(szLoadString(IDS_UNTITLED_FOLDER) , MAX_MENU_ITEM_LENGTH);
+			else
+				lpszShortName = fe_MiddleCutString(entryName , MAX_MENU_ITEM_LENGTH);
+
+			pItem= new CTreeItem(NULL, NULL, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, 
+								CString(FEU_EscapeAmpersand(CString(lpszShortName))));
+			XP_FREEIF(entryName);
+			
 			pMenu->AddItem(pItem, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, NULL);
 			m_pHotlistMenuMap->SetAt(FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems++, pEntry);
 			m_BookmarksGarbageList->Add(pItem);
@@ -650,11 +670,12 @@ void CGenericFrame::FinishMenuExpansion(HT_Resource pRoot)
 			break;
 
 		// fe_MiddleCutString() doesn't like NULL pointers
-		if (HT_GetNodeName(pEntry)){
-			lpszShortName = fe_MiddleCutString(HT_GetNodeName(pEntry), MAX_MENU_ITEM_LENGTH);
+		char *name = UTF8ToMenuText(HT_GetNodeName(pEntry));
+		if (name){
+			lpszShortName = fe_MiddleCutString(name , MAX_MENU_ITEM_LENGTH);
 			csAmpersandName = FEU_EscapeAmpersand(CString(lpszShortName));
 		}
-
+		XP_FREEIF(name);
 		// If this is a nested list or an item we must have a name
 		if ( !lpszShortName && !HT_IsSeparator(pEntry)) 
 			continue;
@@ -3213,8 +3234,15 @@ void CGenericFrame::OnAnimationBonk()
 void CGenericFrame::OnUpdateFileRoot(CCmdUI* pCmdUI)
 {
     if( pCmdUI->m_pMenu ){
-	pCmdUI->m_pMenu->ModifyMenu(ID_BOOKMARKS_FILEROOT, MF_BYCOMMAND | MF_STRING, ID_BOOKMARKS_FILEROOT,
-									HT_GetNodeName(HT_TopNode(HT_GetSelectedView(m_BookmarkMenuPane))));
+		char*   lpszShortName = NULL;
+  		char* entryName = UTF8ToMenuText(HT_GetNodeName(HT_TopNode(HT_GetSelectedView(m_BookmarkMenuPane))));
+		if(NULL == entryName)
+			lpszShortName = fe_MiddleCutString(szLoadString(IDS_UNTITLED_FOLDER) , MAX_MENU_ITEM_LENGTH);
+		else
+			lpszShortName = fe_MiddleCutString(entryName , MAX_MENU_ITEM_LENGTH);
+		pCmdUI->m_pMenu->ModifyMenu(ID_BOOKMARKS_FILEROOT, MF_BYCOMMAND | MF_STRING, ID_BOOKMARKS_FILEROOT, 
+			CString(FEU_EscapeAmpersand(CString(lpszShortName))));
+		XP_FREEIF(entryName);
     }
 
 }
