@@ -20,8 +20,8 @@
  * Contributor(s): 
  */
 
-#ifndef __nsftpconnectionthread__h_
-#define __nsftpconnectionthread__h_
+#ifndef __nsFtpState__h_
+#define __nsFtpState__h_
 
 #include "nsIThread.h"
 #include "nsIRunnable.h"
@@ -32,8 +32,6 @@
 #include "prtime.h"
 #include "nsString.h"
 #include "nsIFTPChannel.h"
-#include "nsIConnectionCache.h"
-#include "nsConnectionCacheObj.h"
 #include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
@@ -42,6 +40,8 @@
 #include "nsAutoLock.h"
 #include "nsIEventQueueService.h"
 #include "nsIPrompt.h"
+
+#include "nsFtpControlConnection.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0
@@ -84,18 +84,18 @@ typedef enum _FTP_STATE {
 // higher level ftp actions
 typedef enum _FTP_ACTION { GET, PUT, MKDIR, DEL} FTP_ACTION;
 
-class nsFtpConnectionThread : public nsIRunnable,
+class nsFtpState : public nsIStreamListener,
                               public nsIRequest {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSIREQUEST
 
-    nsFtpConnectionThread();
-    virtual ~nsFtpConnectionThread();
+    nsFtpState();
+    virtual ~nsFtpState();
 
-    nsresult Init(nsIProtocolHandler    *aHandler,
-                  nsIFTPChannel         *aChannel,
+    nsresult Init(nsIFTPChannel         *aChannel,
                   nsIPrompt             *aPrompter,
                   PRUint32              bufferSegmentSize,
                   PRUint32              bufferMaxSize);
@@ -108,6 +108,8 @@ public:
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
+
+    nsresult Connect();
 
 private:
     ///////////////////////////////////
@@ -136,7 +138,6 @@ private:
     ///////////////////////////////////
 
     // internal methods
-    nsresult    StopProcessing();
     FTP_STATE   FindActionState(void);
     void        SetDirMIMEType(nsString& aString);
     nsresult    Process();
@@ -145,6 +146,11 @@ private:
                                      PRUint32 bufferSegmentSize,
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
+
+    void KillControlConnnection();
+    nsresult StopProcessing();
+    nsresult EstablishControlConnection();
+    nsresult ControlAsyncWrite(nsCString& command);
     
     ///////////////////////////////////
     // Private members
@@ -152,16 +158,14 @@ private:
         // ****** state machine vars
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
-    PRBool              mKeepRunning;       // thread event loop boolean
+    PRPackedBool        mKeepRunning;       // thread event loop boolean
+    PRPackedBool        mCanceled;          // indicates channel being canceled.
     PRInt32             mResponseCode;      // the last command response code
     nsCAutoString       mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
-    nsCOMPtr<nsISocketTransportService> mSTS;       // the socket transport service
-    nsCOMPtr<nsIChannel>         mCPipe;            // the command channel transport
-    nsCOMPtr<nsIChannel>         mDPipe;            // the data channel transport
-    nsCOMPtr<nsIOutputStream>    mCOutStream;       // command channel output
-    nsCOMPtr<nsIInputStream>     mCInStream;        // command channel input
+    nsFtpControlConnection*         mControlConnection;// cacheable control connection (owns mCPipe)
+    nsCOMPtr<nsIChannel>            mDPipe;            // the data channel transport
 
         // ****** consumer vars
     nsCOMPtr<nsIStreamListener>     mListener;        // the consumer of our read events
@@ -172,22 +176,17 @@ private:
 
         // ****** connection cache vars
     PRInt32             mServerType;    // What kind of server are we talking to
-    PRBool              mList;          // Use LIST instead of NLST
+    PRPackedBool        mList;          // Use LIST instead of NLST
     nsCAutoString       mCwd;           // Our current working dir.
     nsCAutoString       mCwdAttempt;    // The dir we're trying to get into.
-    nsCAutoString       mCacheKey;      // the key into the cache hash.
-    PRBool              mCachedConn;    // is this connection from the cache
-    nsCOMPtr<nsIConnectionCache> mConnCache;// the nsISupports proxy ptr to our connection cache
-    nsConnectionCacheObj         *mConn;    // The cached connection.
-    
 
         // ****** protocol interpretation related state vars
     nsAutoString        mUsername;      // username
     nsAutoString        mPassword;      // password
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
-    PRBool              mBin;           // transfer mode (ascii or binary)
-    PRBool              mAnonymous;     // try connecting anonymous (default)
-    PRBool              mRetryPass;     // retrying the password
+    PRPackedBool        mBin;           // transfer mode (ascii or binary)
+    PRPackedBool        mAnonymous;     // try connecting anonymous (default)
+    PRPackedBool        mRetryPass;     // retrying the password
     nsresult            mInternalError; // represents internal state errors
 
         // ****** URI vars
@@ -198,23 +197,26 @@ private:
     nsXPIDLCString         mPath;       // the url's path
 
         // ****** other vars
-    PRBool                 mConnected;  // are we connected.
-    PRBool                 mSentStart;  // have we sent an OnStartRequest() notification
     PRUint8                mSuspendCount;// number of times we've been suspended.
     PRUint32               mBufferSegmentSize;
     PRUint32               mBufferMaxSize;
     PRLock                 *mLock;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
-    PRBool                 mFireCallbacks; // Fire the listener callbacks.
+    PRPackedBool           mFireCallbacks; // Fire the listener callbacks.
 
-    nsCOMPtr<nsIEventQueue> mEventQueue;
-    nsCOMPtr<nsIPrompt>     mPrompter;
-    PRBool                  mIPv6Checked;
-    char                    *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
+    PRPackedBool           mIPv6Checked;
+    nsCOMPtr<nsIPrompt>    mPrompter;
+    char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
+
+    // ***** control read gvars
+    PRPackedBool            mControlReadContinue;
+    PRPackedBool            mControlReadBrokenLine;
+    nsCAutoString           mControlReadCarryOverBuf;
+  
 };
 
 #define NS_FTP_BUFFER_READ_SIZE             (8*1024)
 #define NS_FTP_BUFFER_WRITE_SIZE            (8*1024)
 
-#endif //__nsftpconnectionthread__h_
+#endif //__nsFtpState__h_

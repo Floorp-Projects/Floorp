@@ -33,7 +33,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFtpProtocolHandler.obj      \
         .\$(OBJDIR)\nsFTPChannel.obj              \
         .\$(OBJDIR)\nsFtpConnectionThread.obj	  \
-        .\$(OBJDIR)\nsAsyncEvent.obj              \
+        .\$(OBJDIR)\nsFtpControlConnection.obj	  \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
@@ -43,3 +43,10 @@ install:: $(LIBRARY)
 
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+reallybuild::
+	nmake -f makefile.win
+	cd ..\..\..\build2
+	nmake -f makefile.win
+	cd ..\protocol\ftp\src
+

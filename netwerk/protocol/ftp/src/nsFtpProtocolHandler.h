@@ -26,8 +26,7 @@
 #include "nsIServiceManager.h"
 #include "nsIProtocolHandler.h"
 #include "nsHashtable.h"
-#include "nsIConnectionCache.h"
-#include "nsConnectionCacheObj.h"
+#include "nsIIOService.h"
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
 #include "nsIProtocolProxyService.h"
@@ -37,35 +36,28 @@
 #define NS_FTPPROTOCOLHANDLER_CID \
     { 0x25029490, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
 
-class nsFtpProtocolHandler : public nsIProtocolHandler,
-                             public nsIConnectionCache,
-                             public nsIObserver
-{
+class nsFtpProtocolHandler : public nsIProtocolHandler{
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
-    NS_DECL_NSICONNECTIONCACHE
-    NS_DECL_NSIOBSERVER
     
     // nsFtpProtocolHandler methods:
-    nsFtpProtocolHandler() {
-        NS_INIT_REFCNT();
-    };
+    nsFtpProtocolHandler();
     virtual ~nsFtpProtocolHandler();
     
     // Define a Create method to be used with a factory:
     static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     nsresult Init();
+
+    // FTP Connection list access
+    static nsresult InsertConnection(nsIURI *aKey, nsISupports *aConn);
+    static nsresult RemoveConnection(nsIURI *aKey, nsISupports **_retval);
     
 protected:
-    nsHashtable*            mRootConnectionList;  // hash of FTP connections
-    nsCOMPtr<nsIThreadPool> mPool;                // thread pool for FTP connections
-    nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
-    PRLock*                 mLock; 
-};
+    static nsSupportsHashtable* mRootConnectionList;
 
-#define NS_FTP_MIN_CONNECTION_COUNT  1
-#define NS_FTP_MAX_CONNECTION_COUNT  4
-#define NS_FTP_CONNECTION_STACK_SIZE 0
+    nsCOMPtr<nsIIOService> mIOSvc;
+    nsCOMPtr<nsIProtocolProxyService>   mProxySvc;
+};
 
 #endif /* nsFtpProtocolHandler_h___ */

@@ -46,4 +46,19 @@
 #define NS_ERROR_FTP_MKDIR \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 26)
 
+/**
+ * Status nsresult codes: used with nsINotification objects 
+ */
+#define NS_NET_STATUS_BEGIN_FTP_TRANSACTION \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 27)
+
+#define NS_NET_STATUS_END_FTP_TRANSACTION \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 28)
+
 #endif // __ftpCore_h___
+
+
+
+
+
+
