@@ -1228,7 +1228,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
       else {
           //If you're here, handle an unquoted key.
           //Don't forget to reduce entities inline!
-        static nsAutoString terminals("\b\t\n\r \"=>");
+        static nsAutoString terminals("\b\t\n\r \"<=>");
         result=aScanner.ReadUntil(mTextKey,terminals,PR_TRUE,PR_FALSE);
       }
 

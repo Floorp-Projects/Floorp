@@ -331,7 +331,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         PRUnichar ch; 
         result=aScanner.Peek(ch);
         if(NS_OK==result) {
-          if(nsString::IsAlpha(ch)) {
+          if(nsString::IsAlpha(ch)||(kGreaterThan==ch)) {
             result=ConsumeEndTag(aChar,aToken,aScanner);
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
@@ -413,9 +413,19 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       result=aScanner.SkipWhitespace();
       if(NS_SUCCEEDED(result)) {
         result=aScanner.Peek(aChar);
-        if(NS_SUCCEEDED(result) && (aChar==kGreaterThan)) { //you just ate the '>'
-          aScanner.GetChar(aChar); //skip the '>'
-          done=PR_TRUE;
+        if(NS_SUCCEEDED(result)) {
+          if(aChar==kGreaterThan) { //you just ate the '>'
+            aScanner.GetChar(aChar); //skip the '>'
+            done=PR_TRUE;
+          }
+          else if(aChar==kLessThan) {
+            eHTMLTags theEndTag = (eHTMLTags)aToken->GetTypeID();
+            if(result==NS_OK&&(gHTMLElements[theEndTag].mSkipTarget)){
+              CToken* theEndToken=theRecycler->CreateTokenOfType(eToken_end,theEndTag);
+              AddToken(theEndToken,NS_OK,mTokenDeque,theRecycler); 
+            }
+            done=PR_TRUE;
+          }
         }//if
       }
     }//if
