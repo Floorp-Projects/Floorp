@@ -44,7 +44,7 @@
 
   button.plain
     {
-      -moz-binding			  : url(chrome://global/content/xulBindings.xml#buttonleft);
+      -moz-binding			  : url(chrome://global/content/bindings/button.xml#buttonleft);
     }
 
   button.plain-extended

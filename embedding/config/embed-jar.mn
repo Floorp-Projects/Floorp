@@ -51,7 +51,7 @@ embed.jar:
   content/global/bindings/scrollbox.xml       (toolkit/content/global/bindings/scrollbox.xml)
   content/global/bindings/splitter.xml        (toolkit/content/global/bindings/splitter.xml)
   content/global/bindings/stringbundle.xml    (toolkit/content/global/bindings/stringbundle.xml)
-  content/global/bindings/tabcontrol.xml      (toolkit/content/global/bindings/tabcontrol.xml)
+  content/global/bindings/tabbox.xml          (toolkit/content/global/bindings/tabbox.xml)
   content/global/bindings/text.xml            (toolkit/content/global/bindings/text.xml)
   content/global/bindings/textbox.xml         (toolkit/content/global/bindings/textbox.xml)
   content/global/bindings/titledbox.xml       (toolkit/content/global/bindings/titledbox.xml)

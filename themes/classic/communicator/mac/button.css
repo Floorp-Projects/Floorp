@@ -5,7 +5,7 @@
   /* outer frame */
   .button-toolbar-1, .button-toolbar-2
     {
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttontop");
       min-width           : 0px;
       margin              : 0px 1px;
       border              : 1px solid transparent;
@@ -14,7 +14,7 @@
 
   .button-toolbar, .button-toolbar-4
     {
-      -moz-binding        : url("chrome://global/content/xulBindings.xml#buttonleft");
+      -moz-binding        : url("chrome://global/content/bindings/button.xml#buttonleft");
       min-width           : 0px;
       border              : 1px solid transparent;
       background-color	  : transparent;

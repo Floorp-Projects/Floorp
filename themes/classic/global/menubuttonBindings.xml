@@ -21,7 +21,7 @@
     </content>
   </binding>
   
-  <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#base-button">
     <content autostretch="never">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
@@ -30,7 +30,7 @@
     </content>
   </binding>
 
-  <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
+  <binding id="buttontop" extends="chrome://global/content/bindings/button.xml#base-button">
     <content orient="vertical" autostretch="never" halign="middle">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
