@@ -396,8 +396,8 @@ protected:
   // Returns our indentation width.
   PRInt32 GetIndentation();
 
-  // Returns our width/height once border and padding have been removed.
-  nsRect GetInnerBox();
+  // Calculates our width/height once border and padding have been removed.
+  void CalcInnerBox();
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
