@@ -35,6 +35,8 @@
 #include "fe_proto.h"
 #include "libevent.h" /* Temporary, for FE_CheckConfirm straw-man. */
 #include "proto.h"
+#include "htmldlgs.h"
+#include "xpgetstr.h" /* for XP_GetString() */
 
 #ifdef DEBUG_dfm
 #define D(x) x
@@ -332,4 +334,192 @@ PRVCY_ToggleAnonymous() {
 PUBLIC Bool
 PRVCY_IsAnonymous() {
     return anonymous;
+}
+
+/*
+  Display information about the site
+*/
+extern int XP_EMPTY_STRINGS;
+extern int PRVCY_HAS_A_POLICY;
+extern int PRVCY_HAS_NO_POLICY;
+extern int PRVCY_CANNOT_SET_COOKIES;
+extern int PRVCY_CAN_SET_COOKIES;
+extern int PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES;
+extern int PRVCY_HAS_SET_COOKIES;
+extern int PRVCY_HAS_NOT_SET_COOKIES;
+
+
+#define BUFLEN 5000
+#define FLUSH_BUFFER			\
+    if (buffer) {			\
+	StrAllocCat(buffer2, buffer);	\
+        buffer[0] = '\0';               \
+	g = 0;				\
+    }
+
+PR_STATIC_CALLBACK(PRBool)
+prvcy_SiteInfoDialogDone(XPDialogState* state, char** argv, int argc,
+	unsigned int button) {
+    if (button != XP_DIALOG_OK_BUTTON) {
+	/* OK button not pressed, this must be request for cookie viewer */
+	NET_DisplayCookieInfoOfSiteAsHTML((MWContext *)(state->arg),
+	    ((MWContext *)(state->arg))->hist.cur_doc_ptr->address);
+	return	PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
+static const char *pref_cookieBehavior = "network.cookie.cookieBehavior";
+static const char *pref_warnAboutCookies = "network.cookie.warnAboutCookies";
+
+PUBLIC void
+PRVCY_SiteInfo(MWContext *context) {
+    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer2 = 0;
+    char *argument = 0;
+    char *argument2 = 0;
+    int cookieBehavior;
+    Bool warn;
+    int g = 0;
+
+    static XPDialogInfo dialogInfo = {
+	XP_DIALOG_OK_BUTTON,
+	prvcy_SiteInfoDialogDone,
+	400,
+	200
+    };
+
+    XPDialogStrings* strings;
+    strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
+    if (!strings) {
+	return;
+    }
+    StrAllocCopy(buffer2, "");
+
+    /* create javascript */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<script>\n"
+"  function Policy() {\n"
+"    window.open(\"%s\");\n"
+"  }\n"
+"  function ViewCookies(){\n"
+"    parent.clicker(this,window.parent);\n"
+"  }\n"
+"</script>\n",
+	PRVCY_GetCurrentPrivacyPolicyURL(context)
+    );
+    FLUSH_BUFFER
+
+    /* report privacy policy for site */
+    if (PRVCY_CurrentHasPrivacyPolicy(context)) {
+	StrAllocCopy (argument, XP_GetString(PRVCY_HAS_A_POLICY));
+    } else {
+	StrAllocCopy (argument, XP_GetString(PRVCY_HAS_NO_POLICY));
+    }
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"%s<br><br>\n",
+	argument
+    );
+    FLUSH_BUFFER
+    XP_FREEIF(argument);
+
+    /* report cookie-setting ability of site */
+    PREF_GetIntPref(pref_cookieBehavior, &cookieBehavior);
+    if (cookieBehavior == NET_DontUse) {
+	StrAllocCopy (argument, XP_GetString(PRVCY_CANNOT_SET_COOKIES));
+    } else {
+	PREF_GetBoolPref(pref_warnAboutCookies, &warn);
+	if (!warn) {
+	    StrAllocCopy (argument, XP_GetString(PRVCY_CAN_SET_COOKIES));
+	} else {
+#if defined(CookieManagement)
+	    switch (NET_CookiePermission(context)) {
+		case -1:
+		    StrAllocCopy (argument,
+			XP_GetString(PRVCY_CANNOT_SET_COOKIES));
+		    break;
+		case 0:
+		    StrAllocCopy (argument,
+			XP_GetString(PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES));
+		    break;
+		case 1:
+		    StrAllocCopy (argument,
+			XP_GetString(PRVCY_CAN_SET_COOKIES));
+		    break;
+	    }
+#else
+	    StrAllocCopy (argument,
+		XP_GetString(PRVCY_NEEDS_PERMISSION_TO_SET_COOKIES));
+#endif
+	}
+    }
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"%s<br><br>\n",
+	argument
+    );
+    FLUSH_BUFFER
+    XP_FREEIF(argument);
+
+
+#if defined(CookieManagement)
+    /* report cookies that site has set */
+    if (!context || !(context->hist.cur_doc_ptr) ||
+	    !(context->hist.cur_doc_ptr->address)) {
+	StrAllocCopy (argument, XP_GetString(PRVCY_HAS_NOT_SET_COOKIES));
+    } else if (NET_CookieCount(context->hist.cur_doc_ptr->address) > 0) {
+	StrAllocCopy (argument, XP_GetString(PRVCY_HAS_SET_COOKIES));
+    } else {
+	StrAllocCopy (argument, XP_GetString(PRVCY_HAS_NOT_SET_COOKIES));
+    }
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"%s<br><br>\n",
+	argument
+    );
+    FLUSH_BUFFER
+    XP_FREEIF(argument);
+#endif
+
+if (0) {
+    /* horizontal line separating what the site can do from what it knows */
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+"<hr align=center width=98%><br><br>"
+    );
+    FLUSH_BUFFER
+
+    /* report the referer field */
+    if (!context || !(context->hist.cur_doc_ptr) ||
+	    !(context->hist.cur_doc_ptr->referer)) {
+	StrAllocCopy (argument,
+            "This site was not told where you were when you clicked on the link that brought you to this site.<br>\n");
+        StrAllocCopy  (argument2, "");
+    } else {
+	StrAllocCopy (argument,
+            "This site was told you were at %s when you clicked on the link that brought you to this site.<br>\n");
+	StrAllocCopy  (argument2, context->hist.cur_doc_ptr->referer);
+    }
+
+    g += PR_snprintf(buffer+g, BUFLEN-g,
+	argument,argument2
+    );
+    FLUSH_BUFFER
+    XP_FREEIF(argument);
+    XP_FREEIF(argument2);
+}
+
+    /* free buffer since it is no longer needed */
+    XP_FREEIF(buffer);
+
+    /* do html dialog */
+    if (buffer2) {
+	XP_CopyDialogString(strings, 0, buffer2);
+	XP_FREE(buffer2);
+	buffer2 = NULL;
+    }
+    XP_MakeHTMLDialog(context, &dialogInfo, 0,
+		strings, context, PR_FALSE);
+
+    return;
 }

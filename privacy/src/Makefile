@@ -34,7 +34,7 @@ MODULE = privacy
 EXPORTS = \
 	$(NULL)
 
-REQUIRES = privacy network layer pref style lay rdf nspr util img js
+REQUIRES = privacy network layer pref style lay rdf nspr util img js htmldlgs
 
 include $(DEPTH)/config/config.mk
 
