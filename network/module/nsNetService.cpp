@@ -515,6 +515,6 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
 extern "C" void net_ReleaseContext(MWContext *context)
 {
     if (context) {
-        free_stub_context(context);
+//        free_stub_context(context);
     }
 }
