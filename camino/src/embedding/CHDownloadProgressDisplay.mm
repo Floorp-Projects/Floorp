@@ -53,7 +53,7 @@ CHDownloader::~CHDownloader()
   [mDisplayFactory release];
 }
 
-NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports);
+NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports)
 
 void
 CHDownloader::SetDisplayFactory(id<CHDownloadDisplayFactory> inDownloadControllerFactory)

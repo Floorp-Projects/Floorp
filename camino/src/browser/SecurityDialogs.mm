@@ -57,7 +57,7 @@ SecurityDialogs::~SecurityDialogs()
 {
 }
 
-NS_IMPL_ISUPPORTS2(SecurityDialogs, nsIBadCertListener, nsISecurityWarningDialogs);
+NS_IMPL_ISUPPORTS2(SecurityDialogs, nsIBadCertListener, nsISecurityWarningDialogs)
 
 // nsIBadCertListener implementation
 /* boolean confirmUnknownIssuer (in nsIInterfaceRequestor socketInfo,

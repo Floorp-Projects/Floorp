@@ -53,7 +53,7 @@
 
 #import "CHBrowserView.h"
 
-NS_IMPL_ISUPPORTS2(ContentClickListener, nsIDOMMouseListener, nsIDOMEventListener);
+NS_IMPL_ISUPPORTS2(ContentClickListener, nsIDOMMouseListener, nsIDOMEventListener)
 
 ContentClickListener::ContentClickListener(id aBrowserController)
 :mBrowserController(aBrowserController)

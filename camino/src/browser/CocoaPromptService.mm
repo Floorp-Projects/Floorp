@@ -57,7 +57,7 @@ CocoaPromptService::~CocoaPromptService()
 {
 }
 
-NS_IMPL_ISUPPORTS2(CocoaPromptService, nsIPromptService, nsICookiePromptService);
+NS_IMPL_ISUPPORTS2(CocoaPromptService, nsIPromptService, nsICookiePromptService)
 
 /* void alert (in nsIDOMWindow parent, in wstring dialogTitle, in wstring text); */
 NS_IMETHODIMP
