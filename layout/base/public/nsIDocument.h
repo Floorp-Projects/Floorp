@@ -51,6 +51,7 @@ class nsINameSpaceManager;
 class nsIDOMSelection;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
+class nsIWordBreaker;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -117,6 +118,8 @@ public:
    */
   NS_IMETHOD GetLineBreaker(nsILineBreaker** aResult) = 0;
   NS_IMETHOD SetLineBreaker(nsILineBreaker* aLineBreaker) = 0;
+  NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult) = 0;
+  NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) = 0;
 
   /**
    * Access HTTP header data (this may also get set from other sources, like
