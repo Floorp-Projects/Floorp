@@ -122,6 +122,8 @@ protected:
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
+
+  nsCOMPtr<nsIContent> mClone;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -384,6 +386,26 @@ nsSVGUseElement::DidModifySVGObservable(nsISVGValue* aObservable,
     }
   }
 
+  if (mClone) {
+    nsCOMPtr<nsIDOMSVGAnimatedLength> l = do_QueryInterface(aObservable);
+    nsCOMPtr<nsIDOMSVGSymbolElement> symbol = do_QueryInterface(mClone);
+    nsCOMPtr<nsIDOMSVGSVGElement>    svg    = do_QueryInterface(mClone);
+
+    if (l && (symbol || svg)) {
+      if (l == mWidth) {
+        nsAutoString width;
+        GetAttr(kNameSpaceID_None, nsSVGAtoms::width, width);
+        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::width, width, PR_FALSE);
+      }
+
+      if (l == mHeight) {
+        nsAutoString height;
+        GetAttr(kNameSpaceID_None, nsSVGAtoms::height, height);
+        mClone->SetAttr(kNameSpaceID_None, nsSVGAtoms::height, height, PR_FALSE);
+      }
+    }
+  }
+
   return nsSVGUseElementBase::DidModifySVGObservable(aObservable, aModType);
 }
 
@@ -446,6 +468,8 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
   mHref->GetBaseVal(href);
   fprintf(stderr, "<svg:use> reclone of \"%s\"\n", ToNewCString(href));
 #endif
+
+  mClone = nsnull;
 
   nsCOMPtr<nsIDOMSVGElement> element;
   nsresult rv = LookupHref(getter_AddRefs(element));
@@ -554,6 +578,7 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
   }
 
   aAnonymousItems.AppendElement(newcontent);
+  mClone = newcontent;
 
   return NS_OK;
 }
