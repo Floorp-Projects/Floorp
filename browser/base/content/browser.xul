@@ -178,10 +178,6 @@
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="toggleSidebar('viewHistorySidebar');"/>
                  
-    <broadcaster id="viewPageHolderSidebar" autoCheck="false" label="&pageHolderButton.label;"
-                 type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/page-drawer.xul"
-                 oncommand="toggleSidebar('viewPageHolderSidebar');"/>
-                 
     <broadcaster id="viewWebPanelsSidebar" autoCheck="false" 
                  type="checkbox" group="sidebar" sidebarurl="chrome://browser/content/web-panels.xul"
                  oncommand="toggleSidebar('viewWebPanelsSidebar');"/>
@@ -254,8 +250,7 @@
     <key id="viewBookmarksSidebarKb" key="&manBookmarksCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
     <key id="key_stop" keycode="VK_ESCAPE" command="Browser:Stop"/>
     <key id="key_gotoHistory"  key="&history.commandKey;"  command="viewHistorySidebar" modifiers="accel"/>
-    <key id="key_pageHolderSidebar"  key="&pageHolder.commandKey;"  command="viewPageHolderSidebar" modifiers="accel"/>
-    
+        
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
@@ -664,7 +659,6 @@
                     <menuitem key="key_openDownloadsSidebar" observes="viewDownloadsSidebar"/>
                     <menuitem key="viewBookmarksSidebarKb" observes="viewBookmarksSidebar"/>
                     <menuitem key="key_gotoHistory" observes="viewHistorySidebar"/>
-                    <menuitem key="key_pageHolderSidebar" observes="viewPageHolderSidebar"/>
                   </menupopup>
                 </menu>            
                 <menuseparator/>
@@ -1005,10 +999,6 @@
                        observes="viewBookmarksSidebar"
                        tooltiptext="&bookmarksButton.tooltip;"/>
     
-        <toolbarbutton id="webpanels-button" class="toolbarbutton-1"
-                       observes="viewPageHolderSidebar"
-                       tooltiptext="&pageHolderButton.tooltip;"/>
-                       
         <toolbarbutton id="new-tab-button" class="toolbarbutton-1"
                        label="&tabCmd.label;"
                        command="cmd_newNavigatorTab"
