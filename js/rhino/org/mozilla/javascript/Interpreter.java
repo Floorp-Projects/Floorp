@@ -80,7 +80,7 @@ public class Interpreter extends LabelTable {
             Node regexp = (Node) regexps.elementAt(i);
             Node left = regexp.getFirstChild();
             Node right = regexp.getLastChild();
-            result[i] = rep.newRegExp(scope, left.getString(), 
+            result[i] = rep.newRegExp(cx, scope, left.getString(), 
                                 (left != right) ? right.getString() : null);
             regexp.putProp(Node.REGEXP_PROP, new Integer(i));
         }

@@ -31,7 +31,7 @@ public interface RegExpProxy {
     
     public boolean isRegExp(Object obj);
     
-    public Object newRegExp(Scriptable scope, String source, String global);
+    public Object newRegExp(Context cx, Scriptable scope, String source, String global);
     
     public Object match(Context cx, Scriptable thisObj, Object[] args, 
                         Function funObj)
