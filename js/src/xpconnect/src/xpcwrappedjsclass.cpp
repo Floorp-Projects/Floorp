@@ -610,8 +610,13 @@ pre_call_clean_up:
                 uint8 arg_num = param.GetInterfaceIsArgNumber();
                 const nsXPTParamInfo& param = info->GetParam(arg_num);
                 const nsXPTType& type = param.GetType();
-                if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
-                   !(conditional_iid = *((nsID**)params[arg_num].val.p)))
+                if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID)
+                    break;
+                if(param.IsOut())
+                    conditional_iid = *((nsID**)params[arg_num].val.p);
+                else
+                    conditional_iid = (nsID*) params[arg_num].val.p;
+                if(!conditional_iid)
                     break;
             }
             else if(type.IsPointer() && !param.IsShared())
