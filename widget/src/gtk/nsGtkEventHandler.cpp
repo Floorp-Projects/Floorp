@@ -843,6 +843,9 @@ handle_gdk_event (GdkEvent *event, gpointer data)
 
       nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
       GtkWidget *current_grab = gtk_grab_get_current();
+      if (window->GrabInProgress()) {
+        goto handle_as_superwin;
+      }
 
       if (current_grab) {
         // walk up the list of our parents looking for the widget.

@@ -59,6 +59,8 @@ gint handle_toplevel_focus_out(
 
 // this is the nsWindow with the focus
 nsWindow  *nsWindow::focusWindow = NULL;
+// are we grabbing?
+PRBool     nsWindow::mIsGrabbing = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -390,11 +392,12 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     }
     else
       {
-      int ret = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
-                                  (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                                   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                                   GDK_POINTER_MOTION_MASK),
-                                  (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+        mIsGrabbing = PR_TRUE;
+        int ret = gdk_pointer_grab (GDK_SUPERWIN(mSuperWin)->bin_window, PR_TRUE,(GdkEventMask)
+                                    (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                                     GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                                     GDK_POINTER_MOTION_MASK),
+                                    (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
 #ifdef DEBUG_pavlov
       printf("pointer grab returned %i\n", ret);
 #endif
@@ -406,6 +409,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 #ifdef DEBUG_pavlov
     printf("ungrabbing widget\n");
 #endif
+    mIsGrabbing = PR_FALSE;
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
     //    gtk_grab_remove(grabWidget);
   }
@@ -1775,15 +1779,13 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
     {
       gtk_widget_hide(mShell);
       gtk_widget_hide(mMozArea);
-      gtk_widget_unmap(mShell);
+      //gtk_widget_unmap(mShell);
     } 
    
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
     //    gtk_widget_unmap(mWidget);
   }
-
-  mShown = bState;
 
   return NS_OK;
 }
@@ -2497,6 +2499,11 @@ nsWindow::GetMozArea()
   return (GtkWidget *)mMozAreaClosestParent;
 }
 
+PRBool
+nsWindow::GrabInProgress(void)
+{
+  return nsWindow::mIsGrabbing;
+}
 
 /* virtual */ GdkWindow *
 nsWindow::GetRenderWindow(GtkObject * aGtkObject)
