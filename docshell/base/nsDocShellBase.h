@@ -23,12 +23,25 @@
 #ifndef nsDocShellBase_h__
 #define nsDocShellBase_h__
 
+#include "nsCOMPtr.h"
+
 #include "nsIDocShell.h"
 #include "nsIDocShellEdit.h"
 #include "nsIDocShellFile.h"
 #include "nsIGenericWindow.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
+
+class nsDocShellInitInfo
+{
+public:
+   //nsIGenericWindow Stuff
+   PRInt32        x;
+   PRInt32        y;
+   PRInt32        cx;
+   PRInt32        cy;
+   PRBool         visible;
+};
 
 class nsDocShellBase : public nsIDocShell, public nsIDocShellEdit, 
    public nsIDocShellFile, public nsIGenericWindow, public nsIScrollable, 
@@ -49,6 +62,11 @@ protected:
    virtual ~nsDocShellBase();
 
 protected:
+   PRBool                  m_Created;
+   nsDocShellInitInfo*     m_BaseInitInfo;
+   nsCOMPtr<nsIDocShell>   m_Parent;
+   nsCOMPtr<nsIPresContext>   m_PresContext;
+   nsCOMPtr<nsIWidget>     m_ParentWidget;
 };
 
 #endif /* nsDocShellBase_h__ */
