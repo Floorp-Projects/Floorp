@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: ExprLexer.cpp,v 1.7 2000/07/23 07:24:45 kvisco%ziplink.net Exp $
+ * $Id: ExprLexer.cpp,v 1.8 2000/11/07 08:30:51 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/07/23 07:24:45 $
+ * @version $Revision: 1.8 $ $Date: 2000/11/07 08:30:51 $
 **/
 
 #include <iostream.h>
@@ -651,6 +651,12 @@ void ExprLexer::parse(const String& pattern) {
                 case ASTERIX:
                     matchToken(tokenBuffer, ch);
                     switch ( prevToken->type ) {
+                        //-- temporary fix for Namespace wild-cards - KV
+                        case Token::CNAME :
+                            prevToken->value.append(ch);
+                            break;
+                        //-- end temporary fix for Namespace wild-cards
+
                         //-- Fix: make sure check for axis identifier wild cards, such as
                         //-- ancestor::* - Marina M.
                         case Token::AXIS_IDENTIFIER :
