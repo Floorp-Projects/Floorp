@@ -878,7 +878,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
           PRInt32 j;
           for (j=NO_META_COMMAND+1; j<META_COMMAND_TYPES; j++) {
-            if (temString.EqualsWithConversion(metaCommandNames[j])) {
+            if (temString.EqualsASCII(metaCommandNames[j])) {
               mMetaCommandType = (MetaCommandType) j;
               break;
             }
@@ -1844,7 +1844,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
   if (NS_FAILED(result))
     return result;
 
-  if (!attValue.EqualsWithConversion(sessionElementNames[WARNING_ELEMENT])) {
+  if (!attValue.EqualsASCII(sessionElementNames[WARNING_ELEMENT])) {
     // Create warning message element
     nsCOMPtr<nsIDOMNode> divNode, textNode;
     nsAutoString tagName(NS_LITERAL_STRING("div"));
@@ -1892,7 +1892,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
 
       } else {
 
-        if (attValue.EqualsWithConversion(sessionElementNames[MIXED_ELEMENT])) {
+        if (attValue.EqualsASCII(sessionElementNames[MIXED_ELEMENT])) {
           // Delete single line containing mixed style output
           deleteNode = 1;
           decrementedLineCount = 1;
@@ -1900,9 +1900,9 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
           XMLT_LOG(mozXMLTermSession::LimitOutputLines,79,
                    ("deleted mixed line\n"));
 
-        } else if ( (attValue.EqualsWithConversion(sessionElementNames[STDIN_ELEMENT]))  ||
-                    (attValue.EqualsWithConversion(sessionElementNames[STDOUT_ELEMENT])) ||
-                    (attValue.EqualsWithConversion(sessionElementNames[STDERR_ELEMENT]))) {
+        } else if ( (attValue.EqualsASCII(sessionElementNames[STDIN_ELEMENT]))  ||
+                    (attValue.EqualsASCII(sessionElementNames[STDOUT_ELEMENT])) ||
+                    (attValue.EqualsASCII(sessionElementNames[STDERR_ELEMENT]))) {
           // Delete first line from STDIN/STDOUT/STDERR PRE output
 
           nsCOMPtr<nsIDOMNode> textNode;

@@ -257,7 +257,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(nsIPrintSettings* aPS)
 #ifdef NOT_IMPLEMENTED_YET
   if (mGlobalNumPrinters) {
      for(int i = 0; (i < mGlobalNumPrinters) && !mQueue; i++) {
-        if (!(mGlobalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+        if (!(mGlobalPrinterList->StringAt(i)->EqualsIgnoreCase(mPrData.printer)))
            mQueue = PrnDlg.SetPrinterQueue(i);
      }
   }

@@ -690,8 +690,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
     nsAutoString typeStr;
     PRBool isChecked;
     if (NS_SUCCEEDED(rv = input->GetType(typeStr))) {
-      if (0 == typeStr.CompareWithConversion("radio", PR_TRUE) ||
-	  0 == typeStr.CompareWithConversion("checkbox", PR_TRUE)) {
+      if (0 == typeStr.LowerCaseEqualsLiteral("radio", PR_TRUE) ||
+	  0 == typeStr.LowerCaseEqualsLiteral("checkbox", PR_TRUE)) {
 	if (NS_SUCCEEDED(rv = input->GetChecked(&isChecked))) {
 	  if (isChecked) {
 	    ret.AssignWithConversion("CHECKED");
@@ -1024,8 +1024,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     nsString val;
     
     if (NS_SUCCEEDED(rv = input->GetType(typeStr))) {
-      if (0 == typeStr.CompareWithConversion("radio", PR_TRUE) ||
-	  0 == typeStr.CompareWithConversion("checkbox", PR_TRUE)) {
+      if (0 == typeStr.LowerCaseEqualsLiteral("radio", PR_TRUE) ||
+	  0 == typeStr.LowerCaseEqualsLiteral("checkbox", PR_TRUE)) {
 	val = *value;
 	if (0 == val.Length()) {
 	  input->SetChecked(PR_FALSE);

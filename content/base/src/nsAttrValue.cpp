@@ -745,7 +745,7 @@ nsAttrValue::ParseEnumValue(const nsAString& aValue,
 
   nsAutoString val(aValue);
   while (aTable->tag) {
-    if (aCaseSensitive ? val.EqualsWithConversion(aTable->tag) :
+    if (aCaseSensitive ? val.EqualsASCII(aTable->tag) :
                          val.EqualsIgnoreCase(aTable->tag)) {
       SetIntValueAndType(aTable->value, eEnum);
 
