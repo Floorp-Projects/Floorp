@@ -183,3 +183,4 @@ file:///s:/mozilla/layout/html/tests/block/bugs/97383.html
 file:///s:/mozilla/layout/html/tests/block/bugs/97383-a.html
 file:///s:/mozilla/layout/html/tests/block/bugs/111255.html
 file:///s:/mozilla/layout/html/tests/block/bugs/124637.html
+file:///s:/mozilla/layout/html/tests/block/bugs/148245.html
