@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
 static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFTreeDocumentCID,       NS_RDFTREEDOCUMENT_CID);
 
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
@@ -195,6 +196,7 @@ NS_SetupRegistry()
 #endif	//XP_MAC
 
   nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFTreeDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
