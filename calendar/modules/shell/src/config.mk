@@ -22,6 +22,7 @@ OS_LIBS += $(GUI_LIBS)
 LD_LIBS += \
 	raptorbase \
 	raptorhtmlpars \
+	raptorhtml \
 	png \
 	abouturl \
 	fileurl \

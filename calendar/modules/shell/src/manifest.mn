@@ -25,5 +25,5 @@ CPPSRCS = \
 	$(NULL)
 
 
-REQUIRES = xpcom raptor shell trex julian nls netlib pref js xpfc
+REQUIRES = xpcom raptor shell trex julian nls netlib pref js xpfc 
 
