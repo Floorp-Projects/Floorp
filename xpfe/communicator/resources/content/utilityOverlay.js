@@ -78,6 +78,7 @@ function setOfflineUI(offline)
 {
   var broadcaster = document.getElementById("Communicator:WorkMode");
   var panel = document.getElementById("offline-status");
+  var menuItem = document.getElementById("offlineGoOfflineCmd");
   if (!broadcaster || !panel) return;
 
   //Checking for a preference "network.online", if it's locked, disabling 
@@ -100,13 +101,15 @@ function setOfflineUI(offline)
     {
       broadcaster.setAttribute("offline", "true");
       panel.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-      broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
+      if (menuItem)
+        menuItem.setAttribute("checked", "true");
     }
   else
     {
       broadcaster.removeAttribute("offline");
       panel.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-      broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
+      if (menuItem)
+        broadcaster.removeAttribute("checked");
     }
 }
 
