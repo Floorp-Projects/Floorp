@@ -757,10 +757,34 @@ sub BuildOneProject($$$$$$)
 	$alias_xSYM ? MakeAlias("$project_dir$target_name.xSYM", "$dist_dir$component_dir") : 0;
 }
 
-
 #//--------------------------------------------------------------------------------------------------
 #// Build IDL projects
 #//--------------------------------------------------------------------------------------------------
+
+sub getCodeWarriorPath($)
+{
+	my($subfolder)=@_;
+	my($filepath, $appath) = (':mozilla:build:mac:idepath.txt');
+	if (open(F, $filepath)) {
+		$appath = <F>;
+		close(F);
+
+		my($codewarrior_root) = $appath;
+		$codewarrior_root =~ s/[^:]*$//;
+		return ($codewarrior_root . $subfolder);
+	} else {
+		print("Can't locate CodeWarrior IDE.\n");
+		die;
+	}
+}
+
+sub getModificationDate($)
+{
+	my($filePath)=@_;
+	my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+		$atime,$mtime,$ctime,$blksize,$blocks) = stat($filePath);
+	return $mtime;
+}
 
 sub BuildIDLProjects()
 {
@@ -769,8 +793,21 @@ sub BuildIDLProjects()
 
 	if ( $main::build{xpidl} )
 	{
-		#// beard:  build the IDL compiler itself.
+		#// see if the xpidl compiler/linker has been rebuilt by comparing modification dates.
+		my($codewarrior_plugins) = getCodeWarriorPath("CodeWarrior Plugins:");
+		my($compiler_path) = $codewarrior_plugins . "Compilers:xpidl";
+		my($linker_path) = $codewarrior_plugins . "Linkers:xpt Linker";
+		my($compiler_modtime) = (-e $compiler_path ? getModificationDate($compiler_path) : 0);
+		my($linker_modtime) = (-e $linker_path ? getModificationDate($linker_path) : 0);
+
+		#// build the IDL compiler itself.
 		BuildProject(":mozilla:xpcom:typelib:xpidl:macbuild:xpidl.mcp", "build all");
+
+		#// was the compiler/linker rebuilt? if so, then clobber IDL projects as we go.
+		if (getModificationDate($compiler_path) > $compiler_modtime || getModificationDate($linker_path) > $linker_modtime) {
+			$main::CLOBBER_IDL_PROJECTS = 1;
+			print("XPIDL tools have been updated, will clobber all IDL data folders.\n");
+		}
 	}
 	
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp", 						"xpcom");
