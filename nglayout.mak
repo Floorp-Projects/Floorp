@@ -125,8 +125,7 @@ RAPTOR_DIRS =			\
   widget			\
   layout			\
   rdf                           \
-  webshell			\
-  xpfe			
+  webshell			
 
 # Main rules
 
