@@ -7,11 +7,44 @@ function goPageSetup()
 
 function goQuitApplication()
 {
-	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+	// since RDF in the task menu is broken we seem to crash (occasionally) when closing windows. So just call appShell shutdown
+	// until the RDF is back working. I sure hope that it  fixes this problem
 	
-	if ( editorShell )
-		editorShell.Exit();
+//	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
+//	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+//	
+//	if ( editorShell )
+//		editorShell.Exit();
+//	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+
+//	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+//	do
+//	{
+		
+//		var topWindow = windowManagerInterface.GetMostRecentWindow( null );
+//		if ( topWindow == null )
+//			break;
+//		dump("closing window: "+ topWindow.title+"\n"); 
+	
+	
+	//	if ( topWindow.tryToClose == null )
+	//	{
+//			topWindow.close();
+	//	}
+	//	else
+	//	{
+	//		// Make sure topMostWindow is visibile
+	//		// stop closing windows if tryToClose returns false
+	//		topWindow.focus();
+	//		if ( !topWindow.tryToClose() )
+	//			break;
+	//	}
+//	} while( 1 );
+	
+	// call appshell exit
+	var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+	appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+	appShell.Shutdown();
 }
 
 
@@ -40,4 +73,18 @@ function goPreferences(id, pane)
 	
 	if ( top.goPrefWindow )
 		top.goPrefWindow.showWindow(id, window, pane);
+}
+
+function toggleToolbar( id )
+{
+	dump( "togglinh toolbar "+id+"\n");
+	var toolbar = document.getElementById( id );
+	if ( toolbar )
+	{
+	 	var attribValue = toolbar.getAttribute("hidden") ;
+	
+		dump("hide toolbar");
+		toolbar.setAttribute("hidden", !attribValue);
+		
+	}
 }
