@@ -45,13 +45,19 @@ expression matches. This change saves 47,984 bytes of class files.
 Debug information in Rhino classes consumes about 25% of code size and if you can live without that, you can recompile Rhino to remove it.
 
 <h2>smalljs.jar</h2>
-
-Ant build script in Rhino supports smalljar target that will generate smalljs.jar that does not include Tools, Optimizer, JavaAdapter and Class generation library, Regular Expressions and deprecated files. To build such minimalist jar without debug information, run the following command from the top directory of Rhino distribution:
+<p>
+Ant build script in Rhino supports smalljar target that will generate
+smalljs.jar that does not include Tools, Optimizer, JavaAdapter and Class
+generation library, Regular Expressions, E4X implementataion and deprecated
+files. To build such minimalist jar without debug information, run the
+following command from the top directory of Rhino distribution:
 <pre>
 ant clean
-ant -Ddebug=off -Dno-regexp=true  smalljar
+ant -Ddebug=off -Dno-regexp=true -Dno-e4x=true smalljar
 </pre>
-If you omit <tt>-Dno-regexp=true</tt>, then the resulting smalljs.jar will include Regular Expression support.
+If you omit <tt>-Dno-regexp=true</tt>, then the resulting smalljs.jar will
+include Regular Expression support. Similarly omitting <tt>-Dno-e4x=true</tt>
+results in smalljs.jar  that includes runtime support for E4X.
 
 <p>
 <hr WIDTH="100%">

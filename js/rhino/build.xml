@@ -18,11 +18,11 @@ Requires Ant version 1.2 or later
     <property name="dist.source-only-zip" value="rhino${version}-sources.zip"/>
 
     <property file="apiClasses.properties"/>
-    <property name="xmlimplsrc-build-file" 
+    <property name="xmlimplsrc-build-file"
               location="xmlimplsrc/build.xml"/>
 
-    <available property="xmlimplsrc-present?" 
-               file="${xmlimplsrc-build-file}" /> 
+    <available property="xmlimplsrc-present?"
+               file="${xmlimplsrc-build-file}" />
 
   </target>
 
@@ -37,7 +37,7 @@ Requires Ant version 1.2 or later
     <ant antfile="toolsrc/build.xml" target="compile"/>
     <antcall target="xmlimplsrc-compile" />
   </target>
-  
+
   <target name="copy-source" depends="init">
     <ant antfile="src/build.xml" target="copy-source"/>
     <ant antfile="toolsrc/build.xml" target="copy-source"/>
@@ -72,14 +72,31 @@ Requires Ant version 1.2 or later
     <jar basedir="${classes}" destfile="${dist.dir}/${small-rhino.jar}"
          compress="${jar-compression}">
       <include name="org/mozilla/javascript/*.class"/>
-      <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
-      <exclude name="org/mozilla/javascript/Token.class"/>
 
       <include name="org/mozilla/javascript/debug/*.class"/>
       <include name="org/mozilla/javascript/resources/*.properties"/>
+      <include name="org/mozilla/javascript/xml/*.class"/>
+      <include name="org/mozilla/javascript/continuations/*.class"/>
+
+      <!-- exclude classes that defines only int constants -->
+      <exclude name="org/mozilla/javascript/Token.class"/>
+
+      <!-- exclude classes that uses class generation library -->
+      <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
+      <exclude name="org/mozilla/javascript/InterfaceAdapter*.class"/>
+
+      <!-- exclude deprecated classes -->
+      <exclude name="org/mozilla/javascript/NotAFunctionException.class"/>
+      <exclude name="org/mozilla/javascript/PropertyException.class"/>
+      <exclude name="org/mozilla/javascript/ClassDefinitionException.class"/>
+
 
       <include name="org/mozilla/javascript/regexp/*.class"
                unless="no-regexp"/>
+
+      <include name="org/mozilla/javascript/xmlimpl/*.class"
+               unless="no-e4x"/>
+
     </jar>
 
   </target>
@@ -142,7 +159,7 @@ Requires Ant version 1.2 or later
         <include name="docs/**"/>
         <exclude name="docs/apidocs/**"/>
       </zipfileset>
-    </zip>     
+    </zip>
   </target>
 
   <target name="clean" depends="properties">
