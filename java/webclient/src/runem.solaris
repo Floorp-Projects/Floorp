@@ -11,7 +11,7 @@ JDK_LOCATION=${JDKHOME}
 # paths it gives you!!!!
 GTKLIBS=/usr/local/X11R6/lib:/opt/local/lib:/usr/openwin/lib:/usr/dt/lib
 # For Solaris
-LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/solaris:${MOZILLA_DIST}/bin:${GTKLIBS}:.:/usr/local/lib:/usr/lib:/lib
+LD_LIBRARY_PATH=${JDK_LOCATION}/jre/lib/sparc:${JDK_LOCATION}/jre/lib/sparc/native_threads:${JDK_LOCATION}/jre/lib/sparc/classic:${MOZILLA_DIST}/bin:${GTKLIBS}:.:/usr/local/lib:/usr/lib:/lib
 export LD_LIBRARY_PATH
 JAVA=${JDK_LOCATION}/bin/java
 OUTPUT_DIR=${MOZILLA_DIST}/classes
