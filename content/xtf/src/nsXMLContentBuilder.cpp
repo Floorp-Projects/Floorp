@@ -53,6 +53,7 @@
 #include "nsIDOMText.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -78,7 +79,6 @@ private:
   nsCOMPtr<nsIContent> mTop;
   nsCOMPtr<nsIContent> mCurrent;
   nsCOMPtr<nsIDocument> mDocument;
-  nsCOMPtr<nsINameSpaceManager> mNamespaceManager;
   PRInt32 mNamespaceId;
 };
 
@@ -91,8 +91,6 @@ nsXMLContentBuilder::nsXMLContentBuilder()
 #ifdef DEBUG
 //  printf("nsXMLContentBuilder CTOR\n");
 #endif
-
-  mNamespaceManager = do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
 }
 
 nsXMLContentBuilder::~nsXMLContentBuilder()
@@ -147,7 +145,7 @@ NS_IMETHODIMP nsXMLContentBuilder::SetDocument(nsIDOMDocument *doc)
 /* void setElementNamespace (in AString ns); */
 NS_IMETHODIMP nsXMLContentBuilder::SetElementNamespace(const nsAString & ns)
 {
-  mNamespaceManager->RegisterNameSpace(ns, mNamespaceId);
+  nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(ns, mNamespaceId);
   return NS_OK;
 }
 
