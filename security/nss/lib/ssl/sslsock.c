@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.28 2002/04/04 00:14:11 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.29 2002/07/30 20:56:32 bishakhabanerjee%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -739,6 +739,7 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 
       case SSL_ENABLE_FDX:
       	ssl_defaults.fdx = on;
+	break;
 
       case SSL_V2_COMPATIBLE_HELLO:
       	ssl_defaults.v2CompatibleHello = on;

@@ -2374,6 +2374,7 @@ finish_rsa:
 	break;
     case CKM_TLS_PRF_GENERAL:
 	crv = pk11_TLSPRFInit(context, key, key_type);
+	break;
 
     default:
 	crv = CKR_MECHANISM_INVALID;

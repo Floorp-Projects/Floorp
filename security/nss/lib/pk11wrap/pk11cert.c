@@ -1478,6 +1478,7 @@ PK11_GetPubIndexKeyID(CERTCertificate *cert) {
 	break;
     case dhKey:
         newItem = SECITEM_DupItem(&pubk->u.dh.publicValue);
+	break;
     case fortezzaKey:
     default:
 	newItem = NULL; /* Fortezza Fix later... */
