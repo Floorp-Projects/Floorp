@@ -52,8 +52,7 @@ public:
     static nsIRDFResource* kCHROME_main;
     
     static nsIRDFResource* kCHROME_name;
-    static nsIRDFResource* kCHROME_archive;
-    static nsIRDFResource* kCHROME_text;
+    static nsIRDFResource* kCHROME_path;
     static nsIRDFResource* kCHROME_version;
     static nsIRDFResource* kCHROME_author;
     static nsIRDFResource* kCHROME_siteURL;

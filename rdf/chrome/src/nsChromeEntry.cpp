@@ -54,12 +54,8 @@ NS_IMETHODIMP nsChromeEntry::GetName(PRUnichar * *aName) { return NS_OK; }
 NS_IMETHODIMP nsChromeEntry::SetName(const PRUnichar * aName) { return NS_OK; }
 
 /* attribute wstring Archive; */
-NS_IMETHODIMP nsChromeEntry::GetArchive(PRUnichar * *aName) { return NS_OK; }
-NS_IMETHODIMP nsChromeEntry::SetArchive(const PRUnichar * aName) { return NS_OK; }
-
-/* attribute wstring Text; */
-NS_IMETHODIMP nsChromeEntry::GetText(PRUnichar * *aText) { return NS_OK; }
-NS_IMETHODIMP nsChromeEntry::SetText(const PRUnichar * aText) { return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::GetPath(PRUnichar * *aName) { return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::SetPath(const PRUnichar * aName) { return NS_OK; }
 
 /* attribute wstring Version; */
 NS_IMETHODIMP nsChromeEntry::GetVersion(PRUnichar * *aVersion) { return NS_OK; }
@@ -76,6 +72,10 @@ NS_IMETHODIMP nsChromeEntry::SetSiteURL(const PRUnichar * aSiteURL) { return NS_
 /* attribute wstring previewImageURL; */
 NS_IMETHODIMP nsChromeEntry::GetPreviewImageURL(PRUnichar * *aPreviewImageURL) { return NS_OK; }
 NS_IMETHODIMP nsChromeEntry::SetPreviewImageURL(const PRUnichar * aPreviewImageURL) { return NS_OK; }
+
+/* attribute nsISimpleEnumerator components; */
+NS_IMETHODIMP nsChromeEntry::GetPackages(nsISimpleEnumerator** aResult) {  return NS_OK; }
+NS_IMETHODIMP nsChromeEntry::SetPackages(nsISimpleEnumerator* aComponents) { return NS_OK; }
 
 //////////////////////////////////////////////////////////////////////
 

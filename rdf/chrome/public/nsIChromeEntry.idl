@@ -21,17 +21,18 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIEnumerator.idl"
 
 [scriptable, uuid(C0E45041-A6C6-11d3-97FB-00400553EEF0)]
 interface nsIChromeEntry : nsISupports
 {
+  attribute wstring path;
   attribute wstring name;
-  attribute wstring archive;
-  attribute wstring text;
   attribute wstring version;
   attribute wstring author;
   attribute wstring siteURL;
   attribute wstring previewImageURL;
+  attribute nsISimpleEnumerator packages;
 };
 
 %{ C++
