@@ -138,6 +138,12 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsString& a
   MOZ_COUNT_CTOR(nsScanner);
 
   mSlidingBuffer = nsnull;
+  // XXX This is a big hack.  We want to initialize the iterators in the
+  // constructor.  So, we temporarily use the mFileName string for this
+  // purpose.  This fixes bug 182067.
+  mFilename.BeginReading(mCurrentPosition);
+  mMarkPosition = mCurrentPosition;
+  mEndPosition = mCurrentPosition;
   mIncremental=PR_TRUE;
   mCountRemaining = 0;
   mTotalRead=0;
@@ -166,6 +172,12 @@ nsScanner::nsScanner(const nsAString& aFilename,nsInputStream& aStream,const nsS
   MOZ_COUNT_CTOR(nsScanner);
 
   mSlidingBuffer = nsnull;
+  // XXX This is a big hack.  We want to initialize the iterators in the
+  // constructor.  So, we temporarily use the mFileName string for this
+  // purpose.  This fixes bug 182067.
+  mFilename.BeginReading(mCurrentPosition);
+  mMarkPosition = mCurrentPosition;
+  mEndPosition = mCurrentPosition;
   mIncremental=PR_FALSE;
   mCountRemaining = 0;
   mTotalRead=0;
