@@ -225,6 +225,7 @@ nsMsgAttachmentHandler::AnalyzeSnarfedFile(void)
 
   if (mFileSpec)
   {
+    m_size = mFileSpec->GetFileSize();
     nsInputFileStream fileHdl(*mFileSpec, PR_RDONLY, 0);
     if (fileHdl.is_open())
     {
