@@ -55,7 +55,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSNameSpaceRule.h"
-#include "nsICSSMediaRule.h"
+#include "nsICSSGroupRule.h"
 #include "nsIMediaList.h"
 #include "nsIStyledContent.h"
 #include "nsIDocument.h"
@@ -3589,13 +3589,12 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 }
 
 NS_IMETHODIMP
-nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData,
-                                  nsIAtom* aMedium)
+nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
-  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
     nsIStyledContent* styledContent = aData->mStyledContent;
@@ -3659,14 +3658,13 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 }
 
 NS_IMETHODIMP
-nsCSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData,
-                                  nsIAtom* aMedium)
+nsCSSRuleProcessor::RulesMatching(PseudoRuleProcessorData* aData)
 {
   NS_PRECONDITION(!aData->mContent ||
                   aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content (if present) must be element");
 
-  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
     cascade->mRuleHash.EnumerateTagRules(aData->mPseudoTag,
@@ -3708,13 +3706,12 @@ PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
 
 NS_IMETHODIMP
 nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                           nsIAtom* aMedium,
                                            nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
-  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   // Look up the content node in the state rule list, which points to
   // any (CSS2 definition) simple selector (whether or not it is the
@@ -3759,7 +3756,6 @@ PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
 
 NS_IMETHODIMP
 nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                               nsIAtom* aMedium,
                                                nsReStyleHint* aResult)
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
@@ -3779,7 +3775,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   }
   // XXX What about XLinks?
 
-  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
+  RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   // We do the same thing for attributes that we do for state selectors
   // (see HasStateDependentStyle), except that instead of one big list
@@ -3900,14 +3896,14 @@ RuleArraysDestroy(nsHashKey *aKey, void *aData, void *aClosure)
 }
 
 struct CascadeEnumData {
-  CascadeEnumData(nsIAtom* aMedium, PLArenaPool& aArena)
-    : mMedium(aMedium),
+  CascadeEnumData(nsPresContext* aPresContext, PLArenaPool& aArena)
+    : mPresContext(aPresContext),
       mRuleArrays(nsnull, nsnull, RuleArraysDestroy, nsnull, 64),
       mArena(aArena)
   {
   }
 
-  nsIAtom* mMedium;
+  nsPresContext* mPresContext;
   nsObjectHashtable mRuleArrays; // of nsAutoVoidArray
   PLArenaPool& mArena;
 };
@@ -3939,11 +3935,11 @@ InsertRuleByWeight(nsISupports* aRule, void* aData)
       rules->AppendElement(info);
     }
   }
-  else if (nsICSSRule::MEDIA_RULE == type) {
-    nsICSSMediaRule* mediaRule = (nsICSSMediaRule*)rule;
-    if (mediaRule->UseForMedium(data->mMedium)) {
-      mediaRule->EnumerateRulesForwards(InsertRuleByWeight, aData);
-    }
+  else if (nsICSSRule::MEDIA_RULE == type ||
+           nsICSSRule::DOCUMENT_RULE == type) {
+    nsICSSGroupRule* groupRule = (nsICSSGroupRule*)rule;
+    if (groupRule->UseForPresentation(data->mPresContext))
+      groupRule->EnumerateRulesForwards(InsertRuleByWeight, aData);
   }
   return PR_TRUE;
 }
@@ -3957,7 +3953,7 @@ CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData)
   PRBool bSheetApplicable = PR_TRUE;
   sheet->GetApplicable(bSheetApplicable);
 
-  if (bSheetApplicable && sheet->UseForMedium(data->mMedium)) {
+  if (bSheetApplicable && sheet->UseForMedium(data->mPresContext->Medium())) {
     nsCSSStyleSheet* child = sheet->mFirstChild;
     while (child) {
       CascadeSheetRulesInto(child, data);
@@ -4030,22 +4026,28 @@ static void PutRulesInList(nsObjectHashtable* aRuleArrays,
 }
 
 RuleCascadeData*
-nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext,
-                                   nsIAtom* aMedium)
+nsCSSRuleProcessor::GetRuleCascade(nsPresContext* aPresContext)
 {
+  // Having RuleCascadeData objects be per-medium works for now since
+  // nsCSSRuleProcessor objects are per-document.  (For a given set
+  // of stylesheets they can vary based on medium (@media) or document
+  // (@-moz-document).)  Things will get a little more complicated if
+  // we implement media queries, though.
+
   RuleCascadeData **cascadep = &mRuleCascades;
   RuleCascadeData *cascade;
+  nsIAtom *medium = aPresContext->Medium();
   while ((cascade = *cascadep)) {
-    if (cascade->mMedium == aMedium)
+    if (cascade->mMedium == medium)
       return cascade;
     cascadep = &cascade->mNext;
   }
 
   if (mSheets.Count() != 0) {
-    cascade = new RuleCascadeData(aMedium,
+    cascade = new RuleCascadeData(medium,
                                   eCompatibility_NavQuirks == aPresContext->CompatibilityMode());
     if (cascade) {
-      CascadeEnumData data(aMedium, cascade->mRuleHash.Arena());
+      CascadeEnumData data(aPresContext, cascade->mRuleHash.Arena());
       mSheets.EnumerateForwards(CascadeSheetRulesInto, &data);
       nsVoidArray weightedRules;
       PutRulesInList(&data.mRuleArrays, &weightedRules);

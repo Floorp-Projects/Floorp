@@ -179,11 +179,9 @@ public:
 
   // populate rule node tree with nsIStyleRule*
   // rules are ordered, those with higher precedence are farthest from the root of the tree
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
-                           nsIAtom* aMedium) = 0;
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData) = 0;
 
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
-                           nsIAtom* aMedium) = 0;
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData) = 0;
 
   /**
    * Test whether style is dependent on content state.  This test is
@@ -193,7 +191,6 @@ public:
    * Event states are defined in nsIEventStateManager.h.
    */
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium,
                                     nsReStyleHint* aResult) = 0;
 
   /**
@@ -202,7 +199,6 @@ public:
    * the side of reporting more dependencies than really exist.
    */
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsIAtom* aMedium,
                                         nsReStyleHint* aResult) = 0;
 };
 

@@ -28,6 +28,14 @@
  * marquee { -moz-binding: none; }
  *
  */
+
+/*
+ * example: make search fields on www.mozilla.org white-on-black
+ *
+ * @-moz-document url-prefix(http://www.mozilla.org/) {
+ *   #q { background: white ! important; color: black ! important; }
+ * }
+ */
  
 /* 
  * For more examples see http://www.mozilla.org/unix/customizing.html

@@ -101,7 +101,6 @@ EXPORTS		= \
 		nsICSSStyleRule.h \
 		nsICSSStyleRuleDOMWrapper.h \
 		nsICSSImportRule.h \
-		nsICSSMediaRule.h \
 		nsICSSNameSpaceRule.h \
 		nsCSSStruct.h \
 		nsICSSOMFactory.h \

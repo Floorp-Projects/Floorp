@@ -516,8 +516,7 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 }
 
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData,
-                                nsIAtom* aMedium)
+nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsIStyledContent *styledContent = aData->mStyledContent;
 
@@ -599,7 +598,6 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData,
 // Test if style is dependent on content state
 NS_IMETHODIMP
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                         nsIAtom* aMedium,
                                          nsReStyleHint* aResult)
 {
   if (mActiveRule &&
@@ -617,7 +615,6 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
 
 NS_IMETHODIMP
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                             nsIAtom* aMedium,
                                              nsReStyleHint* aResult)
 {
   // Result is true for |href| changes on HTML links if we have link rules.
@@ -646,8 +643,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
 
 
 NS_IMETHODIMP
-nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData,
-                                nsIAtom* aMedium)
+nsHTMLStyleSheet::RulesMatching(PseudoRuleProcessorData* aData)
 {
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSAnonBoxes::tableCol) {

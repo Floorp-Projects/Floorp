@@ -194,7 +194,8 @@ enum nsDOMClassInfoID {
 
   // We are now trying to preserve binary compat in classinfo.  No
   // more putting things in those categories up there.  New entries
-  // are to be added right before eDOMClassInfoIDCount
+  // are to be added right before eDOMClassInfoIDCount (or, for now,
+  // before the MOZ_SVG ifdefs, since they're off by default).
 
   // Rect object used by getComputedStyle
   eDOMClassInfo_CSSRect_id,
@@ -233,6 +234,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_TreeColumn_id,
   eDOMClassInfo_TreeColumns_id,
 #endif
+
+  eDOMClassInfo_CSSMozDocumentRule_id,
 
 #ifdef MOZ_SVG
   // The SVG document

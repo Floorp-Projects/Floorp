@@ -368,18 +368,14 @@ public:
   NS_IMETHOD SetOwningDocument(nsIDocument* aDocument);
 
   // nsIStyleRuleProcessor api
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
-                           nsIAtom* aMedium);
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
 
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
-                           nsIAtom* aMedium);
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
 
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium,
                                     nsReStyleHint* aResult);
 
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsIAtom* aMedium,
                                         nsReStyleHint* aResult);
 
 #ifdef DEBUG
@@ -432,8 +428,7 @@ NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
                    nsIStyleRuleProcessor)
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
-                                     nsIAtom* aMedium)
+HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsIStyledContent *styledContent = aData->mStyledContent;
   
@@ -449,8 +444,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
-                                     nsIAtom* aMedium)
+HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData)
 {
   // We only want to add these rules if there are real :first-letter or
   // :first-line rules that cause a pseudo-element frame to be created.
@@ -500,7 +494,6 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 // Test if style is dependent on content state
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
-                                              nsIAtom* aMedium,
                                               nsReStyleHint* aResult)
 {
   *aResult = nsReStyleHint(0);
@@ -510,7 +503,6 @@ HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
 // Test if style is dependent on attribute
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                                  nsIAtom* aMedium,
                                                   nsReStyleHint* aResult)
 {
   *aResult = nsReStyleHint(0);

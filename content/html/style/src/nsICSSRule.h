@@ -60,7 +60,8 @@ public:
     FONT_FACE_RULE = 4,
     PAGE_RULE = 5,
     CHARSET_RULE = 6,
-    NAMESPACE_RULE = 7
+    NAMESPACE_RULE = 7,
+    DOCUMENT_RULE = 8
   };
 
   NS_IMETHOD GetType(PRInt32& aType) const = 0;
