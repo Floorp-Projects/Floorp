@@ -727,8 +727,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-	nsWindow::Move(aX, aY);
-	nsWindow::Resize(aWidth, aHeight, aRepaint);
+	Move(aX, aY);
+	Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
 }
 
@@ -827,7 +827,7 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
 	nsRect area = mBounds;
 	area.x = area.y = 0;
-	nsWindow::Invalidate(area, aIsSynchronous);
+	Invalidate(area, aIsSynchronous);
 	return NS_OK;
 }
 
