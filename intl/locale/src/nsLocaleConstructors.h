@@ -50,13 +50,21 @@
 #include "nsLanguageAtomService.h"
 #include "nsLocaleCID.h"
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#define USE_MAC_LOCALE
+#endif
+
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#define USE_UNIX_LOCALE
+#endif
+
 #ifdef XP_WIN
 #include "nsIWin32LocaleImpl.h"
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatWin.h"
 #endif
 
-#ifdef XP_MAC
+#ifdef USE_MAC_LOCALE
 #ifdef USE_UCCOLLATIONKEY
 #include "nsCollationMacUC.h"
 #else
@@ -66,7 +74,7 @@
 #include "nsMacLocale.h"
 #endif
 
-#ifdef XP_UNIX
+#ifdef USE_UNIX_LOCALE
 #include "nsCollationUnix.h"
 #include "nsDateTimeFormatUnix.h"
 #include "nsPosixLocale.h"

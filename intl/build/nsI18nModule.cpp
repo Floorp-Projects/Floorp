@@ -341,7 +341,7 @@ static nsModuleComponentInfo components[] =
     nsDateTimeFormatWinConstructor },
 #endif
  
-#ifdef XP_UNIX
+#ifdef USE_UNIX_LOCALE
   { "Platform locale",
     NS_POSIXLOCALE_CID,
     NS_POSIXLOCALE_CONTRACTID,
@@ -358,7 +358,7 @@ static nsModuleComponentInfo components[] =
     nsDateTimeFormatUnixConstructor },
 #endif
 
-#ifdef XP_MAC
+#ifdef USE_MAC_LOCALE
   { "Mac locale",
     NS_MACLOCALE_CID,
     NS_MACLOCALE_CONTRACTID,
