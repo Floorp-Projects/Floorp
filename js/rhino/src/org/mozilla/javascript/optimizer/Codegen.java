@@ -2889,7 +2889,9 @@ public class Codegen extends Interpreter {
         return null;
     }
 
-    private void visitEqOp(Node node, Node child, Node parent, int trueGOTO, int falseGOTO) {
+    private void visitEqOp(Node node, Node child, Node parent, int trueGOTO, 
+                           int falseGOTO) 
+    {
         int op = node.getInt();
         Node rightChild = child.getNextSibling();
         if (trueGOTO == -1) {
@@ -2897,18 +2899,28 @@ public class Codegen extends Interpreter {
                 rightChild.getInt() == TokenStream.NULL)
             {
                 generateCodeFromNode(child, node, -1, -1);
-                addByteCode(ByteCode.DUP);
-                addByteCode(ByteCode.IFNULL, 15);
-                pushUndefined();
-                addByteCode(ByteCode.IF_ACMPEQ, 10);
+                boolean isStrict = op == TokenStream.SHEQ ||
+                                   op == TokenStream.SHNE;
+                if (isStrict) {
+                    addByteCode(ByteCode.IFNULL, 9);
+                } else {
+                    addByteCode(ByteCode.DUP);
+                    addByteCode(ByteCode.IFNULL, 15);
+                    pushUndefined();
+                    addByteCode(ByteCode.IF_ACMPEQ, 10);
+                }
                 if ((op == TokenStream.EQ) || (op == TokenStream.SHEQ))
                     classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                             "FALSE", "Ljava/lang/Boolean;");
                 else
                     classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                             "TRUE", "Ljava/lang/Boolean;");
-                addByteCode(ByteCode.GOTO, 7);
-                addByteCode(ByteCode.POP);
+                if (isStrict) {
+                    addByteCode(ByteCode.GOTO, 6);
+                } else {
+                    addByteCode(ByteCode.GOTO, 7);
+                    addByteCode(ByteCode.POP);
+                }
                 if ((op == TokenStream.EQ) || (op == TokenStream.SHEQ))
                     classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                             "TRUE", "Ljava/lang/Boolean;");
