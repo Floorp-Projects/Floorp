@@ -929,7 +929,7 @@ function BrowserCloseWindow()
   win.setAttribute( "height", h );
   win.setAttribute( "width", w );
 
-  window.close();
+  closeWindow(true);
 }
 
 function loadURI(uri, referrer)

@@ -33,17 +33,18 @@
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="Browser:page-info"
-  onload="onLoadPageInfo()"
+  onload="onLoadPageInfo()" onclose="return closeWindow(false);"
   align="stretch" class="dialog"
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
   persist="screenX screenY width height sizemode">
 
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/pageInfo.js"/>
 
   <keyset>
-    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="window.close();"/>
+    <key id="closeWindow" key="&closeWindow;" modifiers="accel" oncommand="closeWindow(true);"/>
     <key keycode="VK_ESCAPE" oncommand="window.close();"/>
     <key id="copy" key="c" modifiers="accel" oncommand="doCopy(event);"/>
   </keyset>
