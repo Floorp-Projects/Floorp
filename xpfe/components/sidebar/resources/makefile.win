@@ -32,7 +32,6 @@ CHROME_CONTENT = \
         .\customize-panel.xul \
         .\customize.js \
         .\customize.xul \
-	.\preview.css \
 	.\preview.js \
 	.\preview.xul \
 	.\sidebarOverlay.js \
@@ -42,9 +41,10 @@ CHROME_CONTENT = \
         $(NULL)
 
 CHROME_SKIN = \
-		.\sidebar.css \
         .\customize-panel.css \
         .\customize.css \
+	.\preview.css \
+	.\sidebar.css \
 	.\sidebarOverlay.css \
         .\list-down-dis.gif \
         .\list-down.gif \

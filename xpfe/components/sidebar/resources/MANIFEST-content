@@ -2,7 +2,6 @@ customize-panel.js
 customize-panel.xul
 customize.js
 customize.xul
-preview.css
 preview.js
 preview.xul
 sidebarOverlay.js
