@@ -20,6 +20,8 @@
 #include <Memory.h>
 #include <stdlib.h>
 
+#pragma error "This file is obsolete, but remains for reference reasons"
+
 #include "MacMemAllocator.h"
 
 /*	You probably only want to use this for debugging. It's useful to see leaks

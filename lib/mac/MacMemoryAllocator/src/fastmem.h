@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#pragma error "This file is obsolete, but remains for reference reasons"
+
+
 #include <Types.h>
 #include <Memory.h>
 #include <stdlib.h>
