@@ -361,6 +361,9 @@ public:
 
   PRBool mUnconstrainedHeight;
 
+  PRBool mSkippedRightFloaters;
+  nsSize mSkippedMaxElementSize;
+
   // The content area to reflow child frames within. The x/y
   // coordinates are known to be mBorderPadding.left and
   // mBorderPadding.top. The width/height may be NS_UNCONSTRAINEDSIZE
@@ -507,6 +510,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
       mContentArea.width = aReflowState.availableWidth - lr;
     }
   }
+  mSkippedRightFloaters = PR_FALSE;
+  mSkippedMaxElementSize.SizeTo(0, 0);
 
   // Compute content area height. Unlike the width, if we have a
   // specified style height we ignore it since extra content is
@@ -1573,15 +1578,19 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       (((0 == aState.mKidXMost) ||
         (0 == aState.mKidXMost - borderPadding.left)) &&
        (0 == aState.mY - borderPadding.top))) {
-    // Zero out the works
+    // Zero out most everything
     aMetrics.width = 0;
     aMetrics.height = 0;
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
+
+    // Note: Don't zero out the max-element-sizes: they will be zero
+    // if this is truly empty, otherwise they won't because of a
+    // floater.
     if (nsnull != aMetrics.maxElementSize) {
-      aMetrics.maxElementSize->width = 0;
-      aMetrics.maxElementSize->height = 0;
+      aMetrics.maxElementSize->width = aState.mMaxElementSize.width;
+      aMetrics.maxElementSize->height = aState.mMaxElementSize.height;
     }
   }
   else {
@@ -3743,13 +3752,25 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       printf("PASS1 ");
     }
     ListTag(stdout);
-    printf(": line.floaters=%d band.floaterCount=%d\n",
-           aLine->mFloaters ? aLine->mFloaters->Count() : -1,
+    printf(": line.floaters=%s band.floaterCount=%d\n",
+           aLine->mFloaters.NotEmpty() ? "yes" : "no",
            aState.mBand.GetFloaterCount());
 #endif
     if (0 != aState.mBand.GetFloaterCount()) {
       // Add in floater impacts to the lines max-element-size
       ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
+    }
+
+    // Factor in any skipped right floaters...
+    if (aState.mSkippedRightFloaters) {
+      if (aState.mSkippedMaxElementSize.width > maxElementSize.width) {
+        maxElementSize.width = aState.mSkippedMaxElementSize.width;
+      }
+      if (aState.mSkippedMaxElementSize.height > maxElementSize.height) {
+        maxElementSize.height = aState.mSkippedMaxElementSize.height;
+      }
+      aState.mSkippedMaxElementSize.SizeTo(0, 0);
+      aState.mSkippedRightFloaters = PR_FALSE;
     }
   }
   PostPlaceLine(aState, aLine, maxElementSize);
@@ -5117,6 +5138,14 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
       // pretend that the floater ended up at the left margin...
       okToAddRectRegion = PR_FALSE;
       region.x = mAvailSpaceRect.x;
+      mSkippedRightFloaters = PR_TRUE;
+      if (region.width > mSkippedMaxElementSize.width) {
+        mSkippedMaxElementSize.width = region.width;
+      }
+      if (region.height > mSkippedMaxElementSize.height) {
+        mSkippedMaxElementSize.height = region.height;
+      }
+//      region.x = mAvailSpaceRect.XMost() - region.width;
     }
     else {
       region.x = mAvailSpaceRect.XMost() - region.width;
