@@ -1776,7 +1776,7 @@ NET_ShutdownNetLib(void)
     NET_CleanupTCP();
 
 #ifdef MOZILLA_CLIENT
-    NET_CleanupCache("");
+    NET_CleanupCache();
 	NET_SetMemoryCacheSize(0); /* free memory cache */
 
 #endif /* MOZILLA_CLIENT */
