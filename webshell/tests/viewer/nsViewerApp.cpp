@@ -1029,7 +1029,6 @@ static char * gTop100List[] = {
    "http://www.webcrawler.com",
    "http://www.mirabilis.com",
    "http://www.infoseek.com",
-   "http://www.pathfinder.com",
    "http://www.warnerbros.com",
    "http://www.cnn.com",
    "http://www.altavista.com",
@@ -1056,7 +1055,6 @@ static char * gTop100List[] = {
    "http://www.real.com",
    "http://www.sportsline.com",
    "http://www.dejanews.com",
-   "http://www.the-park.com",
    "http://www.cmpnet.com",
    "http://www.go2net.com",
    "http://www.metacrawler.com",
@@ -1148,6 +1146,8 @@ static char * gTop100List[] = {
    "http://www.developer.com",
    "http://www.mapquest.com",
    "http://www.bluemountain.com",
+   "http://www.the-park.com",
+   "http://www.pathfinder.com",
    0
    };
 
