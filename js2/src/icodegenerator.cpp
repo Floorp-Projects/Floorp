@@ -481,7 +481,7 @@ TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1,
     return dest;
 } 
 
-TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1, 
+TypedRegister ICodeGenerator::binaryOp(ICodeOp dblOp, JSTypes::Operator op, TypedRegister source1, 
                             TypedRegister source2)
 {
     ASSERT(source1.first != NotARegister);    
@@ -489,30 +489,28 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
     TypedRegister dest(getTempRegister(), &Any_Type);
     
     if ((source1.second == &Number_Type) && (source2.second == &Number_Type)) {
-        Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
+        Arithmetic *instr = new Arithmetic(dblOp, dest, source1, source2);
         iCode->push_back(instr);
     }
     else {
-        GenericBinaryOP *instr = new GenericBinaryOP(dest, mapICodeOpToExprNode(op), source1, source2);
+        GenericBinaryOP *instr = new GenericBinaryOP(dest, op, source1, source2);
         iCode->push_back(instr);
     }
     return dest;
 }
 
-TypedRegister ICodeGenerator::unaryOp(ICodeOp op, TypedRegister source)
+TypedRegister ICodeGenerator::unaryOp(JSTypes::Operator op, TypedRegister source)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
-    GenericUnaryOP *instr = new GenericUnaryOP(dest, mapICodeOpToExprNode(op), source);
+    GenericUnaryOP *instr = new GenericUnaryOP(dest, op, source);
     iCode->push_back(instr);
     return dest;
 }
 
-TypedRegister ICodeGenerator::xcrementOp(ICodeOp op, TypedRegister source)
+TypedRegister ICodeGenerator::xcrementOp(JSTypes::Operator op, TypedRegister source)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
-    GenericXcrementOP *instr = new GenericXcrementOP(dest, 
-                                    (op == ADD) ? ExprNode::preIncrement : ExprNode::preDecrement, 
-                                    source);
+    GenericXcrementOP *instr = new GenericXcrementOP(dest, op, source);
     iCode->push_back(instr);
     return dest;
 }
@@ -520,7 +518,7 @@ TypedRegister ICodeGenerator::xcrementOp(ICodeOp op, TypedRegister source)
 TypedRegister ICodeGenerator::call(TypedRegister target, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
-    Call *instr = new Call(dest, target, args);
+    DirectCall *instr = new DirectCall(dest, target, args);
     iCode->push_back(instr);
     return dest;
 }
@@ -532,7 +530,7 @@ TypedRegister ICodeGenerator::invokeCallOp(TypedRegister target, ArgumentList *a
     iCode->push_back(instr);
     return dest;
 }
-
+/*
 TypedRegister ICodeGenerator::directCall(JSFunction *target, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
@@ -540,7 +538,7 @@ TypedRegister ICodeGenerator::directCall(JSFunction *target, ArgumentList *args)
     iCode->push_back(instr);
     return dest;
 }
-
+*/
 TypedRegister ICodeGenerator::bindThis(TypedRegister thisArg, TypedRegister target)
 {
     TypedRegister dest(getTempRegister(), &Function_Type);

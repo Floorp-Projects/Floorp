@@ -105,7 +105,7 @@ namespace JSClasses {
         bool mHasSetters;
         JSFunctions mGetters;       // allocated at 'complete()' time
         JSFunctions mSetters;
-        JSOperatorList *mOperators[ExprNode::kindsEnd];
+        JSOperatorList *mOperators[JSTypes::OperatorCount];
     public:
         JSClass(JSScope* scope, const String& name, JSClass* superClass = 0)
             :   JSType(name, superClass),
@@ -124,7 +124,7 @@ namespace JSClasses {
                     if (si->second.isVirtual())
                         mSlots[si->first] = si->second;
             }
-            for (uint32 i = 0; i < ExprNode::kindsEnd; i++)
+            for (uint32 i = 0; i < JSTypes::OperatorCount; i++)
                 mOperators[i] = NULL;
         }
         
@@ -318,7 +318,7 @@ namespace JSClasses {
             }
         }
 
-        void defineOperator(ExprNode::Kind op, JSType *operand1, JSType *operand2, JSFunction *f)
+        void defineOperator(JSTypes::Operator op, JSType *operand1, JSType *operand2, JSFunction *f)
         {
             if (!mOperators[op])
                 mOperators[op] = new JSOperatorList();
@@ -335,7 +335,7 @@ namespace JSClasses {
             mOperators[op]->push_back(new JSOperator(operand1, operand2, f));
         }
 
-        void addApplicableOperators(JSOperatorList &list, ExprNode::Kind op, const JSType *operand1, const JSType *operand2)
+        void addApplicableOperators(JSOperatorList &list, JSTypes::Operator op, const JSType *operand1, const JSType *operand2)
         {
             if (mOperators[op]) {
                 for (JSOperatorList::iterator i = mOperators[op]->begin(), 
@@ -347,7 +347,7 @@ namespace JSClasses {
             }
         }
 
-        JSOperator *findUnaryOperator(ExprNode::Kind op)
+        JSOperator *findUnaryOperator(JSTypes::Operator op)
         {
             if (mOperators[op])
                 return *mOperators[op]->begin();

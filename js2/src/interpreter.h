@@ -21,9 +21,9 @@
 #define interpreter_h
 
 #include "utilities.h"
+#include "icodegenerator.h"
 #include "jstypes.h"
 #include "vmtypes.h"
-#include "icodegenerator.h"
 #include "gc_allocator.h"
 
 namespace JavaScript {
@@ -83,12 +83,13 @@ namespace Interpreter {
 
         ICodeModule* loadClass(const char *fileName);
 
-        const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op);
-        const JSValue findUnaryOverride(JSValue &operand1, ExprNode::Kind op);
+        const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, JSTypes::Operator op);
+        const JSValue findUnaryOverride(JSValue &operand1, JSTypes::Operator op);
 
         JSType *findType(const StringAtom& typeName);
         JSType *extractType(ExprNode *t);
         JSType *getParameterType(FunctionDefinition &function, int index);
+        uint32 getParameterCount(FunctionDefinition &function);
 
     private:
         void broadcast(Event event);

@@ -98,129 +98,6 @@ static bool hasAttribute(const IdentifierList* identifiers, StringAtom &name)
 /************************************************************************/
 
 
-
-ExprNode::Kind ICodeGenerator::mapICodeOpToExprNode(ICodeOp op)
-{
-    switch (op) {
-    case ADD:
-        return ExprNode::add;
-    case SUBTRACT:
-        return ExprNode::subtract;
-    case MULTIPLY:
-        return ExprNode::multiply;
-    case DIVIDE:
-        return ExprNode::divide;
-    case REMAINDER:
-        return ExprNode::modulo;
-    case SHIFTLEFT:
-        return ExprNode::leftShift;
-    case SHIFTRIGHT:
-        return ExprNode::rightShift;
-    case USHIFTRIGHT:
-        return ExprNode::logicalRightShift;
-    case AND:
-        return ExprNode::bitwiseAnd;
-    case OR:
-        return ExprNode::bitwiseOr;
-    case XOR:
-        return ExprNode::bitwiseXor;
-    case POSATE:
-        return ExprNode::plus;
-    case NEGATE:
-        return ExprNode::minus;
-    case BITNOT:
-        return ExprNode::complement;
-    case COMPARE_EQ:
-        return ExprNode::equal;
-    case COMPARE_LT:
-        return ExprNode::lessThan;
-    case COMPARE_LE:
-        return ExprNode::lessThanOrEqual;
-    case STRICT_EQ:
-        return ExprNode::identical;
-    }
-    return ExprNode::none;
-}
-
-
-ICodeOp ICodeGenerator::mapExprNodeToICodeOp(ExprNode::Kind kind)
-{
-    // can be an array later, when everything has settled down
-    switch (kind) {
-    // binary
-    case ExprNode::add:
-    case ExprNode::addEquals:
-        return ADD;
-    case ExprNode::subtract:
-    case ExprNode::subtractEquals:
-        return SUBTRACT;
-    case ExprNode::multiply:
-    case ExprNode::multiplyEquals:
-        return MULTIPLY;
-    case ExprNode::divide:
-    case ExprNode::divideEquals:
-        return DIVIDE;
-    case ExprNode::modulo:
-    case ExprNode::moduloEquals:
-        return REMAINDER;
-    case ExprNode::leftShift:
-    case ExprNode::leftShiftEquals:
-        return SHIFTLEFT;
-    case ExprNode::rightShift:
-    case ExprNode::rightShiftEquals:
-        return SHIFTRIGHT;
-    case ExprNode::logicalRightShift:
-    case ExprNode::logicalRightShiftEquals:
-        return USHIFTRIGHT;
-    case ExprNode::bitwiseAnd:
-    case ExprNode::bitwiseAndEquals:
-        return AND;
-    case ExprNode::bitwiseXor:
-    case ExprNode::bitwiseXorEquals:
-        return XOR;
-    case ExprNode::bitwiseOr:
-    case ExprNode::bitwiseOrEquals:
-        return OR;
-    // unary
-    case ExprNode::plus:
-        return POSATE;
-    case ExprNode::minus:
-        return NEGATE;
-    case ExprNode::complement:
-        return BITNOT;
-
-   // relational
-    case ExprNode::In:
-        return COMPARE_IN;
-    case ExprNode::Instanceof:
-        return INSTANCEOF;
-
-    case ExprNode::equal:
-        return COMPARE_EQ;
-    case ExprNode::lessThan:
-        return COMPARE_LT;
-    case ExprNode::lessThanOrEqual:
-        return COMPARE_LE;
-    case ExprNode::identical:
-        return STRICT_EQ;
-
-  // these get reversed by the generator
-    case ExprNode::notEqual:        
-        return COMPARE_EQ;
-    case ExprNode::greaterThan:
-        return COMPARE_LT;
-    case ExprNode::greaterThanOrEqual:
-        return COMPARE_LE;
-    case ExprNode::notIdentical:
-        return STRICT_EQ;
-    
-    default:
-        NOT_REACHED("Unimplemented kind");
-        return NOP;
-    }
-}
-
-
 static bool generatedBoolean(ExprNode *p)
 {
     switch (p->getKind()) {
@@ -381,359 +258,6 @@ bool ICodeGenerator::resolveIdentifier(const StringAtom &name, Reference &ref, b
     return true;
 }
 
-#if 0
-TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue)
-{
-    ASSERT(p->getKind() == ExprNode::identifier);
-
-    /*JSType *vType = &Any_Type;*/
-    uint32 slotIndex;
-    TypedRegister v;
-    TypedRegister base;
-
-    const StringAtom &name = (static_cast<IdentifierExprNode *>(p))->name;
-    LValueKind lValueKind = resolveIdentifier(name, v, slotIndex, base, lvalue);
-    JSType *targetType = v.second;
-
-    switch (use) {
-    case ExprNode::addEquals:
-    case ExprNode::subtractEquals:
-    case ExprNode::multiplyEquals:
-    case ExprNode::divideEquals:
-    case ExprNode::moduloEquals:
-    case ExprNode::leftShiftEquals:
-    case ExprNode::rightShiftEquals:
-    case ExprNode::logicalRightShiftEquals:
-    case ExprNode::bitwiseAndEquals:
-    case ExprNode::bitwiseXorEquals:
-    case ExprNode::bitwiseOrEquals:
-        switch (lValueKind) {
-        case Var:
-            break;
-        case Name:
-            v = loadName(name, v.second);
-            break;
-        case Slot:
-            v = getSlot(base, slotIndex);
-            break;
-        case Static:
-        case Constructor:
-            v = getStatic(mClass, name);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
-        }
-        ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
-        // fall thru...
-    case ExprNode::assignment:
-        ret = cast(ret, targetType);
-        switch (lValueKind) {
-        case Var:
-            move(v, ret);
-            break;
-        case Name:
-            saveName(name, ret);
-            break;
-        case Slot:
-            setSlot(base, slotIndex, ret);
-            break;
-        case Static:
-        case Constructor:
-            setStatic(mClass, name, ret);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
-        }
-        break;
-    case ExprNode::identifier: 
-        switch (lValueKind) {
-        case Var:
-            ret = v;
-            break;
-        case Name:
-            ret = loadName(name, v.second);
-            break;
-        case Slot:
-            ret = getSlot(base, slotIndex);
-            break;
-        case Static:
-        case Constructor:
-            ret = getStatic(mClass, name);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
-        }
-        break;
-    case ExprNode::preDecrement: 
-    case ExprNode::preIncrement:
-        switch (lValueKind) {
-        case Var:
-            ret = binaryOp(xcrementOp, v, loadImmediate(1.0));
-            break;
-        case Name:
-            ret = loadName(name, v.second);
-            ret = binaryOp(xcrementOp, ret, loadImmediate(1.0));
-            saveName(name, ret);
-            break;
-        case Slot:
-            ret = binaryOp(xcrementOp, getSlot(base, slotIndex), loadImmediate(1.0));
-            setSlot(base, slotIndex, ret);
-            break;
-        case Static:
-        case Constructor:
-            ret = binaryOp(xcrementOp, getStatic(mClass, name), loadImmediate(1.0));
-            setStatic(mClass, name, ret);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
-        }
-        break;
-    case ExprNode::postDecrement: 
-    case ExprNode::postIncrement:
-        switch (lValueKind) {
-        case Var:
-            ret = varXcr(v, xcrementOp);
-            break;
-        case Name:
-            ret = nameXcr(name, xcrementOp);
-            break;
-        case Slot:
-            ret = slotXcr(base, slotIndex, xcrementOp);
-            break;
-        case Static:
-        case Constructor:
-            ret = staticXcr(mClass, name, xcrementOp);
-            break;
-        default:
-            NOT_REACHED("Bad lvalue kind");
-        }
-        break;
-    case ExprNode::call: 
-        {
-            switch (lValueKind) {
-            case Var:
-                ret = call(v, args);
-                break;
-            case Name:
-                ret = call(loadName(name), args);
-                break;
-            case Method:
-                ret = call(getMethod(base, slotIndex), args);
-                break;
-            case Static:
-                ret = call(getStatic(mClass, name), args);
-                break;
-            case Constructor:
-                ret = newClass(mClass);
-                call(bindThis(ret, getStatic(mClass, name)), args);
-                break;
-            default:
-                NOT_REACHED("Bad lvalue kind");
-            }
-        }
-        break;
-    default:
-        NOT_REACHED("Bad use kind");
-    }
-    return ret;
-
-}
-
-TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue)
-{   
-    ASSERT(b->getKind() == ExprNode::dot);
-
-    LValueKind lValueKind = Property;
-
-    if (b->op2->getKind() != ExprNode::identifier) {
-        NOT_REACHED("Implement me");    // turns into a getProperty (but not via any overloaded [] )
-    }
-    else {
-        // we have <expr>.<fieldname>
-        const StringAtom &fieldName = static_cast<IdentifierExprNode *>(b->op2)->name;
-        TypedRegister base;
-        TypedRegister baseBase;
-        JSClass *clazz = NULL;
-        JSType *fieldType = &Any_Type;
-        uint32 slotIndex;
-        if ((b->op1->getKind() == ExprNode::identifier) && !isWithinWith()) {
-            // handle <basename>.<fieldname>
-            const StringAtom &baseName = (static_cast<IdentifierExprNode *>(b->op1))->name;
-            LValueKind baseKind = resolveIdentifier(baseName, base, slotIndex, baseBase, false);
-            if (baseKind == Slot) {
-                base = getSlot(baseBase, slotIndex);
-            }
-            //
-            // handle <class name>.<static field>
-            //
-            if (base.second == &Type_Type) {
-                const JSValue &v = mContext->getGlobalObject()->getVariable(baseName);
-                bool isConstructor;
-                ASSERT(v.isType());     // there's no other way that base.second could be &Type_Type, right?
-                clazz = dynamic_cast<JSClass*>(v.type);
-                if (clazz && isStaticName(clazz, fieldName, fieldType, isConstructor)) {
-                    lValueKind = (isConstructor) ? Constructor : Static;
-                }
-            }
-            if (lValueKind == Property) {
-                if (isSlotName(base.second, fieldName, slotIndex, fieldType, lvalue))
-                    lValueKind = Slot;
-                else
-                    if (isMethodName(base.second, fieldName, slotIndex))
-                        lValueKind = Method;
-                    else {
-                        bool isConstructor;
-                        clazz = dynamic_cast<JSClass*>(base.second);
-                        if (clazz && isStaticName(clazz, fieldName, fieldType, isConstructor))
-                            lValueKind = (isConstructor) ? Constructor : Static;
-                    }
-            }
-            if ((lValueKind == Property) || (base.first == NotARegister))
-                base = loadName(baseName, base.second);
-        }
-        else {
-            base = genExpr(b->op1);
-            if (isSlotName(base.second, fieldName, slotIndex, fieldType, lvalue))
-                lValueKind = Slot;
-            else
-                if (isMethodName(base.second, fieldName, slotIndex))
-                    lValueKind = Method;
-                else {
-                    bool isConstructor;
-                    clazz = dynamic_cast<JSClass*>(base.second);
-                    if (clazz && clazz && isStaticName(clazz, fieldName, fieldType, isConstructor))
-                        lValueKind = (isConstructor) ? Constructor : Static;
-                }
-        }
-        TypedRegister v;
-        switch (use) {
-        case ExprNode::call:
-            switch (lValueKind) {
-            case Static:
-                ret = call(getStatic(clazz, fieldName), args);
-                break;
-            case Constructor:
-                ret = newClass(clazz);
-                call(bindThis(ret, getStatic(clazz, fieldName)), args);
-                break;
-            case Property:
-                ret = call(bindThis(base, getProperty(base, fieldName)), args);
-                break;
-            case Method:
-                ret = call(getMethod(base, slotIndex), args);
-                break;
-            default:
-                NOT_REACHED("Bad lvalue kind");
-            }
-            break;
-        case ExprNode::dot:
-        case ExprNode::addEquals:
-        case ExprNode::subtractEquals:
-        case ExprNode::multiplyEquals:
-        case ExprNode::divideEquals:
-        case ExprNode::moduloEquals:
-        case ExprNode::leftShiftEquals:
-        case ExprNode::rightShiftEquals:
-        case ExprNode::logicalRightShiftEquals:
-        case ExprNode::bitwiseAndEquals:
-        case ExprNode::bitwiseXorEquals:
-        case ExprNode::bitwiseOrEquals:
-            switch (lValueKind) {
-            case Constructor:
-            case Static:
-                v = getStatic(clazz, fieldName);
-                break;
-            case Property:
-                v = getProperty(base, fieldName);
-                break;
-            case Slot:
-                v = getSlot(base, slotIndex);
-                break;
-            case Method:
-                v = getMethod(base, slotIndex);
-                break;
-            default:
-                NOT_REACHED("Bad lvalue kind");
-            }
-            if (use == ExprNode::dot) {
-                ret = v;
-                break;
-            }
-            ret = binaryOp(mapExprNodeToICodeOp(use), v, ret);
-            // fall thru...
-        case ExprNode::assignment:
-            ret = cast(ret, fieldType);
-            switch (lValueKind) {
-            case Constructor:
-            case Static:
-                setStatic(clazz, fieldName, ret);
-                break;
-            case Property:
-                setProperty(base, fieldName, ret);
-                break;
-            case Slot:
-                setSlot(base, slotIndex, ret);
-                break;
-            default:
-                NOT_REACHED("Bad lvalue kind");
-            }
-            break;
-        case ExprNode::postDecrement: 
-        case ExprNode::postIncrement:
-            {
-//                JSClass *clss = dynamic_cast<JSClass*>(fieldType);
-//                if (clss) {
-//                    clss->findOverloadedOperator(use);
-//                }
-                switch (lValueKind) {
-                case Constructor:
-                case Static:
-                    ret = staticXcr(clazz, fieldName, xcrementOp);
-                    break;
-                case Property:
-                    ret = propertyXcr(base, fieldName, xcrementOp);
-                    break;
-                case Slot:
-                    ret = slotXcr(base, slotIndex, xcrementOp);
-                    break;
-                default:
-                    NOT_REACHED("Bad lvalue kind");
-                }
-            }
-            break;
-        case ExprNode::preDecrement: 
-        case ExprNode::preIncrement:
-            switch (lValueKind) {
-            case Constructor:
-            case Static:
-                ret = binaryOp(xcrementOp, getStatic(clazz, fieldName), loadImmediate(1.0));
-                setStatic(clazz, fieldName, ret);
-                break;
-            case Property:
-                ret = binaryOp(xcrementOp, getProperty(base, fieldName), loadImmediate(1.0));
-                setProperty(base, fieldName, ret);
-                break;
-            case Slot:
-                ret = binaryOp(xcrementOp, getSlot(base, slotIndex), loadImmediate(1.0));
-                setSlot(base, slotIndex, ret);
-                break;
-            default:
-                NOT_REACHED("Bad lvalue kind");
-            }
-            break;
-        case ExprNode::Delete:
-            if (lValueKind == Property) {
-                ret = deleteProperty(base, fieldName);
-            }
-            break;
-        default:
-            NOT_REACHED("unexpected use node");
-        }
-        ret.second = fieldType;
-    }
-    return ret;
-}
-#endif
 
 Reference ICodeGenerator::genReference(ExprNode *p)
 {
@@ -891,6 +415,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                                     Label *trueBranch, 
                                     Label *falseBranch)
 {
+    ICodeOp dblOp;
+    JSTypes::Operator op;
     TypedRegister ret(NotARegister, &None_Type);
     ICodeOp xOp = ADD;
     switch (p->getKind()) {
@@ -953,6 +479,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         ret = call(bindThis(ret, getStatic(clazz, className)), args);
                     }
                     else {
+/*
                         //
                         // like 'new Boolean()' - see if the type has a constructor
                         //
@@ -960,6 +487,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         if (f)
                             ret = directCall(f, args);
                         else
+*/
                             NOT_REACHED("new <name>, where <name> is not a new-able type (whatever that means)");   // XXX Runtime error.
                     }
                 }
@@ -1014,27 +542,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
 
             Reference ref = genReference(i->op);
             ret = invokeCallOp(ref.getCallTarget(this), args);
-/*
-
-            if (i->op->getKind() == ExprNode::dot) {
-                BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
-                ret = handleDot(b, ExprNode::call, xcrementOp, ret, args, false);
-            }
-            else {
-                if (i->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(i->op), ExprNode::call, xcrementOp, ret, args, false);
-                }
-                else {
-                    if (i->op->getKind() == ExprNode::index) {
-                        InvokeExprNode *ii = static_cast<InvokeExprNode *>(i->op);
-                        TypedRegister base = genExpr(ii->op);
-                        ret = call(bindThis(base, getElement(base, genExpr(ii->pairs->value))), args);     // FIXME, only taking first index
-                    }
-                    else
-                        ASSERT("WAH!");
-                }
-            }
-*/
         }
         break;
     case ExprNode::index :
@@ -1053,10 +560,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         {
             Reference ref = genReference(p);
             ret = ref.getValue(this);
-/*
-            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = handleDot(b, p->getKind(), xcrementOp, ret, NULL, false);
-*/
         }
         break;
     case ExprNode::This :
@@ -1068,7 +571,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         {
             Reference ref = genReference(p);
             ret = ref.getValue(this);
-//            ret = handleIdentifier(static_cast<IdentifierExprNode *>(p), ExprNode::identifier, xcrementOp, ret, NULL, false);
         }
         break;
     case ExprNode::number :
@@ -1078,90 +580,88 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         ret = loadString(mContext->getWorld().identifiers[(static_cast<StringExprNode *>(p))->str]);
         break;
     case ExprNode::preDecrement: 
-        xOp = SUBTRACT;
+        op = Decrement;
+        goto GenericPreXcrement;
     case ExprNode::preIncrement:
+        op = Increment;
+        goto GenericPreXcrement;
+GenericPreXcrement:
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             Reference ref = genReference(u->op);
-            ret = xcrementOp(xOp, ref.getValue(this));
-/*
-            UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
-            if (u->op->getKind() == ExprNode::dot) {
-                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
-            }
-            else
-                if (u->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
-                }
-                else
-                    if (u->op->getKind() == ExprNode::index) {
-                        InvokeExprNode *i = static_cast<InvokeExprNode *>(u->op);
-                        TypedRegister base = genExpr(i->op);
-                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
-                        ret = getElement(base, index);
-                        ret = binaryOp(xcrementOp, ret, loadImmediate(1.0));
-                        setElement(base, index, ret);
-                    }
-                    else
-                        ASSERT("WAH!");
-*/
+            ret = xcrementOp(op, ref.getValue(this));
         }
         break;
     case ExprNode::postDecrement: 
-        xOp = SUBTRACT;
+        op = Decrement;
+        goto GenericPostXcrement;
     case ExprNode::postIncrement: 
+        op = Decrement;
+        goto GenericPostXcrement;
+GenericPostXcrement:
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             Reference ref = genReference(u->op);
             ret = ref.getValue(this);
-            ref.setValue(this, xcrementOp(xOp, ret));
-/*
-            UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
-            if (u->op->getKind() == ExprNode::dot) {
-                ret = handleDot(static_cast<BinaryExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
-            }
-            else
-                if (u->op->getKind() == ExprNode::identifier) {
-                    ret = handleIdentifier(static_cast<IdentifierExprNode *>(u->op), p->getKind(), xcrementOp, ret, NULL, true);
-                }
-                else
-                    if (u->op->getKind() == ExprNode::index) {
-                        InvokeExprNode *i = static_cast<InvokeExprNode *>(u->op);
-                        TypedRegister base = genExpr(i->op);
-                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
-                        ret = elementXcr(base, index, xcrementOp);
-                    }
-                    else
-                        ASSERT("WAH!");
-*/
+            ref.setValue(this, xcrementOp(op, ret));
         }
         break;
 
     case ExprNode::plus:
+        op = JSTypes::Posate;
+        goto GenericUnary;
     case ExprNode::minus:
+        op = JSTypes::Negate;
+        goto GenericUnary;
     case ExprNode::complement:
+        op = JSTypes::Complement;
+        goto GenericUnary;
+GenericUnary:
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             TypedRegister r = genExpr(u->op);
-            ret = unaryOp(mapExprNodeToICodeOp(p->getKind()), r);
+            ret = unaryOp(op, r);
         }
         break;
     case ExprNode::add:
+        dblOp = ADD; op = JSTypes::Plus;
+        goto GenericBinary;
     case ExprNode::subtract:
+        dblOp = SUBTRACT; op = JSTypes::Minus;
+        goto GenericBinary;
     case ExprNode::multiply:
+        dblOp = MULTIPLY; op = JSTypes::Multiply;
+        goto GenericBinary;
     case ExprNode::divide:
+        dblOp = DIVIDE; op = JSTypes::Divide;
+        goto GenericBinary;
     case ExprNode::modulo:
+        dblOp = REMAINDER; op = JSTypes::Remainder;
+        goto GenericBinary;
     case ExprNode::leftShift:
+        dblOp = SHIFTLEFT; op = JSTypes::ShiftLeft;
+        goto GenericBinary;
     case ExprNode::rightShift:
+        dblOp = SHIFTRIGHT; op = JSTypes::ShiftRight;
+        goto GenericBinary;
     case ExprNode::logicalRightShift:
+        dblOp = USHIFTRIGHT; op = JSTypes::UShiftRight;
+        goto GenericBinary;
     case ExprNode::bitwiseAnd:
+        dblOp = AND; op = JSTypes::BitAnd;
+        goto GenericBinary;
     case ExprNode::bitwiseXor:
+        dblOp = XOR; op = JSTypes::BitXor;
+        goto GenericBinary;
     case ExprNode::bitwiseOr:
+        dblOp = OR; op = JSTypes::BitOr;
+        goto GenericBinary;
+GenericBinary:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            ret = binaryOp(dblOp, op, r1, r2);
         }
         break;
     case ExprNode::assignment:
@@ -1170,80 +670,88 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             Reference ref = genReference(b->op1);
             ret = genExpr(b->op2);
             ref.setValue(this, ret);
-/*
-            if (b->op1->getKind() == ExprNode::identifier) {
-                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL, true);
-            }
-            else
-                if (b->op1->getKind() == ExprNode::dot) {
-                    BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL, true);
-                }
-                else
-                    if (b->op1->getKind() == ExprNode::index) {
-                        InvokeExprNode *i = static_cast<InvokeExprNode *>(b->op1);
-                        TypedRegister base = genExpr(i->op);
-                        TypedRegister index = genExpr(i->pairs->value);    // FIXME, only taking first index
-                        setElement(base, index, ret);
-                    }
-                    else
-                        ASSERT("WAH!");
-*/
         }
         break;
     case ExprNode::addEquals:
+        dblOp = ADD; op = JSTypes::Plus;
+        goto GenericBinaryEquals;
     case ExprNode::subtractEquals:
+        dblOp = SUBTRACT; op = JSTypes::Minus;
+        goto GenericBinaryEquals;
     case ExprNode::multiplyEquals:
+        dblOp = MULTIPLY; op = JSTypes::Multiply;
+        goto GenericBinaryEquals;
     case ExprNode::divideEquals:
+        dblOp = DIVIDE; op = JSTypes::Divide;
+        goto GenericBinaryEquals;
     case ExprNode::moduloEquals:
+        dblOp = REMAINDER; op = JSTypes::Remainder;
+        goto GenericBinaryEquals;
     case ExprNode::leftShiftEquals:
+        dblOp = SHIFTLEFT; op = JSTypes::ShiftLeft;
+        goto GenericBinaryEquals;
     case ExprNode::rightShiftEquals:
+        dblOp = SHIFTRIGHT; op = JSTypes::ShiftRight;
+        goto GenericBinaryEquals;
     case ExprNode::logicalRightShiftEquals:
+        dblOp = USHIFTRIGHT; op = JSTypes::UShiftRight;
+        goto GenericBinaryEquals;
     case ExprNode::bitwiseAndEquals:
+        dblOp = AND; op = JSTypes::BitAnd;
+        goto GenericBinaryEquals;
     case ExprNode::bitwiseXorEquals:
+        dblOp = XOR; op = JSTypes::BitXor;
+        goto GenericBinaryEquals;
     case ExprNode::bitwiseOrEquals:
+        dblOp = OR; op = JSTypes::BitOr;
+        goto GenericBinaryEquals;
+GenericBinaryEquals:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             Reference ref = genReference(b->op1);
             ret = genExpr(b->op2);            
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), ref.getValue(this), ret);
+            ret = binaryOp(dblOp, op, ref.getValue(this), ret);
             ref.setValue(this, ret);
-/*
-            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = genExpr(b->op2);
-            if (b->op1->getKind() == ExprNode::identifier) {
-                ret = handleIdentifier(static_cast<IdentifierExprNode *>(b->op1), p->getKind(), xcrementOp, ret, NULL, true);
-            }
-            else
-                if (b->op1->getKind() == ExprNode::dot) {
-                    BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    ret = handleDot(lb, p->getKind(), xcrementOp, ret, NULL, true);
-                }
-                else
-                    if (b->op1->getKind() == ExprNode::index) {
-                        InvokeExprNode *i = static_cast<InvokeExprNode *>(b->op1);
-                        TypedRegister base = genExpr(i->op);
-                        TypedRegister index = genExpr(i->pairs->value);   // FIXME, only taking first index
-                        TypedRegister v = getElement(base, index);
-                        ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), v, ret);
-                        setElement(base, index, ret);
-                    }
-                    else
-                        ASSERT("WAH!");
-*/
         }
         break;
     case ExprNode::equal:
+        dblOp = COMPARE_EQ; op = JSTypes::Equal;
+        goto GenericConditionalBranch;
     case ExprNode::lessThan:
+        dblOp = COMPARE_LT; op = JSTypes::Less;
+        goto GenericConditionalBranch;
     case ExprNode::lessThanOrEqual:
+        dblOp = COMPARE_LE; op = JSTypes::LessEqual;
+        goto GenericConditionalBranch;
     case ExprNode::identical:
+        dblOp = STRICT_EQ; op = JSTypes::SpittingImage;
+        goto GenericConditionalBranch;
     case ExprNode::In:
+        dblOp = COMPARE_IN; op = JSTypes::In;
+        goto GenericConditionalBranch;
+GenericConditionalBranch:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            TypedRegister r1 = genExpr(b->op1);
+            TypedRegister r2 = genExpr(b->op2);
+            ret = binaryOp(dblOp, op, r1, r2);
+            if (trueBranch || falseBranch) {
+                if (trueBranch == NULL)
+                    branchFalse(falseBranch, ret);
+                else {
+                    branchTrue(trueBranch, ret);
+                    if (falseBranch)
+                        branch(falseBranch);
+                }
+            }
+        }
+        break;
     case ExprNode::Instanceof:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            ret = binaryOp(INSTANCEOF, JSTypes::None, r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -1256,12 +764,17 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         }
         break;
     case ExprNode::greaterThan:
+        dblOp = COMPARE_LE; op = JSTypes::LessEqual;
+        goto GenericReverseBranch;
     case ExprNode::greaterThanOrEqual:
+        dblOp = COMPARE_LT; op = JSTypes::Less;
+        goto GenericReverseBranch;
+GenericReverseBranch:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
+            ret = binaryOp(dblOp, op, r2, r1);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchFalse(falseBranch, ret);
@@ -1275,12 +788,17 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
         break;
 
     case ExprNode::notEqual:
+        dblOp = COMPARE_EQ; op = JSTypes::Equal;
+        goto GenericNotBranch;
     case ExprNode::notIdentical:
+        dblOp = STRICT_EQ; op = JSTypes::Equal;
+        goto GenericNotBranch;
+GenericNotBranch:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);     // will generate equal/identical code
+            ret = binaryOp(dblOp, op, r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
                     branchTrue(falseBranch, ret);
@@ -1544,6 +1062,141 @@ ICodeModule *ICodeGenerator::genFunction(FunctionDefinition &function, bool isSt
     return icg.complete();
 }
 
+
+JSTypes::Operator simpleLookup[ExprNode::kindsEnd] = {
+   JSTypes::None,                    // none,
+   JSTypes::None,                    // identifier,
+   JSTypes::None,                    // number,
+   JSTypes::None,                    // string,
+   JSTypes::None,                    // regExp
+   JSTypes::None,                    // Null,
+   JSTypes::None,                    // True,
+   JSTypes::None,                    // False,
+   JSTypes::None,                    // This,
+   JSTypes::None,                    // Super,
+   JSTypes::None,                    // parentheses,
+   JSTypes::None,                    // numUnit,
+   JSTypes::None,                    // exprUnit,
+   JSTypes::None,                    // qualify,
+   JSTypes::None,                    // objectLiteral,
+   JSTypes::None,                    // arrayLiteral,
+   JSTypes::None,                    // functionLiteral,
+   JSTypes::None,                    // call,
+   JSTypes::None,                    // New,
+   JSTypes::None,                    // index,
+   JSTypes::None,                    // dot,
+   JSTypes::None,                    // dotClass,
+   JSTypes::None,                    // dotParen,
+   JSTypes::None,                    // at,
+   JSTypes::None,                    // Delete,
+   JSTypes::None,                    // Typeof,
+   JSTypes::None,                    // Eval,
+   JSTypes::None,                    // preIncrement,
+   JSTypes::None,                    // preDecrement,
+   JSTypes::None,                    // postIncrement,
+   JSTypes::None,                    // postDecrement,
+   JSTypes::None,                    // plus,
+   JSTypes::None,                    // minus,
+   JSTypes::Complement,              // complement,
+   JSTypes::None,                    // logicalNot,
+   JSTypes::None,                    // add,
+   JSTypes::None,                    // subtract,
+   JSTypes::Multiply,                // multiply,
+   JSTypes::Divide,                  // divide,
+   JSTypes::Remainder,               // modulo,
+   JSTypes::ShiftLeft,               // leftShift,
+   JSTypes::ShiftRight,              // rightShift,
+   JSTypes::UShiftRight,             // logicalRightShift,
+   JSTypes::BitAnd,                  // bitwiseAnd,
+   JSTypes::BitXor,                  // bitwiseXor,
+   JSTypes::BitOr,                   // bitwiseOr,
+   JSTypes::None,                    // logicalAnd,
+   JSTypes::None,                    // logicalXor,
+   JSTypes::None,                    // logicalOr,
+   JSTypes::Equal,                   // equal,
+   JSTypes::None,                    // notEqual,
+   JSTypes::Less,                    // lessThan,
+   JSTypes::LessEqual,               // lessThanOrEqual,
+   JSTypes::None,                    // greaterThan,
+   JSTypes::None,                    // greaterThanOrEqual,
+   JSTypes::SpittingImage,           // identical,
+   JSTypes::None,                    // notIdentical,
+   JSTypes::In,                      // In,
+   JSTypes::None,                    // Instanceof,
+   JSTypes::None,                    // assignment,
+   JSTypes::None,                    // addEquals,
+   JSTypes::None,                    // subtractEquals,
+   JSTypes::None,                    // multiplyEquals,
+   JSTypes::None,                    // divideEquals,
+   JSTypes::None,                    // moduloEquals,
+   JSTypes::None,                    // leftShiftEquals,
+   JSTypes::None,                    // rightShiftEquals,
+   JSTypes::None,                    // logicalRightShiftEquals,
+   JSTypes::None,                    // bitwiseAndEquals,
+   JSTypes::None,                    // bitwiseXorEquals,
+   JSTypes::None,                    // bitwiseOrEquals,
+   JSTypes::None,                    // logicalAndEquals,
+   JSTypes::None,                    // logicalXorEquals,
+   JSTypes::None,                    // logicalOrEquals,
+   JSTypes::None,                    // conditional,
+   JSTypes::None,                    // comma,
+};
+
+JSTypes::Operator ICodeGenerator::getOperator(uint32 parameterCount, String &name)
+{
+
+    Lexer operatorLexer(mContext->getWorld(), name, widenCString("Operator name"), 0); // XXX get source and line number from function ???
+    
+    const Token &t = operatorLexer.get(false);  // XXX what's correct for preferRegExp parameter ???
+
+    JSTypes::Operator op = simpleLookup[t.getKind()];
+    if (op != JSTypes::None)
+        return op;
+    else {
+        switch (t.getKind()) {
+            default:
+                NOT_REACHED("Illegal operator name");
+
+            case Token::plus:
+                if (parameterCount == 1)
+                    return JSTypes::Posate;
+                else
+                    return JSTypes::Plus;
+            case Token::minus:
+                if (parameterCount == 1)
+                    return JSTypes::Negate;
+                else
+                    return JSTypes::Minus;
+
+            case Token::openParenthesis:
+                return JSTypes::Call;
+            
+            case Token::New:
+                if (parameterCount > 1)
+                    return JSTypes::NewArgs;
+                else
+                    return JSTypes::New;
+            
+            case Token::openBracket:
+                {
+                    const Token &t2 = operatorLexer.get(false);
+                    ASSERT(t2.getKind() == Token::closeBracket);
+                    const Token &t3 = operatorLexer.get(false);
+                    if (t3.getKind() == Token::equal)
+                        return JSTypes::IndexEqual;
+                    else
+                        return JSTypes::Index;
+                }
+                
+            case Token::Delete:
+                return JSTypes::DeleteIndex;
+        }
+    }
+    return JSTypes::None;
+    
+}
+
+
 TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 {
     TypedRegister ret(NotARegister, &None_Type);
@@ -1613,9 +1266,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             bool isConstructor = hasAttribute(f->attributes, mContext->getWorld().identifiers["constructor"]);
                             bool isOperator = hasAttribute(f->attributes, mContext->getWorld().identifiers["operator"]);
                             if (isOperator) {
-                                thisClass->defineOperator(f->function.op, 
-                                                            mContext->getParameterType(f->function, 0), 
-                                                            mContext->getParameterType(f->function, 1), NULL);
+                                ASSERT(f->function.name->getKind() == ExprNode::string);
+                                Operator op = getOperator(mContext->getParameterCount(f->function),
+                                                                (static_cast<StringExprNode *>(f->function.name))->str);
+                                thisClass->defineOperator(op, mContext->getParameterType(f->function, 0), 
+                                                              mContext->getParameterType(f->function, 1), NULL);
                             }
                             else
                                 if (f->function.name->getKind() == ExprNode::identifier) {
@@ -1712,9 +1367,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             ICodeGenerator mcg(classContext, NULL, thisClass, flags);   // method code generator.
                             ICodeModule *icm = mcg.genFunction(f->function, isStatic, isConstructor, superclass);
                             if (isOperator) {
-                                thisClass->defineOperator(f->function.op, 
-                                                            mContext->getParameterType(f->function, 0), 
-                                                            mContext->getParameterType(f->function, 1),  new JSFunction(icm));
+                                ASSERT(f->function.name->getKind() == ExprNode::string);
+                                Operator op = getOperator(mContext->getParameterCount(f->function),
+                                                                (static_cast<StringExprNode *>(f->function.name))->str);
+                                thisClass->defineOperator(op, mContext->getParameterType(f->function, 0), 
+                                                              mContext->getParameterType(f->function, 1),  new JSFunction(icm));
                             }
                             else
                                 if (f->function.name->getKind() == ExprNode::identifier) {
@@ -1960,7 +1617,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             setLabel(nextCaseLabel);
                         nextCaseLabel = getLabel();
                         TypedRegister r = genExpr(c->expr);
-                        TypedRegister eq = binaryOp(COMPARE_EQ, r, sc);
+                        TypedRegister eq = binaryOp(COMPARE_EQ, JSTypes::Equal, r, sc);
                         lastBranch = branchFalse(nextCaseLabel, eq);
                     }
                     else {

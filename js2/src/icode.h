@@ -11,7 +11,6 @@
         BRANCH_FALSE, /* target label, condition */
         BRANCH_INITIALIZED, /* target label, condition */
         BRANCH_TRUE, /* target label, condition */
-        CALL, /* result, target, args */
         CAST, /* dest, rvalue, toType */
         CLASS, /* dest, obj */
         COMPARE_EQ, /* dest, source1, source2 */
@@ -48,7 +47,7 @@
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
-        NEGATE, /* dest, source */
+        NEGATE_DOUBLE, /* dest, source */
         NEW_ARRAY, /* dest */
         NEW_CLASS, /* dest, class */
         NEW_CLOSURE, /* dest, ICodeModule */
@@ -57,7 +56,7 @@
         NOP, /* do nothing and like it */
         NOT, /* dest, source */
         OR, /* dest, source1, source2 */
-        POSATE, /* dest, source */
+        POSATE_DOUBLE, /* dest, source */
         PROP_XCR, /* dest, source, name, value */
         REMAINDER, /* dest, source1, source2 */
         RETURN, /* return value */
@@ -177,22 +176,6 @@
             GenericBranch
             (BRANCH_TRUE, aOp1, aOp2) {};
         /* print() and printOperands() inherited from GenericBranch */
-    };
-
-    class Call : public Instruction_3<TypedRegister, TypedRegister, ArgumentList*> {
-    public:
-        /* result, target, args */
-        Call (TypedRegister aOp1, TypedRegister aOp2, ArgumentList* aOp3) :
-            Instruction_3<TypedRegister, TypedRegister, ArgumentList*>
-            (CALL, aOp1, aOp2, aOp3) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
-            return f;
-        }
     };
 
     class Cast : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -370,18 +353,18 @@
         }
     };
 
-    class DirectCall : public Instruction_3<TypedRegister, JSFunction*, ArgumentList*> {
+    class DirectCall : public Instruction_3<TypedRegister, TypedRegister, ArgumentList*> {
     public:
         /* result, target, args */
-        DirectCall (TypedRegister aOp1, JSFunction* aOp2, ArgumentList* aOp3) :
-            Instruction_3<TypedRegister, JSFunction*, ArgumentList*>
+        DirectCall (TypedRegister aOp1, TypedRegister aOp2, ArgumentList* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, ArgumentList*>
             (DIRECT_CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << "JSFunction" << ", " << mOp3;
+            f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << getRegisterValue(registers, mOp1.first);
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
             return f;
         }
     };
@@ -411,11 +394,11 @@
         }
     };
 
-    class GenericBinaryOP : public Instruction_4<TypedRegister, ExprNode::Kind, TypedRegister, TypedRegister> {
+    class GenericBinaryOP : public Instruction_4<TypedRegister, JSTypes::Operator, TypedRegister, TypedRegister> {
     public:
         /* dest, op, source1, source2 */
-        GenericBinaryOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3, TypedRegister aOp4) :
-            Instruction_4<TypedRegister, ExprNode::Kind, TypedRegister, TypedRegister>
+        GenericBinaryOP (TypedRegister aOp1, JSTypes::Operator aOp2, TypedRegister aOp3, TypedRegister aOp4) :
+            Instruction_4<TypedRegister, JSTypes::Operator, TypedRegister, TypedRegister>
             (GENERIC_BINARY_OP, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GENERIC_BINARY_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3 << ", " << mOp4;
@@ -427,11 +410,11 @@
         }
     };
 
-    class GenericUnaryOP : public Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister> {
+    class GenericUnaryOP : public Instruction_3<TypedRegister, JSTypes::Operator, TypedRegister> {
     public:
         /* dest, op, source */
-        GenericUnaryOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3) :
-            Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister>
+        GenericUnaryOP (TypedRegister aOp1, JSTypes::Operator aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, JSTypes::Operator, TypedRegister>
             (GENERIC_UNARY_OP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GENERIC_UNARY_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
@@ -443,11 +426,11 @@
         }
     };
 
-    class GenericXcrementOP : public Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister> {
+    class GenericXcrementOP : public Instruction_3<TypedRegister, JSTypes::Operator, TypedRegister> {
     public:
         /* dest, op, source */
-        GenericXcrementOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3) :
-            Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister>
+        GenericXcrementOP (TypedRegister aOp1, JSTypes::Operator aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, JSTypes::Operator, TypedRegister>
             (GENERIC_XCREMENT_OP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[GENERIC_XCREMENT_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
@@ -755,14 +738,14 @@
         }
     };
 
-    class Negate : public Instruction_2<TypedRegister, TypedRegister> {
+    class NegateDouble : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Negate (TypedRegister aOp1, TypedRegister aOp2) :
+        NegateDouble (TypedRegister aOp1, TypedRegister aOp2) :
             Instruction_2<TypedRegister, TypedRegister>
-            (NEGATE, aOp1, aOp2) {};
+            (NEGATE_DOUBLE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEGATE] << "\t" << mOp1 << ", " << mOp2;
+            f << opcodeNames[NEGATE_DOUBLE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -891,14 +874,14 @@
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Posate : public Instruction_2<TypedRegister, TypedRegister> {
+    class PosateDouble : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Posate (TypedRegister aOp1, TypedRegister aOp2) :
+        PosateDouble (TypedRegister aOp1, TypedRegister aOp2) :
             Instruction_2<TypedRegister, TypedRegister>
-            (POSATE, aOp1, aOp2) {};
+            (POSATE_DOUBLE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[POSATE] << "\t" << mOp1 << ", " << mOp2;
+            f << opcodeNames[POSATE_DOUBLE] << "\t" << mOp1 << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
@@ -1303,7 +1286,6 @@
         "BRANCH_FALSE       ",
         "BRANCH_INITIALIZED ",
         "BRANCH_TRUE        ",
-        "CALL               ",
         "CAST               ",
         "CLASS              ",
         "COMPARE_EQ         ",
@@ -1340,7 +1322,7 @@
         "MOVE               ",
         "MULTIPLY           ",
         "NAME_XCR           ",
-        "NEGATE             ",
+        "NEGATE_DOUBLE      ",
         "NEW_ARRAY          ",
         "NEW_CLASS          ",
         "NEW_CLOSURE        ",
@@ -1349,7 +1331,7 @@
         "NOP                ",
         "NOT                ",
         "OR                 ",
-        "POSATE             ",
+        "POSATE_DOUBLE      ",
         "PROP_XCR           ",
         "REMAINDER          ",
         "RETURN             ",

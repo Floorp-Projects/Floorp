@@ -110,6 +110,7 @@ namespace VM {
     Formatter& operator<< (Formatter& f, const ArgList& al);
     Formatter& operator<< (Formatter& f, InstructionStream& is);
     Formatter& operator<< (Formatter& f, TypedRegister& r);
+    Formatter& operator<< (Formatter& f, Operator& op);
     
     /********************************************************************/
     

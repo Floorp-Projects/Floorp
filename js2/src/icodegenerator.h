@@ -51,6 +51,10 @@ namespace ICG {
     using namespace JSTypes;
     using namespace JSClasses;
     
+    // forward declarations of classes in this header
+    class ICodeGenerator;
+    class ICodeModule;
+
 
     struct VariableList {       // Maps from variable (parameter) name to a TypedRegister.
                                 // But because we also want to map from a register number to
@@ -123,9 +127,8 @@ namespace ICG {
 
     };
 
-    typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method, ClosureVar } LValueKind;
 
-    class ICodeGenerator;
+    typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method, ClosureVar } LValueKind;
 
     class Reference {
     public:
@@ -146,10 +149,6 @@ namespace ICG {
         TypedRegister getCallTarget(ICodeGenerator *icg);
     };
 
-    class ICodeModule;
-
-    typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
-
     typedef std::vector<const StringAtom *> LabelSet;
     class LabelEntry {
     public:
@@ -166,8 +165,9 @@ namespace ICG {
     };
     typedef std::vector<LabelEntry *> LabelStack;
 
-    Formatter& operator<<(Formatter &f, ICodeModule &i);
 
+    typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
+     
     /****************************************************************/
     
     // An ICodeGenerator provides the interface between the parser and the
@@ -246,9 +246,6 @@ namespace ICG {
 
         void startStatement(uint32 pos)         { (*mInstructionMap)[iCode->size()] = pos; }
 
-        ICodeOp mapExprNodeToICodeOp(ExprNode::Kind kind);
-        ExprNode::Kind mapICodeOpToExprNode(ICodeOp op);
-
         bool isTopLevel()       { return (mFlags & kIsTopLevel) != 0; }
         bool isWithinWith()     { return (mFlags & kIsWithinWith) != 0; }
         bool isStaticMethod()   { return (mFlags & kIsStaticMethod) != 0; }
@@ -258,11 +255,10 @@ namespace ICG {
         bool getVariableByName(const StringAtom &name, Reference &ref);
         bool scanForVariable(const StringAtom &name, Reference &ref);
         bool resolveIdentifier(const StringAtom &name, Reference &ref, bool lvalue);
-//        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
-//        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         ICodeModule *genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superClass);
 
         Reference genReference(ExprNode *p);
+        Operator getOperator(uint32 parameterCount, String &name);
         
         ICodeModule *readFunction(XMLNode *element, JSClass *thisClass);
 
@@ -336,12 +332,12 @@ namespace ICG {
         
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
-        TypedRegister unaryOp(ICodeOp op, TypedRegister source);
+        TypedRegister binaryOp(ICodeOp dblOp, JSTypes::Operator op, TypedRegister source1, TypedRegister source2);
+        TypedRegister unaryOp(JSTypes::Operator op, TypedRegister source);
         TypedRegister invokeCallOp(TypedRegister target, ArgumentList *args);
-        TypedRegister xcrementOp(ICodeOp op, TypedRegister source);
+        TypedRegister xcrementOp(JSTypes::Operator op, TypedRegister source);
         TypedRegister call(TypedRegister target, ArgumentList *args);
-        TypedRegister directCall(JSFunction *target, ArgumentList *args);
+//        TypedRegister directCall(JSFunction *target, ArgumentList *args);
         TypedRegister bindThis(TypedRegister thisArg, TypedRegister target);
         TypedRegister getMethod(TypedRegister thisArg, uint32 slotIndex);
         TypedRegister getClosure(uint32 count);
@@ -394,10 +390,6 @@ namespace ICG {
         Label *getLabel();
 
     };
-
-    Formatter& operator<<(Formatter &f, ICodeGenerator &i);
-    Formatter& operator<<(Formatter &f, ICodeModule &i);
-    Formatter& operator<<(Formatter &f, std::string &s);
 
     class ICodeModule {
     public:
@@ -455,6 +447,10 @@ namespace ICG {
         static uint32 sMaxID;
         
     };
+
+    Formatter& operator<<(Formatter &f, ICodeGenerator &i);
+    Formatter& operator<<(Formatter &f, ICodeModule &i);
+    Formatter& operator<<(Formatter &f, std::string &s);
 
 
 

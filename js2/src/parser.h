@@ -279,7 +279,6 @@ namespace JavaScript {
         };
         
         Prefix prefix;                  // The name's prefix, if any
-        ExprNode::Kind op;              // The operator, if appropriate
         ExprNode *name;                 // The name; nil if omitted
         
         FunctionName(): prefix(normal), name(0) {}

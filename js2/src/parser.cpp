@@ -1116,79 +1116,7 @@ namespace JavaScript
             return 0;
         }
     }
-    
-    ExprNode::Kind
-    Parser::validateOperatorName(const Token &name)
-    {
-        Lexer operatorLexer(getWorld(), copyTokenChars(name),
-                            getReader().sourceLocation); // XXX line number ???
         
-        const Token &t = operatorLexer.get(false);  // XXX preferRegExp ???
-
-        // XXX switch to a table lookup instead
-        switch (t.getKind()) {
-            default:
-                syntaxError("Illegal operator name");
-
-            case Token::complement:
-                return ExprNode::complement;
-            case Token::increment:
-                return ExprNode::postIncrement;
-            case Token::decrement:
-                return ExprNode::postDecrement;
-            case Token::Const:
-                return ExprNode::none;      // XXX
-                
-            case Token::plus:
-                return ExprNode::add;
-            case Token::minus:
-                return ExprNode::subtract;
-            case Token::times:
-                return ExprNode::multiply;
-            case Token::divide:
-                return ExprNode::divide;
-            case Token::modulo:
-                return ExprNode::modulo;
-            case Token::leftShift:
-                return ExprNode::leftShift;
-            case Token::rightShift:
-                return ExprNode::rightShift;
-            case Token::logicalRightShift:
-                return ExprNode::logicalRightShift;
-            case Token::lessThan:
-                return ExprNode::lessThan;
-            case Token::lessThanOrEqual:
-                return ExprNode::lessThanOrEqual;
-            case Token::equal:
-                return ExprNode::equal;
-            case Token::bitwiseAnd:
-                return ExprNode::bitwiseAnd;
-            case Token::bitwiseXor:
-                return ExprNode::bitwiseXor;
-            case Token::bitwiseOr:
-                return ExprNode::bitwiseOr;
-            case Token::identical:
-                return ExprNode::identical;
-            case Token::In:
-                return ExprNode::In;
-                
-            case Token::openParenthesis:
-                return ExprNode::call;
-                
-            case Token::New:
-                return ExprNode::New;
-                
-            case Token::openBracket:
-                return ExprNode::index;
-                
-            case Token::Delete:
-                return ExprNode::Delete;
-        }
-        
-        return ExprNode::none;
-        
-    }
-    
 // Parse and return a statement that takes zero or more initial attributes,
 // which have already been parsed. If noIn is false, allow the in operator.
 //
@@ -1242,21 +1170,6 @@ namespace JavaScript
                 {
                     FunctionStmtNode *f =
                         new(arena) FunctionStmtNode(pos, sKind, attributes);
-/*
-                    if (attributes &&
-                        attributes->contains(Token::Operator)) {
-                            // expecting a string literal matching one
-                            // of the legal operator names
-                        const Token &t2 = lexer.get(false);
-                        if (!t2.hasKind(Token::string))
-                            syntaxError("Operator name (as string "
-                                        "literal) expected");
-                        f->function.prefix = FunctionName::Operator;
-                        f->function.op = validateOperatorName(t2);
-                        f->function.name = NULL;
-                    }
-                    else
-*/
                     parseFunctionName(f->function);
                     parseFunctionSignature(f->function);
                     f->function.body = parseBody(&semicolonState);

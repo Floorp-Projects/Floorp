@@ -131,7 +131,19 @@ $ops{"GENERIC_BINARY_OP"} =
   {
    super  => "Instruction_4",
    rem    => "dest, op, source1, source2",
-   params => [ ("TypedRegister", "ExprNode::Kind", "TypedRegister", "TypedRegister") ]
+   params => [ ("TypedRegister", "JSTypes::Operator", "TypedRegister", "TypedRegister") ]
+  };
+$ops{"GENERIC_UNARY_OP"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, op, source",
+   params => [ ("TypedRegister", "JSTypes::Operator", "TypedRegister") ]
+  };
+$ops{"GENERIC_XCREMENT_OP"} =
+  {
+   super  => "Instruction_3",
+   rem    => "dest, op, source",
+   params => [ ("TypedRegister", "JSTypes::Operator", "TypedRegister") ]
   };
 $ops{"MOVE"} =
   {
@@ -343,8 +355,8 @@ $ops{"INSTANCEOF"} = $binary_op;
 $ops{"BITNOT"}     = $unary_op;
 $ops{"NOT"}        = $unary_op;
 $ops{"TEST"}       = $unary_op;
-$ops{"NEGATE"}     = $unary_op;
-$ops{"POSATE"}     = $unary_op;
+$ops{"NEGATE_DOUBLE"}     = $unary_op;
+$ops{"POSATE_DOUBLE"}     = $unary_op;
 $ops{"BRANCH"} =
   {
    super  => "GenericBranch",
@@ -365,17 +377,17 @@ $ops{"RETURN_VOID"} =
    super => "Instruction",
    rem   => "Return without a value"
   };
-$ops{"CALL"} =
+$ops{"DIRECT_CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
    params => [ ("TypedRegister", "TypedRegister", "ArgumentList*") ]
   };
-$ops{"DIRECT_CALL"} =
+$ops{"INVOKE_CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
-   params => [ ("TypedRegister", "JSFunction*", "ArgumentList*") ]
+   params => [ ("TypedRegister", "TypedRegister", "ArgumentList*") ]
   };
 $ops{"BIND_THIS"} =
   {

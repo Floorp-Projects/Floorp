@@ -92,7 +92,6 @@ Formatter& operator<< (Formatter& f, TypedRegister& r)
 
 Formatter& operator<< (Formatter &f, InstructionStream &is)
 {
-
     for (InstructionIterator i = is.begin(); 
          i != is.end(); i++) {
         /*
@@ -120,6 +119,71 @@ Formatter& operator<< (Formatter &f, InstructionStream &is)
     return f;
 }
 
+
+Formatter& operator<< (Formatter& f, JSTypes::Operator& op)
+{
+    switch (op) {
+    case JSTypes::None:
+    f << "None"; break;
+    case JSTypes::Posate:
+    f << "Posate"; break;
+    case JSTypes::Negate:
+    f << "Negate"; break;
+    case JSTypes::Complement:
+    f << "Complement"; break;
+    case JSTypes::Increment:
+    f << "Increment"; break;
+    case JSTypes::Decrement:
+    f << "Decrement"; break;
+    case JSTypes::Const:
+    f << "Const"; break;
+    case JSTypes::Call:
+    f << "Call"; break;
+    case JSTypes::New:
+    f << "New"; break;
+    case JSTypes::NewArgs:
+    f << "NewArgs"; break;
+    case JSTypes::Index:
+    f << "Index"; break;
+    case JSTypes::IndexEqual:
+    f << "IndexEqual"; break;
+    case JSTypes::DeleteIndex:
+    f << "DeleteIndex"; break;
+    case JSTypes::Plus:
+    f << "Plus"; break;
+    case JSTypes::Minus:
+    f << "Minus"; break;
+    case JSTypes::Multiply:
+    f << "Multiply"; break;
+    case JSTypes::Divide:
+    f << "Divide"; break;
+    case JSTypes::Remainder:
+    f << "Remainder"; break;
+    case JSTypes::ShiftLeft:
+    f << "ShiftLeft"; break;
+    case JSTypes::ShiftRight:
+    f << "ShiftRight"; break;
+    case JSTypes::UShiftRight:
+    f << "UShiftRight"; break;
+    case JSTypes::Less:
+    f << "Less"; break;
+    case JSTypes::LessEqual:
+    f << "LessEqual"; break;
+    case JSTypes::In:
+    f << "In"; break;
+    case JSTypes::Equal:
+    f << "Equal"; break;
+    case JSTypes::SpittingImage:
+    f << "SpittingImage"; break;
+    case JSTypes::BitAnd:
+    f << "BitAnd"; break;
+    case JSTypes::BitXor:
+    f << "BitXor"; break;
+    case JSTypes::BitOr:
+    f << "BitOr"; break;
+    }
+    return f;
+}
 
 } /* namespace VM */
 } /* namespace JavaScript */

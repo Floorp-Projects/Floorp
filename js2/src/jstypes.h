@@ -191,6 +191,39 @@ namespace JSTypes {
 
     Formatter& operator<<(Formatter& f, const JSValue& value);
 
+    typedef enum {
+        None,
+        Posate,
+        Negate,
+        Complement,
+        Increment,
+        Decrement,
+        Const,
+        Call,
+        New,
+        NewArgs,
+        Index,
+        IndexEqual,
+        DeleteIndex,
+        Plus,
+        Minus,
+        Multiply,
+        Divide,
+        Remainder,
+        ShiftLeft,
+        ShiftRight,
+        UShiftRight,
+        Less,
+        LessEqual,
+        In,
+        Equal,
+        SpittingImage,
+        BitAnd,
+        BitXor,
+        BitOr,
+        OperatorCount
+    } Operator;
+
 
 #if defined(XP_MAC)
     // copied from default template parameters in map.

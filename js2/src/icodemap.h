@@ -45,7 +45,7 @@
 namespace JavaScript {
 namespace ICodeASM {
 
-    static uint icodemap_size = 82;
+    static uint icodemap_size = 81;
 
     static struct {
         char *name;
@@ -59,7 +59,6 @@ namespace ICodeASM {
         {"BRANCH_FALSE", {otLabel, otRegister}},
         {"BRANCH_INITIALIZED", {otLabel, otRegister}},
         {"BRANCH_TRUE", {otLabel, otRegister}},
-        {"CALL", {otRegister, otRegister, otArgumentList}},
         {"CAST", {otRegister, otRegister, otRegister}},
         {"CLASS", {otRegister, otRegister}},
         {"COMPARE_EQ", {otRegister, otRegister, otRegister}},
@@ -71,12 +70,12 @@ namespace ICodeASM {
         {"COMPARE_NE", {otRegister, otRegister, otRegister}},
         {"DEBUGGER", {otNone}},
         {"DELETE_PROP", {otRegister, otRegister, otStringAtom}},
-        {"DIRECT_CALL", {otRegister, otJSFunction, otArgumentList}},
+        {"DIRECT_CALL", {otRegister, otRegister, otArgumentList}},
         {"DIVIDE", {otRegister, otRegister, otRegister}},
         {"ELEM_XCR", {otRegister, otRegister, otRegister, otDouble}},
-        {"GENERIC_BINARY_OP", {otRegister, otExprNodeKind, otRegister, otRegister}},
-        {"GENERIC_UNARY_OP", {otRegister, otExprNodeKind, otRegister}},
-        {"GENERIC_XCREMENT_OP", {otRegister, otExprNodeKind, otRegister}},
+        {"GENERIC_BINARY_OP", {otRegister, otJSTypesOperator, otRegister, otRegister}},
+        {"GENERIC_UNARY_OP", {otRegister, otJSTypesOperator, otRegister}},
+        {"GENERIC_XCREMENT_OP", {otRegister, otJSTypesOperator, otRegister}},
         {"GET_CLOSURE", {otRegister, otUInt32}},
         {"GET_ELEMENT", {otRegister, otRegister, otRegister}},
         {"GET_METHOD", {otRegister, otRegister, otUInt32}},
@@ -96,7 +95,7 @@ namespace ICodeASM {
         {"MOVE", {otRegister, otRegister}},
         {"MULTIPLY", {otRegister, otRegister, otRegister}},
         {"NAME_XCR", {otRegister, otStringAtom, otDouble}},
-        {"NEGATE", {otRegister, otRegister}},
+        {"NEGATE_DOUBLE", {otRegister, otRegister}},
         {"NEW_ARRAY", {otRegister}},
         {"NEW_CLASS", {otRegister, otJSClass}},
         {"NEW_CLOSURE", {otRegister, otICodeModule}},
@@ -105,7 +104,7 @@ namespace ICodeASM {
         {"NOP", {otNone}},
         {"NOT", {otRegister, otRegister}},
         {"OR", {otRegister, otRegister, otRegister}},
-        {"POSATE", {otRegister, otRegister}},
+        {"POSATE_DOUBLE", {otRegister, otRegister}},
         {"PROP_XCR", {otRegister, otRegister, otStringAtom, otDouble}},
         {"REMAINDER", {otRegister, otRegister, otRegister}},
         {"RETURN", {otRegister}},
@@ -168,225 +167,222 @@ namespace ICodeASM {
                 i = new BranchTrue (reinterpret_cast<Label*>(node->operand[0].data), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
             case 8:
-                i = new Call (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<ArgumentList*>(node->operand[2].data));
-                break;
-            case 9:
                 i = new Cast (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 10:
+            case 9:
                 i = new Class (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 11:
+            case 10:
                 i = new CompareEQ (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 12:
+            case 11:
                 i = new CompareGE (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 13:
+            case 12:
                 i = new CompareGT (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 14:
+            case 13:
                 i = new CompareIN (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 15:
+            case 14:
                 i = new CompareLE (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 16:
+            case 15:
                 i = new CompareLT (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 17:
+            case 16:
                 i = new CompareNE (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 18:
+            case 17:
                 i = new Debugger ();
                 break;
-            case 19:
+            case 18:
                 i = new DeleteProp (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<const StringAtom*>(node->operand[2].data));
                 break;
-            case 20:
-                i = new DirectCall (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSFunction*>(node->operand[1].data), reinterpret_cast<ArgumentList*>(node->operand[2].data));
+            case 19:
+                i = new DirectCall (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<ArgumentList*>(node->operand[2].data));
                 break;
-            case 21:
+            case 20:
                 i = new Divide (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 22:
+            case 21:
                 i = new ElemXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0), static_cast<double>(node->operand[3].data));
                 break;
+            case 22:
+                i = new GenericBinaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<JSTypes::Operator>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0), TypedRegister(static_cast<Register>(node->operand[3].data), 0));
+                break;
             case 23:
-                i = new GenericBinaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<ExprNode::Kind>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0), TypedRegister(static_cast<Register>(node->operand[3].data), 0));
+                i = new GenericUnaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<JSTypes::Operator>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
             case 24:
-                i = new GenericUnaryOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<ExprNode::Kind>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
+                i = new GenericXcrementOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<JSTypes::Operator>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
             case 25:
-                i = new GenericXcrementOP (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<ExprNode::Kind>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
-                break;
-            case 26:
                 i = new GetClosure (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<uint32>(node->operand[1].data));
                 break;
-            case 27:
+            case 26:
                 i = new GetElement (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 28:
+            case 27:
                 i = new GetMethod (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), static_cast<uint32>(node->operand[2].data));
                 break;
-            case 29:
+            case 28:
                 i = new GetProp (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<const StringAtom*>(node->operand[2].data));
                 break;
-            case 30:
+            case 29:
                 i = new GetSlot (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), static_cast<uint32>(node->operand[2].data));
                 break;
-            case 31:
+            case 30:
                 i = new GetStatic (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSClass*>(node->operand[1].data), static_cast<uint32>(node->operand[2].data));
                 break;
-            case 32:
+            case 31:
                 i = new Instanceof (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 33:
+            case 32:
                 i = new InvokeCall (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<ArgumentList*>(node->operand[2].data));
                 break;
-            case 34:
+            case 33:
                 i = new Jsr (reinterpret_cast<Label*>(node->operand[0].data));
                 break;
-            case 35:
+            case 34:
                 i = new LoadFalse (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 36:
+            case 35:
                 i = new LoadImmediate (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<double>(node->operand[1].data));
                 break;
-            case 37:
+            case 36:
                 i = new LoadName (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<const StringAtom*>(node->operand[1].data));
                 break;
-            case 38:
+            case 37:
                 i = new LoadNull (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 39:
+            case 38:
                 i = new LoadString (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSString*>(node->operand[1].data));
                 break;
-            case 40:
+            case 39:
                 i = new LoadTrue (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 41:
+            case 40:
                 i = new LoadType (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSType*>(node->operand[1].data));
                 break;
-            case 42:
+            case 41:
                 i = new Move (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 43:
+            case 42:
                 i = new Multiply (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 44:
+            case 43:
                 i = new NameXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<const StringAtom*>(node->operand[1].data), static_cast<double>(node->operand[2].data));
                 break;
-            case 45:
-                i = new Negate (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
+            case 44:
+                i = new NegateDouble (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 46:
+            case 45:
                 i = new NewArray (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 47:
+            case 46:
                 i = new NewClass (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSClass*>(node->operand[1].data));
                 break;
-            case 48:
+            case 47:
                 i = new NewClosure (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<ICodeModule*>(node->operand[1].data));
                 break;
-            case 49:
+            case 48:
                 i = new NewFunction (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<ICodeModule*>(node->operand[1].data));
                 break;
-            case 50:
+            case 49:
                 i = new NewObject (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 51:
+            case 50:
                 i = new Nop ();
                 break;
-            case 52:
+            case 51:
                 i = new Not (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 53:
+            case 52:
                 i = new Or (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 54:
-                i = new Posate (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
+            case 53:
+                i = new PosateDouble (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 55:
+            case 54:
                 i = new PropXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), reinterpret_cast<const StringAtom*>(node->operand[2].data), static_cast<double>(node->operand[3].data));
                 break;
-            case 56:
+            case 55:
                 i = new Remainder (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 57:
+            case 56:
                 i = new Return (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 58:
+            case 57:
                 i = new ReturnVoid ();
                 break;
-            case 59:
+            case 58:
                 i = new Rts ();
                 break;
-            case 60:
+            case 59:
                 i = new SaveName (reinterpret_cast<const StringAtom*>(node->operand[0].data), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 61:
+            case 60:
                 i = new SetElement (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 62:
+            case 61:
                 i = new SetProp (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<const StringAtom*>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 63:
+            case 62:
                 i = new SetSlot (TypedRegister(static_cast<Register>(node->operand[0].data), 0), static_cast<uint32>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 64:
+            case 63:
                 i = new SetStatic (reinterpret_cast<JSClass*>(node->operand[0].data), static_cast<uint32>(node->operand[1].data), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 65:
+            case 64:
                 i = new Shiftleft (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 66:
+            case 65:
                 i = new Shiftright (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 67:
+            case 66:
                 i = new SlotXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), static_cast<uint32>(node->operand[2].data), static_cast<double>(node->operand[3].data));
                 break;
-            case 68:
+            case 67:
                 i = new StaticXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), reinterpret_cast<JSClass*>(node->operand[1].data), static_cast<uint32>(node->operand[2].data), static_cast<double>(node->operand[3].data));
                 break;
-            case 69:
+            case 68:
                 i = new StrictEQ (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 70:
+            case 69:
                 i = new StrictNE (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 71:
+            case 70:
                 i = new Subtract (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 72:
+            case 71:
                 i = new Super (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 73:
+            case 72:
                 i = new Test (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0));
                 break;
-            case 74:
+            case 73:
                 i = new Throw (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 75:
+            case 74:
                 i = new Tryin (reinterpret_cast<Label*>(node->operand[0].data), reinterpret_cast<Label*>(node->operand[1].data));
                 break;
-            case 76:
+            case 75:
                 i = new Tryout ();
                 break;
-            case 77:
+            case 76:
                 i = new Ushiftright (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
-            case 78:
+            case 77:
                 i = new VarXcr (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), static_cast<double>(node->operand[2].data));
                 break;
-            case 79:
+            case 78:
                 i = new Within (TypedRegister(static_cast<Register>(node->operand[0].data), 0));
                 break;
-            case 80:
+            case 79:
                 i = new Without ();
                 break;
-            case 81:
+            case 80:
                 i = new Xor (TypedRegister(static_cast<Register>(node->operand[0].data), 0), TypedRegister(static_cast<Register>(node->operand[1].data), 0), TypedRegister(static_cast<Register>(node->operand[2].data), 0));
                 break;
 

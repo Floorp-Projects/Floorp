@@ -456,36 +456,36 @@ void Context::initContext()
 
 }
 
-static JSFunction *getDefaultFunction(ExprNode::Kind op)
+static JSFunction *getDefaultFunction(JSTypes::Operator op)
 {
     switch (op) {
-    case ExprNode::add: return new JSBinaryOperator(add_Default);
-    case ExprNode::subtract: return new JSBinaryOperator(subtract_Default);
-    case ExprNode::multiply: return new JSBinaryOperator(multiply_Default);
-    case ExprNode::divide: return new JSBinaryOperator(divide_Default);
-    case ExprNode::modulo: return new JSBinaryOperator(remainder_Default);
-    case ExprNode::leftShift: return new JSBinaryOperator(shiftLeft_Default);
-    case ExprNode::rightShift: return new JSBinaryOperator(shiftRight_Default);
-    case ExprNode::logicalRightShift: return new JSBinaryOperator(UshiftRight_Default);
-    case ExprNode::bitwiseOr: return new JSBinaryOperator(or_Default);
-    case ExprNode::bitwiseXor: return new JSBinaryOperator(xor_Default);
-    case ExprNode::bitwiseAnd: return new JSBinaryOperator(and_Default);
-    case ExprNode::lessThan: return new JSBinaryOperator(less_Default);
-    case ExprNode::lessThanOrEqual: return new JSBinaryOperator(lessOrEqual_Default);
-    case ExprNode::equal: return new JSBinaryOperator(equal_Default);
-    case ExprNode::identical: return new JSBinaryOperator(identical_Default);
-    case ExprNode::preDecrement: return new JSUnaryOperator(predecrement_Default);
-    case ExprNode::preIncrement: return new JSUnaryOperator(preincrement_Default);
-    case ExprNode::plus: return new JSUnaryOperator(plus_Default);
-    case ExprNode::minus: return new JSUnaryOperator(minus_Default);
-    case ExprNode::complement: return new JSUnaryOperator(complement_Default);
+    case JSTypes::Plus: return new JSBinaryOperator(add_Default);
+    case JSTypes::Minus: return new JSBinaryOperator(subtract_Default);
+    case JSTypes::Multiply: return new JSBinaryOperator(multiply_Default);
+    case JSTypes::Divide: return new JSBinaryOperator(divide_Default);
+    case JSTypes::Remainder: return new JSBinaryOperator(remainder_Default);
+    case JSTypes::ShiftLeft: return new JSBinaryOperator(shiftLeft_Default);
+    case JSTypes::ShiftRight: return new JSBinaryOperator(shiftRight_Default);
+    case JSTypes::UShiftRight: return new JSBinaryOperator(UshiftRight_Default);
+    case JSTypes::BitOr: return new JSBinaryOperator(or_Default);
+    case JSTypes::BitXor: return new JSBinaryOperator(xor_Default);
+    case JSTypes::BitAnd: return new JSBinaryOperator(and_Default);
+    case JSTypes::Less: return new JSBinaryOperator(less_Default);
+    case JSTypes::LessEqual: return new JSBinaryOperator(lessOrEqual_Default);
+    case JSTypes::Equal: return new JSBinaryOperator(equal_Default);
+    case JSTypes::SpittingImage: return new JSBinaryOperator(identical_Default);
+    case JSTypes::Decrement: return new JSUnaryOperator(predecrement_Default);
+    case JSTypes::Increment: return new JSUnaryOperator(preincrement_Default);
+    case JSTypes::Posate: return new JSUnaryOperator(plus_Default);
+    case JSTypes::Negate: return new JSUnaryOperator(minus_Default);
+    case JSTypes::Complement: return new JSUnaryOperator(complement_Default);
     default:
         NOT_REACHED("bad op");
         return NULL;
     }
 }
 
-const JSValue Context::findUnaryOverride(JSValue &operand1, ExprNode::Kind op)
+const JSValue Context::findUnaryOverride(JSValue &operand1, JSTypes::Operator op)
 {
     JSClass *class1 = operand1.isObject() ? dynamic_cast<JSClass*>(operand1.object->getType()) : NULL;
     if (class1) {
@@ -496,7 +496,7 @@ const JSValue Context::findUnaryOverride(JSValue &operand1, ExprNode::Kind op)
     return JSValue(getDefaultFunction(op));
 }
 
-const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op)
+const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, JSTypes::Operator op)
 {
     JSClass *class1 = operand1.isObject() ? dynamic_cast<JSClass*>(operand1.object->getType()) : NULL;
     JSClass *class2 = operand2.isObject() ? dynamic_cast<JSClass*>(operand2.object->getType()) : NULL;
@@ -630,9 +630,9 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
 
             case INVOKE_CALL:
-            case CALL:
+            case DIRECT_CALL:
                 {
-                    Call* call = static_cast<Call*>(instruction);
+                    DirectCall* call = static_cast<DirectCall*>(instruction);
                     JSValue v = (*registers)[op2(call).first];
                     JSFunction *target = NULL;
                     if (v.isFunction())
@@ -789,7 +789,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(gc).first] = cl->getActivation();
                 }
                 break;
-
+/*
             case DIRECT_CALL:
                 {
                     DirectCall* call = static_cast<DirectCall*>(instruction);
@@ -818,7 +818,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         continue;
                     }
                 }
-
+*/
             case RETURN_VOID:
                 {
                     Linkage *linkage = mLinkage;
@@ -1536,15 +1536,15 @@ using JSString throughout.
                     (*registers)[dst(tst).first] = (*registers)[src1(tst).first].toBoolean();
                 }
                 break;
-            case NEGATE:
+            case NEGATE_DOUBLE:
                 {
-                    Negate* neg = static_cast<Negate*>(instruction);
+                    NegateDouble* neg = static_cast<NegateDouble*>(instruction);
                     (*registers)[dst(neg).first] = -(*registers)[src1(neg).first].toNumber().f64;
                 }
                 break;
-            case POSATE:
+            case POSATE_DOUBLE:
                 {
-                    Posate* pos = static_cast<Posate*>(instruction);
+                    PosateDouble* pos = static_cast<PosateDouble*>(instruction);
                     (*registers)[dst(pos).first] = (*registers)[src1(pos).first].toNumber();
                 }
                 break;
@@ -1727,6 +1727,16 @@ JSType *Context::getParameterType(FunctionDefinition &function, int index)
     return NULL;
 }
 
+uint32 Context::getParameterCount(FunctionDefinition &function)
+{
+    uint32 count = 0;
+    VariableBinding *v = function.parameters;
+    while (v) {
+        count++;
+        v = v->next;
+    }
+    return count;
+}
 
 
 Context::Frame* Context::getFrames()
