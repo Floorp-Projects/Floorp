@@ -49,10 +49,10 @@ static void
 Usage(char *progName)
 {
 #define FPS PR_fprintf(PR_STDERR,
-    FPS "Usage:	 %s -i importfile [-d certdir] [-p dbprefix] [-h tokenname]\n",
+    FPS "Usage:	 %s -i importfile [-d certdir] [-P dbprefix] [-h tokenname]\n",
 				 progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
-    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-p dbprefix]\n", progName);
+    FPS "Usage:	 %s -o exportfile -n certname [-d certdir] [-P dbprefix]\n", progName);
     FPS "\t\t [-k slotpwfile | -K slotpw] [-w p12filepwfile | -W p12filepw]\n");
     exit(PK12UERR_USAGE);
 }
@@ -884,7 +884,7 @@ static secuCommandFlag pk12util_options[] =
     { /* opt_Export	       */ 'o', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePWFile     */ 'w', PR_TRUE,	 0, PR_FALSE },
     { /* opt_P12FilePW	       */ 'W', PR_TRUE,	 0, PR_FALSE },
-    { /* opt_DBPrefix	       */ 'p', PR_TRUE,	 0, PR_FALSE }
+    { /* opt_DBPrefix	       */ 'P', PR_TRUE,	 0, PR_FALSE }
 };
 
 int
