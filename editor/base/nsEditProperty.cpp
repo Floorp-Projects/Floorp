@@ -43,6 +43,7 @@ nsIAtom * nsIEditProperty::tt;
 nsIAtom * nsIEditProperty::u;
 // block tags
 nsIAtom * nsIEditProperty::blockquote;
+nsIAtom * nsIEditProperty::br;
 nsIAtom * nsIEditProperty::h1;
 nsIAtom * nsIEditProperty::h2;
 // properties
@@ -56,28 +57,29 @@ void
 nsEditProperty::InstanceInit()
 {
   // tags
-  nsIEditProperty::a =    NS_NewAtom("A");
-  nsIEditProperty::b =    NS_NewAtom("B");
-  nsIEditProperty::big =  NS_NewAtom("BIG");
-  nsIEditProperty::font = NS_NewAtom("FONT");
-  nsIEditProperty::i =    NS_NewAtom("I");
-  nsIEditProperty::span = NS_NewAtom("SPAN");
-  nsIEditProperty::small =NS_NewAtom("SMALL");
-  nsIEditProperty::strike=NS_NewAtom("STRIKE");
-  nsIEditProperty::sub =  NS_NewAtom("SUB");
-  nsIEditProperty::sup =  NS_NewAtom("SUP");
-  nsIEditProperty::tt =   NS_NewAtom("TT");
-  nsIEditProperty::u =    NS_NewAtom("U");
+  nsIEditProperty::a =    NS_NewAtom("a");
+  nsIEditProperty::b =    NS_NewAtom("b");
+  nsIEditProperty::big =  NS_NewAtom("big");
+  nsIEditProperty::font = NS_NewAtom("font");
+  nsIEditProperty::i =    NS_NewAtom("i");
+  nsIEditProperty::span = NS_NewAtom("span");
+  nsIEditProperty::small =NS_NewAtom("small");
+  nsIEditProperty::strike=NS_NewAtom("strike");
+  nsIEditProperty::sub =  NS_NewAtom("sub");
+  nsIEditProperty::sup =  NS_NewAtom("sup");
+  nsIEditProperty::tt =   NS_NewAtom("tt");
+  nsIEditProperty::u =    NS_NewAtom("u");
   // tags
-  nsIEditProperty::blockquote =    NS_NewAtom("BLOCKQUOTE");
-  nsIEditProperty::h1 =    NS_NewAtom("H1");
-  nsIEditProperty::h2 =    NS_NewAtom("H2");
+  nsIEditProperty::blockquote = NS_NewAtom("blockquote");
+  nsIEditProperty::br =    NS_NewAtom("br");
+  nsIEditProperty::h1 =    NS_NewAtom("h1");
+  nsIEditProperty::h2 =    NS_NewAtom("h2");
   // properties
-  nsIEditProperty::color= NS_NewAtom("COLOR");
-  nsIEditProperty::face = NS_NewAtom("FACE");
-  nsIEditProperty::size = NS_NewAtom("SIZE");
+  nsIEditProperty::color= NS_NewAtom("color");
+  nsIEditProperty::face = NS_NewAtom("face");
+  nsIEditProperty::size = NS_NewAtom("size");
   // special
-  nsIEditProperty::allProperties = new nsString("moz_AllProperties");
+  nsIEditProperty::allProperties = new nsString("moz_allproperties");
 }
 
 void
@@ -98,6 +100,7 @@ nsEditProperty::InstanceShutdown()
   NS_IF_RELEASE(nsIEditProperty::u);
   // tags
   NS_IF_RELEASE(nsIEditProperty::blockquote);
+  NS_IF_RELEASE(nsIEditProperty::br);
   NS_IF_RELEASE(nsIEditProperty::h1);
   NS_IF_RELEASE(nsIEditProperty::h2);
   // properties

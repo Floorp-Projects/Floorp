@@ -85,8 +85,6 @@ protected:
   nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
 
   // helper functions
-  static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
-  static PRBool IsEditable(nsIDOMNode *aNode);
   
   /** insert aNode into a new style node of type aTag.
     * aSelection is optional.  If provided, aSelection is set to (aNode, 0)

@@ -19,6 +19,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsEditor.h"
+#include "nsIEditProperty.h"  // to be removed  XXX
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
@@ -41,6 +42,7 @@
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsICaret.h"
 
 #include "nsIEditActionListener.h"
@@ -98,6 +100,7 @@ static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID,     NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIDOMRangeIID,         NS_IDOMRANGE_IID);
+static NS_DEFINE_CID(kCRangeCID,            NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIPresShellIID,        NS_IPRESSHELL_IID);
@@ -106,7 +109,6 @@ static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kITextEditFactoryIID,  NS_ITEXTEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIHTMLEditFactoryIID,  NS_IHTMLEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
-static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 static NS_DEFINE_CID(kTextEditorCID,        NS_TEXTEDITOR_CID);
@@ -144,8 +146,11 @@ static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
+const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
+const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
+
 #ifdef NS_DEBUG_EDITOR
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -324,7 +329,7 @@ nsEditor::~nsEditor()
 
 
 
-//BEGIN nsIEditor interface implementations
+// BEGIN nsEditor core implementation
 
 
 NS_IMPL_ADDREF(nsEditor)
@@ -348,11 +353,6 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIEditorIID)) {
     *aInstancePtr = (void*)(nsIEditor*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIEditorSupportIID)) {
-    *aInstancePtr = (void*)(nsIEditorSupport*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -665,109 +665,6 @@ nsEditor::InsertBreak()
 
 //BEGIN nsEditor Private methods
 
-NS_IMETHODIMP
-nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult)
-{
-  nsresult result=NS_OK;
-
-  if (!mDoc)
-    return NS_ERROR_NULL_POINTER;
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  /* If no node set, get root node */
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMElement> element;
-
-  if (nsnull==aStartNode)
-  {
-    mDoc->GetDocumentElement(getter_AddRefs(element));
-    result = element->QueryInterface(kIDOMNodeIID,getter_AddRefs(node));
-    if (NS_FAILED(result))
-      return result;
-    if (!node)
-      return NS_ERROR_NULL_POINTER;
-  }
-  else
-    node = do_QueryInterface(aStartNode);
-
-  *aResult = nsnull;
-  nsCOMPtr<nsIDOMNode> childNode;
-  result = node->GetFirstChild(getter_AddRefs(childNode));
-  while (childNode)
-  {
-    result = childNode->QueryInterface(kIDOMNodeIID,getter_AddRefs(element));
-    nsAutoString tag;
-    if (NS_SUCCEEDED(result) && (element))
-    {    
-      element->GetTagName(tag);
-      if (PR_TRUE==aTag.Equals(tag))
-      {
-        return (childNode->QueryInterface(kIDOMNodeIID,(void **) aResult)); // does the addref
-      }
-      else
-      {
-        nsresult result = GetFirstNodeOfType(childNode, aTag, aResult);
-        if (nsnull!=*aResult)
-          return result;
-      }
-    }
-    nsCOMPtr<nsIDOMNode> temp = childNode;
-    temp->GetNextSibling(getter_AddRefs(childNode));
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-
-
-NS_IMETHODIMP
-nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
-{
-  if (!aNode || !aRetNode)
-  {
-    NS_NOTREACHED("GetFirstTextNode Failed");
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  PRUint16 mType;
-  PRBool mCNodes;
-
-  nsCOMPtr<nsIDOMNode> answer;
-  
-  aNode->GetNodeType(&mType);
-
-  if (nsIDOMNode::ELEMENT_NODE == mType) {
-    if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
-    {
-      nsCOMPtr<nsIDOMNode> node1;
-      nsCOMPtr<nsIDOMNode> node2;
-
-      if (!NS_SUCCEEDED(aNode->GetFirstChild(getter_AddRefs(node1))))
-      {
-        NS_NOTREACHED("GetFirstTextNode Failed");
-      }
-      while(!answer && node1) 
-      {
-        GetFirstTextNode(node1, getter_AddRefs(answer));
-        node1->GetNextSibling(getter_AddRefs(node2));
-        node1 = node2;
-      }
-    }
-  }
-  else if (nsIDOMNode::TEXT_NODE == mType) {
-    answer = do_QueryInterface(aNode);
-  }
-
-    // OK, now return the answer, if any
-  *aRetNode = answer;
-  if (*aRetNode)
-    NS_IF_ADDREF(*aRetNode);
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
@@ -1510,7 +1407,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
         selectedNode = do_QueryInterface(parentSelectedNode);
         selectedNode->GetParentNode(getter_AddRefs(parentSelectedNode));
         selectedParentNodeAsText->GetLength(&selectedNodeContentCount);
-        nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, indexOfTextNodeInParent);
+        GetChildOffset(selectedNode, parentSelectedNode, indexOfTextNodeInParent);
 
         if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
         {
@@ -1518,7 +1415,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
           result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
           // now get the node's offset in it's parent, and insert the new tag there
           if (NS_SUCCEEDED(result)) {
-            result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+            result = GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
           }
         }
         else 
@@ -1527,7 +1424,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
             offsetOfNewNode = indexOfTextNodeInParent; // insert new node as previous sibling to selection parent
           }
           else {                 // insert new node as last child
-            nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+            GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
             offsetOfNewNode++;    // offsets are 0-based, and we need the index of the new node
           }
         }
@@ -1560,7 +1457,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
               result = SplitNode(selectedNode, offsetOfSelectedNode, getter_AddRefs(newSiblingNode));
               // now get the node's offset in it's parent, and insert the new tag there
               if (NS_SUCCEEDED(result)) {
-                result = nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+                result = GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
               }
             }
             else 
@@ -1569,7 +1466,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
                 offsetOfNewNode = 0; // insert new node as first child
               }
               else {                 // insert new node as last child
-                nsIEditorSupport::GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
+                GetChildOffset(selectedNode, parentSelectedNode, offsetOfNewNode);
                 offsetOfNewNode++;    // offsets are 0-based, and we need the index of the new node
               }
             }
@@ -1821,108 +1718,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   return result;
 }
 
-NS_IMETHODIMP 
-nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
-{
-  nsresult result;
-  *aResultNode = nsnull;
-  // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
-  result = aCurrentNode->GetPreviousSibling(aResultNode);
-  if ((NS_SUCCEEDED(result)) && *aResultNode)
-    return GetRightmostChild(*aResultNode, aResultNode);
-  
-  // otherwise, walk up the parent change until there is a child that comes before 
-  // the ancestor of aCurrentNode.  Then return that node's rightmost child
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
-  do {
-    nsCOMPtr<nsIDOMNode> node(parent);
-    result = node->GetParentNode(getter_AddRefs(parent));
-    if ((NS_SUCCEEDED(result)) && parent)
-    {
-      result = parent->GetPreviousSibling(getter_AddRefs(node));
-      if ((NS_SUCCEEDED(result)) && node)
-      {
-
-        return GetRightmostChild(node, aResultNode);
-      }
-    }
-  } while ((NS_SUCCEEDED(result)) && parent);
-
-  return result;
-}
-
-NS_IMETHODIMP 
-nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
-{
-  nsresult result;
-  *aResultNode = nsnull;
-  // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
-  result = aCurrentNode->GetNextSibling(aResultNode);
-  if ((NS_SUCCEEDED(result)) && *aResultNode)
-    return GetLeftmostChild(*aResultNode, aResultNode);
-  
-  // otherwise, walk up the parent change until there is a child that comes before 
-  // the ancestor of aCurrentNode.  Then return that node's rightmost child
-
-  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
-  do {
-    nsCOMPtr<nsIDOMNode> node(parent);
-    result = node->GetParentNode(getter_AddRefs(parent));
-    if ((NS_SUCCEEDED(result)) && parent)
-    {
-      result = parent->GetNextSibling(getter_AddRefs(node));
-      if ((NS_SUCCEEDED(result)) && node)
-      {
-        return GetLeftmostChild(node, aResultNode);
-      }
-    }
-  } while ((NS_SUCCEEDED(result)) && parent);
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
-{
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
-  PRBool hasChildren;
-  resultNode->HasChildNodes(&hasChildren);
-  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
-  {
-    nsCOMPtr<nsIDOMNode> temp(resultNode);
-    temp->GetLastChild(getter_AddRefs(resultNode));
-    resultNode->HasChildNodes(&hasChildren);
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    *aResultNode = resultNode;
-    NS_ADDREF(*aResultNode);
-  }
-  return result;
-}
-
-NS_IMETHODIMP
-nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
-{
-  nsresult result = NS_OK;
-  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
-  PRBool hasChildren;
-  resultNode->HasChildNodes(&hasChildren);
-  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
-  {
-    nsCOMPtr<nsIDOMNode> temp(resultNode);
-    temp->GetFirstChild(getter_AddRefs(resultNode));
-    resultNode->HasChildNodes(&hasChildren);
-  }
-
-  if (NS_SUCCEEDED(result)) {
-    *aResultNode = resultNode;
-    NS_ADDREF(*aResultNode);
-  }
-  return result;
-}
 
 NS_IMETHODIMP 
 nsEditor::SplitNode(nsIDOMNode * aNode,
@@ -2037,7 +1832,12 @@ NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
   return result;
 }
 
-NS_IMETHODIMP 
+
+// END nsEditor core implementation
+
+// BEGIN nsEditor public static helper methods
+
+nsresult
 nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         PRInt32      aOffset,
                         nsIDOMNode*  aNewLeftNode,
@@ -2113,7 +1913,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
                         nsIDOMNode * aNodeToJoin,
                         nsIDOMNode * aParent,
@@ -2203,7 +2003,8 @@ nsEditor::JoinNodesImpl(nsIDOMNode * aNodeToKeep,
   return result;
 }
 
-nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+nsresult 
+nsEditor::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
 {
   NS_ASSERTION((aChild && aParent), "bad args");
   nsresult result = NS_ERROR_NULL_POINTER;
@@ -2236,8 +2037,478 @@ nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParen
   return result;
 }
 
+// returns the number of things inside aNode.  
+// If aNode is text, returns number of characters. If not, returns number of children nodes.
+nsresult
+nsEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) 
+{
+  aCount = 0;
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+  nsresult result=NS_OK;
+  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+  nodeAsChar = do_QueryInterface(aNode);
+  if (nodeAsChar) {
+    nodeAsChar->GetLength(&aCount);
+  }
+  else
+  {
+    PRBool hasChildNodes;
+    aNode->HasChildNodes(&hasChildNodes);
+    if (PR_TRUE==hasChildNodes)
+    {
+      nsCOMPtr<nsIDOMNodeList>nodeList;
+      result = aNode->GetChildNodes(getter_AddRefs(nodeList));
+      if (NS_SUCCEEDED(result) && nodeList) {
+        nodeList->GetLength(&aCount);
+      }
+    }
+  }
+  return result;
+}
 
-//END nsEditor Private methods
+// content-based inline vs. block query
+nsresult
+nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
+{
+  // this is a content-based implementation
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result;
+  aIsInline = PR_FALSE;
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString tag;
+    result = element->GetTagName(tag);
+    if (NS_SUCCEEDED(result))
+    {
+      nsIAtom *tagAtom = NS_NewAtom(tag);
+      if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
+      if (tagAtom==nsIEditProperty::a      ||
+          tagAtom==nsIEditProperty::b      ||
+          tagAtom==nsIEditProperty::big    ||
+          tagAtom==nsIEditProperty::font   ||
+          tagAtom==nsIEditProperty::i      ||
+          tagAtom==nsIEditProperty::span   ||
+          tagAtom==nsIEditProperty::small  ||
+          tagAtom==nsIEditProperty::strike ||
+          tagAtom==nsIEditProperty::sub    ||
+          tagAtom==nsIEditProperty::sup    ||
+          tagAtom==nsIEditProperty::tt     ||
+          tagAtom==nsIEditProperty::u        )
+      {
+        aIsInline = PR_TRUE;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult
+nsEditor::GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) 
+{
+  nsresult result = NS_OK;
+  if (!aBlockParent) {return NS_ERROR_NULL_POINTER;}
+  *aBlockParent = nsnull;
+  nsCOMPtr<nsIDOMNode>parent;
+  nsCOMPtr<nsIDOMNode>temp;
+  result = aNode->GetParentNode(getter_AddRefs(parent));
+  while (NS_SUCCEEDED(result) && parent)
+  {
+    PRBool isInline;
+    result = IsNodeInline(parent, isInline);
+    if (PR_FALSE==isInline)
+    {
+      parent->QueryInterface(nsIDOMElement::GetIID(), (void**)aBlockParent);
+      break;
+    }
+    result = parent->GetParentNode(getter_AddRefs(temp));
+    parent = do_QueryInterface(temp);
+  }
+  if (gNoisy) { printf("GetBlockParent for %p returning parent %p\n", aNode, *aBlockParent); }
+  return result;
+}
+
+nsresult
+nsEditor::GetBlockSection(nsIDOMNode *aChild,
+                          nsIDOMNode **aLeftNode, 
+                          nsIDOMNode **aRightNode) 
+{
+  nsresult result = NS_OK;
+  if (!aChild || !aLeftNode || !aRightNode) {return NS_ERROR_NULL_POINTER;}
+  *aLeftNode = aChild;
+  *aRightNode = aChild;
+
+  nsCOMPtr<nsIDOMNode>sibling;
+  result = aChild->GetPreviousSibling(getter_AddRefs(sibling));
+  while ((NS_SUCCEEDED(result)) && sibling)
+  {
+    PRBool isInline;
+    IsNodeInline(sibling, isInline);
+    if (PR_FALSE==isInline) 
+    {
+      nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(sibling);
+      if (!nodeAsText) {
+        break;
+      }
+      // XXX: needs some logic to work for other leaf nodes besides text!
+    }
+    *aLeftNode = sibling;
+    result = (*aLeftNode)->GetPreviousSibling(getter_AddRefs(sibling)); 
+  }
+  NS_ADDREF((*aLeftNode));
+  // now do the right side
+  result = aChild->GetNextSibling(getter_AddRefs(sibling));
+  while ((NS_SUCCEEDED(result)) && sibling)
+  {
+    PRBool isInline;
+    IsNodeInline(sibling, isInline);
+    if (PR_FALSE==isInline) 
+    {
+      nsCOMPtr<nsIDOMCharacterData>nodeAsText = do_QueryInterface(sibling);
+      if (!nodeAsText) {
+        break;
+      }
+    }
+    *aRightNode = sibling;
+    result = (*aRightNode)->GetNextSibling(getter_AddRefs(sibling)); 
+  }
+  NS_ADDREF((*aRightNode));
+  if (gNoisy) { printf("GetBlockSection returning %p %p\n", 
+                      (*aLeftNode), (*aRightNode)); }
+
+  return result;
+}
+
+nsresult
+nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSections) 
+{
+  if (!aRange || !aSections) {return NS_ERROR_NULL_POINTER;}
+
+  nsresult result;
+  nsCOMPtr<nsIContentIterator>iter;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              kIContentIteratorIID, getter_AddRefs(iter));
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    nsCOMPtr<nsIDOMRange> lastRange;
+    iter->Init(aRange);
+    nsCOMPtr<nsIContent> currentContent;
+    iter->CurrentNode(getter_AddRefs(currentContent));
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(currentContent);
+      if (currentNode)
+      {
+        nsCOMPtr<nsIAtom> currentContentTag;
+        currentContent->GetTag(*getter_AddRefs(currentContentTag));
+        // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
+        if (nsIEditProperty::br==currentContentTag)
+        {
+          lastRange = do_QueryInterface(nsnull);
+        }
+        else
+        {
+          PRBool isInlineOrText;
+          result = IsNodeInline(currentNode, isInlineOrText);
+          if (PR_FALSE==isInlineOrText)
+          {
+            PRUint16 nodeType;
+            currentNode->GetNodeType(&nodeType);
+            if (nsIDOMNode::TEXT_NODE == nodeType) {
+              isInlineOrText = PR_TRUE;
+            }
+          }
+          if (PR_TRUE==isInlineOrText)
+          {
+            nsCOMPtr<nsIDOMNode>leftNode;
+            nsCOMPtr<nsIDOMNode>rightNode;
+            result = GetBlockSection(currentNode,
+                                     getter_AddRefs(leftNode),
+                                     getter_AddRefs(rightNode));
+            if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", currentNode.get(), leftNode.get(), rightNode.get());}
+            if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
+            {
+              // add range to the list if it doesn't overlap with the previous range
+              PRBool addRange=PR_TRUE;
+              if (lastRange)
+              {
+                nsCOMPtr<nsIDOMNode> lastStartNode;
+                nsCOMPtr<nsIDOMElement> blockParentOfLastStartNode;
+                lastRange->GetStartParent(getter_AddRefs(lastStartNode));
+                result = GetBlockParent(lastStartNode, getter_AddRefs(blockParentOfLastStartNode));
+                if ((NS_SUCCEEDED(result)) && blockParentOfLastStartNode)
+                {
+                  if (gNoisy) {printf("lastStartNode %p has block parent %p\n", lastStartNode.get(), blockParentOfLastStartNode.get());}
+                  nsCOMPtr<nsIDOMElement> blockParentOfLeftNode;
+                  result = GetBlockParent(leftNode, getter_AddRefs(blockParentOfLeftNode));
+                  if ((NS_SUCCEEDED(result)) && blockParentOfLeftNode)
+                  {
+                    if (gNoisy) {printf("leftNode %p has block parent %p\n", leftNode.get(), blockParentOfLeftNode.get());}
+                    if (blockParentOfLastStartNode==blockParentOfLeftNode) {
+                      addRange = PR_FALSE;
+                    }
+                  }
+                }
+              }
+              if (PR_TRUE==addRange) 
+              {
+                if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
+                nsCOMPtr<nsIDOMRange> range;
+                result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
+                                                            kIDOMRangeIID, getter_AddRefs(range));
+                if ((NS_SUCCEEDED(result)) && range)
+                { // initialize the range
+                  range->SetStart(leftNode, 0);
+                  range->SetEnd(rightNode, 0);
+                  aSections->AppendElement(range);
+                  lastRange = do_QueryInterface(range);
+                }
+              }        
+            }
+          }
+        }
+      }
+      /* do not check result here, and especially do not return the result code.
+       * we rely on iter->IsDone to tell us when the iteration is complete
+       */
+      iter->Next();
+      iter->CurrentNode(getter_AddRefs(currentContent));
+    }
+  }
+  return result;
+}
+
+nsresult
+nsEditor::IntermediateNodesAreInline(nsIDOMRange *aRange,
+                                     nsIDOMNode  *aStartNode, 
+                                     PRInt32      aStartOffset, 
+                                     nsIDOMNode  *aEndNode,
+                                     PRInt32      aEndOffset,
+                                     PRBool      &aResult) 
+{
+  aResult = PR_TRUE; // init out param.  we assume the condition is true unless we find a node that violates it
+  if (!aStartNode || !aEndNode || !aRange) { return NS_ERROR_NULL_POINTER; }
+
+  nsCOMPtr<nsIContentIterator>iter;
+  nsresult result;
+  result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                              kIContentIteratorIID, getter_AddRefs(iter));
+  //XXX: maybe CreateInstance is expensive, and I should keep around a static iter?  
+  //     as long as this method can't be called recursively or re-entrantly!
+
+  if ((NS_SUCCEEDED(result)) && iter)
+  {
+    nsCOMPtr<nsIContent>startContent;
+    startContent = do_QueryInterface(aStartNode);
+    nsCOMPtr<nsIContent>endContent;
+    endContent = do_QueryInterface(aEndNode);
+    if (startContent && endContent)
+    {
+      iter->Init(aRange);
+      nsCOMPtr<nsIContent> content;
+      iter->CurrentNode(getter_AddRefs(content));
+      while (NS_COMFALSE == iter->IsDone())
+      {
+        if ((content.get() != startContent.get()) &&
+            (content.get() != endContent.get()))
+        {
+          nsCOMPtr<nsIDOMNode>currentNode;
+          currentNode = do_QueryInterface(content);
+          PRBool isInline=PR_FALSE;
+          IsNodeInline(currentNode, isInline);
+          if (PR_FALSE==isInline)
+          {
+            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+            nodeAsText = do_QueryInterface(currentNode);
+            if (!nodeAsText)  // text nodes don't count in this check, so ignore them
+            {
+              aResult = PR_FALSE;
+              break;
+            }
+          }
+        }
+        /* do not check result here, and especially do not return the result code.
+         * we rely on iter->IsDone to tell us when the iteration is complete
+         */
+        iter->Next();
+        iter->CurrentNode(getter_AddRefs(content));
+      }
+    }
+  }
+
+  return result;
+}
+
+
+nsresult 
+nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result;
+  *aResultNode = nsnull;
+  // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
+  result = aCurrentNode->GetPreviousSibling(aResultNode);
+  if ((NS_SUCCEEDED(result)) && *aResultNode)
+    return GetRightmostChild(*aResultNode, aResultNode);
+  
+  // otherwise, walk up the parent change until there is a child that comes before 
+  // the ancestor of aCurrentNode.  Then return that node's rightmost child
+
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
+  do {
+    nsCOMPtr<nsIDOMNode> node(parent);
+    result = node->GetParentNode(getter_AddRefs(parent));
+    if ((NS_SUCCEEDED(result)) && parent)
+    {
+      result = parent->GetPreviousSibling(getter_AddRefs(node));
+      if ((NS_SUCCEEDED(result)) && node)
+      {
+
+        return GetRightmostChild(node, aResultNode);
+      }
+    }
+  } while ((NS_SUCCEEDED(result)) && parent);
+
+  return result;
+}
+
+nsresult 
+nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result;
+  *aResultNode = nsnull;
+  // if aCurrentNode has a right sibling, return that sibling's leftmost child (or itself if it has no children)
+  result = aCurrentNode->GetNextSibling(aResultNode);
+  if ((NS_SUCCEEDED(result)) && *aResultNode)
+    return GetLeftmostChild(*aResultNode, aResultNode);
+  
+  // otherwise, walk up the parent change until there is a child that comes before 
+  // the ancestor of aCurrentNode.  Then return that node's rightmost child
+
+  nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
+  do {
+    nsCOMPtr<nsIDOMNode> node(parent);
+    result = node->GetParentNode(getter_AddRefs(parent));
+    if ((NS_SUCCEEDED(result)) && parent)
+    {
+      result = parent->GetNextSibling(getter_AddRefs(node));
+      if ((NS_SUCCEEDED(result)) && node)
+      {
+        return GetLeftmostChild(node, aResultNode);
+      }
+    }
+  } while ((NS_SUCCEEDED(result)) && parent);
+
+  return result;
+}
+
+nsresult
+nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
+  PRBool hasChildren;
+  resultNode->HasChildNodes(&hasChildren);
+  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
+  {
+    nsCOMPtr<nsIDOMNode> temp(resultNode);
+    temp->GetLastChild(getter_AddRefs(resultNode));
+    resultNode->HasChildNodes(&hasChildren);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    *aResultNode = resultNode;
+    NS_ADDREF(*aResultNode);
+  }
+  return result;
+}
+
+nsresult
+nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMNode> resultNode(do_QueryInterface(aCurrentNode));
+  PRBool hasChildren;
+  resultNode->HasChildNodes(&hasChildren);
+  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
+  {
+    nsCOMPtr<nsIDOMNode> temp(resultNode);
+    temp->GetFirstChild(getter_AddRefs(resultNode));
+    resultNode->HasChildNodes(&hasChildren);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    *aResultNode = resultNode;
+    NS_ADDREF(*aResultNode);
+  }
+  return result;
+}
+
+PRBool 
+nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
+{
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString tag;
+    element->GetTagName(tag);
+    if (tag.Equals(aTag->GetUnicode()))
+    {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+PRBool 
+nsEditor::IsEditable(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString att(kMOZEditorBogusNodeAttr);
+    nsAutoString val;
+    (void)element->GetAttribute(att, val);
+    if (val.Equals(kMOZEditorBogusNodeValue)) {
+      return PR_FALSE;
+    }
+    else {
+      return PR_TRUE;
+    }
+  }
+  else
+  { 
+    nsCOMPtr<nsIDOMCharacterData>text;
+    text = do_QueryInterface(aNode);
+    if (text)
+    {
+      nsAutoString data;
+      text->GetData(data);
+      PRUint32 length = data.Length();
+      if (0==length) {
+        return PR_FALSE;
+      }
+      // if the node contains only newlines, it's not editable
+      PRUint32 i;
+      for (i=0; i<length; i++)
+      {
+        if ('\n'!=data.CharAt(0)) {
+          return PR_TRUE;
+        }
+      }
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+//END nsEditor static utility methods
+
+
 
 void nsEditor::HACKForceRedraw()
 {
@@ -2398,42 +2669,96 @@ nsEditor::DebugDumpContent() const
   return NS_OK;
 }
 
-//END nsEditor Private methods
-
-/* ----- TEST METHODS ----- */
-// Methods defined here are TEMPORARY
-
-/* ORIGINAL version by Steve - KEEP FOR REFERENCE
-NS_IMETHODIMP GetColIndexForCell(nsIPresShell *aPresShell, nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
+nsresult
+nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode, 
+                             const nsString &aTag, 
+                             nsIDOMNode    **aResult)
 {
-  aCellIndex=0; // initialize out param
-  nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
-  if ((nsnull!=aCellNode) && (nsnull!=aPresShell))
-  { // get the content interface
-    nsCOMPtr<nsIContent> nodeAsContent(aCellNode);
-    if (nodeAsContent)
-    { // get the frame from the content interface
-      nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
-      result = aPresShell->GetLayoutObjectFor(nodeAsContent, &layoutObject);
-      if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
-      { // get the table cell interface from the frame
-        nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
-        result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
-        if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
-        { // get the index
-          result = cellLayoutObject->GetColIndex(aCellIndex);
-        }
+  nsresult result=NS_OK;
+
+  if (!aStartNode)
+    return NS_ERROR_NULL_POINTER;
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMElement> element;
+  *aResult = nsnull;
+  nsCOMPtr<nsIDOMNode> childNode;
+  result = aStartNode->GetFirstChild(getter_AddRefs(childNode));
+  while (childNode)
+  {
+    result = childNode->QueryInterface(kIDOMNodeIID,getter_AddRefs(element));
+    nsAutoString tag;
+    if (NS_SUCCEEDED(result) && (element))
+    {    
+      element->GetTagName(tag);
+      if (PR_TRUE==aTag.Equals(tag))
+      {
+        return (childNode->QueryInterface(kIDOMNodeIID,(void **) aResult)); // does the addref
+      }
+      else
+      {
+        nsresult result = GetFirstNodeOfType(childNode, aTag, aResult);
+        if (nsnull!=*aResult)
+          return result;
+      }
+    }
+    nsCOMPtr<nsIDOMNode> temp = childNode;
+    temp->GetNextSibling(getter_AddRefs(childNode));
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
+{
+  if (!aNode || !aRetNode)
+  {
+    NS_NOTREACHED("GetFirstTextNode Failed");
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  PRUint16 mType;
+  PRBool mCNodes;
+
+  nsCOMPtr<nsIDOMNode> answer;
+  
+  aNode->GetNodeType(&mType);
+
+  if (nsIDOMNode::ELEMENT_NODE == mType) {
+    if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
+    {
+      nsCOMPtr<nsIDOMNode> node1;
+      nsCOMPtr<nsIDOMNode> node2;
+
+      if (!NS_SUCCEEDED(aNode->GetFirstChild(getter_AddRefs(node1))))
+      {
+        NS_NOTREACHED("GetFirstTextNode Failed");
+      }
+      while(!answer && node1) 
+      {
+        GetFirstTextNode(node1, getter_AddRefs(answer));
+        node1->GetNextSibling(getter_AddRefs(node2));
+        node1 = node2;
       }
     }
   }
-  else {
-    result = NS_ERROR_NULL_POINTER;
+  else if (nsIDOMNode::TEXT_NODE == mType) {
+    answer = do_QueryInterface(aNode);
   }
-  return result;
-}
-*/
 
-/* ----- END TEST METHODS ----- */
+    // OK, now return the answer, if any
+  *aRetNode = answer;
+  if (*aRetNode)
+    NS_IF_ADDREF(*aRetNode);
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+//END nsEditor Private methods
 
 NS_IMETHODIMP nsEditor::DoInitialPreeeditInsert(const nsString& aStringToInsert)
 {
@@ -2601,3 +2926,4 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
   EndTransaction();
   return result;
 }
+

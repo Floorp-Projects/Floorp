@@ -145,39 +145,6 @@ protected:
                               const nsString  *aAttributes, 
                               PRBool          &aIsSet) const;
 
-  /** returns PR_TRUE in out-param aIsInline if aNode is inline as defined by HTML DTD */
-  NS_IMETHOD IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const;
-
-  /** returns the closest block parent of aNode, not including aNode itself.
-    * can return null, for example if aNode is in a document fragment.
-    * @param aNode        The node whose parent we seek.
-    * @param aBlockParent [OUT] The block parent, if any.
-    * @return a success value unless an unexpected error occurs.
-    */
-  NS_IMETHOD GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent) const;
-
-  NS_IMETHOD GetBlockDelimitedContent(nsIDOMNode *aChild,
-                                      nsIDOMNode **aLeftNode, 
-                                      nsIDOMNode **aRightNode) const;
-
-  NS_IMETHOD GetBlockRanges(nsIDOMRange *aRange, nsISupportsArray *aSubRanges) const;
-
-  /** returns PR_TRUE in out-param aResult if all nodes between (aStartNode, aStartOffset)
-    * and (aEndNode, aEndOffset) are inline as defined by HTML DTD. 
-    */
-  NS_IMETHOD IntermediateNodesAreInline(nsIDOMRange  *aRange,
-                                        nsIDOMNode   *aStartNode, 
-                                        PRInt32       aStartOffset, 
-                                        nsIDOMNode   *aEndNode,
-                                        PRInt32       aEndOffset,
-                                        PRBool       &aResult) const;
-
-  /** returns the number of things inside aNode in the out-param aCount.  
-    * If aNode is text, returns number of characters. 
-    * If not, returns number of children nodes.
-    */
-  NS_IMETHOD GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) const;
-
   /** Moves the content between (aNode, aStartOffset) and (aNode, aEndOffset)
     * into aNewParentNode, splitting aNode as necessary to maintain the relative
     * position of all leaf content.

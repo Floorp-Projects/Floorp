@@ -226,9 +226,9 @@ public:
    * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
    * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
    */
-  NS_IMETHOD SplitNode(nsIDOMNode * aExistingRightNode,
+  NS_IMETHOD SplitNode(nsIDOMNode  *aExistingRightNode,
                        PRInt32      aOffset,
-                       nsIDOMNode ** aNewLeftNode)=0;
+                       nsIDOMNode **aNewLeftNode)=0;
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
@@ -333,29 +333,28 @@ public:
     * What if no text is selected?
     * What about mixed selections?
     * What are the clipboard formats?
-   */
+    */
   NS_IMETHOD Cut()=0;
 
   /** copy the currently selected text, putting it into the OS clipboard
     * What if no text is selected?
     * What about mixed selections?
     * What are the clipboard formats?
-   */
+    */
   NS_IMETHOD Copy()=0;
   
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
-   */
+    */
   NS_IMETHOD Paste()=0;
 
-  /** add an EditActionListener to the editors list of listeners.
-   */
+  /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
 
-  /** Remove an EditActionListener from the editor's list of listeners.
-   */
+  /** Remove an EditActionListener from the editor's list of listeners. */
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener)=0;
 
+  /** Dumps a text representation of the content tree to standard out */
   NS_IMETHOD DebugDumpContent() const =0;
 
 };

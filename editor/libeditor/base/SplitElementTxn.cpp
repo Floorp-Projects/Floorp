@@ -17,10 +17,10 @@
  */
 
 #include "SplitElementTxn.h"
+#include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIEditorSupport.h"
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -28,7 +28,6 @@ static PRBool gNoisy = PR_FALSE;
 static const PRBool gNoisy = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 
 // note that aEditor is not refcounted
 SplitElementTxn::SplitElementTxn()
@@ -69,19 +68,14 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
     // insert the new node
     if ((NS_SUCCEEDED(result)) && (mParent))
     {
-      nsCOMPtr<nsIEditorSupport> editor;
-      result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-      if (NS_SUCCEEDED(result) && editor) 
+      result = nsEditor::SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
+      if (NS_SUCCEEDED(result) && mNewLeftNode)
       {
-        result = editor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
-        if (NS_SUCCEEDED(result) && mNewLeftNode)
+        nsCOMPtr<nsIDOMSelection>selection;
+        mEditor->GetSelection(getter_AddRefs(selection));
+        if (selection)
         {
-          nsCOMPtr<nsIDOMSelection>selection;
-          mEditor->GetSelection(getter_AddRefs(selection));
-          if (selection)
-          {
-            selection->Collapse(mNewLeftNode, mOffset);
-          }
+          selection->Collapse(mNewLeftNode, mOffset);
         }
       }
       else {
@@ -105,25 +99,20 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
 
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result;
-  nsCOMPtr<nsIEditorSupport> editor;
-  result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
-  if (NS_SUCCEEDED(result) && editor) 
+  result = nsEditor::JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+  if (gNoisy) 
+  { 
+    printf("** after join left child node %p into right node %p\n", mNewLeftNode.get(), mExistingRightNode.get());
+    if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
+  }
+  if (NS_SUCCEEDED(result))
   {
-    result = editor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
-    if (gNoisy) 
-    { 
-      printf("** after join left child node %p into right node %p\n", mNewLeftNode.get(), mExistingRightNode.get());
-      if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
-    }
-    if (NS_SUCCEEDED(result))
+    if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
+    nsCOMPtr<nsIDOMSelection>selection;
+    mEditor->GetSelection(getter_AddRefs(selection));
+    if (selection)
     {
-      if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
-      nsCOMPtr<nsIDOMSelection>selection;
-      mEditor->GetSelection(getter_AddRefs(selection));
-      if (selection)
-      {
-        selection->Collapse(mExistingRightNode, mOffset);
-      }
+      selection->Collapse(mExistingRightNode, mOffset);
     }
   }
   else {
