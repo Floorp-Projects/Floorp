@@ -299,6 +299,7 @@ CheckFinalReturn(JSParseNode *pn)
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
         ok = JS_TRUE;
+        hasDefault = JS_FALSE;
         for (pn2 = pn->pn_kid2->pn_head; ok && pn2; pn2 = pn2->pn_next) {
             if (pn2->pn_type == TOK_DEFAULT)
                 hasDefault = JS_TRUE;
@@ -665,23 +666,23 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                          : "")) {
             return NULL;
         }
-        if (!rewrite)
-            return pn;
-        pn->pn_type = TOK_EQOP;
-        pn->pn_op = (JSOp)cx->jsop_eq;
-        pn2 = pn->pn_left;
-        switch (pn2->pn_op) {
-          case JSOP_SETNAME:
-            pn2->pn_op = JSOP_NAME;
-            break;
-          case JSOP_SETPROP:
-            pn2->pn_op = JSOP_GETPROP;
-            break;
-          case JSOP_SETELEM:
-            pn2->pn_op = JSOP_GETELEM;
-            break;
-          default:
-            JS_ASSERT(0);
+        if (rewrite) {
+            pn->pn_type = TOK_EQOP;
+            pn->pn_op = (JSOp)cx->jsop_eq;
+            pn2 = pn->pn_left;
+            switch (pn2->pn_op) {
+              case JSOP_SETNAME:
+                pn2->pn_op = JSOP_NAME;
+                break;
+              case JSOP_SETPROP:
+                pn2->pn_op = JSOP_GETPROP;
+                break;
+              case JSOP_SETELEM:
+                pn2->pn_op = JSOP_GETELEM;
+                break;
+              default:
+                JS_ASSERT(0);
+            }
         }
     }
     return pn;
@@ -2151,6 +2152,7 @@ SetIncOpKid(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
       default:
         JS_ASSERT(0);
+        op = JSOP_NOP;
     }
     pn->pn_op = op;
     return JS_TRUE;
