@@ -123,6 +123,7 @@ EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_MOZLIBNAME,xpcom_compat gkgfx rdfutil_s) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
+	$(TK_LIBS) \
 	$(NULL)
 endif # meta_mail
 
@@ -144,13 +145,22 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
-	$(STATIC_EXTRA_DSO_LIBS) \
+	$(EXTRA_DSO_LIBS) \
 	$(STATIC_EXTRA_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
+	
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+OS_LIBS	+= -framework QuickTime
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+OS_LIBS	+= -framework Cocoa
+endif
+
 endif # meta_mozcomps
 
 endif # MOZ_META_COMPONENTS

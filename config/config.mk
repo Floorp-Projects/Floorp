@@ -456,6 +456,14 @@ _ENABLE_PIC=1
 endif
 
 #
+# Force PIC if we're generating the mozcomps meta module
+#
+
+ifneq (,$(findstring mozcomps, $(MOZ_META_COMPONENTS)))
+_ENABLE_PIC=1
+endif
+
+#
 # Disable PIC if necessary
 #
 
