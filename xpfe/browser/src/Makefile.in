@@ -79,6 +79,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/scrollThumb.gif \
 	$(srcdir)/scrollThumb_mo.gif \
 	$(srcdir)/scrollThumb_dis.gif \
+	$(srcdir)/tooltip.js \
 	$(NULL)
 
 install:: 
