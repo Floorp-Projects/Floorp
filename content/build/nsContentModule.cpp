@@ -192,7 +192,7 @@ Shutdown(nsIModule* aSelf)
 
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
-    
+
   // Release all of our atoms
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
@@ -210,6 +210,8 @@ Shutdown(nsIModule* aSelf)
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
 
   nsContentUtils::Shutdown();
+
+  NS_NameSpaceManagerShutdown();
 }
 
 extern nsresult NS_NewSelection(nsIFrameSelection** aResult);

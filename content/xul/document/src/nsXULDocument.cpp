@@ -6870,43 +6870,37 @@ public:
     // nsIElementFactory interface
     NS_IMETHOD CreateInstanceByTag(nsINodeInfo *aNodeInfo, nsIContent** aResult);
 
-    static PRUint32 gRefCnt;
+    static PRBool gIsInitialized;
     static PRInt32 kNameSpaceID_XUL;
-    static nsINameSpaceManager* gNameSpaceManager;
 };
 
-PRUint32 XULElementFactoryImpl::gRefCnt = 0;
+PRBool XULElementFactoryImpl::gIsInitialized = PR_FALSE;
 PRInt32 XULElementFactoryImpl::kNameSpaceID_XUL;
-nsINameSpaceManager* XULElementFactoryImpl::gNameSpaceManager = nsnull;
 
 XULElementFactoryImpl::XULElementFactoryImpl()
 {
     NS_INIT_REFCNT();
-    gRefCnt++;
-    if (gRefCnt == 1) {
-        nsresult rv =
-            nsServiceManager::GetService(kNameSpaceManagerCID,
-                                         NS_GET_IID(nsINameSpaceManager),
-                                         (nsISupports**) &gNameSpaceManager);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
-        if (NS_FAILED(rv)) return;
+
+    if (!gIsInitialized) {
+        nsCOMPtr<nsINameSpaceManager> nsmgr =
+            do_GetService(kNameSpaceManagerCID);
+
+        NS_ASSERTION(nsmgr, "unable to get namespace manager");
+        if (!nsmgr)
+            return;
 
 #define XUL_NAMESPACE_URI \
     "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 
-        static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
-        gNameSpaceManager->
-            RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI),
-                              kNameSpaceID_XUL);
+        nsmgr->RegisterNameSpace(NS_ConvertASCIItoUCS2(XUL_NAMESPACE_URI),
+                                 kNameSpaceID_XUL);
+
+        gIsInitialized = PR_TRUE;
     }
 }
 
 XULElementFactoryImpl::~XULElementFactoryImpl()
 {
-    gRefCnt--;
-    if (gRefCnt == 0) {
-        NS_IF_RELEASE(gNameSpaceManager);
-    }
 }
 
 
