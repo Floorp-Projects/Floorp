@@ -93,6 +93,8 @@ protected:
   
   PRBool        SelectionIsCollapsed();
   
+  PRBool        XULNodeExists(const char* nodeID);
+  
   nsresult      SetNodeAttribute(const char* nodeID, const char* attributeName, const nsString& newValue);
   nsresult      UnsetNodeAttribute(const char* nodeID, const char* attributeName);
 
@@ -116,6 +118,15 @@ protected:
   nsIDOMWindow*       mDOMWindow;   // nsIDOMWindow used for calling UpdateCommands
   
   nsCOMPtr<nsITimer>  mUpdateTimer;
+  
+  // what we need to update
+  PRPackedBool  mUpdateParagraph;
+  PRPackedBool  mUpdateFont;
+  PRPackedBool  mUpdateList;
+  
+  PRPackedBool  mUpdateBold;
+  PRPackedBool  mUpdateItalics;
+  PRPackedBool  mUpdateUnderline;
   
   // current state
   PRInt8        mBoldState;
