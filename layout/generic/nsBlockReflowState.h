@@ -3844,7 +3844,10 @@ nsBaseIBFrame::Paint(nsIPresContext&      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // Only paint the border and background if we're visible
-  if ((eFramePaintLayer_Underlay == aWhichLayer) && disp->mVisible) {
+  if (disp->mVisible &&
+      (((0 != (BLOCK_IS_INLINE & mFlags)) &&
+        (eFramePaintLayer_Content == aWhichLayer)) ||
+       (eFramePaintLayer_Underlay == aWhichLayer))) {
     PRIntn skipSides = GetSkipSides();
     const nsStyleColor* color = (const nsStyleColor*)
       mStyleContext->GetStyleData(eStyleStruct_Color);
