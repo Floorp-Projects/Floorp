@@ -31,6 +31,8 @@
   var installedplugins_label = "Installed plug-ins";
   var nopluginsareinstalled_label = "No plug-ins are installed";
   var findmore_label = "Find more information about browser plug-ins at";
+  var installhelp_label = "Help for installing plugins is available from";
+  var plugindoc_label = "plugindoc.mozdev.org";
   var netcenter_label = "Netscape.com";
   var filename_label = "File name:";
   var mimetype_label = "MIME Type";
@@ -67,6 +69,10 @@
 
   document.writeln("<div id=\"findmore\">" + findmore_label + " ");
   document.writeln("<a href=\"http://home.netscape.com/plugins/index.html\">" + netcenter_label + "<\/a>.");
+  document.writeln("<\/div>");
+
+  document.writeln("<div id=\"installhelp\">" + installhelp_label + " ");
+  document.writeln("<a href=\"http://plugindoc.mozdev.org\">" + plugindoc_label + "<\/a>.");
   document.writeln("<\/div><hr>");
 
   for (var i = 0; i < numPlugins; i++)
