@@ -52,6 +52,7 @@ class nsTransform2D;
 class nsString;
 class nsIDeviceContext;
 class nsIRegion;
+class nsIAtom;
 
 struct nsFont;
 struct nsPoint;
@@ -287,7 +288,7 @@ public:
    * Sets the font for the RenderingContext
    * @param aFont The font to use in the RenderingContext
    */
-  NS_IMETHOD SetFont(const nsFont& aFont) = 0;
+  NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup) = 0;
 
   /**
    * Sets the font for the RenderingContext

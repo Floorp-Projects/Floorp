@@ -991,10 +991,10 @@ NS_IMETHODIMP nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextWin :: SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mContext->GetMetricsFor(aFont, mFontMetrics);
+  mContext->GetMetricsFor(aFont, aLangGroup, mFontMetrics);
 
   return NS_OK;
 }

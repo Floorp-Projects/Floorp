@@ -209,7 +209,7 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsIPresContext*      aPresContext,
 
   const nsStyleFont* font;
   baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  aRenderingContext.SetFont(font->mFont);
+  aRenderingContext.SetFont(font->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

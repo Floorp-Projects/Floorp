@@ -659,10 +659,10 @@ NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
   nsCOMPtr<nsIFontMetrics> newMetrics;
-  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
+  nsresult rv = mContext->GetMetricsFor(aFont, aLangGroup, *getter_AddRefs(newMetrics));
   if (NS_SUCCEEDED(rv)) {
     rv = SetFont(newMetrics);
   }

@@ -1063,12 +1063,9 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
 {
   const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-  const nsStyleFont* font =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
   // Set font and color
   aRenderingContext.SetColor(color->mColor);
-  aRenderingContext.SetFont(font->mFont);
+  SetFontFromStyle(&aRenderingContext, mStyleContext);
 
   // Format the text to display within the formatting rect
   nsIFontMetrics* fm;

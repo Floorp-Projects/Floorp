@@ -224,6 +224,27 @@ nsIFrameDebug::RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aI
 #endif
 // end nsIFrameDebug
 
+// a handy utility to set font
+void SetFontFromStyle(nsIRenderingContext* aRC, nsIStyleContext* aSC) 
+{
+  const nsStyleFont *font = (const nsStyleFont*)
+    aSC->GetStyleData(eStyleStruct_Font);
+  NS_ASSERTION(font, "invalid font in style context");
+
+  if (font) {
+    const nsStyleVisibility* visibility = (const nsStyleVisibility*) 
+      aSC->GetStyleData(eStyleStruct_Visibility);
+    NS_ASSERTION(visibility, "invalid visibility in style context");
+
+    nsCOMPtr<nsIAtom> langGroup;
+    if (visibility && visibility->mLanguage) {
+      visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
+    }
+
+    aRC->SetFont(font->mFont, langGroup);
+  }
+}
+
 nsresult
 NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {

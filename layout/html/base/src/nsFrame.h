@@ -111,6 +111,8 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
+// handy utilities
+extern void SetFontFromStyle(nsIRenderingContext* aRC, nsIStyleContext* aSC);
 
 //----------------------------------------------------------------------
 

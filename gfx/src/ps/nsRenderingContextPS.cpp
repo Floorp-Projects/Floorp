@@ -516,10 +516,11 @@ nsRenderingContextPS :: GetLineStyle(nsLineStyle &aLineStyle)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS::SetFont(const nsFont& aFont)
+nsRenderingContextPS::SetFont(const nsFont& aFont, nsIAtom* aLangGroup)
 {
   nsCOMPtr<nsIFontMetrics> newMetrics;
-  nsresult rv = mContext->GetMetricsFor(aFont, *getter_AddRefs(newMetrics));
+  nsresult rv = mContext->GetMetricsFor( aFont, aLangGroup, *getter_AddRefs(newMetrics) );
+
   if (NS_SUCCEEDED(rv)) {
     rv = SetFont(newMetrics);
   }

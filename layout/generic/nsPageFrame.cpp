@@ -690,7 +690,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
     rect.SetRect(0, 0, mRect.width - mPD->mShadowSize.width, mRect.height - mPD->mShadowSize.height);
 
-    aRenderingContext.SetFont(*mPD->mHeadFootFont);
+    aRenderingContext.SetFont(*mPD->mHeadFootFont, nsnull);
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
     // Get the FontMetrics to determine width.height of strings
@@ -698,7 +698,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
     NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
     nsCOMPtr<nsIFontMetrics> fontMet;
-    deviceContext->GetMetricsFor(*mPD->mHeadFootFont, *getter_AddRefs(fontMet));
+    deviceContext->GetMetricsFor(*mPD->mHeadFootFont, nsnull, *getter_AddRefs(fontMet));
     nscoord ascent = 0;
     nscoord visibleHeight = 0;
     if (fontMet) {

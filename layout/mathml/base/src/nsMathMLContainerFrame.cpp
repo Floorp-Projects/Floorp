@@ -78,7 +78,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
   // Set font
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     mStyleContext->GetStyleData(eStyleStruct_Font));
-  aRenderingContext.SetFont(font->mFont);
+  aRenderingContext.SetFont(font->mFont, nsnull);
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
@@ -122,7 +122,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     // Set color and font ...
     const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
       mStyleContext->GetStyleData(eStyleStruct_Font));
-    aRenderingContext.SetFont(font->mFont);
+    aRenderingContext.SetFont(font->mFont, nsnull);
 
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);

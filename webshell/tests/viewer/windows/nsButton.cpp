@@ -278,15 +278,16 @@ NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
 
   //DrawScaledLine(aRenderingContext, right-onePixel, rect.y+twoPixels, right-onePixel, bottom, scale, appUnits, PR_FALSE); // right + 1
   //DrawScaledLine(aRenderingContext, rect.x+twoPixels, bottom-onePixel, right, bottom-onePixel, scale, appUnits, PR_TRUE); // bottom + 1
+ 
 
-  aRenderingContext.SetFont(*mFont);
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(*mFont, metrics);
+  aRenderingContext.SetFont(metrics);
 
   nscoord textWidth;
   nscoord textHeight;
   aRenderingContext.GetWidth(mLabel, textWidth);
 
-  nsIFontMetrics* metrics;
-  context->GetMetricsFor(*mFont, metrics);
   metrics->GetMaxAscent(textHeight);
 
   nscoord x = ((rect.width  - textWidth) / 2)  + rect.x;

@@ -96,7 +96,7 @@ public:
   NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
   NS_IMETHOD SetColor(nscolor aColor);
   NS_IMETHOD GetColor(nscolor &aColor) const;
-  NS_IMETHOD SetFont(const nsFont& aFont);
+  NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup);
   NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics);
   NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics);
   NS_IMETHOD Translate(nscoord aX, nscoord aY);

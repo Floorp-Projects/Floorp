@@ -158,9 +158,7 @@ BRFrame::Reflow(nsIPresContext* aPresContext,
       // We also do this in strict mode because BR should act like a
       // normal inline frame.  That line-height is used is important
       // here for cases where the line-height is less that 1.
-      const nsStyleFont* font = (const nsStyleFont*)
-        mStyleContext->GetStyleData(eStyleStruct_Font);
-      aReflowState.rendContext->SetFont(font->mFont);
+      SetFontFromStyle(aReflowState.rendContext, mStyleContext);
       nsCOMPtr<nsIFontMetrics> fm;
       aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       if (fm) {

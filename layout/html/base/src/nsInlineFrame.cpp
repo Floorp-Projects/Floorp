@@ -601,15 +601,9 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       aMetrics.width += aReflowState.mComputedBorderPadding.right;
     }
 
+    SetFontFromStyle(aReflowState.rendContext, mStyleContext);
     nsCOMPtr<nsIFontMetrics> fm;
-    const nsStyleFont* font;
-    GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
-    if (font) {
-      aReflowState.rendContext->SetFont(font->mFont);
-      aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
-    } else {
-      NS_WARNING("No font retrieved from style context - sorry but font metrics are not available");
-    }
+    aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
 
     if (fm) {
       // Compute final height of the frame.
@@ -640,6 +634,8 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
     // little hack lets us override that behavior to allow for more
     // precise layout in the face of imprecise fonts.
     if (nsHTMLReflowState::UseComputedHeight()) {
+      const nsStyleFont* font;
+      GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
       aMetrics.height = font->mFont.size +
         aReflowState.mComputedBorderPadding.top +
         aReflowState.mComputedBorderPadding.bottom;
