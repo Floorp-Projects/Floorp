@@ -51,25 +51,53 @@ class nsZlibAllocator {
   struct nsMemBucket {
     void *ptr;
     PRUint32 size;
-    PRBool inUse;
+
+    // Is this bucket available ?
+    // 1 : free
+    // 0 or negative : in use
+    // This is an int because we use atomic inc/dec to operate on it
+    PRInt32 available;
   };
 
   nsMemBucket mMemBucket[NBUCKETS];
 
   nsZlibAllocator() {
     memset(mMemBucket, 0, sizeof(mMemBucket));
+    for (PRUint32 i = 0; i < NBUCKETS; i++)
+      mMemBucket[i].available = 1;
     return;
   }
 
   ~nsZlibAllocator() {
-    zClearBuckets();
+    for (PRUint32 i = 0; i < NBUCKETS; i++)
+    {
+      PRBool claimed = Claim(i);
+      
+      // ASSERT that we claimed the bucked. If we cannot, then the bucket is in use.
+      // We dont attempt to free this ptr.
+      // This will most likely cause a leak of this memory.
+      PR_ASSERT(claimed);
+      
+      // Free bucket memory if not in use
+      if (claimed && mMemBucket[i].ptr)
+        free(mMemBucket[i].ptr);
+    }
   }
 
   // zlib allocators
-  void*             zAlloc(PRUint32 items, PRUint32 size);
-  void              zFree(void *ptr);
-  // Clear the buckets of memory we have for zlib
-  int               zClearBuckets();
+  void* zAlloc(PRUint32 items, PRUint32 size);
+  void  zFree(void *ptr);
 
+  // Bucket handling.
+  PRBool Claim(PRUint32 i) {
+    PRBool claimed = (PR_AtomicDecrement(&mMemBucket[i].available) == 0);
+    // Undo the claim, if claim failed
+    if (!claimed)
+      Unclaim(i);
+
+    return claimed;
+  }
+
+  void Unclaim(PRUint32 i) { PR_AtomicIncrement(&mMemBucket[i].available); }
 };
 

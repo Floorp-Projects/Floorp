@@ -44,6 +44,14 @@
 #define READTYPE  PRInt32
 #include "zlib.h"
 #include "nsISupportsUtils.h"
+#include "nsZlibAllocator.h"
+
+/**
+ * Globals
+ *
+ * Global allocator used with zlib. Destroyed in module shutdown.
+ */
+nsZlibAllocator *gZlibAllocator = NULL;
 
 #else /* STANDALONE */
 
@@ -73,14 +81,6 @@ char * strdup(const char *src)
 #endif
 
 #endif /* STANDALONE */
-
-#include "nsZlibAllocator.h"
-/**
- * Globals
- *
- * Global allocator used with zlib. Destroyed in module shutdown.
- */
-nsZlibAllocator *gZlibAllocator = NULL;
 
 #ifdef XP_UNIX
     #include <sys/stat.h>
@@ -334,14 +334,10 @@ void ProcessWindowsMessages()
 }
 #endif /* XP_WIN */
 
-#endif /* STANDALONE */
+#else /* STANDALONE */
 
 //***********************************************************
 // Allocators for use with zlib
-//
-// WARNING: NOT THREADSAFE. But usage from nsJAR.cpp protects against
-//          multithread usage. nsJAR.cpp assumes nsZipArchive is
-//          not thread safe.
 //
 // These are allocators that are performance tuned for
 // use with zlib. Our use of zlib for every file we read from
@@ -386,98 +382,110 @@ void ProcessWindowsMessages()
 // we startup and disabled after we startup if memory is a concern.
 //***********************************************************
 
-// zClearBuckets() : Frees used memory and initalizes all memory to 0
-// DO NOT CALL THIS FROM CONSTRUCTOR. Set all memebers to 0 in constructor.
-int nsZlibAllocator::zClearBuckets()
+void * nsZlibAllocator::zAlloc(PRUint32 items, PRUint32 bytes)
 {
-  for (int i = 0; i < NBUCKETS; i++)
+  PRUint32 totalsize = items * bytes;
+  PRInt32 freeAllocatedBucketIndex = -1;
+  PRUint32 i;
+  PRUint32 size;
+  void *ptr;
+
+  for (i = 0; i < NBUCKETS; i++)
   {
-    if (mMemBucket[i].ptr)
+    size = mMemBucket[i].size;
+    ptr = mMemBucket[i].ptr;
+
+    // Dont look at buckets with no memory allocated or less memory than
+    // what we need.
+    // Can we do this check without claiming the bucket? I think we can
+    // because the next thing we do is try claim this bucket.
+    if (!ptr || size < totalsize)
+      continue;
+
+    // Try Claim a bucket. If we cant, skip it.
+    if (!Claim(i))
+      continue;
+
+    if (size == totalsize)
     {
-      // If the bucket is in use, then we will leak that memory.
-      PR_ASSERT(!mMemBucket[i].inUse);
-      if (!mMemBucket[i].inUse)
+      // Let go of any freeAllocatedBucket that we claimed
+      if (freeAllocatedBucketIndex >= 0)
+        Unclaim(freeAllocatedBucketIndex);
+
+      // zero out memory and return it
+      memset(ptr, 0, totalsize);
+      return ptr;
+    }
+    // Meanwhile, remember a free allocated bucket.
+    // At this point we know the bucket is not in use and it has more
+    // than what we need
+    if (freeAllocatedBucketIndex < 0)
+      freeAllocatedBucketIndex = i;
+    else
+    {
+      // See if this bucket is closer to what we need
+      if (size < mMemBucket[freeAllocatedBucketIndex].size)
       {
-        free(mMemBucket[i].ptr);
+        Unclaim(freeAllocatedBucketIndex);
+        freeAllocatedBucketIndex = i;
       }
-    }
-
-    mMemBucket[i].ptr = NULL;
-    mMemBucket[i].size = 0;
-    mMemBucket[i].inUse = PR_FALSE;
-  }
-  
-  return 0;
-}
-
-void * nsZlibAllocator::zAlloc(PRUint32 items, PRUint32 size)
-{
-  PRUint32 totalsize = items * size;
-  nsMemBucket *freeBucket = NULL;
-  nsMemBucket *freeAllocatedBucket = NULL;
-
-  for (int i = 0; i < NBUCKETS; i++)
-  {
-    // See if we have the memory already allocated. This is the
-    // most common case.
-    if (!mMemBucket[i].inUse && mMemBucket[i].ptr && mMemBucket[i].size == totalsize)
-    {
-      // zero out memory, increase refcnt and return it
-      memset(mMemBucket[i].ptr, 0, totalsize);
-      mMemBucket[i].inUse = PR_TRUE;
-      return mMemBucket[i].ptr;
-    }
-
-    // Meanwhile, remember a free bucket, any one will do
-    if (!mMemBucket[i].inUse) {
-      if (mMemBucket[i].size >= totalsize)
-        freeAllocatedBucket = &mMemBucket[i];
-      else if (!mMemBucket[i].ptr) {
-        // This is a free slot
-        freeBucket = &mMemBucket[i];
-      }
+      else
+        // Undo our claim as freeAllocatedBucketIndex does better than this one
+        Unclaim(i);
     }
   }
 
   // See if we have an allocated bucket
-  if (freeAllocatedBucket)
+  if (freeAllocatedBucketIndex >= 0)
   {
+    ptr = mMemBucket[freeAllocatedBucketIndex].ptr;
     // Clear it, Mark it used and return ptr
     // We need to clear only the size that was requested although
     // the bucket may be larger
-    memset(freeAllocatedBucket->ptr, 0, totalsize);
-    freeAllocatedBucket->inUse = PR_TRUE;
-    return freeAllocatedBucket->ptr;
+    memset(ptr, 0, totalsize);
+    return ptr;
   }
-    
+
   // We dont have that memory already
   // Allocate. Make sure we bump up our allocations of x4 allocations
   int realitems = items;
-  if (size == 4)
+  if (bytes == 4 && items < BY4ALLOC_ITEMS)
     realitems = BY4ALLOC_ITEMS;
-  void *ptr = calloc(realitems, size);
+  ptr = calloc(realitems, bytes);
+
+  // Take care of no memory situation
+  if (!ptr)
+    return ptr;
   
-  if (freeBucket)
+  // Find a free unallocated bucket and store allocation
+  for (i = 0; i < NBUCKETS; i++)
   {
-    // Found free slot. Store it
-    freeBucket->inUse = PR_TRUE;
-    freeBucket->ptr = ptr;
-    freeBucket->size = realitems * size;
+    // If bucket cannot be calimed, continue search.
+    if (!Claim(i))
+      continue;
+
+    if (!mMemBucket[i].ptr)
+    {
+      // Found free slot. Store it
+      mMemBucket[i].ptr = ptr;
+      mMemBucket[i].size = realitems * bytes;
+      return ptr;
+    }
+
+    // This is an already allocated bucket. Cant use this one.
+    Unclaim(i);
   }
 #ifdef DEBUG_dp
   // Warn if we are failing over to calloc and not storing it
   // This says we have a misdesigned memory pool. The intent was
   // once the pool was full, we would never fail over to calloc.
-  else
+  printf("zalloc %d [%dx%d] - FAILOVER 0x%p Memory pool has sizes: ",
+         items*bytes, items, bytes, ptr);
+  for (i = 0; i < NBUCKETS; i++)
   {
-    printf("0x%p - zalloc %d [%dx%d] - FAILOVER 0x%p Memory pool has sizes: ",
-           this, items*size, items, size, ptr);
-    for (i = 0; i < NBUCKETS; i++)
-    {
-      printf("%d ", mMemBucket[i].size);
-    }
-    printf("\n");
+    printf("%d ", mMemBucket[i].size);
   }
+  printf("\n");
 #endif
 
   return ptr;
@@ -485,13 +493,15 @@ void * nsZlibAllocator::zAlloc(PRUint32 items, PRUint32 size)
 
 void nsZlibAllocator::zFree(void *ptr)
 {
-  for (int i = 0; i < NBUCKETS; i++)
+  PRUint32 i;
+
+  for (i = 0; i < NBUCKETS; i++)
   {
     if (mMemBucket[i].ptr == ptr)
     {
       // Ah ha. One of the slots we allocated.
       // Nothing to do. Mark it unused.
-      mMemBucket[i].inUse = PR_FALSE;
+      Unclaim(i);
       return;
     }
   }
@@ -500,7 +510,7 @@ void nsZlibAllocator::zFree(void *ptr)
   // Warn if we are failing over to free.
   // This says we have a misdesigned memory pool. The intent was
   // once the pool was full, we would never fail over to free.
-  printf("DEBUG: zlib memory pool freeing 0x%p", ptr);
+  printf("DEBUG: zlib memory pool freeing 0x%p\n", ptr);
 #endif
 
   // Failover to free
@@ -528,7 +538,7 @@ zlibFree(void *opaque, void *ptr)
     free(ptr);
   return;
 }
-
+#endif /* STANDALONE */
 
 //***********************************************************
 //      nsZipArchive  --  public methods
@@ -1388,16 +1398,20 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
   Bytef inbuf[ZIP_BUFLEN];
   Bytef outbuf[ZIP_BUFLEN];
 
+  //-- set up the inflate
+  memset( &zs, 0, sizeof(zs) );
+
+#ifndef STANDALONE
   //-- ensure we have our zlib allocator for better performance
   if (!gZlibAllocator) {
     gZlibAllocator = new nsZlibAllocator();
   }
 
-  //-- set up the inflate
-  memset( &zs, 0, sizeof(zs) );
   zs.zalloc = zlibAlloc;
   zs.zfree = zlibFree;
   zs.opaque = gZlibAllocator;
+#endif
+
   zerr = inflateInit2( &zs, -MAX_WBITS );
   if ( zerr != Z_OK )
   {
