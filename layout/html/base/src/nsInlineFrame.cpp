@@ -1238,13 +1238,12 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       eReflowReason_Incremental == aReflowState.reason) {
     // Give the absolute positioning code a chance to handle it
     PRBool  handled;
-    nsRect  childBounds;
     nscoord containingBlockWidth = -1;
     nscoord containingBlockHeight = -1;
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
                                          containingBlockWidth, containingBlockHeight,
-                                         handled, childBounds);
+                                         handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
@@ -1261,6 +1260,8 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
       // code seems to reset the NS_FRAME_OUTSIDE_CHILDREN and so it is ignored
 #if 0
       // Factor the absolutely positioned child bounds into the overflow area
+      nsRect childBounds;
+      mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, childBounds);
 
       // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly

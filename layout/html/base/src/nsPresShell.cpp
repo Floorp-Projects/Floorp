@@ -3703,15 +3703,20 @@ PresShell::AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand,
           aReflowCommand->GetType(RCType);
           rc->GetType(queuedRCType);
           if (targetFrame == targetOfQueuedRC &&
-            RCType == queuedRCType) {            
+            RCType == queuedRCType) {
+            nsCOMPtr<nsIAtom> CLName, queuedCLName;
+            aReflowCommand->GetChildListName(*getter_AddRefs(CLName));
+            rc->GetChildListName(*getter_AddRefs(queuedCLName));
+            if (CLName == queuedCLName) {
 #ifdef DEBUG
-            if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-              printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", (void*)this);
-              aReflowCommand->List(stdout);
-            }
+              if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+                printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", (void*)this);
+                aReflowCommand->List(stdout);
+              }
 #endif
-            inQueue = PR_TRUE;
-            break;
+              inQueue = PR_TRUE;
+              break;
+            }
           } 
         }
       }

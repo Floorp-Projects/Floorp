@@ -748,38 +748,31 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     nscoord containingBlockWidth;
     nscoord containingBlockHeight;
     PRBool  handled;
-    nsRect  childBounds;
 
     CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
                              containingBlockWidth, containingBlockHeight);
     
     mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
-                                         containingBlockWidth, containingBlockHeight,
-                                         handled, childBounds);
+                                         containingBlockWidth,
+                                         containingBlockHeight,
+                                         handled);
 
     // If the incremental reflow command was handled by the absolute positioning
     // code, then we're all done
     if (handled) {
       // Just return our current size as our desired size.
-      // XXX We need to know the overflow area for the flowed content, and
-      // we don't have a way to get that currently so for the time being pretend
-      // a resize reflow occured
-#if 0
       aMetrics.width = mRect.width;
       aMetrics.height = mRect.height;
-      aMetrics.ascent = mRect.height;
-      aMetrics.descent = 0;
-  
+      aMetrics.ascent = mAscent;
+      aMetrics.descent = aMetrics.height - aMetrics.ascent;
+
       // Whether or not we're complete hasn't changed
       aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
-#else
-      nsHTMLReflowState reflowState(aReflowState);
-      reflowState.reason = eReflowReason_Resize;
-      reflowState.path = nsnull;
-      nsBlockFrame::Reflow(aPresContext, aMetrics, reflowState, aStatus);
-#endif
       
       // Factor the absolutely positioned child bounds into the overflow area
+      ComputeCombinedArea(aReflowState, aMetrics);
+      nsRect childBounds;
+      mAbsoluteContainer.CalculateChildBounds(aPresContext, childBounds);
       aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
 
       // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
@@ -1497,6 +1490,51 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #endif
   }
 
+  ComputeCombinedArea(aReflowState, aMetrics);
+
+  // If the combined area of our children exceeds our bounding box
+  // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
+  if ((aMetrics.mOverflowArea.x < 0) ||
+      (aMetrics.mOverflowArea.y < 0) ||
+      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  }
+  else {
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+  }
+
+  if (NS_BLOCK_WRAP_SIZE & mState) {
+    // When the area frame is supposed to wrap around all in-flow
+    // children, make sure it is big enough to include those that stick
+    // outside the box.
+    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
+      nscoord xMost = aMetrics.mOverflowArea.XMost();
+      if (xMost > aMetrics.width) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
+#endif
+        aMetrics.width = xMost;
+      }
+      nscoord yMost = aMetrics.mOverflowArea.YMost();
+      if (yMost > aMetrics.height) {
+#ifdef NOISY_FINAL_SIZE
+        ListTag(stdout);
+        printf(": changing desired height from %d to %d\n", aMetrics.height, yMost);
+#endif
+        aMetrics.height = yMost;
+        // adjust descent to absorb any excess difference
+        aMetrics.descent = aMetrics.height - aMetrics.ascent;
+      }
+    }
+  }
+}
+
+void
+nsBlockFrame::ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
+                                  nsHTMLReflowMetrics& aMetrics)
+{
   // Compute the combined area of our children
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
@@ -1549,47 +1587,11 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   printf(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
 #endif
 
-  // If the combined area of our children exceeds our bounding box
-  // then set the NS_FRAME_OUTSIDE_CHILDREN flag, otherwise clear it.
   aMetrics.mOverflowArea.x = xa;
   aMetrics.mOverflowArea.y = ya;
   aMetrics.mOverflowArea.width = xb - xa;
   aMetrics.mOverflowArea.height = yb - ya;
-  if ((aMetrics.mOverflowArea.x < 0) ||
-      (aMetrics.mOverflowArea.y < 0) ||
-      (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
-      (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
-    mState |= NS_FRAME_OUTSIDE_CHILDREN;
-  }
-  else {
-    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
-  }
 
-  if (NS_BLOCK_WRAP_SIZE & mState) {
-    // When the area frame is supposed to wrap around all in-flow
-    // children, make sure it is big enough to include those that stick
-    // outside the box.
-    if (NS_FRAME_OUTSIDE_CHILDREN & mState) {
-      nscoord xMost = aMetrics.mOverflowArea.XMost();
-      if (xMost > aMetrics.width) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
-#endif
-        aMetrics.width = xMost;
-      }
-      nscoord yMost = aMetrics.mOverflowArea.YMost();
-      if (yMost > aMetrics.height) {
-#ifdef NOISY_FINAL_SIZE
-        ListTag(stdout);
-        printf(": changing desired height from %d to %d\n", aMetrics.height, yMost);
-#endif
-        aMetrics.height = yMost;
-        // adjust descent to absorb any excess difference
-        aMetrics.descent = aMetrics.height - aMetrics.ascent;
-      }
-    }
-  }
 }
 
 nsresult
@@ -5632,7 +5634,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
       PRInt32 depth = GetDepth();
       nsRect ca;
-      ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
+      ::ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
       nsFrame::IndentBy(stdout, depth);
       ListTag(stdout);
       printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",

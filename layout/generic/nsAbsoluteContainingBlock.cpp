@@ -199,6 +199,8 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   // is the frame for which this is the absolute container or that the
   // container changed size due to incremental reflow of its children),
   // then change it to eReflowReason_Resize.
+  // XXXldb If the target is this frame, shouldn't we be setting it
+  // appropriately (which might mean to StyleChanged)?
   nsHTMLReflowState reflowState(aReflowState);
   if (eReflowReason_Incremental == reflowState.reason) {
     reflowState.reason = eReflowReason_Resize;
@@ -253,6 +255,9 @@ void
 nsAbsoluteContainingBlock::CalculateChildBounds(nsIPresContext* aPresContext,
                                                 nsRect&         aChildBounds)
 {
+  // Initialize the OUT parameters
+  aChildBounds.SetRect(0, 0, 0, 0);
+
   for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f->GetNextSibling(&f)) {
     // Add in the child's bounds
     nsRect  bounds;
@@ -284,12 +289,10 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
                                              const nsHTMLReflowState& aReflowState,
                                              nscoord                  aContainingBlockWidth,
                                              nscoord                  aContainingBlockHeight,
-                                             PRBool&                  aWasHandled,
-                                             nsRect&                  aChildBounds)
+                                             PRBool&                  aWasHandled)
 {
-  // Initialize the OUT paremeters
+  // Initialize the OUT parameters
   aWasHandled = PR_FALSE;
-  aChildBounds.SetRect(0, 0, 0, 0);
 
   // See if the reflow command is targeted at us.
   nsReflowPath *path = aReflowState.path;
@@ -308,7 +311,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
       // The only type of reflow command we expect is that we have dirty
       // child frames to reflow
-      NS_ASSERTION(eReflowType_ReflowDirty, "unexpected reflow type");
+      NS_ASSERTION(type == eReflowType_ReflowDirty, "unexpected reflow type");
 
       // Walk the positioned frames and reflow the dirty frames
       for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f->GetNextSibling(&f)) {
@@ -331,9 +334,12 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
       // Indicate we handled the reflow command.
       aWasHandled = PR_TRUE;
-      
-      // Calculate the total child bounds.
-      CalculateChildBounds(aPresContext, aChildBounds);
+    } else {
+      // Reflow command is targeted directly at this block.
+      // We cannot handle this incrementally, we have to go to full reflow.
+      // Full reflow of nsBlockFrame reflows all absolutely positioned children,
+      // so skip the incremental update below.
+      return NS_OK;
     }
   }
 
@@ -358,9 +364,6 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
         // should invalidate any area within its frame that needs
         // repainting, and because it has a view if it changes size
         // the view manager will damage the dirty area
-
-        // Calculate the total child bounds
-        CalculateChildBounds(aPresContext, aChildBounds);
 
         // Prune the path so we don't flow the block frame _again_
         // when returning to the caller.
@@ -409,7 +412,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   if (!aReflowState.mStyleBorder->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
   }
-  
+
   nsFrameState        kidFrameState;
   nsSize              availSize(aReflowState.mComputedWidth, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowMetrics kidDesiredSize(nsnull);
@@ -494,6 +497,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     // Get the property (creating a rect struct if necessary)
     nsRect* overflowArea = ::GetOverflowAreaProperty(aPresContext, aKidFrame, PR_TRUE);
 
+    NS_ASSERTION(overflowArea, "should have created rect");
     if (overflowArea) {
       *overflowArea = kidDesiredSize.mOverflowArea;
     }
