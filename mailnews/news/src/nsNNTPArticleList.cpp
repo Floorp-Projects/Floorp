@@ -66,8 +66,7 @@ protected:
 	MessageKey				m_highwater;
 };
 
-NS_IMPL_ADDREF(nsNNTPArticleList) //, (NS_INNTPARTICLELIST_IID))
-NS_IMPL_QUERY_INTERFACE(nsNNTPArticleList, IID())
+NS_IMPL_ISUPPORTS(nsNNTPArticleList, IID())
 
 nsNNTPArticleList::nsNNTPArticleList(const nsINNTPHost* newsHost,
                                      const nsINNTPNewsgroup* newsgroup)
