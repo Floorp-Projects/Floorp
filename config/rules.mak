@@ -175,7 +175,7 @@ PDBFILE=$(DLLNAME)
 #//
 #//------------------------------------------------------------------------
 !ifdef PDBFILE
-PDBFILE=.\$(OBJDIR)\$(PDBFILE)
+PDBFILE=.\$(OBJDIR)\$(PDBFILE).pdb
 !else
 PDBFILE=.\$(OBJDIR)\default
 !endif
