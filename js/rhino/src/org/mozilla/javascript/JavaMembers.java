@@ -362,12 +362,13 @@ class JavaMembers {
                 
                 // Make the bean property name.
                 String beanPropertyName = nameComponent;
-                if (nameComponent.length() > 1 && 
-                    Character.isUpperCase(nameComponent.charAt(0)) && 
-                    !Character.isUpperCase(nameComponent.charAt(1)))
-                {
-                   beanPropertyName = Character.toLowerCase(nameComponent.charAt(0)) + 
-                                      nameComponent.substring(1);
+                if (Character.isUpperCase(nameComponent.charAt(0))) {
+                    if (nameComponent.length() == 1) {
+                        beanPropertyName = nameComponent.substring(0, 1).toLowerCase();
+                    } else if (!Character.isUpperCase(nameComponent.charAt(1))) {
+                        beanPropertyName = Character.toLowerCase(nameComponent.charAt(0)) + 
+                                           nameComponent.substring(1);
+                    }
                 }
                 
                 // If we already have a member by this name, don't do this
