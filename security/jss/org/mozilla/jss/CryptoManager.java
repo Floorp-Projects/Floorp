@@ -1,27 +1,27 @@
-/* 
+/*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is the Netscape Security Services for Java.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are 
+ * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
- * 
+ *
  * Contributor(s):
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
- * "GPL"), in which case the provisions of the GPL are applicable 
- * instead of those above.  If you wish to allow use of your 
+ * "GPL"), in which case the provisions of the GPL are applicable
+ * instead of those above.  If you wish to allow use of your
  * version of this file only under the terms of the GPL and not to
  * allow others to use your version of this file under the MPL,
  * indicate your decision by deleting the provisions above and
@@ -52,12 +52,12 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.8 $ $Date: 2002/07/03 23:46:02 $ 
+ * @version $Revision: 1.9 $ $Date: 2002/07/04 00:36:51 $
  */
 public final class CryptoManager implements TokenSupplier
 {
     /**
-     * CertUsage options for validation 
+     * CertUsage options for validation
      */
     public final static class CertUsage {
         private int usage;
@@ -74,7 +74,7 @@ public final class CryptoManager implements TokenSupplier
         public String toString() {
             return name;
         }
-        
+
         // certUsage, these must be kept in sync with nss/lib/certdb/certt.h
         public static final CertUsage SSLClient = new CertUsage(0, "SSLClient");
         public static final CertUsage SSLServer = new CertUsage(1, "SSLServer");
@@ -126,7 +126,7 @@ public final class CryptoManager implements TokenSupplier
         /**
          * This class enumerates the possible modes for FIPS compliance.
          */
-        public static final class FIPSMode { 
+        public static final class FIPSMode {
             private FIPSMode() {}
 
             /**
@@ -439,8 +439,8 @@ public final class CryptoManager implements TokenSupplier
         public String ocspResponderURL = null;
 
         /**
-         * The nickname of the cert to trust (expected) to 
-         * sign the OCSP responses. 
+         * The nickname of the cert to trust (expected) to
+         * sign the OCSP responses.
          * Only checked when the OCSPResponder value is set.
          */
         public String ocspResponderCertNickname = null;
@@ -461,7 +461,7 @@ public final class CryptoManager implements TokenSupplier
          * be initialized. Only the Java portions of JSS will be
          * initialized. This should only be used if NSS has been initialized
          * elsewhere.
-         * 
+         *
          * <p>Specifically, the following components will <b>not</b> be
          *  configured by <tt>CryptoManager.initialize</tt> if this flag is set:
          * <ul>
@@ -628,7 +628,7 @@ public final class CryptoManager implements TokenSupplier
      */
     private Vector moduleVector;
 
-    /** 
+    /**
      * Re-creates the Vector of modules that is stored by CryptoManager.
      * This entails going into native code to enumerate all modules,
      * wrap each one in a PK11Module, and storing the PK11Module in the vector.
@@ -687,7 +687,7 @@ public final class CryptoManager implements TokenSupplier
     }
 
     /**
-     * Retrieve the single instance of CryptoManager. 
+     * Retrieve the single instance of CryptoManager.
      * This cannot be called before initialization.
      *
      * @see #initialize(CryptoManager.InitializationValues)
@@ -1102,7 +1102,7 @@ public final class CryptoManager implements TokenSupplier
      *
      * @param the DER-encoded CRL.
      */
-    private native 
+    private native
     void importCRLNative(byte[] crl, String url, int rl_type)
         throws CRLImportException, TokenException;
 
@@ -1117,7 +1117,7 @@ public final class CryptoManager implements TokenSupplier
      * field contains the given certificates but whose <i>content</i> field
      * is empty.
      *
-     * @param certs One or more certificates that should be exported into 
+     * @param certs One or more certificates that should be exported into
      *      the PKCS #7 object.  The leaf certificate should be the first
      *      in the chain.  The output of <code>buildCertificateChain</code>
      *      would be appropriate here.
@@ -1167,7 +1167,7 @@ public final class CryptoManager implements TokenSupplier
      * Looks up a certificate by issuer and serial number. The internal
      *      database and all PKCS #11 modules are searched.
      *
-     * @param derIssuer The DER encoding of the certificate issuer name. 
+     * @param derIssuer The DER encoding of the certificate issuer name.
      *      The issuer name has ASN.1 type <i>Name</i>, which is defined in
      *      X.501.
      * @param serialNumber The certificate serial number.
@@ -1269,7 +1269,7 @@ public final class CryptoManager implements TokenSupplier
      *
      * @return A JSS SecureRandom implemented with FIPS-validated NSS.
      */
-    public org.mozilla.jss.crypto.JSSSecureRandom 
+    public org.mozilla.jss.crypto.JSSSecureRandom
     createPseudoRandomNumberGenerator()
     {
         return new PK11SecureRandom();
@@ -1379,15 +1379,15 @@ public final class CryptoManager implements TokenSupplier
     // isCertValid
     /////////////////////////////////////////////////////////////
     /**
-     * Verify a certificate that exists in the given cert database, 
+     * Verify a certificate that exists in the given cert database,
      * check if is valid and that we trust the issuer. Verify time
-     * against Now.  
+     * against Now.
      * @param nickname The nickname of the certificate to verify.
      * @param checkSig verify the signature of the certificate
-     * @param certUsage see exposed certUsage defines to verify Certificate 
-     * @return true for success; false otherwise 
-     *      
-     * @exception InvalidNicknameException If the nickname is null 
+     * @param certUsage see exposed certUsage defines to verify Certificate
+     * @return true for success; false otherwise
+     *
+     * @exception InvalidNicknameException If the nickname is null
      * @exception ObjectNotFoundException If no certificate could be found
      *      with the given nickname.
      */
@@ -1403,6 +1403,37 @@ public final class CryptoManager implements TokenSupplier
     }
 
     private native boolean verifyCertNowNative(String nickname,
-        boolean checkSig, int cUsage) throws ObjectNotFoundException; 
+        boolean checkSig, int cUsage) throws ObjectNotFoundException;
+
+    /////////////////////////////////////////////////////////////
+    // isCertValid
+    /////////////////////////////////////////////////////////////
+    /**
+     * Verify a certificate in memory. Check if
+     * valid and that we trust the issuer. Verify time
+     * against Now.
+     * @param certificate in memory
+     * @param checkSig verify the signature of the certificate
+     * @param certUsage see exposed certUsage defines to verify Certificate
+     * @return true for success; false otherwise
+     *
+     * @exception TokenException unable to insert temporary certificate
+     *            into database.
+     * @exception CertificateEncodingException If the package encoding
+     *      was not recognized.
+     */
+
+    public boolean isCertValid(byte[] certPackage, boolean checkSig,
+            CertUsage certUsage)
+        throws TokenException, CertificateEncodingException
+    {
+        return verifyCertTempNative(certPackage , checkSig,
+                                    certUsage.getUsage());
+    }
+
+
+    private native boolean verifyCertTempNative(byte[] certPackage,
+        boolean checkSig, int cUsage)
+        throws TokenException, CertificateEncodingException;
 
 }
