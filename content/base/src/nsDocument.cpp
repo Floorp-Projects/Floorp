@@ -369,7 +369,7 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIScriptObjectOwner
 {
 public:
-  nsDOMImplementation();
+  nsDOMImplementation(nsIDocument* aDocument = nsnull);
   virtual ~nsDOMImplementation();
 
   NS_DECL_ISUPPORTS
@@ -392,12 +392,14 @@ public:
 
 protected:
   void *mScriptObject;
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
-nsDOMImplementation::nsDOMImplementation()
+nsDOMImplementation::nsDOMImplementation(nsIDocument* aDocument)
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
+  mDocument = aDocument;
 }
 
 nsDOMImplementation::~nsDOMImplementation()
@@ -477,12 +479,20 @@ nsDOMImplementation::CreateDocument(const nsString& aNamespaceURI,
                                     const nsString& aQualifiedName, 
                                     nsIDOMDocumentType* aDoctype, 
                                     nsIDOMDocument** aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aReturn);
-
+{  
+  NS_ENSURE_ARG_POINTER(aReturn);    
+  
+  nsresult rv = NS_OK;
   *aReturn = nsnull;
 
-  return NS_OK;
+  nsIURI* baseURI;
+  rv = mDocument->GetBaseURL(baseURI);
+  if (NS_FAILED(rv)) return rv;
+
+  NS_NewDOMDocument(aReturn, aNamespaceURI, aQualifiedName, aDoctype, baseURI);
+
+  NS_RELEASE(baseURI);
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -788,7 +798,7 @@ NS_IMPL_RELEASE(nsDocument)
 nsresult nsDocument::Init()
 {
   nsresult rv = NS_NewHeapArena(&mArena, nsnull);
-
+  NS_NewNameSpaceManager(&mNameSpaceManager);
   return rv;
 }
 
@@ -878,9 +888,13 @@ nsDocument::StartDocumentLoad(const char* aCommand,
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
                               nsISupports* aContainer,
-                              nsIStreamListener **aDocListener)
+                              nsIStreamListener **aDocListener,
+                              PRBool aReset)
 {
-  return Reset(aChannel, aLoadGroup);
+  nsresult rv = NS_OK;
+  if (aReset)
+    rv = Reset(aChannel, aLoadGroup);
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1894,7 +1908,7 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
 {
   // For now, create a new implementation every time. This shouldn't
   // be a high bandwidth operation
-  nsDOMImplementation* impl = new nsDOMImplementation();
+  nsDOMImplementation* impl = new nsDOMImplementation(this);
   if (nsnull == impl) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2186,6 +2200,12 @@ nsDocument::GetHeight(PRInt32* aHeight)
     *aHeight = 0;
 
   return result;
+}
+
+NS_IMETHODIMP
+nsDocument::Load (const nsString& aUrl, const nsString& aMimeType)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //

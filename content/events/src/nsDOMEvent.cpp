@@ -46,7 +46,8 @@ static char* mEventNames[] = {
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
   mPresContext = aPresContext;
-  NS_ADDREF(mPresContext);
+  if (mPresContext)
+    NS_ADDREF(mPresContext);
   mEvent = aEvent;
   mTarget = nsnull;
   mText = nsnull;
@@ -82,7 +83,7 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
 }
 
 nsDOMEvent::~nsDOMEvent() {
-  NS_RELEASE(mPresContext);
+  NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mTextRange);
 
@@ -127,7 +128,7 @@ NS_METHOD nsDOMEvent::GetTarget(nsIDOMNode** aTarget)
   }
   
   nsIEventStateManager *manager;
-  nsIContent *targetContent;
+  nsIContent *targetContent;  
 
   if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
     manager->GetEventTargetContent(mEvent, &targetContent);

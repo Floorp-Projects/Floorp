@@ -68,7 +68,8 @@ public:
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener);
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset = PR_TRUE);
 
   NS_IMETHOD StopDocumentLoad();
 

@@ -133,6 +133,7 @@ CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
      *  @param   aContentSink -- ptr to content sink that will receive output
      *  @return	 ptr to previously set contentsink (usually null)  
      */
+    virtual void GetCommand(nsString& aCommand);
     virtual void SetCommand(const char* aCommand);
     virtual void SetCommand(eParserCommands aParserCommand);
 
@@ -384,6 +385,7 @@ protected:
     nsresult            mInternalState;
     CObserverService    mObserverService;
     PRBool              mObserversEnabled;
+    nsString            mCommandStr;
 
 public:    
     MOZ_TIMER_DECLARE(mParseTime)

@@ -253,7 +253,7 @@ nsresult
 nsCodebasePrincipal::Init(nsIURI *uri)
 {
     char *codebase;
-    if (NS_FAILED(uri->GetSpec(&codebase))) 
+    if (uri == nsnull || NS_FAILED(uri->GetSpec(&codebase))) 
         return NS_ERROR_FAILURE;
     if (NS_FAILED(mJSPrincipals.Init(codebase))) {
         nsCRT::free(codebase);

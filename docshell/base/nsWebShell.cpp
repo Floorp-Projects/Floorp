@@ -1673,8 +1673,12 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   nsCOMPtr<nsIStreamListener> outStreamListener;  // a valid pointer is required for the returned stream listener
     // XXX: warning: magic cookie!  should get string "view delayedContentLoad"
     //      from somewhere, maybe nsIHTMLDocument?
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view delayedContentLoad", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this),
-                                           getter_AddRefs(outStreamListener)), 
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view delayedContentLoad", 
+                                           dummyChannel, 
+                                           nsnull, 
+                                           NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this),
+                                           getter_AddRefs(outStreamListener),
+                                           PR_TRUE), 
                     NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 

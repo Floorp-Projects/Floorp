@@ -71,7 +71,7 @@ nsTransformMediator::~nsTransformMediator()
 static
 nsresult ConstructProgID(nsString& aProgID, const nsString& aMimeType)
 {
-  aProgID = kTransformerProgIDPrefix;
+  aProgID.AssignWithConversion(kTransformerProgIDPrefix);
   aProgID.Append(aMimeType);
 
   return NS_OK;

@@ -716,6 +716,7 @@
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
     "nsdocument.height", \
+    "nsdocument.load", \
     "nsdocument.width", \
     "nshtmlanchorelement.hash", \
     "nshtmlanchorelement.host", \

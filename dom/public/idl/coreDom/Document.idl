@@ -66,5 +66,7 @@ interface NSDocument {
      Element                   createElementWithNameSpace(in DOMString tagName,
                                                           in DOMString nameSpace)
                                                           raises(DOMException);
-     Range                     createRange();
+	 Range                     createRange();
+	 void                      load(in DOMString url,
+							        in DOMString mimeType);
 };

@@ -405,7 +405,7 @@ nsLayoutDLF::CreateDocument(const char* aCommand,
     // Initialize the document to begin loading the data.  An
     // nsIStreamListener connected to the parser is returned in
     // aDocListener.
-    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
+    rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
     if (NS_FAILED(rv))
       break;
 
@@ -496,7 +496,7 @@ nsLayoutDLF::CreateRDFDocument(const char* aCommand,
    * An nsIStreamListener connected to the parser is returned in
    * aDocListener.
    */
-  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener);
+  rv = doc->StartDocumentLoad(aCommand, aChannel, aLoadGroup, aContainer, aDocListener, PR_TRUE);
   if (NS_SUCCEEDED(rv)) {
     /*
      * Bind the document to the Content Viewer...

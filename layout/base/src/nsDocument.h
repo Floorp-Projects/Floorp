@@ -128,7 +128,8 @@ public:
                                nsIChannel* aChannel,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
-                               nsIStreamListener **aDocListener);
+                               nsIStreamListener **aDocListener,
+                               PRBool aReset = PR_TRUE);
 
   NS_IMETHOD StopDocumentLoad();
 
@@ -357,6 +358,7 @@ public:
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
   NS_IMETHOD    GetWidth(PRInt32* aWidth);
   NS_IMETHOD    GetHeight(PRInt32* aHeight);
+  NS_IMETHOD    Load (const nsString& aUrl, const nsString& aMimeType);
                      
   // nsIDOMNode interface
   NS_DECL_IDOMNODE
