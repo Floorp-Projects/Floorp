@@ -1483,7 +1483,7 @@ function IsGetNewMessagesEnabled()
   // we'll just handle it as best we can in GetFolderMessages()
   // when they click "Get Msgs" and
   // Local Folders or a news server is selected
-  // see bugs #xxxxxx and #xxxxxx
+  // see bugs #89404 and #111102
   return true;
 }
 
@@ -1734,8 +1734,9 @@ function GetFolderMessages()
     // and the user does "Get Msgs"
     // get new mail for the default account
     //
-    // XXX TODO, shift click makes this get mail for all (authenticated) accounts?
-    // maybe, see bug #xxxxxx
+    // XXX TODO
+    // should shift click get mail for all (authenticated) accounts?
+    // see bug #125885
     folder = defaultAccountRootFolder;
   }
 
