@@ -88,18 +88,6 @@ static int handle_connection( PRFileDesc *, PRFileDesc *, int );
 static const char envVarName[] = { SSL_ENV_VAR_NAME };
 static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
 
-const int cipherSuites[] = {
-    SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA,
-    SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,
-    SSL_RSA_WITH_RC4_128_MD5,
-    SSL_RSA_WITH_3DES_EDE_CBC_SHA,
-    SSL_RSA_WITH_DES_CBC_SHA,
-    SSL_RSA_EXPORT_WITH_RC4_40_MD5,
-    SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
-    SSL_FORTEZZA_DMS_WITH_NULL_SHA,
-    SSL_RSA_WITH_NULL_MD5,
-    0
-};
 
 const int ssl2CipherSuites[] = {
     SSL_EN_RC4_128_WITH_MD5,			/* A */
