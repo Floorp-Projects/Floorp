@@ -4124,8 +4124,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                        0,
                                        nsnull,
                                        NS_LITERAL_STRING("return this.content;"),
-                                       __FILE__,
-                                       __LINE__ - 2,
+                                       "javascript:return this.content; // See " __FILE__,
+                                       1, // lineno
                                        PR_FALSE,
                                        (void **) &getterObj);
       NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && getterObj, NS_ERROR_FAILURE);
