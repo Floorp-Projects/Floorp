@@ -108,7 +108,6 @@ input[type="text"]#urlbar {
 toolbox#main-toolbox {
 	min-width: 10px;
 	background-color: #CCCCCC;
-	margin-top: 2px;
 	margin-right: 2px;
 }
 
@@ -153,6 +152,7 @@ titledbutton.bookmarkbutton:active {
 }
 
 titledbutton.bookmarkFolder {
+  background-color: transparent;
   list-style-image: url("chrome://global/skin/toolbar-dropdown.gif");
 }
 
