@@ -183,11 +183,8 @@ static int		isw = 0;
 static int		isD = 0;
 static int		isj = 0;
 static int		ssl_strength = LDAPTOOL_DEFSSLSTRENGTH;
-static char		*ssl_certdbpath = LDAPTOOL_DEFCERTDBPATH;
-static char		*ssl_keydbpath = LDAPTOOL_DEFKEYDBPATH;
-/*
-static char		*ssl_keyname = NULL;
-*/
+static char		*ssl_certdbpath = NULL;
+static char		*ssl_keydbpath = NULL;
 static char		*ssl_certname = NULL;
 static char		*ssl_passwd = NULL;
 
@@ -412,9 +409,10 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	case 'P':	/* path to security database */
 	    secure = 1; /* do SSL encryption */
 	    ssl_certdbpath = strdup( optarg );
-	    if (NULL== ssl_keydbpath)
+	    if (NULL == ssl_certdbpath)
 	    {
-		ssl_keydbpath = certpath2keypath( ssl_certdbpath );
+		perror("malloc");
+		exit( LDAP_NO_MEMORY );
 	    }
 	    break;
 	case 'Z':	/* do SSL encryption */
@@ -431,12 +429,6 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	    isN = 1;
 	    break;
 	case 'K':	/* location of key database */
-	    /* if keydb path is not null, then it was probably strdup by the 
-	     * cert db option.  free it first 
-	     */
-	    if (ssl_keydbpath)
-		free( ssl_keydbpath);
-
 	    ssl_keydbpath = strdup( optarg );
 	    if (NULL == ssl_keydbpath)
 	    {
@@ -609,11 +601,23 @@ ldaptool_process_args( int argc, char **argv, char *extra_opts,
 	return (-1);
     }
 
+    /* use default key and cert DB paths if not set on the command line */
+    if ( NULL == ssl_keydbpath ) {
+	if ( NULL == ssl_certdbpath ) {
+	    ssl_keydbpath = LDAPTOOL_DEFKEYDBPATH;
+	} else {
+	    ssl_keydbpath = certpath2keypath( ssl_certdbpath );
+	}
+    }
+    if ( NULL == ssl_certdbpath ) {
+	ssl_certdbpath = LDAPTOOL_DEFCERTDBPATH;
+    }
+
     if (prompt_password != 0) {
 	char *password_string = "Enter bind password: ";
-	char pbuf[257];
 
 #if defined(_WIN32)
+	char pbuf[257];
 	fputs(password_string,stdout);
 	fflush(stdout);
 	if (fgets(pbuf,256,stdin) == NULL) {
