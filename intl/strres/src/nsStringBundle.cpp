@@ -130,9 +130,12 @@ nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
   name.Append(aID, 10);
   nsresult ret = mProps->GetProperty(name, aResult);
 
+#ifdef DEBUG_tao
   char *s = aResult.ToNewCString();
-  printf("\n** GetStringFromID: %s\n", s?s:"null");
+  printf("\n** GetStringFromID: aResult=%s, len=%d\n", s?s:"null", 
+         aResult.Length());
   delete s;
+#endif /* DEBUG_tao */
 
   return ret;
 }
@@ -141,12 +144,13 @@ nsresult
 nsStringBundle::GetStringFromName(const nsString& aName, nsString& aResult)
 {
   nsresult ret = mProps->GetProperty(aName, aResult);
-
+#ifdef DEBUG_tao
   char *s = aResult.ToNewCString(),
        *ss = aName.ToNewCString();
-  printf("\n** GetStringFromName: %s, %s\n", ss?ss:"null", s?s:"null");
+  printf("\n** GetStringFromName: aName=%s, aResult=%s, len=%d\n", 
+         ss?ss:"null", s?s:"null", aResult.Length());
   delete s;
-
+#endif /* DEBUG_tao */
   return ret;
 }
 
@@ -160,14 +164,14 @@ nsStringBundle::GetStringFromID(PRInt32 aID, PRUnichar **aResult)
   nsString tmpstr("");
 
   nsresult ret = GetStringFromID(aID, tmpstr);
-  PRInt32 len =  tmpstr.Length();
+  PRInt32 len =  tmpstr.Length()+1;
   if (NS_FAILED(ret) || !len) {
     return ret;
   }
 
-  *aResult = (PRUnichar *) PR_Malloc(len);
-  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), len);
-  
+  *aResult = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), sizeof(PRUnichar)*len);
+  (*aResult)[len-1] = '\0';
   return ret;
 }
 
@@ -179,14 +183,15 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   nsString tmpstr("");
   nsString nameStr(aName);
   nsresult ret = GetStringFromName(nameStr, tmpstr);
-  PRInt32 len =  tmpstr.Length();
+  PRInt32 len =  tmpstr.Length()+1;
   if (NS_FAILED(ret) || !len) {
     return ret;
   }
 
-  *aResult = (PRUnichar *) PR_Malloc(2*(len+1));
-  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), 2*len);
-  (*aResult)[len] = 0;
+  *aResult = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
+  *aResult = (PRUnichar *) memcpy(*aResult, tmpstr.GetUnicode(), sizeof(PRUnichar)*len);
+  (*aResult)[len-1] = '\0';
+  
   return ret;
 }
 
