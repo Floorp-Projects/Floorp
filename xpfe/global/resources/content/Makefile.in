@@ -15,31 +15,31 @@
 # Reserved.
 #
 
-DEPTH = ../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=unix
-
-include $(topsrcdir)/config/rules.mk
+DIRS		= unix
 
 EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/hiddenWindow.xul \
-	$(srcdir)/globalOverlay.xul \
-	$(srcdir)/globalOverlay.js \
-	$(srcdir)/tasksOverlay.xul \
-	$(srcdir)/tasksOverlay.js \
-	$(srcdir)/dialogOverlay.xul \
-	$(srcdir)/dialogOverlay.js \
-	$(srcdir)/tasksExtension.xul \
-	$(srcdir)/commonDialog.xul \
-	$(srcdir)/commonDialog.js \
-	$(srcdir)/strres.js \
-	$(srcdir)/about.html \
-	$(NULL)
+		$(srcdir)/hiddenWindow.xul \
+		$(srcdir)/globalOverlay.xul \
+		$(srcdir)/globalOverlay.js \
+		$(srcdir)/tasksOverlay.xul \
+		$(srcdir)/tasksOverlay.js \
+		$(srcdir)/dialogOverlay.xul \
+		$(srcdir)/dialogOverlay.js \
+		$(srcdir)/tasksExtension.xul \
+		$(srcdir)/commonDialog.xul \
+		$(srcdir)/commonDialog.js \
+		$(srcdir)/strres.js \
+		$(srcdir)/about.html \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/content/default

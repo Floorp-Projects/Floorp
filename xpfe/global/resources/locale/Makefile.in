@@ -15,23 +15,23 @@
 # Reserved.
 #
 
-DEPTH = ../../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=unix
-
-include $(topsrcdir)/config/rules.mk
+DIRS		= unix
 
 EXPORT_RESOURCE_CONTENT = \
-	$(srcdir)/globalOverlay.dtd \
-	$(srcdir)/dialogOverlay.dtd \
-	$(srcdir)/tasksOverlay.dtd \
-	$(srcdir)/commonDialog.dtd \
-	$(NULL)
+		$(srcdir)/globalOverlay.dtd \
+		$(srcdir)/dialogOverlay.dtd \
+		$(srcdir)/tasksOverlay.dtd \
+		$(srcdir)/commonDialog.dtd \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/locale/en-US

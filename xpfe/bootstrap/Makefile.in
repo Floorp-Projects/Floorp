@@ -23,22 +23,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= apprunner
-PROGRAM		= apprunner
+PROGRAM		= mozilla
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
 		nsSetupRegistry.cpp \
 		$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
-endif
-
-ifdef MOZ_OJI
-OJI_LIBS	= -ljsj
-endif
-
-
 
 XP_DIST_LIBS	= \
 		-lraptorgfx \
@@ -66,12 +56,20 @@ ifdef MOZ_MONOLITHIC_TOOLKIT
 XP_LIBS		+= $(TK_LIBS)
 endif
 
+ifdef MOZ_OJI
+OJI_LIBS	= -ljsj
+endif
+
 LIBS		= $(XP_LIBS)
 
-# cls/shaver are responsible for this amazingness
-EXTRA_DEPS	= $(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a)))
+EXTRA_DEPS	= \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(XP_NS_UNDERBAR_CRAP) \
+		$(NULL)
 
-EXTRA_DEPS += $(XP_NS_UNDERBAR_CRAP)
+ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
+BEOS_PROGRAM_RESOURCE = $(srcdir)/apprunner-beos.rsrc
+endif
 
 include $(topsrcdir)/config/rules.mk
 
@@ -79,3 +77,4 @@ CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 install:: $(srcdir)/mozilla-apprunner.sh
 	$(INSTALL) $< $(DIST)/bin
+
