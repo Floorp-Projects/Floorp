@@ -33,6 +33,8 @@
 #ifndef _COTHERELEMENTS_
 #define _COTHERELEMENTS_
 
+#include "nsDTDUtils.h"
+
 /************************************************************************
   This union is a bitfield which describes the group membership
  ************************************************************************/

@@ -607,7 +607,7 @@ inline PRInt32 FirstOf(nsDTDContext& aContext,PRInt32 aStartOffset,TagList& aTag
  * @param   id of tag
  * @return  TRUE of the element's end tag is optional
  */
-static PRBool HasOptionalEndTag(eHTMLTags aTag) {
+PRBool HasOptionalEndTag(eHTMLTags aTag) {
   static eHTMLTags gHasOptionalEndTags[]={eHTMLTag_body,eHTMLTag_colgroup,eHTMLTag_dd,eHTMLTag_dt,
                                                     eHTMLTag_head,eHTMLTag_li,eHTMLTag_option,
                                                     eHTMLTag_p,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_tfoot,
