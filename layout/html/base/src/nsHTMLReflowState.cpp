@@ -611,6 +611,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     computedWidth = availableWidth;
     computedHeight = availableHeight;
     computedMargin.SizeTo(0, 0, 0, 0);
+    computedOffsets.SizeTo(0, 0, 0, 0);
 
   } else {
     // Get the containing block reflow state
