@@ -36,7 +36,7 @@ IGNORE_MANIFEST=1
 !if "$(MOZ_BITS)" == "16"
 DIRS= nsinit
 !else
-DIRS= nsdiff nspatch
+DIRS= nsdiff nspatch unbind
 !endif
 
 !ifndef MAKE_OBJ_TYPE
@@ -61,6 +61,7 @@ OBJS=                                       \
 	.\$(OBJDIR)\su_folderspec.obj			\
 	.\$(OBJDIR)\su_instl.obj				\
 	.\$(OBJDIR)\su_trigger.obj              \
+    .\$(OBJDIR)\su_patch.obj                \
 	.\$(OBJDIR)\su_win.obj					\
     .\$(OBJDIR)\vr_java.obj                 \
 !if "$(MOZ_BITS)" == "16"
@@ -71,7 +72,9 @@ OBJS=                                       \
 
 
 JRI_GEN=							\
+    java.lang.Integer                       \
     netscape.softupdate.FolderSpec		\
+    netscape.softupdate.InstallDelete 		\
     netscape.softupdate.InstallObject		\
     netscape.softupdate.InstallFile			\
     netscape.softupdate.InstallPatch		\
@@ -112,7 +115,6 @@ LINCS= $(LINCS) -I_jri       \
 		-I../include \
 		-I$(DEPTH)/lib/libnet	\
 		-I$(DEPTH)/lib/layout	\
-		-I$(PUBLIC)/jar \
 		-I$(DEPTH)/lib/libstyle	\
 		-I$(DEPTH)/cmd/winfe	\
 		$(NULL)
@@ -136,12 +138,15 @@ LINCS= $(LINCS) \
 		-I$(PUBLIC)/js		\
 		-I$(PUBLIC)/dbm		\
 		-I$(PUBLIC)/security	\
+        -I$(PUBLIC)/jar     \
 		-I$(PUBLIC)/pref	\
+        -I$(PUBLIC)/progress	\
 		-I$(PUBLIC)/libfont	\
 		-I$(PUBLIC)/jtools	\
 		-I$(PUBLIC)/winfont	\
 		-I$(PUBLIC)/rdf		\
 		-I$(PUBLIC)/network	\
+        -I$(PUBLIC)/zlib	\
 		$(NULL)
 !endif
 
@@ -162,17 +167,27 @@ PUBLIC_HEADER_DIR=$(PUBLIC)\win16
 
 export::
     $(MAKE_INSTALL) _jri\netscape_softupdate_InstallObject.h        $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_InstallFile.h          $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_InstallExecute.h       $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_InstallDelete.h        $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_InstallPatch.h         $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_Registry.h				$(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_RegistryNode.h			$(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_RegistryException.h	$(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_RegKeyEnumerator.h		$(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_RegEntryEnumerator.h	$(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_SoftwareUpdate.h       $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_SoftUpdateException.h  $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_Strings.h              $(PUBLIC_HEADER_DIR)
-    $(MAKE_INSTALL) _jri\netscape_softupdate_VersionInfo.h          $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_Trigger.h              $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_FolderSpec.h           $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_VersionRegistry.h      $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\netscape_softupdate_VersionInfo.h			$(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_VerRegEnumerator.h     $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_WinProfile.h           $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_WinReg.h               $(PUBLIC_HEADER_DIR)
     $(MAKE_INSTALL) _jri\netscape_softupdate_WinRegValue.h          $(PUBLIC_HEADER_DIR)
+    $(MAKE_INSTALL) _jri\java_lang_Integer.h $(PUBLIC)\libreg
 
 
 install:: $(LIBRARY)
@@ -186,14 +201,16 @@ clobber::
 	$(JRI_GEN_DIR)/netscape_softupdate_SoftwareUpdate.h	 \
 
 
-.\$(OBJDIR)\su_instl.obj:					 \
+\$(OBJDIR)\su_instl.obj:					 \
+    $(JRI_GEN_DIR)\netscape_softupdate_InstallDelete.c  \	
 	$(JRI_GEN_DIR)\netscape_softupdate_InstallFile.c	 \
 	$(JRI_GEN_DIR)\netscape_softupdate_InstallExecute.c	 \
 	$(JRI_GEN_DIR)\netscape_softupdate_InstallObject.c	 \
 	$(JRI_GEN_DIR)\netscape_softupdate_InstallPatch.c	 \
-	$(JRI_GEN_DIR)/netscape_softupdate_SoftwareUpdate.h	 \
-	$(JRI_GEN_DIR)/netscape_softupdate_SoftUpdateException.h \
-	$(JRI_GEN_DIR)\netscape_softupdate_Strings.h
+	$(JRI_GEN_DIR)\netscape_softupdate_SoftwareUpdate.h	 \
+	$(JRI_GEN_DIR)\netscape_softupdate_SoftUpdateException.h \
+    $(JRI_GEN_DIR)\netscape_softupdate_Strings.c        \
+   	$(JRI_GEN_DIR)\netscape_softupdate_Strings.h
 
 .\$(OBJDIR)\su_trigger.obj:					 \
 	$(JRI_GEN_DIR)\netscape_softupdate_Trigger.c		 \

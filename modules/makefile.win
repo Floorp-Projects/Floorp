@@ -45,17 +45,19 @@ DIRS=                   \
 !ifdef NO_SECURITY
 	security        \
 !endif
+	libreg          \
 	libpref         \
 	libhook         \
 	libutil         \
 	libimg          \
 	libfont         \
-	libreg          \
 !ifdef JAVA_OR_OJI
 !ifdef EDITOR
 	edtplug         \
 !endif
+!ifdef MOZ_SMARTUPDATE
 	softupdt        \
+!endif
 	zlib            \
 !endif
 	progress	\

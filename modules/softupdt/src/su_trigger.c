@@ -66,10 +66,16 @@
 #include "xp_error.h"
 #include "jsjava.h"
 
+#include "NSReg.h"
+#include "VerReg.h"
+
+
 extern void FolderSpecInitialize(JRIEnv * env);
 extern void InstallFileInitialize(JRIEnv * env);
+extern void SU_Reg_Initialize(JRIEnv *env );
 extern void SUWinSpecificInit( JRIEnv *env );
-extern int  DiskSpaceAvailable( char *path, int nBytes );
+
+extern uint32 FE_DiskSpaceAvailable (MWContext *context, const char *lpszPath );
 
 #ifdef XP_MAC
 #pragma export on
@@ -77,11 +83,13 @@ extern int  DiskSpaceAvailable( char *path, int nBytes );
 
 void SU_Initialize(JRIEnv * env)
 {
+	SU_Reg_Initialize( env );
+
 	use_netscape_softupdate_Trigger( env );
 	use_netscape_softupdate_SoftwareUpdate( env );
 	use_netscape_softupdate_Strings( env );
 	use_netscape_softupdate_SoftUpdateException( env );
-	FolderSpecInitialize(env);
+  	FolderSpecInitialize(env);
 	InstallFileInitialize(env);
 #if defined(XP_PC)
     SUWinSpecificInit( env );
@@ -147,6 +155,7 @@ native_netscape_softupdate_SoftwareUpdate_VerifyJSObject(JRIEnv* env,
 	*/
 	JSObject * jsobj;
 	JSClass * jsclass;
+/*	jsobj = (JSObject *) get_netscape_javascript_JSObject_internal(env, a); */
 #ifdef OJI      // XXX hack
     jsobj = NULL;
 #else
@@ -277,7 +286,6 @@ native_netscape_softupdate_SoftwareUpdate_NativeExtractJARFile(JRIEnv* env,
 	struct java_lang_String * tempNameJava = NULL;
 	int result;
 	
-
 	target = (char*)JRI_GetStringPlatformChars( env, finalFile, "", 0 );
 
 	if (target)
@@ -287,9 +295,9 @@ native_netscape_softupdate_SoftwareUpdate_NativeExtractJARFile(JRIEnv* env,
 		char *end;
 		char *URLfile = XP_PlatformFileToURL(target);
 
-        fn = URLfile+7;     /* skip "file://" part */
+		fn = URLfile+7; /* skip "file://" part */
 
-		if ( end = XP_STRRCHR(fn, '/') )
+		if ((end = XP_STRRCHR(fn, '/')) != NULL )
 			end[1] = 0;
 
 		/* Create a temporary location */
@@ -396,21 +404,18 @@ done:
 	return tempNameJava;
 }
 
+
+
+
 /* getCertificates
  * native encapsulation that calls AppletClassLoader.getCertificates
  * we cannot call this method from Java because it is private.
  * The method cannot be made public because it is a security risk
  */
-#ifndef XP_MAC
-#include "netscape_applet_AppletClassLoader.h"
-#else
-#include "n_applet_AppletClassLoader.h"
-#endif
 
 /* From java.h (keeping the old hack, until include path is setup correctly on Mac) */
 PR_PUBLIC_API(jref)
 LJ_GetCertificates(JRIEnv* env, void *zigPtr, char *pathname);
-
 
 JRI_PUBLIC_API(jref)
 native_netscape_softupdate_SoftwareUpdate_getCertificates(JRIEnv* env, 
@@ -546,7 +551,7 @@ native_netscape_softupdate_SoftwareUpdate_ExtractDirEntries(
          len = XP_STRLEN(item->pathname);
          /* subtract length of target directory + slash */
          len = len - (dirlen+1);
-         if ( buff = XP_ALLOC (len+1) )
+         if (( buff = XP_ALLOC (len+1)) != NULL )
          {
              /* Don't copy the search directory part */
              XP_STRCPY (buff, (item->pathname)+dirlen+1);
@@ -564,40 +569,30 @@ bail:
     return StrArray;
 }
 
-
-/*** private native NativeDeleteFile (Ljava/lang/String;)I ***/
-extern JRI_PUBLIC_API(jint)
-native_netscape_softupdate_SoftwareUpdate_NativeDeleteFile(
+/*** private native NativeDiskSpaceAvailable (Ljava/lang/String;)J ***/
+JRI_PUBLIC_API(jlong)
+native_netscape_softupdate_SoftwareUpdate_NativeDiskSpaceAvailable(
     JRIEnv* env, 
     struct netscape_softupdate_SoftwareUpdate* self, 
     struct java_lang_String *path)
 {
-    char *fName;
-
-    if ( !(fName = (char*)JRI_GetStringPlatformChars( env, path, "", 0 )) )
-        return -1;
-
-    return XP_FileRemove ( fName, xpURL );
-}
-
-/*** private native NativeVerifyDiskspace (Ljava/lang/String;I)I ***/
-extern JRI_PUBLIC_API(jint)
-native_netscape_softupdate_SoftwareUpdate_NativeVerifyDiskspace(
-    JRIEnv* env, 
-    struct netscape_softupdate_SoftwareUpdate* self, 
-    struct java_lang_String *path, 
-    jint nBytes)
-{
     char *fileSystem;
+    jlong val;
 
-    if ( !(fileSystem = (char*)JRI_GetStringPlatformChars( env, path, "", 0 )) )
-        return 0;
-
-    return DiskSpaceAvailable(fileSystem, (int) nBytes);
+    fileSystem = (char*)JRI_GetStringPlatformChars( env, path, "", 0 );
+    if (fileSystem)
+    {
+        jlong_UI2L( val, FE_DiskSpaceAvailable(NULL, fileSystem));
+    }
+    else
+    {
+        jlong_UI2L( val, 0 );
+    }
+    return val;
 }
 
 /*** private native NativeMakeDirectory (Ljava/lang/String;)I ***/
-extern JRI_PUBLIC_API(jint)
+JRI_PUBLIC_API(jint)
 native_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory(
     JRIEnv* env, 
     struct netscape_softupdate_SoftwareUpdate* self, 
@@ -610,4 +605,48 @@ native_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory(
 
     return XP_MakeDirectoryR ( dir, xpURL );
 }
+
+/* Returns native path, given a fileURL */
+JRI_PUBLIC_API(struct java_lang_String *)
+native_netscape_softupdate_SoftwareUpdate_NativeFileURLToNative(JRIEnv* env, 
+															   struct netscape_softupdate_SoftwareUpdate* self, 
+															   struct java_lang_String *path)
+{
+    char * pathNamePlatform;
+    char * newName;
+    struct java_lang_String * pathNameJava = NULL;
+
+    pathNamePlatform = (char*)JRI_GetStringPlatformChars( env, path, "", 0);
+    if (pathNamePlatform != NULL)
+    {
+        newName = WH_FileName(pathNamePlatform, xpURL);
+
+        /* Create the return Java string if everything went OK */
+        if (newName)
+        {
+            pathNameJava = JRI_NewStringPlatform(env, newName, XP_STRLEN( newName), "", 0);
+            XP_FREE(newName);
+        }
+    }
+    return pathNameJava;
+}
+
+
+JRI_PUBLIC_API(jint)
+native_netscape_softupdate_SoftwareUpdate_NativeUninstall(
+    JRIEnv* env,
+    struct netscape_softupdate_SoftwareUpdate* self,
+    struct java_lang_String * regPackageName)
+{
+    char * regPackageNamePlatform;
+    int err;
+     
+    regPackageNamePlatform = (char*)JRI_GetStringPlatformChars( env, regPackageName, "", 0);
+    if (regPackageNamePlatform == NULL)
+        err = REGERR_PARAM;
+
+    err = SU_Uninstall(regPackageNamePlatform);
+    return err;
+}
+
 

@@ -17,13 +17,15 @@
 
 DEPTH		= ../../..
 
+DIRS		= nsdiff nspatch
+
 include $(DEPTH)/config/config.mk
 
 MODULE		= softupdate
 LIBRARY_NAME	= softupdate
 
 REQUIRES	= softupdt js java net dbm nspr img util layer pref \
-                  jar security lay style libreg network
+            jar security lay style libreg network progress zlib
 
 ifeq ($(MOZ_OJI),1)
 REQUIRES	+= oji npj
@@ -33,7 +35,8 @@ REQUIRES	+= applet
 endif
 
 JRI_GEN		= netscape.softupdate.FolderSpec \
-		  netscape.softupdate.InstallObject \
+          netscape.softupdate.InstallDelete \
+          netscape.softupdate.InstallObject \
 		  netscape.softupdate.InstallFile \
 		  netscape.softupdate.InstallPatch \
 		  netscape.softupdate.InstallExecute \
@@ -49,10 +52,12 @@ JRI_GEN		= netscape.softupdate.FolderSpec \
 		  netscape.softupdate.VersionInfo \
 		  netscape.softupdate.VersionRegistry \
 		  netscape.softupdate.VerRegEnumerator \
+		  java.lang.Integer \
 		  $(NULL)
 
 CSRCS		= softupdt.c \
 		  su_trigger.c \
+		  su_patch.c \
 		  su_folderspec.c \
 		  su_instl.c \
 		  su_nodl.c \
@@ -68,6 +73,7 @@ JRI_GEN		+= netscape.softupdate.WinReg netscape.softupdate.WinProfile netscape.s
 endif
 
 EXPORTS		= ../include/softupdt.h \
+          $(JRI_GEN_DIR)/netscape_softupdate_InstallDelete.h \
 		  $(JRI_GEN_DIR)/netscape_softupdate_InstallFile.h \
 		  $(JRI_GEN_DIR)/netscape_softupdate_InstallObject.h \
 		  $(JRI_GEN_DIR)/netscape_softupdate_SoftwareUpdate.h \
@@ -95,6 +101,7 @@ $(OBJDIR)/su_folderspec.o: $(JRI_GEN_DIR)/netscape_softupdate_FolderSpec.c \
 			   $(JRI_GEN_DIR)/netscape_softupdate_SoftwareUpdate.h
 
 $(OBJDIR)/su_instl.o:	$(JRI_GEN_DIR)/netscape_softupdate_InstallFile.c \
+            $(JRI_GEN_DIR)/netscape_softupdate_InstallDelete.c	 \
 			$(JRI_GEN_DIR)/netscape_softupdate_InstallObject.c \
 			$(JRI_GEN_DIR)/netscape_softupdate_InstallExecute.c \
 			$(JRI_GEN_DIR)/netscape_softupdate_InstallPatch.c \

@@ -48,6 +48,7 @@ extern "C" int SU_NEED_TO_REBOOT;
 
 extern "C" REGERR  fe_DeleteOldFileLater(char * filename);
 extern "C" REGERR  fe_ReplaceOldFileLater(char *tmpfile, char *target);
+
 XP_Bool fe_FileNeedsUpdate(char *sourceFile, char *targetFile);
 
 #if defined(WIN32) || defined(XP_OS2)
@@ -156,19 +157,35 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
         directory = PR_smprintf("%sjava\\download\\", path);
         break;
 
-        case eNetHelpFolder:
-        FE_GetProgramDirectory( path, _MAX_PATH );
-        XP_STRCAT( path, "\\NetHelp\\" );
-        directory = XP_STRDUP( path );
+    case eNetHelpFolder:
+        {
+            char* tmpdir = FE_GetNetHelpDir();
+            if ('/' != *tmpdir ) {
+                /* we got a valid file url from FE_GetNetHelpDir() */
+                directory = WH_FileName(tmpdir+7, xpURL);
+            }
+            else {
+                /* windows FE couldn't find registry setting */
+                FE_GetProgramDirectory( path, _MAX_PATH );
+                XP_STRCAT( path, "NetHelp\\" );
+                directory = XP_STRDUP( path );
+            }
+            XP_FREEIF(tmpdir);
+        }
         break;
        
-        case eOSDriveFolder:
-        directory = XP_STRDUP( "C:" );
+    case eOSDriveFolder:
+        len = GetWindowsDirectory( path, _MAX_PATH );
+        if (len)
+        {
+            if ( path[1] == ':' && path[2] == '\\' )
+            {
+                path[3] = 0;
+                directory = XP_STRDUP( path );
+            }
+        }
         break;
-
-        case eFileURLFolder:
-        directory = XP_STRDUP( "C:" );
-        break;
+      
 
 
     // inapplicable platform specific directories
@@ -186,6 +203,7 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 	case eUnix_LibFolder:
         break;
 
+    case eFileURLFolder: // should never be handled in this routine
     default:
         // someone added a new one and didn't take care of it
         XP_ASSERT(0);
@@ -251,7 +269,8 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
             char* final = finalName;
             char* current = currentName;
 
-#if !defined(XP_WIN16) && !defined (XP_OS2)
+#if !defined(XP_OS2)
+#if !defined(XP_WIN16)
     	    /* Get OS version info */
     	    dwVersion = GetVersion();
     	    dwWindowsMajorVersion =  (DWORD)(LOBYTE(LOWORD(dwVersion)));
@@ -322,23 +341,29 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
                 if ( strlen > 0 ) {
                     final = Dest;
                 }
-#endif /* XP_WIN16 && XP_OS2 */
 
-#if XP_OS2
+#endif /* !XP_WIN16 */
 
-              ULONG usRetCode;
-              usRetCode = WriteLockFileRenameEntry(final,current,"SOFTUPDT.LST");
-              if (usRetCode == NO_ERROR) {
-                 err = NO_ERROR;
-              }
-#else
+                /* NOTE: use OEM filenames! Even though it looks like a Windows
+                 *       .INI file, WININIT.INI is processed under DOS 
+                 */
+                AnsiToOem( final, final );
+                AnsiToOem( current, current );
+
                 if ( WritePrivateProfileString( "Rename", final, current, "WININIT.INI" ) )
 		            err = NO_ERROR;
-#endif
 
-#if !defined(XP_WIN16) && !defined(XP_OS2)
+#if !defined(XP_WIN16)
             }
 #endif /* XP_WIN16 */
+
+#else /* XP_OS2 */
+            ULONG usRetCode;
+            usRetCode = WriteLockFileRenameEntry(final,current,"SOFTUPDT.LST");
+            if (usRetCode == NO_ERROR) {
+                err = NO_ERROR;
+            }
+#endif /* XP_OS2 */
 
             if ( NO_ERROR == err )
                 err = REBOOT_NEEDED;
@@ -575,7 +600,3 @@ BOOL WFE_IsMoveFileExBroken()
 #endif /* WIN32 */
 
 
-extern "C" int DiskSpaceAvailable(char *fileSystem, int nBytes)
-{
-	return nBytes>=0;
-}

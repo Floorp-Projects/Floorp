@@ -244,8 +244,8 @@ native_netscape_softupdate_WinReg_nativeSetValueString(
     pSubkey = (char*)JRI_GetStringPlatformChars( env, subkey, "", 0 );
 
     pValue  = (char*)JRI_GetStringPlatformChars( env, value, "", 0 );
-    length  = strlen(pValue);
-
+    length = (pValue == NULL) ? 0 : strlen(pValue);
+    
 #ifdef WIN32
     pName   = (char*)JRI_GetStringPlatformChars( env, valname, "", 0 );
 

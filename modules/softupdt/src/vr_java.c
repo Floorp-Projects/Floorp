@@ -15,8 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#ifndef STANDALONE_REGISTRY
-/*
+/*  
  *   Native implementation for the netscape.softupdate.VersionRegistry,
  *   netscape.softupdate.Registry classes and helper classes
  */
@@ -40,14 +39,20 @@
 #include "_jri/netscape_softupdate_RegEntryEnumerator.c"
 #include "_jri/netscape_softupdate_RegistryException.c"
 #else
-#include "n_softupdate_VersionRegistry.h"
-#include "n_softupdate_VerRegEnumerator.h"
-#include "n_softupdate_VersionInfo.h"
-#include "netscape_softupdate_Registry.h"
-#include "n_softupdate_RegistryNode.h"   
-#include "n_softupdate_RegKeyEnumerator.h"
-#include "n_s_RegEntryEnumerator.h"
-#include "n_s_RegistryException.h"
+#include "n_softupdate_VersionRegistry.c"
+#include "n_softupdate_VerRegEnumerator.c"
+#include "n_softupdate_VersionInfo.c"
+#include "netscape_softupdate_Registry.c"
+#include "n_softupdate_RegistryNode.c"   
+#include "n_softupdate_RegKeyEnumerator.c"
+#include "n_s_RegEntryEnumerator.c"
+#include "n_s_RegistryException.c"
+#endif
+
+#ifndef XP_MAC
+#include "_jri/java_lang_Integer.c"
+#else
+#include "java_lang_Integer.c"
 #endif
 
 #include "xp_mcom.h"
@@ -55,25 +60,18 @@
 #include "VerReg.h"
 #include "prefapi.h"
 
-#ifdef XP_MAC
-#pragma export on
-#endif
-
-void VR_Initialize(void* env)
+void SU_Reg_Initialize(JRIEnv* env)
 {
-   use_netscape_softupdate_VersionRegistry((JRIEnv*)env);
-   use_netscape_softupdate_VerRegEnumerator((JRIEnv*)env);
-   use_netscape_softupdate_VersionInfo((JRIEnv*)env);
-   use_netscape_softupdate_Registry((JRIEnv*)env);
-   use_netscape_softupdate_RegistryNode((JRIEnv*)env);
-   use_netscape_softupdate_RegKeyEnumerator((JRIEnv*)env);
-   use_netscape_softupdate_RegEntryEnumerator((JRIEnv*)env);
-   use_netscape_softupdate_RegistryException((JRIEnv*)env);
+   use_netscape_softupdate_VersionRegistry(env);
+   use_netscape_softupdate_VerRegEnumerator(env);
+   use_netscape_softupdate_VersionInfo(env);
+   use_netscape_softupdate_Registry(env);
+   use_netscape_softupdate_RegistryNode(env);
+   use_netscape_softupdate_RegKeyEnumerator(env);
+   use_netscape_softupdate_RegEntryEnumerator(env);
+   use_netscape_softupdate_RegistryException(env);
+   use_java_lang_Integer(env);
 }
-
-#ifdef XP_MAC
-#pragma export reset
-#endif
 
 /* ------------------------------------------------------------------
  * VersionRegistry native methods
@@ -339,7 +337,122 @@ native_netscape_softupdate_VersionRegistry_close(
     return ( VR_Close() );
 }
 
+/*
+ *  VersionRegistry::setRefCount()
+ */
+JRI_PUBLIC_API(jint)
+native_netscape_softupdate_VersionRegistry_setRefCount(
+   JRIEnv*                    env,
+   struct java_lang_Class*    clazz,
+   struct java_lang_String*   component, 
+   jint                       refcount )
+{
+    char* szComponent = (char*)JRI_GetStringUTFChars( env, component );
+    if ( szComponent == NULL ) {
+        return REGERR_FAIL;
+    }
 
+    return VR_SetRefCount( szComponent, refcount );
+}
+
+/*
+ *  VersionRegistry::getRefCount()
+ */
+JRI_PUBLIC_API(struct java_lang_Integer*)
+native_netscape_softupdate_VersionRegistry_getRefCount(
+   JRIEnv*                    env,
+   struct java_lang_Class*    clazz,
+   struct java_lang_String*   component )
+{
+    REGERR status;
+    int cRefCount;
+
+    char* szComponent = (char*)JRI_GetStringUTFChars( env, component );
+    if ( szComponent != NULL ) {
+        
+        status = VR_GetRefCount( szComponent, &cRefCount );
+        if ( status == REGERR_OK ) {
+            return java_lang_Integer_new( env,
+                class_java_lang_Integer(env),
+                cRefCount);
+
+        }
+    }
+
+    return NULL;
+}
+
+/*
+ *  VersionRegistry::uninstallCreateNode()
+ */
+extern JRI_PUBLIC_API(jint)
+native_netscape_softupdate_VersionRegistry_uninstallCreateNode(
+   JRIEnv* env, 
+   struct java_lang_Class* clazz, 
+   struct java_lang_String *regPackageName, 
+   struct java_lang_String *userPackageName)
+{
+    char* szRegPackageName = (char*)JRI_GetStringUTFChars( env, regPackageName );
+    char* szUserPackageName = (char*)JRI_GetStringUTFChars( env, userPackageName );
+
+    if ( szRegPackageName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    if ( szUserPackageName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    return VR_UninstallCreateNode( szRegPackageName, szUserPackageName );
+}
+
+/*
+ *  VersionRegistry::uninstallAddFileToList()
+ */
+extern JRI_PUBLIC_API(jint)
+native_netscape_softupdate_VersionRegistry_uninstallAddFileToList(
+   JRIEnv* env, 
+   struct java_lang_Class* clazz, 
+   struct java_lang_String *regPackageName, 
+   struct java_lang_String *vrName)
+{
+    char* szRegPackageName = (char*)JRI_GetStringUTFChars( env, regPackageName );
+    char* szVrName = (char*)JRI_GetStringUTFChars( env, vrName );
+
+    if ( szRegPackageName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    if ( szVrName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    return VR_UninstallAddFileToList( szRegPackageName, szVrName );
+}
+
+/*
+ *  VersionRegistry::uninstallFileExistsInList()
+ */
+extern JRI_PUBLIC_API(jint)
+native_netscape_softupdate_VersionRegistry_uninstallFileExistsInList(
+JRIEnv* env,
+struct java_lang_Class* clazz,
+struct java_lang_String *regPackageName, 
+struct java_lang_String *vrName)
+{
+    char* szRegPackageName = (char*)JRI_GetStringUTFChars( env, regPackageName );
+    char* szVrName = (char*)JRI_GetStringUTFChars( env, vrName );
+
+    if ( szRegPackageName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    if ( szVrName == NULL ) {
+        return REGERR_FAIL;
+    }
+
+    return VR_UninstallFileExistsInList( szRegPackageName, szVrName );
+}
 
 /* ------------------------------------------------------------------
  * VerRegEnumerator native methods
@@ -374,7 +487,7 @@ native_netscape_softupdate_VerRegEnumerator_regNext(
       XP_STRCPY( pathbuf, pszPath );
 
       /* Get next path from Registry */
-      status = VR_Enum( &state, pathbuf, MAXREGPATHLEN );
+      status = VR_Enum( NULL, &state, pathbuf, MAXREGPATHLEN );
 
       /* if we got a good path */
       if (status == REGERR_OK) {
@@ -524,7 +637,7 @@ native_netscape_softupdate_Registry_nGetKey(
                         target);
         }
         else {
-            JRI_ThrowNew(env,
+            JRI_ThrowNew(env, 
                 class_netscape_softupdate_RegistryException(env),
                 "");
         }
@@ -537,7 +650,7 @@ native_netscape_softupdate_Registry_nGetKey(
 /*** private native nUserName ()Ljava/lang/String; ***/
 JRI_PUBLIC_API(struct java_lang_String *)
 native_netscape_softupdate_Registry_nUserName(
-    JRIEnv* env,
+    JRIEnv* env, 
     struct netscape_softupdate_Registry* self)
 {
     char*  profName;
@@ -751,7 +864,7 @@ native_netscape_softupdate_RegistryNode_nGetEntry(
         {
             size = info.entryLength;
             pValue = XP_ALLOC(size);
-            if ( pValue != NULL )
+            if ( pValue != NULL ) 
             {
                 status = NR_RegGetEntry( hReg, key, pName, pValue, &size );
                 if ( REGERR_OK == status )
@@ -759,17 +872,17 @@ native_netscape_softupdate_RegistryNode_nGetEntry(
                     switch ( info.entryType )
                     {
                     case REGTYPE_ENTRY_STRING_UTF:
-                        valObj = (struct java_lang_Object *)JRI_NewStringUTF(
-                            env,
-                            (char*)pValue,
+                        valObj = (struct java_lang_Object *)JRI_NewStringUTF( 
+                            env, 
+                            (char*)pValue, 
                             XP_STRLEN((char*)pValue) );
                         break;
 
 
                     case REGTYPE_ENTRY_INT32_ARRAY:
-                        valObj = (struct java_lang_Object *)JRI_NewByteArray(
-                            env,
-                            size,
+                        valObj = (struct java_lang_Object *)JRI_NewByteArray( 
+                            env, 
+                            size, 
                             (char*)pValue );
                         break;
 
@@ -777,14 +890,14 @@ native_netscape_softupdate_RegistryNode_nGetEntry(
 
                     case REGTYPE_ENTRY_BYTES:
                     default:         /* for unknown types we return raw bits */
-                        valObj = (struct java_lang_Object *)JRI_NewByteArray(
-                            env,
-                            size,
+                        valObj = (struct java_lang_Object *)JRI_NewByteArray( 
+                            env, 
+                            size, 
                             (char*)pValue );
                         break;
                     }
                 }
-
+    
                 XP_FREE(pValue);
             }   /* pValue != NULL */
         }
@@ -900,6 +1013,4 @@ native_netscape_softupdate_RegEntryEnumerator_regNext(
 
    return (javaName);
 }
-
-#endif /* !STANDALONE_REGISTRY */
 

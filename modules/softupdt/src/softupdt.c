@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "softupdt.h"
+#include "su_folderspec.h"
 #define NEW_FE_CONTEXT_FUNCS
 #include "zig.h"
 #include "net.h"
@@ -27,8 +28,14 @@
 #include "prthread.h"
 #include "xpgetstr.h"
 #include "prmon.h"
+#include "pw_public.h"
+#include "NSReg.h"
+#include "VerReg.h"
+
 
 extern int MK_OUT_OF_MEMORY;
+extern REGERR  fe_DeleteOldFileLater(char * filename);
+
 #define MOCHA_CONTEXT_PREFIX "autoinstall:"
 
 /* error codes */
@@ -57,6 +64,7 @@ typedef struct su_DownloadStream_struct	{
 	SoftUpdateCompletionFunction fCompletion;
 	void *			fCompletionClosure;
     int32           fFlags;     /* download flags */
+    pw_ptr          progress ;
 } su_DownloadStream;
 
 /* su_URLFeData
@@ -86,6 +94,15 @@ void su_CompleteSoftwareUpdate(MWContext * context,
 void su_NetExitProc(URL_Struct* url, int result, MWContext * context);
 void su_HandleCompleteJavaScript (su_DownloadStream* realStream);
 
+
+/* Handles cancel of progress dialog by user */
+void cancelProgressDlg(void * closure) 
+{
+	su_DownloadStream* realStream = (su_DownloadStream*)closure;
+	if (realStream->fContext) {
+		XP_InterruptContext(realStream->fContext);
+	}
+}
 
 /* Completion routine for SU_StartSoftwareUpdate */
 
@@ -140,9 +157,18 @@ typedef struct su_QItem
 	su_startCallback  * QItem;
 } su_QItem;
 
+typedef struct su_UninstallContext_struct	{
+    REGENUM         state;
+    XP_Bool         bShared;
+} su_UninstallContext;
+
 
 XP_Bool     DnLoadInProgress = FALSE;
 PRMonitor * su_monitor = NULL;
+
+#ifdef XP_MAC
+#pragma export on
+#endif
 
 void SU_InitMonitor(void)
 {
@@ -159,6 +185,10 @@ void SU_DestroyMonitor(void)
 		su_monitor = NULL;
 	}
 }
+
+#ifdef XP_MAC
+#pragma export reset
+#endif
 
 /*
  * Queue maintanence is done here 
@@ -279,16 +309,20 @@ void su_NetExitProc(URL_Struct* url, int result, MWContext * context)
 {
 	su_startCallback * c;
 
-	PR_EnterMonitor(su_monitor);
-	if (c = QGetItem())
+    if (result != MK_CHANGING_CONTEXT)
 	{
-		FE_SetTimeout( su_FE_timer_callback, c, 1 );
-	}
-	else
-	{
-		DnLoadInProgress = FALSE;
-	}
-	PR_ExitMonitor(su_monitor);
+	    PR_EnterMonitor(su_monitor);
+        c = QGetItem();
+	    if (c != NULL)
+	    {
+		    FE_SetTimeout( su_FE_timer_callback, c, 1 );
+	    }
+	    else
+	    {
+		    DnLoadInProgress = FALSE;
+	    }
+	    PR_ExitMonitor(su_monitor);
+    }
 }
 
 #ifdef XP_MAC
@@ -375,6 +409,8 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
     int32 flags = 0;
 	short result = 0;
 	XP_Bool	isJar;
+    pw_ptr prg = NULL;
+	MWContext *fContext;
 
 	/* Initialize the stream data by data passed in the URL*/
 	fe_data = (su_URLFeData *) request->fe_data;
@@ -425,13 +461,21 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 		goto fail;
 	}
 
+    prg = PW_Create(context, pwApplicationModal);
+	fContext = PW_CreateProgressContext();
+    PW_AssociateWindowWithContext(fContext, prg);
+	fContext->url = request->address;
+	NET_SetNewContext(request, fContext, su_NetExitProc); 
+	PW_SetWindowTitle(streamData->progress, "SmartUpdate");
+	PW_Show(prg);
+
 	stream = NET_NewStream (NULL, 
 			su_HandleProcess,
 			su_HandleComplete, 
 			su_HandleAbort, 
 			su_HandleWriteReady, 
 			streamData,
-			context);
+			fContext);
 
 	if (stream == NULL)
 	{
@@ -440,10 +484,11 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 	}
 
 	streamData->fURL = request;
-	streamData->fContext = context;
+	streamData->fContext = fContext;
 	streamData->fCompletion = completion;
 	streamData->fCompletionClosure = completionClosure;
     streamData->fFlags = flags;
+    streamData->progress = prg;
 
 	if (request->fe_data)
 	{
@@ -465,6 +510,9 @@ NET_StreamClass * SU_NewStream (int format_out, void * registration,
 		result = su_ErrInternalError;
 		goto fail;
 	}
+
+    PW_SetCancelCallback(streamData->progress, cancelProgressDlg, streamData);
+	PW_SetWindowTitle(streamData->progress, "SmartUpdate");
 /* return the stream */
 	return stream;
 
@@ -499,6 +547,7 @@ void su_HandleAbort (NET_StreamClass *stream, int reason)
 	/* Close the files */
 	if (realStream->fFile)
 		XP_FileClose(realStream->fFile);
+    PW_Hide((pw_ptr)(realStream->progress));
 	/* Report the result */
 	su_CompleteSoftwareUpdate(realStream->fContext, 
 					realStream->fCompletion, realStream->fCompletionClosure, reason, realStream);
@@ -519,7 +568,7 @@ void su_HandleComplete (NET_StreamClass *stream)
 
 	if (realStream->fFile)
 		XP_FileClose(realStream->fFile);
-
+    PW_Hide((pw_ptr)(realStream->progress));
 	su_HandleCompleteJavaScript( realStream );
 }
 
@@ -636,6 +685,9 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	char s[255];
     char * jsScope = NULL;
 	ETEvalStuff * stuff = NULL;
+    Chrome chrome;
+	MWContext * context;
+	JSPrincipals * principals = NULL;
 
 	/* Initialize the JAR file */
 
@@ -713,11 +765,6 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 	SOB_destroy( jarData);
 	jarData = NULL;
 
-	{
-		Chrome chrome;
-		MWContext * context;
-		JSPrincipals *principals;
-
 	/* For security reasons, installer JavaScript has to execute inside a
 	special context. This context is created by ET_EvaluateBuffer as a JS object
 	of type SoftUpdate. the arguments to the object are passed in the string,
@@ -731,26 +778,34 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 
 		XP_BZERO(&chrome, sizeof(Chrome));
 		chrome.location_is_chrome = TRUE;
-		chrome.l_hint = -3000;
-		chrome.t_hint = -3000;
+#ifndef XP_MAC
 		chrome.type = MWContextDialog;
+#else
+    /* MacFE doesn't respect chrome.is_modal for MWContextDialog anymore.
+       We need a different solution for int'l content encoding on macs    */
+    chrome.type = MWContextBrowser;
+#endif
+        chrome.l_hint = -3000;
+	    chrome.t_hint = -3000;
 		context = FE_MakeNewWindow(realStream->fContext, NULL, NULL, &chrome);
 		if (context == NULL)
 			goto fail;
 
         urlLen = XP_STRLEN(realStream->fURL->address);
         codebase = XP_ALLOC( urlLen + XP_STRLEN(installerJarName) + 2 );
-        if ( codebase == NULL)
+        if ( codebase == NULL) {
             goto fail;
+        }
         XP_STRCPY( codebase, realStream->fURL->address );
         codebase[urlLen] = '/';
         XP_STRCPY( codebase+urlLen+1, installerJarName );
 
         principals = LM_NewJSPrincipals(realStream->fURL, installerJarName, codebase );
 		if (principals == NULL) {
-			FE_DestroyWindow(context);
 			goto fail;
 		}
+
+        ET_StartSoftUpdate(context, codebase);
 
 		/* Execute the mocha script, result will be reported in the callback */
 		realStream->fContext = context;
@@ -771,7 +826,6 @@ void su_HandleCompleteJavaScript (su_DownloadStream* realStream)
 
 		ET_EvaluateScript(context, buffer, stuff, su_mocha_eval_exit_fn);
 
-	}
 	goto done;
 
 fail:
@@ -782,97 +836,338 @@ fail:
 	/* drop through */
 done:
 	XP_FREEIF(jsScope);
-        XP_FREEIF(codebase);
+    /* Don't free 'codebase', the event destructor will! */
+    /* XP_FREEIF(codebase); */
 	if ( installerFileNameURL )
 		XP_FREE( installerFileNameURL );
 
 	/* Should we purge stuff from the disk cache here? */
 }
 
-/* XXX: Move JavaGetBoolPref to lj_init.c.
- * Delete IsJavaSecurityEnabled and IsJavaSecurityDefaultTo30Enabled functions
- * XXX: Cache all security preferences while we are running on mozilla
- *      thread. Hack for 4.0 
- */
-#define MAX_PREF 20
-
-struct {
-  char *pref_name;
-  XP_Bool value;
-} cachePref[MAX_PREF];
-
-static int free_idx=0;
-static XP_Bool locked = FALSE;
-
-static void AddPrefToCache(char *pref_name, XP_Bool value) 
+int su_UninstallDeleteFile(char *fileNamePlatform)
 {
-  if (!pref_name)
-      return;
+	char * fileName;
+	int32 err;
+	XP_StatStruct statinfo;
+          
+	fileName = XP_PlatformFileToURL(fileNamePlatform);
+    if (fileName != NULL)
+	{
+		char * temp = XP_STRDUP(&fileName[7]);
+		XP_FREEIF(fileName);
+		fileName = temp;
+		if (fileName)
+		{
+			err = XP_Stat(fileName, &statinfo, xpURL);
+			if (err != -1)
+			{
+				if ( XP_STAT_READONLY( statinfo ) )
+				{
+					err = -1;
+				}
+				else if (!S_ISDIR(statinfo.st_mode))
+				{
+					err = XP_FileRemove ( fileName, xpURL );
+					if (err != 0)
+                    {
+#ifdef XP_PC
+/* REMIND  need to move function to generic XP file */
+						fe_DeleteOldFileLater( (char*)fileNamePlatform );
+#endif
+					}
 
-  if (free_idx >= MAX_PREF) {
-      XP_ASSERT(FALSE); /* Implement dynamic growth of preferences */
-      return;
-  }
+				}
+                else
+                {
+                    err = -1;
+                }
+			}
+			else
+			{
+				err = -1;
+			}
+    		
+        }
+		else
+		{
+			err = -1;
+		}
+	}   
 
-  cachePref[free_idx].pref_name = XP_STRDUP(pref_name);
-  cachePref[free_idx].value = value;
-  free_idx++;
+	
+	XP_FREEIF(fileName);
+	return err;
 }
 
-static XP_Bool GetPreference(char *pref_name, XP_Bool *pref_value) 
+
+REGERR su_UninstallProcessItem(char *component_path)
 {
-  int idx = 0;
-  *pref_value = FALSE;
+    int refcount;
+    int err;
+    char filepath[MAXREGPATHLEN];
 
-  if (!pref_name) 
-      return FALSE;
-
-  for (; idx < free_idx; idx++) {
-    if (XP_STRCMP(cachePref[idx].pref_name, pref_name) == 0) {
-        *pref_value = cachePref[idx].value;
-        locked = TRUE;
-        return TRUE;
+    err = VR_GetPath(component_path, sizeof(filepath), filepath);
+    if ( err == REGERR_OK )
+    {
+        err = VR_GetRefCount(component_path, &refcount);  
+        if ( err == REGERR_OK )
+        {
+            --refcount;
+            if (refcount > 0)
+                err = VR_SetRefCount(component_path, refcount);  
+            else 
+            {
+                err = VR_Remove(component_path);
+                err = su_UninstallDeleteFile(filepath);
+            }
+        }
+        else
+        {
+            /* delete node and file */
+            err = VR_Remove(component_path);
+            err = su_UninstallDeleteFile(filepath);
+        }
     }
-  }
-
-  if (locked) {
-    XP_ASSERT(FALSE); /* Implement dynamic growth of preferences */
-    return FALSE;
-  }
-      
-  if (PREF_GetBoolPref(pref_name, pref_value) >=0) {
-      AddPrefToCache(pref_name, *pref_value);
-      return TRUE;
-  }
-
-  return FALSE;
+    return err;
 }
 
 #ifdef XP_MAC
 #pragma export on
 #endif
 
-int PR_CALLBACK JavaGetBoolPref(char * pref_name) 
+int32 SU_Uninstall(char *regPackageName)
 {
-	XP_Bool pref;
-        int ret_val;
-        GetPreference(pref_name, &pref);
-        ret_val = pref;
-	return ret_val;
+    REGERR status = REGERR_FAIL;
+    char pathbuf[MAXREGPATHLEN+1] = {0};
+    char sharedfilebuf[MAXREGPATHLEN+1] = {0};
+    REGENUM state = 0;
+    int32 length;
+    int32 err;
+
+    if (regPackageName == NULL)
+        return REGERR_PARAM;
+
+    if (pathbuf == NULL)
+        return REGERR_PARAM;
+
+    /* Get next path from Registry */
+    status = VR_Enum( regPackageName, &state, pathbuf, MAXREGPATHLEN );
+
+    /* if we got a good path */
+    while (status == REGERR_OK)
+    {
+        char component_path[2*MAXREGPATHLEN+1] = {0};
+        XP_STRCAT(component_path, regPackageName);
+        length = XP_STRLEN(regPackageName);
+        if (component_path[length - 1] != '/')
+            XP_STRCAT(component_path, "/");
+        XP_STRCAT(component_path, pathbuf);
+        err = su_UninstallProcessItem(component_path);
+        status = VR_Enum( regPackageName, &state, pathbuf, MAXREGPATHLEN );  
+    }
+    
+    err = VR_Remove(regPackageName);
+
+    state = 0;
+    status = VR_UninstallEnumSharedFiles( regPackageName, &state, sharedfilebuf, MAXREGPATHLEN );
+    while (status == REGERR_OK)
+    {
+        err = su_UninstallProcessItem(sharedfilebuf);
+        err = VR_UninstallDeleteFileFromList(regPackageName, sharedfilebuf);
+        status = VR_UninstallEnumSharedFiles( regPackageName, &state, sharedfilebuf, MAXREGPATHLEN );
+    }
+
+    err = VR_UninstallDeleteSharedFilesKey(regPackageName);
+    err = VR_UninstallDestroy(regPackageName);
+    return err;
 }
 
-int PR_CALLBACK IsJavaSecurityEnabled() 
+
+int32 SU_EnumUninstall(void** context, char* userPackageName,
+                                    int32 len1, char*regPackageName, int32 len2)
 {
-	XP_Bool pref;
-        int ret_val;
-	GetPreference("signed.applets.codebase_principal_support", &pref);
-        ret_val = !pref;
-	return ret_val;
+    REGERR status = REGERR_FAIL;
+    int err;
+    su_UninstallContext* pcontext = (su_UninstallContext*)*context;
+       
+    if ( *context == NULL )
+    {
+        *context = XP_ALLOC( sizeof (su_UninstallContext));
+        if (*context == NULL)
+	    {
+		    err = MK_OUT_OF_MEMORY;
+		    return err;
+	    }
+
+        pcontext = (su_UninstallContext*)*context;
+        pcontext->state = 0;
+        pcontext->bShared = FALSE;
+    }
+
+    if ( !pcontext->bShared )
+    {
+        status = VR_EnumUninstall(&pcontext->state, 
+                                  userPackageName, len1, 
+                                  regPackageName, len2, pcontext->bShared); 
+        
+        if (status != REGERR_OK)
+        {
+            pcontext->bShared = TRUE;
+            pcontext->state = 0;
+            status = REGERR_OK;
+        }
+    } 
+
+    if ( pcontext->bShared )
+    {
+        status = VR_EnumUninstall(&pcontext->state, 
+                                  userPackageName, len1, 
+                                  regPackageName, len2, pcontext->bShared); 
+
+        if ( status != REGERR_OK )
+        {
+            XP_FREE( pcontext );
+            *context = NULL;
+        }
+    }
+
+    return status;
 }
 
-int PR_CALLBACK IsJavaSecurityDefaultTo30Enabled() 
+PUBLIC int SU_Startup()
 {
-	return JavaGetBoolPref("signed.applets.local_classes_have_30_powers");
+    HREG reg;
+    REGERR  err = REGERR_OK;
+    char    *curPath = NULL;
+	
+    curPath = FE_GetDirectoryPath(eCommunicatorFolder);
+    if (!curPath) {
+        return REGERR_MEMORY;
+    }
+
+    VR_SetRegDirectory(curPath);
+    XP_FREE(curPath);
+
+    NR_StartupRegistry();   /* startup the registry; if already started, this will essentially be a noop */
+    SU_InitMonitor();
+
+	/* The profile manager will set the name of the current user once one is selected */
+	
+    /* check to see that we have a valid registry */
+    if (REGERR_OK == NR_RegOpen("", &reg))
+    {
+#ifdef XP_PC
+	    XP_StatStruct stat;
+ 		XP_Bool removeFromList;
+	    RKEY key;
+	    REGENUM state;
+
+        /* perform scheduled file deletions and replacements (PC only) */
+        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE,
+            REG_DELETE_LIST_KEY,&key))
+        {
+            char *urlFile;
+            char *pFile;
+            char buf[MAXREGNAMELEN];
+
+            state = 0;
+            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state,
+                buf, sizeof(buf), NULL ))
+            {
+                urlFile = XP_PlatformFileToURL(buf);
+                if ( urlFile == NULL)
+                    continue;
+                pFile = urlFile+7;
+
+                removeFromList = FALSE;
+                if (0 == XP_FileRemove(pFile, xpURL)) {
+                    /* file was successfully deleted */
+                    removeFromList = TRUE;
+                }
+                else if (XP_Stat(pFile, &stat, xpURL) != 0) {
+                    /* file doesn't appear to exist */
+                    removeFromList = TRUE;
+                }
+
+                if (removeFromList) {
+                    err = NR_RegDeleteEntry( reg, key, buf );
+                    /* must reset state or enum will stop on deleted entry */
+                    if ( err == REGERR_OK )
+                        state = 0;
+                }
+
+                XP_FREEIF(urlFile);
+            }
+            /* delete list node if empty */
+			state = 0;
+            if (REGERR_NOMORE == NR_RegEnumEntries( reg, key, &state, buf, 
+                sizeof(buf), NULL ))
+            {
+                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY);
+            }
+        }
+
+        /* replace files if any listed */
+        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE,
+            REG_REPLACE_LIST_KEY, &key))
+        {
+            char tmpfile[MAXREGNAMELEN];
+            char target[MAXREGNAMELEN];
+
+            state = 0;
+            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state,
+                tmpfile, sizeof(tmpfile), NULL ))
+            {
+                removeFromList = FALSE;
+                if (XP_Stat(tmpfile, &stat, xpURL) != 0) 
+                {
+                    /* new file is gone! */
+                    removeFromList = TRUE;
+                }
+                else if ( REGERR_OK != NR_RegGetEntryString( reg, key, 
+                    tmpfile, target, sizeof(target) ) )
+                {
+                    /* can't read target filename, corruption? */
+                    removeFromList = TRUE;
+                }
+                else {
+                    if (XP_Stat(target, &stat, xpURL) == 0) {
+                        /* need to delete old file first */
+                        XP_FileRemove( target, xpURL );
+                    }
+                    if (0 == XP_FileRename(tmpfile, xpURL, target, xpURL)) {
+                        removeFromList = TRUE;
+                    }
+                }
+
+                if (removeFromList) {
+                    err = NR_RegDeleteEntry( reg, key, tmpfile );
+                    /* must reset state or enum will stop on deleted entry */
+                    if ( err == REGERR_OK )
+                        state = 0;
+                }
+            }
+            /* delete list node if empty */
+            state = 0;
+            if (REGERR_NOMORE == NR_RegEnumEntries(reg, key, &state, tmpfile, 
+                sizeof(tmpfile), NULL )) 
+            {
+                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
+            }
+        }
+#endif /* XP_PC */
+        NR_RegClose(reg);
+    }
+
+
+    return err;
+}
+
+int SU_Shutdown()
+{
+    SU_DestroyMonitor();
+
+    return 0;
 }
 
 #ifdef XP_MAC

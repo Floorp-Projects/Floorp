@@ -20,11 +20,18 @@
 #include "prlink.h"
 
 extern void Java_netscape_softupdate_FolderSpec_GetNativePath_stub();
-extern void Java_netscape_softupdate_FolderSpec_GetSecurityTargetID_stub();
 extern void Java_netscape_softupdate_FolderSpec_NativeGetDirectoryPath_stub();
 extern void Java_netscape_softupdate_FolderSpec_NativePickDefaultDirectory_stub();
+extern void Java_netscape_softupdate_InstallDelete_NativeComplete_stub();
+extern void Java_netscape_softupdate_InstallDelete_NativeCheckFileStatus_stub();
+extern void Java_netscape_softupdate_InstallExecute_NativeAbort_stub();
 extern void Java_netscape_softupdate_InstallExecute_NativeComplete_stub();
+extern void Java_netscape_softupdate_InstallFile_NativeAbort_stub();
 extern void Java_netscape_softupdate_InstallFile_NativeComplete_stub();
+extern void Java_netscape_softupdate_InstallFile_NativeDoesFileExist_stub();
+extern void Java_netscape_softupdate_InstallPatch_NativeDeleteFile_stub();
+extern void Java_netscape_softupdate_InstallPatch_NativePatch_stub();
+extern void Java_netscape_softupdate_InstallPatch_NativeReplace_stub();
 extern void Java_netscape_softupdate_RegEntryEnumerator_regNext_stub();
 extern void Java_netscape_softupdate_RegKeyEnumerator_regNext_stub();
 extern void Java_netscape_softupdate_RegistryNode_nDeleteEntry_stub();
@@ -45,10 +52,11 @@ extern void Java_netscape_softupdate_SoftwareUpdate_OpenJARFile_stub();
 extern void Java_netscape_softupdate_SoftwareUpdate_VerifyJSObject_stub();
 extern void Java_netscape_softupdate_SoftwareUpdate_getCertificates_stub();
 extern void Java_netscape_softupdate_SoftwareUpdate_NativeGestalt_stub();
-extern void Java_netscape_softupdate_SoftwareUpdate_NativeDeleteFile_stub();
-extern void Java_netscape_softupdate_SoftwareUpdate_NativeVerifyDiskspace_stub();
+extern void Java_netscape_softupdate_SoftwareUpdate_NativeDiskSpaceAvailable_stub();
+extern void Java_netscape_softupdate_SoftwareUpdate_NativeFileURLToNative_stub();
 extern void Java_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory_stub();
 extern void Java_netscape_softupdate_SoftwareUpdate_ExtractDirEntries_stub();
+extern void Java_netscape_softupdate_SoftwareUpdate_NativeUninstall_stub();
 extern void Java_netscape_softupdate_Trigger_StartSoftwareUpdate_stub();
 extern void Java_netscape_softupdate_Trigger_UpdateEnabled_stub();
 extern void Java_netscape_softupdate_VerRegEnumerator_regNext_stub();
@@ -57,12 +65,15 @@ extern void Java_netscape_softupdate_VersionRegistry_componentPath_stub();
 extern void Java_netscape_softupdate_VersionRegistry_componentVersion_stub();
 extern void Java_netscape_softupdate_VersionRegistry_deleteComponent_stub();
 extern void Java_netscape_softupdate_VersionRegistry_getDefaultDirectory_stub();
+extern void Java_netscape_softupdate_VersionRegistry_getRefCount_stub();
 extern void Java_netscape_softupdate_VersionRegistry_inRegistry_stub();
 extern void Java_netscape_softupdate_VersionRegistry_installComponent_stub();
 extern void Java_netscape_softupdate_VersionRegistry_setDefaultDirectory_stub();
+extern void Java_netscape_softupdate_VersionRegistry_setRefCount_stub();
+extern void Java_netscape_softupdate_VersionRegistry_uninstallAddFileToList_stub();
+extern void Java_netscape_softupdate_VersionRegistry_uninstallCreateNode_stub();
+extern void Java_netscape_softupdate_VersionRegistry_uninstallFileExistsInList_stub();
 extern void Java_netscape_softupdate_VersionRegistry_validateComponent_stub();
-extern void Java_netscape_softupdate_InstallExecute_NativeAbort_stub();
-extern void Java_netscape_softupdate_InstallFile_NativeAbort_stub();
 
 #ifdef XP_PC
 extern void Java_netscape_softupdate_WinProfile_nativeWriteString_stub();
@@ -78,11 +89,18 @@ extern void Java_netscape_softupdate_WinReg_nativeGetValue_stub();
 
 PRStaticLinkTable su_nodl_tab[] = {
   { "Java_netscape_softupdate_FolderSpec_GetNativePath_stub", Java_netscape_softupdate_FolderSpec_GetNativePath_stub },
-  { "Java_netscape_softupdate_FolderSpec_GetSecurityTargetID_stub", Java_netscape_softupdate_FolderSpec_GetSecurityTargetID_stub },
   { "Java_netscape_softupdate_FolderSpec_NativeGetDirectoryPath_stub", Java_netscape_softupdate_FolderSpec_NativeGetDirectoryPath_stub },
   { "Java_netscape_softupdate_FolderSpec_NativePickDefaultDirectory_stub", Java_netscape_softupdate_FolderSpec_NativePickDefaultDirectory_stub },
+  { "Java_netscape_softupdate_InstallDelete_NativeComplete_stub", Java_netscape_softupdate_InstallDelete_NativeComplete_stub },
+  { "Java_netscape_softupdate_InstallDelete_NativeCheckFileStatus_stub", Java_netscape_softupdate_InstallDelete_NativeCheckFileStatus_stub },
+  { "Java_netscape_softupdate_InstallExecute_NativeAbort_stub", Java_netscape_softupdate_InstallExecute_NativeAbort_stub },
   { "Java_netscape_softupdate_InstallExecute_NativeComplete_stub", Java_netscape_softupdate_InstallExecute_NativeComplete_stub },
+  { "Java_netscape_softupdate_InstallFile_NativeAbort_stub", Java_netscape_softupdate_InstallFile_NativeAbort_stub },
   { "Java_netscape_softupdate_InstallFile_NativeComplete_stub", Java_netscape_softupdate_InstallFile_NativeComplete_stub },
+  { "Java_netscape_softupdate_InstallFile_NativeDoesFileExist_stub", Java_netscape_softupdate_InstallFile_NativeDoesFileExist_stub },
+  { "Java_netscape_softupdate_InstallPatch_NativeDeleteFile_stub", Java_netscape_softupdate_InstallPatch_NativeDeleteFile_stub },
+  { "Java_netscape_softupdate_InstallPatch_NativePatch_stub", Java_netscape_softupdate_InstallPatch_NativePatch_stub },
+  { "Java_netscape_softupdate_InstallPatch_NativeReplace_stub", Java_netscape_softupdate_InstallPatch_NativeReplace_stub },
   { "Java_netscape_softupdate_RegEntryEnumerator_regNext_stub", Java_netscape_softupdate_RegEntryEnumerator_regNext_stub },
   { "Java_netscape_softupdate_RegKeyEnumerator_regNext_stub", Java_netscape_softupdate_RegKeyEnumerator_regNext_stub },
   { "Java_netscape_softupdate_RegistryNode_nDeleteEntry_stub", Java_netscape_softupdate_RegistryNode_nDeleteEntry_stub },
@@ -103,10 +121,11 @@ PRStaticLinkTable su_nodl_tab[] = {
   { "Java_netscape_softupdate_SoftwareUpdate_VerifyJSObject_stub", Java_netscape_softupdate_SoftwareUpdate_VerifyJSObject_stub },
   { "Java_netscape_softupdate_SoftwareUpdate_getCertificates_stub", Java_netscape_softupdate_SoftwareUpdate_getCertificates_stub },
   { "Java_netscape_softupdate_SoftwareUpdate_NativeGestalt_stub", Java_netscape_softupdate_SoftwareUpdate_NativeGestalt_stub },
-  { "Java_netscape_softupdate_SoftwareUpdate_NativeDeleteFile_stub", Java_netscape_softupdate_SoftwareUpdate_NativeDeleteFile_stub },
-  { "Java_netscape_softupdate_SoftwareUpdate_NativeVerifyDiskspace_stub", Java_netscape_softupdate_SoftwareUpdate_NativeVerifyDiskspace_stub },
-  { "Java_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory_stub", Java_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory_stub },
   { "Java_netscape_softupdate_SoftwareUpdate_ExtractDirEntries_stub", Java_netscape_softupdate_SoftwareUpdate_ExtractDirEntries_stub },
+  { "Java_netscape_softupdate_SoftwareUpdate_NativeDiskSpaceAvailable_stub", Java_netscape_softupdate_SoftwareUpdate_NativeDiskSpaceAvailable_stub },
+  { "Java_netscape_softupdate_SoftwareUpdate_NativeFileURLToNative_stub", Java_netscape_softupdate_SoftwareUpdate_NativeFileURLToNative_stub },
+  { "Java_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory_stub", Java_netscape_softupdate_SoftwareUpdate_NativeMakeDirectory_stub },
+  { "Java_netscape_softupdate_SoftwareUpdate_NativeUninstall_stub", Java_netscape_softupdate_SoftwareUpdate_NativeUninstall_stub },
   { "Java_netscape_softupdate_Trigger_StartSoftwareUpdate_stub", Java_netscape_softupdate_Trigger_StartSoftwareUpdate_stub },
   { "Java_netscape_softupdate_Trigger_UpdateEnabled_stub", Java_netscape_softupdate_Trigger_UpdateEnabled_stub },
   { "Java_netscape_softupdate_VerRegEnumerator_regNext_stub", Java_netscape_softupdate_VerRegEnumerator_regNext_stub },
@@ -115,12 +134,15 @@ PRStaticLinkTable su_nodl_tab[] = {
   { "Java_netscape_softupdate_VersionRegistry_componentVersion_stub", Java_netscape_softupdate_VersionRegistry_componentVersion_stub },
   { "Java_netscape_softupdate_VersionRegistry_deleteComponent_stub", Java_netscape_softupdate_VersionRegistry_deleteComponent_stub },
   { "Java_netscape_softupdate_VersionRegistry_getDefaultDirectory_stub", Java_netscape_softupdate_VersionRegistry_getDefaultDirectory_stub },
+  { "Java_netscape_softupdate_VersionRegistry_getRefCount_stub", Java_netscape_softupdate_VersionRegistry_getRefCount_stub },
   { "Java_netscape_softupdate_VersionRegistry_inRegistry_stub", Java_netscape_softupdate_VersionRegistry_inRegistry_stub },
   { "Java_netscape_softupdate_VersionRegistry_installComponent_stub", Java_netscape_softupdate_VersionRegistry_installComponent_stub },
   { "Java_netscape_softupdate_VersionRegistry_setDefaultDirectory_stub", Java_netscape_softupdate_VersionRegistry_setDefaultDirectory_stub },
+  { "Java_netscape_softupdate_VersionRegistry_setRefCount_stub", Java_netscape_softupdate_VersionRegistry_setRefCount_stub },
+  { "Java_netscape_softupdate_VersionRegistry_uninstallAddFileToList_stub", Java_netscape_softupdate_VersionRegistry_uninstallAddFileToList_stub },
+  { "Java_netscape_softupdate_VersionRegistry_uninstallCreateNode_stub", Java_netscape_softupdate_VersionRegistry_uninstallCreateNode_stub },
+  { "Java_netscape_softupdate_VersionRegistry_uninstallFileExistsInList_stub", Java_netscape_softupdate_VersionRegistry_uninstallFileExistsInList_stub },
   { "Java_netscape_softupdate_VersionRegistry_validateComponent_stub", Java_netscape_softupdate_VersionRegistry_validateComponent_stub },
-  { "Java_netscape_softupdate_InstallExecute_NativeAbort_stub", Java_netscape_softupdate_InstallExecute_NativeAbort_stub },
-  { "Java_netscape_softupdate_InstallFile_NativeAbort_stub", Java_netscape_softupdate_InstallFile_NativeAbort_stub },
 #ifdef XP_PC
   { "Java_netscape_softupdate_WinProfile_nativeWriteString_stub", Java_netscape_softupdate_WinProfile_nativeWriteString_stub },
   { "Java_netscape_softupdate_WinProfile_nativeGetString_stub", Java_netscape_softupdate_WinProfile_nativeGetString_stub },

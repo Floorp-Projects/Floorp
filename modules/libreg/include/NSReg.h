@@ -20,6 +20,10 @@
 #ifndef _NSREG_H_
 #define _NSREG_H_
 
+#ifndef STANDALONE_REGISTRY
+#include "xp_core.h"
+#endif
+
 typedef int32   REGERR;
 typedef int32   RKEY;
 typedef uint32  REGENUM;
@@ -67,7 +71,9 @@ typedef struct _reginfo
 
 /* enumeration styles */
 #define REGENUM_NORMAL                  (0x00)
+#define REGENUM_CHILDREN                REGENUM_NORMAL
 #define REGENUM_DESCEND                 (0x01)
+#define REGENUM_DEPTH_FIRST             (0x02)
 
 /* entry data types */
 #define REGTYPE_ENTRY                 (0x0010)
@@ -77,6 +83,9 @@ typedef struct _reginfo
 
 #define REG_DELETE_LIST_KEY  "Netscape/Communicator/SoftwareUpdate/Delete List"
 #define REG_REPLACE_LIST_KEY "Netscape/Communicator/SoftwareUpdate/Replace List"
+#define REG_UNINSTALL_DIR    "Netscape/Communicator/SoftwareUpdate/Uninstall/"
+
+#define UNINSTALL_NAV_STR "."
 
 #define UNIX_GLOBAL_FLAG     "MOZILLA_SHARED_REGISTRY"
 
@@ -89,8 +98,10 @@ typedef struct _reginfo
   #else
   #define VR_INTERFACE(type)     type _far _pascal _export
   #endif
+#elif defined XP_MAC
+  #define VR_INTERFACE(__x)  __declspec(export) __x
 #else
-#define VR_INTERFACE(type)     type
+  #define VR_INTERFACE(type)     type
 #endif
 
 
@@ -111,6 +122,10 @@ VR_INTERFACE(REGERR) NR_RegClose(
 
 VR_INTERFACE(REGERR) NR_RegPack(
          HREG hReg         /* handle of open registry to pack */
+       );
+
+VR_INTERFACE(REGERR) NR_RegGetUsername(
+	    char **name        /* on return, an alloc'ed copy of the current user name */
        );
 
 VR_INTERFACE(REGERR) NR_RegSetUsername(

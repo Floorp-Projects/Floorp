@@ -21,6 +21,7 @@
 #include "xp_mcom.h"
 #include "su_instl.h"
 #include "su_folderspec.h"
+#include "fe_proto.h"
 #include "xp_str.h"
 #include "net.h"
 #include <Folders.h>
@@ -54,11 +55,7 @@ extern OSErr FindPluginFolder(FSSpec * spec, Boolean create);
 extern "C" OSErr ConvertUnixPathToMacPath(const char *, char **);
 /* Returns the URL format folder path */
 
-#ifdef XP_MAC
-#pragma export on
-#endif
-
-char * FE_GetDirectoryPath( su_DirSpecID folderID)
+PR_PUBLIC_API(char *) FE_GetDirectoryPath( su_DirSpecID folderID)
 {
 	char * path = NULL;
 	OSErr err;
@@ -139,17 +136,38 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 
 
 	// Directories that do not make sense on the Mac
-	case eWin_SystemFolder:
-	case eWin_WindowsFolder:
-
-        case eNetHelpFolder:
-        case eOSDriveFolder:
-        case eFileURLFolder:
-
+    case eWin_SystemFolder:
+    case eWin_WindowsFolder:
+    case eUnix_LocalFolder:
+    case eUnix_LibFolder:
 		path = NULL;
-	default:
-		XP_ASSERT(false);
-		path = NULL;
+		break;
+
+    case eNetHelpFolder:
+        {
+            char* tmpdir = FE_GetNetHelpDir();
+            path = WH_FileName(tmpdir+7, xpURL);   
+            XP_FREEIF(tmpdir);
+        }
+        break;
+
+    case eOSDriveFolder:
+        {
+            char *p;
+            path = GetDirectoryPathFromSystemEnum(kSystemFolderType);
+            /* Drive on mac is :Drive:, so look for second ':' */
+            if ( (p = XP_STRCHR( path+1, ':' )) )
+            {
+                if (p[1])
+                    p[1] =  '\0';
+            }
+        }
+        break;
+
+    case eFileURLFolder: // should never get past outer routine
+    default:
+        XP_ASSERT(false);
+        path = NULL;
 	}
 
 	if (path)	// Unescape the path, because we'll be passing it to XP_FileOpen as xpURL
@@ -171,9 +189,6 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 	return path;
 }
 
-#ifdef XP_MAC
-#pragma export reset
-#endif
 
 int FE_ExecuteFile( const char * fileName, const char * cmdline )
 {
@@ -249,9 +264,4 @@ int FE_ReplaceExistingFile(char *from, XP_FileType ftype,
 	return result;
 }
 
-extern "C" int DiskSpaceAvailable(char *fileSystem, int nBytes);
 
-int DiskSpaceAvailable(char *fileSystem, int nBytes)
-{
-	return nBytes>=0;
-}

@@ -20,7 +20,6 @@
  * native methods
  * created by atotic, 1/6/97
  */
-
 #include "xp_mcom.h"
 #include "jri.h"
 #include "su_folderspec.h"
@@ -152,8 +151,13 @@ pickDirectoryCallback(void * a)
 {
     su_PickDirTimer *t = (su_PickDirTimer *)a;
     int err;
+#ifdef XP_UNIX
+	err = FE_PromptForFileName (XP_FindSomeContext(), t->prompt, NULL, FALSE, TRUE,
+								 GetDirectoryPathCallbackFunction, a );
+#else
 	err = FE_PromptForFileName (t->context, t->prompt, NULL, FALSE, TRUE,
 								 GetDirectoryPathCallbackFunction, a );
+#endif
     if ( err != 0)  /* callback will not run */
         t->done = TRUE;
 }
@@ -190,7 +194,7 @@ native_netscape_softupdate_FolderSpec_NativePickDefaultDirectory(
        callback.prompt = prompt;
        FE_SetTimeout( pickDirectoryCallback, &callback, 1 );
         while (!callback.done)  /* Busy loop for now */
-             PR_Yield(); /* java_lang_Thread_yield(WHAT?); */
+             PR_Sleep(PR_INTERVAL_NO_WAIT); /* java_lang_Thread_yield(WHAT?); */
 	}
 
     if (callback.fileName != NULL)
@@ -213,7 +217,7 @@ struct su_DirectoryTable
 	su_DirSpecID folderEnum;		/* Directory ID */
 };
 
-/* DirectoryTable holds the info about build-in directories:
+/* DirectoryTable holds the info about built-in directories:
  * Text name, security level, enum
  */
 static struct su_DirectoryTable DirectoryTable[] = 
@@ -380,27 +384,3 @@ native_netscape_softupdate_FolderSpec_NativeGetDirectoryPath(JRIEnv* env,
 	return netscape_softupdate_FolderSpec_INVALID_PATH_ERR;
 }
 
-JRI_PUBLIC_API(jint)
-native_netscape_softupdate_FolderSpec_GetSecurityTargetID(JRIEnv* env,
-							struct netscape_softupdate_FolderSpec* self)
-{
-	su_DirSpecID folderID;
-	char *		folderName;
-	struct java_lang_String * jFolderName;
-
-	/* Get the name of the package to prompt for */
-
-	jFolderName = get_netscape_softupdate_FolderSpec_folderID( env, self);
-	folderName = (char*)JRI_GetStringUTFChars( env, jFolderName ); /* UTF OK */
-	folderID = MapNameToEnum(folderName);
-	switch (DirectoryTable[folderID].securityLevel)
-	{
-		case eOneFolderAccess:
-			return  netscape_softupdate_SoftwareUpdate_LIMITED_INSTALL;
-		case eAllFolderAccess:
-			return netscape_softupdate_SoftwareUpdate_FULL_INSTALL;
-		default:
-			return -1;
-	}
-	return -1;
-}

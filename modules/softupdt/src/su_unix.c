@@ -22,12 +22,15 @@
 #include "xp_mcom.h"
 #include "su_folderspec.h"
 #include "su_instl.h"
+#include "fe_proto.h"
 #include "xp_str.h"
 #include "NSReg.h"
 
+#ifndef MAXPATHLEN
 #define  MAXPATHLEN   1024
+#endif
+
 extern void fe_GetProgramDirectory( char *, int );
-extern int  FE_DiskSpaceAvailable( char * );
 int unlink (const char *);
 
 char * FE_GetDirectoryPath( su_DirSpecID folderID)
@@ -101,8 +104,8 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		}
 		else
 			fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
-		XP_STRCAT(Path, "java/bin/");
-		directory = XP_STRDUP( Path );
+            XP_STRCAT(Path, "java/bin/");
+            directory = XP_STRDUP( Path );
 		break;
 
 		case eJavaClassesFolder:
@@ -146,22 +149,16 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 
 		case eNetHelpFolder:
 		{
-			if (directory = getenv("MOZILLA_HOME"))
-    				PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
-			else
-				fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
-
-			XP_STRCAT(Path, "nethelp/");
-			directory = XP_STRDUP( Path );
-		}
+            char* tmpdir = FE_GetNetHelpDir();
+            directory = WH_FileName(tmpdir+7, xpURL);   
+            XP_FREEIF(tmpdir);
+        }
 		break;
 
 		case eOSDriveFolder:
-		case eFileURLFolder:
 			directory = XP_STRDUP( "/" );
 		break;
 
-		case ePackageFolder:
 		case eMac_SystemFolder:
 		case eMac_DesktopFolder:
 		case eMac_TrashFolder:
@@ -174,6 +171,8 @@ char * FE_GetDirectoryPath( su_DirSpecID folderID)
 		case eMac_PreferencesFolder:
 		break;
 		
+		case eFileURLFolder:
+		case ePackageFolder:
 		default:
 			XP_ASSERT(0);
 		break;
@@ -195,12 +194,17 @@ int FE_ExecuteFile( const char * filename, const char * cmdline )
 /* Crude file copy */
 int FE_CopyFile (const char *in, const char *out)
 {
+	struct stat in_stat;
+	int stat_result = -1;
+
 	char	buf [1024];
 	FILE	*ifp, *ofp;
 	int	rbytes, wbytes;
 
 	if (!in || !out)
 		return -1;
+
+	stat_result = stat (in, &in_stat);
 
 	ifp = fopen (in, "r");
 	if (!ifp) 
@@ -235,6 +239,12 @@ int FE_CopyFile (const char *in, const char *out)
 	fclose (ofp);
 	fclose (ifp);
 	unlink(in);
+
+	if (stat_result == 0)
+		{
+		chmod (out, in_stat.st_mode & 0777);
+		}
+
 	return 0;
 }
 
@@ -251,20 +261,4 @@ int    FE_ReplaceExistingFile(char *CurrentFname, XP_FileType ctype,
 }
 
 
-int DiskSpaceAvailable(char *fileSystem, int nBytes)
-{
-#if 0
-	struct STATFS fs_buf;
 
-	if (STATFS (fileSystem, &fs_buf) < 0)
-		return 0;
-
-	return ((fs_buf.f_bsize*(fs_buf.f_bavail-1)) >= nBytes);
-#endif
-	int Available = FE_DiskSpaceAvailable( fileSystem );
-	
-	if (Available > 0 )
-		return (Available >= nBytes);
-
-	return 0;
-}

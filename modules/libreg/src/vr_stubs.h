@@ -42,11 +42,6 @@
 #define TRUE 1
 #endif
 
-#ifdef XP_MAC
-#define EMFILE 23
-#define EBADF  24
-#endif
-
 #define XP_FILE_READ             "r"
 #define XP_FILE_READ_BIN         "rb"
 #define XP_FILE_WRITE            "w"
@@ -93,14 +88,11 @@
 #define XP_MEMSET(d, c, l)      memset((d), (c), (l))
 
 #ifdef XP_PC
-#define XP_STRCASECMP(x,y)  stricmp((x),(y))
-#define XP_STRNCASECMP(x,y,n) strnicmp((x),(y),(n))
-
+  #define XP_STRCASECMP(x,y)  stricmp((x),(y))
+  #define XP_STRNCASECMP(x,y,n) strnicmp((x),(y),(n))
 #else
-
-#define XP_STRCASECMP(x,y)  strcasecmp((x),(y))
-#define XP_STRNCASECMP(x,y,n) strncasecmp((x),(y),(n))
-
+  #define XP_STRCASECMP(x,y)  strcasecmp((x),(y))
+  #define XP_STRNCASECMP(x,y,n) strncasecmp((x),(y),(n))
 #endif
 
 typedef FILE          * XP_File;
@@ -111,18 +103,47 @@ typedef unsigned long   uint32;
 typedef short           int16;
 typedef unsigned short  uint16;
 typedef unsigned char   uint8;
-#endif
 
-typedef char            Bool;
-typedef int             XP_Bool;
-
-#ifdef XP_WIN
- typedef struct _stat   XP_StatStruct;
- #define XP_Stat(file,data,type)     _stat((file),(data))
+#ifdef XP_MAC
+#include <Types.h>
+	typedef char BOOL;
+    typedef char Bool;
+    typedef char XP_Bool;
+#elif defined(XP_PC)
+    typedef int Bool;
+    typedef int XP_Bool;
 #else
- typedef struct stat    XP_StatStruct;
-#define  XP_Stat(file,data,type)     stat((file),(data))
+    /*  XP_UNIX: X11/Xlib.h "define"s Bool to be int. This is really lame
+     *  (that's what typedef is for losers). So.. in lieu of a #undef Bool
+     *  here (Xlib still needs ints for Bool-typed parameters) people have
+     *  been #undef-ing Bool before including this file.
+     *  Can we just #undef Bool here? <mailto:mcafee> (help from djw, converse)
+     */
+
+    typedef char Bool;
+    typedef char XP_Bool;
 #endif
+#endif /* STANDALONE_REGISTRY */
+
+#ifdef XP_PC
+ typedef struct _stat   VR_StatStruct;
+ #define VR_Stat(file,data)     _stat((file),(data))
+#else
+ typedef struct stat    VR_StatStruct;
+#define  VR_Stat(file,data)     stat((file),(data))
+#endif
+
+
+
+#if defined(__cplusplus)
+# define XP_BEGIN_PROTOS extern "C" {
+# define XP_END_PROTOS }
+#else
+# define XP_BEGIN_PROTOS
+# define XP_END_PROTOS
+#endif
+
+XP_BEGIN_PROTOS
 
 #ifdef XP_UNIX
 extern XP_File VR_StubOpen (const char *name, const char * mode);
@@ -135,5 +156,7 @@ extern int strcasecmp(const char *str1, const char *str2);
 extern int strncasecmp(const char *str1, const char *str2, int length);
 extern char * strdup(const char *str);
 #endif
+
+XP_END_PROTOS
 
 #endif /* _VR_STUBS_H_ */

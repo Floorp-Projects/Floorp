@@ -23,6 +23,7 @@
 /* Apologies to the Mac guys, but I have a feeling that this file might be */
 /* cross-product in the future */
 
+
 /* xp */
 #include "su_aplsn.h"
 #include "xp_file.h"
@@ -485,5 +486,5 @@ fail:
 	if (*dst)
 		XP_FREE( *dst);
 	*dst = NULL;
-	return -1;
+	return -218;  /* unique error code to help tracking problems */
 }
