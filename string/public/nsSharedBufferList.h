@@ -26,36 +26,43 @@
 #define nsSharedBufferList_h___
 
 #include "nsBufferHandle.h"
+  // for |nsSharedBufferHandle|
+
+#include "nscore.h"
+  // for |PRUnichar|
 
   /**
+   * This class forms the basis for several multi-fragment string classes, in
+   * particular: |nsFragmentedString| (though not yet), and |nsSlidingString|/|nsSlidingSubstring|.
    *
+   * This class is not templated.  It is provided only for |PRUnichar|-based strings.
+   * If we turn out to have a need for multi-fragment ASCII strings, then perhaps we'll templatize
+   * or else duplicate this class.
    */
 class nsSharedBufferList
   {
     public:
 
       class Buffer
-          : public nsSharedBufferHandle<PRUnichar>
+          : public nsXXXBufferHandle<PRUnichar>
         {
-          friend class nsSharedBufferList;
-
           public:
+            Buffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageStart, PRUnichar* aStorageEnd ) : nsXXXBufferHandle(aDataStart, aDataEnd, aStorageStart, aStorageEnd) { }
 
-          private:
             Buffer* mPrev;
             Buffer* mNext;
         };
 
       struct Position
         {
-          nsSharedBufferList::Buffer*     mBuffer;
-          nsSharedBufferList::PRUnichar*  mPosInBuffer;
+          nsSharedBufferList::Buffer* mBuffer;
+          PRUnichar*                  mPosInBuffer;
         };
 
 
 
     public:
-      nsSharedBufferList() : mFirstBuffer(0), mLastBuffer(0), mTotalLength(0) { }
+      nsSharedBufferList() : mFirstBuffer(0), mLastBuffer(0), mTotalDataLength(0) { }
       virtual ~nsSharedBufferList();
 
     private:
@@ -68,8 +75,18 @@ class nsSharedBufferList
       Buffer* UnlinkBuffer( Buffer* );
       void    SplitBuffer( const Position& );
 
-      Buffer* First() { return mFirstBuffer; }
-      Buffer* Last()  { return mLastBuffer; }
+      static Buffer* NewBuffer( const PRUnichar*, PRUint32, PRUint32 = 0 );
+
+      void    DiscardSuffix( PRUint32 );
+        // need other discards: prefix, and by iterator or pointer or something
+
+            Buffer* GetFirstBuffer()        { return mFirstBuffer; }
+      const Buffer* GetFirstBuffer() const  { return mFirstBuffer; }
+      
+            Buffer* GetLastBuffer()         { return mLastBuffer; }
+      const Buffer* GetLastBuffer() const   { return mLastBuffer; }
+      
+      ptrdiff_t     GetDataLength() const   { return mTotalDataLength; }
 
     protected:
       void    DestroyBuffers();
@@ -77,8 +94,7 @@ class nsSharedBufferList
     protected:
       Buffer*   mFirstBuffer;
       Buffer*   mLastBuffer;
-
-      PRUint32  mTotalLength;
+      ptrdiff_t mTotalDataLength;
   };
 
 #endif // !defined(nsSharedBufferList_h___)
