@@ -76,6 +76,7 @@ locale/en-US/communicator/wallet/SignonViewer.dtd,        en-US/locale/en-US/com
 locale/en-US/editor/editorOverlay.dtd,                    en-US/locale/en-US/editor/editorOverlay.dtd
 locale/en-US/editor/editorSmileyOverlay.dtd,              en-US/locale/en-US/editor/editorSmileyOverlay.dtd
 locale/en-US/editor/contents.rdf,                         en-US/locale/en-US/editor/contents.rdf
+locale/en-US/editor/EditorHLineProperties.dtd,            en-US/locale/en-US/editor/EditorHLineProperties.dtd 
 locale/en-US/editor/EditorImageProperties.dtd,            en-US/locale/en-US/editor/EditorImageProperties.dtd
 locale/en-US/editor/EditorInsertChars.dtd,                en-US/locale/en-US/editor/EditorInsertChars.dtd
 locale/en-US/editor/EditorInsertSource.dtd,               en-US/locale/en-US/editor/EditorInsertSource.dtd
