@@ -605,7 +605,7 @@ nsImapMessageSinkProxy::nsImapMessageSinkProxy(nsIImapMessageSink* aImapMessageS
 
 nsImapMessageSinkProxy::~nsImapMessageSinkProxy()
 {
-    NS_IF_ADDREF (m_realImapMessageSink);
+    NS_IF_RELEASE (m_realImapMessageSink);
 }
 
 static NS_DEFINE_IID(kIImapMessageSinkIID, NS_IIMAPMESSAGESINK_IID);
@@ -882,7 +882,7 @@ nsImapExtensionSinkProxy::nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapEx
 
 nsImapExtensionSinkProxy::~nsImapExtensionSinkProxy()
 {
-    NS_IF_ADDREF (m_realImapExtensionSink);
+    NS_IF_RELEASE (m_realImapExtensionSink);
 }
 
 static NS_DEFINE_IID(kIImapExtensionSinkIID, NS_IIMAPEXTENSIONSINK_IID);
@@ -1121,7 +1121,7 @@ nsImapMiscellaneousSinkProxy::nsImapMiscellaneousSinkProxy(
 
 nsImapMiscellaneousSinkProxy::~nsImapMiscellaneousSinkProxy()
 {
-    NS_IF_ADDREF (m_realImapMiscellaneousSink);
+    NS_IF_RELEASE (m_realImapMiscellaneousSink);
 }
 
 static NS_DEFINE_IID(kIImapMiscellaneousSinkIID, NS_IIMAPMISCELLANEOUSSINK_IID);

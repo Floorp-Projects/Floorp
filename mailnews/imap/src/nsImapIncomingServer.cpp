@@ -58,6 +58,9 @@ public:
 	// we support the nsIImapIncomingServer interface
     NS_IMETHOD GetMaximumConnectionsNumber(PRInt32* maxConnections);
     NS_IMETHOD SetMaximumConnectionsNumber(PRInt32 maxConnections);
+
+    NS_IMETHOD GetTimeOutLimits(PRInt32* minutes);
+    NS_IMETHOD SetTimeOutLimits(PRInt32 minutes);
     
     NS_IMETHOD GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsIImapUrl* aImapUrl,
@@ -71,6 +74,7 @@ private:
     nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
+    PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
 	char *m_rootFolderPath;
     nsCOMPtr<nsISupportsArray> m_connectionCache;
     nsCOMPtr<nsISupportsArray> m_urlQueue;
@@ -144,6 +148,9 @@ NS_IMETHODIMP nsImapIncomingServer::GetServerURI(char ** aServerURI)
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, MaximumConnectionsNumber,
                        "max_cached_connections");
 
+NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
+                       "timeout");
+
 NS_IMETHODIMP
 nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
                                                   aClientEventQueue,
@@ -165,6 +172,17 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     if (aProtocol)
     {
         rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
+        // *** jt - in case of the time out situation or the connection gets
+        // terminated by some unforseen problems let's give it a second chance
+        // to run the url
+        if (NS_FAILED(rv))
+        {
+            rv = aProtocol->LoadUrl(aImapUrl, aConsumer);
+        }
+        else
+        {
+            // *** jt - alert user that error has occurred
+        }   
     }
     else
     {   // unable to get an imap connection to run the url; add to the url
@@ -194,8 +212,10 @@ nsImapIncomingServer::LoadNextQueuedUrl()
     m_urlQueue->Count(&cnt);
     if (cnt > 0)
     {
+        nsCOMPtr<nsISupports>
+            aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
         nsCOMPtr<nsIImapUrl>
-            aImapUrl(do_QueryInterface(m_urlQueue->ElementAt(0)));
+            aImapUrl(do_QueryInterface(aSupport, &rv));
 
         if (aImapUrl)
         {
@@ -225,22 +245,55 @@ nsImapIncomingServer::LoadNextQueuedUrl()
 NS_IMETHODIMP
 nsImapIncomingServer::RemoveConnection(nsIImapProtocol* aImapConnection)
 {
-    PRInt32 elementIndex = -1;
-    nsresult rv;
     PR_CEnterMonitor(this);
 
     if (aImapConnection)
-    {
-        // preventing earlier release of the protocol
-        nsCOMPtr<nsIImapProtocol>
-            aConnection(do_QueryInterface(aImapConnection,&rv));
-        aImapConnection->TellThreadToDie(PR_TRUE);
-
         m_connectionCache->RemoveElement(aImapConnection);
-    }
 
     PR_CExitMonitor(this);
     return NS_OK;
+}
+
+PRBool
+nsImapIncomingServer::ConnectionTimeOut(nsIImapProtocol* aConnection)
+{
+    PRBool retVal = PR_FALSE;
+    if (!aConnection) return retVal;
+    nsresult rv;
+
+    PR_CEnterMonitor(this);
+    PRInt32 timeoutInMinutes = 0;
+    rv = GetTimeOutLimits(&timeoutInMinutes);
+    if (NS_FAILED(rv) || timeoutInMinutes <= 0 || timeoutInMinutes > 29)
+    {
+        timeoutInMinutes = 29;
+        SetTimeOutLimits(timeoutInMinutes);
+    }
+
+    PRTime cacheTimeoutLimits;
+
+    LL_I2L(cacheTimeoutLimits, timeoutInMinutes * 60 * 1000000); // in
+                                                              // microseconds
+    PRTime lastActiveTimeStamp;
+    rv = aConnection->GetLastActiveTimeStamp(&lastActiveTimeStamp);
+
+    PRTime elapsedTime;
+    LL_SUB(elapsedTime, PR_Now(), lastActiveTimeStamp);
+    PRTime t;
+    LL_SUB(t, elapsedTime, cacheTimeoutLimits);
+    if (LL_GE_ZERO(t))
+    {
+        nsCOMPtr<nsIImapProtocol> aProtocol(do_QueryInterface(aConnection,
+                                                              &rv));
+        if (NS_SUCCEEDED(rv) && aProtocol)
+        {
+            m_connectionCache->RemoveElement(aConnection);
+            aProtocol->TellThreadToDie(PR_TRUE);
+            retVal = PR_TRUE;
+        }
+    }
+    PR_CExitMonitor(this);
+    return retVal;
 }
 
 nsresult
@@ -274,21 +327,34 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
     *aImapConnection = nsnull;
 	// iterate through the connection cache for a connection that can handle this url.
 	PRUint32 cnt;
+    nsCOMPtr<nsISupports> aSupport;
+
     rv = m_connectionCache->Count(&cnt);
     if (NS_FAILED(rv)) return rv;
     for (PRUint32 i = 0; i < cnt && !canRunUrl && !hasToWait; i++) 
 	{
-        connection = do_QueryInterface(m_connectionCache->ElementAt(i));
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        connection = do_QueryInterface(aSupport);
 		if (connection)
-			connection->CanHandleUrl(aImapUrl, canRunUrl, hasToWait);
-        
+			rv = connection->CanHandleUrl(aImapUrl, canRunUrl, hasToWait);
+        if (NS_FAILED(rv)) 
+        {
+            connection = null_nsCOMPtr();
+            continue;
+        }
         if (!freeConnection && !canRunUrl && !hasToWait && connection)
         {
-            connection->IsBusy(isBusy, isInboxConnection);
+            rv = connection->IsBusy(isBusy, isInboxConnection);
+            if (NS_FAILED(rv)) continue;
             if (!isBusy && !isInboxConnection)
                 freeConnection = connection;
         }
 	}
+    
+    if (ConnectionTimeOut(connection))
+        connection = null_nsCOMPtr();
+    if (ConnectionTimeOut(freeConnection))
+        freeConnection = null_nsCOMPtr();
 
 	// if we got here and we have a connection, then we should return it!
 	if (canRunUrl && connection)

@@ -110,6 +110,8 @@ public:
 	NS_IMETHOD GetDisplayStream (nsIWebShell **webShell);
     // Tell thread to die. This can only be called by imap service
     NS_IMETHOD TellThreadToDie(PRBool isSafeToDie);
+    // Get last active time stamp
+    NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -370,7 +372,7 @@ private:
 
 	// SendData not only writes the NULL terminated data in dataBuffer to our output stream
 	// but it also informs the consumer that the data has been written to the stream.
-	PRInt32 SendData(const char * dataBuffer);
+	nsresult SendData(const char * dataBuffer);
 
 	// state ported over from 4.5
 	PRBool					m_pseudoInterrupted;
@@ -430,6 +432,7 @@ private:
     PRBool		m_trackingTime;
     PRTime		m_startTime;
     PRTime		m_endTime;
+    PRTime      m_lastActiveTime;
     PRInt32		m_tooFastTime;
     PRInt32		m_idealTime;
     PRInt32		m_chunkAddSize;

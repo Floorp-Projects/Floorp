@@ -544,7 +544,9 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
                               nsIImapIncomingServer::GetIID(),
                                        getter_AddRefs(servers));
         if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIMsgIncomingServer> server (do_QueryInterface(servers->ElementAt(0)));
+        nsCOMPtr<nsISupports> aSupport =
+            getter_AddRefs(servers->ElementAt(0));
+        nsCOMPtr<nsIMsgIncomingServer> server (do_QueryInterface(aSupport));
         if (NS_FAILED(rv)) return rv;
 		m_server = do_QueryInterface(server);
     }
