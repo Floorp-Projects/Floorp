@@ -36,7 +36,7 @@ nsNativeViewerApp::~nsNativeViewerApp()
 }
 
 int
-nsNativeViewerApp::Run()
+nsNativeViewerApp::Run() 
 {
   OpenWindow();
  

@@ -41,7 +41,7 @@ VIEWER MENU DISCARDABLE
       MENUITEM "demo #9", VIEWER_DEMO9
       MENUITEM "demo #10", VIEWER_DEMO10
    }
-    MENUITEM "Top &100 Sites", VIEWER_TOP100
+    MENUITEM "&Test Sites", VIEWER_TOP100
     POPUP "Print &Preview"
     {
       MENUITEM "One Column", VIEWER_ONE_COLUMN
