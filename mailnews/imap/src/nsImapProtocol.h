@@ -34,6 +34,7 @@
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
 #include "nsVoidArray.h"
+#include "nsMsgLineBuffer.h" // we need this to use the nsMsgLineStreamBuffer helper class...
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -248,8 +249,7 @@ private:
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
 	char			*m_dataOutputBuf;
-	char			*m_dataInputBuf; // Note: no one should manipulate this buffer except for ReadLineFromBuffer!!!
-	char			*m_dataInputOffset; // used by ReadLineFromBuffer
+	nsMsgLineStreamBuffer * m_inputStreamBuffer;
     PRUint32		m_allocatedSize; // allocated size
     PRUint32        m_totalDataSize; // total data size
     PRUint32        m_curReadIndex;  // current read index

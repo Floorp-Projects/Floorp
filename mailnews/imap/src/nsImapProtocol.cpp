@@ -218,9 +218,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_allocatedSize = OUTPUT_BUFFER_SIZE;
 
 	// used to buffer incoming data by ReadNextLineFromInput
-	m_dataInputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_dataInputOffset = m_dataInputBuf;
-
+	m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE);
 	m_currentBiffState = nsMsgBiffState_Unknown;
 
 	// where should we do this? Perhaps in the factory object?
@@ -277,7 +275,8 @@ nsImapProtocol::~nsImapProtocol()
 	NS_IF_RELEASE(m_hostSessionList);
 
 	PR_FREEIF(m_dataOutputBuf);
-	PR_FREEIF(m_dataInputBuf);
+	if (m_inputStreamBuffer)
+		delete m_inputStreamBuffer;
 
     // **** We must be out of the thread main loop function
     NS_ASSERTION(m_imapThreadIsRunning == PR_FALSE, "Oops, thread is still running.\n");
@@ -3044,92 +3043,15 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
 		HandleMemoryFailure();
 }
 
-// the design for this method has an inherit bug: if the length of the line is greater than the size of aDataBufferSize, 
-// then we'll never find the next line because we can't hold the whole line in memory. 
-// aDataBuffer - a caller allocated buffer which is persistant across multiple calls to read next line. We store bytes we read
-//				 from the stream but have not formed a complete next line in this buffer. 
-// aStartPos  - ptr into aDataBuffer to the next byte of unprocessed data. ReadNextLineFromInput also modifies this value.
-// aDataBufferSize - the size of the allocated aDataBuffer
-// aInputStream - the input stream we want to read a line from
 
-char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, char *& aStartPos, PRUint32 aDataBufferSize, nsIInputStream * aInputStream)
+char* nsImapProtocol::CreateNewLineFromSocket()
 {
-	// try to extract a line from m_inputBuffer. If we don't have an entire line, 
-	// then read more bytes out from the stream. If the stream is empty then wait
-	// on the monitor for more data to come in.
-
-	NS_PRECONDITION(aStartPos && aDataBufferSize > 0, "invalid input arguments for read next line from input");
-
+	PRBool needMoreData = PR_FALSE;
+	char * newLine = nsnull;
 	do
 	{
-		char * endOfLine = nsnull;
-		PRUint32 numBytesInBuffer = PL_strlen(aStartPos);
-
-		if (numBytesInBuffer > 0) // any data in our internal buffer?
-			endOfLine = PL_strstr(aStartPos, CRLF); // see if we already have a line ending...
-
-		// it's possible that we got here before the first time we receive data from the server
-		// so m_inputStream will be nsnull...
-		if (!endOfLine && m_inputStream) // get some more data from the server
-		{
-			PRUint32 numBytesInStream = 0;
-			PRUint32 numBytesCopied = 0;
-			m_inputStream->GetLength(&numBytesInStream);
-			// if the number of bytes we want to read from the stream, is greater than the number
-			// of bytes left in our buffer, then we need to shift the start pos and its contents
-			// down to the beginning of aDataBuffer...
-			PRUint32 numFreeBytesInBuffer = (aDataBuffer + aDataBufferSize) - (aStartPos + numBytesInBuffer);
-			if (numBytesInStream > numFreeBytesInBuffer)
-			{
-				nsCRT::memcpy(aDataBuffer, aStartPos, numBytesInBuffer);
-				aDataBuffer[numBytesInBuffer] = '\0'; // make sure the end of the buffer is terminated
-				aStartPos = aDataBuffer; // update the new start position
-				// update the number of free bytes in the buffer
-				numFreeBytesInBuffer = aDataBufferSize - numBytesInBuffer;
-			}
-
-			PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer, numBytesInStream);
-			// read the data into the end of our data buffer
-			if (numBytesToCopy > 0)
-			{
-				m_inputStream->Read(aStartPos + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
-				Log("OnDataAvailable", nsnull, aDataBuffer + numBytesInBuffer);
-				aStartPos[numBytesInBuffer + numBytesCopied] = '\0';
-			}
-
-			// okay, now that we've tried to read in more data from the stream, look for another end of line 
-			// character 
-			endOfLine = PL_strstr(aStartPos, CRLF);
-		}
-
-		// okay, now check again for endOfLine.
-		if (endOfLine)
-		{
-			endOfLine += 2; // count for CRLF
-			// PR_CALLOC zeros out the allocated line
-			char* newLine = (char*) PR_CALLOC(endOfLine-aStartPos+1);
-			if (!newLine)
-				return nsnull;
-
-			nsCRT::memcpy(newLine, aStartPos, endOfLine-aStartPos); // copy the string into the new line buffer
-
-			// now we need to update the data buffer to go past the line we just read out. 
-			if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...
-				aStartPos[0] = '\0';
-			else
-			{
-				// advance 
-				aStartPos = endOfLine; // move us up to the end of the line
-//				nsCRT::memcpy(aDataBuffer, endOfLine, PL_strlen(endOfLine)); 
-//				aDataBuffer[PL_strlen(endOfLine)] = '\0';
-			}
-#ifdef DEBUG_bienvenu
-			printf("read next line: %s\n", newLine);
-			printf("remaining data: %s\n\n", aStartPos);
-#endif
-			return newLine;
-		}
-		else // we were unable to extract the next line and we now need to wait for data!
+		newLine = m_inputStreamBuffer->ReadNextLine(m_inputStream, needMoreData); 
+		if (needMoreData)
 		{
 			// wait on the data available monitor!!
 			PR_EnterMonitor(m_dataAvailableMonitor);
@@ -3137,43 +3059,13 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, char *& aStartP
 			PR_Wait(m_dataAvailableMonitor, PR_INTERVAL_NO_TIMEOUT);
 			PR_ExitMonitor(m_dataAvailableMonitor);
 			// once data has arrived, recursively 
+
 		}
-	} while (!DeathSignalReceived()); // mscott - i'd like to have some way of dropping out of here if we aren't going to find a new line...
-
-	return nsnull; // if we somehow got here....
-}
-
-char* 
-nsImapProtocol::CreateNewLineFromSocket()
-{
-	char * newLine = ReadNextLineFromInput(m_dataInputBuf, m_dataInputOffset, OUTPUT_BUFFER_SIZE, m_inputStream);
+	} while (!newLine && !DeathSignalReceived()); // until we get the next line and haven't been interrupted
+	
+	Log("CreateNewLineFromSocket", nsnull, newLine);
 	SetConnectionStatus(newLine ? PL_strlen(newLine) : 0);
 	return newLine;
-#if 0
-    NS_PRECONDITION(m_curReadIndex < m_totalDataSize && m_dataOutputBuf, 
-                    "Oops ... excceeding total data size");
-    if (!m_dataOutputBuf || m_curReadIndex >= m_totalDataSize)
-        return nsnull;
-
-    char* startOfLine = m_dataOutputBuf + m_curReadIndex;
-    char* endOfLine = PL_strstr(startOfLine, CRLF);
-    
-    // *** must have a canonical line format from the imap server ***
-    if (!endOfLine)
-        return nsnull;
-    endOfLine += 2; // count for CRLF
-    // PR_CALLOC zeros out the allocated line
-    char* newLine = (char*) PR_CALLOC(endOfLine-startOfLine+1);
-    if (!newLine)
-        return nsnull;
-
-    memcpy(newLine, startOfLine, endOfLine-startOfLine);
-    // set the current read index
-    m_curReadIndex = endOfLine - m_dataOutputBuf;
-
-    SetConnectionStatus(endOfLine-startOfLine);
-    return newLine;
-#endif
 }
 
 PRInt32
