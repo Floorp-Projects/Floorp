@@ -72,7 +72,7 @@ public:
                            PRBool aCompileEventHandlers);
 
 protected:
-  nsCOMPtr<nsIContentList> mAreas;
+  nsRefPtr<nsContentList> mAreas;
 };
 
 
@@ -152,8 +152,7 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
     }
   }
 
-  CallQueryInterface(mAreas, aAreas);
-
+  NS_ADDREF(*aAreas = mAreas);
   return NS_OK;
 }
 

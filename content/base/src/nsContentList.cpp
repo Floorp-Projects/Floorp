@@ -49,12 +49,11 @@
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIContentList.h"
 
 #include "pldhash.h"
 
 
-static nsIContentList *gCachedContentList;
+static nsContentList *gCachedContentList;
 
 nsBaseContentList::nsBaseContentList()
 {
@@ -236,12 +235,10 @@ ContentListHashtableMatchEntry(PLDHashTable *table,
   return list1->Equals(*list2);
 }
 
-nsresult
+already_AddRefed<nsContentList>
 NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
-                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent,
-                  nsIContentList** aInstancePtrResult)
+                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent)
 {
-  *aInstancePtrResult = nsnull;
   nsContentList* list = nsnull;
 
   static PLDHashTableOps hash_table_ops =
@@ -296,11 +293,10 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
         PL_DHashTableRawRemove(&gContentListHashTable, entry);
     }
 
-    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list, nsnull);
   }
 
-  *aInstancePtrResult = list;
-  NS_ADDREF(*aInstancePtrResult);
+  NS_ADDREF(list);
 
   // Hold on to the last requested content list to avoid having it be
   // removed from the cache immediately when it's released. Avoid
@@ -314,7 +310,7 @@ NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
     NS_ADDREF(gCachedContentList);
   }
 
-  return NS_OK;
+  return list;
 }
 
 
@@ -395,7 +391,6 @@ nsContentList::~nsContentList()
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIContentList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 

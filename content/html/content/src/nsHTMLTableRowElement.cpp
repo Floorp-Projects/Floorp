@@ -85,7 +85,7 @@ public:
 protected:
   nsresult GetSection(nsIDOMHTMLTableSectionElement** aSection);
   nsresult GetTable(nsIDOMHTMLTableElement** aTable);
-  nsCOMPtr<nsIContentList> mCells;
+  nsRefPtr<nsContentList> mCells;
 };
 
 #ifdef XXX_debugging
@@ -272,7 +272,8 @@ nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
     NS_ENSURE_TRUE(mCells, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(mCells, aValue);
+  NS_ADDREF(*aValue = mCells);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

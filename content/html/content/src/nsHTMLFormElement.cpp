@@ -1497,7 +1497,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
   nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
 
   // XXX If ResolveName could return an nsContentList instead then we 
-  //     could get an nsIContentList instead of using this hacky upcast
+  //     could get an nsContentList instead of using this hacky upcast
 
   nsBaseContentList *radioGroup =
     NS_STATIC_CAST(nsBaseContentList *, (nsIDOMNodeList *)radioNodeList);

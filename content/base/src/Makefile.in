@@ -82,6 +82,7 @@ REQUIRES	= xpcom \
 
 EXPORTS		= \
 		nsAtomListUtils.h \
+		nsContentList.h \
 		nsNodeInfoManager.h \
 		nsPropertyTable.h \
 		nsStubDocumentObserver.h \

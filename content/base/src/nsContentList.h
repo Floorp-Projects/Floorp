@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 #include "nsStubDocumentObserver.h"
-#include "nsIContentList.h"
 #include "nsIAtom.h"
 #include "nsINameSpaceManager.h"
 
@@ -158,8 +157,7 @@ protected:
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
                       public nsIDOMHTMLCollection,
-                      public nsStubDocumentObserver,
-                      public nsIContentList
+                      public nsStubDocumentObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -181,13 +179,20 @@ public:
   // nsIDOMHTMLCollection
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  /// nsIContentList
-  virtual nsISupports *GetParentObject();
-  virtual PRUint32 Length(PRBool aDoFlush);
-  virtual nsIContent *Item(PRUint32 aIndex, PRBool aDoFlush);
-  virtual nsIContent *NamedItem(const nsAString& aName, PRBool aDoFlush);
+  // nsBaseContentList overrides
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
-  virtual void RootDestroyed();
+
+  // nsContentList public methods
+  NS_HIDDEN_(nsISupports*) GetParentObject();
+  NS_HIDDEN_(PRUint32) Length(PRBool aDoFlush);
+  NS_HIDDEN_(nsIContent*) Item(PRUint32 aIndex, PRBool aDoFlush);
+  NS_HIDDEN_(nsIContent*) NamedItem(const nsAString& aName, PRBool aDoFlush);
+  NS_HIDDEN_(void) RootDestroyed();
+
+  nsContentListKey* GetKey() {
+    return NS_STATIC_CAST(nsContentListKey*, this);
+  }
+  
 
   // nsIDocumentObserver
   virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
@@ -201,11 +206,6 @@ public:
                               nsIContent* aChild, PRInt32 aIndexInContainer);
   virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-  // Other public methods
-  nsContentListKey* GetKey() {
-    return NS_STATIC_CAST(nsContentListKey*, this);
-  }
-  
 protected:
   void Init(nsIDocument *aDocument);
   /**
@@ -355,9 +355,8 @@ protected:
  */
 #define LIST_LAZY 2
 
-nsresult
+already_AddRefed<nsContentList>
 NS_GetContentList(nsIDocument* aDocument, nsIAtom* aMatchAtom,
-                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent,
-                  nsIContentList** aInstancePtrResult);
+                  PRInt32 aMatchNameSpaceId, nsIContent* aRootContent);
 
 #endif // nsContentList_h___

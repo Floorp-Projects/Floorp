@@ -1431,12 +1431,13 @@ nsGenericElement::GetElementsByTagName(const nsAString& aTagname,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIContentList> list;
-  NS_GetContentList(GetCurrentDoc(), nameAtom, kNameSpaceID_Unknown, this,
-                    getter_AddRefs(list));
+  nsContentList *list = NS_GetContentList(GetCurrentDoc(), nameAtom,
+                                          kNameSpaceID_Unknown, this).get();
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-  return CallQueryInterface(list, aReturn);
+  // transfer ref to aReturn
+  *aReturn = list;
+  return NS_OK;
 }
 
 nsresult
@@ -1552,7 +1553,7 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 {
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
-  nsCOMPtr<nsIContentList> list;
+  nsContentList *list = nsnull;
 
   nsIDocument* document = GetCurrentDoc();
   if (!aNamespaceURI.EqualsLiteral("*")) {
@@ -1561,8 +1562,8 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unknown namespace means no matches, we create an empty list...
-      NS_GetContentList(document, nsnull, kNameSpaceID_None, nsnull,
-                        getter_AddRefs(list));
+      list = NS_GetContentList(document, nsnull,
+                               kNameSpaceID_None, nsnull).get();
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
     }
   }
@@ -1571,12 +1572,13 @@ nsGenericElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
     NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    NS_GetContentList(document, nameAtom, nameSpaceId, this,
-                      getter_AddRefs(list));
+    list = NS_GetContentList(document, nameAtom, nameSpaceId, this).get();
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
   }
 
-  return CallQueryInterface(list, aReturn);
+  // transfer ref to aReturn
+  *aReturn = list;
+  return NS_OK;
 }
 
 nsresult

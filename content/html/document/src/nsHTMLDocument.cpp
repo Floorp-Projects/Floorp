@@ -2465,13 +2465,12 @@ nsHTMLDocument::MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
   return aContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL);
 }
 
-already_AddRefed<nsIDOMNodeList>
+already_AddRefed<nsContentList>
 nsHTMLDocument::GetFormControlElements()
 {
-  nsIDOMNodeList *list = new nsContentList(this, MatchFormControls,
-                                           EmptyString());
+  nsContentList *list = new nsContentList(this,
+                                          MatchFormControls, EmptyString());
   NS_IF_ADDREF(list);
-
   return list;
 }
 
@@ -3393,17 +3392,21 @@ nsHTMLDocument::GetBodyElement(nsIDOMHTMLBodyElement** aBody)
 NS_IMETHODIMP
 nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
 {
-  if (!mForms) {
-    mForms = new nsContentList(this, nsHTMLAtoms::form, mDefaultNamespaceID);
-    if (!mForms) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
+  nsContentList *forms = nsHTMLDocument::GetForms();
+  if (!forms)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aForms = mForms;
-  NS_ADDREF(*aForms);
-
+  NS_ADDREF(*aForms = forms);
   return NS_OK;
+}
+
+nsContentList*
+nsHTMLDocument::GetForms()
+{
+  if (!mForms)
+    mForms = new nsContentList(this, nsHTMLAtoms::form, mDefaultNamespaceID);
+
+  return mForms;
 }
 
 
