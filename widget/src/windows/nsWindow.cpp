@@ -1061,7 +1061,9 @@ void nsWindow::SetFont(const nsFont &aFont)
     mContext->GetFontCache(fontCache);
     nsIFontMetrics* metrics;
     fontCache->GetMetricsFor(aFont, metrics);
-    HFONT hfont = metrics->GetFontHandle();
+    nsFontHandle  fontHandle;
+    metrics->GetFontHandle(fontHandle);
+    HFONT hfont = (HFONT)fontHandle;
 
       // Draw in the new font
     ::SendMessage(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0); 

@@ -111,8 +111,8 @@ BRFrame::InlineReflow(nsCSSLineLayout&      aLineLayout,
     mStyleContext->GetStyleData(eStyleStruct_Font);
   nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(font->mFont);
 
-  aMetrics.ascent = fm->GetMaxAscent();
-  aMetrics.descent = fm->GetMaxDescent();
+  fm->GetMaxAscent(aMetrics.ascent);
+  fm->GetMaxDescent(aMetrics.descent);
   aMetrics.height = aMetrics.ascent + aMetrics.descent;
   aMetrics.width = 0;
   NS_RELEASE(fm);

@@ -533,7 +533,9 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
   if (mFontMetrics)
   {  
 //    mCurrFontHandle = ::XLoadFont(mRenderingSurface->display, (char *)mFontMetrics->GetFontHandle());
-    mCurrFontHandle = (Font)mFontMetrics->GetFontHandle();
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    mCurrFontHandle = (Font)fontHandle;
     
     ::XSetFont(mRenderingSurface->display,
 	             mRenderingSurface->gc,
@@ -546,7 +548,9 @@ void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 
 const nsFont& nsRenderingContextUnix :: GetFont()
 {
-  return mFontMetrics->GetFont();
+  const nsFont* font;
+  mFontMetrics->GetFont(font);
+  return *font;
 }
 
 nsIFontMetrics* nsRenderingContextUnix :: GetFontMetrics()
@@ -951,7 +955,7 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 
   if (mFontMetrics)
   {
-    PRUint8 deco = mFontMetrics->GetFont().decorations;
+    PRUint8 deco = GetFont().decorations;
 
     if (deco & NS_FONT_DECORATION_OVERLINE)
       DrawLine(aX, aY, aX + aWidth, aY);
@@ -993,7 +997,7 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 
   if (mFontMetrics)
   {
-    PRUint8 deco = mFontMetrics->GetFont().decorations;
+    PRUint8 deco = GetFont().decorations;
 
     if (deco & NS_FONT_DECORATION_OVERLINE)
       DrawLine(aX, aY, aX + aWidth, aY);

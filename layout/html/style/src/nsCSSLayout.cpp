@@ -70,6 +70,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     nscoord kidYTop = 0;
 
     PRBool isPass2Kid = PR_FALSE;
+    nscoord fontHeight, fontAscent, fontDescent;
     switch (verticalAlignUnit) {
       case eStyleUnit_Coord:
         kidYTop = aMaxAscent + textStyle->mVerticalAlign.GetCoordValue();
@@ -115,15 +116,18 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
           case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
             // XXX spec says use the 'x' height but our font api
             // doesn't give us that information.
-            kidYTop = aMaxAscent - (fm->GetHeight() / 2) - kidRect.height/2;
+            fm->GetHeight(fontHeight);
+            kidYTop = aMaxAscent - (fontHeight / 2) - kidRect.height/2;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
-            kidYTop = aMaxAscent + fm->GetMaxDescent() - kidRect.height;
+            fm->GetMaxDescent(fontDescent);
+            kidYTop = aMaxAscent + fontDescent - kidRect.height;
             break;
 
           case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
-            kidYTop = aMaxAscent - fm->GetMaxAscent();
+            fm->GetMaxAscent(fontAscent);
+            kidYTop = aMaxAscent - fontAscent;
             break;
 
         }

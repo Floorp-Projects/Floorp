@@ -42,21 +42,21 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(const nsFont& aFont, nsIDeviceContext* aContext);
-  virtual nscoord GetWidth(char aC);
-  virtual nscoord GetWidth(PRUnichar aC);
-  virtual nscoord GetWidth(const nsString& aString);
-  virtual nscoord GetWidth(const char *aString);
-  virtual nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength);
-  virtual nscoord GetWidth(nsIDeviceContext *aContext, const nsString& aString);
-  virtual nscoord GetHeight();
-  virtual nscoord GetLeading();
-  virtual nscoord GetMaxAscent();
-  virtual nscoord GetMaxDescent();
-  virtual nscoord GetMaxAdvance();
-  virtual const nscoord *GetWidths();
-  virtual const nsFont& GetFont();
-  virtual nsFontHandle GetFontHandle();
+  NS_IMETHOD  Init(const nsFont& aFont, nsIDeviceContext* aContext);
+  NS_IMETHOD  GetWidth(char aC);
+  NS_IMETHOD  GetWidth(PRUnichar aC);
+  NS_IMETHOD  GetWidth(const nsString& aString);
+  NS_IMETHOD  GetWidth(const char *aString);
+  NS_IMETHOD  GetWidth(const PRUnichar *aString, PRUint32 aLength);
+  NS_IMETHOD  GetWidth(nsIDeviceContext *aContext, const nsString& aString);
+  NS_IMETHOD  GetHeight();
+  NS_IMETHOD  GetLeading();
+  NS_IMETHOD  GetMaxAscent();
+  NS_IMETHOD  GetMaxDescent();
+  NS_IMETHOD  GetMaxAdvance();
+  NS_IMETHOD  nscoord *GetWidths(const nscoord *&aWidths);
+  NS_IMETHOD  GetFont(const nsFont*& aFont);
+  NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
 
 protected:
   void RealizeFont();

@@ -278,7 +278,8 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   lineHeight = thickness + NSIntPixelsToTwips(2, p2t);
   const nsFont& defaultFont = aPresContext->GetDefaultFont();
   nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
-  nscoord defaultLineHeight = fm->GetHeight();
+  nscoord defaultLineHeight;
+  fm->GetHeight(defaultLineHeight);
   NS_RELEASE(fm);
   if (lineHeight < defaultLineHeight) {
     lineHeight = defaultLineHeight;

@@ -539,7 +539,9 @@ void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 const nsFont& nsRenderingContextMac :: GetFont()
 {
-  return mFontMetrics->GetFont();
+  const nsFont* font;
+  mFontMetrics->GetFont(font);
+  return *font;
 }
 
 //------------------------------------------------------------------------

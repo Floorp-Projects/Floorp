@@ -86,7 +86,7 @@ NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
 // Note: The presentation context has a reference to this font
 // metrics, therefore avoid circular references by not AddRef'ing the
 // presentation context.
-nsresult nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
+NS_IMETHODIMP nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
 
@@ -235,37 +235,42 @@ void nsFontMetricsWin::RealizeFont(nsIDeviceContext *aContext)
   ::ReleaseDC(win, dc);
 }
 
-nscoord nsFontMetricsWin :: GetWidth(char ch)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(char ch, nscoord &aWidth)
 {
-  return mCharWidths[PRUint8(ch)];
+  aWidth = mCharWidths[PRUint8(ch)];
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetWidth(PRUnichar ch)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(PRUnichar ch, nscoord &aWidth)
 {
   if (ch < 256) {
-    return mCharWidths[ch];
+    aWidth = mCharWidths[ch];
+    return NS_OK;
   }
-  return 0;/* XXX */
+  aWidth = 0;/* XXX */
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nscoord nsFontMetricsWin :: GetWidth(const nsString& aString)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const nsString& aString, nscoord &aWidth)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth);
 }
 
-nscoord nsFontMetricsWin :: GetWidth(const char *aString)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const char *aString, nscoord &aWidth)
 {
   // XXX use native text measurement routine
-  nscoord sum = 0;
+  aWidth = 0;
   PRUint8 ch;
   while ((ch = PRUint8(*aString++)) != 0) {
-    sum += mCharWidths[ch];
+    aWidth += mCharWidths[ch];
   }
 
-  return sum;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString& aString)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext,
+                                           const nsString& aString,
+                                           nscoord &aWidth)
 {
   char * str = aString.ToNewCString();
   //if (str) {
@@ -295,62 +300,73 @@ nscoord nsFontMetricsWin :: GetWidth(nsIDeviceContext *aContext, const nsString&
   //printf("[%s] %d  %d = %d\n", str, size.cx, nscoord(((float)size.cx)*aContext->GetDevUnitsToTwips()), GetWidth(str));
 
   delete[] str;
-  return nscoord(float(size.cx) * dev2twip);
+  aWidth = nscoord(float(size.cx) * dev2twip);
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
+NS_IMETHODIMP nsFontMetricsWin :: GetWidth(const PRUnichar *aString,
+                                           PRUint32 aLength,
+                                           nscoord &aWidth)
 {
 
   // XXX use native text measurement routine
-  nscoord sum = 0;
+  aWidth = 0;
   while (aLength != 0) {
     PRUnichar ch = *aString++;
     if (ch < 256) {
-      sum += mCharWidths[ch];
+      aWidth += mCharWidths[ch];
     } else {
       // XXX not yet
     }
     --aLength;
   }
-  return sum;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetHeight()
+NS_IMETHODIMP nsFontMetricsWin :: GetHeight(nscoord &aHeight)
 {
-  return mHeight;
+  aHeight = mHeight;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetLeading()
+NS_IMETHODIMP nsFontMetricsWin :: GetLeading(nscoord &aLeading)
 {
-  return mLeading;
+  aLeading = mLeading;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetMaxAscent()
+NS_IMETHODIMP nsFontMetricsWin :: GetMaxAscent(nscoord &aAscent)
 {
-  return mMaxAscent;
+  aAscent = mMaxAscent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetMaxDescent()
+NS_IMETHODIMP nsFontMetricsWin :: GetMaxDescent(nscoord &aDescent)
 {
-  return mMaxDescent;
+  aDescent = mMaxDescent;
+  return NS_OK;
 }
 
-nscoord nsFontMetricsWin :: GetMaxAdvance()
+NS_IMETHODIMP nsFontMetricsWin :: GetMaxAdvance(nscoord &aAdvance)
 {
-  return mMaxAdvance;
+  aAdvance = mMaxAdvance;
+  return NS_OK;
 }
 
-const nscoord * nsFontMetricsWin :: GetWidths()
+NS_IMETHODIMP nsFontMetricsWin :: GetWidths(const nscoord *&aWidths)
 {
-  return mCharWidths;
+  aWidths = mCharWidths;
+  return NS_OK;
 }
 
-const nsFont& nsFontMetricsWin :: GetFont()
+NS_IMETHODIMP nsFontMetricsWin :: GetFont(const nsFont *&aFont)
 {
-  return *mFont;
+  aFont = mFont;
+  return NS_OK;
 }
 
-nsFontHandle nsFontMetricsWin::GetFontHandle()
+NS_IMETHODIMP nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
 {
-  return mFontHandle;
+  aHandle = mFontHandle;
+  return NS_OK;
 }
