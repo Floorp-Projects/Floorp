@@ -89,7 +89,7 @@ protected:
 public:
     static HINSTANCE mDllInstance;
     // OS flag
-    static PRBool    mIsNT;
+    static PRBool    mUseImeApiW;
 
     static void Startup(HINSTANCE hModule);
     static void Shutdown();

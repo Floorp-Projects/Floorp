@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 static PRUintn gToolkitTLSIndex = 0;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
-PRBool    nsToolkit::mIsNT        = PR_FALSE;
+PRBool    nsToolkit::mUseImeApiW  = PR_FALSE;
 
 #ifdef MOZ_AIMM
 IActiveIMMApp* nsToolkit::gAIMMApp   = NULL;
@@ -224,14 +224,35 @@ nsToolkit::Startup(HMODULE hModule)
     VERIFY(::RegisterClass(&wc));
 
     //
-    // Set flag of nsToolkit::mIsNT due to using Unicode API.
+    // Set flag of nsToolkit::mUseImeApiW due to using Unicode API.
     //
 
-    OSVERSIONINFO osversion;
-    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
-    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    ::GetVersionEx(&osversion);
-    nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
+    OSVERSIONINFOEX osversion;
+    BOOL osVersionInfoEx;
+    
+    ::ZeroMemory(&osversion, sizeof(OSVERSIONINFOEX));
+    osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+
+    if (!(osVersionInfoEx = GetVersionEx((OSVERSIONINFO *)&osversion))) {
+      // if OSVERSIONINFOEX doesn't work, try OSVERSIONINFO.
+      osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+      if (!GetVersionEx((OSVERSIONINFO *)&osversion)) {
+        // maybe we are running on very old Windows OS. Assign FALSE.
+        nsToolkit::mUseImeApiW = PR_FALSE; 
+        return;
+      }
+    }
+
+    nsToolkit::mUseImeApiW = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
+    if (nsToolkit::mUseImeApiW)  {
+      // XXX Hack for stopping the crash (125573)
+      if (osversion.dwMajorVersion == 5 && (osversion.dwMinorVersion == 0 || osversion.dwMinorVersion == 1))  { 
+        // "Microsoft Windows 2000 " or "Microsoft Windows XP "
+        if (936 == ::GetACP())  // Chinese (PRC, Singapore)
+          nsToolkit::mUseImeApiW = PR_FALSE;
+      }
+    }
+
 }
 
 
