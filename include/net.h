@@ -114,6 +114,7 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_ROBOTS_TXT			35 /* web robots control */
 #define FO_XMLCSS               36 /* CSS for formatting XML */
 #define FO_XMLHTML               37 /* HTML inclusions in XML */
+#define FO_NGLAYOUT             38 /* NGLayout streams */
 
 /* bitfield detectable CACHE FO's
  */
@@ -150,6 +151,7 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_CACHE_AND_CRAWL_PAGE			(FO_CACHE_ONLY | FO_CRAWL_PAGE)
 #define FO_CACHE_AND_CRAWL_RESOURCE		(FO_CACHE_ONLY | FO_CRAWL_RESOURCE)
 #define FO_CACHE_AND_ROBOTS_TXT			(FO_CACHE_ONLY | FO_ROBOTS_TXT)
+#define FO_CACHE_AND_NGLAYOUT           (FO_CACHE_ONLY | FO_NGLAYOUT)
 
 /* bitfield detectable ONLY_FROM_CACHE FO's
  */
@@ -193,7 +195,7 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_ONLY_FROM_CACHE_AND_EDIT				(FO_ONLY_FROM_CACHE | FO_EDIT)
 #define FO_ONLY_FROM_CACHE_AND_LOAD_HTML_HELP_MAP_FILE		(FO_ONLY_FROM_CACHE | FO_LOAD_HTML_HELP_MAP_FILE)
 #define FO_ONLY_FROM_CACHE_AND_PRESENT_INLINE				(FO_ONLY_FROM_CACHE | FO_PRESENT_INLINE)
-
+#define FO_ONLY_FROM_CACHE_AND_NGLAYOUT         (FO_ONLY_FROM_CACHE | FO_NGLAYOUT)
 typedef void
 Net_GetUrlExitFunc (URL_Struct *URL_s, int status, MWContext *window_id);
 
