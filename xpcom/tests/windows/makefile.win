@@ -23,7 +23,7 @@ MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestCOM.exe
 PROGRAMS = $(PROG1) $(PROG2)
 
-LINCS=-I..\..\src
+LINCS=-I..\..\public
 
 LLIBS=					\
  rpcrt4.lib				\

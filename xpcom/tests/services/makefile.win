@@ -23,7 +23,7 @@ MAKE_OBJ_TYPE = DLL
 
 DLL = $(OBJDIR)\MyService.dll
 
-LINCS = -I.. -I../../src
+LINCS = -I.. -I../../public
 
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
