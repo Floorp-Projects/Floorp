@@ -165,7 +165,7 @@ char *GetErrorString(DWORD dwError, char *szErrorString, DWORD dwErrorStringSize
     if(*XpErrorList[i] == '\0')
       break;
 
-    if(strcmpi(szErrorNumber, XpErrorList[i]) == 0)
+    if(stricmp(szErrorNumber, XpErrorList[i]) == 0)
     {
       if(*XpErrorList[i + 1] != '\0')
         strcpy(szErrorString, XpErrorList[i + 1]);

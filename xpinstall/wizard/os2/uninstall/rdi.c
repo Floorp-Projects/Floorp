@@ -22,8 +22,8 @@
  */
 
 #include "extern.h"
-#include "parser.h"
 #include "extra.h"
+#include "parser.h"
 #include "ifuncns.h"
 
 char szUnreadMailKey[] = "Software\\Microsoft\\Windows\\CurrentVersion\\UnreadMail";
@@ -109,7 +109,7 @@ BOOL UndoDesktopIntegration(void)
   /* Check to see if uninstall.ini has indicated to restore
    * the destktop integration performed by the browser/mail */
   GetPrivateProfileString(szRDISection, "Enabled", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-  if(strcmpi(szBuf, "TRUE") == 0)
+  if(stricmp(szBuf, "TRUE") == 0)
   {
     RestoreDesktopIntegration();
 

@@ -24,8 +24,8 @@
 
 #include "extern.h"
 #include "logkeys.h"
-#include "parser.h"
 #include "extra.h"
+#include "parser.h"
 #include "ifuncns.h"
 #include "dialogs.h"
 
@@ -361,7 +361,7 @@ ULONG GetLogFile(PSZ szTargetPath, PSZ szInFilename, PSZ szOutBuf, ULONG dwOutBu
     while(bFound)
     {
        memset(szNumber, 0, sizeof(szNumber));
-      if((strcmpi(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
+      if((stricmp(fdFile.achName, ".") != 0) && (strcmpi(fdFile.achName, "..") != 0))
       {
         strcpy(szNumber, &fdFile.achName[iFilenameOnlyLen]);
         ulNumber = atoi(szNumber);

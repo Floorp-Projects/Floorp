@@ -514,7 +514,7 @@ find_end:
 
         strncpy(aVal, currLine, nextEq-currLine);
         aVal+= nextEq-currLine;
-        *aVal = \0;
+        *aVal = '\0';
         aVal++;
 
         currLine = nextNL + 1;
