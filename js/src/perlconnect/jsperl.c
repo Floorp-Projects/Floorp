@@ -45,7 +45,7 @@
 #include "EXTERN.h"
 #include "perl.h"
 
-#include "jsapi.h"
+#include "../jsapi.h"
 #include <string.h>
 
 /*---------------------------------------------------------------------------*/
@@ -775,24 +775,29 @@ PVFinalize(JSContext *cx, JSObject *obj)
     Used for parameter passing. This function is also
     used by the Perl part of PerlConnect.
 */
+#if 0
 JSBool
 JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
 {
-    *sv = &sv_undef;
+/*      *sv = &sv_undef; */
     if(JSVAL_IS_PRIMITIVE(v)){
         /* printf("Primitive\n"); */
         if(JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v)){
-            *sv = newSVsv(&sv_undef);
+/*              *sv = newSVsv(&sv_undef); */
+            **sv = sv_undef;
         }else
         if(JSVAL_IS_INT(v)){
-            *sv = newSViv(JSVAL_TO_INT(v));
+/*              *sv = newSViv(JSVAL_TO_INT(v)); */
+            sv_setiv(*sv, JSVAL_TO_INT(v));
         }else
         if(JSVAL_IS_DOUBLE(v)){
-            *sv = newSVnv(*JSVAL_TO_DOUBLE(v));
+/*              *sv = newSVnv(*JSVAL_TO_DOUBLE(v)); */
+            sv_setnv(*sv, *JSVAL_TO_DOUBLE(v));
         }else
         if(JSVAL_IS_STRING(v)){
-            *sv = newSVpv(JS_GetStringBytes(JSVAL_TO_STRING(v)), 0);
+/*              *sv = newSVpv(JS_GetStringBytes(JSVAL_TO_STRING(v)), 0); */
             /* printf("string %s\n", SvPV(*sv,na)); */
+            sv_setpv(*sv, JS_GetStringBytes(JSVAL_TO_STRING(v)));
         }else{
             warn("Unknown primitive type");
         }
@@ -802,7 +807,7 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
 
             if(JS_InstanceOf(cx, object, &perlValueClass, NULL)){
                 /* printf("Converting PerlValue\n"); */
-                newSVsv(SvRV(PVGetRef(cx, object)));
+                newSVsv(SvRV(PVGetRef(cx, object))); /* _PH_ ?? */
             }else{
                 if(JS_IsArrayObject(cx, object)){
                     /* printf("Converting Array\n"); */
@@ -814,13 +819,15 @@ JSVALToSV(JSContext *cx, JSObject *obj, jsval v, SV** sv)
             }
         }else{
             warn("Type conversion is not supported");
-            *sv = &sv_undef;
+/*              *sv = &sv_undef; */
+            **sv = sv_undef;
             return JS_FALSE;
         }
     }
 
     return JS_TRUE;
 }
+#endif
 
 /*
     Converts a reference Perl value to a jsval. If ref points

@@ -82,7 +82,7 @@ endif
 # and link properly.  Viva gmake.
 #
 ifdef JS_PERLCONNECT
-DEFINES += -DPERLCONNECT
+DEFINES += -DPERLCONNECT -D_GNU_SOURCE
 
 PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
 PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
@@ -236,7 +236,7 @@ DIRS      += liveconnect
 endif
 
 ifdef JS_PERLCONNECT
-JS_CFILES += jsperl.c
+JS_CFILES += perlconnect/jsperl.c
 endif
 
 ifdef JS_HAS_FILE_OBJECT
