@@ -76,8 +76,8 @@ nsMsgLocalFactory::nsMsgLocalFactory(const nsCID &aClass, const char* aClassName
 nsMsgLocalFactory::~nsMsgLocalFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-  delete[] mClassName;
-  delete[] mProgID;
+  PL_strfree(mClassName);
+  PL_strfree(mProgID);
 }   
 
 nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)   
