@@ -1715,7 +1715,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (NS_OK != rv) {
     return rv;
   }
-  if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute)
+  if (nsHTMLAtoms::width == aAttribute || nsHTMLAtoms::height == aAttribute  || nsHTMLAtoms::alt == aAttribute)
   { // XXX: could check for new width == old width, and make that a no-op
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
