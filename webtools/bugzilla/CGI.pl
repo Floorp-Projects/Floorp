@@ -250,6 +250,7 @@ sub CheckIfVotedConfirmed {
             "FROM bugs, products " .
             "WHERE bugs.bug_id = $id AND products.id = bugs.product_id");
     my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
+    my $ret = 0;
     if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
         SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .
                 "WHERE bug_id = $id");
@@ -273,9 +274,10 @@ sub CheckIfVotedConfirmed {
         
         $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
+        $ret = 1;
     }
     PopGlobalSQLState();
-
+    return $ret;
 }
 sub LogActivityEntry {
     my ($i,$col,$removed,$added,$whoid,$timestamp) = @_;

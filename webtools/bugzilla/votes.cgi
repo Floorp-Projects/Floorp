@@ -312,8 +312,12 @@ sub record_votes {
     # for products that only allow one vote per bug).  In that case, we still
     # need to clear the user's votes from the database.
     my %affected;
-    SendSQL("LOCK TABLES bugs write, votes write, products read, cc read,
-             fielddefs read, user_group_map read, bug_group_map read");
+    SendSQL("LOCK TABLES bugs WRITE, bugs_activity WRITE, votes WRITE, 
+             longdescs WRITE, profiles READ, products READ, components READ, 
+             cc READ, dependencies READ, groups READ, fielddefs READ, 
+             namedqueries READ, whine_queries READ, watch READ, 
+             profiles AS watchers READ, profiles AS watched READ, 
+             user_group_map READ, bug_group_map READ");
     
     # Take note of, and delete the user's old votes from the database.
     SendSQL("SELECT bug_id FROM votes WHERE who = $who");
@@ -330,18 +334,18 @@ sub record_votes {
             SendSQL("INSERT INTO votes (who, bug_id, vote_count) 
                      VALUES ($who, $id, ".$votes{$id}.")");
         }
-        
         $affected{$id} = 1;
     }
     
     # Update the cached values in the bugs table
+    print $cgi->header();
     foreach my $id (keys %affected) {
         SendSQL("SELECT sum(vote_count) FROM votes WHERE bug_id = $id");
-        my $v = FetchOneColumn();
-        $v ||= 0;
+        my $v = FetchOneColumn() || 0;
         SendSQL("UPDATE bugs SET votes = $v, delta_ts=delta_ts 
                  WHERE bug_id = $id");
-        CheckIfVotedConfirmed($id, $who);
+        my $confirmed = CheckIfVotedConfirmed($id, $who);
+        $vars->{'header_done'} = 1 if $confirmed;
     }
 
     SendSQL("UNLOCK TABLES");
