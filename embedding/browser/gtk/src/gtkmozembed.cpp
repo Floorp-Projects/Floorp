@@ -378,8 +378,8 @@ GtkMozEmbedPrivate::Resize(GtkWidget *aWidget)
 					   aWidget->allocation.width,
 					   aWidget->allocation.height,
 					   PR_TRUE);
-  nsCOMPtr<nsIBaseWindow> embedBaseWindow = do_QueryInterface(mEmbed);
-  embedBaseWindow->SetPositionAndSize(0, 0,
+  nsCOMPtr<nsIWebBrowserSiteWindow> embedSiteWindow = do_QueryInterface(mEmbed);
+  embedSiteWindow->SetPositionAndSize(0, 0,
 				      aWidget->allocation.width, 
 				      aWidget->allocation.height,
 				      PR_TRUE);
@@ -1514,12 +1514,9 @@ gtk_moz_embed_map(GtkWidget *widget)
 
   embed_private = (GtkMozEmbedPrivate *)embed->data;
 
-  // get our hands on the base window
-  nsCOMPtr<nsIBaseWindow> webBrowserBaseWindow = 
-    do_QueryInterface(embed_private->mWebBrowser);
-  g_return_if_fail(webBrowserBaseWindow);
   // show it
-  webBrowserBaseWindow->SetVisibility(PR_TRUE);
+  embed_private->mListener.Visibility(PR_TRUE);
+
   // show the widget window
   gdk_window_show(widget->window);
 }

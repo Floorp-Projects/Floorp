@@ -93,7 +93,7 @@ NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
@@ -713,22 +713,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewWindow(PRInt32 aChromeFlags,
     return NS_ERROR_FAILURE;
 }
 
-// nsIBaseWindow interface
-
-NS_IMETHODIMP GtkMozEmbedChrome::InitWindow(nativeWindow parentNativeWindow,
-					    nsIWidget * parentWidget, 
-					    PRInt32 x, PRInt32 y,
-					    PRInt32 cx, PRInt32 cy)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::InitWindow\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::Create(void)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::Create\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+// nsIWebBrowserSiteWindow interface
 
 NS_IMETHODIMP GtkMozEmbedChrome::Destroy(void)
 {
@@ -803,69 +788,15 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetPositionAndSize(PRInt32 *x, PRInt32 *y,
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::Repaint(PRBool force)
+NS_IMETHODIMP GtkMozEmbedChrome::GetSiteWindow(void * *aParentNativeWindow)
 {
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedCHrome::Repaint\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetParentWidget(nsIWidget * *aParentWidget)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetParentWidget\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::SetParentWidget(nsIWidget * aParentWidget)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetParentWidget\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetParentNativeWindow(nativeWindow *aParentNativeWindow)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetParentNativeWindow\n"));
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSiteWindow\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
  
-NS_IMETHODIMP GtkMozEmbedChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetParentNativeWindow\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetVisibility(PRBool *aVisibility)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetVisibility\n"));
-  NS_ENSURE_ARG_POINTER(aVisibility);
-  *aVisibility = mVisibility;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::SetVisibility(PRBool aVisibility)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetVisibility for %p\n", this));
-  if (mChromeListener)
-    mChromeListener->Visibility(aVisibility);
-  mVisibility = aVisibility;
-  return NS_OK;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::GetMainWidget(nsIWidget * *aMainWidget)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetMainWidget\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP GtkMozEmbedChrome::SetFocus(void)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetFocus\n"));
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GtkMozEmbedChrome::FocusAvailable(nsIBaseWindow *aCurrentFocus, 
-						PRBool *aTookFocus)
-{
-  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::FocusAvailable\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
