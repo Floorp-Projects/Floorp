@@ -70,7 +70,6 @@
           accesskey="&customColors.accesskey;" 
           oncommand="UseCustomColors()"/>
     </radiogroup>
-
     <box class="big-left-margin">
       <grid>
         <columns><column/><column/></columns>
@@ -153,15 +152,14 @@
     <spring class="spacer"/>
     <text class="label small-margin" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <box valign="middle" autostretch="never">
-      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em">
+      <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1">
         <observes element="backgroundImageData" attribute="disabled"/>
       </textbox>
-      <button class="dialog" label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
+      <button class="dialog" label="&chooseFile.label;" accesskey="&chooseFile.accesskey;"
               oncommand="ChooseImageFile()">
         <observes element="backgroundImageData" attribute="disabled"/>
       </button>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </box>
-
   </titledbox>
 </window>
