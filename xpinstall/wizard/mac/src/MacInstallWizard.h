@@ -145,7 +145,8 @@ if (err) 								\
 #define kMaxProgUnits	100.0	
 #define kMaxRunApps		32
 #define kMaxLegacyChecks 32		
-#define kMaxSites		32		/* end constants */
+#define kMaxSites		32		
+#define kMaxGlobalURLs  5       /* end constants */
 
 
 #define rRootWin 		128		/* widget rsrc ids */
@@ -316,6 +317,7 @@ if (err) 								\
 #define eCfgRead        12
 #define eDownload       13
 #define eInstRead		6		// installer.ini read failed
+#define eDLFailed       14
 
 #define instErrsNum		13	/* number of the install.ini errors */
 
@@ -465,7 +467,8 @@ typedef struct Config {
 	 
 	/* General */
 	Handle  targetSubfolder;
-	Handle  globalURL;
+	Handle  globalURL[kMaxGlobalURLs];
+	short   numGlobalURLs;
 	
 	/* LicenseWin */
 	Handle	licFileName;
@@ -830,7 +833,7 @@ void        SetResumedState(void);
 pascal void *Install(void*);
 long        ComputeTotalDLSize(void);
 short       DownloadXPIs(short, long);
-short       DownloadFile(Handle, long, Handle, int);
+short       DownloadFile(Handle, long, Handle, int, int);
 OSErr       DLMarkerSetCurrent(char *);
 OSErr       DLMarkerGetCurrent(int *, int*);
 OSErr       DLMarkerDelete(void);

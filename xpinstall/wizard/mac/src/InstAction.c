@@ -111,15 +111,15 @@ pascal void* Install(void* unused)
 	    /* otherwise if site selector exists, replace global URL with selected site */
         if (gControls->cfg->numSites > 0)
         {
-	        if (gControls->cfg->globalURL)
-	            DisposeHandle(gControls->cfg->globalURL);
-            gControls->cfg->globalURL = NewHandleClear(kValueMaxLen);
+	        if (gControls->cfg->globalURL[0])
+	            DisposeHandle(gControls->cfg->globalURL[0]);
+            gControls->cfg->globalURL[0] = NewHandleClear(kValueMaxLen);
             
             siteIndex = gControls->opt->siteChoice - 1;
-            HLock(gControls->cfg->globalURL);
+            HLock(gControls->cfg->globalURL[0]);
             HLock(gControls->cfg->site[siteIndex].domain);
-            strcpy(*(gControls->cfg->globalURL), *(gControls->cfg->site[siteIndex].domain));
-            HUnlock(gControls->cfg->globalURL);
+            strcpy(*(gControls->cfg->globalURL[0]), *(gControls->cfg->site[siteIndex].domain));
+            HUnlock(gControls->cfg->globalURL[0]);
             HUnlock(gControls->cfg->site[siteIndex].domain);
 	    }
         
@@ -259,7 +259,7 @@ DownloadXPIs(short destVRefNum, long destDirID)
     short dlPathLen = 0;
     int i, compsDone = 0, instChoice = gControls->opt->instChoice-1, resPos = 0;
     Boolean bResuming = false;
-    int markedIndex = 0;
+    int markedIndex = 0, currGlobalURLIndex = 0;
     
     GetFullPath(destVRefNum, destDirID, "\p", &dlPathLen, &dlPath);
 	DLMarkerGetCurrent(&markedIndex, &compsDone);
@@ -298,13 +298,17 @@ DownloadXPIs(short destVRefNum, long destDirID)
                     gControls->resPos = resPos;
                     gControls->state = eResuming;
                 }
-                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive, resPos);
+TRY_DOWNLOAD:
+                rv = DownloadFile(dlPath, dlPathLen, gControls->cfg->comp[i].archive, resPos, currGlobalURLIndex);
                 if (rv == nsFTPConn::E_USER_CANCEL)
                 {
                     break;
                 }
                 if (rv != 0)
                 {
+                    if (++currGlobalURLIndex < gControls->cfg->numGlobalURLs)
+                        goto TRY_DOWNLOAD;
+                        
                     ErrorHandler(rv);
                     break;
                 }
@@ -327,7 +331,7 @@ const char kHTTP[8] = "http://";
 const char kFTP[7] = "ftp://";
 
 short
-DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos)
+DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos, int urlIndex)
 {
     short rv = 0;
     char *URL = 0, *proxyServerURL = 0, *destFile = 0, *destFolderCopy = 0;
@@ -338,12 +342,12 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos)
     // make URL using globalURL
     HLock(archive);
     DLMarkerSetCurrent(*archive);
-    HLock(gControls->cfg->globalURL);
-    globalURLLen = strlen(*gControls->cfg->globalURL);
+    HLock(gControls->cfg->globalURL[urlIndex]);
+    globalURLLen = strlen(*gControls->cfg->globalURL[urlIndex]);
     archiveLen = strlen(*archive);
     URL = (char *) malloc(globalURLLen + archiveLen + 1); // add 1 for NULL termination
-    sprintf(URL, "%s%s", *gControls->cfg->globalURL, *archive);
-    HUnlock(gControls->cfg->globalURL);
+    sprintf(URL, "%s%s", *gControls->cfg->globalURL[urlIndex], *archive);
+    HUnlock(gControls->cfg->globalURL[urlIndex]);
     
     // set up for dl progress callback
     sCurrURL = URL;
@@ -439,6 +443,9 @@ DownloadFile(Handle destFolder, long destFolderLen, Handle archive, int resPos)
     
     if (bGetTried && rv != 0)
     {
+        if (++urlIndex < gControls->cfg->numGlobalURLs)
+            return eDLFailed;  // don't pase yet: continue trying failover URLs
+            
         /* the get failed before completing; simulate pause */
         SetPausedState();
         rv = nsFTPConn::E_USER_CANCEL;
@@ -996,9 +1003,9 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 					strcat(buf, "\t0=");
 					
 					// tack on URL to xpi directory         // \t0=<URL>
-					HLock(gControls->cfg->globalURL);
-					strcat(buf, *gControls->cfg->globalURL);
-					HUnlock(gControls->cfg->globalURL);
+					HLock(gControls->cfg->globalURL[0]);
+					strcat(buf, *gControls->cfg->globalURL[0]);
+					HUnlock(gControls->cfg->globalURL[0]);
 					
 					// tack on 'archive\r'                  // \t0=<URL>/archive\r
 					HLock(gControls->cfg->comp[i].archive);
