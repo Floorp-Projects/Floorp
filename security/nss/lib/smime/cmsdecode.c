@@ -34,7 +34,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.3 2001/09/20 22:15:31 relyea%netscape.com Exp $
+ * $Id: cmsdecode.c,v 1.4 2002/02/01 17:57:05 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -487,7 +487,7 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     }
 
     if (len == 0)
-	return;		/* nothing more to do */
+	goto done;		/* nothing more to do */
 
     /*
      * Update the running digests with plaintext bytes (if we need to).
@@ -533,6 +533,7 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 	PORT_Memcpy(storage->data + offset, data, len);
     }
 
+done:
 loser:
     if (buf)
 	PORT_Free (buf);
