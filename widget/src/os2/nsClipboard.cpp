@@ -89,7 +89,7 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
   ULONG ulFmt = GetFormatID(aFlavour, &pRecord);
 
   // XXX OS2TODO - images: just handle text until then
-  if (strstr(pRecord->szMimeType, "text") == NULL)
+  if ( (!pRecord || strstr(pRecord->szMimeType, "text") == NULL) )
     return PR_FALSE;
 
   void* pData = (void*) WinQueryClipbrdData(0/*hab*/, ulFmt);
@@ -162,6 +162,9 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
   // Figure out how much memory we need to store the native version
   FormatRecord *pRecord;
   GetFormatID(aFlavour, &pRecord);
+  if (!pRecord)
+    return;
+
   cbData = pRecord->pfnExport(pMozData, cbMozData, 0);
 
   // allocate some memory to put the data in
@@ -327,6 +330,17 @@ ULONG nsClipboard::GetFormatID(const char *aMimeStr, FormatRecord **pFmtRec)
       *pFmtRec = pRecord;
       break;
     }
+
+  if (!ulFormat) {
+    if ( strstr(pszFmt, "text") == NULL) {
+      ulFormat = gModuleData.GetAtom(pszFmt);
+      *pFmtRec = NULL;
+    }
+    else {
+      ulFormat = records[0].ulClipboardFmt;
+      *pFmtRec = &records[0];
+    }
+  }
 
   NS_ASSERTION(ulFormat, "Clipboard besieged by unknown mimetype");
 
