@@ -144,7 +144,7 @@ void nsUint8Array::CopyArray(nsUint8Array &aSrcArray)
 {
   PR_FREEIF(m_pData);
   m_nSize = aSrcArray.m_nSize;
-  m_nMaxSize = aSrcArray.m_nMaxSize;
+  m_nMaxSize = aSrcArray.m_nSize;
   m_pData = (PRUint8*)PR_Malloc(m_nSize * sizeof(PRUint8));
   if (m_pData)
    memcpy(m_pData, aSrcArray.m_pData, m_nSize * sizeof(PRUint8));

@@ -267,7 +267,7 @@ void nsUInt32Array::CopyArray(nsUInt32Array &oldA)
 	if (m_pData)
 		PR_Free(m_pData);
 	m_nSize = oldA.m_nSize;
-	m_nMaxSize = oldA.m_nMaxSize;
+	m_nMaxSize = oldA.m_nSize;
 	m_pData = (PRUint32 *)PR_Malloc(m_nSize * sizeof(PRUint32));
 	if (m_pData)
 		memcpy(m_pData, oldA.m_pData, m_nSize * sizeof(PRUint32));
