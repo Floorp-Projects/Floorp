@@ -65,6 +65,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
+#include "nsIProgressEventSink.h"
 #include "nsIContent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
@@ -409,6 +410,21 @@ nsHTTPIndexParser::GetInterface(const nsIID &anIID, void **aResult )
         
         return wwatch->GetNewAuthPrompter(aDOMWindow, (nsIAuthPrompt**)aResult);
     }  
+
+    if (anIID.Equals(NS_GET_IID(nsIProgressEventSink))) {
+
+        nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(mContainer);
+        if (!requestor) 
+            return NS_ERROR_NO_INTERFACE;
+
+        nsCOMPtr<nsIProgressEventSink> sink = do_GetInterface(requestor);
+        if (!sink) 
+            return NS_ERROR_NO_INTERFACE;
+        
+        *aResult = sink;
+        NS_ADDREF((nsISupports*)*aResult);
+        return NS_OK;
+    }
 
     return NS_ERROR_NO_INTERFACE;
 }
