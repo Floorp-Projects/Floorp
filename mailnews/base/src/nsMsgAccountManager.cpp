@@ -2994,6 +2994,7 @@ NS_IMETHODIMP
 nsMsgAccountManager::FindAccountForServer(nsIMsgIncomingServer *server,
                                             nsIMsgAccount **aResult)
 {
+  NS_ENSURE_ARG_POINTER(server);
   nsresult rv;
   *aResult = nsnull;
 
