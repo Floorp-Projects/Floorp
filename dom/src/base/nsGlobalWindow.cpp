@@ -3055,7 +3055,8 @@ PRBool GlobalWindowImpl::CheckOpenAllow(const nsAString &aName)
     if (!name.IsEmpty() &&
         !name.EqualsIgnoreCase("_top") &&
         !name.EqualsIgnoreCase("_self") &&
-        !name.EqualsIgnoreCase("_content")) {
+        !name.EqualsIgnoreCase("_content") &&
+        !name.EqualsIgnoreCase("_main")) {
 
       nsCOMPtr<nsIWindowWatcher> wwatch =
           do_GetService(NS_WINDOWWATCHER_CONTRACTID);
