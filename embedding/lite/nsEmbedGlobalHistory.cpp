@@ -369,21 +369,20 @@ PRBool nsEmbedGlobalHistory::EntryHasExpired(HistoryEntry *entry)
   return (LL_CMP(lastVisitTime, <, expirationIntervalAgo));
 }
 
-PRIntn nsEmbedGlobalHistory::enumRemoveEntryIfExpired(nsHashKey *aKey, void *aData, void* closure)
+PRIntn PR_CALLBACK nsEmbedGlobalHistory::enumRemoveEntryIfExpired(nsHashKey *aKey, void *aData, void* closure)
 {
   HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, aData);
   if (!entry)
     return PR_FALSE;
   nsEmbedGlobalHistory *history = NS_STATIC_CAST(nsEmbedGlobalHistory*, closure);
   if (!history)
-    return PR_FALSE;
+    return kHashEnumerateStop;
       
   if (history->EntryHasExpired(entry)) {
-    // what do do here?
-    //delete entry;
-    return PR_TRUE;
+    delete entry;
+    return kHashEnumerateRemove;
   }
-  return PR_TRUE;
+  return kHashEnumerateNext;
 }
 
 
@@ -506,40 +505,40 @@ nsresult writeEntry(FILE *outStm, nsCStringKey *url, HistoryEntry *entry)
   return NS_OK;
 }
 
-PRBool PR_CALLBACK enumWriteEntry(nsHashKey *aKey, void *aData, void* closure)
+PRIntn PR_CALLBACK enumWriteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
   FILE *outStm = NS_STATIC_CAST(FILE*, closure);
   if (!outStm)
-    return PR_FALSE;
+    return kHashEnumerateStop;
   nsCStringKey *stringKey = NS_STATIC_CAST(nsCStringKey*, aKey);
   if (!stringKey)
-    return PR_FALSE;
+    return kHashEnumerateStop;
   HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, aData);
   if (!entry)
-    return PR_FALSE;
+    return kHashEnumerateStop;
 
   nsresult rv = writeEntry(outStm, stringKey, entry);
     
-  return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
+  return NS_SUCCEEDED(rv) ? kHashEnumerateNext : kHashEnumerateStop;
 }
 
-PRBool PR_CALLBACK enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure)
+PRIntn PR_CALLBACK enumWriteEntryIfUnwritten(nsHashKey *aKey, void *aData, void* closure)
 {
   FILE *outStm = NS_STATIC_CAST(FILE*, closure);
   if (!outStm)
-    return PR_FALSE;
+    return kHashEnumerateStop;
   nsCStringKey *stringKey = NS_STATIC_CAST(nsCStringKey*, aKey);
   if (!stringKey)
-    return PR_FALSE;
+    return kHashEnumerateStop;
   HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, aData);
   if (!entry)
-    return PR_FALSE;
+    return kHashEnumerateStop;
 
   nsresult rv = NS_OK;
   if (!entry->GetIsWritten())
     rv = writeEntry(outStm, stringKey, entry);
     
-  return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
+  return NS_SUCCEEDED(rv) ? kHashEnumerateNext : kHashEnumerateStop;
 }
 
 PRIntn PR_CALLBACK enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure)
@@ -547,5 +546,5 @@ PRIntn PR_CALLBACK enumDeleteEntry(nsHashKey *aKey, void *aData, void* closure)
   HistoryEntry *entry = NS_STATIC_CAST(HistoryEntry*, aData);
   delete entry;
   
-  return PR_TRUE;
+  return kHashEnumerateNext;
 }
