@@ -894,7 +894,7 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 
 MOZJPEG=62
 MOZPNG=10009
-MOZMNG="((0<<16)|(9<<8)|(4))"
+MOZMNG="((1<<16)|(0<<8)|(1))"
 NSPR_VERSION=4
 
 GLIB_VERSION=1.2.0
