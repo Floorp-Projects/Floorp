@@ -2353,10 +2353,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             m_end->SetHour( 23 );
             m_end->SetMinute( 59 );
         }
-        if( !m_allday ) { //Include end-date only if this is not an all day event
-            prop = icalproperty_new_dtend( m_end->m_datetime );
-            icalcomponent_add_property( vevent, prop );
-        }
+        prop = icalproperty_new_dtend( m_end->m_datetime );
+        icalcomponent_add_property( vevent, prop );
     }
 
     if( m_stamp && !icaltime_is_null_time( m_stamp->m_datetime ) ) {
