@@ -68,7 +68,7 @@
             try {
               var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
                                             .getService(Components.interfaces.nsILocaleService);
-              return localeService.GetApplicationLocale();
+              return localeService.getApplicationLocale();
             }
             catch (ex) {
               return null;

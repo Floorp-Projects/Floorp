@@ -103,25 +103,22 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 second, 
                             PRUnichar **dateTimeString)
 {
-  nsILocale* aLocale; 
-  nsString localeName(locale);
+  nsCOMPtr<nsILocale> aLocale;
   nsresult rv;
-
   *dateTimeString = NULL;
-
 
   // get locale service 
   nsCOMPtr<nsILocaleService> localeService = 
            do_GetService(kLocaleServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = localeName.Length() ? localeService->NewLocale(localeName.get(), &aLocale) :
-                               localeService->GetApplicationLocale(&aLocale);
+    rv = (locale && *locale) ? 
+      localeService->NewLocale(nsDependentString(locale), getter_AddRefs(aLocale)) :
+      localeService->GetApplicationLocale(getter_AddRefs(aLocale));
 
     if (NS_SUCCEEDED(rv) && aLocale) {
-      nsIDateTimeFormat *aDateTimeFormat;
-    	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-                                              NS_GET_IID(nsIDateTimeFormat), (void **) &aDateTimeFormat);
-      if (NS_SUCCEEDED(rv) && aDateTimeFormat) {
+      nsCOMPtr<nsIDateTimeFormat> aDateTimeFormat = do_CreateInstance(kDateTimeFormatCID);
+
+      if (aDateTimeFormat) {
         struct tm tmTime;
         time_t  timetTime;
 
@@ -158,9 +155,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
             }
           }
         }
-        NS_RELEASE(aDateTimeFormat);
       }
-      NS_RELEASE(aLocale);
     }
   }
 

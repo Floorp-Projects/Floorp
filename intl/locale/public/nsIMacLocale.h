@@ -45,18 +45,20 @@
 #include <Script.h>
 
 // {E58B24B2-FD1A-11d2-9E8E-0060089FE59B}
-#define NS_IMACLOCALE_IID							\
-{	0xe58b24b2, 0xfd1a, 0x11d2, 					\
-{	0x9e, 0x8e, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}	
+#define NS_IMACLOCALE_IID                \
+{  0xe58b24b2, 0xfd1a, 0x11d2,           \
+{  0x9e, 0x8e, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}  
 
 
 class nsIMacLocale : public nsISupports {
 
 public:
-	
-        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMACLOCALE_IID)
-	NS_IMETHOD GetPlatformLocale(const nsString* locale,short* scriptCode,short* langCode, short* regionCode) = 0;
-	NS_IMETHOD GetXPLocale(short scriptCode,short langCode, short regionCode, nsString* locale) = 0;
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMACLOCALE_IID)
+  NS_IMETHOD GetPlatformLocale(const nsAString& locale, short* scriptCode, 
+                               short* langCode, short* regionCode) = 0;
+  NS_IMETHOD GetXPLocale(short scriptCode, short langCode, short regionCode,
+                         nsAString& locale) = 0;
 };
 
 

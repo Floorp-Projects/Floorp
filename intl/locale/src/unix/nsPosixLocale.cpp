@@ -44,6 +44,7 @@
 #include "nsLocaleCID.h"
 #include "prprf.h"
 #include "plstr.h"
+#include "nsReadableUtils.h"
 
 /* nsPosixLocale ISupports */
 NS_IMPL_ISUPPORTS1(nsPosixLocale, nsIPosixLocale)
@@ -58,15 +59,15 @@ nsPosixLocale::~nsPosixLocale(void)
 }
 
 NS_IMETHODIMP 
-nsPosixLocale::GetPlatformLocale(const nsString* locale, nsACString& posixLocale)
+nsPosixLocale::GetPlatformLocale(const nsAString& locale, nsACString& posixLocale)
 {
   char  country_code[MAX_COUNTRY_CODE_LEN+1];
   char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
   char  extra[MAX_EXTRA_LEN+1];
   char  posix_locale[MAX_LOCALE_LEN+1];
-  NS_LossyConvertUCS2toASCII xp_locale(*locale);
+  NS_LossyConvertUTF16toASCII xp_locale(locale);
 
-  if (xp_locale.get()) {
+  if (!xp_locale.IsEmpty()) {
     if (!ParseLocaleString(xp_locale.get(),lang_code,country_code,extra,'-')) {
 //      strncpy(posixLocale,"C",length);
       posixLocale = xp_locale;  // use xp locale if parse failed
@@ -98,7 +99,7 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale, nsACString& posixLocale
 }
 
 NS_IMETHODIMP
-nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
+nsPosixLocale::GetXPLocale(const char* posixLocale, nsAString& locale)
 {
   char  country_code[MAX_COUNTRY_CODE_LEN+1];
   char  lang_code[MAX_LANGUAGE_CODE_LEN+1];
@@ -107,12 +108,13 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
-      locale->Assign(NS_LITERAL_STRING("en-US"));
+      locale.Assign(NS_LITERAL_STRING("en-US"));
       return NS_OK;
     }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,extra,'_')) {
 //      * locale = "x-user-defined";
-      locale->AssignWithConversion(posixLocale);  // use posix if parse failed
+      // use posix if parse failed
+      CopyASCIItoUTF16(nsDependentCString(posixLocale), locale);
       return NS_OK;
     }
 
@@ -123,7 +125,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
       PR_snprintf(posix_locale,sizeof(posix_locale),"%s",lang_code);
     }
 
-    locale->AssignWithConversion(posix_locale);
+    CopyASCIItoUTF16(nsDependentCString(posix_locale), locale);
     return NS_OK;
 
   }

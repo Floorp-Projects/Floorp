@@ -115,51 +115,43 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
   // default platform locale
   mLocale.Assign('C');
 
-  PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory;
-  aCategory.Assign(NS_LITERAL_STRING("NSILOCALE_COLLATE##PLATFORM"));
+  nsAutoString localeStr;
+  NS_NAMED_LITERAL_STRING(aCategory, "NSILOCALE_COLLATE##PLATFORM");
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
     nsCOMPtr<nsILocaleService> localeService = 
              do_GetService(NS_LOCALESERVICE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      nsILocale *appLocale;
-      res = localeService->GetApplicationLocale(&appLocale);
+      nsCOMPtr<nsILocale> appLocale;
+      res = localeService->GetApplicationLocale(getter_AddRefs(appLocale));
       if (NS_SUCCEEDED(res)) {
-        res = appLocale->GetCategory(aCategory.get(), &aLocaleUnichar);
+        res = appLocale->GetCategory(aCategory, localeStr);
         NS_ASSERTION(NS_SUCCEEDED(res), "failed to get app locale info");
-        appLocale->Release();
       }
     }
   }
   else {
-    res = locale->GetCategory(aCategory.get(), &aLocaleUnichar);
+    res = locale->GetCategory(aCategory, localeStr);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to get locale info");
   }
 
   // Get platform locale and charset name from locale, if available
   if (NS_SUCCEEDED(res)) {
-    nsString aLocale;
-    aLocale = aLocaleUnichar;
-    if (NULL != aLocaleUnichar) {
-      nsMemory::Free(aLocaleUnichar);
-    }
-
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
-    if (aLocale.EqualsIgnoreCase("en_US")) { // note: locale is in platform format
-      aLocale.Assign(NS_LITERAL_STRING("C"));
+    if (localeStr.EqualsIgnoreCase("en_US")) { // note: locale is in platform format
+      localeStr.Assign(NS_LITERAL_STRING("C"));
     }
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      res = posixLocale->GetPlatformLocale(&aLocale, mLocale);
+      res = posixLocale->GetPlatformLocale(localeStr, mLocale);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
       nsCAutoString mappedCharset;
-      res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), mappedCharset);
+      res = platformCharset->GetDefaultCharsetForLocale(localeStr, mappedCharset);
       if (NS_SUCCEEDED(res)) {
         mCollation->SetCharset(mappedCharset.get());
       }

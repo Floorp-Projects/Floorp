@@ -46,6 +46,7 @@
 #include "prprf.h"
 #include <windows.h>
 #include "nsCRT.h"
+ #include "nsReadableUtils.h"
 
 #define USER_DEFINED_PRIMARYLANG	0x0200
 #define USER_DEFINED_SUBLANGUAGE	0x20
@@ -422,14 +423,14 @@ nsIWin32LocaleImpl::~nsIWin32LocaleImpl(void)
 //
 
 NS_IMETHODIMP
-nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
+nsIWin32LocaleImpl::GetPlatformLocale(const nsAString& locale,LCID* winLCID)
 {
-	char		language_code[3];
-	char		country_code[3];
-	char		region_code[3];
-	int			i,j;
+  char    language_code[3];
+  char    country_code[3];
+  char    region_code[3];
+  int     i,j;
 
-  if (!ParseLocaleString(*locale,language_code,country_code,region_code)) {
+  if (!ParseLocaleString(NS_LossyConvertUTF16toASCII(locale).get(),language_code,country_code,region_code)) {
     *winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
                         SORT_DEFAULT);
     return NS_OK;
@@ -438,7 +439,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 
   for(i=0;i<LENGTH_MAPPING_LIST;i++) {
     if (strcmp(language_code,iso_list[i].iso_code)==0) {
-      for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
+      for(j=0;iso_list[i].sublang_list[j].win_code;j++) {
         if (strcmp(country_code,iso_list[i].sublang_list[j].iso_code)==0) {
           *winLCID = MAKELCID(MAKELANGID(iso_list[i].win_code,iso_list[i].sublang_list[j].win_code),SORT_DEFAULT);
           return NS_OK;
@@ -449,52 +450,51 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
       return NS_OK;
     }
   }
-		
-	return NS_ERROR_FAILURE;
+    
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
+nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsAString& locale)
 {
-	DWORD		lang_id, sublang_id;
-	char		rfc_locale_string[9];
-	int			i,j;
+  DWORD    lang_id, sublang_id;
+  char     rfc_locale_string[9];
+  int      i,j;
 
-	lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
-	sublang_id = SUBLANGID(LANGIDFROMLCID(winLCID));
+  lang_id = PRIMARYLANGID(LANGIDFROMLCID(winLCID));
+  sublang_id = SUBLANGID(LANGIDFROMLCID(winLCID));
 
-	for(i=0;i<LENGTH_MAPPING_LIST;i++) {
-		if (lang_id==iso_list[i].win_code) {
-			for(j=0;strlen(iso_list[i].sublang_list[j].iso_code)!=0;j++) {
-				if (sublang_id == iso_list[i].sublang_list[j].win_code) {
-					PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
-						iso_list[i].sublang_list[j].iso_code,0);
-					locale->AssignWithConversion(rfc_locale_string);
-					return NS_OK;
-				}
-			}
-			// no sublang, so just lang
-			PR_snprintf(rfc_locale_string,9,"%s%c",iso_list[i].iso_code,0);
-			locale->AssignWithConversion(rfc_locale_string);
-			return NS_OK;
-		}
-	}
+  for(i=0;i<LENGTH_MAPPING_LIST;i++) {
+    if (lang_id==iso_list[i].win_code) {
+      for(j=0;iso_list[i].sublang_list[j].win_code;j++) {
+        if (sublang_id == iso_list[i].sublang_list[j].win_code) {
+          PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
+            iso_list[i].sublang_list[j].iso_code,0);
+          CopyASCIItoUTF16(nsDependentCString(rfc_locale_string), locale);
+          return NS_OK;
+        }
+      }
+      // no sublang, so just lang
+      PR_snprintf(rfc_locale_string,9,"%s%c",iso_list[i].iso_code,0);
+      CopyASCIItoUTF16(nsDependentCString(rfc_locale_string), locale);
+      return NS_OK;
+    }
+  }
 
-	//
-	// totally didn't find it
-	//
-	return NS_ERROR_FAILURE;
+  //
+  // totally didn't find it
+  //
+  return NS_ERROR_FAILURE;
 
 }
 
 //
 // returns PR_FALSE/PR_TRUE depending on if it was of the form LL-CC-RR
 PRBool
-nsIWin32LocaleImpl::ParseLocaleString(const nsString& locale_string, char* language, char* country, char* region)
+nsIWin32LocaleImpl::ParseLocaleString(const char* locale_string, char* language, char* country, char* region)
 {
-	size_t		len;
+	size_t		len = strlen(locale_string);
 
-	len = locale_string.Length();
 	if (len==0 || (len!=2 && len!=5 && len!=8))
 		return PR_FALSE;
 	

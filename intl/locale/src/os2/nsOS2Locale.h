@@ -38,7 +38,7 @@ public:
    
   NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,
                                 size_t length);
-  NS_IMETHOD GetXPLocale(const char* os2Locale, nsString* locale);
+  NS_IMETHOD GetXPLocale(const char* os2Locale, nsAutoString& locale);
 
 protected:
   inline PRBool ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator);

@@ -57,11 +57,11 @@ public:
 	nsIWin32LocaleImpl(void);
 	~nsIWin32LocaleImpl(void);
 
-	NS_IMETHOD GetPlatformLocale(const nsString* locale,LCID* winLCID);
-	NS_IMETHOD GetXPLocale(LCID winLCID,nsString* locale);
+	NS_IMETHOD GetPlatformLocale(const nsAString& locale, LCID* winLCID);
+	NS_IMETHOD GetXPLocale(LCID winLCID, nsAString& locale);
 
 protected:
-	inline PRBool	ParseLocaleString(const nsString& locale_string, char* language, char* country, char* region);
+	inline PRBool	ParseLocaleString(const char* locale_string, char* language, char* country, char* region);
 
 };
 

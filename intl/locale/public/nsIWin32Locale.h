@@ -45,21 +45,17 @@
 #include <windows.h>
 
 // {D92D57C2-BA1D-11d2-AF0C-0060089FE59B}
-#define	NS_IWIN32LOCALE_IID							\
-{	0xd92d57c2, 0xba1d, 0x11d2,						\
-{	0xaf, 0xc, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
+#define  NS_IWIN32LOCALE_IID              \
+{  0xd92d57c2, 0xba1d, 0x11d2,            \
+{  0xaf, 0xc, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
 
 
 class nsIWin32Locale : public nsISupports {
-
 public:
-	
-        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIN32LOCALE_IID)
-	NS_IMETHOD GetPlatformLocale(const nsString* locale,LCID* winLCID) = 0;
-	NS_IMETHOD GetXPLocale(LCID winLCID,nsString* locale) = 0;
+  
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIN32LOCALE_IID)
+  NS_IMETHOD GetPlatformLocale(const nsAString& locale, LCID* winLCID) = 0;
+  NS_IMETHOD GetXPLocale(LCID winLCID, nsAString& locale) = 0;
 };
-
-nsresult GetPlatformLocale(const PRUnichar* localeValue, LCID* winLCID);
-nsresult GetXPLocale(LCID winLCID, PRUnichar* localeValue);
 
 #endif

@@ -50,35 +50,35 @@ NS_DEFINE_IID(kPlatformCharsetIID,NS_IPLATFORMCHARSET_IID);
 int
 main(int argc, const char** argv)
 {
-    nsCOMPtr<nsILocaleService>      locale_service;
+
+    nsCOMPtr<nsIPlatformCharset> platform_charset = 
+        do_CreateInstance(NS_PLATFORMCHARSET_CONTRACTID);
+    if (!platform_charset) return -1;
+
+    nsCOMPtr<nsILocaleService>      locale_service = 
+        do_CreateInstance(kLocaleServiceCID);
+    if (!locale_service) return -1;
+
     nsCOMPtr<nsILocale>             locale;
-    nsCOMPtr<nsIPlatformCharset>    platform_charset;
-    nsString                        locale_category(NS_LITERAL_STRING("NSILOCALE_MESSAGES"));
-    PRUnichar*                      category_value;
     nsCAutoString                   charset;
-    nsString                        categoryAsNSString;
+    nsAutoString                    category;
 
-    nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_CONTRACTID, NULL, kPlatformCharsetIID, getter_AddRefs(platform_charset));
-    rv = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, kLocaleServiceIID, getter_AddRefs(locale_service));
+    nsresult rv = locale_service->GetSystemLocale(getter_AddRefs(locale));
     if (NS_FAILED(rv)) return -1;
 
-    rv = locale_service->GetSystemLocale(getter_AddRefs(locale));
+    rv = locale->GetCategory(NS_LITERAL_STRING("NSILOCALE_MESSAGES"), category);
     if (NS_FAILED(rv)) return -1;
 
-    rv = locale->GetCategory(locale_category.get(), &category_value);
+    rv = platform_charset->GetDefaultCharsetForLocale(category, charset);
     if (NS_FAILED(rv)) return -1;
 
-    rv = platform_charset->GetDefaultCharsetForLocale(category_value, charset);
+    printf("DefaultCharset for %s is %s\n", NS_LossyConvertUTF16toASCII(category).get(), charset.get());
+
+    category.Assign(NS_LITERAL_STRING("en-US"));
+    rv = platform_charset->GetDefaultCharsetForLocale(category, charset);
     if (NS_FAILED(rv)) return -1;
 
-    categoryAsNSString = category_value;
-    printf("DefaultCharset for %s is %s\n", NS_LossyConvertUTF16toASCII(categoryAsNSString).get(), charset.get());
-
-    categoryAsNSString.Assign(NS_LITERAL_STRING("en-US"));
-    rv = platform_charset->GetDefaultCharsetForLocale(categoryAsNSString.get(), charset);
-    if (NS_FAILED(rv)) return -1;
-
-    printf("DefaultCharset for %s is %s\n", NS_LossyConvertUTF16toASCII(categoryAsNSString).get(), charset.get());
+    printf("DefaultCharset for %s is %s\n", NS_LossyConvertUTF16toASCII(category).get(), charset.get());
 
     return 0;
 }

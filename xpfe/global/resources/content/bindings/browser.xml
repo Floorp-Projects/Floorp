@@ -265,7 +265,7 @@
             var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                   .getService(Components.interfaces.nsIStringBundleService);
             var bundleURL = "chrome://global/locale/tabbrowser.properties";
-            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
+            this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
           }
           return this._mStrBundle;
         ]]></getter>
