@@ -60,6 +60,7 @@ class WriteStreamWrapper : public nsIOutputStream
   nsDiskCacheRecordChannel*         mChannel;
   nsCOMPtr<nsIOutputStream>         mBaseStream;
   PRUint32                          mTotalSize;
+  PRUint32                          mOldLength;
 };
 
 // implement nsISupports
@@ -67,10 +68,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS(WriteStreamWrapper, NS_GET_IID(nsIOutputStream))
 
 WriteStreamWrapper::WriteStreamWrapper(nsDiskCacheRecordChannel* aChannel, 
                                        nsIOutputStream *aBaseStream) 
-  : mChannel(aChannel), mBaseStream(aBaseStream), mTotalSize(0)
+  : mChannel(aChannel), mBaseStream(aBaseStream), mTotalSize(0), mOldLength(0)
 { 
   NS_INIT_REFCNT(); 
   NS_ADDREF(mChannel);
+  mChannel->mRecord->GetStoredContentLength(&mOldLength);
 }
 
 WriteStreamWrapper::~WriteStreamWrapper()
@@ -93,7 +95,6 @@ WriteStreamWrapper::Write(const char *aBuffer, PRUint32 aCount, PRUint32 *aNumWr
 {
   *aNumWritten = 0;
   nsresult rv = mBaseStream->Write(aBuffer, aCount, aNumWritten);
-  mChannel->NotifyStorageInUse(*aNumWritten);
   mTotalSize += *aNumWritten;
   return rv;
 }
@@ -154,9 +155,15 @@ WriteStreamWrapper::Close()
   // Tell the record we finished write to the file
   mChannel->mRecord->WriteComplete();
 
-  // Truncate the file if we have to. It should have been already but that
-  // would be too easy wouldn't it!!!
-  mChannel->mRecord->SetStoredContentLength(mTotalSize);
+  if (mTotalSize < mOldLength) {
+
+      // Truncate the file if we have to. It should have been already but that
+      // would be too easy wouldn't it!!!
+      mChannel->mRecord->SetStoredContentLength(mTotalSize);
+  } else if (mTotalSize > mOldLength) {
+
+      mChannel->NotifyStorageInUse(mTotalSize - mOldLength);
+  }
 
   return rv;
 }
