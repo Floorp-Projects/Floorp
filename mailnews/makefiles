@@ -5,8 +5,8 @@ network/protocol/nntp/Makefile
 network/protocol/pop3/Makefile
 network/protocol/smtp/Makefile
 mailnews/Makefile
-mailnews/addrbook/build/Makefile
 mailnews/addrbook/Makefile
+mailnews/addrbook/build/Makefile
 mailnews/addrbook/public/Makefile
 mailnews/addrbook/src/Makefile
 mailnews/base/Makefile

@@ -30,15 +30,18 @@
 class NS_MSG_BASE nsNewsSummarySpec : public nsFileSpec
 {
 public:
-			nsNewsSummarySpec();
-			nsNewsSummarySpec(const char *folderPath);
-			nsNewsSummarySpec(const nsFileSpec& inFolderPath);
-			nsNewsSummarySpec(const nsFilePath &inFolderPath);
-			void SetFolderName(const char *folderPath);
+  nsNewsSummarySpec();
+  nsNewsSummarySpec(const char *folderPath);
+  nsNewsSummarySpec(const nsFileSpec& inFolderPath);
+  nsNewsSummarySpec(const nsFilePath &inFolderPath);
+  void SetFolderName(const char *folderPath);
 
 protected:
-	void	CreateSummaryFileName();
-
+  void	CreateSummaryFileName();
+  
+private:
+  /* Phong's linear congruential hash  */
+  PRUint32 StringHash(const char *ubuf);
 };
 
 #endif

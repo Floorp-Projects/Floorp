@@ -32,8 +32,6 @@ typedef int (*XP_HashCompFunction) (const void *ele1, const void *ele2);
 
 /* get hash number from a string */
 extern uint32 XP_StringHash (const void *xv);
-/* Phong's linear congruential hash  */
-extern uint32 XP_StringHash2 (const char *ubuf);
 
 /* Hash Tables.
  */

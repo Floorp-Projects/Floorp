@@ -52,22 +52,6 @@ XP_StringHash (const void *xv)
   return h;
 }
 
-/*	phong's linear congruential hash  */
-uint32
-XP_StringHash2 (const char *ubuf)
-{
-	unsigned char * buf = (unsigned char*) ubuf;
-	uint32 h=1;
-	while(*buf)
-	{
-		h = 0x63c63cd9*h + 0x9c39c33d + (int32)*buf;
-		buf++;
-	}
-	return h;
-}
-
-
-
 /* Hash tables.  For sure this time.
 
    These tables consist of a fixed number of buckets containing linked lists.

@@ -47,7 +47,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsI
 #ifdef DEBUG_sspitzer
   printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)newsgroupName, create ? "TRUE":"FALSE",
-           pMessageDB, upgrading ? "TRUE":"FALSE", (const char*)newsgroupName);
+           pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
 #endif
 
   nsFileSpec dbPath(summarySpec);
