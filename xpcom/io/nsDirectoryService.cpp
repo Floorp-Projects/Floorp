@@ -52,7 +52,7 @@
 #include "prenv.h"
 #endif
 
-
+#include "nsSpecialSystemDirectory.h"
 
 
 #ifdef XP_MAC
@@ -72,6 +72,7 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 {
    //  Set the component registry location:
     nsresult rv;
+
     nsCOMPtr<nsIProperties> dirService;
     rv = nsDirectoryService::Create(nsnull, 
                                     NS_GET_IID(nsIProperties), 
@@ -432,14 +433,323 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistant, nsIFile **_ret
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
-		localFile->Append(COMPONENT_REGISTRY_NAME);           
+    		localFile->Append(COMPONENT_REGISTRY_NAME);           
     }
     else if (strncmp(prop, "xpcom.currentProcess.componentDirectory", 39) == 0)
     {
         rv = GetCurrentProcessDirectory(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) return rv;
-		localFile->Append(COMPONENT_DIRECTORY);           
+		    localFile->Append(COMPONENT_DIRECTORY);           
     }
+    
+    else if (strncmp(prop, "system.OS_DriveDirectory",  24) == 0) 
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_DriveDirectory);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.OS_TemporaryDirectory",  28) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.OS_CurrentProcessDirectory",  35) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.OS_CurrentWorkingDirectory",  33) == 0)   
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+       
+#ifdef XP_MAC          
+    else if (strncmp(prop, "system.Directory",  22) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_SystemDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.DesktopDirectory",  23) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DesktopDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.TrashDirectory",  21) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_TrashDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.StartupDirectory",  23) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_StartupDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.ShutdownDirectory",  24) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ShutdownDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.AppleMenuDirectory",  25) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_AppleMenuDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.ControlPanelDirectory",  28) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ControlPanelDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.ExtensionDirectory",  25) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ExtensionDirectory);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.FontsDirectory",  21) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_FontsDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.PreferencesDirectory",  27) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_PreferencesDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.DocumentsDirectory",  25) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DocumentsDirectory);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.InternetSearchDirectory",  30) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_InternetSearchDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }   
+#elif defined (XP_PC)        
+    else if (strncmp(prop, "system.SystemDirectory",  22) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_SystemDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.WindowsDirectory",  23) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_WindowsDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.HomeDirectory",  20) == 0)  
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_HomeDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Desktop",  14) == 0)      
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Desktop); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Programs",  15) == 0)      
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Programs); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Controls",  15) == 0)      
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Controls); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Printers",  15) == 0)      
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Printers); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Personal",  15) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Personal); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Favorites",  16) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Favorites); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Startup",  14) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Startup);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Recent",  13) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Recent); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Sendto",  13) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Sendto); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Bitbucket",  16) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Bitbucket); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Startmenu",  16) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Startmenu); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Desktopdirectory",  23) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Desktopdirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Drives",  13) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Drives);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Network",  14) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Network); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Nethood",  14) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Nethood); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Fonts",  12) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Fonts);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Templates",  16) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Templates); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Common_Startmenu",  23) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Startmenu); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Common_Programs",  22) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Programs); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Common_Startup",  21) == 0)   
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Startup); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Common_Desktopdirectory",  30) == 0)   
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Common_Desktopdirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Appdata",  14) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Appdata); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.Printhood",  16) == 0)    
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_Printhood); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+#elif defined (XP_UNIX)       
+
+    else if (strncmp(prop, "system.LocalDirectory",  21) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_LocalDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.LibDirectory",  19) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_LibDirectory);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.HomeDirectory",  20) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_HomeDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+#elif defined (XP_BEOS)
+    else if (strncmp(prop, "system.SettingsDirectory",  24) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_SettingsDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.HomeDirectory",  20) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_HomeDirectory);
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.DesktopDirectory",  23) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_DesktopDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+    else if (strncmp(prop, "system.SystemDirectory",  22) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::BeOS_SystemDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+#elif defined (XP_OS2)
+    else if (strncmp(prop, "system.SystemDirectory",  22) == 0)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_SystemDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+        if (NS_FAILED(rv)) return rv; 
+    }
+#endif
 
 	if (localFile)
 		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
