@@ -536,11 +536,7 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
   // is there a visible run there or earlier?
   while (run)
   {
-    if (run->mType != eNormalWS)
-    {
-      run = run->mLeft;
-    }
-    else
+    if (run->mType == eNormalWS)
     {
       WSPoint point;
       res = GetCharBefore(aNode, aOffset, &point);
@@ -566,6 +562,8 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
       }
       // else if no text node then keep looking.  We should eventually fall out of loop
     }
+
+    run = run->mLeft;
   }
   
   // if we get here then nothing in ws data to find.  return start reason
@@ -594,11 +592,7 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
   // is there a visible run there or later?
   while (run)
   {
-    if (run->mType != eNormalWS)
-    {
-      run = run->mRight;
-    }
-    else
+    if (run->mType == eNormalWS)
     {
       WSPoint point;
       res = GetCharAfter(aNode, aOffset, &point);
@@ -624,6 +618,8 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
       }
       // else if no text node then keep looking.  We should eventually fall out of loop
     }
+
+    run = run->mRight;
   }
   
   // if we get here then nothing in ws data to find.  return end reason
