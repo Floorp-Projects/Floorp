@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by mfcembed.rc
+// Used by MfcEmbed.rc
 //
 #define IDD_ABOUTBOX                    100
 #define ID_TOOLBAR_UPDATE               101
@@ -105,6 +105,21 @@
 #define ID_UNDERLINE                    32794
 #define ID_ITALICS                      32795
 #define ID_NEW_EDITORWINDOW             32796
+#define ID_INDENT                       32797
+#define ID_OUTDENT                      32798
+#define ID_FONTBLACK                    32799
+#define ID_FONTRED                      32800
+#define ID_BGCOLOR                      32801
+#define ID_NOBGCOLOR                    32802
+#define ID_FONTSIZEINCREASE             32803
+#define ID_FONTSIZEDECREASE             32804
+#define ID_ARIAL                        32805
+#define ID_TIMES                        32806
+#define ID_COURIER                      32807
+#define ID_ALIGNLEFT                    32808
+#define ID_ALIGNCENTER                  32809
+#define ID_ALIGNRIGHT                   32810
+#define ID_INSERTLINK                   32811
 
 // Next default values for new objects
 // 
@@ -112,7 +127,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        156
-#define _APS_NEXT_COMMAND_VALUE         32797
+#define _APS_NEXT_COMMAND_VALUE         32813
 #define _APS_NEXT_CONTROL_VALUE         1042
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
