@@ -19,9 +19,12 @@
 #ifndef nsFileProtocolHandler_h___
 #define nsFileProtocolHandler_h___
 
-#include "nsIProtocolHandler.h"
+#include "nsIFileProtocolHandler.h"
 
 class nsISupportsArray;
+class nsIRunnable;
+class nsFileChannel;
+class nsIThreadPool;
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  4
 
@@ -34,7 +37,7 @@ class nsISupportsArray;
     {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-class nsFileProtocolHandler : public nsIProtocolHandler
+class nsFileProtocolHandler : public nsIFileProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
