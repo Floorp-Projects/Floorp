@@ -179,11 +179,12 @@ nsDocShell::nsDocShell():
     mItemType(typeContent),
     mCurrentScrollbarPref(-1, -1),
     mDefaultScrollbarPref(-1, -1),
+    mAllowSubframes(PR_TRUE),
     mAllowPlugins(PR_TRUE),
     mAllowJavascript(PR_TRUE),
     mAllowMetaRedirects(PR_TRUE),
-    mAllowSubframes(PR_TRUE),
     mAllowImages(PR_TRUE),
+    mFocusDocFirst(PR_FALSE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
     mEODForCurrentDocument(PR_FALSE),
@@ -1206,6 +1207,22 @@ NS_IMETHODIMP nsDocShell::GetAllowImages(PRBool * aAllowImages)
 NS_IMETHODIMP nsDocShell::SetAllowImages(PRBool aAllowImages)
 {
     mAllowImages = aAllowImages;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetFocusDocBeforeContent(PRBool* aDocFirst)
+{
+    NS_ENSURE_ARG_POINTER(aDocFirst);
+
+    *aDocFirst = mFocusDocFirst;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetFocusDocBeforeContent(PRBool aDocFirst)
+{
+    mFocusDocFirst = aDocFirst;
     return NS_OK;
 }
 
@@ -2680,6 +2697,9 @@ nsDocShell::SetFocus()
     doFocusDoc = type == nsIDocShellTreeItem::typeContent;
   }
 
+  if (mFocusDocFirst)
+    doFocusDoc = PR_TRUE;
+
   // Tell itself (and the DocShellFocusController) who has focus
   // this way focus gets removed from the currently focused DocShell
   SetHasFocus(PR_TRUE);
@@ -2881,6 +2901,7 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
             // For DocShell's not implemented by this class
             nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(chromeFocus));
             MakeSureOfSetFocus(nsnull, docShell);
+            *aTookFocus = PR_TRUE;
             return ret;
         } else {
             // If the embeddor does not implement FocusNext/PrevElement,

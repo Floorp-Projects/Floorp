@@ -303,11 +303,14 @@ protected:
     nsPoint                    mCurrentScrollbarPref; // this document only
     nsPoint                    mDefaultScrollbarPref; // persistent across doc loads
     PRUint32                   mLoadType;
-    PRBool                     mAllowPlugins;
-    PRBool                     mAllowJavascript;
-    PRBool                     mAllowMetaRedirects;
+
     PRBool                     mAllowSubframes;
-    PRBool                     mAllowImages;
+    PRPackedBool               mAllowPlugins;
+    PRPackedBool               mAllowJavascript;
+    PRPackedBool               mAllowMetaRedirects;
+    PRPackedBool               mAllowImages;
+    PRPackedBool               mFocusDocFirst;
+
     PRUint32                   mAppType;
     PRInt32                    mChildOffset;  // Offset in the parent's child list.
     PRUint32                   mBusyFlags;

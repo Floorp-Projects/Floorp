@@ -196,6 +196,13 @@ interface nsIDocShell : nsISupports
   attribute boolean allowSubframes;
 
   /**
+   * Attribute stating whether the document itself should come before
+   * its focusable content in tab traversal (the default is for the document
+   * to be focused last).
+   */
+  attribute boolean focusDocBeforeContent;
+
+  /**
    * Attribute stating whether or not images should be loaded.
    */
   attribute boolean allowImages;
