@@ -67,8 +67,6 @@ EXPORT_RESOURCE_SAMPLES = \
 		trash-hover-active.gif \
 		$(NULL)
 
-DIRS = win
-
 include $(topsrcdir)/config/rules.mk
 
 
