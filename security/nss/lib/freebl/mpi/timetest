@@ -40,11 +40,12 @@
 ## the GPL.  If you do not delete the provisions above, a recipient
 ## may use your version of this file under either the MPL or the GPL.
 ## 
-# $Id: timetest,v 1.3 2000/08/09 20:44:05 nelsonb%netscape.com Exp $
+# $Id: timetest,v 1.4 2000/08/22 01:15:41 nelsonb%netscape.com Exp $
 #
 
 # Avoid using built-in shell echoes
 ECHO=/bin/echo
+MAKE=gmake
 
 # Use a fixed seed so timings will be more consistent
 # This one is the 11th-18th decimal digits of 'e'
@@ -56,7 +57,7 @@ SEED=45904523; export SEED
 $ECHO "\n** Running timing tests for MPI library\n"
 
 $ECHO "Bringing 'metime' up to date ... "
-if make metime ; then
+if $MAKE metime ; then
     :
 else 
     $ECHO "\nMake failed to build metime.\n"
@@ -71,7 +72,7 @@ fi
 #------------------------------------------------------------------------
 
 $ECHO "Bringing 'primegen' up to date ... "
-if make primegen ; then
+if $MAKE primegen ; then
     :
 else
     $ECHO "\nMake failed to build primegen.\n"
