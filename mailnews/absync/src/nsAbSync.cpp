@@ -899,6 +899,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
 
         rv = prefs->GetChildList(SYNC_PREF_PREFIX_CLIENT_MAP, &prefCount, &prefNames);
         if (NS_SUCCEEDED(rv) && prefCount > 0)
+        {
           for (i = 0; i < prefCount; i++)
           {
             nsXPIDLString genericValue;
@@ -917,6 +918,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
               }
             }
           } // end of for (i = 0; i < prefCount; i++)
+
+          NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+        }
        }
     }
 
