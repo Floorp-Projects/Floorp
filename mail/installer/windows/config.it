@@ -634,7 +634,7 @@ Description Long=Adds RSS support to $ProductName$ Mail.
 Archive=newsblog.xpi
 $InstallSize$:newsblog
 $InstallSizeArchive$:newsblog.xpi
-Attributes=FORCE_UPGRADE|VISIBLE
+Attributes=SELECTED|FORCE_UPGRADE|VISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\newsblog.jar
 FileCount=$FileCount$
 
