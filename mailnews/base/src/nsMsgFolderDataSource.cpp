@@ -682,7 +682,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		  PRUnichar *name;
 		  literal->GetValue(&name);
 
-          rv = folder->Rename(name);
+          rv = folder->Rename(name,mWindow);
           PR_FREEIF(name);
 		}
       }
@@ -1586,7 +1586,8 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 		PRUnichar *name;
 		literal->GetValue(&name);
 
-		rv = folder->CreateSubfolder(name);
+		rv = folder->CreateSubfolder(name,mWindow);
+		
 	}
 	return rv;
 }
