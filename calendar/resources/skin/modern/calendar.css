@@ -720,7 +720,8 @@
    margin-top        : 1px;
    border            : 1px solid #1D7AB5;
    background-color  : #F9F4FF;
-   cursor               : pointer;
+   -moz-user-focus   : normal;
+   cursor            : pointer;
 }
 
 .day-view-event-class[eventselected="true"]
@@ -742,6 +743,7 @@
    height               : 50px;
    padding-top          : 2px;
    margin-right 	: 5px;
+   -moz-user-focus      : normal;
 }
 
 .day-view-hour-box-class[draggedover="true"]
@@ -785,6 +787,7 @@
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #000000;
+   -moz-user-focus      : normal;
    cursor               : pointer;
 }
 
@@ -954,6 +957,7 @@
    overflow             : auto;
    border               : 1px solid #2085c4;
    background-color     :#ffffff;
+   -moz-user-focus      : normal;
 }
 
 
@@ -973,6 +977,7 @@
    border            : 1px solid #1D7AB5;
    background-color  : #F9F4FF;
    min-width         : 20px;
+   -moz-user-focus   : normal;
    cursor            : pointer;
 }
 
@@ -1018,6 +1023,7 @@
    width                : 78px;
    height               : 50px;
    background-color     : white;
+   -moz-user-focus      : normal;
 }
 
 .week-view-hour-box-class[draggedover="true"]
@@ -1108,7 +1114,7 @@
 {
    background-color     : white;
    color                : black;
-   border               : none;
+   border		         : none;
 }
 
 .unifinder-tree-class > listitem[selected="true"] > listcell
@@ -1129,7 +1135,6 @@
    -moz-box-align       : start;
 }
 
-
 /* TO DO ITEMS */
 
 #unifinder-todo-listbox > listitem[overdue="true"] > listcell
@@ -1146,4 +1151,3 @@
 {
    color                   : green;
 }
-

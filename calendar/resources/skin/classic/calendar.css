@@ -473,6 +473,7 @@
     text-align: center; 	
     font-size: 0.9em;
     font-family: Arial, Helvetica;
+    cursor               : pointer;
 }
 
 .month-day-event-box-class:hover
@@ -702,7 +703,6 @@
    border             : 1px solid #2085c4;
 }
 
-
 /*--------------------------------------------------------------------
  * Box around the tree content
  *-------------------------------------------------------------------*/
@@ -717,6 +717,8 @@
    margin-top        : 1px;
    border            : 1px solid #1D7AB5;
    background-color  : #F9F4FF;
+   -moz-user-focus   : normal;
+   cursor            : pointer;
 }
 
 .day-view-event-class[eventselected="true"]
@@ -738,6 +740,7 @@
    height               : 50px;
    padding-top          : 2px;
    margin-right 	: 5px;
+   -moz-user-focus      : normal;
 }
 
 .day-view-hour-box-class[draggedover="true"]
@@ -781,6 +784,8 @@
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #000000;
+   -moz-user-focus      : normal;
+   cursor               : pointer;
 }
 
 /*--------------------------------------------------------------------
@@ -949,6 +954,7 @@
    overflow             : auto;
    border               : 1px solid #2085c4;
    background-color     :#ffffff;
+   -moz-user-focus      : normal;
 }
 
 
@@ -968,6 +974,8 @@
    border            : 1px solid #1D7AB5;
    background-color  : #F9F4FF;
    min-width         : 20px;
+   -moz-user-focus   : normal;
+   cursor            : pointer;
 }
 
 .week-view-event-class[eventselected="true"]
@@ -1012,6 +1020,7 @@
    width                : 78px;
    height               : 50px;
    background-color     : white;
+   -moz-user-focus      : normal;
 }
 
 .week-view-hour-box-class[draggedover="true"]
