@@ -246,10 +246,12 @@ nsLanguageAtomService::LookupCharSet(const PRUnichar* aCharSet,
   if (!langGroup) {
     return NS_ERROR_FAILURE;
   }
+#if !defined(XP_BEOS)
   if (langGroup.get() == mUnicode.get()) {
     res = GetLocaleLanguageGroup(getter_AddRefs(langGroup));
     NS_ENSURE_SUCCESS(res, res);
   }
+#endif
   nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
   NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);
