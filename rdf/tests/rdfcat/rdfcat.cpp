@@ -26,6 +26,7 @@
 
  */
 
+#include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsINetService.h"
@@ -49,6 +50,7 @@
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "nsXPComCIID.h"
+#include "prthread.h"
 #include "plevent.h"
 #include "plstr.h"
 
@@ -96,6 +98,8 @@ NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 NS_DEFINE_IID(kIRDFXMLSourceIID,       NS_IRDFXMLSOURCE_IID);
 
+#include "nsIAllocator.h" // for the CID
+
 static nsresult
 SetupRegistry(void)
 {
@@ -117,8 +121,10 @@ SetupRegistry(void)
     nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // xpcom
+    static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kAllocatorCID,             NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
@@ -168,91 +174,57 @@ main(int argc, char** argv)
     nsresult rv;
 
     if (argc < 2) {
-        fprintf(stderr, "usage: %s [url]\n", argv[0]);
+        fprintf(stderr, "usage: %s <url> [<poll-interval>]\n", argv[0]);
         return 1;
     }
 
     SetupRegistry();
 
-    nsIEventQueueService* theEventQueueService = nsnull;
-    nsIEventQueue* mainQueue      = nsnull;
-    nsIRDFService* theRDFService = nsnull;
-    nsIRDFXMLDataSource* ds      = nsnull;
-    nsIOutputStream* out         = nsnull;
-    nsIRDFXMLSource* source      = nsnull;
-
     // Get netlib off the floor...
-    if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
-                                                    kIEventQueueServiceIID,
-                                                    (nsISupports**) &theEventQueueService))) {
-        NS_ERROR("unable to get event queue service");
-        goto done;
-    }
+    NS_WITH_SERVICE(nsIEventQueueService, theEventQueueService, kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = theEventQueueService->CreateThreadEventQueue())) {
-        NS_ERROR("unable to create thread event queue");
-        goto done;
-    }
-
-    if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
-                                                                 &mainQueue))) {
-        NS_ERROR("unable to get event queue for current thread");
-        goto done;
-    }
-
-		NS_IF_RELEASE(mainQueue);
+    rv = theEventQueueService->CreateThreadEventQueue();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create thread event queue");
+    if (NS_FAILED(rv)) return rv;
 
     // Create a stream data source and initialize it on argv[1], which
     // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
     // URL, but only a "file:" URL will be written back to disk.)
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                                          nsnull,
-                                                          kIRDFXMLDataSourceIID,
-                                                          (void**) &ds))) {
-        NS_ERROR("unable to create RDF/XML data source");
-        goto done;
-    }
+    nsCOMPtr<nsIRDFXMLDataSource> ds;
+    rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
+                                            nsnull,
+                                            kIRDFXMLDataSourceIID,
+                                            getter_AddRefs(ds));
 
-    if (NS_FAILED(rv = ds->SetSynchronous(PR_TRUE))) {
-        NS_ERROR("unable to mark data source as synchronous");
-        goto done;
-    }
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create RDF/XML data source");
+    if (NS_FAILED(rv)) return rv;
+
+    rv = ds->Init(argv[1]);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to initialize data source");
+    if (NS_FAILED(rv)) return rv;
 
     // Okay, this should load the XML file...
-    if (NS_FAILED(rv = ds->Init(argv[1]))) {
-        NS_ERROR("unable to initialize data source");
-        goto done;
-    }
+    rv = ds->Open(PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open datasource");
+    if (NS_FAILED(rv)) return rv;
 
-    // And finally, write it back out.
-    if ((out = new ConsoleOutputStreamImpl()) == nsnull) {
-        NS_ERROR("unable to create console output stream");
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-    }
+    // And this should write it back out.
+    nsCOMPtr<nsIOutputStream> out =
+        do_QueryInterface(new ConsoleOutputStreamImpl());
 
-    NS_ADDREF(out);
+    NS_ASSERTION(out, "unable to create console output stream");
+    if (! out)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    if (NS_FAILED(rv = ds->QueryInterface(kIRDFXMLSourceIID, (void**) &source))) {
-        NS_ERROR("unable to RDF/XML interface");
-        goto done;
-    }
+    nsCOMPtr<nsIRDFXMLSource> source = do_QueryInterface(ds);
+    NS_ASSERTION(source, "unable to RDF/XML interface");
+    if (! source)
+        return NS_ERROR_UNEXPECTED;
 
-    if (NS_FAILED(rv = source->Serialize(out))) {
-        NS_ERROR("error serializing");
-        goto done;
-    }
+    rv = source->Serialize(out);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error serializing");
+    if (NS_FAILED(rv)) return rv;
 
-done:
-    NS_IF_RELEASE(out);
-    NS_IF_RELEASE(ds);
-    if (theRDFService) {
-        nsServiceManager::ReleaseService(kRDFServiceCID, theRDFService);
-        theRDFService = nsnull;
-    }
-    if (theEventQueueService) {
-        nsServiceManager::ReleaseService(kEventQueueServiceCID, theEventQueueService);
-        theEventQueueService = nsnull;
-    }
-    return (NS_FAILED(rv) ? 1 : 0);
+    return NS_OK;
 }
