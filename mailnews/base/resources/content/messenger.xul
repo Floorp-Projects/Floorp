@@ -796,7 +796,7 @@ Rights Reserved.
       <toolbox id="msgHeaderView"/>
     
     	<!-- message view -->
-		  <html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
+		  <html:iframe id="messagepane" style="height: 0px" flex="1" name="messagepane" type="content" src="about:blank"/>
 	  </box>	
 		<box id="status-bar">
 		  <box align="vertical" style="width:100px">
