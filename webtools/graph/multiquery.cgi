@@ -5,8 +5,14 @@ use CGI::Request;
 
 my $req = new CGI::Request;
 
-my $TBOXES   = lc($req->param('tboxes'));
-my $TESTNAME = lc($req->param('testname'));
+my $TESTNAME  = lc($req->param('testname'));
+my $UNITS     = lc($req->param('units'));
+my $TBOXES    = lc($req->param('tboxes'));
+my $AUTOSCALE = lc($req->param('autoscale'));
+my $DAYS      = lc($req->param('days'));
+my $LTYPE     = lc($req->param('ltype'));
+my $POINTS    = lc($req->param('points'));
+my $AVG       = lc($req->param('avg'));
 
 sub make_filenames_list {
   my ($dir) = @_;
@@ -109,6 +115,112 @@ sub show_graphs {
 
   print "<center><h3>$TESTNAME: $TBOXES</h3></center>\n";
 
+  # Options
+  print "<table cellspacing=8>\n";
+  print "<tr>\n";
+
+
+  # Scale Y-axis
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
+  if($AUTOSCALE) {
+	print "Y-axis: (<b>zoom</b>|";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=0&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">100%</a>";
+	print ") \n";
+  } else {
+	print "Y-axis: (";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=1&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=$AVG\">zoom</a>";
+	print "|<b>100%</b>) \n";
+  }
+  print "</font>\n";
+  print "</td>\n";
+
+
+  # Days, Time-axis
+  print "<td valign=bottom>\n";
+  print "<form method=\"get\" action=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS&points=$POINTS\">\n";
+  print "<font size=\"-1\">\n";
+  print "<input type=hidden name=\"tboxes\" value=\"$TBOXES\">";
+  print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
+  print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+  print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
+  print "<input type=hidden name=\"units\" value=\"$UNITS\">";
+  print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
+  print "<input type=hidden name=\"avg\" value=\"$AVG\">";
+
+  print "Days:";
+  if($DAYS) {
+	print "(<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS&days=0&points=$POINTS&avg=$AVG\">all data</a>|";
+    print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
+	print ")\n";
+  } else {
+	print "(<b>all data</b>|";
+    print "<input type=text value=\"\" name=\"days\" size=3 maxlength=10>";
+	print ")\n";
+  }
+  print "</font>\n";
+  print "</form>\n";
+  print "</td>\n";
+
+  # Line style (lines|steps)
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
+  print "Style:";
+  if($LTYPE eq "steps") {
+	print "(";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS&avg=$AVG\">lines</a>";
+	print "|<b>steps</b>";
+	print ")";
+  } else {
+	print "(<b>lines</b>|";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS&avg=$AVG\">steps</a>";
+	print ")";
+  }
+  print "</font>\n";
+  print "</td>\n";
+
+  # Points
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
+  print "Points:";
+  if($POINTS) {
+	print "(<b>on</b>|";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&ltype=$LTYPE&days=$DAYS&autoscale=$AUTOSCALE&points=0&units=$UNITS&avg=$AVG\">off</a>";
+	print ")\n";
+  } else {
+	print "(";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&ltype=$LTYPE&days=$DAYS&autoscale=$AUTOSCALE&points=1&units=$UNITS&avg=$AVG\">on</a>";	
+    print "|<b>off</b>)\n";
+  }
+  print "</font>\n";
+  print "</td>\n";
+
+
+  # Average (on|off)
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
+  print "<A title=\"Moving average of last 10 points\">Average:</a>";
+  if($AVG) {
+	print "(<b>on</b>|";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=0\">off</a>";
+	print ")\n";
+  } else {
+	print "(";
+	print "<a href=\"multiquery.cgi?tboxes=$TBOXES&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS&avg=1\">on</a>";	
+    print "|<b>off</b>)\n";
+  }
+  print "</font>\n";
+  print "</td>\n";
+
+
+
+  print "</tr>\n";
+
+  
+  print "</table>\n";
+  print "<br>\n";
+
+
   print "<table cellspacing=8>\n";
 
   my @tbox_array = split(",", $TBOXES);
@@ -116,13 +228,13 @@ sub show_graphs {
   while($i < @tbox_array) {
     print "<tr>\n";
     print "<td>\n";
-    print "<a href=\"http://tegu.mozilla.org/graph/query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&autoscale=1&days=7&avg=1\"><img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
+    print "<a href=\"query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&ltype=$LTYPE&autoscale=$AUTOSCALE&days=$DAYS&avg=$AVG&points=$POINTS&units=$UNITS\"><img src=\"graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&ltype=$LTYPE&size=.6&autoscale=$AUTOSCALE&days=$DAYS&avg=$AVG&points=$POINTS&units=$UNITS\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
     print "</td>\n";
     $i++;
 
     if($i < @tbox_array) {
     print "<td>\n";
-    print "<a href=\"http://tegu.mozilla.org/graph/query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&autoscale=1&days=7&avg=1\"><img src=\"http://tegu.mozilla.org/graph/graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&size=.6&autoscale=1&days=7&avg=1\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
+    print "<a href=\"query.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&ltype=$LTYPE&autoscale=$AUTOSCALE&days=$DAYS&avg=$AVG&points=$POINTS&units=$UNITS\"><img src=\"graph.cgi?tbox=$tbox_array[$i]&testname=$TESTNAME&ltype=$LTYPE&size=.6&autoscale=$AUTOSCALE&days=$DAYS&avg=$AVG&points=$POINTS&units=$UNITS\" alt=\"$tbox_array[$i] $TESTNAME graph\" border=0></a>";
     print "</td>\n";
     $i++;
 
@@ -138,7 +250,7 @@ sub show_graphs {
 
   # luna,sleestack,mecca,mocha
   print "<li>\n";
-  print "Multiqueries: (<a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=startup&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet\">startup</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=xulwinopen&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet\">xulwinopen</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi?&testname=pageload&tboxes=btek,64.236.138.128,64.236.138.100,64.236.139.180,64.236.139.71\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
+  print "Multiqueries: (<a href=\"multiquery.cgi?&testname=startup&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&days=$DAYS&units=$UNITS\">startup</a>, <a href=\"multiquery.cgi?&testname=xulwinopen&tboxes=comet,luna,sleestack,mecca,facedown,openwound,rheeeet&points=$POINTS&days=$DAYS&units=$UNITS\">xulwinopen</a>, <a href=\"multiquery.cgi?&testname=pageload&tboxes=btek,64.236.138.128,64.236.138.100,64.236.139.180,64.236.139.71&points=$POINTS&days=$DAYS&units=$UNITS\">pageload</a>, <a href=\"http://tegu.mozilla.org/graph/multiquery.cgi\">build your own multiquery</a>)";
   print "</li>\n";
 
   print "<li>\n";
