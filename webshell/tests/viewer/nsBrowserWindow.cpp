@@ -758,6 +758,9 @@ nsBrowserWindow::DestroyThrobberImages()
 #include "nsIStyleContext.h"
 #include "nsISizeOfHandler.h"
 #include "nsIStyleSet.h"
+#include "nsXIFDTD.h"
+#include "nsIParser.h"
+#include "nsHTMLContentSinkStream.h"
 
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
@@ -1023,6 +1026,44 @@ nsBrowserWindow::ShowStyleSize()
 {
 }
 
+void
+nsBrowserWindow::DoDebugSave()
+{
+  nsIPresShell* shell = GetPresShell(mWebShell);
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsString buffer;
+      doc->CreateXIF(buffer,PR_FALSE);
+
+      nsIParser* parser;
+      nsresult rv = NS_NewParser(&parser);
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+        
+        rv = NS_New_HTML_ContentSinkStream(&sink);
+
+        if (NS_OK == rv) {
+          parser->SetContentSink(sink);
+          
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            dtd->SetContentSink(sink);
+            dtd->SetParser(parser);
+            parser->Parse(buffer, PR_TRUE);           
+          }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
+        }
+        NS_RELEASE(parser);
+      }
+    }
+  }
+}
+
 nsEventStatus
 nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 {
@@ -1090,6 +1131,10 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
     }
 #endif
     result = nsEventStatus_eConsumeNoDefault;
+    break;
+
+  case VIEWER_DEBUGSAVE:
+    DoDebugSave();
     break;
   }
   return(result);
