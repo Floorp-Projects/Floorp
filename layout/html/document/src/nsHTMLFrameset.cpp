@@ -28,7 +28,6 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
-#include "nsIWebFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsWidgetsCID.h"
