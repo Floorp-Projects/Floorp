@@ -93,12 +93,12 @@ public:
     const PRUnichar* notes, PRBool isMailList, nsAbAutoCompleteSession::MatchType type)
 	{
 	  NS_INIT_REFCNT();
-		mNickName = nsCRT::strdup(nickName ? nickName : NS_LITERAL_STRING(""));
-		mUserName = nsCRT::strdup(userName ? userName : NS_LITERAL_STRING(""));
-		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_LITERAL_STRING(""));
-		mNotes = nsCRT::strdup(notes ? notes : NS_LITERAL_STRING(""));
-    mIsMailList = isMailList;
-    mType = type;
+		mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("")));
+		mUserName = nsCRT::strdup(userName ? userName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("")));
+		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("")));
+		mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("")));
+		mIsMailList = isMailList;
+		mType = type;
 	}
 	
 	virtual ~nsAbAutoCompleteParam()
