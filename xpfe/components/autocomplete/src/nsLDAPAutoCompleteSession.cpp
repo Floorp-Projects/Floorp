@@ -919,7 +919,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     //
     rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
                                NS_ConvertUTF8toUCS2(searchFilter).get(),
-                               0, mMaxHits);
+                               0, 0, 0, mMaxHits);
     if (NS_FAILED(rv)) {
         switch(rv) {
 
