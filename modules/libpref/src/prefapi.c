@@ -1129,7 +1129,6 @@ pref_ClearUserPref(PLHashEntry *he, int i, void *arg)
         pref->flags &= ~PREF_USERSET;
         if (gCallbacksEnabled)
             pref_DoCallback(he->key);
-        return HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE;
     }
     return HT_ENUMERATE_NEXT;
 }
