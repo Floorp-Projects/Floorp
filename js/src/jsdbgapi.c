@@ -747,8 +747,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 					   bytes, length, filename, lineno);
     if (!script)
 	return JS_FALSE;
-    ok = js_Execute(cx, fp->scopeChain, script, fp->fun, fp, JSFRAME_DEBUGGER,
-                    rval);
+    ok = js_Execute(cx, fp->scopeChain, script, fp, JSFRAME_DEBUGGER, rval);
     js_DestroyScript(cx, script);
     return ok;
 }

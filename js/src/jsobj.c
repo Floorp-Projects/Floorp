@@ -948,8 +948,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	scopeobj = caller->scopeChain;
     }
 #endif
-    ok = js_Execute(cx, scopeobj, script, caller->fun, caller,
-		    cx->fp->special & JSFRAME_EVAL,
+    ok = js_Execute(cx, scopeobj, script, caller,
+                    cx->fp->special & JSFRAME_EVAL,
                     rval);
     JS_DestroyScript(cx, script);
 

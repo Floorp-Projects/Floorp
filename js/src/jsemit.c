@@ -965,8 +965,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     script = js_NewScriptFromCG(cx, &cg2, NULL);
                     if (!script)
                         return JS_FALSE;
-                    ok = js_Execute(cx, cx->fp->scopeChain, script, NULL,
-                                    cx->fp, 0, &pn3->pn_val);
+                    ok = js_Execute(cx, cx->fp->scopeChain, script, cx->fp, 0,
+                                    &pn3->pn_val);
                     js_DestroyScript(cx, script);
                     if (!ok)
                         return JS_FALSE;
