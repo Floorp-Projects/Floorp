@@ -302,22 +302,15 @@ nsStandardURL::~nsStandardURL()
 void
 nsStandardURL::InitGlobalObjects()
 {
-    nsCOMPtr<nsIPrefService> prefService( do_GetService(NS_PREFSERVICE_CONTRACTID) );
-    if (prefService) {
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-        if (prefBranch) {
-            nsCOMPtr<nsIPrefBranchInternal> pbi( do_QueryInterface(prefBranch) );
-            if (pbi) {
-                nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
-                pbi->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
-                pbi->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
-                // initialize IDN
-                nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
-                if (serv)
-                    NS_ADDREF(gIDNService = serv.get());
-            }
-        }
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch( do_GetService(NS_PREFSERVICE_CONTRACTID) );
+    if (prefBranch) {
+        nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
+        prefBranch->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
+        prefBranch->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
+        // initialize IDN
+        nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
+        if (serv)
+            NS_ADDREF(gIDNService = serv.get());
     }
 }
 

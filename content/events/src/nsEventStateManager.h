@@ -42,7 +42,7 @@
 #include "nsIEventStateManager.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
@@ -306,7 +306,7 @@ protected:
   static PRInt32 gGeneralAccesskeyModifier;
 
   // For preferences handling
-  nsCOMPtr<nsIPrefBranch> mPrefBranch;
+  nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
   PRPackedBool m_haveShutdown;
 
   // To inform people that dispatched events that frames have been cleared and

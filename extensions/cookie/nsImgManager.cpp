@@ -116,19 +116,17 @@ nsresult nsImgManager::Init()
   // other things, like mailnews blocking
   mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
 
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
-    if (prefInternal) {
-      prefInternal->AddObserver(kImageBehaviorPrefName, this, PR_TRUE);
+    prefBranch->AddObserver(kImageBehaviorPrefName, this, PR_TRUE);
 
-      // We don't do anything with it yet, but let it be. (bug 110112, 146513)
-      prefInternal->AddObserver(kImageWarningPrefName, this, PR_TRUE);
+    // We don't do anything with it yet, but let it be. (bug 110112, 146513)
+    prefBranch->AddObserver(kImageWarningPrefName, this, PR_TRUE);
 
-      // What is this pref, and how do you set it?
-      prefInternal->AddObserver(kImageBlockerPrefName, this, PR_TRUE);
-      prefInternal->AddObserver(kImageBlockImageInMailNewsPrefName, this, PR_TRUE);
-    }
+    // What is this pref, and how do you set it?
+    prefBranch->AddObserver(kImageBlockerPrefName, this, PR_TRUE);
+    prefBranch->AddObserver(kImageBlockImageInMailNewsPrefName, this, PR_TRUE);
+
     PrefChanged(prefBranch, nsnull);
   }
 

@@ -174,8 +174,7 @@ nsTypeAheadFind::~nsTypeAheadFind()
   RemoveDocListeners();
   mTimer = nsnull;
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(prefBranch));
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefInternal) {
     prefInternal->RemoveObserver("accessibility.typeaheadfind", this);
     prefInternal->RemoveObserver("accessibility.browsewithcaret", this);
@@ -189,13 +188,12 @@ nsTypeAheadFind::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
 
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_QueryInterface(prefBranch));
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
   mSearchRange = do_CreateInstance(kRangeCID);
   mStartPointRange = do_CreateInstance(kRangeCID);
   mEndPointRange = do_CreateInstance(kRangeCID);
   mFind = do_CreateInstance(NS_FIND_CONTRACTID);
-  if (!prefBranch || !prefInternal || !mSearchRange || !mStartPointRange ||
+  if (!prefInternal || !mSearchRange || !mStartPointRange ||
       !mEndPointRange || !mFind) {
     return NS_ERROR_FAILURE;
   }
@@ -209,7 +207,7 @@ nsTypeAheadFind::Init()
 
 
   // ----------- Get accel key --------------------
-  rv = prefBranch->GetIntPref("ui.key.accelKey", &sAccelKey);
+  rv = prefInternal->GetIntPref("ui.key.accelKey", &sAccelKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ----------- Get initial preferences ----------

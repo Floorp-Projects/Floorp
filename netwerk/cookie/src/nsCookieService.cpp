@@ -379,13 +379,9 @@ nsCookieService::Init()
   }
 
   // init our pref and observer
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    // add observers
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
-    if (prefInternal)
-      prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
-
+    prefBranch->AddObserver(kCookiesPermissions, this, PR_TRUE);
     PrefChanged(prefBranch);
   }
 

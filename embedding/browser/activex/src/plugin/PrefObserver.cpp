@@ -77,7 +77,7 @@ protected:
     void Sync(nsIPrefBranch *aPrefBranch);
     
     PRUint32 mHostingFlags;
-    nsCOMPtr<nsIPrefService> mPrefService;
+    nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -99,8 +99,8 @@ PrefObserver::PrefObserver() :
     mHostingFlags(kDefaultHostingFlags)
 {
     nsresult rv = NS_OK;
-    mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ASSERTION(mPrefService, "where is the pref service?");
+    mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ASSERTION(mPrefBranch, "where is the pref service?");
 }
 
 PrefObserver::~PrefObserver()
@@ -164,19 +164,14 @@ void PrefObserver::Sync(nsIPrefBranch *aPrefBranch)
 nsresult
 PrefObserver::Subscribe()
 {
-    NS_ENSURE_TRUE(mPrefService, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_FAILURE);
     nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
-    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
-    if (NS_FAILED(rv)) return rv;
+    mPrefBranch->AddObserver(kProxyPref, this, PR_TRUE);
+    mPrefBranch->AddObserver(kUserAgentPref, this, PR_TRUE);
+    mPrefBranch->AddObserver(kActiveXHostingFlags, this, PR_TRUE);
 
-    prefInternal->AddObserver(kProxyPref, this, PR_TRUE);
-    prefInternal->AddObserver(kUserAgentPref, this, PR_TRUE);
-    prefInternal->AddObserver(kActiveXHostingFlags, this, PR_TRUE);
-
-    Sync(prefBranch);
+    Sync(mPrefBranch);
 
     return S_OK;
 }
@@ -184,17 +179,12 @@ PrefObserver::Subscribe()
 nsresult
 PrefObserver::Unsubscribe()
 {
-    NS_ENSURE_TRUE(mPrefService, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mPrefBranch, NS_ERROR_FAILURE);
     nsresult rv;
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mPrefService, &rv);
-    if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    prefInternal->RemoveObserver(kProxyPref, this);
-    prefInternal->RemoveObserver(kUserAgentPref, this);
-    prefInternal->RemoveObserver(kActiveXHostingFlags, this);
+    mPrefBranch->RemoveObserver(kProxyPref, this);
+    mPrefBranch->RemoveObserver(kUserAgentPref, this);
+    mPrefBranch->RemoveObserver(kActiveXHostingFlags, this);
 
     return NS_OK;
 }

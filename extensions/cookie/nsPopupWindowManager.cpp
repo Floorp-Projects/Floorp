@@ -88,10 +88,7 @@ nsPopupWindowManager::Init()
     }
     mPolicy = permission ? (PRUint32) DENY_POPUP : (PRUint32) ALLOW_POPUP;
 
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      prefInternal->AddObserver(kPopupDisablePref, this, PR_TRUE);
-    }
+    mPrefBranch->AddObserver(kPopupDisablePref, this, PR_TRUE);
   } 
 
   return NS_OK;

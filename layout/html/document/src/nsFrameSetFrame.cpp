@@ -993,18 +993,11 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
 
   PRBool firstTime = (eReflowReason_Initial == aReflowState.reason);
   if (firstTime) {
-    nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefService) {
-      nsCOMPtr<nsIPrefBranch> prefBranch;
-      prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-      if (prefBranch) {
-        nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_QueryInterface(prefBranch));
-        if (prefBranchInternal) {
-          mPrefBranchWeakRef = do_GetWeakReference(prefBranchInternal);
-          prefBranchInternal->AddObserver(kFrameResizePref, this, PR_FALSE);
-        }
-        prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
-      }
+    nsCOMPtr<nsIPrefBranchInternal> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    if (prefBranch) {
+      mPrefBranchWeakRef = do_GetWeakReference(prefBranch);
+      prefBranch->AddObserver(kFrameResizePref, this, PR_FALSE);
+      prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);
     }
   }
   

@@ -51,7 +51,6 @@
 
 // pref. includes
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
 
 #define SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"

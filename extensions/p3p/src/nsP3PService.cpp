@@ -58,12 +58,9 @@ NS_IMPL_ISUPPORTS2(nsP3PService, nsICookieConsent, nsIObserver)
 nsP3PService::nsP3PService() 
 {
   // we can live without a prefservice, so errors here aren't fatal
-  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
-    if (prefInternal) {
-      prefInternal->AddObserver(kCookiesP3PStringPref, this, PR_TRUE);
-    }
+    prefBranch->AddObserver(kCookiesP3PStringPref, this, PR_TRUE);
   }
   PrefChanged(prefBranch);
 }

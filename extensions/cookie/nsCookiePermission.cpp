@@ -137,19 +137,16 @@ nsCookiePermission::Init()
   if (NS_FAILED(rv)) return rv;
 
   // failure to access the pref service is non-fatal...
-  nsCOMPtr<nsIPrefBranch> prefBranch =
+  nsCOMPtr<nsIPrefBranchInternal> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInt = do_QueryInterface(prefBranch);   
-    if (prefInt) {
-      prefInt->AddObserver(kCookiesAskPermission, this, PR_FALSE);
-      prefInt->AddObserver(kCookiesLifetimeEnabled, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesAskPermission, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesLifetimeEnabled, this, PR_FALSE);
 #ifndef MOZ_PHOENIX
-      prefInt->AddObserver(kCookiesLifetimeCurrentSession, this, PR_FALSE);
-      prefInt->AddObserver(kCookiesLifetimeDays, this, PR_FALSE);
-      prefInt->AddObserver(kCookiesDisabledForMailNews, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesLifetimeCurrentSession, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesLifetimeDays, this, PR_FALSE);
+    prefBranch->AddObserver(kCookiesDisabledForMailNews, this, PR_FALSE);
 #endif
-    }
     PrefChanged(prefBranch, nsnull);
   }
 

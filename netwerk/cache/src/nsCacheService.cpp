@@ -87,7 +87,7 @@ public:
     
     nsresult        Install();
     nsresult        Remove();
-    nsresult        ReadPrefs();
+    nsresult        ReadPrefs(nsIPrefBranch* branch);
     
     PRBool          DiskCacheEnabled();
     PRInt32         DiskCacheCapacity()         { return mDiskCacheCapacity; }
@@ -133,10 +133,7 @@ nsCacheProfilePrefObserver::Install()
     
     
     // install preferences observer
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIPrefBranchInternal> branch = do_QueryInterface(prefs);
+    nsCOMPtr<nsIPrefBranchInternal> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (!branch) return NS_ERROR_FAILURE;
 
     char * prefList[] = { 
@@ -167,7 +164,7 @@ nsCacheProfilePrefObserver::Install()
         mHaveProfile = PR_TRUE;
     }
 
-    rv = ReadPrefs();
+    rv = ReadPrefs(branch);
     
     return NS_SUCCEEDED(rv) ? rv2 : rv;
 }
@@ -194,11 +191,7 @@ nsCacheProfilePrefObserver::Remove()
 
 
     // remove Pref Service observers
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefService, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     // remove Disk cache pref observers
     rv  = prefInternal->RemoveObserver(DISK_CACHE_ENABLE_PREF, this);
@@ -246,7 +239,8 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
     } else if (!strcmp("profile-after-change", topic)) {
         // profile after change
         mHaveProfile = PR_TRUE;
-        ReadPrefs();
+        nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        ReadPrefs(branch);
         nsCacheService::OnProfileChanged();
     
     } else if (!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, topic)) {
@@ -302,15 +296,9 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
 
 
 nsresult
-nsCacheProfilePrefObserver::ReadPrefs()
+nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
 {
     nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (!prefs)  return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
-    if (!branch)  return NS_ERROR_FAILURE;
 
 #ifdef NECKO_DISK_CACHE
     // read disk cache device prefs

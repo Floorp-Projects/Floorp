@@ -44,7 +44,7 @@
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
-#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsWeakReference.h"
 
 class nsIURI;
@@ -65,7 +65,7 @@ public:
 private:
   PRUint32                       mPolicy;
   nsCOMPtr<nsIPermissionManager> mPermissionManager;
-  nsCOMPtr<nsIPrefBranch>        mPrefBranch;
+  nsCOMPtr<nsIPrefBranchInternal> mPrefBranch;
 };
 
 // {4275d3f4-752a-427a-b432-14d5dda1c20b}

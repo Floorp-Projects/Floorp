@@ -141,7 +141,7 @@ nsresult nsPrefService::Init()
   if (!rootBranch)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  mRootBranch = (nsIPrefBranch *)rootBranch;
+  mRootBranch = (nsIPrefBranchInternal *)rootBranch;
   
   nsXPIDLCString lockFileName;
   nsresult rv;
@@ -271,11 +271,7 @@ NS_IMETHODIMP nsPrefService::GetBranch(const char *aPrefRoot, nsIPrefBranch **_r
     rv = CallQueryInterface(prefBranch, _retval);
   } else {
     // special case caching the default root
-    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(mRootBranch, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      *_retval = prefBranch;
-      NS_ADDREF(*_retval);
-    }
+    rv = CallQueryInterface(mRootBranch, _retval);
   }
   return rv;
 }
@@ -290,29 +286,6 @@ NS_IMETHODIMP nsPrefService::GetDefaultBranch(const char *aPrefRoot, nsIPrefBran
     return NS_ERROR_OUT_OF_MEMORY;
 
   rv = CallQueryInterface(prefBranch, _retval);
-  return rv;
-}
-
-
-// Forward these methods through the nsIPrefBranchInternal headers
-
-NS_IMETHODIMP nsPrefService::AddObserver(const char *aDomain, nsIObserver *aObserver, PRBool aHoldWeak)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mRootBranch, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = prefBranch->AddObserver(aDomain, aObserver, aHoldWeak);
-  return rv;
-}
-
-NS_IMETHODIMP nsPrefService::RemoveObserver(const char *aDomain, nsIObserver *aObserver)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIPrefBranchInternal> prefBranch = do_QueryInterface(mRootBranch, &rv);
-  if (NS_SUCCEEDED(rv))
-    rv = prefBranch->RemoveObserver(aDomain, aObserver);
   return rv;
 }
 
