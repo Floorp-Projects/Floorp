@@ -23,7 +23,9 @@
 #include "nsISupports.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
-#include "nsIDocumentLoaderObserver.h"
+
+#include "nsIImageGroup.h"
+#include "nsIImageObserver.h"
 
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -52,6 +54,11 @@
 #include "nsIWebShell.h"
 
 
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
+
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 #ifdef NS_DEBUG
@@ -60,7 +67,8 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 #undef NOISY_VIEWER
 #endif
 
-class DocumentViewerImpl : public nsIDocumentViewer, public nsIDocumentLoaderObserver
+class DocumentViewerImpl : public nsIDocumentViewer,
+                           public nsIImageGroupObserver
 {
 public:
   DocumentViewerImpl();
@@ -99,44 +107,9 @@ public:
   NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
                                        nsIDocumentViewer*& aResult);
 
-  // nsIDocumentLoaderObserver interface
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand) {return NS_OK;}
-
-#ifndef NECKO
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
-#else
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,nsIDocumentLoaderObserver * aObserver){return NS_OK;}
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,nsIContentViewer* aViewer);
-#else
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer);
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRUint32 aProgress,PRUint32 aProgressMax){return NS_OK;}
-#else
-    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress,PRUint32 aProgressMax){return NS_OK;}
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, nsString& aMsg){return NS_OK;}
-#else
-    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg){return NS_OK;}
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus);
-#else
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-#endif // NECKO
-
-#ifndef NECKO
-    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,nsIURI *aURL,const char *aContentType,const char *aCommand ){return NS_OK;}
-#else
-    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,nsIChannel* channel,const char *aContentType,const char *aCommand ){return NS_OK;}
-#endif // NECKO
+  // nsIImageGroupObserver interface...
+  virtual void Notify(nsIImageGroup *aImageGroup,
+                      nsImageGroupNotification aNotificationType);
 
 protected:
   virtual ~DocumentViewerImpl();
@@ -147,6 +120,14 @@ private:
   nsresult MakeWindow(nsNativeWidget aNativeParent,
                       const nsRect& aBounds,
                       nsScrollPreference aScrolling);
+
+  //
+  // The following three methods are used for printing...
+  //
+  void DocumentReadyForPrinting();
+
+  static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
+  static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
 protected:
   // IMPORTANT: The ownership implicit in the following member
@@ -536,16 +517,18 @@ static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTOR
 NS_IMETHODIMP
 DocumentViewerImpl::Print(void)
 {
-nsIContentViewerContainer   *containerResult;
-nsIWebShell                 *webContainer;
-nsIDeviceContextSpecFactory *factory = nsnull;
-PRInt32                     width,height;
-nsIPref                     *prefs;
-PRBool                      isBusy;
+nsCOMPtr<nsIContentViewerContainer>   containerResult;
+nsCOMPtr<nsIWebShell>                 webContainer;
+nsCOMPtr<nsIDeviceContextSpecFactory> factory;
+PRInt32                               width,height;
+nsCOMPtr<nsIPref>                     prefs;
 
-  nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, nsnull,kIDeviceContextSpecFactoryIID,(void **)&factory);
+  nsComponentManager::CreateInstance(kDeviceContextSpecFactoryCID, 
+                                     nsnull,
+                                     kIDeviceContextSpecFactoryIID,
+                                     (void **)getter_AddRefs(factory));
 
-  if (nsnull != factory) {
+  if (factory) {
 
 #ifdef DEBUG_dcone
     printf("PRINT JOB STARTING\n");
@@ -564,11 +547,9 @@ PRBool                      isBusy;
         NS_RELEASE(devspec);
 
         // Get the webshell for this documentviewer
-        rv = this->GetContainer(containerResult);
-        containerResult->QueryInterface(kIWebShellIID,(void**)&webContainer);
+        rv = this->GetContainer(*getter_AddRefs(containerResult));
+        webContainer = do_QueryInterface(containerResult);
         if(webContainer) {
-          webContainer->SetDocLoaderObserver(this);
-
           // load the document and do the initial reflow on the entire document
           rv = NS_NewPrintContext(&mPrintPC);
           if(NS_FAILED(rv)){
@@ -576,7 +557,7 @@ PRBool                      isBusy;
           }
 
           mPrintDC->GetDeviceSurfaceDimensions(width,height);
-          mPresContext->GetPrefs(&prefs);
+          mPresContext->GetPrefs(getter_AddRefs(prefs));
           mPrintPC->Init(mPrintDC,prefs);
           CreateStyleSet(mDocument,&mPrintSS);
 
@@ -609,6 +590,13 @@ PRBool                      isBusy;
           // setup hierarchical relationship in view manager
           mPrintVM->SetRootView(mPrintView);
           mPrintPS->Init(mDocument,mPrintPC,mPrintVM,mPrintSS);
+
+          nsCOMPtr<nsIImageGroup> imageGroup;
+          mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));
+          if (imageGroup) {
+            imageGroup->AddObserver(this);
+          }
+
           mPrintPS->InitialReflow(width,height);
 
 #ifdef DEBUG_dcone
@@ -659,19 +647,13 @@ PRBool                      isBusy;
           printf("    DeviceDimension w = %d h = %d\n",i1,i2);
 
 #endif
-
-          // check NETLIB to see if something was kicked off, 
-          webContainer->IsBusy(isBusy);
-          
-          // if this did not fire any loads, then continue printing
-          if(!isBusy){
-            PrintContent(webContainer,mPrintDC);
-            webContainer->SetDocLoaderObserver(0);
-            mPrintPS->EndObservingDocument();
-            NS_RELEASE(mPrintPS);
-            NS_RELEASE(mPrintVM);
-            NS_RELEASE(mPrintSS);
-            NS_RELEASE(mPrintDC);
+          //
+          // The mIsPrinting flag is set when the ImageGroup observer is
+          // notified that images must be loaded as a result of the 
+          // InitialReflow...
+          //
+          if(!mIsPrinting){
+            DocumentReadyForPrinting();
 #ifdef DEBUG_dcone
             printf("PRINT JOB ENDING, OBSERVER WAS NOT CALLED\n");
 #endif
@@ -680,13 +662,10 @@ PRBool                      isBusy;
 #ifdef DEBUG_dcone
             printf("PRINTING OBSERVER STARTED\n");
 #endif
-            mIsPrinting = PR_TRUE;
-            mNumURLStarts = 0;
           }
         }
       }
     }
-    NS_RELEASE(factory);
   }
   return NS_OK;
 }
@@ -698,15 +677,15 @@ PRBool                      isBusy;
 NS_IMETHODIMP
 DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDContext)
 {
-nsIStyleSet       *ss;
-nsIPref           *prefs;
-nsIViewManager    *vm;
-PRInt32           width, height;
-nsIView           *view;
-nsresult          rv;
-PRInt32           count,i;
-nsIWebShell       *childWebShell;
-nsIContentViewer  *viewer;
+nsCOMPtr<nsIStyleSet>       ss;
+nsCOMPtr<nsIPref>           prefs;
+nsCOMPtr<nsIViewManager>    vm;
+PRInt32                     width, height;
+nsIView                     *view;
+nsresult                    rv;
+PRInt32                     count,i;
+nsIWebShell                 *childWebShell;
+nsIContentViewer            *viewer;
   
 
   aParent->GetChildCount(count);
@@ -715,32 +694,38 @@ nsIContentViewer  *viewer;
       aParent->ChildAt(i,childWebShell);
       childWebShell->GetContentViewer(&viewer);
       viewer->PrintContent(childWebShell,aDContext);
+      NS_RELEASE(childWebShell);
+      NS_RELEASE(viewer);
     }
   } else {
     aDContext->BeginDocument();
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
-    nsIPresContext *cx;
-    rv = NS_NewPrintContext(&cx);
+    nsCOMPtr<nsIPresContext> cx;
+    rv = NS_NewPrintContext(getter_AddRefs(cx));
     if (NS_FAILED(rv)) {
       return rv;
     }
-    mPresContext->GetPrefs(&prefs);
+
+    mPresContext->GetPrefs(getter_AddRefs(prefs));
     cx->Init(aDContext, prefs);
 
     nsCompatibility mode;
     mPresContext->GetCompatibilityMode(&mode);
     cx->SetCompatibilityMode(mode);
 
-    CreateStyleSet(mDocument, &ss);
+    CreateStyleSet(mDocument, getter_AddRefs(ss));
 
-    nsIPresShell *ps;
-    rv = NS_NewPresShell(&ps);
+    nsCOMPtr<nsIPresShell> ps;
+    rv = NS_NewPresShell(getter_AddRefs(ps));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    rv = nsComponentManager::CreateInstance(kViewManagerCID,nsnull,kIViewManagerIID,(void **)&vm);
+    rv = nsComponentManager::CreateInstance(kViewManagerCID,
+                                            nsnull,
+                                            kIViewManagerIID,
+                                            (void **)getter_AddRefs(vm));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -780,66 +765,58 @@ nsIContentViewer  *viewer;
     aDContext->EndDocument();
 
     ps->EndObservingDocument();
-    NS_RELEASE(ps);
-    NS_RELEASE(vm);
-    NS_RELEASE(ss);
-    NS_IF_RELEASE(prefs); // XXX why is the prefs null??
-    }
+  }
   return NS_OK;
 
 }
 
-/** ---------------------------------------------------
- *  See documentation above in the DocumentViewerImpl class definition
- *	@update 07/09/99 dwc
- */
-NS_IMETHODIMP 
-#ifdef NECKO
-DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsIContentViewer* aViewer)
-#else
-DocumentViewerImpl::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aContentType,nsIContentViewer* aViewer)
-#endif
+void DocumentViewerImpl::Notify(nsIImageGroup *aImageGroup,
+                                nsImageGroupNotification aNotificationType)
 {
-  mNumURLStarts++;
-  return NS_OK;
-}
+  //
+  // Image are being loaded...  Set the flag to delay printing until
+  // all images are loaded.
+  //
+  if (aNotificationType == nsImageGroupNotification_kStartedLoading) {
+    mIsPrinting = PR_TRUE;
+  }
+  //
+  // All the images have been loaded, so the document is ready to print.
+  //
+  // However, at this point we are unable to release the resources that
+  // were allocated for printing...  This is because ImgLib resources will
+  // be deleted and *this* is an ImgLib notification routine.  So, fire an 
+  // event to do the actual printing.
+  //
+  else if(aNotificationType == nsImageGroupNotification_kFinishedLoading) {
+    nsresult rv;
+    nsCOMPtr<nsIEventQueue> eventQ;
 
-/** ---------------------------------------------------
- *  See documentation above in the DocumentViewerImpl class definition
- *	@update 07/09/99 dwc
- */
-NS_IMETHODIMP 
-#ifdef NECKO
-DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus)
-#else
-DocumentViewerImpl::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL, PRInt32 aStatus)
-#endif // NECKO
-{
-  nsIContentViewerContainer *containerResult;
-  nsIWebShell               *webContainer;
-  nsresult                  rv;
+    // Get the event queue of the current thread...
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+    if (NS_FAILED(rv)) return;
 
-    mNumURLStarts--;
+    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), 
+                                            getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return;
 
-    if((mIsPrinting==PR_TRUE) && (mNumURLStarts == 0)) {
-      rv = this->GetContainer(containerResult);
-      containerResult->QueryInterface(kIWebShellIID,(void**)&webContainer);
-      if(webContainer) {
-        PrintContent(webContainer,mPrintDC);
+    PRStatus status;
+    PLEvent *event = new PLEvent;
+  
+    if (!event) return;
 
-        // printing is complete, clean up now
-        mIsPrinting = PR_FALSE;
-        webContainer->SetDocLoaderObserver(0);
+    //
+    // AddRef this because it is being placed in the PLEvent struct.
+    // It will be Released when DestroyPLEvent is called...
+    //
+    NS_ADDREF_THIS();
+    PL_InitEvent(event, 
+                 this,
+                 (PLHandleEventProc)  DocumentViewerImpl::HandlePLEvent,
+                 (PLDestroyEventProc) DocumentViewerImpl::DestroyPLEvent);
 
-        mPrintPS->EndObservingDocument();
-        NS_RELEASE(mPrintPS);
-        NS_RELEASE(mPrintVM);
-        NS_RELEASE(mPrintSS);
-        NS_RELEASE(mPrintDC);
-      }
-    }
-
-  return NS_OK;
+    status = eventQ->PostEvent(event);
+  }
 }
 
 
@@ -994,3 +971,64 @@ DocumentViewerImpl::CreateDocumentViewerUsing(nsIPresContext* aPresContext,
 
   return rv;
 }
+
+
+
+void PR_CALLBACK DocumentViewerImpl::HandlePLEvent(PLEvent* aEvent)
+{
+  DocumentViewerImpl *viewer;
+
+  viewer = (DocumentViewerImpl*)PL_GetEventOwner(aEvent);
+
+  NS_ASSERTION(viewer, "The event owner is null.");
+  if (viewer) {
+    viewer->DocumentReadyForPrinting();
+  }
+}
+
+void PR_CALLBACK DocumentViewerImpl::DestroyPLEvent(PLEvent* aEvent)
+{
+  DocumentViewerImpl *viewer;
+
+  viewer = (DocumentViewerImpl*)PL_GetEventOwner(aEvent);
+  NS_IF_RELEASE(viewer);
+
+  delete aEvent;
+}
+
+
+void DocumentViewerImpl::DocumentReadyForPrinting()
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIContentViewerContainer> containerResult;
+  nsCOMPtr<nsIWebShell> webContainer;
+
+  rv = this->GetContainer(*getter_AddRefs(containerResult));
+  webContainer = do_QueryInterface(containerResult);
+  if(webContainer) {
+    //
+    // Remove ourselves as an image group observer...
+    //
+    nsCOMPtr<nsIImageGroup> imageGroup;
+    mPrintPC->GetImageGroup(getter_AddRefs(imageGroup));
+    if (imageGroup) {
+      imageGroup->RemoveObserver(this);
+    }
+    //
+    // Send the document to the printer...
+    //
+    PrintContent(webContainer,mPrintDC);
+
+    // printing is complete, clean up now
+    mIsPrinting = PR_FALSE;
+
+    mPrintPS->EndObservingDocument();
+
+    NS_RELEASE(mPrintPS);
+    NS_RELEASE(mPrintVM);
+    NS_RELEASE(mPrintSS);
+    NS_RELEASE(mPrintDC);
+  }
+}
+
