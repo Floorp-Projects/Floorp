@@ -37,7 +37,8 @@
 
 #include "nscore.h" 
 #include "nsProfile.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "pratom.h"
 #include "prmem.h"
@@ -180,7 +181,6 @@ static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -514,13 +514,16 @@ nsresult
 nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 {
     nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch;
     nsCOMPtr<nsIURI> profileURL;
     PRInt32 numProfiles=0;
     nsXPIDLString currentProfileStr;
   
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_FAILED(rv)) return rv;
+    
     GetProfileCount(&numProfiles);
 
     if (profileURLStr.Length() == 0)
@@ -615,7 +618,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     }
 
     PRBool prefs_converted = PR_FALSE;
-    rv = prefs->GetBoolPref("prefs.converted-to-utf8",&prefs_converted);
+    rv = prefBranch->GetBoolPref("prefs.converted-to-utf8", &prefs_converted);
     if(NS_FAILED(rv)) return rv;
 
     if (!prefs_converted) 
@@ -634,15 +637,19 @@ nsresult
 nsProfile::ConfirmAutoMigration(PRBool canInteract, PRBool *confirmed)
 {
     NS_ENSURE_ARG_POINTER(confirmed);
+    nsCOMPtr<nsIPrefBranch> prefBranch;
     *confirmed = PR_FALSE;
     nsresult rv;
     
     // First check PREF_CONFIRM_AUTOMIGRATION.
     // If FALSE, we go ahead and migrate without asking.
     PRBool confirmAutomigration = PR_TRUE;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-    if (NS_SUCCEEDED(rv))
-        (void)prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+    if (NS_FAILED(rv)) return rv;
+
+    (void)prefBranch->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
     if (!confirmAutomigration) {
         *confirmed = PR_TRUE;
         return NS_OK;
@@ -1834,7 +1841,7 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 nsresult nsProfile::LoadNewProfilePrefs()
 {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     prefs->ResetUserPrefs();
