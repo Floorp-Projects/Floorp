@@ -351,7 +351,8 @@ nsChromeRegistry::Init()
 
 
 static nsresult
-SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCString& aFile)
+SplitURL(nsIURI *aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCString& aFile,
+         PRBool *aModified = nsnull)
 {
   // Splits a "chrome:" URL into its package, provider, and file parts.
   // Here are the current portions of a
@@ -372,23 +373,20 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
 
   nsresult rv;
 
-  char* str;
-  rv = aChromeURI->GetSpec(&str);
+  nsXPIDLCString str;
+  rv = aChromeURI->GetSpec(getter_Copies(str));
   if (NS_FAILED(rv)) return rv;
 
-  if (! str)
-    return NS_ERROR_INVALID_ARG;
-
-  PRInt32 len = PL_strlen(str);
-  nsCAutoString spec( CBufDescriptor(str, PR_FALSE, len + 1, len) );
+  if (!str.get())
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // We only want to deal with "chrome:" URLs here. We could return
   // an error code if the URL isn't properly prefixed here...
-  if (PL_strncmp(spec, kChromePrefix, sizeof(kChromePrefix) - 1) != 0)
+  if (PL_strncmp(str, kChromePrefix, sizeof(kChromePrefix) - 1) != 0)
     return NS_ERROR_INVALID_ARG;
 
   // Cull out the "package" string; e.g., "navigator"
-  spec.Right(aPackage, spec.Length() - (sizeof(kChromePrefix) - 1));
+  aPackage = str.get() + sizeof(kChromePrefix) - 1;
 
   PRInt32 idx;
   idx = aPackage.FindChar('/');
@@ -410,7 +408,8 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
   aProvider.Right(aFile, aProvider.Length() - (idx + 1));
   aProvider.Truncate(idx);
 
-  if (aFile.Length() == 0) {
+  PRBool nofile = (aFile.Length() == 0);
+  if (nofile) {
     // If there is no file, then construct the default file
     aFile = aPackage;
 
@@ -451,6 +450,8 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
       }
     }
   }
+  if (aModified)
+    *aModified = nofile;
   return NS_OK;
 }
 
@@ -465,10 +466,15 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
   if (! aChromeURI)
       return NS_ERROR_NULL_POINTER;
 
+  PRBool modified = PR_TRUE; // default is we do canonification
   nsCAutoString package, provider, file;
   nsresult rv;
-  rv = SplitURL(aChromeURI, package, provider, file);
-  if (NS_FAILED(rv)) return rv;
+  rv = SplitURL(aChromeURI, package, provider, file, &modified);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!modified)
+    return NS_OK;
 
   nsCAutoString canonical( kChromePrefix );
   canonical += package;
@@ -488,9 +494,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
   if (!aChromeURL)
       return NS_ERROR_NULL_POINTER;
 
-  // First canonify the beast
-  rv = Canonify(aChromeURL);
-  if (NS_FAILED(rv)) return rv;
+  // No need to canonify as the SplitURL() that we
+  // do is the equivalent of canonification without modifying
+  // aChromeURL
 
   // Obtain the package, provider and remaining from the URL
   nsCAutoString package, provider, remaining;
