@@ -109,19 +109,21 @@ public:
 
   static void ReleaseGlobalAtom(nsIAtom** aAtomResult);
 
+  static void QuoteForHTML(const nsString& aValue, nsString& aResult);
+
 public:
-  virtual nsresult            ResetScriptObject();
+  NS_IMETHOD ResetScriptObject();
 
   // nsIDOMNode interface
-  virtual nsresult            GetParentNode(nsIDOMNode **aNode);
-  virtual nsresult            GetChildNodes(nsIDOMNodeIterator **aIterator);
-  virtual nsresult            HasChildNodes();
-  virtual nsresult            GetFirstChild(nsIDOMNode **aNode);
-  virtual nsresult            GetPreviousSibling(nsIDOMNode **aNode);
-  virtual nsresult            GetNextSibling(nsIDOMNode **aNode);
-  virtual nsresult            InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  virtual nsresult            ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
-  virtual nsresult            RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
+  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
+  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
+  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
+  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
 
 protected:
   nsHTMLContent();

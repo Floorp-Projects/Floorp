@@ -522,3 +522,30 @@ nsresult nsHTMLContent::RemoveChild(nsIDOMNode *oldChild)
   return NS_ERROR_FAILURE;
 }
 
+// XXX i18n: this is wrong (?) because we need to know the outgoing
+// character set (I think)
+void
+nsHTMLContent::QuoteForHTML(const nsString& aValue, nsString& aResult)
+{
+  aResult.Truncate();
+  const PRUnichar* cp = aValue.GetUnicode();
+  const PRUnichar* end = aValue.GetUnicode() + aValue.Length();
+  aResult.Append('"');
+  while (cp < end) {
+    PRUnichar ch = *cp++;
+    if ((ch >= 0x20) && (ch <= 0x7f)) {
+      if (ch == '\"') {
+        aResult.Append("&quot;");
+      }
+      else {
+        aResult.Append(ch);
+      }
+    }
+    else {
+      aResult.Append("&#");
+      aResult.Append((PRInt32) ch, 10);
+      aResult.Append(';');
+    }
+  }
+  aResult.Append('"');
+}
