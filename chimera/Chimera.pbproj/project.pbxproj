@@ -1183,6 +1183,66 @@
 			path = "";
 			refType = 4;
 		};
+		F513437402DA286001A967F3 = {
+			isa = PBXFileReference;
+			name = libucvcn.a;
+			path = ../intl/uconv/ucvcn/libucvcn.a;
+			refType = 2;
+		};
+		F513437502DA286001A967F3 = {
+			isa = PBXFileReference;
+			name = libucvja.a;
+			path = ../intl/uconv/ucvja/libucvja.a;
+			refType = 2;
+		};
+		F513437602DA286001A967F3 = {
+			isa = PBXFileReference;
+			name = libucvko.a;
+			path = ../intl/uconv/ucvko/libucvko.a;
+			refType = 2;
+		};
+		F513437702DA286001A967F3 = {
+			isa = PBXFileReference;
+			name = libucvtw.a;
+			path = ../intl/uconv/ucvtw/libucvtw.a;
+			refType = 2;
+		};
+		F513437802DA286001A967F3 = {
+			isa = PBXFileReference;
+			name = libucvtw2.a;
+			path = ../intl/uconv/ucvtw2/libucvtw2.a;
+			refType = 2;
+		};
+		F513437902DA286101A967F3 = {
+			fileRef = F513437402DA286001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F513437A02DA286101A967F3 = {
+			fileRef = F513437502DA286001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F513437B02DA286101A967F3 = {
+			fileRef = F513437602DA286001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F513437C02DA286101A967F3 = {
+			fileRef = F513437702DA286001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F513437D02DA286101A967F3 = {
+			fileRef = F513437802DA286001A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5137A1102676B9101026D05 = {
 			isa = PBXFileReference;
 			path = CHFind.h;
@@ -3020,6 +3080,11 @@
 				F507423C02AD808201A967F3,
 				F524EF6702AD8B9301A967F3,
 				F54AD84402C115D901A967F3,
+				F513437402DA286001A967F3,
+				F513437502DA286001A967F3,
+				F513437602DA286001A967F3,
+				F513437702DA286001A967F3,
+				F513437802DA286001A967F3,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -4833,6 +4898,11 @@
 				F524EF6802AD8B9401A967F3,
 				F5AC38BA02AD8E7B01A967F3,
 				F54AD84502C115DA01A967F3,
+				F513437902DA286101A967F3,
+				F513437A02DA286101A967F3,
+				F513437B02DA286101A967F3,
+				F513437C02DA286101A967F3,
+				F513437D02DA286101A967F3,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
