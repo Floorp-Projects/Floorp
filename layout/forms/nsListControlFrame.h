@@ -232,7 +232,6 @@ protected:
   PRBool       mIsInitializedFromContent;
   nsIFrame*    mContentFrame;
   nsIComboboxControlFrame *mComboboxFrame;
-  PRBool       mDisplayed;
   PRBool       mButtonDown;
   nsIFrame*    mLastFrame;
   nscoord      mMaxWidth;
