@@ -26,6 +26,7 @@ IDLSRCS =  \
         XULDocument.idl         \
         XULElement.idl          \
         XULFocusTracker.idl     \
+        XULTreeElement.idl      \
         $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public
