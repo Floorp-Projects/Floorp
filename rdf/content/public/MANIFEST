@@ -11,3 +11,4 @@ nsIXULKeyListener.h
 nsIXULPopupListener.h
 nsIXULPrototypeCache.h
 nsIXULPrototypeDocument.h
+nsIXULContent.h

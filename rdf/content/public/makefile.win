@@ -38,6 +38,7 @@ EXPORTS	= \
         nsIXULDocument.h                \
         nsIXULPrototypeCache.h          \
         nsIXULPrototypeDocument.h       \
+        nsIXULContent.h                 \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
