@@ -195,7 +195,7 @@ nsRegistryDataSource::QueryInterface(const nsIID& aIID, void** aResult)
         return NS_NOINTERFACE;
     }
 
-    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, this));
+    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*, *aResult));
     return NS_OK;
 }
 
