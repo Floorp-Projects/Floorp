@@ -1081,7 +1081,7 @@ PrefResult pref_OpenFileSpec(
     if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
         result = PREF_BAD_LOCKFILE;
     if (!PREF_EvaluateConfigScript(readBuf, fileLength,
-            nsnull, bGlobalContext, PR_FALSE, skipFirstLine))
+            nsnull, bGlobalContext, PR_TRUE, skipFirstLine))
         result = PREF_ERROR;
     PR_Free(readBuf);
 
