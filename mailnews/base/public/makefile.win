@@ -36,6 +36,7 @@ EXPORTS =                                       \
 			nsIMsgGroupRecord.h     \
 			nsIMsgFolder.h          \
 			nsIMsgRDFFolder.h       \
+			nsIMsgMailNewsUrl.h		\
 			$(NULL)
 
 MODULE=mailnews
