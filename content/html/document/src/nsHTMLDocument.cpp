@@ -339,7 +339,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
         mParser->SetDocumentCharset( charset, charsetSource);
         mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink); 
-        mParser->Parse(aURL);
+        mParser->Parse(aURL, nsnull, PR_FALSE, (void *)this);
       }
       NS_RELEASE(sink);
     }
