@@ -265,7 +265,8 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
     
     if (aContainer)
       rv = aContainer->QueryInterface(kIWebShellIID, (void**)&webShell);
-   
+    else rv = NS_NewXMLContentSink(&sink, this, aUrl, nsnull);
+
     if(NS_SUCCEEDED(rv) && (nsnull != webShell)) {
       nsCOMPtr<nsIContentViewer> cv;
       webShell->GetContentViewer(getter_AddRefs(cv));
