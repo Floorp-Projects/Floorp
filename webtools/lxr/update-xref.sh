@@ -14,6 +14,7 @@ log=$db_dir/genxref.log
 exec > $log 2>&1
 set -x
 
+lxr_dir=`pwd`
 cd $db_dir/tmp
 
 set -e
