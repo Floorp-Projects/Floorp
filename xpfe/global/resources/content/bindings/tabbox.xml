@@ -252,10 +252,42 @@
   </binding>
   
   <binding id="tabpanels"
-           extends="chrome://global/content/bindings/general.xml#deck">
-    <resources>
-      <stylesheet src="chrome://global/skin/tabbox.css"/>
-    </resources>
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+    <implementation>
+      <property name="selectedIndex"
+                onget="return this.getAttribute('selectedIndex');">
+        <setter>
+        <![CDATA[
+          if (this.selectedIndex == val)
+            return val;
+          this.setAttribute("selectedIndex", val);
+          var event = document.createEvent("Events");
+          event.initEvent("select", false, true);
+          this.dispatchEvent(event);
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+
+      <property name="selectedPanel">
+        <getter>
+          <![CDATA[
+            return this.childNodes[this.selectedIndex];
+          ]]>
+        </getter>
+
+        <setter>
+          <![CDATA[
+            var selectedIndex = -1;
+            for (var panel = val; panel != null; panel = panel.previousSibling)
+              ++selectedIndex;
+            this.selectedIndex = selectedIndex;
+            return val;
+          ]]>
+        </setter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="tab" display="xul:button"
