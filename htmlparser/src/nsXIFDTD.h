@@ -290,48 +290,16 @@ class nsXIFDTD : public nsIDTD {
      */
     virtual void SetVerification(PRBool aEnable);
 
-    /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   aTag -- tag to test for containership
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    virtual PRBool CanOmit(eXIFTags aParent,eXIFTags aChild)const;
-
-    /**
-     *  This method gets called to determine whether a given 
-     *  tag can contain newlines. Most do not.
-     *  
-     *  @update  gpk 06/18/98
-     *  @param   aParent -- tag type of parent
-     *  @param   aChild -- tag type of child
-     *  @return  PR_TRUE if given tag can contain other tags
-     */
-    virtual PRBool CanOmitEndTag(eXIFTags aParent,eXIFTags aChild)const;
 
     /**
      *  This method gets called to determine whether a given 
      *  tag is itself a container
      *  
-     *  @update  gpk 06/18/98
+     *  @update  gess 12/1/99
      *  @param   aTag -- tag to test for containership
      *  @return  PR_TRUE if given tag can contain other tags
      */
-    virtual PRBool IsXIFContainer(eXIFTags aTag) const;
     virtual PRBool IsHTMLContainer(eHTMLTags aTag) const;
-
-    /**
-     * This method does two things: 1st, help construct
-     * our own internal model of the content-stack; and
-     * 2nd, pass this message on to the sink.
-     * @update  gpk 06/18/98
-     * @param   aNode -- next node to be added to model
-     * @return  TRUE if ok, FALSE if error
-     */
-    virtual eXIFTags GetDefaultParentTagFor(eXIFTags aTag) const;
-
 
     /**
      * This method gets called at various times by the parser
@@ -344,47 +312,6 @@ class nsXIFDTD : public nsIDTD {
      * @return  TRUE if stack is valid, else FALSE
      */
     virtual PRBool VerifyContextVector(void) const;
-
-   
-    /**
-     * 
-     * @update	gpk 06/18/98
-     * @param 
-     * @return
-     */
-    virtual nsresult DidOpenContainer(eXIFTags aTag,PRBool anExplicitOpen);    
-
-    /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gpk 06/18/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
-     */
-    virtual PRBool HasOpenContainer(eXIFTags aContainer) const;
-
-
-    /**
-     * Retrieve the tag type of the topmost item on context vector stack
-     * @update	gpk 06/18/98
-     * @return  tag type (may be unknown)
-     */
-    virtual eXIFTags GetTopNode() const;
-
-    /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gpk 06/18/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    virtual PRInt32 GetTopmostIndexOf(eXIFTags aTag) const;
-
-    /**
-     * 
-     * @update	gpk 06/18/98
-     * @param 
-     * @return
-     */
-    virtual nsresult DidCloseContainer(eXIFTags aTag,PRBool anExplicitClosure);
 
     /**
      * This method gets called when a start token has been consumed and needs 
@@ -489,15 +416,6 @@ private:
      */
     nsresult AddLeaf(const nsIParserNode& aNode);
 
-     /**
-     * Attempt forward and/or backward propagation for the given
-     * child within the current context vector stack.
-     * @update	gpk 06/18/98
-     * @param   type of child to be propagated.
-     * @return  TRUE if succeeds, otherwise FALSE
-     */
-    nsresult CreateContextStackFor(eXIFTags aChildTag);
-
     /**
      * 
      * @update	gess12/28/98
@@ -559,8 +477,6 @@ protected:
     
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;
-
-    CTokenHandler*        mTokenHandlers[eToken_last];
 
     PRBool                mLeafBits[100];
     eXIFTags              mContextStack[100];

@@ -55,7 +55,7 @@ if ($status != 0) then
   set errmsg = ($errmsg "plainnowrap.out")
 endif
 
-echo "Testing wrapped but unformatted plaintext ..."
+echo "Testing wrapped and formatted plaintext ..."
 TestOutput -i text/html -o text/plain -f 32 -w 50 -c OutTestData/plainwrap.out OutTestData/plain.html
 if ($status != 0) then
   echo "Wrapped plaintext test failed."
@@ -84,7 +84,7 @@ if ($status != 0) then
 endif
 
 echo "Testing HTML Table to Text ..."
-TestOutput -i text/html -o text/plain -c OutTestData/htmltable.out OutTestData/htmltable.html
+TestOutput -i text/html -o text/plain -f 2 -c OutTestData/htmltable.out OutTestData/htmltable.html
 if ($status != 0) then
   echo "HTML Table to Plain text failed."
   set errmsg = ($errmsg "htmltable.out")
