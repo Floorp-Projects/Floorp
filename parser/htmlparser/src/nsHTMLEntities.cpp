@@ -184,8 +184,11 @@ nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
       return found->mStr;
     }
   }
-  static const nsCString kNullStr;
-  return kNullStr;
+  static const nsCString* kNullStr=0;
+  if(!kNullStr) {
+    kNullStr=new nsCString("");
+  }
+  return *kNullStr;
 
 }
 

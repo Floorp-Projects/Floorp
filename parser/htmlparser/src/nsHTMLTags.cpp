@@ -132,8 +132,10 @@ nsHTMLTags::GetStringValue(nsHTMLTag aTag)
     return gTagArray[aTag - 1].mStr;
   }
   else {
-    static const nsCString kNullStr;
-    return kNullStr;
+    static const nsCString* kNullStr=0;
+    if(!kNullStr)
+      kNullStr=new nsCString("");
+    return *kNullStr;
   }
 }
 

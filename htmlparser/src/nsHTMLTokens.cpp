@@ -33,6 +33,8 @@
 
 
 static const char*  gUserdefined = "userdefined";
+static const char*  gIdentChars="-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+static const char*  gNumChars="0123456789ABCDEFabcdef";
 
 const PRInt32 kMAXNAMELEN=10;
 
@@ -192,17 +194,6 @@ PRBool CStartToken::IsEmpty(void) {
   return mEmpty;
 }
 
-static
-nsString& GetIdentChars(void) {
-  static nsString gIdentChars("-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
-  return gIdentChars;
-}
-
-static
-nsString& GetNumericChars(void) {
-  static nsString gNumChars("0123456789ABCDEFabcdef");
-  return gNumChars;
-}
 
 /*
  *  Consume the identifier portion of the start tag
@@ -220,7 +211,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   mTextValue=aChar;
-  nsresult result=aScanner.ReadWhile(mTextValue,GetIdentChars(),PR_TRUE,PR_FALSE);
+  nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_TRUE,PR_FALSE);
   mTypeID = nsHTMLTags::LookupTag(mTextValue);
 
    //Good. Now, let's skip whitespace after the identifier,
@@ -448,12 +439,12 @@ PRInt32 CTextToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  static    nsAutoString terminals("&<\r\n");
+  static    const char* theTerminals="&<\r\n";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if((kCR==aChar) && (NS_OK==result)) {
@@ -502,7 +493,6 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
  //If we find either, just eat them. If we find text or a tag, then go to the 
  //target endtag, or the start of another comment. 
 
-  static nsAutoString theWhitespace2("\b\t ");
 
   PRInt32 termStrLen=aTerminalString.Length();
   while((!done) && (NS_OK==result)) { 
@@ -527,7 +517,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if(0<=theWhitespace2.BinarySearch(aChar)) { 
+    else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
       if(NS_OK==result) { 
@@ -609,12 +599,12 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-  static    nsAutoString terminals("]\r");
+  static    const char* theTerminals="]\r";
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if((kCR==aChar) && (NS_OK==result)) {
@@ -698,7 +688,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  */
 static
 nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
-  static    nsAutoString gMinus("-");
+  static const char* gMinus="-";
   nsresult  result=NS_OK;
  
   /*********************************************************
@@ -767,11 +757,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
  */
 static
 nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
-  static    nsAutoString gEdibles("!-");
-  static    nsAutoString gMinus("-");
-  static    nsAutoString gWhitespace("\b\t\n\r ");
   
-  static nsAutoString gDfltEndComment("-->");
 
   nsresult  result=NS_OK;
  
@@ -794,6 +780,9 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
       if(NS_OK==result) {
         if(kMinus==aChar) {
              //in this case, we're reading a long-form comment <-- xxx -->
+
+          nsAutoString gDfltEndComment("-->");
+
           aString+=aChar;
           PRInt32 findpos=kNotFound;
           while((kNotFound==findpos) && (NS_OK==result)) {
@@ -948,8 +937,10 @@ PRInt32 CNewlineToken::GetTokenType(void) {
  *  @return nsString reference to internal string value
  */
 nsString& CNewlineToken::GetStringValueXXX(void) {
-  static nsAutoString theStr("\n");
-  return theStr;
+  static nsString* theStr=0;
+  if(!theStr)
+    theStr=new nsString("\n");
+  return *theStr;
 }
 
 /*
@@ -1151,8 +1142,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  */
 static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
-  static nsAutoString terminals("\b\t\n\r >");
-  nsresult result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
+  static const char* theTerminals="\b\t\n\r >";
+  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE,PR_FALSE);
   
   //Let's force quotes if either the first or last char is quoted.
   PRUnichar theLast=aString.Last();
@@ -1205,15 +1196,16 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
         result=aScanner.GetChar(aChar);        //skip the hash sign...
         if(NS_OK==result) {
           mTextKey=aChar;
-          static nsAutoString gDigits("0123456789");
+
+          static const char*  gDigits="0123456789";
           result=aScanner.ReadWhile(mTextKey,gDigits,PR_TRUE,PR_FALSE);
         }
       }
       else {
           //If you're here, handle an unquoted key.
           //Don't forget to reduce entities inline!
-        static nsAutoString terminals("\b\t\n\r \"<=>");
-        result=aScanner.ReadUntil(mTextKey,terminals,PR_TRUE,PR_FALSE);
+        static const char* theTerminals="\b\t\n\r \"<=>";
+        result=aScanner.ReadUntil(mTextKey,theTerminals,PR_TRUE,PR_FALSE);
       }
 
         //now it's time to Consume the (optional) value...
@@ -1355,7 +1347,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
 nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
   
   mTextValue=aChar;
-  static nsAutoString theWhitespace("\b\t ");
+  static const char* theWhitespace="\b\t ";
   nsresult result=aScanner.ReadWhile(mTextValue,theWhitespace,PR_FALSE,PR_FALSE);
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
@@ -1468,10 +1460,10 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
           aString+=theChar;
         }
         if(NS_OK==result){
-          result=aScanner.ReadWhile(aString,GetNumericChars(),PR_TRUE,PR_FALSE);
+          result=aScanner.ReadWhile(aString,gNumChars,PR_TRUE,PR_FALSE);
         }
       }
-      else result=aScanner.ReadWhile(aString,GetIdentChars(),PR_TRUE,PR_FALSE);
+      else result=aScanner.ReadWhile(aString,gIdentChars,PR_TRUE,PR_FALSE);
       if(NS_OK==result) {
         result=aScanner.Peek(theChar);
         if(NS_OK==result) {
@@ -1721,8 +1713,6 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
  //If we find either, just eat them. If we find text or a tag, then go to the 
  //target endtag, or the start of another comment. 
 
-  static nsAutoString theWhitespace2("\b\t ");
-
   while((!done) && (NS_OK==result)) { 
     result=aScanner.GetChar(aChar); 
     if((NS_OK==result) && (kLessThan==aChar)) { 
@@ -1743,7 +1733,7 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
         result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
       } 
     } 
-    else if(0<=theWhitespace2.BinarySearch(aChar)) { 
+    else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
       if(NS_OK==result) { 

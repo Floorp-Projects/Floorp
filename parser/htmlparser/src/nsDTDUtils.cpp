@@ -414,7 +414,7 @@ PRInt32  nsDTDContext::TokenCountAt(PRInt32 aID)
  * @update  gess7/25/98
  * @param 
  */
-CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
+CTokenRecycler::CTokenRecycler() : nsITokenRecycler(),mEmpty("") {
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
     mTokenCache[i]=new nsDeque(new CTokenDeallocator());
@@ -523,9 +523,8 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
 
   CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
 
-  static nsAutoString theEmpty;
   if(result) {
-    result->Reinitialize(aTag,theEmpty);
+    result->Reinitialize(aTag,mEmpty);
   }
   else {
 #ifdef  NS_DEBUG
@@ -539,10 +538,10 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) 
       case eToken_entity:           result=new CEntityToken(); break;
       case eToken_whitespace:       result=new CWhitespaceToken(); break;
       case eToken_newline:          result=new CNewlineToken(); break;
-      case eToken_text:             result=new CTextToken(theEmpty); break;
+      case eToken_text:             result=new CTextToken(mEmpty); break;
       case eToken_script:           result=new CScriptToken(); break;
       case eToken_style:            result=new CStyleToken(); break;
-      case eToken_skippedcontent:   result=new CSkippedContentToken(theEmpty); break;
+      case eToken_skippedcontent:   result=new CSkippedContentToken(mEmpty); break;
       case eToken_instruction:      result=new CInstructionToken(); break;
       case eToken_cdatasection:     result=new CCDATASectionToken(); break;
       case eToken_error:            result=new CErrorToken(); break;
