@@ -430,6 +430,8 @@ nsTreeFrame::Init(nsIPresContext*  aPresContext,
   
   target->AddEventListener("mousedown", mTwistyListener, PR_TRUE); 
 	
+  NS_NewLayoutHistoryState(getter_AddRefs(mTempFrameTreeState));
+
   return rv;
 }
 
@@ -496,4 +498,9 @@ nsTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
   return NS_OK;
 }
 
-
+nsresult
+nsTreeFrame::GetFrameStateStorageObject(nsILayoutHistoryState** aState)
+{
+  *aState = mTempFrameTreeState;
+  return NS_OK;
+}

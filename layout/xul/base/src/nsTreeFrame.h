@@ -23,10 +23,13 @@
 #include "nsTableFrame.h"
 #include "nsVoidArray.h"
 #include "nsISelfScrollingFrame.h"
+#include "nsILayoutHistoryState.h"
+#include "nsCOMPtr.h"
 
 class nsTreeCellFrame;
 class nsTreeRowGroupFrame;
 class nsTreeTwistyListener;
+class nsILayoutHistoryState;
 
 class nsTreeFrame : public nsTableFrame, public nsISelfScrollingFrame
 {
@@ -89,6 +92,9 @@ public:
   // nsISelfScrollingFrame interface
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
 
+  // Getter for the frame state storage object
+  nsresult GetFrameStateStorageObject(nsILayoutHistoryState** aState);
+
 protected:
   nsTreeFrame();
   virtual ~nsTreeFrame();
@@ -99,4 +105,7 @@ protected: // Data Members
   PRInt32 mGeneration;
   PRBool mUseGeneration;
   PRBool mSuppressReflow;
+  // An interface into a hash table for storing frame state of child frame trees 
+  // that get deleted and re-created as users scroll the contents of the tree.
+  nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 }; // class nsTreeFrame

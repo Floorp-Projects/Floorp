@@ -255,7 +255,11 @@ public:
 
   NS_IMETHOD DoCopy();
 
+  // XXX This function needs to be renamed to something better.
+  // It is not simply a getter for the layout history state.  It
+  // creates a new state object and captures frame state onto it
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
+
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);
 
   NS_IMETHOD GetReflowEventStatus(PRBool* aPending);
@@ -2037,6 +2041,10 @@ PresShell::DoCopy()
   return NS_OK;
 }
 
+
+// XXX This function needs to be renamed to something better.
+// It is not simply a getter for the layout history state.  It
+// creates a new state object and captures frame state onto it.
 NS_IMETHODIMP
 PresShell::GetHistoryState(nsILayoutHistoryState** aState)
 {
