@@ -45,7 +45,6 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartBinding() must be called before OnDataAvailable()";
-static const char* kOnStopNotCalled  = "Error: OnStopBinding() must be called upon termination of netlib process";
 static const char* kBadListenerInit  = "Error: Parser's IStreamListener API was not setup correctly in constructor.";
 static nsString    kUnknownFilename("unknown");
 static nsString    kEmptyString("unknown");
@@ -160,7 +159,9 @@ nsParser::nsParser() : mCommand("") {
  *  @return  
  */
 nsParser::~nsParser() {
-  NS_POSTCONDITION(eOnStop==mParserContext->mStreamListenerState,kOnStopNotCalled);
+  if(eOnStop!=mParserContext->mStreamListenerState) {
+    NS_WARNING("OnStop may not have been called");
+  }
 
   NS_IF_RELEASE(mObserver);
   NS_RELEASE(mSink);
