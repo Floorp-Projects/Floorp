@@ -1137,8 +1137,9 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
         NS_ASSERTION(plqueue,
             "will crash soon due to event holding dangling pointer to frame");
         if (plqueue) {
-          // Removes the event and destroys it
+          // Remove the event and then destroy it
           PL_DequeueEvent(tmp, plqueue);
+          PL_DestroyEvent(tmp);
         }
       }
     }
