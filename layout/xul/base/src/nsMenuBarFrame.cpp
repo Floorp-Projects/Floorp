@@ -375,8 +375,10 @@ nsMenuBarFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFl
 }
 
 NS_IMETHODIMP
-nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
+nsMenuBarFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 {
+  nsNavigationDirection theDirection;
+  NS_DIRECTION_FROM_KEY_CODE(theDirection, aKeyCode);
   if (!mCurrentMenu)
     return NS_OK;
   
@@ -389,17 +391,17 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
   
   if (isOpen) {
     // Let the child menu try to handle it.
-    mCurrentMenu->KeyboardNavigation(aDirection, aHandledFlag);
+    mCurrentMenu->KeyboardNavigation(aKeyCode, aHandledFlag);
   }
 
   if (aHandledFlag)
     return NS_OK;
 
-  if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT) {
+  if NS_DIRECTION_IS_INLINE(theDirection) {
     
     nsIMenuFrame* nextItem;
     
-    if (aDirection == NS_VK_RIGHT)
+    if (theDirection == eNavigationDirection_End)
       GetNextMenuItem(mCurrentMenu, &nextItem);
     else GetPreviousMenuItem(mCurrentMenu, &nextItem);
 
@@ -413,7 +415,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
       }
     }
   }
-  else if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN) {
+  else if NS_DIRECTION_IS_BLOCK(theDirection) {
     // Open the menu and select its first item.
     mCurrentMenu->OpenMenu(PR_TRUE);
     mCurrentMenu->SelectFirstItem();

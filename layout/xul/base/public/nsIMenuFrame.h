@@ -71,7 +71,7 @@ public:
   NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;
   NS_IMETHOD Enter() = 0;
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
+  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag) = 0;
 
   NS_IMETHOD GetMenuParent(nsIMenuParent** aMenuParent) = 0;
   NS_IMETHOD GetMenuChild(nsIFrame** aResult) = 0;

@@ -52,6 +52,89 @@ class nsIDOMKeyEvent;
  * refcounted.  Eventually it should not inherit from nsISupports.
  */
 
+/**
+ * nsNavigationDirection: an enum expressing navigation through the menus in
+ * terms which are independent of the directionality of the chrome. The
+ * terminology, derived from XSL-FO and CSS3 (e.g. 
+ * http://www.w3.org/TR/css3-text/#TextLayout), is BASE (Before, After, Start,
+ * End), with the addition of First and Last (mapped to Home and End
+ * respectively).
+ *
+ * In languages such as English where the inline progression is left-to-right
+ * and the block progression is top-to-bottom (lr-tb), these terms will map out
+ * as in the following diagram
+ *
+ *  --- inline progression --->
+ *
+ *           First              |
+ *           ...                |
+ *           Before             |
+ *         +--------+         block
+ *   Start |        | End  progression
+ *         +--------+           |
+ *           After              |
+ *           ...                |
+ *           Last               V
+ * 
+ */
+
+enum nsNavigationDirection {
+  eNavigationDirection_Last,
+  eNavigationDirection_First,
+  eNavigationDirection_Start,
+  eNavigationDirection_Before,
+  eNavigationDirection_End,
+  eNavigationDirection_After
+};
+
+#define NS_DIRECTION_IS_INLINE(dir) (dir == eNavigationDirection_Start ||     \
+                                     dir == eNavigationDirection_End)
+#define NS_DIRECTION_IS_BLOCK(dir) (dir == eNavigationDirection_Before || \
+                                    dir == eNavigationDirection_After)
+#define NS_DIRECTION_IS_BLOCK_TO_EDGE(dir) (dir == eNavigationDirection_First ||    \
+                                            dir == eNavigationDirection_Last)
+
+/**
+ * DirectionFromKeyCode_lr_tb: an array that maps keycodes to values of
+ * nsNavigationDirection for left-to-right and top-to-bottom flow orientation
+ */
+static nsNavigationDirection DirectionFromKeyCode_lr_tb [6] = {
+  eNavigationDirection_Last,   // NS_VK_END
+  eNavigationDirection_First,  // NS_VK_HOME
+  eNavigationDirection_Start,  // NS_VK_LEFT
+  eNavigationDirection_Before, // NS_VK_UP
+  eNavigationDirection_End,    // NS_VK_RIGHT
+  eNavigationDirection_After   // NS_VK_DOWN
+};
+
+/**
+ * DirectionFromKeyCode_rl_tb: an array that maps keycodes to values of
+ * nsNavigationDirection for right-to-left and top-to-bottom flow orientation
+ */
+static nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
+  eNavigationDirection_Last,   // NS_VK_END
+  eNavigationDirection_First,  // NS_VK_HOME
+  eNavigationDirection_End,    // NS_VK_LEFT
+  eNavigationDirection_Before, // NS_VK_UP
+  eNavigationDirection_Start,  // NS_VK_RIGHT
+  eNavigationDirection_After   // NS_VK_DOWN
+};
+
+#ifdef IBMBIDI
+#define NS_DIRECTION_FROM_KEY_CODE(direction, keycode)           \
+  NS_ASSERTION(keycode >= NS_VK_END && keycode <= NS_VK_DOWN,    \
+               "Illegal key code");                              \
+  const nsStyleVisibility* vis = (const nsStyleVisibility*)      \
+     mStyleContext->GetStyleData(eStyleStruct_Visibility);       \
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL)                 \
+    direction = DirectionFromKeyCode_rl_tb[keycode - NS_VK_END]; \
+  else                                                           \
+    direction = DirectionFromKeyCode_lr_tb[keycode - NS_VK_END];
+#else
+#define NS_DIRECTION_FROM_KEY_CODE(direction, keycode)           \
+    direction = DirectionFromKeyCode_lr_tb[keycode - NS_VK_END];
+#endif
+
 class nsIMenuParent : public nsISupports {
 
 public:
@@ -78,7 +161,7 @@ public:
   NS_IMETHOD RemoveKeyboardNavigator() = 0;
 
   // Used to move up, down, left, and right in menus.
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag) = 0;
+  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag) = 0;
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag) = 0;
   // Called when the ESC key is held down to close levels of menus.
   NS_IMETHOD Escape(PRBool& aHandledFlag) = 0;

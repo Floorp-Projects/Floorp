@@ -156,7 +156,7 @@ public:
   NS_IMETHOD Escape(PRBool& aHandledFlag);
   NS_IMETHOD Enter();
   NS_IMETHOD ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandledFlag);
-  NS_IMETHOD KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
+  NS_IMETHOD KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag);
 
   NS_IMETHOD SetParent(const nsIFrame* aParent);
 

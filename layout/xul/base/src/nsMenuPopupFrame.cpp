@@ -1751,15 +1751,18 @@ nsMenuPopupFrame::ShortcutNavigation(nsIDOMKeyEvent* aKeyEvent, PRBool& aHandled
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
+nsMenuPopupFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 {
+  nsNavigationDirection theDirection;
+  NS_DIRECTION_FROM_KEY_CODE(theDirection, aKeyCode);
+
   mIncrementalString = NS_LITERAL_STRING("");
 
   // This method only gets called if we're open.
-  if (!mCurrentMenu && (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT)) {
+  if (!mCurrentMenu && NS_DIRECTION_IS_INLINE(theDirection)) {
     // We've been opened, but we haven't had anything selected.
-    // We can handle RIGHT, but our parent handles LEFT.
-    if (aDirection == NS_VK_RIGHT) {
+    // We can handle End, but our parent handles Start.
+    if (theDirection == eNavigationDirection_End) {
       nsIMenuFrame* nextItem;
       GetNextMenuItem(nsnull, &nextItem);
       if (nextItem) {
@@ -1780,9 +1783,10 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
     if (isOpen) {
       // Give our child a shot.
-      mCurrentMenu->KeyboardNavigation(aDirection, aHandledFlag);
+      mCurrentMenu->KeyboardNavigation(aKeyCode, aHandledFlag);
     }
-    else if (aDirection == NS_VK_RIGHT && isContainer && !isDisabled) {
+    else if (theDirection == eNavigationDirection_End &&
+             isContainer && !isDisabled) {
       // The menu is not yet open. Open it and select the first item.
       aHandledFlag = PR_TRUE;
       mCurrentMenu->OpenMenu(PR_TRUE);
@@ -1793,17 +1797,17 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
   if (aHandledFlag)
     return NS_OK; // The child menu took it for us.
 
-  // For the vertical direction, we can move up or down.
-  if (aDirection == NS_VK_UP || aDirection == NS_VK_DOWN ||
-      aDirection == NS_VK_HOME || aDirection == NS_VK_END) {
+  // For block progression, we can move in either direction
+  if (NS_DIRECTION_IS_BLOCK(theDirection) ||
+      NS_DIRECTION_IS_BLOCK_TO_EDGE(theDirection)) {
 
     nsIMenuFrame* nextItem;
     
-    if (aDirection == NS_VK_UP)
+    if (theDirection == eNavigationDirection_Before)
       GetPreviousMenuItem(mCurrentMenu, &nextItem);
-    else if (aDirection == NS_VK_DOWN)
+    else if (theDirection == eNavigationDirection_After)
       GetNextMenuItem(mCurrentMenu, &nextItem);
-    else if (aDirection == NS_VK_HOME)
+    else if (theDirection == eNavigationDirection_First)
       GetNextMenuItem(nsnull, &nextItem);
     else
       GetPreviousMenuItem(nsnull, &nextItem);
@@ -1813,7 +1817,7 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     aHandledFlag = PR_TRUE;
   }
   else if (mCurrentMenu && isContainer && isOpen) {
-    if (aDirection == NS_VK_LEFT) {
+    if (theDirection == eNavigationDirection_Start) {
       // Close it up.
       mCurrentMenu->OpenMenu(PR_FALSE);
       aHandledFlag = PR_TRUE;
