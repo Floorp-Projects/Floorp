@@ -386,6 +386,24 @@
   height: 16px;
 }
 
+#clear-button {
+  list-style-image: url("chrome://global/skin/icons/close.gif");
+}
+
+#clear-button:hover {
+  list-style-image: url("chrome://global/skin/icons/close-hov.gif");
+  border: none;
+  margin-left: 1px;
+  margin-right: 1px;
+}
+
+#clear-button:hover:active {
+  list-style-image: url("chrome://global/skin/icons/close-act.gif");
+  border: none;
+  margin-left: 1px;
+  margin-right: 1px;
+}
+
 #page-proxy-deck {
   cursor: grab;
   margin-right: 4px;

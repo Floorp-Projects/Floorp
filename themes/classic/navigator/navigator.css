@@ -130,6 +130,10 @@
   -moz-image-region: rect(0px 92px 21px 69px) !important;
 }
 
+#clear-button {
+  list-style-image: url("chrome://global/skin/icons/close-button.gif");
+}
+
 #fullscreen-exit-button {
   list-style-image: none;
 }
