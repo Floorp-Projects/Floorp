@@ -53,7 +53,8 @@ function WidgetStateManager( frame_id, panelPrefix, panelSuffix )
   this.ElementIsIgnored  = WSM_ElementIsIgnored;
   this.HasValidElements  = WSM_HasValidElements;
   this.LookupElement     = WSM_LookupElement;
-  this.GetDataForTag    = WSM_GetDataForTag;
+  this.GetDataForTag     = WSM_GetDataForTag;
+  this.SetDataForTag     = WSM_SetDataForTag;
 }
 
 /** void SavePageData() ;
