@@ -16,6 +16,9 @@
  * Reserved.
  */
 #include "stdafx.h"
+
+#include <stack>
+
 #include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"
 
@@ -34,7 +37,25 @@ HRESULT CIEHtmlElementCollection::SetParentNode(IDispatch *pIDispParent)
 	return S_OK;
 }
 
-HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance)
+
+struct NodeListPos
+{
+	nsIDOMNodeList *m_pIDOMNodeList;
+	PRUint32 m_nListPos;
+
+	NodeListPos(nsIDOMNodeList *pIDOMNodeList, PRUint32 nListPos) :
+		m_pIDOMNodeList(pIDOMNodeList),
+		m_nListPos(nListPos)
+	{
+	}
+
+	NodeListPos()
+	{
+	};
+};
+
+
+HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren)
 {
 	if (pInstance == NULL)
 	{
@@ -63,13 +84,25 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 	pCollection->SetParentNode(cpDispNode);
 
 	// Get elements
+
+	std::stack< NodeListPos > cNodeStack;
+
 	nsIDOMNodeList *pIDOMNodeList = nsnull;
 	pIDOMNode->GetChildNodes(&pIDOMNodeList);
+
 	if (pIDOMNodeList)
 	{
+		cNodeStack.push(NodeListPos(pIDOMNodeList, 0));
+	}
+	while (!cNodeStack.empty())
+	{
+		NodeListPos pos = cNodeStack.top();
+		cNodeStack.pop();
+
+		nsIDOMNodeList *pIDOMNodeList = pos.m_pIDOMNodeList;
 		PRUint32 aLength = 0;
 		pIDOMNodeList->GetLength(&aLength);
-		for (PRUint32 i = 0; i < aLength; i++)
+		for (PRUint32 i = pos.m_nListPos; i < aLength; i++)
 		{
 			nsIDOMNode *pChildNode = nsnull;
 			pIDOMNodeList->Item(i, &pChildNode);
@@ -86,6 +119,12 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 				pElement->SetDOMNode(pChildNode);
 				pElement->SetParentNode(pCollection->m_pIDispParent);
 				pCollection->AddNode(pElement);
+
+				if (bRecurseChildren)
+				{
+					// TODO recurse through
+					CIPtr(IHTMLElementCollection) cpCollection;
+				}
 			}
 			pChildNode->Release();
 		}

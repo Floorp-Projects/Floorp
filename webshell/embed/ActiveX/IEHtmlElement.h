@@ -19,6 +19,7 @@
 #define IEHTMLELEMENT_H
 
 #include "IEHtmlNode.h"
+#include "IEHtmlElementCollection.h"
 
 class CIEHtmlElement :	public CIEHtmlNode,
 						public IDispatchImpl<IHTMLElement, &IID_IHTMLElement, &LIBID_MSHTML>
@@ -36,6 +37,7 @@ BEGIN_COM_MAP(CIEHtmlElement)
 END_COM_MAP()
 
 	virtual HRESULT GetIDispatch(IDispatch **pDispatch);
+	virtual HRESULT GetChildren(CIEHtmlElementCollectionInstance **ppCollection);
 
 	// Implementation of IHTMLElement
 	virtual HRESULT STDMETHODCALLTYPE setAttribute(BSTR strAttributeName, VARIANT AttributeValue, LONG lFlags);
