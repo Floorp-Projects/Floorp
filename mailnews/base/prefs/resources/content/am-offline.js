@@ -46,8 +46,8 @@ function initServerSettings()
         gImapIncomingServer = gIncomingServer.QueryInterface(Components.interfaces.nsIImapIncomingServer);
         document.getElementById("offline.downloadBodiesOnGetNewMail").checked =  gImapIncomingServer.downloadBodiesOnGetNewMail;
         document.getElementById("offline.newFolder").checked =  gImapIncomingServer.offlineDownload;
-        onLockPreference();	
     }
+    onLockPreference();	
 }
   
 function initRetentionSettings()
@@ -229,7 +229,18 @@ function onSave()
         gImapIncomingServer.offlineDownload = document.getElementById("offline.newFolder").checked;
     }
 }
+var gPref = null;
 
+function disableIfLocked( prefstrArray )
+{
+    for (i=0; i<prefstrArray.length; i++) {
+        var element = document.getElementById(prefstrArray[i].id);
+        if (gPref.prefIsLocked(prefstrArray[i].prefstring))
+            element.disabled = true;
+        else
+            element.removeAttribute("disabled");
+    }
+}
 
 function onLockPreference()
 {
@@ -242,15 +253,34 @@ function onLockPreference()
     prefService = prefService.getService();
     prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
 
+    // This panel does not use the code in AccountManager.js to handle
+    // the load/unload/disable.  keep in mind new prefstrings and changes
+    // to code in AccountManager, and update these as well.
+    var prefElements = [
+      { prefstring:"offline_download", id:"offline.newFolder"},
+      { prefstring:"download_bodies_on_get_new_mail",
+                           id:"offline.downloadBodiesOnGetNewMail"},
+      { prefstring:"limit_message_size", id:"offline.notDownload"},
+      { prefstring:"max_size", id:"offline.notDownloadMin"},
+      { prefstring:"downloadUnreadOnly", id:"nntp.downloadUnread"},
+      { prefstring:"downloadByDate", id:"nntp.downloadMsg"},
+      { prefstring:"ageLimit", id:"nntp.downloadMsgMin"},
+      { prefstring:"retainBy", id:"nntp.keepMsg"},
+      { prefstring:"daysToKeepHdrs", id:"nntp.keepOldMsgMin"},
+      { prefstring:"numHdrsToKeep", id:"nntp.keepNewMsgMin"},
+      { prefstring:"keepUnreadOnly", id:"nntp.keepUnread"},
+      { prefstring:"daysToKeepBodies", id:"nntp.removeBodyMin"},
+      { prefstring:"disable_button.selectFolder", id:"selectFolderButton"}
+    ];
+
     finalPrefString = initPrefString + "." + gIncomingServer.key + ".";
-    var pref = prefService.getBranch(finalPrefString);
-    isDownloadLocked = pref.prefIsLocked("offline_download");
-    if(isDownloadLocked) 
-        document.getElementById("offline.newFolder").disabled = true;
-    
-    isGetNewLocked = pref.prefIsLocked("download_bodies_on_get_new_mail");
-    if(isGetNewLocked)
-        document.getElementById("offline.downloadBodiesOnGetNewMail").disabled = true;        
-      
+    gPref = prefService.getBranch(finalPrefString);
+
+    disableIfLocked( prefElements );
+
+/*  This element doesn't currently work.  When it does and the prefstring
+is known, it needs to be added to the array.  See bugs 91560 and 79561
+    { prefstring:"", id:"nntp.removeBody" }
+*/
 } 
 
