@@ -20,7 +20,6 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-
 #include "nsDocShellBase.h"
 
 //*****************************************************************************
@@ -220,8 +219,15 @@ NS_IMETHODIMP nsDocShellBase::GetSearchable(PRBool* searchable)
 
 NS_IMETHODIMP nsDocShellBase::ClearSelection()
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_PresShell);
+
+   nsCOMPtr<nsIDOMSelection> selection;
+   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+      getter_AddRefs(selection)), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(selection->ClearSelection(), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SelectAll()
@@ -232,42 +238,72 @@ NS_IMETHODIMP nsDocShellBase::SelectAll()
 
 NS_IMETHODIMP nsDocShellBase::CopySelection()
 {
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(m_PresShell);
+
+   // the pres shell knows how to copy, so let it do the work
+   NS_ENSURE_SUCCESS(m_PresShell->DoCopy(), NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool* copyable)
+/* the docShell is "copyable" if it has a selection and the selection is not
+ * collapsed (that is, at least one token is selected, a character or a node
+ */
+NS_IMETHODIMP nsDocShellBase::GetCopyable(PRBool *aCopyable)
 {
-   NS_ENSURE_ARG_POINTER(copyable);
-   
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aCopyable);
+
+   NS_ENSURE_STATE(m_PresShell);
+
+   nsCOMPtr<nsIDOMSelection> selection;
+   NS_ENSURE_SUCCESS(m_PresShell->GetSelection(SELECTION_NORMAL, 
+      getter_AddRefs(selection)), NS_ERROR_FAILURE);
+
+   if(!selection)
+      {
+      *aCopyable = PR_FALSE;
+      return NS_OK;
+      }
+
+   PRBool isCollapsed;
+   NS_ENSURE_SUCCESS(selection->GetIsCollapsed(&isCollapsed), NS_ERROR_FAILURE);
+   *aCopyable = !isCollapsed;
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::CutSelection()
 {
-   //XXX First Check
+   //XXX Implement
+   //Should check to find the current focused object.  Then cut the contents.
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetCutable(PRBool* cutable)
 {
    NS_ENSURE_ARG_POINTER(cutable);
-   //XXX First Check
+   //XXX Implement
+   //Should check to find the current focused object.  Then see if it can
+   //be cut out of.  For now the answer is always no since CutSelection()
+   // has not been implemented.
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::Paste()
 {
-   //XXX First Check
+   //XXX Implement
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetPasteable(PRBool* pasteable)
 {
    NS_ENSURE_ARG_POINTER(pasteable);
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+
+   //XXX Implement
+   //Should check to find the current focused object.  Then see if it can
+   //be pasted into.  For now the answer is always no since Paste()
+   // has not been implemented.
+   *pasteable = PR_FALSE;
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -284,7 +320,13 @@ NS_IMETHODIMP nsDocShellBase::GetSaveable(PRBool* saveable)
 {
    NS_ENSURE_ARG_POINTER(saveable);
    //XXX First Check
-   return NS_ERROR_FAILURE;
+   // XXX Implement
+   // Should check if a doc is loaded and if it is in a state that that is
+   // ready to save.  For now the answer is always no since saving isn't
+   // implemented.
+
+   *saveable = PR_FALSE;
+   return NS_OK;
 } 
 
 NS_IMETHODIMP nsDocShellBase::Print()
@@ -296,8 +338,13 @@ NS_IMETHODIMP nsDocShellBase::Print()
 NS_IMETHODIMP nsDocShellBase::GetPrintable(PRBool* printable)
 {
    NS_ENSURE_ARG_POINTER(printable);
-   //XXX First Check
-   return NS_ERROR_FAILURE;
+   // XXX Implement
+   // Should check if a doc is loaded and if it is in a state that that is
+   // ready to print.  For now the answer is always no since printing isn't
+   // implemented.
+
+   *printable = PR_FALSE;
+   return NS_OK;
 } 
 
 //*****************************************************************************
@@ -463,7 +510,6 @@ NS_IMETHODIMP nsDocShellBase::SetParentWidget(nsIWidget* parentWidget)
    return NS_OK;
 }
 
-
 NS_IMETHODIMP nsDocShellBase::GetParentNativeWindow(nativeWindow* parentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(parentNativeWindow);
@@ -579,46 +625,93 @@ NS_IMETHODIMP nsDocShellBase::GetCurScrollPos(PRInt32 scrollOrientation,
 {
    NS_ENSURE_ARG_POINTER(curPos);
 
-   //XXX First Check
-	/*
-	Retrieves or Sets the current thumb position to the curPos passed in for the
-	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
+   nscoord x, y;
+   NS_ENSURE_SUCCESS(scrollView->GetScrollPosition(x, y), NS_ERROR_FAILURE);
+
+   switch(scrollOrientation)
+      {
+      case ScrollOrientation_X:
+         *curPos = x;
+         return NS_OK;
+
+      case ScrollOrientation_Y:
+         *curPos = y;
+         return NS_OK;
+
+      default:
+         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+      }
    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetCurScrollPos(PRInt32 scrollOrientation, 
    PRInt32 curPos)
 {
-   //XXX First Check
-	/*
-	Retrieves or Sets the current thumb position to the curPos passed in for the
-	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-   return NS_ERROR_FAILURE;
+   PRInt32 other;
+   PRInt32 x;
+   PRInt32 y;
+
+   GetCurScrollPos(scrollOrientation, &other);
+
+   switch(scrollOrientation)
+      {
+      case ScrollOrientation_X:
+         x = curPos;
+         y = other;
+         break;
+
+      case ScrollOrientation_Y:
+         x = other;
+         y = curPos;
+         break;
+
+      default:
+         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+      }
+
+   NS_ENSURE_SUCCESS(scrollView->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE),
+      NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
+// XXX This is wrong
 NS_IMETHODIMP nsDocShellBase::GetScrollRange(PRInt32 scrollOrientation,
    PRInt32* minPos, PRInt32* maxPos)
 {
    NS_ENSURE_ARG_POINTER(minPos && maxPos);
-   //XXX First Check
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
+
+   PRInt32 cx;
+   PRInt32 cy;
+   
+   NS_ENSURE_SUCCESS(scrollView->GetContainerSize(&cx, &cy), NS_ERROR_FAILURE);
+   *minPos = 0;
+   
+   switch(scrollOrientation)
+      {
+      case ScrollOrientation_X:
+         *maxPos = cx;
+         return NS_OK;
+
+      case ScrollOrientation_Y:
+         *maxPos = cy;
+         return NS_OK;
+
+      default:
+         NS_ENSURE(PR_FALSE, NS_ERROR_INVALID_ARG);
+      }
+
    return NS_ERROR_FAILURE;
 }
 
@@ -641,32 +734,58 @@ NS_IMETHODIMP nsDocShellBase::GetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32* scrollbarPref)
 {
    NS_ENSURE_ARG_POINTER(scrollbarPref);
-   //XXX First Check
-	/*
-	Retrieves of Set the preferences for the scroll bar.
-	*/
-   return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
+
+   // XXX This is all evil, we need to convert.  We don't know our prefs
+   // are the same as this interfaces.
+ /*  nsScrollPreference scrollPref;
+
+   NS_ENSURE_SUCCESS(scrollView->GetScrollPreference(scrollPref), 
+      NS_ERROR_FAILURE);
+
+   *scrollbarPref = scrollPref; */
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetScrollbarPreferences(PRInt32 scrollOrientation,
    PRInt32 scrollbarPref)
 {
-   //XXX First Check
-	/*
-	Retrieves of Set the preferences for the scroll bar.
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
+
+   // XXX This is evil.  We should do a mapping, we don't know our prefs
+   // are the same as this interface.  In fact it doesn't compile
+  /* nsScrollPreference scrollPref = scrollbarPref;
+   NS_ENSURE_SUCCESS(scrollView->SetScrollPreference(scrollPref), 
+      NS_ERROR_FAILURE);  */
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::GetScrollbarVisibility(PRBool* verticalVisible,
    PRBool* horizontalVisible)
 {
-   //XXX First Check
-	/*
-	Get information about whether the vertical and horizontal scrollbars are
-	currently visible.
-	*/
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollableView> scrollView;
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)), 
+      NS_ERROR_FAILURE);
+
+   PRBool vertVisible;
+   PRBool horizVisible;
+
+   NS_ENSURE_SUCCESS(scrollView->GetScrollbarVisibility(&vertVisible,
+      &horizVisible), NS_ERROR_FAILURE);
+
+   if(verticalVisible)
+      *verticalVisible = vertVisible;
+   if(horizontalVisible)
+      *horizontalVisible = horizVisible;
+
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -675,25 +794,71 @@ NS_IMETHODIMP nsDocShellBase::GetScrollbarVisibility(PRBool* verticalVisible,
 
 NS_IMETHODIMP nsDocShellBase::ScrollByLines(PRInt32 numLines)
 {
-   //XXX First Check
-  /**
-   * Scroll the view up or down by aNumLines lines. positive
-   * values move down in the view. Prevents scrolling off the
-   * end of the view.
-   * @param numLines number of lines to scroll the view by
-   */
-   return NS_ERROR_FAILURE;
+   nsCOMPtr<nsIScrollableView> scrollView;
+
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(scrollView->ScrollByLines(numLines), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellBase::ScrollByPages(PRInt32 numPages)
 {
-   //XXX First Check
-	/**
-   * Scroll the view up or down by numPages pages. a page
-   * is considered to be the amount displayed by the clip view.
-   * positive values move down in the view. Prevents scrolling
-   * off the end of the view.
-   * @param numPages number of pages to scroll the view by
-   */
+   nsCOMPtr<nsIScrollableView> scrollView;
+
+   NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+      NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(scrollView->ScrollByPages(numPages), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsDocShellBase: Helper Routines
+//*****************************************************************************   
+
+nsresult nsDocShellBase::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode* aParent,
+   PRInt32* aOffset)
+{
+   NS_ENSURE_ARG_POINTER(aChild || aParent);
+   
+   nsCOMPtr<nsIDOMNodeList> childNodes;
+   NS_ENSURE_SUCCESS(aParent->GetChildNodes(getter_AddRefs(childNodes)),
+      NS_ERROR_FAILURE);
+   NS_ENSURE(childNodes, NS_ERROR_FAILURE);
+
+   PRInt32 i=0;
+
+   for( ; PR_TRUE; i++)
+      {
+      nsCOMPtr<nsIDOMNode> childNode;
+      NS_ENSURE_SUCCESS(childNodes->Item(i, getter_AddRefs(childNode)), 
+         NS_ERROR_FAILURE);
+      NS_ENSURE(childNode, NS_ERROR_FAILURE);
+
+      if(childNode.get() == aChild)
+         {
+         *aOffset = i;
+         return NS_OK;
+         }
+      }
+
    return NS_ERROR_FAILURE;
 }
+
+nsresult nsDocShellBase::GetRootScrollableView(nsIScrollableView** aOutScrollView)
+{
+   NS_ENSURE_ARG_POINTER(aOutScrollView);
+   
+   nsCOMPtr<nsIViewManager> viewManager;
+
+   //XXX Get ViewManager Somewhere.
+
+   NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}        
