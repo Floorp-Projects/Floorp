@@ -45,7 +45,7 @@
    * of the list.  |nsSlidingString| also the client to advance its starting point.
    * 
    */
-class nsSlidingSharedBufferList
+class NS_COM nsSlidingSharedBufferList
     : public nsSharedBufferList
   {
     public:
@@ -63,35 +63,86 @@ class nsSlidingSharedBufferList
 
 
 
+class nsSlidingString;
 
   /**
    * a substring over a buffer list, this 
    */
-class nsSlidingSubstring
-     : public nsPromiseReadable<PRUnichar>
+class NS_COM nsSlidingSubstring
+     : virtual public nsPromiseReadable<PRUnichar>
   {
+    friend class nsSlidingString;
+
     public:
       typedef nsSlidingSharedBufferList::Buffer   Buffer;
       typedef nsSlidingSharedBufferList::Position Position;
 
+      nsSlidingSubstring()
+          : mStart(0,0),
+            mEnd(0,0),
+            mBufferList(0),
+            mLength(0)
+        {
+          // nothing else to do here
+        }
+
       nsSlidingSubstring( const nsSlidingSubstring& );  // copy-constructor
       nsSlidingSubstring( const nsSlidingSubstring& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
+      nsSlidingSubstring( const nsSlidingString& );
+      nsSlidingSubstring( const nsSlidingString& aString, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd );
+      explicit nsSlidingSubstring( const nsAReadableString& );
+        // copy the supplied string into a new buffer ... there will be no modifying instance over this buffer list
+
+      void Rebind( const nsSlidingSubstring& );
+      void Rebind( const nsSlidingSubstring&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+      void Rebind( const nsSlidingString& );
+      void Rebind( const nsSlidingString&, const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
+      void Rebind( const nsAReadableString& );
+
      ~nsSlidingSubstring();
 
       virtual PRUint32 Length() const { return mLength; }
 
     protected:
-      nsSlidingSubstring( nsSlidingSharedBufferList& aBufferList );
+      nsSlidingSubstring( nsSlidingSharedBufferList* aBufferList );
       virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
 
     private:
         // can't assign into me, I'm a read-only reference
       void operator=( const nsSlidingSubstring& );  // NOT TO BE IMPLEMENTED
 
+      void
+      init_range_from_buffer_list()
+          // used only from constructors
+        {
+          mStart.PointBefore(mBufferList->GetFirstBuffer());
+          mEnd.PointAfter(mBufferList->GetLastBuffer());
+          mLength = PRUint32(Position::Distance(mStart, mEnd));
+        }
+
+      void
+      acquire_ownership_of_buffer_list() const
+          // used only from constructors and |Rebind|, requires |mStart| already be initialized
+        {
+          mBufferList->AcquireReference();
+          mStart.mBuffer->AcquireNonOwningReference();
+        }
+
+      void
+      release_ownership_of_buffer_list()
+        {
+          if ( mBufferList )
+            {
+              mStart.mBuffer->ReleaseNonOwningReference();
+              mBufferList->DiscardUnreferencedPrefix(mStart.mBuffer);
+              mBufferList->ReleaseReference();
+            }
+        }
+
     protected:
       Position                    mStart;
       Position                    mEnd;
-      nsSlidingSharedBufferList&  mBufferList;
+      nsSlidingSharedBufferList*  mBufferList;
       PRUint32                    mLength;
   };
 
@@ -102,13 +153,18 @@ class nsSlidingSubstring
    * An |nsSlidingSharedBufferList| may be modified by zero or one instances of this class.
    *  
    */
-class nsSlidingString
-    : public nsSlidingSubstring
+class NS_COM nsSlidingString
+    : virtual public nsPromiseReadable<PRUnichar>,
+      private nsSlidingSubstring
   {
+    friend class nsSlidingSubstring;
+
     public:
       nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
         // ...created by consuming ownership of a buffer ... |aStorageStart| must point to something
         //  that it will be OK for the slidking string to call |nsMemory::Free| on
+
+      virtual PRUint32 Length() const { return mLength; }
 
         // you are giving ownership to the string, it takes and keeps your buffer, deleting it (with |nsMemory::Free|) when done
       void AppendBuffer( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd );
@@ -118,18 +174,21 @@ class nsSlidingString
       void DiscardPrefix( const nsReadingIterator<PRUnichar>& );
         // any other way you want to do this?
 
+    protected:
+      virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
+
     private:
+
+      void
+      acquire_ownership_of_buffer_list() const
+          // used only from constructors and |Rebind|, requires |mStart| already be initialized
+        {
+          mBufferList->AcquireReference();
+          mStart.mBuffer->AcquireNonOwningReference();
+        }
+
       nsSlidingString( const nsSlidingString& );  // NOT TO BE IMPLEMENTED
       void operator=( const nsSlidingString& );   // NOT TO BE IMPLEMENTED
   };
-
-
-#if 0
-  // this (or something similar) is what should appear in the parser, I think
-#include "nsSlidingString.h"
-
-typedef nsSlidingString     nsParserString;
-typedef nsSlidingSubstring  nsParserToken;
-#endif
 
 #endif // !defined(nsSlidingString_h___)

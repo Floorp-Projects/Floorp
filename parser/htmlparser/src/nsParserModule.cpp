@@ -32,9 +32,7 @@
 #include "nsWellFormedDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
-#include "nsXIFDTD.h"
 #include "COtherDTD.h"
-#include "CRtfDTD.h"
 #include "nsViewSourceHTML.h"
 #include "nsHTMLContentSinkStream.h"
 #include "nsHTMLToTXTSinkStream.h"
@@ -142,11 +140,9 @@ static NS_DEFINE_CID(kParserNodeCID, NS_PARSER_NODE_IID);
 static NS_DEFINE_CID(kLoggingSinkCID, NS_LOGGING_SINK_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-static NS_DEFINE_CID(kXIFDTDCID, NS_XIF_DTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID, NS_CTRANSITIONAL_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
-static NS_DEFINE_CID(kRtfDTDCID, NS_CRTF_DTD_CID);
 static NS_DEFINE_CID(kHTMLContentSinkStreamCID, NS_HTMLCONTENTSINKSTREAM_CID);
 static NS_DEFINE_CID(kHTMLToTXTSinkStreamCID, NS_HTMLTOTXTSINKSTREAM_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
@@ -162,11 +158,9 @@ static Components gComponents[] = {
   { "Logging sink", &kLoggingSinkCID },
   { "Well formed DTD", &kWellFormedDTDCID },
   { "Navigator HTML DTD", &kNavDTDCID },
-  { "XIF DTD", &kXIFDTDCID },
   { "OTHER DTD", &kCOtherDTDCID },
   { "Transitional DTD", &kCTransitionalDTDCID },
   { "ViewSource DTD", &kViewSourceDTDCID },
-  { "Rtf DTD", &kRtfDTDCID },
   { "HTML Content Sink Stream", &kHTMLContentSinkStreamCID },
   { "HTML To Text Sink Stream", &kHTMLToTXTSinkStreamCID },
   { "ParserService", &kParserServiceCID },
@@ -179,11 +173,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCParserNode)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLoggingSink)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CWellFormedDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CNavDTD)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(COtherDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CTransitionalDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CViewSourceHTML)
-NS_GENERIC_FACTORY_CONSTRUCTOR(CRtfDTD)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLContentSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLToTXTSinkStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParserService)
@@ -210,11 +202,9 @@ protected:
   nsCOMPtr<nsIGenericFactory> mLoggingSinkFactory;
   nsCOMPtr<nsIGenericFactory> mWellFormedDTDFactory;
   nsCOMPtr<nsIGenericFactory> mNavHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mXIFDTDFactory;
   nsCOMPtr<nsIGenericFactory> mOtherHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mTransitionalHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mViewSourceHTMLDTDFactory;
-  nsCOMPtr<nsIGenericFactory> mRtfHTMLDTDFactory;
   nsCOMPtr<nsIGenericFactory> mHTMLContentSinkStreamFactory;
   nsCOMPtr<nsIGenericFactory> mHTMLToTXTSinkStreamFactory;
   nsCOMPtr<nsIGenericFactory> mParserServiceFactory;
@@ -242,6 +232,8 @@ nsParserModule::Initialize()
     nsHTMLTags::AddRefTable();
     nsHTMLEntities::AddRefTable();
     mInitialized = PR_TRUE;
+    InitializeElementTable();
+    CNewlineToken::AllocNewline();
   }
   return NS_OK;
 }
@@ -255,8 +247,8 @@ nsParserModule::Shutdown()
     nsDTDContext::ReleaseGlobalObjects();
     nsParser::FreeSharedObjects();
     mInitialized = PR_FALSE;
-    COtherDTD::ReleaseTable();
-    CNavDTD::ReleaseTable();
+    DeleteElementTable();
+    CNewlineToken::FreeNewline();
   }
 }
 
@@ -313,13 +305,6 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
     }
     fact = mNavHTMLDTDFactory;
   }
-  else if (aClass.Equals(kXIFDTDCID)) {
-    if (!mXIFDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mXIFDTDFactory), 
-                                &nsXIFDTDConstructor);
-    }
-    fact = mXIFDTDFactory;
-  }  
   else if (aClass.Equals(kCOtherDTDCID)) {
     if (!mOtherHTMLDTDFactory) {
       rv = NS_NewGenericFactory(getter_AddRefs(mOtherHTMLDTDFactory), 
@@ -340,13 +325,6 @@ nsParserModule::GetClassObject(nsIComponentManager *aCompMgr,
                                 &CViewSourceHTMLConstructor);
     }
     fact = mViewSourceHTMLDTDFactory;
-  }
-  else if (aClass.Equals(kRtfDTDCID)) {
-    if (!mRtfHTMLDTDFactory) {
-      rv = NS_NewGenericFactory(getter_AddRefs(mRtfHTMLDTDFactory), 
-                                &CRtfDTDConstructor);
-    }
-    fact = mRtfHTMLDTDFactory;
   }
   else if (aClass.Equals(kHTMLContentSinkStreamCID)) {
     if (!mHTMLContentSinkStreamFactory) {

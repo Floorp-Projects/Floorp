@@ -33,6 +33,7 @@
 #include "nsElementTable.h"
 #include "nsHTMLEntities.h"
 #include "CParserContext.h"
+#include "nsReadableUtils.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -441,7 +442,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
   PRUnichar theChar;
   CToken* theToken=0;
 
-  nsresult result=aScanner.GetChar(theChar);
+  nsresult result=aScanner.Peek(theChar);
 
   switch(result) {
     case kEOF:
@@ -468,8 +469,7 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
       }
       else {
         if(!nsCRT::IsAsciiSpace(theChar)) {
-          nsAutoString temp(theChar);
-          result=ConsumeText(temp,theToken,aScanner);
+          result=ConsumeText(theToken,aScanner);
           break;
         }
         result=ConsumeWhitespace(theChar,theToken,aScanner);
@@ -494,16 +494,19 @@ nsresult nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)
  */
 nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens) {
 
-  nsresult result=aScanner.GetChar(aChar);
+  PRUnichar theNextChar, oldChar;
+  nsresult result=aScanner.Peek(aChar,1);
 
   if(NS_OK==result) {
 
     switch(aChar) {
       case kForwardSlash:
-        PRUnichar ch; 
-        result=aScanner.Peek(ch);
+        // Get the original "<" (we've already seen it with a Peek)
+        aScanner.GetChar(oldChar);
+
+        result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
-          if(nsCRT::IsAsciiAlpha(ch)||(kGreaterThan==ch)) {
+          if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)) {
             result=ConsumeEndTag(aChar,aToken,aScanner);
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
@@ -511,8 +514,10 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         break;
 
       case kExclamation:
-        PRUnichar theNextChar; 
-        result=aScanner.Peek(theNextChar);
+        // Get the original "<" (we've already seen it with a Peek)
+        aScanner.GetChar(oldChar);
+
+        result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
           if((kMinus==theNextChar) || (kGreaterThan==theNextChar)) {
             result=ConsumeComment(aChar,aToken,aScanner);
@@ -523,18 +528,21 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         break;
 
       case kQuestionMark: //it must be an XML processing instruction...
+        // Get the original "<" (we've already seen it with a Peek)
+        aScanner.GetChar(oldChar);
         result=ConsumeProcessingInstruction(aChar,aToken,aScanner);
         break;
 
       default:
-        if(nsCRT::IsAsciiAlpha(aChar))
+        if(nsCRT::IsAsciiAlpha(aChar)) {
+          // Get the original "<" (we've already seen it with a Peek)
+          aScanner.GetChar(oldChar);
           result=ConsumeStartTag(aChar,aToken,aScanner,aFlushTokens);
+        }
         else if(kEOF!=aChar) {
-          // We are not dealing with a tag. So, put back the char
-          // and leave the decision to ConsumeText().
-          aScanner.PutBack(aChar);
-          nsAutoString temp; temp.AssignWithConversion("<");
-          result=ConsumeText(temp,aToken,aScanner);
+          // We are not dealing with a tag. So, don't consume the original
+          // char and leave the decision to ConsumeText().
+          result=ConsumeText(aToken,aScanner);
         }
     } //switch
 
@@ -552,7 +560,7 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
  *  @param   aLeadingWS: contains ws chars that preceeded the first attribute
  *  @return  
  */
-nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner,nsString& aLeadingWS) {
+nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner) {
   PRBool done=PR_FALSE;
   nsresult result=NS_OK;
   PRInt16 theAttrCount=0;
@@ -560,13 +568,8 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
 
   while((!done) && (result==NS_OK)) {
-    CToken* theToken= (CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown);
+    CAttributeToken* theToken= NS_STATIC_CAST(CAttributeToken*, theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown));
     if(theToken){
-      if(aLeadingWS.Length()) {
-        nsString& theKey=((CAttributeToken*)theToken)->GetKey();
-        theKey=aLeadingWS;
-        aLeadingWS.Truncate(0);
-      }
       result=theToken->Consume(aChar,aScanner,PRBool(eViewSource==mParserCommand));  //tell new token to finish consuming text...    
  
       //Much as I hate to do this, here's some special case code.
@@ -575,8 +578,8 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       //and a textkey of "/". We should destroy it, and tell the 
       //start token it was empty.
       if(NS_SUCCEEDED(result)) {
-        nsString& key=((CAttributeToken*)theToken)->GetKey();
-        nsString& text=theToken->GetStringValueXXX();
+        const nsAReadableString& key=theToken->GetKey();
+        const nsAReadableString& text=theToken->GetValue();
         if((mDoXMLEmptyTags) && (kForwardSlash==key.CharAt(0)) && (0==text.Length())){
           //tada! our special case! Treat it like an empty start tag...
           aToken->SetEmpty(PR_TRUE);
@@ -584,7 +587,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
         }
         else {
           theAttrCount++;
-          AddToken(theToken,result,&mTokenDeque,theAllocator);
+          AddToken((CToken*&)theToken,result,&mTokenDeque,theAllocator);
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
@@ -654,7 +657,10 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   aToken=theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   
   if(aToken) {
-    ((CStartToken*)aToken)->mOrigin=aScanner.GetOffset()-1; // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
+    // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
+    nsReadingIterator<PRUnichar> origin;
+    aScanner.CurrentPosition(origin);
+
     PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
     result= aToken->Consume(aChar,aScanner,isHTML);     //tell new token to finish consuming text...    
 
@@ -665,25 +671,33 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
 
        //Good. Now, let's see if the next char is ">". 
        //If so, we have a complete tag, otherwise, we have attributes.
-      nsString &theScratchStr=GetScratchString();
       PRBool theTagHasAttributes=PR_FALSE;
+      nsReadingIterator<PRUnichar> start, end;
       if(NS_OK==result) { 
-        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(theScratchStr) : aScanner.SkipWhitespace();
+        result=(eViewSource==mParserCommand) ? aScanner.ReadWhitespace(start, end) : aScanner.SkipWhitespace();
         aToken->mNewlineCount += aScanner.GetNewlinesSkipped();
         if(NS_OK==result) {
-          result=aScanner.GetChar(aChar);
+          result=aScanner.Peek(aChar);
           if(NS_OK==result) {
             if(kGreaterThan!=aChar) { //look for '>' 
              //push that char back, since we apparently have attributes...
-              result=aScanner.PutBack(aChar);
               theTagHasAttributes=PR_TRUE;
             } //if
+            else {
+              aScanner.GetChar(aChar);
+            }
           } //if
         }//if
       }
       
       if(theTagHasAttributes) {
-        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner,theScratchStr);
+        if (eViewSource==mParserCommand) {
+          // Since we conserve whitespace in view-source mode,
+          // go back to the beginning of the whitespace section
+          // and let the first attribute grab it.
+          aScanner.SetPosition(start, PR_FALSE, PR_TRUE);
+        }
+        result=ConsumeAttributes(aChar,(CStartToken*)aToken,aScanner);
       }
 
       /*  Now that that's over with, we have one more problem to solve.
@@ -699,7 +713,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         }
           
         if(mRecordTrailingContent) 
-          RecordTrailingContent((CStartToken*)aToken,aScanner);
+          RecordTrailingContent((CStartToken*)aToken,aScanner,origin);
         
         //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         if(gHTMLElements[theTag].CanContainType(kCDATA)) {
@@ -739,6 +753,9 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
  * @return
  */
 nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
+ 
+  // Get the "/" (we've already seen it with a Peek)
+  aScanner.GetChar(aChar);
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
@@ -749,7 +766,8 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     if((theTag==eHTMLTag_textarea || theTag==eHTMLTag_xmp) && mRecordTrailingContent) {
       mRecordTrailingContent=PR_FALSE;
     }
-    result= aToken->Consume(aChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
+    PRBool isHTML=((eHTML3Text==mDocType) || (eHTML4Text==mDocType));
+    result= aToken->Consume(aChar,aScanner,isHTML);  //tell new token to finish consuming text...    
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   } //if
   return result;
@@ -767,39 +785,33 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
  */
 nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
    PRUnichar  theChar;
-   nsresult result=aScanner.GetChar(theChar);
+   nsresult result=aScanner.Peek(theChar, 1);
 
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   if(NS_OK==result) {
     if(nsCRT::IsAsciiAlpha(theChar)) { //handle common enity references &xxx; or &#000.
+       // Get the "&"
+       aScanner.GetChar(theChar);
        aToken = theAllocator->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
+
+       // Get the first entity character
+       aScanner.GetChar(theChar);
        result = aToken->Consume(theChar,aScanner,mParseMode);  //tell new token to finish consuming text...    
     }
     else if(kHashsign==theChar) {
+       // Get the "&"
+       aScanner.GetChar(theChar);
        aToken = theAllocator->CreateTokenOfType(eToken_entity,eHTMLTag_entity);
+
+       // Get the first numerical entity character
+       aScanner.GetChar(theChar);
        result=aToken->Consume(theChar,aScanner,mParseMode);
     }
     else {
        //oops, we're actually looking at plain text...
-       nsAutoString temp; temp.AssignWithConversion("&");
-       aScanner.PutBack(theChar);
-       return ConsumeText(temp,aToken,aScanner);
+       return ConsumeText(aToken,aScanner);
     }//if
     if(aToken){
-#if 0
-      nsString& theStr=aToken->GetStringValueXXX();
-
-      if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
-        //if you're here we have a bogus entity.
-        //convert it into a text token.
-        nsAutoString temp; temp.AssignWithConversion("&");
-        temp.Append(theStr);
-        CToken* theToken=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,temp);
-        IF_FREE(aToken);
-        aToken=theToken;
-      }
-#endif
-
       if(mIsFinalChunk && (kEOF==result)) {
         result=NS_OK; //use as much of the entity as you can get.
       }
@@ -821,6 +833,9 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
  *  @return new token or null 
  */
 nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner) {
+  // Get the whitespace character
+  aScanner.GetChar(aChar);
+
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken = theAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace);
   nsresult result=NS_OK;
@@ -842,6 +857,9 @@ nsresult nsHTMLTokenizer::ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsSc
  *  @return new token or null 
  */
 nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+  // Get the "!"
+  aScanner.GetChar(aChar);
+
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
   nsresult result=NS_OK;
@@ -862,21 +880,21 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
  *  @param  anErrorCode: arg that will hold error condition
  *  @return new token or null 
  */ 
-nsresult nsHTMLTokenizer::ConsumeText(const nsString& aString,CToken*& aToken,nsScanner& aScanner){
+nsresult nsHTMLTokenizer::ConsumeText(CToken*& aToken,nsScanner& aScanner){
   nsresult result=NS_OK;
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
-  aToken=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,aString);
-  if(aToken) {
+  CTextToken* theToken = (CTextToken*)theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
+  if(theToken) {
     PRUnichar ch=0;
-    result=aToken->Consume(ch,aScanner,mParseMode);
+    result=theToken->Consume(ch,aScanner,mParseMode);
     if(!NS_SUCCEEDED(result)) {
-      nsString& temp=aToken->GetStringValueXXX();
-      if(0==temp.Length()){
+      if(0==theToken->GetTextLength()){
         IF_FREE(aToken);
         aToken = nsnull;
       }
       else result=NS_OK;
     }
+    aToken = theToken;
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
@@ -894,10 +912,13 @@ nsresult nsHTMLTokenizer::ConsumeText(const nsString& aString,CToken*& aToken,ns
  *  @return new token or null 
  */
 nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+
+  // Get the "!"
+  aScanner.GetChar(aChar);
+
   nsresult result=NS_OK;
   nsAutoString theBufCopy;
-  nsString& theBuffer=aScanner.GetBuffer();
-  theBuffer.Mid(theBufCopy,aScanner.GetOffset(),20);
+  aScanner.Peek(theBufCopy, 20);
   theBufCopy.ToUpperCase();
   PRInt32 theIndex=theBufCopy.Find("DOCTYPE");
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
@@ -927,6 +948,9 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
  *  @return error code
  */
 nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+  // Get the newline character
+  aScanner.GetChar(aChar);
+
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_newline,eHTMLTag_newline);
   nsresult result=NS_OK;
@@ -948,6 +972,10 @@ nsresult nsHTMLTokenizer::ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScann
  *  @return error code
  */
 nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+  
+  // Get the "?"
+  aScanner.GetChar(aChar);
+
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   aToken=theAllocator->CreateTokenOfType(eToken_instruction,eHTMLTag_unknown);
   nsresult result=NS_OK;
@@ -969,16 +997,20 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
  *  
  */
 
-void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner) {
+void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin) {
   if(aStartToken) {
-    PRInt32   theOrigin        =aStartToken->mOrigin;
-    PRInt32   theCurrOffset    =aScanner.GetOffset();
-    PRInt32   theLength        =(theCurrOffset>theOrigin)? theCurrOffset-theOrigin:-1;
-    if(theLength>0) {
-      nsString& theRawXXX      =aStartToken->mTrailingContent;
-      const PRUnichar* theBuff =(aScanner.GetBuffer()).GetUnicode();
-      theRawXXX.Append(&theBuff[theOrigin],theLength);
-    }
+    nsReadingIterator<PRUnichar> theCurrentPosition;
+    aScanner.CurrentPosition(theCurrentPosition);
+
+    nsString& trailingContent      =aStartToken->mTrailingContent;
+    PRUint32 oldLength = trailingContent.Length();
+    trailingContent.SetLength(oldLength + Distance(aOrigin, theCurrentPosition));
+
+    nsWritingIterator<PRUnichar> beginWriting;
+    trailingContent.BeginWriting(beginWriting);
+    beginWriting.advance(oldLength);
+
+    copy_string( aOrigin, theCurrentPosition, beginWriting );
   }
 }
 

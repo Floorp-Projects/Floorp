@@ -42,7 +42,6 @@
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
-#include "CRtfDTD.h"
 #include "CNavDTD.h"
 #include "COtherDTD.h"
 #include "prenv.h" 
@@ -59,7 +58,6 @@ static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
-static NS_DEFINE_CID(kRtfDTDCID, NS_CRTF_DTD_CID);
 
 static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartRequest() must be called before OnDataAvailable()";
@@ -117,7 +115,7 @@ public:
     mDTDDeque.Push(theDTD);
      
     mHasViewSourceDTD=PR_FALSE;
-    mHasRTFDTD=mHasXMLDTD=PR_FALSE;
+    mHasXMLDTD=PR_FALSE;
   }
 
   ~CSharedParserObjects() {
@@ -141,7 +139,6 @@ public:
   nsDeque mDTDDeque;
   PRBool  mHasViewSourceDTD;  //this allows us to defer construction of this object.
   PRBool  mHasXMLDTD;         //also defer XML dtd construction
-  PRBool  mHasRTFDTD;         //also defer RTF dtd construction
   nsIDTD  *mOtherDTD;         //it's ok to leak this; the deque contains a copy too.
 };
 
@@ -677,11 +674,6 @@ void DetermineParseMode(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType& 
     aParseMode=eDTDMode_quirks;
     return;
   }
-  else if(aMimeType.EqualsWithConversion(kRTFTextContentType)) {
-    aDocType=ePlainText;
-    aParseMode=eDTDMode_quirks;
-    return;
-  }
   else if(aMimeType.EqualsWithConversion(kTextCSSContentType)) {
     aDocType=ePlainText;
     aParseMode=eDTDMode_quirks;
@@ -1024,10 +1016,6 @@ void DetermineParseMode2(nsString& aBuffer,nsDTDMode& aParseMode,eParserDocType&
     aDocType=ePlainText;
     aParseMode=eDTDMode_quirks;
   }
-  else if(aMimeType.EqualsWithConversion(kRTFTextContentType)) {
-    aDocType=ePlainText;
-    aParseMode=eDTDMode_quirks;
-  }
 
   if(theModeStr) {
     if(0==nsCRT::strcasecmp(theModeStr,"strict"))
@@ -1093,11 +1081,6 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
         NS_NewViewSourceHTML(&theDTD);  //do this so all non-html files can be viewed...
         gSharedObjects.mDTDDeque.Push(theDTD);
         gSharedObjects.mHasViewSourceDTD=PR_TRUE;
-      }
-      else if(!gSharedObjects.mHasRTFDTD) {
-        NS_NewRTF_DTD(&theDTD);  //do this so all non-html files can be viewed...
-        gSharedObjects.mDTDDeque.Push(theDTD);
-        gSharedObjects.mHasRTFDTD=PR_TRUE;
       }
     }
   }
@@ -1219,9 +1202,6 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
         aMimeType->EqualsWithConversion(kXULTextContentType) ||
         aMimeType->EqualsWithConversion(kRDFTextContentType)) {
         theDTDClassID=&kWellFormedDTDCID;
-      }
-      else if(aMimeType->EqualsWithConversion(kXIFTextContentType)) {
-        theDTDClassID=&kRtfDTDCID;
       }
       else {
         theDTDClassID=&kNavDTDCID;
@@ -1406,7 +1386,10 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       mMajorIteration=-1; 
       mMinorIteration=-1; 
       
-      nsString& theBuffer=mParserContext->mScanner->GetBuffer();
+      nsAutoString theBuffer;
+      // XXXVidur Make a copy and only check in the first 1k
+      mParserContext->mScanner->Peek(theBuffer, 1024);
+
       DetermineParseMode(theBuffer,mParserContext->mDTDMode,mParserContext->mDocType,mParserContext->mMimeType);
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
@@ -2240,6 +2223,61 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
  return oCharset.Length() > 0;
 }
 
+typedef struct {
+  PRBool mNeedCheckFirst4Bytes;
+  nsParser* mParser;
+  nsIParserFilter* mParserFilter;
+  nsScanner* mScanner;
+} ParserWriteStruct;
+
+/*
+ * This function is invoked as a result of a call to a stream's
+ * ReadSegments() method. It is called for each contiguous buffer 
+ * of data in the underlying stream or pipe. Using ReadSegments
+ * allows us to avoid copying data to read out of the stream.
+ */
+static NS_METHOD
+ParserWriteFunc(nsIInputStream* in,
+                void* closure,
+                const char* fromRawSegment,
+                PRUint32 toOffset,
+                PRUint32 count,
+                PRUint32 *writeCount)
+{
+  nsresult result;
+  ParserWriteStruct* pws = NS_STATIC_CAST(ParserWriteStruct*, closure);
+  const char* buf = fromRawSegment;
+  PRUint32 theNumRead = count;
+
+  if (!pws) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if(pws->mNeedCheckFirst4Bytes && (count >= 4)) { 
+    nsCharsetSource guessSource; 
+    nsAutoString guess; 
+  
+    pws->mNeedCheckFirst4Bytes = PR_FALSE; 
+    if(detectByteOrderMark((const unsigned char*)buf, 
+                           theNumRead, guess, guessSource)) 
+      { 
+#ifdef DEBUG_XMLENCODING 
+        printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
+#endif 
+        pws->mParser->SetDocumentCharset(guess, guessSource); 
+      } 
+  } 
+
+  if(pws->mParserFilter) 
+    pws->mParserFilter->RawBuffer(buf, &theNumRead); 
+  
+  result = pws->mScanner->Append(buf, theNumRead);
+  if (NS_SUCCEEDED(result)) {
+    *writeCount = count;
+  }
+
+  return result;
+}
 
 /**
  *  
@@ -2273,90 +2311,27 @@ NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail
 
     if(eInvalidDetect==theContext->mAutoDetectStatus) { 
       if(theContext->mScanner) { 
-        theContext->mScanner->GetBuffer().Truncate(); 
+        nsReadingIterator<PRUnichar> iter;
+        theContext->mScanner->EndReading(iter);
+        theContext->mScanner->SetPosition(iter, PR_TRUE);
       } 
     } 
 
-    PRInt32 newLength=(aLength>theContext->mTransferBufferSize) ? aLength :
-theContext->mTransferBufferSize; 
-    if(!theContext->mTransferBuffer) { 
-      theContext->mTransferBufferSize=newLength; 
-      theContext->mTransferBuffer=new char[newLength+20]; 
-    } 
-    else if(aLength>theContext->mTransferBufferSize){ 
-      delete [] theContext->mTransferBuffer; 
-      theContext->mTransferBufferSize=newLength; 
-      theContext->mTransferBuffer=new char[newLength+20]; 
-    } 
-
-    if(theContext->mTransferBuffer) { 
-
-        //We need to add code to defensively deal with the case where the transfer buffer is null. 
-
-      PRUint32  theTotalRead=0; 
-      PRUint32  theNumRead=1;   //init to a non-zero value 
-      int       theStartPos=0; 
-
-      PRBool needCheckFirst4Bytes = 
+    PRUint32 totalRead;
+    ParserWriteStruct pws;
+    pws.mNeedCheckFirst4Bytes = 
               ((0 == sourceOffset) && (mCharsetSource<kCharsetFromAutoDetection)); 
-      while ((theNumRead>0) && (aLength>theTotalRead) && (NS_OK==result)) { 
-        result = pIStream->Read(theContext->mTransferBuffer, aLength, &theNumRead); 
-        if(NS_SUCCEEDED(result) && (theNumRead>0)) { 
-          if(needCheckFirst4Bytes && (theNumRead >= 4)) { 
-             nsCharsetSource guessSource; 
-             nsAutoString guess; 
-  
-             needCheckFirst4Bytes = PR_FALSE; 
-             if(detectByteOrderMark((const unsigned char*)theContext->mTransferBuffer, 
-                                    theNumRead, guess, guessSource)) 
-             { 
-    #ifdef DEBUG_XMLENCODING 
-                printf("xmlencoding detect- %s\n", guess.ToNewCString()); 
-    #endif 
-                this->SetDocumentCharset(guess, guessSource); 
-             } 
-          } 
-          theTotalRead+=theNumRead; 
-          if(mParserFilter) 
-             mParserFilter->RawBuffer(theContext->mTransferBuffer, &theNumRead); 
+    pws.mParser = this;
+    pws.mParserFilter = mParserFilter;
+    pws.mScanner = theContext->mScanner;
 
-    #ifdef rickgdebug 
-          unsigned int index=0; 
-          for(index=0;index<theNumRead;index++) { 
-            if(0==theContext->mTransferBuffer[index]){ 
-              printf("\nNull found at buffer[%i] provided by netlib...\n",index); 
-              break; 
-            } 
-          } 
-    #endif 
+    result = pIStream->ReadSegments(ParserWriteFunc, (void*)&pws, aLength, &totalRead);
+    if (NS_FAILED(result)) {
+      return result;
+    }
 
-#if 1
-          static int dump=0;
-          if(dump) {
-            theContext->mTransferBuffer[theNumRead]=0;
-            printf("\n\n-----------------------------------------------------%s\n",theContext->mTransferBuffer);
-          }
-#endif
-
-
-          theContext->mScanner->Append(theContext->mTransferBuffer,theNumRead); 
-
-
-    #ifdef rickgdebug 
-          theContext->mTransferBuffer[theNumRead]=0; 
-          theContext->mTransferBuffer[theNumRead+1]=0; 
-          theContext->mTransferBuffer[theNumRead+2]=0; 
-          cout << theContext->mTransferBuffer; 
-    #endif 
-
-        } //if 
-        theStartPos+=theNumRead; 
-      }//while 
-
-      result=ResumeParse(); 
-    } //if 
-
-  } //if 
+    result=ResumeParse(); 
+  }
 
   return result; 
 } 

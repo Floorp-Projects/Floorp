@@ -41,7 +41,19 @@
 #include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsFileStream.h"
+#include "nsSlidingString.h"
 
+class nsScannerString : public nsSlidingString {
+  public: 
+    nsScannerString(PRUnichar* aStorageStart, 
+                    PRUnichar* aDataEnd, 
+                    PRUnichar* aStorageEnd);
+    virtual void InsertBuffer(PRUnichar* aStorageStart, 
+                              PRUnichar* aDataEnd, 
+                              PRUnichar* aStorageEnd);
+    virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
+                                  PRUnichar aChar);
+};
 
 class nsScanner {
   public:
@@ -102,16 +114,9 @@ class nsScanner {
        *  @param   ch is the char to accept new value
        *  @return  error code reflecting read status
        */
-      nsresult Peek(PRUnichar& ch);
+      nsresult Peek(PRUnichar& ch, PRUint32 aOffset=0);
 
-      /**
-       *  Push the given char back onto the scanner
-       *  
-       *  @update  gess 3/25/98
-       *  @param   character to be pushed
-       *  @return  error code
-       */
-      nsresult PutBack(PRUnichar ch);
+      nsresult Peek(nsAWritableString& aStr, PRInt32 aNumChars);
 
       /**
        *  Skip over chars as long as they're in aSkipSet
@@ -175,10 +180,17 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult GetIdentifier(nsSubsumeStr& aString,PRBool allowPunct=PR_FALSE);
+      nsresult GetIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
       nsresult ReadIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
+      nsresult ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
+                              nsReadingIterator<PRUnichar>& aEnd,
+                              PRBool allowPunct=PR_FALSE);
       nsresult ReadNumber(nsString& aString);
+      nsresult ReadNumber(nsReadingIterator<PRUnichar>& aStart, 
+                          nsReadingIterator<PRUnichar>& aEnd);
       nsresult ReadWhitespace(nsString& aString);
+      nsresult ReadWhitespace(nsReadingIterator<PRUnichar>& aStart, 
+                              nsReadingIterator<PRUnichar>& aEnd);
 
       /**
        *  Consume characters until you find the terminal char
@@ -204,6 +216,8 @@ class nsScanner {
       nsresult ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal);
       nsresult ReadUntil(nsString& aString,nsCString& aTermSet,PRBool addTerminal);
       nsresult ReadUntil(nsString& aString,const char* aTermSet,PRBool addTerminal);
+      nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd, nsString& aTerminalSet,PRBool addTerminal);
+
 
       /**
        *  Consume characters while they're members of anInputSet
@@ -225,7 +239,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRUint32 Mark(PRInt32 anIndex=-1);
+      void Mark(void);
 
       /**
        *  Resets current offset position of input stream to marked position. 
@@ -237,7 +251,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRUint32 RewindToMark(void);
+      void RewindToMark(void);
 
 
       /**
@@ -266,17 +280,6 @@ class nsScanner {
        *  @return  
        */
       PRBool Append(const char* aBuffer, PRUint32 aLen);
-
-      PRBool Append(const PRUnichar* aBuffer, PRUint32 aLen);
-
-      /**
-       *  
-       *  
-       *  @update  gess 5/12/98
-       *  @param   
-       *  @return  
-       */
-      nsString& GetBuffer(void);
 
       /**
        *  Call this to copy bytes out of the scanner that have not yet been consumed
@@ -310,6 +313,15 @@ class nsScanner {
        */
       nsresult SetDocumentCharset(const nsString& aCharset, nsCharsetSource aSource);
 
+      void BindSubstring(nsSlidingSubstring& aSubstring, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd);
+      void CurrentPosition(nsReadingIterator<PRUnichar>& aPosition);
+      void EndReading(nsReadingIterator<PRUnichar>& aPosition);
+      void SetPosition(nsReadingIterator<PRUnichar>& aPosition,
+                       PRBool aTruncate = PR_FALSE,
+                       PRBool aReverse = PR_FALSE);
+      void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
+                            PRUnichar aChar);
+
       /**
        * Internal method used to cause the internal buffer to
        * be filled with data. 
@@ -319,7 +331,6 @@ class nsScanner {
       PRBool    IsIncremental(void) {return mIncremental;}
       void      SetIncremental(PRBool anIncrValue) {mIncremental=anIncrValue;}
 
-      PRUint32  GetOffset(void) {return mOffset;}
       PRInt32   GetNewlinesSkipped(void) { return mNewlinesSkipped; }
 
   protected:
@@ -335,18 +346,24 @@ class nsScanner {
        */
       nsresult FillBuffer(void);
 
+      void AppendToBuffer(PRUnichar* aStorageStart, 
+                          PRUnichar* aDataEnd, 
+                          PRUnichar* aStorageEnd);
+
       nsInputStream*  mInputStream;
-      nsString        mBuffer;
+      nsScannerString*             mSlidingBuffer;
+      nsReadingIterator<PRUnichar> mCurrentPosition; // The position we will next read from in the scanner buffer
+      nsReadingIterator<PRUnichar> mMarkPosition;    // The position last marked (we may rewind to here)
+      nsReadingIterator<PRUnichar> mEndPosition;     // The current end of the scanner buffer
       nsString        mFilename;
-      PRUint32        mOffset;
-      PRUint32        mMarkPos;
+      PRUint32        mCountRemaining; // The number of bytes still to be read
+                                       // from the scanner buffer
       PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
       nsCharsetSource mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
-      nsString        mUnicodeXferBuf;
       PRInt32         mNewlinesSkipped;
 };
 

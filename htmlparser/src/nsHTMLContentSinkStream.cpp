@@ -272,7 +272,7 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
  * @param aString - the string to write.
  * @return The number of characters written.
  */
-PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
+PRInt32 nsHTMLContentSinkStream::Write(const nsAReadableString& aString)
 {
   if (mBodyOnly && !mInBody)
     return 0;
@@ -289,7 +289,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
     {
       nsresult res;
       PRUnichar *encodedBuffer = nsnull;
-      res = mEntityConverter->ConvertToEntities(aString.GetUnicode(),
+      res = mEntityConverter->ConvertToEntities(nsPromiseFlatString(aString),
                                                 nsIEntityConverter::html40Latin1,
                                                 &encodedBuffer);
       if (NS_SUCCEEDED(res) && encodedBuffer)
@@ -328,7 +328,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
   {
     // Call the converter to convert to the target charset.
     // Convert() takes a char* output param even though it's writing unicode.
-    res = mCharsetEncoder->Convert(aString.GetUnicode(), &encodedBuffer);
+    res = mCharsetEncoder->Convert(nsPromiseFlatString(aString), &encodedBuffer);
     if (NS_SUCCEEDED(res) && encodedBuffer)
     {
       charsWritten = nsCRT::strlen(encodedBuffer);
@@ -339,7 +339,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
     // If it didn't work, just write the unicode
     else
     {
-      const PRUnichar* unicode = aString.GetUnicode();
+      const PRUnichar* unicode = nsPromiseFlatString(aString);
       charsWritten = aString.Length();
       out.write(unicode, charsWritten);
     }
@@ -348,7 +348,7 @@ PRInt32 nsHTMLContentSinkStream::Write(const nsString& aString)
   // If we couldn't get an encoder, just write the unicode
   else
   {
-    const PRUnichar* unicode = aString.GetUnicode();
+    const PRUnichar* unicode = nsPromiseFlatString(aString);
     charsWritten = aString.Length();
     out.write(unicode, charsWritten);
   }
@@ -399,7 +399,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
   if(theCount) {
     int i=0;
     for(i=0;i<theCount;i++){
-      nsString& key = (nsString&)aNode.GetKeyAt(i);
+      nsAutoString key(aNode.GetKeyAt(i));
       
       // See if there's an attribute:
       // note that we copy here, because we're going to have to trim quotes.
@@ -591,7 +591,7 @@ PRBool nsHTMLContentSinkStream::IsDirty(const nsIParserNode& aNode)
   {
     for(int i=0; i < theCount; i++)
     {
-      nsString& key = (nsString&)aNode.GetKeyAt(i);
+      const nsAReadableString& key = (nsString&)aNode.GetKeyAt(i);
       if (key.Equals(gMozDirty))
         return PR_TRUE;
     }
@@ -614,7 +614,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
   PRBool            isDirty = IsDirty(aNode);
 
-  const nsString&   name = aNode.GetText();
+  const nsAReadableString&   name = aNode.GetText();
   nsAutoString      tagName;
 
   if (tag == eHTMLTag_body)
@@ -722,7 +722,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 #ifdef DEBUG_prettyprint
   if (isDirty)
     printf("AddEndTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
-           aNode.GetText().ToNewCString(),
+           (const char*)NS_ConvertUCS2toUTF8(aNode.GetText()),
            BreakBeforeOpen(tag),
            BreakAfterOpen(tag),
            BreakBeforeClose(tag),
@@ -845,7 +845,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_entity)
   {
     Write('&');
-    const nsString& entity = aNode.GetText();
+    const nsAReadableString& entity = aNode.GetText();
     mColPos += Write(entity) + 1;
     // Don't write the semicolon;
     // rely on the DTD to include it if one is wanted.
@@ -857,7 +857,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
         && (mFlags & nsIDocumentEncoder::OutputSelectionOnly))
       return NS_OK;
 
-    const nsString& text = aNode.GetText();
+    const nsAReadableString& text = aNode.GetText();
     if (mPreLevel > 0)
     {
       Write(text);
@@ -884,7 +884,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   {
     if (!mDoFormat || mPreLevel > 0)
     {
-      const nsString& text = aNode.GetText();
+      const nsAReadableString& text = aNode.GetText();
       Write(text);
       mColPos += text.Length();
     }
@@ -904,15 +904,14 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
 // See if the string has any lines longer than longLineLen:
 // if so, we presume formatting is wonky (e.g. the node has been edited)
 // and we'd better rewrap the whole text node.
-PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
+PRBool nsHTMLContentSinkStream::HasLongLines(const nsAReadableString& text)
 {
   const PRUint32 longLineLen = 128;
-  nsString str = text;
   PRUint32 start=0;
   PRUint32 theLen=text.Length();
   for (start = 0; start < theLen; )
   {
-    PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
+    PRInt32 eol = text.FindChar('\n', start);
     if (eol < 0) eol = text.Length();
     if ((PRUint32)(eol - start) > longLineLen)
       return PR_TRUE;
@@ -921,7 +920,7 @@ PRBool nsHTMLContentSinkStream::HasLongLines(const nsString& text)
   return PR_FALSE;
 }
 
-void nsHTMLContentSinkStream::WriteWrapped(const nsString& text)
+void nsHTMLContentSinkStream::WriteWrapped(const nsAReadableString& text)
 {
       // 1. Determine the length of the input string
   PRInt32 length = text.Length();
@@ -935,7 +934,7 @@ void nsHTMLContentSinkStream::WriteWrapped(const nsString& text)
   }
   else
   {
-    nsString  str = text;
+    nsAutoString  str(text);
     PRBool    done = PR_FALSE;
     PRInt32   indx = 0;
     PRInt32   offset = mColPos;
@@ -1051,16 +1050,16 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
       PRInt32 count=aNode.GetAttributeCount();
       for(PRInt32 i=0;i<count;i++)
       {
-        const nsString& key=aNode.GetKeyAt(i);
+        const nsAReadableString& key=aNode.GetKeyAt(i);
 
-        if (key.EqualsWithConversion("charset"))
+        if (key.Equals(NS_LITERAL_STRING("charset")))
         {
           const nsString& value=aNode.GetValueAt(i);
           if (mCharsetOverride.IsEmpty())
             mCharsetOverride.Assign(value);
           InitEncoders();
         }
-        else if (key.EqualsWithConversion("uri"))
+        else if (key.Equals(NS_LITERAL_STRING("uri")))
         {
           nsAutoString uristring; uristring.Assign(aNode.GetValueAt(i));
 

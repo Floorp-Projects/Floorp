@@ -229,12 +229,41 @@ ToNewUnicode( const nsAReadableCString& aSource )
 
 NS_COM
 PRUnichar*
-CopyUnicodeTo( const nsAReadableString& aSource, PRUnichar* aDest, PRUint32 aLength )
+CopyUnicodeTo( const nsAReadableString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, PRUint32 aLength )
   {
     nsReadingIterator<PRUnichar> fromBegin, fromEnd;
-    PRUnichar* toBegin = aDest;
-    copy_string(aSource.BeginReading(fromBegin), aSource.BeginReading(fromEnd).advance( PRInt32(aLength) ), toBegin);
+    PRUnichar* toBegin = aDest;    
+    copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), toBegin);
     return aDest;
+  }
+
+NS_COM 
+void 
+CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
+               const nsReadingIterator<PRUnichar>& aSrcEnd,
+               nsAWritableString& aDest )
+  {
+    nsWritingIterator<PRUnichar> writer;
+    aDest.SetLength(Distance(aSrcStart, aSrcEnd));
+    aDest.BeginWriting(writer);
+    nsReadingIterator<PRUnichar> fromBegin(aSrcStart);
+    
+    copy_string(fromBegin, aSrcEnd, writer);
+  }
+
+NS_COM 
+void 
+AppendUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
+                 const nsReadingIterator<PRUnichar>& aSrcEnd,
+                 nsAWritableString& aDest )
+  {
+    nsWritingIterator<PRUnichar> writer;
+    PRUint32 oldLength = aDest.Length();
+    aDest.SetLength(oldLength + Distance(aSrcStart, aSrcEnd));
+    aDest.BeginWriting(writer).advance(oldLength);
+    nsReadingIterator<PRUnichar> fromBegin(aSrcStart);
+    
+    copy_string(fromBegin, aSrcEnd, writer);
   }
 
 NS_COM
@@ -341,3 +370,224 @@ ToLowerCase( nsAWritableCString& aCString )
     ConvertToLowerCase<char> converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
+
+
+template <class CharT>
+inline // probably wishful thinking
+PRBool
+FindInReadable_Impl( const basic_nsAReadableString<CharT>& aPattern,
+                     nsReadingIterator<CharT>& aSearchStart,
+                     nsReadingIterator<CharT>& aSearchEnd )
+  {
+    PRBool found_it = PR_FALSE;
+
+      // only bother searching at all if we're given a non-empty range to search
+    if ( aSearchStart != aSearchEnd )
+      {
+        nsReadingIterator<CharT> aPatternStart, aPatternEnd;
+        aPattern.BeginReading(aPatternStart);
+        aPattern.EndReading(aPatternEnd);
+
+          // outer loop keeps searching till we find it or run out of string to search
+        while ( !found_it )
+          {
+              // fast inner loop (that's what it's called, not what it is) looks for a potential match
+            while ( aSearchStart != aSearchEnd && *aPatternStart != *aSearchStart )
+              ++aSearchStart;
+
+              // if we broke out of the `fast' loop because we're out of string ... we're done: no match
+            if ( aSearchStart == aSearchEnd )
+              break;
+
+              // otherwise, we're at a potential match, let's see if we really hit one
+            nsReadingIterator<CharT> testPattern(aPatternStart);
+            nsReadingIterator<CharT> testSearch(aSearchStart);
+
+              // slow inner loop verifies the potential match (found by the `fast' loop) at the current position
+            for(;;)
+              {
+                  // we already compared the first character in the outer loop,
+                  //  so we'll advance before the next comparison
+                ++testPattern;
+                ++testSearch;
+
+                  // if we verified all the way to the end of the pattern, then we found it!
+                if ( testPattern == aPatternEnd )
+                  {
+                    found_it = PR_TRUE;
+                    aSearchEnd = testSearch; // return the exact found range through the parameters
+                    break;
+                  }
+
+                  // if we got to end of the string we're searching before we hit the end of the
+                  //  pattern, we'll never find what we're looking for
+                if ( testSearch == aSearchEnd )
+                  {
+                    aSearchStart = aSearchEnd;
+                    break;
+                  }
+
+                  // else if we mismatched ... it's time to advance to the next search position
+                  //  and get back into the `fast' loop
+                if ( *testPattern != *testSearch )
+                  {
+                    ++aSearchStart;
+                    break;
+                  }
+              }
+          }
+      }
+
+    return found_it;
+  }
+
+NS_COM
+PRBool
+FindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+  {
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd);
+  }
+
+NS_COM
+PRBool
+FindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+  {
+    return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd);
+  }
+
+  /**
+   * This implementation is simple, but does too much work.
+   * It searches the entire string from left to right, and returns the last match found, if any.
+   * This implementation will be replaced when I get |reverse_iterator|s working.
+   */
+template <class CharT>
+inline // probably wishful thinking
+PRBool
+RFindInReadable_Impl( const basic_nsAReadableString<CharT>& aPattern,
+                      nsReadingIterator<CharT>& aSearchStart,
+                      nsReadingIterator<CharT>& aSearchEnd )
+  {
+    PRBool found_it = PR_FALSE;
+
+    nsReadingIterator<CharT> savedSearchEnd(aSearchEnd);
+    nsReadingIterator<CharT> searchStart(aSearchStart), searchEnd(aSearchEnd);
+
+    while ( searchStart != searchEnd )
+      {
+        if ( FindInReadable(aPattern, searchStart, searchEnd) )
+          {
+            found_it = PR_TRUE;
+
+              // this is the best match so far, so remember it
+            aSearchStart = searchStart;
+            aSearchEnd = searchEnd;
+
+              // ...and get ready to search some more
+              //  (it's tempting to set |searchStart=searchEnd| ... but that misses overlapping patterns)
+            ++searchStart;
+            searchEnd = savedSearchEnd;
+          }
+      }
+
+      // if we never found it, return an empty range
+    if ( !found_it )
+      aSearchStart = aSearchEnd;
+
+    return found_it;
+  }
+
+
+NS_COM
+PRBool
+RFindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+  {
+    return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd);
+  }
+
+NS_COM
+PRBool
+RFindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+  {
+    return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd);
+  }
+
+
+
+template <class CharT>
+inline // probably wishful thinking
+PRBool
+FindCharInReadable_Impl( CharT aChar,
+                         nsReadingIterator<CharT>& aSearchStart,
+                         nsReadingIterator<CharT>& aSearchEnd )
+  {
+    while ( aSearchStart != aSearchEnd )
+      {
+        PRInt32 fragmentLength;
+        if ( SameFragment(aSearchStart, aSearchEnd) ) 
+          fragmentLength = aSearchEnd.get() - aSearchStart.get();
+        else
+          fragmentLength = aSearchStart.size_forward();
+
+        const CharT* charFoundAt = nsCharTraits<CharT>::find(aSearchStart.get(), fragmentLength, aChar);
+        if ( charFoundAt ) {
+          aSearchStart.advance( charFoundAt - aSearchStart.get() );
+          return PR_TRUE;
+        }
+
+        aSearchStart.advance(fragmentLength);
+      }
+
+    return PR_FALSE;
+  }
+
+
+NS_COM 
+PRBool 
+FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>& aSearchStart, nsReadingIterator<PRUnichar>& aSearchEnd )
+  {
+    return FindCharInReadable_Impl(aChar, aSearchStart, aSearchEnd);
+  }
+
+NS_COM 
+PRBool 
+FindCharInReadable( char aChar, nsReadingIterator<char>& aSearchStart, nsReadingIterator<char>& aSearchEnd )
+  {
+    return FindCharInReadable_Impl(aChar, aSearchStart, aSearchEnd);
+  } 
+
+template <class CharT>
+PRUint32 
+CountCharInReadable_Impl( const basic_nsAReadableString<CharT>& aStr,
+                          CharT aChar )
+{
+  PRUint32 count = 0;
+  nsReadingIterator<CharT> begin, end;
+  
+  aStr.BeginReading(begin);
+  aStr.EndReading(end);
+  
+  while (begin != end) {
+    if (*begin == aChar) {
+      count++;
+    }
+    begin++;
+  }
+
+  return count;
+}
+
+NS_COM 
+PRUint32 
+CountCharInReadable( const nsAReadableString& aStr,
+                     PRUnichar aChar )
+{
+  return CountCharInReadable_Impl(aStr, aChar);
+}
+
+NS_COM 
+PRUint32 
+CountCharInReadable( const nsAReadableCString& aStr,
+                     char aChar )
+{
+  return CountCharInReadable_Impl(aStr, aChar);
+}

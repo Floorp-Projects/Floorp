@@ -481,7 +481,6 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
 
     nsresult  DoFragment(PRBool aFlag);
 
-    static void ReleaseTable(void);
 
 protected:
 

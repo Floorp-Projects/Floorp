@@ -164,13 +164,13 @@ protected:
 
     NS_IMETHOD InitEncoders();
     
-    PRInt32 Write(const nsString& aString);   // returns # chars written
+    PRInt32 Write(const nsAReadableString& aString);   // returns # chars written
     void Write(const char* aCharBuffer);
     void Write(char aChar);
 
     // Handle wrapping and conditional wrapping:
-    PRBool HasLongLines(const nsString& text);
-    void WriteWrapped(const nsString& text);
+    PRBool HasLongLines(const nsAReadableString& text);
+    void WriteWrapped(const nsAReadableString& text);
 
     // Is this node "dirty", needing reformatting?
     PRBool IsDirty(const nsIParserNode& aNode);

@@ -32,7 +32,8 @@
 #include "nsHTMLTags.h"
 #include "nsHTMLEntities.h"
 #include "nsCRT.h"
-
+#include "nsReadableUtils.h"
+#include "nsScanner.h"
 
 
 static const char*  gUserdefined = "userdefined";
@@ -41,17 +42,6 @@ static const char*  gUserdefined = "userdefined";
 /**************************************************************
   And now for the token classes...
  **************************************************************/
-
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-CHTMLToken::CHTMLToken(const nsString& aName,eHTMLTags aTag) : CToken(aName) {
-  mTypeID=aTag;
-}
 
 /*
  *  constructor from tag id
@@ -68,35 +58,6 @@ CHTMLToken::~CHTMLToken() {
 
 }
 
-/**
- * Setter method that changes the string value of this token
- * @update	gess5/11/98
- * @param   name is a char* value containing new string value
- */
-void CHTMLToken::SetCStringValue(const char* name){
-  if(name) {
-    mTextValue.AssignWithConversion(name);
-    mTypeID = nsHTMLTags::LookupTag(mTextValue);
-  }
-}
-
-
-/**
- *  This method retrieves the value of this internal string. 
- *  
- *  @update gess 3/25/98
- *  @return nsString reference to internal string value
- */
-nsString& CHTMLToken::GetStringValueXXX(void) {
-
-  if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
-    if(!mTextValue.Length()) {
-      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
-    }
-  }
-  return mTextValue;
-}
-
 /*
  *  constructor from tag id
  *  
@@ -111,41 +72,20 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
   mContainerInfo=eFormUnknown;
 }
 
-/*
- *  constructor from tag id
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-CStartToken::CStartToken(const nsString& aString) : CHTMLToken(aString) {
+CStartToken::CStartToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
   mContainerInfo=eFormUnknown;
+  mTextValue.Assign(aName);
 }
 
-CStartToken::CStartToken(const nsString& aName,eHTMLTags aTag) : CHTMLToken(aName,aTag) {
+CStartToken::CStartToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
   mAttributed=PR_FALSE;
   mEmpty=PR_FALSE;
   mOrigin=-1;
   mContainerInfo=eFormUnknown;
-}
-
-/**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
-  CToken::Reinitialize(aTag,aString);
-  mAttributed=PR_FALSE;
-  mUseCount=1; 
-  mEmpty=PR_FALSE;
-  mOrigin=-1;
-  mTrailingContent.Truncate();
-  mContainerInfo=eFormUnknown;
+  mTextValue.Assign(aName);
 }
 
 nsresult CStartToken::GetIDAttributeAtom(nsIAtom** aResult)
@@ -265,17 +205,15 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
   nsresult result=NS_OK;
-  if(0==aMode) {
-    nsSubsumeStr theSubstr;
-    result=aScanner.GetIdentifier(theSubstr,!aMode);
+  if(1==aMode) {
+    nsAutoString theSubstr;
+    result=aScanner.GetIdentifier(theSubstr,PR_TRUE);
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(theSubstr);
     if(eHTMLTag_userdefined==mTypeID) {
       mTextValue=theSubstr;
     }
   }
   else {
-    mTextValue.Assign(aChar);
-
     //added PR_TRUE to readId() call below to fix bug 46083. The problem was that the tag given
     //was written <title_> but since we didn't respect the '_', we only saw <title>. Then 
     //we searched for end title, which never comes (they give </title_>). 
@@ -301,6 +239,16 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
   out << "<" << buffer;
   if(!mAttributed)
     out << ">";
+}
+
+const nsAReadableString& CStartToken::GetStringValue()
+{
+  if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
+    if(!mTextValue.Length()) {
+      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
+    }
+  }
+  return mTextValue;
 }
 
 /*
@@ -357,18 +305,11 @@ void CStartToken::AppendSource(nsString& anOutputString){
  *  @return  
  */
 CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
-  SetCStringValue(GetTagName(aTag));
 }
 
 
-/*
- *  default constructor for end token
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- char* containing token name
- *  @return  
- */
-CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
+CEndToken::CEndToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
+  mTextValue.Assign(aName);
 }
 
 /*
@@ -377,6 +318,7 @@ CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
+ *  @param   aMode -- 1=HTML; 0=text (or other ML)
  *  @return  error result
  */
 nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
@@ -385,15 +327,41 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) 
    //Stop consuming as soon as you see a space or a '>'.
    //NOTE: We don't Consume the tag attributes here, nor do we eat the ">"
 
-  mTextValue.SetLength(0);
-  nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
+  nsresult result=NS_OK;
+  nsAutoString buffer;
+  PRInt32 offset;
+  if(1==aMode) {
+    nsAutoString theSubstr;
+    result=aScanner.ReadUntil(theSubstr,kGreaterThan,PR_FALSE);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+    
+    offset = theSubstr.FindCharInSet(" \r\n\t\b",0);
+    if (offset != kNotFound) {
+      theSubstr.Left(buffer, offset);
+      mTypeID = nsHTMLTags::LookupTag(buffer);
+    }
+    else {
+      mTypeID = nsHTMLTags::LookupTag(theSubstr);
+    }
 
-  if(NS_OK==result){
-    nsAutoString  buffer;
-    mTextValue.Left(buffer, mTextValue.FindCharInSet(" \r\n\t\b",0));
-    mTypeID= nsHTMLTags::LookupTag(buffer);
-    result=aScanner.GetChar(aChar); //eat the closing '>;
+    if(eHTMLTag_userdefined==mTypeID) {
+      mTextValue=theSubstr;
+    }
+
   }
+  else {
+    mTextValue.SetLength(0);
+    result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
+    if (NS_FAILED(result)) {
+      return result;
+    }
+    mTypeID = eHTMLTag_userdefined;
+  }
+
+  result=aScanner.GetChar(aChar); //eat the closing '>;
+
   return result;
 }
 
@@ -457,6 +425,16 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
   out << "</" << buffer << ">";
 }
 
+const nsAReadableString& CEndToken::GetStringValue()
+{
+  if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
+    if(!mTextValue.Length()) {
+      mTextValue.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag) mTypeID));
+    }
+  }
+  return mTextValue;
+}
+
 /*
  *  
  *  
@@ -466,7 +444,10 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
  */
 void CEndToken::GetSource(nsString& anOutputString){
   anOutputString.AppendWithConversion("</");
-  anOutputString+=mTextValue;
+  if(mTextValue.Length()>0)
+    anOutputString.Append(mTextValue);
+  else
+    anOutputString.AppendWithConversion(GetTagName(mTypeID));
   anOutputString.AppendWithConversion(">");
 }
 
@@ -479,7 +460,10 @@ void CEndToken::GetSource(nsString& anOutputString){
  */
 void CEndToken::AppendSource(nsString& anOutputString){
   anOutputString.AppendWithConversion("</");
-  anOutputString+=mTextValue;
+  if(mTextValue.Length()>0)
+    anOutputString.Append(mTextValue);
+  else
+    anOutputString.AppendWithConversion(GetTagName(mTypeID));
   anOutputString.AppendWithConversion(">");
 }
 
@@ -501,8 +485,8 @@ CTextToken::CTextToken() : CHTMLToken(eHTMLTag_text) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_text;
+CTextToken::CTextToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_text) {
+  mTextValue.Rebind(aName);
 }
 
 /*
@@ -527,6 +511,10 @@ PRInt32 CTextToken::GetTokenType(void) {
   return eToken_text;
 }
 
+PRInt32 CTextToken::GetTextLength(void) {
+  return mTextValue.Length();
+}
+
 /*
  *  Consume as much clear text from scanner as possible.
  *
@@ -539,9 +527,17 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
   static nsString theTerminals = NS_ConvertToString("\n\r&<",4);  
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
+  nsReadingIterator<PRUnichar> origin, start, end;
+  
+  // Start scanning after the first character, because we know it to
+  // be part of this text token (we wouldn't have come here if it weren't)
+  aScanner.CurrentPosition(origin);
+  start = origin;
+  start++;
+  aScanner.SetPosition(start);
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE);
+    result=aScanner.ReadUntil(start, end, theTerminals,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
 
@@ -553,31 +549,21 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
           case kCR:
             // result=aScanner.GetChar(aChar);       
             if(kLF==theNextChar) {
+              // If the "\r" is followed by a "\n", don't replace it and 
+              // let it be ignored by the layout system
+              end += 2;
               result=aScanner.GetChar(theNextChar);
             }
-            else if(kCR==theNextChar) {
-              result=aScanner.GetChar(theNextChar);
-              result=aScanner.Peek(theNextChar);    //then see what's next.
-              if(kLF==theNextChar) {
-                result=aScanner.GetChar(theNextChar);
-              }
-              mTextValue.AppendWithConversion("\n");
-              mNewlineCount++;
+            else {
+              // If it standalone, replace the "\r" with a "\n" so that 
+              // it will be considered by the layout system
+              aScanner.ReplaceCharacter(end, kLF);
+              end++;
             }
-            mTextValue.AppendWithConversion("\n");
             mNewlineCount++;
             break;
           case kLF:
-            if((kLF==theNextChar) || (kCR==theNextChar)) {
-              result=aScanner.GetChar(theNextChar);
-              mTextValue.AppendWithConversion("\n");
-              mNewlineCount++;
-            }
-            mTextValue.AppendWithConversion("\n");
-            mNewlineCount++;
-            break;
-          default:
-            mTextValue.AppendWithConversion("\n");
+            end++;
             mNewlineCount++;
             break;
         } //switch
@@ -585,6 +571,9 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
       else done=PR_TRUE;
     }
   }
+  
+  aScanner.BindSubstring(mTextValue, origin, end);
+
   return result;
 }
 
@@ -599,15 +588,15 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
                                   nsString& aTerminalString,PRInt32 aMode,PRBool& aFlushTokens){
   nsresult      result=NS_OK;
-  PRInt32       theTermStrPos=0;;
-  nsString&     theBuffer=aScanner.GetBuffer();
-  PRInt32       theStartOffset=aScanner.GetOffset();
-  PRInt32       theCurrOffset=theStartOffset;  
-  PRInt32       theStartCommentPos=kNotFound;
-  PRInt32       theAltTermStrPos=kNotFound;
+  nsReadingIterator<PRUnichar> theStartOffset, theCurrOffset, theTermStrPos, theStartCommentPos, theAltTermStrPos, endPos;
   PRBool        done=PR_FALSE;
   PRBool        theLastIteration=PR_FALSE;
   PRInt32       termStrLen=aTerminalString.Length();
+
+  aScanner.CurrentPosition(theStartOffset);
+  theCurrOffset = theStartOffset;
+  aScanner.EndReading(endPos);
+  theTermStrPos = theStartCommentPos = theAltTermStrPos = endPos;
 
   // ALGORITHM: *** The performance is based on correctness of the document ***
   // 1. Look for a '<' character.  This could be
@@ -630,74 +619,96 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   // When is the disaster enabled?
   // a) when the buffer runs out ot data.
   // b) when the terminal string is not found.
-  PRBool disaster=PR_FALSE; 
-  while(result==NS_OK && !done) {
-    theCurrOffset=theBuffer.FindChar(kLessThan,PR_TRUE,theCurrOffset);
-    if(-1<theCurrOffset) {
-      PRInt32 tempOffset=theCurrOffset;
+  PRBool disaster = PR_FALSE; 
+  while((result == NS_OK) && !done) {
+    if (FindCharInReadable(PRUnichar(kLessThan), theCurrOffset, endPos)) {
+      nsReadingIterator<PRUnichar> tempOffset = theCurrOffset;
       while(1) {
-        theTermStrPos=kNotFound;
-        tempOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,tempOffset);
-        if(tempOffset>-1) {
-          //theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,termStrLen+2);
-          theTermStrPos=theBuffer.RFind(aTerminalString,PR_TRUE,tempOffset,tempOffset-(theCurrOffset-2));  //bug43513...
-          if(theTermStrPos>-1) break;
-          tempOffset++;
+        if (FindCharInReadable(PRUnichar(kGreaterThan), tempOffset, endPos)) {
+          
+          // Make a copy of the (presumed) end tag and 
+          // do a case-insensitive comparision
+          nsAutoString str;
+
+          nsReadingIterator<PRUnichar> start(tempOffset), end(tempOffset);
+          start.advance(-termStrLen);
+
+          CopyUnicodeTo(start, end, str);
+
+          if (str.EqualsIgnoreCase(aTerminalString)) {
+            theTermStrPos = tempOffset;
+            theTermStrPos.advance(-termStrLen);
+            break;
+          }
+          tempOffset.advance(1);
         }
-        else break;
+        else {
+          break;
+        }
       }
-      //theTermStrPos=theBuffer.Find(aTerminalString,PR_TRUE,theCurrOffset);
-      if(theTermStrPos>kNotFound) {
-        if((aMode!=eDTDMode_strict) && (aMode!=eDTDMode_transitional) && !theLastIteration) {
-          if(!aIgnoreComments) {
-            theCurrOffset=theBuffer.Find("<!--",PR_TRUE,theCurrOffset,5);
-            if(theStartCommentPos==kNotFound && theCurrOffset>kNotFound) {
-              theStartCommentPos=theCurrOffset;
-            }
-            if(theStartCommentPos>kNotFound) {
-              // Search for --> between <!-- and </TERMINALSTRING>.
-              theCurrOffset=theBuffer.RFind("-->",PR_TRUE,theTermStrPos,theTermStrPos-theStartCommentPos);
-              if(theCurrOffset==kNotFound) {
-                // If you're here it means that we have a bogus terminal string.
-                theAltTermStrPos=(theAltTermStrPos>-1)? theAltTermStrPos:theTermStrPos; // This could be helpful in case we hit the rock bottom.
-                theCurrOffset=theTermStrPos+termStrLen; // We did not find '-->' so keep searching for terminal string.
-                continue;
-              }        
-            }
+
+      if (theTermStrPos != endPos) {
+        if((aMode != eDTDMode_strict) && (aMode != eDTDMode_transitional) && 
+           !theLastIteration && !aIgnoreComments) {
+          nsReadingIterator<PRUnichar> endComment(theCurrOffset);
+          endComment += 5;
+          if ((theStartCommentPos == endPos) && 
+              FindInReadable(NS_LITERAL_STRING("<!--"), theCurrOffset, endComment)) {
+            theStartCommentPos = theCurrOffset;
           }
             
-          PRInt32 thePos=theBuffer.FindChar(kGreaterThan,PR_TRUE,theTermStrPos,20);          
-          if(thePos>kNotFound && thePos>theTermStrPos+termStrLen) {
-              termStrLen +=(thePos-(theTermStrPos+termStrLen));
+          if (theStartCommentPos != endPos) {
+            // Search for --> between <!-- and </TERMINALSTRING>.
+            theCurrOffset = theStartCommentPos;
+            nsReadingIterator<PRUnichar> terminal(theTermStrPos);
+            if (!RFindInReadable(NS_LITERAL_STRING("-->"), 
+                                 theCurrOffset, terminal)) {
+              // If you're here it means that we have a bogus terminal string.
+              
+              // Even though it is bogus, the position of the terminal string
+              // could be helpful in case we hit the rock bottom.
+              if (theAltTermStrPos != endPos) {
+                theAltTermStrPos = theTermStrPos;
+              }
+              
+              // We did not find '-->' so keep searching for terminal string.
+              theCurrOffset = theTermStrPos;
+              theCurrOffset.advance(termStrLen);
+              continue;
+            }
           }
         }
-      
+
         disaster=PR_FALSE;
-        theCurrOffset=theTermStrPos; 
-        theBuffer.Mid(aTerminalString,theTermStrPos+2,termStrLen-2);
-        PRUnichar ch=theBuffer.CharAt(theTermStrPos+termStrLen);
-        theTermStrPos=(ch==kGreaterThan)? theTermStrPos+termStrLen:kNotFound;
-        if(theTermStrPos>kNotFound) {
-          theBuffer.Mid(mTextValue,theStartOffset,theCurrOffset-theStartOffset);
-          aScanner.Mark(theTermStrPos+1);   
-          aFlushTokens=PR_TRUE; // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
-        }
-        done=PR_TRUE;
+
+        aScanner.BindSubstring(mTextValue, theStartOffset, theTermStrPos);
+
+        theTermStrPos.advance(termStrLen+1);
+        aScanner.SetPosition(theTermStrPos);   
+
+        // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
+        aFlushTokens=PR_TRUE; 
+        done = PR_TRUE;
       }
-      else  disaster=PR_TRUE;
+      else {
+        disaster = PR_TRUE;
+      }
     }
-    else disaster=PR_TRUE;
+    else {
+      disaster = PR_TRUE;
+    }
+
 
     if(disaster) {
       if(!aScanner.IsIncremental()) {
-        if(theAltTermStrPos>kNotFound) {
+        if(theAltTermStrPos != endPos) {
           // If you're here it means..we hit the rock bottom and therefore switch to plan B.
-          theCurrOffset=theAltTermStrPos;
-          theLastIteration=PR_TRUE;
+          theCurrOffset = theAltTermStrPos;
+          theLastIteration = PR_TRUE;
         }
         else {
-          aTerminalString.Cut(0,2); // Do this to fix Bug. 35456
-          done=PR_TRUE;
+          aTerminalString.Cut(0,2); 
+          done = PR_TRUE; // Do this to fix Bug. 35456
         }
       }
       else
@@ -705,6 +716,26 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     }
   }
   return result; 
+}
+
+void CTextToken::CopyTo(nsAWritableString& aStr)
+{
+  aStr.Assign(mTextValue);
+}
+
+const nsAReadableString& CTextToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
+void CTextToken::Bind(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd)
+{
+  aScanner->BindSubstring(mTextValue, aStart, aEnd);
+}
+
+void CTextToken::Bind(const nsAReadableString& aStr)
+{
+  mTextValue.Rebind(aStr);
 }
 
 /*
@@ -725,8 +756,8 @@ CCDATASectionToken::CCDATASectionToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CCDATASectionToken::CCDATASectionToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_unknown;
+CCDATASectionToken::CCDATASectionToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+  mTextValue.Assign(aName);
 }
 
 /*
@@ -806,6 +837,11 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
   return result;
 }
 
+const nsAReadableString& CCDATASectionToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 
 /*
  *  Default constructor
@@ -825,8 +861,8 @@ CCommentToken::CCommentToken() : CHTMLToken(eHTMLTag_comment) {
  *  @param   
  *  @return  
  */
-CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_comment;
+CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_comment) {
+  mTextValue.Assign(aName);
 }
 
 /*
@@ -918,11 +954,11 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
           per spec (But then, neither does IE or Nav).
    *********************************************************/
 
-  PRInt32       theBestAltPos=kNotFound;
-  nsString&     theBuffer=aScanner.GetBuffer();
-  PRInt32       theStartOffset=aScanner.GetOffset();
-  PRInt32       theCurrOffset=theStartOffset;
+  nsReadingIterator<PRUnichar> theStartOffset, theCurrOffset, theBestAltPos, endPos;
+  aScanner.EndReading(endPos);
+  theBestAltPos = endPos;
 
+  aScanner.CurrentPosition(theStartOffset);
   result=aScanner.GetChar(aChar);
   if(NS_OK==result) {
     if(kMinus==aChar) {
@@ -930,22 +966,26 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
       if(NS_OK==result) {
         if(kMinus==aChar) {
           //in this case, we're reading a long-form comment <-- xxx -->
-          
+
+          theCurrOffset = theStartOffset;
+        
           while((NS_OK==result)) {
-            theCurrOffset=theBuffer.FindChar(kGreaterThan,PR_TRUE,theCurrOffset);
-            if(kNotFound!=theCurrOffset) {
+            if (FindCharInReadable(PRUnichar(kGreaterThan), theCurrOffset, endPos)) {
               theCurrOffset++;
-              aChar=theBuffer[theCurrOffset-3];
+              nsReadingIterator<PRUnichar> temp = theCurrOffset;
+              temp.advance(-3);
+              aChar=*temp;
               if(kMinus==aChar) {
-                aChar=theBuffer[theCurrOffset-2];
+                temp++;
+                aChar=*temp;
                 if(kMinus==aChar) {
-                  theStartOffset=theStartOffset-2; // Include "<!" also..
-                  theBuffer.Mid(aString,theStartOffset,theCurrOffset-theStartOffset);
-                  aScanner.Mark(theCurrOffset);
+                  theStartOffset -= 2; // Include "<!" also..
+                  CopyUnicodeTo(theStartOffset, theCurrOffset, aString);
+                  aScanner.SetPosition(theCurrOffset);
                   return result; // We have found the dflt end comment delimiter ("-->")
                 }
               }
-              if(kNotFound==theBestAltPos) {
+              if(theBestAltPos == endPos) {
                 // If we did not find the dflt then assume that '>' is the end comment
                 // until we find '-->'. Nav. Compatibility -- Ref: Bug# 24006
                 theBestAltPos=theCurrOffset;
@@ -955,16 +995,16 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
               result=kEOF;
             }
           } //while
-          if((kNotFound==theCurrOffset) && (!aScanner.IsIncremental())) {
+          if((endPos==theCurrOffset) && (!aScanner.IsIncremental())) {
             //if you're here, then we're in a special state. 
             //The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
             //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
             //If so, rewind just pass than, and use everything up to that point as your comment.
             //If not, the document has no end comment and should be treated as one big comment.
-            if(kNotFound<theBestAltPos) {
-              theStartOffset=theStartOffset-2;// Include "<!" also..
-              theBuffer.Mid(aString,theStartOffset,theBestAltPos-theStartOffset);
-              aScanner.Mark(theBestAltPos);
+            if(endPos != theBestAltPos) {
+              theStartOffset -= 2;// Include "<!" also..
+              CopyUnicodeTo(theStartOffset, theBestAltPos, aString);
+              aScanner.SetPosition(theBestAltPos);
               result=NS_OK;
             }
           }
@@ -1013,6 +1053,10 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
   return result;
 }
 
+const nsAReadableString& CCommentToken::GetStringValue(void)
+{
+  return mTextValue;
+}
 
 /* 
  *  
@@ -1048,17 +1092,6 @@ CNewlineToken::CNewlineToken() : CHTMLToken(eHTMLTag_newline) {
 
 
 /*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string value to init token name with
- *  @return  
- */
-CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_newline;
-}
-
-/*
  *  
  *  
  *  @update  gess 3/25/98
@@ -1080,19 +1113,29 @@ PRInt32 CNewlineToken::GetTokenType(void) {
   return eToken_newline;
 }
 
+
+static nsSlidingSubstring* gNewlineStr;
+void CNewlineToken::AllocNewline()
+{
+  gNewlineStr = new nsSlidingSubstring(NS_LITERAL_STRING("\n"));
+}
+
+void CNewlineToken::FreeNewline()
+{
+  if (gNewlineStr) {
+    delete gNewlineStr;
+    gNewlineStr = nsnull;
+  }
+}
+
 /**
  *  This method retrieves the value of this internal string. 
  *  
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
  */
-nsString& CNewlineToken::GetStringValueXXX(void) {
-  static nsString* theStr=0;
-  if(!theStr) {
-    theStr=new nsString;
-    theStr->AssignWithConversion("\n");
-  }
-  return *theStr;
+const nsAReadableString& CNewlineToken::GetStringValue(void) {
+  return *gNewlineStr;
 }
 
 /*
@@ -1104,12 +1147,6 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
  *  @return  error result
  */
 nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
-
-#if 1
-  mTextValue.Assign(kNewLine);  //This is what I THINK we should be doing.
-#else
-  mTextValue=aChar;
-#endif
 
 /*******************************************************************
 
@@ -1129,7 +1166,6 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMo
       case kNewLine:
         if(kCR==theChar) {
           result=aScanner.GetChar(theChar);
-          mTextValue+=theChar;
         }
         break;
       case kCR: 
@@ -1164,8 +1200,8 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),  
-  mTextKey() {
+CAttributeToken::CAttributeToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+  mTextValue.Assign(aName);
   mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
 }
@@ -1178,21 +1214,9 @@ CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CAttributeToken::CAttributeToken(const nsString& aKey, const nsString& aName) : CHTMLToken(aName) {
-  mTextKey = aKey;
-  mLastAttribute=PR_FALSE;
-  mHasEqualWithoutValue=PR_FALSE;
-}
-
-/**
- * 
- * @update	gess8/4/98
- * @param 
- * @return
- */
-void CAttributeToken::Reinitialize(PRInt32 aTag, const nsString& aString){
-  CHTMLToken::Reinitialize(aTag,aString);
-  mTextKey.Truncate();
+CAttributeToken::CAttributeToken(const nsAReadableString& aKey, const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+  mTextValue.Assign(aName);
+  mTextKey.Rebind(aKey);
   mLastAttribute=PR_FALSE;
   mHasEqualWithoutValue=PR_FALSE;
 }
@@ -1229,14 +1253,28 @@ PRInt32 CAttributeToken::GetTokenType(void) {
 void CAttributeToken::SanitizeKey() {
   PRInt32   length=mTextKey.Length();
   if(length > 0) {
-    PRUnichar theChar=mTextKey.Last();
-    while(!nsCRT::IsAsciiAlpha(theChar) && !nsCRT::IsAsciiDigit(theChar)) {
-      mTextKey.Truncate(length-1);
-      length = mTextKey.Length();
-      if(length <= 0) break;
-      theChar = mTextKey.Last();
+    nsReadingIterator<PRUnichar> iter, begin, end;
+    mTextKey.BeginReading(begin);
+    mTextKey.EndReading(end);
+    iter = end;
+
+    // Look for the first legal character starting from
+    // the end of the string
+    do {
+      --iter;
+    } while (!nsCRT::IsAsciiAlpha(*iter) && 
+             !nsCRT::IsAsciiDigit(*iter) && 
+             (iter != begin));
+    
+    // If there were any illegal characters, just copy out the
+    // legal part
+    if (iter != --end) {
+      nsAutoString str;
+      CopyUnicodeTo(begin, iter, str);
+      mTextKey.Rebind(str);
     }
   }
+
   return;
 }
 
@@ -1249,10 +1287,16 @@ void CAttributeToken::SanitizeKey() {
  */
 void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
   char buffer[200];
-  mTextKey.ToCString(buffer,sizeof(buffer));
-  out << "[" << GetClassName() << "] " << buffer << "=";
+  nsCAutoString str;
+  CopyUCS2toASCII(mTextKey, str);
+  out << "[" << GetClassName() << "] " << str.GetBuffer() << "=";
   mTextValue.ToCString(buffer,sizeof(buffer));
   out << buffer << ": " << mTypeID << nsEndl;
+}
+
+const nsAReadableString& CAttributeToken::GetStringValue(void)
+{
+  return mTextValue;
 }
  
 /*
@@ -1275,10 +1319,10 @@ void CAttributeToken::GetSource(nsString& anOutputString){
  *  @return  nada
  */
 void CAttributeToken::AppendSource(nsString& anOutputString){
-  anOutputString+=mTextKey;
+  anOutputString.Append(mTextKey);
   if(mTextValue.Length() || mHasEqualWithoutValue) 
     anOutputString.AppendWithConversion("=");
-  anOutputString+=mTextValue;
+  anOutputString.Append(mTextValue);
   // anOutputString.AppendWithConversion(";");
 }
 
@@ -1293,7 +1337,8 @@ void CAttributeToken::AppendSource(nsString& anOutputString){
  */
 nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScanner){
   nsresult result=NS_OK;
-  PRInt32 theOffset=aScanner.GetOffset();
+  nsReadingIterator<PRUnichar> theOffset;
+  aScanner.CurrentPosition(theOffset);
 
   switch(aChar) {
     case kQuote:
@@ -1316,7 +1361,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar) {
     if(!aScanner.IsIncremental() && result==kEOF) {
-      aScanner.Mark(theOffset);
+      aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
       aString.Assign(aChar);
       result=kBadStringLiteral; 
     }
@@ -1374,41 +1419,36 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
   //I changed a bit of this method to use aRetainWhitespace so that we do the right
   //thing in viewsource. The ws/cr/lf sequences are now maintained, and viewsource looks good.
 
-  result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextKey) : aScanner.SkipWhitespace();
+  nsReadingIterator<PRUnichar> wsstart, wsend;
+  result=(aRetainWhitespace) ? aScanner.ReadWhitespace(wsstart, wsend) : aScanner.SkipWhitespace();
 
   if(NS_OK==result) {
     result=aScanner.Peek(aChar);
     if(NS_OK==result) {
       
-      if(kQuote==aChar) {               //if you're here, handle quoted key...
-        result=aScanner.GetChar(aChar); //skip the quote character...
-        if(NS_OK==result) {
-          mTextKey.Append(aChar);
-          result=ConsumeQuotedString(aChar,mTextKey,aScanner);
-          if(result==kBadStringLiteral) {
-            // Ref. Bug: 58455
-            // If you're here it means that we have searched all the way thro'
-            // the document for a matching quote and haven't found it. Tell the
-            // caller that we are done searching and proceed with whatever we have.
-            result=NS_OK; 
-          }
-          if(!aRetainWhitespace)
-            mTextKey.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
-        }//if
-      }
-      else if((kHashsign==aChar) || (nsCRT::IsAsciiDigit(aChar))){
-        result=aScanner.ReadNumber(mTextKey);
+      nsReadingIterator<PRUnichar> start, end;
+      if((kHashsign==aChar) || (nsCRT::IsAsciiDigit(aChar))){
+        result=aScanner.ReadNumber(start, end);
       }
       else {
           //If you're here, handle an unquoted key.
-        static nsString theTerminals = NS_ConvertToString("\b\t\n\r \"=>",8);
-        result=aScanner.ReadUntil(mTextKey,theTerminals,PR_FALSE);
+        static nsAutoString theTerminals = NS_ConvertToString("\b\t\n\r \"=>",8);
+        result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
+      }
+      if (!aRetainWhitespace) {
+        aScanner.BindSubstring(mTextKey, start, end);
       }
 
         //now it's time to Consume the (optional) value...
       if(NS_OK==result) {
 
-        result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextKey) : aScanner.SkipWhitespace();
+        if (aRetainWhitespace) {
+          aScanner.ReadWhitespace(start, wsend);
+          aScanner.BindSubstring(mTextKey, wsstart, wsend);
+        }
+        else {
+          aScanner.SkipWhitespace();
+        }
 
         if(NS_OK==result) { 
           result=aScanner.Peek(aChar);       //Skip ahead until you find an equal sign or a '>'...
@@ -1420,9 +1460,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 result=(aRetainWhitespace) ? aScanner.ReadWhitespace(mTextValue) : aScanner.SkipWhitespace();
 
                 if(NS_OK==result) {
-                  result=aScanner.GetChar(aChar);  //and grab the next char.    
+                  result=aScanner.Peek(aChar);  //and grab the next char.    
                   if(NS_OK==result) {
                     if((kQuote==aChar) || (kApostrophe==aChar)) {
+                      aScanner.GetChar(aChar);
                       mTextValue.Append(aChar);
                       result=ConsumeQuotedString(aChar,mTextValue,aScanner);
                       if(result==kBadStringLiteral) {
@@ -1439,11 +1480,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     }
                     else if(kGreaterThan==aChar){      
                       mHasEqualWithoutValue=PR_TRUE;
-                      result=aScanner.PutBack(aChar);
                     }
                     else if(kAmpersand==aChar) {
                       // XXX - Discard script entity for now....except in
                       // view-source
+                      aScanner.GetChar(aChar);
                       PRBool discard=!aRetainWhitespace; 
                       mTextValue.Append(aChar);
                       result=aScanner.GetChar(aChar);
@@ -1454,6 +1495,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                       if(discard) mTextValue.Truncate();
                     }
                     else {
+                      aScanner.GetChar(aChar);
                       mTextValue.Append(aChar);       //it's an alphanum attribute...
                       result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
                     } 
@@ -1500,14 +1542,27 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
  */
 void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
   static char buffer[1000];
-  mTextKey.ToCString(buffer,sizeof(buffer));
-  out << " " << buffer;
+  nsCAutoString str;
+  CopyUCS2toASCII(mTextKey, str);
+  out << " " << str.GetBuffer();
   if(mTextValue.Length()){
     mTextValue.ToCString(buffer,sizeof(buffer));
     out << "=" << buffer;
   }
   if(mLastAttribute)
     out<<">";
+}
+
+void CAttributeToken::SetKey(const nsAReadableString& aKey)
+{
+  mTextKey.Rebind(aKey);
+}
+
+void CAttributeToken::BindKey(nsScanner* aScanner, 
+                              nsReadingIterator<PRUnichar>& aStart, 
+                              nsReadingIterator<PRUnichar>& aEnd)
+{
+  aScanner->BindSubstring(mTextKey, aStart, aEnd);
 }
 
 /*
@@ -1528,8 +1583,8 @@ CWhitespaceToken::CWhitespaceToken() : CHTMLToken(eHTMLTag_whitespace) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_whitespace;
+CWhitespaceToken::CWhitespaceToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_whitespace) {
+  mTextValue.Assign(aName);
 }
 
 /*
@@ -1572,6 +1627,11 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   return result;
 }
 
+const nsAReadableString& CWhitespaceToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 /*
  *  default constructor
  *  
@@ -1589,8 +1649,8 @@ CEntityToken::CEntityToken() : CHTMLToken(eHTMLTag_entity) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
-  mTypeID=eHTMLTag_entity;
+CEntityToken::CEntityToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_entity) {
+  mTextValue.Assign(aName);
 #ifdef VERBOSE_DEBUG
   if(!VerifyEntityTable())  {
     cout<<"Entity table is invalid!" << endl;
@@ -1796,6 +1856,11 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
   delete[] cp;
 }
 
+const nsAReadableString& CEntityToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 /*
  *  
  *  
@@ -1839,7 +1904,8 @@ CScriptToken::CScriptToken() : CHTMLToken(eHTMLTag_script) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CScriptToken::CScriptToken(const nsString& aString) : CHTMLToken(aString,eHTMLTag_script) {
+CScriptToken::CScriptToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_script) {
+  mTextValue.Assign(aString);
 }
                         
 
@@ -1865,6 +1931,11 @@ PRInt32 CScriptToken::GetTokenType(void) {
   return eToken_script;
 }
 
+const nsAReadableString& CScriptToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 /*
  *  default constructor
  *  
@@ -1873,6 +1944,10 @@ PRInt32 CScriptToken::GetTokenType(void) {
  *  @return  
  */
 CStyleToken::CStyleToken() : CHTMLToken(eHTMLTag_style) {
+}
+
+CStyleToken::CStyleToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_style) {
+  mTextValue.Assign(aString);
 }
 
 /*
@@ -1897,138 +1972,11 @@ PRInt32 CStyleToken::GetTokenType(void) {
   return eToken_style;
 }
 
-
-/*
- *  string based constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string value to init token name with
- *  @return  
- */
-CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeToken(aName) {
-  mTextKey.AssignWithConversion("$skipped-content");/* XXX need a better answer! */
+const nsAReadableString& CStyleToken::GetStringValue(void)
+{
+  return mTextValue;
 }
 
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-const char*  CSkippedContentToken::GetClassName(void) {
-  return "skipped";
-}
-
-/*
- *  Retrieve the token type as an int.
- *  @update  gess 3/25/98 
- *  @return  
- */
-PRInt32 CSkippedContentToken::GetTokenType(void) {
-  return eToken_skippedcontent;
-}
-
-/* 
- *  Consume content until you find an end sequence that matches 
- *  this objects current mTextValue. Note that this is complicated 
- *  by the fact that you can be parsing content that itself 
- *  contains quoted content of the same type (like <SCRIPT>). 
- *  That means we have to look for quote-pairs, and ignore the 
- *  content inside them. 
- * 
- *  @update  gess 7/25/98 
- *  @param   aScanner -- controller of underlying input source 
- *  @return  error result 
- */ 
-nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode) { 
-  PRBool      done=PR_FALSE; 
-  nsresult    result=NS_OK; 
-  nsString    temp; 
-  PRUnichar   theChar;
-
-  //We're going to try a new algorithm here. Rather than scan for the matching 
- //end tag like we used to do, we're now going to scan for whitespace and comments. 
- //If we find either, just eat them. If we find text or a tag, then go to the 
- //target endtag, or the start of another comment. 
-
-  while((!done) && (NS_OK==result)) { 
-    result=aScanner.GetChar(aChar); 
-    if((NS_OK==result) && (kLessThan==aChar)) { 
-      //we're reading a tag or a comment... 
-      result=aScanner.GetChar(theChar); 
-      if((NS_OK==result) && (kExclamation==theChar)) { 
-        //read a comment... 
-        static CCommentToken theComment; 
-        result=theComment.Consume(aChar,aScanner,aMode); 
-        if(NS_OK==result) { 
-          //result=aScanner.SkipWhitespace();
-          temp.Append(theComment.GetStringValueXXX()); 
-        } 
-      } else { 
-        //read a tag... 
-        temp+=aChar; 
-        temp+=theChar; 
-        result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
-      } 
-    } 
-    else if(('\b'==theChar) || ('\t'==theChar) || (' '==theChar)) {
-      static CWhitespaceToken theWS; 
-      result=theWS.Consume(aChar,aScanner,aMode); 
-      if(NS_OK==result) { 
-        temp.Append(theWS.GetStringValueXXX()); 
-      } 
-    } 
-    else { 
-      temp+=aChar; 
-      result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
-    } 
-    nsAutoString theRight;
-    temp.Right(theRight,mTextValue.Length());
-    done=PRBool(0==theRight.CompareWithConversion(mTextValue,PR_TRUE)); 
-  } 
-  int len=temp.Length(); 
-  temp.Truncate(len-mTextValue.Length()); 
-  mTextKey=temp; 
-  return result; 
-} 
-
-/*
- *  Dump contents of this token to givne output stream
- *  
- *  @update  gess 3/25/98
- *  @param   out -- ostream to output content
- *  @return  
- */
-void CSkippedContentToken::DebugDumpSource(nsOutputStream& out) {
-  static char buffer[1000];
-  mTextKey.ToCString(buffer,sizeof(buffer));
-  out << " " << buffer;
-  if(mLastAttribute)
-    out<<">";
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   anOutputString will recieve the result
- *  @return  nada
- */
-void CSkippedContentToken::GetSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("$skipped-content");
-}
-
-/*
- *  
- *  
- *  @update  harishd 03/23/00
- *  @param   result appended to the output string.
- *  @return  nada
- */
-void CSkippedContentToken::AppendSource(nsString& anOutputString){
-  anOutputString.AppendWithConversion("$skipped-content");
-}
 
 /**
  * 
@@ -2064,7 +2012,8 @@ CInstructionToken::CInstructionToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @param   
  *  @return  
  */
-CInstructionToken::CInstructionToken(const nsString& aString) : CHTMLToken(aString) {
+CInstructionToken::CInstructionToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_unknown) {
+  mTextValue.Assign(aString);
 }
 
 /**
@@ -2102,6 +2051,11 @@ PRInt32 CInstructionToken::GetTokenType(void){
   return eToken_instruction;
 }
 
+const nsAReadableString& CInstructionToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 
 CErrorToken::CErrorToken(nsParserError *aError) : CHTMLToken(eHTMLTag_unknown)
 {
@@ -2130,6 +2084,11 @@ const nsParserError * CErrorToken::GetError(void)
   return mError; 
 }
 
+const nsAReadableString& CErrorToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
 // Doctype decl token
 
 CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
@@ -2147,13 +2106,14 @@ nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32
     
   nsresult result =NS_OK;
  
-  nsString& theBuffer=aScanner.GetBuffer();
-  PRInt32   theCurrOffset=aScanner.GetOffset();
-  PRInt32   thePos=(aScanner.GetBuffer()).FindChar(kLessThan,PR_TRUE,theCurrOffset);
+  nsReadingIterator<PRUnichar>  theCurrOffset, endPos;
+  aScanner.CurrentPosition(theCurrOffset);
+  aScanner.EndReading(endPos);
+  FindCharInReadable(PRUnichar(kLessThan), theCurrOffset, endPos);
 
   mTextValue.AssignWithConversion("<!");
     
-  if(thePos>-1) {
+  if(theCurrOffset != endPos) {
     result=aScanner.ReadUntil(mTextValue,'<',PR_FALSE);
   }
   else {
@@ -2168,4 +2128,14 @@ const char*  CDoctypeDeclToken::GetClassName(void) {
 
 PRInt32 CDoctypeDeclToken::GetTokenType(void) {
   return eToken_doctypeDecl;
+}
+
+const nsAReadableString& CDoctypeDeclToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
+void CDoctypeDeclToken::SetStringValue(const nsAReadableString& aStr)
+{
+  mTextValue.Assign(aStr);
 }

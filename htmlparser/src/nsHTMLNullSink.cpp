@@ -23,7 +23,6 @@
 #include "nsHTMLTokens.h"
 #include "nsIParser.h"
 #include "prtypes.h" 
-
 #define VERBOSE_DEBUG
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
@@ -128,12 +127,11 @@ nsHTMLNullSink::~nsHTMLNullSink() {
 }
 
 #ifdef VERBOSE_DEBUG
-static void DebugDump(const char* str1,const nsString& str2,PRInt32 tabs) {
+static void DebugDump(const char* str1,const nsAReadableString& str2,PRInt32 tabs) {
   for(PRInt32 i=0;i<tabs;i++)
     cout << " "; //add some tabbing to debug output...
-  char* cp = str2.ToNewCString();
+  const char* cp = NS_ConvertUCS2toUTF8(str2);
   cout << str1 << cp << ">" << endl;
-  delete[] cp;
 }
 #endif
 

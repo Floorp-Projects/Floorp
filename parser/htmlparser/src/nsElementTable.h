@@ -78,7 +78,7 @@ static const int kAllTags       = 0xffffff;
 
 
 extern void InitializeElementTable(void);
-
+extern void DeleteElementTable(void);
 
 /**
  * We're asking the question: is aTest a member of bitset. 

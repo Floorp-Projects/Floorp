@@ -160,26 +160,19 @@ nsTokenAllocator* nsXMLTokenizer::GetTokenAllocator(void) {
 static
 nsresult ConsumeConditional(nsScanner& aScanner,const nsString& aMatchString,PRBool& aMatch) {
   nsresult result=NS_OK;
-  PRUnichar matchChar;
+  nsAutoString str;
+  PRUint32 len = aMatchString.Length();
 
-  PRInt32 i, count = aMatchString.Length();
-  for (i=0; i < count; i++) {
-    result = aScanner.GetChar(matchChar);
-    if ((NS_OK != result) || (aMatchString.CharAt(i) != matchChar)) {
-      break;
-    }
+  result = aScanner.Peek(str, len);
+  if ((NS_OK == result) && str.Equals(aMatchString)) {
+    aMatch = PR_TRUE;
+    nsReadingIterator<PRUnichar> curPos;
+    aScanner.CurrentPosition(curPos);
+    curPos.advance(len);
+    aScanner.SetPosition(curPos);
   }
-
-  if (NS_OK == result) {
-    if (i != count) {
-      for (; i >= 0; i--) {
-        aScanner.PutBack(aMatchString.CharAt(i));
-      }
-      aMatch = PR_FALSE;
-    }
-    else {
-      aMatch = PR_TRUE;
-    }
+  else {
+    aMatch = PR_FALSE;
   }
 
   return result;

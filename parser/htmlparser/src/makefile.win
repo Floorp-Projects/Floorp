@@ -37,7 +37,6 @@ CPPSRCS=					\
 	nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
-	CRtfDTD.cpp				\
 	nsDTDDebug.cpp				\
 	nsHTMLEntities.cpp			\
 	nsHTMLNullSink.cpp			\
@@ -55,11 +54,9 @@ CPPSRCS=					\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
-	nsXIFDTD.cpp				\
 	nsExpatDTD.cpp			\
 	prstrm.cpp				\
 	nsParserModule.cpp			\
-	nsXIFDTD.cpp				\
 	$(NULL)
 
 CPP_OBJS=					\
@@ -70,7 +67,6 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsElementTable.obj \
 	.\$(OBJDIR)\CNavDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
-	.\$(OBJDIR)\CRtfDTD.obj			\
 	.\$(OBJDIR)\nsDTDDebug.obj		\
 	.\$(OBJDIR)\nsHTMLEntities.obj		\
 	.\$(OBJDIR)\nsHTMLNullSink.obj		\
@@ -88,11 +84,9 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsValidDTD.obj		\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsViewSourceHTML.obj		\
-	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\nsExpatDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	.\$(OBJDIR)\nsParserModule.obj		\
-	.\$(OBJDIR)\nsXIFDTD.obj		\
 	$(NULL)
 
 EXPORTS=					\
@@ -119,10 +113,8 @@ EXPORTS=					\
 	CNavDTD.h				\
 	nsWellFormedDTD.h			\
 	nsValidDTD.h				\
-	CRTFDTD.h				\
 	COtherDTD.h				\
 	nsIDTD.h				\
-	nsXIFDTD.h				\
 	nsExpatDTD.h				\
 	nsParserCIID.h 				\
 	nsParserError.h 			\

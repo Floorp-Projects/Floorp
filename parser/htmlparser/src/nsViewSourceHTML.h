@@ -237,18 +237,13 @@ class CViewSourceHTML: public nsIDTD {
     virtual PRBool IsContainer(PRInt32 aTag) const;
 
 
-    static nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPreserveText,PRBool aPlainText);
-
-
 private:
 #ifdef VIEW_SOURCE_HTML
-    nsresult WriteTag(PRInt32 tagType,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTag(PRInt32 tagType,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTagWithError(PRInt32 tagType,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTag(PRInt32 tagType,const nsAReadableString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTagWithError(PRInt32 tagType,const nsAReadableString& aToken,PRInt32 attrCount,PRBool aNewlineRequired);
 #else
-    nsresult WriteTag(nsString &anXMLName,CToken* aTag,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTag(nsString &anXMLName,nsString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
-    nsresult WriteTagWithError(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTag(nsString &anXMLName,const nsAReadableString &aText,PRInt32 attrCount,PRBool aNewlineRequired);
+    nsresult WriteTagWithError(nsString &theXMLTagName,const nsAReadableString& aStr,PRInt32 attrCount,PRBool aNewlineRequired);
 #endif
     void     AddContainmentError(eHTMLTags aChild,eHTMLTags aParent,PRInt32 aLineNumber);
 
@@ -305,6 +300,7 @@ protected:
     nsString            mErrors;
     PRBool              mShowErrors;
     PRBool              mHasOpenRoot;
+    PRBool              mInCDATAContainer;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

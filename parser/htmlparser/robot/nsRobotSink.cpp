@@ -226,9 +226,8 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
       // Get upper-cased key
-      const nsString& key = aNode.GetKeyAt(i);
-      k.Truncate();
-      k.Append(key);
+      const nsAReadableString& key = aNode.GetKeyAt(i);
+      k.Assign(key);
       k.ToLowerCase();
       if (k.EqualsWithConversion("href")) {
         // Get value and remove mandatory quotes

@@ -109,5 +109,4 @@ copy_string_backward( const InputIterator& first, InputIterator& last, OutputIte
     return result;
   }
 
-
 #endif // !defined(nsAlgorithm_h___)

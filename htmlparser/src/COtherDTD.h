@@ -311,8 +311,6 @@ CLASS_EXPORT_HTMLPARS COtherDTD : public nsIDTD {
     //by the parser to manage its context-stack.
     //*************************************************
     
-    static void ReleaseTable(void);
-
 protected:
 
 		nsresult        CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
@@ -355,6 +353,7 @@ protected:
 };
 
 extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
+
 
 CLASS_EXPORT_HTMLPARS CTransitionalDTD : public COtherDTD
 {

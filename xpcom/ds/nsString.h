@@ -204,7 +204,7 @@ public:
   void ReplaceSubstring(const nsCString& aTarget,const nsCString& aNewValue);
   void ReplaceSubstring(const char* aTarget,const char* aNewValue);
 
-  PRInt32 CountChar(PRUnichar aChar);
+  PRInt32 CountChar(PRUnichar aChar) const;
 
   /**
    *  This method trims characters found in aTrimSet from

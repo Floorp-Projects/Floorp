@@ -186,8 +186,8 @@ const nsString& nsCParserNode::GetName() const {
  *  @param   
  *  @return  string ref of text from internal token
  */
-const nsString& nsCParserNode::GetText() const {
-  return (mToken) ? mToken->GetStringValueXXX() : GetEmptyString();
+const nsAReadableString& nsCParserNode::GetText() const {
+  return (mToken) ? mToken->GetStringValue() : GetEmptyString();
 }
 
 /**
@@ -272,7 +272,7 @@ PRInt32 nsCParserNode::GetAttributeCount(PRBool askToken) const{
  *  @param   anIndex-- offset of attribute to retrieve
  *  @return  string rep of given attribute text key
  */
-const nsString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
+const nsAReadableString& nsCParserNode::GetKeyAt(PRUint32 anIndex) const {
   PRInt32 theCount = (mAttributes) ? mAttributes->GetSize() : 0;
   if((PRInt32)anIndex<theCount) {
     CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
@@ -296,7 +296,7 @@ const nsString& nsCParserNode::GetValueAt(PRUint32 anIndex) const {
 
   if(PRInt32(anIndex)<theCount) {
     CAttributeToken* tkn=(CAttributeToken*)mAttributes->ObjectAt(anIndex);
-    return tkn->GetStringValueXXX();
+    return tkn->GetValue();
   }
   return GetEmptyString();
 }
@@ -373,6 +373,7 @@ nsresult nsCParserNode::ReleaseAll() {
     //fixed a bug that patrick found, where the attributes deque existed
     //but was empty. In that case, the attributes deque itself was leaked.
     //THANKS PATRICK!
+    // Umm...why is this a useful comment in the source?
 
     if(mTokenAllocator) {
       RecycleTokens(mTokenAllocator,*mAttributes);

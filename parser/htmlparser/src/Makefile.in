@@ -60,7 +60,6 @@ CPPSRCS		= \
 		nsElementTable.cpp \
 		CNavDTD.cpp \
 		COtherDTD.cpp \
-		CRtfDTD.cpp \
 		nsHTMLEntities.cpp \
 		nsHTMLNullSink.cpp \
 		nsHTMLTags.cpp \
@@ -78,7 +77,6 @@ CPPSRCS		= \
 		nsValidDTD.cpp \
 		nsWellFormedDTD.cpp \
 		nsViewSourceHTML.cpp \
-		nsXIFDTD.cpp \
 		nsExpatDTD.cpp \
 		$(NULL)
 
@@ -117,8 +115,6 @@ EXPORTS		= \
 		COtherDTD.h \
 		nsWellFormedDTD.h \
 		nsValidDTD.h \
-		CRtfDTD.h \
-		nsXIFDTD.h \
 		nsParserCIID.h \
 		nsExpatDTD.h \
 		nsParserError.h \

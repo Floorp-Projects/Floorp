@@ -23,9 +23,29 @@
  */
 
 #include "nsSharedBufferList.h"
+
+#ifndef nsAlgorithm_h___
 #include "nsAlgorithm.h"
   // for |copy_string|
-#include <new.h>
+#endif
+
+
+ptrdiff_t
+nsSharedBufferList::Position::Distance( const Position& aStart, const Position& aEnd )
+  {
+    ptrdiff_t result = 0;
+    if ( aStart.mBuffer == aEnd.mBuffer )
+      result = aEnd.mPosInBuffer - aStart.mPosInBuffer;
+    else
+      {
+        result = aStart.mBuffer->DataEnd() - aStart.mPosInBuffer;
+        for ( Buffer* b = aStart.mBuffer->mNext; b != aEnd.mBuffer; b = b->mNext )
+          result += b->DataLength();
+        result += aEnd.mPosInBuffer - aEnd.mBuffer->DataStart();
+      }
+
+    return result;
+  }
 
 
 void
@@ -45,36 +65,6 @@ nsSharedBufferList::DestroyBuffers()
 nsSharedBufferList::~nsSharedBufferList()
   {
     DestroyBuffers();
-  }
-
-
-nsSharedBufferList::Buffer*
-nsSharedBufferList::NewSingleAllocationBuffer( const PRUnichar* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
-  {
-    size_t    object_size    = ((sizeof(Buffer) + sizeof(PRUnichar) - 1) / sizeof(PRUnichar)) * sizeof(PRUnichar);
-    PRUint32  buffer_length  = aDataLength + aAdditionalSpace;
-    size_t    buffer_size    = size_t(buffer_length) * sizeof(PRUnichar);
-
-    void* object_ptr = operator new(object_size + buffer_size);
-    if ( object_ptr )
-      {
-        typedef PRUnichar* PRUnichar_ptr;
-        PRUnichar* buffer_ptr = PRUnichar_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
-        if ( aDataLength )
-          {
-            PRUnichar* toBegin = buffer_ptr;
-            copy_string(aData, aData+aDataLength, toBegin);
-          }
-        return new (object_ptr) Buffer(buffer_ptr, buffer_ptr+aDataLength, buffer_ptr, buffer_ptr+buffer_length, PR_TRUE);
-      }
-
-    return 0;
-  }
-
-nsSharedBufferList::Buffer*
-nsSharedBufferList::NewWrappingBuffer( PRUnichar* aDataStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
-  {
-    return new Buffer(aDataStart, aDataEnd, aDataStart, aStorageEnd);
   }
 
 

@@ -35,10 +35,8 @@
 #include "nsAWritableString.h"
 #endif
 
-#if 0
 NS_COM size_t Distance( const nsReadingIterator<PRUnichar>&, const nsReadingIterator<PRUnichar>& );
 NS_COM size_t Distance( const nsReadingIterator<char>&, const nsReadingIterator<char>& );
-#endif
 
 
 NS_COM void CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest );
@@ -115,14 +113,45 @@ NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
    * After this operation |aDest| is not null terminated.
    *
    * @param aSource a 16-bit wide string
+   * @param aSrcOffset start offset in the source string
    * @param aDest a |PRUnichar| buffer
    * @param aLength the number of 16-bit characters to copy
    * @return pointer to destination buffer - identical to |aDest|
    */
 NS_COM PRUnichar* CopyUnicodeTo( const nsAReadableString& aSource,
+                                 PRUint32 aSrcOffset,
                                  PRUnichar* aDest,
                                  PRUint32 aLength );
 
+
+  /**
+   * Copies 16-bit characters between iterators |aSrcStart| and
+   * |aSrcEnd| to the writable string |aDest|. Similar to the
+   * |nsString::Mid| method.
+   *
+   * After this operation |aDest| is not null terminated.
+   *
+   * @param aSrcStart start source iterator
+   * @param aSrcEnd end source iterator
+   * @param aDest destination for the copy
+   */
+NS_COM void CopyUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
+                           const nsReadingIterator<PRUnichar>& aSrcEnd,
+                           nsAWritableString& aDest );
+
+  /**
+   * Appends 16-bit characters between iterators |aSrcStart| and
+   * |aSrcEnd| to the writable string |aDest|. 
+   *
+   * After this operation |aDest| is not null terminated.
+   *
+   * @param aSrcStart start source iterator
+   * @param aSrcEnd end source iterator
+   * @param aDest destination for the copy
+   */
+NS_COM void AppendUnicodeTo( const nsReadingIterator<PRUnichar>& aSrcStart,
+                             const nsReadingIterator<PRUnichar>& aSrcEnd,
+                             nsAWritableString& aDest );
 
   /**
    * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
@@ -141,5 +170,48 @@ NS_COM void ToUpperCase( nsAWritableCString& );
 
 NS_COM void ToLowerCase( nsAWritableString& );
 NS_COM void ToLowerCase( nsAWritableCString& );
+
+  /**
+   * Finds the leftmost occurance of |aPattern|, if any in the range |aSearchStart|..|aSearchEnd|.
+   *
+   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
+   * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
+   *
+   * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
+   * If we need something faster; we can implement that later.
+   */
+NS_COM PRBool FindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool FindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+
+
+  /**
+   * Finds the rightmost occurance of |aPattern| 
+   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
+   * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
+   *
+   * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
+   * If we need something faster; we can implement that later.
+   */
+NS_COM PRBool RFindInReadable( const nsAReadableString& aPattern, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool RFindInReadable( const nsAReadableCString& aPattern, nsReadingIterator<char>&, nsReadingIterator<char>& );
+
+   /**
+   * Finds the leftmost occurance of |aChar|, if any in the range 
+   * |aSearchStart|..|aSearchEnd|.
+   *
+   * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| to
+   * point to the match.  If no match was found, returns |PR_FALSE| and 
+   * makes |aSearchStart == aSearchEnd|.
+   */
+NS_COM PRBool FindCharInReadable( PRUnichar aChar, nsReadingIterator<PRUnichar>&, nsReadingIterator<PRUnichar>& );
+NS_COM PRBool FindCharInReadable( char aChar, nsReadingIterator<char>&, nsReadingIterator<char>& );
+
+    /**
+    * Finds the number of occurences of |aChar| in the string |aStr|
+    */
+NS_COM PRUint32 CountCharInReadable( const nsAReadableString& aStr,
+                                     PRUnichar aChar );
+NS_COM PRUint32 CountCharInReadable( const nsAReadableCString& aStr,
+                                     char aChar );
 
 #endif // !defined(nsReadableUtils_h___)

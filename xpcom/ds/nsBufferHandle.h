@@ -86,7 +86,7 @@ class nsSharedBufferHandle
       nsSharedBufferHandle( CharT* aDataStart, CharT* aDataEnd )
           : nsBufferHandle<CharT>(aDataStart, aDataEnd)
         {
-          mFlags |= kIsShared;
+          mFlags = kIsShared;
         }
 
       ~nsSharedBufferHandle();

@@ -52,6 +52,7 @@
 #include "nsLinebreakConverter.h"
 #include "nsIFormProcessor.h"
 #include "nsVoidArray.h"
+#include "nsReadableUtils.h"
 
 #include "prmem.h"
 
@@ -164,10 +165,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
   mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
 
-  if(!gHTMLElements) {
-    InitializeElementTable();
-  }
-
   mNodeRecycler=0;
 
 #ifdef  RICKG_DEBUG
@@ -176,13 +173,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
   nsHTMLElement::DebugDumpMembership("c:/temp/membership.out");
   nsHTMLElement::DebugDumpContainType("c:/temp/ctnrules.out");
 #endif
-}
-
-void CNavDTD::ReleaseTable(void) {
-  if(gHTMLElements) {
-    delete [] gHTMLElements;  //fixed bug 49564
-    gHTMLElements=0;
-  }
 }
 
 /**
@@ -347,7 +337,7 @@ eAutoDetectResult CNavDTD::CanParse(CParserContext& aParserContext,nsString& aBu
       if(BufferContainsHTML(aBuffer,theBufHasXML)){
         result = eValidDetect ;
         if(0==aParserContext.mMimeType.Length()) {
-          aParserContext.SetMimeType(NS_ConvertToString(kHTMLTextContentType));
+          aParserContext.SetMimeType(NS_ConvertASCIItoUCS2(kHTMLTextContentType, sizeof(kHTMLTextContentType)));
           if(!theBufHasXML) {
             switch(aParserContext.mDTDMode) {
               case eDTDMode_strict:
@@ -455,13 +445,13 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           CStartToken* theToken=nsnull;
           if(ePlainText==mDocType) {
             //we do this little trick for text files, in both normal and viewsource mode...
-            theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre);
+            theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre));
             if(theToken) {
               mTokenizer->PushTokenFront(theToken);
             }
           }
             //if the content model is empty, then begin by opening <html>...
-          theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html"));
+          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_ConvertToString("html")));
           if(theToken) {
             mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
           }
@@ -514,7 +504,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
-      CStartToken *theToken=(CStartToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body"));
+      CStartToken *theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body")));
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
       result=BuildModel(aParser,mTokenizer,0,aSink);
     } 
@@ -524,7 +514,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
           if(mSkipTarget) {
             CHTMLToken* theEndToken=nsnull;
-            theEndToken=(CHTMLToken*)mTokenAllocator->CreateTokenOfType(eToken_end,mSkipTarget);
+            theEndToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,mSkipTarget));
             if(theEndToken) {
               result=HandleToken(theEndToken,mParser);
             }
@@ -629,7 +619,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   nsresult  result=NS_OK;
 
   if(aToken) {
-    CHTMLToken*     theToken= (CHTMLToken*)(aToken);
+    CHTMLToken*     theToken= NS_STATIC_CAST(CHTMLToken*, aToken);
     eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
     PRBool          execSkipContent=PR_FALSE;
@@ -723,7 +713,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
                 mMisplacedContent.Push(aToken);
                 if(mDTDMode==eDTDMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
-                  CToken* theBodyToken=(CToken*)mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body"));
+                  CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_ConvertToString("body")));
                   result=HandleToken(theBodyToken,aParser);
                 }
                 return result;
@@ -856,9 +846,10 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         const nsString& theString=aNode.GetSkippedContent();
         if(0<theString.Length()) {
-          CTextToken *theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString);
+          CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
           nsCParserNode theNode(theToken,0);
-          result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
+          result=mSink->AddLeaf(theNode);
+          IF_FREE(theToken);
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         START_TIMER()
@@ -892,7 +883,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         if(theCount) {
           PRInt32 theIndex=0;
           for(theIndex=0;theIndex<theCount;theIndex++){
-            const nsString& theKey=aNode.GetKeyAt(theIndex);
+            nsAutoString theKey(aNode.GetKeyAt(theIndex));
             if(theKey.EqualsWithConversion("ENTITY",PR_TRUE)) {
               const nsString& theName=aNode.GetValueAt(theIndex);
               theNamePtr=&theName;
@@ -1234,9 +1225,9 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   //(during editing) to display a special icon for unknown tags.
 
   if(eHTMLTag_userdefined==aTag) {
-    CAttributeToken* theToken= (CAttributeToken*)mTokenAllocator->CreateTokenOfType(eToken_attribute,aTag);
+    CAttributeToken* theToken= NS_STATIC_CAST(CAttributeToken*,mTokenAllocator->CreateTokenOfType(eToken_attribute,aTag));
     if(theToken) {
-      theToken->mTextKey.AssignWithConversion("_moz-userdefined");
+      theToken->SetKey(NS_LITERAL_STRING("_moz-userdefined"));
       aNode.AddAttribute(theToken);    
     }
   }
@@ -1266,7 +1257,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     CObserverService* theService=mParser->GetObserverService();
     if(theService) {
       const nsISupportsParserBundle*  bundle=mParser->GetParserBundle();
-      result=theService->Notify(aTag,aNode,(void*)bundle, NS_ConvertToString(kHTMLTextContentType), mParser);
+      result=theService->Notify(aTag,aNode,(void*)bundle, mMimeType, mParser);
     }
   }
 
@@ -1283,11 +1274,11 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
       PRInt32 theCount=aNode.GetAttributeCount(); 
       if(1<theCount){ 
   
-        const nsString& theKey=aNode.GetKeyAt(0); 
+        nsAutoString theKey(aNode.GetKeyAt(0)); 
         if(theKey.Equals("NAME",IGNORE_CASE)) { 
           const nsString& theValue1=aNode.GetValueAt(0); 
           if(theValue1.Equals("\"CRC\"",IGNORE_CASE)) { 
-            const nsString& theKey2=aNode.GetKeyAt(1); 
+            nsAutoString theKey2(aNode.GetKeyAt(1)); 
             if(theKey2.Equals("CONTENT",IGNORE_CASE)) { 
               const nsString& theValue2=aNode.GetValueAt(1); 
               PRInt32 err=0; 
@@ -1484,8 +1475,7 @@ nsresult CNavDTD::HandleKeyGen(nsIParserNode* aNode) {
           // Placing the attribute token on the tokenizer to get picked up by the SELECT.
           theToken=mTokenAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,theAttribute);
 
-          nsString& theKey=((CAttributeToken*)theToken)->GetKey(); 
-          theKey.AssignWithConversion("_moz-type"); 
+          ((CAttributeToken*)theToken)->SetKey(NS_LITERAL_STRING("_moz-type")); 
           mTokenizer->PushTokenFront(theToken); 
   
           // Pop out NAME and CHALLENGE attributes ( from the keygen NODE ) 
@@ -1837,7 +1827,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
           //to use </BR>, even though that isn't a legitimate tag.
         if(eDTDMode_quirks==mDTDMode) {
           // Use recycler and pass the token thro' HandleToken() to fix bugs like 32782.
-          CHTMLToken* theToken = (CHTMLToken*)mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag);
+          CHTMLToken* theToken = NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag));
           result=HandleToken(theToken,mParser);
         }
       }
@@ -1888,7 +1878,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
               if(!CanOmit(theParentTag,theChildTag,theParentContains)) {
                 IF_HOLD(aToken);
                 mTokenizer->PushTokenFront(aToken); //put this end token back...
-                CHTMLToken* theToken = (CHTMLToken*)mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag);
+                CHTMLToken* theToken = NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_start,theChildTag));
                 mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
               }
             }
@@ -2025,7 +2015,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   nsresult  result=NS_OK;
 
-  nsString& theStr=aToken->GetStringValueXXX();
+  nsAutoString theStr(aToken->GetStringValue());
   PRUnichar theChar=theStr.CharAt(0);
   if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
 
@@ -2033,16 +2023,15 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
     CNamedEntity *theEntity=mBodyContext->GetEntity(theStr);
     CToken *theToken=0;
     if(theEntity) {
-      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue);
+      theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theEntity->mValue));
     }
     else {
       //if you're here we have a bogus entity.
       //convert it into a text token.
-      theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,NS_ConvertToString("&"));
-      if(theToken) {
-        nsString &theTokenStr=theToken->GetStringValueXXX();
-        theTokenStr.Append(theStr); //should append the entity name; fix bug 51161.
-      }
+      nsAutoString entityName;
+      entityName.AssignWithConversion("&");
+      entityName.Append(theStr); //should append the entity name; fix bug 51161.
+      theToken = mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,entityName);
     }
     return HandleToken(theToken,mParser); //theToken should get recycled automagically...
   }
@@ -2084,8 +2073,9 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   
   nsresult  result=NS_OK;
 
-  nsString& theComment=aToken->GetStringValueXXX();
-  mLineNumber += (theComment).CountChar(kNewLine);
+  CCommentToken* theToken = NS_STATIC_CAST(CCommentToken*,aToken);
+  const nsAReadableString& theComment = theToken->GetStringValue();
+  mLineNumber += CountCharInReadable(theComment, PRUnichar(kNewLine));
 
   nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
@@ -2203,8 +2193,9 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
     WriteTokenToLog(aToken);
   #endif
 
-  nsString& docTypeStr=aToken->GetStringValueXXX();
-  mLineNumber += (docTypeStr).CountChar(kNewLine);
+  CDoctypeDeclToken* theToken = NS_STATIC_CAST(CDoctypeDeclToken*,aToken);
+  nsAutoString docTypeStr(theToken->GetStringValue());
+  mLineNumber += docTypeStr.CountChar(kNewLine);
   
   PRInt32 len=docTypeStr.Length();
   PRInt32 pos=docTypeStr.RFindChar(kGreaterThan);
@@ -2212,6 +2203,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
     docTypeStr.Cut(pos,len-pos);// First remove '>' from the end.
   }
   docTypeStr.Cut(0,2); // Now remove "<!" from the begining
+  theToken->SetStringValue(docTypeStr);
 
   nsCParserNode* theNode=mNodeRecycler->CreateNode();
   if(theNode) {
@@ -2265,7 +2257,7 @@ nsresult CNavDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt32 
     eHTMLTags theSkipTarget=gHTMLElements[aTag].mSkipTarget;
     for(attr=0;attr<aCount;attr++){
       if((eHTMLTag_unknown!=theSkipTarget) && mSkippedContent.GetSize())
-        theToken=(CToken*)mSkippedContent.PopFront();
+        theToken=NS_STATIC_CAST(CToken*,mSkippedContent.PopFront());
       else theToken=mTokenizer->PopToken();
       if(theToken)  {
         eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());

@@ -473,7 +473,7 @@ nsCString::ReplaceSubstring(const nsCString& aTarget,const nsCString& aNewValue)
  *  @param  
  *  @return *this 
  */
-PRInt32 nsCString::CountChar(PRUnichar aChar) {
+PRInt32 nsCString::CountChar(PRUnichar aChar) const {
   PRInt32 theIndex=0;
   PRInt32 theCount=0;
   PRInt32 theLen=(PRInt32)mLength;
