@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
 #include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIScriptObjectOwner.h"
@@ -34,6 +35,7 @@
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFormControlFrame.h"
@@ -316,9 +318,11 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // Now a little special trickery because we are a label:
   // We need to pass this event on to our child iff it is a focus,
   // keypress/up/dn, mouseclick/dblclick/up/down.
-  if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) && (NS_EVENT_FLAG_INIT == aFlags)) {
+  if ((NS_OK == rv) && (NS_EVENT_FLAG_INIT == aFlags) &&
+      ((nsEventStatus_eIgnore == *aEventStatus) ||
+       (nsEventStatus_eConsumeNoDefault == *aEventStatus)) ) {
     PRBool isFormElement = PR_FALSE;
-    nsIHTMLContent* node = nsnull; // Strong ref to node we are a label for
+    nsCOMPtr<nsIHTMLContent> node; // Node we are a label for
     switch (aEvent->message) {
       case NS_FOCUS_CONTENT:
       case NS_KEY_PRESS:
@@ -341,60 +345,66 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
         nsAutoString elementId;
         rv = GetHtmlFor(elementId);
         if (NS_SUCCEEDED(rv) && elementId.Length()) { // --- We have a FOR attr
-          nsIDocument* doc = nsnull; // Strong
-          rv = mInner.GetDocument(doc);
+          nsCOMPtr<nsIDocument> iDoc;
+          rv = mInner.GetDocument(*getter_AddRefs(iDoc));
           if (NS_SUCCEEDED(rv)) {
-            nsIDOMHTMLDocument* htmldoc = nsnull; // Strong
-            rv = doc->QueryInterface(nsIDOMHTMLDocument::GetIID(),(void**)&htmldoc);
-            if (NS_SUCCEEDED(rv)) {
-              nsIDOMElement* element = nsnull; // Strong
-              rv = htmldoc->GetElementById(elementId, &element);
-              if (NS_SUCCEEDED(rv)) {
-                rv = element->QueryInterface(nsIHTMLContent::GetIID(),(void**)&node);
-                // Find out of this is a form element.
-                if (NS_SUCCEEDED(rv)) {
-                  nsIFormControlFrame* fcFrame = nsnull;
-                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, fcFrame);
-                  isFormElement = NS_SUCCEEDED(gotFrame) && fcFrame;
-                }
-                NS_RELEASE(element);
-              }
-              NS_RELEASE(htmldoc);
+            nsCOMPtr<nsIDOMElement> domElement;
+// XXX This should be merged into nsIDocument
+            nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(iDoc, &rv);
+            if (NS_SUCCEEDED(rv) && htmlDoc) {
+              rv = htmlDoc->GetElementById(elementId, getter_AddRefs(domElement));
             }
-            NS_RELEASE(doc);
+#ifdef INCLUDE_XUL
+            else {
+              nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(iDoc, &rv);
+              if (NS_SUCCEEDED(rv) && xulDoc) {
+                rv = xulDoc->GetElementById(elementId, getter_AddRefs(domElement));
+              }
+            }
+#endif // INCLUDE_XUL
+            if (NS_SUCCEEDED(rv) && domElement) {
+              // Get our grubby paws on the content interface
+              node = do_QueryInterface(domElement, &rv);
+
+              // Find out of this is a form element.
+              if (NS_SUCCEEDED(rv)) {
+                nsIFormControlFrame* control;
+                nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, control);
+                isFormElement = NS_SUCCEEDED(gotFrame) && control;
+              }
+            }
           }
         } else { // --- No FOR attribute, we are a label for our first child element
           PRInt32 numNodes;
           rv = mInner.ChildCount(numNodes);
           if (NS_SUCCEEDED(rv)) {
-            nsIContent* contNode = nsnull;
+            nsCOMPtr<nsIContent> contNode;
 	    PRInt32 i;
             for (i = 0; NS_SUCCEEDED(rv) && !isFormElement && (i < numNodes); i++) {
-              NS_IF_RELEASE(contNode);
-              rv = ChildAt(i, contNode);
+              rv = ChildAt(i, *getter_AddRefs(contNode));
               if (NS_SUCCEEDED(rv) && contNode) {
                 // We need to make sure this child is a form element
-                nsresult isHTMLContent = contNode->QueryInterface(nsIHTMLContent::GetIID(),(void**)&node);
+                nsresult isHTMLContent = PR_FALSE;
+                node = do_QueryInterface(contNode, &isHTMLContent);
                 if (NS_SUCCEEDED(isHTMLContent) && node) {
-                  nsIFormControlFrame* fcFrame = nsnull;
-                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, fcFrame);
-                  isFormElement = NS_SUCCEEDED(gotFrame) && fcFrame;
+                  // Find out of this is a form element.
+                  nsIFormControlFrame* control;
+                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, control);
+                  isFormElement = NS_SUCCEEDED(gotFrame) && control;
                 }
-                NS_RELEASE(contNode);
               }
             }
           }
         }
       } // Close should handle
     } // Close switch
-    
+
     // If we found an element, pass along the event to it.
     if (NS_SUCCEEDED(rv) && node) {
       // Only pass along event if this is a form element
       if (isFormElement) {
         rv = node->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
       }
-      NS_RELEASE(node);
     }
   } // Close trickery
   return rv;
