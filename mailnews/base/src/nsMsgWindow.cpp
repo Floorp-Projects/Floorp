@@ -200,12 +200,10 @@ NS_IMETHODIMP nsMsgWindow::GetProtocolHandler(nsIURI * /* aURI */, nsIProtocolHa
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, const char *aCommand, const char *aWindowTarget, 
+NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
                                      nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
-  // we handle message/rfc822 content in our message window (which is mRootWebShell)
-
-  if (aContentType /* nsCRT::strcasecmp(aContentType, "message/rfc822") == 0 */ )
+  if (aContentType)
   {
     // forward the DoContent call to our webshell
     nsCOMPtr<nsIURIContentListener> ctnListener = do_QueryInterface(mMessageWindowWebShell);
@@ -216,12 +214,31 @@ NS_IMETHODIMP nsMsgWindow::DoContent(const char *aContentType, const char *aComm
 }
 
 NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
-                                            const char * aCommand,
+                                            nsURILoadCommand aCommand,
                                             const char * aWindowTarget,
                                             char ** aDesiredContentType,
                                             PRBool * aCanHandleContent)
 
 {
+  // the mail window is the primary content handler for the following types:
+  // If we are asked to handle any of these types, we will always say Yes!
+  // regardlesss of the uri load command.
+  //    Incoming Type                     Preferred type
+  //     message/rfc822                     text/xul
+  //
+
+  // the mail window can also show the following content types. However, it isn't
+  // the primary content handler for these types. So we won't try to accept this content
+  // unless the uri load command is viewNormal (which implies that we are trying to view a url inline)
+  //    incoming Type                     Preferred type
+  //      text/html                    
+  //      text/xul
+
+
+   *aCanHandleContent = PR_FALSE;
+
+  // (1) list all content types we want to  be the primary handler for....
+  // and suggest a desired content type if appropriate...
   if (aContentType && nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
   {
     // we can handle this content type...but we would prefer it to be 
@@ -230,7 +247,15 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
     *aDesiredContentType = nsCRT::strdup("text/xul");
   }
   else
-    *aCanHandleContent = PR_FALSE;
+  {
+    // (2) list all the content types we can handle IF we really have too....i.e.
+    // if the load command is viewNormal. This includes text/xul, text/html right now.
+    // I'm sure it will grow.
+    
+    // for right now, if the load command is viewNormal just say we can handle it...
+    if (aCommand == nsIURILoader::viewNormal)
+        *aCanHandleContent = PR_TRUE;
+  }
 
   return NS_OK;
 }
