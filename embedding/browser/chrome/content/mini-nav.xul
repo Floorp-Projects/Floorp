@@ -22,7 +22,12 @@ Contributor(s): ______________________________________. -->
 
 <?xml-stylesheet href="chrome://embedding/browser/skin/embedding.css" type="text/css"?> 
 
-<!-- TODO localise this chrome !!! -->
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % embeddingDTD SYSTEM "chrome://embedding/browser/locale/embedding.dtd" >
+%embeddingDTD;
+]>
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -51,10 +56,10 @@ Contributor(s): ______________________________________. -->
   <toolbox>
     <toolbar id="nav-bar">
       <box id="nav-bar-inner" autostretch="never" flex="1" style="min-width: 0px;">
-        <button id="back-button" crop="right" onclick="BrowserBack()" value="Back"/>  
-        <button id="forward-button" crop="right" onclick="BrowserForward()" value="Forward"/>  
-        <button id="reload-button" crop="right" onclick="BrowserReload()" value="Reload"/>
-        <button id="stop-button" crop="right" onclick="BrowserStop()" value="Stop"/>
+        <button id="back-button" crop="right" onclick="BrowserBack()" value="&backButton.label;"/>  
+        <button id="forward-button" crop="right" onclick="BrowserForward()" value="&forwardButton.label;"/>  
+        <button id="reload-button" crop="right" onclick="BrowserReload()" value="&reloadButton.label;"/>
+        <button id="stop-button" crop="right" onclick="BrowserStop()" value="&stopButton.label;"/>
         <box class="box-toolbar-group" flex="1">
           <box autostretch="never" valign="middle" flex="1">
             <textfield autocomplete="true" timeout="300"
