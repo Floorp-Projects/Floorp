@@ -12,6 +12,7 @@
 <!ENTITY serverName.label "Server Name:">
 <!ENTITY userName.label "User Name:">
 <!ENTITY port.label "Port:">
+<!ENTITY serverPortDefault.label "Default:">
 <!ENTITY savePassword.label "Save password">
 <!-- LOCALIZATION NOTE (biffStart.label) : translate below 2 line with grammer dependency
         For example, in Japanese cases:

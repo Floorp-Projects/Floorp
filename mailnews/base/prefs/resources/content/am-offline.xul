@@ -19,7 +19,7 @@ Rights Reserved.
 
 Contributors:
     dianesun@netscape.com
-
+    stefan@borggraefe.com
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
@@ -38,7 +38,6 @@ Contributors:
     
     <broadcaster id="bc_notDownload"/>
     <broadcaster id="bc_downloadMsg"/>
-    <broadcaster id="bc_keepMsg"/>
     <broadcaster id="bc_removeBody"/>
 
     <label hidden="true" wsm_persist="true" id="server.type"/>  
@@ -48,8 +47,7 @@ Contributors:
     <groupbox id="offline.titlebox"  hidable="true" hidefor="movemail,pop3">
       <caption label="&offlineGroupTitle.label;"/>
 
-    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp">&offlineImapDesc.label;</description>
-    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap">&offlineNntpDesc.label;</description>
+    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3">&offlineDesc.label;</description>
 
     <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp" 
               id="offline.downloadBodiesOnGetNewMail" wsm_persist="true" 
@@ -62,59 +60,72 @@ Contributors:
 
     <separator class="thin" hidable="true" hidefor="movemail,pop3,nntp"/>
 
-    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp">&selectButtonDesc.label;</description>
+    <hbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,nntp" align="right">
+        <button label="&offlineSelectImap.label;" accesskey="&offlineSelect.accesskey;"
+                oncommand="onClickSelect()" id="selectImapFoldersButton" class="selectForOfflineUseButton"/>
+    </hbox>
 
-    <hbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3" align="right">
-        <button label="&offlineSelect.label;" oncommand="onClickSelect()" id="selectFolderButton"/>
+    <hbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" align="right">
+        <button label="&offlineSelectNntp.label;" accesskey="&offlineSelect.accesskey;"
+                oncommand="onClickSelect()" id="selectNewsgroupsButton" class="selectForOfflineUseButton"/>
     </hbox>
 
     </groupbox>    
     
-    <separator class="thin"/>
     <groupbox id="diskspace.titlebox">
       <caption label="&diskspaceGroupTitle.label;"/>
 
-    <description iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3">&offlineMsg.label;</description>
-    <description iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&offlinePopDesc.label;</description>
+    <description iscontrolcontainer="true" hidable="true" hidefor="pop3,movemail">&doNotDownload.label;</description>
+    <description iscontrolcontainer="true" hidable="true" hidefor="imap,nntp">&doNotDownloadPop3Movemail.label;</description>
+    
+    <hbox align="center" class="indent">
+        <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" 
+            wsm_persist="true" id="nntp.notDownloadRead" label="&nntpNotDownloadRead.label;" accesskey="&nntpNotDownloadRead.accesskey;"/>
+    </hbox>
 
-    <hbox align="center">
+    <hbox align="center" class="indent">
         <checkbox  wsm_persist="true" id="offline.notDownload"
             label="&offlineNotDownload.label;" accesskey="&offlineNotDownload.accesskey;" oncommand="onCheckItem('bc_notDownload', 'offline.notDownload');"/>
         <textbox wsm_persist="true" id="offline.notDownloadMin" size="2" value="50"  observes="bc_notDownload"/> 
         <label value="&kb.label;"/>
     </hbox>
-        
-    <checkbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" 
-         wsm_persist="true" id="nntp.downloadUnread" label="&nntpDownloadUnread.label;" accesskey="&nntpDownloadUnread.accesskey;"/>
-    <hbox iscontrolcontainer="true" align="center" hidable="true" hidefor="movemail,pop3,imap">
+
+    <hbox iscontrolcontainer="true" align="center" class="indent" hidable="true" hidefor="movemail,pop3,imap">
         <checkbox wsm_persist="true" id="nntp.downloadMsg" label="&nntpDownloadMsg.label;" accesskey="&nntpDownloadMsg.accesskey;" oncommand="onCheckItem('bc_downloadMsg', 'nntp.downloadMsg');"/>
         <textbox wsm_persist="true" id="nntp.downloadMsgMin" size="2" value="30" observes="bc_downloadMsg"/>
-        <label value="&daysAgo.label;"/>
+        <label value="&daysOld.label;"/>
     </hbox>
 
-    <separator/>
     <vbox iscontrolcontainer="true" hidable="true" hidefor="movemail,pop3,imap" align="start">  
+    <separator/>
     <description class="desc">&nntpCleanup.label;</description>
 
-    <radiogroup wsm_persist="true" id="nntp.keepMsg">
+    <radiogroup wsm_persist="true" id="nntp.keepMsg" class="indent">
+        <radio wsm_persist="true" id="nntp.keepAllMsg" value="1" accesskey="&nntpKeepAll.accesskey;"
+            label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
         <hbox flex="1" align="center">
-            <radio wsm_persist="true" id="nntp.keepOldMsg" value="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="2" value="30" observes="bc_keepMsg"/>
-            <label value="&days.label;"/>
-        </hbox>
-        <radio wsm_persist="true" id="nntp.keepAllMsg" value="1" label="&nntpKeepAll.label;" oncommand="onCheckKeepMsg();"/>
-        <hbox flex="1" align="center">
-            <radio wsm_persist="true" id="nntp.keepNewMsg" value="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
-            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="2" value="30" observes="bc_keepMsg"/>
+            <radio wsm_persist="true" id="nntp.keepNewMsg" accesskey="&nntpKeepNew.accesskey;" 
+                value="3" label="&nntpKeepNew.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="nntp.keepNewMsgMin" size="2" value="30"/>
             <label value="&message.label;"/>
+        </hbox>
+        <hbox flex="1" align="center">
+            <radio wsm_persist="true" id="nntp.keepOldMsg" accesskey="&nntpKeepMsg.accesskey;"
+                value="2" label="&nntpKeepMsg.label;" oncommand="onCheckKeepMsg();"/>
+            <textbox wsm_persist="true" id="nntp.keepOldMsgMin" size="2" value="30"/>
+            <label value="&days.label;"/>
         </hbox>
     </radiogroup>
 
-    <checkbox  wsm_persist="true" id="nntp.keepUnread" label="&nntpKeepUnread.label;" checked="true"/>
-    <hbox flex="1" align="center">
-        <checkbox wsm_persist="true" id="nntp.removeBody" label="&nntpRemoveBody.label;" oncommand="onCheckItem('bc_removeBody','nntp.removeBody');"/>
+    <hbox align="center" class="indent">
+        <checkbox wsm_persist="true" id="nntp.keepUnread" accesskey="&nntpKeepUnread.accesskey;"
+            label="&nntpKeepUnread.label;" checked="true"/>
+    </hbox>
+    <hbox align="center" class="indent">
+        <checkbox wsm_persist="true" id="nntp.removeBody" accesskey="&nntpRemoveBody.accesskey;"
+            label="&nntpRemoveBody.label;" oncommand="onCheckItem('bc_removeBody','nntp.removeBody');"/>
         <textbox wsm_persist="true" id="nntp.removeBodyMin" size="2" value="30" observes="bc_removeBody"/>
-        <label value="&days.label;"/>
+        <label value="&daysOld.label;"/>
     </hbox>
     </vbox>
     </groupbox>

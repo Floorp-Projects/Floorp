@@ -22,8 +22,8 @@
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <hbox flex="1">
-    <vbox flex="1">
-      <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
+    <vbox style="&accountTree.width;">
+      <tree datasources="rdf:msgaccountmanager" flex="1"
             containment="http://home.netscape.com/NC-rdf#Settings"
             onselect="onAccountClick(event.target)" id="accounttree"
             seltype="single"
@@ -58,9 +58,7 @@
               prefstring="mail.disable_button.delete_account"/>
     </vbox>
   
-    <iframe id="contentFrame" name="contentFrame" flex="6" style="width: 0px"/>
+    <iframe id="contentFrame" name="contentFrame" flex="1"/>
   </hbox>
-  
-  <separator/>
 
 </dialog>

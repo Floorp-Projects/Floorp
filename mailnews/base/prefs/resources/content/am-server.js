@@ -76,8 +76,11 @@ function initServerType() {
 
   var messengerBundle = document.getElementById("bundle_messenger");
   var verboseName = messengerBundle.getString(propertyName);
-
   setDivText("servertype.verbose", verboseName);
+ 
+  var isSecureSelected = document.getElementById("server.isSecure").checked;
+  var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
+  document.getElementById("defaultPort").value = protocolInfo.getDefaultServerPort(isSecureSelected);
 }
 
 function hideShowControls(serverType)
@@ -206,13 +209,21 @@ function getEnclosingContainer(startNode) {
 function secureSelect() {
     var serverType   = document.getElementById("server.type").getAttribute("value");
     var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
+    var isSecureSelected = document.getElementById("server.isSecure").checked;
+    var defaultPort = protocolInfo.getDefaultServerPort(false);
+    var defaultPortSecure = protocolInfo.getDefaultServerPort(true);
+    var previouslyDisplayedPort = document.getElementById("server.port").value;
 
-    // If the secure option is checked, protocolInfo returns a secure port value
-	// for the corresponding protocol. Otherwise, a default value is returned.
-    if (document.getElementById("server.isSecure").checked)
-        document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(true);
-    else
-        document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
+    if (isSecureSelected) {
+      document.getElementById("defaultPort").value = defaultPortSecure;
+      if (previouslyDisplayedPort == defaultPort)
+        document.getElementById("server.port").value = defaultPortSecure;
+    }
+    else {
+      document.getElementById("defaultPort").value = defaultPort;
+      if (previouslyDisplayedPort == defaultPortSecure)
+        document.getElementById("server.port").value = defaultPort;
+    } 
 }
 
 function setupBiffUI()

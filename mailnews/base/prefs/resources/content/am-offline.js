@@ -100,7 +100,7 @@ function initDownloadSettings()
 
     var downloadSettings =  gIncomingServer.downloadSettings;
     document.getElementById("nntp.downloadMsg").checked = downloadSettings.downloadByDate;
-    document.getElementById("nntp.downloadUnread").checked = downloadSettings.downloadUnreadOnly;
+    document.getElementById("nntp.notDownloadRead").checked = downloadSettings.downloadUnreadOnly;
     if(downloadSettings.ageLimitOfMsgsToDownload > 0)
         document.getElementById("nntp.downloadMsgMin").setAttribute("value", downloadSettings.ageLimitOfMsgsToDownload);
     else
@@ -225,7 +225,7 @@ function onSave()
     retentionSettings.cleanupBodiesByDays = document.getElementById("nntp.removeBody").checked;
 
     downloadSettings.downloadByDate = document.getElementById("nntp.downloadMsg").checked;
-    downloadSettings.downloadUnreadOnly = document.getElementById("nntp.downloadUnread").checked;
+    downloadSettings.downloadUnreadOnly = document.getElementById("nntp.notDownloadRead").checked;
     downloadSettings.ageLimitOfMsgsToDownload = document.getElementById("nntp.downloadMsgMin").value;
 
     gIncomingServer.retentionSettings = retentionSettings;
@@ -279,7 +279,7 @@ function onLockPreference()
                            id:"offline.downloadBodiesOnGetNewMail"},
       { prefstring:"limit_offline_message_size", id:"offline.notDownload"},
       { prefstring:"max_size", id:"offline.notDownloadMin"},
-      { prefstring:"downloadUnreadOnly", id:"nntp.downloadUnread"},
+      { prefstring:"downloadUnreadOnly", id:"nntp.notDownloadRead"},
       { prefstring:"downloadByDate", id:"nntp.downloadMsg"},
       { prefstring:"ageLimit", id:"nntp.downloadMsgMin"},
       { prefstring:"retainBy", id:"nntp.keepMsg"},
@@ -288,7 +288,8 @@ function onLockPreference()
       { prefstring:"keepUnreadOnly", id:"nntp.keepUnread"},
       { prefstring:"daysToKeepBodies", id:"nntp.removeBodyMin"},
       { prefstring:"cleanupBodies", id:"nntp.removeBody" },
-      { prefstring:"disable_button.selectFolder", id:"selectFolderButton"}
+      { prefstring:"disable_button.selectFolder", id:"selectNewsgroupsButton"},
+      { prefstring:"disable_button.selectFolder", id:"selectImapFoldersButton"}
     ];
 
     finalPrefString = initPrefString + "." + gIncomingServer.key + ".";
@@ -318,12 +319,12 @@ function onCheckKeepMsg()
         // radiogroup have been locked by the function onLockPreference.
         return;
     }
-    var broadcaster_keepMsg = document.getElementById("bc_keepMsg");
     var checkedOld = document.getElementById("nntp.keepOldMsg").selected;
     var checkedNew = document.getElementById("nntp.keepNewMsg").selected;
     var checkedAll = document.getElementById("nntp.keepAllMsg").selected;
     if(checkedAll) {
-        broadcaster_keepMsg.setAttribute("disabled", "true");
+        document.getElementById("nntp.keepNewMsgMin").setAttribute("disabled", "true");
+        document.getElementById("nntp.keepOldMsgMin").setAttribute("disabled", "true");
     }
     else if(checkedOld) {
         document.getElementById("nntp.keepOldMsgMin").removeAttribute("disabled");

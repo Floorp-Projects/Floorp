@@ -1,33 +1,32 @@
-<!ENTITY offlineDesc.label "Offline enables you to download your messages locally so that they are available when you are disconnected from the server. Use the &quot;Select&quot; button to choose which messages will be available when you are offline.">
-<!ENTITY offlinePopDesc.label "Messages are stored locally on your computer. To save disk space:">
-<!ENTITY offlineMsg.label "To save download time and disk space:">
-<!ENTITY offlineNewFolder.label "When I create new folders, select them for offline">
-<!ENTITY offlineNewFolder.accesskey "h">
-<!ENTITY offlineNotDownload.label "Do not download messages that are larger than">
-<!ENTITY offlineNotDownload.accesskey "d">
+<!ENTITY doNotDownloadPop3Movemail.label "To save disk space, do not download:">
+<!ENTITY doNotDownload.label "To save disk space, do not download for offline use:">
+<!ENTITY offlineNewFolder.label "When I create new folders, select them for offline use">
+<!ENTITY offlineNewFolder.accesskey "c">
+<!ENTITY offlineNotDownload.label "Messages larger than">
+<!ENTITY offlineNotDownload.accesskey "M">
 <!ENTITY kb.label "KB">
 <!ENTITY days.label "days">
-<!ENTITY daysAgo.label "days ago">
+<!ENTITY daysOld.label "days old">
 <!ENTITY message.label "messages">
-<!ENTITY nntpDownloadUnread.label "Download only unread message bodies">
-<!ENTITY nntpDownloadUnread.accesskey "u">
-<!ENTITY nntpDownloadMsg.label "Download message bodies for messages since">
-<!ENTITY nntpDownloadMsg.accesskey "o">
-<!ENTITY nntpCleanup.label "When it is time to clean up messages:">
-<!ENTITY nntpKeepMsg.label "Keep messages which have arrived within the past">
-<!ENTITY nntpKeepMsg.accesskey "p">
-<!ENTITY nntpKeepAll.label "Keep all messages">
-<!ENTITY nntpKeepAll.accesskey "a">
-<!ENTITY nntpKeepNew.label "Keep the newest">
+<!ENTITY nntpNotDownloadRead.label "Read messages">
+<!ENTITY nntpNotDownloadRead.accesskey "R">
+<!ENTITY nntpDownloadMsg.label "Messages more than">
+<!ENTITY nntpDownloadMsg.accesskey "e">
+<!ENTITY nntpCleanup.label "Keep:">
+<!ENTITY nntpKeepMsg.label "Messages which have arrived within the last">
+<!ENTITY nntpKeepMsg.accesskey "w">
+<!ENTITY nntpKeepAll.label "All messages">
+<!ENTITY nntpKeepAll.accesskey "A">
+<!ENTITY nntpKeepNew.label "The newest">
 <!ENTITY nntpKeepNew.accesskey "n">
-<!ENTITY nntpKeepUnread.label "Keep only unread messages">
-<!ENTITY nntpKeepUnread.accesskey "e">
-<!ENTITY nntpRemoveBody.label "Remove message bodies only older than">
-<!ENTITY nntpRemoveBody.accesskey "m">
-<!ENTITY offlineSelect.label "Select...">
-<!ENTITY offlineNntpDesc.label "You can download your messages locally so that they are available when you are working offline. Use the &quot;Select&quot; button to choose which newsgroups will be available when you are working offline.">
-<!ENTITY offlineImapDesc.label "You can download your messages locally so that they are available when you are working offline.">
-<!ENTITY selectButtonDesc.label "Use the &quot;Select&quot; button to choose which folders will be available when you are working offline.">
+<!ENTITY nntpKeepUnread.label "Only unread messages">
+<!ENTITY nntpKeepUnread.accesskey "u">
+<!ENTITY nntpRemoveBody.label "Only message bodies less than">
+<!ENTITY nntpRemoveBody.accesskey "O">
+<!ENTITY offlineSelectNntp.label "Select newsgroups for offline use...">
+<!ENTITY offlineSelectImap.label "Select folders for offline use...">
+<!ENTITY offlineSelect.accesskey "S">
+<!ENTITY offlineDesc.label "You can download your messages locally so that they are available when you are working offline.">
 <!ENTITY makeInboxMsgsAvailable.label "Make the messages in my Inbox available when I am working offline">
 <!ENTITY makeInboxMsgsAvailable.accesskey "b">
 <!ENTITY offlineGroupTitle.label "Offline">

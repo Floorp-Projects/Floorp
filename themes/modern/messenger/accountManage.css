@@ -48,3 +48,12 @@
 .specialFolderPickerGrid {
   margin-left: 20px;
 }
+
+.selectForOfflineUseButton {
+  list-style-image: url("chrome://communicator/skin/icons/offline.gif");
+}
+
+.selectForOfflineUseButton > .button-box > .button-icon {
+  margin-left: 4px;
+  margin-right: 4px;
+}

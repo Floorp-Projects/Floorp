@@ -60,8 +60,15 @@ Contributors:
         </hbox>
         <hbox iscontrolcontainer="true" align="center">
             <label id="fixedServerName" collapsed="true" use="server.realHostName"/>
-            <textbox wsm_persist="true" size="25" id="server.realHostName"
+            <textbox wsm_persist="true" size="20" id="server.realHostName"
                      prefstring="mail.server.%serverkey%.realhostname" class="uri-element"/>
+            <label hidable="true" hidefor="movemail" value="&port.label;"/>
+            <label id="fixedServerPort" collapsed="true" use="server.port"/>
+            <textbox wsm_persist="true" size="3" id="server.port"
+                     preftype="int" hidable="true" hidefor="movemail" 
+                     prefstring="mail.server.%serverkey%.port"/>
+            <label value="&serverPortDefault.label;" hidable="true" hidefor="movemail"/>
+            <label id="defaultPort" hidable="true" hidefor="movemail"/>
         </hbox>
       </row>
       <row align="center">
@@ -72,25 +79,14 @@ Contributors:
         <hbox iscontrolcontainer="true" align="center">
             <label id="fixedUserName" collapsed="true" use="server.realUsername"/>
             <textbox hidable="true" hidefor="nntp" wsm_persist="true"
-                     size="25" id="server.realUsername"
+                     size="20" id="server.realUsername"
                      prefstring="mail.server.%serverkey%.realusername"/>
-        </hbox>
-      </row>
-      <row>
-        <hbox align="center">
-            <label hidable="true" hidefor="movemail" value="&port.label;"/>
-        </hbox>
-        <hbox align="center">
-            <label id="fixedServerPort" collapsed="true" use="server.port"/>
-            <textbox wsm_persist="true" size="5" id="server.port"
-                     preftype="int" hidable="true" hidefor="movemail" 
-                     prefstring="mail.server.%serverkey%.port"/>
         </hbox>
       </row>
     </rows>
   </grid>
 
-  <spacer class="spacer"/>
+  <separator class="thin"/>
 
   <groupbox>
   <caption label="&serverSettings.label;"/>
