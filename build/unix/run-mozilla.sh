@@ -147,7 +147,7 @@ moz_get_debugger()
 	do
 		dpath=`which ddd`
 	
-		if [ -x $dpath ]
+		if [ -x "$dpath" ]
 		then
 			debugger=$dpath
 			break
@@ -166,7 +166,7 @@ moz_run_program()
 	##
 	## Make sure the program is executable
 	##
-	if [ ! -x $prog ]
+	if [ ! -x "$prog" ]
 	then
 		moz_bail "Cannot execute $prog."
 	fi
@@ -177,7 +177,7 @@ moz_run_program()
 	##
 	crc_prog=`which md5sum`
 
-	if [ -x $crc_prog ]
+	if [ -x "$crc_prog" ]
 	then
 		DEBUG_CORE_FILES=1
 	fi
@@ -216,7 +216,7 @@ moz_run_program()
 		then
 			debugger=`moz_get_debugger`
 
-			if [ -x $debugger ]
+			if [ -x "$debugger" ]
 			then
 				echo "$debugger $prog core"
 				$debugger $prog core
@@ -234,7 +234,7 @@ moz_debug_program()
 	##
 	## Make sure the program is executable
 	##
-	if [ ! -x $prog ]
+	if [ ! -x "$prog" ]
 	then
 		moz_bail "Cannot execute $prog."
 	fi
@@ -246,7 +246,7 @@ moz_debug_program()
 		debugger=`moz_get_debugger`
 	fi
 
-	if [ -x $debugger ]
+	if [ -x "$debugger" ]
 	then
 		echo "$debugger $prog ${1+"$@"}"
 		$debugger $prog ${1+"$@"}
@@ -383,7 +383,7 @@ fi
 ##
 ## Make sure the program is executable
 ##
-if [ ! -x $MOZ_PROGRAM ]
+if [ ! -x "$MOZ_PROGRAM" ]
 then
 	moz_bail "Cannot execute $MOZ_PROGRAM."
 fi
