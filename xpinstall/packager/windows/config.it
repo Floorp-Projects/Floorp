@@ -504,6 +504,20 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
+;[Windows Registry3]
+;Root Key=HKEY_CURRENT_USER
+;Key=Software\Microsoft\Windows\CurrentVersion\Internet Settings
+;Name=EnableAutodial
+;Name Value=1
+;Size=4
+;Type=REG_BINARY
+;Decrypt Key=FALSE
+;Decrypt Name=FALSE
+;Decrypt Name Value=FALSE
+;Overwrite Key=TRUE
+;Overwrite Name=TRUE
+;Timing=post smartupdate
+
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
 ;   MAXIMIZE         Maximizes the specified window.
