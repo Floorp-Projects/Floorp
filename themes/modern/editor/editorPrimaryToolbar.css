@@ -250,3 +250,69 @@
 #spellingButton[disabled="true"] {
   -moz-image-region: rect(272px 199px 305px 150px) !important;
 }
+
+
+#cutButton {
+  -moz-image-region: rect(374px 49px 407px 0);
+}
+
+#cutButton:hover {
+  -moz-image-region: rect(374px 99px 407px 50px);
+}
+
+#cutButton:hover:active {
+  -moz-image-region: rect(374px 149px 407px 100px);
+}
+
+#cutButton[disabled="true"] {
+  -moz-image-region: rect(374px 199px 407px 150px) !important;
+}
+
+#copyButton {
+  -moz-image-region: rect(408px 49px 441px 0);
+}
+
+#copyButton:hover {
+  -moz-image-region: rect(408px 99px 441px 50px);
+}
+
+#copyButton:hover:active {
+  -moz-image-region: rect(408px 149px 441px 100px);
+}
+
+#copyButton[disabled="true"] {
+  -moz-image-region: rect(408px 199px 441px 150px) !important;
+}
+
+#pasteButton {
+  -moz-image-region: rect(442px 49px 475px 0);
+}
+
+#pasteButton:hover {
+  -moz-image-region: rect(442px 99px 475px 50px);
+}
+
+#pasteButton:hover:active {
+  -moz-image-region: rect(442px 149px 475px 100px);
+}
+
+#pasteButton[disabled="true"] {
+  -moz-image-region: rect(442px 199px 475px 150px) !important;
+}
+
+#findButton {
+  -moz-image-region: rect(476px 49px 509px 0);
+}
+
+#findButton:hover {
+  -moz-image-region: rect(476px 99px 509px 50px);
+}
+
+#findButton:hover:active {
+  -moz-image-region: rect(476px 149px 509px 100px);
+}
+
+#findButton[disabled="true"] {
+  -moz-image-region: rect(476px 199px 509px 150px) !important;
+}
+
