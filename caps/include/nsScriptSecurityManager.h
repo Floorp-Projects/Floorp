@@ -56,6 +56,8 @@ public:
         POLICY_TYPE_PERDOMAIN = 2
     };
 
+    nsObjectHashtable *mOriginToPolicyMap;
+
 private:
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
@@ -70,11 +72,9 @@ private:
     GetSecurityLevel(JSContext *cx, char *prop_name, PolicyType type, 
                      PRBool isWrite, char **capability);
 
-    char *
-    AddSecPolicyPrefix(JSContext *cx, char *pref_str, PolicyType type);
-
-    char *
-    GetSitePolicy(const char *org);
+    NS_IMETHOD
+    GetPrefName(JSContext *cx, char *propName, PolicyType type, 
+                char **result);
 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);

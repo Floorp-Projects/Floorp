@@ -2206,7 +2206,7 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         PRBool ok = PR_FALSE;
         if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
             NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
-            NS_FAILED(secMan->CheckURI(scriptCX, newUrl, &ok)) || !ok) 
+            NS_FAILED(secMan->CheckLoadURIFromScript(scriptCX, newUrl))) 
         {
           NS_RELEASE(newOuterShell);
           NS_RELEASE(webShellContainer);

@@ -68,6 +68,7 @@
 #include "nsIRefreshURI.h"
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsHTMLIIDs.h"
 #include "nsTextFragment.h"
@@ -3629,35 +3630,6 @@ HTMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
   return rv;
 }
 
-/*
-** The enum "SchemeOrder" defines an ordering of URI schemes used to 
-** determine whether a page can load a script. Schemes are listed in
-** order of declining power: chrome can access everything, resource
-** can access everything but chrome, and so forth.
-*/
-
-enum SchemeOrder { CHROME_SCHEME, RESOURCE_SCHEME, FILE_SCHEME, OTHER_SCHEME };
-
-static SchemeOrder
-GetSchemeOrder(nsIURI *uri) 
-{
-  SchemeOrder result = OTHER_SCHEME;
-  if (uri) {
-    char *scheme;
-    uri->GetScheme(&scheme);
-    if (scheme) {
-      if (PL_strcmp(scheme, "chrome") == 0)
-        result = CHROME_SCHEME;
-      else if (PL_strcmp(scheme, "resource") == 0)
-        result = RESOURCE_SCHEME;
-      else if (PL_strcmp(scheme, "file") == 0)
-        result = FILE_SCHEME;
-      nsCRT::free(scheme);
-    }
-  }
-  return result;
-}
-
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
@@ -3786,13 +3758,14 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         return rv;
       }
 
-      // Check access to file:, chrome:, and resource:.
-      SchemeOrder order = GetSchemeOrder(url);
-      SchemeOrder baseOrder = GetSchemeOrder(mDocumentBaseURL);
-      if (baseOrder > order) {
-        NS_RELEASE(url);
-        return NS_ERROR_DOM_BAD_URI;
-      }
+      // Check that this page is allowed to load this URI.
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+      if (NS_FAILED(rv)) 
+          return rv;
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url);
+      if (NS_FAILED(rv)) 
+          return rv;
 
       nsCOMPtr<nsILoadGroup> loadGroup;
       nsIUnicharStreamLoader* loader;

@@ -266,7 +266,7 @@ class ConstStringImpl
 
                                         ~ConstStringImpl()
                                         {
-                                            delete [] (char*)mConstString;
+                                            Recycle((char*)mConstString);
                                         }
 
     protected:

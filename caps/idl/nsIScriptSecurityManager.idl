@@ -42,7 +42,21 @@ interface nsIScriptSecurityManager : nsISupports
 	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
 	                          [const] in string prop, in boolean isWrite);
 
-    boolean CheckURI(in nsIScriptContext cx, in nsIURI uri);
+	/**
+	 * Check that the script with context "cx" can load "uri".
+	 *
+	 * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+	 * should be denied.
+	 */
+    void CheckLoadURIFromScript(in nsIScriptContext cx, in nsIURI uri);
+
+	/**
+	 * Check that content from "from" can load "uri".
+	 *
+	 * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+	 * should be denied.
+	 */
+    void CheckLoadURI(in nsIURI from, in nsIURI uri);
 
     boolean HasSubjectPrincipal();
 
@@ -50,7 +64,7 @@ interface nsIScriptSecurityManager : nsISupports
 
     nsIPrincipal GetSystemPrincipal();
 
-    nsIPrincipal CreateCodebasePrincipal(in nsIURI aURI);
+    nsIPrincipal GetCodebasePrincipal(in nsIURI aURI);
 
     boolean CanExecuteScripts(in nsIPrincipal principal);
 

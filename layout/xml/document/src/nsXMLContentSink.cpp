@@ -53,6 +53,8 @@
 #include "nsIScriptContextOwner.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
+#include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIContentViewer.h"
 #include "jsapi.h" // for JSVERSION_* and JS_VersionToString
 #include "prtime.h"
@@ -1797,6 +1799,15 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       if (NS_OK != rv) {
         return rv;
       }
+
+      // Check that this page is allowed to load this URI.
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+      if (NS_FAILED(rv)) 
+          return rv;
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url);
+      if (NS_FAILED(rv)) 
+          return rv;
 
       nsIUnicharStreamLoader* loader;
       nsCOMPtr<nsILoadGroup> loadGroup;

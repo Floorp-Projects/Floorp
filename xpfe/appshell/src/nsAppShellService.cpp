@@ -433,7 +433,7 @@ nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
             char *name = aComponentCID.ToString();
             printf( "Initialized app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
-            delete [] name;
+            Recycle(name);
         #endif
         // Release it (will live on if it registered itself as service).
         component->Release();
@@ -443,7 +443,7 @@ nsAppShellService::InitializeComponent( const nsCID &aComponentCID ) {
             char *name = aComponentCID.ToString();
             printf( "Error creating app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
-            delete [] name;
+            Recycle(name);
         #endif
     }
 

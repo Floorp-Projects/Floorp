@@ -248,7 +248,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         nsCOMPtr<nsIURI> uri;
         if (NS_FAILED(NewURI(urlStr.GetBuffer(), nsnull, getter_AddRefs(uri))))
           return NS_ERROR_FAILURE;
-        if (NS_FAILED(securityManager->CreateCodebasePrincipal(uri, getter_AddRefs(principal))))
+        if (NS_FAILED(securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal))))
           return NS_ERROR_FAILURE;
     }
 

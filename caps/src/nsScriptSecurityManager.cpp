@@ -367,23 +367,59 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext, 
-                                  nsIURI *aURI,
-                                  PRBool *aResult)
+nsScriptSecurityManager::CheckLoadURIFromScript(nsIScriptContext *aContext, 
+                                                nsIURI *aURI)
 {
-    // Temporary: only enforce if security.checkuri pref is enabled
-	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref("security.checkuri", &enabled)) ||
-        !enabled) 
-    {
-        *aResult = PR_TRUE;
-        return NS_OK;
+    // Get principal of currently executing script.
+    JSContext *cx = (JSContext*) aContext->GetNativeContext();
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+        return NS_ERROR_FAILURE;
     }
 
+    // The system principal can load all URIs.
+    PRBool equals;
+    if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
+        return NS_ERROR_FAILURE;
+    if (equals)
+        return NS_OK;
+
+    // Otherwise, principal should have a codebase that we can use to
+    // do the remaining tests.
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    if (!principal) 
+        return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIURI> uri;
+    if (NS_FAILED(codebase->GetURI(getter_AddRefs(uri)))) 
+        return NS_ERROR_FAILURE;
+    if (NS_SUCCEEDED(CheckLoadURI(uri, aURI)))
+        return NS_OK;
+
+    // See if we're attempting to load a file: URI. If so, let a 
+    // UniversalFileRead capability trump the above check.
+    nsXPIDLCString scheme;
+    if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
+        return NS_ERROR_FAILURE;
+    if (nsCRT::strcmp(scheme, "file") == 0) {
+        PRBool enabled;
+        if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", &enabled)))
+            return NS_ERROR_FAILURE;
+        if (enabled)
+            return NS_OK;
+    }
+
+    // Report error.
+    nsXPIDLCString spec;
+    if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
+        return NS_ERROR_FAILURE;
+	JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
+    return NS_ERROR_DOM_BAD_URI;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
+                                      nsIURI *aURI)
+{
     nsXPIDLCString scheme;
     if (NS_FAILED(aURI->GetScheme(getter_Copies(scheme))))
         return NS_ERROR_FAILURE;
@@ -394,7 +430,6 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
         nsCRT::strcmp(scheme, "mailto")       == 0 ||
         nsCRT::strcmp(scheme, "news")         == 0)
     {
-        *aResult = PR_TRUE;
         return NS_OK;
     }
     if (nsCRT::strcmp(scheme, "about") == 0) {
@@ -402,53 +437,31 @@ nsScriptSecurityManager::CheckURI(nsIScriptContext *aContext,
         if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
             return NS_ERROR_FAILURE;
         if (nsCRT::strcmp(spec, "about:blank") == 0) {
-            *aResult = PR_TRUE;
             return NS_OK;
         }
-    }
-    JSContext *cx = (JSContext*) aContext->GetNativeContext();
-    nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
-        return NS_ERROR_FAILURE;
     }
     if (nsCRT::strcmp(scheme, "file") == 0) {
-        nsCOMPtr<nsICodebasePrincipal> codebase;
-        if (NS_SUCCEEDED(principal->QueryInterface(
-                 NS_GET_IID(nsICodebasePrincipal), 
-                 (void **) getter_AddRefs(codebase))))
+        nsXPIDLCString scheme2;
+        if (NS_SUCCEEDED(aFromURI->GetScheme(getter_Copies(scheme2))) &&
+            nsCRT::strcmp(scheme2, "file") == 0)
         {
-            nsCOMPtr<nsIURI> uri;
-            if (NS_SUCCEEDED(codebase->GetURI(getter_AddRefs(uri)))) {
-                nsXPIDLCString scheme2;
-                if (NS_SUCCEEDED(uri->GetScheme(getter_Copies(scheme2))) &&
-                    nsCRT::strcmp(scheme2, "file") == 0)
-                {
-                    *aResult = PR_TRUE;
-                    return NS_OK;
-                }
-            }
-        }
-        
-        if (NS_FAILED(IsCapabilityEnabled("UniversalFileRead", aResult)))
-            return NS_ERROR_FAILURE;
-
-        if (*aResult)
             return NS_OK;
+        }
     }
 
-    // Only allowed for the system principal to create other URIs.
-    if (NS_FAILED(principal->Equals(mSystemPrincipal, aResult)))
-        return NS_ERROR_FAILURE;
-
-    if (!*aResult) {
-        // Report error.
-        nsXPIDLCString spec;
-        if (NS_FAILED(aURI->GetSpec(getter_Copies(spec))))
-            return NS_ERROR_FAILURE;
-	    JS_ReportError(cx, "illegal URL method '%s'", (const char *)spec);
-        return NS_ERROR_DOM_BAD_URI;
+    // Temporary: allow a preference to disable this check
+	nsresult rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	if (NS_FAILED(rv))
+		return NS_ERROR_FAILURE;
+	PRBool enabled;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkuri", &enabled)) &&
+        !enabled) 
+    {
+        return NS_OK;
     }
-    return NS_OK;
+
+    return NS_ERROR_DOM_BAD_URI;
 }
 
 NS_IMETHODIMP
@@ -482,12 +495,12 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI *aURI, 
-                                                 nsIPrincipal **result)
+nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI, 
+                                              nsIPrincipal **result)
 {
     nsresult rv;
     nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
-    NS_ADDREF(codebase);    // XXX should constructor addref?
+    NS_ADDREF(codebase);
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
     if (NS_FAILED(codebase->Init(aURI))) {
@@ -593,7 +606,9 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
                                                                 &canEnable);
             if (NS_FAILED(rv))
                 return rv;
-            if (canEnable == nsIPrincipal::ENABLE_DENIED) {
+            if (canEnable != nsIPrincipal::ENABLE_GRANTED &&
+                canEnable != nsIPrincipal::ENABLE_WITH_USER_PERMISSION) 
+            {
                 *result = PR_FALSE;
                 return NS_OK;
             }
@@ -792,7 +807,8 @@ nsScriptSecurityManager::CanSetProperty(JSContext *aJSContext,
 ///////////////////
 
 nsScriptSecurityManager::nsScriptSecurityManager(void)
-    : mSystemPrincipal(nsnull), mPrincipals(nsnull)
+    : mOriginToPolicyMap(nsnull), mSystemPrincipal(nsnull), 
+      mPrincipals(nsnull)
 {
     NS_INIT_REFCNT();
     memset(domPropertyPolicyTypes, 0, sizeof(domPropertyPolicyTypes));
@@ -801,6 +817,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
 {
+    delete mOriginToPolicyMap;
     NS_IF_RELEASE(mSystemPrincipal);
     delete mPrincipals;
 } 
@@ -931,14 +948,14 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
 
 
 PRInt32 
-nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name, 
+nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *propName, 
                                           PolicyType type, PRBool isWrite, 
                                           char **capability)
 {
-    if (prop_name == nsnull) 
+    if (propName == nsnull) 
         return SCRIPT_SECURITY_NO_ACCESS;
-    char *tmp_prop_name = AddSecPolicyPrefix(cx, prop_name, type);
-    if (tmp_prop_name == nsnull) 
+    nsXPIDLCString prefName;
+    if (NS_FAILED(GetPrefName(cx, propName, type, getter_Copies(prefName))))
         return SCRIPT_SECURITY_NO_ACCESS;
     PRInt32 secLevel;
     char *secLevelString;
@@ -946,18 +963,17 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name,
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 	if (NS_FAILED(rv))
 		return NS_ERROR_FAILURE;
-    rv = prefs->CopyCharPref(tmp_prop_name, &secLevelString);
+    rv = prefs->CopyCharPref(prefName, &secLevelString);
     if (NS_FAILED(rv)) {
-        nsAutoString s = tmp_prop_name;
+        nsAutoString s = (const char *) prefName;
         s += (isWrite ? ".write" : ".read");
         char *cp = s.ToNewCString();
-        if (!cp)
+        if (!cp) 
             return SCRIPT_SECURITY_NO_ACCESS;
         rv = prefs->CopyCharPref(cp, &secLevelString);
         Recycle(cp);
     }
     if (NS_SUCCEEDED(rv) && secLevelString) {
-        PR_FREEIF(tmp_prop_name);
         if (PL_strcmp(secLevelString, "sameOrigin") == 0)
             secLevel = SCRIPT_SECURITY_SAME_DOMAIN_ACCESS;
         else if (PL_strcmp(secLevelString, "allAccess") == 0)
@@ -979,40 +995,51 @@ nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, char *prop_name,
     // This violates the rule of a safe default, but means we don't have
     // to specify the large majority of unchecked properties, only the
     // minority of checked ones.
-    PR_FREEIF(tmp_prop_name);
     return SCRIPT_SECURITY_ALL_ACCESS;
 }
 
 
-char *
-nsScriptSecurityManager::AddSecPolicyPrefix(JSContext *cx, char *pref_str, 
-                                            PolicyType type)
+NS_IMETHODIMP
+nsScriptSecurityManager::GetPrefName(JSContext *cx, char *propName, 
+                                     PolicyType type, char **result)
 {
-    const char *subjectOrigin = "";//GetSubjectOriginURL(cx);
-    char *policy_str, *retval = 0;
-    if ((policy_str = GetSitePolicy(subjectOrigin)) == 0) {
-        /* No site-specific policy.  Get global policy name. */
-		nsresult rv;
-		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-		if (NS_FAILED(rv) ||
-            NS_FAILED(prefs->CopyCharPref("javascript.security_policy", &policy_str)))
-		{
-            policy_str = PL_strdup("default");
-		}
+    nsresult rv;
+    static const char *defaultStr = "default";
+    nsAutoString s = "security.policy.";
+    if (type == POLICY_TYPE_DEFAULT) {
+        s += defaultStr;
+    } else if (type == POLICY_TYPE_PERDOMAIN) {
+        nsCOMPtr<nsIPrincipal> principal;
+        if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+            return NS_ERROR_FAILURE;
+        }
+        PRBool equals;
+        if (NS_FAILED(principal->Equals(mSystemPrincipal, &equals)))
+            return NS_ERROR_FAILURE;
+        if (equals) {
+            s += defaultStr;
+        } else {
+            nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal, &rv);
+            if (NS_FAILED(rv))
+                return rv;
+            nsXPIDLCString origin;
+            if (NS_FAILED(rv = codebase->GetOrigin(getter_Copies(origin))))
+                return rv;
+            nsCString *policy = nsnull;
+            if (mOriginToPolicyMap) {
+                nsStringKey key(origin);
+                policy = (nsCString *) mOriginToPolicyMap->Get(&key);
+            }
+            if (policy)
+                s += *policy;
+            else
+                s += defaultStr;
+        }
     }
-    if (policy_str) { //why can't this be default? && PL_strcasecmp(policy_str, "default") != 0) {
-        retval = PR_sprintf_append(NULL, "security.policy.%s.%s", policy_str, pref_str);
-        PR_Free(policy_str);
-    }
-    
-    return retval;
-}
-
-
-char *
-nsScriptSecurityManager::GetSitePolicy(const char *org)
-{
-    return nsnull;
+    s += '.';
+    s += propName;
+    *result = s.ToNewCString();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -1959,12 +1986,25 @@ findDomProp(const char *propName, int n)
     return -1;
 }
 
-// security.policy.<policyname>.<object>.<property>[.read|.write]
+PR_STATIC_CALLBACK(PRBool)
+DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsCString* entry = (nsCString*) aData;
+    delete entry;
+    return PR_TRUE;
+}
+
+struct PolicyEnumeratorInfo {
+    nsScriptSecurityManager::PolicyType *policies;
+    nsIPref *prefs;
+    nsScriptSecurityManager *secMan;
+};
 
 PR_STATIC_CALLBACK(void)
-enumeratePolicy(const char *prefName, void *policies) {
+enumeratePolicy(const char *prefName, void *data) {
     if (!prefName || !*prefName)
         return;
+    PolicyEnumeratorInfo *info = (PolicyEnumeratorInfo *) data;
     unsigned count = 0;
     const char *dots[5];
     const char *p;
@@ -1977,23 +2017,59 @@ enumeratePolicy(const char *prefName, void *policies) {
     }
     if (count < sizeof(dots)/sizeof(dots[0]))
         dots[count] = p;
-    if (count >= 4) {
-        const char *policyName = dots[1] + 1;
-        int policyLength = dots[2] - policyName;
-        PRBool isDefault = PL_strncmp("default", policyName, policyLength) == 0;
+    if (count < 3)
+        return;
+    const char *policyName = dots[1] + 1;
+    int policyLength = dots[2] - policyName;
+    PRBool isDefault = PL_strncmp("default", policyName, policyLength) == 0;
+    if (!isDefault && count == 3) {
+        // security.policy.<policyname>.sites
+        const char *sitesName = dots[2] + 1;
+        int sitesLength = dots[3] - sitesName;
+        if (PL_strncmp("sites", sitesName, sitesLength) == 0) {
+            if (!info->secMan->mOriginToPolicyMap) {
+                info->secMan->mOriginToPolicyMap = 
+                    new nsObjectHashtable(nsnull, nsnull, DeleteEntry, nsnull);
+                if (!info->secMan->mOriginToPolicyMap)
+                    return;
+            }
+            char *s;
+            if (NS_FAILED(info->prefs->CopyCharPref(prefName, &s)))
+                return;
+            char *q=s;
+            char *r=s;
+            PRBool working = PR_TRUE;
+            while (working) {
+                if (*r == ' ' || *r == '\0') {
+                    working = (*r != '\0');
+                    *r = '\0';
+                    nsStringKey key(q);
+                    nsCString *value = new nsCString(policyName, policyLength);
+                    if (!value)
+                        break;
+                    info->secMan->mOriginToPolicyMap->Put(&key, value);
+                    q = r + 1;
+                }
+                r++;
+            }
+            PR_Free(s);
+            return;
+        }
+    } else if (count >= 4) {
+        // security.policy.<policyname>.<object>.<property>[.read|.write]
         const char *domPropName = dots[2] + 1;
         int domPropLength = dots[4] - domPropName;
         PRInt16 domProp = findDomProp(domPropName, domPropLength);
         if (domProp >= 0) {
             nsScriptSecurityManager::PolicyType *policyType = 
-                ((nsScriptSecurityManager::PolicyType *) policies) + domProp;
+                info->policies + domProp;
             if (!isDefault)
                 *policyType = nsScriptSecurityManager::POLICY_TYPE_PERDOMAIN;
             else if (*policyType == nsScriptSecurityManager::POLICY_TYPE_NONE)
                 *policyType = nsScriptSecurityManager::POLICY_TYPE_DEFAULT;
             return;
         }
-    }
+    } 
     NS_ASSERTION(PR_FALSE, "DOM property name invalid or not found");
 }
 
@@ -2004,7 +2080,11 @@ nsScriptSecurityManager::InitFromPrefs()
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
+    PolicyEnumeratorInfo info;
+    info.policies = domPropertyPolicyTypes;
+    info.prefs = prefs;
+    info.secMan = this;
     prefs->EnumerateChildren("security.policy", enumeratePolicy,
-                             (void *) domPropertyPolicyTypes);
+                             (void *) &info);
     return NS_OK;
 }
