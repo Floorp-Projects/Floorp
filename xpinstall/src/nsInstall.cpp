@@ -778,8 +778,8 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     {
         if ( mUninstallPackage )
         {
-            VR_UninstallCreateNode( (char*)(const char*) nsAutoCString(mRegistryPackageName), 
-                                    (char*)(const char*) nsAutoCString(mUIName));
+            VR_UninstallCreateNode( NS_ConvertUCS2toUTF8(mRegistryPackageName), 
+                                    NS_ConvertUCS2toUTF8(mUIName));
         }
 
         // Install the Component into the Version Registry.
@@ -793,10 +793,10 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             if (mPackageFolder)
                 mPackageFolder->GetDirectoryPath(path);
 
-            VR_Install( (char*)(const char*)nsAutoCString(mRegistryPackageName), 
+            VR_Install( NS_ConvertUCS2toUTF8(mRegistryPackageName), 
                         (char*)path.GetBuffer(),
                         (char*)(const char*)nsAutoCString(versionString), 
-                        PR_FALSE );
+                        PR_TRUE );
         }
 
         nsInstallObject* ie = nsnull;
@@ -932,7 +932,6 @@ PRInt32
 nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aSubdirectory, nsInstallFolder** aNewFolder)
 {
     long        err;
-    char*       componentCString;
     char        dir[MAXREGPATHLEN];
     nsFileSpec  nsfsDir;
     nsresult    res = NS_OK;
@@ -950,11 +949,11 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
         return NS_OK;
     }
 
-    componentCString = tempString.ToNewCString();
+    NS_ConvertUCS2toUTF8 componentCString(tempString);
 
-    if((err = VR_GetDefaultDirectory( componentCString, MAXREGPATHLEN, dir )) != REGERR_OK)
+    if((err = VR_GetDefaultDirectory( componentCString, sizeof(dir), dir )) != REGERR_OK)
     {
-        if((err = VR_GetPath( componentCString, MAXREGPATHLEN, dir )) == REGERR_OK)
+        if((err = VR_GetPath( componentCString, sizeof(dir), dir )) == REGERR_OK)
         {
             int i;
 
@@ -994,9 +993,6 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
       }
     }
 
-    if (componentCString)
-        Recycle(componentCString);
-    
     return res;
 }
 
@@ -1409,13 +1405,6 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     }
 
     char szRegPackagePath[MAXREGPATHLEN];
-    char* szRegPackageName = aRegistryPackageName.ToNewCString();
-    
-    if (szRegPackageName == nsnull)
-    {
-        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return nsInstall::OUT_OF_MEMORY;
-    }
 
     *szRegPackagePath = '0';
     *aReturn   = nsInstall::SUCCESS;
@@ -1433,7 +1422,9 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         return NS_OK;
     }
 
-    if(REGERR_OK == VR_GetDefaultDirectory(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
+    if(REGERR_OK == VR_GetDefaultDirectory(
+                        NS_ConvertUCS2toUTF8(mRegistryPackageName), 
+                        sizeof(szRegPackagePath), szRegPackagePath))
     {
         nsInstallFolder* folder = new nsInstallFolder();   
         if (folder == nsnull)
@@ -1455,9 +1446,6 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     {
       mPackageFolder = nsnull;
     }
-
-    if(szRegPackageName)
-      Recycle(szRegPackageName);
 
     if (mVersionInfo != nsnull)
         delete mVersionInfo;
@@ -2359,6 +2347,9 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
 PRBool 
 nsInstall::BadRegName(const nsString& regName)
 {
+    if ( regName.Length() == 0 )
+        return PR_TRUE;
+
     if ((regName.First() == ' ' ) || (regName.Last() == ' ' ))
         return PR_TRUE;
         
