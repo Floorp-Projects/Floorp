@@ -106,15 +106,18 @@ NS_IMETHODIMP nsIconProtocolHandler::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsIconProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
-  nsCOMPtr<nsIChannel> channel;
-  NS_NEWXPCOM(channel, nsIconChannel);
+  nsIconChannel* channel = new nsIconChannel;
+  if (!channel)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(channel);
 
-  if (channel)
-    NS_STATIC_CAST(nsIconChannel*,NS_STATIC_CAST(nsIChannel*, channel))->Init(url);
+  nsresult rv = channel->Init(url);
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(channel);
+    return rv;
+  }
 
   *result = channel;
-  NS_IF_ADDREF(*result);
-
   return NS_OK;
 }
 
