@@ -940,6 +940,30 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 							if (NS_SUCCEEDED(rv = aTemplateKid->GetAttribute(attribNameSpaceID,
 									attribName,attribValue)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 							{
+								if (attribValue.Find("rdf:") == 0)
+								{
+									// found an attribute which wants to bind its value
+									// to RDF so look it up in the graph
+									attribValue = attribValue.Cut(0,4);
+									char *prop = attribValue.ToNewCString();
+									if (nsnull == prop)	continue;
+									attribValue = "";
+
+									nsCOMPtr<nsIRDFResource>	propRes;
+									rv = gRDFService->GetResource(prop, getter_AddRefs(propRes));
+									delete [] prop;
+									if (NS_FAILED(rv))	continue;
+
+									nsCOMPtr<nsIRDFNode>		valueNode;
+									if (NS_FAILED(rv = mDB->GetTarget(aValue, propRes, PR_TRUE,
+										getter_AddRefs(valueNode))) || (rv == NS_RDF_NO_VALUE))
+										continue;
+									nsCOMPtr<nsIRDFLiteral>	literalValue = do_QueryInterface(valueNode);
+									if (!literalValue)	continue;
+									PRUnichar	*uniVal;
+									if (NS_FAILED(rv = literalValue->GetValue(&uniVal)))	continue;
+									attribValue = uniVal;
+								}
 								treeGrandchild->SetAttribute(attribNameSpaceID,
 									attribName, attribValue, PR_FALSE);
 							}
