@@ -1328,7 +1328,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
       PR_FREEIF(outCString);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, aCharset, bodyText, &outCString);
 
-      if (NS_ERROR_UENC_NOMAPPING == rv) {
+      if (NS_ERROR_UENC_NOMAPPING == rv && nsIMsgSend::nsMsgDeliverNow == m_deliver_mode) {
         PRBool proceedTheSend;
         nsCOMPtr<nsIPrompt> prompt;
         GetDefaultPrompt(getter_AddRefs(prompt));

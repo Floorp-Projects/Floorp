@@ -680,7 +680,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	    if (NS_SUCCEEDED(rv) && NULL != outCString) 
 	    {
         // body contains multilingual data, confirm send to the user
-        if (NS_ERROR_UENC_NOMAPPING == rv) {
+        if (NS_ERROR_UENC_NOMAPPING == rv && nsIMsgSend::nsMsgDeliverNow == deliverMode) {
           PRBool proceedTheSend;
           rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
           if (!proceedTheSend) {
