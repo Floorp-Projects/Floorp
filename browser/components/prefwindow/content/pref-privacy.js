@@ -62,8 +62,14 @@ function Startup() {
   document.getElementById("passwords").setAttribute("cleardisabled", !e.hasMoreElements());
 
   // Initially disable the downloads clear button if there the downloads list is empty
-  e = PrivacyPanel.getDownloads();
-  document.getElementById("downloads").setAttribute("cleardisabled", !e.hasMoreElements());
+  try {
+    e = PrivacyPanel.getDownloads();
+    var hasDownloads = e.hasMoreElements();
+  }
+  catch (e) {
+    hasDownloads = false;
+  }
+  document.getElementById("downloads").setAttribute("cleardisabled", !hasDownloads);
   
   // Initially disable the form history clear button if the history is empty
   var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
@@ -188,7 +194,12 @@ var PrivacyPanel = {
     downloads: function ()
     {
       var dlMgr = Components.classes["@mozilla.org/download-manager;1"].getService(Components.interfaces.nsIDownloadManager);
-      var downloads = PrivacyPanel.getDownloads();
+      try {
+        var downloads = PrivacyPanel.getDownloads();
+      }
+      catch (e) {
+        return true;
+      }
 
       var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
       var state = rdfs.GetResource("http://home.netscape.com/NC-rdf#DownloadState");
