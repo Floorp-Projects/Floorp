@@ -60,6 +60,7 @@ class nsString;
 class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
+class nsICSSPseudoComparator;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -180,6 +181,21 @@ public:
                                           nsIStyleContext* aParentContext,
                                           PRBool aForceUnique,
                                           nsIStyleContext** aResult) = 0;
+
+  /**
+   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
+   * The tag should be lowercase and inclue the colon.
+   * ie: NS_NewAtom(":first-line");
+   *
+   * Instead of matching solely on aPseudoTag, a comparator function can be
+   * passed in to test.
+   */
+  NS_IMETHOD ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
+                                              nsIAtom* aPseudoTag,
+                                              nsIStyleContext* aParentContext,
+                                              PRBool aForceUnique,
+                                              nsICSSPseudoComparator* aComparator,
+                                              nsIStyleContext** aResult) = 0;
 
   /**
    * Probe style for a pseudo frame within the given aParentContent & aParentContext.

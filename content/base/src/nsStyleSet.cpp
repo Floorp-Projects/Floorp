@@ -164,7 +164,8 @@ public:
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
                                                  nsIStyleContext* aParentContext,
-                                                 PRBool aForceUnique = PR_FALSE);
+                                                 PRBool aForceUnique = PR_FALSE,
+                                                 nsICSSPseudoComparator* aComparator = nsnull);
 
   virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aParentContent,
@@ -949,21 +950,24 @@ struct PseudoRulesMatchingData {
                           nsIContent* aParentContent,
                           nsIAtom* aPseudoTag,
                           nsIStyleContext* aParentContext,
+                          nsICSSPseudoComparator* aComparator,
                           nsISupportsArray* aResults)
     : mPresContext(aPresContext),
       mMedium(aMedium),
       mParentContent(aParentContent),
       mPseudoTag(aPseudoTag),
       mParentContext(aParentContext),
+      mComparator(aComparator),
       mResults(aResults)
   {
   }
-  nsIPresContext*   mPresContext;
-  nsIAtom*          mMedium;
-  nsIContent*       mParentContent;
-  nsIAtom*          mPseudoTag;
-  nsIStyleContext*  mParentContext;
-  nsISupportsArray* mResults;
+  nsIPresContext*         mPresContext;
+  nsIAtom*                mMedium;
+  nsIContent*             mParentContent;
+  nsIAtom*                mPseudoTag;
+  nsIStyleContext*        mParentContext;
+  nsICSSPseudoComparator* mComparator;
+  nsISupportsArray*       mResults;
 };
 
 static PRBool
@@ -974,7 +978,7 @@ EnumPseudoRulesMatching(nsISupports* aProcessor, void* aData)
 
   processor->RulesMatching(data->mPresContext, data->mMedium,
                            data->mParentContent, data->mPseudoTag, 
-                           data->mParentContext, data->mResults);
+                           data->mParentContext, data->mComparator, data->mResults);
   return PR_TRUE;
 }
 
@@ -982,7 +986,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
                                                      nsIContent* aParentContent,
                                                      nsIAtom* aPseudoTag,
                                                      nsIStyleContext* aParentContext,
-                                                     PRBool aForceUnique)
+                                                     PRBool aForceUnique,
+                                                     nsICSSPseudoComparator* aComparator)
 {
   MOZ_TIMER_DEBUGLOG(("Start: StyleSetImpl::ResolvePseudoStyleFor(), this=%p\n", this));
   STYLESET_START_TIMER(NS_TIMER_STYLE_RESOLUTION);
@@ -1000,7 +1005,7 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
         nsIAtom* medium = nsnull;
         aPresContext->GetMedium(&medium);
         PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                     aPseudoTag, aParentContext, rules);
+                                     aPseudoTag, aParentContext, aComparator, rules);
         WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
         
         PRBool usedRules = PR_FALSE;
@@ -1056,7 +1061,7 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
         nsIAtom* medium = nsnull;
         aPresContext->GetMedium(&medium);
         PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                     aPseudoTag, aParentContext, rules);
+                                     aPseudoTag, aParentContext, nsnull, rules);
         WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
         
         PRBool usedRules = PR_FALSE;
