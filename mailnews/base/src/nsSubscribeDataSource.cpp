@@ -99,6 +99,10 @@ nsSubscribeDataSource::Init()
                                   getter_AddRefs(kNC_Subscribed));
     NS_ENSURE_SUCCESS(rv,rv);
 
+    rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Subscribable"),
+                                  getter_AddRefs(kNC_Subscribable));
+    NS_ENSURE_SUCCESS(rv,rv);
+
     rv = mRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ServerType"),
                                   getter_AddRefs(kNC_ServerType));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -198,16 +202,16 @@ nsSubscribeDataSource::GetTarget(nsIRDFResource *source,
         rv = server->IsSubscribed(relativePath, &isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
     
-        if (isSubscribed) {
-            *target = kTrueLiteral;
-            NS_IF_ADDREF(*target);
-            return NS_OK;
-        }
-        else {
-            *target = kFalseLiteral;
-            NS_IF_ADDREF(*target);
-            return NS_OK;
-        }
+        NS_IF_ADDREF(*target = (isSubscribed ? kTrueLiteral : kFalseLiteral));
+        return NS_OK;
+    }
+    else if (property == kNC_Subscribable.get()) {
+        PRBool isSubscribable;
+        rv = server->IsSubscribable(relativePath, &isSubscribable);
+        NS_ENSURE_SUCCESS(rv,rv);
+        
+        NS_IF_ADDREF(*target = (isSubscribable ? kTrueLiteral : kFalseLiteral));
+        return NS_OK;
     }
     else if (property == kNC_ServerType.get()) {
         nsXPIDLCString serverTypeStr;
@@ -319,8 +323,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         nsISimpleEnumerator* result = new nsSingletonEnumerator(leafName);
         if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
-        NS_ADDREF(result);
-        *targets = result;
+        NS_IF_ADDREF(*targets = result);
         return NS_OK;
     }
     else if (property == kNC_Subscribed.get()) {
@@ -328,17 +331,21 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         rv = server->IsSubscribed(relativePath, &isSubscribed);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        nsISimpleEnumerator* result = nsnull;
-        if (isSubscribed) {
-            result = new nsSingletonEnumerator(kTrueLiteral);
-        }
-        else {
-            result = new nsSingletonEnumerator(kFalseLiteral); 
-        }
+        nsISimpleEnumerator* result = new nsSingletonEnumerator(isSubscribed ? kTrueLiteral : kFalseLiteral);
         if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
-        NS_ADDREF(result);
-        *targets = result;
+        NS_IF_ADDREF(*targets = result);
+        return NS_OK;
+    }
+    else if (property == kNC_Subscribable.get()) {
+        PRBool isSubscribable;
+        rv = server->IsSubscribable(relativePath, &isSubscribable);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsISimpleEnumerator* result = new nsSingletonEnumerator(isSubscribable ? kTrueLiteral : kFalseLiteral);
+        if (!result) return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_IF_ADDREF(*targets = result);
         return NS_OK;
     }
     else if (property == kNC_Name.get()) {
@@ -349,8 +356,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         nsISimpleEnumerator* result = new nsSingletonEnumerator(name);
         if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
-        NS_ADDREF(result);
-        *targets = result;
+        NS_IF_ADDREF(*targets = result);
         return NS_OK;
     }
     else if (property == kNC_ServerType.get()) {
@@ -365,8 +371,7 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         nsISimpleEnumerator* result = new nsSingletonEnumerator(serverType);
         if (!result) return NS_ERROR_OUT_OF_MEMORY;
 
-        NS_ADDREF(result);
-        *targets = result;
+        NS_IF_ADDREF(*targets = result);
         return NS_OK;
     }
     else {
@@ -529,6 +534,10 @@ nsSubscribeDataSource::HasAssertion(nsIRDFResource *source,
         // everything is subscribed or not
         *hasAssertion = PR_TRUE;
     }
+    else if (property == kNC_Subscribable.get()) {
+        // everything is subscribable or not
+        *hasAssertion = PR_TRUE;
+    }
     else if (property == kNC_ServerType.get()) {
         // everything has a server type
         *hasAssertion = PR_TRUE;
@@ -569,6 +578,7 @@ nsSubscribeDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, P
         return NS_OK;
     }
     else if ((aArc == kNC_Subscribed.get()) ||
+             (aArc == kNC_Subscribable.get()) ||
              (aArc == kNC_LeafName.get()) ||
              (aArc == kNC_ServerType.get()) ||
              (aArc == kNC_Name.get())) {
@@ -617,6 +627,7 @@ nsSubscribeDataSource::ArcLabelsOut(nsIRDFResource *source,
     NS_ENSURE_SUCCESS(rv,rv);
 
     array->AppendElement(kNC_Subscribed);
+    array->AppendElement(kNC_Subscribable);
     array->AppendElement(kNC_Name);
     array->AppendElement(kNC_ServerType);
     array->AppendElement(kNC_LeafName);

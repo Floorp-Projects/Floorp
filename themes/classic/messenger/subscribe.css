@@ -42,6 +42,15 @@ treechildren::-moz-tree-image(subscribedColumn2, subscribed) {
   list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }
 
+treechildren::-moz-tree-image(subscribedColumn, Subscribable-false) {
+  list-style-image: none;
+}
+
+treechildren::-moz-tree-cell-text(nameColumn, Subscribable-false) {
+  color: gray;
+  font-style: italic;
+}
+
 /* ::::: folder icons :::::: */
 
 treechildren::-moz-tree-image(nameColumn) {

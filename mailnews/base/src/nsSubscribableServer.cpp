@@ -686,20 +686,36 @@ nsSubscribableServer::HasChildren(const char *path, PRBool *aHasChildren)
 NS_IMETHODIMP
 nsSubscribableServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 {
-    nsresult rv = NS_OK;
-    NS_ASSERTION(aIsSubscribed, "no aIsSubscribed");
-    if (!aIsSubscribed) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aIsSubscribed);
 
     *aIsSubscribed = PR_FALSE;
 
     SubscribeTreeNode *node = nsnull;
-    rv = FindAndCreateNode(path, &node);
+    nsresult rv = FindAndCreateNode(path, &node);
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ASSERTION(node,"didn't find the node");
     if (!node) return NS_ERROR_FAILURE;
 
     *aIsSubscribed = node->isSubscribed;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+{
+    NS_ENSURE_ARG_POINTER(aIsSubscribable);
+
+    *aIsSubscribable = PR_FALSE;
+
+    SubscribeTreeNode *node = nsnull;
+    nsresult rv = FindAndCreateNode(path, &node);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_ASSERTION(node,"didn't find the node");
+    if (!node) return NS_ERROR_FAILURE;
+
+    *aIsSubscribable = node->isSubscribable;
     return NS_OK;
 }
 

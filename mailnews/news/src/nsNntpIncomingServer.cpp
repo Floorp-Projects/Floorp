@@ -1322,6 +1322,14 @@ nsNntpIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 }
 
 NS_IMETHODIMP
+nsNntpIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->IsSubscribable(path, aIsSubscribable);
+}
+
+NS_IMETHODIMP
 nsNntpIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
 {
     nsresult rv = EnsureInner();

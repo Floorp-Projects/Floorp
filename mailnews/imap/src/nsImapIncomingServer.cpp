@@ -3099,6 +3099,14 @@ nsImapIncomingServer::IsSubscribed(const char *path, PRBool *aIsSubscribed)
 }
 
 NS_IMETHODIMP
+nsImapIncomingServer::IsSubscribable(const char *path, PRBool *aIsSubscribable)
+{
+    nsresult rv = EnsureInner();
+    NS_ENSURE_SUCCESS(rv,rv);
+    return mInner->IsSubscribable(path, aIsSubscribable);
+}
+
+NS_IMETHODIMP
 nsImapIncomingServer::GetLeafName(const char *path, PRUnichar **aLeafName)
 {
     nsresult rv = EnsureInner();

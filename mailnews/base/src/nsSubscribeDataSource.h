@@ -67,6 +67,7 @@ private:
     nsCOMPtr <nsIRDFResource>      kNC_Name;    
     nsCOMPtr <nsIRDFResource>      kNC_LeafName;
     nsCOMPtr <nsIRDFResource>      kNC_Subscribed;
+    nsCOMPtr <nsIRDFResource>      kNC_Subscribable;
     nsCOMPtr <nsIRDFResource>      kNC_ServerType;
     nsCOMPtr <nsIRDFLiteral>       kTrueLiteral;
     nsCOMPtr <nsIRDFLiteral>       kFalseLiteral;

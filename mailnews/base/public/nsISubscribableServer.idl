@@ -85,6 +85,8 @@ interface nsISubscribableServer : nsISupports {
     boolean hasChildren(in string path);
     // if path is null, use the root
     boolean isSubscribed(in string path);
+	// if path is null, use the root
+    boolean isSubscribable(in string path);
     // if path is null, use the root
     wstring getLeafName(in string path);
     // if path is null, use the root
