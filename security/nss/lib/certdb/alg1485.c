@@ -707,6 +707,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
 	avaValue->data[maxLen++] = '.'; 
 	avaValue->data[maxLen++] = '.';
 	avaValue->data[maxLen++] = '.';
+	avaValue->data[maxLen]   = 0;
 	avaValue->len = maxLen;
     }
 
@@ -728,7 +729,7 @@ AppendAVA(stringBuf *bufp, CERTAVA *ava)
 	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
 	    rv = SECFailure;
     	} else {
-	    PORT_Strcpy(tmpBuf+len, (char *)avaValue->data);
+	    PORT_Strncpy(tmpBuf+len, (char *)avaValue->data, avaValue->len + 1);
 	    rv = SECSuccess;
 	}
     } else 
