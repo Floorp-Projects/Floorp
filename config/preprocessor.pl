@@ -109,6 +109,7 @@ sub include {
     local $stack->{'variables'}->{'LINE'} = 0;
     local *FILE;
     open(FILE, $filename) or die "Couldn't open $filename: $!\n";
+    my $lineout = 0;
     while (<FILE>) {
         # on cygwin, line endings are screwed up, so normalise them.
         s/[\x0D\x0A]+$/\n/os if ($^O eq 'cygwin' || "$^O" eq "MSWin32");
@@ -120,6 +121,17 @@ sub include {
         } elsif (/^\#/os) { # comment
             # ignore it
         } elsif ($stack->enabled) {
+            next if $stack->{'dependencies'};
+
+            # set the current line number in JavaScript if necessary
+            my $linein = $stack->{'variables'}->{'LINE'};
+            if (++$lineout != $linein) {
+                if ($filename =~ /\.js(|\.in)$/o) {
+                    $stack->print("//\@line $linein \"$filename\"\n")
+                }
+                $lineout = $linein;
+            }
+
             # print it, including any newlines
             $stack->print(filtered($stack, $_));
         }
