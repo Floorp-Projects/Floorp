@@ -378,6 +378,7 @@ nsLineBox::RemoveFloater(nsIFrame* aFrame)
       fc->mPlaceholder->SetOutOfFlowFrame(nsnull);
       mInlineData->mFloaters.Remove(fc);
       MaybeFreeData();
+      return PR_TRUE;
     }
   }
   return PR_FALSE;
