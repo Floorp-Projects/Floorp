@@ -41,18 +41,19 @@
 #include "nsIStyleContext.h"
 #include "nsBoxFrame.h"
 
-class nsTitledBoxFrame : public nsBoxFrame {
+class nsGroupBoxFrame : public nsBoxFrame {
 public:
 
-  nsTitledBoxFrame(nsIPresShell* aShell);
+  nsGroupBoxFrame(nsIPresShell* aShell);
 
   NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
 
                                
-  NS_METHOD Paint(nsIPresContext* aPresContext,
+  NS_METHOD Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
-                  const nsRect& aDirtyRect,
-                  nsFramePaintLayer aWhichLayer);
+                  const nsRect&        aDirtyRect,
+                  nsFramePaintLayer    aWhichLayer,
+                  PRUint32             aFlags);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
@@ -72,15 +73,15 @@ public:
 };
 
 /*
-class nsTitledBoxInnerFrame : public nsBoxFrame {
+class nsGroupBoxInnerFrame : public nsBoxFrame {
 public:
 
-    nsTitledBoxInnerFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
+    nsGroupBoxInnerFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
 
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("TitledBoxFrameInner", aResult);
+    return MakeFrameName("GroupBoxFrameInner", aResult);
   }
 #endif
   
@@ -91,13 +92,13 @@ public:
 */
 
 nsresult
-NS_NewTitledBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTitledBoxFrame* it = new (aPresShell) nsTitledBoxFrame(aPresShell);
+  nsGroupBoxFrame* it = new (aPresShell) nsGroupBoxFrame(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -106,17 +107,18 @@ NS_NewTitledBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsTitledBoxFrame::nsTitledBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
+nsGroupBoxFrame::nsGroupBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 {
 }
 
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect& aDirtyRect,
-                       nsFramePaintLayer aWhichLayer)
+nsGroupBoxFrame::Paint(nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        const nsRect&        aDirtyRect,
+                        nsFramePaintLayer    aWhichLayer,
+                        PRUint32             aFlags)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint our background and border
@@ -239,7 +241,7 @@ nsTitledBoxFrame::Paint(nsIPresContext* aPresContext,
 }
 
 nsIBox*
-nsTitledBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
+nsGroupBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
 {
     // first child is out titled area
     nsIBox* box;
@@ -250,25 +252,30 @@ nsTitledBoxFrame::GetTitleBox(nsIPresContext* aPresContext, nsRect& aTitleRect)
       return nsnull;
 
     // get the first child in the titled area that is the title
-    nsIBox* child;
-    box->GetChildBox(&child);
+    box->GetChildBox(&box);
 
     // nothing in the area? fail
-    if (!child)
+    if (!box)
       return nsnull;
 
-    // convert to our coordinates.
-    nsRect parentRect;
-    box->GetBounds(parentRect);
-    child->GetBounds(aTitleRect);
-    aTitleRect.x += parentRect.x;
-    aTitleRect.y += parentRect.y;
-   
+    // now get the title itself. It is in the title frame.
+    nsIBox* child = nsnull;
+    box->GetChildBox(&child);
+
+    if (child) {
+       // convert to our coordinates.
+       nsRect parentRect;
+       box->GetBounds(parentRect);
+       child->GetBounds(aTitleRect);
+       aTitleRect.x += parentRect.x;
+       aTitleRect.y += parentRect.y;
+    }
+
     return child;
 }
 
 NS_IMETHODIMP
-nsTitledBoxFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
+nsGroupBoxFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 {
   aBorderAndPadding.SizeTo(0,0,0,0);
   return NS_OK;
