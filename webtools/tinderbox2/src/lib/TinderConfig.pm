@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.13 $ 
-# $Date: 2000/11/14 15:41:01 $ 
+# $Revision: 1.14 $ 
+# $Date: 2000/11/28 00:31:09 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -72,7 +72,7 @@ $GLOBAL_INDEX_FILE = "index.html";
 $ERROR_LOG = "/var/log/tinderbox/log";
   
 # Where the daemon mode lock (for all trees) is placed
-$LOCK_FILE = $TINDERBOX_DATA_DIR."/tinderd.lock";
+$LOCK_FILE = $TINDERBOX_HTML_DIR."/tinderd.lock";
 
 # The time between auto refreshes for all pages in seconds.
 
