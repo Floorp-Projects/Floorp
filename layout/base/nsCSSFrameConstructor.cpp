@@ -850,6 +850,14 @@ public:
                                   nsFrameConstructorSaveState& aSaveState,
                                   PRBool aFirstLetterStyle,
                                   PRBool aFirstLineStyle);
+
+  // Function to return the proper geometric parent for a frame with display
+  // struct given by aStyleDisplay and parent's frame given by
+  // aContentParentFrame.  If the frame is not allowed to be positioned, pass
+  // false for aCanBePositioned.
+  nsIFrame* GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
+                               nsIFrame* aContentParentFrame,
+                               PRBool aCanBePositioned = PR_TRUE);
 };
 
 nsFrameConstructorState::nsFrameConstructorState(nsPresContext*        aPresContext,
@@ -930,6 +938,47 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
   mFloatedItems = nsAbsoluteItems(aNewFloatContainingBlock);
   mFirstLetterStyle = aFirstLetterStyle;
   mFirstLineStyle = aFirstLineStyle;
+}
+
+nsIFrame*
+nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
+                                            nsIFrame* aContentParentFrame,
+                                            PRBool aCanBePositioned)
+{
+  NS_PRECONDITION(aStyleDisplay, "Must have display struct!");
+
+  // If there is no container for a fixed, absolute, or floating root
+  // frame, we will ignore the positioning.  This hack is originally
+  // brought to you by the letter T: tables, since other roots don't
+  // even call into this code.  See bug 178855.
+  //
+  // XXX Disabling positioning in this case is a hack.  If one was so inclined,
+  // one could support this either by (1) inserting a dummy block between the
+  // table and the canvas or (2) teaching the canvas how to reflow positioned
+  // elements. (1) has the usual problems when multiple frames share the same
+  // content (notice all the special cases in this file dealing with inner
+  // tables and outer tables which share the same content). (2) requires some
+  // work and possible factoring.
+  //
+  // XXXbz couldn't we just force position to "static" on roots and
+  // float to "none"?  That's OK per CSS 2.1, as far as I can tell.
+  
+  if (aStyleDisplay->IsFloating() && mFloatedItems.containingBlock) {
+    NS_ASSERTION(!aStyleDisplay->IsAbsolutelyPositioned(),
+                 "Absolutely positioned _and_ floating?");
+    return mFloatedItems.containingBlock;
+  }
+  if (aCanBePositioned) {
+    if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
+        mAbsoluteItems.containingBlock) {
+      return mAbsoluteItems.containingBlock;
+    }
+    if (aStyleDisplay->mPosition == NS_STYLE_POSITION_FIXED &&
+        mFixedItems.containingBlock) {
+      return mFixedItems.containingBlock;
+    }
+  }
+  return aContentParentFrame;
 }
 
 nsFrameConstructorSaveState::nsFrameConstructorSaveState()
@@ -4191,9 +4240,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
                                             nsStyleContext*          aStyleContext,
                                             nsIFrame*&               aNewFrame,
                                             PRBool&                  aProcessChildren,
-                                            PRBool                   aIsAbsolutelyPositioned,
+                                            const nsStyleDisplay*    aStyleDisplay,
                                             PRBool&                  aFrameHasBeenInitialized,
-                                            PRBool                   aIsFixedPositioned,
                                             nsFrameItems&            aFrameItems)
 {
   nsresult rv = NS_OK;
@@ -4217,19 +4265,13 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       nsIFrame * comboboxFrame;
       rv = NS_NewComboboxControlFrame(aPresShell, &comboboxFrame, flags);
 
-      // Determine geometric parent for the combobox frame
-      nsIFrame* geometricParent = aParentFrame;
-      if (aIsAbsolutelyPositioned) {
-        geometricParent = aState.mAbsoluteItems.containingBlock;
-      } else if (aIsFixedPositioned) {
-        geometricParent = aState.mFixedItems.containingBlock;
-      }
       // Save the history state so we don't restore during construction
       // since the complete tree is required before we restore.
       nsILayoutHistoryState *historyState = aState.mFrameState;
       aState.mFrameState = nsnull;
       // Initialize the combobox frame
-      InitAndRestoreFrame(aPresContext, aState, aContent, geometricParent,
+      InitAndRestoreFrame(aPresContext, aState, aContent,
+                          aState.GetGeometricParent(aStyleDisplay, aParentFrame),
                           aStyleContext, nsnull, comboboxFrame);
 
       nsHTMLContainerFrame::CreateViewForFrame(comboboxFrame, aParentFrame, PR_FALSE);
@@ -4261,6 +4303,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
                                                                 nsCSSAnonBoxes::dropDownList, 
                                                                 aStyleContext);
 
+      NS_ASSERTION(!listStyle->GetStyleDisplay()->IsPositioned(),
+                   "Ended up with positioned dropdown list somehow.");
+      NS_ASSERTION(!listStyle->GetStyleDisplay()->IsFloating(),
+                   "Ended up with floating dropdown list somehow.");
+      
       // Initialize the scroll frame positioned. Note that it is NOT
       // initialized as absolutely positioned.
       nsIFrame* newFrame = nsnull;
@@ -4272,8 +4319,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       // on that.
       aPresShell->SetAnonymousContentFor(aContent, nsnull);
 
-      InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
-                           listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
+      InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame,
+                            scrolledFrame, aContent, comboboxFrame,
+                            listStyle, PR_TRUE);
       newFrame = listFrame;
 
         // Set flag so the events go to the listFrame not child frames.
@@ -4319,16 +4367,16 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       rv = NS_NewListControlFrame(aPresShell, &listFrame);
       aNewFrame = listFrame;
 
-      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | 
-          ((aIsAbsolutelyPositioned | aIsFixedPositioned)?NS_BLOCK_SPACE_MGR:0);
+      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR;
       nsIFrame* scrolledFrame = nsnull;
       NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
       // ******* this code stolen from Initialze ScrollFrame ********
       // please adjust this code to use BuildScrollFrame.
 
-      InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, aParentFrame,
-                            aStyleContext, aIsAbsolutelyPositioned, aIsFixedPositioned, PR_FALSE);
+      InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame,
+                            scrolledFrame, aContent, aParentFrame,
+                            aStyleContext, PR_FALSE);
 
       aNewFrame = listFrame;
 
@@ -4353,19 +4401,13 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
                                              nsIContent*              aContent,
                                              nsIFrame*                aParentFrame,
                                              nsStyleContext*          aStyleContext,
-                                             PRBool                   aIsAbsolutelyPositioned,
-                                             PRBool                   aIsFixedPositioned,
                                              PRBool                   aBuildCombobox)
 {
+  const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
+
   // Initialize it
-  nsIFrame* geometricParent = aParentFrame;
+  nsIFrame* geometricParent = aState.GetGeometricParent(display, aParentFrame);
     
-  if (aIsAbsolutelyPositioned) {
-    geometricParent = aState.mAbsoluteItems.containingBlock;
-  } else if (aIsFixedPositioned) {
-    geometricParent = aState.mFixedItems.containingBlock;
-  }
-  
   // We don't call InitAndRestoreFrame for scrollFrame because we can only
   // restore the frame state after its parts have been created (in particular,
   // the scrollable view). So we have to split Init and Restore.
@@ -4418,10 +4460,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
-  const nsStyleDisplay*       display = aStyleContext->GetStyleDisplay();
-  PRBool isPositionedContainingBlock = aIsAbsolutelyPositioned ||
-                                       aIsFixedPositioned ||
-                                       display->mPosition == NS_STYLE_POSITION_RELATIVE;
+  PRBool isPositionedContainingBlock = display->IsPositioned();
 
   if (isPositionedContainingBlock) {
     // The area frame becomes a container for child frames that are
@@ -4472,9 +4511,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
                                               nsStyleContext*          aStyleContext,
                                               nsIFrame*&               aNewFrame,
                                               PRBool&                  aProcessChildren,
-                                              PRBool                   aIsAbsolutelyPositioned,
-                                              PRBool&                  aFrameHasBeenInitialized,
-                                              PRBool                   aIsFixedPositioned)
+                                              const nsStyleDisplay*    aStyleDisplay,
+                                              PRBool&                  aFrameHasBeenInitialized)
 {
   nsIFrame * newFrame;
   nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, NS_BLOCK_SPACE_MGR);
@@ -4483,16 +4521,9 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   }
 
   // Initialize it
-  nsIFrame* geometricParent = aParentFrame;
-    
-  if (aIsAbsolutelyPositioned) {
-    geometricParent = aState.mAbsoluteItems.containingBlock;
-  } else if (aIsFixedPositioned) {
-    geometricParent = aState.mFixedItems.containingBlock;
-  }
-  
   InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      geometricParent, aStyleContext, nsnull, newFrame);
+                      aState.GetGeometricParent(aStyleDisplay, aParentFrame),
+                      aStyleContext, nsnull, newFrame);
 
   // See if we need to create a view, e.g. the frame is absolutely
   // positioned
@@ -4524,10 +4555,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
   // Process children
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems                childItems;
-  const nsStyleDisplay*       display = aStyleContext->GetStyleDisplay();
-  PRBool isPositionedContainingBlock = aIsAbsolutelyPositioned ||
-                                       aIsFixedPositioned ||
-                                       display->mPosition == NS_STYLE_POSITION_RELATIVE;
+  PRBool isPositionedContainingBlock = aStyleDisplay->IsPositioned();
 
   if (isPositionedContainingBlock) {
     // The area frame becomes a container for child frames that are
@@ -4655,8 +4683,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
-  PRBool    isFloating = PR_FALSE;
-  PRBool    isRelativePositioned = PR_FALSE;
   PRBool    canBePositioned = PR_TRUE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
@@ -4673,14 +4699,6 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   }
   else if (NS_STYLE_POSITION_FIXED == display->mPosition) {
     isFixedPositioned = PR_TRUE;
-  }
-  else {
-    if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-      isFloating = PR_TRUE;
-    }
-    if (NS_STYLE_POSITION_RELATIVE == display->mPosition) {
-      isRelativePositioned = PR_TRUE;
-    }
   }
 
   // Create a frame based on the tag
@@ -4733,8 +4751,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       isReplaced = PR_TRUE;
       rv = ConstructSelectFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                 aTag, aStyleContext, newFrame,  processChildren,
-                                isAbsolutelyPositioned, frameHasBeenInitialized,
-                                isFixedPositioned, aFrameItems);
+                                display, frameHasBeenInitialized,
+                                aFrameItems);
     }
   }
   else if (nsHTMLAtoms::object == aTag) {
@@ -4763,17 +4781,10 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
     }
-#define DO_NEWFIELDSET
-#ifdef DO_NEWFIELDSET
     rv = ConstructFieldSetFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                                aTag, aStyleContext, newFrame,  processChildren,
-                                isAbsolutelyPositioned, frameHasBeenInitialized,
-                                isFixedPositioned);
+                                aTag, aStyleContext, newFrame, processChildren,
+                                display, frameHasBeenInitialized);
     processChildren = PR_FALSE;
-#else
-    rv = NS_NewFieldSetFrame(aPresShell, &newFrame, isAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0);
-    processChildren = PR_TRUE;
-#endif
   }
   else if (nsHTMLAtoms::legend == aTag) {
     if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -4893,21 +4904,10 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
   }
 
   if (!frameHasBeenInitialized) {
-    nsIFrame* geometricParent = aParentFrame;
+    nsIFrame* geometricParent = aState.GetGeometricParent(display,
+                                                          aParentFrame,
+                                                          canBePositioned);
      
-    // Makes sure we use the correct parent frame pointer when initializing
-    // the frame
-    if (isFloating) {
-      geometricParent = aState.mFloatedItems.containingBlock;
-
-    } else if (canBePositioned) {
-      if (isAbsolutelyPositioned) {
-        geometricParent = aState.mAbsoluteItems.containingBlock;
-      } else if (isFixedPositioned) {
-        geometricParent = aState.mFixedItems.containingBlock;
-      }
-    }
-    
     rv = InitAndRestoreFrame(aPresContext, aState, aContent, 
                              geometricParent, aStyleContext, nsnull, newFrame);
     if (rv == NS_ERROR_FRAME_REPLACED) {
@@ -5010,7 +5010,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
     // Add the placeholder frame to the flow
     aFrameItems.AddChild(placeholderFrame);
 
-  } else if (isFloating) {
+  } else if (display->IsFloating()) {
     nsIFrame* placeholderFrame;
     CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent, newFrame,
                               aStyleContext, aParentFrame, &placeholderFrame);
@@ -6135,14 +6135,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     }
 
      // Initialize it
-    nsIFrame* geometricParent = adjParentFrame;
-
-    if (isAbsolutelyPositioned) {
-      geometricParent = aState.mAbsoluteItems.containingBlock;
-    } else if (isFixedPositioned) {
-      geometricParent = aState.mFixedItems.containingBlock;
-    }
-
     nsIFrame* scrolledFrame = nsnull;
 
     NS_NewAreaFrame(aPresShell, &scrolledFrame, NS_BLOCK_SPACE_MGR |
@@ -6152,7 +6144,9 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     nsStyleContext* newStyle;
     // Build the scrollframe it
     BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext,
-                     scrolledFrame, geometricParent, adjParentFrame, newFrame, newStyle);
+                     scrolledFrame,
+                     aState.GetGeometricParent(aDisplay, adjParentFrame),
+                     adjParentFrame, newFrame, newStyle);
 
     // buildscrollframe sets the primary frame.
     primaryFrameSet = PR_TRUE;
@@ -6171,9 +6165,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     // Process children
     nsFrameConstructorSaveState absoluteSaveState;
     nsFrameItems                childItems;
-    PRBool isPositionedContainingBlock = isAbsolutelyPositioned ||
-                                         isFixedPositioned ||
-                                         aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE;
+    PRBool isPositionedContainingBlock = aDisplay->IsPositioned();
 
     if (isPositionedContainingBlock) {
       // The area frame becomes a container for child frames that are
@@ -6360,31 +6352,11 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
         ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
       }
-      nsIFrame* geometricParent = adjParentFrame;
-      // If there is no container for a fixed, absolute, or floating table because
-      // it is the root content frame, then ignore the positioning.
-      //
-      // XXX This could be supported either by (1) inserting a dummy block between 
-      // the table and the canvas or (2) teaching the canvas how to reflow positioned
-      // elements. (1) has the usual problems when multiple frames share the same content 
-      // (notice all the special cases in this file dealing with inner tables and outer 
-      // tables which share the same content). (2) requires some work and possible factoring.
-      if ((NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) &&
-          (aState.mAbsoluteItems.containingBlock)) {
-        isAbsolutelyPositioned = PR_TRUE;
-        geometricParent        = aState.mAbsoluteItems.containingBlock;
-      } 
-      else if ((NS_STYLE_POSITION_FIXED == aDisplay->mPosition) &&
-               (aState.mFixedItems.containingBlock)) {
-        isFixedPositioned = PR_TRUE;
-        geometricParent   = aState.mFixedItems.containingBlock;
-      } 
-      else if (aDisplay->IsFloating() && aState.mFloatedItems.containingBlock) {
-        geometricParent = aState.mFloatedItems.containingBlock;
-      }
       nsIFrame* innerTable;
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
-                               geometricParent, adjParentFrame, aStyleContext,
+                               aState.GetGeometricParent(aDisplay,
+                                                         adjParentFrame),
+                               adjParentFrame, aStyleContext,
                                tableCreator, PR_FALSE, aFrameItems, newFrame,
                                innerTable, pseudoParent);
       // if there is a pseudoParent, then newFrame was added to the pseudo cell's child list
@@ -6755,11 +6727,9 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
       newFrame->AddStateBits(NS_FRAME_EXCLUDE_IGNORABLE_WHITESPACE);
     }
 
-    nsIFrame* geometricParent = isAbsolutelyPositioned
-                              ? aState.mAbsoluteItems.containingBlock
-                              : aParentFrame;
     InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        geometricParent, aStyleContext, nsnull, newFrame);
+                        aState.GetGeometricParent(disp, aParentFrame),
+                        aStyleContext, nsnull, newFrame);
 
     // See if we need to create a view, e.g. the frame is absolutely positioned
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, aParentFrame, PR_FALSE);
@@ -6978,6 +6948,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   nsIFrame* newFrame = nsnull;
   //nsSVGTableCreator svgTableCreator(aPresShell); // Used to make table views.
  
+  // Default to aParentFrame for the geometricParent; it's adjusted in
+  // cases when we allow anything else.
+  nsIFrame* geometricParent = aParentFrame;
+  
   if (aTag == nsSVGAtoms::svg) {
     nsCOMPtr<nsISVGContainerFrame> container = do_QueryInterface(aParentFrame);
     processChildren = PR_TRUE;
@@ -6992,7 +6966,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
       else if (NS_STYLE_POSITION_FIXED == disp->mPosition) {
         isFixedPositioned = PR_TRUE;
       }
-    
+
+      // Set the right geometricParent
+      geometricParent = aState.GetGeometricParent(disp, aParentFrame);
+      
       forceView = PR_TRUE;
       rv = NS_NewSVGOuterSVGFrame(aPresShell, aContent, &newFrame);
     }
@@ -7057,11 +7034,6 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
-
-    nsIFrame* geometricParent = isAbsolutelyPositioned
-                              ? aState.mAbsoluteItems.containingBlock
-                              : aParentFrame;
-
     if (aTag == nsSVGAtoms::foreignObject) {
       // Claim to be relatively positioned so that we end up being the
       // absolute containing block.  Also, push "null" as the floater
@@ -7091,7 +7063,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
 
         CreateAnonymousFrames(aPresShell, aPresContext, aTag, aState, aContent, newFrame,
                               PR_FALSE, childItems);
-    }
+      }
 
       // Set the frame's initial child list
       newFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
