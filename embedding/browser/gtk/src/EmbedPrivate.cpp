@@ -52,6 +52,7 @@
 #include "EmbedContentListener.h"
 #include "EmbedEventListener.h"
 #include "EmbedWindowCreator.h"
+#include "EmbedStream.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -73,6 +74,7 @@ EmbedPrivate::EmbedPrivate(void)
   mProgress         = nsnull;
   mContentListener  = nsnull;
   mEventListener    = nsnull;
+  mStream           = nsnull;
   mChromeMask       = 0;
   mListenersAttached = PR_FALSE;
 
@@ -360,6 +362,48 @@ EmbedPrivate::SetProfilePath(char *aDir, char *aName)
   
   if (aName)
     sProfileName = strdup(aName);
+}
+
+nsresult
+EmbedPrivate::OpenStream(const char *aBaseURI, const char *aContentType)
+{
+  nsresult rv;
+
+  if (!mStream) {
+    mStream = new EmbedStream();
+    mStreamGuard = do_QueryInterface(mStream);
+    mStream->InitOwner(this);
+    rv = mStream->Init();
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  rv = mStream->OpenStream(aBaseURI, aContentType);
+  return rv;
+}
+
+nsresult
+EmbedPrivate::AppendToStream(const char *aData, PRInt32 aLen)
+{
+  if (!mStream)
+    return NS_ERROR_FAILURE;
+  return mStream->AppendToStream(aData, aLen);
+}
+
+nsresult
+EmbedPrivate::CloseStream(void)
+{
+  nsresult rv;
+
+  if (!mStream)
+    return NS_ERROR_FAILURE;
+  rv = mStream->CloseStream();
+
+  // release
+  mStream = 0;
+  mStreamGuard = 0;
+
+  return rv;
 }
 
 /* static */
