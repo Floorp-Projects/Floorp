@@ -561,13 +561,11 @@ wallet_DumpTiming() {
   PRInt32 i, r4;
   PRInt64 r1, r2, r3;
   for (i=1; i<timing_index; i++) {
-#ifndef	XP_MAC
     LL_SUB(r1, timings[i], timings[i-1]);
     LL_I2L(r2, 100);
     LL_DIV(r3, r1, r2);
     LL_L2I(r4, r3);
     fprintf(stdout, "time %c = %ld\n", timingID[i], (long)r4);
-#endif
     if (i%20 == 0) {
       wallet_Pause();
     }
@@ -579,10 +577,8 @@ void
 wallet_AddTiming(char c) {
   if (timing_index<timing_max) {
     timingID[timing_index] = c;
-#ifndef	XP_MAC
     // note: PR_IntervalNow returns a 32 bit value!
     LL_I2L(timings[timing_index++], PR_IntervalNow());
-#endif
   }
 }
 
@@ -595,10 +591,8 @@ wallet_ClearStopwatch() {
 void
 wallet_ResumeStopwatch() {
   if (!stopwatchRunning) {
-#ifndef	XP_MAC
     // note: PR_IntervalNow returns a 32 bit value!
     LL_I2L(stopwatchBase, PR_IntervalNow());
-#endif
     stopwatchRunning = PR_TRUE;
   }
 }
@@ -607,12 +601,10 @@ void
 wallet_PauseStopwatch() {
   PRInt64 r1, r2;
   if (stopwatchRunning) {
-#ifndef	XP_MAC
     // note: PR_IntervalNow returns a 32 bit value!
     LL_I2L(r1, PR_IntervalNow());
     LL_SUB(r2, r1, stopwatchBase);
     LL_ADD(stopwatch, stopwatch, r2);
-#endif
     stopwatchRunning = PR_FALSE;
   }
 }
@@ -622,20 +614,16 @@ wallet_DumpStopwatch() {
   PRInt64 r1, r2;
   PRInt32 r3;
   if (stopwatchRunning) {
-#ifndef	XP_MAC
     // note: PR_IntervalNow returns a 32 bit value!
     LL_I2L(r1, PR_IntervalNow());
     LL_SUB(r2, r1, stopwatchBase);
     LL_ADD(stopwatch, stopwatch, r2);
     LL_I2L(stopwatchBase, PR_IntervalNow());
-#endif
   }
-#ifndef	XP_MAC
   LL_I2L(r1, 100);
   LL_DIV(r2, stopwatch, r1);
   LL_L2I(r3, r2);
   fprintf(stdout, "stopwatch = %ld\n", (long)r3);  
-#endif
 }
 #endif /* DEBUG */
 
