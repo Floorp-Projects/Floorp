@@ -38,6 +38,7 @@
 #include "nsIComponentManager.h"
 #include "rdf.h"
 #include "nsIXULSortService.h"
+#include "nsIXULDocumentInfo.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
@@ -63,6 +64,7 @@ static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,	         NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+static NS_DEFINE_CID(kXULDocumentInfoCID,        NS_XULDOCUMENTINFO_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -181,6 +183,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kXULDocumentCID)) {
         if (NS_FAILED(rv = NS_NewXULDocument((nsIRDFDocument**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kXULDocumentInfoCID)) {
+        if (NS_FAILED(rv = NS_NewXULDocumentInfo((nsIXULDocumentInfo**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFHTMLBuilderCID)) {
@@ -376,6 +382,12 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          "XUL Document",
                                          NS_RDF_PROGID "|xul-document",
                                          aPath, PR_TRUE, PR_TRUE);
+
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->RegisterComponent(kXULDocumentInfoCID,
+                                         "XUL Document Info",
+                                         NS_RDF_PROGID "|xul-document-info",
+                                         aPath, PR_TRUE, PR_TRUE);
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
@@ -433,6 +445,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kXULContentSinkCID,         aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kXULDocumentCID,            aPath);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kXULDocumentInfoCID,        aPath);
 
   done:
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
