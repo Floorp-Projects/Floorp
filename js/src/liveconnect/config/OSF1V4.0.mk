@@ -30,10 +30,30 @@
 # the provisions above, a recipient may use your version of this
 # file under either the NPL or the GPL.
 
-JDK = /share/builds/components/jdk/1.1.6/OSF1
+# JDK = /share/builds/components/jdk/1.1.6/OSF1
 
-INCLUDES   += -I$(JDK)/include/java -I$(JDK)/include/java/alpha
+# INCLUDES   += -I$(JDK)/include/java -I$(JDK)/include/java/alpha
 
-OTHER_LIBS += -L$(JDK)/lib/alpha -ljava
+# OTHER_LIBS += -L$(JDK)/lib/alpha -ljava
 
+# XLDFLAGS += -taso
+
+ifndef JDK_VERSION
+JDK_VERSION = 1.2.2
+endif
+
+# jni.h #error's without this.
+CFLAGS += -pthread
+
+JDK = /share/builds/components/jdk/$(JDK_VERSION)/OSF1
+
+# INCLUDES   += -I$(JDK)/include -I$(JDK)/include/solaris
+INCLUDES   += -I$(JDK)/include/alpha -I$(JDK)/include
+
+# XXX is this consistent with -pthread above?
+OTHER_LIBS += -L$(JDK)/jre/lib/alpha/native_threads
+OTHER_LIBS += -L$(JDK)/jre/lib/alpha/classic
+OTHER_LIBS += -L$(JDK)/jre/lib/alpha -ljava -ljvm
+
+# Taken from the previous revision - no idea what it does.
 XLDFLAGS += -taso
