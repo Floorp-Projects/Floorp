@@ -92,7 +92,9 @@ public class OptClassNameHelper implements ClassNameHelper {
     }
 
     public void setTargetClassFileName(String classFileName) {
-        int lastSeparator = classFileName.lastIndexOf(File.separatorChar);
+        int lastSeparator = classFileName == null 
+                            ? -1
+                            : classFileName.lastIndexOf(File.separatorChar);
         String initialName;
         if (lastSeparator == -1) {
             generatingDirectory = "";
