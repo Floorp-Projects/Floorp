@@ -465,6 +465,8 @@ void JSObject::setProperty(Context *cx, const String &name, NamespaceList *names
         Property *prop = PROPERTY(i);
         switch (prop->mFlag) {
         case ValuePointer:
+            if (name.compare(cx->UnderbarPrototype_StringAtom) == 0)
+                mPrototype = v.toObject(cx).object;
             *prop->mData.vp = v;
             break;
         case FunctionPair:
@@ -596,11 +598,10 @@ void JSInstance::initInstance(Context *cx, JSType *type)
         mInstanceValues = new JSValue[type->mVariableCount];
 
     // copy the instance variable names into the property map 
-    // but don't copy the prototype object (XXX others?)
     for (PropertyIterator pi = type->mProperties.begin(), 
                 end = type->mProperties.end();
                 (pi != end); pi++) {
-        if (PROPERTY_NAME(pi) != cx->Prototype_StringAtom) {
+        if (PROPERTY_KIND(pi) == Slot) {
             const PropertyMap::value_type e(PROPERTY_NAME(pi), NAMESPACED_PROPERTY(pi));
             mProperties.insert(e);
         }
@@ -612,7 +613,7 @@ void JSInstance::initInstance(Context *cx, JSType *type)
         for (PropertyIterator i = t->mProperties.begin(), 
                     end = t->mProperties.end();
                     (i != end); i++) {            
-            if (PROPERTY_NAME(i) != cx->Prototype_StringAtom) {
+            if (PROPERTY_KIND(i) == Slot) {
                 const PropertyMap::value_type e(PROPERTY_NAME(i), NAMESPACED_PROPERTY(i));
                 mProperties.insert(e);
             }
@@ -1274,89 +1275,46 @@ void ScopeChain::collectNames(StmtNode *p)
         }
         break;
     case StmtNode::Import:
-
         {
-
             ImportStmtNode *i = checked_cast<ImportStmtNode *>(p);
-
 	    String packageName;
-
 	    if (i->packageIdList)
-
 		packageName = getPackageName(i->packageIdList);
-
             else
-
                 packageName = *i->packageString;
 
-
-
             if (!m_cx->checkForPackage(packageName))
-
                 m_cx->loadPackage(packageName, packageName + ".js");
 
-
-
 	    JSValue packageValue = getCompileTimeValue(packageName, NULL);
-
 	    ASSERT(packageValue.isObject() && (packageValue.object->mType == Package_Type));
-
 	    Package *package = checked_cast<Package *>(packageValue.object);
-
             
-
             if (i->varName)
-
                 defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue(package));
-
             
-
             for (PropertyIterator it = package->mProperties.begin(), end = package->mProperties.end();
-
                         (it != end); it++)
-
             {
-
                 ASSERT(PROPERTY_KIND(it) == ValuePointer);
-
                 bool makeAlias = true;
-
                 if (i->includeExclude) {
-
                     makeAlias = i->exclude;
-
                     IdentifierList *idList = i->includeExclude;
-
                     while (idList) {
-
                         if (idList->name.compare(PROPERTY_NAME(it)) == 0) {
-
                             makeAlias = !makeAlias;
-
                             break;
-
                         }
-
                         idList = idList->next;
-
                     }
-
                 }
-
                 if (makeAlias)
-
                     defineAlias(m_cx, PROPERTY_NAME(it), PROPERTY_NAMESPACELIST(it), PROPERTY_ATTR(it), PROPERTY_TYPE(it), PROPERTY_VALUEPOINTER(it));
-
             }
 
-
-
-
-
         }
-
         break;
-
     case StmtNode::Namespace:
         {
             NamespaceStmtNode *n = checked_cast<NamespaceStmtNode *>(p);
@@ -1365,35 +1323,20 @@ void ScopeChain::collectNames(StmtNode *p)
             m_cx->getGlobalObject()->defineVariable(m_cx, n->name, (NamespaceList *)(NULL), Property::NoAttribute, Attribute_Type, JSValue(x));            
         }
         break;
-
     case StmtNode::Package:
-
         {
-
             PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
-
 	    String packageName = getPackageName(ps->packageIdList);
-
 	    Package *package = new Package(packageName);
-
             ps->scope = package;
-
             defineVariable(m_cx, packageName, NULL, Package_Type, JSValue(package));
-
 	    m_cx->mPackages.push_back(package);
 
-
-
 	    addScope(ps->scope);
-
             collectNames(ps->body);
-
 	    popScope();
-
             package->mStatus = Package::InHand;
-
         }
-
         break;
     default:
         break;
@@ -1606,6 +1549,10 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
         // and that object is prototype-linked to the super-type's prototype object
         if (mSuperType)
             mPrototypeObject->mPrototype = mSuperType->mPrototypeObject;
+        if (mPrototypeObject->mPrototype)
+            mPrototypeObject->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, this, JSValue(mPrototypeObject->mPrototype));
+        else // must be Object_Type being initialized
+            mPrototypeObject->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, this, kNullValue);
     }
 
     if (mSuperType)
@@ -1622,8 +1569,14 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
         else // must be Object_Type being initialized
             mPrototype = mPrototypeObject;
     }
-    defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototype));
-    defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
+    if (mSuperType) {
+        defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototype));
+        defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
+    }
+    else { // must be Object_Type being initialized
+        defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, this, JSValue(mPrototype));
+        defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, this, JSValue(this));
+    }
 }
 
 JSType::JSType(JSType *xClass)     // used for constructing the static component type
@@ -1934,21 +1887,13 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             // do anything ?
         }
         break;
-
     case StmtNode::Package:
-
         {
-
             PackageStmtNode *ps = checked_cast<PackageStmtNode *>(p);
-
 	    mScopeChain->addScope(ps->scope);
-
             buildRuntimeForStmt(ps->body);
-
 	    mScopeChain->popScope();
-
         }
-
         break;
     default:
         break;
@@ -2791,7 +2736,7 @@ static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, 
 }
 
 
-JSFunction::JSFunction(Context *, JSType *resultType, ScopeChain *scopeChain) 
+JSFunction::JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain) 
             : JSObject(Function_Type), 
                 mParameterBarrel(NULL),
                 mActivation(),
@@ -2816,9 +2761,11 @@ JSFunction::JSFunction(Context *, JSType *resultType, ScopeChain *scopeChain)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
+    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(Object_Type->newInstance(cx)));
+    defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(mPrototype));
 }
 
-JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType) 
+JSFunction::JSFunction(Context *cx, NativeCode *code, JSType *resultType) 
             : JSObject(Function_Type), 
                 mParameterBarrel(NULL),
                 mActivation(),
@@ -2840,6 +2787,8 @@ JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType)
     if (Function_Type)    // protect against bootstrap
         mPrototype = Function_Type->mPrototypeObject;
     mActivation.mContainer = this;
+    defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(Object_Type->newInstance(cx)));
+    defineVariable(cx, cx->UnderbarPrototype_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(mPrototype));
 }
               
 JSValue JSFunction::runParameterInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -2976,6 +2925,7 @@ void Context::initBuiltins()
 
     JSFunction *funProto = new JSFunction(this, Object_Type, NULL);
     funProto->mPrototype = Object_Type->mPrototypeObject;
+    funProto->defineVariable(this, UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(funProto->mPrototype));
     Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, funProto);
     Function_Type->mPrototype = Function_Type->mPrototypeObject;
     funProto->mType = Function_Type;

@@ -1405,6 +1405,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             if (target->hasProperty(Prototype_StringAtom, mNamespaceList, Read, &i)) {
                                 JSValue v = target->getPropertyValue(i);
                                 newThis.object->mPrototype = v.toObject(this).object;
+                                newThis.object->setProperty(this, UnderbarPrototype_StringAtom, (NamespaceList *)NULL, JSValue(newThis.object->mPrototype));
                             }
                         }
                         else            

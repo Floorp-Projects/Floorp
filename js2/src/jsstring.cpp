@@ -327,12 +327,7 @@ static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchR
     result.failure = true;
     result.captures = NULL;
 
-    /* save & restore lastIndex as it's not to be modified */
-    uint32 lastIndex = RE->lastIndex;
-    RE->lastIndex = 0;
-    REState *regexp_result = REExecute(RE, S->begin() + q, S->length() - q);
-    RE->lastIndex = lastIndex;
-
+    REState *regexp_result = REMatch(RE, S->begin() + q, S->length() - q);
 
     if (regexp_result) {
         result.endIndex = regexp_result->endIndex + q;
@@ -342,7 +337,8 @@ static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchR
             result.captures = new JSValue[regexp_result->n];
             for (uint32 i = 0; i < regexp_result->n; i++) {
                 if (regexp_result->parens[i].index != -1) {
-                    String *parenStr = new String(S->substr((uint32)(regexp_result->parens[i].index + q), (uint32)(regexp_result->parens[i].length)));
+                    String *parenStr = new String(S->substr((uint32)(regexp_result->parens[i].index + q), 
+                                                    (uint32)(regexp_result->parens[i].length)));
                     result.captures[i] = JSValue(parenStr);
                 }
 		else

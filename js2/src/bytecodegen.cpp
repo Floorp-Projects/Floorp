@@ -290,7 +290,7 @@ void ElementReference::emitCodeSequence(ByteCodeGen *bcg)
 
 void ElementReference::emitDelete(ByteCodeGen *bcg) 
 {
-    bcg->addOpAdjustDepth(DeleteElementOp, -(mDepth - 1));
+    bcg->addOpAdjustDepth(DeleteElementOp, -mDepth);    // discard base + dimensions, push boolean result
     bcg->addShort(mDepth);
 }
 
@@ -2298,6 +2298,7 @@ BinaryOpEquals:
                 index++;
                 e = e->next;
             }
+            return Array_Type;
         }
         break;
     case ExprNode::Is:
@@ -2306,6 +2307,7 @@ BinaryOpEquals:
             genExpr(b->op1);
             genExpr(b->op2);
             addOp(IsOp);
+            return Boolean_Type;
         }
         break;
     case ExprNode::Instanceof:
@@ -2314,6 +2316,7 @@ BinaryOpEquals:
             genExpr(b->op1);
             genExpr(b->op2);
             addOp(InstanceOfOp);
+            return Boolean_Type;
         }
         break;
     case ExprNode::As:
