@@ -7696,6 +7696,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diWelcome.bShowDialog                     = FALSE;
       diLicense.bShowDialog                     = FALSE;
       diSetupType.bShowDialog                   = FALSE;
+      diSelectInstallPath.bShowDialog           = FALSE;
       diSelectComponents.bShowDialog            = FALSE;
       diSelectAdditionalComponents.bShowDialog  = FALSE;
       diWindowsIntegration.bShowDialog          = FALSE;
@@ -7705,8 +7706,16 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       diAdvancedSettings.bShowDialog            = FALSE;
       diStartInstall.bShowDialog                = FALSE;
       diDownload.bShowDialog                    = FALSE;
+      diDownloading.bShowDialog                 = FALSE;
+      diInstallSuccessful.bShowDialog           = FALSE;
+      diInstallSuccessful.bLaunchAppChecked     = FALSE;
+      diInstallSuccessful.bResetHomepageChecked = FALSE;
       break;
   }
+
+  if (sgProduct.mode == SILENT)
+      diInstalling.bShowDialog                  = FALSE;
+  
 
   InitSiComponents(szFileIniConfig);
   InitSiteSelector(szFileIniConfig);
