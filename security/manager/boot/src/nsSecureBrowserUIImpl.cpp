@@ -133,6 +133,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
   mTransferringRequests.ops = nsnull;
   mNewToplevelSecurityState = STATE_IS_INSECURE;
+  mNewToplevelSecurityStateKnown = PR_TRUE;
   ResetStateTracking();
   
 #if defined(PR_LOGGING)
@@ -751,6 +752,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
               ));
 
       ResetStateTracking();
+      mNewToplevelSecurityStateKnown = PR_FALSE;
     }
 
     // By using a counter, this code also works when the toplevel
@@ -830,6 +832,10 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
           mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
         }
 
+        // assume mNewToplevelSecurityState was set in this scope!
+        // see code that is directly above
+        
+        mNewToplevelSecurityStateKnown = PR_TRUE;
         return UpdateSecurityState(aRequest);
       }
     }
@@ -883,8 +889,19 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
          ("SecureUI:%p: OnStateChange: subreq INSECURE\n", this));
         ++mSubRequestsNoSecurity;
       }
+      
+      // Care for the following scenario:
+      // A new top level document load might have already started,
+      // but the security state of the new top level document might not yet been known.
+      // 
+      // At this point, we are learning about the security state of a sub-document.
+      // We must not update the security state based on the sub content,
+      // if the new top level state is not yet known.
+      //
+      // We skip updating the security state in this case.
 
-      return UpdateSecurityState(aRequest);
+      if (mNewToplevelSecurityStateKnown)
+        return UpdateSecurityState(aRequest);
     }
 
     return NS_OK;
