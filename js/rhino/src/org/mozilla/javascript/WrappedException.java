@@ -53,7 +53,7 @@ public class WrappedException extends EvaluatorException implements Wrapper {
      */
     public WrappedException(Throwable exception) {
         super(exception.getMessage());
-        this.exception = exception.fillInStackTrace();
+        this.exception = exception;
     }
 
     /**
