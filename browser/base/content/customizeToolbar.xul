@@ -43,7 +43,7 @@
 
 <script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
   
-<toolbox style="margin:5px;" id="cloned-bar-container"/>
+<toolbox id="cloned-bar-container"/>
 
 <separator class="groove"/>
 
@@ -51,7 +51,7 @@
 Drag your favorite item into the toolbar above:
 </description>
 
-<vbox style="overflow:auto; margin:0px 15px 10px 15px" flex="1" id="palette-box"/>
+<vbox flex="1" id="palette-box"/>
 
 <separator class="groove"/>
 
