@@ -58,9 +58,12 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
-                if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
-                    NS_RELEASE(clazz);  // NULLs out 'clazz'
+                if(nsXPConnect::IsISupportsDescendent(info))
+                {
+                    clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
+                    if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+                        NS_RELEASE(clazz);  // NULLs out 'clazz'
+                }
                 NS_RELEASE(info);
             }
             NS_RELEASE(iimgr);
@@ -93,14 +96,7 @@ nsXPCWrappedNativeClass::~nsXPCWrappedNativeClass()
     mXPCContext->GetWrappedNativeClassMap()->Remove(this);
     DestroyMemberDescriptors();
     if(mName)
-    {
-        nsIAllocator* al;
-        if(NULL != (al = nsXPConnect::GetAllocator()))
-        {
-            al->Free(mName);
-            NS_RELEASE(al);
-        }
-    }
+        XPCMem::Free(mName);
     NS_RELEASE(mInfo);
 }
 
@@ -139,6 +135,10 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors()
         const nsXPTMethodInfo* info;
         if(NS_FAILED(mInfo->GetMethodInfo(i, &info)))
             return JS_FALSE;
+
+        // don't reflect Addref or Release
+        if(i == 1 || i == 2)
+            continue;
 
         if(!XPCConvert::IsMethodReflectable(*info))
             continue;
@@ -361,6 +361,8 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     uint8 vtblIndex;
     nsresult invokeResult;
     nsIAllocator* al = NULL;
+    const nsID* conditional_iid = NULL;
+    JSBool iidIsOwned = JS_TRUE;
     uintN err;
 
     *vp = JSVAL_NULL;
@@ -415,7 +417,6 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     for(i = 0; i < paramCount; i++)
     {
         nsIAllocator* conditional_al = NULL;
-        const nsID* conditional_iid = NULL;
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
 
@@ -444,7 +445,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(!param.IsIn())
                 continue;
 
-            // in the future there may be a param flag indicating 'stingy'
+            // in the future there may be a param flag indicating 'shared'
             if(type.IsPointer())
             {
                 conditional_al = al;
@@ -454,6 +455,11 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         else
         {
             src = argv[i];
+            if(type.IsPointer() && type.TagPart() == nsXPTType::T_IID)
+            {
+                conditional_al = al;
+                dp->flags |= nsXPCVariant::VAL_IS_OWNED;
+            }
         }
 
         if(type.TagPart() == nsXPTType::T_INTERFACE)
@@ -466,6 +472,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                                        cx, desc, i);
                 goto done;
             }
+            iidIsOwned = JS_FALSE;
         }
         else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
         {
@@ -476,7 +483,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             const nsXPTType& type = param.GetType();
             if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
-                                          type, NULL, NULL, NULL))
+                                          type, al, NULL, NULL))
             {
                 ThrowBadParamException(XPCJSError::CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
@@ -489,6 +496,13 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         {
             ThrowBadParamException(err, cx, desc, i);
             goto done;
+        }
+        if(conditional_iid)
+        {
+            if(iidIsOwned)
+                al->Free((void*)conditional_iid);
+            conditional_iid = NULL;
+            iidIsOwned = JS_TRUE;
         }
     }
 
@@ -575,6 +589,8 @@ done:
         if(dp->IsValInterface())
             ((nsISupports*)p)->Release();
     }
+    if(conditional_iid && iidIsOwned && al)
+        al->Free((void*)conditional_iid);
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;

@@ -1,0 +1,6 @@
+
+/* XXX completely bogus declaration */
+
+[object,uuid(00000000-0000-0000-c000-000000000046)]
+interface nsISupports {
+};

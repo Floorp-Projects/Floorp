@@ -121,6 +121,34 @@ nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= NULL */)
     return thrower;
 }        
 
+// static 
+JSBool 
+nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
+{
+    if(!info)
+        return JS_FALSE;
+
+    nsIInterfaceInfo* oldest = info;
+    nsIInterfaceInfo* parent;
+
+    NS_ADDREF(oldest);
+    while(NS_SUCCEEDED(oldest->GetParent(&parent)))
+    {
+        NS_RELEASE(oldest);
+        oldest = parent;
+    }
+
+    JSBool retval = JS_FALSE;
+    nsID* iid;
+    if(NS_SUCCEEDED(oldest->GetIID(&iid)))
+    {
+        retval = iid->Equals(nsISupports::GetIID());
+        XPCMem::Free(iid);
+    }
+    NS_RELEASE(oldest);
+    return retval;
+}        
+
 nsXPConnect::nsXPConnect()
     :   mContextMap(NULL),
         mAllocator(NULL),
@@ -130,6 +158,8 @@ nsXPConnect::nsXPConnect()
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
+
+    xpc_RegisterSelf();
 
     nsXPCWrappedNativeClass::OneTimeInit();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
@@ -301,6 +331,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
 
     if(!(*aWrapper = nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(aJSContext,aJSObj)))
         return NS_ERROR_UNEXPECTED;
+    NS_ADDREF(*aWrapper);
     return NS_OK;
 }
 

@@ -53,9 +53,12 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
-                if(!clazz->mDescriptors)
-                    NS_RELEASE(clazz);  // sets clazz to NULL
+                if(nsXPConnect::IsISupportsDescendent(info))
+                {
+                    clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
+                    if(!clazz->mDescriptors)
+                        NS_RELEASE(clazz);  // sets clazz to NULL
+                }
                 NS_RELEASE(info);
             }
             NS_RELEASE(iimgr);
@@ -153,7 +156,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID
     JSBool success = JS_FALSE;
 
 //    id = CreateIIDJSObject(aIID);
-    id = xpc_NewIDObject(cx, aIID);
+    id = xpc_NewIIDObject(cx, aIID);
 
     if(id)
     {

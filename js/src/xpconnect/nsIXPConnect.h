@@ -26,6 +26,8 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 
+#include "xpccomponents.h"
+
 /*
  * The linkage of XPC API functions differs depending on whether the file is
  * used within the XPC library or not.  Any source file within the XPC
@@ -79,6 +81,7 @@ public:
 
 class nsIXPConnectWrappedJS : public nsISupports
 {
+public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IID)
     // no methods allowed since this has a shared vtbl!
     //
@@ -151,6 +154,9 @@ JS_BEGIN_EXTERN_C
 // XXX Add support for this to be a service?
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
+
+XPC_PUBLIC_API(nsIXPCComponents*)
+XPC_GetXPConnectComponentsObject();
 
 #ifdef DEBUG
 XPC_PUBLIC_API(void)

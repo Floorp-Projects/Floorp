@@ -26,6 +26,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIAllocator.h"
 #include "nsIXPConnect.h"
 #include "nsIInterfaceInfo.h"
@@ -38,6 +39,8 @@
 #include "xpcforwards.h"
 #include "xpcvariant.h"
 #include "xpclog.h"
+#include "xpccomponents.h"
+#include "xpcjsid.h"
 
 extern const char* XPC_VAL_STR; // 'value' property name for out params
 
@@ -79,6 +82,7 @@ public:
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = NULL);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = NULL);
+    static JSBool IsISupportsDescendent(nsIInterfaceInfo* info);
 
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
@@ -208,6 +212,7 @@ private:
 
 class nsIXPCWrappedJSClass : public nsISupports
 {
+public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
     NS_IMETHOD DebugDump(int depth) = 0;
 };
@@ -370,6 +375,7 @@ public:
 
 class nsIXPCWrappedNativeClass : public nsISupports
 {
+public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_NATIVE_CLASS_IID)
     NS_IMETHOD DebugDump(int depth) = 0;
 };
@@ -550,18 +556,6 @@ public:
 };
 
 /***************************************************************************/
-// nsID JavaScript class functions
-
-JSBool
-xpc_InitIDClass(XPCContext* xpcc);
-
-JSObject*
-xpc_NewIDObject(JSContext *cx, const nsID& aID);
-
-const nsID*
-xpc_JSObjectToID(JSContext *cx, JSObject* obj);
-
-/***************************************************************************/
 // data convertion
 
 // class here just for static methods
@@ -583,11 +577,148 @@ private:
 };
 
 /***************************************************************************/
+// allocator access methods
 
+// class here just for static methods
+class XPCMem
+{
+public:
+    static void* Alloc(PRUint32 size);
+    static void* Realloc(void* ptr, PRUint32 size);
+    static void  Free(void* ptr);
+    static void  HeapMinimize();
+    static void* Clone(const void* ptr,  PRUint32 size);
+private:
+    XPCMem();   // not implemented
+    static nsIAllocator* Allocator();
+};
+
+/***************************************************************************/
+// nsJSIID
+
+class nsJSIID : public nsIJSIID
+{
+public:
+    NS_DECL_ISUPPORTS;
+
+    /* readonly attribute string name; */
+    NS_IMETHOD GetName(char * *aName);
+
+    /* readonly attribute string number; */
+    NS_IMETHOD GetNumber(char * *aNumber);
+
+    /* readonly attribute nsID id; */
+    NS_IMETHOD GetId(nsID* *aId);
+
+    /* readonly attribute boolean valid; */
+    NS_IMETHOD GetValid(PRBool *aValid);
+
+    /* boolean equals (in nsIJSID other); */
+    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
+
+    /* boolean init (in string idString); */
+    NS_IMETHOD init(const char *idString, PRBool *_retval);
+
+    nsJSIID();
+    virtual ~nsJSIID();
+
+    static nsJSIID* NewID(const char* str);
+
+private:
+    void reset();
+    void setName(const char* name);
+
+private:
+    nsID    mID;
+    char*   mNumber;
+    char*   mName;
+};
+
+/***************************************************************************/
+// nsJSCID
+
+class nsJSCID : public nsIJSCID
+{
+public:
+    NS_DECL_ISUPPORTS;
+
+    /* readonly attribute string name; */
+    NS_IMETHOD GetName(char * *aName);
+
+    /* readonly attribute string number; */
+    NS_IMETHOD GetNumber(char * *aNumber);
+
+    /* readonly attribute nsID id; */
+    NS_IMETHOD GetId(nsID* *aId);
+
+    /* readonly attribute boolean valid; */
+    NS_IMETHOD GetValid(PRBool *aValid);
+
+    /* boolean equals (in nsIJSID other); */
+    NS_IMETHOD equals(nsIJSID *other, PRBool *_retval);
+
+    /* boolean init (in string idString); */
+    NS_IMETHOD init(const char *idString, PRBool *_retval);
+
+    /* nsISupports newInstance (); */
+    NS_IMETHOD newInstance(nsISupports **_retval);
+
+    nsJSCID();
+    virtual ~nsJSCID();
+
+    static nsJSCID* NewID(const char* str);
+
+private:
+    void reset();
+    void setName(const char* name);
+
+private:
+    nsID    mID;
+    char*   mNumber;
+    char*   mName;
+};
+
+JSObject*
+xpc_NewIIDObject(JSContext *cx, const nsID& aID);
+
+nsID*
+xpc_JSObjectToID(JSContext *cx, JSObject* obj);
+
+/***************************************************************************/
+// 'Components' objects
+
+class nsXPCInterfaces;
+class nsXPCClasses;
+
+class nsXPCComponents : public nsIXPCComponents
+{
+public:
+    NS_DECL_ISUPPORTS;
+
+    /* readonly attribute nsIXPCInterfaces interfaces; */
+    NS_IMETHOD GetInterfaces(nsIXPCInterfaces * *aInterfaces);
+
+    /* readonly attribute nsIXPCClasses classes; */
+    NS_IMETHOD GetClasses(nsIXPCClasses * *aClasses);
+
+    nsXPCComponents();
+    virtual ~nsXPCComponents();
+private:
+    nsXPCInterfaces* mInterfaces;
+    nsXPCClasses*    mClasses;
+};
+
+/***************************************************************************/
 // platform specific method invoker
 nsresult
 xpc_InvokeNativeMethod(void* that, PRUint32 index,
                        uint32 paramCount, nsXPCVariant* params);
+
+/***************************************************************************/
+// module level stuff
+
+void
+xpc_RegisterSelf();
 
 /***************************************************************************/
 

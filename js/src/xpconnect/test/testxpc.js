@@ -1,4 +1,12 @@
-// test case...
+// tests...
+
+function nsID(str)
+{
+    var id = Components.classes.nsIID.newInstance();
+    id = id.QueryInterface(Components.interfaces.nsIID);
+    id.init(str);
+    return id;
+}    
 
 var NS_ISUPPORTS_IID    = new nsID("{00000000-0000-0000-c000-000000000046}");
 var NS_ITESTXPC_FOO_IID = new nsID("{159E36D0-991E-11d2-AC3F-00C09300144B}");
@@ -293,9 +301,9 @@ function idTest(name, iid, same)
     var idFromName = new nsID(name);
     var idFromIID  = new nsID(iid);
 
-    if(!idFromName.isValid() || !idFromIID.isValid()) {
-        return (same && idFromName.isValid() == idFromIID.isValid()) ||
-               (!same && idFromName.isValid() != idFromIID.isValid());
+    if(!idFromName.valid || !idFromIID.valid) {
+        return (same && idFromName.valid == idFromIID.valid) ||
+               (!same && idFromName.valid != idFromIID.valid);
     }
 
     if(same != idFromName.equals(idFromIID) ||
@@ -307,21 +315,21 @@ function idTest(name, iid, same)
     nameNormalized = name.toLowerCase();
     iidNormalized  = iid.toLowerCase();
 
-    idFromName_NameNormalized = idFromName.toName() ? 
-                                    idFromName.toName().toLowerCase() :
-                                    idFromName.toName();
+    idFromName_NameNormalized = idFromName.name ? 
+                                    idFromName.name.toLowerCase() :
+                                    idFromName.name;
 
-    idFromIID_NameNormalized = idFromIID.toName() ? 
-                                    idFromIID.toName().toLowerCase() :
-                                    idFromIID.toName();
+    idFromIID_NameNormalized = idFromIID.name ? 
+                                    idFromIID.name.toLowerCase() :
+                                    idFromIID.name;
 
-    idFromName_StringNormalized = idFromName.toString() ? 
-                                    idFromName.toString().toLowerCase() :
-                                    idFromName.toString();
+    idFromName_StringNormalized = idFromName.number ? 
+                                    idFromName.number.toLowerCase() :
+                                    idFromName.number;
 
-    idFromIID_StringNormalized = idFromIID.toString() ? 
-                                    idFromIID.toString().toLowerCase() :
-                                    idFromIID.toString();
+    idFromIID_StringNormalized = idFromIID.number ? 
+                                    idFromIID.number.toLowerCase() :
+                                    idFromIID.number;
 
     if(idFromName_NameNormalized != nameNormalized ||
        same != (idFromIID_NameNormalized == nameNormalized)) {
@@ -361,6 +369,25 @@ all_ok = idTest("nsISupports",   "{XXXXXXXX-C5D9-11d2-9838-006008962422}", false
 all_ok = idTest("bogus",         "{XXXXXXXX-C5D9-11d2-9838-006008962422}", true)  && all_ok;
 
 print("nsID tests - "+(all_ok ? "passed" : "failed"));
+
+/***************************************************************************/
+// Components object test...
+// print(".......................................");
+
+// print("Components = "+Components);
+// print("Components.interfaces = "+Components.interfaces);
+// print("Components.interfaces.nsISupports = "+Components.interfaces.nsISupports);
+// print("Components.interfaces.nsISupports.name = "+Components.interfaces.nsISupports.name);
+// print("Components.interfaces.nsISupports.number = "+Components.interfaces.nsISupports.number);
+// 
+// print("Components.interfaces.nsIEcho.number = "+Components.interfaces.nsIEcho.number);
+// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'] = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}']);
+// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name);
+// 
+// print("Components.classes = "+Components.classes);
+// print("Components.classes.nsIID = "+Components.classes.nsIID);
+// print("Components.classes.nsCID = "+Components.classes.nsCID);
+// print("Components.classes.nsCID.name = "+Components.classes.nsCID.name);
 
 /***************************************************************************/
 

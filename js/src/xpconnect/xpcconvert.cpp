@@ -170,7 +170,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                 if(!iid)
                     return JS_FALSE;
                 JSObject* obj;
-                if(!(obj = xpc_NewIDObject(cx, *iid)))
+                if(!(obj = xpc_NewIIDObject(cx, *iid)))
                     return JS_FALSE;
                 *d = OBJECT_TO_JSVAL(obj);
                 break;
@@ -385,6 +385,8 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             return JS_FALSE;
         case nsXPTType::T_IID:
         {
+            NS_ASSERTION(al,"trying to convert a JSID to nsID without allocator");
+
             JSObject* obj;
             const nsID* pid=NULL;
             if(!JSVAL_IS_OBJECT(s) ||
@@ -393,17 +395,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             {
                 return JS_FALSE;
             }
-            if(al)
-            {
-                if(!(*((void**)d) = al->Alloc(sizeof(nsID))))
-                {
-                    return JS_FALSE;
-                }
-                memcpy(*((void**)d), pid, sizeof(nsID));
-            }
-            else
-                *((const nsID**)d) = pid;
-
+            *((const nsID**)d) = pid;
             return JS_TRUE;
         }
 
