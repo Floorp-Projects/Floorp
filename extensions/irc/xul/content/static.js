@@ -1691,7 +1691,7 @@ function setCurrentObject (obj)
     }
     
     client.currentObject = obj;
-    tb = getTabForObject(obj);
+    tb = getTabForObject(obj, true);
     if (tb)
     {
         tb.selected = true;
