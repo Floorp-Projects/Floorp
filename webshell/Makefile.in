@@ -32,5 +32,44 @@ ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
+# XXX Export the viewer samples from here 
+# XXX so that we have them in our release builds. 
+# XXX move these back to tests/viewer when we stop shipping with debug menus
+#
+
+EXPORT_RESOURCE_SAMPLES	:= \
+			$(wildcard $(srcdir)/tests/viewer/samples/test*.html) \
+			$(wildcard $(srcdir)/tests/viewer/samples/toolbarTest*.xul) \
+			$(wildcard $(srcdir)/tests/viewer/samples/treeTest*.xul) \
+			$(wildcard $(srcdir)/tests/viewer/samples/treeTest*.css) \
+			$(wildcard $(srcdir)/tests/viewer/samples/slider*.xul) \
+			$(wildcard $(srcdir)/tests/viewer/samples/scrollbar*.xul) \
+			$(srcdir)/tests/viewer/resources/find.html \
+			$(srcdir)/tests/viewer/resources/printsetup.html \
+			$(srcdir)/tests/viewer/resources/image_props.html \
+			$(srcdir)/tests/viewer/samples/aform.css \
+			$(srcdir)/tests/viewer/samples/bform.css \
+			$(srcdir)/tests/viewer/samples/cform.css \
+			$(srcdir)/tests/viewer/samples/demoform.css \
+			$(srcdir)/tests/viewer/samples/mozform.css \
+			$(srcdir)/tests/viewer/samples/xulTest.css \
+			$(srcdir)/tests/viewer/samples/Anieyes.gif \
+			$(srcdir)/tests/viewer/samples/gear1.gif \
+			$(srcdir)/tests/viewer/samples/rock_gra.gif \
+			$(srcdir)/tests/viewer/samples/beeptest.html \
+			$(srcdir)/tests/viewer/samples/soundtest.html \
+			$(srcdir)/tests/viewer/samples/bg.jpg \
+			$(srcdir)/tests/viewer/samples/raptor.jpg \
+			$(srcdir)/tests/viewer/samples/test.wav \
+			$(srcdir)/tests/viewer/samples/checkboxTest.xul \
+			$(NULL)
+
+EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/tests/viewer/throbber/anim*.gif)
+
+
 include $(topsrcdir)/config/rules.mk
 
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
+	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
+	$(INSTALL) $(srcdir)/tests/viewer/resources/viewer.properties $(DIST)/bin/res
