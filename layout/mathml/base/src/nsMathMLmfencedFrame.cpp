@@ -479,7 +479,6 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
  
     nsAutoString data;
     aMathMLChar->GetData(data);
-    aMathMLChar->SetData(aPresContext, data); // XXX hack to reset, bug 45010
     PRBool found = nsMathMLOperators::LookupOperator(data, aForm,              
                                            &flags, &leftSpace, &rightSpace);
 

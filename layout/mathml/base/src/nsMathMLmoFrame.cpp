@@ -109,8 +109,6 @@ void
 nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
 {
   mFlags = 0;
-  if (!mFrames.FirstChild())
-    return;
 
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
@@ -303,7 +301,6 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
     float rspace = 0.0f;
     nsAutoString data;
     mMathMLChar.GetData(data);
-    mMathMLChar.SetData(aPresContext, data); // XXX hack to reset, bug 45010
     PRBool found = nsMathMLOperators::LookupOperator(data, form, &mFlags, &lspace, &rspace);
     if (found) {
       // cache the default values of lspace & rspace that we get from the dictionary.

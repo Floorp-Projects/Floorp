@@ -1213,22 +1213,24 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
   mData = aData;
   // some assumptions until proven otherwise
   // note that mGlyph is not initialized
+  mOperator = -1;
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mBoundingMetrics.Clear();
   mGlyphTable = nsnull;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
-    PRInt32 k = nsMathMLOperators::FindStretchyOperator(mData[0]);
-    if (k != kNotFound) {
-      mDirection = nsMathMLOperators::GetStretchyDirectionAt(k);
+    mOperator = nsMathMLOperators::FindStretchyOperator(mData[0]);
+    if (mOperator >= 0) {
+      mDirection = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
       // default tentative table (not the one that is necessarily going to be used)
       mGlyphTable = gGlyphTableList->GetGlyphTableFor(aPresContext, this);
       // commom case: we won't bother with the stretching if there is
       // no glyph table for us...
       if (!mGlyphTable) {
+        mOperator = -1;
         mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
         // never try to stretch this operator again
-        nsMathMLOperators::DisableStretchyOperatorAt(k);
+        nsMathMLOperators::DisableStretchyOperatorAt(mOperator);
       }
     }
   }
@@ -1422,6 +1424,14 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   nsresult rv = NS_OK;
   nsStretchDirection direction = aStretchDirection;
 
+  // if we have been called before, and we didn't actually stretch, our
+  // direction may have been set to NS_STRETCH_DIRECTION_UNSUPPORTED.
+  // So first set our direction back to its instrinsic value
+  if (mOperator >= 0) {
+    // mOperator is initialized in SetData() and remains unchanged
+    mDirection = nsMathMLOperators::GetStretchyDirectionAt(mOperator);
+  }
+
   // if no specified direction, attempt to stretch in our preferred direction
   if (direction == NS_STRETCH_DIRECTION_DEFAULT) {
     direction = mDirection;
@@ -1448,7 +1458,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   if (NS_FAILED(rv)) {
     NS_WARNING("GetBoundingMetrics failed");
     // ensure that the char later behaves like a normal char
-    // XXX to reset in dynamic updates @ ContentChanged()
+    // (will be reset back to its intrinsic value in case of dynamic updates)
     mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
     return rv;
   }
@@ -1459,7 +1469,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // quick return if there is nothing special about this char
   if (!mGlyphTable || (mDirection != direction)) {
     // ensure that the char later behaves like a normal char
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // XXX to reset in dynamic updates
+    // (will be reset back to its intrinsic value in case of dynamic updates)
+    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
     return NS_OK;
   }
 
@@ -1484,7 +1495,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // if we are not a largeop in display mode, return if size fits
   if (!largeop && IsSizeOK(charSize, targetSize, aStretchHint)) {
     // ensure that the char later behaves like a normal char
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // XXX to reset in dynamic updates
+    // (will be reset back to its intrinsic value in case of dynamic updates)
+    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
     return NS_OK;
   }
 
@@ -1725,7 +1737,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 done:
   if (bestGlyph == startingGlyph) { // nothing happened
     // ensure that the char behaves like a normal char
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // XXX to reset in dynamic updates
+    // (will be reset back to its intrinsic value in case of dynamic updates)
+    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
   else {
     // will stretch
