@@ -163,7 +163,7 @@ var dropObserver = {
     // Don't allow duplicates.
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
-      if (toolbarItem.id == newButtonId)
+      if (toolbarItem.firstChild.id == newButtonId)
         return;
       toolbarItem = toolbarItem.nextSibling;
     }
