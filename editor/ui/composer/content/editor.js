@@ -1020,19 +1020,25 @@ function BuildRecentMenu()
   var historyCount = 10; 
   try { historyCount = gPrefs.CopyUnicharPref("editor.history.url_maximum"); } catch(e) {}
 
+  var a=1; // Keeps track of which access key to use in the menuitem
   for(i = 0; i < historyCount; i++)
   {
     var title = getUnicharPref("editor.history_title_"+i);
-	 var url = getUnicharPref("editor.history_url_"+i);
+    var url = getUnicharPref("editor.history_url_"+i);
 
-	 if (!url || url.length == 0)
-	   break;
-	 
-	 AppendRecentMenuitem(i+1, popup, title, url, i+2);
+    if (!url || url.length == 0)
+      break;
+
+    // If the current url is already opened, don't put useless entries into the menu
+    if (url != window.editorShell.editorDocument.location)
+    {
+      AppendRecentMenuitem(a, popup, title, url);
+      a++;
+    }
   }
 }
 
-function AppendRecentMenuitem(accessKey, menupopup, title, url, menuIndex)
+function AppendRecentMenuitem(accessKey, menupopup, title, url)
 {
   if (menupopup)
   {
