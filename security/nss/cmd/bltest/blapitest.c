@@ -68,7 +68,7 @@ char *testdir = NULL;
 #define TIMEFINISH(time, reps) \
     time2 = (PRIntervalTime)(PR_IntervalNow() - time1); \
     time1 = PR_IntervalToMilliseconds(time2); \
-    time = ((float)(time1))/reps;
+    time = ((double)(time1))/reps;
 
 static void Usage()
 {
@@ -389,15 +389,15 @@ typedef SECStatus (* bltestSymmCipherFn)(void *cx,
 					 unsigned char *output,
 					 unsigned int *outputLen,
 					 unsigned int maxOutputLen,
-					 unsigned char *input,
+					 const unsigned char *input,
 					 unsigned int inputLen);
 
 typedef SECStatus (* bltestPubKeyCipherFn)(void *key,
-					   unsigned char *input,
-					   unsigned char *output);
+					   unsigned char *output,
+					   const unsigned char *input);
 
 typedef SECStatus (* bltestHashCipherFn)(unsigned char *dest,
-					 unsigned char *src,
+					 const unsigned char *src,
 					 uint32 src_length);
 
 typedef enum {
@@ -411,6 +411,8 @@ typedef enum {
     bltestRC4,		  /* .			   */
     bltestRC5_ECB,	  /* .			   */
     bltestRC5_CBC,	  /* .			   */
+    bltestAES_ECB,        /* .                     */
+    bltestAES_CBC,        /* .                     */
     bltestRSA,		  /* Public Key Ciphers	   */
     bltestDSA,		  /* . (Public Key Sig.)   */
     bltestMD2,		  /* Hash algorithms	   */
@@ -418,7 +420,7 @@ typedef enum {
     bltestSHA1		  /* .			   */
 } bltestCipherMode;
 
-#define NUMMODES 14
+#define NUMMODES 16
 
 static char *mode_strings[] =
 {
@@ -431,6 +433,8 @@ static char *mode_strings[] =
     "rc4",
     "rc5_ecb",
     "rc5_cbc",
+    "aes_ecb",
+    "aes_cbc",
     "rsa",
     /*"pqg",*/
     "dsa",
@@ -509,15 +513,15 @@ typedef struct
     /* performance testing */
     int	  repetitions;
     int   cxreps;
-    float cxtime;
-    float optime;
+    double cxtime;
+    double optime;
 } bltestCipherInfo;
 
 PRBool
 is_symmkeyCipher(bltestCipherMode mode)
 {
     /* change as needed! */
-    if (mode >= bltestDES_ECB && mode <= bltestRC5_CBC)
+    if (mode >= bltestDES_ECB && mode <= bltestAES_CBC)
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -554,7 +558,8 @@ cipher_requires_IV(bltestCipherMode mode)
 {
     /* change as needed! */
     if (mode == bltestDES_CBC || mode == bltestDES_EDE_CBC ||
-	mode == bltestRC2_CBC || mode == bltestRC5_CBC)
+	mode == bltestRC2_CBC || mode == bltestRC5_CBC     ||
+        mode == bltestAES_CBC)
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -569,7 +574,7 @@ setupIO(PRArenaPool *arena, bltestIO *input, PRFileDesc *file,
     SECItem fileData;
     SECItem *in;
     unsigned char *tok;
-    int i, j;
+    unsigned int i, j;
 
     if (file && (numBytes == 0 || file == PR_STDIN)) {
 	/* grabbing data from a file */
@@ -639,7 +644,7 @@ finishIO(bltestIO *output, PRFileDesc *file)
     unsigned char byteval;
     SECItem *it;
     char hexstr[5];
-    int i;
+    unsigned int i;
     if (output->pBuf.len > 0) {
 	it = &output->pBuf;
     } else {
@@ -651,7 +656,7 @@ finishIO(bltestIO *output, PRFileDesc *file)
 	break;
     case bltestBinary:
 	nb = PR_Write(file, it->data, it->len);
-	rv = (nb == it->len) ? SECSuccess : SECFailure;
+	rv = (nb == (PRInt32)it->len) ? SECSuccess : SECFailure;
 	break;
     case bltestHexSpaceDelim:
 	hexstr[0] = '0';
@@ -664,6 +669,7 @@ finishIO(bltestIO *output, PRFileDesc *file)
 	    if (rv)
 		break;
 	}
+	PR_Write(file, "\n", 1);
 	break;
     case bltestHexStream:
 	for (i=0; i<it->len; i++) {
@@ -673,6 +679,7 @@ finishIO(bltestIO *output, PRFileDesc *file)
 		break;
 	    nb = PR_Write(file, hexstr, 2);
 	}
+	PR_Write(file, "\n", 1);
 	break;
     }
     return rv;
@@ -714,6 +721,90 @@ misalignBuffer(PRArenaPool *arena, bltestIO *io, int off)
 }
 
 SECStatus
+des_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return DES_Encrypt((DESContext *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+des_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return DES_Decrypt((DESContext *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+rc2_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return RC2_Encrypt((RC2Context *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+rc2_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return RC2_Decrypt((RC2Context *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+rc4_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return RC4_Encrypt((RC4Context *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+rc4_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return RC4_Decrypt((RC4Context *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+aes_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return AES_Encrypt((AESContext *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+aes_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+            unsigned int maxOutputLen, const unsigned char *input,
+            unsigned int inputLen)
+{
+    return AES_Decrypt((AESContext *)cx, output, outputLen, maxOutputLen,
+                       input, inputLen);
+}
+
+SECStatus
+rsa_PublicKeyOp(void *key, unsigned char *output, const unsigned char *input)
+{
+    return RSA_PublicKeyOp((RSAPublicKey *)key, output, input);
+}
+
+SECStatus
+rsa_PrivateKeyOp(void *key, unsigned char *output, const unsigned char *input)
+{
+    return RSA_PrivateKeyOp((RSAPrivateKey *)key, output, input);
+}
+
+SECStatus
 bltest_des_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
     PRIntervalTime time1, time2;
@@ -747,9 +838,9 @@ bltest_des_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	PORT_Free(dummycx);
     }
     if (encrypt)
-	cipherInfo->cipher.symmkeyCipher = DES_Encrypt;
+	cipherInfo->cipher.symmkeyCipher = des_Encrypt;
     else
-	cipherInfo->cipher.symmkeyCipher = DES_Decrypt;
+	cipherInfo->cipher.symmkeyCipher = des_Decrypt;
     return SECSuccess;
 }
 
@@ -789,9 +880,9 @@ bltest_rc2_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	PORT_Free(dummycx);
     }
     if (encrypt)
-	cipherInfo->cipher.symmkeyCipher = RC2_Encrypt;
+	cipherInfo->cipher.symmkeyCipher = rc2_Encrypt;
     else
-	cipherInfo->cipher.symmkeyCipher = RC2_Decrypt;
+	cipherInfo->cipher.symmkeyCipher = rc2_Decrypt;
     return SECSuccess;
 }
 
@@ -818,9 +909,9 @@ bltest_rc4_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	PORT_Free(dummycx);
     }
     if (encrypt)
-	cipherInfo->cipher.symmkeyCipher = RC4_Encrypt;
+	cipherInfo->cipher.symmkeyCipher = rc4_Encrypt;
     else
-	cipherInfo->cipher.symmkeyCipher = RC4_Decrypt;
+	cipherInfo->cipher.symmkeyCipher = rc4_Decrypt;
     return SECSuccess;
 }
 
@@ -850,6 +941,49 @@ bltest_rc5_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 #else
     return SECFailure;
 #endif
+}
+
+SECStatus
+bltest_aes_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
+{
+    PRIntervalTime time1, time2;
+    bltestSymmKeyParams *aesp = &cipherInfo->params.sk;
+    int minorMode;
+    int i;
+    /* XXX */ int keylen, blocklen;
+    keylen = aesp->key.buf.len;
+    blocklen = cipherInfo->input.buf.len;
+    switch (cipherInfo->mode) {
+    case bltestAES_ECB:	    minorMode = NSS_AES;	  break;
+    case bltestAES_CBC:	    minorMode = NSS_AES_CBC;	  break;
+    default:
+	return SECFailure;
+    }
+    cipherInfo->cx = (void*)AES_CreateContext(aesp->key.buf.data,
+					      aesp->iv.buf.data,
+					      minorMode, encrypt, 
+                                              keylen, blocklen);
+    if (cipherInfo->cxreps > 0) {
+	AESContext **dummycx;
+	dummycx = PORT_Alloc(cipherInfo->cxreps * sizeof(AESContext *));
+	TIMESTART();
+	for (i=0; i<cipherInfo->cxreps; i++) {
+	    dummycx[i] = (void*)AES_CreateContext(aesp->key.buf.data,
+					          aesp->iv.buf.data,
+					          minorMode, encrypt,
+	                                          keylen, blocklen);
+	}
+	TIMEFINISH(cipherInfo->cxtime, 1.0);
+	for (i=0; i<cipherInfo->cxreps; i++) {
+	    AES_DestroyContext(dummycx[i], PR_TRUE);
+	}
+	PORT_Free(dummycx);
+    }
+    if (encrypt)
+	cipherInfo->cipher.symmkeyCipher = aes_Encrypt;
+    else
+	cipherInfo->cipher.symmkeyCipher = aes_Decrypt;
+    return SECSuccess;
 }
 
 SECStatus
@@ -889,9 +1023,9 @@ bltest_rsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->publicExponent.len = key->publicExponent.len;
 	pubkey->publicExponent.data = key->publicExponent.data;
 	cipherInfo->cx = (void *)pubkey;
-	cipherInfo->cipher.pubkeyCipher = RSA_PublicKeyOp;
+	cipherInfo->cipher.pubkeyCipher = rsa_PublicKeyOp;
     } else {
-	cipherInfo->cipher.pubkeyCipher = RSA_PrivateKeyOp;
+	cipherInfo->cipher.pubkeyCipher = rsa_PrivateKeyOp;
     }
     return SECSuccess;
 }
@@ -944,9 +1078,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     if (!cipherInfo->cx && dsap->key.buf.len > 0) {
 	cipherInfo->cx = dsakey_from_filedata(&dsap->key.buf);
     }
-    if (encrypt) {
-	cipherInfo->cipher.pubkeyCipher = DSA_SignDigest;
-    } else {
+    if (!encrypt) {
 	/* Have to convert private key to public key.  Memory
 	 * is freed with private key's arena  */
 	DSAPublicKey *pubkey;
@@ -961,14 +1093,13 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	pubkey->params.base.data = key->params.base.data;
 	pubkey->publicValue.len = key->publicValue.len;
 	pubkey->publicValue.data = key->publicValue.data;
-	cipherInfo->cipher.pubkeyCipher = DSA_VerifyDigest;
     }
     return SECSuccess;
 }
 
 /* XXX unfortunately, this is not defined in blapi.h */
 SECStatus
-md2_HashBuf(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
+md2_HashBuf(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
     unsigned int len;
     MD2Context *cx = MD2_NewContext();
@@ -981,19 +1112,18 @@ md2_HashBuf(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 }
 
 SECStatus
-md2_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
+md2_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
     MD2Context *cx, *cx_cpy;
     unsigned char *cxbytes;
-    unsigned char *psrc = src;
     unsigned int len;
-    int i, quarter;
+    unsigned int i, quarter;
     SECStatus rv;
     cx = MD2_NewContext();
     /* divide message by 4, restarting 3 times */
     quarter = src_length / 4;
     for (i=0; i<4; i++) {
-	MD2_Update(cx, psrc, PR_MIN(quarter, src_length));
+	MD2_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = MD2_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
 	MD2_Flatten(cx, cxbytes);
@@ -1010,7 +1140,6 @@ md2_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 	}
 	MD2_DestroyContext(cx_cpy, PR_TRUE);
 	PORT_Free(cxbytes);
-	psrc += quarter;
 	src_length -= quarter;
     }
     MD2_End(cx, dest, &len, MD2_LENGTH);
@@ -1020,20 +1149,18 @@ finish:
 }
 
 SECStatus
-md5_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
+md5_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
     SECStatus rv;
     MD5Context *cx, *cx_cpy;
     unsigned char *cxbytes;
-    unsigned char *psrc = src;
     unsigned int len;
-    int quarter;
-    int i;
+    unsigned int i, quarter;
     cx = MD5_NewContext();
     /* divide message by 4, restarting 3 times */
     quarter = src_length / 4;
     for (i=0; i<4; i++) {
-	MD5_Update(cx, psrc, PR_MIN(quarter, src_length));
+	MD5_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = MD5_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
 	MD5_Flatten(cx, cxbytes);
@@ -1050,7 +1177,6 @@ md5_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 	}
 	MD5_DestroyContext(cx_cpy, PR_TRUE);
 	PORT_Free(cxbytes);
-	psrc += quarter;
 	src_length -= quarter;
     }
     MD5_End(cx, dest, &len, MD5_LENGTH);
@@ -1060,20 +1186,18 @@ finish:
 }
 
 SECStatus
-sha1_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
+sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 {
     SECStatus rv;
     SHA1Context *cx, *cx_cpy;
     unsigned char *cxbytes;
-    unsigned char *psrc = src;
     unsigned int len;
-    int quarter;
-    int i;
+    unsigned int i, quarter;
     cx = SHA1_NewContext();
     /* divide message by 4, restarting 3 times */
     quarter = src_length / 4;
     for (i=0; i<4; i++) {
-	SHA1_Update(cx, psrc, PR_MIN(quarter, src_length));
+	SHA1_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = SHA1_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
 	SHA1_Flatten(cx, cxbytes);
@@ -1090,7 +1214,6 @@ sha1_restart(unsigned char *dest, const unsigned char *src, PRUint32 src_length)
 	}
 	SHA1_DestroyContext(cx_cpy, PR_TRUE);
 	PORT_Free(cxbytes);
-	psrc += quarter;
 	src_length -= quarter;
     }
     SHA1_End(cx, dest, &len, MD5_LENGTH);
@@ -1176,6 +1299,12 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 			  cipherInfo->input.pBuf.len);
 #endif
 	return bltest_rc5_init(cipherInfo, encrypt);
+	break;
+    case bltestAES_ECB:
+    case bltestAES_CBC:
+	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+			  cipherInfo->input.pBuf.len);
+	return bltest_aes_init(cipherInfo, encrypt);
 	break;
     case bltestRSA:
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
@@ -1860,7 +1989,7 @@ int main(int argc, char **argv)
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 
-    NSS_Init(NULL);
+    NSS_NoDB_Init(NULL);
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &bltest);
 
@@ -2088,6 +2217,7 @@ int main(int argc, char **argv)
     if (bltest.options[opt_Input].activated) {
 	if (bltest.options[opt_CmdLine].activated) {
 	    instr = bltest.options[opt_Input].arg;
+	    infile = NULL;
 	} else {
 	    infile = PR_Open(bltest.options[opt_Input].arg, PR_RDONLY, 00660);
 	}
