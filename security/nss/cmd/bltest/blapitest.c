@@ -2063,11 +2063,12 @@ int main(int argc, char **argv)
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
 
-    rv = NSS_NoDB_Init(NULL);
+    rv = RNG_RNGInit();
     if (rv != SECSuccess) {
     	SECU_PrintPRandOSError(progName);
 	return -1;
     }
+    RNG_SystemInfoForRNG();
 
     rv = SECU_ParseCommandLine(argc, argv, progName, &bltest);
 
