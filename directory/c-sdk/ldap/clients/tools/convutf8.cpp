@@ -94,7 +94,7 @@ ldaptool_local2UTF8( const char *src, const char *desc )
 	utf8 = convert_to_utf8( src );	/* the real deal */
 
 	if ( NULL == utf8 ) {
-	    utf8 = strdup( utf8);	/* fallback: no conversion */
+	    utf8 = strdup( src );	/* fallback: no conversion */
 	    fprintf( stderr, "%s: warning: no conversion of %s to "
 		    LDAPTOOL_CHARSET_UTF8 "\n", desc, ldaptool_progname );
 	}
