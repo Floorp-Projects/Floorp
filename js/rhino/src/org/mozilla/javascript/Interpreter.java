@@ -2430,23 +2430,19 @@ switch (op) {
         stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
     }
-    case Token.IN : {
-        Object rhs = stack[stackTop];
-        if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        --stackTop;
-        Object lhs = stack[stackTop];
-        if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, frame.scope);
-        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
-        continue Loop;
-    }
+    case Token.IN :
     case Token.INSTANCEOF : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, frame.scope);
+        boolean valBln;
+        if (op == Token.IN) {
+            valBln = ScriptRuntime.in(lhs, rhs, cx);
+        } else {
+            valBln = ScriptRuntime.instanceOf(lhs, rhs, cx);
+        }
         stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
     }
@@ -2616,44 +2612,33 @@ switch (op) {
         sDbl[stackTop] = ~rIntValue;
         continue Loop;
     }
-    case Token.BITAND : {
-        int rIntValue = stack_int32(frame, stackTop);
-        --stackTop;
-        int lIntValue = stack_int32(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lIntValue & rIntValue;
-        continue Loop;
-    }
-    case Token.BITOR : {
-        int rIntValue = stack_int32(frame, stackTop);
-        --stackTop;
-        int lIntValue = stack_int32(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lIntValue | rIntValue;
-        continue Loop;
-    }
-    case Token.BITXOR : {
-        int rIntValue = stack_int32(frame, stackTop);
-        --stackTop;
-        int lIntValue = stack_int32(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lIntValue ^ rIntValue;
-        continue Loop;
-    }
-    case Token.LSH : {
-        int rIntValue = stack_int32(frame, stackTop);
-        --stackTop;
-        int lIntValue = stack_int32(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lIntValue << rIntValue;
-        continue Loop;
-    }
+    case Token.BITAND :
+    case Token.BITOR :
+    case Token.BITXOR :
+    case Token.LSH :
     case Token.RSH : {
         int rIntValue = stack_int32(frame, stackTop);
         --stackTop;
         int lIntValue = stack_int32(frame, stackTop);
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lIntValue >> rIntValue;
+        switch (op) {
+          case Token.BITAND:
+            lIntValue &= rIntValue;
+            break;
+          case Token.BITOR:
+            lIntValue |= rIntValue;
+            break;
+          case Token.BITXOR:
+            lIntValue ^= rIntValue;
+            break;
+          case Token.LSH:
+            lIntValue <<= rIntValue;
+            break;
+          case Token.RSH:
+            lIntValue >>= rIntValue;
+            break;
+        }
+        sDbl[stackTop] = lIntValue;
         continue Loop;
     }
     case Token.URSH : {
@@ -2664,15 +2649,13 @@ switch (op) {
         sDbl[stackTop] = ScriptRuntime.toUint32(lDbl) >>> rIntValue;
         continue Loop;
     }
-    case Token.NEG : {
-        double rDbl = stack_double(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = -rDbl;
-        continue Loop;
-    }
+    case Token.NEG :
     case Token.POS : {
         double rDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
+        if (op == Token.NEG) {
+            rDbl = -rDbl;
+        }
         sDbl[stackTop] = rDbl;
         continue Loop;
     }
@@ -2680,37 +2663,29 @@ switch (op) {
         --stackTop;
         do_add(stack, sDbl, stackTop, cx);
         continue Loop;
-    case Token.SUB : {
-        double rDbl = stack_double(frame, stackTop);
-        --stackTop;
-        double lDbl = stack_double(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lDbl - rDbl;
-        continue Loop;
-    }
-    case Token.MUL : {
-        double rDbl = stack_double(frame, stackTop);
-        --stackTop;
-        double lDbl = stack_double(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lDbl * rDbl;
-        continue Loop;
-    }
-    case Token.DIV : {
-        double rDbl = stack_double(frame, stackTop);
-        --stackTop;
-        double lDbl = stack_double(frame, stackTop);
-        stack[stackTop] = DBL_MRK;
-        // Detect the divide by zero or let Java do it ?
-        sDbl[stackTop] = lDbl / rDbl;
-        continue Loop;
-    }
+    case Token.SUB :
+    case Token.MUL :
+    case Token.DIV :
     case Token.MOD : {
         double rDbl = stack_double(frame, stackTop);
         --stackTop;
         double lDbl = stack_double(frame, stackTop);
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = lDbl % rDbl;
+        switch (op) {
+          case Token.SUB:
+            lDbl -= rDbl;
+            break;
+          case Token.MUL:
+            lDbl *= rDbl;
+            break;
+          case Token.DIV:
+            lDbl /= rDbl;
+            break;
+          case Token.MOD:
+            lDbl %= rDbl;
+            break;
+        }
+        sDbl[stackTop] = lDbl;
         continue Loop;
     }
     case Token.NOT :
