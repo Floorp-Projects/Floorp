@@ -92,6 +92,7 @@ public:
 
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext, nsDidReflowStatus aStatus);
   NS_IMETHOD MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
     // nsIFormControlFrame
   NS_IMETHOD GetType(PRInt32* aType) const;
@@ -255,6 +256,7 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
+  PRInt32      mNumDisplayRows;
 
   nsVoidArray  * mSelectionCache;
   PRInt32        mSelectionCacheLength;
