@@ -20,19 +20,6 @@
  * Contributor(s): 
  */
 
-  /** USAGE NOTE: 
-     <font color=red>
-
-     This file (prefapi.c) is being obsoleted, and functions previously declared
-     here are migrating to preffunc.cpp in this module.  If you make changes
-     in this file, please be sure to check preffunc.cpp to ensure that similar
-     changes are made in that file.
-     
-     Currently Windows uses preffunc.cpp and the other platforms use prefapi.c.
-
-     </font>
-  **/
-
 #include "prefapi.h"
 #include "jsapi.h"
 

@@ -32,7 +32,6 @@
 #ifdef NS_DEBUG
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
-#include "prefapi.h"
 
 static void debug_RegisterPrefCallbacks();
 
@@ -952,7 +951,7 @@ debug_PrefChangedCallback(const char * name,void * closure)
 		NS_RELEASE(prefs);
 	}
 
-   	return PREF_NOERROR;
+   	return 0;
 }
 //////////////////////////////////////////////////////////////
 /* static */ void
