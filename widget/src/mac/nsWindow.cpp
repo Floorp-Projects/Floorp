@@ -506,8 +506,6 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 {
 nsSizeEvent 	event;
 
-  if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n", 
-                  gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   
@@ -517,10 +515,10 @@ nsSizeEvent 	event;
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
  
   if (aRepaint)
-  {
+  	{
   	UpdateVisibilityFlag();
   	UpdateDisplay();
-  }
+  	}
   
   event.message = NS_SIZE;
   event.point.x = 0;
@@ -552,10 +550,10 @@ nsSizeEvent 	event;
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
 
   if (aRepaint)
-  {
+  	{
   	UpdateVisibilityFlag();
   	UpdateDisplay();
-  }
+  	}
   
   event.message = NS_SIZE;
   event.point.x = 0;
@@ -1057,7 +1055,6 @@ nsRect 					rr;
 			RGBColor				redcolor = {0xff00,0,0};
 			RGBColor				greencolor = {0,0xff00,0};
 
-        event.renderingContext->Init(mContext, this);
         
         CalcOffset(offx,offy);
 				GetPort(&theport);
@@ -1091,10 +1088,12 @@ nsRect 					rr;
 	        ::FrameRect(&macrect); 
 					}		
 					
-        result = DispatchEvent(&event);
-        NS_RELEASE(event.renderingContext);
         SetOrigin(0,0);
         SetPort(theport);
+
+        event.renderingContext->Init(mContext, this);
+        result = DispatchEvent(&event);
+        NS_RELEASE(event.renderingContext);
       }
     else 
       {
@@ -1353,16 +1352,10 @@ void nsWindow::MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const
 nsWindow* 
 nsWindow::FindWidgetHit(Point aThePoint)
 {
-//PRInt32		xOff,yOff;
 nsWindow	*child = this;
 nsWindow	*deeperWindow;
 nsRect		rect;
 
-//<<<<<<< nsWindow.cpp
-	// if this is a main window, then map this point to this windows coordinate space
-//=======
-	//::GlobalToLocal(&aThePoint);
-//>>>>>>> 1.26
 	if (this->PtInWindow(aThePoint.h,aThePoint.v))
 		{
 		
