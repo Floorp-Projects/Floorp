@@ -687,6 +687,11 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   return numSpaces;
 }
 
+
+#define SHOW_SELECTION_CURSOR			// should be turned off when the caret code is activated
+
+#ifdef SHOW_SELECTION_CURSOR
+
 // XXX This clearly needs to be done by the container, *somehow*
 #define CURSOR_COLOR NS_RGB(0,0,255)
 static void
@@ -712,6 +717,8 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
   aRenderingContext.SetColor(aCursorColor);
   aRenderingContext.FillPolygon(pnts, 4);
 }
+
+#endif
 
 // XXX letter-spacing
 // XXX word-spacing
@@ -848,10 +855,13 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-        //aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
-        //RenderSelectionCursor(aRenderingContext,
-        //                    dx + textWidth, dy, mRect.height,
-        //                    CURSOR_COLOR);
+        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
+
+#ifdef SHOW_SELECTION_CURSOR
+        RenderSelectionCursor(aRenderingContext,
+                            dx + textWidth, dy, mRect.height,
+                            CURSOR_COLOR);
+#endif
       }
       else 
       {
@@ -1175,11 +1185,14 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
       if (si.mEmptySelection) {
         RenderString(aRenderingContext, aStyleContext, aTextStyle,
                      text, textLength, dx, dy, width);
-        //GetWidth(aRenderingContext, aTextStyle,
-        //         text, PRUint32(si.mStartOffset), textWidth);
-        //RenderSelectionCursor(aRenderingContext,
-        //                      dx + textWidth, dy, mRect.height,
-        //                      CURSOR_COLOR);
+#ifdef SHOW_SELECTION_CURSOR
+
+        GetWidth(aRenderingContext, aTextStyle,
+                 text, PRUint32(si.mStartOffset), textWidth);
+        RenderSelectionCursor(aRenderingContext,
+                              dx + textWidth, dy, mRect.height,
+                              CURSOR_COLOR);
+#endif
       }
       else {
         nscoord x = dx;
@@ -1318,10 +1331,12 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
-        //aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
-        //RenderSelectionCursor(aRenderingContext,
-        //                    dx + textWidth, dy, mRect.height,
-        //                    CURSOR_COLOR);
+#ifdef SHOW_SELECTION_CURSOR
+        aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
+        RenderSelectionCursor(aRenderingContext,
+                            dx + textWidth, dy, mRect.height,
+                            CURSOR_COLOR);
+#endif
       }
       else 
       {
