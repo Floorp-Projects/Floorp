@@ -53,6 +53,12 @@ ScribbleApp scribbleData;
 #define TEXT_HEIGHT 30
 #endif
 
+#ifdef XP_MAC
+#define WIDGET_DLL "WIDGET_DLL"
+#define GFX_DLL "GFXWIN_DLL"
+#define TEXT_HEIGHT 30
+#endif
+
 
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
@@ -218,8 +224,8 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
                                   ((nsGUIEvent*)aEvent)->point.x,
                                   ((nsGUIEvent*)aEvent)->point.y);
 
-                if (scribbleData.scribble->GetState())
-                   scribbleData.mousePos = ((nsGUIEvent*)aEvent)->point;
+                //if (scribbleData.scribble->GetState())
+                   //scribbleData.mousePos = ((nsGUIEvent*)aEvent)->point;
   
 
                 NS_RELEASE(drawCtx);
@@ -461,9 +467,9 @@ nsresult CreateApplication(int * argc, char ** argv)
     appShell->Create(argc, argv);
    
 
-    nsILookAndFeel *laf;
-    NSRepository::CreateInstance(kCLookAndFeelCID, nsnull, kILookAndFeelIID,
-                                 (void**)&laf);
+    //nsILookAndFeel *laf;
+    //NSRepository::CreateInstance(kCLookAndFeelCID, nsnull, kILookAndFeelIID,(void**)&laf);
+    
     //
     // create the main window
     //
@@ -475,7 +481,7 @@ nsresult CreateApplication(int * argc, char ** argv)
                                     HandleEventMain, 
                                     NULL,
                                     appShell);
-    scribbleData.mainWindow->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //scribbleData.mainWindow->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.mainWindow->SetTitle("Scribble");
 
     //
@@ -485,9 +491,10 @@ nsresult CreateApplication(int * argc, char ** argv)
     rect.SetRect(0, 0, 200, 700);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&controlPane);
     controlPane->Create(scribbleData.mainWindow, rect, HandleEventControlPane, NULL);
-    controlPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //controlPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     controlPane->Show(PR_TRUE);
 
+#ifdef NOTNOW
     //
     // Add the scribble/lines section
     //
@@ -575,6 +582,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     scribbleData.blue->SetBackgroundColor(NS_RGB(0, 255, 0));
     scribbleData.blue->Show(PR_TRUE);
     y += rect.height +2;
+#endif
 
     //
     // create a button  
@@ -596,7 +604,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     rect.SetRect(200, 0, 400, 700);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&scribbleData.drawPane);
     scribbleData.drawPane->Create(scribbleData.mainWindow, rect, HandleEventGraphicPane, NULL);
-    scribbleData.drawPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
+    //scribbleData.drawPane->SetBackgroundColor(laf->GetColor(nsLAF::WindowBackground));
     scribbleData.drawPane->Show(PR_TRUE);
 
     //
@@ -604,7 +612,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //
     scribbleData.mainWindow->Show(PR_TRUE);
 
-    laf->Release();
+    //laf->Release();
 
     return(appShell->Run());
 }
