@@ -83,7 +83,7 @@ static struct keyword {
     {"break",           TOK_BREAK,              JSOP_NOP,   JSVERSION_DEFAULT},
     {"case",            TOK_CASE,               JSOP_NOP,   JSVERSION_DEFAULT},
     {"continue",        TOK_CONTINUE,           JSOP_NOP,   JSVERSION_DEFAULT},
-    {"default",         TOK_DEFAULT,            JSOP_NOP,   JSVERSION_DEFAULT},
+    {js_default_str,    TOK_DEFAULT,            JSOP_NOP,   JSVERSION_DEFAULT},
     {js_delete_str,     TOK_DELETE,             JSOP_NOP,   JSVERSION_DEFAULT},
     {"do",              TOK_DO,                 JSOP_NOP,   JSVERSION_DEFAULT},
     {"else",            TOK_ELSE,               JSOP_NOP,   JSVERSION_DEFAULT},
