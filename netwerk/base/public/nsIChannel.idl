@@ -277,6 +277,12 @@ interface nsIChannel : nsIRequest
     const unsigned long VALIDATE_ONCE_PER_SESSION  = 1 << 14;
     const unsigned long VALIDATE_HEURISTICALLY     = 1 << 15;
 
+	/**
+	 * This flag is used to tell the webshell not to cancel the load in cases
+	 * when the channel is receiving multipart/replace document
+	 */
+	const unsigned long LOAD_REPLACE			   = 1 << 16;
+
     ////////////////////////////////////////////////////////////////////////////
     // nsIChannel operations
     ////////////////////////////////////////////////////////////////////////////
