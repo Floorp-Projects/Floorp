@@ -33,7 +33,7 @@ Contributor(s):
         id="confirmDlg"
         style="width: 60em"
         buttons="accept,cancel"
-        ondialogaccept="return onOk();"
+        ondialogaccept="return onAccept();"
         ondialogcancel="return onCancel();">
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
