@@ -23,6 +23,7 @@
 #include "nsINetlibURL.h"
 #include "nsIHttpURL.h"
 #include "nsIPostToServer.h"
+#include "nsCOMPtr.h"
 
 class nsHttpUrlImpl : public nsIURL, public nsINetlibURL, public nsIHttpURL,
                       public nsIPostToServer    // XXX for now
@@ -107,10 +108,11 @@ protected:
     char* mRef;
     char* mSearch;
     PRInt32 mPort;
-    nsIInputStream* mPostData;
-    nsISupports*    mContainer;
-    nsILoadAttribs* mLoadAttribs;
-    nsIURLGroup*    mURLGroup;
+
+    nsCOMPtr<nsIInputStream> mPostData;
+    nsISupports*             mContainer;    // explicitly changed to no longer own its container
+    nsCOMPtr<nsILoadAttribs> mLoadAttribs;
+    nsIURLGroup*             mURLGroup;     // explicitly changed to no longer own its group
 };
 
 #endif // nsHttpUrl_h__
