@@ -2562,6 +2562,76 @@ nsc_pbe_key_gen(NSSPKCS5PBEParameter *pkcs5_pbe, CK_MECHANISM_PTR pMechanism,
     }
     return CKR_OK;
 }
+static CK_RV
+nsc_parameter_gen(CK_KEY_TYPE key_type, PK11Object *key)
+{
+    PK11Attribute *attribute;
+    CK_ULONG counter;
+    unsigned int seedBits = 0;
+    unsigned int primeBits;
+    CK_RV crv = CKR_OK;
+    PQGParams *params = NULL;
+    PQGVerify *vfy = NULL;
+    SECStatus rv;
+
+    attribute = pk11_FindAttribute(key, CKA_PRIME_BITS);
+    if (attribute == NULL) {
+	return CKR_TEMPLATE_INCOMPLETE;
+    }
+    primeBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
+    pk11_FreeAttribute(attribute);
+
+    attribute = pk11_FindAttribute(key, CKA_NETSCAPE_PQG_SEED_BITS);
+    if (attribute != NULL) {
+	seedBits = (unsigned int) *(CK_ULONG *)attribute->attrib.pValue;
+	pk11_FreeAttribute(attribute);
+    }
+
+    pk11_DeleteAttributeType(key,CKA_PRIME_BITS);
+    pk11_DeleteAttributeType(key,CKA_NETSCAPE_PQG_SEED_BITS);
+
+    if (seedBits == 0) {
+	rv = PQG_ParamGen(primeBits, &params, &vfy);
+    } else {
+	rv = PQG_ParamGenSeedLen(primeBits,seedBits/8, &params, &vfy);
+    }
+
+    if (rv != SECSuccess) {
+	return CKR_DEVICE_ERROR;
+    }
+    crv = pk11_AddAttributeType(key,CKA_PRIME,
+				 params->prime.data, params->prime.len);
+    if (crv != CKR_OK) goto loser;
+    crv = pk11_AddAttributeType(key,CKA_SUBPRIME,
+				 params->subPrime.data, params->subPrime.len);
+    if (crv != CKR_OK) goto loser;
+    crv = pk11_AddAttributeType(key,CKA_BASE,
+				 params->base.data, params->base.len);
+    if (crv != CKR_OK) goto loser;
+    counter = vfy->counter;
+    crv = pk11_AddAttributeType(key,CKA_NETSCAPE_PQG_COUNTER,
+				 &counter, sizeof(counter));
+    crv = pk11_AddAttributeType(key,CKA_NETSCAPE_PQG_SEED,
+				 vfy->seed.data, vfy->seed.len);
+    if (crv != CKR_OK) goto loser;
+    crv = pk11_AddAttributeType(key,CKA_NETSCAPE_PQG_H,
+				 vfy->h.data, vfy->h.len);
+    if (crv != CKR_OK) goto loser;
+
+loser:
+    if (params) {
+	PQG_DestroyParams(params);
+    }
+    if (vfy) {
+	PQG_DestroyVerify(vfy);
+    }
+    return crv;
+}
+
+    
+
+    
+
 
 
 static CK_RV
@@ -2747,7 +2817,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     int i;
     PK11Slot *slot = pk11_SlotFromSessionHandle(hSession);
     char buf[MAX_KEY_LEN];
-    enum {nsc_pbe, nsc_ssl, nsc_bulk} key_gen_type;
+    enum {nsc_pbe, nsc_ssl, nsc_bulk, nsc_param} key_gen_type;
     NSSPKCS5PBEParameter *pbe_param;
     SSL3RSAPreMasterSecret *rsa_pms;
     CK_VERSION *version;
@@ -2837,6 +2907,12 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	key_gen_type = nsc_pbe;
 	crv = nsc_SetupPBEKeyGen(pMechanism,&pbe_param, &key_type);
 	break;
+    case CKM_DSA_PARAMETER_GEN:
+	key_gen_type = nsc_param;
+	key_type = CKK_DSA;
+	objclass = CKO_KG_PARAMETERS;
+	crv = CKR_OK;
+	break;
     default:
 	crv = CKR_MECHANISM_INVALID;
 	break;
@@ -2879,6 +2955,11 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	} while (crv == CKR_OK && checkWeak && 
 			pk11_IsWeakKey((unsigned char *)buf,key_type));
 	break;
+    case nsc_param:
+	/* generate parameters */
+	*buf = 0;
+	crv = nsc_parameter_gen(key_type,key);
+	break;
     }
 
     if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
@@ -2888,10 +2969,10 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
     crv = pk11_AddAttributeType(key,CKA_KEY_TYPE,&key_type,sizeof(CK_KEY_TYPE));
     if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
-    crv = pk11_AddAttributeType(key,CKA_CLASS,&objclass,sizeof(CK_OBJECT_CLASS));
-    if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
-    crv = pk11_AddAttributeType(key,CKA_VALUE,buf,key_length);
-    if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
+    if (key_length != 0) {
+	crv = pk11_AddAttributeType(key,CKA_VALUE,buf,key_length);
+	if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
+    }
 
     /* get the session */
     session = pk11_SessionFromHandle(hSession);
