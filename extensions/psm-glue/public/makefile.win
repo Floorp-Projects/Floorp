@@ -46,3 +46,6 @@ XPIDLSRCS= \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install::
+    $(MAKE_INSTALL) .\psm-glue.js $(DIST)\bin\defaults\pref
