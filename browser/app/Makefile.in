@@ -144,7 +144,7 @@ endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 ifdef BUILD_STATIC_LIBS
-LIBS	+= -framework QuickTime
+LIBS	+= -framework QuickTime -framework IOKit
 endif
 endif
 
