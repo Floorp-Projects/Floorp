@@ -45,6 +45,7 @@ my $topdir = cwd;
 $/ = undef;
 
 foreach my $path (@Support::Templates::include_paths) {
+    $path =~ s|\\|/|g if $^O eq 'MSWin32';  # convert \ to / in path if on windows
     $path =~ m|template/([^/]+)/([^/]+)|;
     my $lang = $1;
     my $flavor = $2;
@@ -65,6 +66,17 @@ foreach my $path (@Support::Templates::include_paths) {
     }
     else {
         do "filterexceptions.pl";
+        if ($^O eq 'MSWin32') {
+          # filterexceptions.pl uses / separated paths, while 
+          # find_actual_files returns \ separated ones on Windows.
+          # Here, we convert the filter exception hash to use \.
+          foreach my $file (keys %safe) {
+            my $orig_file = $file;
+            $file =~ s|/|\\|g;
+            $safe{$file} = $safe{$orig_file};
+            delete $safe{$orig_file};
+          }
+        }
     }
     
     # We preprocess the %safe hash of lists into a hash of hashes. This allows
