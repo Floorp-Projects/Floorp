@@ -1029,7 +1029,7 @@ nsMathMLContainerFrame::AttributeChanged(nsIContent*     aChild,
       aAttribute == nsMathMLAtoms::fontfamily_     ||
       aAttribute == nsMathMLAtoms::mathbackground_ ||
       aAttribute == nsMathMLAtoms::background_) {
-    MapAttributesIntoCSS(aPresContext, this);
+    MapAttributesIntoCSS(GetPresContext(), this);
   }
 
   return ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
