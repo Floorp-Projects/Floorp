@@ -46,7 +46,7 @@ ifdef NS_USE_GCC
 	AR          += cr $@
 	RANLIB       = ranlib
 	BSDECHO      = echo
-	RC           = windres.exe -O coff
+	RC           = windres.exe -O coff --use-temp-file
 	LINK_DLL      = $(CC) $(OS_DLLFLAGS) $(DLLFLAGS)
 else
 	CC           = cl
