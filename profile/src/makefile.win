@@ -33,25 +33,25 @@ DEPTH = ..\..
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= xpprofile$(MOZ_BITS)
-DLL1NAME	= xprofile$(MOZ_BITS)
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+DLLNAME     = xpprofile$(MOZ_BITS)
+DLL1NAME    = xprofile$(MOZ_BITS)
+PDBFILE     = $(DLLNAME).pdb
+MAPFILE     = $(DLLNAME).map
+DLL     =.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE   = DLL
 
 LINCS = -I$(PUBLIC)/js \
-	-I$(PUBLIC)/profile \
-	-I$(PUBLIC)/pref \
-	-I$(PUBLIC)/prefm \
-	-I$(PUBLIC)/java \
-	-I$(PUBLIC)/ldap \
-	-I$(PUBLIC)/dbm \
-	-I$(PUBLIC)/security \
-	-I$(PUBLIC)/raptor \
-	-I$(PUBLIC)/xpcom \
+    -I$(PUBLIC)/profile \
+    -I$(PUBLIC)/pref \
+    -I$(PUBLIC)/prefm \
+    -I$(PUBLIC)/java \
+    -I$(PUBLIC)/ldap \
+    -I$(PUBLIC)/dbm \
+    -I$(PUBLIC)/security \
+    -I$(PUBLIC)/raptor \
+    -I$(PUBLIC)/xpcom \
         -I$(DEPTH)\include \
-	-I$(PUBLIC)/libreg \
+    -I$(PUBLIC)/libreg \
 
 LCFLAGS = -DMOZILLA_CLIENT
 
@@ -71,21 +71,23 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 !endif
 !endif
 
-# DEFFILE	= $(DLLNAME).def
-LLIBS	= \
-	$(LIBNSPR) \
-	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\netlib.lib \
-	$(DIST)\lib\plc3.lib \
+# DEFFILE   = $(DLLNAME).def
+LLIBS   = \
+    $(LIBNSPR) \
+    $(DIST)\lib\xpcom.lib \
+!ifndef NECKO
+    $(DIST)\lib\netlib.lib \
+!endif
+    $(DIST)\lib\plc3.lib \
 
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)
 #//
 #//------------------------------------------------------------------------
-OBJS =							\
-	.\$(OBJDIR)\nsProfile.obj	\
-	$(NULL)
+OBJS =                          \
+    .\$(OBJDIR)\nsProfile.obj   \
+    $(NULL)
 
 #//------------------------------------------------------------------------
 #//
@@ -102,6 +104,6 @@ LIBRARY=.\$(OBJDIR)\$(LIBNAME).lib
 #//------------------------------------------------------------------------
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)	
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+libs:: $(DLL)   
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
