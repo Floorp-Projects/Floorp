@@ -6,15 +6,16 @@
 
 <window style="height:100%;width:100%"
    xmlns:html="http://www.w3.org/TR/REC-html40"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   onload="init_sidebar('browser', 'resource:/res/rdf/sidebar-browser.xul',
+                        170);"> 
 
 <html:script src="contentframe.js" />
 
 <box id="container" align="horizontal" style="height: 100%; width: 100%">
-  <html:iframe id="sidebarframe" class="sidebarframe" 
-               src="about:blank" />
-  <box align="vertical" style="height: 100%;">
-    <titledbutton id="grippy" class="grippy" onclick="toggleOpenClose();"
+  <html:iframe id="sidebarframe" class="sidebarframe" src="about:blank" />
+  <box align="vertical">
+    <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"
                   flex="100%" />
   </box>
   <!-- type attribute is used by frame construction to locate iframes
