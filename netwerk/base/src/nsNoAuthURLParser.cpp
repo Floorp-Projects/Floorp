@@ -231,8 +231,22 @@ nsNoAuthURLParser::ParseAtDirectory(const char* i_Path, char* *o_Directory,
     int len = PL_strlen(i_Path);
 
     /* Factor out the optionpart with ;?# */
-    static const char delimiters[] = ";?#"; // for param, query and ref
+    static const char delimiters[] = "?#"; // for query and ref
     char* brk = PL_strpbrk(i_Path, delimiters);
+    char* pointer;
+    if (!brk)
+        pointer = (char*)i_Path + len;
+    else
+        pointer = brk;
+    /* Now look for a param ; right of a / from pointer backward */
+    while ((pointer-i_Path) >= 0) {
+        pointer--;
+        if (*pointer == ';') {
+            brk = pointer;
+        }
+        if (*pointer == '/')
+            break;
+    }
 
     if (!brk) // Everything is just path and filename
     {
