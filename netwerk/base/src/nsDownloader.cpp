@@ -124,7 +124,17 @@ nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   return mObserver->OnDownloadComplete(this, mContext, aStatus, file);
 }
 
-#define BUF_SIZE 1024
+nsresult 
+nsDownloader::ConsumeData(nsIInputStream* in,
+                          void* closure,
+                          const char* fromRawSegment,
+                          PRUint32 toOffset,
+                          PRUint32 count,
+                          PRUint32 *writeCount)
+{
+  *writeCount = count;
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, 
@@ -133,21 +143,6 @@ nsDownloader::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 {
   // This function simply disposes of the data as it's read in. 
   // We assume it's already been cached and that's what we're interested in.
-  nsresult rv = NS_OK;
-  char buffer[BUF_SIZE];
-  PRUint32 len, lenRead;
-  
-  rv = inStr->Available(&len);
-  if (NS_FAILED(rv)) return rv;
-
-  while (len > 0) {
-    lenRead = PR_MIN(len, BUF_SIZE);
-    rv = inStr->Read(buffer, lenRead, &lenRead);
-    if (NS_FAILED(rv) || lenRead == 0) {
-      return rv;
-    }
-    len -= lenRead;
-  }
-
-  return rv;
+  PRUint32 lenRead;  
+  return inStr->ReadSegments((nsWriteSegmentFun)nsDownloader::ConsumeData, nsnull, count, &lenRead);
 }
