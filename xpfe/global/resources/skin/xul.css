@@ -682,11 +682,11 @@ treehead treerow treecell {
  background-color: #666699; 
  border: thin darkgray solid; 
  color: white;
- padding-left: 3px;
- padding-right: 3px;
- padding-top: 2px;
- padding-bottom: 2px;
 } 
+
+.tree-button {
+  color: inherit;
+}
 
 treeitem > treechildren {
   visibility: collapse;
@@ -1108,40 +1108,45 @@ box[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
 
-titledbutton.twisty
-{
-  visibility: hidden;
+.tree-icon {
+  width: 100%;
 }
 
-treecell > .tree-button {
+.tree-button {
  margin: 0px;
  padding: 0px;
  border: none;
  width: 100%;
+ list-style-image: inherit;
 }
 
-treeitem > treerow > treecell > titledbutton.twisty {
- vertical-align: bottom;
- height: 16px;
+.tree-button[flex] {
+  width: 10px;
+}
+
+treecell {
+ vertical-align: middle;
+}
+
+treeitem > treerow > treecell > .tree-icon > .twisty {
+ border: none;
+ padding: 0px;
+ margin: 0px;
  width: 16px;
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  visibility: visible;
 }
 
-treeitem[empty="true"]> treerow > treecell > titledbutton.twisty {
- visibility: hidden;
+treeitem[empty="true"] > treerow > treecell > .tree-icon > titledbutton.twisty {
+ list-style-image: none;
 }
 
-treeitem[empty="true"][open="true"]> treerow > treecell > titledbutton.twisty {
- visibility: hidden;
+treeitem > treerow > treecell > .tree-icon > .twisty[disabled="true"] {
+ list-style-image: none;
 }
 
-treeitem[open="true"]> treerow > treecell > titledbutton.twisty {
- vertical-align: bottom;
- height: 16px;
- width: 16px;
+treeitem[open="true"] > treerow > treecell > .tree-icon > .twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
- visibility: visible;
 }
 
 
