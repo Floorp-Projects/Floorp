@@ -270,18 +270,18 @@ function OpenURL(aInNewWindow)
 
 function GroupBy(groupingType)
 {
-    var tree = document.getElementById("historyTree");
+    gHistoryGrouping = groupingType;
     switch(groupingType) {
     case "none":
-        tree.setAttribute("ref", "NC:HistoryRoot");
+        gHistoryTree.setAttribute("ref", "NC:HistoryRoot");
         break;
     case "site":
         // xxx for now
-        tree.setAttribute("ref", "NC:HistoryByDate");
+        gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
     case "day":
     default:
-        tree.setAttribute("ref", "NC:HistoryByDate");
+        gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
     gPrefService.setCharPref("browser.history.grouping", groupingType);
