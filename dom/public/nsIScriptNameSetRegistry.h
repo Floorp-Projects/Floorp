@@ -38,6 +38,8 @@ class nsIScriptExternalNameSet;
  */
 class nsIScriptNameSetRegistry : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTNAMESETREGISTRY_IID);
+  
   /** 
    * Add a new name set to the list. Each name set will be asked
    * to register itself with a namespace registry for each new
