@@ -46,7 +46,6 @@
 #include "prtime.h"
 #include "prinrval.h"
 #include "nsVoidArray.h"
-#include "nsHashtable.h"
 #include "nsIScrollableView.h"
 #include "nsIRegion.h"
 #include "nsIBlender.h"
@@ -61,6 +60,8 @@ class nsISupportsArray;
 struct DisplayListElement2;
 struct DisplayZTreeNode;
 class BlendingBuffers;
+struct PLArenaPool;
+class nsHashtable;
 
 //Uncomment the following line to enable generation of viewmanager performance data.
 #ifdef MOZ_PERF_METRICS
@@ -114,8 +115,6 @@ protected:
 protected:
   nsView   *mReparentedView;
 };
-
-struct PLArenaPool;
 
 class nsViewManager : public nsIViewManager {
 public:
@@ -273,7 +272,7 @@ private:
                                          nsDrawingSurface aBorrowSurface, PRBool aNeedAlpha,
                                          const nsRect& aArea);
 
-  void ReparentViews(DisplayZTreeNode* aNode);
+  void ReparentViews(DisplayZTreeNode* aNode, nsHashtable &);
   void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
                         PRBool aCaptured, nsVoidArray* aDisplayList, PLArenaPool &aPool);
   void BuildEventTargetList(nsVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured, PLArenaPool &aPool);
@@ -283,7 +282,8 @@ private:
                            nscoord aOriginX, nscoord aOriginY,
                            nsView *aRealView, const nsRect *aDamageRect,
                            nsView *aTopView, nscoord aX, nscoord aY,
-                           PRBool aPaintFloats, PRBool aEventProcessing, PLArenaPool &aPool);
+                           PRBool aPaintFloats, PRBool aEventProcessing,
+                           nsHashtable&, PLArenaPool &aPool);
   PRBool AddToDisplayList(nsView *aView,
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
@@ -395,7 +395,6 @@ private:
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
   nsPoint           mMouseLocation; // device units, relative to mRootView
-  nsHashtable       mMapPlaceholderViewToZTreeNode;
   nsCOMPtr<nsIBlender> mBlender;
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
@@ -418,7 +417,6 @@ private:
   //list of view managers
   static nsVoidArray       *gViewManagers;
 
-  void DestroyZTreeNode(DisplayZTreeNode* aNode);
   void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS
