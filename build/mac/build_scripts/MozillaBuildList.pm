@@ -192,7 +192,12 @@ sub InstallNonChromeResources()
     #// Make aliases of resource files
     #//
     
-    MakeAlias(":mozilla:content:xml:content:src:xhtml11.dtd",                          "$dist_dir"."res:dtd:");
+    MakeAlias(":mozilla:content:xml:content:src:xhtml11.dtd",                          "$resource_dir"."dtd:");
+
+    if ($main::options{svg})
+    {
+        MakeAlias(":mozilla:layout:svg:base:src:svg.dtd",                              "$resource_dir"."dtd:");
+    }
     
     if (! $main::options{mathml})
     {
@@ -200,6 +205,7 @@ sub InstallNonChromeResources()
     }
     else
     {
+        MakeAlias(":mozilla:layout:mathml:content:src:mathml.dtd",                     "$resource_dir"."dtd:");
         #// Building MathML so include the mathml.css file in ua.css
         MakeAlias(":mozilla:layout:mathml:content:src:mathml.css",                     "$resource_dir");
         copy(":mozilla:layout:html:document:src:ua.css",                               "$resource_dir"."ua.css");
