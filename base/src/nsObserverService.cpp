@@ -45,7 +45,7 @@ public:
 
    
     nsObserverService();
-    ~nsObserverService(void);
+    virtual ~nsObserverService(void);
      
     NS_DECL_ISUPPORTS
 

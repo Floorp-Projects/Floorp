@@ -33,7 +33,7 @@ public:
   virtual void* Alloc(PRInt32 aSize);
 
 protected:
-  ~ArenaImpl();
+  virtual ~ArenaImpl();
 
   PLArenaPool mPool;
   PRInt32 mBlockSize;

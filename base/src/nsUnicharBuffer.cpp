@@ -24,7 +24,7 @@
 class UnicharBufferImpl : public nsIUnicharBuffer {
 public:
   UnicharBufferImpl(PRUint32 aBufferSize);
-  ~UnicharBufferImpl();
+  virtual ~UnicharBufferImpl();
 
   NS_DECL_ISUPPORTS
   virtual PRInt32 GetLength() const;

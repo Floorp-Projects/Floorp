@@ -30,7 +30,7 @@ static struct PLHashTable* gAtomHashTable;
 class AtomImpl : public nsIAtom {
 public:
   AtomImpl();
-  ~AtomImpl();
+  virtual ~AtomImpl();
 
   NS_DECL_ISUPPORTS
 
