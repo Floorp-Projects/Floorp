@@ -34,7 +34,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsIEventStateManager.h"
 
-#define DO_SELECTION 1
+#define DO_SELECTION 0
 
 #include "nsIDOMText.h"
 #include "nsSelectionRange.h"
