@@ -418,6 +418,8 @@ public:
 
     // nsIXULContent
     NS_IMETHOD PeekChildCount(PRInt32& aCount) const;
+    NS_IMETHOD SetAnonymousState(PRBool aState);
+    NS_IMETHOD GetAnonymousState(PRBool& aState);
     NS_IMETHOD SetLazyState(PRInt32 aFlags);
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
@@ -538,6 +540,9 @@ protected:
     // The state of our sloth for lazy content model construction via
     // RDF; see nsIXULContent and nsRDFGenericBuilder.
     PRInt32                             mLazyState;
+
+    // Whether or not we're anonymous
+    PRBool                              mIsAnonymous;
 
     // Lazily instantiated if/when object is mutated. Instantiating
     // the mSlots makes an nsXULElement 'heavyweight'.
