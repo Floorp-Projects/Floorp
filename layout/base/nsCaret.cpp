@@ -575,14 +575,33 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 	if (!mDrawn)
 	{
 		nsPoint		framePos(0, 0);
+		nsRect		caretRect = frameRect;
 		
 		mLastCaretFrame->GetPointFromOffset(presContext, localRC, mLastContentOffset, &framePos);
-		frameRect += framePos;
+		caretRect += framePos;
 		
 		//printf("Content offset %ld, frame offset %ld\n", focusOffset, framePos.x);
 		
-		frameRect.width = mCaretWidth;
-		mCaretRect = frameRect;
+		caretRect.width = mCaretWidth;
+
+		// Avoid view redraw problems by making sure the
+		// caret doesn't hang outside the right edge of
+		// the frame. This insures that the caret gets
+		// erased properly if the frame's right edge gets
+		// invalidated.
+
+		nscoord cX = caretRect.x + caretRect.width;
+		nscoord fX = frameRect.x + frameRect.width;
+
+		if (cX > fX)
+		{
+			caretRect.x -= cX - fX;
+
+			if (caretRect.x < frameRect.x)
+				caretRect.x = frameRect.x;
+		}
+
+		mCaretRect = caretRect;
 	}
 		/*
 		if (mReadOnly)
