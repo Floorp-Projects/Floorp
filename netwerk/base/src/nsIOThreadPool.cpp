@@ -234,45 +234,42 @@ nsIOThreadPool::ThreadFunc(void *arg)
 
     LOG(("entering ThreadFunc\n"));
 
-    // XXX not using a nsAutoLock here because we need to temporarily unlock
-    // and relock in the inner loop.  nsAutoLock has a bug, causing it to warn
-    // of a bogus deadlock, which makes us avoid it here.  (see bug 221331)
-    PR_Lock(pool->mLock);
+    {
+        nsAutoLock lock(pool->mLock);
 
-    for (;;) {
-        // never wait if we are shutting down; always process queued events...
-        if (PR_CLIST_IS_EMPTY(&pool->mEventQ) && !pool->mShutdown) {
-            pool->mNumIdleThreads++;
-            PR_WaitCondVar(pool->mCV, THREAD_IDLE_TIMEOUT);
-            pool->mNumIdleThreads--;
+        for (;;) {
+            // never wait if we are shutting down; always process queued events...
+            if (PR_CLIST_IS_EMPTY(&pool->mEventQ) && !pool->mShutdown) {
+                pool->mNumIdleThreads++;
+                PR_WaitCondVar(pool->mCV, THREAD_IDLE_TIMEOUT);
+                pool->mNumIdleThreads--;
+            }
+
+            // if the queue is still empty, then kill this thread...
+            if (PR_CLIST_IS_EMPTY(&pool->mEventQ))
+                break;
+
+            // handle one event at a time: we don't want this one thread to hog
+            // all the events while other threads may be able to help out ;-)
+            do {
+                PLEvent *event = PLEVENT_FROM_LINK(PR_LIST_HEAD(&pool->mEventQ));
+                PR_REMOVE_AND_INIT_LINK(&event->link);
+
+                LOG(("event:%p\n", event));
+
+                // release lock!
+                lock.unlock();
+                PL_HandleEvent(event);
+                lock.lock();
+            }
+            while (!PR_CLIST_IS_EMPTY(&pool->mEventQ));
         }
 
-        // if the queue is still empty, then kill this thread...
-        if (PR_CLIST_IS_EMPTY(&pool->mEventQ))
-            break;
-
-        // handle one event at a time: we don't want this one thread to hog
-        // all the events while other threads may be able to help out ;-)
-        do {
-            PLEvent *event = PLEVENT_FROM_LINK(PR_LIST_HEAD(&pool->mEventQ));
-            PR_REMOVE_AND_INIT_LINK(&event->link);
-
-            LOG(("event:%p\n", event));
-
-            // release lock!
-            PR_Unlock(pool->mLock);
-            PL_HandleEvent(event);
-            PR_Lock(pool->mLock);
-        }
-        while (!PR_CLIST_IS_EMPTY(&pool->mEventQ));
+        // thread is dying... cleanup mThreads, unless of course if we are
+        // shutting down, in which case Shutdown will clean up mThreads for us.
+        if (!pool->mShutdown)
+            pool->mThreads[pool->GetCurrentThreadIndex()] = nsnull;
     }
-
-    // thread is dying... cleanup mThreads, unless of course if we are
-    // shutting down, in which case Shutdown will clean up mThreads for us.
-    if (!pool->mShutdown)
-        pool->mThreads[pool->GetCurrentThreadIndex()] = nsnull;
-
-    PR_Unlock(pool->mLock);
 
     // release our reference to the pool
     NS_RELEASE(pool);
