@@ -1209,7 +1209,7 @@ void nsView :: List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "%p ", this);
   if (nsnull != mWindow) {
     nsRect windowBounds;
-    mWindow->GetBounds(windowBounds);
+    mWindow->GetClientBounds(windowBounds);
     fprintf(out, "(widget=%p pos={%d,%d,%d,%d}) ",
             mWindow,
             windowBounds.x, windowBounds.y,
