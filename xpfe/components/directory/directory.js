@@ -51,6 +51,7 @@ const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
 
 const NC_NS                 = "http://home.netscape.com/NC-rdf#";
 const NC_NAME               = NC_NS + "Name";
+const NC_URL                = NC_NS + "URL";
 const NC_LOADING            = NC_NS + "loading";
 
 const nsIHTTPIndex          = Components.interfaces.nsIHTTPIndex;
@@ -342,6 +343,14 @@ function BeginDragTree ( event )
     Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
   if ( !transferable ) return(false);
 
+  var genDataURL = 
+    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+  if (!genDataURL) return(false);
+
+  var genDataHTML = 
+    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+  if (!genDataHTML) return(false);
+
   var genData = 
     Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
   if (!genData) return(false);
@@ -350,9 +359,10 @@ function BeginDragTree ( event )
     Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
   if (!genDataURL) return(false);
 
+  transferable.addDataFlavor("text/x-moz-url");
+  transferable.addDataFlavor("text/html");
   transferable.addDataFlavor("text/unicode");
-  transferable.addDataFlavor("moz/rdfitem");
-        
+  
   // ref/id (url) is on the <treeitem> which is two levels above the <treecell> which is
   // the target of the event.
   var id = event.target.parentNode.parentNode.getAttribute("ref");
@@ -361,33 +371,28 @@ function BeginDragTree ( event )
 	id = event.target.parentNode.parentNode.getAttribute("id");
   }
 
-  var parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("ref");
-  if (!parentID || parentID == "")
-  {
-	parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("id");
-  }
-
-  // if we can get node's name, append (space) name to url
   var src = RDF.GetResource(id, true);
-  var prop = RDF.GetResource(NC_NAME, true);
-  var target = database.GetTarget(src, prop, true);
-  if (target) target = target.QueryInterface(nsIRDFLiteral);
-  if (target) target = target.Value;
-  if (target && (target != ""))
-  {
-      id = id + " " + target;
-  }
+  var urlProp = RDF.GetResource(NC_URL, true);
+  var url = database.GetTarget(src, urlProp, true);
+  if (url) url = url.QueryInterface(nsIRDFLiteral);
+  if (url) url = url.Value;
+  if (!url || url=="")
+      return false;
 
-  var trueID = id;
-  if (parentID != null)
-  {
-  	trueID += "\n" + parentID;
-  }
-  genData.data = trueID;
-  genDataURL.data = id;
+  var descProp = RDF.GetResource(NC_NAME, true);
+  var desc = database.GetTarget(src, descProp, true);
+  if (desc) desc = desc.QueryInterface(nsIRDFLiteral);
+  if (desc) desc = desc.Value;
+  if (!desc || desc=="")
+      return false;
 
-  transferable.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
-  transferable.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
+  genDataURL.data = url + "\n" + desc;
+  genDataHTML.data = "<a href=\"" + url + "\">" + desc + "</a>";
+  genData.data = url;
+
+  transferable.setTransferData ( "text/x-moz-url", genDataURL, genDataURL.data.length * 2);
+  transferable.setTransferData ( "text/html", genDataHTML, genDataHTML.data.length * 2);
+  transferable.setTransferData ( "text/unicode", genData, genData.data.length * 2);
 
   var transArray = 
     Components.classes[ARRAY_CONTRACTID].createInstance(nsISupportsArray);
