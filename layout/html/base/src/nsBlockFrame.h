@@ -152,6 +152,9 @@ public:
   nsresult UpdateSpaceManager(nsIPresContext* aPresContext,
                               nsISpaceManager* aSpaceManager);
 
+  nsLineBox* FindLineFor(nsIFrame* aFrame, nsLineBox** aPrevLineResult,
+                         PRBool* aIsFloaterResult);
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -358,9 +361,6 @@ protected:
   void PaintFloaters(nsIPresContext* aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect& aDirtyRect);
-
-  nsLineBox* FindLineFor(nsIFrame* aFrame, nsLineBox** aPrevLineResult,
-                         PRBool* aIsFloaterResult);
 
   void PropogateReflowDamage(nsBlockReflowState& aState,
                              nsLineBox* aLine,
