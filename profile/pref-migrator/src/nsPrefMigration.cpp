@@ -251,6 +251,7 @@ nsPrefMigration::GetInstance()
 nsPrefMigration::nsPrefMigration() : m_prefs(0)
 {
   NS_INIT_REFCNT();
+  mErrorCode = NS_OK;
 }
 
 
@@ -409,15 +410,16 @@ nsPrefMigration::ProcessPrefsFromJS()  // called via js so that we can have prog
                                      PR_GLOBAL_THREAD, 
                                      PR_UNJOINABLE_THREAD,
                                      0);  
-  return NS_OK;
+
+  nsresult err = GetError();
+  return err;
 }  
     
 
 NS_IMETHODIMP
-nsPrefMigration::GetError(PRUint32 *error)
+nsPrefMigration::GetError()
 {
-  *error = mErrorCode;
-  return NS_OK;
+  return mErrorCode;
 }
 
 nsresult
