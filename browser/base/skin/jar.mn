@@ -7,8 +7,6 @@ classic.jar:
         skin/classic/browser/Close-tab.png 
         skin/classic/browser/Go.png 
         skin/classic/browser/Info.png 
-        skin/classic/browser/lock-insecure.gif 
-        skin/classic/browser/lock-mixed.gif 
         skin/classic/browser/pageInfo.css 
         skin/classic/browser/page-themes.png 
         skin/classic/browser/Search-bar.png 
