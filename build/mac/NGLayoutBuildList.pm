@@ -336,6 +336,7 @@ sub BuildDist()
    InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:events:MANIFEST",						"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:range:MANIFEST",						"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:html:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
