@@ -46,6 +46,8 @@ class nsIEventStateManager : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEVENTSTATEMANAGER_IID; return iid; }
 
+  NS_IMETHOD Init() = 0;
+
   NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent *aEvent, 
                          nsIFrame* aTargetFrame,
