@@ -45,7 +45,7 @@
   <box class="box-header" id="header" value="&sidebar.customize.title.label;"/>
 
   <box id="contentarea" flex="1">
-    <box orient="vertical" flex="1">
+    <box orient="vertical" flex="5">
       <text class="label" value="&sidebar.customize.additional.label;"
         crop="right"/>
       <tree id="other-panels" flex="1"
