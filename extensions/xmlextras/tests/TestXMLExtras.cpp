@@ -153,7 +153,7 @@ int main (int argc, char* argv[])
 
       if (NS_SUCCEEDED( rv )) {
         nsString str; str.AssignWithConversion(argv[2]);
-        rv = pDOMParser->ParseFromString(str.get(), NS_LITERAL_CSTRING("text/xml"),
+        rv = pDOMParser->ParseFromString(str.get(), "text/xml",
                                           getter_AddRefs( pDOMDocument ) );
 
         if (NS_SUCCEEDED( rv )) {
@@ -191,9 +191,9 @@ int main (int argc, char* argv[])
                 pDOMParser->SetBaseURI(pURI);
 
                 rv = pDOMParser->ParseFromStream( pInputStream,
-                                                  NS_LITERAL_CSTRING("UTF-8"),
+                                                  "UTF-8",
                                                   uiContentLength,
-                                                  NS_LITERAL_CSTRING("text/xml"),
+                                                  "text/xml",
                                                   getter_AddRefs( pDOMDocument ) );
                 if (NS_SUCCEEDED( rv )) {
                   printf( "DOM parse of %s successful\n", argv[2] );

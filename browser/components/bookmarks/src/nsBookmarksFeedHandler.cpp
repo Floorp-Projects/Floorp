@@ -501,7 +501,7 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDOMDocument> xmldoc;
-    rv = parser->ParseFromUTF8String (mBody, NS_LITERAL_CSTRING("text/xml"), getter_AddRefs(xmldoc));
+    rv = parser->ParseFromBuffer ((const PRUint8*) mBody.get(), mBody.Length(), "text/xml", getter_AddRefs(xmldoc));
     if (NS_FAILED(rv)) return rv;
 
     // becomes true if we figure out that this is an atom stream.

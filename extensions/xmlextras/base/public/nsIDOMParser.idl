@@ -56,22 +56,24 @@ interface nsIDOMParser : nsISupports {
   /**
    * The string passed in is parsed into a DOM document.
    *
-   * @param str The string to be parsed
+   * @param str The UTF16 string to be parsed
    * @param contentType The content type of the string (see parseFromStream)
    * @returns The DOM document created as a result of parsing the 
    *          string
    */
-  nsIDOMDocument parseFromString(in wstring str, in AUTF8String contentType);
+  nsIDOMDocument parseFromString(in wstring str, in string contentType);
 
   /**
-   * The UTF8 string passed in is parsed into a DOM document.
+   * The buffer is parsed into a DOM document.
+   * The charset is determined from the xml entity decl.
    *
-   * @param str The UTF8 string to be parsed
-   * @param contentType The content type of the string (see parseFromStream)
+   * @param buf The octet array data to be parsed
+   * @param bufLen Length (in bytes) of the data
+   * @param contentType The content type of the data (see parseFromStream)
    * @returns The DOM document created as a result of parsing the 
    *          string
    */
-  nsIDOMDocument parseFromUTF8String(in AUTF8String str, in AUTF8String contentType);
+  nsIDOMDocument parseFromBuffer([const,array,size_is(bufLen)] in octet buf, in PRUint32 bufLen, in string contentType);
 
   /**
    * The byte stream passed in is parsed into a DOM document.
@@ -81,15 +83,17 @@ interface nsIDOMParser : nsISupports {
    * @param stream The byte stream whose contents are parsed
    * @param charset The character set that was used to encode the byte
    *                stream. NULL if not specified.
+   * @param contentLength The number of bytes in the input stream.
    * @param contentType The content type of the string - either text/xml,
-   *                    application/xml, or application/xhtml+xml
+   *                    application/xml, or application/xhtml+xml.
+   *                    Must not be NULL.
    * @returns The DOM document created as a result of parsing the 
    *          stream
    */
   nsIDOMDocument parseFromStream(in nsIInputStream stream, 
-                                 in AUTF8String charset,
+                                 in string charset,
                                  in long contentLength,
-                                 in AUTF8String contentType);
+                                 in string contentType);
 
   /**
    * Set/Get the baseURI, may be needed when called from native code.

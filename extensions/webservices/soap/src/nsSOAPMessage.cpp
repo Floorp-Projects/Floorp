@@ -291,8 +291,8 @@ NS_IMETHODIMP
   if (NS_FAILED(rv))
     return rv;
 
-  rv = parser->ParseFromString(nsString(*kEmptySOAPDocStr[aVersion]).get(),
-                               NS_LITERAL_CSTRING("text/xml"), getter_AddRefs(mMessage));
+  rv = parser->ParseFromString(nsPromiseFlatString(*kEmptySOAPDocStr[aVersion]).get(),
+                               "text/xml", getter_AddRefs(mMessage));
   if (NS_FAILED(rv))
     return rv;
 
