@@ -260,7 +260,7 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
         char *linep;
         if ((linep = readline(prompt)) == NULL)
             return JS_FALSE;
-        if (strlen(linep) > 0)
+        if (linep[0] != '\0')
             add_history(linep);
         strcpy(bufp, linep);
         JS_free(cx, linep);
@@ -2007,15 +2007,17 @@ main(int argc, char **argv)
                 FILE *f = fopen("testargs.txt", "r");
                 if (f != NULL) {
                         int maxArgs = 32; /* arbitrary max !!! */
+                        int argText_strlen;
                         argc = 1;
                         argv = malloc(sizeof(char *) * maxArgs);
                         argv[0] = NULL;
                         while (fgets(argText, 255, f) != NULL) {
                                  /* argText includes '\n' */
-                                argv[argc] = malloc(strlen(argText));
+                                argText_strlen = strlen(argText);
+                                argv[argc] = malloc(argText_strlen);
                                 strncpy(argv[argc], argText,
-                                                    strlen(argText) - 1);
-                                argv[argc][strlen(argText) - 1] = '\0';
+                                                    argText_strlen - 1);
+                                argv[argc][argText_strlen - 1] = '\0';
                                 argc++;
                                 if (argc >= maxArgs) break;
                         }
