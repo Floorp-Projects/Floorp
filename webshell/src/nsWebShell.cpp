@@ -535,6 +535,9 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
        this, aContentViewer, aCommand ? aCommand : "", aExtraInfo));
 
   NS_IF_RELEASE(mContentViewer);
+  if (nsnull != mScriptContext) {
+    mScriptContext->GC();
+  }
   mContentViewer = aContentViewer;
   NS_ADDREF(aContentViewer);
 
