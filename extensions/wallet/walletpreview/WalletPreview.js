@@ -47,6 +47,8 @@ function Startup() {
 
   /* create the heading */
 
+  var heading = document.getElementById("walletpreview");
+  heading.setAttribute("title", bundle.GetStringFromName("title"));
   var heading = document.getElementById("heading");
   heading.setAttribute("value", bundle.GetStringFromName("heading"));
   var fieldHeading = document.getElementById("fieldHeading");
