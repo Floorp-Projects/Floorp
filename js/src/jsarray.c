@@ -330,10 +330,10 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	return JS_FALSE;
     ok = JS_TRUE;
 
+    he = js_EnterSharpObject(cx, obj, NULL, &chars);
+    if (!he)
+        return JS_FALSE;
     if (literalize) {
-	he = js_EnterSharpObject(cx, obj, NULL, &chars);
-	if (!he)
-	    return JS_FALSE;
 	if (IS_SHARP(he)) {
 #if JS_HAS_SHARP_VARS
 	    nchars = js_strlen(chars);
@@ -368,12 +368,26 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	}
 	chars[nchars++] = '[';
     } else {
-	if (length == 0) {
+        /*
+         * Free any sharp variable definition in chars.  Normally, we would
+         * MAKE_SHARP(he) so that only the first sharp variable annotation is
+         * a definition, and all the rest are references, but in the current
+         * case of (!literalize), we don't need chars at all.
+         */
+        if (chars)
+            JS_free(cx, chars);
+        chars = NULL;
+        nchars = 0;
+
+        /* Return the empty string on a cycle as well as on empty join. */
+        if (IS_BUSY(he) || length == 0) {
+            js_LeaveSharpObject(cx, NULL);
 	    *rval = JS_GetEmptyStringValue(cx);
 	    return ok;
 	}
-	chars = NULL;
-	nchars = 0;
+
+        /* Flag he as BUSY so we can distinguish a cycle from a join-point. */
+        MAKE_BUSY(he);
     }
     sepstr = NULL;
     seplen = sep->length;
@@ -388,19 +402,18 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	    str = cx->runtime->emptyString;
         } else {
             if (localeString) {
-                if (!js_ValueToObject(cx, v, &obj2))
-                    goto doneBad;
-                if (!js_TryMethod(cx, obj2,
+                if (!js_ValueToObject(cx, v, &obj2) ||
+                    !js_TryMethod(cx, obj2,
                                   cx->runtime->atomState.toLocaleStringAtom,
                                   0, NULL, &v)) {
-                    goto doneBad;
+                    str = NULL;
+                } else {
+                    str = js_ValueToString(cx, v);
                 }
-                str = js_ValueToString(cx, v);
-            }
-            else
+            } else {
                 str = (literalize ? js_ValueToSource : js_ValueToString)(cx, v);
+            }
 	    if (!str) {
-  doneBad:
 		ok = JS_FALSE;
 		goto done;
 	    }
@@ -442,8 +455,10 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 	    }
 	    chars[nchars++] = ']';
 	}
-	js_LeaveSharpObject(cx, NULL);
+    } else {
+        CLEAR_BUSY(he);
     }
+    js_LeaveSharpObject(cx, NULL);
     if (!ok) {
 	if (chars)
 	    free(chars);
