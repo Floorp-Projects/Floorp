@@ -72,7 +72,7 @@ function AddDomain(obj)
   var DomainName;
   if (promptService)
   {
-    var result = {value:0};
+    var result = {value:null};
     if (promptService.prompt(
       window,
       obj.DlgTitle,
