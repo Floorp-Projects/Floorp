@@ -45,15 +45,28 @@ interface nsIURI;
  * built-in list of user or agent style sheets.
  */
 
-[scriptable, uuid(c0f35b2d-de8f-4dab-9538-ff079bda74dc)]
+[scriptable, uuid(41d979dc-ea03-4235-86ff-1e3c090c5630)]
 interface nsIStyleSheetService : nsISupports
 {
   const unsigned long AGENT_SHEET = 0;
   const unsigned long USER_SHEET = 1;
 
   /**
-   * Synchrnously loads a style sheet from |sheetURI| and adds it to the list
+   * Synchronously loads a style sheet from |sheetURI| and adds it to the list
    * of user or agent style sheets.
    */
   void loadAndRegisterSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Returns true if a style sheet at |sheetURI| has previously been
+   * added to the list of style sheets specified by |type|.
+   */
+  boolean sheetRegistered(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Remove the style sheet at |sheetURI| from the list of style
+   * sheets specified by |type|.  All documents loaded after
+   * this call will no longer use the style sheet.
+   */
+  void unregisterSheet(in nsIURI sheetURI, in unsigned long type);
 };

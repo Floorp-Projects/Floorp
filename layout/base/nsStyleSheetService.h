@@ -63,8 +63,8 @@ class nsStyleSheetService : public nsIStyleSheetService
 
   NS_HIDDEN_(nsresult) Init();
 
-  nsCOMArray<nsIStyleSheet>* AgentStyleSheets() { return &mAgentSheets; }
-  nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mUserSheets; }
+  nsCOMArray<nsIStyleSheet>* AgentStyleSheets() { return &mSheets[AGENT_SHEET]; }
+  nsCOMArray<nsIStyleSheet>* UserStyleSheets() { return &mSheets[USER_SHEET]; }
 
   static nsStyleSheetService *gInstance;
 
@@ -75,8 +75,10 @@ class nsStyleSheetService : public nsIStyleSheetService
                                           nsISimpleEnumerator *aEnumerator,
                                           PRUint32             aSheetType);
 
-  nsCOMArray<nsIStyleSheet> mAgentSheets;
-  nsCOMArray<nsIStyleSheet> mUserSheets;
+  NS_HIDDEN_(PRInt32) FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
+                                     nsIURI *sheetURI);
+
+  nsCOMArray<nsIStyleSheet> mSheets[2];
 };
 
 #endif
