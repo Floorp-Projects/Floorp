@@ -1440,7 +1440,7 @@ si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userCont
 #endif
 
 #define BUFFER_SIZE 4096
-#define MAX_ARRAY_SIZE 50
+#define MAX_ARRAY_SIZE 500
 /*
  * APPLE
  * Get the signon data from the keychain

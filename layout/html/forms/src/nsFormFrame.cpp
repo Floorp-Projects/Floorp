@@ -793,7 +793,7 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 #endif
 
 #ifdef SingleSignon
-#define MAX_ARRAY_SIZE 50
+#define MAX_ARRAY_SIZE 500
   char* name_array[MAX_ARRAY_SIZE];
   char* value_array[MAX_ARRAY_SIZE];
   uint8 type_array[MAX_ARRAY_SIZE];
@@ -861,16 +861,18 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 #endif
 #ifdef SingleSignon
 				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {
-					if (type == NS_FORM_INPUT_PASSWORD) {
-						type_array[value_cnt] = FORM_TYPE_PASSWORD;
-					} else {
-						type_array[value_cnt] = FORM_TYPE_TEXT;
+					if (value_cnt < MAX_ARRAY_SIZE) {
+						if (type == NS_FORM_INPUT_PASSWORD) {
+							type_array[value_cnt] = FORM_TYPE_PASSWORD;
+						} else {
+							type_array[value_cnt] = FORM_TYPE_TEXT;
+						}
+						value_array[value_cnt] =
+							values[0].ToNewCString();
+						name_array[value_cnt] =
+							names[0].ToNewCString();
+						value_cnt++;
 					}
-					value_array[value_cnt] =
-						values[0].ToNewCString();
-					name_array[value_cnt] =
-						names[0].ToNewCString();
-					value_cnt++;
 				}
 #endif
 				for (int valueX = 0; valueX < numValues; valueX++) {
