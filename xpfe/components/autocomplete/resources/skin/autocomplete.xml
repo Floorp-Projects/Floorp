@@ -9,7 +9,7 @@
     <content excludes="template,observes,menupopup">
         <xul:box
             onkeydown=" me = this.parentNode;
-                        me.callListener(this, event, 'stopLookup'); 
+                        me.callListener(me, event, 'stopLookup'); 
                         if (me.autoCompleteTimer) {
                             clearTimeout(me.autoCompleteTimer);
                             me.autoCompleteTimer = 0;
@@ -19,14 +19,14 @@
                             clearTimeout(me.autoCompleteTimer);
                         if (event.which != 13) {
                             me.needToAutocomplete = true;
-                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, this, event, 'startLookup');
+                            me.autoCompleteTimer = setTimeout(me.callListener, me.timeout, me, event, 'startLookup');
                         }"
         >
             <xul:textfield class="addressingWidget" inherits="value,timeout"/>
-            <xul:menupopup>
-                <xul:menuitem id="0" value="item 1"/>
-                <xul:menuitem id="2" value="item 2"/>
-            </xul:menupopup>
+            <xul:popupset>
+                <xul:popup>
+                </xul:popup>
+            </xul:popupset>
         </xul:box>
     </content>
 
@@ -59,12 +59,52 @@
         ({
             onAutoComplete: function(result, status) {
                 dump("onAutoComplete, result=" + result + ", status=" + status + "\n");
+                this.param.lastResult = result;
                 item = result.items.QueryElementAt(result.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem);
-                this.param.value = item.value;
-                menu = this.param.anonymousContent[0].childNodes[1];
-                dump("menun=" + menu + "\n");
-                //TODO: show the popup menu now. How do we to that?
-                },
+                
+                //Time to build the new edit field value
+                //First, check if the search string correspond to the current value of the field, else ignore it
+                if (result.searchString != this.param.value)
+                    return;
+
+                match = item.value.toLowerCase();
+                entry = this.param.value.toLowerCase();
+                inputElement = this.param.anonymousContent[0].firstChild.anonymousContent[0].firstChild;
+                
+                if (entry != match)
+                {
+                    if (match.substring(0, entry.length) == entry)
+                    {
+                        this.param.value = this.param.value + item.value.substring(entry.length, match.length);
+                        inputElement.setSelectionRange(entry.length, match.length);
+                    }
+                    else
+                   {
+                        dump("oops, no direct match!\n");
+//                        this.param.value = this.param.value + " " + item.value;
+//                        inputElement.setSelectionRange(entry.length + 1, this.param.value.length);
+                   }
+                }
+
+                popupset = this.param.anonymousContent[0].childNodes[1];
+                dump("popupset=" + popupset + ", popup=" + popupset.firstChild + "\n");
+                
+                //Now, build the popup content
+                popupElement = popupset.firstChild.cloneNode(false);
+                for (i = 0; i < result.items.Count(); i ++)
+                {
+                    item = result.items.QueryElementAt(i, Components.interfaces.nsIAutoCompleteItem);
+                    menuitem = document.createElement("menuitem");
+                    menuitem.setAttribute('id', i);
+                    menuitem.setAttribute('value', item.value);
+                    popupElement.appendChild(menuitem);
+                }
+                popupset.replaceChild(popupElement, popupset.firstChild);
+//TODO: Select the default item
+//                popupset.selectedItem = result.defaultItemIndex;
+                
+//                popupset.firstChild.openPopup(this.param.anonymousContent[0].firstChild, -1, -1, "popup", "bottomleft", "topleft");
+            },
 
             param: this
         })
@@ -81,38 +121,61 @@
                 switch (action) {
                     case 'startLookup':
                         dump('>>> startLookup...\n');
-//TODO:                        this.autoCompleteSession.onStartLookup(event, me.value, null, me.autoCompleteListener);
+                        me.autoCompleteSession.onStartLookup(event, me.value, me.lastResult, me.autoCompleteListener);
                         break;
 
                     case 'stopLookup':
                         dump('>>> stopLookup...\n');
                         //TODO: hide the popup menu now. How do we to that?
-                        this.autoCompleteSession.onStopLookup(event, me.value, null, me.autoCompleteListener);
+                        me.autoCompleteSession.onStopLookup(event);
                         break;
 
                     case 'autoComplete':
                         dump('>>> autoComplete...\n');
-                        if (this.autoCompleteTimer) {
-                            clearTimeout(this.autoCompleteTimer);
-                            this.autoCompleteTimer = 0;
+                        if (me.autoCompleteTimer) {
+                            clearTimeout(me.autoCompleteTimer);
+                            me.autoCompleteTimer = 0;
                         }
-                        this.autoCompleteSession.onAutoComplete(event, me.value, null, me.autoCompleteListener);
-                        this.needToAutocomplete = false;
+                        me.autoCompleteSession.onAutoComplete(event, me.value, me.lastResult, me.autoCompleteListener);
+                        me.needToAutocomplete = false;
                         break;
                 }
             ]]>
             </body>
         </method>
+        
+        <method name="finishAutoComplete">
+            <body>
+            <![CDATA[
+                inputElement = this.anonymousContent[0].firstChild.anonymousContent[0].firstChild;
+                entry = this.value.substring(0, inputElement.selectionStart) + this.value.substring(inputElement.selectionEnd, this.value.length);
+
+                if (this.lastResult)
+                {
+                    if (this.lastResult.searchString == entry)
+                    {
+                        dump('dont need to autocomplete again, just use previous result\n');
+                        this.value = this.lastResult.items.QueryElementAt(this.lastResult.defaultItemIndex, Components.interfaces.nsIAutoCompleteItem).value;
+                        return;
+                    }
+                }
+                
+                this.callListener(this, event, 'autoComplete');
+            ]]>
+            </body>
+        </method>
+        
     </interface>
 
     <handlers>
-        <handler type="keypress" keycode="vk_return"
-            value="dump('value=' + this.value + '\n'); this.callListener(this, event, 'autoComplete');"/>
+        <handler type="keypress" keycode="vk_return" value="this.finishAutoComplete();"/>
 
         <handler type="focus" value="this.needToAutocomplete = false;"/>
 
-        <handler type="blur"
-            value="if (this.needToAutocomplete) this.callListener(me, event, 'autoComplete');"/>
+        <handler type="blur" value="
+            if (this.needToAutocomplete)
+                this.finishAutoComplete();
+            "/>
     </handlers>
 
 </binding> 
