@@ -18,8 +18,6 @@
 
 #include "nsTextEditor.h"
 #include "nsEditorEventListeners.h"
-#include "nsIEditProperty.h"
-#include "nsEditProperty.h"  // temporary, to get html atoms
 
 #include "nsIStreamListener.h"
 #include "nsIParser.h"
@@ -146,7 +144,9 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged()
 };
 
 
-/* ---------- nsTextEditor implementation ---------- */
+/*****************************************************************************
+ * nsTextEditor implementation
+ ****************************************************************************/
 
 nsTextEditor::nsTextEditor()
 :  mTypeInState(nsnull)
@@ -156,7 +156,6 @@ nsTextEditor::nsTextEditor()
 // Done in nsEditor
 //  NS_INIT_REFCNT();
   mRules = nsnull;
-  nsEditProperty::InstanceInit();
   mMaxTextLength = -1;
 }
 
@@ -199,7 +198,6 @@ nsTextEditor::~nsTextEditor()
   delete mRules;
 
   NS_IF_RELEASE(mTypeInState);
-  nsEditProperty::InstanceShutdown();
 }
 
 // Adds appropriate AddRef, Release, and QueryInterface methods for derived class
@@ -2709,3 +2707,4 @@ nsTextEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+

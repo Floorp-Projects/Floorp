@@ -31,6 +31,7 @@
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
+#include "nsIEditProperty.h"
 
 class nsIEditActionListener;
 class nsIDOMCharacterData;
@@ -73,6 +74,7 @@ private:
   nsIViewManager *mViewManager;
   PRUint32        mUpdateCount;
   nsCOMPtr<nsITransactionManager> mTxnMgr;
+  nsCOMPtr<nsIEditProperty>  mEditProperty;
 
   nsCOMPtr<nsIDOMRange> mIMESelectionRange;
 

@@ -38,74 +38,8 @@ protected:
   nsEditProperty ();
   virtual ~nsEditProperty();
 
-public:
-  NS_IMETHOD Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll);
-  NS_IMETHOD GetProperty(nsIAtom **aProperty) const;  
-  NS_IMETHOD GetValue(nsIAtom **aValue) const;  
-  NS_IMETHOD GetAppliesToAll(PRBool *aAppliesToAll) const; 
-
-  // temporary methods
-  static void InstanceInit();
-  static void InstanceShutdown();
-
-protected:
-  nsCOMPtr<nsIAtom>mProperty;
-  nsCOMPtr<nsIAtom>mValue;
-  PRBool mAppliesToAll;
-
   friend nsresult NS_NewEditProperty(nsIEditProperty **aResult);
 };
-
-inline nsEditProperty::nsEditProperty() 
-{
-  NS_INIT_REFCNT();
-};
-
-inline nsEditProperty::~nsEditProperty() {};
-
-inline nsresult nsEditProperty::Init(nsIAtom *aPropName, nsIAtom *aValue, PRBool aAppliesToAll)
-{
-  if (!aPropName)
-    return NS_ERROR_NULL_POINTER;
-
-  mProperty = do_QueryInterface(aPropName);
-  mValue = do_QueryInterface(aValue);
-  mAppliesToAll = aAppliesToAll;
-  return NS_OK;
-};
-
-inline nsresult nsEditProperty::GetProperty(nsIAtom **aProperty) const
-{
-  if (!aProperty) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aProperty = mProperty;
-  if (*aProperty) {
-    NS_ADDREF(*aProperty);
-  }
-  return NS_OK;
-};
-
-inline nsresult nsEditProperty::GetValue(nsIAtom **aValue) const
-{
-  if (!aValue) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aValue = mValue;
-  if (*aValue) {
-    NS_ADDREF(*aValue);
-  }  return NS_OK;
-};
-
-inline nsresult nsEditProperty::GetAppliesToAll(PRBool *aAppliesToAll) const
-{
-  if (!aAppliesToAll) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aAppliesToAll = mAppliesToAll;
-  return NS_OK;
-};
-
 
 
 #endif

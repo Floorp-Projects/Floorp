@@ -289,12 +289,14 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mCompositionListenerP;
   nsCOMPtr<nsIDOMEventListener> mDragListenerP;
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
-  PRBool						mIsComposing;
+  PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
 
 // friends
 friend class nsTextEditRules;
 };
+
+
 
 #endif //nsTextEditor_h__
 
