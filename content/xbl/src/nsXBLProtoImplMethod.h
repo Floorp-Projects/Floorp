@@ -95,10 +95,9 @@ struct nsXBLUncompiledMethod {
 
   void AppendBodyText(const nsAReadableString& aText) {
     if (mBodyText) {
-      nsAutoString currText(mBodyText);
-      currText += aText;
-      nsMemory::Free(mBodyText);
-      mBodyText = ToNewUnicode(currText);
+      PRUnichar* temp = mBodyText;
+      mBodyText = ToNewUnicode(nsDependentString(temp) + aText);
+      nsMemory::Free(temp);
     }
     else
       mBodyText = ToNewUnicode(aText);
