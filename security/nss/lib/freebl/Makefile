@@ -56,8 +56,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 -include config.mk
 
-CPORLN = ln -s
-
 ifdef USE_64
 	DEFINES += -DNSS_USE_64
 endif
@@ -75,15 +73,10 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-CPORLN = cp
 ifneq ($(OS_TARGET),WIN16)
     ASFILES  = mpi_x86.asm
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
 endif
-endif
-
-ifeq ($(OS_ARCH),OS2)
-CPORLN = cp
 endif
 
 ifeq ($(OS_ARCH),IRIX)
@@ -260,13 +253,12 @@ DEFINES += -DMP_API_COMPATIBLE
 
 
 MPI_OBJS = $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_SRCS:.c=$(OBJ_SUFFIX)))
-MPI_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(MPI_USERS:.c=$(OBJ_SUFFIX)))
 
 $(MPI_OBJS): $(MPI_HDRS)
 
 $(OBJDIR)/$(PROG_PREFIX)mpprime$(OBJ_SUFFIX): primes.c
 
-$(OBJDIR)/ldvector$(OBJ_SUFFIX) $(OBJDIR)/loader$(OBJ_SUFFIX) : loader.h   
+$(OBJDIR)/ldvector$(OBJ_SUFFIX) $(OBJDIR)/loader$(OBJ_SUFFIX) : loader.h
 
 ifeq ($(SYSV_SPARC),1)
 
