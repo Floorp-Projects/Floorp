@@ -37,7 +37,7 @@
 
 // XXX TEMP. See HandleEvent()...
 #include "nsIEventStateManager.h"
-#include "nsDOMEVent.h"
+#include "nsDOMEvent.h"
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
