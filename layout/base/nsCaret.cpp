@@ -589,8 +589,6 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 			return;
 	}
 	
-	localRC->PushState();
-	
 	if (!mDrawn)
 	{
 		nsPoint		framePos(0, 0);
@@ -630,9 +628,6 @@ void nsCaret::DrawCaretWithContext(nsIRenderingContext* inRendContext)
 	localRC->SetColor(NS_RGB(255,255,255));
 	localRC->InvertRect(mCaretRect);
 	ToggleDrawnStatus();
-	
-	PRBool dummy;
-	localRC->PopState(dummy);
 }
 
 //-----------------------------------------------------------------------------
