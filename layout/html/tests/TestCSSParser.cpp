@@ -25,6 +25,7 @@
 #include "nsString.h"
 
 // XXX begin bad code
+#include "plevent.h"
 #include "nsINetService.h"
 #include "nsRepository.h"
 #ifdef XP_PC
@@ -46,6 +47,10 @@ static void Usage(void)
 
 int main(int argc, char** argv)
 {
+#ifdef XP_PC
+  PL_InitializeEventsLib("");
+#endif
+
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
   PRBool verbose = PR_FALSE;
