@@ -25,7 +25,6 @@
 #include "nsString.h"
 
 #include "nsINetService.h"  /* XXX: NS_FALSE */
-#include "nsNetStream.h"
 
 #include "prmem.h"
 #include "plstr.h"
