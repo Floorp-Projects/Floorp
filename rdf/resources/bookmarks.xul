@@ -20,6 +20,9 @@
 <!ENTITY menuitem.find.label          "Find in Bookmarks...">
 <!ENTITY menuitem.findAgain.label     "Find Again">
 <!ENTITY menuitem.properties.label    "Bookmark Properties...">
+<!ENTITY tree.header.name.label           "Name">
+<!ENTITY tree.header.url.label            "URL">
+<!ENTITY tree.header.shortcut.label       "Shortcut URL">
 ]>
 
 <xul:window
@@ -69,15 +72,15 @@
       <treecell onclick="return doSort('NameColumn');">
 	<xul:observes element="NameColumn" attribute="sortActive"/>
 	<xul:observes element="NameColumn" attribute="sortDirection"/>
-      Name</treecell>
+      &tree.header.name.label;</treecell>
       <treecell onclick="return doSort('URLColumn');">
 	<xul:observes element="URLColumn" attribute="sortActive"/>
 	<xul:observes element="URLColumn" attribute="sortDirection"/>
-      URL</treecell>
+      &tree.header.url.label;</treecell>
       <treecell onclick="return doSort('ShortcutURLColumn');">
 	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
 	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
-      Shortcut URL</treecell>
+      &tree.header.shortcut.label;</treecell>
     </treeitem>
   </treehead>
 
