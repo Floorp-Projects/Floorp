@@ -61,6 +61,7 @@
             <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.reloadAllTabs(document.popupNode);"/>
             <xul:menuseparator/>
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeTab(document.popupNode);"/>
+            <xul:menuseparator/>
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
           <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
