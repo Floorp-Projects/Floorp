@@ -73,6 +73,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 #######################################################################
 
 psm_RelEng_srvr_bld:
+	cd ../coreconf; gmake
 	cd ../../nsprpub; gmake
 	cd ../nss; gmake import IMPORTS=dbm/DBM_1_54
 	cd ../nss; gmake 
