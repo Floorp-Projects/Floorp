@@ -27,12 +27,10 @@
 class nsCaseConversionImp2 : public nsICaseConversion { 
   NS_DECL_ISUPPORTS 
 
+public:
+  nsCaseConversionImp2();
+  ~nsCaseConversionImp2();
 
-  nsCaseConversionImp2() {
-    if(! gInit)
-	Init();	
-    NS_INIT_REFCNT();
-  }
 
   NS_IMETHOD ToUpper(PRUnichar aChar, PRUnichar* aReturn);
 

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "pratom.h"
+#include "nsUUDll.h"
 #include "nsCaseConversionImp2.h"
 #include "casetable.h"
 
@@ -29,8 +31,7 @@ enum {
 // For gUpperToTitle
 enum {
   kLowIdx =0,
-  kHighIdx,
-  kEveryIdx,
+  kSizeEveryIdx,
   kDiffIdx
 };
 
@@ -103,7 +104,9 @@ PRUnichar nsCompressedMap::Map(PRUnichar aChar)
 PRUnichar nsCompressedMap::Lookup(
    PRUint32 l, PRUint32 m, PRUint32 r, PRUnichar aChar)
 {
-  if ( aChar >  mTable[(m<<2)+kHighIdx]  ) {
+  if ( aChar >  ((mTable[(m*3)+kSizeEveryIdx] >> 8) + 
+                 mTable[(m*3)+kLowIdx])) 
+  {
     if( l > m )
       return aChar;
     PRUint32 newm = (m+r+1)/2;
@@ -111,7 +114,7 @@ PRUnichar nsCompressedMap::Lookup(
 	   newm++;
     return this->Lookup(m+1, newm , r, aChar);
     
-  } else if ( mTable[(m<<2)+kLowIdx]  > aChar ) {
+  } else if ( mTable[(m*3)+kLowIdx]  > aChar ) {
     if( r < m )
       return aChar;
     PRUint32 newm = (l+m-1)/2;
@@ -120,12 +123,13 @@ PRUnichar nsCompressedMap::Lookup(
 	return this->Lookup(l, newm, m-1, aChar);
 
   } else  {
-    if((mTable[(m<<2)+kEveryIdx] > 0) && 
-       (0 != ((aChar - mTable[(m<<2)+kLowIdx]) % mTable[(m<<2)+kEveryIdx])))
+    if(((mTable[(m*3)+kSizeEveryIdx] & 0x00FF) > 0) && 
+       (0 != ((aChar - mTable[(m*3)+kLowIdx]) % 
+              (mTable[(m*3)+kSizeEveryIdx] & 0x00FF))))
     {
        return aChar;
     }
-    return aChar + mTable[(m<<2)+kDiffIdx];
+    return aChar + mTable[(m*3)+kDiffIdx];
   }
 }
 
@@ -205,8 +209,8 @@ nsresult nsCaseConversionImp2::ToTitle(
     PRUnichar upper;
     upper = gUpperMap->Map(aChar);
     for(PRUint32 i = 0 ; i < gUpperToTitleItems; i++) {
-      if ( upper == gUpperToTitle[(i<<1)+kUpperIdx]) {
-         *aReturn = gUpperToTitle[(i<<1)+kTitleIdx];
+      if ( upper == gUpperToTitle[(i*2)+kUpperIdx]) {
+         *aReturn = gUpperToTitle[(i*2)+kTitleIdx];
          return NS_OK;
       }
     }
@@ -302,4 +306,19 @@ nsresult nsCaseConversionImp2::ToTitle(
     bLastIsChar = IS_ASCII_LOWER(aReturn[i]);
   }
   return NS_OK;
+}
+
+
+
+nsCaseConversionImp2::nsCaseConversionImp2()
+{
+    if(! gInit)
+	Init();	
+    NS_INIT_REFCNT();
+    PR_AtomicIncrement(&g_InstanceCount);
+}
+
+nsCaseConversionImp2::~nsCaseConversionImp2()
+{
+    PR_AtomicDecrement(&g_InstanceCount);
 }
