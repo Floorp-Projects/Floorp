@@ -44,7 +44,6 @@ EXPORTS =               \
 	nsIDOMStyleSheet.h \
 	nsIDOMStyleSheetCollection.h \
 	nsIDOMNSDocument.h \
-	nsIDOMRange.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
