@@ -243,8 +243,25 @@ public class JDAPResult {
      * @return string representation
      */
     public String getParamString() {
-        return "{resultCode=" + m_result_code + ", matchedDN=" +
-          m_matched_dn + ", errorMessage=" + m_error_message + "}";
+        StringBuffer sb = new StringBuffer("{resultCode=");
+        sb.append(m_result_code);
+        if (m_matched_dn != null) {
+            sb.append(", matchedDN=");
+            sb.append(m_matched_dn);
+        }
+        if (m_error_message != null) {
+            sb.append(", errorMessage=");
+            sb.append(m_error_message);
+        }
+        if (m_referrals != null && m_referrals.length > 0) {
+            sb.append(", referrals=");
+            for (int i=0; i < m_referrals.length; i++) {
+                sb.append((i==0 ? "" : " "));
+                sb.append(m_referrals[i]);
+            }
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     /**

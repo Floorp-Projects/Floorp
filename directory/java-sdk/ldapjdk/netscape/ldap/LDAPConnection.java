@@ -260,11 +260,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.11f);
+    private final static Float SdkVersion = new Float(4.12f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.11f);
+    private final static Float MinorVersion = new Float(0.12f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
@@ -2550,20 +2550,8 @@ public class LDAPConnection
                 LDAPMessage response = myListener.completeSearchOperation();
                 Enumeration results = myListener.getAllMessages().elements();
 
-                try {
-                    checkSearchMsg(returnValue, response, cons, base, scope,
-                                   filter, attrs, attrsOnly);
-                } catch ( LDAPException ex ) {
-                    /* Was the exception caused by a bad referral? */
-                    JDAPProtocolOp op = response.getProtocolOp();
-                    if ( (op instanceof JDAPSearchResultReference) ||
-                         (op instanceof JDAPSearchResult) ){
-                        System.err.println( "LDAPConnection.checkSearchMsg: " +
-                                            "ignoring bad referral" );
-                    } else {
-                        throw ex;
-                    }
-                }
+                checkSearchMsg(returnValue, response, cons, base, scope,
+                               filter, attrs, attrsOnly);
 
                 while (results.hasMoreElements ()) {
                     LDAPMessage msg = (LDAPMessage)results.nextElement();
@@ -2571,8 +2559,6 @@ public class LDAPConnection
                     checkSearchMsg(returnValue, msg, cons, base, scope, filter, attrs,
                         attrsOnly);
                 }
-            } catch (LDAPException ee) {
-                throw ee;
             } finally {
                 releaseSearchListener (myListener);
             }
@@ -2590,21 +2576,12 @@ public class LDAPConnection
                     releaseSearchListener (myListener);
                 }
             } else {
-                /* First result could be a bad referral, ultimately causing
-                   a NO_SUCH_OBJECT exception. Don't want to miss all
-                   following results, so skip it. */
                 try {
                     checkSearchMsg(returnValue, firstResult, cons, base,
                                    scope, filter, attrs, attrsOnly);
                 } catch ( LDAPException ex ) {
-                    /* Was the exception caused by a bad referral? */
-                    if (firstResult.getProtocolOp() instanceof
-                        JDAPSearchResultReference) {
-                        System.err.println( "LDAPConnection.checkSearchMsg: " +
-                                            "ignoring bad referral" );
-                    } else {
-                        throw ex;
-                    }
+                    releaseSearchListener (myListener);
+                    throw ex;
                 }
 
                 /* we let this listener get garbage collected.. */
@@ -2628,8 +2605,25 @@ public class LDAPConnection
             }
         } catch (LDAPReferralException e) {
             Vector res = new Vector();
-            performReferrals(e, cons, JDAPProtocolOp.SEARCH_REQUEST, dn,
-                scope, filter, attrs, attrsOnly, null, null, null, res);
+            
+            try {
+                performReferrals(e, cons, JDAPProtocolOp.SEARCH_REQUEST, dn,
+                    scope, filter, attrs, attrsOnly, null, null, null, res);
+            }
+            catch (LDAPException ex) {
+                if (msg.getProtocolOp() instanceof JDAPSearchResultReference) {
+                   /*
+                      Don't want to miss all remaining results, so continue.
+                      This is very ugly (using println). We should have a 
+                      configurable parameter (probably in LDAPSearchConstraints)
+                      whether to ignore failed search references or throw exception.
+                    */
+                    System.err.println( "LDAPConnection.checkSearchMsg: " +
+                                        "ignoring bad referral" );
+                    return;
+                }
+                throw ex;
+            }
 
             // the size of the vector can be more than 1 because it is possible
             // to visit more than one referral url to retrieve the entries
@@ -4942,10 +4936,14 @@ public class LDAPConnection
      * @param cons search constraints
      * @return new LDAPConnection, already connected and authenticated
      */
-    private LDAPConnection prepareReferral( LDAPUrl u,
+    private LDAPConnection prepareReferral( String connectList,
                                             LDAPConstraints cons )
         throws LDAPException {
         LDAPConnection connection = new LDAPConnection (this.getSocketFactory());
+        
+        // Set the same connection setup failover policy as for this connection
+        connection.setConnSetupDelay(getConnSetupDelay());
+        
         connection.setOption(REFERRALS, new Boolean(true));
         connection.setOption(REFERRALS_REBIND_PROC, cons.getRebindProc());
         connection.setOption(BIND, cons.getBindProc());
@@ -4956,17 +4954,70 @@ public class LDAPConnection
 
         connection.setOption(REFERRALS_HOP_LIMIT,
                               new Integer(cons.getHopLimit()-1));
-        String host = u.getHost();
-        int port = u.getPort();
-        if ( (host == null) || (host.length() < 1) ) {
-            // If no host:port was specified, use the latest (hop-wise) parameters
-            host = getHost();
-            port = getPort();
+
+        try { 
+            connection.connect (connectList, connection.DEFAULT_PORT);
         }
-        connection.connect (host, port);
+        catch (LDAPException e) {
+            throw new LDAPException("Referral connect failed: " + e.getMessage(),
+                e.getLDAPResultCode());
+        }
         return connection;
     }
 
+    private void referralRebind(LDAPConnection ldc, LDAPConstraints cons)
+        throws LDAPException{
+        try {
+            if (cons.getRebindProc() == null && cons.getBindProc() == null) {
+                ldc.authenticate (m_protocolVersion, null, null);
+            } else if (cons.getBindProc() == null) {
+                LDAPRebindAuth auth =
+                  cons.getRebindProc().getRebindAuthentication(ldc.getHost(),
+                                                               ldc.getPort());
+                ldc.authenticate(m_protocolVersion, auth.getDN(), auth.getPassword());
+            } else {
+                cons.getBindProc().bind(ldc);
+            }
+        }
+        catch (LDAPException e) {
+            throw new LDAPException("Referral bind failed: " + e.getMessage(),
+                e.getLDAPResultCode());
+        }            
+    }
+    
+    
+    private String createReferralConnectList(LDAPUrl[] urls, boolean allowEmptyHost) {
+        String connectList = "";
+        String host = null;
+        int port =0;
+        
+        for (int i=0; urls != null && i < urls.length; i++) {
+            host = urls[i].getHost();
+            port = urls[i].getPort();
+            if ( (host == null) || (host.length() < 1) ) {
+                if (allowEmptyHost) {
+                    // If no host:port was specified, use the latest (hop-wise) parameters                    
+                    host = getHost();
+                    port = getPort();
+                }
+            }
+            connectList += (i==0 ? "" : " ") + host+":"+port;
+        }
+        
+        return (connectList.length() == 0) ? null : connectList;
+    }
+
+    private LDAPUrl findReferralURL(LDAPConnection ldc, LDAPUrl[] urls) {
+        String connHost = ldc.getHost();
+        int    connPort = ldc.getPort();
+        for (int i = 0; i < urls.length; i++) {
+            if (connHost.equals(urls[i].getHost()) && connPort == urls[i].getPort()) {
+                return urls[i];
+            }
+        }
+        return null;
+    }
+    
     /**
      * Establish the LDAPConnection to the referred server. This one is used
      * for bind operation only since we need to keep this new connection for
@@ -4985,16 +5036,17 @@ public class LDAPConnection
             throw e;
         }
 
-        LDAPUrl u[] = e.getURLs();
+        String connectList = 
+            createReferralConnectList(e.getURLs(), /*allowEmptyHost=*/false);
         // If there are no referrals (because the server isn't set up for
         // them), give up here
-        if ((u == null) || (u.length <= 0) || (u[0].equals(""))) {
+        if (connectList == null) {
             throw new LDAPException("No target URL in referral",
                                     LDAPException.NO_RESULTS_RETURNED);
         }
 
         LDAPConnection connection = null;
-        connection = prepareReferral(u[0], cons);
+        connection = prepareReferral(connectList, cons);
         connection.authenticate(m_protocolVersion, m_boundDN, m_boundPasswd);
         return connection;
     }
@@ -5031,63 +5083,52 @@ public class LDAPConnection
             }
         }
 
-        LDAPUrl u[] = e.getURLs();
+        LDAPUrl urls[] = e.getURLs();
         // If there are no referrals (because the server isn't configured to
         // return one), give up here
-        if ( u == null ) {
+        if ( urls == null || urls.length == 0) {
             return;
         }
 
-        for (int i = 0; i < u.length; i++) {
-            String newDN = u[i].getDN();
-            String DN = null;
-            if ((newDN == null) || (newDN.equals(""))) {
-                DN = dn;
-            } else {
-                DN = newDN;
-            }
-            // If this was a one-level search, and a direct subordinate
-            // has a referral, there will be a "?base" in the URL, and
-            // we have to rewrite the scope from one to base
-            if ( u[i].getUrl().indexOf("?base") > -1 ) {
-                scope = SCOPE_BASE;
-            }
+        LDAPUrl referralURL = null;
+        LDAPConnection connection = null;
 
-            LDAPSearchResults res = null;
-            LDAPSearchConstraints newcons = (LDAPSearchConstraints)cons.clone();
-            newcons.setHopLimit( cons.getHopLimit()-1 );
-
-            try {
-                if ((m_referralConnection != null) && 
-                    (u[i].getHost().equals(m_referralConnection.getHost())) &&
-                    (u[i].getPort() == m_referralConnection.getPort())) {
-                    performReferrals(m_referralConnection, newcons, ops, DN, 
-                                     scope, filter, types, attrsOnly, mods,
-                                     entry, attr, results);
-                    continue;
-                }
-            } catch (LDAPException le) {
-                if (le.getLDAPResultCode() != 
-                    LDAPException.INSUFFICIENT_ACCESS_RIGHTS) {
-                    throw le;
-                }
-            }
-
-            LDAPConnection connection = null;
-            connection = prepareReferral( u[i], cons );
-            if (cons.getRebindProc() == null && cons.getBindProc() == null) {
-                connection.authenticate (null, null);
-            } else if (cons.getBindProc() == null) {
-                LDAPRebindAuth auth =
-                  cons.getRebindProc().getRebindAuthentication(u[i].getHost(),
-                                                               u[i].getPort());
-                connection.authenticate(auth.getDN(), auth.getPassword());
-            } else {
-                cons.getBindProc().bind(connection);
-            }
-            performReferrals(connection, newcons, ops, DN, scope, filter,
-                             types, attrsOnly, mods, entry, attr, results);
+        if (m_referralConnection != null) {
+            referralURL = findReferralURL(m_referralConnection, urls);
         }
+        if (referralURL != null) {
+            connection = m_referralConnection;
+        }
+        else {
+            String connectList = createReferralConnectList(urls, /*allowEmptyHost=*/true);
+            connection = prepareReferral( connectList, cons );
+                
+            // which one did we connect to...
+            referralURL = findReferralURL(connection, urls);
+                
+            // Authenticate
+            referralRebind(connection, cons);
+        }
+
+        String newDN = referralURL.getDN();
+        String DN = null;
+        if ((newDN == null) || (newDN.equals(""))) {
+            DN = dn;
+        } else {
+            DN = newDN;
+        }
+        // If this was a one-level search, and a direct subordinate
+        // has a referral, there will be a "?base" in the URL, and
+        // we have to rewrite the scope from one to base
+        if ( referralURL.getUrl().indexOf("?base") > -1 ) {
+            scope = SCOPE_BASE;
+        }
+
+        LDAPSearchConstraints newcons = (LDAPSearchConstraints)cons.clone();
+        newcons.setHopLimit( cons.getHopLimit()-1 );
+
+        performReferrals(connection, newcons, ops, DN, scope, filter,
+                         types, attrsOnly, mods, entry, attr, results);
     }
 
     void performReferrals(LDAPConnection connection, 
@@ -5171,22 +5212,18 @@ public class LDAPConnection
         LDAPUrl u[] = e.getURLs();
         // If there are no referrals (because the server isn't configured to
         // return one), give up here
-        if ( u == null ) {
+        if ( u == null || u.length == 0) {
             return null;
         }
 
-        for (int i = 0; i < u.length; i++) {
-            try {
-                LDAPConnection connection = prepareReferral( u[i], cons );
-                LDAPExtendedOperation results =
-                    connection.extendedOperation( op );
-                connection.disconnect();
-                return results; /* return right away if operation is successful */
-            } catch (LDAPException ee) {
-                continue;
-            }
-        }
-        return null;
+        String connectList = createReferralConnectList(u, /*allowEmptyHost=*/false);
+        LDAPConnection connection = prepareReferral( connectList, cons);
+        referralRebind(connection, cons);
+        LDAPExtendedOperation results =
+            connection.extendedOperation( op );
+        connection.disconnect();
+        return results; /* return right away if operation is successful */
+        
     }
 
     /**
