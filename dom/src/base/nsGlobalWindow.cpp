@@ -86,6 +86,7 @@
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
 #include "nsISidebar.h"                // XXX for sidebar HACK, see bug 20721
+#include "nsIPrompt.h"
 #include "nsIStyleContext.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
@@ -641,6 +642,18 @@ NS_IMETHODIMP GlobalWindowImpl::GetSidebar(nsISidebar** aSidebar)
 
   return rv;
 
+}
+
+NS_IMETHODIMP GlobalWindowImpl::GetPrompt(nsIPrompt** aPrompt)
+{
+  if(!mDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
+  NS_ENSURE_TRUE(prompter, NS_ERROR_NO_INTERFACE);
+
+  NS_ADDREF(*aPrompt = prompter);
+  return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
