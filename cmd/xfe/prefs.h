@@ -161,8 +161,12 @@ typedef struct _XFE_GlobalPrefs
 	XP_Bool enable_style_sheet;
 	XP_Bool auto_install;
 	XP_Bool email_anonftp;
-	XP_Bool warn_accept_cookie;
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	XP_Bool passive_ftp;
+#endif
+
+	XP_Bool warn_accept_cookie;
 	int accept_cookie;	          /* 0:disable, 1:enable-nowarn, else:enable-warn */
 
 	/*

@@ -2488,6 +2488,11 @@ void XFE_PrefsPageGeneralAdvanced::create()
 	kids[i++] = fep->email_anonftp_toggle = 
 		XmCreateToggleButtonGadget(form1, "emailAnonFtp", av, ac);
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	kids[i++] = fep->passive_ftp_toggle = 
+		XmCreateToggleButtonGadget(form1, "passiveFtp", av, ac);
+#endif
+
 	XtVaSetValues(fep->show_image_toggle,
 				  XmNindicatorType, XmN_OF_MANY,
 				  XmNalignment, XmALIGNMENT_BEGINNING,
@@ -2553,6 +2558,19 @@ void XFE_PrefsPageGeneralAdvanced::create()
 				  XmNleftWidget, fep->show_image_toggle,
 				  XmNrightAttachment, XmATTACH_NONE,
 				  0);
+
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	XtVaSetValues(fep->passive_ftp_toggle,
+				  XmNindicatorType, XmN_OF_MANY,
+				  XmNalignment, XmALIGNMENT_BEGINNING,
+				  XmNtopAttachment, XmATTACH_WIDGET,
+				  XmNtopWidget, fep->email_anonftp_toggle,
+				  XmNbottomAttachment, XmATTACH_NONE,
+				  XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+				  XmNleftWidget, fep->show_image_toggle,
+				  XmNrightAttachment, XmATTACH_NONE,
+				  0);
+#endif
 
 	XtManageChildren (kids, i);
 	XtManageChild (form1);
@@ -2702,6 +2720,13 @@ void XFE_PrefsPageGeneralAdvanced::init()
                   XmNsensitive, !PREF_PrefIsLocked("security.email_as_ftp_password"),
                   0);
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	XtVaSetValues(fep->passive_ftp_toggle, 
+                  XmNset, prefs->passive_ftp, 
+                  XmNsensitive, !PREF_PrefIsLocked("network.ftp.passive"),
+                  0);
+#endif
+
 	// Cookie
 
     sensitive = !PREF_PrefIsLocked("network.cookie.cookieBehavior");
@@ -2777,6 +2802,11 @@ void XFE_PrefsPageGeneralAdvanced::save()
 	XtVaGetValues(fep->email_anonftp_toggle, XmNset, &b, 0);
 	fe_globalPrefs.email_anonftp = b;
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	XtVaGetValues(fep->passive_ftp_toggle, XmNset, &b, 0);
+	NET_UsePASV(fe_globalPrefs.passive_ftp = b);
+#endif
+	
 	// Cookies
 
 	XtVaGetValues(fep->always_accept_cookie_toggle, XmNset, &b, 0);

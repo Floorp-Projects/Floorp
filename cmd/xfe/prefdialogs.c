@@ -679,6 +679,10 @@ fe_InstallPreferences (MWContext *context)
 	/* The unit for tcp buffer size is changed from kbyes to btyes */
 	NET_ChangeSocketBufferSize (fe_globalPrefs.network_buffer_size);
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	NET_UsePASV(fe_globalPrefs.passive_ftp);
+#endif
+
 	/* NEWS
 	 */
 

@@ -118,6 +118,10 @@ struct PrefsDataGeneralAdvanced
 	Widget     auto_install_toggle;
 	Widget     email_anonftp_toggle;
 
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+	Widget	   passive_ftp_toggle;
+#endif
+
 	Widget     always_accept_cookie_toggle;
 	Widget     no_foreign_cookie_toggle;
 	Widget     never_accept_cookie_toggle;

@@ -303,6 +303,10 @@ static struct pref_map pref_map[] = {
 #endif /* MOZ_MAIL_NEWS */
 
 {"network.cookie.warnAboutCookies", FIELD_OFFSET(warn_accept_cookie), read_bool, write_bool},
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+{"network.ftp.passive", FIELD_OFFSET(passive_ftp), read_bool, write_bool},
+#endif
+
 {"network.cookie.cookieBehavior", FIELD_OFFSET(accept_cookie), read_int, write_int},
 #ifdef MOZ_MAIL_NEWS
 {"network.hosts.smtp_server", FIELD_OFFSET(mailhost), read_str, write_str},
@@ -1445,6 +1449,12 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
        */
 		else if (!XP_STRCASECMP("MAX_CONNECTIONS", name))
 			prefs->max_connections = atoi (value);
+#ifdef XFE_PREF_ADVANCED_PASSIVE_FTP
+		else if (!XP_STRCASECMP("PASSIVE_FTP", name)) {
+			prefs->passive_ftp = BOOLP(value);
+			NET_UsePASV(prefs->passive_ftp);
+		}
+#endif
 		else if (!XP_STRCASECMP("SOCKET_BUFFER_SIZE", name))
 			/* The unit for tcp buffer size in 3.0 prefs is kbypes
 			 * The unit for tcp buffer size in 4.0 prefs is bytes

@@ -6282,6 +6282,7 @@ Automatically load images and other data types\n\
 *prefs*advanced*enableStyleSheet.labelString:	Enable Style Sheets
 *prefs*advanced*autoInstall.labelString:		Enable AutoInstall
 *prefs*advanced*emailAnonFtp.labelString:		Send email address as anonymous FTP password
+*prefs*advanced*passiveFtp.labelString:			Use passive ftp
 *prefs*cookieFrame*cookieBoxLabel.labelString:	Cookies
 *prefs*cookieFrame*alwaysAcceptCookie.labelString:	Accept all cookies
 *prefs*cookieFrame*noForeignCookie.labelString:	\
