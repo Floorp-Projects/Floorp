@@ -23,11 +23,19 @@ use strict;
 use lib ".";
 
 # This module implements a series - a set of data to be plotted on a chart.
+#
+# This Series is in the database if and only if self->{'series_id'} is defined. 
+# Note that the series being in the database does not mean that the fields of 
+# this object are the same as the DB entries, as the object may have been 
+# altered.
+
 package Bugzilla::Series;
 
 use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::User;
+
+use constant PUBLIC_USER_ID => 0;
 
 sub new {
     my $invocant = shift;
@@ -37,11 +45,12 @@ sub new {
     my $self = {};
     bless($self, $class);
 
-    if ($#_ == 0) {
+    my $arg_count = scalar(@_);
+    
+    if ($arg_count == 1) {
         if (ref($_[0])) {
             # We've been given a CGI object to create a new Series from.
-            $self->readParametersFromCGI($_[0]);
-            $self->createInDatabase();
+            $self->initFromCGI($_[0]);
         }
         else {
             # We've been given a series_id, which should represent an existing
@@ -49,18 +58,15 @@ sub new {
             $self->initFromDatabase($_[0]);
         }
     }
-    elsif ($#_ == 6) {
+    elsif ($arg_count >= 6 && $arg_count <= 8) {
         # We've been given a load of parameters to create a new Series from.
-        # We don't get given a series_id; we generate that for ourselves
-        # when we call createInDatabase(). So we pass -1 here.
-        $self->initFromParameters(-1, @_);
-        $self->createInDatabase();
+        $self->initFromParameters(@_);
     }
     else {
-        die("Bad parameters passed in - invalid number of args \($#_\)($_)");
+        die("Bad parameters passed in - invalid number of args: $arg_count");
     }
 
-    return $self->{'already_exists'} ? $self->{'series_id'} : $self;
+    return $self;
 }
 
 sub initFromDatabase {
@@ -86,7 +92,7 @@ sub initFromDatabase {
         # it as the last parameter in @series; this is because isSubscribed()
         # requires the rest of the object to be set up correctly.
         $self->initFromParameters(@series);
-        $self->{'public'} = $self->isSubscribed(0);
+        $self->{'public'} = $self->isSubscribed(PUBLIC_USER_ID);
     }
     else {
         &::ThrowCodeError("invalid_series_id", { 'series_id' => $series_id });
@@ -94,6 +100,7 @@ sub initFromDatabase {
 }
 
 sub initFromParameters {
+    # Pass undef as the first parameter if you are creating a new series.
     my $self = shift;
 
     ($self->{'series_id'}, $self->{'category'},  $self->{'subcategory'},
@@ -101,7 +108,42 @@ sub initFromParameters {
      $self->{'query'}, $self->{'public'}) = @_;
 }
 
-sub createInDatabase {
+sub initFromCGI {
+    my $self = shift;
+    my $cgi = shift;
+
+    $self->{'series_id'} = $cgi->param('series_id') || undef;
+    if (defined($self->{'series_id'})) {
+        detaint_natural($self->{'series_id'})
+          || &::ThrowCodeError("invalid_series_id", 
+                               { 'series_id' => $self->{'series_id'} });
+    }
+    
+    $self->{'category'} = $cgi->param('category')
+      || $cgi->param('newcategory')
+      || &::ThrowUserError("missing_category");
+
+    $self->{'subcategory'} = $cgi->param('subcategory')
+      || $cgi->param('newsubcategory')
+      || &::ThrowUserError("missing_subcategory");
+
+    $self->{'name'} = $cgi->param('name')
+      || &::ThrowUserError("missing_name");
+
+    $self->{'creator'} = Bugzilla->user->id;
+
+    $self->{'frequency'} = $cgi->param('frequency');
+    detaint_natural($self->{'frequency'})
+      || &::ThrowUserError("missing_frequency");
+
+    $self->{'query'} = $cgi->canonicalise_query("format", "ctype", "action",
+                                        "category", "subcategory", "name",
+                                        "frequency", "public", "query_format");
+                                        
+    $self->{'public'} = $cgi->param('public') ? 1 : 0;    
+}
+
+sub writeToDatabase {
     my $self = shift;
 
     # Lock some tables
@@ -112,22 +154,20 @@ sub createInDatabase {
     my $category_id = getCategoryID($self->{'category'});
     my $subcategory_id = getCategoryID($self->{'subcategory'});
 
-    $self->{'creator'} = $::userid;
-
-    # Check for the series currently existing
-    trick_taint($self->{'name'});
-    $self->{'series_id'} = $dbh->selectrow_array("SELECT series_id " .
-                              "FROM series WHERE category = $category_id " .
-                              "AND subcategory = $subcategory_id AND name = " .
-                              $dbh->quote($self->{'name'}));
-
-    if ($self->{'series_id'}) {
-        $self->{'already_exists'} = 1;
+    # Is this already in the database?                              
+    if ($self->existsInDatabase()) {
+        # Update existing series
+        my $dbh = Bugzilla->dbh;
+        $dbh->do("UPDATE series SET " .
+                 "category = ?, subcategory = ?," .
+                 "name = ?, frequency = ? " .
+                 "WHERE series_id = ?", undef,
+                 $category_id, $subcategory_id, $self->{'name'},
+                 $self->{'frequency'}, $self->{'series_id'});
     }
     else {
-        trick_taint($self->{'query'});
-
         # Insert the new series into the series table
+        trick_taint($self->{'query'});
         $dbh->do("INSERT INTO series (creator, category, subcategory, " .
                  "name, frequency, query) VALUES ($self->{'creator'}, " .
                  "$category_id, $subcategory_id, " .
@@ -140,13 +180,37 @@ sub createInDatabase {
         $self->{'series_id'}
           || &::ThrowCodeError("missing_series_id", { 'series' => $self });
 
-        # Subscribe user to the newly-created series.
-        $self->subscribe($::userid);
-        # Public series are subscribed to by userid 0.
-        $self->subscribe(0) if ($self->{'public'} && $::userid != 0);
+        # Subscribe creator to the newly-created series.
+        $self->subscribe($self->{'creator'});
     }
+    
+    # Update publicness by changing subscription
+    if ($self->{'public'}) {
+        $self->subscribe(PUBLIC_USER_ID);
+    }
+    else {
+        $self->unsubscribe(PUBLIC_USER_ID);
+    }             
 
     $dbh->do("UNLOCK TABLES");
+}
+
+# Check whether a series with this name, category and subcategory exists in
+# the DB and, if so, sets series_id to its series_id.
+sub existsInDatabase {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    my $category_id = getCategoryID($self->{'category'});
+    my $subcategory_id = getCategoryID($self->{'subcategory'});
+    
+    trick_taint($self->{'name'});
+    $self->{'series_id'} = $dbh->selectrow_array("SELECT series_id " .
+                              "FROM series WHERE category = $category_id " .
+                              "AND subcategory = $subcategory_id AND name = " .
+                              $dbh->quote($self->{'name'}));
+                              
+    return(defined($self->{'series_id'}));
 }
 
 # Get a category or subcategory IDs, creating the category if it doesn't exist.
@@ -171,62 +235,6 @@ sub getCategoryID {
 
     return $category_id;
 }        
-
-sub readParametersFromCGI {
-    my $self = shift;
-    my $cgi = shift;
-
-    $self->{'category'} = $cgi->param('category')
-      || $cgi->param('newcategory')
-      || &::ThrowUserError("missing_category");
-
-    $self->{'subcategory'} = $cgi->param('subcategory')
-      || $cgi->param('newsubcategory')
-      || &::ThrowUserError("missing_subcategory");
-
-    $self->{'name'} = $cgi->param('name')
-      || &::ThrowUserError("missing_name");
-
-    $self->{'frequency'} = $cgi->param('frequency');
-    detaint_natural($self->{'frequency'})
-      || &::ThrowUserError("missing_frequency");
-
-    $self->{'public'} = $cgi->param('public') ? 1 : 0;
-    
-    $self->{'query'} = $cgi->canonicalise_query("format", "ctype", "action",
-                                        "category", "subcategory", "name",
-                                        "frequency", "public", "query_format");
-}
-
-sub alter {
-    my $self = shift;
-    my $cgi = shift;
-
-    my $old_public = $self->{'public'};
-    
-    # Note: $self->{'query'} will be meaningless after this call
-    $self->readParametersFromCGI($cgi);
-
-    my $category_id = getCategoryID($self->{'category'});
-    my $subcategory_id = getCategoryID($self->{'subcategory'}); 
-        
-    # Update the entry   
-    trick_taint($self->{'name'});
-    my $dbh = Bugzilla->dbh;
-    $dbh->do("UPDATE series SET " .
-             "category = $category_id, subcategory = $subcategory_id " .
-             ", name = " . $dbh->quote($self->{'name'}) .
-             ", frequency = $self->{'frequency'} " .
-             "WHERE series_id = $self->{'series_id'}");
-    
-    # Update the publicness of this query.        
-    if ($old_public && !$self->{'public'}) {
-        $self->unsubscribe(0);
-    }
-    elsif (!$old_public && $self->{'public'}) {
-        $self->subscribe(0);
-    }             
-}
 
 sub subscribe {
     my $self = shift;

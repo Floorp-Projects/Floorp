@@ -89,6 +89,7 @@ if ($action =~ /^(assemble|add|remove|sum|subscribe|unsubscribe)$/) {
     # These two need to be done before the creation of the Chart object, so
     # that the changes they make will be reflected in it.
     if ($action =~ /^subscribe|unsubscribe$/) {
+        detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
         my $series = new Bugzilla::Series($series_id);
         $series->$action($::userid);
     }
@@ -121,12 +122,12 @@ elsif ($action eq "create") {
     assertCanCreate($cgi);
     my $series = new Bugzilla::Series($cgi);
 
-    if (ref($series)) {
+    if (!$series->existsInDatabase()) {
+        $series->writeToDatabase();
         $vars->{'message'} = "series_created";
     }
     else {
         $vars->{'message'} = "series_already_exists";
-        $series = new Bugzilla::Series($series);
     }
 
     $vars->{'series'} = $series;
@@ -136,18 +137,21 @@ elsif ($action eq "create") {
       || ThrowTemplateError($template->error());
 }
 elsif ($action eq "edit") {
-    $series_id || ThrowCodeError("invalid_series_id");
+    detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
     assertCanEdit($series_id);
 
     my $series = new Bugzilla::Series($series_id);
+    
     edit($series);
 }
 elsif ($action eq "alter") {
-    $series_id || ThrowCodeError("invalid_series_id");
+    # This is the "commit" action for editing a series
+    detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
     assertCanEdit($series_id);
 
-    my $series = new Bugzilla::Series($series_id);
-    $series->alter($cgi);
+    my $series = new Bugzilla::Series($cgi);
+    $series->writeToDatabase();
+    
     edit($series);
 }
 else {
@@ -231,9 +235,7 @@ sub edit {
     # If we've got any parameters, use those in preference to the values
     # read from the database. This is a bit ugly, but I can't see a better
     # way to make this work in the no-JS situation.
-    if ($cgi->param('category') || $cgi->param('subcategory') ||
-        $cgi->param('name') || $cgi->param('frequency') ||
-        $cgi->param('public'))
+    if ($cgi->param('category'))
     {
         $vars->{'default'} = new Bugzilla::Series($series->{'series_id'},
           $cgi->param('category')    || $series->{'category'},
