@@ -1782,7 +1782,12 @@ CompareFontFamilyNames(const void* aArg1, const void* aArg2, void* aClosure)
     weight2 |= 0x100;
 
   if( weight1 == weight2 )
-    return PL_strcasecmp( fm1->szFamilyname, fm2->szFamilyname );
+  {
+    if( fm1->fsType & FM_TYPE_DBCS || fm2->fsType & FM_TYPE_DBCS )
+      return PL_strcasecmp( fm1->szFacename, fm2->szFacename );
+    else
+      return PL_strcasecmp( fm1->szFamilyname, fm2->szFamilyname );
+  }
   else
     return weight1 - weight2;
 }
@@ -1845,9 +1850,18 @@ nsFontMetricsOS2::InitializeGlobalFonts()
   for( int j = 0; j < count; j++ )
   {
     font = (nsGlobalFont*)gGlobalFonts->ElementAt(j);
-    if( PL_strcasecmp( font->metrics.szFamilyname, lastName ) != 0 )
+    
+     // for DBCS fonts, differentiate fonts by Face Name;  for others,
+     // Family Name is enough
+    char* fontname = NULL;
+    if( font->metrics.fsType & FM_TYPE_DBCS )
+      fontname = (char*)&(font->metrics.szFacename);
+    else
+      fontname = (char*)&(font->metrics.szFamilyname);
+
+    if( PL_strcasecmp( fontname, lastName ) != 0 )
     {
-      lastName = (char*)&(font->metrics.szFamilyname);
+      lastName = fontname;
       font = (nsGlobalFont*)gGlobalFonts->ElementAt(prevIndex);
       font->nextFamily = j;
       prevIndex = j;
@@ -1992,8 +2006,16 @@ nsFontEnumeratorOS2::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     }
 
     str[0] = L'\0';
-    MultiByteToWideChar(0, font->metrics.szFamilyname,
-       strlen(font->metrics.szFamilyname)+1, str, FACESIZE+1);
+    if( font->metrics.fsType & FM_TYPE_DBCS )
+    {
+      MultiByteToWideChar(0, font->metrics.szFacename,
+         strlen(font->metrics.szFacename)+1, str, FACESIZE+1);
+    }
+    else
+    {
+      MultiByteToWideChar(0, font->metrics.szFamilyname,
+         strlen(font->metrics.szFamilyname)+1, str, FACESIZE+1);
+    }
     array[j++] = str;
     
     i = font->nextFamily;
