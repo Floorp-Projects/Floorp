@@ -21,26 +21,8 @@
  */
 
 /*
- * errormap.c - map NSPR and OS errors to strings
- *
- * CONFIDENTIAL AND PROPRIETARY SOURCE CODE OF NETSCAPE COMMUNICATIONS
- * CORPORATION 
- * 
- * Copyright (C) 1998-9 Netscape Communications Corporation. All Rights Reserved. 
- *
- * Use of this Source Code is subject to the terms of the applicable license
- * agreement from Netscape Communications Corporation. 
- *
- * The copyright notice(s) in this Source Code does not indicate actual or
- * intended publication of this Source Code. 
+ * errormap.c - map NSPR and NSS errors to strings
  */
-
-/* XXX ceb
- * This code was stolen from Directory server.  
- * ns/netsite/ldap/servers/slapd/errormap.c
- * OS errors are not handled, so the os error has been removed.
- */
-
 
 #if defined( _WINDOWS )
 #include <windows.h>
