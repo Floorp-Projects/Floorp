@@ -11,17 +11,13 @@ slider {
    -moz-user-select: none;
    background: url("chrome://global/skin/scroll-track-horz-middle.gif") repeat-x;
    height: 15px;
-   border-top: 1px solid #4D5971;
-   border-bottom: 1px solid #4D5971;
 }
 
 slider[align="vertical"] {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    background: url("chrome://global/skin/scroll-track-vert-middle.gif") repeat-y;
-   width: 15px;
-   border-left: 1px solid #4D5971;
-   border-right: 1px solid #4D5971;
+   width: 14px;
    border-top: 0px;
    border-bottom: 0px;
 }
@@ -36,19 +32,19 @@ thumb {
 
 .thumb-horz-spring-left {
   background: url(chrome://global/skin/scroll-thumb-horz-left.gif) no-repeat;
-  width: 7px;
-  height: 13px;
+  width: 3px;
+  height: 14px;
 }
 
 .thumb-horz-box-middle {
   background: url(chrome://global/skin/scroll-thumb-horz-expand.gif) repeat-x;
-  height: 13px;
+  height: 14px;
 }
 
 .thumb-horz-spring-right {
   background: url(chrome://global/skin/scroll-thumb-horz-right.gif) no-repeat;
-  width: 6px;
-  height: 13px;
+  width: 3px;
+  height: 14px;
 }
 
 .thumb-horz-grippy {
@@ -59,19 +55,14 @@ thumb {
 
 thumb:active > .thumb-horz-spring-left {
   background: url(chrome://global/skin/scroll-thumb-horz-cl-left.gif) no-repeat;
-  width: 7px;
-  height: 13px;
 }
 
 thumb:active > .thumb-horz-box-middle {
   background: url(chrome://global/skin/scroll-thumb-horz-cl-expand.gif) repeat-x;
-  height: 13px;
 }
 
 thumb:active > .thumb-horz-spring-right {
   background: url(chrome://global/skin/scroll-thumb-horz-cl-right.gif) no-repeat;
-  width: 6px;
-  height: 13px;
 }
 
 thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
@@ -88,19 +79,19 @@ thumb[align="vertical"] {
 
 .thumb-vert-spring-top {
   background: url(chrome://global/skin/scroll-thumb-vert-top.gif) no-repeat;
-  height: 7px;
-  width: 13px;
+  height: 3px;
+  width: 14px;
 }
 
 .thumb-vert-box-middle {
   background: url(chrome://global/skin/scroll-thumb-vert-expand.gif) repeat-y;
-  width: 13px;
+  width: 14px;
 }
 
 .thumb-vert-spring-bottom {
   background: url(chrome://global/skin/scroll-thumb-vert-bottom.gif) no-repeat;
-  height: 6px;
-  width: 13px;
+  height: 3px;
+  width: 14px;
 }
 
 .thumb-vert-grippy {
@@ -111,19 +102,14 @@ thumb[align="vertical"] {
 
 thumb:active > .thumb-vert-spring-top {
   background: url(chrome://global/skin/scroll-thumb-vert-cl-top.gif) no-repeat;
-  height: 7px;
-  width: 13px;
 }
 
 thumb:active > .thumb-vert-box-middle {
   background: url(chrome://global/skin/scroll-thumb-vert-cl-expand.gif) repeat-y;
-  width: 13px;
 }
 
 thumb:active > .thumb-vert-spring-bottom {
   background: url(chrome://global/skin/scroll-thumb-vert-cl-bottom.gif) no-repeat;
-  height: 6px;
-  width: 13px;
 }
 
 thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
