@@ -87,6 +87,9 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
 
+  nsIMsgAccount
+      FindAccountForServer(in nsIMsgIncomingServer server);
+
   /* given a server, return all identities in accounts that have this server
    * returns an array of nsIMsgIdentity
    */

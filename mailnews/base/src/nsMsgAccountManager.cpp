@@ -113,6 +113,7 @@ typedef struct _findAccountByKeyEntry {
     nsIMsgAccount* account;
 } findAccountByKeyEntry;
 
+
 class nsMsgAccountManager : public nsIMsgAccountManager,
                             public nsIShutdownListener
 {
@@ -187,6 +188,8 @@ private:
   // find the account with the given key
   static PRBool findAccountByKey (nsISupports *element, void *aData);
 
+  static PRBool findAccountByServerKey (nsISupports *element, void *aData);
+
   // load up the servers into the given nsISupportsArray
   static PRBool getServersToArray(nsISupports *element, void *aData);
 
@@ -207,7 +210,6 @@ private:
   // write out the server's cache through the given folder cache
   static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
 
-  PRBool isUnique(nsIMsgIncomingServer *server);
   nsresult upgradePrefs();
   nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
@@ -318,10 +320,10 @@ nsMsgAccountManager::GetIdentity(const char* key,
 
   // check for the identity in the hash table
   nsStringKey hashKey(key);
-  nsCOMPtr<nsISupports> idsupports = (nsISupports*)m_identities.Get(&hashKey);
-  nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(idsupports);
+  nsISupports *idsupports = (nsISupports*)m_identities.Get(&hashKey);
+  nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(idsupports, &rv);
 
-  if (identity) {
+  if (NS_SUCCEEDED(rv)) {
     *_retval = identity;
     NS_ADDREF(*_retval);
     return NS_OK;
@@ -387,9 +389,9 @@ nsMsgAccountManager::GetIncomingServer(const char* key,
   
   nsStringKey hashKey(key);
   nsCOMPtr<nsIMsgIncomingServer> server =
-    do_QueryInterface((nsISupports*)m_incomingServers.Get(&hashKey));
+    do_QueryInterface((nsISupports*)m_incomingServers.Get(&hashKey), &rv);
 
-  if (server) {
+  if (NS_SUCCEEDED(rv)) {
     *_retval = server;
     NS_ADDREF(*_retval);
     return NS_OK;
@@ -536,8 +538,10 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     nsCOMPtr<nsISupports> element;
     rv = m_accounts->GetElementAt(0, getter_AddRefs(element));
 
-    if (NS_SUCCEEDED(rv))
-      m_defaultAccount = do_QueryInterface(element);
+    if (NS_SUCCEEDED(rv)) {
+      m_defaultAccount = do_QueryInterface(element, &rv);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "GetDefaultAccount(): bad array");
+    }
   }
   
   *aDefaultAccount = m_defaultAccount;
@@ -555,62 +559,16 @@ nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
   return NS_OK;
 }
 
-PRBool
-nsMsgAccountManager::isUnique(nsIMsgIncomingServer *server)
-{
-  nsresult rv;
-  nsXPIDLCString username;
-  nsXPIDLCString hostname;
-  nsXPIDLCString type;
-  
-  // make sure this server is unique
-  rv = server->GetUsername(getter_Copies(username));
-  if (NS_FAILED(rv)) return rv;
-    
-  rv = server->GetHostName(getter_Copies(hostname));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = server->GetType(getter_Copies(type));
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIMsgIncomingServer> dupeServer;
-  rv = FindServer(username, hostname, type, getter_AddRefs(dupeServer));
-
-  // if the server was not found, then it really is unique.
-  if (NS_FAILED(rv)) return PR_TRUE;
-  
-  // if we're here, then we found it, but maybe it's literally the
-  // same server that we're searching for.
-
-  // return PR_FALSE on error because if one of the keys doesn't
-  // exist, then it's likely a different server
-  
-  nsXPIDLCString dupeKey;
-  rv = dupeServer->GetKey(getter_Copies(dupeKey));
-  if (NS_FAILED(rv)) return PR_FALSE;
-  
-  nsXPIDLCString serverKey;
-  server->GetKey(getter_Copies(serverKey));
-  if (NS_FAILED(rv)) return PR_FALSE;
-  
-  if (!PL_strcmp(dupeKey, serverKey))
-    // it's unique because this EXACT server is the only one that exists
-    return PR_TRUE;
-  else
-    // there is already a server with this {username, hostname, type}
-    return PR_FALSE;
-}
-
-
-
-
 // enumaration for removing accounts from the BiffManager
 PRBool
 nsMsgAccountManager::removeServerFromBiff(nsHashKey *aKey, void *aData,
                                           void *closure)
 {
+    nsresult rv;
     nsCOMPtr<nsIMsgIncomingServer> server =
-      do_QueryInterface((nsISupports*)aData);
+      do_QueryInterface((nsISupports*)aData, &rv);
+    if (NS_FAILED(rv)) return PR_TRUE;
+    
 	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
 
 	accountManager->RemoveServerFromBiff(server);
@@ -697,10 +655,15 @@ nsMsgAccountManager::GetAllIdentities(nsISupportsArray **_retval)
 PRBool
 nsMsgAccountManager::addIdentityIfUnique(nsISupports *element, void *aData)
 {
-  nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(element);
+  nsresult rv;
+  nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) {
+    printf("addIdentityIfUnique problem\n");
+    return PR_TRUE;
+  }
+  
   nsISupportsArray *array = (nsISupportsArray*)aData;
 
-  nsresult rv;
   
   nsXPIDLCString key;
   rv = identity->GetKey(getter_Copies(key));
@@ -713,8 +676,8 @@ nsMsgAccountManager::addIdentityIfUnique(nsISupports *element, void *aData)
   PRBool found=PR_FALSE;
   PRUint32 i;
   for (i=0; i<count; i++) {
-    nsCOMPtr<nsISupports> element;
-    array->GetElementAt(i, getter_AddRefs(element));
+    nsCOMPtr<nsISupports> thisElement;
+    array->GetElementAt(i, getter_AddRefs(thisElement));
 
     nsCOMPtr<nsIMsgIdentity> thisIdentity =
       do_QueryInterface(element, &rv);
@@ -737,9 +700,10 @@ nsMsgAccountManager::addIdentityIfUnique(nsISupports *element, void *aData)
 PRBool
 nsMsgAccountManager::getIdentitiesToArray(nsISupports *element, void *aData)
 {
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
-  
   nsresult rv;
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
   
   nsCOMPtr<nsISupportsArray> identities;
   rv = account->GetIdentities(getter_AddRefs(identities));
@@ -774,10 +738,11 @@ nsMsgAccountManager::GetAllServers(nsISupportsArray **_retval)
 PRBool
 nsMsgAccountManager::getServersToArray(nsISupports *element, void *aData)
 {
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
-  nsISupportsArray *array = (nsISupportsArray*)aData;
-
   nsresult rv;
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsISupportsArray *array = (nsISupportsArray*)aData;
   
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = account->GetIncomingServer(getter_AddRefs(server));
@@ -845,8 +810,9 @@ nsMsgAccountManager::getAccountList(nsISupports *element, void *aData)
 {
   nsresult rv;
   nsCString* accountList = (nsCString*) aData;
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
-
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
   nsXPIDLCString key;
   rv = account->GetKey(getter_Copies(key));
   if (NS_FAILED(rv)) return PR_TRUE;
@@ -968,7 +934,10 @@ nsMsgAccountManager::GetAccount(const char* key,
 PRBool
 nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
 {
-    nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
+    nsresult rv;
+    nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+    if (NS_FAILED(rv)) return PR_TRUE;
+    
     findAccountByKeyEntry *entry = (findAccountByKeyEntry*) aData;
 
     nsXPIDLCString key;
@@ -2089,17 +2058,67 @@ nsMsgAccountManager::FindServer(const char* username,
 
 }
 
+PRBool
+nsMsgAccountManager::findAccountByServerKey(nsISupports *element,
+                                          void *aData)
+{
+  nsresult rv;
+  findAccountByKeyEntry *entry = (findAccountByKeyEntry*)aData;
+  nsCOMPtr<nsIMsgAccount> account =
+    do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = account->GetIncomingServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  nsXPIDLCString key;
+  rv = server->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  // if the keys are equal, the servers are equal
+  if (PL_strcmp(key, entry->key)==0) {
+    entry->account = account;
+    return PR_FALSE;            // stop on first found account
+  }
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::FindAccountForServer(nsIMsgIncomingServer *server,
+                                            nsIMsgAccount **aResult)
+{
+  nsresult rv;
+  *aResult = nsnull;
+
+  nsXPIDLCString key;
+  rv = server->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return rv;
+  
+  findAccountByKeyEntry entry;
+  entry.key = key;
+  entry.account = nsnull;
+
+  m_accounts->EnumerateForwards(findAccountByServerKey, (void *)&entry);
+
+  if (entry.account) {
+    *aResult = entry.account;
+    NS_ADDREF(*aResult);
+  }
+  return NS_OK;
+}
 
 // if the aElement matches the given hostname, add it to the given array
 PRBool
 nsMsgAccountManager::findServer(nsISupports *aElement, void *data)
 {
-  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aElement);
-  if (!server) return PR_TRUE;
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(aElement, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
 
   findServerEntry *entry = (findServerEntry*) data;
-
-  nsresult rv;
   
   nsXPIDLCString thisHostname;
   rv = server->GetHostName(getter_Copies(thisHostname));
@@ -2162,7 +2181,9 @@ PRBool
 nsMsgAccountManager::findIdentitiesForServer(nsISupports* element, void *aData)
 {
   nsresult rv;
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
   findIdentitiesByServerEntry *entry = (findIdentitiesByServerEntry*)aData;
   
   nsCOMPtr<nsIMsgIncomingServer> thisServer;
@@ -2215,7 +2236,9 @@ PRBool
 nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
 {
   nsresult rv;
-  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
   findServersByIdentityEntry *entry = (findServersByIdentityEntry*)aData;
 
   nsCOMPtr<nsISupportsArray> identities;
@@ -2237,9 +2260,9 @@ nsMsgAccountManager::findServersForIdentity(nsISupports *element, void *aData)
     if (NS_FAILED(rv)) continue;
     
     nsCOMPtr<nsIMsgIdentity>
-      thisIdentity = do_QueryInterface(thisSupports);
+      thisIdentity = do_QueryInterface(thisSupports, &rv);
 
-    if (thisIdentity) {
+    if (NS_SUCCEEDED(rv)) {
 
       nsXPIDLCString thisIdentityKey;
       rv = thisIdentity->GetKey(getter_Copies(thisIdentityKey));
