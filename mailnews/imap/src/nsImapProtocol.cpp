@@ -1260,26 +1260,23 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   PseudoInterrupt(PR_FALSE);  // clear this if left over from previous url.
 
-  if (m_runningUrl)
+  m_runningUrl->GetRerunningUrl(&rerunningUrl);
+  m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
+  if (isExternalUrl)
   {
-    m_runningUrl->GetRerunningUrl(&rerunningUrl);
-    m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
-    if (isExternalUrl)
+    m_runningUrl->GetImapAction(&m_imapAction);
+    if (m_imapAction == nsIImapUrl::nsImapSelectFolder)
     {
-      m_runningUrl->GetImapAction(&m_imapAction);
-      if (m_imapAction == nsIImapUrl::nsImapSelectFolder)
+      // we need to send a start request so that the doc loader
+      // will call HandleContent on the imap service so we
+      // can abort this url, and run a new url in a new msg window
+      // to run the folder load url and get off this crazy merry-go-round.
+      if (m_channelListener) 
       {
-        // we need to send a start request so that the doc loader
-        // will call HandleContent on the imap service so we
-        // can abort this url, and run a new url in a new msg window
-        // to run the folder load url and get off this crazy merry-go-round.
-        if (m_channelListener) 
-        {
-          nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
-          m_channelListener->OnStartRequest(request, m_channelContext);
-        }
-        return PR_FALSE;
+        nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+        m_channelListener->OnStartRequest(request, m_channelContext);
       }
+      return PR_FALSE;
     }
   }
 
