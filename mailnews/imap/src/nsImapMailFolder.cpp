@@ -837,6 +837,12 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         imapFolder->SetOnlineName(onlineName.get());
         imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
         imapFolder->SetBoxFlags(flags);
+   
+        nsXPIDLString unicodeName;
+        rv = CreateUnicodeStringFromUtf7(folderName, getter_Copies(unicodeName));
+        if (NS_SUCCEEDED(rv))
+          child->SetPrettyName(unicodeName);
+ 
         // store the online name as the mailbox name in the db folder info
         // I don't think anyone uses the mailbox name, so we'll use it
         // to restore the online name when blowing away an imap db.
