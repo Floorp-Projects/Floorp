@@ -93,13 +93,14 @@ nsCompressedCharMap::nsCompressedCharMap()
   //    1 empty mid pointer array
   //    1 empty page
 
+  int i;
   memset(mCCMap, 0, sizeof(mCCMap));
   mUsedLen = 0;
   mAllOnesPage = 0;
 
   // init the upper pointers
   PRUint16 *upper = &mCCMap[0];
-  for (int i=0; i<CCMAP_NUM_UPPER_POINTERS; i++) {
+  for (i=0; i<CCMAP_NUM_UPPER_POINTERS; i++) {
     upper[i] = CCMAP_EMPTY_MID;
   }
   mUsedLen += CCMAP_NUM_UPPER_POINTERS;
@@ -107,7 +108,7 @@ nsCompressedCharMap::nsCompressedCharMap()
   // init the empty mid
   NS_ASSERTION(mUsedLen==CCMAP_EMPTY_MID, "empty mid offset misconfigured");
   PRUint16 *mid = &mCCMap[CCMAP_EMPTY_MID];
-  for (int i=0; i<CCMAP_NUM_MID_POINTERS; i++) {
+  for (i=0; i<CCMAP_NUM_MID_POINTERS; i++) {
     mid[i] = CCMAP_EMPTY_PAGE;
   }
   mUsedLen += CCMAP_NUM_MID_POINTERS;
