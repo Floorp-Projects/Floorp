@@ -13,39 +13,49 @@
 *
 * The Initial Developer of the Original Code is Netscape
 * Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. 
+* Copyright (C) 1998 Netscape Communications Corporation.
 * All Rights Reserved.
 *
-* Contributor(s): pschwartau@netscape.com  
+* Contributor(s): pschwartau@netscape.com
 * Date: 07 February 2001
 *
-* Functionality common to RegExp testing - 
+* Functionality common to RegExp testing -
 */
 //-------------------------------------------------------------------------------------------------
-var statprefix = 'regexp = '; 
-var statmiddle = ',  string = '; 
+var statprefix = 'regexp = ';
+var statmiddle = ',  string = ';
 var statsuffix = ',  match=$';
-var cnNoMatch = 'regexp FAILED to match anything!!!\n';
-var cnUnexpectedMatch = 'regexp MATCHED when we expected it to fail!!!\n';
-var cnSingleQuote = "'"; 
-var cnNewLine = '\n';
-var actualmatch = '';
-var expectedmatch = '';
+var ERR_LENGTH = '\nERROR !!! Match arrays have different lengths:';
+var ERR_NO_MATCH = '\nregexp FAILED to match anything !!!\n';
+var ERR_UNEXP_MATCH = '\nregexp MATCHED when we expected it to fail !!!\n';
+var cnExpect =  '\nExpect: ';
+var cnActual =  '\nActual: ';
+var cnSingleQuote = "'";
 
 
 // Compares ouput from multiple applications of RegExp(pattern).exec(string)
-function testRegExp(patterns, strings, actualmatches, expectedmatches) 
-{  
+function testRegExp(patterns, strings, actualmatches, expectedmatches)
+{
+  var actualmatch = [ ];
+  var expectedmatch = [ ];
+
   for (var i=0; i != patterns.length; i++)
   {
     actualmatch=actualmatches[i];
     expectedmatch=expectedmatches[i];
 
-    if(actualmatch) 
+    if(actualmatch)
     {
       if(expectedmatch)
       {
-        // expectedmatch and actualmatch are arrays. Compare them element-by-element -
+        // expectedmatch and actualmatch are arrays -
+        if (actualmatch.length != expectedmatch.length)
+        {
+          reportFailure(getStatus(i) + ERR_LENGTH + cnExpect + expectedmatch + cnActual + actualmatch);
+          return;
+        }
+
+        // OK, the arrays have same length. Compare them element-by-element -
         for (var j=0; j !=actualmatch.length; j++)
         {
           reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
@@ -53,14 +63,14 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
       }
       else //expectedmatch is null - that is, we did not expect a match -
       {
-        reportFailure(cnUnexpectedMatch + getStatus(i) + cnNewLine);
-      }    
+        reportFailure(getStatus(i) + ERR_UNEXP_MATCH);
+      }
     }
     else // actualmatch is null
     {
       if (expectedmatch)
-      {    
-        reportFailure(cnNoMatch + getStatus(i) + cnNewLine);
+      {
+        reportFailure(getStatus(i) + ERR_NO_MATCH);
       }
       else // we did not expect a match
       {
@@ -74,11 +84,11 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
 
 function getStatus(i, j)
 {
-  if ( j ) 
-  { 
-    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j ); 
+  if ( j )
+  {
+    return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i])  +  statsuffix  +  j );
   }
-  else 
+  else
   {
     return (statprefix  +  patterns[i]  +  statmiddle  +  quote(strings[i]));
   }
