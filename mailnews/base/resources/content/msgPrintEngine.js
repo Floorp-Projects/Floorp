@@ -87,7 +87,10 @@ function StopUrls()
 
 function PrintEnginePrint()
 {
+  var left = screen.width + 50;
+  var top = screen.height + 50;
   printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
 								                        "",
-								                        "chrome,dialog=no,all");
+								                        "chrome,dialog=no,all",
+								                        "left="+left+",top="+top+")");
 }
