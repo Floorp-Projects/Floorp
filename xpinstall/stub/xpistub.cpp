@@ -69,7 +69,7 @@
 //          globals
 //------------------------------------------------------------------------
 
-static nsIXPINotifier      *gNotifier = 0;
+static nsIXPIListener      *gListener = 0;
 static nsISoftwareUpdate   *gXPI = 0;
 static nsIServiceManager   *gServiceMgr = 0;
 
@@ -205,7 +205,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     //--------------------------------------------------------------------
     // Save the install wizard's callbacks as a nsIXPINotifer for later
     //--------------------------------------------------------------------
-    nsStubNotifier* stub = new nsStubNotifier( progressCB );
+    nsStubListener* stub = new nsStubListener( progressCB );
     if (!stub)
     {
         gXPI->Release();
@@ -213,7 +213,7 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     }
     else
     {
-        rv = stub->QueryInterface(NS_GET_IID(nsIXPINotifier), (void**)&gNotifier);
+        rv = stub->QueryInterface(NS_GET_IID(nsIXPIListener), (void**)&gListener);
     }
     return rv;
 }
@@ -225,8 +225,8 @@ PR_PUBLIC_API(nsresult) XPI_Init(
 //------------------------------------------------------------------------
 PR_PUBLIC_API(void) XPI_Exit()
 {
-    if (gNotifier)
-        gNotifier->Release();
+    if (gListener)
+        gListener->Release();
 
     if (gXPI)
         gXPI->Release();
@@ -269,7 +269,7 @@ PR_PUBLIC_API(PRInt32) XPI_Install(
 
     if (iFile && gXPI)
         rv = gXPI->InstallJar( iFile, URLstr.GetUnicode(), args.GetUnicode(), 
-                               (aFlags | XPI_NO_NEW_THREAD), gNotifier );
+                               (aFlags | XPI_NO_NEW_THREAD), gListener );
 
     return gInstallStatus;
 }

@@ -24,66 +24,65 @@
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "nsIXPINotifier.h"
 #include "nsTopProgressNotifier.h"
 
-nsTopProgressNotifier::nsTopProgressNotifier()
+nsTopProgressListener::nsTopProgressListener()
 {
     NS_INIT_ISUPPORTS();
-    mNotifiers = new nsVoidArray();
+    mListeners = new nsVoidArray();
     mActive = 0;
 }
 
-nsTopProgressNotifier::~nsTopProgressNotifier()
+nsTopProgressListener::~nsTopProgressListener()
 {
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             NS_IF_RELEASE(element);
         }
 
-        mNotifiers->Clear();
-        delete (mNotifiers);
+        mListeners->Clear();
+        delete (mListeners);
     }
 }
 
 
-NS_IMPL_ISUPPORTS(nsTopProgressNotifier, NS_GET_IID(nsIXPINotifier));
+NS_IMPL_ISUPPORTS(nsTopProgressListener, NS_GET_IID(nsIXPIListener));
 
 
 long
-nsTopProgressNotifier::RegisterNotifier(nsIXPINotifier * newNotifier)
+nsTopProgressListener::RegisterListener(nsIXPIListener * newListener)
 {
-    NS_IF_ADDREF( newNotifier );
-    return mNotifiers->AppendElement( newNotifier );
+    NS_IF_ADDREF( newListener );
+    return mListeners->AppendElement( newListener );
 }
 
 
 void
-nsTopProgressNotifier::UnregisterNotifier(long id)
+nsTopProgressListener::UnregisterListener(long id)
 {
-    nsIXPINotifier *item = (nsIXPINotifier*)mNotifiers->ElementAt(id);
+    nsIXPIListener *item = (nsIXPIListener*)mListeners->ElementAt(id);
     NS_IF_RELEASE(item);
-    mNotifiers->ReplaceElementAt(nsnull, id);
+    mListeners->ReplaceElementAt(nsnull, id);
 }
 
 
 
 NS_IMETHODIMP
-nsTopProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsTopProgressListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     if (mActive)
         mActive->BeforeJavascriptEvaluation(URL);
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->BeforeJavascriptEvaluation(URL);
         }
@@ -93,17 +92,17 @@ nsTopProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsTopProgressListener::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     if (mActive)
         mActive->AfterJavascriptEvaluation(URL);
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->AfterJavascriptEvaluation(URL);
         }
@@ -112,17 +111,17 @@ nsTopProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
+nsTopProgressListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     if (mActive)
         mActive->InstallStarted(URL, UIPackageName);
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->InstallStarted(URL, UIPackageName);
         }
@@ -131,19 +130,19 @@ nsTopProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIP
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::ItemScheduled( const PRUnichar* message )
+nsTopProgressListener::ItemScheduled( const PRUnichar* message )
 {
     long rv = 0;
 
     if (mActive)
         mActive->ItemScheduled( message );
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->ItemScheduled( message );
         }
@@ -153,17 +152,17 @@ nsTopProgressNotifier::ItemScheduled( const PRUnichar* message )
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::FinalizeProgress( const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsTopProgressListener::FinalizeProgress( const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (mActive)
         mActive->FinalizeProgress( message, itemNum, totNum );
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->FinalizeProgress( message, itemNum, totNum );
         }
@@ -172,17 +171,17 @@ nsTopProgressNotifier::FinalizeProgress( const PRUnichar* message, PRInt32 itemN
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsTopProgressListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
     if (mActive)
         mActive->FinalStatus(URL, status);
 
-    if (mNotifiers)
+    if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->FinalStatus(URL,status);
         }
@@ -191,17 +190,17 @@ nsTopProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 }
 
 NS_IMETHODIMP
-nsTopProgressNotifier::LogComment(const PRUnichar* comment)
+nsTopProgressListener::LogComment(const PRUnichar* comment)
 {
     if (mActive)
         mActive->LogComment(comment);
 
-   if (mNotifiers)
+   if (mListeners)
     {
         PRInt32 i=0;
-        for (; i < mNotifiers->Count(); i++) 
+        for (; i < mListeners->Count(); i++) 
         {
-            nsIXPINotifier* element = (nsIXPINotifier*)mNotifiers->ElementAt(i);
+            nsIXPIListener* element = (nsIXPIListener*)mListeners->ElementAt(i);
             if (element != NULL)
                 element->LogComment(comment);
         }

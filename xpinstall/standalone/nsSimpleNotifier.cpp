@@ -22,7 +22,6 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
-#include "nsIXPINotifier.h"
 #include "nsSimpleNotifier.h"
 
 #include <stdlib.h>

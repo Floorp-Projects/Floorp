@@ -31,26 +31,26 @@
 #include "nsVoidArray.h"
 
 
-class nsTopProgressNotifier : public nsIXPINotifier
+class nsTopProgressListener : public nsIXPIListener
 {
     public:
 
-        nsTopProgressNotifier();
-        virtual ~nsTopProgressNotifier();
+        nsTopProgressListener();
+        virtual ~nsTopProgressListener();
 
-        long RegisterNotifier(nsIXPINotifier * newNotifier);
-        void UnregisterNotifier(long id);
-        void SetActiveNotifier(nsIXPINotifier *aNotifier) 
-            { mActive = aNotifier; }
+        long RegisterListener(nsIXPIListener * newListener);
+        void UnregisterListener(long id);
+        void SetActiveListener(nsIXPIListener *aListener) 
+            { mActive = aListener; }
 
         NS_DECL_ISUPPORTS
 
-        // implements nsIXPINotifier
-        NS_DECL_NSIXPINOTIFIER
+        // implements nsIXPIListener
+        NS_DECL_NSIXPILISTENER
    
    private:
-        nsVoidArray     *mNotifiers;
-        nsCOMPtr<nsIXPINotifier>  mActive;
+        nsVoidArray     *mListeners;
+        nsCOMPtr<nsIXPIListener>  mActive;
 
 };
 

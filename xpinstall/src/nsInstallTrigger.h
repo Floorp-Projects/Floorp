@@ -14,11 +14,11 @@
 #include "nsSoftwareUpdate.h"
 #include "nsXPITriggerInfo.h"
 
-#define CHROMETYPE_SAFESKIN      1
-#define CHROMETYPE_LOCALE        2
-#define CHROMETYPE_SAFEMAX       CHROMETYPE_LOCALE
-#define CHROMETYPE_SCRIPTSKIN    3
-#define CHROMETYPE_PACKAGE       4
+#define CHROME_SKIN         1
+#define CHROME_LOCALE       2
+#define CHROME_SAFEMAX      CHROME_LOCALE
+#define CHROME_CONTENT      4
+#define CHROME_ALL          7
 
 
 class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTriggerGlobal
@@ -52,8 +52,6 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         
     private:
         void *mScriptObject;
-        void CreateTempFileFromURL(const nsString& aURL, nsString& tempFileString);
-
 };
 
 #define NS_INSTALLTRIGGERCOMPONENT_PROGID NS_IXPINSTALLCOMPONENT_PROGID "/installtrigger"

@@ -480,6 +480,7 @@ nsInstallTrigger::GetVersion(const nsString& component, nsString& version)
 }
 
 
+#if 0
 // this will take a nsIURI, and create a temporary file.  If it is local, we just us it.
  
 void
@@ -523,5 +524,5 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
         tempFileString.AssignWithConversion( NS_STATIC_CAST(const char*, nsNSPRPath( nsFilePath(tempFile) )) );
     }
 }
-
+#endif
 

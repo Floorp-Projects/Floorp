@@ -65,7 +65,10 @@
 
 #include "nsIEventQueueService.h"
 #include "nsProxyObjectManager.h"
+#include "nsProxiedService.h"
+#include "nsIChromeRegistry.h"
 
+extern "C" void RunChromeInstallOnThread(void *data);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
@@ -88,6 +91,7 @@ static NS_DEFINE_CID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
 static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_CID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(knsRegistryCID, NS_REGISTRY_CID);
 
 nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
@@ -246,8 +250,8 @@ nsSoftwareUpdate::Initialize( nsIAppShellService *anAppShell, nsICmdLineService 
     /* Create a top level observer         */
     /***************************************/
 
-    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
-    RegisterNotifier(logger);
+    nsLoggingProgressListener *logger = new nsLoggingProgressListener();
+    RegisterListener(logger);
     
 #if NOTIFICATION_ENABLE
     /***************************************/
@@ -281,33 +285,33 @@ nsSoftwareUpdate::Shutdown()
 
 
 NS_IMETHODIMP 
-nsSoftwareUpdate::RegisterNotifier(nsIXPINotifier *notifier)
+nsSoftwareUpdate::RegisterListener(nsIXPIListener *aListener)
 {
     // we are going to ignore the returned ID and enforce that once you 
-    // register a notifier, you can not remove it.  This should at some
+    // register a Listener, you can not remove it.  This should at some
     // point be fixed.
 
-    (void) mMasterNotifier.RegisterNotifier(notifier);
+    (void) mMasterListener.RegisterListener(aListener);
     
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSoftwareUpdate::GetMasterNotifier(nsIXPINotifier **notifier)
+nsSoftwareUpdate::GetMasterListener(nsIXPIListener **aListener)
 {
-    NS_ASSERTION(notifier, "getter has invalid return pointer");
-    if (!notifier)
+    NS_ASSERTION(aListener, "getter has invalid return pointer");
+    if (!aListener)
         return NS_ERROR_NULL_POINTER;
 
-    *notifier = &mMasterNotifier;
+    *aListener = &mMasterListener;
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsSoftwareUpdate::SetActiveNotifier(nsIXPINotifier *notifier)
+nsSoftwareUpdate::SetActiveListener(nsIXPIListener *aListener)
 {
-    mMasterNotifier.SetActiveNotifier(notifier);
+    mMasterListener.SetActiveListener(aListener);
     return NS_OK;
 }
 
@@ -315,14 +319,25 @@ NS_IMETHODIMP
 nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
                                const PRUnichar* aURL,
                                const PRUnichar* aArguments,
-                               long flags,
-                               nsIXPINotifier* aNotifier)
+                               PRUint32 flags,
+                               nsIXPIListener* aListener)
 {
     if ( !aLocalFile )
         return NS_ERROR_NULL_POINTER;
 
-    nsInstallInfo *info =
-        new nsInstallInfo( aLocalFile, aURL, aArguments, flags, aNotifier );
+    // -- grab a proxied Chrome Registry now while we can
+    nsresult rv;
+    nsIChromeRegistry* chromeReg = nsnull;
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry, 
+                                    tmpReg,
+                                    kChromeRegistryCID, 
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_SUCCEEDED(rv))
+        chromeReg = tmpReg;
+
+    // we want to call this with or without a chrome registry
+    nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments,
+                                             flags, aListener, chromeReg );
     
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -331,6 +346,44 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     mJarInstallQueue.AppendElement( info );
     PR_Unlock(mLock);
     RunNextInstall();
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSoftwareUpdate::InstallChrome( PRUint32 aType,
+                                 nsIFile* aFile,
+                                 const PRUnichar* URL,
+                                 const PRUnichar* aName,
+                                 PRBool aSelect,
+                                 nsIXPIListener* aListener)
+{
+    nsresult rv;
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIChromeRegistry,
+                                    chromeReg,
+                                    kChromeRegistryCID, 
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsInstallInfo *info = new nsInstallInfo( aType,
+                                             aFile,
+                                             URL,
+                                             aName,
+                                             (PRUint32)aSelect,
+                                             aListener,
+                                             chromeReg);
+    if (!info)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_CreateThread(PR_USER_THREAD,
+                    RunChromeInstallOnThread,
+                    (void*)info,
+                    PR_PRIORITY_NORMAL,
+                    PR_GLOBAL_THREAD,
+                    PR_UNJOINABLE_THREAD,
+                    0);
 
     return NS_OK;
 }
@@ -513,8 +566,8 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir)
         VR_SetRegDirectory( tempPath );
 
     // Create the logfile observer
-    nsLoggingProgressNotifier *logger = new nsLoggingProgressNotifier();
-    RegisterNotifier(logger);
+    nsLoggingProgressListener *logger = new nsLoggingProgressListener();
+    RegisterListener(logger);
 
     // setup version registry path
     char*    path;

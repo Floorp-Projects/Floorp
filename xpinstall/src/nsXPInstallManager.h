@@ -37,6 +37,7 @@
 #include "nsIXPINotifier.h"
 #include "nsXPITriggerInfo.h"
 #include "nsIXPIProgressDlg.h"
+#include "nsIChromeRegistry.h"
 
 #include "nsISoftwareUpdate.h"
 
@@ -51,7 +52,7 @@
 #include "nsIDialogParamBlock.h"
 
 
-class nsXPInstallManager : public nsIXPINotifier, 
+class nsXPInstallManager : public nsIXPIListener, 
                            public nsIStreamListener,
                            public nsIProgressEventSink,
                            public nsIInterfaceRequestor,
@@ -71,8 +72,8 @@ class nsXPInstallManager : public nsIXPINotifier,
         // nsIStreamListener
         NS_DECL_NSISTREAMLISTENER
         
-        // IXPINotifier methods
-        NS_DECL_NSIXPINOTIFIER
+        // IXPIListener methods
+        NS_DECL_NSIXPILISTENER
 
         // nsIProgressEventSink
         NS_DECL_NSIPROGRESSEVENTSINK
@@ -87,6 +88,7 @@ class nsXPInstallManager : public nsIXPINotifier,
     private:
         NS_IMETHOD  DownloadNext();
         void        Shutdown();
+        NS_IMETHOD  GetDestinationFile(nsString& url, nsILocalFile* *file);
         void        LoadDialogWithNames(nsIDialogParamBlock* ioParamBlock);
         PRBool      ConfirmInstall(nsIDialogParamBlock* ioParamBlock);
         PRBool      ConfirmChromeInstall();
@@ -101,9 +103,8 @@ class nsXPInstallManager : public nsIXPINotifier,
         PRBool              mSelectChrome;
         PRInt32             mContentLength;
 
-        nsCOMPtr<nsIXPIProgressDlg>  mProxy;
+        nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIStringBundle>    mStringBundle;
-
 };
 
 #endif

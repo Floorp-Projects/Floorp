@@ -27,41 +27,41 @@
 
 extern PRInt32 gInstallStatus;
 
-nsStubNotifier::nsStubNotifier( pfnXPIProgress aProgress )
+nsStubListener::nsStubListener( pfnXPIProgress aProgress )
     : m_progress(aProgress)
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsStubNotifier::~nsStubNotifier()
+nsStubListener::~nsStubListener()
 {}
 
-NS_IMPL_ISUPPORTS(nsStubNotifier, NS_GET_IID(nsIXPINotifier));
+NS_IMPL_ISUPPORTS(nsStubListener, NS_GET_IID(nsIXPIListener));
 
 
 NS_IMETHODIMP
-nsStubNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
+nsStubListener::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
+nsStubListener::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
+nsStubListener::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
     // we're not interested in this one
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsStubNotifier::ItemScheduled(const PRUnichar* message )
+nsStubListener::ItemScheduled(const PRUnichar* message )
 {
     if (m_progress)
       {
@@ -73,7 +73,7 @@ nsStubNotifier::ItemScheduled(const PRUnichar* message )
 }
 
 NS_IMETHODIMP
-nsStubNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsStubListener::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
 {
     if (m_progress)
       {
@@ -85,7 +85,7 @@ nsStubNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRIn
 }
 
 NS_IMETHODIMP
-nsStubNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
+nsStubListener::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
 //    if (m_final)
 //        m_final( nsCAutoString(URL), status );
@@ -94,7 +94,7 @@ nsStubNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 }
 
 NS_IMETHODIMP
-nsStubNotifier::LogComment(const PRUnichar* comment)
+nsStubListener::LogComment(const PRUnichar* comment)
 {
     // we're not interested in this one
     return NS_OK;

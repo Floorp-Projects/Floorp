@@ -33,7 +33,10 @@
 #include "nsIServiceManager.h"
 
 #include "nsSpecialSystemDirectory.h"
+#include "nsProxiedService.h"
 #include "nsFileStream.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 
 #include "nspr.h"
 #include "jsapi.h"
@@ -43,10 +46,10 @@
 #include "nsIZipReader.h"
 #include "nsIJSRuntimeService.h"
 #include "nsCOMPtr.h"
-
-#include "nsIEventQueueService.h"
+#include "nsXPIDLString.h"
 #include "nsILocalFile.h"
-
+#include "nsIChromeRegistry.h"
+#include "nsInstallTrigger.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
@@ -355,7 +358,7 @@ extern "C" void RunInstallOnThread(void *data)
     PRInt32     finalStatus;
     PRBool      sendStatus = PR_TRUE;
 
-    nsIXPINotifier *notifier;
+    nsIXPIListener *listener;
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -374,20 +377,13 @@ extern "C" void RunInstallOnThread(void *data)
         return;
     }
 
-    softwareUpdate->SetActiveNotifier( installInfo->GetNotifier() );
-    softwareUpdate->GetMasterNotifier(&notifier);
+    softwareUpdate->SetActiveListener( installInfo->GetListener() );
+    softwareUpdate->GetMasterListener(&listener);
     
-    nsString url;
-    installInfo->GetURL(url);
-
-    if(notifier)
-        notifier->BeforeJavascriptEvaluation( url.GetUnicode() );
+    if(listener)
+        listener->BeforeJavascriptEvaluation( installInfo->GetURL() );
     
-    nsString args;
-    installInfo->GetArguments(args);
-
-    nsCOMPtr<nsIFile> jarpath;
-    rv = installInfo->GetLocalFile(getter_AddRefs(jarpath));
+    nsCOMPtr<nsIFile> jarpath = installInfo->GetFile();
     if (NS_SUCCEEDED(rv))
     {
         finalStatus = GetInstallScriptFromJarfile( hZip,
@@ -409,8 +405,8 @@ extern "C" void RunInstallOnThread(void *data)
             }
 
             rv = SetupInstallContext( hZip, jarpath,
-                                      url.GetUnicode(),
-                                      args.GetUnicode(),
+                                      installInfo->GetURL(),
+                                      installInfo->GetArguments(),
                                       installInfo->GetFlags(),
                                       rt, &cx, &glob);
 
@@ -481,16 +477,111 @@ extern "C" void RunInstallOnThread(void *data)
         finalStatus = nsInstall::DOWNLOAD_ERROR;
     }
 
-    if(notifier) 
+    if(listener) 
     {
         if ( sendStatus )
-            notifier->FinalStatus( url.GetUnicode(), finalStatus );
+            listener->FinalStatus( installInfo->GetURL(), finalStatus );
 
-        notifier->AfterJavascriptEvaluation( url.GetUnicode() );
+        listener->AfterJavascriptEvaluation( installInfo->GetURL() );
     }
 
     if (scriptBuffer) delete [] scriptBuffer;
 
-    softwareUpdate->SetActiveNotifier(0);
+    softwareUpdate->SetActiveListener(0);
     softwareUpdate->InstallJarCallBack();
+}
+
+
+//-----------------------------------------------------------------------------
+// RunChromeInstallOnThread
+//
+// Performs the guts of a chrome install on its own thread
+//
+// XXX: need to return errors/status somehow. What feedback will a user want?
+// How do we get it there? Maybe just alerts on errors, could also dump to
+// the new console service.
+//-----------------------------------------------------------------------------
+extern "C" void RunChromeInstallOnThread(void *data)
+{
+    nsresult rv;
+
+    NS_ASSERTION(data, "No nsInstallInfo passed to Chrome Install");
+    nsInstallInfo *info = (nsInstallInfo*)data;
+    nsIXPIListener* listener = info->GetListener();
+
+    if (listener)
+        listener->BeforeJavascriptEvaluation(info->GetURL());
+
+    // make sure we've got a chrome registry -- can't proceed if not
+    nsIChromeRegistry* reg = info->GetChromeRegistry();
+    if (reg)
+    {
+        // build up jar: URL
+        nsCString spec;
+        spec.SetCapacity(200);
+        spec = "jar:";
+
+        nsCOMPtr<nsIURI> pURL;
+        rv = NS_NewURI(getter_AddRefs(pURL), "file:");
+        if (NS_SUCCEEDED(rv)) 
+        {
+            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(pURL);
+            if (fileURL)
+                rv = fileURL->SetFile(info->GetFile());
+            else
+                rv = NS_ERROR_NO_INTERFACE;
+
+            if (NS_SUCCEEDED(rv))
+            {
+                nsXPIDLCString localURL;
+                rv = fileURL->GetSpec(getter_Copies(localURL));
+                spec.Append(localURL);
+                spec.Append("!/");
+            }
+        }
+
+        // Now register the new chrome
+        if (NS_SUCCEEDED(rv))
+        {
+            PRBool isSkin    = (info->GetType() & CHROME_SKIN);
+            PRBool isLocale  = (info->GetType() & CHROME_LOCALE);
+            PRBool isContent = (info->GetType() & CHROME_CONTENT);
+            PRBool selected  = (info->GetFlags() != 0);
+ 
+            if ( isContent )
+            {
+                rv = reg->InstallPackage(spec.GetBuffer(), PR_TRUE);
+            }
+
+            if ( isSkin )
+            {
+                rv = reg->InstallSkin(spec.GetBuffer(), PR_TRUE);
+                if (NS_SUCCEEDED(rv) && selected)
+                {
+                    rv = reg->SelectSkin(info->GetArguments(), PR_TRUE);
+                }
+            }
+
+            if ( isLocale ) 
+            {
+                rv = reg->InstallLocale(spec.GetBuffer(), PR_TRUE);
+                if (NS_SUCCEEDED(rv) && selected)
+                {
+                    rv = reg->SelectLocale(info->GetArguments(), PR_TRUE);
+                }
+            }
+
+            // now that all types are registered try to activate
+            if ( isSkin && selected )
+                reg->RefreshSkins();
+ 
+            if ( isContent || (isLocale && selected) )
+                reg->ReloadChrome();
+        }
+    }
+
+    if (listener)
+        listener->AfterJavascriptEvaluation(info->GetURL());
+
+    delete info;
 }

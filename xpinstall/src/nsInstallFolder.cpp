@@ -93,6 +93,13 @@ nsInstallFolder::nsInstallFolder()
 }
 
 nsresult
+nsInstallFolder::Init(nsIFile* rawIFile)
+{
+    mFileSpec = rawIFile;
+    return NS_OK;
+}
+
+nsresult
 nsInstallFolder::Init(const nsString& aFolderID, const nsString& aRelativePath)
 {
 

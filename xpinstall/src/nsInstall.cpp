@@ -100,35 +100,29 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
 
-nsInstallInfo::nsInstallInfo(nsIFile*         aFile, 
-                             const PRUnichar* aURL,
-                             const PRUnichar* aArgs, 
-                             PRUint32         flags, 
-                             nsIXPINotifier*  aNotifier)
-: mError(0), 
+nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
+                             nsIFile*           aFile, 
+                             const PRUnichar*   aURL,
+                             const PRUnichar*   aArgs, 
+                             PRUint32           flags, 
+                             nsIXPIListener*    aListener,
+                             nsIChromeRegistry* aChromeReg)
+: mError(0),
+  mType(aInstallType),
   mFlags(flags),
   mURL(aURL),
   mArgs(aArgs), 
   mFile(aFile), 
-  mNotifier(aNotifier)
+  mListener(aListener),
+  mChromeReg(aChromeReg)
 {
     MOZ_COUNT_CTOR(nsInstallInfo);
 }
 
 
-
 nsInstallInfo::~nsInstallInfo()
 {
   MOZ_COUNT_DTOR(nsInstallInfo);
-}
-
-nsresult
-nsInstallInfo::GetLocalFile(nsIFile** aSpec)
-{
-    if (!mFile)
-       return NS_ERROR_NULL_POINTER;
-      
-    return mFile->Clone(getter_AddRefs(aSpec));
 }
 
 
@@ -170,7 +164,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     
     if (NS_SUCCEEDED(rv))
     {
-        su->GetMasterNotifier( &mNotifier );
+        su->GetMasterListener( &mListener );
     }
 
     su->Release();
@@ -254,9 +248,9 @@ nsInstall::GetRegPackageName(nsString& aRegPackageName)
 void
 nsInstall::InternalAbort(PRInt32 errcode)
 {
-    if (mNotifier)
+    if (mListener)
     {
-        mNotifier->FinalStatus(mInstallURL.GetUnicode(), errcode);
+        mListener->FinalStatus(mInstallURL.GetUnicode(), errcode);
         mStatusSent = PR_TRUE;
     }
 
@@ -785,9 +779,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     if (*aReturn != nsInstall::SUCCESS)
     {
         SaveError( *aReturn );
-        if (mNotifier)
+        if (mListener)
         {
-            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
         return NS_OK;
@@ -850,12 +844,12 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 }
             }
 
-            if (mNotifier)
+            if (mListener)
             {
                 char *objString = ie->toString();
                 if (objString)
                 {
-                    mNotifier->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
+                    mListener->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
                                                (i+1), mInstalledFiles->Count());
                     delete [] objString;
                 }
@@ -884,9 +878,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         else
             *aReturn = SaveError( result );
 
-        if (mNotifier)
+        if (mListener)
         {
-            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
       }
@@ -896,9 +890,9 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         // no actions queued: don't register the package version
         // and no need for user confirmation
 
-        if (mNotifier)
+        if (mListener)
         {
-            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mListener->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
             mStatusSent = PR_TRUE;
         }
     }
@@ -1489,8 +1483,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         return SaveError(nsInstall::OUT_OF_MEMORY);
     }
 
-    if (mNotifier)
-            mNotifier->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
+    if (mListener)
+            mListener->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
 
     mStartInstallCompleted = PR_TRUE;
     return NS_OK;
@@ -2023,8 +2017,8 @@ nsInstall::FileOpFileUnixLink(nsInstallFolder& aTarget, PRInt32 aFlags, PRInt32*
 void
 nsInstall::LogComment(nsString& aComment)
 {
-  if(mNotifier)
-    mNotifier->LogComment(aComment.GetUnicode());
+  if(mListener)
+    mListener->LogComment(aComment.GetUnicode());
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -2046,8 +2040,8 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 
     // flash current item
 
-    if (mNotifier)
-        mNotifier->ItemScheduled(NS_ConvertASCIItoUCS2(objString).GetUnicode());
+    if (mListener)
+        mListener->ItemScheduled(NS_ConvertASCIItoUCS2(objString).GetUnicode());
 
 
     // do any unpacking or other set-up
@@ -2067,7 +2061,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
         if (ob->RegisterPackageNode())
             mRegisterPackage = PR_TRUE;
     }
-    else if ( mNotifier )
+    else if ( mListener )
     {
         // error in preparation step -- log it
         char* errRsrc = GetResourcedString(NS_ConvertASCIItoUCS2("ERROR"));
@@ -2077,7 +2071,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
             nsString errstr; errstr.AssignWithConversion(errprefix);
             errstr.AppendWithConversion(objString);
 
-            mNotifier->LogComment( errstr.GetUnicode() );
+            mListener->LogComment( errstr.GetUnicode() );
 
             PR_smprintf_free(errprefix);
             nsCRT::free(errRsrc);
@@ -2317,14 +2311,6 @@ nsInstall::CleanUp(void)
     mStartInstallCompleted = PR_FALSE;
 }
 
-
-void       
-nsInstall::GetJarFileLocation(nsString& aFile)
-{
-    char* temp;
-    mJarFileLocation->GetPath(&temp);
-    aFile.AssignWithConversion(temp);
-}
 
 void       
 nsInstall::SetJarFileLocation(nsIFile* aFile)

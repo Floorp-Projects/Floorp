@@ -326,7 +326,7 @@ nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajo
                 *aRelease = releaseStr.ToInteger(&errorCode);
     
                 prev = dot+1;
-                if ( version.Length() > dot ) 
+                if ( (int)version.Length() > dot ) 
                 {
                     nsString buildStr;
                     version.Mid(buildStr, prev, version.Length() - prev);
