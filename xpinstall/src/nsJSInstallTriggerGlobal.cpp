@@ -431,7 +431,7 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
   // get the registry name argument
   ConvertJSValToStr(regname, cx, argv[0]);
 
-  if (argc = 2 )
+  if (argc == 2 )
   {
     //  public int CompareVersion(String registryName, String version)
     //  --OR-- CompareVersion(String registryNamve, InstallVersion version)
