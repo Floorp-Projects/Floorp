@@ -677,15 +677,19 @@ BOOL CSaveCX::CanCreate(URL_Struct* pUrl)
 
             //  If this file exists, then we must attempt another temp file.
             if(-1 != _access(pLocalName, 0))    {
-				int type = NET_URL_Type(pUrl->address);
+				int type = HTTP_TYPE_URL;
+				if(pUrl)	{
+					type = NET_URL_Type(pUrl->address);
+				}
+
 				// bug 63751 for Mail/News attachment
 				if ((type == MAILBOX_TYPE_URL) || (type == NEWS_TYPE_URL) || (type == IMAP_TYPE_URL))  
 				{
-	#ifdef XP_WIN16
+#ifdef XP_WIN16
 					pLocalName = GetMailNewsTempFileName(pLocalName, dosName);
-	#else 
+#else 
 					pLocalName = GetMailNewsTempFileName(pLocalName);
-	#endif
+#endif
 #ifdef MOZ_MAIL_NEWS
 					AddFileExtension( pLocalName );
 #endif
