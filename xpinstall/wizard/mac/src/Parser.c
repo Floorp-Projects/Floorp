@@ -724,6 +724,10 @@ PopulateTermWinKeys(char *cfgText)
 		}
 	}
 	
+	/* save bits msg */
+	gControls->cfg->saveBitsMsg = NewHandleClear(kValueMaxLen);
+	FillKeyValueUsingResID(sTermDlg, sMsg1, gControls->cfg->saveBitsMsg, cfgText);
+	
 	if (cSection)
 		DisposePtr((Ptr)cSection);
 	if (cDesc)

@@ -190,6 +190,7 @@ InitOptObject(void)
 	
 	/* TerminalWIn options */
 	gControls->opt->siteChoice = 1;
+	gControls->opt->saveBits = false;
 	
 	gControls->opt->vRefNum = -1;
 	err = FSMakeFSSpec(gControls->opt->vRefNum, 0, "\p", &tmp);

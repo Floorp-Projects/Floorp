@@ -40,7 +40,11 @@ ShowTerminalWin(void)
 	MenuHandle 			popupMenu;
 	PopupPrivateData ** pvtDataHdl;
 	unsigned char *		currMenuItem;
-	short 				i;
+	short 				i, vRefNum;
+	long 				cwdDirID, dirID;
+	Boolean				isDir = false;
+	Str255				pModulesDir;
+	OSErr 				err = noErr;
 #endif /* MOZILLA == 0 */
 	GrafPtr		oldPort;
 	GetPort(&oldPort);
@@ -76,6 +80,7 @@ ShowTerminalWin(void)
 	    }
 	    
 #if MOZILLA == 0	
+        // site selector
 		if (gControls->cfg->numSites > 0)
 		{
 			gControls->tw->siteSelector = NULL;
@@ -103,6 +108,54 @@ ShowTerminalWin(void)
 			SetControlMaximum(gControls->tw->siteSelector, gControls->cfg->numSites);
 			SetControlValue(gControls->tw->siteSelector, gControls->opt->siteChoice);
 			ShowControl(gControls->tw->siteSelector);
+		}
+		
+		// save bits after download and install
+	
+		/* get the "Installer Modules" relative subdir */
+		ERR_CHECK(GetCWD(&cwdDirID, &vRefNum));
+		GetIndString(pModulesDir, rStringList, sInstModules);
+		GetDirectoryID(vRefNum, cwdDirID, pModulesDir, &dirID, &isDir);
+		if (isDir)
+		{
+			if (!ExistArchives(vRefNum, dirID))  // going to download
+			{
+				// show check box and message
+				gControls->tw->saveBitsCheckbox = GetNewControl( rSaveCheckbox, gWPtr );
+				if (!gControls->tw->saveBitsCheckbox)
+				{
+					ErrorHandler();
+					return;
+				}
+				ShowControl(gControls->tw->saveBitsCheckbox);
+				
+				// get rect for save bits message
+				rectH = Get1Resource('RECT', rSaveBitsMsgBox);
+				reserr = ResError();
+				if (reserr == noErr && rectH != NULL)
+					 gControls->tw->saveBitsMsgBox  = (Rect) **((Rect **)rectH);
+				else
+				{
+					ErrorHandler();
+					return;
+				}
+				
+				// get text edit record for save bits message
+				gControls->tw->saveBitsMsg = TENew(&gControls->tw->saveBitsMsgBox,
+												   &gControls->tw->saveBitsMsgBox );
+			    if (gControls->tw->saveBitsMsg == NULL)
+			    {
+			    	ErrorHandler();
+			    	return;
+			    }
+			    HLock(gControls->cfg->saveBitsMsg);
+				TESetText(*gControls->cfg->saveBitsMsg, strlen(*gControls->cfg->saveBitsMsg),
+					gControls->tw->saveBitsMsg);
+				HUnlock(gControls->cfg->saveBitsMsg);
+	
+				// show controls
+				TEUpdate(&gControls->tw->saveBitsMsgBox, gControls->tw->saveBitsMsg);
+			}
 		}
 #endif /* MOZILLA == 0 */
 		
@@ -152,6 +205,7 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 	ControlPartCode	part;
 #if MOZILLA == 0
 	ControlHandle	currCntl;
+	short 			checkboxVal;
 #endif /* MOZILLA == 0 */
 	ThreadID 		tid;
 	GrafPtr			oldPort;
@@ -172,6 +226,22 @@ InTerminalContent(EventRecord* evt, WindowPtr wCurrPtr)
 		gControls->opt->siteChoice = GetControlValue(currCntl);
 		return;
 	}		
+	
+	HLock((Handle)gControls->tw->saveBitsCheckbox);
+	r = (**(gControls->tw->saveBitsCheckbox)).contrlRect;
+	HUnlock((Handle)gControls->tw->saveBitsCheckbox);
+	if (PtInRect(localPt, &r))
+	{
+		part = FindControl(localPt, gWPtr, &currCntl);
+		part = TrackControl(currCntl, localPt, (ControlActionUPP) -1);
+		checkboxVal = GetControlValue(currCntl);
+		SetControlValue(currCntl, 1 - checkboxVal);
+		if (checkboxVal)  // was selected so now toggling off
+			gControls->opt->saveBits = false;
+		else			  // was not selected so now toggling on
+			gControls->opt->saveBits = true;
+		return;
+	}
 #endif /* MOZILLA == 0 */
 					
 	HLock((Handle)gControls->backB);
