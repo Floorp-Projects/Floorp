@@ -75,12 +75,13 @@ function initOutliners()
     var atomsvc =
         Components.classes[ATOM_CTRID].getService(nsIAtomService);
 
-    console.sourceView.atomCurrent = atomsvc.getAtom("current-line");
-    console.sourceView.atomBreakpoint = atomsvc.getAtom("breakpoint");
-    console.sourceView.atomFunctionStart = atomsvc.getAtom("func-start");
-    console.sourceView.atomFunctionLine = atomsvc.getAtom("func-line");
-    console.sourceView.atomFunctionEnd = atomsvc.getAtom("func-end");
-    console.sourceView.atomFunctionAfter = atomsvc.getAtom("func-after");
+    console.sourceView.atomCurrent        = atomsvc.getAtom("current-line");
+    console.sourceView.atomHighlightStart = atomsvc.getAtom("highlight-start");
+    console.sourceView.atomHighlightRange = atomsvc.getAtom("highlight-range");
+    console.sourceView.atomHighlightEnd   = atomsvc.getAtom("highlight-end");
+    console.sourceView.atomBreakpoint     = atomsvc.getAtom("breakpoint");
+    console.sourceView.atomCode           = atomsvc.getAtom("code");
+    console.sourceView.atomWhitespace     = atomsvc.getAtom("whitespace");
 
     var outliner = document.getElementById("source-outliner");
     outliner.outlinerBoxObject.view = console.sourceView;
@@ -97,6 +98,9 @@ function initOutliners()
 
     outliner = document.getElementById("script-list-outliner");
     outliner.outlinerBoxObject.view = console.scriptsView;
+    outliner.setAttribute ("ondraggesture",
+                           "nsDragAndDrop.startDrag(event, " +
+                           "console.scriptsView);");
 
     outliner = document.getElementById("stack-outliner");
     outliner.outlinerBoxObject.view = console.stackView;
@@ -164,7 +168,7 @@ function sv_scrollto (line, align)
 }
 
 /*
- * pass in a ScriptContainer to be displayed on this outliner
+ * pass in a SourceRecord to be displayed on this outliner
  */
 console.sourceView.displaySource =
 function sov_dsource (source)
@@ -272,33 +276,57 @@ function sv_rowprops (row, properties)
     {
         properties.AppendElement(this.atomCurrent);
     }
-
 }
 
 /* nsIOutlinerView */
 console.sourceView.getCellProperties =
 function sv_cellprops (row, colID, properties)
 {
-    if (!this.childData.isLoaded)
+    if (!("childData" in this) || !this.childData.isLoaded ||
+        row < 0 || row > this.childData.sourceText.length)
         return;
 
     var line = this.childData.sourceText[row];
     if (!line)
         return;
     
-    if (colID == "breakpoint-col" && 
-        this.childData.sourceText[row].bpRecord)
-        properties.AppendElement(this.atomBreakpoint);
-    
-    if (line.functionLine)
+    if (colID == "breakpoint-col")
     {
-        properties.AppendElement(this.atomFunctionLine);
-        if (line.functionStart)
-            properties.AppendElement(this.atomFunctionStart);
-        if (linefunctionEnd)
-            properties.AppendElement(this.atomFunctionEnd);
-    } else if (row > 0 && this.childData.sourceText[row - 1].functionEnd)
-        properties.AppendElement(this.atomFunctionAfter);
+        if (this.childData.sourceText[row].bpRecord)
+            properties.AppendElement(this.atomBreakpoint);
+        else if (this.childData.lineMap[row])
+            properties.AppendElement(this.atomCode);
+        else
+            properties.AppendElement(this.atomWhitespace);
+    }
+    
+    if ("highlightStart" in console)
+    {
+        var atom;
+        if (row == console.highlightStart)
+        {
+            atom = this.atomHighlightStart;
+        }
+        else if (row == console.highlightEnd)
+        {
+            atom = this.atomHighlightEnd;
+        }
+        else if (row > console.highlightStart && row < console.highlightEnd)
+        {
+            atom = this.atomHighlightRange;
+        }
+        
+        if (atom && console.highlightFile == this.childData.fileName)
+        {
+            properties.AppendElement(atom);
+        }
+    }
+
+    if (row == console.stopLine - 1 && 
+        console.stopFile == this.childData.fileName)
+    {
+        properties.AppendElement(this.atomCurrent);
+    }
 }
 
 /* nsIOutlinerView */
@@ -372,6 +400,52 @@ function SourceRecord(fileName)
 
 SourceRecord.prototype = new TreeOViewRecord(scriptShare);
 
+SourceRecord.prototype.onDragStart =
+function sr_dragstart (e, transferData, dragAction)
+{        
+    transferData.data = new TransferData();
+    transferData.data.addDataForFlavour("text/x-venkman-file", this.fileName);
+    transferData.data.addDataForFlavour("text/x-moz-url", this.fileName);
+    transferData.data.addDataForFlavour("text/unicode", this.fileName);
+    transferData.data.addDataForFlavour("text/html",
+                                        "<a href='" + this.fileName +
+                                        "'>" + this.fileName + "</a>");
+    return true;
+}    
+
+SourceRecord.prototype.appendScriptRecord =
+function sr_addscript(scriptRec)
+{
+    this.appendChild (scriptRec);
+}
+
+SourceRecord.prototype.__defineGetter__ ("lineMap", sr_getmap);
+function sr_getmap ()
+{
+    if (!("_lineMap" in this))
+    {
+        console.pushStatus (getMsg(MSN_STATUS_MARKING, this.shortName));
+        this._lineMap = new Array();
+    
+        for (var i = 0; i < this.childData.length; ++i)
+        {
+            var scriptRec = this.childData[i];
+            var end = scriptRec.baseLineNumber + scriptRec.lineExtent;
+            for (var j = scriptRec.baseLineNumber; j < end; ++j)
+            {
+                if (!this._lineMap[j] &&
+                    scriptRec.script.isLineExecutable(j + 1))
+                {
+                    this._lineMap[j] = true;
+                }
+            }
+        }
+        console.popStatus();
+    }
+    
+    return this._lineMap;
+}
+
 SourceRecord.prototype.isLoaded = false;
 
 SourceRecord.prototype.sortCompare =
@@ -417,6 +491,11 @@ function sr_makecur ()
         else
             console.sourceView.scrollTo (0, -1);
     }
+
+    console.sourceView.outliner.invalidate();
+    delete console.highlightFile;
+    delete console.highlightStart;
+    delete console.highlightEnd;
 }
 
 SourceRecord.prototype.reloadSource =
@@ -536,6 +615,7 @@ function sr_loadsrc (cb)
             
             console.scriptsView.outliner.invalidate();
             callall(status);
+            console.popStatus();
         }
     };
 
@@ -550,6 +630,7 @@ function sr_loadsrc (cb)
     catch (ex)
     {
         /* if we can't load it now, try to load it later */
+        console.pushStatus (getMsg(MSN_STATUS_LOADING, this.fileName));
         loadURLAsync (this.fileName, observer);
     }
 
@@ -578,36 +659,47 @@ function ScriptRecord(script)
     this.baseLineNumber = script.baseLineNumber;
     this.lineExtent = script.lineExtent;
     this.script = script;
+
+    this.jsdurl = "jsd:sourcetext?url=" + escape(this.script.fileName) + 
+        "&base=" + this.baseLineNumber + "&" + "extent=" + this.lineExtent +
+        "&name=" + this.functionName;
 }
 
 ScriptRecord.prototype = new TreeOViewRecord(scriptShare);
+
+ScriptRecord.prototype.onDragStart =
+function sr_dragstart (e, transferData, dragAction)
+{        
+    var fileName = this.script.fileName;
+    transferData.data = new TransferData();
+    transferData.data.addDataForFlavour("text/x-jsd-url", this.jsdurl);
+    transferData.data.addDataForFlavour("text/x-moz-url", fileName);
+    transferData.data.addDataForFlavour("text/unicode", fileName);
+    transferData.data.addDataForFlavour("text/html",
+                                        "<a href='" + fileName +
+                                        "'>" + fileName + "</a>");
+    return true;
+}
 
 ScriptRecord.prototype.makeCurrent =
 function sr_makecur ()
 {
     console.sourceView.displaySource(this.parentRecord);
     console.sourceView.scrollTo (this.baseLineNumber - 2, -1);
-    if (this.parentRecord.isLoaded)
-        console.sourceView.selection.timedSelect (this.baseLineNumber - 1, 500);
-    else
-        console.sourceView.pendingSelect = this.baseLineNumber - 1;
+    console.highlightFile = this.script.fileName;
+    console.highlightStart = this.baseLineNumber - 1;
+    console.highlightEnd = this.baseLineNumber - 1 + this.lineExtent;
+    console.sourceView.outliner.invalidate();
 }
 
 ScriptRecord.prototype.containsLine =
 function sr_containsl (line)
 {
     if (this.script.baseLineNumber <= line && 
-        this.script.baseLineNumber + this.script.lineExtent > line)
+        this.script.baseLineNumber + this.lineExtent > line)
         return true;
     
     return false;
-}
-
-ScriptRecord.prototype.isLineExecutable =
-function sr_isexecutable (line)
-{
-    var pc = this.script.lineToPc (line);
-    return (line == this.script.pcToLine (pc));
 }
 
 ScriptRecord.prototype.__defineGetter__ ("bpcount", sr_getbpcount);
@@ -701,6 +793,26 @@ function sr_guessname ()
     
 console.scriptsView = new TreeOView(scriptShare);
 
+console.scriptsView.onDragStart = Prophylactic(console.scriptsView,
+                                               scv_dstart);
+function scv_dstart (e, transferData, dragAction)
+{
+    var row = new Object();
+    var colID = new Object();
+    var childElt = new Object();
+
+    this.outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+    if (!colID.value)
+        return false;
+    
+    row = this.childData.locateChildByVisualRow (row.value);
+    var rv = false;
+    if (row && ("onDragStart" in row))
+        rv = row.onDragStart (e, transferData, dragAction);
+
+    return rv;
+}
+
 console.scriptsView.fullNameMode = false;
 
 console.scriptsView.setFullNameMode =
@@ -766,7 +878,7 @@ function ValueRecord (value, name, flags)
 {
     if (!(value instanceof jsdIValue))
         throw new BadMojo (ERR_INVALID_PARAM, "value", String(value));
- 
+
     this.setColumnPropertyName ("stack-col-0", "displayName");
     this.setColumnPropertyName ("stack-col-1", "displayType");
     this.setColumnPropertyName ("stack-col-2", "displayValue");
@@ -774,6 +886,7 @@ function ValueRecord (value, name, flags)
     this.displayName = name;
     this.displayFlags = flags;
     this.value = value;
+    this.jsType = null;
     this.refresh();
 }
 
@@ -805,7 +918,7 @@ function vr_refresh ()
         ++sizeDelta;
     }
     
-    if (this.jsType != jsdIValue.TYPE_OBJECT && this.childData)
+    if (this.jsType != jsdIValue.TYPE_OBJECT && "childData" in this)
     {
         /* if we're not an object but we have child data, then we must have just
          * turned into something other than an object. */
@@ -1035,7 +1148,6 @@ function vr_create()
     }
     
     this.childData = new Array();
-    this.isContainerOpen = false;
     
     var p = new Object();
     this.value.getProperties (p, {});
@@ -1085,8 +1197,62 @@ function vr_destroy()
 
 console.stackView = new TreeOView(stackShare);
 
+console.stackView.restoreState =
+function sv_restore ()
+{
+    function restoreBranch (target, source)
+    {
+        for (var i in source)
+        {
+            if (typeof source[i] == "object")
+            {
+                var name = source[i].name;
+                var len = target.length;
+                for (var j = 0; j < len; ++j)
+                {
+                    if (target[j]._colValues["stack-col-0"] == name &&
+                        "childData" in target[j])
+                    {
+                        //dd ("opening " + name);
+                        target[j].open();
+                        restoreBranch (target[j].childData, source[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    if ("savedState" in this) {
+        restoreBranch (this.stack.childData, this.savedState);
+        this.scrollTo (this.savedState.firstVisible, -1);
+    }
+}
+
+console.stackView.saveState =
+function sv_save ()
+{
+    function saveBranch (target, source)
+    {
+        var len = source.length;
+        for (var i = 0; i < len; ++i)
+        {
+            if (source[i].isContainerOpen)
+            {
+                target[i] = new Object();
+                target[i].name = source[i]._colValues["stack-col-0"];
+                saveBranch (target[i], source[i].childData);
+            }
+        }
+    }
+        
+    this.savedState = new Object();
+    this.savedState.firstVisible = this.outliner.getFirstVisibleRow() + 1;
+    saveBranch (this.savedState, this.stack.childData);
+    //dd ("saved as\n" + dumpObjectTree(this.savedState, 10));
+}
+
 console.stackView.refresh =
-function wv_refresh()
+function sv_refresh()
 {
     var sk = this.stack;
     var delta = 0;
@@ -1287,7 +1453,7 @@ function bpr_matchrec (scriptRec)
 {
     return (scriptRec.script.fileName.indexOf(this.fileName) != -1 &&
             scriptRec.containsLine(this.line) &&
-            scriptRec.isLineExecutable(this.line));
+            scriptRec.script.isLineExecutable(this.line));
 }
 
 BPRecord.prototype.addScriptRecord =

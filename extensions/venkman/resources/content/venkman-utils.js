@@ -45,10 +45,43 @@ else
         dumpln = function () {} /* no suitable function */
 }
 
-if (DEBUG)
-    dd = dumpln;
-else
+if (DEBUG) {
+    var _dd_pfx = "";
+    var _dd_singleIndent = "  ";
+    var _dd_indentLength = _dd_singleIndent.length;
+    var _dd_currentIndent = "";
+    var _dd_lastDumpWasOpen = false;
+    var _dd_timeStack = new Array();
+    dd = function _dd (str) {
+             if (typeof str != "string") {
+                 dumpln (str);
+             } else if (str[str.length - 1] == "{") {
+                 _dd_timeStack.push (new Date());
+                 if (_dd_lastDumpWasOpen)
+                     dump("\n");
+                 dump (_dd_pfx + _dd_currentIndent + str);
+                 _dd_currentIndent += _dd_singleIndent;
+                 _dd_lastDumpWasOpen = true;
+             } else if (str[0] == "}") {
+                 var sufx = (new Date() - _dd_timeStack.pop()) / 1000 + " sec";
+                 _dd_currentIndent = 
+                     _dd_currentIndent.substr (0, _dd_currentIndent.length -
+                                               _dd_indentLength);
+                 if (_dd_lastDumpWasOpen)
+                     dumpln ("} " + sufx);
+                 else
+                     dumpln (_dd_pfx + _dd_currentIndent + str + " " + sufx);
+                 _dd_lastDumpWasOpen = false;
+             } else {
+                 if (_dd_lastDumpWasOpen)
+                     dump ("\n");
+                 dumpln (_dd_pfx + _dd_currentIndent + str);
+                 _dd_lastDumpWasOpen = false;
+             }    
+         }
+} else {
     dd = function (){};
+}
 
 var jsenv = new Object();
 jsenv.HAS_SECURITYMANAGER = ((typeof netscape == "object") &&

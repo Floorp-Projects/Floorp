@@ -110,7 +110,10 @@ function con_ondt ()
 {
     var frame = setCurrentFrameByIndex(0);
     var type = console.trapType;
-    
+
+    var frameRec = console.stackView.stack.childData[0];
+    console.pushStatus (getMsg(MSN_STATUS_STOPPED, [frameRec.functionName,
+                                                    frameRec.location]));
     if (type != jsdIExecutionHook.TYPE_INTERRUPTED ||
         console._lastStackDepth != console.frames.length)
     {
@@ -121,7 +124,8 @@ function con_ondt ()
                    (type == jsdIExecutionHook.TYPE_INTERRUPTED) ? 0 : 2);
     
     console._lastStackDepth = console.frames.length;
-    
+
+    console.stackView.restoreState();
     enableDebugCommands()
 
 }
@@ -129,6 +133,7 @@ function con_ondt ()
 console.onDebugContinue =
 function con_ondc ()
 {
+    console.popStatus();
     console.sourceView.outliner.invalidate();
 }
 
@@ -620,7 +625,14 @@ function con_slkeypress (e)
 
 console.onProjectSelect =
 function con_projsel (e)
-{    
+{
+    if (console.projectView.selectedIndex == -1)
+        return;
+    
+    console.scriptsView.selectedIndex = -1;
+    console.stackView.selectedIndex   = -1;
+    console.sourceView.selectedIndex  = -1;
+    
     var rowIndex = console.projectView.selectedIndex;
     if (rowIndex == -1 || rowIndex > console.projectView.rowCount)
         return;
@@ -660,6 +672,13 @@ function con_projsel (e)
 console.onStackSelect =
 function con_stacksel (e)
 {
+    if (console.stackView.selectedIndex == -1)
+        return;
+
+    console.scriptsView.selectedIndex = -1;
+    console.projectView.selectedIndex = -1;
+    console.sourceView.selectedIndex  = -1;
+
     var rowIndex = console.stackView.selectedIndex;
     if (rowIndex == -1 || rowIndex > console.stackView.rowCount)
         return;
@@ -690,34 +709,60 @@ function con_stacksel (e)
         }
         sourceView.displaySource(source);
         sourceView.softScrollTo(row.frame.line);
+        var script = row.frame.script;
+        console.highlightFile = script.fileName;
+        console.highlightStart = script.baseLineNumber - 1;
+        console.highlightEnd = script.baseLineNumber - 1 + script.lineExtent;
     }
     else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
     {
+        if (row.parentRecord instanceof FrameRecord &&
+            row == row.parentRecord.scopeRec)
+            return;
+        
         var objVal = row.value.objectValue;
-        if (!objVal.creatorURL)
+        var creatorURL = objVal.creatorURL;
+        if (!creatorURL)
         {
             dd ("object with no creator");
             return;
         }
         
-        if (!(objVal.creatorURL in console.scripts))
+        if (!(creatorURL in console.scripts))
         {
-            dd ("object from unknown source");
+            dd ("object from unknown source ``" + creatorURL + "''");
             return;
         }
 
-        sourceView.displaySource(console.scripts[objVal.creatorURL]);
-        sourceView.scrollTo (objVal.creatorLine);
-        if (sourceView.childData && sourceView.childData.isLoaded)
-        {
-            sourceView.outliner.selection.timedSelect (objVal.creatorLine -
-                                                       1, 500);
-        }
-        else
-        {
-            sourceView.pendingSelect = objVal.creatorLine - 1;
-        }
+        sourceView.displaySource(console.scripts[creatorURL]);
+        console.highlightFile = creatorURL;
+        var creatorLine = objVal.creatorLine;
+        sourceView.scrollTo (creatorLine);
+        console.highlightStart = console.highlightEnd = creatorLine - 1;
+        console.sourceView.outliner.invalidate();
     }
+}
+
+console.onScriptSelect =
+function con_scptsel (e)
+{
+    if (console.scriptsView.selectedIndex == -1)
+        return;
+
+    console.projectView.selectedIndex = -1;
+    console.stackView.selectedIndex   = -1;
+    console.sourceView.selectedIndex  = -1;
+
+    var rowIndex = console.scriptsView.selectedIndex;
+
+    if (rowIndex == -1 || rowIndex > console.scriptsView.rowCount)
+        return;
+
+    var row =
+        console.scriptsView.childData.locateChildByVisualRow(rowIndex);
+    ASSERT (row, "bogus row");
+    
+    row.makeCurrent();
 }
 
 console.onScriptClick =
@@ -754,19 +799,26 @@ function con_scptclick (e)
     }
 }
 
-console.onScriptSelect =
-function con_scptsel (e)
+console.onSourceSelect =
+function con_sourcesel (e)
 {
-    var rowIndex = console.scriptsView.selectedIndex;
-
-    if (rowIndex == -1 || rowIndex > console.scriptsView.rowCount)
+    if (console.sourceView.selectedIndex == -1)
         return;
-
-    var row =
-        console.scriptsView.childData.locateChildByVisualRow(rowIndex);
-    ASSERT (row, "bogus row");
     
-    row.makeCurrent();
+    console.scriptsView.selectedIndex = -1;
+    console.stackView.selectedIndex   = -1;
+    console.projectView.selectedIndex = -1;
+
+    if (console.sourceView.outliner.selection.getRangeCount() > 1)
+    {
+        var row = new Object();
+        var colID = new Object();
+        var childElt = new Object();
+        
+        var outliner = console.sourceView.outliner;
+        outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);        
+        console.sourceView.selectedIndex = row.value;
+    }
 }
 
 console.onSourceClick =

@@ -133,6 +133,27 @@ function bov_scrollto (line, align)
     }                    
 }       
 
+BasicOView.prototype.__defineGetter__("selectedIndex", bov_getsel);
+function bov_getsel()
+{
+    if (this.outliner.selection.getRangeCount() < 1)
+        return -1;
+
+    var min = new Object();
+    this.outliner.selection.getRangeAt(0, min, {});
+    return min.value;
+}
+
+BasicOView.prototype.__defineSetter__("selectedIndex", bov_setsel);
+function bov_setsel(i)
+{
+    if (i == -1)
+        this.outliner.selection.clearSelection();
+    else
+        this.outliner.selection.timedSelect (i, 500);
+    return i;
+}
+
 /*
  * functions the outliner will call to retrieve the list state (nsIOutlinerView.)
  */
@@ -300,6 +321,8 @@ function TreeOViewRecord(share)
     this.isHidden = true; /* records are considered hidden until they are
                            * inserted into a live tree */
 }
+
+TreeOViewRecord.prototype.isContainerOpen = false;
 
 /*
  * walk the parent tree to find our tree container.  return null if there is
@@ -640,7 +663,7 @@ function tovr_open ()
     this.resort(true);
     this.visualFootprint += delta;
     if ("parentRecord" in this)
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(),
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
                                                    delta);
 }
 
@@ -658,7 +681,7 @@ function tovr_close ()
     var delta = 1 - this.visualFootprint;
     this.visualFootprint += delta;
     if (this.parentRecord)
-        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(),
+        this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow() + 1,
                                                    delta);
     if (this.onPostClose)
         this.onPostClose();
@@ -869,6 +892,11 @@ function torr_calcrow ()
 TORootRecord.prototype.resort =
 function torr_resort ()
 {
+    if ("_treeView" in this && this._treeView.frozen) {
+        this._treeView.needsResort = true;
+        return;
+    }
+    
     if (!("childData" in this) || this.childData.length < 1 ||
         (this.childData[0].sortCompare == tovr_sortcmp &&
          !("sortColumn" in this._share) || this._share.sortDirection == 0))
@@ -938,14 +966,26 @@ function torr_find (targetRow)
 TORootRecord.prototype.onVisualFootprintChanged =
 function torr_vfpchange (start, amount)
 {
-    this.invalidateCache();
-    this.visualFootprint += amount;
-    if ("_treeView" in this && "outliner" in this._treeView)
+    if (!this._treeView.frozen)
     {
-        if (amount != 0)
-            this._treeView.outliner.rowCountChanged (start, amount);
+        this.invalidateCache();
+        this.visualFootprint += amount;
+        if ("_treeView" in this && "outliner" in this._treeView)
+        {
+            if (amount != 0)
+                this._treeView.outliner.rowCountChanged (start, amount);
+            else
+                this._treeView.outliner.invalidateRow (start);
+        }
+    }
+    else
+    {
+        this._treeView.changeAmount += amount;
+        if (this._treeView.changeStart)
+            this._treeView.changeStart = 
+                Math.min (start, this._treeView.changeStart);
         else
-            this._treeView.outliner.invalidateRow (start);
+            this._treeView.changeStart = start;
     }
 }
 
@@ -958,13 +998,59 @@ function TreeOView(share)
 {
     this.childData = new TORootRecord(this, share);
     this.childData.invalidateCache();
+    this.frozen = 0;
 }
 
 /* functions *you* should call to initialize and maintain the outliner state */
 
+/*
+ * Changes to the tree contents will not cause the outliner to be invalidated
+ * until thaw() is called.  All changes will be pooled into a single invalidate
+ * call.
+ *
+ * Freeze/thaws are nestable, the tree will not update until the number of
+ * thaw() calls matches the number of freeze() calls.
+ */
+TreeOView.prototype.freeze =
+function tov_freeze ()
+{
+    if (++this.frozen == 1)
+    {
+        this.changeStart = 0;
+        this.changeAmount = 0;
+    }
+}
+
+/*
+ * Reflect any changes to the tee content since the last freeze.
+ */
+TreeOView.prototype.thaw =
+function tov_thaw ()
+{
+    if (this.frozen == 0)
+    {
+        ASSERT (0, "not frozen");
+        return;
+    }
+    
+    if (--this.frozen == 0)
+    {
+        this.childData.onVisualFootprintChanged(this.changeStart,
+                                                this.changeAmount);
+    }
+    if ("needsResort" in this) {
+        this.childData.resort();
+        delete this.needsResort;
+    }
+    
+    delete this.changeStart;
+    delete this.changeAmount;
+    
+}
+
 /* scroll the line specified by |line| to the center of the outliner */
 TreeOView.prototype.centerLine =
-function bov_ctrln (line)
+function tov_ctrln (line)
 {
     var first = this.outliner.getFirstVisibleRow();
     var last = this.outliner.getLastVisibleRow();
@@ -1009,7 +1095,9 @@ function tov_getsel()
 TreeOView.prototype.__defineSetter__("selectedIndex", tov_setsel);
 function tov_setsel(i)
 {
-    this.outliner.selection.timedSelect (i, 500);
+    this.outliner.selection.clearSelection();
+    if (i != -1)
+        this.outliner.selection.timedSelect (i, 500);
     return i;
 }
 

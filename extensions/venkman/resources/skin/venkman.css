@@ -149,49 +149,36 @@
 
 outlinerbody:-moz-outliner-cell(breakpoint-col) {
     background: #CCCCCC;
-}
-
-outlinerbody:-moz-outliner-cell(breakpoint-col, func-line) {
-    background: #EEEEEE;
-}
-
-outlinerbody:-moz-outliner-cell(breakpoint-col, func-start) {
-    border-top: 1px grey solid;
-}
-
-outlinerbody:-moz-outliner-cell(breakpoint-col, func-after) {
-    border-top: 1px grey solid;
+    border-right: 1px grey solid;
 }
 
 outlinerbody:-moz-outliner-cell(source-line-number) {
-    border-left: 1px grey solid;
-    border-right: 3px #CCCCCC solid;
+    border-right: 2px #CCCCCC solid;
     text-align: right;
     background: #EEEEEE;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number, func-line) {
-    border-right: 3px #EEEEEE solid;
-    background: white;
+outlinerbody:-moz-outliner-row(current-line, selected) {
+    background: green !important;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number, func-start) {
-    border-top: 1px grey solid;
+outlinerbody:-moz-outliner-cell(source-line-number, highlight-start),
+outlinerbody:-moz-outliner-cell(source-line-number, highlight-range),
+outlinerbody:-moz-outliner-cell(source-line-number, highlight-end) {
+    border-right: 2px #919bd6 solid;
+    background: #d5d5e0;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number, func-after) {
-    border-top: 1px grey solid;
+outlinerbody:-moz-outliner-cell(source-line-text, highlight-start),
+outlinerbody:-moz-outliner-cell(source-line-text, highlight-range),
+outlinerbody:-moz-outliner-cell(source-line-text, highlight-end) {
+    border-left: 1px black solid;
+    background: #EEEEEE;
 }
 
-outlinerbody:-moz-outliner-cell(source-line-number,current-line) {
-    background: yellow;
-}
-
-outlinerbody:-moz-outliner-cell(source-line-number,current-line,current) {
-    background: green;
-}
-
-outlinerbody:-moz-outliner-cell(source-line-number,current) {
+outlinerbody:-moz-outliner-cell(source-line-text, selected),
+outlinerbody:-moz-outliner-cell(source-line-number, selected) {
+    border-left: inherit !important;
     background: inherit !important;
 }
 
@@ -199,15 +186,16 @@ outlinerbody:-moz-outliner-row {
     border: 0px;
 }
 
-outlinerbody:-moz-outliner-row(current-line) {
-    background: yellow;
+outlinerbody:-moz-outliner-cell(source-line-number, current-line),
+outlinerbody:-moz-outliner-cell(source-line-text, current-line) {
+    background: #ecef34;
 }
 
-outlinerbody:-moz-outliner-row(current-line,current) {
-    background: green;
+outlinerbody:-moz-outliner-image(breakpoint-col, code) {
+    list-style-image: url("chrome://venkman/skin/images/code-line.gif");
 }
 
-outlinerbody:-moz-outliner-image(breakpoint) {
+outlinerbody:-moz-outliner-image(breakpoint-col, breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
 }
 

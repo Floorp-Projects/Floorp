@@ -73,6 +73,8 @@
 <!ENTITY DebugBar.tooltip "Debugging Toolbar">
 <!ENTITY MenuBar.tooltip "Menu Bar">
 
+<!ENTITY StatusText.label "Welcome to the JavaScript Debugger">
+
 <!-- source outliner -->
 <!ENTITY SourceCol0.display "Margin">
 <!ENTITY SourceCol1.display "Line Number">

@@ -41,10 +41,11 @@
 <?xml-stylesheet href="chrome://venkman/skin/venkman.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://venkman/content/venkman-menus.xul"?>
+<?xul-overlay href="chrome://venkman/content/venkman-scripts.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
-<window id="main-window" orient="vertical"
+<window id="venkman-window" orient="vertical"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="console.onLoad();" onunload="return console.onUnload();"
@@ -52,177 +53,8 @@
   persist="width height screenX screenY" title="&MainWindow.title;"
   windowtype="mozapp:venkman">
 
-  <script>
-    <![CDATA[
-    /* set this to false to turn off dd() messages */
-    var DEBUG = true;
-    ]]>
-  </script>
-
-  <script src="chrome://navigator/content/tooltip.js"/>
-  <script src="chrome://global/content/nsJSSupportsUtils.js"/>
-  <script src="chrome://global/content/nsJSComponentManager.js"/>
-  <script src="chrome://global/content/nsUserSettings.js"/>
-  <script src="chrome://global/content/nsTransferable.js"/>
-  <script src="chrome://global/content/nsClipboard.js"/>
-  <script src="chrome://global/content/nsDragAndDrop.js"/>
-  <script src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script src="chrome://communicator/content/contentAreaDD.js"/>
-  <script src="chrome://global/content/strres.js"/>
-
-  <script src="chrome://venkman/content/outliner-utils.js"/>
-  <script src="chrome://venkman/content/html-consts.js"/>
-  <script src="chrome://venkman/content/command-manager.js"/>
-
-  <script src="chrome://venkman/content/venkman-utils.js"/>
-  <script src="chrome://venkman/content/venkman-static.js"/>
-  <script src="chrome://venkman/content/venkman-handlers.js"/>
-  <script src="chrome://venkman/content/venkman-debugger.js"/>
-  <script src="chrome://venkman/content/venkman-url-loader.js"/>
-  <script src="chrome://venkman/content/venkman-commands.js"/>
-  <script src="chrome://venkman/content/venkman-prefs.js"/>
-  <script src="chrome://venkman/content/venkman-eval.js"/>
-  <script src="chrome://venkman/content/venkman-msg.js"/>
-  <script src="chrome://venkman/content/venkman-munger.js"/>
-  <script src="chrome://venkman/content/venkman-outliners.js"/>
-
-  <commandset id="tasksCommands">
-    <command id="cmd_close" oncommand="window.close();"/>
-    <command id="cmd_quit"/>
-  </commandset>
-
-  <keyset id="tasksKeys">
-    <key id="key_close"/>
-    <key id="key_quit"/>
-  </keyset>
-
-<!--
-    Step into = F11
-    Step out of = Shift+F11
-    Step over is F10 then?
--->
-
-  <commandset id="venkmanCommands">
-    <command id="cmd_reload_ui"
-      oncommand="if (DEBUG) window.location.href = window.location.href;"/>
-    <command id="cmd_focus" oncommand="console._slInputElement.focus();"/>
-    <command id="cmd_tmode_cycle" oncommand="cycleThrowMode();"/>
-    <command id="cmd_tmode_ignore" oncommand="setThrowMode(TMODE_IGNORE);"/>
-    <command id="cmd_tmode_trace" oncommand="setThrowMode(TMODE_TRACE);"/>
-    <command id="cmd_tmode_break" oncommand="setThrowMode(TMODE_BREAK);"/>
-    <command id="cmd_stop" oncommand="console.doCommandToggleStop();"/>
-    <command id="cmd_reload" oncommand="console.doCommandReload();"/>
-  </commandset>
-
-  <commandset id="venkmanDebuggerCommands">
-    <!-- commands in this set will be disabled when we're not stopped -->
-    <command id="cmd_step_over" oncommand="console.doCommandNext();"/>
-    <command id="cmd_step_in" oncommand="console.doCommandStep();"/>
-    <command id="cmd_step_out" oncommand="console.doCommandStepOut();"/>
-    <command id="cmd_cont" oncommand="console.doCommandCont();"/>
-  </commandset>
-
-  <keyset id="venkmanKeys">
-    <key id="key_reload_ui" observes="cmd_reload_ui" 
-      modifiers="control alt" key="R"/>
-    <key id="key_reload" observes="cmd_reload" 
-      modifiers="control" key="R"/>
-    <key id="key_focus" observes="cmd_focus" keycode="VK_TAB"/>
-    <key id="key_stop" observes="cmd_stop" keycode="VK_F4"/>
-    <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
-    <key id="key_step_over" observes="cmd_step_over" keycode="VK_F10"/>
-    <key id="key_step_in" observes="cmd_step_in" keycode="VK_F11"/>
-    <key id="key_step_out" observes="cmd_step_out" modifiers="shift"
-      keycode="VK_F11"/>
-    <key id="key_tmode_cycle" observes="cmd_tmode_cycle"
-         modifiers="control" key="T"/>
-  </keyset>
-
-  <popupset id="tooltip-set">
-    <popup id="tooltip-popup" class="tooltip" 
-      onpopupshowing="return fillInTooltip(document.tooltipNode);">
-      <box id="tooltipBox" orient="vertical"/>
-    </popup>
-  </popupset>
-
-  <popupset id="aTooltipSet"/>
-
-  <toolbox>
-    <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&MenuBar.tooltip;">
-      <menu id="menu_File">
-        <menupopup id="menu_FilePopup">
-          <menuitem id="menu_close"/>
-        </menupopup>
-      </menu>
-
-      <menu id="menu_View">
-        <menupopup id="menu_ViewPopup">
-          <menuitem id="menu_Reload" key="key_reload" observes="cmd_reload"
-            label="&Reload.label;" accesskey="&Reload.aKey;"/>
-        </menupopup>
-      </menu>
-
-      <menu id="menu_Debug" label="&Debug.label;" accesskey="&Debug.aKey;">
-        <menupopup id="menu_DebugPopup">
-          <menuitem id="menu_Stop" key="key_stop"
-            observes="cmd_stop"
-            label="&Stop.label;" accesskey="&Stop.aKey;"/>
-          <menuitem id="menu_Cont" key="key_cont"
-            observes="cmd_cont"
-            label="&Cont.label;" accesskey="&Cont.aKey;"/>
-          <menuitem id="menu_StepOver" key="key_step_over"
-            observes="cmd_step_over"
-            label="&StepOver.label;" accesskey="&StepOver.aKey;"/>
-          <menuitem id="menu_StepInto" key="key_step_in"
-            observes="cmd_step_in"
-            label="&StepIn.label;" accesskey="&StepIn.aKey;"/>
-          <menuitem id="menu_StepOut" key="key_step_out"
-            observes="cmd_step_out"
-            label="&StepOut.label;" accesskey="&StepOut.aKey;"/>
-          <menuseparator/>
-          <menu id="menu_ThrowMode" label="&TModeMenu.label;"
-                accesskey="&TModeMenu.aKey;">
-            <menupopup onpopupshowing="console.onTModeMenuCreate();">
-              <menuitem id="menu_TModeIgnore"
-                        observes="cmd_tmode_ignore" type="radio"
-                        label="&TModeIgnore.label;"
-                        accesskey="&TModeIgnore.aKey;"/>
-              <menuitem id="menu_TModeTrace"
-                        observes="cmd_tmode_trace" type="radio"
-                        label="&TModeTrace.label;"
-                        accesskey="&TModeTrace.aKey;"/>
-              <menuitem id="menu_TModeBreak"
-                        observes="cmd_tmode_break" type="radio"
-                        label="&TModeBreak.label;"
-                        accesskey="&TModeBreak.aKey;"/>
-              <menuseparator/>
-              <menuitem id="menu_TModeCycle" label = "&TModeCycle.label;"
-                        observes="cmd_tmode_cycle" key="key_tmode_cycle"
-                        accesskey="&TModeCycle.aKey;"/>
-            </menupopup>
-          </menu>
-        </menupopup>
-      </menu>
-      <menu id="tasksMenu"/>
-    </menubar>
-
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="main-toolbar" grippytooltip="aTooltip" grippytooltiptext="&DebugBar.tooltip;">
-      <hbox id="main-toolbar-buttons">
-        <toolbarbutton class="toolbarbutton-1" id="stop-button"
-                label="&Stop.label;" observes="cmd_stop" tooltip="aTooltip" tooltiptext="&Stop.tooltip;"/>
-        <toolbarseparator class="toolbarseparator-primary"/>
-        <toolbarbutton class="toolbarbutton-1" id="cont-button"
-                label="&Cont.label;" observes="cmd_cont" tooltip="aTooltip" tooltiptext="&Cont.tooltip;"/>
-        <toolbarbutton class="toolbarbutton-1" id="step-over-button"
-                label="&StepOver.label;" observes="cmd_step_over" tooltip="aTooltip" tooltiptext="&StepOver.tooltip;"/>
-        <toolbarbutton class="toolbarbutton-1" id="step-in-button"
-                label="&StepIn.label;" observes="cmd_step_in"  tooltip="aTooltip" tooltiptext="&StepIn.tooltip;"/>
-        <toolbarbutton class="toolbarbutton-1" id="step-out-button"
-                label="&StepOut.label;" observes="cmd_step_out" tooltip="aTooltip" tooltiptext="&StepOut.tooltip;"/>
-      </hbox>
-    </toolbar>
-      
-  </toolbox>
+  <overlaytarget id="scripts-overlay-target"/>
+  <overlaytarget id="menu-overlay-target"/>
 
   <box flex="1" orient="vertical">
       <hbox flex="1" id="top-hbox" persist="height">
@@ -274,9 +106,10 @@
         <!-- source view -->
 
         <outliner id="source-outliner" flex="50" persist="width"
+          onselect="console.onSourceSelect(event);"
           onclick="console.onSourceClick(event);">
-          <outlinercol id="breakpoint-col" width="20px"
-            display="&SourceCol0.display;" persist="hidden"/>
+          <outlinercol id="breakpoint-col" flex="3"
+            display="&SourceCol0.display;" persist="hidden width"/>
           <splitter class="tree-splitter"/>
           <outlinercol id="source-line-number" flex="7"
             display="&SourceCol1.display;" persist="hidden width"/>
@@ -319,7 +152,7 @@
         <!-- console view -->
 
         <vbox id="console-box" flex="50" persist="width">
-          <iframe id="output-iframe" flex="1" tooltip="tooltip-popup"
+          <iframe id="output-iframe" flex="1" tooltip="aTooltip"
             ondraggesture=
               "nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
             src="chrome://venkman/content/venkman-output-window.html"
@@ -330,6 +163,8 @@
 
       </hbox>
   </box>
+
+  <overlaytarget id="statusbar-overlay-target"/>
 
 </window>
 

@@ -143,6 +143,8 @@ const MSG_VF_HINTED        = getMsg("vf.hinted");
 
 const MSG_HELLO            = getMsg("msg.hello");
 
+const MSG_STATUS_DEFAULT   = getMsg("msg.status.default");
+
 const MSG_TIP_HELP           = getMsg("msg.tip.help");
 const MSG_NO_BREAKPOINTS_SET = getMsg("msg.no.breakpoints.set");
 const MSG_NO_FBREAKS_SET     = getMsg("msg.no.fbreaks.set");
@@ -260,3 +262,7 @@ const MSN_EVAL_ERROR       = "msg.eval.error";
 const MSN_EVAL_THREW       = "msg.eval.threw";
 const MSN_STOP             = "msg.stop";
 const MSN_SUBSCRIPT_LOADED = "msg.subscript.load";
+
+const MSN_STATUS_LOADING   = "msg.status.loading";
+const MSN_STATUS_MARKING   = "msg.status.marking";
+const MSN_STATUS_STOPPED   = "msg.status.stopped";

@@ -39,8 +39,8 @@ var ASSERT;
 
 if (DEBUG)
 {
-    dd = function (msg) { dumpln("-*- venkman: " + msg); }
-    warn = function (msg) { dd ("** WARNING " + msg + " **"); }
+    _dd_pfx = "vnk: ";
+    warn = function (msg) { dumpln ("** WARNING " + msg + " **"); }
     ASSERT = function (expr, msg) {
         if (!expr)
             dump ("** ASSERTION FAILED: " + msg + " **\n" + getStackTrace() +
@@ -62,21 +62,14 @@ console.version = "0.6.1";
 
 /* |this|less functions */
 
-function startupTests()
-{
-    if (0)
-    {   
-        openDialog("chrome://venkman/content/tests/tree.xul", "", "");
-    }
-    
-}
+const jsdIFilter = Components.interfaces.jsdIFilter;
 
 function cont ()
 {
     disableDebugCommands();
     --console._stopLevel;
+    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
-    return true;
 }
 
 function next ()
@@ -93,6 +86,7 @@ function step ()
     console._stepPast = topFrame.script.fileName + topFrame.line;
     disableDebugCommands()
     --console._stopLevel;
+    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
 }
 
@@ -103,6 +97,7 @@ function stepOut ()
     console.jsds.functionHook = console._callHook;
     disableDebugCommands()
     --console._stopLevel;
+    console.stackView.saveState();
     console.jsds.exitNestedEventLoop();
 }
 
@@ -143,7 +138,7 @@ function disableReloadCommand()
 
 function enableDebugCommands()
 {
-    var cmds = document.getElementById("venkmanDebuggerCommands");
+    var cmds = document.getElementById("venkmanStackCommands");
     var sib = cmds.firstChild;
 
     while (sib)
@@ -163,7 +158,7 @@ function enableDebugCommands()
 
 function disableDebugCommands()
 {
-    var cmds = document.getElementById("venkmanDebuggerCommands");
+    var cmds = document.getElementById("venkmanStackCommands");
     var sib = cmds.firstChild;
     while (sib)
     {
@@ -374,7 +369,7 @@ function htmlVA (attribs, href, contents)
 }
     
 function init()
-{
+{    
     initPrefs();
     initCommands();
     initOutliners();
@@ -407,7 +402,9 @@ function init()
     display(MSG_HELLO, MT_HELLO);
     display(getMsg(MSN_VERSION, console.version), MT_HELLO);
     displayCommands();
-    
+
+    console._statusElement = document.getElementById ("status-text");
+    console._statusStack = new Array();
     startupTests();
 }
 
@@ -498,6 +495,35 @@ function stringToDOM (message)
     return span;
 }
 
+/* some of the drag and drop code has an annoying apetite for exceptions.  any
+ * exception raised during a dnd operation causes the operation to fail silently.
+ * passing the function through one of these adapters lets you use "return
+ * false on planned failure" symantics, and dumps any exceptions caught
+ * to the console. */
+function Prophylactic (parent, fun)
+{
+    function adapter ()
+    {
+        var ex;
+        var rv = false;
+
+        try
+        {
+            rv = fun.apply (parent, arguments);
+        }
+        catch (ex)
+        {
+            dd ("Prophylactic caught an exception:\n" +
+                dumpObjectTree(ex));
+        }
+
+        if (!rv)
+            throw "goodger";
+    }
+        
+    return adapter;
+}    
+
 /* exceptions */
 
 /* keep this list in sync with exceptionMsgNames in venkman-msg.js */
@@ -540,6 +566,34 @@ console._lastTabUp = new Date();
 
 console.display = display;
 console.load = load;
+
+console.__defineGetter__ ("status", con_getstatus);
+function con_getstatus ()
+{
+    return console._statusElement.getAttribute ("label");
+}
+
+console.__defineSetter__ ("status", con_setstatus);
+function con_setstatus (msg)
+{
+    if (!msg)
+        msg = console._statusStack[console._statusStack.length - 1];
+    
+    console._statusElement.setAttribute ("label", msg);
+}
+
+console.pushStatus =
+function con_pushstatus (msg)
+{
+    console._statusStack.push (console.status);
+    console.status = msg;
+}
+
+console.popStatus =
+function con_popstatus ()
+{
+    console.status = console._statusStack.pop();
+}
 
 console.scrollDown =
 function con_scrolldn ()

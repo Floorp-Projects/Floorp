@@ -46,6 +46,8 @@ const FTYPE_STD     = 0;
 const FTYPE_SUMMARY = 1;
 const FTYPE_ARRAY   = 2;
 
+const FILTER_SYSTEM = 0x100; /* system filter, do not show in UI */
+
 var $ = new Array(); /* array to store results from evals in debug frames */
 
 console._scriptHook = {
@@ -56,14 +58,14 @@ console._scriptHook = {
                              realizeScript (script);
                          }
                      },
-
+    
     onScriptDestroyed: function scripthook (script) {
                          if (script.fileName && 
                              script.fileName != MSG_VAL_CONSOLE)
                          {
                              unrealizeScript (script);
                          }
-                       }
+                     }
 };
 
 console._executionHook = {
@@ -103,6 +105,8 @@ console._errorHook = {
 
 function initDebugger()
 {   
+    dd ("initDebugger {");
+    
     console._continueCodeStack = new Array(); /* top of stack is the default  */
                                               /* return code for the most     */
                                               /* recent debugTrap().          */
@@ -119,25 +123,53 @@ function initDebugger()
     console.jsds.debuggerHook = console._executionHook;
     console.jsds.errorHook = console._errorHook;
     console.jsds.scriptHook = console._scriptHook;
+
+    var venkmanFilter1 = { /* glob based filter goes first, because it's the */
+        glob: this,        /* easiest to match.                              */
+        flags: FILTER_SYSTEM | jsdIFilter.FLAG_ENABLED,
+        urlPattern: null,
+        startLine: 0,
+        endLine: 0
+    };
+    var venkmanFilter2 = { /* url based filter for XPCOM callbacks that may  */
+        glob: null,        /* not happen under our glob.                     */
+        flags: FILTER_SYSTEM | jsdIFilter.FLAG_ENABLED,
+        urlPattern: "chrome://venkman/*",
+        startLine: 0,
+        endLine: 0
+    };
+
+    console.jsds.appendFilter (venkmanFilter1);
+    console.jsds.appendFilter (venkmanFilter2);
     
     setThrowMode(TMODE_IGNORE);
 
     var enumer = {
         enumerateScript: function _es (script) {
             realizeScript(script);
-            return true;
         }
     };
     
+    console.scriptsView.freeze();
     console.jsds.enumerateScripts(enumer);
-
+    console.scriptsView.thaw();
+    dd ("} initDebugger");
+    
 }
 
 function detachDebugger()
 {
     console.jsds.topLevelHook = null;
     console.jsds.functionHook = null;
-    console.jsds.off();
+    console.jsds.breakpointHook = null;
+    console.jsds.debuggerHook = null;
+    console.jsds.errorHook = null;
+    console.jsds.scriptHook = null;
+    console.jsds.interruptHook = null;
+    console.jsds.clearAllBreakpoints();
+    console.jsds.clearFilters();
+    if (!console.jsds.initAtStartup)
+        console.jsds.off();
 
     if (console._stopLevel > 0)
     {
@@ -165,7 +197,7 @@ function realizeScript(script)
     }
     
     var scriptRec = new ScriptRecord (script);
-    container.appendChild (scriptRec);
+    container.appendScriptRecord (scriptRec);
 
     /* check to see if this script contains a breakpoint */
     for (var i = 0; i < console.breakpoints.childData.length; ++i)
@@ -363,6 +395,8 @@ function debugTrap (frame, type, rv)
         console.jsds.exitNestedEventLoop();
     }
 
+    console.onDebugContinue();
+
     if (tn)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
@@ -372,8 +406,6 @@ function debugTrap (frame, type, rv)
     clearCurrentFrame();
     delete console.frames;
     delete console.trapType;
-    
-    console.onDebugContinue();
     
     return console._continueCodeStack.pop();
 }
@@ -555,8 +587,6 @@ function formatValue (v, formatType)
         case jsdIValue.TYPE_STRING:
             type = MSG_TYPE_STRING;
             value = v.stringValue.quote();
-            if (value.length > MAX_STR_LEN)
-                value = getMsg(MSN_FMT_LONGSTR, value.length);
             break;
         case jsdIValue.TYPE_VOID:
             type = MSG_TYPE_VOID;
@@ -801,7 +831,7 @@ function setBreakpoint (fileName, line)
     
     for (var i = 0; i < ary.length; ++i)
     {
-        if (ary[i].containsLine(line) && ary[i].isLineExecutable(line))
+        if (ary[i].containsLine(line) && ary[i].script.isLineExecutable(line))
         {
             found = true;
             bpr.addScriptRecord(ary[i]);
