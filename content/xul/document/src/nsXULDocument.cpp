@@ -62,6 +62,7 @@
 #include "nsIParser.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIHTMLContent.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFContentModelBuilder.h"
@@ -2675,11 +2676,6 @@ XULDocumentImpl::SetForm(nsIDOMHTMLFormElement* aForm)
   if (aForm) {
     NS_ADDREF(aForm);
     mHiddenForm = aForm;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aForm);
-    if (content) {
-      // Add this node as a child
-      mRootContent->AppendChildTo(content, PR_TRUE);
-    }
   }
   return NS_OK;
 }
