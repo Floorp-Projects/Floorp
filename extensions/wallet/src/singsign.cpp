@@ -48,6 +48,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kIPrefServiceIID, NS_IPREF_IID);
 static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
@@ -2256,7 +2257,8 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm(NS_ConvertToString(passwordRealm));   // XXX hack
+    nsString realm; // XXX hack
+    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
     return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
                                              savePassword, user, pwd, pressedOK);
   }
@@ -2298,7 +2300,8 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm(NS_ConvertToString(passwordRealm));      // XXX hack
+    nsString realm; // XXX hack
+    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
     res = dialog->PromptPassword(dialogTitle,
                                  text, realm.GetUnicode(), savePassword,
                                  pwd, pressedOK);
@@ -2345,7 +2348,8 @@ SINGSIGN_Prompt
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm(NS_ConvertToString(passwordRealm));   // XXX hack
+    nsString realm; // XXX hack
+    CopyASCIItoUCS2(nsLiteralCString(passwordRealm), realm);
     res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), savePassword, defaultText, resultText, pressedOK);
     return res;
   }
