@@ -62,11 +62,6 @@
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
 
-// TODO remove me
-#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-#include "XPCMediaPlayer.h"
-#endif
-
 static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -722,6 +717,8 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         return S_OK;
     }
 
+    nsAutoString eventName(bstrName.m_str);
+
     // TODO Turn VARIANT args into js objects
 
     // Fire event to DOM 2 event listeners
@@ -734,8 +731,7 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
         eventReceiver->GetListenerManager(getter_AddRefs(eventManager));
         if (eventManager)
         {
-            nsAutoString keyName(bstrName.m_str);
-            nsStringKey key(keyName);
+            nsStringKey key(eventName);
             nsEvent event;
             event.message = NS_USER_DEFINED_EVENT;
             event.userType = &key;
@@ -785,13 +781,15 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
                     continue;
                 }
 
-                if (!forAttr.Equals(id)) // TODO compare no case?
+                if (!forAttr.Equals(id) ||
+                    !eventAttr.Equals(eventName)) // TODO compare no case?
                 {
-                    // Someone elses event
+                    // Somebody elses event
                     continue;
                 }
 
                 // TODO fire the event
+
             }
         }
     }
@@ -908,12 +906,6 @@ void xpc_Release()
       XPCOMGlueShutdown();
 }
 
-// TODO remove me
-#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-const CLSID kWindowsMediaPlayer = {
-    0x6BF52A52, 0x394A, 0x11d3, { 0xB1, 0x53, 0x00, 0xC0, 0x4F, 0x79, 0xFA, 0xA6 } };
-#endif
-
 CLSID xpc_GetCLSIDForType(const char *mimeType)
 {
     if (mimeType == NULL)
@@ -932,7 +924,7 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
         {
 	        USES_CONVERSION;
 	        TCHAR szGUID[64];
-	        ULONG nCount = 64;
+	        ULONG nCount = (sizeof(szGUID) / sizeof(szGUID[0])) - 1;
 
             GUID guidValue = GUID_NULL;
             if (keyMimeType.QueryValue(_T("CLSID"), szGUID, &nCount) == ERROR_SUCCESS &&
@@ -944,6 +936,13 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
     }
     return CLSID_NULL;
 }
+
+// TODO remove me
+#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
+#include "XPCMediaPlayer.h"
+const CLSID kWindowsMediaPlayer = {
+    0x6BF52A52, 0x394A, 0x11d3, { 0xB1, 0x53, 0x00, 0xC0, 0x4F, 0x79, 0xFA, 0xA6 } };
+#endif
 
 nsScriptablePeer *
 xpc_GetPeerForCLSID(const CLSID &clsid)

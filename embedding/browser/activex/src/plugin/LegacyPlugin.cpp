@@ -41,7 +41,9 @@
 
 #include "jni.h"
 #include "npapi.h"
+
 #include "nsISupports.h"
+#include "nsString.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 #include "XPConnect.h"
@@ -164,8 +166,7 @@ NPError NewControl(const char *pluginType,
 {
     // Read the parameters
     CLSID clsid = CLSID_NULL;
-    tstring szName;
-    tstring szCodebase;
+    nsCAutoString codebase;
     PropertyList pl;
 
     if (strcmp(pluginType, MIME_OLEOBJECT1) != 0 &&
@@ -187,43 +188,40 @@ NPError NewControl(const char *pluginType,
             //
             // The first example is the proper way
 
-            char szCLSID[256];
+            const kCLSIDLen = 256;
+            char szCLSID[kCLSIDLen];
             if (strlen(argv[i]) < sizeof(szCLSID))
             {
                 if (strnicmp(argv[i], "CLSID:", 6) == 0)
                 {
-                    sprintf(szCLSID, "{%s}", argv[i]+6);
+                    _snprintf(szCLSID, kCLSIDLen - 1, "{%s}", argv[i]+6);
                 }
                 else if(argv[i][0] != '{')
                 {
-                    sprintf(szCLSID, "{%s}", argv[i]);
+                    _snprintf(szCLSID, kCLSIDLen - 1, "{%s}", argv[i]);
                 }
                 else
                 {
-                    strncpy(szCLSID, argv[i], sizeof(szCLSID));
+                    strncpy(szCLSID, argv[i], kCLSIDLen - 1);
                 }
+                szCLSID[kCLSIDLen - 1] = '\0';
                 USES_CONVERSION;
                 CLSIDFromString(A2OLE(szCLSID), &clsid);
             }
         }
-        else if (stricmp(argn[i], "NAME") == 0)
-        {
-            USES_CONVERSION;
-            szName = tstring(A2T(argv[i]));
-        }
         else if (stricmp(argn[i], "CODEBASE") == 0)
         {
-            szCodebase = tstring(A2T(argv[i]));
+            codebase.Assign(argv[i]);
         }
         else 
         {
             USES_CONVERSION;
 
-            std::wstring szName;
+            nsAutoString paramName;
 
             if (strnicmp(argn[i], "PARAM_", 6) == 0)
             {
-                szName = A2W(argn[i]+6);
+                paramName.AssignWithConversion(argn[i]+6);
             }
             else if (stricmp(argn[i], "PARAM") == 0)
             {
@@ -233,22 +231,22 @@ NPError NewControl(const char *pluginType,
             }
             else
             {
-                szName = A2W(argn[i]);
+                paramName.AssignWithConversion(argn[i]);
             }
 
             // Empty parameters are ignored
-            if (szName.empty())
+            if (paramName.IsEmpty())
             {
                 continue;
             }
 
-            std::wstring szParam(A2W(argv[i]));
+            nsAutoString paramValue; paramValue.AssignWithConversion(argv[i]);
 
             // Check for existing params with the same name
             BOOL bFound = FALSE;
             for (PropertyList::const_iterator i = pl.begin(); i != pl.end(); i++)
             {
-                if (wcscmp((BSTR) (*i).szName, szName.c_str()) == 0)
+                if (wcscmp((BSTR) (*i).szName, paramName.get()) == 0)
                 {
                     bFound = TRUE;
                     break;
@@ -261,7 +259,7 @@ NPError NewControl(const char *pluginType,
                 continue;
             }
 
-            CComVariant vsValue(szParam.c_str());
+            CComVariant vsValue(paramValue.get());
             CComVariant vIValue; // Value converted to int
             CComVariant vRValue; // Value converted to real
             CComVariant vBValue; // Value converted to bool
@@ -284,7 +282,7 @@ NPError NewControl(const char *pluginType,
 
             // Add named parameter to list
             Property p;
-            p.szName = szName.c_str();
+            p.szName = paramName.get();
             p.vValue = vValue;
             pl.push_back(p);
         }
@@ -319,7 +317,7 @@ NPError NewControl(const char *pluginType,
     //      that specified in szCodebase
 
     // Create the object
-    if (FAILED(pSite->Create(clsid, pl, szName)))
+    if (FAILED(pSite->Create(clsid, pl)))
     {
         USES_CONVERSION;
         LPOLESTR szClsid;
