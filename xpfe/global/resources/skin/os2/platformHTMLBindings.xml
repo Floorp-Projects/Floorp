@@ -4,7 +4,7 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
  
-  <binding name="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
+  <binding id="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
     <handlers>
 
     <!-- Emacsish single-line motion and delete keys -->
@@ -65,7 +65,7 @@
     </handlers>
   </binding>
 
-  <binding name="textAreas" extends="resource:/chrome/htmlBindings.xml#textAreasBase">
+  <binding id="textAreas" extends="resource:/chrome/htmlBindings.xml#textAreasBase">
     <handlers>
 
     <!-- Emacsish single-line motion and delete keys -->

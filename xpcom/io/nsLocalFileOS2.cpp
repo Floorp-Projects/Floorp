@@ -332,12 +332,6 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
     char* leaf = strrchr(mPath, '\\');
     size_t len = strlen(mPath);
 
-#if DEBUG_sobotka
-    printf("In nsLocalFile::Create: mPath = %s\n", mPath);
-    printf("tail = %s\n", tail);
-    printf("leaf = %s\n", leaf);
-#endif
-
     // Walk path if not a leaf
     if (stricmp(tail, leaf) || tail != nsnull) {
 
@@ -395,6 +389,12 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 NS_IMETHODIMP  
 nsLocalFile::Append(const char *node)
 {
+    return AppendRelativePath(node);
+}
+
+NS_IMETHODIMP  
+nsLocalFile::AppendRelativePath(const char *node)
+{
     if ( (node == nsnull)           || 
          (*node == '/')             || 
          (strstr(node, "..") != nsnull) ||
@@ -404,42 +404,8 @@ nsLocalFile::Append(const char *node)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
 
-    mPath.Append("\\");
-    mPath.Append(node);
-    return NS_OK;
-#if 0
-    NS_ENSURE_ARG(fragment);
     CHECK_mPath();
-    char * newPath = (char *)nsAllocator::Alloc(strlen(mPath) +
-                                                strlen(fragment) + 2);
-    if (!newPath)
-        return NS_ERROR_OUT_OF_MEMORY;
-    strcpy(newPath, mPath);
-    strcat(newPath, "\\");
 
-    // flip slashes
-    char *c;
-    char *temp =  (char *)nsAllocator::Alloc(strlen(fragment) + 1);
-    strcpy(temp, fragment);
-    for(c = temp; *c; c++)
-        if( *c == '/') *c = '\\';
-
-    strcat(newPath, temp);
-    mPath = newPath;
-    nsAllocator::Free(newPath);
-    return NS_OK;
-#endif
-}
-
-NS_IMETHODIMP  
-nsLocalFile::AppendRelativePath(const char *node)
-{
-    // Cannot start with a / or have .. or have / anywhere
-    if (!node || (*node == '/') || (strstr(node, "..") != nsnull) ||
-        (strchr(node, '/') != nsnull))
-    {
-        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
-    }
     mPath.Append("\\");
     mPath.Append(node);
     return NS_OK;
@@ -480,7 +446,9 @@ nsLocalFile::SetLeafName(const char * aLeafName)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     const char* leaf = strrchr(temp, '\\');
-    
+
+    // XXXXOS2TODO CHECK: note in Windows version:
+    // "cannot use nsCString::RFindChar() due to 0x5c problem"
     PRInt32 offset = mPath.RFindChar('\\');
     if (offset)
     {
@@ -495,7 +463,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*)nsAllocator::Clone((char*)mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsAllocator::Clone(mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 
@@ -514,9 +482,14 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool move)
             return rv;
     }
 
-    nsCString newPath;
-    newParentDir->GetPath((char**)&newPath);
-    if (newPath[strlen(newPath - 1)] != '\\')
+    char* inFilePath;
+    newParentDir->GetTarget(&inFilePath);  
+    nsCString newPath = inFilePath;
+    nsAllocator::Free(inFilePath);
+
+    PRUint32 lastc = strlen(newPath) - 1;
+
+    if (newPath.CharAt(lastc) != '\\')
         newPath.Append("\\");
     newPath.Append(newName);
 
