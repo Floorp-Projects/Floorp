@@ -783,36 +783,6 @@ Boolean MRJContext::loadApplet()
 	};
 	OSStatus status;
 	
-	// Added by Mark Lin (mark.lin@eng.sun.com):
-	// This code will run the plugin using the Swing Toolkit as the AWT peer set
-	// It is commented out for now, because the implementation isn't finished yet
-	/*
-	jclass theClass;
-	jmethodID methodID;
-	JNIEnv * mainEnv = mSession->getMainEnv();
-	jvalue args[1];
-		
-	theClass = mainEnv->FindClass("javax/swing/UIManager");
-		
-	if (theClass == nil) {
-		printf("MRJContext Error: Could not find swing UIManager class\n");
-	}
-	
-	methodID = mainEnv->GetStaticMethodID(theClass, "setLookAndFeel", "(Ljava/lang/String;)V");
-
-	if (methodID == nil) {
-		printf("MRJContext Error: Could not find static method\n");
-	}
-
-	args[0].l = mainEnv->NewStringUTF("javax.swing.plaf.metal.MetalLookAndFeel");
-
-	status = JMExecJNIStaticMethodInContext(mContext, mainEnv, theClass, methodID, 1, args);
-
-	if (status != noErr) {
-		printf("MRJContext Error: method call failed..\n");
-	}
-	*/	
-	
 	status = ::JMNewAppletViewer(&mViewer, mContext, mLocator, 0,
 								 			&security, &callbacks, this);
 	if (status == noErr) {
