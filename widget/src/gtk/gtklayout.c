@@ -2,9 +2,6 @@
  * 
  * This file may be distributed under either the terms of the
  * Netscape Public License, or the GNU Library General Public License
- *
- * Note: No GTK+ or Mozilla code should be added to this file.
- * The coding style should be that of the the GTK core.
  */
 
 #include "gtklayout.h"
@@ -33,6 +30,9 @@ static void     gtk_layout_forall             (GtkContainer *container,
 					       gboolean      include_internals,
 					       GtkCallback   callback,
 					       gpointer      callback_data);
+static void     gtk_layout_set_adjustments    (GtkLayout     *layout,
+					       GtkAdjustment *hadj,
+					       GtkAdjustment *vadj);
 
 static void     gtk_layout_realize_child      (GtkLayout      *layout,
 					       GtkLayoutChild *child);
@@ -73,8 +73,7 @@ gtk_layout_new (GtkAdjustment *hadjustment,
 
   layout = gtk_type_new (gtk_layout_get_type());
 
-  gtk_layout_set_hadjustment (layout, hadjustment);
-  gtk_layout_set_vadjustment (layout, vadjustment);
+  gtk_layout_set_adjustments (layout, hadjustment, vadjustment);
 
   return GTK_WIDGET (layout);
 }
@@ -96,6 +95,65 @@ gtk_layout_get_vadjustment (GtkLayout     *layout)
   return layout->vadjustment;
 }
 
+static void           
+gtk_layout_set_adjustments (GtkLayout     *layout,
+			    GtkAdjustment *hadj,
+			    GtkAdjustment *vadj)
+{
+  gboolean need_adjust = FALSE;
+
+  g_return_if_fail (layout != NULL);
+  g_return_if_fail (GTK_IS_LAYOUT (layout));
+
+  if (hadj)
+    g_return_if_fail (GTK_IS_ADJUSTMENT (hadj));
+  else
+    hadj = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+  if (vadj)
+    g_return_if_fail (GTK_IS_ADJUSTMENT (vadj));
+  else
+    vadj = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+  
+  if (layout->hadjustment && (layout->hadjustment != hadj))
+    {
+      gtk_signal_disconnect_by_data (GTK_OBJECT (layout->hadjustment), layout);
+      gtk_object_unref (GTK_OBJECT (layout->hadjustment));
+    }
+  
+  if (layout->vadjustment && (layout->vadjustment != vadj))
+    {
+      gtk_signal_disconnect_by_data (GTK_OBJECT (layout->vadjustment), layout);
+      gtk_object_unref (GTK_OBJECT (layout->vadjustment));
+    }
+  
+  if (layout->hadjustment != hadj)
+    {
+      layout->hadjustment = hadj;
+      gtk_object_ref (GTK_OBJECT (layout->hadjustment));
+      gtk_object_sink (GTK_OBJECT (layout->hadjustment));
+      
+      gtk_signal_connect (GTK_OBJECT (layout->hadjustment), "value_changed",
+			  (GtkSignalFunc) gtk_layout_adjustment_changed,
+			  layout);
+      need_adjust = TRUE;
+    }
+  
+  if (layout->vadjustment != vadj)
+    {
+      layout->vadjustment = vadj;
+      gtk_object_ref (GTK_OBJECT (layout->vadjustment));
+      gtk_object_sink (GTK_OBJECT (layout->vadjustment));
+      
+      gtk_signal_connect (GTK_OBJECT (layout->vadjustment), "value_changed",
+			  (GtkSignalFunc) gtk_layout_adjustment_changed,
+			  layout);
+      need_adjust = TRUE;
+    }
+
+  if (need_adjust)
+    gtk_layout_adjustment_changed (NULL, layout);
+}
+
 void           
 gtk_layout_set_hadjustment (GtkLayout     *layout,
 			    GtkAdjustment *adjustment)
@@ -103,19 +161,7 @@ gtk_layout_set_hadjustment (GtkLayout     *layout,
   g_return_if_fail (layout != NULL);
   g_return_if_fail (GTK_IS_LAYOUT (layout));
 
-  if (layout->hadjustment)
-    gtk_object_unref (GTK_OBJECT (layout->hadjustment));
-
-  if (!adjustment)
-    adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 0.0, 10.0, 0.0, 0.0));
-  else
-    gtk_object_ref (GTK_OBJECT (adjustment));
-
-  gtk_signal_connect (GTK_OBJECT (adjustment), "value_changed",
-		      GTK_SIGNAL_FUNC (gtk_layout_adjustment_changed),
-		      layout);
-
-  layout->hadjustment = adjustment;
+  gtk_layout_set_adjustments (layout, adjustment, layout->vadjustment);
 }
  
 
@@ -126,19 +172,7 @@ gtk_layout_set_vadjustment (GtkLayout     *layout,
   g_return_if_fail (layout != NULL);
   g_return_if_fail (GTK_IS_LAYOUT (layout));
   
-  if (layout->vadjustment)
-    gtk_object_unref (GTK_OBJECT (layout->hadjustment));
-
-  if (!adjustment)
-    adjustment = GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.0, 0.0, 10.0, 0.0, 0.0));
-  else
-    gtk_object_ref (GTK_OBJECT (adjustment));
-
-  gtk_signal_connect (GTK_OBJECT (adjustment), "value_changed",
-		      GTK_SIGNAL_FUNC (gtk_layout_adjustment_changed),
-		      layout);
-
-  layout->vadjustment = adjustment;
+  gtk_layout_set_adjustments (layout, layout->hadjustment, adjustment);
 }
 
 
@@ -161,6 +195,7 @@ gtk_layout_put (GtkLayout     *layout,
   child->y = y;
   child->widget->requisition.width = 0;
   child->widget->requisition.height = 0;
+  child->mapped = FALSE;
 
   layout->children = g_list_append (layout->children, child);
   
@@ -291,10 +326,20 @@ gtk_layout_class_init (GtkLayoutClass *class)
   widget_class->draw = gtk_layout_draw;
   widget_class->expose_event = gtk_layout_expose;
 
+  widget_class->scroll_adjustments_signal =
+    gtk_signal_new ("scroll_adjustments",
+		    GTK_RUN_LAST,
+		    object_class->type,
+		    GTK_SIGNAL_OFFSET (GtkLayoutClass, scroll_adjustments),
+		    gtk_marshal_NONE__POINTER_POINTER,
+		    GTK_TYPE_NONE, 2, GTK_TYPE_ADJUSTMENT, GTK_TYPE_ADJUSTMENT);
+
   gravity_works = gtk_layout_gravity_works ();
 
   container_class->remove = gtk_layout_remove;
   container_class->forall = gtk_layout_forall;
+
+  class->scroll_adjustments = gtk_layout_set_adjustments;
 }
 
 static void
@@ -400,12 +445,14 @@ gtk_layout_map (GtkWidget *widget)
     {
       GtkLayoutChild *child = tmp_list->data;
 
-      if (GTK_WIDGET_VISIBLE (child->widget) &&
-	  !GTK_WIDGET_MAPPED (child->widget))
-	gtk_widget_map (child->widget);
-
-      if (child->window)
-	gdk_window_show (child->window);
+      if (child->mapped && GTK_WIDGET_VISIBLE (child->widget))
+	{
+	  if (!GTK_WIDGET_MAPPED (child->widget))
+	    gtk_widget_map (child->widget);
+	  
+	  if (child->window)
+	    gdk_window_show (child->window);
+	}
 
       tmp_list = tmp_list->next;
     }
@@ -680,12 +727,21 @@ gtk_layout_position_child (GtkLayout      *layout,
   if ((x >= G_MINSHORT) && (x <= G_MAXSHORT) &&
       (y >= G_MINSHORT) && (y <= G_MAXSHORT))
     {
-      if (GTK_WIDGET_VISIBLE (child->widget) &&
-	  GTK_WIDGET_MAPPED (layout) &&
-	  !GTK_WIDGET_MAPPED (child->widget))
+      if (!child->mapped)
 	{
-	  gtk_widget_map (child->widget);
-	  force_allocate = TRUE;
+	  child->mapped = TRUE;
+
+	  if (GTK_WIDGET_MAPPED (layout) &&
+	      GTK_WIDGET_VISIBLE (child->widget))
+	    {
+	      if (child->window)
+		gdk_window_show (child->window);
+	      if (!GTK_WIDGET_MAPPED (child->widget))
+		gtk_widget_map (child->widget);
+	      
+	      child->mapped = TRUE;
+	      force_allocate = TRUE;
+	    }
 	}
       
       if (force_allocate)
@@ -719,10 +775,14 @@ gtk_layout_position_child (GtkLayout      *layout,
     }
   else
     {
-      if (child->window)
-	gdk_window_hide (child->window);
-      else if (GTK_WIDGET_MAPPED (child->widget))
- 	gtk_widget_unmap (child->widget);
+      if (child->mapped)
+	{
+	  child->mapped = FALSE;
+	  if (child->window)
+	    gdk_window_hide (child->window);
+	  else if (GTK_WIDGET_MAPPED (child->widget))
+	    gtk_widget_unmap (child->widget);
+	}
     }
 }
 
@@ -833,10 +893,11 @@ gtk_layout_adjustment_changed (GtkAdjustment *adjustment,
   if (layout->frozen)
     return;
 
-  gtk_layout_position_children (layout);
-
   if (!GTK_WIDGET_MAPPED (layout))
-    return;
+    {
+      gtk_layout_position_children (layout);
+      return;
+    }
 
   if (dx > 0)
     {
@@ -934,6 +995,8 @@ gtk_layout_adjustment_changed (GtkAdjustment *adjustment,
 			      widget->allocation.height,
 			      -dy);
     }
+
+  gtk_layout_position_children (layout);
 
   /* We have to make sure that all exposes from this scroll get
    * processed before we scroll again, or the expose events will
@@ -1137,3 +1200,4 @@ gtk_layout_gravity_works (void)
   
   return  (y == -20);
 }
+

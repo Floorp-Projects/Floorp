@@ -83,6 +83,8 @@ NS_METHOD nsComboBox::SetMultipleSelection(PRBool aMultipleSelections)
 
 NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   NS_ALLOC_STR_BUF(val, aItem, 256);
   mItems = g_list_insert( mItems, g_strdup(val), aPosition );
   gtk_combo_set_popdown_strings( GTK_COMBO( mWidget ), mItems );
@@ -98,6 +100,8 @@ NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsComboBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   NS_ALLOC_STR_BUF(val, aItem, 256);
   int i;
   PRInt32 index = -1;
@@ -131,6 +135,8 @@ PRInt32  nsComboBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 { 
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   if (aPosition >= 0 && aPosition < mNumItems) {
 
     g_free(g_list_nth(mItems, aPosition)->data);
@@ -150,6 +156,8 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   PRBool result = PR_FALSE;
   if (aPosition >= 0 && aPosition < mNumItems) {
     anItem = (gchar *) g_list_nth(mItems, aPosition)->data;
@@ -166,6 +174,8 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mWidget)->entry));
   return NS_OK;
 }
@@ -189,6 +199,8 @@ PRInt32 nsComboBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
 {
+  g_return_val_if_fail(GTK_IS_COMBO(mWidget), NS_ERROR_FAILURE);
+
   GList *pos;
   if (!mItems)
     return NS_ERROR_FAILURE;

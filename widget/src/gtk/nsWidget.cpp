@@ -140,6 +140,10 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 #endif
   mBounds.x = aX;
   mBounds.y = aY;
+
+  g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+  g_return_val_if_fail(GTK_IS_LAYOUT(mWidget->parent), NS_ERROR_FAILURE);
+
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
   //XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
   return NS_OK;
@@ -152,6 +156,9 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 #endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
+
+  g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
   return NS_OK;
 }
@@ -171,6 +178,8 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
+    g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+
     gtk_widget_set_sensitive(mWidget, bState);
     return NS_OK;
 }
@@ -182,6 +191,8 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
+    g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+
     gtk_widget_grab_focus(mWidget);
     return NS_OK;
 }
@@ -210,6 +221,8 @@ nscolor nsWidget::GetForegroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
 {
+    g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+
     GtkStyle *style;
     GdkColor color;
     mForeground = aColor;
@@ -240,6 +253,8 @@ nscolor nsWidget::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
+    g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+
     GtkStyle *style;
     GdkColor color;
     mBackground = aColor;
@@ -297,7 +312,12 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
   if (!mWidget || !mWidget->window)
     return NS_ERROR_FAILURE;
-  
+
+/*
+  g_return_val_if_fail(mWidget != NULL, NS_ERROR_FAILURE);
+  g_return_val_if_fail(GTK_IS_WIDGET(mWidget), NS_ERROR_FAILURE);
+  g_return_val_if_fail(mWidget->window != NULL, NS_ERROR_FAILURE);
+*/
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     GdkCursor *newCursor = 0;
@@ -442,16 +462,20 @@ NS_METHOD nsWidget::EndResizingChildren(void)
 
 NS_METHOD nsWidget::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
+  g_return_val_if_fail(aWidth != 0 && aHeight != 0, NS_ERROR_FAILURE);
+
   aWidth  = mPreferredWidth;
   aHeight = mPreferredHeight;
-  return (mPreferredWidth != 0 && mPreferredHeight != 0)?NS_OK:NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
-    mPreferredWidth  = aWidth;
-    mPreferredHeight = aHeight;
-    return NS_OK;
+  g_return_val_if_fail(aWidth != 0 && aHeight != 0, NS_ERROR_FAILURE);
+
+  mPreferredWidth  = aWidth;
+  mPreferredHeight = aHeight;
+  return NS_OK;
 }
 
 NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
@@ -500,10 +524,13 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
 
   if (parentWidget)
   {
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
+    if (GTK_IS_LAYOUT(parentWidget))
+    {
+      gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
 #ifdef DBG
-    g_print("nsWidget::SWC(%3d,%3d)    - %s %p\n", mBounds.x, mBounds.y, mWidget->name, this);
+      g_print("nsWidget::SWC(%3d,%3d)    - %s %p\n", mBounds.x, mBounds.y, mWidget->name, this);
 #endif
+    }
   }
 
   InitCallbacks();

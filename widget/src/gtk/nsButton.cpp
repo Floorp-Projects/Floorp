@@ -92,6 +92,8 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
+  g_return_val_if_fail(GTK_IS_BUTTON(mWidget), NS_ERROR_FAILURE);
+
   NS_ALLOC_STR_BUF(label, aText, 256);
 
   gtk_label_set(GTK_LABEL(GTK_BIN (mWidget)->child), label);
@@ -107,6 +109,9 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::GetLabel(nsString& aBuffer)
 {
+  g_return_val_if_fail(GTK_IS_BUTTON(mWidget), NS_ERROR_FAILURE);
+  g_return_val_if_fail(GTK_IS_LABEL(GTK_BIN (mWidget)->child), NS_ERROR_FAILURE);
+
   char * text;
 
   gtk_label_get(GTK_LABEL(GTK_BIN (mWidget)->child), &text);
