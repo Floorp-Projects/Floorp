@@ -632,5 +632,36 @@ MANIFEST_LEVEL=RULES
 CFLAGS = $(CFLAGS) -DNO_JNI_STUBS
 !endif
 
+NSINSTALL = nsinstall
+
+!if "$(XPIDLSRCS)" != "$(NULL)"
+!if "$(MODULE)" != "$(NULL)"
+$(XPIDL_GEN_DIR):
+	@echo +++ make: Creating directory: $(XPIDL_GEN_DIR)
+	echo.
+	-mkdir $(XPIDL_GEN_DIR)
+
+$(DIST)\include:
+	@echo +++ make: Creating directory: $(DIST)\include
+	echo.
+	-mkdir $(DIST)\include
+
+$(XPIDL_GEN_MAKEFILE) : makefile.win 
+	@if exist $(XPIDL_GEN_MAKEFILE) $(NMAKE) -f $(XPIDL_GEN_MAKEFILE) clobber
+	@echo Generating $@
+	@perl $(DEPTH)\config\xpidlmk.pl WINNT $(DEPTH) . $(XPIDL_GEN_DIR) $(DEPTH)\dist $(DIST)\bin\components $(MODULE) $(XPIDLSRCS) > $@
+
+export:: $(XPIDL_GEN_DIR) $(DIST)\include $(XPIDL_GEN_MAKEFILE)
+	@echo generating and copying xpidl based files as necessary
+	@$(NMAKE) -f $(XPIDL_GEN_MAKEFILE) doxpidl
+
+clobber::
+	@echo deleting files generated from xpidl files
+	@if exist $(XPIDL_GEN_MAKEFILE) $(NMAKE) -f $(XPIDL_GEN_MAKEFILE) clobber
+	@$(RM_R) $(XPIDL_GEN_DIR)
+!endif
+!endif
+
+
 !endif # CONFIG_RULES_MAK
 
