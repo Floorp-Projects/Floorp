@@ -1454,7 +1454,8 @@ void CRDFToolbar::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatHa
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				pButton->AddTextEdit();
 			}
-			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED)
+			else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && 
+					 HT_GetParent(n) == HT_TopNode(HT_GetView(n)))
 			{
 				CRDFToolbarButton* pButton = (CRDFToolbarButton*)HT_GetNodeFEData(n);
 				if (pButton->m_hWnd)

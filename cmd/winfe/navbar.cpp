@@ -353,7 +353,7 @@ void CNavTitleBar::OnLButtonDown (UINT nFlags, CPoint point )
 	else if (cachedModeRect.PtInRect(point))
 	{
 		CRDFOutliner* pOutliner = (CRDFOutliner*)HT_GetViewFEData(m_View);
-		HT_ToggleTreeMode(m_View);
+		//HT_ToggleTreeMode(m_View);
 	}
 	else if (cachedAddRect.PtInRect(point))
 	{

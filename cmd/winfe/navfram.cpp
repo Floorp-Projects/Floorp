@@ -280,9 +280,11 @@ CNSNavFrame* CNSNavFrame::CreateFramedRDFViewFromResource(CWnd* pParent, int xPo
 	CRDFOutliner* pOutliner = (CRDFOutliner*)(pNavFrame->GetContentView()->GetOutlinerParent()->GetOutliner());
 	
 	// Display in the appropriate spot depending on our tree state (docked, standalone, or popup)
-	CString treeState = HT_GetTreeStateForButton(node);
-	if (treeState == "Popup" || treeState == "popup")
+	int treeState = HT_GetTreeStateForButton(node);
+	if (treeState == HT_POPUP_WINDOW)
 	{
+		HT_SetWindowType(pNavFrame->GetHTPane(), HT_POPUP_WINDOW);
+
 		// Actually appear at the specified position and set the popup flag to be true.
 		pNavFrame->SetDockStyle(DOCKSTYLE_POPUP);
 	
@@ -291,8 +293,10 @@ CNSNavFrame* CNSNavFrame::CreateFramedRDFViewFromResource(CWnd* pParent, int xPo
 		pOutliner->SetIsPopup(TRUE);
 		
 	}
-	else if (treeState == "Docked" || treeState == "docked")
+	else if (treeState == HT_DOCKED_WINDOW)
 	{
+		HT_SetWindowType(pNavFrame->GetHTPane(), HT_DOCKED_WINDOW);
+
 		// We're supposed to come up docked to the window.  Call DockFrame after setting
 		// the correct dock style
 		pNavFrame->SetDockStyle(DOCKSTYLE_DOCKEDLEFT);
@@ -489,6 +493,10 @@ void CNSNavFrame::CalcClientArea(RECT* lpRectClient, CNSGenFrame * pParentFrame)
 //------------------------------------------------------------------------------
 void CNSNavFrame::ForceFloat(BOOL show)
 {
+	// Notify HT of our new state. Reset to the popup state.
+	HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), HT_POPUP_WINDOW);
+	HT_SetWindowType(GetHTPane(), HT_STANDALONE_WINDOW);
+
 	CFrameWnd *pLayout = GetParentFrame();
 	
 	nsModifyStyle( GetSafeHwnd(), GWL_STYLE, WS_CHILD, WS_OVERLAPPEDWINDOW);
@@ -559,7 +567,8 @@ void CNSNavFrame::DockFrame(CNSGenFrame* pParent, short dockStyle)
 		}
 		
 		// Notify HT of our new state.
-		HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), "Docked");
+		HT_SetTreeStateForButton(HT_TopNode(HT_GetSelectedView(GetHTPane())), HT_DOCKED_WINDOW);
+		HT_SetWindowType(GetHTPane(), HT_DOCKED_WINDOW);
 
 		CRect rect = m_dockingDragRect;
 
