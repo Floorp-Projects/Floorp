@@ -44,6 +44,8 @@ class CToken;
 
 class nsIParserFilter : public nsISupports {
   public:
+
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERFILTER_IID)
       
    NS_IMETHOD RawBuffer(char * buffer, PRUint32 * buffer_length) = 0;
 
