@@ -848,7 +848,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCoun
   // Adjust our selection.
   nsCOMPtr<nsIOutlinerSelection> sel;
   mView->GetSelection(getter_AddRefs(sel));
-  sel->AdjustSelection(aIndex, aCount);
+  if (sel)
+    sel->AdjustSelection(aIndex, aCount);
 
   PRInt32 last;
   GetLastVisibleRow(&last);
