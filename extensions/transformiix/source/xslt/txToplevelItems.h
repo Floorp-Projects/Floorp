@@ -43,10 +43,10 @@
 #include "txOutputFormat.h"
 #include "XMLUtils.h"
 #include "txStylesheet.h"
+#include "txInstructions.h"
 
 class txPattern;
 class Expr;
-class txInstruction;
 
 class txToplevelItem
 {
