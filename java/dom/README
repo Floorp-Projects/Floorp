@@ -84,7 +84,7 @@ and do a gmake. No changes in makefiles are needed.
 You can find examples of Java DOM API usage in 
 
    mozilla/java/dom/classes/org/mozilla/dom/util
-   mozilla/java/dom/classes/org/mozilla/dom/tests
+   mozilla/java/dom/tests/src/applets
 
 
 DOM2 events
