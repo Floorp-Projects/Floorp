@@ -553,7 +553,7 @@ XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
 
     // Drop our reference to the parser to get rid of a circular
     // reference.
-    NS_RELEASE(mParser);
+    NS_IF_RELEASE(mParser);
     return NS_OK;
 }
 
