@@ -12,9 +12,13 @@
     <![CDATA[
     var dialogWindow = null;
 
+    function NewBrowser() {
+      return window.open("http://www.mozilla.org/", "New");
+    }
+
     // show a nonmodal dialog, sending parameters as part of the URL
     function MakeURLDialog() {
-      var newWin = window.open("resource://res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New");
+      var newWin = window.open("resource://res/samples/dexparamdialog.xul?remind=true;prompt=Give me your money and convertible bonds", "New", "chrome");
       return newWin;
     }
 
@@ -88,6 +92,9 @@
          style="background-color:rgb(192,192,192);"/>
       <xul:titledbutton
          value="Modal Dialog" onclick="ModalDialog()"
+         style="background-color:rgb(192,192,192);"/>
+      <xul:titledbutton
+         value="New Browser" onclick="NewBrowser()"
          style="background-color:rgb(192,192,192);"/>
       <xul:titledbutton
          value="Dump Window" onclick="DumpLastDialog()"
