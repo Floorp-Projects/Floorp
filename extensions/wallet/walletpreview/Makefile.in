@@ -23,20 +23,26 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = walletviewers
 LIBRARY_NAME = walletpreview_s
-IS_COMPONENT = 1
+XPIDL_MODULE = walletpreview
 
 XPIDLSRCS = \
 	nsIWalletPreview.idl		\
 	$(NULL)
 
 CPPSRCS = \
-	nsWalletPreviewFactory.cpp	\
 	nsWalletPreview.cpp		\
 	$(NULL)
 
 REQUIRES = walleteditor raptor xpcom
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
+
+MKSHLIB :=
+
+# we don't want the shared lib, but we want to force the creation of a static lib
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/WalletPreview.html $(DIST)/bin/res/samples

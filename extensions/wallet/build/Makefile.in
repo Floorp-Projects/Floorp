@@ -24,14 +24,19 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= walletviewers
 MODULE		= walletviewers
+IS_COMPONENT    = 1
 
 include $(topsrcdir)/config/config.mk
 
+CPPSRCS = \
+	nsWalletViewerFactory.cpp \
+	$(NULL)
+
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/cookieviewer_s.a \
-		$(DIST)/lib/signonviewer_s.a \
-		$(DIST)/lib/walletpreview_s.a \
-		$(DIST)/lib/walleteditor_s.a \
+		$(DIST)/lib/libcookieviewer_s.a \
+		$(DIST)/lib/libsignonviewer_s.a \
+		$(DIST)/lib/libwalletpreview_s.a \
+		$(DIST)/lib/libwalleteditor_s.a \
 		$(NULL)
 
 ifeq ($(OS_ARCH),HP-UX)
