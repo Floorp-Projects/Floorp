@@ -36,6 +36,7 @@ XPIDLSRCS =                               \
             .\nsIXPIProgressDlg.idl       \
             .\nsPIXPIStubHook.idl         \
             .\nsPIXPIManagerCallbacks.idl \
+#            .\nsIUpdateNotification.idl   \
             $(NULL) 
 
 include <$(DEPTH)\config\rules.mak>
