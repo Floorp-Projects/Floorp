@@ -1360,7 +1360,13 @@
           
           var height = rows * bx.rowHeight;
           
-          this.outliner.setAttribute("height", height);
+          if (height == 0)
+            this.outliner.setAttribute("collapsed", "true");
+          else {
+            if (this.outliner.hasAttribute("collapsed"))
+              this.outliner.removeAttribute("collapsed");
+            this.outliner.setAttribute("height", height);
+          }
           this.outliner.setAttribute("hidescrollbar", view.rowCount <= rows);
         ]]></body>
       </method>
