@@ -170,6 +170,13 @@ public:
                                   nsIFactory *aFactory,
                                   PRBool aReplace);
 
+  // Manually registry a factory for a class
+  static nsresult RegisterFactory(const nsCID &aClass,
+                                  const char *aClassName,
+                                  const char *aProgID,
+                                  nsIFactory *aFactory,
+                                  PRBool aReplace);
+
   // Manually registry a dynamically loaded factory for a class
   static nsresult RegisterFactory(const nsCID &aClass,
                                   const char *aLibrary,
