@@ -62,7 +62,7 @@
     <rows>
       <row align="center">
         <label value="&name.label;" accesskey="&name.accesskey;" control="name"/>
-        <textbox id="name"/>
+        <textbox id="name" oninput="onFieldInput();"/>
         <spacer/>
       </row>
       <row>
@@ -72,12 +72,12 @@
       </row>
       <row align="center">
         <label value="&url.label;" accesskey="&url.accesskey;" control="url"/>
-        <textbox id="url" oninput="onLocationInput();"/>
+        <textbox id="url" oninput="onFieldInput();"/>
         <spacer/>
       </row>
     </rows>
   </grid>
-
+  
   <separator id="createinseparator"/>
 
   <vbox id="folderbox" flex="1">
