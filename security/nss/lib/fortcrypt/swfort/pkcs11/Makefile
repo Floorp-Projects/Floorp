@@ -35,6 +35,7 @@
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 include config.mk
+INCLUDES += -I$(OBJDIR)
 
 
 #SWCILIB			= ../$(OBJDIR)/$(LIB_PREFIX)swfci.$(LIB_SUFFIX)
@@ -125,14 +126,19 @@ endif
 
 #$(SHARED_LIBRARY): $(SWCILIB)
 
-forsock.c: ../../forsock.c $(CP_INCLUDES)
-	cp ../../forsock.c $(CP_INCLUDES) .
+$(OBJDIR)/maci.h: $(CP_INCLUDES)
+	@$(MAKE_OBJDIR)
+	cp $(CP_INCLUDES) $(OBJDIR)
 
-fortpk11.c: ../../fortpk11.c
-	cp ../../fortpk11.c .
+$(OBJDIR)/forsock.c: ../../forsock.c $(OBJDIR)/maci.h
+	cp ../../forsock.c $(OBJDIR)
 
-fmutex.c: ../../fmutex.c
-	cp ../../fmutex.c  .
+$(OBJDIR)/fortpk11.c: ../../fortpk11.c $(OBJDIR)/maci.h
+	cp ../../fortpk11.c $(OBJDIR)
+
+$(OBJDIR)/fmutex.c: ../../fmutex.c $(OBJDIR)/maci.h
+	cp ../../fmutex.c  $(OBJDIR)
+
 
 
 #
