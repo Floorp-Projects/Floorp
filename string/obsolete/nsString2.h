@@ -55,6 +55,7 @@
 #ifndef nsAFlatString_h___
 #include "nsAFlatString.h"
 #endif
+#include "nsXPIDLString.h"
 
 #ifdef STANDALONE_MI_STRING_TESTS
   class nsAFlatString { public: virtual ~nsAString() { } };
@@ -470,10 +471,26 @@ public:
   PRInt32 CompareWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRInt32 CompareWithConversion(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  /* a hack to make sure things that used to compile continue to compile
+     even on compilers that don't have proper |explicit| support */
+  inline PRInt32
+  CompareWithConversion(const nsXPIDLString& aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
+    {
+      return CompareWithConversion(aString.get(), aIgnoreCase, aCount);
+    }
 
   PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  /* a hack to make sure things that used to compile continue to compile
+     even on compilers that don't have proper |explicit| support */
+  inline PRBool
+  EqualsWithConversion(const nsXPIDLString &aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
+    {
+      return EqualsWithConversion(aString.get(), aIgnoreCase, aCount);
+    }
+
+
   PRBool  EqualsAtom(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
 
   PRBool  EqualsIgnoreCase(const nsString& aString) const;
