@@ -74,6 +74,8 @@ enum JS2Op {
     eFalse,
     eNull,
     eNumber,
+    eUInt64,
+    eInt64,
     eString,            // <string pointer:u32>
     eThis,
     eNewObject,         // <argCount:u16>
@@ -149,20 +151,24 @@ public:
     uint32 toUInt32(float64 f);
     uint16 toUInt16(float64 f);
 
+
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
     float64 convertValueToDouble(js2val x);
     bool convertValueToBoolean(js2val x);
     int32 convertValueToInteger(js2val x);
+    js2val convertValueToGeneralNumber(js2val x);
 
     String *toString(js2val x)      { if (JS2VAL_IS_STRING(x)) return JS2VAL_TO_STRING(x); else return convertValueToString(x); }
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x);
+    js2val toGeneralNumber(js2val x){ if (JS2VAL_IS_NUMBER(x)) return x; else return convertValueToGeneralNumber(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
     int32 toInteger(js2val x)       { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
+    int32 checkInteger(js2val x);
 
     JS2Metadata *meta;
 
@@ -176,11 +182,18 @@ public:
     js2val posInfValue;
     js2val negInfValue;
 
-    // A cache of f.p. values (XXX experimentally trying to reduce # of double pointers XXX)
-    float64 *float64Table[256];
     js2val allocNumber(float64 x); 
     js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
+
+    js2val allocULong(uint64 x); 
+    js2val pushULong(uint64 x)          { js2val retval = allocULong(x); push(retval); return retval; }
+
+    js2val allocLong(int64 x); 
+    js2val pushLong(int64 x)            { js2val retval = allocLong(x); push(retval); return retval; }
+
 private:
+    // A cache of f.p. values (XXX experimentally trying to reduce # of double pointers XXX)
+    float64 *float64Table[256];
     float64 *newDoubleValue(float64 x);
     js2val retval;
 

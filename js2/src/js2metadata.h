@@ -127,8 +127,7 @@ public:
 };
 
 #define GCMARKOBJECT(n) if ((n) && !(n)->isMarked()) { (n)->mark(); (n)->markChildren(); }
-#define GCMARKVALUE(v) if (JS2VAL_IS_OBJECT(v)) { JS2Object *_obj = JS2VAL_TO_OBJECT(v); GCMARKOBJECT(_obj) } \
-                       else { if (JS2VAL_IS_DOUBLE(v)) { JS2Object::mark(JS2VAL_TO_DOUBLE(v)); } }
+#define GCMARKVALUE(v) JS2Object::markJS2Value(v)
 
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
@@ -160,6 +159,7 @@ public:
     void mark()                     { ((PondScum *)this)[-1].mark(); }
 
     static void mark(void *p)       { ((PondScum *)p)[-1].mark(); }
+    static void markJS2Value(js2val v);
 
 };
 

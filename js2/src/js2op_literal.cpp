@@ -40,6 +40,20 @@
             }
             break;
 
+        case eUInt64: 
+            {
+                pushULong(BytecodeContainer::getUInt64(pc));
+                pc += sizeof(uint64);
+            }
+            break;
+
+        case eInt64: 
+            {
+                pushLong(BytecodeContainer::getInt64(pc));
+                pc += sizeof(int64);
+            }
+            break;
+
         case eTrue: 
             {
 	        push(JS2VAL_TRUE);

@@ -56,9 +56,9 @@ static int64 ll_zero = JSLL_INIT( 0x00000000,0x00000000 );
 static int64 ll_maxint = JSLL_INIT( 0x7fffffff, 0xffffffff );
 static int64 ll_minint = JSLL_INIT( 0x80000000, 0x00000000 );
 
-static int64 JSLL_Zero(void) { return ll_zero; }
-static int64 JSLL_MaxInt(void) { return ll_maxint; }
-static int64 JSLL_MinInt(void) { return ll_minint; }
+int64 JSLL_Zero(void)       { return ll_zero; }
+int64 JSLL_MaxInt(void)     { return ll_maxint; }
+int64 JSLL_MinInt(void)     { return ll_minint; }
 //
 //
 

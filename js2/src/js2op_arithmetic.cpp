@@ -35,7 +35,24 @@
     case eMinus:
         {
 	    a = pop();
-            pushNumber(-toNumber(a));
+            a = toGeneralNumber(a);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 v = *JS2VAL_TO_LONG(a);
+                if (JSLL_EQ(v, JSLL_MININT))
+                    meta->reportError(Exception::rangeError, "Arithmetic overflow", errorPos());
+                JSLL_NEG(v, v);
+                pushLong(v);
+            }
+            else
+            if (JS2VAL_IS_ULONG(a)) {
+                uint64 v = *JS2VAL_TO_ULONG(a);
+                if (JSLL_UCMP(v, >, JSLL_MAXINT))
+                    meta->reportError(Exception::rangeError, "Arithmetic overflow", errorPos());
+                JSLL_NEG(v, v);
+                pushLong(v);
+            }
+            else
+                pushNumber(-toNumber(a));
         }
         break;
 
@@ -56,30 +73,71 @@
         {
 	    b = pop();
 	    a = pop();
-            int32 count = toInteger(b) & 0x1F;
-            pushNumber(toInteger(a) << count);
+            a = toGeneralNumber(a);
+            int32 count = toInteger(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 r;
+                JSLL_SHL(r, *JS2VAL_TO_LONG(a), count & 0x3F);
+                pushLong(r);
+            }
+            else
+            if (JS2VAL_IS_ULONG(a)) {
+                uint64 r;
+                JSLL_SHL(r, *JS2VAL_TO_ULONG(a), count & 0x3F);
+                pushULong(r);
+            }
+            else
+            pushNumber(toInteger(a) << (count & 0x1F));
         }
         break;
     case eRightShift:
         {
 	    b = pop();
 	    a = pop();
-            int32 count = toInteger(b) & 0x1F;
-            pushNumber(toInteger(a) >> count);
+            a = toGeneralNumber(a);
+            int32 count = toInteger(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 r;
+                JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
+                pushLong(r);
+            }
+            else
+            if (JS2VAL_IS_ULONG(a)) {
+                uint64 r;
+                JSLL_USHR(r, *JS2VAL_TO_ULONG(a), count & 0x3F);
+                pushULong(r);
+            }
+            else
+            pushNumber(toInteger(a) >> (count & 0x1F));
         }
         break;
     case eLogicalRightShift:
         {
 	    b = pop();
 	    a = pop();
-            int32 count = toInteger(b) & 0x1F;
-            pushNumber(toUInt32(toInteger(a)) >> count);
+            a = toGeneralNumber(a);
+            int32 count = toInteger(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 r;
+                JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
+                pushLong(r);
+            }
+            else
+            if (JS2VAL_IS_ULONG(a)) {
+                uint64 r;
+                JSLL_USHR(r, *JS2VAL_TO_ULONG(a), count & 0x3F);
+                pushULong(r);
+            }
+            else
+            pushNumber(toUInt32(toInteger(a)) >> (count & 0x1F));
         }
         break;
     case eBitwiseAnd:
         {
 	    b = pop();
 	    a = pop();
+            b = toGeneralNumber(b);
+            a = toGeneralNumber(a);
             pushNumber(toInteger(a) & toInteger(b));
         }
         break;

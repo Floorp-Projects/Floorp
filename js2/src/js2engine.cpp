@@ -48,6 +48,7 @@
 #include "world.h"
 #include "utilities.h"
 #include "js2value.h"
+#include "jslong.h"
 #include "numerics.h"
 #include "fdlibm_ns.h"
 
@@ -140,6 +141,23 @@ namespace MetaData {
         return retval;
     }
 
+    // Don't store as an int, even if possible, we need to retain 'longness'
+    js2val JS2Engine::allocULong(uint64 x)
+    {
+        uint64 *p = (uint64 *)(JS2Object::alloc(sizeof(uint64)));
+        *p = x;
+        return ULONG_TO_JS2VAL(p);
+        
+    }
+
+    // Don't store as an int, even if possible, we need to retain 'longness'
+    js2val JS2Engine::allocLong(int64 x)
+    {
+        int64 *p = (int64 *)(JS2Object::alloc(sizeof(int64)));
+        *p = x;
+        return LONG_TO_JS2VAL(p);
+    }
+
     // Convert an integer to a string
     String *numberToString(int32 i)
     {
@@ -167,6 +185,20 @@ namespace MetaData {
             return (JS2VAL_TO_BOOLEAN(x)) ? &true_StringAtom : &false_StringAtom;
         if (JS2VAL_IS_INT(x))
             return numberToString(JS2VAL_TO_INT(x));
+        if (JS2VAL_IS_LONG(x)) {
+            float64 d;
+            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
+            return numberToString(&d);
+        }
+        if (JS2VAL_IS_ULONG(x)) {
+            float64 d;
+            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
+            return numberToString(&d);
+        }
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 d = *JS2VAL_TO_FLOAT(x);
+            return numberToString(&d);
+        }
         if (JS2VAL_IS_DOUBLE(x))
             return numberToString(JS2VAL_TO_DOUBLE(x));
         return toString(toPrimitive(x));
@@ -202,26 +234,70 @@ namespace MetaData {
         return toNumber(toPrimitive(x));
     }
 
+    // x is not a number
+    js2val JS2Engine::convertValueToGeneralNumber(js2val x)
+    {
+        // XXX Assuming convert to float64, rather than long/ulong
+        return allocNumber(toNumber(x));
+    }
+
+    // x is a Number
+    int64 JS2Engine::checkInteger(js2val x)
+    {
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 f = *JS2VAL_TO_FLOAT(x);
+            if (!JSDOUBLE_IS_FINITE(f, i))
+                meta->reportError(Exception::rangeError, "Non integer", errorPos());
+            int64 i;
+            JSLL_D2L(i, f);
+            JSLL_L2D(f, i);
+            if (!=) rangeError...
+            return i;
+        }
+        else
+        if (JS2VAL_IS_DOUBLE(x)) {
+            float64 d = *JS2VAL_TO_DOUBLE(x);
+            if (!JSDOUBLE_IS_INT(d, i))
+                meta->reportError(Exception::rangeError, "Non integer", errorPos());
+            return i;
+        }
+        else
+        if (JS2VAL_IS_LONG(x)) {
+            JSLL_L2I(i, *JS2VAL_TO_LONG(x));
+            return i;
+        }
+        ASSERT(JS2VAL_IS_ULONG(x));
+            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+            return i;
+        }
+    }
+
+    // x is any js2val
     float64 JS2Engine::toNumber(js2val x)
     { 
         if (JS2VAL_IS_INT(x)) 
             return JS2VAL_TO_INT(x); 
-        else 
+        else
         if (JS2VAL_IS_DOUBLE(x)) 
             return *JS2VAL_TO_DOUBLE(x); 
         else
-        if (JS2VAL_IS_LONG(x))
-            return *JS2VAL_TO_LONG(x);
+        if (JS2VAL_IS_LONG(x)) {
+            float64 d;
+            JSLL_L2D(d, *JS2VAL_TO_LONG(x));
+            return d;
+        }
         else
-        if (JS2VAL_IS_ULONG(x))
-            return *JS2VAL_TO_ULONG(x);
+        if (JS2VAL_IS_ULONG(x)) {
+            float64 d;
+            JSLL_UL2D(d, *JS2VAL_TO_ULONG(x));
+            return d; 
+        }
         else
         if (JS2VAL_IS_FLOAT(x))
             return *JS2VAL_TO_FLOAT(x);
         else 
             return convertValueToDouble(x); 
     }
-
 
     // x is not a bool
     bool JS2Engine::convertValueToBoolean(js2val x)
@@ -232,9 +308,15 @@ namespace MetaData {
             return false;
         if (JS2VAL_IS_INT(x))
             return (JS2VAL_TO_INT(x) != 0);
+        if (JS2VAL_IS_LONG(x) || JS2VAL_IS_ULONG(x))
+            return (!JSLL_IS_ZERO(x));
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 xd = *JS2VAL_TO_FLOAT(x);
+            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
+        }
         if (JS2VAL_IS_DOUBLE(x)) {
-            float64 *xd = JS2VAL_TO_DOUBLE(x);
-            return ! (JSDOUBLE_IS_POSZERO(*xd) || JSDOUBLE_IS_NEGZERO(*xd) || JSDOUBLE_IS_NaN(*xd));
+            float64 xd = *JS2VAL_TO_DOUBLE(x);
+            return ! (JSDOUBLE_IS_POSZERO(xd) || JSDOUBLE_IS_NEGZERO(xd) || JSDOUBLE_IS_NaN(xd));
         }
         if (JS2VAL_IS_STRING(x)) {
             String *str = JS2VAL_TO_STRING(x);
@@ -246,8 +328,25 @@ namespace MetaData {
     // x is not an int
     int32 JS2Engine::convertValueToInteger(js2val x)
     {
-        float64 f = (JS2VAL_IS_DOUBLE(x)) ? *JS2VAL_TO_DOUBLE(x) : convertValueToDouble(x);
-        return toInt32(f);
+        int32 i;
+        if (JS2VAL_IS_LONG(x)) {
+            JSLL_L2I(i, *JS2VAL_TO_LONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_ULONG(x)) {
+            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+            return i;
+        }
+        if (JS2VAL_IS_FLOAT(x)) {
+            float64 f = *JS2VAL_TO_FLOAT(x);
+            return toInt32(f);
+        }
+        if (JS2VAL_IS_DOUBLE(x)) {
+            float64 d = *JS2VAL_TO_DOUBLE(x);
+            return toInt32(d);
+        }
+        float64 d = convertValueToDouble(x);
+        return toInt32(d);
     }
 
     int32 JS2Engine::toInt32(float64 d)
@@ -356,6 +455,8 @@ namespace MetaData {
         case eTrue:
         case eFalse:
         case eNumber:
+        case eUInt64:
+        case eInt64:
         case eNull:
         case eThis:
             return 1;       // push literal value
@@ -515,10 +616,7 @@ namespace MetaData {
                 f->bCon->mark();
         }
         for (js2val *e = execStack; (e < sp); e++) {
-            if (JS2VAL_IS_OBJECT(*e)) {
-                JS2Object *obj = JS2VAL_TO_OBJECT(*e);
-                GCMARKOBJECT(obj)
-            }
+            GCMARKVALUE(*e);
         }
         JS2Object::mark(JS2VAL_TO_DOUBLE(nanValue));
         JS2Object::mark(JS2VAL_TO_DOUBLE(posInfValue));
@@ -534,6 +632,6 @@ namespace MetaData {
         GCMARKVALUE(indexVal);
     }
 
+}
+}
 
-}
-}

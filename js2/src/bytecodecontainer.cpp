@@ -83,7 +83,7 @@ namespace MetaData {
             bCon->addOffset(int32(mLocation - branchLocation));
         else {
             mFixupList.push_back(branchLocation); 
-            bCon->addLong(0);
+            bCon->addOffset(0);
         }
     }
 

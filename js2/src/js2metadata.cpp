@@ -1087,6 +1087,7 @@ namespace MetaData {
         switch (p->getKind()) {
         case ExprNode::Null:
         case ExprNode::number:
+        case ExprNode::numUnit:
         case ExprNode::string:
         case ExprNode::boolean:
             break;
@@ -1485,6 +1486,18 @@ doUnary:
         case ExprNode::Null:
             {
                 bCon->emitOp(eNull, p->pos);
+            }
+            break;
+        case ExprNode::numUnit:
+            {
+                NumUnitExprNode *n = checked_cast<NumUnitExprNode *>(p);
+                if (n->str == L"UL")
+                    bCon->addUInt64(n->num, p->pos);
+                else
+                    if (n->str == L"L")
+                        bCon->addInt64(n->num, p->pos);
+                    else
+                        reportError(Exception::badValueError, "Unrecognized unit", p->pos);
             }
             break;
         case ExprNode::number:
@@ -3149,11 +3162,11 @@ deleteClassProperty:
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
-                GCMARKVALUE(slots[i].value)
+                GCMARKVALUE(slots[i].value);
             }
         }
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second)
+            GCMARKVALUE(i->second);
         }        
     }
 
@@ -3195,7 +3208,7 @@ deleteClassProperty:
         if (slots) {
             ASSERT(type);
             for (uint32 i = 0; (i < type->slotCount); i++) {
-                GCMARKVALUE(slots[i].value)
+                GCMARKVALUE(slots[i].value);
             }
         }
     }
@@ -3212,7 +3225,7 @@ deleteClassProperty:
     {
         GCMARKOBJECT(parent)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second)
+            GCMARKVALUE(i->second);
         }        
     }
 
@@ -3226,7 +3239,7 @@ deleteClassProperty:
     // gc-mark all contained JS2Objects and visit contained structures to do likewise
     void MethodClosure::markChildren()     
     { 
-        GCMARKVALUE(thisObject)
+        GCMARKVALUE(thisObject);
         GCMARKOBJECT(method->fInst)
     }
 
@@ -3263,7 +3276,7 @@ deleteClassProperty:
         Frame::markChildren();
         GCMARKOBJECT(internalNamespace)
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
-            GCMARKVALUE(i->second)
+            GCMARKVALUE(i->second);
         }        
     }
 
@@ -3283,7 +3296,7 @@ deleteClassProperty:
     void ParameterFrame::markChildren()
     {
         Frame::markChildren();
-        GCMARKVALUE(thisObject)
+        GCMARKVALUE(thisObject);
     }
 
 
@@ -3438,6 +3451,25 @@ deleteClassProperty:
         p->owner->returnToPond(p);
     }
 
+    void JS2Object::markJS2Value(js2val v)
+    {
+        if (JS2VAL_IS_OBJECT(v)) { 
+            JS2Object *obj = JS2VAL_TO_OBJECT(v); 
+            GCMARKOBJECT(obj);
+        }
+        else
+        if (JS2VAL_IS_DOUBLE(v)) 
+            JS2Object::mark(JS2VAL_TO_DOUBLE(v));
+        else
+        if (JS2VAL_IS_LONG(v)) 
+            JS2Object::mark(JS2VAL_TO_LONG(v));
+        else
+        if (JS2VAL_IS_ULONG(v)) 
+            JS2Object::mark(JS2VAL_TO_ULONG(v));
+        else
+        if (JS2VAL_IS_FLOAT(v)) 
+            JS2Object::mark(JS2VAL_TO_FLOAT(v));
+    }
 
 /************************************************************************************
  *

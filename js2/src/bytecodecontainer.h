@@ -112,14 +112,22 @@ public:
 
     void addByte(uint8 v)                   { mBuffer.push_back(v); }
     
-    void addPointer(const void *v)          { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }
-    static void *getPointer(void *pc)       { return (void *)getLong(pc); }
+    void addPointer(const void *v)          { ASSERT(sizeof(void *) == sizeof(uint32)); addUInt32((uint32)(v)); }
+    static void *getPointer(void *pc)       { return (void *)getUInt32(pc); }
     
+    // These insert the opcodes...
     void addFloat64(float64 v, size_t pos)  { emitOp(eNumber, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(float64)); }
     static float64 getFloat64(void *pc)     { return *((float64 *)pc); }
    
-    void addLong(const uint32 v)            { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
-    static uint32 getLong(void *pc)         { return *((uint32 *)pc); }
+    void addUInt64(const uint64 v, size_t pos) { emitOp(eUInt64, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint64)); }
+    static uint64 getUInt64(void *pc)       { return *((uint64 *)pc); }
+
+    void addInt64(const int64 v, size_t pos)   { emitOp(eInt64, pos); mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int64)); }
+    static int64 getInt64(void *pc)         { return *((int64 *)pc); }
+
+    // These don't insert opcodes...
+    void addUInt32(const uint32 v)          { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+    static uint32 getUInt32(void *pc)       { return *((uint32 *)pc); }
 
     void addShort(uint16 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
     static uint16 getShort(void *pc)        { return *((uint16 *)pc); }

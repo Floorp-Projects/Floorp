@@ -54,6 +54,10 @@
 **      initializer
 ***********************************************************************/
 
+extern int64 JSLL_MaxInt();
+extern int64 JSLL_MinInt();
+extern int64 JSLL_Zero();
+
 #define JSLL_MAXINT   JSLL_MaxInt()
 #define JSLL_MININT   JSLL_MinInt()
 #define JSLL_ZERO     JSLL_Zero()
@@ -155,12 +159,26 @@
 **  JSLL_D2L            Convert float to 64 bit
 ***********************************************************************/
 #define JSLL_L2I(i, l)        ((i) = (int32)(l))
-#define JSLL_L2UI(ui, l)        ((ui) = (uint32)(l))
+#define JSLL_UL2I(i, ul)      ((i) = (int32)(ul))
+#define JSLL_L2UI(ui, l)      ((ui) = (uint32)(l))
 #define JSLL_L2F(f, l)        ((f) = (float64)(l))
 #define JSLL_L2D(d, l)        ((d) = (float64)(l))
+#ifdef _WIN32
+#define JSLL_UL2D(d, ul) {              \
+    if (ul > JSLL_MAXINT) {             \
+        int64 _l2 = ul - JSLL_MAXINT;   \
+        JSLL_L2D(d, _l2);               \
+        (d) += JSLL_MININT;             \
+    }                                   \
+    else                                \
+        (d) = (int64)ul;                \
+}
+#else
+#define JSLL_UL2D(d, ul)      ((d) = (float64)(ul))
+#endif
 
 #define JSLL_I2L(l, i)        ((l) = (int64)(i))
-#define JSLL_UI2L(l, ui)        ((l) = (int64)(ui))
+#define JSLL_UI2L(l, ui)      ((l) = (int64)(ui))
 #define JSLL_F2L(l, f)        ((l) = (int64)(f))
 #define JSLL_D2L(l, d)        ((l) = (int64)(d))
 
@@ -382,6 +400,8 @@ extern void jsll_udivmod(uint64 *qp, uint64 *rp, uint64 a, uint64 b);
     if (_negative) \
     (d) = -(d); \
 }
+
+#define JSLL_UL2D(d, ul)      ((d) = (double)ul.hi * 4.294967296e9 + ul.lo)
 
 #define JSLL_I2L(l, i)        { int32 _i = (i) >> 31; (l).lo = (i); (l).hi = _i; }
 #define JSLL_UI2L(l, ui)      ((l).lo = (ui), (l).hi = 0)
