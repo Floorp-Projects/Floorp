@@ -256,8 +256,8 @@ function Startup()
   
 function onFontsDialogOK()
   {
-    window.opener.top.hPrefWindow.wsm.savePageData(window.location.href, window);
-    
+    gPrefWindow.registerOKCallbackFunc(window.opener.saveFontPrefs);
+    gPrefWindow.wsm.savePageData(window.location.href, window);
     return true;
   }   
 
