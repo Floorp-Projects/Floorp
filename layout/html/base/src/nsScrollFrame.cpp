@@ -187,10 +187,12 @@ nsScrollFrame::CreateScrollingView()
     view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
 
     // Set the scroll prefrence
+#if 0
     nsScrollPreference scrollPref = (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)
                                     ? nsScrollPreference_kAlwaysScroll :
                                       nsScrollPreference_kAuto;
     scrollingView->SetScrollPreference(scrollPref);
+#endif
 
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
@@ -293,6 +295,11 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // The reflow state width reflects space for the content area only, so don't
     // subtract for borders...
     scrollAreaSize.width = aReflowState.minWidth;
+
+    if (eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) {
+      scrollAreaSize.width -= border.left + border.right;
+      scrollAreaSize.width -= NSToCoordRound(sbWidth);
+    }
   }
   else {
     // Use the max width in the reflow state
@@ -311,6 +318,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // The reflow state height reflects space for the content area only, so don't
     // subtract for borders...
     scrollAreaSize.height = aReflowState.minHeight;
+
+    if (eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) {
+      scrollAreaSize.height -= border.top + border.bottom;
+
+      // If scrollbars are always visible then subtract for the
+      // height of the horizontal scrollbar
+      if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
+        scrollAreaSize.height -= NSToCoordRound(sbHeight);
+      }
+    }
   }
   else {
     // Use the max height in the reflow state
@@ -340,7 +357,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   
   // Make sure the scrolled frame fills the entire scroll area along a
   // fixed dimension
-  if (aReflowState.HaveConstrainedHeight()) {
+  if ((eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) || aReflowState.HaveConstrainedHeight()) {
     if (kidDesiredSize.height < scrollAreaSize.height) {
       kidDesiredSize.height = scrollAreaSize.height;
     }
@@ -354,7 +371,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
   }
-  if (aReflowState.HaveConstrainedWidth()) {
+  if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) || aReflowState.HaveConstrainedWidth()) {
     if (kidDesiredSize.width < scrollAreaSize.width) {
       kidDesiredSize.width = scrollAreaSize.width;
     }
@@ -378,14 +395,14 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our desired size. If our size was fixed then use the fixed size;
   // otherwise, shrink wrap around the scrolled frame
-  if (aReflowState.HaveConstrainedWidth()) {
+  if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) || aReflowState.HaveConstrainedWidth()) {
     aDesiredSize.width = scrollAreaSize.width;
   } else {
     aDesiredSize.width = kidDesiredSize.width;
   }
   aDesiredSize.width += border.left + border.right + NSToCoordRound(sbWidth);
 
-  if (aReflowState.HaveConstrainedHeight()) {
+  if ((eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) || aReflowState.HaveConstrainedHeight()) {
     aDesiredSize.height = scrollAreaSize.height;
   } else {
     aDesiredSize.height = kidDesiredSize.height;
