@@ -46,18 +46,11 @@ sub provides {
             $class->SUPER::provides($service));
 }
 
-sub objectProvides {
-    my $class = shift;
-    my($service) = @_;
-    return ($service eq 'user.login.deniedUserHandle' or $class->SUPER::objectProvides($service));
-}
-
-sub objectInit {
-    my $self = shift;
-    my($app, $user) = @_;
-    $self->SUPER::objectInit(@_);
-    $self->user($user);
-}
+# this module makes calls to:
+#  input.verify.user.<protocol>
+#  user.login.canLogin.<protocol>
+#  user.logout.<protocol>
+#  user.login.required.<protocol>
 
 # input.verify
 sub verifyInput {
@@ -67,28 +60,24 @@ sub verifyInput {
     $self->userAdminMessage('');
     # let's see if there are any protocol-specific user authenticators
     my @result = $app->getSelectingServiceList('input.verify.user.'.$app->input->defaultOutputProtocol)->authenticateUser($app);
-    if (not @result) { 
+    if (not @result) {
         # ok, let's try the generic authenticators...
+        # this should not fail since it will fall back on this module
         @result = $app->getSelectingServiceList('input.verify.user.generic')->authenticateUser($app);
     }
     # now let's see what that gave us
     if (@result) {
         # horrah, somebody knew what to do!
         if (defined($result[0])) {
-            my $canLogin = $result[0]->checkLogin();
-            if ($canLogin) {
-                if ($canLogin != 0) {
-                    # can log in and not logged out
+            if ($result[0]->checkLogin()) {
+                # hook for things that want to override login
+                if (not($app->getSelectingServiceList('user.login.canLogin.'.$app->input->defaultOutputProtocol)->canLogin($app, $result[0]) or
+                        $app->getSelectingServiceList('user.login.canLogin.generic')->canLogin($app, $result[0]))) {
+                    # can definitely log in
                     $app->addObject($result[0]); # they will have returned a user object
-                } else {
-                    # logged out (0E0 is true but numerically equal to 0)
-                    # flag user internally so we know to log them out
-                    # if they try to do something that requires login
-                    # (note: we can't store a reference to an object
-                    # ourselves, so create an object to hold the
-                    # reference for us)
-                    $app->addObject($self->objectCreate($app, $result[0]));
                 }
+                # else user is not denied but protocol-specific stuff
+                # made it not count
             } else {
                 # hmm, so apparently user is not allowed to log in
                 $self->dump(2, 'user '.($result[0]->userID).' tried logging in but their account is disabled');
@@ -96,6 +85,7 @@ sub verifyInput {
                 return $self; # supports user.login (reportInputVerificationError)
             }
         }
+        # else user did not try to authenticate
     }
     return; # nope, nothing to see here... (no error, anyway)
 }
@@ -129,18 +119,12 @@ sub cmdLoginRequestAccount {
 sub cmdLoginLogout {
     my $self = shift;
     my($app) = @_;
-    # mark the user as logged out and then return to the main index page
     my $user = $app->getObject('user');
-    if (defined($user)) {
-        $user->logout();
-        $app->removeObject($user);
-        # flag user internally so we know to log them out
-        # if they try to do something that requires login
-        # (note: we can't store a reference to an object
-        # ourselves, so create an object to hold the
-        # reference for us)
-        $self->addObject($self->objectCreate($app, $user));
-    }
+    $self->assert(defined($user), 0, 'Not logged in, cannot log out');
+    $self->assert($app->getSelectingServiceList('user.logout.'.$app->input->defaultOutputProtocol)->logoutUser($app, $user) or
+                  $app->getSelectingServiceList('user.logout.generic')->logoutUser($app, $user),
+                  0, 'Logging out when using the '.($app->input->defaultOutputProtocol).' protocol is not supported');
+    $app->removeObject($user);
     $app->noCommand();
 }
 
@@ -193,17 +177,15 @@ sub hasRight {
 sub requireLogin {
     my $self = shift;
     my($app) = @_;
-    my $deniedUser = $app->getObject('user.login.deniedUserHandle');
-    if (defined($deniedUser)) {
-        $deniedUser->user->loggedOut();
-        $app->removeObject($deniedUser);
-    } else {
-        my $address = $app->input->address;
-        if (defined($address) and not defined($app->getService('user.factory')->getUserByContactDetails($app, $app->input->protocol, $address))) {
-            my($user, $password) = $self->createUser($app, $app->input->protocol, $address);
-            $self->sendPassword($app, $user, $app->input->protocol, $password);
-            return;
-        }
+    # hook for things that want to know that we've denied access
+    if (not $app->getSelectingServiceList('user.login.required.'.$app->input->defaultOutputProtocol)->loginRequired($app)) {
+        $app->getSelectingServiceList('user.login.required.generic')->loginRequired($app);
+    }
+    my $address = $app->input->address;
+    if (defined($address) and not defined($app->getService('user.factory')->getUserByContactDetails($app, $app->input->protocol, $address))) {
+        my($user, $password) = $self->createUser($app, $app->input->protocol, $address);
+        $self->sendPassword($app, $user, $app->input->protocol, $password);
+        return;
     }
     $app->output->loginFailed(0, '');
 }
