@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsVoidArray.h"
+#include "nsBorder.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
@@ -214,6 +215,15 @@ public:
   void    ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+
+  nscoord GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide);
+
+  PRUint8 CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2);
+
+  void    ComputeCollapsedBorderSegment(PRUint8       aSide, 
+                                        nsVoidArray * aStyles, 
+                                        nsBorderEdge& aBorder);
+
 
   void    RecalcLayoutData();
 
