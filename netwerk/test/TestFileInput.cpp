@@ -23,7 +23,7 @@
 #include "nsIThread.h"
 #include "plevent.h"
 #include "prinrval.h"
-#include "prcmon.h"
+#include "prmon.h"
 #include "prio.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
@@ -45,10 +45,12 @@ public:
 
     NS_IMETHOD Run() {
 //        printf("waiting\n");
-        PR_CEnterMonitor(this);
+        if (!mMonitor)
+            return NS_ERROR_OUT_OF_MEMORY;
+        PR_EnterMonitor(mMonitor);
         if (mEventQueue == nsnull)
             PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-        PR_CExitMonitor(this);
+        PR_ExitMonitor(mMonitor);
 
 //        printf("running\n");
         PL_EventLoop(mEventQueue);
@@ -60,10 +62,12 @@ public:
         : mEventQueue(nsnull), mStartTime(0), mThread(nsnull)
     {
         NS_INIT_REFCNT();
+        mMonitor = PR_NewMonitor();
     }
 
     virtual ~nsReader() {
         NS_IF_RELEASE(mThread);
+        PR_DestroyMonitor(mMonitor);
     }
 
     nsresult Init(nsIThread* thread) {
@@ -71,12 +75,12 @@ public:
         NS_ADDREF(mThread);
         PRThread* prthread;
         thread->GetPRThread(&prthread);
-        PR_CEnterMonitor(this);
+        PR_EnterMonitor(mMonitor);
         mEventQueue = PL_CreateEventQueue("runner event loop",
                                           prthread);
         // wake up event loop
-        PR_CNotify(this);
-        PR_CExitMonitor(this);
+        PR_Notify(mMonitor);
+        PR_ExitMonitor(mMonitor);
         
         return NS_OK;
     }
@@ -84,10 +88,10 @@ public:
     PLEventQueue* GetEventQueue() { return mEventQueue; }
 
     NS_IMETHOD OnStartBinding(nsISupports* context) {
-        PR_CEnterMonitor(this);
+        PR_EnterMonitor(mMonitor);
 //        printf("start binding\n"); 
         mStartTime = PR_IntervalNow();
-        PR_CExitMonitor(this);
+        PR_ExitMonitor(mMonitor);
         return NS_OK;
     }
 
@@ -95,7 +99,7 @@ public:
                                nsIInputStream *aIStream, 
                                PRUint32 aSourceOffset,
                                PRUint32 aLength) {
-        PR_CEnterMonitor(this);
+        PR_EnterMonitor(mMonitor);
         char buf[1025];
         while (aLength > 0) {
             PRUint32 amt;
@@ -105,7 +109,7 @@ public:
             aLength -= amt;
             gVolume += amt;
         }
-        PR_CExitMonitor(this);
+        PR_ExitMonitor(mMonitor);
         return NS_OK;
     }
 
@@ -113,7 +117,7 @@ public:
                              nsresult aStatus,
                              nsIString* aMsg) {
         nsresult rv;
-        PR_CEnterMonitor(this);
+        PR_EnterMonitor(mMonitor);
         if (aStatus == NS_OK) {
             PRIntervalTime endTime = PR_IntervalNow();
             gDuration += (endTime - mStartTime);
@@ -121,7 +125,7 @@ public:
         else {
             printf("stop binding, %d\n", aStatus);
         }
-        PR_CExitMonitor(this);
+        PR_ExitMonitor(mMonitor);
 
         // get me out of my event loop
         rv = mThread->Interrupt();
@@ -134,6 +138,9 @@ protected:
     PLEventQueue*       mEventQueue;
     PRIntervalTime      mStartTime;
     nsIThread*          mThread;
+
+private:
+    PRMonitor*          mMonitor;
 };
 
 NS_IMPL_ADDREF(nsReader);
