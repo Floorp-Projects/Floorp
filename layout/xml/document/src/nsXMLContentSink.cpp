@@ -34,6 +34,7 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
 #include "nsITextContent.h"
@@ -1861,15 +1862,15 @@ nsresult
 nsXMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 {
   if (vm) {
-    nsIContentViewer* contentViewer = nsnull;
-    nsresult rv = mWebShell->GetContentViewer(&contentViewer);
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
     if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
       PRBool enabled;
       contentViewer->GetEnableRendering(&enabled);
       if (enabled) {
         vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
-      NS_RELEASE(contentViewer);
     }
   }
   return NS_OK;
