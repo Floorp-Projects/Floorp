@@ -39,7 +39,7 @@ NS_IMPL_ISUPPORTS(nsStreamConverterService, nsCOMTypeInfo<nsIStreamConverterServ
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
 nsStreamConverterService::nsStreamConverterService() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mAdjacencyList = nsnull;
 }
 
@@ -656,10 +656,10 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
-            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), nsnull, forwardListener);
+            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), forwardListener, nsnull);
 
             nsIStreamListener *listener = nsnull;
-            rv = conv->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
+            rv = conv->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
             if (NS_FAILED(rv)) return rv;
 
             // store the listener of the first converter in the chain.

@@ -20,8 +20,9 @@ DEPTH = ..\..
 MODULE = streamconv
 
 DIRS=          \
-	public \
-	src    \
-	$(NULL)
+    public \
+    src    \
+    test   \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
