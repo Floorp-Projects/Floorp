@@ -194,6 +194,8 @@ function calendarInit()
    //a bit of a hack since the menulist doesn't remember the selected value     
    var value = document.getElementById( 'event-filter-menulist' ).value;
    document.getElementById( 'event-filter-menulist' ).selectedItem = document.getElementById( 'event-filter-'+value );
+
+   gEventSource.alarmObserver.firePendingAlarms();
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 

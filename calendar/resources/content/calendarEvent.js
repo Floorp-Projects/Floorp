@@ -642,8 +642,6 @@ CalendarEventDataSource.prototype.prepareAlarms = function calEvent_prepareAlarm
     this.alarmObserver =  new CalendarAlarmObserver( this );
     
     this.gICalLib.addObserver( this.alarmObserver );
-    
-    this.alarmObserver.firePendingAlarms( this.alarmObserver );
 }
 
 function CalendarAlarmObserver( calendarService )
@@ -662,8 +660,6 @@ CalendarAlarmObserver.prototype.firePendingAlarms = function calAlarm_firePendin
       for( var i in this.pendingAlarmList )
       {
          this.fireAlarm( this.pendingAlarmList[ i ] );
-
-         observer.onAlarm( this.pendingAlarmList[ i ] ); 
       }
     }
    this.pendingAlarmList = null;
@@ -681,11 +677,11 @@ CalendarAlarmObserver.prototype.onError = function(){}
 
 CalendarAlarmObserver.prototype.onAlarm = function calAlarm_onAlarm( calendarEvent )
 {
-    dump( "caEvent.alarmWentOff is "+ calendarEvent );
+    dump( "caEvent.alarmWentOff is "+ calendarEvent + "\n" );
     
     if( this.addToPending )
     {
-        dump( "defering alarm "+ calendarEvent );
+        dump( "defering alarm "+ calendarEvent + "\n" );
         this.pendingAlarmList.push( calendarEvent );
     }
     else
@@ -696,7 +692,7 @@ CalendarAlarmObserver.prototype.onAlarm = function calAlarm_onAlarm( calendarEve
 
 CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calendarEvent )
 {
-   dump( "Fire alarm "+ calendarEvent );
+   dump( "Fire alarm "+ calendarEvent + "\n" );
    
    if( typeof( gCalendarWindow ) == "undefined" )
    {
