@@ -63,12 +63,17 @@ function getString( stringId ) {
    if ( !dialog.strings[ stringId ] ) {
       // Try to get it.
       var elem = document.getElementById( "dialog.strings."+stringId );
-      if ( elem ) {
+      if ( elem
+           &&
+           elem.childNodes
+           &&
+           elem.childNodes[0]
+           &&
+           elem.childNodes[0].nodeValue ) {
          dialog.strings[ stringId ] = elem.childNodes[0].nodeValue;
-      }
-      // If missing, use "?" instead.
-      if ( !dialog.strings[ stringId ] ) {
-         dialogs.strings[ stringId ] = "?";
+      } else {
+         // If unable to fetch string, use an empty string.
+         dialog.strings[ stringId ] = "";
       }
    }
    return dialog.strings[ stringId ];
