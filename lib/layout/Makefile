@@ -20,6 +20,8 @@ DEPTH		= ../..
 MODULE		= lay
 LIBRARY_NAME	= lay
 
+include $(DEPTH)/config/config.mk
+
 EXPORTS		= laylayer.h layout.h lo_funcs.h
 
 # XXX Perignon hack
@@ -70,8 +72,6 @@ REQUIRES	= parse style js layer applet nspr security dbm img util jtools edtplug
 ifdef DOM
 REQUIRES	+= dom
 endif
-
-include $(DEPTH)/config/config.mk
 
 ifdef MOZ_EDITOR
 CSRCS		+= layedit.c \
