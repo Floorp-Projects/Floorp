@@ -214,7 +214,6 @@ bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
-bin\res\xpinstall\*
 bin\res\throbber\*
 bin\res\toolbar\*
 ;debug menus reference samples dir - remove for actual releases:
