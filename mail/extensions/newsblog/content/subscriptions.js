@@ -166,7 +166,11 @@ function doAdd() {
     {
       var folderResource = rdf.GetResource(feedProperties.folderURI);   
       if (folderResource)
-        feed.folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      {
+        var folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (folder && !folder.isServer)
+          feed.folder = folder;
+      }
     }
 
     // set the server for the feed
