@@ -32,6 +32,7 @@ REQUIRES=util img xpcom raptor netlib ps
 
 DEFINES += -D_IMPL_NS_GFXONXP 
 CXXFLAGS += $(TK_CFLAGS)
+INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS = \
 	nsDeviceContextGTK.cpp \
@@ -41,7 +42,10 @@ CPPSRCS = \
 	nsGfxFactoryGTK.cpp \
 	nsRenderingContextGTK.cpp \
 	nsImageGTK.cpp \
-	nsRegionGTK.cpp
+	nsRegionGTK.cpp 
+
+CSRCS = \
+	nsPrintdGTK.c
 
 include $(topsrcdir)/config/rules.mk
 
