@@ -140,6 +140,8 @@
 
   #define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
     // under VC++, we win by inlining StartAssignment
+    // but we need to diable the tons of bogus warnings
+  #pragma warning( disable: 4514 )
 #endif
 
 #define NSCAP_FEATURE_FACTOR_DESTRUCTOR

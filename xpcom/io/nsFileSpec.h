@@ -251,7 +251,7 @@ public:
     void                         operator += (const char* inString);
     nsSimpleCharString           operator + (const char* inString) const;
     
-    char                         operator [](int i) const { return mData ? mData->mString[i] : 0; }
+    char                         operator [](int i) const { return mData ? mData->mString[i] : '\0'; }
     char&                        operator [](int i)
                                  {
                                      if (i >= (int)Length())
