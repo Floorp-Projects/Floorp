@@ -46,7 +46,6 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIMsgDBView.h"
 #include "nsReadableUtils.h"
 
@@ -230,7 +229,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
         }
 
         // also register for shutdown
-        nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
         if (NS_SUCCEEDED(rv))
         {
           rv = observerService->AddObserver(gFolderCharsetObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);

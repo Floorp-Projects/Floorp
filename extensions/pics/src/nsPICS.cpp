@@ -53,7 +53,6 @@
 #include "nsParserCIID.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsPICSElementObserver.h"
 #include "nsFileSpec.h"
 #include "nsIDocumentViewer.h"
@@ -477,13 +476,13 @@ nsPICS::Init()
         if (NS_FAILED(rv = NS_NewPICSElementObserver(&mPICSElementObserver)))
           return rv;
   
-        rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
+        rv = nsServiceManager::GetService("@mozilla.org/observer-service;1", 
                                 NS_GET_IID(nsIObserverService), 
                                 (nsISupports **)&anObserverService);
 
         if(rv == NS_OK) {
           rv = anObserverService->AddObserver(mPICSElementObserver, "htmlparser", PR_FALSE);
-          nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, anObserverService );
+          nsServiceManager::ReleaseService( "@mozilla.org/observer-service;1", anObserverService );
           if (NS_FAILED(rv))
               return rv;
 

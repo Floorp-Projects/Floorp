@@ -43,7 +43,6 @@
 #include "nsMsgRDFUtils.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -78,7 +77,7 @@ nsMsgRDFDataSource::Init()
         return NS_ERROR_ALREADY_INITIALIZED;
     
     /* Add an observer to XPCOM shutdown */
-    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
+    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1",
                                                      &rv);
     if (NS_FAILED(rv)) return rv;
     rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
@@ -98,7 +97,7 @@ void nsMsgRDFDataSource::Cleanup()
     mRDFService = nsnull;
     
     // release ourselves from the observer service
-    nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID,
+    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1",
                                                      &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this),

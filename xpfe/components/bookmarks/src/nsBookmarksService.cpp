@@ -51,7 +51,6 @@
 #include "nsIComponentManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIRDFService.h"
@@ -1705,7 +1704,7 @@ nsBookmarksService::Init()
 
     // Register as an observer of profile changes
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ASSERTION(observerService, "Could not get observer service.");
     if (observerService) {
         observerService->AddObserver(this, "profile-before-change", PR_TRUE);

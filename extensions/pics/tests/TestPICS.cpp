@@ -10,7 +10,6 @@
 #include "nsIIOService.h"
 
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsString.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -90,7 +89,7 @@ PRInt32 main(PRInt32 argc, char *argv[])
 
     nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, RAPTORHTMLPARS_DLL, PR_FALSE, PR_FALSE);
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
+    res = nsServiceManager::GetService("@mozilla.org/observer-service;1", 
                                 NS_GET_IID(nsIObserverService), 
                                 (nsISupports **)&anObserverService);
     

@@ -39,9 +39,9 @@
 #include "nsIRegistry.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsObserverService.h"
 #include "nsObserverList.h"
 #include "nsObserver.h"
+#include "nsObserverService.h"
 #include "nsProperties.h"
 #include "nsIProperties.h"
 #include "nsPersistentProperties.h"
@@ -456,7 +456,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
         // Block it so that the COMPtr will get deleted before we hit
         // servicemanager shutdown
         nsCOMPtr<nsIObserverService> observerService = 
-                 do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+                 do_GetService("@mozilla.org/observer-service;1", &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsCOMPtr<nsIServiceManager> mgr;

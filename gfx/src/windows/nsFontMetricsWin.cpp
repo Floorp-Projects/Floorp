@@ -47,7 +47,6 @@
 #include "nsISaveAsCharset.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "nsTextFormatter.h"
@@ -330,7 +329,7 @@ InitGlobals(void)
   if (gFontCleanupObserver) {
     // register for shutdown
     nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
     if (NS_SUCCEEDED(rv)) {
       rv = observerService->AddObserver(gFontCleanupObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     }    

@@ -54,7 +54,6 @@
 #include "txAtom.h"
 #ifndef TX_EXE
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
@@ -2154,7 +2153,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     if (aObserver) {
         nsresult res = NS_OK;
-        nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
+        nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
         if (NS_SUCCEEDED(res)) {
             Node* docElement = resultDocument->getDocumentElement();
             nsISupports* nsDocElement;

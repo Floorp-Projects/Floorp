@@ -76,7 +76,6 @@
 #include "nsIBookmarksService.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
 
@@ -897,7 +896,7 @@ InternetSearchDataSource::Init()
 
 	// Register as a profile change obsevrer
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);

@@ -39,7 +39,6 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
@@ -66,7 +65,7 @@ void nsDocLoadObserver::Register()
 	if (!mRegistered)
 	{
 		nsresult rv;
-		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+		nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->AddObserver(this, "EndDocumentLoad", PR_FALSE)))
@@ -82,7 +81,7 @@ void nsDocLoadObserver::Unregister()
 	if (mRegistered)
 	{
 		nsresult rv;
-		nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+		nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
 		if (NS_SUCCEEDED(rv))
 		{
 			if (NS_SUCCEEDED(anObserverService->RemoveObserver(this, 

@@ -102,7 +102,6 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDOMElement.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIContent.h"
@@ -354,7 +353,7 @@ nsChromeRegistry::Init()
   NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
 
   nsCOMPtr<nsIObserverService> observerService =
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);

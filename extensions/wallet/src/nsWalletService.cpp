@@ -44,7 +44,6 @@
 #include "singsign.h"
 #include "nsPassword.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -296,7 +295,7 @@ nsresult nsWalletlibService::Init()
   nsresult rv;
 
   nsCOMPtr<nsIObserverService> svc = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv) && svc) {
     // Register as an observer of form submission
     svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
@@ -587,7 +586,7 @@ nsSingleSignOnPrompt::Init()
     nsSingleSignOnProfileObserver *observer = new nsSingleSignOnProfileObserver;
     if (!observer)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+    nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1"));
     if (!svc) return NS_ERROR_FAILURE;
     // The observer service holds the only ref to the observer
     // It thus has the lifespan of the observer service

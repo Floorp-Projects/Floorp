@@ -67,7 +67,6 @@
 #include "nsISmtpService.h"
 #include "nsIMsgBiffManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIMsgMailSession.h"
 #include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
@@ -161,7 +160,7 @@ nsMsgAccountManager::~nsMsgAccountManager()
 	  //Don't remove from Observer service in Shutdown because Shutdown also gets called
 	  //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
 	  nsCOMPtr<nsIObserverService> observerService = 
-	           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+	           do_GetService("@mozilla.org/observer-service;1", &rv);
       if (NS_SUCCEEDED(rv))
 	  {    
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
@@ -183,7 +182,7 @@ nsresult nsMsgAccountManager::Init()
   rv = NS_NewISupportsArray(getter_AddRefs(mFolderListeners));
 
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv))
   {    
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);

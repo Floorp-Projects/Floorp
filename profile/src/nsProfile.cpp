@@ -79,7 +79,6 @@
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
 
@@ -1106,7 +1105,7 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         isSwitch = PR_FALSE;
     
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);
@@ -1187,7 +1186,7 @@ NS_IMETHODIMP nsProfile::ShutDownCurrentProfile(PRUint32 shutDownType)
     nsresult rv;
     
     nsCOMPtr<nsIObserverService> observerService = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+             do_GetService("@mozilla.org/observer-service;1", &rv);
     NS_ENSURE_TRUE(observerService, NS_ERROR_FAILURE);
     
     nsISupports *subject = (nsISupports *)((nsIProfile *)this);

@@ -28,7 +28,6 @@
 #include "nsP3PLogging.h"
 
 #include "nsIServiceManager.h"
-#include "nsObserverService.h"
 #include "nsIParser.h"
 
 #include "nsIDocShell.h"
@@ -127,7 +126,7 @@ nsP3PObserverXML::Init( ) {
           ("P3PObserverXML:  Init, initializing.\n") );
 
   // Get the observer service
-  mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
+  mObserverService = do_GetService( "@mozilla.org/observer-service;1",
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {

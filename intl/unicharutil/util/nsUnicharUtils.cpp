@@ -28,7 +28,6 @@
 
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 // global cache of the case conversion service
 static nsICaseConversion *gCaseConv = nsnull;
@@ -66,7 +65,7 @@ static nsresult NS_InitCaseConversion() {
 
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIObserverService> obs =
-            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+            do_GetService("@mozilla.org/observer-service;1", &rv);
         if (NS_SUCCEEDED(rv)) {
             nsShutdownObserver *observer = new nsShutdownObserver();
             if (observer)

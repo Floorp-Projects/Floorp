@@ -51,7 +51,6 @@
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranchInternal.h"
@@ -786,7 +785,7 @@ NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
     nsCOMPtr<nsIObserverService>
-        observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+        observerService(do_GetService("@mozilla.org/observer-service;1"));
     
     nsresult rv1 = NS_OK;
     nsresult rv2 = NS_OK;

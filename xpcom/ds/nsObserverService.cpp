@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #define NS_IMPL_IDS
+#include "prlog.h"
 #include "prlock.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
@@ -51,20 +52,25 @@
 
 static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
-////////////////////////////////////////////////////////////////////////////////
 
-static nsObserverService* gObserverService = nsnull; // The one-and-only ObserverService
+#if defined(PR_LOGGING)
+// Log module for nsObserverService logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=ObserverService:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+PRLogModuleInfo* observerServiceLog = nsnull;
+#endif /* PR_LOGGING */
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsObserverService Implementation
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsObserverService, nsIObserverService)
-
-NS_COM nsresult NS_NewObserverService(nsIObserverService** anObserverService)
-{
-    return nsObserverService::GetObserverService(anObserverService);
-}
 
 nsObserverService::nsObserverService()
     : mObserverTopicTable(nsnull)
@@ -77,12 +83,16 @@ nsObserverService::~nsObserverService(void)
 {
     if(mObserverTopicTable)
         delete mObserverTopicTable;
-    gObserverService = nsnull;
 }
 
 NS_METHOD
 nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
+#if defined(PR_LOGGING)
+    if (!observerServiceLog)
+        observerServiceLog = PR_NewLogModule("ObserverService");
+#endif
+
     nsresult rv;
     nsObserverService* os = new nsObserverService();
     if (os == nsnull)
@@ -91,20 +101,6 @@ nsObserverService::Create(nsISupports* outer, const nsIID& aIID, void* *aInstanc
     rv = os->QueryInterface(aIID, aInstancePtr);
     NS_RELEASE(os);
     return rv;
-}
-
-nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverService)
-{
-    if (! gObserverService) {
-        nsObserverService* it = new nsObserverService();
-        if (! it)
-            return NS_ERROR_OUT_OF_MEMORY;
-        gObserverService = it;
-    }
-
-    NS_ADDREF(gObserverService);
-    *anObserverService = gObserverService;
-    return NS_OK;
 }
 
 static PRBool PR_CALLBACK 
@@ -223,6 +219,9 @@ NS_IMETHODIMP nsObserverService::NotifyObservers( nsISupports *aSubject,
 
              if ( observer ) 
                 observer->Observe( aSubject, aTopic, someData );
+
+             PR_LOG(observerServiceLog, PR_LOG_DEBUG, ("Notification - %s\n", aTopic ? aTopic : "undefined"));
+
         }
 #endif
     }

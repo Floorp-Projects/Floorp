@@ -28,7 +28,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsObserverService.h"
 #include "nsIPresShell.h"
 
 #include "nsIDocShellTreeItem.h"
@@ -125,7 +124,7 @@ nsP3PObserverLayout::Init( ) {
           ("P3PObserverLayout:  Init, initializing.\n") );
 
   // Get the Observer service
-  mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
+  mObserverService = do_GetService( "@mozilla.org/observer-service;1",
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {

@@ -67,7 +67,6 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -2079,7 +2078,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         }
     }
 
-    nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+    nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1", &rv));
     if (NS_FAILED(rv)) return rv;
     observerService->NotifyObservers(nsnull, "session-logout", nsnull);
 

@@ -64,7 +64,6 @@
 #include "nsIGenericFactory.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsArray.h"
@@ -730,7 +729,7 @@ nsWindowWatcher::RegisterNotification(nsIObserver *aObserver)
   if (!aObserver)
     return NS_ERROR_INVALID_ARG;
   
-  nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (os) {
     rv = os->AddObserver(aObserver, "domwindowopened", PR_FALSE);
     if (NS_SUCCEEDED(rv))
@@ -748,7 +747,7 @@ nsWindowWatcher::UnregisterNotification(nsIObserver *aObserver)
   if (!aObserver)
     return NS_ERROR_INVALID_ARG;
   
-  nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (os) {
     os->RemoveObserver(aObserver, "domwindowopened");
     os->RemoveObserver(aObserver, "domwindowclosed");
@@ -838,7 +837,7 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
 
   // a window being added to us signifies a newly opened window.
   // send notifications.
-  nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (os) {
     nsCOMPtr<nsISupports> domwin(do_QueryInterface(aWindow));
     rv = os->NotifyObservers(domwin, "domwindowopened", 0);
@@ -927,7 +926,7 @@ nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
 
   // a window being removed from us signifies a newly closed window.
   // send notifications.
-  nsCOMPtr<nsIObserverService> os(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (os) {
 #ifdef USEWEAKREFS
     nsCOMPtr<nsISupports> domwin(do_QueryReferent(inInfo->mWindow));

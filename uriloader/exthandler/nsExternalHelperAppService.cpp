@@ -62,7 +62,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIAtom.h"
 #include "nsIObserverService.h" // so we can be an xpcom shutdown observer
-#include "nsObserverService.h"
 
 #ifdef XP_MAC
 #include "nsILocalFileMac.h"
@@ -149,7 +148,7 @@ nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialize
 
   /* Add an observer to XPCOM shutdown */
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (obs)
     rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 
@@ -587,7 +586,7 @@ nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, c
   ExpungeTemporaryFiles();
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIObserverService> obs = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
   if (obs)
     rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 	return NS_OK;

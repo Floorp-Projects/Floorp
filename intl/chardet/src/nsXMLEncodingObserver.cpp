@@ -42,8 +42,6 @@
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
-#include "nsObserverService.h"
 #include "nsISupports.h"
 #include "nsCRT.h"
 #include "nsIParser.h"
@@ -212,7 +210,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     if (bXMLEncodingObserverStarted == PR_TRUE) 
       return res;
 
-    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
+    nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
 
     if(NS_FAILED(res)) 
         goto done;
@@ -232,7 +230,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
       return res;
 
     nsCAutoString xmlTopic; xmlTopic.Assign("xmlparser");
-    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
+    nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
     if(NS_FAILED(res)) 
         goto done;
      

@@ -110,7 +110,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "prprf.h"
 //#include "nsIDOMHTMLInputElement.h"
 //#include "nsIDOMHTMLImageElement.h"
@@ -1663,7 +1662,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
     nsresult rv = NS_OK;
     // Get observer service.
     nsIObserverService *svc = 0;
-    rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_CONTRACTID,
+    rv = nsServiceManager::GetService( "@mozilla.org/observer-service;1",
                                        NS_GET_IID(nsIObserverService),
                                        (nsISupports**)&svc );
     if ( NS_SUCCEEDED( rv ) && svc ) {
@@ -1673,7 +1672,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
         topic.AppendWithConversion(aTopic);
         rv = svc->NotifyObservers( (nsIWebShellWindow*)this, topic.get(), someData.get() );
         // Release the service.
-        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_CONTRACTID, svc );
+        nsServiceManager::ReleaseService( "@mozilla.org/observer-service;1", svc );
     } else {
     }
     return rv;

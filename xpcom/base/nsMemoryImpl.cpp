@@ -40,7 +40,6 @@
 #include "nsAlgorithm.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsAutoLock.h"
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
@@ -456,7 +455,7 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
 nsresult
 nsMemoryImpl::RunFlushers(nsMemoryImpl* aSelf, const PRUnichar* aReason)
 {
-    nsCOMPtr<nsIObserverService> os = do_GetService(NS_OBSERVERSERVICE_CONTRACTID);
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
     if (os) {
         os->NotifyObservers(aSelf, NS_MEMORY_PRESSURE_TOPIC, aReason);
     }

@@ -27,7 +27,6 @@
 #include "nsP3PObserverFormSubmit.h"
 
 #include "nsIServiceManager.h"
-#include "nsObserverService.h"
 #include "nsIPresShell.h"
 
 #include "nsString.h"
@@ -114,7 +113,7 @@ nsP3PObserverFormSubmit::Init( ) {
           ("P3PObserverFormSubmit:  Init, initializing.\n") );
 
   // Get the Observer service
-  mObserverService = do_GetService( NS_OBSERVERSERVICE_CONTRACTID,
+  mObserverService = do_GetService( "@mozilla.org/observer-service;1",
                                    &rv );
 
   if (NS_SUCCEEDED( rv )) {

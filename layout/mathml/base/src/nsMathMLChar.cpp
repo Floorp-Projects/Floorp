@@ -41,7 +41,6 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -723,7 +722,7 @@ nsGlyphTableList::Initialize()
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
@@ -737,7 +736,7 @@ nsGlyphTableList::Finalize()
   // Remove our observer from the observer service
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }

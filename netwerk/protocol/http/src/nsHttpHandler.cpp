@@ -40,7 +40,6 @@
 #include "nsICacheService.h"
 #include "nsICategoryManager.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsINetModRegEntry.h"
 #include "nsICacheService.h"
@@ -248,7 +247,7 @@ nsHttpHandler::Init()
                                   NS_HTTP_STARTUP_TOPIC);    
     
     nsCOMPtr<nsIObserverService> observerSvc =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        do_GetService("@mozilla.org/observer-service;1", &rv);
     if (observerSvc) {
         observerSvc->AddObserver(this, "profile-before-change", PR_TRUE);
         observerSvc->AddObserver(this, "session-logout", PR_TRUE);

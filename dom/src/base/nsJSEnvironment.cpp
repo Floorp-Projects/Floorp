@@ -70,7 +70,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsGUIEvent.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIThread.h"
@@ -1545,7 +1544,7 @@ nsJSEnvironment::nsJSEnvironment()
   // observer.
   nsresult rv;
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
   if (NS_SUCCEEDED(rv))
   {

@@ -99,7 +99,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // FormSubmit observer notification
 #include "nsIFormSubmitObserver.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 
@@ -888,7 +887,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     // Notify observers that the form is being submitted.
     result = NS_OK;
     nsCOMPtr<nsIObserverService> service = 
-             do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &result);
+             do_GetService("@mozilla.org/observer-service;1", &result);
     if (NS_FAILED(result)) return result;
 
     nsCOMPtr<nsISimpleEnumerator> theEnum;

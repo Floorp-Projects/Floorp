@@ -46,7 +46,6 @@
 #include "prefapi.h"
 #include "nsIProfile.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
@@ -69,7 +68,7 @@ nsresult nsAutoConfig::Init()
     
     // Registering the object as an observer to the profile-after-change topic
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_FAILED(rv)) 
         return rv;
 
@@ -223,7 +222,7 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
         // nsIObserverService to skip the next element.  bug 94349
 
         /* nsCOMPtr<nsIObserverService> observerService =
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
            if (observerService) 
            rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
         */

@@ -79,7 +79,6 @@
 
 #include "nsIPref.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -2114,7 +2113,7 @@ nsGlobalHistory::Init()
 
   // register to observe profile changes
   nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+           do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ASSERTION(observerService, "failed to get observer service");
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);

@@ -52,7 +52,6 @@
 #include "nsIAppShellService.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsAppShellCIDs.h"
 #include "prprf.h"
 #include "nsCRT.h"
@@ -1095,7 +1094,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_ENTER("init observer service");
   // Setup an autoreg obserer, so that we can update a progress
   // string in the splash screen
-  nsCOMPtr<nsIObserverService> obsService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+  nsCOMPtr<nsIObserverService> obsService(do_GetService("@mozilla.org/observer-service;1"));
   if (obsService)
   {
     nsCOMPtr<nsIObserver> splashScreenObserver(do_QueryInterface(nativeApp));
