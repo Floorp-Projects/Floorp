@@ -30,7 +30,6 @@
 #include "plhash.h"
 
 #undef NOISY
-#define TEMPORARY_CONTENT_APPENDED_HACK
 
 static PLHashNumber
 HashKey(nsIFrame* key)
@@ -201,9 +200,6 @@ protected:
   PRUint32 mUpdateCount;
   nsVoidArray mReflowCommands;
   PRUint32 mReflowLockCount;
-#ifdef TEMPORARY_CONTENT_APPENDED_HACK
-  PRUint32 mResizeReflows;
-#endif
 };
 
 //----------------------------------------------------------------------
@@ -319,14 +315,6 @@ PresShell::ExitReflowLock()
   printf("exit reflow lock\n");
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
   if (newReflowLockCount == 0) {
-#ifdef TEMPORARY_CONTENT_APPENDED_HACK
-    if (0 != mResizeReflows) {
-      mResizeReflows = 0;
-      nsRect r;
-      mRootFrame->GetRect(r);
-      ResizeReflow(r.width, r.height);
-    }
-#endif
     ProcessReflowCommands();
   }
   mReflowLockCount = newReflowLockCount;
@@ -523,9 +511,6 @@ PresShell::ContentChanged(nsIContent* aContent,
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
   NS_PRECONDITION(0 != mReflowLockCount, "unlocked reflow");
 
-#ifdef TEMPORARY_CONTENT_APPENDED_HACK
-  mResizeReflows++;
-#else
   // Notify the first frame that maps the content. It will generate a reflow
   // command
   nsIFrame* frame = FindFrameWithContent(aContent);
@@ -535,7 +520,6 @@ PresShell::ContentChanged(nsIContent* aContent,
   if (1 == mReflowLockCount) {
     ProcessReflowCommands();
   }
-#endif
 }
 
 void
