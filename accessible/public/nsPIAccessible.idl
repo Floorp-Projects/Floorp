@@ -37,28 +37,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-	
-interface nsIDOMNode;
-interface nsIAccessibleDocument;
 
-[scriptable, uuid(46820F9B-3088-4046-AB0F-56FDACDC7A82)]
-interface nsIAccessNode : nsISupports
+interface nsIAccessible;
+
+[scriptable, uuid(52F1BE88-84F7-4f7f-B31C-062AFE7DF15D)]
+interface nsPIAccessible : nsISupports
 {
-  readonly attribute nsIDOMNode DOMNode;
-
-  readonly attribute long numChildren;
-  nsIAccessNode getChildAt(in long childNum);
-  readonly attribute nsIAccessNode parent;
-  readonly attribute nsIAccessNode firstChild;
-  readonly attribute nsIAccessNode lastChild;
-  readonly attribute nsIAccessNode previousSibling;
-  readonly attribute nsIAccessNode nextSibling;
-  readonly attribute nsIAccessibleDocument accessibleDocument;
-  
-  readonly attribute DOMString innerHTML;
-
-  [noscript] readonly attribute voidPtr ownerWindow;
-  [noscript] readonly attribute voidPtr uniqueID;
-
-  DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
+  [noscript] void setAccParent(in nsIAccessible aAccParent);
+  [noscript] void setAccFirstChild(in nsIAccessible aAccFirstChild);
+  [noscript] void setAccNextSibling(in nsIAccessible aAccNextSibling);
+  [noscript] void invalidateChildren();
+  [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
 };

@@ -96,7 +96,7 @@
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-NS_IMPL_ISUPPORTS_INHERITED1(nsAccessible, nsAccessNode, nsIAccessible)
+NS_IMPL_ISUPPORTS_INHERITED2(nsAccessible, nsAccessNode, nsIAccessible, nsPIAccessible)
 
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAccessNodeWrap(aNode, aShell), 
   mParent(nsnull), mFirstChild(nsnull), mNextSibling(nsnull)
@@ -217,7 +217,8 @@ NS_IMETHODIMP nsAccessible::Shutdown()
   if (mFirstChild) {
     nsCOMPtr<nsIAccessible> current(mFirstChild), next;
     while (current) {
-      current->SetAccParent(nsnull);
+      nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(current));
+      privateAcc->SetAccParent(nsnull);
       current->GetAccNextSibling(getter_AddRefs(next));
       current = next;
     }
@@ -225,7 +226,8 @@ NS_IMETHODIMP nsAccessible::Shutdown()
   // Now invalidate the child count and pointers to other accessibles
   InvalidateChildren();
   if (mParent) {
-    mParent->InvalidateChildren();
+    nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(mParent));
+    privateParent->InvalidateChildren();
     mParent = nsnull;
   }
 
@@ -287,7 +289,8 @@ NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling)
   if (NS_SUCCEEDED(walker.GetNextSibling())) {
     *aAccNextSibling = walker.mState.accessible;
     NS_ADDREF(*aAccNextSibling);
-    (*aAccNextSibling)->SetAccParent(mParent);
+    nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(*aAccNextSibling));
+    privateAcc->SetAccParent(mParent);
 
     mNextSibling = *aAccNextSibling;
   }
@@ -314,7 +317,8 @@ NS_IMETHODIMP nsAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPreviousS
     *aAccPreviousSibling = walker.mState.accessible;
     NS_ADDREF(*aAccPreviousSibling);
     // Use last walker state to cache data on prev accessible
-    (*aAccPreviousSibling)->SetAccParent(mParent);
+    nsCOMPtr<nsPIAccessible> privateAcc(do_QueryInterface(*aAccPreviousSibling));
+    privateAcc->SetAccParent(mParent);
   }
 
   return NS_OK;  
@@ -377,16 +381,16 @@ void nsAccessible::CacheChildren(PRBool aWalkAnonContent)
 
   if (mAccChildCount == eChildCountUninitialized) {
     nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, aWalkAnonContent);
-    nsCOMPtr<nsIAccessible> prevAccessible;
+    nsCOMPtr<nsPIAccessible> privatePrevAccessible;
     mAccChildCount = 0;
     walker.GetFirstChild();
     SetAccFirstChild(walker.mState.accessible);
     while (walker.mState.accessible) {
-      walker.mState.accessible->SetAccParent(this);
       ++mAccChildCount;
-      prevAccessible = walker.mState.accessible;
+      privatePrevAccessible = do_QueryInterface(walker.mState.accessible);
+      privatePrevAccessible->SetAccParent(this);
       walker.GetNextSibling();
-      prevAccessible->SetAccNextSibling(walker.mState.accessible);
+      privatePrevAccessible->SetAccNextSibling(walker.mState.accessible);
     }
   }
 }
@@ -1352,7 +1356,7 @@ NS_IMETHODIMP nsAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible *aTa
   if (!mWeakShell)
     return NS_ERROR_FAILURE; // Don't fire event for accessible that has been shut down
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  nsCOMPtr<nsIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
+  nsCOMPtr<nsPIAccessible> eventHandlingAccessible(do_QueryInterface(docAccessible));
   if (eventHandlingAccessible) {
     return eventHandlingAccessible->FireToolkitEvent(aEvent, aTarget, aData);
   }

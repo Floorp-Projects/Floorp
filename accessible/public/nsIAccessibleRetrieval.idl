@@ -37,28 +37,31 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-	
+
 interface nsIDOMNode;
-interface nsIAccessibleDocument;
+interface nsIAccessible;
+interface nsIWeakReference;
+interface nsIPresShell;
+interface nsIDOMWindow;
+interface nsIAccessNode;
 
-[scriptable, uuid(46820F9B-3088-4046-AB0F-56FDACDC7A82)]
-interface nsIAccessNode : nsISupports
+[scriptable, uuid(663CA4A8-D219-4000-925D-D8F66406B626)]
+interface nsIAccessibleRetrieval : nsISupports
 {
-  readonly attribute nsIDOMNode DOMNode;
-
-  readonly attribute long numChildren;
-  nsIAccessNode getChildAt(in long childNum);
-  readonly attribute nsIAccessNode parent;
-  readonly attribute nsIAccessNode firstChild;
-  readonly attribute nsIAccessNode lastChild;
-  readonly attribute nsIAccessNode previousSibling;
-  readonly attribute nsIAccessNode nextSibling;
-  readonly attribute nsIAccessibleDocument accessibleDocument;
-  
-  readonly attribute DOMString innerHTML;
-
-  [noscript] readonly attribute voidPtr ownerWindow;
-  [noscript] readonly attribute voidPtr uniqueID;
-
-  DOMString getComputedStyleValue(in DOMString pseudoElt, in DOMString propertyName);
+  nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
+  nsIAccessible getAccessibleInWindow(in nsIDOMNode aNode, in nsIDOMWindow aDOMWin);
+  nsIAccessible getAccessibleInWeakShell(in nsIDOMNode aNode, in nsIWeakReference aPresShell);
+  nsIAccessible getAccessibleInShell(in nsIDOMNode aNode, in nsIPresShell aPresShell);
+  nsIAccessNode getCachedAccessNode(in nsIDOMNode aNode, in nsIWeakReference aShell);
+  nsIAccessible getCachedAccessible(in nsIDOMNode aNode, in nsIWeakReference aShell);
 };
+
+
+%{ C++
+
+// for component registration
+// {663CA4A8-D219-4000-925D-D8F66406B626}
+#define NS_ACCESSIBLE_RETRIEVAL_CID \
+{ 0x663ca4a8, 0xd219, 0x4000, { 0x92, 0x5d, 0xd8, 0xf6, 0x64, 0x6, 0xb6, 0x26 } }
+
+%}
