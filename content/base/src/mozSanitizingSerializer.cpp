@@ -323,6 +323,25 @@ mozSanitizingHTMLSerializer::CloseContainer(const nsHTMLTag aTag)
 }
 
 NS_IMETHODIMP 
+mozSanitizingHTMLSerializer::AddHeadContent(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+  if (eHTMLTag_whitespace == type || 
+      eHTMLTag_newline == type    ||
+      eHTMLTag_text == type       ||
+      eHTMLTag_entity == type) {
+    rv = AddLeaf(aNode);
+  }
+  else {
+    rv = OpenContainer(aNode);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = CloseContainer(type);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::AddLeaf(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();

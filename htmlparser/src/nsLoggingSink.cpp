@@ -248,6 +248,21 @@ nsLoggingSink::CloseContainer(const nsHTMLTag aTag) {
 }
 
 NS_IMETHODIMP
+nsLoggingSink::AddHeadContent(const nsIParserNode& aNode) {
+  LeafNode(aNode);
+
+  nsresult theResult=NS_OK;
+
+  //then proxy the call to the real sink if you have one.
+  if(mSink) {
+    theResult=mSink->AddHeadContent(aNode);
+  }
+  
+  return theResult;
+
+}
+
+NS_IMETHODIMP
 nsLoggingSink::AddLeaf(const nsIParserNode& aNode) {
   LeafNode(aNode);
 

@@ -248,7 +248,6 @@ nsCParserNode::GetValueAt(PRUint32 anIndex) const
   return GetEmptyString();
 }
 
-
 PRInt32 
 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
 {

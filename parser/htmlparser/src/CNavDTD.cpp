@@ -1415,15 +1415,14 @@ void WriteTokenToLog(CToken* aToken) {
  * @param   aNode is the node (tag) with associated attributes.
  * @return  TRUE if tag processing should continue; FALSE if the tag has been handled.
  */
-nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode& aNode) {
-  nsresult result=NS_OK; 
-  PRInt32 theAttrCount  = aNode.GetAttributeCount();  
+nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode& aNode) 
+{ 
+  nsresult result = NS_OK;
 
   //this little gem creates a special attribute for the editor team to use.
   //The attribute only get's applied to unknown tags, and is used by ender
   //(during editing) to display a special icon for unknown tags.
-
-  if(eHTMLTag_userdefined==aTag) {
+  if(eHTMLTag_userdefined == aTag) {
     CAttributeToken* theToken= NS_STATIC_CAST(CAttributeToken*,mTokenAllocator->CreateTokenOfType(eToken_attribute,aTag));
     if(theToken) {
       theToken->SetKey(NS_LITERAL_STRING("_moz-userdefined"));
@@ -3797,68 +3796,46 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
-  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes};
+  static eHTMLTags gNoXTags[] = {eHTMLTag_noembed,eHTMLTag_noframes};
 
-  eHTMLTags theTag=(eHTMLTags)aNode->GetNodeType();
+  eHTMLTags theTag = (eHTMLTags)aNode->GetNodeType();
   
   // XXX - SCRIPT inside NOTAGS should not get executed unless the pref.
   // says so.  Since we don't have this support yet..lets ignore the
   // SCRIPT inside NOTAGS.  Ref Bug 25880.
-  if(eHTMLTag_meta==theTag || eHTMLTag_script==theTag) {
-    if(HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
+  if (eHTMLTag_meta == theTag || eHTMLTag_script == theTag) {
+    if (HasOpenContainer(gNoXTags,sizeof(gNoXTags)/sizeof(eHTMLTag_unknown))) {
       return result;
     }
   }
-
-  if(mSink) {
-    // Alternate content => Content that shouldn't get processed
-    // as a regular content. That is, probably the content is
-    // within NOSCRIPT and since JS is enanbled we should not process
-    // this content. However, when JS is disabled alternate content
-    // would become regular content.
-    result=OpenHead(aNode);
-    
-    if(NS_OK==result) {
-      if(eHTMLTag_title==theTag) {
-
-        nsAutoString theString;
-        PRInt32 lineNo = 0;
-        
-        result = CollectSkippedContent(eHTMLTag_title, theString, lineNo);
-        NS_ENSURE_SUCCESS(result, result);
-
-        PRInt32 theLen=theString.Length();
-        CBufDescriptor theBD(theString.get(), PR_TRUE, theLen+1, theLen);
-        nsAutoString theString2(theBD);
-
-        theString2.CompressWhitespace();
-        STOP_TIMER()
-        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-        mSink->SetTitle(theString2);
-        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-        START_TIMER()
-
-      }
-      else {
-        result=AddLeaf(aNode);
-        // XXX If the return value tells us to block, go
-        // ahead and close the tag out anyway, since its
-        // contents will be consumed.
-      }
-
-      // Fix for Bug 31392
-      // Do not leave a head context open no matter what the result is.
-      nsresult rv = CloseHead();
-      NS_ENSURE_SUCCESS(rv,rv);
   
-    }  
+  if (mSink) {
+    if (eHTMLTag_title == theTag) {
+      nsAutoString title;
+      PRInt32 lineNo;
+      result = CollectSkippedContent(theTag, title, lineNo);
+      NS_ENSURE_SUCCESS(result, result);
+      
+      STOP_TIMER();
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+
+      result = mSink->SetTitle(title);
+
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+      START_TIMER();
+    }
+    else {
+      STOP_TIMER();
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+      
+      result = mSink->AddHeadContent(*aNode);
+           
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+      START_TIMER();
+    }
   }
-  
   return result;
 }
-
- 
-
 
 /**
  *  This method gets called to create a valid context stack

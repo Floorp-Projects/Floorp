@@ -276,6 +276,13 @@ public:
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag) = 0;
 
   /**
+   * This gets called by the parser to contents to 
+   * the head container
+   *
+   */     
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode) = 0;
+
+  /**
    * This gets called by the parser when you want to add
    * a leaf node to the current container in the content
    * model.

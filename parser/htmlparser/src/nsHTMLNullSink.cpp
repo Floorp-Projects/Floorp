@@ -66,6 +66,7 @@ public:
   NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
+  NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
@@ -505,6 +506,16 @@ nsHTMLNullSink::CloseContainer(const nsHTMLTag aTag){
 #ifdef VERBOSE_DEBUG
   const PRUnichar* name = nsHTMLTags::GetStringValue(aTag);
   DebugDump("</", nsDependentString(name), (mNodeStackPos)*2);
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLNullSink::AddHeadContent(const nsIParserNode& aNode){
+
+#ifdef VERBOSE_DEBUG
+  DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
 #endif
 
   return NS_OK;
