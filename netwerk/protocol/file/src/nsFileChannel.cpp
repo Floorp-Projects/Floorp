@@ -51,7 +51,7 @@
 #include "nsInt64.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
-#include "prio.h"	// Need to pick up def of PR_RDONLY
+#include "prio.h"   // Need to pick up def of PR_RDONLY
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
@@ -259,9 +259,7 @@ nsFileChannel::EnsureFile()
 nsresult
 nsFileChannel::GetFileTransport(nsITransport **trans)
 {
-    nsresult rv = NS_OK;
-    
-    rv = EnsureFile();
+    nsresult rv = EnsureFile();
     if (NS_FAILED(rv))
         return rv;
 
@@ -458,6 +456,10 @@ nsFileChannel::SetContentCharset(const nsACString &aContentCharset)
 NS_IMETHODIMP
 nsFileChannel::GetContentLength(PRInt32 *aContentLength)
 {
+    if (!mFile) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsresult rv;
     PRInt64 size;
     rv = mFile->GetFileSize(&size);
@@ -551,8 +553,12 @@ nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
     NS_ASSERTION(mRealListener, "No listener...");
     nsresult rv = NS_OK;
     if (mRealListener) {
-        if (mGenerateHTMLDirs)
-        {
+        if (mGenerateHTMLDirs) {
+            // GetFileTransport ensures that mFile is valid before calling 
+            // AsyncRead or AsyncWrite on the underlying transport.  Since 
+            // these transports use |this| as the nsIRequestObserver, there 
+            // should be no way that mFile is null here.
+            NS_ENSURE_TRUE(mFile, NS_ERROR_UNEXPECTED);
             PRBool directory;
             mFile->IsDirectory(&directory);  // this stat should be cached and will not hit disk.
             if (directory) {
@@ -724,6 +730,10 @@ nsFileChannel::Init(nsIFile* file,
 NS_IMETHODIMP
 nsFileChannel::GetFile(nsIFile* *result)
 {
+    nsresult rv = EnsureFile();
+    if (NS_FAILED(rv))
+        return rv;
+    
     *result = mFile;
     NS_ADDREF(*result);
     return NS_OK;
