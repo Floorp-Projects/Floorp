@@ -673,12 +673,12 @@ function log(aText) {
 // open the ones at the top-level (i.e., expose the headings underneath
 // the letters in the list.
 function displayIndex() {
-    var outliner = document.getElementById("help-index-outliner");
-    var oview = outliner.outlinerBoxObject.view;    
-    for ( i = 0; i < 500; ++i ) {
-      if ( !oview.isContainerOpen(i) && oview.getLevel(i) == 0 ) {
-        oview.toggleOpenState(i);
-      }
-    }
+  if (!helpIndexPanel.view)
+    helpIndexPanel.view = helpIndexPanel.builder;
+  var treeview = helpIndexPanel.view;
+  var i = treeview.rowCount;
+  while (i--)
+    if (!treeview.getLevel(i) && !treeview.isContainerOpen(i))
+      treeview.toggleOpenState(i);
 }
 
