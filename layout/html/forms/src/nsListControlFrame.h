@@ -129,7 +129,7 @@ public:
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-  NS_IMETHOD DoneAddingContent();
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
@@ -244,6 +244,8 @@ protected:
   PRBool       mIsAllContentHere;
   PRBool       mIsAllFramesHere;
   PRBool       mHasBeenInitialized;
+
+  nsIFrame *   mMainChild;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 

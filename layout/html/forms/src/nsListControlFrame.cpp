@@ -193,6 +193,9 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //---------------------------------------------------------
 nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount) 
 {
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+
   nsresult status = NS_OK;
   nsIDOMNode * child;
   aNode->GetFirstChild(&child);
@@ -204,6 +207,13 @@ nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount)
     child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptGroupElement>::GetIID(),(void**) &optGroup);
     if (optGroup) {
       aCount++;
+
+      nsIFrame * frame;
+      nsCOMPtr<nsIContent> content(do_QueryInterface(child));
+      nsresult rvv = presShell->GetPrimaryFrameFor(content, &frame);
+      if (NS_FAILED(rvv) || nsnull == frame) {
+        return NS_ERROR_FAILURE;
+      }
 
       // check for children
       PRBool hasChildren;
@@ -225,6 +235,27 @@ nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount)
       child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) &option);
       if (option) {
         aCount++;
+        nsIFrame * frame;
+        nsCOMPtr<nsIContent> content(do_QueryInterface(child));
+        nsresult rvv = presShell->GetPrimaryFrameFor(content, &frame);
+        if (NS_FAILED(rvv) || nsnull == frame) {
+          return NS_ERROR_FAILURE;
+        }
+      } else {
+        // check for children
+        PRBool hasChildren;
+        status = child->HasChildNodes(&hasChildren);
+        if (NS_FAILED(status)) {
+          NS_RELEASE(child);
+          return status;
+        }
+        if (hasChildren) {
+          status = CountAllChild(child, aCount);
+          if (NS_FAILED(status)) {
+            NS_RELEASE(child);
+            return status;
+          }
+        }
       }
     }
 
@@ -288,6 +319,19 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
         mHasBeenInitialized = PR_TRUE;
         InitSelectionCache(-1); // Reset sel cache so as not to send event
         Reset(mPresContext);
+        nsCOMPtr<nsIReflowCommand> cmd;
+        nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!cmd) { return NS_ERROR_NULL_POINTER; }
+        nsCOMPtr<nsIPresShell> shell;
+        rv = mPresContext->GetShell(getter_AddRefs(shell));
+        if (NS_FAILED(rv)) { return rv; }
+        if (!shell) { return NS_ERROR_NULL_POINTER; }
+        rv = shell->EnterReflowLock();
+        if (NS_FAILED(rv)) { return rv; }
+        rv = shell->AppendReflowCommand(cmd);
+        // must do this next line regardless of result of AppendReflowCommand
+        shell->ExitReflowLock(PR_TRUE, PR_TRUE);
       }
     }
   
@@ -1054,7 +1098,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // If all the content is here now check
   // to see if all the frames have been created
-  if (mIsAllContentHere) {
+  /*if (mIsAllContentHere) {
     // If all content and frames are here
     // the reset/initialize
     if (CheckIfAllFramesHere()) {
@@ -1062,7 +1106,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
       Reset(&aPresContext);
       mHasBeenInitialized = PR_TRUE;
     }
-  }
+  }*/
 
   return rv;
 }
@@ -1750,7 +1794,7 @@ nsListControlFrame::ToggleSelected(PRInt32 aIndex)
 PRBool nsListControlFrame::CheckIfAllFramesHere()
 {
   // Get the number of optgroups and options
-  PRInt32 numContentItems = 0;
+/*  PRInt32 numContentItems = 0;
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
   if (node) {
     CountAllChild(node, numContentItems);
@@ -1773,26 +1817,28 @@ PRBool nsListControlFrame::CheckIfAllFramesHere()
       child->GetNextSibling(&child);
     }
   }
+  */
   // now make sure we have a frame each piece of content
-  mIsAllFramesHere = numFrames == numContentItems;
+  mIsAllFramesHere = PR_TRUE;//numFrames == numContentItems;
 
   return mIsAllFramesHere;
 }
 
 NS_IMETHODIMP
-nsListControlFrame::DoneAddingContent()
+nsListControlFrame::DoneAddingContent(PRBool aIsDone)
 {
-  mIsAllContentHere = PR_TRUE;
-
-  // Here we check to see if all the frames have been created 
-  // for all the content.
-  // If so, then we can initialize;
-  if (mIsAllFramesHere == PR_FALSE) {
-    // if all the frames are now present we can initalize
-    if (CheckIfAllFramesHere() && mPresContext) {
-      mHasBeenInitialized = PR_TRUE;
-      InitSelectionCache(-1); // Reset select cache so as not to send event
-      Reset(mPresContext);
+  mIsAllContentHere = aIsDone;
+  if (mIsAllContentHere) {
+    // Here we check to see if all the frames have been created 
+    // for all the content.
+    // If so, then we can initialize;
+    if (mIsAllFramesHere == PR_FALSE) {
+      // if all the frames are now present we can initalize
+      if (CheckIfAllFramesHere() && mPresContext) {
+        mHasBeenInitialized = PR_TRUE;
+        InitSelectionCache(-1); // Reset select cache so as not to send event
+        Reset(mPresContext);
+      }
     }
   }
   return NS_OK;

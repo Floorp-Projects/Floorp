@@ -157,7 +157,7 @@ public:
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-  NS_IMETHOD DoneAddingContent();
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
@@ -1162,7 +1162,7 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::DoneAddingContent()
+nsNativeSelectControlFrame::DoneAddingContent(PRBool aIsDone)
 {
   return NS_OK;
 }
