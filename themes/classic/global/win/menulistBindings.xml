@@ -10,7 +10,7 @@
   XUL REPRESENTATION : <menulist>
   -->
   <binding id="menulist" extends="resource:/chrome/menulistBindings.xml#menulist">
-    <content excludes="template,observes,menupopup">
+    <content excludes="template,observes,menupopup" flex="1">
       <xul:box class="menulist-internal-box" flex="1">
         <xul:image class="menu-icon" inherits="src"/>
         <xul:text class="menu-text" inherits="value,accesskey,crop" crop="right" flex="1"/>

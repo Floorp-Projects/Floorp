@@ -25,32 +25,16 @@
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
   }
 
-.bookmarkitem[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item-sel.gif");
-  }
-  
 .bookmarkfolder
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
   }
 
-.bookmarkfolder[menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed-sel.gif");
-  }
-  
 .bookmarkfolder[open="true"]
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
   }  
 
-.bookmarkfolder[open="true"][menuactive="true"]
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-folder-open-sel.gif");
-  }  
-  
-  
 treeitem[container="true"][open="true"][loading="true"] > treerow > .treecell-bookmark
 {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
