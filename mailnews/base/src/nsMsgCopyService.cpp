@@ -360,9 +360,9 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
     nsCopyRequest* copyRequest;
     nsCopySource* copySource = nsnull;
     nsresult rv = NS_ERROR_NULL_POINTER;
-    nsVoidArray msgArray;
+    nsCOMPtr<nsISupportsArray> msgArray;
     PRUint32 i, cnt;
-    nsIMessage* msg;
+    nsCOMPtr<nsIMessage> msg;
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsCOMPtr<nsISupports> aSupport;
 
@@ -376,17 +376,25 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
                            isMove, listener, listenerData, txnMgr);
     if (NS_FAILED(rv)) goto done;
 
+    rv = NS_NewISupportsArray(getter_AddRefs(msgArray));
+    if (NS_FAILED(rv)) goto done;
+
     messages->Count(&cnt);
 
     // duplicate the message array so we could sort the messages by it's
     // folder easily
     for (i=0; i<cnt; i++)
-        msgArray.AppendElement((void*) messages->ElementAt(i));
+        msgArray->AppendElement(messages->ElementAt(i));
 
-    cnt = msgArray.Count();
+    rv = msgArray->Count(&rv);
+    if (NS_FAILED(rv)) goto done;
+
     while (cnt-- > 0)
     {
-        msg = (nsIMessage*)msgArray.ElementAt(cnt);
+        aSupport = getter_AddRefs(msgArray->ElementAt(cnt));
+        msg = do_QueryInterface(aSupport, &rv);
+        if (NS_FAILED(rv)) goto done;
+
         rv = msg->GetMsgFolder(getter_AddRefs(curFolder));
         if (NS_FAILED(rv)) goto done;
         if (!copySource)
@@ -402,13 +410,12 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
         if (curFolder == copySource->m_msgFolder)
         {
             copySource->AddMessage(msg);
-            msgArray.RemoveElementAt(cnt);
-            NS_RELEASE(msg);
+            msgArray->RemoveElementAt(cnt);
         }
 
         if (cnt == 0)
         {
-            cnt = msgArray.Count();
+            rv = msgArray->Count(&cnt);
             if (cnt > 0)
                 copySource = nsnull; // * force to create a new one and
                                      // * continue grouping the messages
@@ -427,13 +434,7 @@ done:
     else
         rv = DoCopy(copyRequest);
     
-    cnt = msgArray.Count();
-    while(cnt-- > 0)
-    {
-        msg = (nsIMessage*) msgArray.ElementAt(cnt);
-        NS_RELEASE(msg);
-    }
-    msgArray.Clear();
+    msgArray->Clear();
 
     return rv;
 }
