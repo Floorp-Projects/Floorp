@@ -68,11 +68,13 @@
   background: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif") #B1BDC9 repeat-x top;
 }
 
+#navigator-throbber[buttonstyle="text"],
 #navigator-throbber[toolbarmode="small"] {
-  margin: 0 5px 0 0;
+  margin: 0 5px;
   list-style-image: url("chrome://communicator/skin/brand/throbber16-single.gif");
 }
 
+#navigator-throbber[buttonstyle="text"][busy="true"],
 #navigator-throbber[toolbarmode="small"][busy="true"] {
   list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif");
 }

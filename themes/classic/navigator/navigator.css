@@ -150,13 +150,20 @@
   display: none;
 }
 
-#nav-bar[toolbarmode="small"] > #nav-bar-inner {
-  margin: 0;
-  border: none;
+.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-menubutton-button
+    > .toolbarbutton-icon,
+.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-icon {
+  display: inline;
 }
 
 #nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
   display: none;
+}
+
+.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-menubutton-button
+    > .toolbarbutton-text,
+.toolbarbutton-1[buttonstyle="text"] > .toolbarbutton-text {
+  padding: 4px 0;
 }
 
 /* ::::: fullscreen window controls ::::: */
@@ -185,7 +192,6 @@
 #nav-bar-inner {
   -moz-box-align: center;
   min-width: 0px;
-  margin: 4px 6px;
 }
 
 #urlbar {
