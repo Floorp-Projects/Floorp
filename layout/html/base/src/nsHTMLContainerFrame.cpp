@@ -219,6 +219,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
   // If we don't yet have a view, see if we need a view
   if (nsnull == view) {
     PRInt32 zIndex = 0;
+    PRBool  fixedBackgroundAttachment = PR_FALSE;
 
     // Get nsStyleColor and nsStyleDisplay
     const nsStyleColor* color = (const nsStyleColor*)
@@ -287,6 +288,14 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
       }
     }
 
+    // See if the frame has a fixed background attachment
+    if (!aForce) {
+      if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+        aForce = PR_TRUE;
+        fixedBackgroundAttachment = PR_TRUE;
+      }
+    }
+
     // See if the frame is a scrolled frame
     if (!aForce) {
       nsIAtom*  pseudoTag;
@@ -337,6 +346,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         } else {
           viewManager->InsertChild(parentView, view, zIndex);
         }
+
+        // If the frame has a fixed background attachment, then indicate that the
+        // view's contents should repainted and not bitblt'd
+        PRUint32  viewFlags;
+        view->GetViewFlags(&viewFlags);
+        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
 
         // If the background color is transparent or the visibility is hidden
         // then mark the view as having transparent content.
