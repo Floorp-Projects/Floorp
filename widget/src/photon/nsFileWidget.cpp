@@ -36,8 +36,6 @@ NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
 //-------------------------------------------------------------------------
 nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::nsFileWidget - Constructor Called this=<%p>\n", this));
-
   NS_INIT_REFCNT();
   mWidget = nsnull;
   mParent = nsnull;
@@ -51,8 +49,6 @@ nsFileWidget::nsFileWidget() : nsIFileWidget()
 //-------------------------------------------------------------------------
 nsFileWidget::~nsFileWidget()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::~nsFileWidget - Destructor Called this=<%p>\n", this));
-
   if (mWidget)
   	PtDestroyWidget(mWidget);
 }
@@ -64,8 +60,6 @@ nsFileWidget::~nsFileWidget()
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show this=<%p> mMode=<%d>\n", this, mMode));
-
   int         err;
   PRBool      res = PR_FALSE;
   char       *title = mTitle.ToNewCString();
@@ -74,7 +68,6 @@ PRBool nsFileWidget::Show()
   if (mParent)
   {
     myParent = (PtWidget_t *) mParent->GetNativeData(NS_NATIVE_WIDGET);
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show myParent=<%p>\n", myParent));
   }
     
   PhPoint_t thePos= {100,100};
@@ -115,21 +108,14 @@ PRBool nsFileWidget::Show()
     PtSetParentWidget( NULL );
 	  
   err = PtFileSelection(myParent, &thePos, title, root_dir, file_spec, btn1, btn2, format, &info, flags);
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show 2 err=<%d>\n", err));  
-
   if (err == 0)
   {
 	/* Successfully selected a file or directory */
     if (info.ret == Pt_FSDIALOG_BTN1)
 	{
 		mSelectedFile.SetLength(0);
-   mSelectedFile.AppendWithConversion(info.path);
-
-        char *str = mSelectedFile.ToNewCString();
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create Success from PtFileSelection str=<%s>\n", str));
- 		delete [] str;
-		
-        res = PR_TRUE;
+		mSelectedFile.AppendWithConversion(info.path);
+		res = PR_TRUE;
 	}
 	else
 	{
@@ -152,7 +138,6 @@ PRBool nsFileWidget::Show()
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::AskReplace()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::AskReplace this=<%p> - Not Implemented\n", this));
   PRBool      res = PR_FALSE;
 
   /* Almost the same as ::Show Just different button labels */
@@ -169,25 +154,6 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 				      const nsString aTitles[],
 				      const nsString aFilters[])
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetFilterList numFilters=<%d>\n", aNumberOfFilters));
-
-#if defined(DEBUG)
-{
-  int i;
-  for(i=0; i<aNumberOfFilters; i++)
-  {
-    char *str1 = aTitles[i].ToNewCString();
-    char *str2 = aFilters[i].ToNewCString();
-
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetFilterList %d Title=<%s> Filter=<%s>\n", i, str1, str2));
-
-	delete [] str1;
-	delete [] str2;	  
-  }
-
-}
-#endif
-
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
   mFilters          = aFilters;
@@ -203,10 +169,6 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 //-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 {
-  char *str = aString.ToNewCString();
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetDefaultString new string=<%s> - Not Implemented\n", str));
-  delete [] str;
-
   mDefault = aString;  
   return NS_OK;
 }
@@ -219,8 +181,6 @@ NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 //-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec & aDirectory)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetDisplayDirectory to <%s> - Not Implemented\n", aDirectory.GetCString()));
-  
   mDisplayDirectory = (const PRUnichar *) aDirectory.GetCString(); /* LEAK? */
   return NS_OK;
 }
@@ -232,8 +192,6 @@ NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec & aDirectory)
 //-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::GetDisplayDirectory(nsFileSpec& aDirectory)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetDisplayDirectory  - Not Implemented\n"));
-  
   aDirectory = mDisplayDirectory;
   return NS_OK;
 }
@@ -248,8 +206,6 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
                                nsIToolkit *aToolkit,
                                void *aInitData)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create  aParent=<%p>\n", aParent));
-
   mMode = aMode;
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
@@ -262,10 +218,7 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
 
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsFileSpec this=<%p>\n", this));
-  
     char *str = mSelectedFile.ToNewCString();
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsFileSpec filename=<%s>\n", str));
     aFile = strdup(str);
     delete [] str;
 
@@ -274,10 +227,9 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
+// Not Implemented
 NS_METHOD  nsFileWidget::GetSelectedType(PRInt16& theType)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetSelectedType - Not Implemented\n"));
-
   theType = mSelectedType;
   return NS_OK;
 }
@@ -288,8 +240,6 @@ nsFileDlgResults nsFileWidget::GetFile(
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFile with nsIWidget this=<%p> aParent=<%p>\n", this, aParent));
-  
 	Create(aParent, promptString, eMode_load, nsnull, nsnull);
 	if (Show() == PR_TRUE)
 	{
@@ -305,8 +255,6 @@ nsFileDlgResults nsFileWidget::GetFolder(
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog 
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::GetFolder with nsIWidget\n"));
-
 	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
 	if (Show() == PR_TRUE)
 	{
@@ -322,8 +270,6 @@ nsFileDlgResults nsFileWidget::PutFile(
       const nsString   & promptString,    // Window title for the dialog
       nsFileSpec       & theFileSpec)     // Populate with initial path for file dialog 
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::PutFile with nsIWidget\n"));
-
   nsFileDlgResults theResult = nsFileDlgResults_Cancel;
   
   Create(aParent, promptString, eMode_save, nsnull, nsnull);

@@ -48,8 +48,6 @@ NS_IMPL_QUERY_INTERFACE2(nsDragService, nsIDragService, nsIDragSession)
 //-------------------------------------------------------------------------
 nsDragService::nsDragService()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::nsDragService this=<%p>\n", this));
-
   NS_INIT_REFCNT();
   mWidget = nsnull;
   mNumFlavors = 0;
@@ -62,8 +60,6 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::~nsDragService this=<%p>\n", this));
-
   if (mWidget)
   {
 	PtDestroyWidget(mWidget);
@@ -75,8 +71,6 @@ nsDragService::~nsDragService()
 
 NS_IMETHODIMP nsDragService::StartDragSession()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::StartDragSession this=<%p>\n", this));
-
   NS_WARNING("nsDragService::StartDragSession() - Not Supported Yet");
   nsBaseDragService::StartDragSession();
   
@@ -85,8 +79,6 @@ NS_IMETHODIMP nsDragService::StartDragSession()
 
 NS_IMETHODIMP nsDragService::EndDragSession()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::EndDragSession this=<%p>\n", this));
-
   NS_WARNING("nsDragService::EndDragSession()\n");
   nsBaseDragService::EndDragSession();
   
@@ -104,7 +96,6 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
 {
   nsBaseDragService::InvokeDragSession ( aDOMNode, aTransferableArray, aRegion, aActionType );
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::InvokeDragSession this=<%p> aActionType=<%d>\n", this, aActionType));
   //mWidget = gtk_invisible_new();
   //gtk_widget_show(mWidget);
 
@@ -228,8 +219,6 @@ PRBool nsDragService::DoConvert(GdkAtom type)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::GetNumDropItems this=<%p>\n", this));
-
   *aNumItems = 0;
   return NS_OK;
 }
@@ -237,13 +226,6 @@ NS_IMETHODIMP nsDragService::GetNumDropItems (PRUint32 * aNumItems)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 anItem)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::GetData this=<%p>\n", this));
-
-#ifdef DEBUG_DRAG
-  printf("nsClipboard::GetNativeClipboardData()\n");
-#endif /* DEBUG_CLIPBOARD */
-
-
 #if 0
 
   // make sure we have a good transferable
@@ -276,11 +258,6 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
       }
     }
   }
-
-#ifdef DEBUG_CLIPBOARD
-  printf("  Got the callback: '%s', %d\n",
-         mSelectionData.data, mSelectionData.length);
-#endif /* DEBUG_CLIPBOARD */
 
   // We're back from the callback, no longer blocking:
   mBlocking = PR_FALSE;
@@ -320,9 +297,6 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::IsDataFlavorSupported this=<%p>\n", this));
-
-  printf("nsDragService::IsDataFlavorSupported\n");
   if (!aDataFlavor || !_retval)
     return NS_ERROR_FAILURE;
 
@@ -334,9 +308,6 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::GetCurrentSession this=<%p>\n", this));
-
-  printf("nsDragService::GetCurrentSession\n");
   if (!aSession)
     return NS_ERROR_FAILURE;
 

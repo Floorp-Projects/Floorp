@@ -121,8 +121,6 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 
 static int event_processor_callback(int fd, void *data, unsigned mode)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::event_processor_callback fd=<%d> data=<%p> mode=<%d>\n", fd, data, mode));
-	
 	nsIEventQueue *eventQueue = (nsIEventQueue*)data;
 	if (eventQueue)
 	   eventQueue->ProcessPendingEvents();
@@ -146,8 +144,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
   {
     PhWidLog =  PR_NewLogModule("PhWidLog");
   }
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Create\n"));
 
   int argc = bac ? *bac : 0;
   char **argv = bav;
@@ -289,9 +285,6 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::DispatchNativeEvent aRealEvent=<%d> aEvent=<%p> mEventQueue=<%p>\n", aRealEvent, aEvent, mEventQueue));
-
-
   if (!mEventQueue)
     return NS_ERROR_NOT_INITIALIZED;  
 

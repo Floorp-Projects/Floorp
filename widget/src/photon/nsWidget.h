@@ -146,6 +146,7 @@ public:
 
   // nsIKBStateControl
   NS_IMETHOD ResetInputState();
+  NS_IMETHOD PasswordFieldInit();
 
   void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
@@ -163,9 +164,6 @@ public:
   // this is always set to the "this" that owns the PtWidget_t
   static PRBool     SetInstance( PtWidget_t *pWidget, nsWidget * inst );
   static nsWidget*  GetInstance( PtWidget_t *pWidget );
-
-  // Raw Paint Method
-  NS_IMETHOD    doPaint();
 
 protected:
   virtual void InitCallbacks(char * aName = nsnull);

@@ -32,8 +32,6 @@
 
 NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::PreCreateWidget\n"));
-  
   if (nsnull != aInitData)
   {
     nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
@@ -48,8 +46,6 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   PtArg_t arg[2];
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetMaxLength to %d\n", aChars));
-
   if (mWidget)
   {
     PtSetArg(&arg[0], Pt_ARG_MAX_LENGTH, aChars, 0);
@@ -61,8 +57,6 @@ NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 
 NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PRUint32& aActualSize)
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::GetText\n"));
-
  PtArg_t arg[2];
  int length;
  char *string;
@@ -91,8 +85,6 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
   {
     NS_ALLOC_STR_BUF(buf, aText, aText.Length());
 
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetText to <%s> for <%p>\n", buf, mWidget));
-
     PtSetArg(&arg[0], Pt_ARG_TEXT_STRING, buf, 0);
     PtSetResources(mWidget, 1, arg);
 
@@ -105,21 +97,13 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 
 NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos, PRUint32& aActualSize)
 { 
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::InsertText from %d to %d\n", aStartPos, aEndPos));
-
  PtArg_t   arg[2];
- int       ret;
  nsString  currentText;
  PRUint32  currentTextLength;
   if (mWidget)
   {
     NS_ALLOC_STR_BUF(buf, aText, aText.Length());
-	ret=PtTextModifyText(mWidget,0,0,aStartPos,buf,aText.Length());
-	if (!ret)
- 	{
-      PR_LOG(PhWidLog, PR_LOG_ERROR,("nsTextHelper::InsertText failed in call to PtTextModifyText\n"));
-	} 
-
+		PtTextModifyText(mWidget,0,0,aStartPos,buf,aText.Length());
     NS_FREE_STR_BUF(buf);
   }
   aActualSize = aText.Length();
@@ -133,7 +117,6 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
 
 NS_METHOD  nsTextHelper::RemoveText()
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::RemoveText\n"));
  PtArg_t arg[2];
 
   mText.SetLength(0);
@@ -155,8 +138,6 @@ NS_METHOD  nsTextHelper::SetPassword(PRBool aIsPassword)
 
 NS_METHOD nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetReadOnnly %d %d\n", aReadOnlyFlag, mIsReadOnly));
-
  PtArg_t arg[2];
  int	 temp;
  
@@ -180,8 +161,6 @@ NS_METHOD nsTextHelper::SetReadOnly(PRBool aReadOnlyFlag, PRBool& aOldFlag)
   
 NS_METHOD nsTextHelper::SelectAll()
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SelectAll\n"));
-
  int start, end;
  
   if (mWidget)
@@ -196,18 +175,15 @@ NS_METHOD nsTextHelper::SelectAll()
 
 NS_METHOD  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetSelection %d to %d\n", aStartSel, aEndSel));
-
 /* The text widget is 0 based! */
 
   if (mWidget)
   {
-    int start, end, err=0;
+    int start, end;
     start = aStartSel;
     end = aEndSel;
 
-    err=PtTextSetSelection(mWidget, &start, &end);
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetSelection after err=%d start=%d end=%d\n", err, start, end));
+    PtTextSetSelection(mWidget, &start, &end);
   }
 
   return NS_OK;
@@ -229,15 +205,11 @@ NS_METHOD  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 	
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::GetSelection aStartSel=<%d> aEndSel=<%d>\n", *aStartSel, *aEndSel));
-
   return NS_OK;
 }
 
 NS_METHOD  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::SetCaretPosition at %d", aPosition));
-
  PtArg_t arg[2];
 
   if (mWidget)
@@ -253,8 +225,6 @@ NS_METHOD  nsTextHelper::SetCaretPosition(PRUint32 aPosition)
 
 NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPos)
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::GetCaretPosition\n"));
-
  PtArg_t arg[2];
  short *CaretPosition;
  
@@ -266,8 +236,6 @@ NS_METHOD  nsTextHelper::GetCaretPosition(PRUint32& aPos)
 
   aPos = PRUint32(*CaretPosition);
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::GetCaretPosition aPos=<%d>\n", aPos));
-
   return NS_OK;
 }
 
@@ -290,5 +258,4 @@ nsTextHelper::nsTextHelper() : nsWidget(), nsITextAreaWidget(), nsITextWidget()
 //-------------------------------------------------------------------------
 nsTextHelper::~nsTextHelper()
 {
- PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsTextHelper::~nsTextHelper Destructor called for <%p>\n", mWidget));
 }
