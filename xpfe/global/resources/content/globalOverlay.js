@@ -97,3 +97,40 @@ function toggleToolbar( id )
 		document.persist(id, 'hidden')
 	}
 }
+
+
+function goUpdateCommand(command)
+{
+	var controller = document.commandDispatcher.getController();
+	
+	var enabled = false;
+	
+	if ( controller )
+		enabled = controller.IsCommandEnabled(command);
+	
+	goSetCommandEnabled(command, enabled);
+}
+
+function goDoCommand(command)
+{
+	var controller = document.commandDispatcher.getController();
+
+	if ( controller )
+		controller.DoCommand(command);
+}
+
+
+function goSetCommandEnabled(id, enabled)
+{
+	var node = document.getElementById(id);
+
+	if ( node )
+	{
+		if ( enabled )
+			node.removeAttribute("disabled");
+		else
+			node.setAttribute('disabled', 'true');
+	}
+}
+
+
