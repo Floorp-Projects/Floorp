@@ -1339,12 +1339,12 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
-          case eHTMLTag_html:
+          /*case eHTMLTag_html:
             if(mBodyContext->GetCount()>0) {
               result=OpenContainer(theNode,theChildTag,PR_FALSE);
               isTokenHandled=PR_TRUE;
             }
-            break;
+            break;*/
           case eHTMLTag_body:
             if(mHasOpenBody) {
               result=OpenContainer(theNode,theChildTag,PR_FALSE);
@@ -2566,7 +2566,7 @@ nsresult CNavDTD::OpenHTML(const nsIParserNode *aNode){
   START_TIMER();
 
   // Don't push more than one HTML tag into the stack...
-  if(mBodyContext->GetCount()==0) 
+  //if(mBodyContext->GetCount()==0) 
     mBodyContext->Push(aNode); 
 
   return result;
