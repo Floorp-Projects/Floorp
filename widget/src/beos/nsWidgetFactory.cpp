@@ -45,6 +45,7 @@
 
 #include "nsWindow.h"
 #include "nsAppShell.h"
+#include "nsSound.h"
 #include "nsToolkit.h"
 #include "nsLookAndFeel.h"
 #include "nsFilePicker.h"
@@ -71,6 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
@@ -174,6 +176,10 @@ static const nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/beos;1",
     nsHTMLFormatConverterConstructor },
+  { "BeOS Sound",
+    NS_SOUND_CID,
+    "@mozilla.org/sound;1",
+    nsSoundConstructor },
   { "BeOS Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
