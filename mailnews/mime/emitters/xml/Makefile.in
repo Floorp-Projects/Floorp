@@ -37,9 +37,14 @@ EXTRA_DSO_LDOPTS	= 	\
 	$(NSPR_LIBS)	\
 	-L$(DIST)/bin	\
 	-L$(DIST)/lib	\
-	-lxp			\
+	-lmozjs		\
+	-lnetlib	\
+	-lpref		\
+	-lmimetype	\
+	-lxp		\
 	-lraptorbase	\
-	-lxpcom			\
+	-lxpcom		\
+	-lemitterutil	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
