@@ -59,6 +59,10 @@
 #include "sunos4.h"
 #endif
 
+#ifdef NEXTSTEP
+#include <bsd/libc.h>
+#endif
+
 #ifdef NEED_S_ISLNK
 #if !defined(S_ISLNK) && defined(S_IFLNK)
 #define S_ISLNK(a)	(((a) & S_IFMT) == S_IFLNK)
@@ -97,7 +101,7 @@ usage(void)
     fprintf(stderr,
 	"usage: %s [-C cwd] [-L linkprefix] [-m mode] [-o owner] [-g group]\n"
 	"       %*s [-DdltR] file [file ...] directory\n",
-	program, strlen(program), "");
+	program, (int) strlen(program), "");
     exit(2);
 }
 
@@ -230,21 +234,21 @@ main(int argc, char **argv)
     if (onlydir)
 	return 0;
 
-    if (!cwd)
-#ifdef RHAPSODY
-	{
-	  cwd = malloc(PATH_MAX + 1);
-	  cwd = getcwd(cwd, PATH_MAX);
-        }
-#else
+    if (!cwd) {
+#ifndef NEEDS_GETCWD
 	cwd = getcwd(0, PATH_MAX);
-#endif
-    xchdir(todir);
-#ifdef RHAPSODY
-    todir = malloc(PATH_MAX + 1);
-    todir = getcwd(todir, PATH_MAX);
 #else
+	cwd = malloc(PATH_MAX + 1);
+	cwd = getwd(cwd);
+#endif
+    }
+
+    xchdir(todir);
+#ifndef NEEDS_GETCWD
     todir = getcwd(0, PATH_MAX);
+#else
+    todir = malloc(PATH_MAX + 1);
+    todir = getwd(todir);
 #endif
     tdlen = strlen(todir);
     xchdir(cwd);
