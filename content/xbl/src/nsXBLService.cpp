@@ -692,7 +692,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
   if (!newBinding) {
     nsCAutoString str( "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ");
     str.AppendWithConversion(aURL);
-    NS_ERROR(str);
+    NS_ERROR(str.get());
     return NS_OK;
   }
 
@@ -986,7 +986,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
     if (!root)
       return NS_ERROR_FAILURE;
 
-    nsAutoString bindingName; bindingName.AssignWithConversion( NS_STATIC_CAST(const char*, ref) );
+    nsAutoString bindingName; bindingName.AssignWithConversion( ref.get() );
 
     PRInt32 count;
     root->ChildCount(count);
@@ -1106,7 +1106,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
         nsCOMPtr<nsIURI> docURI;
         doc->GetDocumentURL(getter_AddRefs(docURI));
         nsXPIDLCString urlStr;
-        docURI->Resolve(urlCString, getter_Copies(urlStr));
+        docURI->Resolve(urlCString.get(), getter_Copies(urlStr));
         urlCString = urlStr.get();
         if (NS_FAILED(GetBindingInternal(aBoundElement, urlCString, aPeekOnly, aIsReady, getter_AddRefs(baseBinding))))
           return NS_ERROR_FAILURE; // Binding not yet ready or an error occurred.
@@ -1191,7 +1191,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
       // Finally, if all lines of defense fail, we go and fetch the binding
       // document.
       nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), aURLStr);
+      rv = NS_NewURI(getter_AddRefs(uri), aURLStr.get());
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a url");
 
       nsCOMPtr<nsIDocument> document;

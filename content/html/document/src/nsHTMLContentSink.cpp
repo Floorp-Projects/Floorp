@@ -3994,13 +3994,13 @@ nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocC
       {
         PRInt32 srcLen = aRefInDocCharset.Length();
         PRInt32 dstLen;
-        rv = decoder->GetMaxLength(aRefInDocCharset, srcLen, &dstLen);
+        rv = decoder->GetMaxLength(aRefInDocCharset.get(), srcLen, &dstLen);
         if (NS_SUCCEEDED(rv))
         {
           PRUnichar *ustr = (PRUnichar *) nsMemory::Alloc((dstLen+1) * sizeof(PRUnichar));
           if (ustr)
           {
-            rv = decoder->Convert(aRefInDocCharset, &srcLen, ustr, &dstLen);
+            rv = decoder->Convert(aRefInDocCharset.get(), &srcLen, ustr, &dstLen);
             if (NS_SUCCEEDED(rv))
             {
               ustr[dstLen] = 0;

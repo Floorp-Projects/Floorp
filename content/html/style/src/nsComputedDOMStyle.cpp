@@ -681,7 +681,7 @@ nsComputedDOMStyle::GetCssFloat(nsIFrame *aFrame,
     const nsCString& cssFloat =
       nsCSSProps::SearchKeywordTable(display->mFloats,
 	                                 nsCSSProps::kFloatKTable);
-    val->SetString(cssFloat);
+    val->SetString(cssFloat.get());
   }
   else {
     val->SetString("");
@@ -950,7 +950,7 @@ nsComputedDOMStyle::GetFontStyle(nsIFrame *aFrame,
     const nsCString& style=
       nsCSSProps::SearchKeywordTable(font->mFont.style,
                                      nsCSSProps::kFontStyleKTable);
-    val->SetString(style);
+    val->SetString(style.get());
   }
   else {
     val->SetString("");
@@ -975,7 +975,7 @@ nsComputedDOMStyle::GetFontWeight(nsIFrame *aFrame,
       nsCSSProps::SearchKeywordTable(font->mFont.weight,
                                      nsCSSProps::kFontWeightKTable);
     if(str_weight.Length()>0) {
-      val->SetString(str_weight);
+      val->SetString(str_weight.get());
     }
     else {
       nsAutoString num_weight;
@@ -1005,7 +1005,7 @@ nsComputedDOMStyle::GetFontVariant(nsIFrame *aFrame,
     const nsCString& variant=
       nsCSSProps::SearchKeywordTable(font->mFont.variant,
                                      nsCSSProps::kFontVariantKTable);
-    val->SetString(variant);
+    val->SetString(variant.get());
   }
   else {
     val->SetString("");
@@ -1031,7 +1031,7 @@ nsComputedDOMStyle::GetBackgroundColor(nsIFrame *aFrame,
       const nsCString& backgroundColor =
         nsCSSProps::SearchKeywordTable(NS_STYLE_BG_COLOR_TRANSPARENT,
                                        nsCSSProps::kBackgroundColorKTable);
-      val->SetString(backgroundColor);
+      val->SetString(backgroundColor.get());
     }
     else {
       nsAutoString hex;
@@ -1118,7 +1118,7 @@ nsComputedDOMStyle::GetBorderCollapse(nsIFrame *aFrame,
     const nsCString& ident=
       nsCSSProps::SearchKeywordTable(table->mBorderCollapse,
                                      nsCSSProps::kBorderCollapseKTable);
-    val->SetString(ident);
+    val->SetString(ident.get());
   }
   else {
     val->SetString("");
@@ -1324,7 +1324,7 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
     const nsCString& style=
       nsCSSProps::SearchKeywordTable(outline->GetOutlineStyle(),
                                      nsCSSProps::kBorderStyleKTable);
-    val->SetString(style);
+    val->SetString(style.get());
   }
   else {
     val->SetString("");
@@ -1425,7 +1425,7 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
     const nsCString& align=
       nsCSSProps::SearchKeywordTable(text->mTextAlign,
                                      nsCSSProps::kTextAlignKTable);
-    val->SetString(align);
+    val->SetString(align.get());
   }
   else {
     val->SetString("start");
@@ -1449,7 +1449,7 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
     const nsCString& decoration=
       nsCSSProps::SearchKeywordTable(text->mTextDecoration,
 	                                 nsCSSProps::kTextDecorationKTable);
-    val->SetString(decoration);
+    val->SetString(decoration.get());
   }
   else {
     val->SetString("");
@@ -1473,7 +1473,7 @@ nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
     const nsCString& value=
       nsCSSProps::SearchKeywordTable(visibility->mVisible,
                                      nsCSSProps::kVisibilityKTable);
-    val->SetString(value);
+    val->SetString(value.get());
   }
   else {
     val->SetString("");
@@ -2352,7 +2352,7 @@ nsComputedDOMStyle::GetBorderWidthFor(PRUint8 aSide,
           const nsCString& width=
             nsCSSProps::SearchKeywordTable(coord.GetIntValue(),
                                            nsCSSProps::kBorderWidthKTable);
-          val->SetString(width); break;
+          val->SetString(width.get()); break;
         }
       default:
         NS_WARNING("double check the unit");
@@ -2465,7 +2465,7 @@ nsComputedDOMStyle::GetBorderStyleFor(PRUint8 aSide,
     const nsCString& style=
       nsCSSProps::SearchKeywordTable(border->GetBorderStyle(aSide),
                                      nsCSSProps::kBorderStyleKTable);
-    val->SetString(style);
+    val->SetString(style.get());
   }
   else {
     val->SetString("");

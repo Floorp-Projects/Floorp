@@ -592,8 +592,8 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("xul: %.5d. %s<%s>",
                 aNode.GetSourceLineNumber(),
-                NS_STATIC_CAST(const char*, extraWhiteSpace),
-                NS_STATIC_CAST(const char*, textC)));
+                extraWhiteSpace.get(),
+                textC.get()));
     }
 #endif
 
@@ -617,7 +617,7 @@ XULContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
         anodeC.AssignWithConversion(aNode.GetText());
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: unrecognized namespace on '%s' at line %d",
-                NS_STATIC_CAST(const char*,anodeC),
+                anodeC.get(),
                 aNode.GetSourceLineNumber()));
 #endif
 
@@ -670,8 +670,8 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("xul: %.5d. %s</%s>",
                 aNode.GetSourceLineNumber(),
-                NS_STATIC_CAST(const char*, extraWhiteSpace),
-                NS_STATIC_CAST(const char*, textC)));
+                extraWhiteSpace.get(),
+                textC.get()));
     }
 #endif
 
@@ -1244,7 +1244,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             qnameC.AssignWithConversion(qname);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xul: unable to parse attribute '%s' at line %d",
-                    (const char*) qnameC, aNode.GetSourceLineNumber()));
+                    qnameC.get(), aNode.GetSourceLineNumber()));
 
             // Bring it. We'll just fail to copy an attribute that we
             // can't parse. And that's one less attribute to worry
@@ -1270,9 +1270,9 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             PR_LOG(gLog, PR_LOG_DEBUG,
                    ("xul: %.5d. %s    %s=%s",
                     aNode.GetSourceLineNumber(),
-                    NS_STATIC_CAST(const char*, extraWhiteSpace),
-                    NS_STATIC_CAST(const char*, qnameC),
-                    NS_STATIC_CAST(const char*, valueC)));
+                    extraWhiteSpace.get(),
+                    qnameC.get(),
+                    valueC.get()));
         }
 #endif
 
@@ -1433,7 +1433,7 @@ XULContentSinkImpl::OpenRoot(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo)
         anodeC.AssignWithConversion(aNode.GetText());
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: unable to create element '%s' at line %d",
-                NS_STATIC_CAST(const char*, anodeC),
+                anodeC.get(),
                 aNode.GetSourceLineNumber()));
 #endif
 
@@ -1478,7 +1478,7 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode, nsINodeInfo *aNodeInfo)
         anodeC.AssignWithConversion(aNode.GetText());
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xul: unable to create element '%s' at line %d",
-                NS_STATIC_CAST(const char*, anodeC),
+                anodeC.get(),
                 aNode.GetSourceLineNumber()));
 #endif
 

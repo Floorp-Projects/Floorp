@@ -1231,7 +1231,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableS
   nsXPIDLCString otherScheme;
   nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
   if (!ioService) return NS_ERROR_FAILURE;
-  ioService->ExtractScheme(url, 0, 0, getter_Copies(otherScheme));
+  ioService->ExtractScheme(url.get(), 0, 0, getter_Copies(otherScheme));
 
   nsCOMPtr<nsIURI> docURL;
   aBoundDoc->GetDocumentURL(getter_AddRefs(docURL));

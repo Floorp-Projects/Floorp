@@ -879,7 +879,7 @@ nsXULTemplateBuilder::LoadDataSources()
         nsCAutoString uristrC;
         uristrC.AssignWithConversion(uriStr);
 
-        rv = gRDFService->GetDataSource(uristrC, getter_AddRefs(ds));
+        rv = gRDFService->GetDataSource(uristrC.get(), getter_AddRefs(ds));
 
         if (NS_FAILED(rv)) {
             // This is only a warning because the data source may not
@@ -890,7 +890,7 @@ nsXULTemplateBuilder::LoadDataSources()
             msg.Append("unable to load datasource '");
             msg.AppendWithConversion(uriStr);
             msg.Append('\'');
-            NS_WARNING((const char*) msg);
+            NS_WARNING(msg.get());
 #endif
             continue;
         }
@@ -1395,7 +1395,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("                        --[%s]-->[%s]",
                 propertyStr,
-                (const char*) targetstrC));
+                targetstrC.get()));
     }
     return NS_OK;
 }
@@ -1881,7 +1881,7 @@ nsXULTemplateBuilder::CompileCondition(nsIAtom* aTag,
         tagstrC.AssignWithConversion(tagstr);
         PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                ("xultemplate[%p] unrecognized condition test <%s>",
-                this, NS_STATIC_CAST(const char*, tagstrC)));
+                this, tagstrC.get()));
 #endif
 
         rv = NS_OK;
@@ -2061,7 +2061,7 @@ nsXULTemplateBuilder::CompileBindings(nsTemplateRule* aRule, nsIContent* aBindin
             tagstrC.AssignWithConversion(tagstr);
             PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] unrecognized binding <%s>",
-                    this, NS_STATIC_CAST(const char*, tagstrC)));
+                    this, tagstrC.get()));
 #endif
 
             continue;

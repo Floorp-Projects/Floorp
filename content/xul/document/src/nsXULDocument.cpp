@@ -2882,8 +2882,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> attr;
-    nsCAutoString temp_attrstr; temp_attrstr.AssignWithConversion(attrstr);
-    rv = gRDFService->GetResource(temp_attrstr, getter_AddRefs(attr));
+    rv = gRDFService->GetResource(NS_LossyConvertUCS2toASCII(attrstr).get(), getter_AddRefs(attr));
     if (NS_FAILED(rv)) return rv;
 
     // Turn the value into a literal
@@ -6162,7 +6161,7 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         tagstrC.AssignWithConversion(tagstr);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: creating <%s> from prototype",
-                (const char*) tagstrC));
+                tagstrC.get()));
     }
 #endif
 
@@ -6443,7 +6442,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     idC.AssignWithConversion(id);
     PR_LOG(gXULLog, PR_LOG_ALWAYS,
            ("xul: overlay resolved '%s'",
-            (const char*) idC));
+            idC.get()));
 
     mResolved = PR_TRUE;
     return eResolve_Succeeded;
@@ -6611,7 +6610,7 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
         idC.AssignWithConversion(id);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: overlay failed to resolve '%s'",
-                (const char*) idC));
+                idC.get()));
     }
 #endif
 }
@@ -6673,9 +6672,9 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: broadcaster hookup failed <%s attribute='%s'> to %s",
-                (const char*) tagstrC,
-                (const char*) attributeC,
-                (const char*) broadcasteridC));
+                tagstrC.get(),
+                attributeC.get(),
+                broadcasteridC.get()));
     }
 #endif
 }
@@ -6818,9 +6817,9 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: broadcaster hookup <%s attribute='%s'> to %s",
-                (const char*) tagstrC,
-                (const char*) attributeC,
-                (const char*) broadcasteridC));
+                tagstrC.get(),
+                attributeC.get(),
+                broadcasteridC.get()));
     }
 #endif
 
@@ -6998,7 +6997,7 @@ nsXULDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   }
   contractID += ";1";
 
-  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID));
+  nsCOMPtr<nsIBoxObject> boxObject(do_CreateInstance(contractID.get()));
   if (!boxObject)
     return NS_ERROR_FAILURE;
 

@@ -73,7 +73,7 @@ nsControllerCommandManager::RegisterCommand(const nsAReadableString & aCommandNa
 #if DEBUG
     nsCAutoString msg("Replacing existing command -- ");
     msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif
   }  
   return NS_OK;
@@ -123,7 +123,7 @@ nsControllerCommandManager::IsCommandEnabled(const nsAReadableString & aCommandN
 #if DEBUG
     nsCAutoString msg("Controller command manager asked about a command that it does not handle -- ");
     msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif
     return NS_OK;    // we don't handle this command
   }
@@ -143,7 +143,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
 #if DEBUG
     nsCAutoString msg("Controller command manager asked to update the state of a command that it does not handle -- ");
     msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif
     return NS_OK;    // we don't handle this command
   }
@@ -154,7 +154,7 @@ nsControllerCommandManager::UpdateCommandState(const nsAReadableString & aComman
 #if DEBUG
     nsCAutoString msg("Controller command manager asked to update the state of a command that doesn't do state updating -- ");
     msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif
     return NS_ERROR_NO_INTERFACE;
   }
@@ -191,7 +191,7 @@ nsControllerCommandManager::DoCommand(const nsAReadableString & aCommandName, ns
 #if DEBUG
     nsCAutoString msg("Controller command manager asked to do a command that it does not handle -- ");
     msg.AppendWithConversion(aCommandName);
-    NS_WARNING(msg);
+    NS_WARNING(msg.get());
 #endif
     return NS_OK;    // we don't handle this command
   }

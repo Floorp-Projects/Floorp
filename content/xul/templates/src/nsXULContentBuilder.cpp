@@ -454,9 +454,9 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                ("xultemplate[%p] build-content-from-template %s (template='%s') [%s]",
                 this,
-                (const char*) tagstrC,
-                (const char*) templatestrC,
-                (const char*) resourceCStr));
+                tagstrC.get(),
+                templatestrC.get(),
+                resourceCStr.get()));
     }
 #endif
 
@@ -555,7 +555,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             tagstrC.AssignWithConversion(tagname);
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
-                    this, (const char*) tagstrC,
+                    this, tagstrC.get(),
                     (isResourceElement ? "[resource]" : ""),
                     (isUnique ? "[unique]" : "")));
         }
@@ -1148,8 +1148,8 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContainerElement,
             PR_LOG(gXULTemplateLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] remove-member %s->%s [%s]",
                     this,
-                    (const char*) parenttagstrC,
-                    (const char*) childtagstrC,
+                    parenttagstrC.get(),
+                    childtagstrC.get(),
                     resourceCStr));
         }
 #endif

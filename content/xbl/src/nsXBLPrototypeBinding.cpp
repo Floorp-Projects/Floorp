@@ -1018,7 +1018,7 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName, nsIScriptContext *
   jsval vp;
   JSObject* proto;
 
-  if ((! ::JS_LookupProperty(jscontext, global, aClassName, &vp)) || JSVAL_IS_PRIMITIVE(vp))  {
+  if ((! ::JS_LookupProperty(jscontext, global, aClassName.get(), &vp)) || JSVAL_IS_PRIMITIVE(vp))  {
     // We need to initialize the class.
     nsXBLJSClass* c;
     void* classObject;

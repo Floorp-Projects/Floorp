@@ -214,9 +214,9 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
                     PR_LOG(gMapLog, PR_LOG_ALWAYS,
                            ("xulelemap(%p) dup    %s[%p] <-- %s\n",
                             this,
-                            (const char*) tagnameC,
+                            tagnameC.get(),
                             aContent,
-                            (const char*) aidC));
+                            aidC.get()));
                 }
 #endif
 
@@ -251,9 +251,9 @@ nsElementMap::Add(const nsAReadableString& aID, nsIContent* aContent)
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) add    %s[%p] <-- %s\n",
                 this,
-                (const char*) tagnameC,
+                tagnameC.get(),
                 aContent,
-                (const char*)aidC));
+                aidC.get()));
     }
 #endif
 
@@ -289,9 +289,9 @@ nsElementMap::Remove(const nsAReadableString& aID, nsIContent* aContent)
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) remove  %s[%p] <-- %s\n",
                 this,
-                (const char*) tagnameC,
+                tagnameC.get(),
                 aContent,
-                (const char*) aidC));
+                aidC.get()));
     }
 #endif
 

@@ -230,10 +230,10 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
       PR_LOG(gLog, PR_LOG_ALWAYS,
              ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
               this, aElement,
-              (const char*) eventsC,
-              (const char*) targetsC,
-              (const char*) aeventsC,
-              (const char*) atargetsC));
+              eventsC.get(),
+              targetsC.get(),
+              aeventsC.get(),
+              atargetsC.get()));
 #endif
 
       // If the updater was already in the list, then replace
@@ -255,8 +255,8 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
   PR_LOG(gLog, PR_LOG_ALWAYS,
          ("xulcmd[%p] add     %p(events=%s targets=%s)",
           this, aElement,
-          (const char*) aeventsC,
-          (const char*) atargetsC));
+          aeventsC.get(),
+          atargetsC.get()));
 #endif
 
   // If we get here, this is a new updater. Append it to the list.
@@ -287,8 +287,8 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
       PR_LOG(gLog, PR_LOG_ALWAYS,
              ("xulcmd[%p] remove  %p(events=%s targets=%s)",
               this, aElement,
-              (const char*) eventsC,
-              (const char*) targetsC));
+              eventsC.get(),
+              targetsC.get()));
 #endif
 
       *link = updater->mNext;
@@ -357,7 +357,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAReadableString& aEventName)
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("xulcmd[%p] update %p event=%s",
             this, updater->mElement,
-            (const char*) aeventnameC));
+            aeventnameC.get()));
 #endif
 
     PRInt32 count = document->GetNumberOfShells();

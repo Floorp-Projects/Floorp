@@ -207,7 +207,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // XXX URL escape?
         nsCAutoString str; str.AssignWithConversion(value);
       
-        rv = MakeURI(str,nsnull,aURI);
+        rv = MakeURI(str.get(),nsnull,aURI);
         if (NS_FAILED(rv))
           break;
 
@@ -215,7 +215,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
           // XXX URL escape?
           str.AssignWithConversion(base.get());
           nsXPIDLCString resolvedStr;
-          rv = (*aURI)->Resolve(str, getter_Copies(resolvedStr));
+          rv = (*aURI)->Resolve(str.get(), getter_Copies(resolvedStr));
           if (NS_FAILED(rv)) break;
           rv = (*aURI)->SetSpec(resolvedStr);
         }
@@ -256,7 +256,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
       } else {
         // XXX URL escape?
         nsCAutoString str; str.AssignWithConversion(base);
-        rv = MakeURI(str,docBase,aURI);
+        rv = MakeURI(str.get(),docBase,aURI);
       }
     }
   } else {
@@ -327,7 +327,7 @@ static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI,
   *aAbsURI = nsnull;
 
   nsresult rv;
-  rv = MakeURI(str,aBaseURI,aAbsURI);
+  rv = MakeURI(str.get(),aBaseURI,aAbsURI);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);

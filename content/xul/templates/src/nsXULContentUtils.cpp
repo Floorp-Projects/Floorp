@@ -413,7 +413,7 @@ nsXULContentUtils::MakeElementResource(nsIDocument* aDocument, const nsAReadable
     rv = MakeElementURI(aDocument, aID, uri);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDF->GetResource(uri, aResult);
+    rv = gRDF->GetResource(uri.get(), aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
     if (NS_FAILED(rv)) return rv;
 
