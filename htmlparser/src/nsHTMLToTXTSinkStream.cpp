@@ -974,9 +974,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
       if(('>' == aLineFragment[0]) ||
          (' ' == aLineFragment[0]) ||
          (!nsCRT::strncmp(aLineFragment, "From ", 5))) {
-        // Space stuffing a la RFC 2646 if this will be used in a mail,
-        // but how can I know that??? Now space stuffing is done always
-        // when formatting text as HTML and that is wrong! XXX: Fix this!
+        // Space stuffing a la RFC 2646 (format=flowed).
         mCurrentLine.AppendWithConversion(' ');
       }
     }
@@ -1003,7 +1001,9 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
       if (nsnull != mLineBreaker) {
         result = mLineBreaker->Prev(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
                                     (PRUint32 *) &goodSpace, &oNeedMoreText);
-        if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) 
+        if (oNeedMoreText)
+          goodSpace = -1;
+        else if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) 
           --goodSpace;    // adjust the position since line breaker returns a position next to space
       }
       // fallback if the line breaker is unavailable or failed
@@ -1024,8 +1024,6 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
         if (nsnull != mLineBreaker) {
           result = mLineBreaker->Next(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
                                       (PRUint32 *) &goodSpace, &oNeedMoreText);
-          if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) 
-            --goodSpace;    // adjust the position since line breaker returns a position next to space
         }
         // fallback if the line breaker is unavailable or failed
         if (nsnull == mLineBreaker || NS_FAILED(result)) {
@@ -1054,9 +1052,7 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
           if((restOfLine[0] == '>') ||
              (restOfLine[0] == ' ') ||
              (!restOfLine.CompareWithConversion("From ",PR_FALSE,5))) {
-            // Space stuffing a la RFC 2646 if this will be used in a mail,
-            // but how can I know that??? Now space stuffing is done always
-            // when formatting text as HTML and that is wrong! XXX: Fix this!
+            // Space stuffing a la RFC 2646 (format=flowed).
             mCurrentLine.AppendWithConversion(' ');
           }
         }
