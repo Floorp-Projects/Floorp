@@ -47,7 +47,7 @@ interface nsIMsgDBHdr;
 
 typedef long nsMailboxAction;
 
-[scriptable, uuid(C272A1C1-C166-11d2-804E-006008128C4E)]
+[scriptable, uuid(AE30B004-320C-4D2B-AB52-45D2C2DC2CCE)]
 interface nsIMailboxUrl : nsISupports {
 
 	// Mailbox urls which parse a mailbox folder require a consumer of the
@@ -69,9 +69,6 @@ interface nsIMailboxUrl : nsISupports {
 
     // mailbox URL state
     [noscript] readonly attribute nsFileSpecPtr fileSpec;
-
-    // a message db header for that message.
-    readonly attribute nsIMsgDBHdr messageHeader;
 
     // Some mailbox urls include a message key for the message in question.
     readonly attribute nsMsgKey messageKey;
