@@ -40,10 +40,18 @@ function onLoad()
   try {
      params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
      tokenName = params.GetString(1);
-  }catch(exception)
-	 {tokenName = self.name;}
+  } catch(exception) {
+      // this should not happen.
+      // previously we had self.name, but self.name was a bad idea
+      // as window name must be a subset of ascii, and the code was
+      // previously trying to assign unicode to the window's name.
+      // I checked all the places where we get a password prompt and
+      // all of them pass an argument as part of this patch.
+      tokenName="";
+  }
+      
 
-  if(tokenName=="" || tokenName=="_blank") {
+  if(tokenName=="") {
      var sectokdb = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
      var tokenList = sectokdb.listTokens();
      var enumElement;

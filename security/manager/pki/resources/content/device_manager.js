@@ -30,6 +30,8 @@ const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
 const nsIPK11Token = Components.interfaces.nsIPK11Token;
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
+const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
 
 var bundle;
 var secmoddb;
@@ -362,9 +364,11 @@ function doUnload()
 function changePassword()
 {
   getSelectedItem();
-  window.open("changepassword.xul",
-              selected_slot.tokenName, 
-              "chrome,resizable=1,modal=1,dialog=1");
+  var params = Components.classes[nsDialogParamBlock].createInstance(nsIDialogParamBlock);
+  params.SetString(1,selected_slot.tokenName);
+  window.openDialog("changepassword.xul",
+              "", 
+              "chrome,resizable=1,modal=1,dialog=1",params);
   showSlotInfo();
   enableButtons();
 }

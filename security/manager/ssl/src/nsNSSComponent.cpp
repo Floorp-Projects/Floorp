@@ -388,11 +388,10 @@ nsNSSComponent::InstallLoadableRoots()
     fullModuleName = PR_GetLibraryName(processDir.get(), "nssckbi");
 #endif
     /* If a module exists with the same name, delete it. */
-    char *modNameCString = ToNewCString(modName);
+    NS_ConvertUCS2toUTF8 modNameUTF8(modName);
     int modType;
-    SECMOD_DeleteModule(modNameCString, &modType);
-    SECMOD_AddNewModule(modNameCString, fullModuleName, 0, 0);
-    nsMemory::Free(modNameCString);
+    SECMOD_DeleteModule(NS_CONST_CAST(char*, modNameUTF8.get()), &modType);
+    SECMOD_AddNewModule(NS_CONST_CAST(char*, modNameUTF8.get()), fullModuleName, 0, 0);
 #ifndef XP_MAC
     PR_Free(fullModuleName); // allocated by NSPR
 #endif
@@ -444,14 +443,14 @@ nsNSSComponent::ConfigureInternalPKCS11Token()
                              getter_Copies(fipsPrivateSlotDescription));
   if (NS_FAILED(rv)) return rv;
 
-  PK11_ConfigurePKCS11(NS_LossyConvertUCS2toASCII(manufacturerID).get(),
-                       NS_LossyConvertUCS2toASCII(libraryDescription).get(),
-                       NS_LossyConvertUCS2toASCII(tokenDescription).get(),
-                       NS_LossyConvertUCS2toASCII(privateTokenDescription).get(),
-                       NS_LossyConvertUCS2toASCII(slotDescription).get(),
-                       NS_LossyConvertUCS2toASCII(privateSlotDescription).get(),
-                       NS_LossyConvertUCS2toASCII(fipsSlotDescription).get(),
-                       NS_LossyConvertUCS2toASCII(fipsPrivateSlotDescription).get(),
+  PK11_ConfigurePKCS11(NS_ConvertUCS2toUTF8(manufacturerID).get(),
+                       NS_ConvertUCS2toUTF8(libraryDescription).get(),
+                       NS_ConvertUCS2toUTF8(tokenDescription).get(),
+                       NS_ConvertUCS2toUTF8(privateTokenDescription).get(),
+                       NS_ConvertUCS2toUTF8(slotDescription).get(),
+                       NS_ConvertUCS2toUTF8(privateSlotDescription).get(),
+                       NS_ConvertUCS2toUTF8(fipsSlotDescription).get(),
+                       NS_ConvertUCS2toUTF8(fipsPrivateSlotDescription).get(),
                        0, 0);
   return NS_OK;
 }
@@ -1956,3 +1955,4 @@ PSMContentListener::SetParentContentListener(nsIURIContentListener * aContentLis
   mParentContentListener = aContentListener;
   return NS_OK;
 }
+

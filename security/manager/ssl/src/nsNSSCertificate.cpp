@@ -1323,7 +1323,7 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
 #endif
       char *token = PK11_GetTokenName(mCert->slot);
       if (token) {
-        *aTokenName = ToNewUnicode(nsDependentCString(token));
+        *aTokenName = ToNewUnicode(NS_ConvertUTF8toUCS2(token));
       }
     } else {
       nsresult rv;

@@ -49,13 +49,22 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
   srv = PK11_GetTokenInfo(mSlot, &tok_info);
   if (srv == SECSuccess) {
     // Set the Label field
-    mTokenLabel.AssignWithConversion((char *)tok_info.label, 
-                                     sizeof(tok_info.label));
+
+    const char *ccLabel = (const char*)tok_info.label;
+    const nsACString &cLabel = Substring(
+      ccLabel, 
+      ccLabel+PL_strnlen(ccLabel, sizeof(tok_info.label)));
+    mTokenLabel = NS_ConvertUTF8toUCS2(cLabel);
     mTokenLabel.Trim(" ", PR_FALSE, PR_TRUE);
+
     // Set the Manufacturer field
-    mTokenManID.AssignWithConversion((char *)tok_info.manufacturerID, 
-                                     sizeof(tok_info.manufacturerID));
+    const char *ccManID = (const char*)tok_info.manufacturerID;
+    const nsACString &cManID = Substring(
+      ccManID, 
+      ccManID+PL_strnlen(ccManID, sizeof(tok_info.manufacturerID)));
+    mTokenManID = NS_ConvertUTF8toUCS2(cManID);
     mTokenManID.Trim(" ", PR_FALSE, PR_TRUE);
+
     // Set the Hardware Version field
     mTokenHWVersion.AppendInt(tok_info.hardwareVersion.major);
     mTokenHWVersion.Append(NS_LITERAL_STRING("."));
@@ -65,8 +74,11 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
     mTokenFWVersion.Append(NS_LITERAL_STRING("."));
     mTokenFWVersion.AppendInt(tok_info.firmwareVersion.minor);
     // Set the Serial Number field
-    mTokenSerialNum.AssignWithConversion((char *)tok_info.serialNumber, 
-                                         sizeof(tok_info.serialNumber));
+    const char *ccSerial = (const char*)tok_info.serialNumber;
+    const nsACString &cSerial = Substring(
+      ccSerial, 
+      ccSerial+PL_strnlen(ccSerial, sizeof(tok_info.serialNumber)));
+    mTokenSerialNum = NS_ConvertUTF8toUCS2(cSerial);
     mTokenSerialNum.Trim(" ", PR_FALSE, PR_TRUE);
   }
 
