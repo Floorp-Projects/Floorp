@@ -177,7 +177,7 @@ function getEnclosingContainer(startNode) {
 function onClickSelect()
 {
    
-    top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "chrome,modal,titlebar,resizable=yes");
+    top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "chrome,titlebar,resizable=yes");
     return true;
 
 }
