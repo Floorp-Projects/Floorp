@@ -1182,10 +1182,11 @@ function cli_istatus (e)
                                              s.connection.port, serverType]),
                                      "STATUS");        
 
-        var connectTime = formatDateOffset ((new Date() -
-                                             s.connection.connectDate) / 1000);
-        var pingTime = (s.lastPing) ?
-            formatDateOffset ((new Date() - s.lastPing) / 1000) : getMsg("na");
+        var connectTime = formatDateOffset (Math.floor((new Date() -
+                                            s.connection.connectDate) / 1000));
+        var pingTime = ("lastPing" in s) ?
+            formatDateOffset (Math.floor((new Date() - s.lastPing) / 1000)) :
+            getMsg("na");
         var lag = (s.lag >= 0) ? s.lag : getMsg("na");
 
         client.currentObject.display(getMsg("cli_istatusServerDetail", 

@@ -380,8 +380,7 @@ function stringTrim (s)
 /* the offset should be in seconds, it will be rounded to 2 decimal places */
 function formatDateOffset (offset, format)
 {
-    offset = roundTo(offset, 2);
-    var seconds = offset % 60;
+    var seconds = roundTo(offset % 60, 2);
     var minutes = parseInt(offset / 60);
     var hours = parseInt(minutes / 60);
     minutes = minutes % 60;
