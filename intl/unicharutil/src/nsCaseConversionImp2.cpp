@@ -272,13 +272,12 @@ nsresult nsCaseConversionImp2::ToLower(
 
 
 nsresult nsCaseConversionImp2::ToTitle(
-  const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen
+  const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen,
+  PRBool aStartInWordBoundary
 )
 {
   if(0 == aLen)
     return NS_OK;
-
-  PRBool bBeginAsWordBegin = PR_TRUE; // this should really a function arguemnet
 
   //
   // We need to replace this implementation to a real one
@@ -287,7 +286,7 @@ nsresult nsCaseConversionImp2::ToTitle(
   //
   this->ToLower(anArray, aReturn, aLen);
   PRBool bLastIsChar = bLastIsChar =  IS_ASCII_LOWER(anArray[0]);
-  if(bBeginAsWordBegin)
+  if(aStartInWordBoundary)
   {
      this->ToTitle(aReturn[0], &aReturn[0]);
   }

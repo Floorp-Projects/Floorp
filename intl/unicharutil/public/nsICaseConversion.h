@@ -47,7 +47,8 @@ public:
   NS_IMETHOD ToLower( const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen) = 0;
 
   // Convert an array of Unicode characters into title case
-  NS_IMETHOD ToTitle( const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen) = 0;
+  NS_IMETHOD ToTitle( const PRUnichar* anArray, PRUnichar* aReturn, 
+                      PRUint32 aLen, PRBool aStartInWordBundary=PR_TRUE) = 0;
    
 };
 
