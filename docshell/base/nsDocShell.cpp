@@ -4095,7 +4095,7 @@ nsDocShell::CreateFixupURI(const PRUnichar * aStringURI, nsIURI ** aURI)
 {
     *aURI = nsnull;
     nsAutoString uriString(aStringURI);
-    uriString.CompressWhitespace();        // Cleanup the empty spaces that might be on each end.
+    uriString.Trim(" ");        // Cleanup the empty spaces that might be on each end.
 
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
