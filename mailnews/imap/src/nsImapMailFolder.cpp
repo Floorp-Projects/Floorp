@@ -2572,9 +2572,9 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
         m_copyState->m_dataBuffer[m_copyState->m_leftOver] = '\0';
 
         start = m_copyState->m_dataBuffer;
-        end = PL_strstr(start, "\r");
+        end = PL_strchr(start, '\r');
         if (!end)
-            end = PL_strstr(start, "\n");
+            end = PL_strchr(start, '\n');
         else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
             linebreak_len = 2;
 
@@ -2607,9 +2607,9 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                 m_copyState->m_leftOver = 0;
                 break;
             }
-            end = PL_strstr(start, "\r");
+            end = PL_strchr(start, '\r');
             if (!end)
-                end = PL_strstr(start, "\n");
+                end = PL_strchr(start, '\n');
             if (start && !end)
             {
                 m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);

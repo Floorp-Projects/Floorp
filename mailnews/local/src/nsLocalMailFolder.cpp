@@ -2231,9 +2231,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
     mCopyState->m_leftOver += readCount;
     mCopyState->m_dataBuffer[mCopyState->m_leftOver] ='\0';
     start = mCopyState->m_dataBuffer;
-    end = PL_strstr(start, "\r");
+    end = PL_strchr(start, '\r');
     if (!end)
-      	end = PL_strstr(start, "\n");
+      	end = PL_strchr(start, '\n');
     else if (*(end+1) == nsCRT::LF && linebreak_len == 0)
         linebreak_len = 2;
 
@@ -2291,7 +2291,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
             mCopyState->m_leftOver = 0;
             break;
         }
-        end = PL_strstr(start, "\r");
+        end = PL_strchr(start, '\r');
         if (end)
         {
           if (*(end+1) == nsCRT::LF)  //need to set the linebreak_len each time
@@ -2301,7 +2301,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         }
         if (!end)
         {
-         end = PL_strstr(start, "\n");
+         end = PL_strchr(start, '\n');
          if (end)
             linebreak_len = 1;   //LF
          else
