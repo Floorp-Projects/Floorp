@@ -111,12 +111,11 @@ function SetFolderDisplay(pickerMode, disableMode,
     var selectAccountRadioElem = document.getElementById(selectAccountRadioId);
     var selectFolderRadioId = radioElemPrefix + "_selectFolder";
     var selectFolderRadioElem = document.getElementById(selectFolderRadioId);
-
+    var rg = selectAccountRadioElem.radioGroup;
     switch (pickerMode) 
     {
         case "0" :
-            selectAccountRadioElem.setAttribute("checked", "true");
-            selectFolderRadioElem.setAttribute("checked", "false");
+            rg.selectedItem = selectAccountRadioElem;
             if (disableMode) {
               selectAccountRadioElem.setAttribute("disabled","true");
               selectFolderRadioElem.setAttribute("disabled","true");
@@ -133,9 +132,7 @@ function SetFolderDisplay(pickerMode, disableMode,
             break;
 
         case "1"  :
-            selectFolderRadioElem.setAttribute("checked", "true");
-            selectAccountRadioElem.setAttribute("checked", "false");
-
+            rg.selectedItem = selectFolderRadioElem;
             if (disableMode) {
               selectAccountRadioElem.setAttribute("disabled","true");
               selectFolderRadioElem.setAttribute("disabled","true");
@@ -407,8 +404,5 @@ function setPickersState(enablePickerId, disablePickerId, event)
 function SetRadioButtons(selectPickerId, unselectPickerId)
 {
     var activeRadioElem = document.getElementById(selectPickerId);
-    activeRadioElem.setAttribute("checked", "true");
-
-    var inactiveRadioElem = document.getElementById(unselectPickerId);
-    inactiveRadioElem.removeAttribute("checked");
+    activeRadioElem.radioGroup.selectedItem = activeRadioElem;
 }

@@ -90,7 +90,6 @@
                 prefattribute="value"
                 prefstring="mail.identity.%identitykey%.bcc_other"/>
       <textbox wsm_persist="true" id="identity.bccList" flex="1"
-               preftype="string"
                prefstring="mail.identity.%identitykey%.bcc_other_list"/>
     </hbox>
 

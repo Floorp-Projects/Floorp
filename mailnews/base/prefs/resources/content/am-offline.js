@@ -77,19 +77,20 @@ function initRetentionSettings()
     else
         document.getElementById("nntp.removeBodyMin").setAttribute("value", "30");
 
+    var keepAllMsg = document.getElementById("nntp.keepAllMsg");
     switch(retentionSettings.retainByPreference)
     {		
         case 1:
-        document.getElementById("nntp.keepAllMsg").checked = true;	
+        keepAllMsg.radioGroup.selectedItem = keepAllMsg;
             break;
         case 2:   
-        document.getElementById("nntp.keepOldMsg").checked = true;
+        keepAllMsg.radioGroup.selectedItem = document.getElementById("nntp.keepOldMsg");
             break;
         case 3:    
-        document.getElementById("nntp.keepNewMsg").checked = true;
+        keepAllMsg.radioGroup.selectedItem = document.getElementById("nntp.keepNewMsg");
             break;
         default:
-            document.getElementById("nntp.keepAllMsg").checked = true;
+            keepAllMsg.radioGroup.selectedItem = keepAllMsg;
     }  
 }
 
@@ -209,11 +210,11 @@ function onSave()
     gIncomingServer.limitOfflineMessageSize = document.getElementById("offline.notDownload").checked;
     gIncomingServer.maxMessageSize = document.getElementById("offline.notDownloadMin").value;
 
-    if(document.getElementById("nntp.keepAllMsg").checked)
+    if(document.getElementById("nntp.keepAllMsg").selected)
         retentionSettings.retainByPreference = 1;		
-    else if(document.getElementById("nntp.keepOldMsg").checked)
+    else if(document.getElementById("nntp.keepOldMsg").selected)
         retentionSettings.retainByPreference = 2;
-    else if(document.getElementById("nntp.keepNewMsg").checked)
+    else if(document.getElementById("nntp.keepNewMsg").selected)
         retentionSettings.retainByPreference = 3;
 
     document.getElementById("nntp.keepMsg").value = retentionSettings.retainByPreference;
@@ -318,9 +319,9 @@ function onCheckKeepMsg()
         return;
     }
     var broadcaster_keepMsg = document.getElementById("bc_keepMsg");
-    var checkedOld = document.getElementById("nntp.keepOldMsg").checked;
-    var checkedNew = document.getElementById("nntp.keepNewMsg").checked;
-    var checkedAll = document.getElementById("nntp.keepAllMsg").checked;
+    var checkedOld = document.getElementById("nntp.keepOldMsg").selected;
+    var checkedNew = document.getElementById("nntp.keepNewMsg").selected;
+    var checkedAll = document.getElementById("nntp.keepAllMsg").selected;
     if(checkedAll) {
         broadcaster_keepMsg.setAttribute("disabled", "true");
     }

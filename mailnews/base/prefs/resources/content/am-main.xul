@@ -62,7 +62,7 @@
                   prefstring="mail.identity.%identitykey%.attach_signature"/>
       </hbox>
       <hbox align="center" class="indent">
-        <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" name="identity.signature"
+        <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"
                  prefstring="mail.identity.%identitykey%.sig_file"/>
         <button class="push" name="browse" label="&choose.label;"  
                 oncommand="selectFile()"
