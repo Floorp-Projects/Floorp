@@ -3190,6 +3190,7 @@ PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv)
     if (param == NULL) return NULL;
     param->data = NULL;
     param->len = 0;
+    param->type = 0;
     switch (type) {
     case CKM_AES_ECB:
     case CKM_DES_ECB:

@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.37 2002/06/22 01:40:32 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.38 2002/06/25 23:00:59 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1105,6 +1105,7 @@ const ssl3BulkCipherDef *cipher_def;
 
     mac_param.data = (unsigned char *)&macLength;
     mac_param.len  = sizeof(macLength);
+    mac_param.type = 0;
     mac_mech       = pwSpec->mac_def->mmech;
 
     if (cipher_def->calg == calg_null) {

@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.23 2002/06/18 16:41:41 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.24 2002/06/25 23:00:57 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -2200,6 +2200,7 @@ nsslowkey_CheckKeyDBPassword(NSSLOWKEYDBHandle *handle, SECItem *pwitem)
     /* make a secitem of the encrypted check string */
     encstring.len = dbkey->derPK.len - ( oid.len + 1 );
     encstring.data = &dbkey->derPK.data[oid.len+1];
+    encstring.type = 0;
     
     switch(algorithm)
     {
