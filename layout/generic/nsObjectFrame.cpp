@@ -2590,7 +2590,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetTagText(const char* *result)
         nsCOMPtr<nsIDocumentEncoder> docEncoder(do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/html", &rv));
         if (NS_FAILED(rv))
             return rv;
-        rv = docEncoder->Init(document, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeEntities);
+        rv = docEncoder->Init(document, NS_LITERAL_STRING("text/html"), nsIDocumentEncoder::OutputEncodeBasicEntities);
         if (NS_FAILED(rv))
             return rv;
 

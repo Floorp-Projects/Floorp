@@ -395,8 +395,14 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
         mEncodingFlags |= nsIDocumentEncoder::OutputFormatFlowed;
     if (aEncodingFlags & ENCODE_FLAGS_ABSOLUTE_LINKS)
         mEncodingFlags |= nsIDocumentEncoder::OutputAbsoluteLinks;
-    if (aEncodingFlags & ENCODE_FLAGS_ENCODE_ENTITIES)
-        mEncodingFlags |= nsIDocumentEncoder::OutputEncodeEntities;
+    if (aEncodingFlags & ENCODE_FLAGS_ENCODE_BASIC_ENTITIES)
+        mEncodingFlags |= nsIDocumentEncoder::OutputEncodeBasicEntities;
+    if (aEncodingFlags & ENCODE_FLAGS_ENCODE_LATIN1_ENTITIES)
+        mEncodingFlags |= nsIDocumentEncoder::OutputEncodeLatin1Entities;
+    if (aEncodingFlags & ENCODE_FLAGS_ENCODE_HTML_ENTITIES)
+        mEncodingFlags |= nsIDocumentEncoder::OutputEncodeHTMLEntities;
+    if (aEncodingFlags & ENCODE_FLAGS_ENCODE_W3C_ENTITIES)
+        mEncodingFlags |= nsIDocumentEncoder::OutputEncodeW3CEntities;
     if (aEncodingFlags & ENCODE_FLAGS_CR_LINEBREAKS)
         mEncodingFlags |= nsIDocumentEncoder::OutputCRLineBreak;
     if (aEncodingFlags & ENCODE_FLAGS_LF_LINEBREAKS)

@@ -135,7 +135,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
    * what so ever.
    */
   PRPackedBool mInCDATA;
-  PRPackedBool mIsLatin1;
 
   PRInt32   mMaxColumn;
 
