@@ -33,7 +33,7 @@ Divider*MainDivider.bottomOffset:		10
 Divider*MainDivider.background:		        cadetblue4
 
 Divider*MainDivider.orientation:		vertical
-!Divider*MainDivider.dividerType:		divider_offset
+!Divider*MainDivider.dividerType:		divider_fixed_size
 Divider*MainDivider.dividerTarget:		0
 Divider*MainDivider.dividerPercentage:		20
 

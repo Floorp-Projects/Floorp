@@ -441,8 +441,8 @@ XFE_RDFChromeTreeView::setHtmlPaneHeightFixed(PRUint32 heightFixed)
 //	XP_ASSERT( _htmlPane != NULL );
 
 	XtVaSetValues(_divider,
-				  XmNdividerType,		XmDIVIDER_OFFSET,
-				  XmNdividerOffset,		height,
+				  XmNdividerType,			XmDIVIDER_FIXED_SIZE,
+				  XmNdividerFixedSize,		height,
 				  NULL);
 }
 //////////////////////////////////////////////////////////////////////////

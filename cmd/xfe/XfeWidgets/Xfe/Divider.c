@@ -80,11 +80,11 @@ static const XtResource resources[] =
 
 	/* Divider resources */
     { 
-		XmNdividerOffset,
-		XmCDividerOffset,
+		XmNdividerFixedSize,
+		XmCDividerFixedWidth,
 		XmRDimension,
 		sizeof(Dimension),
-		XtOffsetOf(XfeDividerRec , xfe_divider . divider_offset),
+		XtOffsetOf(XfeDividerRec , xfe_divider . divider_fixed_size),
 		XmRImmediate, 
 		(XtPointer) 100
     },
@@ -271,6 +271,25 @@ _XFE_WIDGET_CLASS(divider,Divider);
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Rep type registration functions										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+DividerRegisterRepTypes(void)
+{
+    static String divider_names[] = 
+    { 
+		"divider_fixed_size",
+		"divider_percentage",
+		NULL
+    };
+
+    XfeRepTypeRegister(XmRDividerType,divider_names);
+}
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* Core Class methods													*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -306,8 +325,8 @@ CoreSetValues(Widget ow,Widget rw,Widget nw,ArgList av,Cardinal * ac)
     XfeDividerPart *		np = _XfeDividerPart(nw);
     XfeDividerPart *		op = _XfeDividerPart(ow);
 
-	/* XmNdividerOffset */
-	if (np->divider_offset != op->divider_offset)
+	/* XmNdividerFixedSize */
+	if (np->divider_fixed_size != op->divider_fixed_size)
 	{
 		_XfemConfigFlags(nw) |= XfeConfigLayout;
 	}
@@ -435,8 +454,8 @@ LayoutStaticVertical(Widget w)
 	int			two_height;
 	
 	assert( dp->divider_target == 0 || dp->divider_target == 1 );
-	assert( dp->divider_offset > 0 );
-	assert( dp->divider_offset <= _XfeWidth(w) );
+	assert( dp->divider_fixed_size > 0 );
+	assert( dp->divider_fixed_size <= _XfeWidth(w) );
 	assert( dp->divider_percentage >= 0 );
 	assert( dp->divider_percentage <= 100 );
 
@@ -444,9 +463,9 @@ LayoutStaticVertical(Widget w)
 	if (dp->divider_target == 0)
 	{
 		/* Offset */
-		if (dp->divider_type == XmDIVIDER_OFFSET)
+		if (dp->divider_type == XmDIVIDER_FIXED_SIZE)
 		{
-			one_height = dp->divider_offset;
+			one_height = dp->divider_fixed_size;
 			one_width = _XfemBoundaryWidth(w);
 			one_x = _XfemBoundaryX(w);
 			one_y = _XfemBoundaryY(w);
@@ -474,9 +493,9 @@ LayoutStaticVertical(Widget w)
 	else
 	{
 		/* Offset */
-		if (dp->divider_type == XmDIVIDER_OFFSET)
+		if (dp->divider_type == XmDIVIDER_FIXED_SIZE)
 		{
-			two_height = dp->divider_offset;
+			two_height = dp->divider_fixed_size;
 			two_width = _XfemBoundaryWidth(w);
 			two_x = _XfemBoundaryY(w);
 			two_y = _XfemBoundaryY(w) + _XfemBoundaryHeight(w) - two_height;
@@ -530,8 +549,8 @@ LayoutStaticHorizontal(Widget w)
 	int			two_height;
 	
 	assert( dp->divider_target == 0 || dp->divider_target == 1 );
-	assert( dp->divider_offset > 0 );
-	assert( dp->divider_offset <= _XfeWidth(w) );
+	assert( dp->divider_fixed_size > 0 );
+	assert( dp->divider_fixed_size <= _XfeWidth(w) );
 	assert( dp->divider_percentage >= 0 );
 	assert( dp->divider_percentage <= 100 );
 
@@ -539,9 +558,9 @@ LayoutStaticHorizontal(Widget w)
 	if (dp->divider_target == 0)
 	{
 		/* Offset */
-		if (dp->divider_type == XmDIVIDER_OFFSET)
+		if (dp->divider_type == XmDIVIDER_FIXED_SIZE)
 		{
-			one_width = dp->divider_offset;
+			one_width = dp->divider_fixed_size;
 			one_height = _XfemBoundaryHeight(w);
 			one_x = _XfemBoundaryX(w);
 			one_y = _XfemBoundaryY(w);
@@ -569,9 +588,9 @@ LayoutStaticHorizontal(Widget w)
 	else
 	{
 		/* Offset */
-		if (dp->divider_type == XmDIVIDER_OFFSET)
+		if (dp->divider_type == XmDIVIDER_FIXED_SIZE)
 		{
-			two_width = dp->divider_offset;
+			two_width = dp->divider_fixed_size;
 			two_height = _XfemBoundaryHeight(w);
 			two_x = _XfemBoundaryX(w) + _XfemBoundaryWidth(w) - two_width;
 			two_y = _XfemBoundaryY(w);
@@ -605,25 +624,6 @@ LayoutStaticHorizontal(Widget w)
 	{
 		_XfeConfigureWidget(two,two_x,two_y,two_width,two_height);
 	}
-}
-/*----------------------------------------------------------------------*/
-
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Rep type registration functions										*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-static void
-DividerRegisterRepTypes(void)
-{
-    static String divider_names[] = 
-    { 
-		"divider_offset",
-		"divider_percentage",
-		NULL
-    };
-
-    XfeRepTypeRegister(XmRDividerType,divider_names);
 }
 /*----------------------------------------------------------------------*/
 

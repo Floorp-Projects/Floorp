@@ -69,7 +69,7 @@ externalref XfeDividerClassRec xfeDividerClassRec;
 typedef struct _XfeDividerPart
 {
 	/* Divider resources */
-    Dimension			divider_offset;			/* Divider offset		*/
+    Dimension			divider_fixed_size;		/* Divider fixed size	*/
     int					divider_percentage;		/* Divider percentage	*/
     Cardinal			divider_target;			/* Divider target		*/
     unsigned char		divider_type;			/* Sash shadow type		*/

@@ -39,12 +39,12 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 #define XmNdividerType					"dividerType"
 #define XmNdividerPercentage			"dividerPercentage"
-#define XmNdividerOffset				"dividerOffset"
+#define XmNdividerFixedSize				"dividerFixedSize"
 #define XmNdividerTarget				"dividerTarget"
 
 #define XmCDividerType					"DividerType"
 #define XmCDividerPercentage			"DividerPercentage"
-#define XmCDividerOffset				"DividerOffset"
+#define XmCDividerFixedWidth			"DividerFixedWidth"
 #define XmCDividerTarget				"DividerTarget"
 
 #define XmRDividerType					"DividerType"
@@ -56,7 +56,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 enum
 {
-	XmDIVIDER_OFFSET,
+	XmDIVIDER_FIXED_SIZE,
 	XmDIVIDER_PERCENTAGE
 };
 /*----------------------------------------------------------------------*/
