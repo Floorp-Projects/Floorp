@@ -659,9 +659,9 @@ nsHttpHandler::InitUserAgentComponents()
 #elif defined (XP_MAC)
     long version;
     if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
-        mOscpu.AssignLiteral("PPC Mac OS X"));
+        mOscpu.AssignLiteral("PPC Mac OS X");
     else
-        mOscpu.AssignLiteral("PPC"));
+        mOscpu.AssignLiteral("PPC");
 #elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
     
