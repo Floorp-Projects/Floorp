@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secdig.h,v 1.1 2000/03/31 19:39:43 relyea%netscape.com Exp $
+ * $Id: secdig.h,v 1.2 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECDIG_H_
@@ -46,6 +46,9 @@
 
 
 extern const SEC_ASN1Template sgn_DigestInfoTemplate[];
+
+SEC_ASN1_CHOOSER_DECLARE(sgn_DigestInfoTemplate)
+
 extern DERTemplate SGNDigestInfoTemplate[];
 
 

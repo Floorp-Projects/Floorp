@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: secsign.c,v 1.2 2001/01/05 01:38:09 nelsonb%netscape.com Exp $
+ * $Id: secsign.c,v 1.3 2001/01/07 08:12:57 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -380,6 +380,9 @@ const SEC_ASN1Template CERT_SignedDataTemplate[] =
 	  offsetof(CERTSignedData,signature), },
     { 0, }
 };
+
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SignedDataTemplate)
+
 
 SECStatus
 SEC_DerSignData(PRArenaPool *arena, SECItem *result, 

@@ -41,6 +41,9 @@
 #include "secasn1.h"
 #include "p12t.h"
 
+SEC_ASN1_MKSUB(SEC_AnyTemplate)
+SEC_ASN1_MKSUB(sgn_DigestInfoTemplate)
+
 static const SEC_ASN1Template *
 sec_pkcs12_choose_safe_bag_type(void *src_or_dest, PRBool encoding)
 {
@@ -56,15 +59,15 @@ sec_pkcs12_choose_safe_bag_type(void *src_or_dest, PRBool encoding)
 
     oiddata = SECOID_FindOID(&safeBag->safeBagType);
     if(oiddata == NULL) {
-	return SEC_AnyTemplate;
+	return SEC_ASN1_GET(SEC_AnyTemplate);
     }
 
     switch (oiddata->offset) {
 	default:
-	    theTemplate = SEC_AnyTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
 	    break;
 	case SEC_OID_PKCS12_V1_KEY_BAG_ID:
-	    theTemplate = SECKEY_PointerToPrivateKeyInfoTemplate;
+	    theTemplate = SEC_ASN1_GET(SECKEY_PointerToPrivateKeyInfoTemplate);
 	    break;
 	case SEC_OID_PKCS12_V1_CERT_BAG_ID:
 	    theTemplate = sec_PKCS12PointerToCertBagTemplate;
@@ -76,13 +79,14 @@ sec_pkcs12_choose_safe_bag_type(void *src_or_dest, PRBool encoding)
 	    theTemplate = sec_PKCS12PointerToSecretBagTemplate;
 	    break;
 	case SEC_OID_PKCS12_V1_PKCS8_SHROUDED_KEY_BAG_ID:
-	    theTemplate = SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
+	    theTemplate = 
+	        SEC_ASN1_GET(SECKEY_PointerToEncryptedPrivateKeyInfoTemplate);
 	    break;
 	case SEC_OID_PKCS12_V1_SAFE_CONTENTS_BAG_ID:
 	    if(encoding) {
 		theTemplate = sec_PKCS12PointerToSafeContentsTemplate;
 	    } else {
-		theTemplate = SEC_PointerToAnyTemplate;
+		theTemplate = SEC_ASN1_GET(SEC_PointerToAnyTemplate);
 	    }
 	    break;
     }
@@ -104,15 +108,15 @@ sec_pkcs12_choose_crl_bag_type(void *src_or_dest, PRBool encoding)
 
     oiddata = SECOID_FindOID(&crlbag->bagID);
     if(oiddata == NULL) {
-	return SEC_AnyTemplate;
+	return SEC_ASN1_GET(SEC_AnyTemplate);
     }
 
     switch (oiddata->offset) {
 	default:
-	    theTemplate = SEC_AnyTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
 	    break;
 	case SEC_OID_PKCS9_X509_CRL:
-	    theTemplate = SEC_OctetStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
 	    break;
     }
     return theTemplate;
@@ -133,18 +137,18 @@ sec_pkcs12_choose_cert_bag_type(void *src_or_dest, PRBool encoding)
 
     oiddata = SECOID_FindOID(&certbag->bagID);
     if(oiddata == NULL) {
-	return SEC_AnyTemplate;
+	return SEC_ASN1_GET(SEC_AnyTemplate);
     }
 
     switch (oiddata->offset) {
 	default:
-	    theTemplate = SEC_AnyTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
 	    break;
 	case SEC_OID_PKCS9_X509_CERT:
-	    theTemplate = SEC_OctetStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
 	    break;
 	case SEC_OID_PKCS9_SDSI_CERT:
-	    theTemplate = SEC_IA5StringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
 	    break;
     }
     return theTemplate;
@@ -165,21 +169,21 @@ sec_pkcs12_choose_attr_type(void *src_or_dest, PRBool encoding)
 
     oiddata = SECOID_FindOID(&attr->attrType);
     if(oiddata == NULL) {
-	return SEC_AnyTemplate;
+	return SEC_ASN1_GET(SEC_AnyTemplate);
     }
 
     switch (oiddata->offset) {
 	default:
-	    theTemplate = SEC_AnyTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
 	    break;
 	case SEC_OID_PKCS9_FRIENDLY_NAME:
-	    theTemplate = SEC_BMPStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_BMPStringTemplate);
 	    break;
 	case SEC_OID_PKCS9_LOCAL_KEY_ID:
-	    theTemplate = SEC_OctetStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
 	    break;
 	case SEC_OID_PKCS12_KEY_USAGE:
-	    theTemplate = SEC_BitStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_BitStringTemplate);
 	    break;
     }
 
@@ -191,16 +195,16 @@ const SEC_ASN1Template sec_PKCS12PointerToContentInfoTemplate[] = {
     { SEC_ASN1_POINTER | SEC_ASN1_MAY_STREAM, 0, sec_PKCS7ContentInfoTemplate }
 };
 
-static SEC_ChooseASN1TemplateFunc sec_pkcs12_crl_bag_chooser =
+static const SEC_ASN1TemplateChooserPtr sec_pkcs12_crl_bag_chooser =
     sec_pkcs12_choose_crl_bag_type;
 
-static SEC_ChooseASN1TemplateFunc sec_pkcs12_cert_bag_chooser =
+static const SEC_ASN1TemplateChooserPtr sec_pkcs12_cert_bag_chooser =
     sec_pkcs12_choose_cert_bag_type;
 
-static SEC_ChooseASN1TemplateFunc sec_pkcs12_safe_bag_chooser =
+static const SEC_ASN1TemplateChooserPtr sec_pkcs12_safe_bag_chooser =
     sec_pkcs12_choose_safe_bag_type;
 
-static SEC_ChooseASN1TemplateFunc sec_pkcs12_attr_chooser =
+static const SEC_ASN1TemplateChooserPtr sec_pkcs12_attr_chooser =
     sec_pkcs12_choose_attr_type;
 
 const SEC_ASN1Template sec_PKCS12PointerToCertBagTemplate[] = {
@@ -233,16 +237,17 @@ const SEC_ASN1Template sec_PKCS12PFXItemTemplate[] = {
 
 const SEC_ASN1Template sec_PKCS12MacDataTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(sec_PKCS12MacData) },
-    { SEC_ASN1_INLINE, offsetof(sec_PKCS12MacData, safeMac),
-	sgn_DigestInfoTemplate },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN , offsetof(sec_PKCS12MacData, safeMac),
+	SEC_ASN1_SUB(sgn_DigestInfoTemplate) },
     { SEC_ASN1_OCTET_STRING, offsetof(sec_PKCS12MacData, macSalt) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_INTEGER, offsetof(sec_PKCS12MacData, iter) },
     { 0 }
 };
 
 const SEC_ASN1Template sec_PKCS12AuthenticatedSafeTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM, 
-	offsetof(sec_PKCS12AuthenticatedSafe, encodedSafes), SEC_AnyTemplate }
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM | SEC_ASN1_XTRN , 
+	offsetof(sec_PKCS12AuthenticatedSafe, encodedSafes), 
+	SEC_ASN1_SUB(SEC_AnyTemplate) }
 };
 
 const SEC_ASN1Template sec_PKCS12SafeBagTemplate[] = {
@@ -265,8 +270,8 @@ const SEC_ASN1Template sec_PKCS12SafeContentsTemplate[] = {
 };
 
 const SEC_ASN1Template sec_PKCS12SequenceOfAnyTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM, 0,
-	SEC_AnyTemplate }
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM | SEC_ASN1_XTRN , 0,
+	SEC_ASN1_SUB(SEC_AnyTemplate) }
 };
 
 const SEC_ASN1Template sec_PKCS12NestedSafeContentsDecodeTemplate[] = {
@@ -276,9 +281,9 @@ const SEC_ASN1Template sec_PKCS12NestedSafeContentsDecodeTemplate[] = {
 };
 
 const SEC_ASN1Template sec_PKCS12SafeContentsDecodeTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM, 
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_MAY_STREAM | SEC_ASN1_XTRN , 
 	offsetof(sec_PKCS12SafeContents, encodedSafeBags),
-	SEC_AnyTemplate }
+	SEC_ASN1_SUB(SEC_AnyTemplate) }
 };
 
 const SEC_ASN1Template sec_PKCS12CRLBagTemplate[] = {

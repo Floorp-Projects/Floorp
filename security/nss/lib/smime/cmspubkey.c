@@ -34,7 +34,7 @@
 /*
  * CMS public key crypto
  *
- * $Id: cmspubkey.c,v 1.2 2000/06/13 21:56:30 chrisk%netscape.com Exp $
+ * $Id: cmspubkey.c,v 1.3 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -342,8 +342,8 @@ NSS_CMSUtil_DecryptSymKey_MISSI(SECKEYPrivateKey *privkey, SECItem *encKey, SECA
 	   bulk key size is different than the encrypted key size */
 	if (keaParams.bulkKeySize.len > 0) {
 	    err = SEC_ASN1DecodeItem(NULL, &bulkLength,
-					      SEC_IntegerTemplate,
-					      &keaParams.bulkKeySize);
+				     SEC_ASN1_GET(SEC_IntegerTemplate),
+				     &keaParams.bulkKeySize);
 	    if (err != SECSuccess)
 		goto loser;
 	}

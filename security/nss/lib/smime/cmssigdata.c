@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.10 2000/10/06 23:26:10 nelsonb%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.11 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -181,7 +181,8 @@ NSS_CMSSignedData_Encode_BeforeStart(NSSCMSSignedData *sigd)
 	return SECFailure;
 
     /* this is a SET OF, so we need to sort them guys */
-    rv = NSS_CMSArray_SortByDER((void **)sigd->digestAlgorithms, SECOID_AlgorithmIDTemplate,
+    rv = NSS_CMSArray_SortByDER((void **)sigd->digestAlgorithms, 
+                                SEC_ASN1_GET(SECOID_AlgorithmIDTemplate),
 				(void **)sigd->digests);
     if (rv != SECSuccess)
 	return SECFailure;

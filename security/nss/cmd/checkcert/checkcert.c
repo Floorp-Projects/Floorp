@@ -406,7 +406,8 @@ int main(int argc, char **argv)
 	    fprintf(stderr,"%s: can't allocate issuer signed data!", progName);
 	    exit(1);
 	}
-	rv = SEC_ASN1DecodeItem(arena, issuerCertSD, CERT_SignedDataTemplate,
+	rv = SEC_ASN1DecodeItem(arena, issuerCertSD, 
+	                        SEC_ASN1_GET(CERT_SignedDataTemplate),
 				&derIssuerCert);
 	if (rv) {
 	    fprintf(stderr, "%s: Issuer cert isn't X509 SIGNED Data?\n",
@@ -418,7 +419,8 @@ int main(int argc, char **argv)
 	    printf("%s: can't allocate space for issuer cert.", progName);
 	    exit(1);
 	}
-	rv = SEC_ASN1DecodeItem(arena, issuerCert, CERT_CertificateTemplate,
+	rv = SEC_ASN1DecodeItem(arena, issuerCert, 
+	                    SEC_ASN1_GET(CERT_CertificateTemplate),
 			    &issuerCertSD->data);
 	if (rv) {
 	    printf("%s: Does not appear to be an X509 Certificate.\n",
@@ -433,7 +435,8 @@ int main(int argc, char **argv)
 	exit(1);
     }
     
-    rv = SEC_ASN1DecodeItem(arena, signedData, CERT_SignedDataTemplate, 
+    rv = SEC_ASN1DecodeItem(arena, signedData, 
+                            SEC_ASN1_GET(CERT_SignedDataTemplate), 
 			    &derCert);
     if (rv) {
 	fprintf(stderr, "%s: Does not appear to be X509 SIGNED Data.\n",
@@ -451,7 +454,8 @@ int main(int argc, char **argv)
 	exit(1);
     }
     
-    rv = SEC_ASN1DecodeItem(arena, cert, CERT_CertificateTemplate, 
+    rv = SEC_ASN1DecodeItem(arena, cert, 
+                        SEC_ASN1_GET(CERT_CertificateTemplate), 
 			&signedData->data);
     if (rv) {
 	fprintf(stderr, "%s: Does not appear to be an X509 Certificate.\n",
@@ -540,8 +544,8 @@ int main(int argc, char **argv)
 	exit(1);
     }
     
-    rv = SEC_ASN1DecodeItem(arena, rsapubkey, SECKEY_RSAPublicKeyTemplate,
-			    &spk);
+    rv = SEC_ASN1DecodeItem(arena, rsapubkey, 
+                            SEC_ASN1_GET(SECKEY_RSAPublicKeyTemplate), &spk);
     if (rv) {
 	printf("PROBLEM: subjectPublicKey is not a DER PKCS1 RSAPublicKey.\n");
     } else {

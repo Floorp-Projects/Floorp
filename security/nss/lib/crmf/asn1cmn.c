@@ -34,6 +34,10 @@
 #include "cmmf.h"
 #include "cmmfi.h"
 
+SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
+SEC_ASN1_MKSUB(SEC_AnyTemplate)
+SEC_ASN1_MKSUB(SEC_IntegerTemplate)
+
 static const SEC_ASN1Template CMMFCertResponseTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CMMFCertResponse)},
     { SEC_ASN1_INTEGER, offsetof(CMMFCertResponse, certReqId)},
@@ -58,9 +62,9 @@ const SEC_ASN1Template CMMFCertifiedKeyPairTemplate[] = {
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_POINTER | 0,
       offsetof(CMMFCertifiedKeyPair, privateKey),
       CRMFEncryptedValueTemplate},
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 1,
+    { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 1,
       offsetof (CMMFCertifiedKeyPair, derPublicationInfo),
-      SEC_AnyTemplate},
+      SEC_ASN1_SUB(SEC_AnyTemplate) },
     { 0 }
 };
 
@@ -86,8 +90,10 @@ const SEC_ASN1Template CMMFRandTemplate[] = {
 };
 
 const SEC_ASN1Template CMMFPOPODecKeyRespContentTemplate[] = {
-    { SEC_ASN1_SEQUENCE_OF, offsetof(CMMFPOPODecKeyRespContent, responses),
-      SEC_IntegerTemplate, sizeof(CMMFPOPODecKeyRespContent)},
+    { SEC_ASN1_SEQUENCE_OF | SEC_ASN1_XTRN, 
+      offsetof(CMMFPOPODecKeyRespContent, responses),
+      SEC_ASN1_SUB(SEC_IntegerTemplate), 
+      sizeof(CMMFPOPODecKeyRespContent)},
     { 0 }
 };
 
@@ -118,8 +124,9 @@ const SEC_ASN1Template CMMFCertRepContentTemplate[] = {
 
 static const SEC_ASN1Template CMMFChallengeTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CMMFChallenge)},
-    { SEC_ASN1_POINTER | SEC_ASN1_OPTIONAL, offsetof(CMMFChallenge, owf),
-      SECOID_AlgorithmIDTemplate },
+    { SEC_ASN1_POINTER | SEC_ASN1_OPTIONAL | SEC_ASN1_XTRN, 
+      offsetof(CMMFChallenge, owf),
+      SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
     { SEC_ASN1_OCTET_STRING, offsetof(CMMFChallenge, witness) },
     { SEC_ASN1_ANY, offsetof(CMMFChallenge, senderDER) },
     { SEC_ASN1_OCTET_STRING, offsetof(CMMFChallenge, key) },

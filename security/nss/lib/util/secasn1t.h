@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.1 2000/03/31 19:39:06 relyea%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.2 2001/01/07 08:13:12 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -184,13 +184,34 @@ typedef struct sec_ASN1Template_struct {
 #define SEC_ASN1_SET_OF		(SEC_ASN1_GROUP | SEC_ASN1_SET)
 #define SEC_ASN1_ANY_CONTENTS	(SEC_ASN1_ANY | SEC_ASN1_INNER)
 
+
 /*
 ** Function used for SEC_ASN1_DYNAMIC.
 ** "arg" is a pointer to the structure being encoded/decoded
 ** "enc", when true, means that we are encoding (false means decoding)
 */
-typedef const SEC_ASN1Template * (* SEC_ChooseASN1TemplateFunc)(void *arg,
-								PRBool enc);
+typedef const SEC_ASN1Template * SEC_ASN1TemplateChooser(void *arg, PRBool enc);
+typedef SEC_ASN1TemplateChooser * SEC_ASN1TemplateChooserPtr;
+
+#if defined(_WIN32)
+#define SEC_ASN1_GET(x)        NSS_Get_##x(NULL, PR_FALSE)
+#define SEC_ASN1_SUB(x)        &p_NSS_Get_##x
+#define SEC_ASN1_XTRN          SEC_ASN1_DYNAMIC
+#define SEC_ASN1_MKSUB(x) \
+static const SEC_ASN1TemplateChooserPtr p_NSS_Get_##x = &NSS_Get_##x;
+#else
+#define SEC_ASN1_GET(x)        x
+#define SEC_ASN1_SUB(x)        x
+#define SEC_ASN1_XTRN          0
+#define SEC_ASN1_MKSUB(x) 
+#endif
+
+#define SEC_ASN1_CHOOSER_DECLARE(x) \
+extern SEC_ASN1TemplateChooser NSS_Get_##x;
+
+#define SEC_ASN1_CHOOSER_IMPLEMENT(x) \
+const SEC_ASN1Template * NSS_Get_##x(void * arg, PRBool enc) \
+{ return x; }
 
 /*
 ** Opaque object used by the decoder to store state.

@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.2 2001/01/03 19:49:02 larryh%netscape.com Exp $
+ * $Id: certt.h,v 1.3 2001/01/07 08:12:48 nelsonb%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -800,5 +800,15 @@ extern const SEC_ASN1Template CERT_CrlTemplate[];
 */
 extern const SEC_ASN1Template CERT_AttributeTemplate[];
 extern const SEC_ASN1Template CERT_SetOfAttributeTemplate[];
+
+/* These functions simply return the address of the above-declared templates.
+** This is necessary for Windows DLLs.  Sigh.
+*/
+SEC_ASN1_CHOOSER_DECLARE(CERT_CertificateRequestTemplate);
+SEC_ASN1_CHOOSER_DECLARE(CERT_CertificateTemplate);
+SEC_ASN1_CHOOSER_DECLARE(CERT_CrlTemplate);
+SEC_ASN1_CHOOSER_DECLARE(CERT_IssuerAndSNTemplate);
+SEC_ASN1_CHOOSER_DECLARE(CERT_SetOfSignedCrlTemplate);
+SEC_ASN1_CHOOSER_DECLARE(CERT_SignedDataTemplate);
 
 #endif /* _CERTT_H_ */

@@ -34,7 +34,7 @@
 /*
  * CMS attributes.
  *
- * $Id: cmsattr.c,v 1.3 2000/06/20 16:28:57 chrisk%netscape.com Exp $
+ * $Id: cmsattr.c,v 1.4 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -219,7 +219,7 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 
     if (encoding && attribute->encoded)
 	/* we're encoding, and the attribute value is already encoded. */
-	return SEC_AnyTemplate;
+	return SEC_ASN1_GET(SEC_AnyTemplate);
 
     /* get attribute's typeTag */
     oiddata = attribute->typeTag;
@@ -231,7 +231,7 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
     if (oiddata == NULL) {
 	/* still no OID tag? OID is unknown then. en/decode value as ANY. */
 	encoded = PR_TRUE;
-	theTemplate = SEC_AnyTemplate;
+	theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
     } else {
 	switch (oiddata->offset) {
 	SEC_OID_PKCS9_SMIME_CAPABILITIES:
@@ -240,26 +240,26 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 	default:
 	    /* same goes for OIDs that are not handled here */
 	    encoded = PR_TRUE;
-	    theTemplate = SEC_AnyTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
 	    break;
 	    /* otherwise choose proper template */
 	case SEC_OID_PKCS9_EMAIL_ADDRESS:
 	case SEC_OID_RFC1274_MAIL:
 	case SEC_OID_PKCS9_UNSTRUCTURED_NAME:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_IA5StringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_IA5StringTemplate);
 	    break;
 	case SEC_OID_PKCS9_CONTENT_TYPE:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_ObjectIDTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_ObjectIDTemplate);
 	    break;
 	case SEC_OID_PKCS9_MESSAGE_DIGEST:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_OctetStringTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_OctetStringTemplate);
 	    break;
 	case SEC_OID_PKCS9_SIGNING_TIME:
 	    encoded = PR_FALSE;
-	    theTemplate = SEC_UTCTimeTemplate;
+	    theTemplate = SEC_ASN1_GET(SEC_UTCTimeTemplate);
 	    break;
 	  /* XXX Want other types here, too */
 	}
@@ -284,7 +284,7 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
     return theTemplate;
 }
 
-static SEC_ChooseASN1TemplateFunc cms_attr_chooser
+static const SEC_ASN1TemplateChooserPtr cms_attr_chooser
 	= cms_attr_choose_attr_value_template;
 
 const SEC_ASN1Template nss_cms_attribute_template[] = {
