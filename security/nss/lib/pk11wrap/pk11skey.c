@@ -4227,7 +4227,7 @@ try_faulty_3des:
     crypto_param.len = cryptoMech.ulParameterLen;
 
     PORT_Assert(usage != NULL);
-    PORT_Assert(usageCount = 0);
+    PORT_Assert(usageCount != 0);
     privKey = PK11_UnwrapPrivKey(slot, key, cryptoMech.mechanism, 
 				 &crypto_param, &epki->encryptedData, 
 				 nickname, publicValue, isPerm, isPrivate,
