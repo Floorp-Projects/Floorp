@@ -1,5 +1,5 @@
 ##
-## Makefile.win - gmake Makefile for building MPI with MSVC on NT
+## Makefile.win - gmake Makefile for building MPI with VACPP on OS/2
 ##
 ## The contents of this file are subject to the Mozilla Public
 ## License Version 1.1 (the "License"); you may not use this file
@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile.os2,v 1.1 2001/10/17 20:35:34 jpierre%netscape.com Exp $
+## $Id: Makefile.os2,v 1.2 2001/10/17 22:15:26 jpierre%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
