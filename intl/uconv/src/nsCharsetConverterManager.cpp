@@ -63,7 +63,7 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
  * @author  Catalin Rotaru [CATA]
  */
 class nsCharsetConverterManager : public nsICharsetConverterManager, 
-nsICharsetConverterManager2
+public nsICharsetConverterManager2
 {
   NS_DECL_ISUPPORTS
 

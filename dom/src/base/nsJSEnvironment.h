@@ -141,7 +141,7 @@ public:
 
 class nsIJSRuntimeService;
 
-class nsJSEnvironment: nsIObserver {
+class nsJSEnvironment: public nsIObserver {
 private:
   JSRuntime *mRuntime;
   nsIJSRuntimeService* mRuntimeService; /* XXXbe nsCOMPtr to service */

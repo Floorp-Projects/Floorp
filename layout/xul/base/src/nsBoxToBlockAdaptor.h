@@ -30,7 +30,7 @@
 #include "nsBox.h"
 class nsSpaceManager;
 
-class nsBoxToBlockAdaptor : public nsBox, nsIBoxToBlockAdaptor {
+class nsBoxToBlockAdaptor : public nsBox, public nsIBoxToBlockAdaptor {
 
 public:
 

@@ -103,7 +103,7 @@ MOZ_DECL_CTOR_COUNTER(nsMenuEntry);
  * @created         23/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCharsetMenu : public nsIRDFDataSource, nsICurrentCharsetListener
+class nsCharsetMenu : public nsIRDFDataSource, public nsICurrentCharsetListener
 {
   NS_DECL_ISUPPORTS
 
