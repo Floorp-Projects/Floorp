@@ -124,6 +124,7 @@ sub SetupPath {
 
     if ( $OS eq 'NetBSD' ) {
 	$ENV{'PATH'} = '/bin:/usr/bin:' . $ENV{'PATH'};
+	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11R6/lib';
 	$ConfigureEnvArgs = 'CC=egcc CXX=eg++';
 	$Compiler = 'egcc';
 	$mail = '/usr/bin/mail';
@@ -261,6 +262,10 @@ sub GetSystemInfo {
 	} else {
 	    $ObjDir = 'obj-' . $CPU . '-pc-linux-gnu';
 	    $BuildName = $host . ' ' . $OS . '/i386 ' . $OSVer . ' ' . ($BuildDepend?'Depend':'Clobber');
+	    # What's the right way to test for this?
+	    if ( $host eq 'truth' ) {
+		$ObjDir .= 'libc1';
+	    }
 	}
     }
 
