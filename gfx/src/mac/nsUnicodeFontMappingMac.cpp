@@ -420,7 +420,7 @@ void nsUnicodeFontMappingMac::InitByLangGroup(const nsString& aLangGroup)
   	} else if(gUtil->ScriptEnabled(smKorean) && aLangGroup.EqualsIgnoreCase("ko"))
   	{
 		FillVarBlockToScript(smKorean, mPrivBlockToScript);
-  	} else if(gUtil->ScriptEnabled(smTradChinese)  && aLangGroup.EqualsIgnoreCase("zh-TW"))
+  	} else if((gUtil->ScriptEnabled(smTradChinese)) && ((aLangGroup.EqualsIgnoreCase("zh-TW")) || (aLangGroup.EqualsIgnoreCase("zh-HK"))))
   	{
 		FillVarBlockToScript(smTradChinese, mPrivBlockToScript);
   	} else if(gUtil->ScriptEnabled(smJapanese) && aLangGroup.EqualsIgnoreCase("ja"))

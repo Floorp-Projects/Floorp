@@ -54,6 +54,7 @@
           <menuitem value="ja" label="&font.langGroup.japanese;"/>
           <menuitem value="zh-TW" label="&font.langGroup.trad-chinese;"/>
           <menuitem value="zh-CN" label="&font.langGroup.simpl-chinese;"/>
+          <menuitem value="zh-HK" label="&font.langGroup.trad-chinese-hk;"/>
           <menuitem value="ko" label="&font.langGroup.korean;"/>
           <menuitem value="x-cyrillic" label="&font.langGroup.cyrillic;"/>
           <menuitem value="x-baltic" label="&font.langGroup.baltic;"/>

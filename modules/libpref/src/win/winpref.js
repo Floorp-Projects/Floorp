@@ -118,6 +118,14 @@ pref("font.name-list.serif.zh-TW", "MingLiU");
 pref("font.name-list.sans-serif.zh-TW", "MingLiU"); 
 pref("font.name-list.monospace.zh-TW", "MingLiU"); 
 
+// hkscsm3u.ttf (HKSCS-2001) :  http://www.microsoft.com/hk/hkscs
+pref("font.name.serif.zh-HK", "細明體_HKSCS"); 
+pref("font.name.sans-serif.zh-HK", "細明體_HKSCS"); 
+pref("font.name.monospace.zh-HK", "細明體_HKSCS"); 
+pref("font.name-list.serif.zh-HK", "MingLiu_HKSCS, Ming(for ISO10646), MingLiU"); 
+pref("font.name-list.sans-serif.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");  
+pref("font.name-list.monospace.zh-HK", "MingLiU_HKSCS, Ming(for ISO10646), MingLiU");   
+
 pref("font.name.serif.x-devanagari", "Mangal");
 pref("font.name.sans-serif.x-devanagari", "Raghindi");
 pref("font.name.monospace.x-devanagari", "Mangal");
@@ -178,6 +186,9 @@ pref("font.size.fixed.zh-CN", 16);
 
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
+
+pref("font.size.variable.zh-HK", 16);
+pref("font.size.fixed.zh-HK", 16);
 
 pref("font.size.nav4rounding", false);
 

@@ -177,6 +177,9 @@ public:
   
   nsCOMPtr<nsIAtom>                     mUnicode;
   nsCOMPtr<nsIAtom>                     mUserDefined;
+  nsCOMPtr<nsIAtom>                     mZHTW;
+  nsCOMPtr<nsIAtom>                     mZHHK;
+  nsCOMPtr<nsIAtom>                     mZHTWHK; // common to TW and HK
   nsCOMPtr<nsIAtom>                     mUsersLocale;
   nsCOMPtr<nsIAtom>                     mWesternLocale;
 
@@ -368,6 +371,11 @@ static nsFontCharSetInfoXlib ISO885911 =
 static nsFontCharSetInfoXlib Big5 =
   { "x-x-big5", DoubleByteConvert, 1,
     TT_OS2_CPR1_CHINESE_TRAD, 0 };
+// a kludge to distinguish zh-TW only fonts in Big5 (such as hpbig5-)
+// from zh-TW/zh-HK common fonts in Big5 (such as big5-0, big5-1)
+static nsFontCharSetInfoXlib Big5TWHK =
+  { "x-x-big5", DoubleByteConvert, 1,
+    TT_OS2_CPR1_CHINESE_TRAD, 0 };
 static nsFontCharSetInfoXlib CNS116431 =
   { "x-cns-11643-1", DoubleByteConvert, 1,
     TT_OS2_CPR1_CHINESE_TRAD, 0 };
@@ -474,6 +482,8 @@ static nsFontLangGroupXlib FLG_ARABIC  = { "ar",            nsnull };
 static nsFontLangGroupXlib FLG_THAI    = { "th",            nsnull };
 static nsFontLangGroupXlib FLG_ZHCN    = { "zh-CN",         nsnull };
 static nsFontLangGroupXlib FLG_ZHTW    = { "zh-TW",         nsnull };
+static nsFontLangGroupXlib FLG_ZHHK    = { "zh-HK",         nsnull };
+static nsFontLangGroupXlib FLG_ZHTWHK  = { "x-zh-TWHK",     nsnull };
 static nsFontLangGroupXlib FLG_JA      = { "ja",            nsnull };
 static nsFontLangGroupXlib FLG_KO      = { "ko",            nsnull };
 #ifdef SUNCTL
@@ -514,8 +524,15 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "-ibm pc",            &FLG_NONE,    &Unknown       },
   { "adobe-fontspecific", &FLG_NONE,    &Special       },
   { "ansi-1251",          &FLG_RUSSIAN, &CP1251        },
-  { "big5-0",             &FLG_ZHTW,    &Big5          },
-  { "big5-1",             &FLG_ZHTW,    &Big5          },
+  // On Solaris, big5-0 is used for ASCII-only fonts while in XFree86, 
+  // it's for Big5 fonts without US-ASCII. When a non-Solaris binary
+  // is displayed on a Solaris X server, this would break.
+#ifndef SOLARIS
+  { "big5-0",             &FLG_ZHTWHK,  &Big5TWHK      }, // common to TW/HK
+#else 
+  { "big5-0",             &FLG_ZHTW,    &USASCII       }, 
+#endif
+  { "big5-1",             &FLG_ZHTWHK,  &Big5TWHK      }, // ditto
   { "big5.et-0",          &FLG_ZHTW,    &Big5          },
   { "big5.et.ext-0",      &FLG_ZHTW,    &Big5          },
   { "big5.etext-0",       &FLG_ZHTW,    &Big5          },
@@ -523,7 +540,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "big5.hku-1",         &FLG_ZHTW,    &Big5          },
   { "big5.pc-0",          &FLG_ZHTW,    &Big5          },
   { "big5.shift-0",       &FLG_ZHTW,    &Big5          },
-  { "big5hkscs-0",        &FLG_ZHTW,    &HKSCS         },
+  { "big5hkscs-0",        &FLG_ZHHK,    &HKSCS         },
   { "cns11643.1986-1",    &FLG_ZHTW,    &CNS116431     },
   { "cns11643.1986-2",    &FLG_ZHTW,    &CNS116432     },
   { "cns11643.1992-1",    &FLG_ZHTW,    &CNS116431     },
@@ -559,7 +576,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "gb18030.2000-1",     &FLG_ZHCN,    &GB18030_1     },
   { "gbk-0",              &FLG_ZHCN,    &GBK           },
   { "gbk1988.1989-0",     &FLG_ZHCN,    &USASCII       },
-  { "hkscs-1",            &FLG_ZHTW,    &HKSCS         },
+  { "hkscs-1",            &FLG_ZHHK,    &HKSCS         },
   { "hp-japanese15",      &FLG_NONE,    &Unknown       },
   { "hp-japaneseeuc",     &FLG_NONE,    &Unknown       },
   { "hp-roman8",          &FLG_NONE,    &Unknown       },
@@ -568,6 +585,7 @@ static const nsFontCharSetMapXlib gConstCharSetMap[] =
   { "hp-tchinesebig5",    &FLG_ZHTW,    &Big5          },
   { "hp-wa",              &FLG_NONE,    &Unknown       },
   { "hpbig5-",            &FLG_ZHTW,    &Big5          },
+  { "hphkbig5-",          &FLG_ZHHK,    &HKSCS         },
   { "hproc16-",           &FLG_NONE,    &Unknown       },
   { "ibm-1252",           &FLG_NONE,    &Unknown       },
   { "ibm-850",            &FLG_NONE,    &Unknown       },
@@ -1440,6 +1458,18 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   }
   mUserDefined = NS_NewAtom(USER_DEFINED);
   if (!mUserDefined) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mZHTW = NS_NewAtom("zh-TW");
+  if (!mZHTW) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mZHHK = NS_NewAtom("zh-HK");
+  if (!mZHHK) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mZHTWHK = NS_NewAtom("x-zh-TWHK");
+  if (!mZHTWHK) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -4169,6 +4199,11 @@ SetFontLangGroupInfo(nsFontMetricsXlibContext *aFmctx, const nsFontCharSetMapXli
       fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
   }
 
+  // hack : map 'x-zh-TWHK' to 'zh-TW'. See nsFontMetricsGTK.cpp for details.
+  if (fontLangGroup->mFontLangGroupAtom == aFmctx->mZHTWHK) {
+    langGroup = "zh-TW";
+  }
+
   // get the font scaling controls
   nsFontCharSetInfoXlib *charSetInfo = aCharSetMap->mInfo;
   if (!charSetInfo->mInitedSizeInfo) {
@@ -5527,9 +5562,9 @@ nsFontMetricsXlib::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCSt
   //  scan mCharSetMap for encodings with matching lang groups
   const nsFontCharSetMapXlib* charSetMap;
   for (charSetMap=mFontMetricsContext->mCharSetMap; charSetMap->mName; charSetMap++) {
-    nsFontLangGroupXlib* mFontLangGroup = charSetMap->mFontLangGroup;
+    nsFontLangGroupXlib* fontLangGroup = charSetMap->mFontLangGroup;
 
-    if ((!mFontLangGroup) || (!mFontLangGroup->mFontLangGroupName)) {
+    if ((!fontLangGroup) || (!fontLangGroup->mFontLangGroupName)) {
       continue;
     }
 
@@ -5537,12 +5572,17 @@ nsFontMetricsXlib::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCSt
       SetCharsetLangGroup(mFontMetricsContext, charSetMap->mInfo);
     }
 
-    if (!mFontLangGroup->mFontLangGroupAtom) {
+    if (!fontLangGroup->mFontLangGroupAtom) {
       SetFontLangGroupInfo(mFontMetricsContext, charSetMap);
     }
 
-    if ((aLangGroup != mFontLangGroup->mFontLangGroupAtom) 
-       && (aLangGroup != charSetMap->mInfo->mLangGroup)) {
+    // if font's langGroup is different from requested langGroup, continue.
+    // An exception is that font's langGroup ZHTWHK is regarded as matching
+    // both ZHTW and ZHHK (Freetype2 and Solaris).
+    if ((aLangGroup != fontLangGroup->mFontLangGroupAtom) &&
+        (aLangGroup != charSetMap->mInfo->mLangGroup) &&
+        (fontLangGroup->mFontLangGroupAtom != mFontMetricsContext->mZHTWHK || 
+        (aLangGroup != mFontMetricsContext->mZHHK && aLangGroup != mFontMetricsContext->mZHTW))) {
       continue;
     }
     // look for a font with this charset (registry-encoding) & char
@@ -5666,7 +5706,13 @@ EnumerateNode(void* aElement, void* aData)
       return PR_TRUE; // continue
     }
     else if (info->mLangGroup != aFmctx->mUnicode) {
-      if (node->mCharSetInfo->mLangGroup != info->mLangGroup) {
+      // if font's langGroup is different from requested langGroup, continue.
+      // An exception is that font's langGroup ZHTWHK(big5-1, big5-0) matches 
+      // both ZHTW and ZHHK (Freetype2 and Solaris).
+      if (node->mCharSetInfo->mLangGroup != info->mLangGroup &&
+         (node->mCharSetInfo->mLangGroup != aFmctx->mZHTWHK ||
+         (info->mLangGroup != aFmctx->mZHHK && 
+          info->mLangGroup != aFmctx->mZHTW))) {
         return PR_TRUE; // continue
       }
     }
