@@ -303,21 +303,34 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
           {
             PRUint32 msgSize = 0;
             nsMsgKey msgKey;
-
-            nextMsg->GetMessageKey(&msgKey);
-            nextMsg->GetMessageSize(&msgSize);
-            // now we have to seek to the right position in the file and
-            // basically re-initialize the transport with the correct message size.
-            // then, we have to make sure the url keeps running somehow.
-			    nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
-            // put us in a state where we are always notified of incoming data
-            PR_Sleep(PR_MicrosecondsToInterval(500UL));
-            rv = m_transport->AsyncRead(this, urlSupports, msgKey, msgSize, 0, getter_AddRefs(m_request));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
-            if (m_loadGroup)
-              m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
-            m_socketIsOpen = PR_TRUE; // mark the channel as open
-            return aStatus;
+            nsCOMPtr <nsIMsgFolder> msgFolder;
+            nextMsg->GetFolder(getter_AddRefs(msgFolder));
+            if (msgFolder)
+            {
+              nsXPIDLCString uri;
+              msgFolder->GetUriForMsg(nextMsg, getter_Copies(uri));
+              nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl);
+              if (msgUrl)
+              {
+                msgUrl->SetOriginalSpec(uri);
+                msgUrl->SetUri(uri);
+              
+                nextMsg->GetMessageKey(&msgKey);
+                nextMsg->GetMessageSize(&msgSize);
+                // now we have to seek to the right position in the file and
+                // basically re-initialize the transport with the correct message size.
+                // then, we have to make sure the url keeps running somehow.
+			          nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
+                // put us in a state where we are always notified of incoming data
+                PR_Sleep(PR_MicrosecondsToInterval(500UL));
+                rv = m_transport->AsyncRead(this, urlSupports, msgKey, msgSize, 0, getter_AddRefs(m_request));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
+                if (m_loadGroup)
+                  m_loadGroup->RemoveRequest(NS_STATIC_CAST(nsIRequest *, this), nsnull, aStatus);
+                m_socketIsOpen = PR_TRUE; // mark the channel as open
+                return aStatus;
+              }
+            }
           }
         }
         else
