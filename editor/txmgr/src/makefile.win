@@ -22,10 +22,12 @@ LIBRARY_NAME=ender
 
 CPPSRCS =				\
 	nsTransactionManager.cpp	\
+	nsTransactionStack.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsTransactionManager.obj	\
+	.\$(OBJDIR)\nsTransactionStack.obj	\
 	$(NULL)
 
 MODULE=txmgr 
