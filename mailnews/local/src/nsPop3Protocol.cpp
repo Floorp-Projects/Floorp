@@ -1039,7 +1039,7 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
         if (prefBool && m_pop3ConData->capability_flags & POP3_HAS_AUTH_LOGIN)
             m_pop3ConData->next_state = POP3_AUTH_LOGIN;
         else
-            m_pop3ConData->next_state_after_response = POP3_SEND_USERNAME;
+            m_pop3ConData->next_state = POP3_SEND_USERNAME;
         /* try again right away */
         m_pop3ConData->pause_for_read = PR_FALSE;
         m_pop3ConData->command_succeeded = PR_TRUE;
