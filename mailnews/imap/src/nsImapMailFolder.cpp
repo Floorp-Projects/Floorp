@@ -508,7 +508,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleE
   return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char* folderName)
+NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const PRUnichar* folderName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!folderName) return rv;

@@ -473,13 +473,13 @@ NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
 }
 
 
-NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
+NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname)
 {
 	nsresult rv = NS_OK;
-  
-	if (!newsgroupname) return NS_ERROR_NULL_POINTER;
-	if (PL_strlen(newsgroupname) == 0) return NS_ERROR_FAILURE;
+	if (!uninewsgroupname) return NS_ERROR_NULL_POINTER;
+	if (nsCRT::strlen(uninewsgroupname) == 0) return NS_ERROR_FAILURE;
 
+    nsCAutoString newsgroupname(uninewsgroupname);
     nsFileSpec path;
 	nsCOMPtr<nsIFileSpec> pathSpec;
 	rv = GetPath(getter_AddRefs(pathSpec));
@@ -496,7 +496,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
 	// do we need to hash newsgroup name if it is too big?
-	path += newsgroupname;
+	path += (const char *) newsgroupname;
 	
 	rv = AddNewsgroupToNewsrcFile(newsgroupname);
 	if (NS_FAILED(rv)) return rv;

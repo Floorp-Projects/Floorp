@@ -602,7 +602,7 @@ nsresult nsMsgLocalMailFolder::CreateDirectoryForFolder(nsFileSpec &path)
 }
 
 nsresult
-nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
+nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName)
 {
 	nsresult rv = NS_OK;
     
@@ -692,11 +692,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash()
                 if (NS_SUCCEEDED(rv))
                 {
                     nsString folderName(idlFolderName);
-                    char *cStringName = folderName.ToNewCString();
                     trashFolder->SetParent(nsnull);
                     parentFolder->PropagateDelete(trashFolder, PR_TRUE);
-                    parentFolder->CreateSubfolder(cStringName);
-                    nsCRT::free(cStringName);
+                    parentFolder->CreateSubfolder(folderName.GetUnicode());
                 }
             }
         }

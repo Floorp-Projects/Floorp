@@ -175,7 +175,7 @@ public:
                             nsIURI** url);
     NS_IMETHOD CreateFolder(nsIEventQueue* eventQueue,
                           nsIMsgFolder* parent,
-                          const char* leafName,
+                          const PRUnichar* leafName,
                           nsIUrlListener* urlListener,
                           nsIURI** url);
 

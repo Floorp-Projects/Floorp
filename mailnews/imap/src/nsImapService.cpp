@@ -1600,7 +1600,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
 
 NS_IMETHODIMP
 nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
-                            const char* newFolderName, 
+                            const PRUnichar* newFolderName, 
                             nsIUrlListener* urlListener, nsIURI** url)
 {
     NS_ASSERTION(eventQueue && parent && newFolderName && *newFolderName,
@@ -1630,7 +1630,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
                 urlSpec.Append((const char *) folderName);
                 urlSpec.Append(hierarchySeparator);
             }
-			char *utfNewName = CreateUtf7ConvertedString( newFolderName, PR_TRUE);
+			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newFolderName);
 			char *escapedFolderName = nsEscape(utfNewName, url_Path);
             urlSpec.Append(escapedFolderName);
 			nsCRT::free(escapedFolderName);

@@ -62,7 +62,7 @@ public:
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
-	NS_IMETHOD CreateSubfolder(const char *folderName);
+	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
 
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const char *newName);

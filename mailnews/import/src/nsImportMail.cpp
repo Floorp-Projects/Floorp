@@ -409,7 +409,8 @@ void nsImportGenericMail::GetDefaultDestination( void)
 		rootFolder->GenerateUniqueSubfolderName( "Imported Mail", nsnull, &pName);
 		if (pName) {
 			IMPORT_LOG1( "* Creating folder for importing mail: %s\n", pName);
-			rootFolder->CreateSubfolder( pName);
+			nsAutoString childName(pName);
+			rootFolder->CreateSubfolder( childName.GetUnicode());
 			nsCOMPtr<nsISupports> subFolder;
 			rootFolder->GetChildNamed( pName, getter_AddRefs( subFolder));
 			if (subFolder) {
@@ -884,8 +885,9 @@ ImportMailThread( void *stuff)
 				lastName = pStr;
 				
 				IMPORT_LOG1( "* Creating new import folder: %s\n", pStr);
-				
-				rv = curProxy->CreateSubfolder( pStr);
+				nsAutoString newName(pStr);
+
+				rv = curProxy->CreateSubfolder( newName.GetUnicode());
 				
 				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {

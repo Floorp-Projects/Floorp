@@ -50,4 +50,7 @@ char*
 CreateUtf7ConvertedString(const char * aSourceString, 
                       PRBool aConvertToUtf7Imap);
 
+char *
+CreateUtf7ConvertedStringFromUnicode(const PRUnichar *aSourceString);
+
 #endif //NS_IMAPUTILS_H
