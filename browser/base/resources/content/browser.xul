@@ -497,7 +497,6 @@ Contributor(s):
                 <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
                 <menuitem id="menuitem_showhide_tabbar" label="&tabbarCmd.label;" accesskey="&tabbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" oncommand="showHideTabbar();" checked="true"/>
                 <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
-                <menuitem label="&componentbarCmd.label;" accesskey="&componentbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewcomponentbar"/>
               </menupopup>
             </menu>   
             <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
@@ -511,7 +510,7 @@ Contributor(s):
             <!-- overlayed from viewZoomOverlay.xul -->
             <menu id="menu_textZoom" observes="isImage"/>
     
-            <menu id="charsetMenu" observes="isImage"
+            <menu observes="isImage"
                   label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;"
                   datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot"
                   oncommand="MultiplexHandler(event)" onpopupshowing="CreateMenu('browser');UpdateMenus(event)" onpopupshown="CreateMenu('more-menu');">
@@ -633,7 +632,7 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
+        <menu label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
               oncommand="OpenBookmarkURL(event.target, this.database)">
@@ -690,13 +689,13 @@ Contributor(s):
           </menupopup>
         </menu>
           
-      <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
-        <menupopup id="taskPopup">
+      <menu label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
+        <menupopup>
           <menuitem label="&historyCmd.label;" accesskey="&historyCmd.accesskey;" oncommand="toHistory()" key="key_gotoHistory"/>
-          <menuitem id="downloadmgr" label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
+          <menuitem label="&downloadManagerCmd.label;" accesskey="&downloadManagerCmd.accesskey;" oncommand="toDownloadManager();"/>
           <menuseparator/>
           <menu label="&webDevelopment.label;" accesskey="&webDevelopment.accesskey;">
-            <menupopup id="toolsPopup" onpopupshowing="javaItemEnabling();">
+            <menupopup onpopupshowing="javaItemEnabling();">
               <menuitem id="java" label="&javaConsoleCmd.label;" accesskey="&javaConsoleCmd.accesskey;" oncommand="toJavaConsole()"/>
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
@@ -704,25 +703,18 @@ Contributor(s):
         </menupopup>
       </menu>
       
-      <menu id="menu_Help"
-            label="&helpMenu.label;"
+      <menu label="&helpMenu.label;"
             accesskey="&helpMenu.accesskey;">
-        <menupopup id="helpPopup">
+        <menupopup>
           <menuitem accesskey="&releaseCmd.accesskey;"
                     label="&releaseCmd.label;"
-                    id="releaseUrl"
                     oncommand="openTopWin('&releaseURL;');"/>
-
-          <menuseparator id="menu_HelpAboutSeparator"/>
-    
-          <menuitem class="about"
-                    accesskey="&aboutCommPluginsCmd.accesskey;"
+          <menuseparator/>
+          <menuitem accesskey="&aboutCommPluginsCmd.accesskey;"
                     label="&aboutCommPluginsCmd.label;"
-                    id="pluginInfo"
                     oncommand="openTopWin('about:plugins')"/>
           <menuitem accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
-                    id="aboutName"
                     oncommand="goAboutDialog();"/>
         </menupopup>
       </menu>
@@ -756,6 +748,13 @@ Contributor(s):
                        label="&stopButton.label;"
                        oncommand="BrowserStop();" observes="canStop"  
                        tooltiptext="&stopButton.tooltip;"/>
+
+        <toolbarbutton id="home-button" class="toolbarbutton-1"
+                       label="&homeButton.label;" persist="hidden"
+                       ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
+                       ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
+                       ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
+                       oncommand="BrowserHome();"/>
       </hbox>
  
       <hbox id="nav-bar-inner" flex="1">
@@ -786,7 +785,7 @@ Contributor(s):
                    tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
 
-          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+          <menupopup class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
                      onpopupshowing="createUBHistoryMenu(event.target);" 
                      oncommand="executeUrlBarHistoryCommand(event.target);"/>
@@ -829,17 +828,6 @@ Contributor(s):
              ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
              ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
-
-      <toolbarbutton id="home-button" class="bookmark-item"
-                     label="&homeButton.label;" persist="hidden"
-                     oncommand="BrowserHome(); event.preventBubble()"
-                     ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver)"
-                     ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver); event.preventBubble()"
-                     ondragenter="event.preventBubble()"
-                     ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver); event.preventBubble()"
-                     ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver); event.preventBubble()"/>
-  
-      <toolbarseparator id="home-bm-separator" persist="hidden"/>
       <!-- Personal toolbar items -->
       <hbox id="NC:PersonalToolbarFolder" flex="1" style="min-width: 1px;" context="bmContext" 
            datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
