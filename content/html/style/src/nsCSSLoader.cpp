@@ -976,7 +976,7 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
   NS_ASSERTION(! mSyncCallback, "getting synchronous callback from netlib");
 #endif
 
-  if (NS_SUCCEEDED(aStatus) && (aStyleData) && (0 < aStyleData->Length()) && (mDocument)) {
+  if (NS_SUCCEEDED(aStatus) && (aStyleData) && (!aStyleData->IsEmpty()) && (mDocument)) {
     nsresult result;
     nsIUnicharInputStream* uin = nsnull;
 
@@ -1077,7 +1077,7 @@ static nsresult EnumerateMediaString(const nsString& aStringList, nsStringEnumFu
       subStr.CompressWhitespace(PR_FALSE, PR_TRUE);
     }
 
-    if (0 < subStr.Length()) {
+    if (!subStr.IsEmpty()) {
       status = (*aFunc)(subStr, aData);
     }
 
@@ -1102,7 +1102,7 @@ CSSLoaderImpl::SetMedia(nsICSSStyleSheet* aSheet, const nsString& aMedia)
 {
   nsresult rv = NS_OK;
   aSheet->ClearMedia();
-  if (0 < aMedia.Length()) {
+  if (!aMedia.IsEmpty()) {
     rv = EnumerateMediaString(aMedia, MediumEnumFunc, aSheet);
   }
   return rv;
@@ -1137,7 +1137,7 @@ CSSLoaderImpl::AddPendingSheet(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
 PRBool
 CSSLoaderImpl::IsAlternate(const nsString& aTitle)
 {
-  if (0 < aTitle.Length()) {
+  if (!aTitle.IsEmpty()) {
     return PRBool(! aTitle.EqualsIgnoreCase(mPreferredSheet));
   }
   return PR_FALSE;
@@ -1687,7 +1687,7 @@ nsresult NS_NewCSSLoader(nsICSSLoader** aLoader)
 
 NS_IMETHODIMP CSSLoaderImpl::GetCharset(/*out*/nsAString &aCharsetDest) const
 {
-  NS_ASSERTION(mCharset.Length() > 0, "CSSLoader charset should be set in ctor" );
+  NS_ASSERTION(!mCharset.IsEmpty(), "CSSLoader charset should be set in ctor" );
   nsresult rv = NS_OK;
   aCharsetDest = mCharset;
   return rv;
@@ -1738,7 +1738,7 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const char* aStyleSheetData,
   nsString strStyleDataUndecoded;
   strStyleDataUndecoded.AssignWithConversion(aStyleSheetData, aDataLength);
   PRInt32 charsetOffset;
-  if (strStyleDataUndecoded.Length() > 0) {
+  if (!strStyleDataUndecoded.IsEmpty()) {
     nsString str;
     static const char atCharsetStr[] = "@charset";
     if ((charsetOffset = strStyleDataUndecoded.Find(atCharsetStr)) > -1) {

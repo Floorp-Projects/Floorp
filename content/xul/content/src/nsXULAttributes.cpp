@@ -115,7 +115,7 @@ nsClassList::ParseClasses(nsClassList** aList, const nsAReadableString& aClassSt
         *aList = nsnull;
     }
 
-    if (aClassString.Length() > 0) {
+    if (!aClassString.IsEmpty()) {
         nsAutoString classStr(aClassString);  // copy to work buffer
         classStr.Append(kNullCh);  // put an extra null at the end
 
@@ -306,7 +306,7 @@ nsXULAttribute::SetPrefix(const nsAReadableString& aPrefix)
     nsINodeInfo *newNodeInfo = nsnull;
     nsCOMPtr<nsIAtom> prefix;
 
-    if (aPrefix.Length()) {
+    if (!aPrefix.IsEmpty()) {
         prefix = dont_AddRef(NS_NewAtom(aPrefix));
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }

@@ -1175,7 +1175,7 @@ PRBool CSSParserImpl::ParseMediaRule(PRInt32& aErrorCode, RuleAppendFunc aAppend
   NS_NewISupportsArray(getter_AddRefs(media));
   if (media) {
     if (GatherMedia(aErrorCode, mediaStr, media)) {
-      if ((0 < mediaStr.Length()) &&
+      if ((!mediaStr.IsEmpty()) &&
           ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
         // push media rule on stack, loop over children
         nsCOMPtr<nsICSSMediaRule>  rule;
@@ -1285,7 +1285,7 @@ PRBool CSSParserImpl::ProcessNameSpace(PRInt32& aErrorCode, const nsString& aPre
   nsCOMPtr<nsICSSNameSpaceRule> rule;
   nsCOMPtr<nsIAtom> prefix;
 
-  if (0 < aPrefix.Length()) {
+  if (!aPrefix.IsEmpty()) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
   }
 
@@ -1712,7 +1712,7 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
                                     PRInt32& aParsingStatus,
                                     PRInt32& aErrorCode)
 {
-  if (0 < mToken.mIdent.Length()) { // verify is legal ID
+  if (!mToken.mIdent.IsEmpty()) { // verify is legal ID
     aDataMask |= SEL_MASK_ID;
     aSelector.AddID(mToken.mIdent);
   }
@@ -2860,7 +2860,7 @@ PRBool CSSParserImpl::TranslateDimension(PRInt32& aErrorCode,
 {
   nsCSSUnit units;
   PRInt32   type = 0;
-  if (0 != aUnit.Length()) {
+  if (!aUnit.IsEmpty()) {
     nsCSSKeyword id = nsCSSKeywords::LookupKeyword(aUnit);
     switch (id) {
       case eCSSKeyword_em:    units = eCSSUnit_EM;          type = VARIANT_LENGTH;  break;
@@ -4921,7 +4921,7 @@ PRBool CSSParserImpl::ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue)
       break;
     }
   }
-  if (family.Length() == 0) {
+  if (family.IsEmpty()) {
     return PR_FALSE;
   }
   aValue.SetStringValue(family, eCSSUnit_String);

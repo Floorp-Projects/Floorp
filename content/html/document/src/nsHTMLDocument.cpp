@@ -1111,7 +1111,7 @@ nsHTMLDocument::GetBaseTarget(nsAWritableString& aTarget)
 NS_IMETHODIMP
 nsHTMLDocument::SetBaseTarget(const nsAReadableString& aTarget)
 {
-  if (0 < aTarget.Length()) {
+  if (!aTarget.IsEmpty()) {
     if (nsnull != mBaseTarget) {
       *mBaseTarget = aTarget;
     }
@@ -1131,7 +1131,7 @@ nsHTMLDocument::SetBaseTarget(const nsAReadableString& aTarget)
 NS_IMETHODIMP 
 nsHTMLDocument::SetLastModified(const nsAReadableString& aLastModified)
 {
-  if (0 < aLastModified.Length()) {
+  if (!aLastModified.IsEmpty()) {
     if (nsnull != mLastModified) {
       *mLastModified = aLastModified;
     }
@@ -1150,7 +1150,7 @@ nsHTMLDocument::SetLastModified(const nsAReadableString& aLastModified)
 NS_IMETHODIMP 
 nsHTMLDocument::SetReferrer(const nsAReadableString& aReferrer)
 {
-  if (0 < aReferrer.Length()) {
+  if (!aReferrer.IsEmpty()) {
     if (nsnull != mReferrer) {
       *mReferrer = aReferrer;
     }
@@ -1436,7 +1436,7 @@ nsHTMLDocument::CreateElement(const nsAReadableString& aTagName,
                               nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_TRUE(aTagName.Length(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+  NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsAutoString tmp(aTagName);

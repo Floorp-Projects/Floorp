@@ -701,7 +701,7 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
           } else if (mIsLatin1 && val > 127 && val < 256) {
             parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
 
-            if (entityReplacement.Length() > 0) {
+            if (!entityReplacement.IsEmpty()) {
               entityText = entityReplacement.get();
               break;
             }

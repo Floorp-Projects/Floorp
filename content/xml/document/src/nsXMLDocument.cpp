@@ -170,7 +170,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
-  if (aQualifiedName.Length() > 0) {
+  if (!aQualifiedName.IsEmpty()) {
     nsCOMPtr<nsIDOMElement> root;
     rv = doc->CreateElementNS(aNamespaceURI, aQualifiedName,
                               getter_AddRefs(root));
@@ -768,7 +768,7 @@ nsXMLDocument::CreateElement(const nsAReadableString& aTagName,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
-  NS_ENSURE_TRUE(aTagName.Length(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+  NS_ENSURE_TRUE(!aTagName.IsEmpty(), NS_ERROR_DOM_INVALID_CHARACTER_ERR);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsresult rv;

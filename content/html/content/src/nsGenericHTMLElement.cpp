@@ -1405,7 +1405,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
           nsCOMPtr<nsIURI> baseURL;
           GetBaseURL(*getter_AddRefs(baseURL));
           GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-          if (target.Length() == 0) {
+          if (target.IsEmpty()) {
             GetBaseTarget(target);
           }
           if (inputEvent->isControl || inputEvent->isMeta ||
@@ -1467,7 +1467,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
         nsCOMPtr<nsIURI> baseURL;
         GetBaseURL(*getter_AddRefs(baseURL));
         GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-        if (target.Length() == 0) {
+        if (target.IsEmpty()) {
           GetBaseTarget(target);
         }
         ret = TriggerLink(aPresContext, eLinkVerb_Replace,
@@ -2521,7 +2521,7 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsAReadableString& aString,
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (tmp.Length() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
+    if (!tmp.IsEmpty() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else {
@@ -2554,10 +2554,10 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
 
   if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (tmp.Length() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
+    if (!tmp.IsEmpty() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
-    } else if (tmp.Length() && tmp.Last() == '*') {
+    } else if (!tmp.IsEmpty() && tmp.Last() == '*') {
       if (tmp.Length() == 1) {
         // special case: HTML spec says a value '*' == '1*'
         // see http://www.w3.org/TR/html4/types.html#type-multi-length
@@ -3523,7 +3523,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
         nsAutoString absURLSpec;
         nsAutoString spec;
         value.GetStringValue(spec);
-        if (spec.Length() > 0) {
+        if (!spec.IsEmpty()) {
           // Resolve url to an absolute url
           nsCOMPtr<nsIPresShell> shell;
           nsresult rv = aData->mPresContext->GetShell(getter_AddRefs(shell));
@@ -4247,10 +4247,10 @@ nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
       if (mForm) {
         mForm->RemoveElement(this);
 
-        if (nameVal.Length())
+        if (!nameVal.IsEmpty())
           mForm->RemoveElementFromTable(this, nameVal);
 
-        if (idVal.Length())
+        if (!idVal.IsEmpty())
           mForm->RemoveElementFromTable(this, idVal);
       }
     }
@@ -4261,10 +4261,10 @@ nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
       if (theForm) {
         theForm->AddElement(this);
 
-        if (nameVal.Length())
+        if (!nameVal.IsEmpty())
           theForm->AddElementToTable(this, nameVal);
 
-        if (idVal.Length())
+        if (!idVal.IsEmpty())
           theForm->AddElementToTable(this, idVal);
       }
     } else {

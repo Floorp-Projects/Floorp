@@ -4499,7 +4499,7 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
         return rv;
     }
 
-    if ((attrValue.Equals(aValue)) || (attrValue.Length() > 0 && aValue.Equals(NS_LITERAL_STRING("*")))) {
+    if ((attrValue.Equals(aValue)) || (!attrValue.IsEmpty() && aValue.Equals(NS_LITERAL_STRING("*")))) {
         if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
             NS_ERROR("unable to append element to node list");
             return rv;
@@ -4556,7 +4556,7 @@ nsXULDocument::ParseTagString(const nsAReadableString& aTagName, nsIAtom*& aName
         name.Cut(0, nsoffset+1);
     }
 
-    if (0 < prefix.Length())
+    if (!prefix.IsEmpty())
         aPrefix = NS_NewAtom(prefix);
 
     aName = NS_NewAtom(name);
@@ -6841,12 +6841,12 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         if (NS_FAILED(rv)) return rv;
 
         // Bail if there's no broadcasterID
-        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0)) {
+        if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.IsEmpty())) {
             // Try the command attribute next.
             rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, broadcasterID);
             if (NS_FAILED(rv)) return rv;
 
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE && broadcasterID.Length() > 0) {
+            if (rv == NS_CONTENT_ATTR_HAS_VALUE && !broadcasterID.IsEmpty()) {
               // We've got something in the command attribute.  We only treat this as
               // a normal broadcaster if we are not a menuitem or a key.
 

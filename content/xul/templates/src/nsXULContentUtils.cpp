@@ -492,7 +492,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aA
     }
 
     // XXX check to see if we need to insert a '/' or a '#'. Oy.
-    if (uri.Length() > 0 && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
+    if (!uri.IsEmpty()  && uri.Last() != '#' && uri.Last() != '/' && aAttribute.First() != '#')
         uri.Append(PRUnichar('#'));
 
     uri.Append(aAttribute);

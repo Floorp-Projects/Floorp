@@ -360,7 +360,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
         // Get the element that this label is for
         nsAutoString elementId;
         rv = GetHtmlFor(elementId);
-        if (NS_SUCCEEDED(rv) && elementId.Length()) { // --- We have a FOR attr
+        if (NS_SUCCEEDED(rv) && !elementId.IsEmpty()) { // --- We have a FOR attr
           nsCOMPtr<nsIDocument> iDoc;
           rv = GetDocument(*getter_AddRefs(iDoc));
           if (NS_SUCCEEDED(rv)) {

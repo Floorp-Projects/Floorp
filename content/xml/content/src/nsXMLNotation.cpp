@@ -181,13 +181,13 @@ nsXMLNotation::List(FILE* out, PRInt32 aIndent) const
   fprintf(out, "Notation refcount=%d<!NOTATION ", mRefCnt);
 
   nsAutoString tmp(mName);
-  if (mPublicId.Length()) {
+  if (!mPublicId.IsEmpty()) {
     tmp.Append(NS_LITERAL_STRING(" PUBLIC \""));
     tmp.Append(mPublicId);
     tmp.Append(NS_LITERAL_STRING("\""));
   }
 
-  if (mSystemId.Length()) {
+  if (!mSystemId.IsEmpty()) {
     tmp.Append(NS_LITERAL_STRING(" SYSTEM \""));
     tmp.Append(mSystemId);
     tmp.Append(NS_LITERAL_STRING("\""));

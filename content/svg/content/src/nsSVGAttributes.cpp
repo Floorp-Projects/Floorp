@@ -224,7 +224,7 @@ nsSVGAttribute::SetPrefix(const nsAReadableString& aPrefix)
   nsINodeInfo *newNodeInfo = nsnull;
   nsCOMPtr<nsIAtom> prefix;
   
-  if (aPrefix.Length()) {
+  if (!aPrefix.IsEmpty()) {
     prefix = dont_AddRef(NS_NewAtom(aPrefix));
     NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
   }
@@ -553,7 +553,7 @@ nsSVGAttributes::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         (attr->GetNodeInfo()->Equals(aName))) {
       attr->GetNodeInfo()->GetPrefixAtom(aPrefix);
       attr->GetValue()->GetValueString(aResult);
-      if (0 < aResult.Length()) {
+      if (!aResult.IsEmpty()) {
         rv = NS_CONTENT_ATTR_HAS_VALUE;
       }
       else {

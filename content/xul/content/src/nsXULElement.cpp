@@ -962,7 +962,7 @@ nsXULElement::SetPrefix(const nsAReadableString& aPrefix)
     nsINodeInfo *newNodeInfo = nsnull;
     nsCOMPtr<nsIAtom> prefix;
 
-    if (aPrefix.Length() && !DOMStringIsNull(aPrefix)) {
+    if (!aPrefix.IsEmpty() && !DOMStringIsNull(aPrefix)) {
         prefix = dont_AddRef(NS_NewAtom(aPrefix));
         NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
     }
@@ -2715,7 +2715,7 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
             if (ni->Equals(aName, aNameSpaceID)) {
                 ni->GetPrefixAtom(aPrefix);
                 attr->GetValue(aResult);
-                return aResult.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
+                return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
             }
         }
     }
@@ -2729,7 +2729,7 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID,
             if (ni->Equals(aName, aNameSpaceID)) {
                 ni->GetPrefixAtom(aPrefix);
                 attr->mValue.GetValue( aResult );
-                return aResult.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
+                return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
             }
         }
     }
@@ -3673,7 +3673,7 @@ nsXULElement::GetElementsByAttribute(nsIDOMNode* aNode,
             return rv;
         }
 
-        if ((attrValue.Equals(aValue)) || (attrValue.Length() > 0 && aValue.Equals(NS_LITERAL_STRING("*")))) {
+        if ((attrValue.Equals(aValue)) || (!attrValue.IsEmpty() && aValue.Equals(NS_LITERAL_STRING("*")))) {
             if (NS_FAILED(rv = aElements->AppendNode(child))) {
                 NS_ERROR("unable to append element to node list");
                 return rv;
@@ -4809,7 +4809,7 @@ nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritable
     for (PRInt32 i = 0; i < mNumAttributes; ++i) {
         if (mAttributes[i].mNodeInfo->Equals(aName, aNameSpaceID)) {
             mAttributes[i].mValue.GetValue( aValue );
-            return aValue.Length() ? NS_CONTENT_ATTR_HAS_VALUE : NS_CONTENT_ATTR_NO_VALUE;
+            return aValue.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE : NS_CONTENT_ATTR_HAS_VALUE;
         }
 
     }
