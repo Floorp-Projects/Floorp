@@ -1,4 +1,5 @@
 #import "WebFeatures.h"
+#import "NSString+Utils.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManagerUtils.h"
