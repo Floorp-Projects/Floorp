@@ -294,7 +294,7 @@ exe=
 exe_param=
 
 [Check Instance0]
-Class Name=NetscapeWindowClass
+Class Name=MozillaWindowClass
 Window Name=
 ;*** LOCALIZE ME BABY ***
 Message=Setup has detected that an instance of $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
