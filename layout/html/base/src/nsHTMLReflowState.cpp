@@ -580,14 +580,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     nsStyleUnit heightUnit = pos->mHeight.GetUnit();
 
-    // It's possible the child's max width is less than the width of the
-    // containing block (e.g., for scrolled elements because we subtract for
-    // the scrollbar width).
-    // XXX Don't do this if the max width is 0, which is the case for floaters...
-    if ((availableWidth < containingBlockWidth) && (availableWidth > 0)) {
-      containingBlockWidth = availableWidth;
-    }
-
     // Check for a percentage based width and an unconstrained containing
     // block width
     if (eStyleUnit_Percent == widthUnit) {
