@@ -166,10 +166,14 @@ nsFieldSetFrame::SetInitialChildList(nsPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {
- 
-  // get the content and legend frames.
-  mContentFrame = aChildList;
-  mLegendFrame = mContentFrame->GetNextSibling();
+  // Get the content and legend frames.
+  if (aChildList->GetNextSibling()) {
+    mContentFrame = aChildList->GetNextSibling();
+    mLegendFrame  = aChildList;
+  } else {
+    mContentFrame = aChildList;
+    mLegendFrame  = nsnull;
+  }
 
   // Queue up the frames for the content frame
   return nsHTMLContainerFrame::SetInitialChildList(aPresContext, nsnull, aChildList);
@@ -627,14 +631,9 @@ nsFieldSetFrame::RemoveFrame(nsPresContext* aPresContext,
   // XXX XXX
   // XXX temporary fix for bug 70648
   if (aOldFrame == mLegendFrame) {   
-    nsIFrame* sibling = mContentFrame->GetNextSibling();
-    NS_ASSERTION(sibling == mLegendFrame, "legendFrame is not next sibling");
     NS_ASSERTION(mLegendFrame->GetParent() == this, "Legend Parent has wrong parent");
-    nsIFrame* legendSibling = sibling->GetNextSibling();
-    // replace the legend, which is the next sibling, with any siblings of the legend (XXX always null?)
-    mContentFrame->SetNextSibling(legendSibling);
-    // OK, the legend is now removed from the sibling list, but who has ownership of it?
-    mLegendFrame->Destroy(aPresContext);
+    NS_ASSERTION(mLegendFrame->GetNextSibling() == mContentFrame, "mContentFrame is not next sibling");
+    mFrames.DestroyFrame(aPresContext, mLegendFrame);
     mLegendFrame = nsnull;
     return NS_OK;
   } else {
