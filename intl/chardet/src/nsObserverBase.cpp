@@ -31,6 +31,7 @@
 #include "nsIParser.h"
 #include "nsString.h"
 #include "nsIDocShell.h"
+#include "nsIHTTPChannel.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -45,17 +46,37 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
    
    nsresult rv  = NS_OK;
 
-   nsAutoString theKey;
-   
-   theKey.AssignWithConversion("docshell"); // Key to find docshell from the bundle. 
-    
    nsCOMPtr<nsISupportsParserBundle> bundle=do_QueryInterface(aParserBundle);
 
    if (bundle) {
-     nsCOMPtr<nsIDocShell> docshell=nsnull;
      nsresult res = NS_OK;
+     
+     // XXX - Make sure not to reload POST data to prevent bugs such as 27006
+     nsAutoString theChannelKey;
+     theChannelKey.AssignWithConversion("channel");
+
+     nsCOMPtr<nsIChannel> channel=nsnull;
+     res=bundle->GetDataFromBundle(theChannelKey,getter_AddRefs(channel));
+     if(NS_SUCCEEDED(res)) {
+       nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel,&res));
+       if(NS_SUCCEEDED(res)) {
+         nsIAtom* atom=nsnull;
+         httpChannel->GetRequestMethod(&atom);
+         if(atom) {
+           nsAutoString method;
+           atom->ToString(method);
+           if(method.EqualsWithConversion("POST"))
+             return NS_OK; 
+         }
+       }
+     }
+     
+     nsAutoString theDocShellKey;
+     theDocShellKey.AssignWithConversion("docshell"); // Key to find docshell from the bundle. 
+     
+     nsCOMPtr<nsIDocShell> docshell=nsnull;
  	     
-     res=bundle->GetDataFromBundle(theKey,getter_AddRefs(docshell));
+     res=bundle->GetDataFromBundle(theDocShellKey,getter_AddRefs(docshell));
      if(NS_SUCCEEDED(res)) {
        nsCOMPtr<nsIWebShellServices> wss=nsnull;
        wss=do_QueryInterface(docshell,&res);  // Query webshell service through docshell.

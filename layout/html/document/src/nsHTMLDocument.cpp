@@ -665,9 +665,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     
     if(NS_SUCCEEDED(result)) {
       // We do this to help consumers who don't have access to the webshell.
-      nsAutoString theID;
-      theID.AssignWithConversion("docshell");
-      parserBundle->SetDataIntoBundle(theID,docShell);
+      nsAutoString theDocShell,theChannel;
+      theDocShell.AssignWithConversion("docshell");
+      theChannel.AssignWithConversion("channel");
+      parserBundle->SetDataIntoBundle(theDocShell,docShell);
+      parserBundle->SetDataIntoBundle(theChannel,aChannel);
     }
   }
 
