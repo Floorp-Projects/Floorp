@@ -118,52 +118,17 @@ static const unsigned char kLower2Upper[256] = {
 #define TOUPPER(_ucs2) \
   (((_ucs2) < 128) ? PRUnichar(kLower2Upper[_ucs2]) : _ToUpper(_ucs2))
 
-class HandleCaseConversionShutdown : public nsIShutdownListener {
-public :
-   NS_IMETHOD OnShutdown(const nsCID& cid, nsISupports* service);
-   HandleCaseConversionShutdown(void) { NS_INIT_REFCNT(); }
-   virtual ~HandleCaseConversionShutdown(void) {}
-   NS_DECL_ISUPPORTS
-};
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 
-static nsICaseConversion * gCaseConv = NULL; 
+extern nsICaseConversion * gCaseConv;
 
-NS_IMPL_ISUPPORTS1(HandleCaseConversionShutdown, nsIShutdownListener)
-
-nsresult
-HandleCaseConversionShutdown::OnShutdown(const nsCID& cid,
-                                         nsISupports* aService)
-{
-  if (cid.Equals(kUnicharUtilCID)) {
-    NS_ASSERTION(aService == gCaseConv, "wrong service!");
-    gCaseConv->Release();
-    gCaseConv = NULL;
-  }
-  return NS_OK;
-}
-
-static HandleCaseConversionShutdown* gListener = NULL;
-
-static void StartUpCaseConversion()
-{
-    nsresult err;
-
-    if ( NULL == gListener )
-    {
-      gListener = new HandleCaseConversionShutdown();
-      gListener->AddRef();
-    }
-    err = nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
-                                        (nsISupports**) &gCaseConv, gListener);
-}
 static void CheckCaseConversion()
 {
-    if(NULL == gCaseConv )
-      StartUpCaseConversion();
+    if (NULL == gCaseConv)
+      (void) nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),
+                                          (nsISupports**) &gCaseConv);
 
     NS_ASSERTION( gCaseConv != NULL , "cannot obtain UnicharUtil");
-   
 }
 
 static PRUnichar _ToLower(PRUnichar aChar)
