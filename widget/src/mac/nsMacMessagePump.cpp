@@ -171,7 +171,7 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 	//
 	// create the TSM Message Pump
 	//
-	mTSMMessagePump = new nsMacTSMMessagePump();
+	mTSMMessagePump = nsMacTSMMessagePump::GetSingleton();
 	NS_ASSERTION(mTSMMessagePump!=NULL,"nsMacMessagePump::nsMacMessagePump: Unable to create TSM Message Pump.");
 	
 }
@@ -192,8 +192,6 @@ nsMacMessagePump::~nsMacMessagePump()
   //
   // release the TSM Message Pump
   //
-  if (mTSMMessagePump)
-  	delete mTSMMessagePump;
 }
 
 //=================================================================

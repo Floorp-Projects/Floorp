@@ -91,6 +91,26 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
 #endif
 
 }
+//-------------------------------------------------------------------------
+nsMacTSMMessagePump* nsMacTSMMessagePump::gSingleton = nsnull;
+//-------------------------------------------------------------------------
+nsMacTSMMessagePump* nsMacTSMMessagePump::GetSingleton()
+{
+	if(nsnull == gSingleton)
+	{
+		gSingleton = new nsMacTSMMessagePump();
+		NS_ASSERTION(gSingleton!=NULL,"nsMacTSMMessagePump::GetSingleton: Unable to create TSM Message Pump.");
+	}
+	return gSingleton;
+}
+//-------------------------------------------------------------------------
+void nsMacTSMMessagePump::Shutdown()
+{
+	if(gSingleton) {
+		delete gSingleton;
+		gSingleton = nsnull;
+	}
+}
 
 //-------------------------------------------------------------------------
 //
