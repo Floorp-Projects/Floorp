@@ -2973,7 +2973,7 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
 			break;
    }
    
-   NS_ENSURE_SUCCESS(aChannel->SetLoadAttributes(loadAttribs), NS_ERROR_FAILURE);
+   (void) aChannel->SetLoadAttributes(loadAttribs);
 
    NS_ENSURE_SUCCESS(aURILoader->OpenURI(aChannel, aLoadCmd,
       aWindowTarget, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
