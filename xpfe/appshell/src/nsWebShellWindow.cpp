@@ -575,6 +575,11 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
           focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
           if (focusedWindow) {
+            // It's possible for focusing the window to cause it to close.
+            // To avoid holding a pointer to deleted memory, keep a reference
+            // on eventWindow. -bryner
+            nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(eventWindow);
+
             focusController->SetSuppressFocus(PR_TRUE, "Activation Suppression");
             domWindow->Focus(); // This sets focus, but we'll ignore it.  
                                 // A subsequent activate will cause us to stop suppressing.
