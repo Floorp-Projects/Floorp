@@ -94,7 +94,7 @@
         <vbox flex="1">
           <spacer flex="1"/>
           <hbox align="start">
-          <html:a id="themesLink" href="&getNewThemesURL;"
+          <html:a class="themesLink" id="themesLink" href="&getNewThemesURL;"
               style="padding-left:4px; display: block;" target="_new">&getNewThemes.label;</html:a>
           </hbox>
         </vbox>
@@ -106,8 +106,8 @@
   <vbox flex="1">
     
     <listbox id="extList" datasources="rdf:chrome" 
-          onselect=""
-          ref="urn:mozilla:package:root" rows="3">
+          onselect="extensionSelect();"
+          ref="urn:mozilla:package:root" rows="10">
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
         <rule chrome:extension="true">
           <listitem uri="..."
@@ -116,35 +116,29 @@
                     displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
                     description="rdf:http://www.mozilla.org/rdf/chrome#description"
-                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
-                    loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
+                    disabledState="rdf:http://www.mozilla.org/rdf/chrome#disabled"/>
         </rule>
       </template>
     </listbox>
 
     <separator class="thin"/>
-  
-    <hbox class="inset" align="center" pack="center">
-      <image/>
-    </hbox>
-
-    <separator class="thin"/>
     <hbox>
       <vbox flex="1">
-        <label class="header" id="displayName" value=""/>
+        <label class="header" id="extDisplayName"/>
         <hbox align="center">
           <label value="&author.label;"/>
-          <label/>
+          <label id="extAuthor"/>
         </hbox>
-        <label flex="1"/>
+        <label id="extDescription" flex="1"/>
       </vbox>
       <vbox>
-        <button label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
+        <button id="disableExtension" label="Disable Extension" oncommand="toggleExtension();"/> <!-- XXXdwh localize -->
+        <button label="Uninstall Extension" oncommand="uninstallExtension();"/> <!-- XXXdwh localize -->
         <vbox flex="1">
           <spacer flex="1"/>
           <hbox align="start">
-          <html:a href="&getNewThemesURL;"
-              style="padding-left:4px; display: block;" target="_new">&getNewThemes.label;</html:a>
+          <html:a class="themesLink" href="&getNewThemesURL;"
+              style="padding-left:4px; display: block;" target="_new">Get New Extensions</html:a>
           </hbox>
         </vbox>
       </vbox>
