@@ -695,7 +695,7 @@ safe_popen(char *cmd)
 	if (p[1] != 1) dup2(p[1], 1);
 	if (p[1] != 2) dup2(p[1], 2);
 	close(0);
-	for (fd = getdtablesize(); --fd > 2; close(fd))
+	for (fd = PR_MIN(65536,getdtablesize()); --fd > 2; close(fd))
 	    ;
 
 	/* clean up environment in the child process */
