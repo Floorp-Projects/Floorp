@@ -264,6 +264,12 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     // XXX validate policy against session?
+    
+    PRBool      storageEnabled = PR_FALSE;
+    nsresult    rv = nsCacheService::IsStorageEnabledForPolicy(policy, &storageEnabled);
+    if (NS_FAILED(rv))      return rv;
+    if (!storageEnabled)    return NS_ERROR_FAILURE;
+    
     mCacheEntry->SetStoragePolicy(policy);
     mCacheEntry->MarkEntryDirty();
     return NS_OK;
