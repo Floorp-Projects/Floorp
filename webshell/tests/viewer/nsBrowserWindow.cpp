@@ -126,7 +126,8 @@ nsVoidArray nsBrowserWindow::gBrowsers;
 nsBrowserWindow*
 nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
 {
-  nsIWidget* widget;
+  nsIWidget*        widget;
+  nsBrowserWindow*  result = nsnull;
 
   PRInt32 i, n = gBrowsers.Count();
   for (i = 0; i < n; i++) {
@@ -135,24 +136,36 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
       switch (aWhich) {
       case FIND_WINDOW:
         bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) return bw;
+        if (widget == aWidget) {
+          result = bw;
+        }
+        NS_IF_RELEASE(widget);
         break;
       case FIND_BACK:
         bw->mBack->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) return bw;
+        if (widget == aWidget) {
+          result = bw;
+        }
+        NS_IF_RELEASE(widget);
         break;
       case FIND_FORWARD:
         bw->mForward->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) return bw;
+        if (widget == aWidget) {
+          result = bw;
+        }
+        NS_IF_RELEASE(widget);
         break;
       case FIND_LOCATION:
         bw->mLocation->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) return bw;
+        if (widget == aWidget) {
+          result = bw;
+        }
+        NS_IF_RELEASE(widget);
         break;
       }
     }
   }
-  return nsnull;
+  return result;
 }
 
 void
@@ -331,11 +344,12 @@ nsBrowserWindow::Destroy()
     NS_RELEASE(mWebShell);
   }
 
+  NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mBack);
   NS_IF_RELEASE(mForward);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mThrobber);
-  // XXX What about releasing all the other objects...
+  NS_IF_RELEASE(mStatus);
 }
 
 void
