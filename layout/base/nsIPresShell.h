@@ -109,6 +109,11 @@ public:
   // Methods for recycling frames.
   NS_IMETHOD AllocateFrame(size_t aSize, void** aResult) = 0;
   NS_IMETHOD FreeFrame(size_t aSize, void* aFreeChunk) = 0;
+
+  // Dynamic stack memory allocation
+  NS_IMETHOD PushStackMemory() = 0;
+  NS_IMETHOD PopStackMemory() = 0;
+  NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult) = 0;
   
   NS_IMETHOD GetDocument(nsIDocument** aResult) = 0;
 

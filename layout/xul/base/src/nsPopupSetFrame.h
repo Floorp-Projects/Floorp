@@ -55,7 +55,9 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+    // nsIBox
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
 
   // The following four methods are all overridden so that the menu children
   // can be stored in a separate list (so that they don't impact reflow of the
@@ -71,10 +73,6 @@ public:
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   // Reflow methods
-  NS_IMETHOD Reflow(nsIPresContext*   aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus);
 
@@ -123,7 +121,7 @@ protected:
   void UpdateDismissalListener(nsIMenuParent* aMenuParent);
 
 protected:
-  nsresult SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug);
+  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
 
   nsFrameList mPopupFrames;
   nsIPresContext* mPresContext; // Our pres context.

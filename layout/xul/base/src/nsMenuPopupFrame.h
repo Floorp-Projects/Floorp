@@ -103,7 +103,10 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   static void GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);

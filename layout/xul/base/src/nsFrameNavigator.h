@@ -31,16 +31,17 @@
 #define nsGrippyFrame_h___
 
 #include "nsIFrame.h"
+class nsIBox;
 
 class nsFrameNavigator 
 {
 public:
 
-  static nsIFrame* GetChildBeforeAfter(nsIPresContext* aPresContext, nsIFrame* start, PRBool before);
-  static nsIFrame* GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index);
-  static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child);
-  static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame);
-  static nsIAtom* GetTag(nsIFrame* frame);
+  static nsIBox* GetChildBeforeAfter(nsIPresContext* aPresContext, nsIBox* start, PRBool before);
+  static nsIBox* GetChildAt(nsIPresContext* aPresContext, nsIBox* parent, PRInt32 index);
+  static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIBox* parent, nsIBox* child);
+  static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIBox* aFrame);
+  static nsIAtom* GetTag(nsIBox* frame);
 
 }; 
 

@@ -17,12 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- *
  * Contributor(s): 
  */
 #include "nsCOMPtr.h"
-#include "nsXULCheckboxFrame.h"
+#include "nsCheckBoxFrame.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIContent.h"
 #include "nsIDOMXULRadioElement.h"
@@ -34,27 +32,31 @@
 
 
 //
-// NS_NewXULCheckboxFrame
+// NS_NewCheckBoxFrame
 //
 // Creates a new checkbox frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewXULCheckboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+NS_NewCheckBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULCheckboxFrame* it = new (aPresShell) nsXULCheckboxFrame(aPresShell);
+  nsCheckBoxFrame* it = new (aPresShell) nsCheckBoxFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
   
-} // NS_NewXULCheckboxFrame
+} // NS_NewCheckBoxFrame
 
-nsXULCheckboxFrame::nsXULCheckboxFrame(nsIPresShell* aPresShell)
-:nsXULButtonFrame(aPresShell)
-{}
+PRIntn nsCheckBoxFrame::GetDefaultAlignment()
+{
+  return NS_SIDE_LEFT;
+}
+
+nsCheckBoxFrame::nsCheckBoxFrame(nsIPresShell* aPresShell):nsButtonBoxFrame(aPresShell)
+{
+}

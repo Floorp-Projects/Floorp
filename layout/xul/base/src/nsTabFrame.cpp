@@ -62,7 +62,7 @@ NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 } // NS_NewTabFrame
 
 nsTabFrame::nsTabFrame(nsIPresShell* aPresShell)
-:nsXULButtonFrame(aPresShell)
+:nsButtonBoxFrame(aPresShell)
 {
 
 }

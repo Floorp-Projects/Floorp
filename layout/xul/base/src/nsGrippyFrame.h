@@ -47,7 +47,7 @@ public:
   static nsIFrame* GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt32 index);
   static PRInt32 IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame* child);
   static PRInt32 CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame);
-  nsGrippyFrame();  
+  nsGrippyFrame(nsIPresShell* aShell);  
 
 protected:
   virtual void MouseClicked(nsIPresContext* aPresContext);

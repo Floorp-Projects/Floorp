@@ -30,11 +30,11 @@
 #ifndef nsTabFrame_h___
 #define nsTabFrame_h___
 
-#include "nsXULButtonFrame.h"
+#include "nsButtonBoxFrame.h"
 
 class nsTabControlFrame;
 
-class nsTabFrame : public nsXULButtonFrame
+class nsTabFrame : public nsButtonBoxFrame
 {
 public:
 

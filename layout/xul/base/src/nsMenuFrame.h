@@ -58,6 +58,13 @@ public:
   nsMenuFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
+
+  // nsIBox
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+
+  // The nsIAnonymousContentCreator interface
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousItems);
   
   // The nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
@@ -68,7 +75,7 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, PRBool aDebug);
 
   NS_IMETHOD IsActive(PRBool& aResult) { aResult = PR_TRUE; return NS_OK; };
 
@@ -87,21 +94,13 @@ public:
 
   // Overridden to prevent events from ever going to children of the menu.
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-
-  // Reflow methods
-  NS_IMETHOD Reflow(nsIPresContext*   aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus);
 
   NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
@@ -161,6 +160,9 @@ public:
 
 
 protected:
+
+  virtual void LayoutFinished(nsBoxLayoutState& aState);
+
   static void UpdateDismissalListener(nsIMenuParent* aMenuParent);
   void UpdateMenuType(nsIPresContext* aPresContext);
   void UpdateMenuSpecialState(nsIPresContext* aPresContext);
@@ -185,10 +187,9 @@ protected:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
 
 protected:
-  nsresult SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug);
+  nsresult SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug);
 
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.

@@ -22,8 +22,7 @@
 #ifndef nsScrollPortFrame_h___
 #define nsScrollPortFrame_h___
 
-#include "nsHTMLContainerFrame.h"
-#include "nsIBox.h"
+#include "nsBoxFrame.h"
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -34,7 +33,7 @@
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsScrollPortFrame : public nsHTMLContainerFrame, public nsIBox {
+class nsScrollPortFrame : nsBoxFrame {
 public:
   friend nsresult NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -43,8 +42,6 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
-
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
   // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
   // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
@@ -71,20 +68,11 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD DidReflow(nsIPresContext*   aPresContext,
-                       nsDidReflowStatus aStatus);
-
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
-
-   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   /**
    * Get the "type" of the frame
@@ -98,14 +86,20 @@ public:
 #endif
 
   // nsIBox methods
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
-  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetPadding(nsMargin& aMargin);
+  NS_IMETHOD GetBorder(nsMargin& aMargin);
+  NS_IMETHOD GetMargin(nsMargin& aMargin);
+
+  virtual nsresult GetContentOf(nsIContent** aContent);
 
 protected:
-  nsScrollPortFrame();
+  nsScrollPortFrame(nsIPresShell* aShell);
   virtual PRIntn GetSkipSides() const;
 
    // Creation of the widget for the scrolling view is factored into a virtual method so
@@ -119,14 +113,6 @@ protected:
 private:
   nsresult CreateScrollingView(nsIPresContext* aPresContext);
 
-  nsresult CalculateChildTotalSize(nsIFrame*            aKidFrame,
-                                   nsHTMLReflowMetrics& aKidReflowMetrics);
-
-  nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize);
-
-  PRBool mNeedsRecalc;
-  nsBoxInfo mSpring;
-  PRBool mIncremental;
 };
 
 #endif /* nsScrollPortFrame_h___ */

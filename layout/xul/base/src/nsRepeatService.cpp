@@ -49,7 +49,7 @@ nsRepeatService::GetInstance()
 {
   if (!gInstance) {
      gInstance = new nsRepeatService();
-     gInstance->mRefCnt = 1;
+     NS_ADDREF(gInstance);
   }
 
   return gInstance;

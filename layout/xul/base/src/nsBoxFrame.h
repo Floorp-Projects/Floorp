@@ -33,8 +33,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIBox.h"
-#include "nsISpaceManager.h"
+#include "nsContainerBox.h"
+class nsBoxLayoutState;
 class nsBoxFrameInner;
 class nsBoxDebugInner;
 
@@ -47,23 +47,6 @@ class nsHTMLInfo;
 #define NS_FRAME_BOX_NEEDS_RECALC  0x0004
 #define NS_FRAME_IS_BOX            0x0008
 
-class nsCalculatedBoxInfo : public nsBoxInfo {
-public:
-    nsSize calculatedSize;
-    PRInt16 mFlags;
-    nsCalculatedBoxInfo* next;
-    nsIFrame* frame;
-
-    virtual void Recycle(nsIPresShell* aShell);
-};
-
-class nsInfoList 
-{
-public:
-    virtual nsCalculatedBoxInfo* GetFirst()=0;
-    virtual nsCalculatedBoxInfo* GetLast()=0;
-    virtual PRInt32 GetCount()=0;
-};
 
 // flags from box
 #define NS_STATE_IS_HORIZONTAL           0x00400000
@@ -72,8 +55,9 @@ public:
 #define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
 #define NS_STATE_SET_TO_DEBUG            0x04000000
 #define NS_STATE_DEBUG_WAS_SET           0x08000000
+#define NS_STATE_IS_COLLAPSED            0x10000000
 
-class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
+class nsBoxFrame : public nsHTMLContainerFrame, public nsContainerBox
 {
 public:
 
@@ -81,20 +65,39 @@ public:
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
-  virtual void GetInnerRect(nsRect& aInner);
+  // ------ nsISupports --------
 
+  NS_DECL_ISUPPORTS
+
+  // ------ nsIBox -------------
+
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex);
+  NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
+  NS_IMETHOD SetDebug(nsBoxLayoutState& aBoxLayoutState, PRBool aDebug);
+  NS_IMETHOD GetFrame(nsIFrame** aFrame);
+  NS_IMETHOD GetVAlign(Valignment& aAlign);
+  NS_IMETHOD GetHAlign(Halignment& aAlign);
+  NS_IMETHOD NeedsRecalc();
+  NS_IMETHOD GetInset(nsMargin& aInset);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetDebug(PRBool& aDebug);
+
+  // ----- child and sibling operations ---
+
+  // ----- public methods -------
+  
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                             nsIFrame**     aFrame);
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
-
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus);
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
@@ -146,36 +149,21 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
+                   nsDidReflowStatus aStatus);
+
   virtual PRBool IsHorizontal() const;
 
   
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-
   virtual ~nsBoxFrame();
 
-  virtual void GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize);
+  virtual nsresult GetContentOf(nsIContent** aContent);
 
-  // nsIBox methods
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
-
-    enum Halignment {
-        hAlign_Left,
-        hAlign_Right,
-        hAlign_Center
-    };
-
-    enum Valignment {
-        vAlign_Top,
-        vAlign_Middle,
-        vAlign_BaseLine,
-        vAlign_Bottom
-    };
 protected:
     nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = PR_FALSE);
+
+    virtual void PropagateDebug(nsBoxLayoutState& aState);
+
 
     // Paint one child frame
     virtual void PaintChild(nsIPresContext*      aPresContext,
@@ -189,36 +177,14 @@ protected:
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer);
 
-
-    virtual void GetRedefinedMinPrefMax(nsIPresContext* aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual void ComputeChildsNextPosition( nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent);
-    virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
-    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
-
-    virtual void LayoutChildrenInRect(nsRect& aSize, nscoord& aMaxAscent);
-    virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
-    virtual void BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect);
-    virtual void InvalidateChildren();
-    virtual void AddSize(const nsSize& a, nsSize& b, PRBool largest);
-
     virtual PRIntn GetSkipSides() const { return 0; }
-
-    virtual void GetInset(nsMargin& margin); 
-    virtual void CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame, PRBool hide);
-
-    nsresult GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
-                                        nsIPresShell&   aPresShell);
-
 
 
     virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
     virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 
     virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 
-    virtual PRBool GetDefaultFlex(PRInt32& aFlex);
-
-    virtual nsInfoList* GetInfoList();
+  
     NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
 
 private: 

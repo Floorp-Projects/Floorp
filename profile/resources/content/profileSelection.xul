@@ -31,7 +31,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/profileSelection.dtd" >
-<window 
+<window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   width="475" height="335"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
@@ -54,9 +54,7 @@
 
     <!-- instructions -->
     <deck id="prattle">
-      <box orient="vertical" id="selection">
-        <html>&introgeneral.label;</html>
-      </box>
+      <html id="intro" flex="1">&introgeneral.label;</html>
       <box orient="vertical" id="manager">
         <html class="label" style="width: 200px;">&pmTextA.label;</html>
         <spring flex="1"/>

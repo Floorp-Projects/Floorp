@@ -19,27 +19,24 @@
  *
  * Contributor(s): 
  */
-#ifndef nsXULLeafFrame_h___
-#define nsXULLeafFrame_h___
+#ifndef nsLeafBoxFrame_h___
+#define nsLeafBoxFrame_h___
 
 #include "nsLeafFrame.h"
-#include "nsIBox.h"
+#include "nsBox.h"
 
 class nsAccessKeyInfo;
 
-class nsXULLeafFrame : public nsLeafFrame, public nsIBox
+class nsLeafBoxFrame : public nsLeafFrame, public nsBox
 {
 public:
 
-  friend nsresult NS_NewXULLeafFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-
-  // nsIBox frame interface
-  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
-  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug) { return NS_OK; }
+  friend nsresult NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_DECL_ISUPPORTS
 
+  // nsIBox frame interface
+  NS_IMETHOD GetFrame(nsIFrame** aFrame);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -48,23 +45,35 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
- 
-    NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
+
+  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
 
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
+                 nsDidReflowStatus aStatus);
+
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
+               nsIContent*      aContent,
+               nsIFrame*        aParent,
+               nsIStyleContext* aContext,
+               nsIFrame*        asPrevInFlow);
+
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                          const nsPoint& aPoint,
+                          nsFramePaintLayer aWhichLayer,    
+                          nsIFrame**     aFrame);
 
 protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize) {}
 
-
-  nsXULLeafFrame() {}
+ nsLeafBoxFrame(nsIPresShell* aShell);
 
 private:
 
-}; // class nsXULLeafFrame
+}; // class nsLeafBoxFrame
 
-#endif /* nsXULLeafFrame_h___ */
+#endif /* nsLeafBoxFrame_h___ */

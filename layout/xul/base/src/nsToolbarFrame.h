@@ -73,13 +73,6 @@ public:
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
-    // nsFrame overrides
-#if 0
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, // Overridden to capture events
-                              nsFramePaintLayer aWhichLayer,
-                              nsIFrame**     aFrame);
-#endif
   NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,

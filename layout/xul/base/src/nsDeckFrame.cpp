@@ -43,7 +43,8 @@
 #include "nsStyleChangeList.h"
 #include "nsCSSRendering.h"
 #include "nsIViewManager.h"
-
+#include "nsBoxLayoutState.h"
+#include "nsStackLayout.h"
 
 nsresult
 NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
@@ -56,14 +57,21 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
+
   *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewDeckFrame
 
 
-nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell):nsStackFrame(aPresShell)
+nsCOMPtr<nsIBoxLayout> nsDeckFrame::gLayout = nsnull;
+
+nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
+  if (!gLayout)
+    gLayout = new nsStackLayout(aPresShell);
+
+  SetLayoutManager(gLayout);
 }
 
 NS_IMETHODIMP
@@ -73,49 +81,14 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
-  nsresult rv = nsStackFrame::AttributeChanged(aPresContext, aChild,
+  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
 
 
    // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsHTMLAtoms::index) {
-
-    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-
-     int index = 0;
-
-      // get the index attribute
-      nsAutoString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value))
-      {
-        PRInt32 error;
-
-        // convert it to an integer
-        index = value.ToInteger(&error);
-      }
-
-      nsIFrame* childFrame = mFrames.FirstChild(); 
-      nscoord count = 0;
-      while (nsnull != childFrame) 
-      {
-        // make collapsed children not show up
-        if (index != count) 
-           CollapseChild(aPresContext, childFrame, PR_TRUE);
-        else
-           CollapseChild(aPresContext, childFrame, PR_FALSE);
-
-        rv = childFrame->GetNextSibling(&childFrame);
-        NS_ASSERTION(rv == NS_OK,"failed to get next child");
-        count++;
-      }
-
-  }
-
-
-  
-
-  if (NS_OK != rv) {
-    return rv;
+     nsBoxLayoutState state(aPresContext);
+     MarkDirty(state);
   }
 
   return NS_OK;
@@ -154,11 +127,11 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
   // if a tab is hidden all its children are too.
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->IsVisibleOrCollapsed())
+	if (!disp->mVisible)
 		return NS_OK;
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->IsVisibleOrCollapsed() && mRect.width && mRect.height) {
+    if (disp->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color = (const nsStyleColor*)
@@ -186,44 +159,33 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
-                                             nsFramePaintLayer aWhichLayer,
+                                             nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {
-
-  // If it's not in this frame, then it's not going to be in any
-  // children (since there cannot be overflowing children).
+  // if it is not inside us fail
   if (!mRect.Contains(aPoint)) {
-    return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
   }
+
+  // if its not in our child just return us.
+  *aFrame = this;
 
   // get the selected frame and see if the point is in it.
   nsIFrame* selectedFrame = GetSelectedFrame();
+  nsPoint tmp;
+  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
   if (nsnull != selectedFrame)
   {
-    // adjust the point
-    nsPoint p = aPoint;
-    p.x -= mRect.x;
-    p.y -= mRect.y;
-    return selectedFrame->GetFrameForPoint(aPresContext, p, aWhichLayer, aFrame);
-  }
-
-  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
-    // if its not in our child just return us.
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
+      return selectedFrame->GetFrameForPoint(aPresContext, tmp, aWhichLayer, aFrame);
   }
     
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
+
 NS_IMETHODIMP
-nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus)
+nsDeckFrame::Layout(nsBoxLayoutState& aState)
 {
   int index = 0;
 
@@ -237,21 +199,34 @@ nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
     index = value.ToInteger(&error);
   }
 
-  nsresult rv = nsBoxFrame::DidReflow(aPresContext, aStatus);
-  NS_ASSERTION(rv == NS_OK,"DidReflow failed");
+  nsIBox* box = nsnull;
+  GetChildBox(&box);
 
-  nsIFrame* childFrame = mFrames.FirstChild(); 
   nscoord count = 0;
-  while (nsnull != childFrame) 
+  while (nsnull != box) 
+  {
+    // make collapsed children not show up
+    if (index == count) 
+       box->UnCollapse(aState);
+
+    nsresult rv2 = box->GetNextBox(&box);
+    NS_ASSERTION(rv2 == NS_OK,"failed to get next child");
+    count++;
+  }
+
+  nsresult rv = nsBoxFrame::Layout(aState);
+
+  GetChildBox(&box);
+
+  count = 0;
+  while (nsnull != box) 
   {
     // make collapsed children not show up
     if (index != count) 
-       CollapseChild(aPresContext, childFrame, PR_TRUE);
-    else
-       CollapseChild(aPresContext, childFrame, PR_FALSE);
+       box->Collapse(aState);
 
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    nsresult rv2 = box->GetNextBox(&box);
+    NS_ASSERTION(rv2 == NS_OK,"failed to get next child");
     count++;
   }
 

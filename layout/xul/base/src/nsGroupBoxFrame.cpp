@@ -58,6 +58,9 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+
+  NS_IMETHOD GetBorderAndPadding(nsMargin& aBorderAndPadding);
+
                                
   NS_METHOD Paint(nsIPresContext* aPresContext,
                   nsIRenderingContext& aRenderingContext,
@@ -81,12 +84,7 @@ public:
   }
 #endif
 
-  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
-  
-  virtual PRBool GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; return PR_TRUE; }
+ virtual PRBool GetInitialOrientation(PRBool& aHorizontal) { aHorizontal = PR_FALSE; return PR_TRUE; }
 
   nsIFrame* GetTitleFrame(nsIPresContext* aPresContext, nsRect& aRect);
   nsIFrame* GetContentFrame(nsIPresContext* aPresContext);
@@ -321,28 +319,11 @@ nsTitledBoxFrame::GetContentFrame(nsIPresContext* aPresContext)
         return next;
 }
 
-NS_IMETHODIMP 
-nsTitledBoxFrame::Reflow(nsIPresContext*          aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
-                        nsReflowStatus&          aStatus)
+NS_IMETHODIMP
+nsTitledBoxFrame::GetBorderAndPadding(nsMargin& aBorderAndPadding)
 {
-  if (aReflowState.mComputedBorderPadding.top != 0) 
-  {
-      nsHTMLReflowState newState(aReflowState);
-
-      if (newState.mComputedHeight != NS_INTRINSICSIZE)
-        newState.mComputedHeight += aReflowState.mComputedBorderPadding.top;
-
-      // remove the border from border padding
-      ((nsMargin&)newState.mComputedBorderPadding).top = 0;
-      ((nsMargin&)newState.mComputedPadding).top = 0;
-
-      // reflow us again with the correct values.
-      return Reflow(aPresContext, aDesiredSize, newState, aStatus);
-  }
-
-  return nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  aBorderAndPadding.SizeTo(0,0,0,0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

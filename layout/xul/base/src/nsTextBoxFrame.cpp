@@ -27,7 +27,7 @@
 // See documentation in associated header file
 //
 
-#include "nsXULTextFrame.h"
+#include "nsTextBoxFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
@@ -38,6 +38,7 @@
 #include "nsIStyleContext.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
+#include "nsBoxLayoutState.h"
 
 #define ELIPSIS "..."
 
@@ -61,13 +62,13 @@ public:
 // Creates a new Toolbar frame and returns it in |aNewFrame|
 //
 nsresult
-NS_NewXULTextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXULTextFrame* it = new (aPresShell) nsXULTextFrame;
+  nsTextBoxFrame* it = new (aPresShell) nsTextBoxFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -79,7 +80,7 @@ NS_NewXULTextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 
 NS_IMETHODIMP
-nsXULTextFrame::AttributeChanged(nsIPresContext* aPresContext,
+nsTextBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
@@ -96,23 +97,23 @@ nsXULTextFrame::AttributeChanged(nsIPresContext* aPresContext,
       UpdateAccessUnderline();
 
   if (aResize) {
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    mState |= NS_FRAME_IS_DIRTY;
-    mParent->ReflowDirtyChild(shell, this);
+    nsBoxLayoutState state(aPresContext);
+    MarkDirty(state);
   } else if (aRedraw) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
+    nsBoxLayoutState state(aPresContext);
+    Redraw(state);
   }
 
   return NS_OK;
 }
 
-nsXULTextFrame::nsXULTextFrame():mCropType(CropRight),mTitle(""), mAccessKeyInfo(nsnull)
+nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell):nsLeafBoxFrame(aShell),mTitle(""), mCropType(CropRight),mAccessKeyInfo(nsnull)
 {
 	mState |= NS_STATE_NEED_LAYOUT;
+  NeedsRecalc();
 }
 
-nsXULTextFrame::~nsXULTextFrame()
+nsTextBoxFrame::~nsTextBoxFrame()
 {
     if (mAccessKeyInfo)
         delete mAccessKeyInfo;
@@ -120,13 +121,13 @@ nsXULTextFrame::~nsXULTextFrame()
 
 
 NS_IMETHODIMP
-nsXULTextFrame::Init(nsIPresContext*  aPresContext,
+nsTextBoxFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIStyleContext* aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsXULLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsLeafBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   
   PRBool a,b,c;
   UpdateAttributes(aPresContext, nsnull, a, b, c  /* all */);
@@ -139,7 +140,7 @@ nsXULTextFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString accesskey;
   mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                          accesskey);
-  if (!accesskey.IsEmpty()) {   
+  if (accesskey != "") {   
       if (!mAccessKeyInfo)
           mAccessKeyInfo = new nsAccessKeyInfo();
 
@@ -168,7 +169,7 @@ nsXULTextFrame::Init(nsIPresContext*  aPresContext,
 }
 
 void
-nsXULTextFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline)
+nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline)
 {
     aResize = PR_FALSE;
     aRedraw = PR_FALSE;
@@ -222,14 +223,14 @@ nsXULTextFrame::UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttrib
 }
 
 NS_IMETHODIMP
-nsXULTextFrame::Paint(nsIPresContext* aPresContext,
+nsTextBoxFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {	
 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->IsVisibleOrCollapsed())
+	if (!disp->IsVisible())
 		return NS_OK;
 
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
@@ -251,7 +252,7 @@ nsXULTextFrame::Paint(nsIPresContext* aPresContext,
 
 
 void
-nsXULTextFrame::LayoutTitle(nsIPresContext* aPresContext,
+nsTextBoxFrame::LayoutTitle(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer,
@@ -298,7 +299,7 @@ nsXULTextFrame::LayoutTitle(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsXULTextFrame::PaintTitle(nsIPresContext* aPresContext,
+nsTextBoxFrame::PaintTitle(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer,
@@ -364,7 +365,7 @@ nsXULTextFrame::PaintTitle(nsIPresContext* aPresContext,
 }
 
 void 
-nsXULTextFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+nsTextBoxFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                                 const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
@@ -381,7 +382,7 @@ nsXULTextFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& a
 }
 
 void 
-nsXULTextFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth)
+nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth)
 {
   if (mTitle.Length() == 0)
      return;
@@ -534,13 +535,13 @@ nsXULTextFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderin
 }
 
 void
-nsXULTextFrame::UpdateAccessUnderline()
+nsTextBoxFrame::UpdateAccessUnderline()
 {
 #ifndef XP_UNIX
     nsAutoString accesskey;
     mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey,
                            accesskey);
-    if (accesskey.IsEmpty()) {
+    if (accesskey == "") {
         if (mAccessKeyInfo) {
             delete mAccessKeyInfo;
             mAccessKeyInfo = nsnull;
@@ -559,41 +560,95 @@ nsXULTextFrame::UpdateAccessUnderline()
 
 
 NS_IMETHODIMP
-nsXULTextFrame::Reflow(nsIPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aMetrics,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus)
+nsTextBoxFrame::Layout(nsBoxLayoutState& aBoxLayoutState)
 {
   mState |= NS_STATE_NEED_LAYOUT;
 
-  return nsXULLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+  return nsLeafBoxFrame::Layout(aBoxLayoutState);
+}
+
+NS_IMETHODIMP
+nsTextBoxFrame::NeedsRecalc()
+{
+  mNeedsRecalc = PR_TRUE;
+  return NS_OK;
+}
+
+void
+nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
+{
+  if (mNeedsRecalc) 
+  {
+    nsSize size;
+    nscoord ascent = 0;
+    nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+    nsIRenderingContext* rendContext = aBoxLayoutState.GetReflowState()->rendContext;
+    if (rendContext) {
+      GetTextSize(presContext, *rendContext,
+                  mTitle, size, mAscent);
+      mTextSize = size;
+      mNeedsRecalc = PR_FALSE;
+    }
+  }
 }
 
 /**
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsXULTextFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsTextBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  // depending on the type of alignment add in the space for the text
-  nsSize size;
-  nscoord ascent = 0;
-  GetTextSize(aPresContext, *aReflowState.rendContext,
-              mTitle, size, ascent);
+  CalcTextSize(aBoxLayoutState);
+  
+  aSize = mTextSize;
 
-   aSize.ascent         = ascent;
-   aSize.prefSize       = size;
-   aSize.minSize        = size;
+  AddBorderAndPadding(aSize);
+  AddInset(aSize);
+  nsIBox::AddCSSPrefSize(aBoxLayoutState, this, aSize);
+ 
+  return NS_OK;
+}
 
-   // if there is cropping our min width becomes 0
-   if (mCropType != CropNone) 
-       aSize.minSize.width = 0;
-   
-   return NS_OK;
+/**
+ * Ok return our dimensions
+ */
+NS_IMETHODIMP
+nsTextBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  CalcTextSize(aBoxLayoutState);
+  
+  aSize = mTextSize;
+
+   // if there is cropping our min width becomes our border and  padding
+  if (mCropType != CropNone) {
+     aSize.width = 0;
+  }
+
+  AddBorderAndPadding(aSize);
+  AddInset(aSize);
+  nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);
+ 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULTextFrame::GetFrameName(nsString& aResult) const
+nsTextBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+{
+  CalcTextSize(aBoxLayoutState);
+  
+  aAscent = mAscent;
+
+  nsMargin m(0,0,0,0);
+  GetBorderAndPadding(m);
+  aAscent += m.top;
+  GetInset(m);
+  aAscent += m.top;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextBoxFrame::GetFrameName(nsString& aResult) const
 {
   aResult = "Text[value=";
   aResult += mTitle;

@@ -37,7 +37,7 @@ NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSpringFrame* it = new (aPresShell) nsSpringFrame;
+  nsSpringFrame* it = new (aPresShell) nsSpringFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -48,25 +48,23 @@ NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 NS_IMETHODIMP  nsSpringFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
-                                             nsFramePaintLayer aWhichLayer,
+                                             nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {
-  if (!mRect.Contains(aPoint)) {
+  if (!mRect.Contains(aPoint)) 
     return NS_ERROR_FAILURE;
-  }
 
-  // always return us (if visible)
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->IsVisible()) {
+  // see if it is in our border, padding, or inset
+  nsRect r(mRect);
+  nsMargin m;
+  GetInset(m);
+  r.Deflate(m);
+  GetBorderAndPadding(m);
+  r.Deflate(m);
+  if (!r.Contains(aPoint)) {
     *aFrame = this;
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
-
-    /*
-  // clicks just go right through springs.
-  return NS_ERROR_FAILURE;
-  */
+  return NS_ERROR_FAILURE;  
 }

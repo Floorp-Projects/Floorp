@@ -24,7 +24,7 @@
 
   Eric D Vaughan
   A frame that can have multiple children. Only one child may be displayed at one time. So the
-  can be flipped though like a deck of cards.
+  can be flipped though like a Stack of cards.
  
 **/
 
@@ -39,33 +39,13 @@ public:
 
   friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
- 
-
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
-                   nsIContent*      aContent,
-                   nsIFrame*        aParent,
-                   nsIStyleContext* aContext,
-                   nsIFrame*        asPrevInFlow);
-
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint, 
-                              nsFramePaintLayer aWhichLayer,
-                             nsIFrame**     aFrame);
-
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
       aResult = "Stack";
       return NS_OK;
   }
 
-  
-
-
-protected:
-
-  nsStackFrame(nsIPresShell* aShell);
-
-    // Paint one child frame
+      // Paint one child frame
   virtual void PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
@@ -76,10 +56,11 @@ protected:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsFramePaintLayer    aWhichLayer);
-    virtual void ComputeChildsNextPosition( nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent);
-    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
-    virtual void LayoutChildrenInRect(nsRect& aSize, nscoord& aMaxAscent);
-    virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
+
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
 private:
     virtual nsresult GetStackedFrameForPoint(nsIPresContext* aPresContext,
@@ -87,6 +68,14 @@ private:
                                          const nsRect& aRect,
                                          const nsPoint& aPoint, 
                                          nsIFrame**     aFrame);
+protected:
+
+  nsStackFrame(nsIPresShell* aPresShell);
+
+private:
+
+  static nsCOMPtr<nsIBoxLayout> gLayout;
+
 }; // class nsStackFrame
 
 

@@ -28,7 +28,7 @@
 #define nsSliderFrame_h__
 
 
-#include "nsHTMLContainerFrame.h"
+#include "nsBoxFrame.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
@@ -47,12 +47,12 @@ class nsITimer;
 nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
 
-class nsSliderFrame : public nsHTMLContainerFrame, 
+class nsSliderFrame : public nsBoxFrame, 
                       public nsIDOMMouseListener, 
                       public nsITimerCallback
 {
 public:
-  nsSliderFrame();
+  nsSliderFrame(nsIPresShell* aShell);
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG
@@ -60,6 +60,12 @@ public:
     return MakeFrameName("SliderFrame", aResult);
   }
 #endif
+
+  // nsIBox
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState);
 
   // nsIFrame overrides
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
@@ -83,34 +89,15 @@ public:
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
-   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-     NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aPrevFrame,
-                           nsIFrame*       aFrameList);
-
-  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame);
-
 
    NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-    NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                                const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,    
+                              nsIFrame**     aFrame);
 
     NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -171,7 +158,7 @@ public:
   static PRInt32 GetIncrement(nsIContent* content);
   static PRInt32 GetPageIncrement(nsIContent* content);
   static PRInt32 GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue);
-  static PRInt32 IsHorizontal(nsIContent* content);
+  void EnsureOrient();
 
   void SetScrollbarListener(nsIScrollbarListener* aListener);
 
@@ -196,20 +183,14 @@ public:
 
 protected:
 
-  virtual nsresult ReflowThumb(nsIPresContext*   aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus,
-                     nsIFrame* thumbFrame,
-                     nsSize available,
-                     nsSize computed);
-
   virtual PRIntn GetSkipSides() const { return 0; }
 
  
 private:
 
-  nsIContent* GetScrollBar();
+  nsIBox* GetScrollbar();
+  nsIContent* GetContentOf(nsIBox* aBox);
+
   void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
   void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);
   NS_IMETHOD DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);

@@ -97,6 +97,7 @@ XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
 XUL_ATOM(box, "box")
+XUL_ATOM(mousethrough, "mousethrough")
 XUL_ATOM(flex, "flex")
 XUL_ATOM(spring, "spring")
 XUL_ATOM(orient, "orient")
@@ -129,6 +130,13 @@ XUL_ATOM(resizebefore, "resizebefore")
 XUL_ATOM(resizeafter, "resizeafter")
 XUL_ATOM(state, "state")
 XUL_ATOM(debug, "debug")
+
+// grid
+XUL_ATOM(grid, "grid")
+XUL_ATOM(rows, "rows")
+XUL_ATOM(columns, "columns")
+XUL_ATOM(row, "row")
+XUL_ATOM(column, "column")
 
 // toolbar & toolbar d&d atoms
 XUL_ATOM(ddDropLocation, "dd-droplocation")
