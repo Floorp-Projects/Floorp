@@ -74,6 +74,7 @@ interface nsIUpdateService : nsISupports
 
   const unsigned short SOURCE_EVENT_USER        = 0x01;
   const unsigned short SOURCE_EVENT_BACKGROUND  = 0x02;
+  const unsigned short SOURCE_EVENT_MISMATCH    = 0x04;
 
   void checkForUpdates([array, size_is(aItemCount)] in nsIUpdateItem aItems,
                        in unsigned long aItemCount,

@@ -53,13 +53,12 @@ interface nsIExtensionManager : nsISupports
   void installTheme(in string aThemeID);
   void uninstallTheme(in string aThemeID);
 
-  const unsigned short SOURCE_EVENT_MISMATCH    = 0x01;
+  const unsigned short MISMATCH_RESULT_OK       = 0x00;
+  const unsigned short MISMATCH_RESULT_RESTART  = 0x01;
+  unsigned short checkForMismatches();
 
-  const unsigned short UPDATE_RESULT_OK = 0x00;
-  const unsigned short UPDATE_RESULT_RESTART = 0x01;
-
-  unsigned short update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
-                        in unsigned long aItemCount);
+  void update([array, size_is(aItemCount)] in nsIUpdateItem aItems,
+               in unsigned long aItemCount);
 
   void getItemList(in string aItemID, 
                    in unsigned short aType, 
