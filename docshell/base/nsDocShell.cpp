@@ -52,7 +52,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
-#include "nsScriptSecurityManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
 #include "nsICanvasFrame.h"
 #include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
@@ -105,7 +105,6 @@
 #include "nsIWyciwygChannel.h"
 
 // The following are for bug #13871: Prevent frameset spoofing
-#include "nsICodebasePrincipal.h"
 #include "nsIHTMLDocument.h"
 
 // For reporting errors with the console service.
@@ -955,11 +954,8 @@ PRBool ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem, nsIDocShellTreeItem*
   rv = targetDocument->GetPrincipal(getter_AddRefs(targetPrincipal));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipal, rv);
 
-  nsCOMPtr<nsICodebasePrincipal> targetCodebasePrincipal(do_QueryInterface(targetPrincipal));
-  NS_ENSURE_TRUE(targetCodebasePrincipal, PR_TRUE);
-
   nsCOMPtr<nsIURI> targetPrincipalURI;
-  rv = targetCodebasePrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
+  rv = targetPrincipal->GetURI(getter_AddRefs(targetPrincipalURI));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && targetPrincipalURI, PR_TRUE);
 
   // Find out if document.domain was set for HTML documents

@@ -50,11 +50,8 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsBasePrincipal.cpp \
+		nsPrincipal.cpp \
 		nsSystemPrincipal.cpp \
-		nsCertificatePrincipal.cpp \
-		nsCodebasePrincipal.cpp \
-		nsAggregatePrincipal.cpp \
 		nsJSPrincipals.cpp \
 		nsScriptSecurityManager.cpp \
 		nsSecurityManagerFactory.cpp \

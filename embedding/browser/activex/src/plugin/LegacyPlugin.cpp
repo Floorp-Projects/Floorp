@@ -404,7 +404,7 @@ MozAxAutoPushJSContext::MozAxAutoPushJSContext(JSContext *cx,
         if (NS_SUCCEEDED(mPushResult))
         {
             JSPrincipals* jsprinc;
-            principal->GetJSPrincipals(&jsprinc);
+            principal->GetJsPrincipals(&jsprinc);
 
             mFrame.script = JS_CompileScriptForPrincipals(cx, JS_GetGlobalObject(cx),
                                                           jsprinc, "", 0, "", 1);

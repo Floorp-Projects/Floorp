@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,7 +27,6 @@
 #include "nsDebug.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsICertificatePrincipal.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -93,15 +92,17 @@ PRBool nsXPITriggerItem::IsRelativeURL()
 void
 nsXPITriggerItem::SetPrincipal(nsIPrincipal* aPrincipal)
 {
-	mPrincipal = aPrincipal;
+    mPrincipal = aPrincipal;
 
-	nsCOMPtr<nsICertificatePrincipal> cp(do_QueryInterface(aPrincipal));
-	if (cp) {
-		nsXPIDLCString cName;
-		cp->GetCommonName(getter_Copies(cName));
-		mCertName = NS_ConvertUTF8toUCS2(cName);
-	}
+    PRBool hasCert;
+    aPrincipal->GetHasCertificate(&hasCert);
+    if (hasCert) {
+        nsXPIDLCString cName;
+        aPrincipal->GetCommonName(getter_Copies(cName));
+        mCertName = NS_ConvertUTF8toUCS2(cName);
+    }
 }
+
 //
 // nsXPITriggerInfo
 //

@@ -74,7 +74,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
-#include "nsScriptSecurityManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 

@@ -42,7 +42,6 @@
 #include "nsIEventListenerManager.h"
 #include "jsapi.h"
 #include "nsCOMPtr.h"
-#include "nsIPrincipal.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"

@@ -45,7 +45,6 @@
 #include "nsIServiceManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIPrincipal.h"
-#include "nsICodebasePrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -70,9 +69,7 @@ static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
             nsCOMPtr<nsIPrincipal> principal;
             scriptObjectPrincipal->GetPrincipal(getter_AddRefs(principal));
             if (principal) {
-                nsCOMPtr<nsICodebasePrincipal> codebasePrincipal = do_QueryInterface(principal);
-                if (codebasePrincipal)
-                    return codebasePrincipal->GetURI(result);
+                return principal->GetURI(result);
             }
         }
     }

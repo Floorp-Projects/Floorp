@@ -46,7 +46,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
-#include "nsScriptSecurityManager.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIStringBundle.h"
 #include "prefapi.h"
 #include "prmem.h"
@@ -67,8 +67,6 @@ struct PrefCallbackData {
   PRBool        bIsWeakRef;
 };
 
-
-static NS_DEFINE_CID(kSecurityManagerCID, NS_SCRIPTSECURITYMANAGER_CID);
 
 // Prototypes
 extern PrefResult pref_UnlockPref(const char *key);
@@ -897,7 +895,7 @@ nsresult nsPrefBranch::getValidatedPrefName(const char *aPrefName, const char **
   {
     nsresult rv;
     nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(kSecurityManagerCID, &rv);
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     PRBool enabled;
 
     if (NS_FAILED(rv))

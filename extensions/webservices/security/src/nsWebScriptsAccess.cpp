@@ -43,7 +43,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNamedNodeMap.h"
-#include "nsICodebasePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIURL.h"
 #include "nsReadableUtils.h"
 #include "nsIHttpChannel.h"
@@ -260,13 +260,7 @@ nsWebScriptsAccess::GetCodebaseURI(nsIURI** aCodebase)
   rv = mSecurityManager->GetSubjectPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsICodebasePrincipal> codebase(do_QueryInterface(principal, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = codebase->GetURI(aCodebase);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return principal->GetURI(aCodebase);
 }
 
 nsresult 

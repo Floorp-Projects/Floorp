@@ -44,7 +44,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsICodebasePrincipal.h"
+#include "nsIPrincipal.h"
 #include "nsIVariant.h"
 #include "nsString.h"
 #include "nsSOAPUtils.h"
@@ -57,7 +57,6 @@
 #include "nsIWebScriptsAccessService.h"
 #include "nsMemory.h"
 #include "nsIDocument.h"
-#include "nsIAggregatePrincipal.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
@@ -123,23 +122,15 @@ nsresult ChangePrincipal(nsIDOMDocument* aDocument)
     rv = secMgr->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAggregatePrincipal> subjectAgg = 
-      do_QueryInterface(subjectPrincipal, &rv);
+    nsCOMPtr<nsIURI> subjectURI;
+    rv = subjectPrincipal->GetURI(getter_AddRefs(subjectURI));
     NS_ENSURE_SUCCESS(rv, rv);
-       
-    nsCOMPtr<nsIPrincipal> subjectCodebase;
-    rv = subjectAgg->GetOriginalCodebase(getter_AddRefs(subjectCodebase));
-    NS_ENSURE_SUCCESS(rv, rv);
-       
+
     nsCOMPtr<nsIPrincipal> targetPrincipal;
     rv = targetDoc->GetPrincipal(getter_AddRefs(targetPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIAggregatePrincipal> targetAgg = 
-      do_QueryInterface(targetPrincipal, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = targetAgg->SetCodebase(subjectCodebase);
+    rv = targetPrincipal->SetURI(subjectURI);
   }
   return rv;
 }
@@ -216,24 +207,20 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
                               "SOAP_INVOKE_VERIFY_PRINCIPAL", 
                               "Source-verified message cannot be sent without principal.");
       }
-      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal,&rc);
-      if (NS_FAILED(rc)) 
-        return rc;
-  
-      if (!codebase) {
+
+      nsCOMPtr<nsIURI> uri;
+      principal->GetURI(getter_AddRefs(uri));
+      if (!uri) {
         return SOAP_EXCEPTION(NS_ERROR_FAILURE,
-                              "SOAP_INVOKE_VERIFY_CODEBASE", 
-                              "Source-verified message cannot be sent without codebase.");
+                              "SOAP_INVOKE_VERIFY_URI", 
+                              "Source-verified message cannot be sent without URI.");
       }
-  
-      char* str;
 
-      rc = codebase->GetSpec(&str);
+      nsCAutoString spec;
+      rc = uri->GetSpec(spec);
       if (NS_FAILED(rc)) 
         return rc;
-      CopyASCIItoUCS2(nsDependentCString(str), sourceURI);
-      nsMemory::Free(str);
-
+      CopyASCIItoUCS2(spec, sourceURI);
     }
 
 //  Adding a header to tell the server that it must understand and verify the source of the call

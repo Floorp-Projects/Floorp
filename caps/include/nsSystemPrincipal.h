@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1999-2000
  * the Initial Developer. All Rights Reserved.
@@ -38,10 +38,11 @@
 
 /* The privileged system principal. */
 
-#ifndef _NS_SYSTEM_PRINCIPAL_H_
-#define _NS_SYSTEM_PRINCIPAL_H_
+#ifndef nsSystemPrincipal_h__
+#define nsSystemPrincipal_h__
 
-#include "nsBasePrincipal.h"
+#include "nsIPrincipal.h"
+#include "nsJSPrincipals.h"
 
 #define NS_SYSTEMPRINCIPAL_CLASSNAME "systemprincipal"
 #define NS_SYSTEMPRINCIPAL_CID \
@@ -50,42 +51,23 @@
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
-class nsSystemPrincipal : public nsBasePrincipal {
+class nsSystemPrincipal : public nsIPrincipal
+{
 public:
-    
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIPRINCIPAL
     NS_DECL_NSISERIALIZABLE
-    
-    NS_IMETHOD ToString(char **result);
 
-    NS_IMETHOD ToUserVisibleString(char **result);
-
-    NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
-
-    NS_IMETHOD HashValue(PRUint32 *result);
-
-    NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
-
-    NS_IMETHOD SetCanEnableCapability(const char *capability, 
-                                      PRInt16 canEnable);
-
-    NS_IMETHOD IsCapabilityEnabled(const char *capability, void * annotation, 
-                                   PRBool *result);
-
-    NS_IMETHOD EnableCapability(const char *capability, void * *annotation);
-
-    NS_IMETHOD RevertCapability(const char *capability, void * *annotation);
-
-    NS_IMETHOD DisableCapability(const char *capability, void * *annotation);
-
-    NS_IMETHOD GetPreferences(char** aPrefName, char** aID, 
-                              char** aGrantedList, char** aDeniedList);
-    
-    NS_IMETHOD Init();
+    nsresult Init();
 
     nsSystemPrincipal();
 
+protected:
     virtual ~nsSystemPrincipal(void);
+
+    nsJSPrincipals mJSPrincipals;
+    // XXX Probably unnecessary.  See bug 143559.
+    NS_DECL_OWNINGTHREAD
 };
 
-#endif // _NS_SYSTEM_PRINCIPAL_H_
+#endif // nsSystemPrincipal_h__
