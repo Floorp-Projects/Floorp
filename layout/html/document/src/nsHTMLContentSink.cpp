@@ -20,7 +20,6 @@
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoader.h"
-#include "nsIUnicharInputStream.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIURL.h"
@@ -126,7 +125,9 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 class SinkContext;
 
-class HTMLContentSink : public nsIHTMLContentSink {
+class HTMLContentSink : public nsIHTMLContentSink,
+                        public nsIUnicharStreamLoaderObserver
+{
 public:
   HTMLContentSink();
   virtual ~HTMLContentSink();
@@ -139,6 +140,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
@@ -1904,7 +1906,7 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS(HTMLContentSink, kIHTMLContentSinkIID)
+NS_IMPL_ISUPPORTS2(HTMLContentSink, nsIHTMLContentSink, nsIUnicharStreamLoaderObserver)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
@@ -3582,31 +3584,31 @@ HTMLContentSink::EvaluateScript(nsString& aScript,
   return rv;
 }
 
-static void
-nsDoneLoadingScript(nsIUnicharStreamLoader* aLoader,
-                    nsString& aData,
-                    void* aRef,
-                    nsresult aStatus)
+NS_IMETHODIMP
+HTMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
+                                         nsresult aStatus,
+                                         const PRUnichar* string)
 {
-  HTMLContentSink* sink = (HTMLContentSink*)aRef;
+  nsresult rv = NS_OK;
+  nsString aData(string);
 
   if (NS_OK == aStatus) {
-    PRBool bodyPresent = sink->PreEvaluateScript();
+    PRBool bodyPresent = PreEvaluateScript();
 
-    // XXX We have no way of indicating failure. Silently fail?
-    sink->EvaluateScript(aData, 0, sink->mScriptLanguageVersion);
+    rv = EvaluateScript(aData, 0, mScriptLanguageVersion);
+    if (NS_FAILED(rv)) return rv;
 
-    sink->PostEvaluateScript(bodyPresent);
+    PostEvaluateScript(bodyPresent);
   }
 
-  sink->ResumeParsing();
-
-  // The url loader held a reference to the sink
-  NS_RELEASE(sink);
+  rv = ResumeParsing();
+  if (NS_FAILED(rv)) return rv;
 
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
+
+  return rv;
 }
 
 nsresult
@@ -3737,19 +3739,11 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         return rv;
       }
 
-      // Add a reference to this since the url loader is holding
-      // onto it as opaque data.
-      NS_ADDREF(this);
-
       nsCOMPtr<nsILoadGroup> loadGroup;
       nsIUnicharStreamLoader* loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewUnicharStreamLoader(&loader,
-                                     url, 
-                                     loadGroup,
-                                     (nsStreamCompleteFunc)nsDoneLoadingScript, 
-                                     (void *)this);
+      rv = NS_NewUnicharStreamLoader(&loader, url, loadGroup, this);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

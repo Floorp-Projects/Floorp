@@ -55,6 +55,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
+#include "nsIUnicharStreamLoader.h"
 
 class nsIAtom;
 class nsIHTMLElementFactory;
@@ -81,6 +82,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIJSScriptObject,
                       public nsIScriptObjectOwner,
                       public nsIHTMLContentContainer,
+                      public nsIUnicharStreamLoaderObserver,
                       public nsSupportsWeakReference
 {
 public:
@@ -89,6 +91,7 @@ public:
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
     // nsIDocument interface
     virtual nsIArena* GetArena();
@@ -601,15 +604,6 @@ protected:
      * Add attributes from the prototype to the element.
      */
     nsresult AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aElement);
-
-    /**
-     * Callback invoked when a transcluded script completes loading.
-     */
-    static nsresult
-    DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
-                      nsString& aData,
-                      void* aRef,
-                      nsresult aStatus);
 
     /**
      * The URL of the current transcluded script that is being loaded.

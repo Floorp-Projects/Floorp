@@ -61,7 +61,6 @@
 #include "nsIServiceManager.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIViewManager.h"
 #include "nsIWebShell.h"
 #include "nsIXMLContent.h"
@@ -502,28 +501,10 @@ XULContentSinkImpl::~XULContentSinkImpl()
 //----------------------------------------------------------------------
 // nsISupports interface
 
-NS_IMPL_ADDREF(XULContentSinkImpl);
-NS_IMPL_RELEASE(XULContentSinkImpl);
-
-NS_IMETHODIMP
-XULContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
-{
-    NS_PRECONDITION(result, "null ptr");
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = nsnull;
-    if (iid.Equals(NS_GET_IID(nsIXULContentSink)) ||
-        iid.Equals(NS_GET_IID(nsIXMLContentSink)) ||
-        iid.Equals(NS_GET_IID(nsIContentSink)) ||
-        iid.Equals(NS_GET_IID(nsISupports))) {
-        *result = NS_STATIC_CAST(nsIXMLContentSink*, this);
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
-
+NS_IMPL_ISUPPORTS3(XULContentSinkImpl,
+                   nsIXULContentSink,
+                   nsIXMLContentSink,
+                   nsIContentSink)
 
 //----------------------------------------------------------------------
 // nsIContentSink interface

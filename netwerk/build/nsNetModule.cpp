@@ -31,6 +31,7 @@
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
+#include "nsUnicharStreamLoader.h"
 
 static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -43,6 +44,7 @@ static NS_DEFINE_CID(kExternalModuleManagerCID,  NS_NETMODULEMGR_CID);
 static NS_DEFINE_CID(kDNSServiceCID,             NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kLoadGroupCID,              NS_LOADGROUP_CID);
 static NS_DEFINE_CID(kInputStreamChannelCID,     NS_INPUTSTREAMCHANNEL_CID);
+static NS_DEFINE_CID(kUnicharStreamLoaderCID,    NS_UNICHARSTREAMLOADER_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -73,6 +75,7 @@ protected:
     nsCOMPtr<nsIGenericFactory> mExternalModuleManagerFactory;
     nsCOMPtr<nsIGenericFactory> mLoadGroupFactory;
     nsCOMPtr<nsIGenericFactory> mInputStreamChannelFactory;
+    nsCOMPtr<nsIGenericFactory> mUnicharStreamLoaderFactory;
 };
 
 static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
@@ -116,6 +119,7 @@ nsNetModule::Shutdown()
     mExternalModuleManagerFactory = nsnull;
     mLoadGroupFactory = nsnull;
     mInputStreamChannelFactory = nsnull;
+    mUnicharStreamLoaderFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -201,8 +205,6 @@ nsNetModule::GetClassObject(nsIComponentManager *aCompMgr,
         }
         fact = mExternalModuleManagerFactory;
     }
-// XXX not registered!
-#if 1
     else if (aClass.Equals(kLoadGroupCID)) {
         if (!mLoadGroupFactory) {
             rv = NS_NewGenericFactory(getter_AddRefs(mLoadGroupFactory),
@@ -210,13 +212,19 @@ nsNetModule::GetClassObject(nsIComponentManager *aCompMgr,
         }
         fact = mLoadGroupFactory;
     }
-#endif
     else if (aClass.Equals(kInputStreamChannelCID)) {
         if (!mInputStreamChannelFactory) {
             rv = NS_NewGenericFactory(getter_AddRefs(mInputStreamChannelFactory),
                                       nsInputStreamChannel::Create);
         }
         fact = mInputStreamChannelFactory;
+    }
+    else if (aClass.Equals(kUnicharStreamLoaderCID)) {
+        if (!mUnicharStreamLoaderFactory) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mUnicharStreamLoaderFactory),
+                                      nsUnicharStreamLoader::Create);
+        }
+        fact = mUnicharStreamLoaderFactory;
     }
     else {
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -262,6 +270,10 @@ static Components gComponents[] = {
       "component://netscape/network/net-extern-mod", },
     { "Input Stream Channel", &kInputStreamChannelCID,
       "component://netscape/network/input-stream-channel", },
+    { "Unichar Stream Loader", &kUnicharStreamLoaderCID,
+      "component://netscape/network/unichar-stream-loader", },
+    { "Load Group", &kLoadGroupCID,
+      "component://netscape/network/load-group", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

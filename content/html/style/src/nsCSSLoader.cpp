@@ -149,7 +149,12 @@ public:
   nsISupports*  mSupports;
 };
 
-struct SheetLoadData {
+class SheetLoadData : public nsIUnicharStreamLoaderObserver
+{
+protected:
+  ~SheetLoadData(void);
+
+public:
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                 const nsString& aTitle, const nsString& aMedia, 
                 PRInt32 aDefaultNameSpaceID,
@@ -160,7 +165,9 @@ struct SheetLoadData {
                 nsICSSStyleSheet* aParentSheet, PRInt32 aSheetIndex);
   SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, nsCSSLoaderCallbackFunc aCallback,
                 void* aData);
-  ~SheetLoadData(void);
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
 
   CSSLoaderImpl*  mLoader;
   nsIURI*         mURL;
@@ -187,6 +194,8 @@ struct SheetLoadData {
   nsCSSLoaderCallbackFunc mCallback;
   void*                   mCallbackData;
 };
+
+NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver);
 
 MOZ_DECL_CTOR_COUNTER(PendingSheetData);
 
@@ -317,8 +326,6 @@ public:
 #endif
 };
 
-MOZ_DECL_CTOR_COUNTER(SheetLoadData);
-
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL, 
                              const nsString& aTitle, const nsString& aMedia,
                              PRInt32 aDefaultNameSpaceID,
@@ -343,7 +350,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
-  MOZ_COUNT_CTOR(SheetLoadData);
+  NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_IF_ADDREF(mOwningElement);
@@ -373,7 +380,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(nsnull),
     mCallbackData(nsnull)
 {
-  MOZ_COUNT_CTOR(SheetLoadData);
+  NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_ADDREF(mParentSheet);
@@ -400,7 +407,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mCallback(aCallback),
     mCallbackData(nsnull)
 {
-  MOZ_COUNT_CTOR(SheetLoadData);
+  NS_INIT_REFCNT();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
 }
@@ -408,7 +415,6 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
 
 SheetLoadData::~SheetLoadData(void)
 {
-  MOZ_COUNT_DTOR(SheetLoadData);
   NS_RELEASE(mLoader);
   NS_RELEASE(mURL);
   NS_IF_RELEASE(mOwningElement);
@@ -438,7 +444,7 @@ static PRBool ReleaseSheet(nsHashKey* aKey, void* aData, void* aClosure)
 static PRBool DeleteHashLoadData(nsHashKey* aKey, void* aData, void* aClosure)
 {
   SheetLoadData* data = (SheetLoadData*)aData;
-  delete data;
+  NS_RELEASE(data);
   return PR_TRUE;
 }
 
@@ -452,7 +458,7 @@ static PRBool DeletePendingData(void* aData, void* aClosure)
 static PRBool DeleteLoadData(void* aData, void* aClosure)
 {
   SheetLoadData* data = (SheetLoadData*)aData;
-  delete data;
+  NS_RELEASE(data);
   return PR_TRUE;
 }
 
@@ -582,17 +588,18 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   return result;
 }
 
-static void
-DoneLoadingStyle(nsIUnicharStreamLoader* aLoader,
-                 nsString& aStyleData,
-                 void* aLoadData,
-                 nsresult aStatus)
+NS_IMETHODIMP
+SheetLoadData::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
+                                       nsresult aStatus,
+                                       const PRUnichar* string)
 {
-  SheetLoadData* data = (SheetLoadData*)aLoadData;
-  data->mLoader->DidLoadStyle(aLoader, aStyleData, data, aStatus);
+  nsString aStyleData(string);
+  mLoader->DidLoadStyle(aLoader, aStyleData, this, aStatus);
+
   // We added a reference when the loader was created. This
   // release should destroy it.
   NS_RELEASE(aLoader);
+  return NS_OK;
 }
 
 static PRBool
@@ -671,7 +678,7 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     }
   }
 
-  delete aLoadData; // delete data last, it may have last ref on loader...
+  NS_RELEASE(aLoadData); // delete data last, it may have last ref on loader...
 }
 
 nsresult
@@ -1088,9 +1095,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-        result = NS_NewUnicharStreamLoader(&loader, urlClone, 
-                                           loadGroup,
-                                           DoneLoadingStyle, aData);
+        result = NS_NewUnicharStreamLoader(&loader, urlClone, loadGroup, aData);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
@@ -1118,7 +1123,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
       }
     }
     else { // document gone,  no point in starting the load
-      delete aData;
+      NS_RELEASE(aData);
     }
   }
   return result;
@@ -1148,11 +1153,17 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
                                             aElement,
                                             aDocIndex, aParserToUnblock,
                                             PR_TRUE);
-    nsICSSStyleSheet* sheet;
-    result = ParseSheet(aIn, data, aCompleted, sheet);
-    NS_IF_RELEASE(sheet);
-    if ((! aCompleted) && (aParserToUnblock)) {
-      data->mDidBlockParser = PR_TRUE;
+    if (data == nsnull) {
+      result = NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+      NS_ADDREF(data);
+      nsICSSStyleSheet* sheet;
+      result = ParseSheet(aIn, data, aCompleted, sheet);
+      NS_IF_RELEASE(sheet);
+      if ((! aCompleted) && (aParserToUnblock)) {
+        data->mDidBlockParser = PR_TRUE;
+      }
     }
     NS_RELEASE(docURL);
   }
@@ -1205,17 +1216,23 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
       SheetLoadData* data = new SheetLoadData(this, aURL, aTitle, aMedia, aDefaultNameSpaceID,
                                               aElement, aDocIndex, 
                                               aParserToUnblock, PR_FALSE);
-      if (IsAlternate(aTitle) && mLoadingSheets.Count() &&
-          (! mLoadingSheets.Get(&key)) && (! aParserToUnblock)) {
-        // this is an alternate, and we're already loading others, but not loading this, defer it
-        mPendingAlternateSheets.AppendElement(data);
-        result = NS_OK;
+      if (data == nsnull) {
+        result = NS_ERROR_OUT_OF_MEMORY;
       }
       else {
-        if (aParserToUnblock) {
-          data->mDidBlockParser = PR_TRUE;
+        NS_ADDREF(data);
+        if (IsAlternate(aTitle) && mLoadingSheets.Count() &&
+            (! mLoadingSheets.Get(&key)) && (! aParserToUnblock)) {
+          // this is an alternate, and we're already loading others, but not loading this, defer it
+          mPendingAlternateSheets.AppendElement(data);
+          result = NS_OK;
         }
-        result = LoadSheet(key, data);
+        else {
+          if (aParserToUnblock) {
+            data->mDidBlockParser = PR_TRUE;
+          }
+          result = LoadSheet(key, data);
+        }
       }
       aCompleted = PR_FALSE;
     }
@@ -1252,30 +1269,35 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
     else {
       SheetLoadData* data = new SheetLoadData(this, aURL, aMedia, aDefaultNameSpaceID,
                                               aParentSheet, aIndex);
-
-      PRInt32 count = mParsingData.Count();
-      if (count) { // still parsing the parent (expected for @import)
-        // XXX assert that last parsing == parent sheet
-        SheetLoadData* parentData = (SheetLoadData*)mParsingData.ElementAt(count - 1);
-        data->mParentData = parentData;
-        data->mIsAgent = parentData->mIsAgent;
-        data->mSyncLoad = parentData->mSyncLoad;
-
-        // verify that sheet doesn't have new child as a parent 
-        do {
-          PRBool equals;
-          result = parentData->mURL->Equals(aURL, &equals);
-          if (NS_SUCCEEDED(result) && equals) { // houston, we have a loop, blow off this child
-            data->mParentData = nsnull;
-            delete data;
-            return NS_OK;
-          }
-          parentData = parentData->mParentData;
-        } while (parentData);
-        
-        (data->mParentData->mPendingChildren)++;
+      if (data == nsnull) {
+        result = NS_ERROR_OUT_OF_MEMORY;
       }
-      result = LoadSheet(key, data);
+      else {
+        NS_ADDREF(data);
+        PRInt32 count = mParsingData.Count();
+        if (count) { // still parsing the parent (expected for @import)
+          // XXX assert that last parsing == parent sheet
+          SheetLoadData* parentData = (SheetLoadData*)mParsingData.ElementAt(count - 1);
+          data->mParentData = parentData;
+          data->mIsAgent = parentData->mIsAgent;
+          data->mSyncLoad = parentData->mSyncLoad;
+
+          // verify that sheet doesn't have new child as a parent 
+          do {
+            PRBool equals;
+            result = parentData->mURL->Equals(aURL, &equals);
+            if (NS_SUCCEEDED(result) && equals) { // houston, we have a loop, blow off this child
+              data->mParentData = nsnull;
+              NS_RELEASE(data);
+              return NS_OK;
+            }
+            parentData = parentData->mParentData;
+          } while (parentData);
+        
+          (data->mParentData->mPendingChildren)++;
+        }
+        result = LoadSheet(key, data);
+      }
     }
   }
   return result;
@@ -1303,9 +1325,15 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         result = NS_NewConverterStream(&uin, nsnull, in);
         if (NS_SUCCEEDED(result)) {
           SheetLoadData* data = new SheetLoadData(this, aURL, aCallback, aData);
-          URLKey  key(aURL);
-          mLoadingSheets.Put(&key, data);
-          result = ParseSheet(uin, data, aCompleted, aSheet);
+          if (data == nsnull) {
+            result = NS_ERROR_OUT_OF_MEMORY;
+          }
+          else {
+            NS_ADDREF(data);
+            URLKey  key(aURL);
+            mLoadingSheets.Put(&key, data);
+            result = ParseSheet(uin, data, aCompleted, aSheet);
+          }
           NS_RELEASE(uin);
         }
         else {

@@ -89,7 +89,6 @@
 #include "nsIStyleSheet.h"
 #include "nsITextContent.h"
 #include "nsIURL.h"
-#include "nsIUnicharStreamLoader.h"
 #include "nsIWebShell.h"
 #include "nsIXMLContent.h"
 #include "nsIXMLElementFactory.h"
@@ -414,6 +413,9 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(NS_GET_IID(nsISupportsWeakReference))) {
         *result = NS_STATIC_CAST(nsISupportsWeakReference*, this);
+    }
+    else if (iid.Equals(NS_GET_IID(nsIUnicharStreamLoaderObserver))) {
+        *result = NS_STATIC_CAST(nsIUnicharStreamLoaderObserver*, this);
     }
     else {
         *result = nsnull;
@@ -4585,16 +4587,8 @@ nsXULDocument::LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock)
 
         // N.B., the loader will be released in DoneLoadingScript()
         nsIUnicharStreamLoader* loader;
-        rv = NS_NewUnicharStreamLoader(&loader,
-                                       aURI, 
-                                       group,
-                                       (nsStreamCompleteFunc)DoneLoadingScript, 
-                                       this);
+        rv = NS_NewUnicharStreamLoader(&loader, aURI, group, this);
         if (NS_FAILED(rv)) return rv;
-
-        // AddRef ourself so that the completion routine will be able
-        // to find us.
-        NS_ADDREF(this);
 
         *aBlock = PR_TRUE;
     }
@@ -4604,35 +4598,32 @@ nsXULDocument::LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock)
 
 
 nsresult
-nsXULDocument::DoneLoadingScript(nsIUnicharStreamLoader* aLoader,
-                                 nsString& aData,
-                                 void* aRef,
-                                 nsresult aStatus)
+nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
+                                       nsresult aStatus,
+                                       const PRUnichar* string)
 {
+    nsString aData(string);
     // This is the completion routine that will be called when a
     // transcluded script completes. Evaluate the script if the load
     // was successful, then continue building content from the
     // prototype.
     nsresult rv;
-    nsXULDocument* doc = NS_REINTERPRET_CAST(nsXULDocument*, aRef);
 
     if (NS_SUCCEEDED(aStatus)) {
-        rv = doc->EvaluateScript(doc->mCurrentScriptURL, aData, 1,
-				 doc->mCurrentScriptLanguageVersion);
+        rv = EvaluateScript(mCurrentScriptURL, aData, 1,
+                            mCurrentScriptLanguageVersion);
 
-        if (IsChromeURI(doc->mDocumentURL)) {
-            gXULCache->PutScript(doc->mCurrentScriptURL,
+        if (IsChromeURI(mDocumentURL)) {
+            gXULCache->PutScript(mCurrentScriptURL,
                                  aData,
-                                 doc->mCurrentScriptLanguageVersion);
+                                 mCurrentScriptLanguageVersion);
         }
     }
 
     // balance the addref we added in LoadScript()
     NS_RELEASE(aLoader);
 
-    rv = doc->ResumeWalk();
-
-    NS_RELEASE(doc);
+    rv = ResumeWalk();
     return rv;
 }
 

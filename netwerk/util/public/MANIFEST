@@ -3,5 +3,4 @@
 #
 
 nsIBlockingNotification.h
-nsIUnicharStreamLoader.h
 nsNeckoUtil.h

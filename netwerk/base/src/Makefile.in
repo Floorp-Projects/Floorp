@@ -40,7 +40,8 @@ CPPSRCS		= \
 		nsLoadGroup.cpp \
 		nsInputStreamChannel.cpp \
 		nsDirectoryIndexStream.cpp \
-		nsURIDispatcher.cpp			\
+		nsURIDispatcher.cpp \
+		nsUnicharStreamLoader.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -22,7 +22,6 @@ include <$(DEPTH)/config/config.mak>
 
 EXPORTS =                         \
         nsNeckoUtil.h             \
-        nsIUnicharStreamLoader.h  \
         nsIBlockingNotification.h \
         $(NULL)
 
