@@ -649,12 +649,14 @@
         <parameter name="aNewPane"/>
         <body>
         <![CDATA[
-          this._multiplier = aNewPane.contentHeight > aOldPane.contentHeight ? 1 : -1;
-          var sizeDelta = Math.abs(aOldPane.contentHeight - aNewPane.contentHeight);
+          // if we are already resizing, use currentHeight
+          var oldHeight = this._currentHeight ? this._currentHeight : aOldPane.contentHeight;
           
+          this._multiplier = aNewPane.contentHeight > oldHeight ? 1 : -1;
+          var sizeDelta = Math.abs(oldHeight - aNewPane.contentHeight);
           this._animateRemainder = sizeDelta % this._animateIncrement;
 
-          this._setUpAnimationTimer(aOldPane.contentHeight);
+          this._setUpAnimationTimer(oldHeight);
         ]]>
         </body>
       </method>
