@@ -415,7 +415,7 @@
 #ifdef XP_MACOSX
         <menu id="windowMenu" label="&windowMenu.label;"
             datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-            onpopupshown="checkFocusedWindow();">
+            onpopupshowing="checkFocusedWindow();">
             <template>
             <rule>
                 <menupopup>
