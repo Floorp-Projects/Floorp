@@ -1925,13 +1925,12 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
   if (state & NS_FRAME_INDEPENDENT_SELECTION) 
   {
     nsIFrame *tmp = this;
-    nsIFrame *parent;
-    while ( NS_SUCCEEDED(tmp->GetParent(&parent)) && parent)
+    while ( NS_SUCCEEDED(tmp->GetParent(&tmp)) && tmp)
     {
-      parent->GetFrameState(&state);
+      tmp->GetFrameState(&state);
       if (! (state & NS_FRAME_INDEPENDENT_SELECTION)) //we have found the nsGfx*
       {
-        nsFrame* castParent = NS_STATIC_CAST(nsFrame *,parent);
+        nsFrame* castParent = NS_STATIC_CAST(nsFrame *,tmp);
         return castParent->GetSelectionController(aPresContext, aSelCon);
       }
     }
