@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.36 2003/03/15 01:03:55 dougt%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.37 2003/03/25 02:17:02 darin%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -530,7 +530,11 @@ nsPKCS12Blob::inputToDecoder(SEC_PKCS12DecoderContext *dcx, nsILocalFile *file)
   char buf[PIP_PKCS12_BUFFER_SIZE];
 
   nsCOMPtr<nsIInputStream> fileStream;
-  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), file);
+  
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   while (PR_TRUE) {
     rv = fileStream->Read(buf, PIP_PKCS12_BUFFER_SIZE, &amount);
