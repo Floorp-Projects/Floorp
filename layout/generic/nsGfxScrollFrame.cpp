@@ -135,6 +135,7 @@ public:
   nsIBox* mHScrollbarBox;
   nsIBox* mVScrollbarBox;
   nsIBox* mScrollAreaBox;
+  nsIBox* mScrollCornerBox;
   nscoord mOnePixel;
   nsGfxScrollFrame* mOuter;
   nsIScrollableView* mScrollableView;
@@ -392,8 +393,9 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
 
   ScrollbarStyles styles = GetScrollbarStyles();
-  if (styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
-      || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL) {
+  PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
+    || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
+  if (canHaveHorizontal) {
     nsCOMPtr<nsIContent> content;
     elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
@@ -403,14 +405,23 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     aAnonymousChildren.AppendElement(content);
   }
 
-  if (styles.mVertical == NS_STYLE_OVERFLOW_AUTO
-      || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL) {
+  PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
+    || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
+  if (canHaveVertical) {
     nsCOMPtr<nsIContent> content;
     elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
                      NS_LITERAL_STRING("vertical"), PR_FALSE);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                      NS_LITERAL_STRING("true"), PR_FALSE);
+    aAnonymousChildren.AppendElement(content);
+  }
+
+  if (canHaveHorizontal && canHaveVertical) {
+    nodeInfoManager->GetNodeInfo(NS_LITERAL_CSTRING("scrollcorner"), nsnull,
+                                 kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
+    nsCOMPtr<nsIContent> content;
+    elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
     aAnonymousChildren.AppendElement(content);
   }
 
@@ -436,9 +447,8 @@ nsGfxScrollFrame::Init(nsIPresContext*  aPresContext,
                     nsIFrame*        aPrevInFlow)
 {
   mPresContext = aPresContext;
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent,
-                                            aParent, aStyleContext,
-                                            aPrevInFlow);
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aStyleContext,
+                                  aPrevInFlow);
   return rv;
 }
 
@@ -447,6 +457,7 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
   mInner->mScrollAreaBox = nsnull;
   mInner->mHScrollbarBox = nsnull;
   mInner->mVScrollbarBox = nsnull;
+  mInner->mScrollCornerBox = nsnull;
 
   nsIFrame* frame = nsnull;
   FirstChild(aPresContext, nsnull, &frame);
@@ -474,6 +485,11 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
               NS_ASSERTION(!mInner->mVScrollbarBox, "Found multiple vertical scrollbars?");
               mInner->mVScrollbarBox = box;
             }
+            understood = PR_TRUE;
+          } else {
+            // probably a scrollcorner
+            NS_ASSERTION(!mInner->mScrollCornerBox, "Found multiple scrollcorners");
+            mInner->mScrollCornerBox = box;
             understood = PR_TRUE;
           }
         }
@@ -869,12 +885,14 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 //-------------------- Inner ----------------------
 
-nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollbarBox(nsnull),
-                                               mVScrollbarBox(nsnull),
-                                               mScrollAreaBox(nsnull),
-                                               mOnePixel(20),
-                                               mHasVerticalScrollbar(PR_FALSE), 
-                                               mHasHorizontalScrollbar(PR_FALSE)
+nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter)
+  : mHScrollbarBox(nsnull),
+    mVScrollbarBox(nsnull),
+    mScrollAreaBox(nsnull),
+    mScrollCornerBox(nsnull),
+    mOnePixel(20),
+    mHasVerticalScrollbar(PR_FALSE), 
+    mHasHorizontalScrollbar(PR_FALSE)
 {
    mOuter = aOuter;
    mMaxElementWidth = 0;
@@ -1546,6 +1564,34 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
      resizeState.SetLayoutReason(nsBoxLayoutState::Resize);
      LayoutBox(resizeState, mScrollAreaBox, scrollAreaRect); 
      needsLayout = PR_FALSE;
+  }
+
+  // place the scrollcorner
+  if (mScrollCornerBox) {
+    nsRect r(0, 0, 0, 0);
+    if (clientRect.x != scrollAreaRect.x) {
+      // scrollbar (if any) on left
+      r.x = clientRect.x;
+      r.width = scrollAreaRect.x - clientRect.x;
+      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
+    } else {
+      // scrollbar (if any) on right
+      r.x = scrollAreaRect.XMost();
+      r.width = clientRect.XMost() - scrollAreaRect.XMost();
+      NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
+    }
+    if (clientRect.y != scrollAreaRect.y) {
+      // scrollbar (if any) on top
+      r.y = clientRect.y;
+      r.height = scrollAreaRect.y - clientRect.y;
+      NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
+    } else {
+      // scrollbar (if any) on bottom
+      r.y = scrollAreaRect.YMost();
+      r.height = clientRect.YMost() - scrollAreaRect.YMost();
+      NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
+    }
+    LayoutBox(aState, mScrollCornerBox, r); 
   }
 
   // may need to update fixed position children of the viewport,

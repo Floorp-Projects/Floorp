@@ -5089,7 +5089,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 #ifdef MOZ_XUL
       // Only cut XUL scrollbars off if they're not in a XUL document.  This allows
       // scrollbars to be styled from XUL (although not from XML or HTML).
-      if (content->Tag() == nsXULAtoms::scrollbar) {
+      nsIAtom* tag = content->Tag();
+      if (tag == nsXULAtoms::scrollbar || tag == nsXULAtoms::scrollcorner) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
         if (xulDoc)
           content->SetBindingParent(aParent);
