@@ -1834,9 +1834,7 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       // The DOM spec says that input types should be capitalized but
       // AFAIK all existing browsers return the type in lower case,
       // http://bugzilla.mozilla.org/show_bug.cgi?id=32369 is the bug
-      // about this problem, we pass PR_FALSE as the last argument
-      // here to avoid capitalizing the input type (this is required for
-      // backwards compatibility). -- jst@netscape.com
+      // about this problem.  -- jst@netscape.com
       // Update.  The DOM spec will be changed to have input types be
       // all-lowercase.  See
       // http://bugzilla.mozilla.org/show_bug.cgi?id=113174#c12
@@ -1849,7 +1847,7 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      VAlignValueToString(aValue, aResult);
+      AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1877,16 +1875,25 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   aAttributes->GetAttribute(nsHTMLAtoms::type, value);
   if (eHTMLUnit_Enumerated == value.GetUnit()) {  
     switch (value.GetIntValue()) {
-      case NS_FORM_INPUT_IMAGE: {
+      case NS_FORM_INPUT_TEXT:
+      case NS_FORM_INPUT_PASSWORD:
+      case NS_FORM_INPUT_FILE:
+        nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
+        break;
+      case NS_FORM_INPUT_IMAGE:
         nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
         nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
         nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+        // fall through
+      default:
+        nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
         break;
-      }
     }
-  }
+  } else {
+    // No type attr means this is a text input
+    nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
+  }    
 
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 

@@ -613,7 +613,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (!aAttributes || !aData)
     return;
 
-  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
