@@ -65,7 +65,8 @@ struct nsPropertyTable::PropertyList {
   PropertyList*           mNext;
 
   PropertyList(nsIAtom*           aName,
-               NSPropertyDtorFunc aDtorFunc) NS_HIDDEN;
+               NSPropertyDtorFunc aDtorFunc,
+               void*              aDtorData) NS_HIDDEN;
   ~PropertyList() NS_HIDDEN;
 
   // Removes the property associated with the given object, and destroys
@@ -140,13 +141,15 @@ nsPropertyTable::SetProperty(const void         *aObject,
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
 
   if (propertyList) {
-    // Make sure the dtor function matches
-    if (aPropDtorFunc != propertyList->mDtorFunc) {
+    // Make sure the dtor function and data match
+    if (aPropDtorFunc != propertyList->mDtorFunc ||
+        aPropDtorData != propertyList->mDtorData) {
       return NS_ERROR_INVALID_ARG;
     }
 
   } else {
-    propertyList = new PropertyList(aPropertyName, aPropDtorFunc);
+    propertyList = new PropertyList(aPropertyName, aPropDtorFunc,
+                                    aPropDtorData);
     if (!propertyList)
       return NS_ERROR_OUT_OF_MEMORY;
     if (!propertyList->mObjectValueMap.ops) {
@@ -210,8 +213,9 @@ nsPropertyTable::GetPropertyListFor(nsIAtom* aPropertyName) const
 //----------------------------------------------------------------------
     
 nsPropertyTable::PropertyList::PropertyList(nsIAtom            *aName,
-                                            NSPropertyDtorFunc  aDtorFunc)
-  : mName(aName), mDtorFunc(aDtorFunc), mDtorData(nsnull), mNext(nsnull)
+                                            NSPropertyDtorFunc  aDtorFunc,
+                                            void               *aDtorData)
+  : mName(aName), mDtorFunc(aDtorFunc), mDtorData(aDtorData), mNext(nsnull)
 {
   PL_DHashTableInit(&mObjectValueMap, PL_DHashGetStubOps(), this,
                     sizeof(PropertyListMapEntry), 16);
