@@ -26,6 +26,7 @@
 <!ENTITY search.category.jobs		"Business &amp; Careers">
 <!ENTITY search.category.music		"Music - Artist">
 <!ENTITY search.category.shareware	"Shareware">
+<!ENTITY search.category.shopping	"Shopping">
 <!ENTITY search.category.technews	"Tech News">
 <!ENTITY search.category.web		"Web">
 ]
@@ -51,6 +52,10 @@
 
   		<RDF:Description about="urn:search:category:4">
 			<NC:title>&search.category.shareware;</NC:title>
+  		</RDF:Description>
+
+  		<RDF:Description about="urn:search:category:6">
+			<NC:title>&search.category.shopping;</NC:title>
   		</RDF:Description>
 
   		<RDF:Description about="urn:search:category:5">
@@ -88,6 +93,10 @@
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:5">
   	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:Tech_News.src" />
+  </RDF:Seq>
+
+  <RDF:Seq about="NC:SearchCategory?category=urn:search:category:6">
+  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:ClassifiedPlus.src" />
   </RDF:Seq>
 
 </RDF:RDF>
