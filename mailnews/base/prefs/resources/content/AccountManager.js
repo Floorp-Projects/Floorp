@@ -308,6 +308,7 @@ function updateButtons(tree,serverId) {
 	// HACK
 	// if account is null, we have either selected a SMTP server, or there is a problem
 	// either way, we don't want the user to be able to delete it or duplicate it
+    canSetDefault = false;
 	canDelete = false;
 	canDuplicate = false;
   }
@@ -622,7 +623,7 @@ function getPageFormElements() {
 	return pageElements;
  }
  catch (ex) {
-	dump("getPageFormElements(" + pageId +") failed: " + ex + "\n");
+	dump("getPageFormElements() failed: " + ex + "\n");
  }
  return null;
 }
