@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+
+<?xul-overlay href="chrome://vixen/content/vfdCommands.xul"?>
+
+<!--<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % xuleditDTD SYSTEM "chrome://vixen/locale/xuledit.dtd" >
+%xuleditDTD;
+]>-->
+
+<window id="xulEditMainWindow" class="color-dialog" orient="vertical"
+        title="ViXEn"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="xe_Startup()" onunload="xe_Shutdown();">
+  
+  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script language="JavaScript" src="chrome://global/content/globalOverlay.js"></script>
+
+  <script language="JavaScript" src="chrome://vixen/content/xuledit.js"></script>
+  
+  <toolbox id="xuledit-toolbox" flex="1">
+    <menubar id="xuledit-menubar">
+      <menu id="menu_File" value="File" accesskey="f">
+        <menupopup>
+          <menuitem value="Exit" accesskey="x"/>
+        </menupopup>
+      </menu>
+    </menubar>
+    <toolbar id="xuledit-toolbar" flex="1">
+      <button class="button-toolbar" value="Button" oncommand="goDoCommand('cmd_insert_button');"/>
+    </toolbar>
+  </toolbox>
+          
+</window>
+
+        

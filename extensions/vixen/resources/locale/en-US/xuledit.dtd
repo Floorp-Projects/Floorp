@@ -1,0 +1,8 @@
+
+<!ENTITY  appWindow.title           "Netscape Visual XULEdit">
+
+
+<!ENTITY  fileMenu.label            "File">
+<!ENTITY  fileMenu.accesskey        "f">
+<!ENTITY  fileQuitMenu.label        "Exit">
+<!ENTITY  fileQuitMenu.accesskey    "x">

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://communicator/skin/"?>
+<?xml-stylesheet href="chrome://vixen/skin/vfdScratch.css"?>
+
+<!DOCTYPE window SYSTEM "chrome://vixen/locale/vfdScratch.dtd">
+
+<window id="scratchWindow" class="color-dialog"
+        title="&form.title;" orient="vertical"
+        windowtype="xuledit:document"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <tabcontrol id="scratchView" flex="1" orient="vertical">
+    <tabpanel flex="1">
+      <box orient="vertical">
+        <iframe name="vfView" id="vfView" flex="1"
+                style="overflow: auto;"
+                src="chrome://vixen/content/vfdScratchDocument.xul"/>
+      </box>
+      <box orient="vertical">
+        <tree id="domTree" style="height: 0px; width: 0px;" flex="1">
+          <treehead>
+            <treerow>
+              <treecell value="Node/Attribute Name" class="treecell-header treecell-inset-header"/>
+              <treecell value="Attribute Value" class="treecell-header treecell-inset-header"/>
+            </treerow>
+          </treehead>
+          <treecolgroup>
+            <treecol/>
+            <treecol flex="1"/>
+          </treecolgroup>
+          <treechildren>
+            <treeitem>
+              <treerow>
+                <treecell value="foopy"/>
+                <splitter class="tree-splitter"/>
+                <treecell value="noopy"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </tree> 
+        <box>
+          <button class="button-toolbar" value="Insert Node"/>
+          <button class="button-toolbar" value="Remove Node"/>
+          <toolbarseparator/>
+          <button class="button-toolbar" value="Add Attribute"/>
+          <button class="button-toolbar" value="Remove Attribute"/>
+          <spring flex="1"/>
+        </box>
+      </box>
+    </tabpanel>
+    <tabbox>
+      <tab value="Designer"/>
+      <tab value="DOM Tree"/>
+    </tabbox>
+  </tabcontrol>
+</window>
+
+        

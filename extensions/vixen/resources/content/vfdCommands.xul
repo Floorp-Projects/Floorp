@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+
+<overlay id="vfdCommandsOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script language="JavaScript" src="chrome://vixen/content/vfdCommands.js"></script>
+  
+  <commandset id="vfdCommands"
+              commandupdate="true"
+              events=""
+              oncommandupdate="vfd_oncommandUpdate()">
+    
+    <!-- button commands -->
+    <command id="cmd_insert_button"         
+             oncommand="nsVFD.insertButtonElement('button');"/>
+    <command id="cmd_insert_toolbarbutton"
+             oncommand="nsVFD.insertButtonElement('toolbar-button');"/>
+    <command id="cmd_insert_menubutton"
+             oncommand="nsVFD.insertButtonElement('menu-button');"/>
+             
+    <!-- menu commands -->
+    <command id="cmd_insert_toplevel_menu"
+             oncommand="nsVFD.insertMenuElement('toplevel-menu');"/>
+    <command id="cmd_insert_menu"
+             oncommand="nsVFD.insertMenuElement('menu');"/>
+    <command id="cmd_insert_menuseparator"
+             oncommand="nsVFD.insertMenuElement('menuseparator');"/>
+    <command id="cmd_insert_menulist"
+             oncommand="nsVFD.insertMenuElement('menulist');"/>
+    <command id="cmd_insert_combobox"
+             oncommand="nsVFD.insertMenuElement('combobox');"/>
+             
+    <!-- text input commands -->
+    <command id="cmd_insert_textfield"      
+             oncommand="nsVFD.insertTextElement('textfield');"/>
+    <command id="cmd_insert_textarea"
+             oncommand="nsVFD.insertTextElement('textarea');"/>
+    <command id="cmd_insert_rtf_editor"
+             oncommand="nsVFD.insertTextElement('editor');"/>
+    
+             
+    <!-- display commands -->
+    <command id="cmd_insert_static"
+             oncommand="nsVFD.insertDisplayElement('static');"/>
+    <command id="cmd_insert_wrapping"
+             oncommand="nsVFD.insertDisplayElement('wrapping-text');"/>
+    <command id="cmd_insert_image"
+             oncommand="nsVFD.insertDisplayElement('image');"/>
+    <command id="cmd_insert_browser"
+             oncommand="nsVFD.insertDisplayElement('browser');"/>
+    
+    <!-- box commands -->
+    <command id="cmd_insert_box"
+             oncommand="nsVFD.insertBoxElement('box');"/>
+    <command id="cmd_insert_grid"
+             oncommand="nsVFD.insertBoxElement('grid');"/>
+    <command id="cmd_insert_grid_row"
+             oncommand="nsVFD.insertBoxElement('grid-row');"/>
+    <command id="cmd_insert_grid_col"
+             oncommand="nsVFD.insertBoxElement('grid-col');"/>
+    <command id="cmd_insert_spring"
+             oncommand="nsVFD.insertBoxElement('spring');"/>
+    <command id="cmd_insert_splitter"
+             oncommand="nsVFD.insertBoxElement('splitter');"/>
+
+  </commandset>
+            
+          
+</overlay>          
