@@ -83,7 +83,7 @@ CPPSRCS		= color.cpp \
 
 EXPORTS		= PIMGCB.h PPSIMGCB.h
 
-REQUIRES	= jtools java nspr dbm util img layer js xpcom
+REQUIRES	= jtools java dbm util img layer js xpcom
 
 ifdef NU_CACHE
 REQUIRES 	+= cache
