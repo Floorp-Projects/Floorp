@@ -212,7 +212,8 @@ nsSVGAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
 NS_IMETHODIMP
 nsSVGAttribute::GetPrefix(nsAString& aPrefix)
 {
-  return mNodeInfo->GetPrefix(aPrefix);
+  mNodeInfo->GetPrefix(aPrefix);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -240,7 +241,8 @@ nsSVGAttribute::SetPrefix(const nsAString& aPrefix)
 NS_IMETHODIMP
 nsSVGAttribute::GetLocalName(nsAString& aLocalName)
 {
-  return mNodeInfo->GetLocalName(aLocalName);
+  mNodeInfo->GetLocalName(aLocalName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -821,8 +823,9 @@ nsSVGAttributes::AddMappedSVGValue(nsIAtom* name, nsISupports* value)
   if (!mContent) return NS_ERROR_FAILURE;
   
   nsCOMPtr<nsINodeInfo> ni;
-  mContent->NodeInfoManager()->GetNodeInfo(name, nsnull, kNameSpaceID_None,
-                                           getter_AddRefs(ni));
+  mContent->GetNodeInfo()->NodeInfoManager()->GetNodeInfo(name, nsnull,
+                                                          kNameSpaceID_None,
+                                                          getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   nsSVGAttribute* attrib = nsnull;

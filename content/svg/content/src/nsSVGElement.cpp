@@ -282,7 +282,8 @@ nsSVGElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 NS_IMETHODIMP
 nsSVGElement::GetNodeName(nsAString& aNodeName)
 {
-  return mNodeInfo->GetQualifiedName(aNodeName);
+  mNodeInfo->GetQualifiedName(aNodeName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
