@@ -19,8 +19,7 @@
 
 /* hide the content, but don't destroy the frames.  Make sure this
 comes before any rules involving "hidden"  */
-*[collapsed="true"],
-*[moz-collapsed="true"] {
+*[collapsed="true"] {
   visibility: collapse;
 }
 
