@@ -165,7 +165,7 @@ function selectLang()
 		{
 			if (pref)
 			{
-				var selectVal = pref.CopyCharPref(fontPrefstring);
+				var selectVal = pref.CopyUniCharPref(fontPrefstring);
 			}
 		}
 		catch(ex)
