@@ -73,14 +73,14 @@ OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:$(PDBFILE)
 # compiler optimization bugs, as well as running with Quantify.
 
 !ifdef MOZ_PROFILE
-OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF
+OS_LFLAGS=/DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
 OPTIMIZER=-Zi -O1 -UDEBUG -DNDEBUG
 !else
 # MOZ_PROFILE not set.
 # optimize it, no symbols
 #
 OPTIMIZER=-O1 -UDEBUG -DNDEBUG
-OS_LFLAGS=
+OS_LFLAGS=/OPT:nowin98
 !endif
 # MOZ_PROFILE
 
