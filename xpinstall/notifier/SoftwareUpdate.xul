@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/SoftwareUpdate.css" type="text/css"?>
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="SoftwareUpdate.js"/>
+  
+  <tree id="tree"
+        flex="100%"
+        datasources="rdf:softwareupdates"
+        ondblclick="return OpenURL(event, event.target.parentNode);">
+
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#title" />
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#version" />
+
+    <treehead>
+      <treeitem>
+        <treecell>Title</treecell>
+        <treecell>Description</treecell>
+        <treecell>Version</treecell>
+      </treeitem>
+    </treehead>
+
+    <treebody id="NC:SoftwareUpdateRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" />
+  </tree>
+</window>
