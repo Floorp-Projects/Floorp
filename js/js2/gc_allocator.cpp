@@ -40,25 +40,58 @@ void gc_allocator<T>::deallocate(gc_allocator<T>::pointer ptr, gc_allocator<T>::
 
 // test driver for standalone GC development.
 
-using namespace std;
-using namespace JavaScript;
+namespace JS = JavaScript;
 
 template <class T> struct gc_types {
-	typedef vector<T, gc_allocator<T> > gc_vector;
+	typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
+	typedef std::vector<T, JS::gc_allocator<T> > vector;
+};
+
+/**
+ * Define a C++ class that is garbage collectable, and wants to have its destructor
+ * called when it is finalized.
+ */
+class A {
+public:
+	typedef JS::gc_traits_finalizable<A> traits;
+	typedef JS::gc_allocator<A, traits> allocator;
+	friend struct traits;
+	
+	void* operator new(std::size_t)
+	{
+		return allocator::allocate(1);
+	}
+	
+	void operator delete(void*) {}
+
+	A()
+	{
+		std::cout << "A::A() here." << std::endl;
+	}
+
+private:	
+	~A()
+	{
+		std::cout << "A::~A() here." << std::endl;
+	}
 };
 
 void main(int /* argc */, char* /* argv[] */)
 {
+	using namespace std;
+	using namespace JavaScript;
+
 	cout << "testing the GC allocator." << endl;
-	
-	typedef basic_string< char, char_traits<char>, gc_allocator<char> > GC_string;
-	GC_string str("This is a garbage collectable string.");
+
+	typedef gc_types<char>::string char_string;
+	auto_ptr<char_string> ptr(new char_string("This is a garbage collectable string."));
+	char_string& str = *ptr;
 	cout << str << endl;
 	
 	// question, how can we partially evaluate a template?
 	// can we say, typedef template <class T> vector<typename T>.
 	// typedef vector<int, gc_allocator<int> > int_vector;
-	typedef gc_types<int>::gc_vector int_vector;
+	typedef gc_types<int>::vector int_vector;
 	
 	// generate 1000 random values.
 	int_vector values;
@@ -68,6 +101,8 @@ void main(int /* argc */, char* /* argv[] */)
 		// allocate a random amount of garbage.
 		if (!GC_malloc(static_cast<size_t>(value)))
 			cerr << "GC_malloc failed." << endl;
+		// allocate an object that has a finalizer to call its destructor.
+		A* a = new A();
 	}
 	
 	// run a collection.
