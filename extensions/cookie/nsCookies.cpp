@@ -330,16 +330,6 @@ cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
 /* cookie utility functions */
 PRIVATE void
 cookie_SetBehaviorPref(PERMISSION_BehaviorEnum x, nsIPref* prefs) {
-  // can't have pref specifying accept-cookie-based-on-p3p if p3p module is not installed
-  if (x == PERMISSION_P3P) {
-    // pref specifies that cookie acceptance is based on site's p3p policy
-    nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
-    if (!p3p) {
-      // p3p module is not installed, so change pref to accept-all
-      x = PERMISSION_Accept;
-      prefs->SetIntPref(cookie_behaviorPref, x);
-    }
-  }
   cookie_behavior = x;
 }
 
