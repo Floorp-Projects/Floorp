@@ -2280,7 +2280,7 @@ npn_getJavaClass(np_handle* handle)
     else if (handle && handle->f) {
         JNIEnv* env = npn_getJavaEnv(NULL);		/* may start up the java runtime */
         if (env == NULL) return NULL;
-        return (jclass) env->NewGlobalRef(handle->f->javaClass);
+        return (jclass) env->NewGlobalRef((jobject)handle->f->javaClass);
     }
     return NULL;
 }
@@ -2578,7 +2578,7 @@ np_UnloadPluginClass(np_handle *handle)
 		/* Don't get the environment unless there is a Java class,
 		   because this would cause the java runtime to start up. */
 		JNIEnv* env = npn_getJavaEnv(NULL);
-		env->DeleteGlobalRef(handle->f->javaClass);
+		env->DeleteGlobalRef((jobject)handle->f->javaClass);
 		handle->f->javaClass = NULL;
 	}
 #elif defined(JAVA)
