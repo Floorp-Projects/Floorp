@@ -78,8 +78,10 @@ EventQueueStack::EventQueueStack(EventQueueStack* next)
 		mEventQueue = NULL;
 	}
 
-	if (NS_FAILED(mEventQueue->Init()))
-		mEventQueue = NULL;
+	if (mEventQueue) {
+		if (NS_FAILED(mEventQueue->Init()))
+			mEventQueue = NULL;
+	}
 }
 
 EventQueueStack::~EventQueueStack()
