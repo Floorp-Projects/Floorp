@@ -505,7 +505,8 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString,PRInt32 aMode){
+nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
+                                  nsString& aTerminalString,PRInt32 aMode,PRBool& aFlushTokens){
   PRBool        done=PR_FALSE; 
   nsresult      result=NS_OK; 
   PRUnichar     theChar;
@@ -557,12 +558,15 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     rpos=theRight.RFindChar('<');   //now scan for the '<'
     if(-1<rpos) {
       rpos=theRight.RFind(aTerminalString,PR_TRUE);
-      if(-1<rpos && aMode!=eParseMode_noquirks) {
+      if(-1<rpos) {
         nsAutoString temp(theRight);
         temp.Cut(0,rpos);
-        temp.StripWhitespace();
+        if(aMode!=eParseMode_noquirks) {
+          temp.StripWhitespace();
+        }
         PRUnichar ch=temp.CharAt(aTerminalString.Length());
         rpos=(ch==kGreaterThan)? rpos:kNotFound;
+        aFlushTokens=(-1<rpos)?PR_TRUE:PR_FALSE; // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
       }
     }
     done=PRBool(-1<rpos); 

@@ -682,7 +682,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
           //by forcefully recycling any tokens we might find there.
 
         CToken* theToken=0;
-        while(theToken=(CToken*)mMisplacedContent.Pop()) {
+        while((theToken=(CToken*)mMisplacedContent.Pop())) {
           mTokenRecycler->RecycleToken(theToken);
         }
 
@@ -1327,8 +1327,8 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
           theToken->mUseCount++;
 
           // If the token is attributed then save those attributes too.
-          if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
-         
+          if(attrCount > 0 && aNode) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
+  
           theToken=mTokenizer->PeekToken();
           
           if(theToken) {
@@ -1446,7 +1446,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           aToken->SetTypeID(theChildTag=eHTMLTag_img);
           break;
 
-        case eHTMLTag_userdefined:
+        //case eHTMLTag_userdefined:
         case eHTMLTag_noscript:     //HACK XXX! Throw noscript on the floor for now.
           isTokenHandled=PR_TRUE;
           break;

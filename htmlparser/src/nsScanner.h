@@ -264,6 +264,16 @@ class nsScanner {
       /**
        *  
        *  
+       *  @update  harishd 01/12/99
+       *  @param   
+       *  @return  
+       */
+
+      PRBool Insert(const nsString& aBuffer);
+
+      /**
+       *  
+       *  
        *  @update  gess 5/12/98
        *  @param   
        *  @return  
@@ -331,7 +341,7 @@ class nsScanner {
       nsString        mBuffer;
       nsString        mFilename;
       PRUint32        mOffset;
-      PRUint32        mMarkPos;
+      PRUint32        mMarkPos;   
       PRUint32        mTotalRead;
       PRBool          mOwnsStream;
       PRBool          mIncremental;
