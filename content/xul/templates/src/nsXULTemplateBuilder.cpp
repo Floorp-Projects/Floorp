@@ -3891,6 +3891,7 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
 
         NS_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gHTMLElementFactory);
+        NS_IF_RELEASE(gXMLElementFactory);
 
         if (gXULUtils) {
             nsServiceManager::ReleaseService(kXULContentUtilsCID, gXULUtils);
