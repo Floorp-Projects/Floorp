@@ -24,15 +24,16 @@
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsBlockFrame.h"
 
 #ifdef NS_DEBUG
-#undef  NOISY_SPECULATIVE_TOP_MARGIN
 #undef  NOISY_MAX_ELEMENT_SIZE
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
+#undef  NOISY_VERTICAL_MARGINS
 #else
-#undef  NOISY_SPECULATIVE_TOP_MARGIN
 #undef  NOISY_MAX_ELEMENT_SIZE
 #undef   REALLY_NOISY_MAX_ELEMENT_SIZE
+#undef  NOISY_VERTICAL_MARGINS
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
@@ -44,15 +45,67 @@ nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
 {
   mCompactMarginWidth = 0;
   mStyleSpacing = nsnull;
+#ifdef DEBUG
+  mIndent = 0;
+#endif
+}
+
+nscoord
+nsBlockReflowContext::ComputeCollapsedTopMargin(nsHTMLReflowState& aRS)
+{
+#ifdef NOISY_VERTICAL_MARGINS
+  mIndent++;
+#endif
+
+  // Get aFrame's top margin
+  nscoord topMargin = aRS.computedMargin.top;
+
+  // Calculate aFrame's generational top-margin from its child
+  // blocks. Note that if aFrame has a non-zero top-border or
+  // top-padding then this step is skipped because it will be a margin
+  // root.
+  nscoord generationalTopMargin = 0;
+  if (0 == aRS.mComputedBorderPadding.top) {
+    nsBlockFrame* bf;
+    if (NS_SUCCEEDED(aRS.frame->QueryInterface(kBlockFrameCID, (void**)&bf))) {
+      // Ask the block frame for the top block child that we should
+      // try to collapse the top margin with.
+      nsIFrame* childFrame = bf->GetTopBlockChild();
+      if (nsnull != childFrame) {
+
+        // Here is where we recurse. Now that we have determined that a
+        // generational collapse is required we need to compute the
+        // child blocks margin and so in so that we can look into
+        // it. For its margins to be computed we need to have a reflow
+        // state for it.
+        nsSize availSpace(aRS.computedWidth, aRS.computedHeight);
+        nsHTMLReflowState reflowState(mPresContext, aRS, childFrame,
+                                      availSpace);
+        generationalTopMargin = ComputeCollapsedTopMargin(reflowState);
+      }
+    }
+  }
+
+  // Now compute the collapsed top-margin value. At this point we have
+  // the child frames effective top margin value.
+  nscoord collapsedTopMargin = MaxMargin(topMargin, generationalTopMargin);
+
+#ifdef NOISY_VERTICAL_MARGINS
+  nsFrame::IndentBy(stdout, mIndent);
+  nsFrame::ListTag(stdout, aRS.frame);
+  printf(": topMargin=%d generationalTopMargin=%d => %d\n",
+         topMargin, generationalTopMargin, collapsedTopMargin);
+  mIndent--;
+#endif
+
+  return collapsedTopMargin;
 }
 
 nsresult
 nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                   const nsRect& aSpace,
-#ifdef SPECULATIVE_TOP_MARGIN
                                   PRBool aApplyTopMargin,
                                   nscoord aPrevBottomMargin,
-#endif
                                   PRBool aIsAdjacentWithTop,
                                   nsMargin& aComputedOffsets,
                                   nsReflowStatus& aFrameReflowStatus)
@@ -60,27 +113,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nsresult rv = NS_OK;
   mFrame = aFrame;
   mSpace = aSpace;
-
-#ifdef SPECULATIVE_TOP_MARGIN
-#ifdef NOISY_SPECULATIVE_TOP_MARGIN
-  PRIntn pass = 0;
-#endif
-  mSpeculativeTopMargin = 0;
-  if (aApplyTopMargin) {
-    // Compute a "speculative" collapsed top-margin value. Its
-    // speculative because we don't yet have the
-    // carried-out-top-margin value so the final collapsed value isn't
-    // knowable yet. We want to pre-apply the collapsed top-margin
-    // value so that when a block is flowing around floaters that we
-    // don't have to reflow it twice (we can't just slide it down when
-    // its flowing around a floater after discovering the final top
-    // margin value).
-    mSpeculativeTopMargin = MaxMargin(mMargin.top, aPrevBottomMargin);
-  }
- again:
-#else
-  mSpeculativeTopMargin = 0;
-#endif
 
   // Get reflow reason set correctly. It's possible that a child was
   // created and then it was decided that it could not be reflowed
@@ -100,6 +132,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   }
 
   // Setup reflow state for reflowing the frame
+  // XXX subtract out vertical margin?
   nsSize availSpace(aSpace.width, aSpace.height);
   nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
                                 availSpace, reason);
@@ -111,13 +144,38 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   }
   mIsTable = NS_STYLE_DISPLAY_TABLE == reflowState.mStyleDisplay->mDisplay;
 
+  nscoord topMargin = 0;
+  if (aApplyTopMargin) {
+    // Compute the childs collapsed top margin (its margin collpased
+    // with its first childs top-margin -- recursively).
+#ifdef NOISY_VERTICAL_MARGINS
+    nsFrame::ListTag(stdout, mOuterReflowState.frame);
+    printf(": prevBottomMargin=%d\n", aPrevBottomMargin);
+#endif
+    topMargin = ComputeCollapsedTopMargin(reflowState);
+
+    // Collapse that value with the previous bottom margin to perform
+    // the sibling to sibling collaspe.
+    topMargin = MaxMargin(topMargin, aPrevBottomMargin);
+
+    // Adjust the available height if its constrained so that the
+    // child frame doesn't think it can reflow into its margin area.
+    // XXX write me
+#if 0
+    availSpace.y += topMargin;
+    if (NS_UNCONSTRAINEDSIZE != availHeight) {
+      availSpace.height -= topMargin;
+    }
+#endif
+  }
+
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
   // reflow auto left/right margins will have a zero value.
   mMargin = reflowState.computedMargin;
   mStyleSpacing = reflowState.mStyleSpacing;
   nscoord x = aSpace.x + mMargin.left;
-  nscoord y = aSpace.y + mSpeculativeTopMargin;
+  nscoord y = aSpace.y + topMargin;
   mX = x;
   mY = y;
 
@@ -244,31 +302,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
         parent->DeleteChildsNextInFlow(mPresContext, aFrame);
       }
     }
-
-#ifdef SPECULATIVE_TOP_MARGIN
-    if (aApplyTopMargin) {
-      // Compute final collapsed margin value
-      CollapseMargins(mMargin, mMetrics.mCarriedOutTopMargin,
-                      mMetrics.mCarriedOutBottomMargin,
-                      mMetrics.height, aPrevBottomMargin,
-                      mTopMargin, mBottomMargin);
-
-      if (mSpeculativeTopMargin != mTopMargin) {
-        // We lost our speculative gamble. Use new computed margin
-        // value as the speculative value and try the reflow again.
-#ifdef NOISY_SPECULATIVE_TOP_MARGIN
-        nsFrame::ListTag(stdout, mOuterReflowState.frame);
-        printf(": reflowing again: ");
-        nsFrame::ListTag(stdout, aFrame);
-        printf(" guess=%d actual=%d [pass %d]\n",
-               mSpeculativeTopMargin, mTopMargin, pass);
-        pass++;
-#endif
-        mSpeculativeTopMargin = mTopMargin;
-        goto again;
-      }
-    }
-#endif
   }
 
   return rv;
@@ -328,21 +361,15 @@ nsBlockReflowContext::CollapseMargins(const nsMargin& aMargin,
  */
 PRBool
 nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
-#ifndef SPECULATIVE_TOP_MARGIN
-                                 PRBool aApplyTopMargin,
-                                 nscoord aPrevBottomMargin,
-#endif
                                  const nsMargin& aComputedOffsets,
+                                 nscoord* aBottomMarginResult,
                                  nsRect& aInFlowBounds,
                                  nsRect& aCombinedRect)
 {
-#ifndef SPECULATIVE_TOP_MARGIN
-  // Compute final collapsed margin value
-  CollapseMargins(mMargin, mMetrics.mCarriedOutTopMargin,
-                  mMetrics.mCarriedOutBottomMargin,
-                  mMetrics.height, aPrevBottomMargin,
-                  mTopMargin, mBottomMargin);
-#endif
+  // Compute collapsed bottom margin value
+  nscoord collapsedBottomMargin = MaxMargin(mMetrics.mCarriedOutBottomMargin,
+                                            mMargin.bottom);
+  *aBottomMarginResult = collapsedBottomMargin;
 
   // See if the block will fit in the available space
   PRBool fits = PR_TRUE;
@@ -354,20 +381,13 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     nsRect r(x, y, 0, 0);
     mFrame->SetRect(r);
     aInFlowBounds = r;
+    // Retain combined area information in case we contain a floater
+    // and nothing else.
     aCombinedRect = mMetrics.mCombinedArea;
     aCombinedRect.x += x;
     aCombinedRect.y += y;
-    mTopMargin = 0;
-    mBottomMargin = 0;
   }
   else {
-    // Apply top margin unless it's going to be carried out.
-#ifndef SPECULATIVE_TOP_MARGIN
-    if (aApplyTopMargin) {
-      y += mTopMargin;
-    }
-#endif
-
     // See if the frame fit. If its the first frame then it always
     // fits.
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
@@ -501,9 +521,11 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
           m->width += mMargin.right;
         }
 
+#if XXX_fix_me
         // Margin height should affect the max-element height (since
         // auto top/bottom margins are always zero)
         m->height += mTopMargin + mBottomMargin;
+#endif
       }
     }
     else {
