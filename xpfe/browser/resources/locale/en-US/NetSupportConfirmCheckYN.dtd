@@ -1,0 +1,6 @@
+<!-- extracted from content/NetSupportConfirmCheckYN.xul -->
+
+<!ENTITY m.label "m"> 
+<!ENTITY backwards.label "Backwards">
+<!ENTITY yes.label "Yes"> 
+<!ENTITY no.label "No"> 

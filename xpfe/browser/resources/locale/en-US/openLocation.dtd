@@ -1,0 +1,8 @@
+<!-- extracted from content/openLocation.xul -->
+
+<!ENTITY enter.label "Enter the World Wide Web location (URL) you would like to open or"> 
+<!ENTITY choose.label "use the Choose File... button to select a local file:"> 
+<!ENTITY chooseFile.label "Choose File...">
+<!ENTITY openWin.label "Open in new window">
+<!ENTITY ok.label "OK">
+<!ENTITY cancel.label "Open in new window">
