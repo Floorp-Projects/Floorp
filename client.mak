@@ -57,10 +57,10 @@ CVS_FLAGS=$(MOZ_CVS_FLAGS)
 # let's be explicit about CVSROOT... some windows cvs clients
 # are too stupid to correctly work without the -d option 
 !if defined(CVSROOT)
-CVSCO = cvs -d $(CVSROOT) -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
-!else
-CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
+CVS_FLAGS=$(CVS_FLAGS) -d $(CVSROOT)
 !endif
+
+CVSCO = cvs -q $(CVS_FLAGS) co $(CVS_BRANCH) -P
 
 CVSCO_TAG = cvs -q co -P
 
@@ -86,6 +86,20 @@ CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
 CVSCO_NETWORK = $(CVSCO)
 
+#//------------------------------------------------------------------------
+#// Figure out how to pull NSPR.
+#// If no NSPR_CO_TAG is specified, use the default static tag
+#//------------------------------------------------------------------------
+
+
+!if "$(NSPR_CO_TAG)" != ""
+NSPR_CO_FLAGS=-r $(NSPR_CO_TAG)
+!else
+NSPR_CO_FLAGS=-r NSPRPUB_20000201
+!endif
+
+CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
+
 ## The master target
 ############################################################
 
@@ -97,7 +111,11 @@ pull_and_build_all: pull_all depend build_all
 
 pull_clobber_and_build_all: pull_all clobber_all build_all
 
-pull_all: pull_seamonkey
+pull_all: pull_nspr pull_seamonkey
+
+pull_nspr:
+      cd $(MOZ_SRC)\.
+      $(CVSCO_NSPR) mozilla/nsprpub
 
 # pull either layout only or seamonkey the browser
 pull_layout:
