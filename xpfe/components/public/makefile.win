@@ -21,7 +21,9 @@ MODULE=xpfe\components
 
 DEPTH=..\..\..
 
-EXPORTS=nsIAppShellComponent.h \
+EXPORTS=\
+	nsIAppShellComponent.h \
+	nsIAppShellComponentImpl.h \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -3,3 +3,4 @@
 #
 
 nsIAppShellComponent.h
+nsIAppShellComponentImpl.h
