@@ -23,6 +23,6 @@
 
 [scriptable, uuid(7b9badc6-c9bc-447a-8670-dbd195aed24b)]
 // Introduced in DOM Level 2:
-interface DocumentRange {
-  nsIDOMRange        createRange();
+interface nsIDOMDocumentRange : nsISupports {
+  nsIDOMRange               createRange();
 };
