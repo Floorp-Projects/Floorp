@@ -22,13 +22,18 @@
 #include "nscore.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
+#include "nsISupportsArray.h"
+#include "nsIElementFactory.h"
+#include "nsIServiceManager.h"
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsContentCID.h"
 
 
+extern nsresult NS_NewXMLElementFactory(nsIElementFactory** aResult);
 
 static const char kXMLNSNameSpaceURI[] = "http://www.w3.org/2000/xmlns/";
 static const char kXMLNameSpaceURI[] = "http://www.w3.org/XML/1998/namespace";
@@ -41,9 +46,10 @@ static const char kXSLTNameSpaceURI[] = "http://www.w3.org/1999/XSL/Transform";
 //-----------------------------------------------------------
 // Name Space ID table support
 
-static PRInt32      gNameSpaceTableRefs;
-static nsHashtable* gURIToIDTable;
-static nsVoidArray* gURIArray;
+static PRInt32           gNameSpaceTableRefs;
+static nsHashtable*      gURIToIDTable;
+static nsVoidArray*      gURIArray;
+static nsISupportsArray* gElementFactoryArray;
 
 static void AddRefTable()
 {
@@ -78,9 +84,12 @@ static void AddRefTable()
     gURIToIDTable->Put(&xlinkKey, (void*)kNameSpaceID_XLink);
     gURIToIDTable->Put(&htmlKey, (void*)kNameSpaceID_HTML);
     gURIToIDTable->Put(&xsltKey, (void*)kNameSpaceID_XSLT);
+
+    NS_NewISupportsArray(&gElementFactoryArray);
   }
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
   NS_ASSERTION(nsnull != gURIArray, "no URI array");
+  NS_ASSERTION(nsnull != gElementFactoryArray, "no element factory array");
 }
 
 static void ReleaseTable()
@@ -95,6 +104,8 @@ static void ReleaseTable()
     delete gURIArray;
     gURIToIDTable = nsnull;
     gURIArray = nsnull;
+
+    NS_IF_RELEASE(gElementFactoryArray);
   }
 }
 
@@ -341,8 +352,10 @@ public:
 			                         PRInt32& aNameSpaceID);
 
   NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID, nsAWritableString& aURI);
-  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID);
-
+  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI,
+                            PRInt32& aNameSpaceID);
+  NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,
+                               nsIElementFactory **aElementFactory);
 private:
   // These are not supported and are not implemented!
   NameSpaceManagerImpl(const NameSpaceManagerImpl& aCopy);
@@ -424,6 +437,67 @@ NS_IMETHODIMP
 NameSpaceManagerImpl::GetNameSpaceID(const nsAReadableString& aURI, PRInt32& aNameSpaceID)
 {
   aNameSpaceID = FindNameSpaceID(aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NameSpaceManagerImpl::GetElementFactory(PRInt32 aNameSpaceID,
+                                        nsIElementFactory **aElementFactory)
+{
+  *aElementFactory = nsnull;
+
+  NS_ENSURE_TRUE(gElementFactoryArray, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(aNameSpaceID >= 0, NS_ERROR_ILLEGAL_VALUE);
+
+  gElementFactoryArray->QueryElementAt(aNameSpaceID,
+                                       NS_GET_IID(nsIElementFactory),
+                                       (void **)aElementFactory);
+
+  if (*aElementFactory) {
+    return NS_OK;
+  }
+
+  nsAutoString uri;
+
+  GetNameSpaceURI(aNameSpaceID, uri);
+
+  nsCOMPtr<nsIElementFactory> ef;
+
+  if (!uri.IsEmpty()) {
+    nsCAutoString contract_id(NS_ELEMENT_FACTORY_CONTRACTID_PREFIX);
+    contract_id.Append(NS_ConvertUCS2toUTF8(uri));
+
+    ef = do_GetService(contract_id.get());
+  }
+
+  if (!ef) {
+    nsresult rv = NS_NewXMLElementFactory(getter_AddRefs(ef));
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  PRUint32 count = 0;
+  gElementFactoryArray->Count(&count);
+
+  if ((PRUint32)aNameSpaceID < count) {
+    gElementFactoryArray->ReplaceElementAt(ef, aNameSpaceID);
+  } else {
+    // This sucks, simply doing an InsertElementAt() should IMNSHO
+    // automatically grow the array and insert null's as needed to
+    // fill up the array!?!!
+
+    for (PRInt32 i = count; i < aNameSpaceID; i++) {
+      gElementFactoryArray->AppendElement(nsnull);
+    }
+
+    gElementFactoryArray->AppendElement(ef);
+  }
+
+  *aElementFactory = ef;
+  NS_ADDREF(*aElementFactory);
+
   return NS_OK;
 }
 
