@@ -340,7 +340,7 @@ typedef struct __struct_STRun
         ** As callsites are possibly shared between all contexts, each
         **      different context needs to keep different stats.
         */
-        STCallsiteStats *mFacts;
+        STCallsiteStats *mStats;
 
 } STRun;
 
