@@ -211,10 +211,6 @@ NSS_CO_MODULE = mozilla/security/nss \
 		mozilla/security/coreconf \
 		$(NULL)
 
-ifdef MOZ_NSS_AUTOCONF
-NSS_CO_TAG = NSS_CLIENT_BRANCH
-endif
-
 NSS_CO_FLAGS := -P
 ifdef MOZ_CO_FLAGS
   NSS_CO_FLAGS := $(MOZ_CO_FLAGS)
@@ -312,10 +308,8 @@ ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
 endif
 ifeq (,$(filter security security/manager, $(BUILD_MODULE_CVS)))
-ifndef MOZ_NSS_AUTOCONF
   CVSCO_PSM :=
   CVSCO_NSS :=
-endif
 endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
   CVSCO_LDAPCSDK :=

@@ -27,8 +27,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_NSS_AUTOCONF
-
 ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 LOADABLE_ROOT_MODULE = nssckbi$(DLL_SUFFIX)
 else
@@ -66,13 +64,8 @@ DEFAULT_GMAKE_FLAGS += USE_64=1
 endif
 
 SUBMAKEFILES = ssl/Makefile pki/Makefile
-else
-DIRS		= ssl pki
-endif
 
 include $(topsrcdir)/config/rules.mk
-
-ifndef MOZ_NSS_AUTOCONF
 
 depend dependclean export::
 	$(MAKE) -C ssl $@
@@ -99,5 +92,3 @@ clean clobber clobber_all realclean distclean::
 	$(MAKE) -C pki $@
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS) clean
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS) clean
-
-endif # MOZ_NSS_AUTOCONF

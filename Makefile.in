@@ -128,9 +128,6 @@ DIRS		+= xpfe
 DIRS		+= xpinstall
 
 ifdef MOZ_PSM
-ifdef MOZ_NSS_AUTOCONF
-DIRS		+= security/nss
-endif
 DIRS		+= security/manager
 endif
 
