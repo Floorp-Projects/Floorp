@@ -39,8 +39,9 @@
 #include "prprf.h"         // For PR_snprintf()
 
 #include "nsIWebShell.h"
-#include "nsIBrowserWindow.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsIDOMElement.h"
 
 #include "nsIDOMEventReceiver.h"
@@ -387,20 +388,16 @@ nsMathMLmactionFrame::ShowStatus(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(rv) && cont) {
     nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
     if (docShellItem) {
-      nsCOMPtr<nsIDocShellTreeItem> root;
-      docShellItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-      nsCOMPtr<nsIWebShell> rootWebShell(do_QueryInterface(root));
-      if (rootWebShell) {
-        nsCOMPtr<nsIWebShellContainer> rootContainer;
-        rv = rootWebShell->GetContainer(*getter_AddRefs(rootContainer));
-        if (nsnull != rootContainer) {
-          nsCOMPtr<nsIBrowserWindow> browserWindow(do_QueryInterface(rootContainer));
-          if (browserWindow) {
-            if (rootContainer) {
-              rv = browserWindow->SetStatus(aStatusMsg.GetUnicode());
-            }
-          }
-        }
+
+      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+      docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+      if(treeOwner)
+      {
+      nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
+
+      if(browserChrome)
+        browserChrome->SetJSStatus(aStatusMsg.GetUnicode());
       }
     }
   }
