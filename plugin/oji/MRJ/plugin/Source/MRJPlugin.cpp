@@ -34,6 +34,7 @@
 #include "nsIAllocator.h"
 #include "nsRepository.h"
 #include "nsIJVMManager.h"
+#include "nsIJVMPluginTagInfo.h"
 #include "nsIPluginManager2.h"
 #include "nsIPluginInstancePeer.h"
 #include "nsIWindowlessPlugInstPeer.h"
@@ -218,24 +219,23 @@ NS_METHOD MRJPlugin::Initialize()
 
 	// see if the enhanced plugin manager exists.
 	if (thePluginManager2 == NULL) {
-		result = thePluginManager->QueryInterface(kIPluginManager2IID, &thePluginManager2);
-		if (result != NS_OK)
+		if (thePluginManager->QueryInterface(kIPluginManager2IID, &thePluginManager2) != NS_OK)
 			thePluginManager2 = NULL;
 	}
 
 	// try to get a JVM manager. we have to be able to run without one.
-	result = theServiceManager->GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)&mManager);
-	if (result != NS_OK)
+	if (theServiceManager->GetService(kJVMManagerCID, kIJVMManagerIID, (nsISupports**)&mManager) != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
-	result = mManager->QueryInterface(kIThreadManagerIID, &mThreadManager);
-	if (result != NS_OK)
-		mThreadManager = NULL;
+	if (mManager != NULL) {
+		if (mManager->QueryInterface(kIThreadManagerIID, &mThreadManager) != NS_OK)
+			mThreadManager = NULL;
 
-	if (mThreadManager != NULL)
-		mThreadManager->GetCurrentThread(&mPluginThreadID);
-
+		if (mThreadManager != NULL)
+			mThreadManager->GetCurrentThread(&mPluginThreadID);
+	}
+	
 	// create a console, only if we can register windows.
 	if (thePluginManager2 != NULL) {
 		mConsole = new MRJConsole(this);
@@ -531,6 +531,16 @@ MRJPluginInstance::~MRJPluginInstance()
 
 static const char* kGetCodeBaseScriptURL = "javascript:var href = window.location.href; href.substring(0, href.lastIndexOf('/') + 1)";
 
+static bool hasTagInfo(nsISupports* supports)
+{
+	nsIJVMPluginTagInfo* tagInfo;
+	if (supports->QueryInterface(nsIJVMPluginTagInfo::GetIID(), &tagInfo) == NS_OK) {
+		NS_RELEASE(tagInfo);
+		return true;
+	}
+	return false;
+}
+
 NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
 	// Tell the peer we are retaining a reference.
@@ -544,7 +554,7 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	// create a context for the applet we will run.
 	mContext = new MRJContext(mSession, this);
 
-	if (thePluginManager2 != NULL) {
+	if (hasTagInfo(mPeer)) {
 		mContext->processAppletTag();
 		mContext->createContext();
 	} else {
