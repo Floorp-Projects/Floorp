@@ -282,7 +282,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
     result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
       PRInt32 indx;
-      result == GetIndex(&indx);
+      result = GetIndex(&indx);
       if (NS_SUCCEEDED(result)) {
         selectFrame->SetOptionSelected(indx, aValue);
       }
