@@ -61,7 +61,7 @@ Quit</li>
 
 <td>dp</td>
 
-<td>DONE&nbsp;(waiting to checkin)</td>
+<td>DONE (waiting to checkin)</td>
 </tr>
 
 <tr>
@@ -276,7 +276,7 @@ Apprunner only</h2>
 <tr>
 <td>addrbook.dll</td>
 
-<td></td>
+<td>mscott</td>
 
 <td></td>
 </tr>
@@ -316,7 +316,7 @@ Apprunner only</h2>
 <tr>
 <td>cookie.dll</td>
 
-<td></td>
+<td>neeti</td>
 
 <td></td>
 </tr>
@@ -380,7 +380,7 @@ Apprunner only</h2>
 <tr>
 <td>mime.dll</td>
 
-<td></td>
+<td>mscott</td>
 
 <td></td>
 </tr>
@@ -388,7 +388,7 @@ Apprunner only</h2>
 <tr>
 <td>mork.dll</td>
 
-<td></td>
+<td>mscott</td>
 
 <td></td>
 </tr>
@@ -548,7 +548,7 @@ Apprunner only</h2>
 <tr>
 <td>pics.dll</td>
 
-<td></td>
+<td>neeti</td>
 
 <td></td>
 </tr>
@@ -684,7 +684,7 @@ Apprunner only</h2>
 <tr>
 <td>wallet.dll</td>
 
-<td></td>
+<td>wallet</td>
 
 <td></td>
 </tr>
@@ -723,11 +723,20 @@ How to fix leaks in a dll</h2>
 
 <ol>
 <li>
-Convert dll to use nsIModule. Sample code is in&nbsp; <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/sample/nsSampleModule.cpp">mozilla/xpcom/sample/nsSampleModule.cpp</a></li>
+Convert dll to use nsIModule. Sample code is in&nbsp; <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/sample/nsSampleModule.cpp">mozilla/xpcom/sample/nsSampleModule.cpp</a>.
+Things to watch out for:</li>
+
+<ol>
+<li>
+nsIModule::UnregisterSelf should not return an Error.</li>
+
+<li>
+Cache factories created by modules in the module.</li>
 </ol>
+The sample code does all this right. So sticking to closely is adviced.</ol>
 
 <h3>
-<a NAME="Stage 2: Leak fixing"></a>Stage 2: Leak fixing</h3>
+<a NAME="Stage 2: Leak fixing"></a>Stage 2: Leak fixing <font color="#CC0000">(DONT&nbsp;DO&nbsp;THIS&nbsp;NOW)</font></h3>
 
 <ol>
 <li>
@@ -735,7 +744,7 @@ While in purify run <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/tests
 on the dll. For this you will need to find a CID that the module implements.
 Then invoke TestShutdown as</li>
 
-<ol>% TestShutdown {123d4-4908-490840-409850}</ol>
+<ol>TestShutdown {123d4-4908-490840-409850}</ol>
 
 <li>
 Make sure there are no leaks from the purify output.</li>
