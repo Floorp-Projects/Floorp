@@ -49,10 +49,8 @@ interface nsIDocShellContainer : nsISupports
 	*/
 	void RemoveChild(in nsIDocShell child);
 
-	/*
-	Enumerator to walk child list.
-	*/
-	readonly attribute nsIEnumerator childEnumerator;
+	/* Return the child at the index requested.  This is 0-based.*/
+	void GetChildAt(in long index, out nsIDocShell child);
 
 	/*
 	Return the child DocShell with the specified name
