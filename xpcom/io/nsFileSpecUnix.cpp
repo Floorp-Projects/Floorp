@@ -84,44 +84,21 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
         const mode_t mode = 0700;
         nsFileSpecHelpers::MakeAllDirectories((const char*)ioPath, mode);
     }
-    char buffer[MAXPATHLEN];
-    errno = 0;
-#if defined(SOLARIS)
-    memset(buffer, '\0', sizeof(buffer)); // realpath reads it all, initialized or not.
-#else
-    *buffer = '\0';
-#endif
-    char* canonicalPath = realpath((const char*)ioPath, buffer);
-    if (!canonicalPath)
+
+    errno = 0;  // needed?
+
+    if (ioPath[0] != '/')
     {
-        // Linux's realpath() is pathetically buggy.  If the reason for the nil
-        // result is just that the leaf does not exist, strip the leaf off,
-        // process that, and then add the leaf back.
-        nsSimpleCharString allButLeaf(ioPath);
-        if (allButLeaf.IsEmpty())
-            return;
-        char* lastSeparator = strrchr((char*)allButLeaf, '/');
-        if (lastSeparator)
-        {
-            *lastSeparator = '\0';
-            canonicalPath = realpath((const char*)allButLeaf, buffer);
-            strcat(buffer, "/");
-            // Add back the leaf
-            strcat(buffer, ++lastSeparator);
-        }
+        // the ioPath that was passed in is relative.  We must cat it to the cwd.
+        char buffer[MAXPATHLEN];
+
+        (void) getcwd(buffer, MAXPATHLEN);
+
+        strcat(buffer, "/");
+        strcat(buffer, ioPath);
+
+        ioPath = buffer;
     }
-    if (!canonicalPath && ioPath[0] != '/' && !inMakeDirs)
-    {
-        // Well, if it's a relative path, hack it ourselves.
-        canonicalPath = realpath(".", buffer);
-        if (canonicalPath)
-        {
-            strcat(canonicalPath, "/");
-            strcat(canonicalPath, ioPath);
-        }
-    }
-    if (canonicalPath)
-        ioPath = canonicalPath;
 } // nsFileSpecHelpers::Canonify
 
 //----------------------------------------------------------------------------------------

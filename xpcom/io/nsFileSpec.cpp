@@ -1023,6 +1023,42 @@ const char* nsFileSpec::GetCString() const
 }
 #endif
 
+/* Is our spec a child of the provided parent? */
+PRBool
+nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
+{
+    nsFileSpec iter = *this, parent;
+#ifdef DEBUG
+    int depth = 0;
+#endif
+    while (1) {
+#ifdef DEBUG
+        // sanity
+        NS_ASSERTION(depth < 100, "IsChildOf has lost its little mind");
+        if (depth > 100)
+            return PR_FALSE;
+#endif
+        if (iter == possibleParent)
+            return PR_TRUE;
+
+        iter.GetParent(parent); // shouldn't this be an error on parent?
+        if (iter.Failed())
+            return PR_FALSE;
+
+        if (iter == parent)     // hit bottom
+            return PR_FALSE;
+        
+        iter = parent;
+#ifdef DEBUG
+        depth++;
+#endif
+    }
+
+    /* not reached, but I bet some compiler will whine */
+    return PR_FALSE;
+}
+
+
 //========================================================================================
 //    class nsPersistentFileDescriptor
 //========================================================================================

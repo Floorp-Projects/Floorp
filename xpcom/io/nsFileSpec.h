@@ -332,6 +332,7 @@ class NS_COM nsFileSpec
                                     // so do not delete (or free) it. See also nsNSPRPath below,
                                     // if you really must pass a string  to PR_OpenFile().
                                     // Doing so will introduce two automatic bugs.
+       PRBool                     IsChildOf(nsFileSpec &possibleParent);
 
 #ifdef XP_MAC
         // For Macintosh people, this is meant to be useful in its own right as a C++ version
