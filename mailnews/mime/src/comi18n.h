@@ -135,6 +135,10 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
  */
 char * NextChar_UTF8(char *str);
 
+nsresult MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset);
+nsresult MIME_get_unicode_decoder(const char* aInputCharset, nsIUnicodeDecoder **aDecoder);
+nsresult MIME_get_unicode_encoder(const char* aOutputCharset, nsIUnicodeEncoder **aEncoder);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* __cplusplus */

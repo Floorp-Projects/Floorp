@@ -83,6 +83,9 @@ struct MimeInlineTextClass {
 
 extern MimeInlineTextClass mimeInlineTextClass;
 
+#define DAM_MAX_BUFFER_SIZE 8*1024      
+#define DAM_MAX_LINES  1024
+
 struct MimeInlineText {
   MimeLeaf leaf;			/* superclass variables */
   char *charset;			/* The charset from the content-type of this
@@ -91,7 +94,15 @@ struct MimeInlineText {
   char *defaultCharset; /* This is a charset to use when all else fails */
   char *cbuffer;			/* Buffer used for charset conversion. */
   PRInt32 cbuffer_size;
+  
+  nsCOMPtr<nsIUnicodeDecoder> inputDecoder;
+  nsCOMPtr<nsIUnicodeEncoder> utf8Encoder;
 
+  PRBool  inputAutodetect;
+  PRInt32 lastLineInDam;
+  PRInt32 curDamOffset;
+  char *lineDamBuffer;
+  char **lineDamPtrs;
 };
 
 #endif /* _MIMETEXT_H_ */

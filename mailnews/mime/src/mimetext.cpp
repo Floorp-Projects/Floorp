@@ -28,6 +28,7 @@
 #include "mimetext.h"
 #include "mimebuf.h"
 #include "mimethtm.h"
+#include "comi18n.h"
 
 #include "prlog.h"
 #include "prmem.h"
@@ -50,6 +51,7 @@ static int MimeInlineText_parse_end  (MimeObject *, PRBool);
 static int MimeInlineText_parse_decoded_buffer (char *, PRInt32, MimeObject *);
 static int MimeInlineText_rotate_convert_and_parse_line(char *, PRInt32,
 														MimeObject *);
+static int MimeInlineText_open_dam(MimeObject *obj);
 
 static int
 MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
@@ -72,6 +74,7 @@ static int
 MimeInlineText_initialize (MimeObject *obj)
 {
   MimeInlineText *text = (MimeInlineText *) obj;
+  text->inputAutodetect = PR_FALSE;
   
   /* This is an abstract class; it shouldn't be directly instanciated. */
   PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeInlineTextClass);
@@ -107,8 +110,9 @@ MimeInlineText_initialize (MimeObject *obj)
 
       if (!text->charset)
       {
+        //we need to autodetect, but set defaultCharset first 
         if (obj->options && obj->options->default_charset)
-          text->charset = nsCRT::strdup(obj->options->default_charset);
+          text->defaultCharset = nsCRT::strdup(obj->options->default_charset);
         else
         {
           // New change for falling back to a default view charset
@@ -125,13 +129,29 @@ MimeInlineText_initialize (MimeObject *obj)
 
           if (!text->defaultCharset)
             text->defaultCharset = nsCRT::strdup("");
-
-          text->charset = nsCRT::strdup("");
         }
+        text->inputAutodetect = PR_TRUE;
       }
     }
   }
   
+  if (text->inputAutodetect)
+  {
+    //we need to prepare lineDam for charset detection
+    text->lineDamBuffer = (char*)PR_Malloc(DAM_MAX_BUFFER_SIZE);
+    text->lineDamPtrs = (char**)PR_Malloc(DAM_MAX_LINES*sizeof(char*));
+    text->curDamOffset = 0;
+    text->lastLineInDam = 0;
+    if (!text->lineDamBuffer || !text->lineDamPtrs)
+    {
+      text->charset = text->defaultCharset;
+      text->defaultCharset = nsnull;
+      text->inputAutodetect = PR_FALSE;
+      PR_FREEIF(text->lineDamBuffer);
+      PR_FREEIF(text->lineDamPtrs);
+    }
+  }
+
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
 
@@ -151,6 +171,11 @@ MimeInlineText_finalize (MimeObject *obj)
   PR_ASSERT(!text->cbuffer);
   PR_FREEIF (text->cbuffer);
 
+  if (text->inputAutodetect) {
+    PR_FREEIF(text->lineDamBuffer);
+    PR_FREEIF(text->lineDamPtrs);
+  }
+
   ((MimeObjectClass*)&MIME_SUPERCLASS)->finalize (obj);
 }
 
@@ -161,6 +186,12 @@ MimeInlineText_parse_eof (MimeObject *obj, PRBool abort_p)
   if (obj->closed_p) return 0;
   NS_ASSERTION(!obj->parsed_p, "obj already parsed");
 
+  MimeInlineText *text = (MimeInlineText *) obj;
+
+  //we haven't find charset yet? now its the time
+  if (!text->charset && text->inputAutodetect)
+        MimeInlineText_open_dam(obj);
+   
   /* If there is still data in the ibuffer, that means that the last line of
 	 this part didn't end in a newline; so push it out anyway (this means that
 	 the parse_line method will be called with a string with no trailing
@@ -278,6 +309,119 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
 				   &(text)->cbuffer, &(text)->cbuffer_size) \
    : 0)
 
+static int 
+MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *obj)
+{
+  int status;
+  char *converted = 0;
+  PRInt32 converted_len = 0;
+  
+  MimeInlineText *text = (MimeInlineText *) obj;
+
+  //in case of charset autodetection, charset can be override by meta charset
+  if (text->inputAutodetect) {
+    if (mime_typep(obj, (MimeObjectClass *) &mimeInlineTextHTMLClass))
+    {
+      MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
+      if (textHTML->charset && 
+          *textHTML->charset &&
+          nsCRT::strcmp(textHTML->charset, text->charset))
+      {
+        //if meta tag specified charset is different from our detected result, use meta charset.
+        //but we don't want to redo previous lines
+        MIME_get_unicode_decoder(textHTML->charset, getter_AddRefs(text->inputDecoder));
+        PR_Free(text->charset);
+        text->charset = nsCRT::strdup(textHTML->charset);
+      }
+    }
+  }
+
+  //initiate decoder if not yet
+  if (text->inputDecoder == nsnull)
+    MIME_get_unicode_decoder(text->charset, getter_AddRefs(text->inputDecoder));
+  if (text->utf8Encoder == nsnull)
+    MIME_get_unicode_encoder("UTF-8", getter_AddRefs(text->utf8Encoder));
+
+  PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(text->charset, obj->options->charsetForCachedInputDecoder);
+
+  if (useInputCharsetConverter)
+    status = obj->options->charset_conversion_fn(/*input_autodetect*/PR_FALSE, line, length,
+                         text->charset,
+												 "UTF-8",
+												 &converted,
+												 &converted_len,
+                         obj->options->stream_closure, obj->options->m_inputCharsetToUnicodeDecoder,
+                       obj->options->m_unicodeToUTF8Encoder);
+  else
+    status = obj->options->charset_conversion_fn(/*input_autodetect*/PR_FALSE, line, length,
+                         text->charset,
+												 "UTF-8",
+												 &converted,
+												 &converted_len,
+                         obj->options->stream_closure, (nsIUnicodeDecoder*)text->inputDecoder,
+                         (nsIUnicodeEncoder*)text->utf8Encoder);
+
+  if (status < 0)
+  {
+    PR_FREEIF(converted);
+    return status;
+  }
+
+  if (converted)
+  {
+    line = converted;
+    length = converted_len;
+  }
+
+  /* Now that the line has been converted, call the subclass's parse_line
+	 method with the decoded data. */
+  status = obj->clazz->parse_line(line, length, obj);
+  PR_FREEIF(converted);
+
+  return status;
+}
+
+//In this function call, all buffered lines in lineDam will be sent to charset detector 
+// and a charset will be used to parse all those line and following lines in this mime obj.
+static int 
+MimeInlineText_open_dam(MimeObject *obj)
+{
+  MimeInlineText *text = (MimeInlineText *) obj;
+  const char* detectedCharset;
+  nsresult res;
+  int status;
+
+  res = MIME_detect_charset(text->lineDamBuffer, text->curDamOffset, &detectedCharset);  
+  if (NS_SUCCEEDED(res) && detectedCharset && *detectedCharset) 
+    text->charset = nsCRT::strdup(detectedCharset);
+  else
+  {
+    PR_ASSERT(!text->charset);
+    //if autodetection does not lead to a result, use default-charset.
+    text->charset = text->defaultCharset;
+    text->defaultCharset = nsnull;
+  }
+
+  for (PRInt32 i = 0; i < text->lastLineInDam-1; i++)
+  {
+    status = MimeInlineText_convert_and_parse_line(
+              text->lineDamPtrs[i],  
+              text->lineDamPtrs[i+1] - text->lineDamPtrs[i],
+              obj  );
+  }
+  status = MimeInlineText_convert_and_parse_line(
+              text->lineDamPtrs[i],
+              text->lineDamBuffer + text->curDamOffset - text->lineDamPtrs[i],
+              obj );
+
+  PR_Free(text->lineDamPtrs);
+  PR_Free(text->lineDamBuffer);
+  text->lineDamPtrs = nsnull;
+  text->lineDamBuffer = nsnull;
+
+  return status;
+}
+
 
 static int
 MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
@@ -285,7 +429,6 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 {
   int status;
   MimeInlineTextClass *textc = (MimeInlineTextClass *) obj->clazz;
-  char *converted = 0;
 
   PR_ASSERT(!obj->closed_p);
   if (obj->closed_p) return -1;
@@ -312,72 +455,30 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
        (doConvert)       
      )
 	{
-	  PRInt32         converted_len = 0;
-    const char      *input_charset = NULL;
-    PRBool          input_autodetect = PR_FALSE;
     MimeInlineText  *text = (MimeInlineText *) obj;
 
-    //
-    // Ok, first, check if this is an Inline HTML display, and if so, 
-    // see if we detected a charset via a META tag.
-    //
-    if (mime_typep(obj, (MimeObjectClass *) &mimeInlineTextHTMLClass))
+    //if we don't have a charset yet, and autodetect is on, push line to dam
+    if (!(text->charset) && text->inputAutodetect)
     {
-      MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
-      input_charset = textHTML->charset;
-    }
-
-    if (!input_charset)
-    {
-      if (obj->options->override_charset && obj->options->default_charset && *(obj->options->default_charset))
-        input_charset = obj->options->default_charset;
-      else if ( (text) && (text->charset) && (*(text->charset)) )
-        input_charset = text->charset;
-      else 
-      {
-        if (obj->options->default_charset)
-          input_charset = obj->options->default_charset;
-        else
-          input_charset = text->defaultCharset;
-        input_autodetect = PR_TRUE;
+      //see if we reach the lineDam buffer limit, if so, there is no need to keep buffering
+      if (text->lastLineInDam >= DAM_MAX_LINES ||
+          DAM_MAX_BUFFER_SIZE - text->curDamOffset <= length) {
+        MimeInlineText_open_dam(obj);
+        status = MimeInlineText_convert_and_parse_line(line, length, obj);
+      }
+      else {
+        //buffering current line
+        text->lineDamPtrs[text->lastLineInDam] = text->lineDamBuffer + text->curDamOffset;
+        nsCRT::memcpy(text->lineDamPtrs[text->lastLineInDam], line, length);
+        text->lastLineInDam++;
+        text->curDamOffset += length;
       }
     }
-    const char *inputCharset = !nsCRT::strcasecmp(input_charset, "us-ascii") ? "ISO-8859-1" : input_charset;
-    PRBool useInputCharsetConverter = obj->options->m_inputCharsetToUnicodeDecoder && !nsCRT::strcasecmp(inputCharset, obj->options->charsetForCachedInputDecoder);
-
-    if (useInputCharsetConverter)
-	    status = obj->options->charset_conversion_fn(input_autodetect, line, length,
-                           inputCharset,
-												   "UTF-8",
-												   &converted,
-												   &converted_len,
-                           obj->options->stream_closure, obj->options->m_inputCharsetToUnicodeDecoder,
-                         obj->options->m_unicodeToUTF8Encoder);
-    else
-	    status = obj->options->charset_conversion_fn(input_autodetect, line, length,
-                           input_charset,
-												   "UTF-8",
-												   &converted,
-												   &converted_len,
-                           obj->options->stream_closure, nsnull,
-                         obj->options->m_unicodeToUTF8Encoder);
-
-	  if (status < 0)
-		{
-		  PR_FREEIF(converted);
-		  return status;
-		}
-
-	  if (converted)
-		{
-		  line = converted;
-		  length = converted_len;
-		}
+    else 
+      status = MimeInlineText_convert_and_parse_line(line, length, obj);
 	}
+  else
+    status = obj->clazz->parse_line(line, length, obj);
 
-  /* Now that the line has been converted, call the subclass's parse_line
-	 method with the decoded data. */
-  status = obj->clazz->parse_line(line, length, obj);
-  PR_FREEIF(converted);
   return status;
 }

@@ -59,6 +59,7 @@
 #include "mimebuf.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
+#include "nsICharsetConverterManager2.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -1635,6 +1636,87 @@ char * NextChar_UTF8(char *str)
 void comi18n_destructor()
 {
   NS_IF_RELEASE(MimeCharsetConverterClass::mDetector);
+}
+
+//detect charset soly based on aBuf. return in aCharset
+nsresult
+MIME_detect_charset(const char *aBuf, PRInt32 aLength, const char** aCharset)
+{
+  nsresult res;
+  char theBuffer[128];
+  CBufDescriptor theBufDecriptor( theBuffer, PR_TRUE, sizeof(theBuffer), 0);
+  nsCAutoString detector_contractid(theBufDecriptor);
+  nsXPIDLString detector_name;
+  nsCOMPtr<nsIStringCharsetDetector> detector;
+
+  detector_contractid.Assign(NS_STRCDETECTOR_CONTRACTID_BASE);
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &res)); 
+  if (NS_SUCCEEDED(res)) {
+    if (NS_SUCCEEDED(prefs->GetLocalizedUnicharPref("intl.charset.detector", getter_Copies(detector_name)))) {
+      detector_contractid.Append(NS_ConvertUCS2toUTF8(detector_name).get());
+    }
+  }
+
+  if (detector_contractid.Length() > sizeof(NS_STRCDETECTOR_CONTRACTID_BASE)) {
+    detector = do_CreateInstance(detector_contractid, &res);
+    if (NS_SUCCEEDED(res)) {
+      nsDetectionConfident oConfident;
+      res = detector->DoIt(aBuf, aLength, aCharset, oConfident);
+      if (NS_SUCCEEDED(res) && (eBestAnswer == oConfident || eSureAnswer == oConfident)) {
+        return NS_OK;
+      }
+      else
+        *aCharset = nsnull;
+    }
+  }
+  return res;
+}
+
+//Get unicode decoder(from inputcharset to unicode) for aInputCharset
+nsresult 
+MIME_get_unicode_decoder(const char* aInputCharset, nsIUnicodeDecoder **aDecoder)
+{
+  nsresult res;
+
+  // get charset converters.
+  nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res); 
+  if (NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIAtom> charsetAtom;
+    if (*aInputCharset)
+      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aInputCharset).get(), getter_AddRefs(charsetAtom));
+    else
+      res = ccm2->GetCharsetAtom(NS_LITERAL_STRING("ISO-8859-1").get(), getter_AddRefs(charsetAtom));
+    // create a decoder (conv to unicode), ok if failed if we do auto detection
+    if (NS_SUCCEEDED(res))
+      res = ccm2->GetUnicodeDecoder(charsetAtom, aDecoder);
+  }
+   
+  return res;
+}
+
+//Get unicode encoder(from unicode to inputcharset) for aOutputCharset
+nsresult 
+MIME_get_unicode_encoder(const char* aOutputCharset, nsIUnicodeEncoder **aEncoder)
+{
+  nsresult res;
+
+  // get charset converters.
+  nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+           do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res); 
+  if (NS_SUCCEEDED(res)) {
+    nsCOMPtr <nsIAtom> charsetAtom;
+    if (*aOutputCharset) {
+      res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aOutputCharset).get(), getter_AddRefs(charsetAtom));
+
+      // create a encoder (conv from unicode)
+      if (NS_SUCCEEDED(res))
+        res = ccm2->GetUnicodeEncoder(charsetAtom, aEncoder);
+    }
+  }
+   
+  return res;
 }
 
 } /* end of extern "C" */
