@@ -1137,6 +1137,7 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 	        nameString = (char*)PORT_ZAlloc(name->name.other.len + 1);
 		nameString = PORT_Strncpy(nameString, (char *) name->name.other.data, 
 					  name->name.other.len);
+		start = 0;
 		while(PORT_Strncmp(nameString + start, "://", 3) != 0 && 
 		      nameString[start + 3] != '\0') {
 		    start++;

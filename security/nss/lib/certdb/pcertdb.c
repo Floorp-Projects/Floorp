@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.17 2001/08/24 21:15:52 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.18 2001/09/20 21:34:39 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -54,6 +54,7 @@
 #include "base64.h"
 #include "sechash.h"
 #include "plhash.h"
+#include "pk11func.h" /* sigh */
 
 #include "cdbhdl.h"
 

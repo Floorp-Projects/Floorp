@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.14 2001/08/22 22:40:42 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.15 2001/09/20 21:34:38 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1944,7 +1944,7 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
     int i;
     CERTCertificate **certs = NULL;
     SECStatus rv;
-    int fcerts;
+    int fcerts = 0;
 
     if ( ncerts ) {
 	certs = (CERTCertificate**)PORT_ZAlloc(sizeof(CERTCertificate *) * ncerts );
@@ -1981,7 +1981,9 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
     if ( retCerts ) {
 	*retCerts = certs;
     } else {
-	CERT_DestroyCertArray(certs, fcerts);
+	if (certs) {
+	    CERT_DestroyCertArray(certs, fcerts);
+	}
     }
 
     return(SECSuccess);
@@ -2317,7 +2319,7 @@ loser:
  * This lock is currently used for the following operations:
  *	adding or deleting a cert to either the temp or perm databases
  *	converting a temp to perm or perm to temp
- *	changing(maybe just adding????) the trust of a cert
+ *	changing(maybe just adding !?) the trust of a cert
  *      chaning the DB status checking Configuration
  */
 void
