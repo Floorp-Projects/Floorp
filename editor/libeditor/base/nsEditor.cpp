@@ -1480,7 +1480,7 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIWidget * GetDeepestWidget(nsIView * aView)
+static nsIWidget* GetDeepestWidget(nsIView * aView)
 {
 
   PRInt32 count;

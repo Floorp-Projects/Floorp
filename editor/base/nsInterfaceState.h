@@ -30,6 +30,7 @@
 #include "nsIWebShell.h"
 
 class nsIHTMLEditor;
+class nsIDOMXULDocument;
 
 // class responsible for communicating changes in local state back to the UI.
 // This is currently somewhat tied to a given XUL UI implementation
@@ -44,7 +45,7 @@ public:
   
   NS_DECL_ISUPPORTS
   
-  NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIWebShell *aChromeWebShell);
+  NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc);
 
   // force an update of the UI. At some point, we could pass flags
   // here to target certain things for updating.
@@ -77,8 +78,8 @@ protected:
   // this class should not hold references to the editor or editorShell. Doing
   // so would result in cirular reference chains.
   
-  nsIHTMLEditor*  mEditor;		// the HTML editor
-  nsIWebShell*  mWebShell;  // web shell for the chrome area
+  nsIHTMLEditor*      mEditor;		 // the HTML editor
+  nsIDOMXULDocument*  mChromeDoc;  // XUL document for the chrome area
 
   // current state
   PRInt8        mBoldState;
@@ -87,12 +88,15 @@ protected:
   
   PRInt8        mDirtyState;
   
+  PRInt8        mSelectionCollapsed;
+  
+  
   nsString      mParagraphFormat;
   nsString      mFontString;
   nsString      mListTag;				// contains "" for none, "ol" or "ul"
   
 };
 
-extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult);
+extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMXULDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult);
 
 #endif // nsInterfaceState_h__

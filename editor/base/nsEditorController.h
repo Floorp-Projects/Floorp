@@ -26,7 +26,7 @@
 #include "nsIController.h"
 #include "nsIEditorController.h"
 
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsIHTMLContent;
@@ -65,59 +65,61 @@ protected:
   /** return PR_TRUE if the editor associated with mContent is enabled */
   PRBool IsEnabled();
 
-    // XXX: should be static
-	nsString mUndoString;
-  nsString mRedoString;
-  nsString mCutString;
-  nsString mCopyString;
-  nsString mPasteString;
-  nsString mDeleteString;
-  nsString mSelectAllString;
+  /* Return true if we have pastable data on the clipboard */
+  PRBool DataOnClipboard();
+  
+  nsCOMPtr<nsIAtom> mUndoCmd;
+  nsCOMPtr<nsIAtom> mRedoCmd;
+  nsCOMPtr<nsIAtom> mCutCmd;
+  nsCOMPtr<nsIAtom> mCopyCmd;
+  nsCOMPtr<nsIAtom> mPasteCmd;
+  nsCOMPtr<nsIAtom> mDeleteCmd;
+  nsCOMPtr<nsIAtom> mSelectAllCmd;
 
-  nsString mBeginLineString;
-  nsString mEndLineString  ;
-  nsString mSelectBeginLineString;
-  nsString mSelectEndLineString  ;
+  nsCOMPtr<nsIAtom> mBeginLineCmd;
+  nsCOMPtr<nsIAtom> mEndLineCmd;
+  nsCOMPtr<nsIAtom> mSelectBeginLineCmd;
+  nsCOMPtr<nsIAtom> mSelectEndLineCmd;
 
-  nsString mScrollTopString;
-  nsString mScrollBottomString;
+  nsCOMPtr<nsIAtom> mScrollTopCmd;
+  nsCOMPtr<nsIAtom> mScrollBottomCmd;
 
-  nsString mMoveTopString ;
-  nsString mMoveBottomString;
-  nsString mSelectMoveTopString;
-  nsString mSelectMoveBottomString;
+  nsCOMPtr<nsIAtom> mMoveTopCmd;
+  nsCOMPtr<nsIAtom> mMoveBottomCmd;
+  nsCOMPtr<nsIAtom> mSelectMoveTopCmd;
+  nsCOMPtr<nsIAtom> mSelectMoveBottomCmd;
 
-  nsString mLineNextString;
-  nsString mLinePreviousString;
-  nsString mSelectLineNextString;
-  nsString mSelectLinePreviousString;
+  nsCOMPtr<nsIAtom> mLineNextCmd;
+  nsCOMPtr<nsIAtom> mLinePreviousCmd;
+  nsCOMPtr<nsIAtom> mSelectLineNextCmd;
+  nsCOMPtr<nsIAtom> mSelectLinePreviousCmd;
 
-  nsString mLeftString;
-  nsString mRightString;
-  nsString mSelectLeftString;
-  nsString mSelectRightString;
+  nsCOMPtr<nsIAtom> mLeftCmd;
+  nsCOMPtr<nsIAtom> mRightCmd;
+  nsCOMPtr<nsIAtom> mSelectLeftCmd;
+  nsCOMPtr<nsIAtom> mSelectRightCmd;
 
-  nsString mWordLeftString;
-  nsString mWordRightString;
-  nsString mSelectWordLeftString;
-  nsString mSelectWordRightString;
+  nsCOMPtr<nsIAtom> mWordLeftCmd;
+  nsCOMPtr<nsIAtom> mWordRightCmd;
+  nsCOMPtr<nsIAtom> mSelectWordLeftCmd;
+  nsCOMPtr<nsIAtom> mSelectWordRightCmd;
 
-  nsString mScrollPageUp;
-  nsString mScrollPageDown;
-  nsString mScrollLineUp;
-  nsString mScrollLineDown;
+  nsCOMPtr<nsIAtom> mScrollPageUpCmd;
+  nsCOMPtr<nsIAtom> mScrollPageDownCmd;
+  nsCOMPtr<nsIAtom> mScrollLineUpCmd;
+  nsCOMPtr<nsIAtom> mScrollLineDownCmd;
 
-  nsString mMovePageUp;
-  nsString mMovePageDown;
-  nsString mSelectMovePageUp;
-  nsString mSelectMovePageDown;
+  nsCOMPtr<nsIAtom> mMovePageUpCmd;
+  nsCOMPtr<nsIAtom> mMovePageDownCmd;
+  nsCOMPtr<nsIAtom> mSelectMovePageUpCmd;
+  nsCOMPtr<nsIAtom> mSelectMovePageDownCmd;
 
-  nsString mDeleteCharBackward;
-  nsString mDeleteCharForward;
-  nsString mDeleteWordBackward;
-  nsString mDeleteWordForward;
-  nsString mDeleteToBeginningOfLine;
-  nsString mDeleteToEndOfLine;
+  nsCOMPtr<nsIAtom> mDeleteCharBackwardCmd;
+  nsCOMPtr<nsIAtom> mDeleteCharForwardCmd;
+  nsCOMPtr<nsIAtom> mDeleteWordBackwardCmd;
+  nsCOMPtr<nsIAtom> mDeleteWordForwardCmd;
+  nsCOMPtr<nsIAtom> mDeleteToBeginningOfLineCmd;
+  nsCOMPtr<nsIAtom> mDeleteToEndOfLineCmd;
 
 protected:
    nsIHTMLContent* mContent;    // weak reference, the content object owns this object

@@ -610,6 +610,17 @@ void nsHTMLEditor::InitRules()
   mRules->Init(this, mFlags);
 }
 
+
+PRBool nsHTMLEditor::IsModifiable()
+{
+  PRUint32 flags;
+  if (NS_SUCCEEDED(GetFlags(&flags)))
+    return ((flags & eEditorReadonlyMask) == 0);
+  else
+    return PR_FALSE;
+}
+
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark --- nsIHTMLEditor methods ---
@@ -3525,10 +3536,7 @@ nsHTMLEditor::Redo(PRUint32 aCount)
 NS_IMETHODIMP nsHTMLEditor::Cut()
 {
   nsCOMPtr<nsIDOMSelection> selection;
-  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult res = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
+  nsresult res = GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res))
     return res;
 
@@ -3542,6 +3550,22 @@ NS_IMETHODIMP nsHTMLEditor::Cut()
   return res;
 }
 
+NS_IMETHODIMP nsHTMLEditor::CanCut(PRBool &aCanCut)
+{
+  aCanCut = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+    
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+
+  aCanCut = !isCollapsed && IsModifiable();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsHTMLEditor::Copy()
 {
   //printf("nsEditor::Copy\n");
@@ -3550,6 +3574,22 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   return ps->DoCopy();
+}
+
+NS_IMETHODIMP nsHTMLEditor::CanCopy(PRBool &aCanCopy)
+{
+  aCanCopy = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+    
+  PRBool isCollapsed;
+  res = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+
+  aCanCopy = !isCollapsed;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
@@ -3647,6 +3687,66 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
 
   return rv;
 }
+
+
+NS_IMETHODIMP nsHTMLEditor::CanPaste(PRBool &aCanPaste)
+{
+  aCanPaste = PR_FALSE;
+  
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  // the flavors that we can deal with
+  char* textEditorFlavors[] = { kTextMime, kUnicodeMime, nsnull };
+  char* htmlEditorFlavors[] = { kJPEGImageMime, kHTMLMime, nsnull };
+
+  nsCOMPtr<nsISupportsArray> flavorsList;
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+         NS_GET_IID(nsISupportsArray), getter_AddRefs(flavorsList));
+  if (NS_FAILED(rv)) return rv;
+  
+  PRUint32 editorFlags;
+  GetFlags(&editorFlags);
+  
+  // add the flavors for all editors
+  for (char** flavor = textEditorFlavors; *flavor; flavor++)
+  {
+    nsCOMPtr<nsISupportsString> flavorString;            
+    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+         NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
+    if (flavorString)
+    {
+      flavorString->SetData(*flavor);
+      flavorsList->AppendElement(flavorString);
+    }
+  }
+  
+  // add the HTML-editor only flavors
+  if ((editorFlags & eEditorPlaintextMask) == 0)
+  {
+  
+    for (char** flavor = htmlEditorFlavors; *flavor; flavor++)
+    {
+      nsCOMPtr<nsISupportsString> flavorString;            
+      nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+           NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
+      if (flavorString)
+      {
+        flavorString->SetData(*flavor);
+        flavorsList->AppendElement(flavorString);
+      }
+    }
+  }
+  
+  PRBool haveFlavors;
+  rv = clipboard->HasDataMatchingFlavors(flavorsList, &haveFlavors);
+  if (NS_FAILED(rv)) return rv;
+  
+  aCanPaste = haveFlavors;
+  return NS_OK;
+}
+
 
 // 
 // HTML PasteAsQuotation: Paste in a blockquote type=cite

@@ -224,6 +224,11 @@ public:
     */
   NS_IMETHOD Cut()=0;
 
+  /** Can we cut? True if the doc is modifiable, and we have a non-
+    * collapsed selection.
+    */
+  NS_IMETHOD CanCut(PRBool &aCanCut)=0;
+  
   /** copy the currently selected text, putting it into the OS clipboard
     * What if no text is selected?
     * What about mixed selections?
@@ -231,10 +236,19 @@ public:
     */
   NS_IMETHOD Copy()=0;
   
+  /** Can we copy? True if we have a non-collapsed selection.
+    */
+  NS_IMETHOD CanCopy(PRBool &aCanCopy)=0;
+  
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
     */
   NS_IMETHOD Paste()=0;
+
+  /** Can we paste? True if the doc is modifiable, and we have
+    * pasteable data in the clipboard.
+    */
+  NS_IMETHOD CanPaste(PRBool &aCanPaste)=0;
 
   /* ------------ Selection methods -------------- */
 

@@ -35,6 +35,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMAttr.h"
+#include "nsIDOMXULCommandDispatcher.h"
 
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -45,11 +46,12 @@
 
 nsInterfaceState::nsInterfaceState()
 :  mEditor(nsnull)
-,  mWebShell(nsnull)
+,  mChromeDoc(nsnull)
 ,  mBoldState(eStateUninitialized)
 ,  mItalicState(eStateUninitialized)
 ,  mUnderlineState(eStateUninitialized)
 ,  mDirtyState(eStateUninitialized)
+,  mSelectionCollapsed(eStateUninitialized)
 {
 	NS_INIT_REFCNT();
 }
@@ -94,16 +96,16 @@ nsInterfaceState::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIWebShell *aChromeWebShell)
+nsInterfaceState::Init(nsIHTMLEditor* aEditor, nsIDOMXULDocument *aChromeDoc)
 {
   if (!aEditor)
     return NS_ERROR_INVALID_ARG;
 
-  if (!aChromeWebShell)
+  if (!aChromeDoc)
     return NS_ERROR_INVALID_ARG;
 
   mEditor = aEditor;		// no addreffing here
-  mWebShell = aChromeWebShell;
+  mChromeDoc = aChromeDoc;
   return NS_OK;
 }
 
@@ -130,6 +132,23 @@ nsInterfaceState::NotifyDocumentStateChanged(PRBool aNowDirty)
 NS_IMETHODIMP
 nsInterfaceState::NotifySelectionChanged()
 {
+  // if the selection state has changed, update stuff
+  PRBool isCollapsed = SelectionIsCollapsed();
+  if (isCollapsed != mSelectionCollapsed)
+  {
+    mSelectionCollapsed = isCollapsed;
+
+    // force command updating to happen. Slow, we'll speed it up later
+    // we could do this in JS, but we can't be a selection listener there
+    nsCOMPtr<nsIDOMXULCommandDispatcher> dispatcher;
+    nsresult rv = mChromeDoc->GetCommandDispatcher(getter_AddRefs(dispatcher));
+    if (NS_FAILED(rv)) return rv;
+    if (!dispatcher) return NS_ERROR_UNEXPECTED;
+    
+    rv = dispatcher->UpdateCommands(nsAutoString("selection-change"));
+    if (NS_FAILED(rv)) return rv;
+  }
+  
   return ForceUpdate();
 }
 
@@ -150,7 +169,6 @@ nsInterfaceState::ForceUpdate()
   
   // update the paragraph format popup
   rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
-
   // udpate the font face
   rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
   
@@ -365,25 +383,11 @@ nsInterfaceState::SetNodeAttribute(const char* nodeID, const char* attributeName
 {
     nsresult rv = NS_OK;
 
-  if (!mWebShell)
+  if (!mChromeDoc)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIContentViewer> cv;
-  rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_FAILED(rv)) return rv;
-    
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDocument> chromeDoc;
-  rv = docViewer->GetDocument(*getter_AddRefs(chromeDoc));
-  if (NS_FAILED(rv)) return rv;
- 
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(chromeDoc, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
   nsCOMPtr<nsIDOMElement> elem;
-  rv = xulDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
   if (NS_FAILED(rv) || !elem) return rv;
   
   return elem->SetAttribute(attributeName, newValue);
@@ -395,39 +399,25 @@ nsInterfaceState::UnsetNodeAttribute(const char* nodeID, const char* attributeNa
 {
     nsresult rv = NS_OK;
 
-  if (!mWebShell)
+  if (!mChromeDoc)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIContentViewer> cv;
-  rv = mWebShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_FAILED(rv)) return rv;
-    
-  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(cv, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDocument> chromeDoc;
-  rv = docViewer->GetDocument(*getter_AddRefs(chromeDoc));
-  if (NS_FAILED(rv)) return rv;
- 
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(chromeDoc, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
   nsCOMPtr<nsIDOMElement> elem;
-  rv = xulDoc->GetElementById( nodeID, getter_AddRefs(elem) );
+  rv = mChromeDoc->GetElementById( nodeID, getter_AddRefs(elem) );
   if (NS_FAILED(rv) || !elem) return rv;
   
   return elem->RemoveAttribute(attributeName);
 }
 
 
-nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult)
+nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIDOMXULDocument* aChromeDoc, nsIDOMSelectionListener** aInstancePtrResult)
 {
   nsInterfaceState* newThang = new nsInterfaceState;
   if (!newThang)
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aInstancePtrResult = nsnull;
-  nsresult rv = newThang->Init(aEditor, aWebShell);
+  nsresult rv = newThang->Init(aEditor, aChromeDoc);
   if (NS_FAILED(rv))
   {
     delete newThang;
