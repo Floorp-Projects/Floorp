@@ -306,7 +306,7 @@ PROD = $(notdir $(SHARED_LIBRARY))
 endif
 
 NOW = $(MOD_DEPTH)/config/$(OBJDIR)/now
-SH_DATE = $(shell date)
+SH_DATE = $(shell date "+%Y-%m-%d %T")
 SH_NOW = $(shell $(NOW))
 
 ifeq ($(OS_ARCH), WINNT)
