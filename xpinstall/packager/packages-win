@@ -12,7 +12,7 @@
 ;
 ; en-US 
 bin\defaults\profile\en-US\*
-bin\chrome\locales\en-US\*
+bin\chrome\locales\en-US.jar
 bin\searchplugins\*
 
 [langende]
@@ -198,24 +198,24 @@ bin\components\nsXmlRpcClient.js
 bin\plugins\npnul32.dll
 
 ; chrome stuff
-bin\chrome\packages\core\*
-bin\chrome\packages\widget-toolkit\*
-bin\chrome\skins\modern\*
-bin\chrome\skins\classic\*
-bin\chrome\skins\blue\*
--bin\chrome\packages\core\editor\content\EditorInitPage.html
--bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
+bin\chrome\packages\core.jar
+bin\chrome\packages\widget-toolkit.jar
+bin\chrome\skins\modern.jar
+bin\chrome\skins\classic.jar
+bin\chrome\skins\blue.jar
+;-bin\chrome\packages\core\editor\content\EditorInitPage.html
+;-bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
 ;-bin\chrome\packages\core\editor\content\TextEditorAppShell.xul
--bin\chrome\packages\core\editor\content\sb-bookmarks-panel.xul
--bin\chrome\packages\core\editor\content\sb-bookmarks.js
--bin\chrome\packages\core\editor\content\sb-file-contextMenu.js
--bin\chrome\packages\core\editor\content\sb-file-panel.js
--bin\chrome\packages\core\editor\content\sb-file-panel.xul
--bin\chrome\packages\core\editor\content\sb-FileWidgetFileHandler.js
--bin\chrome\packages\core\editor\content\viewsource.js
--bin\chrome\packages\core\editor\content\viewsource.xul
--bin\chrome\packages\core\communicator\content\domviewer
+;-bin\chrome\packages\core\editor\content\sb-bookmarks-panel.xul
+;-bin\chrome\packages\core\editor\content\sb-bookmarks.js
+;-bin\chrome\packages\core\editor\content\sb-file-contextMenu.js
+;-bin\chrome\packages\core\editor\content\sb-file-panel.js
+;-bin\chrome\packages\core\editor\content\sb-file-panel.xul
+;-bin\chrome\packages\core\editor\content\sb-FileWidgetFileHandler.js
+;-bin\chrome\packages\core\editor\content\viewsource.js
+;-bin\chrome\packages\core\editor\content\viewsource.xul
+;-bin\chrome\packages\core\communicator\content\domviewer
 
 ; all the pref files must be part of base
 ; to prevent migration bugs
@@ -277,8 +277,8 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\absyncsv.dll
 bin\components\absync.xpt
-bin\chrome\packages\messenger\*
+bin\chrome\packages\messenger.jar
 
 [chatzilla]
 bin\components\chatzilla-service.js
-bin\chrome\packages\chatzilla\*
+bin\chrome\packages\chatzilla.jar
