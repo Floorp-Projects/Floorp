@@ -405,7 +405,14 @@ struct NS_COM nsStr {
    * @param   aIgnorecase tells us whether to use a case-sensitive comparison
    * @return  -1,0,1 depending on <,==,>
    */
-  static PRInt32  StrCompare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase);
+  static PRInt32 StrCompare1To1(const nsStr& aDest,const nsStr& aSource,
+                                PRInt32 aCount,PRBool aIgnoreCase);
+  static PRInt32 StrCompare1To2(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
+  static PRInt32 StrCompare2To1(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
+  static PRInt32 StrCompare2To2(const nsStr& aDest, const nsStr& aSource,
+                                PRInt32 aCount, PRBool aIgnoreCase);
 
  /**
   * These methods scan the given string for 1 or more chars in a given direction
@@ -422,7 +429,8 @@ struct NS_COM nsStr {
   static PRInt32 FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
   static PRInt32 RFindSubstr(const nsStr& aDest,const nsStr& aSource, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
-  static PRInt32 RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
+  static PRInt32 RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount);
   static PRInt32 RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset);
 
   static void    Overwrite(nsStr& aDest,const nsStr& aSource,PRInt32 anOffset);

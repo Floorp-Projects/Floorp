@@ -1101,7 +1101,7 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,
  */
 #if 0
 PRInt32 nsString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
-  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset);
+  PRInt32 result=nsStr::RFindChar2(*this,aChar,aIgnoreCase,anOffset);
   return result;
 }
 #endif
@@ -1116,7 +1116,7 @@ PRInt32 nsString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) con
  *  @return  offset of found char, or -1 (kNotFound)
  */
 PRInt32 nsString::RFindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindChar(*this,aChar,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStr::RFindChar2(*this,aChar,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1204,7 +1204,7 @@ PRInt32 nsString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase,
     temp.mLength= (0<aCount) ? aCount : nsCRT::strlen(aCString);
 
     temp.mStr=(char*)aCString;
-    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
+    return nsStr::StrCompare2To1(*this,temp,aCount,aIgnoreCase);
   }
 
   return 0;
@@ -1219,7 +1219,7 @@ PRInt32 nsString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase,
  * @return  -1,0,1
  */
 PRInt32 nsString::CompareWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 result=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
+  PRInt32 result=nsStr::StrCompare2To2(*this,aString,aCount,aIgnoreCase);
   return result;
 }
 
@@ -1239,7 +1239,7 @@ PRInt32 nsString::CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreC
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    return nsStr::StrCompare(*this,temp,aCount,aIgnoreCase);
+    return nsStr::StrCompare2To2(*this,temp,aCount,aIgnoreCase);
   }
 
    return 0;
@@ -1264,7 +1264,7 @@ PRBool nsString::EqualsIgnoreCase(const char* aString,PRInt32 aLength) const {
  * @return TRUE if equal
  */
 PRBool nsString::EqualsWithConversion(const nsString& aString,PRBool aIgnoreCase,PRInt32 aCount) const {
-  PRInt32 theAnswer=nsStr::StrCompare(*this,aString,aCount,aIgnoreCase);
+  PRInt32 theAnswer=nsStr::StrCompare2To2(*this,aString,aCount,aIgnoreCase);
   PRBool  result=PRBool(0==theAnswer);
   return result;
 
