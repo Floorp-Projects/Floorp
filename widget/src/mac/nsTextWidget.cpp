@@ -292,6 +292,7 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 											unused = 0;
 											str.Cut ( startSel, selectionLen );
 											SetText ( str, unused );
+											SetSelection(startSel, startSel);
 										}
 									} // if there is a selection
 									eventHandled = PR_TRUE;
