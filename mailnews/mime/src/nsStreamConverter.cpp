@@ -202,6 +202,13 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
               *override_charset = PR_TRUE;
 
             // notify the default to msgWindow (for the menu check mark)
+            // do not set the default in case of nsMimeMessageDraftOrTemplate
+            // or nsMimeMessageEditorTemplate because it is already set 
+            // when the message is displayed and doing it again may overwrite 
+            // the correct MIME charset parsed from the message header
+            if (aOutputType != nsMimeOutput::nsMimeMessageDraftOrTemplate &&
+                aOutputType != nsMimeOutput::nsMimeMessageEditorTemplate)
+            {
             nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aURI));
             if (msgurl)
             {
@@ -211,6 +218,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI, PRInt32 aOutputType)
               {
                 msgWindow->SetMailCharacterSet(NS_ConvertASCIItoUCS2(*default_charset).get());
                 msgWindow->SetCharsetOverride(*override_charset);
+                }
               }
             }
 
