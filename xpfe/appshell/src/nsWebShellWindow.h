@@ -242,6 +242,7 @@ protected:
   void                     SetSizeFromXUL();
   void                     SetTitleFromXUL();
   void                     ShowAppropriateChrome();
+  void                     LoadContentAreas();
 
   virtual ~nsWebShellWindow();
 
