@@ -294,10 +294,11 @@ Rights Reserved.
                 oncommand="SendMailToNode(document.popupNode)"/>
 	</popup>
 	<popup id="messagePaneContext"/>
+</popupset>
+
+<popupset id="aTooltipSet">
 	<popup id="folderTooltip"/>
 </popupset>
-<popupset id="aTooltipSet"/>
-
 
 
 
