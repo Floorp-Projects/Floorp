@@ -254,6 +254,7 @@ case "$target" in
     else
        MKSHLIB='$(CC) $(DSO_LDOPTS)'
        _WARNINGS_CFLAGS=''
+       _WARNINGS_CXXFLAGS=''
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
