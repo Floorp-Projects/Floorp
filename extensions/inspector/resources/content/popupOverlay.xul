@@ -34,7 +34,10 @@
       <template>
         <rule>
           <menupopup>
-            <menuitem uri="rdf:*" label="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
+            <menuitem uri="rdf:*"
+                      label="rdf:http://home.netscape.com/NC-rdf#KeyIndex rdf:http://home.netscape.com/NC-rdf#Name"
+                      accesskey="rdf:http://home.netscape.com/NC-rdf#KeyIndex"
+                      oncommand="inspector.goToWindow(this);"/>
           </menupopup>
         </rule>
       </template>
@@ -58,7 +61,7 @@
     <menuitem id="mnEditInsert"/>
     <menuitem id="mnEditDelete"/>
     <menuseparator/>
-    <menuitem label="&cmdPrefs.label;" accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
+    <menuitem id="menu_preferences" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
   <menupopup id="mppSearch">
