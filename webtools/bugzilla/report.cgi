@@ -207,8 +207,8 @@ $vars->{'row_names'} = \@row_names;
 $vars->{'tbl_names'} = \@tbl_names;
 
 # Below a certain width, we don't see any bars, so there needs to be a minimum.
-if ($cgi->param('format') eq "bar") {
-    my $min_width = (scalar(@col_names) || 1) * 10;
+if ($width && $cgi->param('format') eq "bar") {
+    my $min_width = (scalar(@col_names) || 1) * 20;
 
     if (!$cgi->param('cumulate')) {
         $min_width *= (scalar(@row_names) || 1);
