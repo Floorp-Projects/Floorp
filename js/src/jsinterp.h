@@ -71,6 +71,13 @@ struct JSStackFrame {
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
+typedef struct JSInlineFrame {
+    JSStackFrame    frame;          /* base struct */
+    jsval           *oldsp;         /* old frame's operand stack base */
+    void            *mark;          /* mark before inline frame */
+    void            *hookData;      /* debugger call hook data */
+} JSInlineFrame;
+
 /* JS stack frame special flags. */
 #define JSFRAME_DEBUGGER    0x1     /* frame for JS_EvaluateInStackFrame */
 #define JSFRAME_EVAL        0x2     /* frame for obj_eval */

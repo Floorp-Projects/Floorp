@@ -107,7 +107,7 @@ js_FlushPropertyCacheByProp(JSContext *cx, JSProperty *prop)
 /*
  * Class for for/in loop property iterator objects.
  */
-#define JSSLOT_ITER_STATE    (JSSLOT_START)
+#define JSSLOT_ITER_STATE   (JSSLOT_START)
 
 static void
 prop_iterator_finalize(JSContext *cx, JSObject *obj)
@@ -412,6 +412,65 @@ js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 }
 
 /*
+ * Compute the 'this' parameter and store it in frame as frame.thisp.
+ * Activation objects ("Call" objects not created with "new Call()", i.e.,
+ * "Call" objects that have private data) may not be referred to by 'this',
+ * as dictated by ECMA.
+ *
+ * N.B.: fp->argv must be set, and fp->argv[-2] must be the callee object
+ * reference, usually a function object.  Also, fp->constructing must be
+ * set if we are preparing for a constructor call.
+ */
+static JSBool
+ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
+{
+    JSObject *parent;
+
+    if (thisp &&
+        !(OBJ_GET_CLASS(cx, thisp) == &js_CallClass &&
+          JS_GetPrivate(cx, thisp) != NULL))
+    {
+        /* Some objects (e.g., With) delegate 'this' to another object. */
+        thisp = OBJ_THIS_OBJECT(cx, thisp);
+        if (!thisp)
+            return JS_FALSE;
+
+        /* Default return value for a constructor is the new object. */
+        if (fp->constructing)
+            fp->rval = OBJECT_TO_JSVAL(thisp);
+    } else {
+        /*
+         * ECMA requires "the global object", but in the presence of multiple
+         * top-level objects (windows, frames, or certain layers in the client
+         * object model), we prefer fun's parent.  An example that causes this
+         * code to run:
+         *
+         *   // in window w1
+         *   function f() { return this }
+         *   function g() { return f }
+         *
+         *   // in window w2
+         *   var h = w1.g()
+         *   alert(h() == w1)
+         *
+         * The alert should display "true".
+         */
+        JS_ASSERT(!fp->constructing);
+        parent = OBJ_GET_PARENT(cx, JSVAL_TO_OBJECT(fp->argv[-2]));
+        if (!parent) {
+            thisp = cx->globalObject;
+        } else {
+            /* walk up to find the top-level object */
+            thisp = parent;
+            while ((parent = OBJ_GET_PARENT(cx, thisp)) != NULL)
+                thisp = parent;
+        }
+    }
+    fp->thisp = thisp;
+    return JS_TRUE;
+}
+
+/*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
  * required arguments, allocate declared local variables, and pop everything
@@ -477,16 +536,16 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
             ok = clasp->convert(cx, funobj, JSTYPE_FUNCTION, &v);
             if (!ok)
                 goto out2;
-        }
 
-        if (JSVAL_IS_FUNCTION(cx, v)) {
-            funobj = JSVAL_TO_OBJECT(v);
-            parent = OBJ_GET_PARENT(cx, funobj);
-            fun = (JSFunction *) JS_GetPrivate(cx, funobj);
+            if (JSVAL_IS_FUNCTION(cx, v)) {
+                funobj = JSVAL_TO_OBJECT(v);
+                parent = OBJ_GET_PARENT(cx, funobj);
+                fun = (JSFunction *) JS_GetPrivate(cx, funobj);
 
-            /* Make vp refer to funobj to keep it available as argv[-2]. */
-            *vp = v;
-            goto have_fun;
+                /* Make vp refer to funobj to keep it available as argv[-2]. */
+                *vp = v;
+                goto have_fun;
+            }
         }
         fun = NULL;
         script = NULL;
@@ -530,55 +589,10 @@ have_fun:
     frame.special = 0;
     frame.dormantNext = NULL;
 
-    /*
-     * Compute the 'this' parameter and store it in frame as frame.thisp.
-     * Activation objects ("Call" objects not created with "new Call", i.e.,
-     * "Call" objects with private data) may not be referred to by 'this'
-     * as dictated by ECMA.
-     */
-    if (thisp &&
-        !(OBJ_GET_CLASS(cx, thisp) == &js_CallClass &&
-          JS_GetPrivate(cx, thisp) != NULL))
-    {
-        /* Some objects (e.g., With) delegate 'this' to another object. */
-        thisp = OBJ_THIS_OBJECT(cx, thisp);
-        if (!thisp) {
-            ok = JS_FALSE;
-            goto out2;
-        }
-
-        /* Default return value for a constructor is the new object. */
-        if (frame.constructing)
-            frame.rval = OBJECT_TO_JSVAL(thisp);
-    } else {
-        /*
-         * ECMA requires "the global object", but in the presence of multiple
-         * top-level objects (windows, frames, or certain layers in the client
-         * object model), we prefer fun's parent.  An example that causes this
-         * code to run:
-         *
-         *   // in window w1
-         *   function f() { return this }
-         *   function g() { return f }
-         *
-         *   // in window w2
-         *   var h = w1.g()
-         *   alert(h() == w1)
-         *
-         * The alert should display "true".
-         */
-        JS_ASSERT(!frame.constructing);
-        if (!parent) {
-            thisp = cx->globalObject;
-        } else {
-            /* walk up to find the top-level object */
-            JSObject *tmp;
-            thisp = parent;
-            while ((tmp = OBJ_GET_PARENT(cx, thisp)) != NULL)
-                thisp = tmp;
-        }
-    }
-    frame.thisp = thisp;
+    /* Compute the 'this' parameter and store it in frame as frame.thisp. */
+    ok = ComputeThis(cx, thisp, &frame);
+    if (!ok)
+        goto out2;
 
     /* From here on, control must flow through label out: to return. */
     cx->fp = &frame;
@@ -813,16 +827,16 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     /*
      * Here we wrap the call to js_Interpret with code to (conditionally)
      * save and restore the old stack frame chain into a chain of 'dormant'
-     * frame chains. Since we are replacing cx->fp we were running into the
-     * problem that if gc was called, then some of the objects associated
-     * with the old frame chain (stored here in the C stack as 'oldfp') were
-     * not rooted and were being collected. This was bad. So, now we
-     * preserve the links to these 'dormant' frame chains in cx before
-     * calling js_Interpret and cleanup afterwards. gc walks these dormant
-     * chains and marks objects in the same way that it marks object in the
-     * primary cx->fp chain.
+     * frame chains.  Since we are replacing cx->fp, we were running into
+     * the problem that if GC was called under this frame, some of the GC
+     * things associated with the old frame chain (available here only in
+     * the C variable 'oldfp') were not rooted and were being collected.
+     *
+     * So, now we preserve the links to these 'dormant' frame chains in cx
+     * before calling js_Interpret and cleanup afterwards.  The GC walks
+     * these dormant chains and marks objects in the same way that it marks
+     * objects in the primary cx->fp chain.
      */
-
     if (oldfp && oldfp != down) {
         JS_ASSERT(!oldfp->dormantNext);
         oldfp->dormantNext = cx->dormantFrameChain;
@@ -999,17 +1013,20 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
 #define MAX_INTERP_LEVEL 30
 #endif
 
+#define MAX_INLINE_CALL_COUNT 1000
+
 JSBool
 js_Interpret(JSContext *cx, jsval *result)
 {
     JSRuntime *rt;
     JSStackFrame *fp;
     JSScript *script;
-    JSVersion newvers, oldvers;
+    uintN inlineCallCount;
     JSObject *obj, *obj2, *proto, *parent;
+    JSVersion currentVersion, originalVersion;
     JSBranchCallback onbranch;
     JSBool ok, cond;
-    ptrdiff_t depth, len;
+    jsint depth, len;
     jsval *sp, *newsp;
     void *mark;
     jsbytecode *pc, *pc2, *endpc;
@@ -1036,8 +1053,7 @@ js_Interpret(JSContext *cx, jsval *result)
     FILE *tracefp;
 #endif
 #if JS_HAS_SWITCH_STATEMENT
-    jsint low, high;
-    uintN off, npairs;
+    jsint low, high, off, npairs;
     JSBool match;
 #endif
 #if JS_HAS_GETTER_SETTER
@@ -1056,20 +1072,18 @@ js_Interpret(JSContext *cx, jsval *result)
     *result = JSVAL_VOID;
     rt = cx->runtime;
 
-    /*
-     * Set registerized frame pointer and derived pointers.
-     */
+    /* Set registerized frame pointer and derived script pointer. */
     fp = cx->fp;
     script = fp->script;
-    obj = fp->scopeChain;
 
-    /*
-     * Optimized Get and SetVersion for proper script language versioning.
-     */
-    newvers = script->version;
-    oldvers = cx->version;
-    if (newvers != oldvers)
-        JS_SetVersion(cx, newvers);
+    /* Count of JS function calls that nest in this C js_Interpret frame. */
+    inlineCallCount = 0;
+
+    /* Optimized Get and SetVersion for proper script language versioning. */
+    currentVersion = script->version;
+    originalVersion = cx->version;
+    if (currentVersion != originalVersion)
+        JS_SetVersion(cx, currentVersion);
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1092,19 +1106,19 @@ js_Interpret(JSContext *cx, jsval *result)
     /*
      * Allocate operand and pc stack slots for the script's worst-case depth.
      */
-    depth = (ptrdiff_t)script->depth;
+    depth = (jsint) script->depth;
     newsp = js_AllocStack(cx, (uintN)(2 * depth), &mark);
     if (!newsp) {
         ok = JS_FALSE;
-        sp = NULL;
         goto out;
     }
     newsp += depth;
-    fp->sp = sp = newsp;
+    sp = newsp;
+    SAVE_SP(fp);
 
     while (pc < endpc) {
         fp->pc = pc;
-        op = (JSOp)*pc;
+        op = (JSOp) *pc;
       do_op:
         cs = &js_CodeSpec[op];
         len = cs->length;
@@ -1205,12 +1219,65 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_RETURN:
             CHECK_BRANCH(-1);
             fp->rval = POP();
+            if (inlineCallCount)
+          inline_return:
+            {
+                JSInlineFrame *ifp = (JSInlineFrame *) fp;
+                void *hookData = ifp->hookData;
+
+                if (hookData)
+                    cx->runtime->callHook(cx, fp, JS_FALSE, &ok, hookData);
+#if JS_HAS_ARGS_OBJECT
+                if (fp->argsobj)
+                    ok &= js_PutArgsObject(cx, fp);
+#endif
+
+                /* Store the return value in the caller's operand frame. */
+                vp = fp->argv - 2;
+                *vp = fp->rval;
+
+                /* Restore newsp for sanity-checking assertions about sp. */
+                newsp = ifp->oldsp;
+
+                /* Restore cx->fp and release the inline frame's space. */
+                cx->fp = fp = fp->down;
+                JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
+
+                /* Restore sp to point just above the return value. */
+                fp->sp = vp + 1;
+                RESTORE_SP(fp);
+
+                /* Restore the calling script's interpreter registers. */
+                script = fp->script;
+                depth = (jsint) script->depth;
+                pc = fp->pc;
+                endpc = script->code + script->length;
+
+                /* Store the generating pc for the return value. */
+                vp[-depth] = (jsval)pc;
+
+                /* Restore version and version control variable. */
+                if (script->version != currentVersion) {
+                    currentVersion = script->version;
+                    JS_SetVersion(cx, currentVersion);
+                }
+
+                /* Set remaining variables for 'goto advance_pc'. */
+                op = (JSOp) *pc;
+                cs = &js_CodeSpec[op];
+                len = cs->length;
+
+                /* Resume execution in the calling frame. */
+                inlineCallCount--;
+                if (ok)
+                    goto advance_pc;
+            }
             goto out;
 
 #if JS_HAS_SWITCH_STATEMENT
           case JSOP_DEFAULT:
             (void) POP();
-            /* fall through */
+            /* FALL THROUGH */
 #endif
           case JSOP_GOTO:
             len = GET_JUMP_OFFSET(pc);
@@ -2288,7 +2355,105 @@ js_Interpret(JSContext *cx, jsval *result)
           case JSOP_CALL:
           case JSOP_EVAL:
             argc = GET_ARGC(pc);
+            vp = sp - (argc + 2);
+            lval = *vp;
             SAVE_SP(fp);
+
+            if (JSVAL_IS_FUNCTION(cx, lval) &&
+                (obj = JSVAL_TO_OBJECT(lval),
+                 fun = (JSFunction *) JS_GetPrivate(cx, obj),
+                 fun->script &&
+                 fun->flags == 0 &&
+                 argc >= (uintN)(fun->nargs + fun->extra)))
+          /* inline_call: */
+            {
+                uintN nframeslots, nvars;
+                jsval *oldsp;
+                void *mark;
+                JSInlineFrame *newifp;
+                JSInterpreterHook hook;
+
+                /* Restrict recursion of lightweight functions. */
+                if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_OVER_RECURSED);
+                    return JS_FALSE;
+                }
+
+                /* Compute the number of stack slots needed for fun. */
+                nframeslots = (sizeof(JSInlineFrame) + sizeof(jsval) - 1)
+                              / sizeof(jsval);
+                nvars = fun->nvars;
+                script = fun->script;
+                depth = (jsint) script->depth;
+
+                /* Allocate the frame and space for vars and operands. */
+                oldsp = newsp;
+                newsp = js_AllocStack(cx, nframeslots + nvars + 2 * depth,
+                                      &mark);
+                if (!newsp) {
+                    ok = JS_FALSE;
+                    goto bad_inline_call;
+                }
+                newifp = (JSInlineFrame *) newsp;
+                newsp += nframeslots;
+
+                /* Initialize the stack frame. */
+                memset(newifp, 0, sizeof(JSInlineFrame));
+                newifp->frame.script = script;
+                newifp->frame.fun = fun;
+                newifp->frame.argc = argc;
+                newifp->frame.argv = vp + 2;
+                newifp->frame.rval = JSVAL_VOID;
+                newifp->frame.nvars = nvars;
+                newifp->frame.vars = newsp;
+                newifp->frame.down = fp;
+                newifp->frame.scopeChain = OBJ_GET_PARENT(cx, obj);
+                newifp->oldsp = oldsp;
+                newifp->mark = mark;
+
+                /* Compute the 'this' parameter now that argv is set. */
+                ok = ComputeThis(cx, JSVAL_TO_OBJECT(vp[1]), &newifp->frame);
+                if (!ok) {
+                    js_FreeStack(cx, mark);
+                    goto bad_inline_call;
+                }
+
+                /* Push void to initialize local variables. */
+                sp = newsp;
+                while (nvars--)
+                    PUSH(JSVAL_VOID);
+                sp += depth;
+                newsp = sp;
+                SAVE_SP(&newifp->frame);
+
+                /* Call the debugger hook if present. */
+                hook = cx->runtime->callHook;
+                if (hook) {
+                    newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                            cx->runtime->callHookData);
+                }
+
+                /* Switch to new version if necessary. */
+                if (script->version != currentVersion) {
+                    currentVersion = script->version;
+                    JS_SetVersion(cx, currentVersion);
+                }
+
+                /* Push the frame and set interpreter registers. */
+                cx->fp = fp = &newifp->frame;
+                pc = script->code;
+                endpc = pc + script->length;
+                inlineCallCount++;
+                continue;
+
+              bad_inline_call:
+                script = fp->script;
+                depth = (jsint) script->depth;
+                newsp = oldsp;
+                goto out;
+            }
+
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
             if (!ok)
@@ -2413,15 +2578,15 @@ js_Interpret(JSContext *cx, jsval *result)
                     goto out;
             }
 
-            pc2 += 2;
+            pc2 += JUMP_OFFSET_LEN;
             low = GET_JUMP_OFFSET(pc2);
-            pc2 += 2;
+            pc2 += JUMP_OFFSET_LEN;
             high = GET_JUMP_OFFSET(pc2);
 
             i -= low;
             if ((jsuint)i <= (jsuint)(high - low)) {
-                pc2 += 2 + 2 * i;
-                off = GET_JUMP_OFFSET(pc2);
+                pc2 += JUMP_OFFSET_LEN + JUMP_OFFSET_LEN * i;
+                off = (jsint) GET_JUMP_OFFSET(pc2);
                 if (off)
                     len = off;
             }
@@ -2438,9 +2603,9 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto advance_pc;
             }
 
-            pc2 += 2;
-            npairs = GET_ATOM_INDEX(pc2);
-            pc2 += 2;
+            pc2 += JUMP_OFFSET_LEN;
+            npairs = (jsint) GET_ATOM_INDEX(pc2);
+            pc2 += ATOM_INDEX_LEN;
 
 #define SEARCH_PAIRS(MATCH_CODE)                                              \
     while (npairs) {                                                          \
@@ -2448,11 +2613,11 @@ js_Interpret(JSContext *cx, jsval *result)
         rval = ATOM_KEY(atom);                                                \
         MATCH_CODE                                                            \
         if (match) {                                                          \
-            pc2 += 2;                                                         \
+            pc2 += ATOM_INDEX_LEN;                                            \
             len = GET_JUMP_OFFSET(pc2);                                       \
             goto advance_pc;                                                  \
         }                                                                     \
-        pc2 += 4;                                                             \
+        pc2 += ATOM_INDEX_LEN + JUMP_OFFSET_LEN;                              \
         npairs--;                                                             \
     }
             if (JSVAL_IS_STRING(lval)) {
@@ -3041,7 +3206,7 @@ js_Interpret(JSContext *cx, jsval *result)
 #endif /* JS_HAS_INITIALIZERS */
 
 #if JS_HAS_EXCEPTIONS
-          /* reset the stack to the given depth */
+          /* Reset the stack to the given depth. */
           case JSOP_SETSP:
             i = (jsint) GET_ATOM_INDEX(pc);
             JS_ASSERT(i >= 0);
@@ -3049,9 +3214,8 @@ js_Interpret(JSContext *cx, jsval *result)
             break;
 
           case JSOP_GOSUB:
+            i = PTRDIFF(pc, script->main, jsbytecode) + len;
             len = GET_JUMP_OFFSET(pc);
-            JS_ASSERT(js_CodeSpec[JSOP_GOSUB].length == 3);
-            i = PTRDIFF(pc, script->main, jsbytecode) + 3;
             PUSH(INT_TO_JSVAL(i));
             break;
 
@@ -3217,11 +3381,19 @@ no_catch:
 #endif
 
     /*
+     * Check whether control fell off the end of a lightweight function, or an
+     * exception thrown under such a function was not caught by it.  If so, go
+     * to the inline code under JSOP_RETURN.
+     */
+    if (inlineCallCount)
+        goto inline_return;
+
+    /*
      * Restore the previous frame's execution state.
      */
     js_FreeStack(cx, mark);
-    if (newvers != oldvers)
-        JS_SetVersion(cx, oldvers);
+    if (currentVersion != originalVersion)
+        JS_SetVersion(cx, originalVersion);
     cx->interpLevel--;
     return ok;
 }
