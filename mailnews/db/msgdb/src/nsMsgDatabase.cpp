@@ -129,6 +129,23 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 ol
     return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDatabase::NotifyReadChanged(nsIDBChangeListener *instigator)
+{
+    if (m_ChangeListeners == nsnull)
+        return NS_OK;
+
+    for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
+    {
+        nsIDBChangeListener *changeListener =
+            (nsIDBChangeListener *) m_ChangeListeners->ElementAt(i);
+
+        nsresult rv = changeListener->OnReadChanged(instigator);
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
@@ -1104,7 +1121,7 @@ nsresult nsMsgDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
 {
 	PRUint32	statusFlags = origFlags;
-	PRBool	isRead;
+	PRBool	isRead = PR_TRUE;
 
     nsMsgKey key;
     (void)msgHdr->GetMessageKey(&key);
@@ -1184,6 +1201,11 @@ nsresult nsMsgDatabase::HasAttachments(nsMsgKey key, PRBool *pHasThem)
 	return rv;
 }
 
+PRBool nsMsgDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
+{
+	return SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
+}
+
 NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                              nsIDBChangeListener *instigator)
 {
@@ -1192,7 +1214,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	PRUint32 oldFlags;
     (void)msgHdr->GetMessageKey(&key);
 	msgHdr->GetFlags(&oldFlags);
-	SetHdrFlag(msgHdr, bRead, MSG_FLAG_READ);
+    SetHdrReadFlag(msgHdr, bRead);
 
 	if (m_newSet)
 		m_newSet->Remove(key);
@@ -1416,7 +1438,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                          nsIDBChangeListener *instigator)
 {
     nsresult rv = NS_OK;
-	PRBool	isRead;
+	PRBool	isRead = PR_TRUE;
 	IsHeaderRead(msgHdr, &isRead);
 	// if the flag is already correct in the db, don't change it
 	if (!!isRead != !!bRead)
@@ -1994,7 +2016,7 @@ static nsresult
 nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
 {
     nsMsgDatabase* db = (nsMsgDatabase*)closure;
-    PRBool wasRead;
+    PRBool wasRead = PR_TRUE;
     nsresult rv = db->IsHeaderRead(msg, &wasRead);
     if (NS_FAILED(rv)) 
 		return rv;
@@ -2062,8 +2084,11 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
 		{
 			m_dbFolderInfo->ChangeNumMessages(1);
 			m_dbFolderInfo->ChangeNumVisibleMessages(1);
-			if (! (flags & MSG_FLAG_READ))
+            PRBool isRead = PR_TRUE;
+            IsHeaderRead(newHdr, &isRead);
+			if (!isRead) {
 				m_dbFolderInfo->ChangeNumNewMessages(1);
+            }
 		}
 
 		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdr->GetMDBRow());

@@ -21,6 +21,7 @@
 */
 
 #include "msgCore.h"
+#include "nntpCore.h"
 #include "nsNewsUtils.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
@@ -30,10 +31,6 @@
 #include "nsINntpIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgUtils.h"
-
-#ifdef DEBUG_seth_
-#define DEBUG_NEWS 1
-#endif
 
 static nsresult
 nsGetNewsServer(const char* username, const char *hostname,

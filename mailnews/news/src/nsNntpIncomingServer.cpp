@@ -25,6 +25,11 @@
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsEnumeratorUtils.h"
+#include "nsIMsgNewsFolder.h"
+#include "nsIFolder.h"
+#include "nsIFileSpec.h"
+#include "nsFileStream.h"
 
 #ifdef DEBUG_seth
 #define DO_HASHING_OF_HOSTNAME 1
@@ -55,10 +60,13 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
 nsNntpIncomingServer::nsNntpIncomingServer()
 {    
     NS_INIT_REFCNT();
+
+    mNewsrcHasChanged = PR_FALSE;
 }
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
 {
+    CloseCachedConnections();
 }
 
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on");
@@ -159,3 +167,131 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     return rv;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::WriteNewsrcFile()
+{
+    nsresult rv;
+
+    PRBool newsrcHasChanged;
+    rv = GetNewsrcHasChanged(&newsrcHasChanged);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_NEWS
+	nsXPIDLCString hostname;
+	rv = GetHostName(getter_Copies(hostname));
+	if (NS_FAILED(rv)) return rv;
+#endif /* DEBUG_NEWS */
+
+    if (newsrcHasChanged) {        
+#ifdef DEBUG_NEWS
+        printf("write newsrc file for %s\n", (const char *)hostname);
+#endif
+        nsCOMPtr <nsIFileSpec> newsrcFile;
+        rv = GetNewsrcFilePath(getter_AddRefs(newsrcFile));
+	    if (NS_FAILED(rv)) return rv;
+
+        nsFileSpec newsrcFileSpec;
+        rv = newsrcFile->GetFileSpec(&newsrcFileSpec);
+        if (NS_FAILED(rv)) return rv;
+
+        nsIOFileStream  newsrcStream(newsrcFileSpec /*, PR_CREATE_FILE */ );
+
+        nsCOMPtr<nsIEnumerator> subFolders;
+        nsCOMPtr<nsIFolder> rootFolder;
+ 
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(rootFolder, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        nsXPIDLCString optionLines;
+        rv = newsFolder->GetOptionLines(getter_Copies(optionLines));
+        if (NS_SUCCEEDED(rv) && ((const char *)optionLines)) {
+               newsrcStream << (const char *)optionLines;
+#ifdef DEBUG_NEWS
+               printf("option lines:\n%s",(const char *)optionLines);
+#endif /* DEBUG_NEWS */
+        }
+#ifdef DEBUG_NEWS
+        else {
+            printf("no option lines to write out\n");
+        }
+#endif /* DEBUG_NEWS */
+
+        nsXPIDLCString unsubscribedLines;
+        rv = newsFolder->GetUnsubscribedNewsgroupLines(getter_Copies(unsubscribedLines));
+        if (NS_SUCCEEDED(rv) && ((const char *)unsubscribedLines)) {
+               newsrcStream << (const char *)unsubscribedLines;
+#ifdef DEBUG_NEWS
+               printf("unsubscribedLines:\n%s",(const char *)unsubscribedLines);
+#endif /* DEBUG_NEWS */
+        }
+#ifdef DEBUG_NEWS
+        else {
+            printf("no unsubscribed lines to write out\n");
+        } 
+#endif /* DEBUG_NEWS */
+
+        rv = rootFolder->GetSubFolders(getter_AddRefs(subFolders));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAdapterEnumerator *simpleEnumerator = new nsAdapterEnumerator(subFolders);
+        if (simpleEnumerator == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+
+        PRBool moreFolders;
+        
+        while (NS_SUCCEEDED(simpleEnumerator->HasMoreElements(&moreFolders)) && moreFolders) {
+            nsCOMPtr<nsISupports> child;
+            rv = simpleEnumerator->GetNext(getter_AddRefs(child));
+            if (NS_SUCCEEDED(rv) && child) {
+                newsFolder = do_QueryInterface(child, &rv);
+                if (NS_SUCCEEDED(rv) && newsFolder) {
+                    nsXPIDLCString newsrcLine;
+                    rv = newsFolder->GetNewsrcLine(getter_Copies(newsrcLine));
+                    if (NS_SUCCEEDED(rv) && ((const char *)newsrcLine)) {
+                        newsrcStream << (const char *)newsrcLine;
+#ifdef DEBUG_NEWS
+                        printf("writing to newsrc file:\n");
+                        printf("%s",(const char *)newsrcLine);
+#endif /* DEBUG_NEWS */
+                    }
+                }
+            }
+        }
+        delete simpleEnumerator;
+
+        newsrcStream.close();
+        
+        rv = SetNewsrcHasChanged(PR_FALSE);
+    }
+#ifdef DEBUG_NEWS
+    else {
+        printf("no need to write newsrc file for %s, it was not dirty\n", (const char *)hostname);
+    }
+#endif /* DEBUG_NEWS */
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::SetNewsrcHasChanged(PRBool aNewsrcHasChanged)
+{
+    mNewsrcHasChanged = aNewsrcHasChanged;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetNewsrcHasChanged(PRBool *aNewsrcHasChanged)
+{
+    if (!aNewsrcHasChanged) return NS_ERROR_NULL_POINTER;
+
+    *aNewsrcHasChanged = mNewsrcHasChanged;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::CloseCachedConnections()
+{
+    return WriteNewsrcFile();
+}

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -33,25 +34,16 @@
 
 nsNewsDatabase::nsNewsDatabase()
 {
-  m_unreadSet = nsnull;
+  m_readSet = nsnull;
 }
 
 nsNewsDatabase::~nsNewsDatabase()
 {
   // todo:  figure out where to delete m_newsgroupSpec
 
-    if (m_unreadSet) {
-#ifdef DEBUG_NEWS_DATABASE
-        char *str = nsnull;
-        str = m_unreadSet->Output();
-        if (str) {
-            printf("setStr = %s on destroy\n",str);
-            delete [] str;
-            str = nsnull;
-        }
-#endif
-        delete m_unreadSet;
-        m_unreadSet = nsnull;
+    if (m_readSet) {
+        delete m_readSet;
+        m_readSet = nsnull;
     }    
 }
 
@@ -151,15 +143,6 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
 
 nsresult nsNewsDatabase::Close(PRBool forceCommit)
 {
-#ifdef DEBUG_NEWS_DATABASE
-  if (m_unreadSet) {
-    char *str = nsnull;
-    str = m_unreadSet->Output();
-    printf("on close, setStr is %s\n", str);
-    delete [] str;
-    str = nsnull;
-  }
-#endif
   return nsMsgDatabase::Close(forceCommit);
 }
 
@@ -170,15 +153,6 @@ nsresult nsNewsDatabase::ForceClosed()
 
 nsresult nsNewsDatabase::Commit(nsMsgDBCommit commitType)
 {
-#ifdef DEBUG_NEWS_DATABASE
-  if (m_unreadSet) {
-    char *str = nsnull;
-    str = m_unreadSet->Output();
-    printf("on commit, setStr is %s\n", str);
-    delete [] str;
-    str = nsnull;
-  }
-#endif
   return nsMsgDatabase::Commit(commitType);
 }
 
@@ -188,53 +162,32 @@ PRUint32 nsNewsDatabase::GetCurVersion()
   return 1;
 }
 
-// methods to get and set docsets for ids.
-NS_IMETHODIMP nsNewsDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
-								nsIDBChangeListener *instigator)
-{
-	nsresult rv = NS_OK;
-	nsMsgKey messageKey;
-	rv = msgHdr->GetMessageKey(&messageKey);
-	if (NS_FAILED(rv)) return rv;
-
-	if (!bRead) {
-      		rv = AddToNewList(messageKey);
-		if (NS_FAILED(rv)) return rv;
-
-		NS_ASSERTION(m_unreadSet, "m_unreadSet is null");
-		if (!m_unreadSet) return NS_ERROR_FAILURE;
-
-      		rv = m_unreadSet->Add(messageKey);
-		if (NS_FAILED(rv)) return rv;
-	}
-	else {
-		NS_ASSERTION(m_unreadSet, "m_unreadSet is null");
-		if (!m_unreadSet) return NS_ERROR_FAILURE;
-
-      		rv = m_unreadSet->Remove(messageKey);
-		if (NS_FAILED(rv)) return rv;
-	}
-
-	// give parent class chance to update data structures
-	rv = nsMsgDatabase::MarkHdrRead(msgHdr, bRead, instigator);
-	if (NS_FAILED(rv)) return rv;
-
-	return rv;
-}
-
 NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
 {
 	NS_ASSERTION(pRead, "null out param in IsRead");
-	if (!pRead) 
-		return NS_ERROR_NULL_POINTER;
+	if (!pRead) return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(m_unreadSet, "set is null!");
-    if (!m_unreadSet) return NS_ERROR_FAILURE;
+    NS_ASSERTION(m_readSet, "set is null!");
+    if (!m_readSet) return NS_ERROR_FAILURE;
     
-	PRBool isRead = m_unreadSet->IsMember(key);
+	PRBool isRead = m_readSet->IsMember(key);
 	*pRead = isRead;
     
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsNewsDatabase::IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead)
+{
+    nsresult rv;
+    nsMsgKey messageKey;
+
+    if (!msgHdr || !pRead) return NS_ERROR_NULL_POINTER;
+
+    rv = msgHdr->GetMessageKey(&messageKey);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = IsRead(messageKey,pRead);
+    return rv;
 }
 
 PRBool nsNewsDatabase::IsArticleOffline(nsMsgKey key)
@@ -365,41 +318,84 @@ nsNewsDatabase::ThreadBySubjectWithoutRe()
   return PR_TRUE;
 }
 
-
-NS_IMETHODIMP nsNewsDatabase::GetUnreadSet(nsMsgKeySet **pSet)
+NS_IMETHODIMP nsNewsDatabase::GetReadSet(nsMsgKeySet **pSet)
 {
     if (!pSet) return NS_ERROR_NULL_POINTER;
     
-    NS_ASSERTION(m_unreadSet,"set doesn't exist yet!");
-    if (!m_unreadSet) return NS_ERROR_FAILURE;
+    NS_ASSERTION(m_readSet,"set doesn't exist yet!");
+    if (!m_readSet) return NS_ERROR_FAILURE;
     
-    *pSet = m_unreadSet;
+    *pSet = m_readSet;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNewsDatabase::SetUnreadSet(const char * setStr)
+NS_IMETHODIMP nsNewsDatabase::SetReadSetWithStr(const char * setStr)
 {
     NS_ASSERTION(setStr, "no setStr!");
     if (!setStr) return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(!m_unreadSet, "set already exists!");
-    if (m_unreadSet) {
-        delete m_unreadSet;
-        m_unreadSet = nsnull;
+    NS_ASSERTION(!m_readSet, "set already exists!");
+    if (m_readSet) {
+        delete m_readSet;
+        m_readSet = nsnull;
     }
     
-    m_unreadSet = nsMsgKeySet::Create(setStr /* , this */);
-    if (!m_unreadSet) return NS_ERROR_OUT_OF_MEMORY;
-    
-#ifdef DEBUG_NEWS_DATABASE
-    char *str = nsnull;
-    str = m_unreadSet->Output();
-    if (str) {
-        printf("in str = %s\nout str = %s\n", setStr,str);
-        delete [] str;
-        str = nsnull;
-    }
-#endif
-    
+    m_readSet = nsMsgKeySet::Create(setStr);
+    if (!m_readSet) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
+}
+ 
+  
+NS_IMETHODIMP nsNewsDatabase::GetReadSetStr(char **setStr)
+{
+    if (!setStr) return NS_ERROR_NULL_POINTER;
+    if (!m_readSet) return NS_ERROR_FAILURE;
+
+    *setStr = m_readSet->Output();
+    if (!*setStr) return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
+PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
+{
+    nsresult rv;
+    PRBool isRead;
+    rv = IsHeaderRead(msgHdr, &isRead);
+    
+    if (isRead == bRead) {
+        return PR_FALSE;
+    }
+    else {
+      nsMsgKey messageKey;
+      rv = msgHdr->GetMessageKey(&messageKey);
+      if (NS_FAILED(rv)) return PR_FALSE;
+
+      NS_ASSERTION(m_readSet, "m_readSet is null");
+      if (!m_readSet) return PR_FALSE;
+
+      if (!bRead) {
+#ifdef DEBUG_NEWS_DATABASE
+        printf("remove %d from the set\n",messageKey);
+#endif
+
+        rv = m_readSet->Remove(messageKey);
+        if (NS_FAILED(rv)) return PR_FALSE;
+
+        rv = NotifyReadChanged(nsnull);
+        if (NS_FAILED(rv)) return PR_FALSE;
+      }
+      else {
+#ifdef DEBUG_NEWS_DATABASE
+        printf("add %d to the set\n",messageKey);
+#endif
+
+        rv = m_readSet->Add(messageKey);
+        if (NS_FAILED(rv)) return PR_FALSE;
+
+        rv = NotifyReadChanged(nsnull);
+        if (NS_FAILED(rv)) return PR_FALSE;
+      }
+    }
+    return PR_TRUE;
 }

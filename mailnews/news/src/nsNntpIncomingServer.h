@@ -46,6 +46,10 @@ public:
     virtual ~nsNntpIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
+    NS_IMETHOD CloseCachedConnections();
+
+private:
+    PRBool mNewsrcHasChanged;
 };
 
 #endif

@@ -188,8 +188,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
       rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
   }
 
-  if (aURL)
-  {
+  if (aURL) {
 	  *aURL = myuri;
 	  NS_IF_ADDREF(*aURL);
   }
@@ -334,11 +333,11 @@ nsresult nsNntpService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolde
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
 typedef struct _findNewsServerEntry {
   const char *newsgroup;
   nsINntpIncomingServer *server;
 } findNewsServerEntry;
+
 
 PRBool 
 nsNntpService::findNewsServerWithGroup(nsISupports *aElement, void *data)
@@ -415,15 +414,16 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
       return rv;
     } 
     
-    char *default_nntp_server = nsnull; 
+    nsXPIDLCString default_nntp_server;
     // if we get here, we know prefs is not null
-    rv = prefs->CopyCharPref(PREF_NETWORK_HOSTS_NNTP_SERVER, &default_nntp_server);
-    if (NS_FAILED(rv) || (!default_nntp_server)) {
-      // if all else fails, use "news" as the default_nntp_server
-      default_nntp_server = PR_smprintf("news");
+    rv = prefs->CopyCharPref(PREF_NETWORK_HOSTS_NNTP_SERVER, getter_Copies(default_nntp_server));
+    if (NS_SUCCEEDED(rv) && ((const char *)default_nntp_server) && (PL_strlen((const char *)default_nntp_server))) {
+        host = (const char *)default_nntp_server;
     }
-    host = default_nntp_server;
-    PR_FREEIF(default_nntp_server);
+    else {
+      // if all else fails, use "news" as the default_nntp_server
+      host = "news";
+    }
   }
   
   if (host.IsEmpty())
@@ -460,7 +460,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
   // 4) use the default nntp server
 
   //nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
-  char *list = PL_strdup(newsgroupsNames);
+  char *list = nsCRT::strdup(newsgroupsNames);
   char *token = nsnull;
   char *rest = list;
   nsCAutoString str;
@@ -489,7 +489,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 #ifdef DEBUG_NEWS
 	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
-        PR_FREEIF(list);
+        CRTFREEIF(list);
         return NS_ERROR_FAILURE;
       }
       else {
@@ -515,7 +515,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
         rv = FindHostFromGroup(currentHost, str);
         currentGroup = str;
         if (NS_FAILED(rv)) {
-		PR_FREEIF(list);
+        CRTFREEIF(list);
 		return rv;
 	}
       }
@@ -530,7 +530,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
       else {
         if (host != currentHost) {
           printf("todo, implement an alert:  no cross posting to multiple hosts!\n"); 
-          PR_FREEIF(list);
+          CRTFREEIF(list);
           return NS_ERROR_FAILURE;
         }
       }
@@ -545,7 +545,7 @@ nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroup
 #endif
     token = nsCRT::strtok(rest, ",", &rest);
   }    
-  PR_FREEIF(list);
+  CRTFREEIF(list);
   
   if (host.IsEmpty())
     return NS_ERROR_FAILURE;
@@ -588,7 +588,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   // if we detect that, we stop and return error.
 
   // nsCRT::strtok is going destroy what we pass to it, so we need to make a copy of newsgroupsNames.
-  char *list = PL_strdup(newsgroupsNames);
+  char *list = nsCRT::strdup(newsgroupsNames);
   char *token = nsnull;
   char *rest = list;
   nsCAutoString host;
@@ -617,7 +617,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 #ifdef DEBUG_NEWS
 	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
-        PR_FREEIF(list);
+        CRTFREEIF(list);
         return NS_ERROR_FAILURE;
       }
       else {
@@ -644,7 +644,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 
         NS_ASSERTION(!currentGroup.IsEmpty(), "currentGroup is empty");
         if (currentGroup.IsEmpty()) {
-          PR_FREEIF(list);
+          CRTFREEIF(list);
           return NS_ERROR_FAILURE;
         }
         
@@ -658,7 +658,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         // theRest is "group"
         rv = FindHostFromGroup(currentHost, str);
         if (NS_FAILED(rv)) {
-            PR_FREEIF(list);
+            CRTFREEIF(list);
             return rv;
         }
 
@@ -673,7 +673,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 #ifdef DEBUG_sspitzer
         printf("empty current host!\n");
 #endif
-        PR_FREEIF(list);
+        CRTFREEIF(list);
         return NS_ERROR_FAILURE;
       }
       
@@ -688,7 +688,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 #ifdef DEBUG_sspitzer
           printf("no cross posting to multiple hosts!\n");
 #endif
-          PR_FREEIF(list);
+          CRTFREEIF(list);
           return NS_ERROR_FAILURE;
         }
       }
@@ -703,10 +703,9 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
 #endif
     token = nsCRT::strtok(rest, ",", &rest);
   }
-  PR_FREEIF(list);
+  CRTFREEIF(list);
   
-  // caller will free with PR_FREEIF()
-  *_retval = PL_strdup(retvalStr.GetBuffer());
+  *_retval = nsCRT::strdup(retvalStr.GetBuffer());
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
   
 #ifdef DEBUG_NEWS
@@ -980,12 +979,12 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   urlStr += "?cancel";
 
 #ifdef DEBUG_NEWS
-  printf("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, messageId.GetBuffer(),urlStr.GetBuffer());
+  printf("attempt to cancel the message (key,ID,cancel url): (%d,%s,%s)\n", key, (const char *)messageId, (const char *)urlStr);
 #endif /* DEBUG_NEWS */ 
 
   nsCAutoString newsgroupNameStr(newsgroupname);
   nsCOMPtr<nsIURI> url;
-  rv = ConstructNntpUrl(urlStr, newsgroupNameStr, key, aUrlListener,  getter_AddRefs(url));
+  rv = ConstructNntpUrl((const char *)urlStr, newsgroupNameStr, key, aUrlListener,  getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(url);
   if (nntpUrl)
@@ -1004,7 +1003,7 @@ NS_IMETHODIMP nsNntpService::GetScheme(char * *aScheme)
 {
 	nsresult rv = NS_OK;
 	if (aScheme)
-		*aScheme = PL_strdup("news");
+		*aScheme = nsCRT::strdup("news");
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv; 

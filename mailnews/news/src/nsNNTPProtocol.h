@@ -29,6 +29,7 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsINntpUrl.h"
+#include "nsINntpIncomingServer.h"
 
 #include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
 
@@ -248,6 +249,8 @@ private:
 
 	
 	nsCOMPtr<nsIStringBundle> m_stringBundle;
+
+    nsCOMPtr<nsINntpIncomingServer> m_nntpServer;
 
 	nsresult GetNewsStringByName(const char *aName, PRUnichar **aString);
 

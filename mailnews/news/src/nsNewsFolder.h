@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 /********************************************************************************************************
@@ -65,10 +66,10 @@ public:
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
 
 	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const char *newName);
+	NS_IMETHOD Rename (const PRUnichar *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
-	NS_IMETHODIMP GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
+	NS_IMETHOD GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
 
   NS_IMETHOD GetFolderURL(char **url);
 
@@ -91,9 +92,9 @@ public:
 	NS_IMETHOD GetCanFileMessages(PRBool *aResult);
 	NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
 	NS_IMETHOD GetCanRename(PRBool *aResult);
+    NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
 
 protected:
-	nsresult AddNewsgroupToNewsrcFile(const char *newsgroupname);
 	nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
@@ -101,7 +102,8 @@ protected:
 	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 
   nsresult LoadNewsrcFileAndCreateNewsgroups();
-  PRInt32 RememberLine(char *line);
+  PRInt32 RememberLine(const char *line);
+  nsresult RememberUnsubscribedGroup(const char *newsgroup, const char *setStr);
   nsresult ForgetLine(void);
 
   PRInt32 HandleLine(char *line, PRUint32 line_size);
@@ -114,10 +116,11 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	char      	*mOptionLines;
+	nsCAutoString mOptionLines;
+    nsCAutoString mUnsubscribedNewsgroupLines;
 
 	// cache this until we open the db.
-	nsCString	m_unreadSet;
+	char        *mCachedNewsrcLine;
 
 	nsCOMPtr<nsIFileSpec> mNewsrcFilePath; 
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Seth Spitzer <sspitzer@netscape.com>
  */
 
 #ifndef nsINewsDatabase_h__
@@ -34,8 +35,9 @@ class nsINewsDatabase : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_INEWSDATABASE_IID; return iid; }
 
-  NS_IMETHOD GetUnreadSet(nsMsgKeySet **pSet) = 0;
-  NS_IMETHOD SetUnreadSet(const char * setStr) = 0;    
+  NS_IMETHOD GetReadSet(nsMsgKeySet **pSet) = 0;
+  NS_IMETHOD GetReadSetStr(char **setStr) = 0;
+  NS_IMETHOD SetReadSetWithStr(const char * setStr) = 0;    
 };
 
 #endif // nsINewsDatabase_h__

@@ -63,6 +63,8 @@ public:
                                  nsIDBChangeListener *instigator);
   NS_IMETHOD NotifyParentChangedAll(nsMsgKey keyReparented, nsMsgKey oldParent, nsMsgKey newParent,
 								nsIDBChangeListener *instigator);
+
+  NS_IMETHOD NotifyReadChanged(nsIDBChangeListener *instigator);
   NS_IMETHOD NotifyAnnouncerGoingAway(void);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -280,6 +282,7 @@ protected:
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+    virtual PRBool  SetHdrReadFlag(nsIMsgDBHdr *, PRBool pRead);
 	virtual PRUint32 GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags);
 	// helper function which doesn't involve thread object
     NS_IMETHOD MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,

@@ -61,7 +61,6 @@
 
 #include "nsIMsgHeaderParser.h" 
 
-#include "nsINntpUrl.h"
 #include "nsNNTPHost.h"
 #include "nsMsgKeySet.h"
 
@@ -75,7 +74,6 @@
 #include "nsIPrompt.h"
 #include "nsIMsgStatusFeedback.h" 
 
-#include "nsINntpIncomingServer.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgNewsFolder.h"
 
@@ -87,10 +85,7 @@
 #include "nsIWebShell.h"
 #include "nsIWebShellWindow.h"
 #include "nsINetPrompt.h"
-
-#ifdef DEBUG_sspitzer
-#define DEBUG_NEWS 1
-#endif
+#include "nntpCore.h"
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
@@ -457,6 +452,9 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
+    if (m_nntpServer) {
+        m_nntpServer->WriteNewsrcFile();
+    }
 	PR_FREEIF(m_currentGroup);
     delete m_lineStreamBuffer;
 }
@@ -484,10 +482,10 @@ nsresult nsNNTPProtocol::Initialize(void)
                                     getter_AddRefs(server));
     
 	if (NS_SUCCEEDED(rv) && server) {
-		nsCOMPtr <nsINntpIncomingServer> nntpServer = do_QueryInterface(server, &rv);
-		if (NS_SUCCEEDED(rv) && nntpServer) {
+		m_nntpServer = do_QueryInterface(server, &rv);
+		if (NS_SUCCEEDED(rv) && m_nntpServer) {
 			PRInt32 max_articles;
-			rv = nntpServer->GetMaxArticles(&max_articles);
+			rv = m_nntpServer->GetMaxArticles(&max_articles);
 			if (NS_SUCCEEDED(rv)) {
 				net_NewsChunkSize = max_articles;
 			}
@@ -996,8 +994,10 @@ nsresult nsNNTPProtocol::ParseURL(nsIURI * aURL, PRBool * bValP, char ** aGroup,
 	  char *start;
 	  if (message_id)
 	  {
+#ifdef DEBUG_NEWS
 		  /* Move past the @. */
 		  NS_ASSERTION (s && *s == '@', "move past the @");
+#endif /* DEBUG_NEWS */
 		  start = s;
 	  }
 	  else
@@ -2104,8 +2104,9 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 
 			rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
 
-			if (NS_SUCCEEDED(rv) && msgHdr)
+			if (NS_SUCCEEDED(rv) && msgHdr) {
 				msgHdr->MarkRead(PR_TRUE);
+            }
 
 			ClearFlag(NNTP_PAUSE_FOR_READ);
 

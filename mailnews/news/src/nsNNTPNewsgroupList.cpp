@@ -281,7 +281,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
             nsCOMPtr<nsINewsDatabase> db(do_QueryInterface(m_newsDB, &rv));
             if (NS_FAILED(rv)) return rv;
             
-	    rv = db->GetUnreadSet(&m_set);
+	    rv = db->GetReadSet(&m_set);
             if (NS_FAILED(rv) || !m_set) {
                 return rv;
             }

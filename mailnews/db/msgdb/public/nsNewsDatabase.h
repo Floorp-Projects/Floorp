@@ -48,9 +48,8 @@ public:
   virtual PRUint32          GetCurVersion();
 
   // methods to get and set docsets for ids.
-  NS_IMETHOD				MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
-                                        nsIDBChangeListener *instigator = NULL);
   NS_IMETHOD				IsRead(nsMsgKey key, PRBool *pRead);
+  NS_IMETHOD                IsHeaderRead(nsIMsgDBHdr *msgHdr, PRBool *pRead);
 
   virtual PRBool			IsArticleOffline(nsMsgKey key);
   virtual nsresult          AddHdrFromXOver(const char * line,  nsMsgKey *msgId);
@@ -61,12 +60,15 @@ public:
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
 
   // for nsINewsDatabase
-  NS_IMETHOD                GetUnreadSet(nsMsgKeySet **pSet);
-  NS_IMETHOD                SetUnreadSet(const char * setStr);
-  
+  NS_IMETHOD                GetReadSet(nsMsgKeySet **pSet);
+  NS_IMETHOD                SetReadSetWithStr(const char * setStr);
+  NS_IMETHOD                GetReadSetStr(char **setStr);
+
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
-  
+ 
+  virtual PRBool        SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead);
+ 
   virtual nsNewsDatabase 	*GetNewsDB() ;
   
   virtual PRBool		PurgeNeeded(MSG_PurgeInfo *hdrPurgeInfo, MSG_PurgeInfo *artPurgeInfo);
@@ -96,7 +98,7 @@ protected:
   PRUint32				m_headerIndex;		// index of unthreaded headers
   // at a specified entry.
 
-  nsMsgKeySet           *m_unreadSet;
+  nsMsgKeySet           *m_readSet;
 };
 
 #endif

@@ -27,7 +27,6 @@ interface nsIMsgWindow;
 
 [scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
 interface nsIMsgNewsFolder : nsISupports {
-  attribute string unreadSetStr;
   attribute string groupUsername;
   attribute string groupPassword;
     
@@ -38,4 +37,12 @@ interface nsIMsgNewsFolder : nsISupports {
   void forgetGroupPassword();
 
   nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
+
+  void getReadSetStr(out string setStr);
+
+  attribute string cachedNewsrcLine;
+  readonly attribute string newsrcLine;
+  readonly attribute string optionLines;
+  readonly attribute string unsubscribedNewsgroupLines;
+  void SetNewsrcHasChanged(in boolean newsrcHasChanged);
 };

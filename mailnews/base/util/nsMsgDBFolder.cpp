@@ -519,6 +519,13 @@ nsMsgDBFolder::GetMsgDatabase(nsIMsgWindow *aMsgWindow,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgDBFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
+{
+    /* do nothing.  if you care about this, over ride it.  see nsNewsFolder.cpp */
+    return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {

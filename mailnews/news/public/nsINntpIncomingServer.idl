@@ -42,4 +42,8 @@ interface nsINntpIncomingServer : nsISupports {
 
 	/* abbreviate the newsgroup names in the folder pane? */
 	attribute boolean abbreviate;
+
+    void writeNewsrcFile();
+
+    attribute boolean newsrcHasChanged;
 };

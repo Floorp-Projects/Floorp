@@ -39,6 +39,9 @@ interface nsIDBChangeAnnouncer  : nsISupports {
   void NotifyKeyDeletedAll(in nsMsgKey keyDeleted, in nsMsgKey parentKey, in long flags, 
                                  in nsIDBChangeListener instigator);
   void NotifyParentChangedAll(in nsMsgKey keyReparented, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener instigator); 
+
+  void NotifyReadChanged(in nsIDBChangeListener instigator);
+
   void NotifyAnnouncerGoingAway();
 };
 
