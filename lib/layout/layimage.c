@@ -544,7 +544,10 @@ lo_BodyForeground(MWContext *context, lo_DocState *state, PA_Tag *tag)
 			text_fg.red = red;
 			text_fg.green = green;
 			text_fg.blue = blue;
-            lo_ChangeBodyTextFGColor(context, state, &text_fg);
+            /* Last param tells this to check state->top_state->body_attr
+               state to suppress changing color during layout
+            */
+            lo_ChangeBodyTextFGColor(context, state, &text_fg, FALSE);
 		}
 	}
 
@@ -3198,10 +3201,7 @@ void lo_GetImage(MWContext *context, IL_GroupContext *img_cx,
                                       trans_pixel,
                                       lo_image->width / context->convertPixX,
                                       lo_image->height / context->convertPixY,
-                                      /* Special flag for Editor so the correct stream
-                                         converter is used (see IL_ViewStream in libimg/src/external.c */
-                                      context->is_editor ? 0x000000ED : 0, 
-                                      net_cx);
+                                      0, net_cx);
 
 		if(( dummy_ireq != lo_image->lowres_image_req ) && url_to_fetch )
 			lo_image->image_req = dummy_ireq;

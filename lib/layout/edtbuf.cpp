@@ -2870,10 +2870,10 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
         // Note that testing for bForward means Backspace key will
         ///  always use format of element to the left. 
         // TODO: Is that the correct thing to to?
-        CEditElement *pNext = m_pCurrent->GetNextSibling();
-        m_bUseCurrentTextFormat = ( bForward && m_pCurrent && m_pCurrent->IsText() &&
+        CEditElement *pNext = m_pCurrent ? m_pCurrent->GetNextSibling() : NULL;
+        m_bUseCurrentTextFormat = ( bForward && m_pCurrent && pNext && 
+                                    m_pCurrent->IsText() && pNext->IsText() &&
                                     (m_iCurrentOffset == m_pCurrent->Text()->GetLen()) &&
-                                    pNext && pNext->IsText() &&
                                     pNext->Text()->GetLen() > 0 ) ? TRUE : FALSE;
         if( m_bUseCurrentTextFormat )
         {
@@ -12803,14 +12803,17 @@ EDT_ClipboardResult CEditBuffer::PasteHTML( IStreamIn& stream, XP_Bool /* bUndoR
             if ( pLeft )
             {
                 CEditContainerElement* pLeftContainer = pLeft->FindContainer();
-                CEditContainerElement* pFirstNewContainer =
-                    pFirstMostNewChild->FindContainer();
-                if ( pLeftContainer != pFirstNewContainer )
-                {
-                    pLeftContainer->Merge(pFirstNewContainer);
-                    // Now deleted in Merge delete pFirstNewContainer;
-                    FixupInsertPoint();
-                }
+                CEditContainerElement* pFirstNewContainer = pFirstMostNewChild->FindContainer();
+
+                // The following merge will delete pFirstNewContainer,
+                //  so if the pLastInserted is the same, 
+                //  set it to the container we will merge into
+                if ( pLastInserted == pFirstNewContainer )
+                    pLastInserted = pLeftContainer;
+
+                // Merge containers and delete pFirstNewContainer;
+                pLeftContainer->Merge(pFirstNewContainer);
+                FixupInsertPoint();
             }
         }
         else {
@@ -13386,8 +13389,8 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
             // TODO: Shouldn't we "unwrap" paragraphs?
             *ppText = (char*) LO_GetSelectionText( m_pContext );
         }
+        if ( pTextLen && *ppText) *pTextLen = XP_STRLEN( *ppText );
     }
-    if ( pTextLen ) *pTextLen = XP_STRLEN( *ppText );
     
     CEditSelection selection;
     EEditCopyType iCopyType;

@@ -487,7 +487,8 @@ XP_Bool CEditElement::Reduce( CEditBuffer* /* pBuffer */ ){
 
             // make sure it stays in the tree so it dies a natural death (because
             //  it has no children)
-            pNext->InsertAfter(this);
+            if( pNext )
+                pNext->InsertAfter(this);
             return FALSE;
         }
     }
