@@ -2207,13 +2207,10 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
       return;
     }
-    // CSS2 pseudo-elements are allowed to have a single ':' on them, as are
-    // various -moz-* pseudo-elements (anonymous boxes).  Others (CSS3+
-    // pseudo-elements) must have |parsingPseudoElement| set.
+    // CSS2 pseudo-elements are allowed to have a single ':' on them.  Others
+    // (CSS3+ pseudo-elements and various -moz-* pseudo-elements) must have
+    // |parsingPseudoElement| set.
     if (!parsingPseudoElement &&
-        // XXXbz remove the isAnonBox check once we have converted all
-        // of our stylesheets to using '::' (see bug 211657).
-        !isAnonBox &&
         !nsCSSPseudoElements::IsCSS2PseudoElement(pseudo)) {
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("This pseudo-element must use the \"::\" form: "));
       UngetToken();
