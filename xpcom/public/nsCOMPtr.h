@@ -34,12 +34,14 @@
 
 
 /*
-	TO DO...
-	
-    + Factor out some base behavior to reduce possible bloating
-    + Find an alternative to the current illegal and non-functioning comparison operators
+  TO DO...
+  
+    + make alternative function for |getter_AddRefs| (or something)
+    + make constructor for |nsQueryInterface| explicit (suddenly construct/assign from raw pointer becomes illegal)
     + Improve internal documentation
       + mention *&
+      + alternatives for comparison
+      + do_QueryInterface
 */
 
 
@@ -152,7 +154,7 @@
 
     Don't worry.  It's a compile-time error if you forget to wrap it.
 
-		Compare the raw-pointer way...
+    Compare the raw-pointer way...
 
       IFoo* foo = 0;
       nsresult status = CreateIFoo(&foo);
@@ -174,17 +176,17 @@
 
 
 
-		To the smart-pointer way...
+    To the smart-pointer way...
 
-			nsCOMPtr<IFoo> fooP;
-			nsresult status = CreateIFoo( getter_AddRefs(fooP) );
-			if ( NS_SUCCEEDED(status) )
-				if ( nsCOMPtr<IBar> barP( fooP ) )
-					{
-						nsCOMPtr<IFooBar> fooBarP;
-						if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, getter_AddRefs(fooBarP))) )
-							fooBarP->DoTheReallyHardThing();
-					}
+      nsCOMPtr<IFoo> fooP;
+      nsresult status = CreateIFoo( getter_AddRefs(fooP) );
+      if ( NS_SUCCEEDED(status) )
+        if ( nsCOMPtr<IBar> barP( fooP ) )
+          {
+            nsCOMPtr<IFooBar> fooBarP;
+            if ( NS_SUCCEEDED(status = CreateIFooBar(fooP, barP, getter_AddRefs(fooBarP))) )
+              fooBarP->DoTheReallyHardThing();
+          }
 
     
   Is there an easy way to convert my current code?
@@ -284,26 +286,25 @@
 #endif
 
 #ifdef NSCAP_FEATURE_DEBUG_MACROS
-	#define NSCAP_ADDREF(ptr)		NS_ADDREF(ptr)
-	#define NSCAP_RELEASE(ptr)	NS_RELEASE(ptr)
+  #define NSCAP_ADDREF(ptr)    NS_ADDREF(ptr)
+  #define NSCAP_RELEASE(ptr)   NS_RELEASE(ptr)
 #else
-	#define NSCAP_ADDREF(ptr)		(ptr)->AddRef()
-	#define NSCAP_RELEASE(ptr)	(ptr)->Release()
+  #define NSCAP_ADDREF(ptr)    (ptr)->AddRef()
+  #define NSCAP_RELEASE(ptr)   (ptr)->Release()
 #endif
 
-	/*
-		WARNING:
-			VC++4.2 is very picky.  To compile under VC++4.2, the classes must be defined
-			in an order that satisfies:
-		
-				nsDerivedSafe < nsCOMPtr
-				nsDontAddRef < nsCOMPtr
-				nsCOMPtr < nsGetterAddRefs
-				nsCOMPtr < nsGetterDoesntAddRef
+  /*
+    WARNING:
+      VC++4.2 is very picky.  To compile under VC++4.2, the classes must be defined
+      in an order that satisfies:
+    
+        nsDerivedSafe < nsCOMPtr
+        nsDontAddRef < nsCOMPtr
+        nsCOMPtr < nsGetterAddRefs
 
-			The other compilers probably won't complain, so please don't reorder these
-			classes, on pain of breaking 4.2 compatibility.
-	*/
+      The other compilers probably won't complain, so please don't reorder these
+      classes, on pain of breaking 4.2 compatibility.
+  */
 
 
 template <class T>
@@ -325,11 +326,11 @@ class nsDerivedSafe : public T
       nsrefcnt Release();
 #endif
 
-			void operator delete( void* );                    // NOT TO BE IMPLEMENTED
-				// declaring |operator delete| private makes calling delete on an interface pointer a compile error
+      void operator delete( void* );                    // NOT TO BE IMPLEMENTED
+        // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
-			nsDerivedSafe& operator=( const nsDerivedSafe& ); // NOT TO BE IMPLEMENTED
-				// you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
+      nsDerivedSafe& operator=( const nsDerivedSafe& ); // NOT TO BE IMPLEMENTED
+        // you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
   };
 
 #if defined(NSCAP_NO_MEMBER_USING_DECLARATIONS) && defined(NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS)
@@ -348,6 +349,57 @@ nsDerivedSafe<T>::Release()
   }
 
 #endif
+
+
+
+
+template <class T>
+struct nsDontQueryInterface
+    /*
+      ...
+    */
+  {
+    explicit
+    nsDontQueryInterface( T* aRawPtr )
+        : mRawPtr(aRawPtr)
+      {
+        // nothing else to do here
+      }
+
+    T* mRawPtr;
+  };
+
+template <class T>
+inline
+nsDontQueryInterface<T>
+dont_QueryInterface( T* aRawPtr )
+  {
+    return nsDontQueryInterface<T>(aRawPtr);
+  }
+
+
+
+
+struct nsQueryInterface
+  {
+    // explicit
+    nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
+        : mRawPtr(aRawPtr),
+          mErrorPtr(error)
+      {
+        // nothing else to do here
+      }
+
+    nsISupports* mRawPtr;
+    nsresult*    mErrorPtr;
+  };
+
+inline
+nsQueryInterface
+do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
+  {
+    return nsQueryInterface(aRawPtr, error);
+  }
 
 
 
@@ -390,36 +442,35 @@ dont_AddRef( T* aRawPtr )
 
 
 
+class nsCOMPtr_base
+  {
+    public:
+
+      nsCOMPtr_base( nsISupports* rawPtr = 0 )
+          : mRawPtr(rawPtr)
+        {
+          // nothing else to do here
+        }
+
+     ~nsCOMPtr_base()
+        {
+          if ( mRawPtr )
+            NSCAP_RELEASE(mRawPtr);
+        }
+
+      NS_EXPORT void    assign_with_AddRef( nsISupports* );
+      NS_EXPORT void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
+      NS_EXPORT void**  begin_assignment();
+
+    protected:
+      nsISupports* mRawPtr;
+  };
+
+
+
 
 template <class T>
-struct nsDontQueryInterface
-		/*
-			...
-		*/
-	{
-		explicit
-		nsDontQueryInterface( T* aRawPtr )
-				: mRawPtr(aRawPtr)
-			{
-				// nothing else to do here
-			}
-
-		T* mRawPtr;
-	};
-
-template <class T>
-inline
-nsDontQueryInterface<T>
-dont_QueryInterface( T* aRawPtr )
-	{
-		return nsDontQueryInterface<T>(aRawPtr);
-	}
-
-
-
-
-template <class T>
-class nsCOMPtr
+class nsCOMPtr : private nsCOMPtr_base
     /*
       ...
     */
@@ -427,144 +478,74 @@ class nsCOMPtr
     public:
       typedef T element_type;
 
-				/*
-					Note: the following constructor is only |explicit| because of a bug in egcs 1.0.
-					This bug prevents egcs from compiling statements like
-					
-					  nsCOMPtr<Y> y;
-					  // ...
-					  nsCOMPtr<X> x = y;
-					
-					Using the parenthesis form of the constructor works fine.  In an effort to
-					help other people not break the linux build, I am making this constructor
-					|explicit|.  That prevents _any_ platform (that supports |explicit|) from compiling
-					the thing that egcs can't compile.
-					
-					When egcs fixes this bug, and we have reasonable agreement that interested parties
-					have or will upgrade, the |explicit| will go away.
-				*/
-
-			explicit
-      nsCOMPtr( nsISupports* aRawPtr = 0 )
-					/*
-						...it's unfortunate, but negligable, that this does a |QueryInterface| even
-						when constructed from a |T*| but we can't tell the difference between a |T*|
-						and a pointer to some object derived from |class T|.
-					*/
-      	{
-      		nsresult status = NS_OK;
-      		if ( !aRawPtr || !NS_SUCCEEDED( status = aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr)) ) )
-	      		mRawPtr = 0;	// ...in case they wrote |QueryInterface| wrong, and it returns an error _and_ a pointer
-
-	      		// ...and |QueryInterface| does the |AddRef| for us (if it returned a pointer)
-
-	      	mImplicitQueryInterfaceResult = status;
-      	}
-
-      nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
-          : mRawPtr(aSmartPtr.mRawPtr),
-            mImplicitQueryInterfaceResult(NS_OK)
+      nsCOMPtr()
+          // : nsCOMPtr_base(0)
         {
           // nothing else to do here
         }
 
-			nsCOMPtr( const nsDontQueryInterface<T>& aSmartPtr )
-					: mRawPtr(aSmartPtr.mRawPtr),
-						mImplicitQueryInterfaceResult(NS_OK)
-				{
-					if ( mRawPtr )
-						{
-							NSCAP_ADDREF(mRawPtr);
-						}
-				}
+      nsCOMPtr( const nsQueryInterface& aSmartPtr )
+          // : nsCOMPtr_base(0)
+        {
+          assign_with_QueryInterface(aSmartPtr.mRawPtr, T::IID(), aSmartPtr.mErrorPtr);
+        }
 
-      nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
-          : mRawPtr(aSmartPtr.mRawPtr),
-						mImplicitQueryInterfaceResult(NS_OK)
+      nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
+          : nsCOMPtr_base(aSmartPtr.mRawPtr)
+        {
+          // nothing else to do here
+        }
+
+      nsCOMPtr( const nsDontQueryInterface<T>& aSmartPtr )
+          : nsCOMPtr_base(aSmartPtr.mRawPtr)
         {
           if ( mRawPtr )
-          	{
-          		NSCAP_ADDREF(mRawPtr);
-          	}
+            NSCAP_ADDREF(mRawPtr);
         }
 
-     ~nsCOMPtr()
+      nsCOMPtr( const nsCOMPtr<T>& aSmartPtr )
+          : nsCOMPtr_base(aSmartPtr.mRawPtr)
         {
-          if ( mRawPtr && !mIsAwaitingAddRef )
-          	{
-            	NSCAP_RELEASE(mRawPtr);
-            }
+          if ( mRawPtr )
+            NSCAP_ADDREF(mRawPtr);
         }
 
-			nsCOMPtr&
-			operator=( nsISupports* rhs )
-				{
-      		T* rawPtr;
-      		nsresult status = NS_OK;
-      		if ( !rhs || !NS_SUCCEEDED( status = rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      			rawPtr = 0;
-
-					if ( mRawPtr && !mIsAwaitingAddRef )
-						{
-							NSCAP_RELEASE(mRawPtr);
-						}
-
-      		mRawPtr = rawPtr;
-					mImplicitQueryInterfaceResult = status;
-      		return *this;
-				}
-
-      nsCOMPtr&
-      operator=( const nsDontAddRef<T>& rhs )
+      nsCOMPtr<T>&
+      operator=( const nsQueryInterface& rhs )
         {
-					if ( mRawPtr && !mIsAwaitingAddRef )
-						{
-							NSCAP_RELEASE(mRawPtr);
-						}
-          mRawPtr = rhs.mRawPtr;
-					mImplicitQueryInterfaceResult = NS_OK;
+          assign_with_QueryInterface(rhs.mRawPtr, T::IID(), rhs.mErrorPtr);
           return *this;
         }
 
-			nsCOMPtr&
-			operator=( const nsDontQueryInterface<T>& rhs )
-				{
-					T* rawPtr = rhs.mRawPtr;
+      nsCOMPtr<T>&
+      operator=( const nsDontAddRef<T>& rhs )
+        {
+          if ( mRawPtr )
+            NSCAP_RELEASE(mRawPtr);
+          mRawPtr = rhs.mRawPtr;
+          return *this;
+        }
 
-					if ( rawPtr )
-						{
-							NSCAP_ADDREF(rawPtr);
-						}
+      nsCOMPtr<T>&
+      operator=( const nsDontQueryInterface<T>& rhs )
+        {
+          assign_with_AddRef(rhs.mRawPtr);
+          return *this;
+        }
 
-					if ( mRawPtr && !mIsAwaitingAddRef )
-						{
-							NSCAP_RELEASE(mRawPtr);
-						}
+      nsCOMPtr<T>&
+      operator=( const nsCOMPtr& rhs )
+        {
+          assign_with_AddRef(rhs.mRawPtr);
+          return *this;
+        }
 
-					mRawPtr = rawPtr;
-					mImplicitQueryInterfaceResult = NS_OK;
-					return *this;
-				}
-
-			nsCOMPtr&
-			operator=( const nsCOMPtr& rhs )
-				{
-					T* rawPtr = rhs.mRawPtr;
-
-					if ( rawPtr )
-						{
-							NSCAP_ADDREF(rawPtr);
-						}
-
-					if ( mRawPtr && !mIsAwaitingAddRef )
-						{
-							NSCAP_RELEASE(mRawPtr);
-						}
-
-					mRawPtr = rawPtr;
-					mImplicitQueryInterfaceResult = NS_OK;
-					return *this;
-				}
+      nsDerivedSafe<T>*
+      get() const
+          // returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
+        {
+          return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
+        }
 
       nsDerivedSafe<T>*
       operator->() const
@@ -587,108 +568,27 @@ class nsCOMPtr
           return get();
         }
 
-      nsDerivedSafe<T>*
-      get() const
-          // returns a |nsDerivedSafe<T>*| to deny clients the use of |AddRef| and |Release|
-        {
-          return NSCAP_REINTERPRET_CAST(nsDerivedSafe<T>*, mRawPtr);
-        }
-
-			nsresult
-			assignment_error() const
-				{
-					return mRawPtr ? NS_OK : mImplicitQueryInterfaceResult;
-				}
-
 #if 0
     private:
       friend class nsGetterAddRefs<T>;
-      friend class nsGetterDoesntAddRef<T>;
 
       /*
-        In a perfect world, the following two member functions, |StartAssignment| and
-        |FinishAssignment|, would be private.  They are and should be only accessed by
-        the closely related classes |nsGetterAddRefs<T>| and |nsGetterDoesntAddRef<T>|.
+        In a perfect world, the following member function, |StartAssignment|, would be private.
+        It is and should be only accessed by the closely related class |nsGetterAddRefs<T>|.
 
         Unfortunately, some compilers---most notably VC++5.0---fail to grok the
-        friend declarations above or in any alternate acceptable form.  So, physically
-        they will be public (until our compilers get smarter); but they are not to be
+        friend declaration above or in any alternate acceptable form.  So, physically
+        it will be public (until our compilers get smarter); but it is not to be
         considered part of the logical public interface.
       */
 #endif
 
       T**
-      StartAssignment( NSCAP_BOOL awaiting_AddRef )
+      StartAssignment()
         {
-          if ( mRawPtr && !mIsAwaitingAddRef )
-          	{
-            	NSCAP_RELEASE(mRawPtr);
-            }
-          mIsAwaitingAddRef = awaiting_AddRef;
-          mRawPtr = 0;
-          return &mRawPtr;
+          return NSCAP_REINTERPRET_CAST(T**, begin_assignment());
         }
-
-      void
-      FinishAssignment()
-        {
-          if ( mRawPtr && mIsAwaitingAddRef )
-            {
-              NSCAP_ADDREF(mRawPtr);
-            }
-         mImplicitQueryInterfaceResult = NS_OK;
-        }
-
-    private:
-      T* mRawPtr;
-
-			union
-				{
-          NSCAP_BOOL mIsAwaitingAddRef;
-          nsresult   mImplicitQueryInterfaceResult;
-      	};
   };
-
-
-
-  /*
-    The following functions make comparing |nsCOMPtr|s and raw pointers
-    more convenient.
-  */
-
-template <class T>
-inline
-NSCAP_BOOL
-operator==( const nsCOMPtr<T>& lhs, const T*const rhs )
-  {
-    return lhs.get() == rhs;
-  }
-
-template <class T>
-inline
-NSCAP_BOOL
-operator!=( const nsCOMPtr<T>& lhs, const T*const rhs )
-  {
-    return lhs.get() != rhs;
-  }
-
-template <class T>
-inline
-NSCAP_BOOL
-operator==( const T*const lhs, const nsCOMPtr<T>& rhs )
-  {
-    return lhs == rhs.get();
-  }
-
-template <class T>
-inline
-NSCAP_BOOL
-operator!=( const T*const lhs, const nsCOMPtr<T>& rhs )
-  {
-    return lhs != rhs.get();
-  }
-
-
 
 
 template <class T>
@@ -715,32 +615,32 @@ class nsGetterAddRefs
     public:
       explicit
       nsGetterAddRefs( nsCOMPtr<T>& aSmartPtr )
-          : mTargetSmartPtr(&aSmartPtr)
+          : mTargetSmartPtr(aSmartPtr)
         {
           // nothing else to do
         }
 
       operator void**()
         {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
-          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr->StartAssignment(0));
+          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
+          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr.StartAssignment());
         }
 
       T*&
       operator*()
         {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
-          return *(mTargetSmartPtr->StartAssignment(0));
+          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
+          return *(mTargetSmartPtr.StartAssignment());
         }
 
       operator T**()
         {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
-          return mTargetSmartPtr->StartAssignment(0);
+          // NS_PRECONDITION(mTargetSmartPtr != 0, "getter_AddRefs into no destination");
+          return mTargetSmartPtr.StartAssignment();
         }
 
     private:
-      nsCOMPtr<T>* mTargetSmartPtr;
+      nsCOMPtr<T>& mTargetSmartPtr;
   };
 
 template <class T>
@@ -757,66 +657,5 @@ getter_AddRefs( nsCOMPtr<T>& aSmartPtr )
 
 
 
-
-
-template <class T>
-class nsGetterDoesntAddRef
-    /*
-      ...
-    */
-  {
-    public:
-      explicit
-      nsGetterDoesntAddRef( nsCOMPtr<T>& aSmartPtr )
-          : mTargetSmartPtr(&aSmartPtr)
-        {
-          // nothing else to do
-        }
-
-      nsGetterDoesntAddRef( nsGetterDoesntAddRef<T>& F )
-          : mTargetSmartPtr(F.mTargetSmartPtr)
-        {
-          F.mTargetSmartPtr = 0;
-        }
-
-     ~nsGetterDoesntAddRef()
-        {
-          if ( mTargetSmartPtr )
-            mTargetSmartPtr->FinishAssignment();
-        }
-
-      operator void**()
-        {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_doesnt_AddRef into no destination");
-          return NSCAP_REINTERPRET_CAST(void**, mTargetSmartPtr->StartAssignment(1));
-        }
-
-      T*&
-      operator*()
-        {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_doesnt_AddRef into no destination");
-          return *(mTargetSmartPtr->StartAssignment(1));
-        }
-
-      operator T**()
-        {
-          NS_PRECONDITION(mTargetSmartPtr != 0, "getter_doesnt_AddRef into no destination");
-          return mTargetSmartPtr->StartAssignment(1);
-        }
-
-    private:
-      nsGetterDoesntAddRef<T> operator=( const nsGetterDoesntAddRef<T>& ); // not to be implemented
-
-    private:
-      nsCOMPtr<T>* mTargetSmartPtr;
-  };
-
-template <class T>
-inline
-nsGetterDoesntAddRef<T>
-getter_doesnt_AddRef( nsCOMPtr<T>& aSmartPtr )
-  {
-    return nsGetterDoesntAddRef<T>(aSmartPtr);
-  }
 
 #endif // !defined(nsCOMPtr_h___)
