@@ -674,16 +674,21 @@ MonthView.prototype.getNewEventDate = function monthView_getNewEventDate( )
    // use the selected year, month and day
    // and the current hours and minutes
    
-   var now = new Date();
-   var start = new Date( this.calendarWindow.getSelectedDate() );
-   
-   start.setHours( now.getHours() );
-   start.setMinutes( Math.ceil( now.getMinutes() / 5 ) * 5 );
-   start.setSeconds( 0 );
-   
-   return start;     
+   return combineWithCurrentTime( this.calendarWindow.getSelectedDate() );
 }
-
+   
+/* PRIVATE
+   
+   Create new datetime with date from date and
+   time near current time (mod 5 min).**/
+function combineWithCurrentTime( date ) {
+  var newDateTime = new Date(date); // copy date, don't modify old date
+  var now = new Date();
+  newDateTime.setHours(now.getHours());
+  newDateTime.setMinutes( Math.ceil( now.getMinutes() / 5 ) * 5 );
+  newDateTime.setSeconds( 0 );
+  return newDateTime;
+}
 
 /** PUBLIC
 *
@@ -839,7 +844,7 @@ MonthView.prototype.doubleClickDay = function monthView_doubleClickDay( event )
    }
    else
    {
-      newEvent( event.currentTarget.date, false );
+     newEvent( combineWithCurrentTime( event.currentTarget.date ), false );
    }
 }
 
