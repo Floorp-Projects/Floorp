@@ -924,7 +924,7 @@ png_destroy_write_struct(png_structpp png_ptr_ptr, png_infopp info_ptr_ptr)
 
 
 /* Free any memory used in png_ptr struct (old method) */
-void PNGAPI
+void /* PRIVATE */
 png_write_destroy(png_structp png_ptr)
 {
 #ifdef PNG_SETJMP_SUPPORTED

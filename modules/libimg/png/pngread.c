@@ -1052,7 +1052,7 @@ png_destroy_read_struct(png_structpp png_ptr_ptr, png_infopp info_ptr_ptr,
 }
 
 /* free all memory used by the read (old method) */
-void PNGAPI
+void /* PRIVATE */
 png_read_destroy(png_structp png_ptr, png_infop info_ptr, png_infop end_info_ptr)
 {
 #ifdef PNG_SETJMP_SUPPORTED
