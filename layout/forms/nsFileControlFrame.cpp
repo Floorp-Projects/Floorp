@@ -245,14 +245,22 @@ nsresult
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
   nsIView* textView;
+  nsIView*   parentView;
+  nsresult result = NS_OK;
+#ifdef ENDER_LITE
+  nsIFrame *parentWithView;
+  if (NS_SUCCEEDED(mTextFrame->GetParentWithView(mPresContext, &parentWithView)) && parentWithView)
+  {
+    parentWithView->GetView(mPresContext,&parentView);
+  }
+#else
   mTextFrame->GetView(mPresContext, &textView);
   if (nsnull == textView) {
     return NS_OK;
   }
-
-  nsresult result = NS_OK;
-  nsIView*   parentView;
   textView->GetParent(parentView);
+#endif
+
   nsIWidget* parentWidget = GetWindowTemp(parentView);
  
   nsIFileWidget *fileWidget = nsnull;
@@ -328,6 +336,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
         nsSize txtAvailSize(aDesiredSize.width - buttonRect.width, aDesiredSize.height);
         nsHTMLReflowMetrics txtKidSize(&txtAvailSize);
         nsHTMLReflowState   txtKidReflowState(aPresContext, aReflowState, mTextFrame, txtAvailSize);
+        txtKidReflowState.reason = eReflowReason_Resize;
         txtKidReflowState.mComputedWidth  = txtAvailSize.width;
         txtKidReflowState.mComputedHeight = txtAvailSize.height;
         mTextFrame->WillReflow(aPresContext);
@@ -374,7 +383,6 @@ nsNewFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
   nsNewFrame* result = nsnull;
-#ifndef DEBUG_NEWFRAME
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(aPresContext, nsnull, &childFrame);
@@ -410,9 +418,6 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
   }
 
   return result;
-#else
-  return nsnull;
-#endif
 }
 
 PRIntn
@@ -505,7 +510,6 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
-#ifndef DEBUG_NEWFRAME
   if ( nsFormFrame::GetDisabled(this) && mRect.Contains(aPoint) ) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -516,7 +520,6 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   } else {
     return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
-#endif
   return NS_OK;
 }
 
