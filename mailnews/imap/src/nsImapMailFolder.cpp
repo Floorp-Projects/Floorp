@@ -3775,62 +3775,62 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
     msgHdr->GetMessageId(getter_Copies(messageID));
     if (!strncmp(messageID, "md5:", 4))
       needMsgID = PR_TRUE;
-  }
-  if (markRead || needMsgID)
-  {
-    if (NS_SUCCEEDED(res))
+    if (markRead || needMsgID)
     {
-      PRBool isRead;
-      msgHdr->GetIsRead(&isRead);
-      if (!isRead || needMsgID)
+      if (NS_SUCCEEDED(res))
       {
-        PRUint32 msgFlags, newFlags;
-        msgHdr->GetFlags(&msgFlags);
+        PRBool isRead;
+        msgHdr->GetIsRead(&isRead);
+        if (!isRead || needMsgID)
+        {
+          PRUint32 msgFlags, newFlags;
+          msgHdr->GetFlags(&msgFlags);
 
-            if (NS_SUCCEEDED(res))
-            {
-          nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-          res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
-          if (NS_SUCCEEDED(res) && mimeHeaders)
+          if (NS_SUCCEEDED(res))
           {
-            if (!isRead)
+            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+            res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
+            if (NS_SUCCEEDED(res) && mimeHeaders)
             {
-              nsXPIDLCString mdnDnt;
-              mimeHeaders->ExtractHeader("Disposition-Notification-To",
-                                         PR_FALSE, getter_Copies(mdnDnt));
-              if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
+              if (!isRead)
               {
-                if(NS_SUCCEEDED(res))
+                nsXPIDLCString mdnDnt;
+                mimeHeaders->ExtractHeader("Disposition-Notification-To",
+                                           PR_FALSE, getter_Copies(mdnDnt));
+                if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
                 {
-                  nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-                  mdnGenerator =
-                    do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
-                  if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
+                  if(NS_SUCCEEDED(res))
                   {
-                      mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
-                                            msgWindow, this, uidOfMessage, 
-                                            mimeHeaders, PR_FALSE);
-                      msgUrl->SetMimeHeaders(nsnull);
-                  }
-               }
-               msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-               msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+                    nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+                    mdnGenerator =
+                      do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
+                    if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
+                    {
+                        mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
+                                              msgWindow, this, uidOfMessage, 
+                                              mimeHeaders, PR_FALSE);
+                        msgUrl->SetMimeHeaders(nsnull);
+                    }
+                 }
+                 msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+                 msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+                }
+              }
+              if (needMsgID)
+              {
+                nsXPIDLCString messageID;
+                mimeHeaders->ExtractHeader("Message-Id",
+                                           PR_FALSE, getter_Copies(messageID));
+                if (messageID.Length())
+                  msgHdr->SetMessageId(messageID);
               }
             }
-            if (needMsgID)
-            {
-              nsXPIDLCString messageID;
-              mimeHeaders->ExtractHeader("Message-Id",
-                                         PR_FALSE, getter_Copies(messageID));
-              if (messageID.Length())
-                msgHdr->SetMessageId(messageID);
-            }
           }
-        }
-        if (markRead)
-        {
-          msgHdr->MarkRead(PR_TRUE);
-          commit = PR_TRUE;
+          if (markRead)
+          {
+            msgHdr->MarkRead(PR_TRUE);
+            commit = PR_TRUE;
+          }
         }
       }
     }
