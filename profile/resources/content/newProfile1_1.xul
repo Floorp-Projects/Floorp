@@ -31,11 +31,8 @@
 %profileDTD;
 ]>
 
-<page 
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-    orient="vertical"
-		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+      onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
     <description>&pnl1.p1.text;</description>
     <description>&pnl1.p2.text;</description>

@@ -12,32 +12,53 @@
 ]>
 
 
-<window title="&newprofile.title;" orient="vertical"
-        class="color-dialog"
-        xmlns:html="http://www.w3.org/1999/xhtml"
+<window title="&newprofile.title;" orient="horizontal" class="color-dialog"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onclose="onCancel();"
-        onload="Startup('newProfile1_1','content');">
+        onload="window.sizeToContent(); Startup('newProfile1_1','content');">
   
   <stringbundle id="bundle_createProfileWizard"
                 src="chrome://communicator/locale/profile/createProfileWizard.properties"/>
   <stringbundle id="bundle_profileManager"
                 src="chrome://communicator/locale/profile/profileManager.properties"/>
+  <stringbundle id="bundle_newProfile1_2"
+                src="chrome://communicator/locale/profile/newProfile1_2.properties"/>
 
-  <!-- XXX: strres.js is needed so that wizardManager.js will work -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+
   <script type="application/x-javascript" src="chrome://communicator/content/profile/createProfileWizard.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardHandlerSet.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/wizardManager.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/widgetStateManager.js"/>
+  <grid>
+    <columns>
+      <column/>
+      <column flex="5"/>
+      <column flex="1"/>
+    </columns>
+    <rows>
+      <row align="center">
+        <description value="&pnl2.pname.label;" accesskey="P" control="ProfileName"/>
+        <textbox id="ProfileName" value="&pnl2.defaultPName.label;" onkeypress="updateProfileName();"/>
+        <spacer/>
+      </row>
+      <row>
+        <separator class="thin"/>
+        <separator class="thin"/>
+        <spacer/>
+      </row>
+      <row align="center">
+          <hbox>
+          <description>&pnl2.pdir.label;</description> 
+          <hbox id="dirbox">
+            <description class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
+            <vbox valign="top">
+              <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
+            </vbox>
+          </hbox>
+          </hbox>
+        <spacer/>
+      </row>
+    </rows>
+  </grid>
 
-  <hbox class="box-header" id="header" title="&window.title.label;" description="&profileWizard.title;"/>
-  <hbox class="wizard-box" flex="1">
-    <html:iframe src="about:blank" style="width: 40em; height: 23em; overflow: auto;" name="content" id="content" flex="1"/>
-  </hbox>
-  <separator class="groove"/>
-  <hbox id="wizardButtons"/>
+    <data id="ProfileLanguage" />
+    <data id="ProfileRegion" />
 
 </window>

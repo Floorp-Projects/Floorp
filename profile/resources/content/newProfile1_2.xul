@@ -26,30 +26,27 @@
 <?xml-stylesheet href="chrome://communicator/skin/profile/newProfile1_2.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/profile/newProfile1_2.dtd" >
-<page
-  xmlns:html="http://www.w3.org/1999/xhtml"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  orient="vertical"
-  onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
   <stringbundle id="bundle_newProfile1_2"
                 src="chrome://communicator/locale/profile/newProfile1_2.properties"/>
 
   <script type="application/x-javascript" src="chrome://communicator/content/profile/newProfile1_2.js"/>
 
-  <html>&pnl2.intro.text;</html> 
-  <html>&pnl2.pname.label;</html> 
+  <description>&pnl2.intro.text;</description> 
+  <description>&pnl2.pname.label;</description> 
 
 
   <textbox id="ProfileName" value="&pnl2.defaultPName.label;" onkeypress="updateProfileName();"/>
 
   <separator/>
 
-  <html>&pnl2.pdir.label;</html> 
+  <description>&pnl2.pdir.label;</description> 
 
 
   <hbox id="dirbox">
-    <html class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
+    <description class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
     <vbox valign="top">
       <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
       <button id="useDefault" label="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
@@ -58,14 +55,14 @@
 
   <separator/>
 
-  <hbox autostretch="never">
+  <hbox align="center">
     <spacer flex="1"/>
     <button label="&langSelection.label;" oncommand="showLangDialog();"/>
   </hbox>
 
   <spacer flex="1"/>
 
-  <html id="finishtext">&pnl2.finish.text;</html> 
+  <description id="finishtext">&pnl2.finish.text;</description> 
 
   <data id="ProfileLanguage" />
   <data id="ProfileRegion" />

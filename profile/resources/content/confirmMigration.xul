@@ -32,8 +32,8 @@
     </vbox>
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
-      <html>&confirmMigrationPart1.label;</html>
-      <html>&confirmMigrationPart2.label;</html>
+      <description>&confirmMigrationPart1.label;</description>
+      <description>&confirmMigrationPart2.label;</description>
     </vbox>
   </hbox>
   <separator class="thin"/>

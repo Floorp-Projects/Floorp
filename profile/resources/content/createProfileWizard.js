@@ -28,16 +28,9 @@ profile = profile.QueryInterface(Components.interfaces.nsIProfileInternal);
 var gCreateProfileWizardBundle;
 var gProfileManagerBundle;
 
-// Navigation Set for pages contained in wizard 
-var wizardMap = {
-  newProfile1_1: { previous: null,              next: "newProfile1_2",    finish: false },
-  newProfile1_2: { previous: "newProfile1_1",   next: null,               finish: true },
-}
-
 // page specific variables
 var profName      = "";
 var profDir       = "";
-var wizardManager = null;
 
 // startup procedure
 function Startup( startPage, frame_id )
@@ -49,15 +42,6 @@ function Startup( startPage, frame_id )
   gCreateProfileWizardBundle = document.getElementById("bundle_createProfileWizard");
   gProfileManagerBundle = document.getElementById("bundle_profileManager");
   
-  // instantiate the Wizard Manager
-  wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
-  wizardManager.URL_PagePrefix    = "chrome://communicator/content/profile/";
-  wizardManager.URL_PagePostfix   = ".xul";
-
-  // set the button handler functions
-  wizardManager.SetHandlers( null, null, onFinish, onCancel, null, null );
-  // load the start page
-  wizardManager.LoadPage (startPage, false);
   // move to center of screen if no opener, otherwise, to center of opener
   if( window.opener )
     moveToAlertPosition();
@@ -78,37 +62,59 @@ function onCancel()
     }
     window.close();
   }
+  return true;
 }
 
 function onFinish()
 {
-
-  // check if we're at final stage 
-  if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
-    return;
-
-  var tag =  wizardManager.WSM.GetTagFromURL( wizardManager.content_frame.src, "/", ".xul" );
-  wizardManager.WSM.SavePageData( tag, null, null, null );
-
-  var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
-  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
-  var profLang = wizardManager.WSM.PageData["newProfile1_2"].ProfileLanguage.value;
-  var profRegion = wizardManager.WSM.PageData["newProfile1_2"].ProfileRegion.value;
+  var profName = document.getElementById("ProfileName").value;
+  var profDir = document.getElementById("ProfileDir").getAttribute("rootFolder");
+  var profLang = document.getElementById("ProfileLanguage").getAttribute("data");
+  var profRegion = document.getElementById("ProfileRegion").getAttribute("data");
 
   // Get & select langcode
-  proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
-  
+  var proceed = processCreateProfileData(profName, profDir, profLang, profRegion); 
+
   if( proceed ) {
+      alert('fo');
     if( window.opener ) {
       window.opener.CreateProfile(profName, profDir);
     }
     else {
       profile.startApprunner(profName);
     }
+    alert('fo');
     window.close();
   }
-  else
-    return;
+  return true;
+}
+
+// function createProfileWizard.js::chooseProfileFolder();
+// invoke a folder selection dialog for choosing the directory of profile storage.
+function chooseProfileFolder( aRootFolder )
+{
+  if( !aRootFolder ) {
+    try {
+      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(Components.interfaces.nsIFilePicker);
+      var newProfile1_2Bundle = document.getElementById("bundle_newProfile1_2");
+      fp.init(window, newProfile1_2Bundle.getString("chooseFolder"), Components.interfaces.nsIFilePicker.modeGetFolder);
+      fp.appendFilters(Components.interfaces.nsIFilePicker.filterAll);
+      fp.show();
+      // later change to 
+      aRootFolder = fp.file.unicodePath;
+    }
+    catch(e) {
+      aRootFolder = null;
+    }
+  }
+  if( aRootFolder ) {
+    var folderText = document.getElementById("ProfileDir");
+    dump("*** setting rootFolderAttribute to " + aRootFolder + "\n");
+    folderText.setAttribute( "rootFolder", aRootFolder );
+    if ( aRootFolder != top.profile.defaultProfileParentDir.unicodePath )
+      document.getElementById( "useDefault" ).removeAttribute("disabled");
+    updateProfileName();
+  }
 }
 
 /** void processCreateProfileData( void ) ;
@@ -174,4 +180,76 @@ function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
     dump("*** Failed to create a profile\n");
   }
 }
+function updateProfileName()
+{
+  const nsILocalFile = Components.interfaces.nsILocalFile; 
+  const nsILocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 
+  var profileName = document.getElementById( "ProfileName" );
+  var folderDisplayElement = document.getElementById( "ProfileDir" );
+  var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
+  try {
+
+    var sfile = Components.classes[nsILocalFile_CONTRACTID].createInstance(nsILocalFile); 
+    if ( sfile ) {
+      // later change to 
+      sfile.initWithUnicodePath(rootFolder);
+    }
+    // later change to 
+    sfile.appendUnicode(profileName.value);
+    
+    clearFolderDisplay();
+    // later change to 
+    var value = document.createTextNode( sfile.unicodePath );
+    folderDisplayElement.appendChild( value );
+  }
+  catch(e) {
+  }
+}
+function clearFolderDisplay()
+{
+  var folderText = document.getElementById("ProfileDir");
+  if ( folderText.hasChildNodes() ) {
+    while ( folderText.hasChildNodes() )
+      folderText.removeChild( folderText.firstChild );
+  }
+}
+function setDisplayToDefaultFolder()
+{
+  var profileName = document.getElementById( "ProfileName" );
+  var profileDisplay = document.getElementById( "ProfileDir" );
+  
+  var fileSpec;
+  try {
+    fileSpec = top.profile.defaultProfileParentDir; 
+    if ( fileSpec )
+      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFile );
+    if ( fileSpec )
+      profileDisplay.setAttribute("rootFolder", fileSpec.unicodePath );
+
+
+  }
+  catch(e) {
+  }
+  
+  document.getElementById("useDefault").setAttribute("disabled", "true");
+  
+  // reset the display field
+  updateProfileName();
+}
+
+function showLangDialog()
+{
+  var selectedLanguage = document.getElementById("ProfileLanguage").getAttribute("data");
+  var selectedRegion = document.getElementById("ProfileRegion").getAttribute("data");
+  var selectLang = window.openDialog("chrome://communicator/content/profile/selectLang.xul","","modal=yes,titlebar,resizable=no", selectedLanguage, selectedRegion);
+}
+
+// check to see if some user specified profile folder exists, otherwise use
+// default. 
+function initPage2()
+{
+  var displayField = document.getElementById( "ProfileDir" );
+  if ( !displayField.value || !displayField.rootFolder )
+    setDisplayToDefaultFolder();
+}

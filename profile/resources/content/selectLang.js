@@ -1,6 +1,5 @@
 function Startup()
 {
-  doSetOKCancel(onOK);
   var selectedLanguage = window.arguments.length ? window.arguments[0] : null;
   var tree = document.getElementById("langList");
   if (selectedLanguage) {
@@ -23,7 +22,7 @@ function Startup()
   }
 }
 
-function onOK()
+function onAccept()
 {
   //cache language on the parent window
   var tree = document.getElementById("langList");
@@ -45,5 +44,5 @@ function onOK()
       regionStore.setAttribute("data", regionName);
   }
 
-  window.close();
+  return true;
 }
