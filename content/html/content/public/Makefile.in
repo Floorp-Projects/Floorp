@@ -28,13 +28,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 
+XPIDLSRCS	= \
+		nsISelectElement.idl \
+		$(NULL)
+
 EXPORTS		= \
 		nsIFormControl.h \
 		nsIForm.h \
 		nsILink.h \
 		nsIOptionElement.h \
 		nsITextControlElement.h \
-		nsISelectElement.h \
 		nsIScriptElement.h \
 		$(NULL)
 

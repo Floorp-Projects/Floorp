@@ -35,19 +35,13 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsISelectElement_h___
-#define nsISelectElement_h___
 
-#include "nsISupports.h"
+#include "nsISupports.idl"
 
-// IID for the nsISelect interface
-#define NS_ISELECTELEMENT_IID    \
-{ 0xa6cf90f6, 0x15b3, 0x11d2,    \
-  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } }
-
-class nsIDOMHTMLOptionElement;
-class nsIPresContext;
-class nsIPresState;
+interface nsIContent;
+interface nsIDOMHTMLOptionElement;
+interface nsIPresContext;
+interface nsIPresState;
 
 /** 
  * This interface is used to notify a SELECT when OPTION
@@ -56,90 +50,85 @@ class nsIPresState;
  * interfaces are the ones to use to access and enumerate
  * OPTIONs within a SELECT element.
  */
-class nsISelectElement : public nsISupports {
-public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISELECTELEMENT_IID)
+[scriptable, uuid(a6cf90f6-15b3-11d2-932e-00805f8add32)]
+interface nsISelectElement : nsISupports
+{
 
   /**
    * To be called when stuff is added under a child of
    * the select--but *before* they are actually added.
    */
-  NS_IMETHOD WillAddOptions(nsIContent* aOptions,
-                            nsIContent* aParent,
-                            PRInt32 aContentIndex) = 0;
+  [noscript] void willAddOptions(in nsIContent aOptions,
+                                 in nsIContent aParent,
+                                 in long aContentIndex);
 
   /**
    * To be called when stuff is removed under a child of
    * the select--but *before* they are actually removed.
    */
-  NS_IMETHOD WillRemoveOptions(nsIContent* aParent,
-                               PRInt32 aContentIndex) = 0;
+  [noscript] void willRemoveOptions(in nsIContent aParent,
+                                    in long aContentIndex);
 
   /**
    * An OPTION element has been added to the SELECT's
    * subtree.
    */
-  NS_IMETHOD AddOption(nsIContent* aContent) = 0;
+  [noscript] void addOption(in nsIContent aContent);
 
   /**
    * An OPTION element has been deleted from the SELECT's
    * subtree.
    */
-  NS_IMETHOD RemoveOption(nsIContent* aContent) = 0;
+  [noscript] void removeOption(in nsIContent aContent);
 
   /**
-  * Indicates that we're done adding child content
-  * to the select during document loading.
-  */
-  NS_IMETHOD DoneAddingContent(PRBool aIsDone) = 0;
+   * Indicates that we're done adding child content
+   * to the select during document loading.
+   */
+  void doneAddingContent(in boolean aIsDone);
 
   /**
-  * Returns whether we're done adding child content
-  * to the select during document loading.
-  */
-  NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone) = 0;
+   * Returns whether we're done adding child content
+   * to the select during document loading.
+   */
+  boolean isDoneAddingContent();
 
   /**
-  * Returns whether we're the option is selected
-  */
-  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption,
-                              PRBool* aIsSelected) = 0;
+   * Returns whether we're the option is selected
+   */
+  boolean isOptionSelected(in nsIDOMHTMLOptionElement aOption);
 
   /**
-  * Sets an option selected or delselected
-  */
-  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
-                               PRBool aIsSelected) = 0;
+   * Sets an option selected or delselected
+   */
+  void setOptionSelected(in nsIDOMHTMLOptionElement aOption,
+                         in boolean aIsSelected);
 
   /**
    * Checks whether an option is disabled (even if it's part of an optgroup)
    */
-  NS_IMETHOD IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled) = 0;
+  boolean isOptionDisabled(in long aIndex);
 
   /**
-  * Sets multiple options (or just sets startIndex if select is single)
-  */
-  NS_IMETHOD SetOptionsSelectedByIndex(PRInt32 aStartIndex,
-                                       PRInt32 aEndIndex,
-                                       PRBool aIsSelected,
-                                       PRBool aClearAll,
-                                       PRBool aSetDisabled,
-                                       PRBool* aChangedSomething) = 0;
+   * Sets multiple options (or just sets startIndex if select is single)
+   */
+  boolean setOptionsSelectedByIndex(in long aStartIndex,
+                                    in long aEndIndex,
+                                    in boolean aIsSelected,
+                                    in boolean aClearAll,
+                                    in boolean aSetDisabled);
 
   /**
-  * Called when an option is disabled
-  */
-  NS_IMETHOD OnOptionDisabled(nsIDOMHTMLOptionElement* anOption) = 0;
+   * Called when an option is disabled
+   */
+  void onOptionDisabled(in nsIDOMHTMLOptionElement aOption);
 
   /**
    * Called to save/restore to/from pres. state
    */
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext,
-                       nsIPresState** aState) = 0;
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext,
-                          nsIPresState* aState) = 0;
+  [noscript] void saveState(in nsIPresContext aPresContext,
+                            out nsIPresState aState);
+  [noscript] void restoreState(in nsIPresContext aPresContext,
+                               in nsIPresState aState);
 };
-
-#endif // nsISelectElement_h___
-
