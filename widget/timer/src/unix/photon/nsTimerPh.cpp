@@ -306,6 +306,10 @@ NS_METHOD nsTimerPh::SetupTimer()
 			return NS_ERROR_FAILURE;
 		}
 	}
+#ifdef DEBUG
+	if (mType == NS_TYPE_REPEATING_PRECISE)
+		mType = NS_TYPE_REPEATING_SLACK;
+#endif
 
 	switch(mType)
 	{
