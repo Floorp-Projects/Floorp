@@ -23,10 +23,11 @@
 var	rootNode = null;
 var	textArc = null;
 var	RDF_observer = new Object;
-var  settingsButton = null;
-var  settingsButtonText = null;
-var bundle = null;
-var pref = null;
+var   settingsButton = null;
+var   settingsButtonText = null;
+var   bunremoveAttributedle = null;
+var   pref = null;
+var   mClickCount = null;
 
 // get the click count pref
 try {
@@ -138,13 +139,14 @@ function SearchPanelStartup()
         categoryList.selectedIndex = i;
       }
     }
-             
+    
     // set the category name on the advanced panel
     var categoryText = categoryList.options[ categoryList.selectedIndex ].text;
     var textElement = document.getElementById( "categoryNameText" );
     textElement.setAttribute( "value", categoryText );
     //set the category name on the settings button
     settingsButton.value = settingsButtonText + categoryText + "...";
+    
 
     if( lastCategoryName == "" )
       lastCategoryName = "NC:SearchEngineRoot";
@@ -397,6 +399,28 @@ function doStop()
 
 function doSearch()
 {
+	//get click count pref for later
+	//and set tree attribute to cause proper results appearance (like links) to happen 
+	//when user set pref to single click
+  try {
+    if( pref ) {
+      var prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
+      mClickCount = prefvalue ? 2 : 1;
+    } 
+    else
+      mClickCount = 1;
+  }
+  catch(e) {
+    mClickCount = 1;
+  }
+  var tree = document.getElementById("Tree");
+  if (mClickCount == 1)
+    tree.setAttribute("singleclick","true");
+  else
+    tree.removeAttribute("singleclick");
+
+	//end insert for single click appearance
+	
 	// hide search button
 	var searchButtonNode = document.getElementById("searchbutton");
 	var stopButtonNode = document.getElementById("stopbutton");
@@ -468,14 +492,14 @@ function doSearch()
       engineURIs[engineURIs.length] = treeItem.getAttribute( "id" );
     }
     else {
-      dump("*** multiple engines present, none selected, selecting the netscape search engine\n");
+      dump("*** multiple search engines present, selecting the netscape search engine\n");
       for( var i = 0; i < treeChildrenNode.childNodes.length; i++ )
       {
         var currItem = treeChildrenNode.childNodes[i];
           dump("*** the current URI is = " + currItem.getAttribute("id") + "\n");
-        if( currItem.getAttribute("id").indexOf("NetscapeSearchMain") != -1 ) {
+        if( currItem.getAttribute("id").indexOf("Open_Directory") != -1 ) {
           
-          engineURIs[engineURIs.length] = currItem.getAttribute("id");
+          engineURIs[engineURIs.length] = treeItem.getAttribute("id");
           break;
         }
       }
@@ -537,7 +561,8 @@ function checkSearchProgress( aSearchURL )
 		//window.frames["sidebar-content"].doStop();
     doStop();
   }
-	return true;
+  
+  return true;
 }
 
 function FOO_doSearch()
@@ -551,7 +576,8 @@ function FOO_doSearch()
 
 function openURL(event, treeitem, root)
 {
-  try {
+  /* mClickCount variable now made global and retrieved at start of doSearch() */
+  /* try {
     if( pref ) {
       var prefvalue = pref.GetBoolPref( "browser.search.use_double_clicks" );
       mClickCount = prefvalue ? 2 : 1;
@@ -561,7 +587,7 @@ function openURL(event, treeitem, root)
   }
   catch(e) {
     mClickCount = 1;
-  }
+  } */
   
 	if ((event.button != 1) || (event.clickCount != mClickCount))
 		return(false);
@@ -703,4 +729,3 @@ function switchTab( aPageIndex )
   var deck = document.getElementById( "advancedDeck" );
   deck.setAttribute( "index", aPageIndex );
 }
-

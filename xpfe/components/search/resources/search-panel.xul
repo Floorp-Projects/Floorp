@@ -39,11 +39,12 @@
   <deck id="advancedDeck" flex="100%" style="border:none;">
       
       <!-- results panel -->
-      <box align="vertical" flex="100%">
+      <box class="searchpanel-outerbox" align="vertical" flex="100%">
+      <spring style="height: 8px;"/>
         <box align="horizontal" class="spaced">
         	<html:input id="sidebar-search-text" flex="1" onkeyup="if (event.which == 13) { return doSearch(); }" />
-          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="toolbar-non-iconic"/>
-          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="toolbar-non-iconic" style="display:none;"/>
+          <titledbutton id="searchbutton" value="&search.button.label;" onclick="return doSearch();" class="dialog search-button"/>
+          <titledbutton id="stopbutton" value="&stop.button.label;" onclick="return doStop();" class="dialog search-button" style="display:none;"/>
         </box>
         <box align="horizontal" class="spaced">
           <html:label for="">&within.label;</html:label>
@@ -89,9 +90,12 @@
                 <treeitem uri="..." persist="open"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading"
                         type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-                  <treerow>
+                  <treerow class="searchresult">
                     <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
                               src="rdf:http://home.netscape.com/NC-rdf#Icon" />
+                    <!--<treecell>
+                    		<html:a href="rdf:http://home.netscape.com/NC-rdf#URL"><html:div class="searchresult">This is a test</html:div></html:a>
+                    </treecell>-->
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -108,16 +112,16 @@
       </box>
       
       <!-- advanced panel -->
-      <box align="vertical">
+      <box align="vertical" class="searchpanel-outerbox" >
       
         <box orient="horizontal" align="center">
-          <text value="&whenSearching.label;"/><text value="&within.label;"/>
+          <text value="&whenSearching.label;" class="indented-label"/><text value="&within.label;"/>
         </box>
-        <box orient="horizontal" align="center" style="font-weight: bold">
+        <box orient="horizontal" align="center" style="font-weight: bold;" class="indented-label">
           <text id="categoryNameText"/>
         </box>
         <box orient="horizontal" align="center">
-          <text value="&useTheseProviders.label;"/>
+          <text value="&useTheseProviders.label;" class="indented-label"/>
         </box>
         <spring style="height: 2px;"/>
 
