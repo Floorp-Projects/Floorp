@@ -352,6 +352,91 @@ SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aS
 }
 
 
+//----------------------------------------------------------------------
+
+// XXX this predicate and its cousins need to migrated to a single
+// place in layout - something in nsStyleDisplay maybe?
+static PRBool
+IsInlineFrame(nsIFrame* aFrame)
+{
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  switch (display->mDisplay) {
+    case NS_STYLE_DISPLAY_INLINE:
+    case NS_STYLE_DISPLAY_INLINE_BLOCK:
+    case NS_STYLE_DISPLAY_INLINE_TABLE:
+      return PR_TRUE;
+    default:
+      break;
+  }
+  return PR_FALSE;
+}
+
+//----------------------------------------------------------------------
+
+// Block/inline frame construction logic. We maintain a few invariants here:
+//
+// 1. Block frames contain block and inline frames.
+//
+// 2. Inline frames only contain inline frames. If an inline parent has a block
+// child then the block child is migrated upward until it lands in a block
+// parent (the inline frames containing block is where it will end up).
+
+// XXX consolidate these things
+static PRBool
+IsBlockFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
+{
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+static nsIFrame*
+FindFirstBlock(nsIPresContext* aPresContext, nsIFrame* aKid, nsIFrame** aPrevKid)
+{
+  nsIFrame* prevKid = nsnull;
+  while (aKid) {
+    if (IsBlockFrame(aPresContext, aKid)) {
+      *aPrevKid = prevKid;
+      return aKid;
+    }
+    prevKid = aKid;
+    aKid->GetNextSibling(&aKid);
+  }
+  *aPrevKid = nsnull;
+  return nsnull;
+}
+
+static nsIFrame*
+FindLastBlock(nsIPresContext* aPresContext, nsIFrame* aKid)
+{
+  nsIFrame* lastBlock = nsnull;
+  while (aKid) {
+    if (IsBlockFrame(aPresContext, aKid)) {
+      lastBlock = aKid;
+    }
+    aKid->GetNextSibling(&aKid);
+  }
+  return lastBlock;
+}
+
+static nsresult
+MoveChildrenTo(nsIPresContext* aPresContext,
+               nsIStyleContext* aNewParentSC,
+               nsIFrame* aNewParent,
+               nsIFrame* aFrameList)
+{
+  while (aFrameList) {
+    aFrameList->SetParent(aNewParent);
+    aFrameList->GetNextSibling(&aFrameList);
+  }
+  return NS_OK;
+}
+
+
 
 // -----------------------------------------------------------
 
@@ -4908,6 +4993,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
                                   isAbsolutelyPositioned, frameHasBeenInitialized,
                                   isFixedPositioned, aFrameItems);
       }
+      else if (nsHTMLAtoms::object == aTag) {
+        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+        }
+        isReplaced = PR_TRUE;
+        rv = NS_NewObjectFrame(aPresShell, &newFrame);
+      }
       else if (nsHTMLAtoms::applet == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
@@ -4944,13 +5036,6 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         rv = NS_NewLegendFrame(aPresShell, &newFrame);
         processChildren = PR_TRUE;
         canBePositioned = PR_FALSE;
-      }
-      else if (nsHTMLAtoms::object == aTag) {
-        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
-          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-        }
-        isReplaced = PR_TRUE;
-        rv = NS_NewObjectFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::form == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -10325,8 +10410,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   absoluteContainingBlock, floaterContainingBlock, nsnull);
     nsFrameItems            frameItems;
-    const nsStyleDisplay*   display = (const nsStyleDisplay*)
-      styleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay*   display =
+      NS_STATIC_CAST(const nsStyleDisplay*, styleContext->GetStyleData(eStyleStruct_Display));
 
     // Create a new frame based on the display type.
     // Note: if the old frame was out-of-flow, then so will the new frame
@@ -10352,7 +10437,45 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       }
 
       // Replace the primary frame
-      if (listName.get() == nsLayoutAtoms::absoluteList) {
+      if (listName == nsnull) {
+        if (IsInlineFrame(aFrame) && !AreAllKidsInline(newFrame)) {
+          // We're in the uncomfortable position of being an inline
+          // that now contains a block. As in ConstructInline(), break
+          // the newly constructed frames into three lists: the inline
+          // frames before the first block frame (list1), the inline
+          // frames after the last block frame (list3), and all the
+          // frames between the first and last block frames (list2).
+          nsIFrame* list1 = newFrame;
+          nsIFrame* prevToFirstBlock;
+          nsIFrame* list2 = FindFirstBlock(aPresContext, list1, &prevToFirstBlock);
+
+          if (prevToFirstBlock) {
+            prevToFirstBlock->SetNextSibling(nsnull);
+          }
+          else {
+            list1 = nsnull;
+          }
+
+          nsIFrame* afterFirstBlock;
+          list2->GetNextSibling(&afterFirstBlock);
+          nsIFrame* list3 = nsnull;
+          nsIFrame* lastBlock = FindLastBlock(aPresContext, afterFirstBlock);
+          if (! lastBlock) {
+            lastBlock = list2;
+          }
+          lastBlock->GetNextSibling(&list3);
+          lastBlock->SetNextSibling(nsnull);
+
+          // Create "special" inline-block linkage between the frames
+          SetFrameIsSpecial(state.mFrameManager, list1, list2);
+          SetFrameIsSpecial(state.mFrameManager, list2, list3);
+          SetFrameIsSpecial(state.mFrameManager, list3, nsnull);
+
+          // Recursively split inlines back up to the first containing
+          // block frame.
+          SplitToContainingBlock(aPresContext, state, aFrame, list1, list2, list3, PR_FALSE);
+        }
+      } else if (listName.get() == nsLayoutAtoms::absoluteList) {
         newFrame = state.mAbsoluteItems.childList;
         state.mAbsoluteItems.childList = nsnull;
       } else if (listName.get() == nsLayoutAtoms::fixedList) {
@@ -11120,24 +11243,6 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
 //----------------------------------------------------------------------
 
 // Support for :first-line style
-
-// XXX this predicate and its cousins need to migrated to a single
-// place in layout - something in nsStyleDisplay maybe?
-static PRBool
-IsInlineFrame(nsIFrame* aFrame)
-{
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  switch (display->mDisplay) {
-    case NS_STYLE_DISPLAY_INLINE:
-    case NS_STYLE_DISPLAY_INLINE_BLOCK:
-    case NS_STYLE_DISPLAY_INLINE_TABLE:
-      return PR_TRUE;
-    default:
-      break;
-  }
-  return PR_FALSE;
-}
 
 static void
 ReparentFrame(nsIPresContext* aPresContext,
@@ -12171,70 +12276,6 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
   return rv;
 }
 
-//----------------------------------------------------------------------
-
-// Block/inline frame construction logic. We maintain a few invariants here:
-//
-// 1. Block frames contain block and inline frames.
-//
-// 2. Inline frames only contain inline frames. If an inline parent has a block
-// child then the block child is migrated upward until it lands in a block
-// parent (the inline frames containing block is where it will end up).
-
-// XXX consolidate these things
-static PRBool
-IsBlockFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
-{
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
-  if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
-    return PR_FALSE;
-  }
-  return PR_TRUE;
-}
-
-static nsIFrame*
-FindFirstBlock(nsIPresContext* aPresContext, nsIFrame* aKid, nsIFrame** aPrevKid)
-{
-  nsIFrame* prevKid = nsnull;
-  while (aKid) {
-    if (IsBlockFrame(aPresContext, aKid)) {
-      *aPrevKid = prevKid;
-      return aKid;
-    }
-    prevKid = aKid;
-    aKid->GetNextSibling(&aKid);
-  }
-  *aPrevKid = nsnull;
-  return nsnull;
-}
-
-static nsIFrame*
-FindLastBlock(nsIPresContext* aPresContext, nsIFrame* aKid)
-{
-  nsIFrame* lastBlock = nsnull;
-  while (aKid) {
-    if (IsBlockFrame(aPresContext, aKid)) {
-      lastBlock = aKid;
-    }
-    aKid->GetNextSibling(&aKid);
-  }
-  return lastBlock;
-}
-
-static nsresult
-MoveChildrenTo(nsIPresContext* aPresContext,
-               nsIStyleContext* aNewParentSC,
-               nsIFrame* aNewParent,
-               nsIFrame* aFrameList)
-{
-  while (aFrameList) {
-    aFrameList->SetParent(aNewParent);
-    aFrameList->GetNextSibling(&aFrameList);
-  }
-  return NS_OK;
-}
-
 //----------------------------------------
 
 nsresult
@@ -12751,6 +12792,156 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
     }
   }
   return PR_FALSE;
+}
+
+
+nsresult
+nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
+                                              nsFrameConstructorState& aState,
+                                              nsIFrame* aFrame,
+                                              nsIFrame* aLeftInlineChildFrame,
+                                              nsIFrame* aBlockChildFrame,
+                                              nsIFrame* aRightInlineChildFrame,
+                                              PRBool aTransfer)
+{
+  // If aFrame is an inline frame, then recursively "split" it until
+  // we reach a block frame. aLeftInlineChildFrame is the original
+  // inline child of aFrame; aBlockChildFrame and
+  // aRightInlineChildFrame are the newly created frames that were
+  // constructed as a result of the previous recursion's "split".
+  //
+  // aBlockChildFrame and aRightInlineChildFrame will be "orphaned" frames upon
+  // entry to this routine; that is, they won't be parented. We'll
+  // assign them proper parents.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
+  if (IsBlockFrame(aPresContext, aFrame)) {
+    // If aFrame is a block frame, then we're done: make
+    // aBlockChildFrame and aRightInlineChildFrame children of aFrame,
+    // and insert aBlockChildFrame and aRightInlineChildFrame after
+    // aLeftInlineChildFrame
+    aBlockChildFrame->SetParent(aFrame);
+    aRightInlineChildFrame->SetParent(aFrame);
+    aBlockChildFrame->SetNextSibling(aRightInlineChildFrame);
+    aFrame->InsertFrames(aPresContext, *shell, nsnull, aLeftInlineChildFrame, aBlockChildFrame);
+    return NS_OK;
+  }
+
+  // Otherwise, aFrame is inline. Split it, and recurse to find the
+  // containing block frame.
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+
+  // Create an "anonymous block" frame that will parent
+  // aBlockChildFrame. The new frame won't have a parent yet: the recursion
+  // will parent it.
+  nsIFrame* blockFrame;
+  NS_NewBlockFrame(shell, &blockFrame);
+
+  nsCOMPtr<nsIStyleContext> styleContext;
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
+
+  nsCOMPtr<nsIStyleContext> blockSC;
+  aPresContext->ResolvePseudoStyleContextFor(content,
+                                             nsHTMLAtoms::mozAnonymousBlock,
+                                             styleContext,
+                                             PR_FALSE,
+                                             getter_AddRefs(blockSC));
+
+  InitAndRestoreFrame(aPresContext, aState, content,
+                      nsnull, blockSC, nsnull, blockFrame);
+
+  blockFrame->SetInitialChildList(aPresContext, nsnull, aBlockChildFrame);
+  MoveChildrenTo(aPresContext, blockSC, blockFrame, aBlockChildFrame);
+
+  // Create an anonymous inline frame that will parent
+  // aRightInlineChildFrame. The new frame won't have a parent yet:
+  // the recursion will parent it.
+  nsIFrame* inlineFrame;
+  NS_NewInlineFrame(shell, &inlineFrame);
+
+  InitAndRestoreFrame(aPresContext, aState, content,
+                      nsnull, styleContext, nsnull, inlineFrame);
+
+  inlineFrame->SetInitialChildList(aPresContext, nsnull, aRightInlineChildFrame);
+  MoveChildrenTo(aPresContext, styleContext, inlineFrame, aRightInlineChildFrame);
+
+  // Make the "special" inline-block linkage between aFrame and the
+  // newly created anonymous frames. We need to create the linkage
+  // between the first in flow, so if we're a continuation frame, walk
+  // back to find it.
+  nsIFrame* firstInFlow = aFrame;
+  while (1) {
+    nsIFrame* prevInFlow;
+    firstInFlow->GetPrevInFlow(&prevInFlow);
+    if (! prevInFlow) break;
+    firstInFlow = prevInFlow;
+  }
+
+  SetFrameIsSpecial(aState.mFrameManager, firstInFlow, blockFrame);
+  SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
+  SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
+
+  // If we have a continuation frame, then we need to break the
+  // continuation.
+  nsIFrame* nextInFlow;
+  aFrame->GetNextInFlow(&nextInFlow);
+  if (nextInFlow) {
+    aFrame->SetNextInFlow(nsnull);
+    nextInFlow->SetPrevInFlow(nsnull);
+  }
+
+  // This is where the mothership lands and we start to get a bit
+  // funky. We're going to do a bit of work to ensure that the frames
+  // from the *last* recursion are properly hooked up.
+  //
+  // aTransfer will be set once the recursion begins to nest. (It's
+  // not set at the first level of recursion, because
+  // aLeftInlineChildFrame, aBlockChildFrame, and
+  // aRightInlineChildFrame already have their sibling and parent
+  // pointers properly initialized.)
+  //
+  // Once we begin to nest recursion, aLeftInlineChildFrame
+  // corresponds to the original inline that we're trying to split,
+  // and aBlockChildFrame and aRightInlineChildFrame are the anonymous
+  // frames we created to protect the inline-block invariant.
+  if (aTransfer) {
+    // We need to move any successors of the original inline
+    // (aLeftInlineChildFrame) to aRightInlineChildFrame.
+    nsIFrame* nextInlineFrame;
+    aLeftInlineChildFrame->GetNextSibling(&nextInlineFrame);
+    aLeftInlineChildFrame->SetNextSibling(nsnull);
+    aRightInlineChildFrame->SetNextSibling(nextInlineFrame);
+
+    // Any frame that was moved will need its parent pointer fixed,
+    // and will need to be marked as dirty.
+    while (nextInlineFrame) {
+      nextInlineFrame->SetParent(inlineFrame);
+
+      nsFrameState state;
+      nextInlineFrame->GetFrameState(&state);
+      state |= NS_FRAME_IS_DIRTY;
+      nextInlineFrame->SetFrameState(state);
+
+      nextInlineFrame->GetNextSibling(&nextInlineFrame);
+    }
+  }
+
+  // Recurse to the parent frame. This will assign a parent frame to
+  // each new frame we've just created.
+  nsIFrame* parent;
+  aFrame->GetParent(&parent);
+
+  NS_ASSERTION(parent != nsnull, "frame has no geometric parent");
+  if (! parent)
+    return NS_ERROR_FAILURE;
+
+  // When we recur, we'll make the "left inline child frame" be the
+  // inline frame we've just begun to "split", and we'll pass the
+  // newly created anonymous frames as aBlockChildFrame and
+  // aRightInlineChildFrame.
+  return SplitToContainingBlock(aPresContext, aState, parent, aFrame, blockFrame, inlineFrame, PR_TRUE);
 }
 
 nsresult
