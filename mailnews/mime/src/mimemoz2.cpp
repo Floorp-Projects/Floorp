@@ -118,12 +118,12 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   MimeObject    *child = obj;
 
   n = 1;
-  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
+  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(nsMsgAttachmentData));
   if (!*data) 
     return NS_ERROR_OUT_OF_MEMORY;
 
   tmp = *data;
-  nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
+  nsCRT::memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   tmp->real_type = child->content_type ? nsCRT::strdup(child->content_type) : NULL;
   tmp->real_encoding = child->encoding ? nsCRT::strdup(child->encoding) : NULL;
   disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION, PR_FALSE, PR_FALSE);
@@ -419,12 +419,12 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
   if (n <= 0) 
     return n;
 
-  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(MSG_AttachmentData));
+  *data = (nsMsgAttachmentData *)PR_Malloc( (n + 1) * sizeof(nsMsgAttachmentData));
   if (!*data) 
     return NS_ERROR_OUT_OF_MEMORY;
 
   attIndex = 0;
-  nsCRT::memset(*data, 0, (n + 1) * sizeof(MSG_AttachmentData));
+  nsCRT::memset(*data, 0, (n + 1) * sizeof(nsMsgAttachmentData));
   
   // Now, build the list!
   return BuildAttachmentList((MimeObject *) cobj, *data, aMessageURL);
