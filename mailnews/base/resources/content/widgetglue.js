@@ -246,8 +246,17 @@ function MsgWorkOffline() {}
 function MsgSynchronize() {}
 function MsgGetSelectedMsg() {}
 function MsgGetFlaggedMsg() {}
-function MsgEditUndo() {}
-function MsgEditRedo() {}
+
+function MsgEditUndo() 
+{
+    messenger.Undo();
+}
+
+function MsgEditRedo() 
+{
+    messenger.Redo();
+}
+
 function MsgEditCut() {}
 function MsgEditCopy() {}
 function MsgEditPaste() {}
