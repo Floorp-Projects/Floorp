@@ -1940,8 +1940,7 @@ nsresult PresShell::SetPrefLinkRules(void)
         //   this means the link colors need to be overridable, 
         //   which they are if we put them in the backstop stylesheet,
         //   though if using an override sheet this will cause authors grief still
-        //   In the backstop stylesheet, they are !important to keep the forced-color rules
-        //   from coloring the links too
+        //   In the backstop stylesheet, they are !important when we are ignoring document colors
         //
         // XXX: do active links and visited links get another color?
         //      They were red in the html.css rules
@@ -1955,20 +1954,32 @@ nsresult PresShell::SetPrefLinkRules(void)
           // insert a rule to make links the preferred color
           PRUint32 index = 0;
           nsAutoString strRule, strColor;
+          PRBool useDocColors = PR_TRUE;
+
+          // see if we need to create the rules first
+          mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
 
           ///////////////////////////////////////////////////////////////
-          // - links: '*:link, *:link:active {color: #RRGGBB !important;}'
+          // - links: '*:link, *:link:active {color: #RRGGBB [!important];}'
           ColorToString(linkColor,strColor);
           strRule.Append(NS_LITERAL_STRING("*:link, *:link:active {color:"));
           strRule.Append(strColor);
-          strRule.Append(NS_LITERAL_STRING(" !important;} "));
+          if (!useDocColors) {
+            strRule.Append(NS_LITERAL_STRING(" !important;} "));
+          } else {
+            strRule.Append(NS_LITERAL_STRING(";} "));
+          }
  
           ///////////////////////////////////////////////////////////////
-          // - visited links '*:visited, *:visited:active {color: #RRGGBB !important;}'
+          // - visited links '*:visited, *:visited:active {color: #RRGGBB [!important];}'
           ColorToString(visitedColor,strColor);
           strRule.Append(NS_LITERAL_STRING("*:visited, *:visited:active {color:"));
           strRule.Append(strColor);
-          strRule.Append(NS_LITERAL_STRING(" !important;} "));
+          if (!useDocColors) {
+            strRule.Append(NS_LITERAL_STRING(" !important;} "));
+          } else {
+            strRule.Append(NS_LITERAL_STRING(";} "));
+          }
 
           // insert the rules
           result = sheet->InsertRule(strRule,0,&index);
