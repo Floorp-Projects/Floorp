@@ -48,6 +48,7 @@ LIBRARY_NAME	= javaxpcom
 
 EMBED_JAR = mozembed.jar
 EMBED_JAR_SRC = $(patsubst %.jar,%-src.jar,$(EMBED_JAR))
+PACKAGE_NAME = org.mozilla.xpcom
 
 REQUIRES	= xpcom \
 		  string \
@@ -131,7 +132,7 @@ org/mozilla/xpcom/stubs/.done: org/mozilla/xpcom/.done
 $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done
 	@echo Making Java stub files
 	@for idl in $(IDL_FILES); do \
-		$(XPIDL_COMPILE) -m javastub -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/`basename $$idl`_Stub $$idl; \
+		$(XPIDL_COMPILE) -m javastub -p $(PACKAGE_NAME) -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/`basename $$idl`_Stub $$idl; \
 	done
 	@touch $@
 
@@ -140,7 +141,7 @@ $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.java_done: $(XPIDL_COMPILE) $(XPIDL_GE
 $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.java_done: $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done $(JAVA_SRCS_)
 	@echo Making Java interface files
 	@for idl in $(IDL_FILES); do \
-		$(XPIDL_COMPILE) -m java -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/`basename $$idl` $$idl; \
+		$(XPIDL_COMPILE) -m java -p $(PACKAGE_NAME) -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/`basename $$idl` $$idl; \
 	done
 	@$(INSTALL) -m 644 $(addprefix $(srcdir)/,$(JAVA_SRCS_)) $(XPIDL_GEN_DIR)/org/mozilla/xpcom
 	@touch $@
