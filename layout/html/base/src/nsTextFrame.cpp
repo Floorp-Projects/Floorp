@@ -924,6 +924,13 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PRUnichar buf[500];
   PRUnichar* text = PrepareUnicodeText(displaySelection ? ip : nsnull,
                                        buf, 500, textLength);
+  // ?? DEBUG
+  nsString str(text);
+  PRInt32 inx = str.Find("bold");
+  if (inx > -1) {
+    int x = 0;
+  }
+
   if (0 != textLength) {
     if (!displaySelection) {
       // When there is no selection showing, use the fastest and
@@ -1090,61 +1097,115 @@ TextFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
   return NS_OK;
 }
 
-// XXX this is slow
+//---------------------------------------------------
+// Uses a binary search for find where the cursor falls in the line of text
+// It also keeps track of the part of the string that has already been measured
+// so it doesn't have to keep measuring the same text over and over
+//
+// Param "aBaseWidth" contains the width in twips of the portion 
+// of the text that has already been measured, and aBaseInx contains
+// the index of the text that has already been measured.
+//
+// aTextWidth returns the (in twips) the length of the text that falls before the cursor
+// aIndex contains the index of the text where the cursor falls
+static PRBool
+BinarySearchForPosition(nsIFontMetrics* aFM, 
+                        PRUnichar* aText,
+                        PRInt32    aBaseWidth,
+                        PRInt32    aBaseInx,
+                        PRInt32    aStartInx, 
+                        PRInt32    aEndInx, 
+                        PRInt32    aCursorPos, 
+                        PRInt32&   aIndex,
+                        PRInt32&   aTextWidth)
+{
+  PRInt32 range = aEndInx - aStartInx;
+  if (range == 1) {
+    aIndex   = aStartInx + aBaseInx;
+    return PR_TRUE;
+  }
+  PRInt32 inx = aStartInx + (range / 2);
 
-// XXX it doesn't work well when dragging the end of the selection
-// (can't hit the first character)
+  PRInt32 textWidth;
+  aFM->GetWidth(aText, inx, textWidth);
 
-// XXX it doesn't do 1/2 the char width to make picking characters
-// more sensible
+  PRInt32 fullWidth = aBaseWidth + textWidth;
+  if (fullWidth == aCursorPos) {
+    aIndex = inx;
+    return PR_TRUE;
+  } else if (aCursorPos < fullWidth) {
+    aTextWidth = aBaseWidth;
+    if (BinarySearchForPosition(aFM, aText, aBaseWidth, aBaseInx, aStartInx, inx, aCursorPos, aIndex, aTextWidth)) {
+      return PR_TRUE;
+    }
+  } else {
+    aTextWidth = fullWidth;
+    PRInt32 end = aEndInx - inx;
+    if (BinarySearchForPosition(aFM, aText+inx, fullWidth, aBaseInx+inx, 0, end, aCursorPos, aIndex, aTextWidth)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
 
+//---------------------------------------------------------------------------
+// Uses a binary search to find the position of the cursor in the text.
+// The "indices array is used to map from the compressed text back to the 
+// un-compressed text, selection is based on the un-compressed text, the visual 
+// display of selection is based on the compressed text.
+//---------------------------------------------------------------------------
 PRInt32
 TextFrame::GetPosition(nsIPresContext& aCX,
                        nsGUIEvent*     aEvent,
                        nsIFrame*       aNewFrame,
                        PRUint32&       aAcutalContentOffset)
 {
+  const PRInt16 kNumIndices = 512;
+
   // Get the rendered form of the text
   PRInt32 textLength;
-  PRInt32 indicies[500];
+  PRInt32  indicies[kNumIndices];
   PRInt32* ip = indicies;
-  if (mContentLength > 500) {
-    ip = new PRInt32[mContentLength];
+  if (mContentLength > kNumIndices) {
+    ip = new PRInt32[mContentLength+1];
   }
-  PRUnichar buf[500];
-  PRUnichar* text = PrepareUnicodeText(ip, buf, 500, textLength);
+  PRUnichar buf[kNumIndices];
+  PRUnichar* text = PrepareUnicodeText(ip, buf, kNumIndices, textLength);
+  ip[mContentLength] = ip[mContentLength-1]+1;
 
   // Find the font metrics for this text
   nsIStyleContext* styleContext;
   aNewFrame->GetStyleContext(&aCX, styleContext);
-  const nsStyleFont *font = (const nsStyleFont*)
-    styleContext->GetStyleData(eStyleStruct_Font);
+  const nsStyleFont *font = (const nsStyleFont*) styleContext->GetStyleData(eStyleStruct_Font);
   NS_RELEASE(styleContext);
+
   nsIFontMetrics* fm = aCX.GetMetricsFor(font->mFont);
 
-  // XXX This algorithm could use some improvement
   PRInt32 offset = mContentOffset + mContentLength;
-  PRInt32 i;
-  for (i=1;i<PRInt32(textLength);i++) {
-    PRInt32 textWidth;
-    fm->GetWidth(text, i, textWidth);
-    if (textWidth >= aEvent->point.x) {
-      if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-        i--;
-        if (i < 0) {
-          i = 0;
-        }
-      }
-      offset = 0;
-      PRInt32 j;
-      for (j=0;j<PRInt32(mContentLength);j++) {
-        if (indicies[j] == i+mContentOffset) {
-          offset = j+mContentOffset;
-          break;
-        }
-      }
-      break;
+
+  PRInt32 index;
+  PRInt32 textWidth;
+
+  PRBool found = BinarySearchForPosition(fm, text, 0, 0, 0, PRInt32(textLength), PRInt32(aEvent->point.x), index, textWidth);
+  if (found) {
+    PRInt32 charWidth;
+    fm->GetWidth(text[index], charWidth);
+    charWidth /= 2;
+
+    if (PRInt32(aEvent->point.x) > textWidth+charWidth) {
+      index++;
     }
+
+    offset = 0;
+    PRInt32 j;
+    PRInt32* ptr = ip; // We will use pointer math to make it fast, instead of indexing into ip
+    for (j=0;j<=PRInt32(mContentLength);j++) {
+      if (*ptr == index+mContentOffset) {
+        offset = j+mContentOffset;
+        break;
+      }
+      ptr++;
+    }      
   }
 
   NS_RELEASE(fm);
