@@ -29,6 +29,10 @@
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #endif
+#if defined(XP_UNIX) || defined(BEOS)
+#include <locale.h>
+#include <stdlib.h>
+#endif
 
 //
 // iids
@@ -40,12 +44,18 @@ static NS_DEFINE_IID(kIFactoryIID,NS_IFACTORY_IID);
 #ifdef XP_PC
 static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 #endif
+#ifdef XP_UNIX
+static NS_DEFINE_IID(kIPosixLocaleIID,NS_IPOSIXLOCALE_IID);
+#endif
 
 //
 // cids
 //
 #ifdef XP_PC
-static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
+static NS_DEFINE_CID(kWin32LocaleFactoryCID,NS_WIN32LOCALEFACTORY_CID);
+#endif
+#ifdef XP_UNIX
+static NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
 #endif
 
 //
@@ -64,6 +74,21 @@ const char* LocaleList[LocaleListLength] =
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
 #define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
+#ifdef XP_UNIX
+static int posix_locale_category[LocaleListLength] =
+{
+  LC_TIME,
+  LC_COLLATE,
+  LC_CTYPE,
+  LC_MONETARY,
+  LC_NUMERIC,
+#ifdef HAVE_I18N_LC_MESSAGES
+  LC_MESSAGES
+#else
+  LC_CTYPE
+#endif
+};
+#endif
 
 //
 // nsILocaleService implementation
@@ -173,7 +198,50 @@ nsLocaleService::nsLocaleService(void)
 		win32Converter->Release();
 	}
 #endif
+#ifdef XP_UNIX
+    nsIPosixLocale* posixConverter;
+    nsString xpLocale;
+    nsresult result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
+                           NULL,kIPosixLocaleIID,(void**)&posixConverter);
+    if (result==NS_OK && posixConverter!=nsnull) {
+        char* lc_all = setlocale(LC_ALL,NULL);
+        char* lang = getenv("LANG");
 
+        if (lc_all!=nsnull) {
+            result = posixConverter->GetXPLocale(lc_all,&xpLocale);
+            if (result!=NS_OK) { posixConverter->Release(); return; }
+            result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+            if (result!=NS_OK) { posixConverter->Release(); return; }
+            mApplicationLocale=mSystemLocale;
+            mApplicationLocale->AddRef();
+            posixConverter->Release();
+        } else {
+            if (lang==nsnull) {
+                xpLocale = "en-US";
+                result = NewLocale(xpLocale.ToNewUnicode(),&mSystemLocale);
+                if (result!=NS_OK) { posixConverter->Release(); return; }
+                mApplicationLocale = mSystemLocale;
+                mApplicationLocale->AddRef();
+                posixConverter->Release();
+            } else {
+                int i;
+                nsString category;
+                nsLocale* resultLocale = new nsLocale();
+                for(i=0;i<LocaleListLength;i++) {
+                    char* lc_temp = setlocale(posix_locale_category[i],"");
+                    category = LocaleList[i];
+                    if (lc_temp==nsnull) xpLocale = "en-US";
+                    else xpLocale = lc_temp;
+                    resultLocale->AddCategory(category.ToNewUnicode(),xpLocale.ToNewUnicode());
+                }
+                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mSystemLocale);
+                (void)resultLocale->QueryInterface(kILocaleIID,(void**)&mApplicationLocale);
+                posixConverter->Release();
+            }
+        }
+    }
+#endif // XP_PC
+                              
 }
 
 nsLocaleService::~nsLocaleService(void)
@@ -379,7 +447,7 @@ nsLocaleService::GetLocaleService(nsILocaleService** localeService)
 		} 
 
 		gLocaleService = NS_STATIC_CAST(nsILocaleService*,locale_service);
-		return NS_OK;
+
 	}
 
 	*localeService = gLocaleService;
