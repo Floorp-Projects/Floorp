@@ -256,7 +256,7 @@ BEGIN
 
             MENUITEM "GetCurrentURI",               ID_INTERFACES_NSIWEBNAV_GETCURRENTURI
 
-            MENUITEM "GetReferringURI",              ID_INTERFACES_NSIWEBNAV_GETREFERRINGURI
+            MENUITEM "GetReferringURI",             ID_INTERFACES_NSIWEBNAV_GETREFERRINGURI
 
             MENUITEM "GetSessionHistory",           ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY
 
@@ -681,7 +681,8 @@ BEGIN
     BEGIN
         MENUITEM "Remove &GH Page",             ID_TOOLS_REMOVEGHPAGE
         MENUITEM "Remove &All GH",              ID_TOOLS_REMOVEALLGH
-        MENUITEM "View &Logfile",				ID_TOOLS_VIEWLOGFILE
+        MENUITEM "View &Logfile",               ID_TOOLS_VIEWLOGFILE
+        MENUITEM "&Delete Logfile",             ID_TOOLS_DELETELOGFILE
         MENUITEM "Test &Your Method",           ID_TOOLS_TESTYOURMETHOD
         MENUITEM "Test Your &Method2",          ID_TOOLS_TESTYOURMETHOD2
     END
