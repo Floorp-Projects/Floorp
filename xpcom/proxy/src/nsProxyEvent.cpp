@@ -387,7 +387,11 @@ nsProxyObject::convertMiniVariantToVariant(nsXPTMethodInfo *methodInfo, nsXPTCMi
         return NS_ERROR_OUT_OF_MEMORY;
     
     for (int i = 0; i < paramCount; i++)
-        (*fullParam)[i].Init(params[i], methodInfo->GetParam(i).GetType());
+    {
+        const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i);
+        uint8 flags = paramInfo.IsOut() ? nsXPTCVariant::PTR_IS_DATA : 0;
+        (*fullParam)[i].Init(params[i], paramInfo.GetType(), flags);
+    }
     
     return NS_OK;
 }

@@ -109,8 +109,19 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     PRBool IsValInterface() const {return (PRBool) (flags & VAL_IS_IFACE);}
     PRBool IsValArray()     const {return (PRBool) (flags & VAL_IS_ARRAY);}
 
-    void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t)
+    void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {
+        type = t;
+        flags = f;
+
+        if(f & PTR_IS_DATA)
+        {
+            ptr = mv.val.p;
+            val.p = nsnull;
+        }
+        else
+        {
+            ptr = nsnull;
         switch(t.TagPart()) {
           case nsXPTType::T_I8:                val.i8  = mv.val.i8;  break;
           case nsXPTType::T_I16:               val.i16 = mv.val.i16; break;
@@ -137,9 +148,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
           case nsXPTType::T_PWSTRING_SIZE_IS:  /* fall through */
           default:                             val.p   = mv.val.p;   break;
         }
-        ptr = nsnull;
-        type = t;
-        flags = 0;
+        }
     }
 };
 
