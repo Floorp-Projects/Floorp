@@ -57,16 +57,16 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
                      "<TR><TD NOWRAP>");
 
 //#### Temporarily removed because the current renderer doesn't get it --Edwin
-//    if (icon != null) {
-//      getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
-//                       "<TR><TD NOWRAP VALIGN=CENTER>");
-//      if (link_url != null)
-//        getOut().print("<A HREF=\"" + link_url + "\">");
-//      getOut().print("<IMG SRC=\"" + icon +
-//                       "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
-//      if (link_url != null) getOut().print("</A>");
-//      getOut().print("</TD><TD VALIGN=CENTER>");
-//    }
+    if (icon != null) {
+      getOut().print("<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>" +
+                       "<TR><TD NOWRAP VALIGN=CENTER>");
+      if (link_url != null)
+        getOut().print("<A HREF=\"" + link_url + "\">");
+      getOut().print("<IMG SRC=\"" + icon +
+                       "\" BORDER=0 ALIGN=MIDDLE ALT=\"\">");
+      if (link_url != null) getOut().print("</A>");
+      getOut().print("</TD><TD VALIGN=CENTER>");
+    }
 //#### End of temporarily removed block --Edwin
 
     if (link_url != null) getOut().print("<A HREF=\"" + link_url + "\">");
@@ -74,8 +74,8 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
     if (link_url != null) getOut().print("</A>");
 
 //#### Temporarily removed because the current renderer doesn't get it --Edwin
-//    if (icon != null)
-//      getOut().print("</TD></TR></TABLE>");
+    if (icon != null)
+      getOut().print("</TD></TR></TABLE>");
 //#### End of temporarily removed block --Edwin
     getOut().print("</TD><TD>");
 
@@ -96,12 +96,12 @@ class MimeExternalObjectOperator extends MimeLeafOperator {
       String cdi[] = headers.getHeader("Content-Disposition");
       String disp = (cdi == null || cdi.length == 0 ? null : cdi[0]);
 // ####
-//      if (disp != null)
-//        name = headers.getParameter(buf, "filename");
-//
-//      if (name == null)
-//        if (headers.getHeaderValue("Content-Type", buf, false, false))
-//          name = headers.getParameter(buf, "name");
+      //      if (disp != null)
+      //        name = headers.getParameter(buf, "filename");
+
+      //      if (name == null)
+      //        if (headers.getHeaderValue("Content-Type", buf, false, false))
+          //          name = headers.getParameter(buf, "name");
 
       if (name == null) {
         String n[] = headers.getHeader("Content-Name");
