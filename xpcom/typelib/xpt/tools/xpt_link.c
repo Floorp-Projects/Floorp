@@ -350,7 +350,7 @@ main(int argc, char **argv)
                         td->type.interface = 
                             get_new_index(fix_array, 
                                           totalNumberOfInterfaces,
-                                          fix_array[j].file_num, 
+                                          fix_array[i].file_num, 
                                           td->type.interface);
                     }                                                
                 }
