@@ -27,35 +27,69 @@
 
 #include "nsFileStream.h"
 
+#include <string.h>
+#include <stdio.h>
+
 #ifdef XP_MAC
 #include <Errors.h>
 #endif
 
+
+//========================================================================================
+//          nsBasicFileStream
+//========================================================================================
+
 //----------------------------------------------------------------------------------------
-PRFileDesc* nsFileStreamHelpers::open(
+nsBasicFileStream::nsBasicFileStream()
+//----------------------------------------------------------------------------------------
+    :    mFileDesc(0)
+    ,    mNSPRMode(0)
+    ,    mFailed(false)
+    ,    mEOF(false)
+{
+}
+
+//----------------------------------------------------------------------------------------
+nsBasicFileStream::nsBasicFileStream(
+    const nsFilePath& inFile, 
+    int nsprMode,
+    PRIntn accessMode)
+//----------------------------------------------------------------------------------------
+    :    mFileDesc(0)
+    ,    mNSPRMode(0)
+    ,    mFailed(false)
+    ,    mEOF(false)
+{
+    open(inFile, nsprMode, accessMode);
+}
+
+//----------------------------------------------------------------------------------------
+nsBasicFileStream::nsBasicFileStream(PRFileDesc* desc, int nsprMode)
+//----------------------------------------------------------------------------------------
+    :    mFileDesc(desc)
+    ,    mNSPRMode(nsprMode)
+    ,    mFailed(false)
+    ,    mEOF(false)
+{
+}
+
+//----------------------------------------------------------------------------------------
+nsBasicFileStream::~nsBasicFileStream()
+//----------------------------------------------------------------------------------------
+{
+	close();
+}
+
+//----------------------------------------------------------------------------------------
+void nsBasicFileStream::open(
 	const nsFilePath& inFile,
-    IOS_BASE::openmode mode,
+    int nsprMode,
     PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 {
-    PRFileDesc* descriptor = 0;
-    const IOS_BASE::openmode valid_modes[]=
-    {
-        IOS_BASE::out, 
-        IOS_BASE::out | IOS_BASE::app, 
-        IOS_BASE::out | IOS_BASE::trunc, 
-        IOS_BASE::in, 
-        IOS_BASE::in  | IOS_BASE::out, 
-        IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::trunc, 
-//      IOS_BASE::out | IOS_BASE::binary, 
-//      IOS_BASE::out | IOS_BASE::app    | IOS_BASE::binary, 
-//      IOS_BASE::out | IOS_BASE::trunc  | IOS_BASE::binary, 
-//      IOS_BASE::in  | IOS_BASE::binary, 
-//      IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::binary, 
-//      IOS_BASE::in  | IOS_BASE::out    | IOS_BASE::trunc | IOS_BASE::binary,
-        0 
-    };
-
+    if (mFileDesc)
+        return;
+        
     const int nspr_modes[]={
         PR_WRONLY | PR_CREATE_FILE,
         PR_WRONLY | PR_CREATE_FILE | PR_APPEND,
@@ -71,19 +105,19 @@ PRFileDesc* nsFileStreamHelpers::open(
 //      "r+b",
 //      "w+b",
         0 };
-    int ind=0;
-    while (valid_modes[ind] && valid_modes[ind] != (mode&~IOS_BASE::ate))
-        ++ind;
-    if (!nspr_modes[ind]) 
-        return 0;
+    const int* currentLegalMode = nspr_modes;
+    while (*currentLegalMode && nsprMode != *currentLegalMode)
+        ++currentLegalMode;
+    if (!*currentLegalMode) 
+        return;
 
 #ifdef XP_MAC
      // Use the file spec to open the file, because one path can be common to
      // several files on the Macintosh (you can have several volumes with the
      // same name, see).
-    descriptor = 0;
+    mFileDesc = 0;
     if (inFile.GetNativeSpec().Error() != noErr)
-        return 0;
+        return;
     OSErr err = noErr;
 #if DEBUG
 	const OSType kCreator = 'CWIE';
@@ -92,17 +126,17 @@ PRFileDesc* nsFileStreamHelpers::open(
 #endif
 	nsNativeFileSpec nativeSpec = inFile.GetNativeSpec();
     FSSpec* spec = (FSSpec*)nativeSpec;
-    if (nspr_modes[ind] & PR_CREATE_FILE)
+    if (nsprMode & PR_CREATE_FILE)
     	err = FSpCreate(spec, kCreator, 'TEXT', 0);
     if (err == dupFNErr)
     	err = noErr;
     if (err != noErr)
-       return 0;
+       return;
     
     SInt8 perm;
-    if (nspr_modes[ind] & PR_RDWR)
+    if (nsprMode & PR_RDWR)
        perm = fsRdWrPerm;
-    else if (nspr_modes[ind] & PR_WRONLY)
+    else if (nsprMode & PR_WRONLY)
        perm = fsWrPerm;
     else
        perm = fsRdPerm;
@@ -110,24 +144,292 @@ PRFileDesc* nsFileStreamHelpers::open(
     short refnum;
     err = FSpOpenDF(spec, perm, &refnum);
 
-    if (err == noErr && (nspr_modes[ind] & PR_TRUNCATE))
+    if (err == noErr && (nsprMode & PR_TRUNCATE))
     	err = SetEOF(refnum, 0);
-    if (err == noErr && (nspr_modes[ind] & PR_APPEND))
+    if (err == noErr && (nsprMode & PR_APPEND))
     	err = SetFPos(refnum, fsFromLEOF, 0);
     if (err != noErr)
-       return 0;
+       return;
 
-    if ((descriptor = PR_ImportFile(refnum)) == 0)
-    	return 0;
+    if ((mFileDesc = PR_ImportFile(refnum)) == 0)
+    	return;
 #else
 	//	Platforms other than Macintosh...
-    if ((descriptor = PR_Open(inFile, nspr_modes[ind], accessMode)) != 0)
+    if ((mFileDesc = PR_Open(inFile, nsprMode, accessMode)) == 0)
+    	return;
 #endif
-       if (mode&IOS_BASE::ate && PR_Seek(descriptor, 0, PR_SEEK_END) >= 0)
-       {
-          PR_Close(descriptor);
-          descriptor = 0;
-          return 0;
-       }
-    return descriptor;
+     mNSPRMode = nsprMode;
 } // nsFileStreamHelpers::open
+
+//----------------------------------------------------------------------------------------
+void nsBasicFileStream::close()
+// Must precede the destructor because both are inline.
+//----------------------------------------------------------------------------------------
+{
+    if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || mFileDesc == 0) 
+       return;
+    if (PR_Close(mFileDesc) == PR_SUCCESS)
+    	mFileDesc = 0;
+} // nsBasicFileStream::close
+
+//----------------------------------------------------------------------------------------
+void nsBasicFileStream::seek(PRSeekWhence whence, PRInt32 offset)
+// Must precede the destructor because both are inline.
+//----------------------------------------------------------------------------------------
+{
+    if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || mFileDesc == 0) 
+       return;
+    mFailed = false; // reset on a seek.
+    mEOF = false; // reset on a seek.
+    PRInt32 position = PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
+    PRInt32 available = PR_Available(mFileDesc);
+    PRInt32 fileSize = position + available;
+    PRInt32 newPosition;
+    switch (whence)
+    {
+    	case PR_SEEK_CUR: newPosition = position + offset; break;
+    	case PR_SEEK_SET: newPosition = offset; break;
+    	case PR_SEEK_END: newPosition = fileSize + offset; break;
+    }
+    if (newPosition < 0)
+    {
+    	newPosition = 0;
+    	mFailed = true;
+    }
+    else if (newPosition >= fileSize)
+    {
+    	newPosition = fileSize;
+    	mEOF = true;
+    }
+    if (PR_Seek(mFileDesc, newPosition, PR_SEEK_SET) < 0)
+    	mFailed = true;
+} // nsBasicFileStream::seek
+
+//----------------------------------------------------------------------------------------
+PRIntn nsBasicFileStream::tell() const
+// Must precede the destructor because both are inline.
+//----------------------------------------------------------------------------------------
+{
+    if (mFileDesc==PR_STDIN || mFileDesc==PR_STDOUT || mFileDesc==PR_STDERR || mFileDesc == 0) 
+       return -1;
+    return PR_Seek(mFileDesc, 0, PR_SEEK_CUR);
+} // nsBasicFileStream::tell
+
+//========================================================================================
+//          nsInputFileStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsInputFileStream::nsInputFileStream(
+  istream& stream)
+//----------------------------------------------------------------------------------------
+#ifdef XP_MAC
+    : nsBasicFileStream(0, kDefaultMode)
+    , mStdStream(&stream)
+#else
+    : nsBasicFileStream(PR_STDIN, kDefaultMode)
+    , mStdStream(0)
+#endif
+{
+}
+
+//----------------------------------------------------------------------------------------
+void nsInputFileStream::get(char& c)
+//----------------------------------------------------------------------------------------
+{
+    read(&c, sizeof(char));
+}
+
+//----------------------------------------------------------------------------------------
+bool nsInputFileStream::readline(char* s, PRInt32 n)
+// This will truncate if the buffer is too small.  Result will always be null-terminated.
+//----------------------------------------------------------------------------------------
+{
+    bool bufferLargeEnough = true; // result
+    if (!s || !n)
+        return true;
+    PRIntn position = tell();
+    if (position < 0)
+        return false;
+    PRInt32 bytesRead = read(s, n - 1);
+    if (mFailed)
+        return false;
+    s[bytesRead] = '\0'; // always terminate at the end of the buffer
+    char* tp = strpbrk(s, "\n\r");
+    if (tp)
+    {
+        char ch = *tp;
+        *tp++ = '\0'; // terminate at the newline, then skip past it
+        if ((ch == '\n' && *tp == '\r') || (ch == '\r' && *tp == '\n'))
+            tp++; // possibly a pair.
+        bytesRead = (tp - s);
+    }
+    else if (!eof())
+        bufferLargeEnough = false;
+    position += bytesRead;
+    seek(position);
+    return bufferLargeEnough;
+} // nsInputFileStream::getline
+
+//----------------------------------------------------------------------------------------
+PRInt32 nsInputFileStream::read(void* s, PRInt32 n)
+//----------------------------------------------------------------------------------------
+{
+    // Calling PR_Read on stdin is sure suicide on Macintosh.
+    if (mStdStream)
+    {
+    	mStdStream->read((char*)s, n);
+    	return n;
+    }
+    if (!mFileDesc || mFailed)
+        return -1;
+    PRInt32 bytesRead = PR_Read(mFileDesc, s, n);
+    if (bytesRead < 0)
+        mFailed = true;
+    else if (bytesRead < n)
+        mEOF = true;
+    return bytesRead;
+}
+
+//----------------------------------------------------------------------------------------
+nsInputFileStream& nsInputFileStream::operator >> (char& c)
+//----------------------------------------------------------------------------------------
+{
+	get(c);
+	return *this;
+}
+
+//========================================================================================
+//          nsOutputFileStream
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream::nsOutputFileStream(
+  ostream& stream)
+//----------------------------------------------------------------------------------------
+#ifdef XP_MAC
+    : nsBasicFileStream(0, kDefaultMode)
+    , mStdStream(&stream)
+#else
+    : nsBasicFileStream(PR_STDOUT, kDefaultMode)
+    , mStdStream(0)
+#endif
+{
+}
+
+//----------------------------------------------------------------------------------------
+void nsOutputFileStream::put(char c)
+//----------------------------------------------------------------------------------------
+{
+    write(&c, sizeof(c));
+}
+
+//----------------------------------------------------------------------------------------
+PRInt32 nsOutputFileStream::write(const void* s, PRInt32 n)
+//----------------------------------------------------------------------------------------
+{
+    // Calling PR_Write on stdout is sure suicide.
+    if (mStdStream)
+    {
+    	mStdStream->write((const char*)s, n);
+        return n;
+    }
+    if (!mFileDesc || mFailed)
+       return -1;
+    PRInt32 bytesWrit = PR_Write(mFileDesc, s, n);
+    if (bytesWrit != n)
+        mFailed = true;
+    return bytesWrit;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (char c)
+//----------------------------------------------------------------------------------------
+{
+	put(c);
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (const char* s)
+//----------------------------------------------------------------------------------------
+{
+	write(s, strlen(s));
+	return *this;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (short val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%d", val);
+	return *this << buf;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (unsigned short val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%ud", val);
+	return *this << buf;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (long val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%ld", val);
+	return *this << buf;
+}
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsOutputFileStream::operator << (unsigned long val)
+//----------------------------------------------------------------------------------------
+{
+	char buf[30];
+	sprintf(buf, "%uld", val);
+	return *this << buf;
+}
+
+//----------------------------------------------------------------------------------------
+void nsOutputFileStream::flush()
+// Must precede the destructor because both are inline.
+//----------------------------------------------------------------------------------------
+{
+    if (mStdStream)
+    {
+        mStdStream->flush();
+        return;
+    }
+    if (mFileDesc == 0) 
+        return;
+    bool itFailed = PR_Sync(mFileDesc) != PR_SUCCESS;
+#ifdef XP_MAC
+    // On unix, it seems to fail always.
+    if (itFailed)
+    	mFailed = true;
+#endif
+} // nsOutputFileStream::flush
+
+//========================================================================================
+//        Manipulators
+//========================================================================================
+
+//----------------------------------------------------------------------------------------
+nsOutputFileStream& nsEndl(nsOutputFileStream& os)
+//----------------------------------------------------------------------------------------
+{
+    // Calling PR_Write on stdout is sure suicide on Macintosh.
+    ostream* stream = os.GetStandardStream();
+    if (stream)
+    {
+        *stream << endl;
+        return os;
+    }
+     os.put('\n');
+     os.flush();
+     return os;
+}

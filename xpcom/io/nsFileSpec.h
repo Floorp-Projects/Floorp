@@ -37,15 +37,14 @@
 //          to the moment Communicator 4.5 shipped.
 //
 //      3.  Used in conjunction with nsFileStream.h (q.v.), this supports all the power
-//          and readability of the ansi stream syntax.  ALL METHODS OF istream, ostream,
-//          AND iostream ARE AVAILABLE!
+//          and readability of the ansi stream syntax.
 //
 //          Basic example:
 //
 //              nsFilePath myPath("/Development/iotest.txt");
 //
 //              nsOutputFileStream testStream(myPath);
-//              testStream << "Hello World" << endl;
+//              testStream << "Hello World" << nsEndl;
 //
 //      4.  Handy methods for manipulating file specifiers safely, e.g. MakeUnique(),
 //          SetLeafName(), Exists().
@@ -117,14 +116,11 @@
 #define NS_NAMESPACE_PROTOTYPE
 #define NS_NAMESPACE namespace
 #define NS_NAMESPACE_END
-#include <ostream>
-	using std::ostream;
 #else
 
 #define NS_NAMESPACE_PROTOTYPE static
 #define NS_NAMESPACE struct
 #define NS_NAMESPACE_END ;
-#include <ostream.h>
 
 #endif
 //=========================== End Compiler-specific macros ===============================
@@ -143,6 +139,8 @@ class nsNativeFileSpec;
 
 #define kFileURLPrefix "file://"
 #define kFileURLPrefixLength (7)
+
+class nsOutputFileStream;
 
 //========================================================================================
 class NS_BASE nsNativeFileSpec
@@ -196,7 +194,7 @@ class NS_BASE nsNativeFileSpec
         bool                    Valid() const { return true; } // Fixme.
 #endif // XP_MAC
 
-        friend                  NS_BASE ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
+        friend                  NS_BASE nsOutputFileStream& operator << (nsOutputFileStream& s, const nsNativeFileSpec& spec);
 
         char*                   GetLeafName() const; // Allocated.  Use delete [].
         void                    SetLeafName(const char* inLeafName);
@@ -237,7 +235,8 @@ class NS_BASE nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsNativeFileSpec& inOther);
 
-        friend                  NS_BASE ostream& operator << (ostream& s, const nsFileURL& spec);
+        friend                  NS_BASE nsOutputFileStream& operator << (
+                                     nsOutputFileStream& s, const nsFileURL& spec);
 
 #ifdef XP_MAC
                                 // Accessor to allow quick assignment to a mNativeFileSpec
