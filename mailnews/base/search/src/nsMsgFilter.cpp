@@ -510,6 +510,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
           nsCOMPtr <nsIMsgFolder> msgFolder;
           msgFolder = do_QueryInterface(destIFolder);	
           destIFolder->GetURI(getter_Copies(folderUri));
+          filterAction->SetTargetFolderUri(folderUri);
           moveValue.Assign(folderUri);
         }
       }
