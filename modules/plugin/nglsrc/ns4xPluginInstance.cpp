@@ -175,7 +175,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
-  if(!mInst)
+  if (!mInst)
     return NS_ERROR_FAILURE;
 
   const NPPluginFuncs *callbacks = nsnull;
@@ -199,8 +199,12 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 
   // Get the data from the input stream
   char* buffer = (char*) PR_Malloc(length);
-  if (buffer) 
-    input->Read(buffer, length, &amountRead);
+  if (!buffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = input->Read(buffer, length, &amountRead);
+  if (NS_FAILED(rv))
+    goto error;
 
   // amountRead tells us how many bytes were put in the buffer
   // WriteReady returns to us how many bytes the plugin is 
@@ -227,8 +231,10 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
 
       // if WriteReady returned 0, the plugin is not ready to handle 
       // the data, return FAILURE for now
-      if(numtowrite <= 0)
-        return NS_ERROR_FAILURE;
+      if (numtowrite <= 0) {
+        rv = NS_ERROR_FAILURE;
+        goto error;
+      }
 
       if (numtowrite > amountRead)
         numtowrite = amountRead;
@@ -240,7 +246,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
       numtowrite = length;
     }
 
-    if(numtowrite > 0)
+    if (numtowrite > 0)
     {
       PRLibrary* lib = mInst->fLibrary;
 
@@ -250,15 +256,22 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                                             mPosition,
                                                             numtowrite,
                                                             (void *)buffer), lib);
-      if(writeCount < 0)
-        return NS_ERROR_FAILURE;
+      if (writeCount < 0) {
+        rv = NS_ERROR_FAILURE;
+        goto error;
+      }
 
       amountRead -= numtowrite;
       mPosition += numtowrite;
     }
   }
 
-  return NS_OK;
+  rv = NS_OK;
+
+error:
+  if (buffer)
+    PR_Free(buffer);
+  return rv;
 }
 
 NS_IMETHODIMP
