@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Set JNICALL to Optlink for
+ *                               use in OS2
  */
 
 /*******************************************************************************
@@ -67,6 +80,17 @@
 
 /* DLL Entry modifiers... */
 #if defined(XP_OS2)
+#  ifdef XP_OS2_VACPP
+#    define JNI_PUBLIC_API(ResultType)          ResultType _System
+#    define JNI_PUBLIC_VAR(VarType)        VarType
+#     define JNICALL                        _Optlink
+#     define JNIEXPORT
+#  else
+#    define JNI_PUBLIC_API(ResultType)          ResultType
+#    define JNI_PUBLIC_VAR(VarType)        VarType
+#     define JNICALL
+#     define JNIEXPORT
+#  endif
 #  ifdef XP_OS2_VACPP
 #	  define JNI_PUBLIC_API(ResultType)	    ResultType _System
 #	  define JNI_PUBLIC_VAR(VarType)        VarType
