@@ -50,6 +50,10 @@ Contributor(s): ______________________________________. -->
 <html:script language="javascript" src="nsContextMenu.js" />
 <html:script language="javascript" src="tooltip.js" />
 
+<commands id="commands">
+	<commandset id="globalEditMenuItems"/>
+</commands>
+
 <!-- broadcasters are appended from the overlay -->
 <broadcasterset id="broadcasterset">
   <broadcaster id="canReload" oncommand="BrowserReallyReload(0);"/>
@@ -58,7 +62,7 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="Browser:LoadingProgress"/>
   <broadcaster id="Browser:Status"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
-  <broadcaster id="args" value=""/>
+  <broadcaster id="args" value=""/> 
 </broadcasterset>
 
 <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
