@@ -950,7 +950,7 @@ NS_IMETHODIMP nsImapMailFolder::List()
   nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = imapService->ListFolder(m_eventQueue, this, nsnull, nsnull);
+  rv = imapService->ListFolder(m_eventQueue, this, this, nsnull);
   return rv;
 }
 
@@ -4603,6 +4603,23 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 
             }
             break;
+        case nsIImapUrl::nsImapListFolder:
+          // check if folder is now verified - if not,
+          // we should remove it?
+          if (NS_SUCCEEDED(aExitCode) && !m_verifiedAsOnlineFolder)
+          {
+            nsCOMPtr<nsIMsgFolder> parent;
+            rv = GetParent(getter_AddRefs(parent));
+    
+    
+            if (NS_SUCCEEDED(rv) && parent)
+            {
+              nsCOMPtr<nsIMsgImapMailFolder> imapParent = do_QueryInterface(parent);
+              if (imapParent)
+                imapParent->RemoveSubFolder(this);
+            }
+          }
+          break;
         case nsIImapUrl::nsImapRefreshFolderUrls:
           // we finished getting an admin url for the folder.
             if (!m_adminUrl.IsEmpty())
