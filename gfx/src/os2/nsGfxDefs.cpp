@@ -156,8 +156,7 @@ void PMERROR( const char *api)
    PR_LogPrint( "%s failed, error = 0x%X\n", api, usError);
 }
 
-nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0),
-                                     lDisplayDepth(0)
+nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0)
 {
 }
 
@@ -179,8 +178,6 @@ void nsGfxModuleData::Init()
 
    // get screen bit-depth
    hpsScreen = ::WinGetScreenPS (HWND_DESKTOP);
-   HDC hdc = GFX (::GpiQueryDevice (hpsScreen), HDC_ERROR);
-   GFX (::DevQueryCaps (hdc, CAPS_COLOR_BITCOUNT, 1, &lDisplayDepth), FALSE);
 }
 
 nsGfxModuleData::~nsGfxModuleData()
