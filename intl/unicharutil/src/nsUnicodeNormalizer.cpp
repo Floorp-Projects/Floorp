@@ -135,7 +135,7 @@ struct composition {
 };
 
 
-#include "unicodedata_320.c"
+#include "normalization_data.h"
 
 /*
  * Macro for multi-level index table.
