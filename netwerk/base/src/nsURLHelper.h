@@ -109,6 +109,23 @@ inline PRBool net_IsValidScheme(const nsAFlatCString &scheme)
     return net_IsValidScheme(scheme.get(), scheme.Length());
 }
 
+/**
+ * Filter out whitespace from a URI string.  The input is the |str|
+ * pointer. |result| is written to if and only if there is whitespace that has
+ * to be filtered out.  The return value is true if and only if |result| is
+ * written to.
+ *
+ * This function strips out all whitespace at the beginning and end of the URL
+ * and strips out \r, \n, \t from the middle of the URL.  This makes it safe to
+ * call on things like javascript: urls or data: urls, where we may in fact run
+ * into whitespace that is not properly encoded.
+ *
+ * @param str the pointer to the string to filter.  Must be non-null.
+ * @param result the out param to write to if filtering happens
+ * @return whether result was written to
+ */
+PRBool net_FilterURIString(const char *str, nsACString& result);
+
 /*****************************************************************************
  * generic string routines follow (XXX move to someplace more generic).
  */

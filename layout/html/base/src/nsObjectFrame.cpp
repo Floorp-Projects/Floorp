@@ -964,9 +964,6 @@ nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI,
   nsCOMPtr<nsIDocument> document;
   rv = mInstanceOwner->GetDocument(getter_AddRefs(document));
 
-  //trim leading and trailing whitespace
-  aSrc.Trim(" \n\r\t\b", PR_TRUE, PR_TRUE, PR_FALSE);
-
   // get document charset
   nsCAutoString originCharset;
   if (document && NS_FAILED(document->GetDocumentCharacterSet(originCharset)))
