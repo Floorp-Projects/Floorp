@@ -1120,6 +1120,10 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     break;
   }
 
+  // XXX If we have a next-in-flow, then we're not complete
+  if (mNextInFlow) {
+    aStatus = NS_FRAME_NOT_COMPLETE;
+  }
   return rv;
 }
 
@@ -1297,6 +1301,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   nsHTMLReflowMetrics desiredSize(nsnull);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
+  // XXX Check aStatus to see if the frame is complete...
 
   // Resize the row frame
   nsRect  kidRect;
@@ -1310,6 +1315,11 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   // Return of desired size
   aDesiredSize.width = aReflowState.reflowState.availableWidth;
   aDesiredSize.height = aReflowState.y;
+
+  // XXX If we have a next-in-flow, then we're not complete
+  if (mNextInFlow) {
+    aStatus = NS_FRAME_NOT_COMPLETE;
+  }
 
   return rv;
 }
