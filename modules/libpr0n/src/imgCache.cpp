@@ -23,14 +23,7 @@
 
 #include "imgCache.h"
 
-#ifdef MOZ_NEW_CACHE
-
-#include "prlog.h"
-#if defined(PR_LOGGING)
-extern PRLogModuleInfo *gImgLog;
-#else
-#define gImgLog
-#endif
+#include "ImageLogging.h"
 
 #include "imgRequest.h"
 
@@ -42,8 +35,6 @@ extern PRLogModuleInfo *gImgLog;
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
-
-#endif /* MOZ_NEW_CACHE */
 
 NS_IMPL_ISUPPORTS1(imgCache, imgICache)
 
@@ -66,8 +57,6 @@ NS_IMETHODIMP imgCache::ClearCache(PRBool chrome)
   else
     return imgCache::ClearImageCache();
 }
-
-#ifdef MOZ_NEW_CACHE
 
 static nsCOMPtr<nsICacheSession> gSession = nsnull;
 static nsCOMPtr<nsICacheSession> gChromeSession = nsnull;
@@ -142,8 +131,7 @@ nsresult imgCache::ClearImageCache()
 
 PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("imgCache::Put\n"));
+  LOG_STATIC_FUNC(gImgLog, "imgCache::Put");
 
   nsresult rv;
 
@@ -174,8 +162,7 @@ PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor 
 
 PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("imgCache::Get\n"));
+  LOG_STATIC_FUNC(gImgLog, "imgCache::Get");
 
   nsresult rv;
 
@@ -209,8 +196,7 @@ PRBool imgCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescripto
 
 PRBool imgCache::Remove(nsIURI *aKey)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("imgCache::Remove\n"));
+  LOG_STATIC_FUNC(gImgLog, "imgCache::Remove");
 
   nsresult rv;
 
@@ -232,6 +218,4 @@ PRBool imgCache::Remove(nsIURI *aKey)
 
   return PR_TRUE;
 }
-
-#endif /* MOZ_NEW_CACHE */
 

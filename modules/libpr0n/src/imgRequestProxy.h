@@ -31,6 +31,8 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 
+#include "prlock.h"
+
 #define NS_IMGREQUESTPROXY_CID \
 { /* 20557898-1dd2-11b2-8f65-9c462ee2bc95 */         \
      0x20557898,                                     \
@@ -66,4 +68,6 @@ private:
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   PRBool mCanceled;
+
+  PRLock *mLock;
 };
