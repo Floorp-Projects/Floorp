@@ -28,6 +28,8 @@
 #include <Files.h>
 #include <OSUtils.h>
 #include "nsAppleSingleDecoder.h" /* AppleSingle struct definitions */
+#include "MoreFilesExtras.h"
+#include "IterateDirectory.h"
 
 nsAppleSingleEncoder::nsAppleSingleEncoder()
 {
@@ -115,6 +117,79 @@ nsAppleSingleEncoder::Encode(FSSpecPtr aInFile, FSSpecPtr aOutFile)
 	err = Encode(NULL);
 
 	return err;
+}
+
+pascal void
+EncodeDirIterateFilter(const CInfoPBRec * const cpbPtr, Boolean *quitFlag, void *yourDataPtr)
+{	
+	OSErr					err = noErr;
+	FSSpec 					currFSp;
+	nsAppleSingleEncoder* 	thisObj = NULL;
+	Boolean					isDir = false;
+	long					dummy;
+	
+	// param check
+	if (!yourDataPtr || !cpbPtr || !quitFlag)
+		return;
+	
+	*quitFlag = false;
+		
+	// extract 'this' -- an nsAppleSingleEncoder instance
+	thisObj = (nsAppleSingleEncoder*) yourDataPtr;
+	thisObj->ReInit();
+	
+	// make an FSSpec from the CInfoPBRec*
+	err = FSMakeFSSpec(cpbPtr->hFileInfo.ioVRefNum, cpbPtr->hFileInfo.ioFlParID, 
+						cpbPtr->hFileInfo.ioNamePtr, &currFSp);
+	if (err == noErr)
+	{
+		FSpGetDirectoryID(&currFSp, &dummy, &isDir);
+		
+		// if current FSSpec is file
+		if (!isDir)
+		{
+			// if file has res fork
+			if (nsAppleSingleEncoder::HasResourceFork(&currFSp))
+			{
+				// encode file
+				thisObj->Encode(&currFSp);
+			}
+		}
+		else
+		{
+			// else if current FSSpec is folder ignore
+			// XXX never reached?
+			return;
+		}
+	}
+}
+
+OSErr
+nsAppleSingleEncoder::EncodeFolder(FSSpecPtr aFolder)
+{
+	OSErr	err = noErr;
+	long	dummy;
+	Boolean	isDir = false;
+	
+	// check that FSSpec is folder
+	if (aFolder)
+	{
+		FSpGetDirectoryID(aFolder, &dummy, &isDir);
+		if (!isDir)
+			return dirNFErr;
+	}
+	
+	// recursively enumerate contents of folder (maxLevels=0 means recurse all)
+	FSpIterateDirectory(aFolder, 0, EncodeDirIterateFilter, (void*)this);
+			
+	return err;
+}
+
+void
+nsAppleSingleEncoder::ReInit()
+{
+	mInFile = NULL;
+	mOutFile = NULL;
 }
 
 OSErr

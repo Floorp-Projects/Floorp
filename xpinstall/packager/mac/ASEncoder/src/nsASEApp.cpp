@@ -29,6 +29,7 @@
 #include "nsEventHandler.h"
 #include "nsAppleSingleEncoder.h"
 #include "nsAppleSingleDecoder.h"
+#include "MoreFilesExtras.h"
 
 Boolean gDone;
 
@@ -77,8 +78,9 @@ EncodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon)
 {
 	OSErr	err = noErr;
 	FSSpec	param;
-	Boolean	result = false;
+	Boolean	result = false, isDir = false;
 	AEDesc	fileDesc;
+	long	dummy;
 	
 	// extract FSSpec from params
 	err = AEGetParamDesc(appEvent, keyDirectObject, typeFSS, &fileDesc);
@@ -91,15 +93,26 @@ EncodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon)
 	if (err != noErr)
 		goto reply;
 		
-	// check if given file has res fork (takes care of existence check)
-	if (nsAppleSingleEncoder::HasResourceFork(&param))
+	FSpGetDirectoryID(&param, &dummy, &isDir);
+	
+	// if folder recursively traverse and encode contents
+	if (isDir)
 	{
-		// encode given file
 		nsAppleSingleEncoder encoder;
-		err = encoder.Encode(&param);
+		err = encoder.EncodeFolder(&param);
 	}
 	else
-		err = -1; // so that result boolean is set to false
+	{
+		// it's a file not a folder so proceed as usual
+		
+		// check if given file has res fork (takes care of existence check)
+		if (nsAppleSingleEncoder::HasResourceFork(&param))
+		{
+			// encode given file
+			nsAppleSingleEncoder encoder;
+			err = encoder.Encode(&param);
+		}
+	}
 	
 	// if noErr thus far 
 	if (err == noErr)
@@ -112,10 +125,8 @@ reply:
 	// package reply
 	AEPutParamPtr(reply, keyDirectObject, typeBoolean, &result, sizeof(result));
 	
-	// set err to noErr -- boolean takes care of failures
-	err = noErr;
-	
-	return err;
+	// boolean takes care of failures
+	return noErr;
 }
 
 pascal OSErr
@@ -123,8 +134,9 @@ DecodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon)
 {
 	OSErr	err = noErr;
 	FSSpec	param, outFile;
-	Boolean	result = false;
+	Boolean	result = false, isDir = false;
 	AEDesc	fileDesc;
+	long	dummy;
 	
 	// extract FSSpec from params
 	err = AEGetParamDesc(appEvent, keyDirectObject, typeFSS, &fileDesc);
@@ -136,16 +148,27 @@ DecodeEvent(AppleEvent *appEvent, AppleEvent *reply, SInt32 handlerRefCon)
 	err = nsASEApp::GotRequiredParams(appEvent);
 	if (err != noErr)
 		goto reply;
-		
-	// check if given file is in AS format (takes care of existence check)
-	if (nsAppleSingleDecoder::IsAppleSingleFile(&param))
+			
+	FSpGetDirectoryID(&param, &dummy, &isDir);
+	
+	// if folder recursively traverse and encode contents
+	if (isDir)
 	{
-		// decode given file
 		nsAppleSingleDecoder decoder;
-		err = decoder.Decode(&param, &outFile);
+		err = decoder.DecodeFolder(&param);
 	}
 	else
-		err = -1; // so that result boolean is set to false
+	{	
+		// it's a file not a folder so proceed as usual
+		
+		// check if given file is in AS format (takes care of existence check)
+		if (nsAppleSingleDecoder::IsAppleSingleFile(&param))
+		{
+			// decode given file
+			nsAppleSingleDecoder decoder;
+			err = decoder.Decode(&param, &outFile);
+		}
+	}
 	
 	// if noErr thus far 
 	if (err == noErr)
@@ -158,10 +181,8 @@ reply:
 	// package reply
 	AEPutParamPtr(reply, keyDirectObject, typeBoolean, &result, sizeof(result));
 	
-	// set err to noErr -- boolean takes care of failures
-	err = noErr;
-	
-	return err;
+	// boolean takes care of failures
+	return noErr;
 }
 
 pascal OSErr

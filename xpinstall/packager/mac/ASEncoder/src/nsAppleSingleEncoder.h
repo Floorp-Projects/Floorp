@@ -45,6 +45,8 @@ public:
 	static Boolean		HasResourceFork(FSSpecPtr aFile);
 	OSErr				Encode(FSSpecPtr aFile);
 	OSErr				Encode(FSSpecPtr aInFile, FSSpecPtr aOutFile);
+	OSErr				EncodeFolder(FSSpecPtr aFolder);
+	void				ReInit();
 	
 	static OSErr		FSpGetCatInfo(CInfoPBRec *pb, FSSpecPtr aFile);
 	

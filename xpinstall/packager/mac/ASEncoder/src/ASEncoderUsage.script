@@ -49,24 +49,15 @@
 
 on run
 	set kTargetFile to "HD:genJS:ASEncoder"
+	set kTargetFolder to "HD:genJS"
 	tell application "ASEncoder"
 		activate
 		
 		-- pre-condition:  kTargetFile is set to a local un-encoded (containing a res fork) file
 		
 		-- encode should succeed
-		set bSuccess to encode file kTargetFile
-		SUCCESS_MSG(kTargetFile, "encode", bSuccess)
-		-- encode should fail
-		set bSuccess to encode file kTargetFile
-		SUCCESS_MSG(kTargetFile, "encode", bSuccess)
-		
-		-- decode should succeed
-		set bSuccess to decode file kTargetFile
-		SUCCESS_MSG(kTargetFile, "decode", bSuccess)
-		--decode should fail
-		set bSuccess to decode file kTargetFile
-		SUCCESS_MSG(kTargetFile, "decode", bSuccess)
+		set bSuccess to encode file kTargetFolder
+		SUCCESS_MSG(kTargetFolder, "encode", bSuccess)
 		
 		-- post-condition: kTargetFile is a decoded (containing a res fork) file as it originally was
 		

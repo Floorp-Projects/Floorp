@@ -72,7 +72,9 @@ extern Boolean gDone;
 #define rMenuFile 				129
 #define rMenuItemASEncode		1
 #define rMenuItemASDecode		2
-#define rMenuItemQuit			4
+#define rMenuItemASEncodeFolder 3
+#define rMenuItemASDecodeFolder 4
+#define rMenuItemQuit			6
 #define rMenuEdit 				130
 
 #define rAboutBox				129
