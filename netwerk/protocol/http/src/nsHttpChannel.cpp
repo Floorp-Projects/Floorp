@@ -3808,6 +3808,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mLoadGroup)
         mLoadGroup->RemoveRequest(this, nsnull, status);
 
+    mCallbacks = nsnull;
+    mHttpEventSink = nsnull;
+    mProgressSink = nsnull;
+    
     return NS_OK;
 }
 
