@@ -34,6 +34,7 @@ public:
   
   NS_IMETHOD PositionChanged(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
+  NS_IMETHOD Page() = 0;
 };
 
 #endif
