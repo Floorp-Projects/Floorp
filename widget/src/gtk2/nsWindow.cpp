@@ -1437,8 +1437,16 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
         }
         else if (mWindowType == eWindowType_popup) {
             mShell = gtk_window_new(GTK_WINDOW_POPUP);
-            gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
-            mTransientParent = topLevelParent;
+            if(topLevelParent) {
+                gtk_window_set_transient_for(GTK_WINDOW(mShell), 
+                                            topLevelParent);
+                mTransientParent = topLevelParent;
+                if(topLevelParent->group) {
+                    gtk_window_group_add_window(topLevelParent->group,
+                                            GTK_WINDOW(mShell));
+                    mWindowGroup = topLevelParent->group;
+                }
+            }
         }
         else { // must be eWindowType_toplevel
             mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
