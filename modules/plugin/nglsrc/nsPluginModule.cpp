@@ -26,6 +26,7 @@
 #include "nsPluginsCID.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginDocLoaderFactory.h"
+#include "ns4xPlugin.h"
 
 static nsModuleComponentInfo gComponentInfo[] = {
   { "Plugin Host",
@@ -44,4 +45,11 @@ static nsModuleComponentInfo gComponentInfo[] = {
     nsPluginDocLoaderFactory::Create },
 };
 
-NS_IMPL_NSGETMODULE("nsPluginModule", gComponentInfo);
+PR_STATIC_CALLBACK(void)
+nsPluginModuleDtor(nsIModule *self)
+{
+  ns4xPlugin::ReleaseStatics();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsPluginModule", gComponentInfo,
+                              nsPluginModuleDtor);
