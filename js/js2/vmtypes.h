@@ -259,6 +259,7 @@ namespace JavaScript {
         /********************************************************************/
             
         /* Specific opcodes */
+
         class Add : public Arithmetic {
         public:
             /* dest, source1, source2 */
@@ -266,7 +267,25 @@ namespace JavaScript {
                 Arithmetic
                 (ADD, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[ADD] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[ADD];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -278,7 +297,9 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH, op1A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH] << "\t" << "Offset " << op1->offset;
+                f << opcodeNames[BRANCH];
+                f << "\t";
+                f << "Offset " << op1->offset;
                 return f;
             }
         };
@@ -290,7 +311,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_EQ, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_EQ] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_EQ];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -302,7 +331,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_GE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_GE] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_GE];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -314,7 +351,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_GT, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_GT] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_GT];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -326,7 +371,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_LE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_LE] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_LE];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -338,7 +391,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_LT, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_LT] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_LT];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -350,7 +411,15 @@ namespace JavaScript {
                 GenericBranch
                 (BRANCH_NE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[BRANCH_NE] << "\t" << "Offset " << op1->offset << ", " << "R" << op2;
+                f << opcodeNames[BRANCH_NE];
+                f << "\t";
+                f << "Offset " << op1->offset;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -362,7 +431,21 @@ namespace JavaScript {
                 Instruction_3<Register, Register, RegisterList>
                 (CALL, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[CALL] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << op3;
+                f << opcodeNames[CALL];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                f << op3;
                 return f;
             }
         };
@@ -374,7 +457,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_EQ, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_EQ] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_EQ];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -386,7 +481,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_GE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_GE] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_GE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -398,7 +505,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_GT, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_GT] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_GT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -410,7 +529,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_LE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_LE] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_LE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -422,7 +553,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_LT, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_LT] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_LT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -434,7 +577,19 @@ namespace JavaScript {
                 Compare
                 (COMPARE_NE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[COMPARE_NE] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[COMPARE_NE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -446,7 +601,25 @@ namespace JavaScript {
                 Arithmetic
                 (DIVIDE, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[DIVIDE] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[DIVIDE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -458,7 +631,25 @@ namespace JavaScript {
                 Instruction_3<Register, Register, Register>
                 (GET_ELEMENT, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[GET_ELEMENT] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[GET_ELEMENT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -470,7 +661,21 @@ namespace JavaScript {
                 Instruction_3<Register, Register, StringAtom*>
                 (GET_PROP, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[GET_PROP] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << *op3;
+                f << opcodeNames[GET_PROP];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                f << "'" << *op3 << "'";
                 return f;
             }
         };
@@ -482,7 +687,15 @@ namespace JavaScript {
                 Instruction_2<Register, double>
                 (LOAD_IMMEDIATE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << op1 << ", " << op2;
+                f << opcodeNames[LOAD_IMMEDIATE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                f << op2;
                 return f;
             }
         };
@@ -494,7 +707,15 @@ namespace JavaScript {
                 Instruction_2<Register, StringAtom*>
                 (LOAD_NAME, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[LOAD_NAME] << "\t" << "R" << op1 << ", " << *op2;
+                f << opcodeNames[LOAD_NAME];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                f << "'" << *op2 << "'";
                 return f;
             }
         };
@@ -506,7 +727,15 @@ namespace JavaScript {
                 Instruction_2<Register, uint32>
                 (LOAD_VAR, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[LOAD_VAR] << "\t" << "R" << op1 << ", " << op2;
+                f << opcodeNames[LOAD_VAR];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                f << op2;
                 return f;
             }
         };
@@ -518,7 +747,19 @@ namespace JavaScript {
                 Instruction_2<Register, Register>
                 (MOVE, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[MOVE] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[MOVE];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -530,7 +771,25 @@ namespace JavaScript {
                 Arithmetic
                 (MULTIPLY, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[MULTIPLY] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[MULTIPLY];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -542,7 +801,13 @@ namespace JavaScript {
                 Instruction_1<Register>
                 (NEW_ARRAY, op1A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[NEW_ARRAY] << "\t" << "R" << op1;
+                f << opcodeNames[NEW_ARRAY];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
                 return f;
             }
         };
@@ -554,7 +819,13 @@ namespace JavaScript {
                 Instruction_1<Register>
                 (NEW_OBJECT, op1A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[NEW_OBJECT] << "\t" << "R" << op1;
+                f << opcodeNames[NEW_OBJECT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
                 return f;
             }
         };
@@ -578,7 +849,19 @@ namespace JavaScript {
                 Instruction_2<Register, Register>
                 (NOT, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[NOT] << "\t" << "R" << op1 << ", " << "R" << op2;
+                f << opcodeNames[NOT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -590,8 +873,14 @@ namespace JavaScript {
                 Instruction_1<Register>
                 (RETURN, op1A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[RETURN] << "\t" << "R" << op1;
-                return f;
+                f << opcodeNames[RETURN];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+               return f;
             }
         };
 
@@ -602,7 +891,15 @@ namespace JavaScript {
                 Instruction_2<StringAtom*, Register>
                 (SAVE_NAME, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[SAVE_NAME] << "\t" << *op1 << ", " << "R" << op2;
+                f << opcodeNames[SAVE_NAME];
+                f << "\t";
+                f << "'" << *op1 << "'";
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -614,7 +911,15 @@ namespace JavaScript {
                 Instruction_2<uint32, Register>
                 (SAVE_VAR, op1A, op2A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[SAVE_VAR] << "\t" << op1 << ", " << "R" << op2;
+                f << opcodeNames[SAVE_VAR];
+                f << "\t";
+                f << op1;
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
                 return f;
             }
         };
@@ -626,7 +931,25 @@ namespace JavaScript {
                 Instruction_3<Register, Register, Register>
                 (SET_ELEMENT, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[SET_ELEMENT] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[SET_ELEMENT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -638,7 +961,21 @@ namespace JavaScript {
                 Instruction_3<Register, StringAtom*, Register>
                 (SET_PROP, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[SET_PROP] << "\t" << "R" << op1 << ", " << *op2 << ", " << "R" << op3;
+                f << opcodeNames[SET_PROP];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                f << "'" << *op2 << "'";
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
@@ -650,7 +987,25 @@ namespace JavaScript {
                 Arithmetic
                 (SUBTRACT, op1A, op2A, op3A) {};
             virtual Formatter& print (Formatter& f) {
-                f << opcodeNames[SUBTRACT] << "\t" << "R" << op1 << ", " << "R" << op2 << ", " << "R" << op3;
+                f << opcodeNames[SUBTRACT];
+                f << "\t";
+                if (op1 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op1;
+                }
+                f << ", ";
+                if (op2 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op2;
+                }
+                f << ", ";
+                if (op3 == NotARegister) {
+                    f << "R~";
+                } else {
+                    f << "R" << op3;
+                }
                 return f;
             }
         };
