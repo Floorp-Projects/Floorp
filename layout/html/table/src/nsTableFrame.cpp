@@ -292,7 +292,22 @@ nsTableFrame::nsTableFrame()
   mBorderEdges.mOutsideEdge=PR_TRUE;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsTableFrame, nsHTMLContainerFrame, nsITableLayout)
+NS_IMPL_ADDREF_INHERITED(nsTableFrame, nsHTMLContainerFrame)
+NS_IMPL_RELEASE_INHERITED(nsTableFrame, nsHTMLContainerFrame)
+
+nsresult nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsITableLayout::GetIID())) 
+  { // note there is no addref here, frames are not addref'd
+    *aInstancePtr = (void*)(nsITableLayout*)this;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  }
+}
 
 NS_IMETHODIMP
 nsTableFrame::Init(nsIPresContext&  aPresContext,

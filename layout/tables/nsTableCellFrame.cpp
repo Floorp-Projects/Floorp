@@ -1010,8 +1010,21 @@ NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 
 /* ----- global methods ----- */
 
+NS_IMPL_ADDREF_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
+NS_IMPL_RELEASE_INHERITED(nsTableCellFrame, nsHTMLContainerFrame)
 
-NS_IMPL_ISUPPORTS_INHERITED(nsTableCellFrame, nsHTMLContainerFrame, nsITableCellLayout)
+nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsITableCellLayout::GetIID())) {
+    *aInstancePtr = (void*)this;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  }
+}
 
 nsresult 
 NS_NewTableCellFrame(nsIFrame** aNewFrame)
