@@ -30,6 +30,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/status.html \
 	$(srcdir)/toolbar.xml \
 	$(srcdir)/BrowserInitPage.html \
+	$(srcdir)/contentframe.html \
 	$(srcdir)/sidebar.html \
 	$(srcdir)/xul.css \
         $(srcdir)/navigator.css \
