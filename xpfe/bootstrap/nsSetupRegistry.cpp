@@ -19,7 +19,8 @@
 
 #define NS_IMPL_IDS
 #include "nsIAppShellService.h"
-/// #include "nsBrowserCIDs.h"
+///#include "nsBrowserCIDs.h"
+#include "nsAppShellCIDs.h"
 
 #ifdef XP_PC
 
@@ -43,7 +44,7 @@
 
 // Class ID's
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-/// static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
+///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 
 /*
  * This evil file will go away when the XPCOM registry can be 
@@ -67,5 +68,5 @@ NS_SetupRegistry_1()
   NS_SetupRegistry();
 
   nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-///   nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
+///  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }

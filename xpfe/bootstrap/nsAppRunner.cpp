@@ -23,6 +23,7 @@
 
 #include "nsIAppShell.h"
 #include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
