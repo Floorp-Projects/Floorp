@@ -272,8 +272,8 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
             
           // now we need to call out the msg sink informing it that this message has remote content      
           nsCOMPtr<nsIMsgWindow> msgWindow;
-          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-          NS_ENSURE_SUCCESS(rv, rv);
+          rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow)); // it's not an error for the msg window to be null
+          NS_ENSURE_TRUE(msgWindow, NS_ERROR_FAILURE);
 
           nsCOMPtr<nsIMsgHeaderSink> msgHdrSink;
           rv = msgWindow->GetMsgHeaderSink(getter_AddRefs(msgHdrSink));

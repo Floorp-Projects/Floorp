@@ -225,25 +225,15 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeed
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetMsgWindow(nsIMsgWindow **aMsgWindow)
 {
-	nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+	
 	// note: it is okay to return a null msg window and not return an error
 	// it's possible the url really doesn't have msg window
-	if (!m_msgWindow)
-	{
-//		nsCOMPtr<nsIMsgMailSession> mailSession = 
-//		         do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
 
-//		if(NS_SUCCEEDED(rv))
-//		mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));
-	}
-	if (aMsgWindow)
-	{
 		*aMsgWindow = m_msgWindow;
 		NS_IF_ADDREF(*aMsgWindow);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
+	
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
