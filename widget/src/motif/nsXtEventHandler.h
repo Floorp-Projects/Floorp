@@ -41,6 +41,7 @@ void nsXtWidget_Toggle_DisArmCallback(Widget w, XtPointer p, XtPointer call_data
 
 void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsXtWidget_Expose_Callback(Widget w, XtPointer p, XtPointer call_data);
 
 
 #endif  // __nsXtEventHandler.h

@@ -26,7 +26,7 @@
 
 #include "stdio.h"
 
-#define DBG 0
+#define DBG 1
 
 //==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
@@ -65,20 +65,124 @@ void nsXtWidget_InitNSMouseEvent(XEvent   * anXEv,
 }
 
 //==============================================================
+#ifndef MIN
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
+#define INTERSECTS(r1_x1,r1_x2,r1_y1,r1_y2,r2_x1,r2_x2,r2_y1,r2_y2) \
+        !((r2_x2 <= r1_x1) ||\
+          (r2_y2 <= r1_y1) ||\
+          (r2_x1 >= r1_x2) ||\
+          (r2_y1 >= r1_y2))
+
+//==============================================================
+typedef struct COLLAPSE_INFO {
+    Window win;
+    nsRect *r;
+} CollapseInfo;
+
+//==============================================================
+static void expandDamageRect(nsRect *drect, XEvent *xev, Boolean debug, char*str)
+{
+    int x1 = xev->xexpose.x;
+    int y1 = xev->xexpose.y;
+    int x2 = x1 + xev->xexpose.width;
+    int y2 = y1 + xev->xexpose.height;
+
+    if (debug) {
+        printf("   %s: collapsing (%d,%d %dx%d) into (%d,%d %dx%d) ->>",
+               str, x1, y1, xev->xexpose.width, xev->xexpose.height,
+               drect->x, drect->y, drect->width - drect->x, drect->height - drect->y); 
+    } 
+    
+    drect->x = MIN(x1, drect->x);
+    drect->y = MIN(y1, drect->y);
+    drect->width = MAX(x2, drect->width);
+    drect->height = MAX(y2, drect->height);
+    
+    if (debug) {
+        printf("(%d,%d %dx%d) %s\n",
+               drect->x, drect->y, drect->width - drect->x, drect->height - drect->y);
+    }
+}
+
+//==============================================================
+static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data) 
+{
+    CollapseInfo *cinfo = (CollapseInfo*)client_data; 
+
+    if ((evt->type == Expose && evt->xexpose.window == cinfo->win &&
+         INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
+                    evt->xexpose.x, evt->xexpose.y, 
+                    evt->xexpose.x + evt->xexpose.width, 
+                    evt->xexpose.y + evt->xexpose.height)) ||
+  (evt->type == GraphicsExpose && evt->xgraphicsexpose.drawable == cinfo->win &&
+         INTERSECTS(cinfo->r->x, cinfo->r->width, cinfo->r->y, cinfo->r->height,
+                    evt->xgraphicsexpose.x, evt->xgraphicsexpose.y, 
+                    evt->xgraphicsexpose.x + evt->xgraphicsexpose.width, 
+                    evt->xgraphicsexpose.y + evt->xgraphicsexpose.height))) {
+
+        return True;
+    }
+    return False;
+}
+
+
+//==============================================================
 void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
 {
+
   if (DBG) fprintf(stderr, "In nsXtWidget_ExposureMask_EventHandler\n");
-  nsPaintEvent pevent ;
   nsWindow * widgetWindow = (nsWindow *) p ;
 
+  nsPaintEvent pevent;
+  nsRect       rect;
+  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT); 
+
+  pevent.rect = (nsRect *)&rect;
+printf("Count %d\n", event->xexpose.count);
   if (event->xexpose.count != 0)
     return ;
 
-  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT); 
+  /* Only post Expose/Repaint if we know others arn't following
+   * directly in the queue.
+   */
+  if (event->xexpose.count == 0) {
+    Boolean      debug = PR_TRUE;
+    int          count = 0;
+    CollapseInfo cinfo;
+
+    cinfo.win = XtWindow(w);
+    cinfo.r   = pevent.rect;
+
+    rect.x      = event->xexpose.x;
+    rect.y      = event->xexpose.y;
+    rect.width  = event->xexpose.width;
+    rect.height = event->xexpose.height;
+printf("Before %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
+    /* Do a little more inspecting and collapse further if there
+     * are additional expose events pending on this window where
+     * the damage rects intersect with the current exposeRect.
+     */
+    while (1) {
+      XEvent xev;
+
+      if (XCheckIfEvent(XtDisplay(w), &xev, checkForExpose, (XtPointer)&cinfo)) {
+        printf("]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n");
+        count = xev.xexpose.count;
+        expandDamageRect(&rect, &xev, debug, "2");
+        
+      } else /* XCheckIfEvent Failed. */
+       break;
+    }
+printf("After %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
+  }
 
   widgetWindow->OnPaint(pevent);
 
   if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
+
 }
 
 //==============================================================
@@ -245,6 +349,69 @@ void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data)
 
 
 //==============================================================
+void nsXtWidget_Expose_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+
+  //if (DBG) 
+//fprintf(stderr, "In nsXtWidget_Resize_Callback 0x%x", p);
+  nsWindow * widgetWindow = (nsWindow *) p ;
+  if (widgetWindow == nsnull) {
+    return;
+  }
+
+  XmDrawingAreaCallbackStruct * cbs = (XmDrawingAreaCallbackStruct *)call_data;
+  XEvent * event = cbs->event;
+  nsPaintEvent pevent;
+  nsRect       rect;
+  nsXtWidget_InitNSEvent(event, p, pevent, NS_PAINT);
+
+  pevent.rect = (nsRect *)&rect;
+printf("Count %d\n", event->xexpose.count);
+  if (event->xexpose.count != 0)
+    return ;
+
+  /* Only post Expose/Repaint if we know others arn't following
+   * directly in the queue.
+   */
+  if (event->xexpose.count == 0) {
+    Boolean      debug = PR_TRUE;
+    int          count = 0;
+    CollapseInfo cinfo;
+
+    cinfo.win = XtWindow(w);
+    cinfo.r   = pevent.rect;
+
+    rect.x      = event->xexpose.x;
+    rect.y      = event->xexpose.y;
+    rect.width  = event->xexpose.width;
+    rect.height = event->xexpose.height;
+printf("Before %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
+    /* Do a little more inspecting and collapse further if there
+     * are additional expose events pending on this window where
+     * the damage rects intersect with the current exposeRect.
+     */
+    while (1) {
+      XEvent xev;
+
+      if (XCheckIfEvent(XtDisplay(w), &xev, checkForExpose, (XtPointer)&cinfo)) {
+        printf("]]]]]]]]]]]]]]]]]]]]]]]]]]]]]\n");
+        count = xev.xexpose.count;
+        expandDamageRect(&rect, &xev, debug, "2");
+
+      } else /* XCheckIfEvent Failed. */
+       break;
+    }
+printf("After %d %d %d %d\n", rect.x, rect.y, rect.width, rect.height);
+  }
+
+  widgetWindow->OnPaint(pevent);
+
+  if (DBG) fprintf(stderr, "Out nsXtWidget_ExposureMask_EventHandler\n");
+
+
+}
+
+//==============================================================
 void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
 
@@ -316,7 +483,10 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
         rect.height = attrs.height;
         doResize = PR_TRUE;
       }
+      //printf("doResize %s  %d %d %d %d rect %d %d\n",  (doResize ?"true":"false"),
+             //attrs.x, attrs.y, attrs.width, attrs.height, rect.width, rect.height);
 
+      //doResize = PR_TRUE;
       if (doResize) {
         //printf("??????????????????????????????? Doing Resize\n");
         widgetWindow->SetBounds(rect); // This needs to be done inside OnResize
