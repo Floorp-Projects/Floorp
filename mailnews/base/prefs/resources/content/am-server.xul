@@ -47,10 +47,10 @@
   <box id="serverPrefContainer" orient="vertical">
 
   <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;"/>
-
+<!--
   <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
-
+-->
   <box orient="horizontal">
     <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"/>
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>

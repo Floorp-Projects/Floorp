@@ -66,7 +66,7 @@ function hideShowControls(serverType)
 
         // skip generic server/identity things
         var hideFor = control.getAttribute("hidefor");
-        if (!hideFor &&
+        if ((!hideFor || hideFor == "") &&
             (controlType == "server" ||
              controlType == "identity")) continue;
 
@@ -76,7 +76,9 @@ function hideShowControls(serverType)
 
         // hide unsupported server type
 
-        if (controlType != serverType ||
+        if ((controlType != "server" &&
+             controlType != "identity" &&
+             controlType != serverType) ||
             hideFor == serverType) {
             box.setAttribute("hidden", "true");
         }
