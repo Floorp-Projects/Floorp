@@ -9088,6 +9088,8 @@ RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *
     nsIFrame *frame = nsnull;
     aFrame->GetParent(&frame);
 
+    NS_ASSERTION(frame, "No parent frame!");
+
     // Find aFrame's previous sibling.
     // XXX: Is there a better way to do this?
 
@@ -9122,6 +9124,29 @@ RemoveGeneratedContentFrameSiblings(nsIPresContext *aPresContext, nsIPresShell *
                      nsCSSAtoms::afterPseudo)) {
     nsIFrame *afterFrame = nsnull;
     aFrame->GetNextSibling(&afterFrame);
+
+    if (!afterFrame)
+    {
+      // At this point we know that aFrame has a :after frame,
+      // but it has no next sibling, so it's possible that it's
+      // :after frame was pushed into a continuing frame for it's parent.
+
+      nsIFrame *frame = nsnull;
+
+      aFrame->GetParent(&frame);
+
+      NS_ASSERTION(frame, "No parent frame!");
+
+      if (frame)
+      {
+        // Now get the first child of the parent's next-in-flow.
+
+        frame->GetNextInFlow(&frame);
+
+        if (frame)
+          frame->FirstChild(aPresContext, nsnull, &afterFrame);
+      }
+    }
 
     if (afterFrame &&
         IsGeneratedContentFor(content, afterFrame, nsCSSAtoms::afterPseudo)) {
