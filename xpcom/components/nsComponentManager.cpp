@@ -661,9 +661,13 @@ ConvertFactoryEntryToCID(PLDHashTable *table,
                          void *data, nsISupports **retval)
 {
     nsresult rv;
+    nsCOMPtr<nsISupportsID> wrapper;
 
-    nsCOMPtr<nsISupportsID> wrapper =
-        do_CreateInstance(NS_SUPPORTS_ID_CONTRACTID, &rv);
+    nsComponentManagerImpl *cm = NS_STATIC_CAST(nsComponentManagerImpl *, data);
+
+    rv = cm->CreateInstanceByContractID(NS_SUPPORTS_ID_CONTRACTID, nsnull,
+           NS_GET_IID(nsISupportsID), getter_AddRefs(wrapper));
+
     NS_ENSURE_SUCCESS(rv, rv);
 
     const nsFactoryTableEntry *entry = 
@@ -689,19 +693,19 @@ ConvertContractIDKeyToString(PLDHashTable *table,
                              void *data, nsISupports **retval)
 {
     nsresult rv;
+    nsCOMPtr<nsISupportsString> wrapper;
 
-    nsCOMPtr<nsISupportsString> wrapper =
-        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    nsComponentManagerImpl *cm = NS_STATIC_CAST(nsComponentManagerImpl *, data);
+
+    rv = cm->CreateInstanceByContractID(NS_SUPPORTS_STRING_CONTRACTID, nsnull,
+                NS_GET_IID(nsISupportsString), getter_AddRefs(wrapper));
+
     NS_ENSURE_SUCCESS(rv, rv);
 
     const nsContractIDTableEntry *entry = 
         NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
-    const char *contractID = entry->mContractID;
-    nsCAutoString converted;
 
-    converted.Append(contractID);
-
-    wrapper->SetData(converted.get());
+    wrapper->SetData(entry->mContractID);
     *retval = wrapper;
     NS_ADDREF(*retval);
     return NS_OK;
@@ -3284,7 +3288,7 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
     PLDHashTableEnumeratorImpl *aEnum;
     rv = PL_NewDHashTableEnumerator(&mFactories,
                                     ConvertFactoryEntryToCID,
-                                    nsnull, 
+                                    (void*)this, 
                                     &aEnum);
     if (NS_FAILED(rv))
         return rv;
@@ -3314,7 +3318,7 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
     PLDHashTableEnumeratorImpl *aEnum;
     rv = PL_NewDHashTableEnumerator(&mContractIDs,
                                     ConvertContractIDKeyToString,
-                                    nsnull, 
+                                    (void*)this, 
                                     &aEnum);
     if (NS_FAILED(rv))
         return rv;
@@ -3445,7 +3449,7 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator **aEnumerator)
     PLDHashTableEnumeratorImpl *aEnum;
     rv = PL_NewDHashTableEnumerator(&mFactories,
                                     ConvertFactoryEntryToCID,
-                                    nsnull, 
+                                    (void*)this, 
                                     &aEnum);
     if (NS_FAILED(rv))
         return rv;
@@ -3474,7 +3478,7 @@ nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator **aEnumerator)
     PLDHashTableEnumeratorImpl *aEnum;
     rv = PL_NewDHashTableEnumerator(&mContractIDs,
                                     ConvertContractIDKeyToString,
-                                    nsnull, 
+                                    (void*)this, 
                                     &aEnum);
     if (NS_FAILED(rv))
         return rv;
