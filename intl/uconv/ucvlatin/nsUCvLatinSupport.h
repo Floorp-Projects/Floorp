@@ -21,7 +21,9 @@
 #define nsUCvLatinSupport_h___
 
 #include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncodeHelper.h"
+#include "nsIUnicodeDecodeHelper.h"
 
 //----------------------------------------------------------------------
 // Class nsEncoderSupport [declaration]
@@ -85,7 +87,7 @@ protected:
   /**
    * Copy as much as possible from the internal buffer to the destination.
    */
-  NS_IMETHOD FlushBuffer(char ** aDest, const char * aDestEnd);
+  nsresult FlushBuffer(char ** aDest, const char * aDestEnd);
 
 public:
 
@@ -145,6 +147,140 @@ protected:
 
   NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
       char * aDest, PRInt32 * aDestLength);
+};
+
+//----------------------------------------------------------------------
+// Class nsTablesEncoderSupport [declaration]
+
+/**
+ * Support class for a multi-table-driven Unicode encoder.
+ * 
+ * @created         11/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsTablesEncoderSupport : public nsEncoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsTablesEncoderSupport(PRInt32 aTableCount, uShiftTable ** aShiftTable,
+      uMappingTable  ** aMappingTable);
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsTablesEncoderSupport();
+
+protected:
+
+  nsIUnicodeEncodeHelper    * mHelper;      // encoder helper object
+  PRInt32                   mTableCount;
+  uShiftTable               ** mShiftTable;
+  uMappingTable             ** mMappingTable;
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+      char * aDest, PRInt32 * aDestLength);
+};
+
+//----------------------------------------------------------------------
+// Class nsDecoderSupport [declaration]
+
+/**
+ * Support class for the Unicode decoders. 
+ *
+ * This class implements:
+ * - nsISupports
+ * - the buffer management
+ *
+ * @created         15/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsDecoderSupport : public nsIUnicodeDecoder
+{
+  NS_DECL_ISUPPORTS
+
+protected:
+
+  /**
+   * Internal buffer for partial conversions.
+   */
+  char *    mBuffer;
+  PRInt32   mBufferCapacity;
+  PRInt32   mBufferLength;
+
+  /**
+   * Convert method but *without* the buffer management stuff.
+   */
+  NS_IMETHOD ConvertNoBuff(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength) = 0;
+
+  void FillBuffer(const char ** aSrc, PRInt32 aSrcLength);
+  void DoubleBuffer();
+
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsDecoderSupport();
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsDecoderSupport();
+
+  //--------------------------------------------------------------------
+  // Interface nsIUnicodeDecoder [declaration]
+
+  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 * aSrcLength);
+  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
+};
+
+//----------------------------------------------------------------------
+// Class nsTableDecoderSupport [declaration]
+
+/**
+ * Support class for a single-table-driven Unicode decoder.
+ * 
+ * @created         15/Mar/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsTableDecoderSupport : public nsDecoderSupport
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsTableDecoderSupport(uShiftTable * aShiftTable, 
+      uMappingTable  * aMappingTable);
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsTableDecoderSupport();
+
+protected:
+
+  nsIUnicodeDecodeHelper    * mHelper;      // decoder helper object
+  uShiftTable               * mShiftTable;
+  uMappingTable             * mMappingTable;
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
+  NS_IMETHOD ConvertNoBuff(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength);
 };
 
 #endif /* nsUCvLatinSupport_h___ */
