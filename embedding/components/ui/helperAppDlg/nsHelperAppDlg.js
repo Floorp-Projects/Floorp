@@ -551,7 +551,7 @@ nsHelperAppDialog.prototype = {
     // replaceInsert: Replace given insert with replacement text and return the result.
     replaceInsert: function( text, insertNo, replacementText ) {
         var result = text;
-        var regExp = eval( "/#"+insertNo+"/" );
+        var regExp = new RegExp("#"+insertNo);
         result = result.replace( regExp, replacementText );
         return result;
     }

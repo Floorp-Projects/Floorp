@@ -284,7 +284,7 @@ function initializeTermFromId(id)
     // id is of the form searchAttr<n>
     // strlen("searchAttr") == 10
     // turn searchAttr<n> -> <n>
-    var index = eval(id.slice(10)); 
+    var index = parseInt(id.slice(10)); 
     initializeTermFromIndex(index)
 }
 

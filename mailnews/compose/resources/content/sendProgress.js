@@ -152,7 +152,7 @@ function loadDialog()
 
 function replaceInsert( text, index, value ) {
    var result = text;
-   var regExp = eval( "/#"+index+"/" );
+   var regExp = new RegExp( "#"+index );
    result = result.replace( regExp, value );
    return result;
 }
