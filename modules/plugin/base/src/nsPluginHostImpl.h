@@ -57,10 +57,7 @@ class nsFileSpec;
 class nsIComponentManager;
 class nsIFile;
 class nsIChannel;
-
-// this is the name of the directory which will be created
-// to cache temporary files.
-static const char *kPluginTmpDirName = "plugtmp";
+class nsIRegistry;
 
 /**
  * A linked-list of plugin information that is used for
@@ -77,14 +74,17 @@ public:
   nsPluginTag(const char* aName,
               const char* aDescription,
               const char* aFileName,
+              const char* aFullPath,
               const char* const* aMimeTypes,
               const char* const* aMimeDescriptions,
               const char* const* aExtensions,
-              PRInt32 aVariants);
+              PRInt32 aVariants,
+              PRInt64 aLastModifiedTime = 0);
 
   ~nsPluginTag();
 
   void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
+  void Mark(PRUint32 mask) { mFlags |= mask; }
 
   nsPluginTag   *mNext;
   char          *mName;
@@ -100,6 +100,7 @@ public:
   PRBool        mXPConnected;
   char          *mFileName;
   char          *mFullPath;
+  PRInt64       mLastModifiedTime;
 };
 
 struct nsActivePlugin
@@ -165,6 +166,8 @@ public:
 
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
+#define NS_PLUGIN_FLAG_FROMCACHE  0x0004    // this plugintag info was loaded from cache
+#define NS_PLUGIN_FLAG_UNWANTED   0x0008    // this is an unwanted plugins
 
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
@@ -440,11 +443,21 @@ private:
   void AddToUnusedLibraryList(PRLibrary * aLibrary);
   void CleanUnusedLibraries();
 
+  // Loads all cached plugins info into mCachedPlugins
+  nsresult LoadCachedPluginsInfo(nsIRegistry* registry);
+  // Stores all plugins info into the registry
+  nsresult CachePluginsInfo(nsIRegistry* registry);
+  // Given a filename, returns the plugins info from our cache and removes
+  // it from the cache.
+  nsPluginTag* RemoveCachedPluginsInfo(const char *filename);
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
+  nsPluginTag *mCachedPlugins;
   PRBool      mPluginsLoaded;
   PRBool      mDontShowBadPluginMessage;
   PRBool      mIsDestroyed;
+  PRBool      mSyncCachedPlugins;
 
   nsActivePluginList mActivePluginList;
   nsUnusedLibrary *mUnusedLibraries;
