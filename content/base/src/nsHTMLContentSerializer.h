@@ -77,6 +77,7 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                                      nsAWritableString& aOutputStr,
                                      PRBool aTranslateEntities);
   PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
+  nsresult EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI);
 
   nsCOMPtr<nsIParserService> mParserService;
   nsCOMPtr<nsIEntityConverter> mEntityConverter;
@@ -107,6 +108,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   nsString  mLineBreak;
 
   PRBool mIsLatin1;
+
+  nsCOMPtr<nsIAtom> mCharSet;
 };
 
 extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);

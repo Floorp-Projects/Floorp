@@ -36,6 +36,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
+#include "nsITextToSubURI.h"
 
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
@@ -115,6 +116,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
 
   mPreLevel = 0;
 
+  mCharSet = aCharSet;
   mIsLatin1 = PR_FALSE;
   if (aCharSet) {
     const PRUnichar *charset;
@@ -161,6 +163,66 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   return NS_OK;
 }
 
+nsresult 
+nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI)
+{
+  // nsITextToSubURI does charset convert plus uri escape
+  // This is needed to convert to a document charset which is needed to support existing browsers.
+  // But we eventually want to use UTF-8 instead of a document charset, then the code would be much simpler.
+  // See HTML 4.01 spec, "Appendix B.2.1 Non-ASCII characters in URI attribute values"
+  nsCOMPtr<nsITextToSubURI> textToSubURI;
+  nsAutoString uri(aURI); // in order to use FindCharInSet(), IsASCII()
+  nsXPIDLCString documentCharset;
+  nsresult rv = NS_OK;
+
+
+  if (mCharSet && !uri.IsASCII()) {
+    const PRUnichar *charset;
+    mCharSet->GetUnicode(&charset);
+    documentCharset = NS_ConvertUCS2toUTF8(charset).get();
+    textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  PRInt32 start = 0;
+  PRInt32 end;
+  nsAutoString part;
+  nsXPIDLCString escapedURI;
+  aEscapedURI.Truncate(0);
+
+  // Loop and escape parts by avoiding escaping reserved characters.
+  while ((end = uri.FindCharInSet(";/?:@&=+$,", start)) != -1) {
+    aURI.Mid(part, start, (end-start));
+    if (textToSubURI && !part.IsASCII()) {
+      rv = textToSubURI->ConvertAndEscape(documentCharset, part.GetUnicode(), getter_Copies(escapedURI));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      escapedURI = nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path);
+    }
+    aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
+
+    // Append a reserved character without escaping.
+    aURI.Mid(part, end, 1);
+    aEscapedURI.Append(part);
+    start = end + 1;
+  }
+
+  if (start < (PRInt32) aURI.Length()) {
+    // Escape the remaining part.
+    aURI.Mid(part, start, aURI.Length()-start);
+    if (textToSubURI) {
+      rv = textToSubURI->ConvertAndEscape(documentCharset, part.GetUnicode(), getter_Copies(escapedURI));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      escapedURI = nsEscape(NS_ConvertUCS2toUTF8(part).get(), url_Path);
+    }
+    aEscapedURI.Append(NS_ConvertASCIItoUCS2(escapedURI));
+  }
+
+  return rv;
+}
 
 void 
 nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
@@ -202,26 +264,32 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
       continue;
     }
 
-    // Make all links absolute when converting only the selection:
-    if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks) &&
-        ((attrName.get() == nsHTMLAtoms::href) || 
+    if (((attrName.get() == nsHTMLAtoms::href) || 
          (attrName.get() == nsHTMLAtoms::src))) {
-      // Would be nice to handle OBJECT and APPLET tags,
-      // but that gets more complicated since we have to
-      // search the tag list for CODEBASE as well.
-      // For now, just leave them relative.
-      nsCOMPtr<nsIDocument> document;
-      aContent->GetDocument(*getter_AddRefs(document));
-      if (document) {
-        nsCOMPtr<nsIURI> uri = dont_AddRef(document->GetDocumentURL());
-        if (uri) {
-          nsAutoString absURI;
-          rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
-          if (NS_SUCCEEDED(rv)) {
-            valueStr = absURI;
+      // Make all links absolute when converting only the selection:
+      if (mFlags & nsIDocumentEncoder::OutputAbsoluteLinks) {
+        // Would be nice to handle OBJECT and APPLET tags,
+        // but that gets more complicated since we have to
+        // search the tag list for CODEBASE as well.
+        // For now, just leave them relative.
+        nsCOMPtr<nsIDocument> document;
+        aContent->GetDocument(*getter_AddRefs(document));
+        if (document) {
+          nsCOMPtr<nsIURI> uri = dont_AddRef(document->GetDocumentURL());
+          if (uri) {
+            nsAutoString absURI;
+            rv = NS_MakeAbsoluteURI(absURI, valueStr, uri);
+            if (NS_SUCCEEDED(rv)) {
+              valueStr = absURI;
+            }
           }
         }
       }
+
+      // Need to escape URI.
+      nsAutoString tempURI(valueStr);
+      if (NS_FAILED(EscapeURI(tempURI, valueStr)))
+        valueStr = tempURI;
     }
 
     attrName->ToString(nameStr);
