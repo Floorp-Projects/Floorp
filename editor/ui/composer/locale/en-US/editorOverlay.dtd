@@ -543,7 +543,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY colorPicker.default.accesskey "r">
 
 <!-- Display Mode Toolbar -->
-<!ENTITY showExtraMarkup.label "Normal">
-<!ENTITY hideExtraMarkup.label "WYSIWYG">
+<!ENTITY normalMode.label "Normal">
+<!ENTITY previewMode.label "Edit Preview">
 <!ENTITY showAllTags.label "Show All Tags">
 <!ENTITY treeModeButton.label "Tag Tree">

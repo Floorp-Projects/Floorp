@@ -22,7 +22,7 @@
 
 /* Styles to alter look of things in the Editor content window 
  *  for the "Normal Edit Mode" These settings will be removed
- *  when we display in completely WYSIWYG "Browser Preview" mode
+ *  when we display in completely WYSIWYG "Edit Preview" mode
  *  Anything that should never change, like cursors, should be 
  *  place in EditorOverride.css, instead of here.
 */

@@ -30,27 +30,6 @@
   border-bottom: 1px solid #003366;
 }
 
-.FormatButton {
-  border: 1px solid transparent;
-  margin: 1px 1px 1px 1px;
-	padding: 2px;
-	text-decoration: none;
-	color: inherit;
-}
-
-.FormatButton[toggled="1"] {
-  border: 1px white inset;
-}
-
-.FormatButton:hover {
-  border: 1px solid white;
-	text-decoration: none;
-}
-
-.FormatButton:active {
-  margin: 2px 0px 0px 2px;
-}
-
 .separator_small { 
   width: 1em; 
 }
@@ -69,15 +48,6 @@
 }
 
 /* end of SHOULD GO IN GLOBAL */
-
-/* THIS WILL GO SOON. With conversion to menulist */
-select.toolbar {
-  /* This is ignored! */
-	/*font-size: smaller;*/
-  max-width: 20em;
-  margin: 2px 3px 0px 3px;
-}
-
 
 #EditModeToolbar {
   padding:       0px;
@@ -124,7 +94,6 @@ select.toolbar {
 .color-caption {
   border: 1px inset white;
 }
-
 
 
 /* Image URLs for all Editor toolbar buttons */
@@ -268,9 +237,8 @@ select.toolbar {
 #ColorButtons {
   margin: 2px;
 }
-
+/* TODO: How to make inset color skinable? */
 #TextColorPopupButton {
-	/*list-style-image:url("chrome://editor/skin/images/color.gif");*/
   border: 1px inset #CCCCCC;
   padding: 0px;
   margin-right:  7px;
@@ -282,7 +250,6 @@ select.toolbar {
 }
 
 #BackColorPopupButton {
-	/*list-style-image:url("chrome://editor/skin/images/color.gif");*/
   border: 1px inset #CCCCCC;
   padding: 0px;
   margin-top:  7px;
