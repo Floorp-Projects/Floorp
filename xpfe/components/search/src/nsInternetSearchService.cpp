@@ -4888,8 +4888,8 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
     keyTemplate.Append(NS_LITERAL_STRING(".release"));
 
     nsXPIDLString releaseValue;
-    const PRUnichar* strings[] = { NS_LITERAL_STRING(MOZ_DISTRIBUTION_ID).get(),
-                                   langName.get() };
+	  NS_NAMED_LITERAL_STRING(distributionID, MOZ_DISTRIBUTION_ID);
+    const PRUnichar* strings[] = { distributionID.get(), langName.get() };
     bundle->FormatStringFromName(keyTemplate.get(), strings, 2, getter_Copies(releaseValue));
 
     if (!releaseValue.IsEmpty()) 
