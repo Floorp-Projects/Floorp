@@ -588,10 +588,10 @@ static bool generatedBoolean(ExprNode *p)
     return false;
 }
 
-bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex)
+static bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex)
 {
-    if (t->isClassType()) {
-        JSClass *c = static_cast<JSClass *>(t);
+    JSClass* c = dynamic_cast<JSClass*>(t);
+    if (c) {
         if (c->hasSlot(name)) {
             JSSlot &s = c->getSlot(name);
             slotIndex = s.mIndex;
@@ -1355,7 +1355,9 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             // to handle recursive types, such as linked list nodes.
             mGlobal->defineVariable(nameExpr->name, JSValue(thisClass));
             if (classStmt->body) {
-                ICodeGenerator fcg(mWorld, thisClass->getScope(), thisClass);
+                ICodeGenerator ccg(mWorld, thisClass->getScope(), thisClass);   // constructor code generator.
+                ccg.allocateParameter(mWorld->identifiers[widenCString("this")], thisClass);   // always parameter #0
+                ICodeGenerator mcg(mWorld, thisClass->getScope(), thisClass);   // method code generator.
                 StmtNode* s = classStmt->body->statements;
                 while (s) {
                     switch (s->getKind()) {
@@ -1364,11 +1366,12 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                             // FIXME:  need to generate a constructor function using the initializers, etc.
                             VariableStmtNode *vs = static_cast<VariableStmtNode *>(s);
                             VariableBinding *v = vs->bindings;
+                            TypedRegister thisRegister = TypedRegister(0, thisClass);
                             while (v)  {
                                 if (v->name) {
                                     ASSERT(v->name->getKind() == ExprNode::identifier);
                                     IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
-                                    const JSType* type = &Any_Type;
+                                    JSType* type = &Any_Type;
                                     // FIXME:  need to do code generation for type expressions.
                                     if (v->type && v->type->getKind() == ExprNode::identifier) {
                                         IdentifierExprNode* typeExpr = static_cast<IdentifierExprNode*>(v->type);
@@ -1376,7 +1379,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                         ASSERT(typeValue.isObject() && !typeValue.isNull());
                                         type = static_cast<JSType*>(typeValue.object);
                                     }
-                                    thisClass->addSlot(idExpr->name, type);
+                                    JSSlot& slot = thisClass->addSlot(idExpr->name, type);
+                                    // generate code for the default constructor, which initializes the slots.
+                                    if (v->initializer)
+                                        ccg.setSlot(thisRegister, slot.mIndex, ccg.genExpr(v->initializer));
                                 }
                                 v = v->next;
                             }
@@ -1384,8 +1390,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                         break;
                     case StmtNode::Function:
                         {
-                            fcg.preprocess(s);
-                            fcg.genStmt(s);
+                            mcg.preprocess(s);
+                            mcg.genStmt(s);
                         }
                         break;
                     default:
@@ -1393,6 +1399,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     }
                     s = s->next;
                 }
+                // FIXME:  what about static member initialization? that's what mcg should be collecting.
+                thisClass->setConstructor(ccg.complete());
             }
         }
         break;
