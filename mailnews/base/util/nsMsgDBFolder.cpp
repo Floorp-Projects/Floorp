@@ -182,6 +182,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
   CRTFREEIF(mBaseMessageURI);
 
   if (--mInstanceCount == 0) {
+    NS_IF_RELEASE(kCollationKeyGenerator);
     CRTFREEIF(kLocalizedInboxName);
     CRTFREEIF(kLocalizedTrashName);
     CRTFREEIF(kLocalizedSentName);
