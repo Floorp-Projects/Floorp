@@ -29,6 +29,8 @@ MOZ_TOP=mozilla
 
 !if defined(MOZ_DATE)
 CVSCO = cvs -q co -P -D "$(MOZ_DATE)"
+!elseif defined(CVSROOT)
+CVSCO = cvs -d $(CVSROOT) -q co -P
 !else
 CVSCO = cvs -q co -P
 !endif
