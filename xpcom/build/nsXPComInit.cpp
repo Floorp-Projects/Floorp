@@ -563,6 +563,12 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     }
 #endif
 
+    nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
+    if ( NS_FAILED(rv) ) return rv;
+
+    rv = eventQService->CreateThreadEventQueue();
+    if ( NS_FAILED(rv) ) return rv;
+
     if ( NS_FAILED(rv) || CheckAndRemoveUpdateFile()) {
         // if we find no persistent registry, we will try to autoregister
         // the default components directory.
@@ -610,12 +616,6 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
     NS_IF_RELEASE(iim);
-
-    nsCOMPtr<nsIEventQueueService> eventQService(do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
-    if ( NS_FAILED(rv) ) return rv;
-
-    rv = eventQService->CreateThreadEventQueue();
-    if ( NS_FAILED(rv) ) return rv;
 
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_OBSERVER_ID, 
