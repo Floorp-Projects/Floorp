@@ -72,6 +72,32 @@ BookmarksUIElement.prototype = {
         kBMDS.Change(krItem, krProperty, rCurrValue, krNewValue);
     }
   },
+
+  listener: null,  
+  exDB: ["rdf:files", "rdf:httpindex"],
+  setUpCompositeDataSource: function ()
+  {
+    if (!this.listener) 
+      this.listener = new AggregationPrefListener ();
+      
+    const kPrefSvcContractID = "@mozilla.org/preferences;1";
+    const kPrefSvcIID = Components.interfaces.nsIPref;
+    const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+    var bUseExtendedDataViews = false;
+    try {
+      bUseExtendedDataViews = kPrefSvc.GetBoolPref("browser.bookmarks.show_extended_data");
+    }
+    catch (e) {
+    }
+    var element = document.getElementById(this.id);
+    var db = element.database;
+
+    for (var i = 0; i < this.exDB.length; ++i) {
+      dump("** txxsdflks = " + this.exDB[i] + "\n");
+      db[bUseExtendedDataViews ? "AddDataSource" : "RemoveDataSource"](this.RDF.GetDataSource(this.exDB[i]));
+    }
+    element.builder.rebuild();
+  },
   
   /////////////////////////////////////////////////////////////////////////////
   // Fill a context menu popup with menuitems that are appropriate for the current
@@ -89,7 +115,7 @@ BookmarksUIElement.prototype = {
     if (!("findRDFNode" in this))
       throw "Clients must implement findRDFNode!";
     var itemNode = this.findRDFNode(popupNode, true);
-    if (!itemNode) return;
+    if (!itemNode) return false;
 
     if (!("getContextSelection" in this)) 
       throw "Clients must implement getContextSelection!";
@@ -103,6 +129,8 @@ BookmarksUIElement.prototype = {
       commonCommands = this.findCommonNodes(commands, commonCommands);
     }
 
+    if (!commonCommands.length) return false;
+    
     // Now that we should have generated a list of commands that is valid
     // for the entire selection, build a context menu.
     for (i = 0; i < commonCommands.length; ++i) {
@@ -122,6 +150,7 @@ BookmarksUIElement.prototype = {
       if (element) 
         popup.appendChild(element);
     }
+    return true;
   },
   
   /////////////////////////////////////////////////////////////////////////////
@@ -174,6 +203,16 @@ BookmarksUIElement.prototype = {
                   "cut", "copy", "paste", "delete", "separator", "rename", 
                   "separator", "newfolder", "separator", "properties"];
       break;
+    case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
+      commands = ["open", "find", "separator", "copy", "separator", "rename", 
+                  "separator", "properties"];
+      break;
+    case "http://home.netscape.com/NC-rdf#IEFavorite":
+      commands = ["open", "find", "separator", "copy", "separator", "properties"];
+      break;
+    case "http://home.netscape.com/NC-rdf#FileSystemObject":
+      commands = ["open", "find", "separator", "copy", "separator", "properties"];
+      break;
     default: 
       var source = this.RDF.GetResource(aNodeID);
       return this.db.GetAllCmds(source);
@@ -210,82 +249,90 @@ BookmarksUIElement.prototype = {
     goDoCommand("cmd_" + commandID.substring(NC_NS_CMD.length));
   },
   
-  execCommand: function (commandID) 
+  execCommand: function (aCommandID) 
   {
     var selection = this.getSelection ();
-    if (selection.length == 1 && commandID != "cut" && commandID != "copy" && 
-        commandID != "paste" && commandID != "delete") {
-      // Commands that can only be performed on a single selection
+    if (selection.length >= 1) 
       var selectedItem = selection[0];
-      switch (commandID) {
-      case "open":
-        this.openRDFNode(selectedItem);
-        break;
-      case "openfolder":
-        this.commands.openFolder(selectedItem);
-        break;
-      case "openfolderinnewwindow":
-        this.openFolderInNewWindow(selectedItem);
-        break;
-      case "rename":
-        // XXX - this is SO going to break if we ever do column re-ordering.
-        this.commands.editCell(selectedItem, 0);
-        break;
-      case "editurl":
-        this.commands.editCell(selectedItem, 1);
-        break;
-      case "setnewbookmarkfolder":
-      case "setpersonaltoolbarfolder":
-      case "setnewsearchfolder":
-        rCommand = this.RDF.GetResource(NC_NS_CMD + commandID);
-        rSource = this.RDF.GetResource(NODE_ID(selectedItem));
+    switch (aCommandID) {
+    case "open":
+      this.openRDFNode(selectedItem);
+      break;
+    case "openfolder":
+      this.commands.openFolder(selectedItem);
+      break;
+    case "openfolderinnewwindow":
+      this.openFolderInNewWindow(selectedItem);
+      break;
+    case "rename":
+      // XXX - this is SO going to break if we ever do column re-ordering.
+      this.commands.editCell(selectedItem, 0);
+      break;
+    case "editurl":
+      this.commands.editCell(selectedItem, 1);
+      break;
+    case "setnewbookmarkfolder":
+    case "setpersonaltoolbarfolder":
+    case "setnewsearchfolder":
+      var args = [];
+      gBookmarksShell.doBookmarksCommand(NODE_ID(selectedItem), NC_NS_CMD + aCommandID, []);
+      break;
+    case "properties":
+      this.showPropertiesForNode(selectedItem);
+      break;
+    case "find":
+      this.findInBookmarks();
+      break;
+    case "cut":
+      this.copySelection (selection);
+      this.deleteSelection (selection);
+      break;
+    case "copy":
+      this.copySelection (selection);
+      break;
+    case "paste":
+      this.paste (selection);
+      break;
+    case "delete":
+      this.deleteSelection (selection);
+      break;
+    case "newfolder":
+      var nfseln = this.getBestItem ();
+      this.commands.createBookmarkItem("folder", nfseln);
+      break;
+    case "newbookmark":
+      var folder = this.getSelectedFolder();
+      openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                 "centerscreen,chrome,dialog=no,resizable=no", null, null, folder, null);
+      break;
+    case "newseparator":
+      nfseln = this.getBestItem ();
+      this.commands.createSeparator(nfseln);
+      break;
+    case "import":
+    case "export":
+      const isImport = aCommandID == "import";
+      try {
+        const kFilePickerContractID = "@mozilla.org/filepicker;1";
+        const kFilePickerIID = Components.interfaces.nsIFilePicker;
+        const kFilePicker = Components.classes[kFilePickerContractID].createInstance(kFilePickerIID);
         
-        kSuppArrayContractID = "@mozilla.org/supports-array;1";
-        kSuppArrayIID = Components.interfaces.nsISupportsArray;
-        var sourcesArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-        sourcesArray.AppendElement (krSource);
-        var argsArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-        this.db.DoCommand(sourcesArray, krCommand, argsArray);
-        break;
-      case "properties":
-        this.showPropertiesForNode(selectedItem);
-        break;
-      case "find":
-        this.findInBookmarks();
+        const kTitle = this.getLocaleString(isImport ? "SelectImport": "EnterExport");
+        kFilePicker.init(window, kTitle, kFilePickerIID[isImport ? "modeOpen" : "modeSave"]);
+        kFilePicker.appendFilters(kFilePickerIID.filterHTML | kFilePickerIID.filterAll);
+        if (!isImport) kFilePicker.defaultString = "bookmarks.html";
+        if (kFilePicker.show() != kFilePickerIID.returnCancel) {
+          var fileName = kFilePicker.fileURL.spec;
+          if (!fileName) break;
+        }
+      }
+      catch (e) {
         break;
       }
-    }
-    else {
-      // Commands that can be performed on a selection of 1 or more items.
-      switch (commandID) {
-      case "cut":
-        this.copySelection (selection);
-        this.deleteSelection (selection);
-        break;
-      case "copy":
-        this.copySelection (selection);
-        break;
-      case "paste":
-        this.paste (selection);
-        break;
-      case "delete":
-        this.deleteSelection (selection);
-        break;
-      case "find":
-        this.findInBookmarks();
-        break;
-      case "newfolder":
-        var nfseln = this.getBestItem ();
-        this.commands.createBookmarkItem("folder", nfseln);
-        break;
-      case "newbookmark":
-        var folder = this.getSelectedFolder();
-        openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                   "centerscreen,chrome,dialog=no,resizable=no", null, null, folder);
-        break;
-      case "newseparator":
-        break;
-      }
+      var seln = this.getBestItem();
+      var args = [{ property: NC_NS + "URL", literal: fileName}];
+      gBookmarksShell.doBookmarksCommand(NODE_ID(seln), NC_NS_CMD + aCommandID, args);
+      break;
     }
   },
   
@@ -413,28 +460,48 @@ BookmarksUIElement.prototype = {
     const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
     ksRDFC.Init(kBMDS, krParent);
 
+    if ("beginBatch" in this && nodes.length > 1)
+      this.beginBatch();
     for (var i = 0; i < nodes.length; ++i) {
       if (!nodes[i]) continue;
-      const krCurrent = this.RDF.GetResource(nodes[i]);
+      var rCurrent = this.RDF.GetResource(nodes[i]);
+      const krTypeProperty = this.RDF.GetResource(RDF_NS + "type");
+      var rType = this.db.GetTarget(rCurrent, krTypeProperty, true);
+      rType = rType.QueryInterface(Components.interfaces.nsIRDFResource);
+
+      // If the node is a folder, then we need to create a new anonymous 
+      // resource and copy all the arcs over.
+      if (rType.Value == NC_NS + "Folder") {
+        const krNewFolder = this.RDF.GetAnonymousResource();
+        const kArcs = this.db.ArcLabelsOut(rCurrent);
+        while (kArcs.hasMoreElements()) {
+          const krCurrentArc = kArcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+          const krCurrentArcVal = this.db.GetTarget(rCurrent, krCurrentArc, true);
+          this.db.Assert(krNewFolder, krCurrentArc, krCurrentArcVal, true);
+        }
+        rCurrent = krNewFolder;
+      }
+
+      // If we are given names, this implies that the nodes do not already 
+      // exist in the graph, and we need to create some additional information
+      // for them. 
       if (names.length) {
-        // If we are given names, this implies that the nodes do not already 
-        // exist in the graph, and we need to create some additional information
-        // for them. 
         const krName = this.RDF.GetResource(names[i]);
         const krNameProperty = this.RDF.GetResource(NC_NS + "Name");
-        const krTypeProperty = this.RDF.GetResource(RDF_NS + "type");
         const krBookmark = this.RDF.GetResource(NC_NS + "Bookmark");
-        this.db.Assert(krCurrent, krNameProperty, krName, true);
-        this.db.Assert(krCurrent, krTypeProperty, krBookmark, true);
+        this.db.Assert(rCurrent, krNameProperty, krName, true);
+        this.db.Assert(rCurrent, krTypeProperty, krBookmark, true);
       }
       ix = ksRDFC.IndexOf(krSource);
       if (ix != -1) 
-        ksRDFC.InsertElementAt(krCurrent, ix+1, true);
+        ksRDFC.InsertElementAt(rCurrent, ix+1, true);
       else
-        ksRDFC.AppendElement(krCurrent);
+        ksRDFC.AppendElement(rCurrent);
       if ("addItemToSelection" in this) 
-        this.addItemToSelection(krCurrent.Value);
+        this.addItemToSelection(rCurrent.Value);
     }
+    if ("endBatch" in this && nodes.length > 1)
+      this.endBatch();
   },
   
   canPaste: function ()
@@ -463,25 +530,34 @@ BookmarksUIElement.prototype = {
     const kRDFCContractID = "@mozilla.org/rdf/container;1";
     const kRDFCIID = Components.interfaces.nsIRDFContainer;
     const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
-    // We must create a copy here because we're going to be modifying the 
-    // selectedItems list.
-    var tempSelection = aSelection;
+
     var nextElement;
-    for (var i = 0; i < tempSelection.length; ++i) {
-      const currParent = this.findRDFNode(tempSelection[i], false);
-      const kSelectionURI = NODE_ID(tempSelection[i]);
-            
+    var count = 0;
+
+    var selectionLength = aSelection.length;
+    if ("beginBatch" in this && selectionLength > 1)
+      this.beginBatch();
+    while (aSelection.length && aSelection[count]) {
+      const currParent = this.findRDFNode(aSelection[count], false);
+      const kSelectionURI = NODE_ID(aSelection[count]);
+
       // Disallow the removal of certain 'special' nodes
-      if (kSelectionURI == "NC:BookmarksRoot" || kSelectionURI == "NC:IEFavoritesRoot")
+      if (kSelectionURI == "NC:BookmarksRoot" || 
+          kSelectionURI == "NC:IEFavoritesRoot") {
+        ++count;
         continue;
+      }
         
       const krParent = this.RDF.GetResource(NODE_ID(currParent));
       const krNode = this.RDF.GetResource(kSelectionURI);
       const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
       ksRDFC.Init(kBMDS, krParent);
-      nextElement = this.getNextElement(tempSelection[i]);
+      nextElement = this.getNextElement(aSelection[count]);
       ksRDFC.RemoveElement(krNode, true);
     }
+    if ("beginBatch" in this && selectionLength > 1)
+      this.endBatch();
+      
     this.selectElement(nextElement);
   },
 
@@ -561,11 +637,15 @@ BookmarksUIElement.prototype = {
   // Determine the rdf:type property for the given resource.
   resolveType: function (aID)
   {
-    const bmTree = document.getElementById("bookmarksTree");
     const krType = this.RDF.GetResource(RDF_NS + "type");
     const krElement = this.RDF.GetResource(aID);
-    const type = bmTree.database.GetTarget(krElement, krType, true);
-    return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+    const type = gBookmarksShell.db.GetTarget(krElement, krType, true);
+    try {
+      return type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
+    }
+    catch (e) {
+      return type.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    }    
   }
 };
 
@@ -593,4 +673,52 @@ CommandArrayEnumerator.prototype = {
   }
 };
 
+var BookmarksUtils = {
+  addBookmarkToWindow: function (aWindow)
+  {
+    var url = aWindow.location.href;
+    var title = aWindow.document.title || url;
+    var docCharset = aWindow.document.characterSet;
 
+    const kPrefContractID = "@mozilla.org/preferences;1";
+    const kPrefIID = Components.interfaces.nsIPref;
+    const kPrefSvc = Components.classes[kPrefContractID].getService(kPrefIID);
+    var showDialog = true;
+    try {
+      showDialog = !kPrefSvc.GetBoolPref("browser.bookmarks.add_without_dialog");
+    }
+    catch (e) {
+    }
+    
+    if (showDialog)
+      openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
+                 "centerscreen,chrome,dialog=no,resizable=no", title, url, null, docCharset);
+    else {
+      // User has elected to override the file dialog and always file bookmarks
+      // into the default bookmark folder. 
+      const kBMSvcContractID = "@mozilla.org/browser/bookmarks-service;1";
+      const kBMSvcIID = Components.interfaces.nsIBookmarksService;
+      const kBMSvc = Components.classes[kBMSvcContractID].getService(kBMSvcIID);
+      kBMSvc.AddBookmark(url, title, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, docCharset);
+    }
+  }
+
+};
+
+function AggregationPrefListener () 
+{ 
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPref;
+  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+  kPrefSvc.addObserver(this.pref, this);
+}
+AggregationPrefListener.prototype = {
+  pref: "browser.bookmarks.show_extended_data",
+  Observe: function (subject, topic, prefName) 
+  {
+    if (topic != "nsPref:changed") return;
+    if (prefName != this.pref) return;
+    gBookmarksShell.setUpCompositeDataSource();
+  }
+};
+  

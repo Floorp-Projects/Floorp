@@ -144,6 +144,7 @@ BookmarksTree.prototype = {
       var aShell = aParams[0];
       aShell.propertySet(aParams[1], aParams[2], aParams[3]); 
       gBookmarksShell.tree.focus();
+      gBookmarksShell.tree.selectItem(document.getElementById(aParams[2]));
       gSelectionTracker.clickCount = 0;
     },
 
@@ -182,11 +183,21 @@ BookmarksTree.prototype = {
 
       const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
       kBMDS.AddObserver(newFolderRDFObserver);
-      gBookmarksShell.doBookmarksCommand(NODE_ID(relativeNode), NC_NS_CMD + "newfolder", args);
+      gBookmarksShell.doBookmarksCommand(NODE_ID(relativeNode), 
+                                         NC_NS_CMD + "newfolder", args);
       kBMDS.RemoveObserver(newFolderRDFObserver);
       var newFolderItem = document.getElementById(newFolderRDFObserver._newFolderURI);
       gBookmarksShell.tree.focus();
       gBookmarksShell.tree.selectItem(newFolderItem);
+    },
+    
+    createSeparator: function (aSelectedItem)
+    {
+      var parentNode = gBookmarksShell.findRDFNode(aSelectedItem, false);
+      var args = [{ property: NC_NS + "parent", 
+                    resource: NODE_ID(parentNode) }];
+      gBookmarksShell.doBookmarksCommand(NODE_ID(aSelectedItem), 
+                                         NC_NS_CMD + "newseparator", args);
     },
     
     ///////////////////////////////////////////////////////////////////////////
@@ -369,6 +380,22 @@ BookmarksTree.prototype = {
       temp = temp.parentNode;
     return temp || this.tree;
   },
+
+  beginBatch: function ()
+  {
+    /*
+    var bo = this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
+    bo.beginBatch();
+    */
+  },
+  
+  endBatch: function ()
+  {
+    /*
+    var bo = this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
+    bo.endBatch();
+    */
+  },
   
   /////////////////////////////////////////////////////////////////////////////
   // Tree click events. This handles when to go into inline-edit mode for 
@@ -419,7 +446,7 @@ BookmarksTree.prototype = {
   selectFolderItem: function (aFolderURI, aItemURI, aAdditiveFlag)
   {
     var folder = document.getElementById(aFolderURI);
-    var kids = ContentUtils.childByLocalName(aSelectedItem, "treechildren");
+    var kids = ContentUtils.childByLocalName(folder, "treechildren");
     if (!kids) return;
     
     var item = kids.firstChild;
@@ -449,6 +476,7 @@ BookmarksTree.prototype = {
         return true;
       case "cmd_open":
       case "cmd_openfolder":
+      case "cmd_openfolderinnewwindow":
       case "cmd_newbookmark":
       case "cmd_newfolder":
       case "cmd_newseparator":
@@ -484,6 +512,7 @@ BookmarksTree.prototype = {
         var seln = gBookmarksShell.tree.selectedItems;
         return numSelectedItems == 1 && seln[0].getAttribute("type") == NC_NS + "Bookmark";
       case "cmd_openfolder":
+      case "cmd_openfolderinnewwindow":
         seln = gBookmarksShell.tree.selectedItems;
         return numSelectedItems == 1 && seln[0].getAttribute("type") == NC_NS + "Folder";
       case "cmd_find":
@@ -496,13 +525,16 @@ BookmarksTree.prototype = {
         return numSelectedItems == 1;
       case "cmd_setnewbookmarkfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder");
+        var folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
       case "cmd_setpersonaltoolbarfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder");
+        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
       case "cmd_setnewsearchfolder":
         seln = gBookmarksShell.tree.selectedItems;
-        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewSearchFolder");
+        folderType = seln[0].getAttribute("type") == (NC_NS + "Folder");
+        return numSelectedItems == 1 && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
       default:
         return false;
       }
@@ -525,11 +557,15 @@ BookmarksTree.prototype = {
       case "cmd_rename": 
       case "cmd_open":
       case "cmd_openfolder":
+      case "cmd_openfolderinnewwindow":
       case "cmd_setnewbookmarkfolder":
       case "cmd_setpersonaltoolbarfolder":
       case "cmd_setnewsearchfolder":
       case "cmd_find":
         gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
+        break;
+      case "cmd_selectAll":
+        gBookmarksShell.tree.selectAll();
         break;
       }
     },
