@@ -123,49 +123,59 @@ function setDivText(divname, value) {
 }
 
 
-function openImapAdvanced()
+function onAdvanced()
 {
-    var imapServer = getImapServer();
-    dump("Opening dialog..\n");
-    window.openDialog("chrome://messenger/content/am-imap-advanced.xul",
-                      "_blank",
-                      "chrome,modal,titlebar", imapServer);
+  dump("onAdvanced..\n");
+  var serverKeyElement = document.getElementById("identity.smtpServerKey");
+  var oldSmtpServerKey = serverKeyElement.getAttribute("value");
+  dump("selected key = " + oldSmtpServerKey + "\n");
 
-    saveServerLocally(imapServer);
+  var serverSettings = {};
+  serverSettings.smtpServerList = oldSmtpServerKey;
+
+  // Store the server type and, if an IMAP server,
+  // the settings needed for the IMAP tab into the array
+  var serverType = document.getElementById("server.type").getAttribute("value");
+  serverSettings.serverType = serverType;
+
+  if (serverType == "imap")
+  {
+    serverSettings.dualUseFolders = document.getElementById("imap.dualUseFolders").checked
+    serverSettings.usingSubscription = document.getElementById("imap.usingSubscription").checked;
+    serverSettings.maximumConnectionsNumber = document.getElementById("imap.maximumConnectionsNumber").getAttribute("value");
+    // string prefs
+    serverSettings.personalNamespace = document.getElementById("imap.personalNamespace").getAttribute("value");
+    serverSettings.publicNamespace = document.getElementById("imap.publicNamespace").getAttribute("value");
+    serverSettings.serverDirectory = document.getElementById("imap.serverDirectory").getAttribute("value");
+    serverSettings.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").getAttribute("value");
+    serverSettings.overrideNamespaces = document.getElementById("imap.overrideNamespaces").checked;
 }
 
-function getImapServer() {
-    var imapServer = new Array;
+  dump("Opening dialog..\n");
+  window.openDialog("chrome://messenger/content/am-server-advanced.xul",
+                    "_blank", "chrome,modal,titlebar", serverSettings);
 
-    imapServer.dualUseFolders = document.getElementById("imap.dualUseFolders").checked
-
-    imapServer.usingSubscription = document.getElementById("imap.usingSubscription").checked;
-
-    imapServer.maximumConnectionsNumber = document.getElementById("imap.maximumConnectionsNumber").getAttribute("value");
+  if (serverSettings.smtpServerList != oldSmtpServerKey)
+  {
+    // save the identity back to the page as a key
+    dump("Setting the smtp server to " + serverSettings.smtpServerList + "\n");
+    if (serverSettings.smtpServerList)
+      serverKeyElement.setAttribute("value", serverSettings.smtpServerList);
+    else
+      serverKeyElement.removeAttribute("value");
+  }
+  if (serverType == "imap")
+  {
+    document.getElementById("imap.dualUseFolders").checked = serverSettings.dualUseFolders;
+    document.getElementById("imap.usingSubscription").checked = serverSettings.usingSubscription;
+    document.getElementById("imap.maximumConnectionsNumber").setAttribute("value", serverSettings.maximumConnectionsNumber);
     // string prefs
-    imapServer.personalNamespace = document.getElementById("imap.personalNamespace").getAttribute("value");
-    imapServer.publicNamespace = document.getElementById("imap.publicNamespace").getAttribute("value");
-    imapServer.serverDirectory = document.getElementById("imap.serverDirectory").getAttribute("value");
-    imapServer.otherUsersNamespace = document.getElementById("imap.otherUsersNamespace").getAttribute("value");
-
-    imapServer.overrideNamespaces = document.getElementById("imap.overrideNamespaces").checked;
-    return imapServer;
-}
-
-function saveServerLocally(imapServer)
-{
-    document.getElementById("imap.dualUseFolders").checked = imapServer.dualUseFolders;
-    document.getElementById("imap.usingSubscription").checked = imapServer.usingSubscription;
-
-    document.getElementById("imap.maximumConnectionsNumber").setAttribute("value", imapServer.maximumConnectionsNumber);
-    // string prefs
-    document.getElementById("imap.personalNamespace").setAttribute("value", imapServer.personalNamespace);
-    document.getElementById("imap.publicNamespace").setAttribute("value", imapServer.publicNamespace);
-    document.getElementById("imap.serverDirectory").setAttribute("value", imapServer.serverDirectory);
-    document.getElementById("imap.otherUsersNamespace").setAttribute("value", imapServer.otherUsersNamespace);
-
-    document.getElementById("imap.overrideNamespaces").checked = imapServer.overrideNamespaces;
-
+    document.getElementById("imap.personalNamespace").setAttribute("value", serverSettings.personalNamespace);
+    document.getElementById("imap.publicNamespace").setAttribute("value", serverSettings.publicNamespace);
+    document.getElementById("imap.serverDirectory").setAttribute("value", serverSettings.serverDirectory);
+    document.getElementById("imap.otherUsersNamespace").setAttribute("value", serverSettings.otherUsersNamespace);
+    document.getElementById("imap.overrideNamespaces").checked = serverSettings.overrideNamespaces;
+  }
 }
 
 function getEnclosingContainer(startNode) {

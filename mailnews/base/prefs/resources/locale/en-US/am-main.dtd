@@ -20,4 +20,3 @@
 <!ENTITY sampleSig3.label "Sample Signature 3">
 <!-- LOCALIZATION NOTE (attachVCard.label) : do not translate "vCard" in below line -->
 <!ENTITY attachVCard.label "Attach my vCard to messages">
-<!ENTITY advancedButton.label "Advanced...">

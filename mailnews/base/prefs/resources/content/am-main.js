@@ -55,26 +55,6 @@ function onInit()
   setupSignatureItems();
 }
 
-function onAdvanced()
-{
-    dump("onAdvanced..\n");
-    var serverKeyElement = document.getElementById("identity.smtpServerKey");
-    var oldSmtpServerKey = serverKeyElement.getAttribute("value");
-    dump("selected key = " + oldSmtpServerKey + "\n");
-    var arg = { smtpServerKey: oldSmtpServerKey };
-    window.openDialog('am-identity-advanced.xul','smtpadvanced',
-                      'modal,titlebar,chrome', arg);
-    
-    if (arg.smtpServerKey != oldSmtpServerKey) {
-        // save the identity back to the page as a key
-        dump("Setting the smtp server to " + arg.smtpServerKey + "\n");
-        if (arg.smtpServerKey)
-            serverKeyElement.setAttribute("value", arg.smtpServerKey);
-        else
-            serverKeyElement.removeAttribute("value");
-    }
-}
-
 function selectFile()
 {
     var fp = Components.classes["@mozilla.org/filepicker;1"]
