@@ -2217,7 +2217,7 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
     return res;
   }
 
-  if (!isProxyEnabled) {
+  if (!isProxyEnabled || !proxyHost.get() || proxyPort <= 0) {
     *result = PL_strdup("DIRECT");
   }
   else {
