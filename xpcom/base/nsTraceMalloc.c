@@ -371,6 +371,7 @@ struct callsite {
     callsite    *kids;
 };
 
+/* NB: these counters are incremented and decremented only within tmmon. */
 static uint32   suppress_tracing = 0;
 static uint32   library_serial_generator = 0;
 static uint32   method_serial_generator = 0;
@@ -539,7 +540,10 @@ static callsite *calltree(uint32 *bp)
             }
         }
 
-        /* Not in tree, let's find our symbolic callsite info. */
+        /*
+         * Not in tree at all, or not logged to fp: let's find our symbolic
+         * callsite info.  XXX static syms are masked by nearest lower global
+         */
         info.dli_fname = info.dli_sname = NULL;
         ok = my_dladdr((void*) pc, &info);
         if (ok < 0) {
@@ -556,7 +560,6 @@ static callsite *calltree(uint32 *bp)
                                             PL_CompareStrings, PL_CompareValues,
                                             &lfdset_hashallocops, NULL);
                 if (!libraries) {
-                    printf("OINK 1\n");
                     tmstats.btmalloc_failures++;
                     return NULL;
                 }
@@ -579,7 +582,6 @@ static callsite *calltree(uint32 *bp)
                                             (void*) library_serial);
                 }
                 if (!he) {
-                    printf("OINK 2\n");
                     tmstats.btmalloc_failures++;
                     return NULL;
                 }
@@ -615,7 +617,6 @@ static callsite *calltree(uint32 *bp)
                                    (char*)pc - (char*)info.dli_fbase);
         }
         if (!method) {
-            printf("OINK 3\n");
             tmstats.btmalloc_failures++;
             return NULL;
         }
@@ -627,7 +628,6 @@ static callsite *calltree(uint32 *bp)
                                       PL_CompareStrings, PL_CompareValues,
                                       &lfdset_hashallocops, NULL);
             if (!methods) {
-                printf("OINK 4\n");
                 tmstats.btmalloc_failures++;
                 free((void*) method);
                 return NULL;
@@ -650,7 +650,6 @@ static callsite *calltree(uint32 *bp)
             he = PL_HashTableRawAdd(methods, hep, hash, method,
                                     (void*) method_serial);
             if (!he) {
-                printf("OINK 5\n");
                 tmstats.btmalloc_failures++;
                 free((void*) method);
                 return NULL;
@@ -667,7 +666,6 @@ static callsite *calltree(uint32 *bp)
         if (!site) {
             site = __libc_malloc(sizeof(callsite));
             if (!site) {
-                printf("OINK 6\n");
                 tmstats.btmalloc_failures++;
                 return NULL;
             }
@@ -828,12 +826,12 @@ __ptr_t malloc(size_t size)
     allocation *alloc;
 
     ptr = __libc_malloc(size);
-    if (tmmon)
-        PR_EnterMonitor(tmmon);
     tmstats.malloc_calls++;
     if (!ptr) {
         tmstats.malloc_failures++;
     } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
         site = backtrace(2);
         if (site)
             log_event2(logfp, 'M', site->serial, size);
@@ -846,9 +844,9 @@ __ptr_t malloc(size_t size)
                 alloc->size = size;
             }
         }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
     }
-    if (tmmon)
-        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -860,12 +858,12 @@ __ptr_t calloc(size_t count, size_t size)
     allocation *alloc;
 
     ptr = __libc_calloc(count, size);
-    if (tmmon)
-        PR_EnterMonitor(tmmon);
     tmstats.calloc_calls++;
     if (!ptr) {
         tmstats.calloc_failures++;
     } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
         site = backtrace(2);
         size *= count;
         if (site)
@@ -879,9 +877,9 @@ __ptr_t calloc(size_t count, size_t size)
                 alloc->size = size;
             }
         }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
     }
-    if (tmmon)
-        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -893,10 +891,10 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     allocation *alloc;
     callsite *site;
 
-    if (tmmon)
-        PR_EnterMonitor(tmmon);
     tmstats.realloc_calls++;
     if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
         oldsize = 0;
         if (ptr && get_allocations()) {
             hash = hash_pointer(ptr);
@@ -906,17 +904,17 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 oldsize = alloc->size;
             }
         }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
     }
-    if (tmmon)
-        PR_ExitMonitor(tmmon);
 
     ptr = __libc_realloc(ptr, size);
 
-    if (tmmon)
-        PR_EnterMonitor(tmmon);
     if (!ptr && size) {
         tmstats.realloc_failures++;
     } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
         site = backtrace(2);
         if (site)
             log_event3(logfp, 'R', site->serial, oldsize, size);
@@ -929,9 +927,9 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 alloc->size = size;
             }
         }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
     }
-    if (tmmon)
-        PR_ExitMonitor(tmmon);
     return ptr;
 }
 
@@ -941,25 +939,27 @@ void free(__ptr_t ptr)
     callsite *site;
     allocation *alloc;
 
-    if (tmmon)
-        PR_EnterMonitor(tmmon);
     tmstats.free_calls++;
     if (!ptr) {
         tmstats.null_free_calls++;
-    } else if (suppress_tracing == 0 && get_allocations()) {
-        hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
-        he = *hep;
-        if (he) {
-            site = (callsite*) he->value;
-            if (site) {
-                alloc = (allocation*) he;
-                log_event2(logfp, 'F', site->serial, alloc->size);
+    } else if (suppress_tracing == 0) {
+        if (tmmon)
+            PR_EnterMonitor(tmmon);
+        if (get_allocations()) {
+            hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
+            he = *hep;
+            if (he) {
+                site = (callsite*) he->value;
+                if (site) {
+                    alloc = (allocation*) he;
+                    log_event2(logfp, 'F', site->serial, alloc->size);
+                }
+                PL_HashTableRawRemove(allocations, hep, he);
             }
-            PL_HashTableRawRemove(allocations, hep, he);
         }
+        if (tmmon)
+            PR_ExitMonitor(tmmon);
     }
-    if (tmmon)
-        PR_ExitMonitor(tmmon);
     __libc_free(ptr);
 }
 
