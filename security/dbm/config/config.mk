@@ -39,7 +39,17 @@
 
 DEFINES += -DSTDC_HEADERS -DHAVE_STRERROR
 
-ifneq (,$(filter-out OSF1,$(OS_ARCH)))
+#
+# Most platforms have snprintf, so it's simpler to list the exceptions.
+#
+HAVE_SNPRINTF = 1
+#
+# OSF1 V4.0D doesn't have snprintf but V5.0A does.
+#
+ifeq ($(OS_ARCH)$(OS_RELEASE),OSF1V4.0D)
+HAVE_SNPRINTF =
+endif
+ifdef HAVE_SNPRINTF
 DEFINES += -DHAVE_SNPRINTF
 endif
 
