@@ -1748,8 +1748,8 @@ nsTextFrame::SetSelected(nsSelectionStruct *aSelStruct)
   if (!aSelStruct)
     return NS_ERROR_NULL_POINTER;
   if (aSelStruct->mType & nsSelectionStruct::SELON){
-    aSelStruct->mEndFrame = PR_MIN(aSelStruct->mEndFrame, PRUint32(mContentLength));
-    aSelStruct->mStartFrame= PR_MIN(aSelStruct->mStartFrame, PRUint32(mContentLength));
+    aSelStruct->mEndFrame = PR_MIN(aSelStruct->mEndFrame, (PRUint32) mContentLength);
+    aSelStruct->mStartFrame= PR_MIN(aSelStruct->mStartFrame, (PRUint32) mContentLength);
 
     if (aSelStruct->mType & nsSelectionStruct::SELTOEND)
       aSelStruct->mEndFrame = mContentLength;
