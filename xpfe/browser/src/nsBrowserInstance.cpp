@@ -136,11 +136,9 @@ static PRLogModuleInfo* gTimerLog = nsnull;
 #endif /* DEBUG || FORCE_PR_LOG */
 #endif
 
-// if DEBUG or MOZ_PERF_METRICS are defined, enable the PageCycler
-#ifdef DEBUG
-#define ENABLE_PAGE_CYCLER
-#endif
-#ifdef MOZ_PERF_METRICS
+// if DEBUG, NS_BUILD_REFCNT_LOGGING, or MOZ_PERF_METRICS is defined,
+// enable the PageCycler
+#if defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING) || defined(MOZ_PERF_METRICS)
 #define ENABLE_PAGE_CYCLER
 #endif
 
