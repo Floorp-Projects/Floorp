@@ -515,8 +515,6 @@ function Startup()
     }
   }
 
-  //initConsoleListener();
-
   // XXXjag work-around for bug 113076
   // there's another bug where we throw an exception when getting
   // sessionHistory if it is null, which I'm exploiting here to
