@@ -710,8 +710,18 @@ RDFElementImpl::GetTagName(nsString& aTagName)
 NS_IMETHODIMP
 RDFElementImpl::GetAttribute(const nsString& aName, nsString& aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    PRInt32 nameSpaceID;
+    nsIAtom* nameAtom;
+
+    if (NS_FAILED(rv = ParseAttributeString(aName, nameAtom, nameSpaceID))) {
+        NS_WARNING("unable to parse attribute name");
+        return rv;
+    }
+
+    GetAttribute(nameSpaceID, nameAtom, aReturn);
+    NS_RELEASE(nameAtom);
+    return NS_OK;
 }
 
 
