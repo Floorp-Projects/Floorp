@@ -43,4 +43,11 @@
 #define ID_STR_HMMDIR    10001
 #define ID_STR_NOCDIR    10002
 
+// OS2TODO HCT temporary bug fix
+#ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
+#define FCF_CLOSEBUTTON 0x04000000L
+#endif
+
+
+
 #endif

@@ -15,8 +15,9 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ * Contributor(s):  
+ * Pierre Phaneuf <pp@ludusdesign.com>
+ * Henry Sobotka <sobotka@axess.com> Jan. 2000 review and update
  */
 
 //#define PROFILE_GSTATE // be noisy about graphicsstate-usage
@@ -180,10 +181,10 @@ nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
    if( !aInstancePtr)
       return NS_ERROR_NULL_POINTER;
 
-   if( aIID.Equals( NS_GET_IID(nsIRenderingContext)))
+   if( aIID.Equals( nsIRenderingContext::GetIID()))
       *aInstancePtr = (void *) (nsIRenderingContext*) this;
-   else if( aIID.Equals( ((nsISupports*)(nsIRenderingContext*)this)->GetIID()))
-      *aInstancePtr = (void *) (nsISupports*)(nsIRenderingContext*)this;
+   else if( aIID.Equals( ((nsIRenderingContext*)this)->GetIID()))
+      *aInstancePtr = (void *) (nsIRenderingContext*)this;
 
    if( !*aInstancePtr)
       return NS_NOINTERFACE;
@@ -254,6 +255,9 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
 
    // Create & remember an on-screen surface
    nsWindowSurface *surf = new nsWindowSurface;
+   if (!surf)
+     return NS_ERROR_OUT_OF_MEMORY;
+
    surf->Init(aWindow);
 
    mSurface = surf;
@@ -368,6 +372,8 @@ nsresult nsRenderingContextOS2::CreateDrawingSurface( nsRect *aBounds,
    nsresult rc = NS_ERROR_FAILURE;
 
    nsOffscreenSurface *surf = new nsOffscreenSurface;
+   if (!surf)
+     return NS_ERROR_OUT_OF_MEMORY;
 
    rc = surf->Init( mFrontSurface->mPS, aBounds->width, aBounds->height);
 
@@ -674,6 +680,8 @@ nsresult nsRenderingContextOS2::GetClipRegion( nsIRegion **aRegion)
    *aRegion = 0;
 
    nsRegionOS2 *pRegion = new nsRegionOS2;
+   if (!pRegion)
+     return NS_ERROR_OUT_OF_MEMORY;
    NS_ADDREF(pRegion);
 
    // Get current clip region
@@ -695,6 +703,19 @@ nsresult nsRenderingContextOS2::GetClipRegion( nsIRegion **aRegion)
    *aRegion = pRegion;
 
    return NS_OK;
+}
+
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+nsresult nsRenderingContextOS2::CopyClipRegion(nsIRegion &aRegion)
+{
+  HRGN hr = GpiCopyClipRegion(mSurface->mPS);
+
+  if (hr == HRGN_ERROR)
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
 }
 
 // Setters & getters -------------------------------------------------------
@@ -772,10 +793,15 @@ nsresult nsRenderingContextOS2::Scale( float aSx, float aSy)
 
 nsresult nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTransform)
 {
+/* JSK0126 - Assign mTMatrix into aTransform, since aTransform is not a valid object yet */
+   aTransform = &mTMatrix;
+
+   /*
    NS_PRECONDITION(aTransform,"Null transform ptr");
    if( !aTransform)
       return NS_ERROR_NULL_POINTER;
    aTransform->SetMatrix( &mTMatrix);
+   */
    return NS_OK;
 }
 
@@ -942,16 +968,18 @@ nsresult nsRenderingContextOS2::FillRect( nscoord aX, nscoord aY, nscoord aWidth
 NS_IMETHODIMP 
 nsRenderingContextOS2 :: InvertRect(const nsRect& aRect)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextOS2::InvertRect");
-
-  return NS_OK;
+  return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 NS_IMETHODIMP 
 nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextOS2::InvertRect");
-
+  mTMatrix.TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  ConditionRect(aX, aY, aWidth, aHeight);
+  nsRect tr(aX, aY, aWidth, aHeight);
+  //  GpiSetMix(mSurface->mPS, FM_XOR);
+  PMDrawRect(tr, FALSE);
+  //  GpiSetMix(mSurface->mPS, FM_DEFAULT);
   return NS_OK;
 }
 
@@ -1136,7 +1164,7 @@ nsresult nsRenderingContextOS2::DrawString( const char *aString,
       GpiCharStringPos( mSurface->mPS, nsnull,
                         aSpacing == nsnull ? 0 : CHS_VECTOR,
                         thislen, (PCH)aString,
-                        aSpacing == nsnull ? nsnull : (const long int *) dx0);
+                        aSpacing == nsnull ? nsnull : (PLONG) dx0);
       aLength -= thislen;
       aString += thislen;
       dx0 += thislen;
@@ -1352,6 +1380,13 @@ nsresult nsRenderingContextOS2::CopyOffScreenBits(
    return NS_OK;
 }
 
+nsresult nsRenderingContextOS2::RetrieveCurrentNativeGraphicData(PRUint32* ngd)
+{
+  if(ngd != nsnull)
+    *ngd = (PRUint32)mDC;
+  return NS_OK;
+}
+
 // Clip region helper functions --------------------------------------------
 
 /* hrgnCombine becomes the clip region.  Any current clip region is       */
@@ -1406,4 +1441,22 @@ HRGN GpiCopyClipRegion( HPS hps)
    }
 
    return hrgn;
+}
+
+// Keep coordinate within 32-bit limits
+NS_IMETHODIMP nsRenderingContextOS2::ConditionRect(nscoord &x, nscoord &y, nscoord &w, nscoord &h)
+{
+  if (y < -134217728)
+    y = -134217728;
+
+  if (y + h > 134217727)
+    h  = 134217727 - y;
+
+  if (x < -134217728)
+    x = -134217728;
+
+  if (x + w > 134217727)
+    w  = 134217727 - x;
+
+  return NS_OK;
 }

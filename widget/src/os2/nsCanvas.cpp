@@ -15,7 +15,7 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Henry Sobotka <sobotka@axess.com> 01/2000 review and update
  *
  */
 
@@ -35,7 +35,7 @@ void nsCanvas::RealDoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
                              nsIDeviceContext *aContext, nsIAppShell *aAppShell,
                              nsWidgetInitData *aInitData, HWND hwndO)
 {
-   if( aInitData && aInitData->mBorderStyle == eBorderStyle_BorderlessTopLevel)
+   if( aInitData && aInitData->mBorderStyle == eBorderStyle_none)
    {
       // Untested hackery for (eg.) drop-downs on gfx-drawn comboboxes
       //
@@ -65,6 +65,13 @@ void nsCanvas::RealDoCreate( HWND hwndP, nsWindow *aParent, const nsRect &aRect,
       nsWindow::RealDoCreate( hwndP, aParent, aRect, aHandleEventFunction,
                               aContext, aAppShell, aInitData, hwndO);
    }
+#if DEBUG
+   printf("\nIn nsCanvas::RealDoCreate aParent = 0x%lx\n", &aParent);
+   printf("   hwndP = %lu\n", hwndP);
+   printf("   hwnd0 = %lu\n", hwndO);
+   printf("   aContext = 0x%lx\n", &aContext);
+   printf("   aAppShell = 0x%lx\n", &aAppShell);
+#endif
 }
 
 // Need to override this because the coords passed in are in OS/2 space but

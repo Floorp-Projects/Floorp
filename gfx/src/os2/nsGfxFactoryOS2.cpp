@@ -79,7 +79,7 @@ nsGfxFactoryOS2::~nsGfxFactoryOS2()
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,NS_GET_IID(nsIFactory))
+NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,nsIFactory::GetIID())
 
 nsresult nsGfxFactoryOS2::CreateInstance( nsISupports *aOuter,
                                           const nsIID &aIID,
@@ -144,7 +144,7 @@ extern "C" NS_GFXNONXP nsresult NSGetFactory(nsISupports* servMgr,
    if( !*aFactory)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return (*aFactory)->QueryInterface( NS_GET_IID(nsIFactory), (void**) aFactory);
+  return (*aFactory)->QueryInterface( nsIFactory::GetIID(), (void**) aFactory);
 }
 
 // Module-level data ---------------------------------------------------------
@@ -164,7 +164,7 @@ void nsGfxModuleData::Init()
    char   buffer[CCHMAXPATH];
    APIRET rc;
 
-   rc = DosLoadModule( buffer, CCHMAXPATH, "GFXOS2", &hModResources);
+   rc = DosLoadModule( buffer, CCHMAXPATH, "GFX_OS2", &hModResources);
 
    if( rc)
    {

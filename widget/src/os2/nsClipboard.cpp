@@ -97,7 +97,7 @@ void nsClipboard::GetClipboardData( nsString *aFlavour)
       // needs to be able to delete [] it.
       PRUint8 *pMozData = new PRUint8 [ cbData ];
       memcpy( pMozData, pData, cbData);
-      mTransferable->SetTransferData( aFlavour, pMozData, cbData);
+      mTransferable->SetTransferData((const char*)aFlavour, pMozData, cbData);
    }
 }
 
@@ -108,7 +108,7 @@ void nsClipboard::SetClipboardData( nsString *aFlavour)
    PRUint32  cbMozData = 0, cbData = 0;
 
    // Get the data from the transferable
-   mTransferable->GetTransferData( aFlavour, &pMozData, &cbMozData);
+   mTransferable->GetTransferData((const char*) aFlavour, &pMozData, &cbMozData);
 
    // Figure out how much memory we need to store the native version
    FormatRecord *pRecord;

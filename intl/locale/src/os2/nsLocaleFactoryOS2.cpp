@@ -15,19 +15,47 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Henry Sobotka <sobotka@axess.com> 01/2000 review and update
  *
  */
 
 #include "nscore.h"
+#include "nsISupports.h"
+#include "nsIFactory.h"
+#include "nsCOMPtr.h"
+#include "nsCollation.h"
+#include "nsCollationOS2.h"
+#include "nsIScriptableDateFormat.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsDateTimeFormatOS2.h"
+#include "nsIOS2Locale.h"
+#include "nsLocaleOS2.h"
 #include "nsLocaleFactoryOS2.h"
+#include "nsLocaleCID.h"
+
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
+NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
+NS_DEFINE_IID(kLocaleFactoryOS2CID, NS_OS2LOCALEFACTORY_CID);
+NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                        
+NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
+NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
 
 // ctor/dtor
 nsLocaleFactoryOS2::nsLocaleFactoryOS2() : mSysLocale(nsnull),
                                            mAppLocale(nsnull)
 {
    // don't need to init the ref-count because XP nsLocaleFactory does that.
+  // ??? Not sure the above comment is still valid 
+  NS_INIT_REFCNT();
 }
+
+nsLocaleFactoryOS2::nsLocaleFactoryOS2(const nsCID &aClass)   
+{   
+  NS_INIT_ISUPPORTS();
+  mClassID = aClass;
+}   
 
 nsLocaleFactoryOS2::~nsLocaleFactoryOS2()
 {
@@ -45,7 +73,7 @@ nsresult nsLocaleFactoryOS2::NewLocale( nsString  **aCatList,
       return NS_ERROR_NULL_POINTER;
 
    *aLocale = nsnull;
-   nsLocaleOS2 *aLoc = new nsLocaleOS2;
+   nsOS2Locale *aLoc = new nsOS2Locale;
    if(nsnull == aLoc)
        return NS_ERROR_OUT_OF_MEMORY;
 
@@ -56,7 +84,7 @@ nsresult nsLocaleFactoryOS2::NewLocale( nsString  **aCatList,
    else
    {
       NS_ADDREF(aLoc);
-      *aLocale = aLoc;
+      *aLocale = (nsILocale*)aLoc;
    }
 
    return rc;
@@ -69,7 +97,7 @@ nsresult nsLocaleFactoryOS2::NewLocale( const nsString *aName,
       return NS_ERROR_NULL_POINTER;
 
    *aLocale = nsnull;
-   nsLocaleOS2 *aLoc = new nsLocaleOS2;
+   nsOS2Locale *aLoc = new nsOS2Locale;
    if(nsnull == aLoc)
        return NS_ERROR_OUT_OF_MEMORY;
 
@@ -80,7 +108,7 @@ nsresult nsLocaleFactoryOS2::NewLocale( const nsString *aName,
    else
    {
       NS_ADDREF(aLoc);
-      *aLocale = aLoc;
+      *aLocale = (nsILocale*)aLoc;
    }
 
    return rc;
@@ -111,3 +139,93 @@ nsresult nsLocaleFactoryOS2::GetApplicationLocale( nsILocale **aAppLocale)
 
    return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsLocaleFactoryOS2::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
+		void** aResult)
+{
+  if (aResult == NULL) {   
+    return NS_ERROR_NULL_POINTER;   
+  }   
+
+  // Always NULL result, in case of failure   
+  *aResult = NULL;   
+  nsISupports *inst = NULL;
+
+  if (aIID.Equals(kISupportsIID)) {
+    *aResult = (void *)(nsISupports*)this;   
+    NS_ADDREF_THIS(); // Increase reference count for caller   
+  }
+  else if (aIID.Equals(kIFactoryIID)) {   
+    *aResult = (void *)(nsIFactory*)this;   
+    NS_ADDREF_THIS(); // Increase reference count for caller   
+  }
+  else if (aIID.Equals(kIOS2LocaleIID)) {
+    nsOS2Locale *localeImpl = new nsOS2Locale();
+    if(localeImpl)
+      localeImpl->AddRef();
+    *aResult = (void*)localeImpl;
+  }
+  else if (aIID.Equals(kICollationFactoryIID)) {
+     NS_NEWXPCOM(inst, nsCollationFactory);
+  }
+  else if (aIID.Equals(kICollationIID)) {
+     NS_NEWXPCOM(inst, nsCollationOS2);
+  }
+  else if (aIID.Equals(kIDateTimeFormatIID)) {
+     NS_NEWXPCOM(inst, nsDateTimeFormatOS2);
+  }
+  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+     inst = NEW_SCRIPTABLE_DATEFORMAT();
+  }
+  else if (mClassID.Equals(kScriptableDateFormatCID)) {
+     inst = NEW_SCRIPTABLE_DATEFORMAT();
+  }
+  if (*aResult == NULL && !inst)
+    return NS_NOINTERFACE;   
+
+  nsresult ret = NS_OK;
+
+  if (inst) {
+    NS_ADDREF(inst);
+    ret = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+  }
+  return ret;
+}
+
+nsresult nsLocaleFactoryOS2::QueryInterface(const nsIID &aIID,   
+					    void **aResult)   
+{   
+  if (aResult == NULL) {   
+    return NS_ERROR_NULL_POINTER;   
+  }   
+
+  // Always NULL result, in case of failure   
+  *aResult = NULL;   
+
+  if (aIID.Equals(kISupportsIID)) {   
+    *aResult = (void *)(nsISupports*)this;   
+  }
+  else if (aIID.Equals(kIFactoryIID)) {   
+    *aResult = (void *)(nsIFactory*)this;   
+  }   
+
+  if (*aResult == NULL) {   
+    return NS_NOINTERFACE;   
+  }   
+
+  NS_ADDREF_THIS(); // Increase reference count for caller   
+  return NS_OK;   
+}   
+
+
+NS_IMETHODIMP
+nsLocaleFactoryOS2::LockFactory(PRBool	aBool)
+{
+	return NS_OK;
+}
+
+NS_IMPL_ADDREF(nsLocaleFactoryOS2);
+NS_IMPL_RELEASE(nsLocaleFactoryOS2);

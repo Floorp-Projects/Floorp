@@ -22,9 +22,10 @@
 #ifndef _nscollationos2_h_
 #define _nscollationos2_h_
 
+#include <unidef.h>
 #include "nsICollation.h"
 
-class nsILocaleOS2;
+class nsIOS2Locale;
 
 class nsCollationOS2 : public nsICollation
 {

@@ -68,13 +68,14 @@ class nsFontMetricsOS2 : public nsIFontMetrics
 
    NS_IMETHOD  GetFont( const nsFont *&aFont);
    NS_IMETHOD  GetFontHandle( nsFontHandle &aHandle);
+//   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
 
    // for drawing text
    PRUint32 GetDevMaxAscender() const { return mDevMaxAscent; }
    nscoord  GetSpaceWidth( nsIRenderingContext *aRContext);
  
  protected:
-   void RealizeFont();
+   nsresult RealizeFont();
  
    nsFont  *mFont;
 

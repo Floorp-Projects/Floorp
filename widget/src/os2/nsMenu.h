@@ -41,14 +41,21 @@ class nsMenu : public nsIMenu, public nsDynamicMenu
    NS_IMETHOD GetParent( nsISupports *&aParent);
    NS_IMETHOD GetLabel( nsString &aText);
    NS_IMETHOD SetLabel( const nsString &aText);
+   NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
    NS_IMETHOD SetEnabled(PRBool aIsEnabled);
+   NS_IMETHOD GetAccessKey(nsString &aText);
+   NS_IMETHOD SetAccessKey(const nsString &aText);
+   NS_IMETHOD IsHelpMenu(PRBool* aIsHelp);
 
+   NS_IMETHOD SetNativeData(void* aData);
+  
    // Common methods
    DECL_DYNAMIC_MENU_METHODS
 
  protected:
    nsString         mLabel;
    nsISupports     *mParent;
+   nsString     mAccessKey;
 };
 
 #endif

@@ -52,8 +52,9 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       case eColor_TextSelectBackground:   idx = SYSCLR_HILITEBACKGROUND; break;
       case eColor_TextSelectForeground:   idx = SYSCLR_HILITEFOREGROUND; break;
 
-      default: 
-         NS_ASSERTION(0, "Bad system colour");
+   default: 
+         printf("nsLookAndFeel::GetColor received bad aID = %d", aID);
+         NS_ASSERTION( 0, "Bad system colour");
          break;
    }
 
@@ -71,6 +72,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
    long svalue = 0;
    aMetric = 0;
+   ULONG ulPels = 0;
 
    switch( aID)
    {
@@ -135,7 +137,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // got rounded down to a 1-pixel caret for drawing, because
         // of errors in conversion to twips and back.
         
-        ULONG ulPels = WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
+        ulPels = WinQuerySysValue( HWND_DESKTOP, SV_CYBORDER);
 
         // With luck, either:
         //   * these metrics will go into nsILookAndFeel, or
@@ -148,9 +150,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 200;
         break;
 
-      default:
-         NS_ASSERTION( 0, "Bad metric");
-         break;
+   default:
+     NS_ASSERTION( 0, "Bad metric");
+     break;
    }
 
    if( svalue != 0)

@@ -58,14 +58,14 @@ nsFontMetricsOS2::~nsFontMetricsOS2()
    delete mFontHandle;
 }
 
-NS_IMPL_ISUPPORTS( nsFontMetricsOS2, NS_GET_IID(nsIFontMetrics))
+NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
 
 nsresult nsFontMetricsOS2::Init( const nsFont &aFont, nsIDeviceContext *aContext)
 {
    mFont = new nsFont( aFont);
    mContext = (nsDeviceContextOS2 *) aContext;
-   RealizeFont();
-   return NS_OK;
+   nsresult rv = RealizeFont();
+   return rv;
 }
 
 nsresult nsFontMetricsOS2::Destroy()
@@ -165,9 +165,11 @@ static PFONTMETRICS getMetrics( long &lFonts, PCSZ facename, HPS hps)
    return pMetrics;
 }
 
-void nsFontMetricsOS2::RealizeFont()
+nsresult nsFontMetricsOS2::RealizeFont()
 {
    nsFontHandleOS2 *fh = new nsFontHandleOS2;
+   if (!fh)
+     return NS_ERROR_OUT_OF_MEMORY;
 
    // 1) Find family name
    char szFamily[ FACESIZE] = "";
@@ -339,6 +341,8 @@ void nsFontMetricsOS2::RealizeFont()
    if( !GpiDeleteSetId( hps, 1))
       PMERROR( "GpiDeleteSetID (FM)");
    mContext->ReleaseRepresentativePS( hps);
+
+   return NS_OK;
 }
 
 nscoord nsFontMetricsOS2::GetSpaceWidth( nsIRenderingContext *aRContext)
@@ -427,3 +431,4 @@ NS_IMETHODIMP nsFontMetricsOS2::GetFontHandle( nsFontHandle &aHandle)
    aHandle = mFontHandle;
    return NS_OK;
 }
+

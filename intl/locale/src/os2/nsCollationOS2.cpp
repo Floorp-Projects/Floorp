@@ -26,9 +26,9 @@
 #include "nscore.h"
 #include "nsCollationOS2.h"
 
-#include "nsILocaleOS2.h"
+#include "nsIOS2Locale.h"
 
-static NS_DEFINE_IID(kILocaleOS2IID, NS_ILOCALEOS2_IID);
+static NS_DEFINE_IID(kILocaleOS2IID, NS_IOS2LOCALE_IID);
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 
@@ -48,7 +48,7 @@ nsCollationOS2::~nsCollationOS2()
 
 nsresult nsCollationOS2::Initialize( nsILocale *aLocale)
 {
-   nsILocaleOS2 *mOS2Locale = nsnull;
+   nsIOS2Locale *mOS2Locale = nsnull;
    nsresult rc = aLocale->QueryInterface( kILocaleOS2IID,
                                           (void**) &mOS2Locale);
    if( NS_SUCCEEDED(rc))
@@ -91,7 +91,7 @@ nsresult nsCollationOS2::CreateRawSortKey( const nsCollationStrength aStrength,
       return NS_ERROR_NULL_POINTER;
 
    UniStrxfrm( mLocaleObject, (UniChar*) aKey,
-               aStringIn.GetUnicode(), *aOutLen / 2);
+               aStringIn.GetUnicode(), *aOutLen / 2 + 1);
 
    // XXX hmm
    if( aStrength & kCollationCaseInsensitiveAscii)
@@ -114,7 +114,7 @@ nsresult nsCollationOS2::CreateRawSortKey( const nsCollationStrength aStrength,
                        (const UniChar *) aStringIn.GetUnicode(),
                        &iSize, xformed, &oSize);
       UniFreeTransformObject( xform_object);
-      UniStrxfrm( mLocaleObject, (UniChar*) aKey, xformed, *aOutLen / 2);
+      UniStrxfrm( mLocaleObject, (UniChar*) aKey, xformed, *aOutLen / 2 + 1);
       delete [] xformed;
 #else
       UniStrlwr( (UniChar*) aKey);

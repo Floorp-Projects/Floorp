@@ -58,9 +58,9 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
      NS_ADDREF_THIS();
      return NS_OK;
   }
-  if( aIID.Equals(((nsISupports*)(nsIMenuItem*)this)->GetIID()))
+  if( aIID.Equals(((nsIMenuItem*)this)->GetIID()))
   {
-     *aInstancePtr = (void*) ((nsISupports*)((nsIMenuItem*)this));
+     *aInstancePtr = (void*) ((nsIMenuItem*)this);
      NS_ADDREF_THIS();
      return NS_OK;
   }
@@ -375,4 +375,48 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenuItem::MenuDestruct( const nsMenuEvent &aMenuEvent)
 {
    return nsEventStatus_eIgnore;
+}
+
+nsresult nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
+{
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetShortcutChar(const nsString &aText)
+{
+  mKeyEquivalent = aText;
+  return NS_OK;
+}
+
+nsresult nsMenuItem::GetShortcutChar(nsString &aText)
+{
+  aText = mKeyEquivalent;
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetModifiers(PRUint8 aModifiers)
+{
+  mModifiers = aModifiers;
+  return NS_OK;
+}
+
+nsresult nsMenuItem::GetModifiers(PRUint8 * aModifiers)
+{
+  *aModifiers = mModifiers; 
+  return NS_OK;
+}
+
+nsresult nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+{
+  return NS_OK;
+}
+
+nsresult nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+{
+  return NS_OK;
 }

@@ -43,6 +43,7 @@
 
 #include <stdlib.h>
 #include <ctype.h>
+#include <unikbd.h>
 
 // HWNDs are mapped to nsWindow objects using a custom presentation parameter,
 // which is registered in nsModule -- thanks to Cindy Ross for explaining how
@@ -276,10 +277,11 @@ void nsWindow::RealDoCreate( HWND              hwndP,
          printf( "Couldn't find DC instance for nsWindow\n");
 #endif
    }
-
-   WinSetPresParam( mWnd, PP_FONTNAMESIZE,
-                    strlen( gModuleData.pszFontNameSize) + 1,
-                    gModuleData.pszFontNameSize);
+   /* OS2TODO - Why is this NULL?  Had to add in checking to avoid trap. */
+   if (gModuleData.pszFontNameSize)
+      WinSetPresParam( mWnd, PP_FONTNAMESIZE,
+                       strlen( gModuleData.pszFontNameSize) + 1,
+                       gModuleData.pszFontNameSize);
 
    Resize( aRect.x, aRect.y, aRect.width, aRect.height, PR_FALSE);
 
@@ -482,6 +484,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
          result = OnActivateMenu( HWNDFROMMP(mp2), FALSE);
          break;
 
+#if 0  // Tooltips appear to be gone
       case WMU_SHOW_TOOLTIP:
       {
          nsTooltipEvent event;
@@ -495,7 +498,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
       case WMU_HIDE_TOOLTIP:
          result = DispatchStandardEvent( NS_HIDE_TOOLTIP);
          break;
-
+#endif
       case WM_CONTROL: // remember this is resent to the orginator...
          result = OnControl( mp1, mp2);
          break;
@@ -879,7 +882,11 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    if( mHaveDeadKey && (fsFlags & KC_COMPOSITE) && unirc == ULS_SUCCESS)
    {
       unirc = UniTranslateDeadkey( gModuleData.hKeyboard,
+#ifdef XP_OS2_VACPP
+                                   mDeadKey,
+#else
                                    &mDeadKey,
+#endif
                                    (UniChar) event.charCode,
                                    (UniChar*) &event.charCode,
                                    &mDeadKey);
@@ -1195,21 +1202,21 @@ nsresult nsWindow::Show( PRBool bState)
 }
 
 // Move this component (WinSetWindowPos() appears not to require a msgq)
-nsresult nsWindow::Move( PRUint32 aX, PRUint32 aY)
+nsresult nsWindow::Move( PRInt32 aX, PRInt32 aY)
 {
    Resize( aX, aY, mBounds.width, mBounds.height, PR_FALSE);
    return NS_OK;
 }
 
 // Resize this component: need to keep top-left corner in the same place
-nsresult nsWindow::Resize( PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+nsresult nsWindow::Resize( PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
    Resize( mBounds.x, mBounds.y, aWidth, aHeight, aRepaint);
    return NS_OK;
 }
 
 // Resize this component
-nsresult nsWindow::Resize( PRUint32 aX, PRUint32 aY, PRUint32 w, PRUint32 h,
+nsresult nsWindow::Resize( PRInt32 aX, PRInt32 aY, PRInt32 w, PRInt32 h,
                            PRBool aRepaint)
 {
    if( mWnd)
@@ -1788,46 +1795,48 @@ nsresult nsWindow::RemoveTooltips()
 
 #define DispatchDragDropEvent(msg) DispatchStandardEvent(msg,NS_DRAGDROP_EVENT)
 
+// XXXX KNOCKED OUT UNTIL nsDragService.cpp is fixed
+
 PRBool nsWindow::OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr)
 {
    // Drawing drop feedback should be fun, have to get DrgGetPS() involved
    // somehow.
 
    // Tell drag service about the drag
-   gModuleData.dragService->InitDragOver( (PDRAGINFO) mp1);
+  //   gModuleData.dragService->InitDragOver( (PDRAGINFO) mp1);
 
    // Invoke gecko for enter if appropriate
-   if( !mDragInside)
-   {
-      DispatchDragDropEvent( NS_DRAGDROP_ENTER);
-      mDragInside = TRUE;
-   }
+  //   if( !mDragInside)
+  //   {
+  //      DispatchDragDropEvent( NS_DRAGDROP_ENTER);
+  //      mDragInside = TRUE;
+  //   }
 
    // Invoke for 'over' to set candrop flag
-   DispatchDragDropEvent( NS_DRAGDROP_OVER);
+  //   DispatchDragDropEvent( NS_DRAGDROP_OVER);
 
    // Get action back from drag service
-   mr = gModuleData.dragService->TermDragOver();
+  //   mr = gModuleData.dragService->TermDragOver();
 
    return PR_TRUE;
 }
 
 PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
 {
-   gModuleData.dragService->InitDragExit( (PDRAGINFO) mp1);
-   DispatchDragDropEvent( NS_DRAGDROP_EXIT);
-   gModuleData.dragService->TermDragExit();
+  //   gModuleData.dragService->InitDragExit( (PDRAGINFO) mp1);
+  //   DispatchDragDropEvent( NS_DRAGDROP_EXIT);
+  //   gModuleData.dragService->TermDragExit();
 
-   mDragInside = FALSE;
+  //   mDragInside = FALSE;
 
    return PR_TRUE;
 }
 
 PRBool nsWindow::OnDrop( MPARAM mp1, MPARAM mp2)
 {
-   gModuleData.dragService->InitDrop( (PDRAGINFO) mp1);
-   DispatchDragDropEvent( NS_DRAGDROP_DROP);
-   gModuleData.dragService->TermDrop();
+  //   gModuleData.dragService->InitDrop( (PDRAGINFO) mp1);
+  //   DispatchDragDropEvent( NS_DRAGDROP_DROP);
+  //   gModuleData.dragService->TermDrop();
 
    mDragInside = FALSE;
 
@@ -2044,4 +2053,12 @@ PRUint32 WMChar2KeyCode( MPARAM mp1, MPARAM mp2)
    }
 
    return rc;
+}
+
+
+// XXXX STUB FIX Find out what this is supposed to do
+NS_IMETHODIMP
+ nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
+{
+  return NS_OK;
 }

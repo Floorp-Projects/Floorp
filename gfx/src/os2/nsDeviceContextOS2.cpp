@@ -197,6 +197,9 @@ nsresult nsDeviceContextOS2::GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
    nsDeviceContextOS2 *newCX = new nsDeviceContextOS2;
    nsDeviceContextSpecOS2 *spec = (nsDeviceContextSpecOS2*) aDevice;
 
+   if (!newCX)
+     return NS_ERROR_OUT_OF_MEMORY;
+
    aContext = newCX;
    NS_ADDREF(aContext);
 
@@ -214,9 +217,13 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
    NS_ASSERTION( mDC, "CreateRenderingContext for non-print DC");
 
    nsIRenderingContext *pContext = new nsRenderingContextOS2;
+   if (!pContext)
+     return NS_ERROR_OUT_OF_MEMORY;
    NS_ADDREF(pContext);
 
    nsPrintSurface *surf = new nsPrintSurface;
+   if (!surf)
+     return NS_ERROR_OUT_OF_MEMORY;
    NS_ADDREF(surf);
 
    surf->Init( mPS, mWidth, mHeight);

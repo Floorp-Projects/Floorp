@@ -23,6 +23,8 @@
 
 #include "nsFrameWindow.h"
 
+static PRBool haveHiddenWindow = PR_FALSE;
+
 nsFrameWindow::nsFrameWindow() : nsCanvas()
 {
    hwndFrame = 0;
@@ -44,9 +46,19 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    NS_ASSERTION( hwndP == HWND_DESKTOP && aParent == nsnull,
                  "Attempt to create non-top-level frame");
 
+#if DEBUG
+   printf("\nIn nsFrameWindow::RealDoCreate:\n");
+   printf("   hwndP = %lu\n", hwndP);
+   printf("   aParent = 0x%lx\n", &aParent);
+   printf("   aRect = %ld, %ld, %ld, %ld\n", aRect.x, aRect.y, aRect.height, aRect.width);
+#endif
+
    // Create the frame window.
    FRAMECDATA fcd = { sizeof( FRAMECDATA), 0, 0, 0 };
-   fcd.flCreateFlags = GetFCFlags();
+
+   // Set flags only if not first hidden window created by nsAppShellService
+   if (haveHiddenWindow)
+     fcd.flCreateFlags = GetFCFlags();
 
    // Assume frames are toplevel.  Breaks if anyone tries to do MDI, which
    // is an extra bonus feature :-)
@@ -58,6 +70,9 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                 HWND_TOP,
                                 0,                     // ID
                                 &fcd, 0);
+
+   if (hwndFrame && !haveHiddenWindow)
+     haveHiddenWindow = PR_TRUE;
 
    // This is a bit weird; without an icon, we get WM_PAINT messages
    // when minimized.  They don't stop, giving maxed cpu.  Go figure.
