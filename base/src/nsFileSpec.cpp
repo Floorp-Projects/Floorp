@@ -461,7 +461,7 @@ nsFileURL::nsFileURL(const char* inString, PRBool inCreateDirs)
     // inString is escaped. We want to make an nsFilePath, which requires
     // an unescaped string.
     nsSimpleCharString unescapedPath(inString + kFileURLPrefixLength);
-    unescapedPath.Unescape()
+    unescapedPath.Unescape();
     nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
@@ -481,7 +481,7 @@ nsFileURL::nsFileURL(const nsString& inString, PRBool inCreateDirs)
     // inString is escaped. We want to make an nsFilePath, which requires
     // an unescaped string.
     nsSimpleCharString unescapedPath(aCString + kFileURLPrefixLength);
-    unescapedPath.Unescape()
+    unescapedPath.Unescape();
     nsFilePath path(unescapedPath, inCreateDirs);
     *this = path;
 } // nsFileURL::nsFileURL
