@@ -483,6 +483,19 @@ nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
 OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight, 
 								PRInt32 aDepth, CTabHandle aColorTable, 
 								PixMap& ioPixMap, Handle& ioBitsHandle)
+{								
+    CreatePixMapInternal( aWidth, aHeight, aDepth, aColorTable, 
+								          ioPixMap, ioBitsHandle, PR_FALSE);
+}
+
+
+/** -----------------------------------------------------------------
+ *	Create a PixMap, filling in ioPixMap
+ *  Call the CreatePixMap wrapper instead.
+ */
+OSErr nsImageMac::CreatePixMapInternal(	PRInt32 aWidth, PRInt32 aHeight, 
+								PRInt32 aDepth, CTabHandle aColorTable, 
+								PixMap& ioPixMap, Handle& ioBitsHandle, PRBool aAllow2Bytes)
 {
 	PRInt16 bufferdepth;
 	OSErr   err = noErr;
@@ -564,8 +577,8 @@ OSErr nsImageMac::CreatePixMap(	PRInt32 aWidth, PRInt32 aHeight,
   if (ioPixMap.cmpCount)
   {
     PRInt32   imageSize;
-    PRInt32   rowBytes = CalculateRowBytes(aWidth, ioPixMap.pixelSize);
-    
+    PRInt32   rowBytes = CalculateRowBytesInternal(aWidth, ioPixMap.pixelSize, aAllow2Bytes);
+
     if (rowBytes >= 0x4000)
     {
       NS_ASSERTION(0, "PixMap too big for QuickDraw");
@@ -660,22 +673,38 @@ nsImageMac::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
 
 /** ---------------------------------------------------
  *  Calculate rowBytes, making sure that it comes out as
- *  a multiple of 4. ( 32 / 4 == 8)
+ *  a multiple of 4. ( 32 / 4 == 8). If you pass true for 
+ *  aAllow2Bytes then, for small images (aWidth * aDepth =< 24), you 
+ *  get a  result which can be a multiple of 2 instead. 
+ *  Some parts of the toolbox require this, notably the native icon creation 
+ *  code. This is worth experimenting with if you deal with masks of 16x16 icons
+ *  which are frequently 1 bit and thus are considered "small" by this function.
+ *
+ *  CAUTION: MacOS X is extremely intolerant of divisible by 2 widths. You should never
+ *  pass a PixMap to the OS for drawing with PixMap.rowBytes set to anything other than
+ *  a multiple of 4 on Mac OS X. (CopyBits seems to be OK with divisible by 2 rowbytes, 
+ *  at least for the icon code in this class). That's why this function is private and 
+ *  wrapped.
+ *
  *	See <http://developer.apple.com/technotes/qd/qd_15.html>
  */
-PRInt32  nsImageMac::CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth)
+PRInt32  nsImageMac::CalculateRowBytesInternal(PRUint32 aWidth, PRUint32 aDepth, PRBool aAllow2Bytes)
 {
     PRInt32 rowBits = aWidth * aDepth;
-    PRInt32 rowBytes;
-    // if bits per row is 24 or less, needs 3 bytes or less
-    if (rowBits > 24)   
-        rowBytes = ((aWidth * aDepth + 31) / 32) * 4;
-    else
-        rowBytes = ((aWidth * aDepth + 15) / 16) * 2;
-  
-  return rowBytes;
+    //if bits per row is 24 or less, may need 3 bytes or less
+    return (rowBits > 24 || !aAllow2Bytes) ?
+        ((aWidth * aDepth + 31) / 32) * 4 :
+        ((aWidth * aDepth + 15) / 16) * 2;
 }
 
+/** Protected CalculateRowBytes. Most functions should call this
+    Requires rowBytes to be a multiple of 4
+    @see CalculateRowBytesInternal
+  */
+PRInt32  nsImageMac::CalculateRowBytes(PRUint32 aWidth, PRUint32 aDepth)
+{
+    CalculateRowBytesInternal(aWidth, aDepth, PR_FALSE);
+}
 
 #pragma mark -
 
@@ -929,8 +958,8 @@ nsImageMac::ConvertToIcon(  const nsRect& aSrcRegion,
     srcRect.bottom = aSrcRegion.y + aSrcRegion.height;
     srcRect.right = aSrcRegion.x + aSrcRegion.width;
 
-    return CopyPixMap(    srcRect, iconRect, aIconDepth, 
-                            PR_FALSE, aOutIcon);     
+    return CopyPixMapInternal(    srcRect, iconRect, aIconDepth, 
+                                  PR_FALSE, aOutIcon, PR_TRUE);     
 } // ConvertToIcon
 
 /** Create an Icon mask from a specified region of the the alpha channel 
@@ -1018,18 +1047,18 @@ nsImageMac::ConvertAlphaToIconMask(  const nsRect& aSrcRegion,
         //mask, or vice versa, it'll simply be converted by CopyPixMap 
         if (aMaskDepth == 8) {
             //for 8 bit masks, this is sufficient
-            result = CopyPixMap(    srcRect, maskRect, aMaskDepth, 
-                                    PR_TRUE, &dstHandle); 
+            result = CopyPixMapInternal(srcRect, maskRect, aMaskDepth, 
+                                        PR_TRUE, &dstHandle, PR_TRUE); 
         } else if (aMaskDepth == 1) {
             //1 bit masks are tricker, we must create an '#' resource 
             //which inclues both the 1-bit icon and a mask for it (icm#, ics#, ICN# or ich#)
             Handle iconHandle = nsnull, maskHandle = nsnull;
-            result = CopyPixMap(    srcRect, maskRect, aMaskDepth,
-                                    PR_FALSE, &iconHandle);
+            result = CopyPixMapInternal(srcRect, maskRect, aMaskDepth,
+                                        PR_FALSE, &iconHandle, PR_TRUE);
                                     
             if (NS_SUCCEEDED(result)) {
-                result = CopyPixMap(    srcRect, maskRect, aMaskDepth,
-                                        PR_TRUE, &maskHandle);                       
+                result = CopyPixMapInternal(srcRect, maskRect, aMaskDepth,
+                                            PR_TRUE, &maskHandle, PR_TRUE);                       
                 if (NS_SUCCEEDED(result)) {
                     //a '#' resource's data is simply the mask appended to the icon
                     //these icons and masks are small - 128 bytes each
@@ -1051,7 +1080,7 @@ nsImageMac::ConvertAlphaToIconMask(  const nsRect& aSrcRegion,
         } else if (aMaskDepth == 1) {
             //make 1 bit icon and mask as above
             Handle iconHandle = nsnull, maskHandle = nsnull;
-            result = CopyPixMap(    srcRect, maskRect, aMaskDepth, PR_FALSE, &iconHandle);
+            result = CopyPixMapInternal(    srcRect, maskRect, aMaskDepth, PR_FALSE, &iconHandle, PR_TRUE);
             if (NS_SUCCEEDED(result)) {
                 result = MakeOpaqueMask(aMaskSize, aMaskSize, aMaskDepth, &maskHandle);                    
                 if (NS_SUCCEEDED(result)) {
@@ -1095,12 +1124,32 @@ nsImageMac::ConvertAlphaToIconMask(  const nsRect& aSrcRegion,
                             is responsible for disposing of them    
 */
 nsresult 
-nsImageMac::CopyPixMap (       Rect& aSrcRegion,
+nsImageMac::CopyPixMap(Rect& aSrcRegion,
+                       Rect& aDestRegion,
+                       const PRInt32 aDestDepth,
+                       const PRBool aCopyMaskBits,
+                       Handle *aDestData
+                      )
+{
+
+    CopyPixMapInternal(aSrcRegion,
+                       aDestRegion,
+                       aDestDepth,
+                       aCopyMaskBits,
+                       aDestData,
+                       PR_FALSE);
+}
+
+
+/** Call CopyPixMap instead*/
+nsresult 
+nsImageMac::CopyPixMapInternal(Rect& aSrcRegion,
                                Rect& aDestRegion,
                                const PRInt32 aDestDepth,
                                const PRBool aCopyMaskBits,
-                               Handle *aDestData
-                        ) 
+                               Handle *aDestData,
+                               PRBool aAllow2Bytes
+                              ) 
 {
     OSStatus err;
     PRBool pixelsNeedLocking = PR_FALSE;
@@ -1138,12 +1187,13 @@ nsImageMac::CopyPixMap (       Rect& aSrcRegion,
     }
 
     // allocate the PixMap structure, then fill it out
-    err = CreatePixMap( aDestRegion.right - aDestRegion.left,
-                        aDestRegion.bottom - aDestRegion.top,
-                        aDestDepth, 
-                        destColorTable, 
-                        destPixmap, 
-                        resultData);   
+    err = CreatePixMapInternal( aDestRegion.right - aDestRegion.left,
+                                aDestRegion.bottom - aDestRegion.top,
+                                aDestDepth, 
+                                destColorTable, 
+                                destPixmap, 
+                                resultData,
+                                aAllow2Bytes);   
     if(err) {
         return NS_ERROR_FAILURE;
     }
@@ -1237,7 +1287,7 @@ nsImageMac::MakeOpaqueMask(    const PRInt32 aWidth,
                                Handle *aMask)
 {
     //mask size =  (width * height * depth)
-    PRInt32 size = aHeight * CalculateRowBytes(aWidth, aDepth);
+    PRInt32 size = aHeight * CalculateRowBytesInternal(aWidth, aDepth, PR_TRUE);
     OSStatus err;
     Handle resultData = nsnull;
 
