@@ -4214,7 +4214,8 @@ nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 // static
 nsresult
-nsHTMLDocumentSH::ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
+nsHTMLDocumentSH::ResolveImpl(JSContext *cx,
+                              nsIXPConnectWrappedNative *wrapper, jsval id,
                               nsISupports **result)
 {
   nsCOMPtr<nsISupports> native;
@@ -4225,7 +4226,10 @@ nsHTMLDocumentSH::ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
   nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(native));
   NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-  JSString *str = JSVAL_TO_STRING(id);
+  // 'id' is not always a string, it can be a number since document.1
+  // should map to <input name="1">. Thus we can't use
+  // JSVAL_TO_STRING() here.
+  JSString *str = JS_ValueToString(cx, id);
 
   const nsDependentString name(NS_REINTERPRET_CAST(const PRUnichar *,
                                                    ::JS_GetStringChars(str)),
@@ -4278,14 +4282,14 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, PRUint32 flags,
                              JSObject **objp, PRBool *_retval)
 {
-  if (!(flags & JSRESOLVE_ASSIGNING) && JSVAL_IS_STRING(id)) {
+  if (!(flags & JSRESOLVE_ASSIGNING)) {
     nsCOMPtr<nsISupports> result;
 
-    nsresult rv = ResolveImpl(wrapper, id, getter_AddRefs(result));
+    nsresult rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (result) {
-      JSString *str = JSVAL_TO_STRING(id);
+      JSString *str = JS_ValueToString(cx, id);
 
       JSBool ok = *_retval =
         ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
@@ -4315,16 +4319,14 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               jsval *vp, PRBool *_retval)
 {
-  if (JSVAL_IS_STRING(id)) {
-    nsCOMPtr<nsISupports> result;
+  nsCOMPtr<nsISupports> result;
 
-    nsresult rv = ResolveImpl(wrapper, id, getter_AddRefs(result));
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = ResolveImpl(cx, wrapper, id, getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    if (result) {
-      return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
-                        NS_GET_IID(nsISupports), vp);
-    }
+  if (result) {
+    return WrapNative(cx, ::JS_GetGlobalObject(cx), result,
+                      NS_GET_IID(nsISupports), vp);
   }
 
   return NS_OK;

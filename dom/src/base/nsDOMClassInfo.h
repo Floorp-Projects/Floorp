@@ -508,10 +508,12 @@ protected:
   {
   }
 
-  static nsresult ResolveImpl(nsIXPConnectWrappedNative *wrapper, jsval id,
+  static nsresult ResolveImpl(JSContext *cx,
+                              nsIXPConnectWrappedNative *wrapper, jsval id,
                               nsISupports **result);
-  static JSBool JS_DLL_CALLBACK DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
-                             jsval *argv, jsval *rval);
+  static JSBool JS_DLL_CALLBACK DocumentOpen(JSContext *cx, JSObject *obj,
+                                             uintN argc, jsval *argv,
+                                             jsval *rval);
 
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -540,8 +542,9 @@ protected:
   {
   }
 
-  static JSBool JS_DLL_CALLBACK ScrollIntoView(JSContext *cx, JSObject *obj, uintN argc,
-                                               jsval *argv, jsval *rval);
+  static JSBool JS_DLL_CALLBACK ScrollIntoView(JSContext *cx, JSObject *obj,
+                                               uintN argc, jsval *argv,
+                                               jsval *rval);
 
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
