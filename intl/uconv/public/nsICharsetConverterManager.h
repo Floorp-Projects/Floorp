@@ -29,6 +29,7 @@
 #include "nsIAtom.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsVoidArray.h"
 
 #define NS_ICHARSETCONVERTERMANAGER_IID \
   {0x3c1c0161, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
@@ -38,7 +39,7 @@
   {0x3c1c0163, 0x9bd0, 0x11d3, { 0x9d, 0x9, 0x0, 0x50, 0x4, 0x0, 0x7, 0xb2}}
 
 // XXX change to NS_CHARSETCONVERTERMANAGER_PID
-#define NS_CHARSETCONVERTERMANAGER_PROGID "charset-converter-manager"
+#define NS_CHARSETCONVERTERMANAGER_PROGID "component://netscape/charset-converter-manager"
 
 #define NS_REGISTRY_UCONV_BASE          "software/netscape/intl/uconv/"
 // XXX change "xuconv" to "uconv" when the new enc&dec trees are in place
@@ -146,6 +147,7 @@ public:
 
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount) = 0;
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount) = 0;
+  NS_IMETHOD GetCharsetDetectorList(nsStringArray * aArray) = 0;
 
   NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
       nsString ** aResult) = 0;
