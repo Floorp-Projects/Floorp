@@ -33,14 +33,13 @@
        
        (%subsection "Identifiers")
        (production :identifier ($identifier) identifier-identifier)
-       ;(production :identifier (const) identifier-const)
        (production :identifier (version) identifier-version)
        (production :identifier (override) identifier-override)
-       ;(production :identifier (field) identifier-field)
+       (production :identifier (field) identifier-field)
+       (production :identifier (local) identifier-local)
        (production :identifier (method) identifier-method)
-       (production :identifier (getter) identifier-getter)
-       (production :identifier (setter) identifier-setter)
-       (production :identifier (traditional) identifier-traditional)
+       (production :identifier (get) identifier-get)
+       (production :identifier (set) identifier-set)
        (production :identifier (constructor) identifier-constructor)
        
        (production :qualified-identifier (:identifier) qualified-identifier-identifier)
@@ -78,16 +77,20 @@
        (production :field-list (:literal-field) field-list-one)
        (production :field-list (:field-list \, :literal-field) field-list-more)
        
-       (production :literal-field (:qualified-identifier \: (:assignment-expression allow-in)) literal-field-assignment-expression)
+       (production :literal-field (:field-name \: (:assignment-expression allow-in)) literal-field-assignment-expression)
+       
+       (production :field-name (:qualified-identifier) field-name-qualified-identifier)
+       (production :field-name ($string) field-name-string)
+       (production :field-name ($number) field-name-number)
        
        
        (%subsection "Array Literals")
-       (production :array-literal ([ ]) array-literal-empty)
        (production :array-literal ([ :element-list ]) array-literal-list)
        
        (production :element-list (:literal-element) element-list-one)
        (production :element-list (:element-list \, :literal-element) element-list-more)
        
+       (production :literal-element () literal-element-none)
        (production :literal-element ((:assignment-expression allow-in)) literal-element-assignment-expression)
        
        
@@ -242,10 +245,6 @@
        
        (%section "Statements")
        
-       (grammar-argument :delta
-                         top      ;top level in a package or program
-                         class    ;top level in a class definition
-                         block)   ;top level in a block
        (grammar-argument :omega
                          abbrev              ;optional semicolon when followed by a '}', 'else', or 'while' in a do-while
                          abbrev-non-empty    ;optional semicolon as long as statement isn't empty
@@ -254,12 +253,12 @@
        (grammar-argument :omega_3 abbrev abbrev-non-empty full)
        (grammar-argument :omega_2 abbrev full)
        
-       (production (:statement :delta :omega_3) ((:code-statement :omega_3)) statement-code-statement)
-       (production (:statement :delta :omega_3) ((:definition :delta :omega_3)) statement-definition)
+       (production (:statement :omega_3) ((:code-statement :omega_3)) statement-code-statement)
+       (production (:statement :omega_3) ((:annotated-definition :omega_3)) statement-definition)
        
        (production (:code-statement :omega) ((:empty-statement :omega)) code-statement-empty-statement)
        (production (:code-statement :omega) (:expression-statement (:semicolon :omega)) code-statement-expression-statement)
-       (production (:code-statement :omega) ((:block block)) code-statement-block)
+       (production (:code-statement :omega) (:annotated-block) code-statement-annotated-block)
        (production (:code-statement :omega) ((:labeled-statement :omega)) code-statement-labeled-statement)
        (production (:code-statement :omega) ((:if-statement :omega)) code-statement-if-statement)
        (production (:code-statement :omega) (:switch-statement) code-statement-switch-statement)
@@ -283,7 +282,6 @@
        (%subsection "Empty Statement")
        (production (:empty-statement :omega) (\;) empty-statement-semicolon)
        (production (:empty-statement abbrev) () empty-statement-abbrev)
-       (production (:empty-statement abbrev-no-short-if) () empty-statement-abbrev-no-short-if)
        
        
        (%subsection "Expression Statement")
@@ -291,14 +289,16 @@
        
        
        (%subsection "Block")
-       (exclude (:block top))
-       (production (:block :delta) ({ (:statements :delta) }) block-statements)
+       (production :annotated-block (:block) annotated-block-block)
+       (production :annotated-block (local :block) annotated-block-local-block)
        
-       (production (:statements :delta) ((:statement :delta abbrev)) statements-one)
-       (production (:statements :delta) ((:statements-prefix :delta) (:statement :delta abbrev-non-empty)) statements-more)
+       (production :block ({ :statements }) block-statements)
        
-       (production (:statements-prefix :delta) ((:statement :delta full)) statements-prefix-one)
-       (production (:statements-prefix :delta) ((:statements-prefix :delta) (:statement :delta full)) statements-prefix-more)
+       (production :statements ((:statement abbrev)) statements-one)
+       (production :statements (:statements-prefix (:statement abbrev-non-empty)) statements-more)
+       
+       (production :statements-prefix ((:statement full)) statements-prefix-one)
+       (production :statements-prefix (:statements-prefix (:statement full)) statements-prefix-more)
        
        
        (%subsection "Labeled Statements")
@@ -380,24 +380,24 @@
        
        
        (%subsection "Try Statement")
-       (production :try-statement (try (:block block) :catch-clauses) try-statement-catch-clauses)
-       (production :try-statement (try (:block block) :finally-clause) try-statement-finally-clause)
-       (production :try-statement (try (:block block) :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
+       (production :try-statement (try :annotated-block :catch-clauses) try-statement-catch-clauses)
+       (production :try-statement (try :annotated-block :finally-clause) try-statement-finally-clause)
+       (production :try-statement (try :annotated-block :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
        
        (production :catch-clauses (:catch-clause) catch-clauses-one)
        (production :catch-clauses (:catch-clauses :catch-clause) catch-clauses-more)
        
-       (production :catch-clause (catch \( (:typed-identifier allow-in) \) (:block block)) catch-clause-block)
+       (production :catch-clause (catch \( (:typed-identifier allow-in) \) :annotated-block) catch-clause-block)
        
-       (production :finally-clause (finally (:block block)) finally-clause-block)
+       (production :finally-clause (finally :annotated-block) finally-clause-block)
        
        
        (%subsection "Import Statement")
        (production (:import-statement :omega) (import :import-list (:semicolon :omega)) import-statement-import)
-       (production (:import-statement abbrev) (import :import-list (:block block)) import-statement-import-then-abbrev)
-       (production (:import-statement abbrev-non-empty) (import :import-list (:block block)) import-statement-import-then-abbrev-non-empty)
-       (production (:import-statement full) (import :import-list (:block block)) import-statement-import-then-full)
-       (production (:import-statement :omega) (import :import-list (:block block) else (:code-statement :omega)) import-statement-import-then-else)
+       (production (:import-statement abbrev) (import :import-list :block) import-statement-import-then-abbrev)
+       (production (:import-statement abbrev-non-empty) (import :import-list :block) import-statement-import-then-abbrev-non-empty)
+       (production (:import-statement full) (import :import-list :block) import-statement-import-then-full)
+       (production (:import-statement :omega) (import :import-list :block else (:code-statement :omega)) import-statement-import-then-else)
        
        (production :import-list (:import-item) import-list-one)
        (production :import-list (:import-list \, :import-item) import-list-more)
@@ -411,30 +411,18 @@
        
        
        (%section "Definitions")
-       (production (:definition :delta :omega_3) (:visibility (:global-definition :omega_3)) definition-global-definition)
-       (production (:definition :delta :omega_3) ((:local-definition :delta :omega_3)) definition-local-definition)
+       (production (:annotated-definition :omega_3) (:visibility (:definition :omega_3)) annotated-definition-visibility-and-definition)
+       (production (:annotated-definition :omega_3) ((:definition :omega_3)) annotated-definition-definition)
        
-       (production (:global-definition :omega_3) (:version-definition (:semicolon :omega_3)) global-definition-version-definition)
-       (production (:global-definition :omega_3) (:variable-definition (:semicolon :omega_3)) global-definition-variable-definition)
-       (production (:global-definition :omega_3) (:function-definition) global-definition-function-definition)
-       (production (:global-definition :omega_3) ((:member-definition :omega_3)) global-definition-member-definition)
-       (production (:global-definition :omega_3) (:class-definition) global-definition-class-definition)
-       
-       (production (:local-definition top :omega_3) (:version-definition (:semicolon :omega_3)) local-definition-top-version-definition)
-       (production (:local-definition top :omega_3) (:variable-definition (:semicolon :omega_3)) local-definition-top-variable-definition)
-       (production (:local-definition top :omega_3) (:function-definition) local-definition-top-function-definition)
-       (production (:local-definition top :omega_3) (:class-definition) local-definition-top-class-definition)
-       
-       (production (:local-definition class :omega_3) (:variable-definition (:semicolon :omega_3)) local-definition-class-variable-definition)
-       (production (:local-definition class :omega_3) (:function-definition) local-definition-class-function-definition)
-       (production (:local-definition class :omega_3) ((:member-definition :omega_3)) local-definition-class-member-definition)
-       (production (:local-definition class :omega_3) (:class-definition) local-definition-class-class-definition)
-       
-       (production (:local-definition block :omega_3) (:variable-definition (:semicolon :omega_3)) local-definition-block-variable-definition)
-       (production (:local-definition block :omega_3) (:function-definition) local-definition-block-function-definition)
+       (production (:definition :omega_3) (:version-definition (:semicolon :omega_3)) definition-version-definition)
+       (production (:definition :omega_3) (:variable-definition (:semicolon :omega_3)) definition-variable-definition)
+       (production (:definition :omega_3) (:function-definition) definition-function-definition)
+       (production (:definition :omega_3) ((:member-definition :omega_3)) definition-member-definition)
+       (production (:definition :omega_3) (:class-definition) definition-class-definition)       
        
        
        (%subsection "Visibility Specifications")
+       (production :visibility (local) visibility-local)
        (production :visibility (private) visibility-private)
        (production :visibility (package) visibility-package)
        (production :visibility (public :versions-and-renames) visibility-public)
@@ -480,7 +468,8 @@
        (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initializer :beta)) variable-binding-initializer)
        
        (production (:typed-identifier :beta) (:identifier) typed-identifier-identifier)
-       (production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
+       (production (:typed-identifier :beta) (:identifier \: (:type-expression :beta)) typed-identifier-identifier-and-type)
+       ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
        
        (production (:variable-initializer :beta) () variable-initializer-empty)
        (production (:variable-initializer :beta) (= (:assignment-expression :beta)) variable-initializer-assignment-expression)
@@ -488,14 +477,15 @@
        
        (%subsection "Function Definition")
        (production :function-definition (:named-function) function-definition-named-function)
-       (production :function-definition (getter :named-function) function-definition-getter-function)
-       (production :function-definition (setter :named-function) function-definition-setter-function)
-       (production :function-definition (:traditional-function) function-definition-traditional-function)
+       (production :function-definition (:accessor-function) function-definition-accessor-function)
        
-       (production :anonymous-function (function :function-signature (:block block)) anonymous-function-signature-and-body)
+       (production :anonymous-function (function :function-signature :block) anonymous-function-signature-and-body)
        
-       (production :named-function (function :identifier :function-signature (:block block)) named-function-signature-and-body)
+       (production :named-function (function :identifier :function-signature :block) named-function-signature-and-body)
        
+       (production :accessor-function (function get :identifier :function-signature :block) accessor-function-getter)
+       (production :accessor-function (function set :identifier :function-signature :block) accessor-function-setter)
+
        (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
        
        (production :parameter-signature (\( :parameters \)) parameter-signature-parameters)
@@ -516,22 +506,14 @@
        
        (production :required-parameter ((:typed-identifier allow-in)) required-parameter-typed-identifier)
        
-       (production :optional-parameter ((:typed-identifier allow-in) =) optional-parameter-default)
        (production :optional-parameter ((:typed-identifier allow-in) = (:assignment-expression allow-in)) optional-parameter-assignment-expression)
        
        (production :rest-parameter (\.\.\.) rest-parameter-none)
        (production :rest-parameter (\.\.\. :identifier) rest-parameter-identifier)
        
        (production :result-signature () result-signature-none)
-       (production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
-       
-       (production :traditional-function (traditional function :identifier \( :traditional-parameter-list \) (:block block)) traditional-function-signature-and-body)
-       
-       (production :traditional-parameter-list () traditional-parameter-list-none)
-       (production :traditional-parameter-list (:traditional-parameter-list-prefix) traditional-parameter-list-some)
-       
-       (production :traditional-parameter-list-prefix (:identifier) traditional-parameter-list-prefix-one)
-       (production :traditional-parameter-list-prefix (:traditional-parameter-list-prefix \, :identifier) traditional-parameter-list-prefix-more)
+       (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
+       ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
        
        
        (%subsection "Class Member Definitions")
@@ -544,28 +526,28 @@
        (production (:method-definition :omega_3) (:concrete-method-definition) method-definition-concrete-method-definition)
        (production (:method-definition :omega_3) ((:abstract-method-definition :omega_3)) method-definition-abstract-method-definition)
        
-       (production :concrete-method-definition (:method-prefix :identifier :function-signature (:block block)) concrete-method-definition-signature-and-body)
+       (production :concrete-method-definition (:method-prefix :method-name :function-signature :block) concrete-method-definition-signature-and-body)
        
-       (production (:abstract-method-definition :omega_3) (:method-prefix :identifier :function-signature (:semicolon :omega_3)) abstract-method-definition-signature)
+       (production (:abstract-method-definition :omega_3) (:method-prefix :method-name :function-signature (:semicolon :omega_3)) abstract-method-definition-signature)
        
-       (production :method-prefix (:method-kind) method-prefix-method)
-       (production :method-prefix (override :method-kind) method-prefix-override-method)
-       (production :method-prefix (final :method-kind) method-prefix-final-method)
-       (production :method-prefix (final override :method-kind) method-prefix-final-override-method)
+       (production :method-prefix (method) method-prefix-method)
+       (production :method-prefix (override method) method-prefix-override-method)
+       (production :method-prefix (final method) method-prefix-final-method)
+       (production :method-prefix (final override method) method-prefix-final-override-method)
        
-       (production :method-kind (method) method-kind-method)
-       (production :method-kind (getter method) method-kind-getter-method)
-       (production :method-kind (setter method) method-kind-setter-method)
+       (production :method-name (:identifier) method-name-method)
+       (production :method-name (get :identifier) method-name-getter-method)
+       (production :method-name (set :identifier) method-name-setter-method)
        
-       (production :constructor-definition (constructor :constructor-name :parameter-signature (:block block)) constructor-definition-signature-and-body)
+       (production :constructor-definition (constructor :constructor-name :parameter-signature :block) constructor-definition-signature-and-body)
        
        (production :constructor-name (new) constructor-name-new)
        (production :constructor-name (:identifier) constructor-name-identifier)
        
        
        (%section "Class Definition")
-       (production :class-definition (class :identifier :superclasses (:block class)) class-definition-normal)
-       (production :class-definition (class extends (:type-expression allow-in) (:block class)) class-definition-augmented)
+       (production :class-definition (class :identifier :superclasses :block) class-definition-normal)
+       (production :class-definition (class extends (:type-expression allow-in) :block) class-definition-augmented)
        
        (production :superclasses () superclasses-none)
        (production :superclasses (extends (:type-expression allow-in)) superclasses-one)
@@ -573,7 +555,7 @@
        
        (%section "Programs")
        
-       (production :program ((:statements top)) program-statements)
+       (production :program (:statements) program-statements)
        )))
   
   (defparameter *jg* (world-grammar *jw* 'code-grammar)))
