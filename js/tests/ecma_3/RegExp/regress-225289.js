@@ -132,7 +132,7 @@ pattern = /((?:a|[^a])*)/g;
   status = inSection(11);
   string = '';
   actualmatch = string.match(pattern);
-  expectedmatch = Array('', undefined); // see bug 209919 comment 14
+  expectedmatch = Array(''); // see bug 225289 comment 9
   addThis();
 
   status = inSection(12);
