@@ -40,4 +40,4 @@ FILES=\
         $(NULL)
 
 install::
-        -for %i in ($(FILES:/=\)) do @$(MAKE_INSTALL) %i $(DIST)\bin\res\profile
+        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\res\profile
