@@ -413,8 +413,10 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
       kidFrame->MoveTo(aState.x, kidMargin.top);
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
+      if (gsDebug1) printf ("%p RR: avail=%d\n", this, availWidth);
       nsReflowStatus status = ReflowChild(kidFrame, &aPresContext, desiredSize,
                                           kidReflowState);
+      if (gsDebug1) printf ("%p RR: desired=%d\n", this, desiredSize.width);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
 
       if (gsDebug1)
@@ -573,7 +575,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     nsReflowStatus  status;
 
     kidFrame->WillReflow(aPresContext);
+    if (gsDebug1) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
     status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);
+    if (gsDebug1) printf ("%p InitR: desired=%d\n", this, kidSize.width);
     ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
     ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected child reflow status");

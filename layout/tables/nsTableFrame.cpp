@@ -2290,14 +2290,28 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
     break;
   }
 
-  // now, if maxWidth is not NS_UNCONSTRAINED, subtract out my border
-  // and padding
-  if (NS_UNCONSTRAINEDSIZE!=maxWidth)
+  // if we think we're UNCONSTRAINED, find the max width of an ancestor via reflow state
+  /*
+  if (NS_UNCONSTRAINEDSIZE==maxWidth)
   {
-    maxWidth -= borderPadding.left + borderPadding.right;
-    if (0>maxWidth)  // nonsense style specification
-      maxWidth = 0;
+    //maxWidth = GetTableContainerWidth(aReflowState);
+    const nsReflowState* rs = &aReflowState;
+    while (nsnull != rs) 
+    {
+      if (NS_UNCONSTRAINEDSIZE!=rs->maxSize.width)
+      {
+        maxWidth = rs->maxSize.width;
+        break;
+      }
+      rs = rs->parentReflowState;
+    }
+    NS_ASSERTION(NS_UNCONSTRAINEDSIZE!=maxWidth, "illegal max width");
   }
+  */
+  // now we know we're not UNCONSTRAINED, so subtract out table border and padding
+  maxWidth -= borderPadding.left + borderPadding.right;
+  if (0>maxWidth)  // nonsense style specification
+    maxWidth = 0;
 
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
     printf ("%p: maxWidth=%d from aMaxSize=%d,%d\n", 
@@ -2915,11 +2929,14 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
       // then we can use it
       if (PR_FALSE==skipThisBlock)
       {
-        parentWidth = rs->maxSize.width;
-        if (PR_TRUE==gsDebugNT)
-          printf("%p: found a block frame %p, returning width %d\n", 
-                 aReflowState.frame, block, parentWidth);
-        break;
+        if (NS_UNCONSTRAINEDSIZE!=rs->maxSize.width)
+        {
+          parentWidth = rs->maxSize.width;
+          if (PR_TRUE==gsDebugNT)
+            printf("%p: found a block frame %p, returning width %d\n", 
+                   aReflowState.frame, block, parentWidth);
+          break;
+        }
       }
     }
     // or if it's another table (we're nested) use its computed width
@@ -2973,7 +2990,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
 
           if (eStyleUnit_Auto == tablePosition->mWidth.GetUnit())
           {
-            parentWidth = 0;
+            parentWidth = NS_UNCONSTRAINEDSIZE;
             if (nsnull != ((nsTableFrame*)table)->mColumnWidths)
             {
               PRInt32 colIndex = ((nsTableCellFrame *)greatgrandchildFrame)->GetColIndex();
@@ -3096,16 +3113,26 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
       // set aSpecifiedTableWidth to be the given percent of the parent.
       // first, get the effective parent width (parent width - insets)
       nscoord parentWidth = nsTableFrame::GetTableContainerWidth(aReflowState);
-      aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
-      spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
-      parentWidth -= (borderPadding.right + borderPadding.left);
+      if (NS_UNCONSTRAINEDSIZE!=parentWidth)
+      {
+        aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
+        parentWidth -= (borderPadding.right + borderPadding.left);
 
-      // then set aSpecifiedTableWidth to the given percent of the computed parent width
-      float percent = tablePosition->mWidth.GetPercentValue();
-      aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
-      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
-        printf("%p: TableIsAutoWidth setting aSpecifiedTableWidth = %d with parentWidth = %d and percent = %f\n", 
-               aTableFrame, aSpecifiedTableWidth, parentWidth, percent);
+        // then set aSpecifiedTableWidth to the given percent of the computed parent width
+        float percent = tablePosition->mWidth.GetPercentValue();
+        aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
+        if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
+          printf("%p: TableIsAutoWidth setting aSpecifiedTableWidth = %d with parentWidth = %d and percent = %f\n", 
+                 aTableFrame, aSpecifiedTableWidth, parentWidth, percent);
+      }
+      else
+      {
+        aSpecifiedTableWidth=parentWidth;
+        if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
+          printf("%p: TableIsAutoWidth setting aSpecifiedTableWidth = %d with parentWidth = %d\n", 
+                 aTableFrame, aSpecifiedTableWidth, parentWidth);
+      }
       result = PR_FALSE;
       break;
     }
