@@ -50,6 +50,16 @@ public:
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie)=0;
 
   /*
+   * Get the complete cookie string associated with the URL
+   *
+   * @param aURL The URL for which to get the cookie string
+   * @param aFirstURL The URL which the user typed in or clicked on
+   * @param aCookie The string object which will hold the result
+   * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
+   */
+  NS_IMETHOD GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie)=0;
+
+  /*
    * Set the cookie string associated with the URL
    *
    * @param aURL The URL for which to set the cookie string
@@ -62,11 +72,12 @@ public:
    * Set the cookie string and expires associated with the URL
    *
    * @param aURL The URL for which to set the cookie string
+   * @param aFirstURL The URL which the user typed in or clicked on
    * @param aCookie The char * string to set
    * @param aExpires The expiry information of the cookie
    * @return Returns NS_OK if successful, or NS_FALSE if an error occurred.
    */
-  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires)=0;
+  NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, const char *aCookie, const char *aExpires)=0;
 
   /* 
    * Blows away all permissions currently in the cookie permissions list,

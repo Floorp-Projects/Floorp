@@ -34,11 +34,12 @@
 #endif
 
 extern char * COOKIE_GetCookie(char * address);
+extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress);
 extern void COOKIE_SetCookieString(char * cur_url, char * set_cookie_header);
 extern int COOKIE_ReadCookies();
 extern void COOKIE_RegisterCookiePrefCallbacks(void);
 extern void COOKIE_RemoveAllCookies(void);
-extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * set_cookie_header, char * server_date);
+extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, char * set_cookie_header, char * server_date);
 extern void COOKIE_GetCookieListForViewer (nsString& aCookieList);
 extern void COOKIE_GetPermissionListForViewer (nsString& aPermissionList);
 extern void COOKIE_CookieViewerReturn(nsAutoString results);

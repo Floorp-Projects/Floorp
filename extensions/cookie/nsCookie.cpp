@@ -820,7 +820,7 @@ COOKIE_RegisterCookiePrefCallbacks(void) {
 /* returns PR_TRUE if authorization is required
 ** 
 **
-** IMPORTANT:  Now that this routine is mutli-threaded it is up
+** IMPORTANT:  Now that this routine is multi-threaded it is up
 **             to the caller to free any returned string
 */
 PUBLIC char *
@@ -938,6 +938,107 @@ COOKIE_GetCookie(char * address) {
 
   /* may be NULL */
   return(rv);
+}
+
+/* Determines whether the inlineHost is in the same domain as the currentHost.
+ * For use with rfc 2109 compliance/non-compliance.
+ */
+PRIVATE int
+cookie_SameDomain(char * currentHost, char * firstHost) {
+  char * dot = 0;
+  char * currentDomain = 0;
+  char * firstDomain = 0;
+  if(!currentHost || !firstHost) {
+    return 0;
+  }
+
+  /* case insensitive compare */
+  if(PL_strcasecmp(currentHost, firstHost) == 0) {
+    return 1;
+  }
+  currentDomain = PL_strchr(currentHost, '.');
+  firstDomain = PL_strchr(firstHost, '.');
+  if(!currentDomain || !firstDomain) {
+    return 0;
+  }
+
+  /* check for at least two dots before continuing, if there are
+   * not two dots we don't have enough information to determine
+   * whether or not the firstDomain is within the currentDomain
+   */
+  dot = PL_strchr(firstDomain, '.');
+  if(dot) {
+    dot = PL_strchr(dot+1, '.');
+  } else {
+    return 0;
+  }
+
+  /* handle .com. case */
+  if(!dot || (*(dot+1) == '\0')) {
+    return 0;
+  }
+  if(!PL_strcasecmp(firstDomain, currentDomain)) {
+    return 1;
+  }
+  return 0;
+}
+
+PRBool
+cookie_isForeign (char * curURL, char * firstURL) {
+  char * curHost = cookie_ParseURL(curURL, GET_HOST_PART);
+  char * firstHost = cookie_ParseURL(firstURL, GET_HOST_PART);
+  char * curHostColon = 0;
+  char * firstHostColon = 0;
+
+  /* strip ports */
+  curHostColon = PL_strchr(curHost, ':');
+  if(curHostColon) {
+    *curHostColon = '\0';
+  }
+  firstHostColon = PL_strchr(firstHost, ':');
+  if(firstHostColon) {
+    *firstHostColon = '\0';
+  }
+
+  /* determine if it's foreign */
+  PRBool retval = (!cookie_SameDomain(curHost, firstHost));
+
+  /* clean up our garbage and return */
+  if(curHostColon) {
+    *curHostColon = ':';
+  }
+  if(firstHostColon) {
+    *firstHostColon = ':';
+  }
+  PR_FREEIF(curHost);
+  PR_FREEIF(firstHost);
+  return retval;
+}
+
+/* returns PR_TRUE if authorization is required
+** 
+**
+** IMPORTANT:  Now that this routine is multi-threaded it is up
+**             to the caller to free any returned string
+*/
+PUBLIC char *
+COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
+
+  if ((cookie_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
+      cookie_isForeign(address, firstAddress)) {
+
+    /*
+     * WARNING!!! This is a different behavior than 4.x.  In 4.x we used this pref to
+     * control the setting of cookies only.  Here we are also blocking the getting of
+     * cookies if the pref is set.  It may be that we need a separate pref to block the
+     * getting of cookies.  But for now we are putting both under one pref since that
+     * is cleaner.  If it turns out that this breaks some important websites, we may
+     * have to resort to two prefs
+     */
+
+    return NULL;
+  }
+  return COOKIE_GetCookie(address);
 }
 
 void
@@ -1535,51 +1636,6 @@ COOKIE_SetCookieString(char * curURL, char * setCookieHeader) {
   cookie_SetCookieString(curURL, setCookieHeader, 0);
 }
 
-#ifdef later // We need to come back and fix this.  - Neeti
-/* Determines whether the inlineHost is in the same domain as the currentHost.
- * For use with rfc 2109 compliance/non-compliance.
- */
-PRIVATE int
-cookie_SameDomain(char * currentHost, char * inlineHost) {
-  char * dot = 0;
-  char * currentDomain = 0;
-  char * inlineDomain = 0;
-  if(!currentHost || !inlineHost) {
-    return 0;
-  }
-
-  /* case insensitive compare */
-  if(PL_strcasecmp(currentHost, inlineHost) == 0) {
-    return 1;
-  }
-  currentDomain = PL_strchr(currentHost, '.');
-  inlineDomain = PL_strchr(inlineHost, '.');
-  if(!currentDomain || !inlineDomain) {
-    return 0;
-  }
-
-  /* check for at least two dots before continuing, if there are
-   * not two dots we don't have enough information to determine
-   * whether or not the inlineDomain is within the currentDomain
-   */
-  dot = PL_strchr(inlineDomain, '.');
-  if(dot) {
-    dot = PL_strchr(dot+1, '.');
-  } else {
-    return 0;
-  }
-
-  /* handle .com. case */
-  if(!dot || (*(dot+1) == '\0')) {
-    return 0;
-  }
-  if(!PL_strcasecmp(inlineDomain, currentDomain)) {
-    return 1;
-  }
-  return 0;
-}
-#endif
-
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
  * determining whether or not a cookie is inline (we need the URL struct, 
  * and outputFormat to do so).  this is called from NET_ParseMimeHeaders 
@@ -1589,15 +1645,15 @@ cookie_SameDomain(char * currentHost, char * inlineHost) {
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * server_date) {
+COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieHeader, char * server_date) {
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
    if(newline) {
      *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, setCookieHeader, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, setCookieHeader, server_date);
      *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, newline+1, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, newline+1, server_date);
      return;
    }
 
@@ -1610,44 +1666,12 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * setCookieHeader, char * ser
   char *ptr=NULL;
   time_t gmtCookieExpires=0, expires=0, sDate;
 
-#ifdef later // We need to come back and fix this.  - Neeti
-  if(CLEAR_CACHE_BIT(outputFormat) != FO_PRESENT &&
-      CLEAR_CACHE_BIT(outputFormat) != FO_SAVE_AS) {
-    if (cookie_GetBehaviorPref() == COOKIE_DontAcceptForeign) {
-      // the user doesn't want foreign cookies, check to see if its foreign 
-      char * curSessionHistHost = 0;
-      char * theColon = 0;
-      char * curHost = cookie_ParseURL(curURL, GET_HOST_PART);
-      History_entry * shistEntry = SHIST_GetCurrent(&context->hist);
-      if (shistEntry) {
-        curSessionHistHost = cookie_ParseURL(shistEntry->address, GET_HOST_PART);
-      } 
-      if(!curHost || !curSessionHistHost) {
-        PR_FREEIF(curHost);
-        PR_FREEIF(curSessionHistHost);
-        return;
-      }
-
-      /* strip ports */
-      theColon = PL_strchr(curHost, ':');
-      if(theColon) {
-        *theColon = '\0';
-      }
-      theColon = PL_strchr(curSessionHistHost, ':');
-      if(theColon) {
-        *theColon = '\0';
-      }
-      /* if it's foreign, get out of here after a little clean up */
-      if(!cookie_SameDomain(curHost, curSessionHistHost)) {
-        PR_FREEIF(curHost);
-        PR_FREEIF(curSessionHistHost);
-        return;
-      }
-      PR_FREEIF(curHost);
-      PR_FREEIF(curSessionHistHost);
-    }
+  /* check for foreign cookie if pref says to reject such */
+  if ((cookie_GetBehaviorPref() == COOKIE_DontAcceptForeign) &&
+      cookie_isForeign(curURL, firstURL)) {
+    /* it's a foreign cookie so don't set the cookie */
+    return;
   }
-#endif /* later */
 
   /* Determine when the cookie should expire. This is done by taking the difference between 
    * the server time and the time the server wants the cookie to expire, and adding that 
@@ -2347,14 +2371,6 @@ XP_StripLine (char *string) {
   }
   return string;
 }
-
-#ifdef later
-PUBLIC History_entry *
-SHIST_GetCurrent(History * hist) {
-  /* MOZ_FUNCTION_STUB; */
-  return NULL;
-}
-#endif
 
 /* Very similar to strdup except it free's too
  */

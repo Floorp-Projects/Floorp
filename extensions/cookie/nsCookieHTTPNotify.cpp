@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
 #include "nsINetModuleMgr.h" 
+#include "nsILoadGroup.h"
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
@@ -110,8 +111,26 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext, &rv);
     if (NS_FAILED(rv)) return rv; 
 
+    // Get the url
     nsCOMPtr<nsIURI> pURL;
     rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
+    if (NS_FAILED(rv)) return rv;
+
+    // Get the original url that the user either typed in or clicked on
+    nsCOMPtr<nsILoadGroup> pLoadGroup;
+    rv = pHTTPConnection->GetLoadGroup(getter_AddRefs(pLoadGroup));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIChannel> pChannel;
+    rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURI> pFirstURL;
+    if (pChannel) {
+      rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
+    } else {
+      rv = pHTTPConnection->GetURI(getter_AddRefs(pFirstURL));
+    }
     if (NS_FAILED(rv)) return rv;
 
     // Ensure that the cookie service exists
@@ -119,7 +138,7 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     nsString cookie;
-    rv = mCookieService->GetCookieString(pURL, cookie);
+    rv = mCookieService->GetCookieStringFromHTTP(pURL, pFirstURL, cookie);
     if (NS_FAILED(rv)) return rv;
 
     // Set the cookie into the request headers
@@ -156,6 +175,23 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
     if (NS_FAILED(rv)) return rv;
 
+    // Get the original url that the user either typed in or clicked on
+    nsCOMPtr<nsILoadGroup> pLoadGroup;
+    rv = pHTTPConnection->GetLoadGroup(getter_AddRefs(pLoadGroup));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIChannel> pChannel;
+    rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURI> pFirstURL;
+    if (pChannel) {
+      rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
+    } else {
+      rv = pHTTPConnection->GetURI(getter_AddRefs(pFirstURL));
+    }
+    if (NS_FAILED(rv)) return rv;
+
     // Get the expires
     nsXPIDLCString expiresHeader;
     rv = pHTTPConnection->GetResponseHeader(mExpiresHeader, getter_Copies(expiresHeader));
@@ -166,7 +202,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     // Save the cookie
-    rv = mCookieService->SetCookieStringFromHttp(pURL, cookieHeader, expiresHeader);
+    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, cookieHeader, expiresHeader);
 
     return rv;
 }
