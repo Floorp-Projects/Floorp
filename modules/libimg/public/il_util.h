@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.h Colormap and colorspace utilities.
  *             
- *   $Id: il_util.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
+ *   $Id: il_util.h,v 3.2 1998/07/27 16:09:08 hardts%netscape.com Exp $
  */
 
 
@@ -42,20 +42,20 @@ XP_BEGIN_PROTOS
    function represents the current state of affairs, and it will eventually
    be replaced when the Image Library has the capability to dither to an
    arbitrary palette. */
-extern IL_ColorMap *
+IL_EXTERN(IL_ColorMap *)
 IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
                    uint16 num_colors);
 
 /* Create an optimal fixed palette of the specified size, starting with
    the given set of reserved colors.
    XXX - This will not be implemented initially. */
-extern IL_ColorMap *
+IL_EXTERN(IL_ColorMap *)
 IL_NewOptimalColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
                       uint16 num_colors);
 
 /* Create an empty colormap.  The caller is responsible for filling in the
    colormap entries. */
-extern IL_ColorMap *
+IL_EXTERN(IL_ColorMap *)
 IL_NewColorMap(void);
 
 /* Append the specified color to an existing IL_ColorMap, returning TRUE if
@@ -70,19 +70,19 @@ IL_NewColorMap(void);
    to the old colormap.  Therefore, the current purpose of this function is
    to add colors (such as a background color for transparent images) which
    are not a part of the Image Library's color cube. */
-extern int
+IL_EXTERN(int)
 IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color);
 
 /* Free all memory associated with a given colormap.
    Note: This should *not* be used to destroy a colormap once it has been
    passed into IL_CreatePseudoColorSpace.  Use IL_ReleaseColorSpace instead. */
-extern void
+IL_EXTERN(void)
 IL_DestroyColorMap (IL_ColorMap *cmap);
 
 /* Reorder the entries in a colormap.  new_order is an array mapping the old
    indices to the new indices.
    XXX Is this really necessary? */
-extern void
+IL_EXTERN(void)
 IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order);
 
 
@@ -94,7 +94,7 @@ IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order);
    might be necessary, e.g. for an alpha channel, or for alignment.  Note: the
    contents of the IL_RGBBits structure will be copied, so they need not be
    preserved after the call to IL_CreateTrueColorSpace. */
-extern IL_ColorSpace *
+IL_EXTERN(IL_ColorSpace *)
 IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth);
 
 /* Create a new Pseudo-colorspace using the given colormap and set the
@@ -108,7 +108,7 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth);
    the colormap, *is* available through the colormap member of the
    IL_ColorSpace.  Memory associated with the colormap will be freed by
    IL_ReleaseColorSpace when the reference count reaches zero. */
-extern IL_ColorSpace *
+IL_EXTERN(IL_ColorSpace *)
 IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
                           uint8 pixmap_depth);
 
@@ -116,17 +116,17 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    set the reference count to 1.  The pixmap_depth is the index_depth plus
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
-extern IL_ColorSpace *
+IL_EXTERN(IL_ColorSpace *)
 IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth);
 
 /* Decrements the reference count for an IL_ColorSpace.  If the reference
    count reaches zero, all memory associated with the colorspace (including
    any colormap associated memory) will be freed. */
-extern void
+IL_EXTERN(void)
 IL_ReleaseColorSpace(IL_ColorSpace *color_space);
 
 /* Increment the reference count for an IL_ColorSpace. */
-extern void
+IL_EXTERN(void)
 IL_AddRefToColorSpace(IL_ColorSpace *color_space);
 
 XP_END_PROTOS

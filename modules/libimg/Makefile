@@ -17,7 +17,11 @@
 
 DEPTH		= ../..
 
-DIRS		= png classes public src
+ifdef STANDALONE_IMAGE_LIB
+DIRS = png public src
+else
+DIRS = png classes public src
+endif
 
 EXTRA_LIBS	= libzlib.a libpng.a
 

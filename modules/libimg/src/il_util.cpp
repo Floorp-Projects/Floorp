@@ -19,14 +19,22 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.c,v 3.1 1998/03/28 03:35:02 ltabb Exp $
+ *   $Id: il_util.cpp,v 3.1 1998/07/27 16:09:35 hardts%netscape.com Exp $
  */
 
 
+#ifdef STANDALONE_IMAGE_LIB
+#include "xpcompat.h"
+#else
 #include "xp_mcom.h"            /* XP definitions and types. */
+#endif
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures. */
+#ifndef STANDALONE_IMAGE_LIB
 #include "xp_core.h"
+#endif
+#include "prtypes.h"
+#include "prmem.h"
 
 /* mwh this is for Win 16 comipler. */
 #ifndef TRUE
@@ -82,15 +90,15 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
 
     /* We may want to add entries to the map array subsequently, so always
        allocate space for a full palette. */
-    map = (IL_RGB *)XP_CALLOC(256, sizeof(IL_RGB));
+    map = (IL_RGB *)PR_Calloc(256, sizeof(IL_RGB));
     if (!map)
         return FALSE;
 
-    lookup_table = (uint8 *)XP_CALLOC(LOOKUP_TABLE_SIZE, 1);
+    lookup_table = (uint8 *)PR_Calloc(LOOKUP_TABLE_SIZE, 1);
     if (!lookup_table)
         return FALSE;
 
-    done = (uint8 *)XP_CALLOC(size, 1);
+    done = (uint8 *)PR_Calloc(size, 1);
     if (!done)
         return FALSE;
     
@@ -125,13 +133,13 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
                 /* Fill in the lookup table entry with the colormap index. */
                 *ptr++ = map_index;
             }
-    XP_FREE(done);
+    PR_FREEIF(done);
 
 
-    cmap = XP_NEW_ZAP(IL_ColorMap);
+    cmap = PR_NEWZAP(IL_ColorMap);
     if (!cmap) {
-        XP_FREE(map);
-        XP_FREE(lookup_table);
+        PR_FREEIF(map);
+        PR_FREEIF(lookup_table);
         return NULL;
     }
     cmap->num_colors = size;
@@ -208,7 +216,7 @@ select_ncolors(int Ncolors[],
    function represents the current state of affairs, and it will eventually
    be replaced when the Image Library has the capability to dither to an
    arbitrary palette. */
-IL_ColorMap *
+IL_IMPLEMENT(IL_ColorMap *)
 IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
                    uint16 num_colors)
 {
@@ -239,7 +247,7 @@ IL_NewCubeColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
 
 /* Create an optimal fixed palette of the specified size, starting with
    the given set of reserved colors. */
-IL_ColorMap *
+IL_IMPLEMENT(IL_ColorMap *)
 IL_NewOptimalColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
                       uint16 num_colors)
 {
@@ -249,20 +257,20 @@ IL_NewOptimalColorMap(IL_RGB *reserved_colors, uint16 num_reserved_colors,
 
 /* Create an empty colormap.  The caller is responsible for filling in the
    colormap entries. */
-IL_ColorMap *
+IL_IMPLEMENT(IL_ColorMap *)
 IL_NewColorMap(void)
 {
     IL_RGB *map;
     IL_ColorMap *cmap;
 
-    cmap = XP_NEW_ZAP(IL_ColorMap);
+    cmap = PR_NEWZAP(IL_ColorMap);
     if (!cmap)
         return NULL;
 
     /* We always allocate space for a full palette. */
-    map = (IL_RGB *)XP_CALLOC(256, sizeof(IL_RGB));
+    map = (IL_RGB *)PR_Calloc(256, sizeof(IL_RGB));
     if (!map) {
-        XP_FREE(cmap);
+        PR_FREEIF(cmap);
         return NULL;
     }
     
@@ -286,7 +294,7 @@ IL_NewColorMap(void)
    to the old colormap.  Therefore, the current purpose of this function is
    to add colors (such as a background color for transparent images) which
    are not a part of the Image Library's color cube. */
-int
+IL_IMPLEMENT(int)
 IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color)
 {
     int max_colors = 256;
@@ -312,23 +320,20 @@ IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color)
 /* Free all memory associated with a given colormap.
    Note: This should *not* be used to destroy a colormap once it has been
    passed into IL_CreatePseudoColorSpace.  Use IL_ReleaseColorSpace instead */
-void
+IL_IMPLEMENT(void)
 IL_DestroyColorMap (IL_ColorMap *cmap)
 {
     if (cmap) {
-        if (cmap->map)
-            XP_FREE(cmap->map);
-        if (cmap->index)
-            XP_FREE(cmap->index);
-        if (cmap->table)
-            XP_FREE(cmap->table);
-        XP_FREE(cmap);
+        PR_FREEIF(cmap->map);
+        PR_FREEIF(cmap->index);
+        PR_FREEIF(cmap->table);
+        PR_FREEIF(cmap);
     }
 }
 
 /* Reorder the entries in a colormap.  new_order is an array mapping the old
    indices to the new indices. */
-void
+IL_IMPLEMENT(void)
 IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order)
 {
 }
@@ -342,12 +347,12 @@ IL_ReorderColorMap(IL_ColorMap *cmap, uint16 *new_order)
    might be necessary, e.g. for an alpha channel, or for alignment.  Note: the
    contents of the IL_RGBBits structure will be copied, so they need not be
    preserved after the call to IL_CreateTrueColorSpace. */
-IL_ColorSpace *
+IL_IMPLEMENT(IL_ColorSpace *)
 IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
 {
     IL_ColorSpace *color_space;
 
-    color_space = XP_NEW_ZAP(IL_ColorSpace);
+    color_space = PR_NEWZAP(IL_ColorSpace);
     if (!color_space)
         return NULL;
 
@@ -359,9 +364,9 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
     color_space->pixmap_depth = pixmap_depth; /* Destination image depth. */
 
     /* Create the private part of the color_space */
-    color_space->private_data = (void *)XP_NEW_ZAP(il_ColorSpaceData);
+    color_space->private_data = (void *)PR_NEWZAP(il_ColorSpaceData);
     if (!color_space->private_data) {
-        XP_FREE(color_space);
+        PR_FREEIF(color_space);
         return NULL;
     }
         
@@ -380,13 +385,13 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
    the colormap, *is* available through the colormap member of the
    IL_ColorSpace.  Memory associated with the colormap will be freed by
    IL_ReleaseColorSpace when the reference count reaches zero. */
-IL_ColorSpace *
+IL_IMPLEMENT(IL_ColorSpace *)
 IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
                           uint8 pixmap_depth)
 {
     IL_ColorSpace *color_space;
 
-    color_space = XP_NEW_ZAP(IL_ColorSpace);
+    color_space = PR_NEWZAP(IL_ColorSpace);
     if (!color_space)
         return NULL;
 
@@ -397,12 +402,12 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    /* Copy the contents of the IL_ColorMap structure.  This copies the map
       and table pointers, not the arrays themselves. */
     XP_MEMCPY(&color_space->cmap, cmap, sizeof(IL_ColorMap)); 
-    XP_FREE(cmap);
+    PR_FREEIF(cmap);
 
     /* Create the private part of the color_space */
-    color_space->private_data = (void *)XP_NEW_ZAP(il_ColorSpaceData);
+    color_space->private_data = (void *)PR_NEWZAP(il_ColorSpaceData);
     if (!color_space->private_data) {
-        XP_FREE(color_space);
+        PR_FREEIF(color_space);
         return NULL;
     }
 
@@ -414,12 +419,12 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
    set the reference count to 1.  The pixmap_depth is the index_depth plus
    any additional allowance that might be necessary e.g. for an alpha channel,
    or for alignment. */
-IL_ColorSpace *
+IL_IMPLEMENT(IL_ColorSpace *)
 IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth)
 {
     IL_ColorSpace *color_space;
 
-    color_space = XP_NEW_ZAP(IL_ColorSpace);
+    color_space = PR_NEWZAP(IL_ColorSpace);
     if (!color_space)
         return NULL;
 
@@ -429,9 +434,9 @@ IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth)
     color_space->cmap.num_colors = (1 << index_depth);
 
     /* Create the private part of the color_space */
-    color_space->private_data = (void *)XP_NEW_ZAP(il_ColorSpaceData);
+    color_space->private_data = (void *)PR_NEWZAP(il_ColorSpaceData);
     if (!color_space->private_data) {
-        XP_FREE(color_space);
+        PR_FREEIF(color_space);
         return NULL;
     }
 
@@ -442,7 +447,7 @@ IL_CreateGreyScaleColorSpace(uint8 index_depth, uint8 pixmap_depth)
 /* Decrements the reference count for an IL_ColorSpace.  If the reference
    count reaches zero, all memory associated with the colorspace (including
    any colormap associated memory) will be freed. */
-void
+IL_IMPLEMENT(void)
 IL_ReleaseColorSpace(IL_ColorSpace *color_space)
 {
     color_space->ref_count--;
@@ -454,15 +459,15 @@ IL_ReleaseColorSpace(IL_ColorSpace *color_space)
 
         /* Free any colormap associated memory. */
         if (cmap->map)  {
-            XP_FREE(cmap->map);
+            PR_FREEIF(cmap->map);
             cmap->map = NULL;
         }
         if (cmap->index)    {
-            XP_FREE(cmap->index);
+            PR_FREEIF(cmap->index);
             cmap->index = NULL;
         }
         if (cmap->table)    {
-            XP_FREE(cmap->table);
+            PR_FREEIF(cmap->table);
             cmap->table = NULL;
         }
         
@@ -470,31 +475,31 @@ IL_ReleaseColorSpace(IL_ColorSpace *color_space)
 
             /* Free any RGB depth conversion maps. */
             if (private_data->r8torgbn) {
-                XP_FREE(private_data->r8torgbn);
+                PR_FREEIF(private_data->r8torgbn);
                 private_data->r8torgbn = NULL;
             }
             if (private_data->g8torgbn) {
-                XP_FREE(private_data->g8torgbn);
+                PR_FREEIF(private_data->g8torgbn);
                 private_data->g8torgbn = NULL;
             }
             if (private_data->b8torgbn) {
-                XP_FREE(private_data->b8torgbn);
+                PR_FREEIF(private_data->b8torgbn);
                 private_data->b8torgbn = NULL;
             }
 
             /* Free the il_ColorSpaceData */
-            XP_FREE(private_data);
+            PR_FREEIF(private_data);
             color_space->private_data = NULL;
         }
 
         /* Free the IL_ColorSpace structure. */
-        XP_FREE(color_space);
+        PR_FREEIF(color_space);
     }
 }
 
 
 /* Increment the reference count for an IL_ColorSpace. */
-void
+IL_IMPLEMENT(void)
 IL_AddRefToColorSpace(IL_ColorSpace *color_space)
 {
     color_space->ref_count++;

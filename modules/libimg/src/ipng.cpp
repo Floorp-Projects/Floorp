@@ -26,7 +26,6 @@
 
 
 
-void read_png(il_container *ic, IL_Stream *stream, unsigned int sig_read);
 
 void png_get_info(const unsigned char *buf, png_structp png_ptr, png_infop info_ptr);
 void  png_read_strm( png_structp png_ptr, png_bytep data, png_size_t length);
@@ -57,13 +56,10 @@ int
 il_png_init(il_container *ic)
 {
 
-	png_structp read_ptr, write_ptr;
-    png_infop read_info_ptr, write_info_ptr, end_info_ptr;
-
 	ipng_struct *ipngs;
     NI_ColorSpace *src_color_space = ic->src_header->color_space;
 
-	ipngs = XP_NEW_ZAP(ipng_struct);
+	ipngs = PR_NEWZAP(ipng_struct);
 	if (ipngs) 
 	{
 		ic->ds = ipngs;
@@ -93,8 +89,6 @@ int il_png_write(il_container *ic, const unsigned char *buf, int32 len)
    png_structp png_ptr;
    png_infop info_ptr;
   
-   int status, done;
-  
 	/*------*/
    
 
@@ -109,7 +103,7 @@ int il_png_write(il_container *ic, const unsigned char *buf, int32 len)
 		      png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 		      return !OK;
 	    }
-        png_set_progressive_read_fn(png_ptr, buf,
+        png_set_progressive_read_fn(png_ptr, (void *)buf,
         info_callback, row_callback, end_callback); 
     }
 	else{
@@ -118,7 +112,7 @@ int il_png_write(il_container *ic, const unsigned char *buf, int32 len)
     }
     /* note addition of ic to png structure.... */
     png_ptr->io_ptr = ic;
-    png_process_data( png_ptr, info_ptr, buf, len );
+    png_process_data( png_ptr, info_ptr, (unsigned char *)buf, len );
         
     ipng_ptr->state = PNG_CONTINUE;
    
@@ -137,7 +131,7 @@ png_set_dims( il_container *ic, png_structp png_ptr)
     src_hdr->height = img_hdr->height = png_ptr->height;
 
     if((png_ptr->channels > 3 )||(png_ptr->trans)){
-        il_create_alpha_mask( png_ptr->io_ptr, 0, png_ptr->width, png_ptr->height);
+        il_create_alpha_mask( (il_container *)png_ptr->io_ptr, 0, png_ptr->width, png_ptr->height);
         ic->image->header.is_interleaved_alpha = TRUE;
         il_init_image_transparent_pixel(ic);
 
@@ -159,7 +153,7 @@ il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
     IL_IRGB *img_trans_pixel;
     
     if (ic->src_header) {
-        ic->src_header->transparent_pixel = XP_NEW_ZAP(IL_IRGB);
+        ic->src_header->transparent_pixel = PR_NEWZAP(IL_IRGB);
     }
     src_trans_pixel = ic->src_header->transparent_pixel;
 
@@ -196,7 +190,7 @@ il_png_destroy_transparency(il_container *ic)
     
     if (src_header->transparent_pixel) {
         /* Destroy the source image's transparent pixel. */
-        XP_FREE(src_header->transparent_pixel);
+        PR_FREEIF(src_header->transparent_pixel);
         src_header->transparent_pixel = NULL;
 
         /* Destroy the destination image's transparent pixel. */
@@ -210,7 +204,7 @@ png_delay_time_callback(void *closure)
 {
 	ipng_struct *ipng_ptr = (ipng_struct *)closure;
 
-    XP_ASSERT(ipng_ptr->state == PNG_DELAY);
+    PR_ASSERT(ipng_ptr->state == PNG_DELAY);
 
     ipng_ptr->delay_time = NULL;
 
@@ -226,7 +220,7 @@ void il_png_complete(il_container *ic)
 {
 	ipng_structp ipng_ptr;
 
-	ipng_ptr = ic->ds;
+	ipng_ptr = (ipng_structp)ic->ds;
 
 	il_png_abort(ic);
    

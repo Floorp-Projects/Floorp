@@ -22,9 +22,6 @@
 */
 
 
-/*
-#include "xp.h"                    Cross-platform definitions
-*/
 
 #include "if.h"                 /* Image library internal declarations */
 #include "il.h"                 /* Image library external API */
@@ -179,20 +176,43 @@ il_flush_image_data(il_container *ic)
      * it to the server.)
      */
     for (;row < (end_row - row_interval); row += row_interval) {
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, image, 0, row,
+                                     img_header->width, row_interval);
+#else
         IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, image, 0, row,
                            img_header->width, row_interval);
-        if (mask)
+#endif
+        if (mask) {
+#ifdef STANDALONE_IMAGE_LIB
+            img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, mask, 0, row,
+                                         mask_header->width, row_interval);
+#else
             IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, mask, 0, row,
                                mask_header->width, row_interval);
+#endif /* STANDALONE_IMAGE_LIB */
+		}
     }
 #endif /* XP_UNIX */
 
     /* Draw whatever is leftover after sending the chunks */
+#ifdef STANDALONE_IMAGE_LIB
+    img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, image, 
+                                 0, row, img_header->width, end_row - row + 1);
+#else
     IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, image, 0, row,
                        img_header->width, end_row - row + 1);
-    if (mask)
+#endif /* STANDALONE_IMAGE_LIB */
+
+    if (mask) {
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->UpdatePixmap(img_cx->dpy_cx, mask, 0, row,
+                                     mask_header->width, end_row - row + 1);
+#else
         IMGCBIF_UpdatePixmap(img_cx->img_cb, img_cx->dpy_cx, mask, 0, row,
                            mask_header->width, end_row - row + 1);
+#endif /* STANDALONE_IMAGE_LIB */
+    }
 
     /* Update the displayable area of the pixmap. */
     ic->displayable_rect.x_origin = 0;
@@ -230,8 +250,8 @@ il_scale_RGB_row(
     uint8 *dest_end = dest + (3 * dest_len);
     int n = 0;
     
-    XP_ASSERT(dest);
-    XP_ASSERT(src_len != dest_len);
+    PR_ASSERT(dest);
+    PR_ASSERT(src_len != dest_len);
 
     /* Two cases */
 
@@ -281,8 +301,8 @@ il_scale_CI_row(
     uint8 *dest_end = dest + dest_len;
     int n = 0;
     
-    XP_ASSERT(dest);
-    XP_ASSERT(src_len != dest_len);
+    PR_ASSERT(dest);
+    PR_ASSERT(src_len != dest_len);
 
     /* Two cases */
 
@@ -354,7 +374,7 @@ il_alpha_mask(
     uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f;
 
-    XP_ASSERT(mask_len);
+    PR_ASSERT(mask_len);
 
     /* Handle case in which we have a mask for a non-transparent
        image.  This can happen when we have a LOSRC that is a transparent
@@ -457,7 +477,7 @@ il_generate_scaled_transparency_mask(
     uint32 *m = ((uint32*)maskp) + (x_offset >> 5);
     mask_bit = ~x_offset & 0x1f;
 
-    XP_ASSERT(mask_len);
+    PR_ASSERT(mask_len);
 
     /* Handle case in which we have a mask for a non-transparent
        image.  This can happen when we have a LOSRC that is a transparent
@@ -535,8 +555,9 @@ il_reset_background_pixels(
     NI_PixmapHeader *img_header = &ic->image->header;
     int src_trans_pixel_index = ic->src_header->transparent_pixel->index;
     int img_trans_pixel_index = img_header->transparent_pixel->index;
-    int dpy_trans_pixel_index =
-        img_header->color_space->cmap.index[img_trans_pixel_index];
+    int dpy_trans_pixel_index = img_header->color_space->cmap.index ?
+        img_header->color_space->cmap.index[img_trans_pixel_index] :
+	    il_identity_index_map[img_trans_pixel_index];
 
     /* Two cases */
 
@@ -684,7 +705,7 @@ il_emit_row(
 	int drow_start, drow_end, row_count, color_index, dup, do_dither;
     int dcolumn_start, dcolumn_end, column_count, offset, src_len, dest_len;
    
-	XP_ASSERT(row >= 0);
+	PR_ASSERT(row >= 0);
 
 	if(row >= src_header->height) {
 		ILTRACE(2,("il: ignoring extra row (%d)", row));
@@ -760,10 +781,15 @@ il_emit_row(
 
         /* Bug, we retain the mask from a transparent
            LOSRC GIF when the SRC is a JPEG. */
-        /* XP_ASSERT(cbuf); */
+        /* PR_ASSERT(cbuf); */
         
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+                                          IL_LOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, mask,
                                 IL_LOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 
 #ifdef _USD
 		maskp = (uint8 XP_HUGE *)mask->bits + 
@@ -796,25 +822,39 @@ il_emit_row(
             }
         
         }
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, mask,
+                                          IL_UNLOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, mask,
                                 IL_UNLOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
     }
 
 	if (!ic->converter) {
 
-#ifndef M12N /* XXXM12N fixme */
+#ifdef M12N
         int i;
         int src_trans_pixel_index;
         uint8 XP_HUGE * dest;
-        uint8 *indirect_map = ic->cs->current_indirect_map;/* XXXM12N fixme */
+        uint8 *indirect_map = src_color_space->cmap.index;
+
+		if (indirect_map == NULL) {
+		    indirect_map = il_identity_index_map;
+		}
 
         if ((draw_mode == ilErase) || !src_header->transparent_pixel)
             src_trans_pixel_index = -1; /* no transparency */
         else
             src_trans_pixel_index = src_header->transparent_pixel->index;
 
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+                                          IL_LOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
                                 IL_LOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 
 		/* No converter, image is already rendered in pseudocolor. */
 #ifdef _USD
@@ -839,8 +879,13 @@ il_emit_row(
                     dest[i] = indirect_map[cbuf[i]];
         }
 
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+                                          IL_UNLOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
                                 IL_UNLOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 #endif /* M12N */
 
 	} else {
@@ -920,8 +965,13 @@ il_emit_row(
             il_scale_RGB_row(src, src_len, dest, dest_len);
 		}
 
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+                                          IL_LOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
                                 IL_LOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 
 #ifdef _USD
 		out = (uint8 XP_HUGE *)image->bits +
@@ -947,8 +997,13 @@ il_emit_row(
 		(*ic->converter)(ic, byte_mask, srcbuf, dcolumn_start,
                          column_count, out);
 
+#ifdef STANDALONE_IMAGE_LIB
+        img_cx->img_cb->ControlPixmapBits(img_cx->dpy_cx, image,
+                                          IL_UNLOCK_BITS);
+#else
         IMGCBIF_ControlPixmapBits(img_cx->img_cb, img_cx->dpy_cx, image,
                                 IL_UNLOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 
         /*
          * Have to reset transparent pixels to background color

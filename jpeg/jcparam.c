@@ -95,9 +95,9 @@ jpeg_set_linear_quality (j_compress_ptr cinfo, int scale_factor,
   };
 
   /* Set up two quantization tables using the specified scaling */
-  jpeg_add_quant_table(cinfo, 0, std_luminance_quant_tbl,
+  jpeg_add_quant_table(cinfo, 0, (const unsigned int *)std_luminance_quant_tbl,
 		       scale_factor, force_baseline);
-  jpeg_add_quant_table(cinfo, 1, std_chrominance_quant_tbl,
+  jpeg_add_quant_table(cinfo, 1, (const unsigned int *)std_chrominance_quant_tbl,
 		       scale_factor, force_baseline);
 }
 

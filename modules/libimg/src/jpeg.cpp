@@ -18,17 +18,18 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.c,v 3.1 1998/03/28 03:35:03 ltabb Exp $
+ *    $Id: jpeg.cpp,v 3.1 1998/07/27 16:09:43 hardts%netscape.com Exp $
  */
 
 
-/*
-#include "xp.h"
-*/
 
 #include "if.h"
 
+#ifdef STANDALONE_IMAGE_LIB
+#include "xpcompat.h"
+#else
 #include "xp_core.h"
+#endif
 #include "merrors.h"
 
 #include "il.h"
@@ -38,11 +39,13 @@
 #	 include <sys/types.h>
 #endif
 
+PR_BEGIN_EXTERN_C
 #include "jinclude.h"
 #include "jpeglib.h"
 #include "jerror.h"
 
 extern int MK_OUT_OF_MEMORY;
+PR_END_EXTERN_C
 
 #ifdef XP_OS2_HACK
 /* IBM-MAS: We removed setjmp.h from XP_core.h, now we need it here. */
@@ -147,7 +150,7 @@ il_error_exit (j_common_ptr cinfo)
         /* Create the message */
         (*cinfo->err->format_message) (cinfo, buffer);
 
-        XP_TRACE(("%s\n", buffer));
+        ILTRACE(1,("%s\n", buffer));
     }
 #endif
 
@@ -264,9 +267,9 @@ fill_input_buffer (j_decompress_ptr jd)
 			roundup_buflen = ((new_backtrack_buflen + 15) >> 4) << 4;
 			if (src->backtrack_buffer_size) {
 				src->backtrack_buffer =
-					(JOCTET *)XP_REALLOC(src->backtrack_buffer, roundup_buflen);
+					(JOCTET *)PR_REALLOC(src->backtrack_buffer, roundup_buflen);
 			} else {
-				src->backtrack_buffer = (JOCTET*)XP_ALLOC(roundup_buflen);
+				src->backtrack_buffer = (JOCTET*)PR_MALLOC(roundup_buflen);
 			}
 
             /* Check for OOM */
@@ -298,7 +301,7 @@ fill_input_buffer (j_decompress_ptr jd)
         goto suspend;
 			
 	default:
-		XP_ASSERT(0);
+		PR_ASSERT(0);
         return FALSE;
 	}
 
@@ -362,9 +365,9 @@ setup_jpeg_src (j_decompress_ptr jd, jpeg_struct *js)
 	il_source_mgr *src;
 
 	if (jd->src == NULL) {
-		src = XP_NEW_ZAP(il_source_mgr);
+		src = PR_NEWZAP(il_source_mgr);
 		if (!src) {
-			XP_TRACE(("il:jpeg: src manager memory lossage"));
+			ILTRACE(1,("il:jpeg: src manager memory lossage"));
 			return FALSE;
 		}
 		jd->src = (struct jpeg_source_mgr *) src;
@@ -456,9 +459,8 @@ il_jpeg_COM_handler (j_decompress_ptr cinfo)
     INPUT_2BYTES(cinfo, length, return FALSE);
     length -= 2;			/* discount the length word itself */
   
-    if (ic->comment)
-        XP_FREE(ic->comment);
-    comment = ic->comment = (char *)XP_ALLOC(length + 1);
+    PR_FREEIF(ic->comment);
+    comment = ic->comment = (char *)PR_MALLOC(length + 1);
     ic->comment_length = length;
     
     if (!ic->comment) {
@@ -497,9 +499,9 @@ int il_jpeg_init(il_container *ic)
     NI_ColorSpace *src_color_space = ic->src_header->color_space;
     NI_RGBBits *rgb = &src_color_space->bit_alloc.rgb;
 
-	js = XP_NEW_ZAP(jpeg_struct);
+	js = PR_NEWZAP(jpeg_struct);
 	if (!js) {
-		XP_TRACE(("il:jpeg: jpeg_struct memory lossage"));
+		ILTRACE(1,("il:jpeg: jpeg_struct memory lossage"));
 		return FALSE;
 	}
 
@@ -534,7 +536,7 @@ int il_jpeg_init(il_container *ic)
 
 	/* Setup jpeg data source object */
 	if (!setup_jpeg_src(jd, js)) {
-		XP_TRACE(("il:jpeg: jpeg source memory lossage"));
+		ILTRACE(1,("il:jpeg: jpeg source memory lossage"));
         /* Free up all the data structures */
         il_jpeg_abort(ic);
 		return FALSE;
@@ -728,10 +730,10 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
 
     /* If this assert fires, chances are the netlib 
        continued to send data after the image stream was closed. */
-    XP_ASSERT(js);
+    PR_ASSERT(js);
     if (!js) {
 #ifdef DEBUG
-        XP_TRACE(("Netlib sent data after the image stream was closed\n"));
+        ILTRACE(1,("Netlib sent data after the image stream was closed\n"));
 #endif
         return MK_IMAGE_LOSSAGE;
     }
@@ -762,7 +764,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
                 ic->src_header->width = jd->image_width;
                 ic->src_header->height = jd->image_height;
 				if ((status = il_size(ic))) {
-					XP_TRACE(("il:jpeg: MEM il_size"));
+					ILTRACE(1,("il:jpeg: MEM il_size"));
 					return status;
 				}
 
@@ -922,7 +924,7 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
             break;
 
 		default:
-			XP_ASSERT(0);
+			PR_ASSERT(0);
 			break;
 		}
 	}
@@ -945,10 +947,10 @@ il_jpeg_abort(il_container *ic)
 		 */
 		if (src) {
 			if (src->backtrack_buffer) {
-				XP_FREE(src->backtrack_buffer);
+				PR_FREEIF(src->backtrack_buffer);
 				src->backtrack_buffer = NULL;
 			}
-			XP_FREE(src);
+			PR_FREEIF(src);
 			js->jd.src = NULL;
 		}
 
@@ -968,7 +970,7 @@ il_jpeg_abort(il_container *ic)
 		js->samples3 = NULL;
 
 		/* Finally, free up our private decoder structure. */
-		XP_FREE(js);
+		PR_FREEIF(js);
 		ic->ds = NULL;
 	}
 }

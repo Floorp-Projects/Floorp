@@ -41,10 +41,13 @@ INSTALL_DIR=$(PUBLIC)\img
 INSTALL_DIR=$(PUBLIC)\win16
 !endif
 
+LCFLAGS		= $(LCFLAGS) /TP
+
 
 MODULE=img 
 DEPTH=..\..\.. 
 !ifdef MOZ_JAVA
+!ifndef STANDALONE_IMAGE_LIB
 JMC_GEN=MIMGCBIF MIMGCB MPSIMGCB 
 JMC_GEN_FLAGS=-cimpl -noexc -interface 
 EXPORTS=il_types.h ni_pixmp.h libimg.h il_icons.h il_strm.h il_util.h \
@@ -56,9 +59,16 @@ JMC_STUBS=$(JMC_GEN_DIR)\MIMGCBIF.c $(JMC_GEN_DIR)\MIMGCB.c \
     $(JMC_GEN_DIR)\MPSIMGCB.c 
 JMC_OBJS=.\$(OBJDIR)\MIMGCBIF.obj .\$(OBJDIR)\MIMGCB.obj \
     .\$(OBJDIR)\MPSIMGCB.obj 
+!endif
+!else
+!ifdef STANDALONE_IMAGE_LIB
+EXPORTS=il_types.h ni_pixmp.h libimg.h il_icons.h il_strm.h il_util.h \
+    ilINetContext.h ilIURL.h ilINetReader.h ilIImageRenderer.h \
+    ilISystemServices.h
 !else
 EXPORTS=il_types.h ni_pixmp.h libimg.h il_icons.h il_strm.h il_util.h \
     dummy_nc.h MIMGCBIF.h MIMGCB.h MPSIMGCB.h 
+!endif
 !endif
 
 
@@ -70,6 +80,7 @@ EXPORTS=il_types.h ni_pixmp.h libimg.h il_icons.h il_strm.h il_util.h \
 include <$(DEPTH)/config/rules.mak>
 
 !ifdef MOZ_JAVA
+!ifndef STANDALONE_IMAGE_LIB
 $(JMC_GEN_DIR)\MIMGCBIF.h: $(JMCSRCDIR)\IMGCBIF.class
     $(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
 $(JMC_GEN_DIR)\MIMGCBIF.c: $(JMCSRCDIR)\IMGCBIF.class
@@ -82,6 +93,7 @@ $(JMC_GEN_DIR)\MPSIMGCB.h: $(JMCSRCDIR)\PSIMGCB.class
     $(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
 $(JMC_GEN_DIR)\MPSIMGCB.c: $(JMCSRCDIR)\PSIMGCB.class
     $(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
+!endif
 !endif
 
 

@@ -16,34 +16,32 @@
  * Reserved.
  */
 
-/* -*- Mode: C; tab-width: 4 -*-
- *  colormap.c
- *             
- *   $Id: colormap.c,v 3.1 1998/03/28 03:35:00 ltabb Exp $
- */
+#ifndef ilIURL_h___
+#define ilIURL_h___
 
+#include <stdio.h>
+#include "nsISupports.h"
+#include "ntypes.h"
 
-#include "if.h"
+// IID for the ilIURL interface
+#define IL_IURL_IID    \
+{ 0x6d7a5600, 0xb412, 0x11d1,    \
+{ 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } }
 
-/*
-int
-IL_ColormapTag(const char* image_url, MWContext* cx)
-{
-	return 0;
-}
-*/
+class ilIURL : public nsISupports {
+public:
+  virtual void SetReader(ilINetReader *aReader)=0;
 
-/* Force il_set_color_palette() to load a new colormap for an image */
-void
-il_reset_palette(il_container *ic)
-{
-    NI_ColorMap *cmap = &ic->src_header->color_space->cmap;
+  virtual ilINetReader *GetReader()=0;
 
-    ic->colormap_serial_num = -1;
-    ic->dont_use_custom_palette = FALSE;
-    ic->rendered_with_custom_palette = FALSE;
+  virtual int GetContentLength()=0;
 
-    if (cmap->num_colors > 0)
-        cmap->num_colors = 0;
-}
+  virtual const char* GetAddress()=0;
 
+  virtual time_t GetExpires()=0;
+
+  virtual void SetBackgroundLoad(PRBool aBgload)=0;
+
+};
+
+#endif

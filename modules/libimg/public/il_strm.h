@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_strm.h --- Stream converters for the image library.
- *  $Id: il_strm.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
+ *  $Id: il_strm.h,v 3.2 1998/07/27 16:09:06 hardts%netscape.com Exp $
  */
 
 
@@ -40,13 +40,16 @@
 #define OPAQUE_CONTEXT MWContext /* The old MWContext. */
 #endif /* IL_INTERNAL */
 
+
+#ifndef STANDALONE_IMAGE_LIB
+XP_BEGIN_PROTOS
+
 /********************** Image Library stream converters. *********************/
 extern int IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out,
                                         URL_Struct *urls,
                                         OPAQUE_CONTEXT *net_cx);
 
 /********************** Image Library stream converters. *********************/
-XP_BEGIN_PROTOS
 
 /* The standard converter for all types of images which are part of an HTML
    document. */
@@ -63,3 +66,5 @@ extern NET_StreamClass * IL_ViewStream (FO_Present_Types format_out,
                                         URL_Struct *urls,
                                         OPAQUE_CONTEXT *cx);
 XP_END_PROTOS
+
+#endif /* STANDALONE_IMAGE_LIB */

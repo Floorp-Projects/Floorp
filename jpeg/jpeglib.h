@@ -885,6 +885,9 @@ typedef JMETHOD(boolean, jpeg_marker_parser_method, (j_decompress_ptr cinfo));
 #define jpeg_resync_to_restart	jResyncRestart
 #endif /* NEED_SHORT_EXTERNAL_NAMES */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Default error-management setup */
 EXTERN(struct jpeg_error_mgr *) jpeg_std_error
@@ -1043,6 +1046,9 @@ EXTERN(void) jpeg_destroy JPP((j_common_ptr cinfo));
 EXTERN(boolean) jpeg_resync_to_restart JPP((j_decompress_ptr cinfo,
 					    int desired));
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
 
 /* These marker codes are exported since applications and data source modules
  * are likely to want to use them.

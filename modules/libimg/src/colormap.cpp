@@ -16,27 +16,34 @@
  * Reserved.
  */
 
-/* This is a dummy Net Context which the Image Library uses for network
-   operations in lieu of an MWContext.  It will be replaced by a true
-   Net Context when the Network Library is modularized. */
+/* -*- Mode: C; tab-width: 4 -*-
+ *  colormap.c
+ *             
+ *   $Id: colormap.cpp,v 3.1 1998/07/27 16:09:21 hardts%netscape.com Exp $
+ */
 
-#ifndef _DUMMY_NC_H
-#define _DUMMY_NC_H
 
-#include "prtypes.h"
-#include "net.h"
+#include "if.h"
 
-typedef void* IL_NetContext;
+/*
+int
+IL_ColormapTag(const char* image_url, MWContext* cx)
+{
+	return 0;
+}
+*/
 
-PR_BEGIN_EXTERN_C
+/* Force il_set_color_palette() to load a new colormap for an image */
+void
+il_reset_palette(il_container *ic)
+{
+    NI_ColorMap *cmap = &ic->src_header->color_space->cmap;
 
-extern IL_NetContext *
-IL_NewDummyNetContext(MWContext *context,
-                      NET_ReloadMethod cache_reload_policy);
+    ic->colormap_serial_num = -1;
+    ic->dont_use_custom_palette = FALSE;
+    ic->rendered_with_custom_palette = FALSE;
 
-extern void
-IL_DestroyDummyNetContext(IL_NetContext *net_cx);
+    if (cmap->num_colors > 0)
+        cmap->num_colors = 0;
+}
 
-PR_END_EXTERN_C
-
-#endif /* _DUMMY_NC_H */

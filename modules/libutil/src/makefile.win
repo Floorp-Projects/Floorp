@@ -29,3 +29,8 @@ LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\util
 !endif
 
 !include $(DEPTH)\config\rules.mak
+
+!ifdef STANDALONE_IMAGE_LIB
+install::  $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
+!endif

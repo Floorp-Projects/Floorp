@@ -18,13 +18,10 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *   xbm.c --- Decoding of X bit-map format images
- * $Id: xbm.c,v 3.1 1998/03/28 03:35:04 ltabb Exp $
+ * $Id: xbm.cpp,v 3.1 1998/07/27 16:09:52 hardts%netscape.com Exp $
  */
 
 
-/*
-#include "xp.h"
-*/
 
 #include "if.h"
 
@@ -34,7 +31,9 @@
 
 #include "il.h"
 
+PR_BEGIN_EXTERN_C
 extern int MK_OUT_OF_MEMORY;
+PR_END_EXTERN_C
 
 typedef enum {
     xbm_gather,
@@ -103,7 +102,7 @@ int il_xbm_init(il_container *ic)
     if (!hex_table_initialized)
 		il_init_hex_table();
 
-    xs = XP_NEW_ZAP (xbm_struct);
+    xs = PR_NEWZAP (xbm_struct);
     if (xs) 
 	{
 		xs->state = xbm_init;
@@ -128,7 +127,7 @@ il_xbm_init_transparency(il_container *ic)
     IL_IRGB *img_trans_pixel;
    
     if (!src_trans_pixel) {
-        src_trans_pixel = XP_NEW_ZAP(IL_IRGB);
+        src_trans_pixel = PR_NEWZAP(IL_IRGB);
         if (!src_trans_pixel)
             return FALSE;
         ic->src_header->transparent_pixel = src_trans_pixel;
@@ -160,7 +159,7 @@ il_xbm_init_transparency(il_container *ic)
 static void
 ConvertDefault(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
 
     *xs->p = val;
     xs->p++;
@@ -170,7 +169,7 @@ static void
 ConvertBWToRGB8(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
     unsigned int bit_mask;
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
     uint8 *ptr = (uint8 *)xs->p;
 
     for (bit_mask = 128; bit_mask >= last_bit_mask; bit_mask >>= 1) {
@@ -187,7 +186,7 @@ static void
 ConvertBWToRGB16(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
     unsigned int bit_mask;
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
     uint16 *ptr = (uint16 *)xs->p;
 
     for (bit_mask = 128; bit_mask >= last_bit_mask; bit_mask >>= 1) {
@@ -204,7 +203,7 @@ static void
 ConvertBWToRGB24(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
     unsigned int bit_mask;
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
     uint8 *ptr = (uint8 *)xs->p;
 
     for (bit_mask = 128; bit_mask >= last_bit_mask; bit_mask >>= 1) {
@@ -226,7 +225,7 @@ static void
 ConvertBWToRGB32(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
     unsigned int bit_mask;
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
     uint32 *ptr = (uint32 *)xs->p;
 
     for (bit_mask = 128; bit_mask >= last_bit_mask; bit_mask >>= 1) {
@@ -243,7 +242,7 @@ static void
 ConvertBWToCI(void *ds, unsigned char val, unsigned int last_bit_mask)
 {
     unsigned int bit_mask;
-    xbm_struct *xs = ds;
+    xbm_struct *xs = (xbm_struct *)ds;
     uint8 *ptr = (uint8 *)xs->p;
     uint8 bg_pixel = xs->bg_pixel;
     uint8 fg_pixel = xs->fg_pixel;
@@ -277,7 +276,7 @@ il_xbm_setup_color_space_converter(il_container *ic)
             break;
             
         default:
-            XP_ASSERT(0);
+            PR_ASSERT(0);
             break;
         }
         break;
@@ -301,7 +300,7 @@ il_xbm_setup_color_space_converter(il_container *ic)
             break;
             
         default:
-            XP_ASSERT(0);
+            PR_ASSERT(0);
             break;
         }
         break;
@@ -311,7 +310,7 @@ il_xbm_setup_color_space_converter(il_container *ic)
         break;
         
     default:
-        XP_ASSERT(0);
+        PR_ASSERT(0);
         break;
     }
 }
@@ -340,10 +339,10 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
 
     /* If this assert fires, chances are the netlib screwed up and
        continued to send data after the image stream was closed. */
-    XP_ASSERT(xs);
+    PR_ASSERT(xs);
     if (!xs) {
 #ifdef DEBUG
-        XP_TRACE(("Netlib just took a shit on the imagelib\n"));
+        ILTRACE(1,("Netlib just took a shit on the imagelib\n"));
 #endif
         return MK_IMAGE_LOSSAGE;
     }
@@ -380,12 +379,19 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
                            colorspace converters to be modelled along the
                            lines of (and hence bundled with) the per-scanline
                            colorspace converters in the core image library. */
+#ifdef STANDALONE_IMAGE_LIB
+                        ic->img_cx->img_cb->ControlPixmapBits(ic->img_cx->dpy_cx,
+                                                              ic->image, IL_LOCK_BITS);
+                        ic->img_cx->img_cb->ControlPixmapBits(ic->img_cx->dpy_cx,
+                                                              ic->mask, IL_LOCK_BITS);
+#else
                         IMGCBIF_ControlPixmapBits(ic->img_cx->img_cb,
                                                   ic->img_cx->dpy_cx,
                                                   ic->image, IL_LOCK_BITS);
                         IMGCBIF_ControlPixmapBits(ic->img_cx->img_cb,
                                                   ic->img_cx->dpy_cx,
                                                   ic->mask, IL_LOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
 
 #ifdef _USD
                             xs->p = (unsigned char *)image->bits +
@@ -413,12 +419,19 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
                     if (num_pixels <= 8) {
                         xs->converter((void*)xs, val, 1<<(8-num_pixels));
 
+#ifdef STANDALONE_IMAGE_LIB
+                        ic->img_cx->img_cb->ControlPixmapBits(ic->img_cx->dpy_cx,
+                                                              ic->image, IL_UNLOCK_BITS);
+                        ic->img_cx->img_cb->ControlPixmapBits(ic->img_cx->dpy_cx,
+                                                              ic->mask, IL_UNLOCK_BITS);
+#else
                         IMGCBIF_ControlPixmapBits(ic->img_cx->img_cb,
                                                   ic->img_cx->dpy_cx,
                                                   ic->image, IL_UNLOCK_BITS);
                         IMGCBIF_ControlPixmapBits(ic->img_cx->img_cb,
                                                   ic->img_cx->dpy_cx,
                                                   ic->mask, IL_UNLOCK_BITS);
+#endif /* STANDALONE_IMAGE_LIB */
                         
 						xs->xpos=0;
 						xs->ypos++;
@@ -491,8 +504,9 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
                         if (img_header->color_space->type == NI_PseudoColor) {
                             xs->bg_pixel =
                                 img_header->transparent_pixel->index;
-                            xs->fg_pixel =
-                                img_header->color_space->cmap.index[0];
+                            xs->fg_pixel = img_header->color_space->cmap.index ?
+                                img_header->color_space->cmap.index[0] :
+							    il_identity_index_map[0];
                         }
 
                         if (ic->mask) {
@@ -500,7 +514,7 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
                             mask_header = &mask->header;
                         }
 
-						if((map = (IL_RGB*)XP_CALLOC(2, sizeof(IL_RGB)))!=0)
+						if((map = (IL_RGB*)PR_Calloc(2, sizeof(IL_RGB)))!=0)
                             {
 							src_header->color_space->cmap.map = map;
 							map++; /* first index is black */
@@ -622,7 +636,7 @@ int il_xbm_write(il_container *ic, const unsigned char *buf, int32 len)
 
 			default: 
 				ILTRACE(0,("il:xbm: unknown state %d", xs->state));
-				XP_ASSERT(0);
+				PR_ASSERT(0);
 				break;
 			}
     }
@@ -635,7 +649,7 @@ il_xbm_abort(il_container *ic)
     if (ic->ds) 
 	{
 		xbm_struct *xs = (xbm_struct*) ic->ds;
-		XP_FREE(xs);
+		PR_FREEIF(xs);
 		ic->ds = 0;
     }
 }
