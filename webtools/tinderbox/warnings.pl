@@ -198,24 +198,6 @@ $total_ignored_count = 0;
 #  print_html_by_file($fh, $br);
 #  $fh->close;
   
-  # Count up all the total warnings for the summary report
-  my $total_unignored_warnings = $total_warnings_count - $total_ignored_count;
-
-  # If we have zero warnings, something must be wrong. Bail.
-  next unless $total_unignored_warnings > 0;
-
-  # Make the new warnings live.
-  unlink("$tree/warnings.html");
-  my $file_to_link = $warn_file;
-  $file_to_link =~ s|^$tree/||;
-  #XXXsymlink($file_to_link, "$tree/warnings.html");
-
-  # Add an entry to the warning log
-  #
-  my $warn_log = "$tree/warnings.dat";
-  $fh->open(">>$warn_log") or die "Unable to open $warn_log: $!\n";
-  print $fh "$log_file|$total_unignored_warnings\n";
-  $fh->close;
 
 
 # end of main
