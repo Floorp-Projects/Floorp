@@ -263,8 +263,10 @@ function doContextCmd(cmdName, treeName)
 
 
 
-/* Note: doSort() does NOT support natural order sorting! */
-function doSort(sortColName)
+/* Note: doSort() does NOT support natural order sorting, unless naturalOrderResource is valid,
+         in which case we sort ascending on naturalOrderResource
+ */
+function doSort(sortColName, naturalOrderResource)
 {
 	var node = document.getElementById(sortColName);
 	// determine column resource to sort on
@@ -275,18 +277,37 @@ function doSort(sortColName)
 	var isSortActive = node.getAttribute('sortActive');
 	if (isSortActive == "true")
 	{
+		sortDirection = "ascending";
+
 		var currentDirection = node.getAttribute('sortDirection');
 		if (currentDirection == "ascending")
-			sortDirection = "descending";
-		else	sortDirection = "ascending";
+		{
+			if (sortResource != naturalOrderResource)
+			{
+				sortDirection = "descending";
+			}
+		}
+		else if (currentDirection == "descending")
+		{
+			if (naturalOrderResource != null && naturalOrderResource != "")
+			{
+				sortResource = naturalOrderResource;
+			}
+		}
 	}
 
 	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 	if (!isupports)    return(false);
 	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
 	if (!xulSortService)    return(false);
-	xulSortService.Sort(node, sortResource, sortDirection);
-
+	try
+	{
+		xulSortService.Sort(node, sortResource, sortDirection);
+	}
+	catch(ex)
+	{
+		debug("Exception calling xulSortService.Sort()");
+	}
 	return(true);
 }
 
