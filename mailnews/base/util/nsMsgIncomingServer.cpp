@@ -757,17 +757,15 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 
 NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 {
-    NS_ENSURE_ARG_POINTER(aPassword);
-
-	*aPassword = ToNewCString(m_password);
-
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aPassword);
+  *aPassword = ToNewCString(m_password);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+NS_IMETHODIMP nsMsgIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
 {
-    if (!_retval) return NS_ERROR_NULL_POINTER;
-	*_retval = PR_TRUE;
+  NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
+	*aServerRequiresPasswordForBiff = PR_TRUE;
 	return NS_OK;
 }
 

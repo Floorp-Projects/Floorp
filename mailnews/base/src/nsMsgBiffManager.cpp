@@ -328,13 +328,11 @@ nsresult nsMsgBiffManager::PerformBiff()
       PRBool serverBusy = PR_FALSE;
       PRBool serverRequiresPassword = PR_TRUE;
       PRBool userAuthenticated; 
-      // we don't want to prompt the user for password UI so pass in false to
-      // the server->GetPassword method. If we don't already know the passsword then 
-      // we just won't biff this server
       current->server->GetIsAuthenticated(&userAuthenticated);
       current->server->GetServerBusy(&serverBusy);
       current->server->GetServerRequiresPasswordForBiff(&serverRequiresPassword);
-      //Make sure we're logged on before doing a biff
+      // so if we need to be authenticated to biff, check that we are
+      // (since we don't want to prompt the user for password UI)
       // and make sure the server isn't already in the middle of downloading new messages
       if(!serverBusy && (!serverRequiresPassword || userAuthenticated))
         current->server->PerformBiff();

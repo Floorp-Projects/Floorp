@@ -109,7 +109,7 @@ protected:
                                              nsIMsgWindow *window);
     PRBool ConnectionTimeOut(nsINNTPProtocol* aNntpConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
-    NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
+    NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
     nsByteArray        mHostInfoInputStream;    
     nsresult SetupNewsrcSaveTimer();
     static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);

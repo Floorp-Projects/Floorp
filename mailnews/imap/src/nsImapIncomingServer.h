@@ -91,7 +91,7 @@ public:
   NS_IMETHOD GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer);
   NS_IMETHOD GetFilterScope(nsMsgSearchScopeValue *filterScope);
   NS_IMETHOD GetSearchScope(nsMsgSearchScopeValue *searchScope);
-  NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
+  NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff);
   NS_IMETHOD OnUserOrHostNameChanged(const char *oldName, const char *newName);
   NS_IMETHOD GetNumIdleConnections(PRInt32 *aNumIdleConnections);
   NS_IMETHOD ForgetSessionPassword();

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Navin Gupta <naving@netscape.com> (Original Author)
+ * Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -46,22 +47,13 @@
 #include "nsVoidArray.h"
 #include "nsTime.h"
 #include "nsCOMPtr.h"
-#include "nsIIncomingServerListener.h"
 #include "nsIMsgSearchNotify.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
 
-typedef struct {
-	nsCOMPtr<nsIMsgIncomingServer> server;
-  nsCAutoString folderURI;
-	nsTime nextPurgeTime;
-} nsPurgeEntry;
-
-
 class nsMsgPurgeService
 	: public nsIMsgPurgeService,
-    public nsIIncomingServerListener,
 		public nsIMsgSearchNotify
 {
 public:
@@ -70,19 +62,13 @@ public:
 
 	NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPURGESERVICE
-	NS_DECL_NSIINCOMINGSERVERLISTENER
 	NS_DECL_NSIMSGSEARCHNOTIFY
 
 	nsresult PerformPurge();
 
 protected:
-  nsresult AddServer(nsIMsgIncomingServer *server);
-  nsresult RemoveServer(nsIMsgIncomingServer *server);
   PRInt32 FindServer(nsIMsgIncomingServer *server);
-  nsresult PurgeJunkFolder(nsPurgeEntry *entry);
-  nsresult SetNextPurgeTime(nsPurgeEntry *purgeEntry, nsTime startTime);
   nsresult SetupNextPurge();
-  nsresult AddPurgeEntry(nsPurgeEntry *purgeEntry);
   nsresult PurgeSurver(nsIMsgIncomingServer *server);
   nsresult SearchFolderToPurge(nsIMsgFolder *folder, PRInt32 purgeInterval);
 
@@ -93,6 +79,10 @@ protected:
   nsCOMPtr<nsISupportsArray> mHdrsToDelete;
   nsVoidArray mPurgeArray;
   PRBool mHaveShutdown;
+
+private:
+  PRInt32 mMinDelayBetweenPurges;  // in minutes, how long must pass between two consecutive purges on the same junk folder?
+  PRInt32 mPurgeTimerInterval;  // in minutes, how often to check if we need to purge one of the junk folders?
 };
 
 

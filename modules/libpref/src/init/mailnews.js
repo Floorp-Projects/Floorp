@@ -511,3 +511,9 @@ pref("mailnews.message_display.allow.plugins", true);
 // to prevent some mail server to disclose the bcc recipients
 pref("mail.compose.add_undisclosed_recipients", true);
 
+// these prefs (in minutes) are here to help QA test this feature
+// "mail.purge.min_delay", never purge a junk folder more than once every 480 minutes (60 mins/hour * 8 hours)
+// "mail.purge.timer_interval", fire the purge timer every 5 minutes, starting 5 minutes after we load accounts
+pref("mail.purge.min_delay",480);
+pref("mail.purge.timer_interval",5); 
+

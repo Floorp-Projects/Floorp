@@ -2415,11 +2415,11 @@ NS_IMETHODIMP nsImapIncomingServer::ForgetSessionPassword()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+NS_IMETHODIMP nsImapIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
 {
-  NS_ENSURE_ARG_POINTER(_retval);
+  NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
   // if the user has already been authenticated, we've got the password
-  *_retval = !m_userAuthenticated;
+  *aServerRequiresPasswordForBiff = !m_userAuthenticated;
   return NS_OK;
 }
 

@@ -295,7 +295,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
 
 nsresult nsNntpIncomingServer::SetupNewsrcSaveTimer()
 {
-	nsInt64 ms(5000 * 60);   // hard code, 5 minutes.
+	nsInt64 ms(300000);   // hard code, 5 minutes.
 	//Convert biffDelay into milliseconds
 	PRUint32 timeInMSUint32 = (PRUint32)ms;
 	//Can't currently reset a timer when it's in the process of
@@ -707,15 +707,12 @@ nsNntpIncomingServer::PerformBiff()
 	return PerformExpand(nsnull);
 }
 
-NS_IMETHODIMP 
-nsNntpIncomingServer::GetServerRequiresPasswordForBiff(PRBool *_retval)
+NS_IMETHODIMP nsNntpIncomingServer::GetServerRequiresPasswordForBiff(PRBool *aServerRequiresPasswordForBiff)
 {
-    if (!_retval) return NS_ERROR_NULL_POINTER;
-
-	*_retval = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aServerRequiresPasswordForBiff);
+	*aServerRequiresPasswordForBiff = PR_FALSE;  // for news, biff is getting the unread counts
 	return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsNntpIncomingServer::OnStartRunningUrl(nsIURI *url)
