@@ -777,8 +777,19 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIChannel* aTransport,
 {
   nsresult rv = NS_OK;
 
+  PRBool bPropogateOnStop = PR_TRUE;
+
+  // Don't fire OnStops for redirects-- confuses imagelib. See #17393
+  if (mResponse && (aStatus == NS_OK))
+  {
+    PRUint32 resp;
+    mResponse->GetStatus(&resp);
+    if (3 == (int)(resp/100)) // 3* is the redirects
+        bPropogateOnStop = PR_FALSE;
+  }
+
   // Call the consumer OnStopRequest(...) to end the request...
-  if (mResponseDataListener) {
+  if (bPropogateOnStop && mResponseDataListener) {
     rv = mResponseDataListener->OnStopRequest(this, 
                                               mResponseContext, 
                                               aStatus, 
