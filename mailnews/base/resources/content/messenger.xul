@@ -50,7 +50,6 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/shareglue.js"/>
 <html:script src="chrome://messenger/content/msgViewNavigation.js"/>
 <html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
-<html:script src="chrome://navigator/content/contentframe.js"/>
 
 <commands id="commands">
 	<commandset id="CommandUpdate_Mail"
