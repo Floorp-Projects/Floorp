@@ -45,6 +45,20 @@
 struct nsPluginPort;
 
 
+//
+// A nice little list structure. Doesn't own the memory in |mRectList|
+//
+typedef struct TRectArray
+{
+  TRectArray ( Rect* inRectList ) : mRectList(inRectList), mNumRects(0) { }
+  PRInt32 Count ( ) const { return mNumRects; }
+  
+  Rect*     mRectList;
+  PRInt32   mNumRects;
+
+} TRectArray;
+
+
 //-------------------------------------------------------------------------
 //
 // nsWindow
@@ -184,6 +198,9 @@ protected:
 	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
+  void          CombineRects ( TRectArray & inRectArray ) ;
+  void          SortRectsLeftToRight ( TRectArray & inRectArray ) ;
+
 protected:
 #if DEBUG
 	const char*				gInstanceClassName;
@@ -218,11 +235,13 @@ protected:
   // do this differently so provide a way to do both.
 #if TARGET_CARBON
   static OSStatus PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
-  static OSStatus CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
+  static OSStatus AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
+  static OSStatus CountRectProc (UInt16 message, RgnHandle rgn, const Rect *rect, void *refCon);
 #endif
 
   static void PaintUpdateRect (Rect * r, void* data) ;
-  static void CountUpdateRect (Rect * r, void* data) ;
+  static void AddRectToArray (Rect * r, void* data) ;
+  static void CountRect (Rect * r, void* data) ;
 	
 };
 
