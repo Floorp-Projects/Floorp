@@ -75,16 +75,17 @@ nsMsgCompFields::nsMsgCompFields()
   {
     prefs->GetBoolPref("mail.request.return_receipt_on", &m_returnReceipt);
     prefs->GetIntPref("mail.request.return_receipt", &m_receiptType);
+    // Get the default charset from pref, use this as a mail charset.
+    nsXPIDLString charset;
+    prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", getter_Copies(charset));
+    if (charset.IsEmpty())
+      m_DefaultCharacterSet.Assign("ISO-8859-1");
+    else
+      m_DefaultCharacterSet.AssignWithConversion(charset);
+    SetCharacterSet(m_DefaultCharacterSet.get());
   }
   m_internalCharSet.Assign(msgCompHeaderInternalCharset());
 
-  // Get the default charset from pref, use this as a mail charset.
-  char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
-  if (default_mail_charset)
-  {
-    SetCharacterSet(default_mail_charset);
-    PR_Free(default_mail_charset);
-  }
 
   NS_INIT_REFCNT();
 }
@@ -776,4 +777,11 @@ NS_IMETHODIMP nsMsgCompFields::SetSecurityInfo(nsISupports * aSecurityInfo)
 {
   mSecureCompFields = aSecurityInfo;
   return NS_OK;
+}
+
+inline nsresult nsMsgCompFields::GetDefaultCharacterSet(char * *aDefaultCharacterSet)
+{
+  NS_ENSURE_ARG_POINTER(aDefaultCharacterSet);
+  *aDefaultCharacterSet = nsCRT::strdup(m_DefaultCharacterSet.get());
+  return *aDefaultCharacterSet ? NS_OK : NS_ERROR_OUT_OF_MEMORY; 
 }

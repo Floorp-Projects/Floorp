@@ -72,6 +72,7 @@ interface nsIMsgCompFields : nsISupports {
   attribute string  priority;
   attribute string  messageId;
   attribute string  characterSet;
+  readonly attribute string defaultCharacterSet;
 
   attribute wstring templateName;
   attribute string  draftId;

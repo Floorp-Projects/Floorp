@@ -417,29 +417,6 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   return NS_SUCCEEDED(res) ? encodedString : nsnull;
 }
 
-// Get a default mail character set.
-char * nsMsgI18NGetDefaultMailCharset()
-{
-  nsresult res = NS_OK;
-  char * retVal = nsnull;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-  if (nsnull != prefs && NS_SUCCEEDED(res))
-  {
-    nsXPIDLString prefValue;
-    res = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", getter_Copies(prefValue));
-
-    if (NS_SUCCEEDED(res))
-    {
-      //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-      retVal = ToNewUTF8String(prefValue);
-    }
-    else 
-      retVal = nsCRT::strdup("ISO-8859-1");
-  }
-
-  return (nsnull != retVal) ? retVal : nsCRT::strdup("ISO-8859-1");
-}
-
 // Return True if a charset is stateful (e.g. JIS).
 PRBool nsMsgI18Nstateful_charset(const char *charset)
 {

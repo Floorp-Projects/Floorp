@@ -115,13 +115,6 @@ NS_MSG_BASE const char *msgCompHeaderInternalCharset(void);
 NS_MSG_BASE const char * nsMsgI18NFileSystemCharset(void);
 
 /**
- * Return mail/news default send charset.
- *
- * @return            Mail/news default charset for mail send.
- */
-NS_MSG_BASE char * nsMsgI18NGetDefaultMailCharset(void);
-
-/**
  * Convert from unicode to target charset.
  *
  * @param charset     [IN] Charset name.

@@ -1404,8 +1404,7 @@ function SetDocumentCharacterSet(aCharset)
 
 function UpdateMailEditCharset()
 {
-  var send_default_charset = sPrefs.getComplexValue("mailnews.send_default_charset",
-                                     Components.interfaces.nsIPrefLocalizedString).data;
+  var send_default_charset = gMsgCompose.compFields.defaultCharacterSet;
 //  dump("send_default_charset is " + send_default_charset + "\n");
 
   var compFieldsCharset = gMsgCompose.compFields.characterSet;
@@ -1450,8 +1449,7 @@ function GetCharsetUIString()
 {
   var charset = gMsgCompose.compFields.characterSet;
   if (gSendDefaultCharset == null) {
-    gSendDefaultCharset = sPrefs.getComplexValue("mailnews.send_default_charset",
-                                     Components.interfaces.nsIPrefLocalizedString).data;
+    gSendDefaultCharset = gMsgCompose.compFields.defaultCharacterSet;
   }
 
   charset = charset.toUpperCase();
