@@ -106,7 +106,7 @@ NS_IMETHODIMP BarPropImpl::SetVisibleByFlag(PRBool aVisible,
       if(aVisible)
          chromeFlags |= aChromeFlag;
       else
-         chromeFlags |= ~aChromeFlag;
+         chromeFlags &= ~aChromeFlag;
       NS_ENSURE_SUCCESS(mBrowserChrome->SetChromeFlags(chromeFlags),
          NS_ERROR_FAILURE);
       return NS_OK;
