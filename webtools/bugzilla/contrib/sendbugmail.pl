@@ -4,7 +4,7 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id: sendbugmail.pl,v 1.1 2004/07/05 21:54:01 justdave%bugzilla.org Exp $
+# $Id: sendbugmail.pl,v 1.2 2004/11/20 12:35:17 jocuri%softhome.net Exp $
 # 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
@@ -12,9 +12,9 @@
 # users associated with the bug.  Replaces the old "processmail"
 # script.
 # 
-# Usage: bugmail.pl bug_id user_email
+# Usage: perl -T contrib/sendbugmail.pl bug_id user_email
 
-use lib qw(..);
+use lib qw(.);
 
 require "globals.pl";
 use Bugzilla::BugMail;
@@ -37,6 +37,8 @@ if (!($bugnum =~ /^(\d+)$/)) {
   print STDERR "Bug number \"$bugnum\" not numeric.\n";
   usage();
 }
+
+detaint_natural($bugnum);
 
 SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $bugnum");
 
