@@ -1283,7 +1283,6 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-#if 0  
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
@@ -1294,7 +1293,6 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   rv = secMan->CheckLoadURI(docURI, aURL, PR_FALSE);
   NS_IF_RELEASE(docURI);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-#endif
 
   // XXX need to add code to cancel any pending sheets for element
   nsresult result = NS_ERROR_NULL_POINTER;

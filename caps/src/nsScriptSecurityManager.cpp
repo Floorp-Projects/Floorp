@@ -522,23 +522,23 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol };
+    enum Action { AllowProtocol, DenyProtocol, LocalProtocol, PrefAccess };
     struct { 
         const char *name;
         Action action;
     } protocolList[] = {
         { "about",           AllowProtocol },
         { "data",            AllowProtocol },
-        { "file",            DenyProtocol  },
+        { "file",            PrefAccess    },
         { "ftp",             AllowProtocol },
         { "http",            AllowProtocol },
         { "https",           AllowProtocol },
         { "keyword",         DenyProtocol  },
         { "res",             DenyProtocol  },
-        { "resource",        DenyProtocol  },
+        { "resource",        LocalProtocol },
         { "datetime",        DenyProtocol  },
         { "finger",          AllowProtocol },
-        { "chrome",          DenyProtocol  },
+        { "chrome",          LocalProtocol },
         { "javascript",      AllowProtocol },
         { "mailto",          AllowProtocol },
         { "imap",            DenyProtocol  },
@@ -550,13 +550,31 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
 
     for (unsigned i=0; i < sizeof(protocolList)/sizeof(protocolList[0]); i++) {
         if (nsCRT::strcasecmp(scheme, protocolList[i].name) == 0) {
+            PRBool doCheck = PR_FALSE;
             switch (protocolList[i].action) {
             case AllowProtocol:
                 // everyone can access these schemes.
                 return NS_OK;
+            case PrefAccess:
+                // Allow access if pref is set
+                NS_ASSERTION(mPrefs,"nsScriptSecurityManager::mPrefs not initialized");
+                mIsAccessingPrefs = PR_TRUE;
+                mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
+                mIsAccessingPrefs = PR_FALSE;
+                if (!doCheck)
+                    return NS_OK;
+                // Otherwise fall through to Deny.
             case DenyProtocol:
                 // Deny access
                 return NS_ERROR_DOM_BAD_URI;
+            case LocalProtocol:
+                // Other local protocols can access these schemes
+                for (unsigned j=0; j < sizeof(protocolList)/sizeof(protocolList[0]); j++)
+                    if (nsCRT::strcasecmp(fromScheme, protocolList[j].name) == 0)
+                        if (protocolList[j].action == LocalProtocol)
+                            return NS_OK;
+                        else
+                            return NS_ERROR_DOM_BAD_URI;
             }
         }
     }
