@@ -147,8 +147,8 @@ NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowser(PRUint32 aChromeMask,
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserChrome(const PRUnichar* aName,
-   nsIWebBrowserChrome** aWebBrowserChrome)
+NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowser(const PRUnichar* aName,
+   nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
