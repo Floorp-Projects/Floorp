@@ -1,0 +1,76 @@
+#!gmake
+# -*- Mode: Makefile -*-
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "MPL"); you may not use this file except in
+# compliance with the MPL.  You may obtain a copy of the MPL at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the MPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the MPL
+# for the specific language governing rights and limitations under the
+# NPL.
+# 
+# The Initial Developer of this code under the MPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 2001 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+
+ifndef MOZ_SRC_FLIPPED
+$(error MOZ_SRC_FLIPPED is not set)
+endif
+
+ifndef MOZ_TOP
+MOZ_TOP=mozilla
+endif
+
+MOZ_DIST_FLIPPED = $(MOZ_SRC_FLIPPED)/mozilla/dist
+
+ifdef MOZ_DEBUG
+MOZ_OBJDIR = WIN32_D.OBJ
+else
+MOZ_OBJDIR = WIN32_O.OBJ
+endif
+
+NSPR_CONFIGURE := ../configure \
+		--with-mozilla \
+		--with-dist-prefix=$(MOZ_DIST_FLIPPED) \
+		--with-dist-bindir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/bin \
+		--with-dist-libdir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/lib
+
+ifeq (,$(MOZ_DEBUG))
+NSPR_CONFIGURE := $(NSPR_CONFIGURE) --enable-optimize --disable-debug
+endif
+
+define MAKE_OBJDIR
+if test ! -d $(@D) ; then rm -rf $(@D) ; nsinstall -D $(@D) ; fi
+endef
+
+
+all:: build_all
+
+# Argh.  nmake keeps the cwd from cmd to cmd and gmake does not
+# Furthermore, shmsdos doesn't support '&&' so there's a chance the
+# 'cd' could fail and configure would be run in the wrong dir
+#
+$(MOZ_OBJDIR)/config.status: configure configure.in
+	@$(MAKE_OBJDIR) 
+	cd $(MOZ_OBJDIR)/ ; \
+		sh $(NSPR_CONFIGURE)
+
+build_all: $(MOZ_OBJDIR)/config.status check_old
+	gmake -C $(MOZ_OBJDIR)
+
+clobber_all: $(MOZ_OBJDIR)/config.status check_old
+	gmake -C $(MOZ_OBJDIR) clobber_all
+
+distclean: check_old
+	rm -rf WIN32_D.OBJ WIN32_O.OBJ
+
+check_old:
+	@if test -f Makefile; then gmake distclean; fi
+
+
+
