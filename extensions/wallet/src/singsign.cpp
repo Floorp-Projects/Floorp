@@ -396,9 +396,9 @@ si_CheckGetPassword
   if (savePassword != SINGSIGN_SAVE_PASSWORD_PERMANENTLY) {
     check_string = nsnull;
   } else if (SI_GetBoolPref(pref_Crypto, PR_FALSE)) {
-    check_string = Wallet_Localize("SaveThisValueEncrypted");
+    check_string = Wallet_Localize("SaveThisPasswordEncrypted");
   } else {
-    check_string = Wallet_Localize("SaveThisValueObscured");
+    check_string = Wallet_Localize("SaveThisPasswordObscured");
   }
 
   res = dialog->UniversalDialog(
