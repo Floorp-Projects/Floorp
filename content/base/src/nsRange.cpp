@@ -82,8 +82,7 @@ nsVoidArray* nsRange::mStartAncestorOffsets = nsnull;
 nsVoidArray* nsRange::mEndAncestorOffsets = nsnull;  
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
-nsresult NS_NewGenRegularIterator(nsIContentIterator** aInstancePtrResult);
-nsresult NS_NewGenSubtreeIterator(nsIContentIterator** aInstancePtrResult);
+nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 
 
 
@@ -1347,158 +1346,499 @@ nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
   return DoSetRange(theNode,0,theNode,indx);
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  class RangeSubtreeIterator
+#pragma mark -
+#endif
+
+// The Subtree Content Iterator only returns subtrees that are
+// completely within a given range. It doesn't return a CharacterData
+// node that contains either the start or end point of the range.
+// We need an iterator that will also include these start/end points
+// so that our methods/algorithms aren't cluttered with special
+// case code that tries to include these points while iterating.
+//
+// The RangeSubtreeIterator class mimics the nsIContentIterator
+// methods we need, so should the Content Iterator support the
+// start/end points in the future, we can switchover relatively
+// easy.
+
+class RangeSubtreeIterator
+{
+private:
+
+  enum RangeSubtreeIterState { eDone=0,
+                               eUseStartCData,
+                               eUseIterator,
+                               eUseEndCData };
+
+  nsCOMPtr<nsIContentIterator>  mIter;
+  RangeSubtreeIterState         mIterState;
+
+  nsCOMPtr<nsIDOMNode>          mStartCData;
+  nsCOMPtr<nsIDOMNode>          mEndCData;
+
+public:
+
+  RangeSubtreeIterator() : mIterState(eDone) {}
+  ~RangeSubtreeIterator() {}
+
+  nsresult Init(nsIDOMRange *aRange)
+  {
+    NS_ENSURE_ARG_POINTER(aRange);
+
+    mIterState = eDone;
+
+    nsCOMPtr<nsIDOMNode> node;
+
+    // Grab the start point of the range and QI it to
+    // a CharacterData pointer. If it is CharacterData store
+    // a pointer to the node.
+
+    nsresult res = aRange->GetStartContainer(getter_AddRefs(node));
+    if (NS_FAILED(res)) return res;
+    if (!node) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMCharacterData> cData = do_QueryInterface(node);
+    if (cData)
+      mStartCData = node;
+
+    // Grab the end point of the range and QI it to
+    // a CharacterData pointer. If it is CharacterData store
+    // a pointer to the node.
+
+    res = aRange->GetEndContainer(getter_AddRefs(node));
+    if (NS_FAILED(res)) return res;
+    if (!node) return NS_ERROR_FAILURE;
+
+    cData = do_QueryInterface(node);
+    if (cData)
+      mEndCData = node;
+
+    if (mStartCData && mStartCData == mEndCData)
+    {
+      // The range starts and stops in the same CharacterData
+      // node. Null out the end pointer so we only visit the
+      // node once!
+
+      mEndCData = nsnull;
+    }
+    else
+    {
+      // Now create a Content Subtree Iterator to be used
+      // for the subtrees between the end points!
+
+      res = NS_NewContentSubtreeIterator(getter_AddRefs(mIter));
+
+      if (NS_FAILED(res)) return res;
+      if (!mIter) return NS_ERROR_FAILURE;
+
+      res = mIter->Init(aRange);
+      if (NS_FAILED(res)) return res;
+
+      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
+      {
+        // The subtree iterator thinks there's nothing
+        // to iterate over, so just free it up so we
+        // don't accidentally call into it.
+
+        mIter = nsnull;
+      }
+    }
+
+    // Initialize the iterator by calling First().
+    // Note that we are ignoring the return value on purpose!
+
+    (void)First();
+
+    return NS_OK;
+  }
+
+  nsresult CurrentNode(nsIDOMNode **aNode)
+  {
+    NS_ENSURE_ARG_POINTER(aNode);
+
+    *aNode = nsnull;
+
+    nsresult res = NS_OK;
+
+    if (mIterState == eUseStartCData && mStartCData)
+      *aNode = mStartCData;
+    else if (mIterState == eUseEndCData && mEndCData)
+      *aNode = mEndCData;
+    else if (mIterState == eUseIterator && mIter)
+    {
+      nsCOMPtr<nsIContent> content;
+      res = mIter->CurrentNode(getter_AddRefs(content));
+      if (NS_FAILED(res)) return res;
+      if (!content) return NS_ERROR_FAILURE;
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+      if (!node) return NS_ERROR_FAILURE;
+      *aNode = node;
+    }
+    else
+      res = NS_ERROR_FAILURE;
+
+    NS_IF_ADDREF(*aNode);
+
+    return res;
+  }
+
+  nsresult First()
+  {
+    nsresult res = NS_OK;
+
+    if (mStartCData)
+      mIterState = eUseStartCData;
+    else if (mIter)
+    {
+      res = mIter->First();
+      if (NS_FAILED(res)) return res;
+      mIterState = eUseIterator;
+    }
+    else if (mEndCData)
+      mIterState = eUseEndCData;
+    else
+      res = NS_ERROR_FAILURE;
+
+    return res;
+  }
+
+  nsresult Last()
+  {
+    nsresult res = NS_OK;
+
+    if (mEndCData)
+      mIterState = eUseEndCData;
+    else if (mIter)
+    {
+      res = mIter->Last();
+      if (NS_FAILED(res)) return res;
+      mIterState = eUseIterator;
+    }
+    else if (mStartCData)
+      mIterState = eUseStartCData;
+    else
+      res = NS_ERROR_FAILURE;
+
+    return res;
+  }
+
+  nsresult Next()
+  {
+    nsresult res = NS_OK;
+
+    if (mIterState == eUseStartCData)
+    {
+      if (mIter)
+      {
+        res = mIter->First();
+        if (NS_FAILED(res)) return res;
+        mIterState = eUseIterator;
+      }
+      else if (mEndCData)
+        mIterState = eUseEndCData;
+      else
+        mIterState = eDone;
+    }
+    else if (mIterState == eUseIterator)
+    {
+      res = mIter->Next();
+      if (NS_FAILED(res)) return res;
+
+      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
+      {
+        if (mEndCData)
+          mIterState = eUseEndCData;
+        else
+          mIterState = eDone;
+      }
+    }
+    else if (mIterState == eUseEndCData)
+      mIterState = eDone;
+    else
+      res = NS_ERROR_FAILURE;
+
+    return res;
+  }
+
+  nsresult Prev()
+  {
+    nsresult res = NS_OK;
+
+    if (mIterState == eUseEndCData)
+    {
+      if (mIter)
+      {
+        res = mIter->Last();
+        if (NS_FAILED(res)) return res;
+        mIterState = eUseIterator;
+      }
+      else if (mStartCData)
+        mIterState = eUseStartCData;
+      else
+        mIterState = eDone;
+    }
+    else if (mIterState == eUseIterator)
+    {
+      res = mIter->Prev();
+      if (NS_FAILED(res)) return res;
+
+      if (mIter->IsDone() != NS_ENUMERATOR_FALSE)
+      {
+        if (mStartCData)
+          mIterState = eUseStartCData;
+        else
+          mIterState = eDone;
+      }
+    }
+    else if (mIterState == eUseStartCData)
+      mIterState = eDone;
+    else
+      res = NS_ERROR_FAILURE;
+
+    return res;
+  }
+
+  PRBool IsDone()
+  {
+    return mIterState == eDone;
+  }
+};
+
+// CollapseRangeAfterDelete() is a utiltiy method that is used by
+// DeleteContents() and ExtractContents() to collapse the range
+// in the correct place, under the range's root container (the
+// range end points common container) as outlined by the Range spec:
+//
+// http://www.w3.org/TR/2000/REC-DOM-Level-2-Traversal-Range-20001113/ranges.html
+// The assumption made by this method is that the delete or extract
+// has been done already, and left the range in a state where there is
+// no content between the 2 end points.
+
+nsresult nsRange::CollapseRangeAfterDelete(nsIDOMRange *aRange)
+{
+  NS_ENSURE_ARG_POINTER(aRange);
+
+  // Check if range gravity took care of collapsing the range for us!
+
+  PRBool isCollapsed = PR_FALSE;
+  nsresult res = aRange->GetCollapsed(&isCollapsed);
+  if (NS_FAILED(res)) return res;
+
+  if (isCollapsed)
+  {
+    // aRange is collapsed so there's nothing for us to do.
+    //
+    // There are 2 possible scenarios here:
+    //
+    // 1. aRange could've been collapsed prior to the delete/extract,
+    //    which would've resulted in nothing being removed, so aRange
+    //    is already where it should be.
+    //
+    // 2. Prior to the delete/extract, aRange's start and end were in
+    //    the same container which would mean everything between them
+    //    was removed, causing range gravity to collapse the range.
+
+    return NS_OK;
+  }
+
+  // aRange isn't collapsed so figure out the appropriate place to collapse!
+  // First get both end points and their common ancestor.
+
+  nsCOMPtr<nsIDOMNode> commonAncestor;
+  res = aRange->GetCommonAncestorContainer(getter_AddRefs(commonAncestor));
+  if(NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> startContainer, endContainer;
+
+  res = aRange->GetStartContainer(getter_AddRefs(startContainer));
+  if (NS_FAILED(res)) return res;
+
+  res = aRange->GetEndContainer(getter_AddRefs(endContainer));
+  if (NS_FAILED(res)) return res;
+
+  // Collapse to one of the end points if they are already in the
+  // commonAncestor. This should work ok since this method is called
+  // immediately after a delete or extract that leaves no content
+  // between the 2 end points!
+
+  if (startContainer == commonAncestor)
+    return aRange->Collapse(PR_TRUE);
+  if (endContainer == commonAncestor)
+    return aRange->Collapse(PR_FALSE);
+
+  // End points are at differing levels. We want to collapse to the
+  // point that is between the 2 subtrees that contain each point,
+  // under the common ancestor.
+
+  nsCOMPtr<nsIDOMNode> nodeToSelect(startContainer), parent;
+
+  while (nodeToSelect)
+  {
+    nsresult res = nodeToSelect->GetParentNode(getter_AddRefs(parent));
+    if (NS_FAILED(res)) return res;
+
+    if (parent == commonAncestor)
+      break; // We found the nodeToSelect!
+
+    nodeToSelect = parent;
+  }
+
+  if (!nodeToSelect)
+    return NS_ERROR_FAILURE; // This should never happen!
+
+  res = aRange->SelectNode(nodeToSelect);
+  if (NS_FAILED(res)) return res;
+
+  return aRange->Collapse(PR_FALSE);
+}
+
 nsresult nsRange::DeleteContents()
 { 
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
-  nsCOMPtr<nsIContent> cStart;
-  nsCOMPtr<nsIContent> cEnd;
-  
-  // get the content versions of our endpoints
-  nsresult res = mStartParent->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(cStart));
-  if (NS_FAILED(res)) 
+  // Save the range end points locally to avoid interference
+  // of Range gravity during our edits!
+
+  nsCOMPtr<nsIDOMNode> startContainer(mStartParent);
+  PRInt32              startOffset = mStartOffset;
+  nsCOMPtr<nsIDOMNode> endContainer(mEndParent);
+  PRInt32              endOffset = mEndOffset;
+
+  // Create and initialize a subtree iterator that will give
+  // us all the subtrees within the range.
+
+  RangeSubtreeIterator iter;
+
+  nsresult res = iter.Init(this);
+  if (NS_FAILED(res)) return res;
+
+  if (iter.IsDone())
   {
-    NS_NOTREACHED("nsRange::DeleteContents");
-    return NS_ERROR_UNEXPECTED;
+    // There's nothing for us to delete.
+    return CollapseRangeAfterDelete(this);
   }
-  res = mEndParent->QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(cEnd));
-  if (NS_FAILED(res)) 
+
+  // We delete backwards to avoid iterator problems!
+
+  res = iter.Last();
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> node;
+  res = iter.CurrentNode(getter_AddRefs(node));
+  if (NS_FAILED(res)) return res;
+  if (!node) return NS_ERROR_FAILURE;
+
+  PRBool handled = PR_FALSE;
+
+  // With the exception of text nodes that contain one of the range
+  // end points, the subtree iterator should only give us back subtrees
+  // that are completely contained between the range's end points.
+
+  while (node)
   {
-    NS_NOTREACHED("nsRange::DeleteContents");
-    return NS_ERROR_UNEXPECTED;
-  }
-  
-  // effeciency hack for simple case
-  if (cStart == cEnd)
-  {
-    PRBool hasChildren;
-    res = cStart->CanContainChildren(hasChildren);
-    if (NS_FAILED(res)) 
+    // Before we delete anything, advance the iterator to the
+    // next subtree.
+
+    res = iter.Prev();
+    if (NS_FAILED(res)) return res;
+
+    handled = PR_FALSE;
+
+    // If it's CharacterData, make sure we might need to delete
+    // part of the data, instead of removing the whole node.
+    //
+    // XXX_kin: We need to also handle ProcessingInstruction
+    // XXX_kin: according to the spec.
+
+    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(node));
+
+    if (charData)
     {
-      NS_NOTREACHED("nsRange::DeleteContents");
-      return res;
-    }
-    
-    if (hasChildren)
-    {
-      PRInt32 i;  
-      for (i=mEndOffset - 1; i >= mStartOffset; --i)
+      PRUint32 dataLength = 0;
+
+      if (node == startContainer)
       {
-        res = cStart->RemoveChildAt(i, PR_TRUE);
-        if (NS_FAILED(res)) 
+        if (node == endContainer)
         {
-          NS_NOTREACHED("nsRange::DeleteContents");
-          return res;
+          // This range is completely contained within a single text node.
+          // Delete the data between startOffset and endOffset.
+
+          if (endOffset > startOffset)
+          {
+            res = charData->DeleteData(startOffset, endOffset - startOffset);
+            if (NS_FAILED(res)) return res;
+          }
+
+          handled = PR_TRUE;
+        }
+        else
+        {
+          // Delete everything after startOffset.
+
+          res = charData->GetLength(&dataLength);
+          if (NS_FAILED(res)) return res;
+
+          if (dataLength > (PRUint32)startOffset)
+          {
+            res = charData->DeleteData(startOffset, dataLength - startOffset);
+            if (NS_FAILED(res)) return res;
+          }
+
+          handled = PR_TRUE;
         }
       }
-      return NS_OK;
-    }
-    else // textnode -  offsets refer to data in node
-    {
-      nsCOMPtr<nsIDOMText> textNode;
-      res = mStartParent->QueryInterface(NS_GET_IID(nsIDOMText), getter_AddRefs(textNode));
-      if (NS_FAILED(res)) // if it's not a text node, punt
+      else if (node == endContainer)
       {
-        NS_NOTREACHED("nsRange::DeleteContents");
-        return NS_ERROR_UNEXPECTED;
-      }
-      // delete the text
-      res = textNode->DeleteData(mStartOffset, mEndOffset - mStartOffset);
-      if (NS_FAILED(res)) 
-      {
-        NS_NOTREACHED("nsRange::DeleteContents");
-        return res;
-      }
+        // Delete the data between 0 and endOffset.
 
-      // collapse range endpoints; gravity should do this, but just in case ...
-      mEndOffset = mStartOffset;
+        if (endOffset > 0)
+        {
+          res = charData->DeleteData(0, endOffset);
+          if (NS_FAILED(res)) return res;
+        }
 
-      return NS_OK;
+        handled = PR_TRUE;
+      }       
     }
-  } 
-  
-  /* complex case: cStart != cEnd
-     revisit - there are potential optimizations here and also tradeoffs.
-  */
-  
-  // get start node ancestors
-  nsAutoVoidArray startAncestorList;
-  
-  FillArrayWithAncestors(&startAncestorList,mStartParent);
-  
-  nsCOMPtr<nsIContentIterator> iter;
-  res = NS_NewContentIterator(getter_AddRefs(iter));
-  if (NS_FAILED(res))  return res;
-  res = iter->Init(this);
-  if (NS_FAILED(res))  return res;
 
-  // thread safety - need locks around here to end of routine since we
-  // aren't ADDREFing nodes as we put them on the delete list
-  // and then releasing them when we take them off
-  nsAutoRangeLock lock;
-  
-  nsAutoVoidArray deleteList;
-  nsCOMPtr<nsIContent> cN;
-  nsCOMPtr<nsIContent> cParent;
-  PRInt32 indx;
- 
-  // loop through the content iterator, which returns nodes in the range in 
-  // close tag order, and mark for deletion any node that is not an ancestor
-  // of the start node.
-  iter->CurrentNode(getter_AddRefs(cN));
-  while (cN && (NS_ENUMERATOR_FALSE == iter->IsDone()))
-  {
-    // if node is not an ancestor of start node, delete it
-    if (startAncestorList.IndexOf(NS_STATIC_CAST(void*,cN)) == -1)
+    if (!handled)
     {
-      deleteList.AppendElement(NS_STATIC_CAST(void*,cN));
+      // node was not handled above, so it must be completely contained
+      // within the range. Just remove it from the tree!
+
+      nsCOMPtr<nsIDOMNode> parent, tmpNode;
+
+      res = node->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(res)) return res;
+
+      res = parent->RemoveChild(node, getter_AddRefs(tmpNode));
+      if (NS_FAILED(res)) return res;
     }
-    res = iter->Next();
-    if (NS_FAILED(res)) // a little noise here to catch bugs
-    {
-      NS_NOTREACHED("nsRange::DeleteContents() : iterator failed to advance");
-      return res;
-    }
-    iter->CurrentNode(getter_AddRefs(cN));
-  }
-  
-  // remove the nodes on the delete list
-  // reverse order delete is faster since the nodes will tend to be in order
-  for (PRInt32 i = deleteList.Count()-1; i >= 0; --i)
-  {
-    cN = do_QueryInterface(NS_STATIC_CAST(nsIContent*, deleteList.ElementAt(i)));
-    res = cN->GetParent(*getter_AddRefs(cParent));
+
+    if (iter.IsDone())
+      break; // We must be done!
+
+    res = iter.CurrentNode(getter_AddRefs(node));
     if (NS_FAILED(res)) return res;
-    res = cParent->IndexOf(cN,indx);
-    if (NS_FAILED(res)) return res;
-    res = cParent->RemoveChildAt(indx, PR_TRUE);
-    if (NS_FAILED(res)) return res;
-  }
-  //deleteList.Clear();  not needed, this will be deleted on function exit
-  
- // If mStartParent is a text node, delete the text after start offset
-  nsCOMPtr<nsIDOMText> textNode( do_QueryInterface(mStartParent) );
-  if (textNode) 
-  {
-    res = textNode->DeleteData(mStartOffset, 0xFFFFFFFF); // del to end
-    if (NS_FAILED(res))
-      return res;
+    if (!node) return NS_ERROR_FAILURE;
   }
 
-  // If mEndParent is a text node, delete the text before end offset
-  textNode = do_QueryInterface(mEndParent);  
-  if (textNode) 
-  {
-    res = textNode->DeleteData(0, mEndOffset); // del from start
-    if (NS_FAILED(res))
-      return res;
-  }
-  // Collapse to start point:
-  mEndParent = mStartParent;
-  mEndOffset = mStartOffset;
+  // XXX_kin: At this point we should be checking for the case
+  // XXX_kin: where we have 2 adjacent text nodes left, each
+  // XXX_kin: containing one of the range end points. The spec
+  // XXX_kin: says the 2 nodes should be merged in that case,
+  // XXX_kin: and to use Normalize() to do the merging, but
+  // XXX_kin: calling Normalize() on the common parent to accomplish
+  // XXX_kin: this might also normalize nodes that are outside the
+  // XXX_kin: range but under the common parent. Need to verify
+  // XXX_kin: with the range commitee members that this was the
+  // XXX_kin: desired behavior. For now we don't merge anything!
 
-  return NS_OK;
+  return CollapseRangeAfterDelete(this);
 }
 
 nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
@@ -1570,6 +1910,12 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
+  // XXX_kin: The spec says that nodes that are completely in the
+  // XXX_kin: range should be moved into the document fragment, not
+  // XXX_kin: copied. This method will have to be rewritten using
+  // XXX_kin: DeleteContents() as a template, with the charData cloning
+  // XXX_kin: code from CloneContents() merged in.
+
   nsresult res = CloneContents(aReturn);
   if (NS_FAILED(res))
     return res;
@@ -1577,123 +1923,65 @@ nsresult nsRange::ExtractContents(nsIDOMDocumentFragment** aReturn)
   return res; 
 }
 
-// CloneSibsAndParents(node, dogfrag, leftP)
-// Assumes that the node passed in is already a clone.
-// If node == 0, adds directly to doc fragment.
-// Algorithm:
-// - Loop from start child until common parent
-//   - clone parent (or use doc frag if parent == common parent)
-//   - add self & left or right right sibs' clones to parent
-//   - recurse to parent
-//
-nsresult
-nsRange::CloneSibsAndParents(nsIDOMNode* aParentNode, PRInt32 nodeOffset,
-                             nsIDOMNode* aClonedNode,
-                             nsIDOMNode* aCommonParent,
-                             nsIDOMDocumentFragment* docfrag,
-                             PRBool leftP)
+nsresult nsRange::CloneParentsBetween(nsIDOMNode *aAncestor,
+                             nsIDOMNode *aNode,
+                             nsIDOMNode **aClosestAncestor,
+                             nsIDOMNode **aFarthestAncestor)
 {
-  nsresult res;
+  NS_ENSURE_ARG_POINTER((aAncestor && aNode && aClosestAncestor && aFarthestAncestor));
 
-  if (!docfrag)
-    return NS_ERROR_INVALID_ARG;
+  *aClosestAncestor  = nsnull;
+  *aFarthestAncestor = nsnull;
 
-  nsCOMPtr<nsIDOMNode> parentClone;
-  if (!aParentNode)
+  if (aAncestor == aNode)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> parent, firstParent, lastParent;
+
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
+
+  while(parent && parent != aAncestor)
   {
-    return NS_ERROR_INVALID_ARG;
-  }
+    nsCOMPtr<nsIDOMNode> clone, tmpNode;
 
-  nsCOMPtr<nsIDOMNode> parentNode = aParentNode;
-  nsCOMPtr<nsIDOMNode> clonedNode = aClonedNode;
-  nsCOMPtr<nsIDOMNode> commonParent = aCommonParent;
-  
-  // Make clone of parent:
-  if (parentNode == commonParent || !parentNode)
-  {
-    parentClone = do_QueryInterface(docfrag);
-  }
-  else
-  {
-    res = parentNode->CloneNode(PR_FALSE, getter_AddRefs(parentClone));
-    if (NS_FAILED(res))
-      return res;
-  }
+    res = parent->CloneNode(PR_FALSE, getter_AddRefs(clone));
 
-  // Loop over self and left or right siblings, and add to parent clone:
-  nsCOMPtr<nsIDOMNode> clone;
-  nsCOMPtr<nsIDOMNode> retNode;    // To hold the useless return value of insertBefore
+    if (NS_FAILED(res)) return res;
+    if (!clone)         return NS_ERROR_FAILURE;
 
-  int i = 0;  // or 1, depending on which base IndexOf uses
-  nsCOMPtr<nsIDOMNode> tmpNode;
-  res = parentNode->GetFirstChild(getter_AddRefs(tmpNode));
-  if (NS_FAILED(res))
-  {
-    return res;
-  }
-
-  while (1)
-  {
-    if (i == nodeOffset)
-    {
-      // If we weren't passed in a clone of node, make one now:
-      if (!clonedNode)
-      {
-        res = tmpNode->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
-        if (NS_FAILED(res))
-          break;
-      }
-
-      res = parentClone->InsertBefore(clonedNode, (nsIDOMNode*)0, getter_AddRefs(retNode));
-    }
-    else if ((leftP && (i < nodeOffset))
-             || (!leftP && (i > nodeOffset)))
-    {
-      res = tmpNode->CloneNode(PR_TRUE, getter_AddRefs(clone));
-      res = parentClone->InsertBefore(clone, (nsIDOMNode*)0, getter_AddRefs(retNode));
-    }
+    if (! firstParent)
+      firstParent = lastParent = clone;
     else
-      res = NS_OK;
-    if (NS_FAILED(res))
-      break;
+    {
+      res = clone->AppendChild(lastParent, getter_AddRefs(tmpNode));
 
-    ++i;
-    nsCOMPtr<nsIDOMNode> tmptmpNode = tmpNode;
-    res = tmpNode->GetNextSibling(getter_AddRefs(tmpNode));
-    if (NS_FAILED(res) || tmpNode == 0)
-      break;
+      if (NS_FAILED(res)) return res;
+
+      lastParent = clone;
+    }
+
+    tmpNode = parent;
+    res = tmpNode->GetParentNode(getter_AddRefs(parent));
   }
 
-  if (NS_FAILED(res))	  // Probably broke out of the loop prematurely
-    return res;
+  *aClosestAncestor  = firstParent;
+  NS_IF_ADDREF(*aClosestAncestor);
 
-  // Recurse to parent:
-  tmpNode = parentNode;
-  res = tmpNode->GetParentNode(getter_AddRefs(parentNode));
-  if (NS_SUCCEEDED(res))
-  {
-    PRInt32 indx = IndexOf(parentNode);
-    return CloneSibsAndParents(parentNode, indx, parentClone,
-                               commonParent, docfrag, leftP);
-  }
+  *aFarthestAncestor = lastParent;
+  NS_IF_ADDREF(*aFarthestAncestor);
 
-  //
-  // XXX This is fine for left children but it will include too much
-  // XXX instead of stopping at the left children of the end node.
-  //
-  
-  return res;
+  return NS_OK;
 }
 
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
-  if(IsDetached())
+  if (IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
 
   nsresult res;
   nsCOMPtr<nsIDOMNode> commonAncestor;
   res = GetCommonAncestorContainer(getter_AddRefs(commonAncestor));
-  if(NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) return res;
 
   nsCOMPtr<nsIDOMDocument> document;
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
@@ -1701,6 +1989,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 
   // Create a new document fragment in the context of this document,
   // which might be null
+
   nsCOMPtr<nsIDOMDocumentFragment> clonedFrag;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
@@ -1708,38 +1997,178 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   res = NS_NewDocumentFragment(getter_AddRefs(clonedFrag), doc);
   if (NS_FAILED(res)) return res;
 
-  PRUint16 commonAncestorNodeType;
-  commonAncestor->GetNodeType(&commonAncestorNodeType);
-  if( (nsIDOMNode::CDATA_SECTION_NODE == commonAncestorNodeType) ||
-     (nsIDOMNode::TEXT_NODE == commonAncestorNodeType) )
+  nsCOMPtr<nsIDOMNode> commonCloneAncestor(do_QueryInterface(clonedFrag));
+  if (!commonCloneAncestor) return NS_ERROR_FAILURE;
+
+  // Create and initialize a subtree iterator that will give
+  // us all the subtrees within the range.
+
+  RangeSubtreeIterator iter;
+
+  res = iter.Init(this);
+  if (NS_FAILED(res)) return res;
+
+  if (iter.IsDone())
   {
-    nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
-    res = CopyContents(commonAncestor, clonedNode, this);
-    if(NS_FAILED(res)) return res;
-    clonedFrag = do_QueryInterface(clonedNode);
+    // There's nothing to add to the doc frag, we must be done!
+
     *aReturn = clonedFrag;
-    NS_ADDREF(*aReturn);
+    NS_IF_ADDREF(*aReturn);
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> firstChild, nextSibling;
-  res = commonAncestor->GetFirstChild(getter_AddRefs(firstChild));
+  res = iter.First();
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
+  nsCOMPtr<nsIDOMNode> node;
+  res = iter.CurrentNode(getter_AddRefs(node));
+  if (NS_FAILED(res)) return res;
+  if (!node) return NS_ERROR_FAILURE;
 
-  while(firstChild)
+
+  // With the exception of text nodes that contain one of the range
+  // end points, the subtree iterator should only give us back subtrees
+  // that are completely contained between the range's end points.
+  //
+  // Unfortunately these subtrees don't contain the parent hierarchy/context
+  // that the Range spec requires us to return. This loop clones the
+  // parent hierarchy, adds a cloned version of the subtree, to it, then
+  // correctly places this new subtree into the doc fragment.
+
+  while (node)
   {
-    res = firstChild->GetNextSibling(getter_AddRefs(nextSibling));
+    // Clone the current subtree!
+
+    nsCOMPtr<nsIDOMNode> clone;
+    res = node->CloneNode(PR_TRUE, getter_AddRefs(clone));
+
     if (NS_FAILED(res)) return res;
- 
-    res = CopyContents(firstChild, clonedNode, this);
+    if (!clone) return NS_ERROR_FAILURE;
+
+    // If it's CharacterData, make sure we only clone what
+    // is in the range.
+    //
+    // XXX_kin: We need to also handle ProcessingInstruction
+    // XXX_kin: according to the spec.
+
+    nsCOMPtr<nsIDOMCharacterData> charData(do_QueryInterface(clone));
+
+    if (charData)
+    {
+      if (node == mEndParent)
+      {
+        // We only need the data before mEndOffset, so get rid of any
+        // data after it.
+
+        PRUint32 dataLength = 0;
+        res = charData->GetLength(&dataLength);
+        if (NS_FAILED(res)) return res;
+
+        if (dataLength > (PRUint32)mEndOffset)
+        {
+          res = charData->DeleteData(mEndOffset, dataLength - mEndOffset);
+          if (NS_FAILED(res)) return res;
+        }
+      }       
+
+      if (node == mStartParent)
+      {
+        // We don't need any data before mStartOffset, so just
+        // delete it!
+
+        if (mStartOffset > 0)
+        {
+          res = charData->DeleteData(0, mStartOffset);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+    }
+
+    // Clone the parent hierarchy between commonAncestor and node.
+
+    nsCOMPtr<nsIDOMNode> closestAncestor, farthestAncestor;
+
+    res = CloneParentsBetween(commonAncestor, node,
+                              getter_AddRefs(closestAncestor),
+                              getter_AddRefs(farthestAncestor));
+
     if (NS_FAILED(res)) return res;
-    firstChild = nextSibling;
+
+    // Hook the parent hierarchy/context of the subtree into the clone tree.
+
+    nsCOMPtr<nsIDOMNode> tmpNode;
+
+    if (farthestAncestor)
+    {
+      res = commonCloneAncestor->AppendChild(farthestAncestor,
+                                             getter_AddRefs(tmpNode));
+
+      if (NS_FAILED(res)) return res;
+    }
+
+    // Place the cloned subtree into the cloned doc frag tree!
+
+    if (closestAncestor)
+    {
+      // Append the subtree under closestAncestor since it is the
+      // immediate parent of the subtree.
+
+      res = closestAncestor->AppendChild(clone, getter_AddRefs(tmpNode));
+
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      // If we get here, there is no missing parent hierarchy between 
+      // commonAncestor and node, so just append clone to commonCloneAncestor.
+
+      res = commonCloneAncestor->AppendChild(clone, getter_AddRefs(tmpNode));
+
+      if (NS_FAILED(res)) return res;
+    }
+
+    // Get the next subtree to be processed. The idea here is to setup
+    // the parameters for the next iteration of the loop.
+
+    res = iter.Next();
+
+    if (iter.IsDone())
+      break; // We must be done!
+
+    nsCOMPtr<nsIDOMNode> nextNode;
+    res = iter.CurrentNode(getter_AddRefs(nextNode));
+    if (NS_FAILED(res)) return res;
+    if (!nextNode) return NS_ERROR_FAILURE;
+
+    // Get node and nextNode's common parent.
+
+    commonAncestor = CommonParent(node, nextNode);
+
+    if (!commonAncestor)
+      return NS_ERROR_FAILURE;
+
+    // Find the equivalent of commonAncestor in the cloned tree!
+
+    while (node && node != commonAncestor)
+    {
+      tmpNode = node;
+      res = tmpNode->GetParentNode(getter_AddRefs(node));
+      if (NS_FAILED(res)) return res;
+      if (!node) return NS_ERROR_FAILURE;
+
+      tmpNode = clone;
+      res = tmpNode->GetParentNode(getter_AddRefs(clone));
+      if (NS_FAILED(res)) return res;
+      if (!node) return NS_ERROR_FAILURE;
+    }
+
+    commonCloneAncestor = clone;
+    node = nextNode;
   }
 
   *aReturn = clonedFrag;
-  NS_ADDREF(*aReturn);
+  NS_IF_ADDREF(*aReturn);
+
   return NS_OK;
 }
 
@@ -2468,137 +2897,6 @@ nsRange::Unlock()
   if (mMonitor)
     PR_ExitMonitor(mMonitor);
 
-  return NS_OK;
-}
-
-
-nsresult
-nsRange::CopyContents(nsIDOMNode* aFromNode, nsIDOMNode* aAppendToNode, nsRange* aInRange)
-{
-  nsresult res;
-  PRBool nodeIntersects;
-  res = aInRange->IntersectsNode(aFromNode, &nodeIntersects);
-  if(NS_FAILED(res)) 
-    return res;
-  if(!nodeIntersects) 
-    return NS_ERROR_FAILURE;
-
-  PRUint16 compare;
-  nsCOMPtr<nsIDOMNode> clonedNode;
-  res = aInRange->CompareNode(aFromNode, &compare);
-  switch(compare)
-  {
-  case NODE_INSIDE:
-    {//node completely inside range, clone it and it's contents
-      res = aFromNode->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
-      if(NS_FAILED(res))
-        return res;
-      nsCOMPtr<nsIDOMNode>tempNode;
-      return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
-    }break;
-  case NODE_BEFORE_AND_AFTER:
-    {//this node is partially selected by the range, it extends before and after the range
-      PRUint16 tNodeType;
-      aFromNode->GetNodeType(&tNodeType);
-      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
-         (nsIDOMNode::TEXT_NODE == tNodeType) )
-      {//split the Text/CDATASection node into the 3 sections (before,inside,after) and clone the inside contents
-        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
-        if(NS_FAILED(res)) return res;
-
-        // get the offsets for the splitting
-        PRInt32 tEndOffset, tStartOffset;
-        aInRange->GetEndOffset(&tEndOffset);
-        aInRange->GetStartOffset(&tStartOffset);
-        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
-        nsCOMPtr<nsIDOMText> tTempText;
-        //split off the end
-        res = tText->SplitText(tEndOffset, getter_AddRefs(tTempText));
-        if(NS_FAILED(res)) return res;
-        tText = tTempText;
-        //split off the start
-        res = tText->SplitText(tStartOffset, getter_AddRefs(tTempText));
-        if(NS_FAILED(res)) return res;
-        tText = tTempText;
-
-        clonedNode =  do_QueryInterface(tText);
-        nsCOMPtr<nsIDOMNode>tempNode;
-        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
-      }
-      return NS_ERROR_FAILURE;      
-    }break;
-  case NODE_BEFORE:
-    {// the node is partially selected by the range, it extends before the range
-      PRUint16 tNodeType;
-      aFromNode->GetNodeType(&tNodeType);
-      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
-         (nsIDOMNode::TEXT_NODE == tNodeType) )
-      {
-        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
-        if(NS_FAILED(res)) return res;
-
-        PRInt32 tStartOffset;
-        aInRange->GetStartOffset(&tStartOffset);
-        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
-        nsCOMPtr<nsIDOMText> tTempText;
-        //split off the start
-        res = tText->SplitText(tStartOffset, getter_AddRefs(tTempText));
-        if(NS_FAILED(res)) return res;
-        tText = tTempText;
-        clonedNode =  do_QueryInterface(tText);
-        nsCOMPtr<nsIDOMNode>tempNode;
-        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
-      }
-      return NS_ERROR_FAILURE;
-    }break;
-  case NODE_AFTER:
-    {// the node is partially selected by the range, it extends after the range
-      PRUint16 tNodeType;
-      nsCOMPtr<nsIDOMNode>tempNode;
-      aFromNode->GetNodeType(&tNodeType);
-
-      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
-         (nsIDOMNode::TEXT_NODE == tNodeType) )
-      {
-        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
-        if(NS_FAILED(res)) return res;
-
-        PRInt32 tEndOffset;
-        aInRange->GetEndOffset(&tEndOffset);
-        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
-        nsCOMPtr<nsIDOMText> tTempText;
-        //split off the end
-        res = tText->SplitText(tEndOffset, getter_AddRefs(tTempText));
-        if(NS_FAILED(res)) return res;
-        tText = tTempText;
-        clonedNode =  do_QueryInterface(tText);
-        nsCOMPtr<nsIDOMNode>tempNode;
-        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
-      }
-      else
-      {//the node is partially selected and is NOT a Text/CDATASection
-        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
-        if(NS_FAILED(res)) return res;
-
-        res = aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
-        if(NS_FAILED(res)) 
-          return res;
-        nsCOMPtr<nsIDOMNode> tFirstChild;
-        res = aFromNode->GetFirstChild(getter_AddRefs(tFirstChild));
-        if(NS_FAILED(res)) return res;
-        while(tFirstChild)
-        {
-          aInRange->CopyContents(tFirstChild, clonedNode, aInRange);
-          tFirstChild->GetFirstChild(getter_AddRefs(tFirstChild));
-        }
-        return NS_OK;
-      }
-      return NS_ERROR_FAILURE;
-    }break;
-  default:
-    {
-    }break;
-  }
   return NS_OK;
 }
 

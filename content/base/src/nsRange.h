@@ -203,16 +203,19 @@ public:
   static nsresult      Lock();
   static nsresult      Unlock();
 
-  static nsresult CopyContents(nsIDOMNode* aFromNode, nsIDOMNode* aAppendToNode, nsRange* aInRange);
-  
-  static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
-                                      PRInt32 nodeOffset,
-                                      nsIDOMNode* clonedNode,
-                                      nsIDOMNode* commonParent,
-                                      nsIDOMDocumentFragment* docfrag,
-                                      PRBool leftP);
+  static nsresult CloneParentsBetween(nsIDOMNode* aAncestor, 
+                                      nsIDOMNode* aNode,
+                                      nsIDOMNode** closestAncestor,
+                                      nsIDOMNode** farthestAncestor);
 
 protected:
+
+  // CollapseRangeAfterDelete() should only be called from DeleteContents()
+  // or ExtractContents() since it makes certain assumptions about the state
+  // of the range used. It's purpose is to collapse the range according to
+  // the range spec after the removal of nodes within the range.
+  static nsresult CollapseRangeAfterDelete(nsIDOMRange *aRange);
+
   nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset);
 
