@@ -135,7 +135,7 @@ ViewportFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
-  nsresult  rv = NS_OK;
+  nsresult  rv;
 
   // See which child list to add the frames to
 #ifdef NS_DEBUG
@@ -143,6 +143,8 @@ ViewportFrame::SetInitialChildList(nsIPresContext& aPresContext,
 #endif
   if (nsLayoutAtoms::fixedList == aListName) {
     mFixedFrames.SetFrames(aChildList);
+    rv = NS_OK;
+
   } else {
     rv = nsContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
@@ -156,24 +158,28 @@ ViewportFrame::AppendFrames(nsIPresContext& aPresContext,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
 {
-  nsresult  rv = NS_OK;
+  nsresult  rv;
   
-  // We only expect incremental changes for our fixed frames
   NS_PRECONDITION(nsLayoutAtoms::fixedList == aListName, "unexpected child list");
-  
-  // Add the frames to our list of fixed position frames
-#ifdef NS_DEBUG
-  nsFrame::VerifyDirtyBitSet(aFrameList);
-#endif
-  mFixedFrames.AppendFrames(nsnull, aFrameList);
-  
-  // Generate a reflow command to reflow the dirty frames
-  nsIReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
-    aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
+  if (aListName != nsLayoutAtoms::fixedList) {
+    // We only expect incremental changes for our fixed frames
+    rv = NS_ERROR_INVALID_ARG;
+
+  } else {
+    // Add the frames to our list of fixed position frames
+  #ifdef NS_DEBUG
+    nsFrame::VerifyDirtyBitSet(aFrameList);
+  #endif
+    mFixedFrames.AppendFrames(nsnull, aFrameList);
+    
+    // Generate a reflow command to reflow the dirty frames
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
   }
 
   return rv;
@@ -186,24 +192,28 @@ ViewportFrame::InsertFrames(nsIPresContext& aPresContext,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList)
 {
-  nsresult  rv = NS_OK;
+  nsresult  rv;
 
-  // We only expect incremental changes for our fixed frames
   NS_PRECONDITION(nsLayoutAtoms::fixedList == aListName, "unexpected child list");
-  
-  // Insert the new frames
-#ifdef NS_DEBUG
-  nsFrame::VerifyDirtyBitSet(aFrameList);
-#endif
-  mFixedFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  if (aListName != nsLayoutAtoms::fixedList) {
+    // We only expect incremental changes for our fixed frames
+    rv = NS_ERROR_INVALID_ARG;
 
-  // Generate a reflow command to reflow the dirty frames
-  nsIReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
-    reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
-    aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
+  } else {
+    // Insert the new frames
+#ifdef NS_DEBUG
+    nsFrame::VerifyDirtyBitSet(aFrameList);
+#endif
+    mFixedFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+  
+    // Generate a reflow command to reflow the dirty frames
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    if (NS_SUCCEEDED(rv)) {
+      reflowCmd->SetChildListName(nsLayoutAtoms::fixedList);
+      aPresShell.AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
   }
 
   return rv;
@@ -215,15 +225,23 @@ ViewportFrame::RemoveFrame(nsIPresContext& aPresContext,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
 {
-  // We only expect incremental changes for our fixed frames
+  nsresult  rv;
+
   NS_PRECONDITION(nsLayoutAtoms::fixedList == aListName, "unexpected child list");
-  
-  PRBool result = mFixedFrames.DestroyFrame(aPresContext, aOldFrame);
-  NS_ASSERTION(result, "didn't find frame to delete");
-  // Because fixed frames aren't part of a flow, there's no additional
-  // work to do, e.g. reflowing sibling frames. And because fixed frames
-  // have a view, we don't need to repaint
-  return NS_OK;
+  if (aListName != nsLayoutAtoms::fixedList) {
+    // We only expect incremental changes for our fixed frames
+    rv = NS_ERROR_INVALID_ARG;
+
+  } else {
+    PRBool result = mFixedFrames.DestroyFrame(aPresContext, aOldFrame);
+    NS_ASSERTION(result, "didn't find frame to delete");
+    // Because fixed frames aren't part of a flow, there's no additional
+    // work to do, e.g. reflowing sibling frames. And because fixed frames
+    // have a view, we don't need to repaint
+    rv = result ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -412,6 +430,10 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
     f->GetFrameState(&frameState);
     if (frameState & NS_FRAME_IS_DIRTY) {
       nsReflowStatus  status;
+
+      // Note: the only reason the frame would be dirty would be if it had
+      // just been inserted or appended
+      NS_ASSERTION(frameState & NS_FRAME_FIRST_REFLOW, "unexpected frame state");
       ReflowFixedFrame(aPresContext, reflowState, f, PR_TRUE, status);
     }
   }

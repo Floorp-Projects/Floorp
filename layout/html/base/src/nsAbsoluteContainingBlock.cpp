@@ -120,7 +120,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   // Because positioned frames aren't part of a flow, there's no additional
   // work to do, e.g. reflowing sibling frames. And because positioned frames
   // have a view, we don't need to repaint
-  return NS_OK;
+  return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -184,6 +184,10 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
         f->GetFrameState(&frameState);
         if (frameState & NS_FRAME_IS_DIRTY) {
           nsReflowStatus  status;
+
+          // Note: the only reason the frame would be dirty would be if it had
+          // just been inserted or appended
+          NS_ASSERTION(frameState & NS_FRAME_FIRST_REFLOW, "unexpected frame state");
           ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                               f, PR_TRUE, status);
         }

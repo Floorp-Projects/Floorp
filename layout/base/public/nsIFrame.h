@@ -226,7 +226,7 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aChildList list of child frames. Each of the frames has its
-   *			NS_FRAME_IS_DIRTY bit set
+   *            NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
@@ -246,10 +246,10 @@ public:
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
    * @param   aFrameList list of child frames to append. Each of the frames has
-   *			its NS_FRAME_IS_DIRTY bit set
+   *            its NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
   NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
@@ -266,10 +266,10 @@ public:
    *            name means the unnamed principal child list
    * @param   aPrevFrame the frame to insert frames <b>after</b>
    * @param   aFrameList list of child frames to insert <b>after</b> aPrevFrame.
-   *			Each of the frames has its NS_FRAME_IS_DIRTY bit set
+   *            Each of the frames has its NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
   NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
@@ -289,7 +289,9 @@ public:
    * @param   aOldFrame the frame to remove
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
+   *          NS_ERROR_FAILURE if the child frame is not in the specified
+   *            child list,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
   NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
@@ -306,10 +308,12 @@ public:
    *            name means the unnamed principal child list
    * @param   aOldFrame the frame to remove
    * @param   aNewFrame the frame to replace it with. The new frame has its
-   *		    NS_FRAME_IS_DIRTY bit set
+   *            NS_FRAME_IS_DIRTY bit set
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
-   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame
+   *          NS_ERROR_FAILURE if the old child frame is not in the specified
+   *            child list,
+   *          NS_ERROR_UNEXPECTED if the frame is an atomic frame,
    *          NS_OK otherwise
    */
   NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
