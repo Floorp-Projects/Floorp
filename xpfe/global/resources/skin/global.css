@@ -1334,7 +1334,7 @@ deck.tabpanel, tabpanel {
  */
 
 box.texttab{
-  behavior: url("chrome://global/skin/globalBindings.xml#texttab");
+  behavior: url("chrome://global/content/globalBindings.xml#texttab");
   padding-top: 2px;
   min-height: 10px;
   min-width: 10px;
