@@ -287,7 +287,7 @@ var contentAreaDNDObserver = {
                 if (textstring != "")
                   htmlstring = "<a href=\"" + textstring + "\">" + textstring + "</a>";
                 else
-                  return;
+                  throw Components.results.NS_ERROR_FAILURE;
                 break;
             }
         }

@@ -47,6 +47,8 @@
  *                                          // nsTransferable can determine whether
  *                                          // or not to accept drop.
  **/ 
+
+/** error codes **/
  
 var nsDragAndDrop = {
 
@@ -72,7 +74,16 @@ var nsDragAndDrop = {
       var flavourList = null;
 
       if (aDragDropObserver.onDragStart)
-        flavourList = aDragDropObserver.onDragStart(aEvent);
+        {
+          try 
+            {
+              flavourList = aDragDropObserver.onDragStart(aEvent);
+            }
+          catch (e)
+            {
+              return; // not a draggable item, bail!
+            }
+        }
 
       if (! flavourList || flavourList.length < 1)
         return;
