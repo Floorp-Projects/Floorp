@@ -4671,7 +4671,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             /* restore previous position of scroller(s), if we're moving
              * back in history (bug 59774)
              */
-            if (aLoadType == LOAD_HISTORY && mOSHE)
+            if (mOSHE && (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL))
             {
                 nscoord bx, by;
                 mOSHE->GetScrollPosition(&bx, &by);
@@ -5191,7 +5191,7 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         return NS_OK;
     }
 
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     // NOTE: we assume URIs are absolute for comparison purposes
 
@@ -5214,17 +5214,12 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
     newSpec.BeginReading(urlStart);
     newSpec.EndReading(refEnd);
     
-    // hasAnchor is used to check if the new URI really has anchor
-    // We can't always scroll, it would break submitting a form that has
-    // same target page.
-    PRBool hasAnchor = PR_FALSE;
     PRInt32 hashNew = newSpec.FindChar(kHash);
     if (hashNew == 0) {
         return NS_OK;           // Strange URI
     }
     else if (hashNew > 0) {
         // found it
-        hasAnchor = PR_TRUE;
         urlEnd = urlStart;
         urlEnd.advance(hashNew);
         
@@ -5288,9 +5283,9 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         if (NS_SUCCEEDED(rv) && shell) {
             *aWasAnchor = PR_TRUE;
 
-            // anchor is there, but if it's a LOAD_HISTORY call
-            // we don't have any achor jumping to do
-            if (aLoadType == LOAD_HISTORY)
+            // anchor is there, but if it's a load from history,
+            // we don't have any anchor jumping to do
+            if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL)
               return rv;
 
             char *str = ToNewCString(sNewRef);
@@ -5341,8 +5336,16 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         }
     }
     else {
-        // Tell there was an anchor only if there really was one (bug 135679)
-        *aWasAnchor = hasAnchor;
+        *aWasAnchor = PR_TRUE;
+        
+        // An empty anchor was found, but if it's a load from history,
+        // we don't have to jump to the top of the page. Scrollbar 
+        // position will be restored by the caller, based on positions
+        // stored in session history.
+        if (aLoadType == LOAD_HISTORY || aLoadType == LOAD_RELOAD_NORMAL)
+            return rv;
+        //An empty anchor. Scroll to the top of the page.
+        SetCurScrollPosEx(0, 0);
     }
 
     return NS_OK;
@@ -5380,7 +5383,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     nsCOMPtr<nsISHistory> rootSH=mSessionHistory;
     if (!rootSH) {
         // Get the handle to SH from the root docshell          
-        nsresult rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+        GetRootSessionHistory(getter_AddRefs(rootSH));
         if (!rootSH)
             shAvailable = PR_FALSE;
     }  // rootSH
