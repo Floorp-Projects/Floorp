@@ -86,6 +86,7 @@
 #include "nsIScriptGlobalObject.h"
 #endif
 
+#include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
 //#define XPC_TOOLS_SUPPORT 1
@@ -1236,28 +1237,6 @@ private:
     nsIJSStackFrameLocation*    mLocation;
     nsISupports*                mData;
     PRBool                      mInitialized;
-};
-
-class xpcJSErrorReport : public nsIJSErrorReport
-{
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIJSERRORREPORT
-
-    static xpcJSErrorReport* NewReport(const char* aMessage,
-                                       const JSErrorReport* aReport);
-
-protected:
-    xpcJSErrorReport();
-    virtual ~xpcJSErrorReport();
-
-private:
-    char*       mMessage;
-    char*       mFilename;
-    PRUint32    mLineno;
-    char*       mLinebuf;
-    PRUint32    mTokenIndex;
-    PRUint32    mFlags;
-    PRUint32    mErrorNumber;
 };
 
 /***************************************************************************/

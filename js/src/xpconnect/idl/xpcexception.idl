@@ -66,22 +66,6 @@ interface nsIXPCException : nsISupports
     string toString();
 };
 
-[scriptable, uuid(8df8cd40-5816-11d3-9899-006008962422)]
-interface nsIJSErrorReport : nsISupports
-{
-    readonly attribute string   message;
-    readonly attribute string   filename;
-    readonly attribute PRUint32 lineno;
-    readonly attribute string   linebuf;
-    readonly attribute PRUint32 tokenIndex;
-    readonly attribute PRUint32 flags;
-    readonly attribute PRUint32 errorNumber;
-    readonly attribute PRBool   warning;
-    readonly attribute PRBool   error;
-
-    string toString();
-};
-
 /* this goes into the C++ header verbatim. */
 %{ C++
 /********************************************************/

@@ -827,6 +827,75 @@ pre_call_clean_up:
                     printf(cant_get_text);     
                 printf(line);     
 #endif
+                // Log the exception to the JS Console, so that users can do
+                // something with it.
+                nsCOMPtr<nsIConsoleService> consoleService
+                    (do_GetService("mozilla.consoleservice.1"));
+                if(nsnull != consoleService)
+                {
+                    nsresult rv;
+                    nsCOMPtr<nsIScriptError> scriptError;
+                    nsCOMPtr<nsISupports> errorData;
+                    rv = xpc_exception->GetData(getter_AddRefs(errorData));
+                    if(NS_SUCCEEDED(rv))
+                        scriptError = do_QueryInterface(errorData);
+                    if(nsnull == scriptError)
+                    {
+                        // No luck getting one from the exception, so
+                        // try to cook one up.
+                        scriptError = do_CreateInstance("mozilla.scripterror.1");
+                        if(nsnull != scriptError)
+                        {
+                            char* exn_string;
+                            rv = xpc_exception->ToString(&exn_string);
+                            if(NS_SUCCEEDED(rv))
+                            {
+                                // use toString on the exception as the message
+                                nsAutoString newMessage;
+                                newMessage.AssignWithConversion(exn_string);
+                                nsMemory::Free((void *) exn_string);
+                                PRUnichar* newMessageUni;
+                                newMessageUni = newMessage.ToNewUnicode();
+
+                                // try to get filename, lineno from the first
+                                // stack frame location.
+                                PRUnichar* sourceNameUni = nsnull;
+                                PRInt32 lineNumber = 0;
+
+                                nsCOMPtr<nsIJSStackFrameLocation> location;
+                                xpc_exception->
+                                    GetLocation(getter_AddRefs(location));
+                                if(location)
+                                {
+                                    // Get line number w/o checking; 0 is ok.
+                                    location->GetLineNumber(&lineNumber);
+
+                                    // get a filename.
+                                    char *csourceName;
+                                    rv = location->GetFilename(&csourceName);
+                                    nsAutoString newSourceName;
+                                    newSourceName.
+                                        AssignWithConversion(csourceName);
+                                    nsMemory::Free((void *)csourceName);
+                                    sourceNameUni = newSourceName.ToNewUnicode();
+                                }
+
+                                rv = scriptError->Init(newMessageUni,
+                                                       sourceNameUni, nsnull,
+                                                       lineNumber, 0, 0,
+                                                       "XPConnect JavaScript");
+                                if(NS_FAILED(rv))
+                                    scriptError = nsnull;
+                                nsMemory::Free((void *)newMessageUni);
+                                if(nsnull != sourceNameUni)
+                                    nsMemory::Free((void *)sourceNameUni);
+                            }
+                        }
+                    }
+
+                    if(nsnull != scriptError)
+                        consoleService->LogMessage(scriptError);
+                }
                 xpc->SetPendingException(xpc_exception);
                 retval = e_result;
             }

@@ -1076,26 +1076,40 @@ XPCConvert::JSErrorToXPCException(JSContext* cx,
                                   const JSErrorReport* report)
 {
     nsIXPCException* result;
-    xpcJSErrorReport* data;
+    nsScriptError* data;
     if(report)
     {
-        static const char defaultMsg[] = "JavaScript Error";
-        const char* bestMessage = nsnull;
-
-        if(message)
-            bestMessage = message;
-        else if(report && report->ucmessage)
+        nsAutoString bestMessage;
+        if(report && report->ucmessage)
         {
-            // We'll let JS make this an 8bit ASCII string for us.
-            JSString* jsstr = JS_NewUCStringCopyZ(cx, report->ucmessage);
-            if(jsstr)
-                bestMessage = JS_GetStringBytes(jsstr);
+            bestMessage = report->ucmessage;
+        }
+        else if(message)
+        {
+            bestMessage.AssignWithConversion(message);
+        } 
+        else
+        {
+            bestMessage = NS_LITERAL_STRING("JavaScript Error");
+        }
+        
+        const PRUnichar *newMessage = bestMessage.ToNewUnicode();
+        const PRUnichar *newSourceName = nsnull;
+        if(report->filename)
+        {
+            nsAutoString newSourceNameStr;
+            newSourceNameStr.AssignWithConversion(report->filename);
+            newSourceName = newSourceNameStr.ToNewUnicode();
         }
 
-        if(!bestMessage)
-            bestMessage = defaultMsg;
-        
-        data = xpcJSErrorReport::NewReport(bestMessage, report);
+        data = new nsScriptError();
+        NS_ADDREF(data);
+        data->Init(newMessage, newSourceName, report->uclinebuf, report->lineno,
+                   report->uctokenptr - report->uclinebuf, report->flags,
+                   "XPConnect JavaScript");
+        nsMemory::Free((void *)newMessage);
+        if(nsnull != newSourceName)
+            nsMemory::Free((void *) newSourceName);
     }
     else
         data = nsnull;
