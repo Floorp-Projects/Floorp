@@ -135,13 +135,19 @@ sub print {
 # checkout( self, module, revision, date)
 # MacCVS checkout command
 # returns 1 on failure
-sub checkout {
+sub checkout
+{
 	my($self, $module, $revision, $date ) = @_;
 	unless( defined ($module) ) { $module = ""; }	# get rid of the pesky undefined warnings
 	unless( defined ($revision) ) { $revision = ""; }
 	unless( defined ($date) ) { $date = ""; }
 
 	$self->assertSessionOpen() || return 1;
+	
+	my($revstring) = ($revision ne "") ? $revision : "(none)";
+	my($datestring) = ($date ne "") ? $date : "(none)";
+	
+	print "Checking out $module with revision $revstring, date $datestring\n";
 	
 	my $script = <<END_OF_APPLESCRIPT;
 	tell (load script file "$MacCVSLib") to Checkout given sessionName:"$self->{name}", module:"$module", revision:"$revision", date:"$date"
