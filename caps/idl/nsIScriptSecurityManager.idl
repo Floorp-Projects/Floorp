@@ -30,7 +30,7 @@
 
 interface nsIURI;
 
-[uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
+[scriptable, uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
 interface nsIScriptSecurityManager : nsISupports
 {
 	///////////////// Principals /////////////////////// 
@@ -69,7 +69,7 @@ interface nsIScriptSecurityManager : nsISupports
      * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
      * @param isWrite True if write access is being attempted
      */
-	void CheckScriptAccess(in JSContextPtr cx, in voidPtr obj, 
+	[noscript] void CheckScriptAccess(in JSContextPtr cx, in voidPtr obj, 
 	                       in long prop, in boolean isWrite);
 
 	/**
@@ -81,7 +81,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * @param cx the JSContext of the script causing the load
 	 * @param uri the URI that is being loaded
 	 */
-    void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
+    [noscript] void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
 
     /** 
      * Default CheckLoadURI permissions
@@ -122,8 +122,8 @@ interface nsIScriptSecurityManager : nsISupports
    * @param funObj The function trying to run..
    * @param targetObj The object the function will run on.
    */
-    void CheckFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
-                  in voidPtr targetObj);
+    [noscript] void CheckFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
+                                        in voidPtr targetObj);
 
 	/**
 	 * Return true if content from the given principal is allowed to

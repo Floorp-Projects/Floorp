@@ -1102,6 +1102,29 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
             return NS_OK;
         }
     }
+
+    //-- If there's no principal on the stack, look at the global object
+    //   and return the innermost frame for annotations.
+    if (cx) 
+    {
+        nsCOMPtr<nsIScriptContext> scriptContext = 
+            NS_REINTERPRET_CAST(nsIScriptContext*,JS_GetContextPrivate(cx));
+        if (scriptContext)
+        {
+            nsCOMPtr<nsIScriptGlobalObject> global = scriptContext->GetGlobalObject();
+            NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+            nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
+            NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
+            globalData->GetPrincipal(result);
+            if (*result)
+            {
+                JSStackFrame *inner = nsnull;
+                *frameResult = JS_FrameIterator(cx, &inner);
+                return NS_OK;
+            }
+        }
+    }   
+
     *result = nsnull;
     return NS_OK;
 }
