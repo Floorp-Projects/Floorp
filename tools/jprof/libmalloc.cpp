@@ -135,6 +135,12 @@ static void DumpAddressMap()
 }
 #endif
 
+static void EndProfilingHook(int signum)
+{
+    DumpAddressMap();
+    writeStrStdout("Jprof: profiling paused.\n");
+}
+
 //----------------------------------------------------------------------
 
 static void
@@ -152,6 +158,8 @@ Log(u_long aTime, char *first)
   write(gLogFD, &me, offsetof(malloc_log_entry, pcs) + me.numpcs*sizeof(char*));
 }
 
+static int  realTime = 0;
+
 /* Lets interrupt at 10 Hz.  This is so my log files don't get too large.
  * This can be changed to a faster value latter.  This timer is not
  * programmed to reset, even though it is capable of doing so.  This is
@@ -166,7 +174,11 @@ static void startSignalCounter(unsigned long milisec)
     tvalue.it_value.tv_sec = milisec/1000;
     tvalue.it_value.tv_usec = (milisec%1000)*1000;
 
-    setitimer(ITIMER_PROF, &tvalue, NULL);
+    if (realTime) {
+	setitimer(ITIMER_REAL, &tvalue, NULL);
+    } else {
+    	setitimer(ITIMER_PROF, &tvalue, NULL);
+    }
 }
 
 static long timerMiliSec = 50;
@@ -215,15 +227,21 @@ void setupProfilingStuff(void)
         char *tst  = getenv("JPROF_FLAGS");
 
 	/* Options from JPROF_FLAGS environment variable:
-	 *   JP_DEFER  -> Wait for a SIGPROF from userland before starting
+	 *   JP_DEFER  -> Wait for a SIGPROF (or SIGALRM, if JP_REALTIME
+	 *               is set) from userland before starting
 	 *               to generate them internally
 	 *   JP_START  -> Install the signal handler
 	 *   JP_PERIOD -> Time between prifiler ticks
 	 *   JP_FIRST  -> Extra delay before starting
+	 *   JP_REALTIME -> Take stack traces in intervals of real time
+	 *               rather than time used by the process (and the
+	 *               system for the process).  This is useful for
+	 *               finding time spent by the X server.
 	*/
 	if(tst) {
 	    if(strstr(tst, "JP_DEFER")) startTimer = 0;
 	    if(strstr(tst, "JP_START")) doNotStart = 0;
+	    if(strstr(tst, "JP_REALTIME")) realTime = 1;
 
 	    char *delay = strstr(tst,"JP_PERIOD=");
 	    if(delay) {
@@ -259,7 +277,23 @@ void setupProfilingStuff(void)
 		    action.sa_sigaction = StackHook;
 		    action.sa_mask  = mset;
 		    action.sa_flags = SA_RESTART | SA_SIGINFO;
-		    sigaction(SIGPROF, &action, NULL);
+		    if (realTime) {
+		    	sigaction(SIGALRM, &action, NULL);
+		    } else {
+		    	sigaction(SIGPROF, &action, NULL);
+		    }
+
+		    // make it so a SIGUSR1 will stop the profiling
+		    // Note:  It currently does not close the logfile.
+		    // This could be configurable (so that it could
+		    // later be reopened).
+
+		    struct sigaction stop_action;
+		    stop_action.sa_handler = EndProfilingHook;
+		    stop_action.sa_mask  = mset;
+		    stop_action.sa_flags = SA_RESTART;
+		    sigaction(SIGUSR1, &stop_action, NULL);
+
 		    sprintf(buffer, "Jprof: Initialized signal hander and set "
 		    "timer for %lu mili-seconds with %d second initial delay\n",
 		    timerMiliSec, firstDelay);
