@@ -13,17 +13,11 @@
 
 <!ENTITY prompt.label          "What should #1 do with this file?">
 
-<!ENTITY default.label         "Use default action for this type of file">
-<!ENTITY default.accesskey     "u">
-
-<!ENTITY different.label       "Use a different action for this file">
-<!ENTITY different.accesskey   "s">
-
-<!ENTITY default.set.label     "Set Default...">
-<!ENTITY default.set.accesskey "e">
+<!ENTITY default.set.label     "Advanced...">
+<!ENTITY default.set.accesskey "A">
 
 <!ENTITY alwaysAsk.label       "Always ask before opening this type of file">
-<!ENTITY alwaysAsk.accesskey   "a">
+<!ENTITY alwaysAsk.accesskey   "l">
 
 <!ENTITY saveToDisk.label      "Save this file to Disk">
 <!ENTITY saveToDisk.accesskey  "d">
@@ -39,20 +33,6 @@
 <!ENTITY chooseApp.accesskey   "c">
 
 <!ENTITY chooseAppFilePickerTitle "Choose Application">
-
-<!-- Localization note: One of these two "explanations" is used to describe
-     what happens if the user selects the "Use default action" choice on
-     this dialog.
-
-     If the "open using" version is used, then the text is modified
-     by inserting the application executable path.
-
-     If there is no specific app specified, then the OS-defined default
-     will be used and the "defaultApp" explanation is utilized.
- -->
-<!ENTITY explanation.saveToDisk "Save to disk">
-<!ENTITY explanation.openUsing  "Open with application #1">
-<!ENTITY explanation.defaultApp "Open according to system settings">
 
 <!ENTITY badApp                 "The application you specified [&quot;#1&quot;] could not be found.  Check the file name or select another application.">
 <!ENTITY badApp.title           "Application not found">

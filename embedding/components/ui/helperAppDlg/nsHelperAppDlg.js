@@ -273,7 +273,7 @@ nsHelperAppDialog.prototype = {
         intro.firstChild.nodeValue = modified;
     },
 
-    // initExplanation:
+    // initAppAndSaveToDiskValues:
     initAppAndSaveToDiskValues: function() {
 
         // Pre-select the choice the user made last time.
@@ -285,7 +285,7 @@ nsHelperAppDialog.prototype = {
           this.updateApplicationName(applicationDescription); 
           this.givenDefaultApp = true;
         }
-        else if (this.chosenApp)
+        else if (this.chosenApp && this.chosenApp.unicodePath)
         {
           // If a user-chosen application, show its path.
           this.updateApplicationName(this.chosenApp.unicodePath);
@@ -295,11 +295,15 @@ nsHelperAppDialog.prototype = {
          this.updateApplicationName(this.getString("noApplicationSpecified"));
 
         if ( applicationDescription  && this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk ) 
-          this.dialogElement( "openUsing" ).checked = true;         
+        {
+          this.dialogElement( "openUsing" ).checked = true;
+          this.dialogElement( "saveToDisk" ).checked = false;         
+        }
         else 
         {
           // Save to disk.
           this.dialogElement( "saveToDisk" ).checked = true;
+          this.dialogElement( "openUsing" ).checked = false;
           // Disable choose app button.
           this.dialogElement( "chooseApp" ).setAttribute( "disabled", "true" );
         }
@@ -310,7 +314,7 @@ nsHelperAppDialog.prototype = {
       var applicationText = this.getString( "openUsingString" );
       applicationText = this.replaceInsert( applicationText, 1, newValue );
       var expl = this.dialogElement( "openUsing" );
-     expl.label = applicationText;
+      expl.label = applicationText;
     },
 
     // Enable pick app button if the user chooses that option.
@@ -353,7 +357,7 @@ nsHelperAppDialog.prototype = {
         {
           // only enable the OK button if we have a default app to use or if 
           // the user chose an app....
-          if (this.choseApp || this.givenDefaultApp)
+          if ((this.choseApp && this.chosenApp.unicodePath) || this.givenDefaultApp)
             ok = true;
         }
         
@@ -481,7 +485,7 @@ nsHelperAppDialog.prototype = {
 
         // Refresh dialog with updated info about the default action.
         this.initIntro();
-        this.initExplanation();
+        this.initAppAndSaveToDiskValues();
     },
 
     // updateMIMEInfo:  This is called from the pref-applications-edit dialog when the user
