@@ -379,7 +379,13 @@ char* charset_name = NULL;
 	            paper_string[mPrintContext->prSetup->paper_size]);
   XP_FilePrintf(f, "%%%%Orientation: %s\n",
               (mPrintContext->prSetup->width < mPrintContext->prSetup->height) ? "Portrait" : "Landscape");
+
+  // hmm, n_pages is always zero so don't use it
+#if 0
   XP_FilePrintf(f, "%%%%Pages: %d\n", (int) mPrintContext->prInfo->n_pages);
+#else
+  XP_FilePrintf(f, "%%%%Pages: (atend)\n");
+#endif
 
   if (mPrintContext->prSetup->reverse)
 	  XP_FilePrintf(f, "%%%%PageOrder: Descend\n");
@@ -766,7 +772,13 @@ nsPostScriptObj::end_page()
 void 
 nsPostScriptObj::end_document()
 {
-  XP_FilePrintf(mPrintContext->prSetup->out, "%%%%EOF\n");
+  XP_File f;
+
+  f = mPrintContext->prSetup->out;
+  // n_pages is zero so use mPageNumber
+  XP_FilePrintf(f, "%%%%Trailer\n");
+  XP_FilePrintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
+  XP_FilePrintf(f, "%%%%EOF\n");
 }
 
 /** ---------------------------------------------------
