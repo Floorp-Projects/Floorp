@@ -1,13 +1,25 @@
-<!--LOCALIZATION NOTE askSendFormat.dtd UI for dialog that ask the user which format to use for sending a message -->
+<!--LOCALIZATION NOTE askSendFormat.dtd UI for dialog that asks the user, which format to use for sending a message -->
 <!ENTITY windowTitle.label "HTML Mail Question">
 
-<!ENTITY question.label "Some of the recipients are not listed as being able to receive HTML mail. Would you like to convert the message to plain text or send it in HTML anyway?">
+<!ENTITY recipient.label "Some of the recipients are not listed as being able to receive HTML mail.">
 
-<!ENTITY plainTextAndHtml.label "Send in Plain Text and HTML">
-<!ENTITY plainTextOnly.label "Send in Plain Text Only">
+<!ENTITY convertibleDefault.label "">
+<!ENTITY convertibleYes.label "Your message can be converted to plaintext without losing information or changing the look.">
+<!ENTITY convertibleAltering.label "Your message can be converted to plaintext without losing important information. However, the plaintext version might look different from what you saw in the composer.">
+<!ENTITY convertibleNo.label "However, you used formatting (e.g. colors) that cannot be converted to plaintext.">
+
+<!ENTITY question.label "Would you like to convert the message to plaintext or send it in HTML anyway?">
+
+<!ENTITY plainTextAndHtml.label "Send in Plaintext and HTML">
+<!ENTITY plainTextOnly.label "Send in Plaintext Only">
 <!ENTITY htmlOnly.label "Send in HTML Only">
 
+<!ENTITY plainTextAndHtmlRecommended.label "Send in Plaintext and HTML (recommended)">
+<!ENTITY plainTextOnlyRecommended.label "Send in Plaintext Only (recommended)">
+<!ENTITY htmlOnlyRecommended.label "Send in HTML Only (recommended)">
+<!ENTITY recommended.label "(recommended)">
+
 <!ENTITY send.label "Send">
-<!ENTITY dontSend.label "Don't Send">
+<!ENTITY cancel.label "Cancel">
 <!ENTITY recipients.label "Recipients...">
 <!ENTITY help.label "Help">

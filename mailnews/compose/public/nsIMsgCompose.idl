@@ -84,10 +84,27 @@ interface nsIMsgCompDeliverMode {
 
 [scriptable, uuid(f38ea280-e090-11d3-a449-e3153319347c)]
 interface nsIMsgCompSendFormat {
-    const long AskUser = 0;
+    const long AskUser = 4;     /* Hack: Bug 44512. If this is 0 and passed
+                                   as results.action to the askSendFormat
+                                   dialog, the args object gets destroyed.*/
     const long PlainText = 1;
     const long HTML = 2;
     const long Both = 3;
+};
+
+[scriptable, uuid(9638af92-1dd1-11b2-bef1-ca5fee0abc62)]
+interface nsIMsgCompConvertible/*ToTXT*/ {
+    const long Plain = 1;  // Like 4.x: Only <html>, <p>, <br>, ...
+    const long Yes = 2;  // *Minor* alterations of the look: <ol>, <dd>, ...
+    const long Altering = 3;  /* Look altered: <strong>, <i>, <h1>, ...
+                                 Can be expressed in plaintext, but not in
+                                 the way it looked in the HTML composer. */
+    const long No = 4;  /* Will lose data: <font>, ...
+                           Really *requires* visual formatting or
+                           is not supported by our HTML->TXT converter. */
+    /* The values here have meaning, they are "levels":
+       convertible({a; b}) == max(convertible({a}), convertible({b}))
+       must be true, i.e. the higher value counts. */
 };
 
 [scriptable, uuid(e72c6981-992a-11d3-a449-eb15bb19bc7c)]
@@ -146,9 +163,10 @@ interface nsIMsgCompose : nsISupports {
     */
     wstring GetNoHtmlNewsgroups(in wstring newsgroups);
     
-    /* BodyContainsHTMLTag: will return true if the node passed contains any HTML tag that really affect the formating 
+    /* bodyConvertible: The level of "convertibility" to plaintext
+     * @return a value from nsIMsgCompConvertible
     */
-    boolean BodyContainsHTMLTag(in nsIDOMNode node);
+    long bodyConvertible(in nsIDOMNode node);
 
     /* SetSignature: will replace the curr.
     */

@@ -1410,6 +1410,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     // text before we try to insert it into the editor. If we don't, we
     // just get lots of HTML text in the message...not good.
     //
+    // XXX not m_composeHTML? /BenB
     PRBool composeHTML = PR_TRUE;
     mComposeObj->GetComposeHTML(&composeHTML);
     if (!composeHTML)
@@ -1420,20 +1421,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       ConvertToPlainText(formatflowed);
       Recycle(target_charset);
     }
-    
-    //
-    // Ok, now we have finished quoting so we should load this into the editor
-    // window.
-    // 
-    PRBool    compHTML = PR_FALSE;
-    mComposeObj->GetComposeHTML(&compHTML);
-    
+
     mComposeObj->ProcessSignature(mIdentity, &mSignature);
     
     nsIEditorShell *editor = nsnull;
     if (NS_SUCCEEDED(mComposeObj->GetEditor(&editor)) && editor)
     {
-      mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, compHTML);
+      mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
     }
   }
 
@@ -2712,40 +2706,38 @@ nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnicha
     return rv;
 }
 
-nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
+// Internal helper function. Parameters are not checked.
+static inline nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 {
     nsresult rv;
     nsAutoString aStr;
-    PRUint32 i;
-    PRUint32 nbrOfElements;
     nsCOMPtr<nsIDOMNode> pItem;
     PRBool hasChild;
 
-    if (nsnull == node || nsnull == _retval)
-        return NS_ERROR_NULL_POINTER;
-    
-    *_retval = PR_TRUE;
-  
+    *_retval = nsIMsgCompConvertible::No;
+
     rv = node->GetNodeName(aStr);
     if (NS_FAILED(rv))
       return rv;
-    
-    if (aStr.EqualsWithConversion("a", PR_TRUE))
+    nsCAutoString aCStr; aCStr.AssignWithConversion(aStr);
+
+    if (aCStr.EqualsIgnoreCase("a"))
     {
-      //We can ignore an anchore tag if the link is the same than the text
+      /* Ignore anchor tag, if the URI is the same as the text
+         (as inserted by recognizers) */
       nsAutoString href;
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
 
       rv = node->GetAttributes(getter_AddRefs(pAttributes));
       if (NS_SUCCEEDED(rv) && pAttributes)
       {
-        nsString attributeName; attributeName.AssignWithConversion("href");
+        nsAutoString attributeName; attributeName.AssignWithConversion("href");
         pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
         if (NS_SUCCEEDED(rv) && pItem)
         {
           rv = pItem->GetNodeValue(href);
           if (NS_SUCCEEDED(rv))
-          {           
+          {
             rv = node->HasChildNodes(&hasChild);
             if (NS_SUCCEEDED(rv) && hasChild)
             {
@@ -2760,7 +2752,7 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
                   if (NS_SUCCEEDED(rv))
                   {
                     if (aStr.Compare(href) == 0)
-                      *_retval = PR_FALSE;
+                      *_retval = nsIMsgCompConvertible::Plain;
                   }
                 }
               }
@@ -2768,56 +2760,129 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
           }
         }
       }
+
+      // It isn't, so don't ignore
+      *_retval = nsIMsgCompConvertible::Altering;
     }
-    else if (aStr.EqualsWithConversion("blockquote", PR_TRUE))
+    else if (aCStr.EqualsIgnoreCase("blockquote"))
     {
-      //skip <blockquote> only if the type is "cite"
+      // Skip <blockquote type=cite>
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
       rv = node->GetAttributes(getter_AddRefs(pAttributes));
       if (NS_SUCCEEDED(rv) && pAttributes)
       {
-        nsString attributeName; attributeName.AssignWithConversion("type");
+        nsAutoString attributeName; attributeName.AssignWithConversion("type");
         pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
         if (NS_SUCCEEDED(rv) && pItem)
         {
           rv = pItem->GetNodeValue(aStr);
-          if (NS_SUCCEEDED(rv) && aStr.EqualsWithConversion("cite", PR_TRUE))
-            *_retval = PR_FALSE;
+          if (NS_SUCCEEDED(rv))
+          {
+            aCStr.StripChars("\"");
+            if (aCStr.EqualsIgnoreCase("cite"))
+              *_retval = nsIMsgCompConvertible::Plain;
+          }
+        }
+      }
+
+      // It isn't, so don't ignore
+      *_retval = nsIMsgCompConvertible::Yes;
+    }
+
+#if 0
+    /* This is for an edge case: A Mozilla user replies to plaintext per HTML
+       and the recipient of that HTML msg, also a Mozilla user, replies to
+       that again. Then we'll have to recognize the stuff inserted by our
+       TXT->HTML converter. Let's see, if this is actually a problem and
+       worth the processing time.
+       Bug 44552. */
+    else if (aCStr.EqualsIgnoreCase("div") ||
+             aCStr.EqualsIgnoreCase("span") ||
+             aCStr.EqualsIgnoreCase("em") ||
+             aCStr.EqualsIgnoreCase("strong") ||
+             aCStr.EqualsIgnoreCase("a"))
+    {
+      /* skip only if inserted by our [TXT|HTML]->HTML converter
+         (might be in a quote) */
+      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+      rv = node->GetAttributes(getter_AddRefs(pAttributes));
+      if (NS_SUCCEEDED(rv) && pAttributes)
+      {
+        nsAutoString attributeName; attributeName.AssignWithConversion("class");
+        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
+        if (NS_SUCCEEDED(rv) && pItem)
+        {
+          rv = pItem->GetNodeValue(aStr);
+          if (NS_SUCCEEDED(rv)
+              && (aCStr.EqualsIgnoreCase("txt", 3) ||
+                  aCStr.EqualsIgnoreCase("\"txt", 4)))
+            *_retval = nsIMsgCompConvertible::Plain;
         }
       }
     }
-    else if (aStr.EqualsWithConversion("html", PR_TRUE))
+#endif
+    else if (
+              aCStr.EqualsIgnoreCase("html") ||
+              aCStr.EqualsIgnoreCase("head") ||
+              aCStr.EqualsIgnoreCase("body") ||
+              aCStr.EqualsIgnoreCase("p") ||
+              aCStr.EqualsIgnoreCase("br") ||
+              aCStr.EqualsIgnoreCase("pre") ||
+              aCStr.EqualsIgnoreCase("tt") ||
+              aCStr.EqualsIgnoreCase("#text")
+            )
     {
-      *_retval = PR_FALSE;
+      *_retval = nsIMsgCompConvertible::Plain;
     }
-    else if (aStr.EqualsWithConversion("head", PR_TRUE))
+    else if (
+              //aCStr.EqualsIgnoreCase("blockquote") || // see above
+              aCStr.EqualsIgnoreCase("ul") ||
+              aCStr.EqualsIgnoreCase("ol") ||
+              aCStr.EqualsIgnoreCase("li") ||
+              aCStr.EqualsIgnoreCase("dl") ||
+              aCStr.EqualsIgnoreCase("dt") ||
+              aCStr.EqualsIgnoreCase("dd")
+            )
     {
-      *_retval = PR_FALSE;
+      *_retval = nsIMsgCompConvertible::Yes;
     }
-    else if (aStr.EqualsWithConversion("body", PR_TRUE))
+    else if (
+              aCStr.EqualsIgnoreCase("h1") ||
+              aCStr.EqualsIgnoreCase("h2") ||
+              aCStr.EqualsIgnoreCase("h3") ||
+              aCStr.EqualsIgnoreCase("h4") ||
+              aCStr.EqualsIgnoreCase("h5") ||
+              aCStr.EqualsIgnoreCase("h6") ||
+              //aCStr.EqualsIgnoreCase("a") || // see above
+              aCStr.EqualsIgnoreCase("em") ||
+              aCStr.EqualsIgnoreCase("strong") ||
+              aCStr.EqualsIgnoreCase("code") ||
+              aCStr.EqualsIgnoreCase("b") ||
+              aCStr.EqualsIgnoreCase("i") ||
+              aCStr.EqualsIgnoreCase("u") ||
+              aCStr.EqualsIgnoreCase("hr")
+            )
     {
-      *_retval = PR_FALSE;
+      *_retval = nsIMsgCompConvertible::Altering;
     }
-    else if (aStr.EqualsWithConversion("p", PR_TRUE))
-    {
-      *_retval = PR_FALSE;
-    }
-    else if (aStr.EqualsWithConversion("br", PR_TRUE))
-    {
-      *_retval = PR_FALSE;
-    }
-    else if (aStr.EqualsWithConversion("pre", PR_TRUE))
-    {
-      *_retval = PR_FALSE;
-    }
-    else if (aStr.EqualsWithConversion("#text", PR_TRUE))
-    {
-      *_retval = PR_FALSE;
-    }
-    
-    if (NS_FAILED(rv) || *_retval)
-      return rv;
 
+    return rv;
+}
+
+nsresult nsMsgCompose::BodyConvertible(nsIDOMNode *node,  PRInt32 *_retval)
+{
+    NS_ENSURE_TRUE(node && _retval, NS_ERROR_NULL_POINTER);
+
+    nsresult rv;
+    PRInt32 result;
+
+    // Check this node
+    rv = TagConvertible(node, &result);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Walk tree recursively to check the children
+    PRBool hasChild;
     rv = node->HasChildNodes(&hasChild);
     if (NS_SUCCEEDED(rv) && hasChild)
     {
@@ -2825,19 +2890,24 @@ nsresult nsMsgCompose::BodyContainsHTMLTag(nsIDOMNode *node,  PRBool *_retval)
         rv = node->GetChildNodes(getter_AddRefs(children));
         if (NS_SUCCEEDED(rv) && children)
         {
+            PRUint32 nbrOfElements;
             rv = children->GetLength(&nbrOfElements);
-            if (NS_FAILED(rv))
-                return rv;
-            
-            for (i = 0; i < nbrOfElements && *_retval == PR_FALSE && NS_SUCCEEDED(rv); i ++)
+            for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < nbrOfElements; i++)
             {
+                nsCOMPtr<nsIDOMNode> pItem;
                 rv = children->Item(i, getter_AddRefs(pItem));
                 if (NS_SUCCEEDED(rv) && pItem)
-                   rv = BodyContainsHTMLTag(pItem, _retval);
+                {
+                    PRInt32 curresult;
+                    rv = BodyConvertible(pItem, &curresult);
+                    if (NS_SUCCEEDED(rv) && curresult > result)
+                        result = curresult;
+                }
             }
         }
     }
-    
+
+    *_retval = result;
     return rv;
 }
 
@@ -2858,8 +2928,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   if (NS_FAILED(rv) || nsnull == rootElement)
     return rv;
 
-
-  //First look for the actual signature, if we have one
+  //First look for the current signature, if we have one
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIDOMNode> tempNode;
   nsAutoString tagLocalName;

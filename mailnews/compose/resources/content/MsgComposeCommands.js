@@ -20,6 +20,7 @@
  
 var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
 var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
+var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var msgCompType = Components.interfaces.nsIMsgCompType;
 
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
@@ -933,18 +934,24 @@ function GenericSendMessage( msgType )
         				  return;
         			}
     			}
-            
+
 				// Before sending the message, check what to do with HTML message, eventually abort.
-				action = DetermineHTMLAction();
+                var convert = DetermineConvertibility();
+				action = DetermineHTMLAction(convert);
 				if (action == msgCompSendFormat.AskUser)
 				{
-					var result = {action:msgCompSendFormat.PlainText, abort:false};
-					window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
-										"askSendFormatDialog", "chrome,modal",
-										result);
+                    recommAction = convert == msgCompConvertible.No
+                                   ? msgCompSendFormat.AskUser
+                                   : msgCompSendFormat.PlainText;
+                    var result = {action:recommAction,
+                                  convertible:convert,
+                                  abort:false};
+                    window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
+                                      "askSendFormatDialog", "chrome,modal,centerscreen",
+                                      result);
 					if (result.abort)
 						return;
-					 action = result.action;
+					action = result.action;
 				}
 				switch (action)
 				{
@@ -1429,7 +1436,7 @@ function AttachVCard()
 	dump("AttachVCard()\n");
 }
 
-function DetermineHTMLAction()
+function DetermineHTMLAction(convertible)
 {
     if (! msgCompose.composeHTML)
     {
@@ -1466,11 +1473,8 @@ function DetermineHTMLAction()
         
         if (noHtmlRecipients != "" || noHtmlnewsgroups != "")
         {
-            try {
-                var bodyContainsHTML = msgCompose.BodyContainsHTMLTag(window.editorShell.contentWindow.document.childNodes[1]);
-                if (! bodyContainsHTML)
-                  return msgCompSendFormat.PlainText;
-            } catch(ex) {}
+            if (convertible == msgCompConvertible.Plain)
+              return msgCompSendFormat.PlainText;
             
             if (noHtmlnewsgroups == "")
             {
@@ -1498,6 +1502,17 @@ function DetermineHTMLAction()
 	  }
 
     return sendFormat;
+}
+
+function DetermineConvertibility()
+{
+    if (!msgCompose.composeHTML)
+        return msgCompConvertible.Plain;
+
+    try {
+        return msgCompose.bodyConvertible(
+             window.editorShell.contentWindow.document.childNodes[1]);
+    } catch(ex) {}
 }
 
 function LoadIdentity(startup)
