@@ -1158,38 +1158,43 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext& aPresContext,
   // Append the frames
   mFrames.AppendFrames(nsnull, aFrameList);
 
-  // See if the newly appended rows are the last rows in the table. Don't
-  // do this for appended row group frames. We probably should, but DidAppendRow()
-  // doesn't handle row group frames
   const nsStyleDisplay *display;
   aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if ((NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) && NoRowsFollow()) {
+  // See if the newly appended rows are the last rows in the table. 
+  // XXX is this the correct code path for nested row groups, considering that whitespace frames may exist currently
+  if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP != display->mDisplay) && NoRowsFollow()) {
     // The rows we appended are the last rows in the table so incrementally
     // add them to the cell map
+    PRBool haveRows = PR_FALSE;
     for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
-      DidAppendRow((nsTableRowFrame*)rowFrame);
+      rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+      if (NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) {
+        DidAppendRow((nsTableRowFrame*)rowFrame);
+        haveRows = PR_TRUE;
+      }
     }
 
-    // See if any implicit column frames need to be created as a result of
-    // adding the new rows
-    PRBool  createdColFrames;
-    tableFrame->EnsureColumns(aPresContext, createdColFrames);
-    if (createdColFrames) {
-      // We need to rebuild the column cache
-      // XXX It would be nice if this could be done incrementally
-      tableFrame->InvalidateColumnCache();
+    if (haveRows) {
+      // See if any implicit column frames need to be created as a result of
+      // adding the new rows
+      PRBool  createdColFrames;
+      tableFrame->EnsureColumns(aPresContext, createdColFrames);
+      if (createdColFrames) {
+        // We need to rebuild the column cache
+        // XXX It would be nice if this could be done incrementally
+        tableFrame->InvalidateColumnCache();
+      }
+
+      // Reflow the new frames. They're already marked dirty, so generate a reflow
+      // command that tells us to reflow our dirty child frames
+      nsIReflowCommand* reflowCmd;
+
+      if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                               nsIReflowCommand::ReflowDirty))) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
     }
-
-    // Reflow the new frames. They're already marked dirty, so generate a reflow
-    // command that tells us to reflow our dirty child frames
-    nsIReflowCommand* reflowCmd;
-
-    if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                             nsIReflowCommand::ReflowDirty))) {
-      aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
-
   } else {
     // We need to rebuild the cell map, because currently we can't insert
     // new frames except at the end (append)
