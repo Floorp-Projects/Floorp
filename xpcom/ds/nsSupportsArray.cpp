@@ -117,12 +117,19 @@ nsSupportsArray::operator=(nsISupportsArray const& aOther)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::Equals(const nsISupportsArray* aOther)
 {
-  if (0 != aOther) {
-    const nsSupportsArray* other = (const nsSupportsArray*)aOther;
-    if (mCount == other->mCount) {
+  if (aOther) {
+    PRUint32 countOther;
+    nsresult rv = NS_CONST_CAST(nsISupportsArray*, aOther)->Count( &countOther );
+    if (NS_FAILED( rv ))
+      return PR_FALSE;
+
+    if (mCount == countOther) {
       PRUint32 aIndex = mCount;
+      nsCOMPtr<nsISupports> other;
       while (0 < aIndex--) {
-        if (mArray[aIndex] != other->mArray[aIndex]) {
+        if (NS_FAILED( GetElementAt( aIndex, getter_AddRefs( other ) ) ))
+          return PR_FALSE;
+        if (mArray[aIndex] != other) {
           return PR_FALSE;
         }
       }
@@ -288,15 +295,21 @@ nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::AppendElements(nsISupportsArray* aElements)
 {
-  nsSupportsArray*  elements = (nsSupportsArray*)aElements;
+  PRUint32  countElements;
 
-  if (elements && (0 < elements->mCount)) {
-    if (mArraySize < (mCount + elements->mCount)) {  // need to grow the array
-      PRUint32 count = mCount + elements->mCount;
+  if (!aElements)
+    return PR_FALSE;
+
+  if (NS_FAILED( aElements->Count( &countElements ) ))
+    return PR_FALSE;
+
+  if (0 < countElements) {
+    if (mArraySize < (mCount + countElements)) {  // need to grow the array
+      PRUint32 count = mCount + countElements;
       PRUint32 oldSize = mArraySize;
-      while (mArraySize < count) {  // ick
-        mArraySize += kGrowArrayBy;
-      }
+      // growth is linear; consider geometric (e.g., doubling) to avoid the n^2
+      //  (amortized) cost we are paying to copy elements now
+      mArraySize += ((count - mArraySize + kGrowArrayBy - 1) / kGrowArrayBy) * kGrowArrayBy;
       nsISupports** oldArray = mArray;
       mArray = new nsISupports*[mArraySize];
       if (0 == mArray) { // ran out of memory
@@ -314,10 +327,11 @@ nsSupportsArray::AppendElements(nsISupportsArray* aElements)
       }
     }
 
-    PRUint32 aIndex = 0;
-    while (aIndex < elements->mCount) {
-      NS_ADDREF(elements->mArray[aIndex]);
-      mArray[mCount++] = elements->mArray[aIndex++];
+    PRUint32 i = 0;
+    for (i = 0; i < countElements; ++i, ++mCount) { 
+      // use GetElementAt to copy and do AddRef for us
+      if (NS_FAILED( aElements->GetElementAt( i, mArray + mCount) ))
+        return PR_FALSE;
     }
     return PR_TRUE;
   }
