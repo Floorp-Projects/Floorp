@@ -426,7 +426,8 @@ returns only 1 digit precision.
 
 =item C<file_mod_time($filename)>
 
-Takes a filename and returns the modification time. It returns it in the format of the "mtime" parameter of the perl "stat" function.
+Takes a filename and returns the modification time. It returns it in the format
+of the "mtime" parameter of the perl "stat" function.
 
 =back
 
