@@ -47,29 +47,21 @@
 #include "nsISupports.h"
 
 #include "nsIEditorShell.h"
-#include "nsIEditorController.h"
 #include "nsIWebProgressListener.h"
-#include "nsISelectionListener.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIPrompt.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIURIContentListener.h"
 #include "nsVoidArray.h"
-#include "nsTextServicesCID.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsISpellChecker.h"
-#include "nsInterfaceState.h"
 #include "nsIHTMLEditor.h"
 #include "nsIStringBundle.h"
 #include "nsICSSStyleSheet.h"
 #include "nsISupportsArray.h"
 
-// Parser Observation
-#include "nsEditorParserObserver.h"
-
+class nsIDOMDocument;
 class nsIDocShell;
 class nsIScriptContext;
+class nsIDOMWindow;
 class nsIDOMWindowInternal;
 class nsIDOMElement;
 class nsIDOMNode;
@@ -81,6 +73,15 @@ class nsISupportsArray;
 class nsIStringBundleService;
 class nsIStringBundle;
 class nsIStyleSheet;
+class nsIEditorController;
+class nsIDOMEventReceiver;
+class nsIDOMEventListener;
+class nsISpellChecker;
+class nsInterfaceState;
+class nsIHTMLEditor;
+class nsICSSStyleSheet;
+class nsEditorParserObserver;
+class nsStringArray;
 
 #define NS_EDITORSHELL_CID                            \
 { /* {} */                                            \

@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
-
 #include "nsEditorShell.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIBaseWindow.h"
@@ -115,13 +113,16 @@
 #include "nsInterfaceState.h"
 
 #include "nsEditorShellMouseListener.h"
+#include "nsIStringBundle.h"
+
+#include "nsHTMLTags.h"
+#include "nsEditorParserObserver.h"
+#include "nsIDOMEventReceiver.h"
 
 ///////////////////////////////////////
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
-#include "nsITransferable.h"
 
 #include "nsISupportsArray.h"
 
@@ -1225,23 +1226,21 @@ nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
 NS_IMETHODIMP
 nsEditorShell::IncreaseFontSize()
 {
-  nsresult  err = NS_NOINTERFACE;
   nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-
   if (htmlEditor)
-    err = htmlEditor->IncreaseFontSize();
-  return err;
+    return htmlEditor->IncreaseFontSize();
+
+  return NS_NOINTERFACE;
 }
 
 NS_IMETHODIMP
 nsEditorShell::DecreaseFontSize()
 {
-  nsresult  err = NS_NOINTERFACE;
   nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
-
   if (htmlEditor)
-    err = htmlEditor->DecreaseFontSize();
-  return err;
+    return htmlEditor->DecreaseFontSize();
+
+  return NS_NOINTERFACE;
 }
 
 
