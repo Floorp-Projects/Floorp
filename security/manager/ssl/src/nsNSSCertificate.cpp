@@ -215,8 +215,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     return NS_ERROR_FAILURE;
   }
   
-  NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
   if (NS_FAILED(rv) || !nssComponent) {
     return NS_ERROR_FAILURE;
@@ -408,29 +407,42 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetNickname(nsAString &_nickname)
+nsNSSCertificate::GetNickname(nsAString &aNickname)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-// XXX kaie: this is bad. We return a non localizable hardcoded string.
-  const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
-  _nickname = NS_ConvertUTF8toUCS2(nickname);
+  if (mCert->nickname) {
+    CopyUTF8toUTF16(mCert->nickname, aNickname);
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+    if (NS_FAILED(rv) || !nssComponent) {
+      return NS_ERROR_FAILURE;
+    }
+    nssComponent->GetPIPNSSBundleString("CertNoNickname", aNickname);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetEmailAddress(nsAString &_emailAddress)
+nsNSSCertificate::GetEmailAddress(nsAString &aEmailAddress)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-// XXX kaie: this is bad. We return a non localizable hardcoded string.
-//           And agents could be confused, assuming the email address == "(no nickname)"
-  const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
-  _emailAddress = NS_ConvertUTF8toUCS2(email);
+  if (mCert->emailAddr) {
+    CopyUTF8toUTF16(mCert->emailAddr, aEmailAddress);
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+    if (NS_FAILED(rv) || !nssComponent) {
+      return NS_ERROR_FAILURE;
+    }
+    nssComponent->GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
+  }
   return NS_OK;
 }
 
