@@ -28,7 +28,7 @@ LIBRARY_NAME = raptorbasewidget_s
 
 #LCFLAGS=-D_IMPL_NS_WIDGET 
 
-INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)
+INCLUDES += -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)
 
 ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
 CFLAGS += $(TK_GTK_CFLAGS)
@@ -55,7 +55,7 @@ CPPSRCS=nsBaseWidget.cpp                \
 
 MODULE=raptor 
 
-REQUIRES=util img xpcom raptor netlib
+REQUIRES=util img xpcom raptor netlib dom js
 
 TARGETS = $(LIBRARY)
 
