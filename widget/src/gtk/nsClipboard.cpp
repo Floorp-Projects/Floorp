@@ -22,8 +22,7 @@
 
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
-#include "nsDataFlavor.h"
-#include "nsIGenericTransferable.h"
+#include "nsITransferable.h"   // kTextMime
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -31,8 +30,6 @@
 #include "nsWidgetsCID.h"
 
 // interface definitions
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-
 static NS_DEFINE_IID(kIWidgetIID,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kWindowCID,         NS_WINDOW_CID);
 
@@ -278,8 +275,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   }
 
   // Dunno why we need to do this, copying the win32 code ...
-  nsCOMPtr<nsIGenericTransferable> genericTrans = do_QueryInterface(aTransferable);
-  if (!genericTrans)
+  nsCOMPtr<nsITransferable> trans = do_QueryInterface(aTransferable);
+  if (!trans)
     return rv;
 
   //
@@ -289,19 +286,18 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   //
   if (gdk_selection_owner_get (GDK_SELECTION_PRIMARY) == sWidget->window)
   {
-    nsDataFlavor *dataFlavor = new nsDataFlavor();
     // XXX only support text/plain for now
-    dataFlavor->Init(kTextMime, kTextMime);
+    nsAutoString  dataFlavor(kTextMime);
 
     // Get data out of our existing transferable.
     void     *clipboardData;
     PRUint32 dataLength;
-    rv = mTransferable->GetTransferData(dataFlavor, 
+    rv = mTransferable->GetTransferData(&dataFlavor, 
                                         &clipboardData,
                                         &dataLength);
     if (NS_SUCCEEDED(rv))
-      rv = genericTrans->SetTransferData(dataFlavor,
-                                         clipboardData, dataLength);
+      rv = trans->SetTransferData(&dataFlavor,
+                                  clipboardData, dataLength);
     return rv;
   }
 
@@ -321,7 +317,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
     //
 
   // Get the transferable list of data flavors
-  nsISupportsArray * dfList;
+  nsVoidArray * dfList;
   aTransferable->GetTransferDataFlavors(&dfList);
 
   // Walk through flavors and see which flavor matches the one being pasted:
@@ -330,12 +326,9 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   nsresult rv = dfList->Count(&cnt);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
   for (i=0;i<cnt;i++) {
-    nsIDataFlavor * df;
-    nsISupports * supports = dfList->ElementAt(i);
-    if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
-      nsString mime;
-      df->GetMimeType(mime);
-      UINT format = GetFormat(mime);
+    nsString * df = (nsString *)dfList->ElementAt(i);
+    if (nsnull != df) {
+      UINT format = GetFormat(*df);
 
       void   * data;
       PRUint32 dataLen;
@@ -343,17 +336,15 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
       if (nsnull != aDataObject) {
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
         if (NS_OK == res) {
-          genericTrans->SetTransferData(df, data, dataLen);
+          trans->SetTransferData(df, data, dataLen);
         }
       } else if (nsnull != aWindow) {
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
         if (NS_OK == res) {
-          genericTrans->SetTransferData(df, data, dataLen);
+          trans->SetTransferData(df, data, dataLen);
         }
       } 
-      NS_IF_RELEASE(df);
     }
-    NS_RELEASE(supports);
   }
 #endif /* ONLY_SUPPORT_PLAIN_TEXT */
 
@@ -387,10 +378,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
   // Now we have data in mSelectionData.data.
   // We just have to copy it to the transferable.
   // 
-  nsDataFlavor *dataFlavor = new nsDataFlavor();
-  dataFlavor->Init(kTextMime, kTextMime);
-  genericTrans->SetTransferData(dataFlavor,
-                                mSelectionData.data, mSelectionData.length);
+  nsAutoString  dataFlavor(kTextMime);
+  trans->SetTransferData(&dataFlavor, mSelectionData.data, mSelectionData.length);
 
   // Can't free the selection data -- the transferable just saves a pointer.
   // But the transferable is responsible for freeing it, so we have to
@@ -511,8 +500,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
   // XXX hack, string-only for now.
   // Create string data-flavor.
-  nsDataFlavor *dataFlavor = new nsDataFlavor();
-  dataFlavor->Init(kTextMime, kTextMime);
+  nsString *dataFlavor;
 
   // Get data out of transferable.
   rv = clipboard->mTransferable->GetTransferData(dataFlavor, 
@@ -530,38 +518,38 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     printf("Transferable didn't support the data flavor\n");
 
   delete dataFlavor;
-} 
+}
 
 
 
 // Called when another app requests selection ownership:
-void nsClipboard::SelectionClearCB(GtkWidget *widget, 
-                                   GdkEventSelection *event, 
-                                   gpointer data) 
-{ 
+void nsClipboard::SelectionClearCB(GtkWidget *widget,
+                                   GdkEventSelection *event,
+                                   gpointer data)
+{
 #ifdef DEBUG_CLIPBOARD
   printf("  nsClipboard::SelectionClearCB\n");
 #endif /* DEBUG_CLIPBOARD */
 }
- 
+
 
 // The routine called when another app asks for the content of the selection
-void 
-nsClipboard::SelectionRequestCB (GtkWidget *aWidget, 
-                                 GtkSelectionData *aSelectionData, 
-                                 gpointer aData) 
-{ 
+void
+nsClipboard::SelectionRequestCB (GtkWidget *aWidget,
+                                 GtkSelectionData *aSelectionData,
+                                 gpointer aData)
+{
 #ifdef DEBUG_CLIPBOARD
-  printf("  nsClipboard::SelectionRequestCB\n");  
+  printf("  nsClipboard::SelectionRequestCB\n");
 #endif /* DEBUG_CLIPBOARD */
-} 
+}
 
-void 
-nsClipboard::SelectionNotifyCB (GtkWidget *aWidget, 
-                                  GtkSelectionData *aSelectionData, 
-                                  gpointer aData) 
-{ 
+void
+nsClipboard::SelectionNotifyCB (GtkWidget *aWidget,
+                                  GtkSelectionData *aSelectionData,
+                                  gpointer aData)
+{
 #ifdef DEBUG_CLIPBOARD
-   printf("  nsClipboard::SelectionNotifyCB\n");  
+   printf("  nsClipboard::SelectionNotifyCB\n");
 #endif /* DEBUG_CLIPBOARD */
-} 
+}
