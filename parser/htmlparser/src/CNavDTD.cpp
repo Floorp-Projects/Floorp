@@ -980,7 +980,20 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   //**********************************************************
 
   if(NS_OK==result) {
-    result=!gHTMLElements[aTag].HasSpecialProperty(kDiscardTag);
+    result=gHTMLElements[aTag].HasSpecialProperty(kDiscardTag) ? 1 : NS_OK;
+  }
+
+    //this code is here to make sure the head is closed before we deal 
+    //with any tags that don't belong in the head.
+  if(NS_OK==result) {
+    if(mHasOpenHead){
+      if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag)){
+
+        CEndToken     theToken(eHTMLTag_head);
+        nsCParserNode theNode(&theToken,mLineNumber);
+        result=CloseContainer(theNode,eHTMLTag_head,PR_FALSE);
+      }
+    }
   }
 
   return result;
@@ -1011,7 +1024,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     theParent=mBodyContext->Last();
  
   if(NS_OK==result) {
-    if(WillHandleStartTag(aToken,theChildTag,attrNode)) {
+    if(NS_OK==WillHandleStartTag(aToken,theChildTag,attrNode)) {
       switch(theChildTag) { 
         case eHTMLTag_title: 
           result=OpenHead(attrNode);
@@ -1081,15 +1094,15 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  *  Call this to see if you have a closeable peer on the stack that
  *  is ABOVE one of its root tags.
  *   
- *  @update  gess 3/25/98
+ *  @update  gess 4/11/99
  *  @param   aRootTagList -- list of root tags for aTag
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
 static
-PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag) {
+PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eHTMLTags aTag,PRBool anEndTag) {
   PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
-  CTagList* theCloseTags=gHTMLElements[aTag].GetAutoCloseStartTags();
+  CTagList* theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
   PRInt32 theChildIndex=-1;
   PRBool  result=PR_FALSE;
   if(theCloseTags) {
@@ -1100,6 +1113,7 @@ PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eH
   }
   return PRBool(theRootIndex<theChildIndex);
 }
+
 
 /**
  *  Call this to find the index of a given child, or (if not found)
@@ -1179,7 +1193,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
         else if(theRootTags) {
           //since we didn't find any close tags, see if there is an instance of aCurrentTag
           //above the stack from the roottag.
-          if(HasCloseablePeerAboveRoot(*theRootTags,aTagStack,aCurrentTag))
+          if(HasCloseablePeerAboveRoot(*theRootTags,aTagStack,aCurrentTag,PR_TRUE))
             return aCurrentTag;
           else return eHTMLTag_unknown;
         }
@@ -1681,7 +1695,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
             //Let's go to the element table, and see who the parent tag of this child is.
             //Make sure they're compatible.
             CTagList* theRootTags=gHTMLElements[aChild].GetRootTags();
-            if(theRootTags && HasCloseablePeerAboveRoot(*theRootTags,mBodyContext->mTags,aChild)) {
+            if(theRootTags && HasCloseablePeerAboveRoot(*theRootTags,mBodyContext->mTags,aChild,PR_FALSE)) {
               return PR_FALSE;
             }
             CTagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();

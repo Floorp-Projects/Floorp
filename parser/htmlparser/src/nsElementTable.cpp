@@ -185,9 +185,9 @@ CTagList  gTableKids(sizeof(gTableList)/sizeof(eHTMLTag_unknown),gTableList);
 static eHTMLTags gTableElemList[]={eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr};
 CTagList  gTableElemKids(sizeof(gTableElemList)/sizeof(eHTMLTag_unknown),gTableElemList);
 
-static eHTMLTags gTRList[]={eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,eHTMLTag_map,eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_script};
+static eHTMLTags gTRList[]=   {eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script};
 CTagList  gTRKids(sizeof(gTRList)/sizeof(eHTMLTag_unknown),gTRList);
-
+ 
 CTagList  gTBodyKids(2,0,eHTMLTag_tr,eHTMLTag_form);
 CTagList  gULKids(2,0,eHTMLTag_li,eHTMLTag_p);
 
