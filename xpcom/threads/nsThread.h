@@ -72,7 +72,7 @@ public:
     nsThreadPool(PRUint32 minThreads, PRUint32 maxThreads);
     virtual ~nsThreadPool();
 
-    nsIRunnable* GetRequest();
+    nsIRunnable* GetRequest(nsIThread* thread);
 
 	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
@@ -80,9 +80,17 @@ protected:
     nsCOMPtr<nsISupportsArray>  mThreads;
     nsCOMPtr<nsISupportsArray>  mRequests;
     PRMonitor*                  mRequestMonitor;
+    
+    PRUint32                    mStackSize;
+    PRThreadPriority            mPriority;
+    PRThreadScope               mScope;
+
     PRUint32                    mMinThreads;
     PRUint32                    mMaxThreads;
     PRBool                      mShuttingDown;
+    
+    nsresult AddThread();
+    nsresult RemoveThread(nsIThread *inThread);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
