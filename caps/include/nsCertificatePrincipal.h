@@ -48,18 +48,20 @@ public:
     NS_IMETHOD ToString(char **result);
 
     NS_IMETHOD ToUserVisibleString(char **result);
-
-    NS_IMETHOD ToStreamableForm(char** aName, char** aData);
-
+    
+    NS_IMETHOD GetPreferences(char** aPrefName, char** aID, 
+                              char** aGrantedList, char** aDeniedList);
+    
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
 
     NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
 
-    NS_IMETHOD InitFromPersistent(const char *name, const char* data);
-
     NS_IMETHOD Init(const char* aCertificateID);
+
+    nsresult InitFromPersistent(const char* aPrefName, const char* aID, 
+                                const char* aGrantedList, const char* aDeniedList);
 
     nsCertificatePrincipal();
 

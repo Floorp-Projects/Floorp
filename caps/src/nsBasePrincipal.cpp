@@ -220,95 +220,94 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
 int nsBasePrincipal::mCapabilitiesOrdinal = 0;
 
 nsresult
-nsBasePrincipal::InitFromPersistent(const char *name, const char* data)
+nsBasePrincipal::InitFromPersistent(const char* aPrefName, const char* aID, 
+                                    const char* aGrantedList, const char* aDeniedList)
 {
-    // Parses capabilities strings of the form 
-    // "Capability=value ..."
-    // ie. "UniversalBrowserRead=Granted UniversalBrowserWrite=Denied"
-
     //-- Empty the capability table
     if (mCapabilities)
         mCapabilities->Reset();
 
     //-- Save the preference name
-    nsCAutoString nameString(name);
-    mPrefName = nameString.ToNewCString();
+    mPrefName = PL_strdup(aPrefName);
+    if (!mPrefName)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    const char* ordinalBegin = PL_strpbrk(name, "1234567890");
+    const char* ordinalBegin = PL_strpbrk(aPrefName, "1234567890");
     if (ordinalBegin) {
         int  n = atoi(ordinalBegin);
-        if (mCapabilitiesOrdinal <= n)
+         if (mCapabilitiesOrdinal <= n)
             mCapabilitiesOrdinal = n+1;
     }
     
-    //-- Parse the capabilities
-    for (;;)
-    {
-        char* wordEnd = PL_strchr(data, '=');
-        if (wordEnd == nsnull)
-            break;
-        while (*(wordEnd-1) == ' ')
-            wordEnd--;
-        const char* cap = data;
-        data = wordEnd+1;
-        *wordEnd = '\0';
-        while (*data == ' ' || *data == '=')
-            data++;
-
-        PRInt16 value;
-        if (*data == 'G' || *data == 'g' || *data == 'Y' ||
-            *data == 'y' || *data == 'T' || *data == 't' || 
-            (*data - '0') == nsIPrincipal::ENABLE_GRANTED ||
-            *data == '1')
-            value = nsIPrincipal::ENABLE_GRANTED;
-        else if (*data == 'D' || *data == 'd' || *data == 'N' ||
-            *data == 'n' || *data == 'F' || *data == 'f' || 
-            (*data - '0') == nsIPrincipal::ENABLE_DENIED ||
-            *data == '0')
-            value = nsIPrincipal::ENABLE_DENIED;
-        else
-            value = nsIPrincipal::ENABLE_UNKNOWN;
-        
-        if(NS_FAILED(SetCanEnableCapability(cap, value))) 
+    //-- Store the capabilities
+    if (aGrantedList)
+        if(NS_FAILED(SetCanEnableCapability(aGrantedList, nsIPrincipal::ENABLE_GRANTED))) 
             return NS_ERROR_FAILURE;
-        while (*data != ' ' && *data != '\0') data++;
-        while (*data == ' ') data++;
-    }
+    if (aDeniedList)
+        if(NS_FAILED(SetCanEnableCapability(aDeniedList, nsIPrincipal::ENABLE_DENIED))) 
+            return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
+struct CapabilityList
 {
-    nsCString *capStr = (nsCString*) aStr;    
-    capStr->Append(' ');
-    capStr->AppendWithConversion(((nsStringKey *) aKey)->GetString());
-    capStr->Append('=');
-    switch ((PRInt16)(PRInt32)aData) 
+    nsCString* granted;
+    nsCString* denied;
+};
+
+PR_STATIC_CALLBACK(PRBool)
+AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
+{
+    CapabilityList* capList = (CapabilityList*)capListPtr;
+    PRInt16 value = (PRInt16)(PRInt32)aData;
+    if (value == nsIPrincipal::ENABLE_GRANTED)
     {
-    case nsIPrincipal::ENABLE_GRANTED:
-        capStr->Append("Granted");
-        break;
-    case nsIPrincipal::ENABLE_DENIED:
-        capStr->Append("Denied");
-        break;
-    default:
-        capStr->Append("Unknown");
+        capList->granted->AppendWithConversion(((nsStringKey *) aKey)->GetString());
+        capList->granted->Append(' ');
+    }
+    else if (value == nsIPrincipal::ENABLE_DENIED)
+    {
+        capList->denied->AppendWithConversion(((nsStringKey *) aKey)->GetString());
+        capList->denied->Append(' ');
     }
     return PR_TRUE;
-}   
+}
 
 NS_IMETHODIMP 
-nsBasePrincipal::ToStreamableForm(char** aName, char** aData)
+nsBasePrincipal::GetPreferences(char** aPrefName, char** aID, 
+                                char** aGrantedList, char** aDeniedList)
 {
-    char *streamableForm;
-    if (NS_FAILED(ToString(&streamableForm)))
+    //-- Preference name
+    *aPrefName = nsCRT::strdup(mPrefName);
+    if (!aPrefName)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    //-- ID
+    if (NS_FAILED(ToString(aID)))
         return NS_ERROR_FAILURE;
+
+    //-- Capabilities
+    *aGrantedList = nsnull;
+    *aDeniedList = nsnull;
     if (mCapabilities) {
-        nsCAutoString buildingCapString(streamableForm);
-        mCapabilities->Enumerate(AppendCapability, (void*)&buildingCapString);
-        streamableForm = buildingCapString.ToNewCString();
+        nsCAutoString grantedListStr;
+        nsCAutoString deniedListStr;
+        CapabilityList* capList = new CapabilityList();
+        capList->granted = &grantedListStr;
+        capList->denied = &deniedListStr;        
+        mCapabilities->Enumerate(AppendCapability, (void*)capList);
+        if (grantedListStr.Length() > 0)
+        {
+            grantedListStr.Truncate(grantedListStr.Length()-1);
+            *aGrantedList = grantedListStr.ToNewCString();
+            if (!*aGrantedList) return NS_ERROR_OUT_OF_MEMORY;
+        }
+        if (deniedListStr.Length() > 0)
+        {
+            deniedListStr.Truncate(deniedListStr.Length()-1);
+            *aDeniedList = deniedListStr.ToNewCString();
+            if (!*aDeniedList) return NS_ERROR_OUT_OF_MEMORY;
+        }
     }
-    *aData = streamableForm;
     return NS_OK;
 }

@@ -60,7 +60,8 @@ public:
 
     NS_IMETHOD DisableCapability(const char *capability, void * *annotation);
 
-    NS_IMETHOD ToStreamambleForm(char** aName, char** aData);
+    NS_IMETHOD GetPreferences(char** aPrefName, char** aID, 
+                              char** aGrantedList, char** aDeniedList);
     
     NS_IMETHOD Init();
 

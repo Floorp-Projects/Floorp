@@ -30,6 +30,7 @@
 #include "nsBasePrincipal.h"
 #include "nsICodebasePrincipal.h"
 #include "nsIURI.h"
+#include "nsCOMPtr.h"
 
 #define NS_CODEBASEPRINCIPAL_CID \
 { 0x7ee2a400, 0x0b91, 0xaad3, \
@@ -46,9 +47,10 @@ public:
     NS_IMETHOD ToString(char **result);
 
     NS_IMETHOD ToUserVisibleString(char **result);
-
-    NS_IMETHOD ToStreamableForm(char** aName, char** aData);
-
+    
+    NS_IMETHOD GetPreferences(char** aPrefName, char** aID, 
+                              char** aGrantedList, char** aDeniedList);
+    
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
@@ -61,12 +63,13 @@ public:
     Init(nsIURI *uri);
 
     nsresult
-    InitFromPersistent(const char *name, const char* data);
+    InitFromPersistent(const char* aPrefName, const char* aID, 
+                       const char* aGrantedList, const char* aDeniedList);
 
     virtual ~nsCodebasePrincipal(void);
     
 protected:
-    nsIURI *mURI;
+    nsCOMPtr<nsIURI> mURI;
 };
 
 #endif // _NS_CODEBASE_PRINCIPAL_H_

@@ -41,20 +41,10 @@ NSBASEPRINCIPALS_RELEASE(nsCodebasePrincipal);
 ///////////////////////////////////////
 // Methods implementing nsIPrincipal //
 ///////////////////////////////////////
-
 NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
-      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
-    nsAutoString buf;
-    buf.AppendWithConversion("[Codebase ");
-    nsXPIDLCString origin;
-    if (NS_FAILED(GetOrigin(getter_Copies(origin))))
-        return NS_ERROR_FAILURE;
-    buf.AppendWithConversion(origin);
-    buf.AppendWithConversion(']');
-    *result = buf.ToNewCString();
-    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return GetOrigin(result);
 }
 
 NS_IMETHODIMP
@@ -64,17 +54,18 @@ nsCodebasePrincipal::ToUserVisibleString(char **result)
 }
 
 NS_IMETHODIMP 
-nsCodebasePrincipal::ToStreamableForm(char** aName, char** aData)
+nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID, 
+                                    char** aGrantedList, char** aDeniedList)
 {
     if (!mPrefName) {
-        nsCAutoString s("security.principal.codebase");
+        nsCAutoString s;
+        s.Assign("security.principal.codebase.p");
         s.AppendInt(mCapabilitiesOrdinal++);
+        s.Append(".id");
         mPrefName = s.ToNewCString();
     }
-    *aName = nsCRT::strdup(mPrefName);
-    if (!*aName)
-        return NS_ERROR_FAILURE;
-    return nsBasePrincipal::ToStreamableForm(aName, aData);
+    return nsBasePrincipal::GetPreferences(aPrefName, aID, 
+                                           aGrantedList, aDeniedList);
 }
 
 NS_IMETHODIMP
@@ -246,7 +237,6 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
 nsCodebasePrincipal::nsCodebasePrincipal()
 {
     NS_INIT_ISUPPORTS();
-    mURI = nsnull;
 }
 
 nsresult
@@ -261,45 +251,26 @@ nsCodebasePrincipal::Init(nsIURI *uri)
     }
     // JSPrincipals::Init adopts codebase, so no need to free now
     mURI = uri;
-    NS_ADDREF(mURI);
     return NS_OK;
 }
 
 // This method overrides nsBasePrincipal::InitFromPersistent
 nsresult
-nsCodebasePrincipal::InitFromPersistent(const char *name, const char* data)
+nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLStr, 
+                                        const char* aGrantedList, const char* aDeniedList)
 {
-    // Parses preference strings of the form 
-    // "<codebase URL><space><capabilities string>"
-    // ie. "http://www.mozilla.org UniversalBrowserRead=Granted"
-    if (!data)
-        return NS_ERROR_ILLEGAL_VALUE;
-
-    char* urlEnd = PL_strchr(data, ' '); // Find end of URL
-    if (urlEnd)
-        *urlEnd = '\0';
-
+    nsresult rv;
     nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), data, nsnull))) {
-        NS_ASSERTION(PR_FALSE, "Malformed URI in security.principal preference.");
-        return NS_ERROR_FAILURE;
-    }
+    rv = NS_NewURI(getter_AddRefs(uri), aURLStr, nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Malformed URI in security.principal preference.");
+    if (NS_FAILED(rv)) return rv;
+
     if (NS_FAILED(Init(uri))) return NS_ERROR_FAILURE;
 
-    if (urlEnd) 
-    {
-        // Jump to beginning of capabilities list
-        data = urlEnd+1;
-        while (*data == ' ')
-            data++;
-        if (data)
-            return nsBasePrincipal::InitFromPersistent(name, data);
-    }
-    return NS_OK;
+    return nsBasePrincipal::InitFromPersistent(aPrefName, aURLStr, 
+                                               aGrantedList, aDeniedList);
 }
 
-nsCodebasePrincipal::~nsCodebasePrincipal(void)
+nsCodebasePrincipal::~nsCodebasePrincipal()
 {
-    if (mURI)
-        NS_RELEASE(mURI);
 }

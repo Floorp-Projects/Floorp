@@ -53,7 +53,7 @@
 #include "nsIStringBundle.h"
 #include "nsINetSupportDialogService.h"
 #include "nsNetUtil.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
 #include "nsIFile.h"
 #include "nsIZipReader.h"
 
@@ -972,6 +972,41 @@ CheckConfirmDialog(const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
 }
 
 NS_IMETHODIMP
+nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal, 
+                                           const char *capability, PRInt16* canEnable)
+{
+    if (NS_FAILED(aPrincipal->CanEnableCapability(capability, canEnable)))
+        return NS_ERROR_FAILURE;
+    if (*canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION) {
+        // Prompt user for permission to enable capability.
+        static PRBool remember = PR_TRUE;
+        nsAutoString query, check;
+        if (NS_FAILED(Localize("EnableCapabilityQuery", query)))
+            return NS_ERROR_FAILURE;
+        if (NS_FAILED(Localize("CheckMessage", check)))
+            return NS_ERROR_FAILURE;
+        char *source;
+        if (NS_FAILED(aPrincipal->ToUserVisibleString(&source)))
+            return NS_ERROR_FAILURE;
+        PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), source);
+        Recycle(source);
+        if (CheckConfirmDialog(message, check.GetUnicode(), &remember))
+            *canEnable = nsIPrincipal::ENABLE_GRANTED;
+        else
+            *canEnable = nsIPrincipal::ENABLE_DENIED;
+        PR_FREEIF(message);
+        if (remember) {
+            //-- Save principal to prefs and to mPrincipals
+            if (NS_FAILED(aPrincipal->SetCanEnableCapability(capability, *canEnable)))
+                return NS_ERROR_FAILURE;
+            if (NS_FAILED(SavePrincipal(aPrincipal)))
+                return NS_ERROR_FAILURE;
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx, 
                                               nsIPrincipal **result, 
                                               JSStackFrame **frameResult) 
@@ -1011,36 +1046,11 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     }
     if (enabled)
         return NS_OK;
+
     PRInt16 canEnable;
-    if (NS_FAILED(principal->CanEnableCapability(capability, &canEnable)))
+    if (NS_FAILED(RequestCapability(principal, capability, &canEnable)))
         return NS_ERROR_FAILURE;
-    if (canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION) {
-        // Prompt user for permission to enable capability.
-        static PRBool remember = PR_TRUE;
-        nsAutoString query, check;
-        if (NS_FAILED(Localize("EnableCapabilityQuery", query)))
-            return NS_ERROR_FAILURE;
-        if (NS_FAILED(Localize("CheckMessage", check)))
-            return NS_ERROR_FAILURE;
-        char *source;
-        if (NS_FAILED(principal->ToUserVisibleString(&source)))
-            return NS_ERROR_FAILURE;
-        PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), 
-                                                       source);
-        Recycle(source);
-        if (CheckConfirmDialog(message, check.GetUnicode(), &remember))
-            canEnable = nsIPrincipal::ENABLE_GRANTED;
-        else
-            canEnable = nsIPrincipal::ENABLE_DENIED;
-        PR_FREEIF(message);
-        if (remember) {
-            //-- Save principal to prefs and to mPrincipals
-            if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
-                return NS_ERROR_FAILURE;
-            if (NS_FAILED(SavePrincipal(principal)))
-                return NS_ERROR_FAILURE;
-        }
-    }
+   
     if (canEnable != nsIPrincipal::ENABLE_GRANTED) {
 		static const char msg[] = "enablePrivilege not granted";
 		JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
@@ -1100,8 +1110,10 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
     if (!mSystemCertificate)
     {
         nsCOMPtr<nsIFile> systemCertFile;
-        rv = NS_GetSpecialDirectory("xpcom.currentProcess.componentDirectory",
-                                    getter_AddRefs(systemCertFile));
+        NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_PROGID, &rv);
+        if (!directoryService) return NS_ERROR_FAILURE;
+        rv = directoryService->Get("system.OS_CurrentProcessDirectory", NS_GET_IID(nsIFile), 
+                              getter_AddRefs(systemCertFile));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         systemCertFile->Append("systemSignature.jar");
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -1112,10 +1124,12 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         systemCertJar->Init(systemCertFile);
         rv = systemCertJar->Open();
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-        rv = systemCertJar->GetCertificatePrincipal(nsnull, 
-                                                    getter_AddRefs(mSystemCertificate));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = systemCertJar->GetCertificatePrincipal(nsnull, 
+                                                        getter_AddRefs(mSystemCertificate));
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+        }
     }
 
     //-- Make sure the caller's principal is the system certificate
@@ -1303,40 +1317,6 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
-{
-    NS_ASSERTION(mPrefs, "nsScriptSecurityManager::mPrefs not initialized");
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> persistent = aToSave;
-    nsCOMPtr<nsIAggregatePrincipal> aggregate = do_QueryInterface(aToSave, &rv);
-    if (NS_SUCCEEDED(rv))
-        if (NS_FAILED(aggregate->GetPrimaryChild(getter_AddRefs(persistent))))
-            return NS_ERROR_FAILURE;
-
-    //-- Save to mPrincipals
-    if (!mPrincipals) 
-    {
-        mPrincipals = new nsSupportsHashtable(31);
-        if (!mPrincipals)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsIPrincipalKey key(persistent);
-    mPrincipals->Put(&key, persistent);
-
-    //-- Save to prefs
-    nsXPIDLCString prefName;
-    nsXPIDLCString prefData;
-    rv = persistent->ToStreamableForm(getter_Copies(prefName),
-                                      getter_Copies(prefData));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    mIsAccessingPrefs = PR_TRUE;
-    rv = mPrefs->SetCharPref(prefName, prefData);
-    mIsAccessingPrefs = PR_FALSE;
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    return mPrefs->SavePrefFile();
-}
-
-NS_IMETHODIMP
 nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
                                           const char *aCapability)
 {
@@ -1443,21 +1423,6 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &ok)))
         ok = PR_FALSE;
     if (!ok) {
-        // T E M P O R A R Y
-        // Check the pref "security.checkxpconnect". If it exists and is
-        // set to false, don't report an error.
-	    nsresult rv;
-	    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-	    if (NS_SUCCEEDED(rv)) {
-		    PRBool enabled;
-		    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect",
-                                                &enabled)) &&
-			    !enabled) 
-		    {
-			    return NS_OK;
-		    }
-	    }
-        // T E M P O R A R Y
 		static const char msg[] = "Access denied to XPConnect service.";
 		JS_SetPendingException(aJSContext, 
 			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));
@@ -1546,6 +1511,65 @@ nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal,
     result += '.';
     result += domPropNames[domProp];
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
+{
+    NS_ASSERTION(mPrefs, "nsScriptSecurityManager::mPrefs not initialized");
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> persistent = aToSave;
+    nsCOMPtr<nsIAggregatePrincipal> aggregate = do_QueryInterface(aToSave, &rv);
+    if (NS_SUCCEEDED(rv))
+        if (NS_FAILED(aggregate->GetPrimaryChild(getter_AddRefs(persistent))))
+            return NS_ERROR_FAILURE;
+
+    //-- Save to mPrincipals
+    if (!mPrincipals) 
+    {
+        mPrincipals = new nsSupportsHashtable(31);
+        if (!mPrincipals)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+    nsIPrincipalKey key(persistent);
+    mPrincipals->Put(&key, persistent);
+
+    //-- Save to prefs
+    nsXPIDLCString idPrefName;
+    nsXPIDLCString id;
+    nsXPIDLCString grantedList;
+    nsXPIDLCString deniedList;
+    rv = persistent->GetPreferences(getter_Copies(idPrefName),
+                                    getter_Copies(id),
+                                    getter_Copies(grantedList),
+                                    getter_Copies(deniedList));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    nsXPIDLCString grantedPrefName;
+    nsXPIDLCString deniedPrefName;
+    rv = PrincipalPrefNames( idPrefName, 
+                             getter_Copies(grantedPrefName), 
+                             getter_Copies(deniedPrefName)  );
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    mIsAccessingPrefs = PR_TRUE;
+    if (grantedList)
+        mPrefs->SetCharPref(grantedPrefName, grantedList);
+    else
+        mPrefs->ClearUserPref(grantedPrefName);
+
+    if (deniedList)
+        mPrefs->SetCharPref(deniedPrefName, deniedList);
+    else
+        mPrefs->ClearUserPref(deniedPrefName);
+
+    if (grantedList || deniedList)
+        mPrefs->SetCharPref(idPrefName, id);
+    else
+        mPrefs->ClearUserPref(idPrefName);
+
+    mIsAccessingPrefs = PR_FALSE;
+    return mPrefs->SavePrefFile();
 }
 
 static nsDOMProp 
@@ -1686,23 +1710,77 @@ nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName,
     NS_ASSERTION(PR_FALSE, "DOM property name invalid or not found");
 }
 
+nsresult
+nsScriptSecurityManager::PrincipalPrefNames(const char* pref, 
+                                            char** grantedPref, char** deniedPref)
+{
+    char* lastDot = PL_strrchr(pref, '.');
+    if (!lastDot) return NS_ERROR_FAILURE;
+    PRInt32 prefLen = lastDot - pref + 1;
+
+    *grantedPref = nsnull;
+    *deniedPref = nsnull;
+
+    static const char granted[] = "granted";
+    *grantedPref = (char*)PR_MALLOC(prefLen + sizeof(granted));
+    if (!grantedPref) return NS_ERROR_OUT_OF_MEMORY;
+    PL_strncpy(*grantedPref, pref, prefLen);
+    PL_strcpy(*grantedPref + prefLen, granted);
+
+    static const char denied[] = "denied";
+    *deniedPref = (char*)PR_MALLOC(prefLen + sizeof(denied));
+    if (!deniedPref)
+    {
+        PR_FREEIF(*grantedPref);
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    PL_strncpy(*deniedPref, pref, prefLen);
+    PL_strcpy(*deniedPref + prefLen, denied);
+
+    return NS_OK;
+}
+
 struct EnumeratePrincipalsInfo {
     // this struct doesn't own these objects; consider them parameters on
     // the stack
     nsSupportsHashtable *ht;
-    nsIPref *prefs; 
+    nsIPref *prefs;
 };
 
 void
 nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName, 
                                                      void *voidParam)
 {
+    /* This is the principal preference syntax:
+     * security.principal.[codebase|certificate].<name>.[id|granted|denied]
+     * For example:
+     * user_pref("security.principal.certificate.p1.id","12:34:AB:CD");
+     * user_pref("security.principal.certificate.p1.granted","Capability1 Capability2"); 
+     * user_pref("security.principal.certificate.p1.denied","Capability3");
+     */
+
     EnumeratePrincipalsInfo *info = (EnumeratePrincipalsInfo *) voidParam;
-    
-    char* data;
-    if (NS_FAILED(info->prefs->CopyCharPref(prefName, &data))) 
+    static const char idName[] = ".id";
+    PRInt32 prefNameLen = PL_strlen(prefName) - (sizeof(idName)-1);
+    if (PL_strcasecmp(prefName + prefNameLen, idName) != 0)
         return;
-    
+
+    char* id;
+    if (NS_FAILED(info->prefs->CopyCharPref(prefName, &id))) 
+        return;
+
+    nsXPIDLCString grantedPrefName;
+    nsXPIDLCString deniedPrefName;
+    if (NS_FAILED(PrincipalPrefNames( prefName, 
+                                      getter_Copies(grantedPrefName), 
+                                      getter_Copies(deniedPrefName)  )))
+        return;
+
+    char* grantedList = nsnull;
+    info->prefs->CopyCharPref(grantedPrefName, &grantedList);
+    char* deniedList = nsnull;
+    info->prefs->CopyCharPref(deniedPrefName, &deniedList);
+
     static const char certificateName[] = "security.principal.certificate";
     static const char codebaseName[] = "security.principal.codebase";
     nsCOMPtr<nsIPrincipal> principal;
@@ -1712,7 +1790,8 @@ nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName,
         nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
         if (certificate) {
             NS_ADDREF(certificate);
-            if (NS_SUCCEEDED(certificate->InitFromPersistent(prefName, data))) 
+            if (NS_SUCCEEDED(certificate->InitFromPersistent(prefName, id, 
+                                                             grantedList, deniedList))) 
                 principal = do_QueryInterface((nsBasePrincipal*)certificate);
             NS_RELEASE(certificate);
         }
@@ -1722,12 +1801,15 @@ nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName,
         nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
         if (codebase) {
             NS_ADDREF(codebase);
-            if (NS_SUCCEEDED(codebase->InitFromPersistent(prefName, data))) 
+            if (NS_SUCCEEDED(codebase->InitFromPersistent(prefName, id, 
+                                                          grantedList, deniedList))) 
                 principal = do_QueryInterface((nsBasePrincipal*)codebase);
             NS_RELEASE(codebase);
         }
     }
-    nsCRT::free(data);
+    PR_FREEIF(grantedList);
+    PR_FREEIF(deniedList);
+   
     if (principal) {
         nsIPrincipalKey key(principal);
         info->ht->Put(&key, principal);
@@ -1737,7 +1819,7 @@ nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName,
 static const char jsEnabledPrefName[] = "javascript.enabled";
 static const char jsMailEnabledPrefName[] = "javascript.allow.mailnews";
 
-int
+int PR_CALLBACK
 nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
 {
     nsScriptSecurityManager *secMgr = (nsScriptSecurityManager *) data;
@@ -1759,16 +1841,28 @@ nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
     return 0;
 }
 
-int
+int PR_CALLBACK
 nsScriptSecurityManager::PrincipalPrefChanged(const char *pref, void *data)
 {
     nsScriptSecurityManager *secMgr = (nsScriptSecurityManager *) data;
     if (secMgr->mIsAccessingPrefs)
         return 0;
+
+    char* lastDot = PL_strrchr(pref, '.');
+    if (!lastDot) return NS_ERROR_FAILURE;
+    PRInt32 prefLen = lastDot - pref + 1;
+
+    static const char id[] = "id";
+    char* idPref = (char*)PR_MALLOC(prefLen + sizeof(id));
+    if (!idPref) return NS_ERROR_OUT_OF_MEMORY;
+    PL_strncpy(idPref, pref, prefLen);
+    PL_strcpy(idPref + prefLen, id);
+
     EnumeratePrincipalsInfo info;
     info.ht = secMgr->mPrincipals;
     info.prefs = secMgr->mPrefs;
-    EnumeratePrincipalsCallback(pref, &info);
+    EnumeratePrincipalsCallback(idPref, &info);
+    PR_FREEIF(idPref);
     return 0;
 }
 
@@ -1786,7 +1880,7 @@ nsScriptSecurityManager::InitFromPrefs()
         NS_ASSERTION(strcmp(domPropNames[i-1], domPropNames[i]) < 0,
                      "DOM properties are not properly sorted");
     }
-#endif 
+#endif
 
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);

@@ -58,7 +58,8 @@ nsSystemPrincipal::ToUserVisibleString(char **result)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::ToStreamambleForm(char** aName, char** aData)
+nsSystemPrincipal::GetPreferences(char** aPrefName, char** aID, 
+                                  char** aGrantedList, char** aDeniedList)
 {
     // The system principal should never be streamed out
     return NS_ERROR_FAILURE; 
@@ -93,6 +94,7 @@ nsSystemPrincipal::SetCanEnableCapability(const char *capability,
 {
     return NS_ERROR_FAILURE;
 }
+
 
 NS_IMETHODIMP 
 nsSystemPrincipal::IsCapabilityEnabled(const char *capability, 
