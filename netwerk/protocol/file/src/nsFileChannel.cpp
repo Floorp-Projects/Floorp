@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
-
+#include "nsEscape.h"
 #include "nsIMIMEService.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
@@ -126,7 +126,7 @@ nsFileChannel::Init(nsFileProtocolHandler* handler,
 			}
 		}
 #else
-		nsFilePath filePath(fileString);
+		nsFilePath filePath(nsUnescape((char*)(const char*)fileString));
 		mSpec = filePath;
 #endif
 	}
