@@ -43,14 +43,16 @@ CSRCS=			\
 	rdfht.c 	\
 	$(NULL)
 
-CPPSRCS=			\
-	comwrap.cpp		\
-	netglue.cpp		\
-	nsRDFDataModel.cpp	\
-	nsRDFDataModelItem.cpp	\
-	nsRDFTreeColumn.cpp	\
-	nsRDFTreeDataModel.cpp	\
-	nsRDFTreeItem.cpp	\
+CPPSRCS=				\
+	comwrap.cpp			\
+	netglue.cpp			\
+	nsRDFDataModel.cpp		\
+	nsRDFDataModelItem.cpp		\
+	nsRDFToolbarDataModel.cpp	\
+	nsRDFToolbarDataModelItem.cpp	\
+	nsRDFTreeColumn.cpp		\
+	nsRDFTreeDataModel.cpp		\
+	nsRDFTreeDataModelItem.cpp	\
 	$(NULL)
 
 include $(DEPTH)/config/config.mk
