@@ -10,8 +10,8 @@ COMMON=${TEST_COMMON-$common}
 DIST=${DIST-${MOZILLA_ROOT}/dist}
 SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
 TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
-. ../common/arch.sh
-OBJDIR=${OBJDIR_NAME}
+OBJDIR=`cd ../common; gmake objdir_name` 
+OS_ARCH=`cd ../common; gmake os_arch`
 if [ ${OS_ARCH} = "WINNT" ]; then
 PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
 else
