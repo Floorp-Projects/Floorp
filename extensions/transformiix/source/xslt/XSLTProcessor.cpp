@@ -1754,7 +1754,7 @@ ExprResult* XSLTProcessor::processVariable
         Expr* expr = ps->getExpr(attr->getValue());
         return expr->evaluate(node, ps);
     }
-    else {
+    else if (xslVariable->hasChildNodes()) {
         Document* resultTree = ps->getResultDocument();
         NodeStack* nodeStack = ps->getNodeStack();
         nodeStack->push(resultTree->createDocumentFragment());
@@ -1764,6 +1764,9 @@ ExprResult* XSLTProcessor::processVariable
         NodeSet* nodeSet = new NodeSet();
         nodeSet->add(node);
         return nodeSet;
+    }
+    else {
+      return new StringResult("");
     }
 } //-- processVariable
 
