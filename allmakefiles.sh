@@ -927,6 +927,7 @@ $MAKEFILES_jprof
 $MAKEFILES_js
 $MAKEFILES_l10n
 $MAKEFILES_l10n_lang
+$MAKEFILES_langpacks
 $MAKEFILES_layout
 $MAKEFILES_libreg
 $MAKEFILES_libimg

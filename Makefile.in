@@ -135,6 +135,8 @@ ifdef MOZ_LDAP_XPCOM
 DIRS	+=	directory/c-sdk/ldap directory/xpcom
 endif
 
+DIRS	+= l10n
+
 endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR)
