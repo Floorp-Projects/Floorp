@@ -289,7 +289,7 @@ CVSCO_CALENDAR := $(CVSCO) $(CVS_CO_DATE_FLAGS) mozilla/calendar mozilla/other-l
 # CVS defines for SeaMonkey
 #
 ifeq ($(MOZ_CO_MODULE),)
-  MOZ_CO_MODULE := SeaMonkeyCore
+  MOZ_CO_MODULE := SeaMonkeyXPToolKit mozilla/editor mozilla/extensions/Makefile.in mozilla/extensions/cookie mozilla/l10n/Makefile.in mozilla/l10n/langpacks/Makefile.in
 endif
 CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 
