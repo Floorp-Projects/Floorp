@@ -32,7 +32,8 @@ $lxr_data_root = '/export2/lxr-data';
   'long long',
   '__cmsg_data',
   'location of the previous definition',
-  'by \`'
+  'by \`',
+  'declaration of \`index\'',
 );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
