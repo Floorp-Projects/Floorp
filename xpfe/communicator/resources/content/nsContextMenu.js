@@ -177,6 +177,9 @@ nsContextMenu.prototype = {
         // nsDocumentViewer.cpp has code to determine whether we're
         // on a link or an image. we really ought to be using that...
 
+        // Copy email link depends on whether we're on an email link.
+        this.showItem( "context-copyemail", this.onMailtoLink );
+
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
 
@@ -344,6 +347,7 @@ nsContextMenu.prototype = {
                     this.onMetaDataItem = true;
                     // Remember corresponding element.
                     this.link = elem;
+                    this.onMailtoLink = this.isLinkType( "mailto:", this.link );
                     // Remember if it is saveable.
                     this.onSaveableLink = this.isLinkSaveable( this.link );
                 }
@@ -383,23 +387,32 @@ nsContextMenu.prototype = {
     },
     // Returns true iff clicked on link is saveable.
     isLinkSaveable : function ( link ) {
+        // We don't do the Right Thing for news/snews yet, so turn them off
+        // until we do.
+        return !(this.isLinkType( "mailto:" , link )     ||
+                 this.isLinkType( "javascript:" , link ) ||
+                 this.isLinkType( "news:", link )        || 
+                 this.isLinkType( "snews:", link ) ); 
+    },
+    // Returns true iff clicked on link is of type given.
+    isLinkType : function ( linktype, link ) {        
         try {
             // Test for missing protocol property.
             if ( !link.protocol ) {
                 // We must resort to testing the URL string :-(.
                 var protocol;
-                if (link.href) {
-                    protocol = link.href.substr( 0, 11 );
+                if ( link.href ) {
+                    protocol = link.href.substr( 0, linktype.length );
                 } else {
                     protocol = link.getAttributeNS("http://www.w3.org/1999/xlink","href");
-                    if (protocol) {
-                        protocol = protocol.substr( 0, 11 );
+                    if ( protocol ) {
+                        protocol = protocol.substr( 0, linktype.length );
                     }
                 }
-                return protocol.toLowerCase() != "javascript:";
+                return protocol.toLowerCase() === linktype;        
             } else {
                 // Presume all but javascript: urls are saveable.
-                return link.protocol.toLowerCase() != "javascript:";
+                return link.protocol.toLowerCase() === linktype;
             }
         } catch (e) {
             // something was wrong with the link,
@@ -461,6 +474,25 @@ nsContextMenu.prototype = {
     saveImage : function () {
         this.savePage( this.imageURL, true );
     },
+    // Generate email address and put it on clipboard.
+    copyEmail : function () {
+        // Copy the comma-separated list of email addresses only.
+        // There are other ways of embedding email addresses in a mailto:
+        // link, but such complex parsing is beyond us.
+        var url = this.linkURL();
+        var qmark = url.indexOf( "?" );
+        var addresses;
+        
+        if ( qmark > 7 ) {                   // 7 == length of "mailto:"
+            addresses = url.substring( 7, qmark );
+        } else {
+            addresses = url.substr( 7 );
+        }
+
+        var clipboard = this.getService( "@mozilla.org/widget/clipboardhelper;1",
+                                         Components.interfaces.nsIClipboardHelper );
+        clipboard.copyString(addresses);
+    },    
     // Open Metadata window for node
     showMetadata : function () {
         window.openDialog(  "chrome://navigator/content/metadata.xul",

@@ -52,6 +52,8 @@
 <!ENTITY copyImageCmd.accesskey       "m">
 <!ENTITY metadataCmd.label            "Properties">
 <!ENTITY metadataCmd.accesskey        "">
+<!ENTITY copyEmailCmd.label           "Copy Email Address">
+<!ENTITY copyEmailCmd.accesskey       "e">
 <!ENTITY pasteCmd.label               "Paste">
 <!ENTITY pasteCmd.accesskey           "p">
 <!ENTITY cutCmd.label                 "Cut">
