@@ -95,9 +95,9 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNodeList> childNodes;
-  nsCOMPtr<nsIDOMNode>refNode;
   nsresult result = mParent->GetChildNodes(getter_AddRefs(childNodes));
   if (NS_FAILED(result)) return result;
+  nsCOMPtr<nsIDOMNode>refNode;
   if (childNodes)
   {
     PRUint32 count;
@@ -146,14 +146,13 @@ NS_IMETHODIMP InsertElementTxn::UndoTransaction(void)
   if (!mNode || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> resultNode;
-  nsresult result = mParent->RemoveChild(mNode, getter_AddRefs(resultNode));
-  return result;
+  return mParent->RemoveChild(mNode, getter_AddRefs(resultNode));
 }
 
 NS_IMETHODIMP InsertElementTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
-  if (nsnull!=aDidMerge)
-    *aDidMerge=PR_FALSE;
+  if (aDidMerge)
+    *aDidMerge = PR_FALSE;
   return NS_OK;
 }
 
