@@ -20,37 +20,34 @@
 
 #include "nsFrame.h"
 
-// Implementation of a frame that's used as a placeholder for an anchored item
-
+/**
+ * Implementation of a frame that's used as a placeholder for an anchored item
+ */
 class nsPlaceholderFrame : public nsFrame {
 public:
   /**
    * Create a new placeholder frame
    */
-  static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
-                           nsIContent* aContent,
-                           nsIFrame*   aParent,
-                           nsIFrame*   aAnchoredItem = nsnull);
+  friend nsresult NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult,
+                                         nsIContent* aContent,
+                                         nsIFrame*   aParent,
+                                         nsIFrame*   aAnchoredItem = nsnull);
 
-  // Returns the associated anchored item
-  nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
-  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {mAnchoredItem = aAnchoredItem;}
+  // Get/Set the associated anchored item
+  nsIFrame*   GetAnchoredItem() const {
+    return mAnchoredItem;
+  }
+  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {
+    mAnchoredItem = aAnchoredItem;
+  }
 
   // nsIHTMLReflow overrides
-#if 0
-  NS_IMETHOD FindTextRuns(nsLineLayout&  aLineLayout,
-                          nsIReflowCommand* aReflowCommand);
-#endif
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
   // nsIFrame overrides
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
-                       nsDidReflowStatus aStatus);
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
-
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
@@ -67,12 +64,14 @@ public:
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
-  nsIFrame* mAnchoredItem;
-
   // Constructor. Takes as arguments the content object and the Frame for
   // the content parent
-  nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame* aAnchoredItem);
+  nsPlaceholderFrame(nsIContent* aContent,
+                     nsIFrame* aParent,
+                     nsIFrame* aAnchoredItem);
   virtual ~nsPlaceholderFrame();
+
+  nsIFrame* mAnchoredItem;
 };
 
 #endif /* nsPlaceholderFrame_h___ */
