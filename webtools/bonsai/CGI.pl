@@ -145,21 +145,13 @@ sub PutsHeader {
 # Create a generic page trailer for bonsai pages
 sub PutsTrailer {
      my $args = BatchIdPart('?');
-     my $maintainer = Param('maintainer');
-     my $email = '';
-
-
-     if ($maintainer) {
-          $email = "<br>" . ConstructMailTo($maintainer, "Bonsai Comments");
-          $email .= " with comments/questions about this page.\n";
-     }
 
      print "
 <br clear=all>
 <hr>
-<a href=\"toplevel.cgi$args\" target=_top>
-    Back to the top of Bonsai</a>
-$email
+<a href=\"toplevel.cgi$args\" target=_top>Back to the top of Bonsai</a><br>
+Found a bug or have a feature request?
+<a href=\"http://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Bonsai\">File a bug report</a> about it.
 </html>
 ";
 }
@@ -245,7 +237,7 @@ sub make_cgi_args {
 sub cvsmenu {
      my ($extra) = @_;
      my ($pass, $i, $page, $title);
-     my ($desc, $branch, $root, $module, $maintainer);
+     my ($desc, $branch, $root, $module);
 
      LoadTreeConfig();
 
@@ -288,12 +280,10 @@ sub cvsmenu {
           close EXTRA;
      }
 
-     $maintainer = Param('maintainer');
      print "</dl>
 <p></tr><tr><td>
-   <font size=-1> Questions, Comments, Feature requests? 
-      mail <a href=\"mailto:$maintainer\">$maintainer</a>
-   </font>
+  Found a bug or have a feature request?
+  <a href=\"http://bugzilla.mozilla.org/enter_bug.cgi?product=Webtools&component=Bonsai\">File a bug report</a> about it.</td>
 </tr></table>
 ";
      
