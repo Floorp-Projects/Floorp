@@ -32,7 +32,7 @@ LIBRARY_NAME	= xpcomds_s
 REQUIRES	= unicharutil
 
 CSRCS = \
-                pldhash.c \
+		pldhash.c \
 		plvector.c \
 		$(NULL)
 
@@ -48,41 +48,29 @@ CPPSRCS		= \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
-		nsFragmentedString.cpp \
 		nsHashtable.cpp \
 		nsHashtableEnumerator.cpp \
 		nsObserver.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
-		nsPrintfCString.cpp \
 		nsProperties.cpp \
 		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
-		nsReadableUtils.cpp \
-		nsSharedBufferList.cpp \
 		nsSizeOfHandler.cpp \
-		nsSlidingString.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
-		nsStr.cpp \
-		nsString.cpp \
-		nsString2.cpp \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
 		nsUnicharBuffer.cpp \
 		nsVoidArray.cpp \
 		nsVoidBTree.cpp \
-		nsXPIDLString.cpp \
 		nsTextFormatter.cpp \
 		$(NULL)
 
 EXPORTS		= \
-		nsAlgorithm.h \
 		nsAVLTree.h \
 		nsAtomService.h \
-		nsBufferHandle.h \
-		nsBufferHandleUtils.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
 		nsDeque.h \
@@ -97,21 +85,9 @@ EXPORTS		= \
 		nsISizeOfHandler.h \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
-		nsPrivateSharableString.h \
 		nsQuickSort.h \
-		nsCharTraits.h \
-		nsAReadableString.h \
-		nsAWritableString.h \
-		nsPrintfCString.h \
-		nsReadableUtils.h \
-		nsSharedBufferList.h \
-		nsSharedString.h \
-		nsSlidingString.h \
 		nsStaticNameTable.h \
 		nsStatistics.h \
-		nsStr.h \
-		nsString.h \
-		nsString2.h \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTime.h \
@@ -119,8 +95,7 @@ EXPORTS		= \
 		nsVector.h \
 		nsVoidArray.h \
 		nsVoidBTree.h \
-		nsXPIDLString.h \
-                pldhash.h \
+		pldhash.h \
 		plvector.h \
 		nsTextFormatter.h \
 		$(NULL)			
