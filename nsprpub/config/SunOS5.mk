@@ -99,6 +99,15 @@ ifeq ($(OS_TEST),i86pc)
 CPU_ARCH		= x86
 CPU_ARCH_TAG		= _i86pc
 OS_DEFINES		+= -Di386
+# The default debug format, DWARF (-g), is not supported by gcc
+# on i386-ANY-sysv4/solaris, but the stabs format is.  It is
+# assumed that the Solaris assembler /usr/ccs/bin/as is used.
+# If your gcc uses GNU as, you do not need the -Wa,-s option.
+ifndef BUILD_OPT
+ifdef NS_USE_GCC
+OPTIMIZER		= -Wa,-s -gstabs
+endif
+endif
 else
 CPU_ARCH		= sparc
 endif
