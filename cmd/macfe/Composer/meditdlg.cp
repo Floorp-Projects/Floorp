@@ -4046,27 +4046,27 @@ void CEDImageContain::AdjustEnable()
 	
 	LView* dimensions = (LView *)FindPaneByID( 'C003' );
 	LView* spacearound = (LView *)FindPaneByID( 'C004' );
-	LView* aligncaption = (LView *)FindPaneByID( 'Cptn' );	// alignment caption
+	LGACaption* aligncaption = (LGACaption *)FindPaneByID( 'Cptn' );	// alignment caption
 	LView* extrahtmlbutton = (LView *)FindPaneByID( 'Xtra' );
 	if ( allEmpty || fBackgroundImageCheck->GetValue() )
 	{
-		dimensions->Disable();
-		spacearound->Disable();
+		dimensions->Deactivate();	// LGACaptions - use Deactivate(), not Disable()
+		spacearound->Deactivate();
 		extrahtmlbutton->Disable();
 
 		mImageAlignmentPopup->Disable();
 		if ( aligncaption )
-			aligncaption->Disable();
+			aligncaption->Deactivate();
 	}
 	else
 	{
-		dimensions->Enable();
-		spacearound->Enable();
+		dimensions->Activate();
+		spacearound->Activate();
 		extrahtmlbutton->Enable();
 
 		mImageAlignmentPopup->Enable();
 		if ( aligncaption )
-			aligncaption->Enable();
+			aligncaption->Activate();
 
 		// can't constrain if it's original size or if either/both are "% of window"
 		Boolean doEnable = false;
