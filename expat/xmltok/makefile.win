@@ -35,4 +35,4 @@ CPP_OBJS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(OBJDIR) $(OBJS)
+install:: $(OBJDIR) $(OBJS)

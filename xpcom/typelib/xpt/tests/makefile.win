@@ -33,7 +33,7 @@ LCFLAGS=-DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API -DUSE_NSREG
 LINCS=-I$(PUBLIC)\xpcom
 
 LLIBS=					\
- $(DIST)\lib\xpcom.lib		\
+ $(DIST)\lib\xpcomxpt_s.lib		\
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

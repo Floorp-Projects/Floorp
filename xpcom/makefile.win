@@ -31,10 +31,13 @@ DIRS=   typelib        \
         threads        \
         reflect        \
         proxy          \
-		  appshell       \
-        tools          \
         build          \
+        appshell       \
+        tools          \
         sample         \
-        tests
+        tests          \
+        reflect\xptinfo\tests \
+        reflect\xptcall\tests \
+        proxy\tests
 
 include <$(DEPTH)\config\rules.mak>

@@ -21,11 +21,7 @@
 
 DEPTH=..\..\..\..
 
-
-MAKE_OBJ_TYPE = DLL
-DLLNAME = nslocale
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-#RESFILE = $(DLLNAME).res
+LIBRARY_NAME = nslocalewin_s
 
 MODULE=raptor 
 
@@ -62,11 +58,9 @@ $(LIBNSPR)
 		 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY) 
+	@echo $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
 
 clobber::
-	rm -f $(DIST)\bin\components\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
-	
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

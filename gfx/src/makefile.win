@@ -20,12 +20,15 @@
 # Contributor(s): 
 
 DEPTH=..\..
-
+MODULE=raptor 
 
 DIRS = windows
 
-LIBRARY_NAME=raptorgfx_s
-MODULE=raptor 
+MAKE_OBJ_TYPE = DLL
+DLLNAME = gkgfxwin
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+#RESFILE = $(DLLNAME).res
+
 !ifdef NECKO
 REQUIRES=util img xpcom raptor necko timer
 !else
@@ -68,17 +71,44 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+LLIBS=				\
+ $(DIST)\lib\xpcom.lib	\
+ $(DIST)\lib\img32$(VERSION_NUMBER).lib        \
+ $(DIST)\lib\js32$(VERSION_NUMBER).lib        \
+ $(DIST)\lib\util.lib           \
+ $(DIST)\lib\neckoutil_s.lib       \
+ $(DIST)\lib\raptorgfxwin_s.lib \
+ $(DIST)\lib\timer_s.lib \
+!if defined(NGLAYOUT_DDRAW)
+ $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
+!endif
+ $(LIBNSPR)  
+
+WIN_LIBS=   \
+!if defined(NGLAYOUT_DDRAW)
+ ole32.lib \
+!endif
+ comdlg32.lib
+
+LLFLAGS = \
+		$(LLFLAGS) \
+		/INCLUDE:_NS_HexToRGB@8 \
+		/INCLUDE:_NS_ColorNameToRGB@8 \
+		/INCLUDE:_NS_NewImageGroup@4 \
+		/INCLUDE:_NS_NewImageRenderer@4 \
+		/INCLUDE:_NS_NewImageSystemServices@4 \
+		/INCLUDE:_NS_NewImageManager@4
+		 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-install::
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) icon_0.gif $(DIST)\bin\res\gfx
 	$(MAKE_INSTALL) icon_1.gif $(DIST)\bin\res\gfx
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-	rm -f $(PDBFILE).pdb
+	rm -f $(DIST)\bin\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\res\gfx\icon_0.gif
 	rm -f $(DIST)\bin\res\gfx\icon_1.gif

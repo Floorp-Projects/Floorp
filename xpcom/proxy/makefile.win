@@ -16,6 +16,7 @@
 
 DEPTH=..\..
 
-DIRS=public src tests
+DIRS=public src 
+# tests are made later after xpcom.lib is linked
 
 include <$(DEPTH)\config\rules.mak>

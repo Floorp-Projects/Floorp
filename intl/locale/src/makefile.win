@@ -31,7 +31,10 @@ MODULE		= locale
 REQUIRES	= xpcom unicharutil uconv
 DIRS		= windows
 
-LIBRARY_NAME = nslocale_s
+MAKE_OBJ_TYPE = DLL
+DLLNAME = nslocale
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
+#RESFILE = $(DLLNAME).res
 
 CPPSRCS		=	nsLocale.cpp				\
 				nsLocaleFactory.cpp			\
@@ -54,18 +57,20 @@ LINCS		= -I.						\
 			  -I$(PUBLIC)\unicharutil
 
 
-LLIBS		= $(DIST)\lib\xpcom.lib		\
-			  $(LIBNSPR)
+LLIBS		= $(DIST)\lib\xpcom.lib         \
+                  $(DIST)\lib\nslocalewin_s.lib \
+		  $(LIBNSPR)
 
 LCFLAGS		= $(LCFLAGS) \
 			  $(DEFINES)
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(LIBRARY) 
-	@echo $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
+install:: $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).lib
+	rm -f $(DIST)\bin\components\$(DLLNAME).dll
+	rm -f $(DIST)\lib\$(DLLNAME).lib
+	

@@ -31,6 +31,7 @@ NECKO=1
 #// root of mozilla
 #//
 #//------------------------------------------------------------------------
+
 DEPTH=.
 
 #//------------------------------------------------------------------------
@@ -42,77 +43,59 @@ DEPTH=.
 #//
 #//------------------------------------------------------------------------
 
-DIRS = \
+DIRS =                         \
 !if defined(DIST_DIRS)
-  config			\
-  db				\
-  dbm				\
-  include			\
-  jpeg				\
-  modules\libreg		\
-  xpcom				\
-  modules\zlib			\
-  modules\libjar        \
-  modules\libutil		\
-  sun-java			\
-  js				\
-  modules\libimg		\
-  modules\plugin		\
-  modules\oji		\
-  modules\libpref		\
-  intl                          \
-  caps                          \
-!if !defined(NECKO)
-  lib\libpwcac			\
-  network			\
-!endif
+  config                       \
+  include                      \
+  jpeg                         \
+  sun-java                     \
+  modules\libreg               \
+  xpcom                        \
+  db                           \
+  dbm                          \
+  netwerk                      \
+  widget\timer                 \
+  js                           \
+  modules                      \
+  caps                         \
+  intl                         \
 !endif
 !if defined(LAYOUT_DIRS)
 # the following are associated with the layout engine
-  expat				\
-  gfx				\
-!if defined(NECKO)
-  netwerk			\
-!endif
-  uriloader			\
-  profile			\
-  htmlparser			\
-  widget			\
-  dom				\
-  view				\
-  layout			\
-  rdf                           \
-  webshell			\
-  editor 			\
+  expat                        \
+  gfx                          \
+  uriloader                    \
+  htmlparser                   \
+  widget                       \
+  dom                          \
+  view                         \
+  layout                       \
+  rdf                          \
+  webshell                     \
+  profile                      \
+  editor                       \
 !if defined(GC_LEAK_DETECTOR)
-  gc\boehm			\
+  gc\boehm                     \
 !endif
 !endif
 !if defined(CLIENT_DIRS)
 # the following are associated with the browser
-  xpfe				\
-  xpinstall                     \
-  extensions			\
+  xpfe                         \
+  xpinstall                    \
+  extensions                   \
 !if !defined(DISABLE_MAILNEWS)
-  mailnews			\
+  mailnews                     \
 !endif
 !endif
   $(NULL)
-
-
-!ifdef NECKO
-all::
-export::
-        @echo NECKO is enabled
-!endif
 
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
 #//
 #//------------------------------------------------------------------------
-include <$(DEPTH)\config\rules.mak>
 
+include <$(DEPTH)\config\rules.mak>
 
 #//------------------------------------------------------------------------
 #//

@@ -51,7 +51,7 @@ WIN_LIBS=                       \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(PROGRAM)
+install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
     $(MAKE_INSTALL) *.html $(DIST)\install
 

@@ -55,6 +55,6 @@ LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor  -I$(XPDIST)\public\net
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
 	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib

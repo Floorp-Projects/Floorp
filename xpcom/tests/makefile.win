@@ -33,7 +33,6 @@ PROG4 = .\$(OBJDIR)\TestID.exe
 PROG5 = .\$(OBJDIR)\TestServMgr.exe
 #PROG6 = .\$(OBJDIR)\TimerTest.exe
 PROG7 = .\$(OBJDIR)\TestAtoms.exe
-PROG8 = .\$(OBJDIR)\CvtURL.exe
 PROG9 = .\$(OBJDIR)\TestCRT.exe
 PROG10 = .\$(OBJDIR)\FilesTest.exe
 PROG11 = .\$(OBJDIR)\PropertiesTest.exe
@@ -60,26 +59,16 @@ PROGRAMS = $(PROG1) $(PROG3) $(PROG4) $(PROG5) \
         $(PROG18) \
 	$(NULL)
 
-LCFLAGS=-DUSE_NSREG -GX -DNECKO
+LCFLAGS=-DUSE_NSREG -GX
 
 REQUIRES=libreg
 
 LINCS=                     \
         -Iservices         \
-!ifdef NECKO
-        -I$(PUBLIC)\necko  \
-!else
-        -I$(PUBLIC)\netlib \
-!endif
         -I$(PUBLIC)\xpcom
 
 LLIBS=                         \
         $(DIST)\lib\xpcom.lib  \
-!ifdef NECKO
-        $(DIST)\lib\neckoutil_s.lib \
-!else
-        $(DIST)\lib\netlib.lib \
-!endif
         $(LIBNSPR)
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
@@ -104,8 +93,6 @@ $(PROG5): $(OBJDIR) TestServMgr.cpp
 $(PROG7): $(OBJDIR) TestAtoms.cpp
 
 $(PROG10): $(OBJDIR) FilesTest.cpp
-
-$(PROG8): $(OBJDIR) CvtURL.cpp
 
 $(PROG9): $(OBJDIR) TestCRT.cpp
 

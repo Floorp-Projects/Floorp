@@ -23,16 +23,16 @@ DEPTH = ..
 
 MODULE = necko
 
-DIRS=            \
-	base     \
-	dns      \
-	build    \
-	protocol \
-	socket   \
-	util     \
-	mime     \
+DIRS=              \
+	base       \
+	dns        \
+	socket     \
+	mime       \
 	streamconv \
-	test     \
+	build      \
+	util       \
+	protocol   \
+	test       \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

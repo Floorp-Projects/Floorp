@@ -52,7 +52,7 @@ export::
     $(MAKE_INSTALL) ..\nsZip*.*  .
     $(MAKE_INSTALL) ..\zip*.*    .
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\jar_s.lib $(DIST)\lib
 
 clobber::

@@ -52,7 +52,7 @@ docopy:
 
 export:: docopy
 
-libs:: $(PROGRAM)
+install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
 
 clobber_all::

@@ -72,7 +72,7 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 	$(MAKE_INSTALL) ua.css $(DIST)\bin\res
 	$(MAKE_INSTALL) html.css $(DIST)\bin\res

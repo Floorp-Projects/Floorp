@@ -77,7 +77,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(EXE)
         $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(LIB_SUFFIX) $(DIST)\lib
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
 				$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(LIB_SUFFIX) $(DIST)\lib
 
 # $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).$(DLL_SUFFIX) $(DIST)\bin

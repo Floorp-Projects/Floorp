@@ -35,7 +35,7 @@ EXPORTS= cnetinit.h
 include <$(DEPTH)\config\rules.mak> 
 
 !ifndef MODULAR_NETLIB
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
     $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 symbols::
