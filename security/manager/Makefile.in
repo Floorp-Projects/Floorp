@@ -44,9 +44,37 @@ else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
 endif
 include $(CORE_DEPTH)/coreconf/prefix.mk
-CPU_TAG := _$(CPU_ARCH)
+#
+# Set CPU_TAG (cut and pasted from mozilla/security/coreconf/ruleset.mk)
+#
+
+#
+# At this time, the CPU_TAG value is actually assigned
+#
+
+CPU_TAG:=
+
+#
+# When the process is not 386-based on Windows NT, override the
+# value of $(CPU_TAG).
+#
+ifeq ($(OS_ARCH), WINNT)
+	ifneq ($(CPU_ARCH),x386)
+		CPU_TAG:=_$(CPU_ARCH)
+	endif
+endif
+
+#
+# Always set CPU_TAG on Linux & OpenVMS
+#
+ifneq (,$(filter Linux OpenVMS,$(OS_ARCH)))
+	CPU_TAG:=_$(CPU_ARCH)
+endif
+
 LOADABLE_ROOT_MODULE := $(DLL_PREFIX)nssckbi.$(DLL_SUFFIX)
 CORECONF_OBJDIR:=$(OBJDIR_NAME)
+FREEBL_PURE_MODULE := $(DLL_PREFIX)freebl_pure32_3.$(DLL_SUFFIX)
+FREEBL_HYBRID_MODULE := $(DLL_PREFIX)freebl_hybrid_3.$(DLL_SUFFIX)
 
 endif # MOZ_NSS_AUTOCONF
 
@@ -85,6 +113,12 @@ endif
 	cd $(MOZ_BUILD_ROOT)/security/nss; $(INSTALL) $(DIST)/include $(DIST)/public/dbm
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
 	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
+ifneq ($(OS_TEST),i86pc)
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(FREEBL_PURE_MODULE) $(DIST)/bin
+	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
+endif
+endif
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
