@@ -154,7 +154,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             // tell any listeners about the current execution state.
             // XXX should only do this if we're single stepping/tracing.
             if (mListeners.size())
-                broadcast(IS_STEP);
+                broadcast(EV_STEP);
 
             Instruction* instruction = *mPC;
             switch (instruction->op()) {
@@ -165,7 +165,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (target->isNative()) {
                         RegisterList &params = op3(call);
                         JSValues argv(params.size());
-                        int i = 0;
+                        JSValues::size_type i = 0;
                         for (RegisterList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[*src];
@@ -607,25 +607,19 @@ void Context::addListener(Listener* listener)
     mListeners.push_back(listener);
 }
 
-typedef std::vector<Context::Listener*>::iterator ListenerIterator;
-
 void Context::removeListener(Listener* listener)
-{   
-    for (ListenerIterator i = mListeners.begin(), e = mListeners.end();
-         i != e; ++i) {
-        if (*i == listener) {
-            mListeners.erase(i);
-            break;
-        }
-    }
+{
+    ListenerIterator e = mListeners.end();
+    ListenerIterator l = find(mListeners.begin(), e, listener);
+    if (l != e) mListeners.erase(l);
 }
 
-void Context::broadcast(InterpretStage Stage)
+void Context::broadcast(Event event)
 {
     for (ListenerIterator i = mListeners.begin(), e = mListeners.end();
          i != e; ++i) {
         Listener* listener = *i;
-        listener->listen(this, Stage);
+        listener->listen(this, event);
     }
 }
 
