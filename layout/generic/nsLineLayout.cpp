@@ -1276,7 +1276,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // XXXwaterson this is probably not exactly right; e.g., embeddings, etc.
     PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    if (NS_FRAME_IS_NOT_COMPLETE(aStatus) && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
       // Only apply end margin for the last-in-flow. Zero this out so
       // that when we compute the max-element-width of the frame we
       // will properly avoid adding in the end margin.
