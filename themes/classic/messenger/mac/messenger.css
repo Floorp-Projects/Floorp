@@ -435,6 +435,11 @@ searchterm
   margin-left: 5px;
 }
 
+#accountCentralBox
+{
+  background-color:#FFFFFF;
+}
+
 /** 
  *Focus rings on 3 pane view
  */

@@ -265,6 +265,11 @@ box#messagepanebox
   margin-left: 5px;
 }
 
+#accountCentralBox
+{
+  background-color:#FFFFFF;
+}
+
 /**
  * this belongs in the mail filter window
  */
