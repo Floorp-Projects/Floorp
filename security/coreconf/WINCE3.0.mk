@@ -80,7 +80,7 @@ LINKFLAGS = -nologo -subsystem:windowsce,3.00 \
  $(NULL)
 
 ifndef MOZ_DEBUG_SYMBOLS
-LINKFLAGS += -PDB:NONE
+    LINKFLAGS += -PDB:NONE
 endif
 
 LINK    += $(LINKFLAGS)
