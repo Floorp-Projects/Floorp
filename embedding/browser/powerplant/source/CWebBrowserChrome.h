@@ -29,7 +29,7 @@
 
 // Interfaces Needed
 #include "nsIWebBrowserChrome.h"
-#include "nsIBaseWindow.h"
+#include "nsIWebBrowserSiteWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
@@ -48,7 +48,7 @@ class CBrowserShell;
 
 class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
-                           public nsIBaseWindow,
+                           public nsIWebBrowserSiteWindow,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
                            public nsIContextMenuListener,
@@ -61,7 +61,7 @@ public:
    NS_DECL_ISUPPORTS
    NS_DECL_NSIWEBBROWSERCHROME
    NS_DECL_NSIWEBPROGRESSLISTENER
-   NS_DECL_NSIBASEWINDOW
+   NS_DECL_NSIWEBBROWSERSITEWINDOW
    NS_DECL_NSIPROMPT
    NS_DECL_NSIINTERFACEREQUESTOR
    NS_DECL_NSICONTEXTMENULISTENER
