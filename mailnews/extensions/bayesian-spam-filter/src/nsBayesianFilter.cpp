@@ -99,39 +99,6 @@ inline Token* TokenEnumeration::nextToken()
     return token;
 }
 
-// PLDHashTable operation callbacks
-
-static const void* PR_CALLBACK GetKey(PLDHashTable* table, PLDHashEntryHdr* entry)
-{
-    return NS_STATIC_CAST(Token*, entry)->mWord;
-}
-
-static PRBool PR_CALLBACK MatchEntry(PLDHashTable* table,
-                                     const PLDHashEntryHdr* entry,
-                                     const void* key)
-{
-    const Token* token = NS_STATIC_CAST(const Token*, entry);
-    return (strcmp(token->mWord, NS_REINTERPRET_CAST(const char*, key)) == 0);
-}
-
-static void PR_CALLBACK MoveEntry(PLDHashTable* table,
-                                  const PLDHashEntryHdr* from,
-                                  PLDHashEntryHdr* to)
-{
-    const Token* fromToken = NS_STATIC_CAST(const Token*, from);
-    Token* toToken = NS_STATIC_CAST(Token*, to);
-    NS_ASSERTION(fromToken->mLength != 0, "zero length token in table!");
-    *toToken = *fromToken;
-}
-
-static void PR_CALLBACK ClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
-{
-    // We use the mWord field to further indicate liveness when using PL_DHASH_ADD.
-    // So we simply clear it when an entry is removed.
-    Token* token = NS_STATIC_CAST(Token*, entry);
-    token->mWord = NULL;
-}
-
 struct VisitClosure {
     PRBool (*f) (Token*, void*);
     void* data;
@@ -149,11 +116,11 @@ static PLDHashOperator PR_CALLBACK VisitEntry(PLDHashTable* table, PLDHashEntryH
 static const PLDHashTableOps gTokenTableOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    GetKey,
-    PL_DHashStringKey,      // Save the extra layer of function call to PL_DHashStringKey.
-    MatchEntry,
-    MoveEntry,
-    ClearEntry,
+    PL_DHashGetKeyStub,
+    PL_DHashStringKey,
+    PL_DHashMatchStringKey,
+    PL_DHashMoveEntryStub,
+    PL_DHashClearEntryStub,
     PL_DHashFinalizeStub
 };
 

@@ -352,12 +352,6 @@ nsMsgDatabase::ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
   element->mKey = nsMsgKey_None; // eh?
 }
 
-extern PLDHashNumber PR_CALLBACK
-PL_DHashStringKey(PLDHashTable *table, const void *key);
-
-extern void PR_CALLBACK
-PL_DHashFinalizeStub(PLDHashTable *table);
-
 
 nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key) 
 {

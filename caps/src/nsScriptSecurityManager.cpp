@@ -990,12 +990,12 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         printf("ClassLookup ");
 #endif
 
-        cpolicy = NS_REINTERPRET_CAST(ClassPolicy*,
-                                      PL_DHashTableOperate(dpolicy,
-                                                           aClassName,
-                                                           PL_DHASH_LOOKUP));
+        cpolicy = NS_STATIC_CAST(ClassPolicy*,
+                                 PL_DHashTableOperate(dpolicy,
+                                                      aClassName,
+                                                      PL_DHASH_LOOKUP));
 
-        if (!PL_DHASH_ENTRY_IS_LIVE(cpolicy))
+        if (PL_DHASH_ENTRY_IS_FREE(cpolicy))
             cpolicy = NO_POLICY_FOR_CLASS;
 
         if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
@@ -1004,10 +1004,10 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
     PropertyPolicy* ppolicy = nsnull;
     if (cpolicy != NO_POLICY_FOR_CLASS)
     {
-        ppolicy = 
-                (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
-                                                       (void*)aProperty,
-                                                       PL_DHASH_LOOKUP);
+        ppolicy = NS_STATIC_CAST(PropertyPolicy*,
+                                 PL_DHashTableOperate(cpolicy->mPolicy,
+                                                      (void*)aProperty,
+                                                      PL_DHASH_LOOKUP));
     }
     else
     {
@@ -1018,30 +1018,33 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         // This class is not present in the domain policy, check its wildcard policy
         if (dpolicy->mWildcardPolicy)
         {
-            ppolicy = 
-                (PropertyPolicy*) PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
-                                                       (void*)aProperty, PL_DHASH_LOOKUP);
+            ppolicy =
+              NS_STATIC_CAST(PropertyPolicy*,
+                             PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
+                                                  (void*)aProperty,
+                                                  PL_DHASH_LOOKUP));
         }
 
         // If there's no wildcard policy, check the default policy for this class
-        if (!ppolicy || !PL_DHASH_ENTRY_IS_LIVE(ppolicy))
+        if (!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy))
         {
-            cpolicy = NS_REINTERPRET_CAST(ClassPolicy*,
-                                          PL_DHashTableOperate(mDefaultPolicy,
-                                                               aClassName,
-                                                               PL_DHASH_LOOKUP));
+            cpolicy = NS_STATIC_CAST(ClassPolicy*,
+                                     PL_DHashTableOperate(mDefaultPolicy,
+                                                          aClassName,
+                                                          PL_DHASH_LOOKUP));
 
-            if (PL_DHASH_ENTRY_IS_LIVE(cpolicy))
+            if (PL_DHASH_ENTRY_IS_BUSY(cpolicy))
             {
-                ppolicy = 
-                    (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
-                                                           (void*)aProperty,
-                                                           PL_DHASH_LOOKUP);
+                ppolicy =
+                  NS_STATIC_CAST(PropertyPolicy*,
+                                 PL_DHashTableOperate(cpolicy->mPolicy,
+                                                      (void*)aProperty,
+                                                      PL_DHASH_LOOKUP));
             }
         }
     }
 
-    if (!ppolicy || !PL_DHASH_ENTRY_IS_LIVE(ppolicy))
+    if (!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy))
         return NS_OK;
 
     // Get the correct security level from the property policy
@@ -2928,11 +2931,9 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
         *end = '\0';
         // Find or store this class in the classes table
         ClassPolicy* cpolicy = 
-          NS_REINTERPRET_CAST(ClassPolicy*,
-                              PL_DHashTableOperate(aDomainPolicy,
-                                                   start,
-                                                   PL_DHASH_ADD));
-
+          NS_STATIC_CAST(ClassPolicy*,
+                         PL_DHashTableOperate(aDomainPolicy, start,
+                                              PL_DHASH_ADD));
         if (!cpolicy)
             break;
 
@@ -2952,10 +2953,12 @@ nsScriptSecurityManager::InitDomainPolicy(JSContext* cx,
             return NS_ERROR_OUT_OF_MEMORY;
 
         // Store this property in the class policy
+        const void* ppkey =
+          NS_REINTERPRET_CAST(const void*, STRING_TO_JSVAL(propertyKey));
         PropertyPolicy* ppolicy = 
-          (PropertyPolicy*) PL_DHashTableOperate(cpolicy->mPolicy,
-                                                 (void*)STRING_TO_JSVAL(propertyKey),
-                                                 PL_DHASH_ADD);
+          NS_STATIC_CAST(PropertyPolicy*,
+                         PL_DHashTableOperate(cpolicy->mPolicy, ppkey,
+                                              PL_DHASH_ADD));
         if (!ppolicy)
             break;
 

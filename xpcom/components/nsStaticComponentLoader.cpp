@@ -50,23 +50,6 @@ protected:
     static PLDHashTableOps        sInfoHashOps;
 };
 
-PR_STATIC_CALLBACK(const void *)
-info_GetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    StaticModuleInfo *info = NS_STATIC_CAST(StaticModuleInfo *, entry);
-    return info->info.name;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-info_MatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                const void *key)
-{
-    const StaticModuleInfo *info = NS_STATIC_CAST(const StaticModuleInfo *,
-                                                  entry);
-    const char *name = NS_STATIC_CAST(const char *, key);
-    return !strcmp(info->info.name, name);
-}
-
 PR_STATIC_CALLBACK(void)
 info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
@@ -75,16 +58,17 @@ info_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     info->~StaticModuleInfo();
 }
 
-PR_STATIC_CALLBACK(void)
+PR_STATIC_CALLBACK(PRBool)
 info_InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry, const void *key)
 {
     // Construct so that our nsCOMPtr is zeroed, etc.
-    (void)new (NS_STATIC_CAST(void *, entry)) StaticModuleInfo();
+    new (NS_STATIC_CAST(void *, entry)) StaticModuleInfo();
+    return PR_TRUE;
 }
 
 /* static */ PLDHashTableOps nsStaticComponentLoader::sInfoHashOps = {
     PL_DHashAllocTable,    PL_DHashFreeTable,
-    info_GetKey,           PL_DHashStringKey, info_MatchEntry,
+    PL_DHashGetKeyStub,    PL_DHashStringKey, PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub, info_ClearEntry,
     PL_DHashFinalizeStub,  info_InitEntry
 };

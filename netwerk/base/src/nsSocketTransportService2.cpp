@@ -363,35 +363,12 @@ PLDHashTableOps nsSocketTransportService::ops =
     PL_DHashFreeTable,
     PL_DHashGetKeyStub,
     PL_DHashStringKey,
-    nsSocketTransportService::MatchEntry,
+    PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
-    nsSocketTransportService::ClearEntry,
+    PL_DHashFreeStringKey,
     PL_DHashFinalizeStub,
     nsnull
 };
-
-PRBool PR_CALLBACK
-nsSocketTransportService::MatchEntry(PLDHashTable *table,
-                                     const PLDHashEntryHdr *entry,
-                                     const void *key)
-{
-    const nsSocketTransportService::nsHostEntry *he =
-        NS_REINTERPRET_CAST(const nsSocketTransportService::nsHostEntry *, entry);
-
-    return !strcmp(he->hostport(), (const char *) key);
-}
-
-void PR_CALLBACK
-nsSocketTransportService::ClearEntry(PLDHashTable *table,
-                                     PLDHashEntryHdr *entry)
-{
-    nsSocketTransportService::nsHostEntry *he =
-        NS_REINTERPRET_CAST(nsSocketTransportService::nsHostEntry *, entry);
-
-    PL_strfree((char *) he->key);
-    he->key = nsnull;
-    memset(&he->addr, 0, sizeof(he->addr));
-}
 
 nsresult
 nsSocketTransportService::LookupHost(const nsACString &host, PRUint16 port, PRIPv6Addr *addr)

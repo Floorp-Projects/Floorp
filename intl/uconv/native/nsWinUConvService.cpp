@@ -59,40 +59,19 @@ static PLDHashTable* gCharsetToCPMap = nsnull;
 
 struct CodePageMapEntry : public PLDHashEntryHdr
 {
+    const char* mCharset;
     UINT mCodePage;
-    const char* mCharset;       // xxx ownership?
 };
-
-PR_STATIC_CALLBACK(const void*)
-GetCharsetName(PLDHashTable*, PLDHashEntryHdr* aHdr)
-{
-    CodePageMapEntry* entry =
-        NS_STATIC_CAST(CodePageMapEntry*, aHdr);
-
-    return entry->mCharset;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-MatchCharsetName(PLDHashTable*, const PLDHashEntryHdr* aHdr,
-                 const void* key)
-{
-    const CodePageMapEntry* entry =
-        NS_STATIC_CAST(const CodePageMapEntry*, aHdr);
-    const char* keyString =
-        NS_STATIC_CAST(const char*, key);
-
-    return (strcmp(entry->mCharset, keyString) == 0);
-}
 
     
 static const struct PLDHashTableOps charsetMapOps = {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
-    GetCharsetName,
+    PL_DHashGetKeyStub,
     PL_DHashStringKey,
-    MatchCharsetName,
+    PL_DHashMatchStringKey,
     PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
+    PL_DHashFreeStringKey,
     PL_DHashFinalizeStub,
     nsnull
 };
@@ -152,9 +131,10 @@ static UINT CharsetToCodePage(const char* aCharset)
 {
     CodePageMapEntry* entry =
         NS_STATIC_CAST(CodePageMapEntry*,
-                       PL_DHashTableOperate(gCharsetToCPMap, aCharset, PL_DHASH_LOOKUP));
+                       PL_DHashTableOperate(gCharsetToCPMap, aCharset,
+                                            PL_DHASH_LOOKUP));
 
-    if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
+    if (PL_DHASH_ENTRY_IS_FREE(entry))
         return 0;
 
     return entry->mCodePage;

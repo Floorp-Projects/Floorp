@@ -230,11 +230,12 @@ ENTRY_CLASS##ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)          \
   ENTRY_CLASS* e = NS_STATIC_CAST(ENTRY_CLASS *, entry);                      \
   e->~ENTRY_CLASS();                                                          \
 }                                                                             \
-PR_STATIC_CALLBACK(void)                                                      \
+PR_STATIC_CALLBACK(PRBool)                                                    \
 ENTRY_CLASS##InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,           \
                        const void *key)                                       \
 {                                                                             \
   new (entry) ENTRY_CLASS(key);                                               \
+  return PR_TRUE;                                                             \
 }
 
 //
@@ -366,7 +367,7 @@ ENTRY_CLASS* CLASSNAME::GetEntry(const KEY_TYPE aKey) {                       \
   ENTRY_CLASS* e = NS_STATIC_CAST(ENTRY_CLASS*,                               \
                                   PL_DHashTableOperate(&mHashTable, &aKey,    \
                                                        PL_DHASH_LOOKUP));     \
-  return PL_DHASH_ENTRY_IS_LIVE(e) ? e : nsnull;                              \
+  return PL_DHASH_ENTRY_IS_BUSY(e) ? e : nsnull;                              \
 }                                                                             \
 ENTRY_CLASS* CLASSNAME::AddEntry(const KEY_TYPE aKey) {                       \
   return NS_STATIC_CAST(ENTRY_CLASS*,                                         \

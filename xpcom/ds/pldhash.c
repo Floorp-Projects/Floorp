@@ -105,6 +105,18 @@ PL_DHashMatchEntryStub(PLDHashTable *table,
     return stub->key == key;
 }
 
+PR_IMPLEMENT(PRBool)
+PL_DHashMatchStringKey(PLDHashTable *table,
+                       const PLDHashEntryHdr *entry,
+                       const void *key)
+{
+    const PLDHashEntryStub *stub = (const PLDHashEntryStub *)entry;
+
+    /* XXX tolerate null keys on account of sloppy Mozilla callers. */
+    return stub->key == key ||
+           (stub->key && key && strcmp(stub->key, key) == 0);
+}
+
 PR_IMPLEMENT(void)
 PL_DHashMoveEntryStub(PLDHashTable *table,
                       const PLDHashEntryHdr *from,
@@ -116,6 +128,15 @@ PL_DHashMoveEntryStub(PLDHashTable *table,
 PR_IMPLEMENT(void)
 PL_DHashClearEntryStub(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
+    memset(entry, 0, table->entrySize);
+}
+
+PR_IMPLEMENT(void)
+PL_DHashFreeStringKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    const PLDHashEntryStub *stub = (const PLDHashEntryStub *)entry;
+
+    free((void *) stub->key);
     memset(entry, 0, table->entrySize);
 }
 
@@ -520,8 +541,12 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
                 table->removedCount--;
                 keyHash |= COLLISION_FLAG;
             }
-            if (table->ops->initEntry)
-                table->ops->initEntry(table, entry, key);
+            if (table->ops->initEntry &&
+                !table->ops->initEntry(table, entry, key)) {
+                /* We haven't claimed entry yet; fail with null return. */
+                memset(entry + 1, 0, table->entrySize - sizeof *entry);
+                return NULL;
+            }
             entry->keyHash = keyHash;
             table->entryCount++;
         }

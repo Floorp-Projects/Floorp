@@ -790,7 +790,8 @@ nsDNSLookup::EnqueueRequest(nsDNSRequest * request)
         mState = LOOKUP_PENDING;
         rv = InitiateLookup();
 
-        if (NS_FAILED(rv))  MarkComplete(rv);
+        if (NS_FAILED(rv))
+            MarkComplete(rv);
     }
     return NS_OK;
 }
@@ -1550,12 +1551,15 @@ nsDNSLookup *
 nsDNSService::FindOrCreateLookup(const char* hostName)
 {
     // find hostname in hashtable
-    PLDHashEntryHdr *  hashEntry;
-    nsDNSLookup *      lookup = nsnull;
+    PLDHashEntryHdr *hashEntry = PL_DHashTableOperate(&mHashTable, hostName,
+                                                      PL_DHASH_ADD);
+    if (!hashEntry)
+        return nsnull;
 
-    hashEntry = PL_DHashTableOperate(&mHashTable, hostName, PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-        lookup = ((DNSHashTableEntry *)hashEntry)->mLookup;
+    DNSHashTableEntry *dnsEntry = NS_STATIC_CAST(DNSHashTableEntry*, hashEntry);
+    nsDNSLookup *lookup = dnsEntry->mLookup;
+    if (lookup) {
+        // found an existing entry (PL_DHASH_ADD didn't have to add one)
         if (lookup->IsComplete() && lookup->IsExpired() && lookup->IsNotProcessing()) {
             lookup->Reset();
             PR_REMOVE_AND_INIT_LINK(lookup);  // remove us from eviction queue
@@ -1567,16 +1571,13 @@ nsDNSService::FindOrCreateLookup(const char* hostName)
 
     // no lookup entry exists for this request 
     lookup = nsDNSLookup::Create(hostName);
-    if (lookup == nsnull)  return nsnull;
-
-    // insert in hash table
-    hashEntry = PL_DHashTableOperate(&mHashTable, lookup->HostName(), PL_DHASH_ADD);
-    if (!hashEntry) {
-        NS_RELEASE(lookup);
+    if (!lookup) {
+        PL_DHashTableRawRemove(&mHashTable, hashEntry);
         return nsnull;
     }
-    ((DNSHashTableEntry *)hashEntry)->mLookup = lookup;
 
+    // insert lookup in hash table entry
+    dnsEntry->mLookup = lookup;
     return lookup;
 }
 

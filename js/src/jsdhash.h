@@ -295,7 +295,7 @@ typedef void
  * set yet, to avoid claiming the last free entry in a severely overloaded
  * table.
  */
-typedef void
+typedef JSBool
 (* JS_DLL_CALLBACK JSDHashInitEntry)(JSDHashTable *table,
                                      JSDHashEntryHdr *entry,
                                      const void *key);
@@ -309,6 +309,7 @@ typedef void
  *  allocTable          Allocate raw bytes with malloc, no ctors run.
  *  freeTable           Free raw bytes with free, no dtors run.
  *  initEntry           Call placement new using default key-based ctor.
+ *                      Return JS_TRUE on success, JS_FALSE on error.
  *  moveEntry           Call placement new using copy ctor, run dtor on old
  *                      entry storage.
  *  clearEntry          Run dtor on entry.
@@ -370,6 +371,11 @@ JS_DHashMatchEntryStub(JSDHashTable *table,
                        const JSDHashEntryHdr *entry,
                        const void *key);
 
+extern JS_PUBLIC_API(JSBool)
+JS_DHashMatchStringKey(JSDHashTable *table,
+                       const JSDHashEntryHdr *entry,
+                       const void *key);
+
 extern JS_PUBLIC_API(void)
 JS_DHashMoveEntryStub(JSDHashTable *table,
                       const JSDHashEntryHdr *from,
@@ -377,6 +383,9 @@ JS_DHashMoveEntryStub(JSDHashTable *table,
 
 extern JS_PUBLIC_API(void)
 JS_DHashClearEntryStub(JSDHashTable *table, JSDHashEntryHdr *entry);
+
+extern JS_PUBLIC_API(void)
+JS_DHashFreeStringKey(JSDHashTable *table, JSDHashEntryHdr *entry);
 
 extern JS_PUBLIC_API(void)
 JS_DHashFinalizeStub(JSDHashTable *table);
@@ -473,8 +482,11 @@ typedef enum JSDHashOperator {
  *
  *  entry = JS_DHashTableOperate(table, key, JS_DHASH_ADD);
  *
- * If entry is null upon return, the table is severely overloaded, and new
- * memory can't be allocated for new entry storage via table->ops->allocTable.
+ * If entry is null upon return, then either the table is severely overloaded,
+ * and memory can't be allocated for entry storage via table->ops->allocTable;
+ * Or if table->ops->initEntry is non-null, the table->ops->initEntry op may
+ * have returned false.
+ *
  * Otherwise, entry->keyHash has been set so that JS_DHASH_ENTRY_IS_BUSY(entry)
  * is true, and it is up to the caller to initialize the key and value parts
  * of the entry sub-type, if they have not been set already (i.e. if entry was
