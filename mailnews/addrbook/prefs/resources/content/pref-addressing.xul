@@ -37,13 +37,13 @@
 		<html:div class="vertical-gap">&mulFound.label;</html:div>
 
 		<html:div>
-			<html:input id="showList" name="multilist" type="radio" class="indent"/>
-			<html:label for="showList">&showList.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="true" id="ldap_2.autoComplete.showDialogForMultipleMatches" name="multilist" type="radio"/>
+			<html:label for="ldap_2.autoComplete.showDialogForMultipleMatches0">&showList.label;</html:label>
 		</html:div>
 		
 		<html:div>
-			<html:input id="acceptList" name="multilist" type="radio" class="indent"/>
-			<html:label for="acceptList">&acceptList.label;</html:label>
+			<html:input pref="true" preftype="1" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="false" id="ldap_2.autoComplete.showDialogForMultipleMatches1" name="multilist" type="radio"/>
+			<html:label for="ldap_2.autoComplete.showDialogForMultipleMatches1">&acceptList.label;</html:label>
 		</html:div>
 		
 		<html:div class="vertical-gap">&oneMatch.label;</html:div>
@@ -88,7 +88,7 @@
 		</html:legend>
 
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.addr_book.lastnamefirst" prefindex="false" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio" checked="true"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.addr_book.lastnamefirst" prefindex="false" id="mail.addr_book.lastnamefirst1" name="displayname" type="radio"/>
 			<html:label for="mail.addr_book.lastnamefirst0">&useDisplayName.label;</html:label>
 		</html:div>
 		

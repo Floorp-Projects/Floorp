@@ -29,7 +29,7 @@
 		</html:div>
 		
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.auto_quote" id="mail.auto_quote" type="checkbox" checked="true"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.auto_quote" id="mail.auto_quote" type="checkbox"/>
 			<html:label for="mail.auto_quote">&autoQuote.label;</html:label>
 		</html:div>
 

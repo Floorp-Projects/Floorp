@@ -39,7 +39,7 @@ function DoCustomize()
 		</html:div>
 		
 		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="2" id="mail.request.return_receipt2" name="msgreceipt" type="radio" checked="true"/>
+			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="2" id="mail.request.return_receipt2" name="msgreceipt" type="radio"/>
 			<html:label for="mail.request.return_receipt2">&mdn.label;</html:label>
 		</html:div>
 
@@ -55,7 +55,7 @@ function DoCustomize()
 		</html:legend>
 		
 		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="0" id="mail.incorporate.return_receipt0" name="getreceipt" type="radio" checked="true"/>
+			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="0" id="mail.incorporate.return_receipt0" name="getreceipt" type="radio"/>
 			<html:label for="mail.incorporate.return_receipt0">&leaveIt.label;</html:label>
 		</html:div>
 		
@@ -76,7 +76,7 @@ function DoCustomize()
 		</html:div>
 		
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="true" id="mail.mdn.report.enabled1" name="returnreceipt" type="radio" checked="true"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="true" id="mail.mdn.report.enabled1" name="returnreceipt" type="radio"/>
 			<html:label for="mail.mdn.report.enabled1">&returnSome.label;</html:label>
 			<titledbutton class="push dialog" value="&custom.label;"/>
 		</html:div>
