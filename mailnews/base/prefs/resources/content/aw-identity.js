@@ -100,6 +100,29 @@ function validateEmail()
   return true;
 }
 
+// This function mimics validateEmail() except that
+// it runs on prefilled text and does not alert the user.
+// This is for the case when the code appends the domain  
+// unnecessarily.
+// This simply gets rid  of "@domain" from "foo@domain"
+
+function fixPreFilledEmail()
+{
+  var emailElement = document.getElementById("email");
+  var email = emailElement.value;
+  var emailArray = email.split('@');
+
+  if (gCurrentDomain) {
+    // check if user entered an @ sign even though we have a domain
+    if (emailArray.length >= 2) {
+      email = emailArray[0];
+      emailElement.value = email;
+    }
+  }
+}
+
+
+
 // This function checks for common illegal
 // characters. This shouldn't be too strict, since
 // we do more extensive tests later. -Håkan
@@ -124,6 +147,7 @@ function onInit()
   checkForDomain();
   checkForFullName(); 
   checkForEmail(); 
+  fixPreFilledEmail();
 }
 
 // Use email example data that ISP has provided. ISP data, if avaialble
