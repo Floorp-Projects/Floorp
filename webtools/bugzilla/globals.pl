@@ -1602,6 +1602,29 @@ $Template::Stash::LIST_OPS->{ containsany } =
       return 0;
   };
 
+# Add a "substr" method to the Template Toolkit's "scalar" object
+# that returns a substring of a string.
+$Template::Stash::SCALAR_OPS->{ substr } = 
+  sub {
+      my ($scalar, $offset, $length) = @_;
+      return substr($scalar, $offset, $length);
+  };
+    
+# Add a "truncate" method to the Template Toolkit's "scalar" object
+# that truncates a string to a certain length.
+$Template::Stash::SCALAR_OPS->{ truncate } = 
+  sub {
+      my ($string, $length, $ellipsis) = @_;
+      $ellipsis ||= "";
+      
+      return $string if !$length || length($string) <= $length;
+      
+      my $strlen = $length - length($ellipsis);
+      my $newstr = substr($string, 0, $strlen) . $ellipsis;
+      return $newstr;
+  };
+    
+###############################################################################
 
 sub GetOutputFormats {
     # Builds a set of possible output formats for a script by looking for
@@ -1712,28 +1735,6 @@ sub ValidateOutputFormat {
 
 ###############################################################################
 
-# Add a "substr" method to the Template Toolkit's "scalar" object
-# that returns a substring of a string.
-$Template::Stash::SCALAR_OPS->{ substr } = 
-  sub {
-      my ($scalar, $offset, $length) = @_;
-      return substr($scalar, $offset, $length);
-  };
-    
-# Add a "truncate" method to the Template Toolkit's "scalar" object
-# that truncates a string to a certain length.
-$Template::Stash::SCALAR_OPS->{ truncate } = 
-  sub {
-      my ($string, $length, $ellipsis) = @_;
-      $ellipsis ||= "";
-      
-      return $string if !$length || length($string) <= $length;
-      
-      my $strlen = $length - length($ellipsis);
-      my $newstr = substr($string, 0, $strlen) . $ellipsis;
-      return $newstr;
-  };
-    
 # Define the global variables and functions that will be passed to the UI
 # template.  Additional values may be added to this hash before templates
 # are processed.
