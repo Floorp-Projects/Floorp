@@ -847,7 +847,6 @@ if [ "$MOZ_MAIL_NEWS" ]; then
 fi
 
 
-if [ "$USE_IMG2" ]; then
     MAKEFILES_libpr0n="
         modules/libpr0n/Makefile
         modules/libpr0n/public/Makefile
@@ -871,8 +870,6 @@ if [ "$USE_IMG2" ]; then
        accessible/src/Makefile
        accessible/build/Makefile
 "
-fi
-
 if [ ! "$SYSTEM_JPEG" ]; then
     MAKEFILES_jpeg="jpeg/Makefile"
 fi
