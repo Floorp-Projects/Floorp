@@ -499,6 +499,30 @@ nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result)
     return NS_OK;
 }
 
+nsresult
+nsHttpResponseHead::GetExpiresValue(PRUint32 *result)
+{
+    const char *val = PeekHeader(nsHttp::Expires);
+    if (!val)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    PRTime time;
+    PRStatus st = PR_ParseTimeString(val, PR_TRUE, &time);
+    if (st != PR_SUCCESS) {
+        // parsing failed... maybe this is an "Expires: 0"
+        nsCAutoString buf(val);
+        buf.StripWhitespace();
+        if (buf.Length() == 1 && buf[0] == '0') {
+            *result = 0;
+            return NS_OK;
+        }
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    *result = PRTimeToSeconds(time); 
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpResponseHead <private>
 //-----------------------------------------------------------------------------
@@ -634,6 +658,8 @@ nsHttpResponseHead::ParseCacheControl(const char *val)
 void
 nsHttpResponseHead::ParsePragma(const char *val)
 {
+    LOG(("nsHttpResponseHead::ParsePragma [val=%s]\n", val));
+
     if (!val) {
         // clear no-cache flag
         mPragmaNoCache = PR_FALSE;
@@ -643,6 +669,6 @@ nsHttpResponseHead::ParsePragma(const char *val)
     // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
     // a request header), caching is inhibited when this header is present so
     // as to match existing Navigator behavior.
-    if (*val && !PL_strcasestr(val, "no-cache"))
+    if (*val && PL_strcasestr(val, "no-cache"))
         mPragmaNoCache = PR_TRUE;
 }
