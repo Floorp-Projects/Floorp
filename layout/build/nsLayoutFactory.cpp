@@ -39,6 +39,7 @@
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
+#include "nsRange.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -57,7 +58,6 @@ static NS_DEFINE_CID(kRangeCID,  NS_RANGE_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
-nsresult NS_NewRange(nsIDOMRange **);
 extern nsresult NS_NewFrameUtil(nsIFrameUtil** aResult);
 
 
