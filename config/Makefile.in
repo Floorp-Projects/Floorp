@@ -44,6 +44,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# For sanity's sake, we compile nsinstall without the wrapped system
+# headers, so that we can use it to set up the wrapped system headers.
+VISIBILITY_FLAGS =
+
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
 HOST_PROGRAM	= nsinstall$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= nsinstall.c pathsub.c
@@ -98,12 +102,6 @@ endif
 
 HEADERS		= nsBuildID.h $(DEPTH)/mozilla-config.h
 
-ifdef WRAP_SYSTEM_INCLUDES
-export::
-	mkdir -p $(DIST)/include/system_wrappers
-	$(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl $(DIST)/include/system_wrappers < $(srcdir)/system-headers
-endif
-
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/build-list.pl $(PUBLIC)/.headerlist $(HEADERS)
@@ -134,6 +132,13 @@ ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 else
 	$(RM) -f $(DIST)/sdk/lib/$(LIB_PREFIX)nspr4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plc4.$(LIB_SUFFIX) $(DIST)/sdk/lib/$(LIB_PREFIX)plds4.$(LIB_SUFFIX)
 endif
+endif
+
+ifdef WRAP_SYSTEM_INCLUDES
+export::
+	if test ! -d system_wrappers; then mkdir system_wrappers; fi
+	$(PERL) $(topsrcdir)/nsprpub/config/make-system-wrappers.pl system_wrappers < $(srcdir)/system-headers
+	$(INSTALL) system_wrappers $(DIST)/include
 endif
 
 # we don't use an explicit dependency here because then we would
