@@ -254,27 +254,27 @@ public:
                                nsIFrame*& aResult);
 
   // nsIScriptObjectOwner interface
-  virtual nsresult  GetScriptObject(JSContext *aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
 
   // nsIDOMText interface
-  virtual nsresult            GetNodeType(PRInt32 *aType);
-  virtual nsresult            GetParentNode(nsIDOMNode **aNode);
-  virtual nsresult            GetChildNodes(nsIDOMNodeIterator **aIterator);
-  virtual nsresult            HasChildNodes();
-  virtual nsresult            GetFirstChild(nsIDOMNode **aNode);
-  virtual nsresult            GetPreviousSibling(nsIDOMNode **aNode);
-  virtual nsresult            GetNextSibling(nsIDOMNode **aNode);
-  virtual nsresult            InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  virtual nsresult            ReplaceChild(nsIDOMNode *newChild, 
-                                            nsIDOMNode *oldChild);
-  virtual nsresult            RemoveChild(nsIDOMNode *oldChild);
-  virtual nsresult            GetData(nsString &aString);
-  virtual nsresult            SetData(nsString &aString);
-  virtual nsresult            Append(nsString &aData);
-  virtual nsresult            Insert(int offset, nsString &aData);
-  virtual nsresult            Delete(int offset, int count);
-  virtual nsresult            Replace(int offset, int count, nsString &aData);
-  virtual nsresult            Splice(nsIDOMElement *element, int offset, int count);
+  NS_IMETHOD GetNodeType(PRInt32 *aType);
+  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
+  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
+  NS_IMETHOD HasChildNodes();
+  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
+  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
+  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
+  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
+  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, 
+                          nsIDOMNode *oldChild);
+  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD GetData(nsString& aString);
+  NS_IMETHOD SetData(const nsString& aString);
+  NS_IMETHOD Append(const nsString& aData);
+  NS_IMETHOD Insert(PRInt32 offset, const nsString& aData);
+  NS_IMETHOD Delete(PRInt32 offset, PRInt32 count);
+  NS_IMETHOD Replace(PRInt32 offset, PRInt32 count, const nsString& aData);
+  NS_IMETHOD Splice(nsIDOMElement *element, PRInt32 offset, PRInt32 count);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
@@ -873,7 +873,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   const PRUnichar* lastWordStart = cpStart;
   PRBool hasMultibyte = PR_FALSE;
   PRBool endsInWhitespace = PR_FALSE;
-PRIntn gotHere = 0;
+
   while (cp < end) {
     PRUnichar ch = *cp++;
     PRBool isWhitespace;
@@ -889,7 +889,6 @@ PRIntn gotHere = 0;
         break;
       }
       if (skipWhitespace) {
-        gotHere++;
         aLineState->AtSpace();
         skipWhitespace = PR_FALSE;
         continue;
@@ -930,7 +929,6 @@ PRIntn gotHere = 0;
 
     // Update break state in line reflow state
     // XXX move this out of the loop!
-    gotHere++;
     if (isWhitespace) {
       aLineState->AtSpace();
     }
@@ -946,7 +944,7 @@ PRIntn gotHere = 0;
     lastWordEnd = cp;
     endsInWhitespace = isWhitespace;
   }
-  NS_ASSERTION(0 != gotHere, "whoops");
+
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
@@ -1815,117 +1813,109 @@ nsresult Text::RemoveChild(nsIDOMNode *oldChild)
   return nsHTMLContent::RemoveChild(oldChild);
 }
 
-nsresult Text::GetData(nsString &aString)
+nsresult
+Text::GetData(nsString& aString)
 {
   if (nsnull != mText) {
     aString.SetString(mText, mLength);
   }
-
   return NS_OK;
 }
 
-nsresult Text::SetData(nsString &aString)
+nsresult
+Text::SetData(const nsString& aString)
 {
-  if (mText) delete[] mText;
+  if (mText) {
+    delete[] mText;
+    mText = nsnull;
+  }
 
   mLength = aString.Length();
   mText = aString.ToNewUnicode();
 
   // Notify the document that the text changed
-  mDocument->ContentChanged(this, nsnull);
+  if (nsnull != mDocument) {
+    mDocument->ContentChanged(this, nsnull);
+  }
   return NS_OK;
 }
 
-nsresult Text::Append(nsString &aData)
+nsresult
+Text::Append(const nsString& aData)
 {
-  PRUint32 length = aData.Length();
-  PRUnichar *text = new PRUnichar[mLength + length];
-  nsCRT::memcpy(text, mText, mLength * sizeof(PRUnichar));
-  nsCRT::memcpy(text + mLength, aData.GetUnicode(), length * sizeof(PRUnichar));
+  return Replace(mLength, 0, aData);
+}
 
-  if (mText) delete[] mText;
-  mLength += length;
-  mText = text;
+nsresult
+Text::Insert(PRInt32 offset, const nsString& aData)
+{
+  return Replace(offset, 0, aData);
+}
+
+nsresult
+Text::Delete(PRInt32 offset, PRInt32 count)
+{
+  nsAutoString empty;
+  return Replace(offset, count, empty);
+}
+
+nsresult
+Text::Replace(PRInt32 offset, PRInt32 count, const nsString& aData)
+{
+  // sanitize arguments
+  if (offset < 0) {
+    offset = 0;
+  }
+  if (offset > mLength) {
+    offset = mLength;
+  }
+  if (count < 0) {
+    count = 0;
+  }
+
+  // Allocate new buffer
+  PRInt32 endOffset = offset + count;
+  if (endOffset > mLength) {
+    count = mLength - offset;
+    endOffset = mLength;
+  }
+  PRInt32 dataLength = aData.Length();
+  PRInt32 newLength = mLength - count + dataLength;
+  PRUnichar* to = new PRUnichar[newLength ? newLength : 1];
+  if (nsnull == to) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Copy over appropriate data
+  if (0 != offset) {
+    nsCRT::memcpy(to, mText, sizeof(PRUnichar) * offset);
+  }
+  if (0 != dataLength) {
+    nsCRT::memcpy(to + offset, aData.GetUnicode(),
+                  sizeof(PRUnichar) * dataLength);
+  }
+  if (endOffset != mLength) {
+    nsCRT::memcpy(to + offset + dataLength, mText + endOffset,
+                  sizeof(PRUnichar) * (mLength - endOffset));
+  }
+
+  // Switch to new buffer
+  if (nsnull != mText) {
+    delete [] mText;
+  }
+  mText = to;
+  mLength = newLength;
 
   // Notify the document that the text changed
-  mDocument->ContentChanged(this, nsnull);
-  return NS_OK;
-}
-
-nsresult Text::Insert(int offset, nsString &aData)
-{
-  if (offset < mLength) {
-    PRInt32 length = aData.Length();
-    PRUnichar *text = new PRUnichar[mLength + length];
-    PRUnichar *data = aData.GetUnicode();
-    PRInt32 i;
-
-    for (i = 0; i < offset; i++) {
-      *(text++) = *(mText++);
-    }
-    for (i = 0; i < length; i++) {
-      *(text++) = *(data++);
-    }
-    for (i = 0; i < mLength - offset; i++) {
-      *(text++) = *(mText++);
-    }
-
-    if (mText) delete[] (mText - mLength);
-    mLength += length;
-    mText = text - mLength;
-
-    // Notify the document that the text changed
+  if (nsnull != mDocument) {
     mDocument->ContentChanged(this, nsnull);
   }
 
   return NS_OK;
 }
 
-nsresult Text::Delete(int offset, int count)
-{
-  // Make sure the offset is something sensible
-  if (offset < mLength) {
-    PRInt32 subLen = mLength - offset;
-
-    // Check if they're deleting the rest of the text
-    if (count >= subLen) {
-      mLength = offset;
-    } else {
-      PRUnichar*  subText = mText + offset;
-
-      nsCRT::memmove(subText, subText + count, (subLen - count) * sizeof(PRUnichar));
-      mLength -= count;
-    }
-
-    // Notify the document that the text changed
-    mDocument->ContentChanged(this, nsnull);
-  }
-
-  return NS_OK;
-}
-
-nsresult Text::Replace(int offset, int count, nsString &aData)
-{
-  // Make sure the offset is something sensible
-  if (offset < mLength) {
-    // We can only replace as many characters as there are in aData
-    if (count > aData.Length()) {
-      count = aData.Length();
-    }
-
-    PRInt32 numChars = PR_MIN(count, mLength - offset);
-    if (numChars > 0) {
-      nsCRT::memcpy(mText + offset, aData.GetUnicode(), numChars * sizeof(PRUnichar));
-    }
-
-    // Notify the document that the text changed
-    mDocument->ContentChanged(this, nsnull);
-  }
-
-  return NS_OK;
-}
-
-nsresult Text::Splice(nsIDOMElement *element, int offset, int count)
+nsresult
+Text::Splice(nsIDOMElement* element, PRInt32 offset, PRInt32 count)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
