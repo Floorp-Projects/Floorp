@@ -21,6 +21,7 @@
  *   Masaki Katakai <katakai@japan.sun.com>
  *   Jessica Blanco <jblanco@us.ibm.com>
  *   Asko Tontti <atontti@cc.hut.fi>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 var dialog;
@@ -184,12 +185,26 @@ function getPrinters()
   selectElement.listElement.value = strDefaultPrinterName;
 }
 
+
+//---------------------------------------------------
+// update gPrintSettings with the defaults for the selected printer
+function setPrinterDefaultsForSelectedPrinter()
+{
+  /* FixMe: We should save the old printer's values here... */
+
+  gPrintSettings.printerName  = dialog.printerList.value;
+  var ifreq = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint); 
+  webBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
+}
+
 //---------------------------------------------------
 function displayPropertiesDialog()
 {
   var displayed = new Object;
   displayed.value = false;
   gPrintSettings.numCopies = dialog.numCopiesInput.value;
+   
   printService.displayJobProperties(dialog.printerList.value, gPrintSettings, displayed);
   dialog.numCopiesInput.value = gPrintSettings.numCopies;
 

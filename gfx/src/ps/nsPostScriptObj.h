@@ -65,6 +65,27 @@ class nsIImage;
 #define PAGE_TO_POINT_F(f) ((f) / 10.0)
 #define POINT_TO_PAGE(p) ((p)*10)
 
+typedef struct {
+  const char *name;
+  float       width,
+              height;
+} PSPaperSizeRec;
+
+static const
+PSPaperSizeRec postscript_module_paper_sizes[] =
+{
+  // 148mm X 210mm == 5.83in X 8.27in  
+  { "A5",         5.83f, 8.27f },
+  // 210mm X 297mm == 8.27in X 11.69in  
+  { "A4",         8.27f, 11.69f },
+  // 297mm X 420mm == 11.69in X 16.53in  
+  { "A3",        11.69f, 16.53f },
+  { "Letter",     8.50f,  11.0f  },
+  { "Legal",      8.50f,  14.0f  },   
+  { "Executive",  7.50f,  10.0f  },
+  { NULL,         0.00f,   0.0f  }
+};
+
 typedef void (*XL_CompletionRoutine)(void*);
 
 

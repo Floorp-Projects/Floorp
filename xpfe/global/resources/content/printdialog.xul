@@ -24,6 +24,7 @@ Contributor(s):
   Dan Rosen <dr@netscape.com>
   Jessica Blanco <jblanco@us.ibm.com>
   Asko Tontti <atontti@cc.hut.fi>
+  Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 
 -->
 
@@ -64,7 +65,7 @@ Contributor(s):
           <hbox align="center" pack="end">
             <label id="printerLabel" value="&printerInput.label;"/>
           </hbox>
-          <menulist id="printerList" flex ="1">
+          <menulist id="printerList" flex="1" oncommand="setPrinterDefaultsForSelectedPrinter();">
             <menupopup/>
           </menulist>
           <button id="properties" label="&propertiesButton.label;" oncommand="displayPropertiesDialog();"/>
@@ -94,7 +95,7 @@ Contributor(s):
           <label id="topageLabel" control="topageInput" value="&topageInput.label;" />
           <textbox id="topageInput" style="width:5em;" onkeyup="checkInteger(this)"/>
         </hbox>
-        <radio id="selectionRadio" label="&selectionRadio.label;" oncommand = "doPrintRange(2)"/>
+        <radio id="selectionRadio" label="&selectionRadio.label;" oncommand="doPrintRange(2)"/>
       </radiogroup>
     </groupbox>
 

@@ -36,6 +36,15 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+/* Store per-printer features in temp. prefs vars that the
+ * print dialog can pick them up... */
+#define SET_PRINTER_FEATURES_VIA_PREFS 1 
+#define PRINTERFEATURES_PREF "print.tmp.printerfeatures"
+
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+#include "prlog.h"
 
 #include "nsDeviceContextSpecG.h"
 
@@ -51,9 +60,22 @@
 #include "nsReadableUtils.h"
 #include "nsISupportsArray.h"
 
+#include "nsPrintfCString.h"
+
 #ifdef USE_XPRINT
 #include "xprintutil.h"
 #endif /* USE_XPRINT */
+
+#ifdef USE_POSTSCRIPT
+/* Fetch |postscript_module_paper_sizes| */
+#include "nsPostScriptObj.h"
+#endif /* USE_POSTSCRIPT */
+
+#ifdef PR_LOGGING 
+static PRLogModuleInfo *DeviceContextSpecGTKLM = PR_NewLogModule("DeviceContextSpecGTK");
+#endif /* PR_LOGGING */
+/* Macro to make lines shorter */
+#define DO_PR_DEBUG_LOG(x) PR_LOG(DeviceContextSpecGTKLM, PR_LOG_DEBUG, x)
 
 //----------------------------------------------------------------------------------
 // The printer data is shared between the PrinterEnumerator and the nsDeviceContextSpecGTK
@@ -72,6 +94,7 @@ public:
   PRBool    PrintersAreAllocated()       { return mGlobalPrinterList != nsnull; }
   PRInt32   GetNumPrinters()             { return mGlobalNumPrinters; }
   nsString* GetStringAt(PRInt32 aInx)    { return mGlobalPrinterList->StringAt(aInx); }
+  void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
@@ -79,8 +102,8 @@ protected:
   static GlobalPrinters mGlobalPrinters;
   static nsStringArray* mGlobalPrinterList;
   static int            mGlobalNumPrinters;
-
 };
+
 //---------------
 // static members
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
@@ -90,11 +113,13 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
 
 nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()
 {
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::nsDeviceContextSpecGTK()\n"));
   NS_INIT_REFCNT();
 }
 
 nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 {
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()\n"));
 }
 
 /* Use both PostScript and Xprint module */
@@ -127,6 +152,7 @@ static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
                                 const char* aChromeURL, 
                                 PRBool& aClickedOK)
 {
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::DisplayXPDialog()\n"));
   NS_ASSERTION(aPS, "Must have a print settings!");
 
   aClickedOK = PR_FALSE;
@@ -199,8 +225,9 @@ static nsresult DisplayXPDialog(nsIPrintSettings* aPS,
  * 
  * ** Please update the other toolkits when changing this function.
  */
-NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings* aPS, PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings *aPS, PRBool aQuiet)
 {
+  DO_PR_DEBUG_LOG(("nsDeviceContextSpecGTK::Init(aPS=%p. qQuiet=%d)\n", aPS, (int)aQuiet));
   nsresult rv = NS_ERROR_FAILURE;
 
   mPrintSettings = aPS;
@@ -215,41 +242,41 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings* aPS, PRBool aQuiet)
     }
   }
 
-  char      *path;
-  PRBool     canPrint       = PR_FALSE;
-  PRBool     reversed       = PR_FALSE;
-  PRBool     color          = PR_FALSE;
-  PRBool     tofile         = PR_FALSE;
-  PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
-  PRInt32    orientation    = NS_PORTRAIT;
-  PRInt32    fromPage       = 1;
-  PRInt32    toPage         = 1;
-  PRUnichar *command        = nsnull;
-  PRInt32    copies         = 1;
-  PRUnichar *printer        = nsnull;
-  PRUnichar *printfile      = nsnull;
-  double     dleft          = 0.5;
-  double     dright         = 0.5;
-  double     dtop           = 0.5;
-  double     dbottom        = 0.5; 
+  PRBool canPrint = PR_FALSE;
 
   rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (!aQuiet ) {
+  if (!aQuiet) {
     rv = DisplayXPDialog(mPrintSettings, 
                          "chrome://global/content/printdialog.xul", canPrint);
-  }
-  else {
+  } else {
+    rv = NS_OK;
     canPrint = PR_TRUE;
   }
   
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 
-  if (canPrint) {
-    if (aPS != nsnull) {
+  if (NS_SUCCEEDED(rv) && canPrint) {
+    if (aPS) {
+      PRBool     reversed       = PR_FALSE;
+      PRBool     color          = PR_FALSE;
+      PRBool     tofile         = PR_FALSE;
+      PRInt16    printRange     = nsIPrintSettings::kRangeAllPages;
+      PRInt32    orientation    = NS_PORTRAIT;
+      PRInt32    fromPage       = 1;
+      PRInt32    toPage         = 1;
+      PRUnichar *command        = nsnull;
+      PRInt32    copies         = 1;
+      PRUnichar *printer        = nsnull;
+      PRUnichar *printfile      = nsnull;
+      double     dleft          = 0.5;
+      double     dright         = 0.5;
+      double     dtop           = 0.5;
+      double     dbottom        = 0.5; 
+
       aPS->GetPrinterName(&printer);
       aPS->GetPrintReversed(&reversed);
       aPS->GetPrintInColor(&color);
@@ -266,67 +293,32 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIPrintSettings* aPS, PRBool aQuiet)
       aPS->GetMarginBottom(&dbottom);
       aPS->GetMarginRight(&dright);
 
-      if (command != nsnull && printfile != nsnull) {
-        // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
-        strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
+      if (printfile)
         strcpy(mPath,    NS_ConvertUCS2toUTF8(printfile).get());
-      }
-      if (printer != nsnull) 
+      if (command)
+        strcpy(mCommand, NS_ConvertUCS2toUTF8(command).get());  
+      if (printer) 
         strcpy(mPrinter, NS_ConvertUCS2toUTF8(printer).get());        
-#ifdef DEBUG_rods
-      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", 
-             dtop, dleft, dbottom, dright);
-      printf("printRange     %d\n", printRange);
-      printf("fromPage       %d\n", fromPage);
-      printf("toPage         %d\n", toPage);
-      printf("tofile         %d\n", tofile);
-      printf("printfile      %s\n", 
-             printfile? NS_ConvertUCS2toUTF8(printfile).get():"NULL");
-      printf("command        %s\n", 
-              command? NS_ConvertUCS2toUTF8(command).get():"NULL");
-      printf("printer        %s\n", 
-              printer? NS_ConvertUCS2toUTF8(printer).get():"NULL");
-#endif /* DEBUG_rods */
-    } else {
-#ifdef VMS
-      // Note to whoever puts the "lpr" into the prefs file. Please contact me
-      // as I need to make the default be "print" instead of "lpr" for OpenVMS.
-      strcpy(mCommand, "print");
-#else
-      strcpy(mCommand, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
-#endif /* VMS */
-    }
 
-    mTop         = dtop;
-    mBottom      = dbottom;
-    mLeft        = dleft;
-    mRight       = dright;
-    mFpf         = !reversed;
-    mGrayscale   = !color;
-    mOrientation = orientation;
-    mToPrinter   = !tofile;
-    mCopies      = copies;
+      DO_PR_DEBUG_LOG(("margins:   %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright));
+      DO_PR_DEBUG_LOG(("printRange %d\n",   printRange));
+      DO_PR_DEBUG_LOG(("fromPage   %d\n",   fromPage));
+      DO_PR_DEBUG_LOG(("toPage     %d\n",   toPage));
+      DO_PR_DEBUG_LOG(("tofile     %d\n",   tofile));
+      DO_PR_DEBUG_LOG(("printfile  '%s'\n", printfile? NS_ConvertUCS2toUTF8(printfile).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("command    '%s'\n", command? NS_ConvertUCS2toUTF8(command).get():"<NULL>"));
+      DO_PR_DEBUG_LOG(("printer    '%s'\n", printer? NS_ConvertUCS2toUTF8(printer).get():"<NULL>"));
 
-    // PWD, HOME, or fail 
-    
-    if (!printfile) {
-      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
-        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
-          strcpy(mPath, "mozilla.ps");
-          
-      if ( path != (char *) nsnull )
-        sprintf(mPath, "%s/mozilla.ps", path);
-      else
-        return NS_ERROR_FAILURE;
+      mTop         = dtop;
+      mBottom      = dbottom;
+      mLeft        = dleft;
+      mRight       = dright;
+      mFpf         = !reversed;
+      mGrayscale   = !color;
+      mOrientation = orientation;
+      mToPrinter   = !tofile;
+      mCopies      = copies;
     }
-       
-    if (command != nsnull) {
-      nsMemory::Free(command);
-    }
-    if (printfile != nsnull) {
-      nsMemory::Free(printfile);
-    }
-    return NS_OK;
   }
 
   return rv;
@@ -417,10 +409,16 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetPageSizeInTwips(PRInt32 *aWidth, PRInt3
 
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetPrintMethod(PrintMethod &aMethod)
 {
+  return GetPrintMethod(mPrinter, aMethod);
+}
+
+/* static !! */
+nsresult nsDeviceContextSpecGTK::GetPrintMethod(const char *aPrinter, PrintMethod &aMethod)
+{
 #if defined(USE_POSTSCRIPT) && defined(USE_XPRINT)
   /* printer names for the PostScript module alwas start with 
    * the NS_POSTSCRIPT_DRIVER_NAME string */
-  if (strncmp(mPrinter, NS_POSTSCRIPT_DRIVER_NAME, 
+  if (strncmp(aPrinter, NS_POSTSCRIPT_DRIVER_NAME, 
               NS_POSTSCRIPT_DRIVER_NAME_LEN) != 0)
     aMethod = pmXprint;
   else
@@ -442,6 +440,67 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::ClosePrintManager()
   return NS_OK;
 }
 
+/* Get prefs for printer
+ * Search order:
+ * - Get prefs per printer name and module name
+ * - Get prefs per printer name
+ * - Get prefs per module name
+ * - Get prefs
+ */
+static
+nsresult CopyPrinterCharPref(nsIPref *pref, const char *modulename, const char *printername, const char *prefname, char **return_buf)
+{
+  DO_PR_DEBUG_LOG(("CopyPrinterCharPref('%s', '%s', '%s')\n", modulename, printername, prefname));
+
+  NS_ENSURE_ARG_POINTER(return_buf);
+
+  nsXPIDLCString name;
+  nsresult rv = NS_ERROR_FAILURE;
+ 
+  if (printername && modulename) {
+    /* Get prefs per printer name and module name */
+    name = nsPrintfCString(512, "print.%s.printer_%s.%s", modulename, printername, prefname);
+    DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
+    rv = pref->CopyCharPref(name, return_buf);
+  }
+  
+  if (NS_FAILED(rv)) { 
+    if (printername) {
+      /* Get prefs per printer name */
+      name = nsPrintfCString(512, "print.printer_%s.%s", printername, prefname);
+      DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
+      rv = pref->CopyCharPref(name, return_buf);
+    }
+
+    if (NS_FAILED(rv)) {
+      if (modulename) {
+        /* Get prefs per module name */
+        name = nsPrintfCString(512, "print.%s.%s", modulename, prefname);
+        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
+        rv = pref->CopyCharPref(name, return_buf);
+      }
+      
+      if (NS_FAILED(rv)) {
+        /* Get prefs */
+        name = nsPrintfCString(512, "print.%s", prefname);
+        DO_PR_DEBUG_LOG(("trying to get '%s'\n", name.get()));
+        rv = pref->CopyCharPref(name, return_buf);
+      }
+    }
+  }
+
+#ifdef PR_LOG  
+  if (NS_SUCCEEDED(rv)) {
+    DO_PR_DEBUG_LOG(("CopyPrinterCharPref returning '%s'.\n", *return_buf));
+  }
+  else
+  {
+    DO_PR_DEBUG_LOG(("CopyPrinterCharPref failure.\n"));
+  }
+#endif /* PR_LOG */
+
+  return rv;
+}
 
 //  Printer Enumerator
 nsPrinterEnumeratorGTK::nsPrinterEnumeratorGTK()
@@ -482,7 +541,6 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   int count = 0;
   while( count < numPrinters )
   {
-
     PRUnichar *str = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(count));
 
     if (!str) {
@@ -504,23 +562,247 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::EnumeratePrinters(PRUint32* aCount, PRUnic
   return NS_OK;
 }
 
-//----------------------------------------------------------------------------------
-// Return the Default Printer name
 /* readonly attribute wstring defaultPrinterName; */
-NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
 {
+  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::GetDefaultPrinterName()\n"));
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
-  *aDefaultPrinterName = nsnull;
+
+  GlobalPrinters::GetInstance()->GetDefaultPrinterName(aDefaultPrinterName);
+
+  DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n", NS_ConvertUCS2toUTF8(*aDefaultPrinterName).get()));
   return NS_OK;
 }
 
 /* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
 NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
-    return NS_OK;
+  DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
+  nsresult rv;
+
+  NS_ENSURE_ARG_POINTER(aPrinterName);
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  if (!*aPrinterName) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (aPrintSettings == nsnull) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString printerName;
+  printerName.Assign(NS_ConvertUCS2toUTF8(aPrinterName));
+  DO_PR_DEBUG_LOG(("printerName='%s'\n", printerName.get()));
+  
+  PrintMethod type = pmInvalid;
+  rv = nsDeviceContextSpecGTK::GetPrintMethod(printerName, type);
+  if (NS_FAILED(rv))
+    return rv;
+
+#ifdef USE_POSTSCRIPT
+  /* "Demangle" postscript printer name */
+  if (type == pmPostScript) {
+    /* Strip the leading NS_POSTSCRIPT_DRIVER_NAME from |printerName|,
+     * e.g. turn "PostScript/foobar" to "foobar" */
+    printerName.Cut(0, NS_POSTSCRIPT_DRIVER_NAME_LEN);
+  }
+#endif /* USE_POSTSCRIPT */
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+  /* Defaults to FALSE */
+  pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.has_special_printerfeatures", printerName.get()).get(), PR_FALSE);
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
+  /* These switches may be dynamic in the future... */
+  PRBool doingFilename    = PR_TRUE;
+  PRBool doingNumCopies   = PR_TRUE;
+  PRBool doingOrientation = PR_TRUE;
+  PRBool doingPaperSize   = PR_TRUE;
+  PRBool doingCommand     = PR_TRUE;
+
+  if (doingFilename) {
+    nsXPIDLCString filename;
+    if (NS_FAILED(CopyPrinterCharPref(pPrefs, nsnull, printerName, "filename", getter_Copies(filename)))) {
+      const char *path;
+    
+      if (!(path = PR_GetEnv("PWD")))
+        path = PR_GetEnv("HOME");
+    
+      if (path)
+        filename = nsPrintfCString(PATH_MAX, "%s/mozilla.ps", path);
+      else
+        filename.Assign("mozilla.ps");  
+    }
+    
+    DO_PR_DEBUG_LOG(("Setting default filename to '%s'\n", filename.get()));
+    aPrintSettings->SetToFileName(NS_ConvertUTF8toUCS2(filename).get());
+  }
+
+#ifdef USE_XPRINT
+  if (type == pmXprint) {
+    DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for Xprint printer\n"));
+
+    Display   *pdpy;
+    XPContext  pcontext;
+    if (XpuGetPrinter(printerName, &pdpy, &pcontext) != 1)
+      return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+
+    if (doingOrientation) {
+      XpuOrientationList  olist;
+      int                 ocount;
+      XpuOrientationRec  *default_orientation;
+      
+      /* Get list of supported orientations */
+      olist = XpuGetOrientationList(pdpy, pcontext, &ocount);
+      if (olist) {
+        default_orientation = &olist[0]; /* First entry is the default one */
+      
+        if (!strcasecmp(default_orientation->orientation, "portrait")) {
+          DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
+          aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+        }
+        else if (!strcasecmp(default_orientation->orientation, "landscape")) {
+          DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
+          aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
+        }  
+        else {
+          DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", default_orientation->orientation));
+        }
+   
+        XpuFreeOrientationList(olist);
+      }  
+    }
+
+    /* Setup Number of Copies */
+    if (doingNumCopies) {
+#ifdef NOT_IMPLEMENTED_YET
+      aPrintSettings->SetNumCopies(PRInt32(aDevMode->dmCopies));
+#endif /* NOT_IMPLEMENTED_YET */
+    }
+    
+    if (doingPaperSize) {
+      XpuMediumSourceSizeList mlist;
+      int                     mcount;
+      XpuMediumSourceSizeRec *default_medium;
+      
+      mlist = XpuGetMediumSourceSizeList(pdpy, pcontext, &mcount);
+      if (mlist) {
+        default_medium = &mlist[0]; /* First entry is the default one */
+        double total_width  = default_medium->ma1 + default_medium->ma2,
+               total_height = default_medium->ma3 + default_medium->ma4;
+ 
+        DO_PR_DEBUG_LOG(("setting default paper size to %g/%g mm\n", total_width, total_height));
+        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
+        aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
+        aPrintSettings->SetPaperWidth(total_width);
+        aPrintSettings->SetPaperHeight(total_height);
+
+#ifdef SET_PRINTER_FEATURES_VIA_PREFS
+        pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.has_special_printerfeatures", printerName.get()).get(), PR_TRUE);
+
+        int i;
+        for( i = 0 ; i < mcount ; i++ )
+        {
+          XpuMediumSourceSizeRec *curr = &mlist[i];
+          double total_width  = curr->ma1 + curr->ma2,
+                 total_height = curr->ma3 + curr->ma4;
+          pPrefs->SetCharPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.name",      printerName.get(), i).get(), curr->medium_name);
+          pPrefs->SetIntPref( nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.width_mm",  printerName.get(), i).get(), PRInt32(total_width));
+          pPrefs->SetIntPref( nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.height_mm", printerName.get(), i).get(), PRInt32(total_height));
+          pPrefs->SetBoolPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.%d.is_inch",   printerName.get(), i).get(), PR_FALSE);
+        }
+        pPrefs->SetIntPref(nsPrintfCString(256, PRINTERFEATURES_PREF ".%s.paper.count", printerName.get(), i).get(), (PRInt32)mcount);          
+#endif /* SET_PRINTER_FEATURES_VIA_PREFS */
+
+        XpuFreeMediumSourceSizeList(mlist);
+      }  
+    }
+ 
+    XpuClosePrinterDisplay(pdpy, pcontext);
+    
+    return NS_OK;    
+  }
+  else
+#endif /* USE_XPRINT */
+
+#ifdef USE_POSTSCRIPT
+  if (type == pmPostScript) {
+    DO_PR_DEBUG_LOG(("InitPrintSettingsFromPrinter() for PostScript printer\n"));
+      
+    if (doingNumCopies) {
+      /* Not implemented yet */
+    }
+    
+    if (doingOrientation) {
+      nsXPIDLCString orientation;
+      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "orientation", getter_Copies(orientation)))) {
+        if (!strcasecmp(orientation, "portrait")) {
+          DO_PR_DEBUG_LOG(("setting default orientation to 'portrait'\n"));
+          aPrintSettings->SetOrientation(nsIPrintSettings::kPortraitOrientation);
+        }
+        else if (!strcasecmp(orientation, "landscape")) {
+          DO_PR_DEBUG_LOG(("setting default orientation to 'landscape'\n"));
+          aPrintSettings->SetOrientation(nsIPrintSettings::kLandscapeOrientation);  
+        }
+        else {
+          DO_PR_DEBUG_LOG(("Unknown default orientation '%s'\n", orientation.get()));
+        }
+      }
+    }
+    
+    if (doingPaperSize) {
+      /* Not implemented yet */
+      nsXPIDLCString papername;
+      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "paper_size", getter_Copies(papername)))) {
+        int    i;
+        double width  = 0.,
+               height = 0.;
+        
+        for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
+        {
+          const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
+
+          if (!strcasecmp(papername, curr->name)) {          
+            width  = curr->width;  
+            height = curr->height;
+            break;
+          }
+        }  
+
+        if (width!=0.0 && height!=0.0) {
+          DO_PR_DEBUG_LOG(("setting default paper size to %g/%g inch\n", width, height));
+          aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
+          aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
+          aPrintSettings->SetPaperWidth(width);
+          aPrintSettings->SetPaperHeight(height);
+        }
+        else {
+          DO_PR_DEBUG_LOG(("Unknown paper size '%s' given.\n", papername));
+        }         
+      }
+    }
+
+    if (doingCommand) {
+      nsXPIDLCString command;
+      if (NS_SUCCEEDED(CopyPrinterCharPref(pPrefs, "postscript", printerName, "print_command", getter_Copies(command)))) {
+        DO_PR_DEBUG_LOG(("setting default print command to '%s'\n", command.get()));
+        aPrintSettings->SetPrintCommand(NS_ConvertUTF8toUCS2(command).get());
+      }
+    }
+  
+    return NS_OK;    
+  }
+#endif /* USE_POSTSCRIPT */
+
+  return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings* aPrintSettings)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
 {
   /* fixme: We simply ignore the |aPrinter| argument here
    * We should get the supported printer attributes from the printer and 
@@ -625,8 +907,35 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
 //----------------------------------------------------------------------
 void GlobalPrinters::FreeGlobalPrinters()
 {
-  delete mGlobalPrinterList;
-  mGlobalPrinterList = nsnull;
-  mGlobalNumPrinters = 0;
+  if (mGlobalPrinterList) {
+    delete mGlobalPrinterList;
+    mGlobalPrinterList = nsnull;
+    mGlobalNumPrinters = 0;
+  }  
+}
+
+void 
+GlobalPrinters::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
+{
+  *aDefaultPrinterName = nsnull;
+  
+  PRBool allocate = (GlobalPrinters::GetInstance()->PrintersAreAllocated() == PR_FALSE);
+  
+  if (allocate) {
+    nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
+    if (NS_FAILED(rv)) {
+      return;
+    }
+  }
+  NS_ASSERTION(GlobalPrinters::GetInstance()->PrintersAreAllocated(), "no GlobalPrinters");
+
+  if (GlobalPrinters::GetInstance()->GetNumPrinters() == 0)
+    return;
+  
+  *aDefaultPrinterName = ToNewUnicode(*GlobalPrinters::GetInstance()->GetStringAt(0));
+
+  if (allocate) {  
+    GlobalPrinters::GetInstance()->FreeGlobalPrinters();
+  }  
 }
 
