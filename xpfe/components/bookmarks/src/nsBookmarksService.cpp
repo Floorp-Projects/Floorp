@@ -168,7 +168,6 @@ static NS_DEFINE_CID(kRDFContainerCID,            NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kIOServiceCID,               NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_IID(kSoundCID,                   NS_SOUND_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,     NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID,         NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCacheServiceCID,            NS_CACHESERVICE_CID);
@@ -2338,7 +2337,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                nsCaseInsensitiveStringComparator()))
             {
                 nsCOMPtr<nsISound> soundInterface =
-                        do_CreateInstance(kSoundCID, &rv);
+                        do_CreateInstance("@mozilla.org/sound;1", &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     // for the moment, just beep
