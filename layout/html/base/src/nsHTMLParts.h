@@ -266,6 +266,7 @@ extern nsresult NS_NewWBRFrame(nsIFrame*& aResult);
 extern nsresult NS_NewScrollFrame(nsIFrame*& aResult);
 extern nsresult NS_NewSimplePageSequenceFrame(nsIFrame*& aResult);
 extern nsresult NS_NewPageFrame(nsIFrame*& aResult);
+extern nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
 
 // forms
 extern nsresult NS_NewFormFrame(nsIFrame*& aResult);
