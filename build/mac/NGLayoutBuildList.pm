@@ -242,6 +242,7 @@ sub BuildDist()
 
 	#WEBSHELL
     InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
+    InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",   "$distdirectory:webshell:");
 
 	#LAYOUT
     InstallFromManifest(":mozilla:layout:build:MANIFEST",							"$distdirectory:layout:");
@@ -466,6 +467,7 @@ sub MakeResouceAliases()
 	
 	my($samples_dir) = "$resource_dir" . "samples:";
 	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:samples:",				"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:webshell:tests:viewer:resources:",				"$samples_dir");
 
 	my($chrome_dir) = "$resource_dir" . "chrome:";
 	BuildFolderResourceAliases(":mozilla:xpfe:xpviewer:src:resources:chrome:",			"$chrome_dir");
