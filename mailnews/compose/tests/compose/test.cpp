@@ -422,7 +422,8 @@ int main(int argc, char *argv[])
       char *tagBuf = (char *)PR_Malloc(256);
       if (tagBuf)
         PL_strcpy(tagBuf, "Do that voodo, that you do, soooo weeeelllll!");
-      
+
+#if 0
       pMsgSend->CreateAndSendMessage(nsnull, // identity
                                      pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
@@ -435,6 +436,10 @@ int main(int argc, char *argv[])
 						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
 						    NULL,             // nsMsgSendPart                     *relatedPart,
 						    nsnull);          // listener array
+
+#else
+	printf("rhp fix me!\n");
+#endif
 
       PR_FREEIF(ptr);
     }    
