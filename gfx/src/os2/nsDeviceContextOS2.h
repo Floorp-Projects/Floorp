@@ -25,8 +25,10 @@
  * identified per MPL Section 3.3
  *
  * Date           Modified by     Description of modification
- * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
- * 05/31/2000   IBM Corp.        Print changes.
+ * ----           -----------     ---------------------------
+ * 03/28/2000     IBM Corp.       Changes to make os2.h file similar to windows.h file
+ * 05/31/2000     IBM Corp.       Print changes.
+ * 06/07/2000     IBM Corp.       Corrected querying of screen and client sizes
  */
 
 #ifndef _nsDeviceContextOS2_h
@@ -115,6 +117,12 @@ public:
 
    virtual nsresult CreateFontAliasTable();
 
+   void ComputeClientRectUsingScreen ( nsRect* outRect ) ;
+   void ComputeFullAreaUsingScreen ( nsRect* outRect ) ;
+ 
+   PRBool mCachedClientRect;
+   PRBool mCachedFullRect;
+
    nsDrawingSurfaceOS2  *mSurface;
    PRUint32              mDepth;  // bit depth of device
    nsPaletteInfo         mPaletteInfo;
@@ -122,10 +130,7 @@ public:
    nsIPaletteOS2        *mPalette;
    PRInt32               mWidth;
    PRInt32               mHeight;
-   float                 mWidthFloat;
-   float                 mHeightFloat;
    nsRect                mClientRect;
-   PRBool                mClientRectConverted;
    nsIDeviceContextSpec *mSpec;
    HDC                   mPrintDC;         // PrintDC.  Owned by libprint.
    HPS                   mPS;         // PrintPS.

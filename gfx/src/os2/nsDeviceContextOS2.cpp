@@ -29,6 +29,7 @@
  * ----             -----------     ---------------------------
  * 5/31/2000        IBM Corp.       Add method isPrintDC() to class nsDeviceContextOS2 to use in file
  *                                         nsRenderingContextOS2.cpp
+ * 06/07/2000       IBM Corp.       Corrected querying of screen and client sizes
  */
 
 // ToDo:
@@ -67,13 +68,12 @@ nsDeviceContextOS2::nsDeviceContextOS2() : DeviceContextImpl()
    mPixelsToTwips = 0;
    mTwipsToPixels = 0;
    mPixelScale = 1.0f;
-   mWidthFloat = 0.0f;
-   mHeightFloat = 0.0f;
    mWidth = -1;
    mHeight = -1;
    mPrintDC = nsnull;
-   mClientRectConverted = PR_FALSE;
    mSpec = nsnull;
+   mCachedClientRect = PR_FALSE;
+   mCachedFullRect = PR_FALSE;
    mPrintState = nsPrintState_ePreBeginDoc;
 
    // Init module if necessary (XXX find a better way of doing this!)
@@ -188,22 +188,51 @@ void nsDeviceContextOS2::CommonInit( HDC aDC)
    DevQueryCaps( aDC, CAPS_COLOR_BITCOUNT, 1, &lCap);
    mDepth = lCap;
 
+   mClientRect.x = mClientRect.y = 0;
    DevQueryCaps( aDC, CAPS_HORIZONTAL_RESOLUTION, 1, &lCap);
    mClientRect.width = lCap;
-   mWidthFloat = (float)lCap;
    DevQueryCaps( aDC, CAPS_VERTICAL_RESOLUTION, 1, &lCap);
    mClientRect.height = lCap;
-   mHeightFloat = (float)lCap;
 
    DevQueryCaps( aDC, CAPS_TECHNOLOGY, 1, &lCap);
    if (lCap & CAPS_TECH_RASTER_DISPLAY) {
-     mClientRect.x = mClientRect.y = 0;
      mClientRect.width = WinQuerySysValue(HWND_DESKTOP, SV_CXFULLSCREEN);
      mClientRect.height = WinQuerySysValue(HWND_DESKTOP, SV_CYFULLSCREEN);
    }
 
    DeviceContextImpl::CommonInit();
 }
+
+
+void
+nsDeviceContextOS2::ComputeClientRectUsingScreen ( nsRect* outRect )
+{
+  if ( !mCachedClientRect ) {
+    // convert to device units
+    outRect->y = NSToIntRound(mClientRect.y * mDevUnitsToAppUnits);
+    outRect->x = NSToIntRound(mClientRect.x * mDevUnitsToAppUnits);
+    outRect->width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
+    outRect->height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
+
+    mCachedClientRect = PR_TRUE;
+    mClientRect = *outRect;
+  } // if we need to recompute the client rect
+  else
+    *outRect = mClientRect;
+
+} // ComputeClientRectUsingScreen
+
+
+void
+nsDeviceContextOS2::ComputeFullAreaUsingScreen ( nsRect* outRect )
+{
+  outRect->y = 0;
+  outRect->x = 0;
+  outRect->width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+  outRect->height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+
+} // ComputeFullRectUsingScreen
+
 
 // Creation of other gfx objects malarky -------------------------------------
 
@@ -491,41 +520,51 @@ nsresult nsDeviceContextOS2::GetSystemAttribute( nsSystemAttrID anID,
 //
 nsresult nsDeviceContextOS2::GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight)
 {
-   if (mWidth == -1)
-     mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+  if ( mSpec )
+  {
+    // we have a printer device
+    aWidth = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aHeight = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+  else {
+    nsRect area;
+    ComputeFullAreaUsingScreen ( &area );
+    aWidth = area.width;
+    aHeight = area.height;
+  }
 
-   if (mHeight == -1)
-     mHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
-
-   aWidth = mWidth;
-   aHeight = mHeight;
-
-   return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextOS2::GetRect(nsRect &aRect)
 {
-  PRInt32 width, height;
-  nsresult rv;
-  rv = GetDeviceSurfaceDimensions(width, height);
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = width;
-  aRect.height = height;
-  return rv;
+  if ( mSpec )
+  {
+    // we have a printer device
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+  else
+    ComputeFullAreaUsingScreen ( &aRect );
+
+  return NS_OK;
 }
 
 nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
 {
-  if (!mClientRectConverted) {
-    mClientRect.x = NSToIntRound(mClientRect.x * mDevUnitsToAppUnits);
-    mClientRect.y = NSToIntRound(mClientRect.y * mDevUnitsToAppUnits);
-    mClientRect.width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
-    mClientRect.height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
-    mClientRectConverted = PR_TRUE;
+  if ( mSpec )
+  {
+    // we have a printer device
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+    aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
   }
+  else
+    ComputeClientRectUsingScreen ( &aRect );
 
-  aRect = mClientRect;
   return NS_OK;
 }
 
