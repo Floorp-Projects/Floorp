@@ -57,6 +57,7 @@ CSS_ATOM(langPseudo, ":lang")
 CSS_ATOM(linkPseudo, ":link")
 
 CSS_ATOM(menuPseudo, ":menu")
+CSS_ATOM(mozDummyOptionPseudo, ":-moz-dummy-option")
 
 CSS_ATOM(outOfDatePseudo, ":out-of-date")
 
