@@ -24,87 +24,7 @@ Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY msgComposeWindow.title "Message Compose">
-
-<!-- address labels -->
-<!ENTITY fromAddr.label "From:">
-<!ENTITY toAddr.label   "To:"> 
-<!ENTITY ccAddr.label   "Cc:"> 
-<!ENTITY bccAddr.label  "Bcc:"> 
-<!ENTITY newsgroupsAddr.label   "Newsgroups:"> 
-<!ENTITY subject.label  "Subject:">
-
-
-<!-- menu items:  the . means that the menu item isn't implemented yet -->
-
-<!-- File menu items -->
-<!ENTITY fileMenu.label "File">
-<!ENTITY newCmd.label ".New">
-<!ENTITY saveCmd.label ".Save">
-<!ENTITY saveAsCmd.label "Save As (Draft)">
-<!ENTITY saveAsTemplateCmd.label "Save As (Template)">
-<!ENTITY attachCmd.label ".Attach">
-<!ENTITY sendNowCmd.label "Send Now">
-<!ENTITY sendLaterCmd.label "Send Later">
-<!ENTITY quoteOrigCmd.label ".Quote Original Message">
-<!ENTITY selectAddressCmd.label "Select Addresses...">
-<!ENTITY printSetupCmd.label ".Print Setup">
-<!ENTITY printPreviewCmd.label ".Print Preview">
-<!ENTITY printCmd.label ".Print">
-<!ENTITY closeCmd.label ".Close">
-
-<!-- Edit menu items -->
-<!ENTITY editMenu.label ".Edit">
-<!ENTITY undoCmd.label ".Undo">
-<!ENTITY cutCmd.label ".Cut">
-<!ENTITY copyCmd.label ".Copy">
-<!ENTITY pasteCmd.label ".Paste">
-<!ENTITY pasteAsQuotCmd.label ".Paste as Quotation">
-<!ENTITY deleteCmd.label ".Delete">
-<!ENTITY selectAllCmd.label ".Select All">
-<!ENTITY findCmd.label ".Find">
-<!ENTITY findAgainCmd.label ".Find Again">
-<!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
-<!ENTITY showMatchingAddrCmd.label ".Show Matching Address">
-<!ENTITY prefsCmd.label ".Preferences...">
-
-<!-- View menu items -->
-<!ENTITY viewMenu.label ".View">
-<!ENTITY showCmd.label ".Show">
-<!ENTITY addressCmd.label ".Address">
-<!ENTITY attachmentsCmd.label ".Attachments">
-<!ENTITY wrapCmd.label ".Wrap Long Lines">
-<!ENTITY charSetCmd.label ".Character Set">
-
-<!-- Tools menu items -->
-<!ENTITY toolsMenu.label ".Tools">
-<!ENTITY checkSpellCmd.label ".Check Spelling...">
-
-<!-- Toolbar items -->
-<!ENTITY sendButton.img "chrome://messengercompose/skin/send.gif">
-<!ENTITY sendButton.label "Send">
-<!ENTITY quoteButton.img "chrome://messengercompose/skin/quote.gif">
-<!ENTITY quoteButton.label "Quote">
-<!ENTITY addressButton.img "chrome://messengercompose/skin/address.gif">
-<!ENTITY addressButton.label "Address">
-<!ENTITY attachButton.img "chrome://messengercompose/skin/attach.gif">
-<!ENTITY attachButton.label "Attach">
-<!ENTITY spellingButton.img "chrome://messengercompose/skin/spelling.gif">
-<!ENTITY spellingButton.label "Spelling">
-<!ENTITY saveButton.img "chrome://messengercompose/skin/save.gif">
-<!ENTITY saveButton.label "Save">
-<!ENTITY stopButton.img "chrome://messengercompose/skin/stop.gif">
-<!ENTITY stopButton.label "Stop">
-<!ENTITY throbberButton.img "resource:/res/throbber/anims00.gif">
-<!ENTITY throbberButton.url "http://www.mozilla.org/">
-
-<!-- Toolbar items, imported from editorAppShell.xul -->
-<!ENTITY formatToolbar.boldChar "B">
-<!ENTITY formatToolbar.italicChar "I">
-<!ENTITY formatToolbar.underlineChar "U">
-]>
+<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/messengercompose.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -216,10 +136,31 @@ Rights Reserved.
     			<menuitem name="Armenian (ARMSCII-8)" onclick="SetDocumentCharacterSet('ARMSCII-8');"/>
     		</menu>
     </menu>
-    <menu name="&toolsMenu.label;">
-		<menuitem name="&checkSpellCmd.label;" cmd="nsCmd:ComposeSpelling"/>
+    <menu name="&insertMenu.label;">
     </menu>
-
+    <menu name="&formatMenu.label;">
+    </menu>
+    <menu name="&messageMenu.label;">
+	   	<menu name="&priorityMenu.label;" onclick="PriorityMenuSelect(event.target);">
+    		<menuitem name="&lowestPriorityCmd.label;" id="lowest"/>
+    		<menuitem name="&lowPriorityCmd.label;" id="low"/>
+    		<menuitem name="&normalPriorityCmd.label;" id="normal"/>
+    		<menuitem name="&highPriorityCmd.label;" id="high"/>
+    		<menuitem name="&highestPriorityCmd.label;" id="highest"/>
+	   	</menu>
+    	<menuitem name="&returnReceiptCmd.label;" onclick="ReturnReceiptMenuSelect();"/>
+	   	<menuitem name="&uuEncodeCmd.label;" onclick="UUEncodeMenuSelect();"/>
+	   	<menu name="&outputFormatMenu.label;" onclick="OutputFormatMenuSelect(event.target);">
+    		<menuitem name="&askmeFormatCmd.label;" id="1"/>
+    		<menuitem name="&plainTextFormatCmd.label;" id="2"/>
+    		<menuitem name="&htmlFormatCmd.label;" id="3"/>
+    		<menuitem name="&bothFormatCmd.label;" id="4"/>
+	   	</menu>
+    	<separator/>
+		<menu name="&fileCarbonCopyCmd.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
+			onclick="MessageFcc(event.target)">
+		</menu>
+    </menu>
 	<menu id="tasksMenu"/>
 	<menu id="helpMenu"/>
 </menubar>
@@ -349,7 +290,7 @@ Rights Reserved.
 </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe type="content" id="content-frame" src="about:blank" name="browser.message.body" flex="100%" />
+    <html:iframe type="content" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"/>
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
     <box align="horizontal" id="status-bar">
