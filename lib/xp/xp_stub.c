@@ -53,9 +53,9 @@ void XP_AssertAtLine( char *pFileName, int iLine )
  * versions of the Navigator do it), then you can define your own
  * wrapper function like this:
  */
-static char * XP_GetBuiltinString(int16 i);
+static char * XP_GetBuiltinString(int32 i);
 char *
-XP_GetString(int16 i)
+XP_GetString(int32 i)
 {
 
 	return XP_GetBuiltinString(i);
@@ -64,7 +64,7 @@ XP_GetString(int16 i)
 
 static
 char *
-XP_GetBuiltinString(int16 i)
+XP_GetBuiltinString(int32 i)
 {
 	static char	buf[128];
 	char		*ret;
