@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -117,6 +118,15 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify);
+
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -780,4 +790,38 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                             const nsAReadableString& aValue,
+                             PRBool aNotify)
+{
+  if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+    nsAutoString val;
+    GetHref(val);
+    if (!val.Equals(aValue)) {
+      SetLinkState(eLinkState_Unknown);
+    }
+  }
+
+  return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aValue, aNotify);
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo,
+                             const nsAReadableString& aValue,
+                             PRBool aNotify)
+{
+  return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);
+}
+
+nsresult
+nsHTMLAnchorElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify)
+{
+  if (aAttribute == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
+      SetLinkState(eLinkState_Unknown);
+  }
+  // We still rely on the old way of setting the attribute.
+  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
