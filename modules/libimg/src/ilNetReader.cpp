@@ -29,7 +29,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD WriteReady(PRUint32 *chunksizep);
+  NS_IMETHOD WriteReady(PRUint32 *max_read);
   
   NS_IMETHOD FirstWrite(const unsigned char *str, int32 len);
 
@@ -66,12 +66,12 @@ NetReaderImpl::~NetReaderImpl()
 NS_IMPL_ISUPPORTS(NetReaderImpl, kINetReaderIID)
 
 NS_IMETHODIMP
-NetReaderImpl::WriteReady(PRUint32* maxread)
+NetReaderImpl::WriteReady(PRUint32* max_read)
 {
     if (ilContainer != NULL) {
-        *maxread =IL_StreamWriteReady(ilContainer);      
-        if (*maxread < 0)
-            *maxread = 0;
+        *max_read =IL_StreamWriteReady(ilContainer);      
+        if (*max_read < 0)
+            *max_read = 0;
     }
     return NS_OK;
 }

@@ -70,11 +70,11 @@ GIFDecoder::ImgDInit()
 
 
 NS_IMETHODIMP 
-GIFDecoder::ImgDWriteReady(PRUint8 *min_read)
+GIFDecoder::ImgDWriteReady(PRUint32 *max_read)
 {
 
   if(ilContainer != NULL) {
-     *min_read = il_gif_write_ready(ilContainer);
+     *max_read = il_gif_write_ready(ilContainer);
   }
   return NS_OK;
 }

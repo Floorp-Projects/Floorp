@@ -54,7 +54,7 @@ public:
   /* stream */
   NS_IMETHOD ImgDInit();
 
-  NS_IMETHOD ImgDWriteReady(PRUint8 *modata);
+  NS_IMETHOD ImgDWriteReady(PRUint32 *max_read);
   NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
@@ -268,10 +268,11 @@ JPGDecoder::ImgDInit()
 
 
 NS_IMETHODIMP 
-JPGDecoder::ImgDWriteReady(PRUint8 *max_read)
+JPGDecoder::ImgDWriteReady(PRUint32 *max_read)
 {
   /* dummy return needed */
-  return NS_OK;
+	*max_read = 2048; 
+  return NS_OK; 
 }
 
 NS_IMETHODIMP

@@ -34,7 +34,7 @@ class ilIURL;
 class ilINetReader : public nsISupports {
 public:
 
-  NS_IMETHOD WriteReady(PRUint32 *chunksizep)=0;
+  NS_IMETHOD WriteReady(PRUint32 *max_read)=0;
   
   NS_IMETHOD FirstWrite(const unsigned char *str, int32 len)=0;
 
