@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.24 $ 
-# $Date: 2002/12/10 19:43:21 $ 
+# $Revision: 1.25 $ 
+# $Date: 2003/01/19 13:52:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -170,16 +170,16 @@ package BuildStatus;
 %TinderboxPrint = (
 
                         'A'  => {
-                                 'description'=> '(Nuber of Allocs)',
+                                 'description'=> '(Number of Allocs)',
                                  },
                          'Bl' => {
-                                  'description'=> '(bytes allocated, bloat)',
+                                  'description'=> '(Bytes allocated, bloat)',
                                  },
                         'Lk' => {
-                                 'description'=> '(bytes leaked)',
+                                 'description'=> '(Bytes leaked)',
                                 },
                         'MH' => {
-                                  'description'=> '(bytes allocated, Max Heap)',
+                                 'description'=> '(Bytes allocated, Max Heap)',
                                 },
                         'Tp' => {
                                  'description'=> '(PageLoadTime in milliseconds)',
