@@ -1410,11 +1410,14 @@ RDFXULBuilderImpl::CreateXULElement(nsIRDFResource* aResource,
         return rv;
     }
 
+#if 0
+	// beard: backing out to fix build bustage.
     // Set the document for this XUL element.  It must be set now
     // in order for event handlers to be detected in the subsequent
     // SetAttribute calls.
     nsCOMPtr<nsIDocument> document = mDocument;
     element->SetDocument(document, PR_FALSE);
+#endif
 
     // Now iterate through all the properties and add them as
     // attributes on the element.  First, create a cursor that'll
