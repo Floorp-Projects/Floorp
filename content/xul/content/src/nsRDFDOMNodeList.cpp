@@ -71,7 +71,6 @@ nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 // QueryInterface implementation for nsRDFDOMNodeList
 NS_INTERFACE_MAP_BEGIN(nsRDFDOMNodeList)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
-    NS_INTERFACE_MAP_ENTRY(nsIRDFNodeList)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNodeList)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULNodeList)
 NS_INTERFACE_MAP_END
@@ -113,7 +112,7 @@ nsRDFDOMNodeList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
-NS_IMETHODIMP
+nsresult
 nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");
@@ -123,7 +122,7 @@ nsRDFDOMNodeList::AppendNode(nsIDOMNode* aNode)
     return mElements.AppendObject(aNode);
 }
 
-NS_IMETHODIMP
+nsresult
 nsRDFDOMNodeList::RemoveNode(nsIDOMNode* aNode)
 {
     NS_PRECONDITION(aNode != nsnull, "null ptr");

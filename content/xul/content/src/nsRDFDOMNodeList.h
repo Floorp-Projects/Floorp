@@ -40,12 +40,10 @@
 #define nsRDFDOMNodeList_h__
 
 #include "nsIDOMNodeList.h"
-#include "nsIRDFNodeList.h"
 #include "nsCOMArray.h"
 class nsIDOMNode;
 
-class nsRDFDOMNodeList : public nsIDOMNodeList,
-                         public nsIRDFNodeList
+class nsRDFDOMNodeList : public nsIDOMNodeList
 {
 private:
     nsCOMArray<nsIDOMNode> mElements;
@@ -62,8 +60,8 @@ public:
     NS_DECL_NSIDOMNODELIST
 
     // Implementation methods
-    NS_IMETHOD AppendNode(nsIDOMNode* aNode);
-    NS_IMETHOD RemoveNode(nsIDOMNode* aNode);
+    nsresult AppendNode(nsIDOMNode* aNode);
+    nsresult RemoveNode(nsIDOMNode* aNode);
 };
 
 #endif // nsRDFDOMNodeList_h__
