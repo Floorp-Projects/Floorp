@@ -47,9 +47,12 @@ public:
 
 public slots:
     bool eventFilter(QObject * object, QEvent * event);
-    bool MousePressedEvent(QMouseEvent * event, nsWidget * widget);
-    bool MouseReleasedEvent(QMouseEvent * event, nsWidget * widget);
+    bool MouseButtonEvent(QMouseEvent * event, 
+                          nsWidget    * widget, 
+                          bool          buttonDown);
     bool MouseMovedEvent(QMouseEvent * event, nsWidget * widget);
+    bool MouseEnterEvent(QEvent * event, nsWidget * widget);
+    bool MouseExitEvent(QEvent * event, nsWidget * widget);
     bool DestroyEvent(QCloseEvent * event, nsWidget * widget);
     bool ShowEvent(QShowEvent * event, nsWidget * widget);
     bool HideEvent(QHideEvent * event, nsWidget * widget);
@@ -58,8 +61,8 @@ public slots:
     bool PaintEvent(QPaintEvent * event, nsWidget * widget);
     bool KeyPressEvent(QKeyEvent * event, nsWidget * widget);
     bool KeyReleaseEvent(QKeyEvent * event, nsWidget * widget);
-    bool FocusInEvent(QWidget * widget);
-    bool FocusOutEvent(QWidget * widget);
+    bool FocusInEvent(QFocusEvent * event, nsWidget * widget);
+    bool FocusOutEvent(QFocusEvent * event, nsWidget * widget);
     bool ScrollbarValueChanged(int value);
     bool TextChangedEvent(const QString & string);
 
