@@ -87,7 +87,6 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
 {
   if (nsnull != aParent) {
     mColor = aParent->mColor;
-    mOpacity = aParent->mOpacity;
   }
   else {
     if (nsnull != aPresContext) {
@@ -96,8 +95,9 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
     else {
       mColor = NS_RGB(0x00, 0x00, 0x00);
     }
-    mOpacity = 1.0F;
   }
+
+  mOpacity = 1.0f;
 
   mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT;

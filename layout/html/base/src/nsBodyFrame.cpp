@@ -872,7 +872,7 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
                nsnull, nsnull, zIndex, pClip);
     viewManager->InsertChild(containingView, view, 0);
     //XXX this needs to be conditional...
-    viewManager->SetViewContentTransparency(view, PR_TRUE);
+    viewManager->SetViewContentTransparency(view, PR_FALSE);
     viewManager->SetViewOpacity(view, color->mOpacity);
     NS_RELEASE(viewManager);
   }
