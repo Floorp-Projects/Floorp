@@ -918,8 +918,10 @@ nsDll* nsComponentManagerImpl::CreateCachedDll(const char *persistentDescriptor,
 
 nsDll* nsComponentManagerImpl::CreateCachedDll(nsIFileSpec *dllSpec)
 {
+    nsDll *dll = NULL;
     PRUint32 modDate;
     PRUint32 size;
+
     if (NS_FAILED(dllSpec->GetModDate(&modDate)) ||
         NS_FAILED(dllSpec->GetFileSize(&size)))
         return NULL;
@@ -927,7 +929,10 @@ nsDll* nsComponentManagerImpl::CreateCachedDll(nsIFileSpec *dllSpec)
     char *persistentDescriptor = NULL;
     if (NS_FAILED(dllSpec->GetPersistentDescriptorString(&persistentDescriptor)))
         return NULL;
-    return CreateCachedDll(persistentDescriptor, modDate, size);
+    dll = CreateCachedDll(persistentDescriptor, modDate, size);
+    nsCRT::free(persistentDescriptor);
+
+    return dll;
 }
 
 
@@ -1732,6 +1737,8 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when, nsIFileSpec *inDirSp
     printf("nsComponentManager: Autoregistration ends. dir = %s\n", nativePath);
 #endif /* DEBUG */
 
+    nsCRT::free(nativePath);
+
     return rv;
 }
 
@@ -1840,7 +1847,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
             break;
         }
     }
-    if (leafName) delete [] leafName;
+    if (leafName) nsCRT::free(leafName);
     	
     if (validExtension == PR_FALSE)
     {
@@ -1852,7 +1859,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
     char *persistentDescriptor = NULL;
     rv = component->GetPersistentDescriptorString(&persistentDescriptor);
     if (NS_FAILED(rv)) return rv;
-    autoFree delete_persistentDescriptor(persistentDescriptor, autoFree::Cplusplus_Array_Delete);
+    autoFree delete_persistentDescriptor(persistentDescriptor, autoFree::nsCRT_String_Delete);
     nsCStringKey key(persistentDescriptor);
 
     // Check if dll is one that we have already seen
