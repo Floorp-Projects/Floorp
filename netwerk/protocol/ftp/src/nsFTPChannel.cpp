@@ -374,7 +374,7 @@ nsFTPChannel::GetContentType(char* *aContentType) {
         rv = NS_OK;
     }
 
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::NewChannel() returned %s\n", *aContentType));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::GetContentType() returned %s\n", *aContentType));
 
     return rv;
 }
