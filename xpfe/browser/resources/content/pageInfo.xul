@@ -83,7 +83,7 @@
     </box>
     
     <box id="formtreecontainer" flex="1" orient="vertical" collapsed="true">
-    <text class="header label" value="Forms on this page"/>
+    <text class="header label" value="&pageInfo.formHeader;"/>
       <tree id="forms_tree" class="inset" flex="1">
         <treecolgroup>
           <treecol flex="2"/>
@@ -107,7 +107,7 @@
 
     <box id="image_items" orient="vertical" flex="1" collapsed="true">
 	    <box id="imagetreecontainer" flex="1" orient="vertical">
-	    <text class="header label" value="Images on this page"/>
+	    <text class="header label" value="&pageInfo.imageHeader;"/>
 	      <tree id="images_tree" class="inset" onselect="onImageSelect()" flex="1">
 	        <treecolgroup>
 	          <treecol flex="8"/>
