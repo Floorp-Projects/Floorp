@@ -39,8 +39,12 @@ package org.mozilla.javascript;
 
 /**
  * Embeddings that wish to provide their own custom wrappings for Java
- * objects may extend this call and call Context.setWrapFactory.
- * XXX
+ * objects may extend this class and call Context.setWrapFactory.
+ * Once an instance of this class or an extension of this class is enabled
+ * for a given context (by calling setWrapFactory on that context), Rhino 
+ * will call the methods of this class whenever it needs to wrap a value
+ * resulting from a call to a Java method or an access to a Java field.
+ *
  * @see org.mozilla.javascript.Context#setWrapFactory(WrapFactory)
  * @since 1.5 Release 4
  */
