@@ -2771,13 +2771,12 @@ js_Interpret(JSContext *cx, jsval *result)
             VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &ltmp);
             VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rtmp);
             if ((cond = JSVAL_IS_STRING(ltmp)) || JSVAL_IS_STRING(rtmp)) {
+                SAVE_SP(fp);
                 if (cond) {
                     str = JSVAL_TO_STRING(ltmp);
-                    SAVE_SP(fp);
                     ok = (str2 = js_ValueToString(cx, rtmp)) != NULL;
                 } else {
                     str2 = JSVAL_TO_STRING(rtmp);
-                    SAVE_SP(fp);
                     ok = (str = js_ValueToString(cx, ltmp)) != NULL;
                 }
                 if (!ok)
