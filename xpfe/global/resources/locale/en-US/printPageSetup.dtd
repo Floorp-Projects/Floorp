@@ -34,6 +34,12 @@
 <!ENTITY hfLeft.label        "Left:">
 <!ENTITY hfCenter.label      "Center:">
 <!ENTITY hfRight.label       "Right:">
+<!ENTITY headerLeft.tip      "Left header">
+<!ENTITY headerCenter.tip    "Center header">
+<!ENTITY headerRight.tip     "Right header">
+<!ENTITY footerLeft.tip      "Left footer">
+<!ENTITY footerCenter.tip    "Center footer">
+<!ENTITY footerRight.tip     "Right footer">
 
 <!ENTITY hfTitle             "Title">
 <!ENTITY hfTitle.code        "[&amp;T]">
