@@ -1896,6 +1896,10 @@ void CDCCX::EraseBackground(MWContext *pContext, int iLocation,
 			    int32 x, int32 y, uint32 width, uint32 height,
 			    LO_Color *pColor)
 {
+#ifdef EDITOR
+    if( EDT_IS_EDITOR(pContext) )
+        WFE_HideEditCaret(pContext);
+#endif
 	HDC hdc = GetContextDC();
 	int32 orgX = GetOriginX();
 	int32 orgY = GetOriginY();
@@ -1912,6 +1916,10 @@ void CDCCX::EraseBackground(MWContext *pContext, int iLocation,
 				pColor);
 
 	ReleaseContextDC(hdc);
+#ifdef EDITOR
+    if( EDT_IS_EDITOR(pContext) )
+        WFE_ShowEditCaret(pContext);
+#endif
 }
 #endif /* LAYERS */
 

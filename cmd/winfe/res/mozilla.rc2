@@ -702,7 +702,10 @@ BEGIN
 			MENUITEM SEPARATOR
 			MENUITEM "A&bout Privacy",              ID_PRIVACY_DISPLAY_TUTORIAL
 		END
-
+#ifdef DEBUG_cmanske
+	    MENUITEM SEPARATOR
+        MENUITEM "&Freeze Window Contents"      ID_TOGGLE_FREEZE_FRAME
+#endif
 	    MENUITEM SEPARATOR
 #ifdef XP_WIN16
 	    MENUITEM "New Window"                       ID_WINDOW_WINDOW_0

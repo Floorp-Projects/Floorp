@@ -193,6 +193,7 @@
 #define IDS_INVALID_EMAIL               178
 #define IDS_READNEWS_STATIC2            179
 #define IDS_PE_ACCT_SETUP               180
+#define ID_TOGGLE_FREEZE_FRAME          181
 #define IDB_IMAGE_DELAYED               184
 #define IDB_IMAGE_BAD                   185
 #define IDB_IMAGE_NOTFOUND              186

@@ -23,7 +23,9 @@
 #include "prefuiid.h"
 #include "isppageo.h"
 #include <assert.h>
-#define NUM_EDITOR_PAGES 3
+// Note: Code for a 3rd page was kept (resource deleted)
+//       in case we want to add more latter
+#define NUM_EDITOR_PAGES 2
 
 // Create a new instance of our derived class and return it.
 CComDll *
@@ -133,7 +135,7 @@ CEditorCategory::GetPageObjects(CAPPAGE *pPages)
 
 	pPages->pElems[0] = new CEditorPrefs;
 	pPages->pElems[1] = new CPublishPrefs;
-	pPages->pElems[2] = new CEditorPrefs2;
+//	pPages->pElems[2] = new CEditorPrefs2;
 	
 	for (ULONG i = 0; i < pPages->cElems; i++)
 		pPages->pElems[i]->AddRef();

@@ -213,6 +213,7 @@ CGenericFrame::CGenericFrame()
 	else
 		capStyle = DT_LEFT;             // for NT 4.0 and Win95
 #endif
+    m_bFreezeFrame = FALSE;
 }
 
 
@@ -880,7 +881,6 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 	ON_COMMAND(ID_COMMAND_PAGE_FROM_WIZARD, OnPageFromWizard)
     ON_REGISTERED_MESSAGE(WM_HELPMSG, OnHelpMsg)
 
-
 #ifdef ON_COMMAND_RANGE
 	ON_COMMAND_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnToggleEncoding)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnUpdateEncoding)
@@ -927,6 +927,8 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 #ifdef DEBUG_WHITEBOX
 	ON_COMMAND(IDS_WHITEBOX_MENU, OnWhiteBox)
 #endif
+    ON_COMMAND(ID_TOGGLE_FREEZE_FRAME, OnToggleFreezeFrame)
+	ON_UPDATE_COMMAND_UI(ID_TOGGLE_FREEZE_FRAME, OnUpdateToggleFreezeFrame)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -3391,6 +3393,17 @@ LONG CGenericFrame::OnHackedMouseWheel(WPARAM wParam, LPARAM lParam)
 }
 #endif
 
+void CGenericFrame::OnToggleFreezeFrame()
+{ 
+    m_bFreezeFrame = !m_bFreezeFrame;
+}
+
+void CGenericFrame::OnUpdateToggleFreezeFrame( CCmdUI *pCmdUI )
+{
+    pCmdUI->SetCheck(m_bFreezeFrame);
+	pCmdUI->Enable(TRUE);
+}
+
 // Call to start a new Browser window with supplied URL
 //  or load homepage if none supplied
 
@@ -3411,5 +3424,3 @@ MWContext * wfe_CreateNavigator(char * pUrl)
     // Always create a new context 
     return CFE_CreateNewDocWindow(NULL, pUrlStruct );
 }
-
-

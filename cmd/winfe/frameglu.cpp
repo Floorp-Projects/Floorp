@@ -173,12 +173,6 @@ void CFrameGlue::RemoveActiveContextCB(ActiveContextCB cb)
     }
 }
 
-// Override to test if frame is an editor
-BOOL CFrameGlue::IsEditFrame() 
-{
-    return(FALSE);
-}
-
 CPtrList CFrameGlue::m_cplActiveNotifyCBList;
 
 //	Add to the top of the stack of active frames.
@@ -229,7 +223,12 @@ CFrameGlue *CFrameGlue::GetLastActiveFrame(MWContextType cxType, int nFindEditor
 	POSITION rIndex = m_cplActiveFrameStack.GetHeadPosition();
 	while(rIndex != NULL)	{
 		pRetval = (CFrameGlue *)m_cplActiveFrameStack.GetNext(rIndex);
-		
+        // Skip over frames designated as "frozen"
+        if( ((CGenericFrame*)pRetval)->IsFrozenFrame() ) {
+            pRetval = NULL;
+            continue;
+        }
+
 		//	See if we can get the type from the context, and verify the type.
 		if(pRetval->GetMainContext() != NULL)	{
 			MWContextType cxRetType = pRetval->GetMainContext()->GetContext()->type;

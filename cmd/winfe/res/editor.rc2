@@ -84,7 +84,7 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "Select &All\tCtrl+A",            ID_EDIT_SELECTALL
 	    MENUITEM SEPARATOR
-	    MENUITEM "&Find in Page...\tCtrl+F",       ID_EDIT_FINDINCURRENT
+	    MENUITEM "&Find/Replace in Page...\tCtrl+F",    ID_EDIT_FINDINCURRENT
 	    MENUITEM "Find A&gain\tF3",                ID_EDIT_FINDAGAIN
 	    // Restore when implemented:
 	    // MENUITEM "&Replace...",                 ID_EDT_FINDREPLACE
@@ -470,7 +470,7 @@ BEGIN
 	    MENUITEM SEPARATOR
 	    MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECTALL
 	    MENUITEM SEPARATOR
-	    MENUITEM "&Find in Message\tCtrl+F",    ID_EDIT_FINDINCURRENT
+	    MENUITEM "&Find/Replace in Message\tCtrl+F",    ID_EDIT_FINDINCURRENT
 	    MENUITEM "Find A&gain\tCtrl+G",         ID_EDIT_FINDAGAIN
 	MENUITEM SEPARATOR
 	MENUITEM "Name Completion",				ID_TOGGLENAMECOMPLETION

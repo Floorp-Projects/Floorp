@@ -389,7 +389,14 @@ protected:
 #ifdef DEBUG_WHITEBOX
 	afx_msg void OnWhiteBox();
 #endif
+    afx_msg void OnToggleFreezeFrame();
+	afx_msg void OnUpdateToggleFreezeFrame( CCmdUI *pCmdUI );
 	DECLARE_MESSAGE_MAP()
+
+public:
+    BOOL IsFrozenFrame() {return m_bFreezeFrame; }
+private:
+    BOOL m_bFreezeFrame;
 
 #ifdef EDITOR
 public:

@@ -130,15 +130,6 @@ BEGIN
     EDITTEXT        IDC_PUBLISH_HTTP,17,170,224,12,ES_AUTOHSCROLL
 END
 
-IDD_PREF_EDITOR2 DIALOG DISCARDABLE  0, 0, 186, 94
-STYLE WS_CHILD | WS_CLIPSIBLINGS
-FONT 8, "MS Sans Serif"
-BEGIN
-    CONTROL         "Page Up/Down Moves Cursor",IDC_PAGEUPDOWN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,7,111,10
-END
-
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
@@ -151,14 +142,6 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 248
         BOTTOMMARGIN, 186
-    END
-
-    IDD_PREF_EDITOR2, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 179
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 87
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -176,7 +159,6 @@ BEGIN
     IDS_APP_FILTER          "Executable (*.exe)\n*.exe\nAll Files (*.*)\n*.*\n\n"
     IDS_CHOOSE_HTML_EDITOR  "Choose HTML Editor Application"
     IDS_CHOOSE_IMAGE_EDITOR "Choose Image Editor Application"
-    IDD_PREF_EDITOR2        "Navigational\nSet general navigational preferences for authoring Web pages"
 END
 
 #endif    // English (U.S.) resources

@@ -79,8 +79,8 @@ public:
 
 	void ClearContext(CAbstractCX *pGone);
 	
-    // Override this in Editors to return TRUE. Default = FALSE
-    virtual BOOL IsEditFrame();
+    // Override this in Editor Frame to return TRUE.
+    virtual BOOL IsEditFrame() {return FALSE; }
 
 protected:
 	IChrome	*m_pChrome;
