@@ -159,7 +159,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRUnichar* bufEnd = mBuffer + mBufferLength;
 
   const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = frag + mNumFrags;
+  const nsTextFragment* lastFrag = mFrags + mNumFrags;
 
   // Set the isWhitespace flag by examining the next character in the
   // text fragment.
@@ -546,7 +546,7 @@ nsTextTransformer::GetNextSection(PRInt32& aLineLenResult,
   PRUnichar* bufEnd = mBuffer + mBufferLength;
 
   const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = frag + mNumFrags;
+  const nsTextFragment* lastFrag = mFrags + mNumFrags;
   PRInt32 contentLen = 0;
   PRInt32 lineLen = 0;
 
