@@ -33,6 +33,7 @@ var gOfflineManager;
 var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gPrintSettings = null;
+var gWindowReuse  = 0;
 
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
@@ -172,6 +173,10 @@ function view_init()
       thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
   }
 
+  // Initialize the View Attachment Inline menu
+  var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
+  document.getElementById("viewAttachmentsInlineMenuitem").setAttribute("checked", viewAttachmentInline ? "true" : "false");
+
   document.commandDispatcher.updateCommands('create-menu-view');
 }
 
@@ -197,7 +202,7 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortByThreadMenuitem", (sortType == nsMsgViewSortType.byThread));
     setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
     setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
-    setSortByMenuItemCheckState("sortByScoreMenuitem", (sortType == nsMsgViewSortType.byScore));
+    setSortByMenuItemCheckState("sortByJunkStatusMenuitem", (sortType == nsMsgViewSortType.byJunkStatus));
  
     // the Sender / Recipient menu is dynamic
     setSortByMenuItemCheckState("sortBySenderOrRecipientMenuitem", (sortType == nsMsgViewSortType.byAuthor) || (sortType == nsMsgViewSortType.byRecipient));
@@ -217,6 +222,9 @@ function InitViewSortByMenu()
 
     setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
     setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
+
+    var threadMenuItem = document.getElementById("sortByThreadMenuitem");
+    threadMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
 }
 
 function InitViewMessagesMenu()
@@ -337,69 +345,14 @@ function InitViewHeadersMenu()
     menuitem.setAttribute("checked", "true"); 
 }
 
-function InitViewBodyMenu()
-{
-  var html_as = 0;
-  var prefer_plaintext = false;
-  var disallow_classes = 0;
-  try
-  {
-    prefer_plaintext = pref.getBoolPref("mailnews.display.prefer_plaintext");
-    html_as = pref.getIntPref("mailnews.display.html_as");
-    disallow_classes =
-                    pref.getIntPref("mailnews.display.disallow_mime_handlers");
-    if (disallow_classes > 0)
-      disallow_classes_no_html = disallow_classes;
-    // else disallow_classes_no_html keeps its inital value (see top)
-  }
-  catch (ex)
-  {
-    dump("failed to get the body plaintext vs. HTML prefs\n");
-  }
-
-  var AllowHTML_checked = false;
-  var Sanitized_checked = false;
-  var AsPlaintext_checked = false;
-  if (prefer_plaintext == false && html_as == 0 && disallow_classes == 0)
-    AllowHTML_checked = true;
-  else if (prefer_plaintext == false && html_as == 3 && disallow_classes > 0)
-    Sanitized_checked = true;
-  else if (prefer_plaintext == true && html_as == 1 && disallow_classes > 0)
-    AsPlaintext_checked = true;
-  // else (the user edited prefs/user.js) check none of the radio menu items
-
-  var AllowHTML_menuitem = document.getElementById("bodyAllowHTML");
-  var Sanitized_menuitem = document.getElementById("bodySanitized");
-  var AsPlaintext_menuitem = document.getElementById("bodyAsPlaintext");
-  if (AllowHTML_menuitem
-      && Sanitized_menuitem
-      && AsPlaintext_menuitem)
-  {
-    AllowHTML_menuitem.setAttribute("checked",
-                                    AllowHTML_checked ? "true" : "false");
-    Sanitized_menuitem.setAttribute("checked",
-                                      Sanitized_checked ? "true" : "false");
-    AsPlaintext_menuitem.setAttribute("checked",
-                                      AsPlaintext_checked ? "true" : "false");
-  }
-  else
-    dump("Where is my View|Body menu?\n");
-}
-
 function IsNewsMessage(messageUri)
 {
-    if (!messageUri) 
-      return false;
-    else 
-      return (messageUri.substring(0,14) == "news-message:/");
+  return (/^news-message:/.test(messageUri));
 }
 
 function IsImapMessage(messageUri)
 {
-    if (!messageUri) 
-      return false;
-    else
-      return (messageUri.substring(0,14) == "imap-message:/");
+  return (/^imap-message:/.test(messageUri));
 }
 
 function SetMenuItemLabel(menuItemId, customLabel)
@@ -506,6 +459,25 @@ function InitMessageMark()
   document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
+function UpdateJunkToolbarButton()
+{
+  try 
+  {
+    var junkButton = document.getElementById("button-junk");
+    if (SelectedMessagesAreJunk())
+    {
+      junkButton.label = junkButton.getAttribute('notjunk_label');
+      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('notjunk_tooltiptext'));
+    }
+    else
+    {
+      junkButton.label = junkButton.getAttribute('junk_label');
+      junkButton.setAttribute('tooltiptext', junkButton.getAttribute('junk_tooltiptext'));
+    }
+  } 
+  catch(e) {}
+}
+
 function UpdateDeleteCommand()
 {
   var value = "value";
@@ -537,8 +509,8 @@ function SelectedMessagesAreJunk()
 {
     var isJunk;
     try {
-        var score = gDBView.hdrForFirstSelectedMessage.getStringProperty("score");
-        isJunk =  ((score != "") && (score != "0"));
+        var junkScore = gDBView.hdrForFirstSelectedMessage.getStringProperty("junkscore");
+        isJunk =  ((junkScore != "") && (junkScore != "0"));
     }
     catch (ex) {
         isJunk = false;
@@ -963,10 +935,8 @@ function MsgNewFolder(callBackFunctionName)
             dump ("Exception: dualUseFolders = true\n");
         }
     }
-
     CreateNewSubfolder("chrome://messenger/content/newFolderDialog.xul", destinationFolder, dualUseFolders, callBackFunctionName);
 }
-
 
 function getDestinationFolder(preselectedFolder, server)
 {
@@ -986,10 +956,7 @@ function getDestinationFolder(preselectedFolder, server)
         if (!verifyCreateSubfolders)
         {
             try {
-                var account = accountManager.defaultAccount;
-                var defaultServer = account.incomingServer;
-                var defaultFolder = defaultServer.rootMsgFolder;
-
+                var defaultFolder = GetDefaultAccountRootFolder();
                 var checkCreateSubfolders = null;
                 if (defaultFolder)
                     checkCreateSubfolders = defaultFolder.canCreateSubfolders;
@@ -1084,9 +1051,81 @@ function MsgOpenSelectedMessages()
 
   var indices = GetSelectedIndices(dbView);
   var numMessages = indices.length;
-  for (var i = 0; i < numMessages; i++) {
-    MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
+
+  gWindowReuse = gPrefs.getBoolPref("mailnews.reuse_message_window");
+  // This is a radio type button pref, currently with only 2 buttons.
+  // We need to keep the pref type as 'bool' for backwards compatibility
+  // with 4.x migrated prefs.  For future radio button(s), please use another
+  // pref (either 'bool' or 'int' type) to describe it.
+  //
+  // gWindowReuse values: false, true
+  //    false: open new standalone message window for each message
+  //    true : reuse existing standalone message window for each message
+  if ((gWindowReuse) && (numMessages == 1)) {
+      if (!MsgOpenExistingWindowForMessage(dbView.getURIForViewIndex(indices[0]))) {
+          MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[0]),dbView.getFolderForViewIndex(indices[0]).URI);
+      }
+  } else {
+      for (var i = 0; i < numMessages; i++) {
+          MsgOpenNewWindowForMessage(dbView.getURIForViewIndex(indices[i]),dbView.getFolderForViewIndex(indices[i]).URI);
+      }
   }
+}
+
+function MsgOpenExistingWindowForMessage(aMessageUri)
+{
+    var messageUri;
+    var msgHdr = null;
+    var windowID = GetWindowByWindowType("mail:messageWindow");
+
+    if (!windowID)
+      return false;
+
+    if (!aMessageUri) {
+        var currentIndex = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView).outlinerView.selection;
+        messageUri = gDBView.getURIForViewIndex(currentIndex);
+    }
+    else
+        messageUri = aMessageUri;
+
+    // be sure to pass in the current view....
+    if (!messageUri)
+        return false;
+
+    try {
+        msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+        if (!msgHdr)
+            return false;
+
+        // even if the folder uri's match, we can't use the existing view
+        // (msgHdr.folder.URI == windowID.gCurrentFolderUri)
+        // the reason is quick search and mail views.
+        // see bug #187673
+        //
+        // for the sake of simplicity,
+        // let's always call CreateView(gDBView)
+        // which will clone gDBView
+        if ("CreateView" in windowID) {
+          // Reset the window's message uri and folder uri vars, and
+          // update the command handlers to what's going to be used.
+          // This has to be done before the call to CreateView().
+          windowID.gCurrentMessageUri = messageUri;
+          windowID.gCurrentFolderUri = msgHdr.folder.URI;
+          windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
+          windowID.CreateView(gDBView);
+          windowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+        }
+        else
+          return false;
+    }
+    catch (ex) {
+        dump("reusing existing standalone message window failed: " + ex + "\n");
+        return false;
+    }
+
+    // bring existing window to front
+    windowID.focus();
+    return true;
 }
 
 function MsgOpenNewWindowForMessage(messageUri, folderUri)
@@ -1276,33 +1315,14 @@ function MsgViewBriefHeaders()
     return true;
 }
 
-function MsgBodyAllowHTML()
-{
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
-    gPrefs.setIntPref("mailnews.display.html_as", 0);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", 0);
-    MsgReload();
-    return true;
-}
 
-function MsgBodySanitized()
+function ToggleInlineAttachment(target)
 {
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
-    gPrefs.setIntPref("mailnews.display.html_as", 3);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
-                      disallow_classes_no_html);
+    var viewAttachmentInline = !pref.getBoolPref("mail.inline_attachments");
+    pref.setBoolPref("mail.inline_attachments", viewAttachmentInline)
+    target.setAttribute("checked", viewAttachmentInline ? "true" : "false");
+    
     MsgReload();
-    return true;
-}
-
-function MsgBodyAsPlaintext()
-{
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", true);
-    gPrefs.setIntPref("mailnews.display.html_as", 1);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
-                      disallow_classes_no_html);
-    MsgReload();
-    return true;
 }
 
 function MsgReload()
@@ -1364,11 +1384,8 @@ function GetPrintSettings()
   return gPrintSettings;
 }
 
-function PrintEnginePrint()
+function PrintEnginePrintInternal(messageList, numMessages, doPrintPreview, msgType)
 {
-    var messageList = GetSelectedMessages();
-    var numMessages = messageList.length;
-
     if (numMessages == 0) {
         dump("PrintEnginePrint(): No messages selected.\n");
         return false;
@@ -1377,12 +1394,24 @@ function PrintEnginePrint()
     if (gPrintSettings == null) {
       gPrintSettings = GetPrintSettings();
     }
-
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                           "",
                                           "chrome,dialog=no,all,centerscreen",
-                                          numMessages, messageList, statusFeedback, gPrintSettings);
+                                          numMessages, messageList, statusFeedback, gPrintSettings, doPrintPreview, msgType, window);
     return true;
+
+}
+
+function PrintEnginePrint()
+{
+    var messageList = GetSelectedMessages();
+    return PrintEnginePrintInternal(messageList, messageList.length, false, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINT_MSG);
+}
+
+function PrintEnginePrintPreview()
+{
+    var messageList = GetSelectedMessages();
+    return PrintEnginePrintInternal(messageList, 1, true, Components.interfaces.nsIMsgPrintEngine.MNAB_PRINTPREVIEW_MSG);
 }
 
 function IsMailFolderSelected()
@@ -1406,25 +1435,13 @@ function IsMailFolderSelected()
 
 function IsGetNewMessagesEnabled()
 {
-    var selectedFolders = GetSelectedMsgFolders();
-    var numFolders = selectedFolders.length;
-    if(numFolders !=1)
-        return false;
-
-    var folder = selectedFolders[0];
-    if (!folder)
-        return false;
-
-    var server = folder.server;
-    var isServer = folder.isServer;
-    var serverType = server.type;
-
-    if(isServer && (serverType == "nntp"))
-        return false;
-    else if(serverType == "none")
-        return false;
-    else
-        return true;
+  // users don't like it when the "Get Msgs" button is disabled
+  // so let's never do that. 
+  // we'll just handle it as best we can in GetFolderMessages()
+  // when they click "Get Msgs" and
+  // Local Folders or a news server is selected
+  // see bugs #89404 and #111102
+  return true;
 }
 
 function IsGetNextNMessagesEnabled()
@@ -1489,7 +1506,7 @@ var gMarkButton = null;
 
 function SetUpToolbarButtons(uri)
 {
-    // dump("SetUpToolbarButtons("+uri+")\n");
+    //dump("SetUpToolbarButtons("+uri+")\n");
 
     // eventually, we might want to set up the toolbar differently for imap,
     // pop, and news.  for now, just tweak it based on if it is news or not.
@@ -1565,16 +1582,28 @@ function MsgGoForward() {}
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 
-function SpaceHit()
+function SpaceHit(event)
 {
   var contentWindow = window.top._content;
   var oldScrollY = contentWindow.scrollY;
 
-  contentWindow.scrollByPages(1);
+  var numPages;
+  var command;
 
-  // if at the end of the message, go to the next one
+  if (event && event.shiftKey) {
+    numPages = -1;
+    command = "cmd_previousUnreadMsg";
+  }
+  else {
+    numPages = 1;
+    command = "cmd_nextUnreadMsg";
+  }
+
+  contentWindow.scrollByPages(numPages);
+
+  // if at the end (or start) of the message, go to the next one
   if (oldScrollY == contentWindow.scrollY) {
-    goDoCommand('cmd_nextUnreadMsg');
+    goDoCommand(command);
   }
 }
 
@@ -1635,23 +1664,66 @@ function PromptSendMessagesOffline()
   return buttonPressed;
 }
 
+function GetDefaultAccountRootFolder()
+{
+  try {
+    var account = accountManager.defaultAccount;
+    var defaultServer = account.incomingServer;
+    var defaultFolder = defaultServer.rootMsgFolder;
+    return defaultFolder;
+  }
+  catch (ex) {
+  }
+  return null;
+}
+
 function GetFolderMessages()
 {
-  var folders = GetSelectedMsgFolders();
+  var selectedFolders = GetSelectedMsgFolders();
+  var defaultAccountRootFolder = GetDefaultAccountRootFolder();
+  
+  // if no default account, get msg isn't going do anything anyways
+  // so bail out
+  if (!defaultAccountRootFolder)
+    return;
+
+  // if nothing selected, use the default
+  var folder = selectedFolders.length ? selectedFolders[0] : defaultAccountRootFolder;
+
+  var serverType = folder.server.type;
+
+  if (folder.isServer && (serverType == "nntp")) {
+    // if we're doing "get msgs" on a news server
+    // update unread counts on this server
+    folder.server.performExpand(msgWindow);
+    return;
+  }
+  else if (serverType == "none") {
+    // if "Local Folders" is selected
+    // and the user does "Get Msgs"
+    // get new mail for the default account
+    //
+    // XXX TODO
+    // should shift click get mail for all (authenticated) accounts?
+    // see bug #125885
+    folder = defaultAccountRootFolder;
+  }
+
+  var folders = new Array(1);
+  folders[0] = folder;
+
   var compositeDataSource = GetCompositeDataSource("GetNewMessages");
   GetNewMessages(folders, compositeDataSource);
 }
 
 function SendUnsentMessages()
 {
-  var am = Components.classes["@mozilla.org/messenger/account-manager;1"]
-               .getService(Components.interfaces.nsIMsgAccountManager);
   var msgSendlater = Components.classes["@mozilla.org/messengercompose/sendlater;1"]
                .getService(Components.interfaces.nsIMsgSendLater);
   var identitiesCount, allIdentities, currentIdentity, numMessages, msgFolder;
 
-  if(am) { 
-    allIdentities = am.allIdentities;
+  if (accountManager) { 
+    allIdentities = accountManager.allIdentities;
     identitiesCount = allIdentities.Count();
     for (var i = 0; i < identitiesCount; i++) {
       currentIdentity = allIdentities.QueryElementAt(i, Components.interfaces.nsIMsgIdentity);
@@ -1760,11 +1832,54 @@ function SetupUndoRedoCommand(command)
     return canUndoOrRedo;
 }
 
-function OnMsgLoaded(folder, msgURI)
+function HandleJunkStatusChanged(folder)
 {
+  if (IsCurrentLoadedFolder(folder)) {
+    var messageURI = GetLoadedMessage();
+    // if multiple message are selected
+    // and we change the junk status
+    // we don't want to show the junk bar
+    // (since the message pane is blank)
+    if (messageURI && (GetNumSelectedMessages() == 1))
+      SetUpJunkBar(messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI));
+    else
+      SetUpJunkBar(null);
+  }
+}
+
+function SetUpJunkBar(aMsgHdr)
+{
+  // XXX todo
+  // should this happen on the start, or at the end?
+  // if at the end, we might keep the "this message is junk" up for a while, until a big message is loaded
+  // or do we need to wait until here, to make sure the message is fully analyzed
+  // what about almost hiding it on the start, and then showing here?
+
+  var isJunk = false;
+  
+  if (aMsgHdr) {
+    var junkScore = aMsgHdr.getStringProperty("junkscore"); 
+    isJunk = ((junkScore != "") && (junkScore != "0"));
+  }
+  
+  var junkBar = document.getElementById("junkBar");
+  if (isJunk)
+    junkBar.removeAttribute("collapsed");
+  else
+    junkBar.setAttribute("collapsed","true");
+ 
+  goUpdateCommand('button_junk');
+}
+
+function OnMsgLoaded(folder, aMessageURI)
+{
+    var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
+    SetUpJunkBar(msgHdr);
+
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (!IsImapMessage(msgURI))
+    if (!IsImapMessage(aMessageURI))
       return;
+
     var imapServer = currentMsgFolder.server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
     var storeReadMailInPFC = imapServer.storeReadMailInPFC;
     if (storeReadMailInPFC)
@@ -1776,17 +1891,7 @@ function OnMsgLoaded(folder, msgURI)
       // look in read mail PFC for msg with same msg id - if we find one,
       // don't put this message in the read mail pfc.
       var outputPFC = imapServer.GetReadMailPFC(true);
-      var messageURI = GetLoadedMessage();
-      if (messageURI != msgURI)
-      {
-//        XXX TODO
-//        bienvenu tells me:  
-//        if you have two message windows open, you can get multiple attempts
-//        to copy into the pfc.  the second will fail and assert.
-          dump("not loading msg into this window - loaded message = " + messageURI + "loading " + msgURI + "\n");
-//        return;
-      }
-      var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
+
       if (msgHdr)
       {
         messageID = msgHdr.messageId;
@@ -1831,6 +1936,16 @@ function MsgJunkMail()
   OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
+function MsgJunkMailInfo()
+{
+  var desiredWindow = GetWindowByWindowType("mailnews:junkmailinfo");
+
+  if (desiredWindow)
+    desiredWindow.focus();
+  else
+    window.openDialog("chrome://messenger/content/junkMailInfo.xul", "mailnews:junkmailinfo", "centerscreen,resizeable=no,titlebar,chrome", null);
+}
+
 function MsgSearchAddresses()
 {
   var args = { directory: null };
@@ -1842,10 +1957,15 @@ function MsgFilterList(args)
   OpenOrFocusWindow(args, "mailnews:filterlist", "chrome://messenger/content/FilterListDialog.xul");
 }
 
-function OpenOrFocusWindow(args, windowType, chromeURL)
+function GetWindowByWindowType(windowType)
 {
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService(Components.interfaces.nsIWindowMediator);
-  var desiredWindow = windowManager.getMostRecentWindow(windowType);
+  return windowManager.getMostRecentWindow(windowType);
+}
+
+function OpenOrFocusWindow(args, windowType, chromeURL)
+{
+  var desiredWindow = GetWindowByWindowType(windowType);
 
   if (desiredWindow) {
     desiredWindow.focus();
@@ -1856,3 +1976,11 @@ function OpenOrFocusWindow(args, windowType, chromeURL)
     window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
 }
 
+function loadThrobberUrl(urlPref)
+{
+    var url;
+    try {
+        url = gPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
+        messenger.loadURL(window, url);  
+    } catch (ex) {}
+}

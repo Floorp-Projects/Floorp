@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+
+
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
+<?xml-stylesheet href="chrome://messenger/skin/searchDialog.css" type="text/css"?>
+
+<?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
+<?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+        onload="searchOnLoad();"
+        onunload="searchOnUnload();"
+        onclose="onSearchStop();"
+        windowtype="mailnews:search"
+        title="&searchDialogTitle.label;"
+        width="640" height="470"
+        persist="screenX screenY width height">
+
+  <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+  <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <!-- XXX: only mailWidgets.xml requires strres.js (<script> isn't valid in XBL yet - see hyatt)-->
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script src="chrome://messenger/content/mailWindow.js"/>
+  <script src="chrome://messenger/content/threadPane.js"/>
+  <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://messenger/content/mailCommands.js"/>
+  <script src="chrome://messenger/content/mailWindowOverlay.js"/>
+  <script src="chrome://messenger/content/commandglue.js"/>
+  <script src="chrome://messenger/content/SearchDialog.js"/>
+  <script type="application/x-javascript" src="chrome://messenger/content/messengerdnd.js"/>
+  <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
+
+  <commands id="commands">
+    <commandset id="mailSearchItems"
+                commandupdater="true"
+                events="mail-search"
+                oncommandupdate="goUpdateSearchItems(this)">
+      <command id="cmd_open" oncommand="goDoCommand('cmd_open')" disabled="true"/>
+      <command id="button_delete" oncommand="goDoCommand('button_delete')" disabled="true"/>
+      <command id="goto_folder_button" oncommand="goDoCommand('goto_folder_button')" disabled="true"/>
+      <command id="file_message_button"/>
+      <command id="cmd_delete"/>
+    </commandset>
+  </commands>
+
+  <keyset id="mailKeys">
+    <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
+    <key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete');"/>
+  </keyset>
+
+  <broadcasterset id="mailBroadcasters">
+    <broadcaster id="Communicator:WorkMode"/>
+  </broadcasterset>
+
+  <dummy class="usesMailWidgets"/>
+    
+    <vbox flex="1">
+      <vbox>
+         <hbox align="center">
+         <label value="&searchHeading.label;" accesskey="&searchHeading.accesskey;"
+                control="searchableFolders"/>
+         <menulist id="searchableFolders" flex="2"/>
+         <spacer flex="10"/>
+         <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);" default="true" accesskey="&searchButton.accesskey;"/>
+ 
+        </hbox>
+        <hbox align="center">
+           <spacer flex="2"/>
+           <button label="&resetButton.label;" oncommand="onResetSearch(event);" accesskey="&resetButton.accesskey;"/>
+         </hbox>
+         <hbox align="center">
+           <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true" accesskey="&searchSubfolders.accesskey;"/>
+           <spacer flex="2"/>
+           <button label="&helpButton.label;" align="end" oncommand="openHelp('search_messages');" accesskey="&helpButton.accesskey;"/> 
+         </hbox>
+      </vbox>
+
+
+      <hbox flex="1">
+        <vbox id="searchTermListBox" flex="1"/>
+      </hbox>
+    </vbox>
+    
+    <splitter id="gray_horizontal_splitter" collapse="after" persist="state">
+      <grippy/>
+    </splitter>
+    
+    <vbox flex="1">
+       <vbox id="searchResultListBox" flex="1" >
+            <tree id="threadTree" flex="1" context="threadPaneContext"/>
+
+       </vbox>
+       <hbox align="start">
+            
+            <button label="&openButton.label;" id="openButton" command="cmd_open" accesskey="&openButton.accesskey;"/>
+            <button id="fileMessageButton" type="menu" label="&fileButton.label;"
+                    accesskey="&fileButton.accesskey;"
+                    observes="file_message_button"
+                    oncommand="MoveMessageInSearch(event.target)" 
+                    sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
+                    sortDirection="ascending"
+                    datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+                    ref="msgaccounts:/">
+        <menupopup/>
+        <template> 
+        <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+          <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                <menupopup>
+                  <menuitem file-uri="..." label="&fileHereMenu.label;" accesskey="&fileHereMenu.accesskey;" />
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule nc:CanFileMessagesOnServer="false">
+            <!-- don't show servers (nntp & any others) which does not allow message filing -->
+            <!-- File, Move & Copy menus -->
+          </rule>
+          <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                <menupopup/>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule nc:CanFileMessages="true">
+            <menupopup>
+              <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+            </menupopup>
+          </rule>
+        </template>
+      </button>
+
+      <button label="&deleteButton.label;" id="deleteButton" command="button_delete" accesskey="&deleteButton.accesskey;"/>
+      <button label="&goToFolderButton.label;" id="goToFolderButton" command="goto_folder_button" accesskey="&goToFolderButton.accesskey;" />
+      <spacer flex="1" />
+    </hbox>      
+  </vbox>
+
+  <statusbar class="chromeclass-status" id="status-bar"> 
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+    </statusbarpanel>
+    <statusbarpanel id="statusText" crop="right" flex="1"/>
+  </statusbar> 
+
+</window>
