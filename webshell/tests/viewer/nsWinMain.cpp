@@ -63,11 +63,10 @@ nsNativeViewerApp::Run()
 
   // Pump all messages
   do {
-    // Give priority to system messages (in particular keyboard, mouse,
+    // DO NOT Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
     // Note: on Win98 and NT 5.0 we can also use PM_QS_INPUT and PM_QS_PAINT flags.
-    if (::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
-      ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       keepGoing = (msg.message != WM_QUIT);
 

@@ -88,12 +88,9 @@ NS_METHOD nsAppShell::Run(void)
 
   // Process messages
   do {
-    // Give priority to system messages (in particular keyboard, mouse,
+    // DO NOT Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
-        ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       keepGoing = (msg.message != WM_QUIT);
 
