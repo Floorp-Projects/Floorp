@@ -48,7 +48,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #define GFXWIN_DLL      "GFX_OS2"
 #define VIEW_DLL        "NGVIEW"
 #define WEB_DLL         "WEBSHELL"
-#define PLUGIN_DLL      "NGPLUGIN"
 #define PREF_DLL        "PREF"
 #define PARSER_DLL      "HTMLPARS"
 #define DOM_DLL         "JSDOM"
