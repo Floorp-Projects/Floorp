@@ -512,32 +512,6 @@ WinRegGetValue(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   return JS_TRUE;
 }
 
-//
-// Native method InstallObject
-//
-PR_STATIC_CALLBACK(JSBool)
-WinRegInstallObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsWinReg     *nativeThis = (nsWinReg*)JS_GetPrivate(cx, obj);
-  nsInstall    *nativeRet;
-  nsAutoString b0;
-  nsAutoString b1;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if(nsnull == nativeThis)
-  {
-    return JS_TRUE;
-  }
-
-  //  public int installObject ();
-
-  nativeRet = nativeThis->InstallObject();
-
-  *rval = INT_TO_JSVAL(nativeRet);
-  return JS_TRUE;
-}
 
 //
 // WinReg constructor
@@ -590,7 +564,6 @@ static JSFunctionSpec WinRegMethods[] =
   {"getValueNumber",            WinRegGetValueNumber,           2},
   {"setValue",                  WinRegSetValue,                 3},
   {"getValue",                  WinRegGetValue,                 2},
-  {"installObject",             WinRegInstallObject,            0},
   {0}
 };
 
