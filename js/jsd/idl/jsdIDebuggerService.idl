@@ -117,6 +117,7 @@ interface jsdIScript : nsISupports
      */
     [noscript] void invalidate(); 
 
+    readonly attribute boolean       isValid;
     readonly attribute boolean       isActive;
     readonly attribute string        fileName;
     readonly attribute string        functionName;
@@ -151,7 +152,10 @@ interface jsdIStackFrame : nsISupports
 
     jsdIValue eval (in AString bytes, in string fileName,
                     in unsigned long line);
-
+    /*
+    boolean eval (in AString bytes, in string fileName,
+                  in unsigned long line, out result);
+    */
 };
 
 /*
@@ -260,6 +264,8 @@ interface jsdIDebuggerService : nsISupports
     attribute jsdIExecutionHook interruptHook;
     attribute jsdIScriptHook    scriptHook;
     attribute jsdIExecutionHook throwHook;
+
+    readonly attribute boolean isOn;
     
     void on ();  /* this function should only be called from js */
     [noscript] void onForRuntime (in JSRuntime rt); /* native version of on() */
