@@ -1,8 +1,8 @@
 <!-- extracted from content/openLocation.xul -->
 
 <!ENTITY enter.label "Enter the address (URL) of the Web page, file, or resource that you want to open."> 
-<!ENTITY chooseFile.label "Open File...">
-<!ENTITY chooseFile.accesskey "O">
+<!ENTITY chooseFile.label "Choose File...">
+<!ENTITY chooseFile.accesskey "o">
 <!ENTITY address.label "Address:">
 <!ENTITY address.accesskey "A">
 <!ENTITY newWindow.label "New Navigator window">

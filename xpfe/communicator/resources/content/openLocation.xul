@@ -22,6 +22,7 @@
   Contributor(s): 
     Ben Goodger <ben@netscape.com>
     Michael Lowe <michael.lowe@bigfoot.com> 
+    Håkan Waara <hwaara@chello.se>
 
 -->
 
@@ -70,6 +71,8 @@
                      onpopupshowing="createUBHistoryMenu(event.target);"
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
+        <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
+                oncommand="onChooseFile();"/>
       </hbox>
       <separator class="thin"/>
       <hbox flex="1" autostretch="never">
@@ -85,8 +88,6 @@
   </hbox> 
   <separator class="thin"/>
   <box valign="bottom" flex="1" autostretch="never">
-    <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
-            oncommand="onChooseFile();"/>
     <hbox flex="1" id="okCancelButtonsRight"/>
   </box>
            
