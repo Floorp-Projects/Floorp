@@ -381,13 +381,6 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
     return NS_OK;
   }
 
-  if (aNewURI.IsEmpty()) {
-    // Do not take down the already loaded image... (for compat with
-    // the old code that loaded images from frames)    
-    // XXXbz is this what we really want?
-    return NS_OK;
-  }
-
   nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
   // First, get a document (needed for security checks, base URI and the like)
