@@ -70,6 +70,9 @@ protected:
     nsXPIDLCString          mFTPProxyHost;
     PRInt32                 mFTPProxyPort;
 
+    nsXPIDLCString          mGopherProxyHost;
+    PRInt32                 mGopherProxyPort;
+
     nsXPIDLCString          mHTTPSProxyHost;
     PRInt32                 mHTTPSProxyPort;
     

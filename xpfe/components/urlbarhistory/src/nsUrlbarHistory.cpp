@@ -47,6 +47,7 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static char * ignoreArray[] = {
 		"http://",
 	    "ftp://",
+		"gopher://",
 		"www.",
 		"http://www.",
 		"https://",

@@ -43,6 +43,7 @@
       <template>
         <treechildren flex="1">
           <treeitem uri="..." persist="open"
+                    URL="rdf:http://home.netscape.com/NC-rdf#URL" 
                     type="rdf:http://home.netscape.com/NC-rdf#File-Type" 
                     loading="rdf:http://home.netscape.com/NC-rdf#loading" >
             <treerow>
@@ -83,7 +84,10 @@
 
       <!-- Create the treechildren here so we can attach event handlers
            at this level (rather than at the tree level -->
-      <treechildren flex="1" onclick="OnClick(event, event.target.parentNode.parentNode);" onkeypress="OnClick(event, event.target.parentNode.parentNode);"/>
+      <treechildren flex="1" onclick="OnClick(event, event.target.parentNode.parentNode);"
+		    onkeypress="OnClick(event, event.target.parentNode.parentNode);"
+		    onmouseover="OnMouseOver(event, event.target.parentNode.parentNode);"
+		    onmouseout="OnMouseOut(event, event.target.parentNode.parentNode);" />
 
   </tree>
 </window>

@@ -165,6 +165,24 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mFTPProxyPort = proxyPort;
     }
 
+    if (!pref || !PL_strcmp(pref, "network.proxy.gopher"))
+    {
+        mGopherProxyHost = "";
+        rv = mPrefs->CopyCharPref("network.proxy.gopher", 
+                                      getter_Copies(tempString));
+        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+            mGopherProxyHost = nsCRT::strdup(tempString);
+    }
+
+    if (!pref || !PL_strcmp(pref, "network.proxy.gopher_port"))
+    {
+        mGopherProxyPort = -1;
+        PRInt32 proxyPort = -1;
+        rv = mPrefs->GetIntPref("network.proxy.gopher_port",&proxyPort);
+        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+            mGopherProxyPort = proxyPort;
+    }
+
     if (!pref || !PL_strcmp(pref, "network.proxy.socks"))
     {
         mSOCKSProxyHost = "";
@@ -286,6 +304,14 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         if (NS_FAILED(rv)) return rv;
         aProxy->SetProxyType("http");
         return aProxy->SetProxyPort(mFTPProxyPort);
+    }
+
+    if (mGopherProxyHost.get()[0] && mGopherProxyPort > 0 &&
+        !PL_strcasecmp(scheme, "gopher")) {
+        rv = aProxy->SetProxyHost(mGopherProxyHost);
+        if (NS_FAILED(rv)) return rv;
+        aProxy->SetProxyType("http");
+        return aProxy->SetProxyPort(mGopherProxyPort);
     }
     
     if (mHTTPProxyHost.get()[0] && mHTTPProxyPort > 0 &&

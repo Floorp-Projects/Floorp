@@ -35,7 +35,13 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["networkProxyType", "networkProxyFTP", "networkProxyFTP_Port", "networkProxyHTTP",                        "networkProxyHTTP_Port", "networkProxySSL", "networkProxySSL_Port", "networkProxySOCKS",                        "networkProxySOCKS_Port", "networkProxyNone", "networkProxyAutoconfigURL"];
+    var _elementIDs = ["networkProxyType",
+	"networkProxyFTP", "networkProxyFTP_Port",
+	"networkProxyGopher", "networkProxyGopher_Port",
+	"networkProxyHTTP", "networkProxyHTTP_Port", 
+	"networkProxySSL", "networkProxySSL_Port", 
+	"networkProxySOCKS", "networkProxySOCKS_Port",
+	"networkProxyNone", "networkProxyAutoconfigURL"];
   ]]>
   </script>
         
@@ -70,6 +76,17 @@
                          prefattribute="value" flex="1"/>
               <text class="label" value="&port.label;" accesskey="&FTPport.accesskey;" for="networkProxyFTP_Port"/>
               <textfield id="networkProxyFTP_Port" pref="true" preftype="int" prefstring="network.proxy.ftp_port"
+                         prefattribute="value" size="5"/>
+            </box>
+          </row>
+          <row>
+            <text class="label" value="&gopher.label;" accesskey="&gopher.accesskey;" for="networkProxyGopher"/>
+            <box autostretch="never">
+              <textfield id="networkProxyGopher" pref="true" preftype="string" prefstring="network.proxy.gopher"
+                         prefattribute="value" flex="1"/>
+              <!-- gopher port doesn't have an accesskey because the window needs a redesign - bbaetz -->
+              <text class="label" value="&port.label;" accesskey="&gopherPort.accesskey;" for="networkProxyGopher_Port"/>
+              <textfield id="networkProxyGopher_Port" pref="true" preftype="int" prefstring="network.proxy.gopher_port"
                          prefattribute="value" size="5"/>
             </box>
           </row>
