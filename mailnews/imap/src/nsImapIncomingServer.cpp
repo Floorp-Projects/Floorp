@@ -2055,44 +2055,44 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString, nsIMsgWindow * aMsgWindo
 
 NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIMsgWindow * aMsgWindow)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   
   nsCOMPtr<nsIPrompt> dialog;
   if (aMsgWindow)
     aMsgWindow->GetPromptDialog(getter_AddRefs(dialog));
-
+  
   if (dialog)
   {
-	if (aString)
-	{
-		// skip over the first two words, I guess.
-		char *whereRealMessage = PL_strchr(aString, ' ');
-		if (whereRealMessage)
-			whereRealMessage++;
-		if (whereRealMessage)
-			whereRealMessage = PL_strchr(whereRealMessage, ' ');
-		if (whereRealMessage)
-		{
-		    PRInt32 len = PL_strlen(whereRealMessage)-1;
-		    if (len > 0 && whereRealMessage[len] !=  '.')
-        	     whereRealMessage[len] = '.';
-		}
-    
-		PRUnichar *serverSaidPrefix = nsnull;
-		GetImapStringByID(IMAP_SERVER_SAID, &serverSaidPrefix);
-		if (serverSaidPrefix)
-		{
-			nsAutoString message(serverSaidPrefix);
-      // the alert string from the server IS UTF-8!!! We must convert it to unicode
-      // correctly before appending it to our error message string...
-			AppendUTF8toUTF16(whereRealMessage ? whereRealMessage : aString, message);
-			rv = dialog->Alert(nsnull, message.get());
-
-			PR_Free(serverSaidPrefix);
-		}
-	}
+    if (aString)
+    {
+      // skip over the first two words, I guess.
+      char *whereRealMessage = PL_strchr(aString, ' ');
+      if (whereRealMessage)
+        whereRealMessage++;
+      if (whereRealMessage)
+        whereRealMessage = PL_strchr(whereRealMessage, ' ');
+      if (whereRealMessage)
+      {
+        PRInt32 len = PL_strlen(whereRealMessage)-1;
+        if (len > 0 && whereRealMessage[len] !=  '.')
+          whereRealMessage[len] = '.';
+      }
+      
+      PRUnichar *serverSaidPrefix = nsnull;
+      GetImapStringByID(IMAP_SERVER_SAID, &serverSaidPrefix);
+      if (serverSaidPrefix)
+      {
+        nsAutoString message(serverSaidPrefix);
+        // the alert string from the server IS UTF-8!!! We must convert it to unicode
+        // correctly before appending it to our error message string...
+        AppendUTF8toUTF16(whereRealMessage ? whereRealMessage : aString, message);
+        rv = dialog->Alert(nsnull, message.get());
+        
+        PR_Free(serverSaidPrefix);
+      }
+    }
   }
-
+  
   return rv;
 }
 
