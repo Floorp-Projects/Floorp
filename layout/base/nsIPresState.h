@@ -17,6 +17,14 @@ public:
   NS_IMETHOD SetStatePropertyAsSupports(const nsAString& aName,
 					nsISupports* aValue) = 0;
 
+  /**
+   * Get the current value of a property.
+   *
+   * @param aName the name of the property.
+   * @param aResult the value (may legitimately be the empty string) [OUT]
+   * @throws NS_STATE_PROPERTY_NOT_THERE if the property is not set 
+   * @throws NS_STATE_PROPERTY_EXISTS if the attribute exists (==NS_OK)
+   */
   NS_IMETHOD GetStateProperty(const nsAString& aName,
 			      nsAString& aResult) = 0;
   NS_IMETHOD SetStateProperty(const nsAString& aProperty,

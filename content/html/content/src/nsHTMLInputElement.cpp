@@ -76,6 +76,7 @@
 #include "nsGUIEvent.h"
 
 #include "nsIPresState.h"
+#include "nsLayoutErrors.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNodeList.h"
@@ -115,7 +116,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 //
 // Accessors for mBitField
 //
-// #define BF_SKIP_FOCUS_EVENT 0 no longer used
+#define BF_DISABLED_CHANGED 0
 #define BF_HANDLING_CLICK 1
 #define BF_VALUE_CHANGED 2
 #define BF_CHECKED_CHANGED 3
@@ -592,7 +593,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
-NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
+//NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, MaxLength, maxlength)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Name, name)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, ReadOnly, readonly)
@@ -600,6 +601,29 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Src, src)
 NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
+
+NS_IMETHODIMP 
+nsHTMLInputElement::GetDisabled(PRBool* aDisabled)
+{
+  nsHTMLValue val;
+  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::disabled, val);
+  *aDisabled = (NS_CONTENT_ATTR_NOT_THERE != rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetDisabled(PRBool aDisabled)
+{
+  SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
+
+  if (aDisabled) {
+    nsHTMLValue empty(eHTMLUnit_Empty);
+    return SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
+  }
+
+  UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
@@ -2538,6 +2562,22 @@ nsHTMLInputElement::SaveState()
         break;
       }
   }
+  
+  if (GET_BOOLBIT(mBitField, BF_DISABLED_CHANGED)) {
+    rv |= GetPrimaryPresState(this, getter_AddRefs(state));
+    if (state) {
+      PRBool disabled;
+      GetDisabled(&disabled);
+      if (disabled) {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                     NS_LITERAL_STRING("t"));
+      } else {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                     NS_LITERAL_STRING("f"));
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
+    }
+  }
 
   return rv;
 }
@@ -2595,10 +2635,9 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
       {
         nsAutoString checked;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("checked"), checked);
-        // We assume that we are the only ones who saved the state.  Thus we
-        // know the exact value that would have been saved.
-        SetChecked(checked.Equals(NS_LITERAL_STRING("t")));
-
+        if (rv == NS_STATE_PROPERTY_EXISTS) {
+          SetChecked(checked.Equals(NS_LITERAL_STRING("t")));
+        }
         break;
       }
 
@@ -2609,12 +2648,25 @@ nsHTMLInputElement::RestoreState(nsIPresState* aState)
         nsAutoString value;
         rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
-        SetValueInternal(value, nsnull);
+        if (rv == NS_STATE_PROPERTY_EXISTS) {
+          SetValueInternal(value, nsnull);
+        }
         break;
       }
   }
+  
+  nsAutoString disabled;
+  nsresult rv2 = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv2), "disabled restore failed!");
+  if (rv2 == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.Equals(NS_LITERAL_STRING("t")));
+  }
 
-  return rv;
+  if (NS_FAILED(rv|rv2)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 

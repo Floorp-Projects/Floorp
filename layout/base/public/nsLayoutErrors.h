@@ -60,4 +60,15 @@
     replaced by alt text or something like that **/
 #define NS_ERROR_FRAME_REPLACED \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LAYOUT, 4)
+
+/** Error codes for nsIPresState::GetProperty() */
+
+/** Returned if the property exists */
+#define NS_STATE_PROPERTY_EXISTS NS_OK
+
+/** Returned if the property does not exist */
+#define NS_STATE_PROPERTY_NOT_THERE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 5)
+
+
 #endif // nsLayoutErrors_h___
