@@ -73,37 +73,6 @@
   display: none;
 }
 
-/* ::::: toolbargrippy ::::: */
- 
-.toolbar-primary-grippy { 
-  -moz-binding: url("chrome://communicator/skin/toolbar/toolbarBindings.xml#toolbargrippy-primary");
-  border: none;
-  background: url("chrome://communicator/skin/toolbar/prtb-grip-mid.gif") repeat-y;
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-btm.gif");
-} 
-
-.toolbar-primary-grippy > .toolbargrippy-texture {
-  width: 13px;
-  height: 0px;
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-top.gif");
-}
-
-.toolbar-primary-grippy > .toolbargrippy-arrow {
-  margin: 0px;
-  width: 13px;
-  height: 10px;
-  list-style-image: inherit;
-}
-
-.toolbar-primary-grippy:hover:active {
-  background-image: url("chrome://communicator/skin/toolbar/prtb-grip-mid-act.gif");
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-btm-act.gif");
-}
-
-.toolbar-primary-grippy:hover:active > .toolbargrippy-texture {
-  list-style-image: url("chrome://communicator/skin/toolbar/prtb-grip-top-act.gif");
-}
-
 /* ::::: toolbar-primary separator ::::: */
 
 .toolbarseparator-primary {

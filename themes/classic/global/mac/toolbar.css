@@ -54,55 +54,6 @@ menubar {
   border-bottom: 1px solid ThreeDShadow;
 }  
 
-/* ::::: toolbargrippy ::::: */
-
-toolbargrippy {
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
-  border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-  width: 10px;
-  padding: 2px 1px;
-  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow.gif");
-}
-
-toolbargrippy:hover {
-  background-color: #CCCCFF;
-}
-
-.toolbargrippy-texture {
-  margin-top: 2px;
-  width: 6px;
-  background: url("chrome://global/skin/toolbar/tbgrip-texture.gif");
-}
-
-/* ::::: collapsed tray and grippies ::::: */
-
-toolbargrippy[tbgrippy-collapsed="true"] {
-  -moz-box-orient: horizontal;
-  border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-  width: 40px;
-  height: 10px;
-  padding: 1px 2px;
-  list-style-image: url("chrome://global/skin/toolbar/tbgrip-arrow-clps.gif");
-}
-
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-texture {
-  margin-top: 0;
-  margin-left: 2px;
-  width: 0px;
-  height: 6px;
-}
-
-.collapsed-tray-spacer {
-  border-bottom: 1px solid ThreeDShadow;
-}  
-
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator {

@@ -248,10 +248,6 @@
   -moz-box-align: center;
 }
 
-#nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
-  display: none;
-}
-
 #nav-bar[toolbarmode="small"] > .toolbar-primary-holder {
   background: #D0D7DF;
 }
@@ -472,16 +468,11 @@
   background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
 }
 
-#PersonalToolbar > toolbargrippy,
 #PersonalToolbar > .toolbar-holder {
   border-top: 1px solid #CED6DD;
   border-right: 1px solid #95A0AD;
   border-bottom: 1px solid #95A0AD;
   border-left: 1px solid #DAE3ED;
-}
-
-#PersonalToolbar > toolbargrippy:hover:active {
-  border-color: #67737E;
 }
 
 #home-button {
