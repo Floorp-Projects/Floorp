@@ -84,7 +84,7 @@ PRVersionDescription VERSION_DESC_NAME =
     /* description      */ "Portable runtime",  /* what we are */
     /* security         */ "N/A",               /* not applicable here */
     /* copywrite        */  "Copyright (c) 1998 Netscape Communications Corporation. All Rights Reserved",
-    /* comment          */  "http://www.mozilla.org/NPL/",
+    /* comment          */  "http://www.mozilla.org/MPL/",
     /* specialString    */ ""
 };
 
