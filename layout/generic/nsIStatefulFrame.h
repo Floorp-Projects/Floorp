@@ -19,7 +19,16 @@ class nsIStatefulFrame : public nsISupports {
   // If you implement nsIStatefulFrame, add an entry to this enum and use it
   // in your GetStateType method to prevent collisions.
   enum StateType {eNoType=-1, eCheckboxType, eFileType, eRadioType, eSelectType,
-                eTextType, eNumStateTypes};
+                eTextType, eScrollType, eNumStateTypes};
+
+  // If you create a special type stateful frame (e.g. scroll) that needs
+  // to be captured outside of the standard pass through the frames, you'll need
+  // a special ID by which to refer to that type.
+  //
+  // There is space reserved between standard ID's and special ID's by the
+  // offset NS_CONTENT_ID_COUNTER_BASE
+  enum SpecialStateID {eNoID=0, eDocumentScrollState};
+
 
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType) = 0;
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState) = 0;
