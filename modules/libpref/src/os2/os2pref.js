@@ -128,6 +128,9 @@ pref("netinst.profile.show_profile_wizard", true);
 
 pref("middlemouse.paste", true);
 
+// turn off scrollbar snapping
+pref("slider.snapMultiplier", 0);
+
 //The following pref is internal to Communicator. Please
 //do *not* place it in the docs...
 pref("netinst.profile.show_dir_overwrite_msg",  true); 
