@@ -2838,7 +2838,7 @@ char * dir_ConvertDescriptionToPrefName(DIR_Server * server)
 		numSrcBytes = PL_strlen(descr);
 		while (srcIndex < numSrcBytes && destIndex < MAX_PREF_NAME_SIZE-1)
 		{
-			if (XP_IS_DIGIT(descr[srcIndex]) ||XP_IS_ALPHA(descr[srcIndex]) )
+			if (nsCRT::IsAsciiDigit(descr[srcIndex]) || nsCRT::IsAsciiAlpha(descr[srcIndex]) )
 			{
 				fileNameBuf[destIndex] = descr[srcIndex];
 				destIndex++;
@@ -4505,10 +4505,10 @@ char *DIR_Unescape (const char *src, PRBool makeHtml)
 				 */
 				PRBool didEscape = PR_FALSE;
 				char c1 = *(tmpSrc + 1);
-				if (c1 && (XP_IS_DIGIT(c1) || XP_IS_ALPHA(c1)))
+				if (c1 && (nsCRT::IsAsciiDigit(c1) || nsCRT::IsAsciiAlpha(c1)))
 				{
 					char c2 = *(tmpSrc + 2);
-					if (c2 && (XP_IS_DIGIT(c2) || XP_IS_ALPHA(c2)))
+					if (c2 && (nsCRT::IsAsciiDigit(c2) || nsCRT::IsAsciiAlpha(c2)))
 					{
 						*tmpDst++ = (UNHEX(c1) << 4) | UNHEX(c2);
 						tmpSrc +=2;
