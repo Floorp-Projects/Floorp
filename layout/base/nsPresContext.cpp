@@ -1381,8 +1381,6 @@ nsPresContext::LoadImage(nsIURI* aURL,
 {
   // look and see if we have a loader for the target frame.
 
-  nsresult rv;
-
   nsVoidKey key(aTargetFrame);
   nsImageLoader *loader = NS_REINTERPRET_CAST(nsImageLoader*, mImageLoaders.Get(&key)); // addrefs
 
