@@ -42,3 +42,4 @@
     <NC:title>&bugzillaButton.label;</NC:title> 
     <NC:content>openTopWin('http://bugzilla.mozilla.org')</NC:content>
   </RDF:Description>
+</RDF:RDF>
