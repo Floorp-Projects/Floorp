@@ -161,9 +161,35 @@ function changeFilter(filterTypes)
   window.setCursor("auto");
 }
 
+function showFileSavingErrorDialog(file){
+  var errorTitle =
+    gFilePickerBundle.getFormattedString("errorSavingFileTitle",
+                                         [file.unicodePath]);
+  var errorMessage =
+    gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_file",
+                                         [file.unicodePath]);
+  var promptService =
+    Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+  promptService.alert(window, errorTitle, errorMessage)
+}
+
 function openOnOK()
 {
   var dir = outlinerView.getSelectedFile();
+  if (!dir.isReadable()) {
+    var errorTitle =
+      gFilePickerBundle.getFormattedString("errorOpenFileDoesntExistTitle",
+                                           [dir.unicodePath]);
+    var errorMessage =
+      gFilePickerBundle.getFormattedString("errorDirNotReadableMessage",
+                                           [dir.unicodePath]);
+    var promptService =
+      Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+    promptService.alert(window, errorTitle, errorMessage);
+    return false;
+  }
+
   if (dir)
     gotoDirectory(dir);
   retvals.file = dir;
@@ -243,15 +269,22 @@ function selectOnOK()
     break;
   case nsIFilePicker.modeSave:
     if (isFile) { // can only be true if file.exists()
-      // we need to pop up a dialog asking if you want to save
-      var message = gFilePickerBundle.getFormattedString("confirmFileReplacing",
-                                                         [file.unicodePath]);
-      var rv = window.confirm(message);
-      if (rv) {
-        ret = nsIFilePicker.returnReplace;
-        retvals.directory = file.parent.unicodePath;
-      } else {
+      if (!file.isWritable()) {
+        showFileSavingErrorDialog(file);
         ret = nsIFilePicker.returnCancel;
+      } else {
+        // we need to pop up a dialog asking if you want to save
+        var message =
+          gFilePickerBundle.getFormattedString("confirmFileReplacing",
+                                               [file.unicodePath]);
+
+        var rv = window.confirm(message);
+        if (rv) {
+          ret = nsIFilePicker.returnReplace;
+          retvals.directory = file.parent.unicodePath;
+        } else {
+          ret = nsIFilePicker.returnCancel;
+        }
       }
     } else if (isDir) {
       if (!sfile.equals(file)) {
@@ -262,7 +295,7 @@ function selectOnOK()
       ret = nsIFilePicker.returnCancel;
     } else {
       var parent = file.parent;
-      if (parent.exists() && parent.isDirectory()) {
+      if (parent.exists() && parent.isDirectory() && parent.isWritable()) {
         ret = nsIFilePicker.returnOK;
         retvals.directory = parent.unicodePath;
       } else {
@@ -271,14 +304,22 @@ function selectOnOK()
           oldParent = parent;
           parent = parent.parent;
         }
-        errorTitle = gFilePickerBundle.getFormattedString("errorSavingFileTitle",
-                                                          [file.unicodePath]);
+        var errorTitle =
+          gFilePickerBundle.getFormattedString("errorSavingFileTitle",
+                                               [file.unicodePath]);
+        var errorMessage;
         if (parent.isFile()) {
-          errorMessage = gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
-                                                              [parent.unicodePath, file.unicodePath]);
+          errorMessage =
+            gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
+                                                 [parent.unicodePath, file.unicodePath]);
         } else {
-          errorMessage = gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
-                                                              [oldParent.unicodePath, file.unicodePath]);
+          errorMessage =
+            gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
+                                                 [oldParent.unicodePath, file.unicodePath]);
+        }
+        if (!parent.isWritable()) {
+          errorMessage =
+            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [file.unicodePath]);
         }
         promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
