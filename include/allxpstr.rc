@@ -7977,6 +7977,9 @@ ResDef(MK_ACCESS_VIEW_COOKIES, (XP_MSG_BASE + 1486),
 ResDef(MK_ACCESS_VIEW_SITES, (XP_MSG_BASE + 1487),
 "View sites that can or cannot store cookies")
 
+ResDef(MK_SIGNON_CHANGE, (XP_MSG_BASE + 1488),
+"Select the user whose password is being changed.")
+
 ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1490), \
 "********")
 /* Note: above string used to say "generate" but at Rick Elliott's
