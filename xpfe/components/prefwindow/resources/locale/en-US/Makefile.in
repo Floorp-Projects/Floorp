@@ -28,42 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= unix
 
-CHROME_DIR = locales/en-US
-CHROME_L10N_DIR = communicator/locale/pref
-
-CHROME_L10N = \
-		pref-advanced.dtd \
-		pref-appearance.dtd \
-		pref-applications.dtd \
-		pref-applications.properties \
-		pref-applications-edit.dtd \
-		pref-cache.dtd \
-		pref-colors.dtd \
-		pref-themes.dtd \
-		pref-charset.dtd \
-		pref-cookies.dtd \
-		pref-debug.dtd \
-		pref-debug1.dtd \
-		pref-debug2.dtd \
-		pref-download.dtd \
-		pref-fonts.dtd \
-		pref-history.dtd \
-		pref-images.dtd \
-		pref-languages.dtd \
-		pref-navigator.dtd \
-		pref-offline.dtd \
-		pref-policies.dtd \
-		pref-proxies.dtd \
-		pref-search.dtd \
-		pref-smart_browsing.dtd \
-		pref-smartupdate.dtd \
-		pref-mousewheel.dtd	\
-		pref-wallet.dtd	\
-		pref-passwords.dtd	\
-		prefutilities.properties	\
-		preftree.dtd \
-		pref.dtd \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

@@ -5,7 +5,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = tools resources
+DIRS = tools
 
 MODULE          = appcomps
 LIBRARY_NAME    = timebomb_s

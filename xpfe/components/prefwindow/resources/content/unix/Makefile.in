@@ -26,12 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR = packages/core
-CHROME_CONTENT_DIR = communicator/content/pref
-
-CHROME_CONTENT = \
-		platformPrefOverlay.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

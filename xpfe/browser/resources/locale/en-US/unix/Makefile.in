@@ -26,11 +26,5 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR=locales/en-US
-CHROME_L10N_DIR=navigator/locale
-
-CHROME_L10N = \
-		platformNavigationBindings.dtd \
-
 include $(topsrcdir)/config/rules.mk
 

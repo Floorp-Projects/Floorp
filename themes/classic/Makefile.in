@@ -20,15 +20,22 @@
 #
 
 DEPTH		= ../..
-THEME_ROOT_DEPTH = @srcdir@
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS  = communicator editor global messenger navigator preview/win
+DIRS  = communicator/search/win \
+	communicator/sidebar \
+	communicator/win \
+	global \
+	messenger/win \
+	messenger/addressbook/win \
+	preview/win \
+	editor/win \
+	navigator/win \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

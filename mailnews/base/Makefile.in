@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src util search prefs build resources
+DIRS		= public src util search build resources
 
 ifdef ENABLE_TESTS
 DIRS		+= tests

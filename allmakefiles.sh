@@ -415,16 +415,10 @@ profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
 profile/resources/Makefile
-profile/resources/content/Makefile
-profile/resources/locale/Makefile
-profile/resources/locale/en-US/Makefile
 profile/pref-migrator/Makefile
 profile/pref-migrator/public/Makefile
 profile/pref-migrator/src/Makefile
 profile/pref-migrator/resources/Makefile
-profile/pref-migrator/resources/content/Makefile
-profile/pref-migrator/resources/locale/Makefile
-profile/pref-migrator/resources/locale/en-US/Makefile
 profile/defaults/Makefile
 "
 
@@ -584,9 +578,6 @@ xpinstall/Makefile
 xpinstall/packager/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
-xpinstall/res/content/Makefile
-xpinstall/res/locale/Makefile
-xpinstall/res/locale/en-US/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
 xpinstall/wizard/unix/src2/Makefile
@@ -611,29 +602,18 @@ xpfe/components/shistory/src/Makefile
 xpfe/components/bookmarks/Makefile
 xpfe/components/bookmarks/public/Makefile
 xpfe/components/bookmarks/src/Makefile
-xpfe/components/bookmarks/resources/Makefile
 xpfe/components/directory/Makefile
 xpfe/components/timebomb/Makefile
 xpfe/components/timebomb/tools/Makefile
-xpfe/components/timebomb/resources/Makefile
-xpfe/components/timebomb/resources/content/Makefile
-xpfe/components/timebomb/resources/locale/Makefile
-xpfe/components/timebomb/resources/locale/en-US/Makefile
 xpfe/components/regviewer/Makefile
 xpfe/components/find/Makefile
 xpfe/components/find/public/Makefile
 xpfe/components/find/src/Makefile
-xpfe/components/find/resources/Makefile
 xpfe/components/filepicker/src/Makefile
-xpfe/components/filepicker/res/content/Makefile
-xpfe/components/filepicker/res/locale/Makefile
-xpfe/components/filepicker/res/locale/en-US/Makefile
-xpfe/components/filepicker/res/Makefile
 xpfe/components/filepicker/Makefile
 xpfe/components/history/Makefile
 xpfe/components/history/src/Makefile
 xpfe/components/history/public/Makefile
-xpfe/components/history/resources/Makefile
 xpfe/components/prefwindow/Makefile
 xpfe/components/prefwindow/resources/Makefile
 xpfe/components/prefwindow/resources/content/Makefile
@@ -644,37 +624,26 @@ xpfe/components/prefwindow/resources/locale/en-US/unix/Makefile
 xpfe/components/related/Makefile
 xpfe/components/related/src/Makefile
 xpfe/components/related/public/Makefile
-xpfe/components/related/resources/Makefile
 xpfe/components/search/Makefile
 xpfe/components/search/datasets/Makefile
-xpfe/components/search/resources/Makefile
 xpfe/components/search/public/Makefile
 xpfe/components/search/src/Makefile
 xpfe/components/sidebar/Makefile
 xpfe/components/sidebar/public/Makefile
-xpfe/components/sidebar/resources/Makefile
 xpfe/components/sidebar/src/Makefile
 xpfe/components/xfer/Makefile
 xpfe/components/xfer/public/Makefile
 xpfe/components/xfer/src/Makefile
-xpfe/components/xfer/resources/Makefile
 xpfe/components/ucth/Makefile
 xpfe/components/ucth/public/Makefile
 xpfe/components/ucth/src/Makefile
-xpfe/components/ucth/resources/Makefile
 xpfe/components/remote/Makefile
 xpfe/components/remote/public/Makefile
 xpfe/components/remote/src/Makefile
 xpfe/components/autocomplete/Makefile
 xpfe/components/autocomplete/public/Makefile
-xpfe/components/autocomplete/resources/Makefile
-xpfe/components/autocomplete/resources/content/Makefile
 xpfe/components/autocomplete/src/Makefile
 xpfe/components/console/Makefile
-xpfe/components/console/resources/Makefile
-xpfe/components/console/resources/content/Makefile
-xpfe/components/console/resources/locale/Makefile
-xpfe/components/console/resources/locale/en-US/Makefile
 xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
@@ -885,9 +854,6 @@ for extension in $MOZ_EXTENSIONS; do
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/irc/Makefile
 	    extensions/irc/xul/Makefile
-	    extensions/irc/xul/content/Makefile
-	    extensions/irc/xul/locale/Makefile
-	    extensions/irc/xul/locale/en-US/Makefile
             " ;;
 	transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    $MAKEFILES_transformiix"

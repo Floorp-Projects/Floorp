@@ -28,16 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfdomds
 
-CHROME_DIR = packages/core
-CHROME_CONTENT_DIR = communicator/content/domviewer
-
-CHROME_CONTENT = \
-		DOMDataSourceViewer.xul \
-		DOMDataSourceViewer.css \
-		DOMDataSourceViewer.js \
-		DOMTree.xul \
-		domviewer.html	\
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 

@@ -20,13 +20,11 @@
 #
 
 DEPTH		= ../../../..
-THEME_ROOT_DEPTH = @srcdir@/../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
-include $(THEME_ROOT_DEPTH)/theme.mk
 
 DIRS = win unix
 

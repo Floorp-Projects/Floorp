@@ -27,8 +27,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= resources
-
 include $(topsrcdir)/config/rules.mk
 
 install::

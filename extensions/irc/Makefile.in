@@ -34,8 +34,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = xul
-
 include $(topsrcdir)/config/rules.mk
 
 install::
