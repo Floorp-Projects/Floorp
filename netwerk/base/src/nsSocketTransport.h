@@ -90,6 +90,8 @@ public:
                         nsISupports *ctxt,
                         nsIEventQueue *eventQueue,
                         nsIStreamObserver *observer);
+  //No-op
+  NS_IMETHOD Open() { return NS_OK;};
 
   // nsSocketTransport methods:
   nsSocketTransport();

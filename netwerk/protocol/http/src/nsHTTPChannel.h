@@ -74,6 +74,7 @@ public:
                           nsISupports *ctxt,
                           nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
+	NS_IMETHOD	Open();
 
     // nsIHTTPChannel methods:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
@@ -87,7 +88,6 @@ public:
 
     // nsHTTPChannel methods:
     nsresult            Init();
-    nsresult            Open();
     nsIEventQueue*      EventQueue(void) const { return m_pEventQ; };
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
 
