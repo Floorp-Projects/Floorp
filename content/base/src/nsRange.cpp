@@ -782,6 +782,17 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   startIdx = mStartAncestors->Count() - 1;
   endIdx   = mEndAncestors->Count() - 1;
 
+  // Ensure that we actually have ancestors to iterate through
+  if (startIdx < 0) {
+    if (startIdx < endIdx) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+  if (endIdx < 0) {
+    return PR_FALSE;
+  }
+
   // back through the ancestors, starting from the root, until first non-matching ancestor found
   while (startIdx >= 0 && endIdx >= 0 &&
          mStartAncestors->ElementAt(startIdx) == mEndAncestors->ElementAt(endIdx))
