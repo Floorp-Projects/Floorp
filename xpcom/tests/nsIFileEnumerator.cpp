@@ -19,7 +19,6 @@ PRBool LoopInDir(nsILocalFile* file)
     if(NS_FAILED(rv) || !entries)
         return PR_FALSE;
     
-    PRUint32 count = 0;
     PRBool hasMore;
     while(NS_SUCCEEDED(entries->HasMoreElements(&hasMore)) && hasMore)
     {
