@@ -53,14 +53,27 @@ protected:
 private:
 // XXX Hack
    nsString iso88591;
+   nsString iso88592;
+   nsString iso88597;
+   nsString iso88599;
    nsString sjis;
    nsString eucjp;
    nsString iso2022jp;
    nsString utf8;
    nsString xmacroman;
+   nsString xmacce;
+   nsString xmacgreek;
+   nsString xmacturkish;
    nsString unknown;
-   nsString iso88597;
+   nsString windows1250;
+   nsString windows1252;
    nsString windows1253;
+   nsString windows1254;
+   nsString big5;
+   nsString euckr;
+   nsString euctw;
+   nsString gb2312;
+
 };
 
 NS_IMPL_ISUPPORTS(nsCharsetAlias, kICharsetAliasIID);
@@ -72,14 +85,26 @@ nsCharsetAlias::nsCharsetAlias()
 
 // XXX Hack
   iso88591 =  "ISO-8859-1";
+  iso88592 =  "ISO-8859-2";
+  iso88597 =  "ISO-8859-7";
+  iso88599 =  "ISO-8859-9";
   sjis =      "Shift_JIS";
   eucjp =     "EUC-JP";
   iso2022jp = "ISO-2022-JP";
   xmacroman = "x-mac-roman";
-  utf8      = "UTF-8";
-  unknown   = "";
-  iso88597 =  "ISO-8859-7";
+  xmacce = 	  "x-mac-ce";
+  xmacgreek = "x-mac-greek";
+  xmacturkish = "x-mac-trukish";
+  utf8      =  "UTF-8";
+  windows1250 =  "Windows-1250";
+  windows1252 =  "Windows-1252";
   windows1253 =  "Windows-1253";
+  windows1254 =  "Windows-1254";
+  big5 =  "BIG5";
+  gb2312 =  "GB2312";
+  euckr =  "EUC-KR";
+  euctw =  "X-EUC-TW";
+  unknown   = "";
 }
 
 nsCharsetAlias::~nsCharsetAlias()
@@ -108,45 +133,123 @@ const nsString& nsCharsetAlias::GetPreferred(
       aKey.Equals("windows-1252") )
    {
       return iso88591;
-   } else if(aKey.Equals("x-sjis") ||
-             aKey.Equals("ms_kanji") ||
-             aKey.Equals("csshiftjis") ||
-             aKey.Equals("shift_jis") ||
-             aKey.Equals("windows-31j") )
-   {
-      return sjis;
-   } else if(aKey.Equals("euc-jp") ||
-             aKey.Equals("cseucjpkdfmtjapanese") ||
-             aKey.Equals("x-euc-jp") )
-   {
-      return eucjp;
-   } else if(aKey.Equals("iso-2022-jp") ||
-             aKey.Equals("csiso2022jp") )
-   {
-      return iso2022jp;
-   } else if(aKey.Equals("x-mac-roman") )
-   {
-      return xmacroman;
-   } else if(aKey.Equals("iso-8859-7") ||
-             aKey.Equals("iso-ir-126") ||
-             aKey.Equals("iso_8859-7") ||
-             aKey.Equals("iso_8859-7:1987") ||
-             aKey.Equals("elot_928") ||
-             aKey.Equals("ecma-118") ||
-             aKey.Equals("greek") ||
-             aKey.Equals("greek8") ||
-             aKey.Equals("csisolatingreek") )
-   {
-      return iso88597;
-   } else if(aKey.Equals("windows-1253") ||
-             aKey.Equals("x-cp1253") )
-   {
-      return windows1253;
-   } else if(aKey.Equals("utf-8") ||
-             aKey.Equals("unicode-1-1-utf-8") )
+   }
+   if(aKey.Equals("utf-8") ||
+      aKey.Equals("unicode-1-1-utf-8") )
    {
       return utf8;
    }
+
+   if(aKey.Equals("x-sjis") ||
+      aKey.Equals("ms_kanji") ||
+      aKey.Equals("csshiftjis") ||
+      aKey.Equals("shift_jis") ||
+      aKey.Equals("windows-31j") )
+   {
+      return sjis;
+   }
+   if(aKey.Equals("euc-jp") ||
+      aKey.Equals("cseucjpkdfmtjapanese") ||
+      aKey.Equals("x-euc-jp") )
+   {
+      return eucjp;
+   } 
+   if(aKey.Equals("iso-2022-jp") ||
+      aKey.Equals("csiso2022jp") )
+   {
+      return iso2022jp;
+   } 
+   
+   // XXX need to verify the BIG5 list
+   if(aKey.Equals("big5"))
+   {
+      return big5;
+   }
+
+   // XXX need to verify the x-euc-tw list
+   if(aKey.Equals("x-euc-tw"))
+   {
+      return euctw;
+   }
+
+   // XXX need to verify the EUC-KR list
+   if(aKey.Equals("euc-kr"))
+   {
+      return euckr;
+   }
+
+   // XXX need to verify the gb2312 list
+   if(aKey.Equals("gb2312"))
+   {
+      return gb2312;
+   }
+
+   if(aKey.Equals("x-mac-roman") )
+   {
+      return xmacroman;
+   } 
+
+   // XXX need to verify the x-mac-ce list
+   if(aKey.Equals("x-mac-ce") )
+   {
+      return xmacce;
+   } 
+   // XXX need to verify the x-mac-greek list
+   if(aKey.Equals("x-mac-greek") )
+   {
+      return xmacgreek;
+   } 
+   // XXX need to verify the x-mac-turkish list
+   if(aKey.Equals("x-mac-turkish") )
+   {
+      return xmacturkish;
+   } 
+
+   if(aKey.Equals("iso-8859-7") ||
+      aKey.Equals("iso-ir-126") ||
+      aKey.Equals("iso_8859-7") ||
+      aKey.Equals("iso_8859-7:1987") ||
+      aKey.Equals("elot_928") ||
+      aKey.Equals("ecma-118") ||
+      aKey.Equals("greek") ||
+      aKey.Equals("greek8") ||
+      aKey.Equals("csisolatingreek") )
+   {
+      return iso88597;
+   } 
+
+   // XXX need to verify the ISO-8859-2 list
+   if(aKey.Equals("iso-8859-2"))
+   {
+      return iso88592;
+   }
+   // XXX need to verify the ISO-8859-9 list
+   if(aKey.Equals("iso-8859-9"))
+   {
+      return iso88599;
+   }
+   
+   // XXX need to verify the 1250 list
+   if(aKey.Equals("windows-1250") ||
+      aKey.Equals("x-cp1250") )
+   {
+      return windows1250;
+   } 
+   
+   // XXXX windows-1252 
+   if(aKey.Equals("windows-1253") ||
+      aKey.Equals("x-cp1253") )
+   {
+      return windows1253;
+   } 
+   
+   // XXX need to verify the 1254 list
+   if(aKey.Equals("windows-1254") ||
+      aKey.Equals("x-cp1254") )
+   {
+      return windows1254;
+   } 
+
 
    return unknown;
 }
