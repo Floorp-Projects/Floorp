@@ -42,8 +42,8 @@ package org.mozilla.javascript;
 public class EvaluatorException extends RuntimeException
 {
     /**
-     * @deprecated Use 
-     * {@link EvaluatorException(String detail, String sourceName, 
+     * @deprecated Use
+     * {@link #EvaluatorException(String detail, String sourceName,
 int lineNumber)}
      * to construct detailed error messages.
      */
@@ -68,7 +68,7 @@ int lineNumber)}
      * @param sourceName the name of the source reponsible for the error
      * @param lineNumber the line number of the source
      */
-    public EvaluatorException(String detail, String sourceName, 
+    public EvaluatorException(String detail, String sourceName,
                               int lineNumber)
     {
         this(detail, sourceName, lineNumber, null, 0);
