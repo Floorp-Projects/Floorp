@@ -20,20 +20,11 @@ function goQuitApplication()
   var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
   appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
 
-  // Get current server mode setting and turn it off while windows close.
-  var serverMode = false;
   var nativeAppSupport = null;
-  try 
-  {
+  try {
     nativeAppSupport = appShell.nativeAppSupport;
-    if ( nativeAppSupport )
-    {
-      serverMode = nativeAppSupport.isServerMode;
-      nativeAppSupport.isServerMode = false;
-    }
   }
-  catch ( ex )
-  {
+  catch ( ex ) {
   }
 
   while ( enumerator.hasMoreElements()  )
@@ -41,27 +32,15 @@ function goQuitApplication()
     var  windowToClose = enumerator.getNext();
     var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
     if (!("tryToClose" in domWindow))
-    {
-      // dump(" window.close \n");
       domWindow.close();
-    }
     else
     {
-      // dump(" try to close \n" );
       if ( !domWindow.tryToClose() )
-      {
-        // Restore server mode if it was set on entry.
-        if ( serverMode )
-        {
-          nativeAppSupport.isServerMode = true;
-        }
         return false;
-      }
     }
   };
-
-  // call appshell exit
-  appShell.Quit();
+  if (!nativeAppSupport.isServerMode)
+    appShell.Quit();
   return true;
 }
 
