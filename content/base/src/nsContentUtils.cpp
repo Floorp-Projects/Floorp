@@ -573,7 +573,10 @@ nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
     nsCOMPtr<nsIDocument> otherDoc;
     content->GetDocument(*getter_AddRefs(contentDoc));
     other->GetDocument(*getter_AddRefs(otherDoc));
-    if (contentDoc && contentDoc == otherDoc) {
+    // XXXcaa Don't bother to check that either node is in a
+    // document.  Editor relies on us returning true if neither
+    // node is in a document.  See bug 154401.
+    if (contentDoc == otherDoc) {
       return PR_TRUE;
     }
   }
