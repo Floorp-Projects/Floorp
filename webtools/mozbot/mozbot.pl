@@ -138,17 +138,6 @@ $::uuid = "./uuidgen/uuidgen";
 $::uuid = (-f $::uuid) ? $::uuid : "";
 delete $pubcmds{'uuid'} if (! $::uuid);
 
-$::megahal = "./megahal/megahal";
-$::megahal = (-f $::megahal) ? $::megahal : "";
-$::megahal_pid;
-
-if ($::megahal) {
-   $::WTR = FileHandle->new;
-   $::RDR = FileHandle->new;
-   $::megahal_pid = &init_megahal;
-   &debug ("Initializing MEGAHAL conversation AI\n");
-}
- 
 my $phase;
 my $last_moon = 0;
 my $last_uuid = 0;
@@ -209,8 +198,18 @@ foreach my $i (keys %rdfcmds) {
     $pubcmds{$i} = $rdfcmds{$i};
 }
 
-
 &debug ("connecting to $server $port as $nick on $channel");
+
+$::megahal = "./megahal/megahal";
+$::megahal = (-f $::megahal) ? $::megahal : "";
+$::megahal_pid;
+
+if ($::megahal) {
+   $::WTR = FileHandle->new;
+   $::RDR = FileHandle->new;
+   $::megahal_pid = &init_megahal;
+   &debug ("Initializing MEGAHAL conversation AI\n");
+}
 
 # and done.
 
