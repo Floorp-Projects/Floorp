@@ -40,10 +40,8 @@ include <$(DEPTH)/config/rules.mak>
 
 #// Rule to set the timebomb on official mozilla builds
 !ifdef MOZILLA_OFFICIAL
-export:: 
+export:: $(DEPTH)/build/build_number
     $(PERL) set-timebomb.pl 0 30
-    $(PERL) bdate.pl > $@
-    $(PERL) aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 !endif
 
 #//
@@ -61,7 +59,14 @@ mantomak.exe:: mantomak.c
 bin2rc.exe:: bin2rc.c
     $(CC) -O2 -MD bin2rc.c
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe $(DEPTH)/build/build_number
+
+#update build number from within make script
+$(DEPTH)/build/build_number:: FORCE
+        $(RM) $@
+        $(PERL) bdate.pl > $@
+        $(PERL) aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
 
 install:: export
 
+FORCE:
