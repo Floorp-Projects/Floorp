@@ -1,0 +1,60 @@
+#
+# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+#ident	"$Id: Makefile.in,v 1.1 2003/01/04 02:13:58 wtc%netscape.com Exp $"
+#
+
+MOD_DEPTH = ../..
+topsrcdir   = @top_srcdir@
+srcdir	    = @srcdir@
+VPATH	    = @srcdir@
+
+include $(MOD_DEPTH)/config/autoconf.mk
+
+%: %.ksh
+	$(RM) $@
+	cp $< $@
+	chmod +x $@
+
+ifeq ($(USE_64), 1)
+DIRS = \
+	SUNWprx
+else
+DIRS = \
+	SUNWpr
+endif
+
+PROTO = \
+	$(ROOT) \
+	$(ROOT)/usr \
+	$(ROOT)/usr/lib \
+	$(ROOT)/usr/lib/mps
+
+ifdef USE_64
+PROTO += $(ROOT)/usr/lib/mps/sparcv9
+endif
+
+include $(srcdir)/Makefile.com
+
+awk_pkginfo: bld_awk_pkginfo
+	./bld_awk_pkginfo -m $(MACH) -p "$(PRODUCT_VERSION)" -o $@ -v $(PRODUCT_VERSION)
+
+all:: awk_pkginfo $(PROTO)
+publish: awk_pkginfo $(PROTO)
+	+$(LOOP_OVER_DIRS)
+
+clean clobber::
+	$(RM) awk_pkginfo bld_awk_pkginfo
+	$(RM) -r $(ROOT)
+
+$(ROOT) $(ROOT)/%:
+	mkdir -p $@
+
+ifdef USE_64
+$(ROOT)/usr/lib/mps/sparcv9:
+	$(LN) -sf ../../../../$(dist_libdir) $@
+else
+$(ROOT)/usr/lib/mps:
+	$(LN) -sf ../../../$(dist_libdir) $@
+endif

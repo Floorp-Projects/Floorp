@@ -36,5 +36,7 @@
 #
 # A module is also called a component or a subsystem.
 
-MOD_NAME = nspr20
-MOD_VERSION = 4
+MOD_NAME = $(NSPR_MODNAME)
+MOD_VERSION = $(MOD_MAJOR_VERSION)
+MOD_MINOR = $(MOD_MINOR_VERSION)
+MOD_PATCH = $(MOD_REVISION_VERSION)

@@ -77,6 +77,13 @@ ifeq ($(OS_ARCH),IRIX)
 OS_LIBS = -lc
 endif
 
+ifeq ($(OS_ARCH),SunOS)
+OS_LIBS = -lc
+MAPFILE = $(OBJDIR)/pldsmap.sun
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -M $(MAPFILE)
+endif
+
 EXTRA_LIBS = $(LIBNSPR)
 
 # On NCR and SCOOS, we can't link with extra libraries when

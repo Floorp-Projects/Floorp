@@ -142,5 +142,9 @@ endif
 	cp -f mdheader.jar $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME); \
 	chmod 664 $(MDIST)/$(MOD_NAME)/$(BUILD_NUMBER)/$(RELEASE_OBJDIR_NAME)/mdheader.jar
 
+solarispkg:
+	@echo Making Solaris packages.
+	$(MAKE) -C pkg/solaris publish
+
 depend:
 	@echo "NSPR20 has no dependencies.  Skipped."

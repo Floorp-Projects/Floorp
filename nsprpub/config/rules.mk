@@ -311,7 +311,7 @@ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	$(IMPLIB) $@ $(SHARED_LIBRARY).def
 endif
     
-$(SHARED_LIBRARY): $(OBJS)
+$(SHARED_LIBRARY): $(OBJS) $(MAPFILE)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
@@ -362,6 +362,13 @@ else
 	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$@ $<
 endif
 	@echo $(RES) finished
+endif
+
+$(MAPFILE): $(LIBRARY_NAME).def
+	@$(MAKE_OBJDIR)
+ifeq ($(OS_ARCH),SunOS)
+	grep -v ';-' $< | \
+	sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.cpp
