@@ -312,6 +312,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 			if (!m_sendListener)
 				return NS_ERROR_FAILURE;
       
+      NS_ADDREF(m_sendListener);
 			// set this object for use on completion...
 			m_sendListener->SetComposeObj(this);
 			m_sendListener->SetDeliverMode(deliverMode);
@@ -1140,7 +1141,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         mComposeObj->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                      // windows hanging around to prevent the app from exiting.
 
-      NS_IF_RELEASE(mComposeObj);
+      NS_IF_RELEASE(compFields);
 		}
 		else
 		{
