@@ -126,6 +126,8 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsCExternalHandlerService.h"
+#include "nsIMIMEService.h"
 
 // Find / Find Again 
 #include "nsIFindComponent.h"
@@ -685,6 +687,7 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   nsCOMPtr <nsILocalFile> lastSaveDir;
   nsCOMPtr<nsIFileSpec> fileSpec;
   nsXPIDLCString filePath;
+  nsXPIDLString defaultDisplayString;
 
   if (NS_FAILED(rv)) goto done;
   if (!url) goto done;
@@ -703,16 +706,28 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
     
   /* we need to convert the UTF-8 fileName to platform specific character set.
      The display name is in UTF-8 because it has been escaped from JS
-  */ 
+  */
+  
+  defaultDisplayString.Assign(NS_ConvertUTF8toUCS2(unescapedDisplayName));
+  nsCRT::free(unescapedDisplayName);
+#if defined (XP_MAC)
+  {
+  /* We need to truncate the name to 31 characters, this even on MacOS X until the file API
+     correctly support long file name. Using a nsILocalFIle will do the trick...
+  */
+  nsCOMPtr<nsILocalFile> aLocalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(aLocalFile->SetUnicodeLeafName(defaultDisplayString.get())))
+    aLocalFile->GetUnicodeLeafName(getter_Copies(defaultDisplayString));
+  }
+#endif
   
   filePicker->Init(
       nsnull, 
       GetString(NS_LITERAL_STRING("Save Attachment").get()),
       nsIFilePicker::modeSave
       );
-  filePicker->SetDefaultString(NS_ConvertUTF8toUCS2(unescapedDisplayName).get());
+  filePicker->SetDefaultString(defaultDisplayString.get());
   filePicker->AppendFilters(nsIFilePicker::filterAll);
-  nsCRT::free(unescapedDisplayName);
   
   rv = GetLastSaveDirectory(getter_AddRefs(lastSaveDir));
   if (NS_SUCCEEDED(rv) && lastSaveDir) {
@@ -1646,15 +1661,17 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
     }
     
 #ifdef XP_MAC
-  /* On Mac, if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
   if (!m_contentType.IsEmpty())
+  {
+    nsFileSpec realSpec;
+    m_fileSpec->GetFileSpec(&realSpec);
+
+  	/* if we are saving an appledouble or applesingle attachment, we need to use an Apple File Decoder */
     if ((nsCRT::strcasecmp(m_contentType.get(), APPLICATION_APPLEFILE) == 0) ||
         (nsCRT::strcasecmp(m_contentType.get(), MULTIPART_APPLEDOUBLE) == 0))
     {        
       /* ggrrrrr, I have a nsFileSpec but I need a nsILocalFile... */
       nsCOMPtr<nsILocalFile> outputFile;
-      nsFileSpec realSpec;
-      m_fileSpec->GetFileSpec(&realSpec);
       NS_FileSpecToIFile(&realSpec, getter_AddRefs(outputFile));
       
       nsCOMPtr<nsIAppleFileDecoder> appleFileDecoder = do_CreateInstance(NS_IAPPLEFILEDECODER_CONTRACTID, &rv);
@@ -1665,6 +1682,24 @@ nsSaveMsgListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
           m_outputStream = do_QueryInterface(appleFileDecoder, &rv);
       }
     }
+    else
+    {
+      /* we need to set the correct application type and creator base on the content-type */
+      nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID));
+      if (mimeService)
+      {
+        nsCOMPtr<nsIMIMEInfo> mimeinfo;
+        if (NS_SUCCEEDED(mimeService->GetFromMIMEType(m_contentType.get(), getter_AddRefs(mimeinfo))))
+        {
+          PRUint32 aMacType;
+          PRUint32 aMacCreator;
+          if (NS_SUCCEEDED(mimeinfo->GetMacType(&aMacType)) && NS_SUCCEEDED(mimeinfo->GetMacCreator(&aMacCreator)))
+            realSpec.SetFileTypeAndCreator((OSType)aMacType, (OSType)aMacCreator);
+        }
+      }
+      
+    }
+  }
 #endif
 
     return rv;
