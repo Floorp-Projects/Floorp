@@ -548,14 +548,12 @@ LDFLAGS="$_SAVE_LDFLAGS"
 dnl Check for toolkit libs
 dnl ========================================================
 useRhapsody=`echo $target_os | egrep "^Rhapsody"`
-useBeOS=`echo $target_os | egrep "^BeOS"`
 AC_ARG_ENABLE(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
         -o "$enableval" = "xlib" \
-        -o "$useRhapsody" \
-        -o "$useBeOS"; then
+        -o "$useRhapsody" ; then
      dnl nglayout only supports building with one toolkit,
      dnl so ignore everything after the first comma (",").
      MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
@@ -565,11 +563,7 @@ AC_ARG_ENABLE(toolkit,
   [if test "$useRhapsody" ; then
      MOZ_TOOLKIT="rhapsody"
    else
-     if test "$useBeOS" ; then
-       MOZ_TOOLKIT="beos"
-     else
-       MOZ_TOOLKIT="gtk"
-     fi
+     MOZ_TOOLKIT="gtk"
    fi])
 
 if echo ":$MOZ_TOOLKIT" | grep "motif" >/dev/null; then
@@ -697,6 +691,11 @@ if echo ":$MOZ_TOOLKIT" | grep "xlib" >/dev/null; then
 fi
 
 fi # $no_x
+
+# BeOS toolkit setting
+if test "`echo $target_os | egrep "beos"`"; then
+        MOZ_TOOLKIT="beos"
+fi
 
 AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
