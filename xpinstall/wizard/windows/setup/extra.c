@@ -6637,73 +6637,59 @@ void CleanTempFiles()
   DeleteInstallLogFile(FILE_INSTALL_STATUS_LOG);
 }
 
-void DeInitialize()
+void SendErrorMessage(void)
 {
   char szBuf[MAX_BUF];
+  char *szPartialEscapedURL = NULL;
 
-  if(gErrorMessageStream.bEnabled && gErrorMessageStream.bSendMessage)
+  /* append to the message stream the list of components that either had
+   * network retries or crc retries */
+  LogMSDownloadFileStatus();
+
+  /* replace this function call with a call to xpnet */
+  if((szPartialEscapedURL = nsEscape(gErrorMessageStream.szMessage,
+                                     url_Path)) != NULL)
   {
-    char *szPartialEscapedURL = NULL;
+    char  szWGetLog[MAX_BUF];
+    char  szMsg[MAX_BUF];
+    char  *szFullURL = NULL;
+    DWORD dwSize;
 
-    /* append to the message stream the list of components that either had
-     * network retries or crc retries */
-    LogMSDownloadFileStatus();
+    lstrcpy(szWGetLog, szTempDir);
+    AppendBackSlash(szWGetLog, sizeof(szWGetLog));
+    lstrcat(szWGetLog, FILE_WGET_LOG);
 
-    /* replace this function call with a call to xpnet */
-    if((szPartialEscapedURL = nsEscape(gErrorMessageStream.szMessage,
-                                       url_Path)) != NULL)
+    /* take into account '?' and '\0' chars */
+    dwSize = lstrlen(gErrorMessageStream.szURL) +
+             lstrlen(szPartialEscapedURL) + 2;
+    if((szFullURL = NS_GlobalAlloc(dwSize)) != NULL)
     {
-      char  szWGetLog[MAX_BUF];
-      char  szMsg[MAX_BUF];
-      char  *szFullURL = NULL;
-      DWORD dwSize;
+      wsprintf(szFullURL,
+               "%s?%s",
+               gErrorMessageStream.szURL,
+               szPartialEscapedURL);
 
-      lstrcpy(szWGetLog, szTempDir);
-      AppendBackSlash(szWGetLog, sizeof(szWGetLog));
-      lstrcat(szWGetLog, FILE_WGET_LOG);
+      wsprintf(szMsg,
+               "UnEscapedURL: %s?%s\nEscapedURL: %s",
+               gErrorMessageStream.szURL,
+               gErrorMessageStream.szMessage,
+               szFullURL);
 
-      /* take into account '?' and '\0' chars */
-      dwSize = lstrlen(gErrorMessageStream.szURL) +
-               lstrlen(szPartialEscapedURL) + 2;
-      if((szFullURL = NS_GlobalAlloc(dwSize)) != NULL)
+      if(gErrorMessageStream.bShowConfirmation &&
+        (*gErrorMessageStream.szConfirmationMessage != '\0'))
       {
-        wsprintf(szFullURL,
-                 "%s?%s",
-                 gErrorMessageStream.szURL,
-                 szPartialEscapedURL);
+        char szConfirmationMessage[MAX_BUF];
 
-        wsprintf(szMsg,
-                 "UnEscapedURL: %s?%s\nEscapedURL: %s",
-                 gErrorMessageStream.szURL,
-                 gErrorMessageStream.szMessage,
-                 szFullURL);
-
-        if(gErrorMessageStream.bShowConfirmation &&
-          (*gErrorMessageStream.szConfirmationMessage != '\0'))
-        {
-          char szConfirmationMessage[MAX_BUF];
-
-          wsprintf(szBuf,
-                   "\n\n  %s",
-                   gErrorMessageStream.szMessage);
-          wsprintf(szConfirmationMessage,
-                   gErrorMessageStream.szConfirmationMessage,
-                   szBuf);
-          if(MessageBox(hWndMain,
-                        szConfirmationMessage,
-                        sgProduct.szProductName,
-                        MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
-          {
-            //PrintError(szMsg, ERROR_CODE_HIDE);
-            WGet(szFullURL,
-                 szWGetLog,
-                 diAdvancedSettings.szProxyServer,
-                 diAdvancedSettings.szProxyPort,
-                 diAdvancedSettings.szProxyUser,
-                 diAdvancedSettings.szProxyPasswd);
-          }
-        }
-        else if(!gErrorMessageStream.bShowConfirmation)
+        wsprintf(szBuf,
+                 "\n\n  %s",
+                 gErrorMessageStream.szMessage);
+        wsprintf(szConfirmationMessage,
+                 gErrorMessageStream.szConfirmationMessage,
+                 szBuf);
+        if(MessageBox(hWndMain,
+                      szConfirmationMessage,
+                      sgProduct.szProductName,
+                      MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
         {
           //PrintError(szMsg, ERROR_CODE_HIDE);
           WGet(szFullURL,
@@ -6713,13 +6699,28 @@ void DeInitialize()
                diAdvancedSettings.szProxyUser,
                diAdvancedSettings.szProxyPasswd);
         }
-
-        FreeMemory(&szFullURL);
+      }
+      else if(!gErrorMessageStream.bShowConfirmation)
+      {
+        //PrintError(szMsg, ERROR_CODE_HIDE);
+        WGet(szFullURL,
+             szWGetLog,
+             diAdvancedSettings.szProxyServer,
+             diAdvancedSettings.szProxyPort,
+             diAdvancedSettings.szProxyUser,
+             diAdvancedSettings.szProxyPasswd);
       }
 
-      FreeMemory(&szPartialEscapedURL);
+      FreeMemory(&szFullURL);
     }
+
+    FreeMemory(&szPartialEscapedURL);
   }
+}
+
+void DeInitialize()
+{
+  char szBuf[MAX_BUF];
 
   LogISTime(W_END);
   if(bCreateDestinationDir)
@@ -6739,6 +6740,9 @@ void DeInitialize()
   DeleteWGetLog();
   CleanTempFiles();
   DirectoryRemove(szTempDir, FALSE);
+
+  if(gErrorMessageStream.bEnabled && gErrorMessageStream.bSendMessage)
+    SendErrorMessage();
 
   DeInitSiComponents(&siComponents);
   DeInitSXpcomFile();
