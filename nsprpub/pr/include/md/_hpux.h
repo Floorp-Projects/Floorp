@@ -45,6 +45,13 @@
 #endif
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
+/*
+ * OSF1 and HPUX report the POLLHUP event for a socket when the
+ * shutdown(SHUT_WR) operation is called for the remote end, even though
+ * the socket is still writeable. Use select(), instead of poll(), to
+ * workaround this problem.
+ */
+#define _PR_POLL_WITH_SELECT
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_HAVE_POSIX_SEMAPHORES
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
