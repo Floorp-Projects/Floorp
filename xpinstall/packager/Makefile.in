@@ -83,11 +83,16 @@ all export libs install:: $(TARGETS)
 $(PACKAGE): $(DIST)/bin/mozilla-bin
 ifneq ($(NSPR_DIR),$(DIST)/bin)
 	@chmod 755 $(NSPR_DIR)/*
+	@echo "Copying NSPR..."
 	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
 endif
-	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
-	@ln -s bin $(DIST)/package
-	@cd $(DIST)/bin; find . ! -type d \
+	@rm -rf $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
+# NOTE: this must be a cp now that dist links into the tree so that we
+# do not strip the binaries actually in the tree.
+	@echo "Creating package directory..."
+	@cp -rp ${DIST}/bin $(DIST)/package
+	@echo "Stripping package directory..."
+	@cd $(DIST)/package; find . ! -type d \
 			! -name "*.js" \
 			! -name "*.xpt" \
 			! -name "*.gif" \
@@ -108,7 +113,7 @@ endif
 			! -name "*.tbl" \
 			! -name "*.src" \
 			! -name "*.reg" \
-			-exec strip $(STRIP_FLAGS) {} \;
+			-exec strip $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
 endif
