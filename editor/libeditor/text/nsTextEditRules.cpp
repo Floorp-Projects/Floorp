@@ -516,7 +516,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 
   // if we are at the end of the document, we need to insert 
   // a special mozBR following the normal br, and then set the
-  // selection to after the mozBR.
+  // selection to stick to the mozBR.
   PRInt32 selOffset;
   nsCOMPtr<nsIDOMNode> nearNode, selNode;
   nsresult res;
@@ -539,7 +539,8 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       if (NS_FAILED(res)) return res;
       res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
       if (NS_FAILED(res)) return res;
-      res = aSelection->Collapse(selNode,selOffset+1);
+      aSelection->SetHint(PR_TRUE);
+      res = aSelection->Collapse(selNode,selOffset);
       if (NS_FAILED(res)) return res;
     }
   }
@@ -878,6 +879,14 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
       if (NS_FAILED(res)) return res;
       // selectedNode is either the anchor itself, 
       // or if anchor has children, it's the referenced child node
+      // XXX ----------------------------------------------- XXX
+      //  I believe this s wrong.  Assuming anchor and focus
+      // alwas correspond to selection endpoints, it is possible 
+      // for the first node after the selectin start point to not
+      // be selected.  As an example consider a selection that
+      // starts right before a <ul>, and ends after the first character
+      // in the text of the first list item.  Really all that is
+      // selected is one letter of text, not the <ul>
       nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(anchor);
       PRBool hasChildren=PR_FALSE;
       anchor->HasChildNodes(&hasChildren);
@@ -890,7 +899,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
         }
       }
 
-      if ((NS_SUCCEEDED(res)) && selectedNode)
+      if ((NS_SUCCEEDED(res)) && selectedNode && !DeleteEmptyTextNode(selectedNode))
       {
         nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
         selectedNodeAsText = do_QueryInterface(selectedNode);
@@ -898,7 +907,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
         {
           nsCOMPtr<nsIDOMNode> siblingNode;
           selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
-          if (siblingNode)
+          if (siblingNode && !DeleteEmptyTextNode(siblingNode))
           {
             nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
             siblingNodeAsText = do_QueryInterface(siblingNode);
@@ -915,7 +924,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
             }
           }
           selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
-          if (siblingNode)
+          if (siblingNode && !DeleteEmptyTextNode(siblingNode))
           {
             nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
             siblingNodeAsText = do_QueryInterface(siblingNode);
@@ -932,15 +941,6 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
               if (NS_FAILED(res)) return res;
               // selectedNode will remain after the join, siblingNode is removed
             }
-          }
-          // if, after all this work, selectedNode is empty, delete it
-          // it's good practice to remove empty text nodes, and this fixes 
-          // bugs 20387 for text controls in html content area.
-          PRUint32 finalSelectedNodeLength; // the length of the resulting node
-          selectedNodeAsText->GetLength(&finalSelectedNodeLength);
-          if (0==finalSelectedNodeLength)
-          {
-            res = mEditor->DeleteNode(selectedNode);
           }
         }
       }
@@ -978,26 +978,15 @@ nsTextEditRules:: DidUndo(nsIDOMSelection *aSelection, nsresult aResult)
     else
     {
       nsCOMPtr<nsIDOMElement> theBody;
+      nsCOMPtr<nsIDOMNode> node;
       res = mEditor->GetRootElement(getter_AddRefs(theBody));
       if (NS_FAILED(res)) return res;
       if (!theBody) return NS_ERROR_FAILURE;
-      
-      nsAutoString tagName; tagName.AssignWithConversion("div");
-      nsCOMPtr<nsIDOMNodeList> nodeList;
-      res = theBody->GetElementsByTagName(tagName, getter_AddRefs(nodeList));
+      res = mEditor->GetLeftmostChild(theBody,getter_AddRefs(node));
       if (NS_FAILED(res)) return res;
-      if (nodeList)
-      {
-        PRUint32 len;
-        nodeList->GetLength(&len);
-        
-        if (len != 1) return NS_OK;  // only in the case of one div could there be the bogus node
-        nsCOMPtr<nsIDOMNode>node;
-        nodeList->Item(0, getter_AddRefs(node));
-        if (!node) return NS_ERROR_NULL_POINTER;
-        if (mEditor->IsMozEditorBogusNode(node))
-          mBogusNode = do_QueryInterface(node);
-      }
+      if (!node) return NS_ERROR_NULL_POINTER;
+      if (mEditor->IsMozEditorBogusNode(node))
+        mBogusNode = do_QueryInterface(node);
     }
   }
   return res;
@@ -1435,3 +1424,23 @@ nsTextEditRules::IsEmptyNode( nsIDOMNode *aNode,
 }
 
 
+PRBool
+nsTextEditRules::DeleteEmptyTextNode(nsIDOMNode *aNode)
+{
+  if (aNode)
+  {
+    nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+    nodeAsText = do_QueryInterface(aNode);
+    if (nodeAsText)
+    {
+      PRUint32 len;
+      nodeAsText->GetLength(&len);
+      if (!len) 
+      {
+        mEditor->DeleteNode(aNode);
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
