@@ -2422,14 +2422,14 @@ PRInt32 nsNNTPProtocol::BeginArticle()
 
 PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 length)
 {
-  PRUint32 status = 0;
+  PRUint32 line_length = 0;
   
   PRBool pauseForMoreData = PR_FALSE;
   if (m_channelListener)
   {
-    
-    char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-    if(pauseForMoreData)
+    nsresult rv = NS_OK;
+    char *line = m_lineStreamBuffer->ReadNextLine(inputStream, line_length, pauseForMoreData, &rv, PR_TRUE);
+    if (pauseForMoreData)
     {
       PRUint32 inlength = 0;
       mDisplayInputStream->Available(&inlength);
@@ -2437,13 +2437,14 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
         m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
       SetFlag(NNTP_PAUSE_FOR_READ);
       PR_Free(line);
-      return status;
+      return line_length;
     }
-    
+
     if (m_newsFolder)
       m_newsFolder->NotifyDownloadedLine(line, m_key);
-    
-    if (line[0] == '.' && line[1] == 0)
+
+    // line only contains a single dot -> message end
+    if (line_length == 1 + MSG_LINEBREAK_LEN && line[0] == '.')
     {
       m_nextState = NEWS_DONE;
       
@@ -2454,23 +2455,22 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
       if (inlength > 0) // broadcast our batched up ODA changes
         m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
       PR_Free(line);
-      return status;
+      return line_length;
     }
     else // we aren't finished with the message yet
     {
       PRUint32 count = 0;
-      
+
       // skip over the quoted '.'
-      if (line[0] == '.') 
-        mDisplayOutputStream->Write(line+1, PL_strlen(line)-1, &count);
+      if (line_length > 1 && line[0] == '.' && line[1] == '.')
+        mDisplayOutputStream->Write(line+1, line_length-1, &count);
       else 
-        mDisplayOutputStream->Write(line, PL_strlen(line), &count);
-      mDisplayOutputStream->Write(MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK), &count);
+        mDisplayOutputStream->Write(line, line_length, &count);
     }
-    
+
     PR_Free(line);
   }
-  
+
   return 0;	
 }
 

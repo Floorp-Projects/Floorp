@@ -509,7 +509,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
 
 nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) 
 : nsMsgProtocol(aURL),
-  nsMsgLineBuffer(NULL, PR_FALSE),
   m_bytesInMsgReceived(0), 
   m_totalFolderSize(0),    
   m_totalDownloadSize(0),
@@ -520,8 +519,6 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
   m_responseTimer(nsnull),
   m_responseTimeout(45)
 {
-  SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
-  m_ignoreCRLFs = PR_TRUE;
 }
 
 nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
@@ -3020,21 +3017,22 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
       {
         if (m_pop3ConData->msg_closure)
         {
-          m_ignoreCRLFs = PR_TRUE;
-          PRInt32 res = BufferInput(line, buffer_size);
-          if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
-          m_ignoreCRLFs = PR_FALSE;
-          res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
-          if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
+          rv = HandleLine(line, buffer_size);
+          if (NS_FAILED(rv))
+            return (Error(POP3_MESSAGE_WRITE_ERROR));
 
+          // not really sure we always had CRLF in input since we
+          // also treat a single LF as line ending!
           m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
         }
 
         // now read in the next line
         PR_Free(line);
         line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
-                                                pauseForMoreData);
+                                                pauseForMoreData, &rv, PR_TRUE);
         PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
+        // not really sure we always had CRLF in input since we
+        // also treat a single LF as line ending!
         status += (buffer_size+2); // including CRLF
       } while (line);
     }
@@ -3068,8 +3066,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
         // (Note: This is only a temp hack until the underlying XPCOM is
         // fixed to return errors)
 
-        if(NS_FAILED(rv))
-            return(Error(POP3_MESSAGE_WRITE_ERROR));
+        if (NS_FAILED(rv))
+            return (Error(POP3_MESSAGE_WRITE_ERROR));
 
         m_pop3ConData->msg_closure = 0;
     }
@@ -3195,50 +3193,41 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
   return RetrResponse(inputStream, length);
 }
 
-
-PRInt32
+/* line is handed over as null-terminated string with MSG_LINEBREAK */
+nsresult
 nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     
     NS_ASSERTION(m_pop3ConData->msg_closure, "m_pop3ConData->msg_closure is null in nsPop3Protocol::HandleLine()");
     if (!m_pop3ConData->msg_closure)
-        return -1;
+        return NS_ERROR_NULL_POINTER;
     
     if (!m_senderInfo.IsEmpty() && !m_pop3ConData->seenFromHeader)
     {
         if (line_length > 6 && !PL_strncasecmp("From: ", line, 6))
         {
-            /* Zzzzz PL_strstr only works with NULL terminated string. Since,
-             * the last character of a line is either a carriage return
-             * or a linefeed. Temporary setting the last character of the
-             * line to NULL and later setting it back should be the right 
-             * thing to do. 
-             */
-            char ch = line[line_length-1];
-            line[line_length-1] = 0;
             m_pop3ConData->seenFromHeader = PR_TRUE;
             if (PL_strstr(line, m_senderInfo.get()) == NULL)
                 m_nsIPop3Sink->SetSenderAuthedFlag(m_pop3ConData->msg_closure,
                                                      PR_FALSE);
-            line[line_length-1] = ch;
         }
     }
 
-    // line contains only dot and linebreak -> message end
-    if (line[0] == '.' && line_length == 1 + MSG_LINEBREAK_LEN)
+    // line contains only a single dot and linebreak -> message end
+    if (line_length == 1 + MSG_LINEBREAK_LEN && line[0] == '.')
     {
         m_pop3ConData->assumed_end = PR_TRUE;	/* in case byte count from server is */
                                     /* wrong, mark we may have had the end */ 
         if (!m_pop3ConData->dot_fix || m_pop3ConData->truncating_cur_msg ||
             (m_pop3ConData->parsed_bytes >= (m_pop3ConData->pop3_size -3))) 
         {
-          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
-          nsCOMPtr<nsIMsgWindow> msgWindow;
-          if (NS_SUCCEEDED(rv))
-            rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-          rv = m_nsIPop3Sink->IncorporateComplete(msgWindow,
-            m_pop3ConData->truncating_cur_msg ? m_pop3ConData->cur_msg_size : 0);
+            nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+            nsCOMPtr<nsIMsgWindow> msgWindow;
+            if (NS_SUCCEEDED(rv))
+              rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+            rv = m_nsIPop3Sink->IncorporateComplete(msgWindow,
+              m_pop3ConData->truncating_cur_msg ? m_pop3ConData->cur_msg_size : 0);
 
             // The following was added to prevent the loss of Data when we try
             // and write to somewhere we dont have write access error to (See
@@ -3246,35 +3235,25 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             // (Note: This is only a temp hack until the underlying XPCOM is
             // fixed to return errors)
 
-            if(NS_FAILED(rv))
-              return(Error((rv == NS_MSG_ERROR_COPYING_FROM_TMP_DOWNLOAD)
-                            ? POP3_TMP_DOWNLOAD_FAILED 
-                            : POP3_MESSAGE_WRITE_ERROR));
+            if (NS_FAILED(rv))
+              return (Error((rv == NS_MSG_ERROR_COPYING_FROM_TMP_DOWNLOAD)
+                             ? POP3_TMP_DOWNLOAD_FAILED 
+                             : POP3_MESSAGE_WRITE_ERROR));
 
-            m_pop3ConData->msg_closure = 0;
-            return 0;
+            m_pop3ConData->msg_closure = nsnull;
+            return rv;
         }
     }
-      /*When examining a multi-line response, the client checks
-      to see if the line begins with the termination octet.  If so and if
-      octets other than CRLF follow, the first octet of the line (the
-      termination octet) is stripped away.*/
-    else if (line_length > 1  && line[0] == '.' && line[1] == '.' ) 
-    {
-        PRUint32 i=0;
-        while ( i < line_length -1 ){
-           line[i] = line[i+1];
-           i++;
-        }
-        line[i] = '\0';
-        line_length -= 1;
+    /* Check if the line begins with the termination octet. If so
+       and if another termination octet follows, we step over the
+       first occurence of it. */
+    else if (line_length > 1 && line[0] == '.' && line[1] == '.') {
+        line++;
+        line_length--;
     
     }
-    rv = m_nsIPop3Sink->IncorporateWrite(line, line_length);
-    if(NS_FAILED(rv))
-      return(Error(POP3_MESSAGE_WRITE_ERROR));
-    
-    return 0;
+
+    return m_nsIPop3Sink->IncorporateWrite(line, line_length);
 }
 
 PRInt32 nsPop3Protocol::SendDele()

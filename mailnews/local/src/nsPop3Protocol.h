@@ -281,7 +281,7 @@ typedef struct _Pop3ConData {
 #define POP3_AUTH_FAILURE           0x00000008  /* extended code said authentication failed */
 
 
-class nsPop3Protocol : public nsMsgProtocol, public nsMsgLineBuffer, public nsIPop3Protocol
+class nsPop3Protocol : public nsMsgProtocol, public nsIPop3Protocol
 {
 public:
   nsPop3Protocol(nsIURI* aURL);  
@@ -301,8 +301,6 @@ public:
   NS_IMETHOD OnTransportStatus(nsITransport *transport, nsresult status, PRUint32 progress, PRUint32 progressMax);
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus);
   NS_IMETHOD Cancel(nsresult status);
-  // for nsMsgLineBuffer
-  virtual PRInt32 HandleLine(char *line, PRUint32 line_length);
 
   static void MarkMsgInHashTable(PLHashTable *hashTable, const Pop3UidlEntry *uidl, 
                                   PRBool *changed);
@@ -364,6 +362,8 @@ private:
   PRInt32 m_responseTimeout; // in seconds
   void SetResponseTimer();
   void CancelResponseTimer();
+
+  nsresult HandleLine(char *line, PRUint32 line_length);
 
   //////////////////////////////////////////////////////////////////////////////////////////
       // Begin Pop3 protocol state handlers

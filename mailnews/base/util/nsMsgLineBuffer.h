@@ -90,7 +90,6 @@ protected:
   nsMsgLineBufferHandler *m_handler;
   PRBool		m_convertNewlinesP;
   PRBool      m_lookingForCRLF; 
-  PRBool    m_ignoreCRLFs;
 };
 
 // I'm adding this utility class here for lack of a better place. This utility class is similar to nsMsgLineBuffer
@@ -122,7 +121,7 @@ public:
   // aEndOfLinetoken -- delimiter used to denote the end of a line.
   // aNumBytesInLine -- The number of bytes in the line returned
   // aPauseForMoreData -- There is not enough data in the stream to make a line at this time...
-  char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData, nsresult *rv = nsnull);
+  char * ReadNextLine(nsIInputStream * aInputStream, PRUint32 &anumBytesInLine, PRBool &aPauseForMoreData, nsresult *rv = nsnull, PRBool addLineTerminator = PR_FALSE);
   nsresult GrowBuffer(PRInt32 desiredSize);
   void ClearBuffer();
   PRBool NextLineAvailable();
