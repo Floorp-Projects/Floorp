@@ -399,6 +399,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "gb18030.2000-0",     &FLG_ZHCN,    &GB18030_0     },
   { "gb18030.2000-1",     &FLG_ZHCN,    &GB18030_1     },
   { "gbk-0",              &FLG_ZHCN,    &GBK           },
+  { "gbk1988.1989-0",     &FLG_ZHCN,    &GBK           },
   { "hkscs-1",            &FLG_ZHTW,    &HKSCS         },
   { "hp-japanese15",      &FLG_NONE,    &Unknown       },
   { "hp-japaneseeuc",     &FLG_NONE,    &Unknown       },
