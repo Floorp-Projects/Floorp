@@ -101,11 +101,11 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
     report = privateData->errorReport;
     if (report) {
         if (report->uclinebuf)
-	    JS_free(cx, (void *)report->uclinebuf);
+            JS_free(cx, (void *)report->uclinebuf);
         if (report->filename)
-	    JS_free(cx, (void *)report->filename);
+            JS_free(cx, (void *)report->filename);
         if (report->ucmessage)
-	    JS_free(cx, (void *)report->ucmessage);
+            JS_free(cx, (void *)report->ucmessage);
         if (report->messageArgs) {
             args = report->messageArgs;
             while (*args != NULL)
@@ -162,16 +162,16 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
      * pointers into internal tokenstream structs, and may go away.
      */
     if (report->uclinebuf != NULL) {
-	capacity = js_strlen(report->uclinebuf) + 1;
+        capacity = js_strlen(report->uclinebuf) + 1;
         newReport->uclinebuf =
             (const jschar *)JS_malloc(cx, capacity * sizeof(jschar));
         if (!newReport->uclinebuf)
             goto error;
-	js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, capacity);
-	newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
-							report->uclinebuf);
+        js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, capacity);
+        newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
+                                                        report->uclinebuf);
     } else {
-	newReport->uclinebuf = newReport->uctokenptr = NULL;
+        newReport->uclinebuf = newReport->uctokenptr = NULL;
     }
 
     if (report->ucmessage != NULL) {
@@ -183,7 +183,7 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
 
         if (report->messageArgs) {
             for (i = 0; report->messageArgs[i] != NULL; i++)
-                ;
+                continue;
             JS_ASSERT(i);
             newReport->messageArgs =
                 (const jschar **)JS_malloc(cx, (i + 1) * sizeof(jschar *));
@@ -262,14 +262,14 @@ js_ErrorFromException(JSContext *cx, jsval exn)
 typedef enum JSExnType {
     JSEXN_NONE = -1,
       JSEXN_ERR,
-	JSEXN_INTERNALERR,
-	JSEXN_EVALERR,
-	JSEXN_RANGEERR,
-	JSEXN_REFERENCEERR,
-	JSEXN_SYNTAXERR,
-	JSEXN_TYPEERR,
-	JSEXN_URIERR,
-	JSEXN_LIMIT
+        JSEXN_INTERNALERR,
+        JSEXN_EVALERR,
+        JSEXN_RANGEERR,
+        JSEXN_REFERENCEERR,
+        JSEXN_SYNTAXERR,
+        JSEXN_TYPEERR,
+        JSEXN_URIERR,
+        JSEXN_LIMIT
 } JSExnType;
 
 struct JSExnSpec {
@@ -885,8 +885,8 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 #if defined( DEBUG_mccabe ) && defined ( PRINTNAMES )
     /* Print the error name and the associated exception name to stderr */
     fprintf(stderr, "%s\t%s\n",
-	    errortoexnname[errorNumber].name,
-	    errortoexnname[errorNumber].exception);
+            errortoexnname[errorNumber].name,
+            errortoexnname[errorNumber].exception);
 #endif
 
     /*
@@ -894,7 +894,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
      * with the given error number.
      */
     if (exn == JSEXN_NONE)
-	return JS_FALSE;
+        return JS_FALSE;
 
     /*
      * Prevent runaway recursion, just as the Exception native constructor
@@ -989,7 +989,7 @@ out:
 
 #if JS_HAS_EXCEPTIONS
 
-extern JSBool
+JSBool
 js_ReportUncaughtException(JSContext *cx)
 {
     JSObject *exnObject;
@@ -1015,7 +1015,6 @@ js_ReportUncaughtException(JSContext *cx)
     } else {
         exnObject = NULL;
     }
-    str = js_ValueToString(cx, exn);
 
 #if JS_HAS_ERROR_EXCEPTIONS
     reportp = js_ErrorFromException(cx, exn);
@@ -1023,12 +1022,8 @@ js_ReportUncaughtException(JSContext *cx)
     reportp = NULL;
 #endif
 
-    if (str != NULL) {
-	bytes = js_GetStringBytes(str);
-    }
-    else {
-	bytes = "null";
-    }
+    str = js_ValueToString(cx, exn);
+    bytes = str ? js_GetStringBytes(str) : "null";
 
     if (reportp == NULL) {
         /*
@@ -1049,4 +1044,4 @@ js_ReportUncaughtException(JSContext *cx)
     return JS_TRUE;
 }
 
-#endif	    /* JS_HAS_EXCEPTIONS */
+#endif /* JS_HAS_EXCEPTIONS */

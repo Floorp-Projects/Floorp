@@ -889,8 +889,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CALL_ARGUMENTS:
 #if JS_HAS_ARGS_OBJECT
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
-        if (JS_HAS_STRICT_OPTION(cx) &&
-            !JS_ReportErrorFlagsAndNumber(cx,
+        if (!JS_ReportErrorFlagsAndNumber(cx,
                                           JSREPORT_WARNING | JSREPORT_STRICT,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_DEPRECATED_USAGE,
@@ -1774,14 +1773,11 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          * flag, and not mapped by an entry in scope.
                          */
                         JS_ASSERT(sprop->getter == js_GetArgument);
-
-                        if (JS_HAS_STRICT_OPTION(cx)) {
-                            ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                        ok = js_ReportCompileErrorNumber(cx, ts, NULL,
                                                          JSREPORT_WARNING |
                                                          JSREPORT_STRICT,
                                                          JSMSG_DUPLICATE_FORMAL,
                                                          ATOM_BYTES(atom));
-                        }
 
                         dupflag = SPROP_IS_DUPLICATE;
                     }
@@ -1831,7 +1827,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (argv) {
         /* Use the last arg (or this if argc == 0) as a local GC root. */
-        argv[(intn)(argc-1)] = STRING_TO_JSVAL(str);
+        argv[(intN)(argc-1)] = STRING_TO_JSVAL(str);
     }
 
     mark = JS_ARENA_MARK(&cx->tempPool);

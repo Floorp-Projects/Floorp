@@ -238,7 +238,7 @@ JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding)
 {
     JSHashNumber hash0, hash1, hash2;
-    int hashShift;
+    int hashShift, sizeLog2;
     JSScopeProperty *stored, *sprop, **spp, **firstRemoved;
     uint32 sizeMask;
 
@@ -258,7 +258,7 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
 
     /* Compute the primary hash address. */
     hash0 = SCOPE_HASH0(id);
-    hashShift = JS_HASH_BITS - scope->sizeLog2;
+    hashShift = scope->hashShift;
     hash1 = SCOPE_HASH1(hash0, hashShift);
     spp = scope->table + hash1;
 
@@ -277,8 +277,9 @@ js_SearchScope(JSScope *scope, jsid id, JSBool adding)
     }
 
     /* Collision: double hash. */
-    hash2 = SCOPE_HASH2(hash0, scope->sizeLog2, hashShift);
-    sizeMask = JS_BITMASK(scope->sizeLog2);
+    sizeLog2 = scope->sizeLog2;
+    hash2 = SCOPE_HASH2(hash0, sizeLog2, hashShift);
+    sizeMask = JS_BITMASK(sizeLog2);
 
     /* Save the first removed entry pointer so we can recycle it if adding. */
     if (SPROP_IS_REMOVED(stored)) {

@@ -1481,14 +1481,12 @@ With(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *parent, *proto;
     jsval v;
 
-    if (JS_HAS_STRICT_OPTION(cx)) {
-        if (!JS_ReportErrorFlagsAndNumber(cx,
-                                          JSREPORT_WARNING | JSREPORT_STRICT,
-                                          js_GetErrorMessage, NULL,
-                                          JSMSG_DEPRECATED_USAGE,
-                                          js_WithClass.name)) {
-            return JS_FALSE;
-        }
+    if (!JS_ReportErrorFlagsAndNumber(cx,
+                                      JSREPORT_WARNING | JSREPORT_STRICT,
+                                      js_GetErrorMessage, NULL,
+                                      JSMSG_DEPRECATED_USAGE,
+                                      js_WithClass.name)) {
+        return JS_FALSE;
     }
 
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {

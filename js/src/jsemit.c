@@ -260,8 +260,9 @@ ReportStatementTooLarge(JSContext *cx, JSCodeGenerator *cg)
   to the target bytecode.  The lookup and table switch opcodes may contain
   many jump offsets.
 
-  This patch adds "X" counterparts to the opcodes/formats (X is suffixed, btw,
-  to prefer JSOP_ORX and thereby to avoid colliding on the JSOP_XOR name for
+  Mozilla bug #80981 (http://bugzilla.mozilla.org/show_bug.cgi?id=80981) was
+  fixed by adding extended "X" counterparts to the opcodes/formats (NB: X is
+  suffixed to prefer JSOP_ORX thereby avoiding a JSOP_XOR name collision for
   the extended form of the JSOP_OR branch opcode).  The unextended or short
   formats have 16-bit signed immediate offset operands, the extended or long
   formats have 32-bit signed immediates.  The span-dependency problem consists
@@ -865,7 +866,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             type = (js_CodeSpec[op].format & JOF_TYPEMASK);
 
             for (sd2 = sd - 1; sd2 >= sdbase && sd2->top == top; sd2--)
-                ;
+                continue;
             sd2++;
             pivot = sd2->offset;
             JS_ASSERT(top == sd2->before);
@@ -1130,7 +1131,7 @@ GetJumpOffset(JSCodeGenerator *cg, jsbytecode *pc)
 
     top = sd->top;
     while (--sd >= cg->spanDeps && sd->top == top)
-        ;
+        continue;
     sd++;
     return JT_CLR_TAG(jt)->offset - sd->offset;
 }
@@ -1139,13 +1140,15 @@ JSBool
 js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
                  ptrdiff_t off)
 {
-    if (!cg->spanDeps && JUMP_OFFSET_MIN <= off && off <= JUMP_OFFSET_MAX) {
-        SET_JUMP_OFFSET(pc, off);
-        return JS_TRUE;
-    }
+    if (!cg->spanDeps) {
+        if (JUMP_OFFSET_MIN <= off && off <= JUMP_OFFSET_MAX) {
+            SET_JUMP_OFFSET(pc, off);
+            return JS_TRUE;
+        }
 
-    if (!cg->spanDeps && !BuildSpanDepTable(cx, cg))
-        return JS_FALSE;
+        if (!BuildSpanDepTable(cx, cg))
+            return JS_FALSE;
+    }
 
     return SetSpanDepTarget(cx, cg, GetSpanDep(cg, pc), off);
 }
@@ -1346,7 +1349,7 @@ BackPatch(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t last,
     return JS_TRUE;
 }
 
-extern void
+void
 js_PopStatement(JSTreeContext *tc)
 {
     tc->topStmt = tc->topStmt->down;

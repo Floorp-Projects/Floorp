@@ -2919,7 +2919,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     return script;
 }
 
-extern JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(JSBool)
 JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
                           const char *bytes, size_t length)
 {
@@ -3448,7 +3448,7 @@ JS_IsAssigning(JSContext *cx)
     jsbytecode *pc;
 
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
-        ;
+        continue;
     if (!fp || !(pc = fp->pc))
         return JS_FALSE;
     return (js_CodeSpec[*pc].format & JOF_SET) != 0;

@@ -40,7 +40,6 @@
 #include "pratom.h"
 #include "prlock.h"
 #include "prcvar.h"
-#include "jshash.h" /* Added by JSIFY */
 
 #include "jsprvtd.h"    /* for JSScope, etc. */
 #include "jspubtd.h"    /* for JSRuntime, etc. */
