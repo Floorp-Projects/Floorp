@@ -104,7 +104,8 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
   // Init our local attributes
 
   mPresContext = aPresContext;
-  
+ 
+  mWasRestyled = PR_FALSE;
   mChildCount = -1; // these will be updated in GetSelectedFrame()
   mSelection = 0;
   mSelectedFrame = nsnull;
@@ -249,14 +250,16 @@ nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsresult rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
   // This very first call to GetSelectedFrame() will cause us to be marked as an
-  // embellished operator if the selected child is an embellished operator,
-  GetSelectedFrame();
-
-  // register us as a mouse event listener ...
-//  printf("maction:%p registering as mouse event listener ...\n", this);
-  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
-  receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
-
+  // embellished operator if the selected child is an embellished operator
+  if (!GetSelectedFrame()) {
+    mActionType = NS_MATHML_ACTION_TYPE_NONE;
+  }
+  else {
+    // register us as a mouse event listener ...
+    // printf("maction:%p registering as mouse event listener ...\n", this);
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
+    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+  }
   return rv;
 }
 
@@ -327,6 +330,44 @@ nsMathMLmactionFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif
   return NS_OK;
+}
+
+// Only reflow the selected child ...
+NS_IMETHODIMP
+nsMathMLmactionFrame::Reflow(nsIPresContext*          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsReflowStatus&          aStatus)
+{
+  nsresult rv = NS_OK;
+  aDesiredSize.width = aDesiredSize.height = 0;
+  aDesiredSize.ascent = aDesiredSize.descent = 0;
+  mBoundingMetrics.Clear();
+  nsIFrame* childFrame = GetSelectedFrame();
+  if (childFrame) {
+    nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+    nsHTMLReflowState childReflowState(aPresContext, aReflowState,
+                                       childFrame, availSize);
+    if (mWasRestyled) {
+      mWasRestyled = PR_FALSE;
+      // If we have just been restyled, make sure to reflow our
+      // selected child with a StyleChange reflow reason so that
+      // it doesn't over-optimize its reflow. In principle we shouldn't
+      // need to do this because we posted a style changed reflow (see
+      // MouseClick() below). But that reason can be (and usually, it is)
+      // changed in the reflow chain and we don't have much control other
+      // than making sure that the right value is reset here.
+      childReflowState.reason = eReflowReason_StyleChange;
+    }
+    rv = ReflowChild(childFrame, aPresContext, aDesiredSize,
+                     childReflowState, aStatus);
+    childFrame->SetRect(aPresContext,
+                        nsRect(aDesiredSize.descent,aDesiredSize.ascent,
+                        aDesiredSize.width,aDesiredSize.height));
+    mBoundingMetrics = aDesiredSize.mBoundingMetrics;
+    FinalizeReflow(aPresContext, *aReflowState.rendContext, aDesiredSize);
+  }
+  return rv;
 }
 
 // Only place the selected child ...
@@ -438,6 +479,18 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
           node->RemoveAttribute(NS_LITERAL_STRING("actiontype"));
         else
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);
+
+        // At this stage, our style sub-tree has been re-resolved
+        mWasRestyled = PR_TRUE;
+
+        // Cancel the reflow command that the change of attribute has
+        // caused, and post a style changed reflow request that is instead
+        // targeted at our selected frame
+        nsCOMPtr<nsIPresShell> presShell;
+        mPresContext->GetShell(getter_AddRefs(presShell));
+        presShell->CancelReflowCommand(this, nsnull);
+        nsFrame::CreateAndPostReflowCommand(presShell, mSelectedFrame, 
+          nsIReflowCommand::StyleChanged, nsnull, nsnull, nsnull);
       }
     }
   }
