@@ -22,6 +22,7 @@
 #include "nsMsgKeySet.h"
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroup.h"
+#include "nsINNTPNewsgroupList.h"
 #include "nsCOMPtr.h"
 
 class nsNNTPNewsgroup : public nsINNTPNewsgroup 

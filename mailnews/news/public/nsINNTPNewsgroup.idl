@@ -25,7 +25,6 @@
 
 
 #include "nsISupports.idl"
-#include "nsINNTPNewsgroupList.idl"
 
 %{ C++
 #include "nsMsgKeySet.h"
