@@ -47,6 +47,8 @@
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
 
+#define BUF_STR_LEN 1024
+
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_ACCOUNTMANAGER 1
 #endif
@@ -199,6 +201,7 @@ private:
   PRBool isUnique(nsIMsgIncomingServer *server);
   nsresult upgradePrefs();
   nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
+  nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   
   PRInt32 MigrateImapAccounts(nsIMsgIdentity *identity);
   nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum);
@@ -813,7 +816,7 @@ nsMsgAccountManager::LoadAccount(nsCAutoString& accountKey)
 
   // mscott - due to a bug in the idl compiler, SetKey takes a char * when it should
   // take a const char *. but the cast *is* safe just ugly until the idl bug gets fixed
-  account->SetKey(((char *) ((const char *) accountKey) ) );
+  account->SetKey(NS_CONST_CAST(char*,(const char*)accountKey));
   
   return account;
 }
@@ -944,26 +947,26 @@ nsMsgAccountManager::upgradePrefs()
     m_prefs->SetCharPref("mail.account.account1.server","server1");
 
     char *oldAccountsValueBuf=nsnull;
-    char newAccountsValueBuf[1024];
-    char prefNameBuf[1024];
-    char prefValueBuf[1024];
+    char newAccountsValueBuf[BUF_STR_LEN];
+    char prefNameBuf[BUF_STR_LEN];
+    char prefValueBuf[BUF_STR_LEN];
 
     // handle the rest of the accounts.
     for (PRInt32 i=2;i<=numAccounts;i++) {
       rv = m_prefs->CopyCharPref("mail.accountmanager.accounts", &oldAccountsValueBuf);
       if (NS_SUCCEEDED(rv)) {
-        PR_snprintf(newAccountsValueBuf, 1024, "%s,account%d",oldAccountsValueBuf,i);
+        PR_snprintf(newAccountsValueBuf, BUF_STR_LEN, "%s,account%d",oldAccountsValueBuf,i);
         m_prefs->SetCharPref("mail.accountmanager.accounts", newAccountsValueBuf);
       }
       PR_FREEIF(oldAccountsValueBuf);
       oldAccountsValueBuf = nsnull;
       
-      PR_snprintf(prefNameBuf, 1024, "mail.account.account%d.identities", i);
-      // in 4.x, we only had one identity, so everyone gets that one in 5.0 when they upgrade
-      m_prefs->SetCharPref(prefNameBuf, "identity1");
+      PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.identities", i);
+      PR_snprintf(prefValueBuf, BUF_STR_LEN, "identity%d", i);
+      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
 
-      PR_snprintf(prefNameBuf, 1024, "mail.account.account%d.server", i);
-      PR_snprintf(prefValueBuf, 1024, "server%d", i);
+      PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.server", i);
+      PR_snprintf(prefValueBuf, BUF_STR_LEN, "server%d", i);
       m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
     }
 
@@ -1205,6 +1208,42 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
 }
 
 nsresult
+nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity)
+{
+	nsresult rv;
+	nsXPIDLCString oldstr;
+	PRBool oldbool;
+
+	rv = srcIdentity->GetEmail(getter_Copies(oldstr)); 
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetEmail(NS_CONST_CAST(char*,(const char*)oldstr));
+
+	rv = srcIdentity->GetReplyTo(getter_Copies(oldstr)); 
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetReplyTo(NS_CONST_CAST(char*,(const char*)oldstr)); 
+
+	rv = srcIdentity->GetComposeHtml(&oldbool); 
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetComposeHtml(oldbool); 
+
+	rv = srcIdentity->GetFullName(getter_Copies(oldstr)); 
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetFullName(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	
+	rv = srcIdentity->GetOrganization(getter_Copies(oldstr)); 
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetOrganization(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	rv = srcIdentity->GetSmtpHostname(getter_Copies(oldstr));
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetSmtpHostname(NS_CONST_CAST(char*,(const char*)oldstr)); 
+	rv = srcIdentity->GetSmtpUsername(getter_Copies(oldstr));
+	if (NS_FAILED(rv)) return rv;
+	destIdentity->SetSmtpUsername(NS_CONST_CAST(char*,(const char*)oldstr));
+
+	return rv;
+}
+
+nsresult
 nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum)
 {
   nsresult rv;
@@ -1229,22 +1268,37 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
                                           getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  char accountStr[1024];
-  char serverStr[1024];
+  char accountStr[BUF_STR_LEN];
+  char serverStr[BUF_STR_LEN];
+  char identityStr[BUF_STR_LEN];
 
-  PR_snprintf(accountStr,1024,"account%d",accountNum);
+  PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
 #ifdef DEBUG_ACCOUNTMANAGER
   printf("account str = %s\n",accountStr);
 #endif
   account->SetKey(accountStr);
-  PR_snprintf(serverStr,1024,"server%d",accountNum);
+  PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
 #ifdef DEBUG_ACCOUNTMANAGER
   printf("server str = %s\n",serverStr);
 #endif
   server->SetKey(serverStr);
   
   account->SetIncomingServer(server);
-  account->addIdentity(identity);
+
+  nsCOMPtr<nsIMsgIdentity> copied_identity;
+  rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
+                                            nsnull,
+                                            nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
+                                            getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+  PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
+  copied_identity->SetKey(identityStr);
+
+  rv = CopyIdentity(identity,copied_identity);
+  if (NS_FAILED(rv)) return rv;
+
+  account->addIdentity(copied_identity);
 
   // adds account to the hash table.
   AddAccount(account);
@@ -1270,8 +1324,8 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   server->SetType("imap");
   server->SetHostName((char *)hostname);
 
-  char prefName[1024];
-  PR_snprintf(prefName, 1024, "mail.imap.server.%s.userName",hostname);
+  char prefName[BUF_STR_LEN];
+  PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.userName",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
     server->SetUsername(oldstr);
@@ -1281,7 +1335,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   // upgrade the password
-  PR_snprintf(prefName, 1024, "mail.imap.server.%s.password",hostname);
+  PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.password",hostname);
   rv = m_prefs->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
     server->SetPassword("enter your clear text password here");
@@ -1294,13 +1348,13 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
   // upgrade the biff prefs
-  PR_snprintf(prefName, 1024, "mail.imap.server.%s.check_new_mail",hostname);
+  PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.check_new_mail",hostname);
   rv = m_prefs->GetBoolPref(prefName, &oldbool);
   if (NS_SUCCEEDED(rv)) {
     server->SetDoBiff(oldbool);
   }
 
-  PR_snprintf(prefName, 1024, "mail.imap.server.%s.check_time",hostname);
+  PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.check_time",hostname);
   rv = m_prefs->GetIntPref(prefName, &oldint);
   if (NS_SUCCEEDED(rv)) {
     server->SetBiffMinutes(oldint);
@@ -1569,22 +1623,36 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 		getter_AddRefs(server));
 	if (NS_FAILED(rv)) return rv;
 
-	char accountStr[1024];
-	char serverStr[1024];
-	
-	PR_snprintf(accountStr,1024,"account%d",accountNum);
+	char accountStr[BUF_STR_LEN];
+	char serverStr[BUF_STR_LEN];
+	char identityStr[BUF_STR_LEN];
+	PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
 #ifdef DEBUG_ACCOUNTMANAGER
 	printf("account str = %s\n",accountStr);
 #endif
 	account->SetKey(accountStr);
-	PR_snprintf(serverStr,1024,"server%d",accountNum);
+	PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
 #ifdef DEBUG_ACCOUNTMANAGER
 	printf("server str = %s\n",serverStr);
 #endif
 	server->SetKey(serverStr);
 	
 	account->SetIncomingServer(server);
-	account->addIdentity(identity);
+
+	nsCOMPtr<nsIMsgIdentity> copied_identity;
+	rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
+						    nsnull,
+						    nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
+						    getter_AddRefs(copied_identity));
+	if (NS_FAILED(rv)) return rv;
+
+	PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
+	copied_identity->SetKey(identityStr);
+
+	rv = CopyIdentity(identity,copied_identity);
+	if (NS_FAILED(rv)) return rv;
+
+	account->addIdentity(copied_identity);
 	
 	// adds account to the hash table.
 	AddAccount(account);
@@ -1612,8 +1680,8 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	char *oldstr = nsnull;
 	
 	// we don't handle nntp servers that accept username / passwords yet
-	char prefName[1024];
-	PR_snprintf(prefName, 1024, "???nntp.server.%s.userName",hostname);
+	char prefName[BUF_STR_LEN];
+	PR_snprintf(prefName, BUF_STR_LEN, "???nntp.server.%s.userName",hostname);
 	rv = m_prefs->CopyCharPref(prefName, &oldstr);
 	if (NS_SUCCEEDED(rv)) {
 		server->SetUsername(oldstr);
@@ -1623,7 +1691,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 
 #ifdef CAN_UPGRADE_4x_PASSWORDS
 	// upgrade the password
-	PR_snprintf(prefName, 1024, "???nntp.server.%s.password",hostname);
+	PR_snprintf(prefName, BUF_STR_LEN, "???nntp.server.%s.password",hostname);
 	rv = m_prefs->CopyCharPref(prefName, &oldstr);
 	if (NS_SUCCEEDED(rv)) {
 		server->SetPassword("enter your clear text password here");
