@@ -26,6 +26,7 @@
 #include "CStLayerOriginSetter.h"
 
 #include <algorithm>
+#include <CAutoPtrXP.h>
 
 #include "CHTMLClickrecord.h"
 #include "BookmarksFile.h"
@@ -201,6 +202,7 @@ CHTMLView::CHTMLView(LStream* inStream)
 	,	mLoadingURL(false)
 	,	mStopEnablerHackExecuted(false)
 	,	mInFocusCallAlready(false)
+	,	mDragSelection(false)
 {
 
 	// FIX ME: Use C++.  I.e., use mem-initializers where possible (as above)
@@ -558,6 +560,63 @@ LModelObject* CHTMLView::GetFormElemBaseModel(void)
 
 	return theBase;
 }
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	ScrollBits
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// LView::ScrollBits works by calling ::ScrollRect() which unfortunately paints 
+// the invalidated area with the background pattern. This causes lots of ugly 
+// flashing and makes us look pretty bad. Instead, we roll our own ::ScrollRect() 
+// by using ::CopyBits() to scroll the image in the view and then set the update
+// rgn appropriately so that the compositor can blit it to the screen.
+
+void CHTMLView :: ScrollBits ( Int32 inLeftDelta, Int32 inTopDelta )
+{
+	if (FocusExposed()) {
+		// Get Frame in local coords from clip rect (there might be a frame around view)
+		StRegion clipRgn;
+		Rect frame;
+		::GetClip ( clipRgn );
+		clipRgn.GetBounds(frame);
+				
+		// compute the source rect (rect that gets scrolled)
+		Rect source = frame;
+		if ( inTopDelta > 0 )
+			source.top += inTopDelta;
+		else if ( inTopDelta < 0 )
+			source.bottom -= inTopDelta;
+		if ( inLeftDelta > 0 )
+			source.left += inLeftDelta;
+		else if ( inLeftDelta < 0 )
+			source.right -= inLeftDelta;			
+		
+		// compute the destination of copybits (post-scroll)
+		Rect dest = source;
+		if ( inTopDelta ) {
+			dest.top -= inTopDelta;
+			dest.bottom -= inTopDelta;
+		}
+		if ( inLeftDelta ) {
+			dest.left -= inLeftDelta;
+			dest.right -= inLeftDelta;
+		}
+
+		// compute the area that is to be updated by subtracting the dest from the visible area
+		StRegion updateRgn(frame);
+		StRegion destRgn(dest);
+		::DiffRgn ( updateRgn, destRgn, updateRgn );
+		
+		// use copybits to simulate a ScrollRect()
+		StColorPenState saved;
+		StColorPenState::Normalize();
+		::CopyBits ( &GetMacPort()->portBits, &GetMacPort()->portBits, &source, &dest, srcCopy, nil );
+		
+		::OffsetRgn(updateRgn, -mPortOrigin.h, -mPortOrigin.v);
+		InvalPortRgn(updateRgn);
+	}
+	
+} // ScrollBits
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥ Reset scroll mode to default (LO_SCROLL_AUTO). Use to transition from LO_SCROLL_NEVER.
@@ -2069,7 +2128,7 @@ void CHTMLView::FindCommandStatus(CommandT inCommand,
 	outUsesMark = false;
 	if (!mContext) // yes, this can happen.  It happened to me!
 	{
-		LTabGroup::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
+		LCommander::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
 		return;
 	}
 	
@@ -2221,8 +2280,8 @@ void CHTMLView::FindCommandStatus(CommandT inCommand,
 				
 				int16 csid = CPrefs::CmdNumToDocCsid( inCommand );
 				outMark = (csid == mContext->GetDefaultCSID()) ? checkMark : ' ';
-			} else 
-				LTabGroup::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
+			} else
+				LCommander::FindCommandStatus(inCommand, outEnabled, outUsesMark, outMark, outName);
 	}
 } // CHTMLView::FindCommandStatus
 
@@ -2556,7 +2615,7 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 			break;
 
 		default:
-			cmdHandled = LTabGroup::ObeyCommand(inCommand, ioParam);
+			cmdHandled = LCommander::ObeyCommand(inCommand, ioParam);
 			break;
 	}
 	if (cr && cr->IsAnchor())
@@ -2996,7 +3055,7 @@ void CHTMLView::ClickSelfLayer(
 	
 	CHTMLClickRecord cr(inMouseDown.whereLocal, inLayerWhere, mContext, theElement, inLayer);
 	cr.Recalc();
-	
+
 	Boolean bClickHandled = false;
 
 	// ¥ with shift key, just track selection
@@ -3004,11 +3063,39 @@ void CHTMLView::ClickSelfLayer(
 	{
 		if ((theElement != NULL) && cr.PixelReallyInElement(theElementWhere, theElement))
 		{
+			// Also, check for click in selection first, as it takes precedence over others. If
+			// the drag is successful, set |bClickHandled| so we don't try to do anyting else
+			// with it.
+			if ( cr.IsClickOnSelection() ) {
+				// are we dragging? Use a try block to ensure that we set click record back to nil
+				mCurrentClickRecord = &cr;
+				CHTMLClickRecord::EClickState theMouseAction = CHTMLClickRecord::eUndefined;				
+				try {
+					// don't allow context menus here, we'll handle them below. Is this the
+					// right thing to do?
+					theMouseAction
+						= cr.WaitForMouseAction(inMouseDown, this, GetDblTime(), false);
+				}
+				catch(...) {}
+				mCurrentClickRecord = nil;
+				
+				// if so, drag the selection
+				try {
+					if ( theMouseAction == CHTMLClickRecord::eMouseDragging ) {
+						StValueChanger<Boolean> val (mDragSelection, true);
+						ClickDragSelection(inMouseDown, theElement);
+						bClickHandled = true;
+					}
+				}
+				catch ( ...  ) { }
+				
+			} // if click on selection
+			
 			// Move check for edge click here; otherwise, if you hold down mouse button over
 			// edge, then context menu pops up. Whoops.
-			if (cr.IsClickOnEdge())
+			if ( !bClickHandled && cr.IsClickOnEdge())
 				ClickTrackEdge(inMouseDown, cr);
-			else if (cr.IsClickOnAnchor())
+			else if ( !bClickHandled && cr.IsClickOnAnchor())
 			{
 				Int32 theClickStart = inMouseDown.macEvent.when;
 				Point thePrevPoint = inMouseDown.whereLocal;
@@ -3066,7 +3153,7 @@ void CHTMLView::ClickSelfLayer(
 				if (doUnhighlight) LO_HighlightAnchor(*mContext, cr.mElement, false);
 				bClickHandled = true;
 			}
-			else if ((theElement != NULL) && (theElement->type == LO_IMAGE))
+			else if ( !bClickHandled && (theElement != NULL) && (theElement->type == LO_IMAGE))
 			{
 				// ¥ allow dragging of non-anchor images
 				mCurrentClickRecord = &cr;
@@ -3608,8 +3695,6 @@ void CHTMLView::HandleImageIconClick(CHTMLClickRecord& inClickRecord)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-	//
-
 void CHTMLView::ClickDragLink(
 	const SMouseDownEvent& 	inMouseDown,
 	LO_Element* 			inElement)
@@ -3638,6 +3723,34 @@ void CHTMLView::ClickDragLink(
 	
 	theDragTask.DoDrag();
 }
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	ClickDragSelection
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// User has clicked somewhere in the current selection. Do the drag
+
+void CHTMLView::ClickDragSelection (
+	const SMouseDownEvent& 	inMouseDown,
+	LO_Element* 			inElement)
+{	
+	FocusDraw();
+
+	// get the local rect of the element. The drag task will convert it to
+	// global coords for it.
+	Rect theLocalRect;
+	Boolean bVisible = CalcElementPosition(inElement, theLocalRect);
+
+	StValueChanger<LO_Element*>	theValueChanger(mDragElement, inElement);
+
+	LDragTask theDragTask ( inMouseDown.macEvent, theLocalRect, (unsigned long)this, 'TEXT', NULL,
+								0, flavorSenderTranslated );								
+	OSErr theErr = ::SetDragSendProc(theDragTask.GetDragReference(), mSendDataUPP, (LDragAndDrop*)this);
+	ThrowIfOSErr_(theErr);
+
+	theDragTask.DoDrag();
+	
+} // ClickDragSelection
+
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
@@ -3759,7 +3872,8 @@ Boolean CHTMLView::ClickTrackSelection(
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 {
 // FIX ME!!! we need to stop the blinkers
-		
+	bool shiftDown = (inMouseDown.macEvent.modifiers & shiftKey) != 0;	
+	
 	::SetCursor(*GetCursor(iBeamCursor));
 	XP_Rect theBoundingBox;
 	CL_GetLayerBboxAbsolute(inClickRecord.mLayer, &theBoundingBox);
@@ -3770,11 +3884,16 @@ Boolean CHTMLView::ClickTrackSelection(
 
 	SPoint32 theImagePointEnd = theImagePointStart;
 
-	if ((inMouseDown.macEvent.modifiers & shiftKey) && !inClickRecord.IsClickOnAnchor())
-		LO_ExtendSelection(*mContext, theImagePointStart.h, theImagePointStart.v);
-	else
-		LO_StartSelection(*mContext, theImagePointStart.h, theImagePointStart.v, inClickRecord.mLayer);
-
+	if ( GetClickCount() == 2 & !shiftDown )
+		LO_DoubleClick ( *mContext, theImagePointStart.h, theImagePointStart.v,
+							inClickRecord.GetLayer() ) ;
+	else {						
+		if ( shiftDown && !inClickRecord.IsClickOnAnchor())
+			LO_ExtendSelection(*mContext, theImagePointStart.h, theImagePointStart.v);
+		else
+			LO_StartSelection(*mContext, theImagePointStart.h, theImagePointStart.v, inClickRecord.mLayer);
+	}
+	
 	// track mouse till we are done
 	Boolean didTrackSelection = false;
 	while (::StillDown())
@@ -4059,46 +4178,7 @@ Boolean CHTMLView::HandleKeyPressLayer(const EventRecord&	inKeyEvent,
 						return TRUE;
 					}
 			}
-		// Tabbing. We want to shift hyperviews, and not form elements, if we
-		// are going backward from the first form element, or forward from the last one
-		if (theChar == char_Tab)
-		{
-			Boolean retVal;
-
-			if (mSubCommanders.GetCount() == 0)	// no tabbing, nothing to switch
-				retVal = LCommander::HandleKeyPress(inKeyEvent);
-			else
-			{
-				// ¥¥¥ 98/03/26: Because of the new implementation of LTabGroup in Pro2, we get
-				// stuck in the deepest commander hierarchy and can never get back to the
-				// toplevel tab group to get to the location bar. This needs to be fixed, but
-				// not before 3/31. I'm not sure what the right fix is (pinkerton).
-				LCommander *onDutySub = GetTarget();
-				
-				//LCommander	*onDutySub = GetOnDutySub();??
-				
-				if (onDutySub == NULL)
-				{
-					LCommander	*newTarget;
-					mSubCommanders.FetchItemAt(1, newTarget);
-					SwitchTarget(newTarget);
-					retVal = TRUE;
-				}
-				else
-				{			
-					Int32	pos = mSubCommanders.FetchIndexOf(onDutySub);
-					Boolean backward = (inKeyEvent.modifiers & shiftKey) != 0;
-					if ((pos == mSubCommanders.GetCount() && !backward)	// If we are the last field,
-						|| (--pos <= 0 && backward))	//
-					// Do not wrap within the view, use the commander
-						retVal = LCommander::HandleKeyPress(inKeyEvent);
-					else
-						retVal = LTabGroup::HandleKeyPress( inKeyEvent );
-				}	
-			}
-			return retVal;
-		}
-		return LTabGroup::HandleKeyPress( inKeyEvent );
+		return LCommander::HandleKeyPress( inKeyEvent );
 	}
 	return handled;
 }
@@ -4480,6 +4560,7 @@ void CHTMLView::DoDragSendData(FlavorType inFlavor,
 {
 	OSErr			theErr;
 	cstring			theUrl;
+	cstring			theText;
 		
 	// Get the URL of the thing we're dragging...
 	if (mDragElement->type == LO_IMAGE)
@@ -4490,9 +4571,15 @@ void CHTMLView::DoDragSendData(FlavorType inFlavor,
 	{
 		PA_Block anchor;
 		XP_ASSERT(mDragElement->type == LO_TEXT);
-	 	anchor = mDragElement->lo_text.anchor_href->anchor;
-	 	PA_LOCK (theUrl, char*, anchor);
-		PA_UNLOCK(anchor);	
+		if ( mDragSelection ) {
+			CAutoPtrXP<float> chunk = LO_GetSelectionText(*mContext);
+			theText = reinterpret_cast<char*>(chunk.get());
+		}
+		else {
+	 		anchor = mDragElement->lo_text.anchor_href->anchor;
+	 		PA_LOCK (theUrl, char*, anchor);
+			PA_UNLOCK(anchor);
+		}
 	}
  	
  		// Now send the data	
@@ -4501,7 +4588,10 @@ void CHTMLView::DoDragSendData(FlavorType inFlavor,
 			// Just send the URL text
 		case 'TEXT':
 		{
-			theErr = ::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, theUrl, strlen(theUrl), 0);
+			if ( mDragSelection )
+				theErr = ::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, theText, strlen(theText), 0);
+			else
+				theErr = ::SetDragItemFlavorData(inDragRef, inItemRef, inFlavor, theUrl, strlen(theUrl), 0);
 			ThrowIfOSErr_ (theErr);
 			break;
 		}

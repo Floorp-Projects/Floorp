@@ -83,7 +83,7 @@ class CHTMLView :
 		public LView,
 		public LListener,
 		public LDragAndDrop,
-		public LTabGroup,
+		public LCommander,
 		public LPeriodical
 {
 	friend class CBrowserContext;
@@ -201,6 +201,7 @@ class CHTMLView :
 										Int32				inLeftDelta,
 										Int32				inTopDelta,
 										Boolean 			inRefresh);
+		virtual void			ScrollBits ( Int32 /* left */, Int32 /* top */ ) ;
 
 		virtual void			AdaptToSuperFrameSize(
 										Int32				inSurrWidthDelta,
@@ -346,6 +347,9 @@ class CHTMLView :
 									Boolean					inMakeNewWindow);
 									
 		virtual	void			ClickDragLink(
+									const SMouseDownEvent& 	inMouseDown,
+									LO_Element* 			inElement);
+		virtual	void			ClickDragSelection(
 									const SMouseDownEvent& 	inMouseDown,
 									LO_Element* 			inElement);
 		
@@ -814,6 +818,10 @@ class CHTMLView :
 		CHTMLClickRecord*		mCurrentClickRecord;
 			// So that FindCommandStatus can use it for disabling context menu items.
 			// This will be non-null only when testing or executing context menu commands.
+		Boolean					mDragSelection;
+			// used for drag and drop to determine if drag was dragging around the
+			// selected text.
+
 }; // class CHTMLView
 
 
