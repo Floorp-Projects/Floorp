@@ -88,6 +88,7 @@ static const char* kURI##prefix##_##name = ns #name
 #define NS_RDF_DATASOURCE_PROGID_PREFIX         NS_RDF_DATASOURCE_PROGID "?name="
 #define NS_RDF_RESOURCE_FACTORY_PROGID          "component://netscape/rdf/resource-factory"
 #define NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX   NS_RDF_RESOURCE_FACTORY_PROGID "?name="
+#define NS_RDF_DELEGATEFACTORY_PROGID_PREFIX    "rdf.delegate-factory."
 
 
 /*@}*/
