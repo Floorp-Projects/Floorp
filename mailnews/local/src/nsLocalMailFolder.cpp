@@ -1206,27 +1206,29 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msgWindow)
 {
-    nsCOMPtr<nsIFileSpec> oldPathSpec;
-    nsresult rv = GetPath(getter_AddRefs(oldPathSpec));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgFolder> parentFolder;
-    rv = GetParentMsgFolder(getter_AddRefs(parentFolder));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
+  nsCOMPtr<nsIFileSpec> oldPathSpec;
+  nsCOMPtr<nsIAtom> folderRenameAtom;
+  nsresult rv = GetPath(getter_AddRefs(oldPathSpec));
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsIMsgFolder> parentFolder;
+  rv = GetParentMsgFolder(getter_AddRefs(parentFolder));
+  if (NS_FAILED(rv)) 
+    return rv;
+  nsCOMPtr<nsISupports> parentSupport = do_QueryInterface(parentFolder);
     
-    nsFileSpec fileSpec;
-    oldPathSpec->GetFileSpec(&fileSpec);
-    nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
-    nsFileSpec dirSpec;
+  nsFileSpec fileSpec;
+  oldPathSpec->GetFileSpec(&fileSpec);
+  nsLocalFolderSummarySpec oldSummarySpec(fileSpec);
+  nsFileSpec dirSpec;
 
 	PRUint32 cnt = 0;
-    if (mSubFolders)
-      mSubFolders->Count(&cnt);
+  if (mSubFolders)
+    mSubFolders->Count(&cnt);
 
+  if (cnt > 0)
+    rv = CreateDirectoryForFolder(dirSpec);
 
-    if (cnt > 0)
-      rv = CreateDirectoryForFolder(dirSpec);
-	
 	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
 	// function in nsIFileSpec
 
@@ -1235,88 +1237,90 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 		return NS_ERROR_FAILURE;
 	nsCAutoString newNameStr(convertedNewName.get());
 
-    nsXPIDLCString oldLeafName;
-    oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
+  nsXPIDLCString oldLeafName;
+  oldPathSpec->GetLeafName(getter_Copies(oldLeafName));
 
-    if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) {
-       if(msgWindow)
-           rv=ThrowAlertMsg("folderExists", msgWindow);
-       return NS_MSG_FOLDER_EXISTS;
-    }
+  if (PL_strcasecmp(oldLeafName, convertedNewName) == 0) 
+  {
+    if(msgWindow)
+      rv=ThrowAlertMsg("folderExists", msgWindow);
+    return NS_MSG_FOLDER_EXISTS;
+  }
 	else
-    {
-       nsCOMPtr <nsIFileSpec> parentPathSpec;
-       parentFolder->GetPath(getter_AddRefs(parentPathSpec));
-       NS_ENSURE_SUCCESS(rv,rv);
+  {
+    nsCOMPtr <nsIFileSpec> parentPathSpec;
+    parentFolder->GetPath(getter_AddRefs(parentPathSpec));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-       nsFileSpec parentPath;
-       parentPathSpec->GetFileSpec(&parentPath);
-       NS_ENSURE_SUCCESS(rv,rv);
-	   
-       if (!parentPath.IsDirectory())
-       AddDirectorySeparator(parentPath);
+    nsFileSpec parentPath;
+    parentPathSpec->GetFileSpec(&parentPath);
+    NS_ENSURE_SUCCESS(rv,rv);
+	  
+    if (!parentPath.IsDirectory())
+    AddDirectorySeparator(parentPath);
 
-       rv = CheckIfFolderExists(aNewName, parentPath, msgWindow);
-       if (NS_FAILED(rv)) return rv;
+    rv = CheckIfFolderExists(aNewName, parentPath, msgWindow);
+    if (NS_FAILED(rv)) 
+      return rv;
 
-    }
-
+  }
+    
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
 
-    rv = oldPathSpec->Rename(newNameStr.get());
-    if (NS_SUCCEEDED(rv))
-    {
-	newNameStr += ".msf";
-	oldSummarySpec.Rename(newNameStr.get());
-    }
-    else
-    {
-      ThrowAlertMsg("folderRenameFailed", msgWindow);
-      return rv;
-    }
+  rv = oldPathSpec->Rename(newNameStr.get());
+  if (NS_SUCCEEDED(rv))
+  {
+  	newNameStr += ".msf";
+	  oldSummarySpec.Rename(newNameStr.get());
+  }
+  else
+  {
+    ThrowAlertMsg("folderRenameFailed", msgWindow);
+    return rv;
+  }
 	
-	if (NS_SUCCEEDED(rv) && cnt > 0) {
-		// rename "*.sbd" directory
-		nsCAutoString newNameDirStr(convertedNewName.get());
-		newNameDirStr += ".sbd";
-		dirSpec.Rename(newNameDirStr.get());
+	if (NS_SUCCEEDED(rv) && cnt > 0) 
+  {
+    // rename "*.sbd" directory
+    nsCAutoString newNameDirStr(convertedNewName.get());
+    newNameDirStr += ".sbd";
+    dirSpec.Rename(newNameDirStr.get());
 	}
 
-    nsCOMPtr<nsIMsgFolder> newFolder;
-    if (parentSupport)
+  nsCOMPtr<nsIMsgFolder> newFolder;
+  if (parentSupport)
+  {
+    nsAutoString newFolderName(aNewName);
+    rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
+    if (newFolder) 
     {
-        nsAutoString newFolderName(aNewName);
-		rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
-		if (newFolder) 
+      newFolder->SetName(newFolderName.get());
+      PRBool changed = PR_FALSE;
+      MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
+      if (changed)
+        AlertFilterChanged(msgWindow);
+
+      if (cnt > 0)
+        newFolder->RenameSubFolders(msgWindow, this);
+
+      if (parentFolder)
+      {
+        SetParent(nsnull);
+        parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
+
+        nsCOMPtr<nsISupports> newFolderSupports = do_QueryInterface(newFolder);
+        nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
+        if(newFolderSupports && parentSupports)
         {
-          newFolder->SetName(newFolderName.get());
-          PRBool changed = PR_FALSE;
-          MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
-          if (changed)
-            AlertFilterChanged(msgWindow);
-        /***** jefft -
-        * Needs to find a way to reselect the new renamed folder and the
-        * message being selected.
-        */
-          if (cnt > 0)
-            newFolder->RenameSubFolders(msgWindow, this);
-
-          if (parentFolder)
-          {
-            SetParent(nsnull);
-            parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
-
-            nsCOMPtr<nsISupports> newFolderSupports = do_QueryInterface(newFolder);
-            nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
-            if(newFolderSupports && parentSupports)
-            {
-              NotifyItemAdded(parentSupports, newFolderSupports, "folderView");
-            }
-          }
+          NotifyItemAdded(parentSupports, newFolderSupports, "folderView");
         }
+      }
+      folderRenameAtom = getter_AddRefs(NS_NewAtom("RenameCompleted"));
+      newFolder->NotifyFolderEvent(folderRenameAtom);
     }
-    return rv;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsgFolder *oldFolder)

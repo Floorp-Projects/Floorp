@@ -45,8 +45,7 @@ var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
-var gCurrentlyDisplayedMessage=-1;
-
+var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
 
@@ -133,6 +132,8 @@ var folderListener = {
 
                  var scrolled = false;
 
+                 LoadCurrentlyDisplayedMessage();  //used for rename folder msg loading after folder is loaded.
+
                  if (gStartMsgKey != -1) { 
                    // select the desired message
                    gDBView.selectMsgByKey(gStartMsgKey);
@@ -178,6 +179,9 @@ var folderListener = {
        }
        else if (eventType == "CompactCompleted") {
          HandleCompactCompleted(folder);
+       }
+       else if(eventType == "RenameCompleted") {
+         SelectFolder(folder.URI);
        }
     }
 }
@@ -331,19 +335,24 @@ function HandleCompactCompleted (folder)
           dbFolderInfo = null;
         }
         RerootFolder(uri, msgFolder, viewType, viewFlags, sortType, sortOrder);
-        SetFocusThreadPane();
-        if (gCurrentlyDisplayedMessage != -1)
-        {
-          var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-          var outlinerSelection = outlinerView.selection;
-          outlinerSelection.select(gCurrentlyDisplayedMessage);
-          if (outlinerView)
-            outlinerView.selectionChanged();
-          EnsureRowInThreadOutlinerIsVisible(gCurrentlyDisplayedMessage);
-        }
-        gCurrentlyDisplayedMessage = -1; //reset
+        LoadCurrentlyDisplayedMessage();
       }
     }
+  }
+}
+
+function LoadCurrentlyDisplayedMessage()
+{
+  if (gCurrentlyDisplayedMessage != nsMsgViewIndex_None)
+  {
+    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+    var outlinerSelection = outlinerView.selection;
+    outlinerSelection.select(gCurrentlyDisplayedMessage);
+    if (outlinerView)
+      outlinerView.selectionChanged();
+    EnsureRowInThreadOutlinerIsVisible(gCurrentlyDisplayedMessage);
+    SetFocusThreadPane();
+    gCurrentlyDisplayedMessage = nsMsgViewIndex_None; //reset
   }
 }
 

@@ -1580,42 +1580,53 @@ NS_IMETHODIMP  nsImapIncomingServer::OnlineFolderCreateFailed(const char *aFolde
 
 NS_IMETHODIMP nsImapIncomingServer::OnlineFolderRename(nsIMsgWindow *msgWindow, const char *oldName, const char *newName)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    if (newName && *newName)
+  nsresult rv = NS_ERROR_FAILURE;
+  if (newName && *newName)
+  {
+    nsCOMPtr<nsIMsgFolder> me;
+    rv = GetFolder(oldName, getter_AddRefs(me));
+    if (NS_FAILED(rv)) 
+      return rv;
+        
+		nsCOMPtr<nsIMsgFolder> parent;
+    nsCAutoString newNameString(newName);
+    nsCAutoString parentName;
+    PRInt32 folderStart = newNameString.RFindChar('/');
+    if (folderStart > 0)
     {
-        nsCOMPtr<nsIMsgFolder> me;
-        rv = GetFolder(oldName, getter_AddRefs(me));
-        if (NS_FAILED(rv)) return rv;
-        
-		nsCOMPtr<nsIMsgFolder> parent ;
-        
-		nsCAutoString newNameString(newName);
-		nsCAutoString parentName;
-		PRInt32 folderStart = newNameString.RFindChar('/');
-		if (folderStart > 0)
-		{
-           newNameString.Left(parentName, folderStart);
-		   rv = GetFolder(parentName.get(),getter_AddRefs(parent));
-		}
-		else  // root is the parent
-		{
-		   nsCOMPtr<nsIFolder> rootFolder;
-           rv = GetRootFolder(getter_AddRefs(rootFolder));
-		   parent = do_QueryInterface(rootFolder,&rv);
-		}
-        if (NS_SUCCEEDED(rv) && parent) 
-        {
-        nsCOMPtr<nsIMsgImapMailFolder> folder;
-        folder = do_QueryInterface(me, &rv);
-        if (NS_SUCCEEDED(rv))
-            folder->RenameLocal(newName,parent);
-
-		nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
-        if (parentImapFolder)
-            parentImapFolder->RenameClient(msgWindow, me,oldName, newName);
-        }
+      newNameString.Left(parentName, folderStart);
+      rv = GetFolder(parentName.get(),getter_AddRefs(parent));
     }
-    return rv;
+    else  // root is the parent
+    {
+      nsCOMPtr<nsIFolder> rootFolder;
+      rv = GetRootFolder(getter_AddRefs(rootFolder));
+      parent = do_QueryInterface(rootFolder,&rv);
+    }
+    if (NS_SUCCEEDED(rv) && parent) 
+    {
+      nsCOMPtr<nsIMsgImapMailFolder> folder;
+      folder = do_QueryInterface(me, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        folder->RenameLocal(newName,parent);
+        nsCOMPtr<nsIMsgImapMailFolder> parentImapFolder = do_QueryInterface(parent);
+
+        if (parentImapFolder)
+          parentImapFolder->RenameClient(msgWindow, me,oldName, newName);
+        
+        nsCOMPtr <nsIMsgFolder> newFolder;
+        rv = GetFolder(newName, getter_AddRefs(newFolder));
+        if (NS_SUCCEEDED(rv))
+        {
+          nsCOMPtr <nsIAtom> folderRenameAtom;
+          folderRenameAtom = getter_AddRefs(NS_NewAtom("RenameCompleted"));
+          newFolder->NotifyFolderEvent(folderRenameAtom);
+        }
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP  nsImapIncomingServer::FolderIsNoSelect(const char *aFolderName, PRBool *result) 

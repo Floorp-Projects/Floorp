@@ -852,11 +852,11 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
             unusedDB->Close(PR_TRUE);
         }
   }
-  nsCOMPtr <nsIAtom> folderCreateAtom;
   if (!suppressNotification)
   {
+    nsCOMPtr <nsIAtom> folderCreateAtom;
     if(NS_SUCCEEDED(rv) && child)
-    { 
+    {
       nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
       nsCOMPtr<nsISupports> folderSupports;
       rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
@@ -4294,7 +4294,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             }
             break;
         case nsIImapUrl::nsImapRenameFolder:
-            break;
+          if (NS_FAILED(aExitCode))
+          {
+            nsCOMPtr <nsIAtom> folderRenameAtom;
+            folderRenameAtom = getter_AddRefs(NS_NewAtom("RenameCompleted"));
+            NotifyFolderEvent(folderRenameAtom);
+          }
+          break;
         case nsIImapUrl::nsImapDeleteAllMsgs:
             if (NS_SUCCEEDED(aExitCode))
             {

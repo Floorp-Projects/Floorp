@@ -78,33 +78,40 @@ function MsgRenameFolder()
 
 function RenameFolder(name,uri)
 {
-    dump("uri,name = " + uri + "," + name + "\n");
-    var folderOutliner = GetFolderOutliner();
-    if (folderOutliner)
+  dump("uri,name = " + uri + "," + name + "\n");
+  var folderOutliner = GetFolderOutliner();
+  if (folderOutliner)
+  {
+    if (uri && (uri != "") && name && (name != "")) 
     {
-	if (uri && (uri != "") && name && (name != "")) {
-                var selectedFolder = GetResourceFromUri(uri);
-                try
-                {
-                    messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
-                }
-                catch(e)
-                {
-                    throw(e); // so that the dialog does not automatically close
-                    dump ("Exception : RenameFolder \n");
-                }
+      var selectedFolder = GetResourceFromUri(uri);
+      if (gDBView)
+        gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
 
-                ClearThreadPane();
-                ClearMessagePane();
-                folderOutliner.outlinerBoxObject.selection.clearSelection();
-        }
-        else {
-                dump("no name or nothing selected\n");
-        }   
+      ClearThreadPane();
+      ClearMessagePane();
+      folderOutliner.outlinerBoxObject.selection.clearSelection();
+
+      try
+      {
+        messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
+      }
+      catch(e)
+      {
+        SelectFolder(selectedFolder.URI);  //restore selection
+        throw(e); // so that the dialog does not automatically close
+        dump ("Exception : RenameFolder \n");
+      }
     }
-    else {
-	dump("no folder tree\n");
-    }
+    else 
+    {
+      dump("no name or nothing selected\n");
+    }   
+  }
+  else 
+  {
+	  dump("no folder tree\n");
+  }
 }
 
 function MsgEmptyTrash() 
