@@ -79,6 +79,22 @@ enum {
     mcmd_ContextTextCmds        = 1203
 };
 
+// STR#s
+
+enum {
+    STRx_FileLocProviderStrings = 5000,
+    
+    str_AppRegistryName         = 1,
+    str_ProfilesRootDirName,
+    str_DefaultsDirName,
+    str_PrefDefaultsDirName,
+    str_ProfileDefaultsDirName,
+    str_ResDirName,
+    str_ChromeDirName,
+    str_PlugInsDirName,
+    str_SearchPlugInsDirName
+};
+
 
 //*****************************************************************************
 //***    Message IDs
