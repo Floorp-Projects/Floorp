@@ -972,14 +972,32 @@ public:
 
   /**
    * Find the closest view (on |this| or an ancestor).
+   * If aOffset is non-null, it will be set to the offset of |this|
+   * from the returned view.
    */
-  nsIView* GetClosestView() const;
+  nsIView* GetClosestView(nsPoint* aOffset = nsnull) const;
 
   /**
    * Find the closest ancestor (excluding |this| !) that has a view
    */
   nsIFrame* GetAncestorWithView() const;
   virtual nsIFrame* GetAncestorWithViewExternal() const;
+
+  /**
+   * Get the offset between the coordinate systems of |this| and aOther.
+   * Adding the return value to a point in the coordinate system of |this|
+   * will transform the point to the coordinate system of aOther.
+   *
+   * aOther must be non-null.
+   * 
+   * This function is fastest when aOther is an ancestor of |this|.
+   *
+   * NOTE: this actually returns the offset from aOther to |this|, but
+   * that offset is added to transform _coordinates_ from |this| to
+   * aOther.
+   */
+  nsPoint GetOffsetTo(const nsIFrame* aOther) const;
+  virtual nsPoint GetOffsetToExternal(const nsIFrame* aOther) const;
 
   /**
    * Returns the offset from this frame to the closest geometric parent that

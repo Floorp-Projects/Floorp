@@ -709,19 +709,11 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
   // Look only at frames below this depth, or at this depth (if we're still on the content node we started with)
   while (iterContent == firstContent || depth > 0) {
     // Coordinates will come back relative to parent frame
-    nsIFrame *parentFrame = iterFrame;
     nsRect currFrameBounds = iterFrame->GetRect();
-   
-    // We just want the width and height - only get relative coordinates if we're not already
-    // at the bounding frame
-    currFrameBounds.x = currFrameBounds.y = 0;
-
+    
     // Make this frame's bounds relative to common parent frame
-    while (parentFrame && parentFrame != *aBoundingFrame) {
-      // Add this frame's bounds to our total rectangle
-      currFrameBounds += parentFrame->GetPosition();
-      parentFrame = parentFrame->GetParent();
-    }
+    currFrameBounds +=
+      iterFrame->GetParent()->GetOffsetToExternal(*aBoundingFrame);
 
     // Add this frame's bounds to total
     aTotalBounds.UnionRect(aTotalBounds, currFrameBounds);

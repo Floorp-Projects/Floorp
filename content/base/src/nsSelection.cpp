@@ -442,7 +442,6 @@ private:
   void         SetDesiredX(nscoord aX); //set the mDesiredX
 
   nsresult     GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent);
-  nsresult     GetGlobalViewOffsetsFromFrame(nsPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY);
   nsresult     ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint);
 
   PRUint32     GetBatching(){return mBatching;}
@@ -1048,47 +1047,6 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
 }
 
 nsresult
-nsSelection::GetGlobalViewOffsetsFromFrame(nsPresContext *aPresContext, nsIFrame *aFrame, nscoord *offsetX, nscoord *offsetY)
-{
-  //
-  // The idea here is to figure out what the offset of aFrame's view
-  // is within the global space. Where I define the global space to
-  // be the coordinate system that exists above all views.
-  //
-  // The offsets are calculated by walking up the view parent hierarchy,
-  // adding up all the view positions, until there are no more views.
-  //
-  // A point in a view's coordinate space can be converted to the global
-  // coordinate space by simply adding the offsets returned by this method
-  // to the point itself.
-  //
-
-  if (!aPresContext || !aFrame || !offsetX || !offsetY)
-    return NS_ERROR_NULL_POINTER;
-
-  *offsetX = *offsetY = 0;
-
-  nsIFrame *frame = aFrame;
-  while (frame)
-  {
-    frame = frame->GetAncestorWithView();
-
-    if (frame) {
-      nsIView *view = frame->GetView();
-
-      if (view)
-      {
-        nsPoint pt = view->GetPosition();
-        *offsetX += pt.x;
-        *offsetY += pt.y;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, nsIFrame **aRetFrame, nsPoint& aRetPoint)
 {
   //
@@ -1197,20 +1155,7 @@ nsSelection::ConstrainFrameAndPointToAnchorSubtree(nsPresContext *aPresContext, 
   // system used by aRetFrame.
   //
 
-  nsPoint frameOffset;
-  nsPoint retFrameOffset;
-
-  result = GetGlobalViewOffsetsFromFrame(aPresContext, aFrame, &frameOffset.x, &frameOffset.y);
-
-  if (NS_FAILED(result))
-    return result;
-
-  result = GetGlobalViewOffsetsFromFrame(aPresContext, *aRetFrame, &retFrameOffset.x, &retFrameOffset.y);
-
-  if (NS_FAILED(result))
-    return result;
-
-  aRetPoint = aPoint + frameOffset - retFrameOffset;
+  aRetPoint = aPoint + aFrame->GetOffsetTo(*aRetFrame);
 
   return NS_OK;
 }
@@ -2958,13 +2903,7 @@ nsSelection::CommonPageMove(PRBool aForward,
   
   if (caretView)
   {
-    while (caretView != scrolledView)
-    {
-      caretPos += caretView->GetPosition();
-      caretView = caretView->GetParent();
-      if (!caretView) //how did we miss the scrolled view. something is very wrong
-        return NS_ERROR_FAILURE;
-    }
+    caretPos += caretView->GetOffsetTo(scrolledView);
   }
     
   // get a content at desired location
@@ -5223,16 +5162,10 @@ nsTypedSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, 
   if (!aView || !aXOffset || !aYOffset)
     return NS_ERROR_FAILURE;
 
-  *aXOffset = 0;
-  *aYOffset = 0;
+  nsPoint offset = aView->GetOffsetTo(aAncestorView);
 
-  for (nsIView* view = aView; view && view != aAncestorView;
-       view = view->GetParent())
-  {
-    nsPoint pt = view->GetPosition();
-    *aXOffset += pt.x;
-    *aYOffset += pt.y;
-  }
+  *aXOffset = offset.x;
+  *aYOffset = offset.y;
 
   return NS_OK;
 }
@@ -6740,13 +6673,7 @@ nsTypedSelection::GetFrameToScrolledViewOffsets(nsIScrollableView *aScrollableVi
 
   // XXX Deal with the case where there is a scrolled element, e.g., a
   // DIV in the middle...
-  while (closestView && closestView != scrolledView) {
-    // Update the offset
-    offset += closestView->GetPosition();
-
-    // Get its parent view
-    closestView = closestView->GetParent();
-  }
+  offset += closestView->GetOffsetTo(scrolledView);
 
   *aX = offset.x;
   *aY = offset.y;

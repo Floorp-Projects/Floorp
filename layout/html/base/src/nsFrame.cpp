@@ -1213,23 +1213,7 @@ ContentContainsPoint(nsPresContext *aPresContext,
   // that our point is in the same view space our content frame's
   // rects are in.
 
-  nsPoint point(*aPoint);
-
-  if (frameView != aRelativeView) {
-    // Views are different, just assume frameView is an ancestor
-    // of aRelativeView and walk up the view hierarchy calculating what
-    // the actual point is, relative to frameView.
-
-    while (aRelativeView && aRelativeView != frameView) {
-      point += aRelativeView->GetPosition();
-      aRelativeView = aRelativeView->GetParent();
-    }
-
-    // At this point the point should be in the correct
-    // view coordinate space. If not, just bail!
-
-    if (aRelativeView != frameView) return PR_FALSE;
-  }
+  nsPoint point = *aPoint + aRelativeView->GetOffsetTo(frameView);
 
   // Now check to see if the point is within the bounds of the
   // content's primary frame, or any of it's continuation frames.
@@ -1242,10 +1226,7 @@ ContentContainsPoint(nsPresContext *aPresContext,
     frameRect.x = offsetPoint.x;
     frameRect.y = offsetPoint.y;
 
-    if (frameRect.x <= point.x &&
-        frameRect.XMost() >= point.x &&
-        frameRect.y <= point.y &&
-        frameRect.YMost() >= point.y) {
+    if (frameRect.Contains(point)) {
       // point is within this frame's rect!
       return PR_TRUE;
     }
@@ -1759,19 +1740,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
     nsPoint dummyPoint;
     nsIView* eventView;
     GetOffsetFromView(aPresContext, dummyPoint, &eventView);
-    nsPoint pt = aEvent->point;
-    nsIView* view = eventView;
-    while (view && view != captureView) {
-      pt += view->GetPosition();
-      view = view->GetParent();
-    }
-    if (!view) {
-      // Hmm. Maybe captureView is a child of eventView? Recover by
-      // subtracting the global offset of eventView.
-      for (view = eventView; view; view = view->GetParent()) {
-        pt -= view->GetPosition();
-      }
-    }
+    nsPoint pt = aEvent->point + eventView->GetOffsetTo(captureView);
     frameselection->StartAutoScrollTimer(aPresContext, captureView, pt, 30);
   }
 
@@ -2298,6 +2267,35 @@ nsIFrame* nsIFrame::GetAncestorWithView() const
   return nsnull;
 }
 
+// virtual
+nsPoint nsIFrame::GetOffsetToExternal(const nsIFrame* aOther) const
+{
+  return GetOffsetTo(aOther);
+}
+
+nsPoint nsIFrame::GetOffsetTo(const nsIFrame* aOther) const
+{
+  NS_PRECONDITION(aOther,
+                  "Must have frame for destination coordinate system!");
+  // Note that if we hit a view while walking up the frame tree we need to stop
+  // and switch to traversing the view tree so that we will deal with scroll
+  // views properly.
+  nsPoint offset(0, 0);
+  const nsIFrame* f;
+  for (f = this; !f->HasView() && f != aOther; f = f->GetParent()) {
+    offset += f->GetPosition();
+  }
+  
+  if (f != aOther) {
+    // We found a view.  Switch to the view tree
+    nsPoint toViewOffset(0, 0);
+    nsIView* otherView = aOther->GetClosestView(&toViewOffset);
+    offset += f->GetView()->GetOffsetTo(otherView) - toViewOffset;
+  }
+  
+  return offset;
+}
+
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
 NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPresContext* aPresContext,
@@ -2369,6 +2367,7 @@ NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPresContext* aPresContext,
         nsIView *tmpView = pview->GetParent();
         if (tmpView && vVM != tmpView->GetViewManager()) {
           // Don't cross ViewManager boundaries!
+          // XXXbz why not?
           break;
         }
         pview = tmpView;
@@ -4145,12 +4144,19 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
   return NS_OK;
 }
 
-nsIView* nsIFrame::GetClosestView() const
+nsIView* nsIFrame::GetClosestView(nsPoint* aOffset) const
 {
-  for (const nsIFrame *f = this; f; f = f->GetParent())
-    if (f->HasView())
+  nsPoint offset(0,0);
+  for (const nsIFrame *f = this; f; f = f->GetParent()) {
+    if (f->HasView()) {
+      if (aOffset)
+        *aOffset = offset;
       return f->GetView();
+    }
+    offset += f->GetPosition();
+  }
 
+  NS_NOTREACHED("No view on any parent?  How did that happen?");
   return nsnull;
 }
 

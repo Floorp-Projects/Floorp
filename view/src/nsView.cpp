@@ -761,6 +761,27 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
 }
 #endif // DEBUG
 
+nsPoint nsIView::GetOffsetTo(const nsIView* aOther) const
+{
+  nsPoint offset(0, 0);
+  const nsIView* v;
+  for (v = this; v != aOther && v; v = v->GetParent()) {
+    offset += v->GetPosition();
+  }
+
+  if (v != aOther) {
+    // Looks like aOther wasn't an ancestor of |this|.  So now we have
+    // the root-VM-relative position of |this| in |offset|.  Convert back
+    // to the coordinates of aOther
+    while (aOther) {
+      offset -= aOther->GetPosition();
+      aOther = aOther->GetParent();
+    }
+  }
+
+  return offset;
+}
+
 nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset)
 {
   nsPoint pt(0, 0);

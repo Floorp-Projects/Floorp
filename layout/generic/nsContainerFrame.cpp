@@ -433,17 +433,6 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 /////////////////////////////////////////////////////////////////////////////
 // Helper member functions
 
-static PRBool
-TranslatePointTo(nsPoint& aPoint, nsIView* aChildView, nsIView* aParentView)
-{
-  do {
-    aPoint += aChildView->GetPosition();
-    aChildView = aChildView->GetParent();
-  } while (aChildView && (aChildView != aParentView));
-
-  return aChildView == aParentView;
-}
-
 /**
  * Position the view associated with |aKidFrame|, if there is one. A
  * container frame should call this method after positioning a frame,
@@ -498,12 +487,7 @@ nsContainerFrame::PositionFrameView(nsPresContext* aPresContext,
         // We have the origin in the coordinate space of the containing view,
         // but we need it in the coordinate space of the parent view so do a
         // view translation
-#ifdef DEBUG
-        PRBool ok = 
-#endif
-        TranslatePointTo(origin, containingView, parentView);
-
-        NS_ASSERTION(ok, "translation failed");
+        origin += containingView->GetOffsetTo(parentView);
       }
     }
 

@@ -685,22 +685,6 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWid
          margin.left + margin.right;
 }
 
-static void
-GetPlaceholderOffset(nsIFrame* aPlaceholderFrame,
-                     nsIFrame* aBlockFrame,
-                     nsPoint&  aOffset)
-{
-  aOffset = aPlaceholderFrame->GetPosition();
-
-  // Convert the placeholder position to the coordinate space of the block
-  // frame that contains it
-  nsIFrame* parent = aPlaceholderFrame->GetParent();
-  while (parent && (parent != aBlockFrame)) {
-    aOffset += parent->GetPosition();
-    parent = parent->GetParent();
-  }
-}
-
 static nsIFrame*
 FindImmediateChildOf(nsIFrame* aParent, nsIFrame* aDescendantFrame)
 {
@@ -794,8 +778,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
   // space of the block frame that contains it
   // XXXbz the placeholder is not fully reflown yet if our containing block is
   // relatively positioned...
-  nsPoint placeholderOffset;
-  GetPlaceholderOffset(aPlaceholderFrame, aBlockFrame, placeholderOffset);
+  nsPoint placeholderOffset = aPlaceholderFrame->GetOffsetTo(aBlockFrame);
 
   // First, determine the hypothetical box's mTop
   if (aBlockFrame) {
@@ -895,32 +878,11 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsPresContext*    aPresContext,
 
   // The current coordinate space is that of the nearest block to the placeholder.
   // Convert to the coordinate space of the absolute containing block
-  nsIFrame* absoluteContainingBlock = cbrs->frame;
-  if (aBlockFrame != absoluteContainingBlock) {
-    nsIFrame* parent;
-    nsIFrame* stop;
-    if (NS_FRAME_GET_TYPE(cbrs->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
-      // The absolute containing block is an inline frame... so it will be a
-      // descendant of aBlockFrame
-      parent = absoluteContainingBlock;
-      stop = aBlockFrame;
-    } else {
-      // aBlockFrame may be a descendant of absoluteContainingBlock
-      parent = aBlockFrame;
-      stop = absoluteContainingBlock;
-    }
-    do {
-      nsPoint origin = parent->GetPosition();
-
-      aHypotheticalBox.mLeft += origin.x;
-      aHypotheticalBox.mRight += origin.x;
-      aHypotheticalBox.mTop += origin.y;
-
-      // Move up the tree one level
-      parent = parent->GetParent();
-    } while (parent && parent != stop);
-  }
-
+  nsPoint cbOffset = aBlockFrame->GetOffsetTo(cbrs->frame);
+  aHypotheticalBox.mLeft += cbOffset.x;
+  aHypotheticalBox.mTop += cbOffset.y;
+  aHypotheticalBox.mRight += cbOffset.x;
+  
   // The specified offsets are relative to the absolute containing block's
   // padding edge or content edge, and our current values are relative to the
   // border edge, so translate.
