@@ -351,7 +351,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // If the scrollbars are auto and the scrolled frame is fully visible
       // vertically then the vertical scrollbar will be hidden so increase the
       // width of the scrolled frame
-      if (NS_STYLE_OVERFLOW_AUTO == display->mOverflow) {
+      if (display->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
         kidDesiredSize.width += NSToCoordRound(sbWidth);
       }
     }
