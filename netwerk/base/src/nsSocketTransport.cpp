@@ -656,7 +656,10 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         break;
     }
 
-    fireStatus(mCurrentState);
+    // Notify the nsIProgressEventSink of the progress...
+    if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes)) {
+      fireStatus(mCurrentState);
+    }
     //
     // If the current state has successfully completed, then move to the
     // next state for the current operation...
@@ -1189,7 +1192,8 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
          ("--- Leaving nsSocketTransport::doRead() [%s:%d %x]. rv = %x.\t"
           "Total bytes read: %d\n\n",
           mHostName, mPort, this, rv, totalBytesWritten));
-  if (mEventSink)
+
+  if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
       // we don't have content length info at the socket level
       // just pass 0 through.
       (void)mEventSink->OnProgress(this, mReadContext, mReadOffset, 0);
@@ -1284,7 +1288,7 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
           "Total bytes written: %d\n\n",
           mHostName, mPort, this, rv, totalBytesWritten));
 
-  if (mEventSink)
+  if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
       // we don't have content length info at the socket level
       // just pass 0 through.
       (void)mEventSink->OnProgress(this, mWriteContext, mWriteOffset, 0);
