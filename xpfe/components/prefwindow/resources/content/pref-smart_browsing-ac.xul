@@ -28,13 +28,13 @@
 <?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
 
 <dialog id="pref-smart_browsing-ac" title="&autoCompleteAdvanced.title;"
-        ondialogaccept="return onAccept();"
+        ondialogaccept="return onAccept();" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"><![CDATA[
     
     window.onload = function()
-    {   
+    {
       setCheck("cbxAutoFill", window.arguments[0]);
       setCheck("cbxShowPopup", window.arguments[1]);
       setCheck("cbxShowSearch", window.arguments[2]);
@@ -62,7 +62,10 @@
     
     function setCheck(aName, aTruth)
     {
-      document.getElementById(aName).setAttribute("checked", aTruth);
+      if (aTruth == "true")
+        document.getElementById(aName).setAttribute("checked", "true");
+      else
+        document.getElementById(aName).removeAttribute("checked");
     }
     
     function updateImage(aImg)

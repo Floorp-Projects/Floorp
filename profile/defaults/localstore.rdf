@@ -61,14 +61,7 @@
     <last-selected-panel>urn:sidebar:panel:bookmarks</last-selected-panel>
   </RDF:Description>
   <RDF:Description about="chrome://navigator/content/navigator.xul">
-    <NC:persist resource="chrome://navigator/content/navigator.xul#main-window"/>
     <NC:persist resource="chrome://navigator/content/navigator.xul#sidebar-panels"/>
-  </RDF:Description>
- <RDF:Description about="chrome://navigator/content/navigator.xul#main-window">
-    <width>610</width>
-    <height>450</height>
-    <screenX>4</screenX>
-    <screenY>4</screenY>
   </RDF:Description>
 
   <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol">
