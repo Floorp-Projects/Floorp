@@ -90,6 +90,7 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMContextMenuListener.h"
+#include "nsIDOMEventGroup.h"
 
 #include "nsXBLAtoms.h"
 #include "nsXULAtoms.h"
@@ -860,6 +861,14 @@ nsXBLBinding::InstallEventHandlers()
       PRBool found = PR_FALSE;
       GetEventHandlerIID(eventAtom, &iid, &found);
 
+      // If this is a command, add it in the system event group, otherwise 
+      // add it to the standard event group.
+
+      nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
+      nsCOMPtr<nsIDOMEventGroup> eventGroup;
+      if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND)
+        receiver->GetSystemEventGroup(getter_AddRefs(eventGroup));
+
       if (found) { 
         /*
         // Disable ATTACHTO capability for Mozilla 1.0
@@ -887,78 +896,101 @@ nsXBLBinding::InstallEventHandlers()
         }
         */
 
-        // Add the event listener.
         if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
           nsXBLMouseHandler* mouseHandler;
           NS_NewXBLMouseHandler(receiver, curr, &mouseHandler);
-          receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMMouseListener*)mouseHandler,
+                                          useCapture, eventGroup);
           handler = mouseHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
           nsXBLKeyHandler* keyHandler;
           NS_NewXBLKeyHandler(receiver, curr, &keyHandler);
-          receiver->AddEventListener(type, (nsIDOMKeyListener*)keyHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMKeyListener*)keyHandler,
+                                          useCapture, eventGroup);
           handler = keyHandler;
         }
         else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
           nsXBLMouseMotionHandler* mouseHandler;
           NS_NewXBLMouseMotionHandler(receiver, curr, &mouseHandler);
-          receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMMouseListener*)mouseHandler,
+                                          useCapture, eventGroup);
           handler = mouseHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener))) {
           nsXBLFocusHandler* focusHandler;
           NS_NewXBLFocusHandler(receiver, curr, &focusHandler);
-          receiver->AddEventListener(type, (nsIDOMFocusListener*)focusHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMFocusListener*)focusHandler,
+                                          useCapture, eventGroup);
           handler = focusHandler;
         }
         else if (iid.Equals(NS_GET_IID(nsIDOMXULListener))) {
           nsXBLXULHandler* xulHandler;
           NS_NewXBLXULHandler(receiver, curr, &xulHandler);
-          receiver->AddEventListener(type, (nsIDOMXULListener*)xulHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                           (nsIDOMXULListener*)xulHandler,
+                                           useCapture, eventGroup);
           handler = xulHandler;
         }
         else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
           nsXBLScrollHandler* scrollHandler;
           NS_NewXBLScrollHandler(receiver, curr, &scrollHandler);
-          receiver->AddEventListener(type, (nsIDOMScrollListener*)scrollHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMScrollListener*)scrollHandler,
+                                          useCapture, eventGroup);
           handler = scrollHandler;
         }
         else if (iid.Equals(NS_GET_IID(nsIDOMFormListener))) {
           nsXBLFormHandler* formHandler;
           NS_NewXBLFormHandler(receiver, curr, &formHandler);
-          receiver->AddEventListener(type, (nsIDOMFormListener*)formHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMFormListener*)formHandler,
+                                          useCapture, eventGroup);
           handler = formHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMDragListener))) {
           nsXBLDragHandler* dragHandler;
           NS_NewXBLDragHandler(receiver, curr, &dragHandler);
-          receiver->AddEventListener(type, (nsIDOMDragListener*)dragHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMDragListener*)dragHandler,
+                                          useCapture, eventGroup);
           handler = dragHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMLoadListener))) {
           nsXBLLoadHandler* loadHandler;
           NS_NewXBLLoadHandler(receiver, curr, &loadHandler);
-          receiver->AddEventListener(type, (nsIDOMLoadListener*)loadHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMLoadListener*)loadHandler,
+                                          useCapture, eventGroup);
           handler = loadHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMMutationListener))) {
           nsXBLMutationHandler* mutationHandler;
           NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
-          receiver->AddEventListener(type, (nsIDOMMutationListener*)mutationHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMMutationListener*)mutationHandler,
+                                          useCapture, eventGroup);
           handler = mutationHandler;
         }
         else if(iid.Equals(NS_GET_IID(nsIDOMContextMenuListener))) {
           nsXBLContextMenuHandler* menuHandler;
           NS_NewXBLContextMenuHandler(receiver, curr, &menuHandler);
-          receiver->AddEventListener(type, (nsIDOMContextMenuListener*)menuHandler, useCapture);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMContextMenuListener*)menuHandler,
+                                          useCapture, eventGroup);
           handler = menuHandler;
         }
       }
       else {
         nsXBLCustomHandler* customHandler;
         NS_NewXBLCustomHandler(receiver, curr, &customHandler);
-        receiver->AddEventListener(type, (nsIDOMEventListener*)customHandler, useCapture);
+        target->AddGroupedEventListener(type,
+                                        (nsIDOMEventListener*)customHandler,
+                                        useCapture, eventGroup);
         handler = customHandler;
       }
 
