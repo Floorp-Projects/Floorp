@@ -491,6 +491,10 @@ NS_IMETHODIMP
 jsdScript::ClearBreakpoint(jsdIPC *aPC)
 {
     ASSERT_VALID_SCRIPT;
+    
+    if (!aPC)
+        return NS_ERROR_INVALID_ARG;
+    
     jsuword pc;
     aPC->GetPc (&pc);
     
@@ -502,7 +506,9 @@ NS_IMETHODIMP
 jsdScript::ClearAllBreakpoints()
 {
     ASSERT_VALID_SCRIPT;
+    JSD_LockScriptSubsystem(mCx);
     JSD_ClearAllExecutionHooksForScript (mCx, mScript);
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
@@ -878,7 +884,9 @@ jsdService::Off (void)
 NS_IMETHODIMP
 jsdService::ClearAllBreakpoints (void)
 {
+    JSD_LockScriptSubsystem(mCx);
     JSD_ClearAllExecutionHooks (mCx);
+    JSD_UnlockScriptSubsystem(mCx);
     return NS_OK;
 }
 
