@@ -280,6 +280,7 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
   else
     rv = mDataSource->Assert(res, gNC_ProgressPercent, intLiteral, PR_TRUE);
  
+  // update download state (not started, downloading, queued, finished, etc...)
   DownloadState state;
   internalDownload->GetDownloadState(&state);
  
@@ -313,9 +314,6 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
   
   if (oldTarget)
     rv = mDataSource->Change(res, gNC_StatusText, oldTarget, literal);
-  else
-    rv = mDataSource->Assert(res, gNC_StatusText, literal, PR_TRUE);
-
   
   // update transferred
   PRInt32 current = 0;
@@ -329,7 +327,6 @@ nsDownloadManager::AssertProgressInfoFor(const char* aPersistentDescriptor)
     maxBytes.get()
   };
   
-  // first with the search text
   rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("transferred").get(),
                                      strings, 2, getter_Copies(value));
   

@@ -205,7 +205,6 @@ nsDownloadProgressListener.prototype = {
     },
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownload)
     {
-      // XXX error handling
     },
     onSecurityChange: function(aWebProgress, aRequest, state, aDownload)
     {
