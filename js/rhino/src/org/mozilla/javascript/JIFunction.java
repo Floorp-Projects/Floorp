@@ -38,7 +38,7 @@
 package org.mozilla.javascript;
 
 /**
- * JIFunction or Java Implemented unction is a class to simplify implementation
+ * JIFunction or Java Implemented function is a class to simplify implementation
  * of JS functions in native code.
  */
 
