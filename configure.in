@@ -1094,6 +1094,33 @@ if test "$ac_cv_cpp_namespaces" = yes ; then
    AC_DEFINE(HAVE_CPP_NAMESPACES)
 fi
 
+AC_MSG_CHECKING(for ostreams)
+AC_CACHE_VAL(ac_cv_ostream,
+  [AC_TRY_LINK([#include <iostream.h>],
+               [ostream *foo=new ostream();],
+               [ac_cv_ostream=true],
+               [ac_cv_ostream=false])])
+if test "$ac_cv_ostream" = true ; then
+  AC_DEFINE(HAVE_OSTREAM)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+  _SAVE_LIBS=$LIBS
+  LIBS="$LIBS -lstdc++"
+  AC_MSG_CHECKING(for ostreams in -lstdc++)
+  AC_CACHE_VAL(ac_cv_lib_stdcpp_ostream,
+    [AC_TRY_LINK([#include <iostream.h>],
+                [ostream *foo=new ostream();],
+                [ac_cv_lib_stdcpp_ostream=true],
+                [ac_cv_lib_stdcpp_ostream=false])])
+  if test "$ac_cv_lib_stdcpp_ostream" = true ; then
+    AC_DEFINE(HAVE_OSTREAM)
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+    LIBS=$_SAVE_LIBS
+  fi
+fi
 
 AC_CACHE_CHECK(for C++ \"bool\" keyword,
                ac_cv_cpp_bool,
