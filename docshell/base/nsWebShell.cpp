@@ -1455,9 +1455,13 @@ nsWebShell::OnLinkClick(nsIFrame* aFrame,
 nsIWebShell*
 nsWebShell::GetTarget(const PRUnichar* aName)
 {
-  nsString name(aName);
+  nsAutoString name(aName);
   nsIWebShell* target = nsnull;
 
+  if (0 == name.Length()) {
+    return this;
+  }
+  
   if (name.EqualsIgnoreCase("_blank")) {
     nsIWebShell *shell;
     if (NS_OK == NewWebShell(shell))
