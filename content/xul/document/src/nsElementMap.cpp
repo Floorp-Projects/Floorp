@@ -17,12 +17,20 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author(s):
+ *   Chris Waterson <waterson@netscape.com>
+ *
  * Contributor(s): 
  */
 
 /*
 
    Maps IDs to elements.
+
+
+   To turn on logging for this module, set:
+
+     NS_PR_LOG_MODULES nsElementMap:5
 
  */
 
@@ -37,18 +45,58 @@
 static PRLogModuleInfo* gMapLog;
 #endif
 
+static void* PR_CALLBACK AllocTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+static void PR_CALLBACK FreeTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey)
+{
+    nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
+    PLHashEntry* entry = NS_STATIC_CAST(PLHashEntry*, pool->Alloc(sizeof(PLHashEntry)));
+    return entry;
+}
+
+static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) 
+{
+    if (aFlag == HT_FREE_ENTRY)
+        nsFixedSizeAllocator::Free(aEntry, sizeof(PLHashEntry));
+}
+
+PLHashAllocOps nsElementMap::gAllocOps = {
+    AllocTable, FreeTable, AllocEntry, FreeEntry };
+
+
 nsElementMap::nsElementMap()
 {
-    MOZ_COUNT_CTOR(XUL_nsElementMap);
+    MOZ_COUNT_CTOR(nsElementMap);
 
     // Create a table for mapping IDs to elements in the content tree.
-    static PRInt32 kInitialResourceTableSize = 1023;
-    mMap = PL_NewHashTable(kInitialResourceTableSize,
-                                 Hash,
-                                 Compare,
-                                 PL_CompareValues,
-                                 nsnull,
-                                 nsnull);
+    static const size_t kBucketSizes[] = {
+        sizeof(PLHashEntry), sizeof(ContentListItem)
+    };
+
+    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+
+    static const PRInt32 kInitialNumElements = 64;
+
+    static const PRInt32 kInitialPoolSize =
+        (NS_SIZE_IN_HEAP(sizeof(PLHashEntry)) +
+         NS_SIZE_IN_HEAP(sizeof(ContentListItem))) * kInitialNumElements;
+
+    mPool.Init("nsElementMap", kBucketSizes, kNumBuckets, kInitialPoolSize);
+
+    mMap = PL_NewHashTable(kInitialNumElements,
+                           Hash,
+                           Compare,
+                           PL_CompareValues,
+                           &gAllocOps,
+                           &mPool);
 
     NS_ASSERTION(mMap != nsnull, "could not create hash table for resources");
 
@@ -64,7 +112,7 @@ nsElementMap::nsElementMap()
 
 nsElementMap::~nsElementMap()
 {
-    MOZ_COUNT_DTOR(XUL_nsElementMap);
+    MOZ_COUNT_DTOR(nsElementMap);
 
     if (mMap) {
         PL_HashTableEnumerateEntries(mMap, ReleaseContentList, nsnull);
@@ -105,10 +153,10 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
         return NS_ERROR_NOT_INITIALIZED;
 
     ContentListItem* head =
-        (ContentListItem*) PL_HashTableLookup(mMap, aID.GetUnicode());
+        NS_STATIC_CAST(ContentListItem*, PL_HashTableLookup(mMap, aID.GetUnicode()));
 
     if (! head) {
-        head = new ContentListItem(aContent);
+        head = new (mPool) ContentListItem(aContent);
         if (! head)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -160,7 +208,7 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
             head = head->mNext;
         }
 
-        head->mNext = new ContentListItem(aContent);
+        head->mNext = new (mPool) ContentListItem(aContent);
         if (! head->mNext)
             return NS_ERROR_OUT_OF_MEMORY;
     }
