@@ -113,7 +113,6 @@ char *strdup(const char *str)
     return copy;
 }
 
-
 #ifdef XP_MAC_MPW
 /* Macintosh MPW replacements for the ANSI routines.  These translate LF's to CR's because
    the MPW libraries supplied by Metrowerks don't do that for some reason.  */
@@ -207,6 +206,20 @@ static void initConsole(StringPtr consoleName, const char* startupMessage, int *
 	*argc = 1;
 	*argv = mac_argv;
 }
+
+#ifdef LIVECONNECT
+/* Little hack to provide a default CLASSPATH on the Mac. */
+#define getenv(var) mac_getenv(var)
+static char* mac_getenv(const char* var)
+{
+	if (strcmp(var, "CLASSPATH") == 0) {
+		static char class_path[] = "liveconnect.jar";
+		return class_path;
+	}
+	return NULL;
+}
+#endif /* LIVECONNECT */
+
 #endif
 #endif
 
