@@ -188,6 +188,8 @@ hist_go(JSContext *cx, JSObject *obj,
 	he = SHIST_GetObjectNum(&context->hist, index);
     }
     else if (JSVAL_IS_STRING(argv[0])) {
+	/* i18n problem */
+    /* I believe this part is broken for I18N. Particular after we change the he->title to UTF8 */
 	char * argv_str = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 	histlist = SHIST_GetList(context);
 	if (histlist)
@@ -260,6 +262,9 @@ hist_toString(JSContext *cx, JSObject *obj,
 		      "<TABLE BORDER=0 ALIGN=center VALIGN=top HSPACE=8>");
     while ((he = XP_ListNextObject(histlist)) != 0) {
 	StrAllocCat(bytes, "<TR><TD VALIGN=top><STRONG>");
+	/* i18n problem */
+    /* I believe this part is broken for I18N. Particular after we change the he->title to UTF8 */
+    /* force the output HTML to display as in UTF8 will fix it. */
 	StrAllocCat(bytes, he->title);
 	StrAllocCat(bytes, "</STRONG></TD><TD>&nbsp;</TD>"
 			 "<TD VALIGN=top><A HREF=\"");

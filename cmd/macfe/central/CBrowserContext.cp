@@ -1142,6 +1142,9 @@ void CBrowserContext::LayoutNewDocument(
 		theCurrentView->LayoutNewDocument(inURL, inWidth, inHeight, inMarginWidth, inMarginHeight);
 		
 		CStr31 theTitle = CFileMgr::FileNameFromURL(inURL->address);
+		// i18n problem- we may need to convert theTitle to UTF8 before call SHIST_CreateHistryEntry
+		// However, currently theTitle is only URL encoded file name which have no 8bit data. Should double check again later.
+
 		History_entry* theNewEntry = SHIST_CreateHistoryEntry(inURL, theTitle);
 		SHIST_AddDocument(*this, theNewEntry);
 		

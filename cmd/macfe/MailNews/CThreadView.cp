@@ -2682,6 +2682,9 @@ void CThreadView::UpdateHistoryEntry()
 	if (url && *entryName)
 	{
 		LO_DiscardDocument(*mContext);
+		// i18n problem- we need to convert entryName to UTF8 before call SHIST_CreateHistryEntry
+		// We didn't do that because mail/news is not alive yet....
+
 		History_entry* theNewEntry = ::SHIST_CreateHistoryEntry(
 			url,
 			entryName);
