@@ -260,7 +260,7 @@ nsThrobberGlueFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
-extern "C" NS_WEB nsresult
+extern "C" NS_EXPORT nsresult
 NS_NewThrobberGlueFactory(nsIFactory** aFactory)
 {
   nsresult rv = NS_OK;
