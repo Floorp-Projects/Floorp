@@ -33,278 +33,467 @@
 #include "nsMsgI18N.h"
 #include "nsIMsgIdentity.h"
 
+/* The definition is nsAddressBook.cpp */
+extern const char *kDirectoryDataSourceRoot;
+
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kAutoCompleteResultsCID, NS_AUTOCOMPLETERESULTS_CID);
+static NS_DEFINE_CID(kAutoCompleteItemCID, NS_AUTOCOMPLETEITEM_CID);
 
-nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (aInstancePtrResult)
-	{
-		nsAbAutoCompleteSession * abSession = new nsAbAutoCompleteSession(); 
-		if (abSession)
-			return abSession->QueryInterface(NS_GET_IID(nsIAbAutoCompleteSession), aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
 
-NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, NS_GET_IID(nsIAbAutoCompleteSession))
+NS_IMPL_ISUPPORTS2(nsAbAutoCompleteSession, nsIAbAutoCompleteSession, nsIAutoCompleteSession)
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
 	NS_INIT_REFCNT();
-    m_numEntries = 0;
-    m_tableInitialized = PR_FALSE;
+    mParser = do_GetService(kHeaderParserCID);
 }
 
-nsresult nsAbAutoCompleteSession::PopulateTableWithAB(nsIEnumerator * aABCards)
+
+nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {
-    nsresult rv = NS_OK;
-    if (!aABCards)
-        return rv;
+}
 
-    rv = aABCards->First();
-    while (NS_SUCCEEDED(rv) && m_numEntries < MAX_ENTRIES) 
+
+void nsAbAutoCompleteSession::ResetMatchTypeConters()
+{
+    PRInt32 i;
+    for (i = 0; i < LAST_MATCH_TYPE; mMatchTypeConters[i++] = 0)
+        ;
+}
+
+PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> array;
+    rv = results->GetItems(getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv))
     {
-        m_searchNameCompletionEntryTable[m_numEntries].userName = nsnull;
-        m_searchNameCompletionEntryTable[m_numEntries].emailAddress = nsnull;
-        m_searchNameCompletionEntryTable[m_numEntries].nickName = nsnull;
-    
-        nsCOMPtr<nsISupports> i;
-        rv = aABCards->CurrentItem(getter_AddRefs(i));
-        if (NS_FAILED(rv)) break;
-    
-        nsCOMPtr<nsIAbCard> card(do_QueryInterface(i, &rv));
-        if (NS_FAILED(rv)) break;
-    
-	    /* card holds unicode string, convert to utf8 String for autocomplete*/
-	    nsXPIDLString pUnicodeStr;
-	    PRInt32 unicharLength = 0;
-	    rv=card->GetDisplayName(getter_Copies(pUnicodeStr));
-        if (NS_FAILED(rv)) break; 
+        nsCOMPtr<nsIEnumerator> enumerator;
+        rv = array->Enumerate(getter_AddRefs(enumerator));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsISupports> item;
+            nsCOMPtr<nsIAutoCompleteItem> resultItem;
+            nsXPIDLString valueStr;
 
-	    unicharLength = nsCRT::strlen(pUnicodeStr);
-	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].userName);
+            for (rv = enumerator->First(); NS_SUCCEEDED(rv); rv = enumerator->Next())
+            {
+                rv = enumerator->CurrentItem(getter_AddRefs(item));
+                if (NS_SUCCEEDED(rv) && item)
+                {
+                    resultItem = do_QueryInterface(item, &rv);
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        rv = resultItem->GetValue(getter_Copies(valueStr));
+                        if (NS_SUCCEEDED(rv) && valueStr && ((const PRUnichar*)valueStr)[0] != 0)
+                        {
+                            if (nsCRT::strcasecmp(fullAddrStr, valueStr) == 0)
+                                return PR_TRUE;
+                        }
+                    }
+                }
+            }
+        }
+    }
     
-        rv=card->GetPrimaryEmail(getter_Copies(pUnicodeStr));
-        if (NS_FAILED(rv)) break;
+    return PR_FALSE;
+}
 
-	    unicharLength = nsCRT::strlen(pUnicodeStr);
-	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].emailAddress);
-    
-        rv=card->GetNickName(getter_Copies(pUnicodeStr));
-        if (NS_FAILED(rv)) break;
+void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const PRUnichar* pNameStr, 
+    const PRUnichar*pEmailStr, MatchType type, nsIAutoCompleteResults* results)
+{
+    nsresult rv;
+    PRUnichar* fullAddrStr = nsnull;
 
-		unicharLength = nsCRT::strlen(pUnicodeStr);
-	    INTL_ConvertFromUnicode(pUnicodeStr, unicharLength, (char**)&m_searchNameCompletionEntryTable[m_numEntries].nickName);
+    if (type == DEFAULT_MATCH)
+    {
+        if (mDefaultDomain[0] == 0)
+            return;
+
+        nsAutoString aStr = pNameStr;
+        aStr += '@';
+        aStr += mDefaultDomain;
+        fullAddrStr = aStr.ToNewUnicode();
+    }
+    else
+        if (mParser)
+        {
+            char * utf8Name = nsAutoString(pNameStr).ToNewUTF8String();
+            char * utf8Email = nsAutoString(pEmailStr).ToNewUTF8String();   
+    	    char * fullAddress = nsnull;
+
+            mParser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
+    	    if (fullAddress && *fullAddress)
+    	    {
+            	/* We need to convert back the result from UTF-8 to Unicode */
+            	PRInt32 strLen;
+            	INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&fullAddrStr, &strLen);
+            	PR_Free(fullAddress);
+    	    }
+            Recycle(utf8Name);
+            Recycle(utf8Email);
+        }
     
-        rv = aABCards->Next();
-        m_numEntries++;
-        m_tableInitialized = PR_TRUE;
+    if (!fullAddrStr)
+    {
+        //oops, parser problem! I will try to do my best...
+        nsAutoString aStr = pNameStr;
+        aStr += " <";
+        aStr += pEmailStr;
+        aStr += ">";
+        fullAddrStr = aStr.ToNewUnicode();
+    }
     
-        if (m_numEntries == MAX_ENTRIES)
-            break;
+    if (! ItsADuplicate(fullAddrStr, results))
+    {    
+        nsCOMPtr<nsIAutoCompleteItem> newItem;
+    	rv = nsComponentManager::CreateInstance(kAutoCompleteItemCID, nsnull, NS_GET_IID(nsIAutoCompleteItem), getter_AddRefs(newItem));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsAbAutoCompleteParam *param = new nsAbAutoCompleteParam(pNickNameStr, pNameStr, pEmailStr, type);
+            NS_IF_ADDREF(param);
+            newItem->SetParam(param);
+            NS_IF_RELEASE(param);
+
+            newItem->SetValue(fullAddrStr);
+            nsCOMPtr<nsISupportsArray> array;
+            rv = results->GetItems(getter_AddRefs(array));
+            if (NS_SUCCEEDED(rv))
+            {
+                PRInt32 insertPosition = 0;
+                PRInt32 i;
+                for (i = 0; i <= type; insertPosition += mMatchTypeConters[i++])
+                    ; 
+                rv = array->InsertElementAt(newItem, insertPosition);
+                if (NS_SUCCEEDED(rv))
+                    mMatchTypeConters[type] ++;
+            }
+        }
+    }    
+    PR_Free(fullAddrStr);
+}
+
+
+nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, const PRUnichar* searchStr, nsIAutoCompleteResults* results)
+{
+    nsresult rv;    
+    nsCOMPtr<nsIEnumerator> cardsEnumerator;
+    nsCOMPtr<nsIAbCard> card;
+    
+    PRUint32 searchStrLen = nsCRT::strlen(searchStr);
+
+    rv = directory->GetChildCards(getter_AddRefs(cardsEnumerator));
+    if (NS_SUCCEEDED(rv) && cardsEnumerator)
+    {
+		nsCOMPtr<nsISupports> item;
+	    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
+	    {
+            rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
+            if (NS_SUCCEEDED(rv))
+            {
+                card = do_QueryInterface(item, &rv);
+	            if (NS_SUCCEEDED(rv))
+	            {
+            	    nsXPIDLString pEmailStr;
+            	    nsXPIDLString pNameStr;
+            	    nsXPIDLString pNickNameStr;
+
+                    // Don't bother with card without an email address
+             	    rv = card->GetPrimaryEmail(getter_Copies(pEmailStr));
+                    if (NS_FAILED(rv))
+                        continue;
+                    if (!(const PRUnichar*)pEmailStr || ((const PRUnichar*)pEmailStr)[0] == 0)
+                        continue;
+                    
+                    //Now, retrive the user name and nickname
+             	    rv = card->GetDisplayName(getter_Copies(pNameStr));
+             	    if (NS_FAILED(rv))
+             	        continue;
+             	    rv = card->GetNickName(getter_Copies(pNickNameStr));
+             	    if (NS_FAILED(rv))
+             	        continue;
+                    
+                    // First check for a Nickname exact match
+        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pNickNameStr) == 0)
+        			{
+        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NICKNAME_EXACT_MATCH, results);
+        			    continue;
+        			}
+
+                    // Then check for a Name exact match
+        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pNameStr) == 0)
+        			{
+        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NAME_EXACT_MATCH, results);
+        			    continue;
+        			}
+
+                    // Then check for a Email exact match
+        			if (nsCRT::strcasecmp(searchStr, (const PRUnichar*)pEmailStr) == 0)
+        			{
+        			    AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, EMAIL_EXACT_MATCH, results);
+        			    continue;
+        			}
+
+                    // Then check for a NickName partial match
+    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pNickNameStr, searchStrLen) == 0)
+    			    {
+    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NICKNAME_MATCH, results);
+        			    continue;
+    			    }
+
+                    // Then check for a Name partial match
+    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pNameStr, searchStrLen) == 0)
+    			    {
+    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, NAME_MATCH, results);
+        			    continue;
+    			    }
+
+                    // Then check for a Email partial match
+    			    if (nsCRT::strncasecmp(searchStr, (const PRUnichar*)pEmailStr, searchStrLen) == 0)
+    			    {
+    			        AddToResult((const PRUnichar*)pNickNameStr, (const PRUnichar*)pNameStr, (const PRUnichar*)pEmailStr, EMAIL_MATCH, results);
+        			    continue;
+    			    }
+	            }
+            }
+        }
     }
 
     return NS_OK;
 }
 
-nsresult nsAbAutoCompleteSession::InitializeTable()
+
+nsresult nsAbAutoCompleteSession::SearchDirectory(nsString& fileName, const PRUnichar* searchStr, nsIAutoCompleteResults* results, PRBool searchSubDirectory)
 {
-#ifdef DEBUG_seth
-  fprintf(stderr,"initializing autocomplete table\n");
-#endif
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr <nsIRDFResource> resource;
-  // this should not be hardcoded to abook.mab
-  rv = rdfService->GetResource("abdirectory://abook.mab", getter_AddRefs(resource));
-  if (NS_FAILED(rv)) return rv;
-  
-  // query interface 
-  nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIEnumerator> cards;
-  rv = directory->GetChildCards(getter_AddRefs(cards));
-  if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  rv = PopulateTableWithAB(cards);
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr <nsIRDFResource> resource;
+    char * strFileName = fileName.ToNewCString();
+    rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
+    Recycle(strFileName);
+    if (NS_FAILED(rv)) return rv;
 
-  // now if we have any left over space, populate the table with the history address book
-
-  rv = rdfService->GetResource("abdirectory://history.mab", getter_AddRefs(resource));
-  if (NS_FAILED(rv)) return rv;
-  
-  directory = do_QueryInterface(resource, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = directory->GetChildCards(getter_AddRefs(cards));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = PopulateTableWithAB(cards);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK; // always return success??
-}
-
-nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
-{
-	PRInt32 i;
-	for (i=0;i<m_numEntries;i++) {
-      PR_FREEIF(m_searchNameCompletionEntryTable[i].userName);     
-      m_searchNameCompletionEntryTable[i].userName = nsnull;
-      PR_FREEIF(m_searchNameCompletionEntryTable[i].emailAddress);
-      m_searchNameCompletionEntryTable[i].emailAddress = nsnull;
-      PR_FREEIF(m_searchNameCompletionEntryTable[i].nickName);
-      m_searchNameCompletionEntryTable[i].nickName = nsnull;
-	}
-}
-
-NS_IMETHODIMP
-nsAbAutoCompleteSession::AutoComplete(nsIMsgIdentity *aIdentity,
-                                      nsISupports *aParam,
-                                      const PRUnichar *aSearchString,
-                                      nsIAbAutoCompleteListener *aResultListener)
-{
-	// mscott - right now I'm not even going to bother to make this synchronous...
-	// I'll beef it up with some test data later but we want to see if this idea works for right now...
+    // query interface 
+    nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(resource, &rv));
+    if (NS_FAILED(rv)) return rv;
     
-	nsresult rv = NS_OK;
-    if (!m_tableInitialized) {
-      rv = InitializeTable();
-      if (NS_FAILED(rv)) return rv;
-    }
-
-    nsXPIDLCString domain;
-    if (aIdentity) {
-      nsXPIDLCString email;
-      rv = aIdentity->GetEmail(getter_Copies(email));
-      if (NS_SUCCEEDED(rv) && email) {
-
-        char *domainStart = PL_strchr(email, '@');
-        if (domainStart)
-          domain = domainStart; // makes a copy
-      }
-    }
+    if (fileName != nsAutoString(kDirectoryDataSourceRoot))
+        rv = SearchCards(directory, searchStr, results);
     
-    if (nsCRT::strlen(aSearchString) == 0)
-    	return NS_OK;
-
-	if (aResultListener)
+    if (!searchSubDirectory)
+        return rv;
+  
+    nsCOMPtr<nsIEnumerator> subDirectories;
+ 	if (NS_SUCCEEDED(directory->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
 	{
-		// get a mime header parser to generate a valid address
-		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
-
-		PRUint32 searchStringLen = nsCRT::strlen(aSearchString);
-		PRInt32 nIndex;
-		PRUnichar* matchResult = nsnull;
-
-		for (nIndex = 0; nIndex < m_numEntries; nIndex++)
+		nsCOMPtr<nsISupports> item;
+		if (NS_SUCCEEDED(subDirectories->First()))
 		{
-			/* First look for a Nickname exact match... */
-			if (nsCRT::strcasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].nickName) == 0)
-			{
-				PRUnichar* searchResult = BuildSearchResult(nIndex, parser);
-				if (searchResult)
-				{
-					rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult);
-					nsCRT::free(searchResult);
-					return rv;
-				}
-			}
-			/* ... look for a username or email address match */
-			if (!matchResult)
-				if (nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].userName, searchStringLen) == 0
-					|| nsCRT::strncasecmp(aSearchString, m_searchNameCompletionEntryTable[nIndex].emailAddress,searchStringLen) == 0)
-				{
-					matchResult = BuildSearchResult(nIndex, parser);
-				}
-		}
-		
-		/* no exact nickname match, maybe we got another match? */
-		if (matchResult)
-		{
-			rv = aResultListener->OnAutoCompleteResult(aParam, aSearchString, matchResult);
-			nsCRT::free(matchResult);
-			return rv;
-		}
-
-		/*no match at all,  do we have several names? */
-		nsAutoString searchResult(aSearchString);
-		char * cSearchString = searchResult.ToNewUTF8String();
-		nsresult res;
-		PRUint32 numAddresses;
-		char	*names;
-		char	*addresses;
-
-		if (parser)
-		{
-			res = parser->ParseHeaderAddresses (nsnull, cSearchString, &names, &addresses, &numAddresses);
-			if (NS_SUCCEEDED(res))
-			{
-				searchResult = "";
-				PRUint32 i;
-				char* pName = names;
-				char* pAddr = addresses;
-				nsAutoString fullAddress;
-				for (i = 0; i < numAddresses; i ++)
-				{
-					if (! searchResult.IsEmpty())
-						searchResult += ',';
-
-					char * strFullAddr = nsnull;
-					PRUnichar* uStr;
-					PRInt32 uStrLen;
-					parser->MakeFullAddress(nsnull, pName, pAddr, &strFullAddr);
-					INTL_ConvertToUnicode(strFullAddr, nsCRT::strlen(strFullAddr), (void**)&uStr, &uStrLen);
-
-					fullAddress = uStr;
-					if (fullAddress.FindChar('@') < 0) /* no domain? */
-						fullAddress += domain;		/* then add the default domain */
-						
-					searchResult += fullAddress;
-
-					nsCRT::free(strFullAddr);
-					nsCRT::free(uStr);
-
-					pName += nsCRT::strlen(pName) + 1;
-					pAddr += nsCRT::strlen(pAddr) + 1;
-				}
-			}
-			PR_FREEIF(cSearchString);
-		}
-
-		return aResultListener->OnAutoCompleteResult(aParam, aSearchString, searchResult.GetUnicode());
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
-
+		    do
+		    {
+                if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+                {
+                    directory = do_QueryInterface(item, &rv);
+                    if (NS_SUCCEEDED(rv))
+                    {
+			            DIR_Server *server = nsnull;
+                        if (NS_SUCCEEDED(directory->GetServer(&server)) && server)
+                        {
+                            nsAutoString subFileName(fileName);
+                            if (subFileName.Last() != '/')
+                                subFileName += "/";
+                            subFileName += server->fileName;
+                            rv = SearchDirectory(subFileName, searchStr, results, PR_TRUE);
+                        }
+                    }
+                }
+            } while (NS_SUCCEEDED(subDirectories->Next()));
+        }
+    }
+    return rv;
 }
 
-
-PRUnichar* nsAbAutoCompleteSession::BuildSearchResult(PRUint32 nIndex, nsIMsgHeaderParser* parser)
+nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoCompleteResults *previousSearchResult)
 {
-	char * fullAddress = nsnull;
-	if (parser)
-		parser->MakeFullAddress(nsnull, m_searchNameCompletionEntryTable[nIndex].userName, 
-								m_searchNameCompletionEntryTable[nIndex].emailAddress, &fullAddress);
+    if (!previousSearchResult)
+        return NS_ERROR_NULL_POINTER;
+        
+    nsXPIDLString prevSearchString;
+    PRUint32 searchStrLen = nsCRT::strlen(searchStr);
+    nsresult rv;
 
-	if (! fullAddress || ! *fullAddress)
-		return nsnull;	/* something goes wrong with this entry, maybe the email address is missing.*/
-	
-	/* We need to convert back the result from UTF-8 to Unicode */
-	PRUnichar* searchResult;
-	PRInt32 searchResultLen;
-	INTL_ConvertToUnicode(fullAddress, nsCRT::strlen(fullAddress), (void**)&searchResult, &searchResultLen);
-	PR_Free(fullAddress);
+    rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    
+    if (!(const PRUnichar*)prevSearchString || ((const PRUnichar*)prevSearchString)[0] == 0)
+        return NS_ERROR_FAILURE;
+    
+    PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
+    if (searchStrLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr, prevSearchString, prevSearchStrLen != 0))
+        return NS_ERROR_ABORT;
 
-	return searchResult;
+    nsCOMPtr<nsISupportsArray> array;
+    rv = previousSearchResult->GetItems(getter_AddRefs(array));
+    if (NS_SUCCEEDED(rv))
+    {
+        PRUint32 nbrOfItems;
+        PRUint32 i;
+        PRUint32 pos;
+        
+        rv = array->Count(&nbrOfItems);
+        if (NS_FAILED(rv) || nbrOfItems <= 0)
+            return NS_ERROR_FAILURE;
+        
+	    nsCOMPtr<nsISupports> item;
+	    nsCOMPtr<nsIAutoCompleteItem> resultItem;
+        nsAbAutoCompleteParam *param;
+
+	    for (i = 0, pos = 0; i < nbrOfItems; i ++, pos ++)
+	    {
+	        rv = array->QueryElementAt(pos, nsIAutoCompleteItem::GetIID(), getter_AddRefs(resultItem));
+	        if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
+	        
+            rv = resultItem->GetParam(getter_AddRefs(item));
+	        if (NS_FAILED(rv) || !item)
+                return NS_ERROR_FAILURE;
+          
+	        rv = item->QueryInterface(nsAbAutoCompleteParam::GetIID(), (void **)&param);
+	        if (NS_FAILED(rv) || !param)
+                return NS_ERROR_FAILURE;
+            
+		    if (nsCRT::strncasecmp(searchStr, param->mNickName, searchStrLen) == 0 ||
+                nsCRT::strncasecmp(searchStr, param->mUserName, searchStrLen) == 0 ||
+			    nsCRT::strncasecmp(searchStr, param->mEmailAddress, searchStrLen) == 0)
+			{
+			    NS_RELEASE(param);
+			    continue;
+			}
+			
+			//No match at all with the new search string. Thefore remove this result item from the results array
+			if (array->RemoveElementAt(pos))
+			{
+			    pos --;
+			    mMatchTypeConters[param->mType] --;
+			    NS_RELEASE(param);
+			}
+			else
+			{
+			    NS_RELEASE(param);
+			    return NS_ERROR_FAILURE;
+			}
+	    }
+	    return NS_OK;
+    }
+
+    return NS_ERROR_ABORT;
 }
+
+NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteListener *listener)
+{
+    nsresult rv = NS_OK;
+    
+    if (!listener)
+        return NS_ERROR_NULL_POINTER;
+        
+    if (uSearchString[0] == 0)
+    {
+        listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+        return NS_OK;
+    }
+    
+    PRInt32 i;
+    for (i = nsCRT::strlen(uSearchString) - 1; i >= 0; i --)
+        if (uSearchString[i] == '@')
+        {
+            listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+            return NS_OK;
+        }
+    
+    nsCOMPtr<nsIAutoCompleteResults> results;
+    if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
+    {
+        ResetMatchTypeConters();
+        
+    	rv = nsComponentManager::CreateInstance(kAutoCompleteResultsCID, nsnull, NS_GET_IID(nsIAutoCompleteResults), getter_AddRefs(results));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsAutoString root = kDirectoryDataSourceRoot;
+            rv = SearchDirectory(root, uSearchString, results, PR_TRUE);
+        }
+    }
+    else
+        results = previousSearchResult;
+                
+    AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
+    if (NS_SUCCEEDED(rv) && results)
+    {
+        PRBool addedDefaultItem = PR_FALSE;
+
+        results->SetSearchString(uSearchString);
+        results->SetDefaultItemIndex(-1);
+        if (mDefaultDomain[0] != 0)
+        {
+            PRUnichar emptyStr = 0;
+            AddToResult(&emptyStr, uSearchString, &emptyStr, DEFAULT_MATCH, results);
+            addedDefaultItem = PR_TRUE;
+        }
+
+        nsCOMPtr<nsISupportsArray> array;
+        rv = results->GetItems(getter_AddRefs(array));
+        if (NS_SUCCEEDED(rv))
+        {
+            PRUint32 nbrOfItems;
+            rv = array->Count(&nbrOfItems);
+            if (NS_SUCCEEDED(rv))
+                if (nbrOfItems > 1)
+                {
+                    results->SetDefaultItemIndex(addedDefaultItem ? 1 : 0);
+                    status = nsIAutoCompleteStatus::matchFound;
+                }
+                else
+                    if (nbrOfItems == 1)
+                    {
+                        results->SetDefaultItemIndex(0);
+                        status = nsIAutoCompleteStatus::matchFound;
+                    }
+                    else
+                        status = nsIAutoCompleteStatus::noMatch;
+        }
+    }
+    listener->OnAutoComplete(results, status);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAbAutoCompleteSession::OnStopLookup()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAbAutoCompleteSession::OnAutoComplete(const PRUnichar *searchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteListener *listener)
+{
+    return OnStartLookup(searchString, previousSearchResult, listener);
+}
+
+NS_IMETHODIMP nsAbAutoCompleteSession::GetDefaultDomain(PRUnichar * *aDefaultDomain)
+{
+    if (!aDefaultDomain)
+        return NS_ERROR_NULL_POINTER;
+
+    *aDefaultDomain = mDefaultDomain.ToNewUnicode();
+    return NS_OK;
+}
+NS_IMETHODIMP nsAbAutoCompleteSession::SetDefaultDomain(const PRUnichar * aDefaultDomain)
+{
+    mDefaultDomain = aDefaultDomain;
+    return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(nsAbAutoCompleteParam, nsAbAutoCompleteParam::GetIID());
