@@ -329,16 +329,16 @@ public:
     *   or return the parent TD or TH if selection is inside a table cell
     *   Returns null if no table element is found.
     *
-    * @param aTableElement      The table element (table, row, or cell) returned
     * @param aTagName           The tagname of returned element
     *                           Note that "td" will be returned if name is actually "th"
     * @param aSelectedCount     How many table elements were selected
     *                           This tells us if we have multiple cells selected
     *                             (0 if element is a parent cell of selection)
     *
+    * @param aTableElement      The table element (table, row, or cell) returned
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement* &aTableElement, nsString& aTagName, PRInt32 &aSelectedCount)=0;
+  NS_IMETHOD GetSelectedOrParentTableElement(nsString& aTagName, PRInt32 &aSelectedCount, nsIDOMElement* &aTableElement)=0;
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
@@ -362,34 +362,34 @@ public:
   /** Get first selected element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
-    * @param aCell     Selected cell or null if ranges don't contain cell selections
     * @param aRange    Optional: if not null, return the selection range 
     *                     associated with the cell
+    * @param aCell     Selected cell or null if ranges don't contain cell selections
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)=0;
   
   /** Get first selected element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
-    * @param aCell       Selected cell or null if ranges don't contain cell selections
     * @param aRowIndex   Optional: if not null, return the row index of first cell
     * @param aColIndex   Optional: if not null, return the column index of first cell
+    * @param aCell       Selected cell or null if ranges don't contain cell selections
     *
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex)=0;
+  NS_IMETHOD GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aCell)=0;
 
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
     * Always call GetFirstSelectedCell() to initialize stored index of "next" cell
-    * @param aCell     Selected cell or null if no more selected cells
-    *                     or ranges don't contain cell selections
     * @param aRange    Optional: if not null, return the selection range 
     *                     associated with the cell
+    * @param aCell     Selected cell or null if no more selected cells
+    *                     or ranges don't contain cell selections
     */
-  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)=0;
+  NS_IMETHOD GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)=0;
 };
 
 #endif // nsITableEditor_h__

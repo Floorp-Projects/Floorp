@@ -2578,11 +2578,10 @@ function InitJoinCellMenuitem(id)
   var foundElement;
   
   try {
-    var elt = { value: null };
     var tagNameObj = {};
-    numSelected = gEditor.getSelectedOrParentTableElement(elt,
-                                          tagNameObj);
-    foundElement = elt.value;
+    var countObj = {value:0}
+    foundElement = gEditor.getSelectedOrParentTableElement(tagNameObj, countObj);
+    numSelected = countObj.value
   }
   catch(e) {}
   if (foundElement && numSelected > 1)
@@ -2639,13 +2638,13 @@ function goUpdateTableMenuItems(commandset)
       IsEditingRenderedHTML())
   {
     var tagNameObj = { value: "" };
-    var element = { value: null };
+    var element;
     try {
-      gEditor.getSelectedOrParentTableElement(element, tagNameObj);
+      element = gEditor.getSelectedOrParentTableElement(tagNameObj, {value:0});
     }
     catch(e) {}
 
-    if (element && element.value)
+    if (element)
     {
       // Value when we need to have a selected table or inside a table
       enabledIfTable = true;
@@ -2774,11 +2773,10 @@ function GetNumberOfContiguousSelectedRows()
   if (!isHTMLEditor())
     return 0;
 
-  var cellObj = { value: null };
   var rowObj = { value: 0 };
   var colObj = { value: 0 };
-  gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
-  var cell = cellObj.value;
+  
+  var cell = gEditor.getFirstSelectedCellInTable(rowObj, colObj);
   if (!cell)
     return 0;
 
@@ -2786,7 +2784,7 @@ function GetNumberOfContiguousSelectedRows()
   var lastIndex = rowObj.value;
 
   do {
-    cell = gEditor.getNextSelectedCell();
+    cell = gEditor.getNextSelectedCell({value:0});
     if (cell)
     {
       gEditor.getCellIndexes(cell, rowObj, colObj);
@@ -2808,11 +2806,9 @@ function GetNumberOfContiguousSelectedColumns()
   if (!isHTMLEditor())
     return 0;
 
-  var cellObj = { value: null };
   var colObj = { value: 0 };
   var rowObj = { value: 0 };
-  gEditor.getFirstSelectedCellInTable(cellObj, rowObj, colObj);
-  var cell = cellObj.value;
+  var cell = gEditor.getFirstSelectedCellInTable(rowObj, colObj);
   if (!cell)
     return 0;
 
@@ -2820,7 +2816,7 @@ function GetNumberOfContiguousSelectedColumns()
   var lastIndex = colObj.value;
 
   do {
-    cell = gEditor.getNextSelectedCell();
+    cell = gEditor.getNextSelectedCell({value:0});
     if (cell)
     {
       gEditor.getCellIndexes(cell, rowObj, colObj);

@@ -886,7 +886,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
 
   nsCOMPtr<nsIDOMElement> firstCell;
   nsCOMPtr<nsIDOMRange> range;
-  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   if (NS_FAILED(res)) return res;
 
   PRInt32 rangeCount;
@@ -932,7 +932,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
           PRInt32 nextRow = startRowIndex;
           while (nextRow == startRowIndex)
           {
-            res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+            res = GetNextSelectedCell(nsnull, getter_AddRefs(cell));
             if (NS_FAILED(res)) return res;
             if (!cell) break;
             res = GetCellIndexes(cell, &nextRow, &startColIndex);
@@ -967,7 +967,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
             PRInt32 nextCol = startColIndex;
             while (nextCol == startColIndex)
             {
-              res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+              res = GetNextSelectedCell(nsnull, getter_AddRefs(cell));
               if (NS_FAILED(res)) return res;
               if (!cell) break;
               res = GetCellIndexes(cell, &startRowIndex, &nextCol);
@@ -989,7 +989,7 @@ nsHTMLEditor::DeleteTableCell(PRInt32 aNumber)
         {
           // First get the next cell to delete
           nsCOMPtr<nsIDOMElement> nextCell;
-          res = GetNextSelectedCell(getter_AddRefs(nextCell), getter_AddRefs(range));
+          res = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(nextCell));
           if (NS_FAILED(res)) return res;
 
           // Then delete the cell
@@ -1083,7 +1083,7 @@ nsHTMLEditor::DeleteTableCellContents()
 
   nsCOMPtr<nsIDOMElement> firstCell;
   nsCOMPtr<nsIDOMRange> range;
-  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   if (NS_FAILED(res)) return res;
 
 
@@ -1102,7 +1102,7 @@ nsHTMLEditor::DeleteTableCellContents()
     if (firstCell)
     {
       // We doing a selected cells, so do all of them
-      res = GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+      res = GetNextSelectedCell(nsnull, getter_AddRefs(cell));
       if (NS_FAILED(res)) return res;
     }
     else
@@ -1166,7 +1166,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
   // Test if deletion is controlled by selected cells
   nsCOMPtr<nsIDOMElement> firstCell;
   nsCOMPtr<nsIDOMRange> range;
-  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   if (NS_FAILED(res)) return res;
 
   PRInt32 rangeCount;
@@ -1199,7 +1199,7 @@ nsHTMLEditor::DeleteTableColumn(PRInt32 aNumber)
       PRInt32 nextCol = startColIndex;
       while (nextCol == startColIndex)
       {
-        res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+        res = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
         if (NS_FAILED(res)) return res;
         if (!cell) break;
         res = GetCellIndexes(cell, &startRowIndex, &nextCol);
@@ -1341,7 +1341,7 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
 
   nsCOMPtr<nsIDOMElement> firstCell;
   nsCOMPtr<nsIDOMRange> range;
-  res = GetFirstSelectedCell(getter_AddRefs(firstCell), getter_AddRefs(range));
+  res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   if (NS_FAILED(res)) return res;
 
   PRInt32 rangeCount;
@@ -1377,7 +1377,7 @@ nsHTMLEditor::DeleteTableRow(PRInt32 aNumber)
       PRInt32 nextRow = startRowIndex;
       while (nextRow == startRowIndex)
       {
-        res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+        res = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
         if (NS_FAILED(res)) return res;
         if (!cell) break;
         res = GetCellIndexes(cell, &nextRow, &startColIndex);
@@ -1604,7 +1604,7 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
   nsCOMPtr<nsIDOMElement> cell;
   PRInt32 currentRowIndex, currentColIndex;
   nsCOMPtr<nsIDOMRange> range;
-  res = GetFirstSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+  res = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   if (res == NS_EDITOR_ELEMENT_NOT_FOUND) return NS_OK;
 
@@ -1620,7 +1620,7 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
       // Since we've removed the range, decrement pointer to next range
       mSelectedCellIndex--;
     }    
-    res = GetNextSelectedCell(getter_AddRefs(cell), getter_AddRefs(range));
+    res = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
     if (NS_FAILED(res)) return res;
   }
 
@@ -2165,14 +2165,14 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
 
   nsCOMPtr<nsIDOMElement> firstCell;
   PRInt32 firstRowIndex, firstColIndex;
-  res = GetFirstSelectedCellInTable(getter_AddRefs(firstCell), &firstRowIndex, &firstColIndex);
+  res = GetFirstSelectedCellInTable(&firstRowIndex, &firstColIndex, getter_AddRefs(firstCell));
   if (NS_FAILED(res)) return res;
   
   PRBool joinSelectedCells = PR_FALSE;
   if (firstCell)
   {
     nsCOMPtr<nsIDOMElement> secondCell;
-    res = GetNextSelectedCell(getter_AddRefs(secondCell), nsnull);
+    res = GetNextSelectedCell(nsnull, getter_AddRefs(secondCell));
     if (NS_FAILED(res)) return res;
 
     // If only one cell is selected, join with cell to the right
@@ -2996,8 +2996,8 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
     nsCOMPtr<nsIDOMElement> cellOrTableElement;
     PRInt32 selectedCount;
     nsAutoString tagName;
-    res = GetSelectedOrParentTableElement(getter_AddRefs(cellOrTableElement),
-                                          tagName, &selectedCount);
+    res = GetSelectedOrParentTableElement(tagName, &selectedCount,
+                                          getter_AddRefs(cellOrTableElement));
     if (NS_FAILED(res)) return res;
     if (tagName == NS_LITERAL_STRING("table"))
     {
@@ -3111,7 +3111,7 @@ nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
+nsHTMLEditor::GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   *aCell = nsnull;
@@ -3151,7 +3151,7 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 }
 
 NS_IMETHODIMP
-nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
+nsHTMLEditor::GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   *aCell = nsnull;
@@ -3207,7 +3207,7 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange)
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex)
+nsHTMLEditor::GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aCell)
 {
   if (!aCell) return NS_ERROR_NULL_POINTER;
   *aCell = nsnull;
@@ -3217,7 +3217,7 @@ nsHTMLEditor::GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIn
     *aColIndex = 0;
 
   nsCOMPtr<nsIDOMElement> cell;
-  nsresult res = GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
+  nsresult res = GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
   if (NS_FAILED(res)) return res;
   if (!cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
@@ -3335,9 +3335,9 @@ nsHTMLEditor::SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PR
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement** aTableElement,
-                                              nsAString& aTagName,
-                                              PRInt32 *aSelectedCount)
+nsHTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
+                                              PRInt32 *aSelectedCount,
+                                              nsIDOMElement** aTableElement)
 {
   NS_ENSURE_ARG_POINTER(aTableElement);
   NS_ENSURE_ARG_POINTER(aSelectedCount);
@@ -3354,7 +3354,7 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsIDOMElement** aTableElement,
 
   // Try to get the first selected cell
   nsCOMPtr<nsIDOMElement> tableOrCellElement;
-  res = GetFirstSelectedCell(getter_AddRefs(tableOrCellElement), nsnull);
+  res = GetFirstSelectedCell(nsnull, getter_AddRefs(tableOrCellElement));
   if (NS_FAILED(res)) return res;
 
   if (tableOrCellElement)
@@ -3469,7 +3469,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelection
 
   // Traverse all selected cells 
   nsCOMPtr<nsIDOMElement> selectedCell;
-  res = GetFirstSelectedCell(getter_AddRefs(selectedCell), nsnull);
+  res = GetFirstSelectedCell(nsnull, getter_AddRefs(selectedCell));
   if (NS_FAILED(res)) return res;
   if (res == NS_EDITOR_ELEMENT_NOT_FOUND) return NS_OK;
   
@@ -3495,7 +3495,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelection
       // We're done as soon as we fail for any row
       if (!allCellsInRowAreSelected) break;
     }
-    res = GetNextSelectedCell(getter_AddRefs(selectedCell), nsnull);
+    res = GetNextSelectedCell(nsnull, getter_AddRefs(selectedCell));
   }
 
   if (allCellsInRowAreSelected)
@@ -3509,7 +3509,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelection
   indexArray.Clear();
 
   // Start at first cell again
-  res = GetFirstSelectedCell(getter_AddRefs(selectedCell), nsnull);
+  res = GetFirstSelectedCell(nsnull, getter_AddRefs(selectedCell));
   while (NS_SUCCEEDED(res) && selectedCell)
   {
     // Get the cell's location in the cellmap
@@ -3524,7 +3524,7 @@ nsHTMLEditor::GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelection
       // We're done as soon as we fail for any column
       if (!allCellsInRowAreSelected) break;
     }
-    res = GetNextSelectedCell(getter_AddRefs(selectedCell), nsnull);
+    res = GetNextSelectedCell(nsnull, getter_AddRefs(selectedCell));
   }
   if (allCellsInColAreSelected)
     *aSelectionType = nsISelectionPrivate::TABLESELECTION_COLUMN;

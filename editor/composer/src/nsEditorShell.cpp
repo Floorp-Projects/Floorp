@@ -2781,7 +2781,7 @@ nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
       {
-        result = tableEditor->GetFirstSelectedCell(aOutElement, nsnull);
+        result = tableEditor->GetFirstSelectedCell(nsnull, aOutElement);
         // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
         //  to JavaScript
         if(NS_SUCCEEDED(result)) return NS_OK;
@@ -2813,7 +2813,7 @@ nsEditorShell::GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColInde
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
       {
-        result = tableEditor->GetFirstSelectedCellInTable(aOutElement, aRowIndex, aColIndex);
+        result = tableEditor->GetFirstSelectedCellInTable(aRowIndex, aColIndex, aOutElement);
         // Don't return NS_EDITOR_ELEMENT_NOT_FOUND (passes NS_SUCCEEDED macro)
         //  to JavaScript
         if(NS_SUCCEEDED(result)) return NS_OK;
@@ -2844,7 +2844,7 @@ nsEditorShell::GetNextSelectedCell(nsIDOMElement **aOutElement)
     {
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
-        result = tableEditor->GetNextSelectedCell(aOutElement, nsnull);
+        result = tableEditor->GetNextSelectedCell(nsnull, aOutElement);
       break;
     }
     case ePlainTextEditorType:
@@ -3670,9 +3670,9 @@ nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRInt32 *aS
         nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
         nsAutoString TagName(*aTagName);
         if (tableEditor)
-          result = tableEditor->GetSelectedOrParentTableElement(_retval,
-                                                                TagName,
-                                                                aSelectedCount);
+          result = tableEditor->GetSelectedOrParentTableElement(TagName,
+                                                                aSelectedCount,
+                                                                _retval);
           *aTagName = ToNewUnicode(TagName);
       }
       break;

@@ -269,9 +269,9 @@ public:
 
   NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, PRInt32 aRow, PRInt32 aCol, 
                                         PRInt32 aDirection, PRBool aSelected);
-  NS_IMETHOD GetSelectedOrParentTableElement(nsIDOMElement** aTableElement,
-                                             nsAString& aTagName,
-                                             PRInt32 *aSelectedCount);
+  NS_IMETHOD GetSelectedOrParentTableElement(nsAString& aTagName,
+                                             PRInt32 *aSelectedCount,
+                                             nsIDOMElement** aTableElement);
   NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, PRUint32 *aSelectionType);
 
   nsresult GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell);
@@ -281,13 +281,13 @@ public:
   // (i.e., each cell added to selection is added in another range 
   //  in the selection's rangelist, independent of location in table)
   // aRange is optional: returns the range around the cell
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell);
   // Get next cell until no more are found. Always use GetFirstSelected cell first
   // aRange is optional: returns the range around the cell
-  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
+  NS_IMETHOD GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell);
 
   // Upper-left-most selected cell in table
-  NS_IMETHOD GetFirstSelectedCellInTable(nsIDOMElement **aCell, PRInt32 *aRowIndex, PRInt32 *aColIndex);
+  NS_IMETHOD GetFirstSelectedCellInTable(PRInt32 *aRowIndex, PRInt32 *aColIndex, nsIDOMElement **aCell);
     
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
