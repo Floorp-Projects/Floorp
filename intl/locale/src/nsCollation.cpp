@@ -29,6 +29,7 @@
 
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS(nsCollationFactory, kICollationFactoryIID);
 
@@ -197,7 +198,7 @@ nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsStr
   nsresult res;
 
   res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
+                                     nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), 
                                      (nsISupports**)&ccm);
   if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
     nsIUnicodeEncoder* encoder = nsnull;

@@ -33,6 +33,7 @@
 #endif
 
 static NS_DEFINE_IID(kIUnicharInputStreamIID, NS_IUNICHAR_INPUT_STREAM_IID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 class StringUnicharInputStream : public nsIUnicharInputStream {
 public:
@@ -142,8 +143,8 @@ NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
   nsAutoString defaultCharset("ISO-8859-1");
 
   if (aCharSet == nsnull) aCharSet = &defaultCharset;
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-      kICharsetConverterManagerIID, (nsISupports**)&ccm);
+  res = nsServiceManager::GetService(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+      nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), (nsISupports**)&ccm);
   if (NS_FAILED(res)) return res;
 
   res = ccm->GetUnicodeDecoder(aCharSet, aInstancePtrResult);

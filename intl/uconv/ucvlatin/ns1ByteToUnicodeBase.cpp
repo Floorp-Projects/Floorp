@@ -25,6 +25,8 @@
 #include "nsICharsetConverterManager.h"
 #include "ns1ByteToUnicodeBase.h"
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 ns1ByteToUnicodeBase::ns1ByteToUnicodeBase() 
 {
   mUtil = nsnull;

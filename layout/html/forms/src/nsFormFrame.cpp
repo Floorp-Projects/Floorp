@@ -98,6 +98,8 @@ static NS_DEFINE_IID(kIWebshellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
 #ifdef SingleSignon
 #define FORM_TYPE_TEXT          1
 #define FORM_TYPE_PASSWORD      7
@@ -726,7 +728,7 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   // Get Charset, get the encoder.
   nsICharsetConverterManager * ccm = nsnull;
   rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
-                                    kICharsetConverterManagerIID,
+                                    nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
      rv = ccm->GetUnicodeEncoder(&charset, encoder);
