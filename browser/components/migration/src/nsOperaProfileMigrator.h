@@ -125,7 +125,7 @@ class nsOperaCookieMigrator
 {
 public:
   nsOperaCookieMigrator(nsIInputStream* aSourceStream);
-  virtual ~nsOperaCookieMigrator() { };
+  virtual ~nsOperaCookieMigrator();
 
   nsresult Migrate();
 
