@@ -117,9 +117,9 @@ nsScreenOS2 :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth
       WinQueryWindowPos( hwndWarpCenter, &swp );
       if (swp.y != 0) {
          /* WarpCenter is at the top */
-         *outTop += (*outHeight - lWorkAreaHeight);
+         *outTop += swp.cy;
       }
-      *outHeight = lWorkAreaHeight;
+      *outHeight -= swp.cy;
     }
   }
 
