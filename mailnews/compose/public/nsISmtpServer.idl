@@ -43,4 +43,6 @@ interface nsISmtpServer : nsISupports {
     void getUsernamePasswordWithUI(in wstring promptString, in wstring promptTitle,
                              in nsIAuthPrompt netPrompt, out string userid, out string password);
     void forgetPassword();
+
+	void clearAllValues();
 };

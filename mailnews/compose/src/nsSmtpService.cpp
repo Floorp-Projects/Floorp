@@ -814,6 +814,9 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
         token = nsCRT::strtok(newStr, ",", &newStr);
     }
 
+    // make sure the server clears out it's values....
+    aServer->ClearAllValues();
+
     mServerKeyList = newServerList;
     saveKeyList();
     return rv;

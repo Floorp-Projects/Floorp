@@ -415,3 +415,25 @@ nsSmtpServer::GetRedirectorType(char **aResult)
 
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSmtpServer::ClearAllValues()
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString rootPref("mail.smtpserver.");
+    rootPref += mKey;
+
+    rv = prefs->EnumerateChildren(rootPref, clearPrefEnum, (void *)prefs.get());
+
+    return rv;
+}
+
+void
+nsSmtpServer::clearPrefEnum(const char *aPref, void *aClosure)
+{
+    nsIPref *prefs = (nsIPref *)aClosure;
+    prefs->ClearUserPref(aPref);
+}
