@@ -67,7 +67,7 @@ var testMap = {
     newProfile1_1: { previous: null, next: "newProfile1_2" },
     newProfile1_2: { previous: "newProfile1_1", next: null},
 }
-
+var pagePrefix = "chrome://profile/content/";
 var pagePostfix=".xul";
 var currentPageTag;
 
@@ -200,7 +200,7 @@ function onCancel()
 // utility functions
 function getUrlFromTag(title) 
 {
-    return title + pagePostfix;
+    return pagePrefix + title + pagePostfix;
 }
 
 function Startup()
