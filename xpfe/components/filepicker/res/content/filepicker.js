@@ -96,7 +96,7 @@ function filepickerLoad() {
   // start out with a filename sort
   handleColumnClick("FilenameColumn");
 
-  document.documentElement.setAttribute("ondialogcancel", "onCancel");
+  document.documentElement.setAttribute("ondialogcancel", "return onCancel();");
   try {
     var buttonLabel = getOKAction();
     okButton.setAttribute("label", buttonLabel);
