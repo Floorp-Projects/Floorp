@@ -192,6 +192,7 @@
   <menuitem id="dirTreeContext-delete"
             label="&deleteButton.label;"
             accesskey="&deleteButton.accesskey;"
+            observes="button_delete"
             oncommand="goDoCommand('button_delete');"/>
 </popup>
 
