@@ -12,6 +12,6 @@
         chrome:displayName="Windows Specific Resources"
         chrome:author="mozilla.org"
         chrome:name="navigator-platform"
-	chrome:localeVersion="1.1a">
+	chrome:localeVersion="1.1b">
   </RDF:Description>
 </RDF:RDF>
