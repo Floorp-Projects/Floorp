@@ -859,7 +859,7 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   const PRInt32 width  = PR_MIN(aWidth, frameWidth - aX);
   const PRInt32 height = PR_MIN(aHeight, frameHeight - aY);
 
-  if (width <= 0 && height <= 0) {
+  if (width <= 0 || height <= 0) {
     aFrame->UnlockAlphaData();
     return;
   }
