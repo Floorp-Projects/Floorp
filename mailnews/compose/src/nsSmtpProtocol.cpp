@@ -230,11 +230,6 @@ nsSmtpProtocol::~nsSmtpProtocol()
 	PR_FREEIF(m_addressCopy);
 	PR_FREEIF(m_verifyAddress);
 	PR_FREEIF(m_dataBuf);
-
-	// free handles on all networking objects...
-	NS_IF_RELEASE(m_outputStream); 
-	NS_IF_RELEASE(m_outputConsumer);
-	NS_IF_RELEASE(m_transport);
 }
 
 void nsSmtpProtocol::Initialize(nsIURL * aURL)
@@ -245,18 +240,8 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 	m_flags = 0;
 	m_port = SMTP_PORT;
 
-	// query the URL for a nsISmtpUrl
-	m_runningURL = NULL; // initialize to NULL
-
 	if (aURL)
-	{
-		nsresult rv = aURL->QueryInterface(nsISmtpUrl::GetIID(), (void **)&m_runningURL);
-		if (NS_SUCCEEDED(rv) && m_runningURL)
-		{
-			// okay, now fill in our event sinks...Note that each getter ref counts before
-			// it returns the interface to us...we'll release when we are done
-		}
-	}
+		m_runningURL = do_QueryInterface(aURL);
 
 	const char * hostName = NULL;
 	if (m_runningURL)
@@ -269,26 +254,16 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 		m_hostName = PL_strdup(hostName);
 	else
 		m_hostName = NULL;
-
-
-
-	m_outputStream = nsnull;
-	m_outputConsumer = nsnull;
-	m_transport = nsnull;
-
-	nsINetService* pNetService;
-	rv = nsServiceManager::GetService(kNetServiceCID,
-                                        nsINetService::GetIID(),
-                                        (nsISupports**)&pNetService);
+	NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pNetService) 
 	{
-		rv = pNetService->CreateSocketTransport(&m_transport, m_port, m_hostName);
+		rv = pNetService->CreateSocketTransport(getter_AddRefs(m_transport), m_port, m_hostName);
 		if (NS_SUCCEEDED(rv) && m_transport)
 		{
-			rv = m_transport->GetOutputStream(&m_outputStream);
+			rv = m_transport->GetOutputStream(getter_AddRefs(m_outputStream));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
 
-			rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+			rv = m_transport->GetOutputStreamConsumer(getter_AddRefs(m_outputConsumer));
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
 
 			// register self as the consumer for the socket...
@@ -296,7 +271,6 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 			NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
 		} // if m_transport
                 
-		(void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 	} // if net service
 	
 
@@ -325,7 +299,7 @@ void nsSmtpProtocol::Initialize(nsIURL * aURL)
 
 const char * nsSmtpProtocol::GetUserDomainName()
 {
-	NS_PRECONDITION(m_runningURL != nsnull, "we must be running a url in order to get the user's domain...");
+	NS_PRECONDITION(m_runningURL, "we must be running a url in order to get the user's domain...");
 
 	if (m_runningURL)
 	{
@@ -452,13 +426,10 @@ PRInt32 nsSmtpProtocol::SendData(const char * dataBuffer)
 		{
 			// notify the consumer that data has arrived
 			// HACK ALERT: this should really be m_runningURL once we have NNTP url support...
-			nsIInputStream *inputStream = NULL;
-			m_outputStream->QueryInterface(nsIInputStream::GetIID() , (void **) &inputStream);
+			nsCOMPtr<nsIInputStream> inputStream;
+			inputStream = do_QueryInterface(m_outputStream);
 			if (inputStream)
-			{
 				m_outputConsumer->OnDataAvailable(m_runningURL, inputStream, writeCount);
-				NS_RELEASE(inputStream);
-			}
 			status = 1; // mscott: we need some type of MK_OK? MK_SUCCESS? Arrgghhh
 		}
 		else // the write failed for some reason, returning 0 trips an error by the caller
@@ -1292,85 +1263,81 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 
 	if (aURL)
 	{
-		rv = aURL->QueryInterface(nsISmtpUrl::GetIID(), (void **) &smtpUrl);
-		if (NS_SUCCEEDED(rv) && smtpUrl)
+		m_runningURL = do_QueryInterface(aURL);
+
+#ifdef UNREADY_CODE
+		m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
+#endif
+			
+		PRBool postMessage = PR_FALSE;
+		m_runningURL->IsPostMessage(&postMessage);
+
+		if(postMessage)
 		{
-			m_runningURL = smtpUrl;
+			int status=0;
+			char *addrs1 = 0;
+			char *addrs2 = 0;
+    		m_nextState = SMTP_RESPONSE;
+			m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
 
-			#ifdef UNREADY_CODE
-				m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
-			#endif
-			
-			PRBool postMessage = PR_FALSE;
-			m_runningURL->IsPostMessage(&postMessage);
+			/* Remove duplicates from the list, to prevent people from getting
+				more than one copy (the SMTP host may do this too, or it may not.)
+				This causes the address list to be parsed twice; this probably
+				doesn't matter.
+			*/
 
-			if(postMessage)
+			char * addresses = nsnull;
+			nsIMsgHeaderParser * parser = nsnull;
+            nsComponentManager::CreateInstance(kHeaderParserCID,
+                                               nsnull,
+                                               nsIMsgHeaderParser::GetIID(),
+                                               (void **)&parser);
+
+			m_runningURL->GetAllRecipients(&addresses);
+
+			if (parser)
 			{
-				int status=0;
-				char *addrs1 = 0;
-				char *addrs2 = 0;
-    			m_nextState = SMTP_RESPONSE;
-				m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
+				parser->RemoveDuplicateAddresses(nsnull, addresses, nsnull, PR_FALSE, &addrs1);
 
-				/* Remove duplicates from the list, to prevent people from getting
-					more than one copy (the SMTP host may do this too, or it may not.)
-					This causes the address list to be parsed twice; this probably
-					doesn't matter.
+				/* Extract just the mailboxes from the full RFC822 address list.
+				   This means that people can post to mailto: URLs which contain
+				   full RFC822 address specs, and we will still send the right
+				   thing in the SMTP RCPT command.
 				*/
-
-				char * addresses = nsnull;
-				nsIMsgHeaderParser * parser = nsnull;
-                nsComponentManager::CreateInstance(kHeaderParserCID,
-                                                   nsnull,
-                                                   nsIMsgHeaderParser::GetIID(),
-                                                   (void **)&parser);
-
-				m_runningURL->GetAllRecipients(&addresses);
-
-				if (parser)
+				if (addrs1 && *addrs1)
 				{
-					parser->RemoveDuplicateAddresses(nsnull, addresses, nsnull, PR_FALSE, &addrs1);
+					rv = parser->ParseHeaderAddresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
+					PR_FREEIF (addrs1);
+				}
 
-					/* Extract just the mailboxes from the full RFC822 address list.
-					   This means that people can post to mailto: URLs which contain
-					   full RFC822 address specs, and we will still send the right
-					   thing in the SMTP RCPT command.
-					*/
-					if (addrs1 && *addrs1)
-					{
-						rv = parser->ParseHeaderAddresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
-						PR_FREEIF (addrs1);
-					}
+				if (m_addressesLeft == 0 || addrs2 == nsnull) // hmm no addresses to send message to...
+				{
+					m_nextState = SMTP_ERROR_DONE;
+					ClearFlag(SMTP_PAUSE_FOR_READ);
+					status = MK_MIME_NO_RECIPIENTS;
+					m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(status));
+					return status;
+				}
 
-					if (m_addressesLeft == 0 || addrs2 == nsnull) // hmm no addresses to send message to...
-					{
-						m_nextState = SMTP_ERROR_DONE;
-						ClearFlag(SMTP_PAUSE_FOR_READ);
-						status = MK_MIME_NO_RECIPIENTS;
-						m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(status));
-						return status;
-					}
-
-					m_addressCopy = addrs2;
-					m_addresses = m_addressCopy;
-					NS_RELEASE(parser); // release the RFC-822 parser...
-					PR_FREEIF(addresses); // free our original addresses string...
-				} // if parser
-			} // if post message
-			
-			// okay now kick us off to the next state...
-			// our first state is a process state so drive the state machine...
-			PRBool transportOpen = PR_FALSE;
-			m_transport->IsTransportOpen(&transportOpen);
-			m_urlInProgress = PR_TRUE;
-			m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
-			if (transportOpen == PR_FALSE)
-			{
-				m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
-			}
-			else  // the connection is already open so we should begin processing our new url...
-				status = ProcessSmtpState(m_runningURL, nsnull, 0); 
-		} // if we received an smtp url...
+				m_addressCopy = addrs2;
+				m_addresses = m_addressCopy;
+				NS_RELEASE(parser); // release the RFC-822 parser...
+				PR_FREEIF(addresses); // free our original addresses string...
+			} // if parser
+		} // if post message
+		
+		// okay now kick us off to the next state...
+		// our first state is a process state so drive the state machine...
+		PRBool transportOpen = PR_FALSE;
+		m_transport->IsTransportOpen(&transportOpen);
+		m_urlInProgress = PR_TRUE;
+		m_runningURL->SetUrlState(PR_TRUE, NS_OK); // set the url as a url currently being run...
+		if (transportOpen == PR_FALSE)
+		{
+			m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
+		}
+		else  // the connection is already open so we should begin processing our new url...
+			status = ProcessSmtpState(m_runningURL, nsnull, 0); 
 	} // if we received a url!
 
 	return status;

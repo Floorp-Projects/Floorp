@@ -20,6 +20,7 @@
 #define nsSmtpProtocol_h___
 
 #include "nsIStreamListener.h"
+#include "nsCOMPtr.h"
 #include "nsITransport.h"
 #include "rosetta.h"
 #include HG40855
@@ -118,12 +119,12 @@ private:
 	// Smtp Event Sinks
 
 	// Ouput stream for writing commands to the socket
-	nsITransport			* m_transport; 
-	nsIOutputStream			* m_outputStream;   // this will be obtained from the transport interface
-	nsIStreamListener	    * m_outputConsumer; // this will be obtained from the transport interface
+	nsCOMPtr<nsITransport>		m_transport; 
+	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface
+	nsCOMPtr<nsIStreamListener> m_outputConsumer; // this will be obtained from the transport interface
 
 	// the nsISmtpURL that is currently running
-	nsISmtpUrl				* m_runningURL;
+	nsCOMPtr<nsISmtpUrl>		m_runningURL;
 	PRUint32 m_flags;		// used to store flag information
 	PRUint32 m_LastTime;
 
