@@ -30,8 +30,7 @@ LIBRARY_NAME	= javadom
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
-	nsJavaDOMImpl.cpp \
-	nsJavaDOMModule.cpp 
+	nsJavaDOMImpl.cpp 
 
 include $(topsrcdir)/config/config.mk
 
@@ -59,7 +58,6 @@ else
 endif
 
 EXPORTS 	= \
-	nsJavaDOMCID.h \
 	nsIJavaDOM.h 
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
