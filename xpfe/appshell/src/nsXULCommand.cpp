@@ -136,14 +136,14 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::SetWebShell(nsIWebShell * aWebShell)
 {
-  mWebShell = aWebShell;
+  mWebShell = do_QueryInterface(aWebShell);
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::SetDOMElement(nsIDOMElement * aDOMElement)
 {
-  mDOMElement = aDOMElement;
+  mDOMElement = do_QueryInterface(aDOMElement);
   return NS_OK;
 }
 
