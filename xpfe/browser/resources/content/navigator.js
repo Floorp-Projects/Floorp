@@ -716,6 +716,12 @@ function Shutdown()
   } catch (ex) {
   }
 
+  var bt = document.getElementById("bookmarks-ptf");
+  if (bt) {
+    bt.database.RemoveObserver(BookmarksToolbarRDFObserver);
+  }
+  controllers.removeController(BookmarksMenuController);
+
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
 
