@@ -2121,15 +2121,26 @@ PK11_NeedUserInit(PK11SlotInfo *slot)
 PK11SlotInfo *
 PK11_GetInternalKeySlot(void)
 {
-	SECMODModule *mod = SECMOD_GetInternalModule();
-	return PK11_ReferenceSlot(mod->isFIPS ? mod->slots[0] : mod->slots[1]);
+    SECMODModule *mod = SECMOD_GetInternalModule();
+    PORT_Assert(mod != NULL);
+    if (!mod) {
+	PORT_SetError( SEC_ERROR_NO_MODULE );
+	return NULL;
+    }
+    return PK11_ReferenceSlot(mod->isFIPS ? mod->slots[0] : mod->slots[1]);
 }
 
 /* get the internal default slot */
 PK11SlotInfo *
 PK11_GetInternalSlot(void) 
 {
-	return PK11_ReferenceSlot(SECMOD_GetInternalModule()->slots[0]);
+    SECMODModule * mod = SECMOD_GetInternalModule();
+    PORT_Assert(mod != NULL);
+    if (!mod) {
+	PORT_SetError( SEC_ERROR_NO_MODULE );
+	return NULL;
+    }
+    return PK11_ReferenceSlot(mod->slots[0]);
 }
 
 /*
