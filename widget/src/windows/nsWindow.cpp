@@ -700,7 +700,7 @@ nsIWidget* nsWindow::GetParent(void)
     if (mWnd) {
         HWND parent = ::GetParent(mWnd);
         if (parent) {
-            widget = (nsWindow *)::GetWindowLong(mWnd, GWL_USERDATA);
+            widget = (nsWindow *)::GetWindowLong(parent, GWL_USERDATA);
             if (widget) {
               // If the widget is in the process of being destroyed then
               // do NOT return it
