@@ -1434,6 +1434,10 @@ MimeGetStringByIDREAL(PRInt32 stringID)
     nsIURI      *url = nsnull;
     nsILocale   *locale = nsnull;
 
+#if 1
+    nsIStringBundle* sBundle = nsnull;
+    res = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
+#else
     res = pNetService->CreateURL(&url, nsString(propertyURL), nsnull, nsnull, nsnull);
     // Cleanup property URL
     if (propertyURL != MIME_URL)
@@ -1446,13 +1450,20 @@ MimeGetStringByIDREAL(PRInt32 stringID)
 
     nsIStringBundle* sBundle = nsnull;
     res = sBundleService->CreateBundle(url, locale, &sBundle);
+#endif
     if (NS_FAILED(res)) 
     {
       return PL_strdup("???");   // Don't I18N this string...failsafe return value
     }
 
     nsAutoString v("");
+#if 1
+    PRUnichar *ptrv = nsnull;
+    res = sBundle->GetStringFromID(stringID, &ptrv);
+    v = ptrv;
+#else
     res = sBundle->GetStringFromID(stringID, v);
+#endif
     if (NS_FAILED(res)) 
     {
       char    buf[128];

@@ -993,7 +993,20 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
         goto cleanup;
 
     // get the string bundle using the extracted properties file
+#if 1
+    {
+      const char* spec = nsnull;
+      ret = url->GetSpec(&spec);
+      if (NS_FAILED(ret)) {
+        printf("cannot get url spec\n");
+        nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
+        return ret;
+      }
+      ret = service->CreateBundle(spec, locale, &bundle);
+    }
+#else
     ret = service->CreateBundle(url, locale, &bundle);
+#endif
     if (NS_FAILED(ret)) 
         goto cleanup;
     ret = bundle->GetEnumeration(&propEnum);

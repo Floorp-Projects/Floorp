@@ -85,8 +85,8 @@ NS_SetupRegistry()
     
 	pEventQService = nsnull;
     nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
-                                          (nsISupports **)&pEventQService);
+                                                   kIEventQueueServiceIID,
+                                                   (nsISupports **)&pEventQService);
     if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?
       result = pEventQService->CreateThreadEventQueue();
@@ -112,8 +112,9 @@ main(int argc, char* argv[])
 
 #ifndef NECKO
   nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
-    (nsISupports**) &pNetService);
+  ret = nsServiceManager::GetService(kNetServiceCID, 
+                                     kINetServiceIID,
+                                     (nsISupports**) &pNetService);
   if (NS_FAILED(ret) || (!pNetService)) {
     printf("cannot get net service\n");
     return 1;

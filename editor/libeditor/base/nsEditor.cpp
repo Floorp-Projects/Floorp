@@ -553,6 +553,11 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
 
   if (NS_SUCCEEDED(result) && service)
   {
+#if 1
+    nsILocale* locale = nsnull;
+    result = service->CreateBundle(EDITOR_BUNDLE_URL, locale, 
+                                   getter_AddRefs(mStringBundle));
+#else
     nsCOMPtr<nsIURI> url;
 #ifndef NECKO
     result = NS_NewURL(getter_AddRefs(url), nsString(EDITOR_BUNDLE_URL));
@@ -570,6 +575,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
     } else {
       printf("ERROR: Failed to get create URL for StringBundle\n");
     }
+#endif
     // We don't need to keep service around once we created the bundle
     nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
   } else {
@@ -4537,7 +4543,14 @@ nsresult nsEditor::GetString(const nsString& name, nsString& value)
   value = "";
   if (mStringBundle && (name != ""))
   {
+#if 1
+    const PRUnichar *ptrtmp = name.GetUnicode();
+    PRUnichar *ptrv = nsnull;
+    result = mStringBundle->GetStringFromName(ptrtmp, &ptrv);
+    value = ptrv;
+#else
     result = mStringBundle->GetStringFromName(name, value);
+#endif
   }
   return result;
 }

@@ -398,7 +398,18 @@ Wallet_Localize(char* genericString) {
   }
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
+#if 1
+  const char* spec = nsnull;
+  ret = url->GetSpec(&spec);
+  if (NS_FAILED(ret)) {
+    printf("cannot get url spec\n");
+    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+    return v.ToNewCString();
+  }
+  ret = pStringService->CreateBundle(spec, locale, &bundle);
+#else
   ret = pStringService->CreateBundle(url, locale, &bundle);
+#endif
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
@@ -407,7 +418,15 @@ Wallet_Localize(char* genericString) {
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
+#if 1
+  nsString   strtmp(genericString);
+  const PRUnichar *ptrtmp = strtmp.GetUnicode();
+  PRUnichar *ptrv = nsnull;
+  ret = bundle->GetStringFromName(ptrtmp, &ptrv);
+  v = ptrv;
+#else
   ret = bundle->GetStringFromName(nsString(genericString), v);
+#endif
   NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
