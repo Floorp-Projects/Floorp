@@ -28,6 +28,8 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvLatinCID.h"
 #include "nsUCvLatinDll.h"
+#include "nsUEscapeToUnicode.h"
+#include "nsUnicodeToUEscape.h"
 #include "nsAsciiToUnicode.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsISO88592ToUnicode.h"
@@ -167,6 +169,12 @@ FactoryData g_FactoryData[] =
     &kAsciiToUnicodeCID,
     nsAsciiToUnicode::CreateInstance,
     "us-ascii",
+    "Unicode"
+  },
+  {
+    &kUEscapeToUnicodeCID,
+    NEW_UEscapeToUnicode,
+    "x-u-escaped",
     "Unicode"
   },
   {
@@ -430,12 +438,14 @@ FactoryData g_FactoryData[] =
   {
     &kUCS2BEToUnicodeCID,
     nsUCS2BEToUnicode::CreateInstance,
+    //NEW_UTF16BEToUnicode,
     "X-ISO-10646-UCS-2-BE",
     "Unicode"
   },
   {
     &kUCS2LEToUnicodeCID,
     nsUCS2LEToUnicode::CreateInstance,
+    //NEW_UTF16LEToUnicode,
     "X-ISO-10646-UCS-2-LE",
     "Unicode"
   },
@@ -468,6 +478,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToAscii::CreateInstance,
     "Unicode",
     "us-ascii"
+  },
+  {
+    &kUnicodeToUEscapeCID,
+    NEW_UnicodeToUEscape,
+    "Unicode",
+    "x-u-escaped"
   },
   {
     &kUnicodeToISO88591CID,
