@@ -54,6 +54,7 @@ interface nsIBookmarksService : nsISupports
 
     boolean readBookmarks();
     boolean isBookmarked(in string aURL);
+    boolean isBookmarkedInternal(in nsIRDFResource aSource);
 
     void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
@@ -75,6 +76,8 @@ interface nsIBookmarksService : nsISupports
                                              in long aIndex);
 
     nsIRDFResource createSeparator();
+
+    nsIRDFResource cloneResource(in nsIRDFResource aSource);
 
     void updateBookmarkIcon(in string aURL, in wstring aIconURL);
     void removeBookmarkIcon(in string aURL, in wstring aIconURL);

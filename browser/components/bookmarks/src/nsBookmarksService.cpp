@@ -25,6 +25,7 @@
  *   David Hyatt              <hyatt@netscape.com>
  *   Ben Goodger              <ben@netscape.com>
  *   Andreas Otte             <andreas.otte@debitel.net>
+ *   Pierre Chanial           <chanial@noos.fr>
  *   Jan Varga                <varga@netscape.com>
  *   Benjamin Smedberg        <bsmedberg@covad.net>
  *
@@ -97,6 +98,7 @@ nsIRDFResource      *kNC_BookmarkSeparator;
 nsIRDFResource      *kNC_BookmarkAddDate;
 nsIRDFResource      *kNC_BookmarksTopRoot;
 nsIRDFResource      *kNC_BookmarksRoot;
+nsIRDFResource      *kNC_ID;
 nsIRDFResource      *kNC_Description;
 nsIRDFResource      *kNC_Folder;
 nsIRDFResource      *kNC_FolderType;
@@ -229,6 +231,8 @@ bm_AddRefGlobals()
                           &kNC_BookmarkSeparator);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "BookmarkAddDate"),
                           &kNC_BookmarkAddDate);
+        gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "ID"),
+                          &kNC_ID);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Description"),
                           &kNC_Description);
         gRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Folder"),
@@ -336,6 +340,7 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkAddDate);
         NS_IF_RELEASE(kNC_BookmarksTopRoot);
         NS_IF_RELEASE(kNC_BookmarksRoot);
+        NS_IF_RELEASE(kNC_ID);
         NS_IF_RELEASE(kNC_Description);
         NS_IF_RELEASE(kNC_Folder);
         NS_IF_RELEASE(kNC_FolderType);
@@ -2787,6 +2792,57 @@ nsBookmarksService::CreateSeparator(nsIRDFResource** aResult)
 }
 
 NS_IMETHODIMP
+nsBookmarksService::CloneResource(nsIRDFResource* aSource, nsIRDFResource** aResult)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = gRDF->GetAnonymousResource(getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(arcs));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore;
+    while (NS_SUCCEEDED(arcs->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> isupports;
+        arcs->GetNext(getter_AddRefs(isupports));
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+      
+        nsCOMPtr<nsIRDFNode> targetNode;
+        rv = mInner->GetTarget(aSource, property, PR_TRUE, getter_AddRefs(targetNode));
+        NS_ENSURE_SUCCESS(rv, rv);
+ 
+        // test if the arc points to a children
+        PRBool isOrdinal;
+        rv = gRDFC->IsOrdinalProperty(property, &isOrdinal);
+        if (NS_SUCCEEDED(rv) && isOrdinal) {
+            nsCOMPtr<nsIRDFResource> oldTargetResource = do_QueryInterface(targetNode);
+            nsCOMPtr<nsIRDFResource> newTargetResource;
+            rv = CloneResource(oldTargetResource, getter_AddRefs(newTargetResource));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            mInner->Assert(resource, property, newTargetResource, PR_TRUE);
+        } else {
+            mInner->Assert(resource, property, targetNode, PR_TRUE);
+        }
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // correctly assert cloned ID
+    mInner->Change(resource, kNC_ID, aSource, resource);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = resource;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBookmarksService::AddBookmarkImmediately(const char *aURI,
                                            const PRUnichar *aTitle, 
                                            PRInt32 aBookmarkType, 
@@ -2815,7 +2871,7 @@ nsBookmarksService::AddBookmarkImmediately(const char *aURI,
                                      getter_AddRefs(bookmark));
 }
 
-nsresult
+NS_IMETHODIMP
 nsBookmarksService::IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBookmarkedFlag)
 {
     if (!bookmark)      return NS_ERROR_UNEXPECTED;

@@ -496,10 +496,8 @@ var BookmarksMenuDNDObserver = {
       menuTarget.removeChild(menuTarget.lastChild.previousSibling);
     }
 
-    // disabling ctrl-DND for now bookmarks are not cloned
     if (aDragSession.dragAction & kCopyAction)
-      SOUND.beep();
-    //BookmarksUtils.insertSelection("drag", selection, selTarget, true);
+      BookmarksUtils.insertSelection("drag", selection, selTarget);
     else
       BookmarksUtils.moveSelection("drag", selection, selTarget);
 

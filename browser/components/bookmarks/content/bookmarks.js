@@ -466,10 +466,7 @@ var BookmarksCommand = {
       // since data are ended by \n, remove the last empty node
       items.pop(); 
       for (var i=0; i<items.length; ++i) {
-        var resource = RDF.GetResource(items[i]);
-        name = BookmarksUtils.getProperty(resource, NC_NS+"Name");
-        url  = BookmarksUtils.getProperty(resource, NC_NS+"URL" );
-        items[i] = BookmarksUtils.createBookmark(name, url, null, null);
+        items[i] = RDF.GetResource(items[i]);
       }
       break;
     case "text/x-moz-url":
@@ -487,7 +484,7 @@ var BookmarksCommand = {
    
     var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
-    BookmarksUtils.insertSelection("paste", selection, aTarget, true);
+    BookmarksUtils.insertSelection("paste", selection, aTarget);
   },
   
   deleteBookmark: function (aSelection)
@@ -813,8 +810,7 @@ var BookmarksController = {
     case "cmd_bm_copy":
       return length > 0;
     case "cmd_bm_cut":
-      // disabling cut for now since we don't clone folders
-      return false;
+      return true;
     case "cmd_bm_delete":
       return length > 0 && aSelection.containsMutable && !aSelection.containsPTF;
     case "cmd_bm_selectAll":
@@ -1133,33 +1129,6 @@ var BookmarksUtils = {
     }
     return null;
   },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns a cloned folder a aFolder (with a different uri). folderType and 
-  // other properties are recursively dropped
-  cloneFolder: function (aFolder) 
-  {
-    var rName = this.getProperty(aFolder, NC_NS+"Name");    
-    var newFolder;
-    newFolder = BMSVC.createFolder(rName);
-    
-    // Now need to append kiddies. 
-    try {
-      RDFC.Init(BMDS, aFolder);
-      var elts = RDFC.GetElements();
-      RDFC.Init(BMDS, newFolder);
-
-      while (elts.hasMoreElements()) {
-        var curr = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        if (RDFCU.IsContainer(BMDS, curr))
-          curr = BookmarksUtils.cloneFolder(curr);
-        RDFC.AppendElement(curr);
-      }
-    }
-    catch (e) {
-    }
-    return newFolder;
-  },
   
   /////////////////////////////////////////////////////////////////////////////
   // Caches frequently used informations about the selection
@@ -1331,7 +1300,7 @@ var BookmarksUtils = {
       //  kPrefSvc.setBoolPref("browser.bookmarks.import_system_favorites", false);
       //}
         
-  insertSelection: function (aAction, aSelection, aTarget, aDoCopy)
+  insertSelection: function (aAction, aSelection, aTarget)
   {
     var transaction     = new BookmarkInsertTransaction(aAction);
     transaction.item    = new Array(aSelection.length);
@@ -1345,15 +1314,9 @@ var BookmarksUtils = {
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
       
-      // disabling cloneFolder for now
-      if (aDoCopy && aSelection.isContainer[i]) {
-        transaction.isValid[i]=false;
-        SOUND.beep();
-      }
-
       if (transaction.isValid[i]) {
-        if (aDoCopy && aSelection.isContainer[i])
-          rSource = BookmarksUtils.cloneFolder(rSource);
+        if (BMSVC.isBookmarkedInternal(rSource))
+          rSource = BMSVC.cloneResource(rSource);
         transaction.item  [i] = rSource;
         transaction.parent[i] = aTarget.parent;
         transaction.index [i] = index++;
@@ -1777,12 +1740,12 @@ function dumpOBJ (aObj)
 
 function dumpRDF (aDS, aRDFNode)
 {
-  dumpRDFout(aDS, aRDFNode);
+  dumpRDFOut(aDS, aRDFNode);
   dump("\n");
-  dumpRDFin (aDS, aRDFNode);
+  dumpRDFIn (aDS, aRDFNode);
 }
 
-function dumpRDFout (aDS, aRDFNode)
+function dumpRDFOut (aDS, aRDFNode)
 {
   dump("Arcs Out for "+aRDFNode.Value+"\n");
   var arcsout=aDS.ArcLabelsOut(aRDFNode);
@@ -1802,7 +1765,7 @@ function dumpRDFout (aDS, aRDFNode)
     }
   }
 }
-function dumpRDFin (aDS, aRDFNode)
+function dumpRDFIn (aDS, aRDFNode)
 {
   dump("Arcs In for "+aRDFNode.Value+"\n");
   var arcs=aDS.ArcLabelsIn(aRDFNode);

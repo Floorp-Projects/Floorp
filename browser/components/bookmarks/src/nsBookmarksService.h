@@ -156,7 +156,7 @@ protected:
     nsresult deleteBookmarkItem(nsIRDFResource *src,
                                 nsISupportsArray *aArguments,
                                 PRInt32 parentArgIndex);
-
+    
     nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
 
     nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag,
@@ -172,9 +172,6 @@ protected:
 
     void AnnotateBookmarkSchedule(nsIRDFResource* aSource,
                                   PRBool scheduleFlag);
-
-    nsresult IsBookmarkedInternal(nsIRDFResource *bookmark,
-                                  PRBool *isBookmarkedFlag);
 
     nsresult InsertResource(nsIRDFResource* aResource,
                             nsIRDFResource* aParentFolder, PRInt32 aIndex);
