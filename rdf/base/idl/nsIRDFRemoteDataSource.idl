@@ -22,17 +22,33 @@
 
 #include "nsISupports.idl"
 
+/**
+ * A datasource that may load asynchronously
+ */
 [scriptable, uuid(1D297320-27F7-11d3-BE01-000064657374)]
 interface nsIRDFRemoteDataSource : nsISupports
 {
-    // Specify the URI for the data source: this is the prefix
-    // that will be used to register the data source in the
-    // data source registry.
-    void Init(in string uri);
+    /**
+     * Specify the URI for the data source: this is the prefix
+     * that will be used to register the data source in the
+     * data source registry.
+     * @param aURI the URI to load
+     */
+    void Init(in string aURI);
 
+    /**
+     * Refresh the remote datasource, re-loading its contents
+     * from the URI.
+     *
+     * @param aBlocking If <code>true</code>, the call will block
+     * until the datasource has completely reloaded.
+     */
     void Refresh(in boolean aBlocking);
 
-    // Request that a data source write it's contents out to 
-    // permanent storage if applicable.
+    /**
+     * Request that a data source write it's contents out to 
+     * permanent storage, if applicable.
+     */
     void Flush();
 };
+
