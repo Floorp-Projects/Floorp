@@ -137,6 +137,20 @@ void *nsHashtable::Remove(nsHashKey *aKey) {
   return res;
 }
 
+static PR_CALLBACK PRIntn _hashEnumerateCopy(PLHashEntry *he, PRIntn i, void *arg)
+{
+  nsHashtable *newHashtable = (nsHashtable *)arg;
+  newHashtable->Put((nsHashKey *) he->key, he->value);
+  return HT_ENUMERATE_NEXT;
+}
+
+nsHashtable * nsHashtable::Clone() {
+  nsHashtable *newHashTable = new nsHashtable(hashtable->nentries);
+  
+  PL_HashTableEnumerateEntries(hashtable, _hashEnumerateCopy, newHashTable);
+  return newHashTable;
+}
+
 void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc) {
   PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, aEnumFunc);
 }

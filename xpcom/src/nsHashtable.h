@@ -49,6 +49,7 @@ public:
   void *Put(nsHashKey *aKey, void *aData);
   void *Get(nsHashKey *aKey);
   void *Remove(nsHashKey *aKey);
+  nsHashtable *Clone();
   void Enumerate(nsHashtableEnumFunc aEnumFunc);
 };
 
