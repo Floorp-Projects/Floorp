@@ -470,8 +470,19 @@ tbx_dirs()
             TBX_LOGFILE_DIR="${TBX_LOGDIR}"
         elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris8_64" ] ; then
             TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
+        elif [ -d "${NSS_VER_DIR}/logs/tinderbox/Solaris2.6" ] ; then
+            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris2.6"
         else
-            TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
+            TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tinderbox |
+                     sed -e 's/ .*//g'`
+            if [ -z "$TBX_LOGFILE_DIR" ] ; then
+                TBX_LOGFILE_DIR=`ls ${NSS_VER_DIR}/logs/tbx |
+                     sed -e 's/ .*//g'`
+                TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/${TBX_LOGFILE_DIR}"
+            else
+                TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/${TBX_LOGFILE_DIR}"
+            fi
+            #TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs"
         fi
     fi
     echo "QA results in $RESULTDIR" >${TBX_LOGFILE_DIR}/qa.log
