@@ -36,6 +36,8 @@
 const JSD_CTRID = "@mozilla.org/js/jsd/debugger-service;1";
 const jsdIDebuggerService = Components.interfaces.jsdIDebuggerService;
 const jsdIExecutionHook = Components.interfaces.jsdIExecutionHook;
+const jsdIValue = Components.interfaces.jsdIValue;
+const jsdIProperty = Components.interfaces.jsdIProperty;
 
 console.scriptHooker = new Object();
 console.scriptHooker.onScriptLoaded =
@@ -56,44 +58,68 @@ function ih_exehook (cx, state, type, rv)
 
 console.debuggerHooker = new Object();
 console.debuggerHooker.onExecute =
-function dh_exehook (aCx, state, type, rv)
+function dh_exehook (cx, state, type, rv)
 {
-    dd ("onDebuggerHook (" + aCx + ", " + state + ", " + type + ")");
+    dd ("onDebuggerHook (" + cx + ", " + state + ", " + type + ")");
 
+    return debugTrap(cx, state, type);
+}
+
+function debugTrap (cx, state, type)
+{
     ++console.stopLevel;
 
     /* set our default return value */
     console.continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
 
-    console.currentContext = aCx;
+    console.currentContext = cx;
     console.currentThreadState = state;
+    var frame = console.currentFrame = state.topFrame;
+    
+    /* build an array of frames */
+    console.frames = new Array(frame);
+    while ((frame = frame.callingFrame))
+        console.frames.push(frame);
 
-    display (MSG_STOP_DEBUGGER, MT_STOP);
+    var tn = "";
+    switch (type)
+    {
+        case jsdIExecutionHook.TYPE_BREAKPOINT:
+            tn = MSG_VAL_BREAKPOINT;
+            break;
+        case jsdIExecutionHook.TYPE_DEBUG_REQUESTED:
+            tn = MSG_VAL_DEBUG;
+            break;
+        case jsdIExecutionHook.TYPE_DEBUGGER_KEYWORD:
+            tn = MSG_VAL_DEBUGGER;
+            break;
+        case jsdIExecutionHook.TYPE_THROW:
+            tn = MSG_VAL_THROW;
+            break;
+        default:
+            /* don't print stop/cont messages for other types */
+    }
 
+    if (tn)
+        display (getMsg(MSN_STOP, tn), MT_STOP);
+
+    display (formatStackFrame(console.currentFrame));
+    
     console.jsds.enterNestedEventLoop(); 
 
     /* execution pauses here until someone calls 
      * console.dbg.exitNestedEventLoop() 
      */
 
+    if (tn)
+        display (getMsg(MSN_CONT, tn), MT_CONT);
+
     delete console.currentContext;
     delete console.currentThreadState;
-
-    display (MSG_CONT_DEBUGGER, MT_CONT);
-
-    return console.continueCodeStack.pop();
-}
-
-function initDebugger()
-{   
-    console.continueCodeStack = new Array();
+    delete console.currentFrame;
+    delete console.frames;
     
-    /* create the debugger instance */
-    console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
-    console.jsds.init();
-    console.jsds.scriptHook = console.scriptHooker;
-    console.jsds.debuggerHook = console.debuggerHooker;
-    //dbg.interruptHook = interruptHooker;
+    return console.continueCodeStack.pop();
 }
 
 function detachDebugger()
@@ -111,8 +137,155 @@ function detachDebugger()
     console.jsds.debuggerHook = null;
 }
 
-console.printCallStack =
-function jsd_pcallstack ()
+function formatProperty (p)
 {
-    display ();
+    if (!p)
+        throw BadMojo (ERR_REQUIRED_PARAM, "p");
+
+    var flags = p.flags;
+    var s = "[";
+    s += (flags & jsdIProperty.FLAG_ENUMERATE) ? "e" : "-";
+    s += (flags & jsdIProperty.FLAG_READONLY)  ? "r" : "-";
+    s += (flags & jsdIProperty.FLAG_PERMANENT) ? "p" : "-";
+    s += (flags & jsdIProperty.FLAG_ALIAS)     ? "A" : "-";
+    s += (flags & jsdIProperty.FLAG_ARGUMENT)  ? "a" : "-";
+    s += (flags & jsdIProperty.FLAG_VARIABLE)  ? "v" : "-";
+    s += (flags & jsdIProperty.FLAG_HINTED)    ? "h]" : "-]";
+
+    if (p.name)
+        s += " " + p.name.stringValue;
+    
+    if (p.value)
+        s += " " + formatValue(p.value);
+
+    return s;
+}
+
+function formatScript (scr)
+{
+    if (!scr)
+        throw BadMojo (ERR_REQUIRED_PARAM, "scr");
+
+    return MSG_TYPE_FUNCTION + " " + scr.functionName + " in " + scr.fileName;
+}
+
+function formatStackFrame (f)
+{
+    if (!f)
+        throw BadMojo (ERR_REQUIRED_PARAM, "f");
+
+    var s = formatScript (f.script);
+    s += " " + MSG_TYPE_LINE + " " + f.line;
+
+    return s;
+}
+
+function formatValue (v)
+{
+    if (!v)
+        throw BadMojo (ERR_REQUIRED_PARAM, "v");
+    
+    var s = "[";
+    var value = "";
+        
+    if (v.isNative)
+        s += MSG_TYPE_NATIVE + " ";
+    
+    switch (v.jsType)
+    {
+        case jsdIValue.TYPE_DOUBLE:
+            s += MSG_TYPE_DOUBLE;
+            value = v.doubleValue;
+            break;
+        case jsdIValue.TYPE_INT:
+            s += MSG_TYPE_INT;
+            value = v.intValue;
+            break;
+        case jsdIValue.TYPE_FUNCTION:
+            s += MSG_TYPE_FUNCTION;
+            value = v.jsFunctionName;
+            break;
+        case jsdIValue.TYPE_NULL:
+            s += MSG_TYPE_NULL;
+            break;
+        case jsdIValue.TYPE_OBJECT:
+            s += MSG_TYPE_OBJECT;
+            var pcount = new Object();
+            value = String(v.propertyCount) + " " + MSG_TYPE_PROPERTIES;
+            break;
+        case jsdIValue.TYPE_STRING:
+            s += MSG_TYPE_STRING;
+            value = v.stringValue;
+            break;
+        case jsdIValue.TYPE_VOID:
+            s += MSG_TYPE_VOID;
+            break;
+        default:
+            s += MSG_TYPE_UNKNOWN;
+            break;
+    }
+
+    /*
+    if (v.isPrimitive)
+        s += " (" + MSG_TYPE_PRIMITIVE + ")";
+    */
+    s += "]";
+
+    if (v.jsClassName)
+        s += " [" + MSG_TYPE_CLASS + ": " + v.jsClassName + "]";
+
+    if (value)
+        s += " " + value;
+
+    
+    return s;
+}
+
+function initDebugger()
+{   
+    console.continueCodeStack = new Array();
+    
+    /* create the debugger instance */
+    console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
+    console.jsds.init();
+    //console.jsds.scriptHook = console.scriptHooker;
+    console.jsds.debuggerHook = console.debuggerHooker;
+    //dbg.interruptHook = interruptHooker;
+}
+
+function displayCallStack ()
+{
+    for (i = 0; i < console.frames.length; ++i)
+        displayFrame (console.frames[i], i);
+}
+
+function displayProperties (v)
+{
+    if (!v)
+        throw BadMojo (ERR_REQUIRED_PARAM, "v");
+    
+    var p = new Object();
+    v.getProperties (p, {});
+    for (var i in p.value) display(formatProperty (p.value[i]));
+}
+
+function displayFrame (f, idx)
+{
+    if (!f)
+        throw BadMojo (ERR_REQUIRED_PARAM, "f");
+
+    if (typeof idx == "undefined")
+    {
+        for (idx = 0; idx < console.frames.length; ++idx)
+            if (f == console.frames[idx])
+                break;
+    
+        if (idx >= console.frames.length)
+            idx = MSG_VAL_UNKNOWN;
+    }
+    
+    if (typeof idx == "number")
+        idx = "#" + idx;
+    
+    display(idx + ": " + formatStackFrame (f));
 }
