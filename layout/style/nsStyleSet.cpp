@@ -1245,9 +1245,12 @@ StyleSetImpl::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule, 
     aContext->GetRuleNode(&ruleNode);
     ruleNode->ClearCachedData(aRule); 
 
-    // We don't need to mess with the style tree in this case, since the act of 
-    // changing inline style attributes automatically causes re-resolution to a new style context
-    // (with new descendant style contexts as well).
+    // XXX We need to clear style data here in case there's a style context
+    // that inherits a struct from its parent where the parent uses data
+    // that's cached on the rule node.  Otherwise we could crash while
+    // doing checks comparing old data to new data during reresolution.
+    // This could make some of those checks incorrect.
+    aContext->ClearStyleData(aPresContext, nsnull);
   }
   else {
     // XXXdwh This is not terribly fast, but fortunately this case is rare (and often a full tree
