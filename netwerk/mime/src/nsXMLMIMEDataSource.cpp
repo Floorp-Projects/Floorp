@@ -57,7 +57,6 @@
 #include <stdio.h>
 #include "prlong.h"
 
-const char* kMIME="mime";
 const char* kMIMEType="mimetype";
 const char* kDescription="description";
 const char* kExtensions="extensions";
