@@ -23,9 +23,9 @@
 
  */
 
+#include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsElementMap.h"
-#include "nsIContent.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -33,8 +33,6 @@
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gMapLog;
 #endif
-
-MOZ_DECL_CTOR_COUNTER(RDF_nsElementMap);
 
 nsElementMap::nsElementMap()
 {
@@ -64,10 +62,6 @@ nsElementMap::nsElementMap()
 nsElementMap::~nsElementMap()
 {
     MOZ_COUNT_DTOR(RDF_nsElementMap);
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: nsElementMap\n", gInstanceCount);
-#endif
 
     if (mMap) {
         PL_HashTableEnumerateEntries(mMap, ReleaseContentList, nsnull);
@@ -93,7 +87,6 @@ nsElementMap::ReleaseContentList(PLHashEntry* aHashEntry, PRIntn aIndex, void* a
     while (head) {
         ContentListItem* doomed = head;
         head = head->mNext;
-        NS_RELEASE(doomed->mContent);
         delete doomed;
     }
 
@@ -124,11 +117,10 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
         key[aID.Length()] = PRUnichar(0);
 
         PL_HashTableAdd(mMap, key, head);
-        NS_ADDREF(aContent);
     }
     else {
         while (1) {
-            if (head->mContent == aContent) {
+            if (head->mContent.get() == aContent) {
                 // This can happen if an element that was created via
                 // frame construction code is then "appended" to the
                 // content model with aNotify == PR_TRUE. If you see
@@ -136,9 +128,26 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
                 // unnecessarily notifying the frame system, and
                 // potentially causing unnecessary reflow.
                 //NS_ERROR("element was already in the map");
-                PR_LOG(gMapLog, PR_LOG_ALWAYS,
-                       ("xulelemap(%p) dup    [%p] <-- %s\n",
-                        this, aContent, (const char*) nsCAutoString(aID)));
+#ifdef PR_LOGGING
+                if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+                    nsresult rv;
+
+                    nsCOMPtr<nsIAtom> tag;
+                    rv = aContent->GetTag(*getter_AddRefs(tag));
+                    if (NS_FAILED(rv)) return rv;
+
+                    nsAutoString tagname;
+                    rv = tag->ToString(tagname);
+                    if (NS_FAILED(rv)) return rv;
+
+                    PR_LOG(gMapLog, PR_LOG_ALWAYS,
+                           ("xulelemap(%p) dup    %s[%p] <-- %s\n",
+                            this,
+                            (const char*) nsCAutoString(tagname),
+                            aContent,
+                            (const char*) nsCAutoString(aID)));
+                }
+#endif
 
                 return NS_OK;
             }
@@ -151,14 +160,28 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
         head->mNext = new ContentListItem(aContent);
         if (! head->mNext)
             return NS_ERROR_OUT_OF_MEMORY;
-
-        NS_ADDREF(aContent);
     }
 
-    PR_LOG(gMapLog, PR_LOG_ALWAYS,
-           ("xulelemap(%p) add    [%p] <-- %s\n",
-            this, aContent, (const char*) nsCAutoString(aID)));
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsresult rv;
 
+        nsCOMPtr<nsIAtom> tag;
+        rv = aContent->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagname;
+        rv = tag->ToString(tagname);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelemap(%p) add    %s[%p] <-- %s\n",
+                this,
+                (const char*) nsCAutoString(tagname),
+                aContent,
+                (const char*) nsCAutoString(aID)));
+    }
+#endif
 
     return NS_OK;
 }
@@ -171,9 +194,26 @@ nsElementMap::Remove(const nsString& aID, nsIContent* aContent)
     if (! mMap)
         return NS_ERROR_NOT_INITIALIZED;
 
-    PR_LOG(gMapLog, PR_LOG_ALWAYS,
-           ("xulelemap(%p) remove [%p] <-- %s\n",
-            this, aContent, (const char*) nsCAutoString(aID)));
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+        nsresult rv;
+
+        nsCOMPtr<nsIAtom> tag;
+        rv = aContent->GetTag(*getter_AddRefs(tag));
+        if (NS_FAILED(rv)) return rv;
+
+        nsAutoString tagname;
+        rv = tag->ToString(tagname);
+        if (NS_FAILED(rv)) return rv;
+
+        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+               ("xulelemap(%p) remove  %s[%p] <-- %s\n",
+                this,
+                (const char*) nsCAutoString(tagname),
+                aContent,
+                (const char*) nsCAutoString(aID)));
+    }
+#endif
 
     PLHashEntry** hep = PL_HashTableRawLookup(mMap,
                                               Hash(aID.GetUnicode()),
@@ -182,14 +222,13 @@ nsElementMap::Remove(const nsString& aID, nsIContent* aContent)
     // XXX Don't comment out this assert: if you get here, something
     // has gone dreadfully, horribly wrong. Curse. Scream. File a bug
     // against waterson@netscape.com.
-    //NS_ASSERTION(hep != nsnull && *hep != nsnull, "attempt to remove an element that was never added");
+    NS_ASSERTION(hep != nsnull && *hep != nsnull, "attempt to remove an element that was never added");
     if (!hep || !*hep)
         return NS_OK;
 
     ContentListItem* head = NS_REINTERPRET_CAST(ContentListItem*, (*hep)->value);
 
-    if (head->mContent == aContent) {
-        NS_RELEASE(aContent);
+    if (head->mContent.get() == aContent) {
         ContentListItem* next = head->mNext;
         if (next) {
             (*hep)->value = next;
@@ -205,9 +244,8 @@ nsElementMap::Remove(const nsString& aID, nsIContent* aContent)
     else {
         ContentListItem* item = head->mNext;
         while (item) {
-            if (item->mContent == aContent) {
+            if (item->mContent.get() == aContent) {
                 head->mNext = item->mNext;
-                NS_RELEASE(aContent);
                 delete item;
                 break;
             }
@@ -273,34 +311,43 @@ nsElementMap::Enumerate(nsElementMapEnumerator aEnumerator, void* aClosure)
 PRIntn
 nsElementMap::EnumerateImpl(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
+    // This routine will be called once for each key in the
+    // hashtable. It will in turn call the enumerator that the user
+    // has passed in via Enumerate() once for each element that's been
+    // mapped to this ID.
     EnumerateClosure* closure = NS_REINTERPRET_CAST(EnumerateClosure*, aClosure);
 
     const PRUnichar* id =
         NS_REINTERPRET_CAST(const PRUnichar*, aHashEntry->key);
 
+    // 'link' holds a pointer to the previous element's link field.
     ContentListItem** link = 
         NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value);
 
     ContentListItem* item = *link;
 
+    // Iterate through each content node that's been mapped to this ID
     while (item) {
-        PRIntn result = (*closure->mEnumerator)(id, item->mContent, closure->mClosure);
+        ContentListItem* current = item;
+        item = item->mNext;
+        PRIntn result = (*closure->mEnumerator)(id, current->mContent, closure->mClosure);
 
         if (result == HT_ENUMERATE_REMOVE) {
-            NS_RELEASE(item->mContent);
-            *link = item->mNext;
+            // If the user wants to remove the current, then deal.
+            *link = item;
+            delete current;
 
             if ((! *link) && (link == NS_REINTERPRET_CAST(ContentListItem**, &aHashEntry->value))) {
+                // It's the last content node that was mapped to this
+                // ID. Unhash it.
                 PRUnichar* key = NS_CONST_CAST(PRUnichar*, id);
                 delete[] key;
                 return HT_ENUMERATE_REMOVE;
             }
         }
         else {
-            link = &item->mNext;
+            link = &current->mNext;
         }
-
-        item = item->mNext;
     }
 
     return HT_ENUMERATE_NEXT;
