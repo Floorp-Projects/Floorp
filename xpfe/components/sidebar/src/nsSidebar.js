@@ -35,18 +35,20 @@
  */
 
 const DEBUG = false; /* set to false to suppress debug messages */
-const PANELS_RDF_FILE  = 66626; /* the magic number to find panels.rdf */
+const PANELS_RDF_FILE  = "UPnls"; /* directory services property to find panels.rdf */
 
 const SIDEBAR_PROGID   = "component://mozilla/sidebar";
 const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
 const CONTAINER_PROGID = "component://netscape/rdf/container";
-const LOCATOR_PROGID   = "component://netscape/filelocator";
+const DIR_SERV_PROGID  = "component://netscape/file/directory_service"
+const STD_URL_PROGID   = "component://netscape/network/standard-url"
 const NETSEARCH_PROGID = "component://netscape/rdf/datasource?name=internetsearch"
 const nsISupports      = Components.interfaces.nsISupports;
 const nsIFactory       = Components.interfaces.nsIFactory;
 const nsISidebar       = Components.interfaces.nsISidebar;
 const nsIRDFContainer  = Components.interfaces.nsIRDFContainer;
-const nsIFileLocator   = Components.interfaces.nsIFileLocator;
+const nsIProperties    = Components.interfaces.nsIProperties;
+const nsIFileURL       = Components.interfaces.nsIFileURL;
 const nsIRDFRemoteDataSource = Components.interfaces.nsIRDFRemoteDataSource;
 const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
 const nsISecurityCheckedComponent = Components.interfaces.nsISecurityCheckedComponent;
@@ -383,12 +385,13 @@ function getSidebarDatasourceURI(panels_file_id)
         /* use the fileLocator to look in the profile directory 
          * to find 'panels.rdf', which is the
          * database of the user's currently selected panels. */
-        var fileLocatorService  =
-            Components.classes[LOCATOR_PROGID].getService(nsIFileLocator);
+        var directory_service = Components.classes[DIR_SERV_PROGID].getService();
+        if (directory_service)
+            directory_service = locator_service.QueryInterface(nsIProperties);
 
-        /* if <profile>/panels.rdf doesn't exist, GetFileLocation() will copy
+        /* if <profile>/panels.rdf doesn't exist, get will copy
          *bin/defaults/profile/panels.rdf to <profile>/panels.rdf */
-        var sidebar_file = fileLocatorService.GetFileLocation(panels_file_id);
+        var sidebar_file = directory_service.get(panels_file_id, nsIFile);
 
         if (!sidebar_file.exists())
         {
@@ -398,8 +401,11 @@ function getSidebarDatasourceURI(panels_file_id)
             return null;
         }
 
-        debug("sidebar uri is " + sidebar_file.URLString);
-        return sidebar_file.URLString;
+        var file_url = Components.classes[STD_URL_PROGID].createInstance(nsIFileURL);
+        file_url.file = sidebar_file;
+
+        debug("sidebar uri is " + file_url.spec);
+        return file_url.spec;
     }
     catch (ex)
     {
