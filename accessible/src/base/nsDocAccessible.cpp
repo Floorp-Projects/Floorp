@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDocAccessible.h"
+#include "nsHashtable.h"
 #include "nsIAccessibilityService.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"
@@ -106,11 +107,15 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   }
   
   NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
-  PutCacheEntry(*gGlobalDocAccessibleCache, mWeakShell, this);
+  PutCacheEntry(gGlobalDocAccessibleCache, mWeakShell, this);
 
   // XXX aaronl should we use an algorithm for the initial cache size?
+#ifdef OLD_HASH
+  mAccessNodeCache = new nsSupportsHashtable(kDefaultCacheSize);
+#else
   mAccessNodeCache = new nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>;
   mAccessNodeCache->Init(kDefaultCacheSize);
+#endif
 }
 
 //-----------------------------------------------------
@@ -293,14 +298,14 @@ NS_IMETHODIMP nsDocAccessible::GetIsEditable(PRBool *aIsEditable)
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
 {
   NS_ASSERTION(mAccessNodeCache, "No accessibility cache for document");
-  GetCacheEntry(*mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
+  GetCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode); // Addrefs for us
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::CacheAccessNode(void *aUniqueID, nsIAccessNode *aAccessNode)
 {
   NS_ASSERTION(mAccessNodeCache, "No accessibility cache for document");
-  PutCacheEntry(*mAccessNodeCache, aUniqueID, aAccessNode);
+  PutCacheEntry(mAccessNodeCache, aUniqueID, aAccessNode);
   return NS_OK;
 }
 
@@ -342,7 +347,12 @@ NS_IMETHODIMP nsDocAccessible::Destroy()
 {
   NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
   if (gGlobalDocAccessibleCache) {
+#ifdef OLD_HASH
+    nsVoidKey key(NS_STATIC_CAST(void*, mWeakShell));
+    gGlobalDocAccessibleCache->Remove(&key);
+#else
     gGlobalDocAccessibleCache->Remove(NS_STATIC_CAST(void*, mWeakShell));
+#endif
   }
   return Shutdown();
 }
@@ -370,9 +380,13 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   mWebProgress = nsnull;
 
   if (mAccessNodeCache) {
+#ifdef OLD_HASH
+    nsSupportsHashtable *hashToClear = mAccessNodeCache; // Avoid reentrency
+#else
     nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *hashToClear = mAccessNodeCache; // Avoid reentrency
+#endif
     mAccessNodeCache = nsnull;
-    ClearCache(*hashToClear);
+    ClearCache(hashToClear);
     delete hashToClear;
   }
 
@@ -869,7 +883,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIDOMNode *aStartNode)
         accessNode->GetUniqueID(&uniqueID);
         accessNode->Shutdown();
         // Remove from hash table as well
+#ifdef OLD_HASH
+        nsVoidKey key(uniqueID);
+        mAccessNodeCache->Remove(&key); 
+#else
         mAccessNodeCache->Remove(uniqueID);
+#endif
       }
     }
 

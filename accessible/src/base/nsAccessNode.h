@@ -49,7 +49,16 @@
 #include "nsIStringBundle.h"
 #include "nsWeakReference.h"
 
+#define OLD_HASH 1
+
+#ifdef OLD_HASH
+class nsSupportsHashtable;
+class nsHashKey;
+#include "nsHashtable.h"
+#else
 #include "nsInterfaceHashtable.h"
+#include "pldhash.h"
+#endif
 
 class nsIPresShell;
 class nsIPresContext;
@@ -63,31 +72,34 @@ enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2 };
 #define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
 #define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
 
+#ifndef OLD_HASH
 /* hashkey wrapper using void* KeyType
  *
  * @see nsTHashtable::EntryType for specification
  */
-class nsVoidHashKey : public PLDHashEntryHdr
+class NS_COM nsVoidHashKey : public PLDHashEntryHdr
 {
-public:
-  typedef const void* KeyType;
-  typedef const void* KeyTypePointer;
+public:  typedef void* voidPointer;
+  typedef const voidPointer& KeyType;
+  typedef const voidPointer* KeyTypePointer;
   
-  nsVoidHashKey(KeyTypePointer aKey) : mValue(aKey) { }
+  const voidPointer mValue;
+
+public:
+  nsVoidHashKey(KeyTypePointer aKey) : mValue(*aKey) { }
   nsVoidHashKey(const nsVoidHashKey& toCopy) : mValue(toCopy.mValue) { }
   ~nsVoidHashKey() { }
 
   KeyType GetKey() const { return mValue; }
-  KeyTypePointer GetKeyPointer() const { return mValue; }
-  PRBool KeyEquals(KeyTypePointer aKey) const { return aKey == mValue; }
+  KeyTypePointer GetKeyPointer() const { return &mValue; }
+  PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
 
-  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
-  static PLDHashNumber HashKey(KeyTypePointer aKey) { return NS_PTR_TO_INT32(aKey) >> 2; }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return NS_PTR_TO_INT32(*aKey) >> 2; }
+  static PRBool AllowMemMove() { return PR_TRUE; }
 
-private:
-  const void* mValue;
 };
+#endif
 
 class nsAccessNode: public nsIAccessNode
 {
@@ -104,13 +116,23 @@ class nsAccessNode: public nsIAccessNode
     static void ShutdownXPAccessibility();
 
     // Static methods for handling per-document cache
-    static void PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache, 
+#ifdef OLD_HASH
+    static void PutCacheEntry(nsSupportsHashtable *aCache, 
                               void* aUniqueID, nsIAccessNode *aAccessNode);
-    static void GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache, void* aUniqueID, 
+    static void GetCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
                               nsIAccessNode **aAccessNode);
-    static void ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode>& aCache);
+    static void ClearCache(nsSupportsHashtable *aCache);
+    static PRIntn PR_CALLBACK ClearCacheEntry(nsHashKey *aKey, void *aData, 
+                                              void* aClosure);
+#else
+    static void PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, 
+                              void* aUniqueID, nsIAccessNode *aAccessNode);
+    static void GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, void* aUniqueID, 
+                              nsIAccessNode **aAccessNode);
+    static void ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache);
 
-    static PLDHashOperator PR_CALLBACK ClearCacheEntry(const void* aKey, nsCOMPtr<nsIAccessNode>& aAccessNode, void* aUserArg);
+    static PLDHashOperator PR_CALLBACK ClearCacheEntry(void *const& aKey, nsCOMPtr<nsIAccessNode> aAccessNode, void* aUserArg);
+#endif
 
     // Static cache methods for global document cache
     static void GetDocAccessibleFor(nsIWeakReference *aPresShell,
@@ -140,7 +162,11 @@ class nsAccessNode: public nsIAccessNode
     static PRBool gIsAccessibilityActive;
     static PRBool gIsCacheDisabled;
 
+#ifdef OLD_HASH
+    static nsSupportsHashtable *gGlobalDocAccessibleCache;
+#else
     static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *gGlobalDocAccessibleCache;
+#endif
 };
 
 #endif
