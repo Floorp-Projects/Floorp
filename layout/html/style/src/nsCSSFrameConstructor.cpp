@@ -14187,14 +14187,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
   }
 
   // If we get here, we're screwed!
-  return RecreateEntireFrameTree(aPresContext);
-}
-
-nsresult
-nsCSSFrameConstructor::RecreateEntireFrameTree(nsIPresContext* aPresContext)
-{
-  // XXX write me some day
-  return NS_OK;
+  return ReconstructDocElementHierarchy(aPresContext);
 }
 
 nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext*  aPresContext,
