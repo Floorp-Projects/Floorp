@@ -319,7 +319,7 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 				msgHdr->GetMessageSize(&messageSize);
 				msgHdr->Release();
 			}
-			mailDb->Release();
+			mailDb->Close();
 		}
 	}
 	m_runningUrl->SetMessageSize(messageSize);
