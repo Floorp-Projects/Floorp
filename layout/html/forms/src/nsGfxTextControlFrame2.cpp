@@ -3028,6 +3028,7 @@ nsGfxTextControlFrame2::SetTextControlFrameState(const nsAReadableString& aValue
       if (domSel)
         domSel->EndBatchChanges();
     }
+    mTextSelImpl->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,nsISelectionController::SELECTION_FOCUS_REGION);
   }
   else
   {
