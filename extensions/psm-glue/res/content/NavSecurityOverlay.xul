@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<overlay id="NavSecurityOverlay"
+xmlns:html="http://www.w3.org/TR/REC-html40"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<?xml-stylesheet href="chrome://navigator/skin/NavSecurityOverlay.css" type="text/css"?> 
+<html:script language="JavaScript" src="chrome://navigator/content/NavSecurityUI.js" />
+
+<box id="state-box">
+    <titledbutton id="security-button" class="borderless" align="left" onclick="displayPageInfo()"/>    
+</box>
+      
+</overlay>
