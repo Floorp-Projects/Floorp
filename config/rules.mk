@@ -1143,11 +1143,11 @@ _JAR_REGCHROME_JAR=0
 endif
 
 chrome::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/../mozilla/config/make-jars.pl $(_JAR_FLAT_FILES_ONLY) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 install:: chrome
 
-REGCHROME = $(PERL) $(topsrcdir)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_JAR)
+REGCHROME = $(PERL) $(topsrcdir)/../mozilla/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_JAR)
 
 ##############################################################################
 
