@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,245 +18,173 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Franz.Sirl-kernel@lauterbach.com (Franz Sirl)
+ *   beard@netscape.com (Patrick Beard)
+ *   waterson@netscape.com (Chris Waterson)
  */
 
-/* Implement shared vtbl methods. */
+// Implement shared vtbl methods.
 
 #include "xptcprivate.h"
 
-/*
-        For Linux/PPC, the first 8 integral and the first 8 f.p. parameters 
-        arrive in a separate chunk of data that has been loaded from the registers. 
-        The args pointer has been set to the start of the parameters BEYOND the ones
-        arriving in registers.
-*/
-
-extern "C" nsresult
-PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, PRUint32 *gprData, double *fprData)
-{
+// The Linux/PPC ABI (aka PPC/SYSV ABI) passes the first 8 integral
+// parameters and the first 8 floating point parameters in registers
+// (r3-r10 and f1-f8), no stack space is allocated for these by the
+// caller.  The rest of the parameters are passed in the callers stack
+// area. The stack pointer has to retain 16-byte alignment, longlongs
+// and doubles are aligned on 8-byte boundaries.
 
 #define PARAM_BUFFER_COUNT     16
-#define PARAM_GPR_COUNT         8
-#define PARAM_FPR_COUNT         8
+#define GPR_COUNT               8
+#define FPR_COUNT               8
 
-  nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-  nsXPTCMiniVariant* dispatchParams = NULL;
-  nsIInterfaceInfo* iface_info = NULL;
-  const nsXPTMethodInfo* info;
-  PRUint8 paramCount;
-  PRUint8 i;
-  nsresult result = NS_ERROR_FAILURE;
+// PrepareAndDispatch() is called by SharedStub() and calls the actual method.
+//
+// - 'args[]' contains the arguments passed on stack
+// - 'gprData[]' contains the arguments passed in integer registers
+// - 'fprData[]' contains the arguments passed in floating point registers
+// 
+// The parameters are mapped into an array of type 'nsXPTCMiniVariant'
+// and then the method gets called.
 
-  NS_ASSERTION(self,"no self");
+extern "C" nsresult
+PrepareAndDispatch(nsXPTCStubBase* self,
+                   PRUint32 methodIndex,
+                   PRUint32* args,
+                   PRUint32 *gprData,
+                   double *fprData)
+{
+    nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
+    nsXPTCMiniVariant* dispatchParams = NULL;
+    nsIInterfaceInfo* iface_info = NULL;
+    const nsXPTMethodInfo* info;
+    PRUint32 paramCount;
+    PRUint32 i;
+    nsresult result = NS_ERROR_FAILURE;
 
-  self->GetInterfaceInfo(&iface_info);
-  NS_ASSERTION(iface_info,"no interface info");
+    NS_ASSERTION(self,"no self");
 
-  iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
-  NS_ASSERTION(info,"no interface info");
+    self->GetInterfaceInfo(&iface_info);
+    NS_ASSERTION(iface_info,"no interface info");
+    if (! iface_info)
+        return NS_ERROR_UNEXPECTED;
 
-  paramCount = info->GetParamCount();
+    iface_info->GetMethodInfo(PRUint16(methodIndex), &info);
+    NS_ASSERTION(info,"no method info");
+    if (! info)
+        return NS_ERROR_UNEXPECTED;
 
-  // setup variant array pointer
-  if(paramCount > PARAM_BUFFER_COUNT)
-    dispatchParams = new nsXPTCMiniVariant[paramCount];
-  else
-    dispatchParams = paramBuffer;
-  NS_ASSERTION(dispatchParams,"no place for params");
+    paramCount = info->GetParamCount();
 
-  PRUint32* ap = args;
-  PRUint32 gprCount = 1; //skip one GPR reg
-  PRUint32 fprCount = 0;
-  for(i = 0; i < paramCount; i++) {
-    const nsXPTParamInfo& param = info->GetParam(i);
-    const nsXPTType& type = param.GetType();
-    nsXPTCMiniVariant* dp = &dispatchParams[i];
+    // setup variant array pointer
+    if(paramCount > PARAM_BUFFER_COUNT)
+        dispatchParams = new nsXPTCMiniVariant[paramCount];
+    else
+        dispatchParams = paramBuffer;
 
-    if(param.IsOut() || !type.IsArithmetic()) {
-      if (gprCount < PARAM_GPR_COUNT) {
-        dp->val.p = (void*) *gprData++;
-        gprCount++;
-      }
-      else {
-        dp->val.p   = (void*) *ap++;
-      }
-      continue;
+    NS_ASSERTION(dispatchParams,"no place for params");
+    if (! dispatchParams)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    PRUint32* ap = args;
+    PRUint32 gpr = 1;    // skip one GPR register
+    PRUint32 fpr = 0;
+    PRUint32 tempu32;
+    PRUint64 tempu64;
+
+    for(i = 0; i < paramCount; i++) {
+        const nsXPTParamInfo& param = info->GetParam(i);
+        const nsXPTType& type = param.GetType();
+        nsXPTCMiniVariant* dp = &dispatchParams[i];
+	
+        if (!param.IsOut() && type == nsXPTType::T_DOUBLE) {
+            if (fpr < FPR_COUNT)
+                dp->val.d = fprData[fpr++];
+            else {
+                if ((PRUint32) ap & 4) ap++; // doubles are 8-byte aligned on stack
+                dp->val.d = *(double*) ap;
+                ap += 2;
+            }
+            continue;
+        }
+        else if (!param.IsOut() && type == nsXPTType::T_FLOAT) {
+            if (fpr < FPR_COUNT)
+                dp->val.f = (float) fprData[fpr++]; // in registers floats are passed as doubles
+            else
+                dp->val.f = *(float*) ap++;
+            continue;
+        }
+        else if (!param.IsOut() && (type == nsXPTType::T_I64
+                                    || type == nsXPTType::T_U64)) {
+            if (gpr & 1) gpr++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
+            if ((gpr + 1) < GPR_COUNT) {
+                tempu64 = *(PRUint64*) &gprData[gpr];
+                gpr += 2;
+            }
+            else {
+                if ((PRUint32) ap & 4) ap++; // longlongs are 8-byte aligned on stack
+                tempu64 = *(PRUint64*) ap;
+                ap += 2;
+            }
+        }
+        else {
+            if (gpr < GPR_COUNT)
+                tempu32 = gprData[gpr++];
+            else
+                tempu32 = *ap++;
+        }
+
+        if(param.IsOut() || !type.IsArithmetic()) {
+            dp->val.p = (void*) tempu32;
+            continue;
+        }
+
+        switch(type) {
+        case nsXPTType::T_I8:      dp->val.i8  = (PRInt8)   tempu32; break;
+        case nsXPTType::T_I16:     dp->val.i16 = (PRInt16)  tempu32; break;
+        case nsXPTType::T_I32:     dp->val.i32 = (PRInt32)  tempu32; break;
+        case nsXPTType::T_I64:     dp->val.i64 = (PRInt64)  tempu64; break;
+        case nsXPTType::T_U8:      dp->val.u8  = (PRUint8)  tempu32; break;
+        case nsXPTType::T_U16:     dp->val.u16 = (PRUint16) tempu32; break;
+        case nsXPTType::T_U32:     dp->val.u32 = (PRUint32) tempu32; break;
+        case nsXPTType::T_U64:     dp->val.u64 = (PRUint64) tempu64; break;
+        case nsXPTType::T_BOOL:    dp->val.b   = (PRBool)   tempu32; break;
+        case nsXPTType::T_CHAR:    dp->val.c   = (char)     tempu32; break;
+        case nsXPTType::T_WCHAR:   dp->val.wc  = (wchar_t)  tempu32; break;
+
+        default:
+            NS_ASSERTION(0, "bad type");
+            break;
+        }
     }
-    // else
-    switch(type) {
-    case nsXPTType::T_I8:
-      if (gprCount < PARAM_GPR_COUNT) {
-        dp->val.i8 = (PRInt8) *gprData++;
-        gprCount++;
-      }
-      else
-        dp->val.i8   = (PRInt8) *ap++;
-      break;
 
-    case nsXPTType::T_I16:
-      if (gprCount < PARAM_GPR_COUNT) {
-        dp->val.i16 = (PRInt16) *gprData++;
-        gprCount++;
-      }
-      else
-        dp->val.i16   = (PRInt16) *ap++;
-      break;
+    result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
 
-    case nsXPTType::T_I32:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.i32 = (PRInt32) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.i32   = (PRInt32) *ap++;
-      break;
+    NS_RELEASE(iface_info);
 
-    case nsXPTType::T_I64:
-      if (gprCount & 1) gprCount++;
-      if ((gprCount + 1) < PARAM_GPR_COUNT)
-        {
-          dp->val.i64 = *(PRInt64*) gprData;
-          gprData += 2;
-          gprCount++;
-        }
-      else
-        {
-          if ((PRUint32) ap & 4) ap++;
-          dp->val.i64 = *(PRInt64*) ap;
-          ap += 2;
-        }
-      break;
+    if (dispatchParams != paramBuffer)
+        delete [] dispatchParams;
 
-    case nsXPTType::T_U8:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.u8 = (PRUint8) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.u8   = (PRUint8) *ap++;
-      break;
-
-    case nsXPTType::T_U16:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.u16 = (PRUint16) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.u16   = (PRUint16) *ap++;
-      break;
-
-    case nsXPTType::T_U32:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.u32 = (PRUint32) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.u32   = (PRUint32) *ap++;
-      break;
-
-    case nsXPTType::T_U64:
-      if (gprCount & 1) gprCount++;
-      if ((gprCount + 1) < PARAM_GPR_COUNT)
-        {
-          dp->val.u64 = *(PRUint64*) gprData;
-          gprData += 2;
-          gprCount++;
-        }
-      else
-        {
-          if ((PRUint32) ap & 4) ap++;
-          dp->val.u64 = *(PRUint64*) ap;
-          ap += 2;
-        }
-      break;
-
-    case nsXPTType::T_FLOAT:
-      if (fprCount < PARAM_FPR_COUNT)
-        {
-          dp->val.f = (float) *fprData++;
-          fprCount++;
-        }
-      else
-        dp->val.f = *(float*) ap++;
-      break;
-
-    case nsXPTType::T_DOUBLE:
-      if (fprCount < PARAM_FPR_COUNT)
-        {
-          dp->val.d = *fprData++;
-          fprCount++;
-        }
-      else
-        {
-          if ((PRUint32) ap & 4) ap++;
-          dp->val.d = *(double*) ap;
-          ap += 2;
-        }
-      break;
-
-    case nsXPTType::T_BOOL:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.b = (PRBool) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.b   = (PRBool) *ap++;
-      break;
-
-    case nsXPTType::T_CHAR:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.c = (char) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.c   = (char) *ap++;
-      break;
-
-    case nsXPTType::T_WCHAR:
-      if (gprCount < PARAM_GPR_COUNT)
-        {
-          dp->val.wc = (wchar_t) *gprData++;
-          gprCount++;
-        }
-      else
-        dp->val.wc   = (wchar_t) *ap++;
-      break;
-
-    default:
-      NS_ASSERTION(0, "bad type");
-      break;
-    }
-  }
-
-  result = self->CallMethod((PRUint16) methodIndex, info, dispatchParams);
-
-  NS_RELEASE(iface_info);
-
-  if(dispatchParams != paramBuffer)
-    delete [] dispatchParams;
-
-  return result;
+    return result;
 }
 
-// We give a bogus prototype to generate the correct glue code. We
-// actually pass the method index in r12 (an "unused" register),
-// because r4 is used to pass the first parameter.
-extern "C" nsresult SharedStub(void);
+// Load r11 with the constant 'n' and branch to SharedStub().
+//
+// XXX Yes, it's ugly that we're relying on gcc's name-mangling here;
+// however, it's quick, dirty, and'll break when the ABI changes on
+// us, which is what we want ;-).
 
-#define STUB_ENTRY(n)                \
-nsresult nsXPTCStubBase::Stub##n()   \
-{                                    \
-   __asm__(                          \
-   "\tli 12,"#n"\n"                  \
-   );                                \
-   return SharedStub();              \
-}
+#define STUB_ENTRY(n)                                       \
+__asm__ (                                                   \
+        ".section \".text\" \n\t"                           \
+        ".align 2 \n\t"                                     \
+	".globl  Stub"#n"__14nsXPTCStubBase \n\t"           \
+	".type   Stub"#n"__14nsXPTCStubBase,@function \n\n" \
+                                                            \
+"Stub"#n"__14nsXPTCStubBase: \n\t"                          \
+	"li     11,"#n" \n\t"                               \
+	"b      SharedStub@local \n"                        \
+);
 
 #define SENTINEL_ENTRY(n)                            \
 nsresult nsXPTCStubBase::Sentinel##n()               \
