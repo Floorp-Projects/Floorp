@@ -49,7 +49,10 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
 	MMXAvailable = mmxsupport();
 
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
-	SSE2Available = sse2support();
+	/* only do the sse2 support check if mmx is supported (so
+	   we know the processor supports cpuid) */
+	if (MMXAvailable)
+	    SSE2Available = sse2support();
 #endif
 
 	cpuidDetected = 1;
