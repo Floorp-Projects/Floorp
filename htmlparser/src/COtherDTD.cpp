@@ -765,7 +765,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
 
       PRBool theTagWasHandled=PR_FALSE; 
  
-      switch(theChildTag) {     
+      switch(theChildTag) {      
         
         case eHTMLTag_html: 
           if(!HasOpenContainer(theChildTag)) { 
