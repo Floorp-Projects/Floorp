@@ -215,18 +215,17 @@ nsHTMLContainerFrame::CreateWrapperFrame(nsIPresContext& aPresContext,
                                          nsIFrame*       aFrame,
                                          nsIFrame*&      aWrapperFrame)
 {
-  // If the floated element can contain children then wrap it in a
-  // BODY frame before floating it
+  // If the frame can contain children then wrap it in a BODY frame
   nsIContent* content;
   PRBool      isContainer;
 
   aFrame->GetContent(content);
   content->CanContainChildren(isContainer);
   if (isContainer) {
-    // Wrap the floated element in a BODY frame.
+    // Wrap the frame in a BODY frame.
     NS_NewBodyFrame(content, this, aWrapperFrame, NS_BODY_SHRINK_WRAP);/* XXX auto margins? */
 
-    // The body wrapper frame gets the original style context, and the floated
+    // The body wrapper frame gets the original style context, and the wrapped
     // frame gets a pseudo style context
     nsIStyleContext*  kidStyle;
     aFrame->GetStyleContext(&aPresContext, kidStyle);
