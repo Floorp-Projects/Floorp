@@ -105,13 +105,32 @@ DateFormater.prototype.getFormatedDate = function( date )
    // make a user settable date format and use it here.
 
    try
-   {
+   {     
       if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
-         var dateFormat = dateService.dateFormatLong;
-      else                                                                                                       
+         var dateFormat = dateService.dateFormatLong
+      else
          var dateFormat = dateService.dateFormatShort;
-                                                                                                                 
-      return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+
+      if( (navigator.platform.indexOf("Win") == 0) || (navigator.platform.indexOf("Mac") != -1) )
+        return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+      else
+      {
+         // dateFormatShort seems to work on Linux
+         if( dateFormat == dateService.dateFormatShort )
+         {
+            return( dateService.FormatDate( "", dateFormat, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
+         }
+         else
+         {
+            // HACK We are probably on Linux and want a string in long format.
+            // dateService.dateFormatLong on Linux returns a short string, so build our own
+            // this should move into Mozilla or libxpical
+            var oneBasedMonthNum = date.getMonth() + 1;
+	         var monthString = this.dateStringBundle.GetStringFromName("month." + oneBasedMonthNum + ".Mmm" );
+	         var dateString =  monthString + " " + date.getDate()+", "+date.getFullYear();
+	         return dateString;
+         }
+      }
    }
    catch(ex)
    {
