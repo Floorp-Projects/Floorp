@@ -43,6 +43,8 @@
 #include "nsIProtocolHandler.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 
 // ftp server types
 #define FTP_GENERIC_TYPE     0

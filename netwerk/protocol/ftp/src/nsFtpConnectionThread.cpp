@@ -25,12 +25,10 @@
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIURI.h"
-#include "nsIBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStringStream.h"
 #include "nsIPipe.h"
-#include "nsIBufferOutputStream.h"
 #include "nsIMIMEService.h"
 #include "nsXPIDLString.h" 
 #include "nsIStreamConverterService.h"
