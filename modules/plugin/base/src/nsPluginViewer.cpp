@@ -853,6 +853,7 @@ PluginViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetting
 /* void printPreview (in nsIPrintSettings aThePrintSettings); */
 NS_IMETHODIMP 
 PluginViewerImpl::PrintPreview(nsIPrintSettings *aThePrintSettings, 
+                               nsIDOMWindow *aChildDOMWin, 
                                nsIWebProgressListener* aWebProgressListener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -882,6 +883,13 @@ PluginViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
 /* readonly attribute nsIPrintSettings currentPrintSettings; */
 NS_IMETHODIMP 
 PluginViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsIDOMWindow currentChildDOMWindow; */
+NS_IMETHODIMP 
+PluginViewerImpl::GetCurrentChildDOMWindow(nsIDOMWindow * *aCurrentChildDOMWindow)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

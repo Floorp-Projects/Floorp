@@ -327,7 +327,7 @@
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
               settings.shrinkToFit = true;
-              print.printPreview(settings, null);
+              print.printPreview(settings, null, null);
               this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
               // update total number of pages since this could have changed
               this.mTotalPages.value = print.printPreviewNumPages;
@@ -353,7 +353,7 @@
 
           settings.shrinkToFit = false;
           settings.scaling = aValue;
-          print.printPreview(settings, null);
+          print.printPreview(settings, null, null);
           // update total number of pages since this could have changed
           this.mTotalPages.value = print.printPreviewNumPages;
         ]]>
@@ -384,7 +384,7 @@
           var print = this._getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
-          print.printPreview(settings, null);
+          print.printPreview(settings, null, null);
 
           // update total number of pages since this could have changed
           this.mTotalPages.value = print.printPreviewNumPages;
