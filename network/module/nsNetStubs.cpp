@@ -59,7 +59,7 @@ static nsVoidArray switchBack;
 extern "C" {
 #include "secnav.h"
 #include "preenc.h"
-};
+}
 
 /* From libimg */
 #define OPAQUE_CONTEXT void
@@ -301,14 +301,14 @@ PUBLIC void INTL_CCCReportMetaCharsetTag(MWContext *context, char *charset_tag)
  * From ns/cmd/winfe/authdll.cpp
  *---------------------------------------------------------------------------
  */
-char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
+static char * WFE_BuildCompuserveAuthString(URL_Struct *URL_s)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
 }
 
 
-int
+static int
 WFE_DoCompuserveAuthenticate(MWContext *context,
                              URL_Struct *URL_s, 
                              char *authenticate_header_value)
@@ -514,7 +514,6 @@ Bool XP_IsContextInList(MWContext *context)
     return FALSE;
 }
 
-
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/xp/xplocale.c
@@ -528,13 +527,14 @@ size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
     return 0;
 }
 
+
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/layout/edtutil.cpp
  *---------------------------------------------------------------------------
  */
 
-void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
+static void EDT_SavePublishUsername(MWContext *pContext, char *pAddress, char *pUsername)
 {
     MOZ_FUNCTION_STUB;
 }
@@ -614,7 +614,7 @@ IL_Type(const char *buf, int32 len)
  * Create an HTML stream and generate HTML describing
  * the image cache.  Use "about:memory-cache" URL to acess.
  */
-int 
+static int 
 IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
                              OPAQUE_CONTEXT *cx)
 {
@@ -650,7 +650,7 @@ IL_SetCacheSize(uint32 new_size)
  * From ns/modules/libimg/src/external.c
  *---------------------------------------------------------------------------
  */
-NET_StreamClass *
+static NET_StreamClass *
 IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
               OPAQUE_CONTEXT *cx)
 {
@@ -2178,4 +2178,4 @@ void RDF_AddCookieResource(char* name, char* path, char* host, char* expires)
 }
 
 
-}; /* end of extern "C" */
+} /* end of extern "C" */

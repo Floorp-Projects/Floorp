@@ -29,6 +29,7 @@
 #include "nsIInputStream.h"
 #include "nsIURL.h"
 #include "nsString.h"
+#include "nsIRelatedLinks.h"
 
 extern "C" {
 #include "mkutils.h"
@@ -50,8 +51,6 @@ extern "C" {
 #include "cvactive.h"
 #include "nsCRT.h"
 
-void RL_Init();
-
 PUBLIC NET_StreamClass * 
 NET_NGLayoutConverter(FO_Present_Types format_out,
                       void *converter_obj,
@@ -60,7 +59,7 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
 
 void net_AddrefContext(MWContext *context);
 void net_ReleaseContext(MWContext *context);
-}; /* end of extern "C" */
+} /* end of extern "C" */
 
 #if defined(XP_PC)
 void net_InitAsyncDNS();
@@ -807,7 +806,7 @@ nsStreamListenerProxy::~nsStreamListenerProxy()
     NS_RELEASE(mRealListener);
 }
 
-nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
+static nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener,
                                              PLEventQueue* aEventQ)
 {
     return new nsStreamListenerProxy(aListener, aEventQ);

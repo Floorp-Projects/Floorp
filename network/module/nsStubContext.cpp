@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsStubContext.h"
 
 #include "net.h"
 #include "mktrace.h"
@@ -23,6 +23,8 @@
 #include "ctxtfunc.h"
 #include "xp_list.h"
 #include "plstr.h"
+#include "fe_proto.h" // Needed for prototype of FE_Alert().
+#include "proto.h" // Needed for prototype of XP_FindContextOfType().
 
 #include "nsString.h"
 #include "nsIStreamListener.h"
@@ -678,6 +680,12 @@ unsigned int stub_is_write_ready(NET_StreamClass *stream)
 
 extern "C" {
 
+PUBLIC NET_StreamClass * 
+NET_NGLayoutConverter(FO_Present_Types format_out,
+                      void *converter_obj,
+                      URL_Struct  *URL_s,
+                      MWContext   *context);
+
 /* 
  *Find a converter routine to create a stream and return the stream struct
  */
@@ -774,4 +782,4 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
     return stream;
 }
 
-}; /* extern "C" */
+} /* extern "C" */
