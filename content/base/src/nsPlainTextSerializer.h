@@ -114,7 +114,7 @@ protected:
   void EndLine(PRBool softlinebreak);
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
-  void OutputQuotesAndIndent();
+  void OutputQuotesAndIndent(PRBool stripTrailingSpaces=PR_FALSE);
   void Output(nsString& aString);
   void Write(const nsAReadableString& aString);
   PRBool IsBlockLevel(PRInt32 aId);
@@ -193,6 +193,8 @@ protected:
   // The stack for ordered lists:
   PRInt32         *mOLStack;
   PRUint32         mOLStackIndex;
+
+  PRUint32         mULCount;
 
   nsString                     mLineBreak;
   nsCOMPtr<nsILineBreaker>     mLineBreaker;

@@ -110,6 +110,8 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   // initialize the OL stack, where numbers for ordered lists are kept:
   mOLStack = new PRInt32[OLStackSize];
   mOLStackIndex = 0;
+
+  mULCount = 0;
 }
 
 nsPlainTextSerializer::~nsPlainTextSerializer()
@@ -565,12 +567,15 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     }
   }
   else if (type == eHTMLTag_ul) {
-    // Indent here to support nested list, which aren't included in li :-(
-    EnsureVerticalSpace(1); // Must end the current line before we change indent.
+    // Indent here to support nested lists, which aren't included in li :-(
+    EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
+         // Must end the current line before we change indention
     mIndent += kIndentSizeList;
+    mULCount++;
   }
   else if (type == eHTMLTag_ol) {
-    EnsureVerticalSpace(1); // Must end the current line before we change indent.
+    EnsureVerticalSpace(mULCount + mOLStackIndex == 0 ? 1 : 0);
+         // Must end the current line before we change indention
     if (mOLStackIndex < OLStackSize) {
       mOLStack[mOLStackIndex++] = 1;  // XXX should get it from the node!
     }
@@ -727,18 +732,24 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   } 
   else if ((type == eHTMLTag_tr) ||
            (type == eHTMLTag_li) ||
-           (type == eHTMLTag_pre) ||
            (type == eHTMLTag_dt)) {
     // Items that should always end a line, but get no more whitespace
     EnsureVerticalSpace(0);
   } 
+  else if (type == eHTMLTag_pre) {
+    EnsureVerticalSpace(1);
+  }
   else if (type == eHTMLTag_ul) {
     mIndent -= kIndentSizeList;
+    if (--mULCount + mOLStackIndex == 0)
+      EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_ol) {
     FlushLine(); // Doing this after decreasing OLStackIndex would be wrong.
-    --mOLStackIndex;
     mIndent -= kIndentSizeList;
+    mOLStackIndex--;
+    if (mULCount + mOLStackIndex == 0)
+      EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_dd) {
     mIndent -= kIndentSizeDD;
@@ -975,6 +986,13 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
 void
 nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
 {
+  // If we have something in the indent we probably want to output
+  // it and it's not included in the count for empty lines so we don't
+  // realize that we should start a new line.
+  if(noOfRows >= 0 && mInIndentString.Length() > 0) {
+    EndLine(PR_FALSE);
+  }
+
   while(mEmptyLines < noOfRows) {
     EndLine(PR_FALSE);
   }
@@ -1045,23 +1063,28 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     }
 
     if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-      if(('>' == aLineFragment[0]) ||
-         (' ' == aLineFragment[0]) ||
-         (!nsCRT::strncmp(aLineFragment, "From ", 5))) {
-
-        // Space stuffing a la RFC 2646 (format=flowed).
-        mCurrentLine.Append(PRUnichar(' '));
-
-        if(MayWrap()) {
-          mCurrentLineWidth += GetUnicharWidth(' ');
+      if(
+         (
+          '>' == aLineFragment[0] ||
+          ' ' == aLineFragment[0] ||
+          !nsCRT::strncmp(aLineFragment, "From ", 5)
+          )
+         && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
+         )
+        {
+          // Space stuffing a la RFC 2646 (format=flowed).
+          mCurrentLine.Append(PRUnichar(' '));
+          
+          if(MayWrap()) {
+            mCurrentLineWidth += GetUnicharWidth(' ');
 #ifdef DEBUG_wrapping
-          NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.GetUnicode(),
-                                    mCurrentLine.Length()) ==
-                       (PRInt32)mCurrentLineWidth,
-                       "mCurrentLineWidth and reality out of sync!");
+            NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.GetUnicode(),
+                                               mCurrentLine.Length()) ==
+                         (PRInt32)mCurrentLineWidth,
+                         "mCurrentLineWidth and reality out of sync!");
 #endif
+          }
         }
-      }
     }
     mEmptyLines=-1;
   }
@@ -1170,12 +1193,20 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
         mCurrentLine.Truncate();
         // Space stuff new line?
         if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
-          if((restOfLine.Length()>0) &&
-             ((restOfLine[0] == '>') ||
-              (restOfLine[0] == ' ') ||
-              (restOfLine.EqualsWithConversion("From ",PR_FALSE,5)))) {
+          if(
+              restOfLine.Length() > 0
+              &&
+              (
+                restOfLine[0] == '>' ||
+                restOfLine[0] == ' ' ||
+                restOfLine.EqualsWithConversion("From ",PR_FALSE,5)
+              )
+              && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
+            )
+          {
             // Space stuffing a la RFC 2646 (format=flowed).
             mCurrentLine.Append(PRUnichar(' '));
+            //XXX doesn't seem to work correctly for ' '
           }
         }
         mCurrentLine.Append(restOfLine);
@@ -1212,10 +1243,6 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
     return;
   }
   
-  if(mAtFirstColumn) {
-    OutputQuotesAndIndent();
-  }
-
   // In non-preformatted mode, remove SPACE from the end
   // of the line, unless we got "-- " in a format=flowed
   // output. "-- " is the sig delimiter by convention and
@@ -1226,7 +1253,7 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
      (aSoftlinebreak || !mCurrentLine.EqualsWithConversion("-- "))) {
     // Remove SPACE:s from the end of the line.
     while(currentlinelength > 0 &&
-          ' ' == mCurrentLine[currentlinelength-1]) {
+          mCurrentLine[currentlinelength-1] == ' ') {
       --currentlinelength;
     }
     mCurrentLine.SetLength(currentlinelength);
@@ -1246,11 +1273,19 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
   } 
   else {
     // Hard break
-    if(mCurrentLine.Length()>0) {
+    if(mCurrentLine.Length()>0 || mInIndentString.Length()>0) {
       mEmptyLines=-1;
     }
 
     mEmptyLines++;
+  }
+
+  if(mAtFirstColumn) {
+    // If we don't have anything "real" to output we have to
+    // make sure the indent doesn't end in a space since that
+    // would trick a format=flowed-aware receiver.
+    PRBool stripTrailingSpaces = (mCurrentLine.Length() == 0);
+    OutputQuotesAndIndent(stripTrailingSpaces);
   }
 
   mCurrentLine.Append(mLineBreak);
@@ -1268,34 +1303,60 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
  * stored text to put in the indentation after using it.
  */
 void
-nsPlainTextSerializer::OutputQuotesAndIndent()
+nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_FALSE */)
 {
+  nsAutoString stringToOutput;
+  
   // Put the mail quote "> " chars in, if appropriate:
   if (mCiteQuoteLevel > 0) {
     nsAutoString quotes;
     for(int i=0; i < mCiteQuoteLevel; i++) {
       quotes.Append(PRUnichar('>'));
     }
-    quotes.Append(PRUnichar(' '));
-    Output(quotes);
+    if (mCurrentLine.Length() > 0) {
+      /* Better don't output a space here, if the line is empty,
+         in case a recieving f=f-aware UA thinks, this were a flowed line,
+         which it isn't - it's just empty.
+         (Flowed lines may be joined with the following one,
+         so the empty line may be lost completely.) */
+      quotes.Append(PRUnichar(' '));
+    }
+    stringToOutput = quotes;
     mAtFirstColumn = PR_FALSE;
   }
   
   // Indent if necessary
   PRInt32 indentwidth = mIndent - mInIndentString.Length();
-  if (indentwidth > 0) {
+  if (indentwidth > 0
+      && (mCurrentLine.Length() > 0 || mInIndentString.Length() > 0)
+      // Don't make empty lines look flowed
+      ) {
     nsAutoString spaces;
     for (int i=0; i < indentwidth; ++i)
       spaces.Append(PRUnichar(' '));
-    Output(spaces);
+    stringToOutput += spaces;
     mAtFirstColumn = PR_FALSE;
   }
   
   if(mInIndentString.Length() > 0) {
-    Output(mInIndentString);
+    stringToOutput += mInIndentString;
     mAtFirstColumn = PR_FALSE;
     mInIndentString.Truncate();
   }
+
+  if(stripTrailingSpaces) {
+    PRInt32 lineLength = stringToOutput.Length();
+    while(lineLength > 0 &&
+          ' ' == stringToOutput[lineLength-1]) {
+      --lineLength;
+    }
+    stringToOutput.SetLength(lineLength);
+  }
+
+  if(stringToOutput.Length() > 0) {
+    Output(stringToOutput);
+  }
+    
 }
 
 /**
