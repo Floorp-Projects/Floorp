@@ -71,7 +71,7 @@
 	      </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="right"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
+  	 		<titledbutton align="right"  class="popup" popup="mozillaPopup"
 			   popupanchor="bottomright" value="&mozillaButton.label;" />
   	 		
   	 		
