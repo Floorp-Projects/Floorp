@@ -841,6 +841,7 @@ fi
         modules/libpr0n/decoders/mng/Makefile
         modules/libpr0n/decoders/icon/Makefile
         modules/libpr0n/decoders/icon/win/Makefile
+        modules/libpr0n/decoders/xbm/Makefile
 "
 
     MAKEFILES_gfx2="
