@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -91,7 +91,7 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
     JSErrorReport *report;
     const jschar **args;
 
-    if (!privateData) 
+    if (!privateData)
         return;
     report = privateData->errorReport;
     if (report) {
@@ -134,7 +134,7 @@ exn_newPrivate(JSContext *cx, JSErrorReport *report)
         goto error;
     memset(newReport, 0, sizeof (JSErrorReport));
     newPrivate->errorReport = newReport;
-    
+
     if (report->filename != NULL) {
         newReport->filename = JS_strdup(cx, report->filename);
         if (!newReport->filename)
@@ -320,7 +320,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval pval;
     int32 lineno;
     JSString *message, *filename;
-    
+
     if (!cx->fp->constructing) {
         /*
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
@@ -348,7 +348,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, JSVAL_NULL);
 
     /* Set the 'message' property. */
-    if (argc > 0) {
+    if (argc != 0) {
         message = js_ValueToString(cx, argv[0]);
         if (!message)
             return JS_FALSE;
@@ -385,7 +385,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_DefineProperty(cx, obj, js_lineno_str,
                              INT_TO_JSVAL(lineno),
                              NULL, NULL, JSPROP_ENUMERATE);
-    
+
 }
 
 /*
@@ -414,7 +414,7 @@ exn_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
-    if (message->length > 0) {
+    if (message->length != 0) {
         length = name->length + message->length + 2;
         cp = chars = (jschar*) JS_malloc(cx, (length + 1) * sizeof(jschar));
         if (!chars)
@@ -460,12 +460,12 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
 
     if (!JS_GetProperty(cx, obj, js_message_str, &v) ||
-        !(message = js_ValueToString(cx, v))) {
+        !(message = js_ValueToSource(cx, v))) {
         return JS_FALSE;
     }
 
     if (!JS_GetProperty(cx, obj, js_filename_str, &v) ||
-        !(filename = js_ValueToString(cx, v))) {
+        !(filename = js_ValueToSource(cx, v))) {
         return JS_FALSE;
     }
 
@@ -480,14 +480,14 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     } else {
         lineno_as_str = NULL;
-    }    
-    
-    length = (message->length > 0) ? name->length + message->length + 10
-        : name->length + 8;
+    }
 
-    if (filename->length > 0) {
-        /* append filename as ``, "{filename}"'' */
-        length += 4 + filename->length;
+    /* Magic 8, for the characters in ``(new ())''. */
+    length = 8 + name->length + message->length;
+
+    if (filename->length != 0) {
+        /* append filename as ``, {filename}'' */
+        length += 2 + filename->length;
         if (lineno_as_str) {
             /* append lineno as ``, {lineno_as_str}'' */
             length += 2 + lineno_as_str->length;
@@ -510,19 +510,16 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     js_strncpy(cp, name->chars, name->length);
     cp += name->length;
     *cp++ = '(';
-    if (message->length > 0) {
-        *cp++ = '"';
+    if (message->length != 0) {
         js_strncpy(cp, message->chars, message->length);
         cp += message->length;
-        *cp++ = '"';
     }
 
-    if (filename->length > 0) {
-        /* append filename as ``, "{filename}"'' */
-        *cp++ = ','; *cp++ = ' '; *cp++ = '"';
+    if (filename->length != 0) {
+        /* append filename as ``, {filename}'' */
+        *cp++ = ','; *cp++ = ' ';
         js_strncpy(cp, filename->chars, filename->length);
         cp += filename->length;
-        *cp++ = '"';
         if (lineno_as_str) {
             /* append lineno as ``, {lineno_as_str}'' */
             *cp++ = ','; *cp++ = ' ';
@@ -549,10 +546,6 @@ exn_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         JS_free(cx, chars);
         return JS_FALSE;
     }
-
-    result = js_QuoteString(cx, result, '"');
-    if (!result)
-        return JS_FALSE;
     *rval = STRING_TO_JSVAL(result);
     return JS_TRUE;
 }
@@ -767,9 +760,9 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
                 return JS_FALSE;
             }
         }
-        
+
     }
-    
+
     /*
      * Construct a new copy of the error report, and store it in the
      * exception objects' private data.  We can't use the error report
