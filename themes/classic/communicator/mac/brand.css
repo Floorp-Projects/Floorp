@@ -7,7 +7,6 @@
     list-style-image      : url("chrome://global/skin/animthrob_single.gif");
     margin                : 0px 2px 0px 10px;
     min-width             : 0px;
-    cursor                : pointer;
     -moz-user-focus       : ignore;
   }  
   
