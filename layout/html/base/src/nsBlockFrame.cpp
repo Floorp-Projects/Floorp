@@ -1230,7 +1230,7 @@ nsBlockFrame::Destroy(nsIPresContext* aPresContext)
   mAbsoluteContainer.DestroyFrames(this, aPresContext);
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
-  if (HaveOutsideBullet()) {
+  if (mBullet && HaveOutsideBullet()) {
     mBullet->Destroy(aPresContext);
     mBullet = nsnull;
   }
@@ -2508,7 +2508,7 @@ nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
   const nsStyleList* styleList;
   GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
   if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
-    if (HaveOutsideBullet()) {
+    if (mBullet && HaveOutsideBullet()) {
       // We now have an inside bullet, but used to have an outside
       // bullet.  Adjust the frame line list
       nsLineBox* line = aState.NewLineBox(mBullet, 1, PR_FALSE);
@@ -4089,7 +4089,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // rare case: an empty first line followed by a second line that
       // contains a block (example: <LI>\n<P>... ). This is where
       // the second case can happen.
-      if (HaveOutsideBullet() &&
+      if (mBullet && HaveOutsideBullet() &&
           ((aLine == mLines) ||
            ((0 == mLines->mBounds.height) && (aLine == mLines->mNext)))) {
         // Reflow the bullet
@@ -4720,7 +4720,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // case is happening then the worst that will happen is that the
   // bullet frame will be reflowed twice.
   PRBool addedBullet = PR_FALSE;
-  if (HaveOutsideBullet() && (aLine == mLines) &&
+  if (mBullet && HaveOutsideBullet() && (aLine == mLines) &&
       (!aLineLayout.IsZeroHeight() || !aLine->mNext)) {
     nsHTMLReflowMetrics metrics(nsnull);
     ReflowBullet(aState, metrics);
