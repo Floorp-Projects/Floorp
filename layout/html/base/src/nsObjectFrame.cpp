@@ -671,7 +671,8 @@ nsObjectFrame::Destroy(nsPresContext* aPresContext)
   if(mInstanceOwner != nsnull)
   {
     nsCOMPtr<nsIPluginInstance> inst;
-    if(NS_SUCCEEDED(mInstanceOwner->GetInstance(*getter_AddRefs(inst))))
+    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
+    if(inst)
     {
       nsPluginWindow *win;
       mInstanceOwner->GetWindow(win);
@@ -1019,17 +1020,20 @@ nsObjectFrame::Reflow(nsPresContext*          aPresContext,
 
       // if we find "java:" in the class id, we have a java applet
       if(bJavaObject) {
-        if (!baseURI) return NS_ERROR_FAILURE;
+        if (!baseURI) {
+          rv = NS_ERROR_FAILURE;
+        }
+        else {
+          fullURL = baseURI;
 
-        fullURL = baseURI;
-
-        // get the nsIPluginHost interface
-        pluginHost = do_GetService(kCPluginManagerCID);
-        if (!pluginHost) return NS_ERROR_FAILURE;
-
-        mInstanceOwner->SetPluginHost(pluginHost);
-        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                               pluginHost, "application/x-java-vm", fullURL);
+          // get the nsIPluginHost interface
+          pluginHost = do_GetService(kCPluginManagerCID, &rv);
+          if (pluginHost) {
+            mInstanceOwner->SetPluginHost(pluginHost);
+            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                                  pluginHost, "application/x-java-vm", fullURL);
+          }
+        }
       }
       else { // otherwise, we're either an ActiveX control or an internal widget
         // These are some builtin types that we know about for now.
@@ -1042,24 +1046,27 @@ nsObjectFrame::Reflow(nsPresContext*          aPresContext,
           // if we haven't matched to an internal type, check to see if
           // we have an ActiveX handler
           // if not, create the default plugin
-          if (!baseURI) return NS_ERROR_FAILURE;
-
-          fullURL = baseURI;
-
-          // get the nsIPluginHost interface
-          pluginHost = do_GetService(kCPluginManagerCID);
-          if (!pluginHost) return NS_ERROR_FAILURE;
-
-          mInstanceOwner->SetPluginHost(pluginHost);
-          if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {
-            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, 
-                                   "application/x-oleobject", fullURL);
+          if (!baseURI) {
+            rv = NS_ERROR_FAILURE;
           }
-          else if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/oleobject"))) {
-            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, 
-                                   "application/oleobject", fullURL);
+          else {
+            fullURL = baseURI;
+
+            // get the nsIPluginHost interface
+            pluginHost = do_GetService(kCPluginManagerCID, &rv);
+            if (pluginHost) {
+              mInstanceOwner->SetPluginHost(pluginHost);
+              if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {
+                rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, 
+                                      "application/x-oleobject", fullURL);
+              }
+              else if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/oleobject"))) {
+                rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, 
+                                      "application/oleobject", fullURL);
+              }
+              else rv = NS_ERROR_FAILURE;
+            }
           }
-          else rv = NS_ERROR_FAILURE;
         }
       }
 
@@ -1071,75 +1078,77 @@ nsObjectFrame::Reflow(nsPresContext*          aPresContext,
     }
     else { // no clsid - the object is either an applet or a plugin
       nsAutoString    src;
-      if (!baseURI) return NS_ERROR_FAILURE;
+      if (!baseURI) {
+        rv = NS_ERROR_FAILURE;
+      }
+      else {
+        // get the nsIPluginHost interface
+        pluginHost = do_GetService(kCPluginManagerCID, &rv);
+        if (pluginHost) {
+          mInstanceOwner->SetPluginHost(pluginHost);
 
-      // get the nsIPluginHost interface
-      pluginHost = do_GetService(kCPluginManagerCID);
-      if (!pluginHost) return NS_ERROR_FAILURE;
+          nsIAtom *tag = mContent->Tag();
+          if (tag == nsHTMLAtoms::applet) {
+            if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
+              // Create an absolute URL
+              rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
+            }
+            else
+              fullURL = baseURI;
 
-      mInstanceOwner->SetPluginHost(pluginHost);
+            rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                                  pluginHost, "application/x-java-vm", fullURL);
+          } else { // traditional plugin
+            nsXPIDLCString mimeTypeStr;
+            nsAutoString type;
+            mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
-      nsIAtom *tag = mContent->Tag();
-      if (tag == nsHTMLAtoms::applet) {
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, src)) {
-          // Create an absolute URL
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
-        }
-        else
-          fullURL = baseURI;
+            if (type.Length()) {
+              mimeTypeStr.Adopt(ToNewCString(type));
+            }
+            // Stream in the object source if there is one...
+            // If this is an OBJECT tag, we should look for a DATA attribute.
+            // If not, it's an EMBED tag, and so we should look for a SRC attribute.
+            if (tag == nsHTMLAtoms::object)
+              rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src);
+            else
+              rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+            
+            if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+              // Create an absolute URL
+              rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
+              if (NS_FAILED(rv)) {
+                // Failed to create URI, maybe because we didn't
+                // reconize the protocol handler ==> treat like
+                // no 'src'/'data' was specified in the embed/object tag
+                fullURL = baseURI;
+              }
+            }
+            else {
+              // we didn't find a src or data param, so just set the url
+              // to the base
 
-        rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                               pluginHost, "application/x-java-vm", fullURL);
-      } else { // traditional plugin
-        nsXPIDLCString mimeTypeStr;
-        nsAutoString type;
-        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+              fullURL = baseURI;
+            }
 
-        if (type.Length()) {
-          mimeTypeStr.Adopt(ToNewCString(type));
-        }
-        // Stream in the object source if there is one...
-        // If this is an OBJECT tag, we should look for a DATA attribute.
-        // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-        if (tag == nsHTMLAtoms::object)
-          rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, src);
-        else
-          rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
-        
-        if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-          // Create an absolute URL
-          rv = MakeAbsoluteURL(getter_AddRefs(fullURL), src, baseURI);
-          if (NS_FAILED(rv)) {
-            // Failed to create URI, maybe because we didn't
-            // reconize the protocol handler ==> treat like
-            // no 'src'/'data' was specified in the embed/object tag
-            fullURL = baseURI;
+            // now try to instantiate a plugin instance based on a mime type
+            const char* mimeType = mimeTypeStr.get();
+            if (mimeType || !src.IsEmpty()) {
+              if (!mimeType) {
+                // we don't have a mime type, try to figure it out from extension
+                PRInt32 offset = src.RFindChar(PRUnichar('.'));
+                if (offset != kNotFound)
+                  pluginHost->IsPluginEnabledForExtension(NS_ConvertUTF16toUTF8(Substring(src, offset + 1, src.Length())).get(), mimeType);
+              }
+              // if we fail to get a mime type from extension we can still try to 
+              // instantiate plugin as it can be possible to determine it later
+              rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
+                                    pluginHost, mimeType, fullURL);
+            }
+            else // if we have neither we should not bother
+              rv = NS_ERROR_FAILURE;
           }
         }
-        else {
-          // we didn't find a src or data param, so just set the url
-          // to the base
-
-          fullURL = baseURI;
-        }
-
-        // now try to instantiate a plugin instance based on a mime type
-        const char* mimeType = mimeTypeStr.get();
-        if (mimeType || !src.IsEmpty()) {
-          if (!mimeType) {
-            // we don't have a mime type, try to figure it out from extension
-            PRInt32 offset = src.RFindChar(PRUnichar('.'));
-            if (offset != kNotFound)
-              pluginHost->IsPluginEnabledForExtension(NS_ConvertUTF16toUTF8(Substring(src, offset + 1, src.Length())).get(), mimeType);
-          }
-          // if we fail to get a mime type from extension we can still try to 
-          // instantiate plugin as it can be possible to determine it later
-          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState,
-                                 pluginHost, mimeType, fullURL);
-        }
-        else // if we have neither we should not bother
-          rv = NS_ERROR_FAILURE;
-
       }
     }
   }
@@ -1446,9 +1455,9 @@ nsObjectFrame::DidReflow(nsPresContext*           aPresContext,
  
   nsCOMPtr<nsIPluginInstance> pi; 
   if (!mInstanceOwner ||
-      NS_FAILED(rv = mInstanceOwner->GetWindow(win)) || 
       NS_FAILED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi))) ||
       !pi ||
+      NS_FAILED(rv = mInstanceOwner->GetWindow(win)) || 
       !win)
     return rv;
 
@@ -1716,8 +1725,9 @@ nsObjectFrame::Paint(nsPresContext*      aPresContext,
       mInstanceOwner->Paint(aDirtyRect);
 #elif defined (XP_WIN) || defined(XP_OS2)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    nsIPluginInstance * inst;
-    if (NS_OK == GetPluginInstance(inst)) {
+    nsCOMPtr<nsIPluginInstance> inst;
+    GetPluginInstance(*getter_AddRefs(inst));
+    if (inst) {
       // Look if it's windowless
       nsPluginWindow * window;
       mInstanceOwner->GetWindow(window);
@@ -1806,7 +1816,6 @@ nsObjectFrame::Paint(nsPresContext*      aPresContext,
 
         mInstanceOwner->Paint(aDirtyRect, hdc);
       }
-      NS_RELEASE(inst);
     }
   }
 #endif /* !XP_MAC */
@@ -1864,8 +1873,8 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 
   if(mInstanceOwner == nsnull)
     return NS_ERROR_NULL_POINTER;
-  else
-    return mInstanceOwner->GetInstance(aPluginInstance);
+  
+  return mInstanceOwner->GetInstance(aPluginInstance);
 }
 
 void
@@ -2216,15 +2225,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 {
-  if (mInstance)
-  {
-    aInstance = mInstance;
-    NS_ADDREF(aInstance);
+  NS_IF_ADDREF(aInstance = mInstance);
 
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
