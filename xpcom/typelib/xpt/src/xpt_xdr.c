@@ -219,6 +219,12 @@ XPT_DestroyXDRState(XPTState *state)
 }
 
 XPT_PUBLIC_API(void)
+XPT_GetXDRDataLength(XPTState *state, XPTPool pool, PRUint32 *len)
+{
+    *len = state->next_cursor[pool] - 1;
+}
+
+XPT_PUBLIC_API(void)
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, PRUint32 *len)
 {
     if (pool == XPT_HEADER) {

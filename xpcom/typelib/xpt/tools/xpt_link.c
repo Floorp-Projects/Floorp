@@ -113,6 +113,8 @@ main(int argc, char **argv)
     XPTTypeDescriptor *td;
     XPTAnnotation *ann, *first_ann;
     PRUint32 header_sz, len;
+    PRUint32 oldOffset;
+    PRUint32 newOffset;
     size_t flen = 0;
     char *head, *data, *whole;
     FILE *in, *out;
@@ -498,18 +500,28 @@ main(int argc, char **argv)
         perror("FAILED: error making cursor");
         return 1;
     }
-    
+    oldOffset = cursor->offset;
     if (!XPT_DoHeader(arena, cursor, &header)) {
         perror("FAILED: error doing Header");
         return 1;
     }
-    
+    newOffset = cursor->offset;
+    XPT_GetXDRDataLength(state, XPT_HEADER, &len);
+    header->file_length = len;
+    XPT_GetXDRDataLength(state, XPT_DATA, &len);
+    header->file_length += len;
+    XPT_SeekTo(cursor, oldOffset);
+    if (!XPT_DoHeaderPrologue(arena, cursor, &header, NULL)) {
+        perror("FAILED: error doing Header");
+        return 1;
+    }
+    XPT_SeekTo(cursor, newOffset);
     out = fopen(argv[1], "wb");
     if (!out) {
         perror("FAILED: fopen");
         return 1;
     }
- 
+
     XPT_GetXDRData(state, XPT_HEADER, &head, &len);
     fwrite(head, len, 1, out);
  

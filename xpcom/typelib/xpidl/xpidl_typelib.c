@@ -378,6 +378,8 @@ typelib_epilog(TreeState *state)
     XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
     XPTCursor curs, *cursor = &curs;
     PRUint32 i, len, header_sz;
+    PRUint32 oldOffset;
+    PRUint32 newOffset;
     char *data;
 
     /* Write any annotations */
@@ -441,10 +443,18 @@ typelib_epilog(TreeState *state)
     if (!xstate ||
         !XPT_MakeCursor(xstate, XPT_HEADER, header_sz, cursor))
         goto destroy_header;
-
+    oldOffset = cursor->offset;
     if (!XPT_DoHeader(ARENA(state), cursor, &HEADER(state)))
         goto destroy;
-
+    newOffset = cursor->offset;
+    XPT_GetXDRDataLength(xstate, XPT_HEADER, &len);
+    HEADER(state)->file_length = len;
+    XPT_GetXDRDataLength(xstate, XPT_DATA, &len);
+    HEADER(state)->file_length += len;
+    XPT_SeekTo(cursor, oldOffset);
+    if (!XPT_DoHeaderPrologue(ARENA(state), cursor, &HEADER(state), NULL))
+        goto destroy;
+    XPT_SeekTo(cursor, newOffset);
     XPT_GetXDRData(xstate, XPT_HEADER, &data, &len);
     fwrite(data, len, 1, state->file);
     XPT_GetXDRData(xstate, XPT_DATA, &data, &len);

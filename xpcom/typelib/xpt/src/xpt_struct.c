@@ -156,13 +156,11 @@ XPT_FreeHeader(XPTArena *arena, XPTHeader* aHeader)
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
+XPT_DoHeaderPrologue(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp, PRUint32 * ide_offset)
 {
     XPTMode mode = cursor->state->mode;
-    XPTHeader *header;
-    PRUint32 ide_offset;
     int i;
-    XPTAnnotation *ann, *next, **annp;
+    XPTHeader * header;
 
     if (mode == XPT_DECODE) {
         header = XPT_NEWZAP(arena, XPTHeader);
@@ -175,12 +173,15 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 
     if (mode == XPT_ENCODE) {
         /* IDEs appear after header, including annotations */
-        ide_offset = XPT_SizeOfHeader(*headerp) + 1; /* one-based offset */
+        if (ide_offset != NULL)
+        {
+            *ide_offset = XPT_SizeOfHeader(*headerp) + 1; /* one-based offset */
+        }
         header->data_pool = XPT_SizeOfHeaderBlock(*headerp);
         XPT_SetDataOffset(cursor->state, header->data_pool);
     }
 
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < sizeof(header->magic); i++) {
         if (!XPT_Do8(cursor, &header->magic[i]))
             goto error;
     }
@@ -213,10 +214,27 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 
     if (!XPT_Do16(cursor, &header->num_interfaces) ||
         !XPT_Do32(cursor, &header->file_length) ||
-        !XPT_Do32(cursor, &ide_offset)) {
+        (ide_offset != NULL && !XPT_Do32(cursor, ide_offset))) {
         goto error;
     }
-    
+    return PR_TRUE;
+    /* XXX need to free child data sometimes! */
+    XPT_ERROR_HANDLE(arena, header);    
+}
+
+XPT_PUBLIC_API(PRBool)
+XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
+{
+    const int HEADER_SIZE = 24;
+    XPTMode mode = cursor->state->mode;
+    XPTHeader * header;
+    PRUint32 ide_offset;
+    int i;
+    XPTAnnotation *ann, *next, **annp;
+
+    if (!XPT_DoHeaderPrologue(arena, cursor, headerp, &ide_offset))
+        return PR_FALSE;
+    header = *headerp;
     if (mode == XPT_ENCODE)
         XPT_DataOffset(cursor->state, &header->data_pool);
     if (!XPT_Do32(cursor, &header->data_pool))
