@@ -48,7 +48,6 @@ class NS_EXTERN DebuggerState {
 
 public:
 	void setBreakPoint(void *pc);
-	getBreakPoints();
 	void clearBreakPoint(void *pc);
 	void clearAllBreakPoints();
 	
