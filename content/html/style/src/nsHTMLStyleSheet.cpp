@@ -225,12 +225,12 @@ nsHashKey* AttributeKey::Clone(void) const
 
 // Structure used when constructing formatting object trees.
 struct nsFrameItems {
-	nsIFrame* childList;
-	nsIFrame* lastChild;
-	
-	nsFrameItems();
-	void AddChild(nsIFrame* aChild);
-	void Clear();
+  nsIFrame* childList;
+  nsIFrame* lastChild;
+  
+  nsFrameItems();
+  void AddChild(nsIFrame* aChild);
+  void Clear();
 };
 
 nsFrameItems::nsFrameItems()
@@ -240,20 +240,20 @@ nsFrameItems::nsFrameItems()
 void 
 nsFrameItems::Clear()
 {
-	childList = lastChild = nsnull;
+  childList = lastChild = nsnull;
 }
 
 void 
 nsFrameItems::AddChild(nsIFrame* aChild)
 {
-	if (childList == nsnull) {
-		childList = lastChild = aChild;
-	}
-	else
-	{
-		lastChild->SetNextSibling(aChild);
-		lastChild = aChild;
-	}
+  if (childList == nsnull) {
+    childList = lastChild = aChild;
+  }
+  else
+  {
+    lastChild->SetNextSibling(aChild);
+    lastChild = aChild;
+  }
 }
 
 // -----------------------------------------------------------
@@ -483,7 +483,7 @@ protected:
                                nsIAtom*         aTag,
                                nsIStyleContext* aStyleContext,
                                nsAbsoluteItems& aAbsoluteItems,
-                               nsFrameItems&	aFrameItems);
+                               nsFrameItems&  aFrameItems);
 
 #ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresContext*  aPresContext,
@@ -493,7 +493,7 @@ protected:
                              nsIStyleContext* aStyleContext,
                              nsAbsoluteItems& aAbsoluteItems,
                              nsFrameItems&    aFrameItems,
-							 PRBool&		  haltProcessing);
+               PRBool&      haltProcessing);
 
   nsresult ConstructTreeFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
@@ -523,7 +523,7 @@ protected:
                                        nsIFrame*             aParentFrame,
                                        nsIStyleContext*      aStyleContext,
                                        nsAbsoluteItems&      aAbsoluteItems,
-                                       nsFrameItems&		 aFrameItems);
+                                       nsFrameItems&     aFrameItems);
 
   nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
                                   PRUint8    aChildDisplayType,
@@ -1118,14 +1118,14 @@ NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
  * @param   aState the state information associated with the current process
  * @param   aChildList an OUT parameter. This is the list of flowed child
  *            frames that should go in the principal child list
- * @param	aLastChildInList contains a pointer to the last child in aChildList
+ * @param aLastChildInList contains a pointer to the last child in aChildList
  */
 nsresult
 HTMLStyleSheetImpl::ProcessChildren(nsIPresContext*  aPresContext,
                                     nsIContent*      aContent,
                                     nsIFrame*        aFrame,
                                     nsAbsoluteItems& aAbsoluteItems,
-                                    nsFrameItems&	 aFrameItems)
+                                    nsFrameItems&  aFrameItems)
 {
   // Iterate the child content objects and construct a frame
   nsIFrame* lastChildFrame = nsnull;
@@ -1138,7 +1138,7 @@ HTMLStyleSheetImpl::ProcessChildren(nsIPresContext*  aPresContext,
 
     if (nsnull != childContent) {
       // Construct a child frame
-	  ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems, aFrameItems);
+    ConstructFrame(aPresContext, childContent, aFrame, aAbsoluteItems, aFrameItems);
       NS_RELEASE(childContent);
     }
   }
@@ -1601,7 +1601,7 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     
     // Process the child content
     nsAbsoluteItems  absoluteItems(areaFrame);
-    nsFrameItems	 childItems;
+    nsFrameItems   childItems;
 
     ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems, childItems);
     
@@ -1861,7 +1861,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                         nsIAtom*         aTag,
                                         nsIStyleContext* aStyleContext,
                                         nsAbsoluteItems& aAbsoluteItems,
-                                        nsFrameItems&	 aFrameItems)
+                                        nsFrameItems&  aFrameItems)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
@@ -1965,10 +1965,10 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
 
-	// Add the frame to the list of items.
-	aFrameItems.AddChild(aNewFrame);
+  // Add the frame to the list of items.
+  aFrameItems.AddChild(aNewFrame);
     
-	if (!frameHasBeenInitialized) {
+  if (!frameHasBeenInitialized) {
       nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
                                                            aParentFrame;
       aNewFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
@@ -2001,7 +2001,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
       // Add the placeholder frame to the flow
       aFrameItems.Clear();
-	  aFrameItems.AddChild(placeholderFrame);
+    aFrameItems.AddChild(placeholderFrame);
     }
   }
 
@@ -2016,8 +2016,8 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
                                       nsIAtom*         aTag,
                                       nsIStyleContext* aStyleContext,
                                       nsAbsoluteItems& aAbsoluteItems,
-                                      nsFrameItems&	   aFrameItems,
-									  PRBool&		   haltProcessing)
+                                      nsFrameItems&    aFrameItems,
+                                      PRBool&          haltProcessing)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
   nsresult  rv = NS_OK;
@@ -2049,16 +2049,16 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewRadioControlFrame(aNewFrame);
     else if (aTag == nsXULAtoms::text)
       rv = NS_NewTextControlFrame(aNewFrame);
-	else if (aTag == nsXULAtoms::widget)
-	  rv = NS_NewObjectFrame(aNewFrame);
-	
-	// TREE CONSTRUCTION
-	// The following code is used to construct a tree view from the XUL content
-	// model.  It has to take the hierarchical tree content structure and build a flattened
-	// table row frame structure.
-	else if (aTag == nsXULAtoms::tree)
-	{
-	  isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
+  else if (aTag == nsXULAtoms::widget)
+    rv = NS_NewObjectFrame(aNewFrame);
+  
+  // TREE CONSTRUCTION
+  // The following code is used to construct a tree view from the XUL content
+  // model.  It has to take the hierarchical tree content structure and build a flattened
+  // table row frame structure.
+  else if (aTag == nsXULAtoms::tree)
+  {
+    isAbsolutelyPositioned = NS_STYLE_POSITION_ABSOLUTE == position->mPosition;
       nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
                                                            aParentFrame;
       rv = ConstructTreeFrame(aPresContext, aContent, geometricParent, aStyleContext,
@@ -2079,86 +2079,86 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
         aNewFrame = placeholderFrame;
       }
       return rv;
-	}
-	else if (aTag == nsXULAtoms::treeitem)
-	{
-		// A tree item is essentially a NO-OP as far as the frame construction code
-		// is concerned.  The row for this item will be created (when the TREEROW child
-		// tag is encountered).  The children of this node still need to be processed,
-		// but this content node needs to be "skipped".	
+  }
+  else if (aTag == nsXULAtoms::treeitem)
+  {
+    // A tree item is essentially a NO-OP as far as the frame construction code
+    // is concerned.  The row for this item will be created (when the TREEROW child
+    // tag is encountered).  The children of this node still need to be processed,
+    // but this content node needs to be "skipped". 
 
-		rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
-						     aFrameItems);
-		
-		// No more work to do.
-		return rv;
-	}
-	else if (aTag == nsXULAtoms::treechildren)
-	{
-		// Determine whether or not we need to process the child content of
-		// this node. We determine this by checking the OPEN attribute on the parent
-		// content node.  The OPEN attribute indicates whether or not the children
-		// of this node should be part of the tree view (whether or not the folder
-		// is expanded or collapsed).
-		nsIContent* pTreeItemNode = nsnull;
-		aContent->GetParent(pTreeItemNode);
-		if (pTreeItemNode != nsnull)
-		{
-			nsString attrValue;
-			nsIAtom* kOpenAtom = NS_NewAtom("open");
-			nsresult result = pTreeItemNode->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
-			attrValue.ToLowerCase();
-			processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-				(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
-			NS_RELEASE(kOpenAtom);
-			NS_RELEASE(pTreeItemNode);
+    rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
+                 aFrameItems);
+    
+    // No more work to do.
+    return rv;
+  }
+  else if (aTag == nsXULAtoms::treechildren)
+  {
+    // Determine whether or not we need to process the child content of
+    // this node. We determine this by checking the OPEN attribute on the parent
+    // content node.  The OPEN attribute indicates whether or not the children
+    // of this node should be part of the tree view (whether or not the folder
+    // is expanded or collapsed).
+    nsIContent* pTreeItemNode = nsnull;
+    aContent->GetParent(pTreeItemNode);
+    if (pTreeItemNode != nsnull)
+    {
+      nsString attrValue;
+      nsIAtom* kOpenAtom = NS_NewAtom("open");
+      nsresult result = pTreeItemNode->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
+      attrValue.ToLowerCase();
+      processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+      NS_RELEASE(kOpenAtom);
+      NS_RELEASE(pTreeItemNode);
 
-			// If we do need to process, we have to "skip" this content node, since it
-			// doesn't really have any associated display.
-			
-			if (processChildren)
-			{
-				rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
-									 aFrameItems);
-			}
-			else haltProcessing = PR_TRUE;
-		}
+      // If we do need to process, we have to "skip" this content node, since it
+      // doesn't really have any associated display.
+      
+      if (processChildren)
+      {
+        rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
+                   aFrameItems);
+      }
+      else haltProcessing = PR_TRUE;
+    }
 
-		// No more work to do.
-		return rv;
-	}
-	else if (aTag == nsXULAtoms::treerow)
-	{
-		// A tree item causes a table row to be constructed that is always
-		// slaved to the nearest enclosing table row group (regardless of how
-		// deeply nested it is within other tree items).
-		rv = NS_NewTableRowFrame(aNewFrame);
-		processChildren = PR_TRUE;
-	}
-	else if (aTag == nsXULAtoms::treecell)
-	{
-		// We make a tree cell frame and process the children.
-		rv = ConstructTreeCellFrame(aPresContext, aContent, aParentFrame,
+    // No more work to do.
+    return rv;
+  }
+  else if (aTag == nsXULAtoms::treerow)
+  {
+    // A tree item causes a table row to be constructed that is always
+    // slaved to the nearest enclosing table row group (regardless of how
+    // deeply nested it is within other tree items).
+    rv = NS_NewTableRowFrame(aNewFrame);
+    processChildren = PR_TRUE;
+  }
+  else if (aTag == nsXULAtoms::treecell)
+  {
+    // We make a tree cell frame and process the children.
+    rv = ConstructTreeCellFrame(aPresContext, aContent, aParentFrame,
                                     aStyleContext, aAbsoluteItems, aNewFrame);
-		aFrameItems.AddChild(aNewFrame);
-		return rv;
-	}
-	else if (aTag == nsXULAtoms::treeindentation)
-	{
-		rv = NS_NewTreeIndentationFrame(aNewFrame);
-	}
-	// End of TREE CONSTRUCTION logic
+    aFrameItems.AddChild(aNewFrame);
+    return rv;
+  }
+  else if (aTag == nsXULAtoms::treeindentation)
+  {
+    rv = NS_NewTreeIndentationFrame(aNewFrame);
+  }
+  // End of TREE CONSTRUCTION logic
 
-	// TOOLBAR CONSTRUCTION
-	else if (aTag == nsXULAtoms::toolbox) {
-	  processChildren = PR_TRUE;
-	  rv = NS_NewToolboxFrame(aNewFrame);
-	}
-	else if (aTag == nsXULAtoms::toolbar) {
-	  processChildren = PR_TRUE;
-	  rv = NS_NewToolbarFrame(aNewFrame);
-	}
-	// End of TOOLBAR CONSTRUCTION logic
+  // TOOLBAR CONSTRUCTION
+  else if (aTag == nsXULAtoms::toolbox) {
+    processChildren = PR_TRUE;
+    rv = NS_NewToolboxFrame(aNewFrame);
+  }
+  else if (aTag == nsXULAtoms::toolbar) {
+    processChildren = PR_TRUE;
+    rv = NS_NewToolbarFrame(aNewFrame);
+  }
+  // End of TOOLBAR CONSTRUCTION logic
   }
 
   // If we succeeded in creating a frame then initialize it, process its
@@ -2172,8 +2172,8 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                              aStyleContext, PR_FALSE);
 
-	// Add the new frame to our list of frame items.
-	aFrameItems.AddChild(aNewFrame);
+  // Add the new frame to our list of frame items.
+  aFrameItems.AddChild(aNewFrame);
 
     // Process the child content if requested
     nsFrameItems childItems;
@@ -2183,7 +2183,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-	
+  
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned) {
       nsIFrame* placeholderFrame;
@@ -2197,7 +2197,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
 
       // Add the placeholder frame to the flow
       aFrameItems.Clear();
-	  aFrameItems.AddChild(placeholderFrame);
+    aFrameItems.AddChild(placeholderFrame);
     }
   }
 
@@ -2259,52 +2259,52 @@ HTMLStyleSheetImpl::ConstructTreeFrame(nsIPresContext*   aPresContext,
       // Resolve the style context
       childStyleContext = aPresContext->ResolveStyleContextFor(childContent, aStyleContext);
 
-	  // Get the element's tag
-	  nsIAtom*  tag;
-	  childContent->GetTag(tag);
+    // Get the element's tag
+    nsIAtom*  tag;
+    childContent->GetTag(tag);
       
-	  if (tag != nsnull)
-	  {
-		  if (tag == nsXULAtoms::treecaption)
-		  {
-			// Have we already created a caption? If so, ignore this caption
-			if (nsnull == captionFrame) {
-			  NS_NewAreaFrame(captionFrame, 0);
-			  captionFrame->Init(*aPresContext, childContent, aNewFrame, childStyleContext);
-			  // Process the caption's child content and set the initial child list
-			  nsFrameItems captionChildItems;
-			  ProcessChildren(aPresContext, childContent, captionFrame,
-							  aAbsoluteItems, captionChildItems);
-			  captionFrame->SetInitialChildList(*aPresContext, nsnull, captionChildItems.childList);
+    if (tag != nsnull)
+    {
+      if (tag == nsXULAtoms::treecaption)
+      {
+      // Have we already created a caption? If so, ignore this caption
+      if (nsnull == captionFrame) {
+        NS_NewAreaFrame(captionFrame, 0);
+        captionFrame->Init(*aPresContext, childContent, aNewFrame, childStyleContext);
+        // Process the caption's child content and set the initial child list
+        nsFrameItems captionChildItems;
+        ProcessChildren(aPresContext, childContent, captionFrame,
+                aAbsoluteItems, captionChildItems);
+        captionFrame->SetInitialChildList(*aPresContext, nsnull, captionChildItems.childList);
 
-			  // Prepend the caption frame to the outer frame's child list
-			  innerFrame->SetNextSibling(captionFrame);
-			}
-		  }
-		  else if (tag == nsXULAtoms::treebody ||
-			       tag == nsXULAtoms::treehead)
-		  {
-		  
-			  ConstructTreeBodyFrame(aPresContext, childContent, innerFrame, 
+        // Prepend the caption frame to the outer frame's child list
+        innerFrame->SetNextSibling(captionFrame);
+      }
+      }
+      else if (tag == nsXULAtoms::treebody ||
+             tag == nsXULAtoms::treehead)
+      {
+      
+        ConstructTreeBodyFrame(aPresContext, childContent, innerFrame, 
                                          childStyleContext, scrollFrame, frame);
-		  }
+      }
 
-		  // Note: The row and cell cases have been excised, since the tree view's rows must occur
-		  // inside row groups.  The column case has been excised for now until I decide what the
-		  // appropriate syntax will be for tree columns.
+      // Note: The row and cell cases have been excised, since the tree view's rows must occur
+      // inside row groups.  The column case has been excised for now until I decide what the
+      // appropriate syntax will be for tree columns.
 
           else
-		  {
-			// For non table related frames (e.g. forms) make them children of the outer table frame
-			// XXX also need to deal with things like table cells and create anonymous frames...
-			nsFrameItems nonTableRelatedFrameItems;
-			ConstructFrameByTag(aPresContext, childContent, aNewFrame, tag, childStyleContext,
-								aAbsoluteItems, nonTableRelatedFrameItems);
-			childList->SetNextSibling(nonTableRelatedFrameItems.childList);
-		  }
-	  }
-	  
-	  NS_IF_RELEASE(tag);
+      {
+      // For non table related frames (e.g. forms) make them children of the outer table frame
+      // XXX also need to deal with things like table cells and create anonymous frames...
+      nsFrameItems nonTableRelatedFrameItems;
+      ConstructFrameByTag(aPresContext, childContent, aNewFrame, tag, childStyleContext,
+                aAbsoluteItems, nonTableRelatedFrameItems);
+      childList->SetNextSibling(nonTableRelatedFrameItems.childList);
+      }
+    }
+    
+    NS_IF_RELEASE(tag);
       
       // If it's not a caption frame, then link the frame into the inner
       // frame's child list
@@ -2474,7 +2474,7 @@ HTMLStyleSheetImpl::InitializeScrollFrame(nsIFrame *            scrollFrame,
       // The area frame becomes a container for child frames that are
       // absolutely positioned
       nsAbsoluteItems  absoluteItems(scrolledFrame);
-      nsFrameItems	childItems;
+      nsFrameItems  childItems;
       ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
                       childItems);
   
@@ -2507,7 +2507,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
                                                 nsIFrame*             aParentFrame,
                                                 nsIStyleContext*      aStyleContext,
                                                 nsAbsoluteItems&      aAbsoluteItems,
-                                                nsFrameItems&		  aFrameItems)
+                                                nsFrameItems&     aFrameItems)
 {
   const nsStylePosition* position = (const nsStylePosition*)
                            aStyleContext->GetStyleData(eStyleStruct_Position);
@@ -2571,7 +2571,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
       // The area frame becomes a container for child frames that are
       // absolutely positioned
       nsAbsoluteItems  absoluteItems(scrolledFrame);
-      nsFrameItems		childItems;
+      nsFrameItems    childItems;
       ProcessChildren(aPresContext, aContent, scrolledFrame, absoluteItems,
                       childItems);
   
@@ -2700,8 +2700,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
 
-	  // Add the table frame to the list of items
-	  aFrameItems.AddChild(aNewFrame);
+    // Add the table frame to the list of items
+    aFrameItems.AddChild(aNewFrame);
 
       if (isAbsolutelyPositioned) {
         nsIFrame* placeholderFrame;
@@ -2714,8 +2714,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
         aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
 
         // Add the placeholder frame to the flow
-		aFrameItems.Clear();
-		aFrameItems.AddChild(placeholderFrame);
+    aFrameItems.Clear();
+    aFrameItems.AddChild(placeholderFrame);
       }
       return rv;
     }
@@ -2769,7 +2769,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
                                    aStyleContext, aAbsoluteItems, aNewFrame);
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
-	  aFrameItems.AddChild(aNewFrame);
+    aFrameItems.AddChild(aNewFrame);
       return rv;
   
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
@@ -2787,8 +2787,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
     // process children if requested
     if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
 
-	  // Add the frame to the list of items.
-	  aFrameItems.AddChild(aNewFrame);
+    // Add the frame to the list of items.
+    aFrameItems.AddChild(aNewFrame);
 
       aNewFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext);
 
@@ -2821,7 +2821,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresConte
 
     // Add the placeholder frame to the flow
     aFrameItems.Clear();
-	aFrameItems.AddChild(placeholderFrame);
+  aFrameItems.AddChild(placeholderFrame);
   }
 
   return rv;
@@ -2900,7 +2900,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
                                    nsIContent*      aContent,
                                    nsIFrame*        aParentFrame,
                                    nsAbsoluteItems& aAbsoluteItems,
-                                   nsFrameItems&	aFrameItems)
+                                   nsFrameItems&  aFrameItems)
 {
   NS_PRECONDITION(nsnull != aParentFrame, "no parent frame");
 
@@ -2953,7 +2953,7 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
 
     if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
 
-	  nsIFrame* lastChild = aFrameItems.lastChild;
+    nsIFrame* lastChild = aFrameItems.lastChild;
 
       // Handle specific frame types
       rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame, tag,
@@ -2965,16 +2965,16 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       // whole process into separate, pluggable steps.
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) || (lastChild == aFrameItems.lastChild)))
       {
-		  PRBool haltProcessing = PR_FALSE;
-		  rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
+      PRBool haltProcessing = PR_FALSE;
+      rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
                                styleContext, aAbsoluteItems, aFrameItems, haltProcessing);
-		  if (haltProcessing)
-		  {
-			  NS_RELEASE(styleContext);
-			  NS_IF_RELEASE(tag);
-			  return rv;
-		  }
-	  }	
+      if (haltProcessing)
+      {
+        NS_RELEASE(styleContext);
+        NS_IF_RELEASE(tag);
+        return rv;
+      }
+    } 
 #endif
 
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) || (lastChild == aFrameItems.lastChild))) {
@@ -3133,7 +3133,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
     nsIFrame*       lastChildFrame = nsnull;
     nsIFrame*       firstAppendedFrame = nsnull;
     nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-	nsFrameItems    frameItems;
+  nsFrameItems    frameItems;
 
     aContainer->ChildCount(count);
 
@@ -3150,7 +3150,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
     // we need to do this here because we need both the parent frame and the constructed frame
     nsresult result = NS_OK;
     nsIFrame *adjustedParentFrame=parentFrame;
-	firstAppendedFrame = frameItems.childList;
+  firstAppendedFrame = frameItems.childList;
     if (nsnull!=firstAppendedFrame)
     {
       const nsStyleDisplay* firstAppendedFrameDisplay;
@@ -3294,7 +3294,7 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
     nsFrameItems frameItems;
     rv = ConstructFrame(aPresContext, aChild, parentFrame, absoluteItems, frameItems);
 
-	nsIFrame* newFrame = frameItems.childList;
+  nsIFrame* newFrame = frameItems.childList;
 
     if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
       nsIReflowCommand* reflowCmd = nsnull;
