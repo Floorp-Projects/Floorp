@@ -102,6 +102,7 @@
 
 #ifdef SUNCTL
 #include "nsILE.h"
+static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 #endif /* SUNCTL */
 
 #ifdef NS_DEBUG
@@ -124,7 +125,6 @@
 #define TEXT_BUF_SIZE 100
 
 //----------------------------------------
-
 
 // checks to see if the text can be lightened..
 // text is darkend
@@ -2311,29 +2311,32 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         sdptr->mStart = ip[sdptr->mStart] - mContentOffset;
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
 #ifdef SUNCTL
-        static NS_DEFINE_CID(kLECID, NS_ULE_CID);
-
-        nsCOMPtr<nsILE> mCtlObj;
-        mCtlObj = do_CreateInstance(kLECID, &rv);
+        nsCOMPtr<nsILE> ctlObj;
+        ctlObj = do_CreateInstance(kLECID, &rv);
         if (NS_FAILED(rv)) {
           NS_WARNING("Cell based cursor movement will not be supported\n");
-          mCtlObj = nsnull;
+          ctlObj = nsnull;
         }
         else {
-          PRInt32 mStart, mEnd;
+          PRInt32 start, end;
+          PRBool  needsCTL = PR_FALSE;
 
-          if (sdptr->mEnd < textLength) {
-            mCtlObj->GetRangeOfCluster(text, PRInt32(textLength), sdptr->mEnd, &mStart, &mEnd);
+          ctlObj->NeedsCTLFix(text, sdptr->mStart, sdptr->mEnd, &needsCTL);
+
+          if (needsCTL && (sdptr->mEnd < textLength)) {
+            ctlObj->GetRangeOfCluster(text, PRInt32(textLength), sdptr->mEnd,
+                                      &start, &end);
             if (sdptr->mStart > sdptr->mEnd) /* Left Edge */
-              sdptr->mEnd = mStart;
+              sdptr->mEnd = start;
             else
-              sdptr->mEnd = mEnd;
+              sdptr->mEnd = end;
           }
 
           /* Always start selection from a Right Edge */
-          if (sdptr->mStart > 0) {
-            mCtlObj->GetRangeOfCluster(text, PRInt32(textLength), sdptr->mStart, &mStart, &mEnd);
-            sdptr->mStart = mEnd;
+          if (needsCTL && (sdptr->mStart > 0)) {
+            ctlObj->GetRangeOfCluster(text, PRInt32(textLength),
+                                      sdptr->mStart, &start, &end);
+            sdptr->mStart = end;
           }
         }
 #endif /* SUNCTL */
@@ -3984,15 +3987,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   #endif
           aPos->mContentOffset = 0;
           PRInt32 i;
-  #ifdef SUNCTL
-          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
 
-          nsCOMPtr<nsILE> mCtlObj;
-          mCtlObj = do_CreateInstance(kLECID, &rv);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("Cell based cursor movement will not be supported\n");
-            mCtlObj = nsnull;
-  #endif /* SUNCTL */
           for (i = aPos->mStartOffset -1 - mContentOffset; i >=0;  i--){
             if ((ip[i] < ip[aPos->mStartOffset - mContentOffset]) &&
                 (! IS_LOW_SURROGATE(paintBuffer.mBuffer[ip[i]-mContentOffset])))
@@ -4001,18 +3996,30 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               break;
             }
           }
+
   #ifdef SUNCTL
+          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+          nsCOMPtr<nsILE> ctlObj;
+          ctlObj = do_CreateInstance(kLECID, &rv);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Cell based cursor movement will not be supported\n");
+            ctlObj = nsnull;
           }
           else {
-            if (aPos->mStartOffset < 1) {
-              // go to prev
-              i = -1;
-            } else {
-              PRInt32 mPreviousOffset;
-              mCtlObj->PrevCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
-                                 textLength,aPos->mStartOffset, 
-                                 &mPreviousOffset);
-              aPos->mContentOffset = i = mPreviousOffset;
+            PRBool  needsCTL = PR_FALSE;
+            PRInt32 previousOffset;
+
+            ctlObj->NeedsCTLFix(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                     paintBuffer.mBuffer),
+                                 aPos->mStartOffset, -1, &needsCTL);
+
+            if (needsCTL) {
+              ctlObj->PrevCluster(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                       paintBuffer.mBuffer),
+                                   textLength,aPos->mStartOffset,
+                                   &previousOffset);
+              aPos->mContentOffset = i = previousOffset;
             }
           }
   #endif /* SUNCTL */
@@ -4032,15 +4039,6 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
   #endif
           PRInt32 i;
           aPos->mContentOffset = mContentLength;
-  #ifdef SUNCTL
-          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
-
-          nsCOMPtr<nsILE> mCtlObj;
-          mCtlObj = do_CreateInstance(kLECID, &rv);
-          if (NS_FAILED(rv)) {
-            NS_WARNING("Cell based cursor movement will not be supported\n");
-            mCtlObj = nsnull;
-  #endif /* SUNCTL */
 
           for (i = aPos->mStartOffset +1 - mContentOffset; i <= mContentLength;  i++){
             if ((ip[i] > ip[aPos->mStartOffset - mContentOffset]) &&
@@ -4051,17 +4049,29 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             }
           }
   #ifdef SUNCTL
+          static NS_DEFINE_CID(kLECID, NS_ULE_CID);
+
+          nsCOMPtr<nsILE> ctlObj;
+          ctlObj = do_CreateInstance(kLECID, &rv);
+          if (NS_FAILED(rv)) {
+            NS_WARNING("Cell based cursor movement will not be supported\n");
+            ctlObj = nsnull;
           }
           else {
-            if (aPos->mStartOffset >= textLength) {
-              // go to next
-              i = mContentLength + 1;
-            } else {
-              PRInt32 mNextOffset;
-              mCtlObj->NextCluster(NS_REINTERPRET_CAST(const PRUnichar*, paintBuffer.mBuffer),
-                                 textLength, aPos->mStartOffset,
-                                 &mNextOffset);
-              aPos->mContentOffset = i = mNextOffset;
+            PRBool needsCTL = PR_FALSE;
+            PRInt32 nextOffset;
+
+            ctlObj->NeedsCTLFix(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                     paintBuffer.mBuffer),
+                                aPos->mStartOffset, 0, &needsCTL);
+
+            if (needsCTL) {
+
+              ctlObj->NextCluster(NS_REINTERPRET_CAST(const PRUnichar*,
+                                                      paintBuffer.mBuffer),
+                                  textLength, aPos->mStartOffset,
+                                  &nextOffset);
+              aPos->mContentOffset = i = nextOffset;
             }
           }
   #endif /* SUNCTL */
@@ -4087,7 +4097,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             return result;
         }
       }
-      else 
+      else
         aPos->mResultContent = mContent;
     }
     break;
