@@ -87,5 +87,21 @@ be 10 to 20 times that so be prepared to have alot of disk space. It helps
 a great deal to narrow down your problem space to reduce the log file size...</li>
 </ol>
 
+<hr>
+
+<p>A quick additional note. Leaky now has a "graph" output option.
+If you do this:</p>
+
+<pre>leaky -gqx viewer malloc-log | c++filt | sed -e 's/&/&amp;/g' > /tmp/GQ0.html</pre>
+
+<p>Then leaky will make a graph of the leaks [-g] and output that graph
+in xml format (currently actually html...) [-x]. I use c++filt to
+translate the C++ mangled names into ascii and then use sed to make it
+legitimate html and off it goes to a file.</p>
+
+<p>If you throw file at viewer (recursion is cool) then it will
+present you with a treeview of the leaks that you can click on to
+open/close sections. Enjoy!</p>
+
 </body>
 </html>
