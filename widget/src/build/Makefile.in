@@ -34,7 +34,11 @@ INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 
 INCLUDES += $(FE_X_CFLAGS)
 
-CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
+CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp
+
+ifneq ($(USE_NGLAYOUT_GTK),1)
+CPPSRCS+=nsMotifWidgetFactory.cpp
+endif
 
 ifeq ($(OS_ARCH),IRIX)
 LD = $(CCC)
@@ -42,8 +46,13 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetgtk_s.a
+else
+EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetgtk_s.a
+endif
+
 EXTRA_DSO_LDOPTS+=\
-	$(DIST)/lib/libraptorwidgetunix_s.a \
 	$(DIST)/lib/libraptorbasewidget_s.a \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libraptorbase.so \
