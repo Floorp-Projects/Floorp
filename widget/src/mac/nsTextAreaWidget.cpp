@@ -100,7 +100,7 @@ NS_IMETHODIMP nsTextAreaWidget::Create(nsIWidget *aParent,const nsRect &aRect,EV
 	destRect = viewRect;
 
 	StartDraw();
-	PRUint32 teFlags = weFAutoScroll;
+	PRUint32 teFlags = weDoAutoScroll | weDoOutlineHilite | weDoMonoStyled;
 	WENew(&destRect, &viewRect, teFlags, &mTE_Data);
 	EndDraw();
 		
@@ -236,7 +236,43 @@ PRBool nsTextAreaWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 //-------------------------------------------------------------------------
 PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
-	PRBool eventHandled = nsWindow::DispatchWindowEvent(aEvent);
+	// filter cursor keys
+	PRBool passKeyEvent = PR_TRUE;
+	switch (aEvent.message)
+	{
+		case NS_KEY_DOWN:
+		case NS_KEY_UP:
+		{
+			// hack: if Enter is pressed, pass Return
+  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
+			if (keyEvent->keyCode == 0x03)
+			{
+				keyEvent->keyCode = NS_VK_RETURN;
+				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+				if (theOSEvent)
+					theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
+			}
+			switch (keyEvent->keyCode)
+			{
+				case NS_VK_PAGE_UP:
+				case NS_VK_PAGE_DOWN:
+				case NS_VK_END:
+				case NS_VK_HOME:
+				case NS_VK_LEFT:
+				case NS_VK_UP:
+				case NS_VK_RIGHT:
+				case NS_VK_DOWN:
+					passKeyEvent = PR_FALSE;
+					break;
+			}
+			break;
+		}
+	}
+
+	// dispatch the message
+	PRBool eventHandled = PR_FALSE;
+	if (passKeyEvent)
+		eventHandled = Inherited::DispatchWindowEvent(aEvent);
 
 	if (! eventHandled)
 	{
@@ -247,7 +283,9 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 				if (mTE_Data)
 				{
 					StartIdling();
+					StartDraw();
 					WEActivate(mTE_Data);
+					EndDraw();
 				}
 				break;
 			}
@@ -256,8 +294,10 @@ PRBool nsTextAreaWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 			{
 				if (mTE_Data)
 				{
-					WEDeactivate(mTE_Data);
 					StopIdling();
+					StartDraw();
+					WEDeactivate(mTE_Data);
+					EndDraw();
 				}
 				break;
 			}
