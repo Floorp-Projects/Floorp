@@ -1,10 +1,10 @@
 #ifndef LIBART_FEATURES_H
 #define LIBART_FEATURES_H 1
 
-#define LIBART_MAJOR_VERSION (@LIBART_MAJOR_VERSION@)
-#define LIBART_MINOR_VERSION (@LIBART_MINOR_VERSION@)
-#define LIBART_MICRO_VERSION (@LIBART_MICRO_VERSION@)
-#define LIBART_VERSION "@LIBART_VERSION@"
+#define LIBART_MAJOR_VERSION (2)
+#define LIBART_MINOR_VERSION (3)
+#define LIBART_MICRO_VERSION (7)
+#define LIBART_VERSION "2.3.7"
 
 extern const unsigned int libart_major_version, libart_minor_version, libart_micro_version;
 extern const char *libart_version;
