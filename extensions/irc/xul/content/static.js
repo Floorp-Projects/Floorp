@@ -21,6 +21,11 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
+if (DEBUG)
+    dd = function (m) { dump ("-*- chatzilla: " + m + "\n"); }
+else
+    dd = function (){};
+
 var client = new Object();
 
 client.defaultNick = "IRCMonkey";
@@ -267,8 +272,8 @@ function insertLink (matchText, containerTag)
 
 function insertSmiley (emoticon, containerTag)
 {
-    var src = "";    
-    
+    var src = "";
+
     if (emoticon.search (/\;[\-\^\v]?[\)\>\]]/) != -1)
         src = "face-wink.gif";
     else if (emoticon.search (/[\=\:\8][\-\^\v]?[\)\>\]]/) != -1)
@@ -309,7 +314,10 @@ function insertHyphenatedWord (longWord, containerTag)
 function mainStep()
 {
 
-    client.eventPump.stepEvents();
+    if (!client.output)
+        setClientOutput(frames[0].document);
+    else
+        client.eventPump.stepEvents();
     setTimeout ("mainStep()", client.STEP_TIMEOUT);
     
 }
@@ -421,10 +429,17 @@ function setOutputStyle (styleSheet)
 function setClientOutput(doc) 
 {
     client.output = doc.getElementById("output");
-    /* continue processing now: */
-    initStatic();
-    if (client.STARTUP_NETWORK)
-        client.onInputAttach ({inputData: client.STARTUP_NETWORK});    
+    if (client.output)
+    {
+        dd ("Got output element.");
+        /* continue processing now: */
+        initStatic();
+        if (client.STARTUP_NETWORK)
+            client.onInputAttach ({inputData: client.STARTUP_NETWORK});
+    }
+    else
+        dd ("ARG!  Couldn't get output element, try again later.");
+    
 }
 
 testURLs =
@@ -1070,7 +1085,9 @@ function getTBForObject (source, create)
     {
         var views = document.getElementById ("views-tbar-inner");
         tb = document.createElement ("menubutton");
-        tb.addEventListener("click", onTBIClickTempHandler, false);
+        tb.setAttribute ("onclick", "onTBIClick('" + id + "');");
+        
+        //tb.addEventListener("command", onTBIClickTempHandler, false);
         
         var aclass = (client.ICONS_IN_TOOLBAR) ?
             "activity-button-image" : "activity-button-text";
@@ -1099,6 +1116,8 @@ function getTBForObject (source, create)
 function onTBIClickTempHandler (e)
 { 
   
+    dd ("onTBIClickTempHandler called");
+    
     var id = "tb[" + e.target.getAttribute("value") + "]";
 
     var tb = document.getElementById (id);

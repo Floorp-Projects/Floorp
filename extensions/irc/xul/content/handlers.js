@@ -54,7 +54,7 @@ function onNotImplemented()
 /* toolbaritem click */
 function onTBIClick (id)
 {
-
+    
     var tbi = document.getElementById (id);
     var view = client.viewsArray[tbi.getAttribute("viewKey")];
 
@@ -1657,7 +1657,7 @@ function my_whoisreply (e)
             
         case 317:
             text = e.params[2] + " has been idle for " + e.params[3] +
-                " seconds (on since " + new Date(Number(e.params[4]) * 100) +
+                " seconds (on since " + new Date(Number(e.params[4]) * 1000) +
                 ")";
             break;
             
