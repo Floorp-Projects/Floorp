@@ -115,9 +115,11 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 
 		virtual void			Select(); // mjc modified for always on bottom
 		virtual void			ActivateSelf();
-				
+		virtual void			DeactivateSelf();
+					
 		virtual void			ClickInDrag(const EventRecord &inMacEvent);
 		virtual void			ClickInGrow(const EventRecord &inMacEvent);
+		virtual void			Click( SMouseDownEvent &inMouseDown ) ;
 		
 		// override to send javascript move, resize, and zoom events
 		// these might be called from handling an AppleEvent.
@@ -188,6 +190,11 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 			// sometimes you just need the HTPane of the window...
 		HT_Pane 					HTPane ( ) const { return GetNavCenterParentView()->HTPane(); } ;
 		
+		virtual void			PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inResource ) ;
+		virtual void 			ClosePopdownTreeView ( ) ;
+		virtual void			OpenDockedTreeView ( HT_Resource inTopNode ) ;
+		static void				ClipOutPopdown ( LView* inView ) ;
+	
 	protected:
 		virtual	void				FinishCreateSelf(void);
 		const CHTMLView*			GetHTMLView() const { return mHTMLView; }
@@ -236,8 +243,15 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		Boolean					mIsViewSource;
 		Boolean					mIsHTMLHelp;
 		
-	private:
-		CDockedRDFCoordinator* mNavCenterParent;			// top level of navcenter hierarchy
+	private:		
+	
+			// the popup Aurora tree, etc. There only needs to be one of these for all browser
+			// windows. We also need to make sure we save/restore the current target when we
+			// create one of these popdowns.
+		static CPopdownRDFCoordinator*	sPopdownParent;
+		static LCommander*				sSavedPopdownTarget;
+		
+		CDockedRDFCoordinator*	mNavCenterParent;			// the docked Aurora tree, etc
 		CHTMLView*				mHTMLView;
 
 		LStr255					mCurrentKeyword;			// holds current internet keyword string

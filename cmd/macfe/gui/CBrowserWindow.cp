@@ -95,6 +95,10 @@ const char* Pref_ShowLocationBar = "browser.chrome.show_url_bar";
 const char* Pref_ShowPersonalToolbar = "browser.chrome.show_personal_toolbar";	// is this right?
 
 
+CPopdownRDFCoordinator* CBrowserWindow::sPopdownParent = NULL;
+LCommander* CBrowserWindow::sSavedPopdownTarget = NULL;
+
+
 enum {  eNavigationBar,
 		eLocationBar,
 		eStatusBar,
@@ -749,6 +753,10 @@ void CBrowserWindow::ListenToMessage(MessageT inMessage, void* ioParam)
 				SendAEGetURL(urlString);
 			break;
 		
+		case CPopdownRDFCoordinator::msg_ClosePopdownTree:
+			ClosePopdownTreeView();
+			break;
+		
 		case cmd_GoForward:
 		case cmd_GoBack:
 		case cmd_Home:
@@ -851,6 +859,22 @@ CBrowserWindow::ActivateSelf ( )
 	if ( mNavCenterParent && !HasAttribute(windAttr_Floating) )
 		XP_SetLastActiveContext ( *GetWindowContext() );
 }
+
+
+//
+// DeactivateSelf
+//
+// When this window loses focus, hide the popdown tree view if it exists
+//
+void
+CBrowserWindow :: DeactivateSelf ( )
+{
+	// don't need to check if one is already open, CPTV() does that for us.
+	ClosePopdownTreeView();
+
+	CNetscapeWindow::DeactivateSelf();
+	
+} // DeactivateSelf
 
 
 // ClickInDrag modified so z-locked window will not automatically be selected - mjc
@@ -1762,6 +1786,139 @@ void CBrowserWindow :: ReadWindowStatus ( LStream *inStatusData )
 	
 } // ReadWindowStatus
 
+
+//
+// ClipOutPopdown [static]
+//
+// Adds to the current clipRgn the popdown box, if visible. |inView| is needed so we
+// know what view we're drawing in for coordinate adjustments
+//
+void
+CBrowserWindow :: ClipOutPopdown ( LView* inView )
+{
+	if ( sPopdownParent && sPopdownParent->IsVisible() ) {
+		StRegion clip;
+		::GetClip(clip);
+		
+		Rect portPopdownFrame;
+		sPopdownParent->CalcPortFrameRect(portPopdownFrame);
+		Rect localPopdownFrame = PortToLocalRect ( inView, portPopdownFrame ) ;
+		StRegion popdownRgn(localPopdownFrame);
+		
+		::DiffRgn ( clip, popdownRgn, clip );
+		::SetClip ( clip );
+	}
+
+} // ClipOutPopdown
+
+
+//
+// PopDownTreeView 
+//
+// Create a popdown Aurora tree view at the given coords (in port coords) from the given
+// HT_Resource. This will dynamically size the height of the tree view.
+//
+void
+CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inResource )
+{
+	try { 
+		if ( !sPopdownParent )
+			sPopdownParent = dynamic_cast<CPopdownRDFCoordinator*>
+									(UReanimator::CreateView(CPopdownRDFCoordinator::res_ID, this, this));
+	}
+	catch ( ... ) {
+		sPopdownParent = NULL;
+	}
+	
+	if ( sPopdownParent ) {
+		// compute the height of tree (80% of the space between top of tree and bottom of browser)
+		const Uint16 kMinTreeHeight = 75;
+		const Uint16 kMaxTreeHeight = 700;
+		const Uint16 kTreeWidth = 250;
+		const float kHeightPercentage = 0.8;		// 80%
+		
+		SDimension16 browserFrame;
+		GetFrameSize ( browserFrame );
+		Uint16 spaceToWorkWith = browserFrame.height - inTop;
+		Uint16 newHeight = (Uint16)(spaceToWorkWith * kHeightPercentage);
+		if ( newHeight < kMinTreeHeight )
+			newHeight = kMinTreeHeight;
+		if ( newHeight > kMaxTreeHeight )
+			newHeight = kMaxTreeHeight;
+		
+		sPopdownParent->ResizeFrameTo ( kTreeWidth, newHeight, false );
+		sPopdownParent->PlaceInSuperImageAt ( inLeft, inTop, false );
+		sPopdownParent->BuildHTPane ( inResource );
+		
+		sSavedPopdownTarget = LCommander::GetTarget();
+		LCommander::SwitchTarget(sPopdownParent);
+		
+		sPopdownParent->AddListener(this);		// listen for close messages
+		sPopdownParent->Show();
+		
+		// make sure that we draw NOW if this is created in response to a drag
+		// and drop.
+		if ( ::StillDown() )
+			sPopdownParent->Draw(nil);
+	}
+	
+} // PopDownTreeView
+
+
+//
+// ClosePopdownTreeView
+//
+// Closes up the popdown tree view. Don't actually delete it, as we will probably be using it
+// again.
+//
+void
+CBrowserWindow :: ClosePopdownTreeView ( ) 
+{
+	if ( sPopdownParent ) {
+		sPopdownParent->Hide();
+		sPopdownParent->RemoveListener(this);
+		LCommander::SwitchTarget(sSavedPopdownTarget);
+	}
+
+} // ClosePopdownTreeView
+
+
+//
+// OpenDockedTreeView
+//
+// Make sure the embedded aurora shelf is open and create a new pane to fill it with data
+//
+void
+CBrowserWindow :: OpenDockedTreeView ( HT_Resource inTopNode )
+{
+	mNavCenterParent->BuildHTPane ( inTopNode );
+	mNavCenterParent->NavCenterShelf().SetShelfState(true, NULL);
+
+} // OpenDockedTreeView
+
+
+//
+// Click
+//
+// Override the default behavior to handle when a popdown Aurora tree is showing. If it
+// is and the click is outside of it, dispose of it and throw away the click. Otherwise,
+// just do the normal thing.
+//
+//¥¥¥this should probably not ignore the click when closing up the popdown. It just feels
+//¥¥¥weird.
+void
+CBrowserWindow :: Click( SMouseDownEvent &inMouseDown )
+{
+	if ( sPopdownParent && sPopdownParent->IsVisible() ) {
+		LPane *clickedPane = FindSubPaneHitBy(inMouseDown.wherePort.h, inMouseDown.wherePort.v);
+		if ( clickedPane == sPopdownParent )
+			clickedPane->Click(inMouseDown);
+		else
+			ClosePopdownTreeView();
+	}
+	else
+		CNetscapeWindow::Click(inMouseDown);	// process click normally
+}
 
 #pragma mark -- I18N Support --
 Int16 	CBrowserWindow::DefaultCSIDForNewWindow()
