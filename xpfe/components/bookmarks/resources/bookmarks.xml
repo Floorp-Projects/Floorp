@@ -1587,7 +1587,7 @@
                   <outlinercell ref="ShortcutURL" label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
                   <outlinercell ref="Description" label="rdf:http://home.netscape.com/NC-rdf#Description" />
                   <outlinercell ref="LastVisitDate" label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <outlinercell ref="AddDate" label="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" />
+                  <outlinercell ref="AddDate" label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
                   <outlinercell ref="LastModDate" label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
                 </outlinerrow>
               </rule>
@@ -1608,7 +1608,7 @@
           <splitter class="tree-splitter" />
           <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" persist="width hidden sortActive sortDirection ordinal" />
         </outliner>
-        <statusbar inherits="hidden=hidestatusbar" hidden="false">
+        <statusbar class="chromeclass-status" inherits="hidden=hidestatusbar" hidden="false">
           <statusbarpanel anonid="statusbar-text" flex="1"/>
         </statusbar>
       </vbox>
