@@ -33,7 +33,7 @@
 #include "seccomon.h"
 
 #if defined( _WIN32 ) || defined( __WIN32__ )
-#define RETURN_TYPE  extern _declspec( dllexport ) int _cdecl
+#define RETURN_TYPE  extern __declspec( dllexport ) int _cdecl
 #endif /* Windows */
 #include "maci.h"
 
