@@ -48,7 +48,6 @@ Rights Reserved.
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 <html:script language="JavaScript" src="chrome://global/content/strres.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="chrome://messenger/content/messengercompose/addressAutoComplete.js"/>
 
 <commands id="commands">
 	<commandset id="globalEditMenuItems"/>
