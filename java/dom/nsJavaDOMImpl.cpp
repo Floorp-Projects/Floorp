@@ -347,6 +347,8 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
   char* contentType = (char*) "";
   if (channel)
       channel->GetContentType(&contentType);
+  if (!contentType) 
+    contentType = (char*) "";
   jstring jContentType = env->NewStringUTF(contentType);
   if (!jContentType) return NS_ERROR_FAILURE;
 
