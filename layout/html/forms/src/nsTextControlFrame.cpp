@@ -804,7 +804,7 @@ nsTextControlFrame::Paint(nsIPresContext& aPresContext,
                           nsFramePaintLayer aWhichLayer)
 {
   PaintTextControlBackground(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     nsString text;
     GetText(&text, PR_FALSE);
     nsRect rect(0, 0, mRect.width, mRect.height);

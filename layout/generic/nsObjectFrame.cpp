@@ -1337,7 +1337,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     const nsStyleFont* font = (const nsStyleFont*)
       mStyleContext->GetStyleData(eStyleStruct_Font);
 
@@ -1360,7 +1360,7 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
   }
 #else
   // delegate all painting to the plugin instance.
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     mInstanceOwner->Paint(aDirtyRect);
   }
 #endif /* !XP_MAC */

@@ -277,7 +277,7 @@ nsSimplePageSequenceFrame::Paint(nsIPresContext&      aPresContext,
                                  const nsRect&        aDirtyRect,
                                  nsFramePaintLayer    aWhichLayer)
 {
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Paint a white background
     aRenderingContext.SetColor(NS_RGB(255,255,255));
     aRenderingContext.FillRect(aDirtyRect);
@@ -299,7 +299,7 @@ nsSimplePageSequenceFrame::PaintChild(nsIPresContext&      aPresContext,
   nsContainerFrame::PaintChild(aPresContext, aRenderingContext,
                                aDirtyRect, aFrame, aWhichLayer);
 
-  if (eFramePaintLayer_Overlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // XXX Paint a one-pixel border around the page so it's easy to see where
     // each page begins and ends when we're in print preview mode
     nsRect  pageBounds;

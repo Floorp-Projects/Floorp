@@ -133,7 +133,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
 {
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
@@ -184,7 +184,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   }
 
   // for debug...
-  if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     aRenderingContext.SetColor(NS_RGB(0, 0, 128));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }

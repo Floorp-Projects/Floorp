@@ -996,7 +996,7 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
 {
   nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                             aWhichLayer);
-  if (eFramePaintLayer_Content == aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
   }
   return NS_OK;

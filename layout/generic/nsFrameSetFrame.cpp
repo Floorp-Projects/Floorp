@@ -1568,7 +1568,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
                                  const nsRect&        aDirtyRect,
                                  nsFramePaintLayer    aWhichLayer)
 {
-  if (eFramePaintLayer_Content != aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
   //printf("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
@@ -1740,7 +1740,7 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext&      aPresContext,
                                 const nsRect&        aDirtyRect,
                                 nsFramePaintLayer    aWhichLayer)
 {
-  if (eFramePaintLayer_Content != aWhichLayer) {
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
   nscolor white = NS_RGB(255,255,255);
