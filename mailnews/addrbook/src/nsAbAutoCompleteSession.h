@@ -48,9 +48,9 @@ class nsIPref;
 
 typedef struct
 {
-	char * userName;
-	char * emailAddress;
-	char * nickName;
+  char * userName;
+  char * emailAddress;
+  char * nickName;
 } nsAbStubEntry;
 
 #define MAX_ENTRIES 100
@@ -76,12 +76,12 @@ public:
 class nsAbAutoCompleteSession : public nsIAbAutoCompleteSession
 {
 public:
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTOCOMPLETESESSION
     NS_DECL_NSIABAUTOCOMPLETESESSION
 
-	nsAbAutoCompleteSession();
-	virtual ~nsAbAutoCompleteSession(); 
+  nsAbAutoCompleteSession();
+  virtual ~nsAbAutoCompleteSession(); 
 
     typedef enum
     {
@@ -106,8 +106,8 @@ protected:
                      const PRUnichar* pDirName, PRBool bIsMailList, 
                      MatchType type, nsIAutoCompleteResults* results);
     PRBool CheckEntry(nsAbAutoCompleteSearchString* searchStr, const PRUnichar* nickName,const PRUnichar* displayName, 
-	    const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
-	      
+      const PRUnichar* firstName, const PRUnichar* lastName, const PRUnichar* emailAddress, MatchType* matchType);
+        
     nsCOMPtr<nsIMsgHeaderParser> mParser;
     nsString mDefaultDomain;
     PRUint32 mMatchTypeConters[LAST_MATCH_TYPE];
@@ -124,6 +124,8 @@ protected:
     PRInt32 mAutoCompleteCommentColumn;
 
 private:
+    #define MAX_NUMBER_OF_EMAIL_ADDRESSES     2
+
     nsresult SearchCards(nsIAbDirectory* directory, nsAbAutoCompleteSearchString* searchStr, nsIAutoCompleteResults* results);
     nsresult SearchDirectory(const char *aURI, nsAbAutoCompleteSearchString* searchStr, PRBool searchSubDirectory, nsIAutoCompleteResults* results);
     nsresult SearchPreviousResults(nsAbAutoCompleteSearchString *uSearchString, nsIAutoCompleteResults *previousSearchResult, nsIAutoCompleteResults* results);
@@ -142,9 +144,9 @@ private:
 class nsAbAutoCompleteParam : public nsISupports
 {
 public:
-	NS_DECL_ISUPPORTS
-	
-	nsAbAutoCompleteParam(const PRUnichar* nickName,
+  NS_DECL_ISUPPORTS
+  
+  nsAbAutoCompleteParam(const PRUnichar* nickName,
                           const PRUnichar* displayName,
                           const PRUnichar* firstName,
                           const PRUnichar* lastName,
@@ -153,21 +155,21 @@ public:
                           const PRUnichar* dirName,
                           PRBool isMailList, 
                           nsAbAutoCompleteSession::MatchType type)
-	{
-	  NS_INIT_ISUPPORTS();
-		mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mDisplayName = nsCRT::strdup(displayName ? displayName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mFirstName = nsCRT::strdup(firstName ? firstName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
-		mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+  {
+    NS_INIT_ISUPPORTS();
+    mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+    mDisplayName = nsCRT::strdup(displayName ? displayName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+    mFirstName = nsCRT::strdup(firstName ? firstName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+    mLastName = nsCRT::strdup(lastName ? lastName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+    mEmailAddress = nsCRT::strdup(emailAddress ? emailAddress : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
+    mNotes = nsCRT::strdup(notes ? notes : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
     mDirName = nsCRT::strdup(dirName ? dirName : NS_STATIC_CAST(const PRUnichar *, NS_LITERAL_STRING("").get()));
-		mIsMailList = isMailList;
-		mType = type;
-	}
-	
-	virtual ~nsAbAutoCompleteParam()
-	{
+    mIsMailList = isMailList;
+    mType = type;
+  }
+  
+  virtual ~nsAbAutoCompleteParam()
+  {
     CRTFREEIF(mNickName);
     CRTFREEIF(mDisplayName);
     CRTFREEIF(mFirstName);
@@ -175,8 +177,8 @@ public:
     CRTFREEIF(mEmailAddress);
     CRTFREEIF(mNotes);
     CRTFREEIF(mDirName);
-	};
-	
+  };
+  
 protected:
     PRUnichar* mNickName;
     PRUnichar* mDisplayName;
