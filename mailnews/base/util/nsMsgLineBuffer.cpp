@@ -317,7 +317,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
 	// on the monitor for more data to come in.
 
 	NS_PRECONDITION(m_dataBuffer && m_dataBufferSize > 0, "invalid input arguments for read next line from input");
-	
+
 	// initialize out values
 	aPauseForMoreData = PR_FALSE;
 	aNumBytesInLine = 0;
@@ -373,6 +373,17 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
                                numBytesToCopy, &numBytesCopied);
             m_numBytesInBuffer += numBytesCopied;
 			m_dataBuffer[m_startPos + m_numBytesInBuffer] = '\0';
+            PRUint32 i,j=0;
+            for (i=0;i < m_numBytesInBuffer;i++)  //strip nulls
+            {
+               if (m_dataBuffer[i])
+                  m_dataBuffer[j++] = m_dataBuffer[i];
+            } 
+            if (i != j)
+            {
+              m_dataBuffer[j] = '\0';
+              m_numBytesInBuffer = j;
+            }
 		}
         else if (!m_numBytesInBuffer)
         {
