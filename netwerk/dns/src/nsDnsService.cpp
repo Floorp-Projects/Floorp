@@ -754,7 +754,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
 
     PRBool numeric = PR_TRUE;
     for (const char *hostCheck = hostName; *hostCheck; hostCheck++) {
-        if (!nsString2::IsDigit(*hostCheck) && (*hostCheck != '.') ) {
+        if (!nsCRT::IsAsciiDigit(*hostCheck) && (*hostCheck != '.') ) {
             numeric = PR_FALSE;
             break;
         }
