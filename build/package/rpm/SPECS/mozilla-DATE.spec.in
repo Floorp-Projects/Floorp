@@ -28,13 +28,11 @@ Patch0:      mozilla-navigator-overlay-menu.patch
 Patch1:      mozilla-editor-overlay-menu.patch
 Patch6:      mozilla-prefs-debug.patch
 Patch7:      mozilla-redhat-home-page.patch
-Patch8:      mozilla-redhat-mail-home-page.patch
 Patch12:     mozilla-psfonts-7.2.patch
 Patch13:     mozilla-nspr-packages.patch
 Patch14:     mozilla-default-plugin-less-annoying.patch
 Patch17:     mozilla-buildid-title.patch
 Patch18:     mozilla-1.2.1-uifont.patch
-Patch20:     mozilla-1.2.1-xft-font-prefs.patch
 
 Buildroot:   /var/tmp/mozilla-root
 Prefix:      /usr
@@ -159,9 +157,6 @@ development or web page development.
 %patch7 -p1
 %patch7 -p1 -R
 
-%patch8 -p1
-%patch8 -p1 -R
-
 # Can't hurt to leave this in since the defaults are empty.
 %patch12 -p1
 
@@ -177,10 +172,6 @@ development or web page development.
 
 # make it possible to set the uifont
 %patch18 -p1
-
-# patch to make it possible to use the font prefs with xft in a sane
-# manner
-%patch20 -p1
 
 # set up our default bookmarks
 /bin/cp %{SOURCE19} $RPM_BUILD_DIR/mozilla/profile/defaults/bookmarks.html
