@@ -110,6 +110,30 @@ sub SyncAnyPendingShadowChanges {
 }
 
 
+# This is used to manipulate global state used by SendSQL(),
+# MoreSQLData() and FetchSQLData().  It provides a way to do another
+# SQL query without losing any as-yet-unfetched data from an existing
+# query.  Just push the current global state, do your new query and fetch
+# any data you need from it, then pop the current global state.
+# 
+@::SQLStateStack = ();
+
+sub PushGlobalSQLState() {
+    push @::SQLStateStack, $::currentquery;
+    push @::SQLStateStack, [ @::fetchahead ]; 
+}
+
+sub PopGlobalSQLState() {
+    die ("PopGlobalSQLState: stack underflow") if ( $#::SQLStateStack < 1 );
+    @::fetchahead = @{pop @::SQLStateStack};
+    $::currentquery = pop @::SQLStateStack;
+}
+
+sub SavedSQLStates() {
+    return ($#::SqlStateStack + 1) / 2;
+}
+
+
 my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
 
 sub SqlLog {
@@ -117,13 +141,21 @@ sub SqlLog {
         my ($str) = (@_);
         open(SQLLOGFID, ">>data/sqllog") || die "Can't write to data/sqllog";
         if (flock(SQLLOGFID,2)) { # 2 is magic 'exclusive lock' const.
+
+            # if we're a subquery (ie there's pushed global state around)
+            # indent to indicate the level of subquery-hood
+            #
+            for (my $i = SavedSQLStates() ; $i > 0 ; $i--) {
+                print SQLLOGFID "\t";
+            }
+
             print SQLLOGFID time2str("%D %H:%M:%S $$", time()) . ": $str\n";
         }
         flock(SQLLOGFID,8);     # '8' is magic 'unlock' const.
         close SQLLOGFID;
     }
 }
-    
+
 sub SendSQL {
     my ($str, $dontshadow) = (@_);
     my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
@@ -637,6 +669,11 @@ sub DBNameToIdAndCheck {
 sub quoteUrls {
     my ($knownattachments, $text) = (@_);
     return $text unless $text;
+    
+    # make sure that any unfetched data from a currently running query 
+    # is saved off rather than overwritten
+    #
+    PushGlobalSQLState();
 
     my $base = Param('urlbase');
 
@@ -714,6 +751,9 @@ sub quoteUrls {
 
     # And undo the quoting of "#" characters.
     $text =~ s/%#/#/g;
+
+    # put back any query info in progress
+    PopGlobalSQLState();
 
     return $text;
 }
