@@ -23,7 +23,6 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifdef DEBUG									/* ifdef DEBUG			*/
 
 #include <stdlib.h>
@@ -32,14 +31,37 @@
 #include <Xfe/XfeP.h>
 #include <Xm/RepType.h>
 
+#define DEBUG_BUFFER_SIZE 2048
+
+/*
+ * This memory will leak, but only in debug builds.
+ */
+static String
+DebugGetBuffer(void)
+{
+	static String _debug_buffer = NULL;
+
+	if (!_debug_buffer)
+	{
+		_debug_buffer = (String) XtMalloc(sizeof(char) * DEBUG_BUFFER_SIZE);
+	}
+
+	assert( _debug_buffer != NULL );
+
+	return _debug_buffer;
+}
+
+/*----------------------------------------------------------------------*/
+
+
 /*----------------------------------------------------------------------*/
 /* extern */ String
 XfeDebugXmStringToStaticPSZ(XmString xmstring)
 {
-	static char buf[2048];
+	String		result = DebugGetBuffer();
 	String		psz_string;
 
-	buf[0] = '\0';
+	result[0] = '\0';
 
 	if (xmstring)
 	{
@@ -47,13 +69,13 @@ XfeDebugXmStringToStaticPSZ(XmString xmstring)
 
 		if (psz_string)
 		{
-			strcpy(buf,psz_string);
+			strcpy(result,psz_string);
 
 			XtFree(psz_string);
 		}
 	}
 
-	return buf;
+	return result;
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
@@ -78,7 +100,8 @@ XfeDebugPrintArgVector(FILE *		fp,
 /* extern */ String
 XfeDebugRepTypeValueToName(String rep_type,unsigned char value)
 {
-	char * result = NULL;
+	String		result = DebugGetBuffer();
+	Boolean		found = False;
 
 	if (rep_type)
 	{
@@ -92,11 +115,13 @@ XfeDebugRepTypeValueToName(String rep_type,unsigned char value)
 			{
 				Cardinal i = 0;
 
-				while ((i < entry->num_values) && !result)
+				while ((i < entry->num_values) && !found)
 				{
 					if (entry->values[i] == value)
 					{
-						result = XtNewString(entry->value_names[i]);
+						found = True;
+
+						strcpy(result,entry->value_names[i]);
 					}
 
 					i++;
@@ -133,6 +158,7 @@ XfeDebugRepTypeNameToValue(String rep_type,String name)
 					if (strcmp(entry->value_names[i],name) == 0)
 					{
 						result = entry->values[i];
+
 						found = True;
 					}
 
