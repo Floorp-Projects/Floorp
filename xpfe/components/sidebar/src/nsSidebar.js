@@ -88,6 +88,11 @@ function (aContentURL)
     return (container.IndexOf(panel_resource) != -1);
 }
 
+function sidebarURLSecurityCheck(url)
+{
+    if (url.search(/(^http:|^ftp:|^https:)/) == -1)
+        throw "Script attempted to add sidebar panel from illegal source";
+}
 
 /* decorate prototype to provide ``class'' methods and property accessors */
 nsSidebar.prototype.addPanel =
@@ -101,6 +106,8 @@ function (aTitle, aContentURL, aCustomizeURL)
         debug ("no window object set, bailing out.");
         throw Components.results.NS_ERROR_NOT_INITIALIZED;
     }
+
+    sidebarURLSecurityCheck(aContentURL);
 
     // Create a "container" wrapper around the current panels to
     // manipulate the RDF:Seq more easily.
