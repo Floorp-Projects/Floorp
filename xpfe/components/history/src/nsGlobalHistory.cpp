@@ -1588,7 +1588,7 @@ nsGlobalHistory::GetNow()
       mExpireNowTimer = do_CreateInstance("@mozilla.org/timer;1");
 
     if (mExpireNowTimer)
-      mExpireNowTimer->Init(fireSyncTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
+      mExpireNowTimer->Init(expireNowTimer, this, HISTORY_EXPIRE_NOW_TIMEOUT,
                             NS_PRIORITY_LOWEST, NS_TYPE_ONE_SHOT);
   }
   
