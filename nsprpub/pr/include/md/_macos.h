@@ -427,7 +427,7 @@ extern PRStatus _MD_gethostname(char *name, int namelen);
 ** Time Related definitions
 */
 
-#define kMacTimerInMiliSecs				(1UL)
+#define kMacTimerInMiliSecs				8L
 #define _MD_GET_INTERVAL 				_MD_GetInterval
 #define _MD_INTERVAL_PER_SEC() 			(PR_MSEC_PER_SEC/kMacTimerInMiliSecs)
 #define _MD_INTERVAL_INIT()
