@@ -250,11 +250,27 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // It's also possible that we have an overflow list for ourselves
+#ifdef DEBUG
+  if (aReflowState.reason == eReflowReason_Initial) {
+    // If it's our initial reflow, then we should not have an overflow list.
+    // However, add an assertion in case we get reflowed more than once with
+    // the initial reflow reason
+    nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_FALSE);
+    NS_ASSERTION(!overflowFrames, "overflow list is not empty for initial reflow");
+  }
+#endif
   if (aReflowState.reason != eReflowReason_Initial) {
     nsIFrame* overflowFrames = GetOverflowFrames(aPresContext, PR_TRUE);
     if (overflowFrames) {
       NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-      mFrames.AppendFrames(nsnull, overflowFrames);
+
+      // Because we lazily set the parent pointer of child frames we get from
+      // our prev-in-flow's overflow list, it's possible that we have not set
+      // the parent pointer for these frames. Check the first frame to see, and
+      // if we haven't set the parent pointer then set it now
+      nsIFrame* parent;
+      overflowFrames->GetParent(&parent);
+      mFrames.AppendFrames(parent == this ? nsnull : this, overflowFrames);
     }
   }
 
@@ -298,7 +314,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
-
+  
   // Note: the line layout code will properly compute our
   // NS_FRAME_OUTSIDE_CHILDREN state for us.
 
@@ -372,6 +388,22 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
     // Check if we should lazily set the child frame's parent pointer
     if (irs.mSetParentPointer) {
       frame->SetParent(this);
+
+      // We also need to check if frame has a next-in-flow. It it does, then set
+      // its parent frame pointer, too. Otherwise, if we reflow frame and it's
+      // complete we'll fail when deleting its next-in-flow which is no longer
+      // needed. This scenario doesn't happen often, but it can happen
+      nsIFrame* nextInFlow;
+      frame->GetNextInFlow(&nextInFlow);
+      while (nextInFlow) {
+        // Since we only do lazy setting of parent pointers for the frame's
+        // initial reflow, this frame can't have a next-in-flow. That means
+        // the continuing child frame must be in our child list as well. If
+        // not, then something is wrong
+        NS_ASSERTION(mFrames.ContainsFrame(nextInFlow), "unexpected flow");
+        nextInFlow->SetParent(this);
+        nextInFlow->GetNextInFlow(&nextInFlow);
+      }
     }
     rv = ReflowInlineFrame(aPresContext, aReflowState, irs, frame, aStatus);
     if (NS_FAILED(rv)) {
@@ -539,6 +571,18 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
       else {
         // Preserve reflow status when breaking-before our first child
         // and propogate it upward without modification.
+        // Note: if we're lazily setting the frame pointer for our child 
+        // frames, then we need to set it now. Don't return and leave the
+        // remaining child frames in our child list with the wrong parent
+        // frame pointer...
+        if (irs.mSetParentPointer) {
+          nsIFrame* f;
+          aFrame->GetNextSibling(&f);
+          while (f) {
+            f->SetParent(this);
+            f->GetNextSibling(&f);
+          }
+        }
       }
     }
     else {
