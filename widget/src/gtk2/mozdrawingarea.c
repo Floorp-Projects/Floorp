@@ -114,7 +114,7 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
   gint          attributes_mask = 0;
   
   /* create the clipping window */
-  attributes.event_mask = (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK);
+  attributes.event_mask = 0;
   attributes.x = 0;
   attributes.y = 0;
   attributes.width = 1;
@@ -135,6 +135,10 @@ moz_drawingarea_create_windows (MozDrawingarea *drawingarea, GdkWindow *parent,
      gtk default which is BlackPixel. */
   gdk_window_set_back_pixmap(drawingarea->clip_window, NULL, FALSE);
 
+  attributes.event_mask = (GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK |
+			   GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+			   GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+			   GDK_POINTER_MOTION_MASK);
   /* create the inner window */
   drawingarea->inner_window = gdk_window_new (drawingarea->clip_window,
 					      &attributes, attributes_mask);

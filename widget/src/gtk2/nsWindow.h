@@ -136,10 +136,20 @@ class nsWindow : public nsCommonWidget {
 				   GdkEventExpose *aEvent);
   gboolean           OnConfigureEvent(GtkWidget *aWidget,
 				      GdkEventConfigure *aEvent);
-  void               SendResizeEvent(nsRect &aRect,
-				     nsEventStatus &aStatus);
   void               OnDeleteEvent(GtkWidget *aWidget,
 				   GdkEventAny *aEvent);
+  void               OnEnterNotifyEvent(GtkWidget *aWidget,
+					GdkEventCrossing *aEvent);
+  void               OnLeaveNotifyEvent(GtkWidget *aWidget,
+					GdkEventCrossing *aEvent);
+  void               OnMotionNotifyEvent(GtkWidget *aWidget,
+					 GdkEventMotion *aEvent);
+  void               OnButtonPressEvent(GtkWidget *aWidget,
+					GdkEventButton *aEvent);
+  void               OnButtonReleaseEvent(GtkWidget *aWidget,
+					  GdkEventButton *aEvent);
+  void               SendResizeEvent(nsRect &aRect,
+				     nsEventStatus &aStatus);
 
  private:
 
