@@ -6,7 +6,6 @@ abcom.h
 abdefn.h
 addrbook.h
 allxpstr.h
-bkmks.h
 cdefs.h
 cgi.h
 client.h
@@ -23,7 +22,6 @@ fe_rgn.h
 garray.h
 glhist.h
 gui.h
-hotlist.h
 imap.h
 intl_csi.h
 itapefs.h
