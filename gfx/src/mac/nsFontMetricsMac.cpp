@@ -262,24 +262,21 @@ nsFontMetricsMac :: Destroy()
 NS_IMETHODIMP
 nsFontMetricsMac :: GetXHeight(nscoord& aResult)
 {
-//  aResult = mMaxAscent / 2;     // XXX temporary code!
-  aResult = 0;/* XXX */
+  aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetSuperscriptOffset(nscoord& aResult)
 {
-//  aResult = mMaxAscent / 2;     // XXX temporary code!
-  aResult = 0;/* XXX */
+  aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsMac :: GetSubscriptOffset(nscoord& aResult)
 {
-//  aResult = mMaxAscent / 2;     // XXX temporary code!
-  aResult = 0;/* XXX */
+  aResult = mMaxAscent / 2;     // XXX temporary code!
   return NS_OK;
 }
 
@@ -446,47 +443,3 @@ NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
   aHandle = nsnull;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-
-// XXX this function is a hack; the only logical font names we should
-// support are the one used by css.
-
-// we'll probably need something similar for the mac
-/*const char* nsFontMetricsMac::MapFamilyToFont(const nsString& aLogicalFontName)
-{
-  if (aLogicalFontName.EqualsIgnoreCase("Times Roman")) {
-    return "times";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("Times New Roman")) {
-    return "times";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("Unicode")) {
-    return "Bitstream Cyberbit";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("Courier New")) {
-    return "courier";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("Arial")) {
-    return "helvetica";
-  }
-
-  // the CSS generic names
-  if (aLogicalFontName.EqualsIgnoreCase("serif")) {
-    return "times";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("sans-serif")) {
-    return "helvetica";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("cursive")) {
-//    return "XXX";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("fantasy")) {
-//    return "XXX";
-  }
-  if (aLogicalFontName.EqualsIgnoreCase("monospace")) {
-    return "fixed";
-  }
-  return "helvetica";
-}
-*/
-
