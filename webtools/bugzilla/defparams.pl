@@ -671,6 +671,16 @@ sub find_languages {
   },
 
   {
+   name => 'enable_mail_sending',
+   desc => 'If set to \'Off\', Bugzilla will not send out any email of any ' .
+           'type whatsoever.<br>For most administrators, it is useful to ' .
+           'be able to disable all mail during testing and initial setup, ' .
+           'but other than that they will want to leave it \'On\'.',
+   type => 'b',
+   default => 1
+  },
+
+  {
    name => 'maildeliverymethod',
    desc => 'The method used for mail delivery. The testfile method ' .
            'is useful for debugging (for more information see the ' .

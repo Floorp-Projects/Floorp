@@ -59,9 +59,6 @@ if ($2) {
     $sitespec = "-$2$sitespec"; # Put the port number back in, before the '@'
 }
 
-# disable email flag for offline debugging work
-my $enableSendMail = 1;
-
 my %force;
 
 my %seen;
@@ -886,7 +883,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
 
 sub MessageToMTA ($) {
     my ($msg) = (@_);
-    return unless $enableSendMail;
+    return unless Param('enable_mail_sending');
 
     my @args;
     if (Param("maildeliverymethod") eq "sendmail" && !Param("sendmailnow")) {
