@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -41,16 +41,15 @@ nsAutoCompleteItem::~nsAutoCompleteItem()
 {
 }
 
-NS_IMETHODIMP nsAutoCompleteItem::GetValue(PRUnichar * *aValue)
+NS_IMETHODIMP nsAutoCompleteItem::GetValue(nsAWritableString& aValue)
 {
-    if (!aValue) return NS_ERROR_NULL_POINTER;   
-    *aValue = mValue.ToNewUnicode();
+    aValue.Assign(mValue);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteItem::SetValue(const PRUnichar * aValue)
+NS_IMETHODIMP nsAutoCompleteItem::SetValue(const nsAReadableString& aValue)
 {
-    mValue = aValue;
+    mValue.Assign(aValue);
     return NS_OK;
 }
 

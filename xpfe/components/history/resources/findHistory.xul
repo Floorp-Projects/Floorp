@@ -48,8 +48,8 @@
   <hbox autostretch="never" valign="middle">
     <menulist id="matchList">
       <menupopup>
-        <menuitem value="http://home.netscape.com/NC-rdf#Name" label="&search.name.label;"/>
-        <menuitem value="http://home.netscape.com/NC-rdf#URL" label="&search.url.label;"/>
+        <menuitem value="Name" label="&search.name.label;"/>
+        <menuitem value="URL" label="&search.url.label;"/>
       </menupopup>
     </menulist>
     <menulist id="methodList">

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,23 +27,56 @@
 
 [scriptable, uuid(88DCFA80-062F-11d4-a449-B36A1A94C0FC)]
 interface nsIAutoCompleteItem : nsISupports {
-    attribute wstring value;                        // the result value
-    attribute wstring comment;                      // an extra comment that will be displayed next to the value but that
-                                                    // will not be part of the value itself
-    attribute string className;                     // class name used to define some style through css like the colors, an
-                                                    // icon url, etc...    
-    attribute nsISupports param;                    // parameter use by the search engin
+    /**
+     * the result value
+     * using AString to avoid excess allocations
+     */
+    attribute AString  value;    
+
+    /**
+     * an extra comment that will be
+     * displayed next to the value but that
+     * will not be part of the value
+     * itself
+     */
+    attribute wstring comment;
+    
+    /**
+     * class name used to define some style through
+     * css like the colors, an icon url, etc...
+     */
+    attribute string className;
+    
+    /**
+     * parameter use by the search engine
+     */
+    attribute nsISupports param;
 };
 
 
 [scriptable, uuid(88DCFA81-062F-11d4-a449-B36A1A94C0FC)]
 interface nsIAutoCompleteResults : nsISupports {
-    attribute wstring searchString;                 // the original search string
     
-    attribute nsISupportsArray items;               // Array of result items (nsIAutoCompleteItem)
-    attribute long defaultItemIndex;                // Index (0 base) of the default item that will be preselected and displayed
+    /**
+     * the original search string
+     */
+    attribute wstring searchString;
+    
+    /**
+     * Array of result items (nsIAutoCompleteItem)
+     */
+    attribute nsISupportsArray items;
 
-    attribute nsISupports param;                    // param use by the the search engine
+    /**
+     * Index (0 base) of the default item that
+     * will be preselected and displayed
+     */
+    attribute long defaultItemIndex; 
+
+    /**
+     * param use by the the search engine
+     */
+    attribute nsISupports param; 
 };
 
 %{ C++

@@ -77,7 +77,7 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
         {
             nsCOMPtr<nsISupports> item;
             nsCOMPtr<nsIAutoCompleteItem> resultItem;
-            nsXPIDLString valueStr;
+            nsAutoString valueStr;
 
             for (rv = enumerator->First(); NS_SUCCEEDED(rv); rv = enumerator->Next())
             {
@@ -87,11 +87,11 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
                     resultItem = do_QueryInterface(item, &rv);
                     if (NS_SUCCEEDED(rv))
                     {
-                        rv = resultItem->GetValue(getter_Copies(valueStr));
-                        if (NS_SUCCEEDED(rv) && valueStr && ((const PRUnichar*)valueStr)[0] != 0)
+                        rv = resultItem->GetValue(valueStr);
+                        if (NS_SUCCEEDED(rv) && !valueStr.IsEmpty())
                         {
-                            if (nsCRT::strcasecmp(fullAddrStr, valueStr) == 0)
-                                return PR_TRUE;
+                          if (nsCRT::strcasecmp(fullAddrStr, valueStr.get())==0)
+                            return PR_TRUE;
                         }
                     }
                 }
@@ -177,7 +177,7 @@ void nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr, const P
       newItem->SetParam(param);
       NS_IF_RELEASE(param);
 
-      newItem->SetValue(fullAddrStr);
+      newItem->SetValue(nsDependentString(fullAddrStr));
       nsCOMPtr<nsISupportsArray> array;
       rv = results->GetItems(getter_AddRefs(array));
       if (NS_SUCCEEDED(rv))
