@@ -218,14 +218,14 @@ sub bz_get_field_defs {
 
     my $extra = "";
     if (!&::UserInGroup(Param('timetrackinggroup'))) {
-        $extra = "WHERE name NOT IN ('estimated time', 'remaining_time', " .
+        $extra = "AND name NOT IN ('estimated_time', 'remaining_time', " .
                  "'work_time', 'percentage_complete', 'deadline')";
     }
 
     my @fields;
-    my $sth = $self->prepare("SELECT name, description
-                                FROM fielddefs $extra
-                            ORDER BY sortkey");
+    my $sth = $self->prepare("SELECT name, description FROM fielddefs
+                              WHERE obsolete = 0 $extra
+                              ORDER BY sortkey");
     $sth->execute();
     while (my $field_ref = $sth->fetchrow_hashref()) {
         push(@fields, $field_ref);
