@@ -659,7 +659,8 @@ struct nsStyleText : public nsStyleStruct {
   nsStyleCoord  mWordSpacing;           // [inherited] 
   
   PRBool WhiteSpaceIsSignificant() const {
-    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE;
+    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
+           mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP;
   }
 };
 
