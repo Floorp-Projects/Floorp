@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+$t=time();
+
+print (
+       "The current time on ".`hostname`. "\n".
+       "UnixTime: ".$t."\n".
+       "LocalTime: ".localtime($t)."\n".
+       "GMTime: ".gmtime($t)."\n".
+       "\n"
+	       );
