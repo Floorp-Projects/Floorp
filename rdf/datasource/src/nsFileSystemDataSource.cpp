@@ -1186,7 +1186,8 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		leafStr = nsnull;
 
 		// we need to escape this leaf name;
-		// for now, let's just hack it and encode spaces and slashes
+		// for now, let's just hack it and encode
+		// spaces, slashes and question marks
 		PRInt32			aOffset;
 		while ((aOffset = leaf.FindChar(' ')) >= 0)
 		{
@@ -1197,6 +1198,11 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
 		{
 			leaf.Cut((PRUint32)aOffset, 1);
 			leaf.Insert("%2F", (PRUint32)aOffset);
+		}
+		while ((aOffset = leaf.FindChar('?')) >= 0)
+		{
+			leaf.Cut((PRUint32)aOffset, 1);
+			leaf.Insert("%3F", (PRUint32)aOffset);
 		}
 
 		// append the encoded name
