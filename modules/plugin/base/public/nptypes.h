@@ -89,13 +89,7 @@
   #include <stdint.h>
 
   #if !defined(__GNUC__) || (__GNUC__ > 2 || __GNUC_MINOR__ > 91)
-    /*
-     * Non-GCC compilers, or GCC > 2.91 need a typedef for bool
-     * (unless one already exists) for C code.
-     */
-    #if !defined(__cplusplus) && !defined(bool)
-      typedef int bool;
-    #endif
+    #include <stdbool.h>
   #else
     /*
      * GCC 2.91 can't deal with a typedef for bool, but a #define
