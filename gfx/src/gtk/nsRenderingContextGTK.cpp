@@ -30,6 +30,7 @@
 
 NS_IMPL_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
 
+static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
@@ -145,9 +146,11 @@ NS_IMETHODIMP nsRenderingContextGTK::CommonInit()
   gint x, y, w, h, d;
   gdk_window_get_geometry(mSurface->GetDrawable(), &x, &y, &w, &h, &d);
   
-  mClipRegion = new nsRegionGTK();
-  mClipRegion->Init();
-  mClipRegion->SetTo(0, 0, w, h);
+  if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) )
+  {
+    mClipRegion->Init();
+    mClipRegion->SetTo(0, 0, w, h);
+  } 
 
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
@@ -244,12 +247,8 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 
   if (mClipRegion)
   {
-    NS_IF_ADDREF(mClipRegion);
-    state->mClipRegion = mClipRegion;
-      
-    mClipRegion = new nsRegionGTK();
-    mClipRegion->Init();
-    mClipRegion->SetTo(state->mClipRegion);
+    // set the state's clip region to a new copy of the current clip region
+    GetClipRegion(&state->mClipRegion);
   }
 
   NS_IF_ADDREF(mFontMetrics);
@@ -277,9 +276,11 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
       delete mTMatrix;
     mTMatrix = state->mMatrix;
 
+    // get rid of the current clip region
     NS_IF_RELEASE(mClipRegion);
+    mClipRegion = nsnull;
 
-// restore everything
+    // restore everything
     mClipRegion = state->mClipRegion;
     mFontMetrics = state->mFontMetrics;
 
@@ -456,23 +457,33 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
-
   if (!aRegion)
     return NS_ERROR_NULL_POINTER;
 
   if (*aRegion) // copy it, they should be using CopyClipRegion
   {
-    (*aRegion)->SetTo(*NS_STATIC_CAST(nsIRegion*, mClipRegion));
+    printf("you should be calling CopyClipRegion()\n");
+    (*aRegion)->SetTo(*mClipRegion);
     rv = NS_OK;
   }
   else
   {
-    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)*aRegion)) )
+    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), 
+                                                         (void**)aRegion )) )
     {
-      (*aRegion)->Init();
-      (*aRegion)->SetTo( *NS_STATIC_CAST(nsIRegion*, mClipRegion) );
-      rv = NS_OK;
+      if (mClipRegion)
+      {
+        (*aRegion)->Init();
+        (*aRegion)->SetTo(*mClipRegion);
+        NS_ADDREF(*aRegion);
+        rv = NS_OK;
+      }
+      else
+      {
+        printf("null clip region, can't make a valid copy\n");
+        NS_RELEASE(*aRegion);
+        rv = NS_ERROR_FAILURE;
+      }
     } 
   }
 

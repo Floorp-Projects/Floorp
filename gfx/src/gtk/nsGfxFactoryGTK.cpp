@@ -145,7 +145,9 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsImageGTK();
   }
   else if (mClassID.Equals(kCRegion)) {
-    inst = (nsISupports *)new nsRegionGTK();
+    nsRegionGTK* dcs;
+    NS_NEWXPCOM(dcs, nsRegionGTK);
+    inst = (nsISupports *)dcs;
   }
   else if (mClassID.Equals(kCBlender)) {
     inst = (nsISupports *)new nsBlender;
