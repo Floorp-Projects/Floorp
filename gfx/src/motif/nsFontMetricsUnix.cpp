@@ -53,6 +53,8 @@ NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
 
 nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
+  NS_ASSERTION(!(nsnull == aCX), "attempt to init fontmetrics with null device context");
+
   char        **fnames = nsnull;
   PRInt32     namelen = aFont.name.Length() + 1;
   char	      *wildstring = (char *)PR_Malloc((namelen << 1) + 200);
@@ -60,7 +62,7 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   char        altitalicization = 0;
   XFontStruct *fonts;
   PRInt32     dpi = NS_TO_INT_ROUND(aCX->GetTwipsToDevUnits() * 1440);
-  Display     *dpy = XtDisplay((Widget)mContext->GetNativeWidget());
+  Display     *dpy = XtDisplay((Widget)aCX->GetNativeWidget());
 
   if (nsnull == wildstring)
     return NS_ERROR_NOT_INITIALIZED;
