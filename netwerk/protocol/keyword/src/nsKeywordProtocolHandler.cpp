@@ -173,7 +173,10 @@ nsKeywordProtocolHandler::NewURI(const nsACString &aSpec,
     rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
     rv = uri->SetSpec(aSpec);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(uri);
+      return rv;
+    }
 
     *result = uri;
     return rv;
