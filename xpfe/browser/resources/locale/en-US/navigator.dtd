@@ -247,8 +247,6 @@
 <!ENTITY xptk2Cmd.label "Toolbar">
 <!ENTITY xptk3Cmd.label "Tree">
 <!ENTITY xptk4Cmd.label "Dialog">
-<!ENTITY xptk5Cmd.label "Dialog w/ animation">
-<!ENTITY xptk6Cmd.label "Dialog chrome">
 <!ENTITY xptk7Cmd.label "Tab">
 <!ENTITY xptk8Cmd.label "Beep">
 <!ENTITY xptk9Cmd.label "Sound">
