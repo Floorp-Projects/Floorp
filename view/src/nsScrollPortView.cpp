@@ -212,7 +212,6 @@ NS_IMETHODIMP nsScrollPortView::GetScrollPreference(nsScrollPreference &aScrollP
 
 NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 {
-
     // do nothing if the we aren't scrolling.
     if (aX == mOffsetX && aY == mOffsetY)
         return NS_OK;

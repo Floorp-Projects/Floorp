@@ -113,6 +113,8 @@ public:
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD InvertRect(const nsRect& aRect);
   NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD FlushRect(const nsRect& aRect);
+  NS_IMETHOD FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
