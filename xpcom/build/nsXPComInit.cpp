@@ -51,6 +51,7 @@
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
 
 #include "xptinfo.h"
+#include "nsIInterfaceInfoManager.h"
 
 #include "nsThread.h"
 
@@ -505,6 +506,11 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     // Prepopulate registry for performance
     // Ignore return value. It is ok if this fails.
     nsComponentManagerImpl::gComponentManager->PlatformPrePopulateRegistry();
+
+    // Pay the cost at startup time of starting this singleton which
+    // reads in all the .xpt files.    
+    nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
+    NS_IF_RELEASE(iim);
 
     return rv;
 }
