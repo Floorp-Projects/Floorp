@@ -1034,7 +1034,7 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   if (aSelectStyle)
     *aSelectStyle = selectStyle;
   if (mState & NS_FRAME_GENERATED_CONTENT)
-    *aSelectable = false;
+    *aSelectable = PR_FALSE;
   return NS_OK;
 }
 
