@@ -84,7 +84,7 @@
 	addi	r6,sp,44	# gprData
 	addi	r7,sp,72	# fprData
 				# r3 has the 'self' pointer already
-	mr	r4,r12		# methodIndex selector
+#	mr	r4,r12		# methodIndex selector
 	addi	r5,sp,232	# pointer to callers args area, beyond r3-r10 mapped range
 
 	bl	.PrepareAndDispatch
