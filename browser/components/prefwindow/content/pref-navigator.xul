@@ -201,7 +201,7 @@
     <hbox align="center" flex="1">
       <label value="&location.label;" accesskey="&location.accesskey;" control="browserStartupHomepage"/>
       <textbox id="browserStartupHomepage" type="autocomplete" class="padded" flex="1" 
-               autocompletesearch="history"
+               autocompletesearch="history" oninput="parent.homepage = this.value;"
                preftype="localizedstring"
                prefstring="browser.startup.homepage"/>  <!-- we may wish to change this to data
                                                when we support fancy formatted local filenames -->

@@ -2878,6 +2878,7 @@ function updateHomeTooltip()
   var homeButton = document.getElementById("home-button");
   if (homeButton) {
     var homePage = getHomePage();
+    homePage = homePage.replace(/\|/g,', ');
     homeButton.setAttribute("tooltiptext", homePage);
   }
 }
