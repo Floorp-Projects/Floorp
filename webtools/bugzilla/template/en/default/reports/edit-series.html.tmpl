@@ -54,9 +54,9 @@
   <a href="query.cgi?[% default.query FILTER html%]">View 
     series search parameters</a> |
   <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
-    [% default.category FILTER html %]-
-    [% default.subcategory FILTER html %]-
-    [% default.name FILTER html %]&amp;remaction=runseries&amp;series_id=
+    [% default.category FILTER url_quote %]-
+    [% default.subcategory FILTER url_quote %]-
+    [% default.name FILTER url_quote %]&amp;remaction=runseries&amp;series_id=
     [% default.series_id %]">Run series search</a>
 </p>
 

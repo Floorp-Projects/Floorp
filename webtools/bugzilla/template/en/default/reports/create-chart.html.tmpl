@@ -207,9 +207,9 @@ function subcatSelected() {
                        [% series.series_id %]">Edit</a> |
               [% END %]
               <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
-                [% series.category FILTER html %]%20/%20
-                [% series.subcategory FILTER html %]%20/%20
-                [% series.name FILTER html -%]&amp;series_id=
+                [% series.category FILTER url_quote %]%20/%20
+                [% series.subcategory FILTER url_quote %]%20/%20
+                [% series.name FILTER url_quote -%]&amp;series_id=
                 [% series.series_id %]&amp;remaction=runseries">Run Search</a>
             </td>        
           </tr>
