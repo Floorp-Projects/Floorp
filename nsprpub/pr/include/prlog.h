@@ -232,7 +232,7 @@ NSPR_API(void) PR_LogFlush(void);
 
 #endif /* NO_NSPR_10_SUPPORT */
 
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(FORCE_PR_ASSERT)
 
 NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
 #define PR_ASSERT(_expr) \
@@ -246,7 +246,7 @@ NSPR_API(void) PR_Assert(const char *s, const char *file, PRIntn ln);
 #define PR_ASSERT(expr) ((void) 0)
 #define PR_NOT_REACHED(reasonStr)
 
-#endif /* defined(DEBUG) */
+#endif /* defined(DEBUG) || defined(FORCE_PR_ASSERT) */
 
 PR_END_EXTERN_C
 
