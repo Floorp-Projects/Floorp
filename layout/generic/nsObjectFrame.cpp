@@ -666,12 +666,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsReflowStatus status;
 
-    if(PR_TRUE)//reflowReason == eReflowReason_Initial)
-    {
-      kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
-      kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
-    }
-
     ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, status);
 
     nsRect rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
