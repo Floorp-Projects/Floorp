@@ -148,6 +148,7 @@ public:
 	NS_IMETHOD RememberPassword(const char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
+  NS_IMETHOD AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag);
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
 	NS_IMETHOD MarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);

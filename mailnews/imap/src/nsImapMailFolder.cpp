@@ -1250,6 +1250,26 @@ NS_IMETHODIMP nsImapMailFolder::GetRememberedPassword(char ** password)
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapMailFolder::AddMessageDispositionState(nsIMessage *aMessage, nsMsgDispositionState aDispositionFlag)
+{
+  nsMsgDBFolder::AddMessageDispositionState(aMessage, aDispositionFlag);
+
+  // set the mark message answered flag on the server for this message...
+  if (aMessage)
+  {
+    nsMsgKeyArray messageIDs;
+    nsMsgKey msgKey;
+    aMessage->GetMsgKey(&msgKey);
+    messageIDs.Add(msgKey);
+
+    if (aDispositionFlag == nsIMsgFolder::nsMsgDispositionState_Replied)
+      StoreImapFlags(kImapMsgAnsweredFlag, PR_TRUE, messageIDs);
+    else if (aDispositionFlag == nsIMsgFolder::nsMsgDispositionState_Forwarded)
+      StoreImapFlags(kImapMsgForwardedFlag, PR_TRUE, messageIDs);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
@@ -1261,7 +1281,7 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
   if (NS_SUCCEEDED(rv))
   {
     nsCAutoString messageIds;
-        nsMsgKeyArray keysToMarkRead;
+    nsMsgKeyArray keysToMarkRead;
     rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkRead);
     if (NS_FAILED(rv)) return rv;
 
