@@ -65,6 +65,8 @@ EXPORTS		= \
 		nsLocalStringBundle.h \
 		nsNoneService.h	\
 		nsNoIncomingServer.h \
+		nsMovemailIncomingServer.h \
+		nsMovemailService.h \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
