@@ -219,8 +219,8 @@ qa_stat_init()
 write_qa_header_html()
 {
 echo 'Subject: QA Report ' $NSSVER $BUILDDATE '
-From: sonmi@netscape.com
-Reply-To: sonmi@netscape.com
+From: sonmi@iplanet.com
+Reply-To: sonmi@iplanet.com
 Content-Type: text/html; charset=us-ascii
 <!doctype html public "-//w3c//dtd html 4.0 transitional//en">
 <html>
@@ -236,8 +236,7 @@ etscape]">
 <h2>
 <a href="http://tinderbox.mozilla.org/showbuilds.cgi?tree=NSS">Tinderbox</a
 ><br>
-<a href="http://cindercone.red.iplanet.com/share/builds/mccrel/nss/nsstip/t
-inderbox/tests_results/security/">Tinderbox
+<a href="http://cindercone.red.iplanet.com/share/builds/mccrel/nss/nsstip/tinderbox/tests_results/security/">Tinderbox
 QA&nbsp;result</a></h2>
 &nbsp;
 
