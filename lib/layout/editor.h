@@ -858,6 +858,9 @@ public:
             return pChild.IsTableRow() || pChild.IsCaption();
         }
     virtual void FinishedLoad( CEditBuffer* pBuffer );
+    // Move current caption contents to just after or before the table.
+    // Used primarily when all table contents are about to be deleted
+    XP_Bool MoveCaptionOutsideTable(XP_Bool bAfter);
     void AdjustCaption();
     virtual PA_Tag* TagOpen(int iEditOffset);
     PA_Tag* InternalTagOpen(int iEditOffset, XP_Bool bPrinting);
@@ -879,6 +882,10 @@ public:
 //    void DeleteRows(int32 Y, intn number, CEditTableElement* pUndoContainer = NULL);
     void DeleteRows(int32 Y, intn number, CEditTableCellElement **ppCellForInsertPoint = NULL);
     void DeleteColumns(int32 X, intn number, CEditTableCellElement **ppCellForInsertPoint = NULL);
+    // Returns TRUE if the entire table was deleted
+    // Also returns last leaf in the row just above
+    //  the first row deleted (use to locate cursor for backspacing through cells)
+    XP_Bool DeleteEmptyRows(CEditLeafElement **ppPreviousLeaf = 0);
 
     // Not used much - index based
     CEditTableRowElement* FindRow(intn number);
@@ -937,6 +944,8 @@ public:
     CEditCaptionElement* GetCaption();
     void SetCaption(CEditCaptionElement*);
     void DeleteCaption();
+    void DeleteCaptionAbove();
+    void DeleteCaptionBelow();
 
     void SetData( EDT_TableData *pData );
     EDT_TableData* GetData();
@@ -1113,6 +1122,8 @@ public:
     virtual void FinishedLoad( CEditBuffer* pBuffer );
 
     intn GetCells();
+    XP_Bool AllCellsInRowAreEmpty();
+
     // Use actual cell X and Y for Insert and Delete logic
     // Return the cell where we should place the insert point after Relayout
     void InsertCells(int32 X, int32 newX, intn number, CEditTableRowElement* pSource = NULL, 
@@ -2691,13 +2702,13 @@ class CDeleteTableRowCommand
     : public CEditCommand
 {
 public:
-    CDeleteTableRowCommand(CEditBuffer* buffer, intn rows, intn id = kDeleteTableRowCommandID);
+    CDeleteTableRowCommand(CEditBuffer* buffer, intn rows, XP_Bool *pTableDeleted = 0, intn id = kDeleteTableRowCommandID);
     virtual ~CDeleteTableRowCommand();
     virtual void Do();
 //    virtual void Undo();
 //    virtual void Redo();
 private:
-    XP_Bool m_bDeletedWholeTable;
+//    XP_Bool m_bDeletedWholeTable;
     intn m_row;
     intn m_rows;
 	CEditTableElement m_table;    // Holds deleted rows
@@ -2728,13 +2739,13 @@ class CDeleteTableColumnCommand
     : public CEditCommand
 {
 public:
-    CDeleteTableColumnCommand(CEditBuffer* buffer, intn rows, intn id = kDeleteTableColumnCommandID);
+    CDeleteTableColumnCommand(CEditBuffer* buffer, intn rows, XP_Bool *pTableDeleted = 0, intn id = kDeleteTableColumnCommandID);
     virtual ~CDeleteTableColumnCommand();
     virtual void Do();
 //    virtual void Undo();
 //    virtual void Redo();
 private:
-    XP_Bool m_bDeletedWholeTable;
+//    XP_Bool m_bDeletedWholeTable;
     intn m_column;
     intn m_columns;
 	CEditTableElement m_table;    // Holds deleted columns
@@ -2763,13 +2774,13 @@ class CDeleteTableCellCommand
     : public CEditCommand
 {
 public:
-    CDeleteTableCellCommand(CEditBuffer* buffer, intn rows, intn id = kDeleteTableCellCommandID);
+    CDeleteTableCellCommand(CEditBuffer* buffer, intn rows, XP_Bool *pTableDeleted = 0, intn id = kDeleteTableCellCommandID);
     virtual ~CDeleteTableCellCommand();
     virtual void Do();
 //    virtual void Undo();
 //    virtual void Redo();
 private:
-    XP_Bool m_bDeletedWholeTable;
+//    XP_Bool m_bDeletedWholeTable;
     intn m_column;
     intn m_columns;
 	CEditTableRowElement m_tableRow;    // Holds deleted cells
@@ -3041,7 +3052,6 @@ public:
     CEditLeafElement *m_pCurrent;
     ElementOffset m_iCurrentOffset;
     XP_Bool m_bCurrentStickyAfter;
-
     CEditElement* m_pCreationCursor;
 
     ED_Color m_colorText;
@@ -3080,6 +3090,8 @@ public:
                                     //  are blocked.
     XP_Bool m_bSelecting;
     XP_Bool m_bNoRelayout;               // maybe should be a counter
+    XP_Bool m_bDontClearTableSelection;
+
     // Any operation changing table (insert and delete operations)
     //  can set this so next Relayout call knows where to place caret
     CEditTableCellElement *m_pCellForInsertPoint;
@@ -3526,7 +3538,11 @@ public:
     void FixupInsertPoint(CEditInsertPoint& ip);
     EDT_ClipboardResult DeleteSelection(XP_Bool bCopyAppendAttributes = TRUE);
     EDT_ClipboardResult DeleteSelection(CEditSelection& selection, XP_Bool bCopyAppendAttributes = TRUE);
-    void DeleteBetweenPoints( CEditLeafElement* pBegin, CEditLeafElement* pEnd, XP_Bool bCopyAppendAttributes = TRUE );
+    // If stream is empty, we are deleting, else copy element data to the stream for the clipboard
+    EDT_ClipboardResult DeleteOrCopyAcrossCellBorders(CEditSelection& selection, CStreamOutMemory& stream);
+    // Should be used ONLY by DeleteOrCopyAcrossCellBorders
+    void DeleteOrCopyWithinTable(CEditTableElement *pTable, CEditLeafElement *pBegin, CEditLeafElement *pEnd, CStreamOutMemory& stream);
+    void DeleteBetweenElements( CEditLeafElement* pBegin, CEditLeafElement* pEnd, XP_Bool bCopyAppendAttributes = TRUE );
     void PositionCaret( int32 x, int32 y);
 
     // Show where we can drop during  dragNdrop. Handles tables as well
@@ -3591,7 +3607,7 @@ public:
     void SetInsertPoint(CPersistentEditInsertPoint& insertPoint);
 
     void GetInsertPoint( CEditLeafElement** ppLeaf, ElementOffset *pOffset, XP_Bool * pbStickyAfter);
-    XP_Bool GetPropertyPoint( CEditLeafElement** ppLeaf, ElementOffset *pOffset);
+    XP_Bool GetPropertyPoint( CEditLeafElement** ppLeaf, ElementOffset *pOffset = 0);
     CEditElement *GetSelectedElement();
     void SelectCurrentElement();
     void ClearSelection( XP_Bool bResyncInsertPoint = TRUE, XP_Bool bKeepLeft = FALSE );
@@ -3627,10 +3643,13 @@ public:
     XP_Bool GetDirtyFlag();
     void DocumentStored();
 
-    EDT_ClipboardResult CanCut(XP_Bool bStrictChecking);
-    EDT_ClipboardResult CanCut(CEditSelection& selection, XP_Bool bStrictChecking);
-    EDT_ClipboardResult CanCopy(XP_Bool bStrictChecking);
-    EDT_ClipboardResult CanCopy(CEditSelection& selection, XP_Bool bStrictChecking);
+    // When bCheckForCellBoundary is TRUE, then we return EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL
+    //  when selection crosses a cell boundary. This is used internally to know when to handle this case.
+    //  Calls from UI should use FALSE, which will return EDT_OK if we cross cell boundary
+    EDT_ClipboardResult CanCut(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
+    EDT_ClipboardResult CanCut(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
+    EDT_ClipboardResult CanCopy(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
+    EDT_ClipboardResult CanCopy(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary = FALSE);
     EDT_ClipboardResult CanPaste(XP_Bool bStrictChecking);
     EDT_ClipboardResult CanPaste(CEditSelection& selection, XP_Bool bStrictChecking);
 
@@ -3720,16 +3739,22 @@ public:
     void PasteTable( CEditTableCellElement *pCell, CEditTableElement *pSourceTable, ED_PasteType iPasteType );
     EDT_ClipboardResult PasteHREF( char **ppHref, char **ppTitle, int iCount);
     EDT_ClipboardResult CopySelection( char **ppText, int32* pTextLen,
-            char **ppHtml, int32* pHtmlLen);
+                                       char **ppHtml, int32* pHtmlLen);
 
-    XP_Bool CopyBetweenPoints( CEditElement *pBegin,
-                    CEditElement *pEnd, char **ppText, int32* pTextLen,
-                    char **ppHtml, int32* pHtmlLen );
+    // Next 2 are used only for copying across table cell boundaries. iCopyType is assumed to be ED_COPY_NORMAL.
+    void CopySelectionAcrossCellBoundary(CEditSelection& selection, char **ppHtml, int32* pHtmlLen);
+    void AppendCopyBetweenElements( CEditLeafElement *pBegin, CEditLeafElement *pEnd, CStreamOutMemory& stream );
+
+    XP_Bool CopyBetweenElements( CEditElement *pBegin,
+                                 CEditElement *pEnd, char **ppText, int32* pTextLen,
+                                 char **ppHtml, int32* pHtmlLen );
     XP_Bool CopySelectionContents( CEditSelection& selection,
-                    char **ppHtml, int32* pHtmlLen, ED_CopyType iCopyType = ED_COPY_NORMAL );
+                                   char **ppHtml, int32* pHtmlLen, ED_CopyType iCopyType = ED_COPY_NORMAL );
     //cmanske: Added flags param to pass info about copied table elements
     XP_Bool CopySelectionContents( CEditSelection& selection,
                     IStreamOut& stream, ED_CopyType iCopyType = ED_COPY_NORMAL );
+    
+
     int32 GetClipboardSignature();
     int32 GetClipboardVersion();
     EDT_ClipboardResult CutSelection( char **ppText, int32* pTextLen,
@@ -4407,6 +4432,8 @@ void edt_AddTag( PA_Tag*& pStart, PA_Tag*& pEnd, TagType t, XP_Bool bIsEnd,
         char *pTagData = 0 );
 
 void edt_CopyTableCellData( EDT_TableCellData *pDestData, EDT_TableCellData *pSourceData );
+
+void edt_ForceTableSelection(MWContext *pMWContext, LO_TableStruct *pLoTable);
 
 void edt_InitBitArrays();
 

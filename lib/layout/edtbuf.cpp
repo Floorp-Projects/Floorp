@@ -1544,6 +1544,7 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_bBlocked(TRUE),
         m_bSelecting(0),
         m_bNoRelayout(FALSE),
+        m_bDontClearTableSelection(0),
         m_pCellForInsertPoint(0),
         m_pSelectStart(0),
         m_iSelectOffset(0),
@@ -2354,7 +2355,7 @@ void CEditBuffer::Relayout( CEditElement* pStartElement,
         CEditElement *pElement = (CEditElement*)m_pCellForInsertPoint->GetTable();
         if( pElement )
         {
-            CEditElement *pLeaf = pElement->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
+            CEditElement *pLeaf = pElement->PreviousLeaf();
             if( pLeaf )
                 SetInsertPoint(pLeaf->Leaf(), 0, m_bCurrentStickyAfter);
         }
@@ -2963,11 +2964,18 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
         if( IsSelected() ){
             result = DeleteSelection();
         }
-        else {
+        else
+        {
             CEditSelection selection;
             GetSelection(selection);
-            if ( Move(*selection.GetEdge(bForward), bForward ) ) {
-                result = CanCut(selection, TRUE);
+            if ( Move(*selection.GetEdge(bForward), bForward ) )
+            {
+                // First TRUE = "strict checking"
+                // We can currently (I hope!) handle backspacing from 
+                //  outside a table into a table from cell to cell,
+                //  but delete key (bForward = TRUE) has lots of strange side-effects
+                //  so lets not allow that (TRUE means check for cell boundaries)
+                result = CanCut(selection, TRUE, bForward);
                 if ( result == EDT_COP_OK ) {
                     DeleteSelection(selection, FALSE);
                 }
@@ -3433,6 +3441,8 @@ EDT_ClipboardResult CEditBuffer::ReturnKey(XP_Bool bTyping, XP_Bool bIndent){
         }
     }
     else {
+        // We end up here when pasting text (and other paths?)
+        //  so we don;t want to call StartType()
         result = InternalReturnKey(TRUE);
     }
 
@@ -3515,8 +3525,6 @@ CEditElement* CEditBuffer::SplitAtContainer(XP_Bool bUserTyped, XP_Bool bSplitAt
     m_iCurrentOffset = 0;
     m_pCurrent->GetParent()->Split( pSplitAfter, 0,
                 &CEditElement::SplitContainerTest, 0 );
-
-    //pRelayoutStart = m_pCurrent->FindContainer();
 
     CEditContainerElement* pContainer = m_pCurrent->FindContainer();
     if ( bUserTyped && m_pCurrent->GetLen() == 0 && m_pCurrent->TextInContainerAfter() == 0 )
@@ -4495,14 +4503,34 @@ void CEditBuffer::ToggleList2(intn iTagType, CEditSelection& /*selection*/)
 void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
     VALIDATE_TREE(this);
     XP_Bool bDone;
-
+    XP_ASSERT(m_pCurrent);
+    
     // To avoid extra HTML params, use default
     //  for left align since that's how layout will do it
     //cmanske: Windows FE was doing this - moved logic here for consistency
     // TODO: This is messy for table cells: We need to check if ROW
     //   has set alignment and NOT do this if it isn't already ED_ALIGN_DEFAULT,
     //   otherwise cell gets the row's alignment
-    if( eAlign == ED_ALIGN_LEFT )
+    // BUT we must keep an explicit ED_ALIGN_LEFT if inside a table caption
+    // Use insert point instead of m_pCurrent in case we're selected
+    CEditElement *pParent = 0;
+    CEditLeafElement *pInsertPoint;
+    GetPropertyPoint(&pInsertPoint);
+    XP_ASSERT(pInsertPoint);
+    pParent = pInsertPoint->GetParent();
+
+    // See we are inside a caption
+    XP_Bool bInCaption = FALSE;
+    while( pParent && pParent != m_pRoot )
+    {
+        if( pParent->IsCaption() )
+        {
+            bInCaption = TRUE;
+            break;
+        }
+        pParent = pParent->GetParent();
+    }
+    if( !bInCaption && eAlign == ED_ALIGN_LEFT )
         eAlign = ED_ALIGN_DEFAULT;
 
     if( IsSelected() ){
@@ -6344,10 +6372,7 @@ XP_Bool CEditBuffer::CheckCharset( PA_Tag *pTag, EDT_MetaData *pData, int16 win_
                 }
                 else
                 {
-                    //TODO: ftang needs to implement this!
-                    // Note: Don't free this string!
-                    //pCorrectCharset = INTL_CharsetCorrection(pCharset);
-                    char *pCorrectCharset = pCharset;
+                    char *pCorrectCharset = (char*)INTL_CharsetCorrection(pCharset);
                     if( pCorrectCharset && 0 != XP_STRCASECMP(pCorrectCharset, pCharset) )
                     {
                         // See if user wants to replace charset with the "correct" string
@@ -6374,6 +6399,8 @@ XP_Bool CEditBuffer::CheckCharset( PA_Tag *pTag, EDT_MetaData *pData, int16 win_
     }
     return bRetVal;
 }
+
+
 
 // Image 
 EDT_ImageData* CEditBuffer::GetImageData(){
@@ -6661,6 +6688,7 @@ void CEditBuffer::SetTableData(EDT_TableData *pData)
         intn iCurrentRows = pTable->GetRows();
         CEditTableCellElement *pCell = NULL;
         XP_Bool bMovedToLastCell = FALSE;
+        XP_Bool bTableDeleted = FALSE;
 
         // Be sure we have at least 1 row and column
         pData->iColumns = max(1, pData->iColumns);
@@ -6695,7 +6723,7 @@ void CEditBuffer::SetTableData(EDT_TableData *pData)
                 SetTableInsertPoint(pCell);
 
                 // This will relayout the table and move caret appropriately
-        		AdoptAndDo(new CDeleteTableColumnCommand(this, iCurrentCols - pData->iColumns));
+        		AdoptAndDo(new CDeleteTableColumnCommand(this, iCurrentCols - pData->iColumns, &bTableDeleted));
 
                 // Don't try to go back to original insert point,
                 //  it may have been deleted
@@ -6707,6 +6735,8 @@ void CEditBuffer::SetTableData(EDT_TableData *pData)
                 XP_TRACE(("CEditBuffer::SetTableData: Failed to delete columns to reduce table size"));
             }
         }
+        if( bTableDeleted )
+            return;
 
         if( pData->iRows > iCurrentRows )
         {
@@ -6731,7 +6761,7 @@ void CEditBuffer::SetTableData(EDT_TableData *pData)
                 SetTableInsertPoint(pCell);
 
                 // This will relayout the table and move caret appropriately
-        		AdoptAndDo(new CDeleteTableRowCommand(this, iCurrentRows - pData->iRows));
+        		AdoptAndDo(new CDeleteTableRowCommand(this, iCurrentRows - pData->iRows, &bTableDeleted));
 
                 // Don't try to go back to original insert point,
                 //  it may have been deleted
@@ -8633,33 +8663,53 @@ void CEditBuffer::InsertBreak( ED_BreakType eBreak, XP_Bool bTyping ){
     Reduce(pBreak->GetParent());
 }
 
-EDT_ClipboardResult CEditBuffer::CanCut(XP_Bool bStrictChecking){
+EDT_ClipboardResult CEditBuffer::CanCut(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary){
     CEditSelection selection;
     GetSelection(selection);
-    return CanCut(selection, bStrictChecking);
+    return CanCut(selection, bStrictChecking, bCheckForCellBoundary);
 }
 
-EDT_ClipboardResult CEditBuffer::CanCut(CEditSelection& selection, XP_Bool bStrictChecking)
+EDT_ClipboardResult CEditBuffer::CanCut(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary)
 {
     if( IsTableOrCellSelected() )
-    {
-        //TODO: MODIFY TO CHECK FOR CONTENTS TO COPY?
         return EDT_COP_OK;
-    }
+
     EDT_ClipboardResult result = selection.IsInsertPoint() ? EDT_COP_SELECTION_EMPTY : EDT_COP_OK;
     if ( bStrictChecking && result == EDT_COP_OK
-        && selection.CrossesSubDocBoundary() ) {
-        result = EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL;
+        && selection.CrossesSubDocBoundary() )
+    {
+        //Note: We return this only for calls internal to CEditBuffer,
+        //      so it knows when to do special cell boundary copying or deleting
+        if( bCheckForCellBoundary )
+            return EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL;
+
+        // Get table(s) at start and end of the selection
+        CEditTableElement *pTableAtStart = selection.m_start.m_pElement->GetTableIgnoreSubdoc();
+        CEditTableElement *pTableAtEnd = selection.m_end.m_pElement->GetTableIgnoreSubdoc();
+
+        // Must have one or the other end within a table
+        XP_ASSERT(pTableAtStart || pTableAtEnd);
+        // If both are null (SHOULDN'T HAPPEN), or both ends are within same table, we're OK
+        if( pTableAtStart == pTableAtEnd )
+        {
+            result = EDT_COP_OK;
+        }
+        else if( (pTableAtStart && pTableAtStart->GetParent()->GetTableIgnoreSubdoc()) ||
+                 (pTableAtEnd && pTableAtEnd->GetParent()->GetTableIgnoreSubdoc()) )
+        {
+            // We still can't copy or delete if we go into a nested table
+            result = EDT_COP_SELECTION_CROSSES_NESTED_TABLE;
+        }
     }
     return result;
 }
 
-EDT_ClipboardResult CEditBuffer::CanCopy(XP_Bool bStrictChecking){
-    return CanCut(bStrictChecking); /* In the future we may do something for read-only docs. */
+EDT_ClipboardResult CEditBuffer::CanCopy(XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary){
+    return CanCut(bStrictChecking, bCheckForCellBoundary); /* In the future we may do something for read-only docs. */
 }
 
-EDT_ClipboardResult CEditBuffer::CanCopy(CEditSelection& selection, XP_Bool bStrictChecking){
-    return CanCut(selection, bStrictChecking); /* In the future we may do something for read-only docs. */
+EDT_ClipboardResult CEditBuffer::CanCopy(CEditSelection& selection, XP_Bool bStrictChecking, XP_Bool bCheckForCellBoundary){
+    return CanCut(selection, bStrictChecking, bCheckForCellBoundary); /* In the future we may do something for read-only docs. */
 }
 
 EDT_ClipboardResult CEditBuffer::CanPaste(XP_Bool bStrictChecking){
@@ -10978,10 +11028,6 @@ int CEditBuffer::GetFontPointSize( ){
 		if ( tElement){
 			return tElement->GetFontPointSize();
 		}
-
-		// Get font size from parent of pElement.
-        // There is only one default for all containers, unlike relative font size
-		// return pElement->GetDefaultFontSize();
 	}
 
     return ED_FONT_POINT_SIZE_DEFAULT;
@@ -11112,8 +11158,7 @@ TagType CEditBuffer::GetParagraphFormattingSelection(CEditSelection& selection)
 {
     TagType type = P_UNKNOWN;
 
-    // Grab the current selection.
-//    CEditSelection selection;
+    // Grab the current selection if not supplied
     if( selection.IsEmpty() )
         GetSelection(selection);
     CEditContainerElement* pStart = selection.m_start.m_pElement->FindContainer();
@@ -11358,10 +11403,25 @@ XP_Bool CEditBuffer::PositionDropCaret(int32 x, int32 y)
     if( m_pDragTableData )
     {
         // We can't drop inside the table being dragged
-        if( m_pDragTableData->iSourceType == ED_HIT_SEL_TABLE &&
-            m_pDragTableData->pSourceTable == lo_GetParentTable(m_pContext, m_pDragTableData->pDragOverCell) )
+
+        // Get where user is currently dragging over
+        int32 iWidth = 0;
+        int32 iHeight = 0;
+        LO_Element *pLoCell;
+        ED_DropType iDropType = GetTableDropRegion(&m_pDragTableData->X, &m_pDragTableData->Y, 
+                                                   &m_pDragTableData->iWidth, &m_pDragTableData->iHeight, 
+                                                   &pLoCell);
+        // Check if we changed cell or drop type
+        XP_Bool bDisplayFeedback = ( pLoCell != m_pDragTableData->pDragOverCell ||
+                                     iDropType != m_pDragTableData->iDropType );
+        m_pDragTableData->iDropType = iDropType;
+        m_pDragTableData->pDragOverCell = pLoCell;
+
+        // Don't allow dropping on top of selection or table being dragged
+        if( iDropType == ED_DROP_NONE ||
+            (m_pDragTableData->iSourceType == ED_HIT_SEL_TABLE &&
+             m_pDragTableData->pSourceTable == lo_GetParentTable(m_pContext, m_pDragTableData->pDragOverCell)) )
         {
-NO_DROP_ALLOWED:
             FE_DestroyCaret(m_pContext);
             // Be sure there's no special selection
             if( edt_pPrevReplaceCellSelected )
@@ -11371,19 +11431,6 @@ NO_DROP_ALLOWED:
 
         if( m_pDragTableData->iSourceType > ED_HIT_SEL_TABLE )
         {
-            // Get where we currently are
-            LO_Element *pLoCell = NULL;
-            int32 iWidth = 0;
-            int32 iHeight = 0;
-
-            // Get where user is currently dragging over
-
-            ED_DropType iDropType = GetTableDropRegion(&x, &y, &iWidth, &iHeight, &pLoCell);
-        
-            // No point in dropping exactly on top of selection being dragged
-            if( iDropType == ED_DROP_NONE )
-                goto NO_DROP_ALLOWED;
-        
             if( iDropType == ED_DROP_NORMAL )
             {
                 // Be sure there's no special selection
@@ -11395,16 +11442,8 @@ NO_DROP_ALLOWED:
             {
                 // Call Front end to display drop feedback only if
                 //  different from previous condition
-                //if( pLoCell != m_pDragTableData->pDragOverCell ||
-                //    iDropType != m_pDragTableData->iDropType )
+                if( bDisplayFeedback )
                 {
-                    m_pDragTableData->iDropType = iDropType;
-                    m_pDragTableData->pDragOverCell = pLoCell;
-                    m_pDragTableData->X = x;
-                    m_pDragTableData->Y = y;
-                    m_pDragTableData->iWidth = iWidth;
-                    m_pDragTableData->iHeight = iHeight;
-
                     FE_DestroyCaret(m_pContext);
                     if( m_pDragTableData->iDropType == ED_DROP_REPLACE_CELLS )
                     {
@@ -11488,11 +11527,6 @@ void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
         ClearSelection();
         m_inScroll = scrolling;
     }
-
-    // Remove any existing table or cell selection
-    // This is the best place to put this so all "normal" selection-setting
-    //  clears the table selection, but it prevents moving caret without clearing table
-//    ClearTableAndCellSelection();
 
     FE_DestroyCaret(m_pContext);
     ClearMove(); // do this when moving caret and not up or down arrow
@@ -11787,11 +11821,28 @@ void CEditBuffer::EndSelection(int32 /* x */, int32 /* y */){
     EndSelection();
 }
 
+void edt_ForceTableSelection(MWContext *pMWContext, LO_TableStruct *pLoTable)
+{
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer);
+    if( pLoTable )
+    {
+        // This is needed to suppress clearing the selection on mouse up
+        pEditBuffer->m_bDontClearTableSelection = TRUE;
+        pEditBuffer->SelectTableElement(pLoTable->x, pLoTable->y, (LO_Element*)pLoTable, 
+                                        ED_HIT_SEL_TABLE, FALSE, FALSE); 
+    }
+}
+
 void CEditBuffer::EndSelection( )
 {
-    // Always clear any table and cell selection
+    // Almost always clear any table and cell selection
     // (We don't do this on mouse down now)
-    ClearTableAndCellSelection();
+    // Exception is when we force a selection from layout
+    //  by calling edt_ForceTableSelection()
+    if( m_bDontClearTableSelection )
+        m_bDontClearTableSelection = FALSE;
+    else
+        ClearTableAndCellSelection();
 
     // Clear the move just in case EndSelection is called out of order
     // (this seems to be happening in the WinFE when you click a lot.)
@@ -11972,7 +12023,7 @@ XP_Bool CEditBuffer::GetPropertyPoint( CEditLeafElement**ppElement,
                     &bFromStart, &bSingleElementSelection );
 
         XP_ASSERT( pStart->lo_any.edit_element );
-
+#if 0
         //------------------------- Begin Removable code ------------------------
         //
         // LTNOTE:  We are doing this in GetSelectionEndpoints, but I
@@ -11990,14 +12041,17 @@ XP_Bool CEditBuffer::GetPropertyPoint( CEditLeafElement**ppElement,
             }
         }
         //------------------------- End Removable code ------------------------
+#endif
 
         *ppElement = pStart->lo_any.edit_element->Leaf();
-        *pOffset = pStart->lo_any.edit_offset+iStartPos;
+        if( pOffset )
+            *pOffset = pStart->lo_any.edit_offset+iStartPos;
         XP_ASSERT( *ppElement );
     }
     else {
         *ppElement = m_pCurrent;
-        *pOffset = m_iCurrentOffset;
+        if( pOffset )
+            *pOffset = m_iCurrentOffset;
         bSingleElementSelection = FALSE;
     }
     return bSingleElementSelection;
@@ -12387,8 +12441,9 @@ EDT_ClipboardResult CEditBuffer::DeleteSelection(XP_Bool bCopyAppendAttributes){
     if( m_bDeleteTableAfterPasting )
         return EDT_COP_OK;
 
-    EDT_ClipboardResult result = CanCut(TRUE);
-    if ( result == EDT_COP_OK )
+    // Do strict testing and tell us if we crossed a cell boundary
+    EDT_ClipboardResult result = CanCut(TRUE, TRUE);
+    if ( result == EDT_COP_OK || result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL )
     {
         if ( IsSelected() )
         {
@@ -12406,11 +12461,559 @@ EDT_ClipboardResult CEditBuffer::DeleteSelection(XP_Bool bCopyAppendAttributes){
             {
                 return result;
             }
-            MakeSelectionEndPoints( selection, pBegin, pEnd );
-            DeleteBetweenPoints( pBegin, pEnd, bCopyAppendAttributes );
+            if( result == EDT_COP_OK )
+            {
+                // The normal deletion path
+                MakeSelectionEndPoints( selection, pBegin, pEnd );
+                DeleteBetweenElements( pBegin, pEnd, bCopyAppendAttributes );
+            }
+            else if( result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL )
+            {
+                // A dummy empty stream - it will be ignored
+                CStreamOutMemory stream;
+                return DeleteOrCopyAcrossCellBorders(selection, stream);
+            }
         }
     }
     return result;
+}
+
+// Used for copying text HTML content across table cell boundaries
+#define ED_COPY_TYPE_INDEX (3*sizeof(int32))
+
+void CEditBuffer::CopySelectionAcrossCellBoundary(CEditSelection& selection, char **ppHtml, int32* pHtmlLen)
+{
+    CStreamOutMemory stream;
+    INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
+    stream.WriteInt(GetClipboardSignature());
+    stream.WriteInt(GetClipboardVersion());
+    stream.WriteInt(INTL_GetCSIWinCSID(c));
+    stream.WriteInt(int32(ED_COPY_NORMAL)); // Index to this is ED_COPY_TYPE_INDEX
+
+    // IMPORTANT: We really can't know what this value is until
+    //            we are done with AppendCopyBetweenElements,
+    //            so be sure to to back and patch this value
+    //            after determining the 
+    int32 bMergeEnd = 0;
+    stream.WriteInt(bMergeEnd);
+
+    // Share the work with the routine that also deletes across cells
+    DeleteOrCopyAcrossCellBorders(selection, stream);
+    
+    // Terminate the stream
+    stream.WriteInt( (int32)eElementNone );
+
+    *ppHtml = stream.GetText();
+    *pHtmlLen = stream.GetLen();
+
+    // Reset the original selection
+    SetSelection(selection);
+}
+
+EDT_ClipboardResult CEditBuffer::DeleteOrCopyAcrossCellBorders(CEditSelection& selection, CStreamOutMemory& stream)
+{
+    CEditLeafElement *pBegin;
+    CEditLeafElement *pEnd;
+    // We will copy to a stream if there is already some data in it
+    XP_Bool bCopy = stream.GetLen() > 0;
+
+    // Get table(s) at start and end of the selection
+    // Note that a table will be returned if start or end is
+    //  in a caption element as well. DeleteOrCopyWithinTable will handle this
+    CEditTableElement *pTableAtStart = selection.m_start.m_pElement->GetTableIgnoreSubdoc();
+    CEditTableElement *pTableAtEnd = selection.m_end.m_pElement->GetTableIgnoreSubdoc();
+
+    // Must have one or the other end within a table
+    XP_ASSERT(pTableAtStart || pTableAtEnd);
+
+    // We are OK if both are null (shouldn't be here)
+    if( pTableAtStart == 0 && pTableAtEnd == 0 )
+        return EDT_COP_OK;
+    
+    // Check for nested table - 
+    //   We can't deal with crossing a nested table boundary
+    if( (pTableAtStart && pTableAtStart->GetParent()->GetTableIgnoreSubdoc()) ||
+        (pTableAtEnd && pTableAtEnd->GetParent()->GetTableIgnoreSubdoc()) )
+    {
+        return EDT_COP_SELECTION_CROSSES_NESTED_TABLE;
+    }
+
+    // This divides at both start and element
+    MakeSelectionEndPoints( selection, pBegin, pEnd );
+    XP_ASSERT(pBegin != 0 && pEnd != 0);
+
+    // Captions make things more complicated
+    // We must know if and where they are to know when to delete them
+    XP_Bool bStartIsInCaptionAbove = FALSE;
+    XP_Bool bStartIsInCaptionBelow = FALSE;
+    XP_Bool bEndIsInCaptionAbove = FALSE;
+    XP_Bool bEndIsInCaptionBelow = FALSE;
+    
+    if( pTableAtStart )
+    {
+        CEditCaptionElement *pCaption = pBegin->GetCaption();
+        if( pCaption )
+        {
+            bStartIsInCaptionAbove = pTableAtStart->GetChild() == pCaption;
+            bStartIsInCaptionBelow = !bStartIsInCaptionAbove;
+        }
+    }
+    if( pTableAtEnd )
+    {
+        CEditCaptionElement *pCaption = pEnd->GetCaption();
+        if( pCaption )
+        {
+            bEndIsInCaptionAbove = pTableAtEnd->GetChild() == pCaption;
+            bEndIsInCaptionBelow = !bEndIsInCaptionAbove;
+        }
+    }
+
+    // We must note if the end element is a temporary empty element
+    //  created to mark the end of selection. It might get deleted
+    //  below so we must know when to recreate it
+    XP_Bool bEndIsTemporary = selection.m_end.m_pElement != pEnd && pEnd->GetLen() == 0;
+
+    // Save where we will reposition the insert point and start of relayout
+    // (it will be NULL if pBegin is at the start of the document,
+    //  we fix that below)
+    CEditLeafElement *pRelayoutStart = pBegin->PreviousLeaf();
+    //int32 iInsertPointOffset = pRelayoutStart ? pRelayoutStart->GetLen() : 0;
+
+    //TODO: Should we check for the end of the page?
+    CEditElement *pRelayoutEnd = pEnd->NextLeafAll();
+
+    // Suppress Relayout when deleting -- we will relayout once at the end
+    m_bNoRelayout = TRUE;
+
+    CEditLeafElement *pTempStartLeaf = NULL;
+    CEditLeafElement *pTempEndLeaf = NULL;
+    if( pTableAtStart )
+    {
+        if( pTableAtEnd == pTableAtStart )
+        {
+            // Start and end of selection are within the same table
+            DeleteOrCopyWithinTable(pTableAtStart, pBegin, pEnd, stream);
+        }
+        else
+        {
+            // End is outside the start table, so delete/copy to the end of it
+            CEditLeafElement *pTempEndLeaf2 = pTableAtStart->GetLastMostChild()->Leaf();
+            if( pTempEndLeaf2 )
+                pTempEndLeaf2 = pTempEndLeaf2->Divide( pTempEndLeaf2->GetLen() )->Leaf(); 
+            
+            if( pTempEndLeaf2 )
+            {
+                DeleteOrCopyWithinTable(pTableAtStart, pBegin, pTempEndLeaf2, stream);
+                // If there's a caption below, then selection must
+                //  have spanned it, so delete/copy it unless the start was within it
+                if( !bCopy && !bStartIsInCaptionBelow )
+                    pTableAtStart->DeleteCaptionBelow();
+            }
+        }
+
+        if( pTableAtEnd && pTableAtEnd != pTableAtStart )
+        {
+            // End is in another table - setup to delete/copy between the two tables
+            // Get last element in table
+            pTempEndLeaf = pTableAtStart->GetLastMostChild()->Leaf();
+            if( pTempEndLeaf )
+            {
+                // Next leaf after the table
+                pTempStartLeaf = pTempEndLeaf->NextLeafAll();
+                // Just before the table at the end
+                pTempEndLeaf = pTableAtEnd->PreviousLeaf();
+            }
+            // Delete/copy captions if start or end aren't in them
+            if( !bCopy )
+            {
+                if( !bStartIsInCaptionBelow )
+                    pTableAtStart->DeleteCaptionBelow();
+                if( !bEndIsInCaptionAbove )
+                    pTableAtEnd->DeleteCaptionAbove();
+            }
+        }
+    }
+    else if( pTableAtStart != pTableAtEnd )
+    {
+        // We must have a table at the end (and its not the same as the start)
+        // Delete/copy from start of selection to begining of table at end
+        pTempStartLeaf = pBegin;
+        pTempEndLeaf = pTableAtEnd->PreviousLeaf();
+
+        if( pTempEndLeaf == selection.m_start.m_pElement )
+        {
+            // This is a special case when we are deleting from end of text before a table
+            //   into the first element in the table. The selection is invalid at this point.
+            // Save the element before as our relayout start and remove temporary 0-length element
+            pRelayoutStart = pTempEndLeaf;
+            pTempEndLeaf = 0;
+            if( pRelayoutStart != pBegin && pBegin->GetLen() == 0 )
+                Reduce(pBegin->GetParent());
+        }
+
+        // Since the end is in pTableAtEnd, 
+        //   we must span a caption above in that table,
+        //   so delete/copy it unless end of selection is within it
+        if( !bCopy && !bEndIsInCaptionAbove )
+            pTableAtEnd->DeleteCaptionAbove();
+    }
+    if( pTempStartLeaf && pTempEndLeaf )
+    {
+        // Both of the following calls will reduce (delete) our original pEnd element,
+        //   so we will create a new temporary element if we need it
+
+        // Get or create an end element after the point to delete/copy up to
+        pTempEndLeaf = pTempEndLeaf->Divide(pTempEndLeaf->GetLen())->Leaf();
+        if( bCopy )
+            AppendCopyBetweenElements(pTempStartLeaf, pTempEndLeaf, stream);
+        else
+            DeleteBetweenElements(pTempStartLeaf, pTempEndLeaf);
+
+        // Get the element after the end of the original selection
+        // If it is 0-length, then the pEnd we got above is still valid,
+        //  else it was destroyed by a Reduce call, so we must recreate it        
+        CEditElement *pNextAfterSelection = selection.m_end.m_pElement->GetNextSibling();
+        if( pNextAfterSelection == 0 || pNextAfterSelection->Leaf()->GetLen() !=0 )
+            pEnd = selection.m_end.m_pElement->Divide( selection.m_end.m_iPos )->Leaf();
+#ifdef DEBUG
+        else  // A wise safety check
+            XP_ASSERT( pEnd == pNextAfterSelection );
+#endif
+    }
+    if( pTableAtEnd && pTableAtEnd != pTableAtStart )
+    {
+        // Delete/copy from start of the end table to the end of the selection
+        pTempStartLeaf = pTableAtEnd->GetFirstMostChild()->Leaf();
+        if( pTempStartLeaf )
+            DeleteOrCopyWithinTable(pTableAtEnd, pTempStartLeaf, pEnd, stream);
+    }
+    else if( pTableAtEnd == 0 && pEnd )
+    {
+        // Delete/copy between the end of the start table and end of the selection
+        pTempEndLeaf = pTableAtStart->GetLastMostChild()->Leaf();
+        if( pTempEndLeaf )
+        {
+            pTempStartLeaf = pTempEndLeaf->NextLeafAll();
+            if( bCopy )
+                AppendCopyBetweenElements(pTempStartLeaf, pEnd, stream);
+            else
+                DeleteBetweenElements( pTempStartLeaf, pEnd );
+            // We are deleting from within a table to outside it,
+            //   so delete/copy the caption below unless start was within it
+            if( !bCopy && !bStartIsInCaptionBelow )
+                pTableAtStart->DeleteCaptionBelow();
+        }
+    }
+
+    if( !bCopy )
+    {
+        CEditLeafElement *pLeafAfterTable = 0;
+        // Be sure each table has a text element before and after
+        // Delete entire rows if all elements in them are empty
+        if( pTableAtStart )
+        {
+            pTableAtStart->FinishedLoad(this);
+            // This will always be valid since Finished load will insert 
+            //  a text element before or after if needed
+            CEditLeafElement *pLeafBeforeTable = pTableAtStart->PreviousLeaf();
+            // Get this to reset relayout end as well
+            if( pTableAtEnd == pTableAtStart )
+            {
+                // This is also guarenteed to be valid
+                pLeafAfterTable = pTableAtEnd->GetLastMostChild()->Leaf()->NextLeafAll();
+            }
+            CEditLeafElement *pPreviousLeaf = 0;
+            if( pTableAtStart->DeleteEmptyRows(&pPreviousLeaf) )
+            {
+                // We deleted 1 or more rows - reset the start element to either the
+                //  last leaf in row above the first deleted or to above the table
+                pRelayoutStart = pPreviousLeaf ? pPreviousLeaf : pLeafBeforeTable;
+                // and end element if in the same table
+                if( pLeafAfterTable )
+                    pRelayoutEnd = pLeafAfterTable;
+
+                // If all the rows were deleted, then 
+                //  move any text in a caption that would be deleted with the table
+                //  and delete the table
+                if( pTableAtStart->CountRows() == 0 )
+                {
+                    pTableAtStart->MoveCaptionOutsideTable(bEndIsInCaptionBelow);
+                    pTableAtStart->Unlink();
+                    delete pTableAtStart;
+                }
+            }
+        }
+        if( pTableAtEnd && pLeafAfterTable == 0 )
+        {
+            pTableAtEnd->FinishedLoad(this);
+            pLeafAfterTable = pTableAtEnd->GetLastMostChild()->Leaf()->NextLeafAll();
+            if( pTableAtEnd->DeleteEmptyRows() )
+            {
+                // We deleted 1 or more rows -- reset the end element
+                pRelayoutEnd = pLeafAfterTable;
+                // Delete table if necessary
+                if( pTableAtEnd->CountRows() == 0 )
+                {
+                    pTableAtEnd->MoveCaptionOutsideTable(TRUE);
+                    pTableAtEnd->Unlink();
+                    delete pTableAtEnd;
+                }
+            }
+        }
+    }
+
+    if( !pRelayoutStart )
+    {
+        // We probably deleted from the top of the page
+        pRelayoutStart = m_pRoot->GetFirstMostChild()->Leaf();
+    }
+
+    // Reset the insert point to the end of the starting relayout element
+    SetInsertPoint(pRelayoutStart, pRelayoutStart->GetLen(), m_bCurrentStickyAfter);
+
+    // Turn layout back on
+    m_bNoRelayout = FALSE;
+    
+    // There seems to be a 0-length elemement left over after copying,
+    //  but Reducing isn't eliminating it. It reveals itself upon
+    //  the next time we save buffer to the undo copy, but its not critical
+    CEditElement* pCommonAncestor = pRelayoutStart->GetCommonAncestor(pRelayoutEnd);
+    Reduce(pCommonAncestor);
+    
+    Relayout( pRelayoutStart, 0, pRelayoutEnd);
+    return EDT_COP_OK;
+}
+
+// This assumes that both pBegin and pEnd are within the same table
+//   and m_bNoRelayout must already be set to FALSE
+// Used only by DeleteOrCopyAcrossCellBorders
+
+void CEditBuffer::DeleteOrCopyWithinTable( CEditTableElement *pTable, 
+                                           CEditLeafElement *pBegin, CEditLeafElement *pEnd,
+                                           CStreamOutMemory& stream )
+{
+    if( !pTable || !pBegin || !pEnd )
+        return;
+
+    // We will copy to a stream if there is already some data in it
+    XP_Bool bCopy = stream.GetLen() > 0;
+
+    CEditTableCellElement *pStartCell = pBegin->GetTableCellIgnoreSubdoc();
+    CEditTableCellElement *pEndCell = pEnd->GetTableCellIgnoreSubdoc();
+    CEditLeafElement *pLastLeaf = NULL;
+    CEditCaptionElement *pCaption = NULL;
+    CEditLeafElement *pCaptionBelowStartLeaf = 0;
+
+    if( !pStartCell )
+    {
+        // Start must be inside a caption
+        pCaption = pBegin->GetCaptionIgnoreSubdoc();
+        if( pCaption )
+        {
+            if( pCaption == pTable->GetChild() )
+            {
+                if( pTable->GetFirstMostChild() == pBegin && pEndCell == 0 &&
+                    pCaption == pEnd->GetCaptionIgnoreSubdoc() )
+                {
+                    // The beginning supplied is at start of the caption
+                    //  and the end is also within that caption.
+                    //  Go to the code below to delete/copy just within the caption
+                    goto CHECK_END_IS_IN_CAPTION;
+                }
+                else
+                {
+                    // Start is in caption "above" (first child) of table.
+                    // Get end of the caption and jump to delete/copy
+                    //   from start of selection to end of the caption,
+                    //   then continue deleting through other cells
+                    pLastLeaf = pCaption->GetLastMostChild()->Leaf();
+                    goto DELETE_START;
+                }
+            }
+            else
+            {
+                // Start is actually in a caption "below" (last child of) table,
+                //  so simply delete/copy to the end of the caption and leave
+                pLastLeaf = pCaption->GetLastMostChild()->Leaf();
+                pLastLeaf = pLastLeaf->Divide(pLastLeaf->GetLen() )->Leaf();
+                XP_ASSERT(pLastLeaf == pEnd);
+                if( pLastLeaf )
+                {
+                if( bCopy )
+                    AppendCopyBetweenElements(pBegin, pLastLeaf, stream);
+                else
+                    DeleteBetweenElements( pBegin, pLastLeaf );
+                }
+                return;
+            }
+        }
+        else
+        {
+            // We are messed up
+            XP_ASSERT(FALSE);
+            return;
+        }
+    }
+    if( !pEndCell )
+    {
+CHECK_END_IS_IN_CAPTION:
+        // End of selection must be in a caption
+        pCaption = pEnd->GetCaptionIgnoreSubdoc();
+        if( pCaption )
+        {
+            XP_Bool bCaptionAbove = (pCaption == pTable->GetChild());
+            // End is inside the caption
+            // Delete/copy from start of caption to the end of selection
+            CEditLeafElement *pCaptionStart  = pCaption->GetFirstMostChild()->Leaf();
+            if( pCaptionStart )
+            {
+                if( bCopy )
+                {
+                    if( bCaptionAbove )
+                    {
+                        // Append the Caption text now and we must be done
+                        AppendCopyBetweenElements(pCaptionStart, pEnd, stream);
+                        return;
+                    }
+                    // Copying from a caption below the table:
+                    // Save the start and copy after done copying other cell contents
+                    pCaptionBelowStartLeaf = pCaptionStart;
+                }
+                else
+                {
+                    // We can delete now, doesn't matter if caption is above or below
+                    DeleteBetweenElements( pCaptionStart, pEnd );
+                    if( bCaptionAbove )
+                        // End is in a caption "above" the table, so we're done
+                        return;
+                }
+            }
+        }
+        else
+        {
+            // We are messed up
+            XP_ASSERT(FALSE);
+            return;
+        }
+    }
+
+    if( pStartCell )
+    {
+        if( pStartCell != pEndCell )
+        {
+            // Delete/copy from start of selection to end of first cell
+            pLastLeaf = pStartCell->GetLastMostChild()->Leaf();
+DELETE_START:
+            pLastLeaf = pLastLeaf->Divide(pLastLeaf->GetLen())->Leaf();
+
+            if( bCopy )
+                AppendCopyBetweenElements(pBegin, pLastLeaf, stream);
+            else
+                DeleteBetweenElements( pBegin, pLastLeaf );
+
+            CEditTableCellElement *pCell;
+            if( pStartCell )
+                pCell = pStartCell->GetNextCellInTable();
+            else
+                // We jumped into here from a caption element
+                //   that was "above" the table (actually the first child),
+                //   so get the first cell in the table
+                pCell = pTable->GetFirstCell();
+
+            // Delete/copy entire contents in intervening cells                
+            while( pCell && pCell != pEndCell )
+            {
+                if( bCopy )
+                {
+                    // Copy from the first to last leaves in the cell
+                    CEditLeafElement *pFirstLeaf = pCell->GetFirstMostChild()->Leaf();
+                    pLastLeaf = pCell->GetLastMostChild()->Leaf();
+                    if( pFirstLeaf && pLastLeaf )
+                    {
+                        pLastLeaf = pLastLeaf->Divide(pLastLeaf->GetLen() )->Leaf();
+                        AppendCopyBetweenElements(pFirstLeaf, pLastLeaf, stream);
+                    }
+                }
+                else
+                {
+                    pCell->DeleteContents();
+                }
+                pCell = pCell->GetNextCellInTable();
+            }
+        }
+        if( pEndCell )
+        {
+            if( pStartCell != pEndCell )
+                // Be sure we start at the start of last cell
+                pBegin = pEndCell->GetFirstMostChild()->Leaf();
+
+            // Delete/copy to the selection endpoint
+            if( pBegin )
+            {
+                if( bCopy )
+                    AppendCopyBetweenElements(pBegin, pEnd, stream);
+                else
+                    DeleteBetweenElements( pBegin, pEnd );
+            }
+        }
+        else if( pCaptionBelowStartLeaf )
+        {
+            // We have some contents in the Caption below the table at the end
+            AppendCopyBetweenElements(pCaptionBelowStartLeaf, pEnd, stream);
+        }
+    }
+}
+
+
+// This should be used ONLY for "Normal" copying, not table elements
+// Append elements to an existing stream.
+//  Be sure to end the stream with stream.WriteInt( (int32)eElementNone );
+void CEditBuffer::AppendCopyBetweenElements( CEditLeafElement *pBegin, CEditLeafElement *pEnd, CStreamOutMemory& stream )
+{
+    XP_ASSERT(pBegin && pEnd && pEnd->IsLeaf() && stream.GetLen() > 0 );
+    CEditElement* pCommonAncestor = pBegin->GetCommonAncestor(pEnd);
+    XP_Bool bEndIsTemporary = pEnd->Leaf()->GetLen() == 0;
+
+    CEditInsertPoint begin(pBegin, 0);
+    ElementOffset end_offset = 0; 
+
+    // The end element supplied was prepared for DELETING,
+    //  (i.e., the begining and end of the selection were "divided")
+    //  so the end is guarenteed to be either a next sibling
+    //  or the temporary 0-length text element at the end of a real element
+    //  For the purpose of copying, we want to construct a "normal" selection
+    //  whose end element is real and has an offset equal to its length
+    pEnd = pEnd->PreviousLeaf();
+    if( pEnd )
+    {
+        XP_ASSERT(pEnd->IsLeaf());
+        end_offset = pEnd->Leaf()->GetLen();
+    }
+    else
+    {
+        XP_ASSERT(FALSE);
+        return;
+    }
+    if( bEndIsTemporary ) 
+        // We must remove the temporary pEnd element
+        //  else the document is really horked
+        Reduce(pCommonAncestor);
+
+    CEditInsertPoint end(pEnd, end_offset);
+    CEditSelection selection(begin, end);
+    
+    // Have the element tree write the selection to the stream as we normally do
+    m_pRoot->PartialStreamOut(&stream, selection);
+
+    // After each append, we must patch the bMerge value that we
+    //  couldn't determine when we started the stream.
+    //  The last call here will yield the correct value.
+    int32 bMerge = end.IsStartOfContainer() == 0;
+    stream.WriteIntAtIndex(bMerge, ED_COPY_TYPE_INDEX);
+
+#ifdef DEBUG
+         m_pRoot->ValidateTree();
+#endif
 }
 
 CPersistentEditSelection CEditBuffer::GetEffectiveDeleteSelection(){
@@ -12423,8 +13026,9 @@ CPersistentEditSelection CEditBuffer::GetEffectiveDeleteSelection(){
     return EphemeralToPersistent(selection);
 }
 
-void CEditBuffer::DeleteBetweenPoints( CEditLeafElement* pBegin, CEditLeafElement* pEnd,
-     XP_Bool bCopyAppendAttributes){
+void CEditBuffer::DeleteBetweenElements( CEditLeafElement* pBegin, CEditLeafElement* pEnd,
+                                       XP_Bool bCopyAppendAttributes)
+{
     CEditLeafElement *pCurrent;
     CEditLeafElement *pNext;
 
@@ -12502,6 +13106,7 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
     CEditTableElement *pTable = NULL;
     XP_Bool bRelayout;
     XP_Bool bNeedRelayout = FALSE;
+    XP_Bool bTableDeleted = FALSE;
 
     // Set the flag that controls whether we
     //   insert a single space in the cell contents we clear
@@ -12559,7 +13164,7 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
                     }
 
                     // Delete the column(s) -- this will relayout the table
-            		AdoptAndDo(new CDeleteTableColumnCommand(this, number));
+                    AdoptAndDo(new CDeleteTableColumnCommand(this, number, &bTableDeleted));
 
                     // Reset this flag since it was probably cleared 
                     if( !bNoSpaceInNewCells )
@@ -12593,7 +13198,7 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
 
                         pCell = pTable->GetFirstCellInNextRow(pCell->GetY());
                     }
-            		AdoptAndDo(new CDeleteTableRowCommand(this, number));
+            		AdoptAndDo(new CDeleteTableRowCommand(this, number, &bTableDeleted));
 
                     // Reset this flag since it was probably cleared 
                     if( !bNoSpaceInNewCells )
@@ -12622,10 +13227,10 @@ void CEditBuffer::DeleteSelectedCells(XP_Bool bNoSpaceInNewCells)
     }
     // Repeat entire process if we actually deleted anything
     //   since we have a new m_SelectedEdCell array after relayout
-    while( bRelayout );
+    while( !bTableDeleted && bRelayout );
 
 
-    if( pTable )
+    if( !bTableDeleted && pTable )
     {
         // We need to relayout only if deleting cell contents
         //  was the last thing we did
@@ -13943,24 +14548,31 @@ EDT_ClipboardResult CEditBuffer::CutSelection( char **ppText, int32* pTextLen,
 XP_Bool CEditBuffer::CutSelectionContents( CEditSelection& selection,
                     char **ppHtml, int32* pHtmlLen ){
     XP_Bool result = CopySelectionContents( selection, ppHtml, pHtmlLen );
-    if ( result ) {
+    if ( result )
+    {
+        // Use this to handle deleting across cell boundaries
+        DeleteSelection(selection);
+#if 0
+// The old way
         CEditLeafElement *pBegin;
         CEditLeafElement *pEnd;
         MakeSelectionEndPoints( selection, pBegin, pEnd );
 
-        DeleteBetweenPoints( pBegin, pEnd );
+        DeleteBetweenElements( pBegin, pEnd );
+#endif
     }
     return TRUE;
 }
 
 
 EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
-                    char **ppHtml, int32* pHtmlLen )
+                                                char **ppHtml, int32* pHtmlLen )
 {
-    EDT_ClipboardResult result = CanCopy(TRUE);
-    if ( result != EDT_COP_OK ) return result;
+    // Do "strict" testing and tell is if we crossed a cell boundary
+    EDT_ClipboardResult result = CanCopy(TRUE, TRUE);
+    if ( !(result == EDT_COP_OK || result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL) )
+        return result;
 
-    //cmanske: Added table selection handling
     if ( ppText )
     {
         if( IsTableOrCellSelected() )
@@ -13972,12 +14584,14 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
         else 
         {
             // This adds hard CR/LF at the end of each row
-            // TODO: Shouldn't we "unwrap" paragraphs?
+            // TODO: FIX THIS: With new Copy accross cell boundaries, this is weird:
+            //  there's CR/LF at the end of the table cell,
+            //  then a bunch of extra spaces, then text of the 2nd cell 
             *ppText = (char*) LO_GetSelectionText( m_pContext );
         }
         if ( pTextLen && *ppText) *pTextLen = XP_STRLEN( *ppText );
     }
-    
+
     CEditSelection selection;
     ED_CopyType iCopyType;
     CEditTableElement *pTempTable = NULL;
@@ -14128,7 +14742,15 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
     }
     // Build the HTML stream from the selection
     if( !selection.IsEmpty() )
-        CopySelectionContents( selection, ppHtml, pHtmlLen, iCopyType );
+    {
+        if( result == EDT_COP_SELECTION_CROSSES_TABLE_DATA_CELL )
+        {
+            CopySelectionAcrossCellBoundary(selection, ppHtml, pHtmlLen);
+            result = EDT_COP_OK;
+        }
+        else
+            CopySelectionContents( selection, ppHtml, pHtmlLen, iCopyType );
+    }
 
     if( pTempRoot )
     {
@@ -14180,7 +14802,7 @@ XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
     //   next conainter after insert point
     int32 bMergeEnd = ( iCopyType == ED_COPY_NORMAL ) ? !selection.EndsAtStartOfContainer() : 0;
     stream.WriteInt(bMergeEnd);
-
+    
     // If streaming out "temporary" table for cell copying,
     //    we must use it as the root of stream creation since that is 
     //    where elements are examined if they contain the selection elements
@@ -14195,13 +14817,15 @@ XP_Bool CEditBuffer::CopySelectionContents( CEditSelection& selection,
     } else {
         m_pRoot->PartialStreamOut(&stream, selection);
     }
+
     stream.WriteInt( (int32)eElementNone );
     return TRUE;
 }
 
-XP_Bool CEditBuffer::CopyBetweenPoints( CEditElement *pBegin,
-                    CEditElement *pEnd, char **ppText, int32* pTextLen,
-                    char **ppHtml, int32* pHtmlLen ){
+XP_Bool CEditBuffer::CopyBetweenElements( CEditElement *pBegin,
+                                          CEditElement *pEnd, char **ppText, int32* pTextLen,
+                                          char **ppHtml, int32* pHtmlLen )
+{
     if ( ppText ) *ppText = (char*) LO_GetSelectionText( m_pContext );
     if ( pTextLen ) *pTextLen = XP_STRLEN( *ppText );
     CEditInsertPoint a(pBegin, 0);
@@ -14218,9 +14842,8 @@ int32 CEditBuffer::GetClipboardVersion(){
     return 0x040000; /* Should roughly match product version in binary-coded-decimal */
 }
 
-
-
 // New Table Cut/Paste routines
+
 XP_Bool CEditBuffer::CountRowsAndColsInPasteText(char *pText, intn* pRows, intn* pCols)
 {
     if( !pText )
@@ -14640,30 +15263,68 @@ LO_Element *edt_XYToNestedTableAndCell(LO_Element *pStartCell, int32 x, int32 y,
 
 static void edt_SetHitLimits(LO_Element *pLoElement,
                              int32 *pLeftLimit, int32 *pTopLimit, int32 *pRightLimit, int32 *pBottomLimit,
-                             int32 *pRight, int32 *pBottom, XP_Bool /*bDropLimits*/)
+                             int32 *pRight, int32 *pBottom, int32 *pTopOfColumn)
 {
     int32 left = pLoElement->lo_any.x;
     int32 top = pLoElement->lo_any.y;
     int32 right = left + pLoElement->lo_any.width;
     int32 bottom = top + pLoElement->lo_any.height;
-
-    // We use this for cell sizing detection in inter_cell_space
-    if( pRight )
-        *pRight = right;
-
-    if( pBottom )
-        *pBottom = bottom;
+    int32 top_of_column = 0;
 
     if( pLoElement->type == LO_TABLE )
     {
+        // Unfortunately, table captions are a pain!
+        // Check if we have a caption above the table and adjust the top to compensate
+        LO_Element *pCell = pLoElement->lo_any.next;
+        // Find first cell
+        while( pCell && pCell->type != LO_CELL )
+            pCell = pCell->lo_any.next;
+
+        int32 top_limit;
+        if( pCell && pCell->lo_cell.isCaption )
+        {
+            // Set the limit for selecting a column to be the top of the first cell
+            LO_Element *pFirstCell = pCell->lo_any.next;
+            while( pFirstCell && pFirstCell->type != LO_CELL )
+                pFirstCell = pFirstCell->lo_any.next;
+            XP_ASSERT(pFirstCell);
+            top_limit = pFirstCell->lo_cell.y;
+
+            // This should be just below the caption
+            // We want to limit area for selecting a column
+            // to between the caption and the top of first cell...
+            top_of_column = top + pCell->lo_cell.height;
+
+            // I'm not sure how much space is between bottom of caption 
+            //  an the top table border, so calculate relative
+            //  to something I am more certain about - the first cell!
+            top = top_limit - (pLoElement->lo_table.inter_cell_space + pLoElement->lo_table.border_top_width);
+
+            // Recalculate the bottom
+            bottom = top + pLoElement->lo_any.height;
+
+            // Make sure we have enough space to select the column,
+            //  even if it encroaches into the caption
+            if( top_limit - top_of_column < ED_SIZING_BORDER )
+                top_of_column = top_limit - ED_SIZING_BORDER;
+        }
+        else
+            top_limit = top + max(ED_SIZING_BORDER, pLoElement->lo_table.border_top_width);
+
+        *pTopLimit = top_limit;
+        *pBottomLimit = bottom - max(ED_SIZING_BORDER, pLoElement->lo_table.border_bottom_width);
+
+        if( *pTopOfColumn )
+            *pTopOfColumn = top_of_column;
+
         // We assume that we don't need to worry about too-small tables
         // Include the entire beveled border as hit region
         *pLeftLimit = left + max(ED_SIZING_BORDER, pLoElement->lo_table.border_left_width);
         *pRightLimit = right - max(ED_SIZING_BORDER, pLoElement->lo_table.border_left_width);
         
-        *pTopLimit = top + max(ED_SIZING_BORDER, pLoElement->lo_table.border_top_width);
-        *pBottomLimit = bottom - max(ED_SIZING_BORDER, pLoElement->lo_table.border_bottom_width);
-    } else {
+    } 
+    else 
+    {
         // Figure sizing regions but reduce if cell is too small
         //  so side and top hit regions are at least ED_SIZING_BORDER wide
         //  This may eliminate corner hit regions if element rect is too small
@@ -14694,6 +15355,13 @@ static void edt_SetHitLimits(LO_Element *pLoElement,
         *pTopLimit = top + border;
         *pBottomLimit = bottom - border;
     }
+
+    // We use this for cell sizing detection in inter_cell_space
+    if( pRight )
+        *pRight = right;
+
+    if( pBottom )
+        *pBottom = bottom;
 }
 
 // Find Table or cell element and specific mouse hit regions,
@@ -14805,13 +15473,14 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
     if (pTableElement)
     {
         // First check for cell hit regions
-        if(pCellElement)
+        // IGNORE THE CAPTION ELEMENT!
+        if(pCellElement && !pCellElement->lo_cell.isCaption)
         {
             // Return the cell found, even if result is ED_HIT_NONE
             if(ppElement) *ppElement = pCellElement;
             
             // Set test limits for Cell element
-            edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, FALSE );
+            edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, 0);
                         
             if( x >= right_limit )
             {
@@ -14882,7 +15551,8 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
         if( ppElement) *ppElement = pTableElement;
 
         // Set test limits for Table element
-        edt_SetHitLimits(pTableElement, &left_limit, &top_limit, &right_limit, &bottom_limit, 0, 0, FALSE );
+        int32 top_of_column;
+        edt_SetHitLimits(pTableElement, &left_limit, &top_limit, &right_limit, &bottom_limit, 0, 0, &top_of_column);
 
         if( x <= left_limit )
         {
@@ -14922,7 +15592,7 @@ ED_HitType CEditBuffer::GetTableHitRegion(int32 x, int32 y, LO_Element **ppEleme
             return ED_HIT_SIZE_TABLE_HEIGHT;
         }
 
-        if( y <= top_limit )
+        if( y <= top_limit && y > top_of_column)
         {
             // Along top border - select column
             if( ppElement)
@@ -14957,7 +15627,8 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
     if( ! (iSourceType == ED_HIT_SEL_COL  ||
            iSourceType == ED_HIT_SEL_ROW  || 
            iSourceType == ED_HIT_SEL_CELL ||
-           iSourceType == ED_HIT_SEL_ALL_CELLS) )
+           iSourceType == ED_HIT_SEL_ALL_CELLS ||
+           iSourceType == ED_HIT_SEL_TABLE) )
     {
         return ED_DROP_NORMAL;
     }
@@ -15065,8 +15736,8 @@ ED_DropType CEditBuffer::GetTableDropRegion(int32 *pX, int32 *pY, int32 *pWidth,
         if( pCellElement == m_pDragTableData->pFirstSelectedCell )
             return ED_DROP_NONE;
         
-        // Set test limits for Cell element: TRUE = get limits for Drag/Drop
-        edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, TRUE );
+        // Set test limits for Cell element:
+        edt_SetHitLimits(pCellElement, &left_limit, &top_limit, &right_limit, &bottom_limit, &right, &bottom, 0);
                     
         *pX = pCellElement->lo_cell.x;
         *pY = pCellElement->lo_cell.y;
@@ -15269,15 +15940,9 @@ XP_Bool CEditBuffer::SelectTableElement( int32 x, int32 y, LO_Element *pLoElemen
             if( IsSelected() )
                 ClearSelection();
 
-            // Move the caret to the first cell in table being selected
-            CEditElement *pLeaf = pEdTable->FindNextElement(&CEditElement::FindLeafAll,0 );
-            if( pLeaf )
-            {
-                ClearPhantomInsertPoint();
-                ClearMove();
-                FE_DestroyCaret(m_pContext);
-                SetInsertPoint( pLeaf->Leaf(), 0, FALSE );
-            }
+            // Move the caret to the first cell in table being selected,
+            // but not in the caption!
+            SetTableInsertPoint(pEdTable->GetFirstCell());
 
             // Save selected element data
             m_pSelectedTableElement = pLoElement;

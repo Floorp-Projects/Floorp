@@ -100,6 +100,9 @@ public:
     virtual void Write( char *pBuffer, int32 iCount );
     XP_HUGE_CHAR_PTR GetText(){ return m_pBuffer; }
     int32 GetLen(){ return m_bufferEnd; }
+    
+    // For poking values into a stream at specific locations
+    void WriteIntAtIndex( int32 iValue, int32 iIndex );
 };
 
 // Convert character set encodings while streaming out.

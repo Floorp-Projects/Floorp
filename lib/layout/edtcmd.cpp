@@ -1038,7 +1038,7 @@ void CInsertTableRowCommand::Do() {
 
 
 // CDeleteTableRowCommand
-CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* pBuffer, intn rows, intn id)
+CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* pBuffer, intn rows, XP_Bool *pTableDeleted, intn id)
     : CEditCommand(pBuffer, id),
     m_table(0,0)
 {
@@ -1053,20 +1053,38 @@ CDeleteTableRowCommand::CDeleteTableRowCommand(CEditBuffer* pBuffer, intn rows, 
         if ( pTable )
         {
             int32 Y = pTableCell->GetY();
-            //TODO: FIGURE THIS OUT 
-            m_bDeletedWholeTable = FALSE; //m_row == 0 && m_rows >= pTable->GetRows();
-            
             pBuffer->m_pCellForInsertPoint = 0;
+            // Get elements before and after the table
+            CEditElement *pLeafBefore = pTable->PreviousLeaf();
+            XP_ASSERT(pLeafBefore);
+            CEditElement *pLeafAfter = pTable->GetLastMostChild();
+            if( pLeafAfter )
+                pLeafAfter = pLeafAfter->NextLeaf();
+
             pTable->DeleteRows(Y, rows, &pBuffer->m_pCellForInsertPoint);
             pTable->FinishedLoad(pBuffer);
+
             if( pBuffer->m_pCellForInsertPoint == NULL )
             {
                 // Move to a safe location so Relayout() doesn't assert
-                CEditElement *pLeaf = pTable->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
-                if( pLeaf )
-                    pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
+                if( pLeafBefore )
+                    pBuffer->SetInsertPoint(pLeafBefore->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
             }
-            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
+            // Check if all rows were deleted
+            if( pTable->CountRows() == 0 )
+            {
+                // Move any caption contents so they will display
+                pTable->MoveCaptionOutsideTable(pLeafBefore == 0);
+                // Delete the table
+                pTable->Unlink();
+                delete pTable;
+                if( pTableDeleted )
+                    *pTableDeleted = TRUE;
+            }
+            else if( pTableDeleted )
+                *pTableDeleted = FALSE;
+
+            pBuffer->Relayout(pLeafBefore, 0, pLeafAfter, RELAYOUT_NOCARET);
         }
     }
 }
@@ -1118,7 +1136,7 @@ void CInsertTableColumnCommand::Do() {
 }
 
 // CDeleteTableColumnCommand
-CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* pBuffer, intn columns, intn id)
+CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* pBuffer, intn columns, XP_Bool *pTableDeleted, intn id)
     : CEditCommand(pBuffer, id),
     m_table(0,0)
 {
@@ -1132,21 +1150,39 @@ CDeleteTableColumnCommand::CDeleteTableColumnCommand(CEditBuffer* pBuffer, intn 
         CEditTableElement* pTable = pTableCell->GetTable();
         if ( pTable )
         {
-            //TODO: FIGURE THIS OUT 
-            m_bDeletedWholeTable = FALSE; //m_column == 0 && m_columns >= pTable->GetColumns();
             int32 X = pTableCell->GetX();
             pBuffer->m_pCellForInsertPoint = 0;
+
+            CEditElement *pLeafBefore = pTable->PreviousLeaf();
+            XP_ASSERT(pLeafBefore);
+            CEditElement *pLeafAfter = pTable->GetLastMostChild();
+            if( pLeafAfter )
+                pLeafAfter = pLeafAfter->NextLeaf();
+
             // We don't save the table to undo any more
             pTable->DeleteColumns(X, columns, &pBuffer->m_pCellForInsertPoint );
-            pTable->FinishedLoad(pBuffer);
+
             if( pBuffer->m_pCellForInsertPoint == NULL )
             {
                 // Move to a safe location so Relayout() doesn't assert
-                CEditElement *pLeaf = pTable->FindPreviousElement(&CEditElement::FindLeafAll, 0 );
-                if( pLeaf )
-                    pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
+                if( pLeafBefore )
+                    pBuffer->SetInsertPoint(pLeafBefore->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
             }
-            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
+            // Check if all rows were deleted
+            if( pTable->CountRows() == 0 )
+            {
+                // Move any caption contents so they will display
+                pTable->MoveCaptionOutsideTable(pLeafBefore == 0);
+                // Delete the table
+                pTable->Unlink();
+                delete pTable;
+                if( pTableDeleted )
+                    *pTableDeleted = TRUE;
+            }
+            else if( pTableDeleted )
+                *pTableDeleted = FALSE;
+
+            pBuffer->Relayout(pLeafBefore, 0, pLeafAfter, RELAYOUT_NOCARET);
         }
     }
 }
@@ -1200,7 +1236,7 @@ void CInsertTableCellCommand::Do() {
 
 
 // CDeleteTableCellCommand
-CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn columns, intn id)
+CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn columns, XP_Bool *pTableDeleted, intn id)
     : CEditCommand(pBuffer, id)
 {
 //	m_columns = columns;
@@ -1214,13 +1250,18 @@ CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn colu
         CEditTableElement* pTable = pTableCell->GetTableIgnoreSubdoc();
         if ( pTable && pTableRow )
         {
-            // TODO: FIGURE THIS OUT
-            m_bDeletedWholeTable = FALSE; // m_column == 0 && m_columns >= pTableRow->GetCells();
-
             int32 X = pTableCell->GetX();
             pBuffer->m_pCellForInsertPoint = 0;
+
+            CEditElement *pLeafBefore = pTable->PreviousLeaf();
+            XP_ASSERT(pLeafBefore);
+            CEditElement *pLeafAfter = pTable->GetLastMostChild();
+            if( pLeafAfter )
+                pLeafAfter = pLeafAfter->NextLeaf();
+
             pTableRow->DeleteCells(X, columns, &pBuffer->m_pCellForInsertPoint);
             pTable->FinishedLoad(pBuffer);
+
             if( pBuffer->m_pCellForInsertPoint == NULL )
             {
                 // Move to a safe location so Relayout() doesn't assert
@@ -1228,7 +1269,21 @@ CDeleteTableCellCommand::CDeleteTableCellCommand(CEditBuffer* pBuffer, intn colu
                 if( pLeaf )
                     pBuffer->SetInsertPoint(pLeaf->Leaf(), 0, pBuffer->m_bCurrentStickyAfter);
             }
-            pBuffer->Relayout(pTable, 0, NULL, RELAYOUT_NOCARET);
+            // Check if all rows were deleted
+            if( pTable->CountRows() == 0 )
+            {
+                // Move any caption contents so they will display
+                pTable->MoveCaptionOutsideTable(pLeafBefore == 0);
+                // Delete the table
+                pTable->Unlink();
+                delete pTable;
+                if( pTableDeleted )
+                    *pTableDeleted = TRUE;
+            }
+            else if( pTableDeleted )
+                *pTableDeleted = FALSE;
+
+            pBuffer->Relayout(pLeafBefore, 0, pLeafAfter, RELAYOUT_NOCARET);
         }
     }
 }

@@ -341,6 +341,16 @@ void CStreamOutMemory::Write( char *pSrc, int32 iCount ){
     m_pBuffer[m_bufferEnd] = '\0';
 }
 
+// Poke an int directly into the stream
+// Used to write header params that we can't know while building a stream
+void CStreamOutMemory::WriteIntAtIndex( int32 iValue, int32 iIndex )
+{
+    if( iIndex < m_bufferEnd )
+    {
+        XP_HUGE_MEMCPY( &m_pBuffer[iIndex], (char*)&iValue, sizeof(int32) );
+    }
+}
+
 // class CConvertCSIDStreamOut
 
 CConvertCSIDStreamOut::CConvertCSIDStreamOut(int16 oldCSID, int16 newCSID, IStreamOut* pStream){

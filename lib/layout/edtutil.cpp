@@ -4290,6 +4290,7 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
 
             pElement = lo_GetFirstAndLastCellsInTable(m_pBuffer->m_pContext, m_pLoElement, &pLastElement);
             if( pElement )
+            {
                 do {
                     if( pElement && pElement->lo_any.type == LO_CELL &&
                         (pElement->lo_cell.x + pElement->lo_cell.width) == iRightEdge &&
@@ -4298,9 +4299,11 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
                         m_pLoElement = pElement;
                         break;
                     }
-                    pElement = pElement->lo_any.next;
+                    if( pElement != pLastElement )
+                        pElement = pElement->lo_any.next;
                 }
                 while( pElement != pLastElement );
+            }
         }
         if( m_iStyle == ED_SIZE_BOTTOM && lo_GetRowSpan(m_pLoElement) > 1 )
         {
@@ -4309,6 +4312,7 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
             if( !pElement )
                 pElement = lo_GetFirstAndLastCellsInTable(m_pBuffer->m_pContext, m_pLoElement, &pLastElement);
             if( pElement ) 
+            {
                 do {
                     if( pElement && pElement->lo_any.type == LO_CELL &&
                         (pElement->lo_cell.y + pElement->lo_cell.height) == iBottomEdge &&
@@ -4317,9 +4321,11 @@ XP_Bool CSizingObject::Create(CEditBuffer *pBuffer,
                         m_pLoElement = pElement;
                         break;
                     }
-                    pElement = pElement->lo_any.next;
+                    if( pElement != pLastElement )
+                        pElement = pElement->lo_any.next;
                 }
                 while( pElement != pLastElement );
+            }
         }
     }
 
@@ -4787,6 +4793,14 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
                 // Convert to % format
                 iWidth = (iWidth * 100) / m_iParentWidth;
             }
+            else
+            {
+                // Tables are problematic. We use full cell width, including padding and borders,
+                // because it much easier to calculate percent mode values,
+                //   but the HTML WIDTH and HEIGHT params only measure CONTENT area
+                // Should we display the same content size value when resizing?
+                // (That's what user sees in the Width and Height values in the property dialogs)
+            }
 
             // "Width = x"
             PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_WIDTH_EQUALS), iWidth);
@@ -4795,7 +4809,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
             strcat(pMsg, XP_GetString(m_iWidthMsgID));
 
             // The % of original [width] and/or [height] string
-            // Current logic assumes constaining aspect ratio when sizing corners,
+            // Current logic assumes constraining aspect ratio when sizing corners,
             //   so separate Width, Height percentages are not shown
             XP_STRCPY(pPercentOfWhat, XP_GetString(XP_EDT_WIDTH));
         }
@@ -4896,8 +4910,8 @@ void CSizingObject::ResizeObject()
     EraseAddRowsOrCols();
     int32 iWidth=0, iWidthPixels=0, iHeightPixels=0, iHeight=0;
 
-    // Get the element being sized (except table or cell - obtained below)
-     CEditLeafElement *pElement = (CEditLeafElement*)(m_pLoElement->lo_any.edit_element);
+    // Get the element being sized
+    CEditLeafElement *pElement = (CEditLeafElement*)(m_pLoElement->lo_any.edit_element);
 
     if( !(m_iStyle == ED_SIZE_ADD_ROWS || m_iStyle == ED_SIZE_ADD_COLS) )
     {
@@ -6272,6 +6286,52 @@ void EDT_EncryptReset( MWContext *pContext ){
     if (pEditBuffer == NULL) return;
 
     pEditBuffer->m_bEncrypt = PR_FALSE;
+}
+
+XP_Bool EDT_AdjustTableRectForCaption(LO_TableStruct *pTable, XP_Rect *pRect)
+{
+    if( !pTable || !pRect )
+        return FALSE;
+
+    // If table has a caption, we want highlighting to surround the caption as well
+    LO_Element *pElement = (LO_Element*)pTable;
+    // Find the first cell
+    while( pElement && pElement->type != LO_CELL )
+        pElement = pElement->lo_any.next;
+    if( pElement )
+    {
+        XP_Bool bCaptionBeforeTable = pElement->lo_cell.isCaption;
+        XP_Bool bCaptionAfterTable = FALSE;
+        if( !bCaptionBeforeTable )
+        {
+            // Search for a caption at the end
+            do {
+                if( pElement && pElement->type == LO_CELL &&
+                   pElement->lo_cell.isCaption )
+                {
+                    bCaptionAfterTable = TRUE;
+                    break;
+                }
+                pElement = pElement->lo_any.next;
+            }
+            while( pElement && pElement->type != LO_LINEFEED );
+            
+        }
+        if( bCaptionBeforeTable || bCaptionAfterTable )
+        {
+            // This is the full height, including caption
+            int32 iHeight = pTable->line_height + pTable->border_bottom_width + pTable->inter_cell_space;
+            
+            // Adjust top or bottom to include caption area
+            if( bCaptionBeforeTable )
+                pRect->top = pRect->bottom - iHeight;
+            else
+                pRect->bottom = pRect->top + iHeight;
+
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 #endif // EDITOR

@@ -5209,8 +5209,10 @@ lo_GetLineEnds(MWContext *context, lo_DocState *state,
 	int32 line, LO_Element** retBegin, LO_Element** retEnd)
 {
 	LO_Element **line_array;
-
-	*retBegin = NULL;
+    LO_Element *begin = 0;
+    LO_Element *end = 0;
+	
+    *retBegin = NULL;
 	*retEnd = NULL;
 
 	/*
@@ -5236,11 +5238,11 @@ lo_GetLineEnds(MWContext *context, lo_DocState *state,
 		XP_LOCK_BLOCK(larray_array, XP_Block *, state->larray_array);
 		state->line_array = larray_array[a_indx];
 		XP_LOCK_BLOCK(line_array, LO_Element **, state->line_array);
-		*retBegin = line_array[a_line];
+		begin = line_array[a_line];
 
 		if (line >= (state->line_num - 2))
 		{
-			*retEnd = NULL;
+			end = NULL;
 		}
 		else
 		{
@@ -5250,11 +5252,11 @@ lo_GetLineEnds(MWContext *context, lo_DocState *state,
 				state->line_array = larray_array[a_indx + 1];
 				XP_LOCK_BLOCK(line_array, LO_Element **,
 					state->line_array);
-				*retEnd = line_array[0];
+				end = line_array[0];
 			}
 			else
 			{
-				*retEnd = line_array[a_line + 1];
+				end = line_array[a_line + 1];
 			}
 		}
 		XP_UNLOCK_BLOCK(state->line_array);
@@ -5263,18 +5265,36 @@ lo_GetLineEnds(MWContext *context, lo_DocState *state,
 #else
 	{
 		XP_LOCK_BLOCK(line_array, LO_Element **, state->line_array);
-		*retBegin = line_array[line];
+        begin = line_array[line];
 		if (line == (state->line_num - 2))
 		{
-			*retEnd = NULL;
+			end = NULL;
 		}
 		else
 		{
-			*retEnd = line_array[line + 1];
+			end = line_array[line + 1];
 		}
 		XP_UNLOCK_BLOCK(state->line_array);
 	}
 #endif /* XP_WIN16 */
+    /* Be sure we aren't pointing to internal dummy elements */
+    if( begin )
+    {
+        while( begin && lo_IsDummyLayoutElement(begin) )
+            begin = begin->lo_any.next;
+        *retBegin = begin;
+    }
+    if( end )
+    {
+        while( end && lo_IsDummyLayoutElement(end) )
+        {
+            if( end->lo_any.prev )
+                end = end->lo_any.prev;
+            else
+                end = end->lo_any.next;
+        }
+        *retEnd = end;
+    }
 }
 
 Bool lo_IsDummyLayoutElement(LO_Element *ele)
@@ -5413,44 +5433,46 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
 			y2 = tptr->lo_any.y + tptr->lo_any.y_offset +
 				t_height;
 		}
-		if ((y >= tptr->lo_any.y)&&(y < y2)&&
-			(x >= tptr->lo_any.x)&&
-			(x < (x1 + t_width)))
-		{
-                        
-			/*
-			 * Tables are containers.  Don't stop on them,
-			 * look inside them.
-			 */
-			if (tptr->type != LO_TABLE)
-			{
-                /* Inflow layers look just like table cells, but we
-                   always look inside them, as if the layout elements
-                   were part of the line's list of element's. */
-                if (is_inflow_layer && into_ilayers) {
-                    eptr = lo_XYToCellElement(context, state,
-                                              (LO_CellStruct *)tptr, x, y,
-                                              TRUE, into_cells, into_ilayers);
-                    if (eptr) {
-                        tptr = eptr;
-                        break;
-                    }
-
-                    /* No matching element found inside cell, keep
-                       looking on rest of line. */
-                } else
-                    break;
-			}
-			else
-			{
-				in_table = TRUE;
-                /*
-                 * Save the table element
-                 *  to return if no other element is found
-                */
+		if ((y >= tptr->lo_any.y)&&(y < y2))
+        {
+    	    if (tptr->type == LO_TABLE)
+            {
+                /* Save to return if no other elements are found */
                 tptrTable = tptr;
-			}
-		}
+            }
+            if((x >= tptr->lo_any.x)&&
+			   (x < (x1 + t_width)))
+		    {
+                        
+			    /*
+			     * Tables are containers.  Don't stop on them,
+			     * look inside them.
+			     */
+			    if (tptr->type != LO_TABLE)
+			    {
+                    /* Inflow layers look just like table cells, but we
+                       always look inside them, as if the layout elements
+                       were part of the line's list of element's. */
+                    if (is_inflow_layer && into_ilayers) {
+                        eptr = lo_XYToCellElement(context, state,
+                                                  (LO_CellStruct *)tptr, x, y,
+                                                  TRUE, into_cells, into_ilayers);
+                        if (eptr) {
+                            tptr = eptr;
+                            break;
+                        }
+
+                        /* No matching element found inside cell, keep
+                           looking on rest of line. */
+                    } else
+                        break;
+			    }
+			    else
+			    {
+				    in_table = TRUE;
+			    }
+		    }
+        }
 		tptr = tptr->lo_any.next;
 	}
 	if (tptr == end_ptr)
@@ -5546,10 +5568,20 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
         tptrCell = tptr;
 		tptr = lo_XYToCellElement(context, state,
 			(LO_CellStruct *)tptr, x, y, TRUE, into_cells, into_ilayers);
-	}
+    }
 
 	*ret_x = x;
 	*ret_y = y;
+    
+    /* cmanske: Return table if no other element is found (we are before a table)
+     *          or the element is a non-editable linefeed (we are after a table),
+     *          and return this only if we are outside the table boundary
+    */
+    if( EDT_IS_EDITOR(context) && tptrTable && !in_table &&
+        (tptr == 0 || (tptr->type == LO_LINEFEED && tptr->lo_linefeed.break_type == LO_LINEFEED_BREAK_SOFT)) )
+    {
+        tptr = tptrTable;
+    }
 
 	return(tptr);
 }

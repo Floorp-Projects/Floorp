@@ -1863,7 +1863,7 @@ void CEditSubDocElement::FinishedLoad( CEditBuffer* pBuffer ){
         // Subdocs have to have children.
         // Put an empty paragraph into any empty subdoc.
         pChild = CEditContainerElement::NewDefaultContainer( this,
-                        GetDefaultAlignment() );
+                        IsCaption() ? ED_ALIGN_CENTER : GetDefaultAlignment() );
         // Creating it inserts it.
         (void) new CEditTextElement(pChild, 0);
     }
@@ -3142,10 +3142,12 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
 
         if( iReplaceRow != iPrevReplaceRow )
         {
-            // We are on the next row
+            // We are on the next row to be replaced
             iPrevReplaceRow = iReplaceRow;
             // If cell layout of source and destination matches,
-            //   we should get to the next source row at the same time
+            //   we should get to the next source row at the same time,
+            //   (which means iSourceRow should be 1 > than iPrevSourceRow)
+            //   if iSourceRow wasn't increased, there's still source cells on the previous row
             if( iSourceRow == iPrevSourceRow )
             {
                 XP_TRACE(("CEditTableElement::ReplaceSpecialCells: More Source cells are left to paste."));
@@ -3168,7 +3170,6 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
             // We ran out of source cells on the desired row, 
             //  but we still have cells to replace
             XP_TRACE(("CEditTableElement::ReplaceSpecialCells: Not enough SOURCE cells to paste in this row."));
-            iPrevSourceRow = iSourceRow;
 
             if( !bIgnoreSourceLayout )
             {
@@ -3182,19 +3183,24 @@ XP_Bool CEditTableElement::ReplaceSpecialCells(CEditTableElement *pSourceTable, 
                     pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
                 }
                 
-                // then find the next special selected cell
+                // Skip to the next special selected cell
                 while( pReplaceCell && !pReplaceCell->IsSpecialSelected() )
                     pReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
                 if( !pReplaceCell )
                     break;
-                // We are now at beginning of both a replace row and a source row                
+                // We are now at the right place in the next replace row
                 iPrevReplaceRow = iReplaceRow;
             }
         }
+        // Be sure to do this here (not in above block)
+        // since we don't ever go there if cell layout 
+        // of source and destination matches
+        iPrevSourceRow = iSourceRow;
 
         // Must get these now before we move cells around
         pNextSourceCell = pSourceCell->GetNextCellInTable(&iSourceRow);
         pNextReplaceCell = pReplaceCell->GetNextCellInTable(&iReplaceRow);
+        
         // Skip to a special-selected cell
         while( pNextReplaceCell && !pNextReplaceCell->IsSpecialSelected() )
             pNextReplaceCell = pNextReplaceCell->GetNextCellInTable(&iReplaceRow);
@@ -3405,6 +3411,67 @@ void CEditTableElement::DeleteColumns(int32 X, intn number, CEditTableCellElemen
         *ppCellForInsertPoint = pCellForInsertPoint;
 }
 
+// Returns TRUE if any row was deleted
+// Return the last cell in row above the first deleted row
+//   if first row wasn't deleted
+XP_Bool CEditTableElement::DeleteEmptyRows(CEditLeafElement **ppPreviousLeaf)
+{
+    int32 iRowsInTable = m_iRows;
+    CEditTableRowElement *pRow = GetFirstRow();
+    CEditTableRowElement *pPrevRow = 0;
+    int32 iCount = 0;
+    int32 iIndex = 0;
+    int32 iFirstEmptyRowY = -1;
+    CEditTableCellElement *pCellForInsertPoint = NULL;
+    // Clear this now in case we don't find a valid leaf to use
+    if( ppPreviousLeaf )
+        *ppPreviousLeaf = 0;
+
+    // Count number of completely empty rows
+    while( pRow )
+    {
+        if( pRow->AllCellsInRowAreEmpty() )
+        {
+            if( iFirstEmptyRowY == -1 )
+                iFirstEmptyRowY = GetRowY(iIndex);
+            iCount++;
+
+            if( iCount == 1 && pPrevRow && ppPreviousLeaf )
+            {
+                // We are in the first row we will delete and it isn't the first row of table
+                // Get the last cell in the previous row
+                CEditTableCellElement *pCell = pPrevRow->GetFirstCell();
+                CEditTableCellElement *pNextCell;
+                while( pCell && (pNextCell = GetNextCellInRow(pCell)) != 0 )
+                    pCell = pNextCell;
+
+                // Return last leaf in that cell
+                if( pCell )
+                {
+                    CEditElement *pLast = pCell->GetLastMostChild();
+                    while( pLast && (!pLast->IsLeaf() || pLast->Leaf()->GetLen() == 0) )
+                        pLast = pLast->GetPreviousSibling();
+                    if( pLast && pLast->IsLeaf() )
+                        *ppPreviousLeaf = pLast->Leaf();
+                }
+            }
+        }
+        else
+        {
+            pPrevRow = pRow;
+        }
+
+        iIndex++;
+        pRow = pRow->GetNextRow();
+    }
+    if( iCount > 0 )
+    {
+        DeleteRows(iFirstEmptyRowY, iCount);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 // This is the old version - just finds row based on counting,
 //   no ROWSPAN effect needed
 CEditTableRowElement* CEditTableElement::FindRow(intn number)
@@ -3460,6 +3527,25 @@ void CEditTableElement::SetCaption(CEditCaptionElement* pCaption){
 void CEditTableElement::DeleteCaption(){
     CEditCaptionElement* pOldCaption = GetCaption();
     delete pOldCaption;
+}
+
+void CEditTableElement::DeleteCaptionAbove()
+{
+    CEditCaptionElement* pCaption = GetCaption();
+    // A caption "above" the table is always the first
+    //   child of the table
+    if( pCaption && pCaption == GetChild() )
+        delete pCaption;
+}
+
+void CEditTableElement::DeleteCaptionBelow()
+{
+    CEditCaptionElement* pCaption = GetCaption();
+    // A caption "below" the table is always the 
+    //   last of the table. Its simpler to just check
+    //   if its not the first child
+    if( pCaption && pCaption != GetChild() )
+        delete pCaption;
 }
 
 void CEditTableElement::FinishedLoad( CEditBuffer* pBuffer ){
@@ -3567,6 +3653,69 @@ void CEditTableElement::FinishedLoad( CEditBuffer* pBuffer ){
     AdjustCaption();
 
     EnsureSelectableSiblings(pBuffer);
+}
+
+XP_Bool CEditTableElement::MoveCaptionOutsideTable(XP_Bool bAfter)
+{
+    CEditCaptionElement *pCaption = GetCaption();
+    XP_Bool bReturn = FALSE;
+
+    if ( pCaption )
+    {
+        CEditContainerElement *pContainer = (CEditContainerElement*)pCaption->GetChild();
+        // Skip over the division element used for alignment
+        // (Alternate method is to start at first leaf and find its container,
+        //  but that would miss lists, so lets try to start from top down)
+        if( pContainer && pContainer->IsDivision() )
+            pContainer = (CEditContainerElement*)pContainer->GetChild();
+
+        if( !pContainer || !pContainer->IsContainer() || 
+            (pContainer->IsEmpty() && pContainer->GetNextSibling() == 0) )
+            return FALSE;
+
+        CEditElement *pLastChild = GetLastMostChild();
+        CEditLeafElement *pBefore = bAfter ? 0 : PreviousLeaf();
+        CEditLeafElement *pAfter = (bAfter && pLastChild) ? pLastChild->NextLeaf() : 0;
+        CEditContainerElement *pOutsideContainer;
+        // Save container after current so all are moved
+        CEditElement *pNextContainer = pContainer->GetNextSibling();
+        
+        if( pBefore )
+        {
+            pOutsideContainer = pBefore->FindContainer();
+            if( pOutsideContainer )
+            {
+                // Move the first container found
+                pContainer->Unlink();
+                pContainer->InsertAfter(pOutsideContainer);
+                bReturn = TRUE;
+            }
+        }
+        else if( pAfter )
+        {
+            pOutsideContainer = pAfter->FindContainer();
+            if( pOutsideContainer )
+            {
+                pContainer->Unlink();
+                pContainer->InsertBefore(pOutsideContainer);
+                bReturn = TRUE;
+            }
+        }
+        if( bReturn && pNextContainer != 0 )
+        {
+            // Move any other containers following the one just moved
+            CEditElement *pInsertAfter = pContainer;
+            while( pNextContainer )
+            {
+                pContainer = (CEditContainerElement*)pNextContainer;
+                pNextContainer = pContainer->GetNextSibling();
+                pContainer->Unlink(); 
+                pContainer->InsertAfter(pInsertAfter);
+                pInsertAfter = pContainer;
+            }
+        }
+    }
+    return bReturn;
 }
 
 void CEditTableElement::AdjustCaption() {
@@ -4418,6 +4567,25 @@ intn CEditTableRowElement::GetCells()
         }
     }
     return cells;
+}
+
+XP_Bool CEditTableRowElement::AllCellsInRowAreEmpty()
+{
+    CEditTableCellElement *pCell = GetFirstCell();
+    if( !pCell || !pCell->IsTableCell() ) // Unlikely
+    {
+        XP_ASSERT(FALSE);
+        return FALSE;
+    }
+
+    while( pCell && pCell->IsTableCell() )
+    {
+        if( !pCell->IsEmpty() )
+            return FALSE;
+
+        pCell = (CEditTableCellElement*)(pCell->GetNextSibling());
+    }
+    return TRUE;
 }
 
 void CEditTableRowElement::FinishedLoad( CEditBuffer* pBuffer ){
@@ -6148,9 +6316,14 @@ CEditTableCellElement* CEditTableCellElement::GetNextCellInTable(intn *pRowCount
         // Get the first child cell of the next row
         if( GetParent() && GetParent()->GetNextSibling() )
             pNextCell = GetParent()->GetNextSibling()->GetChild(); 
-#ifdef DEBUG
-        if( pNextCell ) XP_ASSERT(pNextCell->IsTableCell());
-#endif
+        
+        // If the next child is not a cell, 
+        //  we hit a table caption at the end of the table
+        //  (its the sibling after the last row in the table)
+        //  so there's no more cells
+        if( pNextCell && !pNextCell->IsTableCell() )
+            return 0;
+
         // Tell caller we wrapped to the next row
         if( pRowCounter && pNextCell )
             (*pRowCounter)++;
@@ -7689,16 +7862,30 @@ void CEditContainerElement::PrintOpen( CPrintState *pPrintState ){
         CEditContainerElement* pPrevContainer=GetPreviousNonEmptyContainer();
         if (pPrevContainer && pPrevContainer->GetType()!=P_NSDT)
           pPrevContainer=NULL;//all bets are off
-        if (( GetAlignment() == ED_ALIGN_RIGHT && ! IsEmpty()) && ( !pPrevContainer || (pPrevContainer->GetAlignment() != ED_ALIGN_RIGHT ) )){
+        
+        // We must set this explicitly for text in TableCaptions
+        // Hopefully, we will change ED_ALIGN_LEFT to ED_ALIGN_DEFAULT for regular paragraphs
+        //  so we don't clutter HTML with extra <DIV> alignment tags
+        if (( GetAlignment() == ED_ALIGN_LEFT && ! IsEmpty()) && ( !pPrevContainer || 
+            (pPrevContainer->GetAlignment() != ED_ALIGN_LEFT) ))
+        {
+            pPrintState->m_pOut->Printf( "\n");
+            pPrintState->m_iCharPos = pPrintState->m_pOut->Printf( "<DIV ALIGN=left>"); 
+            
+        }
+        else if (( GetAlignment() == ED_ALIGN_RIGHT && ! IsEmpty()) && ( !pPrevContainer || (pPrevContainer->GetAlignment() != ED_ALIGN_RIGHT ) ))
+        {
             pPrintState->m_pOut->Printf( "\n");
             pPrintState->m_iCharPos = pPrintState->m_pOut->Printf( "<DIV ALIGN=right>"); 
             
         }
-        else if (( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty()) && ( !pPrevContainer || (pPrevContainer->GetAlignment() != ED_ALIGN_ABSCENTER ) )){
+        else if (( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty()) && ( !pPrevContainer || (pPrevContainer->GetAlignment() != ED_ALIGN_ABSCENTER ) ))
+        {
             pPrintState->m_pOut->Printf( "\n");
             pPrintState->m_iCharPos = pPrintState->m_pOut->Printf( "<CENTER>"); 
         }
-        if( !IsImplicitBreak() && ! bHasExtraData){
+        if( !IsImplicitBreak() && ! bHasExtraData)
+        {
             switch( ppState ){
             default:
             case 0:
@@ -7812,21 +7999,29 @@ void CEditContainerElement::PrintEnd( CPrintState *pPrintState ){
             }
         }
         // Keep empty paragraphs from being eaten
-        if ( IsEmpty() && ppState == 0) {
+        if ( IsEmpty() && ppState == 0)
+        {
             char* space = "&nbsp;";
             pPrintState->m_pOut->Printf( space );
             pPrintState->m_iCharPos += XP_STRLEN(space);
         }
-        if( (GetAlignment() == ED_ALIGN_RIGHT && !IsEmpty() )&& (!pNextContainer || pNextContainer->GetType() != P_NSDT || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
+        ED_Alignment align = GetAlignment();
+        if( !IsEmpty() && (align == ED_ALIGN_RIGHT || align == ED_ALIGN_LEFT) && 
+            (!pNextContainer || pNextContainer->GetType() != P_NSDT || 
+             !CompareAlignments(pNextContainer->GetAlignment(), align)) )
+        {
             pPrintState->m_pOut->Printf( "</DIV>"); 
             bNeedReturn = TRUE;
         }
-        else if(( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty() ) && (!pNextContainer || pNextContainer->GetType() != P_NSDT || !CompareAlignments(pNextContainer->GetAlignment(),GetAlignment())) ) {
+        else if(( GetAlignment() == ED_ALIGN_ABSCENTER && !IsEmpty() ) && 
+                (!pNextContainer || pNextContainer->GetType() != P_NSDT || !CompareAlignments(pNextContainer->GetAlignment(), align)) )
+        {
             pPrintState->m_pOut->Printf( "</CENTER>"); 
             bNeedReturn = TRUE;
         }
 
-        if ( bNeedReturn ) {
+        if ( bNeedReturn )
+        {
             pPrintState->m_iCharPos = 0;
             pPrintState->m_pOut->Printf( "\n");
         }
@@ -9760,7 +9955,10 @@ void CEditTextElement::PrintRange( CPrintState *ps, int32 start, int32 end ){
     }
     else {
         if ( end > len ) {
-            XP_ASSERT(FALSE);
+            // This is getting annoying - XP_TRACE instead,
+            //  since we survive it just fine
+            XP_TRACE(("PrintRange error: end = %d len = %d\n", end, len));
+            //XP_ASSERT(FALSE);
 #ifdef DEBUG_akkana
             printf("end = %d len = %d\n", end, len);
 #endif

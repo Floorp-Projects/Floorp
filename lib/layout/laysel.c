@@ -1907,6 +1907,10 @@ lo_IsHardBreak2(MWContext *context, LO_Element* element, int32 position)
     return FALSE;
 }
 
+/* cmanske This is really misnamed for an Editor context.
+   It extends selection to the end of any line (i.e., soft break or no break),
+   not just to a hard break
+*/
 PRIVATE
 Bool
 lo_ExtendToIncludeHardBreak(MWContext* context, lo_DocState *state, LO_Selection* selection)
@@ -1933,6 +1937,31 @@ lo_ExtendToIncludeHardBreak(MWContext* context, lo_DocState *state, LO_Selection
                     end->element = eol;
                     end->position = 0;
                     result = TRUE;
+                }
+            }
+            else
+            {
+                /* Find a soft linefeed or end of text on the line 
+                   This allows the selection of a "line" to work inside
+                   a table cell
+                */
+                LO_Element* tptr = end->element;
+                do {
+                    if( tptr->type == LO_LINEFEED || !tptr->lo_any.next )
+                        break;
+                    tptr = tptr->lo_any.next;
+                }
+                while( tptr->type != LO_LINEFEED );
+
+                XP_ASSERT(tptr);
+                end->element = tptr;
+                if( tptr->type == LO_LINEFEED )
+                {
+                    end->position = 0;
+                }
+                else
+                {
+                    end->position = lo_GetLastCharEndPosition(end->element);
                 }
             }
         }
@@ -4270,8 +4299,9 @@ lo_GetLastCharEndPosition(LO_Element* eptr)
 
 void lo_HitLine(MWContext *context, lo_DocState *state, int32 x, int32 y, Bool requireCaret,
                 LO_HitResult* result);
+/* cmanske: added y param for snapping to closest cell in the editor */
 void lo_HitLine2(MWContext *context, lo_DocState *state, LO_Element* element, int32 position,
-                 int32 x, LO_HitResult* result);
+                 int32 x, int32 y, LO_HitResult* result);
 Bool lo_PositionIsOffEndOfLine(LO_HitElementResult* elementResult);
 
 void lo_FullHitElement(MWContext *context, lo_DocState* state, int32 x, int32 y,
@@ -4370,7 +4400,7 @@ void lo_FullHitElement(MWContext *context, lo_DocState* state, int32 x, int32 y,
     Bool requireCaret,
     LO_Element* eptr, int32 ret_x, int32 ret_y, LO_HitResult* result)
 {
-    if ( eptr->type != LO_LINEFEED ) {
+    if ( eptr->type != LO_LINEFEED && eptr->type != LO_TABLE ) {
         /* Seek forward to find an editable element */
         if ( ! lo_EnsureEditableSearchNext(context, state, &eptr) )
         {
@@ -4397,7 +4427,7 @@ void lo_FullHitElement(MWContext *context, lo_DocState* state, int32 x, int32 y,
          * that bites us if we use lo_HitLine. So rather than starting the
          * search from the beginning, we start from the linefeed.
          */
-        lo_HitLine2(context, state, eptr, 0, x, result);
+        lo_HitLine2(context, state, eptr, 0, x, y, result);
     }
 }
 
@@ -4561,11 +4591,13 @@ Bool lo_OnlyBulletsBetween(LO_Element *begin,LO_Element *end)
 #endif
 
 void lo_HitLine2(MWContext *context, lo_DocState *state, LO_Element* element,
-                 int32 position, int32 x, LO_HitResult* result)
+                 int32 position, int32 x, int32 y, LO_HitResult* result)
 {
     LO_Element* begin;
     LO_Element* end;
-
+#ifdef EDITOR
+    LO_Element* tptr;
+#endif
     result->type = LO_HIT_UNKNOWN;
 
     end = element;
@@ -4580,7 +4612,115 @@ void lo_HitLine2(MWContext *context, lo_DocState *state, LO_Element* element,
         }
         if ( ! end )
             return;
+#ifdef EDITOR
+        if( EDT_IS_EDITOR(context) && end->type == LO_TABLE )
+        {
+            tptr = end;
+            if( x > end->lo_table.x  )
+            {
+                /* We are after the table
+                 * Find the last cell in a row that spans the y value
+                 * Begin at the end of the table
+                */
+                
+                while( tptr->lo_any.next && tptr->lo_any.next->type != LO_LINEFEED )
+                    tptr = tptr->lo_any.next;
 
+                do {
+                    if( tptr->type == LO_CELL )
+                    {
+                        /* Find a cell that is in same (last) column 
+                         *  and the y location is within the row of that cell.
+                        */
+                        if( y >= tptr->lo_cell.y )
+                        {
+                            end = tptr;
+                            break;
+                        }
+                    }
+                    tptr = tptr->lo_any.prev;
+                }
+                while( tptr && tptr->type != LO_TABLE ); /* Stop when we hit beginning of the table */
+
+                /* Find the last element in the cell */
+                begin = end->lo_cell.cell_list;
+                if( begin == 0 )
+                    return;
+
+                while( begin->lo_any.next )
+                    begin = begin->lo_any.next;
+        
+                /* Back up to find an editable element */        
+                if ( ! lo_EnsureEditableSearchPrev(context, state, &begin) )
+                    return;
+
+                result->lo_hitLine.region = LO_HIT_LINE_REGION_AFTER;
+                result->lo_hitLine.selection.begin.position = lo_GetMaximumInsertPointPosition(begin);
+            }
+            else
+            {
+                /* We are before the table
+                 * Find the cell that spans the y value
+                 * Start at beginning cell of table
+                */
+                while( tptr->type != LO_CELL )
+                {
+                    tptr = tptr->lo_any.next;
+                    if( tptr == 0 || tptr->type == LO_LINEFEED )
+                        /* No cells in table? */
+                        goto LO_HIT_CONTINUE;
+
+                    if( tptr->type == LO_CELL )
+                        break;
+                }
+
+                do {
+                    if( tptr->type == LO_CELL )
+                    {
+                        /* Find a cell that is in the first column 
+                         *  and the y location is within the row of that cell.
+                        */
+                        if( y < (tptr->lo_cell.y + tptr->lo_cell.height + tptr->lo_cell.inter_cell_space) )
+                        {
+                            end = tptr;
+                            break;
+                        }
+                    }
+                    tptr = tptr->lo_any.next;
+                }
+                while( tptr && tptr->type != LO_LINEFEED ); /* Stop when we hit end of the table */
+
+                /* Find the first element in the cell */
+                begin = end->lo_cell.cell_list;
+                if( begin == 0 )
+                    return;
+
+                /* Find an editable element */        
+                if ( ! lo_EnsureEditableSearchNext(context, state, &begin) )
+                    return;
+
+                result->lo_hitLine.region = LO_HIT_LINE_REGION_BEFORE;
+                result->lo_hitLine.selection.begin.position = 0;
+            }
+            if( end->type == LO_CELL )
+            {
+                /* New hit type: For single click after the table, 
+                 *    this is the same as LO_HIT_LINE,
+                 *    and it will position caret at end of the line
+                 *    For double-click, it signals processing same as single click
+                 * For single or double click before the table, it will select the table
+                */
+                result->lo_hitLine.type = LO_HIT_TABLE_LINE;
+
+                /* Set the result data - make begin and end the same */
+                result->lo_hitLine.selection.begin.element = begin;
+                result->lo_hitLine.selection.end.element = begin;
+                result->lo_hitLine.selection.end.position = result->lo_hitLine.selection.begin.position;
+                return;
+            }
+        }
+#endif        
+LO_HIT_CONTINUE:
         /* Search forward to find the end of line */
         for ( ;
             end;
@@ -4653,7 +4793,7 @@ void lo_HitLine2(MWContext *context, lo_DocState *state, LO_Element* element,
              * Select the previous line.
              */
             if ( lo_EnsureEditableSearchPrev(context, state, & begin) ){
-                lo_HitLine2(context, state, begin, 0, 0, result);
+                lo_HitLine2(context, state, begin, 0, 0, 0, result);
             }
             return;
         }
@@ -4805,8 +4945,7 @@ void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret,
 
 #ifdef DEBUG
     {
-/*        const char* kTypes[] = { "LO_HIT_UNKNOWN", "LO_HIT_LINE", "LO_HIT_ELEMENT"};*/
-        XP_ASSERT ( result->type >= LO_HIT_UNKNOWN &&  result->type <= LO_HIT_ELEMENT );
+        XP_ASSERT ( result->type >= LO_HIT_UNKNOWN &&  result->type <= LO_HIT_TABLE_LINE );
     }
 
 #if 0
@@ -4901,6 +5040,26 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
 {
     switch ( result->type )
     {
+    case LO_HIT_TABLE_LINE:
+        {
+            if( result->lo_hitLine.region == LO_HIT_LINE_REGION_BEFORE )
+            {
+                /* Click before a table
+                 * Analogous to clicking before a line selects the line,
+                 *  clicking before a table selects the entire table
+                */
+                LO_TableStruct *table = lo_GetParentTable(context, result->lo_hitLine.selection.end.element);
+                if( table )
+                {
+                    edt_ForceTableSelection(context, table);
+                }
+            }
+            /* Set insert point to the the supplied element 
+               (we trust it was already set to an editable element) */
+            lo_SetInsertPoint(context, top_state, result->lo_hitLine.selection.begin.element, 
+                              result->lo_hitLine.selection.begin.position, layer);
+            break;
+        }
     case LO_HIT_LINE:
         {
             switch ( result->lo_hitLine.region )
@@ -4917,7 +5076,6 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
                     }
                     else
                     {
-                        /* Select the line */
                         lo_ExtendToIncludeHardBreak(context, state, & result->lo_hitLine.selection);
                         lo_SetSelection(context, & result->lo_hitLine.selection, FALSE);
                         return TRUE;
@@ -4948,9 +5106,29 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
             {
             case LO_HIT_ELEMENT_REGION_BEFORE:
                 {
-                    lo_SetInsertPoint(context, top_state, eptr, position, 
-                                      layer);
-                    return FALSE;
+
+                    if( requireCaret || lo_GetParentTable(context, eptr) == 0 )
+                    {
+                        /* Not in a table cell or we need a caret 
+                           Just set insert point at beginning of element
+                        */
+                        lo_SetInsertPoint(context, top_state, eptr, position, 
+                                          layer);
+
+                        return FALSE;
+                    }
+                    else
+                    {
+                        /* Inside a cell: Select the line
+                           For some reason (unknown to cmanske)
+                           the lo_hitLine.selection.end element is not 
+                           filled in correctly -- just use the beginning element
+                        */
+                        result->lo_hitLine.selection.end = result->lo_hitLine.selection.begin;
+                        lo_ExtendToIncludeHardBreak(context, state, & result->lo_hitLine.selection);
+                        lo_SetSelection(context, & result->lo_hitLine.selection, FALSE);
+                        return TRUE;
+                    }
                 }
                 break;
             case LO_HIT_ELEMENT_REGION_MIDDLE:
@@ -5006,7 +5184,7 @@ LO_Element * lo_PositionDropCaret(MWContext *pContext, int32 x, int32 y, int32 *
 
     LO_Hit(pContext, x, y, FALSE /*requireCaret*/, &result, 0);
 
-    /* This was copied from lo_ProcessClick above
+    /* This was copied from lo_ProcessClick above and modified
      * We want to execute most of the same logic to locate the caret position
      *  without calling lo_SetInsertPoint, which sets the regular caret
      *  and is incompatable with a selection
@@ -5014,6 +5192,13 @@ LO_Element * lo_PositionDropCaret(MWContext *pContext, int32 x, int32 y, int32 *
 
     switch ( result.type )
     {
+        case LO_HIT_TABLE_LINE:
+            if( result.lo_hitLine.region == LO_HIT_LINE_REGION_BEFORE 
+                || result.lo_hitLine.region == LO_HIT_LINE_REGION_AFTER )
+            {
+                    eptr = result.lo_hitLine.selection.begin.element;
+                    position = result.lo_hitLine.selection.begin.position;
+            }
         case LO_HIT_LINE:
             switch ( result.lo_hitLine.region )
             {
@@ -5741,7 +5926,8 @@ lo_FindLineEdge(MWContext* context, lo_DocState *state, LO_Position* where, LO_P
     }
     else {
         LO_HitResult result;
-        lo_HitLine2(context, state, where->element, where->position, where->element->lo_any.x, &result);
+        lo_HitLine2(context, state, where->element, where->position, 
+                    where->element->lo_any.x, where->element->lo_any.y, &result);
         if ( result.type != LO_HIT_LINE )
         {
             XP_ASSERT(FALSE);
@@ -5980,6 +6166,13 @@ Bool lo_ProcessDoubleClick(MWContext *context, lo_TopState *top_state, lo_DocSta
             }
         }
         break;
+
+#ifdef EDITOR
+    case LO_HIT_TABLE_LINE:
+        /* Double click before or after a line is the same as single click */
+        lo_ProcessClick(context, top_state, state, result, FALSE, layer);
+        break;
+#endif
     default:
         break;
     }

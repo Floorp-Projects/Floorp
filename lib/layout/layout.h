@@ -1694,4 +1694,8 @@ int32 lo_GetCellPadding(LO_Element *pCellElement);
 lo_DocState * lo_CreateStateForCellLayout(MWContext *context, LO_CellStruct *cell);
 void lo_RebuildCell(MWContext *context, lo_DocState *state, LO_CellStruct *cell);
 
+/* Even though this is an EDT function, this avoids having to place this in EDT.H
+ * It is only called by lo_ProcessClick() in laysel.c */
+void edt_ForceTableSelection(MWContext *pMWContext, LO_TableStruct *pLoTable);
+
 #endif /* _Layout_h_ */
