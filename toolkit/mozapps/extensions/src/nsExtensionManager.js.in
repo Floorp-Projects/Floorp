@@ -1656,8 +1656,8 @@ nsExtensionManager.prototype = {
         needsRestart = true;
       }
 
-      if (aIsDirty) 
-        needsRestart = this._finishOperations();
+      if (aIsDirty || needsRestart)
+        needsRestart = this._finishOperations() || needsRestart;
     }
     else {
       var win = this._showProgressWindow();
