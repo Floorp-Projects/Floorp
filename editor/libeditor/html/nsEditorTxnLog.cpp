@@ -89,7 +89,7 @@ nsEditorTxnLog::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction)
+nsEditorTxnLog::WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -127,7 +127,7 @@ nsEditorTxnLog::DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransactio
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction)
+nsEditorTxnLog::WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -183,7 +183,7 @@ nsEditorTxnLog::DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction)
+nsEditorTxnLog::WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -239,7 +239,7 @@ nsEditorTxnLog::DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransact
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr)
+nsEditorTxnLog::WillBeginBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -273,7 +273,7 @@ nsEditorTxnLog::DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillEndBatch(nsITransactionManager *aTxMgr)
+nsEditorTxnLog::WillEndBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 
@@ -307,7 +307,7 @@ nsEditorTxnLog::DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult)
 }
 
 NS_IMETHODIMP
-nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction)
+nsEditorTxnLog::WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, PRBool *aInterrupt)
 {
   LOCK_LOG(this);
 

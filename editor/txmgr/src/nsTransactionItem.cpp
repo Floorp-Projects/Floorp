@@ -165,13 +165,15 @@ nsTransactionItem::UndoChildren(nsTransactionManager *aTxMgr)
         return result;
       }
 
-      result = aTxMgr->WillUndoNotify(t);
+      PRBool doInterrupt = PR_FALSE;
+
+      result = aTxMgr->WillUndoNotify(t, &doInterrupt);
 
       if (NS_FAILED(result)) {
         return result;
       }
 
-      if (result == NS_COMFALSE) {
+      if (doInterrupt) {
         return NS_OK;
       }
 
@@ -254,13 +256,15 @@ nsTransactionItem::RedoChildren(nsTransactionManager *aTxMgr)
       return result;
     }
 
-    result = aTxMgr->WillRedoNotify(t);
+    PRBool doInterrupt = PR_FALSE;
+
+    result = aTxMgr->WillRedoNotify(t, &doInterrupt);
 
     if (NS_FAILED(result)) {
       return result;
     }
 
-    if (result == NS_COMFALSE) {
+    if (doInterrupt) {
       return NS_OK;
     }
 

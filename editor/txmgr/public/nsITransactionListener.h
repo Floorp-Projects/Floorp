@@ -52,13 +52,14 @@ public:
    * Do() method.
    * @param aManager the transaction manager doing the transaction.
    * @param aTransaction the transaction being done.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
   NS_IMETHOD WillDo(nsITransactionManager *aManager,
-                    nsITransaction *aTransaction) = 0;
+                    nsITransaction *aTransaction,
+                    PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager calls the Do() method of
@@ -77,13 +78,14 @@ public:
    * a transaction.
    * @param aManager the transaction manager undoing the transaction.
    * @param aTransaction the transaction being undone.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
   NS_IMETHOD WillUndo(nsITransactionManager *aManager,
-                      nsITransaction *aTransaction) = 0;
+                      nsITransaction *aTransaction,
+                      PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager calls the Undo() method of
@@ -102,13 +104,14 @@ public:
    * a transaction.
    * @param aManager the transaction manager redoing the transaction.
    * @param aTransaction the transaction being redone.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
   NS_IMETHOD WillRedo(nsITransactionManager *aManager,
-                      nsITransaction *aTransaction) = 0;
+                      nsITransaction *aTransaction,
+                      PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager calls the Redo() method of
@@ -125,12 +128,13 @@ public:
   /**
    * Called before a transaction manager begins a batch.
    * @param aManager the transaction manager beginning a batch.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
-  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager) = 0;
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager,
+                            PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager begins a batch.
@@ -144,12 +148,13 @@ public:
   /**
    * Called before a transaction manager ends a batch.
    * @param aManager the transaction manager ending a batch.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
-  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager) = 0;
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager,
+                          PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager ends a batch.
@@ -167,14 +172,15 @@ public:
    * @param aManager the transaction manager ending a batch.
    * @param aTopTransaction the transaction at the top of the undo stack.
    * @param aTransactionToMerge the transaction to merge.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
   NS_IMETHOD WillMerge(nsITransactionManager *aManager,
                        nsITransaction *aTopTransaction,
-                       nsITransaction *aTransactionToMerge) = 0;
+                       nsITransaction *aTransactionToMerge,
+                       PRBool *aInterrupt) = 0;
 
   /**
    * Called after a transaction manager tries to merge
@@ -185,10 +191,10 @@ public:
    * @param aTransactionToMerge the transaction to merge.
    * @param aDidMerge true if transaction was merged, else false.
    * @param aMergeResult the nsresult returned after the merge attempt.
+   * @param aInterrupt listeners should set this to PR_TRUE if they
+   * want to interrupt normal control flow, without throwing an error.
    * @result error status returned by the listener. NS_OK
-   * should be used to indicate no error, proceed with normal control
-   * flow. NS_COMFALSE can be returned by the listener to
-   * indicate no error, interrupt normal control flow.
+   * should be used to indicate no error, proceed with normal control flow.
    */
   NS_IMETHOD DidMerge(nsITransactionManager *aManager,
                       nsITransaction *aTopTransaction,
