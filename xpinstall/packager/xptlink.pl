@@ -20,13 +20,12 @@
 # 
 # Contributor(s): 
 # Jonathan Granrose (granrose@netscape.com)
+# Jean-Jacques Enser (jj@netscape.com)
 
 # xptlink.pl -
 #
 # traverse directories created by pkgcp.pl and merge multiple .xpt files into
 # a single .xpt file to improve startup performance.
-#
-# NOTE: this only works on win32 and unix.  mac uses a CodeWarrior project.
 #
 
 # load modules
@@ -42,6 +41,7 @@ use Getopt::Long;
 $saved_cwd        = cwd();
 $component        = "";		# current component being copied
 $PD               = "";		# file Path Delimiter ( /, \, or :)
+$bindir           = "";		# directory for xpt files ("bin" or "viewer")
 $srcdir           = "";		# root directory being copied from
 $destdir          = "";		# root directory being copied to
 $os               = "";  	# os type (MSDOS, Unix)
@@ -78,7 +78,8 @@ if (! $return)
 $xptdirs = ();	# directories in the destination directory
 $xptfiles = ();	# list of xpt files found in current directory
 $file = "";		# file from file list
-$files = ();		# file list for removing .xpt files
+$files = ();	# file list for removing .xpt files
+$cmdline = "";	# command line passed to system() call
 $i = 0;			# generic counter var
 
 ($debug >= 1) && print "\nLinking .xpt files...\n";
@@ -94,15 +95,17 @@ closedir (DESTDIR);
 foreach $component (@xptdirs) {
 	($debug >= 1) && print "[$component]\n";
 	chdir ("$destdir$PD$component");
-	if ( -d "bin".$PD."components" ) {
-		chdir ("bin".$PD."components") ;
+	if ( -d "$bindir$PD"."components" ) {
+		chdir ("$bindir$PD"."components") ;
 		( -f "$component".".xpt" ) &&
+			warn "Warning:  file ".$component.".xpt already exists.\n";
+		( -f ":$component".".xpt" ) &&
 			warn "Warning:  file ".$component.".xpt already exists.\n";
 
 		# create list of .xpt files in cwd
-		($debug >= 4) && print "opendir: $destdir$PD$component$PD"."bin".$PD."components\n";
-		opendir (COMPDIR, "$destdir$PD$component$PD"."bin".$PD."components") ||
-			die "Error: cannot open $destdir$PD$component$PD"."bin".$PD."components.  Exiting...\n";
+		($debug >= 4) && print "opendir: $destdir$PD$component$PD$bindir$PD"."components\n";
+		opendir (COMPDIR, "$destdir$PD$component$PD$bindir$PD"."components") ||
+			die "Error: cannot open $destdir$PD$component$PD$bindir$PD"."components.  Exiting...\n";
 		($debug >= 3) && print "Creating list of .xpt files...\n";
 		@files = sort ( grep (!/^\./, readdir (COMPDIR)));
 		foreach $file (@files) {
@@ -117,16 +120,22 @@ foreach $component (@xptdirs) {
 
 		# merge .xpt files into one if we found any in the dir
 		if ( $#xptfiles >=1 ) {
-			($debug >= 4) && print "$srcdir$PD"."bin".$PD."xpt_link $component".".xpt.new"." @xptfiles\n";
-			system("$srcdir$PD"."bin".$PD."xpt_link ".$component.".xpt.new"." @xptfiles");
+			if ( $os eq "MacOS" ) {
+				$cmdline = "'$srcdir$PD$bindir$PD"."xpt_link' $component".".xpt.new"." @xptfiles";
+			} else {
+				$cmdline = "$srcdir$PD$bindir$PD"."xpt_link $component".".xpt.new"." @xptfiles";
+			}
+			($debug >= 4) && print "$cmdline\n";
+			system($cmdline);
 
 			# remove old .xpt files in the component directory if xpt_link succeeded
-			if ( -f "$component".".xpt.new" ) {
+			if	(( -f "$component".".xpt.new" ) ||
+				(( -f "$PD$component".".xpt.new" ) && ( $os eq "MacOS" ))) {
 				($debug >= 2) && print "Deleting individual xpt files.\n";
 				foreach $file (@xptfiles) {
 					($debug >= 4) && print "\t$file";
-					unlink ("$destdir$PD$component$PD"."bin".$PD."components"."$PD$file") ||
-						warn "Warning: couldn't unlink file $destdir$PD$component$PD"."bin".$PD."components"."$PD$file.\n";
+					unlink ("$destdir$PD$component$PD$bindir$PD"."components"."$PD$file") ||
+						warn "Warning: couldn't unlink file $file.\n";
 					($debug >= 4) && print "\t\tdeleted\n";
 				}
 				($debug >= 4) && print "\n";
@@ -134,8 +143,13 @@ foreach $component (@xptdirs) {
 				die "Error: xpt_link failed.  Exiting...\n";
 			}
 			($debug >= 2) && print "Renaming $component".".xpt.new as $component".".xpt.\n";
-			rename ("$component".".xpt.new", "$component".".xpt") ||
-				warn "Warning: rename of $component".".xpt.new as ".$component.".xpt failed.\n";
+			if ( $os eq "MacOS" ) {
+				rename (":$component".".xpt.new", ":$component".".xpt") ||
+					warn "Warning: rename of $component".".xpt.new as ".$component.".xpt failed.\n";
+			} else {
+				rename ("$component".".xpt.new", "$component".".xpt") ||
+					warn "Warning: rename of $component".".xpt.new as ".$component.".xpt failed.\n";
+			}
 		}
 	}
 	# reinitialize vars for next component
@@ -188,14 +202,19 @@ sub check_arguments
 		print "Error: OS type (--os) not specified.\n";
 		$exitval += 8;
 	} elsif ( $os =~ /mac/i ) {
-		die "Error: MacOS not supported.  Exiting...\n";
+		$os = "MacOS";
+		$PD = ":";
+		$bindir = "viewer";
+		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
 		$PD = "\\";
+		$bindir = "bin";
 		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /unix/i ) {
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
 		$PD = "/";
+		$bindir = "bin";
 		($debug >= 4) && print " OS: Unix\n";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
@@ -230,19 +249,21 @@ sub print_usage
 	print <<EOC
 
 $0
-	Traverse component directory specified and merge multiple existing .xpt files into
-	single new .xpt files for improved startup time.
+	Traverse component directory specified and merge multiple existing
+	.xpt files into single new .xpt files for improved startup time.
 
 Options:
 
 	-s, --source <directory>
-		Specifies the directory from which the component files were copied.  Typically,
-		this will be the same directory used by pkgcp.pl.
+		Specifies the directory from which the component files were
+		copied.  Typically, this will be the same directory used by
+		pkgcp.pl.
 		Required.
 
 	-d, --destination <directory>
-		Specifies the directory in which the component directories are located.
-		Typically, this will be the same directory used by pkgcp.pl.
+		Specifies the directory in which the component directories are
+		located.  Typically, this will be the same directory used by
+		pkgcp.pl.
 		Required.
 
 	-o, --os [dos|unix]
