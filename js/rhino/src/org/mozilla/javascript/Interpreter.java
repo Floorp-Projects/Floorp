@@ -116,8 +116,13 @@ public class Interpreter
         Icode_LOAD_STR2                 = BASE_ICODE + 33,
         Icode_LOAD_STR4                 = BASE_ICODE + 34,
 
+    // Load index register to prepare for the following index operation
+        Icode_LOAD_IND1                 = BASE_ICODE + 35,
+        Icode_LOAD_IND2                 = BASE_ICODE + 36,
+        Icode_LOAD_IND4                 = BASE_ICODE + 37,
+
     // Last icode
-        MAX_ICODE                       = BASE_ICODE + 34;
+        MAX_ICODE                       = BASE_ICODE + 37;
 
     public Object compile(Scriptable scope,
                           CompilerEnvirons compilerEnv,
@@ -357,11 +362,8 @@ public class Interpreter
                     // statements needs closure code creating new function
                     // object on stack as function statements are initialized
                     // at script/function start
-                    iCodeTop = addIcode(Icode_CLOSURE, iCodeTop);
-                    iCodeTop = addIndex(fnIndex, iCodeTop);
-                    itsStackDepth++;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
+                    iCodeTop = addIndexOp(Icode_CLOSURE, fnIndex, iCodeTop);
+                    stackChange(1);
                 } else {
                     stackShouldBeZero = true;
                 }
@@ -537,12 +539,12 @@ public class Interpreter
                                                Node.NON_SPECIALCALL);
                 if (callType != Node.NON_SPECIALCALL) {
                     // embed line number and source filename
-                    iCodeTop = addIcode(Icode_CALLSPECIAL, iCodeTop);
+                    iCodeTop = addIndexOp(Icode_CALLSPECIAL, argCount, iCodeTop);
                     iCodeTop = addByte(callType, iCodeTop);
                     iCodeTop = addByte(type == Token.NEW ? 1 : 0, iCodeTop);
                     iCodeTop = addShort(itsLineNumber, iCodeTop);
                 } else {
-                    iCodeTop = addToken(type, iCodeTop);
+                    iCodeTop = addIndexOp(type, argCount, iCodeTop);
                 }
                 // adjust stack
                 if (type == Token.NEW) {
@@ -552,7 +554,6 @@ public class Interpreter
                     // f, thisObj, args -> results
                    itsStackDepth -= (argCount + 1);
                 }
-                iCodeTop = addIndex(argCount, iCodeTop);
                 if (argCount > itsData.itsMaxCalleeArgs)
                     itsData.itsMaxCalleeArgs = argCount;
                 break;
@@ -887,12 +888,10 @@ public class Interpreter
                         iCodeTop = addInt(inum, iCodeTop);
                     }
                 } else {
-                    iCodeTop = addToken(Token.NUMBER, iCodeTop);
-                    iCodeTop = addDouble(num, iCodeTop);
+                    int index = getDoubleIndex(num);
+                    iCodeTop = addIndexOp(Token.NUMBER, index, iCodeTop);
                 }
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                stackChange(1);
                 break;
             }
 
@@ -1082,11 +1081,8 @@ public class Interpreter
             case Token.REGEXP : {
                 stackDelta = 1;
                 int index = node.getExistingIntProp(Node.REGEXP_PROP);
-                iCodeTop = addToken(Token.REGEXP, iCodeTop);
-                iCodeTop = addIndex(index, iCodeTop);
-                itsStackDepth++;
-                if (itsStackDepth > itsData.itsMaxStack)
-                    itsData.itsMaxStack = itsStackDepth;
+                iCodeTop = addIndexOp(Token.REGEXP, index, iCodeTop);
+                stackChange(1);
                 break;
             }
 
@@ -1212,8 +1208,7 @@ public class Interpreter
         } else {
             throw badTree(node);
         }
-        iCodeTop = addIcode(Icode_LITERAL_NEW, iCodeTop);
-        iCodeTop = addInt(count, iCodeTop);
+        iCodeTop = addIndexOp(Icode_LITERAL_NEW, count, iCodeTop);
         stackChange(1);
         while (child != null) {
             iCodeTop = generateICode(child, iCodeTop);
@@ -1396,21 +1391,6 @@ public class Interpreter
         return iCodeTop + 2;
     }
 
-    private int addIndex(int index, int iCodeTop)
-    {
-        if (index < 0) Kit.codeBug();
-        if (index > 0xFFFF) {
-            throw Context.reportRuntimeError0("msg.too.big.index");
-        }
-        byte[] array = itsData.itsICode;
-        if (iCodeTop + 2 > array.length) {
-            array = increaseICodeCapasity(iCodeTop, 2);
-        }
-        array[iCodeTop] = (byte)(index >>> 8);
-        array[iCodeTop + 1] = (byte)index;
-        return iCodeTop + 2;
-    }
-
     private int addInt(int i, int iCodeTop)
     {
         byte[] array = itsData.itsICode;
@@ -1424,7 +1404,7 @@ public class Interpreter
         return iCodeTop + 4;
     }
 
-    private int addDouble(double num, int iCodeTop)
+    private int getDoubleIndex(double num)
     {
         int index = itsDoubleTableTop;
         if (index == 0) {
@@ -1436,9 +1416,7 @@ public class Interpreter
         }
         itsData.itsDoubleTable[index] = num;
         itsDoubleTableTop = index + 1;
-
-        iCodeTop = addIndex(index, iCodeTop);
-        return iCodeTop;
+        return index;
     }
 
     private int addStringOp(int op, String str, int iCodeTop)
@@ -1453,9 +1431,30 @@ public class Interpreter
             iCodeTop = addByte(index, iCodeTop);
         } else if (index <= 0xFFFF) {
             iCodeTop = addIcode(Icode_LOAD_STR2, iCodeTop);
-            iCodeTop = addIndex(index, iCodeTop);
+            iCodeTop = addShort(index, iCodeTop);
         } else {
             iCodeTop = addIcode(Icode_LOAD_STR4, iCodeTop);
+            iCodeTop = addInt(index, iCodeTop);
+        }
+        if (op > BASE_ICODE) {
+            iCodeTop = addIcode(op, iCodeTop);
+        } else {
+            iCodeTop = addToken(op, iCodeTop);
+        }
+        return iCodeTop;
+    }
+
+    private int addIndexOp(int op, int index, int iCodeTop)
+    {
+        if (index < 0) Kit.codeBug();
+        if (index <= 0xFF) {
+            iCodeTop = addIcode(Icode_LOAD_IND1, iCodeTop);
+            iCodeTop = addByte(index, iCodeTop);
+        } else if (index <= 0xFFFF) {
+            iCodeTop = addIcode(Icode_LOAD_IND2, iCodeTop);
+            iCodeTop = addShort(index, iCodeTop);
+        } else {
+            iCodeTop = addIcode(Icode_LOAD_IND4, iCodeTop);
             iCodeTop = addInt(index, iCodeTop);
         }
         if (op > BASE_ICODE) {
@@ -1594,6 +1593,9 @@ public class Interpreter
                     case Icode_LOAD_STR1:        return "LOAD_STR1";
                     case Icode_LOAD_STR2:        return "LOAD_STR2";
                     case Icode_LOAD_STR4:        return "LOAD_STR4";
+                    case Icode_LOAD_IND1:        return "LOAD_IND1";
+                    case Icode_LOAD_IND2:        return "LOAD_IND2";
+                    case Icode_LOAD_IND4:        return "LOAD_IND4";
                 }
             }
             return "<UNKNOWN ICODE: "+icode+">";
@@ -1612,6 +1614,7 @@ public class Interpreter
                         + ", length = " + iCodeLength);
             out.println("MaxStack = " + idata.itsMaxStack);
 
+            int indexReg = 0;
             for (int pc = 0; pc < iCodeLength; ) {
                 out.flush();
                 out.print(" [" + pc + "] ");
@@ -1655,19 +1658,15 @@ public class Interpreter
                         int callType = iCode[pc] & 0xFF;
                         boolean isNew =  (iCode[pc + 1] != 0);
                         int line = getShort(iCode, pc+2);
-                        int count = getIndex(iCode, pc + 4);
                         out.println(tname+" "+callType+" "+isNew
-                                    +" "+count+" "+line);
-                        pc += 6;
+                                    +" "+indexReg+" "+line);
+                        pc += 4;
                         break;
                     }
-                    case Token.REGEXP : {
-                        int i = getIndex(iCode, pc);
-                        Object regexp = idata.itsRegExpLiterals[i];
-                        out.println(tname + " " + regexp);
-                        pc += 2;
+                    case Token.REGEXP :
+                        out.println(
+                            tname+" "+idata.itsRegExpLiterals[indexReg]);
                         break;
-                    }
                     case Token.ARRAYLIT : {
                         int count = getInt(iCode, pc);
                         pc += 4;
@@ -1682,20 +1681,14 @@ public class Interpreter
                         out.println(tname+" : "+idsOffset);
                         break;
                     }
-                    case Icode_CLOSURE : {
-                        int i = getIndex(iCode, pc);
-                        InterpreterData data2 = idata.itsNestedFunctions[i];
-                        out.println(tname + " " + data2);
-                        pc += 2;
+                    case Icode_CLOSURE :
+                        out.println(
+                            tname+" "+idata.itsNestedFunctions[indexReg]);
                         break;
-                    }
                     case Token.NEW :
-                    case Token.CALL : {
-                        int count = getIndex(iCode, pc);
-                        out.println(tname+' '+count);
-                        pc += 2;
+                    case Token.CALL :
+                        out.println(tname+' '+indexReg);
                         break;
-                    }
                     case Token.THROW : {
                         int line = getShort(iCode, pc);
                         out.println(tname + " : " + line);
@@ -1715,8 +1708,7 @@ public class Interpreter
                         break;
                     }
                     case Token.NUMBER : {
-                        int index = getIndex(iCode, pc);
-                        double value = idata.itsDoubleTable[index];
+                        double value = idata.itsDoubleTable[indexReg];
                         out.println(tname + " " + value);
                         pc += 2;
                         break;
@@ -1734,9 +1726,8 @@ public class Interpreter
                         break;
                     }
                     case Icode_LITERAL_NEW: {
-                        int numberOfValues = getInt(iCode, pc);
+                        int numberOfValues = indexReg;
                         out.println(tname + " : " + numberOfValues);
-                        pc += 4;
                         break;
                     }
                     case Icode_LOAD_STR1: {
@@ -1752,6 +1743,21 @@ public class Interpreter
                     case Icode_LOAD_STR4: {
                         String str = strings[getInt(iCode, pc)];
                         out.println(tname + " \"" + str + '"');
+                        pc += 4;
+                    }
+                    case Icode_LOAD_IND1: {
+                        indexReg = 0xFF & iCode[pc];
+                        out.println(tname+" "+indexReg);
+                        ++pc;
+                    }
+                    case Icode_LOAD_IND2: {
+                        indexReg = getIndex(iCode, pc);
+                        out.println(tname+" "+indexReg);
+                        pc += 2;
+                    }
+                    case Icode_LOAD_IND4: {
+                        indexReg = getInt(iCode, pc);
+                        out.println(tname+" "+indexReg);
                         pc += 4;
                     }
                 }
@@ -1855,6 +1861,12 @@ public class Interpreter
             case Icode_NAMEINC :
             case Icode_NAMEDEC :
             case Token.CATCH_SCOPE :
+            case Token.REGEXP :
+            case Icode_CLOSURE :
+            case Token.NEW :
+            case Token.CALL :
+            case Icode_LITERAL_NEW:
+            case Token.NUMBER :
                 return 1;
 
             case Token.THROW :
@@ -1886,21 +1898,7 @@ public class Interpreter
                 // call type
                 // is new
                 // line number
-                // arg count
-                return 1 + 1 + 1 + 2 + 2;
-
-            case Token.REGEXP :
-                // regexp index
-                return 1 + 2;
-
-            case Icode_CLOSURE :
-                // index of closure master copy
-                return 1 + 2;
-
-            case Token.NEW :
-            case Token.CALL :
-                // arg count
-                return 1 + 2;
+                return 1 + 1 + 1 + 2;
 
             case Icode_SHORTNUMBER :
                 // short number
@@ -1909,10 +1907,6 @@ public class Interpreter
             case Icode_INTNUMBER :
                 // int number
                 return 1 + 4;
-
-            case Token.NUMBER :
-                // index of double number
-                return 1 + 2;
 
             case Icode_LOAD_STR1:
                 // ubyte string index
@@ -1924,6 +1918,18 @@ public class Interpreter
 
             case Icode_LOAD_STR4:
                 // int string index
+                return 1 + 4;
+
+            case Icode_LOAD_IND1:
+                // ubyte index
+                return 1 + 1;
+
+            case Icode_LOAD_IND2:
+                // ushort index
+                return 1 + 2;
+
+            case Icode_LOAD_IND4:
+                // int index
                 return 1 + 4;
 
             case Icode_NAME_AND_THIS :
@@ -1938,9 +1944,6 @@ public class Interpreter
                 return 1 + 4 + 4;
             case Token.OBJECTLIT:
                 // offset of property ids array
-                return 1 + 4;
-            case Icode_LITERAL_NEW:
-                // number of literal values
                 return 1 + 4;
             default:
                 Kit.codeBug(); // Bad icodeToken
@@ -2155,6 +2158,7 @@ public class Interpreter
 
         String[] strings = idata.itsStringTable;
         String stringReg = null;
+        int indexReg = 0;
 
         Loop: for (;;) {
             int pcJump;
@@ -2579,6 +2583,18 @@ public class Interpreter
         stringReg = strings[getInt(iCode, pc)];
         pc += 4;
         continue Loop;
+    case Icode_LOAD_IND1:
+        indexReg = 0xFF & iCode[pc];
+        ++pc;
+        continue Loop;
+    case Icode_LOAD_IND2:
+        indexReg = getIndex(iCode, pc);
+        pc += 2;
+        continue Loop;
+    case Icode_LOAD_IND4:
+        indexReg = getInt(iCode, pc);
+        pc += 4;
+        continue Loop;
     case Token.BINDNAME :
         stack[++stackTop] = ScriptRuntime.bind(scope, stringReg);
         continue Loop;
@@ -2667,12 +2683,12 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
+        // indexReg: number of arguments
         int callType = iCode[pc] & 0xFF;
         boolean isNew =  (iCode[pc + 1] != 0);
         int sourceLine = getShort(iCode, pc + 2);
-        int count = getIndex(iCode, pc + 4);
-        stackTop -= count;
-        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, count);
+        stackTop -= indexReg;
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
         Object functionThis;
         if (isNew) {
             functionThis = null;
@@ -2690,7 +2706,7 @@ public class Interpreter
                               scope, thisObj, callType,
                               idata.itsSourceFile, sourceLine);
         instructionCount = cx.instructionCount;
-        pc += 6;
+        pc += 4;
         continue Loop;
     }
     case Token.CALL : {
@@ -2699,8 +2715,8 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int count = getIndex(iCode, pc);
-        stackTop -= count;
+        // indexReg: number of arguments
+        stackTop -= indexReg;
         int calleeArgShft = stackTop + 1;
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
@@ -2723,11 +2739,12 @@ public class Interpreter
             // argument array
             InterpretedFunction f = (InterpretedFunction)lhs;
             stack[stackTop] = interpret(cx, calleeScope, calleeThis,
-                                        stack, sDbl, calleeArgShft, count,
+                                        stack, sDbl, calleeArgShft, indexReg,
                                         f, f.itsData);
         } else if (lhs instanceof Function) {
             Function f = (Function)lhs;
-            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, count);
+            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
+                                            indexReg);
             stack[stackTop] = f.call(cx, calleeScope, calleeThis, outArgs);
         } else {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
@@ -2741,7 +2758,6 @@ public class Interpreter
         }
 
         instructionCount = cx.instructionCount;
-        pc += 2;
         continue Loop;
     }
     case Token.NEW : {
@@ -2750,8 +2766,8 @@ public class Interpreter
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int count = getIndex(iCode, pc);
-        stackTop -= count;
+        // indexReg: number of arguments
+        stackTop -= indexReg;
         int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
 
@@ -2761,7 +2777,7 @@ public class Interpreter
             InterpretedFunction f = (InterpretedFunction)lhs;
             Scriptable newInstance = f.createObject(cx, scope);
             Object callResult = interpret(cx, scope, newInstance,
-                                          stack, sDbl, calleeArgShft, count,
+                                          stack, sDbl, calleeArgShft, indexReg,
                                           f, f.itsData);
             if (callResult instanceof Scriptable && callResult != undefined) {
                 stack[stackTop] = callResult;
@@ -2770,7 +2786,8 @@ public class Interpreter
             }
         } else if (lhs instanceof Function) {
             Function f = (Function)lhs;
-            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft, count);
+            Object[] outArgs = getArgsArray(stack, sDbl, calleeArgShft,
+                                            indexReg);
             stack[stackTop] = f.construct(cx, scope, outArgs);
         } else {
             if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
@@ -2784,7 +2801,6 @@ public class Interpreter
 
         }
         instructionCount = cx.instructionCount;
-        pc += 2;
         continue Loop;
     }
     case Token.TYPEOF : {
@@ -2820,8 +2836,7 @@ public class Interpreter
     case Token.NUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = idata.itsDoubleTable[getIndex(iCode, pc)];
-        pc += 2;
+        sDbl[stackTop] = idata.itsDoubleTable[indexReg];
         continue Loop;
     case Token.NAME :
         stack[++stackTop] = ScriptRuntime.name(scope, stringReg);
@@ -2983,36 +2998,30 @@ public class Interpreter
         stack[++stackTop] = scope;
         continue Loop;
     case Icode_CLOSURE : {
-        int i = getIndex(iCode, pc);
-        InterpreterData closureData = idata.itsNestedFunctions[i];
+        InterpreterData closureData = idata.itsNestedFunctions[indexReg];
         stack[++stackTop] = createFunction(cx, scope, closureData,
                                            idata.itsFromEvalCode);
-        pc += 2;
         continue Loop;
     }
     case Token.REGEXP : {
-        int i = getIndex(iCode, pc);
         Scriptable regexp;
         if (idata.itsFunctionType != 0) {
-            regexp = ((InterpretedFunction)fnOrScript).itsRegExps[i];
+            regexp = ((InterpretedFunction)fnOrScript).itsRegExps[indexReg];
         } else {
             if (scriptRegExps == null) {
                 scriptRegExps = wrapRegExps(cx, scope, idata);
             }
-            regexp = scriptRegExps[i];
+            regexp = scriptRegExps[indexReg];
         }
         stack[++stackTop] = regexp;
-        pc += 2;
         continue Loop;
     }
-    case Icode_LITERAL_NEW : {
-        int i = getInt(iCode, pc);
+    case Icode_LITERAL_NEW :
+        // indexReg: number of values in the literal
         ++stackTop;
-        stack[stackTop] = new Object[i];
+        stack[stackTop] = new Object[indexReg];
         sDbl[stackTop] = 0;
-        pc += 4;
         continue Loop;
-    }
     case Icode_LITERAL_SET : {
         Object value = stack[stackTop];
         if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
