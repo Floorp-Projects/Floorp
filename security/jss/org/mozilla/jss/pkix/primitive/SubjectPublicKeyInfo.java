@@ -63,11 +63,7 @@ public class SubjectPublicKeyInfo extends java.security.spec.X509EncodedKeySpec
     }
 
     public byte[] getEncoded() {
-        if( subjectPublicKey.getPadCount() != 0 ) {
-            Assert.notReached("public key is not an integral number of bytes");
-            return null;
-        }
-        return subjectPublicKey.getBits();
+        return ASN1Util.encode(this);
     }
         
 
