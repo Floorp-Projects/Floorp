@@ -2139,8 +2139,8 @@ jsdValue::GetStringValue(char **_rval)
 {
     ASSERT_VALID_EPHEMERAL;
     JSString *jstr_val = JSD_GetValueString(mCx, mValue);
-    char *bytes = JS_GetStringBytes(jstr_val);
-    if (bytes) {
+    if (jstr_val) {
+        char *bytes = JS_GetStringBytes(jstr_val);
         *_rval = PL_strdup(bytes);
         if (!*_rval)
             return NS_ERROR_OUT_OF_MEMORY;
