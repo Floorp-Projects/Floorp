@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.65 2004/03/20 05:51:43 bugreport%peshkin.net Exp $ -->
+<!-- $Id: installation.xml,v 1.66 2004/03/21 22:09:31 bugreport%peshkin.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1588,6 +1588,370 @@ $smtp->quit;
 
   </section>
 
+
+  <section id="nonroot">
+    <title>UNIX (non-root) Installation Notes</title>
+
+    <section>
+      <title>Introduction</title>
+
+      <para>If you are running an *NIX OS as non-root, either due
+      to lack of access (web hosts, for example) or for security
+      reasons, this will detail how to install Bugzilla on such
+      a setup. It is recommended that you read through the
+      <xref linkend="installation" />
+      first to get an idea on the installation steps required.
+      (These notes will reference to steps in that guide.)</para>
+
+    </section>
+
+    <section>
+      <title>MySQL</title>
+
+      <para>You may have MySQL installed as root. If you're
+      setting up an account with a web host, a MySQL account
+      needs to be set up for you. From there, you can create
+      the bugs account, or use the account given to you.</para>
+
+      <warning>
+        <para>You may have problems trying to set up
+        <command>GRANT</command> permissions to the database.
+        If you're using a web host, chances are that you have a
+        separate database which is already locked down (or one big
+        database with limited/no access to the other areas), but you
+        may want to ask your system adminstrator what the security
+        settings are set to, and/or run the <command>GRANT</command>
+        command for you.</para>
+
+        <para>Also, you will probably not be able to change the MySQL
+        root user password (for obvious reasons), so skip that
+        step.</para>
+      </warning>
+
+      <section>
+        <title>Running MySQL as Non-Root</title>
+          <section>
+            <title>The Custom Configuration Method</title>
+              <para>Create a file .my.cnf in your 
+              home directory (using /home/foo in this example)
+              as follows....</para>
+              <programlisting>
+[mysqld]
+datadir=/home/foo/mymysql
+socket=/home/foo/mymysql/thesock
+port=8081
+
+[mysql]
+socket=/home/foo/mymysql/thesock
+port=8081
+
+[mysql.server]
+user=mysql
+basedir=/var/lib
+
+[safe_mysqld]
+err-log=/home/foo/mymysql/the.log
+pid-file=/home/foo/mymysql/the.pid
+              </programlisting>
+          </section>
+          <section>
+            <title>The Custom Built Method</title>
+    
+            <para>You can install MySQL as a not-root, if you really need to.
+            Build it with PREFIX set to <filename class="directory">/home/foo/mysql</filename>,
+            or use pre-installed executables, specifying that you want
+            to put all of the data files in <filename class="directory">/home/foo/mysql/data</filename>.
+            If there is another MySQL server running on the system that you
+            do not own, use the -P option to specify a TCP port that is not
+            in use.</para>
+          </section>
+    
+          <section>
+            <title>Starting the Server</title>
+            <para>After your mysqld program is built and any .my.cnf file is 
+            in place, you must initialize the databases (ONCE).</para>
+            <screen>
+              <prompt>bash$</prompt>
+              <command>mysql_install_db</command>
+            </screen>
+            <para>Then start the daemon with</para>
+            <screen>
+              <prompt>bash$</prompt>
+              <command>safe_mysql &amp;</command>
+            </screen>
+            <para>After you start mysqld the first time, you then connect to
+            it as "root" and <command>GRANT</command> permissions to other
+            users. (Again, the MySQL root account has nothing to do with
+            the *NIX root account.)</para>
+    
+            <note>
+              <para>You will need to start the daemons yourself. You can either
+              ask your system administrator to add them to system startup files, or
+              add a crontab entry that runs a script to check on these daemons
+              and restart them if needed.</para>
+            </note>
+    
+            <warning>
+              <para>Do NOT run daemons or other services on a server without first
+              consulting your system administrator! Daemons use up system resources
+              and running one may be in violation of your terms of service for any
+              machine on which you are a user!</para>
+            </warning>
+          </section>
+      </section>
+
+    </section>
+
+    <section>
+      <title>Perl</title>
+
+      <para>On the extremely rare chance that you don't have Perl on
+      the machine, you will have to build the sources
+      yourself. The following commands should get your system
+      installed with your own personal version of Perl:</para>
+
+      <screen>
+        <prompt>bash$</prompt>
+        <command>wget http://perl.com/CPAN/src/stable.tar.gz</command>
+        <prompt>bash$</prompt>
+        <command>tar zvxf stable.tar.gz</command>
+        <prompt>bash$</prompt>
+        <command>cd perl-5.8.1</command> (or whatever the version of Perl is called)
+        <prompt>bash$</prompt>
+        <command>sh Configure -de -Dprefix=/home/foo/perl</command>
+        <prompt>bash$</prompt>
+        <command>make && make test && make install</command>
+      </screen>
+
+      <para>Once you have Perl installed into a directory (probably
+      in <filename class="directory">~/perl/bin</filename>), you'll have to
+      change the locations on the scripts, which is detailed later on
+      this page.</para>
+    </section>
+
+    <section>
+      <title>Perl Modules</title>
+
+      <para>Installing the Perl modules as a non-root user is probably the
+      hardest part of the process. There are two different methods: a
+      completely independant Perl with its own modules, or personal
+      modules using the current (root installed) version of Perl. The
+      independant method takes up quite a bit of disk space, but is
+      less complex, while the mixed method only uses as much space as the
+      modules themselves, but takes more work to setup.</para>
+
+      <section>
+        <title>The Independant Method</title>
+
+        <para>The independant method requires that you install your own
+        personal version of Perl, as detailed in the previous section. Once
+        installed, you can start the CPAN shell with the following
+        command:</para>
+
+        <para>
+          <screen>
+            <prompt>bash$</prompt>
+            <command>/home/foo/perl/bin/perl -MCPAN -e 'shell'</command>
+          </screen>
+        </para>
+
+        <para>And then:</para>
+
+        <para>
+          <screen>
+            <prompt>cpan&gt;</prompt>
+            <command>install Bundle::Bugzilla</command>
+          </screen>
+        </para>
+
+        <para>With this method, module installation will usually go a lot
+        smoother, but if you have any hang-ups, you can consult the next
+        section.</para>
+      </section>
+
+      <section>
+        <title>The Mixed Method</title>
+
+        <para>First, you'll need to configure CPAN to
+        install modules in your home directory. The CPAN FAQ says the
+        following on this issue:</para>
+
+        <para>
+          <programlisting>
+5)  I am not root, how can I install a module in a personal directory?
+
+    You will most probably like something like this:
+
+      o conf makepl_arg "LIB=~/myperl/lib \
+                         INSTALLMAN1DIR=~/myperl/man/man1 \
+                         INSTALLMAN3DIR=~/myperl/man/man3"
+    install Sybase::Sybperl
+
+    You can make this setting permanent like all "o conf" settings with "o conf commit".
+
+    You will have to add ~/myperl/man to the MANPATH environment variable and also tell your Perl programs to
+    look into ~/myperl/lib, e.g. by including
+
+      use lib "$ENV{HOME}/myperl/lib";
+
+    or setting the PERL5LIB environment variable.
+
+    Another thing you should bear in mind is that the UNINST parameter should never be set if you are not root.</programlisting>
+        </para>
+
+        <para>So, you will need to create a Perl directory in your home
+        directory, as well as the <filename class="directory">lib</filename>,
+        <filename class="directory">man</filename>,
+        <filename class="directory">man/man1</filename>, and
+        <filename class="directory">man/man3</filename> directories in that
+        Perl directory. Set the MANPATH variable and PERL5LIB variable, so
+        that the installation of the modules goes smoother. (Setting
+        UNINST=0 in your "make install" options, on the CPAN first-time
+        configuration, is also a good idea.)</para>
+
+        <para>After that, go into the CPAN shell:</para>
+
+        <para>
+          <screen>
+            <prompt>bash$</prompt>
+            <command>perl -MCPAN -e 'shell'</command>
+          </screen>
+        </para>
+
+        <para>From there, you will need to type in the above "o conf" command
+        and commit the changes. Then you can run through the installation:</para>
+
+        <para>
+          <screen>
+            <prompt>cpan&gt;</prompt>
+            <command>install Bundle::Bugzilla</command>
+          </screen>
+        </para>
+
+        <para>Most of the module installation process should go smoothly. However,
+        you may have some problems with Template. When you first start, you will
+        want to try to install Template with the XS Stash options on. If this
+        doesn't work, it may spit out C compiler error messages and croak back
+        to the CPAN shell prompt. So, redo the install, and turn it off. (In fact,
+        say no to all of the Template questions.) It may also start failing on a
+        few of the tests. If the total tests passed is a reasonable figure (90+%),
+        force the install with the following command:</para>
+
+        <para>
+          <screen>
+            <prompt>cpan&gt;</prompt>
+            <command>force install Template</command>
+          </screen>
+        </para>
+
+        <para>You may also want to install the other optional modules:</para>
+
+        <screen>
+          <prompt>cpan&gt;</prompt>
+          <command>install GD</command>
+          <prompt>cpan&gt;</prompt>
+          <command>install Chart::Base</command>
+          <prompt>cpan&gt;</prompt>
+          <command>install MIME::Parser</command>
+        </screen>
+
+      </section>
+    </section>
+
+    <section>
+      <title>HTTP Server</title>
+
+      <para>Ideally, this also needs to be installed as root and
+      running under a special webserver account. As long as
+      the web server will allow the running of *.cgi files outside of a
+      cgi-bin, and a way of denying web access to certain files (such as a
+      .htaccess file), you should be good in this department.</para>
+
+      <section>
+        <title>Running Apache as Non-Root</title>
+
+        <para>You can run Apache as a non-root user, but the port will need
+        to be set to one above 1024. If you type <command>httpd -V</command>,
+        you will get a list of the variables that your system copy of httpd
+        uses. One of those, namely HTTPD_ROOT, tells you where that
+        installation looks for its config information.</para>
+
+        <para>From there, you can copy the config files to your own home
+        directory to start editing. When you edit those and then use the -d
+        option to override the HTTPD_ROOT compiled into the web server, you
+        get control of your own customized web server.</para>
+
+        <note>
+          <para>You will need to start the daemons yourself. You can either
+          ask your system administrator to add them to system startup files, or
+          add a crontab entry that runs a script to check on these daemons
+          and restart them if needed.</para>
+        </note>
+
+        <warning>
+          <para>Do NOT run daemons or other services on a server without first
+          consulting your system administrator! Daemons use up system resources
+          and running one may be in violation of your terms of service for any
+          machine on which you are a user!</para>
+        </warning>
+      </section>
+    </section>
+
+    <section>
+      <title>Bugzilla</title>
+
+      <para>Since you probably can't set up a symbolic link to
+      <filename>/usr/bonsaitools/bin/perl</filename> as a non-root user,
+      you will need to hack the scripts to point to the right Perl:</para>
+
+      <para>
+        <programlisting>perl -pi -e
+        's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm
+        processmail syncshadowdb</programlisting>
+
+        Change <filename>/usr/bin/perl</filename> to match the location
+        of Perl on your machine. If you had to install Perl as non-root,
+        this would be the location in your home directory.
+      </para>
+
+      <note>
+        <para>Version 2.17+ of Bugzilla now already has the scripts
+        pointing to <filename>/usr/bin/perl</filename>.</para>
+      </note>
+
+      <para>Of course, the scripts will not work if they don't know the
+      location of your newly install Perl modules, so you will have to hack
+      the scripts to look for those, too:</para>
+
+      <para>
+        <programlisting>perl -pi -e
+        's@use strict\;@use strict\; use lib \"/home/foo/perl/lib\"\;@'
+        *cgi *pl Bug.pm processmail syncshadowdb</programlisting>
+
+        Change <filename class="directory">/home/foo/perl/lib</filename> to
+        your personal Perl library directory. You can probably skip this
+        step if you are using the independant method of Perl module
+        installation.
+      </para>
+
+      <para>When you run <command>./checksetup.pl</command> to create
+      the <filename>localconfig</filename> file, it will list the Perl
+      modules it finds. If one is missing, go back and double-check the
+      module installation from the CPAN shell, then delete the
+      <filename>localconfig</filename> file and try again.</para>
+
+      <warning>
+        <para>The one option in <filename>localconfig</filename> you
+        might have problems with is the web server group. If you can't
+        successful browse to the <filename>index.cgi</filename> (like
+        a Forbidden error), you may have to relax your permissions,
+        and blank out the web server group. Of course, this may pose
+        as a security risk. Having a properly jailed shell and/or
+        limited access to shell accounts may lessen the security risk,
+        but use at your own risk.</para>
+      </warning>
+    </section>
+  </section>
 
   <section id="troubleshooting">
     <title>Troubleshooting</title>
