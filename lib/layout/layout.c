@@ -4923,7 +4923,7 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
 		 */
 		if (tptr->type == LO_IMAGE)
 		{
-			t_width = t_width + (2 * tptr->lo_image.border_width);
+			t_width += (2 * tptr->lo_image.border_width);
             /*
              * If we're editing, images also account for their border space
              */
@@ -4933,6 +4933,15 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
                 x1 -= tptr->lo_image.border_horiz_space;
             }
 		}
+        else if(tptr->type == LO_CELL && editMode )
+        {
+            /* In editor, include intercell space so we
+             * don't "get lost" when clicking inbetween cells
+             * This assures a cell will be found if we are in a table
+            */
+            t_width += tptr->lo_cell.inter_cell_space;
+        }
+
 		if (t_width <= 0)
 		{
 			t_width = 1;
@@ -4944,7 +4953,7 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
 		 */
 		if (tptr->type == LO_IMAGE)
 		{
-			t_height = t_height + (2 * tptr->lo_image.border_width);
+			t_height += (2 * tptr->lo_image.border_width);
 
             /*
              * If we're editing, images also account for their border space
@@ -4954,6 +4963,10 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
                 t_height += 2 * tptr->lo_image.border_vert_space;
             }
 		}
+        else if(tptr->type == LO_CELL && editMode )
+        {
+            t_height += tptr->lo_cell.inter_cell_space;
+        }
 
         is_inflow_layer =
             (tptr->type == LO_CELL) && tptr->lo_cell.cell_inflow_layer;
@@ -5104,8 +5117,8 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
          *  to return if no other element is found
         */
         tptrCell = tptr;
-		tptr = lo_XYToCellElement(context, state, &(tptr->lo_cell),
-			x, y, TRUE, into_cells, into_ilayers);
+        tptr = lo_XYToCellElement(context, state, &(tptr->lo_cell),
+                                  x, y, TRUE, into_cells, into_ilayers);
         if (!tptr && editMode)
         {
             tptr = lo_XYToNearestCellElement(context, state,
@@ -5123,7 +5136,7 @@ XP_TRACE(("lo_PointToLine says line %d\n", line));
      *          or the element is a non-editable linefeed (we are after a table),
      *          and return this only if we are outside the table boundary
     */
-    if( EDT_IS_EDITOR(context) && tptrTable && !in_table &&
+    if( editMode /*EDT_IS_EDITOR(context)*/ && tptrTable && !in_table &&
         (tptr == 0 || (tptr->type == LO_LINEFEED && tptr->lo_linefeed.break_type == LO_LINEFEED_BREAK_SOFT)) )
     {
         tptr = tptrTable;

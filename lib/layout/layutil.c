@@ -2132,14 +2132,6 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 									    type,
 									    eptr );
             }
-#ifdef DEBUG_cmanske
-            else if( type == LO_LINEFEED)
-            {
-                /******* TEMP ********/
-                ED_Element *pBreak = edit_element;
-                XP_TRACE(("Editable Element = LO_LINEFEED"));
-            }
-#endif
         }
 		state->edit_force_offset = FALSE;
 #endif

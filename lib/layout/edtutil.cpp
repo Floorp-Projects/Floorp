@@ -2435,9 +2435,23 @@ XP_Bool EDT_CanSetCharacterAttribute(MWContext * pMWContext)
     if( !pMWContext || pMWContext->waitingMode || EDT_IsBlocked(pMWContext) ){
         return FALSE;
     }
+    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
+
     ED_ElementType type = EDT_GetCurrentElementType(pMWContext);
-    return ( (type == ED_ELEMENT_TEXT || type == ED_ELEMENT_SELECTION ||
-              type >= ED_ELEMENT_TABLE) && !EDT_IsJavaScript(pMWContext) );
+    if( (type == ED_ELEMENT_TEXT || type == ED_ELEMENT_SELECTION ||
+         type >= ED_ELEMENT_TABLE) && !EDT_IsJavaScript(pMWContext) )
+    {
+        CEditContainerElement *pContainer;
+        CEditInsertPoint ip;
+        pEditBuffer->GetInsertPoint(ip);
+        if( ip.m_pElement )
+        {
+            pContainer = ip.m_pElement->FindContainer();
+            if( pContainer )
+                return pContainer->GetType() != P_PREFORMAT;
+        }
+    }
+    return FALSE;
 }
 
 // XP string defines for FontFaces
@@ -4697,8 +4711,9 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
     // We never allow lock aspect for table sizing
     // Instead, modifier is used to distinguish between sizing the last column or row
     //  and sizing the whole table
+    // For non-table objects, we lock aspect ratio if Modifier Key IS NOT pressed
     XP_Bool bLockAspectRatio = m_pLoElement->type != LO_TABLE && m_pLoElement->type != LO_CELL &&
-                               EDT_IS_SIZING_CORNER(m_iStyle) && bModifierKeyPressed;
+                               EDT_IS_SIZING_CORNER(m_iStyle) && !bModifierKeyPressed;
 
     int32 iViewX = xVal - m_iXOrigin;
     int32 iViewY = yVal - m_iYOrigin;
@@ -4902,7 +4917,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
                         iPercent, pPercentOfWhat);
         } else if( m_iStyle == ED_SIZE_ADD_COLS )
         {
-            int iAddCols = iNewWidth / EDT_NEW_COL_WIDTH;
+            int iAddCols = max(1, iNewWidth / EDT_NEW_COL_WIDTH);
             PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_COLUMNS_STATUS), iAddCols);
             XP_Rect rect;
 
@@ -4925,7 +4940,7 @@ XP_Bool CSizingObject::GetSizingRect(int32 xVal, int32 yVal, XP_Bool bModifierKe
             m_iAddCols = iAddCols;
         } else if(  m_iStyle == ED_SIZE_ADD_ROWS )
         {
-            int iAddRows = iNewHeight / EDT_NEW_ROW_HEIGHT;
+            int iAddRows = max(1, iNewHeight / EDT_NEW_ROW_HEIGHT);
             PR_snprintf(pMsg, 128, XP_GetString(XP_EDT_ADD_ROWS_STATUS), iAddRows);
             XP_Rect rect;
             

@@ -4893,8 +4893,8 @@ void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret,
     /* Clip Y to the last line of the document */
     {
         int32 endY;
-	LO_Element *last_eptr;
-	last_eptr = LO_getFirstLastElement(context, FALSE);
+        LO_Element *last_eptr;
+        last_eptr = LO_getFirstLastElement(context, FALSE);
         if (last_eptr == NULL)
         {
             return;
@@ -4902,9 +4902,9 @@ void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret,
         endY = last_eptr->lo_any.y
             + last_eptr->lo_any.y_offset
             + last_eptr->lo_any.height;
-        if ( y >= endY ){
+        
+        if ( y >= endY )
             y = endY - 1;
-        }
     }
 
     /* Clip Y to the first line of the document */
@@ -5022,18 +5022,21 @@ Bool LO_Click(MWContext *context, int32 x, int32 y, Bool requireCaret,
 */
 Bool LO_CanSelectLine(MWContext *context, int32 x, int32 y)
 {
-    int32 doc_id;
-    lo_TopState *top_state;
-    lo_DocState *state;
     LO_HitResult result;
+	LO_Element  *last_eptr;
 
-    doc_id = XP_DOCID(context);
-    top_state = lo_FetchTopState(doc_id);
-    if ((top_state == NULL)||(top_state->doc_state == NULL))
+    /* LO_Hit will snap Y value to an element in the last line,
+     *  but we want to return FALSE if cursor is in region
+     *  below the last line
+    */
+	last_eptr = LO_getFirstLastElement(context, FALSE);
+    if( (last_eptr == NULL) ||
+        (y >=  last_eptr->lo_any.y + 
+               last_eptr->lo_any.y_offset + 
+               last_eptr->lo_any.height) )
     {
         return FALSE;
     }
-    state = top_state->doc_state;
 
     LO_Hit(context, x, y, FALSE, &result, NULL);
 
@@ -7174,8 +7177,17 @@ LO_getFirstLastElement(MWContext *context, int forward )
     	 * Get last element in doc.
     	 */
     	eptr = state->end_last_line;
-    	if (eptr == NULL)
-    	{
+        if( eptr )
+        {
+            /* In the Editor, the last line is an invisible
+             * line with an HRULE. We must scan backwards
+             * to get the last editable element
+             */
+            if( EDT_IS_EDITOR(context) )
+                lo_EnsureEditableSearchPrev(context, state, &eptr);
+        }
+        else
+        {
     		eptr = state->selection_start;		/* ??? */
     	}
     }

@@ -17302,8 +17302,8 @@ ED_SizeStyle CEditBuffer::StartSizing(LO_Element *pLoElement, int32 xVal, int32 
     ClearTableAndCellSelection();
 
     // We are using the "ModifierKeyPressed" (last param)
-    //   for 2 purposes: To lock the aspect ratio for non-table objects,
-    //   and for 
+    //   for 2 purposes: 1. To unlock the aspect ratio for non-table objects,
+    //                   2. To size table instead of last column
     int iStyle = CanSizeObject(pLoElement, xVal, yVal, bModifierKeyPressed);
 
     if( iStyle ){
