@@ -45,6 +45,9 @@ include $(DEPTH)/config/autoconf.mk
 ifdef MOZ_THUNDERBIRD
 DIRS = console filepicker printing viewsource
 else
+ifdef MOZ_STANDALONE_COMPOSER
+DIRS = console filepicker printing viewsource
+else
 DIRS = 		\
 	autocomplete \
 	console \
@@ -65,6 +68,7 @@ endif
 
 DIRS += downloads build
 
+endif
 endif
 
 

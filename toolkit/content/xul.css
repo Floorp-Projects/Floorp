@@ -656,8 +656,15 @@ textbox[type="timed"] {
 
 /********** autocomplete textbox **********/
 
-/* thunderbird doesn't use the new toolkit's autocomplete widget yet.... */
+/* thunderbird and Nvu don't use the new toolkit's autocomplete widget yet.... */
+
 #ifdef MOZ_THUNDERBIRD
+#define AUTOCOMPLETE_OLD_STYLE
+#elifdef MOZ_STANDALONE_COMPOSER
+#define AUTOCOMPLETE_OLD_STYLE
+#endif
+
+#ifdef AUTOCOMPLETE_OLD_STYLE
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
