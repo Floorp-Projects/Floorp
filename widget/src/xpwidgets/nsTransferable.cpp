@@ -109,8 +109,7 @@ NS_IMETHODIMP nsTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFl
     PRInt32 i;
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      NS_ADDREF(data->mFlavor);
-      array->AppendElement(data->mFlavor);
+      array->AppendElement(data->mFlavor);    // this addref's for us
     }
     *aDataFlavorList = array;
   }
