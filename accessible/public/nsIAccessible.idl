@@ -315,31 +315,30 @@ interface nsIAccessible : nsISupports
  *  ROLE_HOTKEYFIELD
  *    The object represents a hot-key field that allow the user to enter a
  *    sequence of keystroke.
+ *
+ * The following ATK roles have no corresponding nsIAccessible roles. Perhaps
+ * there are not these types of widget/control in Mozilla, so don't need these
+ * ATK roles? Or need add some of them?
+ *
+ *   ATK_ROLE_ARROW
+ *     An arrow in one of the four cardinal directions.
+ *
+ *   ATK_ROLE_INTERNAL_FRAME
+ *     A frame-like object that is clipped by a desktop pane.
+ * 
+ *  ATK_ROLE_ACCEL_LABEL, ATK_ROLE_CANVAS, ATK_ROLE_CHECK_MENU_ITEM,
+ *   ATK_ROLE_COLOR_CHOOSER, ATK_ROLE_DATE_EDITOR, ATK_ROLE_DESKTOP_ICON,
+ *   ATK_ROLE_DESKTOP_FRAME, ATK_ROLE_DIRECTORY_PANE, ATK_ROLE_FILE_CHOOSER,
+ *   ATK_ROLE_FILLER, ATK_ROLE_FONT_CHOOSER, ATK_ROLE_GLASS_PANE,
+ *  ATK_ROLE_HTML_CONTAINER, ATK_ROLE_ICON, ATK_ROLE_LAYERED_PANE,
+ *   ATK_ROLE_POPUP_MENU, ATK_ROLE_OPTION_PANE, ATK_ROLE_PASSWORD_TEXT,
+ *  ATK_ROLE_RADIO_MENU_ITEM, ATK_ROLE_ROOT_PANE, ATK_ROLE_SCROLL_PANE,
+ *  ATK_ROLE_SPLIT_PANE, ATK_ROLE_TEAR_OFF_MENU_ITEM, ATK_ROLE_TERMINAL,
+ *  ATK_ROLE_TOGGLE_BUTTON, ATK_ROLE_TREE_TABLE, ATK_ROLE_VIEWPORT, ATK_ROLE_LABEL
+ *
+ * Important:
+ * Following value should keep synchronization with the definitions in atk.h
  */
-
-The following ATK roles have no corresponding nsIAccessible roles. Perhaps
-there are not these types of widget/control in Mozilla, so don't need these
-ATK roles? Or need add some of them?
-
-  ATK_ROLE_ARROW
-    An arrow in one of the four cardinal directions.
-
-  ATK_ROLE_INTERNAL_FRAME
-    A frame-like object that is clipped by a desktop pane.
-
-  ATK_ROLE_ACCEL_LABEL, ATK_ROLE_CANVAS, ATK_ROLE_CHECK_MENU_ITEM,
-  ATK_ROLE_COLOR_CHOOSER, ATK_ROLE_DATE_EDITOR, ATK_ROLE_DESKTOP_ICON,
-  ATK_ROLE_DESKTOP_FRAME, ATK_ROLE_DIRECTORY_PANE, ATK_ROLE_FILE_CHOOSER,
-  ATK_ROLE_FILLER, ATK_ROLE_FONT_CHOOSER, ATK_ROLE_GLASS_PANE,
-  ATK_ROLE_HTML_CONTAINER, ATK_ROLE_ICON, ATK_ROLE_LAYERED_PANE,
-  ATK_ROLE_POPUP_MENU, ATK_ROLE_OPTION_PANE, ATK_ROLE_PASSWORD_TEXT,
-  ATK_ROLE_RADIO_MENU_ITEM, ATK_ROLE_ROOT_PANE, ATK_ROLE_SCROLL_PANE,
-  ATK_ROLE_SPLIT_PANE, ATK_ROLE_TEAR_OFF_MENU_ITEM, ATK_ROLE_TERMINAL,
-  ATK_ROLE_TOGGLE_BUTTON, ATK_ROLE_TREE_TABLE, ATK_ROLE_VIEWPORT, ATK_ROLE_LABEL
-
-Important:
-  Following value should keep synchronization with the definitions in atk.h
-*******************************************************************************/
   enum { ROLE_TITLEBAR = 66U };    // ATK_ROLE_UNKNOWN
   enum { ROLE_MENUBAR = 33U };     // ATK_ROLE_MENU_BAR
   enum { ROLE_SCROLLBAR = 47U };   // ATK_ROLE_SCROLL_BAR
