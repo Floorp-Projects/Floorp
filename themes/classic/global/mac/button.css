@@ -164,7 +164,7 @@ button[disabled="true"]:hover:active > .box-inherit > .button-stack > .button-te
 }
 
 button[disabled="true"]:hover:active > .box-inherit > .button-stack > .button-box-mid {
-	background-color    : #DDDDDD;;
+	background-color    : #DDDDDD;
 }
 
 button:hover:active > .box-inherit > .button-box-left > .button-left-top[disabled="true"],
