@@ -1073,6 +1073,7 @@ then
 
     if test -n "$MOZ_XINERAMA_LIBS" && test -n "$ac_cv_header_X11_extensions_Xinerama_h"; then
       MOZ_ENABLE_XINERAMA=1
+      AC_DEFINE(MOZ_ENABLE_XINERAMA)
     fi
         
 	LDFLAGS="$_SAVE_LDFLAGS"
