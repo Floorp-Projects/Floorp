@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: NumberFunctionCall.cpp,v 1.6 2000/06/11 12:23:08 Peter.VanderBeken%pandora.be Exp $
+ * $Id: NumberFunctionCall.cpp,v 1.7 2000/07/11 09:47:37 axel%pike.org Exp $
  */
 
 /*
@@ -65,7 +65,7 @@ NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
     }
 } //-- NumberFunctionCall
 
-#ifdef WINDOWS
+#if !defined(HAVE_RINT) && !defined(XP_MAC)
 static double rint(double r)
 {
   double integerPart = 0;
