@@ -244,7 +244,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
 
     else if (mClassID.Equals(kCAppShell)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsAppShell\n" ));
-        inst = (nsISupports*)new nsAppShell();
+        inst = (nsISupports*)(nsIAppShell*)new nsAppShell();
     }
     else if (mClassID.Equals(kCToolkit)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsToolkit\n" ));

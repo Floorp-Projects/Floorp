@@ -19,8 +19,9 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include <Pt.h>
 #include "nsIAppShell.h"
+#include "nsIObserver.h"
+#include <Pt.h>
 
 /**
  * Native Photon Application shell wrapper
@@ -28,16 +29,17 @@
 
 class nsIEventQueueService;
 class EventQueueTokenQueue;
-struct PRLock;
 
-
-class nsAppShell : public nsIAppShell
+class nsAppShell : public nsIAppShell,
+                   public nsIObserver
 {
   public:
-                      nsAppShell(); 
+    nsAppShell(); 
     virtual           ~nsAppShell();
 
     NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIOBSERVER
 
     PRBool            OnPaint();
 
@@ -47,33 +49,26 @@ class nsAppShell : public nsIAppShell
     virtual nsresult  Run(); 
     NS_IMETHOD        Spinup();
     NS_IMETHOD        Spindown();
-    NS_IMETHOD        PushThreadEventQueue();
-    NS_IMETHOD        PopThreadEventQueue();
     NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-    NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
-    NS_IMETHOD        Exit();
-    virtual void*     GetNativeData(PRUint32 aDataType);
-//    NS_IMETHOD        GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
-
-    // XXX temporary for Dialog investigation
-
-//    NS_IMETHOD        GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
-//    NS_IMETHOD        DispatchNativeEvent(void * aEvent);
     NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                   PRBool *aForWindow);
 
-  private:
+    NS_IMETHOD        Exit();
+    NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
+
+private:
+  void          RegisterObserver(PRBool aRegister);
 
     nsDispatchListener   *mDispatchListener;
-//nsISelectionMgr      *mSelectionMgr;
-    unsigned long        mEventBufferSz;
-    PhEvent_t            *mEvent;
+	EventQueueTokenQueue *mEventQueueTokens;
     static PRBool        mPtInited;
 
-//nsIEventQueueService * mEventQService;
-	PRLock               *mLock;
-	EventQueueTokenQueue *mEventQueueTokens;
+//  unsigned long        mEventBufferSz;
+//  PhEvent_t            *mEvent;
+//  nsIEventQueueService * mEventQService;
+//	PRLock               *mLock;
+
 };
 
 #endif // nsAppShell_h__
