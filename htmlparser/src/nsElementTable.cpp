@@ -204,8 +204,6 @@ CTagList  gNoframeRoot(2,0,eHTMLTag_body,eHTMLTag_frameset);
 CTagList  gAutoClose(2,0,eHTMLTag_body,eHTMLTag_td);
 CTagList  gBodyAutoClose(1,0,eHTMLTag_head);
 CTagList  gTBodyAutoClose(3,0,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody);
-CTagList  gTHeadAutoClose(2,0,eHTMLTag_thead,eHTMLTag_colgroup);
-CTagList  gTFootAutoClose(2,0,eHTMLTag_tfoot,eHTMLTag_colgroup);
 CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
 CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
@@ -1044,9 +1042,9 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_tbody,
     /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,	
-    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
     /*parent,incl,exclgroups*/          kNone, kNone, (kSelf|kInlineEntity),	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kDefaultPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kDefaultPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTBodyKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_td,
@@ -1068,9 +1066,9 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_tfoot,
     /*requiredAncestor*/                eHTMLTag_table, eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInTable,	&gInTable,
-    /*autoclose starttags and endtags*/ &gTFootAutoClose,0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kNoPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_th, 
@@ -1084,9 +1082,9 @@ nsHTMLElement gHTMLElements[] = {
   { /*tag*/                             eHTMLTag_thead,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	  /*rootnodes,endrootnodes*/          &gInTable,&gInTable,		
-    /*autoclose starttags and endtags*/ &gTHeadAutoClose,0,0,0,
+    /*autoclose starttags and endtags*/ &gTBodyAutoClose,0,0,&gDontAutoClose,
     /*parent,incl,exclgroups*/          kNone, kNone, kSelf,	
-    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn|kDiscardMisplaced), kNoPropRange,
+    /*special props, prop-range*/       (kNoPropagate|kOmitWS|kBadContentWatch|kNoStyleLeaksIn), kNoPropRange,
     /*special parents,kids,skip*/       &gInTable,&gTableElemKids,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_title,
@@ -1624,18 +1622,11 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
  * @param 
  * @return
  */
-PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag, eHTMLTokenTypes aType) const{
+PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   PRBool result=PR_TRUE;
-  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)){
-    CTagList* theTagList=nsnull;
-    if(aType==eToken_start) {
-      theTagList=gHTMLElements[mTagID].GetAutoCloseStartTags();
-      if(theTagList) return theTagList->Contains(aTag);
-    }
-    else {
-      theTagList=gHTMLElements[mTagID].GetNonAutoCloseEndTags();
-      if(theTagList) return !theTagList->Contains(aTag);
-    }
+  if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
+    CTagList* theTagList=gHTMLElements[mTagID].GetNonAutoCloseEndTags();
+    if(theTagList) return !theTagList->Contains(aTag);
   }
   return result;
 }
