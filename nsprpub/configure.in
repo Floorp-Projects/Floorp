@@ -1682,25 +1682,30 @@ mips-sony-newsos*)
         ASFLAGS='-Mb'
         AR=-ilib
         AR_FLAGS='/NOL /NOI /O:$(subst /,\\,$@)'
-        CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl-'
+        CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
         HOST_CFLAGS="$CFLAGS"
-        OS_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Ge- /Tl-'
-        OS_EXE_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Ge+ /Tl-'
-        CXXFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl-'
+        OS_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        OS_EXE_CFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
+        CXXFLAGS='/Q /qlibansi /Gd+ /Gm+ /Su4 /Mp /Tl9'
         OS_LIBS='so32dll.lib tcp32dll.lib'
         LD='-ilink'
-        LDFLAGS='/FREE /DE /NOE /LINENUMBERS /nologo'
         MKSHLIB='$(LD) $(DSO_LDOPTS)'
         IMPLIB='implib -nologo -noignorecase'
         FILTER='cppfilt -q -B -P'
-        _OPTIMIZE_FLAGS=/O+
-        _DEBUG_FLAGS=/Ti+ 
+        _OPTIMIZE_FLAGS='/O+ /Gl+ /Gx+ /qtune=pentium /qarch=pentium'
+        _DEBUG_FLAGS='/Ti+ '
+        LDFLAGS='/NOL /M /L'
+        DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /L /NOL'
+        EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /L /NOL'
         if test -n "$MOZ_DEBUG"; then
-          DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /nologo /DEBUG /NOE'
-          EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /nologo /DEBUG /NOE'
-        else
-          DLLFLAGS='/O:$@ /DLL /INC:_dllentry /MAP:$(@:.dll=.map) /nologo'
-          EXEFLAGS='/OUT:$@ /PMTYPE:VIO /MAP:$(@:.exe=.map) /nologo'
+          LDFLAGS="$LDFLAGS /DE"
+          DLLFLAGS="$DLLFLAGS /DE"
+          EXEFLAGS="$EXEFLAGS /DE"
+        fi
+        if test -n "$MOZ_OPTIMIZE"; then
+          LDFLAGS="$LDFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
+          DLLFLAGS="$DLLFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
+          EXEFLAGS="$EXEFLAGS /OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
         fi
         LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
         LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
