@@ -157,7 +157,9 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   }  
 
   nsCOMPtr<nsIURI> aURL;
-  rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
+  rv = mMessageService->GetUrlForUri(mURI, getter_AddRefs(aURL), aMsgWindow);
+  if (aURL)
+    aURL->SetSpec(nsDependentCString(mURI));
 
   // if we are forwarding a message and that message used a charset over ride
   // then use that over ride charset instead of the charset specified in the message
