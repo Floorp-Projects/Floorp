@@ -1376,7 +1376,9 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
     else
     {
       nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-      textAreaElement->GetControllers(getter_AddRefs(controllers));
+      if (textAreaElement) {
+        textAreaElement->GetControllers(getter_AddRefs(controllers));
+      }
     }
 
     if (controllers)
