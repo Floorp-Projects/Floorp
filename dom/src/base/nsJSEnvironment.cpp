@@ -142,7 +142,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
 NS_IMETHODIMP
 nsJSContext::EvaluateString(const nsString& aScript,
                             void *jsObj,
-                            nsIPrincipal *principal,
+                            nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             const char* aVersion,
@@ -157,9 +157,9 @@ nsJSContext::EvaluateString(const nsString& aScript,
   // the entities who signed this script, or the fully-qualified-domain-name
   // or "codebase" from which it was loaded.
   JSPrincipals *jsprin;
-  nsCOMPtr<nsIPrincipal> principalCOMPtr = principal;
-  if (principal) {
-    principal->GetJSPrincipals(&jsprin);
+  nsCOMPtr<nsIPrincipal> principal = aPrincipal;
+  if (aPrincipal) {
+    aPrincipal->GetJSPrincipals(&jsprin);
   }
   else {
     // norris TODO: Using GetGlobalObject to get principals is broken?
@@ -169,10 +169,10 @@ nsJSContext::EvaluateString(const nsString& aScript,
     nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global, &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    rv = globalData->GetPrincipal(getter_AddRefs(principalCOMPtr));
+    rv = globalData->GetPrincipal(getter_AddRefs(principal));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    principalCOMPtr->GetJSPrincipals(&jsprin);
+    principal->GetJSPrincipals(&jsprin);
   }
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
@@ -180,7 +180,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
   nsCOMPtr<nsIScriptSecurityManager> securityManager;
   rv = GetSecurityManager(getter_AddRefs(securityManager));
   if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(principalCOMPtr, &ok);
+    rv = securityManager->CanExecuteScripts(principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -236,7 +236,10 @@ nsJSContext::EvaluateString(const nsString& aScript,
   if (ok) {
     *aIsUndefined = JSVAL_IS_VOID(val);
     JSString* jsstring = JS_ValueToString(mContext, val);
-    aRetValue.SetString(JS_GetStringChars(jsstring));
+    if (jsstring)
+      aRetValue.SetString(JS_GetStringChars(jsstring));
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
   }
   else {
     *aIsUndefined = PR_TRUE;
@@ -247,9 +250,140 @@ nsJSContext::EvaluateString(const nsString& aScript,
 
   // Pop here, after JS_ValueToString and any other possible evaluation.
   if (NS_FAILED(stack->Pop(nsnull)))
-    return NS_ERROR_FAILURE;
+    rv = NS_ERROR_FAILURE;
 
-  return NS_OK;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsJSContext::CompileScript(const PRUnichar* aText,
+                           PRInt32 aTextLength,
+                           void *aScopeObject,
+                           nsIPrincipal *aPrincipal,
+                           const char *aURL,
+                           PRUint32 aLineNo,
+                           const char* aVersion,
+                           void** aScriptObject)
+{
+  nsresult rv;
+  NS_ENSURE_ARG_POINTER(aPrincipal);
+
+  if (!aScopeObject)
+    aScopeObject = JS_GetGlobalObject(mContext);
+
+  JSPrincipals *jsprin;
+  aPrincipal->GetJSPrincipals(&jsprin);
+  // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
+
+  PRBool ok = PR_FALSE;
+  nsCOMPtr<nsIScriptSecurityManager> securityManager;
+  rv = GetSecurityManager(getter_AddRefs(securityManager));
+  if (NS_SUCCEEDED(rv))
+    rv = securityManager->CanExecuteScripts(aPrincipal, &ok);
+  if (NS_FAILED(rv)) {
+    JSPRINCIPALS_DROP(mContext, jsprin);
+    return NS_ERROR_FAILURE;
+  }
+
+  *aScriptObject = nsnull;
+  if (ok) {
+    JSVersion newVersion;
+
+    // SecurityManager said "ok", but don't compile if aVersion is specified
+    // and unknown.  Do compile with the default version (and avoid thrashing
+    // the context's version) if aVersion is not specified.
+    if (!aVersion ||
+        (newVersion = JS_StringToVersion(aVersion)) != JSVERSION_UNKNOWN) {
+      JSVersion oldVersion;
+      if (aVersion)
+        oldVersion = JS_SetVersion(mContext, newVersion);
+
+      JSScript* script =
+        ::JS_CompileUCScriptForPrincipals(mContext,
+                                          (JSObject*) aScopeObject,
+                                          jsprin,
+                                          (jschar*) aText,
+                                          aTextLength,
+                                          aURL,
+                                          aLineNo);
+      if (script) {
+        *aScriptObject = (void*) ::JS_NewScriptObject(mContext, script);
+        if (! *aScriptObject) {
+          ::JS_DestroyScript(mContext, script);
+          script = nsnull;
+        }
+      }
+      if (!script)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+
+      if (aVersion)
+        JS_SetVersion(mContext, oldVersion);
+    }
+  }
+
+  // Whew!  Finally done with these manually ref-counted things.
+  JSPRINCIPALS_DROP(mContext, jsprin);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsJSContext::ExecuteScript(void* aScriptObject,
+                           void *aScopeObject,
+                           nsString* aRetValue,
+                           PRBool* aIsUndefined)
+{
+  nsresult rv;
+
+  if (!aScopeObject)
+    aScopeObject = JS_GetGlobalObject(mContext);
+
+  // Push our JSContext on our thread's context stack, in case native code
+  // called from JS calls back into JS via XPConnect.
+  NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
+  if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // The result of evaluation, used only if there were no errors.  This need
+  // not be a GC root currently, provided we run the GC only from the branch
+  // callback or from ScriptEvaluated.  TODO: use JS_Begin/EndRequest to keep
+  // the GC from racing with JS execution on any thread.
+  jsval val;
+  JSBool ok;
+
+  mRef = nsnull;
+  mTerminationFunc = nsnull;
+  ok = ::JS_ExecuteScript(mContext,
+			  (JSObject*) aScopeObject,
+			  (JSScript*) JS_GetPrivate(mContext,
+						    (JSObject*)aScriptObject),
+			  &val);
+
+  if (ok) {
+    // If all went well, convert val to a string (XXXbe unless undefined?).
+    if (aIsUndefined)
+      *aIsUndefined = JSVAL_IS_VOID(val);
+    if (aRetValue) {
+      JSString* jsstring = JS_ValueToString(mContext, val);
+      if (jsstring)
+        aRetValue->SetString(JS_GetStringChars(jsstring));
+      else
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  } else {
+    if (aIsUndefined)
+      *aIsUndefined = PR_TRUE;
+    if (aRetValue)
+      aRetValue->Truncate();
+  }
+
+  ScriptEvaluated();
+
+  // Pop here, after JS_ValueToString and any other possible evaluation.
+  if (NS_FAILED(stack->Pop(nsnull)))
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
 }
 
 const char *gEventArgv[] = {"event"};

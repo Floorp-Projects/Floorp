@@ -67,6 +67,18 @@ public:
                                   const char* aVersion,
                                   nsString& aRetValue,
                                   PRBool* aIsUndefined);
+  NS_IMETHOD       CompileScript(const PRUnichar* aText,
+                                 PRInt32 aTextLength,
+                                 void *aScopeObj,
+                                 nsIPrincipal *principal,
+                                 const char *aURL,
+                                 PRUint32 aLineNo,
+                                 const char* aVersion,
+                                 void** aScriptObject);
+  NS_IMETHOD       ExecuteScript(void* aScriptObject,
+                                 void *aScopeObject,
+                                 nsString* aRetValue,
+                                 PRBool* aIsUndefined);
   NS_IMETHOD       CompileFunction(void *aObj, nsIAtom *aName,
                                    const nsString& aBody);
   NS_IMETHOD       CallFunction(void *aObj, void *aFunction, 
