@@ -467,13 +467,13 @@ input {
 	cursor: text;
 }
 
-input[type=hidden] {
+input[type="hidden"] {
   border: none;
   visibility: collapse;
   behavior: none;
 }
 
-input[type=image] {
+input[type="image"] {
   box-sizing: border-box;
   border: 2px solid blue;
   vertical-align:baseline;
@@ -482,11 +482,15 @@ input[type=image] {
 	cursor: default;
 }
 
-input[type=image]:focus {
+input[type="image"]:hover {
+  cursor: pointer;
+}
+
+input[type="image"]:focus {
   border: 2px dotted black;
 }
 
-input[type=image][disabled] {
+input[type="image"][disabled] {
   border: 2px solid rgb(153, 153, 153);
   cursor: default;
 }
@@ -518,7 +522,7 @@ input[type="file"][disabled] > input[type="button"] {
 } 
 
 /* radio buttons */
-input[type=radio] {
+input[type="radio"] {
   box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   padding: 0px;
@@ -536,28 +540,28 @@ input[type=radio] {
 	cursor: default;
 }
 
-input[type=radio][disabled] {
+input[type="radio"][disabled] {
   border: 1px solid;
   padding: 1px;
 }
 
-input[type=radio]:focus {
+input[type="radio"]:focus {
   border: 2px inset rgb(153, 153, 153);
 }
 
-input[type=radio]:hover {
+input[type="radio"]:hover {
   border : 2px solid black;
 }
 
-input[type=radio]:active {
+input[type="radio"]:active {
   background-color: white;
 }
 
-input[type=radio][disabled]:hover {
+input[type="radio"][disabled]:hover {
   border: 1px solid rgb(153, 153, 153);
 }
 
-input[type=radio][disabled]:active {
+input[type="radio"][disabled]:active {
   background-color: rgb(204, 204, 204);
 }
 
@@ -571,7 +575,7 @@ input[type=radio][disabled]:active {
 }
 
 
-input[type=checkbox] {
+input[type="checkbox"] {
   box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
   padding:       0px;
@@ -589,27 +593,27 @@ input[type=checkbox] {
 /*  -moz-border-radius:1px; */
 }
 
-input[type=checkbox]:focus {
+input[type="checkbox"]:focus {
   border: 2px dotted rgb(153, 153, 153);
 }
 
-input[type=checkbox]:hover {
+input[type="checkbox"]:hover {
   border : 2px solid black;
 }
 
-input[type=checkbox]:active {
+input[type="checkbox"]:active {
   background-color: white;
 }
 
-input[type=checkbox][disabled] {
+input[type="checkbox"][disabled] {
   border: 2px solid;
 }
 
-input[type=checkbox][disabled]:hover {
+input[type="checkbox"][disabled]:hover {
   border: 2px solid rgb(153, 153, 153);
 }
 
-input[type=checkbox][disabled]:active {
+input[type="checkbox"][disabled]:active {
   background-color:rgb(204, 204, 204);
 }
 
@@ -753,7 +757,7 @@ input[type="button"]:-moz-focus-inner {
 /*XXX[PERF] setup a border so the size does 
   not change between focus changes to prevent 
   reflows */
-   border : 1px solid rgb(206, 207, 206);
+   border : 1px solid inherit;
 }
 
 input[type="button"]:focus:-moz-focus-inner {
@@ -845,13 +849,13 @@ input[type="text"][disabled] {
 	cursor: default;
 }
 
-input[type=password] {
+input[type="password"] {
   border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color:black;
 }
 
-input[type=password][disabled] {
+input[type="password"][disabled] {
   color: gray;
 	cursor: default;
 }
