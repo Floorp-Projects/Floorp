@@ -24,6 +24,7 @@
 #include "nsITransactionManager.h"
 #include "nsIMessageView.h"
 #include "nsIMsgFolder.h"
+#include "nsIWebShell.h"
 
 #include "nsCOMPtr.h"
 
@@ -43,6 +44,8 @@ protected:
 	nsCOMPtr<nsITransactionManager> mTransactionManager;
 	nsCOMPtr<nsIMessageView> mMessageView;
 	nsCOMPtr<nsIMsgFolder> mOpenFolder;
+	// let's not make this a strong ref - we don't own it.
+	nsIWebShell *mRootWebShell;
 };
 
 

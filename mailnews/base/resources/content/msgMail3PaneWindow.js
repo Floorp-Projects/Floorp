@@ -231,7 +231,7 @@ function InitMsgWindow()
 {
 	msgWindow.statusFeedback = statusFeedback;
 	msgWindow.messageView = messageView;
-
+	msgWindow.SetDOMWindow(window);
 }
 
 function AddDataSources()
@@ -388,9 +388,7 @@ function ClearMessagePane()
 
 function StopUrls()
 {
-	dump("sorry, stop doesn't work yet.\n");
-	var windowData = folderDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-
+	msgWindow.StopUrls();
 }
 
 

@@ -22,7 +22,8 @@
 #include "nsIMsgFolder.idl"
 
 interface nsITransactionManager;
-
+interface nsIWebShell;
+interface nsIDOMWindow;
 /*
  *  This interface can be used to set data specific to a window.
  */
@@ -35,4 +36,8 @@ interface nsIMsgWindow : nsISupports {
     attribute nsITransactionManager transactionManager;
 	attribute nsIMessageView messageView;
 	attribute nsIMsgFolder openFolder;
+	attribute nsIWebShell rootWebShell;
+	
+	void SetDOMWindow(in nsIDOMWindow window);
+	void StopUrls();
 };

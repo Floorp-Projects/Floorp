@@ -17,15 +17,16 @@
  */
 
 #include "nsMsgWindow.h"
-
-
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMWindow.h"
 
 NS_IMPL_ISUPPORTS(nsMsgWindow, nsCOMTypeInfo<nsIMsgWindow>::GetIID())
 
 nsMsgWindow::nsMsgWindow()
 {
 	NS_INIT_REFCNT();
-
+	mRootWebShell = nsnull;
 }
 
 nsMsgWindow::~nsMsgWindow()
@@ -102,3 +103,49 @@ NS_IMETHODIMP nsMsgWindow::SetOpenFolder(nsIMsgFolder * aOpenFolder)
 	mOpenFolder = aOpenFolder;
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgWindow::GetRootWebShell(nsIWebShell * *aWebShell)
+{
+	if(!aWebShell)
+		return NS_ERROR_NULL_POINTER;
+
+	*aWebShell = mRootWebShell;
+	NS_IF_ADDREF(*aWebShell);
+	return NS_OK;
+
+}
+
+NS_IMETHODIMP nsMsgWindow::SetRootWebShell(nsIWebShell * aWebShell)
+{
+	mRootWebShell = aWebShell;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
+{
+	if (!aWindow)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = NS_OK;
+
+	nsCOMPtr<nsIScriptGlobalObject>
+		globalScript(do_QueryInterface(aWindow));
+	nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+	if (globalScript)
+		globalScript->GetWebShell(getter_AddRefs(webshell));
+	if (webshell)
+	{
+		webshell->GetRootWebShell(mRootWebShell);
+		nsIWebShell *root = mRootWebShell;
+		NS_RELEASE(root); // don't hold reference
+	}
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgWindow::StopUrls()
+{
+	if (mRootWebShell)
+		return mRootWebShell->Stop();
+	return NS_ERROR_NULL_POINTER;
+}
+
