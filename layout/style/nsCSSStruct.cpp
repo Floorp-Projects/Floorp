@@ -1198,7 +1198,7 @@ void nsCSSColumn::List(FILE* out, PRInt32 aIndent) const
 #ifdef MOZ_SVG
 // --- nsCSSSVG -----------------
 
-nsCSSSVG::nsCSSSVG(void)
+nsCSSSVG::nsCSSSVG(void) : mStrokeDasharray(nsnull)
 {
   MOZ_COUNT_CTOR(nsCSSSVG);
 }
@@ -1224,11 +1224,13 @@ nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
       mTextRendering(aCopy.mTextRendering)
 {
   MOZ_COUNT_CTOR(nsCSSSVG);
+  CSS_IF_COPY(mStrokeDasharray, nsCSSValueList);
 }
 
 nsCSSSVG::~nsCSSSVG(void)
 {
   MOZ_COUNT_DTOR(nsCSSSVG);
+  CSS_IF_DELETE(mStrokeDasharray);
 }
 
 #ifdef DEBUG
@@ -1247,7 +1249,15 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
   mStopColor.AppendToString(buffer, eCSSProperty_stop_color);
   mStopOpacity.AppendToString(buffer, eCSSProperty_stop_opacity);
   mStroke.AppendToString(buffer, eCSSProperty_stroke);
-  mStrokeDasharray.AppendToString(buffer, eCSSProperty_stroke_dasharray);
+
+  nsCSSValueList *value = mStrokeDasharray;
+  while (value) {
+    value->mValue.AppendToString(buffer, eCSSProperty_stroke_dasharray);
+    value = value->mNext;
+    if (value)
+      buffer.AppendLiteral(",");
+  }
+
   mStrokeDashoffset.AppendToString(buffer, eCSSProperty_stroke_dashoffset);
   mStrokeLinecap.AppendToString(buffer, eCSSProperty_stroke_linecap);
   mStrokeLinejoin.AppendToString(buffer, eCSSProperty_stroke_linejoin);

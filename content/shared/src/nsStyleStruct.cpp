@@ -848,7 +848,8 @@ nsStyleSVG::nsStyleSVG()
     mStopOpacity             = 1.0f;
     mStroke.mType            = eStyleSVGPaintType_None;
     mStroke.mPaint.mColor    = NS_RGB(0,0,0);
-    mStrokeDasharray.Truncate();
+    mStrokeDasharray         = nsnull;
+    mStrokeDasharrayLength   = 0;
     mStrokeDashoffset        = 0.0f;
     mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
     mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
@@ -861,6 +862,7 @@ nsStyleSVG::nsStyleSVG()
 
 nsStyleSVG::~nsStyleSVG() 
 {
+  delete [] mStrokeDasharray;
 }
 
 nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
@@ -875,7 +877,18 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   mStopColor = aSource.mStopColor;
   mStopOpacity = aSource.mStopOpacity;
   mStroke = aSource.mStroke;
-  mStrokeDasharray = aSource.mStrokeDasharray;
+  mStrokeDasharrayLength = aSource.mStrokeDasharrayLength;
+  if (aSource.mStrokeDasharray) {
+    mStrokeDasharray = new float[mStrokeDasharrayLength];
+    if (mStrokeDasharray)
+      memcpy(mStrokeDasharray,
+             aSource.mStrokeDasharray,
+             mStrokeDasharrayLength * sizeof(float));
+    else
+      mStrokeDasharrayLength = 0;
+  } else {
+    mStrokeDasharray = nsnull;
+  }
   mStrokeDashoffset = aSource.mStrokeDashoffset;
   mStrokeLinecap = aSource.mStrokeLinecap;
   mStrokeLinejoin = aSource.mStrokeLinejoin;
@@ -888,24 +901,28 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
 
 nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 {
-  if ( mFill             != aOther.mFill             ||
-       mFillOpacity      != aOther.mFillOpacity      ||
-       mFillRule         != aOther.mFillRule         ||
-       mPointerEvents    != aOther.mPointerEvents    ||
-       mShapeRendering   != aOther.mShapeRendering   ||
-       mStopColor        != aOther.mStopColor        ||
-       mStopOpacity      != aOther.mStopOpacity      ||
-       mStroke           != aOther.mStroke           ||
-       mStrokeDasharray  != aOther.mStrokeDasharray  ||
-       mStrokeDashoffset != aOther.mStrokeDashoffset ||
-       mStrokeLinecap    != aOther.mStrokeLinecap    ||
-       mStrokeLinejoin   != aOther.mStrokeLinejoin   ||
-       mStrokeMiterlimit != aOther.mStrokeMiterlimit ||
-       mStrokeOpacity    != aOther.mStrokeOpacity    ||
-       mStrokeWidth      != aOther.mStrokeWidth      ||
-       mTextAnchor       != aOther.mTextAnchor       ||
-       mTextRendering    != aOther.mTextRendering)
+  if ( mFill                  != aOther.mFill                  ||
+       mFillOpacity           != aOther.mFillOpacity           ||
+       mFillRule              != aOther.mFillRule              ||
+       mPointerEvents         != aOther.mPointerEvents         ||
+       mShapeRendering        != aOther.mShapeRendering        ||
+       mStopColor             != aOther.mStopColor             ||
+       mStopOpacity           != aOther.mStopOpacity           ||
+       mStroke                != aOther.mStroke                ||
+       mStrokeDasharrayLength != aOther.mStrokeDasharrayLength ||
+       mStrokeDashoffset      != aOther.mStrokeDashoffset      ||
+       mStrokeLinecap         != aOther.mStrokeLinecap         ||
+       mStrokeLinejoin        != aOther.mStrokeLinejoin        ||
+       mStrokeMiterlimit      != aOther.mStrokeMiterlimit      ||
+       mStrokeOpacity         != aOther.mStrokeOpacity         ||
+       mStrokeWidth           != aOther.mStrokeWidth           ||
+       mTextAnchor            != aOther.mTextAnchor            ||
+       mTextRendering         != aOther.mTextRendering)
     return NS_STYLE_HINT_VISUAL;
+
+  for (PRUint32 i=0; i<mStrokeDasharrayLength; i++)
+    if (mStrokeDasharray[i] != aOther.mStrokeDasharray[i])
+      return NS_STYLE_HINT_VISUAL;
 
   return NS_STYLE_HINT_NONE;
 }

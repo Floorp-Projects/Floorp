@@ -332,43 +332,19 @@ nsSVGPathGeometryFrame::GetStrokeWidth(float *aStrokeWidth)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 {
-  *arr = nsnull;
-  *count = 0;
-  
-  const nsString &dasharrayString = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeDasharray;
-  if (dasharrayString.Length() == 0) return NS_OK;
+  const nsStyleSVG *svg = GetStyleSVG();
 
-  // XXX parsing of the dasharray string should be done elsewhere
+  *count = svg->mStrokeDasharrayLength;
 
-  char *str = ToNewCString(dasharrayString);
-
-  // array elements are separated by commas. count them to get our max
-  // no of elems.
-
-  int i=0;
-  char* cp = str;
-  while (*cp) {
-    if (*cp == ',')
-      ++i;
-    ++cp;
+  if (*count) {
+    *arr = (float *) nsMemory::Alloc(*count * sizeof(float));
+    if (*arr)
+      memcpy(*arr, svg->mStrokeDasharray, *count * sizeof(float));
+    else {
+      *count = 0;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-  ++i;
-
-  // now get the elements
-  
-  *arr = (float*) nsMemory::Alloc(i * sizeof(float));
-
-  cp = str;
-  char *elem;
-  while ((elem = nsCRT::strtok(cp, "',", &cp))) {
-    char *end;
-    (*arr)[(*count)++] = (float) PR_strtod(elem, &end);
-#ifdef DEBUG
-//    printf("[%f]",(*arr)[(*count)-1]);
-#endif
-  }
-  
-  nsMemory::Free(str);
 
   return NS_OK;
 }
