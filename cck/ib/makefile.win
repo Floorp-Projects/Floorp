@@ -31,7 +31,6 @@ IS_COMPONENT = 1
 
 OBJS=					\
 	.\$(OBJDIR)\ib.obj		\
-	.\$(OBJDIR)\ifuncns.obj		\
 	$(NULL)
 
 LINCS=  $(LINCS) \
