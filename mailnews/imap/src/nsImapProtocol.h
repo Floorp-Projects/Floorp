@@ -590,14 +590,11 @@ public:
   static nsresult Create (const nsIID& iid, void **result);
 
 protected:
-  // we CANNOT own the uri else we will have a circular ref count
-  // because the imap uri ref counts us....so don't think about
-  // turning this into a com ptr! HOWEVER, because life is complicated,
-  // there is one scenario where we need to own the url....and that
-  // is when we are loading the url from the cache....so in that case,
-  // we'll turn around and make our m_url ptr an owning reference... *sigh*
-  nsIURI * m_url;
-  PRBool mOwningRefToUrl;
+  // we must break this circular reference between the imap url 
+  // and the mock channel when we've finished running the url,
+  // or we'll leak like crazy. The idea is that when nsImapUrl::RemoveChannel is called,
+  // it will null out the url's pointer to the mock channel
+  nsCOMPtr <nsIURI> m_url;
 
   nsCOMPtr<nsIURI> m_originalUrl;
   nsCOMPtr<nsILoadGroup> m_loadGroup;

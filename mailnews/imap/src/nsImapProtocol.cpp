@@ -631,6 +631,11 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 // when the connection is done processing the current state, free any per url state data...
 void nsImapProtocol::ReleaseUrlState()
 {
+  if (m_mockChannel)
+  {
+     m_mockChannel->Close();
+     m_mockChannel = null_nsCOMPtr();
+  }
   if (m_runningUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
@@ -660,11 +665,6 @@ void nsImapProtocol::ReleaseUrlState()
   m_imapMiscellaneousSink = null_nsCOMPtr();
   m_channelListener = null_nsCOMPtr();
   m_channelContext = null_nsCOMPtr();
-  if (m_mockChannel)
-  {
-     m_mockChannel->Close();
-     m_mockChannel = null_nsCOMPtr();
-  }
   
   m_channelInputStream = null_nsCOMPtr();
   m_channelOutputStream = null_nsCOMPtr();
@@ -2790,7 +2790,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
   {
     PRBool echoLineToMessageSink = PR_TRUE;
     // if we have a channel listener, then just spool the message
-    // directory to the listener
+    // directly to the listener
     if (m_channelListener)
     {
       PRUint32 count = 0;
@@ -4741,7 +4741,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                     if (NS_SUCCEEDED(rv) && messageId.Length() > 0 &&
                         GetServerStateParser().LastCommandSuccessful())
                     {
-                        command = "search seen header Message-ID ";
+                        command = "SEARCH SEEN HEADER Message-ID ";
                         command.Append(messageId);
 
                         Search(command, PR_TRUE, PR_FALSE);
@@ -6732,16 +6732,11 @@ nsImapMockChannel::nsImapMockChannel()
   NS_INIT_REFCNT();
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
-  mOwningRefToUrl = PR_FALSE;
   mLoadAttributes = 0;
 }
 
 nsImapMockChannel::~nsImapMockChannel()
 {
-  // only release the url if we have a owning ref on it...
-  // this only occurrs when we are loading the url from the cache...
-  if (mOwningRefToUrl && m_url)
-    NS_RELEASE(m_url);
 }
 
 NS_IMETHODIMP nsImapMockChannel::Close()
@@ -6814,20 +6809,26 @@ NS_IMETHODIMP nsImapMockChannel::GetURI(nsIURI* *aURI)
 {
     *aURI = m_url;
     NS_IF_ADDREF(*aURI);
-    return NS_OK; 
+    return NS_OK ; 
 }
  
 NS_IMETHODIMP nsImapMockChannel::SetURI(nsIURI* aURI)
 {
     m_url = aURI;
-
-    // if we don't have a progress event sink yet, get it from the url for now...
-    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
-    if (mailnewsUrl && !mProgressEventSink)
+#ifdef DEBUG_bienvenu
+    if (!aURI)
+      printf("Clearing URI\n");
+#endif
+    if (m_url)
     {
-      nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
-      mailnewsUrl->GetStatusFeedback(getter_AddRefs(statusFeedback));
-      mProgressEventSink = do_QueryInterface(statusFeedback);
+      // if we don't have a progress event sink yet, get it from the url for now...
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url);
+      if (mailnewsUrl && !mProgressEventSink)
+      {
+        nsCOMPtr<nsIMsgStatusFeedback> statusFeedback;
+        mailnewsUrl->GetStatusFeedback(getter_AddRefs(statusFeedback));
+        mProgressEventSink = do_QueryInterface(statusFeedback);
+      }
     }
     return NS_OK; 
 }
@@ -6916,11 +6917,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
       rv = cacheEntry->NewChannel(m_loadGroup, getter_AddRefs(cacheChannel));
       if (NS_SUCCEEDED(rv))
       {
-        // turn around and make our ref on m_url an owning ref...and force the url to remove
-        // its reference on the mock channel...this is a complicated texas two step to solve
+        // .and force the url to remove its reference on the mock channel...this is to solve
         // a nasty reference counting problem...
-        NS_IF_ADDREF(m_url);
-        mOwningRefToUrl = PR_TRUE;
         imapUrl->SetMockChannel(nsnull);
 
         // if we are going to read from the cache, then create a mock stream listener class and use it
@@ -6966,11 +6964,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(nsIStreamListener *listener, nsISuppo
       if (fileChannel && NS_SUCCEEDED(rv))
       {
         fileChannel->SetLoadGroup(m_loadGroup);
-        // turn around and make our ref on m_url an owning ref...and force the url to remove
-        // its reference on the mock channel...this is a complicated texas two step to solve
+        // force the url to remove its reference on the mock channel...this is to solve
         // a nasty reference counting problem...
-        NS_IF_ADDREF(m_url);
-        mOwningRefToUrl = PR_TRUE;
         imapUrl->SetMockChannel(nsnull);
 
         // if we are going to read from the cache, then create a mock stream listener class and use it

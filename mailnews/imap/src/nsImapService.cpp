@@ -951,25 +951,10 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
       if (!msgIsInLocalCache)
       {
         nsCOMPtr<nsIMsgIncomingServer> server;
-        nsCOMPtr<nsIImapServerSink> imapServer;
 
         rv = aImapMailFolder->GetServer(getter_AddRefs(server));
         if (server)
-        {
-          imapServer = do_QueryInterface(server);
-          if (imapServer)
-          {
-            nsXPIDLString errorMsgTitle;
-            nsXPIDLString errorMsgBody;
-
-            imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_BODY, getter_Copies(errorMsgBody));
-            imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_TITLE, getter_Copies(errorMsgTitle));
-            if (aMsgWindow)
-              return aMsgWindow->DisplayHTMLInMessagePane(errorMsgTitle, errorMsgBody);
-            else
-              return NS_ERROR_FAILURE;
-          }
-        }
+          return server->DisplayOfflineMsg(aMsgWindow);
       }
     }
   }

@@ -1143,6 +1143,8 @@ NS_IMETHODIMP nsImapUrl::RemoveChannel(nsresult status)
 		{
 			loadGroup->RemoveChannel(m_mockChannel, nsnull, status, nsnull);
 		}
+    // break deadly embrace between mock channel and url
+    SetMockChannel(nsnull);
 	}
 	return NS_OK;
 }
