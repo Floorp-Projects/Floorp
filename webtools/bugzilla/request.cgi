@@ -151,8 +151,10 @@ sub queue {
         push(@excluded_columns, 'requester') unless $cgi->param('do_union');
     }
     if (defined $cgi->param('requestee') && $cgi->param('requestee') ne "") {
-        push(@criteria, "requestees.login_name = " .
-            SqlQuote($cgi->param('requestee')));
+        if ($cgi->param('requestee') ne "-") {
+            push(@criteria, "requestees.login_name = " . SqlQuote($cgi->param('requestee')));
+        }
+        else { push(@criteria, "flags.requestee_id IS NULL") }
         push(@excluded_columns, 'requestee') unless $cgi->param('do_union');
     }
     

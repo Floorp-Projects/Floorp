@@ -47,7 +47,8 @@
   <table id="filter">
     <tr>
       <th>Requester:</th>
-      <td><input type="text" name="requester" value="[% cgi.param('requester') FILTER html %]" size="20"></td>
+      <td><input type="text" name="requester" value="[% cgi.param('requester') FILTER html %]" size="20" 
+           title="Requester's email address"></td>
       <th>Product:</th>
       <td>
         <select name="product" onchange="selectProduct(this.form, 'product', 'component', 'Any');">
@@ -80,7 +81,8 @@
     </tr>
     <tr>
       <th>Requestee:</th>
-      <td><input type="text" name="requestee" value="[% cgi.param('requestee') FILTER html %]" size="20"></td>
+      <td><input type="text" name="requestee" value="[% cgi.param('requestee') FILTER html %]" size="20" 
+           title="Requestee's email address or &quot;-&quot; (hyphen) for requests with no requestee"></td>
       <th>Component:</th>
       <td>
         <select name="component">
