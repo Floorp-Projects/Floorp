@@ -602,16 +602,16 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",					"png$D.o");
 
 	BuildOneProject(":mozilla:modules:libimg:macbuild:libimg.mcp",				"libimg$D.shlb", "libimg.toc", 1, $main::ALIAS_SYM_FILES, 0);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",				"gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",				"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",				"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:gifdecoder.mcp",			"gifdecoder$D.shlb", "gifdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",			"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",			"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
-	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",			"Wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
-	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"brprof$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "chrome$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:rdf:brprof:build:brprof.mcp",						"BrowsingProfile$D.shlb", "brprof.toc", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:rdf:chrome:build:chrome.mcp",                     "ChomeRegistry$D.shlb", "chrome.toc", 1, $main::ALIAS_SYM_FILES, 1);
     
 #// XXX moved this TEMPORARILY to layout while we sort out a dependency
 #	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
@@ -786,7 +786,7 @@ sub BuildLayoutProjects()
 	BuildOneProject(":mozilla:webshell:embed:mac:RaptorShell.mcp",				"RaptorShell$D.shlb", "RaptorShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	#// XXX this is here because of a very TEMPORARY dependency
-	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"rdf$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:rdf:macbuild:rdf.mcp",							"RDFLibrary$D.shlb", "rdf.toc", 1, $main::ALIAS_SYM_FILES, 1);
     
     BuildOneProject(":mozilla:xpinstall:macbuild:xpinstall.mcp",                "xpinstall$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
