@@ -69,22 +69,7 @@ static NS_DEFINE_IID(kCTransferableCID,  NS_TRANSFERABLE_CID);
 // Some Misc #defines
 #define SELECTION_DEBUG        0
 #define FORCE_SELECTION_UPDATE 1
-#define TRACKER_DEBUG          0
 #define CALC_DEBUG             0
-
-// Tracker Data
-#define kInsertInRemoveList 0
-#define kInsertInAddList    1
-
-// Kludged Content stuff
-nsIFrame   * fFrameArray[1024];
-nsIContent * fContentArray[1024];
-PRInt32      fMax = -1;
-
-nsIContent * fTrackerContentArrayRemoveList[1024];
-PRInt32      fTrackerRemoveListMax = 0;
-nsIContent * fTrackerContentArrayAddList[1024];
-PRInt32      fTrackerAddListMax = 0;
 
 
 #include "nsICaret.h"
@@ -1193,14 +1178,6 @@ nsFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::MoveInSpaceManager(nsIPresContext* aPresContext,
-                            nsISpaceManager* aSpaceManager,
-                            nscoord aDeltaX, nscoord aDeltaY)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsFrame::ContentChanged(nsIPresContext* aPresContext,
                         nsIContent*     aChild,
                         nsISupports*    aSubContent)
@@ -2141,44 +2118,6 @@ static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 /********************************************************
 * Refreshes each content's frame
 *********************************************************/
-#if 0
-static void RefreshContentFrames(nsIPresContext& aPresContext,
-                          nsIContent * aStartContent,
-                          nsIContent * aEndContent)
-{
-  //-------------------------------------
-  // Undraw all the current selected frames
-  // XXX Kludge for now
-  nsIPresShell *shell     = aPresContext.GetShell();
-  nsIFrame     *rootFrame;
-   
-  shell->GetRootFrame(rootFrame);
-
-  PRBool foundStart = PR_FALSE;
-  for (PRInt32 i=0;i<fMax;i++) {
-    nsIContent * node = (nsIContent *)fContentArray[i];
-    if (node == aStartContent) {
-      foundStart = PR_TRUE;
-      //ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
-      RefreshAllContentFrames(rootFrame, node);
-      if (aStartContent == aEndContent) {
-        break;
-      }
-    } else if (foundStart) {
-      //ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
-      RefreshAllContentFrames(rootFrame, node);
-    } else if (aEndContent == node) {
-      //ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(node));
-      RefreshAllContentFrames(rootFrame, node);
-      break;
-    }
-  }
-  //NS_RELEASE(rootFrame);
-  NS_RELEASE(shell);
-  //-------------------------------------
-}
-#endif
-
 
 /**
   *
@@ -2226,25 +2165,6 @@ GetLastLeaf(nsIFrame **aFrame)
   }
   *aFrame = child;
 }
-
-#if 0
-void
-GetFirstLeaf(nsIFrame **aFrame)
-{
-  if (!aFrame || !*aFrame)
-    return;
-  nsIFrame *child = *aFrame;
-  nsresult result;
-  nsIFrame *lookahead = nsnull;
-  while (1){
-    result = child->FirstChild(nsnull, &lookahead);
-    if (NS_FAILED(result) || !lookahead)
-      return;//nothing to do
-    child = lookahead;
-    *aFrame = child;
-  }
-}
-#endif
 
 #ifdef NS_DEBUG
 static void
