@@ -392,6 +392,18 @@ LPSTR CPlugin::createURLString()
         urlToOpen = szPageUrlForJVM;
       }
 
+      // wsprintf doesn't like null pointers on NT or 98, so
+      // change any null string pointers to null strings
+      if (!m_szPageURL) {
+        m_szPageURL = new char[1];
+        m_szPageURL[0] = '\0';
+      }
+
+      if (!m_szFileURL) {
+        m_szFileURL = new char[1];
+        m_szFileURL[0] = '\0';
+      }
+
       m_szURLString = new char[lstrlen(szPluginFinderCommandBeginning) + lstrlen(urlToOpen) + 10 + 
                                lstrlen((LPSTR)m_pNPMIMEType) + 13 +
                                lstrlen((LPSTR)m_szPageURL) + 11 + 
