@@ -501,6 +501,10 @@ protected:
 
   void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
+  static PRBool TryChannelCharset(nsIChannel *aChannel,
+                                  PRInt32& aCharsetSource,
+                                  nsACString& aCharset);
+  
   nsresult doCreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
                          nsCompatibility aCompatMode,
