@@ -41,8 +41,9 @@ nsRDFArrayCursor::QueryInterface(REFNSIID iid, void** result)
     if (!result)
         return NS_ERROR_NULL_POINTER;
 
+    static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     if (iid.Equals(nsIRDFCursor::IID()) ||
-        iid.Equals(::nsISupports::IID())) {
+        iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIRDFCursor*, this);
         AddRef();
         return NS_OK;
