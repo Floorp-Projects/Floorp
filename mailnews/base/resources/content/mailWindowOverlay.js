@@ -733,13 +733,14 @@ function MsgGetMessagesForAllServers(defaultServer)
     try
     {
         var allServers = accountManager.allServers;
+        var i;
         // array of isupportsarrays of servers for a particular folder
-        var pop3DownloadServersArray = new Array; 
+        var pop3DownloadServersArray = new Array();
         // parallel isupports array of folders to download to...
         var localFoldersToDownloadTo = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
         var pop3Server;
 
-        for (var i=0;i<allServers.Count();i++)
+        for (i = 0; i < allServers.Count(); ++i)
         {
             var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
             var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
@@ -764,7 +765,7 @@ function MsgGetMessagesForAllServers(defaultServer)
                 }
             }
         }
-        for (var i = 0; i < pop3DownloadServersArray.length; i++)
+        for (i = 0; i < pop3DownloadServersArray.length; ++i)
         {
           // any ol' pop3Server will do - the serversArray specifies which servers to download from
           pop3Server.downloadMailFromServers(pop3DownloadServersArray[i], msgWindow, localFoldersToDownloadTo.GetElementAt(i), null);
@@ -1933,7 +1934,6 @@ function CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadSe
 {
   var outNumFolders = new Object();
   var inboxFolder = currentServer.rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-  pop3Server = currentServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
   // coalesce the servers that download into the same folder...
   var index = localFoldersToDownloadTo.GetIndexOf(inboxFolder);
   if (index == -1)
@@ -1946,12 +1946,8 @@ function CoalesceGetMsgsForPop3ServersByDestFolder(currentServer, pop3DownloadSe
     localFoldersToDownloadTo.AppendElement(inboxFolder);
     index = pop3DownloadServersArray.length
     pop3DownloadServersArray[index] = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    pop3DownloadServersArray[index].AppendElement(currentServer);
   }
-  else
-  {
-    pop3DownloadServersArray[index].AppendElement(currentServer);
-  }
+  pop3DownloadServersArray[index].AppendElement(currentServer);
 }
 
 function GetMessagesForAllAuthenticatedAccounts()
@@ -1960,14 +1956,14 @@ function GetMessagesForAllAuthenticatedAccounts()
   try
   {
     var allServers = accountManager.allServers;
-
+    var i;
     // array of isupportsarrays of servers for a particular folder
-    var pop3DownloadServersArray = new Array; 
+    var pop3DownloadServersArray = new Array();
     // parallel isupports array of folders to download to...
     var localFoldersToDownloadTo = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
     var pop3Server;
 
-    for (var i=0;i<allServers.Count();i++)
+    for (i = 0; i < allServers.Count(); ++i)
     {
       var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
       var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
@@ -1983,7 +1979,7 @@ function GetMessagesForAllAuthenticatedAccounts()
           GetMessagesForInboxOnServer(currentServer);
       }
     }
-    for (var i = 0; i < pop3DownloadServersArray.length; i++)
+    for (i = 0; i < pop3DownloadServersArray.length; ++i)
     {
       // any ol' pop3Server will do - the serversArray specifies which servers to download from
       pop3Server.downloadMailFromServers(pop3DownloadServersArray[i], msgWindow, localFoldersToDownloadTo.GetElementAt(i), null);
