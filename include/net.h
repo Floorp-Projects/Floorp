@@ -121,6 +121,8 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_XMLHTML              37 /* HTML inclusions in XML */
 #define FO_NGLAYOUT             38 /* NGLayout streams */
 #define FO_AUTOUPDATE           39 
+#define FO_LASTFORMAT           40 /* If you create another FO_Format, bump this value! */
+
 /* bitfield detectable CACHE FO's
  */
 #define FO_CACHE_ONLY					64
@@ -202,6 +204,8 @@ typedef struct _net_MemoryCacheObject net_MemoryCacheObject;
 #define FO_ONLY_FROM_CACHE_AND_LOAD_HTML_HELP_MAP_FILE		(FO_ONLY_FROM_CACHE | FO_LOAD_HTML_HELP_MAP_FILE)
 #define FO_ONLY_FROM_CACHE_AND_PRESENT_INLINE				(FO_ONLY_FROM_CACHE | FO_PRESENT_INLINE)
 #define FO_ONLY_FROM_CACHE_AND_NGLAYOUT         (FO_ONLY_FROM_CACHE | FO_NGLAYOUT)
+
+#define MAX_FORMATS_OUT (FO_LASTFORMAT | FO_ONLY_FROM_CACHE)+1
 
 typedef void
 Net_GetUrlExitFunc (URL_Struct *URL_s, int status, MWContext *window_id);
