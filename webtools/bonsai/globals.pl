@@ -684,14 +684,14 @@ sub ConstructMailTo {
 sub MyFmtClock {
      my ($time) = @_;
 
-     $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
+     $time = 1 * 365 * 24 * 60 * 60 + 1 if (!defined($time) || $time <= 0);
      return time2str("%Y-%m-%d %T", $time);
 }
 
 sub SqlFmtClock {
      my ($time) = @_;
 
-     $time = 1 * 365 * 24 * 60 * 60 + 1 if ($time <= 0);
+     $time = 1 * 365 * 24 * 60 * 60 + 1 if (!defined($time) || $time <= 0);
      return time2str("%Y-%m-%d %T", $time);
 }
 

@@ -64,16 +64,16 @@ print "<TITLE> Rebooting, please wait...</TITLE>
 <p>
 Searching for first checkin after " . SqlFmtClock($startfrom) . "...<p>\n";
 
-my $branch = $::TreeInfo{$::TreeID}->{'branch'};
-print "<p> $branch <p> \n";
+my $inbranch = $::TreeInfo{$::TreeID}->{'branch'};
+print "<p> $inbranch <p> \n";
 
-my $sqlstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$branch' and ci_when>='" . SqlFmtClock($startfrom) . "' order by ci_when;";
+my $sqlstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid and branches.branch='$inbranch' and ci_when>='" . SqlFmtClock($startfrom) . "' order by ci_when;";
 print "<p> $sqlstring <p>\n";
 SendSQL("$sqlstring");
 
 my ($change, $date, $who, $repos, $dir, $file, $rev, $sticky, $branch, $linesa, $linesr, $log);
 my ($lastchange, $lastdate, $lastwho, $lastrepos, $lastdir, $lastrev, $laststicky, $lastbranch, $lastlinesa, $lastlinesr, $lastlog);
-my ($id, $info, $lastdate, @files, @fullinfo);
+my ($id, $info, @files, @fullinfo);
 my ($d, $f, $okdir, $full);
 my ($r);
 $lastdate = "";
