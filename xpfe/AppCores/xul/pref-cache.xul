@@ -1,0 +1,69 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?>
+
+<?xml-stylesheet href="pref.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY  title.label "Sample Prefs Panel">
+<!ENTITY  cacheHeader "cache">
+<!ENTITY cachePara "The cache is used to keep local copies of frequently accessed documents
+	  and thus reduce time connected to the network. The Reload button will always
+	  compare the cache document to the network and show the most recent one.">
+<!ENTITY memCache "Memory Cache:">
+<!ENTITY kbyes "Kbytes">
+<!ENTITY clearMemcacheButton.label "Clear Memory Cache">
+<!ENTITY clearDiskcacheButton.label "Clear Disk Cache">
+<!ENTITY extEdit "External Editors">
+<!ENTITY htmlSource "Html Source">
+<!ENTITY chooseButton.label "Choose...">
+<!ENTITY images "Images:">
+<!ENTITY docCache "Document in cache is compared to document on network:">
+<!ENTITY oncePsessionRadio.label "Once per session">
+<!ENTITY everyTimeRadio.label "Every time">
+<!ENTITY neverRadio.label "Never">
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="return StartUp('Cache');"  title="Sample Prefs Panel">
+
+<html:script language="JavaScript" src="PrefsWindow.js">
+</html:script>
+
+<html:DIV ID="top">
+		<html:SPAN ID="lefttext">&cacheHeader;</html:SPAN>
+</html:DIV>
+
+
+<html:table>
+      <html:tr><html:td>&cachePara;
+	  </html:td></html:tr>  
+            <html:tr><html:td>&memCache;<html:input name="disk" type="text" size="3" id="pref:string:composer.source" />&kbyes;<html:input name="clearm" type="button" value="&clearMemcacheButton.label;" /></html:td></html:tr>           
+			<html:tr><html:td>Disk Cache:<html:input name="memory" type="text" size="3" id="pref:string:composer.source" />&kbyes;<html:input name="cleard" type="button" value="&clearDiskcacheButton.label;" /></html:td></html:tr> 
+</html:table>
+
+&extEdit;
+			
+<html:table>  		
+      <html:tr><html:td>&htmlSource;</html:td></html:tr>
+			<html:tr>
+				<html:td><html:input name="Choose" type="text" id="pref:string:composer.source" /></html:td>
+				<html:td><html:input value="&chooseButton.label;" type="button" /></html:td>
+			</html:tr>
+			<html:tr><html:td>&images;</html:td></html:tr>
+			<html:tr>
+				<html:td><html:input name="Choose" type="text" id="pref:string:composer.images" /></html:td>
+				<html:td><html:input value="&chooseButton.label;" type="button" /></html:td>
+			</html:tr>
+</html:table>
+
+
+
+<html:table> 
+       &docCache;			
+			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:0:int:composer.font.size" />&oncePsessionRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:1:int:composer.font.size" />&everyTimeRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:2:int:composer.font.size" />&neverRadio.label;</html:label></html:td></html:tr>
+</html:table>
+
+</window>
