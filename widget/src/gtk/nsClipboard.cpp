@@ -170,10 +170,9 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
   sWidget = w;
 
   // Get the clipboard from the service manager.
-  nsIClipboard* clipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
-                                             (nsISupports **)&clipboard);
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
+
   if (!NS_SUCCEEDED(rv)) {
     printf("Couldn't get clipboard service!\n");
     return;
@@ -214,9 +213,6 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
                            GDK_SELECTION_PRIMARY,
                            GDK_SELECTION_TYPE_STRING,
                            GDK_SELECTION_TYPE_STRING);
-
-  // We're done with our reference to the clipboard.
-  NS_IF_RELEASE(clipboard);
 }
 
 
@@ -417,11 +413,10 @@ nsClipboard::SelectionReceivedCB (GtkWidget *aWidget,
 
   // ARGHH!  GTK doesn't pass the arg to the callback, so we can't
   // get "this" back!  Until we solve this, get it from the service mgr:
-  nsIClipboard* iclipboard;
-  nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
-                                             (nsISupports **)&iclipboard);
-  if (!NS_SUCCEEDED(rv)) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIClipboard, iclipboard, kCClipboardCID, &rv);
+
+  if (NS_FAILED(rv)) {
     printf("Couldn't get clipboard service!\n");
     return;
   }
