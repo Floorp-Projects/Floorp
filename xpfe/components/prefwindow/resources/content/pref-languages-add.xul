@@ -35,8 +35,8 @@
   orient="vertical"
   style="width: 25em;height: 25em;">
 
-  <script language="javascript" src="pref-languages.js"></script>
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script type="application/x-javascript" src="pref-languages.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <keyset id="keyset"/>
   

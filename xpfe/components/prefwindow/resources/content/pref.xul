@@ -44,8 +44,8 @@
   
   </script>        
         
-  <script language="javascript" src="chrome://global/content/nsWidgetStateManager.js"></script>
-  <script language="javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsWidgetStateManager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/nsPrefWindow.js"/>
 
   <keyset id="keyset"/>
 
@@ -54,7 +54,7 @@
     <tree class="inset" id="prefsTree" style="width: 0px" flex="3"/>      
 
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
-    <script language="JavaScript">
+    <script type="application/x-javascript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
         document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );

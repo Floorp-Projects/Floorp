@@ -37,7 +37,7 @@ Contributor(s): Kin Blas <kin@netscape.com>
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script type="text/javascript" src="chrome://global/content/replacedialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/replacedialog.js"/>
   <stringbundle id="replaceBundle" src="chrome://global/locale/finddialog.properties"/>
    
   <box>

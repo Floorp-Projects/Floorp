@@ -6,7 +6,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	align="vertical"> 
 
-	<html:script>
+	<script>
 	function cmdHideButtonOne(){
 		window.document.getElementById("ShowButton").setAttribute("buttonmode", "hideOne");		
 	}
@@ -22,7 +22,7 @@
 	function cmdShowAll() {
 		window.document.getElementById("ShowButton").setAttribute("buttonmode", "showAll");
 	}
-	</html:script>
+	</script>
 
 	<broadcaster id="ShowButton" buttonmode="showAll" />
 	<observes element="ShowButton" attribute="buttonmode" />

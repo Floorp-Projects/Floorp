@@ -32,7 +32,7 @@
         align="vertical" title="&title.label;"
   		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-download' ); else parent.queuedTag = 'pref-download';">
 
-  <html:script language="JavaScript">
+  <script type="application/x-javascript">
   // startup function called by the prefs architecture.
   function Startup()
   {
@@ -65,7 +65,7 @@
       }
     }
   }
-  </html:script>
+  </script>
   
   <box class="box-smallheader" title="&lHeader;" description="&rHeader;"/>
 	

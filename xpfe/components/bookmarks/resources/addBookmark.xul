@@ -43,9 +43,9 @@
         orient="vertical" class="dialog"
         onload="Startup();">
   
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"></script>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"></script>
-  <script type="text/javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/addBookmark.js"/>
 
   <stringbundle id="bookmarksbundle"
                 src="chrome://communicator/locale/bookmarks/bookmark.properties"/>

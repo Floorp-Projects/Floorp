@@ -25,7 +25,7 @@
         <observes element="data.status"   attribute="value" onbroadcast="onStatus()"/>
     </dialog>
 
-    <html:script>
+    <script>
         var data;
         var dialog;
 
@@ -159,7 +159,7 @@
             var txt = data.status.getAttribute( "value" );
             dialog.status.childNodes[0].nodeValue = txt;
         }
-    </html:script>
+    </script>
 
     <html:table style="width:100%;">
 

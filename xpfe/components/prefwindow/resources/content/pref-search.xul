@@ -30,12 +30,12 @@
         onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()"  title="&title.label;"
         orient="vertical">
 
-  <script type="text/javascript">
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["engineList","openSidebarPanel"];
   ]]>
   </script> 
-  <script type="text/javascript" src="chrome://communicator/content/pref/pref-search.js"/>      
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-search.js"/>      
         
   <box class="box-smallheader" title="&lHeader;"/>
 

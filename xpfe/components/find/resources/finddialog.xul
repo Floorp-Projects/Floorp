@@ -46,7 +46,7 @@ Contributor(s):
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script language="JavaScript" src="chrome://global/content/finddialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/finddialog.js"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   <box>
   

@@ -35,7 +35,7 @@
   orient="vertical"
   onunload="DoUnload();">
 
-  <script src="chrome://communicator/content/directory/directory.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/directory/directory.js"/>
 
   <tree id="tree" datasources="rdf:files" flex="1" style="height:0px;"
       container="true" open="true" flags="dont-test-empty"

@@ -14,7 +14,7 @@
 <overlay id="tasksOverlay"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script language="JavaScript" src="chrome://communicator/content/tasksOverlay.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/tasksOverlay.js"/>
 
 
 

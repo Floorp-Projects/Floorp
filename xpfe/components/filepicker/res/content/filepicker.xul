@@ -43,7 +43,7 @@
   persist="screenX screenY">
 
 <stringbundle id="bundle_filepicker" src="chrome://global/locale/filepicker.properties"/>
-<script src="chrome://global/content/filepicker.js"/>
+<script type="application/x-javascript" src="chrome://global/content/filepicker.js"/>
 <keyset id="keyset"/>
 
 <box autostretch="never">

@@ -27,12 +27,12 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- Context menu -->
-  <script language="javascript">
+  <script type="application/x-javascript">
     // Global variable that holds the nsContextMenu instance.
     var contextMenu = null;
   </script>
-  <script type="text/javascript" src="chrome://communicator/content/nsContextMenu.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
 
   <popupset id="contentAreaContextSet">
     <!-- This is a generic context menu for a content area. It contains 

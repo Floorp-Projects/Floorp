@@ -17,10 +17,10 @@
 		<popup id="disallowcontext" oncreate="return false;" />
 	</popupset>
 
-	<script type="text/javascript" src="chrome://global/content/nsUserSettings.js"/>
-	<script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-	<script type="text/javascript" src="chrome://communicator/content/search/internetresults.js"/>
-	<script type="text/javascript" src="chrome://communicator/content/search/shared.js"/>
+	<script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+	<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+	<script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
+	<script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <box id="multi-results-header"> 
     <text value="&results.header.label;"/>

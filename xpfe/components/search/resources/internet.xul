@@ -10,8 +10,8 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
 
-	<html:script src="chrome://communicator/content/search/internet.js" />
-	<html:script src="chrome://communicator/content/search/shared.js" />
+	<script type="application/x-javascript" src="chrome://communicator/content/search/internet.js" />
+	<script type="application/x-javascript" src="chrome://communicator/content/search/shared.js" />
 
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />

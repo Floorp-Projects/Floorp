@@ -33,11 +33,10 @@
         orient="vertical" title="&title.label;"
   		  onload="parent.initPanel('chrome://communicator/content/pref/pref-navigator.xul');">
 
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
-  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js">
-  </script>
-  <script language="JavaScript">
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["startupPage", "browserStartupHomepage",
                        "bookmarksButton", "goButton",

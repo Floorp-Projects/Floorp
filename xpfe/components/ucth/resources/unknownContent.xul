@@ -13,8 +13,8 @@
         class="dialog"
         orient="vertical">
 
-	<script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script src="chrome://global/content/unknownContent.js"></script>
+	<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/unknownContent.js"/>
 
   <box>
     <separator orient="vertical" class="thin"/>

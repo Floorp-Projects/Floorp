@@ -42,8 +42,8 @@
 	windowtype="internetsearch:editor" class="dialog"
 	onload="doLoad()" onunload="doUnload()">
 
-	<script language="Javascript" src="chrome://global/content/strres.js"></script>
-	<script language="Javascript" src="chrome://communicator/content/search/search-editor.js"></script>
+	<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+	<script type="application/x-javascript" src="chrome://communicator/content/search/search-editor.js"/>
 
   <keyset id="keyset"/>
   

@@ -30,7 +30,7 @@
         align="vertical" title="&window.title;"
         onload="parent.initPanel(panel);">
 
-  <script language="JavaScript">
+  <script type="application/x-javascript">
   <![CDATA[
     var panel = "chrome://communicator/content/pref/pref-advanced.xul";
     var _elementIDs = ["advancedJavaAllow", "javascriptEnabled", "advancedMailFTP", "advancedMailFTPAddress"];
@@ -49,8 +49,8 @@
     
   ]]>
   </script>
-  <script language="javascript" src="chrome://global/content/strres.js"></script>
-  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
 
         
   <box class="box-smallheader" title="&lHeader;"/>

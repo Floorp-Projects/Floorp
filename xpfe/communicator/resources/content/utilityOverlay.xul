@@ -14,8 +14,8 @@
 <overlay id="utilityOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script language="javascript" src="chrome://communicator/content/utilityOverlay.js"></script>
-  <script language="javascript" src="chrome://communicator/content/builtinURLs.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/builtinURLs.js"/>
          
   <!-- online/offline status indicators -->
   <broadcasterset id="broadcasterset">  	

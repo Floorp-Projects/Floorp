@@ -28,7 +28,7 @@
 		</menu>
 	</menubar>
 
-	<html:script src="chrome://communicator/content/search/search.js" />
+	<script type="application/x-javascript" src="chrome://communicator/content/search/search.js" />
 
 	<tabcontrol align="vertical"> 
 		<tabbox> 
