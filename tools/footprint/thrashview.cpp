@@ -94,8 +94,8 @@ init()
     unsigned short brightness = 0;
 
     XColor *color = colors;
-    XColor *last_color = colors + ncolors;
-    for (; color < last_color; ++color, brightness += step) {
+    XColor *limit = colors + ncolors;
+    for (; color < limit; ++color, brightness += step) {
         color->red   = brightness;
         color->green = brightness;
         color->blue  = brightness;
@@ -118,8 +118,8 @@ static void
 decay()
 {
     unsigned char *page = pages;
-    unsigned char *last_page = pages + (maxpage - minpage) + 1;
-    for (; page < last_page; ++page) {
+    unsigned char *limit = pages + (maxpage - minpage) + 1;
+    for (; page < limit; ++page) {
         if (*page) {
             *page /= 8;
             *page *= 7;
@@ -239,9 +239,9 @@ read_addrs()
         count /= sizeof buf[0];
 
         unsigned int *addr = reinterpret_cast<unsigned int *>(buf);
-        unsigned int *last_addr = addr + count;
+        unsigned int *limit = addr + count;
 
-        for (; addr < last_addr; ++addr) {
+        for (; addr < limit; ++addr) {
             // map the address to a page
             unsigned int page = *addr / 4096;
 
