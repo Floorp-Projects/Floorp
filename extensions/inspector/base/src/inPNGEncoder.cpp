@@ -38,9 +38,8 @@
 
 
 #include "inPNGEncoder.h"
-
-#include "nsString.h"
-#include "nsReadableUtils.h"
+#include "inIBitmap.h"
+#include "nsILocalFile.h"
 #include "png.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,7 +52,7 @@ inPNGEncoder::~inPNGEncoder()
 {
 }
 
-NS_IMPL_ISUPPORTS1(inPNGEncoder, inIPNGEncoder);
+NS_IMPL_ISUPPORTS1(inPNGEncoder, inIPNGEncoder)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -63,53 +62,56 @@ static void PNGAPI gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg
 /// inIPNGEncoder
 
 NS_IMETHODIMP 
-inPNGEncoder::WritePNG(inIBitmap *aBitmap, const PRUnichar *aURL, PRInt16 aType)
+inPNGEncoder::WritePNG(inIBitmap *aBitmap, nsILocalFile *aFile, PRInt16 aType)
 {
-  PRUint8* bits;
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  FILE *file;
+  nsresult rv = aFile->OpenANSIFileDesc("wb", &file);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  PRUint8 *bits;
   aBitmap->GetBits(&bits);
   PRUint32 width;
   aBitmap->GetWidth(&width);
   PRUint32 height;
   aBitmap->GetHeight(&height);
 
-  png_structp  pngStruct;
-  png_infop  infoStruct;
+  png_structp pngStruct;
+  png_infop infoStruct;
 
-  nsAutoString str;
-  str.Assign(aURL);
-  FILE *file = fopen(ToNewCString(str), "wb");
-  if (file) {
-    pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, gPNGErrorHandler, NULL);
-    infoStruct = png_create_info_struct(pngStruct);
-    png_init_io(pngStruct, file);
-    png_set_compression_level(pngStruct, Z_BEST_COMPRESSION);
+  pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, gPNGErrorHandler, NULL);
+  infoStruct = png_create_info_struct(pngStruct);
+  png_init_io(pngStruct, file);
+  png_set_compression_level(pngStruct, Z_BEST_COMPRESSION);
 
-    png_set_IHDR(pngStruct, infoStruct, width, height,
-        8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+  png_set_IHDR(pngStruct, infoStruct, width, height,
+               8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+               PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-    png_write_info(pngStruct, infoStruct);
+  png_write_info(pngStruct, infoStruct);
 
-    ReverseRGB(width, height, bits);
-    PRUint8* rowPtr = bits;
-    for (PRUint32 row = 0; row < height; ++row) {
-      png_write_row(pngStruct, rowPtr);
-      rowPtr += width*3;
-    }
-    ReverseRGB(width, height, bits);
-    
-    png_write_end(pngStruct, NULL);
-
-    fclose(file); 
-  } else {
-    return NS_ERROR_NULL_POINTER;
+  ReverseRGB(width, height, bits);
+  PRUint8 *rowPtr = bits;
+  for (PRUint32 row = 0; row < height; ++row) {
+    png_write_row(pngStruct, rowPtr);
+    rowPtr += width * 3;
   }
+  ReverseRGB(width, height, bits);
+    
+  png_write_end(pngStruct, NULL);
+
+  png_destroy_write_struct(&pngStruct, &infoStruct);
+
+  fclose(file); 
 
   return NS_OK;
 }
 
 void
-inPNGEncoder::ReverseRGB(PRUint32 aWidth, PRUint32 aHeight, PRUint8* aBits)
+inPNGEncoder::ReverseRGB(PRUint32 aWidth, PRUint32 aHeight, PRUint8 *aBits)
 {
   PRUint8 temp;
   PRUint32 row, col;
@@ -127,7 +129,3 @@ void gPNGErrorHandler(png_structp aPNGStruct, png_const_charp aMsg)
 {
   printf("ERROR ENCODING PNG IMAGE\n");
 }
-
-
-
-

@@ -512,7 +512,7 @@ BoxModelViewer.prototype =
     var encoder = XPCU.createInstance("@mozilla.org/inspector/png-encoder;1", "inIPNGEncoder");
     var path = FilePickerUtils.pickFile("Save Image as PNG", "", ["filterAll"], "Save");
     if (path)
-     encoder.writePNG(this.mBitmap, path.path, 24);
+      encoder.writePNG(this.mBitmap, path, 24);
   },
 
   ////////////////////////////////////////////////////////////////////////////
