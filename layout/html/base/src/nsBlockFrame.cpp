@@ -4308,7 +4308,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   nsRect combinedArea;
   aLineLayout.RelativePositionFrames(combinedArea);  // XXXldb This returned width as -15, 2001-06-12, Bugzilla
-  // XXX Changing the combined area here seems wrong. - LDB
   aLine->SetCombinedArea(combinedArea);
   if (addedBullet) {
     aLineLayout.RemoveBulletFrame(mBullet);

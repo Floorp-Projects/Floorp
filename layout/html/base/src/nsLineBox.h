@@ -335,7 +335,10 @@ public:
   void AppendFloaters(nsFloaterCacheFreeList& aFreeList);
   PRBool RemoveFloater(nsIFrame* aFrame);
 
-  // Combined area
+  // Combined area is the area of the line that should influence the
+  // overflow area of its parent block.  The combined area should be
+  // used for painting-related things, but should never be used for
+  // layout (except for handling of 'overflow').
   void SetCombinedArea(const nsRect& aCombinedArea);
   void GetCombinedArea(nsRect* aResult);
   PRBool CombinedAreaIntersects(const nsRect& aDamageRect) {
