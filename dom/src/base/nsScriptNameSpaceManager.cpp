@@ -397,20 +397,19 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   nsGlobalNameStruct *s = AddToHash(NS_ConvertASCIItoUCS2(aClassName));
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
-  if (s) {
-    if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
-      return NS_OK;
-    }
-
-    // If a external constructor is already defined with aClassName we
-    // won't overwrite it.
-
-    if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
-      return NS_OK;
-    }
+  if (s->mType == nsGlobalNameStruct::eTypeClassConstructor) {
+    return NS_OK;
   }
 
-  NS_ASSERTION(!(s && s->mType != nsGlobalNameStruct::eTypeInterface),
+  // If a external constructor is already defined with aClassName we
+  // won't overwrite it.
+
+  if (s->mType == nsGlobalNameStruct::eTypeExternalConstructor) {
+    return NS_OK;
+  }
+
+  NS_ASSERTION(!(s->mType != nsGlobalNameStruct::eTypeNotInitialized &&
+                 s->mType != nsGlobalNameStruct::eTypeInterface),
                "Whaaa, JS environment name clash!");
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
