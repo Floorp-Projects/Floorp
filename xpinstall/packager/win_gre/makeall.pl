@@ -97,9 +97,9 @@ $gDirStageProduct     = "$inStagePath/gre";
 
 # Create the stage area here.
 # If -sd is not used, the default stage dir will be: $topsrcdir/stage
-if(system("perl \"$gDirPackager/make_stage.pl\" -pn gre -os win -sd \"$inStagePath\""))
+if(system("perl \"$gDirPackager/make_stage.pl\" -pn gre -os win -sd \"$inStagePath\" -dd \"$inDistPath\""))
 {
-  die "\n Error: perl \"$gDirPackager/make_stage.pl\" -pn gre -os win -sd \"$inStagePath\"\n";
+  die "\n Error: perl \"$gDirPackager/make_stage.pl\" -pn gre -os win -sd \"$inStagePath\" -dd \"$inDistPath\"\n";
 }
 
 $seiFileNameGeneric       = "nsinstall.exe";
