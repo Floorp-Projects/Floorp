@@ -277,7 +277,7 @@ nsAString::do_AssignFromReadable( const self_type& aReadable )
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_AssignFromElementPtrLength(buffer, length);
+            UncheckedAssignFromReadable(Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
@@ -303,13 +303,13 @@ nsAString::UncheckedAssignFromReadable( const self_type& aReadable )
 void
 nsAString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    UncheckedAssignFromReadable(nsDependentString(aPtr));
+    do_AssignFromReadable(nsDependentString(aPtr));
   }
 
 void
 nsAString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    UncheckedAssignFromReadable(Substring(aPtr, aPtr+aLength));
+    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
@@ -338,7 +338,7 @@ nsAString::do_AppendFromReadable( const self_type& aReadable )
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_AppendFromElementPtrLength(buffer, length);
+            UncheckedAppendFromReadable(Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
@@ -360,13 +360,13 @@ nsAString::UncheckedAppendFromReadable( const self_type& aReadable)
 void
 nsAString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    UncheckedAppendFromReadable(nsDependentString(aPtr));
+    do_AppendFromReadable(nsDependentString(aPtr));
   }
 
 void
 nsAString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    UncheckedAppendFromReadable(Substring(aPtr, aPtr+aLength));
+    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
@@ -395,7 +395,7 @@ nsAString::do_InsertFromReadable( const self_type& aReadable, index_type atPosit
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_InsertFromElementPtrLength(buffer, atPosition, length);
+            UncheckedInsertFromReadable(Substring(buffer, buffer + length), atPosition);
             delete[] buffer;
           }
         // else assert
@@ -420,13 +420,13 @@ nsAString::UncheckedInsertFromReadable( const self_type& aReadable, index_type a
 void
 nsAString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    UncheckedInsertFromReadable(nsDependentString(aPtr), atPosition);
+    do_InsertFromReadable(nsDependentString(aPtr), atPosition);
   }
 
 void
 nsAString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    UncheckedInsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
+    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
@@ -475,7 +475,7 @@ nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, con
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            UncheckedReplaceFromReadable(cutStart, cutLength, nsDependentString(buffer, length));
+            UncheckedReplaceFromReadable(cutStart, cutLength, Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
@@ -774,7 +774,7 @@ nsACString::do_AssignFromReadable( const self_type& aReadable )
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_AssignFromElementPtrLength(buffer, length);
+            UncheckedAssignFromReadable(Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
@@ -800,13 +800,13 @@ nsACString::UncheckedAssignFromReadable( const self_type& aReadable )
 void
 nsACString::do_AssignFromElementPtr( const char_type* aPtr )
   {
-    UncheckedAssignFromReadable(nsDependentCString(aPtr));
+    do_AssignFromReadable(nsDependentCString(aPtr));
   }
 
 void
 nsACString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    UncheckedAssignFromReadable(Substring(aPtr, aPtr+aLength));
+    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
@@ -835,7 +835,7 @@ nsACString::do_AppendFromReadable( const self_type& aReadable )
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_AppendFromElementPtrLength(buffer, length);
+            UncheckedAppendFromReadable(Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
@@ -856,13 +856,13 @@ nsACString::UncheckedAppendFromReadable( const self_type& aReadable )
 void
 nsACString::do_AppendFromElementPtr( const char_type* aPtr )
   {
-    UncheckedAppendFromReadable(nsDependentCString(aPtr));
+    do_AppendFromReadable(nsDependentCString(aPtr));
   }
 
 void
 nsACString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    UncheckedAppendFromReadable(Substring(aPtr, aPtr+aLength));
+    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
@@ -891,7 +891,7 @@ nsACString::do_InsertFromReadable( const self_type& aReadable, index_type atPosi
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            do_InsertFromElementPtrLength(buffer, atPosition, length);
+            UncheckedInsertFromReadable(Substring(buffer, buffer + length), atPosition);
             delete[] buffer;
           }
         // else assert
@@ -916,13 +916,13 @@ nsACString::UncheckedInsertFromReadable( const self_type& aReadable, index_type 
 void
 nsACString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition )
   {
-    UncheckedInsertFromReadable(nsDependentCString(aPtr), atPosition);
+    do_InsertFromReadable(nsDependentCString(aPtr), atPosition);
   }
 
 void
 nsACString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    UncheckedInsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
+    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
@@ -971,7 +971,7 @@ nsACString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, co
             const_iterator fromBegin, fromEnd;
             char_type* toBegin = buffer;
             copy_string(aReadable.BeginReading(fromBegin), aReadable.EndReading(fromEnd), toBegin);
-            UncheckedReplaceFromReadable(cutStart, cutLength, nsDependentCString(buffer, length));
+            UncheckedReplaceFromReadable(cutStart, cutLength, Substring(buffer, buffer + length));
             delete[] buffer;
           }
         // else assert?
