@@ -126,7 +126,9 @@ interface nsIX509Cert : nsISupports {
   readonly attribute wstring sha1Fingerprint;
   readonly attribute wstring md5Fingerprint;
   readonly attribute wstring issuedDate;
+  readonly attribute wstring issuedDateSortable;
   readonly attribute wstring expiresDate;
+  readonly attribute wstring expiresDateSortable;
   readonly attribute wstring tokenName;
   readonly attribute wstring issuerCommonName;
   readonly attribute wstring issuerOrganization;
