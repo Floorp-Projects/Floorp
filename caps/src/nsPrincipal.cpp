@@ -49,6 +49,8 @@
 #include "nsHashtable.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "nsPrincipal.h"
 
@@ -255,6 +257,36 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     *result = nsIPrincipal::ENABLE_DENIED;
 
     return NS_OK;
+  }
+
+  if (!mCert && !mTrusted) {
+    NS_ASSERTION(mInitialized, "Trying to enable a capability on an "
+                               "uninitialized principal");
+
+    // If we are a non-trusted codebase principal, capabilities can not
+    // be enabled if the user has not set the pref allowing scripts to
+    // request enhanced capabilities; however, the file: and resource:
+    // schemes are special and may be able to get extra capabilities
+    // even with the pref disabled.
+
+    static const char pref[] = "signed.applets.codebase_principal_support";
+    nsCOMPtr<nsIPrefBranch> prefBranch =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefBranch) {
+      PRBool mightEnable;
+      nsresult rv = prefBranch->GetBoolPref(pref, &mightEnable);
+      if (NS_FAILED(rv) || !mightEnable) {
+        rv = mCodebase->SchemeIs("file", &mightEnable);
+        if (NS_FAILED(rv) || !mightEnable) {
+          rv = mCodebase->SchemeIs("resource", &mightEnable);
+          if (NS_FAILED(rv) || !mightEnable) {
+            *result = nsIPrincipal::ENABLE_DENIED;
+
+            return NS_OK;
+          }
+        }
+      }
+    }
   }
 
   const char *start = capability;
