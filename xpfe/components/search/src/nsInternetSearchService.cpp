@@ -1043,9 +1043,9 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		if (source == kNC_SearchCommand_AddToBookmarks)
 			name.AssignWithConversion("Add to bookmarks");
 		else if (source == kNC_SearchCommand_FilterResult)
-			name.AssignWithConversion("Filter out this URL from all search results");
+			name.AssignWithConversion("Exclude this URL from future searches");
 		else if (source == kNC_SearchCommand_FilterSite)
-			name.AssignWithConversion("Filter out this web site from all search results");
+			name.AssignWithConversion("Exclude this domain from future searches");
 		else if (source == kNC_SearchCommand_ClearFilters)
 			name.AssignWithConversion("Clear all search filters");
 
