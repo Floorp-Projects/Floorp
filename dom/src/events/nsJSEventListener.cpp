@@ -143,20 +143,24 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+  PRBool handledScriptError = PR_FALSE;
   if (eventString.Equals(NS_LITERAL_STRING("onerror"))) {
     nsCOMPtr<nsIPrivateDOMEvent> priv(do_QueryInterface(aEvent));
     NS_ENSURE_TRUE(priv, NS_ERROR_UNEXPECTED);
 
-    nsScriptErrorEvent *event;
+    nsEvent* event;
+    priv->GetInternalNSEvent(&event);
+    if (event->message == NS_SCRIPT_ERROR) {
+      nsScriptErrorEvent *scriptEvent = NS_STATIC_CAST(nsScriptErrorEvent*, event);
+      argv = ::JS_PushArguments(cx, &stackPtr, "WWi", scriptEvent->errorMsg,
+                              scriptEvent->fileName, scriptEvent->lineNr);
+      NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+      argc = 3;
+      handledScriptError = PR_TRUE;
+    }
+  }
 
-    priv->GetInternalNSEvent((nsEvent**)&event);
-
-    argv = ::JS_PushArguments(cx, &stackPtr, "WWi", event->errorMsg,
-                              event->fileName, event->lineNr);
-    NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
-
-    argc = 3;
-  } else {
+  if (!handledScriptError) {
     rv = xpc->WrapNative(cx, obj, aEvent, NS_GET_IID(nsIDOMEvent),
                          getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
