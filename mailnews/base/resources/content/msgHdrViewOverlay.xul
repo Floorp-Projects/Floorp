@@ -53,6 +53,14 @@ Rights Reserved.
             </hbox>
             <html class="headerValue" id="FromValue" flex="1"></html>
 					</box>
+					
+          <box id="ReplyToBox" class="headerBox" orient="horizontal" collapsed="true"> 
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&replyToField.label;" popup="allHeadersPopup"/>
+            </hbox>
+            <html class="headerValue" id="ReplyToValue" flex="1"></html>
+          </box>
+
 
 					<box id = "DateBox" class="headerBox" orient="horizontal" collapsed="true">
             <hbox class="headerValueBox">
@@ -116,6 +124,14 @@ Rights Reserved.
             </hbox>
             <html class="headerValue" id="NewsgroupValue" flex="1">*</html>
 				  </box>
+
+          <box id="FollowupToBox" class="headerBox" orient="horizontal" collapsed="true">
+            <hbox class="headerValueBox">
+              <text class="headerdisplayname" value="&followupToField.label;" popup="allHeadersPopup"/>
+            </hbox>          
+            <html class="headerValue" id="FollowupToValue" flex="1">*</html> 
+          </box>
+
 			</box>
 		</toolbar>
     

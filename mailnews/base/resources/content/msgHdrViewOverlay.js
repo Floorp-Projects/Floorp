@@ -60,6 +60,12 @@ function OnLoadMsgHeaderPane()
   // if you add more document elements with ids to msgHeaderPane.xul, you should add 
   // to this object...
   msgPaneData = new Object;
+
+  // HACK...force our XBL bindings file to be load before we try to create our first xbl widget....
+  // otherwise we have problems.
+
+  document.loadBindingDocument('chrome://messenger/content/mailWidgets.xml');
+
   if (msgPaneData)
   {
     // First group of headers
@@ -67,6 +73,9 @@ function OnLoadMsgHeaderPane()
     msgPaneData.SubjectValue = document.getElementById("SubjectValue");
     msgPaneData.FromBox   =   document.getElementById("FromBox");
     msgPaneData.FromValue = document.getElementById("FromValue");
+    msgPaneData.ReplyToBox   =   document.getElementById("ReplyToBox");
+    msgPaneData.ReplyToValue = document.getElementById("ReplyToValue");
+
     msgPaneData.DateBox = document.getElementById("DateBox");
     msgPaneData.DateValue = document.getElementById("DateValue");
 
@@ -91,6 +100,8 @@ function OnLoadMsgHeaderPane()
 
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
+    msgPaneData.FollowupToBox = document.getElementById("FollowupToBox");
+    msgPaneData.FollowupToValue = document.getElementById("FollowupToValue");
 
     msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
     msgPaneData.UserAgentToolbar = document.getElementById("headerPart3");
@@ -134,6 +145,8 @@ var messageHeaderSink = {
 
       // (1) clear out the email fields for to, from, cc....
       ClearEmailField(msgPaneData.FromValue);
+      ClearEmailField(msgPaneData.ReplyToValue);
+
       ClearEmailFieldWithButton(msgPaneData.ToValueShort);
       ClearEmailFieldWithButton(msgPaneData.CcValueShort);
       ClearEmailFieldWithButton(msgPaneData.ToValueLong);
@@ -338,6 +351,20 @@ function ClearEmailField(parentDiv)
   }
 }
 
+function OutputNewsgroups(boxNode, textNode, currentHeaderData, headerName)
+{
+  if (currentHeaderData[headerName])
+  {    
+    var headerValue = currentHeaderData[headerName].headerValue;
+    headerValue = headerValue.replace(/,/g,", ");
+
+    hdrViewSetNodeWithBox(boxNode, textNode, headerValue);
+  }
+  else
+    hdrViewSetNodeWithBox(boxNode, textNode, "");
+}
+
+
 // OutputEmailAddresses --> knows how to take a comma separated list of email addresses,
 // extracts them one by one, linkifying each email address into a mailto url. 
 // Then we add the link'ified email address to the parentDiv passed in.
@@ -483,9 +510,14 @@ function UpdateMessageHeaders()
     OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
   
   if (currentHeaderData["newsgroups"])
-    hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData["newsgroups"].headerValue); 
+    OutputNewsgroups(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData, "newsgroups");
   else
     hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, ""); 
+
+  if (currentHeaderData["followup-to"])
+    OutputNewsgroups(msgPaneData.FollowupToBox, msgPaneData.FollowupToValue, currentHeaderData, "followup-to");
+  else
+    hdrViewSetNodeWithBox(msgPaneData.FollowupToBox, msgPaneData.NewsgroupValue, ""); 
 
   if (gShowUserAgent)
   { 
@@ -616,15 +648,15 @@ function fillBoxWithAllHeaders(containerBox, boxPartOfPopup)
         innerBox.setAttribute("autostretch", "never");
 
     // for each header, create a header value and header name then assign those values...
-	var newHeaderTitle  = document.createElement('text');
+	  var newHeaderTitle  = document.createElement('text');
     newHeaderTitle.setAttribute("class", "headerdisplayname");
-	newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
-	innerBox.appendChild(newHeaderTitle);
+	  newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
+	  innerBox.appendChild(newHeaderTitle);
 
     var newHeaderValue = document.createElement('html');
     // make sure we are properly resized...
-    if (boxPartOfPopup)
-        newHeaderValue.setAttribute("width", window.innerWidth*.65);
+//    if (boxPartOfPopup)
+//        newHeaderValue.setAttribute("width", window.innerWidth*.65);
     newHeaderValue.setAttribute("class", "headerValue");
     innerBox.appendChild(newHeaderValue);
     containerBox.appendChild(innerBox);
