@@ -33,6 +33,7 @@ export::
 		mkdir $(DEPTH)/mail/app/icons/gtk; \
 	fi
 	cp $(srcdir)/mozicon50.xpm  $(DEPTH)/mail/app/icons/gtk/messengerWindow.xpm
+	cp $(srcdir)/mozicon16.xpm  $(DEPTH)/mail/app/icons/gtk/messengerWindow16.xpm
 	if [ ! -d $(DEPTH)/mail/app/icons/os2 ] ; then \
 		mkdir $(DEPTH)/mail/app/icons/os2; \
 	fi
