@@ -1319,6 +1319,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
           plainLstFrame->FirstChild(aPresContext, nsnull, &frame);
           nsIScrollableFrame * scrollFrame;
           if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollFrame))) {
+            nsIFrame * incrementalChild;
+            aReflowState.reflowCommand->GetNext(incrementalChild);
             nsRect rect;
             plainLstFrame->GetRect(rect);
             nsresult rvv = plainLstFrame->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -1979,6 +1981,20 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
   return rv;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::OptionDisabled(nsIContent * aContent)
+{
+  nsISelectControlFrame* listFrame = nsnull;
+  nsIFrame* dropdownFrame = GetDropdownFrame();
+  nsresult rv = dropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
+                                              (void**)&listFrame);
+  if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = listFrame->OptionDisabled(aContent);
+    NS_RELEASE(listFrame);
+  }
+  return rv;
+}
+
 NS_IMETHODIMP 
 nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
@@ -2403,9 +2419,9 @@ nsComboboxControlFrame::Paint(nsIPresContext* aPresContext,
 #endif
   nsAreaFrame::Paint(aPresContext,aRenderingContext,aDirtyRect,aWhichLayer);
 
-  if (kGoodToGo) {
-    return NS_OK;
-  }
+  //if (kGoodToGo) {
+  //  return NS_OK;
+  //}
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     if (mDisplayFrame) {

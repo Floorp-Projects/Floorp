@@ -28,8 +28,8 @@
 #endif
 
 #ifdef DEBUG_rods
-//#define DO_REFLOW_DEBUG
-//#define DO_REFLOW_COUNTER
+#define DO_REFLOW_DEBUG
+#define DO_REFLOW_COUNTER
 //#define DO_UNCONSTRAINED_CHECK
 //#define DO_PIXELS
 //#define DO_NEW_REFLOW
@@ -170,6 +170,7 @@ public:
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
+  NS_IMETHOD OptionDisabled(nsIContent * aContent);
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);

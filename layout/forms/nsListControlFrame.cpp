@@ -2341,6 +2341,16 @@ nsListControlFrame::GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame**
   return FirstChild(aPresContext, nsnull, aFrame);
 }
 
+NS_IMETHODIMP
+nsListControlFrame::OptionDisabled(nsIContent * aContent)
+{
+  if (IsContentSelected(aContent)) {
+    PRInt32 inx = GetSelectedIndexFromContent(aContent);
+    SetOptionSelected(inx, PR_FALSE);
+  }
+  return NS_OK;
+}
+
 // Send out an onchange notification.
 nsresult
 nsListControlFrame::SelectionChanged(nsIContent* aContent)
