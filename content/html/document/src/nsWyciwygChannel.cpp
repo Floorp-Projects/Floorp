@@ -348,13 +348,19 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
     if (NS_FAILED(rv)) return rv;
   }
 
+  PRUint32 out;
   if (!mCacheOutputStream) {
     // Get the outputstream from the cache entry.
     rv = mCacheEntry->OpenOutputStream(0, getter_AddRefs(mCacheOutputStream));    
     if (NS_FAILED(rv)) return rv;
+
+    // Write out a Byte Order Mark, so that we'll know if the data is
+    // BE or LE when we go to read it.
+    PRUnichar bom = 0xFEFF;
+    rv = mCacheOutputStream->Write((char *)&bom, sizeof(bom), &out);
+    if (NS_FAILED(rv)) return rv;
   }
 
-  PRUint32 out;
   return mCacheOutputStream->Write((char *)PromiseFlatString(aData).get(),
                                    aData.Length() * sizeof(PRUnichar), &out);
 }
