@@ -548,10 +548,10 @@ net_open_file (ActiveEntry * cur_entry)
 
 
 #ifdef MOZILLA_CLIENT
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 extern int net_InitializeNewsFeData (ActiveEntry * cur_entry);
 extern int IMAP_InitializeImapFeData (ActiveEntry * cur_entry);
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 #endif /* MOZILLA_CLIENT */
 
 PRIVATE int
@@ -749,7 +749,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 	  if (NET_URL_Type(cur_entry->URL_s->address) == NEWS_TYPE_URL)
 	  {
 #ifdef MOZILLA_CLIENT
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 		/* #### DISGUSTING KLUDGE to make cacheing work for news articles. */
 		CE_STATUS = net_InitializeNewsFeData (cur_entry);
 		if (CE_STATUS < 0)
@@ -757,7 +757,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 			/* #### what error message? */
 			return CE_STATUS;
 		  }
-#endif /* MOZ_MAIL_NEWS */        
+#endif /* OLD_MOZ_MAIL_NEWS */        
 #else
 		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
@@ -765,7 +765,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 	  else if (!PL_strncmp(cur_entry->URL_s->address, "IMAP://", 7))
 	  {
 #ifdef MOZILLA_CLIENT
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 		/* #### DISGUSTING KLUDGE to make cacheing work for imap articles. */
 		CE_STATUS = IMAP_InitializeImapFeData (cur_entry);
 		if (CE_STATUS < 0)
@@ -773,7 +773,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 			/* #### what error message? */
 			return CE_STATUS;
 		  }
-#endif /* MOZ_MAIL_NEWS */        
+#endif /* OLD_MOZ_MAIL_NEWS */        
 #else
 		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */

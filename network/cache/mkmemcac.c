@@ -1292,14 +1292,14 @@ typedef struct _MemCacheConData {
 
 /* begin the load, This is called from NET_GetURL
  */
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 extern int
 net_InitializeNewsFeData (ActiveEntry * cur_entry);
 extern int
 IMAP_InitializeImapFeData (ActiveEntry * cur_entry);
 extern void
 IMAP_URLFinished(URL_Struct *URL_s);
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 
 PRIVATE int32
 net_MemoryCacheLoad (ActiveEntry * cur_entry)
@@ -1365,7 +1365,7 @@ net_MemoryCacheLoad (ActiveEntry * cur_entry)
 	
 	FE_EnableClicking(CE_WINDOW_ID);
 
-#ifdef MOZ_MAIL_NEWS    
+#ifdef OLD_MOZ_MAIL_NEWS    
     if (cur_entry->format_out == FO_PRESENT)
     {
       if (NET_URL_Type(cur_entry->URL_s->address) == NEWS_TYPE_URL)
@@ -1389,7 +1389,7 @@ net_MemoryCacheLoad (ActiveEntry * cur_entry)
           }
       }
     }
-#endif /* MOZ_MAIL_NEWS */      
+#endif /* OLD_MOZ_MAIL_NEWS */      
 
 	/* open the outgoing stream
 	 */
@@ -1593,7 +1593,7 @@ net_ProcessMemoryCache (ActiveEntry * cur_entry)
                                     CE_URL_S->content_length,
                                     CE_BYTES_RECEIVED);
 
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 	if (!PL_strncmp(CE_URL_S->address, "Mailbox://", 10))
         /* #### DISGUSTING KLUDGE to make cacheing work for imap articles. */
         IMAP_URLFinished(CE_URL_S);
