@@ -75,6 +75,7 @@ public:
 
   nsHashtable *Clone();
   void Reset();
+  PRBool RemoveAndDelete(nsHashKey *aKey);
 
 protected:
   static PR_CALLBACK PRIntn CopyElement(PLHashEntry *he, PRIntn i, void *arg);
