@@ -134,6 +134,11 @@ public:
   virtual void MouseClicked(nsIPresContext* aPresContext) {}
 
   /**
+    * Respond to a control change (e.g. combo box close-up)
+    */
+  virtual void ControlChanged(nsIPresContext* aPresContext) {}
+
+  /**
     * Perform opertations after the widget associated with this frame has been
     * created.
     */
