@@ -59,9 +59,17 @@ public:
 	NS_IMETHOD Shutdown() = 0;
 
 	// Getters
-	NS_IMETHOD GetAcctConfig(nsString returnData) = 0;
+	NS_IMETHOD GetAcctConfig(nsString& AccountList) = 0;
+	NS_IMETHOD GetModemConfig(nsString& ModemList) =0;
+	NS_IMETHOD GetLocation(nsString& Locat) =0;
+	NS_IMETHOD GetSiteName(nsString& SiteList) =0;
+	NS_IMETHOD GetPhone(nsString& PhoneList) =0;
+	NS_IMETHOD LoadValues(void)=0;
+	NS_IMETHOD CheckForDun(nsString& dun)=0;
+
 //    NS_IMETHOD GetModemConfig(nsString returnData)=0;
     NS_IMETHOD SetDialerConfig(char* returnData)=0;
+
 
 	//	NS_IMETHOD PEPluginFunc( long selectorCode, void* paramBlock, void* returnData )=0;
 
