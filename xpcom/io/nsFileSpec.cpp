@@ -70,7 +70,7 @@ std::string nsFileSpecHelpers::GetLeaf(const std::string& inPath, char inSeparat
 
 #ifdef XP_MAC
 #include "nsFileSpecMac.cpp" // Macintosh-specific implementations
-#elif defined(XP_WIN)
+#elif defined(XP_PC)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_UNIX)
 #include "nsFileSpecUnix.cpp" // Unix-specific implementations
@@ -128,7 +128,7 @@ void nsFileURL::operator = (const nsFileURL& inOther)
 nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix + ((string&)inOther);
+	mURL = kFileURLPrefix + ((std::string&)inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther.GetNativeSpec();
 #endif
@@ -137,7 +137,7 @@ nsFileURL::nsFileURL(const nsFilePath& inOther)
 void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix + ((string&)inOther);
+	mURL = kFileURLPrefix + ((std::string&)inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther.GetNativeSpec();
 #endif
@@ -180,8 +180,8 @@ nsFilePath::nsFilePath(const std::string& inString)
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
-:	mPath(((string&)inOther).substr(
-			kFileURLPrefixLength, ((string&)inOther).length() - kFileURLPrefixLength))
+:	mPath(((std::string&)inOther).substr(
+			kFileURLPrefixLength, ((std::string&)inOther).length() - kFileURLPrefixLength))
 #ifdef XP_MAC
 ,	mNativeFileSpec(inOther.GetNativeSpec())
 #endif
@@ -203,8 +203,8 @@ void nsFilePath::operator = (const std::string& inString)
 void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mPath = ((string&)inOther).substr(
-				kFileURLPrefixLength, ((string&)inOther).length() - kFileURLPrefixLength);
+	mPath = ((std::string&)inOther).substr(
+				kFileURLPrefixLength, ((std::string&)inOther).length() - kFileURLPrefixLength);
 #ifdef XP_MAC
 	mNativeFileSpec = inOther.GetNativeSpec();
 #endif
@@ -258,8 +258,8 @@ void nsNativeFileSpec::MakeUnique()
 		if ( ++index > 999 )		// something's very wrong
 			return;
 		char buf[nsFileSpecHelpers::kMaxFilenameLength + 1];
-		ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
-		newName << altName.c_str() << "-" << index << suffix.c_str() << ends;
+		std::ostrstream newName(buf, nsFileSpecHelpers::kMaxFilenameLength);
+		newName << altName.c_str() << "-" << index << suffix.c_str() << std::ends;
 		SetLeafName(newName.str()); // or: SetLeafName(buf)
 	}
 } // nsNativeFileSpec::MakeUnique

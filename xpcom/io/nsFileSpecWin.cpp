@@ -42,16 +42,38 @@ void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 } // nsNativeFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
+nsFilePath::nsFilePath(const nsNativeFileSpec& inSpec)
+//----------------------------------------------------------------------------------------
+{
+	// Convert '\' to '/'
+	std::string& str = (std::string&)inSpec;
+	for (std::string::size_type i = 0; i < str.length(); i++)
+	{
+		char c = str[i];
+		if (c == '\\')
+			c = '/';
+		mPath.append(&c, 1);
+	}
+} // nsFilePath::nsFilePath
+
+//----------------------------------------------------------------------------------------
 void nsNativeFileSpec::SetLeafName(const std::string& inLeafName)
 //----------------------------------------------------------------------------------------
 {
-	nsFileHelpers::LeafReplace(mPath, '\\', inLeafName);
+	nsFileSpecHelpers::LeafReplace(mPath, '\\', inLeafName);
 } // nsNativeFileSpec::SetLeafName
 
 //----------------------------------------------------------------------------------------
 std::string nsNativeFileSpec::GetLeafName() const
 //----------------------------------------------------------------------------------------
 {
-	return nsFileHelpers::GetLeaf(mPath, '\\');
+	return nsFileSpecHelpers::GetLeaf(mPath, '\\');
 } // nsNativeFileSpec::GetLeafName
+
+//----------------------------------------------------------------------------------------
+bool nsNativeFileSpec::Exists() const
+//----------------------------------------------------------------------------------------
+{
+	return false; // fixme
+} // nsNativeFileSpec::Exists
 

@@ -158,13 +158,13 @@ class nsNativeFileSpec
         StringPtr               GetLeafPName() { return mSpec.name; }
         ConstStr255Param        GetLeafPName() const { return mSpec.name; }
 #else
-        bool                    Valid() const { return TRUE; } // Fixme.
+        bool                    Valid() const { return true; } // Fixme.
 #endif
 
 #if DEBUG
-        friend                  ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
+        friend                  std::ostream& operator << (std::ostream& s, const nsNativeFileSpec& spec);
 #endif
-        string                  GetLeafName() const;
+        std::string             GetLeafName() const;
         void                    SetLeafName(const std::string& inLeafName);
         bool                    Exists() const;
         void                    MakeUnique();
@@ -175,7 +175,7 @@ class nsNativeFileSpec
 #ifdef XP_MAC
         FSSpec                    mSpec;
         OSErr                    mError;
-#elif defined(XP_UNIX) || defined(XP_WIN)
+#elif defined(XP_UNIX) || defined(XP_PC)
         std::string                mPath;
 #endif
 }; // class nsNativeFileSpec
@@ -321,7 +321,7 @@ inline void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_PC)
 //----------------------------------------------------------------------------------------
 inline nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -330,7 +330,7 @@ inline nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_PC)
 //----------------------------------------------------------------------------------------
 inline nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
 //----------------------------------------------------------------------------------------
@@ -339,7 +339,7 @@ inline nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
 }
 #endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_PC)
 //----------------------------------------------------------------------------------------
 inline void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -349,18 +349,18 @@ inline void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 #endif //XP_UNIX
 
 
-#if defined(XP_UNIX) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_PC)
 //----------------------------------------------------------------------------------------
-inline nsNativeFileSpec::operator = (const std::string& inString)
+inline void nsNativeFileSpec::operator = (const std::string& inString)
 //----------------------------------------------------------------------------------------
 {
     mPath = inString;
 }
 #endif //XP_UNIX
 
-#if (defined(XP_UNIX) || defined(XP_WIN)) && DEBUG
+#if (defined(XP_UNIX) || defined(XP_PC)) && DEBUG
 //----------------------------------------------------------------------------------------
-inline ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
+inline std::ostream& operator << (std::ostream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
     return (s << (std::string&)spec.mPath);
