@@ -143,7 +143,7 @@ function loadEventHandlers(event)
 function getContentAreaFrameCount()
 {
   var saveFrameItem = document.getElementById("menu_saveFrame");
-  if (!content || !content.frames.length || !isDocumentFrame(document.commandDispatcher.focusedWindow))
+  if (!content || !content.frames.length || !isContentFrame(document.commandDispatcher.focusedWindow))
     saveFrameItem.setAttribute("hidden", "true");
   else
     saveFrameItem.removeAttribute("hidden");
