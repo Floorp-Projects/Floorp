@@ -87,7 +87,7 @@ function OnLoadMsgHeaderPane()
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
 
-    msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
+    msgPaneData.UserAgentBox = document.getElementById("headerPart3");
     msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
 
   }
@@ -123,8 +123,8 @@ var messageHeaderSink = {
       ClearEmailFieldWithButton(msgPaneData.CcValueLong);
 
       // be sure to re-hide the toggle button, we'll re-enable it later if we need it...
-      msgPaneData.ToValueToggleIcon.setAttribute('hideNonBox', 'true');
-      msgPaneData.CcValueToggleIcon.setAttribute('hideNonBox', 'true');
+      msgPaneData.ToValueToggleIcon.setAttribute('collapsed', 'true');
+      msgPaneData.CcValueToggleIcon.setAttribute('collapsed', 'true');
       //hdrViewSetVisible(msgPaneData.ToValueToggleIcon, false);
       //hdrViewSetVisible(msgPaneData.CcValueToggleIcon, false);
       
@@ -241,7 +241,7 @@ function AddAttachmentToMenu(name, oncommand)
 
   var attachBox = document.getElementById("attachmentBox");
   if (attachBox)
-    attachBox.removeAttribute("hide");
+    attachBox.removeAttribute("collapsed");
 } 
 
 function SaveAllAttachments()
@@ -288,7 +288,7 @@ function ClearAttachmentMenu()
 
   var attachBox = document.getElementById("attachmentBox");
   if (attachBox)
-    attachBox.setAttribute("hide", "true");
+    attachBox.setAttribute("collapsed", "true");
 
   // reset attachments name array
   attachmentUrlArray.length = 0;
@@ -382,7 +382,7 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
 
     if (includeShortLongToggle && (numAddressesParsed > gNumAddressesToShow) && optionalToggleButton)
     {
-      optionalToggleButton.removeAttribute('hideNonBox');
+      optionalToggleButton.removeAttribute('collapsed');
     }
   } // if msgheader parser
 }
@@ -400,12 +400,10 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
 {
   if ( parentBox ) 
   { 
-    var item = document.createElement("titledbutton");
+    var item = document.createElement("mail-emailaddress");
+    var itemInDocument;
     if ( item && parentDiv) 
     { 
-      item.setAttribute("class", "emailDisplayButton");
-      item.setAttribute("value", fullAddress); 
-
       if (parentDiv.childNodes.length)
       {
         var child = parentDiv.childNodes[parentDiv.childNodes.length - 1]; 
@@ -413,21 +411,20 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
         {
           var textNode = document.createElement("text");
           textNode.setAttribute("value", ", ");
-          parentDiv.insertBefore(textNode, child);       
+          parentDiv.insertBefore(textNode, child);
         }
-        parentDiv.insertBefore(item, child);
+        itemInDocument = parentDiv.insertBefore(item, child);
       }
       else
-       parentDiv.appendChild(item);
+      {
+       itemInDocument = parentDiv.appendChild(item);
+      }
       
-      item.setAttribute("class", "emailDisplayButton");
-      item.setAttribute("popup", "emailAddressPopup");
-      item.setAttribute("value", fullAddress);
-      
-      item.setAttribute("emailAddress", emailAddress);
-      item.setAttribute("fullAddress", fullAddress);  
+      itemInDocument.setAttribute("value", fullAddress);           
+      itemInDocument.setTextAttribute("emailAddress", emailAddress);
+      itemInDocument.setTextAttribute("fullAddress", fullAddress);  
 
-      AddExtraAddressProcessing(emailAddress, item);
+      AddExtraAddressProcessing(emailAddress, itemInDocument);
 
       hdrViewSetVisible(parentBox, true);
     } 
@@ -458,26 +455,26 @@ function ShowMessageHeaderPane()
 { 
   var node = document.getElementById("headerPart1");
   if (node)
-    node.removeAttribute("hide");
+    node.removeAttribute("collapsed");
   node = document.getElementById("headerPart2");
   if (node)
-    node.removeAttribute("hide");
+    node.removeAttribute("collapsed");
   node = document.getElementById("headerPart3");
   if (node)
-    node.removeAttribute("hide");
+    node.removeAttribute("collapsed");
 }
 
 function HideMessageHeaderPane()
 {
   var node = document.getElementById("headerPart1");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("collapsed", "true");
   node = document.getElementById("headerPart2");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("collapsed", "true");
   node = document.getElementById("headerPart3");
   if (node)
-    node.setAttribute("hide", "true");
+    node.setAttribute("collapsed", "true");
 }
 
 // ToggleLongShortAddresses is used to toggle between showing
@@ -489,18 +486,36 @@ function ToggleLongShortAddresses(shortDivID, longDivID)
 {
   var shortNode = document.getElementById(shortDivID);
   var longNode = document.getElementById(longDivID);
+  var nodeToReset;
 
   // test to see which if short is already hidden...
-  if (shortNode.getAttribute("hide") == "true")
+  if (shortNode.getAttribute("collapsed") == "true")
   {
+     
      hdrViewSetVisible(longNode, false);
      hdrViewSetVisible(shortNode, true);
+     nodeToReset = shortNode;
   }
   else
   {
      hdrViewSetVisible(shortNode, false);
      hdrViewSetVisible(longNode, true);
+     nodeToReset = longNode;
   }
+   
+   // HACK ALERT: this is required because of a bug in boxes when you add content
+   // to a box which is collapsed, when you then uncollapse that box, the content isn't 
+   // displayed. So I'm forcing us to reset the value for each node...
+   var endPos = nodeToReset.childNodes.length;
+   var index = 0;
+   var tempValue;
+   while (index < endPos - 1)
+   {
+     tempValue = nodeToReset.childNodes[index].getAttribute("value");
+     nodeToReset.childNodes[index].setAttribute("value", "");
+     nodeToReset.childNodes[index].setAttribute("value", tempValue);
+     index++;
+   }
 }
 
 ///////////////////////////////////////////////////////////////
@@ -549,8 +564,8 @@ function hdrViewSetNode(boxNode, textNode, text)
 function hdrViewSetVisible(boxNode, visible)
 {
 	if ( visible )
-		boxNode.removeAttribute("hide");
+		boxNode.removeAttribute("collapsed");
 	else
-		boxNode.setAttribute("hide", "true");
+		boxNode.setAttribute("collapsed", "true");
 }
 
