@@ -271,7 +271,7 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   
     // XXX Not particularly efficient, but does anyone care?
     for (i = 0; (i < imax) && (nsnull == *aReturn); i++) {
-      nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(mDocument->GetStyleSheetAt(i)));
+      nsCOMPtr<nsIStyleSheet> sheet(dont_AddRef(mDocument->GetStyleSheetAt(i)));
       if (!sheet)
         continue;
       nsCOMPtr<nsIDOMStyleSheet> domss(do_QueryInterface(sheet));
@@ -279,7 +279,7 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
       if (domss) {
         if (count++ == aIndex) {
           *aReturn = domss;
-          NS_IF_ADDREF(*aReturn = domss);
+          NS_IF_ADDREF(*aReturn);
         }
       }
     }
