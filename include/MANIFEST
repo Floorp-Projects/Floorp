@@ -2,7 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-csid.h
 minicom.h
 npapi.h
 npupp.h

@@ -49,7 +49,6 @@ DEPTH = ..
 #INSTALL_FILE_LIST=*.h
 #INSTALL_DIR=$(XPDIST)\include
 EXPORTS = \
-		csid.h \
 		minicom.h \
 		npapi.h \
 		npupp.h \
