@@ -25,9 +25,11 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  onload="Init();">
+  windowtype="navigator:browser"
+  onload="Init();"
+  onunload="RefreshPanel();;">
 
   <script src="chrome://communicator/content/sidebar/customize-panel.js" />
-  <iframe id="customize_frame" type="content" src="about:blank" flex="1"/>
+  <browser id="customize_frame" type="content-primary" src="about:blank" flex="1"/>
 
 </window>
