@@ -148,6 +148,7 @@ static void SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo);
 
 static int gFontMetricsGTKCount = 0;
 static int gInitialized = 0;
+static PRBool gForceOutlineScaledFonts = PR_FALSE;
 static PRBool gAllowDoubleByteSpecialChars = PR_TRUE;
 
 // XXX many of these statics need to be freed at shutdown time
@@ -932,6 +933,12 @@ InitGlobals(void)
   if (percent) {
     gBitmapUndersize = percent/100.0;
     SIZE_FONT_PRINTF(("gBitmapUndersize = %g", gBitmapUndersize));
+  }
+
+  PRBool force_outline_scaled_fonts = gForceOutlineScaledFonts;
+  rv = gPref->GetBoolPref("font.x11.force_outline_scaled_fonts", &force_outline_scaled_fonts);
+  if (NS_SUCCEEDED(rv)) {
+    gForceOutlineScaledFonts = force_outline_scaled_fonts;
   }
 
   PRBool enable_freetype2 = PR_TRUE;
@@ -3696,7 +3703,7 @@ NodeAddSize(nsFontStretch* aStretch, int aSize, const char *aName,
 }
 
 static void
-GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
+GetFontNames(const char* aPattern, PRBool aAnyFoundry, PRBool aOnlyOutlineScaledFonts, nsFontNodeArray* aNodes)
 {
 #ifdef NS_FONT_DEBUG_CALL_TRACE
   if (gFontDebug & NS_FONT_DEBUG_CALL_TRACE) {
@@ -3865,6 +3872,10 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
     }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
+      continue;
+    }
+    
+    if (aOnlyOutlineScaledFonts && (outline_scaled == PR_FALSE)) {
       continue;
     }
 
@@ -4043,7 +4054,7 @@ GetAllFontNames(void)
     }
     /* Using "-*" instead of the full-qualified "-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
      * because it's faster and "smarter" - see bug 34242 for details. */
-    GetFontNames("-*", PR_FALSE, gGlobalList);
+    GetFontNames("-*", PR_FALSE, PR_FALSE, gGlobalList);
   }
 
   return NS_OK;
@@ -4060,7 +4071,7 @@ FindFamily(nsCString* aName)
       char pattern[256];
       PR_snprintf(pattern, sizeof(pattern), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*",
         aName->get());
-      GetFontNames(pattern, PR_TRUE, &family->mNodes);
+      GetFontNames(pattern, PR_TRUE, gForceOutlineScaledFonts, &family->mNodes);
       gFamilies->Put(&key, family);
     }
   }
@@ -4154,7 +4165,7 @@ nsFontMetricsGTK::TryNodes(nsACString &aFFREName, PRUnichar aChar)
     nodes = new nsFontNodeArray;
     if (!nodes)
       return nsnull;
-    GetFontNames(pattern.get(), anyFoundry, nodes);
+    GetFontNames(pattern.get(), anyFoundry, gForceOutlineScaledFonts, nodes);
     gCachedFFRESearches->Put(&key, nodes);
   }
   int i, cnt = nodes->Count();
@@ -4183,7 +4194,7 @@ nsFontMetricsGTK::TryNode(nsCString* aName, PRUnichar aChar)
     nsCAutoString pattern;
     FFREToXLFDPattern(*aName, pattern);
     nsFontNodeArray nodes;
-    GetFontNames(pattern.get(), PR_FALSE, &nodes);
+    GetFontNames(pattern.get(), PR_FALSE, gForceOutlineScaledFonts, &nodes);
     // no need to call gFFRENodes->Put() since GetFontNames already did
     if (nodes.Count() > 0) {
       // This assertion is not spurious; when searching for an FFRE

@@ -413,8 +413,12 @@ nsDeviceContextXp::GetPrintContext(nsXPrintContext*& aContext)
 /* Enable hack "fix" for bug 88554/116158 ("Xprint module should avoid using
  * GFX fonts unless there is no other option...") until bug 93771 ("Mozilla
  * uses low-resolution bitmap fonts on high resolution X11 displays") gets
- * fixed. */
-#define XPRINT_FONT_HACK 1
+ * fixed.
+ *
+ * Obsoleted with patch from bug 148690 ("RFE: Force use of outline
+ * scaleable fonts if possible") ; code will be removed in a later step
+ */
+// #define XPRINT_FONT_HACK 1
 
 class nsFontCacheXp : public nsFontCache
 {

@@ -328,11 +328,14 @@ pref("font.min-size.fixed.zh-TW", 10);
 //pref("print.xprint.font.rejectfontpattern", 
 //     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
+/* Xprint print module prefs */
+pref("print.xprint.font.force_outline_scaled_fonts", true);
+
 /* PostScript print module prefs */
 pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
 pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
-''
+
 /* PostScript print module font config
  * this list is used by the postscript font
  * to enumerate the list of langGroups
