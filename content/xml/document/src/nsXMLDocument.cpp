@@ -326,7 +326,7 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   // Get security manager, check to see if we're allowed to load this URI
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-  if (NS_FAILED(secMan->CheckLoadURIFromScript(nsnull, uri)))
+  if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "XMLDocument", "load")))
     return NS_ERROR_FAILURE;
 
   // Partial Reset
