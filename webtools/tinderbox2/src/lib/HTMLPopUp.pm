@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2002/04/27 00:31:09 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/04/27 00:47:30 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -240,7 +240,7 @@ sub regenerate_HTML_pages {
     local $ENV{"QUERY_STRING"} = '';
 
     system(
-           $FileStructure::URLS{'tinderd'}, 
+           $FileStructure::CGIBIN_DIR.'tinder.cgi', 
            '--daemon-mode',
            );
 

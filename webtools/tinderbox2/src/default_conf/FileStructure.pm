@@ -6,8 +6,8 @@
 # partitions and this will require making directory structure in
 # get_filename() less regular then we have defined it here.
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/20 19:04:54 $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/04/27 00:47:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -106,6 +106,9 @@ $GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
 
 $LOCK_FILE = ($TinderConfig::LOCK_FILE ||
               "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
+
+$CGIBIN_DIR = ($TINDERBOX_CGIBIN_DIR ||
+               "/usr/apache/cgibin/webtools/tinderbox");
 
 # the default page for a tree
 $DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
