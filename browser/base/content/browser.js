@@ -79,7 +79,6 @@ var gIgnoreClick = false;
 var gToolbarMode = "icons";
 var gIconSize = "";
 var gMustLoadSidebar = false;
-var gURIFixup = null;
 var gProgressMeterPanel = null;
 var gProgressCollapseTimer = null;
 var gPrefService = null;
@@ -2265,15 +2264,16 @@ var personalToolbarDNDObserver = {
   onDragRemoveFeedBack: function (aTarget)
   { 
     var newTarget;
+    var bt;
     if (aTarget.localName == "hbox") { 
       // hit when dropping in the bt or between the last visible bookmark 
       // and the chevron
-      var bt = document.getElementById("bookmarks-toolbar");
+      bt = document.getElementById("bookmarks-toolbar");
       newTarget = bt.getLastVisibleBookmark();
       if (newTarget)
         newTarget.removeAttribute("dragover-right");
     } else if (aTarget.localName == "stack") {
-      var bt = document.getElementById("bookmarks-toolbar");
+      bt = document.getElementById("bookmarks-toolbar");
       newTarget = bt.getLastVisibleBookmark();
       newTarget.removeAttribute("dragover-right");
     } else {
@@ -2641,7 +2641,7 @@ var FullScreen =
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
-  },
+  }
 };
 
 function nsBrowserStatusHandler()
@@ -2968,9 +2968,10 @@ nsBrowserStatusHandler.prototype =
 function onViewToolbarsPopupShowing(aEvent)
 {
   var popup = aEvent.target;
-  
+  var i;
+
   // Empty the menu
-  for (var i = popup.childNodes.length-1; i >= 0; --i) {
+  for (i = popup.childNodes.length-1; i >= 0; --i) {
     var deadItem = popup.childNodes[i];
     if (deadItem.hasAttribute("toolbarindex"))
       popup.removeChild(deadItem);
@@ -2979,7 +2980,7 @@ function onViewToolbarsPopupShowing(aEvent)
   var firstMenuItem = popup.firstChild;
   
   var toolbox = document.getElementById("navigator-toolbox");
-  for (var i = 0; i < toolbox.childNodes.length; ++i) {
+  for (i = 0; i < toolbox.childNodes.length; ++i) {
     var toolbar = toolbox.childNodes[i];
     var toolbarName = toolbar.getAttribute("toolbarname");
     if (toolbarName) {
