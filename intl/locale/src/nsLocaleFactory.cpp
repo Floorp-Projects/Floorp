@@ -59,6 +59,13 @@ char* localeCatagoryList[LOCALE_CATAGORY_LISTLEN] =
 };
 
 #ifdef XP_UNIX
+
+//
+// of systems w/o LC_MESSAGE, we grab LC_CTYPE for the value of LC_MESSAGE
+// i want NSILOCALE_MESSAGES to always exist in the XP version, and if it doesn't
+// exist on a platform LC_CTYPE is probably the cloest approximation
+//
+
 int posix_locale_catagory[LOCALE_CATAGORY_LISTLEN] =
 {
   LC_TIME,
@@ -66,7 +73,11 @@ int posix_locale_catagory[LOCALE_CATAGORY_LISTLEN] =
   LC_CTYPE,
   LC_MONETARY,
   LC_NUMERIC,
+#ifdef HAVE_I18N_LC_MESSAGES
   LC_MESSAGES
+#else
+  LC_CTYPE
+#endif
 };
 #endif
 
@@ -255,7 +266,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
     char* tempvalue = lc_values[0]->ToNewCString();
     result = NewLocale(lc_values[0],&fSystemLocale);
     if (result!=NS_OK) {
-      delete lc_values[i];
+      delete lc_values[0];
       *systemLocale=(nsILocale*)nsnull;
       fSystemLocale=(nsILocale*)nsnull;
       return result;

@@ -1119,6 +1119,28 @@ ac_ext=c
 
 dnl End of C++ language/feature checks
 
+dnl ========================================================
+dnl =
+dnl =  Internationalization checks
+dnl =
+dnl ========================================================
+dnl
+dnl Internationalization and Locale support is different
+dnl on various UNIX platforms.  Checks for specific i18n
+dnl features go here.
+
+dnl check for LC_MESSAGES
+AC_CACHE_CHECK(for LC_MESSAGES,
+		ac_cv_i18n_lc_messages,
+		[AC_TRY_COMPILE([#include <locale.h>],
+				[int catagory = LC_MESSAGES;],
+				ac_cv_i18n_lc_messages=yes,
+				ac_cv_i18n_lc_messages=no)])
+if test "$ac_cv_i18n_lc_messages" = yes; then
+   AC_DEFINE(HAVE_I18N_LC_MESSAGES)
+fi 	
+
+  
 dnl Mozilla specific options
 dnl ========================================================
 dnl The macros used for command line options
