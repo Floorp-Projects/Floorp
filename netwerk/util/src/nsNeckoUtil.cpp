@@ -26,7 +26,7 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
 {
     nsresult rv;
@@ -37,7 +37,7 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 {
     // XXX if the string is unicode, GetBuffer() returns null. 
@@ -51,7 +51,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIChannel* *result, nsIURI* uri)
 {
     nsresult rv;
@@ -66,7 +66,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 {
     nsresult rv;
@@ -84,7 +84,7 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri)
 {
     nsresult rv;
@@ -98,7 +98,7 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
 {
     nsresult rv;
@@ -108,7 +108,7 @@ NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
     return serv->MakeAbsolute(spec, baseURI, result);
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 {
     char* resultStr;
@@ -124,7 +124,7 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
     return rv;
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
                 nsILoadGroup* parent, nsILoadGroup* *result)
 {
@@ -135,7 +135,7 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
     return serv->NewLoadGroup(outer, observer, parent, result);
 }
 
-nsresult
+NECKO_EXPORT(nsresult)
 NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                      nsIInputStream **result)
 {

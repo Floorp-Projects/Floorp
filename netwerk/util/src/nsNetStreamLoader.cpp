@@ -195,7 +195,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
   return rv;
 }
 
-extern nsresult 
+extern NECKO_EXPORT(nsresult) 
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader** aInstancePtrResult,
                           nsIURI* aURL,
                           nsILoadGroup* aLoadGroup,
