@@ -40,7 +40,7 @@
 #include "nsRect.h"
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
-
+#include "nsFileSpec.h"
 #include "nsIDeviceContext.h"
 #include "nsIServiceManager.h"
 
