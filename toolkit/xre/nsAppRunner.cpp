@@ -46,6 +46,10 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
 
+#ifdef XP_OS2
+#include "private/pprthred.h"
+#endif
+
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPref.h"
@@ -350,7 +354,7 @@ static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2)
+#if !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined(XP_WIN) && !defined(XP_OS2) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2)
 
 nsresult NS_CreateSplashScreen(nsISplashScreen **aResult)
 {
@@ -385,7 +389,7 @@ PRBool NS_CanRun()
 //       nsISplashScreen will be removed.
 //
 
-#if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2) && !defined(XP_MAC) && (!defined(XP_MACOSX) || defined(MOZ_WIDGET_COCOA))
+#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_GTK2) && !defined(XP_MAC) && (!defined(XP_MACOSX) || defined(MOZ_WIDGET_COCOA))
 
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
@@ -680,9 +684,9 @@ static PRBool IsStartupCommand(const char *arg)
 
   // windows allows /mail or -mail
   if ((arg[0] == '-')
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
       || (arg[0] == '/')
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
       ) {
     return PR_TRUE;
   }
@@ -1006,7 +1010,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
 }
 
 #ifdef DEBUG_warren
-#ifdef XP_PC
+#ifdef XP_WIN
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif
@@ -1372,7 +1376,7 @@ static void DumpHelp(char *appname)
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
   printf("%s-nosplash%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
   printf("%s-quiet%sDisable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #endif
 #endif
@@ -1468,11 +1472,11 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 #if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--help") == 0)
 #endif /* XP_UNIX || XP_BEOS*/
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         || (PL_strcasecmp(argv[i], "/h") == 0)
         || (PL_strcasecmp(argv[i], "/help") == 0)
         || (PL_strcasecmp(argv[i], "/?") == 0)
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
       ) {
       DumpHelp(argv[0]);
       return PR_TRUE;
@@ -1482,10 +1486,10 @@ static PRBool HandleDumpArguments(int argc, char* argv[])
 #if defined(XP_UNIX) || defined(XP_BEOS)
         || (PL_strcasecmp(argv[i], "--version") == 0)
 #endif /* XP_UNIX || XP_BEOS */
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         || (PL_strcasecmp(argv[i], "/v") == 0)
         || (PL_strcasecmp(argv[i], "/version") == 0)
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
       ) {
       DumpVersion(argv[0]);
       return PR_TRUE;
@@ -1522,9 +1526,9 @@ static PRBool GetWantSplashScreen(int argc, char* argv[], PRBool aDefault)
 #ifdef XP_BEOS
 		|| (PL_strcasecmp(argv[i], "--nosplash") == 0)
 #endif /* XP_BEOS */
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
         || (PL_strcasecmp(argv[i], "/nosplash") == 0)
-#endif /* XP_PC */
+#endif /* XP_WIN || XP_OS2 */
 	) {
       dosplash = PR_FALSE;
 	}
@@ -1559,7 +1563,6 @@ int main(int argc, char* argv[])
 
   ULONG    ulMaxFH = 0;
   LONG     ulReqCount = 0;
-  APIRET   rc = NO_ERROR;
 
   DosSetRelMaxFH(&ulReqCount,
                  &ulMaxFH);
@@ -1567,6 +1570,9 @@ int main(int argc, char* argv[])
   if (ulMaxFH < 256) {
     DosSetMaxFH(256);
   }
+
+  EXCEPTIONREGISTRATIONRECORD excpreg;
+  PR_OS2_SetFloatExcpHandler(&excpreg);
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
@@ -1753,10 +1759,14 @@ int main(int argc, char* argv[])
 #endif
   NS_ASSERTION(NS_SUCCEEDED(rv), "GRE_Shutdown failed");
 
+#ifdef XP_OS2
+  PR_OS2_UnsetFloatExcpHandler(&excpreg);
+#endif
+
   return TranslateReturnValue(mainResult);
 }
 
-#if defined( XP_PC ) && defined( WIN32 ) && !defined(MOZ_XUL_APP)
+#if defined( XP_WIN ) && defined( WIN32 ) && !defined(MOZ_XUL_APP)
 // We need WinMain in order to not be a console app.  This function is
 // unused if we are a console application.
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR args, int)
@@ -1764,4 +1774,4 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR args, int)
     // Do the real work.
     return main(__argc, __argv);
 }
-#endif // XP_PC && WIN32
+#endif // XP_WIN && WIN32
