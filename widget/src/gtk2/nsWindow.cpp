@@ -4133,9 +4133,9 @@ IM_set_text_range(const PRInt32 aLen,
     START_OFFSET(0) = aLen;
     END_OFFSET(0) = aLen;
 
-    int count;
+    int count = 0;
     PangoAttribute * aPangoAttr;
-    count = 0;
+    PangoAttribute * aPangoAttrReverse, * aPangoAttrUnderline;
     /*
      * Depend on gtk2's implementation on XIM support.
      * In aFeedback got from gtk2, there are only three types of data:
@@ -4145,61 +4145,63 @@ IM_set_text_range(const PRInt32 aLen,
      * PANGO_ATTR_BACKGROUND and PANGO_ATTR_FOREGROUND are always
      * a couple.
      */
+    gint start, end;
     gunichar2 * uniStr;
     glong uniStrLen;
     do {
-        aPangoAttr = pango_attr_iterator_get(aFeedbackIterator,
-                                             PANGO_ATTR_UNDERLINE);
-        if (aPangoAttr) {
-            // Stands for XIMUnderline
-            count++;
-            START_OFFSET(count) = 0;
-            END_OFFSET(count) = 0;
-            
-            uniStr = NULL;
-            if (aPangoAttr->start_index > 0)
-                uniStr = g_utf8_to_utf16(aPreeditString,
-                                         aPangoAttr->start_index,
-                                         NULL, &uniStrLen, NULL);
-            if (uniStr)
-                START_OFFSET(count) = uniStrLen;
-            
-            uniStr = NULL;
-            uniStr = g_utf8_to_utf16(aPreeditString + aPangoAttr->start_index,
-                         aPangoAttr->end_index - aPangoAttr->start_index,
-                         NULL, &uniStrLen, NULL);
-            if (uniStr) {
-                END_OFFSET(count) = START_OFFSET(count) + uniStrLen;
-                SET_FEEDBACKTYPE(count, NS_TEXTRANGE_CONVERTEDTEXT);
-            }
-        } else {
-            aPangoAttr = pango_attr_iterator_get(aFeedbackIterator,
-                                                 PANGO_ATTR_FOREGROUND);
-            if (aPangoAttr) {
-                count++;
-                START_OFFSET(count) = 0;
-                END_OFFSET(count) = 0;
-                
-                uniStr = NULL;
-                if (aPangoAttr->start_index > 0)
-                    uniStr = g_utf8_to_utf16(aPreeditString,
-                                             aPangoAttr->start_index,
-                                             NULL, &uniStrLen, NULL);
-                if (uniStr)
-                    START_OFFSET(count) = uniStrLen;
-            
-                uniStr = NULL;
-                uniStr = g_utf8_to_utf16(
-                             aPreeditString + aPangoAttr->start_index,
-                             aPangoAttr->end_index - aPangoAttr->start_index,
-                             NULL, &uniStrLen, NULL);
+        aPangoAttrUnderline = pango_attr_iterator_get(aFeedbackIterator,
+                                                      PANGO_ATTR_UNDERLINE);
+        aPangoAttrReverse = pango_attr_iterator_get(aFeedbackIterator,
+                                                    PANGO_ATTR_FOREGROUND);
+        if (!aPangoAttrUnderline && !aPangoAttrReverse)
+            continue;
 
-                if (uniStr) {
-                    END_OFFSET(count) = START_OFFSET(count) + uniStrLen;
-                    SET_FEEDBACKTYPE(count, NS_TEXTRANGE_SELECTEDRAWTEXT);
-                }
-            }
+        // Get the range of the current attribute(s)
+        pango_attr_iterator_range(aFeedbackIterator, &start, &end);
+
+        PRUint32 feedbackType;
+        // XIMReverse | XIMUnderline
+        if (aPangoAttrUnderline && aPangoAttrReverse) {
+            feedbackType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+            // Doesn't matter which attribute we use here since we
+            // are using pango_attr_iterator_range to determine the
+            // range of the attributes.
+            aPangoAttr = aPangoAttrUnderline;
         }
+        // XIMUnderline
+        else if (aPangoAttrUnderline) {
+            feedbackType = NS_TEXTRANGE_CONVERTEDTEXT;
+            aPangoAttr = aPangoAttrUnderline;
+        }
+        // XIMReverse
+        else if (aPangoAttrReverse) {
+            feedbackType = NS_TEXTRANGE_SELECTEDRAWTEXT;
+            aPangoAttr = aPangoAttrReverse;
+        }
+
+        count++;
+        START_OFFSET(count) = 0;
+        END_OFFSET(count) = 0;
+        
+        uniStr = NULL;
+        if (start > 0) {
+            uniStr = g_utf8_to_utf16(aPreeditString, start,
+                                     NULL, &uniStrLen, NULL);
+        }
+        if (uniStr) {
+            START_OFFSET(count) = uniStrLen;
+            g_free(uniStr);
+        }
+        
+        uniStr = NULL;
+        uniStr = g_utf8_to_utf16(aPreeditString + start, end - start,
+                                 NULL, &uniStrLen, NULL);
+        if (uniStr) {
+            END_OFFSET(count) = START_OFFSET(count) + uniStrLen;
+            SET_FEEDBACKTYPE(count, feedbackType);
+            g_free(uniStr);
+        }
+
     } while ((count < aMaxLenOfTextRange - 1) &&
              (pango_attr_iterator_next(aFeedbackIterator)));
 
