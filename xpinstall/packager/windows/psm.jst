@@ -31,10 +31,10 @@ if(verifyDiskSpace(fProgram, srDest))
   {
     var pki = getFolder("Chrome", "pippki.jar");
     var nss = getFolder("Chrome", "pipnss.jar");
-    registerChrome(CONTENT | DELAYED_CHROME, pki, "pippki/");
-    registerChrome(CONTENT | DELAYED_CHROME, nss, "pipnss/");
-    registerChrome(LOCALE | DELAYED_CHROME, pki, "en-US/pippki/");
-    registerChrome(LOCALE | DELAYED_CHROME, nss, "en-US/pipnss/");
+    registerChrome(CONTENT | DELAYED_CHROME, pki, "content/pippki/");
+    registerChrome(CONTENT | DELAYED_CHROME, nss, "content/pipnss/");
+    registerChrome(LOCALE | DELAYED_CHROME, pki, "locale/en-US/pippki/");
+    registerChrome(LOCALE | DELAYED_CHROME, nss, "locale/en-US/pipnss/");
     err = performInstall(); 
     logComment("performInstall() returned: " + err);
   }
