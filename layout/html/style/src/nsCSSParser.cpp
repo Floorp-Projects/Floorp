@@ -1150,7 +1150,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         UngetToken();
         return PR_FALSE;
       }
-      nsAutoString  attr(mToken.mType);
+      nsAutoString  attr(mToken.mIdent);
       if (! mCaseSensative) {
         attr.ToUpperCase();
       }
@@ -1209,7 +1209,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
               if (! mCaseSensative) {
                 value.ToUpperCase();
               }
-              aSelector.AddAttribute(attr, func, value);
+              aSelector.AddAttribute(attr, func, value, mCaseSensative);
             }
             else {
               UngetToken();
