@@ -10,7 +10,7 @@
     border            : 3px solid transparent;
     padding           : 0px;
     min-height        : 19px;
-    font              : menu;
+    font              : message-box;
   }
 
   .menulist-text-mid {
@@ -291,6 +291,7 @@
       min-width           : 0px;
       max-width           : none !important;
       color				        : #000000;
+      font                : message-box;
     }
 
 
