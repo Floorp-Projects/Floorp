@@ -84,4 +84,7 @@ interface nsIAbMDBDirectory : nsISupports {
 	[noscript] void notifyDirItemAdded(in nsISupports item);
 	
 	[noscript] void clearDatabase();
+	
+    // Check if the directory has a card for the specified email address
+	boolean hasCardForEmailAddress(in string emailAddress);
 };

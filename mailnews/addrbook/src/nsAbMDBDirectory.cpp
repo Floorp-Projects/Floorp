@@ -1010,3 +1010,19 @@ nsresult nsAbMDBDirectory::GetAbDatabase()
     return NS_ERROR_NULL_POINTER;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists)
+{
+  nsresult rv = NS_OK;
+  *aCardExists = PR_FALSE;
+
+  if (!mDatabase)
+    rv = GetAbDatabase();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAbCard> cardExists; 
+  mDatabase->GetCardFromAttribute(this, kPriEmailColumn, aEmailAddress, PR_FALSE /* retain case */, getter_AddRefs(cardExists));
+  if (cardExists)
+    *aCardExists = PR_TRUE;
+  return NS_OK;
+}

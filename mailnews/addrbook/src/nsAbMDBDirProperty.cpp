@@ -210,3 +210,7 @@ NS_IMETHODIMP nsAbMDBDirProperty::SetValueForCard(nsIAbCard *card, const char *n
   return rv;
 }
 
+NS_IMETHODIMP nsAbMDBDirProperty::HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
