@@ -68,8 +68,6 @@ private:
 
   } DByte;
 
-  void GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
-
 };
   
 

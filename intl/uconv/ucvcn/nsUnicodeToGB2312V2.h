@@ -38,7 +38,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToGB2312V2(){};
+  nsUnicodeToGB2312V2();
   virtual ~nsUnicodeToGB2312V2(){};
 
   /**
@@ -75,8 +75,6 @@ protected:
     char rightbyte;
 
   } DByte;
-
-  void UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode);
 
 };
 

@@ -12,23 +12,28 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1998
- * Netscape Communications Corporation.  All Rights Reserved.
+ * This file is a newer implementation of GB2312 converters developed by
+ * Intel Corporation intended to replace the existing mozilla GB2312 converters
+ * developed by Netscape Communications in mozilla. 
+ *
  */
-
+// =======================================================================
+// Original Author: Yueheng Xu
+// email: yueheng.xu@intel.com
+// phone: (503)264-2248
+// Intel Corporation, Oregon, USA
+// Last Update: September 7, 1999
+// Revision History: 
+// 09/07/1999 - initial version. Based on exisiting nsGB2312ToUnicode.cpp. Removed
+//              dependecy on those shift/map tables. Now we only depend on gbku.h.
+// 09/28/1999 - changed to use the same table and code as GBKToUnicode converter
+// ======================================================================================
 
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUCvCnDll.h"
 
-
 #define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
-
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-
 
 //----------------------------------------------------------------------
 // Class nsGB2312ToUnicodeV2 [implementation]
@@ -50,71 +55,57 @@ NS_IMETHODIMP nsGB2312ToUnicodeV2::GetMaxLength(const char * aSrc,
   return NS_OK;
 }
 
-
-
-
-//Overwriting the ConvertNoBuff() in nsUCvCnSupport.cpp.
-
-void nsGB2312ToUnicodeV2::GBKToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
-{
-	short int iGBKToUnicodeIndex;
-
-    if(pGBCode)	
-	iGBKToUnicodeIndex = ( (short int)(pGBCode->leftbyte) - 0x81)*0xbf +( (short int)(pGBCode->rightbyte) - 0x40);
-
-	if( (iGBKToUnicodeIndex >= 0 ) && ( iGBKToUnicodeIndex < MAX_GBK_LENGTH) )
-	*pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
-
-}
-
-
-
-
-
 NS_IMETHODIMP nsGB2312ToUnicodeV2::ConvertNoBuff(const char* aSrc,
-											   PRInt32 * aSrcLength,
-											   PRUnichar *aDest,
-											   PRInt32 * aDestLength)
+                                                 PRInt32 * aSrcLength,
+                                                 PRUnichar *aDest,
+                                                 PRInt32 * aDestLength)
 {
 
-	short int i=0;
-	short int iSrcLength = (short int)(*aSrcLength);
-	DByte *pSrcDBCode = (DByte *)aSrc;
-    PRUnichar *pDestDBCode = (PRUnichar *)aDest;
-	int iDestlen = 0;
+  PRInt32 i=0;
+  PRInt32 iSrcLength = (*aSrcLength);
+  DByte *pSrcDBCode = (DByte *)aSrc;
+  PRUnichar *pDestDBCode = (PRUnichar *)aDest;
+  PRInt32 iDestlen = 0;
+  PRUint8 left;
+  PRUint8 right;
+  PRUint16 iGBKToUnicodeIndex = 0;
 
+  for (i=0;i<iSrcLength;i++)
+    {
+      pSrcDBCode = (DByte *)aSrc;
+      pDestDBCode = aDest;
+      
+      if ( iDestlen >= (*aDestLength) )
+        break;
+		
+      if ( *aSrc & 0x80 )
+        {
+          
+		  // The source is a GBCode
+     
+          left = pSrcDBCode->leftbyte; 
+          right = pSrcDBCode->rightbyte;
 
-    for (i=0;i<iSrcLength;i++)
-	{
-		pSrcDBCode = (DByte *)aSrc;
-		pDestDBCode = aDest;
-
-		if ( iDestlen >= (*aDestLength) )
+          iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);  
+          *pDestDBCode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+          
+          aSrc += 2;
+          i++;
+		}
+      else
 		{
-			break;
+          // The source is an ASCII
+          *pDestDBCode = (PRUnichar) ( ((char )(*aSrc)) & 0x00ff);
+          aSrc++;
 		}
 
-		if ( *aSrc & 0x80 )
-		{
-			// The source is a GBCode
-			GBKToUnicode(pSrcDBCode, pDestDBCode);
-			aSrc += 2;
-			i++;
-		}
-		else
-		{
-			// The source is an ASCII
-		    *pDestDBCode = (PRUnichar) ( ((char)(*aSrc) )& 0x00ff);
-			aSrc++;
-		}
-
-   	    iDestlen++;
-	    aDest++;
-		*aSrcLength = i+1;
+      iDestlen++;
+      aDest++;
+      *aSrcLength = i+1;
 	}
 
-    *aDestLength = iDestlen;
-	
-	return NS_OK;
-}
+  *aDestLength = iDestlen;
 
+  return NS_OK;
+  
+}
