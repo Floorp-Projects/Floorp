@@ -10,7 +10,7 @@
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
-    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULControlElement, nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <property name="accessible">
         <getter>
           <![CDATA[
@@ -25,7 +25,14 @@
       <property name="disabled">
         <getter>
         <![CDATA[
-            return this.getAttribute('disabled') == 'true';
+          if (this.getAttribute('disabled') == 'true')
+            return true;
+          var children = this._getRadioChildren();
+          for (var i = 0; i < children.length; ++i) {
+            if (!children[i].hidden && !children[i].collapsed && !children[i].disabled)
+              return false;
+          }
+          return true;
         ]]>
         </getter>
         <setter>
@@ -141,39 +148,39 @@
         <body>
         <![CDATA[
           var currentElement = this.focusedItem;
-          // If focused item isn't a radio button, do nothing!
-          if (!currentElement)
-            return;
-          var index, i;
+          var i;
           var children = this._getRadioChildren();
           for (i = 0; i < children.length; ++i ) {
             if (children[i] == currentElement) 
               break;
           }
-          
+          var index = i;
+
           if (aNextFlag) {
             do {
-              index = ++i % children.length;             
-              if (i > children.length)
+              if (++i == children.length)
+                i = 0;
+              if (i == index)
                 break;
             }
-            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
-            // XXX check for collapsed attr and display/visibility props too
+            while (children[i].hidden || children[i].collapsed || children[i].disabled);
+            // XXX check for display/visibility props too
 
-            this.selectedItem = children[index];
-            children[index].doCommand();
+            this.selectedItem = children[i];
+            children[i].doCommand();
           }
           else {              
             do {
-              index = i > 0 ? --i : (i = children.length - 1);
-              if (i == children.length)
+              if (i == 0)
+                i = children.length;
+              if (--i == index)
                 break;
             }
-            while (children[index].getAttribute("hidden") == "true" || children[index].disabled);
-            // XXX check for collapsed attr and display/visibility props too
+            while (children[i].hidden || children[i].collapsed || children[i].disabled);
+            // XXX check for display/visibility props too
 
-            this.selectedItem = children[index];
-            children[index].doCommand();
+            this.selectedItem = children[i];
+            children[i].doCommand();
           }
         ]]>
         </body>
@@ -249,13 +256,6 @@
     </implementation>
     
     <handlers>
-      <handler event="click" button="0">
-        <![CDATA[
-          if (event.target.localName == "radio" && !event.target.disabled) 
-            this.selectedItem = event.target;
-          event.preventBubble();
-         ]]>
-      </handler>
       <handler event="select">
         <![CDATA[
           //XXXblake this should not be necessary
@@ -263,13 +263,10 @@
           event.preventBubble();
         ]]>
       </handler>
-      <handler event="mousedown" button="0">
-        <![CDATA[
-          if (event.target.localName == "radio" && !event.target.disabled)
-            this.focusedItem = event.target;
-          event.preventBubble();
-         ]]>
-      </handler>
+      <handler event="mousedown">
+        if (this.disabled)
+          event.preventDefault();
+       </handler>
      
       <!-- keyboard navigation -->
       <!-- Here's how keyboard navigation works in radio groups on Windows:
@@ -304,9 +301,24 @@
            it is not (Windows platform behaviour is for the group to receive focus,
            not the item -->
       <handler event="focus" phase="target">
-        this.setAttribute("focused", "true");
-        if (!this.focusedItem)
-          this.focusedItem = this.selectedItem;
+        <![CDATA[
+          this.setAttribute("focused", "true");
+          if (this.focusedItem)
+            return;
+
+          var val = this.selectedItem;
+          if (!val || val.disabled || val.hidden || val.collapsed) {
+            var children = this._getRadioChildren();
+            var i;
+            for (var i = 0; i < children.length; ++i) {
+              if (!children[i].hidden && !children[i].collapsed && !children[i].disabled) {
+                val = children[i];
+                break;
+              }
+            }
+          }
+          this.focusedItem = val;
+        ]]>
       </handler>
       <handler event="blur" phase="target">
         this.removeAttribute("focused");

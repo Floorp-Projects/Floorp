@@ -59,6 +59,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMXULControlElement.h"
 #include "nsImageMapUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsINameSpaceManager.h"
@@ -3602,8 +3603,14 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
           PRInt32 errorCode;
           tabIndex = tabStr.ToInteger(&errorCode);
         }
-        if (!value.Equals(NS_LITERAL_STRING("true")))
-          disabled = PR_FALSE;
+        if (!value.Equals(NS_LITERAL_STRING("true"))) {
+          nsCOMPtr<nsIDOMXULControlElement> control(do_QueryInterface(child));
+          if (control)
+            control->GetDisabled(&disabled);
+          else
+            disabled = PR_FALSE;
+        }
+
       }
       
       //TabIndex not set (-1) treated at same level as set to 0
