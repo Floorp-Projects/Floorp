@@ -552,11 +552,19 @@ sub ValidateNewUser {
         return 0;
     }
 
+    my $sqluname = SqlQuote($username);
+
     # Reject if the new login is part of an email change which is 
     # still in progress
+    #
+    # substring/locate stuff: bug 165221; this used to use regexes, but that
+    # was unsafe and required weird escaping; using substring to pull out
+    # the new/old email addresses and locate() to find the delimeter (':')
+    # is cleaner/safer
     SendSQL("SELECT eventdata FROM tokens WHERE tokentype = 'emailold' 
-                AND eventdata like '%:$username' 
-                 OR eventdata like '$username:%'");
+     AND SUBSTRING(eventdata, 1, (LOCATE(':', eventdata) - 1)) = $sqluname 
+     OR SUBSTRING(eventdata, (LOCATE(':', eventdata) + 1)) = $sqluname");
+
     if (my ($eventdata) = FetchSQLData()) {
         # Allow thru owner of token
         if($old_username && ($eventdata eq "$old_username:$username")) {
