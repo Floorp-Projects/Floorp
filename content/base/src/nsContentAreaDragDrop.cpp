@@ -142,7 +142,7 @@ private:
   static nsresult GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage** outImage);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);
-  static void FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor);
+  static void GetSelectedLink(nsISelection* inSelection, nsIDOMNode **outLinkNode);
 
   enum serializationMode {serializeAsText, serializeAsHTML};
   // if inNode is null, use the selection from the window
@@ -852,70 +852,6 @@ mFlavorDataProvider(inFlavorDataProvider)
 {
 }
 
-//
-// FindFirstAnchor
-//
-// A recursive routine that finds the first child link initiating anchor
-//
-void
-nsTransferableFactory::FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor)
-{
-  if ( !inNode && !outAnchor )
-    return;
-  *outAnchor = nsnull;
-    
-  static NS_NAMED_LITERAL_STRING(simple, "simple");
-
-  nsCOMPtr<nsIDOMNode> curr = inNode;
-  while ( curr ) {
-    // check me (base case of recursion)
-    PRUint16 nodeType = 0;
-    curr->GetNodeType(&nodeType);
-    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
-      // a?
-      nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(curr));
-      if (a) {
-        *outAnchor = curr;
-        NS_ADDREF(*outAnchor);
-        return;
-      }
-
-      // area?
-      nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(curr));
-      if (area) {
-        *outAnchor = curr;
-        NS_ADDREF(*outAnchor);
-        return;
-      }
-
-      // Simple XLink?
-      nsCOMPtr<nsIContent> content(do_QueryInterface(curr));
-      NS_WARN_IF_FALSE(content, "DOM node is not content?");
-      if (!content)
-        return;
-      nsAutoString value;
-      content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
-      if (value.Equals(simple)) {
-        *outAnchor = curr;
-        NS_ADDREF(*outAnchor);
-        return;
-      }
-    }
-    
-    // recursively check my children
-    nsCOMPtr<nsIDOMNode> firstChild;
-    curr->GetFirstChild(getter_AddRefs(firstChild));
-    FindFirstAnchor(firstChild, outAnchor);
-    if ( *outAnchor )
-      return;
-      
-    // check my siblings
-    nsIDOMNode* temp = nsnull;
-    curr->GetNextSibling(&temp);
-    curr = dont_AddRef(temp);
-  }
-
-}
 
 //
 // FindParentLinkNode
@@ -1183,16 +1119,21 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         nsCOMPtr<nsIDOMNode> selectedImageOrLinkNode;
         GetDraggableSelectionData(selection, realTargetNode, getter_AddRefs(selectedImageOrLinkNode), &haveSelectedContent);
 
-        if (selectedImageOrLinkNode)
+        // either plain text or anchor text is selected
+        if (haveSelectedContent)
         {
-          image = do_QueryInterface(selectedImageOrLinkNode);
           link  = do_QueryInterface(selectedImageOrLinkNode);
-          useSelectedText = !image && link;
+          if (link && isAltKeyDown)
+            return NS_OK;
+          useSelectedText = PR_TRUE;
         }
+        // an image is selected
+        else if (selectedImageOrLinkNode)
+          image = do_QueryInterface(selectedImageOrLinkNode);
         else
         {
-          // we're not using a selected element. Look for draggable elements
-          // under the mouse
+          // nothing is selected -
+          // look for draggable elements under the mouse
 
           // if the alt key is down, don't start a drag if we're in an anchor because
           // we want to do selection.
@@ -1203,9 +1144,6 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
           area  = do_QueryInterface(draggedNode);
           image = do_QueryInterface(draggedNode);
           link  = do_QueryInterface(draggedNode);
-
-          if (haveSelectedContent)
-            useSelectedText = PR_TRUE;
         }
       }
     }
@@ -1264,10 +1202,9 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
       }
       else if (parentLink)
       {
+        // parentLink will always be null if there's selected content
         linkNode = parentLink;
         nodeToSerialize = linkNode;
-        if (haveSelectedContent)
-          useSelectedText = PR_TRUE;
       }
       else if (!haveSelectedContent)
       {
@@ -1486,17 +1423,10 @@ nsresult nsTransferableFactory::GetDraggableSelectionData(nsISelection* inSelect
         }
       }
 
-      // if we didn't find an image, look for an anchor
-      nsCOMPtr<nsIDOMNode> firstAnchor;
-      FindFirstAnchor(selectionStart, getter_AddRefs(firstAnchor)); 
-      if (firstAnchor)
-      {
-        PRBool anchorInSelection = PR_FALSE;
-        inSelection->ContainsNode(firstAnchor, PR_FALSE, &anchorInSelection);
-        if (anchorInSelection)
-          CallQueryInterface(firstAnchor, outImageOrLinkNode);    // addrefs
-      }
-      
+      // see if the selection is a link;  if so, its node will be returned
+      GetSelectedLink(inSelection, outImageOrLinkNode);
+
+      // indicate that a link or text is selected
       *outDragSelectedText = PR_TRUE;
     }
   }
@@ -1504,6 +1434,118 @@ nsresult nsTransferableFactory::GetDraggableSelectionData(nsISelection* inSelect
   return NS_OK;
 }
 
+// static
+void nsTransferableFactory::GetSelectedLink(nsISelection* inSelection,
+                                                nsIDOMNode **outLinkNode)
+{
+  *outLinkNode = nsnull;
+
+  nsCOMPtr<nsIDOMNode> selectionStart;
+  inSelection->GetAnchorNode(getter_AddRefs(selectionStart));
+  nsCOMPtr<nsIDOMNode> selectionEnd;
+  inSelection->GetFocusNode(getter_AddRefs(selectionEnd));
+
+  // simple case:  only one node is selected
+  // see if it or its parent is an anchor, then exit
+
+  if (selectionStart == selectionEnd)
+  {
+    nsCOMPtr<nsIDOMNode> link;
+    FindParentLinkNode(selectionStart, getter_AddRefs(link));
+    if (link)
+      NS_IF_ADDREF(*outLinkNode = link);
+
+    return;
+  }
+
+  // more complicated case:  multiple nodes are selected
+
+  // Unless you use the Alt key while selecting anchor text, it is
+  // nearly impossible to avoid overlapping into adjacent nodes.
+  // Deal with this by trimming off the leading and/or trailing
+  // nodes of the selection if the strings they produce are empty.
+
+  // first, use a range determine if the selection was marked LTR or RTL;
+  // if the latter, swap endpoints so we trim in the right direction
+
+  PRInt32 startOffset, endOffset;
+  {
+    nsCOMPtr<nsIDOMRange> range;
+    inSelection->GetRangeAt(0, getter_AddRefs(range));
+    if (!range)
+      return;
+
+    nsCOMPtr<nsIDOMNode> tempNode;
+    range->GetStartContainer( getter_AddRefs(tempNode));
+    if (tempNode != selectionStart)
+    {
+      selectionEnd = selectionStart;
+      selectionStart = tempNode;
+      inSelection->GetAnchorOffset(&endOffset);
+      inSelection->GetFocusOffset(&startOffset);
+    }
+    else
+    {
+      inSelection->GetAnchorOffset(&startOffset);
+      inSelection->GetFocusOffset(&endOffset);
+    }
+  }
+
+  // trim leading node if the string is empty or
+  // the selection starts at the end of the text
+
+  nsAutoString nodeStr;
+  selectionStart->GetNodeValue(nodeStr);
+  if (nodeStr.IsEmpty() || startOffset+1 >= NS_STATIC_CAST(PRInt32, nodeStr.Length()))
+  {
+    nsCOMPtr<nsIDOMNode> curr = selectionStart;
+    nsIDOMNode*          next;
+    while (curr)
+    {
+      curr->GetNextSibling(&next);
+      if (next)
+      {
+        selectionStart = dont_AddRef(next);
+        break;
+      }
+      curr->GetParentNode(&next);
+      curr = dont_AddRef(next);
+    }
+  }
+  
+  // trim trailing node if the selection ends before its text begins
+
+  if (endOffset == 0)
+  {
+    nsCOMPtr<nsIDOMNode> curr = selectionEnd;
+    nsIDOMNode*          next;
+    while (curr)
+    {
+      curr->GetPreviousSibling(&next);
+      if (next)
+      {
+        selectionEnd = dont_AddRef(next);
+        break;
+      }
+      curr->GetParentNode(&next);
+      curr = dont_AddRef(next);
+    }
+  }
+
+  // see if the leading & trailing nodes are part of the
+  // same anchor - if so, return the anchor node
+  nsCOMPtr<nsIDOMNode> link;
+  FindParentLinkNode(selectionStart, getter_AddRefs(link));
+  if (link)
+  {
+    nsCOMPtr<nsIDOMNode> link2;
+    FindParentLinkNode(selectionEnd, getter_AddRefs(link2));
+    if (link == link2)
+      NS_IF_ADDREF(*outLinkNode = link);
+  }
+
+  return;
+}
 
 // static
 nsresult
