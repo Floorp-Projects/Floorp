@@ -918,7 +918,12 @@ nsWindow::SetFocus(void)
   if (top_mozarea)
   {
     if (!GTK_WIDGET_HAS_FOCUS(top_mozarea))
+    {
       gtk_widget_grab_focus(top_mozarea);
+      // this will show the window if it's minimized and bring it to
+      // the front of the stacking order.
+      GetAttention();
+    }
   }
   
   // check to see if we need to send a focus out event for the old window
