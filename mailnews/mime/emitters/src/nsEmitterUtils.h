@@ -24,3 +24,4 @@
 extern "C" char     *nsEscapeHTML(const char *string);
 
 #endif // _nsEmitterUtils_h_
+
