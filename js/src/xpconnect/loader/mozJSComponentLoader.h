@@ -16,12 +16,12 @@
  * Reserved.
  */
 
+#include "plhash.h"
+#include "jsapi.h"
 #include "nsIComponentLoader.h"
+#include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIXPConnect.h"
-#include "jsapi.h"
-#include "nsHashtable.h"
-#include "plhash.h"
 
 extern const char mozJSComponentLoaderProgID[];
 extern const char jsComponentTypeName[];
@@ -42,10 +42,17 @@ public:
     virtual ~mozJSComponentLoader();
 
  protected:
-    nsCOMPtr<nsIComponentManager> mCompMgr;
-    nsCOMPtr<nsIXPConnect> mXPC;
     nsresult RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
-    JSObject *GlobalForLocation(const char *aLocation);
+    JSObject *GlobalForLocation(const char *aLocation, nsIFileSpec *component);
+    nsIModule *ModuleForLocation(const char *aLocation,
+                                 nsIFileSpec *component);
+    PRBool HasChanged(const char *registryLocation, nsIFileSpec *component);
+    nsresult SetRegistryInfo(const char *registryLocation,
+                             nsIFileSpec *component);
+
+    nsCOMPtr<nsIComponentManager> mCompMgr;
+    nsCOMPtr<nsIRegistry> mRegistry;
+    nsCOMPtr<nsIXPConnect> mXPC;
 
     JSObject  *mSuperGlobal;
     JSRuntime *mRuntime;
@@ -54,4 +61,5 @@ public:
     
     PLHashTable *mModules;
     PLHashTable *mGlobals;
+    nsIRegistry::Key mXPCOMKey;
 };

@@ -29,6 +29,7 @@
 #include "nsIXPConnect.h"
 #include "nsCRT.h"
 #include "nsIAllocator.h"
+#include "nsIRegistry.h"
 
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
@@ -109,6 +110,7 @@ mozJSComponentLoader::~mozJSComponentLoader()
     }
     mXPC = nsnull;
     mCompMgr = nsnull;
+    mRegistry = nsnull;
 }
 
 NS_IMPL_ISUPPORTS(mozJSComponentLoader, NS_GET_IID(nsIComponentLoader));
@@ -128,10 +130,9 @@ mozJSComponentLoader::GetFactory(const nsIID &aCID,
     delete [] cidString;
 #endif
 
-    nsCOMPtr<nsIModule> module = 
-        (nsIModule *)PL_HashTableLookup(mModules, aLocation);
     
-    if (!module.get()) {
+    nsIModule * module = ModuleForLocation(aLocation, 0);
+    if (!module) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "ERROR: couldn't get module for %s\n", aLocation);
 #endif
@@ -171,27 +172,27 @@ NS_IMETHODIMP
 mozJSComponentLoader::Init(nsIComponentManager *aCompMgr, nsISupports *aReg)
 {
     mCompMgr = aCompMgr;
-    
     nsresult rv;
+
+    /* initialize registry handles */
+    mRegistry = do_QueryInterface(aReg, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = mRegistry->GetSubtree(nsIRegistry::Common, xpcomKeyName,
+                                   &mXPCOMKey);
+        if (NS_FAILED(rv))
+            /* if we can't get the XPCOM key, just skip all registry ops */
+            mRegistry = nsnull;
+    }
+
     NS_WITH_SERVICE(nsIJSRuntimeService, rtsvc, "nsJSRuntimeService", &rv);
     // get the JSRuntime from the runtime svc, if possible
-    if (NS_SUCCEEDED(rv)) {
-        rv = rtsvc->GetRuntime(&mRuntime);
-        /* XXX rtcvs should create: bug 13174 */
-        if (NS_FAILED(rv) || !mRuntime) {
-            mRuntime = JS_NewRuntime(4L * 1024L * 1024L /* pref? */);
-            if (NS_SUCCEEDED(rv)) // got service, so set it back
-                rtsvc->SetRuntime(mRuntime);
-        }
+    if (NS_FAILED(rv))
+        return rv;
+    
+    if (NS_FAILED(rv = rtsvc->GetRuntime(&mRuntime)))
 #ifdef DEBUG_shaver
         fprintf(stderr, "mJCL: runtime initialized!\n");
 #endif
-    } else {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: eeek -- can't give runtime back to service!\n");
-#endif
-        mRuntime = JS_NewRuntime(4L * 1024L * 1024L /* pref? */);
-    }
     
     mContext = JS_NewContext(mRuntime, 8192 /* pref? */);
     if (!mContext)
@@ -312,6 +313,64 @@ mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir)
     return NS_OK;
 }
 
+nsresult
+mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
+                                      nsIFileSpec *component)
+{
+    if (!mRegistry)
+        return NS_OK;           // silent failure
+
+    nsresult rv;
+    nsIRegistry::Key key;
+    if (NS_FAILED(rv = mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation,
+                                                &key)))
+        return rv;
+
+    PRUint32 modDate;
+    if (NS_FAILED(rv = component->GetModDate(&modDate)) ||
+        NS_FAILED(rv = mRegistry->SetInt(key, lastModValueName, modDate)))
+        return rv;
+
+    PRUint32 fileSize;
+    if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
+        NS_FAILED(rv = mRegistry->SetInt(key, fileSizeValueName, fileSize)))
+        return rv;
+
+    return NS_OK;
+}
+
+PRBool
+mozJSComponentLoader::HasChanged(const char *registryLocation,
+                                 nsIFileSpec *component)
+{
+
+    /* if we don't have a registry handle, force registration of component */
+    if (!mRegistry)
+        return PR_TRUE;
+
+    nsIRegistry::Key key;
+    if (NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, registryLocation, &key)))
+        return PR_TRUE;
+
+    /* check modification date */
+    int32 regTime;
+    if (NS_FAILED(mRegistry->GetInt(key, lastModValueName, &regTime)))
+        return PR_TRUE;
+    PRBool changed;
+    if (NS_FAILED(component->ModDateChanged(regTime, &changed)) || changed)
+        return PR_TRUE;
+
+    /* check file size */
+    int32 regSize;
+    if (NS_FAILED(mRegistry->GetInt(key, fileSizeValueName, &regSize)))
+        return PR_TRUE;
+    PRUint32 size = 0;
+    if (NS_FAILED(component->GetFileSize(&size)) || ((int32)size != regSize))
+        return PR_TRUE;
+
+    return PR_FALSE;
+}
+
 NS_IMETHODIMP
 mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
                                             nsIFileSpec *component,
@@ -324,10 +383,6 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     const char jsExtension[] = ".cjs";
     int jsExtensionLen = 4;
     char *nativePath = nsnull, *leafName = nsnull, *registryLocation = nsnull;
-    jsval argv[2], retval;
-    JSObject *obj, *jsModuleObj;
-    JSScript *script;
-    JSString *s;
     nsIModule *module;
 
     *registered = PR_FALSE;
@@ -350,67 +405,18 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     fprintf(stderr, "mJCL: registering JS component %s\n", leafName);
 #endif
 
-    component->GetNativePath(&nativePath);
-
     rv = mCompMgr->RegistryLocationForSpec(component, &registryLocation);
     if (NS_FAILED(rv))
         goto out;
     
-    obj = GlobalForLocation(registryLocation);
-    if (!obj) {
+    if (!HasChanged(registryLocation, component)) {
 #ifdef DEBUG_shaver
-        fprintf(stderr, "GlobalForLocation failed!\n");
+        fprintf(stderr, "mJCL: %s hasn't changed\n", registryLocation);
 #endif
         goto out;
     }
 
-    /* XXX MAC: we use native files, *sigh* */
-    script = JS_CompileFile(mContext, obj, nativePath);
-    if (!script) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
-                nativePath);
-#endif
-        goto out;
-    }
-#ifdef DEBUG_shaver
-    fprintf(stderr, "mJCL: compiled JS component %s\n", nativePath);
-#endif
-
-    if (!JS_ExecuteScript(mContext, obj, script, &retval)) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: failed to execute %s\n", nativePath);
-#endif
-        goto out;
-    }
-
-    argv[0] = OBJECT_TO_JSVAL(mCompMgrWrapper);
-    argv[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(mContext, nativePath));
-    if (!JS_CallFunctionName(mContext, obj, "NSGetModule", 2, argv, &retval)) {
-#ifdef DEBUG_shaver
-        fprintf(stderr, "mJCL: NSGetModule failed for %s\n", leafName);
-#endif
-        goto out;
-    }
-
-#ifdef DEBUG_shaver
-    s = JS_ValueToString(mContext, retval);
-    fprintf(stderr, "mJCL: %s::NSGetModule returned %s\n",
-            leafName, JS_GetStringBytes(s));
-#endif
-
-    if (!JS_ValueToObject(mContext, retval, &jsModuleObj)) {
-        fprintf(stderr, "mJCL: couldn't convert %s's nsIModule to obj\n",
-                nativePath);
-        goto out;
-    }
-
-    rv = mXPC->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
-                      (nsISupports **)&module);
-    if (NS_FAILED(rv)) {
-        fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
-        goto out;
-    }
+    module = ModuleForLocation(registryLocation, component);
 
     rv = module->RegisterSelf(mCompMgr, component, registryLocation);
     if (NS_FAILED(rv)) {
@@ -418,12 +424,13 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
         goto out;
     }
 
-    /* we hand our reference to the hash table, it'll be released much later */
-    PL_HashTableAdd(mModules, registryLocation, module);
+    SetRegistryInfo(registryLocation, component);
+
 #ifdef DEBUG_shaver
     fprintf(stderr, "added module %p for %s\n", module, registryLocation);
 #endif    
     registryLocation = 0;       // prevent free below
+    *registered = PR_TRUE;
 
  out:
     if (registryLocation)
@@ -436,10 +443,70 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
 
 }
 
+nsIModule *
+mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
+                                        nsIFileSpec *component)
+{
+    PLHashNumber hash = PL_HashString(registryLocation);
+    PLHashEntry **hep = PL_HashTableRawLookup(mModules, hash,
+                                              (void *)registryLocation);
+    PLHashEntry *he = *hep;
+    if (he)
+        return (nsIModule *)he->value;
+
+    JSObject *obj = GlobalForLocation(registryLocation, component);
+    if (!obj) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "GlobalForLocation failed!\n");
+#endif
+        return nsnull;
+    }
+
+    jsval argv[2], retval;
+    argv[0] = OBJECT_TO_JSVAL(mCompMgrWrapper);
+    argv[1] = STRING_TO_JSVAL(JS_NewStringCopyZ(mContext, registryLocation));
+    if (!JS_CallFunctionName(mContext, obj, "NSGetModule", 2, argv,
+                             &retval)) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "mJCL: NSGetModule failed for %s\n",
+                registryLocation);
+#endif
+        return nsnull;
+    }
+
+#ifdef DEBUG_shaver
+    JSString *s = JS_ValueToString(mContext, retval);
+    fprintf(stderr, "mJCL: %s::NSGetModule returned %s\n",
+            registryLocation, JS_GetStringBytes(s));
+#endif
+
+    JSObject *jsModuleObj;
+    if (!JS_ValueToObject(mContext, retval, &jsModuleObj)) {
+        /* XXX report error properly */
+        fprintf(stderr, "mJCL: couldn't convert %s's nsIModule to obj\n",
+                registryLocation);
+        return nsnull;
+    }
+
+    nsIModule *module;
+    if (NS_FAILED(mXPC->WrapJS(mContext, jsModuleObj, NS_GET_IID(nsIModule),
+                               (nsISupports **)&module))) {
+        /* XXX report error properly */
+        fprintf(stderr, "mJCL: couldn't get nsIModule from jsval\n");
+        return nsnull;
+    }
+
+    /* we hand our reference to the hash table, it'll be released much later */
+    he = PL_HashTableRawAdd(mModules, hep, hash, registryLocation, module);
+    return module;
+}
+
 JSObject *
-mozJSComponentLoader::GlobalForLocation(const char *aLocation)
+mozJSComponentLoader::GlobalForLocation(const char *aLocation,
+                                        nsIFileSpec *component)
 {
 
+    PRBool needRelease = PR_FALSE;
     PLHashNumber hash = PL_HashString(aLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mGlobals, hash,
                                               (void *)aLocation);
@@ -449,10 +516,48 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation)
     
     JSObject *obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal,
                                  mSuperGlobal);
-    if (obj) {
-        he = PL_HashTableRawAdd(mGlobals, hep, hash, aLocation, obj);
-        JS_AddNamedRoot(mContext, &he->value, aLocation);
+    if (!obj)
+        return nsnull;
+
+    if (!component) {
+        if (NS_FAILED(mCompMgr->SpecForRegistryLocation(aLocation,
+                                                        &component)))
+            return nsnull;
+        needRelease = PR_TRUE;
     }
+
+    jsval retval;
+    char *nativePath;
+    /* XXX MAC: we use strings as file paths, *sigh* */
+    component->GetNativePath(&nativePath);
+    JSScript *script = JS_CompileFile(mContext, obj, nativePath);
+    if (!script) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
+                nativePath);
+#endif
+        goto out;
+    }
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "mJCL: compiled JS component %s\n", nativePath);
+#endif
+
+    if (!JS_ExecuteScript(mContext, obj, script, &retval)) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "mJCL: failed to execute %s\n", nativePath);
+#endif
+        goto out;
+    }
+
+    he = PL_HashTableRawAdd(mGlobals, hep, hash, aLocation, obj);
+    JS_AddNamedRoot(mContext, &he->value, aLocation);
+
+ out:
+    if (needRelease)
+        NS_RELEASE(component);
+    if (nativePath)
+        nsAllocator::Free(nativePath);
     return obj;
 }
 
@@ -550,5 +655,6 @@ NSRegisterSelf(nsISupports *aServMgr, const char *aLocation)
         return rv;
 
     return compMgr->RegisterComponentLoader(jsComponentTypeName,
-                                            mozJSComponentLoaderProgID, PR_TRUE);
+                                            mozJSComponentLoaderProgID,
+                                            PR_TRUE);
 }
