@@ -111,7 +111,7 @@ sub Told {
         } else {
             $self->say($event, "$1");
         }
-    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you)[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:you\s+(?:really\s+)?suck(?:\s+hard|(?:\s+big)?\s+rocks)?|you(?:\s+a|\')re\s+an\s+idiot|i\s+hate\s+you|bi+tch)[?!1.\s]*$/osi) {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|thank\s+you|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'thanks');
