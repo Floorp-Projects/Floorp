@@ -274,7 +274,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
     nsString  newAttachName(NS_LITERAL_STRING("attachment"));
     nsresult  rv = NS_OK;
     nsCAutoString contentType (aAttach->real_type);
-    PRInt32 pos = contentType.FindCharInSet(";");
+    PRInt32 pos = contentType.FindChar(';');
     if (pos > 0)
       contentType.Truncate(pos);
 

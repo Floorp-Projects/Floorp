@@ -1886,7 +1886,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     // the content type may contain a charset. i.e. text/html; ISO-2022-JP...we want to strip off the charset
     // before we ask the mime service for a mime info for this content type.
     nsCAutoString contentType (newAttachment->type);
-    PRInt32 pos = contentType.FindCharInSet(";");
+    PRInt32 pos = contentType.FindChar(';');
     if (pos > 0)
       contentType.Truncate(pos);
     nsresult  rv = NS_OK;
