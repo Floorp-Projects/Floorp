@@ -132,7 +132,8 @@ nsRDFCore::Init(const nsString& aId)
 }
 
 NS_IMETHODIMP    
-nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource)
+nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource,
+                  const nsString &sortDirection)
 {
   printf(" ***** nsRDFCore::DoSort entered!!! *****\n");
 
@@ -146,6 +147,7 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource)
   printf("-- Sort \n");
   printf("----------------------------\n");
   printf("Column: %s  \n", sortResource.ToNewCString());
+  printf("Direction: %s  \n", sortDirection.ToNewCString());
   printf("----------------------------\n");
 
 	nsIXULSortService		*gXULSortService = nsnull;
@@ -156,7 +158,7 @@ nsRDFCore::DoSort(nsIDOMNode* node, const nsString& sortResource)
 	{
 		printf("\n******** YES, we got kXULSortServiceCID\n\n");
 		
-		gXULSortService->DoSort(node, sortResource);
+		gXULSortService->DoSort(node, sortResource, sortDirection);
 		nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
 	}
 	else printf("\n******** unable to obtain kXULSortServiceCID\n\n");

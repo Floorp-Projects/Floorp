@@ -8,19 +8,30 @@
 
 <html:script>
 
-function doSort(node)
+function doSort(sortColName)
 {
+        var node = document.getElementById(sortColName);
 	// determine column resource to sort on
 	var sortResource = node.getAttribute('resource');
 	if (!node)	return(false);
-        dump("Sort on '" + sortResource + "' column.\n");
+
+        var sortDirection="ascending";
+        var isSortActive = node.getAttribute('sortActive');
+        if (isSortActive == "true")
+        {
+                var currentDirection = node.getAttribute('sortDirection');
+                if (currentDirection == "ascending")
+                        sortDirection = "descending";
+                else if (currentDirection == "descending")
+                        sortDirection = "natural";
+                else    sortDirection = "ascending";
+        }
+        dump("Sort on '" + sortResource + "' column in '" + sortDirection + "' order.\n");
 
 	// get RDF Core service
 	var rdfCore = XPAppCoresManager.Find("RDFCore");
 	if (!rdfCore)
 	{
-		dump("    *** error: RDFCore not found.\n");
-
 		rdfCore = new RDFCore();
 		if (!rdfCore)
 		{
@@ -38,7 +49,7 @@ function doSort(node)
 
 	// sort!!!
         dump("About to sort...\n");
-        rdfCore.doSort(node, sortResource, "ascending");
+        rdfCore.doSort(node, sortResource, sortDirection);
         dump("Sort done.\n");
 
         return(false);
@@ -47,15 +58,15 @@ function doSort(node)
 </html:script>
 
 <xul:tree datasources="rdf:files rdf:bookmarks rdf:mail">
-  <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+  <xul:treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <xul:treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
+  <xul:treecol id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
   <xul:treehead>
     <xul:treeitem>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort(this);">Name</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort(this);">URL</xul:treecell>
-      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort(this);">Last Modified</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort('NameColumn');">Name</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort('URLColumn');">URL</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort('LastModColumn');">Last Modified</xul:treecell>
     </xul:treeitem>
   </xul:treehead>
 

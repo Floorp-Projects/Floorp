@@ -140,6 +140,7 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   JSBool rBool = JS_FALSE;
   nsIDOMNodePtr b0;
   nsAutoString b1;
+  nsAutoString b2;
 
   *rval = JSVAL_NULL;
 
@@ -148,7 +149,7 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 3) {
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
                                            kINodeIID,
@@ -160,14 +161,16 @@ RDFCoreDoSort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    if (NS_OK != nativeThis->DoSort(b0, b1)) {
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
+
+    if (NS_OK != nativeThis->DoSort(b0, b1, b2)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function doSort requires 2 parameters");
+    JS_ReportError(cx, "Function doSort requires 3 parameters");
     return JS_FALSE;
   }
 
@@ -207,7 +210,7 @@ static JSPropertySpec RDFCoreProperties[] =
 //
 static JSFunctionSpec RDFCoreMethods[] = 
 {
-  {"doSort",          RDFCoreDoSort,     2},
+  {"doSort",          RDFCoreDoSort,     3},
   {0}
 };
 
