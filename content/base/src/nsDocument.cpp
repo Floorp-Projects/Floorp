@@ -1750,6 +1750,40 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
   }
 }
 
+void
+nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
+{
+  nsICSSLoader* cssLoader = GetCSSLoader();
+  PRBool enabled;
+  if (cssLoader && NS_SUCCEEDED(cssLoader->GetEnabled(&enabled)) && enabled) {
+    PRInt32 sheetCount = GetNumberOfCatalogStyleSheets();
+    for (PRInt32 i = 0; i < sheetCount; i++) {
+      nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
+      NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
+      if (sheet) {
+        nsCOMPtr<nsIURI> uri;
+        sheet->GetSheetURI(getter_AddRefs(uri));
+        nsCAutoString uriStr;
+        uri->GetSpec(uriStr);
+        if (uriStr.Equals(aStyleSheetURI))
+          return;
+      }
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
+    if (uri) {
+      nsCOMPtr<nsICSSStyleSheet> sheet;
+      cssLoader->LoadAgentSheet(uri, getter_AddRefs(sheet));
+      if (sheet) {
+        BeginUpdate(UPDATE_STYLE);
+        AddCatalogStyleSheet(sheet);
+        EndUpdate(UPDATE_STYLE);
+      }
+    }
+  }
+}
+
 nsIScriptGlobalObject*
 nsDocument::GetScriptGlobalObject() const
 {

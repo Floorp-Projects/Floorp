@@ -136,6 +136,13 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
   if (!SVGEnabled())
     return NS_NewXMLElement(aResult, aNodeInfo);
 
+  static const char kSVGStyleSheetURI[] = "resource://gre/res/svg.css";
+
+  // this bit of code is to load svg.css on demand
+  nsIDocument* doc = nsContentUtils::GetDocument(aNodeInfo);
+  if (doc)
+    doc->EnsureCatalogStyleSheet(kSVGStyleSheetURI);
+
   nsIAtom *name = aNodeInfo->NameAtom();
   
   if (name == nsSVGAtoms::polyline)

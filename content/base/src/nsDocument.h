@@ -323,6 +323,7 @@ public:
   virtual PRInt32 GetNumberOfCatalogStyleSheets() const;
   virtual nsIStyleSheet* GetCatalogStyleSheetAt(PRInt32 aIndex) const;
   virtual void AddCatalogStyleSheet(nsIStyleSheet* aSheet);
+  virtual void EnsureCatalogStyleSheet(const char *aStyleSheetURI);
 
 
   /**
