@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.19 2002/10/23 23:41:02 jpierre%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.20 2003/04/26 01:40:49 nelsonb%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -412,10 +412,10 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
     encode_kind &= ~SEC_ASN1_DYNAMIC;
     encode_kind &= ~SEC_ASN1_MAY_STREAM;
 
-    if( encode_kind & SEC_ASN1_CHOICE ) {
+    if (encode_kind & SEC_ASN1_CHOICE) {
 #if 0	/* XXX remove? */
       sec_asn1d_state *child = sec_asn1d_push_state(state->top, state->theTemplate, state->dest, PR_FALSE);
-      if( (sec_asn1d_state *)NULL == child ) {
+      if ((sec_asn1d_state *)NULL == child) {
         return (sec_asn1d_state *)NULL;
       }
 
@@ -1517,7 +1517,7 @@ sec_asn1d_next_substring (sec_asn1d_state *state)
 
     if (state->pending) {
 	PORT_Assert (!state->indefinite);
-	if( child_consumed > state->pending ) {
+	if (child_consumed > state->pending) {
 	    PORT_SetError (SEC_ERROR_BAD_DER);
 	    state->top->status = decodeError;
 	    return;
@@ -1636,7 +1636,7 @@ sec_asn1d_next_in_group (sec_asn1d_state *state)
      */
     if (state->pending) {
 	PORT_Assert (!state->indefinite);
-	if( child_consumed > state->pending ) {
+	if (child_consumed > state->pending) {
 	    PORT_SetError (SEC_ERROR_BAD_DER);
 	    state->top->status = decodeError;
 	    return;
@@ -1706,7 +1706,7 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	sec_asn1d_free_child (child, PR_FALSE);
 	if (state->pending) {
 	    PORT_Assert (!state->indefinite);
-	    if( child_consumed > state->pending ) {
+	    if (child_consumed > state->pending) {
 		PORT_SetError (SEC_ERROR_BAD_DER);
 		state->top->status = decodeError;
 		return;
@@ -1755,7 +1755,7 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 	     */
 	    if (state->indefinite && child->endofcontents) {
 		PORT_Assert (child_consumed == 2);
-		if( child_consumed != 2 ) {
+		if (child_consumed != 2) {
 		    PORT_SetError (SEC_ERROR_BAD_DER);
 		    state->top->status = decodeError;
 		} else {
@@ -2111,7 +2111,7 @@ sec_asn1d_pop_state (sec_asn1d_state *state)
 	state->consumed += state->child->consumed;
 	if (state->pending) {
 	    PORT_Assert (!state->indefinite);
-	    if( state->child->consumed > state->pending ) {
+	    if (state->child->consumed > state->pending) {
 		PORT_SetError (SEC_ERROR_BAD_DER);
 		state->top->status = decodeError;
 	    } else {
@@ -2135,134 +2135,124 @@ sec_asn1d_pop_state (sec_asn1d_state *state)
 }
 
 static sec_asn1d_state *
-sec_asn1d_before_choice
-(
-  sec_asn1d_state *state
-)
+sec_asn1d_before_choice (sec_asn1d_state *state)
 {
-  sec_asn1d_state *child;
+    sec_asn1d_state *child;
 
-  if( state->allocate ) {
-    void *dest;
+    if (state->allocate) {
+	void *dest;
 
-    dest = sec_asn1d_zalloc(state->top->their_pool, state->theTemplate->size);
-    if( (void *)NULL == dest ) {
-      state->top->status = decodeError;
-      return (sec_asn1d_state *)NULL;
+	dest = sec_asn1d_zalloc(state->top->their_pool, state->theTemplate->size);
+	if ((void *)NULL == dest) {
+	    state->top->status = decodeError;
+	    return (sec_asn1d_state *)NULL;
+	}
+
+	state->dest = (char *)dest + state->theTemplate->offset;
     }
 
-    state->dest = (char *)dest + state->theTemplate->offset;
-  }
+    child = sec_asn1d_push_state(state->top, state->theTemplate + 1, 
+				 state->dest, PR_FALSE);
+    if ((sec_asn1d_state *)NULL == child) {
+	return (sec_asn1d_state *)NULL;
+    }
 
-  child = sec_asn1d_push_state(state->top, state->theTemplate + 1, 
-                               state->dest, PR_FALSE);
-  if( (sec_asn1d_state *)NULL == child ) {
-    return (sec_asn1d_state *)NULL;
-  }
+    sec_asn1d_scrub_state(child);
+    child = sec_asn1d_init_state_based_on_template(child);
+    if ((sec_asn1d_state *)NULL == child) {
+	return (sec_asn1d_state *)NULL;
+    }
 
-  sec_asn1d_scrub_state(child);
-  child = sec_asn1d_init_state_based_on_template(child);
-  if( (sec_asn1d_state *)NULL == child ) {
-    return (sec_asn1d_state *)NULL;
-  }
+    child->optional = PR_TRUE;
 
-  child->optional = PR_TRUE;
+    state->place = duringChoice;
 
-  state->place = duringChoice;
-
-  return child;
+    return child;
 }
 
 static sec_asn1d_state *
-sec_asn1d_during_choice
-(
-  sec_asn1d_state *state
-)
+sec_asn1d_during_choice (sec_asn1d_state *state)
 {
-  sec_asn1d_state *child = state->child;
-  
-  PORT_Assert((sec_asn1d_state *)NULL != child);
+    sec_asn1d_state *child = state->child;
+    
+    PORT_Assert((sec_asn1d_state *)NULL != child);
 
-  if( child->missing ) {
-    unsigned char child_found_tag_modifiers = 0;
-    unsigned long child_found_tag_number = 0;
+    if (child->missing) {
+	unsigned char child_found_tag_modifiers = 0;
+	unsigned long child_found_tag_number = 0;
 
-    child->theTemplate++;
+	child->theTemplate++;
 
-    if( 0 == child->theTemplate->kind ) {
-      /* Ran out of choices */
-      PORT_SetError(SEC_ERROR_BAD_DER);
-      state->top->status = decodeError;
-      return (sec_asn1d_state *)NULL;
-    }
+	if (0 == child->theTemplate->kind) {
+	    /* Ran out of choices */
+	    PORT_SetError(SEC_ERROR_BAD_DER);
+	    state->top->status = decodeError;
+	    return (sec_asn1d_state *)NULL;
+	}
 
-    state->consumed += child->consumed;
+	state->consumed += child->consumed;
 
-    /* cargo'd from next_in_sequence innards */
-    if( state->pending ) {
-      PORT_Assert(!state->indefinite);
-      if( child->consumed > state->pending ) {
-	PORT_SetError (SEC_ERROR_BAD_DER);
-	state->top->status = decodeError;
-	return NULL;
-      }
-      state->pending -= child->consumed;
-      if( 0 == state->pending ) {
-        /* XXX uh.. not sure if I should have stopped this
-         * from happening before. */
-        PORT_Assert(0);
-        PORT_SetError(SEC_ERROR_BAD_DER);
-        state->top->status = decodeError;
-        return (sec_asn1d_state *)NULL;
-      }
-    }
+	/* cargo'd from next_in_sequence innards */
+	if (state->pending) {
+	    PORT_Assert(!state->indefinite);
+	    if (child->consumed > state->pending) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
+		state->top->status = decodeError;
+		return NULL;
+	    }
+	    state->pending -= child->consumed;
+	    if (0 == state->pending) {
+		/* XXX uh.. not sure if I should have stopped this
+		 * from happening before. */
+		PORT_Assert(0);
+		PORT_SetError(SEC_ERROR_BAD_DER);
+		state->top->status = decodeError;
+		return (sec_asn1d_state *)NULL;
+	    }
+	}
 
-    child->consumed = 0;
-    sec_asn1d_scrub_state(child);
+	child->consumed = 0;
+	sec_asn1d_scrub_state(child);
 
-    /* move it on top again */
-    state->top->current = child;
+	/* move it on top again */
+	state->top->current = child;
 
-    child_found_tag_modifiers = child->found_tag_modifiers;
-    child_found_tag_number = child->found_tag_number;
+	child_found_tag_modifiers = child->found_tag_modifiers;
+	child_found_tag_number = child->found_tag_number;
 
-    child = sec_asn1d_init_state_based_on_template(child);
-    if( (sec_asn1d_state *)NULL == child ) {
-      return (sec_asn1d_state *)NULL;
-    }
+	child = sec_asn1d_init_state_based_on_template(child);
+	if ((sec_asn1d_state *)NULL == child) {
+	    return (sec_asn1d_state *)NULL;
+	}
 
-    /* copy our findings to the new top */
-    child->found_tag_modifiers = child_found_tag_modifiers;
-    child->found_tag_number = child_found_tag_number;
+	/* copy our findings to the new top */
+	child->found_tag_modifiers = child_found_tag_modifiers;
+	child->found_tag_number = child_found_tag_number;
 
-    child->optional = PR_TRUE;
-    child->place = afterIdentifier;
+	child->optional = PR_TRUE;
+	child->place = afterIdentifier;
 
-    return child;
-  } else {
-    if( (void *)NULL != state->dest ) {
-      /* Store the enum */
-      int *which = (int *)((char *)state->dest + state->theTemplate->offset);
-      *which = (int)child->theTemplate->size;
+	return child;
+    } 
+    if ((void *)NULL != state->dest) {
+	/* Store the enum */
+	int *which = (int *)((char *)state->dest + state->theTemplate->offset);
+	*which = (int)child->theTemplate->size;
     }
 
     child->place = notInUse;
 
     state->place = afterChoice;
     return state;
-  }
 }
 
 static void
-sec_asn1d_after_choice
-(
-  sec_asn1d_state *state
-)
+sec_asn1d_after_choice (sec_asn1d_state *state)
 {
-  state->consumed += state->child->consumed;
-  state->child->consumed = 0;
-  state->place = afterEndOfContents;
-  sec_asn1d_pop_state(state);
+    state->consumed += state->child->consumed;
+    state->child->consumed = 0;
+    state->place = afterEndOfContents;
+    sec_asn1d_pop_state(state);
 }
 
 unsigned long
@@ -2461,7 +2451,7 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 
 	/* We should not consume more than we have.  */
 	PORT_Assert (consumed <= len);
-	if( consumed > len ) {
+	if (consumed > len) {
 	    PORT_SetError (SEC_ERROR_BAD_DER);
 	    cx->status = decodeError;
 	    break;
