@@ -329,7 +329,7 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-nsresult cookie_Get(nsInputFileStream strm, char& c) {
+nsresult cookie_Get(nsInputFileStream& strm, char& c) {
 #define BUFSIZE 128
   static char buffer[BUFSIZE];
   static PRInt32 next = BUFSIZE, count = BUFSIZE;
@@ -358,7 +358,7 @@ nsresult cookie_Get(nsInputFileStream strm, char& c) {
  * strip carriage returns and line feeds from end of line
  */
 PRInt32
-cookie_GetLine(nsInputFileStream strm, nsAutoString& aLine) {
+cookie_GetLine(nsInputFileStream& strm, nsString& aLine) {
 
   /* read the line */
   aLine.Truncate();
