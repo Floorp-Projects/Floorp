@@ -272,25 +272,22 @@ ssl_stress()
       if [ $value != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g'`
           start_selfserv
-
-          #FIXME - this is done because NSS 3.2 stressclient did not have the 
-          # -q option - needs to be removed when testing later releases
-          if [ -n "$BC_RELEASE" -a "$BC_RELEASE" = "3.2" -a \
-               -n "$TEST_LEVEL" -a "$TEST_LEVEL" = "2" ] ; then
-              echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose \\"
-              echo "         ${HOSTADDR}"
-              echo "strsclnt started at `date`"
-              strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
-              ret=$?
-          else
-              echo "strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose \\"
-              echo "         ${HOSTADDR}"
-              echo "strsclnt started at `date`"
-              strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
-              ret=$?
+          if [ `uname -n` = "sjsu" ] ; then
+              echo "debugging disapering selfserv... ps -ef | grep selfserv"
+              ps -ef | grep selfserv
           fi
+
+          echo "strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose \\"
+          echo "         ${HOSTADDR}"
+          echo "strsclnt started at `date`"
+          strsclnt -q -p ${PORT} -d . -w nss $cparam $verbose ${HOSTADDR}
+          ret=$?
           echo "strsclnt completed at `date`"
           html_msg $ret $value "${testname}"
+          if [ `uname -n` = "sjsu" ] ; then
+              echo "debugging disapering selfserv... ps -ef | grep selfserv"
+              ps -ef | grep selfserv
+          fi
           kill_selfserv
       fi
   done
