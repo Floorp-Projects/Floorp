@@ -435,6 +435,10 @@ function HideMenus()
 	if (renameFolderMenu)
 		renameFolderMenu.setAttribute("hidden", "true");
 
+  var viewLayoutMenu = document.getElementById("menu_MessagePaneLayout");
+  if (viewLayoutMenu)
+    viewLayoutMenu.setAttribute("hidden", "true");
+
 	var viewMessagesMenu = document.getElementById('viewMessagesMenu');
 	if (viewMessagesMenu)
 		viewMessagesMenu.setAttribute("hidden", "true");
@@ -451,6 +455,10 @@ function HideMenus()
 	if (openMessageMenu)
 		openMessageMenu.setAttribute("hidden", "true");
 
+  var viewSortMenuSeparator = document.getElementById('viewSortMenuSeparator');
+  if (viewSortMenuSeparator)
+    viewSortMenuSeparator.setAttribute("hidden", "true");
+
 	var viewSortMenu = document.getElementById('viewSortMenu');
 	if (viewSortMenu)
 		viewSortMenu.setAttribute("hidden", "true");
@@ -458,6 +466,10 @@ function HideMenus()
 	var emptryTrashMenu = document.getElementById('menu_emptyTrash');
 	if (emptryTrashMenu)
 		emptryTrashMenu.setAttribute("hidden", "true");
+
+  var menuPropertiesSeparator = document.getElementById("editPropertiesSeparator");
+  if (menuPropertiesSeparator)
+    menuPropertiesSeparator.setAttribute("hidden", "true");
 
 	var menuProperties = document.getElementById('menu_properties');
 	if (menuProperties)
@@ -471,7 +483,7 @@ function HideMenus()
 	if (trashSeparator)
 		trashSeparator.setAttribute("hidden", "true");
 
-	var goStartPageSeparator = document.getElementById('goStartPageSeparator');
+	var goStartPageSeparator = document.getElementById('goNextSeparator');
 	if (goStartPageSeparator)
 		goStartPageSeparator.hidden = true;
 

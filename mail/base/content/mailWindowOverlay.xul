@@ -1060,7 +1060,7 @@
       <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
       <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
       <menuitem label="&findPrevCmd.label;"  key="key_findPrev"  accesskey="&findPrevCmd.accesskey;"  observes="cmd_findPrev"/>
-      <menuseparator/>
+      <menuseparator id="editPropertiesSeparator"/>
       <menuitem id="menu_properties" label="&folderPropsCmd.label;"
                 accesskey="&folderPropsCmd.accesskey;"
                 observes="cmd_properties"/>
@@ -1089,7 +1089,7 @@
               <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('mail-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
             </menupopup>
           </menu>
-          <menu id="menu_MessagePane" label="&messagePaneLayoutStyle.label;" accesskey="&messagePaneLayoutStyle.accesskey;">
+          <menu id="menu_MessagePaneLayout" label="&messagePaneLayoutStyle.label;" accesskey="&messagePaneLayoutStyle.accesskey;">
             <menupopup onpopupshowing="InitViewLayoutStyleMenu()">
               <menuitem id="messagePaneClassic" type="radio" label="&messagePaneClassic.label;"
                         accesskey="&messagePaneClassic.accesskey;" oncommand="ChangeMailLayout(kClassicMailLayout);"/>
@@ -1102,7 +1102,9 @@
                         accesskey="&showMessageCmd.accesskey;" oncommand="MsgToggleMessagePane();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
+          
+          <menuseparator id="viewSortMenuSeparator"/>
+
           <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
             <menupopup onpopupshowing="InitViewSortByMenu()">
               <menuitem id="sortByDateMenuitem" type="radio" name="sortby" label="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
@@ -1220,7 +1222,7 @@
             </menupopup>
           </menu>
           <menuseparator id="goNextSeparator"/>
-          <menuitem label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
+          <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
         </menupopup>
         </menu>
 
