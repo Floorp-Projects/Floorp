@@ -157,7 +157,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
 NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument()
 {
     OSStatus status = ::PMBeginDocument(mPrintSettings, mPageFormat, &mPrintingContext);
-    if (status != noErr) return NS_ERROR_GFX_PRINTER_STARTDOC;
+    if (status != noErr) return NS_ERROR_ABORT;
     
     return NS_OK;
 }
@@ -178,12 +178,12 @@ NS_IMETHODIMP nsDeviceContextSpecX::BeginPage()
 {
 	// see http://devworld.apple.com/techpubs/carbon/graphics/CarbonPrintingManager/Carbon_Printing_Manager/Functions/PMSessionBeginPage.html
     OSStatus status = ::PMBeginPage(mPrintingContext, NULL);
-    if (status != noErr) return NS_ERROR_GFX_PRINTER_STARTPAGE;
+    if (status != noErr) return NS_ERROR_ABORT;
     
     ::GetPort(&mSavedPort);
     GrafPtr printingPort;
     status = ::PMGetGrafPtr(mPrintingContext, &printingPort);
-    if (status != noErr) return NS_ERROR_GFX_PRINTER_STARTPAGE;
+    if (status != noErr) return NS_ERROR_ABORT;
     ::SetPort(printingPort);
     return NS_OK;
 }
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
         ::SetPort(mSavedPort);
         mSavedPort = 0;
     }
-    if (status != noErr) return NS_ERROR_GFX_PRINTER_ENDDOC;
+    if (status != noErr) return NS_ERROR_ABORT;
     return NS_OK;
 }
 
