@@ -360,7 +360,7 @@ public:
      */
     class Match {
     public:
-        Match() { MOZ_COUNT_CTOR(Match); }
+        Match() : mRule(nsnull) { MOZ_COUNT_CTOR(Match); }
 
         Match(const Rule* aRule, const Instantiation& aInstantiation)
             : mRule(aRule), mInstantiation(aInstantiation) {
@@ -565,8 +565,15 @@ MatchSet::Insert(Iterator aIterator, const Match& aMatch)
                                    nsnull);
 
         Iterator last = Last();
-        for (Iterator match = First(); match != last; ++match)
-            PL_HashTableAdd(mMatches, &*match, &*match);
+        for (Iterator match = First(); match != last; ++match) {
+            // The sole purpose of the hashtable is to make
+            // determining MatchSet membership an O(1)
+            // operation. Since the linked list is maintaining
+            // storage, we can use a pointer to the Match object
+            // (obtained from the iterator) as the key. We'll just
+            // stuff something non-zero into the table as a value.
+            PL_HashTableAdd(mMatches, match.operator->(), NS_REINTERPRET_CAST(void*, 1));
+        }
     }
 
     MatchList* newelement = new MatchList();
@@ -581,7 +588,7 @@ MatchSet::Insert(Iterator aIterator, const Match& aMatch)
         aIterator.mCurrent->mPrev = newelement;
 
         if (mMatches)
-            PL_HashTableAdd(mMatches, &*aIterator, &*aIterator);
+            PL_HashTableAdd(mMatches, &newelement->mMatch, NS_REINTERPRET_CAST(void*, 1));
     }
     return aIterator;
 }
@@ -600,7 +607,7 @@ MatchSet::Contains(const Rule* aRule, const Instantiation& aInstantiation) const
 {
     Match match(aRule, aInstantiation);
     if (mMatches) {
-        return PL_HashTableLookup(mMatches, &match) != nsnull;
+        return PL_HashTableLookup(mMatches, &match) != 0;
     }
     else {
         ConstIterator last = Last();
@@ -639,7 +646,7 @@ MatchSet::Erase(Iterator aIterator)
     --mCount;
 
     if (mMatches)
-        PL_HashTableRemove(mMatches, &*aIterator);
+        PL_HashTableRemove(mMatches, aIterator.operator->());
 
     ++result;
     aIterator.mCurrent->mNext->mPrev = aIterator.mCurrent->mPrev;
