@@ -90,7 +90,7 @@ interface nsIImapMailFolderSink : nsISupports {
   /**
    * The IMAP quota root for this folder, as returned by the GETQUOTAROOT IMAP command.
    */
-  attribute ACstring folderQuotaRoot;
+  attribute ACString folderQuotaRoot;
 
   /**
    * Used space, in kilobytes, on this folder's quota root.
