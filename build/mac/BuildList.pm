@@ -84,6 +84,9 @@ sub BuildMozilla()
 		
 		BuildProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",							"PowerPlant$D.shlb");		
 		MakeAlias(":mozilla:lib:mac:PowerPlant:PowerPlant$D.shlb", "$dist_dir");
+
+		BuildProject(":mozilla:modules:progress:macbuild:ProgressPPC.mcp",					"Progress$D.shlb");
+		MakeAlias(":mozilla:modules:progress:macbuild:Progress$D.shlb", "$dist_dir");
 		
 		BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",								"zlib$D.shlb");
 		MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb", "$dist_dir");
@@ -134,15 +137,15 @@ sub BuildMozilla()
 		
 		if ( $main::MOZ_LITE == 1 )
 		{
-			BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
-			BuildProject("cmd:macfe:projects:dummies:MakeDummies.mcp",						"Composer$D.o");
+			BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"MailNews$D.o");
+			BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"Composer$D.o");
 			BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Nav_Resources");
 		}
 		else
 		{
 			if ( $main::MOZ_MEDIUM == 1 )
 			{
-				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",						"MailNews$D.o");
+				BuildProject(":mozilla:cmd:macfe:projects:dummies:MakeDummies.mcp",				"MailNews$D.o");
 				BuildProject(":mozilla:cmd:macfe:Composer:build:Composer.mcp",					"Composer$D.o");
 				BuildProject(":mozilla:cmd:macfe:projects:client:Client.mcp", 					"Moz_Resources");
 			}
