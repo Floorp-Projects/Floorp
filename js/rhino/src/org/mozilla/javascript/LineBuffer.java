@@ -92,7 +92,13 @@ final class LineBuffer {
                         && (buffer[offset] != '\u2028')
                         && (buffer[offset] != '\u2029'))
                     { 
-			            return (int) buffer[offset++];
+                        if (Character.getType(buffer[offset])
+                                                    == Character.FORMAT) {
+				            hadCFSinceStringStart = true;
+				            offset++;
+                            continue;
+                        }
+                        return (int) buffer[offset++];
 			        }
 			    offset++;
 			    prevStart = lineStart;
@@ -101,7 +107,7 @@ final class LineBuffer {
 			    return '\n';
 			}
 			if ((buffer[offset] >= 128) 
-				&& Character.getType(buffer[offset]) == Character.FORMAT) {
+				  && (Character.getType(buffer[offset]) == Character.FORMAT)) {
 				hadCFSinceStringStart = true;
 				offset++;
 			}
