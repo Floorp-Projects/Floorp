@@ -40,6 +40,7 @@
 #include "nsDOMEvent.h"
 #include "nsIFormControl.h"
 #include "nsFormFrame.h"
+#include "nsIFrameManager.h"
 #include "nsIContent.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -103,6 +104,8 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #define EMPTY_DOCUMENT "about:blank"
 #define PASSWORD_REPLACEMENT_CHAR '*'
+
+//#define NEW_WEBSHELL_INTERFACES
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
@@ -579,8 +582,51 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
       mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
     }
     mCreatingViewer=PR_TRUE;
+
+#ifdef NEW_WEBSHELL_INTERFACES
+    // create document
+    nsIDocument *doc;
+    rv = NS_NewHTMLDocument(&doc);
+    if (NS_FAILED(rv)) { return rv; }
+    if (!doc) { return NS_ERROR_NULL_POINTER; }
+
+    // create document content
+    nsCOMPtr<nsIHTMLContent> htmlElement;
+    nsCOMPtr<nsIHTMLContent> headElement;
+    nsCOMPtr<nsIHTMLContent> bodyElement;
+      // create the root
+    rv = NS_NewHTMLHtmlElement(getter_AddRefs(htmlElement), nsHTMLAtoms::html);
+    if (NS_FAILED(rv)) { return rv; }
+    if (!htmlElement) { return NS_ERROR_NULL_POINTER; }
+      // create the head
+    nsIAtom* headAtom = NS_NewAtom("head");
+    if (!headAtom) { return NS_ERROR_OUT_OF_MEMORY; }
+    rv = NS_NewHTMLHeadElement(getter_AddRefs(headElement), headAtom);
+    NS_RELEASE(headAtom);
+    if (NS_FAILED(rv)) { return rv; }
+    if (!headElement) { return NS_ERROR_NULL_POINTER; }
+    headElement->SetDocument(doc, PR_FALSE);
+      // create the body
+    rv = NS_NewHTMLBodyElement(getter_AddRefs(bodyElement), nsHTMLAtoms::body);
+    if (NS_FAILED(rv)) { return rv; }
+    if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
+    bodyElement->SetDocument(doc, PR_FALSE);
+      // put the head and body into the root
+    rv = htmlElement->AppendChildTo(headElement, PR_FALSE);
+    if (NS_FAILED(rv)) { return rv; }
+    rv = htmlElement->AppendChildTo(bodyElement, PR_FALSE);
+    if (NS_FAILED(rv)) { return rv; }
+    
+    // load the document into the webshell
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+    if (!domDoc) { return NS_ERROR_NULL_POINTER; }
+    nsCOMPtr<nsIDOMElement> htmlDOMElement = do_QueryInterface(htmlElement);
+    if (!htmlDOMElement) { return NS_ERROR_NULL_POINTER; }
+    rv = mWebShell->SetDocument(domDoc, htmlDOMElement);
+#else
     nsAutoString url(EMPTY_DOCUMENT);
     rv = mWebShell->LoadURL(url.GetUnicode());  // URL string with a default nsnull value for post Data
+#endif
 
     // force an incremental reflow of the text control
     /* XXX: this is to get the view/webshell positioned correctly.
@@ -1058,14 +1104,21 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
                   webBounds.x, webBounds.y,
-                  webBounds.width, webBounds.height);
+                  webBounds.width, webBounds.height,
+                  nsScrollPreference_kAuto, // auto scrolling
+                  PR_FALSE                  // turn off plugin hosting
+                  );
   NS_RELEASE(widget);
 
+#ifdef NEW_WEBSHELL_INTERFACES
+  mWebShell->SetDocLoaderObserver(mTempObserver);
+#else
   nsCOMPtr<nsIDocumentLoader> docLoader;
   mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
   if (docLoader) {
     docLoader->AddObserver(mTempObserver);
   }
+#endif
   mWebShell->Show();
   return NS_OK;
 }
@@ -1653,6 +1706,15 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
           if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
           textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
           textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
+          nsCOMPtr<nsIPresShell> presShell;
+          rv = aPresContext.GetShell(getter_AddRefs(presShell));
+          if (NS_FAILED(rv)) { return rv; }
+          if (!presShell) { return NS_ERROR_NULL_POINTER; }
+          nsCOMPtr<nsIFrameManager> frameManager;
+          rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
+          if (NS_FAILED(rv)) { return rv; }
+          if (!frameManager) { return NS_ERROR_NULL_POINTER; }
+          frameManager->SetPrimaryFrameFor(content, textFrame);
         
           rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
           if (NS_FAILED(rv)) { return rv; }
