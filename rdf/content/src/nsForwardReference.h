@@ -32,9 +32,9 @@ public:
     virtual ~nsForwardReference() {}
 
     /**
-     * Priority codes returned from GetPriority()
+     * Priority codes returned from GetPhase()
      */
-    enum State {
+    enum Phase {
         /** A dummy marker, used to indicate unstarted resolution */
         eStart,
 
@@ -56,16 +56,16 @@ public:
      * reference in a lower priority. This variable specifies this
      * ordering. The last Priority is guaranteed to be eDone.
      */
-    static const State kPasses[];
+    static const Phase kPasses[];
 
     /**
      * Get the state in which the forward reference should be resolved.
      * 'eConstruction' references are all resolved before 'eHookup' references
      * are resolved.
      *
-     * @return the State in which the reference needs to be resolved
+     * @return the Phase in which the reference needs to be resolved
      */
-    virtual State GetState() = 0;
+    virtual Phase GetPhase() = 0;
 
     /**
      * Result codes returned from Resolve()
