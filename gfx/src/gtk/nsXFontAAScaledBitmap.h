@@ -98,6 +98,7 @@ protected:
 #ifdef DEBUG
   void dump_XImage_blue_data(XImage *ximage);
 #endif
+  static PRBool DisplayIsLocal(Display *);
 
 protected:
   PRBool       mAlreadyLoaded;

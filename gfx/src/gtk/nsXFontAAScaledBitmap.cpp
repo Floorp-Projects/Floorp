@@ -118,6 +118,17 @@ double gAASBDarkTextGain = 0.6;
 PRUint8 gAASBLightTextMinValue = 64;
 double gAASBLightTextGain = 1.3;
 
+PRBool
+nsXFontAAScaledBitmap::DisplayIsLocal(Display *aDisplay)
+{
+  // if shared memory works then the display is local
+  if (gdk_get_use_xshm())
+    return PR_TRUE;
+
+  return PR_FALSE;
+
+}
+
 void
 nsXFontAAScaledBitmap::DrawText8(GdkDrawable *aDrawable, GdkGC *aGC,
                                  PRInt32 aX, PRInt32 aY,
@@ -468,6 +479,11 @@ nsXFontAAScaledBitmap::InitGlobals(Display *aDisplay, int aScreen)
   Window root_win;
 
   sDisplay = aDisplay; // used to free shared sBackgroundGC
+
+  // if not a local display then might be slow so don't run
+  if (!DisplayIsLocal(aDisplay)) {
+    goto cleanup_and_return;
+  }
 
   root_win = RootWindow(sDisplay, aScreen);
   sBackgroundGC = XCreateGC(sDisplay, root_win, 0, NULL);
