@@ -5911,7 +5911,7 @@ else
 struct X { int i; };
                                struct Y { int i; };
 int main() {
-X x; Y*y = reinterpret_cast<Y*>(&x);
+X x; X*const z = &x;Y*y = reinterpret_cast<Y*>(z);
 ; return 0; }
 EOF
 if { (eval echo configure:5918: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
