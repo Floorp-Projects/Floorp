@@ -62,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListen
 ////////////////////////////////////////////////////////////////////////
 
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
-  :mAccessKeyDown(PR_FALSE), mAccessKey(-1)
+  :mAccessKeyDown(PR_FALSE), mAccessKeyFocuses(PR_FALSE), mAccessKey(-1)
 {
   NS_INIT_REFCNT();
   mMenuBarFrame = aMenuBar;
@@ -92,6 +92,8 @@ void nsMenuBarListener::InitAccessKey()
   if (NS_SUCCEEDED(rv) && prefs)
   {
     rv = prefs->GetIntPref("ui.key.menuAccessKey", &mAccessKey);
+    rv |= prefs->GetBoolPref("ui.key.menuAccessKeyFocuses",
+                             &mAccessKeyFocuses);
   }
 #ifdef DEBUG_akkana
   if (NS_FAILED(rv))
@@ -107,7 +109,7 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {  
   InitAccessKey();
 
-  if (mAccessKey)
+  if (mAccessKey && mAccessKeyFocuses)
   {
     // On a press of the ALT key by itself, we toggle the menu's 
     // active/inactive state.
@@ -206,7 +208,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
       mAccessKeyDown = PR_FALSE;
     }
 
-    if (theChar == mAccessKey || access) {
+    if (theChar == (PRUint32)mAccessKey || access) {
       // No other modifiers can be down.
       // Especially CTRL.  CTRL+ALT == AltGR, and
       // we'll fuck up on non-US enhanced 102-key

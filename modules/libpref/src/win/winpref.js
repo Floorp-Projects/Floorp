@@ -34,6 +34,7 @@ pref("news.thread_columns_win",             "");
 pref("category.thread_columns_win",         "");
 pref("news.category_columns_win",           "");
 
+pref("ui.key.menuAccessKeyFocuses", true);
 
 pref("font.name.serif.ar", "Times New Roman");
 pref("font.name.sans-serif.ar", "Arial");
