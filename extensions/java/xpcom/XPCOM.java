@@ -66,4 +66,44 @@ public final class XPCOM {
   public static native void FinalizeStub(Object thisObj);
 
   public static native int nsWriteSegmentFun(int ptr, Object aInStream, int aClosure, byte[] aFromSegment, int aToOffset, int aCount);
+
+
+  /*  Utility functions */
+
+  // Given an interface, this will construct the name of the IID field (such as
+  // NS_ISUPPORTS_IID) and return its value.
+  public static String getInterfaceIID(Class aInterface)
+  {
+    // Get short class name (i.e. "bar", not "org.blah.foo.bar")
+    StringBuffer iidName = new StringBuffer();
+    String fullClassName = aInterface.getName();
+    int index = fullClassName.lastIndexOf(".");
+    String className = index > 0 ? fullClassName.substring(index + 1) :
+                                    fullClassName;
+
+    // Create iid field name
+    if (className.startsWith("ns")) {
+      iidName.append("NS_");
+      iidName.append(className.substring(2).toUpperCase());
+    } else {
+      iidName.append(className.toUpperCase());
+    }
+    iidName.append("_IID");
+
+    String iid;
+    try {
+      Field iidField = aInterface.getDeclaredField(iidName.toString());
+      iid = (String) iidField.get(null);
+    } catch (NoSuchFieldException e) {
+      // Class may implement non-Mozilla interfaces, which would not have an
+      // IID method.  In that case, just return an emptry string.
+      iid = "";
+    } catch (IllegalAccessException e) {
+      // XXX Should be using a logging service, such as java.util.logging
+      System.err.println("ERROR: Could not get field " + iidName.toString());
+      iid = "";
+    }
+
+    return iid;
+  }
 }
