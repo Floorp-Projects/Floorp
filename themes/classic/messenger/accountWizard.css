@@ -40,3 +40,10 @@
 #fullName {
   margin-right: 15px;
 }
+.serverLabel {
+  width: 8em;
+}
+
+.serverDataBox {
+  margin-left: 15px;
+}
