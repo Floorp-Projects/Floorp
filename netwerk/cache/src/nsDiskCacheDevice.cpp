@@ -633,6 +633,14 @@ nsDiskCacheDevice::Init()
     gFileTransportService = do_GetService("@mozilla.org/network/file-transport-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
     
+    // delete "Cache.Trash" folder
+    nsCOMPtr<nsIFile> cacheTrashDir;
+    rv = mCacheDirectory->Clone(getter_AddRefs(cacheTrashDir));
+    if (NS_FAILED(rv))  return rv;
+    rv = cacheTrashDir->SetLeafName("Cache.Trash");
+    if (NS_FAILED(rv))  return rv;
+    (void) cacheTrashDir->Delete(PR_TRUE);  // ignore errors, we tried...
+
     // XXX read in persistent information about the cache. this can fail, if
     // no cache directory has ever existed before.
     rv = readCacheMap();
@@ -1502,7 +1510,45 @@ nsresult nsDiskCacheDevice::clobberDiskCache()
     
     // recursively delete the disk cache directory.
     rv = mCacheDirectory->Delete(PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        // try moving it aside
+        
+        // get parent directory of cache directory
+        nsCOMPtr<nsIFile> cacheParentDir;
+        rv = mCacheDirectory->GetParent(getter_AddRefs(cacheParentDir));
+        if (NS_FAILED(rv))  return rv;
+        
+        // create "Cache.Trash" directory if necessary
+        nsCOMPtr<nsIFile> oldCacheDir;
+        rv = cacheParentDir->Clone(getter_AddRefs(oldCacheDir));
+        if (NS_FAILED(rv))  return rv;
+        rv = oldCacheDir->Append("Cache.Trash");
+        if (NS_FAILED(rv))  return rv;
+        
+        PRBool exists = PR_FALSE;
+        rv = oldCacheDir->Exists(&exists);
+        if (NS_FAILED(rv))  return rv;
+        
+        if (!exists) {
+            // create the "Cache.Trash" directory
+            rv = oldCacheDir->Create(nsIFile::DIRECTORY_TYPE,0777);
+            if (NS_FAILED(rv))  return rv;
+        }
+        
+        // create a directory with unique name to contain existing cache directory
+        rv = oldCacheDir->Append("Cache");
+        if (NS_FAILED(rv))  return rv;
+        rv = oldCacheDir->CreateUnique(nsnull,nsIFile::DIRECTORY_TYPE, 0777); 
+        if (NS_FAILED(rv))  return rv;
+        
+        // move existing cache directory into profileDir/Cache.Trash/CacheUnique
+        nsCOMPtr<nsIFile> existingCacheDir;
+        rv = mCacheDirectory->Clone(getter_AddRefs(existingCacheDir));
+        if (NS_FAILED(rv))  return rv;
+        rv = existingCacheDir->MoveTo(oldCacheDir, nsnull);
+        if (NS_FAILED(rv))  return rv;
+    }
+    
     rv = mCacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
     if (NS_FAILED(rv)) return rv;
     

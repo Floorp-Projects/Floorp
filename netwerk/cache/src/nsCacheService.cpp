@@ -433,7 +433,13 @@ nsCacheService::CreateDiskDevice()
 
     nsresult rv = mDiskDevice->Init();
     if (NS_FAILED(rv)) {
-        // XXX log error
+#if DEBUG
+        printf("###\n");
+        printf("### mDiskDevice->Init() failed (0x%.8x)\n", rv);
+        printf("###    - disabling disk cache for this session.\n");
+        printf("###\n");
+#endif        
+        mEnableDiskDevice = PR_FALSE;
         delete mDiskDevice;
         mDiskDevice = nsnull;
     }
@@ -732,27 +738,35 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
 {
     nsCacheDevice * device = entry->CacheDevice();
     if (device)  return device;
+    nsresult rv = NS_OK;
 
     if (entry->IsStreamData() && entry->IsAllowedOnDisk() && mEnableDiskDevice) {
         // this is the default
         if (!mDiskDevice) {
-            nsresult rv = CreateDiskDevice();
-            if (NS_FAILED(rv))
-                return nsnull;
+            rv = CreateDiskDevice();  // ignore the error (check for mDiskDevice instead)
         }
 
-        device = mDiskDevice;
-    } else if (mEnableMemoryDevice) {
+        if (mDiskDevice) {
+            entry->MarkBinding();  // XXX
+            rv = mDiskDevice->BindEntry(entry);
+            entry->ClearBinding(); // XXX
+            if (NS_SUCCEEDED(rv))
+                device = mDiskDevice;
+        }
+    }
+     
+    // if we can't use mDiskDevice, try mMemoryDevice
+    if (!device && mEnableMemoryDevice) {
         NS_ASSERTION(entry->IsAllowedInMemory(), "oops.. bad flags");
-        device = mMemoryDevice;
+        
+        entry->MarkBinding();  // XXX
+        rv = mMemoryDevice->BindEntry(entry);
+        entry->ClearBinding(); // XXX
+        if (NS_SUCCEEDED(rv))
+            device = mMemoryDevice;
     }
 
     if (device == nsnull)  return nsnull;
-
-	entry->MarkBinding(); // XXX
-    nsresult  rv = device->BindEntry(entry);
-    entry->ClearBinding(); // XXX
-    if (NS_FAILED(rv)) return nsnull;
 
     entry->SetCacheDevice(device);
     return device;
