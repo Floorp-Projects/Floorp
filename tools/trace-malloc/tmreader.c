@@ -307,7 +307,7 @@ static PLHashEntry *callsite_allocentry(void *pool, const void *key)
     return (PLHashEntry*)arena_alloc(pool, sizeof(tmcallsite));
 }
 
-static  init_graphnode(tmgraphnode* node)
+static void init_graphnode(tmgraphnode* node)
 {
     node->in = node->out = NULL;
     node->up = node->down = node->next = NULL;
@@ -639,6 +639,8 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
             hash = hash_serial(key);
             hep = PL_HashTableRawLookup(tmr->callsites, hash, key);
             he = *hep;
+
+            /* there should not be an entry here! */
             PR_ASSERT(!he);
             if (he) exit(2);
 
@@ -684,7 +686,7 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
           case TM_EVENT_REALLOC: {
             tmcallsite *site;
             uint32 size, oldsize;
-            double delta, sqdelta, sqszdelta;
+            double delta, sqdelta, sqszdelta = 0;
             tmgraphnode *comp, *lib;
             tmmethodnode *meth;
 
