@@ -850,15 +850,16 @@ nsSetupTypeDlg::DeleteOldInst()
 {
     DUMP("DeleteOldInst");
 
+    const int MAXCHARS = 64; // Maximum chars per line in Delete Dialog
+    const int MAXLINES = 20; // Maximum lines in Delete Dialog
     int err = OK;
     struct stat dummy;
     char path[MAXPATHLEN];
     GtkWidget *label = NULL;
     GtkWidget *deleteBtn = NULL; /* delete button */
     GtkWidget *cancelBtn = NULL; /* cancel button */
-    int numLines = 0, i;
-    char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL;
-    char msgChunk[65];
+    char *msg = NULL, *msgPtr = NULL, *msgChunkPtr = NULL, *msgEndPtr = NULL;
+    char msgChunk[MAXCHARS+1];
     nsLegacyCheck *currLC = NULL;
 
     currLC = sLegacyChecks;
