@@ -81,7 +81,7 @@ class nsPrefMigration: public nsIPrefMigration, public nsIShutdownListener
                               const char *newName); 
 
       nsresult DoSpecialUpdates(nsFileSpec profilePath);
-      nsresult RenameCookiesFile(nsFileSpec profilePath);
+      nsresult Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName);
       nsresult RenameAndMoveFilterFiles(nsFileSpec profilePath);
   
       nsresult SetPremigratedCharPref(const char *pref_name, char *value);

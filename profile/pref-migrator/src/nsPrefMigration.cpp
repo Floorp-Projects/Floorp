@@ -48,20 +48,24 @@
 #define MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define SUMMARY_SUFFIX_IN_4x ".summary"
 #define COOKIES_FILE_NAME_IN_4x "cookies"
+#define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #elif defined(XP_MAC)
 #define MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x " Rules"   
 #define SUMMARY_SUFFIX_IN_4x ".snm"
-#define COOKIES_FILE_NAME_IN_4x "MagicCookie" 
+#define COOKIES_FILE_NAME_IN_4x "MagicCookie"
+#define BOOKMARKS_FILE_NAME_IN_4x "Bookmarks.html"
 #else /* XP_PC */
 #define MAIL_FILTER_FILE_NAME_IN_4x "rules.dat"
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #define COOKIES_FILE_NAME_IN_4x "cookies.txt"
+#define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.htm"
 #endif /* XP_UNIX */
 
 #define SUMMARY_SUFFIX_IN_5x ".msf"
 #define COOKIES_FILE_NAME_IN_5x "cookies.txt"
 #define MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
+#define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.htm"
 
 #define PREMIGRATION_PREFIX "premigration"
 #define PREF_MAIL_DIRECTORY "mail.directory"
@@ -908,18 +912,20 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   fsStream << PREF_FILE_HEADER_STRING << nsEndl ;
 
   // rename the cookies file, but only if we need to.
-  if (PL_strcmp(COOKIES_FILE_NAME_IN_4x,COOKIES_FILE_NAME_IN_5x)) {
-    rv = RenameCookiesFile(profilePath);
-    if (NS_FAILED(rv)) return rv;
-  }
+  rv = Rename4xFileAfterMigration(profilePath,COOKIES_FILE_NAME_IN_4x,COOKIES_FILE_NAME_IN_5x);
+  if (NS_FAILED(rv)) return rv;
 
+  // rename the bookmarks file, but only if we need to.
+  rv = Rename4xFileAfterMigration(profilePath,BOOKMARKS_FILE_NAME_IN_4x,BOOKMARKS_FILE_NAME_IN_5x);
+  if (NS_FAILED(rv)) return rv;
+  
 #ifdef MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x
   rv = RenameAndMoveFilterFiles(profilePath);
   if (NS_FAILED(rv)) return rv;
 #endif /* MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
      
   fsStream.close();
-                  
+
   return rv;
 }
 
@@ -940,15 +946,20 @@ nsPrefMigration::RenameAndMoveFilterFiles(nsFileSpec profilePath)
 }
 
 nsresult
-nsPrefMigration::RenameCookiesFile(nsFileSpec profilePath)
+nsPrefMigration::Rename4xFileAfterMigration(nsFileSpec profilePath, const char *oldFileName, const char *newFileName)
 {
-  nsFileSpec cookiesFile(profilePath);
+  // if they are the same, don't bother to rename the file.
+  if (PL_strcmp(oldFileName, newFileName) == 0) {
+    return NS_OK;
+  }
+               
+  nsFileSpec file(profilePath);
 
-  cookiesFile += COOKIES_FILE_NAME_IN_4x;
+  file += oldFileName;
   
   // make sure it exists before you try to rename it
-  if (cookiesFile.Exists()) {
-    cookiesFile.Rename(COOKIES_FILE_NAME_IN_5x);
+  if (file.Exists()) {
+    file.Rename(newFileName);
   }
   return NS_OK;
 }
