@@ -1,68 +1,70 @@
-<!ENTITY pane.title                 "Advanced">
-<!ENTITY receiptSettings.label      "Return Receipts">
+<!ENTITY pane.title                    "Advanced">
 
 <!-- Privacy Settings -->
-<!ENTITY privacyTitle.label "Privacy">
-<!ENTITY privacyFeature.label "Configure features to protect your privacy:">
-<!ENTITY disableImageInMailNews.label       "Block loading of remote images in mail messages.">
-<!ENTITY disableImageInMailNews.accesskey   "B">
-<!ENTITY disableCookieForMailNews.label "Cookies">
-<!ENTITY disableCookieForMailNews.accesskey "C">
-<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript in mail messages.">
-<!ENTITY enbJsCheckMailNews.accesskey "J">
-<!ENTITY enbPluginCheckMailNews.label     "Plugins">
-<!ENTITY enbPluginCheckMailNews.accesskey "p">
+<!ENTITY privacyTitle.label            "Privacy">
+<!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages.">
+<!ENTITY disableImageInMailNews.accesskey "B">
+<!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages.">
+<!ENTITY enbJsCheckMailNews.accesskey  "J">
 
 <!-- Password Manager -->
-<!ENTITY  signonHeader.label          "Passwords">
-<!ENTITY  signonDescription.label     "Manage stored mail server passwords:">
-<!ENTITY  viewSignons.label           "Manage Stored Passwords">
-<!ENTITY  viewSignons.accesskey       "e">
+<!ENTITY signonHeader.label            "Passwords">
+<!ENTITY signonDescription.label       "Manage stored mail server passwords:">
+<!ENTITY viewSignons.label             "Manage Stored Passwords">
+<!ENTITY viewSignons.accesskey         "e">
 
 <!-- Return Receipts -->
-
-<!ENTITY returnReceiptsDescription.label "Configure Return Receipts.">
+<!ENTITY receiptSettings.label         "Return Receipts">
+<!ENTITY requestReceipt.label          "When sending messages, always request a return receipt">
+<!ENTITY requestReceipt.accesskey      "W">
+<!ENTITY receiptArrive.label           "When a receipt arrives:">
+<!ENTITY leaveIt.label                 "Leave it in my Inbox">
+<!ENTITY leaveIt.accesskey             "i">
+<!ENTITY moveToSent.label              "Move it to my &quot;Sent&quot; folder">
+<!ENTITY moveToSent.accesskey          "m">
+<!ENTITY requestMDN.label              "When I receive a request for a return receipt:">
+<!ENTITY never.label                   "Never send a return receipt">
+<!ENTITY never.accesskey               "n">
+<!ENTITY returnSome.label              "Allow return receipts for some messages">
+<!ENTITY returnSome.accesskey          "r">
+<!ENTITY notInToCc.label               "If I'm not in the To or Cc of the message:">
+<!ENTITY notInToCc.accesskey           "f">
+<!ENTITY outsideDomain.label           "If the sender is outside my domain:">
+<!ENTITY outsideDomain.accesskey       "t">
+<!ENTITY otherCases.label              "In all other cases:">
+<!ENTITY otherCases.accesskey          "a">
+<!ENTITY askMe.label                   "Ask me">
+<!ENTITY alwaysSend.label              "Always send">
+<!ENTITY neverSend.label               "Never send">
 
 <!-- Address book collection -->
-<!ENTITY emailCollectiontitle.label	"Email Address Collection">
-<!ENTITY emailCollectionPicker.label    "Add email addresses to my:">
-<!ENTITY emailCollectiontext.label	"Email addresses from outgoing messages can be automatically added to a local address book.">
+<!ENTITY emailCollectiontitle.label    "Email Address Collection">
+<!ENTITY emailCollectionPicker.label   "Add email addresses to my:">
+<!ENTITY emailCollectiontext.label     "Email addresses from outgoing messages can be automatically added to a local address book.">
 
-<!--LOCALIZATION NOTE : FILE The Proxies preferences dialog -->
-<!ENTITY  lHeader.label                 "Connection">
-<!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet:">
-<!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
-<!ENTITY  directTypeRadio.accesskey     "d">
-<!ENTITY  manualTypeRadio.label         "Manual proxy configuration">
-<!ENTITY  manualTypeRadio.accesskey     "m">
-<!ENTITY  autoTypeRadio.label           "Automatic proxy configuration URL:">
-<!ENTITY  autoTypeRadio.accesskey       "a">
-<!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
-<!ENTITY  configAutoconfigText.accesskey "u">
-<!ENTITY  reload.label                  "Reload">
-<!ENTITY  reload.accesskey              "l">
-<!ENTITY  ftp.label                     "FTP Proxy:">
-<!ENTITY  ftp.accesskey                 "f">
-<!ENTITY  gopher.label                  "Gopher Proxy:">
-<!ENTITY  gopher.accesskey              "g">
-<!ENTITY  http.label                    "HTTP Proxy:">
-<!ENTITY  http.accesskey                "h">
-<!ENTITY  ssl.label                     "SSL Proxy:">
-<!ENTITY  ssl.accesskey                 "s">
-<!ENTITY  socks.label                   "SOCKS Host:">
-<!ENTITY  socks.accesskey               "c">
-<!ENTITY  socks4.label                  "SOCKS v4">
-<!ENTITY  socks4.accesskey              "k">
-<!ENTITY  socks5.label                  "SOCKS v5">
-<!ENTITY  socks5.accesskey              "v">
-<!ENTITY  port.label                    "Port:">
-<!ENTITY  HTTPport.accesskey            "p">
-<!ENTITY  SSLport.accesskey             "o">
-<!ENTITY  FTPport.accesskey             "r">
-<!-- No accesskey for gopher (':' doesn't go well) - mpt's going to redesign the window -->
-<!ENTITY  gopherPort.accesskey          "">
-<!ENTITY  SOCKSport.accesskey           "t">
-<!ENTITY  noproxy.label                 "No Proxy for:">
-<!ENTITY  noproxy.accesskey             "n">
-<!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz">
-
+<!ENTITY lHeader.label                 "Connection">
+<!ENTITY directTypeRadio.label         "Direct connection to the Internet">
+<!ENTITY directTypeRadio.accesskey     "d">
+<!ENTITY manualTypeRadio.label         "Manual proxy configuration">
+<!ENTITY manualTypeRadio.accesskey     "m">
+<!ENTITY http.label                    "HTTP Proxy:">
+<!ENTITY http.accesskey                "h">
+<!ENTITY ssl.label                     "SSL Proxy:">
+<!ENTITY ssl.accesskey                 "s">
+<!ENTITY socks.label                   "SOCKS Host:">
+<!ENTITY socks.accesskey               "c">
+<!ENTITY socks4.label                  "SOCKS v4">
+<!ENTITY socks4.accesskey              "k">
+<!ENTITY socks5.label                  "SOCKS v5">
+<!ENTITY socks5.accesskey              "v">
+<!ENTITY port.label                    "Port:">
+<!ENTITY HTTPport.accesskey            "p">
+<!ENTITY SSLport.accesskey             "o">
+<!ENTITY SOCKSport.accesskey           "t">
+<!ENTITY noproxy.label                 "No Proxy for:">
+<!ENTITY noproxy.accesskey             "n">
+<!ENTITY noproxyExplain.label          "Example: .mozilla.org, .net.nz">
+<!ENTITY autoTypeRadio.label           "Automatic proxy configuration URL:">
+<!ENTITY autoTypeRadio.accesskey       "a">
+<!ENTITY reload.label                  "Reload">
+<!ENTITY reload.accesskey              "l">

@@ -39,13 +39,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
-<!DOCTYPE overlay [
-  <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/pref-advanced.dtd" > %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://messenger/locale/pref-receipts.dtd" > %dtd2;
-]>
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-advanced.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -80,11 +74,9 @@
   <vbox id="expanderCategories" class="listBox settingsBox" flex="1" style="overflow: auto;">
     
     <!-- Privacy Settings -->
-      
     <expander id="privacySettings" label="&privacyTitle.label;" open="true" persist="open" clearhidden="true">
-      <label class="expanderDescription" value="&privacyFeature.label;" flex="1"/>
       
-      <vbox id="contentEnablingBox" class="indent">
+      <vbox id="contentEnablingBox" align="start">
 
         <checkbox id="networkImageDisableImagesInMailNews" 
                   label="&disableImageInMailNews.label;" accesskey="&disableImageInMailNews.accesskey;"
@@ -95,23 +87,12 @@
                   label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
                   prefstring="javascript.allow.mailnews"/>
 
-        <!-- thunderbird doesn't support cookies or plugins so these options don't make sense 
-        
-        <checkbox id="networkDisableCookieForMailNews"
-                  label="&disableCookieForMailNews.label;" accesskey="&disableCookieForMailNews.accesskey;"
-                  preftype="bool" prefinverted="true" prefstring="network.cookie.disableCookieForMailNews"/>
-        <checkbox id="pluginAllowMailNews"
-                  label="&enbPluginCheckMailNews.label;" accesskey="&enbPluginCheckMailNews.accesskey;"
-                  pref="true" preftype="bool" prefstring="mailnews.message_display.allow.plugins"
-                  prefattribute="checked"/>
-        -->
-
       </vbox>      
     </expander>  
 
     <!-- Password management -->
     <expander id="passwordManagement" label="&signonHeader.label;" open="true" persist="open" clearhidden="true">
-      <hbox pack="end">
+      <hbox align="center" pack="end">
         <label class="expanderDescription" value="&signonDescription.label;" flex="1"/>
         <button label="&viewSignons.label;" accesskey="&viewSignons.accesskey;"
                 oncommand="editPasswords();"
@@ -120,10 +101,10 @@
       </hbox>
     </expander>
 
-    <!-- Email Collection  --> 
+    <!-- Email Collection --> 
     <expander id="emailCollection" label="&emailCollectiontitle.label;" persist="open" clearhidden="true">
       <description flex="1">&emailCollectiontext.label;</description>
-      <hbox align="center">
+      <hbox align="center" class="indent">
         <checkbox id="emailCollectionOutgoing" label="&emailCollectionPicker.label;" prefstring="mail.collect_email_address_outgoing"/>
         <menulist id="localDirectoriesList" preftype="string" prefstring="mail.collect_addressbook">
           <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory" sortActive="true"
@@ -140,81 +121,76 @@
     </expander>
 
     <!-- Return Receipts -->
-    <expander id="returnReceipts" label="&receiptSettings.label;" persist="open" clearhidden="true">       
-      <label class="expanderDescription" value="&returnReceiptsDescription.label;" flex="1"/>
+    <expander id="returnReceipts" label="&receiptSettings.label;" persist="open" clearhidden="true">
 
-      <vbox id="returnReceiptSettings" class="indent">
+      <vbox id="returnReceiptSettings" align="start">
         <checkbox id="alwaysRequest" label="&requestReceipt.label;"
                   prefstring="mail.receipt.request_return_receipt_on"
                   accesskey="&requestReceipt.accesskey;"/>
-
-        <vbox id="receiptArrive">
-          <description>&receiptArrive.label;</description>
-          <radiogroup id="receiptFolder" prefstring="mail.incorporate.return_receipt">
-            <radio value="0" label="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
-            <radio value="1" label="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/> 
-          </radiogroup>
-        </vbox>
-
-        <vbox id="receiptRequest">
-          <description>&requestMDN.label;</description>
-          <radiogroup id="receiptSend" preftype="bool" prefstring="mail.mdn.report.enabled" oncommand="EnableDisableAllowedReceipts();">
-            <radio value="false" label="&never.label;" accesskey="&never.accesskey;"/>
-            <radio value="true" label="&returnSome.label;" accesskey="&returnSome.accesskey;"/> 
-          </radiogroup>
-
-          <hbox id="receiptSendIf" class="indent">
-            <grid>
-              <columns><column/><column/></columns>
-              <rows>
-                <row align="center">
-                  <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" 
-                         control="notInToCcPref" value="&notInToCc.label;"/>
-                  <menulist id="notInToCcPref" prefstring="mail.mdn.report.not_in_to_cc">
-                    <menupopup>
-                      <menuitem value="0" label="&neverSend.label;"/>
-                      <menuitem value="1" label="&alwaysSend.label;"/>
-                      <menuitem value="2" label="&askMe.label;"/>
-                    </menupopup>
-                  </menulist>
-                </row>
-                <row align="center">
-                  <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;"
-                         control="outsideDomainPref" value="&outsideDomain.label;"/>
-                  <menulist id="outsideDomainPref" prefstring="mail.mdn.report.outside_domain">
-                    <menupopup>
-                      <menuitem value="0" label="&neverSend.label;"/>
-                      <menuitem value="1" label="&alwaysSend.label;"/>
-                      <menuitem value="2" label="&askMe.label;"/>
-                    </menupopup>
-                  </menulist>
-                </row>
-                <row align="center">
-                  <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref"
-                         value="&otherCases.label;"/>
-                  <menulist id="otherCasesPref" prefstring="mail.mdn.report.other">
-                    <menupopup>
-                      <menuitem value="0" label="&neverSend.label;"/>
-                      <menuitem value="1" label="&alwaysSend.label;"/>
-                      <menuitem value="2" label="&askMe.label;"/>
-                    </menupopup>
-                  </menulist>
-                </row>
-              </rows>
-            </grid>
-          </hbox>
-        </vbox>
       </vbox>
+
+      <description>&receiptArrive.label;</description>
+      <radiogroup id="receiptFolder" class="indent" prefstring="mail.incorporate.return_receipt">
+        <radio value="0" label="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
+        <radio value="1" label="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/> 
+      </radiogroup>
+
+      <description>&requestMDN.label;</description>
+      <radiogroup id="receiptSend" class="indent" preftype="bool" prefstring="mail.mdn.report.enabled" oncommand="EnableDisableAllowedReceipts();">
+        <radio value="false" label="&never.label;" accesskey="&never.accesskey;"/>
+        <radio value="true" label="&returnSome.label;" accesskey="&returnSome.accesskey;"/> 
+
+        <grid class="indent">
+          <columns>
+            <column/>
+            <column/>
+          </columns>
+          <rows>
+            <row align="center">
+              <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" 
+                     control="notInToCcPref" value="&notInToCc.label;"/>
+              <menulist id="notInToCcPref" prefstring="mail.mdn.report.not_in_to_cc">
+                <menupopup>
+                  <menuitem value="0" label="&neverSend.label;"/>
+                  <menuitem value="1" label="&alwaysSend.label;"/>
+                  <menuitem value="2" label="&askMe.label;"/>
+                </menupopup>
+              </menulist>
+            </row>
+            <row align="center">
+              <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;"
+                     control="outsideDomainPref" value="&outsideDomain.label;"/>
+              <menulist id="outsideDomainPref" prefstring="mail.mdn.report.outside_domain">
+                <menupopup>
+                  <menuitem value="0" label="&neverSend.label;"/>
+                  <menuitem value="1" label="&alwaysSend.label;"/>
+                  <menuitem value="2" label="&askMe.label;"/>
+                </menupopup>
+              </menulist>
+            </row>
+            <row align="center">
+              <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref"
+                     value="&otherCases.label;"/>
+              <menulist id="otherCasesPref" prefstring="mail.mdn.report.other">
+                <menupopup>
+                  <menuitem value="0" label="&neverSend.label;"/>
+                  <menuitem value="1" label="&alwaysSend.label;"/>
+                  <menuitem value="2" label="&askMe.label;"/>
+                </menupopup>
+              </menulist>
+            </row>
+          </rows>
+        </grid>
+      </radiogroup>
     </expander>
 
     <!-- Connections -->
-    <expander id="connections"    label="&lHeader.label;" persist="open" clearhidden="true">     
-      <label class="expanderDescription" value="&proxyTitle.label;" flex="1"/>      
+    <expander id="connections" label="&lHeader.label;" persist="open" clearhidden="true">
       <radiogroup id="networkProxyType" prefstring="network.proxy.type">
-          <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-          <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
         
-        <grid class="indent" flex="1">
+        <grid class="indent">
           <columns>
             <column/>
             <column flex="1"/>
@@ -222,56 +198,51 @@
         
           <rows>
             <row align="center">
-              <hbox align="center" pack="end">
+              <hbox pack="end">
                 <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
               </hbox>
-              <hbox align="center">
-                <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"
-                         flex="1"/>
-                <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
-                <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
-                         size="5"/>
-              </hbox>
+              <textbox id="networkProxyHTTP" preftype="string" prefstring="network.proxy.http"/>
+              <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="networkProxyHTTP_Port"/>
+              <textbox id="networkProxyHTTP_Port" preftype="int" prefstring="network.proxy.http_port"
+                       size="5"/>
             </row>
+
             <row align="center">
-              <hbox align="center" pack="end">
+              <hbox pack="end">
                 <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
               </hbox>
-              <hbox align="center">
-                <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"
-                         flex="1"/>
-                <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
-                <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
-                         size="5"/>
-              </hbox>
+              <textbox id="networkProxySSL" preftype="string" prefstring="network.proxy.ssl"/>
+              <label value="&port.label;" accesskey="&SSLport.accesskey;" control="networkProxySSL_Port"/>
+              <textbox id="networkProxySSL_Port" preftype="int" prefstring="network.proxy.ssl_port"
+                       size="5"/>
             </row>
+
             <row align="center">
-              <hbox align="center" pack="end">
+              <hbox pack="end">
                 <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
               </hbox>
-              <hbox align="center">
-                <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"
-                         flex="1"/>
+              <textbox id="networkProxySOCKS" preftype="string" prefstring="network.proxy.socks"/>
               <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="networkProxySOCKS_Port"/>
-                <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
-                         size="5"/>
-              </hbox>
+              <textbox id="networkProxySOCKS_Port" preftype="int" prefstring="network.proxy.socks_port"
+                       size="5"/>
             </row>
+
             <row>
               <spacer/>
               <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
                           prefstring="network.proxy.socks_version">
-                  <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
-                  <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
+                <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;"/>
+                <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;"/>
               </radiogroup>
             </row>
 
             <row align="center"> 
-              <hbox align="center" pack="end">
+              <hbox pack="end">
                 <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
               </hbox>
               <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on"/>
             </row>
+
             <row>
               <spacer/>
               <label value="&noproxyExplain.label;" control="networkProxyNone"/>
@@ -280,7 +251,7 @@
         </grid>
 
         <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
-        <hbox class="indent" flex="1" align="center">
+        <hbox class="indent" align="center">
           <textbox id="networkProxyAutoconfigURL" flex="1" 
                    preftype="string" prefstring="network.proxy.autoconfig_url"/>
           <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
