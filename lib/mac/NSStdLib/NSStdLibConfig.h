@@ -18,8 +18,10 @@
  
 /* Common defines for both debug & non-debug versions NSStdLib */
 
+#include "DefinesMac.h"
+#include "DefinesMozilla.h"
 #include "IDE_Options.h"
-#include "NSCrossProductDefines.h"
+//#include "NSCrossProductDefines.h"
 
 #define MOZILLA_CLIENT 1
 #define NETSCAPE 	1
