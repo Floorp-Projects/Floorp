@@ -47,9 +47,11 @@ nsFontMetricsUnix :: ~nsFontMetricsUnix()
   if (nsnull != mXstring)
     PR_Free(mXstring);
   
-  if (nsnull != mFontHandle)
-    ::XUnloadFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);  
- 
+  if (nsnull != mFontHandle) {
+    nsNativeWidget  widget;
+    mContext->GetNativeWidget(widget);
+    ::XUnloadFont(XtDisplay((Widget)widget, mFontHandle);  
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsUnix, kIFontMetricsIID)
@@ -72,7 +74,9 @@ nsresult nsFontMetricsUnix :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
   float       t2d;
   aCX->GetTwipsToDevUnits(t2d);
   PRInt32     dpi = NSToIntRound(t2d * 1440);
-  Display     *dpy = XtDisplay((Widget)aCX->GetNativeWidget());
+  nsNativeWidget  widget;
+  aCX->GetNativeWidget(widget);
+  Display     *dpy = XtDisplay((Widget)widget);
 
   if (nsnull == wildstring)
     return NS_ERROR_NOT_INITIALIZED;
@@ -231,7 +235,9 @@ char * nsFontMetricsUnix::PickAppropriateSize(char **names, XFontStruct *fonts, 
 
 void nsFontMetricsUnix::RealizeFont()
 {
-  mFontInfo = ::XQueryFont(XtDisplay((Widget)mContext->GetNativeWidget()), mFontHandle);
+  nsNativeWidget  widget;
+  mContext->GetNativeWidget(widget);
+  mFontInfo = ::XQueryFont(XtDisplay((Widget)widget, mFontHandle);
 
   float f = mContext->GetDevUnitsToAppUnits();
   

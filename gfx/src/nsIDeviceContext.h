@@ -107,7 +107,7 @@ public:
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
-  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext) = 0;
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface) = 0;
 
   //functions for handling gamma correction of output device
   NS_IMETHOD  GetGamma(float &aGamms) = 0;

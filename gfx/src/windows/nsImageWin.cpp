@@ -334,7 +334,9 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
   else
   {
     nsIDeviceContext    *dx = aContext.GetDeviceContext();
-    nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)dx->GetDrawingSurface(aContext);
+    nsDrawingSurface     ds;
+    dx->GetDrawingSurface(aContext, ds);
+    nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)ds;
     HDC                 srcdc;
 
     if (nsnull != srcds)
@@ -418,7 +420,9 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
   else
   {
     nsIDeviceContext    *dx = aContext.GetDeviceContext();
-    nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)dx->GetDrawingSurface(aContext);
+    nsDrawingSurface     ds;
+    dx->GetDrawingSurface(aContext, ds);
+    nsDrawingSurfaceWin *srcds = (nsDrawingSurfaceWin *)ds;
     HDC                 srcdc;
 
     if (nsnull != srcds)

@@ -99,9 +99,10 @@ NS_IMETHODIMP nsDeviceContextUnix :: GetScrollBarDimensions(float &aWidth, float
   return NS_OK;
 }
 
-nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
+NS_IMETHODIMP nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  return aContext.CreateDrawingSurface(nsnull);
+  aSurface = aContext.CreateDrawingSurface(nsnull);
+  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
@@ -349,7 +350,7 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
   float       t2d;
   GetTwipsToDevUnits(t2d);
   PRInt32     dpi = NSToIntRound(t2d * 1440);
-  Display     *dpy = XtDisplay((Widget)GetNativeWidget());
+  Display     *dpy = XtDisplay((Widget)mWidget);
   int         numnames = 0;
   XFontStruct *fonts;
   nsresult    rv = NS_ERROR_FAILURE;

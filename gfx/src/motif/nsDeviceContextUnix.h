@@ -69,7 +69,7 @@ public:
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
   virtual PRUint32 ConvertPixel(nscolor aColor);
 
