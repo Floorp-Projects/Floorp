@@ -20,6 +20,8 @@
 #define USE_SHM
 #endif
 
+//#define USE_SHM
+
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 #ifdef USE_SHM
@@ -157,26 +159,27 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockFlags = aFlags;
 
   // Obtain an ximage from the pixmap.
-#if USE_SHM
+#ifdef USE_SHM
   if (gdk_get_use_xshm())
   {
     mImage = gdk_image_new(GDK_IMAGE_FASTEST,
                            gdk_rgb_get_visual(),
                            mLockWidth,
                            mLockHeight);
-
+    
     XShmGetImage(GDK_DISPLAY(),
                  GDK_WINDOW_XWINDOW(mPixmap),
                  GDK_IMAGE_XIMAGE(mImage),
                  mLockX, mLockY,
                  0xFFFFFFFF);
 
+    gdk_flush();
   }
   else
   {
 #endif /* USE_SHM */
     mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
-#if USE_SHM
+#ifdef USE_SHM
   }
 #endif /* USE_SHM */
 
@@ -187,7 +190,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 
 
 #if 0
-  int bytes_per_line = ((GdkImagePrivate*)mImage)->ximage->bytes_per_line;
+  int bytes_per_line = GDK_IMAGE_XIMAGE(mImage)->bytes_per_line;
 
   //
   // All this code is a an attempt to set the stride width properly.
@@ -202,8 +205,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   int width_in_pixels = *aWidthBytes << 8;
 
 
-  int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
-  int depth = ((GdkImagePrivate*)mImage)->ximage->depth;
+  int bitmap_pad = GDK_IMAGE_XIMAGE(mImage)->bitmap_pad;
+  int depth = GDK_IMAGE_XIMAGE(mImage)->depth;
 
 #define RASWIDTH8(width, bpp) (width)
 #define RASWIDTH16(width, bpp) ((((width) * (bpp) + 15) >> 4) << 1)
@@ -233,7 +236,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 
   *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
 
-  ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  GDK_IMAGE_XIMAGE(mImage)->bitmap_pad;
 
   *aWidthBytes = mImage->bpl;
 #endif
@@ -268,6 +271,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 
   }
 
+  // FIXME if we are using shared mem, we shouldn't destroy the image...
   if (mImage)
     ::gdk_image_destroy(mImage);
   mImage = nsnull;
