@@ -132,38 +132,21 @@ sub JarIt
 sub MkDirs
 {
     my ($path, $containingDir, $doCleanup) = @_;
-    #print "MkDirs $path $containingDir $doCleanup\n";
-    if ($path =~ /([\w\d.\-]+)[\\\/](.*)/) {
-        my $dir = $1;
-        $path = $2;
-        if (!-e $dir) {
-            if ($verbose) {
-                print "making dir $containingDir/$dir\n";
-            }
-            mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            if ($doCleanup) {
-                push(@cleanupList, "$containingDir/$dir");
-                push(@cleanupList, $IS_DIR);
-            }
-        }
-        my $wd = cwd();
-        chdir $dir;
-        MkDirs($path, "$containingDir/$dir", $doCleanup);
-        chdir $wd;
-    }
-    else {
-        my $dir = $path;
-        if ($dir eq "") { return 0; } 
-        if (!-e $dir) {
-            if ($verbose) {
-                print "making dir $containingDir/$dir\n";
-            }
-            mkdir($dir, 0777) || die "error: can't create '$dir': $!";
-            if ($doCleanup) {
-                push(@cleanupList, "$containingDir/$dir");
-                push(@cleanupList, $IS_DIR);
-            }
-        }
+    my $cwd = getcwd;
+    my (@dirlist, $dir);
+
+    return if ($path eq "");
+
+    #print "MkDirs $cwd |$path| $containingDir $doCleanup\n";
+    
+    @dirlist = mkpath("$path", 0, 0755);
+    
+    if ($doCleanup == 1) {
+	foreach $dir ( @dirlist) {
+	    #push(@cleanupList, "$cwd/$containingDir/$path");
+	    push(@cleanupList, "$dir");
+	    push(@cleanupList, $IS_DIR);
+	}
     }
 }
 
