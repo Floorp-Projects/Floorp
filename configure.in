@@ -46,10 +46,15 @@ dnl     AC_ERROR(Building in the srcdir is not supported! Please build from a se
 dnl fi
 dnl unset d
 
-dnl Build optimized by default
 dnl ========================================================
-CFLAGS="${CFLAGS=-O}"
-CXXFLAGS="${CXXFLAGS=-O}"
+dnl =
+dnl = Dont change the following two lines.  Doing so breaks:
+dnl =
+dnl = CFLAGS="-foo" ./configure
+dnl =
+dnl ========================================================
+CFLAGS="${CFLAGS=}"
+CXXFLAGS="${CXXFLAGS=}"
 
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
@@ -955,17 +960,70 @@ MOZ_ARG_DISABLE_BOOL(asserts,
 [  --disable-asserts       Disable asserts during debugging],
   UNIX_SKIP_ASSERTS=1)
 
-MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
-[  --enable-debug          Enable debug symbols],
-  [ MOZ_DEBUG=1 ],
-  [],
-  [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
+dnl ========================================================
+dnl =
+dnl = --enable-optimize
+dnl = 
+dnl = Enable code optimization. OFF by default.
+dnl = 
+dnl ========================================================
+MOZ_OPTIMIZE=
+
+if test ! "$MOZ_OPTIMIZE_FLAGS"
+then
+	MOZ_OPTIMIZE_FLAGS="-O"
+fi
+
+MOZ_ARG_ENABLE_BOOL(optimize,
+[  --enable-optimize       Enable code optimizations ],
+  [ MOZ_OPTIMIZE=1 ])
+
+if test "$MOZ_OPTIMIZE"
+then
+  CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
+  CXXFLAGS="$CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
+fi
+dnl ========================================================
+
+dnl ========================================================
+dnl =
+dnl = --disable-debug
+dnl = 
+dnl = Disable building with debug info.
+dnl = 
+dnl = Debugging is ON by default so that we get more useful
+dnl = bug reports.
+dnl = 
+dnl ========================================================
+MOZ_DEBUG=1
+
+if test ! "$MOZ_DEBUG_FLAGS"
+then
+	MOZ_DEBUG_FLAGS="-g"
+fi
+
+MOZ_ARG_DISABLE_BOOL(debug,
+[  --disable-debug        Disable building with debug info],
+  MOZ_DEBUG=)
 
 if test "$MOZ_DEBUG"
 then
-  CFLAGS="$CFLAGS -g"
-  CXXFLAGS="$CXXFLAGS -g"
+  CFLAGS="$CFLAGS $MOZ_DEBUG_FLAGS"
+  CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
 fi
+dnl ========================================================
+
+dnl ========================================================
+dnl =
+dnl = --with-debug-modules=module1,module1,etc
+dnl = 
+dnl = Enable debug for specific modules only
+dnl = 
+dnl ========================================================
+MOZ_ARG_WITH_STRING(debug-modules,
+[  --with-debug-modules          Enable debug for specific modulues only],
+  [ MOZ_DEBUG_MODULES=`echo $withval | sed 's|,| |g'` ] )
+dnl ========================================================
 
 _cpp_md_flag=
 MOZ_ARG_DISABLE_BOOL(md,
