@@ -77,6 +77,7 @@ class nsFileWidget : public nsWindow, public nsIFileWidget
     NS_IMETHOD            OnCancel();
 
   protected:
+     GtkWidget             *mWidget;
      PRBool                 mIOwnEventLoop;
      PRBool                 mWasCancelled;
      nsString               mTitle;

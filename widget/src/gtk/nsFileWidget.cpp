@@ -17,11 +17,8 @@
  */
 
 #include "nsFileWidget.h"
-#include <Xm/FileSB.h>
-#include "nsXtEventHandler.h"
 #include "nsStringUtil.h"
 
-extern XtAppContext gAppContext;
 
 NS_IMPL_ADDREF(nsFileWidget)
 NS_IMPL_RELEASE(nsFileWidget)
@@ -64,12 +61,12 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   mTitle.Append(aTitle);
   mMode = aMode;
 
-  GtkWidget parentWidget = nsnull;
+  GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (GtkWidget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = (GtkWidget *) aParent->GetNativeData(NS_NATIVE_WIDGET);
   } else {
-    parentWidget = (GtkWidget) aInitData ;
+    parentWidget = (GtkWidget *) aInitData ;
   }
 
   InitToolkit(aToolkit, aParent);
@@ -78,13 +75,17 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   NS_ALLOC_STR_BUF(title, aTitle, 256);
   mWidget = gtk_file_selection_new(title);
   NS_FREE_STR_BUF(title);
+  /*
+  gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(mWidget)->ok_button),
+                            "clicked",
+                            GTK_SIGNAL_FUNC(nsFileWidget::OnOk),
+                            this);
 
-  gtk_signal_connect_object(GTK_OBJECT(mWidget->ok_button),
-    "clicked", GTK_SIGNAL_FUNC(nsGtkWidget_FSBOk_Callback), this);
-
-  gtk_signal_connect_object(GTK_OBJECT(mWidget->cancel_button),
-    "clicked", GTK_SIGNAL_FUNC(nsGtkWidget_FSBCancel_Callback), this);
-
+  gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(mWidget->)cancel_button),
+                            "clicked",
+                            GTK_SIGNAL_FUNC(nsFileWidget::OnCancel),
+                            this);
+  */
   return NS_OK;
 }
 
@@ -126,9 +127,11 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsFileWidget::OnOk()
 {
+#if 0
   XtUnmanageChild(mWidget);
   mWasCancelled  = PR_FALSE;
   mIOwnEventLoop = PR_FALSE;
+#endif
   return NS_OK;
 }
 
@@ -139,9 +142,11 @@ NS_METHOD nsFileWidget::OnOk()
 //-------------------------------------------------------------------------
 NS_METHOD nsFileWidget::OnCancel()
 {
+#if 0
   XtUnmanageChild(mWidget);
   mWasCancelled  = PR_TRUE;
   mIOwnEventLoop = PR_FALSE;
+#endif
   return NS_OK;
 }
 
@@ -152,6 +157,7 @@ NS_METHOD nsFileWidget::OnCancel()
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
+#if 0
   nsresult result = nsEventStatus_eIgnore;
   XtManageChild(mWidget);
 
@@ -175,7 +181,7 @@ PRBool nsFileWidget::Show()
       XtFree(fileBuf);
     }
   }
-
+#endif
  return PR_TRUE;
 }
 
