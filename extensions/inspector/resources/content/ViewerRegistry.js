@@ -110,7 +110,7 @@ ViewerRegistry.prototype =
     for (var i = 0; i < this.mViewerDS.length; ++i) {
       js = this.getEntryProperty(i, "filter");
       try {
-        fn = new Function("doesQI", "object", js);
+        fn = new Function("object", js);
       } catch (ex) {
         fn = new Function("return false");
         debug("### ERROR - Syntax error in filter for viewer \"" + this.getEntryProperty(i, "description") + "\"\n");
@@ -172,20 +172,7 @@ ViewerRegistry.prototype =
   ///////////////////////////////////////////////////////////////////////////
   objectMatchesEntry: function(aObject, aIndex)
   {
-    if (!aObject) return false;
-    return this.mFilters[aIndex](this.doesQI, aObject);
-  },
-  
-  doesQI: function(aObject, aInterface)
-  {
-    if (!("QueryInterface" in aObject)) return false;
-    
-    try {
-      var result = aObject.QueryInterface(Components.interfaces[aInterface]);
-      return true;
-    } catch (ex) {
-      return false;
-    }
+    return this.mFilters[aIndex](aObject);
   },
 
   ///////////////////////////////////////////////////////////////////////////
