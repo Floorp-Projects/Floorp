@@ -97,7 +97,7 @@ nsDownloadManager::nsDownloadManager() : mBatches(0)
 
 nsDownloadManager::~nsDownloadManager()
 {
-  if (--gRefCnt != 0 || !gRDFService)
+  if (--gRefCnt != 0 || !gRDFService  || !gObserverService)
     // Either somebody tried to use |CreateInstance| instead of
     // |GetService| or |Init| failed very early, so there's nothing to
     // do here.
