@@ -135,7 +135,8 @@ nsSocketTransport::nsSocketTransport():
     mService(nsnull),
     mSocketFD(nsnull),
     mSocketType(nsnull),
-    mSourceOffset(0),
+    mReadOffset(0),
+    mWriteOffset(0),
     mStatus(NS_OK),
     mSuspendCount(0),
     mWriteCount(0)
@@ -940,7 +941,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
       nsresult rv1;
 
       rv1 = mReadListener->OnDataAvailable(this, mReadContext, mReadPipeIn, 
-                                           mSourceOffset, 
+                                           mReadOffset, 
                                            totalBytesWritten);
       //
       // If the consumer returns failure, then cancel the operation...
@@ -949,13 +950,17 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
         rv = rv1;
       }
     }
-    mSourceOffset += totalBytesWritten;
+    mReadOffset += totalBytesWritten;
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("--- Leaving nsSocketTransport::doRead() [this=%x]. rv = %x.\t"
           "Total bytes read: %d\n\n",
           this, rv, totalBytesWritten));
+  if (mEventSink)
+      // we don't have content length info at the socket level
+      // just pass -1 through.
+      rv = mEventSink->OnProgress(this, mReadContext, mReadOffset, -1);
 
   return rv;
 }
@@ -1005,6 +1010,8 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
     mWriteCount -= totalBytesWritten;
   }
 
+  mWriteOffset += totalBytesWritten;
+
   //
   // The write operation has completed...
   //
@@ -1038,6 +1045,11 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
          ("--- Leaving nsSocketTransport::doWrite() [this=%x]. rv = %x.\t"
           "Total bytes written: %d\n\n",
           this, rv, totalBytesWritten));
+
+  if (mEventSink)
+      // we don't have content length info at the socket level
+      // just pass -1 through.
+      rv = mEventSink->OnProgress(this, mWriteContext, mWriteOffset, -1);
 
   return rv;
 }
