@@ -4164,7 +4164,9 @@ NS_IMETHODIMP nsWebShell::GetDocument(nsIDOMDocument** aDocument)
   NS_ENSURE_TRUE(doc, NS_ERROR_NULL_POINTER);
 
   // the result's addref comes from this QueryInterface call
+#ifndef XP_UNIX // until Travis can fix for Solaris
   NS_ENSURE_SUCCESS(CallQueryInterface(doc, aDocument), NS_ERROR_FAILURE);
+#endif
 
   return NS_OK;
 }
