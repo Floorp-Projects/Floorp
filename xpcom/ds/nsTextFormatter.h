@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "nscore.h"
+#include "nsAString.h"
 
 
 class NS_COM nsTextFormatter {
@@ -61,6 +62,8 @@ static PRUint32  snprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt,
 */
 static PRUnichar*  smprintf(const PRUnichar *fmt, ...);
 
+
+static PRUint32 ssprintf(nsAString& out, const PRUnichar* fmt, ...);
 /*
 ** Free the memory allocated, for the caller, by smprintf
 */
@@ -80,6 +83,7 @@ static PRUnichar*  sprintf_append(PRUnichar *last, const PRUnichar *fmt, ...);
 */
 static PRUint32  vsnprintf(PRUnichar *out, PRUint32 outlen, const PRUnichar *fmt, va_list ap);
 static PRUnichar*  vsmprintf(const PRUnichar *fmt, va_list ap);
+static PRUint32    vssprintf(nsAString& out, const PRUnichar *fmt, va_list ap);
 static PRUnichar*  vsprintf_append(PRUnichar *last, const PRUnichar *fmt, va_list ap);
 
 #ifdef DEBUG
