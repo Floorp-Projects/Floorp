@@ -78,6 +78,7 @@
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -230,7 +231,6 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
 	  aLoadInfo->GetSHEntry(getter_AddRefs(loadInfoSHEntry));
 #endif
    }
- 
 	/* Check if we are in the middle of loading a subframe whose parent
 	 * was originally loaded thro' Session History. ie., you were in a frameset
 	 * page, went somewhere else and clicked 'back'. The loading of the root page
@@ -260,6 +260,50 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
       NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, owner, nsnull, nsnull, loadType), NS_ERROR_FAILURE);
 #endif 
 
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI, 
+                                     const char *aContentType, PRInt32 aContentLen,
+                                     nsIDocShellLoadInfo* aLoadInfo)
+{
+   NS_ENSURE_ARG(aStream);
+   NS_ENSURE_ARG(aContentType);
+   NS_ENSURE_ARG(aContentLen);
+
+   // if the caller doesn't pass in a URI we need to create a dummy URI. necko
+   // currently requires a URI in various places during the load. Some consumers
+   // do as well.
+   nsCOMPtr<nsIURI> uri = aURI;
+   if (!uri) {
+      // HACK ALERT
+      nsresult rv = NS_OK;
+      uri = do_CreateInstance(kSimpleURICID, &rv);
+      if (NS_FAILED(rv)) return rv;
+      rv = uri->SetSpec("stream");
+      if (NS_FAILED(rv)) return rv;
+   }
+
+   nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
+
+   if(aLoadInfo)
+      (void)aLoadInfo->GetLoadType(&loadType);
+
+   NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
+   // Cancel any timers that were set for this loader.
+   (void)CancelRefreshURITimers();
+
+   mLoadType = loadType;
+
+   // build up a channel for this stream.
+   nsCOMPtr<nsIChannel> channel;
+   NS_ENSURE_SUCCESS(NS_NewInputStreamChannel(getter_AddRefs(channel), aURI, aStream, 
+                                              aContentType, aContentLen), NS_ERROR_FAILURE);
+   
+   nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+   NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(DoChannelLoad(channel, nsIURILoader::viewNormal, nsnull, uriLoader), NS_ERROR_FAILURE);
    return NS_OK;
 }
 
@@ -2736,54 +2780,6 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
       }
    channel->SetOriginalURI(aURI);
    
-   // Mark the channel as being a document URI...
-   nsLoadFlags loadAttribs = 0;
-   channel->GetLoadAttributes(&loadAttribs);
-   loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
-  
-  	switch ( mLoadType )
-  	{
-  	 case nsIDocShellLoadInfo::loadHistory:
-  	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
-  	 		break;
-  	 		
-  	 case nsIDocShellLoadInfo::loadReloadNormal:
-  	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
-  	 		break;
-  	 		
-  	 case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
-  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
-  	 		break;
-  	 case nsIDocShellLoadInfo::loadRefresh:
-  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
-  	 		break;
-     case nsIDocShellLoadInfo::loadNormal:
-     case nsIDocShellLoadInfo::loadLink:
-		   // Set cache checking flags
-		   if ( mPrefs )
-		   {
-		   		PRInt32 prefSetting;
-		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
-		   		{
-		   			switch ( prefSetting )
-		   			{
-		   				case 0:
-		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
-		   					break;
-		   				case 1:
-		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
-		   					break;
-		   				case 2:
-		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
-		   					break;
-		   			}
-		   		}
-			   }
-			break;
-   }
-   
-   channel->SetLoadAttributes(loadAttribs);
-
    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
    if(httpChannel)
       {
@@ -2830,7 +2826,62 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
           }
       }
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, aLoadCmd,
+   NS_ENSURE_SUCCESS(DoChannelLoad(channel, aLoadCmd, aWindowTarget, uriLoader), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand aLoadCmd, 
+                                       const char* aWindowTarget, nsIURILoader *aURILoader)
+{
+   // Mark the channel as being a document URI...
+   nsLoadFlags loadAttribs = 0;
+   (void)aChannel->GetLoadAttributes(&loadAttribs);
+   loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
+  
+  	switch ( mLoadType )
+  	{
+  	 case nsIDocShellLoadInfo::loadHistory:
+  	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
+  	 		break;
+  	 		
+  	 case nsIDocShellLoadInfo::loadReloadNormal:
+  	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
+  	 		break;
+  	 		
+  	 case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+  	 		break;
+  	 case nsIDocShellLoadInfo::loadRefresh:
+  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+  	 		break;
+     case nsIDocShellLoadInfo::loadNormal:
+		   // Set cache checking flags
+		   if ( mPrefs )
+		   {
+		   		PRInt32 prefSetting;
+		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
+		   		{
+		   			switch ( prefSetting )
+		   			{
+		   				case 0:
+		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
+		   					break;
+		   				case 1:
+		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
+		   					break;
+		   				case 2:
+		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
+		   					break;
+		   			}
+		   		}
+			   }
+			break;
+   }
+   
+   NS_ENSURE_SUCCESS(aChannel->SetLoadAttributes(loadAttribs), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(aURILoader->OpenURI(aChannel, aLoadCmd,
       aWindowTarget, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -3035,6 +3086,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
                  httpChannel->GetUploadStream(getter_AddRefs(inputStream));
 			   }
 			}
+
 
 			nsXPIDLCString uriSpec;
 			aURI->GetSpec(getter_Copies(uriSpec));

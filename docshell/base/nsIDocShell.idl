@@ -64,6 +64,25 @@ interface nsIDocShell : nsISupports
 	[noscript]void loadURI(in nsIURI uri, in nsIDocShellLoadInfo loadInfo);
 
 	/*
+	Loads a given stream. This will give priority to loading the requested stream
+	in the object implementing this interface. If it can't be loaded here however,
+	the URL dispatched will go through its normal process of content loading.
+
+	@param aStream - The input stream that provides access to the data to be loaded.
+	@param aURI	   - The URI representing the stream, or null.
+	@param aContentType - The type (MIME) of data being loaded.
+	@param aContentLen  - The length (in bytes) of the stream.
+	@param aLoadInfo - This is the extended load info for this load.  This most
+		most often will be null, but if you need to do additional setup for this
+		load you can get a loadInfo object by calling createLoadInfo.  Once you have
+		this object you can set the needed properties on it and then pass it to 
+		loadURI.
+	*/
+	[noscript]void loadStream(in nsIInputStream aStream, in nsIURI aURI,
+							  in string aContentType, in long aContentLen,
+							  in nsIDocShellLoadInfo aLoadInfo);
+
+	/*
 	Creates a DocShellLoadInfo object that you can manipulate and then pass to 
 	loadURI.
 	*/
