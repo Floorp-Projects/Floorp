@@ -3351,11 +3351,15 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 #endif
 
 #ifdef XP_WIN
+        // this code supports windowless plugins
         nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
-        PRBool eventHandled = PR_FALSE;
-        mInstance->HandleEvent(pPluginEvent, &eventHandled);
-        if (eventHandled)
-            rv = nsEventStatus_eConsumeNoDefault;
+        // we can get synthetic events from the nsEventStateManager... these have no nativeMsg
+        if (pPluginEvent != nsnull) {
+            PRBool eventHandled = PR_FALSE;
+            mInstance->HandleEvent(pPluginEvent, &eventHandled);
+            if (eventHandled)
+                rv = nsEventStatus_eConsumeNoDefault;
+        }
 #endif
 
   return rv;
