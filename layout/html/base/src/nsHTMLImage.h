@@ -22,11 +22,12 @@
 #include "nslayout.h"
 #include "nsIFrameImageLoader.h"
 #include "nsString.h"
+
 class nsIFrame;
 class nsIFrameImageLoader;
+class nsImageMap;
 class nsIPresContext;
 class nsISizeOfHandler;
-class nsIImageMap;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
 struct nsSize;
@@ -95,6 +96,7 @@ protected:
   nsString* mBaseHREF;
 };
 
+//----------------------------------------------------------------------
 
 #define ImageFrameSuper nsLeafFrame
 class nsImageFrame : public ImageFrameSuper {
@@ -133,7 +135,7 @@ protected:
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize);
 
-  nsIImageMap* GetImageMap();
+  nsImageMap* GetImageMap();
 
   void TriggerLink(nsIPresContext& aPresContext,
                    const nsString& aURLSpec,
@@ -163,7 +165,7 @@ protected:
                     nsRect& aInnerArea) const;
 
   nsHTMLImageLoader mImageLoader;
-  nsIImageMap* mImageMap;
+  nsImageMap* mImageMap;
   PRBool mSizeFrozen;
   nsMargin mBorderPadding;
 };
