@@ -290,6 +290,7 @@ protected:
   nsresult ReflowInlineFrames(nsBlockReflowState& aState,
                               nsLineBox* aLine,
                               PRBool* aKeepLineGoing,
+                              PRBool aDamageDirtyArea,
                               PRBool aUpdateMaximumWidth = PR_FALSE);
 
   nsresult DoReflowInlineFrames(nsBlockReflowState& aState,
@@ -297,19 +298,22 @@ protected:
                                 nsLineBox* aLine,
                                 PRBool* aKeepReflowGoing,
                                 PRUint8* aLineReflowStatus,
-                                PRBool aUpdateMaximumWidth);
+                                PRBool aUpdateMaximumWidth,
+                                PRBool aDamageDirtyArea);
 
   nsresult DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                                     nsLineBox* aLine,
                                     PRBool* aKeepReflowGoing,
                                     PRUint8* aLineReflowStatus,
-                                    PRBool aUpdateMaximumWidth);
+                                    PRBool aUpdateMaximumWidth,
+                                    PRBool aDamageDirtyArea);
 
   nsresult DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
                                       nsLineBox* aLine,
                                       PRBool* aKeepReflowGoing,
                                       PRUint8* aLineReflowStatus,
-                                      PRBool aUpdateMaximumWidth);
+                                      PRBool aUpdateMaximumWidth,
+                                      PRBool aDamageDirtyArea);
 
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineLayout& aLineLayout,
@@ -340,12 +344,14 @@ protected:
 
   nsresult PullFrame(nsBlockReflowState& aState,
                      nsLineBox* aLine,
+                     PRBool     aDamageDeletedLine,
                      nsIFrame*& aFrameResult);
 
   nsresult PullFrame(nsBlockReflowState& aState,
                      nsLineBox* aToLine,
                      nsLineBox** aFromList,
                      PRBool aUpdateGeometricParent,
+                     PRBool aDamageDeletedLines,
                      nsIFrame*& aFrameResult,
                      PRBool& aStopPulling);
 

@@ -3017,7 +3017,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // associated floater we don't end up resetting the line's right edge and
       // have it think the width is unconstrained...
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, PR_TRUE);
-      ReflowInlineFrames(aState, aLine, aKeepReflowGoing, PR_TRUE);
+      ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea, PR_TRUE);
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       aState.SetFlag(BRS_UNCONSTRAINEDWIDTH, oldUnconstrainedWidth);
@@ -3040,12 +3040,12 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         
       aState.SetFlag(BRS_COMPUTEMAXELEMENTSIZE, PR_FALSE);
       aState.SetFlag(BRS_COMPUTEMAXWIDTH, PR_FALSE);
-      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea);
       aState.SetFlag(BRS_COMPUTEMAXELEMENTSIZE, oldComputeMaxElementSize);
       aState.SetFlag(BRS_COMPUTEMAXWIDTH, oldComputeMaximumWidth);
 
     } else {
-      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+      rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea);
     }
 
     // We don't really know what changed in the line, so use the union
@@ -3074,6 +3074,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 nsresult
 nsBlockFrame::PullFrame(nsBlockReflowState& aState,
                         nsLineBox* aLine,
+                        PRBool aDamageDeletedLines,
                         nsIFrame*& aFrameResult)
 {
   nsresult rv = NS_OK;
@@ -3082,7 +3083,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
 
   // First check our remaining lines
   while (nsnull != aLine->mNext) {
-    rv = PullFrame(aState, aLine, &aLine->mNext, PR_FALSE,
+    rv = PullFrame(aState, aLine, &aLine->mNext, PR_FALSE, aDamageDeletedLines,
                    aFrameResult, stopPulling);
     if (NS_FAILED(rv) || stopPulling) {
       return rv;
@@ -3098,7 +3099,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
       aState.mNextInFlow = nextInFlow;
       continue;
     }
-    rv = PullFrame(aState, aLine, &nextInFlow->mLines, PR_TRUE,
+    rv = PullFrame(aState, aLine, &nextInFlow->mLines, PR_TRUE, aDamageDeletedLines,
                    aFrameResult, stopPulling);
     if (NS_FAILED(rv) || stopPulling) {
       return rv;
@@ -3126,6 +3127,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
                         nsLineBox* aLine,
                         nsLineBox** aFromList,
                         PRBool aUpdateGeometricParent,
+                        PRBool aDamageDeletedLines,
                         nsIFrame*& aFrameResult,
                         PRBool& aStopPulling)
 {
@@ -3155,6 +3157,10 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
     }
     else {
       // Free up the fromLine now that it's empty
+      // Its bounds might need to be redrawn, though.
+      if (aDamageDeletedLines) {
+        Invalidate(aState.mPresContext, fromLine->mBounds);
+      }
       *aFromList = fromLine->mNext;
       aState.FreeLineBox(fromLine);
     }
@@ -3860,6 +3866,7 @@ nsresult
 nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
                                  nsLineBox* aLine,
                                  PRBool* aKeepReflowGoing,
+                                 PRBool aDamageDirtyArea,
                                  PRBool aUpdateMaximumWidth)
 {
   nsresult rv = NS_OK;
@@ -3876,12 +3883,12 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
     if (aState.mReflowState.mReflowDepth > 30) {//XXX layout-tune.h?
       rv = DoReflowInlineFramesMalloc(aState, aLine, aKeepReflowGoing,
                                       &lineReflowStatus,
-                                      aUpdateMaximumWidth);
+                                      aUpdateMaximumWidth, aDamageDirtyArea);
     }
     else {
       rv = DoReflowInlineFramesAuto(aState, aLine, aKeepReflowGoing,
                                     &lineReflowStatus,
-                                    aUpdateMaximumWidth);
+                                    aUpdateMaximumWidth, aDamageDirtyArea);
     }
     if (NS_FAILED(rv)) {
       break;
@@ -3903,7 +3910,8 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
                                          nsLineBox* aLine,
                                          PRBool* aKeepReflowGoing,
                                          PRUint8* aLineReflowStatus,
-                                         PRBool aUpdateMaximumWidth)
+                                         PRBool aUpdateMaximumWidth,
+                                         PRBool aDamageDirtyArea)
 {
   nsLineLayout* ll = new nsLineLayout(aState.mPresContext,
                                       aState.mReflowState.mSpaceManager,
@@ -3915,7 +3923,7 @@ nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
   ll->Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
   ll->SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, *ll, aLine, aKeepReflowGoing,
-                                     aLineReflowStatus, aUpdateMaximumWidth);
+                                     aLineReflowStatus, aUpdateMaximumWidth, aDamageDirtyArea);
   ll->EndLineReflow();
   delete ll;
   return rv;
@@ -3926,7 +3934,8 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
                                        nsLineBox* aLine,
                                        PRBool* aKeepReflowGoing,
                                        PRUint8* aLineReflowStatus,
-                                       PRBool aUpdateMaximumWidth)
+                                       PRBool aUpdateMaximumWidth,
+                                       PRBool aDamageDirtyArea)
 {
   nsLineLayout lineLayout(aState.mPresContext,
                           aState.mReflowState.mSpaceManager,
@@ -3936,7 +3945,7 @@ nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
   lineLayout.SetReflowTextRuns(mTextRuns);
   nsresult rv = DoReflowInlineFrames(aState, lineLayout, aLine,
                                      aKeepReflowGoing, aLineReflowStatus,
-                                     aUpdateMaximumWidth);
+                                     aUpdateMaximumWidth, aDamageDirtyArea);
   lineLayout.EndLineReflow();
   return rv;
 }
@@ -3947,7 +3956,8 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                                    nsLineBox* aLine,
                                    PRBool* aKeepReflowGoing,
                                    PRUint8* aLineReflowStatus,
-                                   PRBool aUpdateMaximumWidth)
+                                   PRBool aUpdateMaximumWidth,
+                                   PRBool aDamageDirtyArea)
 {
   // Forget all of the floaters on the line
   aLine->FreeFloaters(aState.mFloaterCacheFreeList);
@@ -4023,7 +4033,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   // Pull frames and reflow them until we can't
   while (LINE_REFLOW_OK == lineReflowStatus) {
-    rv = PullFrame(aState, aLine, frame);
+    rv = PullFrame(aState, aLine, aDamageDirtyArea, frame);
     if (NS_FAILED(rv)) {
       return rv;
     }
