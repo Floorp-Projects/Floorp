@@ -115,6 +115,7 @@ protected:
 static NS_DEFINE_IID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWidgetCID,            NS_CHILD_CID);
+static NS_DEFINE_IID(kViewCID,              NS_VIEW_CID);
 
 
 // Interface IDs
@@ -492,7 +493,11 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
     // Create a child window of the parent that is our "root view/window"
     // Create a view
+#if 0
     rv = nsRepository::CreateInstance(kScrollingViewCID, 
+#else
+    rv = nsRepository::CreateInstance(kViewCID, 
+#endif
                                       nsnull, 
                                       kIViewIID, 
                                       (void **)&mView);
@@ -506,6 +511,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
         return rv;
     }
 
+#if 0
     nsIScrollableView* scrollView;
     rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
     if (NS_OK == rv) {
@@ -515,6 +521,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
         NS_ASSERTION(0, "invalid scrolling view");
         return rv;
     }
+#endif
 
     // Setup hierarchical relationship in view manager
     mViewManager->SetRootView(mView);
