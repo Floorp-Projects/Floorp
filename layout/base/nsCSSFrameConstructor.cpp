@@ -9498,11 +9498,16 @@ DoDeletingFrameSubtree(nsPresContext*  aPresContext,
             !nsLayoutUtils::IsProperAncestorFrame(aRemovedFrame, outOfFlowFrame)) {
           if (aDestroyQueue.IndexOf(outOfFlowFrame) < 0)
             aDestroyQueue.AppendElement(outOfFlowFrame);
+
+          // We want to descend into the out-of-flow frame's subtree,
+          // not the placeholder frame's!
+          subtree = outOfFlowFrame;
         }
 
-        // We want to descend into the out-of-flow frame's subtree,
-        // not the placeholder frame's!
-        subtree = outOfFlowFrame;
+        // Note that if outOfFlowFrame is aRemovedFrame's descendant we don't
+        // need to explicitly recurse into outOfFlowFrame here, since we'll do
+        // it whenever we recurse into the appropriate child and into its
+        // appropriate child list.
       }
 
       // Recursively find and delete any of its out-of-flow frames,
