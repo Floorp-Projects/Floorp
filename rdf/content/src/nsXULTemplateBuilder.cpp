@@ -2605,6 +2605,18 @@ protected:
     static nsString    kTrueStr;
     static nsString    kFalseStr;
 
+    PRBool mIsBuilding;
+
+    class AutoSentry {
+    protected:
+        PRBool* mVariable;
+
+    public:
+        AutoSentry(PRBool* aVariable) : mVariable(aVariable)
+            { *mVariable = PR_TRUE; }
+
+        ~AutoSentry() { *mVariable = PR_FALSE; }
+    };
 
     class ContentTestNode : public TestNode
     {
@@ -3855,7 +3867,8 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mDB(nsnull),
       mRoot(nsnull),
       mTimer(nsnull),
-      mRulesCompiled(PR_FALSE)
+      mRulesCompiled(PR_FALSE),
+      mIsBuilding(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -4313,6 +4326,9 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
     // is an ancestor of B in the rule network).
     nsresult rv;
 
+    // Forbid re-entrant updates while we're propogating changes
+    AutoSentry guard(&mIsBuilding);
+
     // First, we'll go through and find all of the test nodes that can
     // propogate the assertion.
     NodeSet livenodes;
@@ -4467,6 +4483,10 @@ nsXULTemplateBuilder::OnAssert(nsIRDFResource* aSource,
     if (! mDocument)
         return NS_OK;
 
+    // Ignore re-entrant updates while we're building content.
+    if (mIsBuilding)
+        return NS_OK;
+
     nsresult rv;
 
 	if (mCache)
@@ -4495,6 +4515,9 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
                               nsIRDFResource* aProperty,
                               nsIRDFNode* aTarget)
 {
+    // Forbid re-entrant updates while we're propogating changes
+    AutoSentry guard(&mIsBuilding);
+
     // Retract any currently active rules that will no longer be
     // matched.
     NodeSet::ConstIterator lastnode = mRDFTests.Last();
@@ -4547,6 +4570,10 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFResource* aSource,
     if (! mDocument)
         return NS_OK;
 
+    // Ignore re-entrant updates while we're building content.
+    if (mIsBuilding)
+        return NS_OK;
+
     nsresult rv;
 
 	if (mCache)
@@ -4575,6 +4602,10 @@ nsXULTemplateBuilder::OnChange(nsIRDFResource* aSource,
     // Just silently fail, because this can happen "normally" as part
     // of tear-down code. (Bug 9098)
     if (! mDocument)
+        return NS_OK;
+
+    // Ignore re-entrant updates while we're building content.
+    if (mIsBuilding)
         return NS_OK;
 
 	if (mCache)
@@ -4607,6 +4638,10 @@ nsXULTemplateBuilder::OnMove(nsIRDFResource* aOldSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget)
 {
+    // Ignore re-entrant updates while we're building content.
+    if (mIsBuilding)
+        return NS_OK;
+
     NS_NOTYETIMPLEMENTED("write me");
 
 	if (mCache)
@@ -5248,6 +5283,9 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
     // Update each match that contains <aSource, aProperty, aOldTarget>.
     nsresult rv;
 
+    // Forbid re-entrant updates while we synchronize
+    AutoSentry guard(&mIsBuilding);
+
     // Get all the matches whose assignments are currently supported
     // by aSource and aProperty: we'll need to recompute them.
     MatchSet* matches;
@@ -5680,6 +5718,9 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
         // stumbles on a template that is rooted at an HTML element.
         // (/me crosses fingers...)
     }
+
+    // Forbid re-entrant updates while we propogate
+    AutoSentry guard(&mIsBuilding);
 
     // Seed the rule network with assignments for the content and
     // container variables
