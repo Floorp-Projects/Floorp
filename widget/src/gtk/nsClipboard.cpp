@@ -37,6 +37,9 @@ static GtkTargetEntry targets[] = {
   { "strings n stuff", GDK_SELECTION_TYPE_STRING, GDK_SELECTION_TYPE_STRING }
 };
 
+// The class statics:
+GtkWidget* nsClipboard::sWidget = 0;
+
 NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
 NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
 
