@@ -34,7 +34,7 @@
   <script language="JavaScript">
   <![CDATA[
     _elementIDs = ["nglayoutDebugWindow",
-                   "debugXULBoxes", "nglayoutDebugDisableXULCache", "browserEnableCache",
+                   "debugXULBoxes", "nglayoutDebugUseXBLForms", "nglayoutDebugDisableXULCache", "browserEnableCache",
                    "browserEnableDiskCache", "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
                    "browserEnableTBDnD"];
   ]]>
@@ -46,7 +46,9 @@
        panel and you can damn well click the widgets! -->
   <titledbox orient="vertical">
     <title><text value="&debugMiscellaneous.label;"/></title>
-
+    <checkbox id="nglayoutDebugUseXBLForms" value="Use XBL-based form controls."
+              pref="true" preftype="bool" prefstring="nglayout.debug.enable_xbl_forms"
+              prefattribute="checked"/>
     <checkbox id="nglayoutDebugDisableXULCache" value="&debugDisableXULCache.label;"
               pref="true" preftype="bool" prefstring="nglayout.debug.disable_xul_cache"
               prefattribute="checked"/>

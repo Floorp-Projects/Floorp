@@ -166,6 +166,9 @@ pref("nglayout.view.useViewManager2", true);
 // css2 hover pref
 pref("nglayout.events.showHierarchicalHover", false);
 
+// whether or not to use xbl form controls
+pref("nglayout.debug.enable_xbl_forms", false);
+
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
 pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
