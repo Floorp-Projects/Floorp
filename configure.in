@@ -1525,7 +1525,7 @@ dnl the qsort routine under solaris is faulty
         AC_MSG_RESULT([$_res])
     else
        ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-shared -h $@ -Wl,-z -Wl,textwarn'
+       DSO_LDOPTS='-shared -mimpure-text -h $@'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
