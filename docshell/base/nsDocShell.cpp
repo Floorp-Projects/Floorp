@@ -6975,13 +6975,13 @@ nsDocShell::EnsureScriptEnvironment()
 NS_IMETHODIMP
 nsDocShell::EnsureEditorData()
 {
-  if (!mEditorData)
-  {
-    mEditorData = new nsDocShellEditorData(this);
-    if (!mEditorData) return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return mEditorData ? NS_OK : NS_ERROR_FAILURE;
+    if (!mEditorData && !mIsBeingDestroyed)
+    {
+        mEditorData = new nsDocShellEditorData(this);
+        if (!mEditorData) return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return mEditorData ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult
@@ -6992,7 +6992,7 @@ nsDocShell::EnsureTransferableHookData()
         if (!mTransferableHookData) return NS_ERROR_OUT_OF_MEMORY;
     }
 
-  return NS_OK;
+    return NS_OK;
 }
 
 

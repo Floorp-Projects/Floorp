@@ -255,15 +255,6 @@ function GetCurrentEditorElement()
   return null;
 }
 
-function GetCurrentEditingSession()
-{
-  try {
-    return GetCurrentEditorElement().editingSession;
-  } catch (e) { dump (e)+"\n"; }
-
-  return null;
-}
-
 function GetCurrentCommandManager()
 {
   try {

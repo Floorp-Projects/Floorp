@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -68,16 +68,12 @@ nsDocShellEditorData::nsDocShellEditorData(nsIDocShell* inOwningDocShell)
 ----------------------------------------------------------------------------*/
 nsDocShellEditorData::~nsDocShellEditorData()
 {
-  // Get editing session on the root docShell
-  nsCOMPtr <nsIEditingSession> editingSession;
-  GetOrCreateEditingSession(PR_FALSE, getter_AddRefs(editingSession));
-
-  if (editingSession)
+  if (mEditingSession)
   {
     nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(mDocShell);
     // This will eventually call nsDocShellEditorData::SetEditor(nsnull)
     //   which will call mEditorPreDestroy() and delete the editor
-    editingSession->TearDownEditorOnWindow(domWindow);
+    mEditingSession->TearDownEditorOnWindow(domWindow);
   }
   else if (mEditor) // Should never have this w/o nsEditingSession!
   {
@@ -152,8 +148,12 @@ nsDocShellEditorData::CreateEditor()
 nsresult
 nsDocShellEditorData::GetEditingSession(nsIEditingSession **outEditingSession)
 {
-  NS_ENSURE_ARG_POINTER(outEditingSession);
-  return GetOrCreateEditingSession(PR_TRUE, outEditingSession);
+  nsresult rv = EnsureEditingSession();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  NS_ADDREF(*outEditingSession = mEditingSession);
+
+  return NS_OK;
 }
 
 
@@ -199,63 +199,25 @@ nsDocShellEditorData::SetEditor(nsIEditor *inEditor)
 
 /*---------------------------------------------------------------------------
 
-  GetOrCreateEditingSession
+  EnsureEditingSession
   
-  This creates the editing session on the content root docShell,
-  irrespective of the shell owning 'this'.
+  This creates the editing session on the content docShell that owns
+  'this'.
 
 ----------------------------------------------------------------------------*/
 nsresult
-nsDocShellEditorData::GetOrCreateEditingSession(PRBool inAllowCreation, nsIEditingSession **outEditingSession)
+nsDocShellEditorData::EnsureEditingSession()
 {
-  NS_ENSURE_ARG_POINTER(outEditingSession);
-  *outEditingSession = nsnull;
-  
   NS_ASSERTION(mDocShell, "Should have docShell here");
   
   nsresult rv = NS_OK;
   
-  nsCOMPtr<nsIDocShellTreeItem> owningShell = do_QueryInterface(mDocShell);
-  if (!owningShell) return NS_ERROR_FAILURE;
-  
-  // Get the root docshell
-  nsCOMPtr<nsIDocShellTreeItem> contentRootShell;
-  owningShell->GetSameTypeRootTreeItem(getter_AddRefs(contentRootShell));
-  if (!contentRootShell) return NS_ERROR_FAILURE;
-  
-  if (contentRootShell.get() == owningShell.get())
+  if (!mEditingSession)
   {
-    // if we're on the root shell, go ahead and create the editing shell
-    // if necessary.
-    if (!mEditingSession)
-    {
-      // Caller doesn't want a new EditingSession if it doesn't already exist
-      if (!inAllowCreation)
-        return NS_OK;
-
-      mEditingSession = do_CreateInstance("@mozilla.org/editor/editingsession;1", &rv);
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(mDocShell, &rv));
-      if (NS_FAILED(rv)) return rv;
-
-      rv = mEditingSession->Init(domWindow);
-      if (NS_FAILED(rv)) return rv;
-    }
-    
-    NS_ADDREF(*outEditingSession = mEditingSession.get());
+    mEditingSession =
+      do_CreateInstance("@mozilla.org/editor/editingsession;1", &rv);
   }
-  else
-  {
-    // otherwise we're on a subshell. In this case, call GetInterface
-    // on the root shell, which will come back into this routine,
-    // to the block above, and give us back the editing session on
-    // the content root.
-    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(contentRootShell);
-    NS_ASSERTION(editingSession, "should have been able to get the editing session here");
-    NS_IF_ADDREF(*outEditingSession = editingSession.get());
-  }
-  
-  return (*outEditingSession) ? NS_OK : NS_ERROR_FAILURE;
+
+  return rv;
 }
 

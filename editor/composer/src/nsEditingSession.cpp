@@ -41,6 +41,7 @@
 
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMNSHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
@@ -92,6 +93,8 @@
 nsEditingSession::nsEditingSession()
 : mDoneSetup(PR_FALSE)
 , mCanCreateEditor(PR_FALSE)
+, mScriptsEnabled(PR_TRUE)
+, mImageAnimationMode(0)
 , mEditorFlags(0)
 , mEditorStatus(eEditorOK)
 , mBaseCommandControllerId(0)
@@ -114,25 +117,6 @@ nsEditingSession::~nsEditingSession()
 
 NS_IMPL_ISUPPORTS4(nsEditingSession, nsIEditingSession, nsIWebProgressListener, 
                    nsIURIContentListener, nsISupportsWeakReference)
-
-/*---------------------------------------------------------------------------
-
-  GetEditingShell
-
-  void init (in nsIDOMWindow aWindow)
-----------------------------------------------------------------------------*/
-NS_IMETHODIMP 
-nsEditingSession::Init(nsIDOMWindow *aWindow)
-{
-  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
-  if (!docShell) return NS_ERROR_FAILURE;
-
-  mEditingShell = do_GetWeakReference(docShell);
-  if (!mEditingShell) return NS_ERROR_NO_INTERFACE;
-
-  return NS_OK;
-}
-
 
 /*---------------------------------------------------------------------------
 
@@ -175,6 +159,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
     nsIScriptContext *scriptContext = sgo->GetContext();
     if (scriptContext)
     {
+      mScriptsEnabled = scriptContext->GetScriptsEnabled();
       scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
     }
   }
@@ -192,7 +177,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 
   // if all this does is setup listeners and I don't need listeners, 
   // can't this step be ignored?? (based on aDoAfterURILoad)
-  rv = PrepareForEditing();
+  rv = PrepareForEditing(aWindow);
   if (NS_FAILED(rv)) return rv;  
   
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
@@ -409,6 +394,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsPresContext *presContext = presShell->GetPresContext();
   if (!presContext) return NS_ERROR_FAILURE;
 
+  mImageAnimationMode = presContext->ImageAnimationMode();
   presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
 
   // create and set editor
@@ -456,8 +442,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
                     selCon, mEditorFlags);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsISelection>	selection;
-  editor->GetSelection(getter_AddRefs(selection));	
+  nsCOMPtr<nsISelection> selection;
+  editor->GetSelection(getter_AddRefs(selection));
   nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
   if (!selPriv) return NS_ERROR_FAILURE;
 
@@ -492,36 +478,61 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
 {
+  if (!mDoneSetup)
+    return NS_OK;
+
   nsresult rv;
   
-   // Kill any existing reload timer
-   if (mLoadBlankDocTimer)
-   {
-     mLoadBlankDocTimer->Cancel();
-     mLoadBlankDocTimer = nsnull;
-   }
+  // Kill any existing reload timer
+  if (mLoadBlankDocTimer)
+  {
+    mLoadBlankDocTimer->Cancel();
+    mLoadBlankDocTimer = nsnull;
+  }
+
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+
+  mDoneSetup = PR_FALSE;
+
+  nsCOMPtr<nsIDOMDocument> dom_doc;
+  aWindow->GetDocument(getter_AddRefs(dom_doc));
+
+  nsCOMPtr<nsIDOMNSHTMLDocument> html_doc(do_QueryInterface(dom_doc));
+  nsAutoString designMode;
+
+  if (html_doc) {
+    html_doc->GetDesignMode(designMode);
+  }
+
+  if (designMode.EqualsLiteral("on")) {
+    // We're tearing down a midas editor, unregister callbacks since
+    // we're all done editing here.
+
+    nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+    if (webProgress) {
+      webProgress->RemoveProgressListener(this);
+    }
+  }
 
   nsCOMPtr<nsIEditorDocShell> editorDocShell;
   rv = GetEditorDocShellFromWindow(aWindow, getter_AddRefs(editorDocShell));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIEditor> editor;
   rv = editorDocShell->GetEditor(getter_AddRefs(editor));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // null out the editor on the controllers first to prevent their weak 
   // references from pointing to a destroyed editor
   if (mStateMaintainer && editor)
   {
-      // null out the editor on the controllers
-      rv = SetEditorOnControllers(aWindow, nsnull);
-      if (NS_FAILED(rv)) return rv;  
+    // null out the editor on the controllers
+    SetEditorOnControllers(aWindow, nsnull);
   }
 
   // null out the editor on the docShell to trigger PreDestroy which
   // needs to happen before document state listeners are removed below
-  rv = editorDocShell->SetEditor(nsnull);
-  if (NS_FAILED(rv)) return rv;
+  editorDocShell->SetEditor(nsnull);
 
   if (mStateMaintainer)
   {
@@ -530,39 +541,93 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
       // If we had an editor -- we are loading a new URL into existing window
 
       // Remove all the listeners
-      nsCOMPtr<nsISelection>	selection;
-      editor->GetSelection(getter_AddRefs(selection));	
+      nsCOMPtr<nsISelection> selection;
+      editor->GetSelection(getter_AddRefs(selection));
       nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
       if (selPriv)
       {
         nsCOMPtr<nsISelectionListener> listener = 
-                                        do_QueryInterface(mStateMaintainer);
-        rv = selPriv->RemoveSelectionListener(listener);
-        if (NS_FAILED(rv)) return rv;
+          do_QueryInterface(mStateMaintainer);
+        selPriv->RemoveSelectionListener(listener);
       }
 
       nsCOMPtr<nsIDocumentStateListener> docListener =
-                                            do_QueryInterface(mStateMaintainer);
-      rv = editor->RemoveDocumentStateListener(docListener);
-      if (NS_FAILED(rv)) return rv;
-  
+        do_QueryInterface(mStateMaintainer);
+      editor->RemoveDocumentStateListener(docListener);
+
       nsCOMPtr<nsITransactionManager> txnMgr;
       editor->GetTransactionManager(getter_AddRefs(txnMgr));
       if (txnMgr)
       {
         nsCOMPtr<nsITransactionListener> transactionListener =
-              do_QueryInterface(mStateMaintainer);
+          do_QueryInterface(mStateMaintainer);
         txnMgr->RemoveListener(transactionListener);
       }
     }
-    else
+
+    // Remove editor controllers from the window now that we're not
+    // editing in that window any more.
+
+    nsCOMPtr<nsIDOMWindowInternal> domWindowInt(do_QueryInterface(aWindow));
+  
+    nsCOMPtr<nsIControllers> controllers;      
+    domWindowInt->GetControllers(getter_AddRefs(controllers));
+
+    if (controllers) {
+      nsCOMPtr<nsIController> controller;
+
+      if (mBaseCommandControllerId) {
+        controllers->GetControllerById(mBaseCommandControllerId,
+                                       getter_AddRefs(controller));
+
+        if (controller) {
+          controllers->RemoveController(controller);
+        }
+      }
+
+      if (mDocStateControllerId) {
+        controllers->GetControllerById(mDocStateControllerId,
+                                       getter_AddRefs(controller));
+
+        if (controller) {
+          controllers->RemoveController(controller);
+        }
+      }
+
+      if (mHTMLCommandControllerId) {
+        controllers->GetControllerById(mHTMLCommandControllerId,
+                                       getter_AddRefs(controller));
+
+        if (controller) {
+          controllers->RemoveController(controller);
+        }
+      }
+    }
+
+    //   Clear IDs to trigger creation of new controllers
+    mBaseCommandControllerId = 0;
+    mDocStateControllerId = 0;
+    mHTMLCommandControllerId = 0;
+  }
+
+  // Make things the way they were before we started editing.
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
+
+  if (sgo) {
+    nsIScriptContext *scriptContext = sgo->GetContext();
+
+    if (mScriptsEnabled && scriptContext)
     {
-      // No editor: we have a new window and previous controllers
-      //   were destroyed with the contentWindow.
-      //   Clear IDs to trigger creation of new controllers
-      mBaseCommandControllerId = 0;
-      mDocStateControllerId = 0;
-      mHTMLCommandControllerId = 0;
+      scriptContext->SetScriptsEnabled(PR_TRUE, PR_TRUE);
+    }
+
+    nsCOMPtr<nsIPresShell> presShell;
+    nsIDocShell *docShell = sgo->GetDocShell();
+    docShell->GetPresShell(getter_AddRefs(presShell));
+
+    nsPresContext *presContext;
+    if (presShell && (presContext = presShell->GetPresContext())) {
+      presContext->SetImageAnimationMode(mImageAnimationMode);
     }
   }
 
@@ -708,8 +773,8 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
     if (aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
     {
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-      nsresult rv = EndDocumentLoad(aWebProgress, channel, aStatus,
-                                    IsProgressForTargetDocument(aWebProgress));
+      EndDocumentLoad(aWebProgress, channel, aStatus,
+                      IsProgressForTargetDocument(aWebProgress));
 #ifdef NOISY_DOC_LOADING
       printf("STATE_STOP & STATE_IS_DOCUMENT flags=%x\n", aStateFlags);
 #endif
@@ -936,7 +1001,7 @@ nsEditingSession::StartDocumentLoad(nsIWebProgress *aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   if (domWindow)
   {
-    nsresult rv = TearDownEditorOnWindow(domWindow);
+    TearDownEditorOnWindow(domWindow);
   }
     
   if (aIsToBeMadeEditable)
@@ -1094,8 +1159,8 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
     mEditorStatus = eEditorErrorFileNotFound;
 
   nsCOMPtr<nsIDOMWindow> domWindow;
-  nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  
+  aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+
   nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
   if (!docShell) return NS_ERROR_FAILURE;
 
@@ -1160,18 +1225,14 @@ nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *aWindow,
   Set up this editing session for one or more editors
 ----------------------------------------------------------------------------*/
 nsresult
-nsEditingSession::PrepareForEditing()
+nsEditingSession::PrepareForEditing(nsIDOMWindow *aWindow)
 {
   if (mDoneSetup)
     return NS_OK;
     
   mDoneSetup = PR_TRUE;
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mEditingShell);
-  if (!docShell) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIDOMWindow>  domWindow = do_GetInterface(docShell);
-  if (!domWindow) return NS_ERROR_FAILURE;
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   
   // register callback
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
@@ -1223,7 +1284,7 @@ nsEditingSession::SetupEditorCommandController(
     // We must insert at head of the list to be sure our
     //   controller is found before other implementations
     //   (e.g., not-implemented versions by browser)
-    rv = controllers->InsertControllerAt(0,controller);
+    rv = controllers->InsertControllerAt(0, controller);
     if (NS_FAILED(rv)) return rv;  
 
     // Remember the ID for the controller
@@ -1260,28 +1321,28 @@ nsEditingSession::SetEditorOnControllers(nsIDOMWindow *aWindow,
   if (mBaseCommandControllerId)
   {
     rv = SetContextOnControllerById(controllers, editorAsISupports,
-                                   mBaseCommandControllerId);
+                                    mBaseCommandControllerId);
     if (NS_FAILED(rv)) return rv;
   }
 
   if (mDocStateControllerId)
   {
     rv = SetContextOnControllerById(controllers, editorAsISupports,
-                                   mDocStateControllerId);
+                                    mDocStateControllerId);
     if (NS_FAILED(rv)) return rv;
   }
 
   if (mHTMLCommandControllerId)
     rv = SetContextOnControllerById(controllers, editorAsISupports,
-                                   mHTMLCommandControllerId);
+                                    mHTMLCommandControllerId);
 
   return rv;
 }
 
 nsresult
 nsEditingSession::SetContextOnControllerById(nsIControllers* aControllers,
-                                            nsISupports* aContext,
-                                            PRUint32 aID)
+                                             nsISupports* aContext,
+                                             PRUint32 aID)
 {
   NS_ENSURE_ARG_POINTER(aControllers);
 

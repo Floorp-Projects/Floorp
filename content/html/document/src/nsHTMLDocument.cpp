@@ -3524,23 +3524,26 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!editSession)
     return NS_ERROR_FAILURE;
 
-  if (aDesignMode.LowerCaseEqualsLiteral("on")) {
-    nsCOMPtr<nsIDOMWindow> domwindow(do_QueryInterface(mScriptGlobalObject));
-    NS_ENSURE_TRUE(domwindow, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(mScriptGlobalObject));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-    rv = editSession->MakeWindowEditable(domwindow, "html", PR_FALSE);
-    if (NS_FAILED(rv))
-      return rv;
+  if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
+    rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
 
-    // now that we've successfully created the editor, we can reset our flag
-    mEditingIsOn = PR_TRUE;
+    if (NS_SUCCEEDED(rv)) {
+      // now that we've successfully created the editor, we can reset our flag
+      mEditingIsOn = PR_TRUE;
+    }
+  } else if (aDesignMode.LowerCaseEqualsLiteral("off") && mEditingIsOn) {
+    // turn editing off
+    rv = editSession->TearDownEditorOnWindow(window);
+
+    if (NS_SUCCEEDED(rv)) {
+      mEditingIsOn = PR_FALSE;
+    }
   }
-  else { // turn editing off
-    // right now we don't have a way to turn off editing  :-(
-    mEditingIsOn = PR_FALSE;
-  }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
