@@ -543,7 +543,7 @@ function Save()
   var have_panel_attributes = new Array();
   current_panels = container.GetElements();
   while (current_panels.hasMoreElements()) {
-    var panel = current_panels.getNext();
+    panel = current_panels.getNext();
     id = panel.QueryInterface(Components.interfaces.nsIRDFResource).Value;
     if (has_element(panels, id)) {
       // This panel will remain in the sidebar.
