@@ -75,6 +75,9 @@ extern int XP_BKMKS_HOURS_AGO;
 #define HT_SORT_ASCENDING 1
 #define HT_SORT_DESCENDING 0
 
+// The Nav Center vocab element
+extern "C" RDF_NCVocab gNavCenter;
+
 // Function to make a pretty date string
 #define SECONDS_PER_DAY		86400L
 void FormatDateTime( CTime &tmDate, CString &csFormatDate )
@@ -198,7 +201,7 @@ BEGIN_MESSAGE_MAP(CRDFOutliner, COutliner)
 END_MESSAGE_MAP()
 
 CRDFOutliner::CRDFOutliner (HT_Pane thePane, HT_View theView, CRDFOutlinerParent* theParent)
-:m_pAncestor(NULL), m_Pane(thePane), m_View(theView), m_Parent(theParent), m_EditField(NULL),
+:COutliner(FALSE), m_pAncestor(NULL), m_Pane(thePane), m_View(theView), m_Parent(theParent), m_EditField(NULL),
 m_nSortType(HT_NO_SORT), m_nSortColumn(HT_NO_SORT), m_hEditTimer(0), m_hDragRectTimer(0),
 m_bNeedToClear(FALSE), m_nSelectedColumn(0), m_bDoubleClick(FALSE), m_Node(NULL), 
 m_bDataSourceInWindow(FALSE), m_NavMenuBar(NULL)
@@ -305,23 +308,28 @@ LPCTSTR CRDFOutliner::GetColumnText ( UINT iColumn, void * pLineData )
 	if (pEntry && HT_GetNodeData(pEntry, theColumn->GetToken(), theColumn->GetDataType(), &nodeData)
 		&& nodeData)
 	{
-		char* buffer = theColumn->GetStorageBuffer();
+		CString& buffer = theColumn->GetStorageBuffer();
+		char buf2[500]; // More than big enough for dates and ints
+		
 		switch (theColumn->GetDataType())
 		{
 			case HT_COLUMN_DATE_STRING:
 				if ((dateVal = (time_t)atol((char *)nodeData)) == 0)	break;
 				if ((time = localtime(&dateVal)) == NULL)	break;
-				HTFE_MakePrettyDate(buffer, dateVal);
+				HTFE_MakePrettyDate(buf2, dateVal);
+				buffer = buf2;
 				break;
 			case HT_COLUMN_DATE_INT:
 				if ((time = localtime((time_t *) &nodeData)) == NULL)	break;
-				HTFE_MakePrettyDate(buffer, (time_t)nodeData);
+				HTFE_MakePrettyDate(buf2, (time_t)nodeData);
+				buffer = buf2;
 				break;
 			case HT_COLUMN_INT:
-				sprintf(buffer,"%d",(int)nodeData);
+				sprintf(buf2,"%d",(int)nodeData);
+				buffer = buf2;
 				break;
 			case HT_COLUMN_STRING:
-				strcpy(buffer, (char*)nodeData);
+				buffer = (char*)nodeData;
 				break;
 		}
 
@@ -498,7 +506,9 @@ int CRDFOutliner::TranslateIconFolder( void *pData )
 
 void CRDFOutliner::LoadComplete(HT_Resource pResource)
 {
-	InvalidateLine(HT_GetNodeIndex(m_View, pResource));
+	if (pResource == NULL)	// Background image loaded.
+		Invalidate();
+	else InvalidateLine(HT_GetNodeIndex(m_View, pResource));  // Individual line had an image load.
 }
 
 // Functions used to draw custom images (either local file system icons or arbitrary image URLs)
@@ -709,29 +719,7 @@ NSNavCenterImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* imageObject
 		hashString = "about:personal.gif";
 	}
 
-	// Find the image.
-	void* pData;
-	if (CHTFEData::m_CustomURLCache.Lookup(hashString, pData))
-	{
-		pImage = (NSNavCenterImage*)pData;
-
-		// Add ourselves to the callback list if the image hasn't completely loaded.
-		if (!pImage->CompletelyLoaded())
-		{
-			// The image is currently loading.  Register ourselves with the image so that we will get called
-			// when the image finishes loading.
-			CIconCallbackInfo* iconCallbackInfo = new CIconCallbackInfo(imageObject, r);
-			pImage->resourceList.AddHead(iconCallbackInfo);  
-		}
-	}
-	else
-	{
-		// Create a new NavCenter image.
-		CIconCallbackInfo* iconCallbackInfo = new CIconCallbackInfo(imageObject, r);
-		pImage = new NSNavCenterImage((char*)(const char*)hashString, iconCallbackInfo);
-		CHTFEData::m_CustomURLCache.SetAt(hashString, pImage);
-	}
-
+	pImage = imageObject->LookupImage(hashString, r);
 	return pImage;
 }
 
@@ -1095,7 +1083,7 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 	// If the user clicked on the image column, they might have struck the trigger.  Check for this.
 	if ( m_pColumn[ iCol ]->iCommand == m_idImageCol ) 
 	{
-		int iImageWidth = m_pIImage->GetImageWidth ( );
+		int iImageWidth = GetIndentationWidth();
 		RECT rcToggle = m_rcHit;
 		rcToggle.left += iDepth * iImageWidth;
 		rcToggle.right = rcToggle.left + iImageWidth;
@@ -1385,6 +1373,11 @@ void CRDFOutliner::OnMouseMove(UINT nFlags, CPoint point)
 				TestRowCol(testPoint1, iRow, iCol);
 				TestRowCol(testPoint2, otherRow, otherCol);
 
+				// Select the item we're on.  Always do this.
+				HT_Resource r = HT_GetNthItem(m_View, iRow);
+				if (r)
+					HT_SetSelectedState(r, PR_TRUE);
+
 				// Both over selections.
 				if (iRow != otherRow)
 				{
@@ -1624,9 +1617,11 @@ void CRDFOutliner::OnPaint()
 	GetClientRect(&rcClient);
     CPaintDC pdc ( this );
 
+/*
 	COLORREF bgColor = GetSysColor(COLOR_WINDOW);
 	COLORREF textColor = GetSysColor(COLOR_WINDOWTEXT);
 	COLORREF sortColor;
+
 	if (GetRValue(bgColor) == 255 && GetGValue(bgColor) == 255 && GetBValue(bgColor) == 255 
 		&& sysInfo.m_iBitsPerPixel > 8)
 	{
@@ -1641,55 +1636,117 @@ void CRDFOutliner::OnPaint()
 			sortColor = Darken(bgColor);
 		else sortColor = Brighten(bgColor);
 	}
+*/
+
+	// Read in all the properties
+	HT_Resource top = HT_TopNode(m_View);
+	void* data;
+	PRBool foundData = FALSE;
+	
+	// Foreground color
+	HT_GetNodeData(top, gNavCenter->treeFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_ForegroundColor);
+	else m_ForegroundColor = RGB(0,0,0);
+
+	// background color
+	HT_GetNodeData(top, gNavCenter->treeBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_BackgroundColor);
+	else m_BackgroundColor = RGB(240,240,240);
+
+	// Sort foreground color
+	HT_GetNodeData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_SortForegroundColor);
+	else m_SortForegroundColor = RGB(0,0,0);
+
+	// Sort background color
+	HT_GetNodeData(top, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_SortBackgroundColor);
+	else m_SortBackgroundColor = RGB(224,224,224);
+
+	// Selection foreground color
+	HT_GetNodeData(top, gNavCenter->selectionFGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_SelectionForegroundColor);
+	else m_SelectionForegroundColor = RGB(255,255,255);
+
+	// Selection background color
+	HT_GetNodeData(top, gNavCenter->selectionBGColor, HT_COLUMN_STRING, &data);
+	if (data)
+		WFE_ParseColor((char*)data, &m_SelectionBackgroundColor);
+	else m_SelectionBackgroundColor = RGB(0,0,128);
+
+	// Background image URL
+	m_BackgroundImageURL = "";
+	HT_GetNodeData(top, gNavCenter->treeBGURL, HT_COLUMN_STRING, &data);
+	if (data)
+		m_BackgroundImageURL = (char*)data;
+	m_pBackgroundImage = NULL; // Clear out the BG image.
+
+	// Divider color
+	m_DividerColor = RGB(255,255,255);
 
 	HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
 	HPALETTE pOldPalette = ::SelectPalette(pdc.m_hDC, hPalette, TRUE);	
-/*
-	if (sysInfo.m_iBitsPerPixel <= 8)
-	{
-		PALETTEENTRY paletteColors[1];
-			
-		UINT index;
 
-		index = ::GetNearestPaletteIndex(hPalette, sortColor);
-		::GetPaletteEntries(hPalette, index, 1, paletteColors);
-		sortColor = RGB(paletteColors[0].peRed, paletteColors[0].peGreen, paletteColors[0].peBlue);
+	HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(m_BackgroundColor); 
+    HPEN hRegPen = (HPEN)::CreatePen( PS_SOLID, 0, m_BackgroundColor);
 
-		index = ::GetNearestPaletteIndex(hPalette, bgColor);
-		::GetPaletteEntries(hPalette, index, 1, paletteColors);
-		bgColor = RGB(paletteColors[0].peRed, paletteColors[0].peGreen, paletteColors[0].peBlue);
-
-		index = ::GetNearestPaletteIndex(hPalette, textColor);
-		::GetPaletteEntries(hPalette, index, 1, paletteColors);
-		textColor = RGB(paletteColors[0].peRed, paletteColors[0].peGreen, paletteColors[0].peBlue);
-	}
-*/
-	HBRUSH hRegBrush = (HBRUSH) ::CreateSolidBrush(bgColor); 
-    HPEN hRegPen = (HPEN)::CreatePen( PS_SOLID, 0, bgColor);
-
-	HBRUSH hHighBrush = ::CreateSolidBrush( GetSysColor( COLOR_HIGHLIGHT ) );
-	HPEN hHighPen = ::CreatePen( PS_SOLID, 0, GetSysColor ( COLOR_HIGHLIGHT ) );
+	HBRUSH hHighBrush = ::CreateSolidBrush( m_SelectionBackgroundColor );
+	HPEN hHighPen = ::CreatePen( PS_SOLID, 0, m_SelectionBackgroundColor );
 
     HBRUSH hOldBrush = (HBRUSH) pdc.SelectObject ( hRegBrush );
     HPEN hOldPen = (HPEN) pdc.SelectObject ( hRegPen );
-    COLORREF cOldText = pdc.SetTextColor ( textColor );
-    COLORREF cOldBk = pdc.SetBkColor ( bgColor );
+    COLORREF cOldText = pdc.SetTextColor ( m_ForegroundColor );
+    
+	int previousBkMode = pdc.SetBkMode(TRANSPARENT);
 
-    int i;            
-    for ( i = pdc.m_ps.rcPaint.top / m_itemHeight; 
-        i < ( pdc.m_ps.rcPaint.bottom / m_itemHeight ) + 1; i++ ) 
+	// Construct a precise line invalidation rect.
+	int start = pdc.m_ps.rcPaint.top / m_itemHeight;
+	int end = pdc.m_ps.rcPaint.bottom / m_itemHeight + 1;
+
+	CRect clientRect;
+	GetClientRect(&clientRect);
+
+	CRect bgFillRect;
+	bgFillRect.left = 0;
+	bgFillRect.right = clientRect.Width();
+	bgFillRect.top = m_itemHeight*start;
+	bgFillRect.bottom = m_itemHeight*end;
+
+	if (m_BackgroundImageURL != "")
 	{
+		// There's a background that needs to be drawn.
+		m_pBackgroundImage = LookupImage(m_BackgroundImageURL, NULL);
+	}
 
+	if (m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded())
+	{
+		int imageHeight = m_pBackgroundImage->bmpInfo->bmiHeader.biHeight;
+		int ySrcOffset = (bgFillRect.top + m_iTopLine*m_itemHeight) % imageHeight;
+		PaintBackground(pdc, bgFillRect, m_pBackgroundImage, ySrcOffset);
+	}
+	else
+	{
+		::FillRect(pdc, bgFillRect, hRegBrush);
+	}
+	
+    int i;            
+    for (i = start; i <= end; i++) 
+	{
 		int index = i + m_iTopLine;
 
-		PaintLine ( i, pdc.m_hDC, &pdc.m_ps.rcPaint, sortColor, hHighBrush, hHighPen );
+		PaintLine ( i, pdc.m_hDC, &pdc.m_ps.rcPaint, hHighBrush, hHighPen );
 
 		if (m_bPaintingFirstObject)
 			m_bPaintingFirstObject = FALSE;
     }
 
     pdc.SetTextColor ( cOldText );
-    pdc.SetBkColor ( cOldBk );        
+    pdc.SetBkMode(previousBkMode);
     pdc.SelectObject ( hOldPen );
     pdc.SelectObject ( hOldBrush );
 	
@@ -1701,12 +1758,100 @@ void CRDFOutliner::OnPaint()
 	VERIFY(DeleteObject( hHighPen ));
 }
 
-void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORREF sortColor,
+void DrawBGSubimage(NSNavCenterImage* pImage, HDC hDC, int xSrcOffset, int ySrcOffset, int xDstOffset, int yDstOffset,
+								  int width, int height)
+{
+	if (pImage->bits) 
+	{
+		HPALETTE hPal = WFE_GetUIPalette(NULL);
+		HPALETTE hOldPal = ::SelectPalette(hDC, hPal, TRUE);
+
+		::RealizePalette(hDC);
+		
+		int oldMode = ::SetMapMode(hDC, MM_TEXT);
+
+		if (pImage->maskbits) 
+		{
+			WFE_StretchDIBitsWithMask(hDC, TRUE, NULL,
+					xDstOffset, yDstOffset,
+					width, height,
+					xSrcOffset, ySrcOffset, width, height,
+					pImage->bits, pImage->bmpInfo,
+					pImage->maskbits, FALSE, RGB(0,0,0));
+		}
+		else 
+		{
+			::StretchDIBits(hDC,
+					xDstOffset, yDstOffset,
+					width, height,
+					xSrcOffset, ySrcOffset, width, height, pImage->bits, pImage->bmpInfo, DIB_RGB_COLORS,
+					SRCCOPY);
+		}
+
+		::SetMapMode(hDC, oldMode);
+
+		::SelectPalette(hDC, hOldPal, TRUE);
+	}
+}
+
+void PaintBackground(HDC hdc, CRect rect, NSNavCenterImage* pImage, int ySrcOffset)
+{ 
+	int totalWidth = rect.Width();
+	int totalHeight = rect.Height();
+
+	if (!pImage->bits)
+		return;
+
+	int imageWidth = pImage->bmpInfo->bmiHeader.biWidth;
+	int imageHeight = pImage->bmpInfo->bmiHeader.biHeight;
+	
+	// Ok, complicated math time.
+	int xDstOffset = rect.left;
+	int yDstOffset = rect.top;
+	
+	int xSrcOffset = 0;
+	if (ySrcOffset == -1) // Assume we don't have a scrolled offset in the view we're drawing into.
+	  ySrcOffset = rect.top % imageHeight;
+
+	int xRemainder = imageWidth - xSrcOffset;
+	int yRemainder = imageHeight - ySrcOffset;
+
+	int xSize = xRemainder > totalWidth ? totalWidth : xRemainder;
+	int ySize = yRemainder > totalHeight ? totalHeight : yRemainder;
+
+	while (yDstOffset < rect.bottom)
+	{
+		// Tile vertically
+		while (xDstOffset < rect.right)
+		{
+			int ySrc = ySrcOffset;
+			if (imageHeight != ySize)
+				ySrc = imageHeight - ySize - ySrcOffset;
+			
+			DrawBGSubimage(pImage, hdc, xSrcOffset, ySrc, xDstOffset, yDstOffset, xSize, ySize);
+			
+			xSrcOffset = 0;
+			xDstOffset += xSize;
+			
+			xSize = (xDstOffset + imageWidth) > rect.right ? imageWidth - (xDstOffset + imageWidth) + rect.right : imageWidth;
+		}
+
+		xDstOffset = rect.left;
+		xSize = (xDstOffset + imageWidth) > rect.right ? rect.right - xDstOffset : imageWidth;
+		ySrcOffset = 0;
+		yDstOffset += ySize;
+		ySize = (yDstOffset + imageHeight) > rect.bottom ? rect.bottom - yDstOffset : imageHeight;
+	}
+}
+
+
+
+void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect,
 							   HBRUSH hHighlightBrush,
 						       HPEN hHighlightPen )
 {
     void * pLineData;
-    int iImageWidth = m_pIImage->GetImageWidth ( );
+    int iImageWidth = GetIndentationWidth();
     CRect WinRect;
     GetClientRect(&WinRect);
 
@@ -1720,12 +1865,16 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
 
 	if ( !( pLineData = AcquireLineData( iLineNo + m_iTopLine )) ) 
 	{
-		EraseLine ( iLineNo, hdc, lpPaintRect );
+		// We're drawing a blank line.
 		if (ViewerHasFocus() && HasFocus(iLineNo + m_iTopLine)) 
 		{
-			rectColumn.left = WinRect.left;
-			rectColumn.right = WinRect.right;
-			DrawFocusRect ( hdc, &rectColumn );
+			CRect internalRect(rectColumn);
+			internalRect.top += 1; // Move in by a pixel.
+			internalRect.bottom -= 2; // Move in by a pixel + the divider line.
+
+			internalRect.left = WinRect.left;
+			internalRect.right = WinRect.right;
+			DrawFocusRect ( hdc, &internalRect );
 		}
 
 		// Draw the column rect
@@ -1736,11 +1885,9 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
 
 			if (iColumn == GetSortColumn())
 			{
-				// Draw the sort rect (Yes, I know this is inefficient.)
-				HBRUSH hSortBrush = (HBRUSH)::CreateSolidBrush(sortColor);
-				HBRUSH pOldBrush = (HBRUSH) ::SelectObject(hdc, hSortBrush);
-				::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-				::SelectObject(hdc, pOldBrush);
+				// Draw the sort rect.
+				HBRUSH hSortBrush = (HBRUSH)::CreateSolidBrush(m_SortBackgroundColor);
+				::FillRect(hdc, &rectColumn, hSortBrush);
 				VERIFY(DeleteObject(hSortBrush));
 			}
 
@@ -1749,6 +1896,15 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
 		return;
 	}
 
+	// Draw the divider
+	CDC* pDC = CDC::FromHandle(hdc);
+	HPEN hDividerPen = ::CreatePen(PS_SOLID, 1, m_DividerColor);
+	HPEN pOldPen = (HPEN)::SelectObject(hdc, hDividerPen);
+	pDC->MoveTo(WinRect.left, rectColumn.bottom-1);
+	pDC->LineTo(WinRect.right, rectColumn.bottom-1);
+	::SelectObject(hdc, pOldPen);
+	VERIFY(::DeleteObject(hDividerPen));
+	
     HFONT hOldFont =(HFONT) ::SelectObject ( hdc, GetLineFont ( pLineData ) );
 
     for ( iColumn = offset = 0; iColumn < m_iVisColumns; iColumn++ )
@@ -1758,21 +1914,17 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
 
         if ( rectInter.IntersectRect ( &rectColumn, lpPaintRect ) ) 
 		{
-			HBRUSH pOldBrush; 
-			COLORREF cOldBk;
-			HPEN pOldPen;
-			HPEN hRegPen;
 			HBRUSH hSortBrush;
 			if (iColumn == GetSortColumn())
 			{
-				hSortBrush = (HBRUSH)::CreateSolidBrush(sortColor);
-				pOldBrush = (HBRUSH) ::SelectObject(hdc, hSortBrush);
-				cOldBk = ::SetBkColor ( hdc, sortColor );
-				hRegPen = (HPEN)::CreatePen( PS_SOLID, 0, sortColor);
-				pOldPen = (HPEN)::SelectObject(hdc, hRegPen);
+				hSortBrush = (HBRUSH)::CreateSolidBrush(m_SortBackgroundColor);
+				CRect tempRect(rectColumn);
+				tempRect.bottom--;
+				if (iColumn == m_iVisColumns-1)
+				  tempRect.right = WinRect.right;
+				::FillRect(hdc, &tempRect, hSortBrush);
+				VERIFY(DeleteObject(hSortBrush));
 			}
-
-			::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
 			
 			if ( m_pColumn[ iColumn ]->iCommand == m_idImageCol ) 
 			{
@@ -1781,15 +1933,6 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
 			}
             PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush,
 						  hHighlightPen );
-
-			if (iColumn == GetSortColumn())
-			{
-				::SelectObject(hdc, pOldBrush);
-				::SetBkColor(hdc, cOldBk);
-				::SelectObject(hdc, pOldPen);
-				VERIFY(DeleteObject(hRegPen));
-				VERIFY(DeleteObject(hSortBrush));
-			}
 		}
 
         offset += m_pColumn[ iColumn ]->iCol;
@@ -1798,8 +1941,13 @@ void CRDFOutliner::PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORRE
     rectColumn.left = offset;
 	rectColumn.right = WinRect.right;
 
-	::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-    PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush, hHighlightPen );
+	if (!(m_pBackgroundImage && m_pBackgroundImage->SuccessfullyLoaded()))
+	{
+		rectColumn.bottom--; // Handle the divider
+		::FillRect(hdc, &rectColumn, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
+	}
+
+	PaintColumn ( iLineNo, iColumn, rectColumn, hdc, pLineData, hHighlightBrush, hHighlightPen );
 
 	rectColumn.left = WinRect.left;
 	rectColumn.right = WinRect.right;
@@ -1836,13 +1984,15 @@ void CRDFOutliner::PaintColumn(int iLineNo, int iColumn, LPRECT lpColumnRect,
 			{
 				// Draw the horizontal line.
 				CPen separatorPen;
-				separatorPen.CreatePen(PS_SOLID, 1, GetSysColor ( COLOR_WINDOWTEXT ));
+				if (iColumn == GetSortColumn())
+				  separatorPen.CreatePen(PS_SOLID, 1, m_SortForegroundColor);
+				else separatorPen.CreatePen(PS_SOLID, 1, m_ForegroundColor);
 				
 				HPEN sepPen = (HPEN)separatorPen.GetSafeHandle();
 				
 				HPEN usePen = IsSelected(iLineNo) ? hHighlightPen : sepPen;
 
-				HPEN pOldPen = (HPEN)(::SelectObject(hdc, usePen)); //separatorPen.GetSafeHandle()));
+				HPEN pOldPen = (HPEN)(::SelectObject(hdc, usePen));
 				::MoveToEx(hdc, lpColumnRect->left, lpColumnRect->top+m_itemHeight/2, NULL);
 				::LineTo(hdc, lpColumnRect->right, lpColumnRect->top+m_itemHeight/2);
 				::SelectObject(hdc, pOldPen);
@@ -1860,16 +2010,15 @@ void CRDFOutliner::PaintColumn(int iLineNo, int iColumn, LPRECT lpColumnRect,
 					{
 						HBRUSH pOldBrush = (HBRUSH)(::SelectObject ( hdc, hHighlightBrush ));
 						HPEN pOldPen = (HPEN)(::SelectObject ( hdc, hHighlightPen ));
-						COLORREF cOldText = ::SetTextColor ( hdc, GetSysColor ( COLOR_HIGHLIGHTTEXT ) );
-						COLORREF oldColor = ::SetBkColor ( hdc, GetSysColor ( COLOR_HIGHLIGHT ) );
+						COLORREF cOldText = ::SetTextColor ( hdc, m_SelectionForegroundColor );
+						
 						DrawColumn ( hdc, lpColumnRect, lpsz, 
 								 m_pColumn[ iColumn ]->cropping, 
 								 m_pColumn[ iColumn ]->alignment, hHighlightBrush, hasFocus );
 						::SelectObject(hdc, pOldBrush);
 						::SelectObject(hdc, pOldPen);
 						::SetTextColor ( hdc, cOldText );
-						::SetBkColor ( hdc, oldColor );
-
+						
 					}
 					else DrawColumn ( hdc, lpColumnRect, lpsz, 
 								 m_pColumn[ iColumn ]->cropping, 
@@ -1923,6 +2072,9 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 	}
 
 	CRect textRect(*lpColumnRect);
+	textRect.top += 1; // Account for the slight padding.
+	textRect.bottom -= 2; // Account for the slight padding and the divider line.
+
 	CRect bgRect;
 	CString theString(lpszString);
 
@@ -1937,11 +2089,24 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 	bgRect.bottom = textRect.bottom;
 
 	// Fill the background with the current brush (or frame if we don't have focus)
-	if (ViewerHasFocus())
-		::FillRect(hdc, &bgRect, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-	else if (theBrush)
-		::FrameRect( hdc, &bgRect, theBrush);
-	
+	if (theBrush)
+	{
+		if (ViewerHasFocus())
+		{
+			CRect newRect(bgRect);
+			if (hasFocus)
+			{	
+				newRect.top +=2;
+				newRect.bottom-=2;
+				newRect.left+=2;
+				newRect.right-=2;
+			}
+			::FillRect(hdc, &newRect, theBrush);
+		}
+		else if (!hasFocus)
+			::FrameRect( hdc, &bgRect, theBrush);
+	}
+
 	// Adjust the text rectangle for the left and right margins
 	textRect.left += COL_LEFT_MARGIN;
 	textRect.right -= COL_LEFT_MARGIN;
@@ -1956,7 +2121,9 @@ void CRDFOutliner::DrawColumn(HDC hdc, LPRECT lpColumnRect, LPCTSTR lpszString,
 
 int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void * pLineData )
 {
-	int iImageWidth = m_pIImage->GetImageWidth ( );
+	int iImageWidth = m_itemHeight - 3; // Account for the two pixel padding + the divider
+	int iTriggerSize = 9;	// This will need to be changed when custom triggers arrive.
+	int iBarWidth = iTriggerSize / 2 + 1; // 5 pixels out of the 9.
 	int iMaxX = offset + m_pColumn[ iColNo ]->iCol;
 	int idx;
 
@@ -1973,33 +2140,95 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 
 	if ( m_bHasPipes ) 
 	{
-		for ( int i = 0; i < iDepth; i++ ) 
+		for ( int i = 0; i < iDepth; i++ )  
 		{
 			if ( rect.right <= iMaxX ) 
 			{
-				if ( pAncestor && pAncestor[ i ].has_next ) 
+				if ( pAncestor && pAncestor[ i ].has_next && i > 0) // Ignore the outermost level.
 				{
-					m_pIImage->DrawTransImage( IDX_VERTPIPE, rect.left, rect.top, hdc );
+					// Draw the appropriate vertical bar.
+					// bar should be 5 pixels wide. 1 black - 3 gray - 1 black.
+					CDC* pDC = CDC::FromHandle(hdc);
+					CBrush innerBrush(RGB(192,192,192));
+					CBrush outerBrush(RGB(128,128,128));
+					CRect barRect(rect);
+					barRect.left += (iImageWidth - iBarWidth) / 2;
+					barRect.right = barRect.left + iBarWidth;
+					pDC->FrameRect(barRect, &outerBrush);
+					barRect.left += 1;
+					barRect.right -= 1;
+					pDC->FillRect(barRect, &innerBrush);
 				} 
-				else 
-				{
-					::FillRect(hdc, &rect, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-				}
 			}
 			rect.left += iImageWidth;
 			rect.right += iImageWidth;
 		}
     
-		if ( rect.right <= iMaxX ) {
-			idx = 0;
-			if ( pAncestor ) {
-				idx = GetPipeIndex ( pLineData, iDepth, &pAncestor[iDepth] );
+		if ( rect.right <= iMaxX ) 
+		{
+			if (iDepth)
+			{
+				// Draw the vertical bar.
+				CDC* pDC = CDC::FromHandle(hdc);
+				CBrush innerBrush(RGB(192,192,192));
+				CBrush outerBrush(RGB(128,128,128));
+				CRect barRect(rect);
+				barRect.left += (iImageWidth - iBarWidth) / 2;
+				barRect.right = barRect.left + iBarWidth;
+				if (!pAncestor[iDepth].has_next)
+				{
+					barRect.bottom -= 2; // Move away from the divider and even supply a little padding.
+				}
+				if (!pAncestor[iDepth].has_prev)
+				{
+					barRect.top += 1; // Supply a little padding.
+				}
+				pDC->FrameRect(barRect, &outerBrush);
+				barRect.left += 1;
+				barRect.right -= 1;
+				if (!pAncestor[iDepth].has_next)
+				{
+					barRect.bottom -= 1; // Actually get that frame onto the end
+				}
+				if (!pAncestor[iDepth].has_prev)
+				{
+					barRect.top += 1; // Get that frame onto the top.
+				}
+
+				pDC->FillRect(barRect, &innerBrush);
 			}
-			if ( idx ) { 
-				m_pIImage->DrawTransImage( idx, rect.left, rect.top, hdc );
-			} else {
-				::FillRect(hdc, &rect, (HBRUSH) GetCurrentObject(hdc, OBJ_BRUSH));
-			}
+			
+			HT_Resource r = (HT_Resource)pLineData;
+			if (r && HT_IsContainer(r))
+			{
+				// Draw the trigger
+				CBrush outerTrigger(RGB(128,128,128));
+				CBrush innerTrigger(RGB(255,255,255));
+				CRect triggerRect(rect);
+				triggerRect.top += (iImageWidth - iTriggerSize) / 2 + 2; // Account for the pixel of padding
+				triggerRect.bottom = triggerRect.top + iTriggerSize;
+				triggerRect.left += (iImageWidth - iTriggerSize) / 2;
+				triggerRect.right = triggerRect.left + iTriggerSize;
+				CDC* pDC = CDC::FromHandle(hdc);
+				pDC->FillRect(triggerRect, &innerTrigger);
+				pDC->FrameRect(triggerRect, &outerTrigger);
+
+				// Draw the horizontal portion of the trigger cross
+				HPEN pen = ::CreatePen(PS_SOLID, 1, RGB(0,0,0));
+				HPEN pOldPen = (HPEN)::SelectObject(hdc, pen);
+				pDC->MoveTo(triggerRect.left + 2, triggerRect.top + (iTriggerSize / 2));
+				pDC->LineTo(triggerRect.right - 2, triggerRect.top + (iTriggerSize / 2));
+
+				// Draw the vertical portion of the trigger cross (only for closed containers)
+				if (!HT_IsContainerOpen(r))
+				{
+					pDC->MoveTo(triggerRect.left + (iTriggerSize / 2), triggerRect.top + 2);
+					pDC->LineTo(triggerRect.left + (iTriggerSize / 2), triggerRect.bottom - 2);
+				}
+
+				::SelectObject(hdc, pOldPen);
+				VERIFY(::DeleteObject(pen));
+			} 
 		}
 		rect.left += iImageWidth;
 		rect.right += iImageWidth;
@@ -2040,7 +2269,7 @@ CRect CRDFOutliner::GetColumnRect(int iLine, int column)
 		if (m_pColumn[iColumn]->iCommand == m_idImageCol) 
 		{
 			// Handle the image column (where the indentation is)
-			int iImageWidth = m_pIImage->GetImageWidth ( );
+			int iImageWidth = GetIndentationWidth();
 			rectColumn.left = (iImageWidth * (iDepth+1)) + OUTLINE_TEXT_OFFSET + m_pIUserImage->GetImageWidth();
         }
 		else rectColumn.left = offset;
@@ -2112,8 +2341,8 @@ void CRDFOutliner::AddTextEdit()
 	::ReleaseDC(m_hWnd, hDC);
 
 	rect = GetColumnRect(m_iSelection, m_nSelectedColumn);
-	rect.bottom+=2; // Adjustment, since the default is a little too small
-
+	rect.top += 1;
+	
 	if (rect.left == rect.right)
 		bRtn = FALSE;
 
@@ -2137,8 +2366,9 @@ void CRDFOutliner::AddTextEdit()
 
 		if (pText)
 		{
+			m_EditField->SetSel(0,-1);
 			m_EditField->ReplaceSel(pText);
-			m_EditField->SetSel(0, strlen(pText), TRUE);
+			m_EditField->SetSel(0,-1);
 		}
 	}
 }
@@ -2202,7 +2432,6 @@ void CRDFOutliner::MoveToNextColumn()
 
 void CRDFOutliner::OnTimer(UINT nID)
 {
-	COutliner::OnTimer(nID);
 	if (nID == IDT_EDITFOCUS) 
 	{
 		if (m_hEditTimer != 0)
@@ -2210,7 +2439,8 @@ void CRDFOutliner::OnTimer(UINT nID)
 			KillTimer(m_hEditTimer);
 			m_hEditTimer = 0;
 		}	
-		AddTextEdit();		
+		AddTextEdit();
+		return;
 	}
 	else if (nID == IDT_SPRINGLOAD)
 	{
@@ -2233,6 +2463,8 @@ void CRDFOutliner::OnTimer(UINT nID)
 				}
 			}
 		}
+
+		return;
 	}
 	else if (nID == IDT_DRAGRECT)
 	{
@@ -2256,7 +2488,11 @@ void CRDFOutliner::OnTimer(UINT nID)
 				m_hDragRectTimer = SetTimer(IDT_DRAGRECT, GetDragHeartbeat(), NULL);
 			}
 		}
+
+		return;
 	}
+
+	COutliner::OnTimer(nID);
 }
 
 // DRAG AND DROP ROUTINES
@@ -2388,7 +2624,7 @@ void CRDFOutliner::PaintDragLine(HDC hdc, CRect &rectColumn)
 	}
 
 	::SelectObject(hdc, pOldPen);
-	::DeleteObject(pen);
+	VERIFY(::DeleteObject(pen));
 }
 
 void CRDFOutliner::AcceptDrop( int iLineNo, COleDataObject *pDataObject, DROPEFFECT dropEffect )
@@ -2844,12 +3080,15 @@ void CRDFDropTarget::OnDragLeave(CWnd* pWnd)
 
 BEGIN_MESSAGE_MAP(CRDFOutlinerParent,COutlinerParent)
     ON_WM_DESTROY()
+	ON_WM_PAINT ( )
 END_MESSAGE_MAP()
 
 CRDFOutlinerParent::CRDFOutlinerParent(HT_Pane thePane, HT_View theView)
 {
 	CRDFOutliner* theOutliner = new CRDFOutliner(thePane, theView, this);
 	m_pOutliner = theOutliner;
+	m_ForegroundColor = RGB(0,0,0);
+	m_BackgroundColor = RGB(192, 192, 192);
 }
 
 BOOL CRDFOutlinerParent::PreCreateWindow(CREATESTRUCT& cs)
@@ -2871,6 +3110,145 @@ void CRDFOutlinerParent::OnDestroy()
 COutliner* CRDFOutlinerParent::GetOutliner ( )
 {
 	return m_pOutliner;
+}
+
+void CRDFOutlinerParent::OnPaint ( )
+{                            
+    CPaintDC pdc ( this );
+
+    if ( !m_pOutliner || m_bDisableHeaders )
+        return;
+
+    int i, offset;
+
+	// we might use these in the for() loop below --- make sure
+	//  they stay in scope since we don't restore into the CDC until
+	//  the end of the routine
+    HFONT hOldFont = (HFONT) pdc.SelectObject ( m_hToolFont );
+    COLORREF cOldText = pdc.SetTextColor(m_ForegroundColor);
+    int nOldMode = pdc.SetBkMode(TRANSPARENT);
+	CBrush bgBrush(m_BackgroundColor);
+	CBrush fgBrush(m_ForegroundColor);
+
+	CRect rectClient;
+	GetClientRect ( &rectClient );
+	int iMaxHeaderWidth = rectClient.right - m_iPusherWidth;
+
+    for ( i = offset = 0; (i < (int)m_pOutliner->GetVisibleColumns()) && (offset < iMaxHeaderWidth); i++ )
+    {
+        BOOL bDep = m_pOutliner->m_pColumn[ i ]->bDepressed &&
+					m_pOutliner->m_pColumn[ i ]->bIsButton;
+		CRect rect( offset, 0, m_pOutliner->m_pColumn[ i ]->iCol + offset, m_iHeaderHeight );
+
+		if (rect.right > iMaxHeaderWidth ) {
+			rect.right = iMaxHeaderWidth;
+		}
+
+        CRect rcInter;
+        if ( ::IntersectRect ( &rcInter, &pdc.m_ps.rcPaint, &rect ) )
+        {
+			CRect rcText = rect;
+			//::InflateRect(&rcText,-2,-2);
+			::FillRect(pdc.m_hDC, &rcText, bgBrush );
+			rcText.InflateRect(1, 0, 0, 0);
+			::FrameRect(pdc.m_hDC, &rcText, fgBrush);
+
+			DrawColumnHeader( pdc.m_hDC, rcText, i );
+			//DrawButtonRect( pdc.m_hDC, rect, bDep );
+		}
+
+        offset += m_pOutliner->m_pColumn[ i ]->iCol;
+    }
+
+	// Fill in the gap on the right
+
+	if (offset < iMaxHeaderWidth) {
+		RECT rect = {offset, 0, iMaxHeaderWidth, m_iHeaderHeight};
+		CRect rcInter;
+
+		if ( IntersectRect( &rcInter, &pdc.m_ps.rcPaint, &rect ) ) {
+			CRect rcText = rect;
+			//::InflateRect(&rcText,-2,-2);
+			::FillRect(pdc.m_hDC, &rcText, bgBrush );
+			rcText.InflateRect(1, 0, 0, 0);
+			::FrameRect(pdc.m_hDC, &rcText, fgBrush );
+
+			//DrawButtonRect( pdc.m_hDC, rect, FALSE );
+		}
+	}
+
+	CRect rect(rectClient.right - m_iPusherWidth, 0, rectClient.right, m_iHeaderHeight );
+    CRect iRect;
+
+    if ( iRect.IntersectRect ( &pdc.m_ps.rcPaint, &rect ) ) {
+		int idxImage;
+		rect.InflateRect(1,0,1,0);
+		::FillRect ( pdc.m_hDC, &rect, bgBrush );
+		::FrameRect( pdc.m_hDC, &rect, fgBrush );
+
+		m_iPusherState = pusherNone;
+		if ( m_pOutliner->m_iNumColumns > 1 ) {
+			if (m_pOutliner->GetVisibleColumns() > 1) {
+				m_iPusherState |= pusherRight;
+			}
+			if (int(m_pOutliner->GetVisibleColumns()) < m_pOutliner->m_iNumColumns) {
+				m_iPusherState |= pusherLeft;
+			}
+		}
+
+		CRect divider(rect.left, rect.top, rect.left + rect.Width()/2, rect.bottom);
+		::FrameRect(pdc.m_hDC, &divider, fgBrush);
+
+		POINT ptBitmap;
+		RECT rect2 = rect;
+
+		// Draw left pusher
+		rect2.right = (rect.left + rect.right + 1) / 2;
+
+		ptBitmap.x = (rect2.left + rect2.right + 1) / 2 - 4;
+		ptBitmap.y = (rect2.top + rect2.bottom + 1) / 2 - 4;
+		if ( m_iPusherRgn == pusherLeft ) {
+			ptBitmap.x++;
+			ptBitmap.y++;
+		}
+		idxImage = m_iPusherState & pusherLeft ? 
+				   IDX_PUSHLEFT : IDX_PUSHLEFTI;
+		m_pIImage->DrawTransImage( idxImage, ptBitmap.x, ptBitmap.y, &pdc);
+		//DrawButtonRect( pdc.m_hDC, rect2, m_iPusherRgn == pusherLeft );
+		
+		// Draw right pusher
+		rect2.left = rect2.right;
+		rect2.right = rect.right;
+		ptBitmap.x = (rect2.left + rect2.right + 1) / 2 - 4;
+		ptBitmap.y = (rect2.top + rect2.bottom + 1) / 2 - 4;
+		if ( m_iPusherRgn == pusherRight ) {
+			ptBitmap.x++;
+			ptBitmap.y++;
+		}
+ 		idxImage = m_iPusherState & pusherRight ? 
+				   IDX_PUSHRIGHT : IDX_PUSHRIGHTI;
+		m_pIImage->DrawTransImage( idxImage, ptBitmap.x, ptBitmap.y, &pdc);
+		//DrawButtonRect( pdc.m_hDC, rect2, m_iPusherRgn == pusherRight );
+	}
+
+    pdc.SelectObject ( hOldFont );
+    pdc.SetTextColor ( cOldText );
+    pdc.SetBkMode( nOldMode );
+
+	if (m_bEnableFocusFrame)
+	{
+		HBRUSH hBrush = NULL;
+		if (GetFocus() == m_pOutliner)
+			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_HIGHLIGHT ) );
+		else
+			hBrush = ::CreateSolidBrush( GetSysColor( COLOR_WINDOW ) );
+
+		RECT clientRect;
+		GetClientRect(&clientRect);
+		::FrameRect( pdc.m_hDC, &clientRect, hBrush );	 
+		VERIFY(DeleteObject( hBrush ));
+	}
+
 }
 
 void CRDFOutlinerParent::CreateColumns ( void )

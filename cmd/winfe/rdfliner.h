@@ -55,6 +55,8 @@ class CRDFOutlinerParent;
 
 class CRDFOutliner : public COutliner, public CCustomImageObject
 {
+friend class CRDFOutlinerParent;
+
 private:
 	HT_Pane m_Pane;		// The pane that owns this view
 	HT_View m_View;		// The view as registered in the hypertree
@@ -100,6 +102,23 @@ private:
 
 	CNavMenuBar* m_NavMenuBar;	// A pointer to the title nav menu. NULL if no menu button is present.
 
+	// Tree colors, fonts, and backgrounds
+	COLORREF m_ForegroundColor;				// The foreground color.  Used for text, separators, etc.
+	COLORREF m_BackgroundColor;				// The background color.  For trees with no bg image.  Also
+											// displayed until the image loads.
+	COLORREF m_SortBackgroundColor;			// The color used to display a highlighted column (that has a sort
+											// imposed upon it.
+	COLORREF m_SortForegroundColor;			// The color used to display te highlighted text/separators, etc.
+
+	COLORREF m_SelectionForegroundColor;	// Foreground color of the selection
+	COLORREF m_SelectionBackgroundColor;	// Background color of the selection
+
+	COLORREF m_DividerColor;				// Color of the dividers drawn between lines
+	BOOL	 m_bDrawDividers;				// Whether or not dividers should be drawn
+
+	CString m_BackgroundImageURL;			// The URL of the background image.
+	NSNavCenterImage* m_pBackgroundImage;	// The image for the background.
+
 public:
     CRDFOutliner (HT_Pane thePane, HT_View theView, CRDFOutlinerParent* theParent);
 	~CRDFOutliner ( );
@@ -122,6 +141,16 @@ public:
 // overridden.  That is, unless I state otherwise, all virtual functions
 // are overridden versions of COutliner functions.
 	
+	virtual void InitializeItemHeight(int iDesiredSize) { m_itemHeight = 19; }
+		// Overridden to place a pixel of padding on either side of the line and to add a pixel for the
+		// divider that is drawn between lines.
+
+	virtual void AdjustTipSize(int& left, int& top, int& hor, int& ver)
+	{ top += 1; ver -= 3; };	// Account for the dividers between lines and for the padding.
+
+	virtual int GetIndentationWidth() { return m_pIUserImage->GetImageWidth(); };
+		// Gets the width to indent at each level.
+
 	void FocusCheck(CWnd* pWnd, BOOL gotFocus);  
 		// Called to potentially update the embedded menu bar in the docked view.
 
@@ -223,7 +252,7 @@ public:
 	virtual int DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void * pLineData );
 		// Overridden to handle the drawing of custom icons.
 
-	void PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, COLORREF sortColor, HBRUSH hHighlightBrush,
+	void PaintLine ( int iLineNo, HDC hdc, LPRECT lpPaintRect, HBRUSH hHighlightBrush,
 						       HPEN hHighlightPen );
 		// This PaintLine is used instead of the one in the outliner base class. Overridden so
 		// that individual columns can be selected (instead of an entire line).
@@ -326,6 +355,8 @@ class CRDFOutlinerParent : public COutlinerParent
 {
 private:
 	CRDFCommandMap columnMap;
+	COLORREF m_ForegroundColor;
+	COLORREF m_BackgroundColor;
 
 public:
 	CRDFOutlinerParent(HT_Pane thePane, HT_View theView);
@@ -340,6 +371,7 @@ public:
 
 protected:
     afx_msg void OnDestroy();
+	afx_msg void OnPaint();
     DECLARE_MESSAGE_MAP()
 };
 
