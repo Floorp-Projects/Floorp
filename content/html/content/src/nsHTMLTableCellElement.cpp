@@ -350,7 +350,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
     if (nsGenericHTMLElement::ParseValue(aValue, -1, MAX_COLSPAN, aResult, eHTMLUnit_Integer)) {
       PRInt32 val = aResult.GetIntValue();
       // quirks mode does not honor the special html 4 value of 0
-      if ((val < 0) || ((0 == val) && mInner.InNavQuirksMode())) {
+      if ((val < 0) || ((0 == val) && mInner.InNavQuirksMode(mInner.mDocument))) {
         nsHTMLUnit unit = aResult.GetUnit();
         aResult.SetIntValue(1, unit);
       }

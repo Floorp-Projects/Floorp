@@ -312,7 +312,7 @@ public:
 
   // See if the content object is in a document that has nav-quirks
   // mode enabled.
-  PRBool InNavQuirksMode() const;
+  static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
   nsIHTMLAttributes* mAttributes;
 };

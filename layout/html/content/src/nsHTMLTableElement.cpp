@@ -275,7 +275,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
         if ((count+rows) > aIndex) {
           body.Item(aIndex-count, aReturn);
           NS_RELEASE(tbodies);
-		  return NS_OK;
+		      return NS_OK;
         }
         count += rows;
         theIndex++;

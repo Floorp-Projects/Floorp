@@ -240,6 +240,7 @@ struct MenuList_s DemoList[18] =
   CreateMenuItem(submenu2, "Select Alternative 3", VIEWER_SELECT_STYLE_THREE);
   CreateMenuItem(submenu2, "Select Alternative 4", VIEWER_SELECT_STYLE_FOUR);
   submenu2=CreateSubMenu(submenu, "Compatibility Mode");
+  CreateMenuItem(submenu2, "Use DTD", VIEWER_USE_DTD_MODE);
   CreateMenuItem(submenu2, "Nav Quirks", VIEWER_NAV_QUIRKS_MODE);
   CreateMenuItem(submenu2, "Standard", VIEWER_STANDARD_MODE);
   submenu2=CreateSubMenu(submenu, "Widget Render Mode");

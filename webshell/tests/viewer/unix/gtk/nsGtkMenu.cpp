@@ -130,6 +130,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/Style/Select Style Sheet/Select Alternative 3", nsnull, (GIFC)gtk_ifactory_cb, VIEWER_SELECT_STYLE_THREE, nsnull },
   { "/Style/Select Style Sheet/Select Alternative 4", nsnull, (GIFC)gtk_ifactory_cb, VIEWER_SELECT_STYLE_FOUR, nsnull },
   { "/Style/_Compatibility Mode",		nsnull,	nsnull,			0,			"<Branch>" },
+  { "/Style/Compatibility Mode/Use DTD",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_USE_DTD_MODE,	nsnull },
   { "/Style/Compatibility Mode/Nav Quirks",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_NAV_QUIRKS_MODE,	nsnull },
   { "/Style/Compatibility Mode/Standard",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_STANDARD_MODE,	nsnull },
   { "/Style/_Gfx Scrollbars Mode",		nsnull,	nsnull,			0,			"<Branch>" },

@@ -3525,12 +3525,21 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
 #endif // NS_DEBUG
 
+#define USE_DTD  0
+#define STANDARD 1 
+#define QUIRKS   2 
 void 
-nsBrowserWindow::SetCompatibilityMode(PRBool aIsStandard)
+nsBrowserWindow::SetCompatibilityMode(PRUint32 aMode)
 {
   nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
   if (pref) { 
-    int32 prefInt = (aIsStandard) ? eCompatibility_Standard : eCompatibility_NavQuirks;
+    int32 prefInt = USE_DTD;
+    if (STANDARD == aMode) {
+      prefInt = eCompatibility_Standard;
+    }
+    else if (QUIRKS == aMode) {
+      prefInt = eCompatibility_NavQuirks;
+    }
     pref->SetIntPref("nglayout.compatibility.mode", prefInt);
     pref->SavePrefFile();
   }
@@ -3624,9 +3633,10 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
     result = nsEventStatus_eConsumeNoDefault;
     break;
 
+  case VIEWER_USE_DTD_MODE:
   case VIEWER_NAV_QUIRKS_MODE:
   case VIEWER_STANDARD_MODE:
-    SetCompatibilityMode(VIEWER_STANDARD_MODE == aID);
+    SetCompatibilityMode(aID - VIEWER_USE_DTD_MODE);
     result = nsEventStatus_eConsumeNoDefault;
     break;
   }

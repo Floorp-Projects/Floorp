@@ -30,7 +30,7 @@
 
 class nsIImageGroup;
 class nsITimer;
-class nsRect;
+struct nsRect;
 
 class nsThrobber : public nsIImageRequestObserver {
 public:
