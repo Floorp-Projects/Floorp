@@ -38,9 +38,14 @@
 
   . Improve names of stuff
 
+  . We're a bit schizophrenic about whether we want to use
+    nsXULTemplateBuilder's members to determine the container & member
+    variables, or if we want to use the mRule member of a Match. Which
+    is right? Is there redundancy here?
+
   To turn on logging for this module, set:
 
-    NSPR_LOG_MODULES nsRDFGenericBuilder:5
+    NSPR_LOG_MODULES nsXULTemplateBuilder:5
 
  */
 
@@ -4630,6 +4635,10 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
 
             content = VALUE_TO_ICONTENT(value);
 
+            // Update the 'empty' attribute. Do this *first*, because
+            // we may decide to nuke bestmatch in a minute...
+            SetContainerAttrs(content, bestmatch);
+
             // See if we've built the container contents for "content"
             // yet. If not, we don't need to build any content. This
             // happens, for example, if we recieve an assertion on a
@@ -4656,9 +4665,6 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
                 // never saw this match.
                 matches->Remove(bestmatch);
             }
-
-            // Update the 'empty' attribute
-            SetContainerAttrs(content, bestmatch);
         }
     }
 
@@ -4981,16 +4987,28 @@ nsXULTemplateBuilder::SubstituteText(Match& aMatch,
 
         // Construct a substring that is the symbol we need to look up
         // in the rule's symbol table. The symbol is terminated by a
-        // space character, or the end of the string, whichever comes
-        // first. (The space character is consumed.)
+        // space character, a caret, or the end of the string,
+        // whichever comes first.
         PRInt32 first = backup;
 
-        while (i < len && aAttributeValue[i] != PRUnichar(' '))
+        PRUnichar c;
+        while (i < len) {
+            c = aAttributeValue[i];
+            if ((c == PRUnichar(' ')) || (c == PRUnichar('^')))
+                break;
+
             ++i;
+        }
 
         PRInt32 last = i;
 
-        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last);
+        // Back up so we don't consume the terminating character
+        // *unless* the terminating character was a caret: the caret
+        // means "concatenate with no space in between".
+        if (c != PRUnichar('^'))
+            --i;
+
+        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last - first);
 
         // The symbol "rdf:*" is special, and means "this guy's URI"
         PRInt32 var = 0;
