@@ -716,12 +716,10 @@ il_removefromcache(il_container *ic)
     PR_ASSERT(ic); 
     if (ic)
     {
-#ifdef PIN_CHROME
-   	ILTRACE(2,("\nRemoving a chrome image from the image cache")); 
-#endif
 
-	    if ( ic->moz_type == TYPE_CHROME )
-		    printf( "Image type is chrome\n" );	
+        if ( ic->moz_type == TYPE_CHROME )
+     	    ILTRACE(2,("\nRemoving a chrome image from the image cache")); 
+
         ILTRACE(2,("il: remove ic=0x%08x from cache\n", ic));
         PR_ASSERT(ic->next || ic->prev || (il_cache.head == il_cache.tail));
 
