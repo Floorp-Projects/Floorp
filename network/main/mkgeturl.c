@@ -151,7 +151,17 @@
 
 #ifdef MODULAR_NETLIB
 void net_ReleaseContext(MWContext *context);
-#endif
+#endif /* MODULAR_NETLIB */
+
+#if defined(NETLIB_THREAD)
+void net_CallExitRoutineProxy(Net_GetUrlExitFunc* exit_routine,
+                              URL_Struct*         URL_s,
+                              int                 status,
+                              FO_Present_Types    format_out,
+                              MWContext*          window_id);
+#else
+#define net_CallExitRoutineProxy net_CallExitRoutine
+#endif /* !NETLIB_THREAD */
 
 #include "timing.h"
 
@@ -1049,7 +1059,7 @@ NET_SetCacheUseMethod(CacheUseEnum method)
     NET_CacheUseMethod = method;
 }
 
-PRIVATE void
+MODULE_PRIVATE void
 net_CallExitRoutine(Net_GetUrlExitFunc *exit_routine,
 					URL_Struct                 *URL_s,
 					int                 status,
@@ -1210,12 +1220,12 @@ net_push_url_on_wait_queue(int                 url_type,
 					 NET_TotalNumberOfOpenConnections ));
 	if(!wus)
 	  {
-		net_CallExitRoutine(exit_routine,
+		net_CallExitRoutineProxy(exit_routine,
 							URL_s,
 							MK_OUT_OF_MEMORY,
 							format_out,
 							context);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(wus->window_id);
 #endif
 		return(MK_OUT_OF_MEMORY);
@@ -1452,7 +1462,7 @@ net_AbortWaitingURL(MWContext * window_id, Bool all, XP_List *list)
 			TRACEMSG(("killing waiting URL"));
 
 			/* call exit routine since we are done */
-			net_CallExitRoutine(wus->exit_routine,
+			net_CallExitRoutineProxy(wus->exit_routine,
 								wus->URL_s,
 								MK_INTERRUPTED,
 								wus->format_out,
@@ -1469,7 +1479,7 @@ net_AbortWaitingURL(MWContext * window_id, Bool all, XP_List *list)
 			 * funky doubly linked list stuff.
 			 */
 			XP_ListRemoveObject(list, wus);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(wus->window_id);
 #endif
 			FREE(wus);
@@ -1746,12 +1756,12 @@ NET_ShutdownNetLib(void)
                tmpEntry->socket, tmpEntry->con_sock, tmpEntry->status, tmpEntry->URL_s->address));
 
 	 	/* call exit routine since we know we are done */
-	 	net_CallExitRoutine(tmpEntry->exit_routine,
+	 	net_CallExitRoutineProxy(tmpEntry->exit_routine,
 							 tmpEntry->URL_s,
 							 tmpEntry->status,
 							 tmpEntry->format_out,
 							 tmpEntry->window_id);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(tmpEntry->window_id);
 #endif
 	 	PR_Free(tmpEntry);  /* free the no longer active entry */
@@ -1946,12 +1956,12 @@ NET_GetURL (URL_Struct *URL_s,
 		if ( !confirm ) {
 			/* abort url
 			 */
-			net_CallExitRoutine(exit_routine,
+			net_CallExitRoutineProxy(exit_routine,
 								URL_s,
 								MK_INTERRUPTED,
 								output_format,
 								window_id);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
 #endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2084,7 +2094,7 @@ NET_GetURL (URL_Struct *URL_s,
 	if (URL_s->method == URL_HEAD_METHOD &&
 		type != HTTP_TYPE_URL HG42421 && type != FILE_TYPE_URL) {
 	  /* We can only do HEAD on http connections. */
-	  net_CallExitRoutine(exit_routine,
+	  net_CallExitRoutineProxy(exit_routine,
 						  URL_s,
 						  MK_MALFORMED_URL_ERROR, /* Is this right? ### */
 						  output_format,
@@ -2093,7 +2103,7 @@ NET_GetURL (URL_Struct *URL_s,
 	  NET_TotalNumberOfProcessingURLs++;
 	  net_CheckForWaitingURL(window_id, 0, load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
       net_ReleaseContext(window_id);
 #endif
 	  LIBNET_UNLOCK_AND_RETURN(MK_MALFORMED_URL_ERROR);
@@ -2240,7 +2250,7 @@ NET_GetURL (URL_Struct *URL_s,
 		/* we need at least an address
 		 * if we don't have it exit this routine
 	     */
-		net_CallExitRoutine(exit_routine,
+		net_CallExitRoutineProxy(exit_routine,
 			    URL_s,
 			    MK_TIMEBOMB_URL_PROHIBIT,
 							output_format,
@@ -2248,7 +2258,7 @@ NET_GetURL (URL_Struct *URL_s,
 
 			net_CheckForWaitingURL(window_id, 0, load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
 #endif
 		LIBNET_UNLOCK_AND_RETURN(MK_TIMEBOMB_URL_PROHIBIT);
@@ -2327,14 +2337,14 @@ NET_GetURL (URL_Struct *URL_s,
 		      {
 			    /* abort url
 		 */
-		net_CallExitRoutine(exit_routine,
+		net_CallExitRoutineProxy(exit_routine,
 									URL_s,
 									MK_INTERRUPTED,
 									output_format,
 									window_id);
 		net_CheckForWaitingURL(window_id, 0, load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
 #endif
 		LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2356,13 +2366,13 @@ NET_GetURL (URL_Struct *URL_s,
 
 		if(!(munged = (char*) PR_Malloc(PL_strlen(URL_s->address)+20)))
 		{
-		    net_CallExitRoutine(exit_routine,
+		    net_CallExitRoutineProxy(exit_routine,
 								URL_s,
 								MK_OUT_OF_MEMORY,
 								output_format,
 								window_id);
 			
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
 #endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
@@ -2379,12 +2389,12 @@ NET_GetURL (URL_Struct *URL_s,
 	 * a Composer View Document Source window.
 	 */
 	if ( window_id->edit_view_source_hack ){
-	    net_CallExitRoutine(exit_routine,
+	    net_CallExitRoutineProxy(exit_routine,
 							    URL_s,
 							    MK_INTERRUPTED,
 							    output_format,
 							    window_id);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
 #endif
 			LIBNET_UNLOCK_AND_RETURN(MK_INTERRUPTED);
@@ -2771,14 +2781,14 @@ NET_GetURL (URL_Struct *URL_s,
 
 		if(!cache_method)
 		  {
-			net_CallExitRoutine(exit_routine,
+			net_CallExitRoutineProxy(exit_routine,
 								URL_s,
 								MK_OBJECT_NOT_IN_CACHE,
 								output_format,
 								window_id);
 			net_CheckForWaitingURL(window_id, type, load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
 #endif
 			LIBNET_UNLOCK_AND_RETURN(MK_OBJECT_NOT_IN_CACHE);
@@ -2811,13 +2821,13 @@ NET_GetURL (URL_Struct *URL_s,
     this_entry = PR_NEW(ActiveEntry);
     if(!this_entry)
 	  {
-	net_CallExitRoutine(exit_routine,
+	net_CallExitRoutineProxy(exit_routine,
 							URL_s,
 							MK_OUT_OF_MEMORY,
 							output_format,
 							window_id);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(window_id);
 #endif
 		LIBNET_UNLOCK_AND_RETURN(MK_OUT_OF_MEMORY);
@@ -2870,7 +2880,7 @@ NET_GetURL (URL_Struct *URL_s,
 			if(!FE_Confirm(window_id, XP_GetString(XP_CONFIRM_REPOST_FORMDATA)))
 			  {
 				XP_ListRemoveObject(net_EntryList, this_entry);
-				net_CallExitRoutine(exit_routine,
+				net_CallExitRoutineProxy(exit_routine,
 									URL_s,
 									MK_INTERRUPTED,
 									output_format,
@@ -2879,7 +2889,7 @@ NET_GetURL (URL_Struct *URL_s,
 				net_CheckForWaitingURL(window_id, this_entry->protocol, 
 									   load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
                 net_ReleaseContext(window_id);
 #endif
 				PR_Free(this_entry);  /* not needed any more */
@@ -2909,7 +2919,7 @@ NET_GetURL (URL_Struct *URL_s,
 
 			XP_ListRemoveObject(net_EntryList, this_entry);
 
-			net_CallExitRoutine(exit_routine,
+			net_CallExitRoutineProxy(exit_routine,
 								URL_s,
 								MK_INTERRUPTED,
 								output_format,
@@ -2917,7 +2927,7 @@ NET_GetURL (URL_Struct *URL_s,
 			net_CheckForWaitingURL(window_id, this_entry->protocol,
 								   load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
             net_ReleaseContext(window_id);
 #endif
 			PR_Free(this_entry);  /* not needed any more */
@@ -3109,7 +3119,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 			}
 		}
 		
-		net_CallExitRoutine(this_entry->exit_routine,
+		net_CallExitRoutineProxy(this_entry->exit_routine,
 							this_entry->URL_s,
 							this_entry->status,
 							this_entry->format_out,
@@ -3121,7 +3131,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 							   this_entry->protocol,
 							   load_background);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(this_entry->window_id);
 #endif
 		PR_Free(this_entry);
@@ -3138,7 +3148,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 
 		XP_ListRemoveObject(net_EntryList, this_entry);
 
-		net_CallExitRoutine(this_entry->exit_routine,
+		net_CallExitRoutineProxy(this_entry->exit_routine,
 							this_entry->URL_s,
 							this_entry->status,
 							this_entry->format_out,
@@ -3146,7 +3156,7 @@ redo_load_switch:   /* come here on file/ftp retry */
 		net_CheckForWaitingURL(this_entry->window_id, 
 							   this_entry->protocol,
 							   load_background);
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(this_entry->window_id);
 #endif
 		PR_Free(this_entry);  /* not needed any more */
@@ -3524,7 +3534,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 					load_background = tmpEntry->URL_s->load_background;
 					/* run the exit routine
 					 */
-		    		net_CallExitRoutine(tmpEntry->exit_routine,
+		    		net_CallExitRoutineProxy(tmpEntry->exit_routine,
 											tmpEntry->URL_s,
 											tmpEntry->status,
 											tmpEntry->format_out,
@@ -3546,7 +3556,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type)
 						NET_SilentInterruptWindow(tmpEntry->window_id);
 					}
 	#endif /* MILAN */
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
 	                net_ReleaseContext(tmpEntry->window_id);
 #endif
 		  		}
@@ -3606,7 +3616,7 @@ net_InterruptActiveStream (ActiveEntry *entry, Bool show_warning)
            entry->socket, entry->con_sock, entry->status, entry->URL_s->address));
 
 	/* call exit routine since we know we are done */
-	net_CallExitRoutine(entry->exit_routine,
+	net_CallExitRoutineProxy(entry->exit_routine,
 						entry->URL_s,
 						entry->status,
 						entry->format_out,
@@ -3620,7 +3630,7 @@ net_InterruptActiveStream (ActiveEntry *entry, Bool show_warning)
 		FE_AllConnectionsComplete(entry->window_id);
 
 	/* free the no longer active entry */
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
     net_ReleaseContext(entry->window_id);
 #endif
 	PR_Free(entry);
@@ -3756,7 +3766,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 		  {
 			/* call the old exit routine now with the old context */
 			/* call with MK_CHANGING_CONTEXT, FE shouldn't free URL_s */
-			net_CallExitRoutine(tmpEntry->exit_routine,
+			net_CallExitRoutineProxy(tmpEntry->exit_routine,
 								URL_s,
 								MK_CHANGING_CONTEXT,
 								0,
@@ -3787,7 +3797,7 @@ NET_SetNewContext(URL_Struct *URL_s, MWContext * new_context, Net_GetUrlExitFunc
 		if(!NET_AreThereActiveConnectionsForWindow(old_window_id))
 				FE_AllConnectionsComplete(old_window_id);
 
-#ifdef MODULAR_NETLIB
+#if defined(MODULAR_NETLIB)
         net_ReleaseContext(old_window_id);
 #endif
 			LIBNET_UNLOCK();
