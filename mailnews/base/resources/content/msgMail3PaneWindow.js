@@ -285,15 +285,38 @@ function loadStartPage() {
 
 function loadStartFolder()
 {
-	//Load StartFolder
-    try {
-        var startFolder = pref.CopyCharPref("mailnews.start_folder");
-        //ChangeFolderByURI(startFolder);
-		//	var folder = OpenFolderTreeToFolder(startFolder);
-    }
-    catch(ex) {
+	//First get default account
+	var defaultAccount = accountManager.defaultAccount;
 
-    }
+	var server = defaultAccount.incomingServer;
+	var rootFolder = server.RootFolder;
+	var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+	//now find Inbox
+    var inboxFolder; 
+    var outInbox = new Object();
+    var outNumFolders = new Object();
+        
+    rootMsgFolder.getFoldersWithFlag(0x1000, outInbox, 1, outNumFolders); 
+    inboxFolder = outInbox.value;
+	if(!inboxFolder)
+		return;
+
+	var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+	var inboxURI = resource.Value;
+
+	//first, let's see if it's already in the dom.  This will make life easier.
+	var inbox = document.getElementById(inboxURI);
+
+	//if it's not here we will have to make sure it's open.
+	if(!inbox)
+	{
+
+
+	}
+
+	var folderTree= GetFolderTree();
+	ChangeSelection(folderTree, inbox);
 
 }
 
@@ -591,3 +614,15 @@ function OpenTreeItemAndDescendants(treeitem)
 	}
 
 }
+
+function ChangeSelection(tree, newSelection)
+{
+	if(newSelection)
+	{
+		tree.clearItemSelection();
+		tree.clearCellSelection();
+		tree.selectItem(newSelection);
+		tree.ensureElementIsVisible(newSelection);
+	}
+}
+

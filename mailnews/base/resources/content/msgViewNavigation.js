@@ -427,16 +427,6 @@ function GetPreviousMessage(currentMessage, previousFunction, startFromEnd)
 	return previousMessage;
 }
 
-function ChangeSelection(tree, newMessage)
-{
-	if(newMessage)
-	{
-		tree.clearItemSelection();
-		tree.clearCellSelection();
-		tree.selectItem(newMessage);
-		tree.ensureElementIsVisible(newMessage);
-	}
-}
 
 function FindFirstMessage(tree)
 {
