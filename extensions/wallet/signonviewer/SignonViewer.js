@@ -151,7 +151,7 @@ function LoadSignons()
       var uri =
         Components.classes["@mozilla.org/network/standard-url;1"]
           .createInstance(Components.interfaces.nsIURI); 
-      uri.spec = site; 
+      uri.spec = host; 
       if (uri.username) {
         user = uri.username;
       } else {
