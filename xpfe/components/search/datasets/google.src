@@ -1,0 +1,22 @@
+# Mozilla/Google plug-in by amitp@google.com
+
+<search 
+   name="Google"
+   description="Google Search"
+   method="GET"
+   action="http://www.google.com/search"
+   update="http://www.google.com/mozilla/google.src"
+   updateCheckDays=1   
+>
+
+<input name="q" user>
+<input name="sourceid" value="mozilla-search">
+
+<interpret 
+    browserResultType="result" 
+    resultListStart="<!--a-->" 
+    resultListEnd="<!--z-->" 
+    resultItemStart="<!--m-->" 
+    resultItemEnd="<!--n-->"
+>
+</search>
