@@ -250,9 +250,6 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
 
 
    WinSetWindowPos(mFrameWnd, 0, frameRect.x, frameRect.y, frameRect.width, frameRect.height, SWP_SIZE | SWP_MOVE);
-
-   // Record frame hwnd somewhere that the window object can see during dtor
-   mHackDestroyWnd = mFrameWnd;
 }
 
 

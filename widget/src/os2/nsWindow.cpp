@@ -202,8 +202,8 @@ nsWindow::nsWindow() : nsBaseWidget()
     mFrameIcon          = 0;
     mDeadKey            = 0;
     mHaveDeadKey        = FALSE;
-    // This is so that frame windows can be destroyed from their destructors.
-    mHackDestroyWnd     = 0;
+    mIsDestroying       = PR_FALSE;
+    mOnDestroyCalled    = PR_FALSE;
 
     mPreferredWidth     = 0;
     mPreferredHeight    = 0;
@@ -1076,10 +1076,6 @@ NS_METHOD nsWindow::Destroy()
    }
    else
    {
-#if DEBUG_sobotka
-     printf("\n++++++++++nsWindow::Destroy trashing 0x%lx\n\n", mHackDestroyWnd ? mHackDestroyWnd : mWnd);
-     printf("+++++++++++WINDOWCOUNT- = %d\n\n", --WINDOWCOUNT);
-#endif
       // avoid calling into other objects if we're being deleted, 'cos
       // they must have no references to us.
       if( (mWindowState & nsWindowState_eLive) && mParent )
@@ -1121,9 +1117,14 @@ nsIWidget* nsWindow::GetParent(void)
        // a HWND which is not associated with a nsIWidget.
       return nsnull;
     }
+    /* If this widget has already been destroyed, pretend we have no parent.
+       This corresponds to code in Destroy which removes the destroyed
+       widget from its parent's child list. */
+    if (mIsDestroying || mOnDestroyCalled)
+      return nsnull;
 
    nsWindow *widget = nsnull;
-   if( nsnull != mParent)
+   if ((nsnull != mParent) && (!mParent->mIsDestroying))
    {
       NS_ADDREF(mParent);
       widget = mParent;
@@ -2765,6 +2766,8 @@ PRBool nsWindow::OnControl( MPARAM mp1, MPARAM mp2)
 //-------------------------------------------------------------------------
 void nsWindow::OnDestroy()
 {
+   mOnDestroyCalled = PR_TRUE;
+
    SubclassWindow( PR_FALSE);
    mWnd = 0;
 
