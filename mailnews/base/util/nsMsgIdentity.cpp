@@ -326,7 +326,10 @@ nsMsgIdentity::GetSignature(nsIFileSpec **sig) {
   if (NS_FAILED(rv)) return rv;
   
   char *prefName = getPrefName(m_identityKey, "sig_file");
-  return m_prefs->GetFilePref(prefName, sig);
+  rv = m_prefs->GetFilePref(prefName, sig);
+  if (NS_FAILED(rv))
+    *sig = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
