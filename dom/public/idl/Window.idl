@@ -15,6 +15,7 @@
 	void  alert(in wstring str);
 	void  focus();
 	void  blur();
+	void  close();
  
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);

@@ -90,6 +90,7 @@ public:
   NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    Focus();
   NS_IMETHOD    Blur();
+  NS_IMETHOD    Close();
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, 

@@ -478,6 +478,21 @@ GlobalWindowImpl::Blur()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::Close()
+{
+  // Basic security check.  If window has opener and therefore was opened from JS it can be
+  // closed.  Need to add additional checks and privilege based closing
+  if (nsnull != mOpener) {
+    nsIBrowserWindow *mBrowser;
+    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+      mBrowser->Close();
+      NS_RELEASE(mBrowser);
+    }
+  }
+  return NS_OK;
+}
+
 nsresult
 GlobalWindowImpl::ClearTimeoutOrInterval(PRInt32 aTimerID)
 {
@@ -909,8 +924,7 @@ GlobalWindowImpl::Open(JSContext *cx,
   PRUint32 mChrome = 0;
   PRInt32 mWidth, mHeight;
   PRInt32 mLeft, mTop;
-  nsString mName;
-  nsAutoString mAbsURL;
+  nsAutoString mAbsURL, mName;
   JSString* str;
   *aReturn = nsnull;
 
@@ -1038,6 +1052,8 @@ GlobalWindowImpl::Open(JSContext *cx,
       NS_IF_RELEASE(mNewContextOwner);
       return NS_ERROR_FAILURE;
     }
+
+    mNewWebShell->SetName(mName);
     
     NS_RELEASE(mNewWindow);
     NS_RELEASE(mNewWebShell);
@@ -1050,7 +1066,7 @@ GlobalWindowImpl::Open(JSContext *cx,
   }
 
   /* Set opener */
-  mNewGlobalObject->SetOpenerWindow(mNewDOMWindow);
+  mNewGlobalObject->SetOpenerWindow(this);
 
   NS_IF_RELEASE(mNewGlobalObject);
 
