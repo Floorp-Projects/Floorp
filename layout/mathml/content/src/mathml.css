@@ -32,6 +32,7 @@
 /*******************************************************/
 
 math {
+  display: inline;
   font-size: inherit;
   font-style: normal;
   font-family: CMSY10, CMEX10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
@@ -43,7 +44,15 @@ math[mode="inline"] {
 
 math[mode="display"] {
   display: block;
-  text-align: center;
+  text-align: -moz-center;
+}
+
+:-moz-math-inline {
+  display: inline;
+}
+
+:-moz-math-table {
+  display: table;
 }
 
 /*******************************************************/
@@ -134,6 +143,7 @@ merror {
 
 mtable {
   display: table;
+  text-align: -moz-center;
   border-spacing: 0.8em 1.0ex; /* horizontal vertical */
   border-collapse: separate; /* 'collapse' is blocked by bug 49490 */
   margin-left: -0.4em;
@@ -147,7 +157,7 @@ mtable {
 
 mtr {
   display: table-row;
-  text-align: center;
+  text-align: inherit;
   vertical-align: baseline;
 }
 
@@ -157,6 +167,7 @@ mtd {
   display: table-cell;
   text-align: inherit; 
   vertical-align: inherit;
+  white-space: nowrap;
 }
 
 /***********************/
@@ -171,7 +182,7 @@ mtd[columnalign="right"] {
 }
 
 mtd[columnalign="center"] {
-  text-align: center;
+  text-align: -moz-center;
 }
 
 /********************/
