@@ -58,6 +58,9 @@ CPPSRCS =                       \
     nsObserverList.cpp		\
     nsObserver.cpp		\
     nsQuickSort.cpp		\
+    nsPageMgr.cpp		\
+    nsBuffer.cpp		\
+    nsPipe.cpp			\
     $(NULL)
 
 EXPORTS =                       \

@@ -53,6 +53,9 @@ CPPSRCS =				\
 	nsObserverList.cpp \
 	nsObserver.cpp \
 	nsQuickSort.cpp	\
+	nsPageMgr.cpp	\
+	nsBuffer.cpp	\
+	nsPipe.cpp	\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -85,6 +88,9 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsObserverList.obj \
 	.\$(OBJDIR)\nsObserver.obj \
 	.\$(OBJDIR)\nsQuickSort.obj \
+	.\$(OBJDIR)\nsPageMgr.obj \
+	.\$(OBJDIR)\nsBuffer.obj \
+	.\$(OBJDIR)\nsPipe.obj \
 	$(NULL)
 
 EXPORTS=nscore.h nsIArena.h nsIAtom.h nsIByteBuffer.h \
