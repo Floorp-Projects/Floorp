@@ -191,9 +191,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-#ifdef DEBUG_dougt
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
-#endif
 
   if (!correctThread)
     return NS_ERROR_FAILURE;
@@ -206,9 +204,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::EventLoop()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-#ifdef DEBUG_dougt
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
-#endif
   if (!correctThread)
     return NS_ERROR_FAILURE;
 
@@ -235,9 +231,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-#ifdef DEBUG_dougt
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
-#endif
   if (!correctThread)
     return NS_ERROR_FAILURE;
 
@@ -249,9 +243,7 @@ NS_IMETHODIMP
 nsEventQueueImpl::WaitForEvent(PLEvent** aResult)
 {
     PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
-#ifdef DEBUG_dougt
     NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
-#endif
     if (!correctThread)
       return NS_ERROR_FAILURE;
 
