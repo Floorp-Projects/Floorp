@@ -92,7 +92,16 @@ NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
    //XXX Need to mask in flag_windowActivity when animation is occuring in the
    // window
    if(mDocShell)
+      {
+      if(aProgressStatusFlags & nsIWebProgress::flag_net_start)
+         aProgressStatusFlags |= nsIWebProgress::flag_win_start;
+      else if(aProgressStatusFlags & nsIWebProgress::flag_net_stop &&
+         PR_TRUE /*XXX Eventually check some flag to see if there is animation
+         going if there is don't add in the window stop flag*/)
+         aProgressStatusFlags |= nsIWebProgress::flag_win_stop;
+         
       mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
+      }
 
    return NS_OK;
 }
