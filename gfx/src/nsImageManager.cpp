@@ -50,7 +50,7 @@ public:
   virtual void SetCacheSize(PRInt32 aCacheSize);
   virtual PRInt32 GetCacheSize(void);
   virtual PRInt32 ShrinkCache(void);
-  NS_IMETHOD FlushCache(void);
+  NS_IMETHOD FlushCache(PRUint8 img_catagory);
  // virtual nsImageType GetImageType(const char *buf, PRInt32 length);
 
 private:
@@ -123,11 +123,12 @@ ImageManagerImpl::ShrinkCache(void)
 }
 
 NS_IMETHODIMP
-ImageManagerImpl::FlushCache(void)
+ImageManagerImpl::FlushCache(PRUint8 img_catagory)
 {
-  IL_FlushCache();
+  IL_FlushCache(img_catagory);
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 ImageManagerImpl::FlushMemory(PRUint32 reason, size_t requestedAmount)
