@@ -211,15 +211,30 @@ nsresult testEncoder(nsIUnicodeEncoder * aEnc,
   nsresult res;
 
   // prepare for conversion
-  PRInt32 srcLen = aSrcLength;
+  PRInt32 srcLen = 0;
   char dest[GENERAL_BUFFER];
-  PRInt32 destLen = GENERAL_BUFFER;
+  PRInt32 destLen = 0;
+  PRInt32 bcr, bcw;
 
   // conversion
-  res = aEnc->Convert(aSrc, &srcLen, dest, &destLen);
+  bcr = aSrcLength;
+  bcw = GENERAL_BUFFER;
+  res = aEnc->Convert(aSrc, &bcr, dest, &bcw);
+  srcLen += bcr;
+  destLen += bcw;
   // we want a perfect result here - the test data should be complete!
   if (res != NS_OK) {
     printf("ERROR at %s.easy.Encode() code=0x%x.\n",aTestName,res);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // finish
+  bcw = GENERAL_BUFFER - destLen;
+  res = aEnc->Finish(dest + destLen, &bcw);
+  destLen += bcw;
+  // we want a perfect result here - the test data should be complete!
+  if (res != NS_OK) {
+    printf("ERROR at %s.easy.Finish() code=0x%x.\n",aTestName,res);
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -377,7 +392,9 @@ nsresult testStressEncoder(nsIUnicodeEncoder * aEnc,
   if (res != NS_OK) if (res != NS_OK_UENC_MOREOUTPUT) {
     printf("ERROR at %s.stress.postConvert() code=0x%x.\n",aTestName,res);
     return NS_ERROR_UNEXPECTED;
-  } else for (;;) {
+  } 
+  
+  for (;;) {
     res = aEnc->Finish(dest + destOff, &destLen);
     if (NS_FAILED(res)) {
       printf("ERROR at %s.stress.Finish() code=0x%x.\n",aTestName,res);
@@ -885,6 +902,43 @@ nsresult testEUCJPEncoder()
   }
 }
 
+/**
+ * Test the ISO-2022-JP encoder.
+ */
+nsresult testISO2022JPEncoder()
+{
+  char * testName = "T204";
+  printf("\n[%s] Unicode -> ISO2022JP\n", testName);
+
+  // create converter
+  CREATE_ENCODER("iso-2022-jp");
+  enc->SetOutputErrorBehavior(enc->kOnError_Replace, NULL, 0x00cc);
+
+  // test data
+  PRUnichar src[] = {0x000d,0x007f, 0xff6a,0xFF9C, 0x3000, 0x5378};
+  char exp[] = {"\x0d\x7f" "\x1b(J\xaa\xdc" "\x1b$@\x21\x21\x32\x37\x1b(B"};
+
+  // test converter - easy test
+  res = testEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetEncoder(enc, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressEncoder(enc, src, ARRAY_SIZE(src), exp, ARRAY_SIZE(exp)-1, testName);
+
+  // release converter
+  NS_RELEASE(enc);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 nsresult  testPlatformCharset()
 {
   nsIPlatformCharset * cinfo;
@@ -935,6 +989,7 @@ nsresult testAll()
   testLatin1Encoder();
   testSJISEncoder();
   testEUCJPEncoder();
+  testISO2022JPEncoder();
 
   // return
   return NS_OK;
