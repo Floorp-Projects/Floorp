@@ -184,6 +184,7 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mTokenDeque(gTokenKiller) {
   mLineNumber=0;
   mTokenizer=0;
   mIsHTML=PR_FALSE;
+  mHasOpenHead=0;
 }
 
 /**
@@ -606,6 +607,37 @@ PRBool WriteTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRB
 }
 
 /**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be added to model
+ * @return  TRUE if ok, FALSE if error
+ */
+nsresult CViewSourceHTML::OpenHead(const nsIParserNode& aNode){
+  if(!mHasOpenHead++) {
+    nsresult result=(mSink) ? mSink->OpenHead(aNode) : NS_OK; 
+  }
+  return NS_OK;
+}
+
+/**
+ * This method does two things: 1st, help construct
+ * our own internal model of the content-stack; and
+ * 2nd, pass this message on to the sink.
+ * @update  gess4/6/98
+ * @param   aNode -- next node to be removed from our model
+ * @return  TRUE if ok, FALSE if error
+ */
+nsresult CViewSourceHTML::CloseHead(const nsIParserNode& aNode){
+  if(mHasOpenHead) {
+    if(0==--mHasOpenHead){
+      nsresult result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
+    }
+  }
+  return NS_OK;
+}
+/**
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- token object to be put into content model
@@ -615,11 +647,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   nsresult        result=NS_OK;
   CHTMLToken*     theToken= (CHTMLToken*)(aToken);
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
+  eHTMLTags  theTag = (eHTMLTags)aToken->GetTypeID();
+
   PRBool          theEndTag=PR_TRUE;
 
   mParser=(nsParser*)aParser;
   mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
   nsCParserNode theNode(theToken,mLineNumber);
+ 
   switch(theType) {
 
     case eToken_newline:
@@ -686,6 +721,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     
     case eToken_start:
       {
+
         PRInt16 attrCount=aToken->GetAttributeCount();
         theEndTag=PR_FALSE;
         if(0<attrCount){ //go collect the attributes...
@@ -703,12 +739,35 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           }
         }
       }
-      //intentionally fall through...
-
+      
+      WriteTag(theNode,*mSink,theEndTag,mIsHTML);
+      
+      // We make sure to display the title on the view source window.
+      
+      if(eHTMLTag_title == theTag){
+        nsCParserNode attrNode(theToken,mLineNumber,GetTokenRecycler());
+        CToken* theNextToken = mTokenizer->PopToken();
+        if(theNextToken) {
+          theType=eHTMLTokenTypes(theNextToken->GetTokenType());
+          if(eToken_skippedcontent==theType) {
+            attrNode.SetSkippedContent(theNextToken);
+          } 
+        }
+        result= OpenHead(attrNode);
+        if(NS_OK==result) {
+          if(mSink) {
+            mSink->SetTitle(attrNode.GetSkippedContent());
+          }
+          if(NS_OK==result)
+            result=CloseHead(attrNode);
+        }
+        nsString& theText=((CAttributeToken*)theNextToken)->GetKey();
+        WriteText(theText,*mSink,PR_FALSE);
+      }
+      break;
     case eToken_end:
       WriteTag(theNode,*mSink,theEndTag,mIsHTML);
       break;
-
     default:
       result=NS_OK;
   }//switch
