@@ -5404,7 +5404,7 @@ nsNNTPProtocol::SetProgressStatus(const PRUnichar *aMessage)
 
 NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 {	
-	if (!aContentType) return NS_ERROR_NULL_POINTER;
+  if (!aContentType) return NS_ERROR_NULL_POINTER;
 
   // if we've been set with a content type, then return it....
   // this happens when we go through libmime now as it sets our new content type
@@ -5414,18 +5414,18 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
     return NS_OK;
   }
 
-  // otherwise do what we did before...
+  // otherwise do what we did before...  
 
-	if (m_key == nsMsgKey_None && m_typeWanted != ARTICLE_WANTED && !m_currentGroup.IsEmpty() &&
-	    // if it is an article url, it has a @ or %40 in it.
-	    m_currentGroup.FindChar('@') == kNotFound && m_currentGroup.Find("%40") == kNotFound) {
-		*aContentType = nsCRT::strdup("x-application-newsgroup");
-	}
-	else {
-		*aContentType = nsCRT::strdup("message/rfc822");
-	}
-	if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
-	return NS_OK;
+  if (m_typeWanted == GROUP_WANTED)  
+  {
+    *aContentType = nsCRT::strdup("x-application-newsgroup");
+  }
+  else 
+  {
+    *aContentType = nsCRT::strdup("message/rfc822");
+  }
+  if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 nsresult
