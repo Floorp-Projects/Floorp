@@ -239,7 +239,6 @@ protected:
     nsIParser*             mParser;               // [OWNER] We use regular pointer b/c of funky exports on nsIParser
     
     nsString               mPreferredStyle;
-    PRInt32                mStyleSheetCount;
     nsCOMPtr<nsICSSLoader> mCSSLoader;            // [OWNER]
     nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
 };
@@ -362,8 +361,7 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
       mTextSize(0),
       mConstrainSize(PR_TRUE),
       mState(eInProlog),
-      mParser(nsnull),
-      mStyleSheetCount(0)
+      mParser(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -891,12 +889,13 @@ XULContentSinkImpl::ProcessStyleLink(nsIContent* aElement,
             }
         }
 
-        // XXX Note that mStyleSheetCount is going to place the style
-        // sheet in a fairly random location if we're loading an
-        // overlay. Should we just use a Very Large Number?
+        nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+        if (! doc)
+            return NS_ERROR_FAILURE; // doc went away!
+
         PRBool doneLoading;
         rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_Unknown,
-                                       mStyleSheetCount++, 
+                                       doc->GetNumberOfStyleSheets(),
                                        ((blockParser) ? mParser : nsnull),
                                        doneLoading);
         if (NS_SUCCEEDED(rv) && blockParser && (! doneLoading)) {
