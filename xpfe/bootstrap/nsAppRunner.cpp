@@ -231,11 +231,22 @@ int main(int argc, char* argv[])
   {
     nsIAppShellService *messenger;
     const char *messengerProgID = "component://netscape/messenger";
-    nsresult result = nsRepository::CreateInstance(messengerProgID,
-                                                   nsnull,
-                                                   nsIAppShellService::GetIID(),
-                                                   (void **)&messenger);
+    nsresult result;
+
+    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
+#define NS_MESSENGERBOOTSTRAP_CID                 \
+    { /* 4a85a5d0-cddd-11d2-b7f6-00805f05ffa5 */      \
+      0x4a85a5d0, 0xcddd, 0x11d2,                     \
+      {0xb7, 0xf6, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5}}
+
+    NS_DEFINE_CID(kCMessengerBootstrapCID, NS_MESSENGERBOOTSTRAP_CID);
+    
+    result = nsRepository::CreateInstance(kCMessengerBootstrapCID,
+                                          nsnull,
+                                          nsIAppShellService::GetIID(),
+                                          (void **)&messenger);
     if (NS_SUCCEEDED(result)) {
+      printf("The Messenger component is available. Initializing...\n");
       result = messenger->Initialize();
     }
   }
