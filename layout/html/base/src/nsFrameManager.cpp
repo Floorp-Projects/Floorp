@@ -19,6 +19,13 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "nsIFrameManager.h"
 #include "nsIFrame.h"
@@ -1579,7 +1586,7 @@ FrameHashTable::Remove(void* aKey)
   return oldValue;
 }
 
-static PRIntn
+static PRIntn PR_CALLBACK
 RemoveEntry(PLHashEntry* he, PRIntn i, void* arg)
 {
   // Remove and free this entry and continue enumerating
@@ -1593,7 +1600,7 @@ FrameHashTable::Clear()
 }
 
 #ifdef NS_DEBUG
-static PRIntn
+static PRIntn PR_CALLBACK
 EnumEntries(PLHashEntry* he, PRIntn i, void* arg)
 {
   // Continue enumerating
@@ -1863,7 +1870,7 @@ UndisplayedMap::RemoveNodesFor(nsIContent* aParentContent)
   return NS_OK;
 }
 
-static PRIntn
+static PRIntn PR_CALLBACK
 RemoveUndisplayedEntry(PLHashEntry* he, PRIntn i, void* arg)
 {
   UndisplayedNode*  node = (UndisplayedNode*)(he->value);

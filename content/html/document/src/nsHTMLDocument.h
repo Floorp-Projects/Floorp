@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 #ifndef nsHTMLDocument_h___
 #define nsHTMLDocument_h___
@@ -181,7 +182,7 @@ protected:
   PRBool       mShouldMatchCase;
 
 protected:
-  static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
+  static PRIntn PR_CALLBACK RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
   void RegisterNamedItems(nsIContent *aContent, PRBool aInForm);
   void UnregisterNamedItems(nsIContent *aContent, PRBool aInForm);
   nsIContent* FindNamedItem(nsIContent *aContent, const nsString& aName,

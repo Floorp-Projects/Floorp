@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corp.
  */ 
 #define NS_IMPL_IDS
 #include "nsICharsetAlias.h"
@@ -147,7 +148,7 @@ static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
 static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
-static int
+static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
