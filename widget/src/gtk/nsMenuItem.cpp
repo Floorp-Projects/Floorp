@@ -113,7 +113,6 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
     return;
   }
 
-  mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
   if(aIsSeparator) {
     mIsSeparator = PR_TRUE;
@@ -171,6 +170,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   
   while(1) {
     if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
+      NS_RELEASE(parent);
       if (NS_OK != menu->GetParent(parent)) {
         NS_RELEASE(menu);
         return nsnull;
@@ -182,6 +182,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
         widget =  nsnull;
       } 
       NS_RELEASE(popup);
+      NS_RELEASE(parent);
       return widget;
 
     } else if (NS_OK == parent->QueryInterface(kIMenuBarIID,(void**)&menuBar)) {
@@ -189,8 +190,10 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
         widget =  nsnull;
       } 
       NS_RELEASE(menuBar);
+      NS_RELEASE(parent);
       return widget;
     } else {
+      NS_RELEASE(parent);
       return nsnull;
     }
   }
@@ -213,7 +216,8 @@ NS_METHOD nsMenuItem::Create(nsIMenu        * aParent,
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
     widget = GetMenuBarParent(sups);
-    NS_RELEASE(sups);
+    //GetMenuBarParent will call release for us
+    //NS_RELEASE(sups);
   }
 
   Create(widget, GetNativeParent(), aLabel, aIsSeparator);
@@ -228,7 +232,6 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
                              PRUint32        aCommand)
 {
   mPopUpParent = aParent;
-  //NS_ADDREF(mPopUpParent);
 
   nsIWidget * widget = nsnull;
   if (NS_OK != aParent->GetParent(widget)) {
@@ -236,7 +239,6 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
   }
 
   Create(widget, GetNativeParent(), aLabel, PR_FALSE);
-//  aParent->AddItem(this);
 
   return NS_OK;
 }
@@ -305,7 +307,7 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-  NS_ASSERTION(PR_FALSE, "we should never get here");
+ 
   NS_IF_RELEASE(mXULCommandListener);
   NS_IF_ADDREF(aMenuListener);
   mXULCommandListener = aMenuListener;
@@ -358,7 +360,7 @@ nsEventStatus nsMenuItem::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
     void              * menuNode,
-	void              * aWebShell)
+    void              * aWebShell)
 {
   g_print("nsMenuItem::MenuConstruct\n");
   return nsEventStatus_eIgnore;
@@ -378,7 +380,7 @@ nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
 {
-	return NS_OK;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------

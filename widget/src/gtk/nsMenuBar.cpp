@@ -38,7 +38,6 @@ static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
 static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
 
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
@@ -92,7 +91,9 @@ nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()
 //-------------------------------------------------------------------------
 nsMenuBar::~nsMenuBar()
 {
-  NS_IF_RELEASE(mParent);
+  g_print("nsMenuBar::~nsMenuBar() called\n");
+  // Release the menus
+  RemoveAll();
 }
 
 //-------------------------------------------------------------------------
@@ -109,25 +110,19 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
   gtk_widget_show(mMenuBar);
   
   return NS_OK;
-
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 {
   aParent = mParent;
-  // Bad monkey. Don't addref parent since we don't own the parent
-  //NS_IF_ADDREF(aParent);
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetParent(nsIWidget *aParent)
 {
-  // We don't own the parent, we shouldn't be addrefing it
-  //NS_IF_RELEASE(mParent);
   mParent = aParent;
-  //NS_IF_ADDREF(mParent);
   return NS_OK;
 }
 
@@ -139,6 +134,13 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   char *labelStr;
   void *voidData;
 
+  nsISupports * supports = nsnull;
+  aMenu->QueryInterface(kISupportsIID, (void**)&supports);
+  if(supports){
+    mMenusVoidArray.AppendElement(aMenu);
+    mNumMenus++;
+  }
+  
   aMenu->GetLabel(Label);
 
   labelStr = Label.ToNewCString();
@@ -184,6 +186,22 @@ NS_METHOD nsMenuBar::RemoveMenu(const PRUint32 aCount)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::RemoveAll()
 {
+  for (int i = mMenusVoidArray.Count(); i > 0; i--) {
+    if(nsnull != mMenusVoidArray[i-1]) {
+      nsIMenu * menu = nsnull;
+      ((nsISupports*)mMenusVoidArray[i-1])->QueryInterface(kIMenuIID, (void**)&menu);
+      if(menu) {
+        //void * gtkmenu= nsnull;
+        //menu->GetNativeData(&gtkmenu);
+	//if(gtkmenu){
+        //  gtk_container_remove (GTK_CONTAINER (mMenuBar), GTK_WIDGET(gtkmenu) );
+	//}
+	NS_RELEASE(menu);
+	
+	((nsISupports*)mMenusVoidArray[i-1])->Release();
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -270,8 +288,8 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   pnsMenu->Create(supports, menuName);
                   NS_RELEASE(supports);
 
-				  pnsMenu->SetDOMNode(menuNode);
-				  pnsMenu->SetDOMElement(menuElement);
+                  pnsMenu->SetDOMNode(menuNode);
+                  pnsMenu->SetDOMElement(menuElement);
 
                   // Set nsMenu Name
                   pnsMenu->SetLabel(menuName); 
@@ -291,16 +309,13 @@ nsEventStatus nsMenuBar::MenuConstruct(
         } // end while (nsnull != menuNode)
           
         // Give the aParentWindow this nsMenuBar to hold onto.
+	// The parent window should take ownership at this point
         aParentWindow->SetMenuBar(pnsMenuBar);
       
         // HACK: force a paint for now
         pnsMenuBar->Paint();
         
-        // HACK for M4, should be removed by M5
-        #ifdef XP_MAC
-        Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
-		pnsMenuBar->SetNativeData((void*)tempMenuBar);
-		#endif
+	NS_RELEASE(pnsMenuBar);
     } // end if ( nsnull != pnsMenuBar )
   }
   
