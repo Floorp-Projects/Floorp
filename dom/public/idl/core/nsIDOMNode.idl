@@ -89,5 +89,8 @@ interface nsIDOM3Node : nsISupports
 {
   // Introduced in DOM Level 3:
   readonly attribute DOMString        baseURI;
-
+ // Introduced in DOM Level 3:
+  DOMString          lookupNamespacePrefix(in DOMString namespaceURI);
+  // Introduced in DOM Level 3:
+  DOMString          lookupNamespaceURI(in DOMString prefix);
 };
