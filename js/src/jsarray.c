@@ -121,33 +121,35 @@ static JSBool
 ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
 {
     jsint i;
+    jsdouble d;
 
     if (JSVAL_IS_INT(v)) {
-	i = JSVAL_TO_INT(v);
+        i = JSVAL_TO_INT(v);
         if (i < 0) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-				 JSMSG_BAD_ARRAY_LENGTH);
+                                 JSMSG_BAD_ARRAY_LENGTH);
             return JS_FALSE;
         }
-	if (lengthp)
-	    *lengthp = (jsuint) i;
-	return JS_TRUE;
+        *lengthp = (jsuint) i;
+        return JS_TRUE;
     }
-    if (JSVAL_IS_DOUBLE(v)) {
-        jsdouble d;
-	/* mccabe gets his wish */
-        if (!js_ValueToNumber(cx, v, &d))
-	    return JS_FALSE;
-        if (!js_DoubleToECMAUint32(cx, d, (uint32 *)lengthp))
+    
+    if (!js_ValueToNumber(cx, v, &d)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_ARRAY_LENGTH);
             return JS_FALSE;
-        if (JSDOUBLE_IS_NaN(d) || (d != *(uint32 *)lengthp)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-				 JSMSG_BAD_ARRAY_LENGTH);
-            return JS_FALSE;
-        }
-	return JS_TRUE;
     }
-    return JS_FALSE;
+    if (!js_DoubleToECMAUint32(cx, d, (uint32 *)lengthp)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_ARRAY_LENGTH);
+            return JS_FALSE;
+    }
+    if (JSDOUBLE_IS_NaN(d) || d != *lengthp) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_BAD_ARRAY_LENGTH);
+        return JS_FALSE;
+    }
+    return JS_TRUE;
 }
 
 JSBool
