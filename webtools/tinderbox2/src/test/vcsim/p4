@@ -19,8 +19,8 @@
 # date/time pairs.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2003/08/17 00:57:43 $ 
+# $Revision: 1.7 $ 
+# $Date: 2004/06/08 03:41:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
 # $Name:  $ 
@@ -127,7 +127,7 @@ $STATE_FILE = "$FileStructure::TINDERBOX_HTML_DIR/p4sim_statefile.txt";
      
      "\tConvert to logging using VCP::Logger to reduce stdout/err spew.\n".
      "\tSimplify & speed up debugging quite a bit.\n".
-     "\tProvide more verbose information in logs.\n".
+     "\tProvide more verbose information in logs. fixes bug 12345\n".
      "\tPrint to STDERR progress reports to keep users from wondering\n".
      "\twhat's going on.\n".
      "\tBreaks test; halfway through upgrading run3() to an inline\n".
@@ -135,7 +135,7 @@ $STATE_FILE = "$FileStructure::TINDERBOX_HTML_DIR/p4sim_statefile.txt";
      
      "\tAdded copy/paste support in the depot view\n".
      "\tAdded expand path to depot view\n".
-     "\tAdded bookmarks\n",
+     "\tAdded bookmarks bug: 987654\n",
      
      "\tMake destinations call back to sources to check out files to\n".
      "\tsimplify the architecture (is_metadata_only() no longer needed)\n".
@@ -152,7 +152,7 @@ $STATE_FILE = "$FileStructure::TINDERBOX_HTML_DIR/p4sim_statefile.txt";
      
      "\tAdded double click support to the depot view and pending changelist\n".
      "\tview.  Added View File In Editor item on the pending changeist context\n".
-     "\tmenu.\n",
+     "\tmenu. bug 56789\n",
      
      "\tMade multiple selection smarter by operating on the entire selection\n".
      "\tas an atomic operation with the server. Also partially fixed the read\n".
@@ -180,7 +180,7 @@ $STATE_FILE = "$FileStructure::TINDERBOX_HTML_DIR/p4sim_statefile.txt";
      "\tThe extensions range from minor output tweaks and simple fixes to\n".
      "\t  more major things like a header cache, serialization of output from\n".
      "\t  multiple jobs, dynamic command block sizing\n".
-     "\tThese are all offered without warranty, etc.\n",
+     "\tThese are all offered without warranty, etc. bug: 4321\n",
      
      );
 
@@ -389,7 +389,7 @@ sub simulate_perforce_jobnum {
 sub parse_args {
 
 # We must be able to simulate the cvs calls which tinderbox makes:
-# 		p4 changes -s submitted  @2003/05/11,@now
+# 		p4 changes -s submitted  //...@2003/05/11,@now
 #		p4 describe -s 567 568 569
 
     @ORIG_ARGV = @ARGV;
@@ -407,12 +407,15 @@ sub parse_args {
 	    next;
         }
 
+        # we will call the argumesn change_numbers but it could
+        # contain a date spec also.
+
 	($arg eq '-s') &&
 	    (@CHANGE_NUMBERS =  @ARGV);
     }
 
     scalar(@CHANGE_NUMBERS) || 
-	die ("argument '-s num' is required.\n");
+	die ("argument '-s nums/dateSpec' is required.\n");
 
     ( ($DESCRIBE) || ($CHANGES) ) ||
         die ("Must call simulator with argument either ".
@@ -498,6 +501,11 @@ sub simulate_jobs{
 sub simulate_changes_cmd {
     my $date;
     if ( "@CHANGE_NUMBERS" =~  m!\@(\d\d\d\d/\d\d/\d\d)\,!) {
+
+        # Notice that we may have a file spec prefixing the date and
+        # we are ignoring the second date and assuming it is ',@now$'
+        # which is how tinderbox calls it.
+
         $date = $1;
         $date = perforce_date_str2time($date);
     }
