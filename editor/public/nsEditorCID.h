@@ -1,0 +1,9 @@
+#ifndef NSEDITORCID_H___
+
+#define NS_EDITOR_CID \
+{/* {D3DE3431-8A75-11d2-918C-0080C8E44DB5}*/ \
+0xd3de3431, 0x8a75, 0x11d2, \
+{ 0x91, 0x8c, 0x0, 0x80, 0xc8, 0xe4, 0x4d, 0xb5 } }
+
+#endif //NSEDITORCID_H___
+

@@ -20,6 +20,7 @@ IGNORE_MANIFEST=1
 
 EXPORTS =		\
     nsIEditor.h	\
+    nsEditorCID.h	\
     nsIContextLoader.h	\
     $(NULL)
 
