@@ -64,33 +64,6 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if ((nsnull==aDOMDocument) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
-  /** temp code until the editor auto-registers **/
-  if (PR_TRUE==needsInit)
-  {
-    needsInit=PR_FALSE;
-    result = nsRepository::RegisterComponent(kHTMLEditorCID, NULL, NULL, EDITOR_DLL, 
-                                             PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL, EDITOR_DLL, 
-                                             PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-    result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL, EDITOR_DLL, 
-                                             PR_FALSE, PR_FALSE);
-    if (NS_ERROR_FACTORY_EXISTS!=result)
-    {
-      if (NS_FAILED(result))
-        return result;
-    }
-  }
-  /** end temp code **/
 /*
   nsISupports *isup = nsnull;
   result = nsServiceManager::GetService(kHTMLEditorCID,
