@@ -89,6 +89,7 @@ struct nsCSSInlineLayout {
   PRPackedBool mUnconstrainedWidth;
   PRPackedBool mNoWrap;
   PRPackedBool mComputeMaxElementSize;
+  PRPackedBool mIsBullet;
   nscoord mAvailWidth;
   nscoord mAvailHeight;
   nscoord mX, mY;

@@ -1961,12 +1961,22 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
                                         aState.mY,
                                         aState.mCurrentBand.availSpace.width,
                                         aState.mCurrentBand.availSpace.height);
+    // If we we are a list-item container and we are positioning the
+    // first child on the line (which is true when !mInlineLayoutPrepared)
+    // and it's the first line, and we are not a continuation, then
+    // set the mIsBullet flag for the line layout code.
+    if (aState.mLineLayout.mListPositionOutside &&
+        (0 == aState.mLineLayout.mLineNumber) &&
+        (nsnull == mPrevInFlow)) {
+      aState.mInlineLayout.mIsBullet = PR_TRUE;
+    }
     aState.mInlineLayoutPrepared = PR_TRUE;
   }
 
   nsresult rv;
   nsIFrame* nextInFlow;
   aReflowResult = aState.mInlineLayout.ReflowAndPlaceFrame(aFrame);
+  aState.mInlineLayout.mIsBullet = PR_FALSE;
   if (IS_REFLOW_ERROR(aReflowResult)) {
     return PR_FALSE;
   }
