@@ -208,23 +208,23 @@ button.color-button {
 
 /* ::::: Image Properties dialog ::::: */
 
-.align-menu[data="top"] {
+.align-menu[value="top"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-top.gif") !important;
 }
 
-.align-menu[data="center"] {
+.align-menu[value="center"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-mid.gif") !important;
 }
 
-.align-menu[data="bottom"] {
+.align-menu[value="bottom"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-btm.gif") !important;
 }
 
-.align-menu[data="right"] {
+.align-menu[value="right"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-rit.gif") !important;
 }
 
-.align-menu[data="left"] {
+.align-menu[value="left"] {
 	list-style-image: url("chrome://editor/skin/icons/img-align-lft.gif") !important;
 }
 

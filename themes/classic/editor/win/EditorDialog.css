@@ -237,23 +237,23 @@ tree.list {
   min-height: 10px;
 }
 
-.align-menu[data="top"] {
+.align-menu[value="top"] {
 	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
 }
 
-.align-menu[data="center"] {
+.align-menu[value="center"] {
 	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
 }
 
-.align-menu[data="bottom"] {
+.align-menu[value="bottom"] {
 	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
 }
 
-.align-menu[data="right"] {
+.align-menu[value="right"] {
 	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
 }
 
-.align-menu[data="left"] {
+.align-menu[value="left"] {
 	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
 
