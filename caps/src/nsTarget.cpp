@@ -222,6 +222,10 @@ extern int CAPS_TARGET_DESC_ALL_JAVA_PERMISSION;
 extern int CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION;
 extern int CAPS_TARGET_URL_ALL_JAVA_PERMISSION;
 
+extern int CAPS_TARGET_DESC_ALL_JS_PERMISSION;
+extern int CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION;
+extern int CAPS_TARGET_URL_ALL_JS_PERMISSION;
+
 extern int CAPS_TARGET_RISK_COLOR_HIGH;
 extern int CAPS_TARGET_RISK_COLOR_HIGH;
 
@@ -241,7 +245,8 @@ extern "C" {
 #include "jpermission.h"
 
 PR_PUBLIC_API(void)
-java_netscape_security_getTargetDetails(const char *charSetName, char* targetName, 
+java_netscape_security_getTargetDetails(const char *charSetName, 
+                                        char* targetName, 
                                         char** details, char **risk)
 {
     if (!targetName) {
@@ -1138,6 +1143,27 @@ PRBool CreateSystemTargets(nsPrincipal *sysPrin)
                             JavaSecUI_getString(CAPS_TARGET_DESC_ALL_JAVA_PERMISSION),
                             JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ALL_JAVA_PERMISSION),
                             JavaSecUI_getHelpURL(CAPS_TARGET_URL_ALL_JAVA_PERMISSION));
+  target->registerTarget();
+
+  /* Permission to All privileges in Java */
+  targetPtrArray = new nsTargetArray();
+  targetPtrArray->SetSize(7, 1);
+  i=0;
+  /* The following list of JS targets came from lm_taint.c */
+  targetPtrArray->Set(i++, (void *)BrowserReadTarg);
+  targetPtrArray->Set(i++, (void *)BrowserWriteTarg);
+  targetPtrArray->Set(i++, (void *)SendMailTarg);
+  targetPtrArray->Set(i++, (void *)FileReadTarg);
+  targetPtrArray->Set(i++, (void *)FileWriteTarg);
+  targetPtrArray->Set(i++, (void *)UniversalPreferencesReadTarg);
+  targetPtrArray->Set(i++, (void *)UniversalPreferencesWriteTarg);
+  target = new nsUserTarget("AllJavaScriptPermission", sysPrin, 
+                            targetRiskHigh,
+                            targetRiskColorHigh,
+                            JavaSecUI_getString(CAPS_TARGET_DESC_ALL_JS_PERMISSION),
+                            JavaSecUI_getString(CAPS_TARGET_DETAIL_DESC_ALL_JS_PERMISSION),
+                            JavaSecUI_getHelpURL(CAPS_TARGET_URL_ALL_JS_PERMISSION),
+                            targetPtrArray);
   target->registerTarget();
 
   return PR_TRUE;
