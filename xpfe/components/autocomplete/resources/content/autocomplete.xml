@@ -199,7 +199,7 @@
                     case 'startLookup':
                         if (me.disableAutocomplete == "true")
                             return;
-						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+						            var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         if (!me.lastResults || inputElement.value != me.lastResults.searchString)
                             me.autoCompleteSession.onStartLookup(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
@@ -216,19 +216,19 @@
                         me.needToAutocomplete = false;
                         if (this.disableAutocomplete == "true")
                             return;
-						var inputElement = document.getAnonymousNodes(me)[0].firstChild;
+						            var inputElement = document.getAnonymousNodes(me)[0].firstChild;
                         me.autoCompleteSession.onAutoComplete(inputElement.value, me.lastResults, me.autoCompleteListener);
                         break;
                 }
 			},
 
 			finishAutoComplete: function(me, event) {
- 			   me.privatefunc.closePopupMenu(me);
-               if (me.disableAutocomplete == "true")
+ 			          me.privatefunc.closePopupMenu(me);
+                if (me.disableAutocomplete == "true")
                     return;
 
                 var inputElement = document.getAnonymousNodes(me)[0].firstChild;
-				var value = inputElement.value;
+				        var value = inputElement.value;
                 var entry = value.substring(0, inputElement.selectionStart) + value.substring(inputElement.selectionEnd, value.length);
 
                 if (me.lastResults)
@@ -301,9 +301,12 @@
 					needToAutocomplete = false;
           me.ignoreInputEvent = false;
 
-					//TODO: Need to change the menu selection
 					if (popup)
 					{
+            if (me.privatefunc.selectedItemIndex >= 0)
+              popup.activeChild = popupElement.childNodes[me.privatefunc.selectedItemIndex];
+            else
+              popup.activeChild = null;
 					}
 					return;
 				}
@@ -321,11 +324,12 @@
 					clearTimeout(me.autoCompleteTimer);
 					me.autoCompleteTimer = 0;
 				}
-        me.privatefunc.closePopupMenu(me);
 
    		  if (me.ignoreInputEvent)
    		    return;
    		  
+        me.privatefunc.closePopupMenu(me);
+
 				if (me.disableAutocomplete == "true")
 					return;
 
@@ -413,7 +417,8 @@
 						me.privatefunc.keyNavigation(me, event, popup);
 						event.preventDefault();
 						event.preventBubble();
-						me.privatefunc.cleanupInputField(me);
+            if (! popup)
+						  me.privatefunc.cleanupInputField(me);
 						break;
 				}
 			},
@@ -433,10 +438,10 @@
         <handler type="keypress" value="this.privatefunc.processKeyPress(this, event);"/>
         <handler type="focus" value="this.needToAutocomplete = false; this.lastResults.searchString=''; this.ignoreInputEvent = false"/>
         <handler type="blur" value="
-			this.privatefunc.closePopupMenu(this);
+			      this.privatefunc.closePopupMenu(this);
             if (this.needToAutocomplete)
                 this.privatefunc.finishAutoComplete(this, event);
-			this.privatefunc.cleanupInputField(this);
+			      this.privatefunc.cleanupInputField(this);
             "/>
     </handlers>
 
