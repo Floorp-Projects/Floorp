@@ -21,7 +21,9 @@
 #include "nsIAtom.h"
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
+#include "nsHashtable.h"
 #include "nsIHTMLContent.h"
+#include "nsIHTMLAttributes.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
@@ -46,10 +48,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRBool Equals(const nsIStyleRule* aRule) const;
-  virtual PRUint32 HashValue(void) const;
+  NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aValue) const;
+  NS_IMETHOD HashValue(PRUint32& aValue) const;
 
-  virtual void MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                          nsIContent* aContent);
 
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -67,29 +70,109 @@ HTMLAnchorRule::~HTMLAnchorRule()
 
 NS_IMPL_ISUPPORTS(HTMLAnchorRule, kIStyleRuleIID);
 
-PRBool HTMLAnchorRule::Equals(const nsIStyleRule* aRule) const
+NS_IMETHODIMP
+HTMLAnchorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
-  return PRBool(this == aRule);
+  aResult = PRBool(this == aRule);
+  return NS_OK;
 }
 
-PRUint32 HTMLAnchorRule::HashValue(void) const
+NS_IMETHODIMP
+HTMLAnchorRule::HashValue(PRUint32& aValue) const
 {
-  return (PRUint32)(mColor);
+  aValue = (PRUint32)(mColor);
+  return NS_OK;
 }
 
-void HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+NS_IMETHODIMP
+HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext, 
+                             nsIContent* aContent)
 {
   nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
 
   if (nsnull != styleColor) {
     styleColor->mColor = mColor;
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
 {
   return NS_OK;
+}
+
+// -----------------------------------------------------------
+
+class AttributeKey: public nsHashKey
+{
+public:
+  AttributeKey(nsIAtom* aTag, nsIHTMLAttributes* aAttributes);
+  virtual ~AttributeKey(void);
+
+  PRBool      Equals(const nsHashKey* aOther) const;
+  PRUint32    HashValue(void) const;
+  nsHashKey*  Clone(void) const;
+
+private:
+  AttributeKey(void);
+  AttributeKey(const AttributeKey& aCopy);
+  AttributeKey& operator=(const AttributeKey& aCopy);
+
+public:
+  nsIAtom*            mTag;
+  nsIHTMLAttributes*  mAttributes;
+  PRUint32            mHashSet: 1;
+  PRUint32            mHashCode: 31;
+};
+
+AttributeKey::AttributeKey(nsIAtom* aTag, nsIHTMLAttributes* aAttributes)
+  : mTag(aTag),
+    mAttributes(aAttributes)
+{
+  NS_ADDREF(mTag);
+  NS_ADDREF(mAttributes);
+  mHashSet = 0;
+}
+
+AttributeKey::~AttributeKey(void)
+{
+  NS_RELEASE(mTag);
+  NS_RELEASE(mAttributes);
+}
+
+PRBool AttributeKey::Equals(const nsHashKey* aOther) const
+{
+  const AttributeKey* other = (const AttributeKey*)aOther;
+  if (mTag == other->mTag) {
+    PRBool  equals;
+    mAttributes->Equals(other->mAttributes, equals);
+    return equals;
+  }
+  return PR_FALSE;
+}
+
+PRUint32 AttributeKey::HashValue(void) const
+{
+  if (0 == mHashSet) {
+    AttributeKey* self = (AttributeKey*)this; // break const
+    PRUint32  hash;
+    mAttributes->HashValue(hash);
+    self->mHashCode = (0x7FFFFFFF & hash);
+    self->mHashCode |= (0x7FFFFFFF & PRUint32(mTag));
+    self->mHashSet = 1;
+  }
+  return mHashCode;
+}
+
+nsHashKey* AttributeKey::Clone(void) const
+{
+  AttributeKey* clown = new AttributeKey(mTag, mAttributes);
+  if (nsnull != clown) {
+    clown->mHashSet = mHashSet;
+    clown->mHashCode = mHashCode;
+  }
+  return clown;
 }
 
 // -----------------------------------------------------------
@@ -122,6 +205,18 @@ public:
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
 
+  // Attribute management methods, aAttributes is an in/out param
+  NS_IMETHOD SetAttributesFor(nsIAtom* aTag, nsIHTMLAttributes*& aAttributes);
+  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes);
+  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes);
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, nsIAtom* aTag, 
+                             nsIHTMLAttributes*& aAttributes);
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, nsIAtom* aTag, 
+                             nsIHTMLAttributes*& aAttributes);
+  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIAtom* aTag, 
+                               nsIHTMLAttributes*& aAttributes);
+
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -134,6 +229,15 @@ private:
 protected:
   virtual ~HTMLStyleSheetImpl();
 
+  NS_IMETHOD EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes, 
+                                    nsIAtom* aTag,
+                                    PRBool aCreate, 
+                                    nsIHTMLAttributes*& aSingleAttrs);
+  NS_IMETHOD UniqueAttributes(nsIHTMLAttributes*& aSingleAttrs,
+                              nsIAtom* aTag,
+                              PRInt32 aAttrCount,
+                              nsIHTMLAttributes*& aAttributes);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -142,6 +246,8 @@ protected:
   HTMLAnchorRule* mLinkRule;
   HTMLAnchorRule* mVisitedRule;
   HTMLAnchorRule* mActiveRule;
+  nsHashtable     mAttrTable;
+  nsIHTMLAttributes*  mRecycledAttrs;
 };
 
 
@@ -186,7 +292,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(nsIURL* aURL)
     mURL(aURL),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
-    mActiveRule(nsnull)
+    mActiveRule(nsnull),
+    mRecycledAttrs(nsnull)
 {
   NS_INIT_REFCNT();
   NS_ADDREF(mURL);
@@ -198,6 +305,7 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   NS_IF_RELEASE(mLinkRule);
   NS_IF_RELEASE(mVisitedRule);
   NS_IF_RELEASE(mActiveRule);
+  NS_IF_RELEASE(mRecycledAttrs);
 }
 
 NS_IMPL_ADDREF(HTMLStyleSheetImpl)
@@ -353,6 +461,10 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       } // end A tag
       else if ((tag == nsHTMLAtoms::td) || (tag == nsHTMLAtoms::th)) {
         // propogate row/col style rules
+        // XXX: this approach has a few caveats
+        //      behavior is bound to HTML content
+        //      makes table cells process attributes from other content
+        //      inherit based style (ie: font-size: 110%) can double on row & cell
         PRInt32 backstopInsertPoint = 0;
         nsTableCell*  cell = (nsTableCell*)aContent;
         PRInt32 colIndex = cell->GetColIndex();
@@ -450,6 +562,240 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
   mVisitedRule->mColor = aColor;
   return NS_OK;
 }
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributesFor(nsIAtom* aTag, nsIHTMLAttributes*& aAttributes)
+{
+  nsIHTMLAttributes*  attrs = aAttributes;
+
+  if (nsnull != attrs) {
+    AttributeKey  key(aTag, attrs);
+    nsIHTMLAttributes* sharedAttrs = (nsIHTMLAttributes*)mAttrTable.Get(&key);
+    if (nsnull == sharedAttrs) {  // we have a new unique set
+      mAttrTable.Put(&key, attrs);
+    }
+    else {  // found existing set
+      if (sharedAttrs != aAttributes) {
+        aAttributes->ReleaseContentRef();
+        NS_RELEASE(aAttributes);  // release content's ref
+
+        aAttributes = sharedAttrs;
+        aAttributes->AddContentRef();
+        NS_ADDREF(aAttributes); // add ref for content
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetIDFor(nsIAtom* aID, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes)
+{
+  nsresult            result = NS_OK;
+  nsIHTMLAttributes*  attrs;
+  PRBool              hasValue = PRBool(nsnull != aID);
+
+  result = EnsureSingleAttributes(aAttributes, aTag, hasValue, attrs);
+
+  if ((NS_OK == result) && (nsnull != attrs)) {
+    PRInt32 count;
+    attrs->SetID(aID, count);
+
+    result = UniqueAttributes(attrs, aTag, count, aAttributes);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetClassFor(nsIAtom* aClass, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes)
+{
+  nsresult            result = NS_OK;
+  nsIHTMLAttributes*  attrs;
+  PRBool              hasValue = PRBool(nsnull != aClass);
+
+  result = EnsureSingleAttributes(aAttributes, aTag, hasValue, attrs);
+
+  if ((NS_OK == result) && (nsnull != attrs)) {
+    PRInt32 count;
+    attrs->SetClass(aClass, count);
+
+    result = UniqueAttributes(attrs, aTag, count, aAttributes);
+  }
+
+  return result;
+}
+
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
+                                                  const nsString& aValue,
+                                                  nsIAtom* aTag, 
+                                                  nsIHTMLAttributes*& aAttributes)
+{
+  nsresult            result = NS_OK;
+  nsIHTMLAttributes*  attrs;
+
+  result = EnsureSingleAttributes(aAttributes, aTag, PR_TRUE, attrs);
+
+  if ((NS_OK == result) && (nsnull != attrs)) {
+    PRInt32 count;
+    attrs->SetAttribute(aAttribute, aValue, count);
+
+    result = UniqueAttributes(attrs, aTag, count, aAttributes);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::EnsureSingleAttributes(nsIHTMLAttributes*& aAttributes, 
+                                           nsIAtom* aTag,
+                                           PRBool aCreate, 
+                                           nsIHTMLAttributes*& aSingleAttrs)
+{
+  nsresult  result = NS_OK;
+  PRInt32   contentRefCount;
+
+  if (nsnull == aAttributes) {
+    if (PR_TRUE == aCreate) {
+      if (nsnull != mRecycledAttrs) {
+        aSingleAttrs = mRecycledAttrs;
+        mRecycledAttrs = nsnull;
+      }
+      else {
+        result = NS_NewHTMLAttributes(&aSingleAttrs);
+      }
+    }
+    else {
+      aSingleAttrs = nsnull;
+    }
+    contentRefCount = 0;
+  }
+  else {
+    aSingleAttrs = aAttributes;
+    aSingleAttrs->GetContentRefCount(contentRefCount);
+    NS_ASSERTION(0 < contentRefCount, "bad content ref count");
+  }
+
+  if (NS_OK == result) {
+    if (1 < contentRefCount) {  // already shared, copy it
+      result = aSingleAttrs->Clone(&aSingleAttrs);
+      if (NS_OK != result) {
+        aSingleAttrs = nsnull;
+        return result;
+      }
+      contentRefCount = 0;
+      aAttributes->ReleaseContentRef();
+      NS_RELEASE(aAttributes);
+    }
+    else {  // one content ref, ok to use, remove from table because hash may change
+      if (1 == contentRefCount) {
+        AttributeKey  key(aTag, aSingleAttrs);
+        mAttrTable.Remove(&key);
+        NS_ADDREF(aSingleAttrs); // add a local ref so we match up 
+      }
+    }
+    // at this point, content ref count is 0 or 1, and we hold a local ref
+    // attrs is also unique and not in the table
+    NS_ASSERTION(((0 == contentRefCount) && (nsnull == aAttributes)) ||
+                 ((1 == contentRefCount) && (aSingleAttrs == aAttributes)), "this is broken");
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+HTMLStyleSheetImpl::UniqueAttributes(nsIHTMLAttributes*& aSingleAttrs,
+                                     nsIAtom* aTag,
+                                     PRInt32 aAttrCount,
+                                     nsIHTMLAttributes*& aAttributes)
+{
+  nsresult result = NS_OK;
+
+  if (0 < aAttrCount) {
+    AttributeKey  key(aTag, aSingleAttrs);
+    nsIHTMLAttributes* sharedAttrs = (nsIHTMLAttributes*)mAttrTable.Get(&key);
+    if (nsnull == sharedAttrs) {  // we have a new unique set
+      mAttrTable.Put(&key, aSingleAttrs);
+      if (aSingleAttrs != aAttributes) {
+        NS_ASSERTION(nsnull == aAttributes, "this is broken");
+        aAttributes = aSingleAttrs;
+        aAttributes->AddContentRef(); 
+        NS_ADDREF(aAttributes); // add ref for content
+      }
+    }
+    else {  // found existing set
+      NS_ASSERTION (sharedAttrs != aAttributes, "should never happen");
+      if (nsnull != aAttributes) {
+        aAttributes->ReleaseContentRef();
+        NS_RELEASE(aAttributes);  // release content's ref
+      }
+      aAttributes = sharedAttrs;
+      aAttributes->AddContentRef();
+      NS_ADDREF(aAttributes); // add ref for content
+
+      if (nsnull == mRecycledAttrs) {
+        mRecycledAttrs = aSingleAttrs;
+        NS_ADDREF(mRecycledAttrs);
+        mRecycledAttrs->Reset();
+      }
+    }
+  }
+  else {  // no attributes to store
+    if (nsnull != aAttributes) {
+      aAttributes->ReleaseContentRef();
+      NS_RELEASE(aAttributes);
+    }
+    if ((nsnull != aSingleAttrs) && (nsnull == mRecycledAttrs)) {
+      mRecycledAttrs = aSingleAttrs;
+      NS_ADDREF(mRecycledAttrs);
+      mRecycledAttrs->Reset();
+    }
+  }
+  NS_IF_RELEASE(aSingleAttrs);
+  return result;
+}
+
+
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetAttributeFor(nsIAtom* aAttribute, 
+                                                  const nsHTMLValue& aValue,
+                                                  nsIAtom* aTag, 
+                                                  nsIHTMLAttributes*& aAttributes)
+{
+  nsresult            result = NS_OK;
+  nsIHTMLAttributes*  attrs;
+  PRBool              hasValue = PRBool(eHTMLUnit_Null != aValue.GetUnit());
+
+  result = EnsureSingleAttributes(aAttributes, aTag, hasValue, attrs);
+
+  if ((NS_OK == result) && (nsnull != attrs)) {
+    PRInt32 count;
+    attrs->SetAttribute(aAttribute, aValue, count);
+
+    result = UniqueAttributes(attrs, aTag, count, aAttributes);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::UnsetAttributeFor(nsIAtom* aAttribute,
+                                                    nsIAtom* aTag, 
+                                                    nsIHTMLAttributes*& aAttributes)
+{
+  nsresult            result = NS_OK;
+  nsIHTMLAttributes*  attrs;
+
+  result = EnsureSingleAttributes(aAttributes, aTag, PR_FALSE, attrs);
+
+  if ((NS_OK == result) && (nsnull != attrs)) {
+    PRInt32 count;
+    attrs->UnsetAttribute(aAttribute, count);
+
+    result = UniqueAttributes(attrs, aTag, count, aAttributes);
+  }
+
+  return result;
+
+}
+
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {

@@ -22,6 +22,11 @@
 #include "nsIStyleSheet.h"
 #include "nsColor.h"
 
+class nsIAtom;
+class nsString;
+class nsHTMLValue;
+class nsIHTMLAttributes;
+
 // IID for the nsIHTMLStyleSheet interface {bddbd1b0-c5cc-11d1-8031-006008159b5a}
 #define NS_IHTML_STYLE_SHEET_IID     \
 {0xbddbd1b0, 0xc5cc, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
@@ -31,6 +36,18 @@ public:
   NS_IMETHOD SetLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
+
+  // Attribute management methods
+  NS_IMETHOD SetAttributesFor(nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetIDFor(nsIAtom* aID, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetClassFor(nsIAtom* aClass, nsIAtom* aTag, nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsString& aValue, nsIAtom* aTag, 
+                             nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttribute, const nsHTMLValue& aValue, nsIAtom* aTag, 
+                             nsIHTMLAttributes*& aAttributes) = 0;
+  NS_IMETHOD UnsetAttributeFor(nsIAtom* aAttribute, nsIAtom* aTag, 
+                               nsIHTMLAttributes*& aAttributes) = 0;
+
 };
 
 extern NS_HTML nsresult

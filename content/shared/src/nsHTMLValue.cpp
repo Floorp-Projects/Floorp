@@ -38,9 +38,11 @@ nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
 {
   NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
                (eHTMLUnit_Enumerated == aUnit) ||
+               (eHTMLUnit_Proportional == aUnit) ||
                (eHTMLUnit_Pixel == aUnit), "not an integer value");
   if ((eHTMLUnit_Integer == aUnit) ||
       (eHTMLUnit_Enumerated == aUnit) ||
+      (eHTMLUnit_Proportional == aUnit) ||
       (eHTMLUnit_Pixel == aUnit)) {
     mValue.mInt = aValue;
   }
@@ -160,6 +162,15 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
   return PR_FALSE;
 }
 
+PRUint32 nsHTMLValue::HashValue(void) const
+{
+  return PRUint32(mUnit) ^ 
+         (((eHTMLUnit_String == mUnit) && (nsnull != mValue.mString)) ? 
+          nsCRT::HashValue(mValue.mString->GetUnicode()) : 
+          mValue.mInt);
+}
+
+
 void nsHTMLValue::Reset(void)
 {
   if (eHTMLUnit_String == mUnit) {
@@ -179,9 +190,11 @@ void nsHTMLValue::SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit)
 {
   Reset();
   NS_ASSERTION((eHTMLUnit_Integer == aUnit) ||
-               (eHTMLUnit_Enumerated == aUnit), "not an int value");
+               (eHTMLUnit_Enumerated == aUnit) ||
+               (eHTMLUnit_Proportional == aUnit), "not an int value");
   if ((eHTMLUnit_Integer == aUnit) ||
-      (eHTMLUnit_Enumerated == aUnit)) {
+      (eHTMLUnit_Enumerated == aUnit) ||
+      (eHTMLUnit_Proportional == aUnit)) {
     mUnit = aUnit;
     mValue.mInt = aValue;
   }
@@ -279,6 +292,7 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     case eHTMLUnit_ISupports:  aBuffer.Append("ptr");  break;
     case eHTMLUnit_Integer:    break;
     case eHTMLUnit_Enumerated: aBuffer.Append("enum"); break;
+    case eHTMLUnit_Proportional:  aBuffer.Append("*"); break;
     case eHTMLUnit_Color:      aBuffer.Append("rbga"); break;
     case eHTMLUnit_Percent:    aBuffer.Append("%");    break;
     case eHTMLUnit_Pixel:      aBuffer.Append("px");   break;

@@ -52,6 +52,7 @@ public:
 
   nsHTMLValue&  operator=(const nsHTMLValue& aCopy);
   PRBool        operator==(const nsHTMLValue& aOther) const;
+  PRUint32      HashValue(void) const;
 
   nsHTMLUnit  GetUnit(void) const { return mUnit; }
   PRInt32     GetIntValue(void) const;
@@ -91,9 +92,11 @@ public:
 inline PRInt32 nsHTMLValue::GetIntValue(void) const
 {
   NS_ASSERTION((mUnit == eHTMLUnit_Integer) || 
-               (mUnit == eHTMLUnit_Enumerated), "not an int value");
+               (mUnit == eHTMLUnit_Enumerated) ||
+               (mUnit == eHTMLUnit_Proportional), "not an int value");
   if ((mUnit == eHTMLUnit_Integer) || 
-      (mUnit == eHTMLUnit_Enumerated)) {
+      (mUnit == eHTMLUnit_Enumerated) ||
+      (mUnit == eHTMLUnit_Proportional)) {
     return mValue.mInt;
   }
   return 0;
