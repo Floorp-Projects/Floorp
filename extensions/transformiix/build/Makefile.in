@@ -49,7 +49,7 @@ OBJS =../source/base/ArrayList.o \
   ../source/base/StringComparator.o \
   ../source/base/StringList.o \
   ../source/base/Tokenizer.o \
-  ../source/base/TxString.o \
+  ../source/base/MozillaString.o \
   ../source/net/URIUtils.o \
   ../source/xml/dom/mozImpl/MozillaAttr.o \
   ../source/xml/dom/mozImpl/MozillaCDATASection.o \
@@ -111,8 +111,6 @@ OBJS =../source/base/ArrayList.o \
   ../source/xml/parser/xmlrole.o \
   ../source/xml/parser/xmlparse.o \
   ../source/xml/parser/xmltok.o \
-  ../source/xml/printer/XMLPrinter.o \
-  ../source/xml/printer/HTMLPrinter.o \
   ../source/xslt/OutputFormat.o \
   ../source/xslt/Names.o \
   ../source/xslt/Numbering.o \

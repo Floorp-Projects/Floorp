@@ -25,32 +25,34 @@
 
 var xmlLoaded, xslLoaded;
 var xmlDocument, xslDocument, resultDocument;
+var theXMLURL = "chrome://transformiix/content/simple.xml";
+var theXSLURL = "chrome://transformiix/content/simplexsl.xml";
 
 function onLoadTransformiix() 
 {
-	var theXMLURL = "chrome://Transformiix/content/simple.xml";
-	var theXSLURL = "chrome://Transformiix/content/simplexsl.xml";
+  onTransform();
+}
 
-    var docShellElement = document.getElementById("xml-source");
-	var docShell = docShellElement.docShell;
-	docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
-	var webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-	webNav.loadURI(theXMLURL);
-
-    docShellElement = document.getElementById("xsl-source");
-	docShell = docShellElement.docShell;
-	docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
-	webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-	webNav.loadURI(theXSLURL);
-
-    docShellElement = document.getElementById("result-doc");
-    resultDocument = docShellElement.contentDocument;
-	xmlDocument = resultDocument.implementation.createDocument("", "", null);
-	xmlDocument.addEventListener("load", xmlDocumentLoaded, false);
-	xmlDocument.load(theXMLURL, "text/xml");
-	xslDocument = resultDocument.implementation.createDocument("", "", null);
-	xslDocument.addEventListener("load", xslDocumentLoaded, false);
-	xslDocument.load(theXSLURL, "text/xml");
+function onTransform() 
+{
+  var docShellElement = document.getElementById("xml-source");
+  var docShell = docShellElement.docShell;
+  docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+  var webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+  webNav.loadURI(theXMLURL);
+  docShellElement = document.getElementById("xsl-source");
+  docShell = docShellElement.docShell;
+  docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+  webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+  webNav.loadURI(theXSLURL);
+  docShellElement = document.getElementById("result-doc");
+  resultDocument = webNav.document;
+  xmlDocument = resultDocument.implementation.createDocument("", "", null);
+  xmlDocument.addEventListener("load", xmlDocumentLoaded, false);
+  xmlDocument.load(theXMLURL, "text/xml");
+  xslDocument = resultDocument.implementation.createDocument("", "", null);
+  xslDocument.addEventListener("load", xslDocumentLoaded, false);
+  xslDocument.load(theXSLURL, "text/xml");
 }
 
 function xmlDocumentLoaded(e) {
@@ -64,20 +66,23 @@ function xslDocumentLoaded(e) {
 }
 
 function tryToTransform() {
-	if (xmlLoaded && xslLoaded) {
-		try {
-			var xsltProcessor = null;
-			var xmlDocumentNode = xmlDocument.documentElement;
-			var xslDocumentNode = xslDocument.documentElement;
-
-			xsltProcessor = Components.classes["component://netscape/document-transformer?type=text/xsl"].getService();
-			if (xsltProcessor)	xsltProcessor = xsltProcessor.QueryInterface(Components.interfaces.nsIDocumentTransformer);
-		}
-		catch (ex) {
-			dump("failed to get transformiix service!\n");
-			xsltProcessor = null;
-		}
-		var newDocument = resultDocument.implementation.createDocument("", "", null);
-	   	xsltProcessor.transformDocument(xmlDocumentNode, xslDocumentNode, newDocument, null);
-	}
+  if (xmlLoaded && xslLoaded) {
+    try {
+      var xsltProcessor = null;
+      var xmlDocumentNode = xmlDocument.documentElement;
+      var xslDocumentNode = xslDocument.documentElement;
+      
+      xsltProcessor = Components.classes["component://netscape/document-transformer?type=text/xsl"].getService();
+      if (xsltProcessor)	xsltProcessor = xsltProcessor.QueryInterface(Components.interfaces.nsIDocumentTransformer);
+    }
+    catch (ex) {
+      dump("failed to get transformiix service!\n");
+      xsltProcessor = null;
+    }
+  dump("Mal sehen, "+xsltProcessor+"\n");
+  var outDocument = resultDocument.implementation.createDocument("", "", null);
+  xsltProcessor.TransformDocument(xmlDocumentNode, xslDocumentNode, outDocument, null);
+  DumpDOM(outDocument.documentElement);
+  DumpDOM(xmlDocument.documentElement);
+  }
 }
