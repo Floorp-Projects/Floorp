@@ -1,3 +1,20 @@
+1998-08-03  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (modifyRDN): Fixed! It also has an option to take an
+	"external" DN as an argument, if supplied.
+
+1998-08-02  Leif Hedstrom  <leif@netscape.com>
+
+	* Conn.pm (getErrorCode): Now takes two optional arguments, to
+	return the match string, and extra error string. Note that these
+	two arguments are pointers to strings!
+
+	* API.xs(ldap_get_lderrno): Fixed this function, at least it seems
+	to work now...
+
+	* Conn.pm (getLD): Added this function, convenient way to get the
+	LD from the OO layer.
+
 1998-07-30  Leif Hedstrom  <leif@netscape.com>
 
 	* Conn.pm (modifyRDN): New method, to rename the RDN of the entry.

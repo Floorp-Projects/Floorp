@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.12 1998/08/03 07:50:54 leif Exp $
+# $Id: Conn.pm,v 1.13 1998/08/03 07:52:13 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -390,7 +390,7 @@ sub add
 #
 sub modifyRDN
 {
-  my ($self, $rdn, $dn, $del) = ($_[$[], lc $_[$[ + 1], lc $_[$[ + 2], $_[$[ + 3]);
+  my ($self, $rdn, $dn, $del) = ($_[$[], lc $_[$[ + 1], $_[$[ + 2], $_[$[ + 3]);
   my (@vals);
   my $ret = 1;
 
