@@ -1121,7 +1121,7 @@ nsGfxScrollFrame::AttributeChanged(nsIDocument *aDocument,
    mHScrollbarFrame->GetContent(getter_AddRefs(hcontent));
    mVScrollbarFrame->GetContent(getter_AddRefs(vcontent));
 
-   if (hcontent == aContent  || vcontent == aContent)
+   if (hcontent.get() == aContent  || vcontent.get() == aContent)
    {
       nscoord x = 0;
       nscoord y = 0;
