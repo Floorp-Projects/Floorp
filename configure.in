@@ -2589,11 +2589,16 @@ MOZ_ARG_ENABLE_BOOL(logrefcnt,
   MOZ_LOG_REFCNT=1
   AC_DEFINE(MOZ_LOG_REFCNT))
 
-
 dnl mozilla/tools/leaky not part of default build.
 MOZ_ARG_ENABLE_BOOL(leaky,
 [  --enable-leaky          Enable leaky memory tool],
   MOZ_LEAKY=1)
+
+dnl Detect webshell leaks
+MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,
+[  --enable-detect-webshell-leaks   Enable detection of webshell leaks],
+  DETECT_WEBSHELL_LEAKS=1
+  AC_DEFINE(DETECT_WEBSHELL_LEAKS))
 
 MOZ_ARG_DISABLE_BOOL(double-buffer,
 [  --disable-double-buffer Disable double buffering],
@@ -2827,6 +2832,7 @@ AC_SUBST(MOZ_PERF_METRICS)
 AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
+AC_SUBST(DETECT_WEBSHELL_LEAKS)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
