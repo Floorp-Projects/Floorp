@@ -98,6 +98,8 @@ nsLocaleFactory::nsLocaleFactory(void)
 :	fSystemLocale(NULL),
 	fApplicationLocale(NULL)
 {
+  NS_ASSERTION(0, "obsoleted, use nsILocaleService instead.\n");
+
   int	i;
   nsresult result;
   NS_INIT_REFCNT();
