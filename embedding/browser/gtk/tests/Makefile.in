@@ -42,25 +42,13 @@ SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=)
 # ENABLE_GNOME=1
 
 ifdef ENABLE_GNOME
-
 CPPSRCS	       += TestGtkEmbedMDI.cpp
-
-LIBS		= \
-		-lgtkembedmoz \
-		-lgtksuperwin \
-		`gnome-config --libs gnomeui` \
-		$(TK_LIBS) \
-		$(NULL)
-
-else
-
-LIBS		= \
-		-lgtkembedmoz \
-		-lgtksuperwin \
-		$(TK_LIBS) \
-		$(NULL)
-
 endif
+
+LIBS		+= \
+		-lgtkembedmoz \
+		-lgtksuperwin \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
@@ -83,15 +71,16 @@ EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+
 ifdef ENABLE_GNOME
-
-CXXFLAGS        += $(MOZ_GTK_CFLAGS) `gnome-config --cflags gnomeui`
-
-else
-
-CXXFLAGS        += $(MOZ_GTK_CFLAGS)
-
+CXXFLAGS	+= `gnome-config --cflags gnomeui`
+EXTRA_LIBS	+= `gnome-config --libs gnomeui`
 endif
+
+EXTRA_LIBS	+= \
+		$(TK_LIBS) \
+		$(NULL)
 
 ifeq ($(OS_ARCH), SunOS)
 ifndef GNU_CC
