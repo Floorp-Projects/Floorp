@@ -93,7 +93,7 @@ public:
      */
     PRBool isEmpty()
     {
-        return (Count() > 0);
+        return (Count() <= 0);
     }
 
     /**
