@@ -132,9 +132,16 @@ nsresult rv;
     return nsnull;
   }  
 
-  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  nsCOMPtr<nsIMsgAccount> account;
+  rv = accountManager->GetDefaultAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return nsnull;
 
-  rv = accountManager->GetCurrentIdentity(getter_AddRefs(identity));
+  nsCOMPtr<nsISupportsArray> identities;
+  rv = account->GetIdentities(getter_AddRefs(identities));
+
+  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
+                                  (void **)getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
     printf("Failure getting Identity!\n");
