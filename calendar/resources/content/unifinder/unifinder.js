@@ -558,7 +558,8 @@ function refreshEventTree( eventArray, childrenName )
       treeCellHBox.setAttribute( "flex" , "1000" );
       treeCellHBox.setAttribute( "class", "unifinder-treecell-box-class" );
       treeCellHBox.setAttribute( "crop", "right" );
-      
+      treeCellHBox.setAttribute( "align", "center" );
+
       var treeCellVBox = document.createElement( "vbox" );
       treeCellVBox.setAttribute( "crop", "right" );
       treeCellVBox.setAttribute( "flex", "1" );
