@@ -294,8 +294,10 @@ PRBool nsScanner::UngetReadable(const nsAString& aBuffer) {
   mSlidingBuffer->UngetReadable(aBuffer,mCurrentPosition);
   mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
   mSlidingBuffer->EndReading(mEndPosition);
-  mTotalRead += aBuffer.Length();
-      
+ 
+  PRUint32 length = aBuffer.Length();
+  mCountRemaining += length; // Ref. bug 117441
+  mTotalRead += length;
   return PR_TRUE;
 }
 
