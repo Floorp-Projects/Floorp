@@ -28,10 +28,25 @@ Editor interface to outside world
 0xa3c5ee71, 0x742e, 0x11d2, \
 {0x8f, 0x2c, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94} }
 
-class nsIEditor
-{
+enum PROPERTIES{NONE = 0;BOLD = 1;NUMPROPERTIES};
+
+/**
+ * An editor specific interface. 
+ * <P>
+ * It's implemented by an object that has to execute specific editor
+ * behavior.
+ * <P>
+ * It is used by the script runtime to collect information about an object
+ */
+class nsIEditor  : public nsISupports{
 public:
-    virtual nsresult Init() = 0;
+  NS_DECL_ISUPPORTS
+
+  virtual nsresult Init() = 0;
+  virtual nsresult SetDomInterface(nsIDOMDocument *aDomInterface)=0;
+  virtual nsresult GetDomInterface(nsIDOMDocument **)=0;
+  virtual nsresult SetProperties(PROPERTIES aProperty)=0;
+  virtual nsresult GetProperties(PROPERTIES &)=0;
 };
 
 #endif //nsIEditor_h__
