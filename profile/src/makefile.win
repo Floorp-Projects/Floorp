@@ -42,6 +42,8 @@ MAKE_OBJ_TYPE	= DLL
 
 LINCS = -I$(PUBLIC)/js \
 	-I$(PUBLIC)/profile \
+	-I$(PUBLIC)/pref \
+	-I$(PUBLIC)/prefm \
 	-I$(PUBLIC)/java \
 	-I$(PUBLIC)/ldap \
 	-I$(PUBLIC)/dbm \
