@@ -21,10 +21,10 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#ifndef nsImageRequest_h__
-#define nsImageRequest_h__
+#ifndef imgRequest_h__
+#define imgRequest_h__
 
-#include "lpIImageRequest.h"
+#include "imgIRequest.h"
 
 #include "nsIRunnable.h"
 
@@ -53,13 +53,13 @@ enum {
   onStopDecode = 0x8
 };
 
-class nsImageRequest : public lpIImageRequest,
-                       public nsIImageDecoderObserver, 
-                       public nsIStreamListener
+class imgRequest : public imgIRequest,
+                   public nsIImageDecoderObserver, 
+                   public nsIStreamListener
 {
 public:
-  nsImageRequest();
-  virtual ~nsImageRequest();
+  imgRequest();
+  virtual ~imgRequest();
 
   /* additional members */
   nsresult Init(nsIChannel *aChannel);
@@ -67,7 +67,7 @@ public:
   nsresult RemoveObserver(nsIImageDecoderObserver *observer, nsresult status);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_LPIIMAGEREQUEST
+  NS_DECL_IMGIREQUEST
   NS_DECL_GFXIIMAGECONTAINEROBSERVER
   NS_DECL_NSIIMAGEDECODEROBSERVER
   NS_DECL_NSISTREAMLISTENER

@@ -25,7 +25,7 @@
 #include "nsIOutputStream.idl"
 #include "gfxtypes.idl"
 
-interface lpIImageRequest;
+interface imgIRequest;
 
 /**
  * nsIImageDecoder interface
@@ -46,8 +46,8 @@ interface nsIImageDecoder : nsIOutputStream
    * The decoder should always pass NULL as the first two parameters to
    * all of the nsIImageDecoderObserver APIs.
    */
-  void init(in lpIImageRequest aRequest);
+  void init(in imgIRequest aRequest);
 
   /// allows access to the nsIImage we have to put bits in to.
-  readonly attribute lpIImageRequest request;
+  readonly attribute imgIRequest request;
 };

@@ -26,14 +26,14 @@
 interface gfxIImageContainer;
 
 /**
- * lpIImageRequest interface
+ * imgIRequest interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  * @see imagelib2
  */
 [scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
-interface lpIImageRequest : nsISupports
+interface imgIRequest : nsISupports
 {
   void cancel(in nsresult status);
 

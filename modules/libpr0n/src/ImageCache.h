@@ -25,7 +25,7 @@
 #define ImageCache_h__
 
 #include "nsIURI.h"
-#include "nsImageRequest.h"
+#include "imgRequest.h"
 
 
 #define IMAGE_CACHE_CID \
@@ -43,8 +43,8 @@ public:
   ~ImageCache();
 
   /* additional members */
-  static PRBool Put(nsIURI *aKey, nsImageRequest *request);
-  static PRBool Get(nsIURI *aKey, nsImageRequest **request);
+  static PRBool Put(nsIURI *aKey, imgRequest *request);
+  static PRBool Get(nsIURI *aKey, imgRequest **request);
   static PRBool Remove(nsIURI *aKey);
 
 private:

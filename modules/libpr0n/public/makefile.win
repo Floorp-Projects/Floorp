@@ -31,7 +31,7 @@ XPIDLSRCS	= \
 		.\nsIImageDecoder.idl \
 		.\nsIImageDecoderObserver.idl \
 		.\nsIImageLoader.idl \
-		.\lpIImageRequest.idl \
+		.\imgIRequest.idl \
 		$(NULL)
 
 

@@ -56,8 +56,8 @@ nsGIFDecoder2::~nsGIFDecoder2(void)
 //******************************************************************************
 
 //******************************************************************************
-/* void init (in lpIImageRequest aRequest); */
-NS_IMETHODIMP nsGIFDecoder2::Init(lpIImageRequest *aRequest)
+/* void init (in imgIRequest aRequest); */
+NS_IMETHODIMP nsGIFDecoder2::Init(imgIRequest *aRequest)
 {
   mImageRequest = aRequest;
   mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
@@ -87,8 +87,8 @@ NS_IMETHODIMP nsGIFDecoder2::Init(lpIImageRequest *aRequest)
 }
 
 //******************************************************************************
-/* readonly attribute lpIImageRequest request; */
-NS_IMETHODIMP nsGIFDecoder2::GetRequest(lpIImageRequest * *aRequest)
+/* readonly attribute imgIRequest request; */
+NS_IMETHODIMP nsGIFDecoder2::GetRequest(imgIRequest * *aRequest)
 {
   *aRequest = mImageRequest;
   NS_IF_ADDREF(*aRequest);

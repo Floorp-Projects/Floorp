@@ -24,7 +24,7 @@
 #include "gfxIImageContainerObserver.idl"
 #include "gfxtypes.idl"
 
-interface lpIImageRequest;
+interface imgIRequest;
 interface gfxIImageContainer;
 interface gfxIImageFrame;
 
@@ -45,37 +45,37 @@ interface nsIImageDecoderObserver : gfxIImageContainerObserver
   /**
    * called as soon as the image begins getting decoded
    */
-  void onStartDecode(in lpIImageRequest request, in nsISupports cx);
+  void onStartDecode(in imgIRequest request, in nsISupports cx);
 
   /**
    * called once the image has been inited and therefore has a width and height
    */
-  void onStartContainer(in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image);
+  void onStartContainer(in imgIRequest request, in nsISupports cx, in gfxIImageContainer image);
 
   /**
    * called when each frame is created
    */
-  void onStartFrame(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame);
+  void onStartFrame(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame);
 
   /**
    * called when some part of the frame has new data in it
    */
-  [noscript] void onDataAvailable(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect);
+  [noscript] void onDataAvailable(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect);
 
   /**
    * called when a frame is finished decoding
    */
-  void onStopFrame(in lpIImageRequest request, in nsISupports cx, in gfxIImageFrame frame);
+  void onStopFrame(in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame);
 
   /**
    * probably not needed.  called right before onStopDecode
    */
-  void onStopContainer(in lpIImageRequest request, in nsISupports cx, in gfxIImageContainer image);
+  void onStopContainer(in imgIRequest request, in nsISupports cx, in gfxIImageContainer image);
 
   /**
    * called when the decoder is dying off
    */
-  void onStopDecode(in lpIImageRequest request, in nsISupports cx,
+  void onStopDecode(in imgIRequest request, in nsISupports cx,
                     in nsresult status, in wstring statusArg);
 
 };
