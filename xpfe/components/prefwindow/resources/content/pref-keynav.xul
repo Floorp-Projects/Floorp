@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): Aaron Leventhal
+   -                 Ian Neal
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,8 +50,8 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["findAsYouTypeEnableAuto", "findAsYouTypeSound", 
-      "findAsYouTypeTimeout"];
+    var _elementIDs = ["findAsYouTypeEnableAuto", "findAsYouTypeAutoWhat",
+      "findAsYouTypeSound", "findAsYouTypeTimeout"];
   ]]>
   </script>
   
@@ -72,11 +73,11 @@
     <checkbox id="findAsYouTypeEnableAuto" label="&findAsYouTypeEnableAuto.label;" 
               prefstring="accessibility.typeaheadfind.autostart" 
               oncommand="setLinksOnlyDisabled();"/>
-    <radiogroup id="findAsYouTypeAutoWhat" style="margin-left: 2em" 
-                oncommand="gData.linksOnlyPref = this.selectedIndex;">
-      <radio value="0" label="&findAsYouTypeAutoText.label;" 
+    <radiogroup id="findAsYouTypeAutoWhat" class="indent"
+                preftype="bool" prefstring="accessibility.typeaheadfind.linksonly">
+      <radio value="false" label="&findAsYouTypeAutoText.label;"
              accesskey="&findAsYouTypeAutoText.accesskey;"/>
-      <radio value="1" label="&findAsYouTypeAutoLinks.label;" 
+      <radio value="true" label="&findAsYouTypeAutoLinks.label;"
              accesskey="&findAsYouTypeAutoLinks.accesskey;"/>
     </radiogroup>
     <description>&findAsYouTypeTip.label;</description>

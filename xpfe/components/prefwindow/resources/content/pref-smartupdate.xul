@@ -4,7 +4,7 @@
 <!DOCTYPE page SYSTEM "chrome://communicator/locale/pref/pref-smartupdate.dtd" >
  
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul'); initUpdateNotifications();"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-smartupdate.xul');"
       headertitle="&lHeader;">
   
   <script type="application/x-javascript">
@@ -12,37 +12,16 @@
     var _elementIDs = ["XPInstallEnabled", "updateNotificationsEnabled", 
                        "updateFrequency"];
 
-    function initUpdateNotifications()
+    function Startup()
     {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-      if (!prefs.getBoolPref("update_notifications.enabled"))
-      {
-        // disable frequency radiogroup
-        var freqWeekly = document.getElementById("freqWeekly");
-        var freqMonthly = document.getElementById("freqMonthly");
-        freqWeekly.setAttribute("disabled", "true");
-        freqMonthly.setAttribute("disabled", "true");
-      }
+      toggleFrequency();
     }
 
     function toggleFrequency()
     {
-      var enabled = document.getElementById("updateNotificationsEnabled");
-      var freqWeekly = document.getElementById("freqWeekly");
-      var freqMonthly = document.getElementById("freqMonthly");
-      if (enabled.getAttribute("checked") == "true")
-      {
-        // enable frequency radiogroup
-        freqWeekly.removeAttribute("disabled");
-        freqMonthly.removeAttribute("disabled");
-      }
-      else
-      {
-        // disable frequency radiogroup
-        freqWeekly.setAttribute("disabled", "true");
-        freqMonthly.setAttribute("disabled", "true");
-      }
+      document.getElementById("updateFrequency").disabled =
+        !document.getElementById("updateNotificationsEnabled").checked ||
+        parent.hPrefWindow.getPrefIsLocked("update_notifications.provider.0.frequency");
     }
   ]]>
   </script>
