@@ -134,7 +134,7 @@ NS_METHOD nsToolbarItemHolder::SetBounds(PRUint32 aX,
 //-------------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::SetVisible(PRBool aState) 
 {
-  if (nsnull != mWidget) {
+  if (mWidget) {
     mWidget->Show(aState);
   }
   return NS_OK;
@@ -142,7 +142,7 @@ NS_METHOD nsToolbarItemHolder::SetVisible(PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::IsVisible(PRBool & aState) 
 {
-  if (nsnull != mWidget) {
+  if (mWidget) {
     return mWidget->IsVisible(aState);
   }
   return NS_OK;
@@ -151,7 +151,7 @@ NS_METHOD nsToolbarItemHolder::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::SetLocation(PRUint32 aX, PRUint32 aY) 
 {
-  if (nsnull != mWidget) {
+  if (mWidget) {
     mWidget->Move(aX, aY);
   }
   return NS_OK;
@@ -160,7 +160,7 @@ NS_METHOD nsToolbarItemHolder::SetLocation(PRUint32 aX, PRUint32 aY)
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
-  if (nsnull != mWidget) {
+  if (mWidget) {
     return mWidget->GetPreferredSize(aWidth, aHeight);
   }
   return NS_OK;
@@ -169,7 +169,7 @@ NS_METHOD nsToolbarItemHolder::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeigh
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarItemHolder::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 {
-  if (nsnull != mWidget) {
+  if (mWidget) {
     return mWidget->SetPreferredSize(aWidth, aHeight);
   }
   return NS_OK;
