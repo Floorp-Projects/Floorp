@@ -22,6 +22,6 @@ IGNORE_MANIFEST=1
 # Build xpidl first, so it's available to process idl.
 # Explicitly recur into libxpt/xptinfo and libxpt/xptcall,
 # as they depend on xpidl and can't be in the DIRS for libxpt.
-DIRS=libxpt tools\xpidl public src libxpt\xptinfo libxpt\xptcall proxy tests
+DIRS=libxpt tools\xpidl idl public src libxpt\xptinfo libxpt\xptcall proxy tests
 
 include <$(DEPTH)\config\rules.mak>

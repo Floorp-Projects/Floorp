@@ -29,17 +29,14 @@ EXPORTS =                      \
         nsHashtable.h          \
         nsICollection.h        \
         nsID.h                 \
-        nsIFactory.h           \
 	nsIID.h                \
         nsISimpleEnumerator.h  \
-        nsISupports.h          \
 	nsISupportsUtils.h     \
         nsIPtr.h               \
         nsIServiceManager.h    \
         nsISupportsArray.h     \
         nsIComponentManager.h  \
         nsRepository.h         \
-        nsIEnumerator.h        \
         nsTraceRefcnt.h        \
         nsVector.h             \
         plvector.h             \
@@ -51,7 +48,6 @@ EXPORTS =                      \
         nsIAllocator.h         \
         nsIRegistry.h          \
         nsIGenericFactory.h    \
-        nsrootidl.h            \
         $(NULL)			
 
 MODULE = xpcom 
