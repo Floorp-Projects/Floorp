@@ -78,7 +78,7 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 {
    PgShmemDestroy( mPixmap->image );
    PmMemReleaseMC( (PmMemoryContext_t *) mGC);
-   free (mPixmap);
+   PR_Free (mPixmap);
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -159,7 +159,10 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   PhDim_t dim;
   short               bytes_per_pixel = 3;
 
-  image = malloc(sizeof(PhImage_t));
+  image = PR_Malloc(sizeof(PhImage_t));
+  if (image == NULL)
+    return NS_ERROR_FAILURE;
+
   mImage = image;
 
   dim.w = mLockWidth;
@@ -169,7 +172,10 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   image->type = Pg_IMAGE_DIRECT_888; // 3 bytes per pixel with this type
   image->size = dim;
 //  image->image = (char *) PgShmemCreate( dim.w * dim.h * bytes_per_pixel, NULL);
-  image->image = (char *) malloc( dim.w * dim.h * bytes_per_pixel);
+  image->image = (char *) PR_Malloc( dim.w * dim.h * bytes_per_pixel);
+  if (image->image == NULL)
+    return NS_ERROR_FAILURE;
+	  
   image->bpl = bytes_per_pixel*dim.w;
 
 int y;
@@ -238,8 +244,8 @@ int bpl;
 
   }
 
-  free(mImage->image);
-  free(mImage);
+  PR_Free(mImage->image);
+  PR_Free(mImage);
   mImage = nsnull;
   mLocked = PR_FALSE;
 
@@ -304,12 +310,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 // we can draw on this offscreen because it has no parent
   mIsOffscreen = PR_TRUE;
 
-  PhImage_t *image;
-  PhDim_t dim;
+  PhImage_t   *image = NULL;
+  PhDim_t     dim;
   PhArea_t    area;
   PtArg_t     arg[3];
 
-  image = malloc(sizeof(PhImage_t));
+  image = PR_Malloc(sizeof(PhImage_t));
+  if (image == NULL)
+    return NS_ERROR_FAILURE;
+	
   mPixmap = image;
 
   area.pos.x=0;
