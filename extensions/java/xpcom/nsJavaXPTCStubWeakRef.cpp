@@ -78,10 +78,14 @@ nsJavaXPTCStubWeakRef::QueryReferent(const nsIID& aIID, void** aInstancePtr)
     // Get interface info for class
     nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
     nsCOMPtr<nsIInterfaceInfo> iinfo;
-    iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
+    nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
+    if (NS_FAILED(rv))
+      return rv;
 
     // Create XPCOM stub
     nsJavaXPTCStub* xpcomStub = new nsJavaXPTCStub(mJavaEnv, javaObject, iinfo);
+    if (!xpcomStub)
+      return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(xpcomStub);
     AddJavaXPCOMBinding(mJavaEnv, javaObject, SetAsXPTCStub(xpcomStub));
 
