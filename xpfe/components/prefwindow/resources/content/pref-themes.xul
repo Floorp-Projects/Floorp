@@ -45,14 +45,39 @@
     </treecolgroup>
     <template>
       <rule>
-        <treechildren>
-          <treeitem uri="..." author="rdf:http://www.mozilla.org/rdf/chrome#author"
-                    name="rdf:http://www.mozilla.org/rdf/chrome#name">
-            <treerow>
-              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
-            </treerow>
-          </treeitem>
-        </treechildren>
+        <conditions>
+          <content uri="?uri"/>
+          <triple subject="?uri"
+                  predicate="http://www.mozilla.org/rdf/chrome#packages"
+                  object="?packageList"/>
+          <member container="?packageList"
+                  child="?entry"/>
+          <triple subject="?entry"
+                  predicate="http://www.mozilla.org/rdf/chrome#package"
+                  object="?package"/>
+          <triple subject="?package"
+                  predicate="http://www.mozilla.org/rdf/chrome#displayName"
+                  object="?displayName"/>
+        </conditions>
+        <action>
+          <treechildren>
+            <treeitem uri="?entry"> 
+              <treerow>
+                <treecell class="treecell-indent" value="?displayName"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </action>
+      </rule>
+      <rule>
+          <treechildren>
+            <treeitem uri="?child" author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                      container="true" name="rdf:http://www.mozilla.org/rdf/chrome#name">
+              <treerow>
+                <treecell class="treecell-indent" value="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
       </rule>
     </template>
   </tree>
