@@ -30,7 +30,7 @@ DIRS= \
         util \
 	main \
 	mimetype \
-!ifdef NU_CACHE
+!ifndef NU_CACHE
 	cache\nu	\
 !endif
 	cache \
