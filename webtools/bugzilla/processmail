@@ -657,7 +657,6 @@ sub getEmailAttributes ($@) {
     
     my ($commentField,@fieldDiffs) = @_;
     my (@flags,@uniqueFlags,%alreadySeen) = ();
-    my $Status = 0;
     
     foreach my $ref (@fieldDiffs) {
         my ($who, $fieldName, $when, $old, $new) = (@$ref);
@@ -671,7 +670,6 @@ sub getEmailAttributes ($@) {
             if ($new eq 'RESOLVED' || $new eq 'VERIFIED') {
                 push (@flags, 'Resolved');
             }
-            $Status = 1;
         }
         elsif ( $fieldName eq 'Severity' || $fieldName eq 'Status' ||
                 $fieldName eq 'Priority' ) {
@@ -686,7 +684,7 @@ sub getEmailAttributes ($@) {
     if ( $commentField =~ /Created an attachment \(/ ) {
         push (@flags, 'Attachments');
     }
-    elsif ( $commentField ne '' && !($Status)) {
+    elsif ( ($commentField ne '') && (scalar(@flags) == 1) && ($flags[0] eq 'Resolved')) {
         push (@flags, 'Comments');
     }
     
