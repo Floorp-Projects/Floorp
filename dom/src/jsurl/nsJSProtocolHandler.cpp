@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsCOMPtr.h"
@@ -44,17 +44,23 @@
 #include "nsIEvaluateStringProxy.h"
 #include "nsXPIDLString.h"
 #include "nsIByteArrayInputStream.h"
+#include "nsIWindowMediator.h"
+#include "nsIDOMWindow.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
+static const char console_chrome_url[] = "chrome://global/content/console.xul";
+static const char console_window_options[] = "chrome,menubar,toolbar,resizable";
 
 class nsJSThunk;
 
-/***************************************************************************/
-/* nsEvaluateStringProxy                                                   */
-/* This private class will allow us to evaluate js on another thread       */
-/***************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+// nsEvaluateStringProxy
+// This private class will allow us to evaluate DOM JS on the main thread
+
 class nsEvaluateStringProxy : public nsIEvaluateStringProxy {
 public:
     NS_DECL_ISUPPORTS
@@ -63,9 +69,8 @@ public:
     nsEvaluateStringProxy();
     virtual ~nsEvaluateStringProxy();
 protected:
-    nsCOMPtr<nsIChannel>        mChannel;
+    nsCOMPtr<nsIChannel> mChannel;
 };
-
 
 nsEvaluateStringProxy::nsEvaluateStringProxy()
 {
@@ -93,13 +98,14 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
     NS_ENSURE_ARG_POINTER(aIsUndefined);
 
     nsresult rv;
-    
+
+    // Get an interface requestor from the channel callbacks.
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
     if (NS_FAILED(rv)) return rv;
     NS_ENSURE_TRUE(callbacks, NS_ERROR_FAILURE);
 
-    // The event sink must be a script global Object Owner or we fail.
+    // The requestor must be able to get a script global object owner.
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
     callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
                             getter_AddRefs(globalOwner));
@@ -118,21 +124,20 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
     nsCOMPtr<nsISupports> owner;
     rv = mChannel->GetOwner(getter_AddRefs(owner));
     nsCOMPtr<nsIPrincipal> principal;
-    if (owner)
-    {
+    if (owner) {
         principal = do_QueryInterface(owner, &rv);
         NS_ASSERTION(principal, "Channel's owner is not a principal");
         if (!principal) return NS_ERROR_FAILURE;
     }
-    else // No owner from channel, use the current URI to generate a principal
-    {
+    else {
+        // No owner from channel, use the current URI to generate a principal
         nsCOMPtr<nsIURI> uri;
         rv = mChannel->GetURI(getter_AddRefs(uri));
         if (NS_FAILED(rv) || !uri) return NS_ERROR_FAILURE;
         NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
                         NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
         if (NS_FAILED(rv)) return rv;
-        rv =securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
+        rv = securityManager->GetCodebasePrincipal(uri, getter_AddRefs(principal));
         if (NS_FAILED(rv) || !principal) return NS_ERROR_FAILURE;
     }
 
@@ -148,19 +153,81 @@ nsEvaluateStringProxy::EvaluateString(char **aRetValue, PRBool *aIsUndefined)
 
     nsString result;
     {
-      nsAutoString scriptString;
-      scriptString.AssignWithConversion(script);
-      rv = scriptContext->EvaluateString(scriptString,
-                                         nsnull,  // obj
-                                         principal,
-                                         nsnull,  // url
-                                         0,       // line no
-                                         nsnull,
-                                         result,
-                                         aIsUndefined);
+        nsAutoString scriptString;
+        scriptString.AssignWithConversion(script);
+        rv = scriptContext->EvaluateString(scriptString,
+                                           nsnull,      // obj
+                                           principal,
+                                           nsnull,      // url
+                                           0,           // line no
+                                           nsnull,
+                                           result,
+                                           aIsUndefined);
     }
+
     // XXXbe this should not decimate! pass back UCS-2 to necko
     *aRetValue = result.ToNewCString();
+    return rv;
+}
+
+// Gasp.  This is so much easier to write in JS....
+NS_IMETHODIMP
+nsEvaluateStringProxy::BringUpConsole()
+{
+    nsresult rv;
+
+    // First, get the Window Mediator service.
+    NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // Next, find out whether there's a console already open.
+    nsCOMPtr<nsIDOMWindow> console;
+    nsAutoString windowType = NS_LITERAL_STRING("global:console");
+    rv = windowMediator->GetMostRecentWindow(windowType.GetUnicode(),
+                                             getter_AddRefs(console));
+    if (NS_FAILED(rv)) return rv;
+
+    if (console) {
+        // If the console is already open, bring it to the top.
+        rv = console->Focus();
+    } else {
+        // Get an interface requestor from the channel callbacks.
+        nsCOMPtr<nsIInterfaceRequestor> callbacks;
+        rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        if (NS_FAILED(rv)) return rv;
+        NS_ENSURE_TRUE(callbacks, NS_ERROR_FAILURE);
+
+        // The requestor must be able to get a script global object owner.
+        nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
+        callbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
+                                getter_AddRefs(globalOwner));
+        NS_ENSURE_TRUE(globalOwner, NS_ERROR_FAILURE);
+
+        // So far so good: get the script global and its context.
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
+        NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+
+        nsCOMPtr<nsIScriptContext> scriptContext;
+        rv = global->GetContext(getter_AddRefs(scriptContext));
+        if (NS_FAILED(rv)) return rv;
+
+        // Finally, QI global to nsIDOMWindow and open the console.
+        nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global, &rv);
+        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+        JSContext *cx = (JSContext*) scriptContext->GetNativeContext();
+        void *mark;
+        jsval *argv = JS_PushArguments(cx, &mark, "sss",
+                                       console_chrome_url,
+                                       "_blank",
+                                       console_window_options);
+        if (!argv) return NS_ERROR_OUT_OF_MEMORY;
+
+        rv = window->Open(cx, argv, 3, getter_AddRefs(console));
+
+        JS_PopArguments(cx, mark);
+    }
     return rv;
 }
 
@@ -172,7 +239,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsJSThunk()
-        : mChannel(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
+      : mChannel(nsnull), mResult(nsnull), mLength(0), mReadCursor(0) {
         NS_INIT_REFCNT();
     }
 
@@ -189,14 +256,16 @@ public:
     }
 
     NS_IMETHOD Open(char* *contentType, PRInt32 *contentLength) {
-        // IMPORTANT CHANGE: We used to just implement nsIInputStream and use an
-        // input stream channel in the js protocol, but that had the nasty side effect
-        // of doing the evaluation after the window content was already torn down (in
-        // the webshell's OnStartRequest callback). By using an nsIStreamIO instead, 
-        // we now get more control over when the evaluation occurs. By evaluating in the
-        // Open method, we can can get the status of the channel in the OnStartRequest
-        // callback and detect NS_ERROR_DOM_RETVAL_UNDEFINED, thereby avoiding tearing
-        // down the current document.
+        // IMPORTANT CHANGE: We used to just implement nsIInputStream and use
+        // an input stream channel in the js protocol, but that had the nasty
+        // side effect of doing the evaluation after the window content was
+        // already torn down (in the webshell's OnStartRequest callback).
+        //
+        // By using an nsIStreamIO instead, we now get more control over when
+        // the evaluation occurs.  By evaluating in the Open method, we can
+        // get the status of the channel in the OnStartRequest callback and
+        // detect NS_ERROR_DOM_RETVAL_UNDEFINED, thereby avoiding tear-down of
+        // the current document.
 
         nsresult rv;
 
@@ -205,10 +274,9 @@ public:
                         nsIProxyObjectManager::GetCID(), &rv);
         if (NS_FAILED(rv)) return rv;
 
-        nsEvaluateStringProxy* eval = new nsEvaluateStringProxy();
-        if (eval == nsnull)
+        nsCOMPtr<nsEvaluateStringProxy> eval = new nsEvaluateStringProxy();
+        if (!eval)
             return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(eval);
         rv = eval->Init(mChannel);
         if (NS_FAILED(rv)) return rv;
 
@@ -219,16 +287,23 @@ public:
                                                 PROXY_SYNC | PROXY_ALWAYS,
                                                 getter_AddRefs(evalProxy));
 
-        if (NS_FAILED(rv)) {        
-            NS_RELEASE(eval);
-            return rv;
+        if (NS_FAILED(rv)) return rv;
+
+        // If mURI is just "javascript:", we bring up the JavaScript console
+        // and return NS_ERROR_DOM_RETVAL_UNDEFINED.
+        nsXPIDLCString spec;
+        rv = mURI->GetSpec(getter_Copies(spec));
+        if (NS_FAILED(rv)) return rv;
+
+        if (PL_strcasecmp(spec, "javascript:") == 0) {
+            rv = evalProxy->BringUpConsole();
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+            return NS_ERROR_DOM_RETVAL_UNDEFINED;
         }
 
         char* retString;
         PRBool isUndefined;
         rv = evalProxy->EvaluateString(&retString, &isUndefined);
-
-        NS_RELEASE(eval);
 
         if (NS_FAILED(rv)) {
             rv = NS_ERROR_MALFORMED_URI;
@@ -236,14 +311,16 @@ public:
         }
 
         if (isUndefined) {
-            if (retString) 
+            if (retString)
                 Recycle(retString);
             rv = NS_ERROR_DOM_RETVAL_UNDEFINED;
             return rv;
         }
 #if 0
-        else {
-            // This is from the old code which need to be hack on a bit more:
+        {
+            // This is from the old code which need to be hack on a bit more.
+            // XXXbe maybe we should just drop this, and take the compatibility
+            //       hit here -- does anyone care?
 
             // plaintext is apparently busted
             if (ret[0] != PRUnichar('<'))
@@ -408,8 +485,9 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     nsCOMPtr<nsIStreamIOChannel> channel;
     rv = NS_NewStreamIOChannel(getter_AddRefs(channel), uri, thunk);
-    // If the resultant script evaluation actually does return a
-    // value, we treat it as html.
+
+    // If the resultant script evaluation actually does return a value, we
+    // treat it as html.  XXXbe see <plaintext> comment above
     if (NS_SUCCEEDED(rv)) {
         rv = channel->SetContentType("text/html");
     }
@@ -427,7 +505,7 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 ////////////////////////////////////////////////////////////////////////////////
 
 static nsModuleComponentInfo gJSModuleInfo[] = {
-    { "JavaScript Protocol Handler", 
+    { "JavaScript Protocol Handler",
       NS_JSPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
       nsJSProtocolHandler::Create }
