@@ -987,7 +987,8 @@ sub stocks {
 
 sub LoadStockList {
     %stocklist = ("AOL"  => [$channel],
-                  "^DJI" => [$channel]);
+                  "^DJI" => [$channel],
+                  "^IXIC" => [$channel]);
 
     if (open(LIST, $stockf)) {
         %stocklist = ();
