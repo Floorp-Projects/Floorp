@@ -1,7 +1,7 @@
 {
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = java.lang.Object; LANGUAGE = Java; }, 
+        {CLASS = "java.lang.Object"; LANGUAGE = Java; }, 
         {
             ACTIONS = {hitButton1 = id; hitButton2 = id; hitButton3 = id; }; 
             CLASS = nsAlertController; 

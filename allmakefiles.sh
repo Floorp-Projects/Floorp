@@ -746,6 +746,7 @@ embedding/browser/gtk/tests/Makefile
 embedding/browser/photon/Makefile
 embedding/browser/photon/src/Makefile
 embedding/browser/photon/tests/Makefile
+embedding/browser/cocoa/Makefile
 embedding/components/Makefile
 embedding/components/build/Makefile
 embedding/components/windowwatcher/Makefile
@@ -756,6 +757,7 @@ embedding/components/ui/helperAppDlg/Makefile
 embedding/components/ui/progressDlg/Makefile
 embedding/config/Makefile
 embedding/tests/Makefile
+embedding/tests/cocoaEmbed/Makefile
 embedding/tests/winEmbed/Makefile
 embedding/tests/mfcembed/Makefile
 embedding/tests/mfcembed/components/Makefile

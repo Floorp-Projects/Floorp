@@ -56,6 +56,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
+#include "nsString.h"
 
 
 @interface CHOptionSelector : NSObject

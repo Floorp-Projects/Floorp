@@ -10,8 +10,6 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DEBUGGING_SYMBOLS = YES;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "\U0001 -DDEBUG -DTRACING -DMOZ_DEBUG";
 			};
 			isa = PBXBuildStyle;
@@ -22,6 +20,8 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				DEBUGGING_SYMBOLS = NO;
+				OPTIMIZATION_CFLAGS = "-O";
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -79,6 +79,7 @@
 				F57D38AE0330DCA001026D5D,
 				08FB77AEFE84172EC02AAC07,
 				F6BA6D4C01B2EFCE01A962F7,
+				79C235890439D34800202892,
 				089C1665FE841158C02AAC07,
 				0867D69AFE84028FC02AAC07,
 				034768DFFF38A50411DB9C8B,
@@ -111,17 +112,16 @@
 				0867D6A2FE84028FC02AAC07,
 			);
 			buildSettings = {
-				DEBUGGING_SYMBOLS = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = "../../../../dist/include/mimetype ../../../../dist/include/find ../../../../dist/include/webbrowserpersist ../../../../dist/include/commandhandler ../../../../dist/include/exthandler ../../../../dist/include/helperAppDlg ../../../../dist/include/profile ../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
-				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib ../../../../dist/Embed";
-				OPTIMIZATION_CFLAGS = "-O2";
+				HEADER_SEARCH_PATHS = "../../../dist/include/mimetype ../../../dist/include/find ../../../dist/include/webbrowserpersist ../../../dist/include/commandhandler ../../../dist/include/exthandler ../../../dist/include/helperAppDlg ../../../dist/include/profile ../../../dist/include/xpcom ../../../dist/include/string ../../../dist/include/docshell ../../../dist/include/webshell ../../../dist/include/necko ../../../dist/include/widget ../../../dist/include/dom ../../../dist/include/gfx ../../../dist/include/layout ../../../dist/include/content ../../../dist/include/uriloader ../../../dist/include/webbrwsr ../../../dist/include/shistory ../../../dist/include/embed_base ../../../dist/include/pref ../../../dist/include/windowwatcher ../../../dist/include ../../../dist/include/nspr";
+				LIBRARY_SEARCH_PATHS = "../../../dist/bin ../../../dist/lib ../../../dist/Embed /Users/conrad/Development/TRUNK/MachObj/obj-cocoa-debug/xpcom/build";
+				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
-				PREFIX_HEADER = "../../../../mozilla-config.h";
+				PREFIX_HEADER = "../../../mozilla-config.h";
 				PRODUCT_NAME = CHBrowserView;
 				SECTORDER_FLAGS = "";
 				USE_GCC3_PFE_SUPPORT = NO;
@@ -195,7 +195,6 @@
 				F64C5F1B01B58AC001A962F7,
 				F57D38A00330DAB701026D5D,
 				F57D38A20330DAB701026D5D,
-				F57D38A40330DAB701026D5D,
 				F57D38A60330DAB701026D5D,
 				F57D38A80330DAB701026D5D,
 				F57D38AD0330DC9701026D5D,
@@ -203,6 +202,7 @@
 				F57D38B70330E3E201026D5D,
 				F57D38B80330E3E301026D5D,
 				F52978A60371981A01026DCE,
+				79C235950439D56C00202892,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -210,8 +210,8 @@
 		0867D6A0FE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F6BA6D4501B2115301A962F7,
 				F6BA6D6001B3008E01A962F7,
+				79C2358B0439D3B700202892,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -249,8 +249,8 @@
 		089C1667FE841158C02AAC07 = {
 			fileEncoding = 10;
 			isa = PBXFileReference;
-			name = English;
-			path = English.lproj/InfoPlist.strings;
+			name = InfoPlist.strings;
+			path = res/English.lproj/InfoPlist.strings;
 			refType = 4;
 		};
 		089C1668FE841158C02AAC07 = {
@@ -265,10 +265,8 @@
 				F64C5F1A01B58AC001A962F7,
 				F57D38950330DAB701026D5D,
 				F57D38970330DAB701026D5D,
-				F57D38990330DAB701026D5D,
+				79C235930439D56C00202892,
 				F52978A50371981701026DCE,
-				F6BA6D4401B2115301A962F7,
-				3FA6DEB1042FA53F0002AD8F,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -312,22 +310,62 @@
 //102
 //103
 //104
-//3F0
-//3F1
-//3F2
-//3F3
-//3F4
-		3FA6DEB1042FA53F0002AD8F = {
+//790
+//791
+//792
+//793
+//794
+		79C235710438E63900202892 = {
+			children = (
+				F57D389A0330DAB701026D5D,
+				F57D389C0330DAB701026D5D,
+				F57D38AF0330DFF201026D5D,
+				F57D38B10330E1D101026D5D,
+				F57D38B40330E25501026D5D,
+			);
+			isa = PBXGroup;
+			name = Download;
+			refType = 4;
+		};
+		79C235890439D34800202892 = {
+			children = (
+				79C2358A0439D3B700202892,
+			);
+			isa = PBXGroup;
+			name = "Gecko Libraries";
+			path = "";
+			refType = 4;
+		};
+		79C2358A0439D3B700202892 = {
 			isa = PBXFileReference;
-			name = libxpcombase_s.a;
-			path = ../../../../xpcom/base/libxpcombase_s.a;
+			name = libembed_base_s.a;
+			path = ../../base/libembed_base_s.a;
 			refType = 2;
 		};
-//3F0
-//3F1
-//3F2
-//3F3
-//3F4
+		79C2358B0439D3B700202892 = {
+			fileRef = 79C2358A0439D3B700202892;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		79C235930439D56C00202892 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			name = CHBrowserView.mm;
+			path = src/CHBrowserView.mm;
+			refType = 4;
+		};
+		79C235950439D56C00202892 = {
+			fileRef = 79C235930439D56C00202892;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//790
+//791
+//792
+//793
+//794
 //F50
 //F51
 //F52
@@ -336,13 +374,15 @@
 		F52978A40371981701026DCE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHClickListener.h;
+			name = CHClickListener.h;
+			path = src/CHClickListener.h;
 			refType = 2;
 		};
 		F52978A50371981701026DCE = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHClickListener.mm;
+			name = CHClickListener.mm;
+			path = src/CHClickListener.mm;
 			refType = 2;
 		};
 		F52978A60371981A01026DCE = {
@@ -360,67 +400,71 @@
 		F57D38940330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHBrowserListener.h;
+			name = CHBrowserListener.h;
+			path = src/CHBrowserListener.h;
 			refType = 2;
 		};
 		F57D38950330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHBrowserListener.mm;
+			name = CHBrowserListener.mm;
+			path = src/CHBrowserListener.mm;
 			refType = 2;
 		};
 		F57D38960330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHBrowserService.h;
+			name = CHBrowserService.h;
+			path = src/CHBrowserService.h;
 			refType = 2;
 		};
 		F57D38970330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHBrowserService.mm;
+			name = CHBrowserService.mm;
+			path = src/CHBrowserService.mm;
 			refType = 2;
 		};
 		F57D38980330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHBrowserView.h;
-			refType = 2;
-		};
-		F57D38990330DAB701026D5D = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			path = CHBrowserView.mm;
+			name = CHBrowserView.h;
+			path = src/CHBrowserView.h;
 			refType = 2;
 		};
 		F57D389A0330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHDownloadFactories.h;
+			name = CHDownloadFactories.h;
+			path = src/CHDownloadFactories.h;
 			refType = 2;
 		};
 		F57D389B0330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHDownloadFactories.mm;
+			name = CHDownloadFactories.mm;
+			path = src/CHDownloadFactories.mm;
 			refType = 2;
 		};
 		F57D389C0330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHDownloadProgressDisplay.h;
+			name = CHDownloadProgressDisplay.h;
+			path = src/CHDownloadProgressDisplay.h;
 			refType = 2;
 		};
 		F57D389D0330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = CHDownloadProgressDisplay.mm;
+			name = CHDownloadProgressDisplay.mm;
+			path = src/CHDownloadProgressDisplay.mm;
 			refType = 2;
 		};
 		F57D389E0330DAB701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = nsAlertController.h;
+			name = nsAlertController.h;
+			path = src/nsAlertController.h;
 			refType = 2;
 		};
 		F57D389F0330DAB701026D5D = {
@@ -460,12 +504,6 @@
 				ATTRIBUTES = (
 					Public,
 				);
-			};
-		};
-		F57D38A40330DAB701026D5D = {
-			fileRef = F57D38990330DAB701026D5D;
-			isa = PBXBuildFile;
-			settings = {
 			};
 		};
 		F57D38A50330DAB701026D5D = {
@@ -510,13 +548,15 @@
 		F57D38AA0330DC9701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = "NSString+Utils.h";
+			name = "NSString+Utils.h";
+			path = "src/NSString+Utils.h";
 			refType = 2;
 		};
 		F57D38AB0330DC9701026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = "NSString+Utils.mm";
+			name = "NSString+Utils.mm";
+			path = "src/NSString+Utils.mm";
 			refType = 2;
 		};
 		F57D38AC0330DC9701026D5D = {
@@ -547,25 +587,29 @@
 		F57D38AF0330DFF201026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = SaveHeaderSniffer.h;
+			name = SaveHeaderSniffer.h;
+			path = src/SaveHeaderSniffer.h;
 			refType = 2;
 		};
 		F57D38B00330DFF201026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = SaveHeaderSniffer.mm;
+			name = SaveHeaderSniffer.mm;
+			path = src/SaveHeaderSniffer.mm;
 			refType = 2;
 		};
 		F57D38B10330E1D101026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = nsDownloadListener.h;
+			name = nsDownloadListener.h;
+			path = src/nsDownloadListener.h;
 			refType = 2;
 		};
 		F57D38B20330E1D101026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = nsDownloadListener.mm;
+			name = nsDownloadListener.mm;
+			path = src/nsDownloadListener.mm;
 			refType = 2;
 		};
 		F57D38B30330E1D801026D5D = {
@@ -583,13 +627,15 @@
 		F57D38B40330E25501026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = ProgressDlgController.h;
+			name = ProgressDlgController.h;
+			path = src/ProgressDlgController.h;
 			refType = 2;
 		};
 		F57D38B50330E25501026D5D = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = ProgressDlgController.mm;
+			name = ProgressDlgController.mm;
+			path = src/ProgressDlgController.mm;
 			refType = 2;
 		};
 		F57D38B60330E3E101026D5D = {
@@ -650,7 +696,8 @@
 		F64C5F1A01B58AC001A962F7 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			path = nsAlertController.mm;
+			name = nsAlertController.mm;
+			path = src/nsAlertController.mm;
 			refType = 2;
 		};
 		F64C5F1B01B58AC001A962F7 = {
@@ -670,8 +717,8 @@
 		};
 		F64C5F2801B5904701A962F7 = {
 			isa = PBXFileReference;
-			name = English;
-			path = English.lproj/alert.nib;
+			name = alert.nib;
+			path = res/English.lproj/alert.nib;
 			refType = 4;
 		};
 		F64C5F2901B5904701A962F7 = {
@@ -680,30 +727,14 @@
 			settings = {
 			};
 		};
-		F6BA6D4401B2115301A962F7 = {
-			isa = PBXFileReference;
-			name = libembed_base_s.a;
-			path = ../../../base/libembed_base_s.a;
-			refType = 2;
-		};
-		F6BA6D4501B2115301A962F7 = {
-			fileRef = F6BA6D4401B2115301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BA6D4C01B2EFCE01A962F7 = {
 			children = (
-				F52978A40371981701026DCE,
+				79C235710438E63900202892,
+				F57D389E0330DAB701026D5D,
 				F57D38940330DAB701026D5D,
 				F57D38960330DAB701026D5D,
 				F57D38980330DAB701026D5D,
-				F57D389A0330DAB701026D5D,
-				F57D389C0330DAB701026D5D,
-				F57D38AF0330DFF201026D5D,
-				F57D389E0330DAB701026D5D,
-				F57D38B10330E1D101026D5D,
-				F57D38B40330E25501026D5D,
+				F52978A40371981701026DCE,
 			);
 			isa = PBXGroup;
 			name = Headers;
