@@ -69,6 +69,7 @@
  */
 
 #include <MacTypes.h>
+#include <MacWindows.h>
 
 class nsIEventSink;
 class nsIWidget;
