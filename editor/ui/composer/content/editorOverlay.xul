@@ -22,6 +22,7 @@
   -->
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://editor/content/EditorCommandsOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -253,7 +254,7 @@
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
       <menuitem id="menu_sendPage" observes="cmd_sendPage"/>
-      <menuitem accesskey="&filepreview.accesskey;"                              observes="cmd_preview" value="&previewCmd.label;"/>
+      <menuitem id="menu_preview"/>
       <menuseparator />
       <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
       <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
@@ -526,9 +527,7 @@
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
                 accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
                 oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
-    <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
-                accesskey="&formatremovelinks.accesskey;"
-                oncommand="EditorRemoveLinks()" position="7"/>
+    <menuitem id="removeLinksMenuitem" position="7"/>
     <menuseparator position="8"/>
 
     <!-- Heading submenu -->
@@ -584,9 +583,7 @@
   </menupopup>
 
   <!-- Items to append at the bottom of the formatMenuPopup -->
-  <menuitem id="objectProperties" value="&properties.label;"
-            accesskey="&properties.accesskey;"
-            oncommand="EditorObjectProperties()"/>
+  <menuitem id="objectProperties"/>
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
             oncommand="goDoCommand('cmd_pageProperties')"/>
@@ -594,47 +591,7 @@
             accesskey="&colorsandbackground.accesskey;"
             oncommand="goDoCommand('cmd_colorProperties')"/>
 
-  <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
-    <menupopup  oncreate="InitTableMenu()">
-      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
-              accesskey="&tableselectmenu.accesskey;">
-        <menupopup>
-            <menuitem value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
-            <menuitem value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
-            <menuitem value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
-            <menuitem value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
-            <menuitem value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
-        </menupopup>
-      </menu>
-      <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
-        <menupopup>
-          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
-          <menuseparator />
-          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
-          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
-          <menuseparator />
-          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
-          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
-          <menuseparator />
-          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
-          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
-        </menupopup>
-      </menu>
-      <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
-        <menupopup>
-            <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorDeleteTable()"/>
-            <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow(1)"/>
-            <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn(1)"/>
-            <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell(1)"/>
-        </menupopup>
-      </menu>
-      <menuseparator />
-      <menuitem id="tableNormalizeTable" accesskey="&tablefixup.accesskey;"     oncommand="EditorNormalizeTable()" value="&tableFixup.label;"      />
-      <menuitem id="tableJoinCells"      accesskey="&tablejoincells.accesskey;" oncommand="EditorJoinTableCells()"/><!-- menu text set in InitTableMenu -->
-      <menuitem id="tableSlitCell"       accesskey="&tablesplitcell.accesskey;" oncommand="EditorSplitTableCell()" value="&tableSplitCell.label;"  />
-      <menuitem id="tableProperties"     accesskey="&properties.accesskey;"     observes="cmd_editTable"           value="&tableProperties.label;" />
-    </menupopup>
-  </menu>
+  <menu id="tableMenu"/>
 
   <popup id="TextColorPopup"  popupanchor="bottomleft" tooltip="aTooltip" tooltiptext="foo text color">
     <text class="ColorPickerLabel" id="TextColorCaption" value="&textColorCaption.label;" flex="1"/>
