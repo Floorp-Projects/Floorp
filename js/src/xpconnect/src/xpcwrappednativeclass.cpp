@@ -72,8 +72,8 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
         return clazz;
     }
 
-    nsCOMPtr<nsIInterfaceInfoManager> iimgr;
-    if(!(iimgr = nsXPConnect::GetInterfaceInfoManager()))
+    nsCOMPtr<nsIInterfaceInfoManager> iimgr = dont_AddRef(nsXPConnect::GetInterfaceInfoManager());
+    if(!iimgr)
     {
         SET_ERROR_CODE(NS_ERROR_FAILURE);
         return nsnull;
