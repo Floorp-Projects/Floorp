@@ -85,7 +85,7 @@ protected:
     nsCOMPtr<nsHTTPHandler>     mHandler;
     HTTPState                   mState;
 
-    nsString                    mVerb;
+    nsCString                    mVerb;
     nsCOMPtr<nsIHTTPEventSink>  mEventSink;
     nsCOMPtr<nsIEventSinkGetter> mEventSinkGetter;
 
