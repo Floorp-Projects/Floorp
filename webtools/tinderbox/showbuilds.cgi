@@ -768,6 +768,8 @@ sub do_panel {
     my $keycount = @keys;
     my $tm = &print_time(time);
 
+    print q(<body BGCOLOR="#FFFFFF" TEXT="#000000" 
+                  LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000");
     print "<a href=showbuilds.cgi?tree=$form{tree}";
     print "&hours=$form{'hours'}" if $form{'hours'};
     print "&nocrap=1" if $form{'nocrap'};
@@ -786,7 +788,7 @@ sub do_panel {
       print $build{$buildname} eq 'success' ? '00ff00' : 'FF0000';
       print "'>$buildname</td></tr>";
     }
-    print "</table>\n";
+    print "</table></body>";
 }
 
 sub loadquickparseinfo {
