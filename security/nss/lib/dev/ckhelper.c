@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.9 $ $Date: 2001/11/05 17:18:47 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.10 $ $Date: 2001/11/07 16:15:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -236,16 +236,6 @@ nssCKObject_SetAttributes
 	return PR_FAILURE;
     }
 }
-
-/*
-NSS_IMPLEMENT PRBool
-nssCKObject_IsTokenObject
-(
-  CK_OBJECT_HANDLE object
-)
-{
-}
-*/
 
 NSS_IMPLEMENT PRBool
 nssCKObject_IsTokenObjectTemplate

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.13 $ $Date: 2001/11/05 17:18:48 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: token.c,v $ $Revision: 1.14 $ $Date: 2001/11/07 16:15:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -221,10 +221,29 @@ nssToken_DeleteStoredObject
 {
     nssSession *session;
     CK_RV ckrv;
-    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
+    PRStatus nssrv;
+    PRBool createdSession;
+    if (nssCKObject_IsAttributeTrue(object, CKA_TOKEN, tok->defaultSession,
+                                    tok->slot, &nssrv)) {
+	if (sessionOpt) {
+	    if (!nssSession_IsReadWrite(sessionOpt)) {
+		return PR_FAILURE;;
+	    } else {
+		session = sessionOpt;
+	    }
+	} else if (nssSession_IsReadWrite(tok->defaultSession)) {
+	    session = tok->defaultSession;
+	} else {
+	    session = nssSlot_CreateSession(tok->slot, NULL, PR_TRUE);
+	    createdSession = PR_TRUE;
+	}
+    }
     nssSession_EnterMonitor(session);
     ckrv = CKAPI(tok->slot)->C_DestroyObject(session->handle, object);
     nssSession_ExitMonitor(session);
+    if (createdSession) {
+	nssSession_Destroy(session);
+    }
     if (ckrv != CKR_OK) {
 	return PR_FAILURE;
     }
@@ -244,7 +263,6 @@ nssToken_ImportObject
     PRBool createdSession = PR_FALSE;
     CK_OBJECT_HANDLE object;
     CK_RV ckrv;
-    session = (sessionOpt) ? sessionOpt : tok->defaultSession;
     if (nssCKObject_IsTokenObjectTemplate(objectTemplate, otsize)) {
 	if (sessionOpt) {
 	    if (!nssSession_IsReadWrite(sessionOpt)) {
