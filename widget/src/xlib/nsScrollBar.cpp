@@ -195,11 +195,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
     attr_mask |= CWColormap;
 
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
-
-  // set up the GC for this window.
-  if (!mBaseWindow)
-    printf("*** warning: this is about to fail...\n");
-  mGC = XCreateGC(gDisplay, mBaseWindow, 0, NULL);
+  CreateGC();
 
   // create a rendering context for this window
   static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);

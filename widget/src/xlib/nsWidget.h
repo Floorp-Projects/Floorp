@@ -107,6 +107,7 @@ protected:
                                   XSetWindowAttributes aAttr, unsigned long aMask);
   virtual void CreateNative(Window aParent, nsRect aRect);
   virtual void DestroyNative(void);
+  void         CreateGC(void);
 
   // these will add and delete a window
   static void  AddWindowCallback   (Window aWindow, nsWidget *aWidget);
