@@ -6436,6 +6436,42 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       exit(1);
     }
   }
+  else if(lstrcmpi(szVariable, "JRE LIB PATH") == 0)
+  {
+    /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\javaw.Exe", NULL, szVariable, dwVariableSize);
+    if(*szVariable == '\0')
+      return(FALSE);
+    else
+    {
+      char szVarPathOnly[MAX_BUF];
+
+      /* The path to javaw.exe is "...\jre\1.3.1\bin\javaw.exe", so we need to get it's
+       * path only.  This should return:
+       *
+       *   ...\jre\1.3.1\bin\
+       *
+       * We remove the trailing backslash to get the following:
+       *
+       *   ...\jre\1.3.1\bin
+       *
+       * Then get the path again (the trailing backslash indicates that it's a
+       * path, thus the lack of it indicates a file):
+       *
+       *   ...\jre\1.3.1\
+       *
+       * Now append 'lib' to it.  We are assuming that ...\jre\1.3.1\lib is at the
+       * same dir level as ...\jre\1.3.1\bin:
+       *
+       *   ...\jre\1.3.1\lib
+       */
+      ParsePath(szVariable, szVarPathOnly, sizeof(szVarPathOnly), FALSE, PP_PATH_ONLY);
+      RemoveBackSlash(szVarPathOnly);
+      ParsePath(szVarPathOnly, szVariable, dwVariableSize, FALSE, PP_PATH_ONLY);
+      AppendBackSlash(szVariable, dwVariableSize);
+      lstrcat(szVariable, "lib");
+    }
+  }
   else if(lstrcmpi(szVariable, "JRE BIN PATH") == 0)
   {
     /* Locate the "c:\Program Files\JavaSoft\JRE\1.3\Bin" directory */
