@@ -313,6 +313,15 @@ nsDocumentFragment::ReconnectChildren()
 NS_IMETHODIMP
 nsDocumentFragment::DropChildReferences()
 {
+  PRInt32 count;
+
+  ChildCount(count);
+
+  for (PRInt32 index = 0; index < count; ++index) {
+    nsIContent* kid = NS_STATIC_CAST(nsIContent*, mChildren.ElementAt(index));
+    NS_RELEASE(kid);
+  }
+
   mChildren.Clear();
 
   return NS_OK;
