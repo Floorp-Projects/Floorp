@@ -153,6 +153,50 @@ HandleTabEvent(nsGUIEvent *aEvent)
   return result;
 }*/
 
+
+//
+// SetContentRoot
+//
+// Hook up the toolbar to the content model rooted at the given node
+//
+NS_METHOD
+nsToolbarManager::SetContentRoot(nsIContent* pContent)
+{
+#if PINK_NOT_YET_IMPLEMENTED
+	if (mDataModel)
+		mDataModel->SetContentRoot(pContent);
+#endif
+
+	return NS_OK;
+}
+
+
+//
+// HandleEvent
+//
+// Events come from the DOM and they wind up here. Handle them.
+//
+nsEventStatus
+nsToolbarManager::HandleEvent(nsGUIEvent *aEvent) 
+{
+#if PINK_NOT_YET_IMPLEMENTED
+  if (aEvent->message == NS_PAINT) 
+  {
+    nsRect r;
+    aEvent->widget->GetBounds(r);
+    r.x = 0;
+    r.y = 0;
+    nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
+
+    return (OnPaint(*drawCtx,r));
+  }
+#endif
+
+  return nsEventStatus_eIgnore;
+  
+}
+
+
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::AddTabToManager(nsIToolbar *    aToolbar,
                                             const nsString& aUpURL,
