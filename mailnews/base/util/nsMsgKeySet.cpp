@@ -118,6 +118,7 @@ PRBool nsMsgKeySet::Grow()
 nsMsgKeySet::nsMsgKeySet(const char* numbers /* , MSG_NewsHost* host */)
 {
 	PRInt32 *head, *tail, *end;
+    MOZ_COUNT_CTOR(nsMsgKeySet);
 
 #ifdef NEWSRC_DOES_HOST_STUFF
 	m_host = host;
