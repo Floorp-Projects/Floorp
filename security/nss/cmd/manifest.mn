@@ -54,21 +54,24 @@ DIRS = lib  \
  p7env  \
  p7sign  \
  p7verify  \
+ pk12util \
  pp  \
  rngtest \
  rsaperf \
  sdrtest \
  selfserv  \
+ signtool \
+ signver \
+ smimetools  \
+ SSLsample \
  ssltap  \
  strsclnt \
  swfort  \
  tstclnt  \
- smimetools  \
  modutil \
  $(NULL)
 
 TEMPORARILY_DONT_BUILD = \
- SSLsample \
  $(NULL)
 
 # rsaperf  \
