@@ -160,6 +160,10 @@ protected:
     void Write(const char* aCharBuffer);
     void Write(char aChar);
 
+    // Handle wrapping and conditional wrapping:
+    PRBool HasLongLines(const nsString& text);
+    void WriteWrapped(const nsString& text);
+
 
 protected:
     nsIOutputStream* mStream;
@@ -181,6 +185,8 @@ protected:
     PRBool    mDoFormat;
     PRBool    mDoHeader;
     PRBool    mBodyOnly;
+
+    PRInt32   mMaxColumn;
 
     nsCOMPtr<nsISaveAsCharset> mUnicodeEncoder;
     nsCAutoString mCharsetOverride;
