@@ -83,7 +83,7 @@ typedef unsigned short mork_u2;  // make sure this is two bytes
 typedef short          mork_i2;  // make sure this is two bytes
 typedef PRUint32       mork_u4;  // make sure this is four bytes
 typedef PRInt32        mork_i4;  // make sure this is four bytes
-typedef long           mork_ip;  // make sure sizeof(mork_ip) == sizeof(void*)
+typedef PRWord         mork_ip;  // make sure sizeof(mork_ip) == sizeof(void*)
 
 typedef mork_u1 mork_ch;    // small byte-sized character (never wide)
 typedef mork_u1 mork_flags;  // one byte's worth of predicate bit flags

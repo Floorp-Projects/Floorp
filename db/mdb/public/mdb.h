@@ -49,7 +49,7 @@ typedef unsigned short mdb_u2;  // make sure this is two bytes
 typedef short          mdb_i2;  // make sure this is two bytes
 typedef PRUint32       mdb_u4;  // make sure this is four bytes
 typedef PRInt32        mdb_i4;  // make sure this is four bytes
-typedef long          mdb_ip;  // make sure sizeof(mdb_ip) == sizeof(void*)
+typedef PRWord         mdb_ip;  // make sure sizeof(mdb_ip) == sizeof(void*)
 
 typedef mdb_u1 mdb_bool;  // unsigned byte with zero=false, nonzero=true
 
