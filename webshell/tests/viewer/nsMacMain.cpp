@@ -398,9 +398,10 @@ int main(int argc, char **argv)
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
  
 	// Hack to get il_ss set so it doesn't fail in xpcompat.c
-	nsIImageManager *manager;
-	NS_NewImageManager(&manager);
-
+	// looks like we don't need this any more.
+	// nsCOMPtr<nsIImageManager> manager = do_GetService(kImageManagerCID, &rv);
+	// NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get image manager service");
+	
 	gTheApp = new nsNativeViewerApp();
 	if (gTheApp != nsnull) {
 		NS_ADDREF(gTheApp);
