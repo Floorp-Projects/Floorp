@@ -36,11 +36,15 @@
 package org.mozilla.javascript.tools.shell;
 
 import org.mozilla.javascript.*;
+import org.mozilla.javascript.tools.ToolErrorReporter;
 
 public class ShellContextFactory extends ContextFactory
 {
     private boolean enableContinuations;
     private boolean strictMode;
+    private int languageVersion;
+    private int optimizationLevel;
+    private ErrorReporter errorReporter;
 
     protected boolean hasFeature(Context cx, int featureIndex)
     {
@@ -53,6 +57,16 @@ public class ShellContextFactory extends ContextFactory
         return super.hasFeature(cx, featureIndex);
     }
 
+    protected void onContextCreated(Context cx)
+    {
+        cx.setLanguageVersion(languageVersion);
+        cx.setOptimizationLevel(optimizationLevel);
+        if (errorReporter != null) {
+            cx.setErrorReporter(errorReporter);
+        }
+        super.onContextCreated(cx);
+    }
+
     public void setEnableContinuations(boolean flag)
     {
         checkNotSealed();
@@ -63,6 +77,26 @@ public class ShellContextFactory extends ContextFactory
     {
         checkNotSealed();
         this.strictMode = flag;
+    }
+
+    public void setLanguageVersion(int version)
+    {
+        Context.checkLanguageVersion(version);
+        checkNotSealed();
+        this.languageVersion = version;
+    }
+
+    public void setOptimizationLevel(int optimizationLevel)
+    {
+        Context.checkOptimizationLevel(optimizationLevel);
+        checkNotSealed();
+        this.optimizationLevel = optimizationLevel;
+    }
+
+    public void setErrorReporter(ErrorReporter errorReporter)
+    {
+        if (errorReporter == null) throw new IllegalArgumentException();
+        this.errorReporter = errorReporter;
     }
 
 }

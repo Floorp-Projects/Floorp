@@ -86,7 +86,8 @@ public class Main
     /**
      *  Execute the given arguments, but don't System.exit at the end.
      */
-    public static int exec(final String origArgs[]) {
+    public static int exec(String origArgs[])
+    {
 
         for (int i=0; i < origArgs.length; i++) {
             String arg = origArgs[i];
@@ -96,19 +97,16 @@ public class Main
             }
         }
 
+        global = getGlobal();
+        errorReporter = new ToolErrorReporter(false, global.getErr());
+        shellContextFactory.setErrorReporter(errorReporter);
+        final String[] args = processOptions(origArgs);
+        if (processStdin)
+            fileList.addElement(null);
+
         withContext(new ContextAction() {
             public Object run(Context cx)
             {
-                // Create the top-level scope object.
-                global = getGlobal();
-                errorReporter = new ToolErrorReporter(false, global.getErr());
-                cx.setErrorReporter(errorReporter);
-
-                String[] args = processOptions(cx, origArgs);
-
-                if (processStdin)
-                    fileList.addElement(null);
-
                 // define "arguments" array in the top-level object:
                 // need to allocate new array since newArray requires instances
                 // of exactly Object[], not ObjectSubclass[]
@@ -136,27 +134,20 @@ public class Main
         return global;
     }
 
-    static Object withContext(final ContextAction action) {
-        ContextAction wrap;
-        if (securityImpl == null) {
-            wrap = action;
-        } else {
-            wrap = new ContextAction() {
-                public Object run(Context cx)
-                {
-                    cx.setSecurityController(securityImpl);
-                    return action.run(cx);
-                }
-            };
-        }
+    static Object withContext(ContextAction action) {
         return shellContextFactory.call(action);
     }
 
     /**
      * Parse arguments.
      */
-    public static String[] processOptions(Context cx, String args[]) {
-        for (int i=0; i < args.length; i++) {
+    public static String[] processOptions(String args[])
+    {
+        String usageError;
+        goodUsage: for (int i = 0; ; ++i) {
+            if (i == args.length) {
+                return new String[0];
+            }
             String arg = args[i];
             if (!arg.startsWith("-")) {
                 processStdin = false;
@@ -166,27 +157,45 @@ public class Main
                 return result;
             }
             if (arg.equals("-version")) {
-                if (++i == args.length)
-                    usage(arg);
-                double d = cx.toNumber(args[i]);
-                if (d != d)
-                    usage(arg);
-                cx.setLanguageVersion((int) d);
+                if (++i == args.length) {
+                    usageError = arg;
+                    break goodUsage;
+                }
+                int version;
+                try {
+                    version = Integer.parseInt(args[i]);
+                } catch (NumberFormatException ex) {
+                    usageError = args[i];
+                    break goodUsage;
+                }
+                if (!Context.isValidLanguageVersion(version)) {
+                    usageError = args[i];
+                    break goodUsage;
+                }
+                shellContextFactory.setLanguageVersion(version);
                 continue;
             }
             if (arg.equals("-opt") || arg.equals("-O")) {
-                if (++i == args.length)
-                    usage(arg);
-                double d = cx.toNumber(args[i]);
-                if (d != d)
-                    usage(arg);
-                int opt = (int)d;
+                if (++i == args.length) {
+                    usageError = arg;
+                    break goodUsage;
+                }
+                int opt;
+                try {
+                    opt = Integer.parseInt(args[i]);
+                } catch (NumberFormatException ex) {
+                    usageError = args[i];
+                    break goodUsage;
+                }
                 if (opt == -2) {
                     // Compatibility with Cocoon Rhino fork
                     shellContextFactory.setEnableContinuations(true);
                     opt = -1;
+                } else if (!Context.isValidOptimizationLevel(opt)) {
+                    usageError = args[i];
+                    break goodUsage;
                 }
-                cx.setOptimizationLevel(opt);
+                shellContextFactory.setOptimizationLevel(opt);
                 if (opt >= 0) {
                     shellContextFactory.setEnableContinuations(false);
                 }
@@ -198,14 +207,24 @@ public class Main
             }
             if (arg.equals("-continuations")) {
                 shellContextFactory.setEnableContinuations(true);
-                cx.setOptimizationLevel(-1);
+                shellContextFactory.setOptimizationLevel(-1);
                 continue;
             }
             if (arg.equals("-e")) {
                 processStdin = false;
-                if (++i == args.length)
-                    usage(arg);
-                evaluateScript(cx, global, null, args[i], "<command>", 1, null);
+                if (++i == args.length) {
+                    usageError = arg;
+                    break goodUsage;
+                }
+                final String scriptText = args[i];
+                withContext(new ContextAction() {
+                    public Object run(Context cx)
+                    {
+                        evaluateScript(cx, global, null, scriptText,
+                                       "<command>", 1, null);
+                        return null;
+                    }
+                });
                 continue;
             }
             if (arg.equals("-w")) {
@@ -214,8 +233,10 @@ public class Main
             }
             if (arg.equals("-f")) {
                 processStdin = false;
-                if (++i == args.length)
-                    usage(arg);
+                if (++i == args.length) {
+                    usageError = arg;
+                    break goodUsage;
+                }
                 fileList.addElement(args[i].equals("-") ? null : args[i]);
                 continue;
             }
@@ -224,17 +245,13 @@ public class Main
                 if (!sealedStdLib) Kit.codeBug();
                 continue;
             }
-            usage(arg);
+            usageError = arg;
+            break goodUsage;
         }
-        return new String[0];
-    }
-
-    /**
-     * Print a usage message.
-     */
-    public static void usage(String s) {
-        p(ToolErrorReporter.getMessage("msg.shell.usage", s));
+        // print usage message
+        p(ToolErrorReporter.getMessage("msg.shell.usage", usageError));
         System.exit(1);
+        return null;
     }
 
     private static void initJavaPolicySecuritySupport() {
@@ -243,6 +260,7 @@ public class Main
             Class cl = Class.forName
                 ("org.mozilla.javascript.tools.shell.JavaPolicySecurity");
             securityImpl = (SecurityProxy)cl.newInstance();
+            SecurityController.initGlobal(securityImpl);
             return;
         } catch (ClassNotFoundException ex) {
             exObj = ex;
