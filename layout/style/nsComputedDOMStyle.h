@@ -282,8 +282,8 @@ private:
     // Create a pointer-to-member-function type.
     typedef nsresult (nsComputedDOMStyle::*ComputeMethod)(nsIFrame*, nsIDOMCSSValue**);
 
-    const nsCSSProperty mProperty;
-    const ComputeMethod mGetter;
+    nsCSSProperty mProperty;
+    ComputeMethod mGetter;
   };
 
   static const ComputedStyleMapEntry* GetQueryablePropertyMap(PRUint32* aLength);
