@@ -1619,35 +1619,33 @@ nsresult nsCharsetMenu::UpdateCachePrefs(const char * aCacheKey,
                                          const char * aStaticKey,
                                          const PRUnichar * aCharset)
 {
-  nsresult res = NS_OK;
-  char * cachePrefValue = NULL;
-  char * staticPrefValue = NULL;
-  NS_ConvertUCS2toUTF8 currentCharset(aCharset);
+  nsresult rv = NS_OK;
+  nsXPIDLCString cachePrefValue;
+  nsXPIDLCString staticPrefValue;
+  NS_LossyConvertUTF16toASCII currentCharset(aCharset);
   PRInt32 cacheSize = 0;
 
-  res = mPrefs->GetCharPref(aCacheKey, &cachePrefValue);
-  res = mPrefs->GetCharPref(aStaticKey, &staticPrefValue);
-  res = mPrefs->GetIntPref(aCacheSizeKey, &cacheSize);
+  mPrefs->GetCharPref(aCacheKey, getter_Copies(cachePrefValue));
+  mPrefs->GetCharPref(aStaticKey, getter_Copies(staticPrefValue));
+  rv = mPrefs->GetIntPref(aCacheSizeKey, &cacheSize);
 
-  nsCAutoString strCachePrefValue(cachePrefValue);
-  nsCAutoString strStaticPrefValue(staticPrefValue);
+  if (NS_FAILED(rv) || cacheSize <= 0)
+    return NS_ERROR_UNEXPECTED;
 
-  if ((strCachePrefValue.Find(currentCharset) == -1) && 
-      (strStaticPrefValue.Find(currentCharset) == -1)) {
+  if ((cachePrefValue.Find(currentCharset) == kNotFound) && 
+      (staticPrefValue.Find(currentCharset) == kNotFound)) {
 
-    if (!strCachePrefValue.IsEmpty())
-      strCachePrefValue.Insert(", ", 0);
+    if (!cachePrefValue.IsEmpty())
+      cachePrefValue.Insert(", ", 0);
 
-    strCachePrefValue.Insert(currentCharset, 0);
-    if ((cacheSize - 1) < (PRInt32) strCachePrefValue.CountChar(','))
-      strCachePrefValue.Truncate(strCachePrefValue.RFindChar(','));
+    cachePrefValue.Insert(currentCharset, 0);
+    if (cacheSize < (PRInt32) cachePrefValue.CountChar(',') + 1)
+      cachePrefValue.Truncate(cachePrefValue.RFindChar(','));
 
-    res = mPrefs->SetCharPref(aCacheKey, PromiseFlatCString(strCachePrefValue).get());
+    rv = mPrefs->SetCharPref(aCacheKey, cachePrefValue);
   }
 
-  nsMemory::Free(cachePrefValue);
-  nsMemory::Free(staticPrefValue);
-  return res;
+  return rv;
 }
 
 nsresult nsCharsetMenu::ClearMenu(nsIRDFContainer * aContainer,  
@@ -1851,8 +1849,8 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
     res = WriteCacheToPrefs(&mBrowserMenu, mBrowserCacheStart, 
       kBrowserCachePrefKey);
   } else {
-    UpdateCachePrefs(kBrowserCachePrefKey, kBrowserCacheSizePrefKey, 
-                     kBrowserStaticPrefKey, aCharset);
+    res = UpdateCachePrefs(kBrowserCachePrefKey, kBrowserCacheSizePrefKey, 
+                           kBrowserStaticPrefKey, aCharset);
   }
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentCharset");
   NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentCharset");
@@ -1874,8 +1872,8 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
     res = WriteCacheToPrefs(&mMailviewMenu, mMailviewCacheStart, 
                             kMailviewCachePrefKey);
   } else {
-    UpdateCachePrefs(kMailviewCachePrefKey, kMailviewCacheSizePrefKey, 
-                     kMailviewStaticPrefKey, aCharset);
+    res = UpdateCachePrefs(kMailviewCachePrefKey, kMailviewCacheSizePrefKey, 
+                           kMailviewStaticPrefKey, aCharset);
   }
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentMailCharset");
   NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentMailCharset");
@@ -1898,8 +1896,8 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharse
     res = WriteCacheToPrefs(&mComposerMenu, mComposerCacheStart, 
       kComposerCachePrefKey);
   } else {
-    UpdateCachePrefs(kComposerCachePrefKey, kComposerCacheSizePrefKey, 
-                     kComposerStaticPrefKey, aCharset);
+    res = UpdateCachePrefs(kComposerCachePrefKey, kComposerCacheSizePrefKey, 
+                           kComposerStaticPrefKey, aCharset);
   }
   NS_TIMELINE_STOP_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
   NS_TIMELINE_MARK_TIMER("nsCharsetMenu:SetCurrentComposerCharset");
