@@ -670,7 +670,7 @@ $table{profiles} =
     disabledtext mediumtext not null,
     newemailtech tinyint not null,
 
-    index(login_name)';
+    unique(login_name)';
 
 
 # This isn't quite cooked yet...
@@ -892,12 +892,6 @@ AddFDef("target_milestone", "Target Milestone", 0);
 # Detect changed local settings
 ###########################################################################
 
-#
-# Check if the enums in the bugs table return the same values that are defined
-# in the various locally changeable variables. If this is true, then alter the
-# table definition.
-#
-
 sub GetFieldDef ($$)
 {
     my ($table, $field) = @_;
@@ -909,6 +903,24 @@ sub GetFieldDef ($$)
         return $ref;
    }
 }
+
+sub GetIndexDef ($$)
+{
+    my ($table, $field) = @_;
+    my $sth = $dbh->prepare("SHOW INDEX FROM $table");
+    $sth->execute;
+
+    while (my $ref = $sth->fetchrow_arrayref) {
+        next if $$ref[2] ne $field;
+        return $ref;
+   }
+}
+
+#
+# Check if the enums in the bugs table return the same values that are defined
+# in the various locally changeable variables. If this is true, then alter the
+# table definition.
+#
 
 sub CheckEnumField ($$@)
 {
@@ -1328,8 +1340,52 @@ if (!GetFieldDef('bugs', 'lastdiffed')) {
     $dbh->do('UPDATE bugs SET lastdiffed = delta_ts, delta_ts = delta_ts');
 }
 
-AddField('profiles', 'newemailtech', 'tinyint not null')
+AddField('profiles', 'newemailtech', 'tinyint not null');
 
+
+# 2000-01-22 The "login_name" field in the "profiles" table was not
+# declared to be unique.  Sure enough, somehow, I got 22 duplicated entries
+# in my database.  This code detects that, cleans up the duplicates, and
+# then tweaks the table to declare the field to be unique.  What a pain.
+
+if (GetIndexDef('profiles', 'login_name')->[1]) {
+    print "Searching for duplicate entries in the profiles table ...\n";
+    while (1) {
+        # This code is weird in that it loops around and keeps doing this
+        # select again.  That's because I'm paranoid about deleting entries
+        # out from under us in the profiles table.  Things get weird if
+        # there are *three* or more entries for the same user...
+        $sth = $dbh->prepare("SELECT p1.userid, p2.userid, p1.login_name " .
+                             "FROM profiles AS p1, profiles AS p2 " .
+                             "WHERE p1.userid < p2.userid " .
+                             "AND p1.login_name = p2.login_name " .
+                             "ORDER BY p1.login_name");
+        $sth->execute();
+        my ($u1, $u2, $n) = ($sth->fetchrow_array);
+        if (!$u1) {
+            last;
+        }
+        print "Both $u1 & $u2 are ids for $n!  Merging $u2 into $u1 ...\n";
+        foreach my $i (["bugs", "reporter"],
+                       ["bugs", "assigned_to"],
+                       ["bugs", "qa_contact"],
+                       ["attachments", "submitter_id"],
+                       ["bugs_activity", "who"],
+                       ["cc", "who"],
+                       ["votes", "who"],
+                       ["longdescs", "who"]) {
+            my ($table, $field) = (@$i);
+            print "   Updating $table.$field ...\n";
+            $dbh->do("UPDATE $table SET $field = $u1 WHERE $field = $u2");
+        }
+        $dbh->do("DELETE FROM profiles WHERE userid = $u2");
+    }
+    print "OK, changing index type to prevent duplicates in the future ...\n";
+    
+    $dbh->do("ALTER TABLE profiles DROP INDEX login_name");
+    $dbh->do("ALTER TABLE profiles ADD UNIQUE (login_name)");
+
+}    
 
 
 
