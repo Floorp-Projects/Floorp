@@ -39,7 +39,7 @@ class nsUnicharUtilFactory : public nsIFactory {
     NS_INIT_REFCNT();
     PR_AtomicIncrement(&g_InstanceCount);
   };
-  ~nsUnicharUtilFactory() {
+  virtual ~nsUnicharUtilFactory() {
     PR_AtomicDecrement(&g_InstanceCount);
   };
 

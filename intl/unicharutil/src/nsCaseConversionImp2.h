@@ -29,7 +29,7 @@ class nsCaseConversionImp2 : public nsICaseConversion {
 
 public:
   nsCaseConversionImp2();
-  ~nsCaseConversionImp2();
+  virtual ~nsCaseConversionImp2();
 
 
   NS_IMETHOD ToUpper(PRUnichar aChar, PRUnichar* aReturn);

@@ -27,7 +27,7 @@ class nsCategoryImp : public nsIUGenCategory {
    
 public: 
    nsCategoryImp();
-   ~nsCategoryImp();
+   virtual ~nsCategoryImp();
 
 
    /**
