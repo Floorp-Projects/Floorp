@@ -344,19 +344,10 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
 
-// currently this only works on win32
-#ifndef WIN32
+// currently this only works on win32 and mac
+#ifdef XP_UNIX
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
-/*
-  nsWidgetInitData widgetData;
-  widgetData.mWindowType = eWindowType_child;
-  widgetData.mBorderStyle = eBorderStyle_default;
-  static NS_DEFINE_IID(kCChildCID,  NS_CHILD_CID);
-  view->CreateWidget(kCChildCID,
-                     &widgetData,
-                     nsnull);
-*/
 #else
    static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
    nsCOMPtr<nsIViewManager> viewManager;
@@ -367,7 +358,6 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
    // Need to have a widget to appear on top of other widgets.
    view->CreateWidget(kCChildCID);
 #endif
-
 
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->UpdateState();
