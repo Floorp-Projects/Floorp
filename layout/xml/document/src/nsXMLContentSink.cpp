@@ -42,6 +42,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsHTMLAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsINameSpace.h"
@@ -430,7 +431,13 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     nsIAtom* nameSpacePrefix = CutNameSpacePrefix(name);
     nsIAtom* nameAtom = NS_NewAtom(name);
     PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
-    if ((kNameSpaceID_None == nameSpaceID) && aIsHTML) {
+    if ((kNameSpaceID_XMLNS == nameSpaceID) && aIsHTML) {
+      NS_RELEASE(nameAtom);
+      name.Insert("xmlns:", 0);
+      nameAtom = NS_NewAtom(name);
+      nameSpaceID = kNameSpaceID_HTML;
+    }
+    else if ((kNameSpaceID_None == nameSpaceID) && aIsHTML) {
       nameSpaceID = kNameSpaceID_HTML;
     }
 
