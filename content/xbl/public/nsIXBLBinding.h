@@ -88,8 +88,10 @@ public:
 
   NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult)=0;
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex) = 0;
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints) = 0;
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex,
+                               nsIContent** aDefaultContent) = 0;
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, 
+                                     PRBool* aMultipleInsertionPoints, nsIContent** aDefaultContent) = 0;
 
   NS_IMETHOD IsStyleBinding(PRBool* aResult) = 0;
   NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) = 0;

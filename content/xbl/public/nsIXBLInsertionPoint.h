@@ -39,6 +39,9 @@ public:
   NS_IMETHOD GetInsertionParent(nsIContent** aParentElement)=0;
   NS_IMETHOD GetInsertionIndex(PRInt32* aResult)=0;
 
+  NS_IMETHOD SetDefaultContent(nsIContent* aDefaultContent)=0;
+  NS_IMETHOD GetDefaultContent(nsIContent** aDefaultContent)=0;
+
   NS_IMETHOD AddChild(nsIContent* aChildElement)=0;
   NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement)=0;
   NS_IMETHOD RemoveChild(nsIContent* aChildElement)=0;
@@ -51,6 +54,7 @@ public:
 };
 
 extern nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIXBLInsertionPoint** aResult);
+NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent,
+                        nsIXBLInsertionPoint** aResult);
 
 #endif // nsIXBLInsertionPoint_h__

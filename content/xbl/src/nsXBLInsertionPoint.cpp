@@ -26,12 +26,13 @@
 #include "nsIContent.h"
 #include "nsISupportsArray.h"
 
-nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex)
+nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefaultContent)
 :mElements(nsnull)
 {
   NS_INIT_REFCNT();
   mParentElement = aParentElement;
   mIndex = aIndex;
+  mDefaultContent = aDefaultContent;
 }
 
 nsXBLInsertionPoint::~nsXBLInsertionPoint()
@@ -52,6 +53,21 @@ NS_IMETHODIMP
 nsXBLInsertionPoint::GetInsertionIndex(PRInt32 *aResult)
 {
   *aResult = mIndex;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLInsertionPoint::SetDefaultContent(nsIContent* aDefaultContent)
+{
+  mDefaultContent = aDefaultContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLInsertionPoint::GetDefaultContent(nsIContent** aDefaultContent)
+{
+  *aDefaultContent = mDefaultContent;
+  NS_IF_ADDREF(*aDefaultContent);
   return NS_OK;
 }
 
@@ -116,9 +132,10 @@ nsXBLInsertionPoint::Matches(nsIContent* aContent, PRUint32 aIndex, PRBool* aRes
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIXBLInsertionPoint** aResult)
+NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent,
+                        nsIXBLInsertionPoint** aResult)
 {
-  *aResult = new nsXBLInsertionPoint(aParentElement, aIndex);
+  *aResult = new nsXBLInsertionPoint(aParentElement, aIndex, aDefContent);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

@@ -349,30 +349,27 @@ nsXBLBinding::GetAnonymousContent(nsIContent** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
+void
+nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement)
 {
-  // First cache the element.
-  mContent = aParent;
-
-  // Now we need to ensure two things.
+  // We need to ensure two things.
   // (1) The anonymous content should be fooled into thinking it's in the bound
   // element's document.
   nsCOMPtr<nsIDocument> doc;
-  mBoundElement->GetDocument(*getter_AddRefs(doc));
+  aElement->GetDocument(*getter_AddRefs(doc));
 
-  mContent->SetDocument(doc, PR_TRUE, AllowScripts());
+  aAnonParent->SetDocument(doc, PR_TRUE, AllowScripts());
 
   nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(doc));
 
   // (2) The children's parent back pointer should not be to this synthetic root
-  // but should instead point to the bound element.
+  // but should instead point to the enclosing parent element.
   PRInt32 childCount;
-  mContent->ChildCount(childCount);
+  aAnonParent->ChildCount(childCount);
   for (PRInt32 i = 0; i < childCount; i++) {
     nsCOMPtr<nsIContent> child;
-    mContent->ChildAt(i, *getter_AddRefs(child));
-    child->SetParent(mBoundElement);
+    aAnonParent->ChildAt(i, *getter_AddRefs(child));
+    child->SetParent(aElement);
     child->SetBindingParent(mBoundElement);
 
     // To make XUL templates work (and other goodies that happen when
@@ -381,7 +378,15 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
     if (xuldoc)
       xuldoc->AddSubtreeToDocument(child);
   }
+}
 
+NS_IMETHODIMP
+nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
+{
+  // First cache the element.
+  mContent = aParent;
+
+  InstallAnonymousContent(mContent, mBoundElement);
   return NS_OK;
 }
 
@@ -450,14 +455,23 @@ nsXBLBinding::HasStyleSheets(PRBool* aResolveStyle)
   return NS_OK;
 }
 
-struct ContentListData {
+struct EnumData {
   nsXBLBinding* mBinding;
+ 
+  EnumData(nsXBLBinding* aBinding)
+    :mBinding(aBinding)
+  {};
+};
+
+struct ContentListData : public EnumData {
   nsIBindingManager* mBindingManager;
 
   ContentListData(nsXBLBinding* aBinding, nsIBindingManager* aManager)
-    :mBinding(aBinding), mBindingManager(aManager)
+    :EnumData(aBinding), mBindingManager(aManager)
   {};
 };
+
+
 
 PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosure)
 {
@@ -522,7 +536,7 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     }
     
     if (!pseudoPoint) {
-      NS_NewXBLInsertionPoint(parent, -1, getter_AddRefs(pseudoPoint));
+      NS_NewXBLInsertionPoint(parent, -1, nsnull, getter_AddRefs(pseudoPoint));
       contentList->AppendElement(pseudoPoint);
     }
 
@@ -543,6 +557,82 @@ PRBool PR_CALLBACK BuildContentLists(nsHashKey* aKey, void* aData, void* aClosur
     bm->SetAnonymousNodesFor(parent, contentList);
   else 
     bm->SetContentListFor(parent, contentList);
+  return PR_TRUE;
+}
+
+PRBool PR_CALLBACK RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  ContentListData* data = (ContentListData*)aClosure;
+  nsIBindingManager* bm = data->mBindingManager;
+  nsXBLBinding* binding = data->mBinding;
+
+  nsCOMPtr<nsIContent> boundElement;
+  binding->GetBoundElement(getter_AddRefs(boundElement));
+
+  nsISupportsArray* arr = (nsISupportsArray*)aData;
+  PRUint32 count;
+  arr->Count(&count);
+ 
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(i));
+    PRUint32 insCount;
+    currPoint->ChildCount(&insCount);
+    
+    if (insCount == 0) {
+      nsCOMPtr<nsIContent> defContent;
+      currPoint->GetDefaultContent(getter_AddRefs(defContent));
+      if (defContent) {
+        // We need to take this template and use it to realize the
+        // actual default content (through cloning).
+        // Clone this insertion point element.
+        nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(defContent));
+        nsCOMPtr<nsIDOMNode> clonedNode;
+        elt->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+
+        nsCOMPtr<nsIContent> insParent;
+        currPoint->GetInsertionParent(getter_AddRefs(insParent));
+
+        // Now that we have the cloned content, install the default content as
+        // if it were additional anonymous content.
+        nsCOMPtr<nsIContent> clonedContent(do_QueryInterface(clonedNode));
+        binding->InstallAnonymousContent(clonedContent, insParent);
+
+        // Cache the clone so that it can be properly destroyed if/when our
+        // other anonymous content is destroyed.
+        currPoint->SetDefaultContent(clonedContent);
+
+        // Now make sure the kids of the clone are added to the insertion point as
+        // children.
+        PRInt32 cloneKidCount;
+        clonedContent->ChildCount(cloneKidCount);
+        for (PRInt32 k = 0; k < cloneKidCount; k++) {
+          nsCOMPtr<nsIContent> cloneChild;
+          clonedContent->ChildAt(k, *getter_AddRefs(cloneChild));
+          bm->SetInsertionParent(cloneChild, insParent);
+          currPoint->AddChild(cloneChild);
+        }
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+PRBool PR_CALLBACK ChangeDocumentForDefaultContent(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsISupportsArray* arr = (nsISupportsArray*)aData;
+  PRUint32 count;
+  arr->Count(&count);
+  
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)arr->ElementAt(i));
+    nsCOMPtr<nsIContent> defContent;
+    currPoint->GetDefaultContent(getter_AddRefs(defContent));
+    
+    if (defContent)
+      defContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
+  }
+
   return PR_TRUE;
 }
 
@@ -657,7 +747,9 @@ nsXBLBinding::GenerateAnonymousContent()
       nsCOMPtr<nsIContent> singlePoint;
       PRUint32 index = 0;
       PRBool multiplePoints = PR_FALSE;
-      GetSingleInsertionPoint(getter_AddRefs(singlePoint), &index, &multiplePoints);
+      nsCOMPtr<nsIContent> singleDefaultContent;
+      GetSingleInsertionPoint(getter_AddRefs(singlePoint), &index, 
+                              &multiplePoints, getter_AddRefs(singleDefaultContent));
       
       if (children) {
         if (multiplePoints) {
@@ -674,7 +766,8 @@ nsXBLBinding::GenerateAnonymousContent()
             // Now determine the insertion point in the prototype table.
             nsCOMPtr<nsIContent> point;
             PRUint32 index;
-            GetInsertionPoint(content, getter_AddRefs(point), &index);
+            nsCOMPtr<nsIContent> defContent;
+            GetInsertionPoint(content, getter_AddRefs(point), &index, getter_AddRefs(defContent));
             bindingManager->SetInsertionParent(content, point);
 
             // Find the correct nsIXBLInsertion point in our table.
@@ -708,6 +801,7 @@ nsXBLBinding::GenerateAnonymousContent()
           nsCOMPtr<nsIContent> content;
           PRUint32 length;
           children->GetLength(&length);
+          
           for (PRUint32 i = 0; i < length; i++) {
             children->Item(i, getter_AddRefs(node));
             content = do_QueryInterface(node);
@@ -716,6 +810,11 @@ nsXBLBinding::GenerateAnonymousContent()
           }
         }
       }
+
+      // Now that all of our children have been added, we need to walk all of our
+      // nsIXBLInsertion points to see if any of them have default content that
+      // needs to be built.
+      mInsertionPointTable->Enumerate(RealizeDefaultContent, &data);
     }
   }
 
@@ -1322,25 +1421,18 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     nsCOMPtr<nsIContent> anonymous;
     GetAnonymousContent(getter_AddRefs(anonymous));
     if (anonymous) {
+      // Also kill the default content within all our insertion points.
+      if (mInsertionPointTable)
+        mInsertionPointTable->Enumerate(ChangeDocumentForDefaultContent, nsnull);
+
       // To make XUL templates work (and other XUL-specific stuff),
       // we'll need to notify it using its add & remove APIs. Grab the
       // interface now...
       nsCOMPtr<nsIXULDocument> xuldoc(do_QueryInterface(aOldDocument));
 
-      if (mIsStyleBinding) {
-        anonymous->SetDocument(nsnull, PR_TRUE, PR_TRUE); // Kill it.
-        if (xuldoc)
-          xuldoc->RemoveSubtreeFromDocument(anonymous);
-      }
-      else {
-        anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts()); // Keep it around.
-        if (xuldoc)
-          xuldoc->RemoveSubtreeFromDocument(anonymous);
-
-        xuldoc = do_QueryInterface(aNewDocument);
-        if (xuldoc)
-          xuldoc->AddSubtreeToDocument(anonymous);
-      }
+      anonymous->SetDocument(nsnull, PR_TRUE, PR_TRUE); // Kill it.
+      if (xuldoc)
+        xuldoc->RemoveSubtreeFromDocument(anonymous);
     }
   }
 
@@ -1667,25 +1759,30 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aRes
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)
+nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex, 
+                                nsIContent** aDefaultContent)
 {
   *aResult = nsnull;
+  *aDefaultContent = nsnull;
   if (mContent)
-    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult, aIndex);
+    return mPrototypeBinding->GetInsertionPoint(mBoundElement, mContent, aChild, aResult, aIndex, aDefaultContent);
   else if (mNextBinding)
-    return mNextBinding->GetInsertionPoint(aChild, aResult, aIndex);
+    return mNextBinding->GetInsertionPoint(aChild, aResult, aIndex, aDefaultContent);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints)
+nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints,
+                                      nsIContent** aDefaultContent)
 {
   *aResult = nsnull;
+  *aDefaultContent = nsnull;
   *aMultipleInsertionPoints = PR_FALSE;
   if (mContent)
-    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aIndex, aMultipleInsertionPoints);
+    return mPrototypeBinding->GetSingleInsertionPoint(mBoundElement, mContent, aResult, aIndex, 
+                                                      aMultipleInsertionPoints, aDefaultContent);
   else if (mNextBinding)
-    return mNextBinding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints);
+    return mNextBinding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints, aDefaultContent);
   return NS_OK;
 }
 

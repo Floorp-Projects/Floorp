@@ -82,10 +82,12 @@ public:
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding)=0;
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)=0;
+                               nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex,
+                               nsIContent** aDefaultContent)=0;
 
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints)=0;
+                                     nsIContent** aResult, PRUint32* aIndex, PRBool* aMultiple,
+                                     nsIContent** aDefaultContent)=0;
 
   NS_IMETHOD GetBaseTag(PRInt32* aNamespaceID, nsIAtom** aTag)=0;
   NS_IMETHOD SetBaseTag(PRInt32 aNamespaceID, nsIAtom* aTag)=0;

@@ -27,17 +27,21 @@
 
 #include "nsIXBLInsertionPoint.h"
 #include "nsISupportsArray.h"
+#include "nsIContent.h"
 
 class nsXBLInsertionPoint : public nsIXBLInsertionPoint
 {
 public:
-  nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex);
+  nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent);
   virtual ~nsXBLInsertionPoint();
   
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetInsertionParent(nsIContent** aParentElement);
   NS_IMETHOD GetInsertionIndex(PRInt32* aIndex);
+
+  NS_IMETHOD SetDefaultContent(nsIContent* aDefaultContent);
+  NS_IMETHOD GetDefaultContent(nsIContent** aDefaultContent);
 
   NS_IMETHOD AddChild(nsIContent* aChildElement);
   NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement);
@@ -53,9 +57,11 @@ protected:
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
   PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
   nsCOMPtr<nsISupportsArray> mElements;  // An array of elements present at the insertion point.
+  nsCOMPtr<nsIContent> mDefaultContent;           // The default content at this insertion point.
 };
 
 extern nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIXBLInsertionPoint** aResult);
+NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent, 
+                        nsIXBLInsertionPoint** aResult);
 
 #endif

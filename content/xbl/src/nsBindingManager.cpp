@@ -815,8 +815,9 @@ nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsI
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
   
+  nsCOMPtr<nsIContent> defContent;
   if (binding)
-    return binding->GetInsertionPoint(aChild, aResult, aIndex);
+    return binding->GetInsertionPoint(aChild, aResult, aIndex, getter_AddRefs(defContent));
   
   return NS_OK;
 }
@@ -828,8 +829,10 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
   
+  nsCOMPtr<nsIContent> defContent;
+
   if (binding)
-    return binding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints);
+    return binding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints, getter_AddRefs(defContent));
   
   return NS_OK;
 }

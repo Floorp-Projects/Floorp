@@ -82,8 +82,9 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult);
 
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, PRBool* aMultipleInsertionPoints);
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex, nsIContent** aDefaultContent);
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRUint32* aIndex, 
+                                     PRBool* aMultipleInsertionPoints, nsIContent** aDefaultContent);
 
   NS_IMETHOD IsStyleBinding(PRBool* aResult) { *aResult = mIsStyleBinding; return NS_OK; };
   NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; return NS_OK; };
@@ -110,7 +111,8 @@ public:
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
   PRBool AllowScripts();
-  
+  void InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement);
+
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
   
 // Static members
@@ -164,6 +166,7 @@ protected:
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
+  
 // MEMBER VARIABLES
 protected:
   nsCOMPtr<nsIXBLPrototypeBinding> mPrototypeBinding; // Strong. As long as we're around, the binding can't go away.

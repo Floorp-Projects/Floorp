@@ -129,6 +129,9 @@ public:
 
   NS_IMETHOD GetInsertionIndex(PRUint32* aResult)=0;
   NS_IMETHOD SetInsertionIndex(PRUint32 aIndex)=0;
+
+  NS_IMETHOD GetDefaultContent(nsIContent** aResult)=0;
+  NS_IMETHOD SetDefaultContent(nsIContent* aChildren)=0;
 };
   
 class nsXBLInsertionPointEntry : public nsIXBLInsertionPointEntry {
@@ -143,7 +146,11 @@ public:
   NS_IMETHOD GetInsertionIndex(PRUint32* aResult) { *aResult = mInsertionIndex; return NS_OK; };
   NS_IMETHOD SetInsertionIndex(PRUint32 aIndex) { mInsertionIndex = aIndex;  return NS_OK; };
 
+  NS_IMETHOD GetDefaultContent(nsIContent** aResult) { *aResult = mDefaultContent; NS_IF_ADDREF(*aResult); return NS_OK; };
+  NS_IMETHOD SetDefaultContent(nsIContent* aChildren) { mDefaultContent = aChildren; return NS_OK; };
+
   nsCOMPtr<nsIContent> mInsertionParent;
+  nsCOMPtr<nsIContent> mDefaultContent;
   PRUint32 mInsertionIndex;
   
   static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
@@ -626,7 +633,9 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
   entry->GetInsertionParent(getter_AddRefs(content));
   PRUint32 index;
   entry->GetInsertionIndex(&index);
-
+  nsCOMPtr<nsIContent> defContent;
+  entry->GetDefaultContent(getter_AddRefs(defContent));
+    
   // Locate the real content.
   nsCOMPtr<nsIContent> realContent;
   nsCOMPtr<nsIContent> instanceRoot;
@@ -645,6 +654,7 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
   points->Count(&count);
   PRUint32 i = 0;
   PRInt32 currIndex = 0;  
+  
   for ( ; i < count; i++) {
     nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
     currPoint->GetInsertionIndex(&currIndex);
@@ -661,7 +671,7 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
 
   if (!insertionPoint) {
     // We need to make a new insertion point.
-    NS_NewXBLInsertionPoint(realContent, index, getter_AddRefs(insertionPoint));
+    NS_NewXBLInsertionPoint(realContent, index, defContent, getter_AddRefs(insertionPoint));
     points->InsertElementAt(insertionPoint, i);
   }
 
@@ -679,7 +689,8 @@ nsXBLPrototypeBinding::InstantiateInsertionPoints(nsIXBLBinding* aBinding)
 
 NS_IMETHODIMP
 nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* aCopyRoot,
-                                         nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex)
+                                         nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex,
+                                         nsIContent** aDefaultContent)
 {
   if (mInsertionPointTable) {
     nsCOMPtr<nsIAtom> tag;
@@ -697,6 +708,7 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* 
       nsCOMPtr<nsIContent> content;
       entry->GetInsertionParent(getter_AddRefs(content));
       entry->GetInsertionIndex(aIndex);
+      entry->GetDefaultContent(aDefaultContent); // Addref happens here.
       nsCOMPtr<nsIContent> templContent;
       GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
       LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
@@ -716,7 +728,8 @@ NS_IMETHODIMP
 nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
                                                nsIContent* aCopyRoot,
                                                nsIContent** aResult, PRUint32* aIndex,
-                                               PRBool* aMultipleInsertionPoints)
+                                               PRBool* aMultipleInsertionPoints,
+                                               nsIContent** aDefaultContent)
 { 
   if (mInsertionPointTable) {
     if(mInsertionPointTable->Count() == 1) {
@@ -728,6 +741,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
         nsCOMPtr<nsIContent> content;
         entry->GetInsertionParent(getter_AddRefs(content));
         entry->GetInsertionIndex(aIndex);
+        entry->GetDefaultContent(aDefaultContent); // Addref happens here.
         nsCOMPtr<nsIContent> templContent;
         GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
         LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
@@ -1109,6 +1123,14 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // binding instantiation will not contain a clone of the <children> element when
       // it clones the binding template.
       parent->RemoveChildAt(index, PR_FALSE);
+
+      // See if the insertion point contains default content.  Default content must
+      // be cached in our insertion point entry, since it will need to be cloned
+      // in situations where no content ends up being placed at the insertion point.
+      PRInt32 defaultCount;
+      child->ChildCount(defaultCount);
+      if (defaultCount > 0)
+        xblIns->SetDefaultContent(child);
     }
   }
 }
