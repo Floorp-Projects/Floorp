@@ -376,6 +376,11 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
       doc = nsnull;             // Forces release now
     }
 
+    if (mListenerManager) {
+      mListenerManager->RemoveAllListeners(PR_FALSE);
+      mListenerManager = nsnull;
+    }
+
     if (docURL) {
       nsXPIDLCString url;
 
@@ -388,11 +393,6 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
         if (mSidebar) {
           mSidebar->SetWindow(nsnull);
           mSidebar = nsnull;
-        }
-
-        if (mListenerManager) {
-          mListenerManager->RemoveAllListeners(PR_FALSE);
-          mListenerManager = nsnull;
         }
 
         if (mContext && mJSObject) {
