@@ -330,7 +330,7 @@ nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
 #ifndef XP_MAC
     char* theEnvString = PR_GetEnv("EXPAT");
     if(theEnvString){
-      if(('1'==theEnvString[0]) || ('Y'==toupper(theEnvString[0]))) {
+      if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])) {
         theExpatState=PR_TRUE;  //this indicates that the EXPAT flag was found in the environment.
       }
     }
