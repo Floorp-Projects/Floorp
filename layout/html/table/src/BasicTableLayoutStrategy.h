@@ -222,9 +222,9 @@ protected:
   PRInt32        mCols;
   PRInt32        mNumCols;
   // cached data
-  nscoord        mMinTableWidth;    // the absolute smallest width for the table
-  nscoord        mMaxTableWidth;    // the "natural" size for the table, if unconstrained
-  nscoord        mFixedTableWidth;  // the amount of space taken up by fixed-width columns
+  nscoord        mMinTableWidth;          // the smallest size for the table
+  nscoord        mMaxTableWidth;          // the "natural" size for the table, if unconstrained
+  nscoord        mFixedTableWidth;        // the amount of space taken up by fixed-width columns
 
 };
 
