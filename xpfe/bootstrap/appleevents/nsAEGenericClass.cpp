@@ -162,6 +162,10 @@ void AEGenericClass::DispatchEvent(AEDesc *token, const AppleEvent *appleEvent, 
 			case kAEOpenApplication:
 				HandleRun(token, appleEvent, reply);
 				break;
+			
+			case kAEReopenApplication:
+			  HandleReOpen(token, appleEvent, reply);
+			  break; 
 							
 			case kAEQuitApplication:
 				HandleQuit(token, appleEvent, reply);
@@ -514,6 +518,16 @@ void AEGenericClass::HandleMove(AEDesc *token, const AppleEvent *appleEvent, App
 	
 ----------------------------------------------------------------------------*/
 void AEGenericClass::HandleOpen(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
+{
+	ThrowIfOSErr(errAEEventNotHandled);
+}
+
+/*----------------------------------------------------------------------------
+	HandleReOpen 
+
+	
+----------------------------------------------------------------------------*/
+void AEGenericClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	ThrowIfOSErr(errAEEventNotHandled);
 }
