@@ -31,6 +31,10 @@
  * macros defined later in this file so that the debug code can be
  * conditionally compiled out.
  */
+
+/* in case this is included by a C file */
+#ifdef __cplusplus
+
 class nsDebug {
 public:
   // XXX add in log controls here
@@ -175,5 +179,5 @@ if (!(expr))                       \
 #define NS_BREAK()                 {}
 
 #endif /* ! NS_DEBUG */
-
+#endif /* __cplusplus */
 #endif /* nsDebug_h___ */
