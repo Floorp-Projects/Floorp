@@ -54,6 +54,8 @@
 #include "nsXBLProtoImplProperty.h"
 #include "nsXBLProtoImplMethod.h"
 #include "nsXBLProtoImplField.h"
+#include "nsIConsoleService.h"
+#include "nsIScriptError.h"
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
@@ -181,6 +183,40 @@ nsXBLContentSink::FlushText(PRBool aCreateTextNode,
   }
 
   return nsXMLContentSink::FlushText(aCreateTextNode, aDidFlush);
+}
+
+NS_IMETHODIMP
+nsXBLContentSink::ReportError(const PRUnichar* aErrorText, 
+                              const PRUnichar* aSourceText)
+{
+  // XXX We should make sure the binding has no effect, but that it also
+  // gets destroyed properly without leaking.  Perhaps we should even
+  // ensure that the content that was bound is displayed with no
+  // binding.
+
+  // Report the error to the error console.
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  if (consoleService) {
+    // XXX It would be nice if the parser didn't pre-format it for us,
+    // because then we could create a instance of nsIScriptError and the
+    // error console would format this much more nicely for us.
+    // However, that would require duplicating even more code between
+    // the XML content sink and the XUL content sink.
+
+    consoleService->LogStringMessage(aErrorText);
+  }
+
+#ifdef DEBUG
+  // Report the error to stderr.
+  fprintf(stderr,
+          "\n%s\n%s\n\n",
+          NS_LossyConvertUCS2toASCII(aErrorText).get(),
+          NS_LossyConvertUCS2toASCII(aSourceText).get());
+#endif
+
+  // Most of what this does won't be too useful, but whatever...
+  return nsXMLContentSink::ReportError(aErrorText, aSourceText);
 }
 
 NS_IMETHODIMP 
