@@ -41,8 +41,7 @@ static NS_DEFINE_CID(kCImapMessageResource, NS_IMAPMESSAGERESOURCE_CID);
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
 // private factory declarations for each component we know how to produce
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapUrl)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImapUrl, Initialize)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapProtocol)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMAPHostSessionList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapIncomingServer)
