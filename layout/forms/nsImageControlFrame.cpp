@@ -107,8 +107,6 @@ public:
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
   void ScrollIntoView(nsIPresContext* aPresContext);
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                     const nsFont*&  aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
@@ -319,13 +317,6 @@ nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
 // This is no longer called; click events are handled in
 // nsHTMLInputElement::HandleDOMEvent().
-}
-
-NS_IMETHODIMP
-nsImageControlFrame::GetFont(nsIPresContext* aPresContext, 
-                             const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
 }
 
 NS_IMETHODIMP

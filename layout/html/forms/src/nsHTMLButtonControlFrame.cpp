@@ -569,13 +569,6 @@ nsHTMLButtonControlFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFont(nsIPresContext* aPresContext, 
-                                  const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-}
-
-NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 {
   aContent = GetContent();

@@ -150,9 +150,6 @@ public:
   void       ScrollIntoView(nsIPresContext* aPresContext);
   virtual void InitializeControl(nsIPresContext* aPresContext);
   NS_IMETHOD OnContentReset();
-
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                     const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;

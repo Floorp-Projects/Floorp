@@ -82,8 +82,6 @@ public:
 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight) = 0;
   
-  NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
-                     const nsFont*&  aFont) = 0;
   /**
    * Get the content object associated with this frame. Adds a reference to
    * the content object so the caller must do a release.

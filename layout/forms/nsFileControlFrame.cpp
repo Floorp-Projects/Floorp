@@ -598,12 +598,6 @@ nsFileControlFrame::GetFormContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFileControlFrame::GetFont(nsIPresContext* aPresContext, 
-                            const nsFont*&  aFont)
-{
-  return nsFormControlHelper::GetFont(this, aPresContext, mStyleContext, aFont);
-}
 nscoord 
 nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
