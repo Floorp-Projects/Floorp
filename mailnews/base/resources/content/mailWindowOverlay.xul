@@ -1358,7 +1358,6 @@ Rights Reserved.
   <hbox insertafter="totalMessageCount">
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
     <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
-    <resizer class="window-diagonal"/>
   </hbox>
 </statusbar> 
 

@@ -157,9 +157,7 @@ iframe {
 
 #status-bar {
   -moz-user-focus: ignore;
-  margin: 0px;
   border-top: 1px solid #CED6DD;
-  padding: 0px;
   min-width: 1px; /* DON'T DELETE!
     Removes disappearance of scrollbars in content pane when window
     is made smaller. Talk to evaughan@netscape.com for details. */

@@ -265,7 +265,6 @@
       <hbox id="component-bar"/>
       <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
       <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-      <resizer class="window-diagonal" />
     </statusbar>
     
 

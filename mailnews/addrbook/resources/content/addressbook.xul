@@ -283,6 +283,5 @@ Rights Reserved.
     <hbox id="component-bar"/>
     <statusbarpanel id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>  
     <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/>           
-    <resizer class="window-diagonal"/>
   </statusbar>  
 </window>

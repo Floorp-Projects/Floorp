@@ -468,7 +468,6 @@
     <progressmeter id="compose-progressmeter" class="progressmeter-statusbar" 
                    mode="normal" value="0" statusbar="true"/>
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-icononly"/> 
-    <resizer class="window-diagonal"/>
   </statusbar>
 
 

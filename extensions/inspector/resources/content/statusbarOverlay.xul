@@ -8,7 +8,6 @@
       <text id="txStatus" flex="1"/>
     </statusbarpanel>
     <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
-    <resizer class="window-diagonal"/>
   </statusbar>
 
 </overlay>
