@@ -69,6 +69,8 @@ protected:
   unsigned char GetNativeAlignment();
   nsLabelAlignment mAlignment;
 
+ private:
+  GtkWidget *mWidget;
 };
 
 #endif // nsLabel_h__
