@@ -1239,28 +1239,6 @@ CString GetBrowser(void)
 	return retflag;
 }
 
-extern "C" __declspec(dllexport)
-void EraseDirectory(CString sPath)
-{
-	CFileFind finder;
-    CString  sFullPath = sPath + "\\*.*";
-
-	BOOL bWorking = finder.FindFile(sFullPath);
-	while (bWorking) 
-    {
-        bWorking = finder.FindNextFile();
-        if (finder.IsDots()) continue;
-        if (finder.IsDirectory()) 
-        {
-            CString dirPath = finder.GetFilePath();
-            EraseDirectory(dirPath);
-            _rmdir(finder.GetFilePath());
-            continue; 
-         }
-         _unlink( finder.GetFilePath() );
-     }
-}
-
 void CopyDirectory(CString source, CString dest, BOOL subdir)
 // Copy files in subdirectories if the subdir flag is set (equal to 1).
 {
@@ -1390,15 +1368,60 @@ void DiskSpaceAlert(ULONGLONG required, ULONGLONG available)
 	AfxMessageBox("Not enough disk space. Required: "+requiredSpace+" bytes. Available: "+availableSpace+" bytes.", MB_OK);
 }
 
-extern "C" __declspec(dllexport)
-int StartIB(CString parms, WIDGET *curWidget)
+
+
+BOOL FillGlobalWidgetArray(CString file)
+{
+	char buffer[MAX_SIZE] = {'\0'};
+	CString name = "";
+	CString value = "";
+
+       	FILE *globs = fopen(file, "r");
+	if (!globs)
+		return FALSE;
+
+	while(!feof(globs))
+	{
+		while(fgets(buffer, MAX_SIZE, globs))
+		{
+			if (strstr(buffer, "="))
+			{
+				name =  CString(strtok(buffer,"="));
+				value = CString(strtok(NULL,"="));
+				value.TrimRight();
+				if (value.Find("%") >= 0) {
+					//We should never enter this condition via wizardmachine.exe 
+					AfxMessageBox("The current .che file called: "+file+" contains some unfilled parameters."
+							"These parameters will appear between two percent (%) signs such as %Root%"
+							"Please replace these parameters with their appropriate values and restart"
+							"the program", MB_OK);
+			//		value=theInterpreter->replaceVars((char *) (LPCSTR) value,NULL);
+				}
+				
+				WIDGET* w = SetGlobal(name, value);
+				if (w)
+					w->cached = TRUE;
+			}
+		}
+	}
+
+	fclose(globs);
+
+	return TRUE;
+}
+
+
+
+int StartIB(/*CString parms, WIDGET *curWidget*/)
 {
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
 	componentOrder =0;
-	rootPath	= GetGlobal("Root");
-	configName	= GetGlobal("CustomizationList");
+	rootPath	= GetModulePath();
+	SetGlobal("Root", rootPath);
+	configName	= GetGlobal("_NewConfigName");
+	SetGlobal("CustomizationList", configName); 
 	configPath  = rootPath + "Configs\\" + configName;
 	outputPath	= configPath + "\\Output";
 	cdPath 		= configPath + "\\Output\\Core";
@@ -1448,7 +1471,11 @@ int StartIB(CString parms, WIDGET *curWidget)
 		CopyFile(nscpxpiPath+"\\recommended.end",
 			templinuxPath+"\\xpi\\recommended.end", FALSE);
 	}
+
+
+
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
+
 //Check for disk space before continuing
 
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
@@ -1570,16 +1597,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 		iniDstPath = outputPath + "\\config.ini";
 		xpiDstPath = outputPath;
 	}
-	CNewDialog newprog;
-	newprog.Create(IDD_NEW_DIALOG,NULL );
-	newprog.ShowWindow(SW_SHOW);
-/////////////////////////////
-	CWnd * dlg;
-	CRect tmpRect = CRect(7,7,173,13);
-	dlg = newprog.GetDlgItem(IDC_BASE_TEXT);
-	CWnd* pwnd = newprog.GetDlgItem(IDD_NEW_DIALOG);
-	dlg->SetWindowText("         Customization is in Progress");
-	
 /////////////////////////////
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
@@ -1627,16 +1644,13 @@ int StartIB(CString parms, WIDGET *curWidget)
 		fclose(f);
 	}
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||");
 
 	// Put all the extracted files back into their new XPI homes
 	ReplaceJARFiles();
 
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||");
 
 	ReplaceXPIFiles();
 
-	dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||");
 
 	// Copy remaining default installer files into config
 	// preserving any existing files that we created already
@@ -1705,30 +1719,23 @@ int StartIB(CString parms, WIDGET *curWidget)
 	}
 
 	// Didn't work...
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||");
 
 	if (linuxOption == "Linux")
 	{
 		LinuxInvisible();
-		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 		AddThirdParty();
-		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
 		CreateLinuxInstaller();
-		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	}
 	else
 	{
 		invisible();
 
-		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||");
 
 		AddThirdParty();
 		
-		dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||");
 		
 		ReplaceINIFile();
 		
-		dlg->SetWindowText("         Customization is in Progress \n         ||||||||||||||||||||||||||||||||||||||||||||||||||||||");
 	}
 	SetCurrentDirectory(olddir);
 	CString TargetDir = GetGlobal("Root");
@@ -1736,8 +1743,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString MozBrowser = GetBrowser();
 //	CreateShortcut(MozBrowser, TargetFile, "HelpLink", TargetDir, FALSE);
 
-	dlg->SetWindowText("         Customization is in Progress \n         |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-	newprog.DestroyWindow();
 	EraseDirectory(tempPath);
 	_chdir(configPath);
 	_rmdir("Temp");

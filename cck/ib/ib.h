@@ -1,3 +1,5 @@
+#define MID_SIZE 512
+
 typedef struct s_xpi {
 	CString xpiname;
 	CString filename;
@@ -7,6 +9,8 @@ typedef struct s_jar {
 	CString filename;
 	} JAR;
 
+int StartIB(void);
+BOOL FillGlobalWidgetArray(CString);
 void CreateRshell(void);
 void CreateHelpMenu(void);
 void CreateBuddyList(void);

@@ -35,9 +35,9 @@ OBJS=					\
 	.\$(OBJDIR)\NewDialog.obj \
 	.\$(OBJDIR)\wizshell.obj \
 	.\$(OBJDIR)\ib.obj		\
-	.\$(OBJDIR)\comp.obj	\
 	.\$(OBJDIR)\Helpmenu.obj	\
 	.\$(OBJDIR)\buddylist.obj	\
+	.\$(OBJDIR)\engine.obj	\
 	$(NULL)
 
 #		-I$(DEPTH)\xpinstall\wizard\windows\setup \
@@ -47,9 +47,13 @@ LINCS=  $(LINCS) \
 		-I$(DIST)\$(OBJDIR)\include \
 		$(NULL)
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = ibengine
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE = EXE 
+EXENAME = ibengine
+MAPFILE = ib.map
+RESFILE = ib.res
+PDBFILE = $(EXENAME)
+
+PROGRAM=.\$(OBJDIR)\$(EXENAME).exe
 
 CFLAGS = \
 	-W3 \
@@ -80,14 +84,16 @@ include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\cck\InitDist.win>
 
-libs:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
+libs:: $(PROGRAM)
+	$(MAKE_INSTALL) $(PROGRAM) $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(EXENAME).lib ..\lib
 
 export::
 	$(MAKE_INSTALL) script.ib $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) help1.txt $(CCKDIST)\CCKTool
 	$(MAKE_INSTALL) help2.txt $(CCKDIST)\CCKTool
+
+$(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE)
 
 #clobber::
 #	rm -f $(DIST)\bin\$(DLLNAME).dll

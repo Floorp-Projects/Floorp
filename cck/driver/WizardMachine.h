@@ -69,7 +69,6 @@ public:
 	void CreateNewCache();
 	BOOL IsLastNode(NODE* treeNode);
 	BOOL IsFirstNode(NODE* treeNode);
-	CString GetModulePath();
 	CString GetGlobalOptions(CString theName);
 	void BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue);
 //	void BuildHelpWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex);

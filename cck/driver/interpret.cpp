@@ -612,6 +612,9 @@ BOOL CInterpret::interpret(char *cmds, WIDGET *curWidget)
 
 BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 {
+
+ 	CString quotes = "\"";	
+	
 	// Make modifiable copy of string's buffer
 	char buf[MAX_SIZE];
 	strcpy(buf, (char *)(LPCTSTR) cmds);
@@ -874,7 +877,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
 						char deletePath[MAX_SIZE];
 						strcpy(deletePath, outputPath);
-						CallDLL("IBEngine", "EraseDirectory", deletePath, w);
+						EraseDirectory(deletePath);
 					}
 			}
 			// change pre-set CD autorun option
@@ -888,7 +891,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CString outputPath	= rootPath + "Configs\\" + configName + "\\Output";
 					char deletePath[MAX_SIZE];
 					strcpy(deletePath, outputPath);
-					CallDLL("IBEngine", "EraseDirectory", deletePath, w);
+					EraseDirectory(deletePath);
 				}
 			}
 			else if (strcmp(pcmd, "WriteCache") ==0)
@@ -1202,6 +1205,32 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 							p2 = strchr(parms1, ',');
 					}
 				}
+			}
+			else if (strcmp(pcmd, "RunIB") == 0)
+			{
+				//Make sure _NewConfigName is defined
+				if(GetGlobal("_NewConfigName") != GetGlobal("CustomizationList"))
+					SetGlobal("_NewConfigName", GetGlobal("CustomizationList"));
+
+				//Create an updated .che
+				theApp.CreateNewCache();
+
+			        CString exec_command = "ibengine.exe -c " + quotes 
+					+ CachePath + quotes;
+
+				CNewDialog newprog;
+				newprog.Create(IDD_NEW_DIALOG,NULL );
+				newprog.ShowWindow(SW_SHOW);
+				CWnd * dlg;
+				CRect tmpRect = CRect(7,7,173,13);
+				dlg = newprog.GetDlgItem(IDC_BASE_TEXT);
+				CWnd* pwnd = newprog.GetDlgItem(IDD_NEW_DIALOG);
+				newprog.SetWindowText("Progress");
+				dlg->SetWindowText("         Customization is in Progress ... ");
+
+				ExecuteCommand((char *)(LPCTSTR) exec_command, SW_HIDE, INFINITE);
+
+				newprog.DestroyWindow();
 			}
 			else if (strcmp(pcmd, "ShowSection") == 0)
 			{

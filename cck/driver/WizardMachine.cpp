@@ -1266,24 +1266,6 @@ BOOL CWizardMachineApp::IsFirstNode(NODE* treeNode)
 	return firstNode;
 }
 
-CString CWizardMachineApp::GetModulePath()
-{
-	char currPath[MID_SIZE];
-    int     i,numBytes; 
- 
-    // Get the path of the file that was executed 
-    numBytes = GetModuleFileName(m_hInstance, currPath, MIN_SIZE);
-
-	// get the cmd path
-	// Remove the filename from the path 
-	for (i=numBytes-1;i >= 0 && currPath[i] != '\\';i--);
-	// Terminate command line with 0 
-	if (i >= 0) 
-		currPath[i+1]= '\0';
-
-	return CString(currPath);
-}
-
 CString CWizardMachineApp::GetGlobalOptions(CString theName)
 {
 	CString temp="";

@@ -31,6 +31,7 @@ IS_COMPONENT = 1
 
 OBJS=					\
 	.\$(OBJDIR)\globals.obj		\
+	.\$(OBJDIR)\comp.obj		\
 	$(NULL)
 
 LINCS=  $(LINCS) \
@@ -70,8 +71,9 @@ include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\cck\InitDist.win>
 
-export:: $(DLLNAME).h
-	$(MAKE_INSTALL) $(DLLNAME).h ..\include
+export:: 
+	$(MAKE_INSTALL) globals.h ..\include
+	$(MAKE_INSTALL) comp.h ..\include
 
 libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib

@@ -137,3 +137,43 @@ void ExecuteCommand(char *command, int showflag, DWORD wait)
 	WaitForSingleObject(processInfo.hProcess, wait);
 }
 
+extern "C" __declspec(dllexport)
+void EraseDirectory(CString sPath)
+{
+        CFileFind finder;
+	CString  sFullPath = sPath + "\\*.*";
+
+        BOOL bWorking = finder.FindFile(sFullPath);
+        while (bWorking)
+        {
+        	bWorking = finder.FindNextFile();
+        	if (finder.IsDots()) continue;
+        	if (finder.IsDirectory())
+        	{
+            		CString dirPath = finder.GetFilePath();
+            		EraseDirectory(dirPath);
+            		_rmdir(finder.GetFilePath());
+            		continue;
+         	}
+         	_unlink( finder.GetFilePath() );
+     	}
+}
+
+__declspec(dllexport)
+CString GetModulePath()
+{
+        char currPath[MID_SIZE];
+        int     i,numBytes;
+
+        // Get the path of the file that was executed
+        numBytes = GetModuleFileName(NULL, currPath, MIN_SIZE);
+
+        // get the cmd path
+        // Remove the filename from the path
+        for (i=numBytes-1;i >= 0 && currPath[i] != '\\';i--);
+        // Terminate command line with 0
+        if (i >= 0)
+                currPath[i+1]= '\0';
+
+        return CString(currPath);
+}
