@@ -444,9 +444,9 @@ void CBrowserView::OnNavHome()
 {
     // Get the currently configured HomePage URL
     CString strHomeURL;
-     CMfcEmbedApp *pApp = (CMfcEmbedApp *)AfxGetApp();
+    CMfcEmbedApp *pApp = (CMfcEmbedApp *)AfxGetApp();
     if(pApp)
-      pApp->GetHomePage(strHomeURL);
+        pApp->GetHomePage(strHomeURL);
 
     if(strHomeURL.GetLength() > 0)
         OpenURL(strHomeURL);    
@@ -454,14 +454,17 @@ void CBrowserView::OnNavHome()
 
 void CBrowserView::OnNavReload() 
 {
-    if(mWebNav)
-        mWebNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
+    PRUint32 loadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
+    if (GetKeyState(VK_SHIFT))
+        loadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE;
+    if (mWebNav)
+        mWebNav->Reload(loadFlags);
 }
 
 void CBrowserView::OnNavStop() 
 {
-  if(mWebNav)
-    mWebNav->Stop(nsIWebNavigation::STOP_ALL);
+    if(mWebNav)
+        mWebNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
 void CBrowserView::OnUpdateNavStop(CCmdUI* pCmdUI)
