@@ -126,8 +126,8 @@ protected:
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
 
-  /** Have DoneAddingChildren() been called? */
-  PRBool mDoneAddingChildren;
+  /** True while children are being added */
+  PRBool mAddingChildren;
   
    /**
    * Retrieves an integer attribute and checks its type.
@@ -138,7 +138,9 @@ protected:
    * @return                 Normal error codes, and NS_ERROR_NOT_AVAILABLE if
    *                         the attribute was empty/nonexistant
    */
-  nsresult GetIntAttr(const nsAString& aName, PRInt32* aVal, const PRUint16 aType);
+  nsresult GetIntAttr(const nsAString &aName,
+                      PRInt32         *aVal,
+                      const PRUint16   aType);
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -153,10 +155,13 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
+  NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
 
   // nsIXFormsControl
   NS_IMETHOD Refresh();
+
+  nsXFormsRepeatElement() : mAddingChildren(PR_FALSE) {};  
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
@@ -176,10 +181,8 @@ nsXFormsRepeatElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   NS_ENSURE_SUCCESS(rv, rv);
 
   aWrapper->SetNotificationMask(kStandardNotificationMask |
+                                nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
-
-  // Initialize members  
-  mDoneAddingChildren = PR_FALSE;
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   rv = mElement->GetOwnerDocument(getter_AddRefs(domDoc));
@@ -255,13 +258,21 @@ nsXFormsRepeatElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
 }
 
 NS_IMETHODIMP
+nsXFormsRepeatElement::BeginAddingChildren()
+{
+  mAddingChildren = PR_TRUE;
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsRepeatElement::DoneAddingChildren()
 {
 #ifdef DEBUG_XF_REPEAT
   printf("nsXFormsRepeatElement::DoneAddingChildren()\n");
 #endif
   
-  mDoneAddingChildren = PR_TRUE;
+  mAddingChildren = PR_FALSE;
 
   Refresh();
   
@@ -278,7 +289,7 @@ nsXFormsRepeatElement::Refresh()
   printf("nsXFormsRepeatElement::Refresh()\n");
 #endif
 
-  if (!mHTMLElement || !mDoneAddingChildren)
+  if (!mHTMLElement || mAddingChildren)
     return NS_OK;
 
   nsresult rv;
