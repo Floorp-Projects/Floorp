@@ -45,16 +45,7 @@
 #include "nsWeakReference.h"
 #endif
 
-#include "nsIEditor.h"
 #include "nsITimer.h"
-
-#ifndef __gen_nsIControllers_h__
-#include "nsIControllers.h"
-#endif
-
-#ifndef __gen_nsIDocShell_h__
-#include "nsIDocShell.h"
-#endif
 
 #ifndef __gen_nsIWebProgressListener_h__
 #include "nsIWebProgressListener.h"
@@ -71,8 +62,11 @@
 
 
 class nsIWebProgress;
+class nsIDocShell;
 class nsIEditorDocShell;
 class nsIChannel;
+class nsIEditor;
+class nsIControllers;
 
 class nsComposerCommandsUpdater;
 

@@ -30,7 +30,6 @@
 #define nsComposerCommandsUpdater_h__
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
 #include "nsITimer.h"
 
 #include "nsISelectionListener.h"

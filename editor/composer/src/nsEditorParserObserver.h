@@ -39,11 +39,9 @@
 
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
 
 #include "nsWeakReference.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
 #include "nsHTMLTags.h"
 
 class nsEditorParserObserver : public nsSupportsWeakReference,
