@@ -172,7 +172,7 @@ NSRegisterSelf(const char* path)
   nsresult ret;
 
   ret = nsRepository::RegisterFactory(kCMsgFolderEventCID, path, PR_TRUE,
-    PR_TRUE);
+                                      PR_TRUE);
   if (NS_FAILED(ret)) {
     return ret;
   }

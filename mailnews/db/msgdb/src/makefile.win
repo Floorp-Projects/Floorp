@@ -45,7 +45,7 @@ EXPORTS=	\
 			$(NULL)
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor  -I$(PUBLIC)\rdf
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf -I$(PUBLIC)\rdfutil
 
 LCFLAGS = \
         $(LCFLAGS) \

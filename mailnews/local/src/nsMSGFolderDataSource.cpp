@@ -36,7 +36,9 @@
 #include "nsISupportsArray.h"
 #include "nsFileSpec.h"
 #include "nsMsgFolderFlags.h"
+#include "nsRDFCursorUtils.h"
 #include "nsIMessage.h"
+#include "nsMsgFolder.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID);
@@ -55,7 +57,7 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_MSGFolderRoot;
 
 nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
 
-static const char kURINC_MSGFolderRoot[]  = "mailbox:MSGFolderRoot";
+static const char kURINC_MSGFolderRoot[]  = "mailbox:/";
 
 #define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
@@ -91,15 +93,11 @@ peq(nsIRDFResource* r1, nsIRDFResource* r2)
 	}
 }
 
-static void createNode(const char *str, nsIRDFNode **node)
+static void createNode(nsString& str, nsIRDFNode **node)
 {
 	nsIRDFLiteral * value;
-	nsString nsStr(str);
-
 	*node = nsnull;
-
-	if(NS_SUCCEEDED(gRDFService->GetLiteral((const PRUnichar*)nsStr, &value)))
-	{
+	if(NS_SUCCEEDED(gRDFService->GetLiteral((const PRUnichar*)str, &value))) {
 		*node = value;
 	}
 }
@@ -136,6 +134,7 @@ static PRBool ShouldIgnoreFile (const char *name)
 
 	return PR_FALSE;
 }
+
 nsMSGFolderDataSource::nsMSGFolderDataSource()
 {
 	NS_INIT_REFCNT();
@@ -192,8 +191,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
   if ((mURI = PL_strdup(uri)) == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
-  nsresult rv;
-
   if (! kNC_Child) {
     gRDFService->GetResource(kURINC_child,   &kNC_Child);
     gRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
@@ -203,25 +200,32 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
   }
-
+#if 0
 	//create the folder for the root folder
+  nsresult rv;
 	nsIMsgFolder *rootFolder;
+#if 0
 	if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(nsIMsgFolder::IID(), (void**)&rootFolder)))
 	{		
 		if(rootFolder)
 		{
 			rootFolder->SetName("Mail and News");
 			rootFolder->SetDepth(0);
-			nsNativeFileSpec startPath("d:\\users\\warren\\Mail", PR_FALSE);
+			nsNativeFileSpec startPath("h:\\user\\warren\\Mail", PR_FALSE);
 			if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
 				return rv;
 
 			NS_RELEASE(rootFolder);
 		}
 	}
-
+#else
+  if (NS_FAILED(rv = nsMsgFolder::GetRoot(&rootFolder)))
+    return rv;
+#endif
+#endif
 	mInitialized = PR_TRUE;
-	return NS_OK;}
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsMSGFolderDataSource::GetURI(const char* *uri) const
 {
@@ -255,8 +259,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     nsresult rv;
 
 		if (peq(kNC_Name, property)) {
-			char * name;
-			rv = folder->GetName(&name);
+			nsString name;
+			rv = folder->GetName(name);
 			createNode(name, target);
 		}
 		else {
@@ -275,9 +279,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
         peq(kNC_Subject, property)) {
 			nsAutoString subject;
 			rv = message->GetProperty("subject", subject);
-      char* str = subject.ToNewCString();
-			createNode(str, target);
-      delete[] str;
+			createNode(subject, target);
 		}
 		else {
 			rv = NS_ERROR_RDF_NO_VALUE;
@@ -315,29 +317,43 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 
 		if (peq(kNC_Child, property))
 		{
-			nsISupportsArray *subFolders;
+			nsIEnumerator *subFolders;
 
-			folder->GetSubFolders (&subFolders);
-
-		  *targets = new ArrayMsgFolderCursor(source, kNC_Child, subFolders);
-
+      folder->GetSubFolders(&subFolders);
+		  nsRDFEnumeratorAssertionCursor* cursor =
+        new nsRDFEnumeratorAssertionCursor(gMsgFolderDataSource, 
+                                           source, kNC_Child, subFolders);
 			NS_IF_RELEASE(subFolders);
+      if (cursor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(cursor);
+      *targets = cursor;
 			rv = NS_OK;
 		}
 		else if (peq(kNC_MessageChild, property))
 		{
-			nsISupportsArray *messages;
+			nsIEnumerator *messages;
 
 			folder->GetMessages(&messages);
-
-		  *targets = new ArrayMsgFolderCursor(source, kNC_MessageChild, messages);
-
+		  nsRDFEnumeratorAssertionCursor* cursor =
+        new nsRDFEnumeratorAssertionCursor(gMsgFolderDataSource, 
+                                           source, kNC_MessageChild, messages);
 			NS_IF_RELEASE(messages);
+      if (cursor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(cursor);
+      *targets = cursor;
 			rv = NS_OK;
 		}
 		else if(peq(kNC_Name, property))
 		{
-			*targets = new SingletonMsgFolderCursor(source, property, PR_FALSE);
+			nsRDFSingletonAssertionCursor* cursor =
+        new nsRDFSingletonAssertionCursor(gMsgFolderDataSource, 
+                                          source, property);
+      if (cursor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(cursor);
+      *targets = cursor;
 			rv = NS_OK;
 		}
 		NS_IF_RELEASE(folder);
@@ -345,7 +361,13 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
   else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::IID(), (void**)&message))) {
     if(peq(kNC_Name, property))
 		{
-			*targets = new SingletonMsgFolderCursor(source, property, PR_FALSE);
+			nsRDFSingletonAssertionCursor* cursor =
+        new nsRDFSingletonAssertionCursor(gMsgFolderDataSource, 
+                                          source, property, PR_FALSE);
+      if (cursor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(cursor);
+      *targets = cursor;
 			rv = NS_OK;
 		}
 		NS_IF_RELEASE(message);
@@ -406,15 +428,23 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFArcsOutCursor** labels)
+                                                  nsIRDFArcsOutCursor** labels)
 {
-	nsISupportsArray *temp;
-	NS_NewISupportsArray(&temp);
+  nsISupportsArray *arcs;
+  NS_NewISupportsArray(&arcs);
+  if (arcs == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  temp->AppendElement(kNC_Child);
-  temp->AppendElement(kNC_MessageChild);
-  temp->AppendElement(kNC_Name);
-  *labels = new MsgFolderArcsOutCursor(source, temp);
+  arcs->AppendElement(kNC_Child);
+  arcs->AppendElement(kNC_MessageChild);
+  arcs->AppendElement(kNC_Name);
+  nsRDFArrayArcsOutCursor* cursor =
+    new nsRDFArrayArcsOutCursor(gMsgFolderDataSource, source, arcs);
+  NS_RELEASE(arcs);
+  if (cursor == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(cursor);
+  *labels = cursor;
   return NS_OK;
 }
 
@@ -432,8 +462,8 @@ NS_IMETHODIMP nsMSGFolderDataSource::Flush()
 }
 
 NS_IMETHODIMP nsMSGFolderDataSource::IsCommandEnabled(const char* aCommand,
-                                nsIRDFResource* aCommandTarget,
-                                PRBool* aResult)
+                                                      nsIRDFResource* aCommandTarget,
+                                                      PRBool* aResult)
 {
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -445,163 +475,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::DoCommand(const char* aCommand,
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-nsresult nsMSGFolderDataSource::InitFoldersFromDirectory(nsIMsgFolder *folder, nsNativeFileSpec& aPath, PRInt32 depth)
-{
-
-	char *currentFolderName =nsnull;
-
-	for (nsDirectoryIterator dir(aPath); dir; dir++)
-	{
-		nsNativeFileSpec currentFolderPath = (nsNativeFileSpec&)dir;
-		if(currentFolderName)
-			delete[] currentFolderName;
-
-		currentFolderName = currentFolderPath.GetLeafName();
-		if (ShouldIgnoreFile (currentFolderName))
-				continue;
-
-		InitLocalFolders (folder, currentFolderPath, depth);
-	}
-	if(currentFolderName)
-		delete[] currentFolderName;
-
-	return NS_OK;
-}
-
-nsresult
-nsMSGFolderDataSource::InitLocalFolders(nsIMsgFolder* aParentFolder, nsNativeFileSpec& aPath, PRInt32 depth)
-{
-  const char *kDirExt = ".sbd";
-
-  nsFilePath aFilePath(aPath);
-	char* pathStr = (char*)aFilePath;
-
-	PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
-
-	PRBool addNewFolderToTree = PR_TRUE;
-	nsIMsgFolder *folder = nsnull;
-
-	if(aPath.IsDirectory())
-	{
-		// pathStr specifies a filesystem directory
-		char *lastFour = &pathStr[PL_strlen(pathStr) - PL_strlen(kDirExt)];
-		if (PL_strcasecmp(lastFour, kDirExt))
-		{
-			newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
-
-			// Create a new resource for this folder and set the child and name properties
-			PRInt16 fileurlSize = PL_strlen("mailbox:") + PL_strlen(pathStr);
-			char *fileurl = (char*)PR_Malloc( fileurlSize + 1);
-			nsIRDFResource* resource;
-
-			PR_snprintf(fileurl, fileurlSize + 1, "mailbox:%s", pathStr);
-			gRDFService->GetResource(fileurl, (nsIRDFResource**)&resource);
-
-			PR_Free(fileurl);
-
-			if(NS_SUCCEEDED(resource->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
-			{
-				char * folderName;
-
-				folder->GetNameFromPathName(pathStr, &folderName);
-				folder->SetName(folderName);
-
-				nsIMsgLocalMailFolder *mailFolder;
-				if(NS_SUCCEEDED(folder->QueryInterface(nsIMsgLocalMailFolder::IID(), (void**)&mailFolder)))
-				{
-					mailFolder->SetPathName(pathStr);
-					NS_IF_RELEASE(mailFolder);
-				}
-
-				
-				folder->SetDepth(depth);
-				folder->SetFlag(newFlags);
-				aParentFolder->AddSubFolder(folder);
-			}
-
-			InitFoldersFromDirectory(folder, aPath, depth + 1); 
-
-			NS_IF_RELEASE(folder);
-			NS_IF_RELEASE(resource);
-		}
-	}
-	else
-	{
-
-		// Create a new resource for this folder and set the child and name properties
-		PRInt16 fileurlSize = PL_strlen("mailbox:") + PL_strlen(pathStr);
-		char *fileurl = (char*)PR_Malloc( fileurlSize + 1);
-		nsIRDFResource* resource;
-
-		PR_snprintf(fileurl, fileurlSize + 1, "mailbox:%s", pathStr);
-		gRDFService->GetResource(fileurl, (nsIRDFResource**)&resource);
-
-		PR_Free(fileurl);
-
-		if(NS_SUCCEEDED(resource->QueryInterface(nsIMsgFolder::IID(), (void**)&folder)))
-		{
-			char * folderName;
-			folder->GetNameFromPathName(pathStr, &folderName);
-			folder->SetName(folderName);
-
-			nsIMsgLocalMailFolder *mailFolder;
-			if(NS_SUCCEEDED(folder->QueryInterface(nsIMsgLocalMailFolder::IID(), (void**)&mailFolder)))
-			{
-				mailFolder->SetPathName(pathStr);
-				NS_IF_RELEASE(mailFolder);
-			}
-
-			folder->SetDepth(depth);
-			if (addNewFolderToTree)
-			{
-				aParentFolder->AddSubFolder(folder);
-			}
-
-			if (folder)
-			{
-				folder->UpdateSummaryTotals();
-				// Look for a directory for this mail folder, and recurse into it.
-				// e.g. if the folder is "inbox", look for "inbox.sbd". 
-				char *folderName = aPath.GetLeafName();
-				char *newLeafName = (char*)malloc(PL_strlen(folderName) + PL_strlen(kDirExt) + 2);
-				PL_strcpy(newLeafName, folderName);
-				PL_strcat(newLeafName, kDirExt);
-				aPath.SetLeafName(newLeafName);
-				if(folderName)
-					delete[] folderName;
-				if(newLeafName)
-					delete[] newLeafName;
-
-				if(aPath.IsDirectory())
-				{
-					// If we knew it was a directory before getting here, we must have
-					// found that out from the folder cache. In that case, the elided bit
-					// is already what it should be, and we shouldn't change it. Otherwise
-					// the default setting is collapsed.
-					// NOTE: these flags do not affect the sort order, so we don't have to call
-					// QuickSort after changing them.
-
-					PRBool hasFlag;
-					folder->GetFlag(MSG_FOLDER_FLAG_DIRECTORY, &hasFlag);
-					if (!hasFlag)
-						folder->SetFlag (MSG_FOLDER_FLAG_ELIDED);
-					folder->SetFlag (MSG_FOLDER_FLAG_DIRECTORY);
-
-					InitFoldersFromDirectory(folder, aPath, depth + 1); 
-				}
-			}
-		}
-		NS_IF_RELEASE(folder);
-		NS_IF_RELEASE(resource);
-
-
-	}
-
-	return NS_OK;
-
-}
-
 
 NS_EXPORT nsresult
 NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result)
@@ -620,305 +493,3 @@ NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result)
   return NS_OK;
 }
 
-SingletonMsgFolderCursor::SingletonMsgFolderCursor(nsIRDFNode* u,
-                                         nsIRDFResource* s,
-                                         PRBool inversep)
-{
-  if (!inversep) {
-    mSource = (nsIRDFResource*)u;
-    mTarget = nsnull;
-  } else {
-    mSource = nsnull;
-    mTarget = u;
-  }
-  NS_ADDREF(u);
-  mProperty = s;
-  NS_ADDREF(mProperty);
-  mValueReturnedp = PR_FALSE;
-  mInversep = inversep;
-  mValue = nsnull;
-}
-
-
-SingletonMsgFolderCursor::~SingletonMsgFolderCursor(void)
-{
-  NS_IF_RELEASE(mSource);
-  NS_IF_RELEASE(mValue);
-  NS_IF_RELEASE(mProperty);
-  NS_IF_RELEASE(mTarget);
-}
-
-
-
-    // nsIRDFCursor interface
-NS_IMETHODIMP
-SingletonMsgFolderCursor::Advance(void)
-{
-  nsresult rv = NS_ERROR_RDF_CURSOR_EMPTY;
-  if (mValueReturnedp) {
-      NS_IF_RELEASE(mValue);
-      mValue = nsnull;
-      return NS_ERROR_RDF_CURSOR_EMPTY;
-  }
-  mValueReturnedp = PR_TRUE;
-  if (mInversep) {
-      rv = gMsgFolderDataSource->GetSource(mProperty, mTarget, 1, (nsIRDFResource**)&mValue);
-      mSource = (nsIRDFResource*)mValue;
-  } else {
-      rv = gMsgFolderDataSource->GetTarget(mSource, mProperty,  1, &mValue);
-      mTarget = mValue;
-  }
-  if (mValue) {
-      NS_ADDREF(mValue);
-      NS_ADDREF(mValue);
-  }
-  // yes, its required twice, one for the value and one for the source/target
-  if (rv == NS_ERROR_RDF_NO_VALUE) return NS_ERROR_RDF_CURSOR_EMPTY;
-  return rv;
-}
-
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetValue(nsIRDFNode** aValue)
-{
-  NS_ADDREF(mValue);
-  *aValue = mValue;
-  return NS_OK;
-}
-
-    // nsIRDFAssertionCursor interface
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetDataSource(nsIRDFDataSource** aDataSource)
-{
-  NS_ADDREF(gMsgFolderDataSource);
-  *aDataSource = gMsgFolderDataSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetSubject(nsIRDFResource** aResource)
-{
-  NS_ADDREF(mSource);
-  *aResource = mSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetPredicate(nsIRDFResource** aPredicate)
-{
-  NS_ADDREF(mProperty);
-  *aPredicate = mProperty;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetObject(nsIRDFNode** aObject)
-{
-  NS_ADDREF(mTarget);
-  *aObject = mTarget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SingletonMsgFolderCursor::GetTruthValue(PRBool* aTruthValue)
-{
-  *aTruthValue = PR_TRUE;
-  return NS_OK;
-}
-
-
-NS_IMPL_ISUPPORTS(SingletonMsgFolderCursor, nsIRDFAssertionCursor::IID());
-
-ArrayMsgFolderCursor::ArrayMsgFolderCursor(nsIRDFResource* u,
-											   nsIRDFResource* s,
-											   nsISupportsArray* array)
-{
-    //  getsources and gettargets will call this with the array
-  mSource = u;
-  mProperty = s;
-  mArray = array;
-  NS_ADDREF(mProperty);
-  NS_ADDREF(u);
-	NS_ADDREF(mArray);
-  mCount = 0;
-  mTarget = nsnull;
-  mValue = nsnull;
-}
-
-ArrayMsgFolderCursor::~ArrayMsgFolderCursor(void)
-{
-  NS_IF_RELEASE(mSource);
-  NS_IF_RELEASE(mValue);
-  NS_IF_RELEASE(mProperty);
-  NS_IF_RELEASE(mTarget);
-	NS_IF_RELEASE(mArray);
-}
-
-
-    // nsIRDFCursor interface
-NS_IMETHODIMP
-ArrayMsgFolderCursor::Advance(void)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-
-  if (mArray->Count() <= mCount) return  NS_ERROR_RDF_CURSOR_EMPTY;
-  NS_IF_RELEASE(mValue);
-	mTarget = mValue = (nsIRDFNode*) mArray->ElementAt(mCount++);
-  NS_ADDREF(mValue);
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetValue(nsIRDFNode** aValue)
-{
-  NS_ADDREF(mValue);
-  *aValue = mValue;
-  return NS_OK;
-}
-
-    // nsIRDFAssertionCursor interface
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetDataSource(nsIRDFDataSource** aDataSource)
-{
-  NS_ADDREF(gMsgFolderDataSource);
-  *aDataSource = gMsgFolderDataSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetSubject(nsIRDFResource** aResource)
-{
-	NS_ADDREF(mSource);
-  *aResource = mSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetPredicate(nsIRDFResource** aPredicate)
-{
-  NS_ADDREF(mProperty);
-  *aPredicate = mProperty;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetObject(nsIRDFNode** aObject)
-{
-  NS_ADDREF(mTarget);
-  *aObject = mTarget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::GetTruthValue(PRBool* aTruthValue)
-{
-  *aTruthValue = 1;
-  return NS_OK;
-}
-
-NS_IMPL_ADDREF(ArrayMsgFolderCursor);
-NS_IMPL_RELEASE(ArrayMsgFolderCursor);
-
-NS_IMETHODIMP
-ArrayMsgFolderCursor::QueryInterface(REFNSIID iid, void** result)
-{
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  *result = nsnull;
-  if (iid.Equals(nsIRDFAssertionCursor::IID()) ||
-      iid.Equals(kIRDFCursorIID) ||
-      iid.Equals(kISupportsIID)) {
-      *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
-      AddRef();
-      return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-
-MsgFolderArcsOutCursor::MsgFolderArcsOutCursor(nsIRDFResource* source,
-											   nsISupportsArray* array)
-{
-    //  getsources and gettargets will call this with the array
-  mSource = source;
-  mProperty = nsnull;
-  mArray = array;
-  NS_ADDREF(source);
-	NS_ADDREF(mArray);
-  mCount = 0;
-}
-
-MsgFolderArcsOutCursor::~MsgFolderArcsOutCursor(void)
-{
-  NS_IF_RELEASE(mSource);
-  NS_IF_RELEASE(mProperty);
-	NS_IF_RELEASE(mArray);
-}
-
-
-    // nsIRDFCursor interface
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::Advance(void)
-{
-	nsresult rv = NS_ERROR_FAILURE;
-
-  if (mArray->Count() <= mCount) return  NS_ERROR_RDF_CURSOR_EMPTY;
-  NS_IF_RELEASE(mProperty);
-  mProperty = (nsIRDFResource*)mArray->ElementAt(mCount++);
-  NS_ADDREF(mProperty);
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::GetValue(nsIRDFNode** aValue)
-{
-  NS_ADDREF(mProperty);
-  *aValue = mProperty;
-  return NS_OK;
-}
-
-    // nsIRDFAssertionCursor interface
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::GetDataSource(nsIRDFDataSource** aDataSource)
-{
-  NS_ADDREF(gMsgFolderDataSource);
-  *aDataSource = gMsgFolderDataSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::GetSubject(nsIRDFResource** aResource)
-{
-	NS_ADDREF(mSource);
-  *aResource = mSource;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::GetPredicate(nsIRDFResource** aPredicate)
-{
-  NS_ADDREF(mProperty);
-  *aPredicate = mProperty;
-  return NS_OK;
-}
-
-
-NS_IMPL_ADDREF(MsgFolderArcsOutCursor);
-NS_IMPL_RELEASE(MsgFolderArcsOutCursor);
-
-NS_IMETHODIMP
-MsgFolderArcsOutCursor::QueryInterface(REFNSIID iid, void** result)
-{
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  *result = nsnull;
-  if (iid.Equals(nsIRDFCursor::IID()) ||
-      iid.Equals(nsIRDFArcsOutCursor::IID()) ||
-      iid.Equals(::nsISupports::IID())) {
-      *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
-      AddRef();
-      return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}

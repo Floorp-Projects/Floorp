@@ -24,6 +24,7 @@
 #include "plstr.h"
 #include "prmem.h"
 #include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include <stdio.h>
 
 #include "nsINNTPNewsgroup.h"
@@ -608,7 +609,7 @@ nsresult nsNNTPHostStub::FindGroup(const char * name, nsINNTPNewsgroup ** retVal
 {
 	PRBool found = PR_FALSE;
 	*retVal = nsnull;
-	for (PRInt32 count = 0; count < m_groups->Count() && !found; count++)
+	for (PRUint32 count = 0; count < m_groups->Count() && !found; count++)
 	{
 		nsISupports * elem = m_groups->ElementAt(count);
 		if (elem)

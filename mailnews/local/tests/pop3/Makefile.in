@@ -55,6 +55,8 @@ LIBS = \
 	-lpref	\
 	-ljs	\
 	-lraptorbase \
+	-lrdfbase_s \
+	-lrdfutil_s \
 	-lgmbase$(MOZ_TOOLKIT) \
 	-lsecfree \
 	-lz \

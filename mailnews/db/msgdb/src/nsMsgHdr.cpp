@@ -72,6 +72,14 @@ nsMsgHdr::~nsMsgHdr()
 	}
 }
 
+#if 0
+NS_IMETHODIMP nsMsgHdr::GetMessageSize(PRUint32 *result)
+{
+    *result = m_messageSize;
+    return NS_OK;
+}
+#endif
+
 NS_IMETHODIMP nsMsgHdr::GetMessageKey(nsMsgKey *result)
 {
 	if (m_messageKey == nsMsgKey_None && m_mdbRow != NULL)

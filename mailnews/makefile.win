@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=public base db local news compose mime
+DIRS=public base db local news compose mime ui
 
 include <$(DEPTH)\config\rules.mak>

@@ -12,17 +12,15 @@ class nsDBChangeAnnouncer;
 class nsIDBChangeListener : public nsISupports
 {
 public:
- static const nsIID& IID() {
-    static nsIID iid = NS_IDBCHANGELISTENER_IID;
-    return iid;
-  }
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
-		nsIDBChangeListener * aInstigator) = 0;
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
-		nsIDBChangeListener * aInstigator) = 0;
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
-		nsIDBChangeListener * aInstigator) = 0;
-	NS_IMETHOD OnAnnouncerGoingAway(nsDBChangeAnnouncer * instigator) ;
+    static const nsIID& IID(void) { static nsIID iid = NS_IDBCHANGELISTENER_IID; return iid; }
+  
+    NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, int32 aFlags, 
+                           nsIDBChangeListener * aInstigator) = 0;
+    NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, int32 aFlags, 
+                            nsIDBChangeListener * aInstigator) = 0;
+    NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
+                          nsIDBChangeListener * aInstigator) = 0;
+    NS_IMETHOD OnAnnouncerGoingAway(nsDBChangeAnnouncer * instigator) ;
 };
 
 #endif

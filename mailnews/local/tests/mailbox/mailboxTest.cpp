@@ -131,7 +131,7 @@ nsresult NS_NewMailboxUrl(nsIMailboxUrl ** aResult, const nsString urlSpec)
 	 if (mailboxUrl)
 	 {
 		mailboxUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = mailboxUrl->QueryInterface(kIMailboxUrlIID, (void **) aResult);
+		rv = mailboxUrl->QueryInterface(nsIMailboxUrl::IID(), (void **) aResult);
 	 }
 
 	 return rv;

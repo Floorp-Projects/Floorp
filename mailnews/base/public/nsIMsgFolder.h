@@ -5,9 +5,11 @@
 #ifndef __gen_nsIMsgFolder_h__
 #define __gen_nsIMsgFolder_h__
 
-#include "nsISupportsArray.h" /* interface nsISupportsArray */
+#include "nsIFolder.h"
 
+class nsISupportsArray;
 class nsIMessage;
+class nsNativeFileSpec;
 
 /* starting interface nsIMsgFolder */
 
@@ -17,72 +19,30 @@ class nsIMessage;
   {0x85e39ff0, 0xb248, 0x11d2, \
     { 0xb7, 0xef, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
 
-class nsIMsgFolder : public nsISupports {
+class nsIMsgFolder : public nsIFolder {
  public: 
   static const nsIID& IID() {
-    static nsIID iid = NS_IMSGFOLDER_IID;
+    static nsIID iid = NS_IMSGFOLDER_IID; 
     return iid;
   }
 
-  /*  <IDL>  */
-  NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
+  // XXX should these 2 go on nsIFolder or nsICollection?
+  NS_IMETHOD AddUnique(nsISupports* element) = 0;
+  NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement) = 0;
+
+  NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result) = 0;
+
+  // subset of GetElements such that each element is an nsIMessage
+  NS_IMETHOD GetMessages(nsIEnumerator* *result) = 0;
+
+  NS_IMETHOD GetPrettyName(nsString& name) = 0;
+  NS_IMETHOD SetPrettyName(const nsString& name) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetName(char * *aName) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD SetName(const char *name) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetPrettiestName(char * *aPrettiestName) = 0;
+  NS_IMETHOD GetPrettiestName(nsString& aPrettiestName) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD BuildFolderURL(char **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetNameFromPathName(const char *pathName, char **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD HasSubFolders(PRBool *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetNumSubFolders(PRUint32 *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetNumSubFoldersToDisplay(PRUint32 *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetSubFolder(PRUint32 which, nsIMsgFolder **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetSubFolders(nsISupportsArray **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD AddSubFolder(const nsIMsgFolder *folder) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD RemoveSubFolder(const nsIMsgFolder *folder) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD HasMessages(PRBool *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetNumMessages(PRUint32 *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetNumMessagesToDisplay(PRUint32 *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetMessage(PRUint32 which, nsIMessage **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD GetMessages(nsISupportsArray **_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD AddMessage(const nsIMessage *msg) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD RemoveMessage(const nsIMessage *msg) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD GetDeleteIsMoveToTrash(PRBool *aDeleteIsMoveToTrash) = 0;
@@ -113,9 +73,6 @@ class nsIMsgFolder : public nsISupports {
 
   /*  <IDL>  */
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD FindChildNamed(const char *name, nsIMsgFolder **_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD FindParentOf(const nsIMsgFolder *childFolder, nsIMsgFolder **_retval) = 0;
@@ -191,12 +148,6 @@ class nsIMsgFolder : public nsISupports {
   NS_IMETHOD GetHostName(char **_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD AddSubfolderIfUnique(const nsIMsgFolder *newSubfolder) = 0;
-
-  /*  <IDL>  */
-  NS_IMETHOD ReplaceSubfolder(const nsIMsgFolder *oldFolder, const nsIMsgFolder *newFolder) = 0;
-
-  /*  <IDL>  */
   NS_IMETHOD SetFlag(PRUint32 flag) = 0;
 
   /*  <IDL>  */
@@ -238,8 +189,7 @@ class nsIMsgLocalMailFolder : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD GetPathName(char * *aPathName) = 0;
-  NS_IMETHOD SetPathName(char * aPathName) = 0;
+  NS_IMETHOD GetPath(nsNativeFileSpec& aPathName) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,9 +212,9 @@ class nsIMsgImapMailFolder : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD GetPathName(char * *aPathName) = 0;
-  NS_IMETHOD SetPathName(char * aPathName) = 0;
+  NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
 
 #endif /* __gen_nsIMsgFolder_h__ */

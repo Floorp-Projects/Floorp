@@ -78,7 +78,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		{	
 			nsFilePath dbName(fileName);
 
-			nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
+			(void)nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
 			printf("url file = %s\n", fileName);
 		}
 	}

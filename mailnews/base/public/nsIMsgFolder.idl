@@ -1,3 +1,5 @@
+XXX fix this to match the .h file
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -20,7 +22,6 @@
 #include "nsISupports.idl"
 #include "nsIMsg.idl"
 
-
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsISupports {
 
@@ -31,7 +32,9 @@ interface nsIMsgFolder : nsISupports {
 
 	string BuildFolderURL();
 
-	string GetNameFromPathName(in string pathName);
+        // XXX should these 2 go on nsIFolder or nsICollection?
+        void AddUnique(in nsISupports element);
+        void ReplaceElement(in nsISupports element, in nsISupports newElement);
 
 	boolean HasSubFolders();
 	unsigned long GetNumSubFolders() ;
@@ -121,7 +124,7 @@ interface nsIMsgFolder : nsISupports {
 [uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
 
-	attribute string pathName;
+        readonly attribute nsNativeFileSpec pathName;
 };
 
 

@@ -18,14 +18,14 @@
 
 #include "msgCore.h"    // precompiled header...
 
-#include "nsLocalMailFolder.h"	 
+#include "nsMsgLocalMailFolder.h"
 #include "nsMsgFolderFlags.h"
+#include "nsISupportsArray.h"
 #include "prprf.h"
 #include "nsIRDFResourceFactory.h"
-#include "nsISupportsArray.h"
+#include "nsSupportsArray.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsIEnumerator.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
@@ -77,8 +77,8 @@ nsURI2Path(const char* uriStr, nsNativeFileSpec& pathResult)
   path.Append(rootPath);
   uri.Cut(0, nsCRT::strlen(kRootPrefix));
 
-  PRUint32 uriLen = uri.Length();
-  if (uri.RFind('/') == (PRInt32)uriLen - 1) {
+  PRUint32 uriLen = url.Length();
+  if (uri.RFind('/') == uriLen - 1) {
     // delete trailing slash
     uri.Left(uri, uriLen - 1);
     uriLen--;
@@ -266,7 +266,7 @@ nsMsgLocalMailFolder::Initialize(void)
 }
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
+nsMsgLocalMailFolder::GetElements(nsIEnumerator* *result)
 {
   nsresult rv; 
 
@@ -277,8 +277,7 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
   if (NS_FAILED(rv)) return rv;
   rv = GetMessages(&messages);
   if (NS_FAILED(rv)) return rv;
-  return NS_NewConjoiningEnumerator(folders, messages, 
-                                    (nsIBidirectionalEnumerator**)result);
+  return NS_NewConjoiningEnumerator(folders, messages, result);
 }
 
 NS_IMETHODIMP
@@ -289,7 +288,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
-  return mSubFolders->Enumerate(result);
+  return mSubFolders->GetElements(result);
 }
 
 NS_IMETHODIMP
@@ -310,12 +309,11 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
   // XXX temporary
-  nsISupportsArray* messages;
-  nsresult rv = NS_NewISupportsArray(&messages);
-  if (NS_FAILED(rv))
-    return rv;
+  nsSupportsArray* messages = new nsSupportsArray();
+  if (messages == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(messages);
-  return messages->Enumerate(result); // empty set for now
+  return messages->GetElements(result); // empty set for now
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)

@@ -33,13 +33,6 @@ private:
   char*         mURI;
   nsVoidArray*  mObservers;
 	PRBool				mInitialized;
-  // internal methods
-  nsresult InitLocalFolders (nsIMsgFolder *aParentFolder, nsNativeFileSpec& path,
-							 PRInt32 depth);
-	nsresult InitFoldersFromDirectory(nsIMsgFolder *folder,
-								nsNativeFileSpec& aPath, PRInt32 depth);
-
-  nsresult AddColumns (void);
 
 public:
   
@@ -120,86 +113,4 @@ public:
 
   static nsIRDFResource* kNC_Subject;
 };
-
-class SingletonMsgFolderCursor : public nsIRDFAssertionCursor 
-{
-private:
-  nsIRDFNode*     mValue;
-  nsIRDFResource* mSource;
-  nsIRDFResource* mProperty;
-  nsIRDFNode*     mTarget;
-  PRBool          mValueReturnedp;
-  PRBool          mInversep;
-
-public:
-  SingletonMsgFolderCursor(nsIRDFNode* u,
-                      nsIRDFResource* s,
-                      PRBool inversep);
-  virtual ~SingletonMsgFolderCursor(void);
-
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
- 
-  // nsIRDFCursor interface
-  NS_IMETHOD Advance(void);
-  NS_IMETHOD GetValue(nsIRDFNode** aValue);
-
-  // nsIRDFAssertionCursor interface
-  NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
-  NS_IMETHOD GetSubject(nsIRDFResource** aResource);
-  NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
-  NS_IMETHOD GetObject(nsIRDFNode** aObject);
-  NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
-};
-
-class ArrayMsgFolderCursor : public nsIRDFAssertionCursor, public nsIRDFArcsOutCursor
-{
-private:
-  nsIRDFNode*     mValue;
-  nsIRDFResource* mSource;
-  nsIRDFResource* mProperty;
-  nsIRDFNode*     mTarget;
-  int             mCount;
-  nsISupportsArray*    mArray;
-
-public:
-  ArrayMsgFolderCursor(nsIRDFResource* u, nsIRDFResource* s, nsISupportsArray* array);
-  virtual ~ArrayMsgFolderCursor(void);
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
- 
-  // nsIRDFCursor interface
-  NS_IMETHOD Advance(void);
-  NS_IMETHOD GetValue(nsIRDFNode** aValue);
-  // nsIRDFAssertionCursor interface
-  NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
-  NS_IMETHOD GetSubject(nsIRDFResource** aResource);
-  NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
-  NS_IMETHOD GetObject(nsIRDFNode** aObject);
-  NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
-};
-
-class MsgFolderArcsOutCursor :  public nsIRDFArcsOutCursor
-{
-private:
-  nsIRDFResource* mSource;
-  nsIRDFResource* mProperty;
-  int             mCount;
-  nsISupportsArray*    mArray;
-
-public:
-  MsgFolderArcsOutCursor(nsIRDFResource* source, nsISupportsArray* array);
-  virtual ~MsgFolderArcsOutCursor(void);
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
- 
-  // nsIRDFCursor interface
-  NS_IMETHOD Advance(void);
-  NS_IMETHOD GetValue(nsIRDFNode** aValue);
-  // nsIRDFAssertionCursor interface
-  NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
-  NS_IMETHOD GetSubject(nsIRDFResource** aResource);
-  NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
-};
-
 

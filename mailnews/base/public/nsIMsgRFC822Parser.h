@@ -36,12 +36,11 @@
   * nsIMsgRFCParser Interface declaration 
   */ 
 
- class nsIMsgRFC822Parser: public nsISupports { 
- public: 
-  static const nsIID& IID() {
-    static nsIID iid = NS_IMSGRFC822PARSER_IID;
-    return iid;
-  }
+class nsIMsgRFC822Parser: public nsISupports { 
+public: 
+
+  static const nsIID& IID(void) { static nsIID iid = NS_IMSGRFC822PARSER_IID; return iid; }
+  
 	/* Given a string which contains a list of RFC822 addresses, parses it into
 	   their component names and mailboxes.
 
@@ -126,7 +125,7 @@
 	NS_IMETHOD UnquotePhraseOrAddr (const char *line, char** lineout) = 0;
 	NS_IMETHOD UnquotePhraseOrAddr_Intl (PRInt16 csid, const char *line, char** lineout) = 0;
 
- }; 
+}; 
 
 #endif /* nsIMSGRFC822PARSER_h__ */
 

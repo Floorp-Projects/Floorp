@@ -28,6 +28,8 @@
 
 class nsIStreamConverter : public nsIStreamListener { 
 public: 
+  static const nsIID& IID() { static nsIID iid = NS_ISTREAM_CONVERTER_IID; return iid; }
+
     // 
     // This is the output stream where the stream converter will write processed data after 
     // conversion. 

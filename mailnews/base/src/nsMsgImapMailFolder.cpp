@@ -20,6 +20,7 @@
 
 #include "nsMsgImapMailFolder.h"	 
 #include "nsMsgFolderFlags.h"
+#include "nsISupportsArray.h"
 #include "prprf.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -27,8 +28,8 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsMsgImapMailFolder::nsMsgImapMailFolder(const char* uri)
-:nsMsgFolder(uri)
+nsMsgImapMailFolder::nsMsgImapMailFolder(const char* uri, nsString& name)
+  : nsMsgFolder(uri, name)
 {
 	mHaveReadNameFromDB = PR_FALSE;
 	mPathName = nsnull;
@@ -116,19 +117,24 @@ nsMsgImapMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
 		if (NS_SUCCEEDED(supports->QueryInterface(kISupportsIID,
                                               (void**)&folder)))
 		{
-			char *folderName;
+			nsString folderName;
 
-			folder->GetName(&folderName);
+			folder->GetName(folderName);
       // IMAP INBOX is case insensitive
       if (/* XXX type == FOLDER_IMAPSERVERCONTAINER && */
-          !PL_strcasecmp(folderName, "INBOX"))
+          !folderName.EqualsIgnoreCase("INBOX")
+          //          !PL_strcasecmp(folderName, "INBOX")
+          )
       {
         NS_RELEASE(supports);
         continue;
       }
 
       // For IMAP, folder names are case sensitive
-      if (!PL_strcmp(folderName, name))
+      if (
+          !folderName.EqualsIgnoreCase(name)
+          //          !PL_strcmp(folderName, name)
+          )
       {
         *aChild = folder;
         return NS_OK;

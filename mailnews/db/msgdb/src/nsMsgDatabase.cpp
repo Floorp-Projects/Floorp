@@ -223,13 +223,25 @@ void nsMsgDatabase::DumpCache()
 }
 #endif /* DEBUG */
 
-nsMsgDatabase::nsMsgDatabase() : m_dbName("")
+nsMsgDatabase::nsMsgDatabase()
+    : m_dbFolderInfo(nsnull), m_mdbEnv(nsnull), m_mdbStore(nsnull),
+      m_mdbAllMsgHeadersTable(nsnull), m_dbName(""), m_newSet(nsnull),
+      mRefCnt(0), m_mdbTokensInitialized(PR_FALSE),
+      m_hdrRowScopeToken(0),
+      m_hdrTableKindToken(0),
+      m_subjectColumnToken(0),
+      m_senderColumnToken(0),
+      m_messageIdColumnToken(0),
+      m_referencesColumnToken(0),
+      m_recipientsColumnToken(0),
+      m_dateColumnToken(0),
+      m_messageSizeColumnToken(0),
+      m_flagsColumnToken(0),
+      m_priorityColumnToken(0),
+      m_statusOffsetColumnToken(0),
+      m_numLinesColumnToken(0),
+      m_ccListColumnToken(0)
 {
-	m_mdbEnv = NULL;
-	m_mdbStore = NULL;
-	m_mdbAllMsgHeadersTable = NULL;
-	m_mdbTokensInitialized = FALSE;
-	m_dbFolderInfo = NULL;
 }
 
 nsMsgDatabase::~nsMsgDatabase()

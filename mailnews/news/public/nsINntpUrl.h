@@ -41,10 +41,8 @@
 class nsINntpUrl : public nsIURL
 {
 public:
- static const nsIID& IID() {
-    static nsIID iid = NS_INNTPURL_IID;
-    return iid;
-  }
+    static const nsIID& IID() { static nsIID iid = NS_INNTPURL_IID; return iid; }
+
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the news specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////

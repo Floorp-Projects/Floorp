@@ -28,6 +28,7 @@ class nsMsgKeyArray;
 class MSG_Master;
 class MSG_FolderInfo;
 class nsIOFileStream;
+class nsFilePath;
 
 // this is the version number for the mail db. If the file format changes, we 
 // just reparse the mail folder. 
@@ -36,7 +37,7 @@ const int kMailDBVersion = 1;
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
-			nsMailDatabase();
+			nsMailDatabase(nsFilePath& folder);
 	virtual ~nsMailDatabase();
 	static nsresult			Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
 									PRBool upgrading = PR_FALSE);
@@ -79,10 +80,10 @@ protected:
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);
 
-	MSG_Master					*m_master;
-	PRBool						m_reparse;
-	nsFilePath					m_folderName;
-	nsIOFileStream				*m_folderStream; 	/* this is a cache for loops which want file left open */
+	MSG_Master				*m_master;
+	PRBool					m_reparse;
+	nsFilePath				m_folderName;
+	nsIOFileStream			*m_folderStream; 	/* this is a cache for loops which want file left open */
 };
 
 #endif

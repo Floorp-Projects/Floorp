@@ -34,6 +34,7 @@ EXPORTS =                                       \
 			nsMsgMessageFlags.h     \
 			nsIMsgHost.h            \
 			nsIMsgGroupRecord.h     \
+			nsIFolder.h             \
 			nsIMsgFolder.h          \
 			nsIMsgRDFFolder.h       \
 			nsIMsgMailNewsUrl.h		\

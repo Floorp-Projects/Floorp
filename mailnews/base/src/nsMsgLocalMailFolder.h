@@ -39,7 +39,7 @@ public:
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
   // nsICollection methods:
-  NS_IMETHOD Enumerate(nsIEnumerator* *result);
+  NS_IMETHOD GetElements(nsIEnumerator* *result);
 
   // nsIFolder methods:
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);

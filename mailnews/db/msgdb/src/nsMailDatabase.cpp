@@ -22,11 +22,11 @@
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsFileStream.h"
 #include "nsLocalFolderSummarySpec.h"
+#include "nsFileSpec.h"
 
-nsMailDatabase::nsMailDatabase()
-: m_folderName("")
+nsMailDatabase::nsMailDatabase(nsFilePath& folder)
+    : m_master(nsnull), m_reparse(PR_FALSE), m_folderName(folder), m_folderStream(nsnull)
 {
-	m_folderStream = NULL;
 }
 
 nsMailDatabase::~nsMailDatabase()
@@ -34,8 +34,9 @@ nsMailDatabase::~nsMailDatabase()
 }
 
 
+
 /* static */ nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB,
-					 PRBool upgrading /*=PR_FALSE*/)
+                                             PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
 	int				statResult;
@@ -44,10 +45,6 @@ nsMailDatabase::~nsMailDatabase()
 	nsLocalFolderSummarySpec	summarySpec(dbName);
 
 	nsDBFolderInfo	*folderInfo = NULL;
-
-// OK, dbName is probably folder name, since I can't figure out how nsFilePath interacts
-// with xpFileTypes and its related routines.
-	char *folderName = dbName;
 
 	*pMessageDB = NULL;
 
@@ -63,14 +60,11 @@ nsMailDatabase::~nsMailDatabase()
 	if (stat ((const char *) summarySpec, &st) && create)
 		newFile = PR_TRUE;
 
-
-	mailDB = new nsMailDatabase;
+	mailDB = new nsMailDatabase(dbName);
 
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
 	
-	mailDB->m_folderName = PL_strdup(folderName);
-
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
@@ -416,7 +410,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFilePath &folderName, int num, int
 	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
 	if (pMessageDB == NULL)
 	{
-		pMessageDB = new nsMailDatabase;
+		pMessageDB = new nsMailDatabase(summaryPath);
 		// ### this does later stuff (marks latered messages unread), which may be a problem
 		err = pMessageDB->OpenMDB(summaryPath, FALSE);
 		if (err != NS_OK)

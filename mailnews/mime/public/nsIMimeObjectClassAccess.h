@@ -34,6 +34,8 @@
 
 class nsIMimeObjectClassAccess : public nsISupports {
 public: 
+  static const nsIID& IID() { static nsIID iid = NS_IMIME_OBJECT_CLASS_ACCESS_IID; return iid; }
+
   // These methods are all implemented by libmime to be used by 
   // content type handler plugins for processing stream data. 
 

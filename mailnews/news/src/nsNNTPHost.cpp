@@ -36,6 +36,8 @@
 #include "nsNNTPNewsgroup.h"
 
 #include "nsIMsgFolder.h"
+#include "nsISupportsArray.h"
+#include "nsIEnumerator.h"
 
 /* for XP_FilePerm */
 #include "xp_file.h"
@@ -283,7 +285,6 @@ private:
 	// must be free'd using delete[].
 	char* GetPrettyName(const char* groupname);
 	NS_IMETHOD SetPrettyName(const char* groupname, const char* prettyname);
-
 
 	time_t GetAddTime(const char* groupname);
 
@@ -782,7 +783,8 @@ nsNNTPHost::ProcessLine(char* line, PRUint32 line_size)
         
         nsIMsgFolder *folder = getFolderFor(info);
         if (folder) {
-            m_hostinfo->AddSubFolder(folder);
+            //            m_hostinfo->AddSubFolder(folder);
+            m_hostinfo->AppendElement(folder);
             NS_RELEASE(folder);
         }
         
@@ -1704,7 +1706,8 @@ nsNNTPHost::AddGroup(const char *groupName,
 		if (NS_SUCCEEDED(rv) && !subscribed) {
 			newsInfo->SetSubscribed(PR_TRUE);
             nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
-            m_hostinfo->AddSubfolderIfUnique(newsFolder);
+            //            m_hostinfo->AddSubfolderIfUnique(newsFolder);
+            m_hostinfo->AppendElement(newsFolder);
             /*
             nsISupportsArray* infolist;
             nsresult rv = m_hostinfo->GetSubFolders(&infolist);
@@ -1844,7 +1847,7 @@ nsNNTPHost::SwitchNewsToCategoryContainer(nsINNTPNewsgroup *newsInfo)
         if (newsFolder) {
             nsIMsgFolder *catContFolder = getFolderFor(newCatCont);
             if (catContFolder) {
-                m_hostinfo->ReplaceSubfolder(newsFolder, catContFolder);
+                m_hostinfo->ReplaceElement(newsFolder, catContFolder);
                 NS_RELEASE(catContFolder);
             }
             NS_RELEASE(newsFolder);
@@ -1883,7 +1886,7 @@ nsNNTPHost::SwitchCategoryContainerToNews(nsINNTPCategoryContainer*
         if (catContFolder) {
             nsIMsgFolder *rootFolder = getFolderFor(rootCategory);
             if (rootFolder) {
-                m_hostinfo->ReplaceSubfolder(catContFolder, rootFolder);
+                m_hostinfo->ReplaceElement(catContFolder, rootFolder);
                 NS_RELEASE(rootFolder);
             }
             NS_RELEASE(catContFolder);
@@ -1916,7 +1919,7 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
 #endif
         nsIMsgFolder* newsFolder = getFolderFor((nsINNTPNewsgroup*)newsInfo);
         if (newsFolder) {
-            m_hostinfo->RemoveSubFolder(newsFolder);
+            m_hostinfo->RemoveElement(newsFolder);
             NS_RELEASE(newsFolder);
         }
         /*
@@ -2951,7 +2954,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
                     nsIMsgFolder* parentCategory;
                     rv = catFolder->FindParentOf(newsFolder,&parentCategory);
                     if (NS_SUCCEEDED(rv)) {
-                        parentCategory->RemoveSubFolder(newsFolder);
+                        parentCategory->RemoveElement(newsFolder);
                         NS_RELEASE(parentCategory);
                     }
                     NS_RELEASE(catFolder);
@@ -2967,7 +2970,7 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 
 		if (newsInfo)
 		{
-            m_hostinfo->RemoveSubFolder(newsFolder);
+            m_hostinfo->RemoveElement(newsFolder);
             /*
             nsISupportsArray* infolist;
             nsresult rv = m_hostinfo->GetSubFolders(&infolist);
@@ -2983,13 +2986,13 @@ nsNNTPHost::GroupNotFound(const char *groupName, PRBool opening)
 }
 
 
-int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx)
+int nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupToMoveBefore, PRInt32 *newIdx)
 {
 	// Do the list maintenance to reorder a newsgroup. The news host has a list, and
 	// so does the FolderInfo which represents the host in the hierarchy tree
 
 	int err = MK_MSG_CANT_MOVE_FOLDER;
-    nsISupportsArray *infoList=NULL;
+    nsIEnumerator *infoList=NULL;
 	nsresult rv = m_hostinfo->GetSubFolders(&infoList);
 
 	if (NS_SUCCEEDED(rv) && groupToMove && groupToMoveBefore && infoList)
@@ -3002,18 +3005,24 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 			// Unsubscribed groups are in the lists, but not in the view
 			nsIMsgFolder *group = NULL;
 			int idxInView, idxInData;
-			int idxInHostInfo = 0;
+            int idxInHostInfo = 0;
+            infoList->First();
 			PRBool	foundIdxInHostInfo = PR_FALSE;
 
-			for (idxInData = 0, idxInView = -1; idxInData < m_groups->Count(); idxInData++)
+			for (idxInData = 0, idxInView = -1; idxInData < (PRInt32)m_groups->Count(); idxInData++)
 			{
 				group = (nsIMsgFolder*)(*m_groups)[idxInData];
-                nsISupports *hostInfoSupports =
-                    infoList->ElementAt(idxInHostInfo);
+
+                nsIMsgFolder *groupInHostInfo;
+                (void)infoList->CurrentItem((nsISupports**)&groupInHostInfo);
+#if 0
+                nsISupports *hostInfoSupports;
+                (void)infoList->CurrentItem(&hostInfoSupports);
                 
 				nsIMsgFolder *groupInHostInfo=NULL;
                 rv = hostInfoSupports->QueryInterface(::nsISupports::IID(),
                                                       (void **)&groupInHostInfo);
+#endif
 #ifdef HAVE_PANE
 				if (group->CanBeInFolderPane())
 					idxInView++;
@@ -3023,11 +3032,14 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
 					break;
 				if (groupInHostInfo == folderToMoveBefore)
 					foundIdxInHostInfo = PR_TRUE;
-				else if (!foundIdxInHostInfo)
+				else if (!foundIdxInHostInfo) {
 					idxInHostInfo++;
+                    infoList->Next();
+                }
                 NS_RELEASE(groupInHostInfo);
+#if 0
                 NS_RELEASE(hostInfoSupports);
-
+#endif
 			} 
 
 			if (idxInView != -1) 
@@ -3036,7 +3048,7 @@ int nsNNTPHost::ReorderGroup (nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *g
                 nsISupports* groupSupports;
                 groupToMove->QueryInterface(::nsISupports::IID(),
                                             (void **)&groupSupports);
-				infoList->InsertElementAt (groupSupports, idxInHostInfo);
+//XXX				infoList->InsertElementAt(groupSupports, idxInHostInfo);
                 NS_RELEASE(groupSupports);
 
 				MarkDirty (); // Make sure the newsrc gets written out in the new order
