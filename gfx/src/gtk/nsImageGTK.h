@@ -38,26 +38,34 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetBytesPix()       { return 0; }  // XXXX this need to be filled in
-  virtual PRInt32     GetHeight()         { return mHeight; }
-  virtual PRInt32     GetWidth()          { return mWidth; }
-  virtual PRUint8*    GetBits()           { return mImageBits; }
-  virtual void*       GetBitInfo()        { return nsnull; }
-  virtual PRInt32     GetLineStride()     { return mRowBytes; }
-  virtual nsColorMap* GetColorMap()       { return nsnull; }
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+  virtual PRInt32     GetBytesPix();
+  virtual PRInt32     GetHeight();
+  virtual PRInt32     GetWidth();
+  virtual PRUint8*    GetBits();
+  virtual void*       GetBitInfo();
+  virtual PRInt32     GetLineStride();
+  virtual nsColorMap* GetColorMap();
+  NS_IMETHOD Draw(nsIRenderingContext &aContext,
+                  nsDrawingSurface aSurface,
+                  PRInt32 aX, PRInt32 aY,
+                  PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD Draw(nsIRenderingContext &aContext,
+                  nsDrawingSurface aSurface,
+                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
-  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
-  virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return PR_TRUE; }
+  virtual void ImageUpdated(nsIDeviceContext *aContext,
+                            PRUint8 aFlags, nsRect *aUpdateRect);
+  virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight,
+                           PRInt32 aDepth,
+                           nsMaskRequirements aMaskRequirements);
+  virtual PRBool      IsOptimized();
 
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
-  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaWidth()     { return mAlphaWidth; }
-  virtual PRInt32     GetAlphaHeight()    { return mAlphaHeight; }
-  virtual PRInt32     GetAlphaLineStride(){ return mAlphaRowBytes; }
-  virtual nsIImage*   DuplicateImage() {return(nsnull);}
+  virtual PRUint8*    GetAlphaBits();
+  virtual PRInt32     GetAlphaWidth();
+  virtual PRInt32     GetAlphaHeight();
+  virtual PRInt32     GetAlphaLineStride();
+  virtual nsIImage*   DuplicateImage();
 
   /**
    * Calculate the number of bytes spaned for this image for a given width
@@ -65,9 +73,9 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
-  virtual void  SetAlphaLevel(PRInt32 /* aAlphaLevel */) {}
-  virtual PRInt32 GetAlphaLevel() {return(0);}
-  virtual void  MoveAlphaMask(PRInt32 /* aX */, PRInt32 /* aY */) {}
+  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
+  virtual PRInt32 GetAlphaLevel();
+  virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 
 private:
   /**
@@ -75,7 +83,6 @@ private:
    */
   void ComputMetrics();
   void ComputePaletteSize(PRIntn nBitCount);
-
 
 private:
   PRInt32    mWidth;
@@ -86,9 +93,9 @@ private:
   PRUint8    *mConvertedBits;
   PRInt32    mSizeImage;
 
-  PRInt8      mNumBytesPixel;
+  PRInt8     mNumBytesPixel;
 
- // alpha layer members
+  // alpha layer members
   PRUint8    *mAlphaBits;
   GdkPixmap  *mAlphaPixmap;
   PRInt8     mAlphaDepth;        // alpha layer depth
@@ -96,8 +103,6 @@ private:
   PRInt16    mAlphaWidth;        // alpha layer width
   PRInt16    mAlphaHeight;       // alpha layer height
   nsPoint    mLocation;          // alpha mask location
-
-
 };
 
 #endif
