@@ -106,7 +106,6 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = style->klass->ythickness;
         break;
     case eMetric_Widget3DBorder:
-// XXX look into this
         aMetric = 4;
         break;
     case eMetric_TextFieldHeight:
@@ -129,7 +128,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_TextHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 0;
         break;
     case eMetric_TextShouldUseHorizontalInsideMinimumPadding:
         aMetric = 0;
@@ -147,16 +146,16 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 12;
         break;
     case eMetric_ListShouldUseHorizontalInsideMinimumPadding:
-        aMetric = 0;
+        aMetric = 15;
         break;
     case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 15;
         break;
     case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     default:
         aMetric = -1;

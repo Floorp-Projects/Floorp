@@ -708,8 +708,9 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 
   GdkWindow *win = (GdkWindow *)widget->GetNativeData(NS_NATIVE_WINDOW);
   gdk_window_get_pointer(win, &sevent.point.x, &sevent.point.y, nsnull);
+
 #ifdef NS_GTK_REF
-  gdk_window_unref(win);
+  widget->ReleaseNativeData(NS_NATIVE_WINDOW);
 #endif
 
   widget->OnScroll(sevent, adj->value);
