@@ -694,7 +694,8 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				}
 				else if (strcmp(pcmd, "Msg") ==0)
 				{
-					int rv = AfxMessageBox(parms,MB_OK);
+					CString message = replaceVars(parms,NULL);
+					int rv = AfxMessageBox(message,MB_OK);
 				}
 				else if (strcmp(pcmd, "Message") ==0)
 				{
