@@ -201,7 +201,7 @@ FindDataSource::FindDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
 		gRDFService->GetResource(NC_NAMESPACE_URI "FindObject",  &kNC_FindObject);
-		gRDFService->GetResource(NC_NAMESPACE_URI "FindObject",  &kNC_pulse);
+		gRDFService->GetResource(NC_NAMESPACE_URI "pulse",       &kNC_pulse);
 
 		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
