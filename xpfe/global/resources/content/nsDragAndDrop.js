@@ -108,9 +108,9 @@ var nsDragAndDrop = {
                                  .createInstance(Components.interfaces.nsISupportsArray);
 
       var region = null;
-      if (aEvent.target.localName == "outliner") {
+      if (aEvent.originalTarget.localName == "outlinerchildren") {
         // let's build the drag region
-        var outliner = aEvent.target;
+        var outliner = aEvent.originalTarget.parentNode;
         try {
           region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
           region.init();
