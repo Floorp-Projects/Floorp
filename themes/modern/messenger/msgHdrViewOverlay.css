@@ -80,7 +80,6 @@ text.subjectvalue {
 text.headerdisplayname {
   margin-right: .5em;
   margin-left: .5em;
-  max-height: 16px;
   min-height: 16px;
   font-weight: bold;
 }
@@ -94,7 +93,6 @@ mail-emailaddress {
 
 .emailDisplayButton {
   cursor: pointer;
-  max-height: 16px;
   min-height: 16px;
   color: blue;
   text-decoration: underline;
@@ -103,6 +101,7 @@ mail-emailaddress {
 .emailDisplayImage {
   text-align: right;
 }
+
 
 /* ::::: email address twisty ::::: */
 
@@ -162,7 +161,6 @@ mail-emailaddress {
 text.collapsedHeaderDisplayName { 
   font-weight: bold; 
   margin-left: .7em;
-  max-height: 16px;
   min-height: 16px;
 }
 
