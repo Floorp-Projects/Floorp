@@ -52,13 +52,34 @@ class nsIDocumentEncoder : public nsISupports
 public:
 
   /**
-   * Output methods flag bits:
+   * Output methods flag bits.
+   *
+   * There are a frightening number of these,
+   * because everyone wants something a little bit different!
+   *
+   * These should move to an idl file so that Javascript can
+   * have access to the symbols, not just the constants.
    */
   enum {
+    // Output only the selection.
     OutputSelectionOnly = 1,
+
+    // Convert html to plaintext that looks like the html.
+    // Implies wrap (except inside <pre>), since html wraps.
     OutputFormatted     = 2,
+
+    // Don't output the html doctype and gecko output system comment headers
     OutputNoDoctype     = 4,
-    OutputBodyOnly      = 8
+
+    // No html head tags
+    OutputBodyOnly      = 8,
+
+    // Wrap even if we're not doing formatted output (e.g. for text fields)
+    OutputPreformatted  = 16,
+
+    // Output as though the content is preformatted
+    // (e.g. maybe it's wrapped in a MOZ_PRE or MOZ_PRE_WRAP style tag)
+    OutputWrap          = 32
   };
   
   static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
