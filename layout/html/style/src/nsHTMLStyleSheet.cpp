@@ -48,6 +48,8 @@
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
+#include "nsToolboxFrame.h"
+#include "nsToolbarFrame.h"
 #endif
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
@@ -1849,6 +1851,14 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       rv = NS_NewTextControlFrame(aNewFrame);
 	else if (aTag == nsXULAtoms::widget)
 	  rv = NS_NewObjectFrame(aNewFrame);
+	else if (aTag == nsXULAtoms::toolbox) {
+	  processChildren = PR_TRUE;
+	  rv = NS_NewToolboxFrame(aNewFrame);
+	}
+	else if (aTag == nsXULAtoms::toolbar) {
+	  processChildren = PR_TRUE;
+	  rv = NS_NewToolbarFrame(aNewFrame);
+	}
   }
 
   // If we succeeded in creating a frame then initialize it, process its
