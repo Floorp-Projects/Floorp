@@ -3768,6 +3768,10 @@ nsEnderEventListener::Focus(nsIDOMEvent* aEvent)
     event.widget = nsnull;
     event.message = NS_FOCUS_CONTENT;
     event.flags = NS_EVENT_FLAG_INIT;
+    event.isShift = false;
+    event.isControl = false;
+    event.isAlt = false;
+    event.isMeta = false;
 
     nsIEventStateManager *manager=nsnull;
     result = mContext->GetEventStateManager(&manager);
@@ -3820,6 +3824,10 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
       event.widget = nsnull;
       event.message = NS_FORM_CHANGE;
       event.flags = NS_EVENT_FLAG_INIT;
+      event.isShift = false;
+      event.isControl = false;
+      event.isAlt = false;
+      event.isMeta = false;
 
       // Have the content handle the event.
       mContent->HandleDOMEvent(mContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
@@ -3837,6 +3845,10 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
     event.widget = nsnull;
     event.message = NS_BLUR_CONTENT;
     event.flags = NS_EVENT_FLAG_INIT;
+    event.isShift = false;
+    event.isControl = false;
+    event.isAlt = false;
+    event.isMeta = false;
     
     gfxFrame->SetShouldSetFocus();
 
