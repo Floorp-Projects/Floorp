@@ -146,7 +146,7 @@
     <command id="cmd_saveAsCharset" value="&saveAsCharsetCmd.label;" oncommand="goDoCommand('cmd_saveAsCharset')"/>
     <command id="cmd_revert"        value="&fileRevert.label;"       oncommand="goDoCommand('cmd_revert')"/>
     <command id="cmd_preview"                                        oncommand="goDoCommand('cmd_preview')"/>
-    <command id="cmd_editSendPage"    value="&sendPageCmd.label;"      oncommand="goDoCommand('cmd_editSendPage')"/>
+    <command id="cmd_editSendPage"  value="&sendPageCmd.label;"   accesskey="&sendPage.accesskey;"   oncommand="goDoCommand('cmd_editSendPage')"/>
   </commandset>
 
 
@@ -299,19 +299,16 @@
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
-      <menuseparator />
+      <menuseparator/>
       <menuitem value="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
-      <menuitem accesskey="&sendPage.accesskey;"       observes="cmd_editSendPage"/>
+      <!-- menuitem id="menu_SendPage" is merged here from mailEditorOverlay.xul,
+           where "position" is assumed to be 13. Change that value if menu position changes.      -->
       <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
       <menuitem accesskey="&fileprint.accesskey;"      observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator/>
       <!-- The Exit/Quit item is merged from platformGlobalOverlay.xul -->
     </menupopup>
   </menu>
-
-      <!-- FRAME, LINK should go here, but nav must put them in global files first -->
-      <!-- Editor needs a different menuItem and cmd node than other module's send page (we need to prompt for filesave) -->
-      <!-- The Exit (or Quit) menu item is added at bottom from globalOverlay -->
 
   <menu id="editMenu" value="&editMenu.label;" accesskey="&editmenu.accesskey;">
     <menupopup id="edEditMenuPopup" oncreate="EditorInitEditMenu()">
