@@ -632,6 +632,11 @@ case "$target" in
     else
        MKSHLIB_FORCE_ALL='-all'
        MKSHLIB_UNFORCE_ALL='-none'
+	   AR_LIST="$AR t"
+	   AR_EXTRACT="$AR x"
+	   AR_DELETE="$AR d"
+	   AR='$(CXX) -ar'
+	   AR_FLAGS='-o $@'
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262 -LANG:exceptions=OFF"
        if test -n "$USE_N32"; then
