@@ -1022,7 +1022,14 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
           px->GetDevUnitsToAppUnits(p2t);
 
-          mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
+          // XXX Check for 0 initial size. This is really indicative
+          // of a problem. 
+          if (0 == oldsizey) {
+            mOffsetY = 0;
+          }
+          else {
+            mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
+          }
 
           dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
 
@@ -1083,7 +1090,14 @@ NS_IMETHODIMP nsScrollingView :: ComputeContainerSize()
 
           px->GetDevUnitsToAppUnits(p2t);
 
-          mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
+          // XXX Check for 0 initial size. This is really indicative
+          // of a problem. 
+          if (0 == oldsizex) {
+            mOffsetX = 0;
+          }
+          else {
+            mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
+          }
 
           dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
 
