@@ -30,8 +30,20 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:09 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:11:57 $ $Name:  $"
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
 endif
+
+#
+#  Override TARGETS variable so that only static libraries
+#  are specifed as dependencies within rules.mk.
+#
+
+TARGETS        = $(LIBRARY)
+SHARED_LIBRARY =
+IMPORT_LIBRARY =
+PURE_LIBRARY   =
+PROGRAM        =
+
