@@ -781,12 +781,12 @@
          (return (lookup-qualified-variable e q (name :identifier))))))
     
     (rule :expression-qualified-identifier ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-      (production :expression-qualified-identifier (:parenthesized-expression \:\: :identifier) expression-qualified-identifier-identifier
+      (production :expression-qualified-identifier (:paren-expression \:\: :identifier) expression-qualified-identifier-identifier
         ((verify s)
-         ((verify :parenthesized-expression) s)
+         ((verify :paren-expression) s)
          (todo))
         ((eval e)
-         (const a object (read-reference ((eval :parenthesized-expression) e)))
+         (const a object (read-reference ((eval :paren-expression) e)))
          (rwhen (not-in a namespace :narrow-false) (throw type-error))
          (return (lookup-qualified-variable e a (name :identifier))))))
     
@@ -802,9 +802,9 @@
     
     (%subsection "Unit Expressions")
     (rule :unit-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-      (production :unit-expression (:parenthesized-list-expression) unit-expression-parenthesized-list-expression
-        (verify (verify :parenthesized-list-expression))
-        (eval (eval :parenthesized-list-expression)))
+      (production :unit-expression (:paren-list-expression) unit-expression-paren-list-expression
+        (verify (verify :paren-list-expression))
+        (eval (eval :paren-list-expression)))
       (production :unit-expression ($number :no-line-break $string) unit-expression-number-with-unit
         ((verify (s :unused)) (todo))
         ((eval (e :unused)) (todo)))
@@ -853,16 +853,16 @@
         ((eval (e :unused)) (todo))))
     (%print-actions)
     
-    (rule :parenthesized-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-      (production :parenthesized-expression (\( (:assignment-expression allow-in) \)) parenthesized-expression-assignment-expression
+    (rule :paren-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :paren-expression (\( (:assignment-expression allow-in) \)) paren-expression-assignment-expression
         (verify (verify :assignment-expression))
         (eval (eval :assignment-expression))))
     
-    (rule :parenthesized-list-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-      (production :parenthesized-list-expression (:parenthesized-expression) parenthesized-list-expression-parenthesized-expression
-        (verify (verify :parenthesized-expression))
-        (eval (eval :parenthesized-expression)))
-      (production :parenthesized-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) parenthesized-list-expression-list-expression
+    (rule :paren-list-expression ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+      (production :paren-list-expression (:paren-expression) paren-list-expression-paren-expression
+        (verify (verify :paren-expression))
+        (eval (eval :paren-expression)))
+      (production :paren-list-expression (\( (:list-expression allow-in) \, (:assignment-expression allow-in) \)) paren-list-expression-list-expression
         ((verify s)
          ((verify :list-expression) s)
          ((verify :assignment-expression) s))
@@ -890,7 +890,7 @@
     (production :field-name ($string) field-name-string)
     (production :field-name ($number) field-name-number)
     (? js2
-      (production :field-name (:parenthesized-expression) field-name-parenthesized-expression))
+      (production :field-name (:paren-expression) field-name-paren-expression))
     (%print-actions)
     
     
@@ -921,7 +921,7 @@
         ((eval (e :unused)) (todo))
         ((super e) (return (lexical-class e)))))
     
-    (production :full-super-expression (super :parenthesized-expression) full-super-expression-super-parenthesized-expression)
+    (production :full-super-expression (super :paren-expression) full-super-expression-super-paren-expression)
     (%print-actions)
     
     
@@ -988,8 +988,7 @@
     
     ;(rule :member-operator ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
     (production :member-operator (:dot-operator) member-operator-dot-operator)
-    (production :member-operator (\. class) member-operator-class)
-    (production :member-operator (\. :parenthesized-expression) member-operator-indirect)
+    (production :member-operator (\. :paren-expression) member-operator-indirect)
     
     ;(rule :dot-operator ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
     (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
@@ -1001,12 +1000,12 @@
     (production :brackets ([ :named-argument-list ]) brackets-named)
     
     ;(rule :arguments ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :arguments (:parenthesized-expressions) arguments-parenthesized-expressions)
+    (production :arguments (:paren-expressions) arguments-paren-expressions)
     (production :arguments (\( :named-argument-list \)) arguments-named)
     
-    ;(rule :parenthesized-expressions ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
-    (production :parenthesized-expressions (\( \)) parenthesized-expressions-none)
-    (production :parenthesized-expressions (:parenthesized-list-expression) parenthesized-expressions-some)
+    ;(rule :paren-expressions ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
+    (production :paren-expressions (\( \)) paren-expressions-none)
+    (production :paren-expressions (:paren-list-expression) paren-expressions-some)
     
     ;(rule :named-argument-list ((verify (-> (verify-env) void)) (eval (-> (dynamic-env) reference)))
     (production :named-argument-list (:literal-field) named-argument-list-one)
@@ -1610,9 +1609,9 @@
     (%section "Statements")
     
     (grammar-argument :omega
-                      abbrev              ;optional semicolon when followed by a '}', 'else', or 'while' in a do-while
-                      abbrev-no-short-if  ;optional semicolon, but statement must not end with an if without an else
-                      full)               ;semicolon required at the end
+                      abbrev       ;optional semicolon when followed by a '}', 'else', or 'while' in a do-while
+                      no-short-if  ;optional semicolon, but statement must not end with an if without an else
+                      full)        ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
     (rule (:statement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
@@ -1677,7 +1676,7 @@
     (production (:semicolon :omega) (\;) semicolon-semicolon)
     (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
     (production (:semicolon abbrev) () semicolon-abbrev)
-    (production (:semicolon abbrev-no-short-if) () semicolon-abbrev-no-short-if)
+    (production (:semicolon no-short-if) () semicolon-no-short-if)
     
     
     (%subsection "Empty Statement")
@@ -1748,37 +1747,37 @@
     
     (%subsection "If Statement")
     (rule (:if-statement :omega) ((verify (-> (verify-env) void)) (eval (-> (dynamic-env object) object)))
-      (production (:if-statement abbrev) (if :parenthesized-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
+      (production (:if-statement abbrev) (if :paren-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
         ((verify s)
-         ((verify :parenthesized-list-expression) s)
+         ((verify :paren-list-expression) s)
          ((verify :substatement) s))
         ((eval e d)
-         (if (to-boolean (read-reference ((eval :parenthesized-list-expression) e)))
+         (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement) e d))
            (return d))))
-      (production (:if-statement full) (if :parenthesized-list-expression (:substatement full)) if-statement-if-then-full
+      (production (:if-statement full) (if :paren-list-expression (:substatement full)) if-statement-if-then-full
         ((verify s)
-         ((verify :parenthesized-list-expression) s)
+         ((verify :paren-list-expression) s)
          ((verify :substatement) s))
         ((eval e d)
-         (if (to-boolean (read-reference ((eval :parenthesized-list-expression) e)))
+         (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement) e d))
            (return d))))
-      (production (:if-statement :omega) (if :parenthesized-list-expression (:substatement abbrev-no-short-if)
-                                             else (:substatement :omega)) if-statement-if-then-else
+      (production (:if-statement :omega) (if :paren-list-expression (:substatement no-short-if) else (:substatement :omega))
+                  if-statement-if-then-else
         ((verify s)
-         ((verify :parenthesized-list-expression) s)
+         ((verify :paren-list-expression) s)
          ((verify :substatement 1) s)
          ((verify :substatement 2) s))
         ((eval e d)
-         (if (to-boolean (read-reference ((eval :parenthesized-list-expression) e)))
+         (if (to-boolean (read-reference ((eval :paren-list-expression) e)))
            (return ((eval :substatement 1) e d))
            (return ((eval :substatement 2) e d))))))
     (%print-actions)
     
     
     (%subsection "Switch Statement")
-    (production :switch-statement (switch :parenthesized-list-expression { :case-statements }) switch-statement-cases)
+    (production :switch-statement (switch :paren-list-expression { :case-statements }) switch-statement-cases)
     
     (production :case-statements () case-statements-none)
     (production :case-statements (:case-label) case-statements-one)
@@ -1796,23 +1795,23 @@
     
     
     (%subsection "Do-While Statement")
-    (production :do-statement (do (:substatement abbrev) while :parenthesized-list-expression) do-statement-do-while)
+    (production :do-statement (do (:substatement abbrev) while :paren-list-expression) do-statement-do-while)
     (%print-actions)
     
     
     (%subsection "While Statement")
-    (production (:while-statement :omega) (while :parenthesized-list-expression (:substatement :omega)) while-statement-while)
+    (production (:while-statement :omega) (while :paren-list-expression (:substatement :omega)) while-statement-while)
     (%print-actions)
     
     
     (%subsection "For Statements")
-    (production (:for-statement :omega) (for \( :for-initializer \; :optional-expression \; :optional-expression \)
+    (production (:for-statement :omega) (for \( :for-initialiser \; :optional-expression \; :optional-expression \)
                                              (:substatement :omega)) for-statement-c-style)
     (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:substatement :omega)) for-statement-in)
     
-    (production :for-initializer () for-initializer-empty)
-    (production :for-initializer ((:list-expression no-in)) for-initializer-expression)
-    (production :for-initializer (:attributes :variable-definition-kind (:variable-binding-list no-in)) for-initializer-variable-definition)
+    (production :for-initialiser () for-initialiser-empty)
+    (production :for-initialiser ((:list-expression no-in)) for-initialiser-expression)
+    (production :for-initialiser (:attributes :variable-definition-kind (:variable-binding-list no-in)) for-initialiser-variable-definition)
     
     (production :for-in-binding (:postfix-expression) for-in-binding-expression)
     (production :for-in-binding (:attributes :variable-definition-kind (:variable-binding no-in)) for-in-binding-variable-definition)
@@ -1820,7 +1819,7 @@
     
     
     (%subsection "With Statement")
-    (production (:with-statement :omega) (with :parenthesized-list-expression (:substatement :omega)) with-statement-with)
+    (production (:with-statement :omega) (with :paren-list-expression (:substatement :omega)) with-statement-with)
     (%print-actions)
     
     
@@ -1930,7 +1929,7 @@
     
 
     (%subsection "Use Directive")
-    (production :use-directive (use namespace :parenthesized-list-expression :includes-excludes) use-directive-normal)
+    (production :use-directive (use namespace :paren-list-expression :includes-excludes) use-directive-normal)
     
     (production :includes-excludes () includes-excludes-none)
     (production :includes-excludes (\, exclude \( :name-patterns \)) includes-excludes-exclude-list)
@@ -1953,7 +1952,7 @@
     (production :qualified-wildcard-pattern (:qualified-identifier) qualified-wildcard-pattern-qualified-identifier)
     (production :qualified-wildcard-pattern (:wildcard-pattern) qualified-wildcard-pattern-wildcard-pattern)
     (production :qualified-wildcard-pattern (:qualifier \:\: :wildcard-pattern) qualified-wildcard-pattern-qualifier)
-    (production :qualified-wildcard-pattern (:parenthesized-expression \:\: :wildcard-pattern) qualified-wildcard-pattern-expression-qualifier)
+    (production :qualified-wildcard-pattern (:paren-expression \:\: :wildcard-pattern) qualified-wildcard-pattern-expression-qualifier)
     
     (production :wildcard-pattern (*) wildcard-pattern-all)
     (production :wildcard-pattern ($regular-expression) wildcard-pattern-regular-expression)
@@ -1962,7 +1961,7 @@
     
     (%subsection "Import Directive")
     (production :import-directive (import :import-binding :includes-excludes) import-directive-import)
-    (production :import-directive (import :import-binding \, namespace :parenthesized-list-expression :includes-excludes)
+    (production :import-directive (import :import-binding \, namespace :paren-list-expression :includes-excludes)
                 import-directive-import-namespaces)
     
     (production :import-binding (:import-source) import-binding-import-source)
@@ -1987,7 +1986,7 @@
     (production :pragma-item (:pragma-expr \?) pragma-item-optional-pragma-expr)
     
     (production :pragma-expr (:identifier) pragma-expr-identifier)
-    (production :pragma-expr (:identifier :parenthesized-list-expression) pragma-expr-identifier-and-arguments)
+    (production :pragma-expr (:identifier :paren-list-expression) pragma-expr-identifier-and-arguments)
     
     
     (%section "Definitions")
@@ -1998,7 +1997,7 @@
     (production :export-binding-list (:export-binding-list \, :export-binding) export-binding-list-more)
     
     (production :export-binding (:function-name) export-binding-simple)
-    (production :export-binding (:function-name = :function-name) export-binding-initializer)
+    (production :export-binding (:function-name = :function-name) export-binding-initialiser)
     
     
     (%subsection "Variable Definition")
@@ -2011,14 +2010,14 @@
     (production (:variable-binding-list :beta) ((:variable-binding-list :beta) \, (:variable-binding :beta)) variable-binding-list-more)
     
     (production (:variable-binding :beta) ((:typed-identifier :beta)) variable-binding-simple)
-    (production (:variable-binding :beta) ((:typed-identifier :beta) = (:variable-initializer :beta)) variable-binding-initialized)
+    (production (:variable-binding :beta) ((:typed-identifier :beta) = (:variable-initialiser :beta)) variable-binding-initialised)
     
-    (production (:variable-initializer :beta) ((:assignment-expression :beta)) variable-initializer-assignment-expression)
-    (production (:variable-initializer :beta) (:multiple-attributes) variable-initializer-multiple-attributes)
-    (production (:variable-initializer :beta) (abstract) variable-initializer-abstract)
-    (production (:variable-initializer :beta) (final) variable-initializer-final)
-    (production (:variable-initializer :beta) (private) variable-initializer-private)
-    (production (:variable-initializer :beta) (static) variable-initializer-static)
+    (production (:variable-initialiser :beta) ((:assignment-expression :beta)) variable-initialiser-assignment-expression)
+    (production (:variable-initialiser :beta) (:multiple-attributes) variable-initialiser-multiple-attributes)
+    (production (:variable-initialiser :beta) (abstract) variable-initialiser-abstract)
+    (production (:variable-initialiser :beta) (final) variable-initialiser-final)
+    (production (:variable-initialiser :beta) (private) variable-initialiser-private)
+    (production (:variable-initialiser :beta) (static) variable-initialiser-static)
     
     (production :multiple-attributes (:attribute :no-line-break :attribute) multiple-attributes-two)
     (production :multiple-attributes (:multiple-attributes :no-line-break :attribute) multiple-attributes-more)
@@ -2034,7 +2033,7 @@
     (production :untyped-variable-binding-list (:untyped-variable-binding-list \, :untyped-variable-binding) untyped-variable-binding-list-more)
     
     (production :untyped-variable-binding (:identifier) untyped-variable-binding-simple)
-    (production :untyped-variable-binding (:identifier = (:variable-initializer allow-in)) untyped-variable-binding-initialized)
+    (production :untyped-variable-binding (:identifier = (:variable-initialiser allow-in)) untyped-variable-binding-initialised)
     
     
     (%subsection "Function Definition")
@@ -2061,18 +2060,33 @@
     
     (production :optional-parameters (:optional-parameter) optional-parameters-optional-parameter)
     (production :optional-parameters (:optional-parameter \, :optional-parameters) optional-parameters-optional-parameter-and-more)
-    (production :optional-parameters (:rest-parameter) optional-parameters-rest-parameter)
+    (production :optional-parameters (:rest-and-named-parameters) optional-parameters-rest-and-named-parameters)
+    
+    (production :rest-and-named-parameters (:named-parameters) rest-and-named-parameters-named-parameters)
+    (production :rest-and-named-parameters (:rest-parameter) rest-and-named-parameters-rest-parameter)
+    (production :rest-and-named-parameters (:rest-parameter \, :named-parameters) rest-and-named-parameters-rest-and-named-parameters)
+    (production :rest-and-named-parameters (:named-rest-parameter) rest-and-named-parameters-named-rest-parameter)
+    
+    (production :named-parameters (:named-parameter) named-parameters-named-parameter)
+    (production :named-parameters (:named-parameter \, :named-parameters) named-parameters-named-parameter-and-more)
+    
+    (production :parameter ((:typed-identifier allow-in)) parameter-typed-identifier)
+    (production :parameter (const (:typed-identifier allow-in)) parameter-const-typed-identifier)
+    
+    (production :optional-parameter (:parameter = (:assignment-expression allow-in)) optional-parameter-assignment-expression)
+    
+    (production :typed-initialiser ((:typed-identifier allow-in) = (:assignment-expression allow-in)) typed-initialiser-assignment-expression)
+    
+    (production :named-parameter (named :typed-initialiser) named-parameter-named-typed-initialiser)
+    (production :named-parameter (const named :typed-initialiser) named-parameter-const-named-typed-initialiser)
+    (production :named-parameter (named const :typed-initialiser) named-parameter-named-const-typed-initialiser)
     
     (production :rest-parameter (\.\.\.) rest-parameter-none)
     (production :rest-parameter (\.\.\. :parameter) rest-parameter-parameter)
     
-    (production :parameter ((:typed-identifier allow-in)) parameter-typed-identifier)
-    (production :parameter (const (:typed-identifier allow-in)) parameter-const-typed-identifier)
-    (production :parameter (named (:typed-identifier allow-in)) parameter-named-typed-identifier)
-    (production :parameter (const named (:typed-identifier allow-in)) parameter-const-named-typed-identifier)
-    (production :parameter (named const (:typed-identifier allow-in)) parameter-named-const-typed-identifier)
-    
-    (production :optional-parameter (:parameter = (:assignment-expression allow-in)) optional-parameter-assignment-expression)
+    (production :named-rest-parameter (\.\.\. named :identifier) named-rest-parameter-named-identifier)
+    (production :named-rest-parameter (\.\.\. const named :identifier) named-rest-parameter-const-named-identifier)
+    (production :named-rest-parameter (\.\.\. named const :identifier) named-rest-parameter-named-const-identifier)
     
     (production :result-signature () result-signature-none)
     (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
