@@ -164,14 +164,14 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
         nsresult rv;
         NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
-        char* detector_name = nsnull;
+        PRUnichar* detector_name = nsnull;
         if(NS_SUCCEEDED(rv) && NS_SUCCEEDED(
-             rv = prefs->CopyCharPref("intl.charset.detector",
+             rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
                                      &detector_name)))
         {
 			if(nsCRT::strlen(detector_name) > 0) {
 				PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
-				PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
+				PL_strncat(g_detector_progid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_PROGID_MAX);
 				gPlugDetector = PR_TRUE;
 			} else {
 				g_detector_progid[0]=0;
@@ -757,13 +757,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_PROGID));
       if(pref)
       {
-        char* detector_name = nsnull;
+        PRUnichar* detector_name = nsnull;
         if(NS_SUCCEEDED(
-             rv_detect = pref->CopyCharPref("intl.charset.detector",
+             rv_detect = pref->GetLocalizedUnicharPref("intl.charset.detector",
                                  &detector_name)))
         {
           PL_strncpy(g_detector_progid, NS_CHARSET_DETECTOR_PROGID_BASE,DETECTOR_PROGID_MAX);
-          PL_strncat(g_detector_progid, detector_name,DETECTOR_PROGID_MAX);
+          PL_strncat(g_detector_progid, NS_ConvertUCS2toUTF8(detector_name),DETECTOR_PROGID_MAX);
           gPlugDetector = PR_TRUE;
           PR_FREEIF(detector_name);
         }
