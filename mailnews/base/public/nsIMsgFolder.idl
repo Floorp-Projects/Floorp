@@ -16,7 +16,6 @@
  * Reserved.
  */
  
-#include "nsISupportsArray.idl"
 #include "nsISupports.idl"
 #include "nsIFolder.idl"
 #include "nsIMessage.idl"
@@ -24,8 +23,11 @@
 
 %{ C++
 #include "nsFileSpec.h"
+#include "nsISupportsArray.h"
 %}
+interface nsISupportsArray;
 interface nsIMessage;
+
 native nsNativeFileSpec(nsNativeFileSpec*);
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]

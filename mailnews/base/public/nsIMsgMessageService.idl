@@ -19,9 +19,17 @@
  */
 
 #include "nsISupports.idl"
-interface nsIUrlListener;
+#include "nsIUrlListener.idl"
+
 interface nsIURL;
 interface nsIStreamListener;
+
+%{C++
+
+#include "nsIURL.h"
+#include "nsIStreamListener.h"
+    
+%}
 
 [uuid(F11009C1-F697-11d2-807F-006008128C4E)]
 interface nsIMsgMessageService : nsISupports {
