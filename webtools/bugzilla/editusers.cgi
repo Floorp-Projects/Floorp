@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#
+#                 Dave Miller <dave@intrec.com>
 #
 # Direct any questions on this source code to
 #
@@ -139,21 +139,56 @@ sub EmitFormElements ($$$$$$$)
     SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
             "       bit & $blessgroupset " .
             "FROM groups " .
-            "WHERE bit & $opblessgroupset != 0 " .
+            "WHERE bit & $opblessgroupset != 0 AND isbuggroup " .
             "ORDER BY name");
+    print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Group Access:</TH><TD><TABLE><TR>";
+    my $curgrouptype = 1;
+    if (MoreSQLData()) {
+        if ($editall) {
+          print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
+          print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+        }
+        print "<TD COLSPAN=2 ALIGN=LEFT><B>User is a member of these groups</B></TD>\n";
+    }
     while (MoreSQLData()) {
 	my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
 	print "</TR><TR>\n";
-	print "  <TH ALIGN=\"right\">", ucfirst($name), ":</TH>\n";
-	$checked = ($checked) ? "CHECKED" : "";
-	print "  <TD><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"> $description</TD>\n";
         if ($editall) {
-            print "</TR><TR>\n";
-            print "<TH></TH>";
-            $blchecked = ($blchecked) ? "CHECKED" : "";
-            print "<TD><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"> Can turn this bit on for other users</TD>\n";
+          $blchecked = ($blchecked) ? "CHECKED" : "";
+          print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
         }
+	$checked = ($checked) ? "CHECKED" : "";
+	print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+	print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
     }
+    print "</TR></TABLE></TD>\n";
+
+    SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+            "       bit & $blessgroupset " .
+            "FROM groups " .
+            "WHERE bit & $opblessgroupset != 0 AND !isbuggroup " .
+            "ORDER BY name");
+    print "</TR><TR><TH VALIGN=TOP ALIGN=RIGHT>Privileges:</TH><TD><TABLE><TR>";
+    my $curgrouptype = 1;
+    if (MoreSQLData()) {
+        if ($editall) {
+          print "<TD COLSPAN=3 ALIGN=LEFT><B>Can turn this bit on for other users</B></TD>\n";
+          print "</TR><TR>\n<TD ALIGN=CENTER><B>|</B></TD>\n";
+        }
+        print "<TD COLSPAN=2 ALIGN=LEFT><B>User has these priveleges</B></TD>\n";
+    }
+    while (MoreSQLData()) {
+	my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
+	print "</TR><TR>\n";
+        if ($editall) {
+          $blchecked = ($blchecked) ? "CHECKED" : "";
+          print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"></TD>";
+        }
+	$checked = ($checked) ? "CHECKED" : "";
+	print "<TD ALIGN=CENTER><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"></TD>";
+	print "<TD><B>" . ucfirst($name) . "</B>: $description</TD>\n";
+    }
+    print "</TR></TABLE></TD>\n";
 
 }
 
