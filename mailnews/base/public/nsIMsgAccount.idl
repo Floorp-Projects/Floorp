@@ -20,7 +20,6 @@
 #include "nsIMsgIncomingServer.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIEnumerator.idl"
-#include "nsIPref.idl"
 
 /* an account consists of an incoming server and one or more
    outgoing identities

@@ -11,7 +11,6 @@
 #include "nsIMsgIdentity.h" /* interface nsIMsgIdentity */
 #include "nsIMsgVCard.h" /* interface nsIMsgVCard */
 #include "nsIMsgAccount.h" /* interface nsIMsgAccount */
-#include "nsIPref.h" /* interface nsIPref */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
 #include "nsID.h" /* interface nsID */
 
