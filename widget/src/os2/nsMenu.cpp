@@ -139,3 +139,8 @@ nsresult nsMenu::SetLabel( const nsString &aText)
    mLabel = aText;
    return NS_OK;
 }
+
+NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
+{
+  return NS_OK;
+}

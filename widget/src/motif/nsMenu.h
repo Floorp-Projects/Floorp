@@ -78,6 +78,7 @@ public:
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
 
 protected:
   void LoadMenuItem(
