@@ -80,25 +80,12 @@ HRESULT CRange::GetParentElement(IHTMLElement **ppParent)
         domNode = parentNode;
     }
     // get or create com object:
-    CIEHtmlNode *pHtmlNode = NULL;
-    CIEHtmlElementInstance *pHtmlElement = NULL;
-    CIEHtmlElementInstance::FindFromDOMNode(domNode, &pHtmlNode);
-    if (!pHtmlNode)
-    {
-        CIEHtmlElementInstance::CreateInstance(&pHtmlElement);
-        if (!pHtmlElement)
-        {
-            NS_ASSERTION(0, "Could not create element");
-            return E_OUTOFMEMORY;
-        }
-        pHtmlElement->SetDOMNode(domNode);
-    }
-    else
-    {
-        pHtmlElement = (CIEHtmlElementInstance *) pHtmlNode;
-    }
-    // return com object:
-    pHtmlElement->QueryInterface(IID_IHTMLElement, (void **)ppParent);
+    CComPtr<IUnknown> pNode;
+    HRESULT hr = CIEHtmlDomNode::FindOrCreateFromDOMNode(domNode, &pNode);
+    if (FAILED(hr))
+        return hr;
+    if (FAILED(pNode->QueryInterface(IID_IHTMLElement, (void **)ppParent)))
+        return E_UNEXPECTED;
 
     return S_OK;
 }
@@ -118,7 +105,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlTxtRange::pasteHTML(BSTR html)
     nsCOMPtr<nsIDOMDocumentFragment> domDocFragment;
     nsAutoString nsStrHtml(OLE2W(html));
 
-    if (mRange->DeleteContents())
+    if (NS_FAILED(mRange->DeleteContents()))
         return E_FAIL;
     nsCOMPtr<nsIDOMNSRange> domNSRange = do_QueryInterface(mRange);
     if (!domNSRange)
@@ -142,7 +129,7 @@ HRESULT STDMETHODCALLTYPE CIEHtmlTxtRange::get_text(BSTR __RPC_FAR *p)
     mRange->ToString(strText);
     
     *p = SysAllocString(strText.get());
-    return p ? S_OK : E_OUTOFMEMORY;
+    return *p ? S_OK : E_OUTOFMEMORY;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlTxtRange::parentElement(IHTMLElement __RPC_FAR *__RPC_FAR *Parent)

@@ -46,7 +46,7 @@
 class CIEHtmlElement;
 
 class CIEHtmlElementCollection :
-    public CIEHtmlNode,
+    public CNode,
     public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
 private:
@@ -62,7 +62,7 @@ public:
 
 protected:
     virtual ~CIEHtmlElementCollection();
-    virtual HRESULT FindOrCreateIEElement(nsIDOMNode* pDomNode, CIEHtmlElement** ppIEHtmlElement);
+    virtual HRESULT FindOrCreateIEElement(nsIDOMNode* domNode, IHTMLElement** pIHtmlElement);
 
 public:
     // Adds a node to the collection
@@ -74,15 +74,15 @@ public:
     virtual HRESULT PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren);
 
     // Helper method creates a collection from a parent node
-    static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance);
+    static HRESULT CreateFromParentNode(CNode *pParentNode, BOOL bRecurseChildren, CIEHtmlElementCollection **pInstance);
 
     // Helper method creates a collection from the specified HTML collection
-    static HRESULT CreateFromDOMHTMLCollection(CIEHtmlNode *pParentNode, nsIDOMHTMLCollection *pNodeList, CIEHtmlElementCollection **pInstance);
+    static HRESULT CreateFromDOMHTMLCollection(CNode *pParentNode, nsIDOMHTMLCollection *pNodeList, CIEHtmlElementCollection **pInstance);
 
 
 BEGIN_COM_MAP(CIEHtmlElementCollection)
-    COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)
-    COM_INTERFACE_ENTRY_IID(IID_IHTMLElementCollection, IHTMLElementCollection)
+    COM_INTERFACE_ENTRY(IDispatch)
+    COM_INTERFACE_ENTRY(IHTMLElementCollection)
 END_COM_MAP()
 
     // IHTMLElementCollection methods

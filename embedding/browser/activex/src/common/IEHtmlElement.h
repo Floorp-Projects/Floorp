@@ -42,11 +42,16 @@
 #include "IEHtmlElementCollection.h"
 
 class CIEHtmlElement :
-    public CIEHtmlNode,
+    public CNode,
     public IDispatchImpl<IHTMLElement, &IID_IHTMLElement, &LIBID_MSHTML>
 {
 public:
+    DECLARE_AGGREGATABLE(CIEHtmlElement)
     CIEHtmlElement();
+    HRESULT FinalConstruct( );
+    void FinalRelease( );
+
+DECLARE_GET_CONTROLLING_UNKNOWN()
 
 protected:
     virtual ~CIEHtmlElement();
@@ -54,11 +59,15 @@ protected:
 public:
 
 BEGIN_COM_MAP(CIEHtmlElement)
-    COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElement)
-    COM_INTERFACE_ENTRY_IID(IID_IHTMLElement, IHTMLElement)
+    COM_INTERFACE_ENTRY2(IDispatch, IHTMLElement)
+    COM_INTERFACE_ENTRY(IHTMLElement)
+    COM_INTERFACE_ENTRY_AGGREGATE(IID_IHTMLDOMNode, m_pNodeAgg)
 END_COM_MAP()
 
     virtual HRESULT GetChildren(CIEHtmlElementCollectionInstance **ppCollection);
+    virtual HRESULT GetHtmlDomNode(CIEHtmlDomNode **ppHtmlDomNode);
+    virtual HRESULT SetDOMNode(nsIDOMNode *pDomNode);
+    virtual HRESULT SetParent(CNode *pParent);
 
     // Implementation of IHTMLElement
     virtual HRESULT STDMETHODCALLTYPE setAttribute(BSTR strAttributeName, VARIANT AttributeValue, LONG lFlags);
@@ -148,6 +157,9 @@ END_COM_MAP()
     virtual HRESULT STDMETHODCALLTYPE get_onfilterchange(VARIANT __RPC_FAR *p);
     virtual HRESULT STDMETHODCALLTYPE get_children(IDispatch __RPC_FAR *__RPC_FAR *p);
     virtual HRESULT STDMETHODCALLTYPE get_all(IDispatch __RPC_FAR *__RPC_FAR *p);
+    
+protected:
+    IUnknown* m_pNodeAgg;
 };
 
 #define CIEHTMLELEMENT_INTERFACES \

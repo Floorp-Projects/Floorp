@@ -46,7 +46,7 @@
 class CMozillaBrowser;
 
 class CIEHtmlDocument :
-    public CIEHtmlNode,
+    public CNode,
     public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML, 4, 0>,
     public IOleCommandTarget
 {
