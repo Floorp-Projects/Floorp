@@ -26,6 +26,9 @@
 #include "msgCore.h"
 #include "mimebuf.h"
 #include "nsMimeURLUtils.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 /* this function will be used by the factory to generate an RFC-822 Parser....*/
 nsresult NS_NewMimeURLUtils(nsIMimeURLUtils ** aInstancePtrResult)
@@ -333,6 +336,32 @@ nsMimeURLUtils::URLType(const char *URL, PRInt32  *retType)
 }
 
 PRBool
+GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
+{
+  PRInt32 len = PL_strlen(line);
+
+  if ( (len >= 3) && (!PL_strncasecmp(line, ":-)", 3)) )
+  {
+    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/smile.gif\" height=17 width=17 align=ABSCENTER>");
+    if (!(*outputHTML))
+      return PR_FALSE;
+    *glyphTextLen = 3;
+    return PR_TRUE;
+  }  
+  else if ( (len >= 3) && (!PL_strncasecmp(line, ":-(", 3)) )
+  {
+    *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/frown.gif\" height=17 width=17 align=ABSCENTER>");
+    if (!(*outputHTML))
+      return PR_FALSE;
+    *glyphTextLen = 3;
+    return PR_TRUE;
+  }
+
+ 
+  return PR_FALSE;
+}
+
+PRBool
 IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
 {
   if (!PL_strncasecmp(link, "www.", 4))
@@ -473,7 +502,16 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 		}
 	}
 
+  PRBool      do_glyph_substitution = PR_TRUE;
+  nsresult    rv;
+  
+  // See if we should get cute with text to glyph replacement
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs)
+    prefs->GetBoolPref("mail.do_glyph_substitution", &do_glyph_substitution);
+
   mailToTag = FindAmbitiousMailToTag(input);
+
   /* Normal lines are scanned for buried references to URL's
      Unfortunately, it may screw up once in a while (nobody's perfect)
    */
@@ -485,8 +523,19 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 		 this lets us match inside "---HTTP://XXX" but not inside of
 		 things like "NotHTTP://xxx"
 	   */
-	  int    type = 0;
-    PRBool ambitiousHit;
+	  int     type = 0;
+    PRBool  ambitiousHit;
+    char    *glyphHTML;
+    PRInt32 glyphTextLen;
+
+    if ((do_glyph_substitution) && GlyphHit(cp, &glyphHTML, &glyphTextLen))
+    {
+      PRInt32   size_available = output_size - (output_ptr-output);
+      PR_snprintf(output_ptr, size_available, glyphHTML);
+      output_ptr += PL_strlen(glyphHTML);
+      cp += glyphTextLen-1;
+      continue;
+    }
 
     ambitiousHit = PR_FALSE;
     if (mailToTag)
@@ -508,7 +557,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
 				  *cp2 == '<' || *cp2 == '>' ||
 				  *cp2 == '`' || *cp2 == ')' ||
 				  *cp2 == '\'' || *cp2 == '"' ||
-				  *cp2 == ']' || *cp2 == '}'
+				  /**cp2 == ']' || */ *cp2 == '}'
 				  )
 				break;
 			}
