@@ -20,8 +20,10 @@
  * Contributor(s): Robert John Churchill (rjc@netscape.com)
  */
 
-	var pref = null;
-	try
+//	var pref = null;
+//	document.getElementById("engineList").value = 0;
+
+/*	try
 	{
 		pref = Components.classes["@mozilla.org/preferences;1"];
 		if (pref)	pref = pref.getService();
@@ -33,6 +35,16 @@
 		pref = null;
 	}
 
+*/
+
+
+function checkEngine()
+{
+	var engineList = document.getElementById("engineList");
+	var engineValue = engineList.value;
+    if (!engineValue)
+		engineList.selectedIndex = 6;	
+}
 
 
 function InitSingleEngineList()
@@ -49,7 +61,9 @@ function InitSingleEngineList()
 	}
 	catch(ex)
 	{
+	dump("\ncatch");
 		defaultEngineURI = null;
+		document.getElementById("engineList").selectedIndex = 6;
 	}
 
 	if ((!defaultEngineURI) || (defaultEngineURI == ""))	return;
@@ -68,6 +82,8 @@ function InitSingleEngineList()
 		if (uri != defaultEngineURI)	continue;
 
 		engineList.selectedIndex = x;
+		dump("\n" + x);
+	    engineList.selectedItem = selectedItem;
 		break;
 	}
 }
