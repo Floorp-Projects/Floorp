@@ -525,6 +525,8 @@ titledbutton[default] {
 	/* border-color: black; */
 	font-weight: bold;
 	list-style-image: url("chrome://global/skin/return.gif");
+	/* FIX ME - temporary workaround to offset the lack of a way to align text and image */
+	padding-right: 2em;
 }
 
 titledbutton:active:-moz-outline {
