@@ -73,6 +73,7 @@ void testAttributes(nsIHTMLContent* content) {
 
   nsISupportsArray* allNames;
   NS_NewISupportsArray(&allNames);
+  if (nsnull == allNames) return;
 
   PRInt32 na;
   content->GetAttributeCount(na);
@@ -236,8 +237,13 @@ int main(int argc, char** argv)
 
   // Create test document.
   MyDocument *myDoc = new MyDocument();
+  if (myDoc) {
+    testStrings(myDoc);
+  } else {
+    printf("Out of memory trying to create document\n");
+    return -1;
+  }
 
-  testStrings(myDoc);
 
   // Create a new text content object.
   nsIContent *text;

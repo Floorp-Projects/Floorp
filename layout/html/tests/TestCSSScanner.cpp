@@ -75,7 +75,13 @@ int main(int argc, char** argv)
 
   // Create scanner and set it up to process the input file
   nsCSSScanner* css = new nsCSSScanner();
+  if (nsnull == css) {
+    printf("Out of memory allocating nsCSSScanner\n");
+    return -1;
+  }
+
   css->Init(uin);
+  
 
   // Scan the file and dump out the tokens
   nsCSSToken tok;
