@@ -281,7 +281,10 @@ PRMJ_Now(void)
 #endif
 
 #ifdef XP_UNIX
-#if defined(SOLARIS)
+/* The following line used to be ifdef SOLARIS, which seems to be required
+   to build on some SOLARIS platforms, but on others it causes duplicate
+   function declaration errors.  mccabe will have to investigate further. */
+#if 0
     gettimeofday(&tv);
 #else
     gettimeofday(&tv, 0);
