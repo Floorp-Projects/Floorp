@@ -1823,7 +1823,7 @@ var nsRevertCommand =
       // Reload page if first button (Revert) was pressed
       if(result == 0)
       {
-        FinishHTMLSource();
+        SetEditMode(PreviousNonSourceDisplayMode);
         window.editorShell.LoadUrl(GetDocumentUrl());
       }
     }
@@ -2002,12 +2002,14 @@ var nsQuitCommand =
     return true;    // we can always do this
   },
 
+  /* The doCommand is not used, since cmd_quit's oncommand="goQuitApplication()" in platformCommunicatorOverlay.xul
   doCommand: function(aCommand)
   {
     // In editor.js
     FinishHTMLSource();
     goQuitApplication();
   }
+  */
 };
 
 //-----------------------------------------------------------------------------------
@@ -2763,6 +2765,7 @@ var nsNormalModeCommand =
   },
   doCommand: function(aCommand)
   {
+    FinishHTMLSource();
     if (gEditorDisplayMode != DisplayModeNormal)
       SetEditMode(DisplayModeNormal);
   }
@@ -2776,6 +2779,7 @@ var nsAllTagsModeCommand =
   },
   doCommand: function(aCommand)
   {
+    FinishHTMLSource();
     if (gEditorDisplayMode != DisplayModeAllTags)
       SetEditMode(DisplayModeAllTags);
   }

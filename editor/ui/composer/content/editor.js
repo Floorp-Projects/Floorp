@@ -606,8 +606,11 @@ function CheckAndSaveDocument(command, allowDontSave)
   if (result == 0)
   {
     // Save, but first finish HTML source mode
-    if (gHTMLSourceChanged)
-      FinishHTMLSource();
+    if (gHTMLSourceChanged) {
+      try {
+        FinishHTMLSource();
+      } catch (e) { return false;}
+    }
 
     if (doPublish)
     {
@@ -1634,6 +1637,35 @@ function CancelHTMLSource()
 
 function FinishHTMLSource()
 {
+  //Here we need to check whether the HTML source contains <head> and <body> tags
+  //Or RebuildDocumentFromSource() will fail.
+  if (IsInHTMLSourceMode())
+  {
+    var htmlSource = gSourceContentWindow.value;
+    if (htmlSource.length > 0)
+    {
+      var beginHead = htmlSource.indexOf("<head");
+      if (beginHead == -1)
+      {
+        AlertWithTitle(GetString("Alert"), GetString("NoHeadTag"));
+        //cheat to force back to Source Mode
+        gEditorDisplayMode = DisplayModePreview;
+        SetDisplayMode(DisplayModeSource);
+        throw Components.results.NS_ERROR_FAILURE;
+      }
+
+      var beginBody = htmlSource.indexOf("<body");
+      if (beginBody == -1)
+      {
+        AlertWithTitle(GetString("Alert"), GetString("NoBodyTag"));
+        //cheat to force back to Source Mode
+        gEditorDisplayMode = DisplayModePreview;
+        SetDisplayMode(DisplayModeSource);
+        throw Components.results.NS_ERROR_FAILURE;
+      }
+    }
+  }
+
   // Switch edit modes -- converts source back into DOM document
   SetEditMode(PreviousNonSourceDisplayMode);
 }
