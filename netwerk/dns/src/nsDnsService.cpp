@@ -90,7 +90,7 @@ public:
     nsresult            FinishHostEntry(void);
     nsresult            CallOnFound(void);
     const char *        HostName(void)  { return mHostName; }
-    nsresult            InitiateDNSLookup(nsDNSService * dnsService);
+    nsresult            InitiateDNSLookup(void);
 
 protected:
     // Input when creating a nsDNSLookup
@@ -274,14 +274,14 @@ nsDNSLookup::CallOnFound(void)
 
 
 nsresult
-nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
+nsDNSLookup::InitiateDNSLookup(void)
 {
 	nsresult rv = NS_OK;
 	
 #if defined(XP_MAC)
 	OSErr   err;
 	
-    err = OTInetStringToAddress(dnsService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
+    err = OTInetStringToAddress(gService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
     if (err != noErr)
         rv = NS_ERROR_UNEXPECTED;
 #endif /* XP_MAC */
@@ -290,8 +290,8 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
     mMsgID = gService->AllocMsgID();
     if (mMsgID == 0)
         return NS_ERROR_UNEXPECTED;
-
-    mLookupHandle = WSAAsyncGetHostByName(dnsService->mDNSWindow, mMsgID,
+	PR_Lock(gService->mThreadLock);  // protect against lookup completing before WSAAsyncGetHostByName returns, better to refcount lookup
+    mLookupHandle = WSAAsyncGetHostByName(gService->mDNSWindow, mMsgID,
                                           mHostName, (char *)&mHostEntry.hostEnt, PR_NETDB_BUF_SIZE);
     // check for error conditions
     if (mLookupHandle == nsnull) {
@@ -304,6 +304,7 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
 		// the first two calls made to WSAAsyncGetHostByName), to avoid using the handle on
 		// those systems.  For more info, see bug 23709.
     }
+	PR_Unlock(gService->mThreadLock);
 #endif /* XP_PC */
 
 #ifdef XP_UNIX
@@ -315,7 +316,8 @@ nsDNSLookup::InitiateDNSLookup(nsDNSService * dnsService)
     mResult = rv;
 
     CallOnFound();
-    delete this;
+	if (PR_SUCCESS == status)
+	    delete this;	// nsDNSLookup deleted by nsDNSService::Lookup() in failure case
 #endif /* XP_UNIX */
 
     return rv;
@@ -358,9 +360,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     LRESULT result = nsnull;
     int     error = nsnull;
 
-    nsDNSService *  dnsService = (nsDNSService *)GetWindowLong(hWnd, GWL_USERDATA);
-
- 	if ((dnsService != nsnull) && (uMsg >= WM_USER) && (uMsg < WM_USER+128)) {
+ 	if ((uMsg >= WM_USER) && (uMsg < WM_USER+128)) {
         // dns lookup complete - get error code
         error = WSAGETASYNCERROR(lParam);
         
@@ -370,10 +370,10 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PRBool        rv;
         
 		// find matching lookup element
-		PR_Lock(dnsService->mThreadLock);	// so we don't collide with thread calling Lookup()
-		index = dnsService->mCompletionQueue.Count();
+		PR_Lock(gService->mThreadLock);	// so we don't collide with thread calling Lookup()
+		index = gService->mCompletionQueue.Count();
 		while (index) {
-			lookup = (nsDNSLookup *)dnsService->mCompletionQueue.ElementAt(index-1);
+			lookup = (nsDNSLookup *)gService->mCompletionQueue.ElementAt(index-1);
 			if (lookup->mMsgID == uMsg) {
 				break;
 			}
@@ -381,7 +381,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		if (lookup && (lookup->mMsgID == uMsg)) {
-			rv = dnsService->mCompletionQueue.RemoveElement(lookup);
+			rv = gService->mCompletionQueue.RemoveElement(lookup);
 			NS_ASSERTION(rv == PR_TRUE, "error removing dns lookup element.");
 
 			lookup->mComplete = PR_TRUE;
@@ -389,15 +389,15 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				lookup->mResult = NS_ERROR_UNKNOWN_HOST;
 			
 			(void)lookup->CallOnFound();
-			dnsService->FreeMsgID(lookup->mMsgID);
+			gService->FreeMsgID(lookup->mMsgID);
 			delete lookup;  // until we implement the dns cache
 		}
         result = 0;
-		PR_Unlock(dnsService->mThreadLock);
+		PR_Unlock(gService->mThreadLock);
     }
     else if (uMsg == WM_DNS_SHUTDOWN) {
         // dispose DNS EventHandler Window
-        (void) DestroyWindow(dnsService->mDNSWindow);
+        (void) DestroyWindow(gService->mDNSWindow);
         PostQuitMessage(0);
         result = 0;
     }
@@ -591,8 +591,6 @@ nsDNSService::InitDNSThread(void)
     // create DNS event receiver window
     mDNSWindow = CreateWindow(windowClass, "Mozilla:DNSWindow",
                               0, 0, 0, 10, 10, NULL, NULL, NULL, NULL);
-
-    (void) SetWindowLong(mDNSWindow, GWL_USERDATA, (long)this);
 
     // sync with Create thread
     PRMonitor * monitor;
@@ -810,16 +808,14 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     (void)listener->OnStartLookup(clientContext, hostName);
 
     // initiate async lookup
-    rv = lookup->InitiateDNSLookup(this);
+    rv = lookup->InitiateDNSLookup();
     if (rv != NS_OK) {
 #if defined(XP_PC)
         PR_Lock(mThreadLock);
         mCompletionQueue.RemoveElement(lookup);
         PR_Unlock(mThreadLock);
 #endif
-#if !defined(XP_UNIX)
         delete lookup;
-#endif
     }
     return rv;
 }
