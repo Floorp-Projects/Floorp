@@ -45,16 +45,16 @@ public:
   
   virtual PRBool IsMulti();
 
-  il_container *GetContainer() {return mContainer;}
+  il_container *GetContainer() {return ilContainer;}
 
 private:
-  il_container *mContainer;
+  il_container *ilContainer;
 };
 
 NetReaderImpl::NetReaderImpl(il_container *aContainer)
 {
     NS_INIT_REFCNT();
-    mContainer = aContainer;
+    ilContainer = aContainer;
 }
 
 NetReaderImpl::~NetReaderImpl()
@@ -66,8 +66,8 @@ NS_IMPL_ISUPPORTS(NetReaderImpl, kINetReaderIID)
 unsigned int 
 NetReaderImpl::WriteReady()
 {
-    if (mContainer != NULL) {
-        return IL_StreamWriteReady(mContainer);
+    if (ilContainer != NULL) {
+        return IL_StreamWriteReady(ilContainer);
     }
     else {
         return 0;
@@ -77,8 +77,8 @@ NetReaderImpl::WriteReady()
 int 
 NetReaderImpl::FirstWrite(const unsigned char *str, int32 len)
 {
-    if (mContainer != NULL) {
-        return IL_StreamFirstWrite(mContainer, str, len);
+    if (ilContainer != NULL) {
+        return IL_StreamFirstWrite(ilContainer, str, len);
     }
     else {
         return 0;
@@ -88,8 +88,8 @@ NetReaderImpl::FirstWrite(const unsigned char *str, int32 len)
 int 
 NetReaderImpl::Write(const unsigned char *str, int32 len)
 {
-    if (mContainer != NULL) {
-        return IL_StreamWrite(mContainer, str, len);
+    if (ilContainer != NULL) {
+        return IL_StreamWrite(ilContainer, str, len);
     }
     else {
         return 0;
@@ -99,32 +99,32 @@ NetReaderImpl::Write(const unsigned char *str, int32 len)
 void 
 NetReaderImpl::StreamAbort(int status)
 {
-    if (mContainer != NULL) {
-        IL_StreamAbort(mContainer, status);
+    if (ilContainer != NULL) {
+        IL_StreamAbort(ilContainer, status);
     }
 }
 
 void 
 NetReaderImpl::StreamComplete(PRBool is_multipart)
 {
-    if (mContainer != NULL) {
-        IL_StreamComplete(mContainer, is_multipart);
+    if (ilContainer != NULL) {
+        IL_StreamComplete(ilContainer, is_multipart);
     }
 }
 
 void 
 NetReaderImpl::NetRequestDone(ilIURL *urls, int status)
 {
-    if (mContainer != NULL) {
-        IL_NetRequestDone(mContainer, urls, status);
+    if (ilContainer != NULL) {
+        IL_NetRequestDone(ilContainer, urls, status);
     }
 }
   
 PRBool 
 NetReaderImpl::StreamCreated(ilIURL *urls, int type)
 {
-    if (mContainer != NULL) {
-        return IL_StreamCreated(mContainer, urls, type);
+    if (ilContainer != NULL) {
+        return IL_StreamCreated(ilContainer, urls, type);
     }
     else {
         return PR_FALSE;
@@ -134,8 +134,8 @@ NetReaderImpl::StreamCreated(ilIURL *urls, int type)
 PRBool 
 NetReaderImpl::IsMulti()
 {
-    if (mContainer != NULL) {
-        return (PRBool)(mContainer->multi > 0);
+    if (ilContainer != NULL) {
+        return (PRBool)(ilContainer->multi > 0);
     }
     else {
         return PR_FALSE;

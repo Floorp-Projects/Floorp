@@ -62,19 +62,19 @@ public:
   NS_IMETHOD ImgDComplete();
   NS_IMETHOD ImgDAbort();
 
-  il_container *SetContainer(il_container *ic){mContainer = ic; return ic;}
-  il_container *GetContainer() {return mContainer;}
+  il_container *SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  il_container *GetContainer() {return ilContainer;}
 
   
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 };
 /*-------------------------------------------------*/
 
 GIFDecoder::GIFDecoder(il_container* aContainer)
 {
   NS_INIT_REFCNT();
-  mContainer = aContainer;
+  ilContainer = aContainer;
 };
 
 
@@ -125,7 +125,7 @@ protected:
 
 private:
 	nsCID mClassID;
-	il_container *mContainer;
+	il_container *ilContainer;
 };
 
 /*-----------------------------------------*/
@@ -257,8 +257,8 @@ NSGetFactory(nsISupports* serviceMgr,
 NS_IMETHODIMP
 GIFDecoder::ImgDInit()
 {
-   if(mContainer != NULL) {
-     return(il_gif_init(mContainer));
+   if(ilContainer != NULL) {
+     return(il_gif_init(ilContainer));
   }
   else {
     return nsnull;
@@ -269,8 +269,8 @@ GIFDecoder::ImgDInit()
 NS_IMETHODIMP 
 GIFDecoder::ImgDWriteReady()
 {
-  if(mContainer != NULL) {
-     return(il_gif_write_ready(mContainer));
+  if(ilContainer != NULL) {
+     return(il_gif_write_ready(ilContainer));
   }
   return 0;
 }
@@ -278,8 +278,8 @@ GIFDecoder::ImgDWriteReady()
 NS_IMETHODIMP
 GIFDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 {
-  if( mContainer != NULL ) {
-     return(il_gif_write(mContainer, buf,len));
+  if( ilContainer != NULL ) {
+     return(il_gif_write(ilContainer, buf,len));
   }
   return 0;
 }
@@ -287,8 +287,8 @@ GIFDecoder::ImgDWrite(const unsigned char *buf, int32 len)
 NS_IMETHODIMP 
 GIFDecoder::ImgDComplete()
 {
-  if( mContainer != NULL ) {
-     il_gif_complete(mContainer);
+  if( ilContainer != NULL ) {
+     il_gif_complete(ilContainer);
   }
   return 0;
 }
@@ -296,8 +296,8 @@ GIFDecoder::ImgDComplete()
 NS_IMETHODIMP 
 GIFDecoder::ImgDAbort()
 {
-  if( mContainer != NULL ) {
-    il_gif_abort(mContainer);
+  if( ilContainer != NULL ) {
+    il_gif_abort(ilContainer);
   }
   return 0;
 }

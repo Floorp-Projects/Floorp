@@ -30,8 +30,8 @@ class ImgDCallbk : public nsIImgDCallbk
 {
 public:
   NS_DECL_ISUPPORTS
-  ImgDCallbk(il_container *aContainer) { NS_INIT_ISUPPORTS(); mContainer=aContainer; };
-  virtual ~ImgDCallbk(){};
+  ImgDCallbk(il_container *aContainer) { NS_INIT_ISUPPORTS(); ilContainer=aContainer; };
+  virtual ~ImgDCallbk(){if(ilContainer) delete ilContainer;};
 
 
   NS_IMETHOD ImgDCBFlushImage();
@@ -62,11 +62,11 @@ public:
                              const nsIID &aIID,
                              void **ppv) ;
 
-  il_container *GetContainer() {return mContainer; };
-  il_container *SetContainer(il_container *ic) {mContainer=ic; return ic; };
+  il_container *GetContainer() {return ilContainer; };
+  il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic; };
 
 private:
-  il_container* mContainer;
+  il_container* ilContainer;
 }; 
 
 /*-------------------------------*/    

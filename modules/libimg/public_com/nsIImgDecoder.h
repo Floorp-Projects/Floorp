@@ -38,7 +38,7 @@ public:
 	NS_IMETHOD ImgDAbort()=0;
 
 private:
-   void *mContainer;
+   void *ilContainer;
 
 };
 
@@ -72,7 +72,7 @@ public:
   NS_IMETHOD ImgDCBError()=0;
 
 private:
-   void *mContainer;
+   void *ilContainer;
 
 };
 
