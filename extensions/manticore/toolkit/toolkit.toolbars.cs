@@ -44,6 +44,7 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
   using System.IO;
   using System.Xml;
 
+  /*
   // We want to replace use of Coolbar with our own widget, just
   // not right now.
   using stdole;
@@ -52,18 +53,19 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
   using StdFormat;
   using VBRUN;
   //using ComCtl3;
+  */
   
   public class ToolbarBuilder
   {
     private String mToolbarFile;
 
-    public AxCoolBar mToolbar;
+    //public AxCoolBar mToolbar;
     public Hashtable mItems;
 
     public ToolbarBuilder(String file)
     {
       mToolbarFile = file;
-      mToolbar = new AxCoolBar();
+      // mToolbar = new AxCoolBar();
       mItems = new Hashtable();
     }
 
@@ -102,8 +104,7 @@ namespace Silverstone.Manticore.Toolkit.Toolbars
             String key = tbvalues[0];
             String label = tbvalues[1];
             String visible = tbvalues[3];
-            Console.WriteLine(mToolbar.Bands);
-            mToolbar.Bands.Add(bandIndex++, key, label, null, needNewRow, null, visible != "false");
+      //      mToolbar.Bands.Add(bandIndex++, key, label, null, needNewRow, null, visible != "false");
             needNewRow = false;
             break;
           case "toolbarbutton":

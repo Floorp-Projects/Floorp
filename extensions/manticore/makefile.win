@@ -47,7 +47,7 @@ _CS_XML_IMPORTS=/R:System.DLL /R:System.Data.DLL /R:System.XML.DLL
 _CS_LAYOUT_IMPORTS=/R:AxSHDocVw.DLL /R:MSHTML.DLL /R:AxMOZILLACONTROLLib.DLL /R:MOZILLACONTROLLib.dll
 _CS_CTL_IMPORTS=/R:StdFormat.dll /R:MSDATASRC.dll /R:stdole.dll /R:AxComCtl3.dll /R:ComCtl3.dll /R:VBRUN.dll
 
-_IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS) $(_CS_CTL_IMPORTS)
+_IMPORTS=$(_CS_WINFORMS_IMPORTS) $(_CS_XMLIMPORTS) $(_CS_LAYOUT_IMPORTS)
 
 _DEBUG_FLAGS=/optimize+
 !if defined(MOZ_DEBUG)
@@ -82,10 +82,6 @@ bindings:
 	tlbimp c:\WINNT\system32\mscomctl.ocx
 	aximp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll 
 	tlbimp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll
-
-control:
-	aximp c:\WINNT\system32\comct332.ocx
-	tlbimp c:\WINNT\system32\comct332.ocx
 
 # XXX fix me
 clean:
