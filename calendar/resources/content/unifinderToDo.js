@@ -425,7 +425,7 @@ var toDoTreeView =
          case "unifinder-todo-tree-col-completeddate":
             return( formatUnifinderEventDate( new Date( calendarToDo.completed.getTime() ) ) );
          case "unifinder-todo-tree-col-percentcomplete":
-            return( calendarToDo.percent );
+            return( calendarToDo.percent+"%" );
          case "unifinder-todo-tree-col-categories":
             return( calendarToDo.categories );
          default:
@@ -512,8 +512,8 @@ function refreshToDoTree( taskArray )
    {
       if( ArrayOfTreeCols[i].getAttribute( "sortActive" ) == "true" )
       {
-         treeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
-         treeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
+         toDoTreeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
+         toDoTreeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
          gTaskArray.sort(sortTasks);
          break;
       }
