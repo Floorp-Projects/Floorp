@@ -433,7 +433,7 @@ nsSoftwareUpdate::StartupTasks( PRBool *needAutoreg )
 
     // Also check for build number changes
     nsresult rv;
-    PRInt32 buildID = 0;
+    PRInt32 buildID = -1;
     nsRegistryKey idKey = 0;
     nsCOMPtr<nsIRegistry> reg = do_GetService(knsRegistryCID,&rv);
     if (NS_SUCCEEDED(rv))

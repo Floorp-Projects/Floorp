@@ -63,7 +63,6 @@
 #include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
