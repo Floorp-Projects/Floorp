@@ -368,7 +368,11 @@ sub update_bonsai_action {
 }
 
 sub sql_current_timestamp {
-  return "current_timestamp()";
+  if ($dbtype eq "Pg") {
+      return "current_timestamp";
+  } elsif ($dbtype eq "mysql") {
+      return "current_timestamp()";
+  }
 }
 
 sub sql_get_timestamp {
