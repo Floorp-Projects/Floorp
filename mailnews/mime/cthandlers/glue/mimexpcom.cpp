@@ -126,7 +126,7 @@ COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length,
                                                     (void **) getter_AddRefs(objAccess)); 
   if (NS_SUCCEEDED(res) && objAccess)
   { 
-    if (objAccess->MimeObjectWrite(mimeObject, data, length, user_visible_p) == NS_OK)
+    if (NS_SUCCEEDED(objAccess->MimeObjectWrite(mimeObject, data, length, user_visible_p)))
       rc = length;
     else
       rc = -1;
