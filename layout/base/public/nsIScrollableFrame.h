@@ -107,6 +107,8 @@ public:
    */
   NS_IMETHOD ScrollTo(nsIPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
 
+  NS_IMETHOD GetScrollableView(nsIPresContext* aContext, nsIScrollableView** aResult)=0;
+
 
   /**
    * Set information about whether the vertical and horizontal scrollbars
