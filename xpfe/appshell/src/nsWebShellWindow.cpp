@@ -38,6 +38,7 @@
 #include "nsIXULParentDocument.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULChildDocument.h"
+#include "nsIDOMXULElement.h"
 #include "nsRDFCID.h"
 
 #include "nsGUIEvent.h"
@@ -596,7 +597,6 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
     menuDelegate->SetMenuItem(pnsMenuItem);
     nsIXULCommand * icmd;
     if (NS_OK == menuDelegate->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
-      mMenuDelegates.AppendElement(icmd);
       nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(menuDelegate));
 
       if (listener) 
@@ -1847,7 +1847,6 @@ void nsWebShellWindow::SetTitleFromXUL()
 } // SetTitleFromXUL
 
 
-#include "nsIDOMXULElement.h"
 // show/hide contents according to the current chrome mask
 void nsWebShellWindow::ShowAppropriateChrome()
 {
