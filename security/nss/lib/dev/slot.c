@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.2 $ $Date: 2001/09/13 22:14:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.3 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -54,6 +54,21 @@ static const char CVS_ID[] = "@(#) $RCSfile: slot.c,v $ $Revision: 1.2 $ $Date: 
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
+
+/* The flags needed to open a read-only session. */
+static const CK_FLAGS s_ck_readonly_flags = CKF_SERIAL_SESSION;
+
+/* In pk11slot.c, this was a no-op.  So it is here also. */
+static CK_RV PR_CALLBACK
+nss_ck_slot_notify
+(
+  CK_SESSION_HANDLE session,
+  CK_NOTIFICATION event,
+  CK_VOID_PTR pData
+)
+{
+    return CKR_OK;
+}
 
 /* maybe this should really inherit completely from the module...  I dunno,
  * any uses of slots where independence is needed?
@@ -123,6 +138,7 @@ NSSSlot_Create
     rvSlot->epv = parent->epv;
     rvSlot->module = parent;
     rvSlot->name = slotName;
+    rvSlot->slotID = slotID;
     rvSlot->ckFlags = slotInfo.flags;
     /* Initialize the token if present. */
     if (slotInfo.flags & CKF_TOKEN_PRESENT) {
@@ -164,5 +180,87 @@ NSSSlot_Destroy
 	return NSSArena_Destroy(slot->arena);
     }
     return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT nssSession *
+NSSSlot_CreateSession
+(
+  NSSSlot *slot,
+  NSSArena *arenaOpt,
+  PRBool readOnly /* so far, this is the only flag used */
+)
+{
+    CK_RV ckrv;
+    CK_FLAGS ckflags;
+    CK_SESSION_HANDLE session;
+    nssSession *rvSession;
+    ckflags = s_ck_readonly_flags;
+    if (!readOnly) {
+	ckflags |= CKF_RW_SESSION;
+    }
+    /* does the opening and closing of sessions need to be done in a
+     * threadsafe manner?  should there be a "meta-lock" controlling
+     * calls like this?
+     */
+    ckrv = CKAPI(slot)->C_OpenSession(slot->slotID, ckflags,
+                                      slot, nss_ck_slot_notify, &session);
+    if (ckrv != CKR_OK) {
+	/* set an error here, eh? */
+	return (nssSession *)NULL;
+    }
+    rvSession = nss_ZNEW(arenaOpt, nssSession);
+    if (!rvSession) {
+	return (nssSession *)NULL;
+    }
+    if (slot->module->flags & NSSMODULE_FLAGS_NOT_THREADSAFE) {
+	/* If the parent module is not threadsafe, create lock to manage 
+	 * session within threads.
+	 */
+	rvSession->lock = PZ_NewLock(nssILockOther);
+	if (!rvSession->lock) {
+	    /* need to translate NSPR error? */
+	    if (arenaOpt) {
+	    } else {
+		nss_ZFreeIf(rvSession);
+	    }
+	}
+    }
+    rvSession->handle = session;
+    rvSession->slot = slot;
+    return rvSession;
+}
+
+NSS_IMPLEMENT PRStatus
+nssSession_Destroy
+(
+  nssSession *s
+)
+{
+    if (s) {
+	if (s->lock) {
+	    PZ_DestroyLock(s->lock);
+	}
+	nss_ZFreeIf(s);
+    }
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssSession_EnterMonitor
+(
+  nssSession *s
+)
+{
+    if (s->lock) PZ_Lock(s->lock);
+    return PR_SUCCESS;
+}
+
+NSS_IMPLEMENT PRStatus
+nssSession_ExitMonitor
+(
+  nssSession *s
+)
+{
+    return (s->lock) ? PZ_Unlock(s->lock) : PR_SUCCESS;
 }
 

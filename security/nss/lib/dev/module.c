@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.1 $ $Date: 2001/09/13 22:06:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: module.c,v $ $Revision: 1.2 $ $Date: 2001/09/18 20:54:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -318,7 +318,8 @@ NSSModule_TraverseCertificates
     PRUint32 i;
     for (i=0; i<mod->numSlots; i++) {
 	/* might as well skip straight to token, right? or is this slot? */
-	NSSToken_TraverseCertificates(mod->slots[i]->token, callback, arg);
+	NSSToken_TraverseCertificates(mod->slots[i]->token, 
+	                              NULL, callback, arg);
     }
     return NULL;
 }
