@@ -56,7 +56,6 @@ clobber::
         rm -f $(DIST)\bin\chrome\communicator\content\wallet\CookieViewer.xul
         rm -f $(DIST)\bin\chrome\communicator\content\wallet\CookieViewer.js
         rm -f $(DIST)\bin\chrome\communicator\skin\wallet\CookieViewer.css
-        rm -f $(DIST)\bin\chrome\communicator\skin\wallet\wallet.css
         rm -f $(DIST)\bin\chrome\communicator\locale\wallet\CookieViewer.properties
         rm -f $(DIST)\bin\chrome\communicator\locale\wallet\CookieViewer.dtd
 

@@ -22,8 +22,8 @@
 
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bm-panel.css" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"

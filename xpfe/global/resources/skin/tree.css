@@ -28,18 +28,13 @@ treeitem[selected="true"] > treerow {
 	background-color: #CCCCCC;
 }
 
-tree:focus treeitem[selected="true"] > treerow { 
-	color: white;
-	background-color: #336699;
-}
-
 treecell { 
   white-space: nowrap;
   vertical-align: middle;
   padding: 1px 0px 1px 2px;
 } 
 
-treehead > treerow > treecell { 
+.treecell-header { 
   background-color: #CCCCCC; 
   color: black;
   border-right: 1px solid white;
@@ -47,7 +42,7 @@ treehead > treerow > treecell {
   padding: 0px 0px 0px 5px;
 } 
 
-tree.inset > treehead > treerow > treecell {
+.treecell-inset-header {
   border-top: 1px solid white;
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
@@ -61,36 +56,6 @@ tree.inset > treehead > treerow > treecell.sortable:active {
   border-right: 1px solid white;
 }
 
-treecell.image > titledbutton {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-treecell.image > titledbutton:hover {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
- 
-treecell.image > titledbutton:active {
-  text-decoration: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-.tree-icon {
-  width: 100%;
-}
-
-.tree-button {
- margin: 0px;
- padding: 0px;
- border: none;
- list-style-image: inherit;
- width: 100%;
-}
-
 /** class="propertylist" ******************************************
  *  class for cells in grid-formatted property lists.
  **/
@@ -100,51 +65,53 @@ treecell.propertylist {
   border-bottom: 1px solid #CCCCCC;
 }
 
-treeitem > treerow > treecell > .twisty {
- border: none;
- padding: 0px;
- margin: 0px;
- width: 16px;
- list-style-image: url("chrome://global/skin/closedtwisty.gif");
- user-focus:ignore;
+.tree-cell-primary-icon {
+  list-style-image: inherit;
+  padding-right: 2px;
 }
 
-treeitem[selected="true"] > treerow > treecell > .twisty {
+.tree-cell-twisty {
+ list-style-image: url("chrome://global/skin/closedtwisty.gif");
+ user-focus:ignore;
+ padding-right: 2px;
+}
+
+treeitem[selected="true"] > treerow > treecell > .tree-cell-twisty {
   list-style-image: url("chrome://global/skin/closedtwisty-selected.gif");
 }
 
-.twisty:hover {
+.tree-cell-twisty:hover {
  text-decoration: none;
 }
 
-.twisty:active {
+.tree-cell-twisty:active {
  text-decoration: none;
 }
 
-treeitem[empty="true"] > treerow > treecell > titledbutton.twisty {
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {
+ list-style-image: none !important;
+}
+
+.tree-cell-twisty[disabled="true"] {
  list-style-image: none;
 }
 
-treeitem > treerow > treecell > .twisty[disabled="true"] {
- list-style-image: none;
-}
-
-treeitem[container="true"][open="true"] > treerow > treecell > .twisty {
+treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/opentwisty.gif");
 }
 
-treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .twisty {
+treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > .tree-cell-twisty {
   list-style-image: url("chrome://global/skin/opentwisty-selected.gif");
 }
 
 
 /* tree header with sort direction indicators */
-treecell.sortDirectionIndicator[sortDirection="ascending"]  > .treeheader-sortdirection {
+treecell.sortDirectionIndicator[sortDirection="ascending"]  > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");
   margin-right: 3px;
 }
 
-treecell.sortDirectionIndicator[sortDirection="descending"] > .treeheader-sortdirection {
+treecell.sortDirectionIndicator[sortDirection="descending"] > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortDescending.gif");
   margin-right: 3px;
 }

@@ -36,7 +36,6 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
-	.\history.css \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

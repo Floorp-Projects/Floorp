@@ -38,8 +38,6 @@ CHROME_CONTENT	= \
 		history-test.js \
 		$(NULL)
 
-CHROME_SKIN	= history.css
-
 EXPORT_RESOURCE_LOCALE	= locale/en-US/history.dtd
 
 include $(topsrcdir)/config/rules.mk

@@ -22,8 +22,8 @@
 
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bm-props.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 

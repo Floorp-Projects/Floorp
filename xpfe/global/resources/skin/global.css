@@ -17,8 +17,8 @@
 @import url(chrome://global/skin/colors.css);
 @import url(chrome://global/skin/textfield.css);
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
-@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
 
 /**********************************
  * Window

@@ -42,15 +42,11 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
-	.\bm-find.css \
-	.\bm-panel.css \
-	.\bm-props.css \
 	.\bookmark-folder-closed.gif \
 	.\bookmark-folder-open.gif \
 	.\bookmark-item.gif \
 	.\bookmarks.css \
 	.\iefavorite.gif \
-	.\manage-bookmarks.css \
 	.\personal-folder-closed.gif \
 	.\personal-folder-open.gif \
 	$(NULL)

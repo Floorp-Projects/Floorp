@@ -23,7 +23,7 @@
 -->
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<?xml-stylesheet href="chrome://communicator/skin/wallet/wallet.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!-- CHANGE THIS WHEN MOVING FILES -->

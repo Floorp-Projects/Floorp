@@ -196,15 +196,24 @@ treechildren {
 
 treecell { 
  display: table-cell;
+ vertical-align: middle;
  behavior: url("resource:/chrome/xulBindings.xml#treecell");
 } 
 
-treecell[indent="true"] {
- behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-leaf");
+.treecell-indent {
+ behavior: url("resource:/chrome/xulBindings.xml#treecell-indented");
 }
 
-treeitem[container="true"] > treerow > treecell[indent="true"] {
- behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-folder");
+.treecell-iconic {
+ behavior: url("resource:/chrome/xulBindings.xml#treecell-iconic");
+}
+
+.treecell-image {
+ behavior: url("resource:/chrome/xulBindings.xml#treecell-image");
+}
+
+.treecell-header {
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-header");
 }
 
 treeitem > treechildren {
@@ -221,10 +230,6 @@ treecol {
 
 treecolgroup {
   display: table-column-group;
-}
-
-treehead > treerow > treecell {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-header");
 }
 
 /********** Tab widget *********/
