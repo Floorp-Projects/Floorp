@@ -40,8 +40,11 @@ static NS_DEFINE_IID(kIRDFIntIID, NS_IRDFINT_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Page);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, CategoryID);
+
+#define OPENDIR_NAMESPACE_URI "http://directory.mozilla.org/rdf"
+DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, Topic);
+DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, link);
+DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, catid);
 
 #if 0
 static PRBool
@@ -100,9 +103,10 @@ public:
     static PRUint32 gRefCnt;
     static nsIRDFService* gRDFService;
     static nsIRDFDataSource* gCategoryDB; 
-    static nsIRDFResource* gPageProperty;
-    static nsIRDFResource* gChildProperty;
-    static nsIRDFResource* gCategoryIDProperty;
+    static nsIRDFResource* kNC_Page;
+    static nsIRDFResource* kOPENDIR_Topic;
+    static nsIRDFResource* kOPENDIR_link;
+    static nsIRDFResource* kOPENDIR_catid;
 
 protected:
     const char* mUserProfileName;
@@ -114,9 +118,11 @@ protected:
 PRUint32 nsBrowsingProfile::gRefCnt = 0;
 nsIRDFService* nsBrowsingProfile::gRDFService = nsnull;
 nsIRDFDataSource* nsBrowsingProfile::gCategoryDB = nsnull; 
-nsIRDFResource* nsBrowsingProfile::gPageProperty = nsnull;
-nsIRDFResource* nsBrowsingProfile::gChildProperty = nsnull;
-nsIRDFResource* nsBrowsingProfile::gCategoryIDProperty = nsnull;
+
+nsIRDFResource* nsBrowsingProfile::kNC_Page       = nsnull;
+nsIRDFResource* nsBrowsingProfile::kOPENDIR_Topic = nsnull;
+nsIRDFResource* nsBrowsingProfile::kOPENDIR_link  = nsnull;
+nsIRDFResource* nsBrowsingProfile::kOPENDIR_catid = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,29 +145,60 @@ nsBrowsingProfile::Init(const char* userProfileName)
     mUserProfileName = userProfileName;
 
     if (gRefCnt == 1) {
-        NS_ASSERTION(gPageProperty == nsnull, "out of sync");
+        NS_ASSERTION(kNC_Page == nsnull, "out of sync");
 
         rv = nsServiceManager::GetService(kRDFServiceCID,
                                           kIRDFServiceIID,
                                           (nsISupports**)&gRDFService);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
 
         rv = gRDFService->GetDataSource("resource:/res/samples/directory.rdf", &gCategoryDB);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get directory data source");
         if (NS_FAILED(rv)) return rv;
 
         // get all the properties we'll need:
-        rv = gRDFService->GetResource(kURINC_Page, &gPageProperty);
+        rv = gRDFService->GetResource(kURINC_Page, &kNC_Page);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
-        rv = gRDFService->GetResource(kURINC_Page, &gChildProperty);
+        rv = gRDFService->GetResource(kURIOPENDIR_Topic, &kOPENDIR_Topic);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
-        rv = gRDFService->GetResource(kURINC_Page, &gCategoryIDProperty);
+        rv = gRDFService->GetResource(kURIOPENDIR_link, &kOPENDIR_link);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+        if (NS_FAILED(rv)) return rv;
+        rv = gRDFService->GetResource(kURIOPENDIR_catid, &kOPENDIR_catid);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
         if (NS_FAILED(rv)) return rv;
     }
+
+    // Grab the history data source, which is what we'll observe
+    nsCOMPtr<nsIRDFDataSource> history;
+    rv = gRDFService->GetDataSource("rdf:history", getter_AddRefs(history));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get history data source");
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX: TODO
+    // Grovel through the history data source to initialize the profile
+
+    // add ourself as an observer so that we can keep the profile
+    // in-sync as the user browses.
+    rv = history->AddObserver(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self as history observer");
     return rv;
 }
 
 nsBrowsingProfile::~nsBrowsingProfile()
 {
+    // Stop observing the history data source
+    nsresult rv;
+    nsCOMPtr<nsIRDFDataSource> history;
+    rv = gRDFService->GetDataSource("rdf:history", getter_AddRefs(history));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get history data source");
+    if (NS_SUCCEEDED(rv)) {
+        history->RemoveObserver(this);
+    }
+
     PRCList* chain = &mCategoryChain;
     while (!PR_CLIST_IS_EMPTY(chain)) {
         PRCList* element = chain;
@@ -173,9 +210,10 @@ nsBrowsingProfile::~nsBrowsingProfile()
     --gRefCnt;
     if (gRefCnt == 0) {
         // release all the properties:
-        NS_IF_RELEASE(gCategoryIDProperty);
-        NS_IF_RELEASE(gChildProperty);
-        NS_IF_RELEASE(gPageProperty);
+        NS_IF_RELEASE(kOPENDIR_Topic);
+        NS_IF_RELEASE(kOPENDIR_catid);
+        NS_IF_RELEASE(kOPENDIR_link);
+        NS_IF_RELEASE(kNC_Page);
 
         if (gCategoryDB) {
             NS_RELEASE(gCategoryDB);
@@ -237,10 +275,11 @@ nsBrowsingProfile::GetCookieString(char buf[kBrowsingProfileCookieSize])
 	char hexMap[] = "0123456789ABCDEF";
     PRUint8* vector = (PRUint8*)&mVector;
     for (PRUint32 i = 0; i < sizeof(mVector); i++) {
-        char c = vector[i];
+        unsigned char c = vector[i];
         *buf++ = hexMap[c >> 4];
         *buf++ = hexMap[c & 0x0F];
     }
+    *buf = '\0';
     return NS_OK;
 }
 
@@ -262,7 +301,7 @@ nsBrowsingProfile::GetDescription(char* *htmlResult)
         nsIRDFInt* intLit;
         rv = gRDFService->GetIntLiteral(desc->mID, &intLit);
         nsIRDFResource* category;
-        rv = gCategoryDB->GetSource(gCategoryIDProperty, category, PR_TRUE, &category);
+        rv = gCategoryDB->GetSource(kOPENDIR_catid, category, PR_TRUE, &category);
         const char* uri;
         rv = category->GetValue(&uri);
         char* buf2 = PR_smprintf("%s%s: %d<b>", buf, uri, desc->mVisitCount);
@@ -307,7 +346,7 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
         rv = gRDFService->GetResource(url, &urlRes);
         if (NS_SUCCEEDED(rv)) {
             nsIRDFAssertionCursor* cursor;
-            rv = gCategoryDB->GetSources(gChildProperty, urlRes, PR_TRUE, &cursor);
+            rv = gCategoryDB->GetSources(kOPENDIR_link, urlRes, PR_TRUE, &cursor);
             if (NS_SUCCEEDED(rv)) {
                 while (NS_SUCCEEDED(cursor->Advance())) {
                     nsIRDFResource* category;
@@ -353,26 +392,24 @@ nsresult
 nsBrowsingProfile::GetCategoryID(nsIRDFResource* category, PRUint16 *result)
 {
     nsresult rv;
-    nsIRDFNode* catID;
-    rv = gCategoryDB->GetTarget(category, gCategoryIDProperty, PR_TRUE, &catID);
-    if (NS_SUCCEEDED(rv)) {
-        const char* catURI;
-        rv = category->GetValue(&catURI);
-        if (NS_SUCCEEDED(rv)) {
-            nsIRDFInt* catIDInt;
-            rv = catID->QueryInterface(kIRDFIntIID, (void**)&catIDInt);
-            if (NS_SUCCEEDED(rv)) {
-                int32 id;
-                rv = catIDInt->GetValue(&id);
-                if (NS_SUCCEEDED(rv)) {
-                    *result = (PRUint16)id;
-                }
-                NS_RELEASE(catIDInt);
-            }
-        }
-        NS_RELEASE(catID);
-    }
-    return rv;
+    nsCOMPtr<nsIRDFNode> catID;
+    rv = gCategoryDB->GetTarget(category, kOPENDIR_catid, PR_TRUE, getter_AddRefs(catID));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get category ID");
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIRDFLiteral> catIDLiteral(do_QueryInterface(catID));
+    NS_ASSERTION(catID != nsnull, "not a literal");
+    if (! catID) return NS_ERROR_NO_INTERFACE;
+
+    const PRUnichar* idStr;
+    rv = catIDLiteral->GetValue(&idStr);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get literal value");
+
+    PRInt32 err;
+    *result = nsAutoString(idStr).ToInteger(&err);
+    NS_ASSERTION(err == 0, "error converting to integer");
+
+    return (err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -391,34 +428,48 @@ nsBrowsingProfile::RecordHit(const char* categoryURL, PRUint16 id)
         cat->mDescriptor.mFlags = 0;
 
         // find the right place to insert this
-        PRCList* end = &mCategoryChain;
-        for (PRCList* chain = &mCategoryChain; chain != end; chain = PR_NEXT_LINK(chain)) {
-            nsCategory* other = (nsCategory*)chain;
-            if (cat->mDescriptor.mVisitCount >= other->mDescriptor.mVisitCount) {
-                PR_INSERT_BEFORE(&cat->mHeader, chain);
-                cat->mVectorIndex = other->mVectorIndex;
-                // and slide everybody else down
-                for (; chain != end; chain = PR_NEXT_LINK(chain)) {
-                    other = (nsCategory*)chain;
-                    other->mVectorIndex++;
-                    UpdateVector(other);
-                }
+        PRCList* end   = &mCategoryChain;
+        PRCList* chain = PR_NEXT_LINK(&mCategoryChain);
+        nsCategory* other;
+        PRInt32 count = 0;
+
+        while (chain != end) {
+            other = (nsCategory*)chain;
+            if (cat->mDescriptor.mVisitCount >= other->mDescriptor.mVisitCount)
                 break;
-            }
+
+            chain = PR_NEXT_LINK(chain);
+            ++count;
         }
+
+        // do the deed
+        PR_INSERT_BEFORE(&cat->mHeader, chain);
+        cat->mVectorIndex = (chain != end) ? other->mVectorIndex : count;
+        UpdateVector(cat);
+
+        // slide everybody else down
+        for (; chain != end; chain = PR_NEXT_LINK(chain)) {
+            other = (nsCategory*)chain;
+            other->mVectorIndex++;
+            UpdateVector(other);
+        }
+
         // and insert this in the lookup table
         mCategories.Put(&key, cat);
     }
     else {
         cat->mDescriptor.mVisitCount++;
-        nsCategory* prev = (nsCategory*)PR_PREV_LINK(&cat->mHeader);
-        if (cat->mDescriptor.mVisitCount >= prev->mDescriptor.mVisitCount) {
-            // if we got more hits on this category then it's predecessor 
-            // then reorder the chain
-            PR_REMOVE_LINK(&cat->mHeader);
-            PR_INSERT_BEFORE(&cat->mHeader, &prev->mHeader);
-            cat->mVectorIndex = prev->mVectorIndex++;
-            UpdateVector(prev);
+        if (PR_PREV_LINK(&cat->mHeader) != &mCategoryChain) {
+            // it's not the first element already
+            nsCategory* prev = (nsCategory*)PR_PREV_LINK(&cat->mHeader);
+            if (cat->mDescriptor.mVisitCount >= prev->mDescriptor.mVisitCount) {
+                // if we got more hits on this category then it's predecessor 
+                // then reorder the chain
+                PR_REMOVE_LINK(&cat->mHeader);
+                PR_INSERT_BEFORE(&cat->mHeader, &prev->mHeader);
+                cat->mVectorIndex = prev->mVectorIndex++;
+                UpdateVector(prev);
+            }
         }
         UpdateVector(cat);
     }
@@ -434,7 +485,7 @@ nsBrowsingProfile::OnAssert(nsIRDFResource* subject,
                             nsIRDFNode* object)
 {
     nsresult rv = NS_OK;
-    if (peq(predicate, gPageProperty)) {
+    if (peq(predicate, kNC_Page)) {
         nsIRDFResource* objRes;
         rv = object->QueryInterface(kIRDFResourceIID, (void**)&objRes);
         if (NS_FAILED(rv)) return rv;
