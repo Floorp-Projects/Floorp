@@ -1657,8 +1657,10 @@
           // We're about to open a modal dialog, make sure the opening
           // tab is brought to the front.
 
+          var targetTop = new XPCNativeWrapper(event.target, "top").top;
+
           for (var i = 0; i < browsers.length; ++i) {
-            if (this.getBrowserAtIndex(i).contentWindow == event.target) {
+            if (this.getBrowserAtIndex(i).contentWindow == targetTop) {
               this.mModalDialogShowing = true;
               this.selectedTab = this.mTabContainer.childNodes[i];
 
