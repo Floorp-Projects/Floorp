@@ -2328,12 +2328,7 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
   if (mPrintHost)
     mesg.AppendWithConversion(mPrintHost);
   else 
-  {
-#ifdef DEBUG_gagan
-      NS_ASSERTION(0, "no print host specified for this socket!");
-#endif
       mesg.AppendWithConversion(mHostName);
-  }
 
   if (NS_FAILED(rv)) return rv;
 
