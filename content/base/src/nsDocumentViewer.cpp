@@ -407,9 +407,7 @@ public:
                       nsImageGroupNotification aNotificationType);
 
   // Printing Methods
-  PRBool   PrintPage(nsIPresContext* aPresContext,
-                     nsIPrintOptions* aPrintOptions,
-                     PrintObject*     aPOect);
+  PRBool   PrintPage(nsIPresContext* aPresContext,nsIPrintOptions* aPrintOptions,PrintObject* aPOect);
   PRBool   DonePrintingPages(PrintObject* aPO);
   
 protected:
@@ -498,7 +496,6 @@ private:
                                nsIPrintOptions* aPrintOptions,
                                PrintObject*     aPOect,
                                PRUint32         aDelay);
-  void     StopPagePrintTimer();
 
   void PrepareToStartLoad(void);
 
@@ -533,6 +530,7 @@ protected:
   PRBool  mStopped;
   PRBool  mLoaded;
   PRInt16 mNumURLStarts;
+  PRInt16 mDestroyRefCount;     // a second "refcount" for the document viewer's "destroy"
   nsIPageSequenceFrame* mPageSeqFrame;
 
 
@@ -572,6 +570,8 @@ public:
       mTimer->Cancel();
     }
     gCurrentlyPrinting = PR_FALSE;
+    mDocViewer->Destroy();
+    NS_RELEASE(mDocViewer);
   }
 
 
@@ -622,7 +622,10 @@ public:
             PrintObject*        aPO,
             PRUint32            aDelay) 
   {
+    NS_IF_RELEASE(mDocViewer);
     mDocViewer       = aDocViewerImpl;
+    NS_ADDREF(mDocViewer);    
+
     mPresContext     = aPresContext;
     mPrintOptions    = aPrintOptions;
     mPrintObj        = aPO;
@@ -639,7 +642,14 @@ public:
     return StartTimer();
   }
 
-  void Stop() { if (mTimer) mTimer->Cancel(); }
+
+  void Stop()
+  {
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nsnull;
+    }
+  }
 
 private:
   DocumentViewerImpl*  mDocViewer;
@@ -652,17 +662,20 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsPagePrintTimer, nsITimerCallback)
 
-nsresult NS_NewUpdateTimer(nsPagePrintTimer **aResult)
+static nsresult NS_NewUpdateTimer(nsPagePrintTimer **aResult)
 {
-  if (!aResult)
-    return NS_ERROR_NULL_POINTER;
 
-  *aResult = (nsPagePrintTimer*) new nsPagePrintTimer;
+  NS_PRECONDITION(aResult, "null param");
 
-  if (!aResult)
+  nsPagePrintTimer* result = new nsPagePrintTimer;
+
+  if (!result) {
+    *aResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  NS_ADDREF(*aResult);
+  NS_ADDREF(result);
+  *aResult = result;
 
   return NS_OK;
 }
@@ -1169,15 +1182,15 @@ DocumentViewerImpl::Close()
 NS_IMETHODIMP
 DocumentViewerImpl::Destroy()
 {
+  if (mDestroyRefCount != 0) {
+    --mDestroyRefCount;
+    return NS_OK;
+  }
+
   // All callers are supposed to call destroy to break circular
   // references.  If we do this stuff in the destructor, the
   // destructor might never be called (especially if we're being
   // used from JS.
-
-  if (mPagePrintTimer != nsnull) {
-    mPagePrintTimer->Stop();
-    delete mPagePrintTimer;
-  }
 
   if (mPrt) {
     mPrt->OnEndPrinting(NS_ERROR_FAILURE);
@@ -1761,7 +1774,7 @@ static void DumpPrintObjectsListStart(char * aStr, nsVoidArray * aDocList, FILE*
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
 #define DUMP_DOC_TREELAYOUT DumpPrintObjectsTreeLayout(mPrt->mPrintObject, mPrt->mPrintDC);
 #else
-#define DUMP_DOC_LIST
+#define DUMP_DOC_LIST(_title)
 #define DUMP_DOC_TREE
 #define DUMP_DOC_TREELAYOUT 
 #endif
@@ -2141,6 +2154,8 @@ DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
   gCurrentlyPrinting = PR_FALSE;
   delete mPrt;
   mPrt = nsnull;
+
+  NS_IF_RELEASE(mPagePrintTimer);
 
   return PR_TRUE;
 }
@@ -3649,7 +3664,7 @@ DocumentViewerImpl::PrintDocContent(PrintObject* aPO, nsresult& aStatus)
 {
   NS_ASSERTION(aPO, "Pointer is null!");
 
-  nsresult rv = NS_ERROR_FAILURE;
+
   if (!aPO->mHasBeenPrinted && aPO->IsPrintable()) {
     PRBool donePrinting;
     // donePrinting is only valid when when doing synchronous printing
@@ -4318,7 +4333,8 @@ nsresult rv;
   // if we are printing another URL, then exit
   // the reason we check here is because this method can be called while 
   // another is still in here (the printing dialog is a good example).
-  if(gCurrentlyPrinting) {
+  // the only time we can print more than one job at a time is the regression tests
+  if(gCurrentlyPrinting && (aFile==0)) {
     // Beep at the user, let them know we are not ready to print.
     nsCOMPtr<nsISound> soundInterface( do_CreateInstance(kSoundCID, &rv) );
     if (NS_SUCCEEDED(rv) && (soundInterface != nsnull)){
@@ -4589,10 +4605,9 @@ nsresult rv;
         }
       }      
     } else {
-      if (mPagePrintTimer != nsnull) {
+      if (mPagePrintTimer) {
         mPagePrintTimer->Stop();
-        delete mPagePrintTimer;
-        mPagePrintTimer = nsnull;
+        NS_RELEASE(mPagePrintTimer);
       }
       mPrt->OnEndPrinting(NS_ERROR_FAILURE);
       delete mPrt;
@@ -5528,16 +5543,10 @@ DocumentViewerImpl::StartPagePrintTimer(nsIPresContext * aPresContext,
 
     if (NS_FAILED(result))
       return result;
+
+    ++mDestroyRefCount;
   }
 
   return mPagePrintTimer->Start(this, aPresContext, aPrintOptions, aPOect, aDelay);
-}
-
-inline void
-DocumentViewerImpl::StopPagePrintTimer()
-{
-  if (mPagePrintTimer) {
-    mPagePrintTimer->Stop();
-  }
 }
 
