@@ -1,0 +1,62 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+[scriptable, uuid(99ec6694-535f-11d4-9a58-000064657374)]
+interface nsISOAPFault : nsISupports {
+  /**
+   * The DOM element representing the fault in the response SOAP message.
+   */
+  readonly attribute nsIDOMElement element;
+
+  /**
+   * The fault code
+   */
+  readonly attribute wstring faultCode;
+
+  /**
+   * The fault string
+   */
+  readonly attribute wstring faultString;
+  
+  /**
+   * The fault actor if one was specified.
+   */
+  readonly attribute wstring faultActor;
+
+  /**
+   * The DOM element representing the fault details
+   */
+  readonly attribute nsIDOMElement detail;
+};
+
+%{ C++
+#define NS_SOAPFAULT_CID                            \
+{ /* 87d21ec1-539d-11d4-9a59-00104bdf5339 */        \
+  0x87d21ec1, 0x539d, 0x11d4,                       \
+ {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
+#define NS_SOAPFAULT_PROGID \
+"component://netscape/xmlextras/soap/fault"
+%}

@@ -1,0 +1,150 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+[ptr] native JSObjectPtr(JSObject);
+
+[scriptable, uuid(99ec6690-535f-11d4-9a58-000064657374)]
+interface nsISOAPParameter : nsISupports {
+    
+  /**
+   * <p>Possible values for the type of a Parameter object. Native
+   *    (non-script) callers must specify the type of a parameter
+   *    when setting the value. The list below indicates the native
+   *    type expected in each case. Both native and script callers
+   *    may query the type of the parameter. The list below also
+   *    indicates the native or script type passed back when the 
+   *    value is retrieved.</p>
+   * <p>Notes:
+   * <ul>
+   *   <li><code>PARAMETER_TYPE_STRING</code> - The value is of type
+   *       nsISupportsWString for native callers, a JavaScript string
+   *       for script callers.</li>
+   *   <li><code>PARAMETER_TYPE_BOOLEAN</code> - The value is of type
+   *       nsISupportsPRBool for native callers, a boolean for script
+   *       callers.</li>
+   *   <li><code>PARAMETER_TYPE_DOUBLE</code> - The value is of type
+   *       nsISupportsDouble for native callers, a double for script
+   *       callers.</li>
+   *   <li><code>PARAMETER_TYPE_FLOAT</code> - The value is of type
+   *       nsISupportsFloat for native callers, a double for script
+   *       callers.</li>
+   *   <li><code>PARAMETER_TYPE_LONG</code> - The value is of type
+   *       nsISupportsPRInt64 for native callers.</li>
+   *   <li><code>PARAMETER_TYPE_INT</code> - The value is of type
+   *       nsISupportsPRInt32 for native callers, an integer for
+   *       script callers.</li>
+   *   <li><code>PARAMETER_TYPE_SHORT</code> - The value is of type
+   *       nsISupportsPRInt16 for native callers, an integer for
+   *       script callers.</li>
+   *   <li><code>PARAMETER_TYPE_BYTE</code> - The value is of type
+   *       nsISupportsPRInt8 for native callers, an integer for script
+   *       callers.</li>
+   *   <li><code>PARAMETER_TYPE_ARRAY</code> - The value is of type
+   *       nsISupportsArray for native callers (each element is itself
+   *       an instance of nsISOAPParameter).</li>
+   *   <li><code>PARAMETER_TYPE_JAVASCRIPT_ARRAY</code> - The value is
+   *       a JSObject that is an array.</li>
+   *   <li><code>PARAMETER_TYPE_JAVASCRIPT_OBJECT</code> - The value is
+   *       a generic JSObject.</li>
+   * </ul>
+   * </p>
+   */
+  const long PARAMETER_TYPE_NULL = 0;
+  const long PARAMETER_TYPE_VOID = 1;
+  const long PARAMETER_TYPE_STRING = 2;
+  const long PARAMETER_TYPE_BOOLEAN = 3;
+  const long PARAMETER_TYPE_DOUBLE = 4;
+  const long PARAMETER_TYPE_FLOAT = 5;
+  const long PARAMETER_TYPE_LONG = 6;
+  const long PARAMETER_TYPE_INT = 7;
+  const long PARAMETER_TYPE_SHORT = 8;
+  const long PARAMETER_TYPE_BYTE = 9;
+  const long PARAMETER_TYPE_ARRAY = 10;
+  const long PARAMETER_TYPE_JAVASCRIPT_ARRAY = 11;
+  const long PARAMETER_TYPE_JAVASCRIPT_OBJECT = 12;
+
+  /**
+   * An optional encodingStyle specifically for this parameter. The
+   * default is to inherit the encodingStyle from the element parent
+   * chain.
+   */
+  attribute string encodingStyleURI;
+
+  /**
+   * The name of the parameter. If the parameter is left unnamed, it
+   * will be encoded using the element types defined in the SOAP-ENC
+   * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
+   */
+  attribute wstring name;
+
+  /**
+   * The type of the parameter. See the descriptions for the type
+   * constants for details.
+   */
+  readonly attribute long type;
+
+  /**
+   * Native (non-script) method for setting the value of a parameter.
+   * The interface implemented by the <code>value</code> parameter 
+   * depends on the value of <code>type</code> parameter. Additional
+   * details can be found in the descriptions for the type constants.
+   *
+   * @param value The value of the parameter. Either NULL or an object
+   *              that implements an interface specified by the
+   *              <code>type</code> parameter.
+   * @param type The type of the parameter. See the description of
+   *             the type contants for details.
+   */
+  [noscript] void setValueAndType(in nsISupports value, in long type);
+
+  /**
+   * <p>The getter is for native and script callers. For native callers,
+   * the interface implemented by the returned value depends on the
+   * <code>type</code> attribute as detailed in the description of the
+   * type constants. For script callers, the value returned is either
+   * a string, boolean, double, integer, Array or object.</p>
+   * <p>Even though the attribute is readonly in IDL, script callers can
+   * set it (native callers should use the <code>setValueAndType</code> 
+   * method). For script callers, the value can be either a string, 
+   * boolean, double, integer, Array or object.
+   */
+  readonly attribute nsISupports value;
+
+  /**
+   * Used by native callers (SOAP encoders, for example) to retrieve
+   * the JSObject value if the <code>type</code> attribute is either
+   * <code>PARAMETER_TYPE_JAVASCRIPT_ARRAY</code> or
+   * <code>PARAMETER_TYPE_JAVASCRIPT_OBJECT</code>.
+   */
+  [noscript] readonly attribute JSObjectPtr JSValue;
+};
+
+%{ C++
+#define NS_SOAPPARAMETER_CID                        \
+{ /* 87d21ec2-539d-11d4-9a59-00104bdf5339 */        \
+  0x87d21ec2, 0x539d, 0x11d4,                       \
+ {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
+#define NS_SOAPCPARAMETER_PROGID \
+"component://netscape/xmlextras/soap/parameter"
+%}

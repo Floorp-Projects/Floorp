@@ -1,0 +1,185 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+interface nsISOAPParameter;
+interface nsISOAPResponse;
+
+[scriptable, uuid(a8fefe40-52bc-11d4-9a57-000064657374)]
+interface nsISOAPCall : nsISupports {
+
+  /**
+   * The DOM element representing the SOAP envelope itself. By default, 
+   * this element has a namespace declaration for the SOAP envelope
+   * namespace defined in the SOAP specification. It also has an
+   * <code>encodingStyle</code> attribute that corresponds to the 
+   * current encoding style for the call. The Envelope element also 
+   * has two children representing the SOAP header and body. DOM methods
+   * may be used to add additional attributes to the envelope.
+   */
+  readonly attribute nsIDOMElement envelope;
+
+  /**
+   * A convenience attribute to obtain the DOM element representing the
+   * SOAP header. DOM methods may be used to add header entries. By default
+   * this element has no attributes or children. If this is still the case
+   * at the point at which the call is invoked, the SOAP message will not
+   * contain a header.
+   */
+  readonly attribute nsIDOMElement header;
+
+  /**
+   * A convenience attribute to obtain the DOM element representing the
+   * SOAP body. DOM methods may be used to add additional attributes to
+   * the body element. DOM methods may also be used to add body entries,
+   * though the expectation is that in most cases the SOAP message will
+   * contain a single body entry created as a result of invoking the
+   * call with a method name and a set of parameters.
+   */
+  readonly attribute nsIDOMElement body;
+
+  /**
+   * The encodingStyle to be used for the envelope. This URI will be
+   * specified in the SOAP message using the encodingStyle attribute 
+   * of the Envelope element. 
+   */
+  attribute string encodingStyleURI;
+
+  /**
+   * The target object on which the method is being invoked. This URI
+   * is used as the namespace to qualify the tagname of the element 
+   * that is the single body entry of the SOAP message.
+   *
+   * For example, if the <code>targetObjectURI</code> is 
+   * "urn:some-namespace" and the <code>methodName</code> is 
+   * GetLastTradePrice, the single body entry will be the
+   * following element:
+   * <code>
+   *   <m:GetLastTradePrice xmlns:m="urn:some-namespace">
+   *   ...
+   * </code>
+   * 
+   */
+  attribute string targetObjectURI;
+  
+  /**
+   * The name of the method being invoked. The methodName is used as
+   * the tagname for the element that is the single body entry of the
+   * SOAP message.
+   *
+   * For example, if the <code>targetObjectURI</code> is 
+   * "urn:some-namespace" and the <code>methodName</code> is 
+   * GetLastTradePrice, the single body entry will be the
+   * following element:
+   * <code>
+   *   <m:GetLastTradePrice xmlns:m="urn:some-namespace">
+   *   ...
+   * </code>
+   */
+  attribute wstring methodName;   
+
+  /**
+   * The URI to which the RPC call is made. This does not have to
+   * match the <code>targetObjectURI</code>.
+   */
+  attribute string destinationURI;
+
+  /**
+   * An optional URI that can be used to add a SOAPAction HTTP
+   * header field. If this attribute is NULL (the default case),
+   * no SOAPAction header will be added.
+   */
+  attribute string actionURI;
+
+  /**
+   * Native (non-script) method to set the list of parameters to
+   * include in the SOAP call.
+   *
+   * @param parameters The array of parameters to include in the call
+   * @param count The number of parameters in the array
+   */
+  [noscript] void setSOAPParameters([array, size_is(count)] in nsISOAPParameter parameters, in unsigned long count);
+  
+  /**
+   * The script-only method for setting the list of parameters to
+   * include in the SOAP call.
+   *
+   * @param parameters The expectation is that this parameter is either a
+   *                   JavaScript array that holds the nsISOAPParameter
+   *                   instances or a single nsISOAPParameter.
+   */
+  void setParameters(in nsISupports parameters);
+
+  /**
+   * A script-only method for setting the list of parameters, where
+   * the parameters are unnamed and are encoded using the default
+   * encoding style. This method actually expects a variable number
+   * of arguments, each representing an individual parameter - an
+   * actual script type and not a nsISOAPParameter object. This is 
+   * purely a convenience for scripters who want unnamed parameters
+   * and don't want to create an array of parameter objects.
+   */
+  void setSimpleParameters();
+
+  /**
+   * Synchronously make the SOAP call. At this point, the document
+   * rooted by the Envelope element is serialized to form the body
+   * of the SOAP message. The method returns only when we receive
+   * a response (or a protocol error occurs). The expectation is that
+   * at this point the <code>targetObjectURI</code>, 
+   * <code>methodName</code>, <code>destinationURI</code> and
+   * parameters (if any) have been set. If this is not the case,
+   * the methods throws and NS_ERROR_NOT_INITIALIZED error.
+   *
+   * @returns The SOAP response
+   */ 
+  nsISOAPResponse invoke();
+  
+  /**
+   * Asynchronously makes the SOAP call. At this point, the document
+   * rooted by the Envelope element is serialized to form the body
+   * of the SOAP message. The method returns immediately, and the
+   * listener is triggered when we eventually receive a response
+   * (or a protocol error occurs). The expectation is that
+   * at this point the <code>targetObjectURI</code>, 
+   * <code>methodName</code>, <code>destinationURI</code> and
+   * parameters (if any) have been set. If this is not the case,
+   * the methods throws and NS_ERROR_NOT_INITIALIZED error.
+   *
+   * @param listener For a native (non-script) invocation of this
+   *                 method, this should be a nsISOAPResponseListener instance.
+   *                 For a script invocation of this method, this
+   *                 is expected to be a Function object.
+   */
+  void asyncInvoke(in nsISupports listener);
+};
+
+%{ C++
+#define NS_SOAPCALL_CID                             \
+{ /* 87d21ec0-539d-11d4-9a59-00104bdf5339 */        \
+  0x87d21ec0, 0x539d, 0x11d4,                       \
+ {0x9a, 0x59, 0x00, 0x10, 0x4b, 0xdf, 0x53, 0x39} }
+#define NS_SOAPCALL_PROGID \
+"component://netscape/xmlextras/soap/call"
+%}

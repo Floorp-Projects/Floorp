@@ -1,0 +1,12 @@
+#
+# This is a list of local files which get copied to the mozilla:dist:idl directory
+#
+
+nsISOAPCall.idl
+nsISOAPParameter.idl
+nsISOAPResponse.idl
+nsISOAPResponseListener.idl
+nsISOAPEncoder.idl
+nsISOAPFault.idl
+nsISOAPTransport.idl
+nsISOAPTransportListener.idl
