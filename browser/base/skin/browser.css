@@ -379,106 +379,83 @@ toolbar[mode="text"] .toolbarbutton-icon {
 
 /* ::::: small primary toolbar buttons ::::: */
 
-#back-button[toolbarmode="small"],
 toolbar[iconsize="small"]  #back-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(0px 28px 25px 0px);
 }
-#back-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #back-button[buttonover="true"] {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
-#back-button[toolbarmode="small"][disabled="true"],
 toolbar[iconsize="small"] #back-button[disabled="true"] {
   -moz-image-region: rect(0px 84px 25px 56px);
 }
-#back-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #back-button[buttondown="true"] {
   -moz-image-region: rect(0px 112px 25px 84px) !important;
 }
 
-#forward-button[toolbarmode="small"],
 toolbar[iconsize="small"] #forward-button {
   list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
   -moz-image-region: rect(25px 28px 50px 0px);
 }
-#forward-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #forward-button[buttonover="true"] {
   -moz-image-region: rect(25px 56px 50px 28px);
 }
-#forward-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #forward-button[buttondown="true"] {
   -moz-image-region: rect(25px 84px 50px 56px);
 }
-#forward-button[toolbarmode="small"][disabled="true"],
 toolbar[iconsize="small"] #forward-button[disabled="true"] {
   -moz-image-region: rect(25px 112px 50px 84px) !important;
 }
 
-#reload-button[toolbarmode="small"],
 toolbar[iconsize="small"] #reload-button {
   list-style-image: url("chrome://browser/skin/reload-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
-#reload-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #reload-button:hover {
   -moz-image-region: rect(0px 48px 25px 24px);
 }
-#reload-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #reload-button:hover:active {
   -moz-image-region: rect(0px 72px 25px 48px);
 }
-#reload-button[toolbarmode="small"][disabled="true"],
 toolbar[iconsize="small"] #reload-button[disabled="true"] {
   -moz-image-region: rect(0px 96px 25px 72px) !important;
 }
 
-#stop-button[toolbarmode="small"],
 toolbar[iconsize="small"] #stop-button {
   list-style-image: url("chrome://browser/skin/stop-small.png") !important;
   -moz-image-region: rect(0px 24px 25px 0px);
 }
-#stop-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #stop-button:hover {
   -moz-image-region: rect(0px 48px 25px 24px);
 }
-#stop-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #stop-button:hover:active {
   -moz-image-region: rect(0px 72px 25px 48px);
 }
-#stop-button[toolbarmode="small"][disabled="true"],
 toolbar[iconsize="small"] #stop-button[disabled="true"] {
   -moz-image-region: rect(0px 96px 25px 72px) !important;
 }
 
-#home-button[toolbarmode="small"],
 toolbar[iconsize="small"] #home-button {
   list-style-image: url("chrome://browser/skin/home-small.png") !important;
   -moz-image-region: rect(0px 28px 25px 0px);
 }
-#home-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #home-button:hover {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
-#home-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #home-button:hover:active {
   -moz-image-region: rect(0px 112px 25px 84px);
 }
 
-#print-button[toolbarmode="small"],
 toolbar[iconsize="small"] #print-button {
   list-style-image: url("chrome://browser/skin/print-small.png");
   -moz-image-region: rect(0px 28px 25px 0px);
 }
-#print-button[toolbarmode="small"]:hover,
 toolbar[iconsize="small"] #print-button:hover {
   -moz-image-region: rect(0px 56px 25px 28px);
 }
-#print-button[toolbarmode="small"]:hover:active,
 toolbar[iconsize="small"] #print-button:hover:active {
   -moz-image-region: rect(0px 84px 25px 56px);
 }
-#print-button[toolbarmode="small"][disabled="true"],
 toolbar[iconsize="small"] #print-button[disabled="true"] {
   -moz-image-region: rect(0px 112px 25px 84px);
 }
