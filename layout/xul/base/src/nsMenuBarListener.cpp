@@ -225,8 +225,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           retVal = NS_ERROR_BASE;       // I am consuming event
         }
       }    
-#ifdef XP_WIN
-      // Also need to handle F10 specially on Windows.
+#if !defined(XP_MAC) && !defined(XP_MACOSX)
+      // Also need to handle F10 specially on Non-Mac platform.
       else if (theChar == NS_VK_F10) {
         PRBool alt,ctrl,shift,meta;
         keyEvent->GetAltKey(&alt);
@@ -247,7 +247,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           return NS_ERROR_BASE; // consume the event
         }
       }
-#endif   // XP_WIN
+#endif   // !XP_MAC && !XP_MACOSX
     } 
   }
   return retVal;
