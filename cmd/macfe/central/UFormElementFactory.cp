@@ -78,8 +78,7 @@ void FE_FreeFormElement(
 typedef struct lo_FormElementTextareaData_struct lo_FormElementHTMLareaData;
 
 // prototypes
-Boolean SetFE_Data(LO_FormElementStruct *formElem, LPane * pane, LFormElement *host, LCommander *commander);
-Boolean HasFormWidget(LO_FormElementStruct *formElem);
+static Boolean HasFormWidget(LO_FormElementStruct *formElem);
 
 // utilities
 inline  FormFEData *GetFEData(LO_FormElementStruct *formElem) { return ((FormFEData *)formElem->element_data->ele_minimal.FE_Data); }
@@ -87,7 +86,12 @@ inline	LPane *GetFEDataPane( LO_FormElementStruct *formElem) { return FEDATAPANE
 
 // Sets the value of FE_Data structure in form element
 // Returns true if form is being created from scratch
-Boolean SetFE_Data(
+// or if we are printing. The return value is used to
+// determine whether the form element should be initialized
+// to default values, or from the layout data. If printing,
+// we want the latter
+static Boolean InitFE_Data(
+	MWContext	*context,
 	LO_FormElementStruct* formElem,
 	LPane* pane,
 	LFormElement *host,
@@ -113,10 +117,14 @@ Boolean SetFE_Data(
 	Assert_(host);
 	if (host)
 		host->SetFEData(feData);
+		
+	if (context->type == MWContextPrint)
+		return false;		// force the form elements to use data from layout
+
 	return noFEData;
 }
 
-Boolean HasFormWidget(
+static Boolean HasFormWidget(
 	LO_FormElementStruct *formElem)
 {
 	return ((formElem->element_data->ele_minimal.FE_Data != NULL) &&
@@ -370,7 +378,7 @@ LPane*	UFormElementFactory::MakeTextFormElem(
 		editField->AddAttachment(theUndoer);
 
 	// Reset the value
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,editField,editField, editField));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext,formElem,editField,editField, editField));
 
 	// Secure fields are disabled
 	}
@@ -427,7 +435,7 @@ LPane * UFormElementFactory::MakeReadOnlyFormElem(
 		editField->Disable();
 
 	// Reset the value
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,editField,editField, editField));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem,editField,editField, editField));
 		char * newText;
 		PA_LOCK(newText, char* , readData->value);
 		editField->SetDescriptor(CStr255(newText));
@@ -520,15 +528,20 @@ LPane* UFormElementFactory::MakeTextArea(
 		theTextView->InitFormElement(*inNSContext, formElem);
 
 		// Add the undoer for text actions.  This will be on a per-text field basis
-		//	- Let WASTE handle undo
-		//	LUndoer* theUndoer = new LUndoer;
-		//	theTextView->AddAttachment(theUndoer);
+	// Let WASTE handle undo
+	//	LUndoer* theUndoer = new LUndoer;
+	//	theTextView->AddAttachment(theUndoer);
 		
-		// Resize to proper size
+	//  Resize to proper size
 		theTextView->FocusDraw();
+//		UTextTraits::SetPortTextTraits( theTextView->GetTextTraits() );
 		::GetFontInfo(&fontInfo);
-//		short wantedWidth = textAreaData->cols * fontInfo.widMax + 8;
-		short wantedWidth = textAreaData->cols * ::CharWidth('M') + 8;
+	
+				// measuring a space doesn't work well when users set a proportional font
+				// as their default fixed width font in their preferences (such as palatino)
+	short wantedWidth = textAreaData->cols * ::CharWidth('M') + 8;	// M is better than space
+//	short wantedWidth = textAreaData->cols * fontInfo.widMax + 8;
+			
 		short wantedHeight = textAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
 		
 		// make the image big so there is something to scroll, if necessary....
@@ -540,7 +553,7 @@ LPane* UFormElementFactory::MakeTextArea(
 								   FALSE);
 								   
 	// Set the default values.
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem, theScroller, theTextView, theTextView));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theScroller, theTextView, theTextView));
 
 		theScroller->Show();
 		}
@@ -630,7 +643,7 @@ LPane* UFormElementFactory::MakeHTMLArea(
 								   FALSE);
 								   
 	// Set the default values.
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem, theScroller, theHTMLAreaView, theHTMLAreaView));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, theScroller, theHTMLAreaView, theHTMLAreaView));
 
 		theScroller->Show();
 	}
@@ -747,7 +760,7 @@ LPane* UFormElementFactory::MakeButton(
 		thePane->FinishCreate();
 		theHost->InitFormElement(*inNSContext, formElem);
 
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,thePane,theHost, NULL));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem,thePane,theHost, NULL));
 	// Set up buttons as broadcasters. Store the LO_FormElementStruct * in refCon
 		theControl->AddListener(inHTMLView);
 	}
@@ -808,7 +821,7 @@ LPane* UFormElementFactory::MakeFilePicker(
 		filePicker->InitFormElement(*inNSContext, formElem);
 
 		filePicker->FinishCreate();
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,filePicker,filePicker, filePicker->fEditField));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem,filePicker,filePicker, filePicker->fEditField));
 	}
 	else
 	{
@@ -907,7 +920,7 @@ LPane* UFormElementFactory::MakeToggle(
 		thePane->FinishCreate();
 		thePane->Enable();
 
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,toggle, host, NULL ));
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem,toggle, host, NULL));
 			
 		// Set up toggles as broadcasters. Store the LO_FormElementStruct * in refCon
 //		toggle->AddListener(this);
@@ -1001,7 +1014,8 @@ LPane* UFormElementFactory::MakePopup (
 		
 		popupCtrl->AddAttachment (popupText);
 		// reset values
-		ResetFormElement(formElem, FALSE, SetFE_Data(formElem,popupCtrl,popupText, NULL ));			// Reset the selection
+
+		ResetFormElement(formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem,popupCtrl,popupText, NULL));			// Reset the selection
 #if 1	/*	POPUP MENU VERTICAL POSITION FIX */
 		FontInfo fontInfo;
 		GetFontInfo (&fontInfo);
@@ -1086,7 +1100,7 @@ LPane* UFormElementFactory::MakeList(
 		myList->SetSelectMultiple( selectData->multiple );
 		myList->SyncRows( selectData->option_cnt );
 		
-		ResetFormElement( formElem, FALSE, 	SetFE_Data( formElem, myList, myList, myList) );			// Reset the selection
+		ResetFormElement( formElem, FALSE, InitFE_Data((MWContext*)*inNSContext, formElem, myList, myList, myList));			// Reset the selection
 		myList->ShrinkToFit( selectData->size );
 	}
 	else
@@ -1905,9 +1919,12 @@ void UFormElementFactory::ResetFormElementData(
 				ValidateTextByCharset(formElem->text_attr->charset, default_text);
 				Try_
 				{
-				
-					// don't want ending linefeed
-					Int32 length = XP_STRLEN((char*)default_text)-1;
+					Int32 length = XP_STRLEN((char*)default_text);
+					// Don't want last linefeed
+					if ( length && default_text[ length -1 ] == '\r')
+						length --; // Strip off the last lf
+						
+					
 					if( length )
 						SetupTextInTextEngine(engine, formElem->text_attr->charset, default_text,  length);
 				}
