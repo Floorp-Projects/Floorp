@@ -383,7 +383,7 @@ nsInlineFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
             nscoord used;
             ihr->AdjustFrameSize(extra, used);
             if (used < extra) {
-              frame->ListTag(); printf(": extra=%d used=%d\n", extra, used);
+//              frame->ListTag(); printf(": extra=%d used=%d\n", extra, used);
             }
             totalUsed += used;
             frame->GetRect(r);
