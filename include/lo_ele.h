@@ -336,6 +336,9 @@ struct LO_TextInfo_struct {
 typedef struct LO_TextBlock_struct {
     /* the base layout struct */
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -394,6 +397,9 @@ typedef struct LO_TextBlock_struct {
  */
 struct LO_TextStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -471,6 +477,9 @@ typedef enum {
  */
 struct LO_ImageStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -536,6 +545,9 @@ typedef struct {
 
 struct LO_SubDocStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -761,6 +773,9 @@ struct LO_FormSubmitData_struct {
  
 struct LO_FormElementStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -813,6 +828,9 @@ struct LO_FormElementStruct_struct {
 
 struct LO_LinefeedStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -838,6 +856,9 @@ struct LO_LinefeedStruct_struct {
  
 struct LO_HorizRuleStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -863,6 +884,9 @@ struct LO_HorizRuleStruct_struct {
  
 struct LO_BulletStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -887,6 +911,9 @@ struct LO_BulletStruct_struct {
 
 struct LO_TableStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -920,6 +947,9 @@ struct LO_TableStruct_struct {
 
 struct LO_CellStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -965,6 +995,9 @@ typedef struct lo_NVList lo_NVList;
 
 struct LO_CommonPluginStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
@@ -998,6 +1031,9 @@ struct LO_CommonPluginStruct_struct {
 
 struct LO_BuiltinStruct_struct {
 		int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
 		int16 x_offset;
 		int32 ele_id;
 		int32 x, y;
@@ -1077,6 +1113,9 @@ struct LO_JavaAppStruct_struct {
 
 struct LO_EdgeStruct_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;
