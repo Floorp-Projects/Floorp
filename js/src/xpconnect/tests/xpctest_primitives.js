@@ -51,7 +51,7 @@ var data = [
 
 function println(s)
 {
-    if(typeof(this.document) == "undefined")
+    if(this.document === undefined)
         print(s);
     else
         dump(s+"\n");
