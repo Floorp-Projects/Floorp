@@ -42,7 +42,7 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[scriptable, uuid(b482f6d8-40a9-4f20-89f3-772d417a4c81)]
+[scriptable, uuid(6a8812fd-d045-4835-bfc1-d26f487b8b89)]
 interface nsIImageDocument : nsISupports {
 
   /* Whether the pref for image resizing has been set. */
@@ -59,6 +59,11 @@ interface nsIImageDocument : nsISupports {
 
   /* Restore image original size. */
   void restoreImage();
+
+  /* Restore the image, trying to keep a certain pixel in the same position.
+   * The coordinate system is that of the shrunken image.
+   */
+  void restoreImageTo(in long x, in long y);
 
   /* A helper method for switching between states.
    * The switching logic is as follows. If the image has been resized
