@@ -4176,6 +4176,8 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
       // Add the override style sheet
       // (This checks if already exists)
       styleSet->AppendOverrideStyleSheet(styleSheet);
+      // Save doc pointer to be able to use nsIStyleSheet::SetEnabled()
+      styleSheet->SetOwningDocument(document);
 
       // This notifies document observers to rebuild all frames
       // (this doesn't affect style sheet because it is not a doc sheet)

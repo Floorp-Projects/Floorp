@@ -200,6 +200,7 @@ public:
   NS_IMETHOD SelectTableColumn();
   NS_IMETHOD SelectTable();
   NS_IMETHOD SelectAllTableCells();
+  NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell);
   NS_IMETHOD JoinTableCells();
   NS_IMETHOD SplitTableCell();
   NS_IMETHOD NormalizeTable(nsIDOMElement *aTable);
@@ -377,7 +378,7 @@ protected:
   //  Optional: If aNewCell supplied, returns the newly-created cell (addref'd, of course)
   // This doesn't change or use the current selection
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
-                        PRBool aAfter, nsIDOMElement **aNewCell);
+                        PRBool aAfter, PRBool aIsHeader, nsIDOMElement **aNewCell);
 
   // Move all contents from aCellToMerge into aTargetCell (append at end)
   NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, PRBool aDeleteCellToMerge);

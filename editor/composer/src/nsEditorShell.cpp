@@ -44,9 +44,10 @@
 #include "nsIDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
+#include "nsIStyleSheet.h"
+#include "nsIStyleSet.h"
 #include "nsIContent.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIStyleSet.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 
@@ -1271,55 +1272,76 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   if (!styleSheets) return NS_NOINTERFACE;
 
   mDisplayMode = aDisplayMode;
+  nsCOMPtr<nsIStyleSheet> nsISheet;
+  nsresult res = NS_OK;
 
   if (aDisplayMode == eDisplayModePreview)
   {
-    // Remove all extra "edit mode" style sheets 
+    // Disable all extra "edit mode" style sheets 
     if (mEditModeStyleSheet)
     {
-      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-      mEditModeStyleSheet = nsnull;
+      nsISheet = do_QueryInterface(mEditModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_FALSE);
     }
     if (mAllTagsModeStyleSheet)
     {
-      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
-      mAllTagsModeStyleSheet = nsnull;
+      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_FALSE);
     }
   }
   else if (aDisplayMode == eDisplayModeNormal)
   {
-    // Remove the AllTags sheet
+    // Disable the AllTags sheet
     if (mAllTagsModeStyleSheet)
     {
-      styleSheets->RemoveOverrideStyleSheet(mAllTagsModeStyleSheet);
-      mAllTagsModeStyleSheet = nsnull;
+      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_FALSE);
     }
 
-    // We are already in the requested mode
-    if (mEditModeStyleSheet) return NS_OK;
+    // If loaded before, enable the sheet
+    if (mEditModeStyleSheet)
+    {
+      nsISheet = do_QueryInterface(mEditModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_TRUE);
+    }
+    else
+    {
     
-    //Load the editmode style sheet
-    return styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
-                                                getter_AddRefs(mEditModeStyleSheet));
+      //Load the editmode style sheet
+      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+                                                 getter_AddRefs(mEditModeStyleSheet));
+    }
   }
   else if (aDisplayMode == eDisplayModeAllTags)
   {
-    // We are already in the requested mode
-    if (mAllTagsModeStyleSheet) return NS_OK;
-    
-    //Load the normal mode style sheet
-    if (!mEditModeStyleSheet)
+    // If loaded before, enable the sheet
+    if (mAllTagsModeStyleSheet)
+    {
+      nsISheet = do_QueryInterface(mAllTagsModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_TRUE);
+    }
+    else
+    {
+      // else load it
+      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
+                                                 getter_AddRefs(mAllTagsModeStyleSheet));
+    }     
+
+    if (mEditModeStyleSheet)
+    {
+      nsISheet = do_QueryInterface(mEditModeStyleSheet);
+      res = nsISheet->SetEnabled(PR_TRUE);
+    }
+    else
     {
       // Note: using "@import url(chrome://editor/content/EditorContent.css);"
       //   in EditorAllTags.css doesn't seem to work!?
-      styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
-                                           getter_AddRefs(mEditModeStyleSheet));
+      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+                                                 getter_AddRefs(mEditModeStyleSheet));
     }
 
-    return styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
-                                                getter_AddRefs(mAllTagsModeStyleSheet));
   }
-  return NS_OK;
+  return res;
 }
 
 NS_IMETHODIMP 
@@ -1329,21 +1351,25 @@ nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets) return NS_NOINTERFACE;
-  
+  nsCOMPtr<nsIStyleSheet> nsISheet;
   if (aShowMarks)
   {
-    // Check if style sheet is already loaded
-    if (mParagraphMarksStyleSheet) return NS_OK;
-
-    //Load the style sheet
+    // Check if style sheet is already loaded -- just enable it
+    if (mParagraphMarksStyleSheet)
+    {
+      nsISheet = do_QueryInterface(mParagraphMarksStyleSheet);
+      return nsISheet->SetEnabled(PR_TRUE);
+    }
+    //First time used -- load the style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
     res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorParagraphMarks.css"),
                                                 getter_AddRefs(mParagraphMarksStyleSheet));
   }
   else if (mParagraphMarksStyleSheet)
   {
-    res = styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
-    mParagraphMarksStyleSheet = nsnull;  
+    // Disable the style sheet
+    nsISheet = do_QueryInterface(mParagraphMarksStyleSheet);
+    res = nsISheet->SetEnabled(PR_FALSE);
   }
   
   return res;
@@ -3833,6 +3859,26 @@ nsEditorShell::DeleteTableColumn(PRInt32 aNumber)
   }
   return result;
 }
+
+NS_IMETHODIMP 
+nsEditorShell::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElement **aNewCell)
+{
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->SwitchTableCellHeaderType(aSourceCell, aNewCell);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP    
 nsEditorShell::JoinTableCells()
