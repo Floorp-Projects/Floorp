@@ -266,7 +266,8 @@ static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString
   // encode nodes if non ASCII
 
   char encodedBuf[kEncodedBufSize];
-  idn_result_t result = race_compress_encode(temp, get_compress_mode(temp + 1), 
+  idn_result_t result = race_compress_encode((const unsigned short *) temp, 
+                                             get_compress_mode((unsigned short *) temp + 1), 
                                              encodedBuf, kEncodedBufSize);
   if (idn_success != result)
     return NS_ERROR_FAILURE;
