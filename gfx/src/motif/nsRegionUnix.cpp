@@ -23,10 +23,16 @@ static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 nsRegionUnix :: nsRegionUnix()
 {
   NS_INIT_REFCNT();
+
+  mRegion = nsnull;
+  mRegionType = eRegionType_empty;
 }
 
 nsRegionUnix :: ~nsRegionUnix()
 {
+  if (mRegion)
+    ::XDestroyRegion(mRegion);
+  mRegion = nsnull;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRegionUnix, kRegionIID)
@@ -35,65 +41,154 @@ NS_IMPL_RELEASE(nsRegionUnix)
 
 nsresult nsRegionUnix :: Init(void)
 {
+  mRegion = ::XCreateRegion();
+  mRegionType = eRegionType_empty;
+
   return NS_OK;
 }
 
 void nsRegionUnix :: SetTo(const nsIRegion &aRegion)
 {
+  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+
+  ::XDestroyRegion(mRegion);
+  mRegion = ::XCreateRegion();
+
+  ::XUnionRegion(mRegion, pRegion->mRegion, mRegion);
+
+  mRegionType = eRegionType_rect ; // XXX: Should probably set to complex
 }
 
 void nsRegionUnix :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  ::XDestroyRegion(mRegion);
+  mRegion = ::XCreateRegion();
+
+  ::XOffsetRegion(mRegion, aX, aY);
+  ::XShrinkRegion(mRegion, -aWidth, -aHeight);
+
+  mRegionType = eRegionType_rect ;
 }
 
 void nsRegionUnix :: Intersect(const nsIRegion &aRegion)
 {
+  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+
+  ::XIntersectRegion(mRegion, pRegion->mRegion, mRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 
 void nsRegionUnix :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  Region tRegion;
+
+  tRegion = ::XCreateRegion();
+
+  ::XOffsetRegion(tRegion, aX, aY);
+  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
+  
+  ::XIntersectRegion(mRegion, tRegion, mRegion);
+
+  ::XDestroyRegion(tRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 
 void nsRegionUnix :: Union(const nsIRegion &aRegion)
 {
+  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+
+  ::XUnionRegion(mRegion, pRegion->mRegion, mRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 
 void nsRegionUnix :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  Region tRegion;
+
+  tRegion = ::XCreateRegion();
+
+  ::XOffsetRegion(tRegion, aX, aY);
+  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
+  
+  ::XUnionRegion(mRegion, tRegion, mRegion);
+
+  ::XDestroyRegion(tRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 
 void nsRegionUnix :: Subtract(const nsIRegion &aRegion)
 {
+  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+
+  ::XSubtractRegion(mRegion, pRegion->mRegion, mRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 void nsRegionUnix :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
+  Region tRegion;
+
+  tRegion = ::XCreateRegion();
+
+  ::XOffsetRegion(tRegion, aX, aY);
+  ::XShrinkRegion(tRegion, -aWidth, -aHeight);
+  
+  ::XSubtractRegion(mRegion, tRegion, mRegion);
+
+  ::XDestroyRegion(tRegion);
+
+  mRegionType = eRegionType_rect ;
 }
 
 PRBool nsRegionUnix :: IsEmpty(void)
 {
-  return PR_FALSE;
+  return (::XEmptyRegion(mRegion));
 }
 
 PRBool nsRegionUnix :: IsEqual(const nsIRegion &aRegion)
 {
-  return PR_FALSE;
+  nsRegionUnix * pRegion = (nsRegionUnix *)&aRegion;
+
+  return(::XEqualRegion(mRegion, pRegion->mRegion));
+
 }
 
 void nsRegionUnix :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  *aX = *aY = *aWidth = *aHeight = 0;
+  XRectangle rect;
+
+  ::XClipBox(mRegion, &rect);
+
+  *aX = rect.x;
+  *aY = rect.y;
+  *aWidth = rect.width;
+  *aHeight = rect.height;
 }
 
 void nsRegionUnix :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
+  ::XOffsetRegion(mRegion, aXOffset, aYOffset);
 }
 
 PRBool nsRegionUnix :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  return PR_TRUE;
+  PRInt32 containment;
+
+  containment = ::XRectInRegion(mRegion, aX, aY, aWidth, aHeight);
+
+  if (containment == RectangleIn)
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+
 }
 
 PRBool nsRegionUnix :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 {
   return PR_FALSE;
 }
+
