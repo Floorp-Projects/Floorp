@@ -54,7 +54,7 @@
 .menubutton-dual.toolbar > .menubutton-dual-dropmarker-box
   {
     border                : 1px solid transparent;
-    padding               : 1px 0px 1px 0px;
+    padding               : 1px 2px 1px 2px;
   }
  
  
@@ -264,7 +264,7 @@
       border-bottom         : 1px solid threedhighlight;
       */
       border                : 1px inset #FFFFFF;
-      padding               : 2px 0px 0px 0px;
+      padding               : 2px 2px 0px 2px;
     }
 
 
