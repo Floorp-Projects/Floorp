@@ -103,6 +103,15 @@ plaintext, xmp, pre {
   white-space: pre;
   margin: 1em 0;
 }
+pre[wrap] {
+  white-space: -moz-pre-wrap;
+}
+pre[cols] {
+  white-space: -moz-pre-wrap;
+}
+pre[width] {
+  white-space: -moz-pre-wrap;
+}
 multicol {
   display: block;
   margin: 1em 0;
