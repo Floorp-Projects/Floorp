@@ -73,7 +73,8 @@ struct nsBandData {
 };
 
 /**
- * Interface for dealing with bands of available space.
+ * Interface for dealing with bands of available space. The space manager defines a coordinate
+ * space with an origin at (0, 0) that grows down and to the right.
  *
  * @see nsIRunaround
  */
@@ -138,6 +139,9 @@ public:
    *
    * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is already
    * a region tagged with aFrame
+   *
+   * When translated to world coordinates the origin MUST be within the defined
+   * coordinate space, i.e. the x-offset and y-offset must be >= 0
    */
   virtual PRBool AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace) = 0;
 
@@ -147,7 +151,8 @@ public:
    * You specify whether the width change applies to the left or right edge
    *
    * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
-   * tagged with aFrame
+   * tagged with aFrame, or the new offset when translated to world coordinates is
+   * outside the defined coordinate space
    */
   enum AffectedEdge {LeftEdge, RightEdge};
   virtual PRBool ResizeRectRegion(nsIFrame*    aFrame,
@@ -159,7 +164,8 @@ public:
    * Offset the region associated with aFrame by the specified amount.
    *
    * Returns PR_TRUE if successful and PR_FALSE otherwise, e.g. there is no region
-   * tagged with aFrame
+   * tagged with aFrame, or the new offset when translated to world coordinates
+   * is outside the defined coordinate space
    */
   virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy) = 0;
 
