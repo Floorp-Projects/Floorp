@@ -3738,8 +3738,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_left_width:
   case eCSSProperty_border_right_width:
   case eCSSProperty_border_top_width:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
-                        nsCSSProps::kBorderWidthKTable);
+    return ParsePositiveVariant(aErrorCode, aValue, VARIANT_HKL,
+                                nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_border_radius_topLeft:
   case eCSSProperty__moz_border_radius_topRight:
   case eCSSProperty__moz_border_radius_bottomRight:
