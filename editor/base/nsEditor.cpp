@@ -3849,6 +3849,9 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 {
 	nsresult	result;
 
+	if (mIMETextNode==nsnull) 
+		BeginComposition();
+
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
 	if (nsnull!=*aTxn) {
 		result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,aTextRangeList,aStringToInsert,mPresShell);
