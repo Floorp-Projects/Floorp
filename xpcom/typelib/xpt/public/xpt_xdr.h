@@ -23,9 +23,6 @@
 #ifndef __xpt_xdr_h__
 #define __xpt_xdr_h__
 
-#include "nspr.h"
-#include "plhash.h"
-#include "prmem.h"
 #include "xpt_struct.h"
 
 PR_BEGIN_EXTERN_C
