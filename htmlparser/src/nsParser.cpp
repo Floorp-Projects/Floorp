@@ -1823,7 +1823,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
     result=WillBuildModel(mParserContext->mScanner->GetFilename());
     if(mParserContext->mDTD) {
 
-      mParserContext->mDTD->WillResumeParse();
+      mParserContext->mDTD->WillResumeParse(mSink);
       PRBool theFirstTime=PR_TRUE;
       PRBool theIterationIsOk=(theFirstTime || allowIteration||(!mParserContext->mPrevContext));
        
@@ -1930,7 +1930,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
         if((kEOF==theTokenizerResult) || (result==NS_ERROR_HTMLPARSER_INTERRUPTED)) {
           result = (result == NS_ERROR_HTMLPARSER_INTERRUPTED) ? NS_OK : result;
           if (mParserContext->mDTD) {
-            mParserContext->mDTD->WillInterruptParse();
+            mParserContext->mDTD->WillInterruptParse(mSink);
           }
         }
 

@@ -163,7 +163,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillResumeParse(nsIContentSink* aSink = 0) = 0;
+    NS_IMETHOD WillResumeParse(nsIContentSink* aSink) = 0;
 
     /**
      * If the parse process gets interrupted, this method is called by
@@ -171,7 +171,7 @@ public:
      * @update  gess5/18/98
      * @return ignored
      */
-    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0) = 0;
+    NS_IMETHOD WillInterruptParse(nsIContentSink* aSink) = 0;
 
     /**
      * This method is called to determine whether or not a tag of one
