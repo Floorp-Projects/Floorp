@@ -140,10 +140,13 @@ NS_METHOD nsBodyFrame::Reflow(nsIPresContext*      aPresContext,
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Do we have any children?
-  // XXX Verify the reason is eReflowReason_Initial...
   if (nsnull == mFirstChild) {
     // No, create a pseudo block frame
+    NS_ASSERTION(eReflowReason_Initial == aReflowState.reason, "bad reason");
     CreateColumnFrame(aPresContext);
+  }
+  else {
+    NS_ASSERTION(eReflowReason_Initial != aReflowState.reason, "bad reason");
   }
 
   if (eReflowReason_Incremental == aReflowState.reason) {
