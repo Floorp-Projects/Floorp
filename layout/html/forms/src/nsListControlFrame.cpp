@@ -35,6 +35,7 @@
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsWidgetsCID.h"
 #include "nsIReflowCommand.h"
+#include "nsIPresShell.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -340,8 +341,10 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
 
+  PRBool isInDropDownMode = IsInDropDownMode();
+
   nscoord visibleWidth = 0;
-  if (IsInDropDownMode() == PR_TRUE) {
+  if (isInDropDownMode) {
      // Calculate visible width for dropdown
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
@@ -370,8 +373,34 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   PRInt32 heightOfARow = scrolledAreaDesiredSize.maxElementSize->height;
   heightOfARow -= (border.top + border.bottom);
 
+  // Check to see if we have zero item and
+  // whether we have no width and height
+  // The following code measures the width and height 
+  // of a bogus string so the list actually displays
+  PRInt32 length = 0;
+  GetNumberOfOptions(&length);
+  /*if (!isInDropDownMode && (0 == length || (0 == visibleWidth && 0 == heightOfARow))) {
+    nsCOMPtr<nsIPresShell> presShell;
+    nsresult rv = aPresContext.GetShell(getter_AddRefs(presShell));
+    if (NS_SUCCEEDED(rv) && presShell) {
+      nsCOMPtr<nsIRenderingContext> renderContext;
+      rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
+      if (NS_SUCCEEDED(rv) && renderContext) {
+
+
+        nsSize size;
+        rv = presShell->CreateRenderingContext(this, getter_AddRefs(renderContext));
+	      const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+        renderContext->SetFont(fontStyle->mFont);
+        nsFormControlHelper::GetTextSize(aPresContext, this, nsAutoString("XX"), size, renderContext);
+        visibleWidth  = size.width;
+        heightOfARow = size.height;
+      }
+    }
+  }*/
+
   nscoord visibleHeight = 0;
-  if (IsInDropDownMode() == PR_TRUE) {
+  if (isInDropDownMode) {
     // Compute the visible height of the drop-down list
     // The dropdown list height is the smaller of it's height setting or the height
     // of the smallest box that can drawn around it's contents.
@@ -397,12 +426,20 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
+
+  // There are no items in the list
+  // but we want to include space for the scrollbars
+  // So fake like we will need scrollbars also
+  if (!isInDropDownMode && 0 == length) {
+    scrolledAreaHeight = visibleHeight+1;
+  }
+
   PRBool needsVerticalScrollbar = PR_FALSE;
   if (visibleHeight < scrolledAreaHeight) {
     needsVerticalScrollbar = PR_TRUE; 
   }
 
-  if ((needsVerticalScrollbar) && (IsInDropDownMode() == PR_FALSE)) {
+  if (needsVerticalScrollbar && !isInDropDownMode) {
     visibleWidth += scrollbarWidth;
     mIsScrollbarVisible = PR_TRUE; // XXX temp code
   } else {
@@ -414,10 +451,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   secondPassState.mComputedWidth = visibleWidth;
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
-  nsScrollFrame::Reflow(aPresContext, 
-                    aDesiredSize,
-                    secondPassState, 
-                    aStatus);
+  nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
 
     // Set the max element size to be the same as the desired element size.
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -1746,4 +1780,5 @@ nsListControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
   return NS_OK;
 }
+
 
