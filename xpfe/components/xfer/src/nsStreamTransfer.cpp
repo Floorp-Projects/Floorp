@@ -350,10 +350,10 @@ nsString nsStreamTransfer::SuggestNameFor( nsIChannel *aChannel, char const *sug
                     for (char *ptr = nameFromURL; *ptr; ptr++) {
                       if (*ptr & '\200')
                         break;
+                    }
 
                     if (!(*ptr))
                       result = NS_ConvertASCIItoUCS2(nameFromURL).GetUnicode();
-                    }
 
                     nsCRT::free( nameFromURL );
                 }
