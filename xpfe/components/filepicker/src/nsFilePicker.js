@@ -133,14 +133,16 @@ nsFilePicker.prototype = {
     o.retvals = new Object();
 
     var parent;
-    if (this.mParentWindow) {
-      parent = this.mParentWindow;
-    } else if (window) {
-      parent = window;
-    } else {
-      var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
-      parent = appShellService.GetHiddenWindow();
-    }
+    try {
+      if (this.mParentWindow) {
+        parent = this.mParentWindow;
+      } else if (window) {
+        parent = window;
+      } else {
+        var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
+        parent = appShellService.GetHiddenWindow();
+      }
+    } catch(ex) { }
 
     parent.openDialog("chrome://global/content/filepicker.xul",
                       "",
