@@ -181,7 +181,7 @@ function GetEditorController()
   var numControllers = window._content.controllers.getControllerCount();
     
   // count down to find a controller that supplies a nsIControllerCommandManager interface
-  for (var i = numControllers; i >= 0 ; i --)
+  for (var i = numControllers-1; i >= 0 ; i --)
   {
     var commandManager = null;
     
