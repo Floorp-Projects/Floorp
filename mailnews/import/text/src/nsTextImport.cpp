@@ -618,7 +618,7 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 		*pStr = nsCRT::strdup( str.GetUnicode());
 		*pFound = PR_TRUE;
 
-		IMPORT_LOG1( "Sample data: %S\n", str.GetUnicode());
+		/* IMPORT_LOG1( "Sample data: %S\n", str.GetUnicode()); */
 	}
 	else {
 		*pFound = PR_FALSE;

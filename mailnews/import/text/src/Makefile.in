@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= impText
-#LIBRARY_NAME	= addrbook
+LIBRARY_NAME	= impText
 IS_COMPONENT	= 1
 
 
@@ -37,20 +37,11 @@ CPPSRCS		= 	nsTextFactory.cpp 				\
         		nsTextAddress.cpp 				\
 			$(NULL)
 			
-#EXPORTS		= nsAbBaseCID.h
-
-#SHARED_LIBRARY_LIBS = \
-#	$(DIST)/lib/libaddrbook_s.a \
-#	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-	$(MKSHLIB_FORCE_ALL) \
-	$(MKSHLIB_UNFORCE_ALL) \
 	-L$(DIST)/bin \
 	$(NSPR_LIBS) \
 	-lxpcom \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-
-#$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile

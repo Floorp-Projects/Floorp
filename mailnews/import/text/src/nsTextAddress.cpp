@@ -20,7 +20,7 @@
 #include "nsTextAddress.h"
 
 #include "nsIAddrDatabase.h"
-#include "nsABBaseCID.h"
+#include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 
 static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
@@ -496,7 +496,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 		}
 		else {
 			if (active) {
-				IMPORT_LOG1( "*** Error getting field map for index %ld\n", i);
+				IMPORT_LOG1( "*** Error getting field map for index %ld\n", (long) i);
 			}
 		}
 
@@ -1255,3 +1255,4 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  break; // default
 	}
 }
+

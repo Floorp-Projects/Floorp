@@ -724,6 +724,9 @@ void nsImportModuleList::AddModule( const nsCID& cid, const char *pSupports, con
 	m_pList[m_count]->SetDescription( pDesc);
 	
 	m_count++;
-	
-	IMPORT_LOG3( "* nsImportService registered import module: %S, %S, %s\n", pName, pDesc, pSupports);
+#ifdef IMPORT_DEBUG
+	nsCString 	name( pName);
+	nsCString	desc( pDesc);
+	IMPORT_LOG3( "* nsImportService registered import module: %s, %s, %s\n", (const char *)name, (const char *)desc, pSupports);
+#endif
 }

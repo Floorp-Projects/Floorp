@@ -64,7 +64,6 @@
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
-#include "nsPOP3IncomingServer.h"
 #include "nsIProfile.h"
 #include "nsIMsgFolder.h"
 #include "nsImportStringBundle.h"
@@ -72,7 +71,6 @@
 
 #include "ImportDebug.h"
 
-static NS_DEFINE_IID(kIPOP3IncomingServerIID, NS_IPOP3INCOMINGSERVER_IID);
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
@@ -351,7 +349,7 @@ void nsImportGenericMail::GetDefaultLocation( void)
 	m_gotLocation = PR_TRUE;
 
 	nsIFileSpec *	pLoc = nsnull;
-	nsresult rv = m_pInterface->GetDefaultLocation( &pLoc, &m_found, &m_userVerify);
+	m_pInterface->GetDefaultLocation( &pLoc, &m_found, &m_userVerify);
 	if (!m_pSrcLocation)
 		m_pSrcLocation = pLoc;
 	else {
@@ -364,7 +362,7 @@ void nsImportGenericMail::GetDefaultMailboxes( void)
 	if (!m_pInterface || m_pMailboxes || !m_pSrcLocation)
 		return;
 	
-	nsresult rv = m_pInterface->FindMailboxes( m_pSrcLocation, &m_pMailboxes);
+	m_pInterface->FindMailboxes( m_pSrcLocation, &m_pMailboxes);
 }
 
 void nsImportGenericMail::GetDefaultDestination( void)
@@ -746,12 +744,12 @@ ImportMailThread( void *stuff)
 	nsString	error;
 
 	// Initialize the curFolder proxy object
-    NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
+	NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
 		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(),
 										curFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 
-		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", rv);
+		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", (long) rv);
 	}
 	else {
 		IMPORT_LOG0( "Unable to obtain proxy service to do import\n");
@@ -774,7 +772,7 @@ ImportMailThread( void *stuff)
 					rv = box->GetSize( &size);
 				rv = box->GetDepth( &newDepth);
 				if (newDepth > depth) {
-					char *	pStr = lastName.ToNewCString();
+					pStr = lastName.ToNewCString();
 					IMPORT_LOG1( "* Finding folder for child named: %s\n", pStr);
 					rv = curProxy->GetChildNamed( pStr, getter_AddRefs( subFolder));
 					nsCRT::free( pStr);
@@ -792,7 +790,7 @@ ImportMailThread( void *stuff)
 						break;
 					}
 
-					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", rv);
+					IMPORT_LOG1( "Created proxy for new subFolder: 0x%lx\n", (long) rv);
 				}
 				else if (newDepth < depth) {
 					rv = NS_OK;
@@ -823,11 +821,11 @@ ImportMailThread( void *stuff)
 				exists = PR_FALSE;
 				rv = curProxy->ContainsChildNamed( pStr, &exists);
 				if (exists) {
-					char *pName = nsnull;
-					curProxy->GenerateUniqueSubfolderName( pStr, nsnull, &pName);
-					if (pName) {
+					char *pSubName = nsnull;
+					curProxy->GenerateUniqueSubfolderName( pStr, nsnull, &pSubName);
+					if (pSubName) {
 						nsCRT::free( pStr);
-						pStr = pName;
+						pStr = pSubName;
 					}
 				}
 				lastName = pStr;
@@ -836,10 +834,10 @@ ImportMailThread( void *stuff)
 				
 				rv = curProxy->CreateSubfolder( pStr);
 				
-				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", rv);
+				IMPORT_LOG1( "New folder created, rv: 0x%lx\n", (long) rv);
 				if (NS_SUCCEEDED( rv)) {
 					rv = curProxy->GetChildNamed( pStr, getter_AddRefs( subFolder));
-					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", rv);
+					IMPORT_LOG1( "GetChildNamed for new folder returned rv: 0x%lx\n", (long) rv);
 					if (NS_SUCCEEDED( rv)) {
 						newFolder = do_QueryInterface( subFolder);
 						if (newFolder) {

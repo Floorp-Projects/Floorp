@@ -26,7 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME	= import
+MODULE = import
+LIBRARY_NAME = import
 IS_COMPONENT	= 1
 
 CPPSRCS		= 	\
@@ -40,7 +41,7 @@ CPPSRCS		= 	\
 			ImportTranslate.cpp				\
 			nsImportTranslator.cpp			\
 			ImportCharSet.cpp				\
-			ImportOutFile.cpp				\	
+			ImportOutFile.cpp				\
 			nsImportScanFile.cpp			\
 			nsImportEncodeScan.cpp			\
 			nsImportMimeEncode.cpp			\
@@ -48,12 +49,13 @@ CPPSRCS		= 	\
 			$(NULL)
 
 
+include $(topsrcdir)/config/rules.mk
+
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin \
 	$(NSPR_LIBS) \
 	-lxpcom \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
 
 

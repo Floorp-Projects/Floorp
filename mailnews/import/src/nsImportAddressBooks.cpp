@@ -289,7 +289,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 			rNum += (*pNum - '0');
 			pNum++;
 		}
-		IMPORT_LOG1( "Requesting sample data #: %ld\n", rNum);
+		IMPORT_LOG1( "Requesting sample data #: %ld\n", (long)rNum);
 		if (m_pInterface) {
 			nsCOMPtr<nsISupportsWString>	data;
 			rv = nsComponentManager::CreateInstance( kSupportsWStringCID, nsnull, kISupportsWStringIID, getter_AddRefs( data));
@@ -412,7 +412,7 @@ void nsImportGenericAddressBooks::GetDefaultLocation( void)
 	if (m_description)
 		nsCRT::free( m_description);
 	m_description = nsnull;
-	nsresult rv = m_pInterface->GetAutoFind( &m_description, &m_autoFind);
+	m_pInterface->GetAutoFind( &m_description, &m_autoFind);
 	m_gotLocation = PR_TRUE;
 	if (m_autoFind) {
 		m_found = PR_TRUE;
@@ -421,7 +421,7 @@ void nsImportGenericAddressBooks::GetDefaultLocation( void)
 	}
 
 	nsIFileSpec *	pLoc = nsnull;
-	rv = m_pInterface->GetDefaultLocation( &pLoc, &m_found, &m_userVerify);
+	m_pInterface->GetDefaultLocation( &pLoc, &m_found, &m_userVerify);
 	if (!m_pLocation)
 		m_pLocation = pLoc;
 	else {
