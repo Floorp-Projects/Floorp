@@ -398,14 +398,11 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
   
     nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,mStyleContext,contentParent,PR_TRUE); 
   }
-  nsIView* view = GetView(aPresContext);
+  nsIView* view = GetView();
 
-  if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK) {
-    nsCOMPtr<nsIWidget> widget;
-    view->GetWidget(*getter_AddRefs(widget));
-
-    if (!widget)
-      view->CreateWidget(kCChildCID);
+  if (aParent->GetStyleDisplay()->mDisplay == NS_STYLE_DISPLAY_DECK
+      && !view->HasWidget()) {
+    view->CreateWidget(kCChildCID);
   }
 
   nsCOMPtr<nsIPresShell> shell;
@@ -584,8 +581,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext*          aPresContext,
 
   {
     // Invalidate the frame
-    nsRect frameRect;
-    GetRect(frameRect);
+    nsRect frameRect = GetRect();
     nsRect rect(0, 0, frameRect.width, frameRect.height);
     if (!rect.IsEmpty()) {
       Invalidate(aPresContext, rect, PR_FALSE);
@@ -637,8 +633,7 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
     parentContent->GetTag(getter_AddRefs(parentTag));
 
     if (parentTag == nsHTMLAtoms::frameset) {
-      nsIFrame* parentFrame = nsnull;
-      GetParent(&parentFrame);
+      nsIFrame* parentFrame = GetParent();
 
       if (parentFrame) {
         // There is no interface for nsHTMLFramesetFrame so QI'ing to
@@ -961,11 +956,10 @@ nsHTMLFrameInnerFrame::GetParentContent(nsIContent** aContent)
 {
   *aContent = nsnull;
 
-  nsIFrame* parent = nsnull;
-  GetParent(&parent);
-
+  nsIFrame* parent = GetParent();
   if (parent) {
-    parent->GetContent(aContent);
+    *aContent = parent->GetContent();
+    NS_IF_ADDREF(*aContent);
   }
 }
 
@@ -1025,17 +1019,14 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext*           aPresContext,
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    nsIView* view = GetView(aPresContext);
+    nsIView* view = GetView();
     if (view) {
       nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
                                   ? nsViewVisibility_kShow
                                   : nsViewVisibility_kHide;
-      nsViewVisibility oldVis;
       // only change if different.
-      view->GetVisibility(oldVis);
-      if (newVis != oldVis) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
+      if (newVis != view->GetVisibility()) {
+        nsIViewManager* vm = view->GetViewManager();
         if (vm) {
           vm->SetViewVisibility(view, newVis);
         }
@@ -1115,10 +1106,6 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aWidget);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
 
@@ -1138,8 +1125,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   GetOffsetFromView(aPresContext, origin, &parView);
   nsRect viewBounds(origin.x, origin.y, 10, 10);
 
-  nsCOMPtr<nsIViewManager> viewMan;
-  presShell->GetViewManager(getter_AddRefs(viewMan));
+  nsIViewManager* viewMan = aPresContext->GetViewManager();
   rv = view->Init(viewMan, viewBounds, parView);
   // XXX put it at the end of the document order until we can do better
   viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
@@ -1151,7 +1137,7 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
 
   rv = view->CreateWidget(kCChildCID, nsnull, nsnull, PR_TRUE, PR_TRUE,
                           xulElement? eContentTypeUI: eContentTypeContent);
-  SetView(aPresContext, view);
+  SetView(view);
 
   nsContainerFrame::SyncFrameViewProperties(aPresContext, this, nsnull, view);
 
@@ -1160,7 +1146,8 @@ nsHTMLFrameInnerFrame::CreateViewAndWidget(nsIPresContext* aPresContext,
   if (!GetStyleVisibility()->IsVisible()) {
     viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
   }
-  view->GetWidget(*aWidget);
+  *aWidget = view->GetWidget();
+  NS_IF_ADDREF(*aWidget);
   return rv;
 }
 
