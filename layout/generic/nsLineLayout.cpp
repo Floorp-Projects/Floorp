@@ -1987,6 +1987,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   PRBool zeroEffectiveSpanBox = PR_FALSE;
   // XXXldb If we really have empty continuations, then all these other
   // checks don't make sense for them.
+  // XXXldb This should probably just use nsIFrame::IsSelfEmpty, assuming that
+  // it agrees with this code.  (If it doesn't agree, it probably should.)
   if ((emptyContinuation || mCompatMode != eCompatibility_FullStandards) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
