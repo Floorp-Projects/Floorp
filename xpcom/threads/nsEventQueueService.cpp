@@ -97,7 +97,9 @@ EventQueueStack::~EventQueueStack()
 
 nsIEventQueue* EventQueueStack::GetEventQueue()
 {
-	NS_ADDREF(mEventQueue);
+	if (mEventQueue) {
+		NS_ADDREF(mEventQueue);
+	}
 	return mEventQueue;
 }
 
@@ -122,7 +124,7 @@ class EventQueueEntry : public nsISupports
 {
 public:
   EventQueueEntry();
-  ~EventQueueEntry();
+  virtual ~EventQueueEntry();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -184,6 +186,7 @@ class nsEventQueueServiceImpl : public nsIEventQueueService
 {
 public:
   nsEventQueueServiceImpl();
+  virtual ~nsEventQueueServiceImpl();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -201,8 +204,6 @@ public:
 #ifdef XP_MAC
   NS_IMETHOD ProcessEvents();
 #endif // XP_MAC
-protected:
-  ~nsEventQueueServiceImpl();
 
 private:
   nsHashtable* mEventQTable;
