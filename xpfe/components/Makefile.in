@@ -91,6 +91,7 @@ DIRS += \
 		sidebar \
 		startup \
 		alerts \
+		extensions \
 		$(NULL)
 endif
 endif
@@ -104,7 +105,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
-DIRS    += urlwidget winhooks extensions
+DIRS    += urlwidget winhooks
 endif
 endif
 endif
