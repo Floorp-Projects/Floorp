@@ -396,7 +396,7 @@ var defaultController =
       case "cmd_image":
       case "cmd_hline":
       case "cmd_table":
-      case "cmd_insertHTML":
+      case "cmd_insertHTMLWithDialog":
       case "cmd_insertChars":
       case "cmd_insertBreak":
       case "cmd_insertBreakAll":
@@ -520,7 +520,7 @@ var defaultController =
       case "cmd_image":
       case "cmd_hline":
       case "cmd_table":
-      case "cmd_insertHTML":
+      case "cmd_insertHTMLWithDialog":
       case "cmd_insertChars":
       case "cmd_insertBreak":
       case "cmd_insertBreakAll":
