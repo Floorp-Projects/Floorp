@@ -131,7 +131,7 @@
 				 </menupopup>
 			</menu>
 			-->
-			<menuitem value="&releaseCommCmd.label;"  oncommand="openTopWin('http://www.mozilla.org/projects/seamonkey/release-notes/')"  />
+			<menuitem value="&releaseCommCmd.label;" id="releaseUrl"  />
 			<menuitem value="&aboutCommCmd.label;" name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
 		</menupopup>
 	</menu>
