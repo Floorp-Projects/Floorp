@@ -60,8 +60,10 @@ QWidget*
 nsWindow::createQWidget(QWidget *parent, nsWidgetInitData *aInitData)
 {
     Qt::WFlags flags = Qt::WNoAutoErase|Qt::WStaticContents;
+#ifdef DEBUG_WIDGETS
     qDebug("NEW WIDGET\n\tparent is %p (%s)", (void*)parent,
            parent ? parent->name() : "null");
+#endif
     // ok, create our windows
     switch (mWindowType) {
     case eWindowType_dialog:

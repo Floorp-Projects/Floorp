@@ -278,14 +278,15 @@ nsCommonWidget::Initialize(QWidget *widget)
 NS_IMETHODIMP
 nsCommonWidget::Show(PRBool aState)
 {
-    qDebug("MM Show");
     mIsShown = aState;
 
     // Ok, someone called show on a window that isn't sized to a sane
     // value.  Mark this window as needing to have Show() called on it
     // and return.
     if ((aState && !AreBoundsSane()) || !mWidget) {
-        qDebug("XX Bounds are insane or window hasn't been created yet");
+#ifdef DEBUG_WIDGETS
+        qWarning("XX Bounds are insane or window hasn't been created yet");
+#endif
         mNeedsShow = PR_TRUE;
         return NS_OK;
     }
@@ -297,8 +298,10 @@ nsCommonWidget::Show(PRBool aState)
     // If someone is showing this window and it needs a resize then
     // resize the widget.
     if (aState && mNeedsResize) {
+#ifdef DEBUG_WIDGETS
         qDebug("\tresizing [%d, %d, %d, %d]", mBounds.x, mBounds.y,
                mBounds.width, mBounds.height);
+#endif
         NativeResize(mBounds.x, mBounds.y, mBounds.width, mBounds.height,
                      PR_FALSE);
     }
@@ -356,7 +359,9 @@ nsCommonWidget::Move(PRInt32 x, PRInt32 y)
                      !popup))
         return NS_OK;
 
+#ifdef DEBUG_WIDGETS
     qDebug("Move [%d,%d] (%s)", x, y, popup?"popup":"widget");
+#endif
 
     if (!mWidget)
         return NS_OK;
@@ -371,9 +376,11 @@ nsCommonWidget::Move(PRInt32 x, PRInt32 y)
             mParent->WidgetToScreen(oldrect, newrect);
 
             pos = QPoint(newrect.x, newrect.y);
+#ifdef DEBUG_WIDGETS
             qDebug("pos is [%d,%d]", pos.x(), pos.y());
+#endif
         } else {
-            qDebug("NO POSITION!!!!!!!!!!!!");
+            qDebug("Widget within another? (%p)", (void*)mWidget);
         }
     }
 
@@ -462,7 +469,9 @@ NS_IMETHODIMP
 nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                        PRBool aRepaint)
 {
+#ifdef DEBUG_WIDGETS
     qDebug("Resize : [%d,%d,%d,%d]", aX, aY, aWidth, aHeight);
+#endif
     if (!mWidget || (mWidget->x() == aX &&
                      mWidget->y() == aY &&
                      mWidget->height() == aHeight &&
@@ -560,7 +569,9 @@ nsCommonWidget::SetFocus(PRBool aSet)
 nsIFontMetrics*
 nsCommonWidget::GetFont()
 {
-    qDebug("nsCommonWidget.cpp: GetFont not implemented");
+#ifdef DEBUG_WIDGETS
+    qWarning("nsCommonWidget.cpp: GetFont not implemented");
+#endif
     return nsnull;
 }
 
@@ -574,7 +585,9 @@ NS_IMETHODIMP
 nsCommonWidget::Invalidate(PRBool aIsSynchronous)
 {
     if (mContainer) {
+#ifdef DEBUG_WIDGETS
         qDebug("invalidate 1");
+#endif
         if (aIsSynchronous)
             mContainer->update();
         else
@@ -587,7 +600,9 @@ NS_IMETHODIMP
 nsCommonWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
     if (mContainer) {
+#ifdef DEBUG_WIDGETS
         qDebug("invalidate 2");
+#endif
         if (aIsSynchronous)
             mContainer->update(aRect.x, aRect.y, aRect.width, aRect.height);
         else
@@ -686,14 +701,15 @@ nsCommonWidget::SetTitle(const nsAString &str)
 NS_IMETHODIMP
 nsCommonWidget::SetMenuBar(nsIMenuBar*)
 {
-    qDebug("XXXXX SetMenuBar");
+    qWarning("XXXXX SetMenuBar");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCommonWidget::ShowMenuBar(int)
 {
-    qDebug("XXXXX ShowMenuBar");
+
+    qWarning("XXXXX ShowMenuBar");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -738,14 +754,14 @@ nsCommonWidget::ScreenToWidget(const nsRect &aOldRect, nsRect &aNewRect)
 NS_IMETHODIMP
 nsCommonWidget::BeginResizingChildren()
 {
-    qDebug("XXXXXX BeginResizingChildren");
+    qWarning("XXXXXX BeginResizingChildren");
     return  NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsCommonWidget::EndResizingChildren()
 {
-    qDebug("XXXXXXX EndResizingChildren");
+    qWarning("XXXXXXX EndResizingChildren");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -764,7 +780,7 @@ nsCommonWidget::GetPreferredSize(PRInt32 &aWidth, PRInt32 &aHeight)
 NS_IMETHODIMP
 nsCommonWidget::SetPreferredSize(int w, int h)
 {
-    qDebug("SetPreferredSize %d %d", w, h);
+    qWarning("XXX SetPreferredSize %d %d", w, h);
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1091,15 +1107,19 @@ nsCommonWidget::paintEvent(QPaintEvent *e)
 bool
 nsCommonWidget::moveEvent(QMoveEvent *e)
 {
-    bool shown = mWidget ? mWidget->isShown() : false;
-    bool popup = mWidget ? mWidget->isPopup() : false;
-    qDebug("moveEvent mWidget=%p %d %d (%s, %s)", (void*)mWidget, e->pos().x(), e->pos().y(),
-           shown? "shown": "hidden", popup ? "popup": "widget");
     // can we shortcut?
     if (!mWidget || (mBounds.x == e->pos().x() &&
                      mBounds.y == e->pos().y()))
         return FALSE;
-    qDebug("\tmoving");
+
+#ifdef DEBUG_WIDGETS
+    bool shown = mWidget ? mWidget->isShown() : false;
+    bool popup = mWidget ? mWidget->isPopup() : false;
+
+    qDebug("moveEvent mWidget=%p %d %d (%s, %s)", (void*)mWidget, e->pos().x(), e->pos().y(),
+           shown? "shown": "hidden", popup ? "popup": "widget");
+#endif
+
     // Toplevel windows need to have their bounds set so that we can
     // keep track of our location.  It's not often that the x,y is set
     // by the layout engine.  Width and height are set elsewhere.
@@ -1111,8 +1131,9 @@ nsCommonWidget::moveEvent(QMoveEvent *e)
         WidgetToScreen(oldrect, newrect);
         mBounds.x = newrect.x;
         mBounds.y = newrect.y;
-
+#ifdef DEBUG_WIDGETS
         qDebug("BOUNDS are [%d, %d]", mBounds.x, mBounds.y);
+#endif
     }
 
     nsGUIEvent event(NS_MOVE, this);
@@ -1139,8 +1160,10 @@ nsCommonWidget::resizeEvent(QResizeEvent *e)
     mBounds.width = rect.width;
     mBounds.height = rect.height;
 
+#ifdef DEBUG_WIDGETS
     qDebug("resizeEvent: mWidget=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mWidget,
            rect.width, rect.height, rect.x, rect.y);
+#endif
 
     nsEventStatus status;
     DispatchResizeEvent(rect, status);
@@ -1171,56 +1194,58 @@ nsCommonWidget::contextMenuEvent(QContextMenuEvent *)
 bool
 nsCommonWidget::imStartEvent(QIMEvent *)
 {
-    qDebug("imStartEvent");
+    qWarning("XXX imStartEvent");
     return false;
 }
 
 bool
 nsCommonWidget::imComposeEvent(QIMEvent *)
 {
-    qDebug("imComposeEvent");
+    qWarning("XXX imComposeEvent");
     return false;
 }
 
 bool
 nsCommonWidget::imEndEvent(QIMEvent * )
 {
-    qDebug("imComposeEvent");
+    qWarning("XXX imComposeEvent");
     return false;
 }
 
 bool
 nsCommonWidget::dragEnterEvent(QDragEnterEvent *)
 {
-    qDebug("dragEnterEvent");
+    qDebug("XXX dragEnterEvent");
     return false;
 }
 
 bool
 nsCommonWidget::dragMoveEvent(QDragMoveEvent *)
 {
-    qDebug("dragMoveEvent");
+    qDebug("XXX dragMoveEvent");
     return false;
 }
 
 bool
 nsCommonWidget::dragLeaveEvent(QDragLeaveEvent *)
 {
-    qDebug("dragLeaveEvent");
+    qDebug("XXX dragLeaveEvent");
     return false;
 }
 
 bool
 nsCommonWidget::dropEvent(QDropEvent *)
 {
-    qDebug("dropEvent");
+    qDebug("XXX dropEvent");
     return false;
 }
 
 bool
 nsCommonWidget::showEvent(QShowEvent *)
 {
+#ifdef DEBUG_WIDGETS
     qDebug("showEvent mWidget=%p", (void*)mWidget);
+#endif
 
     QRect r = mWidget->rect();
     nsRect rect(r.x(), r.y(), r.width(), r.height());
@@ -1245,7 +1270,9 @@ nsCommonWidget::showEvent(QShowEvent *)
 bool
 nsCommonWidget::hideEvent(QHideEvent *)
 {
+#ifdef DEBUG_WIDGETS
     qDebug("hideEvent mWidget=%p", (void*)mWidget);
+#endif
     return false;
 }
 
@@ -1477,7 +1504,9 @@ bool nsCommonWidget::ignoreEvent(nsEventStatus aStatus) const
 
 NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
 {
+#ifdef DEBUG_WIDGETS
     qDebug("------------> SetModal mWidget=%p",(void*) mWidget);
+#endif
 
     MozQWidget *mozWidget = qt_cast<MozQWidget*>(mWidget);
     if (mozWidget)
@@ -1504,7 +1533,6 @@ nsCommonWidget::NativeShow(PRBool aState)
          qDebug("nsCommon::Show : widget empty");
          return;
     }
-    qDebug("Show (%p)  XXXXXXXXXXXXXXXXXX", (void*)mWidget);
     mWidget->setShown(aState);
 }
 
@@ -1538,9 +1566,13 @@ nsCommonWidget::NativeResize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
             mParent->WidgetToScreen(oldrect, newrect);
 
             pos = QPoint(newrect.x, newrect.y);
+#ifdef DEBUG_WIDGETS
             qDebug("pos is [%d,%d]", pos.x(), pos.y());
+#endif
         } else {
-            qDebug("NO POSITION!!!!!!!!!!!!");
+#ifdef DEBUG_WIDGETS
+            qDebug("Widget with original position? (%p)", mWidget);
+#endif
         }
     }
 
