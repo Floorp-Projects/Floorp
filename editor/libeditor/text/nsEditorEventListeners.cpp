@@ -559,6 +559,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 nsresult
 nsTextEditorMouseListener::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
+   // TODO: MOVE THIS TO ::MouseUp and test for click count to detect double click
    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
   if (htmlEditor)
   {

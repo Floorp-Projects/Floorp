@@ -1131,23 +1131,34 @@ function CheckSpelling()
     // Start the spell checker module. Return is first misspelled word
     try {
       firstMisspelledWord = spellChecker.StartSpellChecking();
-      dump(firstMisspelledWord+"\n");
-      if( firstMisspelledWord == "")
-      {
-        spellChecker.CloseSpellChecking();
-
-        // No misspelled word - tell user
-        editorShell.Alert(editorShell.GetString("CheckSpelling"), editorShell.GetString("NoMisspelledWord")); 
-      } else {
-        dump("We found a MISSPELLED WORD\n");
-        // Set spellChecker variable on window
-        window.spellChecker = spellChecker;
-        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank", "chrome,close,titlebar,modal", "", firstMisspelledWord);
-        editorShell.Alert(editorShell.GetString("CheckSpelling"), editorShell.GetString("CheckSpellingDone")); 
-      }
     }
-    catch(ex) { 
-      dump("*** Exception error from Spell Checker\n");
+    catch(ex) {
+      dump("*** Exception error: StartSpellChecking\n");
+      return;
+    }
+    if( firstMisspelledWord == "")
+    {
+      try {
+        spellChecker.CloseSpellChecking();
+      }
+      catch(ex) {
+        dump("*** Exception error: CloseSpellChecking\n");
+        return;
+      }
+      // No misspelled word - tell user
+      editorShell.AlertWithTitle(editorShell.GetString("CheckSpelling"), editorShell.GetString("NoMisspelledWord")); 
+    } else {
+      // Set spellChecker variable on window
+      window.spellChecker = spellChecker;
+      try {
+        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank", "chrome,close,titlebar,modal", "", firstMisspelledWord);
+      }
+      catch(ex) {
+        dump("*** Exception error: SpellChecker Dialog Closing\n");
+        return;
+      }
+// We might want to use this:
+//      editorShell.AlertWithTitle(editorShell.GetString("CheckSpelling"), editorShell.GetString("CheckSpellingDone")); 
     }
   }
   contentWindow.focus();
