@@ -78,6 +78,7 @@ public:
   NS_IMETHOD Paint(nsIPresContext &aCX,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
+  NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIInlineReflow
@@ -218,6 +219,15 @@ BulletFrame::DeleteFrame(nsIPresContext& aPresContext)
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.DestroyLoader();
   return nsFrame::DeleteFrame(aPresContext);
+}
+
+NS_IMETHODIMP
+BulletFrame::ListTag(FILE* out) const
+{
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "Bullet(%d)@%p", contentIndex, this);
+  return NS_OK;
 }
 
 NS_METHOD
