@@ -60,6 +60,7 @@ IdlFunction::IdlFunction()
   mParameters = (nsVoidArray*)0;
   mExceptions = (nsVoidArray*)0;
   mHasEllipsis = 0;
+  mIsNoScript = 0;
 }
 
 IdlFunction::~IdlFunction()
@@ -167,3 +168,14 @@ IdlFunction::SetHasEllipsis(int aHasEllipsis)
   mHasEllipsis = aHasEllipsis;
 }
 
+int             
+IdlFunction::GetIsNoScript()
+{
+  return mIsNoScript;
+}
+
+void            
+IdlFunction::SetIsNoScript(int aIsNoScript)
+{
+  mIsNoScript = aIsNoScript;
+}

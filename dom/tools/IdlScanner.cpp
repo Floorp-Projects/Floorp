@@ -184,6 +184,9 @@ Token* IdlScanner::NextToken()
         case 'l':
           LKeywords(mTokenName + 1, mCurrentToken); 
           break;
+        case 'n':
+          NKeywords(mTokenName + 1, mCurrentToken); 
+          break;
         case 'o':
           OKeywords(mTokenName + 1, mCurrentToken); 
           break;
@@ -768,6 +771,44 @@ void IdlScanner::LKeywords(char *aCurrentPos, Token *aToken)
     }
     else {
       aToken->SetToken(LONG_TOKEN);
+    }
+  }
+  else {
+    // it must be an identifier
+    KeywordMismatch(c, aCurrentPos, aToken);
+  }
+}
+
+//
+// 'noscript' is the only keyword starting with 'nl'.
+// If that is not it, it must be an identifier
+//
+void IdlScanner::NKeywords(char *aCurrentPos, Token *aToken)
+{
+  int c = mInputFile->get();
+  if (c != EOF && c == 'o' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 's' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'c' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'r' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'i' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'p' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 't' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(NOSCRIPT_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(NOSCRIPT_TOKEN);
     }
   }
   else {

@@ -72,6 +72,7 @@ enum EIDLTokenType {
   FUNC_PARAMS_SPEC_BEGIN_TOKEN, // '('
   FUNC_PARAMS_SPEC_END_TOKEN, // ')'
   VOID_TOKEN,
+  NOSCRIPT_TOKEN,
   UNKNOWN_TOKEN,
   // constant values
   INTEGER_CONSTANT = 1000,
@@ -192,6 +193,7 @@ protected:
   void      FKeywords(char *aCurrentPos, Token *aToken);
   void      IKeywords(char *aCurrentPos, Token *aToken);
   void      LKeywords(char *aCurrentPos, Token *aToken);
+  void      NKeywords(char *aCurrentPos, Token *aToken);
   void      OKeywords(char *aCurrentPos, Token *aToken);
   void      RKeywords(char *aCurrentPos, Token *aToken);
   void      SKeywords(char *aCurrentPos, Token *aToken);

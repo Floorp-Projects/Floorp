@@ -259,14 +259,21 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
       IdlAttribute *attr = iface->GetAttributeAt(a);
       char attr_name[128];
 
-      any_props = 1;
-      if ((i == 0) && (a == 0)) {
+      if (attr->GetIsNoScript()) {
+        continue;
+      }
+
+      // If this is the first time...
+      if (!any_props) {
         sprintf(buf, kPropEnumStr, iface->GetName(), iface->GetName());
         *file << buf;
       }
+      // If this is the first time for this interface...
       else if (a == 0) {
         *file << ",\n";
       }
+
+      any_props = 1;
 
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
@@ -473,7 +480,7 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
-      if (!aIsGetter && (attr->GetReadOnly())) {
+      if (attr->GetIsNoScript() || (!aIsGetter && (attr->GetReadOnly()))) {
         continue;
       }
 
@@ -1097,6 +1104,10 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
       char return_type[128];
       int p, pcount = func->ParameterCount();
 
+      if (func->GetIsNoScript()) {
+        continue;
+      }
+                              
       GetCapitalizedName(method_name, *func);
       // If this is a constructor don't have a method for it
       if (strcmp(method_name, iface_name) == 0) {
@@ -1322,6 +1333,10 @@ JSStubGen::GenerateClassProperties(IdlSpecification &aSpec)
       IdlAttribute *attr = iface->GetAttributeAt(a);
       char attr_name[128];
 
+      if (attr->GetIsNoScript()) {
+        continue;
+      }
+
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
@@ -1372,6 +1387,10 @@ JSStubGen::GenerateClassFunctions(IdlSpecification &aSpec)
     for (m = 0; m < mcount; m++) {
       char method_name[128];
       IdlFunction *func = iface->GetFunctionAt(m);
+
+      if (func->GetIsNoScript()) {
+        continue;
+      }
 
       GetCapitalizedName(method_name, *func);
       // If this is a constructor don't have a method for it.
