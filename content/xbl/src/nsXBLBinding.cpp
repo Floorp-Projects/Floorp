@@ -1106,8 +1106,10 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     className.Append(buf);
   }
 
-  if ((!::JS_LookupProperty(cx, global, className.get(), &val)) ||
-      JSVAL_IS_PRIMITIVE(val)) {  
+  if ((!::JS_LookupPropertyWithFlags(cx, global, className.get(),
+                                     JSRESOLVE_CLASSNAME,
+                                     &val)) ||
+      JSVAL_IS_PRIMITIVE(val)) {
     // We need to initialize the class.
 
     nsXBLJSClass* c;
