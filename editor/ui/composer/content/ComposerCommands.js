@@ -353,10 +353,18 @@ var nsSaveAsCharsetCommand =
   {    
     FinishHTMLSource();
     window.ok = false;
-    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal")
+    window.exportToText = false;
+    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes")
     if (window.ok)
     {
+      if (window.exportToText)
+      {
+        window.ok = window.editorShell.saveDocument(true, true, "text/plain");
+      }
+      else
+      {
       window.ok = window.editorShell.saveDocument(true, false, window.gDefaultSaveMimeType);
+      }
     }
     window._content.focus();
     return window.ok;

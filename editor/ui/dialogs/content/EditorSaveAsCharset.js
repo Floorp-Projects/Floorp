@@ -47,6 +47,7 @@ function Startup()
   dialog = new Object;
   dialog.TitleInput    = document.getElementById("TitleInput");
   dialog.charsetTree   = document.getElementById('CharsetTree'); 
+  dialog.exportToText  = document.getElementById('ExportToText');
   //dialog.charsetRoot = document.getElementById('CharsetRoot'); 
 
   contenttypeElement = GetHTTPEquivMetaElement("content-type");
@@ -106,6 +107,7 @@ function onOK()
    editorShell.EndBatchChanges();
 
    window.opener.ok = true;
+   window.opener.exportToText = dialog.exportToText.checked;
    SaveWindowLocation();
    return true;
  }
