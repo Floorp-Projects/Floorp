@@ -345,8 +345,13 @@ nsXMLDocument::Load(const nsAString& aUrl)
   nsCOMPtr<nsIScriptSecurityManager> secMan = 
            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
-  if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "XMLDocument", "load")))
-    return NS_ERROR_FAILURE;
+  rv = secMan->CheckConnect(nsnull, uri, "XMLDocument", "load");
+  if (NS_FAILED(rv)) {
+    // We need to return success here so that JS will get a proper exception
+    // thrown later. Native calls should always result in CheckConnect() succeeding,
+    // but in case JS calls C++ which calls this code the exception might be lost.
+    return NS_OK;
+  }
 
   // Partial Reset, need to restore principal for security reasons and
   // event listener manager so that load listeners etc. will remain.
