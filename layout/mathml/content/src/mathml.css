@@ -167,46 +167,54 @@ math[mode="display"], math[display="block"] {
      bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
      sans-serif-bold-italic | monospace
 
-   Note: the 'font' shorthand must specify at least two properties, size & family
+   Note1: These are handled with additional back-end code:
+          double-struck, script, fraktur, bold-fraktur, bold-script
+
+   Note2: the 'font' shorthand must specify at least two properties, size & family
    font: [ <font-style> || <font-variant> || <font-weight> ]? 
          <font-size> [ / <line-height> ]?
          <font-family>
 
    XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
 */
-[mathvariant="normal"] {
-  font: normal serif;
+[mathvariant] { /* shared and same as [mathvariant="normal"] */
+  font: medium serif;
+  font-size: inherit;
+  font-size-adjust: inherit;
+  font-stretch: inherit;
+}
+[mathvariant="bold-fraktur"], 
+[mathvariant="bold-script"] {
+  font-weight: bold;
 }
 [mathvariant="bold"] {
-  font: bold normal serif;
+  font-weight: bold;
 }
 [mathvariant="italic"] { 
-  font: italic normal serif;
+  font-style: italic;
 }
 [mathvariant="bold-italic"] {
-  font: bold italic normal serif;
+  font-weight: bold;
+  font-style: italic;
 }
-/* bug 114365
-[mathvariant="double-struck"]
-[mathvariant="bold-fraktur"]
-[mathvariant="script"]
-[mathvariant="bold-script"]
-[mathvariant="fraktur"]
-*/
 [mathvariant="sans-serif"] {
-  font: normal sans-serif;
+  font-family: sans-serif;
 }
 [mathvariant="bold-sans-serif"] {
-  font: bold normal sans-serif;
+  font-weight: bold;
+  font-family: sans-serif;
 }
 [mathvariant="sans-serif-italic"] {
-  font: italic normal sans-serif;
+  font-family: sans-serif;
+  font-style: italic;
 }
 [mathvariant="sans-serif-bold-italic"] {
-  font: bold italic normal sans-serif;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-style: italic;
 }
 [mathvariant="monospace"] {
-  font: normal monospace;
+  font-family: monospace;
 }
 
 /**************************************************************************/
