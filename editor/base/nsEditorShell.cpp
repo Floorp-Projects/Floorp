@@ -1587,67 +1587,6 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsEditorShell::CheckAndSaveDocument(const PRUnichar *reasonToSave, PRBool *_retval)
-{
-  *_retval = PR_FALSE;
-
-  nsCOMPtr<nsIDOMDocument> theDoc;
-  nsresult rv = GetEditorDocument(getter_AddRefs(theDoc));
-  if (NS_SUCCEEDED(rv) && theDoc)
-  {
-    nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc);
-    if (diskDoc)
-    {
-      PRInt32  modCount = 0;
-      diskDoc->GetModCount(&modCount);
-
-      // Return true unless user cancels an action
-      *_retval = PR_TRUE;
-
-      if (modCount > 0)
-      {
-        // Ask user if they want to save current changes
-        nsAutoString reasonToSaveStr(reasonToSave);
-        nsAutoString tmp1, tmp2, title;
-        GetBundleString(NS_ConvertASCIItoUCS2("Save"), tmp1);
-        GetBundleString(NS_ConvertASCIItoUCS2("DontSave"), tmp2);
-        GetDocumentTitleString(title);
-        // If title is empty, use "untitled"
-        if (title.Length() == 0)
-          GetBundleString(NS_ConvertASCIItoUCS2("untitled"), title);
-
-        nsAutoString saveMsg;
-        GetBundleString(NS_ConvertASCIItoUCS2("SaveFilePrompt"), saveMsg);
-        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%title%"), title);
-        saveMsg.ReplaceSubstring(NS_ConvertASCIItoUCS2("%reason%"), reasonToSaveStr);
-
-        nsAutoString saveDocString;
-        GetBundleString(NS_ConvertASCIItoUCS2("SaveDocument"), saveDocString);
-        EConfirmResult result = ConfirmWithCancel(saveDocString, saveMsg, &tmp1, &tmp2);
-        if (result == eCancel)
-        {
-          *_retval = PR_FALSE;
-        } else if (result == eYes)
-        {
-          FinishHTMLSource();
-
-          // Either save to existing file or prompt for name (as for SaveAs)
-          // We don't continue if we failed to save file (_retval is set to FALSE)
-          rv = SaveDocument(PR_FALSE, PR_FALSE, _retval);
-        }
-        else if (mHTMLSourceMode) // result == eNo
-        {
-          // User doesn't want to save document, so we just cancel source mode
-          nsAutoString command(NS_LITERAL_STRING("cmd_CancelHTMLSource"));
-          rv = DoControllerCommand(command);
-        }
-      }
-    }
-  }
-  return rv;
-}
-
 NS_IMETHODIMP 
 nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 {
@@ -1901,24 +1840,12 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 }
 
 NS_IMETHODIMP    
-nsEditorShell::CloseWindow( PRBool *_retval )
+nsEditorShell::CloseWindowWithoutSaving()
 {
-  nsAutoString beforeClosingStr;
-  GetBundleString(NS_ConvertASCIItoUCS2("BeforeClosing"), beforeClosingStr);
-  
-  nsresult rv = CheckAndSaveDocument(beforeClosingStr.GetUnicode(), _retval);
- 
-  // Don't close the window if there was an error saving file or 
-  //   user canceled an action along the way
-  if (NS_SUCCEEDED(rv) && *_retval)
-  {
-    nsCOMPtr<nsIBaseWindow> baseWindow;
-    GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
-    NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
-    baseWindow->Destroy();
-  }
-
-  return rv;
+  nsCOMPtr<nsIBaseWindow> baseWindow;
+  GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
+  NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
+  return baseWindow->Destroy();
 }
 
 NS_IMETHODIMP    

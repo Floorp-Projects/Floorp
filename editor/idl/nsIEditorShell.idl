@@ -131,7 +131,7 @@ interface nsIEditorShell : nsISupports
     */
   PRInt32 ConfirmWithTitle(in wstring title, in wstring question,
                            in wstring yesButtonText, in wstring noButtonText);
-
+                        
   /* check a particular window's URL to see if it matches the given URL */
   boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindow inCheckWindow); 
 
@@ -152,17 +152,6 @@ interface nsIEditorShell : nsISupports
    */  
   boolean saveDocument(in boolean saveAs, in boolean saveCopy);
   
-  /** Check if current document has changes and prompt to save if it does.
-   *  return value:
-   *         false ONLY if user executed "Cancel" in the SaveAs dialog
-   *         true if no changes in doc, or file was saved successfully
-   *  @param reasonToSave 
-   *         A string to append after "Save changes to <URL>"
-   *         If null, just the question mark will be appended
-   */
-  boolean  CheckAndSaveDocument(in wstring reasonToSave);
-
-  boolean CloseWindow();
   void Print();
   
   void Undo();
@@ -625,4 +614,5 @@ interface nsIEditorShell : nsISupports
   void StartLogging(in nsIFileSpec logFile);
   void StopLogging();
   
+  void CloseWindowWithoutSaving();
 };

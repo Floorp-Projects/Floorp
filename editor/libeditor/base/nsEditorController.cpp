@@ -291,8 +291,6 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   nsresult rv;
   
   // File menu
-  NS_REGISTER_ONE_COMMAND(nsCloseCommand, "cmd_close");
-  
   NS_REGISTER_FIRST_COMMAND(nsPrintingCommands, "cmd_print");
   NS_REGISTER_NEXT_COMMAND(nsPrintingCommands, "cmd_printSetup");
   NS_REGISTER_LAST_COMMAND(nsPrintingCommands, "cmd_printPreview");

@@ -186,7 +186,7 @@ function EditorStartup(editorType, editorElement)
 
   // set up our global prefs object
   GetPrefsService();
-   
+ 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -336,6 +336,57 @@ function sendPageMustSave()
   }
 }
 
+function CheckAndSaveDocument(reasonToSave)
+{
+  var document = editorShell.editorDocument;
+  if (!editorShell.documentModified)
+    return true;
+  
+  var title = window.editorShell.editorDocument.title;
+  if (title.length == 0)
+    var title = GetString("untitled");
+      
+  var dialogTitle = window.editorShell.GetString("SaveDocument");
+  var dialogMsg = window.editorShell.GetString("SaveFilePrompt");
+  dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
+  
+  var result = {value:0};
+  commonDialogsService.UniversalDialog(
+    window,
+    null,
+    dialogTitle,
+    dialogMsg,
+    null,
+    window.editorShell.GetString("Save"),     // Save Button
+    window.editorShell.GetString("Cancel"),   // Cancel Button
+    window.editorShell.GetString("DontSave"), // Don't Save Button
+    null,
+    null,
+    null,
+    {value:0},
+    {value:0},
+    "chrome://global/skin/question-icon.gif",
+    {value:"false"},
+    3,
+    0,
+    0,
+    result
+    );
+   
+   if (result.value == 0) 
+   {
+     // Save
+     var success = window.editorShell.saveDocument(false, false);
+     return success;
+   }
+   
+   if (result.value == 1) // "Cancel"
+     return false;
+
+   if (result.value == 2) // "Don't Save"
+     return true;
+}
+
 // --------------------------- File menu ---------------------------
 
 
@@ -363,7 +414,7 @@ function EditorCanClose()
   // Returns FALSE only if user cancels save action
   dump("Calling EditorCanClose\n");
 
-  return editorShell.CheckAndSaveDocument(GetString("BeforeClosing"));
+  return CheckAndSaveDocument(GetString("BeforeClosing"));
 }
 
 // --------------------------- View menu ---------------------------
@@ -372,7 +423,7 @@ function EditorViewSource()
 {
   // Temporary hack: save to a file and call up the source view window
   // using the local file url.
-  if (!editorShell.CheckAndSaveDocument(GetString("BeforeViewSource")))
+  if (CheckAndSaveDocument(GetString("BeforeViewSource")))
     return;
 
   fileurl = "";
