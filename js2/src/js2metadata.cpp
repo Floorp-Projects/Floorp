@@ -348,13 +348,13 @@ namespace MetaData {
             case StmtNode::Break:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    g->tgtID = -1;
+                    g->tgtID = NotALabel;
                     if (g->name) {
                         // need to find the closest 'breakable' statement covered by the named label
-                        LabelID tgt = -1;
+                        LabelID tgt = NotALabel;
                         bool foundit = false;
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
-                                    ((g->tgtID == -1) && (si != end) && !foundit); si++)
+                                    ((g->tgtID == NotALabel) && (si != end) && !foundit); si++)
                         {
                             switch ((*si)->getKind()) {
                             case StmtNode::label:
@@ -372,7 +372,7 @@ namespace MetaData {
                     else {
                         // un-labelled, just find the closest breakable statement
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
-                                        ((g->tgtID == -1) && (si != end)); si++) {
+                                        ((g->tgtID == NotALabel) && (si != end)); si++) {
                             switch ((*si)->getKind()) {
                             case StmtNode::While:
                             case StmtNode::DoWhile:
@@ -397,20 +397,20 @@ namespace MetaData {
                             }
                         }
                     }
-                    if (g->tgtID == -1) 
+                    if (g->tgtID == NotALabel) 
                         reportError(Exception::syntaxError, "No break target available", p->pos);
                 }
                 break;
             case StmtNode::Continue:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    g->tgtID = -1;
+                    g->tgtID = NotALabel;
                     if (g->name) {
                         // need to find the closest 'continuable' statement covered by the named label
-                        LabelID tgt = -1;
+                        LabelID tgt = NotALabel;
                         bool foundit = false;
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
-                                    ((g->tgtID == -1) && (si != end) && !foundit); si++)
+                                    ((g->tgtID == NotALabel) && (si != end) && !foundit); si++)
                         {
                             switch ((*si)->getKind()) {
                             case StmtNode::label:
@@ -442,7 +442,7 @@ namespace MetaData {
                     else {
                         // un-labelled, just find the closest breakable statement
                         for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); 
-                                        ((g->tgtID == -1) && (si != end)); si++) {
+                                        ((g->tgtID == NotALabel) && (si != end)); si++) {
                             // only some non-label statements will do
                             StmtNode *s = *si;
                             switch (s->getKind()) {
@@ -463,7 +463,7 @@ namespace MetaData {
                             }
                         }
                     }
-                    if (g->tgtID == -1) 
+                    if (g->tgtID == NotALabel) 
                         reportError(Exception::syntaxError, "No continue target available", p->pos);
                 }
                 break;
@@ -774,12 +774,12 @@ namespace MetaData {
                             || (JS2VAL_TO_OBJECT(packageValue)->kind != PackageKind))
                         reportError(Exception::badValueError, "Package expected in Import directive", i->pos);
 
+#if 0
                     Package *package = checked_cast<Package *>(JS2VAL_TO_OBJECT(packageValue));            
                     if (i->varName) {
                         Variable *v = new Variable(packageClass, packageValue, true);
                         defineLocalMember(env, *i->varName, NULL, Attribute::NoOverride, false, ReadAccess, v, 0, true);
                     }
-#if 0
 
                     // defineVariable(m_cx, *i->varName, NULL, Package_Type, JSValue::newPackage(package));
             
@@ -1821,7 +1821,7 @@ namespace MetaData {
     }
 
     CompoundAttribute::CompoundAttribute() : Attribute(CompoundAttr),
-            namespaces(NULL), xplicit(false), enumerable(false), dynamic(false), memberMod(NoModifier), 
+            xplicit(false), enumerable(false), dynamic(false), memberMod(NoModifier), 
             overrideMod(NoOverride), prototype(false), unused(false) 
     { 
     }
@@ -3998,7 +3998,7 @@ static const uint8 urlCharType[256] =
         ASSERT(JS2VAL_IS_OBJECT(thisValue));
         JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
         ASSERT(obj->kind == ClassKind);
-        JS2Class *c = checked_cast<JS2Class *>(obj);
+//        JS2Class *c = checked_cast<JS2Class *>(obj);
         return OBJECT_TO_JS2VAL(meta->functionClass->prototype);
     }
  
@@ -4039,7 +4039,7 @@ static const uint8 urlCharType[256] =
     }
 
     
-#define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new (this) JS2Class(super, NULL, new (this) Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
+#define MAKEBUILTINCLASS(c, super, dynamic, final, name, defaultVal) c = new (this) JS2Class(super, JS2VAL_NULL, new (this) Namespace(engine->private_StringAtom), dynamic, final, name); c->complete = true; c->defaultValue = defaultVal;
 
     JS2Metadata::JS2Metadata(World &world) :
         world(world),
