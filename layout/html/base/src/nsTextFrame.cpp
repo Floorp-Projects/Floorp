@@ -86,6 +86,7 @@ static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);
 
 // #define DEBUGWORDJUMP
 
+#define kSZLIG 0x00DF
 //----------------------------------------------------------------------
 
 #define TEXT_BUF_SIZE 100
@@ -2238,7 +2239,13 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 {
   PRUnichar buf[TEXT_BUF_SIZE];
   PRUnichar* bp0 = buf;
-  if (aLength > TEXT_BUF_SIZE) {
+  
+  //German 0x00df might expand to "SS", but no need to count it for speed reason
+  if (aTextStyle.mSmallCaps) {
+     if (aLength*2 > TEXT_BUF_SIZE)
+       bp0 = new PRUnichar[aLength*2];
+  }
+  else if (aLength > TEXT_BUF_SIZE) {
     bp0 = new PRUnichar[aLength];
   }
   PRUnichar* bp = bp0;
@@ -2275,19 +2282,31 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     nsIFontMetrics* nextFont;
     nscoord nextY, glyphWidth;
     PRUnichar ch = *aBuffer;
-    if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
+    if (aTextStyle.mSmallCaps && (nsCRT::IsLower(ch) || (ch == kSZLIG))) {
       nextFont = aTextStyle.mSmallFont;
       nextY = smallY;
-      ch = nsCRT::ToUpper(ch);
+      PRUnichar upper_ch;
+      // German szlig should be expanded to "SS".
+      if (ch == kSZLIG)
+        upper_ch = (PRUnichar)'S';
+      else
+        upper_ch = nsCRT::ToUpper(ch);
       if (lastFont != aTextStyle.mSmallFont) {
         aRenderingContext.SetFont(aTextStyle.mSmallFont);
-        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.GetWidth(upper_ch, charWidth);
         aRenderingContext.SetFont(aTextStyle.mNormalFont);
       }
       else {
-        aRenderingContext.GetWidth(ch, charWidth);
+        aRenderingContext.GetWidth(upper_ch, charWidth);
       }
       glyphWidth = charWidth + aTextStyle.mLetterSpacing;
+      if (ch == kSZLIG)   //add an additional 'S' here.
+      {
+        *bp++ = upper_ch;
+        *sp++ = glyphWidth;
+        width += glyphWidth;
+      }
+      ch = upper_ch;
     }
     else if (ch == ' ') {
       nextFont = aTextStyle.mNormalFont;
@@ -2401,14 +2420,21 @@ nsTextFrame::GetWidthOrLength(nsIRenderingContext& aRenderingContext,
   while (--length >= 0) {
     nscoord glyphWidth;
     PRUnichar ch = *inBuffer++;
-    if (aStyle.mSmallCaps && nsCRT::IsLower(ch)) {
-      ch = nsCRT::ToUpper(ch);
+    if (aStyle.mSmallCaps && (nsCRT::IsLower(ch) || (ch == kSZLIG))) {
+      PRUnichar upper_ch;
+      // German szlig should be expanded to "SS".
+      if (ch == kSZLIG)
+        upper_ch = (PRUnichar)'S';
+      else
+        upper_ch = nsCRT::ToUpper(ch);
       if (lastFont != aStyle.mSmallFont) {
         lastFont = aStyle.mSmallFont;
         aRenderingContext.SetFont(lastFont);
       }
-      aRenderingContext.GetWidth(ch, charWidth);
+      aRenderingContext.GetWidth(upper_ch, charWidth);
       glyphWidth = charWidth + aStyle.mLetterSpacing;
+      if (ch == kSZLIG)
+        glyphWidth += glyphWidth;
     }
     else if (ch == ' ') {
       glyphWidth = aStyle.mSpaceWidth + aStyle.mWordSpacing
