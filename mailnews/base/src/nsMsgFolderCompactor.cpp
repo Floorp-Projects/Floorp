@@ -229,10 +229,6 @@ nsFolderCompactState::FinishCompact()
     // close down database of the original folder and remove the folder node
     // and all it's message node from the tree
   m_folder->ForceDBClosed();
-  m_folder->GetParent(getter_AddRefs(parent));
-  parentFolder = do_QueryInterface(parent, &rv);
-  m_folder->SetParent(nsnull);
-  parentFolder->PropagateDelete(m_folder, PR_FALSE);
 
     // remove the old folder and database
   fileSpec.Delete(PR_FALSE);
@@ -242,21 +238,6 @@ nsFolderCompactState::FinishCompact()
   m_fileSpec.Rename((const char*) idlName);
   newSummarySpec.Rename(dbName);
 
-    // add the node back the tree
-  nsCOMPtr<nsIMsgFolder> child;
-  nsAutoString folderName; folderName.AssignWithConversion((const char*) idlName);
-  rv = parentFolder->AddSubfolder(&folderName, getter_AddRefs(child));
-  if (child) 
-  {
-    child->SetFlags(flags);
-    nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
-    nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
-    if (childSupports && parentSupports)
-    {
-      parentFolder->NotifyItemAdded(parentSupports, childSupports,
-                                    "folderView");
-    }
-  }
   return rv;
 }
 
