@@ -1153,11 +1153,7 @@ case "$target" in
     RCFLAGS='-n -x2'
 
     if test "$MOZTOOLS"; then
-        MOZ_TOOLS_DIR=`cd $MOZTOOLS && pwd -D`
-        if test "$?" != "0" || test -z "$MOZ_TOOLS_DIR"; then
-            AC_MSG_ERROR([cd \$MOZTOOLS failed. MOZTOOLS ==? $MOZTOOLS])
-        fi
-        MOZ_TOOLS_DIR=`echo $MOZ_TOOLS_DIR | sed -e 's|\\\\|/|g'`
+        MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
     else
         AC_MSG_ERROR([MOZTOOLS is not set])
     fi
