@@ -286,12 +286,18 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
   nsCOMPtr<nsPIWindowRoot> winRoot(do_QueryInterface(aReceiver));
+  nsCOMPtr<nsIDOMWindowInternal> focusedWin;
+
   if (winRoot) {
     nsCOMPtr<nsIFocusController> focusController;
     winRoot->GetFocusController(getter_AddRefs(focusController));
-    nsCOMPtr<nsIDOMWindowInternal> win;
-    focusController->GetFocusedWindow(getter_AddRefs(win));
-    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(win));
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWin));
+  }
+
+  // if the focused window was found get our script global object from
+  // that.
+  if (focusedWin) {
+    nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(focusedWin));
     nsCOMPtr<nsIDOMWindowInternal> rootWin;
     piWin->GetPrivateRoot(getter_AddRefs(rootWin));
     boundGlobal = do_QueryInterface(rootWin);
@@ -303,6 +309,8 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
     if (!boundDocument) {
       // We must be an element.
       nsCOMPtr<nsIContent> content(do_QueryInterface(aReceiver));
+      if (!content)
+        return NS_OK;
       content->GetDocument(*getter_AddRefs(boundDocument));
       if (!boundDocument)
         return NS_OK;
