@@ -70,13 +70,19 @@ public:
 BEGIN_COM_MAP(IENavigator)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IOmNavigator)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
-    COM_INTERFACE_ENTRY_BREAK(IServiceProvider)
 END_COM_MAP()
 
     PluginInstanceData *mData;
+    CComBSTR mUserAgent;
+
+    HRESULT Init(PluginInstanceData *pData)
+    {
+        mData = pData;
+        USES_CONVERSION;
+        const char *userAgent = NPN_UserAgent(mData->pPluginInstance);
+        mUserAgent.Attach(::SysAllocString(A2CW(userAgent)));
+        return S_OK;
+    }
 
 // IOmNavigator
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_appCodeName( 
@@ -100,9 +106,7 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_userAgent( 
         /* [out][retval] */ BSTR __RPC_FAR *p)
     {
-        USES_CONVERSION;
-        const char *userAgent = NPN_UserAgent(mData->pPluginInstance);
-        *p = ::SysAllocString(A2CW(userAgent));
+        *p = mUserAgent.Copy();
         return S_OK;
     }
 
@@ -213,8 +217,22 @@ public:
     PluginInstanceData *mData;
     CComObject<IENavigator> *mNavigator;
 
-    IEWindow() : mNavigator(NULL)
+    IEWindow() : mNavigator(NULL), mData(NULL)
     {
+    }
+
+    HRESULT Init(PluginInstanceData *pData)
+    {
+        mData = pData;
+
+        CComObject<IENavigator>::CreateInstance(&mNavigator);
+        if (!mNavigator)
+        {
+            return E_UNEXPECTED;
+        }
+        mNavigator->AddRef();
+        mNavigator->Init(mData);
+        return S_OK;
     }
 
 protected:
@@ -232,10 +250,6 @@ BEGIN_COM_MAP(IEWindow)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLWindow2)
     COM_INTERFACE_ENTRY(IHTMLFramesCollection2)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
-    COM_INTERFACE_ENTRY_BREAK(IServiceProvider)
 END_COM_MAP()
 
 //IHTMLFramesCollection2
@@ -357,15 +371,6 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_navigator( 
         /* [out][retval] */ IOmNavigator __RPC_FAR *__RPC_FAR *p)
     {
-        if (!mNavigator)
-        {
-            CComObject<IENavigator>::CreateInstance(&mNavigator);
-            if (!mNavigator)
-            {
-                return E_UNEXPECTED;
-            }
-        }
-        mNavigator->mData = mData;
         return mNavigator->QueryInterface(__uuidof(IOmNavigator), (void **) p);
     }
     
@@ -700,19 +705,66 @@ END_COM_MAP()
 class IEDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
-    public IServiceProvider
+    public IServiceProvider,
+    public IOleContainer
 {
 public:
     PluginInstanceData *mData;
 
     CComObject<IEWindow> *mWindow;
     CComObject<IEBrowser> *mBrowser;
+    CComBSTR mURL;
 
     IEDocument() :
         mWindow(NULL),
-        mBrowser(NULL)
+        mBrowser(NULL),
+        mData(NULL)
     {
         xpc_AddRef();
+    }
+
+    HRESULT Init(PluginInstanceData *pData)
+    {
+        mData = pData;
+
+        nsCOMPtr<nsIDOMWindow> window;
+        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &window);
+        if (window)
+        {
+            nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
+            if (windowInternal)
+            {
+                nsCOMPtr<nsIDOMLocation> location;
+                nsAutoString href;
+                windowInternal->GetLocation(getter_AddRefs(location));
+                if (location &&
+                    NS_SUCCEEDED(location->GetHref(href)))
+                {
+                    const PRUnichar *s = href.get();
+                    mURL.Attach(::SysAllocString(s));
+                }
+            }
+        }
+
+        CComObject<IEWindow>::CreateInstance(&mWindow);
+        ATLASSERT(mWindow);
+        if (!mWindow)
+        {
+            return E_OUTOFMEMORY;
+        }
+        mWindow->AddRef();
+        mWindow->Init(mData);
+
+        CComObject<IEBrowser>::CreateInstance(&mBrowser);
+        ATLASSERT(mBrowser);
+        if (mBrowser)
+        {
+            return E_OUTOFMEMORY;
+        }
+        mBrowser->AddRef();
+        mBrowser->Init(mData);
+ 
+        return S_OK;
     }
 
     virtual ~IEDocument()
@@ -733,9 +785,8 @@ BEGIN_COM_MAP(IEDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument2)
     COM_INTERFACE_ENTRY(IServiceProvider)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowser2)
-    COM_INTERFACE_ENTRY_BREAK(IWebBrowserApp)
+    COM_INTERFACE_ENTRY(IParseDisplayName)
+    COM_INTERFACE_ENTRY(IOleContainer)
 END_COM_MAP()
 
 // IServiceProvider
@@ -751,11 +802,6 @@ END_COM_MAP()
             IsEqualIID(riid, __uuidof(IWebBrowserApp)))
         {
             ATLTRACE(_T("  IWebBrowserApp\n"));
-            if (!mBrowser)
-            {
-                CComObject<IEBrowser>::CreateInstance(&mBrowser);
-                mBrowser->AddRef();
-            }
             if (mBrowser)
             {
                 return mBrowser->QueryInterface(riid, ppvObject);
@@ -984,26 +1030,7 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL( 
         /* [out][retval] */ BSTR *p)
     {
-        *p = NULL;
-        nsCOMPtr<nsIDOMWindow> window;
-        NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &window);
-        if (window)
-        {
-            nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
-            if (windowInternal)
-            {
-                nsCOMPtr<nsIDOMLocation> location;
-                nsAutoString href;
-                windowInternal->GetLocation(getter_AddRefs(location));
-                if (location &&
-                    NS_SUCCEEDED(location->GetHref(href)))
-                {
-                    const PRUnichar *s = href.get();
-                    *p = ::SysAllocString(s);
-                    return S_OK;
-                }
-            }
-        }
+        *p = mURL.Copy();
         return E_FAIL;
     }
     
@@ -1427,15 +1454,6 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_parentWindow( 
         /* [out][retval] */ IHTMLWindow2 **p)
     {
-        if (!mWindow)
-        {
-            CComObject<IEWindow>::CreateInstance(&mWindow);
-            if (!mWindow)
-            {
-                return E_UNEXPECTED;
-            }
-            mWindow->mData = mData;
-        }
         return mWindow->QueryInterface(_uuidof(IHTMLWindow2), (void **) p);
     }
     
@@ -1482,12 +1500,43 @@ END_COM_MAP()
     {
         return E_NOTIMPL;
     }
+
+// IParseDisplayName
+    virtual HRESULT STDMETHODCALLTYPE ParseDisplayName( 
+        /* [unique][in] */ IBindCtx *pbc,
+        /* [in] */ LPOLESTR pszDisplayName,
+        /* [out] */ ULONG *pchEaten,
+        /* [out] */ IMoniker **ppmkOut)
+    {
+        return E_NOTIMPL;
+    }
+
+// IOleContainer
+    virtual HRESULT STDMETHODCALLTYPE EnumObjects( 
+        /* [in] */ DWORD grfFlags,
+        /* [out] */ IEnumUnknown **ppenum)
+    {
+        return E_NOTIMPL;
+    }
+    
+    virtual HRESULT STDMETHODCALLTYPE LockContainer( 
+        /* [in] */ BOOL fLock)
+    {
+        return E_NOTIMPL;
+    }
 };
 
 HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)
 {
+    // Note this should be called on the main NPAPI thread
     CComObject<IEDocument> *pDoc = NULL;
     CComObject<IEDocument>::CreateInstance(&pDoc);
-    pDoc->mData = pData;
+    ATLASSERT(pDoc);
+    if (!pDoc)
+    {
+        return E_OUTOFMEMORY;
+    }
+    pDoc->Init(pData);
+    // QI does the AddRef
     return pDoc->QueryInterface(_uuidof(IServiceProvider), (void **) pSP);
 }

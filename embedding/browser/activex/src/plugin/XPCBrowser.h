@@ -43,6 +43,8 @@
 #include <docobj.h>
 #include <ExDisp.h>
 
+#include "LegacyPlugin.h"
+
 class IEBrowser :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IWebBrowser2, &IID_IWebBrowser2, &LIBID_MSHTML>
@@ -54,7 +56,13 @@ BEGIN_COM_MAP(IEBrowser)
     COM_INTERFACE_ENTRY(IWebBrowserApp)
 END_COM_MAP()
 
+    PluginInstanceData *mData;
+    CComBSTR mLocationURL;
+
     IEBrowser();
+    HRESULT Init(PluginInstanceData *pData);
+
+protected:
     virtual ~IEBrowser();
 
 public:

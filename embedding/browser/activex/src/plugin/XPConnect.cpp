@@ -42,6 +42,7 @@
 #include "nsXPCOMGlue.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIServiceManagerUtils.h"
 
 #include "nsIMozAxPlugin.h"
 #include "nsIClassInfo.h"
@@ -58,6 +59,10 @@
 
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
+
+#include "nsIScriptEventHandler.h"
+#include "jsapi.h"
+#include "nsIDispatchSupport.h"
 
 #include "LegacyPlugin.h"
 #include "XPConnect.h"
@@ -749,8 +754,8 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
     nsAutoString eventName(bstrName.m_str);
 
     // TODO Turn VARIANT args into js objects
+#if 0
     // Fire event to DOM 2 event listeners
-
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
     if (eventReceiver)
     {
@@ -771,56 +776,77 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
                 eventReceiver, NS_EVENT_FLAG_INIT, &eventStatus);
         }
     }
+#endif
 
-    // Loop through all script tags looking for event handlers
+    nsresult rv;
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsCOMPtr<nsIDOMNodeList> scriptElements;
 
-    nsCOMPtr<nsIDOMDocument> doc;
-    NPN_GetValue(mPlugin->pPluginInstance, NPNVDOMDocument, (void *)&doc);
-    if (doc)
-    {
-        nsCOMPtr<nsIDOMNodeList> scriptList;
-        doc->GetElementsByTagName(NS_LITERAL_STRING("script"), getter_AddRefs(scriptList));
-        if (scriptList)
+    // This outer loop is used for error handling...
+    do {
+        // Get a list of all SCRIPT elements in the document.
+        rv = element->GetOwnerDocument(getter_AddRefs(domdoc));
+        if (NS_FAILED(rv)) break;
+
+        rv = domdoc->GetElementsByTagName(NS_LITERAL_STRING("script"),
+                                        getter_AddRefs(scriptElements));
+        if (NS_FAILED(rv)) break;
+
+        // Get the number of script elements in the current document...
+        PRUint32 count = 0;
+        rv = scriptElements->GetLength(&count);
+        if (NS_FAILED(rv)) break;
+
+        //
+        // Iterate over all of the SCRIPT elements looking for a handler.
+        //
+        // Walk the list backwards in order to pick up the most recently
+        // defined script handler (if more than one is present)...
+        //
+        nsDependentString eventName(bstrName.m_str);
+        nsCOMPtr<nsIDOMNode> node;
+        nsCOMPtr<nsIScriptEventHandler> handler;
+
+        while (count--)
         {
-            PRUint32 length = 0;
-            scriptList->GetLength(&length);
-            for (PRUint32 i = 0; i < length; i++)
+            rv = scriptElements->Item(count, getter_AddRefs(node));
+            if (NS_FAILED(rv)) break;
+
+            handler = do_QueryInterface(node, &rv);
+            if (NS_FAILED(rv)) continue;
+
+            PRBool bFound;
+            rv = handler->IsSameEvent(id, eventName, pDispParams->cArgs, &bFound);
+            if (NS_FAILED(rv)) break;
+
+            if (bFound)
             {
-                nsCOMPtr<nsIDOMNode> node;
-                scriptList->Item(i, getter_AddRefs(node));
-                if (!node)
+                // Create a list of arguments to pass along.
+                jsval *args = nsnull;
+                if (pDispParams->cArgs > 0)
                 {
-                    continue;
-                }
-                nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-                if (!element)
-                {
-                    continue;
-                }
-
-                // Get the <script FOR="foo" EVENT="bar"> attributes
-                nsAutoString forAttr;
-                nsAutoString eventAttr;
-                if (NS_FAILED(element->GetAttribute(NS_LITERAL_STRING("for"), forAttr)) ||
-                    forAttr.IsEmpty() ||
-                    NS_FAILED(element->GetAttribute(NS_LITERAL_STRING("event"), eventAttr)) ||
-                    eventAttr.IsEmpty())
-                {
-                    continue;
+                    args = new jsval[pDispParams->cArgs];
+                    if (!args) break; 
+                    nsCOMPtr<nsIDispatchSupport> disp(do_GetService("@mozilla.org/nsdispatchsupport;1"));
+                    for (UINT i = 0; i < pDispParams->cArgs; i++)
+                    {
+                        // For some bizarre reason, arguments are listed backwards
+                        disp->COMVariant2JSVal(&pDispParams->rgvarg[pDispParams->cArgs - 1 - i], &args[i]);
+                    }
                 }
 
-                if (!forAttr.Equals(id) ||
-                    !eventAttr.Equals(eventName)) // TODO compare no case?
+                // Fire the Event.
+                handler->Invoke(element, args, pDispParams->cArgs);
+                if (args)
                 {
-                    // Somebody elses event
-                    continue;
+                    // TODO cleanup jsval or are these things garbage collected somehow?
+                    delete[]args;
                 }
-
-                // TODO fire the event
-
+                break;
             }
         }
-    }
+    } while (0);
+    // Errors just fall of the end of the do..while 
 
     // TODO Turn js objects for out params back into VARIANTS
 
@@ -965,12 +991,6 @@ CLSID xpc_GetCLSIDForType(const char *mimeType)
     return CLSID_NULL;
 }
 
-// TODO remove me
-#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-#include "XPCMediaPlayer.h"
-const CLSID kWindowsMediaPlayer = {
-    0x6BF52A52, 0x394A, 0x11d3, { 0xB1, 0x53, 0x00, 0xC0, 0x4F, 0x79, 0xFA, 0xA6 } };
-#endif
 
 nsScriptablePeer *
 xpc_GetPeerForCLSID(const CLSID &clsid)
@@ -978,33 +998,17 @@ xpc_GetPeerForCLSID(const CLSID &clsid)
 #ifdef XPC_IDISPATCH_SUPPORT
     return new nsScriptablePeer();
 #else
-// TODO remove me
-#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-    if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
-    {
-        return new nsWMPScriptablePeer();
-    }
-#endif
     return new nsScriptablePeer();
 #endif
 }
 
-nsIID
-xpc_GetIIDForCLSID(const CLSID &clsid)
+void
+xpc_GetIIDForCLSID(const CLSID &clsid, nsIID &iid)
 {
 #ifdef XPC_IDISPATCH_SUPPORT
-    nsIID iid;
     memcpy(&iid, &_uuidof(IDispatch), sizeof(iid));
-    return iid;
 #else
-// TODO remove me
-#ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-    if (::IsEqualCLSID(clsid, kWindowsMediaPlayer))
-    {
-        return NS_GET_IID(nsIWMPPlayer2);
-    }
-#endif
-    return NS_GET_IID(nsIMozAxPlugin);
+    iid = NS_GET_IID(nsIMozAxPlugin);
 #endif
 }
 
@@ -1018,6 +1022,12 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
     }
 
     PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
+    if (!pData ||
+        !pData->pControlSite ||
+        !pData->pControlSite->IsObjectValid())
+    {
+        return NPERR_GENERIC_ERROR;
+    }
 
     // Happy happy fun fun - redefine some NPPVariable values that we might
     // be asked for but not defined by every PluginSDK 
@@ -1030,9 +1040,12 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
         if (!pData->pScriptingPeer)
         {
             nsScriptablePeer *peer  = xpc_GetPeerForCLSID(pData->clsid);
-            peer->AddRef();
-            pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
-            peer->mPlugin = pData;
+            if (peer)
+            {
+                peer->AddRef();
+                pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
+                peer->mPlugin = pData;
+            }
         }
         if (pData->pScriptingPeer)
         {
@@ -1044,7 +1057,7 @@ xpc_GetValue(NPP instance, NPPVariable variable, void *value)
     else if (variable == kVarScriptableIID)
     {
         nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
-        *piid = xpc_GetIIDForCLSID(pData->clsid);
+        xpc_GetIIDForCLSID(pData->clsid, *piid);
         *((nsIID **) value) = piid;
         return NPERR_NO_ERROR;
     }
