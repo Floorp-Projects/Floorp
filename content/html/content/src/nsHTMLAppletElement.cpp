@@ -77,6 +77,11 @@ public:
   virtual void DoneAddingChildren();
   virtual PRBool IsDoneAddingChildren();
 
+  // nsIContent
+  // Have to override tabindex for <embed> to act right
+  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
+  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -143,7 +148,8 @@ NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Object, object)
 NS_IMPL_INT_ATTR(nsHTMLAppletElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
-
+NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAppletElement, TabIndex, tabindex, 0)
+  
 PRBool
 nsHTMLAppletElement::ParseAttribute(nsIAtom* aAttribute,
                                     const nsAString& aValue,
