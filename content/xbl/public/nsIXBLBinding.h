@@ -35,6 +35,7 @@
 #include "nsISupports.h"
 
 class nsIContent;
+class nsIDocument;
 class nsISupportsArray;
 class nsIScriptContext;
 
@@ -67,7 +68,7 @@ public:
   // Called when an attribute changes on a binding.
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
 
-  NS_IMETHOD RemoveScriptReferences(nsIScriptContext* aContext) = 0;
+  NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument) = 0;
 
   NS_IMETHOD GetBindingURI(nsString& aResult) = 0;
 };
