@@ -36,6 +36,7 @@
 
 #include "nsIRDFDataSource.h"
 #include "nsIRDFResource.h"
+#include "nsHashtable.h"
 #include "nsCOMPtr.h"
 
 class nsExternalAppHandler;
@@ -62,10 +63,10 @@ public:
   // aFileExtension --> the extension we need to append to our temp file INCLUDING the ".". i.e. .mp3
   nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension, nsISupports * aWindowContext);
  
-  // GetMIMEInfoForMimeType --> this will eventually be part of an interface but for now
-  // it's only used internally. Given a content type, look up the user override information to 
-  // see if we have a mime info object representing this content type
-  nsresult GetMIMEInfoForMimeType(const char * aContentType, nsIMIMEInfo ** aMIMEInfo);
+  // GetMIMEInfoForMimeTypeFromDS --> Given a content type, look up the user override information to 
+  // see if we have a mime info object representing this content type. The user over ride information is contained
+  // in a in memory data source....
+  nsresult GetMIMEInfoForMimeTypeFromDS(const char * aContentType, nsIMIMEInfo ** aMIMEInfo);
 
   // GetFileTokenForPath must be implemented by each platform. 
   // platformAppPath --> a platform specific path to an application that we got out of the 
@@ -98,7 +99,25 @@ protected:
   // and returns a CONST ptr to the string value of that target
   nsresult FillLiteralValueFromTarget(nsIRDFResource * aSource, nsIRDFResource * aProperty, const PRUnichar ** aLiteralValue);
 
+  // in addition to the in memory data source which stores the user over ride mime types, we also use a hash table
+  // for quick look ups of mime types...
+  nsHashtable   *mMimeInfoCache; // used for fast access and multi index lookups
+  // used to add entries to the mime info cache
+  virtual nsresult AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo);
+  virtual nsresult AddDefaultMimeTypesToCache();
+
 };
+
+// this is a small private struct used to help us initialize some
+// default mime types.
+struct nsDefaultMimeTypeEntry {
+  const char* mMimeType; 
+  const char* mFileExtensions;
+  const char* mDescription;
+  PRUint32 mMactype;
+  PRUint32 mMacCreator;
+};
+
 
 // An external app handler is just a small little class that presents itself as 
 // a nsIStreamListener. It saves the incoming data into a temp file. The handler
@@ -129,6 +148,9 @@ protected:
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
   nsCOMPtr<nsISupports> mWindowContext; 
+  // the following field is set if we were processing an http channel that had a content disposition header
+  // which specified the SUGGESTED file name we should present to the user in the save to disk dialog. 
+  nsString mHTTPSuggestedFileName;
 
   // the canceled flag is set if the user canceled the launching of this application before we finished
   // saving the data to a temp file...
@@ -147,6 +169,9 @@ protected:
 
   nsresult SetUpTempFile(nsIChannel * aChannel);
   nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile);
+  // if the passed in channel is an nsIHTTPChannel, we'll attempt to extrace a suggested file name
+  // from the content disposition header...
+  void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);
 };
 
 #endif // nsExternalHelperAppService_h__
