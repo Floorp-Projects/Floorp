@@ -309,7 +309,7 @@ static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
  
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
-  nsIDocument* doc = content->GetDocument);
+  nsIDocument* doc = content->GetDocument();
   if (doc)
     doc->GetShellAt(0, aResult); // Addref happens here.
 }
