@@ -214,6 +214,7 @@ NS_IMETHODIMP nsMsgHdr::SetFlags(PRUint32 flags)
 #ifdef DEBUG_bienvenu
   NS_ASSERTION(! (flags & (MSG_FLAG_ELIDED | MSG_FLAG_IGNORED)), "shouldn't set this flag on db");
 #endif
+  m_initedValues |= FLAGS_INITED;
   m_flags = flags;
   // don't write out MSG_FLAG_NEW to MDB.
   return SetUInt32Column(m_flags & ~MSG_FLAG_NEW, m_mdb->m_flagsColumnToken);
