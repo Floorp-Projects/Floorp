@@ -687,10 +687,10 @@ void nsWidget::WidgetMove(nsWidget *aWidget)
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetMove()\n"));
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
+    XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
+                aWidget->mBounds.x,
+                aWidget->mBounds.y);
     if (aWidget->mIsShown == PR_TRUE) {
-      XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                  aWidget->mBounds.x,
-                  aWidget->mBounds.y);
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", mBaseWindow));
       XMapWindow(aWidget->mDisplay, aWidget->mBaseWindow);
     }
