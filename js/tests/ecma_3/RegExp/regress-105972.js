@@ -59,7 +59,7 @@ status = inSection(2);
 pattern = /^.*?/;
 string = 'Hello World';
 actualmatch = string.match(pattern);
-expectedmatch = [cnEmptyString];
+expectedmatch = Array(cnEmptyString);
 addThis();
 
 
