@@ -1457,7 +1457,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (mCachedState)
     defaultValue = mCachedState->GetUnicode();
   else
-    rv = GetText(&defaultValue, PR_FALSE);
+    rv = GetText(&defaultValue, PR_TRUE);
 
   if (NS_FAILED(rv))
     return rv;
