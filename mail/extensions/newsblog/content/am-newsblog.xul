@@ -31,7 +31,12 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<!DOCTYPE page SYSTEM "chrome://messenger-newsblog/locale/am-newsblog.dtd">
+<!DOCTYPE page [
+<!ENTITY % newsblogDTD SYSTEM "chrome://messenger-newsblog/locale/am-newsblog.dtd" >
+%newsblogDTD;
+<!ENTITY % accountNoIdentDTD SYSTEM "chrome://messenger/locale/am-serverwithnoidentities.dtd" >
+%accountNoIdentDTD;
+]>  
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
@@ -42,8 +47,16 @@
   <script type="application/x-javascript" src="chrome://messenger-newsblog/content/am-newsblog.js"/>
     
   <dialogheader title="&newsblogTitle.label;"/>
-  
-  <vbox align="start">
+
+    <hbox align="center">
+      <label value="&accountName.label;" control="server.prettyName"
+             accesskey="&accountName.accesskey;"/>
+      <textbox wsm_persist="true" size="30" id="server.prettyName"
+               prefstring="mail.server.%serverkey%.name"/>
+    </hbox>
+
+    <separator/>
+
     <hbox align="center">
       <checkbox wsm_persist="true" id="server.doBiff" label="&biffStart.label;"
                 accesskey="&biffStart.accesskey;"
@@ -60,6 +73,11 @@
               label="&loginAtStartup.label;"
               accesskey="&loginAtStartup.accesskey;"
               prefattribute="value"
-              prefstring="mail.server.%serverkey%.login_at_startup"/>
-  </vbox>    
+              prefstring="mail.server.%serverkey%.login_at_startup"/>   
+
+    <hbox align="center">
+      <spacer flex="1"/>
+      <button label="&manageSubscriptions.label;" oncommand="manageSubscriptions();"
+              accesskey="&manageSubscriptions.accesskey;"/>
+    </hbox>
 </page>

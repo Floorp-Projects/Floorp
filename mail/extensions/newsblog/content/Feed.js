@@ -70,7 +70,6 @@ Feed.prototype.download = function(parseItems, aCallback) {
 
   this.downloadCallback = aCallback; // may be null
 
-  // var loadgroup = this.request.channel.loadgroup;
   this.request.overrideMimeType("text/xml");
   this.request.onload = Feed.onDownloaded;
   this.request.onerror = Feed.onDownloadError;
@@ -115,7 +114,7 @@ Feed.onDownloadError = function(event) {
 }
 
 Feed.prototype.url getter = function() {
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(this.server);
     var url = ds.GetTarget(this.resource, DC_IDENTIFIER, true);
     if (url)
       url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -125,7 +124,7 @@ Feed.prototype.url getter = function() {
 }
 
 Feed.prototype.title getter = function() {
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(this.server);
     var title = ds.GetTarget(this.resource, DC_TITLE, true);
     if (title)
       title = title.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
@@ -133,7 +132,7 @@ Feed.prototype.title getter = function() {
 }
 
 Feed.prototype.title setter = function(new_title) {
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(this.server);
     new_title = rdf.GetLiteral(new_title || "");
     var old_title = ds.GetTarget(this.resource, DC_TITLE, true);
     if (old_title)
@@ -143,7 +142,7 @@ Feed.prototype.title setter = function(new_title) {
 }
 
 Feed.prototype.quickMode getter = function() {
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(this.server);
     var quickMode = ds.GetTarget(this.resource, FZ_QUICKMODE, true);
     if (quickMode) {
         quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -186,7 +185,7 @@ Feed.prototype.parse = function() {
     debug(this.url + " is of unknown format; assuming an RSS 0.9x feed");
     this.parseAsRSS2();
   }
-  var ds = getItemsDS();
+  var ds = getItemsDS(this.server);
   ds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
   ds.Flush();
 }
@@ -409,7 +408,7 @@ Feed.prototype.parseAsAtom = function() {
 }
 
 Feed.prototype.invalidateItems = function invalidateItems() {
-    var ds = getItemsDS();
+    var ds = getItemsDS(this.server);
     debug("invalidating items for " + this.url);
     var items = ds.GetSources(FZ_FEED, this.resource, true);
     var item;
@@ -424,7 +423,7 @@ Feed.prototype.invalidateItems = function invalidateItems() {
 }
 
 Feed.prototype.removeInvalidItems = function() {
-    var ds = getItemsDS();
+    var ds = getItemsDS(this.server);
     debug("removing invalid items for " + this.url);
     var items = ds.GetSources(FZ_FEED, this.resource, true);
     var item;
@@ -475,8 +474,12 @@ function storeNextItem()
   else
   {    
     item.feed.removeInvalidItems();
+
     if (item.feed.downloadCallback)
       item.feed.downloadCallback.downloaded(item.feed);
+
+    item.feed.request = null; // force the xml http request to go away. This helps reduce some
+                              // nasty assertions on shut down of all things.
 
     gItemsToStore = "";
     gItemsToStoreIndex = 0;

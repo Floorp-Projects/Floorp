@@ -60,8 +60,8 @@ var fileHandler =
           .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
 function addFeed(url, title, quickMode, destFolder) {
-    var ds = getSubscriptionsDS();
-    var feeds = getSubscriptionsList();
+    var ds = getSubscriptionsDS(destFolder.server);
+    var feeds = getSubscriptionsList(destFolder.server);
 
     // Give quickMode a default value of "true"; otherwise convert value
     // to either "true" or "false" string.
@@ -118,11 +118,11 @@ function getRDFTargetValue(ds, source, property) {
 }
 
 var gFzSubscriptionsDS; // cache
-function getSubscriptionsDS() {
+function getSubscriptionsDS(server) {
     if (gFzSubscriptionsDS)
         return gFzSubscriptionsDS;
 
-    var file = getSubscriptionsFile();
+    var file = getSubscriptionsFile(server);
     var url = fileHandler.getURLSpecFromFile(file);
 
     gFzSubscriptionsDS = rdf.GetDataSourceBlocking(url);
@@ -130,16 +130,11 @@ function getSubscriptionsDS() {
     if (!gFzSubscriptionsDS)
         throw("can't get subscriptions data source");
 
-    // Note that it this point the datasource may not be loaded yet.
-    // You have to QueryInterface it to nsIRDFRemoteDataSource and check
-    // its "loaded" property to be sure.  You can also attach an observer
-    // which will get notified when the load is complete.
-
     return gFzSubscriptionsDS;
 }
 
-function getSubscriptionsList() {
-    var ds = getSubscriptionsDS();
+function getSubscriptionsList(server) {
+    var ds = getSubscriptionsDS(server);
     var list = ds.GetTarget(FZ_ROOT, FZ_FEEDS, true);
     //list = feeds.QueryInterface(Components.interfaces.nsIRDFContainer);
     list = list.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -147,24 +142,9 @@ function getSubscriptionsList() {
     return list;
 }
 
-function getSubscriptionsFile() {
-  // Get the app directory service so we can look up the user's profile dir.
-  var appDirectoryService =
-    Components
-      .classes["@mozilla.org/file/directory_service;1"]
-        .getService(Components.interfaces.nsIProperties);
-  if ( !appDirectoryService )
-    throw("couldn't get the directory service");
-
-  // Get the user's profile directory.
-  var profileDir =
-    appDirectoryService.get("ProfD", Components.interfaces.nsIFile);
-  if ( !profileDir )
-    throw ("couldn't get the user's profile directory");
-
-  // Get the user's subscriptions file.
-  var file = profileDir.clone();
-  file.append("feeds.rdf");
+function getSubscriptionsFile(server) {
+  server.QueryInterface(Components.interfaces.nsIRssIncomingServer);
+  var file = server.subscriptionsDataSourcePath;
 
   // If the file doesn't exist, create it.
   if (!file.exists())
@@ -192,11 +172,11 @@ function createSubscriptionsFile(file) {
 }
 
 var gFzItemsDS; // cache
-function getItemsDS() {
+function getItemsDS(server) {
     if (gFzItemsDS)
         return gFzItemsDS;
 
-    var file = getItemsFile();
+    var file = getItemsFile(server);
     var url = fileHandler.getURLSpecFromFile(file);
 
     gFzItemsDS = rdf.GetDataSourceBlocking(url);
@@ -211,24 +191,9 @@ function getItemsDS() {
     return gFzItemsDS;
 }
 
-function getItemsFile() {
-  // Get the app directory service so we can look up the user's profile dir.
-  var appDirectoryService =
-    Components
-      .classes["@mozilla.org/file/directory_service;1"]
-        .getService(Components.interfaces.nsIProperties);
-  if ( !appDirectoryService )
-    throw("couldn't get the directory service");
-
-  // Get the user's profile directory.
-  var profileDir =
-    appDirectoryService.get("ProfD", Components.interfaces.nsIFile);
-  if ( !profileDir )
-    throw ("couldn't get the user's profile directory");
-
-  // Get the user's subscriptions file.
-  var file = profileDir.clone();
-  file.append("feeditems.rdf");
+function getItemsFile(server) {
+  server.QueryInterface(Components.interfaces.nsIRssIncomingServer);
+  var file = server.subscriptionsDataSourcePath;
 
   // If the file doesn't exist, create it.
   if (!file.exists()) {

@@ -29,7 +29,29 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 # ***** END LICENSE BLOCK *****
 
+var gIncomingServer;
+
 function onInit() 
 {  
   // nothing to do here yet...
+}
+
+function onPreInit(account, accountValues)
+{
+  gIncomingServer = account.incomingServer;
+}
+
+function manageSubscriptions()
+{
+  // XXX: This code should be shared with the JS in toolbar-icon.xul
+  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
+  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+  var lastSubscriptionWindow = kWindowMediator.getMostRecentWindow("Mail:News-BlogSubscriptions");
+
+  if (lastSubscriptionWindow)
+    lastSubscriptionWindow.focus();
+  else 
+    window.openDialog("chrome://messenger-newsblog/content/subscriptions.xul", "",
+                      "centerscreen,resizable=yes", { server: gIncomingServer});
 }

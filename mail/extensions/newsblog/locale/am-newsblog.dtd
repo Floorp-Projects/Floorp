@@ -1,4 +1,4 @@
-<!ENTITY newsblogTitle.label "News &amp; Blog Settings">
+<!ENTITY newsblogTitle.label "RSS Account Settings">
 
 <!ENTITY biffStart.label "Check for new articles every ">
 <!ENTITY biffStart.accesskey "k">
@@ -6,3 +6,6 @@
 
 <!ENTITY loginAtStartup.label "Check for new articles at startup"> 
 <!ENTITY loginAtStartup.accesskey "C">
+
+<!ENTITY manageSubscriptions.label "Manage Subscriptions..."> 
+<!ENTITY manageSubscriptions.accesskey "M">

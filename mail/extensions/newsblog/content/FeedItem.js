@@ -185,7 +185,7 @@ FeedItem.prototype.isStored = function() {
     return false;
   }
 
-  var ds = getItemsDS();
+  var ds = getItemsDS(server);
   var itemResource = rdf.GetResource(this.url || ("urn:" + this.id));
   var downloaded = ds.GetTarget(itemResource, FZ_STORED, true);
   if (!downloaded || downloaded.QueryInterface(Components.interfaces.nsIRDFLiteral).Value == "false") 
@@ -204,7 +204,7 @@ FeedItem.prototype.isStored = function() {
 FeedItem.prototype.markValid = function() {
     debug("validating " + this.url);
 
-    var ds = getItemsDS();
+    var ds = getItemsDS(this.feed.server);
     var resource = rdf.GetResource(this.url || ("urn:" + this.id));
     
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
@@ -221,7 +221,7 @@ FeedItem.prototype.markValid = function() {
 
 
 FeedItem.prototype.markStored = function() {
-    var ds = getItemsDS();
+    var ds = getItemsDS(this.feed.server);
     var resource = rdf.GetResource(this.url || ("urn:" + this.id));
     
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))

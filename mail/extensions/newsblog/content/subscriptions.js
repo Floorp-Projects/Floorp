@@ -38,16 +38,14 @@ var kFeedUrlDelimiter = '|'; // the delimiter used to delimit feed urls in the m
 var gRSSServer = null;
 
 function doLoad() {
-    // Display the list of feed subscriptions.
-    var file = getSubscriptionsFile();
-    var ds = getSubscriptionsDS();
-    var tree = document.getElementById('subscriptions');
-    tree.database.AddDataSource(ds);
-    tree.builder.rebuild();
-
     // extract the server argument
     if (window.arguments[0].server)
         gRSSServer = window.arguments[0].server;
+    
+    var ds = getSubscriptionsDS(gRSSServer);
+    var tree = document.getElementById('subscriptions');
+    tree.database.AddDataSource(ds);
+    tree.builder.rebuild();
 }
 
 // opens the feed properties dialog
@@ -178,7 +176,7 @@ function doEdit() {
     // XXX There should be some way of correlating feed RDF resources
     // with their corresponding Feed objects.  Perhaps in the end much
     // of this code could hang off methods of the Feed object.
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(gRSSServer);
     var tree = document.getElementById('subscriptions');
     var item = tree.view.getItemAtIndex(tree.view.selection.currentIndex);
     var resource = rdf.GetResource(item.id);
@@ -232,10 +230,10 @@ function doRemove() {
     var item = tree.view.getItemAtIndex(tree.view.selection.currentIndex);
     var resource = rdf.GetResource(item.id);
     var feed = new Feed(resource);
-    var ds = getSubscriptionsDS();
+    var ds = getSubscriptionsDS(gRSSServer);
     
     // remove the feed from the subscriptions ds
-    var feeds = getSubscriptionsList();
+    var feeds = getSubscriptionsList(gRSSServer);
     var index = feeds.IndexOf(resource);
     if (index != -1)
         feeds.RemoveElementAt(index, false);
@@ -257,7 +255,7 @@ function doRemove() {
     ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
     // Remove all assertions about items in the feed from the items database.
-    var itemds = getItemsDS();
+    var itemds = getItemsDS(gRSSServer);
     feed.invalidateItems();
     feed.removeInvalidItems();
     itemds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
