@@ -24,11 +24,14 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLParts.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "GenericElementCollection.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
 // you will see the phrases "rowgroup" and "section" used interchangably
 
@@ -80,6 +83,7 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  GenericElementCollection *mRows;
 };
 
 nsresult
@@ -100,10 +104,15 @@ nsHTMLTableSectionElement::nsHTMLTableSectionElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mRows = nsnull;
 }
 
 nsHTMLTableSectionElement::~nsHTMLTableSectionElement()
 {
+  if (nsnull!=mRows) {
+    mRows->ParentDestroyed();
+    NS_RELEASE(mRows);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLTableSectionElement)
@@ -142,23 +151,66 @@ NS_IMPL_STRING_ATTR(nsHTMLTableSectionElement, ChOff, choff)
 NS_IMETHODIMP
 nsHTMLTableSectionElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
-  *aValue = 0;
-  // XXX write me
+  *aValue = nsnull;
+  if (nsnull == mRows) {
+    NS_ADDREF(nsHTMLAtoms::tr);
+    mRows = new GenericElementCollection(this, nsHTMLAtoms::tr);
+    NS_ADDREF(mRows); // this table's reference, released in the destructor
+  }
+  mRows->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsHTMLTableSectionElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 {
-  *aValue = 0;
-  // XXX write me
+  *aValue = nsnull;
+
+  PRInt32 refIndex = (0 <= aIndex) ? aIndex : 0;
+    
+  nsIDOMHTMLCollection *rows;
+  GetRows(&rows);
+  PRUint32 rowCount;
+  rows->GetLength(&rowCount);
+  if (rowCount <= PRUint32(aIndex)) {
+    refIndex = rowCount - 1; // refIndex will be -1 if there are no rows 
+  }
+  // create the row
+  nsIHTMLContent *rowContent = nsnull;
+  nsresult rv = NS_NewHTMLTableRowElement(&rowContent, nsHTMLAtoms::tr);
+  if (NS_SUCCEEDED(rv) && (nsnull != rowContent)) {
+    nsIDOMNode *rowNode = nsnull;
+    rv = rowContent->QueryInterface(kIDOMNodeIID, (void **)&rowNode); 
+    if (NS_SUCCEEDED(rv) && (nsnull != rowNode)) {
+      if (refIndex >= 0) {
+        nsIDOMNode *refRow;
+        rows->Item(refIndex, &refRow);
+        rv = InsertBefore(rowNode, refRow, (nsIDOMNode **)aValue);
+      } else {
+        rv = AppendChild(rowNode, (nsIDOMNode **)aValue);
+      }
+
+      NS_RELEASE(rowNode);
+    }
+    NS_RELEASE(rowContent);
+  }
+  NS_RELEASE(rows);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLTableSectionElement::DeleteRow(PRInt32 aIndex)
+nsHTMLTableSectionElement::DeleteRow(PRInt32 aValue)
 {
-  // XXX write me
+  nsIDOMHTMLCollection *rows;
+  GetRows(&rows);
+  nsIDOMNode *row = nsnull;
+  rows->Item(aValue, &row);
+  if (nsnull != row) {
+    RemoveChild(row, &row);
+  }
+  NS_RELEASE(rows);
   return NS_OK;
 }
 
