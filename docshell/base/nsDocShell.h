@@ -121,12 +121,10 @@ protected:
    NS_IMETHOD EnsureDeviceContext();
    NS_IMETHOD CreateAboutBlankContentViewer();
    NS_IMETHOD CreateContentViewer(const char* aContentType, 
-      nsURILoadCommand aCommand, nsIChannel* aOpenedChannel,
-      nsIStreamListener** aContentHandler);
+      nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
    NS_IMETHOD NewContentViewerObj(const char* aContentType, 
-      nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
-      nsILoadGroup* aLoadGroup, nsIStreamListener** aContentHandler,
-      nsIContentViewer** aViewer);
+      nsIChannel* aOpenedChannel, nsILoadGroup* aLoadGroup, 
+      nsIStreamListener** aContentHandler, nsIContentViewer** aViewer);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
    // Site Loading
@@ -142,9 +140,12 @@ protected:
       loadLink
    } loadType;
 
-   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer, 
-      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal);
-   NS_IMETHOD DoURILoad(nsIURI* aURI);
+   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
+      const char* aWindowTarget=nsnull, nsIInputStream* aPostData=nsnull, 
+      loadType aLoadType=loadNormal);
+   NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
+   NS_IMETHOD DoURILoad(nsIURI* aURI, nsURILoadCommand aLoadCmd,
+      const char* aWindowTarget);
    NS_IMETHOD StopCurrentLoads();
    NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
    NS_IMETHOD OnLoadingSite(nsIChannel* aChannel);

@@ -56,17 +56,6 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
-#ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
-#define WEB_TRACE(_bit,_args)            \
-  PR_BEGIN_MACRO                         \
-    if (WEB_LOG_TEST(gLogModule,_bit)) { \
-      PR_LogPrint _args;                 \
-    }                                    \
-  PR_END_MACRO
-#else
-#define WEB_TRACE(_bit,_args)
-#endif
-
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 //*****************************************************************************
@@ -211,7 +200,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
       }
       
 
-   NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, nsnull, 
+   NS_ENSURE_SUCCESS(InternalLoad(aURI, referrer, nsnull, nsnull, 
       replace ? loadNormalReplace : loadNormal), NS_ERROR_FAILURE);
 
    return NS_OK;
@@ -1007,23 +996,13 @@ NS_IMETHODIMP nsDocShell::GoForward()
 
 NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not Yet Implemeted");
-   return NS_ERROR_FAILURE;
    nsCOMPtr<nsIURI> uri;
 
-//   CreateFixupURI(aURI, getter_AddRefs(uri));
+   CreateFixupURI(aURI, getter_AddRefs(uri));
    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(LoadURI(uri, nsnull), NS_ERROR_FAILURE);
    return NS_OK;
-   // Mangle URL
-   // If anchor goto Anchor
-   // Stop Current Loads
-   // URI Load
-   //XXX First Checkin
-   NS_ERROR("Not Yet Implemented");
-   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
@@ -1034,8 +1013,8 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    // XXXTAB Convert reload type to our type
    loadType type = loadReloadNormal;
    
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, type),
-      NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+      type), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2064,8 +2043,7 @@ NS_IMETHODIMP nsDocShell::CreateAboutBlankContentViewer()
 }
 
 NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType, 
-   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel, 
-   nsIStreamListener** aContentHandler)
+   nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler)
 {
    // Can we check the content type of the current content viewer
    // and reuse it without destroying it and re-creating it?
@@ -2075,8 +2053,8 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 
    // Instantiate the content viewer object
    nsCOMPtr<nsIContentViewer> viewer;
-   if(NS_FAILED(NewContentViewerObj(aContentType, aCommand, aOpenedChannel,
-      loadGroup, aContentHandler, getter_AddRefs(viewer))))
+   if(NS_FAILED(NewContentViewerObj(aContentType, aOpenedChannel, loadGroup, 
+      aContentHandler, getter_AddRefs(viewer))))
       return NS_ERROR_FAILURE;
 
    // let's try resetting the load group if we need to...
@@ -2113,9 +2091,8 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
 }
 
 nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
-   nsURILoadCommand aCommand, nsIChannel* aOpenedChannel,
-   nsILoadGroup* aLoadGroup, nsIStreamListener** aContentHandler,
-   nsIContentViewer** aViewer)
+   nsIChannel* aOpenedChannel, nsILoadGroup* aLoadGroup, 
+   nsIStreamListener** aContentHandler, nsIContentViewer** aViewer)
 {
    //XXX This should probably be some category thing....
    char id[256];
@@ -2250,7 +2227,7 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************   
   
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsIInputStream* aPostData, loadType aLoadType)
+   const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
 {
    PRBool wasAnchor = PR_FALSE;
    NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
@@ -2261,19 +2238,26 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       }
    
    NS_ENSURE_SUCCESS(StopCurrentLoads(), NS_ERROR_FAILURE);
-   
-   NS_ENSURE_SUCCESS(DoURILoad(aURI), NS_ERROR_FAILURE);
+
+   NS_ENSURE_SUCCESS(DoURILoad(aURI, (loadLink == aLoadType) ? 
+      nsIURILoader::viewUserClick : nsIURILoader::viewNormal, aWindowTarget),
+      NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI)
+NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI, 
+   nsIURI** aURI)
+{
+   NS_ERROR("Not Implemented");
+   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsURILoadCommand aLoadCmd,
+   const char* aWindowTarget)
 {
    nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_PROGID);
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
-
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-   //mContentListener->SetPresContext(aPresContext);
 
    // we need to get the load group from our load cookie so we can pass it into open uri...
    nsCOMPtr<nsILoadGroup> loadGroup;
@@ -2287,8 +2271,8 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI)
                                 NS_STATIC_CAST(nsIInterfaceRequestor*, this)),
                      NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, nsIURILoader::viewNormal,
-      nsnull, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(uriLoader->OpenURI(channel, aLoadCmd,
+      aWindowTarget, NS_STATIC_CAST(nsIDocShell*, this)), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
@@ -2454,7 +2438,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
       NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, postData, loadHistory),
+   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, postData, loadHistory),
       NS_ERROR_FAILURE);
 
    return NS_OK;
