@@ -701,8 +701,9 @@ nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *evt, PRBool* _retval)
 //----------------------------------------------------------------------
 
 nsDOMSlots::nsDOMSlots(PtrBits aFlags)
-  : mFlags(aFlags), mChildNodes(nsnull), mStyle(nsnull), mAttributeMap(nsnull),
-    mBindingParent(nsnull), mContentID(0)
+  : mFlags(aFlags & ~GENERIC_ELEMENT_CONTENT_ID_MASK), mChildNodes(nsnull),
+    mStyle(nsnull), mAttributeMap(nsnull), mBindingParent(nsnull),
+    mContentID(aFlags >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
 {
 }
 
@@ -849,26 +850,6 @@ nsGenericElement::~nsGenericElement()
   }
 
   // No calling GetFlags() beond this point...
-}
-
-void
-nsGenericElement::MaybeClearDOMSlots()
-{
-  nsDOMSlots *slots = GetExistingDOMSlots();
-
-  if (!slots) {
-    return;
-  }
-
-  if (slots->IsEmpty()) {
-    mFlagsOrSlots = slots->mFlags | GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS;
-
-    // Move the content id from the slots to mFlagsOrSlots too since
-    // it might have changed since we created the slots
-    SetContentID(slots->mContentID);
-
-    delete slots;
-  }
 }
 
 PR_STATIC_CALLBACK(void)
@@ -2146,8 +2127,7 @@ nsGenericElement::GetContentID(PRUint32* aID)
 NS_IMETHODIMP
 nsGenericElement::SetContentID(PRUint32 aID)
 {
-  if (aID > GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE ||
-      HasDOMSlots()) {
+  if (HasDOMSlots() || aID > GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE) {
     nsDOMSlots *slots = GetDOMSlots();
 
     if (!slots) {
