@@ -786,6 +786,25 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 {
   nsresult rv;
+
+#ifdef XP_WIN32
+  // If starting up in server mode, then we do things differently.
+  nsCOMPtr<nsINativeAppSupport> nativeApp;
+  rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
+  if (NS_SUCCEEDED(rv)) {
+      PRBool isServerMode = PR_FALSE;
+      nativeApp->GetIsServerMode(&isServerMode);
+      if (isServerMode) {
+          nativeApp->StartServerMode();
+      }
+      PRBool shouldShowUI = PR_TRUE;
+      nativeApp->GetShouldShowUI(&shouldShowUI);
+      if (!shouldShowUI) {
+          return NS_OK;
+      }
+  }
+#endif
+  
   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID, &rv));
 
   if (NS_FAILED(rv))
@@ -800,21 +819,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
     windowEnumerator->HasMoreElements(&more);
     if ( !more )
     {
-      #ifdef XP_WIN32
-        // If starting up in server mode, then we do things differently.
-        nsCOMPtr<nsINativeAppSupport> nativeApp;
-        rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
-        // Create special Nav window.
-        if (NS_SUCCEEDED(rv)) {
-          PRBool shouldShowUI = PR_TRUE;
-          nativeApp->GetShouldShowUI(&shouldShowUI);
-          if (!shouldShowUI) {
-            nativeApp->StartServerMode();
-            return NS_OK;
-          }
-        }
-      #endif
-
       // No window exists so lets create a browser one
       PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
       PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
