@@ -23,7 +23,7 @@ Contributor(s):
 #include "nametab.h"
 
 #define VTABLE1 \
-  { PREFIX(prologTok), PREFIX(contentTok) }, \
+  { PREFIX(prologTok), PREFIX(contentTok), PREFIX(cdataSectionTok) }, \
   { PREFIX(attributeValueTok), PREFIX(entityValueTok) }, \
   PREFIX(sameName), \
   PREFIX(nameMatchesAscii), \
@@ -31,14 +31,11 @@ Contributor(s):
   PREFIX(skipS), \
   PREFIX(getAtts), \
   PREFIX(charRefNumber), \
+  PREFIX(predefinedEntityName), \
   PREFIX(updatePosition), \
   PREFIX(isPublicId)
 
-#define VTABLE2 \
-  PREFIX(encode), \
-  { PREFIX(toUtf8) }
-
-#define VTABLE VTABLE1, VTABLE2
+#define VTABLE VTABLE1, PREFIX(toUtf8), PREFIX(toUtf16)
 
 #define UCS2_GET_NAMING(pages, hi, lo) \
    (namingBitmap[(pages[hi] << 3) + ((lo) >> 5)] & (1 << ((lo) & 0x1F)))
@@ -81,11 +78,79 @@ We need 8 bits to index into pages, 3 bits to add to that index and
 
 #define UTF8_INVALID4(p) ((*p) == 0xF4 && ((p)[1] & 0x30) != 0)
 
+static
+int isNever(const ENCODING *enc, const char *p)
+{
+  return 0;
+}
+
+static
+int utf8_isName2(const ENCODING *enc, const char *p)
+{
+  return UTF8_GET_NAMING2(namePages, (const unsigned char *)p);
+}
+
+static
+int utf8_isName3(const ENCODING *enc, const char *p)
+{
+  return UTF8_GET_NAMING3(namePages, (const unsigned char *)p);
+}
+
+#define utf8_isName4 isNever
+
+static
+int utf8_isNmstrt2(const ENCODING *enc, const char *p)
+{
+  return UTF8_GET_NAMING2(nmstrtPages, (const unsigned char *)p);
+}
+
+static
+int utf8_isNmstrt3(const ENCODING *enc, const char *p)
+{
+  return UTF8_GET_NAMING3(nmstrtPages, (const unsigned char *)p);
+}
+
+#define utf8_isNmstrt4 isNever
+
+#define utf8_isInvalid2 isNever
+
+static
+int utf8_isInvalid3(const ENCODING *enc, const char *p)
+{
+  return UTF8_INVALID3((const unsigned char *)p);
+}
+
+static
+int utf8_isInvalid4(const ENCODING *enc, const char *p)
+{
+  return UTF8_INVALID4((const unsigned char *)p);
+}
+
 struct normal_encoding {
   ENCODING enc;
   unsigned char type[256];
+  int (*isName2)(const ENCODING *, const char *);
+  int (*isName3)(const ENCODING *, const char *);
+  int (*isName4)(const ENCODING *, const char *);
+  int (*isNmstrt2)(const ENCODING *, const char *);
+  int (*isNmstrt3)(const ENCODING *, const char *);
+  int (*isNmstrt4)(const ENCODING *, const char *);
+  int (*isInvalid2)(const ENCODING *, const char *);
+  int (*isInvalid3)(const ENCODING *, const char *);
+  int (*isInvalid4)(const ENCODING *, const char *);
 };
 
+#define NORMAL_VTABLE(E) \
+ E ## isName2, \
+ E ## isName3, \
+ E ## isName4, \
+ E ## isNmstrt2, \
+ E ## isNmstrt3, \
+ E ## isNmstrt4, \
+ E ## isInvalid2, \
+ E ## isInvalid3, \
+ E ## isInvalid4
+ 
 static int checkCharRefNumber(int);
 
 #include "xmltok_impl.h"
@@ -95,12 +160,16 @@ static int checkCharRefNumber(int);
 #define BYTE_TYPE(enc, p) \
   (((struct normal_encoding *)(enc))->type[(unsigned char)*(p)])
 #define BYTE_TO_ASCII(enc, p) (*p)
-#define IS_NAME_CHAR(enc, p, n) UTF8_GET_NAMING(namePages, p, n)
-#define IS_NMSTRT_CHAR(enc, p, n) UTF8_GET_NAMING(nmstrtPages, p, n)
+
+#define IS_NAME_CHAR(enc, p, n) \
+ (((const struct normal_encoding *)(enc))->isName ## n(enc, p))
+#define IS_NMSTRT_CHAR(enc, p, n) \
+ (((const struct normal_encoding *)(enc))->isNmstrt ## n(enc, p))
 #define IS_INVALID_CHAR(enc, p, n) \
-((n) == 3 \
-  ? UTF8_INVALID3((const unsigned char *)(p)) \
-  : ((n) == 4 ? UTF8_INVALID4((const unsigned char *)(p)) : 0))
+ (((const struct normal_encoding *)(enc))->isInvalid ## n(enc, p))
+
+#define IS_NAME_CHAR_MINBPC(enc, p) (0)
+#define IS_NMSTRT_CHAR_MINBPC(enc, p) (0)
 
 /* c is an ASCII character */
 #define CHAR_MATCHES(enc, p, c) (*(p) == c)
@@ -113,50 +182,17 @@ static int checkCharRefNumber(int);
 #undef BYTE_TO_ASCII
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
+#undef IS_NAME_CHAR_MINBPC
 #undef IS_NMSTRT_CHAR
+#undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
 
-enum {
-  /* cvalN is value of masked first byte of N byte sequence */
-  cval1 = 0x00,
-  cval2 = 0xc0,
-  cval3 = 0xe0,
-  cval4 = 0xf0,
-  /* minN is minimum legal resulting value for N byte sequence */
-  min2 = 0x80,
-  min3 = 0x800,
-  min4 = 0x10000
+enum {  /* UTF8_cvalN is value of masked first byte of N byte sequence */
+  UTF8_cval1 = 0x00,
+  UTF8_cval2 = 0xc0,
+  UTF8_cval3 = 0xe0,
+  UTF8_cval4 = 0xf0
 };
-
-static
-int utf8_encode(const ENCODING *enc, int c, char *buf)
-{
-  if (c < 0)
-    return 0;
-  if (c < min2) {
-    buf[0] = (c | cval1);
-    return 1;
-  }
-  if (c < min3) {
-    buf[0] = ((c >> 6) | cval2);
-    buf[1] = ((c & 0x3f) | 0x80);
-    return 2;
-  }
-  if (c < min4) {
-    buf[0] = ((c >> 12) | cval3);
-    buf[1] = (((c >> 6) & 0x3f) | 0x80);
-    buf[2] = ((c & 0x3f) | 0x80);
-    return 3;
-  }
-  if (c < 0x110000) {
-    buf[0] = ((c >> 18) | cval4);
-    buf[1] = (((c >> 12) & 0x3f) | 0x80);
-    buf[2] = (((c >> 6) & 0x3f) | 0x80);
-    buf[3] = ((c & 0x3f) | 0x80);
-    return 4;
-  }
-  return 0;
-}
 
 static
 void utf8_toUtf8(const ENCODING *enc,
@@ -177,33 +213,62 @@ void utf8_toUtf8(const ENCODING *enc,
   *toP = to;
 }
 
+static
+void utf8_toUtf16(const ENCODING *enc,
+		  const char **fromP, const char *fromLim,
+		  unsigned short **toP, const unsigned short *toLim)
+{
+  unsigned short *to = *toP;
+  const char *from = *fromP;
+  while (from != fromLim && to != toLim) {
+    switch (((struct normal_encoding *)enc)->type[(unsigned char)*from]) {
+    case BT_LEAD2:
+      *to++ = ((from[0] & 0x1f) << 6) | (from[1] & 0x3f);
+      from += 2;
+      break;
+    case BT_LEAD3:
+      *to++ = ((from[0] & 0xf) << 12) | ((from[1] & 0x3f) << 6) | (from[2] & 0x3f);
+      from += 3;
+      break;
+    case BT_LEAD4:
+      {
+	unsigned long n;
+	if (to + 1 == toLim)
+	  break;
+	n = ((from[0] & 0x7) << 18) | ((from[1] & 0x3f) << 12) | ((from[2] & 0x3f) << 6) | (from[3] & 0x3f);
+	n -= 0x10000;
+	to[0] = (unsigned short)((n >> 10) | 0xD800);
+	to[1] = (unsigned short)((n & 0x3FF) | 0xDC00);
+	to += 2;
+	from += 4;
+      }
+      break;
+    default:
+      *to++ = *from++;
+      break;
+    }
+  }
+  *fromP = from;
+  *toP = to;
+}
+
 static const struct normal_encoding utf8_encoding = {
-  { VTABLE1, utf8_encode, { utf8_toUtf8 }, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
 #include "asciitab.h"
 #include "utf8tab.h"
-  }
+  },
+  NORMAL_VTABLE(utf8_)
 };
 
 static const struct normal_encoding internal_utf8_encoding = {
-  { VTABLE1, utf8_encode, { utf8_toUtf8 }, 1 },
+  { VTABLE1, utf8_toUtf8, utf8_toUtf16, 1, 1, 0 },
   {
 #include "iasciitab.h"
 #include "utf8tab.h"
-  }
+  },
+  NORMAL_VTABLE(utf8_)
 };
-
-static
-int latin1_encode(const ENCODING *enc, int c, char *buf)
-{
-  if (c < 0)
-    return 0;
-  if (c <= 0xFF) {
-    buf[0] = (char)c;
-    return 1;
-  }
-  return 0;
-}
 
 static
 void latin1_toUtf8(const ENCODING *enc,
@@ -218,7 +283,7 @@ void latin1_toUtf8(const ENCODING *enc,
     if (c & 0x80) {
       if (toLim - *toP < 2)
 	break;
-      *(*toP)++ = ((c >> 6) | cval2);
+      *(*toP)++ = ((c >> 6) | UTF8_cval2);
       *(*toP)++ = ((c & 0x3f) | 0x80);
       (*fromP)++;
     }
@@ -230,15 +295,39 @@ void latin1_toUtf8(const ENCODING *enc,
   }
 }
 
+static
+void latin1_toUtf16(const ENCODING *enc,
+		    const char **fromP, const char *fromLim,
+		    unsigned short **toP, const unsigned short *toLim)
+{
+  while (*fromP != fromLim && *toP != toLim)
+    *(*toP)++ = (unsigned char)*(*fromP)++;
+}
+
 static const struct normal_encoding latin1_encoding = {
-  { VTABLE1, latin1_encode, { latin1_toUtf8 }, 1 },
+  { VTABLE1, latin1_toUtf8, latin1_toUtf16, 1, 0, 0 },
   {
 #include "asciitab.h"
 #include "latin1tab.h"
   }
 };
 
-#define latin1tab (latin1_encoding.type)
+static
+void ascii_toUtf8(const ENCODING *enc,
+		  const char **fromP, const char *fromLim,
+		  char **toP, const char *toLim)
+{
+  while (*fromP != fromLim && *toP != toLim)
+    *(*toP)++ = *(*fromP)++;
+}
+
+static const struct normal_encoding ascii_encoding = {
+  { VTABLE1, ascii_toUtf8, latin1_toUtf16, 1, 1, 0 },
+  {
+#include "asciitab.h"
+/* BT_NONXML == 0 */
+  }
+};
 
 #undef PREFIX
 
@@ -258,25 +347,6 @@ static int unicode_byte_type(char hi, char lo)
     break;
   }
   return BT_NONASCII;
-}
-
-#define DEFINE_UTF16_ENCODE \
-static \
-int PREFIX(encode)(const ENCODING *enc, int charNum, char *buf) \
-{ \
-  if (charNum < 0) \
-    return 0; \
-  if (charNum < 0x10000) { \
-    SET2(buf, charNum); \
-    return 2; \
-  } \
-  if (charNum < 0x110000) { \
-    charNum -= 0x10000; \
-    SET2(buf, (charNum >> 10) + 0xD800); \
-    SET2(buf + 2, (charNum & 0x3FF) + 0xDC00); \
-    return 4; \
-  } \
-  return 0; \
 }
 
 #define DEFINE_UTF16_TO_UTF8 \
@@ -308,7 +378,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
         *fromP = from; \
 	return; \
       } \
-      *(*toP)++ = ((lo >> 6) | (hi << 2) |  cval2); \
+      *(*toP)++ = ((lo >> 6) | (hi << 2) |  UTF8_cval2); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
     default: \
@@ -317,7 +387,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 	return; \
       } \
       /* 16 bits divided 4, 6, 6 amongst 3 bytes */ \
-      *(*toP)++ = ((hi >> 4) | cval3); \
+      *(*toP)++ = ((hi >> 4) | UTF8_cval3); \
       *(*toP)++ = (((hi & 0xf) << 2) | (lo >> 6) | 0x80); \
       *(*toP)++ = ((lo & 0x3f) | 0x80); \
       break; \
@@ -327,7 +397,7 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 	return; \
       } \
       plane = (((hi & 0x3) << 2) | ((lo >> 6) & 0x3)) + 1; \
-      *(*toP)++ = ((plane >> 2) | cval4); \
+      *(*toP)++ = ((plane >> 2) | UTF8_cval4); \
       *(*toP)++ = (((lo >> 2) & 0xF) | ((plane & 0x3) << 4) | 0x80); \
       from += 2; \
       lo2 = GET_LO(from); \
@@ -342,15 +412,33 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
   *fromP = from; \
 }
 
+#define DEFINE_UTF16_TO_UTF16 \
+static \
+void PREFIX(toUtf16)(const ENCODING *enc, \
+		     const char **fromP, const char *fromLim, \
+		     unsigned short **toP, const unsigned short *toLim) \
+{ \
+  /* Avoid copying first half only of surrogate */ \
+  if (fromLim - *fromP > ((toLim - *toP) << 1) \
+      && (GET_HI(fromLim - 2) & 0xF8) == 0xD8) \
+    fromLim -= 2; \
+  for (; *fromP != fromLim && *toP != toLim; *fromP += 2) \
+    *(*toP)++ = (GET_HI(*fromP) << 8) | GET_LO(*fromP); \
+}
+
 #define PREFIX(ident) little2_ ## ident
 #define MINBPC 2
 #define BYTE_TYPE(enc, p) \
- ((p)[1] == 0 ? latin1tab[(unsigned char)*(p)] : unicode_byte_type((p)[1], (p)[0]))
+ ((p)[1] == 0 \
+  ? ((struct normal_encoding *)(enc))->type[(unsigned char)*(p)] \
+  : unicode_byte_type((p)[1], (p)[0]))
 #define BYTE_TO_ASCII(enc, p) ((p)[1] == 0 ? (p)[0] : -1)
 #define CHAR_MATCHES(enc, p, c) ((p)[1] == 0 && (p)[0] == c)
-#define IS_NAME_CHAR(enc, p, n) \
+#define IS_NAME_CHAR(enc, p, n) (0)
+#define IS_NAME_CHAR_MINBPC(enc, p) \
   UCS2_GET_NAMING(namePages, (unsigned char)p[1], (unsigned char)p[0])
-#define IS_NMSTRT_CHAR(enc, p, n) \
+#define IS_NMSTRT_CHAR(enc, p, n) (0)
+#define IS_NMSTRT_CHAR_MINBPC(enc, p) \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[1], (unsigned char)p[0])
 
 #include "xmltok_impl.c"
@@ -360,8 +448,8 @@ void PREFIX(toUtf8)(const ENCODING *enc, \
 #define GET_LO(ptr) ((unsigned char)(ptr)[0])
 #define GET_HI(ptr) ((unsigned char)(ptr)[1])
 
-DEFINE_UTF16_ENCODE
 DEFINE_UTF16_TO_UTF8
+DEFINE_UTF16_TO_UTF16
 
 #undef SET2
 #undef GET_LO
@@ -371,10 +459,32 @@ DEFINE_UTF16_TO_UTF8
 #undef BYTE_TO_ASCII
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
+#undef IS_NAME_CHAR_MINBPC
 #undef IS_NMSTRT_CHAR
+#undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
 
-static const struct encoding little2_encoding = { VTABLE, 2 };
+static const struct normal_encoding little2_encoding = { 
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 12
+    1
+#else
+    0
+#endif
+  },
+#include "asciitab.h"
+#include "latin1tab.h"
+};
+
+#if BYTE_ORDER != 21
+
+static const struct normal_encoding internal_little2_encoding = { 
+  { VTABLE, 2, 0, 1 },
+#include "iasciitab.h"
+#include "latin1tab.h"
+};
+
+#endif
 
 #undef PREFIX
 
@@ -382,12 +492,16 @@ static const struct encoding little2_encoding = { VTABLE, 2 };
 #define MINBPC 2
 /* CHAR_MATCHES is guaranteed to have MINBPC bytes available. */
 #define BYTE_TYPE(enc, p) \
- ((p)[0] == 0 ? latin1tab[(unsigned char)(p)[1]] : unicode_byte_type((p)[0], (p)[1]))
+ ((p)[0] == 0 \
+  ? ((struct normal_encoding *)(enc))->type[(unsigned char)(p)[1]] \
+  : unicode_byte_type((p)[0], (p)[1]))
 #define BYTE_TO_ASCII(enc, p) ((p)[0] == 0 ? (p)[1] : -1)
 #define CHAR_MATCHES(enc, p, c) ((p)[0] == 0 && (p)[1] == c)
-#define IS_NAME_CHAR(enc, p, n) \
+#define IS_NAME_CHAR(enc, p, n) 0
+#define IS_NAME_CHAR_MINBPC(enc, p) \
   UCS2_GET_NAMING(namePages, (unsigned char)p[0], (unsigned char)p[1])
-#define IS_NMSTRT_CHAR(enc, p, n) \
+#define IS_NMSTRT_CHAR(enc, p, n) (0)
+#define IS_NMSTRT_CHAR_MINBPC(enc, p) \
   UCS2_GET_NAMING(nmstrtPages, (unsigned char)p[0], (unsigned char)p[1])
 
 #include "xmltok_impl.c"
@@ -397,8 +511,8 @@ static const struct encoding little2_encoding = { VTABLE, 2 };
 #define GET_LO(ptr) ((unsigned char)(ptr)[1])
 #define GET_HI(ptr) ((unsigned char)(ptr)[0])
 
-DEFINE_UTF16_ENCODE
 DEFINE_UTF16_TO_UTF8
+DEFINE_UTF16_TO_UTF16
 
 #undef SET2
 #undef GET_LO
@@ -408,10 +522,32 @@ DEFINE_UTF16_TO_UTF8
 #undef BYTE_TO_ASCII
 #undef CHAR_MATCHES
 #undef IS_NAME_CHAR
+#undef IS_NAME_CHAR_MINBPC
 #undef IS_NMSTRT_CHAR
+#undef IS_NMSTRT_CHAR_MINBPC
 #undef IS_INVALID_CHAR
 
-static const struct encoding big2_encoding = { VTABLE, 2 };
+static const struct normal_encoding big2_encoding = {
+  { VTABLE, 2, 0,
+#if BYTE_ORDER == 21
+  1
+#else
+  0
+#endif
+  },
+#include "asciitab.h"
+#include "latin1tab.h"
+};
+
+#if BYTE_ORDER != 12
+
+static const struct normal_encoding internal_big2_encoding = {
+  { VTABLE, 2, 0, 1 },
+#include "iasciitab.h"
+#include "latin1tab.h"
+};
+
+#endif
 
 #undef PREFIX
 
@@ -454,18 +590,18 @@ int initScan(const ENCODING *enc, int state, const char *ptr, const char *end,
   else {
     switch (((unsigned char)ptr[0] << 8) | (unsigned char)ptr[1]) {
     case 0x003C:
-      *encPtr = &big2_encoding;
+      *encPtr = &big2_encoding.enc;
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFEFF:
       *nextTokPtr = ptr + 2;
-      *encPtr = &big2_encoding;
+      *encPtr = &big2_encoding.enc;
       return XML_TOK_BOM;
     case 0x3C00:
-      *encPtr = &little2_encoding;
+      *encPtr = &little2_encoding.enc;
       return XmlTok(*encPtr, state, ptr, end, nextTokPtr);
     case 0xFFFE:
       *nextTokPtr = ptr + 2;
-      *encPtr = &little2_encoding;
+      *encPtr = &little2_encoding.enc;
       return XML_TOK_BOM;
     }
   }
@@ -494,13 +630,21 @@ void initUpdatePosition(const ENCODING *enc, const char *ptr,
   normal_updatePosition(&utf8_encoding.enc, ptr, end, pos);
 }
 
-const ENCODING *XmlGetInternalEncoding(int e)
+const ENCODING *XmlGetUtf8InternalEncoding()
 {
-  switch (e) {
-  case XML_UTF8_ENCODING:
-    return &internal_utf8_encoding.enc;
-  }
-  return 0;
+  return &internal_utf8_encoding.enc;
+}
+
+const ENCODING *XmlGetUtf16InternalEncoding()
+{
+#if BYTE_ORDER == 12
+  return &internal_little2_encoding.enc;
+#elif BYTE_ORDER == 21
+  return &internal_big2_encoding.enc;
+#else
+  const short n = 1;
+  return *(const char *)&n ? &internal_little2_encoding.enc : &internal_big2_encoding.enc;
+#endif
 }
 
 int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
@@ -512,6 +656,10 @@ int XmlInitEncoding(INIT_ENCODING *p, const ENCODING **encPtr, const char *name)
     }
     if (streqci(name, "UTF-8")) {
       *encPtr = &utf8_encoding.enc;
+      return 1;
+    }
+    if (streqci(name, "US-ASCII")) {
+      *encPtr = &ascii_encoding.enc;
       return 1;
     }
     if (!streqci(name, "UTF-16"))
@@ -531,7 +679,7 @@ int toAscii(const ENCODING *enc, const char *ptr, const char *end)
 {
   char buf[1];
   char *p = buf;
-  XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &p, p + 1);
+  XmlUtf8Convert(enc, &ptr, end, &p, p + 1);
   if (p == buf)
     return -1;
   else
@@ -641,7 +789,7 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
   char buf[ENCODING_MAX];
   char *p = buf;
   int i;
-  XmlConvert(enc, XML_UTF8_ENCODING, &ptr, end, &p, p + ENCODING_MAX - 1);
+  XmlUtf8Convert(enc, &ptr, end, &p, p + ENCODING_MAX - 1);
   if (ptr != end)
     return 0;
   *p = 0;
@@ -653,11 +801,13 @@ const ENCODING *findEncoding(const ENCODING *enc, const char *ptr, const char *e
     return &utf8_encoding.enc;
   if (streqci(buf, "ISO-8859-1"))
     return &latin1_encoding.enc;
+  if (streqci(buf, "US-ASCII"))
+    return &ascii_encoding.enc;
   if (streqci(buf, "UTF-16")) {
     static const unsigned short n = 1;
     if (enc->minBytesPerChar == 2)
       return enc;
-    return &big2_encoding;
+    return &big2_encoding.enc;
   }
   return 0;  
 }
@@ -757,3 +907,229 @@ int checkCharRefNumber(int result)
   return result;
 }
 
+int XmlUtf8Encode(int c, char *buf)
+{
+  enum {
+    /* minN is minimum legal resulting value for N byte sequence */
+    min2 = 0x80,
+    min3 = 0x800,
+    min4 = 0x10000
+  };
+
+  if (c < 0)
+    return 0;
+  if (c < min2) {
+    buf[0] = (c | UTF8_cval1);
+    return 1;
+  }
+  if (c < min3) {
+    buf[0] = ((c >> 6) | UTF8_cval2);
+    buf[1] = ((c & 0x3f) | 0x80);
+    return 2;
+  }
+  if (c < min4) {
+    buf[0] = ((c >> 12) | UTF8_cval3);
+    buf[1] = (((c >> 6) & 0x3f) | 0x80);
+    buf[2] = ((c & 0x3f) | 0x80);
+    return 3;
+  }
+  if (c < 0x110000) {
+    buf[0] = ((c >> 18) | UTF8_cval4);
+    buf[1] = (((c >> 12) & 0x3f) | 0x80);
+    buf[2] = (((c >> 6) & 0x3f) | 0x80);
+    buf[3] = ((c & 0x3f) | 0x80);
+    return 4;
+  }
+  return 0;
+}
+
+int XmlUtf16Encode(int charNum, unsigned short *buf)
+{
+  if (charNum < 0)
+    return 0;
+  if (charNum < 0x10000) {
+    buf[0] = charNum;
+    return 1;
+  }
+  if (charNum < 0x110000) {
+    charNum -= 0x10000;
+    buf[0] = (charNum >> 10) + 0xD800;
+    buf[1] = (charNum & 0x3FF) + 0xDC00;
+    return 2;
+  }
+  return 0;
+}
+
+struct unknown_encoding {
+  struct normal_encoding normal;
+  int (*convert)(void *userData, const char *p);
+  void *userData;
+  unsigned short utf16[256];
+  char utf8[256][4];
+};
+
+int XmlSizeOfUnknownEncoding()
+{
+  return sizeof(struct unknown_encoding);
+}
+
+static
+int unknown_isName(const ENCODING *enc, const char *p)
+{
+  int c = ((const struct unknown_encoding *)enc)
+	  ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  if (c & ~0xFFFF)
+    return 0;
+  return UCS2_GET_NAMING(namePages, c >> 8, c & 0xFF);
+}
+
+static
+int unknown_isNmstrt(const ENCODING *enc, const char *p)
+{
+  int c = ((const struct unknown_encoding *)enc)
+	  ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  if (c & ~0xFFFF)
+    return 0;
+  return UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xFF);
+}
+
+static
+int unknown_isInvalid(const ENCODING *enc, const char *p)
+{
+  int c = ((const struct unknown_encoding *)enc)
+	   ->convert(((const struct unknown_encoding *)enc)->userData, p);
+  return (c & ~0xFFFF) || checkCharRefNumber(c) < 0;
+}
+
+static
+void unknown_toUtf8(const ENCODING *enc,
+		    const char **fromP, const char *fromLim,
+		    char **toP, const char *toLim)
+{
+  char buf[XML_UTF8_ENCODE_MAX];
+  for (;;) {
+    const char *utf8;
+    int n;
+    if (*fromP == fromLim)
+      break;
+    utf8 = ((const struct unknown_encoding *)enc)->utf8[(unsigned char)**fromP];
+    n = *utf8++;
+    if (n == 0) {
+      int c = ((const struct unknown_encoding *)enc)
+	      ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
+      n = XmlUtf8Encode(c, buf);
+      if (n > toLim - *toP)
+	break;
+      utf8 = buf;
+      *fromP += ((const struct normal_encoding *)enc)->type[(unsigned char)**fromP]
+	         - (BT_LEAD2 - 2);
+    }
+    else {
+      if (n > toLim - *toP)
+	break;
+      (*fromP)++;
+    }
+    do {
+      *(*toP)++ = *utf8++;
+    } while (--n != 0);
+  }
+}
+
+static
+void unknown_toUtf16(const ENCODING *enc,
+		     const char **fromP, const char *fromLim,
+		     unsigned short **toP, const unsigned short *toLim)
+{
+  while (*fromP != fromLim && *toP != toLim) {
+    unsigned short c
+      = ((const struct unknown_encoding *)enc)->utf16[(unsigned char)**fromP];
+    if (c == 0) {
+      c = (unsigned short)((const struct unknown_encoding *)enc)
+	   ->convert(((const struct unknown_encoding *)enc)->userData, *fromP);
+      *fromP += ((const struct normal_encoding *)enc)->type[(unsigned char)**fromP]
+	         - (BT_LEAD2 - 2);
+    }
+    else
+      (*fromP)++;
+    *(*toP)++ = c;
+  }
+}
+
+ENCODING *
+XmlInitUnknownEncoding(void *mem,
+		       int *table,
+		       int (*convert)(void *userData, const char *p),
+		       void *userData)
+{
+  int i;
+  struct unknown_encoding *e = mem;
+  for (i = 0; i < sizeof(struct normal_encoding); i++)
+    ((char *)mem)[i] = ((char *)&latin1_encoding)[i];
+  for (i = 0; i < 128; i++)
+    if (latin1_encoding.type[i] != BT_OTHER
+        && latin1_encoding.type[i] != BT_NONXML
+	&& table[i] != i)
+      return 0;
+  for (i = 0; i < 256; i++) {
+    int c = table[i];
+    if (c == -1) {
+      e->normal.type[i] = BT_MALFORM;
+      /* This shouldn't really get used. */
+      e->utf16[i] = 0xFFFF;
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = 0;
+    }
+    else if (c < 0) {
+      if (c < -4)
+	return 0;
+      e->normal.type[i] = BT_LEAD2 - (c + 2);
+      e->utf8[i][0] = 0;
+      e->utf16[i] = 0;
+    }
+    else if (c < 0x80) {
+      if (latin1_encoding.type[c] != BT_OTHER
+	  && latin1_encoding.type[c] != BT_NONXML
+	  && c != i)
+	return 0;
+      e->normal.type[i] = latin1_encoding.type[c];
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = (char)c;
+      e->utf16[i] = c == 0 ? 0xFFFF : c;
+    }
+    else if (checkCharRefNumber(c) < 0) {
+      e->normal.type[i] = BT_NONXML;
+      /* This shouldn't really get used. */
+      e->utf16[i] = 0xFFFF;
+      e->utf8[i][0] = 1;
+      e->utf8[i][1] = 0;
+    }
+    else {
+      if (c > 0xFFFF)
+	return 0;
+      if (UCS2_GET_NAMING(nmstrtPages, c >> 8, c & 0xff))
+	e->normal.type[i] = BT_NMSTRT;
+      else if (UCS2_GET_NAMING(namePages, c >> 8, c & 0xff))
+	e->normal.type[i] = BT_NAME;
+      else
+	e->normal.type[i] = BT_OTHER;
+      e->utf8[i][0] = (char)XmlUtf8Encode(c, e->utf8[i] + 1);
+      e->utf16[i] = c;
+    }
+  }
+  e->userData = userData;
+  e->convert = convert;
+  if (convert) {
+    e->normal.isName2 = unknown_isName;
+    e->normal.isName3 = unknown_isName;
+    e->normal.isName4 = unknown_isName;
+    e->normal.isNmstrt2 = unknown_isNmstrt;
+    e->normal.isNmstrt3 = unknown_isNmstrt;
+    e->normal.isNmstrt4 = unknown_isNmstrt;
+    e->normal.isInvalid2 = unknown_isInvalid;
+    e->normal.isInvalid3 = unknown_isInvalid;
+    e->normal.isInvalid4 = unknown_isInvalid;
+  }
+  e->normal.enc.utf8Convert = unknown_toUtf8;
+  e->normal.enc.utf16Convert = unknown_toUtf16;
+  return &(e->normal.enc);
+}

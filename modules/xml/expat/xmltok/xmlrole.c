@@ -594,7 +594,7 @@ int notation4(PROLOG_STATE *state,
     return XML_ROLE_NOTATION_SYSTEM_ID;
   case XML_TOK_DECL_CLOSE:
     state->handler = internalSubset;
-    return XML_ROLE_NONE;
+    return XML_ROLE_NOTATION_NO_SYSTEM_ID;
   }
   return syntaxError(state);
 }
