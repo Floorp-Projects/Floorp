@@ -73,6 +73,7 @@ public:
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
 
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
+  static nsresult GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32 *aCount);
 
 protected:
   nsCOMPtr<nsITreeBoxObject> mTree;

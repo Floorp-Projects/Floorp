@@ -53,6 +53,12 @@ nsXULTreeitemAccessible(aParent, aDOMNode, aShell, aRow, aColumn)
 {
 }
 
+NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_OUTLINEITEM;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescription)
 {
   if (!mParent || !mWeakShell || !mTreeView) {

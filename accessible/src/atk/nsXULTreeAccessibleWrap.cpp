@@ -53,6 +53,27 @@ nsXULTreeAccessible(aDOMNode, aShell)
   mCaption = nsnull;
 }
 
+// tree's children count is row count * col count + treecols count
+// override "children count = row count + treecols count" defined in
+// nsXULTreeAccessible
+NS_IMETHODIMP nsXULTreeAccessibleWrap::GetChildCount(PRInt32 *aAccChildCount)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  // get treecols count, which is cached by nsAccessibleTreeWalker
+  // by going through DOM structure of XUL tree
+  nsAccessible::GetChildCount(aAccChildCount);
+
+  // add the count of table cell (or tree item) accessibles, which are
+  // created and appended by XUL tree accessible implementation
+  PRInt32 rowCount, colCount = 1;
+  mTreeView->GetRowCount(&rowCount);
+  GetColumnCount(mTree, &colCount);
+  *aAccChildCount += rowCount * colCount;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetCaption(nsIAccessible **aCaption)
 {
   *aCaption = mCaption;
@@ -347,6 +368,34 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::IsRowSelected(PRInt32 aRow, PRBool *_retv
 NS_IMETHODIMP nsXULTreeAccessibleWrap::IsCellSelected(PRInt32 aRow, PRInt32 aColumn, PRBool *_retval)
 {
   return IsRowSelected(aRow, _retval);
+}
+
+NS_IMETHODIMP nsXULTreeAccessibleWrap::ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+
+  PRInt32 rowIndex;
+  nsresult rv = GetRowAtIndex(aIndex, &rowIndex);
+
+  nsCOMPtr<nsITreeSelection> selection;
+  rv = mTreeView->GetSelection(getter_AddRefs(selection));
+  NS_ASSERTION(selection, "Can't get selection from mTreeView");
+
+  if (selection) {
+    selection->IsSelected(rowIndex, aSelState);
+    // XXX: Can move to nsXULTreeAccessible if this can be applied to cross-platform
+    if ((!(*aSelState) && eSelection_Add == aMethod)) {
+      nsresult rv = selection->Select(rowIndex);
+      mTree->EnsureRowIsVisible(aIndex);
+      return rv;
+    }
+    // XXX: Will eSelection_Remove happen for XULTree? Leave the original implementation here
+    if ((*aSelState) && eSelection_Remove == aMethod) {
+      return selection->ToggleSelect(rowIndex);
+    }
+  }
+
+  return NS_OK;
 }
 
 // --------------------------------------------------------

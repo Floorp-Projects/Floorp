@@ -390,9 +390,20 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
     nsCOMPtr<nsIAccessibleTable> header;
     nsresult rv = accTable->GetColumnHeader(getter_AddRefs(header));
     NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_TRUE(header, nsnull);
 
-    nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
-    NS_ENSURE_TRUE(accTable, nsnull);
+    // Note: "table column header" has different definition between atk and mai
+    //
+    // 1. "getColumnHeaderCB" defined in AtkTableIface should return object
+    // whose role is "ATK_ROLE_TABLE_COLUMN_HEADER", which is implemented
+    // by nsXULTreeColumnitemAccessible.
+    //
+    // 2. "GetColumnHeader" defined in nsIAccessibleTable returns
+    // nsXULTreeColumnsAccessibleWrap, which exports nsIAccessibleTable and is
+    // "ROLE_LIST".
+    nsCOMPtr<nsIAccessible> accHeader;
+    header->CellRefAt(0, aColumn, getter_AddRefs(accHeader));
+    NS_ENSURE_TRUE(accHeader, nsnull);
 
     nsIAccessible *tmpAcc = accHeader;
     nsAccessibleWrap *headerAccWrap =

@@ -504,6 +504,7 @@ interface nsIAccessible : nsISupports
   enum { ROLE_LIST = 33U };
   enum { ROLE_LISTITEM = 34U };
   enum { ROLE_OUTLINE = 35U };
+  enum { ROLE_TREE_TABLE = 35U }; // Same as ROLE_OUTLINE
   enum { ROLE_OUTLINEITEM = 36U };
   enum { ROLE_PAGETAB = 37U };
   enum { ROLE_PROPERTYPAGE = 38U };

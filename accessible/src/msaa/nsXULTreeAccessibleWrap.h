@@ -48,6 +48,7 @@ public:
   nsXULTreeitemAccessibleWrap(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, 
     PRInt32 aRow, nsITreeColumn* aColumn);
   virtual ~nsXULTreeitemAccessibleWrap() {}
+  NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetDescription(nsAString &aDescription);
 };
 
