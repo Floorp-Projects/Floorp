@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMenuBase.h"
@@ -146,7 +146,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
    {
       mI.afStyle |= MIS_SEPARATOR;
    }
-   else if( NS_SUCCEEDED( aThing->QueryInterface( nsIMenu::GetIID(),
+   else if( NS_SUCCEEDED( aThing->QueryInterface( NS_GET_IID(nsIMenu),
                                                   (void**) &pMenu)))
    {
       void *hwnd = nsnull;
@@ -162,7 +162,7 @@ nsresult nsMenuBase::InsertItemAt( nsISupports *aThing, PRUint32 aPos)
 
       NS_RELEASE(pMenu);
    }
-   else if( NS_SUCCEEDED( aThing->QueryInterface( nsIMenuItem::GetIID(),
+   else if( NS_SUCCEEDED( aThing->QueryInterface( NS_GET_IID(nsIMenuItem),
                                                   (void**) &pItem)))
    {
       nsMenuItem *pPMItem = (nsMenuItem*) pItem; // XXX

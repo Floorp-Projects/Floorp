@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define NS_IMPL_IDS
@@ -122,11 +123,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstan
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIMsgLocalMailFolder::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIMsgLocalMailFolder)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
 	}              
-	else if(aIID.Equals(nsICopyMessageListener::GetIID()))
+	else if(aIID.Equals(NS_GET_IID(nsICopyMessageListener)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
 	}
@@ -381,7 +382,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 
           if (NS_SUCCEEDED(rv) && server) {
             nsCOMPtr<nsIPop3IncomingServer> popServer;
-            rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+            rv = server->QueryInterface(NS_GET_IID(nsIPop3IncomingServer),
                                         (void **)&popServer);
             if (NS_SUCCEEDED(rv)) {
               nsCOMPtr<nsIFileSpec> spec;
@@ -398,7 +399,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
         
           if (NS_SUCCEEDED(rv) && server) {
             nsCOMPtr<nsINoIncomingServer> noneServer;
-            rv = server->QueryInterface(nsINoIncomingServer::GetIID(),
+            rv = server->QueryInterface(NS_GET_IID(nsINoIncomingServer),
                                         (void **)&noneServer);
             if (NS_SUCCEEDED(rv)) {
               nsCOMPtr<nsIFileSpec> spec;
@@ -459,7 +460,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
+		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
 			folderOpen = mailDBFactory->Open(pathSpec, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
@@ -627,7 +628,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	// Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
         nsIMsgDatabase *unusedDB = NULL;
@@ -661,7 +662,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const char *folderName)
 	{
 		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 		nsCOMPtr<nsISupports> folderSupports;
-		rv = QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), getter_AddRefs(folderSupports));
+		rv = QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(folderSupports));
 		if(childSupports && NS_SUCCEEDED(rv))
 		{
 
@@ -873,7 +874,7 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInf
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 	nsCOMPtr<nsIMsgDatabase> mailDB;
 
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
 		openErr = mailDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
@@ -1285,7 +1286,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 
   if (msgTxn)
     rv =
-      msgTxn->QueryInterface(nsCOMTypeInfo<nsLocalMoveCopyMsgTxn>::GetIID(),
+      msgTxn->QueryInterface(NS_GET_IID(nsLocalMoveCopyMsgTxn),
                              getter_AddRefs(mCopyState->m_undoMsgTxn));
   else
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -1477,7 +1478,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 	    rv = GetServer(getter_AddRefs(server));
 
 	    nsCOMPtr<nsIPop3IncomingServer> popServer;
-	    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+	    rv = server->QueryInterface(NS_GET_IID(nsIPop3IncomingServer),
 					(void **)&popServer);
 	    if (NS_SUCCEEDED(rv)) {
 		rv = pop3Service->GetNewMail(aWindow, nsnull,popServer,nsnull);
@@ -1639,7 +1640,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
   if (mCopyState->m_undoMsgTxn)
     rv = mCopyState->m_undoMsgTxn->QueryInterface(
-      nsCOMTypeInfo<nsLocalMoveCopyMsgTxn>::GetIID(),
+      NS_GET_IID(nsLocalMoveCopyMsgTxn),
       getter_AddRefs(localUndoTxn));
   
 	//Copy the header to the new database
@@ -1767,7 +1768,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMessage(nsMsgKey key)
 
   if (mCopyState->m_undoMsgTxn)
     rv = mCopyState->m_undoMsgTxn->QueryInterface(
-      nsCOMTypeInfo<nsLocalMoveCopyMsgTxn>::GetIID(),
+      NS_GET_IID(nsLocalMoveCopyMsgTxn),
       getter_AddRefs(localUndoTxn));
 
   // I think this is always true for online to offline copy
@@ -1826,7 +1827,7 @@ nsresult nsMsgLocalMailFolder::CopyMessagesTo(nsISupportsArray *messages,
   if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
 	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
 	nsresult rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-											nsICopyMessageStreamListener::GetIID(),
+											NS_GET_IID(nsICopyMessageStreamListener),
 											getter_AddRefs(copyStreamListener)); 
 	if(NS_FAILED(rv))
 		return rv;
@@ -1904,7 +1905,7 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 
 	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
 	rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-											nsICopyMessageStreamListener::GetIID(),
+											NS_GET_IID(nsICopyMessageStreamListener),
 											getter_AddRefs(copyStreamListener)); 
 	if(NS_FAILED(rv))
 		return rv;

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // popup context menu
@@ -38,13 +38,13 @@ nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  
    *aInstancePtr = 0;
  
-   if( aIID.Equals(nsIContextMenu::GetIID()))
+   if( aIID.Equals(NS_GET_IID(nsIContextMenu)))
    {
       *aInstancePtr = (void*) ((nsIContextMenu*) this);
       NS_ADDREF_THIS();
       return NS_OK;
    }
-   if( aIID.Equals(nsIMenuListener::GetIID()))
+   if( aIID.Equals(NS_GET_IID(nsIMenuListener)))
    {
       *aInstancePtr = (void*) ((nsIMenuListener*)this);
       NS_ADDREF_THIS();

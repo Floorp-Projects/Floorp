@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *  Michael Lowe <michael.lowe@bigfoot.com>
+ *   Michael Lowe <michael.lowe@bigfoot.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #if defined(DEBUG_ftang)
@@ -230,7 +231,7 @@ NS_IMETHODIMP nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    if (aIID.Equals(nsIKBStateControl::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIKBStateControl))) {
         *aInstancePtr = (void*) ((nsIKBStateControl*)this);
     	NS_ADDREF((nsBaseWidget*)this);
         // NS_ADDREF_THIS();
@@ -2645,7 +2646,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       case WM_DESTROYCLIPBOARD: {
         nsIClipboard* clipboard;
         nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                                   nsCOMTypeInfo<nsIClipboard>::GetIID(),
+                                                   NS_GET_IID(nsIClipboard),
                                                    (nsISupports **)&clipboard);
         clipboard->EmptyClipboard();
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
@@ -2870,12 +2871,12 @@ PRBool nsWindow::OnPaint()
 
             if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, 
                                                             nsnull, 
-                                                            nsCOMTypeInfo<nsIRenderingContext>::GetIID(), 
+                                                            NS_GET_IID(nsIRenderingContext), 
                                                             (void **)&event.renderingContext))
             {
               nsIRenderingContextWin *winrc;
 
-              if (NS_OK == event.renderingContext->QueryInterface(nsCOMTypeInfo<nsIRenderingContextWin>::GetIID(), (void **)&winrc))
+              if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextWin), (void **)&winrc))
               {
                 nsDrawingSurface surf;
 

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // menu item
@@ -46,13 +46,13 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = nsnull;
 
-  if( aIID.Equals(nsIMenuItem::GetIID()))
+  if( aIID.Equals(NS_GET_IID(nsIMenuItem)))
   {
      *aInstancePtr = (void*) ((nsIMenuItem*) this);
      NS_ADDREF_THIS();
      return NS_OK;
   }
-  if( aIID.Equals(nsIMenuListener::GetIID()))
+  if( aIID.Equals(NS_GET_IID(nsIMenuListener)))
   {
      *aInstancePtr = (void*) ((nsIMenuListener*)this);
      NS_ADDREF_THIS();
@@ -97,7 +97,7 @@ static nsIWidget *FindWidget( nsISupports *aParent)
    NS_ADDREF(parent);
    for( ;;)
    {
-      if( NS_OK == parent->QueryInterface( nsIMenu::GetIID(), (void**) &menu))
+      if( NS_OK == parent->QueryInterface( NS_GET_IID(nsIMenu), (void**) &menu))
       {
          NS_RELEASE(parent);
          if( NS_OK != menu->GetParent(parent))
@@ -107,7 +107,7 @@ static nsIWidget *FindWidget( nsISupports *aParent)
          }
          NS_RELEASE(menu);
       }
-      else if( NS_OK == parent->QueryInterface( nsIContextMenu::GetIID(),
+      else if( NS_OK == parent->QueryInterface( NS_GET_IID(nsIContextMenu),
                                                 (void**) &popup))
       {
          nsISupports *pThing = 0;
@@ -115,12 +115,12 @@ static nsIWidget *FindWidget( nsISupports *aParent)
          {
             widget = nsnull;
          }
-         pThing->QueryInterface( nsIWidget::GetIID(), (void**) &widget);
+         pThing->QueryInterface( NS_GET_IID(nsIWidget), (void**) &widget);
          NS_RELEASE(parent);
          NS_RELEASE(popup);
          return widget;
       }
-      else if( NS_OK == parent->QueryInterface( nsIMenuBar::GetIID(),
+      else if( NS_OK == parent->QueryInterface( NS_GET_IID(nsIMenuBar),
                                                 (void**) &menuBar))
       {
          if( NS_OK != menuBar->GetParent(widget))
@@ -148,13 +148,13 @@ nsresult nsMenuItem::Create( nsISupports *aParent, const nsString &aLabel,
 
    void         *pvWnd = 0;
 
-   if( NS_SUCCEEDED( aParent->QueryInterface( nsIMenu::GetIID(),
+   if( NS_SUCCEEDED( aParent->QueryInterface( NS_GET_IID(nsIMenu),
                                               (void**) &pMenu)))
    {
       pMenu->GetNativeData( &pvWnd);
       NS_RELEASE(pMenu);
    }
-   else if( NS_SUCCEEDED( aParent->QueryInterface( nsIContextMenu::GetIID(),
+   else if( NS_SUCCEEDED( aParent->QueryInterface( NS_GET_IID(nsIContextMenu),
                                                    (void**) &pPopup)))
    {
       pPopup->GetNativeData( &pvWnd);

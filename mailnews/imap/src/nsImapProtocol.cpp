@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // sorry, this has to be before the pre-compiled header
@@ -156,21 +157,21 @@ NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstance
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID); 
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIRunnable)))
   {
     *aInstancePtr = (nsIRunnable *) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIStreamListener::GetIID()) ||
-      aIID.Equals(nsIStreamObserver::GetIID())) 
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
+      aIID.Equals(NS_GET_IID(nsIStreamObserver))) 
   {
     *aInstancePtr = (nsIStreamListener *) this;                                                   
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIImapProtocol::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIImapProtocol)))
   {
     *aInstancePtr = (nsIImapProtocol *) this;
     NS_ADDREF_THIS();
@@ -536,7 +537,7 @@ nsImapProtocol::SetupSinkProxy()
          res = m_runningUrl->GetImapServerSink(getter_AddRefs(aImapServerSink));
          if (NS_SUCCEEDED(res) && aImapServerSink)
             res = proxyManager->GetProxyObject(  m_sinkEventQueue,
-                             nsCOMTypeInfo<nsIImapServerSink>::GetIID(),
+                             NS_GET_IID(nsIImapServerSink),
                              aImapServerSink,
                              PROXY_SYNC | PROXY_ALWAYS,
                              getter_AddRefs(m_imapServerSink));
@@ -1248,7 +1249,7 @@ NS_IMETHODIMP
 nsImapProtocol::GetRunningUrl(nsIURI **result)
 {
     if (result && m_runningUrl)
-        return m_runningUrl->QueryInterface(nsIURI::GetIID(), (void**)
+        return m_runningUrl->QueryInterface(NS_GET_IID(nsIURI), (void**)
                                             result);
     else
         return NS_ERROR_NULL_POINTER;
@@ -1259,7 +1260,7 @@ NS_IMETHODIMP nsImapProtocol::GetRunningImapURL(nsIImapUrl **aImapUrl)
 {
     if (aImapUrl && m_runningUrl)
   {
-        return m_runningUrl->QueryInterface(nsIImapUrl::GetIID(), (void**) aImapUrl);
+        return m_runningUrl->QueryInterface(NS_GET_IID(nsIImapUrl), (void**) aImapUrl);
   }
   else
     return NS_ERROR_NULL_POINTER;

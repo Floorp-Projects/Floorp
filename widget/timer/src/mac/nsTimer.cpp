@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
 //
@@ -148,7 +149,7 @@ class TimerPeriodical  : public Repeater
 // TimerImpl implementation
 //========================================================================================
 
-NS_IMPL_ISUPPORTS(TimerImpl, nsITimer::GetIID())
+NS_IMPL_ISUPPORTS(TimerImpl, NS_GET_IID(nsITimer))
 
 //----------------------------------------------------------------------------------------
 TimerImpl::TimerImpl()
@@ -374,5 +375,5 @@ PR_PUBLIC_API(nsresult) NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(nsITimer::GetIID(), (void **) aInstancePtrResult);
+    return timer->QueryInterface(NS_GET_IID(nsITimer), (void **) aInstancePtrResult);
 }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsCardDataSource.h"
@@ -156,7 +157,7 @@ nsresult nsAbCardDataSource::Init()
       return NS_ERROR_ALREADY_INITIALIZED;
 
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsCOMTypeInfo<nsIRDFService>::GetIID(),
+                                             NS_GET_IID(nsIRDFService),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
   if (NS_FAILED(rv)) return rv;
 
@@ -203,7 +204,7 @@ NS_IMETHODIMP nsAbCardDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
+	if(iid.Equals(NS_GET_IID(nsIAbListener)))
 	{
 		*result = NS_STATIC_CAST(nsIAbListener*, this);
 		NS_ADDREF(this);

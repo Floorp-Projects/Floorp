@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsToolkit.h"
@@ -51,7 +51,7 @@ extern "C" void RunPump( void *arg)
    static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 
    res = nsComponentManager::CreateInstance( kAppShellCID, nsnull,
-                                             nsIAppShell::GetIID(),
+                                             NS_GET_IID(nsIAppShell),
                                              (void **) &pShell);
    NS_ASSERTION( res == NS_OK, "Couldn't create new shell");
 
@@ -106,7 +106,7 @@ nsToolkit::~nsToolkit()
 }
 
 // nsISupports implementation macro
-NS_IMPL_ISUPPORTS(nsToolkit, nsIToolkit::GetIID())
+NS_IMPL_ISUPPORTS(nsToolkit, NS_GET_IID(nsIToolkit))
 
 static MRESULT EXPENTRY fnwpDispatch( HWND, ULONG, MPARAM, MPARAM);
 #define UWC_DISPATCH "DispatchWndClass"

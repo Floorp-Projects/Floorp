@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <gtk/gtk.h>
@@ -48,7 +49,7 @@ nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIMenu::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenu))) {
     *aInstancePtr = (void*)(nsIMenu*) this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -58,7 +59,7 @@ nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIMenuListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {
     *aInstancePtr = (void*)(nsIMenuListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -115,7 +116,7 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent,
   if(aParent)
   {
     nsIWidget *parent = nsnull;
-    aParent->QueryInterface(nsIWidget::GetIID(), (void**) &parent);
+    aParent->QueryInterface(NS_GET_IID(nsIWidget), (void**) &parent);
     if(parent)
     {
       mParent = parent;
@@ -155,7 +156,7 @@ NS_METHOD nsContextMenu::AddItem(nsISupports * aItem)
   if(aItem)
   {
     nsIMenuItem * menuitem = nsnull;
-    aItem->QueryInterface(nsIMenuItem::GetIID(),
+    aItem->QueryInterface(NS_GET_IID(nsIMenuItem),
                           (void**)&menuitem);
     if(menuitem)
     {
@@ -165,7 +166,7 @@ NS_METHOD nsContextMenu::AddItem(nsISupports * aItem)
     else
     {
       nsIMenu * menu = nsnull;
-      aItem->QueryInterface(nsIMenu::GetIID(),
+      aItem->QueryInterface(NS_GET_IID(nsIMenu),
                             (void**)&menu);
       if(menu)
       {
@@ -217,7 +218,7 @@ NS_METHOD nsContextMenu::AddMenu(nsIMenu * aMenu)
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
                                                    nsnull,
-                                                   nsIMenuItem::GetIID(),
+                                                   NS_GET_IID(nsIMenuItem),
                                                    (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     nsISupports * supports = nsnull;
@@ -252,7 +253,7 @@ NS_METHOD nsContextMenu::AddSeparator()
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(
-    kMenuItemCID, nsnull, nsIMenuItem::GetIID(), (void**)&pnsMenuItem);
+    kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     nsString tmp = "separator";
     nsISupports * supports = nsnull;
@@ -340,7 +341,7 @@ NS_METHOD nsContextMenu::RemoveAll()
 
     if(nsnull != item)
     {
-      if (NS_OK == item->QueryInterface(nsIMenuItem::GetIID(), (void**)&menuitem))
+      if (NS_OK == item->QueryInterface(NS_GET_IID(nsIMenuItem), (void**)&menuitem))
       {
         // we do this twice because we have to do it once for QueryInterface,
         // then we want to get rid of it.
@@ -348,7 +349,7 @@ NS_METHOD nsContextMenu::RemoveAll()
         NS_RELEASE(menuitem);
         NS_RELEASE(item);
         menuitem = nsnull;
-      } else if (NS_OK == item->QueryInterface(nsIMenu::GetIID(), (void**)&menu)) {
+      } else if (NS_OK == item->QueryInterface(NS_GET_IID(nsIMenu), (void**)&menu)) {
 #ifdef NOISY_MENUS
         g_print("remove nsMenu\n");
 #endif
@@ -366,7 +367,7 @@ NS_METHOD nsContextMenu::RemoveAll()
   for (int i = mMenuItemVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenuItemVoidArray[i-1]) {
       nsIMenuItem * menuitem = nsnull;
-      ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(nsIMenuItem::GetIID(),
+      ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuItem),
                                                               (void**)&menuitem);
       if(menuitem) {
         void *gtkmenuitem = nsnull;
@@ -384,7 +385,7 @@ NS_METHOD nsContextMenu::RemoveAll()
       } else {
  
         nsIMenu * menu= nsnull;
-        ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(nsIMenu::GetIID(),
+        ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenu),
                                                                 (void**)&menu);
         if(menu)
           {
@@ -575,7 +576,7 @@ void nsContextMenu::LoadMenuItem(nsIMenu        *pParentMenu,
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID,
                                                    nsnull, 
-                                                   nsIMenuItem::GetIID(), 
+                                                   NS_GET_IID(nsIMenuItem), 
                                                    (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, PR_FALSE);
@@ -629,7 +630,7 @@ void nsContextMenu::LoadSubMenu(nsIMenu         *pParentMenu,
   nsIMenu * pnsMenu = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuCID,
                                                    nsnull,
-                                                   nsIMenu::GetIID(),
+                                                   NS_GET_IID(nsIMenu),
                                                    (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create

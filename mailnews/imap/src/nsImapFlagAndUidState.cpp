@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"  // for pre-compiled headers
@@ -27,7 +28,7 @@
 #include "prcmon.h"
 #include "nspr.h"
 
-NS_IMPL_ISUPPORTS(nsImapFlagAndUidState, nsIImapFlagAndUidState::GetIID())
+NS_IMPL_ISUPPORTS(nsImapFlagAndUidState, NS_GET_IID(nsIImapFlagAndUidState))
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetNumberOfMessages(PRInt32 *result)
 {

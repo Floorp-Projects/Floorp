@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsFontRetrieverService.h"
@@ -73,13 +74,13 @@ nsresult nsFontRetrieverService::QueryInterface(const nsIID& aIID, void** aInsta
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIFontRetrieverService>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFontRetrieverService))) {
     *aInstancePtr = (void*) ((nsIFontRetrieverService*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIFontNameIterator>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFontNameIterator))) {
     *aInstancePtr = (void*) ((nsIFontNameIterator*)this);
     NS_ADDREF_THIS();
     return NS_OK;

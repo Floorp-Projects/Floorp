@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsFontSizeIterator.h"
@@ -28,7 +29,7 @@
 
 NS_IMPL_ADDREF(nsFontSizeIterator)
 NS_IMPL_RELEASE(nsFontSizeIterator)
-NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, nsIFontSizeIterator::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, NS_GET_IID(nsIFontSizeIterator))
 
 //----------------------------------------------------------
 nsFontSizeIterator::nsFontSizeIterator() 

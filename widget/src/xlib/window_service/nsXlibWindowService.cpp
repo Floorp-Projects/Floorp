@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsXlibWindowService.h"
@@ -33,7 +34,7 @@ nsXlibWindowService::~nsXlibWindowService()
 
 NS_IMPL_ADDREF(nsXlibWindowService)
 NS_IMPL_RELEASE(nsXlibWindowService)
-NS_IMPL_QUERY_INTERFACE(nsXlibWindowService, nsCOMTypeInfo<nsIXlibWindowService>::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsXlibWindowService, NS_GET_IID(nsIXlibWindowService))
 
 nsXlibWindowCallback         nsXlibWindowService::gsWindowCreateCallback = nsnull;
 nsXlibWindowCallback         nsXlibWindowService::gsWindowDestroyCallback = nsnull;

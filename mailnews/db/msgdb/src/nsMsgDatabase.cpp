@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // this file implements the nsMsgDatabase interface using the MDB Interface.
@@ -396,9 +397,9 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsIMsgDatabase::GetIID()) ||
-        aIID.Equals(nsIDBChangeAnnouncer::GetIID()) ||
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    if (aIID.Equals(NS_GET_IID(nsIMsgDatabase)) ||
+        aIID.Equals(NS_GET_IID(nsIDBChangeAnnouncer)) ||
+        aIID.Equals(NS_GET_IID(nsISupports))) {
         *aResult = NS_STATIC_CAST(nsIMsgDatabase*, this);   
         NS_ADDREF_THIS();
         return NS_OK;
@@ -1659,7 +1660,7 @@ nsMsgDBEnumerator::~nsMsgDBEnumerator()
 	NS_IF_RELEASE(mResultHdr);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsISimpleEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, NS_GET_IID(nsISimpleEnumerator))
 
 nsresult nsMsgDBEnumerator::GetRowCursor()
 {
@@ -1839,7 +1840,7 @@ nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
     NS_RELEASE(mDB);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, nsISimpleEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, NS_GET_IID(nsISimpleEnumerator))
 
 nsresult nsMsgDBThreadEnumerator::GetTableCursor(void)
 {
@@ -2150,7 +2151,7 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 		{
 			// apply mime decode
 			err = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-                                            nsIMimeConverter::GetIID(), getter_AddRefs(m_mimeConverter));
+                                            NS_GET_IID(nsIMimeConverter), getter_AddRefs(m_mimeConverter));
 		}
 		if (NS_SUCCEEDED(err) && m_mimeConverter) 
 		{
@@ -2228,7 +2229,7 @@ nsIMsgHeaderParser *nsMsgDatabase::GetHeaderParser()
 	{
 		nsresult rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
 													NULL, 
-													nsIMsgHeaderParser::GetIID(), 
+													NS_GET_IID(nsIMsgHeaderParser), 
 													(void **) &m_HeaderParser);
 		if (!NS_SUCCEEDED(rv))
 			m_HeaderParser = nsnull;

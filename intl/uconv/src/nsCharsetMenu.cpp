@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIComponentManager.h"
@@ -242,7 +243,7 @@ nsMenuItem::~nsMenuItem()
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetMenu, nsIRDFDataSource::GetIID());
+NS_IMPL_ISUPPORTS(nsCharsetMenu, NS_GET_IID(nsIRDFDataSource));
 
 nsIRDFDataSource * nsCharsetMenu::mInner = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserCharsetMenuRoot = NULL;
@@ -699,7 +700,7 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
   if (NS_FAILED(res)) return res;
 
   res = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL, 
-      nsICollationFactory::GetIID(), (void**) &collationFactory);
+      NS_GET_IID(nsICollationFactory), (void**) &collationFactory);
   if (NS_FAILED(res)) return res;
 
   res = collationFactory->CreateCollation(locale, aCollation);
@@ -714,7 +715,7 @@ nsresult nsCharsetMenu::NewRDFContainer(nsIRDFDataSource * aDataSource,
   nsresult res;
 
   res = nsComponentManager::CreateInstance(kRDFContainerCID, NULL, 
-      nsIRDFContainer::GetIID(), (void**)aResult);
+      NS_GET_IID(nsIRDFContainer), (void**)aResult);
   if (NS_FAILED(res)) return res;
 
   res = (*aResult)->Init(aDataSource, aResource);

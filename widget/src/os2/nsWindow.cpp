@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsWindow.h"
@@ -267,7 +267,7 @@ void nsWindow::RealDoCreate( HWND              hwndP,
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
       rc = nsComponentManager::CreateInstance( kDeviceContextCID, nsnull,
-                                               nsIDeviceContext::GetIID(),
+                                               NS_GET_IID(nsIDeviceContext),
                                                (void **)&mContext);
       if( NS_SUCCEEDED(rc))
          mContext->Init( (nsNativeWidget) mWnd);
@@ -1025,7 +1025,7 @@ PRBool nsWindow::OnMenuClick( USHORT aCmd)
       if( aThing)
 #endif
       {
-         aThing->QueryInterface( nsIMenuItem::GetIID(),
+         aThing->QueryInterface( NS_GET_IID(nsIMenuItem),
                                  (void**) &aItem);
       }
 
@@ -1049,7 +1049,7 @@ PRBool nsWindow::OnMenuClick( USHORT aCmd)
       if( aThing)
 #endif
       {
-         aThing->QueryInterface( nsIMenuListener::GetIID(),
+         aThing->QueryInterface( NS_GET_IID(nsIMenuListener),
                                  (void**) &aListener);
          result = ConvertStatus( aListener->MenuItemSelected( event));
       }

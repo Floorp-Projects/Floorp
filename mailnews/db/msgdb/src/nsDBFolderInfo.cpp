@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -49,11 +50,6 @@ static const char * kVersionColumnName = "version";
 static const char * kCharacterSetColumnName = "charSet";
 static const char * kLocaleColumnName = "locale";
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 NS_IMPL_ADDREF(nsDBFolderInfo)
 NS_IMPL_RELEASE(nsDBFolderInfo)
 
@@ -64,8 +60,8 @@ nsDBFolderInfo::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-    if(iid.Equals(nsIDBFolderInfo::GetIID()) ||
-       iid.Equals(kISupportsIID)) {
+    if(iid.Equals(NS_GET_IID(nsIDBFolderInfo)) ||
+       iid.Equals(NS_GET_IID(nsISupports))) {
 		*result = NS_STATIC_CAST(nsIDBFolderInfo*, this);
 		AddRef();
 		return NS_OK;

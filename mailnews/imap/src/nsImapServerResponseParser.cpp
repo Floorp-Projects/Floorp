@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // sorry, this has to be before the pre-compiled header
@@ -875,7 +876,7 @@ void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
 		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
 		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
 		nsIURI * aURL = nsnull;
-		boxSpec->connection->GetCurrentUrl()->QueryInterface(nsIURI::GetIID(), (void **) &aURL);
+		boxSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aURL);
 		if (aURL)
 			aURL->GetHost(&boxSpec->hostName);
 		NS_IF_RELEASE(aURL);
@@ -2305,7 +2306,7 @@ nsImapMailboxSpec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const ch
 		{
 			nsIURI * aUrl = nsnull;
 			nsresult rv = NS_OK;
-			returnSpec->connection->GetCurrentUrl()->QueryInterface(nsIURI::GetIID(), (void **) &aUrl);
+			returnSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aUrl);
 			if (NS_SUCCEEDED(rv) && aUrl)
 				aUrl->GetHost(&returnSpec->hostName);
 			NS_IF_RELEASE(aUrl);

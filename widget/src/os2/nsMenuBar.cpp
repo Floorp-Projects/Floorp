@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // menu bar
@@ -40,13 +40,13 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
  
    *aInstancePtr = 0;
  
-   if( aIID.Equals(nsIMenuBar::GetIID()))
+   if( aIID.Equals(NS_GET_IID(nsIMenuBar)))
    {
       *aInstancePtr = (void*) ((nsIMenuBar*) this);
       NS_ADDREF_THIS();
       return NS_OK;
    }
-   if( aIID.Equals(nsIMenuListener::GetIID()))
+   if( aIID.Equals(NS_GET_IID(nsIMenuListener)))
    {
       *aInstancePtr = (void*) ((nsIMenuListener*)this);
       NS_ADDREF_THIS();
@@ -171,7 +171,7 @@ nsresult nsMenuBar::GetMenuAt( const PRUint32 aCount, nsIMenu *&aMenu)
       nsMenuBase::GetItemAt( aCount, &mI);
 
       nsISupports *aThing = (nsISupports*) mI.hItem;
-      rc = aThing->QueryInterface( nsIMenu::GetIID(), (void**) &aMenu);
+      rc = aThing->QueryInterface( NS_GET_IID(nsIMenu), (void**) &aMenu);
    }
 
    return rc;

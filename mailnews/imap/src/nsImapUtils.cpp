@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
-*/
+ *   Pierre Phaneuf <pp@ludusdesign.com>
+ */
 
 #include "msgCore.h"
 #include "nsImapUtils.h"
@@ -212,7 +213,7 @@ nsresult nsBuildImapMessageURI(const char *baseURI, PRUint32 key, char** uri)
 
 // nsImapMailboxSpec stuff
 
-NS_IMPL_ISUPPORTS(nsImapMailboxSpec, nsCOMTypeInfo<nsIMailboxSpec>::GetIID());
+NS_IMPL_ISUPPORTS(nsImapMailboxSpec, NS_GET_IID(nsIMailboxSpec));
 
 nsImapMailboxSpec::nsImapMailboxSpec()
 {

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Radio button control
@@ -31,7 +31,7 @@ nsresult nsRadioButton::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
   nsresult result = nsWindow::QueryInterface( aIID, aInstancePtr);
 
-  if( result == NS_NOINTERFACE && aIID.Equals( nsIRadioButton::GetIID()))
+  if( result == NS_NOINTERFACE && aIID.Equals( NS_GET_IID(nsIRadioButton)))
   {
      *aInstancePtr = (void*) ((nsIRadioButton*)this);
      NS_ADDREF_THIS();

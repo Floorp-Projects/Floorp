@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsWidgetDefs.h"
@@ -221,7 +221,7 @@ class nsFontSizeIterator : public nsIFontSizeIterator
    }
 };
 
-NS_IMPL_ISUPPORTS(nsFontSizeIterator, nsIFontSizeIterator::GetIID())
+NS_IMPL_ISUPPORTS(nsFontSizeIterator, NS_GET_IID(nsIFontSizeIterator))
 
 // Font-name iterator (xpcom)
 class nsFontNameIterator : public nsIFontNameIterator
@@ -269,10 +269,10 @@ class nsFontNameIterator : public nsIFontNameIterator
    }
 };
 
-NS_IMPL_ISUPPORTS(nsFontNameIterator, nsIFontNameIterator::GetIID())
+NS_IMPL_ISUPPORTS(nsFontNameIterator, NS_GET_IID(nsIFontNameIterator))
 
 // font retriever service
-NS_IMPL_ISUPPORTS(nsFontRetrieverService, nsIFontRetrieverService::GetIID())
+NS_IMPL_ISUPPORTS(nsFontRetrieverService, NS_GET_IID(nsIFontRetrieverService))
 
 nsFontRetrieverService::nsFontRetrieverService()
 {

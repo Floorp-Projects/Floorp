@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -229,11 +230,11 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
     *aInstancePtr = nsnull;
 
-    if (aIID.Equals(nsIUrlListener::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsIUrlListener)))
     {
         *aInstancePtr = (void*)(nsIUrlListener*)this;
     }
-    else if (aIID.Equals(nsIImapLog::GetIID()))
+    else if (aIID.Equals(NS_GET_IID(nsIImapLog)))
     {
         *aInstancePtr = (void*)(nsIImapLog*)this;
     }
@@ -363,7 +364,7 @@ nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	{
 		// query it for a mailnews interface for now....
 		nsIMsgMailNewsUrl * mailUrl = nsnull;
-		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::GetIID(), (void **) mailUrl);
+		rv = aUrl->QueryInterface(NS_GET_IID(nsIMsgMailNewsUrl), (void **) mailUrl);
 		if (NS_SUCCEEDED(rv))
 		{
 			// our url must be done so release it...
@@ -437,7 +438,7 @@ nsIMAP4TestDriver::SetupInbox()
     if (!m_inbox)
     {
         nsresult rv = nsComponentManager::CreateInstance( kCImapResource,
-                nsnull, nsIMsgFolder::GetIID(), (void**)&m_inbox);
+                nsnull, NS_GET_IID(nsIMsgFolder), (void**)&m_inbox);
         if (NS_SUCCEEDED(rv) && m_inbox)
 		{
             nsCOMPtr<nsIRDFResource>
@@ -515,7 +516,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 
 	// create a url to process the request.
     rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                            nsIImapUrl::GetIID(), (void **)
+                                            NS_GET_IID(nsIImapUrl), (void **)
 
                                             &m_url);
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
@@ -640,7 +641,7 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 
 	nsIImapUrl * imapUrl = nsnull;
 	
-	nsComponentManager::CreateInstance(kImapUrlCID, nsnull /* progID */, nsIImapUrl::GetIID(), (void **) &imapUrl);
+	nsComponentManager::CreateInstance(kImapUrlCID, nsnull /* progID */, NS_GET_IID(nsIImapUrl), (void **) &imapUrl);
 	if (imapUrl)
 	{
 		char * urlSpec = nsnull;

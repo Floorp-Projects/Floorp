@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -67,7 +68,7 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 	nsresult rv;
 	nsXPIDLCString uri;
 	nsIRDFResource *resource;
-	if(NS_SUCCEEDED( rv = QueryInterface(nsIRDFResource::GetIID(), (void**)&resource)))
+	if(NS_SUCCEEDED( rv = QueryInterface(NS_GET_IID(nsIRDFResource), (void**)&resource)))
 	{
 		resource->GetValue( getter_Copies(uri) );
 		nsCAutoString messageFolderURIStr;
@@ -89,7 +90,7 @@ nsresult nsImapMessage::GetFolderFromURI(nsIMsgFolder **folder)
 				rv = rdfService->GetResource(folderURI, &folderResource);
 				if(NS_SUCCEEDED(rv))
 				{
-					rv = NS_SUCCEEDED(folderResource->QueryInterface(nsIMsgFolder::GetIID(), (void**)folder));
+					rv = NS_SUCCEEDED(folderResource->QueryInterface(NS_GET_IID(nsIMsgFolder), (void**)folder));
 					NS_RELEASE(folderResource);
 				}
 			}

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -602,7 +603,7 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl ** imapUrl,
 	// now we need to create an imap url to load into the connection. The url
     // needs to represent a select folder action. 
 	rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                            nsIImapUrl::GetIID(), (void **)
+                                            NS_GET_IID(nsIImapUrl), (void **)
                                             imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
     {
@@ -1096,34 +1097,34 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
 		if (imapServerSink)
 			aImapUrl->SetImapServerSink(imapServerSink);
 	}
-    rv = aMsgFolder->QueryInterface(nsIImapLog::GetIID(), (void**)&aInst);
+    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapLog), (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapLog((nsIImapLog*) aInst);
     NS_IF_RELEASE (aInst);
     aInst = nsnull;
     
-    rv = aMsgFolder->QueryInterface(nsIImapMailFolderSink::GetIID(), 
+    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMailFolderSink), 
                                    (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapMailFolderSink((nsIImapMailFolderSink*) aInst);
     NS_IF_RELEASE (aInst);
     aInst = nsnull;
     
-    rv = aMsgFolder->QueryInterface(nsIImapMessageSink::GetIID(), 
+    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMessageSink), 
                                    (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapMessageSink((nsIImapMessageSink*) aInst);
     NS_IF_RELEASE (aInst);
     aInst = nsnull;
     
-    rv = aMsgFolder->QueryInterface(nsIImapExtensionSink::GetIID(), 
+    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapExtensionSink), 
                                    (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapExtensionSink((nsIImapExtensionSink*) aInst);
     NS_IF_RELEASE (aInst);
     aInst = nsnull;
     
-    rv = aMsgFolder->QueryInterface(nsIImapMiscellaneousSink::GetIID(), 
+    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMiscellaneousSink), 
                                    (void**)&aInst);
     if (NS_SUCCEEDED(rv) && aInst)
         aImapUrl->SetImapMiscellaneousSink((nsIImapMiscellaneousSink*) aInst);

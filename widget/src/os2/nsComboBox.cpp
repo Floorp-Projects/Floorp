@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscombobox.h"
@@ -30,13 +30,13 @@ NS_IMPL_RELEASE(nsComboBox)
 
 nsresult nsComboBox::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
-   if( aIID.Equals( nsIComboBox::GetIID()))
+   if( aIID.Equals( NS_GET_IID(nsIComboBox)))
    {
       *aInstancePtr = (void*) ((nsIComboBox*)this);
       NS_ADDREF_THIS();
       return NS_OK;
    }
-   else if( aIID.Equals( nsIListWidget::GetIID()))
+   else if( aIID.Equals( NS_GET_IID(nsIListWidget)))
    {
       *aInstancePtr = (void*) ((nsIListWidget*)this);
       NS_ADDREF_THIS();

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -62,7 +63,7 @@ NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;   
 
- 	if (aIID.Equals(nsINewsDatabase::GetIID()))
+ 	if (aIID.Equals(NS_GET_IID(nsINewsDatabase)))
         {
                 *aInstancePtr = NS_STATIC_CAST(nsINewsDatabase *, this);
         }

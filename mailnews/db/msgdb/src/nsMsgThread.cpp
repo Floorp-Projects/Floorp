@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -25,7 +26,7 @@
 #include "nsMsgDatabase.h"
 #include "nsCOMPtr.h"
 
-NS_IMPL_ISUPPORTS(nsMsgThread, nsMsgThread::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgThread, NS_GET_IID(nsMsgThread))
 
 nsMsgThread::nsMsgThread()
 {
@@ -655,7 +656,7 @@ nsMsgThreadEnumerator::~nsMsgThreadEnumerator()
     NS_RELEASE(mThread);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsISimpleEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, NS_GET_IID(nsISimpleEnumerator))
 
 
 PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)

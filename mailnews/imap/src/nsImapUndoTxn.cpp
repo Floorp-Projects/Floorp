@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h" // for precompiled headers
@@ -132,7 +133,7 @@ nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
     *aInstancePtr = nsnull;
 
-    if (aIID.Equals(nsImapMoveCopyMsgTxn::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsImapMoveCopyMsgTxn))) 
     {
         *aInstancePtr = NS_STATIC_CAST(nsImapMoveCopyMsgTxn*, this);
     }

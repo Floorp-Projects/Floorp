@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsLookAndFeel.h"
@@ -26,7 +26,7 @@
 #include <stdio.h>
  
 // XPCom scaffolding
-NS_IMPL_ISUPPORTS(nsLookAndFeel, nsILookAndFeel::GetIID())
+NS_IMPL_ISUPPORTS(nsLookAndFeel, NS_GET_IID(nsILookAndFeel))
 
 nsLookAndFeel::nsLookAndFeel()
 {

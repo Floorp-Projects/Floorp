@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -78,7 +79,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::QueryInterface(const nsIID &aIID, void** aI
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
   static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID); 
 
-  if (aIID.Equals(nsIImapHostSessionList::GetIID()))
+  if (aIID.Equals(NS_GET_IID(nsIImapHostSessionList)))
   {
 	  *aInstancePtr = (nsIImapHostSessionList *) this;
 	  NS_ADDREF_THIS();

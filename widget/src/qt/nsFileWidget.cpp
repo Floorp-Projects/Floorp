@@ -18,12 +18,13 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsFileWidget.h"
 #include "nsWidget.h"
 
-NS_IMPL_ISUPPORTS(nsFileWidget, nsIFileWidget::GetIID());
+NS_IMPL_ISUPPORTS(nsFileWidget, NS_GET_IID(nsIFileWidget));
 
 //-------------------------------------------------------------------------
 //

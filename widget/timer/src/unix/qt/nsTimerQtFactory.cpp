@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -62,7 +63,7 @@ nsTimerQtFactory::~nsTimerQtFactory()
 {   
 }   
 
-NS_IMPL_ISUPPORTS(nsTimerQtFactory, nsIFactory::GetIID())
+NS_IMPL_ISUPPORTS(nsTimerQtFactory, NS_GET_IID(nsIFactory))
 
 
 NS_IMETHODIMP
@@ -116,7 +117,7 @@ NSGetFactory(nsISupports* servMgr,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory);
+  return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
   
 }
 

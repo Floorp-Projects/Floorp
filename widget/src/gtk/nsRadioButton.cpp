@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <gtk/gtk.h>
@@ -65,7 +66,7 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-  if (result == NS_NOINTERFACE && aIID.Equals(nsIRadioButton::GetIID())) {
+  if (result == NS_NOINTERFACE && aIID.Equals(NS_GET_IID(nsIRadioButton))) {
       *aInstancePtr = (void*) ((nsIRadioButton*)this);
       AddRef();
       result = NS_OK;

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsIMotifAppContextService.h"
@@ -59,7 +60,7 @@ nsMotifAppContextServiceFactory::~nsMotifAppContextServiceFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsMotifAppContextServiceFactory, nsIFactory::GetIID())
+NS_IMPL_ISUPPORTS(nsMotifAppContextServiceFactory, NS_GET_IID(nsIFactory))
 
 NS_IMETHODIMP
 nsMotifAppContextServiceFactory::CreateInstance(nsISupports *aOuter,
@@ -107,7 +108,7 @@ NSGetFactory(nsISupports *servMgr,
   if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
+  return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory),
 				     (void **)aFactory);
 }
 

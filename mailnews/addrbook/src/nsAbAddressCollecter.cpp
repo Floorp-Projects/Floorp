@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"  // for pre-compiled headers
@@ -42,7 +43,7 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAbAddressCollecter, nsCOMTypeInfo<nsIAbAddressCollecter>::GetIID());
+NS_IMPL_ISUPPORTS(nsAbAddressCollecter, NS_GET_IID(nsIAbAddressCollecter));
 
 nsAbAddressCollecter::nsAbAddressCollecter()
 {
@@ -110,7 +111,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 				if (!existingCard)
 				{
 					nsCOMPtr<nsIAbCard> senderCard;
-					rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(senderCard));
+					rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, NS_GET_IID(nsIAbCard), getter_AddRefs(senderCard));
 					if (NS_SUCCEEDED(rv) && senderCard)
 					{
 						if (curName && nsCRT::strlen(curName) > 0)

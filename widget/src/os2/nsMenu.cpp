@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // normal menu
@@ -42,13 +42,13 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = 0;
 
-  if( aIID.Equals(nsIMenu::GetIID()))
+  if( aIID.Equals(NS_GET_IID(nsIMenu)))
   {
      *aInstancePtr = (void*) ((nsIMenu*) this);
      NS_ADDREF_THIS();
      return NS_OK;
   }
-  if( aIID.Equals(nsIMenuListener::GetIID()))
+  if( aIID.Equals(NS_GET_IID(nsIMenuListener)))
   {
      *aInstancePtr = (void*) ((nsIMenuListener*)this);
      NS_ADDREF_THIS();
@@ -83,19 +83,19 @@ nsresult nsMenu::Create( nsISupports *aThing, const nsString &aLabel)
    nsIContextMenu *aPopup = nsnull;
    nsIMenuBar     *aBar = nsnull;
 
-   if( NS_SUCCEEDED( aThing->QueryInterface( nsIMenuBar::GetIID(),
+   if( NS_SUCCEEDED( aThing->QueryInterface( NS_GET_IID(nsIMenuBar),
                                              (void**) &aBar)))
    {
       aBar->GetNativeData( pvHwnd);
       NS_RELEASE(aBar);
    }
-   else if( NS_SUCCEEDED( aThing->QueryInterface( nsIMenu::GetIID(),
+   else if( NS_SUCCEEDED( aThing->QueryInterface( NS_GET_IID(nsIMenu),
                                                   (void**) &aMenu)))
    {
       aMenu->GetNativeData( &pvHwnd);
       NS_RELEASE(aMenu);
    }
-   else if( NS_SUCCEEDED( aThing->QueryInterface( nsIContextMenu::GetIID(),
+   else if( NS_SUCCEEDED( aThing->QueryInterface( NS_GET_IID(nsIContextMenu),
                                                   (void**) &aPopup)))
    {
       aPopup->GetNativeData( &pvHwnd);

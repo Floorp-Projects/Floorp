@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsWidgetDefs.h"
@@ -45,7 +45,7 @@ nsFileDialog::~nsFileDialog()
       free( mFileDlg.pszTitle);
 }
 
-NS_IMPL_ISUPPORTS(nsFileDialog,nsIFileWidget::GetIID())
+NS_IMPL_ISUPPORTS(nsFileDialog,NS_GET_IID(nsIFileWidget))
 
 nsresult nsFileDialog::Create( nsIWidget        *aParent,
                                const nsString    &aTitle,

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -29,7 +30,7 @@
 #include "nsIMimeConverter.h"
 #include "nsXPIDLString.h"
 
-NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgHdr, NS_GET_IID(nsIMsgDBHdr))
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
@@ -607,7 +608,7 @@ NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString *resultAuthor)
 			// apply mime decode
 			nsIMimeConverter *converter;
 			ret = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
-												nsIMimeConverter::GetIID(), (void **)&converter);
+												NS_GET_IID(nsIMimeConverter), (void **)&converter);
 
 			if (NS_SUCCEEDED(ret) && nsnull != converter) 
 			{

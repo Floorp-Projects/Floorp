@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -43,7 +44,7 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 	{
 		nsAbAutoCompleteSession * abSession = new nsAbAutoCompleteSession(); 
 		if (abSession)
-			return abSession->QueryInterface(nsCOMTypeInfo<nsIAutoCompleteSession>::GetIID(), aInstancePtrResult);
+			return abSession->QueryInterface(NS_GET_IID(nsIAutoCompleteSession), aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -51,7 +52,7 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, nsCOMTypeInfo<nsIAutoCompleteSession>::GetIID())
+NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, NS_GET_IID(nsIAutoCompleteSession))
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsDirectoryDataSource.h"
@@ -119,7 +120,7 @@ nsAbDirectoryDataSource::Init()
 		return NS_ERROR_ALREADY_INITIALIZED;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-											 nsCOMTypeInfo<nsIRDFService>::GetIID(),
+											 NS_GET_IID(nsIRDFService),
 											 (nsISupports**) &mRDFService); 
 	if (NS_FAILED(rv)) return rv;
 
@@ -156,7 +157,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::QueryInterface(REFNSIID iid, void** resul
     return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
+	if(iid.Equals(NS_GET_IID(nsIAbListener)))
 	{
 		*result = NS_STATIC_CAST(nsIAbListener*, this);
 		NS_ADDREF(this);
@@ -438,10 +439,10 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory,
 	nsCOMPtr<nsIAbDirectory> directory;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(NS_GET_IID(nsIRDFResource), getter_AddRefs(parentResource))))
 	{ 
 		//If we are adding a card
-		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(card))))
+		if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbCard), getter_AddRefs(card))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if (NS_SUCCEEDED(rv))
@@ -451,7 +452,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemAdded(nsISupports *parentDirectory,
 			}
 		}
 		//If we are adding a directory
-		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbDirectory>::GetIID(), getter_AddRefs(directory))))
+		else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -472,10 +473,10 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 	nsCOMPtr<nsIAbDirectory> directory;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(NS_GET_IID(nsIRDFResource), getter_AddRefs(parentResource))))
 	{
 		//If we are removing a card
-		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(card))))
+		if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbCard), getter_AddRefs(card))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -485,7 +486,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 			}
 		}
 		//If we are removing a directory
-		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbDirectory>::GetIID(), getter_AddRefs(directory))))
+		else if(NS_SUCCEEDED(item->QueryInterface(NS_GET_IID(nsIAbDirectory), getter_AddRefs(directory))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))

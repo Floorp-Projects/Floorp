@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #define INCL_DOS
@@ -62,7 +62,7 @@ static TID QueryCurrentTID();
 
 // Timer object (funky 'release' method for recycler)
 NS_IMPL_ADDREF(nsTimer)
-NS_IMPL_QUERY_INTERFACE(nsTimer, nsITimer::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsTimer, NS_GET_IID(nsITimer))
 
 nsrefcnt nsTimer::Release()
 {
@@ -591,7 +591,7 @@ nsresult NS_NewTimer( nsITimer **aInstance)
    if( !timer)
       return NS_ERROR_OUT_OF_MEMORY;
 
-   return timer->QueryInterface( nsITimer::GetIID(), (void **) aInstance);
+   return timer->QueryInterface( NS_GET_IID(nsITimer), (void **) aInstance);
 }
 
 TID QueryCurrentTID()

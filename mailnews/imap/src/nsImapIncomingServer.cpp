@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "msgCore.h"
@@ -64,11 +65,11 @@ NS_IMETHODIMP nsImapIncomingServer::QueryInterface(REFNSIID aIID, void** aInstan
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
 
-    if (aIID.Equals(nsIImapServerSink::GetIID()))
+    if (aIID.Equals(NS_GET_IID(nsIImapServerSink)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIImapServerSink*, this);
 	}              
-	else if(aIID.Equals(nsIImapIncomingServer::GetIID()))
+	else if(aIID.Equals(NS_GET_IID(nsIImapIncomingServer)))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIImapIncomingServer*, this);
 	}
@@ -452,7 +453,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 		// condition where someone else goes through this code 
 		nsIImapProtocol * protocolInstance = nsnull;
 		rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-                                                nsIImapProtocol::GetIID(),
+                                                NS_GET_IID(nsIImapProtocol),
                                                 (void **) &protocolInstance);
 		if (NS_SUCCEEDED(rv) && protocolInstance)
         {

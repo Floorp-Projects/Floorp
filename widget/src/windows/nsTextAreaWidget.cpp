@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsTextAreaWidget.h"
 #include "nsToolkit.h"
@@ -89,13 +90,13 @@ void nsTextAreaWidget::SetUpForPaint(HDC aHDC)
 nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 
-  if (aIID.Equals(nsCOMTypeInfo<nsITextAreaWidget>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsITextAreaWidget))) {
       nsITextAreaWidget* textArea = this;
       *aInstancePtr = (void*) (textArea);
       NS_ADDREF_THIS();
       return NS_OK;
   } 
-  else if (aIID.Equals(nsCOMTypeInfo<nsIWidget>::GetIID()))
+  else if (aIID.Equals(NS_GET_IID(nsIWidget)))
   {
       nsIWidget* widget = this;
       *aInstancePtr = (void*) (widget);
