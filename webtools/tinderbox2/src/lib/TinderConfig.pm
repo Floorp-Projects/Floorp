@@ -4,8 +4,8 @@
 
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/24 15:00:45 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/08/30 02:27:38 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -52,6 +52,10 @@ $URL_HTML = "http://tinderbox.mozilla.org/";
 
 $TINDERBOX_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 
+# The top level tinderbox index file. Change this if you wish to
+# provide your own index file for tinderboxs web pages.
+
+$GLOBAL_INDEX_FILE = "index.html";
 
 # where errors are loged
   
@@ -95,7 +99,7 @@ $PopUpImpl = (
 # frame the parts of the legend without putting a border arround the
 # individual cells.
 
-#$LEGEND_BORDER = "border rules=none";
+#$DB_LEGEND_BORDER = "border rules=none";
 $DB_LEGEND_BORDER = "";
 
 # finest spacing on html page (in minutes), this resticts the
