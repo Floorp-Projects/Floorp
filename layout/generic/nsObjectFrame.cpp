@@ -142,7 +142,7 @@ public:
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
-  void Paint(const nsRect& aDirtyRect);
+  void Paint(const nsRect& aDirtyRect, PRUint32 ndc);
 
   // nsITimerCallback interface
   virtual void Notify(nsITimer *timer);
@@ -1194,13 +1194,16 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+  aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+  aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+
 #if !defined(XP_MAC)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
-    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
-    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
 
-    //~~~
+#ifdef _NEW_METHOD_ADDED_
+//~~~
+#ifdef XP_WIN
     nsIPluginInstance * inst;
     if(NS_OK == GetPluginInstance(inst))
     {
@@ -1209,9 +1212,15 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
       nsPluginWindow * window;
       mInstanceOwner->GetWindow(window);
       if(window->type == nsPluginWindowType_Drawable)
-        mInstanceOwner->Paint(aDirtyRect);
-      return NS_OK;
+      {
+        PRUint32 hdc;
+        aRenderingContext.RetrieveCurrentNativeDC(&hdc);
+        mInstanceOwner->Paint(aDirtyRect, hdc);
+        return NS_OK;
+      }
     }
+#endif
+#endif
 
     const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
@@ -2194,7 +2203,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 // Paints are handled differently, so we just simulate an update event.
 
-void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
+void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 {
 #ifdef XP_MAC
 	if (mInstance != NULL) {
@@ -2214,13 +2223,11 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect)
 //~~~
 #ifdef XP_WIN
 	nsPluginEvent pluginEvent;
-  nsPluginPort* pluginPort = GetPluginPort();
   pluginEvent.event = 0x000F; //!!! This is bad, but is it better to include <windows.h> for WM_PAINT only?
-  pluginEvent.wParam = (uint32)pluginPort;
+  pluginEvent.wParam = (uint32)ndc;
   pluginEvent.lParam = nsnull;
 	PRBool eventHandled = PR_FALSE;
 	mInstance->HandleEvent(&pluginEvent, &eventHandled);
-  ReleasePluginPort(pluginPort);
 #endif
 }
 
