@@ -771,7 +771,7 @@ public class Context
         this.version = version;
     }
 
-    static void checkLanguageVersion(int version)
+    public static boolean isValidLanguageVersion(int version)
     {
         switch (version) {
             case VERSION_DEFAULT:
@@ -782,7 +782,15 @@ public class Context
             case VERSION_1_4:
             case VERSION_1_5:
             case VERSION_1_6:
-                return;
+                return true;
+        }
+        return false;
+    }
+
+    public static void checkLanguageVersion(int version)
+    {
+        if (isValidLanguageVersion(version)) {
+            return;
         }
         throw new IllegalArgumentException("Bad language version: "+version);
     }
@@ -1841,11 +1849,18 @@ public class Context
         this.optimizationLevel = optimizationLevel;
     }
 
-    static void checkOptimizationLevel(int optimizationLevel)
+    public static boolean isValidOptimizationLevel(int optimizationLevel)
     {
-        if (!(-1 <= optimizationLevel && optimizationLevel <= 9))
-            throw new IllegalArgumentException(
-                "Optimization level outside [-1..9]: "+optimizationLevel);
+        return -1 <= optimizationLevel && optimizationLevel <= 9;
+    }
+
+    public static void checkOptimizationLevel(int optimizationLevel)
+    {
+        if (isValidOptimizationLevel(optimizationLevel)) {
+            return;
+        }
+        throw new IllegalArgumentException(
+            "Optimization level outside [-1..9]: "+optimizationLevel);
     }
 
     /**
