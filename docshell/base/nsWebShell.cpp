@@ -941,9 +941,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
             
           if (NS_SUCCEEDED(rv) && messageStr) {
             prompter->Confirm(nsnull, messageStr, &repost);
-            /* If the user pressed cancel in the dialog, 
-             * return failure. Don't try to load the page with out 
-             * the post data. 
+            /* If the user pressed cancel in the dialog, return. Don't
+             * try to load the page with out the post data.
              */
             if (!repost)
               return NS_OK;
