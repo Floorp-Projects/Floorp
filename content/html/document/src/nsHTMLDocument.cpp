@@ -4261,9 +4261,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
 
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
-  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
-  if (NS_FAILED(rv))
-    return rv;
+  GetMidasCommandManager(getter_AddRefs(cmdMgr));
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
@@ -4275,6 +4273,7 @@ nsHTMLDocument::ExecCommand(const nsAString & commandID,
   if (!ConvertToMidasInternalCommand(commandID, value, cmdToDispatch, paramStr))
     return NS_ERROR_NOT_IMPLEMENTED;
 
+  nsresult rv;
   if (paramStr.IsEmpty()) {
     rv = cmdMgr->DoCommand(cmdToDispatch.get(), nsnull, window);
   } else {
@@ -4322,7 +4321,22 @@ nsHTMLDocument::QueryCommandEnabled(const nsAString & commandID,
   if (!mEditingIsOn)
     return NS_ERROR_FAILURE;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // get command manager and dispatch command to our window if it's acceptable
+  nsCOMPtr<nsICommandManager> cmdMgr;
+  GetMidasCommandManager(getter_AddRefs(cmdMgr));
+  if (!cmdMgr)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mScriptGlobalObject);
+  if (!window)
+    return NS_ERROR_FAILURE;
+
+  nsCAutoString cmdToDispatch, paramStr;
+  if (!ConvertToMidasInternalCommand(commandID, commandID,
+                                     cmdToDispatch, paramStr))
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+  return cmdMgr->IsCommandEnabled(cmdToDispatch.get(), window, _retval);
 }
 
 /* boolean queryCommandIndeterm (in DOMString commandID); */
@@ -4353,9 +4367,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
 
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
-  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
-  if (NS_FAILED(rv))
-    return rv;
+  GetMidasCommandManager(getter_AddRefs(cmdMgr));
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
@@ -4368,6 +4380,7 @@ nsHTMLDocument::QueryCommandState(const nsAString & commandID, PRBool *_retval)
                                      cmdToDispatch, paramToCheck))
     return NS_ERROR_NOT_IMPLEMENTED;
 
+  nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
                                            NS_COMMAND_PARAMS_CONTRACTID, &rv);
   if (!cmdParams)
@@ -4442,9 +4455,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
 
   // get command manager and dispatch command to our window if it's acceptable
   nsCOMPtr<nsICommandManager> cmdMgr;
-  nsresult rv = GetMidasCommandManager(getter_AddRefs(cmdMgr));
-  if (NS_FAILED(rv))
-    return rv;
+  GetMidasCommandManager(getter_AddRefs(cmdMgr));
   if (!cmdMgr)
     return NS_ERROR_FAILURE;
 
@@ -4458,6 +4469,7 @@ nsHTMLDocument::QueryCommandValue(const nsAString & commandID,
     return NS_ERROR_NOT_IMPLEMENTED;
 
   // create params
+  nsresult rv;
   nsCOMPtr<nsICommandParams> cmdParams = do_CreateInstance(
                                            NS_COMMAND_PARAMS_CONTRACTID, &rv);
   if (!cmdParams)
