@@ -66,7 +66,7 @@ nsString::nsString() {
   Initialize(*this,eTwoByte);
 }
 
-#ifndef NEW_STRING_APIS
+#if 0
 /**
  * This constructor accepts an ascii string
  * @update  gess 1/4/99
@@ -97,7 +97,7 @@ nsString::nsString(const PRUnichar* aString,PRInt32 aCount) {
   Assign(aString,aCount);
 }
 
-#ifndef NEW_STRING_APIS
+#if 0
 /**
  * This constructor works for all other nsSTr derivatives
  * @update  gess 1/4/99
@@ -336,7 +336,7 @@ nsSubsumeStr nsString::operator+(const nsString& aString){
  */
 nsSubsumeStr nsString::operator+(const char* aCString) {
   nsString temp(*this);
-  temp.Append(aCString); 
+  temp.AppendWithConversion(aCString); 
   return nsSubsumeStr(temp);
 }
 
@@ -1207,6 +1207,7 @@ void nsString::AppendFloat(double aFloat){
  * @param   aString : string to be appended to this
  * @return  this
  */
+#if 0
 nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
 
   if(aCount<0)
@@ -1217,7 +1218,7 @@ nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
     StrAppend(*this,aString,0,aCount);
   return *this;
 }
-
+#endif
 
 /**
  * append given string to this string
@@ -1390,9 +1391,8 @@ void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return this
  */
-nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
+void nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
   StrInsert(*this,anOffset,aCopy,0,aCount);
-  return *this;
 }
 
 
@@ -1407,7 +1407,7 @@ nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCoun
  *
  * @return  this
  */
-nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
+void nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
   if(aString && aCount){
     nsStr temp;
     nsStr::Initialize(temp,eTwoByte);
@@ -1432,7 +1432,6 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
       StrInsert(*this,anOffset,temp,0,aCount);
     }
   }
-  return *this;  
 }
 
 
@@ -1445,7 +1444,7 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
  * @param   anOffset is insert pos in str 
  * @return  this
  */
-nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
+void nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
   PRUnichar theBuffer[2]={0,0};
   theBuffer[0]=aChar;
   nsStr temp;
@@ -1453,7 +1452,6 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
   temp.mUStr=theBuffer;
   temp.mLength=1;
   StrInsert(*this,anOffset,temp,0,1);
-  return *this;
 }
 #endif
 
@@ -1467,11 +1465,10 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
  *  @return *this
  */
 #ifndef NEW_STRING_APIS
-nsString& nsString::Cut(PRUint32 anOffset, PRInt32 aCount) {
+void nsString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   if(0<aCount) {
     nsStr::Delete(*this,anOffset,aCount);
   }
-  return *this;
 }
 #endif
 
@@ -1877,34 +1874,34 @@ PRInt32 nsString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCount
  */
 
 PRBool nsString::operator==(const nsString& S) const {return Equals(S);}      
-PRBool nsString::operator==(const nsStr& S) const {return Equals(S);}      
-PRBool nsString::operator==(const char* s) const {return Equals(s);}
-PRBool nsString::operator==(const PRUnichar* s) const {return Equals(s);}
+//PRBool nsString::operator==(const nsStr& S) const {return Equals(S);}      
+//PRBool nsString::operator==(const char* s) const {return Equals(s);}
+PRBool nsString::operator==(const PRUnichar* s) const {return Equals(nsAutoString(s));}
 
 PRBool nsString::operator!=(const nsString& S) const {return PRBool(Compare(S)!=0);}
-PRBool nsString::operator!=(const nsStr& S) const {return PRBool(Compare(S)!=0);}
-PRBool nsString::operator!=(const char* s) const {return PRBool(Compare(s)!=0);}
-PRBool nsString::operator!=(const PRUnichar* s) const {return PRBool(Compare(s)!=0);}
+//PRBool nsString::operator!=(const nsStr& S) const {return PRBool(Compare(S)!=0);}
+//PRBool nsString::operator!=(const char* s) const {return PRBool(Compare(s)!=0);}
+PRBool nsString::operator!=(const PRUnichar* s) const {return PRBool(Compare(nsAutoString(s))!=0);}
 
 PRBool nsString::operator<(const nsString& S) const {return PRBool(Compare(S)<0);}
-PRBool nsString::operator<(const nsStr& S) const {return PRBool(Compare(S)<0);}
-PRBool nsString::operator<(const char* s) const {return PRBool(Compare(s)<0);}
-PRBool nsString::operator<(const PRUnichar* s) const {return PRBool(Compare(s)<0);}
+//PRBool nsString::operator<(const nsStr& S) const {return PRBool(Compare(S)<0);}
+//PRBool nsString::operator<(const char* s) const {return PRBool(Compare(s)<0);}
+PRBool nsString::operator<(const PRUnichar* s) const {return PRBool(Compare(nsAutoString(s))<0);}
 
 PRBool nsString::operator>(const nsString& S) const {return PRBool(Compare(S)>0);}
-PRBool nsString::operator>(const nsStr& S) const {return PRBool(Compare(S)>0);}
-PRBool nsString::operator>(const char* s) const {return PRBool(Compare(s)>0);}
-PRBool nsString::operator>(const PRUnichar* s) const {return PRBool(Compare(s)>0);}
+//PRBool nsString::operator>(const nsStr& S) const {return PRBool(Compare(S)>0);}
+//PRBool nsString::operator>(const char* s) const {return PRBool(Compare(s)>0);}
+PRBool nsString::operator>(const PRUnichar* s) const {return PRBool(Compare(nsAutoString(s))>0);}
 
 PRBool nsString::operator<=(const nsString& S) const {return PRBool(Compare(S)<=0);}
-PRBool nsString::operator<=(const nsStr& S) const {return PRBool(Compare(S)<=0);}
-PRBool nsString::operator<=(const char* s) const {return PRBool(Compare(s)<=0);}
-PRBool nsString::operator<=(const PRUnichar* s) const {return PRBool(Compare(s)<=0);}
+//PRBool nsString::operator<=(const nsStr& S) const {return PRBool(Compare(S)<=0);}
+//PRBool nsString::operator<=(const char* s) const {return PRBool(Compare(s)<=0);}
+PRBool nsString::operator<=(const PRUnichar* s) const {return PRBool(Compare(nsAutoString(s))<=0);}
 
 PRBool nsString::operator>=(const nsString& S) const {return PRBool(Compare(S)>=0);}
-PRBool nsString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
-PRBool nsString::operator>=(const char* s) const {return PRBool(Compare(s)>=0);}
-PRBool nsString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
+//PRBool nsString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
+//PRBool nsString::operator>=(const char* s) const {return PRBool(Compare(s)>=0);}
+PRBool nsString::operator>=(const PRUnichar* s) const {return PRBool(Compare(nsAutoString(s))>=0);}
 #endif // !defined(NEW_STRING_APIS)
 
 PRBool nsString::EqualsIgnoreCase(const nsString& aString) const {
@@ -2345,7 +2342,7 @@ NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsCString& )
 #endif
 #endif
 
-#ifndef NEW_STRING_APIS
+#if 0
 /**
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr

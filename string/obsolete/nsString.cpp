@@ -85,7 +85,7 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength) {
   Assign(aCString,aLength);
 }
 
-#ifndef NEW_STRING_APIS
+#if 0
 /**
  * This constructor accepts a unicode string
  * @update  gess 1/4/99
@@ -981,6 +981,7 @@ nsCString& nsCString::Append(const nsCString& aString,PRInt32 aCount) {
   return *this;
 }
 
+#if 0
 /**
  * append given string to this string; 
  * @update  gess 01/04/99
@@ -997,6 +998,7 @@ nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
     StrAppend(*this,aString,0,aCount);
   return *this;
 }
+#endif
 
 /**
  * append given c-string to this string
@@ -1216,10 +1218,9 @@ void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUi
  *  @param  aCount -- number of chars to be copied from aCopy
  *  @return this
  */
-nsCString& nsCString::Insert(const nsCString& aString,PRUint32 anOffset,PRInt32 aCount) {
+void nsCString::Insert(const nsCString& aString,PRUint32 anOffset,PRInt32 aCount) {
 
   StrInsert(*this,anOffset,aString,0,aCount);
-  return *this;
 }
 
 /**
@@ -1231,7 +1232,7 @@ nsCString& nsCString::Insert(const nsCString& aString,PRUint32 anOffset,PRInt32 
  * @param   aCounttells us how many chars to insert
  * @return  this
  */
-nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
+void nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
   if(aCString){
     nsStr temp;
     nsStr::Initialize(temp,eOneByte);
@@ -1256,7 +1257,6 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
       StrInsert(*this,anOffset,temp,0,aCount);
     }
   }
-  return *this;  
 }
 
 
@@ -1269,7 +1269,7 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
  * @param   anOffset is insert pos in str 
  * @return  this
  */
-nsCString& nsCString::Insert(char aChar,PRUint32 anOffset){
+void nsCString::Insert(char aChar,PRUint32 anOffset){
   char theBuffer[2]={0,0};
   theBuffer[0]=aChar;
   nsStr temp;
@@ -1277,7 +1277,6 @@ nsCString& nsCString::Insert(char aChar,PRUint32 anOffset){
   temp.mStr=theBuffer;
   temp.mLength=1;
   StrInsert(*this,anOffset,temp,0,1);
-  return *this;
 }
 #endif
 
@@ -1292,11 +1291,10 @@ nsCString& nsCString::Insert(char aChar,PRUint32 anOffset){
  *  @return *this
  */
 #ifndef NEW_STRING_APIS
-nsCString& nsCString::Cut(PRUint32 anOffset, PRInt32 aCount) {
+void nsCString::Cut(PRUint32 anOffset, PRInt32 aCount) {
   if(0<aCount) {
     nsStr::Delete(*this,anOffset,aCount);
   }
-  return *this;
 }
 #endif
 
@@ -1623,27 +1621,27 @@ PRInt32 nsCString::Compare(const nsStr& aString,PRBool aIgnoreCase,PRInt32 aCoun
  */
 PRBool nsCString::operator==(const nsStr& S) const {return Equals(S);}      
 PRBool nsCString::operator==(const char* s) const {return Equals(s);}
-PRBool nsCString::operator==(const PRUnichar* s) const {return Equals(s);}
+//PRBool nsCString::operator==(const PRUnichar* s) const {return Equals(s);}
 
 PRBool nsCString::operator!=(const nsStr& S) const {return PRBool(Compare(S)!=0);}
-PRBool nsCString::operator!=(const char* s) const {return PRBool(Compare(s)!=0);}
-PRBool nsCString::operator!=(const PRUnichar* s) const {return PRBool(Compare(s)!=0);}
+PRBool nsCString::operator!=(const char* s) const {return PRBool(Compare(nsCAutoString(s))!=0);}
+//PRBool nsCString::operator!=(const PRUnichar* s) const {return PRBool(Compare(s)!=0);}
 
 PRBool nsCString::operator<(const nsStr& S) const {return PRBool(Compare(S)<0);}
-PRBool nsCString::operator<(const char* s) const {return PRBool(Compare(s)<0);}
-PRBool nsCString::operator<(const PRUnichar* s) const {return PRBool(Compare(s)<0);}
+PRBool nsCString::operator<(const char* s) const {return PRBool(Compare(nsCAutoString(s))<0);}
+//PRBool nsCString::operator<(const PRUnichar* s) const {return PRBool(Compare(s)<0);}
 
 PRBool nsCString::operator>(const nsStr& S) const {return PRBool(Compare(S)>0);}
-PRBool nsCString::operator>(const char* s) const {return PRBool(Compare(s)>0);}
-PRBool nsCString::operator>(const PRUnichar* s) const {return PRBool(Compare(s)>0);}
+PRBool nsCString::operator>(const char* s) const {return PRBool(Compare(nsCAutoString(s))>0);}
+//PRBool nsCString::operator>(const PRUnichar* s) const {return PRBool(Compare(s)>0);}
 
 PRBool nsCString::operator<=(const nsStr& S) const {return PRBool(Compare(S)<=0);}
-PRBool nsCString::operator<=(const char* s) const {return PRBool(Compare(s)<=0);}
-PRBool nsCString::operator<=(const PRUnichar* s) const {return PRBool(Compare(s)<=0);}
+PRBool nsCString::operator<=(const char* s) const {return PRBool(Compare(nsCAutoString(s))<=0);}
+//PRBool nsCString::operator<=(const PRUnichar* s) const {return PRBool(Compare(s)<=0);}
 
 PRBool nsCString::operator>=(const nsStr& S) const {return PRBool(Compare(S)>=0);}
-PRBool nsCString::operator>=(const char* s) const {return PRBool(Compare(s)>=0);}
-PRBool nsCString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
+PRBool nsCString::operator>=(const char* s) const {return PRBool(Compare(nsCAutoString(s))>=0);}
+//PRBool nsCString::operator>=(const PRUnichar* s) const {return PRBool(Compare(s)>=0);}
 #endif
 
 #ifndef NEW_STRING_APIS
@@ -1911,7 +1909,7 @@ nsCAutoString::nsCAutoString(const CBufDescriptor& aBuffer) : nsCString() {
     AddNullTerminator(*this); //this isn't really needed, but it guarantees that folks don't pass string constants.
 }
 
-#ifndef NEW_STRING_APIS
+#if 0
 /**
  * Copy construct from uni-string
  * @param   aString is a ptr to a unistr
