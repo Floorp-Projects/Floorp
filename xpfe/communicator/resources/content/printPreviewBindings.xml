@@ -139,7 +139,7 @@
         var print = _getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
 
-        var settings = print.globalPrintSettings;
+        var settings = print.currentPrintSettings;
         if (settings.orientation == 
             Components.interfaces.nsIPrintSettings.kLandscapeOrientation)
           this.orient('landscape');
@@ -263,7 +263,7 @@
             this.mScaleTextBox.setAttribute("lastvalid", newValue);
 
             var print = this._getWebBrowserPrint();
-            var settings = print.globalPrintSettings;
+            var settings = print.currentPrintSettings;
             settings.scaling = newValue/100.0;
             print.printPreview(settings);
 
@@ -302,7 +302,7 @@
           }
 
           var print = this._getWebBrowserPrint();
-          var settings = print.globalPrintSettings;
+          var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
           print.printPreview(settings);
 
