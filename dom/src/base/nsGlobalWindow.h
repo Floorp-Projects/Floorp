@@ -53,6 +53,7 @@
 #include "nsIDOMPkcs11.h"
 #include "nsISidebar.h"
 #include "nsIPrincipal.h"
+#include "nsPluginArray.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -302,7 +303,7 @@ struct nsTimeoutImpl {
 class NavigatorImpl : public nsIScriptObjectOwner, public nsIDOMNavigator
 {
 public:
-  NavigatorImpl();
+  NavigatorImpl(nsIDocShell *aDocShell);
   virtual ~NavigatorImpl();
 
   NS_DECL_ISUPPORTS
@@ -312,10 +313,13 @@ public:
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
 
+  void SetDocShell(nsIDocShell *aDocShell);
+
 protected:
   void *mScriptObject;
   nsIDOMMimeTypeArray* mMimeTypes;
-  nsIDOMPluginArray* mPlugins;
+  PluginArrayImpl* mPlugins;
+  nsIDocShell* mDocShell; // weak reference
 };
 
 class nsIURI;

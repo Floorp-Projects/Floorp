@@ -28,11 +28,14 @@
 #include "nsIDOMMimeType.h"
 #include "nsIServiceManager.h"
 #include "nsIPluginHost.h"
+#include "nsIDocShell.h"
+
+#include "nsIWebNavigation.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator)
+PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell)
 {
   NS_INIT_ISUPPORTS();
   mScriptObject = nsnull;
@@ -46,6 +49,7 @@ PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator)
 
   mPluginCount = 0;
   mPluginArray = nsnull;
+  mDocShell = aDocShell;
 }
 
 PluginArrayImpl::~PluginArrayImpl()
@@ -168,23 +172,49 @@ PluginArrayImpl::NamedItem(const nsAReadableString& aName,
   return NS_OK;
 }
 
+void
+PluginArrayImpl::SetDocShell(nsIDocShell* aDocShell)
+{
+  mDocShell = aDocShell;
+}
+
 NS_IMETHODIMP
 PluginArrayImpl::Refresh(PRBool aReloadDocuments)
 {
-  if(mPluginHost == nsnull)
-    return NS_ERROR_FAILURE;
-
   nsresult res = NS_OK;
 
-  res = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginHost), (nsISupports**)&mPluginHost);
+  if (mPluginArray != nsnull) 
+  {
+    for (PRUint32 i = 0; i < mPluginCount; i++) 
+      NS_IF_RELEASE(mPluginArray[i]);
+
+    delete[] mPluginArray;
+  }
+
+  mPluginCount = 0;
+  mPluginArray = nsnull;
+
+  if (mPluginHost == nsnull)
+    res = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginHost), (nsISupports**)&mPluginHost);
 
   if(NS_FAILED(res))
+  {
+    mPluginHost = nsnull;
     return res;
+  }
 
-  nsCOMPtr<nsIPluginManager> pm = do_QueryInterface(mPluginHost);
+  nsCOMPtr<nsIPluginManager> pm(do_QueryInterface(mPluginHost));
   
   if(pm)
     pm->ReloadPlugins(aReloadDocuments);
+
+  if (aReloadDocuments && mDocShell)
+  {
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+
+    if (webNav)
+      webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
+  }
 
   return res;
 }

@@ -428,6 +428,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 
   if (mLocation)
     mLocation->SetDocShell(aDocShell);
+  if (mNavigator)
+    mNavigator->SetDocShell(aDocShell);
   if (mHistory)
     mHistory->SetDocShell(aDocShell);
   if (mFrames)
@@ -680,7 +682,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetSelf(nsIDOMWindowInternal** aWindow)
 NS_IMETHODIMP GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 {
   if (!mNavigator) {
-    mNavigator = new NavigatorImpl();
+    mNavigator = new NavigatorImpl(mDocShell);
     NS_ENSURE_TRUE(mNavigator, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(mNavigator);
   }
@@ -4499,8 +4501,11 @@ extern
 //***    NavigatorImpl: Object Management
 //*****************************************************************************
 
-NavigatorImpl::NavigatorImpl():mScriptObject(nsnull), mMimeTypes(nsnull),
-mPlugins(nsnull)
+NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) : 
+  mScriptObject(nsnull),                                                       
+  mMimeTypes(nsnull),                                                       
+  mPlugins(nsnull),                                                       
+  mDocShell(aDocShell)
 {
   NS_INIT_REFCNT();
 }
@@ -4549,6 +4554,14 @@ NS_IMETHODIMP NavigatorImpl::GetScriptObject(nsIScriptContext *aContext,
 
   *aScriptObject = mScriptObject;
   return res;
+}
+
+
+void NavigatorImpl::SetDocShell(nsIDocShell *aDocShell)
+{
+  mDocShell = aDocShell;
+  if (mPlugins)
+    mPlugins->SetDocShell(aDocShell);
 }
 
 //*****************************************************************************
@@ -4764,7 +4777,7 @@ NS_IMETHODIMP NavigatorImpl::GetMimeTypes(nsIDOMMimeTypeArray **aMimeTypes)
 NS_IMETHODIMP NavigatorImpl::GetPlugins(nsIDOMPluginArray **aPlugins)
 {
   if (!mPlugins) {
-    mPlugins = new PluginArrayImpl(this);
+    mPlugins = new PluginArrayImpl(this, mDocShell);
     NS_IF_ADDREF(mPlugins);
   }
 
