@@ -3507,10 +3507,9 @@ nsGfxListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
               if (optionElement) {
                 nsAutoString text;
                 if (NS_OK == optionElement->GetText(text)) {
-                  char * buf = text.ToNewCString();
-                  char c = buf[0];
-                  delete [] buf;
-                  if (c == (char)code) {
+                  text.ToUpperCase();
+                  PRUnichar firstChar = text.CharAt(0);
+                  if (firstChar == (PRUnichar)code) {
                     mOldSelectedIndex = mSelectedIndex;
                     mSelectedIndex    = selectedIndex;
                     SingleSelection();
