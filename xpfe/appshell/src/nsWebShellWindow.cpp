@@ -1847,6 +1847,30 @@ nsDOMWindowPrompter::Alert(const PRUnichar* dialogTitle,
 }
 
 NS_IMETHODIMP
+nsDOMWindowPrompter::AlertCheck(const PRUnichar* dialogTitle, 
+                                  const PRUnichar* text,
+                                  const PRUnichar* checkMsg,
+                                  PRBool *checkValue)
+{
+  nsresult rv;
+
+  if (dialogTitle == nsnull) {
+    PRUnichar *title;
+    rv = GetLocaleString(NS_ConvertASCIItoUCS2("Alert"), &title);
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+    rv = mCommonDialogs->AlertCheck(mDOMWindow, title, text, checkMsg, checkValue);
+    nsCRT::free(title);
+    title = nsnull;
+  }
+  else {
+    rv = mCommonDialogs->AlertCheck(mDOMWindow, dialogTitle, text, checkMsg, checkValue);
+  }
+
+  return rv;  
+}
+
+NS_IMETHODIMP
 nsDOMWindowPrompter::Confirm(const PRUnichar* dialogTitle, 
                              const PRUnichar* text,
                              PRBool *_retval)

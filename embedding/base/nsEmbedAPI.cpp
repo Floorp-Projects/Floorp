@@ -187,12 +187,14 @@ nsresult NS_TermEmbedding()
     }
     sInitCounter = 0;
 
-    nsCOMPtr<nsIEventQueueService> eventQService;
-    sServiceManager->GetService(NS_EVENTQUEUESERVICE_CONTRACTID, 
-                                nsIEventQueueService::GetIID(), 
-                                getter_AddRefs(eventQService));
-    if (eventQService)
-        eventQService->DestroyThreadEventQueue();
+    {
+        nsCOMPtr<nsIEventQueueService> eventQService;
+        sServiceManager->GetService(NS_EVENTQUEUESERVICE_CONTRACTID, 
+                                    nsIEventQueueService::GetIID(), 
+                                    getter_AddRefs(eventQService));
+        if (eventQService)
+            eventQService->DestroyThreadEventQueue();
+    }
 
     NS_RELEASE(sServiceManager);
 

@@ -44,6 +44,7 @@
 #include "nsIPrompt.h"
 #include "nsTextFormatter.h"
 #include "nsIHTTPEventSink.h"
+#include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
 
 // Local Includes
@@ -236,7 +237,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
             return NS_NOINTERFACE;
       }
    else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)) || aIID.Equals(NS_GET_IID(nsIHTTPEventSink)) ||
-            aIID.Equals(NS_GET_IID(nsIWebProgress)))
+            aIID.Equals(NS_GET_IID(nsIWebProgress)) || aIID.Equals(NS_GET_IID(nsISecurityEventSink)) )
    {
      nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
      NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
@@ -2413,6 +2414,15 @@ nsDocShell::OnStatusChange(nsIWebProgress* aWebProgress,
 {
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShell::OnSecurityChange(nsIWebProgress *aWebProgress,
+                             nsIRequest *aRequest, 
+                             PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //*****************************************************************************
 // nsDocShell: Content Viewer Management

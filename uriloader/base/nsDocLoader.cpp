@@ -199,6 +199,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)   
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIHTTPEventSink)
+   NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
 NS_INTERFACE_MAP_END
 
 
@@ -1248,12 +1249,14 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
 }
 
 
+
 NS_IMETHODIMP
 nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
                                       nsIRequest* aRequest,
                                       nsIURI *aUri)
 {
   PRInt32 count;
+
 
   count = mListenerList.Count();
   while (count > 0) {
@@ -1398,6 +1401,40 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsISupports * aContext, nsIURI * aNewL
   // for now, we'll make the implementation empty.
   return NS_OK;
 }
+
+
+NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
+                                                PRInt32 state)
+{
+  //
+  // Fire progress notifications out to any registered nsIWebProgressListeners.  
+  //
+  
+  nsCOMPtr<nsIRequest> request = do_QueryInterface(aContext);
+  nsIWebProgress* webProgress = NS_STATIC_CAST(nsIWebProgress*, this);
+
+  PRInt32 count = mListenerList.Count();
+  while (count > 0) {
+    nsIWebProgressListener *listener;
+
+    listener = NS_STATIC_CAST(nsIWebProgressListener*,
+                              mListenerList.ElementAt(--count));
+
+    NS_ASSERTION(listener, "NULL listener found in list.");
+    if (! listener) {
+      continue;
+    }
+    listener->OnSecurityChange(webProgress, request, state);
+  }
+
+  // Pass the notification up to the parent...
+  if (mParent) {
+    mParent->OnSecurityChange(aContext, state);
+  }
+  return NS_OK;
+}
+
+
 
 
 #if 0

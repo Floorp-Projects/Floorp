@@ -295,6 +295,17 @@ CWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
     return NS_OK;
 }
 
+
+
+NS_IMETHODIMP 
+CWebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                    nsIRequest *aRequest, 
+                                    PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 //*****************************************************************************
 // CWebBrowserChrome::nsIBaseWindow
 //*****************************************************************************   
@@ -533,6 +544,14 @@ NS_IMETHODIMP CWebBrowserChrome::Alert(const PRUnichar *dialogTitle, const PRUni
    		break;
 	}
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP CWebBrowserChrome::AlertCheck(const PRUnichar *dialogTitle, 
+                                            const PRUnichar *text, 
+                                            const PRUnichar *checkMsg, 
+                                            PRBool *checkValue)
+{
     return NS_OK;
 }
 

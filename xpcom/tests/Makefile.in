@@ -34,6 +34,7 @@ TESTS_NOT_COMPILING = \
 
 CPPSRCS		= \
 		nsIFileTest.cpp \
+		nsIFileEnumerator.cpp \
 		TestServMgr.cpp \
 		TestFactory.cpp \
 		TestCOMPtr.cpp \

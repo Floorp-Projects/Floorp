@@ -103,6 +103,16 @@ NS_IMETHODIMP CWebBrowserContainer::Alert(const PRUnichar* dialogTitle, const PR
     return NS_OK;
 }
 
+/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
+NS_IMETHODIMP CWebBrowserContainer::AlertCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue)
+{
+// TODO show dialog with check box
+	USES_CONVERSION;
+	m_pOwner->MessageBox(W2T(text), W2T(dialogTitle), MB_OK | MB_ICONEXCLAMATION);
+    return NS_OK;
+}
+
+
 /* boolean confirm (in wstring text); */
 NS_IMETHODIMP CWebBrowserContainer::Confirm(const PRUnichar* dialogTitle, const PRUnichar *text, PRBool *_retval)
 {
@@ -281,6 +291,15 @@ CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
 {
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+CWebBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                       nsIRequest *aRequest, 
+                                       PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIURIContentListener

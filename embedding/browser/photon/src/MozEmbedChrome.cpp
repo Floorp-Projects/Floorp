@@ -705,6 +705,16 @@ MozEmbedChrome::OnStatusChange(nsIWebProgress* aWebProgress,
     return NS_OK;
 }
 
+
+
+NS_IMETHODIMP 
+MozEmbedChrome::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                    nsIRequest *aRequest, 
+                                    PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIBaseWindow interface
 
 NS_IMETHODIMP MozEmbedChrome::InitWindow(nativeWindow parentNativeWindow,

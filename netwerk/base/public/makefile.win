@@ -60,6 +60,7 @@ XPIDLSRCS =                             \
         .\nsIURL.idl                    \
         .\nsIURLParser.idl              \
         .\nsIWebFilters.idl             \
+        .\nsISecurityEventSink.idl      \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

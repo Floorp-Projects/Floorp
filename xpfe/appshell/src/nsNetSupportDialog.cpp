@@ -75,6 +75,21 @@ NS_IMETHODIMP nsNetSupportDialog::Alert(const PRUnichar *dialogTitle, const PRUn
 	 return rv;
 }
 
+NS_IMETHODIMP	nsNetSupportDialog::AlertCheck(const PRUnichar *dialogTitle, 
+                                               const PRUnichar *text, 
+                                               const PRUnichar *checkMsg, 
+                                               PRBool *checkValue)
+{
+
+	nsresult rv = NS_ERROR_FAILURE;
+	nsCOMPtr< nsIPrompt> dialogService;
+    if( GetNSIPrompt( dialogService ) )
+    	rv = dialogService->AlertCheck(dialogTitle, text, checkMsg, checkValue);
+
+	return rv;
+}
+
+
 NS_IMETHODIMP nsNetSupportDialog::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text, PRBool *returnValue)
 {
 

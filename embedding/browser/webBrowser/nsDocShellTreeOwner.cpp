@@ -524,6 +524,15 @@ nsDocShellTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
    return mOwnerProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
 }
 
+NS_IMETHODIMP 
+nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                      nsIRequest *aRequest, 
+                                      PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 //*****************************************************************************
 // nsDocShellTreeOwner: Helpers
 //*****************************************************************************   

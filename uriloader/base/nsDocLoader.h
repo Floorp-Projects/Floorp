@@ -39,6 +39,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIHTTPEventSink.h"
+#include "nsISecurityEventSink.h"
 #include "nsCOMPtr.h"
 
 struct nsChannelInfo;
@@ -53,7 +54,8 @@ class nsDocLoaderImpl : public nsIDocumentLoader,
                         public nsIProgressEventSink,
                         public nsIWebProgress,
                         public nsIInterfaceRequestor,
-                        public nsIHTTPEventSink
+                        public nsIHTTPEventSink,
+                        public nsISecurityEventSink
 {
 public:
 
@@ -69,6 +71,8 @@ public:
     
     // nsIProgressEventSink
     NS_DECL_NSIPROGRESSEVENTSINK
+
+    NS_DECL_NSISECURITYEVENTSINK
 
     // nsIStreamObserver methods: (for observing the load group)
     NS_DECL_NSISTREAMOBSERVER

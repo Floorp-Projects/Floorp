@@ -32,16 +32,16 @@ PRBool LoopInDir(nsILocalFile* file)
         if(NS_FAILED(file->GetLeafName(&name)))
             return PR_FALSE;
         
-        //printf("%s\t", name);
         PRBool isDir;
-        
+        printf("%s\n", name);
         rv = file->IsDirectory(&isDir);
         if (isDir == PR_TRUE)
         {
-            nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
-            LoopInDir(lfile);   
+           nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
+           LoopInDir(lfile);   
         }        
-        nsMemory::Free(name);
+       
+         nsMemory::Free(name);
     }
     return PR_TRUE;
 }
