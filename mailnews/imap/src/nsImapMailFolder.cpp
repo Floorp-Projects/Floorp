@@ -85,6 +85,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_urlRunning(PR_FALSE), m_tempMessageFile(MESSAGE_PATH)
 {
 	m_pathName = nsnull;
+	m_copyState = nsnull;
 
 	nsresult rv;
 
