@@ -17,6 +17,7 @@
  * 
  * Contributors:
  *   Scott MacGregor <mscott@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 const kPersonalAddressbookURI = "moz-abmdbdirectory://abook.mab";
@@ -96,8 +97,9 @@ function viewPickerOnLoad()
 
 function LaunchCustomizeDialog()
 {
-  OpenOrFocusWindow({onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul');
-  // window.openDialog('chrome://messenger/content/mailViewList.xul', "", 'centerscreen,resizeable,titlebar,chrome', {onOkCallback: refreshCustomMailViews});
+  // making it modal, see bug #191188
+  //OpenOrFocusWindow({onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews}, 'mailnews:mailviewlist', 'chrome://messenger/content/mailViewList.xul'); 
+  window.openDialog("chrome://messenger/content/mailViewList.xul", "mailnews:mailviewlist", "chrome,modal,titlebar,resizable,centerscreen", {onOkCallback: refreshCustomMailViews, onCancelCallback: cancelCustomMailViews});
 }
 
 function LoadCustomMailView(index)
