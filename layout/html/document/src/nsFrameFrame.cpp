@@ -679,27 +679,6 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     if (nsnull != outerShell) {
       outerShell->AddChild(mWebShell);
 
-#ifdef INCLUDE_XUL
-			// Determine whether or not the frame is content or chrome.
-			nsIAtom* typeAtom = NS_NewAtom("type");
-			nsAutoString value;
-			content->GetAttribute(kNameSpaceID_None, typeAtom, value);
-			if (value.EqualsIgnoreCase("content"))
-			{
-				// The web shell's type is content.
-				mWebShell->SetWebShellType(nsWebShellContent);
-			}
-			else
-			{
-				// Inherit our type from our parent webshell.  If it is
-				// chrome, we'll be chrome.  If it is content, we'll be
-				// content.
-				nsWebShellType parentType;
-				outerShell->GetWebShellType(parentType);
-				mWebShell->SetWebShellType(parentType);
-			}
-#endif // INCLUDE_XUL
-
       // connect the container...
       nsIWebShellContainer* outerContainer = nsnull;
       container->QueryInterface(kIWebShellContainerIID, (void**) &outerContainer);
@@ -714,6 +693,49 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
         mWebShell->SetPrefs(outerPrefs);
         NS_RELEASE(outerPrefs);
       }
+      
+#ifdef INCLUDE_XUL
+			// Determine whether or not the frame is content or chrome.
+			nsIAtom* typeAtom = NS_NewAtom("type");
+			nsAutoString value;
+			content->GetAttribute(kNameSpaceID_None, typeAtom, value);
+			if (value.EqualsIgnoreCase("content"))
+			{
+				// The web shell's type is content.
+				mWebShell->SetWebShellType(nsWebShellContent);
+
+        // In this specific circumstance, where a content sandbox
+        // has been added underneath a chrome shell, we should 
+        // send a notification to the web shell container, which
+        // will pass the notification up the chain to our root
+        // container.  The root container can determine if this
+        // content shell matches any shells that it has asynchronous load
+        // information for, and if so, the root container can handle
+        // the linkage between this new shell and the original
+        // opener shell.
+
+        // Note that this notification will never fire with normal HTML
+        // pages.  This can only fire on a sandboxed shell in a XUL
+        // document.
+        nsIWebShellContainer* outerContainer = nsnull;
+        container->QueryInterface(kIWebShellContainerIID, (void**) &outerContainer);
+        if (nsnull != outerContainer) {
+          PRBool handled;
+          outerContainer->ChildShellAdded(mWebShell, content, handled); 
+          NS_RELEASE(outerContainer);
+        }
+			}
+			else
+			{
+				// Inherit our type from our parent webshell.  If it is
+				// chrome, we'll be chrome.  If it is content, we'll be
+				// content.
+				nsWebShellType parentType;
+				outerShell->GetWebShellType(parentType);
+				mWebShell->SetWebShellType(parentType);
+			}
+#endif // INCLUDE_XUL
+
       NS_RELEASE(outerShell);
     }
     NS_RELEASE(container);
