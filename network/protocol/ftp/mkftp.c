@@ -3223,7 +3223,7 @@ net_parse_ls_line (char *line, NET_FileEntryInfo *entry_info)
 	char   *ptr;
 
     for (ptr = &line[PL_strlen(line) - 1];
-            (ptr > line+13) && (!XP_IS_SPACE(*ptr) || !net_is_ls_date(ptr-12)); ptr--)
+            (ptr > line+13) && (!NET_IS_SPACE(*ptr) || !net_is_ls_date(ptr-12)); ptr--)
                 ; /* null body */
 	save_char = *ptr;
     *ptr = '\0';
@@ -3240,7 +3240,7 @@ net_parse_ls_line (char *line, NET_FileEntryInfo *entry_info)
 		/* find the first whitespace and  terminate
 		 */
 		for(ptr=line; *ptr != '\0'; ptr++)
-			if(XP_IS_SPACE(*ptr))
+			if(NET_IS_SPACE(*ptr))
 			  {
 				*ptr = '\0';
 				break;
@@ -3449,7 +3449,7 @@ net_parse_dir_entry (char *entry, int server_type)
 		 * syntax.  But most NT servers use the DOS dir syntax.
 		 * If there is a space at position 8 then it's a DOS dir syntax
 		 */
-		if(server_type == FTP_NT_TYPE && !XP_IS_SPACE(entry[8]))
+		if(server_type == FTP_NT_TYPE && !NET_IS_SPACE(entry[8]))
 			server_type = FTP_UNIX_TYPE;
 
         switch (server_type)
@@ -3534,7 +3534,7 @@ net_parse_dir_entry (char *entry, int server_type)
                     remove_size=TRUE; /* size is not useful */
 
                     /* strip off " -> pathname" */
-                    for (i = len - 1; (i > 3) && (!XP_IS_SPACE(entry[i])
+                    for (i = len - 1; (i > 3) && (!NET_IS_SPACE(entry[i])
                     || (entry[i-1] != '>') 
                     || (entry[i-2] != '-')
                     || (entry[i-3] != ' ')); i--)

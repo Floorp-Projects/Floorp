@@ -156,7 +156,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 				  {
 					net_EndPICSLabelFinderTag(obj);
 				  }
-				else if(!XP_IS_SPACE(*cp))
+				else if(!NET_IS_SPACE(*cp))
 				  {
                     /* capture all tag data */
 				    tiny_buf[0] = *cp;
@@ -179,7 +179,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 				tiny_buf[1] = '\0';
 				StrAllocCat(obj->tag_data, tiny_buf);
 
-				if(XP_IS_SPACE(*cp))
+				if(NET_IS_SPACE(*cp))
 				  {
 					obj->state = IN_TAG;
 					obj->tag[obj->tag_index] = '\0';
@@ -229,7 +229,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 				 * we will enter the UNQUOTED or the QUOTED
 				 * ATTRIBUTE state
 				 */
-				if(!XP_IS_SPACE(*cp))
+				if(!NET_IS_SPACE(*cp))
 				  {
 					if(*cp == '"')
                     {
@@ -260,7 +260,7 @@ PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, in
 
 unquoted_attribute_jump_point:
 			    /* do nothing until you find a whitespace */
-				if(XP_IS_SPACE(*cp))
+				if(NET_IS_SPACE(*cp))
 				  {
 					obj->state = IN_TAG;
 				  }
@@ -304,7 +304,7 @@ unquoted_attribute_jump_point:
 			    break;
 			case IN_AMPERSAND_THINGY:
 			    /* do nothing until you find a ';' or space */
-				if(*cp == ';' || XP_IS_SPACE(*cp))
+				if(*cp == ';' || NET_IS_SPACE(*cp))
 				  {
 					sprintf(tiny_buf, "%c", *cp);
 					obj->state = IN_CONTENT;

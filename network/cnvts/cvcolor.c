@@ -186,7 +186,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 					PR_FREEIF(tmp_markup);
 					tmp_markup = NULL;
 				  }
-				else if(!XP_IS_SPACE(*cp))
+				else if(!NET_IS_SPACE(*cp))
 				  {
 					obj->state = IN_BEGIN_TAG;
 					obj->tag_index = 0;
@@ -200,7 +200,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 				/* go to the IN_TAG state when we see
 				 * the first whitespace
 				 */
-				if(XP_IS_SPACE(*cp))
+				if(NET_IS_SPACE(*cp))
 				  {
 					StrAllocCopy(new_markup, END_TAG_NAME_MARKUP);
 					sprintf(tiny_buf, "%c", *cp);
@@ -262,7 +262,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 				 * we will enter the UNQUOTED or the QUOTED
 				 * ATTRIBUTE state
 				 */
-				if(!XP_IS_SPACE(*cp))
+				if(!NET_IS_SPACE(*cp))
 				  {
 					if(*cp == '"')
                     {
@@ -297,7 +297,7 @@ PRIVATE int net_ColorHTMLWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 		    case IN_UNQUOTED_ATTRIBUTE_VALUE:
 unquoted_attribute_jump_point:
 			    /* do nothing until you find a whitespace */
-				if(XP_IS_SPACE(*cp))
+				if(NET_IS_SPACE(*cp))
 				  {
 					StrAllocCopy(new_markup, END_ATTRIBUTE_VALUE_MARKUP);
 					sprintf(tiny_buf, "%c", *cp);
@@ -375,7 +375,7 @@ unquoted_attribute_jump_point:
 			    break;
 			case IN_AMPERSAND_THINGY:
 			    /* do nothing until you find a ';' or space */
-				if(*cp == ';' || XP_IS_SPACE(*cp))
+				if(*cp == ';' || NET_IS_SPACE(*cp))
 				  {
 					sprintf(tiny_buf, "%c", *cp);
 					StrAllocCopy(new_markup, tiny_buf);
