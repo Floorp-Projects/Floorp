@@ -30,15 +30,10 @@ public:
 		nsMacEventHandler(nsWindow* aTopLevelWidget);
 		virtual ~nsMacEventHandler();
 
-		virtual PRBool	HandleOSEvent(
-													EventRecord&		aOSEvent);
-
-		virtual PRBool	HandleMenuCommand(
-													EventRecord&		aOSEvent,
-													long						aMenuResult);
+		virtual PRBool	HandleOSEvent(EventRecord& aOSEvent);
+		virtual PRBool	HandleMenuCommand(EventRecord& aOSEvent, long aMenuResult);
 
 protected:
-
 		virtual PRBool	HandleKeyEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleActivateEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleUpdateEvent(EventRecord& aOSEvent);
@@ -46,30 +41,16 @@ protected:
 		virtual PRBool	HandleMouseUpEvent(EventRecord& aOSEvent);
 		virtual PRBool	HandleMouseMoveEvent(EventRecord& aOSEvent);
 
-//--		virtual void		ConvertOSEventToPaintEvent(
-//--													EventRecord&		aOSEvent,
-//--													nsPaintEvent&		aPaintEvent);
-
-		virtual void		ConvertOSEventToMouseEvent(
-													EventRecord&		aOSEvent,
-													nsMouseEvent&		aMouseEvent,
-													PRUint32				aMessage);
-
-//--		virtual void		ConvertOSEventToKeyEvent(EventRecord& aOSEvent, nsKeyEvent& aKeyEvent);
-
-		//¥TODO: virtual ConvertOSEventToScrollbarEvent(EventRecord& aOSEvent, nsScrollbarEvent& sizeEvent);
-		//¥TODO: virtual ConvertOSEventToTooltipEvent(EventRecord& aOSEvent, nsTooltipEvent& sizeEvent);
-
-//--		virtual PRBool PropagateEventRecursively(nsEvent& aRaptorEvent, nsIWidget& aWidget);
-//--		virtual PRBool DispatchEvent(nsEvent& aRaptorEvent, nsIWidget& aWidget);
-
-
+		virtual void	ConvertOSEventToMouseEvent(
+									EventRecord&	aOSEvent,
+									nsMouseEvent&	aMouseEvent,
+									PRUint32		aMessage);
 
 protected:
-	nsCOMPtr<nsWindow>		mTopLevelWidget;
-	nsCOMPtr<nsWindow>		mLastWidgetHit;
-	nsCOMPtr<nsWindow>		mLastWidgetPointed;
-	RgnHandle				mUpdateRgn;
+	nsWindow*			mTopLevelWidget;		// do change to nsCOMPtr
+	nsWindow*			mLastWidgetHit;			// do change to nsCOMPtr
+	nsWindow*			mLastWidgetPointed;		// do change to nsCOMPtr
+	RgnHandle			mUpdateRgn;
 };
 
 #endif // MacMacEventHandler_h__
