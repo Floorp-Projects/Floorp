@@ -1315,7 +1315,7 @@ function EditorSetDefaultPrefs()
     var prefAuthorString = 0;
     try
     {
-      prefAuthorString = gPrefs.CopyCharPref("editor.author");
+      prefAuthorString = gPrefs.CopyUnicharPref("editor.author");
     }
     catch (ex) {}
     if ( prefAuthorString && prefAuthorString != 0)
