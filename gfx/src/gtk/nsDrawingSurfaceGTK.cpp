@@ -265,6 +265,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
     gdk_image_destroy(mImage);
   mImage = nsnull;
 
+  g_return_val_if_fail(mPixmap != nsnull, NS_ERROR_FAILURE);
+  
   return NS_OK;
 }
 
