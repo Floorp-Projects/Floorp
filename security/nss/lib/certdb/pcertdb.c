@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.14 2001/06/12 20:57:09 nicolson%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.15 2001/06/20 23:14:35 ddrinan%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -873,8 +873,14 @@ DecodeDBCrlEntry(certDBEntryRevocation *entry, SECItem *dbentry)
     nnlen = ( ( dbentry->data[2] << 8 ) | dbentry->data[3] );
     if ( ( entry->derCrl.len + nnlen + DB_CRL_ENTRY_HEADER_LEN )
 	!= dbentry->len) {
-	PORT_SetError(SEC_ERROR_BAD_DATABASE);
-	goto loser;
+      /* CRL entry is greater than 64 K. Hack to make this continue to work */
+      if (dbentry->len >= (0xffff - DB_CRL_ENTRY_HEADER_LEN) - nnlen) {
+          entry->derCrl.len = 
+                      (dbentry->len - DB_CRL_ENTRY_HEADER_LEN) - nnlen;
+      } else {
+          PORT_SetError(SEC_ERROR_BAD_DATABASE);
+          goto loser;
+      }    
     }
     
     /* copy the dercert */
