@@ -177,6 +177,7 @@
 // See nsStyleColor
 #define NS_STYLE_COLOR_TRANSPARENT        0
 #define NS_STYLE_COLOR_INVERT             1
+#define NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR      2
 
 // See nsStyleColor
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01
