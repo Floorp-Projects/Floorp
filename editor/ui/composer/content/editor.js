@@ -251,94 +251,6 @@ function GetString(id)
   return editorShell.GetString(id);
 }
 
-// ------------------------- Move Selection ------------------------
-function SelectionBeginningOfLine()
-{
-  var selCont = editorShell.selectionController;
-  selCont.intraLineMove(false, false);
-}
-
-function SelectionEndOfLine()
-{
-  var selCont = editorShell.selectionController;
-  selCont.intraLineMove(true, false);
-}
-
-function SelectionBackwardChar()
-{
-  var selCont = editorShell.selectionController;
-  selCont.characterMove(false, false);
-}
-
-function SelectionForwardChar()
-{
-  var selCont = editorShell.selectionController;
-  selCont.characterMove(true, false);
-}
-
-function SelectionBackwardWord()
-{
-  var selCont = editorShell.selectionController;
-  selCont.wordMove(false, false);
-}
-
-function SelectionForwardWord()
-{
-  var selCont = editorShell.selectionController;
-  selCont.wordMove(true, false);
-}
-
-function SelectionPreviousLine()
-{
-  var selCont = editorShell.selectionController;
-  selCont.lineMove(false, false);
-}
-
-function SelectionNextLine()
-{
-  var selCont = editorShell.selectionController;
-  selCont.lineMove(true, false);
-}
-
-function SelectionPageUp()
-{
-  var selCont = editorShell.selectionController;
-  selCont.pageMove(false, false);
-}
-
-function SelectionPageDown()
-{
-  var selCont = editorShell.selectionController;
-  selCont.pageMove(true, false);
-}
-
-// --------------------------- Deletion --------------------------
-
-function EditorDeleteCharForward()
-{
-  editorShell.DeleteCharForward();
-}
-
-function EditorDeleteCharBackward()
-{
-  editorShell.DeleteCharBackward();
-}
-
-function EditorDeleteWordForward()
-{
-  editorShell.DeleteWordForward();
-}
-
-function EditorDeleteWordBackward()
-{
-  editorShell.DeleteWordBackward();
-}
-
-function EditorDeleteToEndOfLine()
-{
-  editorShell.DeleteToEndOfLine();
-}
-
 function FindAndSelectEditorWindowWithURL(urlToMatch)
 {
   if (!urlToMatch || urlToMatch.length == 0)
@@ -394,14 +306,6 @@ function EditorNewPlaintext()
                      "_blank",
                      "chrome,dialog=no,all",
                      "about:blank");
-}
-
-// returns wasSavedSuccessfully
-function EditorSaveDocument(doSaveAs, doSaveCopy)
-{
-  //TODO: Replace this with nsIFilePicker code.
-  // but should we try to do it all here or just use nsIFilePicker in EditorShell code?
-  editorShell.saveDocument(doSaveAs, doSaveCopy);
 }
 
 // Check for changes to document and allow saving before closing
