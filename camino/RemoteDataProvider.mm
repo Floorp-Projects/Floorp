@@ -198,6 +198,7 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
   nsCOMPtr<nsISupports> loaderContext = new StreamLoaderContext(loadListener, userData, target, inURI);
    
   nsLoadFlags loadFlags = (allowNetworking) ? nsIRequest::LOAD_NORMAL : nsIRequest::LOAD_FROM_CACHE;
+  loadFlags |= nsIRequest::LOAD_BACKGROUND;		// don't show progress or cookie dialogs
   nsCOMPtr<nsIStreamLoader> streamLoader;
   rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), uri, this, loaderContext, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
@@ -290,7 +291,7 @@ nsresult RemoteURILoadManager::RequestURILoad(const nsAString& inURI, id<RemoteL
     [NSNumber numberWithInt:status], RemoteDataLoadRequestResultKey,
                                      nil];
   
-  NSLog(@"remoteLoadDone with status %d and length %d", status, [data length]);
+  // NSLog(@"remoteLoadDone with status %d and length %d", status, [data length]);
   [[NSNotificationCenter defaultCenter] postNotificationName: RemoteDataLoadRequestNotificationName
       	object:target userInfo:notificationData];
 }
