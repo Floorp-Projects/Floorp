@@ -208,7 +208,6 @@ nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aDisplayCon
     msgUrl->SetMsgWindow(aMsgWindow);
     nntpUrl->SetNewsAction(nsINntpUrl::ActionDisplayArticle);
     nsCOMPtr<nsIMsgI18NUrl> i18nurl (do_QueryInterface(msgUrl));
-    nsCOMPtr <nsIMsgFolder> folder;
 
     i18nurl->SetCharsetOverRide(aCharsetOverride);
 
