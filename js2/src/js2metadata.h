@@ -104,6 +104,7 @@ public:
     Pond *nextPond;
 };
 
+
 class JS2Object {
 // Every object is either undefined, null, a Boolean,
 // a number, a string, a namespace, a compound attribute, a class, a method closure, 
@@ -235,6 +236,9 @@ class StaticMember : public Member {
 public:
     StaticMember(MemberKind kind) : Member(kind) { }
 
+    StaticMember *cloneContent; // Used during cloning operation    
+
+    virtual StaticMember *clone()       { ASSERT(false); return NULL; }
 };
 
 #define FUTURE_TYPE ((JS2Class *)(-1))
@@ -244,6 +248,8 @@ public:
     Variable() : StaticMember(Member::Variable), type(NULL), vb(NULL), value(JS2VAL_VOID), immutable(false) { }
     Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), vb(NULL), value(value), immutable(immutable) { }
 
+    virtual StaticMember *clone()   { return new Variable(type, value, immutable); }
+    
     JS2Class *type;                 // Type of values that may be stored in this variable, NULL if INACCESSIBLE, FUTURE_TYPE if pending
     VariableBinding *vb;            // The variable definition node, to resolve future types
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
@@ -254,6 +260,7 @@ public:
 class HoistedVar : public StaticMember {
 public:
     HoistedVar() : StaticMember(Member::HoistedVariable), value(JS2VAL_VOID), hasFunctionInitializer(false) { }
+
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 };
@@ -589,6 +596,7 @@ public:
 // Frames holding bindings for invoked functions
 class ParameterFrame : public Frame {
 public:
+    ParameterFrame(js2val thisObject, bool prototype) : Frame(ParameterKind), thisObject(thisObject), prototype(prototype) { }    
     ParameterFrame() : Frame(ParameterKind) { }
 
     Plurality plurality;
@@ -637,6 +645,9 @@ public:
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
 
+    void instantiateFrame(Frame *pluralFrame, Frame *singularFrame);
+
+
 private:
     Frame *firstFrame;
 };
@@ -644,8 +655,10 @@ private:
 
 class FunctionWrapper {
 public:
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
+        : bCon(new BytecodeContainer), unchecked(unchecked), compileFrame(compileFrame) { }
+
     BytecodeContainer   *bCon;
-    js2val              compileThis;    // The value of 'this' established at Validate time
     bool                unchecked;      // true if the function is untyped, non-method, normal
     ParameterFrame      *compileFrame;
 };
@@ -697,6 +710,15 @@ public:
     bool unused;                    // true if the unused attribute has been given
 };
 
+typedef std::map<const StringAtom *, BytecodeContainer::LabelID> LabelSet;
+class JumpTarget {
+public:
+    JumpTarget() : breakTargets(new LabelSet()), continueTargets(new LabelSet()) { }
+
+    LabelSet *breakTargets;
+    LabelSet *continueTargets;
+};
+
 struct MemberDescriptor {
     StaticMember *staticMember;
     QualifiedName *qname;
@@ -713,9 +735,9 @@ public:
     js2val EvalStmtList(Phase phase, StmtNode *p);
 
 
-    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt);
     void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
-    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
+    void ValidateStmt(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 

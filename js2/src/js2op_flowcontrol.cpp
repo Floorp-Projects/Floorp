@@ -31,19 +31,6 @@
 * file under either the NPL or the GPL.
 */
 
-    case eReturn: 
-        {
-            retval = pop();
-            return retval;
-	}
-        break;
-
-    case eReturnVoid: 
-        {
-            return retval;
-	}
-        break;
-
     case eBranchTrue:
         {
             retval = pop();

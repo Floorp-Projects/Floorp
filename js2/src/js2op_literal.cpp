@@ -35,7 +35,7 @@
 
         case eNumber: 
             {
-                push(DOUBLE_TO_JS2VAL(newDoubleValue(BytecodeContainer::getFloat64(pc))));
+                pushNumber(BytecodeContainer::getFloat64(pc));
                 pc += sizeof(float64);
             }
             break;

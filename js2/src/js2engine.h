@@ -92,6 +92,8 @@ enum JS2Op {
 
 };
 
+int getStackEffect(JS2Op op);
+
 
 class JS2Object;
 class JS2Metadata;
@@ -103,23 +105,11 @@ public:
     JS2Engine(World &world);
 
     js2val interpret(JS2Metadata *metadata, Phase execPhase, BytecodeContainer *targetbCon);
-
     js2val interpreterLoop();
 
-    void *gc_alloc_8();
-    float64 *newDoubleValue(float64 x);
-
+    // Use the pc map in the current bytecode container to get a source offset
     size_t errorPos();
 
-    js2val allocNumber(float64 x); 
-    js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
-
-#define MAX_EXEC_STACK (20)
-
-    void push(js2val x)         { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
-    js2val pop()                { ASSERT(sp > execStack); return *--sp; }
-    js2val top()                { return *(sp - 1); }
-    js2val top(int argCount)    { return *(sp - (1 + argCount)); }
 
     String *convertValueToString(js2val x);
     js2val convertValueToPrimitive(js2val x);
@@ -134,15 +124,27 @@ public:
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
+
+    // Current engine execution state
     uint8 *pc;
     BytecodeContainer *bCon;
     JS2Metadata *meta;
     Phase phase;
     World &world;
 
+
+
+    // A cache of f.p. values (XXX experimentally trying to reduce # of double pointers XXX)
     float64 *nanValue;
     float64 *float64Table[256];
+    js2val allocNumber(float64 x); 
+    js2val pushNumber(float64 x)        { js2val retval = allocNumber(x); push(retval); return retval; }
+    void *gc_alloc_8();
+    float64 *newDoubleValue(float64 x);
 
+
+
+    // Cached StringAtoms for handy access
     StringAtom &true_StringAtom;
     StringAtom &false_StringAtom;
     StringAtom &null_StringAtom;
@@ -151,15 +153,37 @@ public:
     StringAtom &private_StringAtom;
     StringAtom &function_StringAtom;
     StringAtom &object_StringAtom;
+
+    // The activation stack, when it's empty and a return is executed, the
+    // interpreter quits
+#define MAX_ACTIVATION_STACK (20)
+    struct ActivationFrame {
+        uint8 *pc;
+        BytecodeContainer *bCon;
+    };
+    void jsr(BytecodeContainer *bCon);
+    bool activationStackEmpty() { return (activationStackTop == activationStack); }
+    void rts();
+    ActivationFrame *activationStack;
+    ActivationFrame *activationStackTop;
     
+    
+    // The execution stack for expression evaluation, should be empty
+    // between statements.
+#define MAX_EXEC_STACK (20)
+
     js2val *execStack;
     js2val *sp;
     
+    void push(js2val x)         { ASSERT(sp < (execStack + MAX_EXEC_STACK)); *sp++ = x; }
+    js2val pop()                { ASSERT(sp > execStack); return *--sp; }
+    js2val top()                { return *(sp - 1); }
+    js2val top(int argCount)    { return *(sp - (1 + argCount)); }
+
+
+
 
     static JS2Object *defaultConstructor(JS2Engine *engine);
-
-
-    static int getStackEffect(JS2Op op);
 
 
 };

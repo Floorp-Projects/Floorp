@@ -71,15 +71,17 @@ namespace MetaData {
      * Validate the linked list of statement nodes beginning at 'p'
      */
     void JS2Metadata::ValidateStmtList(StmtNode *p) {
+        LabelSet stmtLbl;
+        JumpTarget jt;
         while (p) {
-            ValidateStmt(&cxt, &env, p);
+            ValidateStmt(&cxt, &env, p, &stmtLbl, &jt);
             p = p->next;
         }
     }
 
-    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p) {
+    void JS2Metadata::ValidateStmtList(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt) {
         while (p) {
-            ValidateStmt(cxt, env, p);
+            ValidateStmt(cxt, env, p, stmtLbl, jt);
             p = p->next;
         }
     }
@@ -89,38 +91,53 @@ namespace MetaData {
     /*
      * Validate an individual statement 'p', including it's children
      */
-    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p) {
+    void JS2Metadata::ValidateStmt(Context *cxt, Environment *env, StmtNode *p, LabelSet *stmtLbl, JumpTarget *jt) {
         switch (p->getKind()) {
         case StmtNode::block:
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                ValidateStmtList(cxt, env, b->statements);
+                b->compileFrame = new BlockFrame();
+                env->addFrame(b->compileFrame);
+                ValidateStmtList(cxt, env, b->statements, stmtLbl, jt);
+                env->removeTopFrame();
             }
             break;
         case StmtNode::label:
             {
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
-                ValidateStmt(cxt, env, l->stmt);
+                l->labelID = bCon->getLabel();
+                std::pair<LabelSet::iterator, bool> result = stmtLbl->insert(LabelSet::value_type(&l->name, l->labelID));
+                if (!result.second)
+                    reportError(Exception::syntaxError, "Duplicate statement label", p->pos);
+                ValidateStmt(cxt, env, l->stmt, stmtLbl, jt);
             }
             break;
         case StmtNode::If:
             {
                 UnaryStmtNode *i = checked_cast<UnaryStmtNode *>(p);
                 ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt);
+                ValidateStmt(cxt, env, i->stmt, stmtLbl, jt);
             }
             break;
         case StmtNode::IfElse:
             {
                 BinaryStmtNode *i = checked_cast<BinaryStmtNode *>(p);
                 ValidateExpression(cxt, env, i->expr);
-                ValidateStmt(cxt, env, i->stmt);
-                ValidateStmt(cxt, env, i->stmt2);
+                ValidateStmt(cxt, env, i->stmt, stmtLbl, jt);
+                ValidateStmt(cxt, env, i->stmt2, stmtLbl, jt);
             }
             break;
         case StmtNode::While:
             {
+            }
+            break;
+        case StmtNode::Return:
+            {
+                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                if (e->expr) {
+                    ValidateExpression(cxt, env, e->expr);
+                }
             }
             break;
         case StmtNode::Function:
@@ -163,13 +180,16 @@ namespace MetaData {
                               || (memberMod == Attribute::Virtual) 
                               || (memberMod == Attribute::Final))
                     compileThis = JS2VAL_INACCESSIBLE;
-                ParameterFrame *compileFrame = new ParameterFrame();
-                compileFrame->thisObject = compileThis;
-                compileFrame->prototype = prototype;
+                ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
                 Frame *topFrame = env->getTopFrame();
                 env->addFrame(compileFrame);
-//                ValidateStmt(cxt, env, f->function.parameters);
-                ValidateStmt(cxt, env, f->function.body);
+                VariableBinding *pb = f->function.parameters;
+                while (pb) {
+                    // XXX define a static binding for each parameter
+                    pb = pb->next;
+                }
+                ValidateStmt(cxt, env, f->function.body, stmtLbl, jt);
+                env->removeTopFrame();
                 if (unchecked 
                         && ((topFrame->kind == GlobalObjectKind)
                                         || (topFrame->kind == ParameterKind))
@@ -182,16 +202,14 @@ namespace MetaData {
                     case Attribute::Static:
                         {
                             FixedInstance *fInst = new FixedInstance(functionClass);
-                            fInst->fWrap = new FunctionWrapper();
-                            fInst->fWrap->compileThis = compileThis;
-                            fInst->fWrap->unchecked = unchecked;
+                            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+                            f->fWrap = fInst->fWrap;
                             Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
                             defineStaticMember(env, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                         }
                         break;
                     }
                 }
-                env->removeTopFrame();
             }
             break;
         case StmtNode::Var:
@@ -345,7 +363,7 @@ namespace MetaData {
                 defineStaticMember(env, classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                 if (classStmt->body) {
                     env->addFrame(c);
-                    ValidateStmtList(cxt, env, classStmt->body->statements);
+                    ValidateStmtList(cxt, env, classStmt->body->statements, stmtLbl, jt);
                     ASSERT(env->getTopFrame() == c);
                     env->removeTopFrame();
                 }
@@ -411,11 +429,16 @@ namespace MetaData {
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
+                env->addFrame(b->compileFrame);
+                bCon->emitOp(ePushFrame, p->pos);
+                bCon->addFrame(b->compileFrame);
                 StmtNode *bp = b->statements;
                 while (bp) {
                     EvalStmt(env, phase, bp);
                     bp = bp->next;
                 }
+                bCon->emitOp(ePopFrame, p->pos);
+                env->removeTopFrame();
             }
             break;
         case StmtNode::label:
@@ -456,13 +479,23 @@ namespace MetaData {
             {
             }
             break;
+        case StmtNode::Return:
+            {
+                ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
+                if (e->expr) {
+                    EvalExprNode(env, phase, e->expr);
+                    bCon->emitOp(eReturn, p->pos);
+                }
+            }
+            break;
         case StmtNode::Function:
             {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
                 BytecodeContainer *saveBacon = bCon;
-                f->fWrap->bCon = new BytecodeContainer();
                 bCon = f->fWrap->bCon;
+                env->addFrame(f->fWrap->compileFrame);
                 EvalStmt(env, phase, f->function.body);
+                env->removeTopFrame();
                 bCon = saveBacon;
             }
             break;
@@ -1131,7 +1164,7 @@ doBinary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eCall, p->pos);
+                bCon->emitOp(eCall, p->pos, -argCount + 1);    // pop argCount args and push a result
                 bCon->addShort(argCount);
             }
             break;
@@ -1147,7 +1180,7 @@ doBinary:
                     argCount++;
                     args = args->next;
                 }
-                bCon->emitOp(eNew, p->pos, -argCount + 1);    // pop argCount args and push a result
+                bCon->emitOp(eNew, p->pos, -argCount + 1);    // pop argCount args and push a new object
                 bCon->addShort(argCount);
             }
             break;
@@ -1259,6 +1292,42 @@ doBinary:
         }
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
+
+    // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
+    void Environment::instantiateFrame(Frame *pluralFrame, Frame *singularFrame)
+    {
+        StaticBindingIterator sbi, sbend;
+        for (sbi = pluralFrame->staticReadBindings.begin(), sbend = pluralFrame->staticReadBindings.end(); (sbi != sbend); sbi++) {
+            sbi->second->content->cloneContent = NULL;
+        }
+        for (sbi = pluralFrame->staticWriteBindings.begin(), sbend = pluralFrame->staticWriteBindings.end(); (sbi != sbend); sbi++) {
+            sbi->second->content->cloneContent = NULL;
+        }
+        for (sbi = pluralFrame->staticReadBindings.begin(), sbend = pluralFrame->staticReadBindings.end(); (sbi != sbend); sbi++) {
+            StaticBinding *sb;
+            StaticBinding *m = sbi->second;
+            if (m->content->cloneContent == NULL) {
+                m->content->cloneContent = m->content->clone();
+            }
+            sb = new StaticBinding(m->qname, m->content->cloneContent);
+            sb->xplicit = m->xplicit;
+            const StaticBindingMap::value_type e(sbi->first, sb);
+            singularFrame->staticReadBindings.insert(e);
+        }
+        for (sbi = pluralFrame->staticWriteBindings.begin(), sbend = pluralFrame->staticWriteBindings.end(); (sbi != sbend); sbi++) {
+            StaticBinding *sb;
+            StaticBinding *m = sbi->second;
+            if (m->content->cloneContent == NULL) {
+                m->content->cloneContent = new Variable();
+            }
+            sb = new StaticBinding(m->qname, m->content->cloneContent);
+            sb->xplicit = m->xplicit;
+            const StaticBindingMap::value_type e(sbi->first, sb);
+            singularFrame->staticWriteBindings.insert(e);
+        }
+
+    }
+
 
 
 
@@ -2059,6 +2128,7 @@ readClassProperty:
                     access = WriteAccess;
                     b = container->staticWriteBindings.lower_bound(multiname->name);
                     end = container->staticWriteBindings.upper_bound(multiname->name);
+                    continue;
                 }
                 else
                     break;
@@ -2160,6 +2230,7 @@ readClassProperty:
                     access = WriteAccess;
                     b = c->instanceWriteBindings.lower_bound(multiname->name);
                     end = c->instanceWriteBindings.upper_bound(multiname->name);
+                    continue;
                 }
                 else
                     break;

@@ -105,7 +105,7 @@ public:
     void emitBranch(JS2Op op, LabelID tgt, size_t pos)
                                             { emitOp(op, pos); addFixup(tgt); }
 
-    void adjustStack(JS2Op op)              { adjustStack(op, JS2Engine::getStackEffect(op)); }
+    void adjustStack(JS2Op op)              { adjustStack(op, getStackEffect(op)); }
     void adjustStack(JS2Op op, int32 effect);
 
     void addByte(uint8 v)                   { mBuffer.push_back(v); }

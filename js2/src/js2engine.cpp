@@ -241,10 +241,10 @@ JS2Engine::JS2Engine(World &world)
         float64Table[i] = NULL;
 
     sp = execStack = new js2val[MAX_EXEC_STACK];
-
+    activationStackTop = activationStack = new ActivationFrame[MAX_ACTIVATION_STACK];
 }
 
-int JS2Engine::getStackEffect(JS2Op op)
+int getStackEffect(JS2Op op)
 {
     switch (op) {
     case eReturn:
@@ -344,6 +344,28 @@ JS2Object *JS2Engine::defaultConstructor(JS2Engine *engine)
         else
             return new FixedInstance(c);
 }
+
+void JS2Engine::jsr(BytecodeContainer *new_bCon)
+{
+    ASSERT(activationStackTop < (activationStack + MAX_ACTIVATION_STACK));
+    activationStackTop->bCon = bCon;
+    activationStackTop->pc = pc;
+    activationStackTop++;
+
+    bCon = new_bCon;
+    pc = new_bCon->getCodeStart();
+
+}
+
+void JS2Engine::rts()
+{
+    ASSERT(activationStackTop > activationStack);
+    activationStackTop--;
+
+    bCon = activationStackTop->bCon;
+    pc = activationStackTop->pc;
+}
+
 
 
 }

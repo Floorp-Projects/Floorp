@@ -65,6 +65,8 @@ namespace JavaScript {
         class OverrideStatus;
         typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
         class FunctionWrapper;
+        class BlockFrame;
+        typedef uint32 LabelID;
     }
 #endif
 
@@ -550,6 +552,10 @@ namespace JavaScript {
                 AttributeStmtNode(pos, kind, attributes), statements(statements) {}
 
         void print(PrettyPrinter &f, bool noSemi) const;
+
+#ifdef EPIMETHEUS
+        MetaData::BlockFrame *compileFrame;      // used by backend
+#endif
     };
 
     struct LabelStmtNode: StmtNode {
@@ -560,6 +566,9 @@ namespace JavaScript {
                 StmtNode(pos, label), name(name), stmt(stmt) {ASSERT(stmt);}
 
         void print(PrettyPrinter &f, bool noSemi) const;
+#ifdef EPIMETHEUS
+        MetaData::LabelID labelID;
+#endif
     };
 
     struct UnaryStmtNode: ExprStmtNode {

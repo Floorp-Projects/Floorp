@@ -87,7 +87,7 @@
             if (fObj->kind == FixedInstanceKind) {
                 FixedInstance *fInst = checked_cast<FixedInstance *>(fObj);
                 FunctionWrapper *fWrap = fInst->fWrap;
-                js2val compileThis = fWrap->compileThis;
+                js2val compileThis = fWrap->compileFrame->thisObject;
                 js2val runtimeThis;
                 if (JS2VAL_IS_VOID(compileThis))
                     runtimeThis = JS2VAL_VOID;
@@ -101,37 +101,33 @@
                 }
                 Frame *runtimeFrame = new ParameterFrame();
                 meta->env.addFrame(runtimeFrame);
-//                instantiateFrame(fWrap->compileFrame, runtimeFrame, meta->env);
+                meta->env.instantiateFrame(fWrap->compileFrame, runtimeFrame);
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                
+                jsr(fWrap->bCon);
 
-
-/*
-proc call(this: OBJECT, args: ARGUMENTLIST, runtimeEnv: ENVIRONMENT, phase: PHASE): OBJECT
-if phase = compile then throw compileExpressionError end if;
-runtimeThis: OBJECTOPT;
-case compileThis of
-{none} do runtimeThis ® none;
-{inaccessible} do
-runtimeThis ® this;
-g: PACKAGE ª GLOBAL ® getPackageOrGlobalFrame(runtimeEnv);
-if prototype and runtimeThis å {null, undefined} and g å GLOBAL then
-runtimeThis ® g
-end if
-end case;
-runtimeFrame: PARAMETERFRAME ® new PARAMETERFRAME∑∑staticReadBindings: {},
-staticWriteBindings: {}, plurality: singular, this: runtimeThis, prototype: prototype,
-signature: compileFrame.signature““;
-instantiateFrame(compileFrame, runtimeFrame, [runtimeFrame] ! runtimeEnv);
-assignArguments(runtimeFrame, compileFrame.signature, unchecked, args);
-try
-Eval[Block]([runtimeFrame] ! runtimeEnv, undefined);
-throw RETURNEDVALUE∑value: undefined“
-catch x: SEMANTICEXCEPTION do
-if x å RETURNEDVALUE then return x.value else throw x end if
-end try
-
-*/
             }
             else
                 ASSERT(false);
         }
+        break;
+
+    case eReturn: 
+        {
+            retval = pop();
+            if (activationStackEmpty()) 
+                return retval;
+            else
+                rts();
+	}
+        break;
+
+    case eReturnVoid: 
+        {
+            if (activationStackEmpty()) 
+                return retval;
+            else
+                rts();
+	}
+        break;
+
