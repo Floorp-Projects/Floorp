@@ -1226,12 +1226,16 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
    }
    else
    {
+      PRInt32 Sweep = (end % 360) - (start % 360);
+
+      if (Sweep < 0) Sweep += 360;
+
       // draw an arc or a pie
       if( bFilled)
       {
          GpiBeginArea( mSurface->mPS, BA_BOUNDARY);
          GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0),
-                        MAKEFIXED(start,0), MAKEFIXED(end-start,0));
+                        MAKEFIXED(start,0), MAKEFIXED(Sweep,0));
          GpiEndArea( mSurface->mPS);
       }
       else
@@ -1244,7 +1248,7 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled,
          // now draw a real arc
          GpiSetLineType( mSurface->mPS, lLineType);
          GpiPartialArc( mSurface->mPS, (PPOINTL)&rcl, MAKEFIXED(1,0),
-                        MAKEFIXED(start,0), MAKEFIXED(end-start,0));
+                        MAKEFIXED(start,0), MAKEFIXED(Sweep,0));
       }
    }
 }
