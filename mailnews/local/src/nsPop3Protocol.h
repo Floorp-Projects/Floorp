@@ -225,7 +225,6 @@ typedef struct _Pop3ConData {
     PRBool pause_for_read;   		/* Pause now for next read? */
     
     PRBool command_succeeded;   /* did the last command succeed? */
-    char *command_response;     /* text of last response */
     PRInt32 first_msg;
 
     char *obuffer;              /* line buffer for output to msglib */
@@ -240,7 +239,6 @@ typedef struct _Pop3ConData {
                                    messages on the server). */
     PRInt32 last_accessed_msg;
     PRInt32 cur_msg_size;
-    char *output_buffer;
     PRBool truncating_cur_msg;  /* are we using top and uidl? */
     PRBool msg_del_started;     /* True if MSG_BeginMailDel...
                                  * called
@@ -298,18 +296,20 @@ public:
     
     virtual nsresult LoadUrl(nsIURL *aURL, nsISupports * aConsumer = nsnull);
 
-    const char* GetUsername() { return m_username; };
+    const char* GetUsername() { return m_username.GetBuffer(); };
     void SetUsername(const char* name);
 
-    const char* GetPassword() { return m_password; };
+    const char* GetPassword() { return m_password.GetBuffer(); };
     void SetPassword(const char* password);
 
 private:
 
     PRUint32 m_pop3CapabilityFlags;
-    char* m_username;
-    char* m_password;
+    nsString m_username;
+    nsString m_password;
     Pop3ConData* m_pop3ConData;
+	
+	nsString m_commandResponse;
 
 	virtual nsresult ProcessProtocolState(nsIURL* aURL, nsIInputStream* aInputStream, PRUint32 aLength); 
 	virtual nsresult CloseSocket();
