@@ -81,3 +81,26 @@ class CBrowserView : public CHTMLView, public CKeyUpReceiver
 };
 
 
+//
+// class CAdSpaceView
+//
+// A derivative of a browser view that fits inside the docked Aurora pane for showing
+// "useful Netcenter information" to the user. You and I both know what that means.
+//
+
+class CAdSpaceView : public CBrowserView
+{
+private:
+	typedef CBrowserView Inherited;
+
+public:
+
+	enum { class_ID = 'AdVw' };
+	
+							CAdSpaceView(LStream* inStream) 
+								: CBrowserView(inStream) { };
+	virtual					~CAdSpaceView() { };
+
+	virtual Boolean			DragIsAcceptable(DragReference inDragRef);
+
+}; // class CAdSpaceView

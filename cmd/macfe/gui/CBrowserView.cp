@@ -751,3 +751,21 @@ void CBrowserView::QueueFTPUpload(const FSSpec & spec, URL_Struct* request)
 		request->files_to_post = newFileList;
 		
 }
+
+
+#pragma mark -
+
+
+//
+// DragIsAcceptable
+//
+// Since this is smack-dab in the middle of the chrome and shows only what we want
+// it to show, don't let the user drag urls here (say from bookmarks) and launch them.
+//
+Boolean
+CAdSpaceView :: DragIsAcceptable ( DragReference inDragRef )
+{
+	return false;
+
+} // DragIsAcceptable
+
