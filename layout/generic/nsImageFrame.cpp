@@ -450,9 +450,8 @@ nsresult
 nsImageFrame::HandleLoadError(PRInt16 aImageStatus)
 {
   if (!NS_CP_ACCEPTED(aImageStatus) &&
-      aImageStatus != nsIContentPolicy::REJECT_TYPE) {
-    // The image is blocked, but not because all images are blocked.
-    // don't display any alt feedback in this case; we're blocking images
+      aImageStatus == nsIContentPolicy::REJECT_SERVER) {
+    // Don't display any alt feedback in this case; we're blocking images
     // from that site and don't care to see anything from them
     return NS_OK;
   }
@@ -1348,7 +1347,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
       
         if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
             (NS_CP_ACCEPTED(imageStatus) ||
-             imageStatus == nsIContentPolicy::REJECT_TYPE)) {
+             imageStatus != nsIContentPolicy::REJECT_SERVER)) {
           DisplayAltFeedback(aPresContext, aRenderingContext, 
                              (loadStatus & imgIRequest::STATUS_ERROR)
                              ? gIconLoad->mBrokenImage
