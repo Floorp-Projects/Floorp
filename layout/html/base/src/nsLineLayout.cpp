@@ -1249,9 +1249,14 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   aFrame->GetView(mPresContext, &view);
   if (view) {
     nsIViewManager  *vm;
-
     view->GetViewManager(vm);
-    vm->ResizeView(view, metrics.width, metrics.height);
+
+#if 0 // XXX This is the correct code. We'll turn it on later to mitigate risk.
+    vm->ResizeView(view, pfd->mCombinedArea);
+#else // imitate the old, wrong code
+    nsRect r(0, 0, metrics.width, metrics.height);
+    vm->ResizeView(view, r);
+#endif
     NS_RELEASE(vm);
   }
 

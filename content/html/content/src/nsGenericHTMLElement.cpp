@@ -1105,13 +1105,12 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
 
   if (scrollView) {
     const nsIView *view = nsnull;
-    nscoord xClip, yClip;
+    nsRect r;
 
     scrollView->GetClipView(&view);
+    view->GetBounds(r);
 
-    view->GetDimensions(&xClip, &yClip);
-
-    *aClientHeight = NSTwipsToIntPixels(yClip, t2p);
+    *aClientHeight = NSTwipsToIntPixels(r.height, t2p);
   }
 
   return rv;
@@ -1131,13 +1130,12 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
 
   if (scrollView) {
     const nsIView *view = nsnull;
-    nscoord xClip, yClip;
+    nsRect r;
 
     scrollView->GetClipView(&view);
+    view->GetBounds(r);
 
-    view->GetDimensions(&xClip, &yClip);
-
-    *aClientWidth = NSTwipsToIntPixels(xClip, t2p);
+    *aClientWidth = NSTwipsToIntPixels(r.width, t2p);
   }
 
   return rv;

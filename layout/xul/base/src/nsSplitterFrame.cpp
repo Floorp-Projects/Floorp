@@ -372,17 +372,14 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   nsIView* view;
   GetView(aPresContext, &view);
 
-  if (realTimeDrag) {
-     view->SetContentTransparency(PR_TRUE);
-     view->SetZIndex(kMaxZ);
-  }
-  else {
+  nsCOMPtr<nsIViewManager> viewManager;
+  view->GetViewManager(*getter_AddRefs(viewManager));
+  viewManager->SetViewContentTransparency(view, PR_TRUE);
+  viewManager->SetViewZIndex(view, PR_FALSE, kMaxZ);
+
+  if (!realTimeDrag) {
      // currently this only works on win32 and mac
      static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
-     nsCOMPtr<nsIViewManager> viewManager;
-     view->GetViewManager(*getter_AddRefs(viewManager));
-     viewManager->SetViewContentTransparency(view, PR_TRUE);
-     viewManager->SetViewZIndex(view, kMaxZ);
 
      // Need to have a widget to appear on top of other widgets.
      view->CreateWidget(kCChildCID);

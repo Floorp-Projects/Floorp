@@ -2226,8 +2226,11 @@ nsresult
 nsListControlFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay* aDisplay)
 {
   if (IsInDropDownMode() == PR_TRUE) {
+    nsCOMPtr<nsIViewManager> vm;
+    aView->GetViewManager(*getter_AddRefs(vm));
+    vm->SetViewFloating(aView, PR_TRUE);
+
     nsWidgetInitData widgetData;
-    aView->SetFloating(PR_TRUE);
     widgetData.mWindowType  = eWindowType_popup;
     widgetData.mBorderStyle = eBorderStyle_default;
     
@@ -2297,13 +2300,13 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
   //nsSize size;
   //GetSize(size);
 
-  nscoord width;
-  nscoord height;
-  view->GetDimensions(&width, &height);
+  //nscoord width;
+  //nscoord height;
+  //view->GetDimensions(&width, &height);
 
-  if (width != mRect.width || height != mRect.height) {
+  //if (width != mRect.width || height != mRect.height) {
     //viewManager->ResizeView(view, mRect.width, mRect.height);
-  }
+  //}
   nscoord x;
   nscoord y;
   view->GetPosition(&x, &y);

@@ -639,7 +639,8 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       menuPopup->GetView(mPresContext, &view);
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
-      viewManager->ResizeView(view, rect.width, rect.height);
+      rect.x = rect.y = 0;
+      viewManager->ResizeView(view, rect);
 
       // make sure the scrolled window is at 0,0
       if (mLastPref.height <= rect.height) {
@@ -652,7 +653,7 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
         }
       }
 
-      viewManager->UpdateView(view, nsRect(0,0, rect.width, rect.height), NS_VMREFRESH_IMMEDIATE);
+      viewManager->UpdateView(view, rect, NS_VMREFRESH_IMMEDIATE);
       viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
 
   } else {
@@ -663,7 +664,8 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
       viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-      viewManager->ResizeView(view, 0, 0);
+      nsRect r(0, 0, 0, 0);
+      viewManager->ResizeView(view, r);
     }
     // set here so hide chain can close the menu as well.
     mMenuOpen = PR_FALSE;
@@ -813,7 +815,11 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       nsIView* view = nsnull;
       menuPopup->GetView(mPresContext, &view);
-      view->SetVisibility(nsViewVisibility_kHide);
+      nsCOMPtr<nsIViewManager> vm;
+      view->GetViewManager(*getter_AddRefs(vm));
+      if (vm) {
+        vm->SetViewVisibility(view, nsViewVisibility_kHide);
+      }
       menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
       nsRect rect;
       menuPopup->GetBounds(rect);
@@ -991,7 +997,8 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
       popupChild->GetView(aState.GetPresContext(), &view);
       nsCOMPtr<nsIViewManager> viewManager;
       view->GetViewManager(*getter_AddRefs(viewManager));
-      viewManager->ResizeView(view, bounds.width, bounds.height);
+      nsRect r(0, 0, bounds.width, bounds.height);
+      viewManager->ResizeView(view, r);
     }
 
   }

@@ -293,8 +293,9 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
     result = view->Init(viewMan, boundBox, parView);
-    view->SetContentTransparency(PR_TRUE);
-    viewMan->InsertChild(parView, view, 0);
+    viewMan->SetViewContentTransparency(view, PR_TRUE);
+    // XXX put the view last in document order until we know how to do better
+    viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
     SetView(aPresContext, view);
 
     const nsStyleVisibility* vis = (const nsStyleVisibility*) mStyleContext->GetStyleData(eStyleStruct_Visibility);

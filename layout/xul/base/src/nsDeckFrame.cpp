@@ -230,7 +230,8 @@ nsDeckFrame::HideBox(nsIPresContext* aPresContext, nsIBox* aBox)
     nsCOMPtr<nsIViewManager> viewManager;
     view->GetViewManager(*getter_AddRefs(viewManager));
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    viewManager->ResizeView(view, 0, 0);
+    nsRect r(0, 0, 0, 0);
+    viewManager->ResizeView(view, r);
   }
 }
 
@@ -247,7 +248,8 @@ nsDeckFrame::ShowBox(nsIPresContext* aPresContext, nsIBox* aBox)
   if (view) {
     nsCOMPtr<nsIViewManager> viewManager;
     view->GetViewManager(*getter_AddRefs(viewManager));
-    viewManager->ResizeView(view, rect.width, rect.height);
+    rect.x = rect.y = 0;
+    viewManager->ResizeView(view, rect);
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 }
