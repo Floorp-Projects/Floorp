@@ -59,6 +59,23 @@ CQaUtils::~CQaUtils()
 // ***************** Local QA Methods ******************
 // ***********************************************************************
 
+
+void CQaUtils::RvTestResult(nsresult rv, const char *pLine, int displayMethod)
+{
+	// note: default displayMethod = 1 in .h file
+
+	CString strLine = pLine;
+	char theOutputLine[100];
+
+	if (NS_FAILED(rv))
+	   strLine += " failed.";
+	else
+	   strLine += " passed.";
+
+	strcpy(theOutputLine, strLine);
+	QAOutput(theOutputLine, displayMethod);
+}
+
 void CQaUtils::WriteToOutputFile(const char *pLine) 
 { 
     CStdioFile myFile; 
@@ -84,22 +101,6 @@ void CQaUtils::WriteToOutputFile(const char *pLine)
     } 
 } 
 
-void CQaUtils::RvTestResult(nsresult rv, const char *pLine, int displayMethod)
-{
-	// note: default displayMethod = 1 in .h file
-
-   CString strLine = pLine;
-   char theOutputLine[100];
-
-   if (NS_FAILED(rv))
-	   strLine += " failed.";
-   else
-	   strLine += " passed.";
-
-   strcpy(theOutputLine, strLine);
-   QAOutput(theOutputLine, displayMethod);
-}
-
 void CQaUtils::QAOutput(const char *pLine, int displayMethod)
 {
 	// note: default displayMethod = 1 in .h file
@@ -118,12 +119,12 @@ void CQaUtils::QAOutput(const char *pLine, int displayMethod)
 //#endif
 }
 
-void CQaUtils::FormatAndPrintOutput(const char *theOutput, const char *theVar, int outputMode)
+void CQaUtils::FormatAndPrintOutput(const char *theInput, const char *theVar, int outputMode)
 {
 	nsCString outStr;
 	CString strMsg;
 
-	outStr = theOutput;
+	outStr = theInput;
 	outStr += theVar;
 
 	strMsg = outStr.get();
@@ -143,7 +144,9 @@ void CQaUtils::FormatAndPrintOutput(const char *theOutput, const char *theVar, i
 	}
 }
 
-void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg)
+// stringMsg is returned in case embeddor wishes to use it in the calling method.
+void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg,
+						   int displayMethod)
 {
     nsXPIDLString theReqName;
 	nsresult rv;
@@ -152,10 +155,29 @@ void CQaUtils::RequestName(nsIRequest *request, nsCString &stringMsg)
 	if(NS_SUCCEEDED(rv))
 	{
 		stringMsg.AssignWithConversion(theReqName);
-		FormatAndPrintOutput("The request name = ", stringMsg.get(), 1);
+		FormatAndPrintOutput("nsIRequest: The request name = ", stringMsg.get(), displayMethod);
 	}
 	else
-		QAOutput("We didn't get the request name.");
+		QAOutput("nsIRequest: We didn't get the request name.", displayMethod);
 
 }
 
+void CQaUtils::WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
+								  int displayMethod)
+{
+	nsresult rv;
+	nsCString totalStr1, totalStr2;
+	nsCOMPtr<nsIDOMWindow> theDOMWindow;
+
+	totalStr1 = inString;
+	totalStr1 += ": Didn't get the DOMWindow. Test failed.";
+
+	totalStr2 = inString;
+	totalStr2 += ": nsIWebProgress:DOMWindow attribute test";
+
+	rv = progress->GetDOMWindow(getter_AddRefs(theDOMWindow));
+	if (!theDOMWindow)
+		QAOutput(totalStr1.get(), displayMethod);
+	else
+		RvTestResult(rv, totalStr2, displayMethod);
+}

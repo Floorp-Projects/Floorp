@@ -83,15 +83,12 @@ public:
 	// Generated message map functions
 protected:
 	//{{AFX_MSG(CTests)
-
 	afx_msg void OnUpdateNavBack(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateNavForward(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateNavStop(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCut(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateCopy(CCmdUI* pCmdUI);
 	afx_msg void OnUpdatePaste(CCmdUI* pCmdUI);
-
-	// qa tests
 	afx_msg void OnTestsChangeUrl();
 	afx_msg void OnTestsGlobalHistory();
 	afx_msg void OnTestsCreateFile();
@@ -101,11 +98,12 @@ protected:
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnInterfacesNsishistory();
 	afx_msg void OnInterfacesNsiwebnav();
+	afx_msg void OnInterfacesNsirequest();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
+	afx_msg void OnToolsTestYourMethod();
+	afx_msg void OnToolsTestYourMethod2();
 	afx_msg void OnVerifybugs70228();
-
-	//DHARMA
     afx_msg void OnPasteTest();
     afx_msg void OnCopyTest();
     afx_msg void OnSelectAllTest();
@@ -115,8 +113,6 @@ protected:
     afx_msg void canCopySelectionTest();
     afx_msg void canCutSelectionTest();
     afx_msg void canPasteTest();
-	//DHARMA
-
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
@@ -131,8 +127,8 @@ protected:
 	// individual nsISHistory tests
 	void GetCountTest(nsISHistory *, PRInt32 *);
 	void GetIndexTest(nsISHistory *, PRInt32 *);
-	void GetMaxLength(nsISHistory *, PRInt32);
-	void SetMaxLength(nsISHistory *, PRInt32 *);
+	void GetMaxLengthTest(nsISHistory *, PRInt32 *);
+	void SetMaxLengthTest(nsISHistory *, PRInt32);
 	void GetEntryAtIndexTest(nsISHistory *, nsIHistoryEntry *, PRInt32 theIndex);
 	void GetURIHistTest(nsIHistoryEntry *);
 	void GetTitleHistTest(nsIHistoryEntry *);
@@ -153,6 +149,16 @@ protected:
 	void GetDocumentTest(void);
 	void GetCurrentURITest(void);
 	void GetSHTest(void);
+
+public:
+	// individual nsIRequest tests
+	void static IsPendingReqTest(nsIRequest *);
+	void static GetStatusReqTest(nsIRequest *);
+	void static SuspendReqTest(nsIRequest *);
+	void static ResumeReqTest(nsIRequest *);
+	void static CancelReqTest(nsIRequest *);
+	void static SetLoadGroupTest(nsIRequest *, nsILoadGroup *);
+	void static GetLoadGroupTest(nsIRequest *);
 };
 
 #endif //_TESTS_H

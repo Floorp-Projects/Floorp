@@ -95,9 +95,11 @@
 #include "nsIGlobalHistory.h"
 #include "nsIBrowserHistory.h"
 #include "nsILocalFile.h"
-
 #include "nsIProfile.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIURIContentListener.h"
+
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  *   David Epstein <depstein@netscape.com> 
+ *   Dharma Sirnapalli <dsirnapalli@netscape.com>
+ *	 Ashish Bhatt <ashishbhatt@netscape.com>
  */
 
 // File Overview....
@@ -48,7 +50,6 @@ static UINT WM_FINDMSG = ::RegisterWindowMessage(FINDMSGSTRING);
 
 BEGIN_MESSAGE_MAP(CTests, CWnd)
 	//{{AFX_MSG_MAP(CTests)
-
 	ON_COMMAND(ID_TESTS_CHANGEURL, OnTestsChangeUrl)
 	ON_COMMAND(ID_TESTS_GLOBALHISTORY, OnTestsGlobalHistory)
 	ON_COMMAND(ID_TESTS_CREATEFILE, OnTestsCreateFile)
@@ -58,10 +59,11 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSIFILE, OnInterfacesNsifile)
 	ON_COMMAND(ID_INTERFACES_NSISHISTORY, OnInterfacesNsishistory)
 	ON_COMMAND(ID_INTERFACES_NSIWEBNAV, OnInterfacesNsiwebnav)
+	ON_COMMAND(ID_INTERFACES_NSIREQUEST, OnInterfacesNsirequest)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
-
-	// DHARMA
+	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
+	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
     ON_COMMAND(ID_CLIPBOARDCMD_PASTE, OnPasteTest)
     ON_COMMAND(ID_CLIPBOARDCMD_COPYSELECTION, OnCopyTest)
     ON_COMMAND(ID_CLIPBOARDCMD_SELECTALL, OnSelectAllTest)
@@ -71,8 +73,6 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCOPYSELECTION, canCopySelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANCUTSELECTION, canCutSelectionTest)
     ON_COMMAND(ID_CLIPBOARDCMD_CANPASTE, canPasteTest)
-	// DHARMA
-
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -93,7 +93,7 @@ CTests::~CTests()
 }
 
 
-// de: Start QA test cases here
+// depstein: Start QA test cases here
 // *********************************************************
 // *********************************************************
 
@@ -216,7 +216,6 @@ void CTests::OnTestsGlobalHistory()
 	else
 		CQaUtils::QAOutput("IsVisited() and AddPage() tests not executed.", 1);
 }
-
 
 
 // *********************************************************
@@ -370,6 +369,18 @@ void CTests::OnToolsRemoveAllGH()
 }
 
 // ***********************************************************************
+void CTests::OnToolsTestYourMethod()
+{
+	// place your test code here
+}
+
+// ***********************************************************************
+void CTests::OnToolsTestYourMethod2()
+{
+	// place your test code here
+}
+
+// ***********************************************************************
 // ************************** Interface Tests ****************************
 // ***********************************************************************
 
@@ -506,7 +517,7 @@ void CTests::OnInterfacesNsishistory()
    nsresult rv;
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 100;
+   PRInt32 theMaxLength = 1;
 
    CString shString;
 
@@ -537,13 +548,10 @@ void CTests::OnInterfacesNsishistory()
    GetIndexTest(theSessionHistory, &theIndex);
 
 		// test maxLength attribute in nsISHistory.idl
-   GetMaxLength(theSessionHistory, theMaxLength);
-   SetMaxLength(theSessionHistory, &theMaxLength);
+   SetMaxLengthTest(theSessionHistory, theMaxLength);
+   GetMaxLengthTest(theSessionHistory, &theMaxLength);
 
-	CQaUtils::QAOutput("Start nsiHistoryEntry tests.", 2);
-
-	strMsg.Format("numEntries = %d", numEntries); 
-	AfxMessageBox(strMsg); 
+	CQaUtils::QAOutput("Start nsiHistoryEntry tests.", 2); 
 
 		// get theHistoryEntry object
 	theSessionHistory->GetEntryAtIndex(0, PR_FALSE, getter_AddRefs(theHistoryEntry));
@@ -602,8 +610,11 @@ void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
     rv = theSessionHistory->GetCount(numEntries);
 	if (!(*numEntries))
 		CQaUtils::QAOutput("numEntries for GetCount() invalid. Test failed.", 1);
-	else
+	else {
+		strMsg.Format("numEntries = %d", *numEntries); 
+		AfxMessageBox(strMsg);
 		CQaUtils::RvTestResult(rv, "GetCount() (count attribute) test", 2);
+	}
 }
 
 void CTests::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex)
@@ -615,19 +626,22 @@ void CTests::GetIndexTest(nsISHistory *theSessionHistory, PRInt32 *theIndex)
 		CQaUtils::RvTestResult(rv, "GetIndex() (index attribute) test", 2);
 }
 
-void CTests::GetMaxLength(nsISHistory *theSessionHistory, PRInt32 theMaxLength)
+void CTests::SetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 theMaxLength)
 {
 	rv = theSessionHistory->SetMaxLength(theMaxLength);
 	CQaUtils::RvTestResult(rv, "SetMaxLength() (MaxLength attribute) test", 2);
 }
 
-void CTests::SetMaxLength(nsISHistory *theSessionHistory, PRInt32 *theMaxLength)
+void CTests::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theMaxLength)
 {
 	rv = theSessionHistory->GetMaxLength(theMaxLength);
 	if (!(*theMaxLength))
 		CQaUtils::QAOutput("theMaxLength for GetMaxLength() invalid. Test failed.", 1);
-	else
+	else {
+		strMsg.Format("theMaxLength = %d", *theMaxLength); 
+		AfxMessageBox(strMsg); 
 		CQaUtils::RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 2);
+	}
 }
 
 /*
@@ -760,7 +774,7 @@ void CTests::OnInterfacesNsiwebnav()
    ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
 
    LoadUriTest("http://www.cisco.com/", nsIWebNavigation::LOAD_FLAGS_MASK);
-// ReloadTest(nsIWebNavigation::LOAD_FLAGS_MASK);
+   ReloadTest(nsIWebNavigation::LOAD_FLAGS_MASK);
 
    LoadUriTest("http://www.netscape.com/", nsIWebNavigation::LOAD_FLAGS_IS_LINK);
    LoadUriTest("http://www.aol.com/", nsIWebNavigation::LOAD_FLAGS_BYPASS_HISTORY);
@@ -779,7 +793,7 @@ void CTests::OnInterfacesNsiwebnav()
 }
 
 // ***********************************************************************
-// Individual nsISHistory tests
+// Individual nsIWebNavigation tests
 
 void CTests::CanGoBackTest()
 {
@@ -915,17 +929,23 @@ void CTests::StopUriTest(char *theUrl)
 
 void CTests::GetDocumentTest()
 {
-   nsCOMPtr<nsIDOMDocument> theDocument; 
+   nsCOMPtr<nsIDOMDocument> theDocument;
+   nsCOMPtr<nsIDOMDocumentType> theDocType;
+   
    rv = qaWebNav->GetDocument(getter_AddRefs(theDocument));
    if (!theDocument)
 	  CQaUtils::QAOutput("We didn't get the document. Test failed.", 2);
    else
 	  CQaUtils::RvTestResult(rv, "GetDocument() test", 2);
+
+   rv = theDocument->GetDoctype(getter_AddRefs(theDocType));
+   CQaUtils::RvTestResult(rv, "nsIDOMDocument::GetDoctype() for nsIWebNav test", 2);
 }
 
 void CTests::GetCurrentURITest()
 {
    nsCOMPtr<nsIURI> theUri;
+
    rv = qaWebNav->GetCurrentURI(getter_AddRefs(theUri));
    if (!theUri)
       CQaUtils::QAOutput("We didn't get the URI. Test failed.", 2);
@@ -934,18 +954,130 @@ void CTests::GetCurrentURITest()
 
    char *uriSpec;
    rv = theUri->GetSpec(&uriSpec);
+   CQaUtils::RvTestResult(rv, "nsIURI::GetSpec() for nsIWebNav test", 1);
 
-   CQaUtils::FormatAndPrintOutput("the uri = ", uriSpec, 2);
+   CQaUtils::FormatAndPrintOutput("the nsIWebNav uri = ", uriSpec, 2);
 }
 
 void CTests::GetSHTest()
 {
+   PRInt32 numOfElements;
+
    nsCOMPtr<nsISHistory> theSessionHistory;
    rv = qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
    if (!theSessionHistory)
       CQaUtils::QAOutput("We didn't get the session history. Test failed.", 2);
    else
 	  CQaUtils::RvTestResult(rv, "GetSessionHistory() test", 2);
+
+   rv = theSessionHistory->GetCount(&numOfElements);
+   CQaUtils::RvTestResult(rv, "nsISHistory::GetCount() for nsIWebNav test", 1);
+
+   strMsg.Format("the sHist entry count = %d", numOfElements); 
+   AfxMessageBox(strMsg); 
+}
+
+// ***********************************************************************
+// ***********************************************************************
+//  nsIRequest iface
+
+
+void CTests::OnInterfacesNsirequest() 
+{
+	CUrlDialog myDialog;
+	nsCString stringMsg;
+
+	CQaUtils::QAOutput("Begin nsIRequest tests.", 2);
+
+	if (myDialog.DoModal() == IDOK)
+	{
+		// add web prog listener to track requests & invoke nsIRequest methods
+		nsWeakPtr weakling(
+        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
+		qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
+
+		// invoke a request. request picked up in OnStateChange().
+		strcpy(theUrl, myDialog.m_urlfield);
+		qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
+						  nsIWebNavigation::LOAD_FLAGS_NONE);
+	}
+
+	// note: individual nsIRequest tests are found in BrowserImplWebProgLstner.cpp, OnStateChange().
+	
+}
+
+void CTests::IsPendingReqTest(nsIRequest *request)
+{
+	PRBool	  reqPending;
+	nsresult rv;
+
+	rv = request->IsPending(&reqPending);
+    CQaUtils::RvTestResult(rv, "nsIRequest::IsPending() rv test", 1);
+
+	if (!reqPending)
+		CQaUtils::QAOutput("Pending request = false.", 1);
+	else
+		CQaUtils::QAOutput("Pending request = true.", 1);
+}
+
+void CTests::GetStatusReqTest(nsIRequest *request)
+{
+	nsresult	theStatusError;
+	nsresult	rv;
+
+	rv = request->GetStatus(&theStatusError);
+    CQaUtils::RvTestResult(rv, "nsIRequest::GetStatus() test", 1);
+    CQaUtils::RvTestResult(rv, "the returned status error test", 1);
+
+} 
+
+void CTests::SuspendReqTest(nsIRequest *request)
+{
+	nsresult	rv;
+
+	rv = request->Suspend();
+    CQaUtils::RvTestResult(rv, "nsIRequest::Suspend() test", 1);
+}
+
+void CTests::ResumeReqTest(nsIRequest *request)
+{
+	nsresult	rv;
+
+	rv = request->Resume();
+    CQaUtils::RvTestResult(rv, "nsIRequest::Resume() test", 1);
+}
+
+void CTests::CancelReqTest(nsIRequest *request)
+{
+	nsresult	rv;
+	nsresult	status = NS_BINDING_ABORTED;
+
+	rv = request->Cancel(status);
+    CQaUtils::RvTestResult(rv, "nsIRequest::Cancel() rv test", 1);
+    CQaUtils::RvTestResult(status, "nsIRequest::Cancel() status test", 1);
+}
+
+void CTests::SetLoadGroupTest(nsIRequest *request,
+							  nsILoadGroup *theLoadGroup)
+{
+	nsresult	rv;
+	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
+
+	rv = request->SetLoadGroup(theLoadGroup);
+    CQaUtils::RvTestResult(rv, "nsIRequest::SetLoadGroup() rv test", 1);
+}
+
+void CTests::GetLoadGroupTest(nsIRequest *request)
+{
+	nsCOMPtr<nsILoadGroup> theLoadGroup;
+	nsresult	rv;
+	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
+
+	rv = request->GetLoadGroup(getter_AddRefs(theLoadGroup));
+    CQaUtils::RvTestResult(rv, "nsIRequest::GetLoadGroup() rv test", 1);
+
+	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
+    CQaUtils::RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
 }
 
 // ***********************************************************************
@@ -1014,7 +1146,7 @@ void CTests::canCopySelectionTest()
     if(canCopySelection)
                 AfxMessageBox("The selection you made Can be copied");
         else
-                AfxMessageBox("Either you didnot make a selection or The selection you made Cannot be copied");
+                AfxMessageBox("Either you did not make a selection or The selection you made Cannot be copied");
 }
 
 // Checking the canCutSelection() method.
@@ -1028,7 +1160,7 @@ void CTests::canCutSelectionTest()
     if(canCutSelection)
                 AfxMessageBox("The selection you made Can be cut");
         else
-                AfxMessageBox("Either you didnot make a selection or The selection you made Cannot be cut");
+                AfxMessageBox("Either you did not make a selection or The selection you made Cannot be cut");
 }
 
 // Checking the canPaste() method.
@@ -1077,4 +1209,5 @@ nsCOMPtr<nsIHelperAppLauncher>
 	rv = myHALD->show(myHal, mySupp);
 */	
 }
+
 

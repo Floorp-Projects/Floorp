@@ -8,12 +8,12 @@ CFG=mfcembed - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "mfcembed.mak".
+!MESSAGE NMAKE /f "testembed.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "mfcembed.mak" CFG="mfcembed - Win32 Debug"
+!MESSAGE NMAKE /f "testembed.mak" CFG="mfcembed - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -122,14 +122,6 @@ SOURCE=.\Dialogs.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\MfcEmbed.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MfcEmbed.rc
-# End Source File
-# Begin Source File
-
 SOURCE=.\MostRecentUrls.cpp
 # End Source File
 # Begin Source File
@@ -155,6 +147,14 @@ SOURCE=.\QaUtils.cpp
 # Begin Source File
 
 SOURCE=.\StdAfx.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TestEmbed.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\testembed.rc
 # End Source File
 # Begin Source File
 
@@ -194,10 +194,6 @@ SOURCE=.\IBrowserFrameGlue.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\MfcEmbed.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\MostRecentUrls.h
 # End Source File
 # Begin Source File
@@ -227,6 +223,10 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\TestEmbed.h
 # End Source File
 # Begin Source File
 
