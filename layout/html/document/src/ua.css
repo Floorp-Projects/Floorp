@@ -30,15 +30,19 @@ BODY {
 
 P {
   display: block;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 ADDRESS {
   display: block;
   font-style: italic;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 BLOCKQUOTE {
   display: block;
-  margin-left: .25in;
-  margin-right: .25in;
+  margin-left: 40px;
+  margin-right: 40px;
 }
 CENTER {
   display: block;
@@ -48,36 +52,50 @@ CENTER {
 }
 DIV {
   display: block;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 H1 {
   display: block;
   font-size: x-large;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 H2 {
   display: block;
   font-size: large;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 H3 {
   display: block;
   font-size: medium;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 H4 {
   display: block;
   font-size: small;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 H5 {
   display: block;
   font-size: x-small;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 H6 {
   display: block;
   font-size: xx-small;
   font-weight: bold;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 LAYER {
   display: block;
@@ -88,14 +106,20 @@ LISTING {
   font-family: monospace;
   font-size: small;
   white-space: pre;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 PLAINTEXT, XMP, PRE {
   display: block;
   font-family: monospace;
   white-space: pre;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 MULTICOL {
   display: block;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 
 // Tables
@@ -256,28 +280,57 @@ NOBR {
 
 // Lists
 
-UL {
+UL, MENU, DIR {
   display: block;
-  padding-left: 40px;
+  margin-left: 20px;
+  padding-left: 20px;
   list-style-type: disc;
 }
 OL {
   display: block;
-  padding-left: 40px;
+  margin-left: 20px;
+  padding-left: 20px;
   list-style-type: decimal;
 }
-OL UL, UL UL  {
+
+// 2 deep unordered lists use a circle
+OL UL,   UL UL,   MENU UL,   DIR UL,
+OL MENU, UL MENU, MENU MENU, DIR MENU,
+OL DIR,  UL DIR,  MENU DIR,  DIR DIR
+{
   list-style-type: circle;
 }
-UL UL UL,  UL OL UL, OL UL UL,  OL OL UL {
+
+// 3 deep (or more) unordered lists use a square
+OL OL UL,   OL UL UL,   OL MENU UL,   OL DIR UL,
+OL OL MENU, OL UL MENU, OL MENU MENU, OL DIR MENU,
+OL OL DIR,  OL UL DIR,  OL MENU DIR,  OL DIR DIR,
+
+UL OL UL,   UL UL UL,   UL MENU UL,   UL DIR UL,
+UL OL MENU, UL UL MENU, UL MENU MENU, UL DIR MENU,
+UL OL DIR,  UL UL DIR,  UL MENU DIR,  UL DIR DIR,
+
+MENU OL UL,   MENU UL UL,   MENU MENU UL,   MENU DIR UL,
+MENU OL MENU, MENU UL MENU, MENU MENU MENU, MENU DIR MENU,
+MENU OL DIR,  MENU UL DIR,  MENU MENU DIR,  MENU DIR DIR,
+
+DIR OL UL,   DIR UL UL,   DIR MENU UL,   DIR DIR UL,
+DIR OL MENU, DIR UL MENU, DIR MENU MENU, DIR DIR MENU,
+DIR OL DIR,  DIR UL DIR,  DIR MENU DIR,  DIR DIR DIR
+{
   list-style-type: square;
 }
+
 LI {
   display: list-item;
   list-style-position: inside;
+  margin-bottom: 0;
+  margin-top: 0;
 }
-UL LI, OL LI {
+UL LI, OL LI, MENU LI, DIR LI {
   list-style-position: outside;
+  margin-left: -20px;
+  padding-left: 20px;
 }
 UL UL, UL OL, OL UL, OL OL  {
   margin-top: 0;
