@@ -117,26 +117,6 @@ public:
   }
 };
 
-// an operator matches with another if its string is the same as the 
-// other's string and its flags constitute a subset of the other's flags.
-class OperatorMatch: public nsAVLNodeFunctor {
-public:
-  OperatorMatch(const nsString& aString, const nsOperatorFlags aFlags)
-    : mStr(aString), 
-      mFlags(aFlags) 
-  {
-  }
-  virtual void* operator()(void* aItem)
-  {
-    OperatorNode* node = (OperatorNode*)aItem;
-    return ((node->mStr.Compare(mStr, PR_FALSE) == 0) &&
-            (node->mFlags & mFlags) == mFlags) ?
-      aItem : nsnull;
-  }
-protected:
-  nsString        mStr;
-  nsOperatorFlags mFlags;
-};
 
 
 static PRInt32             gTableRefCount = 0;
@@ -222,9 +202,10 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
 
     if (found) {
       NS_ASSERTION(found->mStr.Equals(aOperator), "bad tree");
-      *aFlags = found->mFlags;
       *aLeftSpace = found->mLeftSpace;
       *aRightSpace = found->mRightSpace;
+      *aFlags &= 0xFFFFFFFC; // (= ~0x3) clear the form bits
+      *aFlags |= found->mFlags; // just add bits without overwriting
       return PR_TRUE;
     }
   }
@@ -232,26 +213,48 @@ nsMathMLOperators::LookupOperator(const nsString&       aOperator,
 }
 
 PRBool
-nsMathMLOperators::LookupOperator(const nsCString&      aOperator, 
-                                  const nsOperatorFlags aForm,
-                                  nsOperatorFlags*      aFlags,
-                                  float*                aLeftSpace,
-                                  float*                aRightSpace)
-{
-  return LookupOperator(aOperator,aForm,aFlags,aLeftSpace,aRightSpace);
-}
-
-PRBool
-nsMathMLOperators::MatchOperator(const nsString&       aOperator, 
-                                 const nsOperatorFlags aFlags)
+nsMathMLOperators::IsMutableOperator(const nsString& aOperator)
 {
   NS_ASSERTION(gOperatorTree, "no lookup table, needs addref");
   if (gOperatorTree) {
-    OperatorMatch functor(aOperator, aFlags);
-    return PRBool(gOperatorTree->FirstThat(functor));
+
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX] = nsnull;
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX] = nsnull;
+    gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX] = nsnull;
+
+    OperatorNode node(aOperator, 0);
+    OperatorNode* found = (OperatorNode*)gOperatorTree->FindItem(&node);
+
+    // if the operator was found, gOperatorFound contains all the variants 
+    // of the operator. check if there is one that meets the criteria
+
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_INFIX];
+    if (found && 
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
+    {
+      return PR_TRUE;
+    }
+
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_POSTFIX];
+    if (found && 
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
+    {
+      return PR_TRUE;
+    }
+
+    found = gOperatorFound[NS_MATHML_OPERATOR_FORM_PREFIX];
+    if (found && 
+        (NS_MATHML_OPERATOR_IS_STRETCHY(found->mFlags) || 
+         NS_MATHML_OPERATOR_IS_LARGEOP(found->mFlags)))
+    {
+      return PR_TRUE;
+    }
   }
   return PR_FALSE;
 }
+
 
 #if 0
 // DEBUG

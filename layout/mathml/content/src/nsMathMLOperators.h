@@ -53,7 +53,41 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_MINSIZE_EXPLICIT  (1<<9)
 #define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT  (1<<10)
 
-// Macros that retrieve those bits
+
+// Enumerator callback function. Return PR_FALSE to stop
+typedef PRBool (*nsOperatorEnumFunc)(const nsString&       aOperator, 
+                                     const nsOperatorFlags aFlags, 
+                                     void*                 aData);
+
+class nsMathMLOperators {
+public:
+  static void AddRefTable(void);
+  static void ReleaseTable(void);
+
+  // LookupOperator:
+  // Given the string value of an operator and its form (last two bits of flags),
+  // this method returns true if the operator is found in the Operator Dictionary.
+  // Attributes of the operator are returned in the output parameters.
+  // If the operator is not found under the supplied form but is found under a 
+  // different form, the method returns true as well. The caller can test the
+  // output parameter aFlags to know exactly under which form the operator was
+  // found in the Operator Dictionary.
+  static PRBool
+  LookupOperator(const nsString&       aOperator,
+                 const nsOperatorFlags aForm,
+                 nsOperatorFlags*      aFlags,
+                 float*                aLeftSpace,
+                 float*                aRightSpace);
+
+  // IsMutableOperator:
+  // Return true if the operator exists and is stretchy or largeop
+  static PRBool
+  IsMutableOperator(const nsString& aOperator);
+};
+
+
+////////////////////////////////////////////////////////////////////////////
+// Macros that retrieve the bits used to handle operators
 
 #define NS_MATHML_OPERATOR_IS_MUTABLE(_flags) \
   (NS_MATHML_OPERATOR_MUTABLE == ((_flags) & NS_MATHML_OPERATOR_MUTABLE))
@@ -99,43 +133,5 @@ typedef PRUint32 nsOperatorFlags;
 
 #define NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(_flags) \
   (NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT == ((_flags) & NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT))
-
-class nsMathMLOperators {
-public:
-  static void AddRefTable(void);
-  static void ReleaseTable(void);
-
-  // LookupOperator:
-  // Given the string value of an operator and its form (last two bits of flags),
-  // this method returns true if the operator is found in the Operator Dictionary.
-  // Attributes of the operator are returned in the output parameters.
-  // If the operator is not found under the supplied form but is found under a 
-  // different form, the method returns true as well. The caller can test the
-  // output parameter aFlags to know exactly under which form the operator was
-  // found in the Operator Dictionary.
-  static PRBool
-  LookupOperator(const nsString&       aOperator,
-                 const nsOperatorFlags aForm,
-                 nsOperatorFlags*      aFlags,
-                 float*                aLeftSpace,
-                 float*                aRightSpace);
-  static PRBool
-  LookupOperator(const nsCString&      aOperator,
-                 const nsOperatorFlags aForm,
-                 nsOperatorFlags*      aFlags,
-                 float*                aLeftSpace,
-                 float*                aRightSpace);
-
-  // MatchOperator:
-  // Given the string value of an operator and *some* bits of its flags,
-  // this function will return true if this operator matches with another
-  // in the Operator Dictionary, i.e., if its string is the same as the 
-  // other's string and its flags constitute a subset of the other's flags.
-  // For example, to see if a string is a stretchy fence, the call will be:
-  // MatchOperator(aString, NS_MATHML_OPERATOR_FENCE | NS_MATHML_OPERATOR_STRETCHY).
-  static PRBool
-  MatchOperator(const nsString&       aOperator,
-                const nsOperatorFlags aFlags);
-};
 
 #endif /* nsMathMLOperators_h___ */
