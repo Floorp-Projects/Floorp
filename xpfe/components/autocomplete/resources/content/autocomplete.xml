@@ -355,17 +355,6 @@
 
 				switch (event.keyCode)
 				{
-					case 8: /*vk_back*/
-					case 46: /*vk_delete*/
-				    if (me.autoCompleteTimer) {
-					    clearTimeout(me.autoCompleteTimer);
-					    me.autoCompleteTimer = 0;
-				    }
-						me.privatefunc.closePopupMenu(me);
-            if (me.lastResults != null)
-						  me.lastResults.searchString='';
-						return;
-
           case 9: /*vk_tab*/
 						if (popup)
               me.privatefunc.closePopupMenu(me);
