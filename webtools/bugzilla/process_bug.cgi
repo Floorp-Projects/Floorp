@@ -1557,18 +1557,17 @@ foreach my $id (@idlist) {
     # change or the status or resolution change. This var keeps track of that.
     my $check_dep_bugs = 0;
 
-    if (defined $::FORM{'dependson'}) {
-        my $me = "blocked";
-        my $target = "dependson";
-        for (1..2) {
-            SendSQL("select $target from dependencies where $me = $id order by $target");
+    foreach my $pair ("blocked/dependson", "dependson/blocked") {
+        my ($me, $target) = split("/", $pair);
+
+        my @oldlist = @{$dbh->selectcol_arrayref("SELECT $target FROM dependencies
+                                                  WHERE $me = ? ORDER BY $target",
+                                                  undef, $id)};
+        @dependencychanged{@oldlist} = 1;
+
+        if (defined $::FORM{'dependson'}) {
             my %snapshot;
-            my @oldlist;
-            while (MoreSQLData()) {
-                push(@oldlist, FetchOneColumn());
-            }
             my @newlist = sort {$a <=> $b} @{$deps{$target}};
-            @dependencychanged{@oldlist} = 1;
             @dependencychanged{@newlist} = 1;
 
             while (0 < @oldlist || 0 < @newlist) {
@@ -1604,10 +1603,6 @@ foreach my $id (@idlist) {
                 LogDependencyActivity($id, $oldsnap, $target, $me, $timestamp);
                 $check_dep_bugs = 1;
             }
-
-            my $tmp = $me;
-            $me = $target;
-            $target = $tmp;
         }
     }
 
