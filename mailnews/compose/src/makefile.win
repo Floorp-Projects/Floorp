@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  mime \
 		  pref \
 		  intl \
+		  uconv \
 		  locale \
 		  uconv \
 		  unicharutil \

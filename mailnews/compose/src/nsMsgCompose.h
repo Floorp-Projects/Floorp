@@ -56,6 +56,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIAbDirectory.h"
 #include "nsIMimeConverter.h"
+#include "nsICharsetConverterManager2.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -190,6 +191,9 @@ private:
     nsCOMPtr<nsIMsgIdentity>  mIdentity;
     nsString                  mCiteReference;
     nsCOMPtr<nsIMimeConverter> mMimeConverter;
+    nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
+    PRInt32                   mUnicodeBufferCharacterLength;
+    PRUnichar*                mUnicodeConversionBuffer;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

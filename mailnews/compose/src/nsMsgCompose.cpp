@@ -1530,6 +1530,8 @@ NS_IMETHODIMP nsMsgCompose::GetSavedFolderURI(char ** folderURI)
 ////////////////////////////////////////////////////////////////////////////////////
 QuotingOutputStreamListener::~QuotingOutputStreamListener() 
 {
+  if (mUnicodeConversionBuffer)
+    nsMemory::Free(mUnicodeConversionBuffer);
 }
 
 QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMsgURI,
@@ -1543,6 +1545,8 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
   mQuoteHeaders = quoteHeaders;
   mHeadersOnly = headersOnly;
   mIdentity = identity;
+  mUnicodeBufferCharacterLength = 0;
+  mUnicodeConversionBuffer = nsnull;
 
   if (! mHeadersOnly)
   {
@@ -2005,7 +2009,63 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
     rv = NS_OK;
   newBuf[numWritten] = '\0';
   if (NS_SUCCEEDED(rv) && numWritten > 0)
-    mMsgBody.Append(NS_ConvertUTF8toUCS2(newBuf, numWritten));
+  {
+    // Create unicode decoder.
+    if (!mUnicodeDecoder)
+    {
+      nsCOMPtr<nsICharsetConverterManager2> ccm2 = 
+               do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv); 
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCOMPtr <nsIAtom> charsetAtom = getter_AddRefs(NS_NewAtom("UTF-8"));
+
+        if (!charsetAtom)
+        {
+          PR_Free(newBuf);
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        rv = ccm2->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mUnicodeDecoder));
+      }
+    }
+
+    if (NS_SUCCEEDED(rv))
+    {
+      PRInt32 unicharLength;
+      PRInt32 inputLength = (PRInt32) numWritten;
+      rv = mUnicodeDecoder->GetMaxLength(newBuf, numWritten, &unicharLength);
+      if (NS_SUCCEEDED(rv))
+      {
+        // Use this local buffer if possible.
+        const PRUint32 kLocalBufSize = 4096;
+        PRUnichar localBuf[kLocalBufSize];
+        PRUnichar *unichars = localBuf;
+        
+        if (unicharLength > kLocalBufSize)
+        {
+          // Otherwise, use the buffer of the class.
+          if (!mUnicodeConversionBuffer ||
+              unicharLength > mUnicodeBufferCharacterLength)
+          {
+            if (mUnicodeConversionBuffer)
+              nsMemory::Free(mUnicodeConversionBuffer);
+            mUnicodeConversionBuffer = (PRUnichar *) nsMemory::Alloc(unicharLength * sizeof(PRUnichar));
+            if (!mUnicodeConversionBuffer)
+            {
+              mUnicodeBufferCharacterLength = 0;
+              PR_Free(newBuf);
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            mUnicodeBufferCharacterLength = unicharLength;
+          }
+          unichars = mUnicodeConversionBuffer;
+        }
+
+        rv = mUnicodeDecoder->Convert(newBuf, &inputLength, unichars, &unicharLength);
+        if (NS_SUCCEEDED(rv))
+          mMsgBody.Append(unichars, unicharLength);
+      }
+    }
+  }
 
   PR_FREEIF(newBuf);
   return rv;
