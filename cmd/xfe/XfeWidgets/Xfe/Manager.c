@@ -828,6 +828,9 @@ CoreResize(Widget w)
 /* 	XfeDebugPrintfFunction(w,"CoreResize",NULL); */
 #endif
 
+	/* Update the widget boundary before calling preferred_geometry */
+    _XfeManagerUpdateBoundary(w);
+
     /* Obtain the Prefered Geometry */
     _XfeManagerPreferredGeometry(w,
 								 &_XfemPreferredWidth(w),
@@ -844,7 +847,7 @@ CoreResize(Widget w)
 		_XfeHeight(w) = _XfemPreferredHeight(w);
     }
     
-    /* Update the widget boundary */
+    /* Update the widget boundary again in case dimensions changed */
     _XfeManagerUpdateBoundary(w);
     
     /* Layout the widget */
@@ -1383,6 +1386,9 @@ CompositeChangeManaged(Widget w)
 		Boolean		change_width = False;
 		Boolean		change_height = False;
 
+		/* Update the widget boundary before calling preferred_geometry */
+		_XfeManagerUpdateBoundary(w);
+
 		/* Update the children info */
 		_XfeManagerUpdateChildrenInfo(w);
 
@@ -1523,6 +1529,9 @@ CompositeGeometryManager(Widget				child,
 		{
 			_XfeHeight(child) = request->height;
 		}
+
+		/* Update the widget boundary before calling preferred_geometry */
+		_XfeManagerUpdateBoundary(w);
 
 		/* Obtain the preferred geometry to support the new child */
 		_XfeManagerPreferredGeometry(w,&pref_width,&pref_height);
@@ -1867,6 +1876,9 @@ CoreInitializePostHook(Widget rw,Widget nw)
     
     /* Prepare the Widget */
     _XfeManagerPrepareComponents(nw,_XfemPrepareFlags(nw));
+
+	/* Update the widget boundary before calling preferred_geometry */
+	_XfeManagerUpdateBoundary(nw);
     
     /* Obtain the preferred dimensions for the first time. */
     _XfeManagerPreferredGeometry(nw,
@@ -1912,10 +1924,14 @@ CoreSetValuesPostHook(Widget ow,Widget rw,Widget nw)
 	{
 		_XfeManagerPrepareComponents(nw,_XfemPrepareFlags(nw));
 	}
+
 	
 	/* Obtain the preferred dimensions if needed */
 	if (_XfemConfigFlags(nw) & XfeConfigGeometry)
 	{
+		/* Update the widget boundary before calling preferred_geometry */
+		_XfeManagerUpdateBoundary(nw);
+
 		_XfeManagerPreferredGeometry(nw,
 									 &_XfemPreferredWidth(nw),
 									 &_XfemPreferredHeight(nw));
@@ -1985,6 +2001,9 @@ ConstraintSetValuesPostHook(Widget oc,Widget rc,Widget nc)
 	{
 		Dimension width	= _XfeWidth(w);
 		Dimension height = _XfeHeight(w);
+
+		/* Update the widget boundary before calling preferred_geometry */
+		_XfeManagerUpdateBoundary(w);
 
 		/* Obtain the preferred dimensions */
 		_XfeManagerPreferredGeometry(w,
