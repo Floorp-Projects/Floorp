@@ -364,7 +364,6 @@ public:
    */
   NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
 
-#ifdef IBMBIDI
   /**
    *  Check if the document contains bidi data.
    *  If so, we have to apply the Unicode Bidi Algorithm.
@@ -374,7 +373,6 @@ public:
    *  Indicate the document contains RTL characters.
    */
   NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled);
-#endif // IBMBIDI
 
   /**
    * Return the Line Breaker for the document
@@ -664,9 +662,7 @@ protected:
 
   nsHashtable mRadioGroups;
 
-#ifdef IBMBIDI
   PRBool        mBidiEnabled;
-#endif // IBMBIDI
 
   nsCOMPtr<nsIBindingManager> mBindingManager;
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;

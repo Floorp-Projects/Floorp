@@ -253,10 +253,8 @@ public:
 
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
-#ifdef IBMBIDI
   PRBool       GetTrueDirection() {return mTrueDirection;}
   void         SetTrueDirection(PRBool aBool){mTrueDirection = aBool;}
-#endif
   NS_IMETHOD   CopyRangeToAnchorFocus(nsIDOMRange *aRange);
   
 
@@ -310,9 +308,7 @@ private:
   SelectionType mType;//type of this nsTypedSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
   nsCOMArray<nsISelectionListener> mSelectionListeners;
-#ifdef IBMBIDI
   PRBool mTrueDirection;
-#endif
   nsCOMPtr<nsIEventQueue> mEventQueue;
   PRBool mScrollEventPosted;
 };
@@ -389,7 +385,6 @@ public:
   NS_IMETHOD GetLimiter(nsIContent **aLimiterContent);
   NS_IMETHOD SetMouseDoubleDown(PRBool aDoubleDown);
   NS_IMETHOD GetMouseDoubleDown(PRBool *aDoubleDown);
-#ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
                                    PRUint32 aContentOffset,
@@ -403,7 +398,6 @@ public:
                                PRUint8 aBidiLevel,
                                nsIFrame **aFrameOut);
 
-#endif // IBMBIDI
   /*END nsIFrameSelection interfacse*/
 
 
@@ -421,7 +415,6 @@ private:
   NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, 
                        PRBool aContinueSelection, PRBool aMultipleSelection);
 
-#ifdef IBMBIDI
   void BidiLevelFromMove(nsIPresContext* aContext,
                          nsIPresShell* aPresShell,
                          nsIContent *aNode,
@@ -452,7 +445,6 @@ private:
                          PRInt32 aCurrentOffset,
                          nsPeekOffsetStruct aPos);
 #endif // VISUALSELECTION
-#endif // IBMBIDI
 
 //post and pop reasons for notifications. we may stack these later
   void  PostReason(short aReason){mReason = aReason;}
@@ -1560,7 +1552,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 //        SetDesiredX(desiredX);
   }
 
-#ifdef IBMBIDI
   nsCOMPtr<nsICaret> caret;
   nsCOMPtr<nsIPresShell> shell;
   result = context->GetShell(getter_AddRefs(shell));
@@ -1569,7 +1560,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   result = shell->GetCaret(getter_AddRefs(caret));
   if (NS_FAILED(result) || !caret)
     return 0;
-#endif
 
   offsetused = mDomSelections[index]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[index]->FetchFocusNode();
@@ -1645,7 +1635,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     tHint = (HINT)pos.mPreferLeft;
-#ifdef IBMBIDI
     PRBool bidiEnabled = PR_FALSE;
     context->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled)
@@ -1715,7 +1704,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
 #else
     }
 #endif // VISUALSELECTION
-#endif // IBMBIDI
     result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
   }
   if (NS_SUCCEEDED(result))
@@ -1846,7 +1834,6 @@ nsTypedSelection::GetInterlinePosition(PRBool *aHintRight)
   return rv;
 }
 
-#ifdef IBMBIDI
 nsDirection ReverseDirection(nsDirection aDirection)
 {
   return (eDirNext == aDirection) ? eDirPrevious : eDirNext;
@@ -2580,7 +2567,6 @@ void nsSelection::BidiLevelFromClick(nsIContent *aNode, PRUint32 aContentOffset)
                                 (void**)&frameLevel, sizeof(frameLevel) );
   shell->SetCaretBidiLevel(frameLevel);
 }
-#endif //IBMBIDI
 
 NS_IMETHODIMP
 nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, 
@@ -2595,9 +2581,7 @@ nsSelection::HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset,
   // Don't take focus when dragging off of a table
   if (!mDragSelectingCells)
   {
-#ifdef IBMBIDI
     BidiLevelFromClick(aNewFocus, aContentOffset);
-#endif
     PostReason(nsISelectionListener::MOUSEDOWN_REASON + nsISelectionListener::DRAG_REASON);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aContinueSelection, aMultipleSelection);
   }
@@ -2709,7 +2693,6 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
 
   if (NS_SUCCEEDED(result))
   {
-#ifdef IBMBIDI
 #ifdef VISUALSELECTION
     PRBool bidiEnabled = PR_FALSE;
     aPresContext->GetBidiEnabled(&bidiEnabled);
@@ -2736,7 +2719,6 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
     }
     else
 #endif // VISUALSELECTION
-#endif // IBMBIDI
       result = HandleClick(newContent, startPos, contentOffsetEnd, PR_TRUE,
                            PR_FALSE, beginOfContent);
   }
@@ -2816,12 +2798,8 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
       mBatching = batching;
       mChangesDuringBatching = changes;
     }
-#ifdef IBMBIDI
     if (aContentEndOffset != aContentOffset)
-#else
-    if (aContentEndOffset > aContentOffset)
-#endif // IBMBIDI
-    mDomSelections[index]->Extend(domNode,aContentEndOffset);
+      mDomSelections[index]->Extend(domNode,aContentEndOffset);
 
     //find out if we are inside a table. if so, find out which one and which cell
     //once we do that, the next time we get a takefocus, check the parent tree. 
@@ -7855,7 +7833,6 @@ nsTypedSelection::DeleteFromDocument()
 NS_IMETHODIMP
 nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
 {
-#ifdef IBMBIDI
   nsresult result;
   nsCOMPtr<nsIDOMNode>  focusNode;
   nsCOMPtr<nsIContent> focusContent;
@@ -7927,6 +7904,5 @@ nsTypedSelection::SelectionLanguageChange(PRBool aLangRTL)
     else
       shell->SetCaretBidiLevel(levelAfter);
   }
-#endif // IBMBIDI
   return NS_OK;
 }

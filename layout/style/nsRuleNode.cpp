@@ -2506,7 +2506,6 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData,
     text->mTextDecoration = parentText->mTextDecoration;
   }
 
-#ifdef IBMBIDI
   // unicode-bidi: enum, normal, inherit
   if (eCSSUnit_Normal == textData.mUnicodeBidi.GetUnit() ) {
     text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
@@ -2518,7 +2517,6 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData,
     inherited = PR_TRUE;
     text->mUnicodeBidi = parentText->mUnicodeBidi;
   }
-#endif // IBMBIDI
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
@@ -3058,10 +3056,8 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
   // direction: enum, inherit
   if (eCSSUnit_Enumerated == displayData.mDirection.GetUnit()) {
     visibility->mDirection = displayData.mDirection.GetIntValue();
-#ifdef IBMBIDI    
     if (NS_STYLE_DIRECTION_RTL == visibility->mDirection)
       mPresContext->SetBidiEnabled(PR_TRUE);
-#endif // IBMBIDI
   }
   else if (eCSSUnit_Inherit == displayData.mDirection.GetUnit()) {
     inherited = PR_TRUE;

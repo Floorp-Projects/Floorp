@@ -2264,10 +2264,8 @@ MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsRul
     if (aText.mDecoration.GetUnit() == eCSSUnit_Null && ourText->mDecoration.GetUnit() != eCSSUnit_Null)
       aText.mDecoration = ourText->mDecoration;
 
-#ifdef IBMBIDI
     if (aText.mUnicodeBidi.GetUnit() == eCSSUnit_Null && ourText->mUnicodeBidi.GetUnit() != eCSSUnit_Null)
       aText.mUnicodeBidi = ourText->mUnicodeBidi;
-#endif
   }
 
   return NS_OK;

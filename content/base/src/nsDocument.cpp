@@ -131,9 +131,7 @@
 #include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
 
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#endif
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
@@ -518,9 +516,7 @@ nsDocument::nsDocument() : mSubDocuments(nsnull),
   mNextContentID = NS_CONTENT_ID_COUNTER_BASE;
   mBoxObjectTable = nsnull;
   mNumCapturers = 0;
-#ifdef IBMBIDI
   mBidiEnabled = PR_FALSE;
-#endif // IBMBIDI
 
   // Force initialization.
   mBindingManager = do_CreateInstance("@mozilla.org/xbl/binding-manager;1");
@@ -2903,7 +2899,6 @@ nsDocument::SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject)
   return NS_OK;
 }
 
-#ifdef IBMBIDI
 struct DirTable {
   const char* mName;
   PRUint8     mValue;
@@ -2913,7 +2908,6 @@ static const DirTable dirAttributes[] = {
   {"rtl", IBMBIDI_TEXTDIRECTION_RTL},
   {0}
 };
-#endif // IBMBIDI
 
 /**
  *  Retrieve the "direction" property of the document.
@@ -2923,7 +2917,6 @@ static const DirTable dirAttributes[] = {
 NS_IMETHODIMP
 nsDocument::GetDir(nsAString& aDirection)
 {
-#ifdef IBMBIDI
   nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
   if (shell) {
     nsCOMPtr<nsIPresContext> context;
@@ -2939,9 +2932,7 @@ nsDocument::GetDir(nsAString& aDirection)
       }
     }
   }
-#else
-  aDirection.Assign(NS_LITERAL_STRING("ltr"));
-#endif // IBMBIDI
+
   return NS_OK;
 }
 
@@ -2953,7 +2944,6 @@ nsDocument::GetDir(nsAString& aDirection)
 NS_IMETHODIMP
 nsDocument::SetDir(const nsAString& aDirection)
 {
-#ifdef IBMBIDI
   if (mPresShells.Count() != 0) {
     nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.ElementAt(0);
     if (shell) {
@@ -2974,7 +2964,6 @@ nsDocument::SetDir(const nsAString& aDirection)
       }
     }
   }
-#endif // IBMBIDI 
   return NS_OK;
 }
 
@@ -3926,7 +3915,6 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
   return rv;
 }
 
-#ifdef IBMBIDI
 /**
  *  Check if bidi enabled (set depending on the presence of RTL
  *  characters). If enabled, we should apply the Unicode Bidi Algorithm
@@ -3952,4 +3940,3 @@ nsDocument::SetBidiEnabled(PRBool aBidiEnabled)
   mBidiEnabled = aBidiEnabled;
   return NS_OK;
 }
-#endif // IBMBIDI

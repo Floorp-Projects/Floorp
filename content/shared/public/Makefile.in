@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= content
 
 EXPORTS		= \
+nsBidiUtils.h \
 nsChangeHint.h \
 nsCSSAnonBoxList.h \
 nsCSSAnonBoxes.h \
@@ -61,10 +62,6 @@ $(NULL)
 
 ifdef MOZ_SVG
 EXPORTS += nsSVGAtomList.h nsSVGAtoms.h
-endif
-
-ifdef IBMBIDI
-EXPORTS += nsBidiUtils.h
 endif
 
 include $(topsrcdir)/config/rules.mk

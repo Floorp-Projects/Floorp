@@ -1757,7 +1757,6 @@ nsComputedDOMStyle::GetUnicodeBidi(nsIFrame *aFrame,
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-#ifdef IBMBIDI
   const nsStyleTextReset *text = nsnull;
   GetStyleData(eStyleStruct_TextReset, (const nsStyleStruct*&)text, aFrame);
 
@@ -1769,9 +1768,6 @@ nsComputedDOMStyle::GetUnicodeBidi(nsIFrame *aFrame,
   } else {
     val->SetIdent(NS_LITERAL_STRING("normal"));
   }
-#else // IBMBIDI
-  val->SetIdent(NS_LITERAL_STRING("normal"));
-#endif // IBMBIDI
 
   return CallQueryInterface(val, aValue);
 }

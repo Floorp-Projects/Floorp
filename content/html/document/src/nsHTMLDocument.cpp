@@ -131,9 +131,7 @@
 
 #include "nsIPrompt.h"
 //AHMED 12-2 
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#endif
 
 #include "nsIEditingSession.h"
 
@@ -307,9 +305,7 @@ nsHTMLDocument::nsHTMLDocument()
   mWriteLevel = 0;
   mWyciwygSessionCnt = 0;
 
-#ifdef IBMBIDI
   mTexttype = IBMBIDI_TEXTTYPE_LOGICAL;
-#endif
   
   if (gRefCntRDFService++ == 0)
   {
@@ -875,7 +871,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));  
-#ifdef IBMBIDI
   nsCOMPtr<nsIPresContext> cx;
   docShell->GetPresContext(getter_AddRefs(cx));
   if(cx){
@@ -883,7 +878,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     cx->GetBidi(&mBidiOption);
     mTexttype = GET_BIDI_OPTION_TEXTTYPE(mBidiOption);
   }
-#endif // IBMBIDI
   //
   // The following logic is mirrored in nsWebShell::Embed!
   //
@@ -975,11 +969,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #endif
 
 //ahmed
-#ifdef IBMBIDI
   // Check if 864 but in Implicit mode !
   if( (mTexttype == IBMBIDI_TEXTTYPE_LOGICAL)&&(charset.EqualsIgnoreCase("ibm864")) )
     charset.Assign(NS_LITERAL_STRING("IBM864i"));
-#endif // IBMBIDI
 
   SetDocumentCharacterSet(charset);
   SetDocumentCharacterSetSource(charsetSource);

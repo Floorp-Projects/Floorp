@@ -40,9 +40,7 @@
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
-#ifdef IBMBIDI
 #include "nsBidiUtils.h"
-#endif
 
 // Static buffer used for newline fragments
 static unsigned char sNewLineCharacter = '\n';
@@ -344,7 +342,6 @@ nsTextFragment::CopyTo(char *aDest, PRInt32 aOffset, PRInt32 aCount)
   }
 }
 
-#ifdef IBMBIDI
 // To save time we only do this when we really want to know, not during
 // every allocation
 void
@@ -362,4 +359,3 @@ nsTextFragment::SetBidiFlag()
     }
   }
 }
-#endif

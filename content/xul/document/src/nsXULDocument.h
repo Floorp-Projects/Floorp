@@ -194,14 +194,12 @@ public:
 
     NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const;
 
-#ifdef IBMBIDI
     /**
      *  Retrieve and get bidi state of the document 
      *  (set depending on presence of bidi data).
      */
     NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
     NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled);
-#endif // IBMBIDI
 
     NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
     NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
@@ -592,9 +590,7 @@ protected:
     PRInt32 mNextContentID;
     PRInt32 mNumCapturers; //Number of capturing event handlers in doc.  Used to optimize event delivery.
 
-#ifdef IBMBIDI
     PRBool mBidiEnabled;
-#endif // IBMBIDI
 
     /*
      * XXX dr

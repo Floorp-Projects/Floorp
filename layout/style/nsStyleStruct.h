@@ -633,9 +633,7 @@ struct nsStyleTextReset : public nsStyleStruct {
   nsChangeHint CalcDifference(const nsStyleTextReset& aOther) const;
   
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
-#ifdef IBMBIDI
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
-#endif // IBMBIDI
 
   nsStyleCoord  mVerticalAlign;         // [reset] see nsStyleConsts.h for enums
 };
