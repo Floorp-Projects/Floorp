@@ -51,6 +51,20 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
+NS_METHOD
+nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
+    nsresult rv;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+    
+    nsIndexedToHTML* _s = new nsIndexedToHTML();
+    if (_s == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+    rv = _s->QueryInterface(aIID, aResult);
+    return rv;
+}
+
 nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     nsresult rv = NS_OK;

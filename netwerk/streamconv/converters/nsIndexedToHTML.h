@@ -68,18 +68,7 @@ public:
     nsresult Init(nsIStreamListener *aListener);
 
     static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-        nsresult rv;
-        if (aOuter)
-            return NS_ERROR_NO_AGGREGATION;
-
-        nsIndexedToHTML* _s = new nsIndexedToHTML();
-        if (_s == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        rv = _s->QueryInterface(aIID, aResult);
-        return rv;
-    }
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
     
