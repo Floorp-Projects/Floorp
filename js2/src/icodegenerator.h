@@ -59,6 +59,8 @@ namespace JavaScript {
     public:
         Instruction(ICodeOp op) : itsOp(op) { }
         ICodeOp itsOp;
+        
+        ICodeOp opcode() { return itsOp; }
     };
 
     template <typename Operand1>
@@ -67,6 +69,8 @@ namespace JavaScript {
             Instruction_1(ICodeOp op, Operand1 operand1) :
                             Instruction(op), itsOperand1(operand1) {  }
             Operand1 itsOperand1;
+            
+            Operand1& o1() { return itsOperand1; }
         };
 
     template <typename Operand1, typename Operand2>
@@ -76,6 +80,9 @@ namespace JavaScript {
                             Instruction(op), itsOperand1(operand1), itsOperand2(operand2) {  }
             Operand1 itsOperand1;
             Operand2 itsOperand2;
+
+            Operand1& o1() { return itsOperand1; }
+            Operand2& o2() { return itsOperand2; }
         };
 
     template <typename Operand1, typename Operand2, typename Operand3>
@@ -86,6 +93,10 @@ namespace JavaScript {
             Operand1 itsOperand1;
             Operand2 itsOperand2;
             Operand3 itsOperand3;
+
+            Operand1& o1() { return itsOperand1; }
+            Operand2& o2() { return itsOperand2; }
+            Operand3& o3() { return itsOperand3; }
         };
 
     typedef std::vector<Instruction *> InstructionStream;
@@ -175,6 +186,7 @@ namespace JavaScript {
 
         Register getRegisterBase()                          { return topRegister; }
         InstructionStream *get_iCode()                      { return iCode; }
+        LabelList& getLabels()                              { return labels; }
 
 
     // Rather than have the ICG client maniplate labels and branches, it
