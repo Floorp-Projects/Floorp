@@ -295,6 +295,7 @@ modern.jar:
   skin/modern/editor/icons/smiley/wink.gif                         (editor/icons/smiley/wink.gif)
   skin/modern/editor/icons/smiley/wink_n.gif                       (editor/icons/smiley/wink_n.gif)
   skin/modern/global/autocomplete.css                              (global/autocomplete.css)
+  skin/modern/global/browser.css                                   (global/browser.css)
   skin/modern/global/button.css                                    (global/button.css)
   skin/modern/global/checkbox.css                                  (global/checkbox.css)
   skin/modern/global/colorpicker.css                               (global/colorpicker.css)
