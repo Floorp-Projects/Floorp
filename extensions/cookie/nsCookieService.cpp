@@ -557,7 +557,8 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull);
+  PRUint32 permission;
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull, permission);
   // for GetCookie(), we don't update the UI icon if cookie was rejected.
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
     return NS_OK;
@@ -712,7 +713,8 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader);
+  PRUint32 listPermission;
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader, listPermission);
   // update UI icon, and return, if cookie was rejected.
   // should we be doing this just for p3p?
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
@@ -739,7 +741,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI,
                            cookieHeader, serverTime,
-                           cookieStatus, cookiePolicy));
+                           cookieStatus, cookiePolicy, listPermission));
 
   // write out the cookie file
   LazyWrite(PR_TRUE);
@@ -1460,7 +1462,8 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsDependentCString &aCookieHeader,
                                    nsInt64            aServerTime,
                                    nsCookieStatus     aStatus,
-                                   nsCookiePolicy     aPolicy)
+                                   nsCookiePolicy     aPolicy,
+                                   PRUint32           aListPermission)
 {
   nsresult rv;
 
@@ -1536,14 +1539,15 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
     PRBool permission;
     // we need to think about prompters/parent windows here - TestPermission
     // needs one to prompt, so right now it has to fend for itself to get one
-    rv = mPermissionService->TestPermission(aHostURI,
-                                            NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, cookie)),
-                                            nsnull,
-                                            countFromHost, foundCookie,
-                                            mCookiesAskPermission,
-                                            &permission);
+    mPermissionService->TestPermission(aHostURI,
+                                       NS_STATIC_CAST(nsICookie*, NS_STATIC_CAST(nsCookie*, cookie)),
+                                       nsnull,
+                                       countFromHost, foundCookie,
+                                       mCookiesAskPermission,
+                                       aListPermission,
+                                       &permission);
     if (!permission) {
-      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookies are blocked for this site");
+      COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
       return newCookie;
     }
   }
@@ -2081,13 +2085,16 @@ nsCookieStatus
 nsCookieService::CheckPrefs(nsIURI     *aHostURI,
                             nsIURI     *aFirstURI,
                             nsIChannel *aChannel,
-                            const char *aCookieHeader)
+                            const char *aCookieHeader,
+                            PRUint32   &aListPermission)
 {
   // pref tree:
   // 0) get the scheme strings from the two URI's
   // 1) disallow ftp
   // 2) disallow mailnews, if pref set
-  // 3) go thru enumerated permissions to see which one we have:
+  // 3) perform a permissionlist lookup to see if an entry exists for this host
+  //    (a match here will override defaults in 4)
+  // 4) go thru enumerated permissions to see which one we have:
   // -> cookies disabled: return
   // -> dontacceptforeign: check if cookie is foreign
   // -> p3p: check p3p cookie data
@@ -2160,6 +2167,26 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
         IsFromMailNews(currentURIScheme)) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies disabled for mailnews");
       return nsICookie::STATUS_REJECTED;
+    }
+  }
+
+  // check the permission list first; if we find an entry, it overrides
+  // default prefs. see bug 184059.
+  nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    // we need to pass the lookup result, aListPermission, as an outparam since
+    // we'll need it later on to decide whether to prompt the user or not.
+    // (if an entry exists in the list, we don't want to prompt the user.)
+    permissionManager->TestPermission(aHostURI, "cookie", &aListPermission);
+
+    // if we found an entry, use it
+    switch (aListPermission) {
+      case nsIPermissionManager::DENY_ACTION:
+        COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are blocked for this site");
+        return nsICookie::STATUS_REJECTED;
+
+      case nsIPermissionManager::ALLOW_ACTION:
+        return nsICookie::STATUS_ACCEPTED;
     }
   }
 

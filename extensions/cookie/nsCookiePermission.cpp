@@ -36,39 +36,29 @@
 
 
 #include "nsCookiePermission.h"
-#include "nsCookie.h"
-#include "nsICookieAcceptDialog.h"
-#include "nsIWindowWatcher.h"
+#include "nsICookie.h"
+#include "nsIPermissionManager.h"
 #include "nsIServiceManager.h"
+#include "nsICookiePromptService.h"
+#include "nsIDOMWindow.h"
+#include "nsIURI.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsIDialogParamBlock.h"
-#include "nsArray.h"
-#include "nsCookiePromptService.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
  ****************************************************************/
 
-static const PRUint32 kDefaultPolicy = nsIPermissionManager::ALLOW_ACTION;
+static const PRBool kDefaultPolicy = PR_TRUE;
 
-NS_IMPL_ISUPPORTS1(nsCookiePermission, nsICookiePermission);
+NS_IMPL_ISUPPORTS1(nsCookiePermission, nsICookiePermission)
 
 nsCookiePermission::nsCookiePermission()
- : mPermissionManager(nsnull)
 {
 }
 
 nsCookiePermission::~nsCookiePermission()
 {
-}
-
-nsresult
-nsCookiePermission::Init()
-{
-  // Continue on an error. We can do a few things without a permission manager
-  mPermissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -78,45 +68,47 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
                                    PRInt32 aCookiesFromHost,
                                    PRBool aChangingCookie,
                                    PRBool aShowDialog,
+                                   PRUint32 aListPermission,
                                    PRBool *aPermission) 
 {
   NS_ASSERTION(aURI, "could not get uri");
 
   nsresult rv;
   *aPermission = kDefaultPolicy;
-  
-  nsCAutoString hostPort;
-  aURI->GetHostPort(hostPort);
-  if (hostPort.IsEmpty())
-    return NS_OK;
 
-  PRUint32 listPermission = nsIPermissionManager::UNKNOWN_ACTION;
-  if (mPermissionManager) {
-    mPermissionManager->TestPermission(aURI, "cookie", &listPermission);
-  }
+  // check if the user wants to be prompted. we only do this if a prior
+  // permissionlist lookup (performed by the caller) returned UNKNOWN_ACTION
+  // (i.e., no permissionlist entry exists for this host).
+  if (aShowDialog && aListPermission == nsIPermissionManager::UNKNOWN_ACTION) {
+    // default to rejecting, in case the prompting process fails
+    *aPermission = PR_FALSE;
 
-  if (listPermission == nsIPermissionManager::UNKNOWN_ACTION) {
-    if (aShowDialog && aCookie) {
-      // we don't cache the cookiePromptService - it's not used often, so not worth the memory
-      nsCOMPtr<nsICookiePromptService> cookiePromptService = do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) return rv;
+    nsCAutoString hostPort;
+    aURI->GetHostPort(hostPort);
 
-      PRBool rememberDecision = PR_FALSE;
-
-      rv = cookiePromptService->
-             CookieDialog(nsnull, aCookie, hostPort, 
-                          aCookiesFromHost, aChangingCookie, &rememberDecision, 
-                          aPermission);
-      if (NS_FAILED(rv)) return rv;
-
-      if (rememberDecision && mPermissionManager) {
-        // Remember this decision
-        mPermissionManager->Add(aURI, "cookie", 
-                                *aPermission ? nsIPermissionManager::ALLOW_ACTION : nsIPermissionManager::DENY_ACTION);
-      }
+    if (!aCookie || hostPort.IsEmpty()) {
+      return NS_ERROR_UNEXPECTED;
     }
-  } else {
-    *aPermission = (listPermission == nsIPermissionManager::ALLOW_ACTION);
+
+    // we don't cache the cookiePromptService - it's not used often, so not worth the memory
+    nsCOMPtr<nsICookiePromptService> cookiePromptService = do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool rememberDecision = PR_FALSE;
+
+    rv = cookiePromptService->
+           CookieDialog(nsnull, aCookie, hostPort, 
+                        aCookiesFromHost, aChangingCookie, &rememberDecision, 
+                        aPermission);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rememberDecision) {
+      nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      permissionManager->Add(aURI, "cookie", 
+                              *aPermission ? nsIPermissionManager::ALLOW_ACTION : nsIPermissionManager::DENY_ACTION);
+    }
   }
 
   return NS_OK;
