@@ -2604,14 +2604,16 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     res = mHTMLEditor->SplitStyleAbovePoint(address_of(node), &offset, item->tag, &item->attr, address_of(leftNode), address_of(rightNode));
     if (NS_FAILED(res)) return res;
     PRBool bIsEmptyNode;
-    mHTMLEditor->IsEmptyNode(leftNode, &bIsEmptyNode, PR_FALSE, PR_TRUE);
-    if (bIsEmptyNode)
+    if (leftNode)
     {
-      // delete leftNode if it became empty
-      res = mEditor->DeleteNode(leftNode);
-      if (NS_FAILED(res)) return res;
+      mHTMLEditor->IsEmptyNode(leftNode, &bIsEmptyNode, PR_FALSE, PR_TRUE);
+      if (bIsEmptyNode)
+      {
+        // delete leftNode if it became empty
+        res = mEditor->DeleteNode(leftNode);
+        if (NS_FAILED(res)) return res;
+      }
     }
-
     if (rightNode)
     {
       res = mHTMLEditor->GetLeftmostChild(rightNode, getter_AddRefs(secondSplitParent));
