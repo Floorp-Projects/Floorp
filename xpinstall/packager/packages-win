@@ -10,7 +10,6 @@
 
 [core]
 bin\appcores.dll
-bin\appshell.dll
 bin\component.reg
 bin\gkgfxwin.dll
 bin\gkplugin.dll
@@ -36,6 +35,7 @@ bin\zlib.dll
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
+bin\components\appshell.dll
 bin\components\bookmark.dll
 bin\components\bookmarks.xpt
 bin\components\brprof.dll
