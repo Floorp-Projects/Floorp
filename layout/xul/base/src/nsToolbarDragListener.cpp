@@ -54,8 +54,9 @@ NS_IMPL_RELEASE(nsToolbarDragListener)
 // Not much to do besides init member variables
 //
 nsToolbarDragListener :: nsToolbarDragListener ( nsToolbarFrame* inToolbar, nsIPresContext* inPresContext )
-  : mToolbar(inToolbar), mPresContext(inPresContext), mMouseDown(PR_FALSE), mMouseDrag(PR_FALSE),
-     mCurrentDropLoc(-1)
+  : mToolbar(inToolbar), mPresContext(inPresContext), mCurrentDropLoc(-1), 
+    mMouseDown(PR_FALSE), mMouseDrag(PR_FALSE)
+     
 {
   NS_INIT_REFCNT();
 }
@@ -303,7 +304,7 @@ nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
       // Check to see if the mouse is over an item
       nscoord xLoc;
       PRBool isLegalChild;
-      PRBool onChild = IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
+      IsOnToolbarItem(aDragEvent, xLoc, isLegalChild);
 
       if (xLoc != mCurrentDropLoc) {
         mToolbar->SetDropfeedbackLocation(xLoc);
