@@ -44,6 +44,12 @@
 	list-style-image: url("chrome://help/skin/Toolbar.png");
 }
 
+.browserButton {
+  -moz-box-orient: vertical;
+  min-width: 0px;
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
 #help-zoom-large-button,
 #help-zoom-small-button,
 #help-sidebar-button {
@@ -57,13 +63,13 @@ menubutton:not([disabled="true"]):hover:active {
 	color: ButtonText !important;
 }
 
-#help-back-button { -moz-image-region: rect(0px 144px 24px 120px); }
-#help-back-button[buttonover="true"] { -moz-image-region: rect(24px 144px 48px 120px); }
-#help-back-button[disabled="true"] { -moz-image-region: rect(48px 144px 72px 120px); }
+#help-back-button { -moz-image-region: rect(0px 32px 32px 0px); }
+#help-back-button[buttonover="true"] { -moz-image-region: rect(32px 32px 64px 0px); }
+#help-back-button[disabled="true"] { -moz-image-region: rect(64px 32px 96px 0px); }
 
-#help-forward-button { -moz-image-region: rect(0px 168px 24px 144px); }
-#help-forward-button[buttonover="true"] { -moz-image-region: rect(24px 168px 48px 144px); }
-#help-forward-button[disabled="true"] { -moz-image-region: rect(48px 168px 72px 144px); }
+#help-forward-button { -moz-image-region: rect(0px 64px 32px 32px); }
+#help-forward-button[buttonover="true"] { -moz-image-region: rect(32px 64px 64px 32px); }
+#help-forward-button[disabled="true"] { -moz-image-region: rect(64px 64px 96px 32px); }
 
 #help-find-button { -moz-image-region: rect(0px 192px 24px 168px); }
 #help-find-button:hover { -moz-image-region: rect(0px 192px 24px 168px); }
@@ -71,11 +77,11 @@ menubutton:not([disabled="true"]):hover:active {
 #help-toolbar-customization { -moz-image-region: rect(0px 216px 24px 192px); }
 #help-toolbar-customization:hover { -moz-image-region: rect(24px 216px 48px 192px); }
 
-#help-home-button { -moz-image-region: rect(0px 120px 24px 96px); }
-#help-home-button:hover { -moz-image-region: rect(24px 120px 48px 96px); }
+#help-home-button { -moz-image-region: rect(0px 160px 32px 128px); }
+#help-home-button:hover { -moz-image-region: rect(32px 160px 64px 128px); }
 
-#help-print-button { -moz-image-region: rect(0px 96px 24px 72px); }
-#help-print-button:hover { -moz-image-region: rect(24px 96px 48px 72px); }
+#help-print-button { -moz-image-region: rect(0px 288px 32px 256px); }
+#help-print-button:hover { -moz-image-region: rect(32px 288px 64px 256px); }
 
 #help-zoom-large-button { -moz-image-region: rect(0px 24px 24px 0px); }
 #help-zoom-large-button:hover { -moz-image-region: rect(24px 24px 48px 0px); }

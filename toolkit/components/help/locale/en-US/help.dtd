@@ -28,6 +28,7 @@
 <!ENTITY customizeButton.tooltip        "Customize which buttons are shown on the Help toolbar.">
 <!ENTITY reloadCmd.label                "Reload">
 <!ENTITY reloadCmd.accesskey            "R">
+<!ENTITY closeWindow.commandkey         "W">
 
 <!ENTITY throbberItem.title             "Activity Indicator">
 <!ENTITY throbber.tooltip               "Go to the Help on Help section">

@@ -49,7 +49,7 @@
 <window id="help"
         windowtype="mozilla:help"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        width="640"
+        width="700"
         height="550"
         persist="width height screenX screenY"
         onload="init();"
@@ -87,6 +87,7 @@
         <command id="Help:Find" oncommand="helpBrowser.find();"/>
         <command id="Help:FindAgain" oncommand="helpBrowser.findAgain();"/>      
 	<command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
+	 <command id="cmd_closeWindow" oncommand="close();"/>
         <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
         <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
         <command id="cmd_CustomizeToolbars" oncommand="CustomizeToolbar('help-toolbox');"/>
@@ -103,11 +104,17 @@
             command="Help:Find" modifiers="accel"/>
         <key id="key_findAgain" key="&findAgainCmd.commandkey;"
             command="Help:FindAgain" modifiers="accel"/>
+        <key id="key_closeWindow" key="&closeWindow.commandkey;"
+            command="cmd_closeWindow" modifiers="accel"/>
         <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"
             command="cmd_textZoomEnlarge" modifiers="accel"/>
         <key id="key_textZoomReduce" key="&textZoomReduceCmd.commandkey;"
             command="cmd_textZoomReduce" modifiers="accel"/>
         <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
+        <key id="key_viewNextHelpPanel" keycode="VK_TAB" 
+             oncommand="showRelativePanel(true);" modifiers="control"/>
+        <key id="key_viewPrevHelpPanel" keycode="VK_TAB" 
+             oncommand="showRelativePanel(false);" modifiers="control,shift"/>
     </keyset>
     <stringbundle id="bundle_viewZoom"/>
     <stringbundle id="findBundle"
@@ -117,7 +124,6 @@
 
     <vbox flex="1">
 
-#       <!-- button bar -->
         <toolbox id="help-toolbox" class="toolbox-top" mode="icons" iconsize="small" customizable="true">
             
             <toolbarpalette id="HelpToolbarPalette">
@@ -127,7 +133,7 @@
                 	customizeable="true" label="&sidebarBtn.label;"
                 	command="Help:ToggleSidebar"/>
                 <toolbarbutton id="help-back-button" type="menu-button"
-                        class="toolbarbutton-1" label="&backButton.label;"
+                        class="browserButton" label="&backButton.label;"
                         oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
                         observes="canGoBack" context="backMenu"
                         tooltiptext="&backButton.tooltip;">
@@ -135,7 +141,7 @@
                         onpopupshowing="createBackMenu(event);"/>
                 </toolbarbutton>
                 <toolbarbutton id="help-forward-button" type="menu-button"
-                        class="toolbarbutton-1"
+                        class="browserButton"
                         label="&forwardButton.label;"
                         oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
                         tooltiptext="&forwardButton.tooltip;"
@@ -144,7 +150,7 @@
                         onpopupshowing="createForwardMenu(event);"/>
                 </toolbarbutton>
                 <toolbarbutton id="help-home-button"
-                    class="toolbarbutton-1" label="&homeButton.label;"
+                    class="browserButton" label="&homeButton.label;"
                     command="Help:Home"/>
                 <toolbarbutton id="help-find-button"
                     class="toolbarbutton-1" label="&findBtn.label;"
@@ -155,7 +161,7 @@
                 <toolbarbutton id="help-zoom-large-button"
                     class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
                     command="cmd_textZoomEnlarge"/>    
-                <toolbarbutton id="help-print-button" class="toolbarbutton-1"
+                <toolbarbutton id="help-print-button" class="browserButton"
                     label="&printButton.label;"
                     oncommand="print();"
                     tooltiptext="&printButton.tooltip;"/>
@@ -178,16 +184,17 @@
 	    <toolbarset id="customToolbars"/>
         </toolbox>
 
-#       <!-- the two help panes (sidebar & content) -->
         <hbox flex="1">
             <vbox id="helpsidebar-box" persist="width">
 
                 <!-- glossary panel -->
-                <button id="help-glossary-btn"
+                <toolbarbutton id="help-glossary-btn"
                     class="box-texttab texttab-sidebar"
                     label="&glossarytab.label;"
-                    oncommand="showPanel('help-glossary')"/>
-                <tree id="help-glossary-panel" flex="1" hidecolumnpicker="true"
+                    oncommand="showPanel('help-glossary')"
+                    accesskey="&glossarytab.accesskey;"/>
+                <tree id="help-glossary-panel" class="focusring"
+                        flex="1" hidecolumnpicker="true"
                         hidden="true" datasources="rdf:null"
                         containment="http://home.netscape.com/NC-rdf#subheadings"
                         ref="urn:root" flags="dont-build-content"
@@ -225,12 +232,13 @@
                     </treecols>
                 </tree>
 
-#               <!-- index panel -->
-                <button id="help-index-btn" class="box-texttab texttab-sidebar"
+                <toolbarbutton id="help-index-btn" class="box-texttab texttab-sidebar"
                     label="&indextab.label;"
-                    oncommand="showPanel('help-index');expandAllIndexEntries();"/>
+                    oncommand="showPanel('help-index');expandAllIndexEntries();"
+                    accesskey="&indextab.accesskey;"/>
 
-                <tree id="help-index-panel" flex="1" datasources="rdf:null"
+                <tree id="help-index-panel" class="focusring"
+                        flex="1" datasources="rdf:null"
                         hidecolumnpicker="true" hidden="true"
                         containment="http://home.netscape.com/NC-rdf#subheadings"
                         ref="urn:root"
@@ -270,10 +278,10 @@
                     </treecols>
                 </tree>
 
-#               <!-- search panel -->
-                <button id="help-search-btn" class="box-texttab texttab-sidebar"
+                <toolbarbutton id="help-search-btn" class="box-texttab texttab-sidebar"
                     label="&searchtab.label;"
-                    oncommand="showPanel('help-search')"/>
+                    oncommand="showPanel('help-search')"
+                    accesskey="&searchtab.accesskey;"/>
 
                 <vbox id="help-search-panel" hidden="true" flex="1">
                     <hbox align="center">
@@ -286,7 +294,7 @@
                             label="&gobtn.label;" oncommand="doFind()"
                             flex="0"/>
                     </hbox>
-                    <tree id="help-search-tree"
+                    <tree id="help-search-tree" class="focusring"
                             flex="1" hidecolumnpicker="true"
                             datasources="rdf:null"
                             containment="http://home.netscape.com/NC-rdf#child"
@@ -327,11 +335,12 @@
                     </tree>
                 </vbox>
 
-#               <!-- table of contents panel -->
-                <button id="help-toc-btn" class="box-texttab texttab-sidebar"
+                <toolbarbutton id="help-toc-btn" class="box-texttab texttab-sidebar"
                     label="&toctab.label;"
-                    oncommand="showPanel('help-toc')"/>
-                <tree id="help-toc-panel" flex="1"  hidecolumnpicker="true"
+                    oncommand="showPanel('help-toc')"
+                    accesskey="&toctab.accesskey;"/>
+                <tree id="help-toc-panel" class="focusring" 
+                        flex="1"  hidecolumnpicker="true"
                         datasources="rdf:null"
                         containment="http://home.netscape.com/NC-rdf#subheadings"
                         ref="urn:root" flags="dont-build-content"
@@ -373,7 +382,7 @@
             </vbox>
 
             <splitter id="helpsidebar-splitter" collapse="before"
-                    persist="state hidden" state="open">
+                    persist="state hidden" autostretch="never" state="open">
             </splitter>
 
             <vbox id="appcontent" flex="3">
@@ -383,9 +392,7 @@
                         iframes intended to hold (html) content -->
                     <browser context="contentAreaContextMenu"
                         type="content-primary" id="help-content"
-                        src="about:blank" flex="1"
-                        ondraggesture="nsDragAndDrop.startDrag(event,
-                            contentAreaDNDObserver);"/>
+                        src="about:blank" flex="1"/>
                 </hbox>
             </vbox>
         </hbox>
