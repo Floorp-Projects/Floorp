@@ -294,7 +294,7 @@ nsInputButton::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 
     return PR_TRUE;
   }
-  else if ((kButton_Submit == mType) || (kButton_Hidden == mType) && (nsnull != mValue)) {
+  else if (((kButton_Submit == mType) || (kButton_Hidden == mType)) && (nsnull != mValue)) {  // XXX fix this in branch
     aValues[0] = *mValue;
     aNames[0]  = *mName;
     aNumValues = 1;

@@ -1964,7 +1964,7 @@ nsresult HTMLContentSink::ProcessINPUTTag(nsIHTMLContent** aInstancePtrResult,
       // rv = NS_NewHTMLFrameset(aInstancePtrResult, atom, mWebWidget, 3);
     }
     else {
-      rv = NS_NewHTMLInputSubmit(aInstancePtrResult, atom, mCurrentForm);
+      rv = NS_NewHTMLInputText(aInstancePtrResult, atom, mCurrentForm); // XXX fix this on branch
     }
   }
 
