@@ -1493,7 +1493,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
         rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
         if (NS_SUCCEEDED(rv)) {
         
-            escPath.Insert("file://", 0);
+            escPath.Insert("file:///", 0);
 
             PRBool dir;
             rv = IsDirectory(&dir);
