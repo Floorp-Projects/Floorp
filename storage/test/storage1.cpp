@@ -11,7 +11,7 @@
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
-#include "mozIStorageValue.h"
+#include "mozIStorageValueArray.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageFunction.h"
 
