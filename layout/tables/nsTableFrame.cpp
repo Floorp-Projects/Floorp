@@ -100,11 +100,11 @@ struct InnerTableReflowState {
   // Running y-offset
   nscoord y;
 
-  // a list of the footers in this table frame, for quick access when inserting bodies
-  nsVoidArray *footerList;
+  // Pointer to the footer in the table
+  nsIFrame* footerFrame;
 
-  // cache the total height of the footers for placing body rows
-  nscoord footerHeight;
+  // The first body section row group frame, i.e. not a header or footer
+  nsIFrame* firstBodySection;
 
   InnerTableReflowState(nsIPresContext&          aPresContext,
                         const nsHTMLReflowState& aReflowState,
@@ -125,13 +125,8 @@ struct InnerTableReflowState {
       availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
 
-    footerHeight = 0;
-    footerList = nsnull;
-  }
-
-  ~InnerTableReflowState() {
-    if (nsnull!=footerList)
-      delete footerList;
+    footerFrame = nsnull;
+    firstBodySection = nsnull;
   }
 };
 
@@ -3439,49 +3434,38 @@ void nsTableFrame::PlaceChild(nsIPresContext&    aPresContext,
   // Adjust the running y-offset
   aReflowState.y += aKidRect.height;
 
-  // If our height is constrained then update the available height
+  // If our height is constrained, then update the available height
   if (PR_FALSE == aReflowState.unconstrainedHeight) {
     aReflowState.availSize.height -= aKidRect.height;
   }
 
-  // If this is a footer row group, add it to the list of footer row groups
+  // If this is a footer row group, remember it
   const nsStyleDisplay *childDisplay;
   aKidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-  if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay)
+
+  // We only allow a single footer frame, and the footer frame must occur before
+  // any body section row groups
+  if ((NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay) &&
+      !aReflowState.footerFrame && !aReflowState.firstBodySection)
   {
-    if (nsnull==aReflowState.footerList)
-      aReflowState.footerList = new nsVoidArray();
-    aReflowState.footerList->AppendElement((void *)aKidFrame);
-    aReflowState.footerHeight += aKidRect.height;
+    aReflowState.footerFrame = aKidFrame;
   }
-  // else if this is a body row group, push down all the footer row groups
-  else
+  else if (aReflowState.footerFrame)
   {
-    // don't bother unless there are footers to push down
-    if (nsnull!=aReflowState.footerList  &&  0!=aReflowState.footerList->Count())
-    {
-      nsPoint origin;
-      aKidFrame->GetOrigin(origin);
-      origin.y -= aReflowState.footerHeight;
-      aKidFrame->MoveTo(origin.x, origin.y);
-      // XXX do we need to check for headers here also, or is that implicit?
-      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay)
-      {
-        PRInt32 numFooters = aReflowState.footerList->Count();
-        for (PRInt32 footerIndex = 0; footerIndex < numFooters; footerIndex++)
-        {
-          nsTableRowGroupFrame * footer = (nsTableRowGroupFrame *)(aReflowState.footerList->ElementAt(footerIndex));
-          NS_ASSERTION(nsnull!=footer, "bad footer list in table inner frame.");
-          if (nsnull!=footer)
-          {
-            footer->GetOrigin(origin);
-            origin.y += aKidRect.height;
-            footer->MoveTo(origin.x, origin.y);
-          }
-        }
-      }
-    }
+    // Place the row group frame
+    nsSize  footerSize;
+    nsPoint origin;
+    aKidFrame->GetOrigin(origin);
+    aReflowState.footerFrame->GetSize(footerSize);
+    origin.y -= footerSize.height;
+    aKidFrame->MoveTo(origin.x, origin.y);
+    
+    // Move the footer below the body row group frame
+    aReflowState.footerFrame->GetOrigin(origin);
+    origin.y += aKidRect.height;
+    aReflowState.footerFrame->MoveTo(origin.x, origin.y);
   }
+
   //XXX: this should call into layout strategy to get the width field
   if (nsnull != aMaxElementSize) 
   {
@@ -3534,7 +3518,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     reason = eReflowReason_Resize;
 
   // this never passes reflows down to colgroups
-  nsIFrame*  firstRowGroupFrame = nsnull;
   for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) 
   {
     nsSize              kidAvailSize(aReflowState.availSize);
@@ -3545,12 +3528,10 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
     {
-      // Keep track of the first row group frame: we need this to correctly clear
-      // the isTopOfPage flag and when pushing frames
-      // XXX what about header and footer groups?
-      if (nsnull == firstRowGroupFrame) {
+      // Keep track of the first body section row group
+      if (nsnull == aReflowState.firstBodySection) {
         if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
-          firstRowGroupFrame = kidFrame;
+          aReflowState.firstBodySection = kidFrame;
         }
       }
 
@@ -3565,7 +3546,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       // Reflow the child into the available space
       nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
                                         kidFrame, kidAvailSize, reason);
-      if ((nsnull != firstRowGroupFrame) && (kidFrame != firstRowGroupFrame)) {
+      if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
         // If this isn't the first row group frame or the header or footer, then
         // we can't be at the top of the page anymore...
         kidReflowState.isTopOfPage = PR_FALSE;
@@ -3577,9 +3558,9 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       // Did the child fit?
       if (desiredSize.height > kidAvailSize.height) {
-        if ((nsnull != firstRowGroupFrame) && (kidFrame != firstRowGroupFrame)) {
-          // The child is too tall to fit in the available space, and it's
-          // not our first row grpup frame
+        if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
+          // The child is too tall to fit at all in the available space, and it's
+          // not a header/footer or our first row group frame
           PushChildren(kidFrame, prevKidFrame);
           aStatus = NS_FRAME_NOT_COMPLETE;
           break;
@@ -3634,7 +3615,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
          
         kidFrame->GetNextSibling(&nextSibling);
         if (nsnull != nextSibling) {
-          // XXX Don't push header/footer frames...
           PushChildren(nextSibling, kidFrame);
         }
         break;
@@ -3653,8 +3633,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
 
     // Get the next child
     kidFrame->GetNextSibling(&kidFrame);
-
-    // XXX talk with troy about checking for available space here
   }
 
   // Update the child count
