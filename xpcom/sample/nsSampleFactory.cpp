@@ -40,7 +40,7 @@
  * somewhere.
  *
  * NS_DEFINE_IID and NS_DEFINE_CID expand to define static IID/CID objects
- * that will be used later.  IID and CID objects are of the same type, the
+ * that will be used later.  IID and CID objects are of the same form, so the
  * distinction between InterfaceID and ClassID is made strictly by what the
  * ID represents, and not by any binary differences.
  */
@@ -56,13 +56,13 @@ static NS_DEFINE_CID(kSampleCID,           NS_SAMPLE_CID);
  * XPCOM: "Hello factory at <path-name>, what can you do for me?",
  * FACTORY: "Hello XPCOM, I can create the classes named <progID>:<CID>,
  * and <progID>:<CID> and ...".  This conversation is initiated when XPCOM calls
- * into the static NSRegisterSelf function of the shared library that houses this
+ * into the static |NSRegisterSelf| function of the shared library that houses this
  * factory.  Once this factory is properly registered, XPCOM can work it's magic.
  * After registration, any call into the Service Manager or Component Manager's
- * CreateInstance method requesting a progID or CID that this factory has
- * registered will cause XPCOM to call the static NSGetFactory function in
+ * |CreateInstance| method requesting a progID or CID that this factory has
+ * registered will cause XPCOM to call the static |NSGetFactory| function in
  * the .so, .dll, .whatever associated with this factory (if it hasn't already
- * done so), and then invoke the CreateInstance method of the resulting factory.
+ * done so), and then invoke the |CreateInstance| method of the resulting factory.
  */
 class SampleFactoryImpl : public nsIFactory
 {
@@ -92,9 +92,9 @@ protected:
 
 protected:
     /**
-     * When XPCOM calls into NSGetFactory, it informs us what kind of class
-     * it intends to create with this factory.  CreateInstance does NOT get
-     * this information, so we need to record what kind of class CreateInstance
+     * When XPCOM calls |NSGetFactory|, it informs us what kind of class
+     * it intends to create with this factory.  |CreateInstance| does NOT get
+     * this information, so we need to record what kind of class |CreateInstance|
      * should return for later reference.
      */
     nsCID       mClassID;
@@ -106,8 +106,8 @@ protected:
 
 /**
  * The constructor needs to initailize reference counting and
- * record the CID / ProgID of the object it should return when CreateInstance
- * is called.
+ * record the CID / ProgID of the object it should return when
+ * |CreateInstance| is called.
  */
 SampleFactoryImpl::SampleFactoryImpl(const nsCID &aClass, 
                                      const char* className,
@@ -123,11 +123,11 @@ SampleFactoryImpl::~SampleFactoryImpl()
 }
 
 /**
- * This is what a normal implementation of QueryInterface (sometimes
+ * This is what a normal implementation of |QueryInterface| (often
  * abbreviated QI) actually looks like. Because this QI only supports
  * nsISupports and nsIFactory, it, and the two NS_IMPL_* macros
  * that follow it could actually be replaced with the macro 
- * NS_IMPL_ISUPPORTS(nsIFactory, nsIFactory::GetIID) as nsSample does
+ * |NS_IMPL_ISUPPORTS(nsIFactory, nsIFactory::GetIID)| as nsSample does
  * in nsSample.cpp.
  * The XPCOM homepage (www.mozilla.org/projects/xpcom) has another reference
  * implementation of QueryInterface.
@@ -153,20 +153,21 @@ SampleFactoryImpl::QueryInterface(const nsIID &aIID, void **aResult)
     return NS_NOINTERFACE;
 }
 
+/*
+ * These macros expand to implementations of AddRef and Release
+ */
 NS_IMPL_ADDREF(SampleFactoryImpl);
 NS_IMPL_RELEASE(SampleFactoryImpl);
 
 /**
  * The IID passed in here is for COM Aggregation.  Aggregation deals with
- * classes contained within other classes, a topic out of the scope of
+ * classes contained within other classes, a topic outside the scope of
  * this sample.
- * Notice that this CreateInstance is very methodical...  It verifies that it
- * has been asked to create a supported class, even though we only registered
- * for one, and it calls QI on the newly created object, verifying that the
- * created class can actually support the interface we thought it could.  This
- * is (probably) regarded as a good thing in CreateInstance, and even if you
- * think you know whats going to happen in your CreateInstance, it's a good
- * idea to follow this same formula.
+ *
+ * Notice that this |CreateInstance| is very methodical.  It verifies that it
+ * has been asked to create a supported class and calls QI on the newly
+ * created object, verifying that the created class can actually support
+ * the interface that was asked for.
  */
 NS_IMETHODIMP
 SampleFactoryImpl::CreateInstance(nsISupports *aOuter,
@@ -176,6 +177,7 @@ SampleFactoryImpl::CreateInstance(nsISupports *aOuter,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
+    // Our example does not support COM Aggregation
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
@@ -185,10 +187,14 @@ SampleFactoryImpl::CreateInstance(nsISupports *aOuter,
 
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kSampleCID)) {
+
+        /* Try to create a new nsSampleImpl instance.  If this
+           fails, then return the error code */
         if (NS_FAILED(rv = NS_NewSample((nsISample**) &inst)))
             return rv;
     }
     else {
+        // We don't know how to create objects with the ClassID asked for
         return NS_ERROR_NO_INTERFACE;
     }
 
@@ -200,13 +206,19 @@ SampleFactoryImpl::CreateInstance(nsISupports *aOuter,
         NS_ERROR("didn't support the interface you wanted");
     }
 
+    /*
+     * We must call |Release| on the interface pointer that was
+     * returned from |QueryInterface|.  The "interface release"
+     * macro checks for a null pointer, calls |Release|, then
+     * sets the pointer to null.  This macro should be
+     * used instead of a direct |inst->Release()| call since
+     * the macro records tracing information if
+     * MOZ_TRACE_XPCOM_REFCNT is defined.
+     */
     NS_IF_RELEASE(inst);
     return rv;
 }
 
-/**
- * I'm really not sure what LockFactory would do if it were implemented :(
- */
 nsresult SampleFactoryImpl::LockFactory(PRBool aLock)
 {
     // Not implemented in simplest case.
@@ -243,7 +255,7 @@ NSGetFactory(nsISupports* aServMgr,
 
 /**
  * When the XPCOM runtime is initialized, it searches the component directory
- * for shared objects, and attempts to call NSRegisterSelf for each one it
+ * for shared objects, and attempts to call |NSRegisterSelf| for each one it
  * encounters.
  *
  * Clients create instances of XPCOM objects using the ComponentManager.
@@ -294,9 +306,8 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
 }
 
 /**
- * NSUnregisterSelf is responsible for undoing anything NSRegisterSelf does
- * to the registry.  It would presumably be called if your component is
- * uninstalled or upgraded.
+ * |NSUnregisterSelf| is responsible for undoing anything NSRegisterSelf does
+ * to the registry.
  */
 extern "C" PR_IMPLEMENT(nsresult)
 NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
