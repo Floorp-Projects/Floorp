@@ -43,8 +43,14 @@
 #include <Errors.h>
 #include <Script.h>
 #include <Processes.h>
+#include <StringCompare.h>
+
+#include <AppleEvents.h>
+#include <AEDataModel.h>
 
 #include <Aliases.h>
+#include <Folders.h>
+
 
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
@@ -53,6 +59,15 @@ extern "C"
 }
 
 #pragma mark [static util funcs]
+
+static inline void ClearFSSpec(FSSpec& aSpec)
+{
+	aSpec.vRefNum = 0;
+	aSpec.parID = 0;
+	aSpec.name[0] = 0;
+}
+
+
 // Simple func to map Mac OS errors into nsresults
 static nsresult MacErrorMapper(OSErr inErr)
 {
@@ -92,6 +107,258 @@ static nsresult MacErrorMapper(OSErr inErr)
 	return outErr;
 }
 
+
+
+/*----------------------------------------------------------------------------
+	IsEqualFSSpec 
+	
+	Compare two canonical FSSpec records.
+			
+	Entry:	file1 = pointer to first FSSpec record.
+			file2 = pointer to second FSSpec record.
+	
+	Exit:	function result = true if the FSSpec records are equal.
+----------------------------------------------------------------------------*/
+
+static PRBool IsEqualFSSpec (const FSSpec *file1, const FSSpec *file2)
+{
+	return
+		file1->vRefNum == file2->vRefNum &&
+		file1->parID == file2->parID &&
+		EqualString(file1->name, file2->name, false, true);
+}
+
+
+/*----------------------------------------------------------------------------
+	VolHasDesktopDB 
+	
+	Check to see if a volume supports the new desktop database.
+	
+	Entry:	vRefNum = vol ref num of volumn
+			
+	Exit:	function result = error code.
+			*hasDesktop = true if volume has the new desktop database.
+----------------------------------------------------------------------------*/
+
+static OSErr VolHasDesktopDB (short vRefNum, Boolean *hasDesktop)
+{
+	HParamBlockRec 		pb;
+	GetVolParmsInfoBuffer	info;
+	OSErr 				err = noErr;
+	
+	pb.ioParam.ioCompletion = nil;
+	pb.ioParam.ioNamePtr = nil;
+	pb.ioParam.ioVRefNum = vRefNum;
+	pb.ioParam.ioBuffer = (Ptr)&info;
+	pb.ioParam.ioReqCount = sizeof(info);
+	err = PBHGetVolParmsSync(&pb);
+	*hasDesktop = err == noErr && (info.vMAttrib & (1L << bHasDesktopMgr)) != 0;
+	return err;
+}
+
+
+/*----------------------------------------------------------------------------
+	GetLastModDateTime
+	
+	Get the last mod date and time of a file.
+	
+	Entry:	fSpec = pointer to file spec.
+	
+	Exit:	function result = error code.
+			*lastModDateTime = last mod date and time.
+----------------------------------------------------------------------------*/
+
+static OSErr GetLastModDateTime(const FSSpec *fSpec, unsigned long *lastModDateTime)
+{
+	CInfoPBRec	pBlock;
+	OSErr 		err = noErr;
+	
+	pBlock.hFileInfo.ioNamePtr = (StringPtr)fSpec->name;
+	pBlock.hFileInfo.ioVRefNum = fSpec->vRefNum;
+	pBlock.hFileInfo.ioFDirIndex = 0;
+	pBlock.hFileInfo.ioDirID = fSpec->parID;
+	err = PBGetCatInfoSync(&pBlock);
+	if (err != noErr) return err;
+	*lastModDateTime = pBlock.hFileInfo.ioFlMdDat;
+	return noErr;
+}
+
+
+/*----------------------------------------------------------------------------
+	FindAppOnVolume 
+	
+	Find an application on a volume.
+	
+	Entry:	sig = application signature.
+			vRefNum = vol ref num
+			
+	Exit:	function result = error code
+				= afpItemNotFound if app not found on vol.
+			*file = file spec for application on volume.
+----------------------------------------------------------------------------*/
+
+static OSErr FindAppOnVolume (OSType sig, short vRefNum, FSSpec *file)
+{
+	DTPBRec 	pb;
+	OSErr 		err = noErr;
+	short 		ioDTRefNum, i;
+	FInfo 		fInfo;
+	FSSpec 		candidate;
+	unsigned long lastModDateTime, maxLastModDateTime;
+
+	memset(&pb, 0, sizeof(DTPBRec));
+	pb.ioCompletion = nil;
+	pb.ioVRefNum = vRefNum;
+	pb.ioNamePtr = nil;
+	err = PBDTGetPath(&pb);
+	if (err != noErr) return err;
+	ioDTRefNum = pb.ioDTRefNum;
+
+	memset(&pb, 0, sizeof(DTPBRec));
+	pb.ioCompletion = nil;
+	pb.ioIndex = 0;
+	pb.ioFileCreator = sig;
+	pb.ioNamePtr = file->name;
+	pb.ioDTRefNum = ioDTRefNum;
+	err = PBDTGetAPPLSync(&pb);
+	
+	if (err == fnfErr || err == paramErr) return afpItemNotFound;
+	if (err != noErr) return err;
+
+	file->vRefNum = vRefNum;
+	file->parID = pb.ioAPPLParID;
+	
+	err = FSpGetFInfo(file, &fInfo);
+	if (err == noErr) return noErr;
+	
+	i = 1;
+	maxLastModDateTime = 0;
+	while (true)
+	{
+		memset(&pb, 0, sizeof(DTPBRec)); 
+		pb.ioCompletion = nil;
+		pb.ioIndex = i;
+		pb.ioFileCreator = sig;
+		pb.ioNamePtr = candidate.name;
+		pb.ioDTRefNum = ioDTRefNum;
+		err = PBDTGetAPPLSync(&pb);
+		if (err != noErr) break;
+		candidate.vRefNum = vRefNum;
+		candidate.parID = pb.ioAPPLParID;
+		err = GetLastModDateTime(file, &lastModDateTime);
+		if (err == noErr) {
+			if (lastModDateTime > maxLastModDateTime) {
+				maxLastModDateTime = lastModDateTime;
+				*file = candidate;
+			}
+		}
+		i++;
+	}
+	
+	return maxLastModDateTime > 0 ? noErr : afpItemNotFound;
+}
+
+
+/*----------------------------------------------------------------------------
+	GetIndVolume 
+	
+	Get a volume reference number by volume index.
+	
+	Entry:	index = volume index
+			
+	Exit:	function result = error code.
+			*vRefNum = vol ref num of indexed volume.
+----------------------------------------------------------------------------*/
+
+static OSErr GetIndVolume(short index, short *vRefNum)
+{
+	ParamBlockRec pb;
+	OSErr err = noErr;
+	
+	pb.volumeParam.ioCompletion = nil;
+	pb.volumeParam.ioNamePtr = nil;
+	pb.volumeParam.ioVolIndex = index;
+	
+	err = PBGetVInfoSync(&pb);
+	
+	*vRefNum = pb.volumeParam.ioVRefNum;
+	return err;
+}
+
+
+// Private NSPR functions
+static unsigned long gJanuaryFirst1970Seconds = 0;
+/*
+ * The geographic location and time zone information of a Mac
+ * are stored in extended parameter RAM.  The ReadLocation
+ * produdure uses the geographic location record, MachineLocation,
+ * to read the geographic location and time zone information in
+ * extended parameter RAM.
+ *
+ * Because serial port and SLIP conflict with ReadXPram calls,
+ * we cache the call here.
+ *
+ * Caveat: this caching will give the wrong result if a session
+ * extend across the DST changeover time.
+ */
+
+static void MyReadLocation(MachineLocation *loc)
+{
+    static MachineLocation storedLoc;
+    static Boolean didReadLocation = false;
+    
+    if (!didReadLocation) {
+        ReadLocation(&storedLoc);
+        didReadLocation = true;
+    }
+    *loc = storedLoc;
+}
+
+static long GMTDelta(void)
+{
+    MachineLocation loc;
+    long gmtDelta;
+
+    MyReadLocation(&loc);
+    gmtDelta = loc.u.gmtDelta & 0x00ffffff;
+    if (gmtDelta & 0x00800000) {    /* test sign extend bit */
+        gmtDelta |= 0xff000000;
+    }
+    return gmtDelta;
+}
+
+static void MacintoshInitializeTime(void)
+{
+    /*
+     * The NSPR epoch is midnight, Jan. 1, 1970 GMT.
+     *
+     * At midnight Jan. 1, 1970 GMT, the local time was
+     *     midnight Jan. 1, 1970 + GMTDelta().
+     *
+     * Midnight Jan. 1, 1970 is 86400 * (365 * (1970 - 1904) + 17)
+     *     = 2082844800 seconds since the Mac epoch.
+     * (There were 17 leap years from 1904 to 1970.)
+     *
+     * So the NSPR epoch is 2082844800 + GMTDelta() seconds since
+     * the Mac epoch.  Whew! :-)
+     */
+    gJanuaryFirst1970Seconds = 2082844800 + GMTDelta();
+}
+
+static nsresult	ConvertMacTimeToUnixTime( PRInt64* aLastModificationDate, PRInt32 timestamp )
+{
+	if ( gJanuaryFirst1970Seconds == 0)
+		MacintoshInitializeTime();
+	timestamp -= gJanuaryFirst1970Seconds;
+  PRTime			oneMillion, dateInMicroSeconds;
+	LL_I2L(dateInMicroSeconds, timestamp);
+	LL_I2L(oneMillion, 1000000UL);
+	LL_MUL(*aLastModificationDate, oneMillion, dateInMicroSeconds);
+	return NS_OK;
+}
+
+
+#pragma mark -
 
 static void myPLstrcpy(Str255 dst, const char* src)
 {
@@ -439,23 +706,14 @@ NS_IMPL_ISUPPORTS(nsDirEnumerator, NS_GET_IID(nsISimpleEnumerator));
 #pragma mark -
 #pragma mark [CTOR/DTOR]
 nsLocalFile::nsLocalFile()
+:	mInitType(eNotInitialized)
+,	mLastResolveFlag(PR_FALSE)
+,	mHaveFileInfo(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 
-	MakeDirty();
-	mLastResolveFlag = PR_FALSE;
-	
-	mWorkingPath.Assign("");
-	mAppendedPath.Assign("");
-	
-	mInitType = eNotInitialized;
-	
-	mSpec.vRefNum = 0;
-	mSpec.parID = 0;
-	mSpec.name[0] = 0;
-
-	mResolvedWasAlias = false;
-	mResolvedWasFolder = false;
+	MakeDirty();	
+	ClearFSSpec(mSpec);
 }
 
 nsLocalFile::~nsLocalFile()
@@ -491,16 +749,13 @@ nsLocalFile::MakeDirty()
 {
 	mStatDirty = PR_TRUE;
 	
-	mResolvedSpec.vRefNum = 0;
-	mResolvedSpec.parID = 0;
-	mResolvedSpec.name[0] = 0;
+	ClearFSSpec(mResolvedSpec);
+	ClearFSSpec(mTargetSpec);
 	
-	mTargetSpec.vRefNum = 0;
-	mTargetSpec.parID = 0;
-	mTargetSpec.name[0] = 0;
-
 	mResolvedWasAlias = false;
 	mResolvedWasFolder = false;
+	
+	mHaveFileInfo = PR_FALSE;
 }
 
 
@@ -546,6 +801,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
 			break;
 	}
 	
@@ -782,6 +1038,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
 			break;
 	}
 	
@@ -828,7 +1085,8 @@ nsLocalFile::Append(const char *node)
 	switch (mInitType)
 	{
 		case eInitWithPath:
-			mWorkingPath.Append(":");
+			if ( (mWorkingPath.Last())!=':' )
+				mWorkingPath.Append(":");
 			mWorkingPath.Append(node);
 			break;
 		
@@ -840,6 +1098,7 @@ nsLocalFile::Append(const char *node)
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
 			break;
 	}
 	
@@ -906,6 +1165,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
 			break;
 	}
 
@@ -993,6 +1253,7 @@ nsLocalFile::GetPath(char **_retval)
 		default:
 			// !!!!! Danger Will Robinson !!!!!
 			// we really shouldn't get here
+			NS_NOTREACHED("Unknown nsLocalFileMac init type");
 			break;
 	}
 	
@@ -1116,11 +1377,18 @@ NS_IMETHODIMP
 nsLocalFile::GetLastModificationDate(PRInt64 *aLastModificationDate)
 {
 	NS_ENSURE_ARG(aLastModificationDate);
+	nsresult rv = ResolveAndStat( PR_TRUE );
+	if ( NS_FAILED( rv ) )
+		return rv;
+		
+	CInfoPBRec pb;
+	PRUint32 timestamp;
+	if (GetTargetSpecCatInfo(pb) == noErr)
+		timestamp = ((DirInfo*)&pb)->ioDrMdDat; // The mod date is in the same spot for files and dirs.
+	else
+		timestamp = 0;
 	
-	aLastModificationDate->hi = 0;
-	aLastModificationDate->lo = 0;
-	
-	return NS_OK;
+  return ConvertMacTimeToUnixTime( aLastModificationDate, timestamp );
 }
 
 NS_IMETHODIMP  
@@ -1128,7 +1396,8 @@ nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
 {
 	MakeDirty();
 
-	return NS_OK;
+	NS_ASSERTION(0, "Not implemented");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP  
@@ -1139,7 +1408,8 @@ nsLocalFile::GetLastModificationDateOfLink(PRInt64 *aLastModificationDate)
 	aLastModificationDate->hi = 0;
 	aLastModificationDate->lo = 0;
 
-	return NS_OK;
+	NS_ASSERTION(0, "Not implemented");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP  
@@ -1147,7 +1417,8 @@ nsLocalFile::SetLastModificationDateOfLink(PRInt64 aLastModificationDate)
 {
 	MakeDirty();
 
-	return NS_OK;
+	NS_ASSERTION(0, "Not implemented");
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1166,7 +1437,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 	
 	OSErr err = FSpGetFileSize(&mTargetSpec, &dataSize, &resSize);
 							   
-	if (err != noErr)
+	if (err != noErr && !mResolvedWasFolder)
 		return MacErrorMapper(err);
 	
 	// For now we've only got 32 bits of file size info
@@ -1226,7 +1497,37 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
 NS_IMETHODIMP  
 nsLocalFile::GetFileSizeOfLink(PRInt64 *aFileSize)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_ENSURE_ARG(aFileSize);
+	
+	aFileSize->hi = 0;
+	aFileSize->lo = 0;
+
+	ResolveAndStat(PR_TRUE);
+	
+	long dataSize = 0;
+	long resSize = 0;
+	
+	OSErr err = FSpGetFileSize(&mResolvedSpec, &dataSize, &resSize);
+							   
+	if (err != noErr && !mResolvedWasFolder)
+		return MacErrorMapper(err);
+	
+	// For now we've only got 32 bits of file size info
+	PRInt64 dataInt64 = LL_Zero();
+	PRInt64 resInt64 = LL_Zero();
+	
+	// WARNING!!!!!!
+	// 
+	// For now we do NOT add the data and resource fork sizes as there are several
+	// assumptions in the code (notably in form submit) that only the data fork is
+	// used. 
+	// LL_I2L(resInt64, resSize);
+	
+	LL_I2L(dataInt64, dataSize);
+	
+	LL_ADD((*aFileSize), dataInt64, resInt64);
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP  
@@ -1244,6 +1545,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 	pb.ioNamePtr = nsnull;
 	pb.ioVRefNum = mResolvedSpec.vRefNum;
 	
+	// we should check if this call is available
 	OSErr err = ::PBXGetVolInfoSync(&pb);
 	
 	if (err == noErr)
@@ -1304,8 +1606,11 @@ nsLocalFile::Exists(PRBool *_retval)
 {
 	NS_ENSURE_ARG(_retval);
 	*_retval = PR_FALSE;		// Assume failure
-	(void)ResolveAndStat(PR_TRUE);
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if ( rv == NS_ERROR_FILE_NOT_FOUND )
+		return NS_OK;
 	
+	// XXX maybe Exists() should check the mResolvedSpec?
 	FSSpec temp;
 	if (::FSMakeFSSpec(mTargetSpec.vRefNum, mTargetSpec.parID, mTargetSpec.name, &temp) == noErr)
 		*_retval = PR_TRUE;
@@ -1314,33 +1619,49 @@ nsLocalFile::Exists(PRBool *_retval)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::IsWritable(PRBool *_retval)
+nsLocalFile::IsWritable(PRBool *outIsWritable)
 {
-	NS_ENSURE_ARG(_retval);
-	*_retval = PR_FALSE;
-	   
+	NS_ENSURE_ARG(outIsWritable);
+	*outIsWritable = PR_TRUE;
+
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+	
+	CInfoPBRec	fileInfo;
+	OSErr	err = GetTargetSpecCatInfo(fileInfo);
+	if (err != noErr)
+		return MacErrorMapper(err);
+	
+	// bit 0 in ioFlAttrib is the lock bit (apparently)
+	*outIsWritable = !(fileInfo.hFileInfo.ioFlAttrib & 0x01);
 	return NS_OK;
-
-
 }
 
 NS_IMETHODIMP  
 nsLocalFile::IsReadable(PRBool *_retval)
 {
 	NS_ENSURE_ARG(_retval);
-	*_retval = PR_FALSE;
 
+	// is it ever not readable on Mac?
 	*_retval = PR_TRUE;
 	return NS_OK;
 }
 
 
 NS_IMETHODIMP  
-nsLocalFile::IsExecutable(PRBool *_retval)
+nsLocalFile::IsExecutable(PRBool *outIsExecutable)
 {
-	NS_ENSURE_ARG(_retval);
-	*_retval = PR_FALSE;
+	NS_ENSURE_ARG(outIsExecutable);
+	*outIsExecutable = PR_FALSE;
 
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+
+	OSType fileType, fileCreator;
+	rv = GetFileTypeAndCreator(&fileType, &fileCreator);
+	if (NS_FAILED(rv)) return rv;
+	
+	*outIsExecutable = (fileType == 'APPL' || fileType == 'appe' || fileType == 'FNDR');
 	return NS_OK;
 }
 
@@ -1352,9 +1673,7 @@ nsLocalFile::IsDirectory(PRBool *_retval)
 	*_retval = PR_FALSE;
 
 	nsresult rv = ResolveAndStat(PR_TRUE);
-	
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
 	
 	long dirID;
 	Boolean isDirectory;
@@ -1386,16 +1705,25 @@ nsLocalFile::IsFile(PRBool *_retval)
 NS_IMETHODIMP  
 nsLocalFile::IsHidden(PRBool *_retval)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	NS_ENSURE_ARG(_retval);
+	*_retval = PR_FALSE;
+
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
+	
+	return TestFinderFlag(kIsInvisible, _retval);
 }
 
-NS_IMETHODIMP  
+NS_IMETHODIMP
 nsLocalFile::IsSymlink(PRBool *_retval)
 {
 	NS_ENSURE_ARG(_retval);
 	*_retval = PR_FALSE;
+
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 	
-	return NS_OK;
+	return TestFinderFlag(kIsAlias, _retval, PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -1499,6 +1827,296 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 	return NS_OK;
 }
 
+
+#pragma mark -
+
+// a stack-based, exception safe class for an AEDesc
+
+#pragma mark
+class StAEDesc: public AEDesc
+{
+public:
+					StAEDesc()
+					{
+						descriptorType = typeNull;
+						dataHandle = nil;
+					}
+										
+					~StAEDesc()
+					{
+						::AEDisposeDesc(this);
+					}
+
+					void Clear()
+					{
+						::AEDisposeDesc(this);
+						descriptorType = typeNull;
+						dataHandle = nil;
+					}
+										
+private:
+	// disallow copies and assigns
+							StAEDesc(const StAEDesc& rhs);		// copy constructor
+	StAEDesc& 	operator= (const StAEDesc&rhs);		// throws OSErrs
+
+};
+
+#pragma mark -
+#pragma mark [Utility methods]
+
+
+OSErr nsLocalFile::GetTargetSpecCatInfo(CInfoPBRec& outInfo) 
+{
+	OSErr	err = noErr;
+	
+	if (!mHaveFileInfo)
+	{
+		mTargetFileInfoRec.hFileInfo.ioCompletion = nsnull;
+		mTargetFileInfoRec.hFileInfo.ioFDirIndex = 0; // use dirID and name
+		mTargetFileInfoRec.hFileInfo.ioVRefNum = mTargetSpec.vRefNum;
+		mTargetFileInfoRec.hFileInfo.ioDirID = mTargetSpec.parID;
+		mTargetFileInfoRec.hFileInfo.ioNamePtr = mTargetSpec.name;
+
+		err =  PBGetCatInfoSync(&mTargetFileInfoRec);
+		mHaveFileInfo = (err == noErr);
+	}
+	
+	outInfo = mTargetFileInfoRec;
+	return err;
+}
+
+
+nsresult nsLocalFile::TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec /* = PR_TRUE */)
+{
+	CInfoPBRec	fileInfo;
+	
+	// we assume here that ResolveAndStat has already been called
+	
+	*outFlagSet = PR_FALSE;
+	OSErr	err = noErr;
+	
+	if (testTargetSpec)
+	{
+		err = GetTargetSpecCatInfo(fileInfo);
+	}
+	else
+	{
+		// we don't cache this CInfoPBRec, so do it manually
+		
+		fileInfo.hFileInfo.ioCompletion = nsnull;
+		fileInfo.hFileInfo.ioFDirIndex = 0; // use dirID and name
+		fileInfo.hFileInfo.ioVRefNum = mResolvedSpec.vRefNum;
+		fileInfo.hFileInfo.ioDirID = mResolvedSpec.parID;
+		fileInfo.hFileInfo.ioNamePtr = mResolvedSpec.name;
+
+		err =  PBGetCatInfoSync(&fileInfo);
+	}
+	
+	if (err != noErr)
+		return MacErrorMapper(err);
+	
+	*outFlagSet = (fileInfo.hFileInfo.ioFlFndrInfo.fdFlags & flagMask) != 0;
+	return NS_OK;
+}
+
+
+nsresult nsLocalFile::FindRunningAppBySignature (OSType aAppSig, FSSpec& outSpec, ProcessSerialNumber& outPsn)
+{
+	ProcessInfoRec 	info;
+	FSSpec					tempFSSpec;
+	OSErr 					err = noErr;
+	
+	outPsn.highLongOfPSN = 0;
+	outPsn.lowLongOfPSN  = kNoProcess;
+
+	while (PR_TRUE)
+	{
+		err = ::GetNextProcess(&outPsn);
+		if (err == procNotFound) break;
+		if (err != noErr) return NS_ERROR_FAILURE;
+		info.processInfoLength = sizeof(ProcessInfoRec);
+		info.processName = nil;
+		info.processAppSpec = &tempFSSpec;
+		err = ::GetProcessInformation(&outPsn, &info);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		if (info.processSignature == aAppSig)
+		{
+			outSpec = tempFSSpec;
+			return NS_OK;
+		}
+	}
+	
+	return NS_ERROR_FILE_NOT_FOUND;		// really process not found
+}
+
+
+nsresult nsLocalFile::FindRunningAppByFSSpec(const FSSpec& appSpec, ProcessSerialNumber& outPsn)
+{
+	ProcessInfoRec 	info;
+	FSSpec					tempFSSpec;
+	OSErr 					err = noErr;
+	
+	outPsn.highLongOfPSN = 0;
+	outPsn.lowLongOfPSN  = kNoProcess;
+
+	while (PR_TRUE)
+	{
+		err = ::GetNextProcess(&outPsn);
+		if (err == procNotFound) break;		
+		if (err != noErr) return NS_ERROR_FAILURE;
+		info.processInfoLength = sizeof(ProcessInfoRec);
+		info.processName = nil;
+		info.processAppSpec = &tempFSSpec;
+		err = ::GetProcessInformation(&outPsn, &info);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		if (IsEqualFSSpec(&appSpec, info.processAppSpec))
+		{
+  			return NS_OK;
+		}
+	}
+	
+	return NS_ERROR_FILE_NOT_FOUND;		// really process not found
+}
+
+
+nsresult nsLocalFile::FindAppOnLocalVolumes(OSType sig, FSSpec &outSpec)
+{
+	OSErr	err;
+	
+	// get the system volume
+	long		systemFolderDirID;
+	short		sysVRefNum;
+	err = FindFolder(kOnSystemDisk, kSystemFolderType, false, &sysVRefNum, &systemFolderDirID);
+	if (err != noErr) return NS_ERROR_FAILURE;
+
+	short	vRefNum = sysVRefNum;
+	short	index = 0;
+	
+	while (true)
+	{
+		if (index == 0 || vRefNum != sysVRefNum)
+		{
+			// should we avoid AppleShare volumes?
+			
+			Boolean	hasDesktopDB;
+			err = VolHasDesktopDB(vRefNum, &hasDesktopDB);
+			if (err != noErr) return err;
+			if (hasDesktopDB)
+			{
+				err = FindAppOnVolume(sig, vRefNum, &outSpec);
+				if (err != afpItemNotFound) return err;
+			}
+		}
+		index++;
+		err = GetIndVolume(index, &vRefNum);
+		if (err == nsvErr) return fnfErr;
+		if (err != noErr) return err;
+	}
+
+	return NS_OK;
+}
+
+nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aDocToLoad, PRBool aLaunchInBackground)
+{
+	ProcessSerialNumber thePSN = {0};
+	StAEDesc 			target;
+	StAEDesc 			docDesc;
+	StAEDesc 			launchDesc;
+	StAEDesc		 	docList;
+	AppleEvent 		theEvent = {0, nil};
+	AppleEvent 		theReply = {0, nil};
+	OSErr 				err = noErr;
+	Boolean 			autoParamValue = false;
+	Boolean				running = false;
+	nsresult			rv = NS_OK;
+	
+	rv = FindRunningAppByFSSpec(appSpec, thePSN);
+	running = NS_SUCCEEDED(rv);
+	
+	err = AECreateDesc(typeProcessSerialNumber, &thePSN, sizeof(thePSN), &target); 
+	if (err != noErr) return NS_ERROR_FAILURE;
+	
+	err = AECreateAppleEvent(kCoreEventClass, aDocToLoad ? kAEOpenDocuments : kAEOpenApplication, &target,
+							kAutoGenerateReturnID, kAnyTransactionID, &theEvent);
+	if (err != noErr) return NS_ERROR_FAILURE;
+	
+	if (aDocToLoad)
+	{
+		FSSpec		docSpec;
+
+		err = AECreateList(nil, 0, false, &docList);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		err = AECreateDesc(typeFSS, &docSpec, sizeof(FSSpec), &docDesc);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		err = AEPutDesc(&docList, 0, &docDesc);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		err = AEPutParamDesc(&theEvent, keyDirectObject, &docList);
+		if (err != noErr) return NS_ERROR_FAILURE;
+	}
+	
+	if (running)
+	{
+		err = AESend(&theEvent, &theReply, kAENoReply, kAENormalPriority, kNoTimeOut, nil, nil);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		if (!aLaunchInBackground)
+		{
+			err = ::SetFrontProcess(&thePSN);
+			if (err != noErr) return NS_ERROR_FAILURE;
+		}
+	}
+	else
+	{
+		LaunchParamBlockRec	launchThis = {0};
+		PRUint16						launchControlFlags = (launchContinue | launchNoFileFlags);
+		if (aLaunchInBackground)
+			launchControlFlags |= launchDontSwitch;
+		
+		err = AECoerceDesc(&theEvent, typeAppParameters, &launchDesc);
+		if (err != noErr) return NS_ERROR_FAILURE;
+
+		::HLock(theEvent.dataHandle);
+		
+		launchThis.launchAppSpec = (FSSpecPtr)&appSpec;
+		launchThis.launchAppParameters = (AppParametersPtr)*launchDesc.dataHandle;
+		launchThis.launchBlockID = extendedBlock;
+		launchThis.launchEPBLength = extendedBlockLen;
+		launchThis.launchFileFlags = 0;
+		launchThis.launchControlFlags = launchControlFlags;
+		err = ::LaunchApplication(&launchThis);
+		if (err != noErr) return NS_ERROR_FAILURE;
+		
+		// let's be nice and wait until it's running
+		const PRUint32	kMaxTimeToWait = 60;		// wait 1 sec max
+		PRUint32				endTicks = ::TickCount() + kMaxTimeToWait;
+
+		PRBool					foundApp = PR_FALSE;
+		
+		do
+		{
+			EventRecord		theEvent;
+			(void)WaitNextEvent(nullEvent, &theEvent, 1, NULL);
+
+			ProcessSerialNumber		psn;
+			foundApp = NS_SUCCEEDED(FindRunningAppByFSSpec(appSpec, psn));
+		
+		} while (!foundApp && (::TickCount() <= endTicks));
+
+		NS_ASSERTION(foundApp, "Failed to find app after launching it");
+	}
+	
+	if (theEvent.dataHandle != nil) AEDisposeDesc(&theEvent);
+	if (theReply.dataHandle != nil) AEDisposeDesc(&theReply);
+
+	return NS_OK;
+}
+
+
 #pragma mark -
 #pragma mark [Methods that won't be implemented on Mac]
 
@@ -1559,6 +2177,26 @@ NS_IMETHODIMP nsLocalFile::InitWithFSSpec(const FSSpec *fileSpec)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsLocalFile::InitFindingAppByCreatorCode(OSType aAppCreator)
+{
+	// is the app running?
+	FSSpec							appSpec;
+	ProcessSerialNumber psn;
+	
+	nsresult rv = FindRunningAppBySignature(aAppCreator, appSpec, psn);
+	if (rv == NS_ERROR_FILE_NOT_FOUND)
+	{
+		// we have to look on disk
+		rv = FindAppOnLocalVolumes(aAppCreator, appSpec);
+		if (NS_FAILED(rv)) return rv;
+	}
+	else if (NS_FAILED(rv))
+		return rv;
+
+	// init with the spec here
+	return InitWithFSSpec(&appSpec);
+}
+
 NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *fileSpec)
 {
 	NS_ENSURE_ARG(fileSpec);
@@ -1570,17 +2208,19 @@ NS_IMETHODIMP nsLocalFile::GetFSSpec(FSSpec *fileSpec)
 NS_IMETHODIMP nsLocalFile::GetResolvedFSSpec(FSSpec *fileSpec)
 {
 	NS_ENSURE_ARG(fileSpec);
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 	*fileSpec = mResolvedSpec;
 	return NS_OK;
-
 }
 
 NS_IMETHODIMP nsLocalFile::GetTargetFSSpec(FSSpec *fileSpec)
 {
 	NS_ENSURE_ARG(fileSpec);
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if (NS_FAILED(rv)) return rv;
 	*fileSpec = mTargetSpec;
 	return NS_OK;
-
 }
 
 NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
@@ -1665,6 +2305,88 @@ nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSize)
 	
 	return NS_OK;
 }
+
+
+// this nsLocalFile points to the app. We want to launch it, optionally with the document.
+NS_IMETHODIMP
+nsLocalFile::LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground)
+{
+	// are we launchable?
+	PRBool isExecutable;
+	nsresult rv = IsExecutable(&isExecutable);
+	if (NS_FAILED(rv)) return rv;
+	if (!isExecutable) return NS_ERROR_FILE_EXECUTION_FAILED;
+	
+	FSSpec			docSpec;
+	FSSpecPtr		docSpecPtr = nsnull;
+	
+	nsCOMPtr<nsILocalFileMac> macDoc = do_QueryInterface(aDocToLoad);
+	if (macDoc)
+	{
+		rv = macDoc->GetTargetFSSpec(&docSpec);
+		if (NS_FAILED(rv)) return rv;
+		
+		docSpecPtr = &docSpec;
+	}
+	
+	FSSpec	appSpec;
+	rv = GetResolvedFSSpec(&appSpec);
+	if (NS_FAILED(rv)) return rv;
+	
+	rv = MyLaunchAppWithDoc(appSpec, docSpecPtr, aLaunchInBackground);
+	return rv;
+}
+
+
+NS_IMETHODIMP
+nsLocalFile::OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackground)
+{
+	// if aAppToOpenWith is nil, we have to find the app from the creator code
+	// of the document
+	nsresult rv = NS_OK;
+	
+	FSSpec		appSpec;
+	
+	if (aAppToOpenWith)
+	{
+		nsCOMPtr<nsILocalFileMac> appFileMac = do_QueryInterface(aAppToOpenWith, &rv);
+		if (!appFileMac) return rv;
+	
+		rv = appFileMac->GetTargetFSSpec(&appSpec);
+		if (NS_FAILED(rv)) return rv;
+
+		// is it launchable?
+		PRBool isExecutable;
+		rv = aAppToOpenWith->IsExecutable(&isExecutable);
+		if (NS_FAILED(rv)) return rv;
+		if (!isExecutable) return NS_ERROR_FILE_EXECUTION_FAILED;
+	}
+	else
+	{
+		// look for one
+		OSType	fileType, fileCreator;
+		rv = GetFileTypeAndCreator(&fileType, &fileCreator);
+		if (NS_FAILED(rv)) return rv;
+		
+		// just make one on the stack
+		nsLocalFile	localAppFile;
+		rv = localAppFile.InitFindingAppByCreatorCode(fileCreator);
+		if (NS_FAILED(rv)) return rv;
+		
+		rv = localAppFile.GetTargetFSSpec(&appSpec);
+		if (NS_FAILED(rv)) return rv;
+	}
+	
+	FSSpec		docSpec;
+	rv = GetResolvedFSSpec(&docSpec);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = MyLaunchAppWithDoc(appSpec, &docSpec, aLaunchInBackground);
+	return rv;
+}
+
+
+#pragma mark -
 
 // Handy dandy utility create routine for something or the other
 nsresult 

@@ -59,6 +59,7 @@ public:
 	NS_IMETHOD GetInitType(nsLocalFileMacInitType *type);
 
 	NS_IMETHOD InitWithFSSpec(const FSSpec *fileSpec);
+	NS_IMETHOD InitFindingAppByCreatorCode(OSType aAppCreator);
 
 	NS_IMETHOD GetFSSpec(FSSpec *fileSpec);
 	NS_IMETHOD GetResolvedFSSpec(FSSpec *fileSpec);
@@ -72,11 +73,36 @@ public:
 
 	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize);
 
+	NS_IMETHOD LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground);
+	NS_IMETHOD OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackground);
+
+protected:
+
+    void 			MakeDirty();
+    nsresult 	ResolveAndStat(PRBool resolveTerminal);
+
+    nsresult  FindAppOnLocalVolumes(OSType sig, FSSpec &outSpec);
+    
+    nsresult  FindRunningAppBySignature(OSType sig, FSSpec& outSpec, ProcessSerialNumber& outPsn);
+    nsresult  FindRunningAppByFSSpec(const FSSpec& appSpec, ProcessSerialNumber& outPsn);
+
+    nsresult  MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aDocToLoad, PRBool aLaunchInBackground);
+    
+		nsresult	TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBool testTargetSpec = PR_TRUE);
+
+    OSErr			GetTargetSpecCatInfo(CInfoPBRec& outInfo);
+		
 private:
 
+    // It's important we keep track of how we were initialized
+    nsLocalFileMacInitType	mInitType;
+
     // this is the flag which indicates if I can used cached information about the file
-    PRBool		mStatDirty;
-    PRBool      mLastResolveFlag;
+    PRPackedBool		mStatDirty;
+    PRPackedBool    mLastResolveFlag;
+
+    // Is the mResolvedSpec member valid?  Only after we resolve the mSpec or mWorkingPath
+    // PRPackedBool		mHaveValidSpec;
 
     // If we're inited with a path then we store it here
     nsCString	mWorkingPath;
@@ -88,21 +114,17 @@ private:
     nsCString	mResolvedPath;
     
     // The Mac data structure for a file system object
-    FSSpec		mSpec;			// This is the raw spec from InitWithPath or InitWithFSSpec
-    FSSpec		mResolvedSpec;	// This is the spec we've called ResolveAlias on
-    FSSpec		mTargetSpec;	// This is the spec we've called ResolveAlias on
+    FSSpec		mSpec;					// This is the raw spec from InitWithPath or InitWithFSSpec
+    FSSpec		mResolvedSpec;	// This is the spec that we get from the initial spec + path. It might be an alias
+    FSSpec		mTargetSpec;		// This is the spec we've called ResolveAlias on
     
     Boolean		mResolvedWasAlias;	// mResolvedSpec was for an alias
     Boolean		mResolvedWasFolder;	// mResolvedSpec was for a directory
     
-    // Is the mResolvedSpec member valid?  Only after we resolve the mSpec or mWorkingPath
-    PRBool		mHaveValidSpec;
     
-    // It's important we keep track of how we were initialized
-    nsLocalFileMacInitType	mInitType;
+    PRPackedBool	mHaveFileInfo;					// have we got the file info?    
+    CInfoPBRec  	mTargetFileInfoRec;			// cached file info, for the mTargetSpec
     
-    void MakeDirty();
-    nsresult ResolveAndStat(PRBool resolveTerminal);
 };
 
 #endif
