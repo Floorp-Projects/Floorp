@@ -31,8 +31,8 @@
 
 #include <X11/Xatom.h>
 
-//#undef NOISY_FONTS
-//#undef REALLY_NOISY_FONTS
+#undef NOISY_FONTS
+#undef REALLY_NOISY_FONTS
 
 #ifdef DEBUG_pavlov
 #define NOISY_FONTS
@@ -101,6 +101,11 @@ NS_IMPL_ISUPPORTS1(nsFontMetricsGTK, nsIFontMetrics)
 static PRBool
 FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
+#ifdef REALLY_NOISY_FONTS
+  printf("font = '");
+  fputs(aFamily, stdout);
+  printf("'\n");
+#endif
   nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) aData;
   if (metrics->mFontsCount == metrics->mFontsAlloc) {
     int newSize = 2 * (metrics->mFontsAlloc ? metrics->mFontsAlloc : 1);
@@ -969,25 +974,25 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
 static nsFontCharSetInfo CP1251 =
   { "windows-1251", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88591 =
-  { "iso-8859-1", SingleByteConvert, 0 };
+  { "ISO-8859-1", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88592 =
-  { "iso-8859-2", SingleByteConvert, 0 };
+  { "ISO-8859-2", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88593 =
-  { "iso-8859-3", SingleByteConvert, 0 };
+  { "ISO-8859-3", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88594 =
-  { "iso-8859-4", SingleByteConvert, 0 };
+  { "ISO-8859-4", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88595 =
-  { "iso-8859-5", SingleByteConvert, 0 };
+  { "ISO-8859-5", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88596 =
-  { "iso-8859-6", SingleByteConvert, 0 };
+  { "ISO-8859-6", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88597 =
-  { "iso-8859-7", SingleByteConvert, 0 };
+  { "ISO-8859-7", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88598 =
-  { "iso-8859-8", SingleByteConvertReverse, 0 };
+  { "ISO-8859-8", SingleByteConvertReverse, 0 };
 static nsFontCharSetInfo ISO88599 =
-  { "iso-8859-9", SingleByteConvert, 0 };
+  { "ISO-8859-9", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
-  { "iso-8859-15", SingleByteConvert, 0 };
+  { "ISO-8859-15", SingleByteConvert, 0 };
 static nsFontCharSetInfo JISX0201 =
   { "jis_0201", SingleByteConvert, 1 };
 static nsFontCharSetInfo KOI8R =
@@ -1488,12 +1493,14 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   m->mLoadedFonts[m->mLoadedFontsCount++] = s;
   aSearch->mFont = s;
 
-#if 0
+#ifdef REALLY_NOISY_FONTS
   nsFontGTK* result = s;
   for (s = begin; s < end; s++) {
     printf("%d/%d ", s->mSize, s->mActualSize);
   }
-  printf("desired %d chose %d\n", desiredSize, result->mActualSize);
+  printf("%s[%s]: desired %d chose %d\n", aSearch->mFont->mName,
+         aSearch->mFont->mCharSetInfo->mCharSet,
+         desiredSize, result->mActualSize);
 #endif /* 0 */
 }
 
@@ -1715,6 +1722,9 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
   nsFontMetricsGTK* f = aSearch->mMetrics;
   nsFontStyle* style = aCharSet->mStyles[f->mStyleIndex];
   if (!style) {
+#ifdef REALLY_NOISY_FONTS
+    printf(" ==> skiping style index %d\n", f->mStyleIndex);
+#endif
     return; // skip dummy entries
   }
 
@@ -1762,6 +1772,10 @@ TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet)
     GET_WEIGHT_INDEX(weightIndex, weight);
   }
 
+#ifdef REALLY_NOISY_FONTS
+  printf("  ==> charset=%s weightIndex=%d strechIndex=%d\n", aCharSet->mInfo->mCharSet,
+         weightIndex, f->mStretchIndex);
+#endif
   PickASizeAndLoad(aSearch, weights[weightIndex]->mStretches[f->mStretchIndex],
     aCharSet);
 }
@@ -1774,6 +1788,10 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
   PRUnichar c = search->mChar;
+#ifdef REALLY_NOISY_FONTS
+  printf("%s: searching for character c=0x%x (%d) '%c' in %s\n",
+         search->mFont ? search->mFont->mName : "(no-name)", c, c, c, charSetInfo->mCharSet);
+#endif
   if (charSetInfo->mCharSet) {
     if (!map) {
       map = (PRUint32*) PR_Calloc(2048, 4);
@@ -1784,12 +1802,18 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
       SetUpFontCharSetInfo(charSetInfo);
     }
     if (!IS_REPRESENTABLE(map, c)) {
+#ifdef REALLY_NOISY_FONTS
+      printf("  ==> character not representable, trying next character set\n");
+#endif
       return HT_ENUMERATE_NEXT;
     }
   }
 
   TryCharSet(search, charSet);
   if (search->mFont) {
+#ifdef REALLY_NOISY_FONTS
+    printf("  ==> found '%s'\n", search->mFont->mName);
+#endif
     return HT_ENUMERATE_STOP;
   }
 
@@ -2065,7 +2089,7 @@ GetFontNames(char* aPattern)
   XFreeFontNames(list);
 
 #ifdef DEBUG_DUMP_TREE
-  //DumpTree();
+  DumpTree();
 #endif
 
   return family;
