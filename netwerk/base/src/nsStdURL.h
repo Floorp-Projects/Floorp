@@ -141,8 +141,10 @@ nsStdURL::GetFileExtension(char* *o_FileExtension)
 
     char *dot = mFileName;
     if (dot) {
-        while (*dot && (*dot != '.')) dot++; // goto the dot.
-        if (*dot) {
+        // find the last dot
+        while (*dot) dot++;
+        while ( (dot != mFileName) && (*dot != '.') ) dot--; // goto the dot.
+        if (*dot == '.') {
             nsCAutoString ext(dot+1);
             *o_FileExtension = ext.ToNewCString();
             if (!*o_FileExtension) return NS_ERROR_OUT_OF_MEMORY;
