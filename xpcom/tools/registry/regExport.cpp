@@ -29,6 +29,8 @@
 #include "nsIEnumerator.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "nsIAllocator.h"
+#include "nsIFileSpec.h"
 
 static void display( nsIRegistry *reg, nsRegistryKey root, const char *name );
 static void displayValues( nsIRegistry *reg, nsRegistryKey root );
