@@ -30,8 +30,6 @@
 use diagnostics;
 use strict;
 # use Carp;                       # for confess
-# Shut up misguided -w warnings about "used only once".  For some reason,
-# "use vars" chokes on me when I try it here.
 
 # commented out the following snippet of code. this tosses errors into the
 # CGI if you are perl 5.6, and doesn't if you have perl 5.003. 
@@ -39,6 +37,8 @@ use strict;
 # eval "use Mozilla::LDAP::Conn";
 # my $have_ldap = $@ ? 0 : 1;
 
+# Shut up misguided -w warnings about "used only once".  For some reason,
+# "use vars" chokes on me when I try it here.
 
 sub CGI_pl_sillyness {
     my $zz;
