@@ -27,8 +27,8 @@
 
 <form method="get" action="show_bug.cgi">
 <div id="useful-links">
-  <div class="group">
-    <div id="link-action">Actions:</div>
+  <div id="links-actions">
+    <div class="label">Actions:</div>
     <div class="links">
         <a href="enter_bug.cgi">New</a> | 
         <a href="query.cgi">Search</a> |
@@ -64,8 +64,8 @@
   </div>
       
     [% IF user.login %] 
-  <div class="group">
-    <div id="link-edit">Edit:</div>
+  <div id="links-edit">
+    <div class="label">Edit:</div>
     <div class="links">
 
         <a href="userprefs.cgi">Prefs</a>
@@ -88,8 +88,8 @@
 
     [%# Saved searches %]
     
-  <div class="group">
-    <div id="link-saved">
+  <div id="links-saved">
+    <div class="label">
       [% IF user.showmybugslink OR user.queries.size %]
           Saved&nbsp;Searches:
       [% END %]

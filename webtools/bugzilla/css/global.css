@@ -107,14 +107,14 @@
         display: table;
     }
 
-    #footer .group
+    #footer #links-actions,
+    #footer #links-edit,
+    #footer #links-saved
     {
         display: table-row;
     }
 
-    #footer #link-action,
-    #footer #link-edit,
-    #footer #link-saved
+    #footer .label
     {
         width: 7.2em;
         display: block;
@@ -125,15 +125,13 @@
         padding: 0.1em 0.2em;
     }
 
-    #footer #link-action
+    #footer #links-actions .label
     {
         padding-top: 0.45em;
     }
 
     /* hide from MSIE and NN4 */
-    [id]#footer #link-action,
-    [id]#footer #link-edit,
-    [id]#footer #link-saved
+    [id]#footer .label
     {
         display: table-cell;
         float: none;
