@@ -57,6 +57,7 @@
 #include "nsMsgCompUtils.h"
 #include "prcmon.h"
 #include "nsIMsgImapMailFolder.h"
+#include "nsIImapIncomingServer.h"
 #include "nsIEventQueueService.h"
 #include "nsMsgSimulateError.h"
 
@@ -430,6 +431,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   RETURN_SIMULATED_ERROR(SIMULATED_SEND_ERROR_5, NS_ERROR_FAILURE)
   
   if (!msgFolder) return NS_ERROR_NULL_POINTER;
+  *msgFolder = nsnull;
 
   if (!aFolderURI || (PL_strlen(aFolderURI) == 0)) {
     return NS_ERROR_INVALID_ARG;
@@ -458,9 +460,15 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
         nsCOMPtr<nsIMsgFolder> rootMsgFolder;
         server->GetRootMsgFolder(getter_AddRefs(rootMsgFolder));
         if (rootMsgFolder)
-          rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, PR_FALSE, msgFolder);
+        {
+          nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
+          return rootMsgFolder->GetChildWithURI(aFolderURI, PR_TRUE, imapServer == nsnull /*caseInsensitive*/, msgFolder);
+        }
+        else
+          return NS_MSG_ERROR_FOLDER_MISSING;
       }
-	    return NS_OK;
+      else
+	      return NS_MSG_ERROR_FOLDER_MISSING;
     }
     else 
     {
