@@ -200,7 +200,7 @@ function goClickThrobber( urlPref )
   try {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    url = pref.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString);
+    url = pref.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
   }
 
   catch(e) {
