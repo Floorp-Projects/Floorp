@@ -13,13 +13,25 @@
             SUPERCLASS = NSObject; 
         }, 
         {
-            ACTIONS = {checkboxClicked = id; }; 
-            CLASS = OrgMozillaChimeraPreferenceTabbedBrowsing; 
+            ACTIONS = {
+                checkboxClicked = id; 
+                checkboxStartPageClicked = id; 
+                checkboxUseSystemHomePageClicked = id; 
+                chooseDownloadFolder = id; 
+                clearDiskCache = id; 
+                clearGlobalHistory = id; 
+                historyDaysModified = id; 
+            }; 
+            CLASS = OrgMozillaChimeraPreferenceNavigation; 
             LANGUAGE = ObjC; 
             OUTLETS = {
-                checkboxLoadTabsInBackground = NSButton; 
-                radioOpenForAE = id; 
-                radioOpenTabsForCommand = id; 
+                checkboxNewTabBlank = NSButton; 
+                checkboxNewWindowBlank = NSButton; 
+                checkboxUseSystemHomePage = NSButton; 
+                mDownloadFolder = NSPopUpButton; 
+                mEnableHelperApps = NSButton; 
+                textFieldHistoryDays = NSTextField; 
+                textFieldHomePage = NSTextField; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
