@@ -1916,8 +1916,8 @@ js_Interpret(JSContext *cx, jsval *result)
 	    RESTORE_SP(fp);
 	    if (!ok)
 		goto out;
-	    i = ~i;
-	    PUSH_NUMBER(cx, i);
+	    d = (jsdouble) ~i;
+	    PUSH_NUMBER(cx, d);
 	    break;
 
 	  case JSOP_NEG:

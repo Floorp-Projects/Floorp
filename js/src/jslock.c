@@ -452,8 +452,8 @@ js_CleanupLocks()
 JS_PUBLIC_API(void)
 js_InitContextForLocking(JSContext *cx)
 {
-	cx->thread = CurrentThreadId();
-	JS_ASSERT(Thin_GetWait(cx->thread) == 0);
+    cx->thread = CurrentThreadId();
+    JS_ASSERT(Thin_GetWait(cx->thread) == 0);
 }
 
 /*

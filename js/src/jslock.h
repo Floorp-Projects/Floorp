@@ -51,8 +51,8 @@ typedef struct JSFatLockTable {
 
 #define JS_ATOMIC_ADDREF(p, i) js_AtomicAdd(p,i)
 
-#define CurrentThreadId() (jsword)PR_GetCurrentThread()
-#define JS_CurrentThreadId() js_CurrentThreadId()
+#define CurrentThreadId()           (jsword)PR_GetCurrentThread()
+#define JS_CurrentThreadId()        js_CurrentThreadId()
 #define JS_NEW_LOCK()               PR_NewLock()
 #define JS_DESTROY_LOCK(l)          PR_DestroyLock(l)
 #define JS_ACQUIRE_LOCK(l)          PR_Lock(l)

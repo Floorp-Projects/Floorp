@@ -88,7 +88,7 @@ typedef enum JSOp {
 
 #define ARGC_HI(argc)           ((jsbytecode)((argc) >> 8))
 #define ARGC_LO(argc)           ((jsbytecode)(argc))
-#define GET_ARGC(pc)            (((pc)[1] << 8) | (pc)[2])
+#define GET_ARGC(pc)            ((uintN)(((pc)[1] << 8) | (pc)[2]))
 #define ARGC_LIMIT              ((uint32)1 << 16)
 
 /* Synonyms for quick JOF_QARG and JOF_QVAR bytecodes. */

@@ -1772,8 +1772,8 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, JSBool constructing)
     }
     if (str) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-			     constructing ? JSMSG_NOT_CONSTRUCTOR
-					  : JSMSG_NOT_FUNCTION,
+			     (uintN)(constructing ? JSMSG_NOT_CONSTRUCTOR
+						  : JSMSG_NOT_FUNCTION),
 			     JS_GetStringBytes(str));
     }
 }

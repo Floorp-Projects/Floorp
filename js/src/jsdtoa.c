@@ -2530,7 +2530,7 @@ ret1:
 **   '+' or '-' after the 'e' in scientific notation
 */
 JS_FRIEND_API(void)
-JS_cnvtf(char *buf,int bufsz, int prcsn,double fval)
+JS_cnvtf(char *buf, size_t bufsz, int prcsn, double fval)
 {
     intN decpt,sign,numdigits;
     char *num, *nump;
