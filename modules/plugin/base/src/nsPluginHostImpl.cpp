@@ -1783,10 +1783,19 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
 
   mHaveFiredOnStartRequest = PR_TRUE;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  // do a little sanity check to make sure our frame isn't gone
+  // by getting the tag type and checking for an error, we can determine if
+  // the frame is gone
+  if (mOwner) {
+    nsCOMPtr<nsIPluginTagInfo2> pti2 = do_QueryInterface(mOwner);
+    NS_ENSURE_TRUE(pti2, NS_ERROR_FAILURE);
+    nsPluginTagType tagType;  
+    if (NS_FAILED(pti2->GetTagType(&tagType)))
+      return NS_ERROR_FAILURE;  // something happened to our object frame, so bail!
+  }
 
-  if (!channel)
-      return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsICachingChannel> cacheChannel = do_QueryInterface(channel, &rv);
   if (cacheChannel)
