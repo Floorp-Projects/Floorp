@@ -39,37 +39,6 @@
 
 class nsIFrame;
 
-// Bits for each struct.
-#define NS_STYLE_INHERIT_FONT             0x000001
-#define NS_STYLE_INHERIT_COLOR            0x000002
-#define NS_STYLE_INHERIT_BACKGROUND       0x000004
-#define NS_STYLE_INHERIT_LIST             0x000008
-#define NS_STYLE_INHERIT_POSITION         0x000010
-#define NS_STYLE_INHERIT_TEXT             0x000020
-#define NS_STYLE_INHERIT_TEXT_RESET       0x000040
-#define NS_STYLE_INHERIT_DISPLAY          0x000080
-#define NS_STYLE_INHERIT_VISIBILITY       0x000100
-#define NS_STYLE_INHERIT_TABLE            0x000200
-#define NS_STYLE_INHERIT_TABLE_BORDER     0x000400
-#define NS_STYLE_INHERIT_CONTENT          0x000800
-#define NS_STYLE_INHERIT_QUOTES           0x001000
-#define NS_STYLE_INHERIT_UI               0x002000
-#define NS_STYLE_INHERIT_UI_RESET         0x004000
-#define NS_STYLE_INHERIT_MARGIN           0x008000
-#define NS_STYLE_INHERIT_PADDING          0x010000
-#define NS_STYLE_INHERIT_BORDER           0x020000
-#define NS_STYLE_INHERIT_OUTLINE          0x040000
-#define NS_STYLE_INHERIT_XUL              0x080000
-
-#define NS_STYLE_INHERIT_MASK             0x0fffff
-
-// A bit to test whether or not a style context can be shared
-// by siblings.
-#define NS_STYLE_UNIQUE_CONTEXT           0x100000
-
-// A bit to test whether or not we have any text decorations.
-#define NS_STYLE_HAS_TEXT_DECORATIONS     0x200000
-
 enum nsStyleStructID {
   eStyleStruct_Font           = 1,
   eStyleStruct_Color          = 2,
@@ -94,6 +63,38 @@ enum nsStyleStructID {
   eStyleStruct_Max            = eStyleStruct_XUL,
   eStyleStruct_BorderPaddingShortcut = 21       // only for use in GetStyle()
 };
+
+// Bits for each struct.
+#define NS_STYLE_INHERIT_BIT(sid_)        (1 << (PRInt32(sid_) - 1))
+#define NS_STYLE_INHERIT_FONT             NS_STYLE_INHERIT_BIT(eStyleStruct_Font)
+#define NS_STYLE_INHERIT_COLOR            NS_STYLE_INHERIT_BIT(eStyleStruct_Color)
+#define NS_STYLE_INHERIT_BACKGROUND       NS_STYLE_INHERIT_BIT(eStyleStruct_Background)
+#define NS_STYLE_INHERIT_LIST             NS_STYLE_INHERIT_BIT(eStyleStruct_List)
+#define NS_STYLE_INHERIT_POSITION         NS_STYLE_INHERIT_BIT(eStyleStruct_Position)
+#define NS_STYLE_INHERIT_TEXT             NS_STYLE_INHERIT_BIT(eStyleStruct_Text)
+#define NS_STYLE_INHERIT_TEXT_RESET       NS_STYLE_INHERIT_BIT(eStyleStruct_TextReset)
+#define NS_STYLE_INHERIT_DISPLAY          NS_STYLE_INHERIT_BIT(eStyleStruct_Display)
+#define NS_STYLE_INHERIT_VISIBILITY       NS_STYLE_INHERIT_BIT(eStyleStruct_Visibility)
+#define NS_STYLE_INHERIT_TABLE            NS_STYLE_INHERIT_BIT(eStyleStruct_Table)
+#define NS_STYLE_INHERIT_TABLE_BORDER     NS_STYLE_INHERIT_BIT(eStyleStruct_TableBorder)
+#define NS_STYLE_INHERIT_CONTENT          NS_STYLE_INHERIT_BIT(eStyleStruct_Content)
+#define NS_STYLE_INHERIT_QUOTES           NS_STYLE_INHERIT_BIT(eStyleStruct_Quotes)
+#define NS_STYLE_INHERIT_UI               NS_STYLE_INHERIT_BIT(eStyleStruct_UserInterface)
+#define NS_STYLE_INHERIT_UI_RESET         NS_STYLE_INHERIT_BIT(eStyleStruct_UIReset)
+#define NS_STYLE_INHERIT_MARGIN           NS_STYLE_INHERIT_BIT(eStyleStruct_Margin)
+#define NS_STYLE_INHERIT_PADDING          NS_STYLE_INHERIT_BIT(eStyleStruct_Padding)
+#define NS_STYLE_INHERIT_BORDER           NS_STYLE_INHERIT_BIT(eStyleStruct_Border)
+#define NS_STYLE_INHERIT_OUTLINE          NS_STYLE_INHERIT_BIT(eStyleStruct_Outline)
+#define NS_STYLE_INHERIT_XUL              NS_STYLE_INHERIT_BIT(eStyleStruct_XUL)
+
+#define NS_STYLE_INHERIT_MASK             0x0fffff
+
+// A bit to test whether or not a style context can be shared
+// by siblings.
+#define NS_STYLE_UNIQUE_CONTEXT           0x100000
+
+// A bit to test whether or not we have any text decorations.
+#define NS_STYLE_HAS_TEXT_DECORATIONS     0x200000
 
 // The actual structs start here
 struct nsStyleStruct {

@@ -96,101 +96,107 @@ protected:
                                     nsRuleData* aRuleData,
                                     nsCSSStruct* aSpecificData);
 
-  const nsStyleStruct* ComputeStyleData(const nsStyleStructID& aSID, nsStyleStruct* aStartStruct, 
-                                        const nsCSSStruct& aStartData, 
-                                        nsIStyleContext* aContext, nsRuleNode* aHighestNode,
-                                        const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeDisplayData(nsStyleDisplay* aStartDisplay, const nsCSSDisplay& aDisplayData, 
+  const nsStyleStruct* ComputeDisplayData(nsStyleStruct* aStartDisplay, const nsCSSStruct& aDisplayData, 
                                           nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                           const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeVisibilityData(nsStyleVisibility* aStartVisibility, const nsCSSDisplay& aDisplayData, 
+  const nsStyleStruct* ComputeVisibilityData(nsStyleStruct* aStartVisibility, const nsCSSStruct& aDisplayData, 
                                              nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                              const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeFontData(nsStyleFont* aStartFont, const nsCSSFont& aFontData, 
+  const nsStyleStruct* ComputeFontData(nsStyleStruct* aStartFont, const nsCSSStruct& aFontData, 
                                        nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                        const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeColorData(nsStyleColor* aStartColor, const nsCSSColor& aColorData, 
+  const nsStyleStruct* ComputeColorData(nsStyleStruct* aStartColor, const nsCSSStruct& aColorData, 
                                         nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                         const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeBackgroundData(nsStyleBackground* aStartBackground, const nsCSSColor& aColorData, 
+  const nsStyleStruct* ComputeBackgroundData(nsStyleStruct* aStartBackground, const nsCSSStruct& aColorData, 
                                              nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                              const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeMarginData(nsStyleMargin* aStartMargin, const nsCSSMargin& aMarginData, 
+  const nsStyleStruct* ComputeMarginData(nsStyleStruct* aStartMargin, const nsCSSStruct& aMarginData, 
                                          nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                          const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeBorderData(nsStyleBorder* aStartBorder, const nsCSSMargin& aMarginData, 
+  const nsStyleStruct* ComputeBorderData(nsStyleStruct* aStartBorder, const nsCSSStruct& aMarginData, 
                                          nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                          const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputePaddingData(nsStylePadding* aStartPadding, const nsCSSMargin& aMarginData, 
+  const nsStyleStruct* ComputePaddingData(nsStyleStruct* aStartPadding, const nsCSSStruct& aMarginData, 
                                           nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                           const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeOutlineData(nsStyleOutline* aStartOutline, const nsCSSMargin& aMarginData, 
+  const nsStyleStruct* ComputeOutlineData(nsStyleStruct* aStartOutline, const nsCSSStruct& aMarginData, 
                                           nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                           const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeListData(nsStyleList* aStartList, const nsCSSList& aListData, 
+  const nsStyleStruct* ComputeListData(nsStyleStruct* aStartList, const nsCSSStruct& aListData, 
                                        nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                        const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputePositionData(nsStylePosition* aStartPosition, const nsCSSPosition& aPositionData, 
+  const nsStyleStruct* ComputePositionData(nsStyleStruct* aStartPosition, const nsCSSStruct& aPositionData, 
                                            nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                            const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeTableData(nsStyleTable* aStartTable, const nsCSSTable& aTableData, 
+  const nsStyleStruct* ComputeTableData(nsStyleStruct* aStartTable, const nsCSSStruct& aTableData, 
                                         nsIStyleContext* aContext, nsRuleNode* aHighestNode,
                                         const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeTableBorderData(nsStyleTableBorder* aStartTable, const nsCSSTable& aTableData, 
+  const nsStyleStruct* ComputeTableBorderData(nsStyleStruct* aStartTable, const nsCSSStruct& aTableData, 
                                               nsIStyleContext* aContext,  
                                               nsRuleNode* aHighestNode,
                                               const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeContentData(nsStyleContent* aStartContent, const nsCSSContent& aData, 
+  const nsStyleStruct* ComputeContentData(nsStyleStruct* aStartContent, const nsCSSStruct& aData, 
                                           nsIStyleContext* aContext,  
                                           nsRuleNode* aHighestNode,
                                           const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeQuotesData(nsStyleQuotes* aStartQuotes, const nsCSSContent& aData, 
+  const nsStyleStruct* ComputeQuotesData(nsStyleStruct* aStartQuotes, const nsCSSStruct& aData, 
                                          nsIStyleContext* aContext,  
                                          nsRuleNode* aHighestNode,
                                          const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeTextData(nsStyleText* aStartData, const nsCSSText& aData, 
+  const nsStyleStruct* ComputeTextData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
                                        nsIStyleContext* aContext,  
                                        nsRuleNode* aHighestNode,
                                        const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeTextResetData(nsStyleTextReset* aStartData, const nsCSSText& aData, 
+  const nsStyleStruct* ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
                                             nsIStyleContext* aContext,  
                                             nsRuleNode* aHighestNode,
                                             const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeUIData(nsStyleUserInterface* aStartData, const nsCSSUserInterface& aData, 
+  const nsStyleStruct* ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
                                      nsIStyleContext* aContext,  
                                      nsRuleNode* aHighestNode,
                                      const RuleDetail& aRuleDetail, PRBool aInherited);
-  const nsStyleStruct* ComputeUIResetData(nsStyleUIReset* aStartData, const nsCSSUserInterface& aData, 
+  const nsStyleStruct* ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
                                           nsIStyleContext* aContext,  
                                           nsRuleNode* aHighestNode,
                                           const RuleDetail& aRuleDetail, PRBool aInherited);
 #ifdef INCLUDE_XUL
-  const nsStyleStruct* ComputeXULData(nsStyleXUL* aStartXUL, const nsCSSXUL& aXULData, 
+  const nsStyleStruct* ComputeXULData(nsStyleStruct* aStartXUL, const nsCSSStruct& aXULData, 
                                       nsIStyleContext* aContext,  
                                       nsRuleNode* aHighestNode,
                                       const RuleDetail& aRuleDetail, PRBool aInherited);
 #endif
 
-  RuleDetail CheckSpecifiedProperties(const nsStyleStructID& aSID, const nsCSSStruct& aCSSStruct);
-  RuleDetail CheckDisplayProperties(const nsCSSDisplay& aDisplay);
-  RuleDetail CheckVisibilityProperties(const nsCSSDisplay& aDisplay);
-  RuleDetail CheckFontProperties(const nsCSSFont& aFont);
-  RuleDetail CheckColorProperties(const nsCSSColor& aColor);
-  RuleDetail CheckBackgroundProperties(const nsCSSColor& aColor);
-  RuleDetail CheckMarginProperties(const nsCSSMargin& aMargin);
-  RuleDetail CheckBorderProperties(const nsCSSMargin& aMargin);
-  RuleDetail CheckPaddingProperties(const nsCSSMargin& aMargin);
-  RuleDetail CheckOutlineProperties(const nsCSSMargin& aMargin);
-  RuleDetail CheckListProperties(const nsCSSList& aList);
-  RuleDetail CheckPositionProperties(const nsCSSPosition& aPosition);
-  RuleDetail CheckTableProperties(const nsCSSTable& aTable);
-  RuleDetail CheckTableBorderProperties(const nsCSSTable& aTable);
-  RuleDetail CheckContentProperties(const nsCSSContent& aContent);
-  RuleDetail CheckQuotesProperties(const nsCSSContent& aContent);
-  RuleDetail CheckTextProperties(const nsCSSText& aText);
-  RuleDetail CheckTextResetProperties(const nsCSSText& aText);
-  RuleDetail CheckUIProperties(const nsCSSUserInterface& aUI);
-  RuleDetail CheckUIResetProperties(const nsCSSUserInterface& aUI);
+  typedef const nsStyleStruct*
+  (nsRuleNode::*ComputeStyleDataFn)(nsStyleStruct* aStartStruct,
+                                    const nsCSSStruct& aStartData,
+                                    nsIStyleContext* aContext,
+                                    nsRuleNode* aHighestNode,
+                                    const RuleDetail& aRuleDetail,
+                                    PRBool aInherited);
+
+  static ComputeStyleDataFn gComputeStyleDataFn[];
+
+  inline RuleDetail CheckSpecifiedProperties(const nsStyleStructID& aSID, const nsCSSStruct& aCSSStruct);
+  inline RuleDetail CheckDisplayProperties(const nsCSSDisplay& aDisplay);
+  inline RuleDetail CheckVisibilityProperties(const nsCSSDisplay& aDisplay);
+  inline RuleDetail CheckFontProperties(const nsCSSFont& aFont);
+  inline RuleDetail CheckColorProperties(const nsCSSColor& aColor);
+  inline RuleDetail CheckBackgroundProperties(const nsCSSColor& aColor);
+  inline RuleDetail CheckMarginProperties(const nsCSSMargin& aMargin);
+  inline RuleDetail CheckBorderProperties(const nsCSSMargin& aMargin);
+  inline RuleDetail CheckPaddingProperties(const nsCSSMargin& aMargin);
+  inline RuleDetail CheckOutlineProperties(const nsCSSMargin& aMargin);
+  inline RuleDetail CheckListProperties(const nsCSSList& aList);
+  inline RuleDetail CheckPositionProperties(const nsCSSPosition& aPosition);
+  inline RuleDetail CheckTableProperties(const nsCSSTable& aTable);
+  inline RuleDetail CheckTableBorderProperties(const nsCSSTable& aTable);
+  inline RuleDetail CheckContentProperties(const nsCSSContent& aContent);
+  inline RuleDetail CheckQuotesProperties(const nsCSSContent& aContent);
+  inline RuleDetail CheckTextProperties(const nsCSSText& aText);
+  inline RuleDetail CheckTextResetProperties(const nsCSSText& aText);
+  inline RuleDetail CheckUIProperties(const nsCSSUserInterface& aUI);
+  inline RuleDetail CheckUIResetProperties(const nsCSSUserInterface& aUI);
 
 #ifdef INCLUDE_XUL
   RuleDetail CheckXULProperties(const nsCSSXUL& aXUL);
@@ -219,6 +225,9 @@ protected:
 #ifdef INCLUDE_XUL
   const nsStyleStruct* GetXULData(nsIStyleContext* aContext);
 #endif
+
+  typedef const nsStyleStruct* (nsRuleNode::*GetStyleDataFn)(nsIStyleContext*);
+  static GetStyleDataFn gGetStyleDataFn[];
 
 public:
   nsRuleNode(nsIPresContext* aPresContext, nsIStyleRule* aRule=nsnull, nsRuleNode* aParent=nsnull);

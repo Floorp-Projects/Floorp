@@ -191,134 +191,35 @@ struct nsResetStyleData
 
 struct nsCachedStyleData
 {
+  struct StyleStructInfo {
+    ptrdiff_t mCachedStyleDataOffset;
+    ptrdiff_t mInheritResetOffset;
+    PRBool    mIsReset;
+  };
+
+  static StyleStructInfo gInfo[];
+
   nsInheritedStyleData* mInheritedData;
   nsResetStyleData* mResetData;
 
-  static PRBool IsReset(const nsStyleStructID& aSID)
-  {
-    switch (aSID) {
-      case eStyleStruct_Visibility: // [Inherited]
-      case eStyleStruct_Font:
-      case eStyleStruct_List:
-      case eStyleStruct_TableBorder:
-      case eStyleStruct_Color:
-      case eStyleStruct_Quotes:
-      case eStyleStruct_Text:
-      case eStyleStruct_UserInterface:
-        return PR_FALSE; 
-      case eStyleStruct_Display: // [Reset]
-      case eStyleStruct_Margin: 
-      case eStyleStruct_Padding:
-      case eStyleStruct_Border:
-      case eStyleStruct_Outline:
-      case eStyleStruct_Position:
-      case eStyleStruct_Table:
-      case eStyleStruct_Background:
-      case eStyleStruct_Content:
-      case eStyleStruct_XUL:
-      case eStyleStruct_TextReset:
-      case eStyleStruct_UIReset:
-    	  return PR_TRUE;
-    }
-
-    return PR_TRUE;
+  static PRBool IsReset(const nsStyleStructID& aSID) {
+    return gInfo[aSID].mIsReset;
   };
 
-  static PRUint32 GetBitForSID(const nsStyleStructID& aSID)
-  {
-    switch (aSID) {
-      case eStyleStruct_Visibility:
-        return NS_STYLE_INHERIT_VISIBILITY;
-      case eStyleStruct_Font:
-        return NS_STYLE_INHERIT_FONT;   
-      case eStyleStruct_Color:
-        return NS_STYLE_INHERIT_COLOR;
-      case eStyleStruct_Background:
-        return NS_STYLE_INHERIT_BACKGROUND;
-      case eStyleStruct_List:
-        return NS_STYLE_INHERIT_LIST;
-      case eStyleStruct_Position:
-        return NS_STYLE_INHERIT_POSITION;
-      case eStyleStruct_Text:
-        return NS_STYLE_INHERIT_TEXT;
-      case eStyleStruct_TextReset:
-        return NS_STYLE_INHERIT_TEXT_RESET;
-      case eStyleStruct_Display:
-        return NS_STYLE_INHERIT_DISPLAY;
-      case eStyleStruct_Table:
-        return NS_STYLE_INHERIT_TABLE;
-      case eStyleStruct_TableBorder:
-        return NS_STYLE_INHERIT_TABLE_BORDER;
-      case eStyleStruct_Content:
-        return NS_STYLE_INHERIT_CONTENT;
-      case eStyleStruct_UserInterface:
-        return NS_STYLE_INHERIT_UI;
-      case eStyleStruct_UIReset:
-        return NS_STYLE_INHERIT_UI_RESET;
-      case eStyleStruct_Margin:
-    	  return NS_STYLE_INHERIT_MARGIN;
-      case eStyleStruct_Padding:
-    	  return NS_STYLE_INHERIT_PADDING;
-      case eStyleStruct_Border:
-    	  return NS_STYLE_INHERIT_BORDER;
-      case eStyleStruct_Outline:
-    	  return NS_STYLE_INHERIT_OUTLINE;
-      case eStyleStruct_Quotes:
-        return NS_STYLE_INHERIT_QUOTES;
-#ifdef INCLUDE_XUL
-      case eStyleStruct_XUL:
-    	  return NS_STYLE_INHERIT_XUL;
-#endif
-    }
-
-    return 0;
+  static PRUint32 GetBitForSID(const nsStyleStructID& aSID) {
+    return 1 << (aSID - 1);
   };
+
   nsStyleStruct* GetStyleData(const nsStyleStructID& aSID) {
-    switch (aSID) {
-      case eStyleStruct_Display:
-        return mResetData ? mResetData->mDisplayData : nsnull;
-      case eStyleStruct_Visibility:
-        return mInheritedData ? mInheritedData->mVisibilityData : nsnull;
-      case eStyleStruct_Font:
-        return mInheritedData ? mInheritedData->mFontData : nsnull;
-      case eStyleStruct_Color:
-        return mInheritedData ? mInheritedData->mColorData : nsnull;
-      case eStyleStruct_Background:
-        return mResetData ? mResetData->mBackgroundData : nsnull;
-      case eStyleStruct_Margin:
-        return mResetData ? mResetData->mMarginData : nsnull;
-      case eStyleStruct_Padding:
-        return mResetData ? mResetData->mPaddingData : nsnull;
-      case eStyleStruct_Border:
-        return mResetData ? mResetData->mBorderData : nsnull;
-      case eStyleStruct_Outline:
-        return mResetData ? mResetData->mOutlineData : nsnull;
-      case eStyleStruct_List:
-        return mInheritedData ? mInheritedData->mListData : nsnull;
-      case eStyleStruct_Position:
-        return mResetData ? mResetData->mPositionData : nsnull;
-      case eStyleStruct_Table:
-        return mResetData ? mResetData->mTableData : nsnull;
-      case eStyleStruct_TableBorder:
-        return mInheritedData ? mInheritedData->mTableData : nsnull;
-      case eStyleStruct_Content:
-        return mResetData ? mResetData->mContentData : nsnull;
-      case eStyleStruct_Quotes:
-        return mInheritedData ? mInheritedData->mQuotesData : nsnull;
-      case eStyleStruct_Text:
-        return mInheritedData ? mInheritedData->mTextData : nsnull;
-      case eStyleStruct_TextReset:
-        return mResetData ? mResetData->mTextData : nsnull;
-      case eStyleStruct_UserInterface:
-        return mInheritedData ? mInheritedData->mUIData : nsnull;
-      case eStyleStruct_UIReset:
-        return mResetData ? mResetData->mUIData : nsnull;
-#ifdef INCLUDE_XUL
-      case eStyleStruct_XUL:
-        return mResetData ? mResetData->mXULData : nsnull;
-#endif
+    const StyleStructInfo& info = gInfo[aSID];
+    char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, this) + info.mCachedStyleDataOffset;
+    char* resetOrInherit = NS_REINTERPRET_CAST(char*, *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
+    nsStyleStruct* data = nsnull;
+    if (resetOrInherit) {
+      char* dataSlot = resetOrInherit + info.mInheritResetOffset;
+      data = *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot);
     }
-    return nsnull;
+    return data;
   };
 
   void ClearInheritedData(PRUint32 aBits) {
@@ -368,7 +269,7 @@ struct nsRuleData
 
   nsRuleData(const nsStyleStructID& aSID, nsIPresContext* aContext, nsIStyleContext* aStyleContext) 
     :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
-     mAttributes(nsnull), mDisplayData(nsnull), mFontData(nsnull), mMarginData(nsnull), mListData(nsnull), 
+     mAttributes(nsnull), mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
      mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),
      mUIData(nsnull)
   {
