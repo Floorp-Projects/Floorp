@@ -199,6 +199,7 @@ PRBool CStartToken::IsEmpty(void) {
   return mEmpty;
 }
 
+static
 nsString& GetIdentChars(void) {
   static nsString gIdentChars("-0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz");
   return gIdentChars;
@@ -609,6 +610,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   
  *  @return  
  */
+static
 nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
   static    nsAutoString gMinus("-");
   nsresult  result=NS_OK;
@@ -677,6 +679,7 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
  *  @param   
  *  @return  
  */
+static
 nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
   static    nsAutoString gEdibles("!-");
   static    nsAutoString gMinus("-");
@@ -991,6 +994,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
+static
 nsresult ConsumeAttributeValueText(PRUnichar,nsString& aString,nsScanner& aScanner){
   static nsAutoString terminals("\b\t\n\r >");
   nsresult result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
