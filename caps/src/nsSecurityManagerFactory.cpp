@@ -49,62 +49,6 @@ Construct_nsIScriptSecurityManager(nsISupports *aOuter, REFNSIID aIID,
 }
 
 
-static NS_IMETHODIMP
-Construct_nsISecurityManager(nsISupports * aOuter, REFNSIID aIID, void * * aResult)
-{
-	nsresult rv;
-	nsISupports *obj;
-	if(!aResult)
-	{
-		rv = NS_ERROR_NULL_POINTER;
-		goto done;
-	}
-	*aResult = NULL;
-	if(aOuter)
-	{
-		rv = NS_ERROR_NO_AGGREGATION;
-		goto done;
-	}
-	obj = nsnull; // nsCCapsManager::GetSecurityManager();
-	if(!obj)
-	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
-		goto done;
-	}
-	rv = obj->QueryInterface(aIID, aResult);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
-done:
-	return rv;
-}
-
-static NS_IMETHODIMP
-Construct_nsIPrivilegeManager(nsISupports * aOuter, REFNSIID aIID, void * * aResult)
-{
-	nsresult rv;
-	nsISupports * obj;
-	if(!aResult)
-	{
-		rv = NS_ERROR_NULL_POINTER;
-		goto done;
-	}
-	*aResult = NULL;
-	if(aOuter)
-	{
-		rv = NS_ERROR_NO_AGGREGATION;
-		goto done;
-	}
-	obj = nsnull; /// nsPrivilegeManager::GetPrivilegeManager();
-	if(!obj)
-	{
-		rv = NS_ERROR_OUT_OF_MEMORY;
-		goto done;
-	}
-	rv = obj->QueryInterface(aIID, aResult);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
-done:
-	return rv;
-}
-
 extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports *aServMgr, const nsCID &aClass, 
              const char *aClassName, const char *aProgID, 
