@@ -7,14 +7,24 @@
         onload="onload();">
     <script type="application/x-javascript">
         <![CDATA[
-            var n = 11;
+            const n = 11;
+            var sub = [];
             function onload() {
-                while( n-- ) {
-                    window.setTimeout( 'openMiniXul();', n*2000 );
+                var i = n;
+                while( i-- ) {
+                    window.setTimeout( 'sub[n] = openMiniXul();', i*1000 );
                 }
+                window.setTimeout( 'shutDown();', n*1000 );
             }
             function openMiniXul(n) {
-                window.openDialog("chrome://navigator/content/miniXul.xul","_blank","","chrome,all");
+                return window.openDialog("chrome://navigator/content/miniXul.xul","_blank","","chrome,all");
+            }
+            function shutDown() {
+                var i = n;
+                while( i-- ) {
+                    sub[i].close();
+                }
+                window.close();
             }
         ]]>
     </script>
