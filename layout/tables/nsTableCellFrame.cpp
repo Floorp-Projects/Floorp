@@ -389,6 +389,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     printf("  %p cellFrame returning aDesiredSize=%d,%d\n",
            this, aDesiredSize.width, aDesiredSize.height);
 
+  aDesiredSize.ascent=aDesiredSize.height;
+  aDesiredSize.descent=0;
+
 #ifdef NS_DEBUG
   //PostReflowCheck(result);
 #endif
