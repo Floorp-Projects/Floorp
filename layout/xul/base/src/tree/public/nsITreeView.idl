@@ -52,6 +52,11 @@ interface nsIOutlinerView : nsISupports
   // to be matched on the ::moz-outliner-cell pseudoelement.
   void getCellProperties(in long row, in wstring colID, in nsISupportsArray properties);
   
+  // Methods that can be used to test whether or not a twisty should be drawn,
+  // and if so, whether an open or closed twisty should be used.
+  boolean isContainer(in long index);
+  boolean isContainerOpen(in long index);
+
   // The text for a given cell.  If a column consists only of an image, then
   // the empty string is returned.  The level is an integer value that represents
   // the level of indentation.  It is multiplied by the width specified in the 

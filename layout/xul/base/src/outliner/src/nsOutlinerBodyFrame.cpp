@@ -29,6 +29,9 @@
 #include "nsXULAtoms.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMNodeList.h"
+#include "nsIContent.h"
 
 // The style context cache impl
 nsresult 
@@ -267,7 +270,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
     mView->GetRowCount(&rowCount);
   
   // Ensure our column info is built.
-  EnsureColumns();
+  EnsureColumns(aPresContext);
 
   // Loop through our onscreen rows.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
@@ -307,10 +310,39 @@ nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyl
 }
 
 void
-nsOutlinerBodyFrame::EnsureColumns()
+nsOutlinerBodyFrame::EnsureColumns(nsIPresContext* aPresContext)
 {
   if (!mColumns) {
+    nsCOMPtr<nsIContent> parent;
+    mContent->GetParent(*getter_AddRefs(parent));
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
 
+    nsCOMPtr<nsIDOMNodeList> cols;
+    elt->GetElementsByTagName(NS_LITERAL_STRING("outlinercol"), getter_AddRefs(cols));
+
+    nsCOMPtr<nsIPresShell> shell; 
+    aPresContext->GetShell(getter_AddRefs(shell));
+
+    PRUint32 count;
+    cols->GetLength(&count);
+
+    nsOutlinerColumn* currCol = nsnull;
+    for (PRUint32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIDOMNode> node;
+      cols->Item(i, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> child(do_QueryInterface(node));
+      
+      // Get the frame for this column.
+      nsIFrame* frame;
+      shell->GetPrimaryFrameFor(child, &frame);
+      
+      // Create a new column structure.
+      nsOutlinerColumn* col = new nsOutlinerColumn(child, frame);
+      if (currCol)
+        currCol->SetNext(col);
+      else mColumns = col;
+      currCol = col;
+    }
   }
 }
 

@@ -122,7 +122,7 @@ class nsOutlinerColumn {
   nsIFrame* mColFrame;
 
 public:
-  nsOutlinerColumn(nsIContent* aColElement);
+  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame);
   virtual ~nsOutlinerColumn();
 
   void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
@@ -178,7 +178,7 @@ protected:
   nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult);
 
   // Builds our cache of column info.
-  void EnsureColumns();
+  void EnsureColumns(nsIPresContext* aContext);
 
 protected: // Data Members
   // The current view for this outliner widget.  We get all of our row and cell data
