@@ -41,7 +41,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
-#include "nsLiteralString.h"
+#include "nsString.h"
 
 static const nsID TestTargetID =
 { /* e628fc6e-a6a7-48c7-adba-f241d1128fb8 */
@@ -64,16 +64,15 @@ static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
 //static PRInt32 gMsgCount = 0;
 
+//-----------------------------------------------------------------------------
+
 class myIpcMessageObserver : public ipcIMessageObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IPCIMESSAGEOBSERVER
 
-    myIpcMessageObserver()
-    {
-        NS_INIT_ISUPPORTS();
-    }
+    myIpcMessageObserver() { NS_INIT_ISUPPORTS(); }
 };
 
 NS_IMPL_ISUPPORTS1(myIpcMessageObserver, ipcIMessageObserver)
@@ -88,6 +87,38 @@ myIpcMessageObserver::OnMessageAvailable(const nsID &target, const char *data, P
 
     return NS_OK;
 }
+
+//-----------------------------------------------------------------------------
+
+class myIpcClientObserver : public ipcIClientObserver
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_IPCICLIENTOBSERVER
+
+    myIpcClientObserver() { NS_INIT_ISUPPORTS(); }
+};
+
+NS_IMPL_ISUPPORTS1(myIpcClientObserver, ipcIClientObserver)
+
+NS_IMETHODIMP
+myIpcClientObserver::OnClientStatus(PRUint32 aReqToken, ipcIClientInfo *aClientInfo, PRUint32 aStatus)
+{
+    printf("*** got client status [token=%u info=%p status=%u]\n", aReqToken, (void *) aClientInfo, aStatus);
+
+    if (aClientInfo) {
+        PRUint32 cID;
+        if (NS_SUCCEEDED(aClientInfo->GetID(&cID))) {
+            nsCAutoString cName;
+            if (NS_SUCCEEDED(aClientInfo->GetName(cName)))
+                printf("***   name:%s --> ID:%u\n", cName.get(), cID);
+        }
+    }
+
+    return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
 
 void SendMsg(ipcIService *ipc, const nsID &target, const char *data, PRUint32 dataLen)
 {
@@ -198,6 +229,10 @@ int main(int argc, char **argv)
                 "59 this is a really long message.\n"
                 "60 this is a really long message.\n";
         SendMsg(ipcServ, TestTargetID, data, strlen(data)+1);
+
+        PRUint32 reqToken;
+        nsCOMPtr<ipcIClientObserver> obs(new myIpcClientObserver());
+        ipcServ->QueryClientByName(NS_LITERAL_CSTRING("foopy"), obs, &reqToken);
 
         while (gKeepRunning)
             gEventQ->ProcessPendingEvents();
