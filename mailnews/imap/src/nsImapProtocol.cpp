@@ -363,6 +363,8 @@ nsImapProtocol::~nsImapProtocol()
   PR_FREEIF(m_serverKey);
   PR_FREEIF(m_fetchBodyIdList);
 
+  NS_IF_RELEASE(m_flagState);
+
   nsCRT::free(m_hostName);
 
   PR_FREEIF(m_dataOutputBuf);
@@ -750,6 +752,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
             aImapServer(do_QueryInterface(me_server, &result));
         if (NS_SUCCEEDED(result))
             aImapServer->RemoveConnection(me);
+        me_server = nsnull;
     }
         
     me->m_runningUrl = null_nsCOMPtr();
@@ -857,6 +860,8 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     Log("SendData", "TellThreadToDie", command.get());
   }
 
+  if (mAsyncReadRequest)
+    mAsyncReadRequest->Cancel(NS_BINDING_ABORTED);
   PR_EnterMonitor(m_threadDeathMonitor);
   m_threadShouldDie = PR_TRUE;
   PR_ExitMonitor(m_threadDeathMonitor);
@@ -865,14 +870,15 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
   PR_NotifyAll(m_eventCompletionMonitor);
   PR_ExitMonitor(m_eventCompletionMonitor);
 
-  PR_EnterMonitor(m_urlReadyToRunMonitor);
-  PR_NotifyAll(m_urlReadyToRunMonitor);
-  PR_ExitMonitor(m_urlReadyToRunMonitor);
 
   PR_EnterMonitor(m_dataAvailableMonitor);
   PR_Notify(m_dataAvailableMonitor);
   PR_ExitMonitor(m_dataAvailableMonitor);
 
+  PR_EnterMonitor(m_urlReadyToRunMonitor);
+  m_imapThreadIsRunning = PR_FALSE;
+  PR_NotifyAll(m_urlReadyToRunMonitor);
+  PR_ExitMonitor(m_urlReadyToRunMonitor);
   return rv;
 }
 
@@ -1028,9 +1034,8 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_channel)
   {
-      nsCOMPtr<nsIRequest> request;
     m_channel->AsyncRead(this /* stream listener */, nsnull, 0, PRUint32(-1), 0,
-                         getter_AddRefs(request));
+                         getter_AddRefs(mAsyncReadRequest));
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
 #ifdef DEBUG_bienvenu   
@@ -1286,6 +1291,7 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
   }
 
   PR_CEnterMonitor(this);
+  mAsyncReadRequest = nsnull; // don't need to cache this anymore, it's going away
   if (killThread == PR_TRUE) 
   {
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
