@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsWalletService.h"
 #include "nsIServiceManager.h"
 #include "wallet.h"
@@ -258,8 +259,8 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
       NS_RELEASE(cont);
       return rv;
     }
-    nsIDocument *doc = nsnull;
-    rv = docViewer->GetDocument(doc);
+    nsCOMPtr<nsIDocument> doc;
+    rv = docViewer->GetDocument(*getter_AddRefs(doc));
     if (NS_FAILED(rv) || (doc == nsnull)) {
       NS_RELEASE(docViewer);
       NS_RELEASE(cv);
