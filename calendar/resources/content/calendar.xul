@@ -45,7 +45,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/skin/unifinder.css" type="text/css"?>
 
 
 <!-- Overlays -->
