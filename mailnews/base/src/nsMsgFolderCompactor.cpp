@@ -350,6 +350,13 @@ nsFolderCompactState::FinishCompact()
 
   nsLocalFolderSummarySpec newSummarySpec(m_fileSpec);
 
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  nsCOMPtr <nsIDBFolderInfo> transferInfo;
+  nsCOMPtr <nsIMsgDatabase> db;
+  m_folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+  if (dbFolderInfo)
+    dbFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+  db=nsnull;
     // close down database of the original folder and remove the folder node
     // and all it's message node from the tree
   m_folder->ForceDBClosed();
@@ -364,12 +371,20 @@ nsFolderCompactState::FinishCompact()
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
-  // Make the front end reload the folder. Calling GetMsgDatabase on a folder whose
-  // db isn't open will cause the folder to open the db and
-  // send a folder loaded event to the js front end, which will build up the view.
-  nsCOMPtr <nsIMsgDatabase> db;
   m_folder->GetMsgDatabase(m_window, getter_AddRefs(db));
+  if (transferInfo && db)
+  {
+    dbFolderInfo=nsnull;
+    db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+    if (dbFolderInfo)
+      dbFolderInfo->InitFromTransferInfo(transferInfo);
+  }
   db = nsnull;
+  dbFolderInfo=nsnull;
+  transferInfo=nsnull;
+
+  m_folder->NotifyCompactCompleted();
+
   if (m_compactAll)
     rv = CompactNextFolder();
       

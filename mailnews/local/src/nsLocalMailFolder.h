@@ -149,6 +149,7 @@ public:
                              nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
+    NS_IMETHOD NotifyCompactCompleted();
 
 
 protected:
@@ -190,7 +191,6 @@ protected:
 	nsresult CopyMessagesTo(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow,
                                              nsIMsgFolder *dstFolder,
                                              PRBool isMove);
-
 	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
@@ -211,6 +211,7 @@ protected:
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
   nsresult DeleteMsgsOnPop3Server(nsISupportsArray *messages);
+  static nsIAtom* mCompactCompletedAtom;
 };
 
 #endif // nsMsgLocalMailFolder_h__

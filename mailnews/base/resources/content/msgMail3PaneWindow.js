@@ -43,6 +43,7 @@ var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
 var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -2;
+var gCurrentlyDisplayedMessage=-1;
 
 var gActiveThreadPaneSortColumn = "";
 
@@ -105,8 +106,6 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				//dump("In OnFolderLoaded for " + uri +"\n");
-            
 				if(uri == gCurrentFolderToReroot)
 				{
 					gCurrentFolderToReroot="";
@@ -174,6 +173,10 @@ var folderListener = {
                         HandleDeleteOrMoveMsgFailed(folder);
         }
 
+          else if (eventType == "CompactCompleted") {
+            HandleCompactCompleted(folder);
+        }
+
     }
 }
 
@@ -234,6 +237,44 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     }
       gNextMessageViewIndexAfterDelete = -2;  
      //default value after delete/move/copy is over
+  }
+}
+
+function HandleCompactCompleted (folder)
+{
+  dump ("Compact Completed \n\n");
+  if(folder)
+  {
+    var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if(resource)
+    {
+      var uri = resource.Value;
+      var msgFolder = msgWindow.openFolder;
+      if (msgFolder && uri == msgFolder.URI)
+      {
+        var msgdb = msgFolder.getMsgDatabase(msgWindow);
+        if (msgdb)
+        {
+          var dbFolderInfo = msgdb.dBFolderInfo;
+          sortType = dbFolderInfo.sortType;
+          sortOrder = dbFolderInfo.sortOrder;
+          viewFlags = dbFolderInfo.viewFlags;
+          viewType = dbFolderInfo.viewType;
+        }
+        RerootFolder(uri, msgFolder, viewType, viewFlags, sortType, sortOrder);
+        SetFocusThreadPane();
+        if (gCurrentlyDisplayedMessage != -1)
+        {
+          var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+          var outlinerSelection = outlinerView.selection;
+          outlinerSelection.select(gCurrentlyDisplayedMessage);
+          if (outlinerView)
+            outlinerView.selectionChanged();
+          EnsureRowInThreadOutlinerIsVisible(gCurrentlyDisplayedMessage);
+        }
+        gCurrentlyDisplayedMessage = -1; //reset
+      }
+    }
   }
 }
 

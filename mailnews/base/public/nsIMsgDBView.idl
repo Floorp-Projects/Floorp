@@ -254,6 +254,7 @@ interface nsIMsgDBView : nsISupports
 
     readonly attribute unsigned long numSelected;
     readonly attribute nsMsgViewIndex msgToSelectAfterDelete; 
+    readonly attribute nsMsgViewIndex currentlyDisplayedMessage; 
 
 	// we'll suppress displaying messages if the message pane is collapsed
 	attribute boolean supressMsgDisplay;

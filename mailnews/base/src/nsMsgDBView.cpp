@@ -4261,6 +4261,14 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
 }
 
 
+NS_IMETHODIMP 
+nsMsgDBView::GetCurrentlyDisplayedMessage (nsMsgViewIndex *currentlyDisplayedMessage)
+{
+  NS_ENSURE_ARG_POINTER(currentlyDisplayedMessage);
+  *currentlyDisplayedMessage = FindViewIndex(m_currentlyDisplayedMsgKey);
+  return NS_OK;
+}
+
 // if nothing selected, return an NS_ERROR
 NS_IMETHODIMP
 nsMsgDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)

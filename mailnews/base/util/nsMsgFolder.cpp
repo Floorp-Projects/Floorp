@@ -2629,3 +2629,9 @@ nsresult nsMsgFolder::WarnAndDisableFilter(nsIMsgWindow *msgWindow)
   }
   return rv;
 }
+
+NS_IMETHODIMP nsMsgFolder::NotifyCompactCompleted()
+{
+  NS_ASSERTION(PR_FALSE, "should be overridden by child class");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

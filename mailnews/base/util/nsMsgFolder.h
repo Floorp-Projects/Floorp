@@ -85,10 +85,10 @@ public:
   NS_IMETHOD GetNoSelect(PRBool *aNoSelect);
   NS_IMETHOD GetCanSubscribe(PRBool *aCanSubscribe);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
+  NS_IMETHOD GetFilterList(nsIMsgFilterList **aFilterList);
   NS_IMETHOD GetCanCreateSubfolders(PRBool *aCanCreateSubfolders);
   NS_IMETHOD GetCanRename(PRBool *aCanRename);
   NS_IMETHOD GetCanCompact(PRBool *aCanCompact);
-  NS_IMETHOD GetFilterList(nsIMsgFilterList **aFilterList);
   NS_IMETHOD ForceDBClosed(void);
   NS_IMETHOD Delete(void);
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
@@ -174,6 +174,7 @@ public:
 
   NS_IMETHOD GetChildWithURI(const char *uri, PRBool deep, PRBool caseInsensitive, nsIMsgFolder **_retval); 
   NS_IMETHOD EnableNotifications(PRInt32 notificationType, PRBool enable);
+  NS_IMETHOD NotifyCompactCompleted();
 
   // end NS_DECL_NSIMSGFOLDER
   

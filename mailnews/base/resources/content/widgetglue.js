@@ -176,73 +176,45 @@ function MsgCompactFolder(isAll)
         var folderList = tree.selectedItems;
         if (folderList)
         {
-            var selectedFolderUri = "";
-            var isImap = false;
-            if (folderList.length == 1)
+            var folder = folderList[0];
+            if (folder)
             {
-                selectedFolderUri = folderList[0].getAttribute('id');
+                dump("folder = " + folder.localName + "\n"); 
+                var selectedFolderUri = folder.getAttribute('id');
+                var isImap=false;
                 if (selectedFolderUri.indexOf("imap:") != -1)
+                  isImap = true;
+                if (!isImap)  //can be local only
                 {
-                    isImap = true;
-                }
-                else
-                {
-                    // set this so we'll reload it when compact is done
-                    gCurrentFolderToReroot = selectedFolderUri;
-                    // save off the current sort and view info so we'll
-                    // use it on the folder loaded notification
-                    var resource = RDF.GetResource(selectedFolderUri);
-                    var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-                    if (msgfolder)
-                    {
-                      var msgdb = msgfolder.getMsgDatabase(msgWindow);
-                      if (msgdb)
-                      {
-                        var dbFolderInfo = msgdb.dBFolderInfo;
-                        gCurrentLoadingFolderSortType = dbFolderInfo.sortType;
-                        gCurrentLoadingFolderSortOrder = dbFolderInfo.sortOrder;
-                        gCurrentLoadingFolderViewFlags = dbFolderInfo.viewFlags;
-                        gCurrentLoadingFolderViewType = dbFolderInfo.viewType;
-                      }
-                    }
+                  var resource = RDF.GetResource(selectedFolderUri);
+                  var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+                  var expungedBytes = msgfolder.expungedBytes;
+
+                  if (expungedBytes > 0)
+                  { 
+                    if (gDBView)
+                      gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
                     ClearThreadPaneSelection();
                     ClearThreadPane();
                     ClearMessagePane();
-
-                }
-            }
-            var i;
-            var folder;
-            for(i = 0; i < folderList.length; i++)
-            {
-                folder = folderList[i];
-                if (folder)
+                  }
+                  else
+                  {
+                     if (!isAll)  //you have one local folder with no room to compact
+                       return;
+                  }
+                } 
+                try
                 {
-                    folderuri = folder.getAttribute('id');
-                    dump(folderuri + "\n");
-                    dump("folder = " + folder.localName + "\n"); 
-                    try
-                    {
-                      messenger.CompactFolder(tree.database, folder.resource, isAll);
-                    }
-                    catch(e)
-                    {
-                      dump ("Exception : messenger.CompactFolder \n");
-                    }
+                  messenger.CompactFolder(tree.database, folder.resource, isAll);
                 }
-            }
-            if (!isImap && selectedFolderUri && selectedFolderUri != "")
-            {
-                /* this doesn't work; local compact is now an async operation
-                dump("selected folder = " + selectedFolderUri + "\n");
-                var selectedFolder =
-                    document.getElementById(selectedFolderUri);
-                ChangeSelection(tree, selectedFolder);
-                */
-                tree.clearItemSelection();
-            }
-        }
-	}
+                catch(e)
+                {
+                  dump ("Exception : messenger.CompactFolder \n");
+                }
+             }
+	     }
+    }
 }
 
 function MsgFolderProperties() 

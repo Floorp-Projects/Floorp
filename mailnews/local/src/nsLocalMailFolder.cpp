@@ -103,6 +103,7 @@ extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
 extern void KillPopData(char* data);
+nsIAtom* nsMsgLocalMailFolder::mCompactCompletedAtom=nsnull;
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
 /////////////////////////////////////////////////////////////////////////////
@@ -143,11 +144,19 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mCheckForNewMessagesAfterParsing(PR_FALSE), mParsingInbox(PR_FALSE)
 
 {
+  if (nsMsgDBFolder::mInstanceCount == 1)
+  {
+    mCompactCompletedAtom = NS_NewAtom("CompactCompleted");
+  }
 //  NS_INIT_REFCNT(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
+  if (nsMsgDBFolder::mInstanceCount ==1)
+  {
+    NS_IF_RELEASE(mCompactCompletedAtom);
+}
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
@@ -883,8 +892,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsg
       }
       rv = folderArray->Count(&cnt);
       NS_ENSURE_SUCCESS(rv,rv);
-      if (cnt == 0 ) return NS_OK;
+      if (cnt == 0 )
+      {
+        NotifyFolderEvent(mCompactCompletedAtom);
+        return NS_OK;
     }
+  }
   }
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
@@ -928,6 +941,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWin
           rv = folderCompactor->StartCompacting();
       }
     }
+    else
+      NotifyFolderEvent(mCompactCompletedAtom);
     return rv;
   }
   done:
@@ -3168,3 +3183,11 @@ nsMsgLocalMailFolder::GetParsingInbox(PRBool *aParsingInbox)
   *aParsingInbox = mParsingInbox;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::NotifyCompactCompleted()
+{
+  NotifyFolderEvent(mCompactCompletedAtom);
+  return NS_OK;
+}
+
