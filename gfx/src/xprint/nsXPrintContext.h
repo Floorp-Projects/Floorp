@@ -44,7 +44,6 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Print.h>
 #include "xp_core.h"
-#include "xp_file.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsIImage.h"
