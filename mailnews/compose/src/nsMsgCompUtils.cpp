@@ -1881,8 +1881,6 @@ mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress)
                               rand_buf1[0], rand_buf1[1], rand_buf1[2], rand_buf1[3],
                               rand_buf2[0], rand_buf2[1], rand_buf2[2], rand_buf2[3],
                               domain);
-  if (domain != defaultDomain)
-    PR_FREEIF(domain);
 
   return retVal;
 }
