@@ -33,7 +33,6 @@
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsIMemory.h"
 #include "nsIObserver.h"
@@ -45,7 +44,6 @@
 #include "plarena.h"
 #include "prlog.h"              // for PR_ASSERT
 #include "prmem.h"
-#include "nsIServiceManager.h"
 #include "nsIModule.h"
 #include "nsIRegistry.h"
 #include "nsISupportsArray.h"
