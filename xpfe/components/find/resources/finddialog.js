@@ -150,7 +150,7 @@
         function onTyping( key )
         {
             if ( key == 13 && dialog.enabled) {
-                ok();
+                find();
             } else
             {
                 if ( dialog.enabled ) {

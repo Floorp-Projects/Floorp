@@ -3,8 +3,9 @@
 
 <!DOCTYPE window> 
 
-<window width="400" height="200" xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="padding:5px;"
         title="Search">
 
     <data>
