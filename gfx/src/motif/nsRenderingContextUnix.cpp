@@ -108,27 +108,6 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
-  nsRect  trect = aRect;
-
-	mTMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
-
-  //how we combine the new rect with the previous?
-
-  if (aCombine == nsClipCombine_kIntersect)
-  {
-  }
-  else if (aCombine == nsClipCombine_kUnion)
-  {
-  }
-  else if (aCombine == nsClipCombine_kSubtract)
-  {
-  }
-  else if (aCombine == nsClipCombine_kReplace)
-  {
-  }
-  else
-    NS_ASSERTION(FALSE, "illegal clip combination");
 }
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
