@@ -89,40 +89,22 @@ nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
-  // Get the floater container in which we're inserted
-  nsIFrame*             containingBlock;
-  nsIFloaterContainer*  container = nsnull;
-
-  for (containingBlock = mGeometricParent;
-       nsnull != containingBlock;
-       containingBlock->GetGeometricParent(containingBlock))
-  {
-    if (NS_OK == containingBlock->QueryInterface(kIFloaterContainerIID, (void**)&container)) {
-      break;
+  if (nsnull != aReflowState.lineLayout) {
+    if (eReflowReason_Initial == aReflowState.reason) {
+      aReflowState.lineLayout->InitFloater(this);
+    }
+    else {
+      aReflowState.lineLayout->AddFloater(this);
     }
   }
-  NS_ASSERTION(nsnull != container, "no floater container");
-
-  if (eReflowReason_Initial == aReflowState.reason) {
-    // By this point we expect to have been told which anchored item we're
-    // associated with
-    NS_ASSERTION(nsnull != mAnchoredItem, "no anchored item");
-
-    // Notify our containing block that there's a new floater
-    container->AddFloater(&aPresContext, aReflowState, mAnchoredItem, this);
-  }
-
-  // Let line layout know about the floater
-  NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
-  aReflowState.lineLayout->AddFloater(this);
 
   aDesiredSize.width = 0;
   aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
   aDesiredSize.descent = 0;
   if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    aDesiredSize.maxElementSize->width = 0;
+    aDesiredSize.maxElementSize->height = 0;
   }
 
   aStatus = NS_FRAME_COMPLETE;
