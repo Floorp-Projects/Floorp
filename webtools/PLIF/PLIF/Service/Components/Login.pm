@@ -213,7 +213,7 @@ sub getDefaultString {
         } elsif ($string eq 'login.failed') {
             return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="!=" rvalue="0">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>');
         } elsif ($string eq 'login.detailsSent') {
-            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>');
+            return ('COSES', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/></text>');
         }
     }
     return; # nope, sorry
