@@ -132,8 +132,9 @@ function setTitleFromFolder(msgfolder, subject)
     }
     }
 
-    // XXX To Do: we may want to set the title to the titledefault if we don't have anything to put in the title field
-    // I don't think that would ever happen for a mail 3-pane window though.
+#ifndef XP_MACOSX
+    title += " - " + gBrandBundle.getString("brandShortName");
+#endif
     window.title = title;
 }
 
