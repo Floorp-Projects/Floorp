@@ -704,7 +704,7 @@ Contributor(s):
   
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
              fullscreentoolbar="true" 
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,throbber-box"
+             defaultset="back-button,forward-button,reload-button,stop-button,urlbar-container,throbber-box"
              context="toolbar-context-menu">
         <toolbarpalette>
           <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"

@@ -46,7 +46,7 @@ function addItemToToolbar(newItem, newToolbar)
                                        "toolbarpaletteitem");
   
   // Set a draggesture handler to allow drag-rearrange within the clone toolbar.
-  enclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
+  enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver)");
   enclosure.appendChild(newItem);
   newToolbar.appendChild(enclosure);
 }
