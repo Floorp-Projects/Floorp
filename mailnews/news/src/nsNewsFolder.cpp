@@ -564,10 +564,8 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
     
     if(NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
-      nsCOMPtr<nsIEnumerator> msgHdrEnumerator2;
       nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
       rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
-      rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator2));
       nsCOMPtr <nsISupportsArray> shortlist;
       
       if(NS_SUCCEEDED(rv)) {
@@ -580,10 +578,10 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
         printf("total = %d\n",total);
 #endif
         PRInt32 count = 0;
-        for (msgHdrEnumerator2->First(); msgHdrEnumerator2->IsDone() != NS_OK; msgHdrEnumerator2->Next()) {
+        for (msgHdrEnumerator->First(); msgHdrEnumerator->IsDone() != NS_OK; msgHdrEnumerator->Next()) {
           if (count >= (total - number_to_show)) {
             nsCOMPtr<nsISupports> i;
-            rv = msgHdrEnumerator2->CurrentItem(getter_AddRefs(i));
+            rv = msgHdrEnumerator->CurrentItem(getter_AddRefs(i));
             if (NS_FAILED(rv)) return rv;
             shortlist->AppendElement(i);
 #ifdef DEBUG_NOISY_NEWS

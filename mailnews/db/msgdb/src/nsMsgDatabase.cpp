@@ -1479,6 +1479,7 @@ NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsIEnumerator::GetIID())
 NS_IMETHODIMP nsMsgDBEnumerator::First(void)
 {
 	nsresult rv = 0;
+	mDone = PR_FALSE;
 
 	if (!mDB || !mDB->m_mdbAllMsgHeadersTable)
 		return NS_ERROR_NULL_POINTER;
