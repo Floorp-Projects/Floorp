@@ -45,7 +45,13 @@ protected:
    nsDocShell* DocShell();
 
 protected:
-   nsDocShell*                      mDocShell;
+   nsDocShell*       mDocShell;
+
+   PRInt32           mProgressStatusFlags;
+   PRInt32           mCurSelfProgress;
+   PRInt32           mMaxSelfProgress;
+   PRInt32           mCurTotalProgress;
+   PRInt32           mMaxTotalProgress;
 };
 
 #endif /* nsDSWebProgressListener_h__ */

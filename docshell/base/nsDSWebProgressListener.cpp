@@ -31,7 +31,10 @@
 //***    nsDSWebProgressListener: Object Management
 //*****************************************************************************
 
-nsDSWebProgressListener::nsDSWebProgressListener() : mDocShell(nsnull) 
+nsDSWebProgressListener::nsDSWebProgressListener() : mDocShell(nsnull),
+   mProgressStatusFlags(0), mCurSelfProgress(0), mMaxSelfProgress(0),
+   mCurTotalProgress(0), mMaxTotalProgress(0)
+ 
 {
 	NS_INIT_REFCNT();
 }
@@ -60,39 +63,49 @@ NS_IMETHODIMP nsDSWebProgressListener::OnProgressChange(nsIChannel* aChannel,
    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
    PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not yet Implemented");
+   mCurSelfProgress = aCurSelfProgress;
+   mMaxSelfProgress = aMaxSelfProgress;
+   mCurTotalProgress = aCurTotalProgress;
+   mMaxTotalProgress = aMaxTotalProgress;
+
+   mDocShell->FireOnProgressChange(aChannel, aCurSelfProgress, aMaxSelfProgress,
+      aCurTotalProgress, aMaxTotalProgress);
+
    return NS_OK;
 }
       
 NS_IMETHODIMP nsDSWebProgressListener::OnChildProgressChange(nsIChannel* aChannel,
    PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not yet Implemented");
+   mDocShell->FireOnChildProgressChange(aChannel, aCurSelfProgress, 
+      aMaxSelfProgress);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not yet Implemented");
+   mProgressStatusFlags = aProgressStatusFlags;
+   //XXX Need to mask in flag_windowActivity when animation is occuring in the
+   // window
+
+   mDocShell->FireOnStatusChange(aChannel, aProgressStatusFlags);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnChildStatusChange(nsIChannel* aChannel,
    PRInt32 aProgressStatusFlags)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not yet Implemented");
+   mDocShell->FireOnChildStatusChange(aChannel, aProgressStatusFlags);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsDSWebProgressListener::OnLocationChange(nsIURI* aLocation)
 {
-   //XXXTAB Implement
-   NS_ERROR("Not yet Implemented");
+   NS_ERROR("DocShell should be the only one generating this message");
    return NS_OK;
 }
 
