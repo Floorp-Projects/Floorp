@@ -320,12 +320,13 @@ ol {
 
 li {
   display: list-item;
-  list-style-position: inside;
+  list-style-position: inside; 
 }
 
-ul li, ol li, menu li, dir li {
-  list-style-position: outside;
+ul li, dir li, menu li, ol li { 
+  list-style-position: inherit; 
 }
+
 
 /* nested lists have no top/bottom margins */
 ul ul,   ul ol,   ul menu,   ul dir,
@@ -371,6 +372,9 @@ dl {
 }
 dt {
   display: block;
+}
+dl[compact] > DT {  /* compact allowed on DL, OL, UL, DIR MENU */
+  display: compact;
 }
 dd {
   display: block;
