@@ -3,7 +3,7 @@
     FILE: icaldirset.c
     CREATOR: eric 28 November 1999
   
-    $Id: icaldirset.c,v 1.6 2002/11/06 21:22:43 mostafah%oeone.com Exp $
+    $Id: icaldirset.c,v 1.7 2004/05/06 14:41:35 mostafah%oeone.com Exp $
     $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -673,6 +673,7 @@ icalcomponent* icaldirset_fetch_match(icaldirset* set, icalcomponent *c)
 {
     fprintf(stderr," icaldirset_fetch_match is not implemented\n");
     assert(0);
+    return 0;
 }
 
 
