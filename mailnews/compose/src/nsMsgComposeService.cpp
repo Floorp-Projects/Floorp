@@ -370,5 +370,5 @@ NS_IMETHODIMP nsMsgComposeService::HandleContent(const char * aContentType, cons
   return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messengercompose/content/","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_PROGID,"Messenger Compose Startup Handler", PR_FALSE, "", PR_TRUE)
+CMDLINEHANDLER_IMPL(nsMsgComposeService,"-compose","general.startup.messengercompose","chrome://messengercompose/content/","Start with messenger compose.",NS_MSGCOMPOSESTARTUPHANDLER_PROGID,"Messenger Compose Startup Handler", PR_TRUE, "about:blank", PR_TRUE)
 
