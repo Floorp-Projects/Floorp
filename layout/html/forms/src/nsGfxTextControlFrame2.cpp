@@ -50,7 +50,9 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIScrollableView.h"
-
+#include "nsIScrollableFrame.h" //to turn off scroll bars
+#include "nsFormControlFrame.h" //for registering accesskeys
+#include "nsIDeviceContext.h" // to measure fonts
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -494,10 +496,13 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2()
   mIsProcessing=PR_FALSE;
   mFormFrame = nsnull;
   mCachedState = nsnull;
+  mSuggestedWidth = NS_FORMSIZE_NOTSET;
+  mSuggestedHeight = NS_FORMSIZE_NOTSET;
 }
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 {
+  nsFormControlFrame::RegUnRegAccessKey(nsnull, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
@@ -535,6 +540,233 @@ PRBool nsGfxTextControlFrame2::IsPasswordTextControl() const
 }
 
 
+nsresult 
+nsGfxTextControlFrame2::GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                                         nsIAtom *     aColSizeAttr,
+                                         nsHTMLValue & aColSize,
+                                         nsresult &    aColStatus,
+                                         nsIAtom *     aRowSizeAttr,
+                                         nsHTMLValue & aRowSize,
+                                         nsresult &    aRowStatus)
+{
+  nsIContent* iContent = nsnull;
+  aFrame->GetFormContent((nsIContent*&) iContent);
+  if (!iContent) {
+    return NS_ERROR_FAILURE;
+  }
+  nsIHTMLContent* hContent = nsnull;
+  nsresult result = iContent->QueryInterface(kIHTMLContentIID, (void**)&hContent);
+  if ((NS_OK != result) || !hContent) {
+    NS_RELEASE(iContent);
+    return NS_ERROR_FAILURE;
+  }
+
+  aColStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aColSizeAttr) {
+    aColStatus = hContent->GetHTMLAttribute(aColSizeAttr, aColSize);
+  }
+
+  aRowStatus= NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aRowSizeAttr) {
+    aRowStatus = hContent->GetHTMLAttribute(aRowSizeAttr, aRowSize);
+  }
+
+  NS_RELEASE(hContent);
+  NS_RELEASE(iContent);
+  
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
+                                      nsHTMLReflowMetrics&     aDesiredSize,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsReflowStatus&          aStatus,
+                                      nsMargin&                aBorder,
+                                      nsMargin&                aPadding)
+{
+  // get the css size and let the frame use or override it
+  nsSize styleSize;
+  nsFormControlFrame::GetStyleSize(aPresContext, aReflowState, styleSize);
+
+  nsSize desiredSize;
+  nsSize minSize;
+  
+  PRBool widthExplicit, heightExplicit;
+  PRInt32 ignore;
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+    PRInt32 width = 0;
+    if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
+      width = GetDefaultColumnWidth();
+    }
+    nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
+                                  nsnull, width, 
+                                  PR_FALSE, nsnull, 1);
+    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, styleSize, 
+                           textSpec, desiredSize, minSize, widthExplicit, 
+                           heightExplicit, ignore, aBorder, aPadding);
+  } else {
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
+                                  nsnull, GetDefaultColumnWidth(), 
+                                  PR_FALSE, nsHTMLAtoms::rows, 1);
+    CalculateSizeStandard(aPresContext, aReflowState.rendContext, this, styleSize, 
+                           areaSpec, desiredSize, minSize, widthExplicit, 
+                           heightExplicit, ignore, aBorder, aPadding);
+  }
+
+  // CalculateSize makes calls in the nsFormControlHelper that figures
+  // out the entire size of the control when in NavQuirks mode. For the
+  // textarea, this means the scrollbar sizes hav already been added to
+  // its overall size and do not need to be added here.
+  if (NS_FORM_TEXTAREA == type) {
+    float   p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+
+    nscoord scrollbarWidth  = 0;
+    nscoord scrollbarHeight = 0;
+    float   scale;
+    nsCOMPtr<nsIDeviceContext> dx;
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
+    if (dx) { 
+      float sbWidth;
+      float sbHeight;
+      dx->GetCanonicalPixelScale(scale);
+      dx->GetScrollBarDimensions(sbWidth, sbHeight);
+      scrollbarWidth  = PRInt32(sbWidth * scale);
+      scrollbarHeight = PRInt32(sbHeight * scale);
+    } else {
+      scrollbarWidth  = nsFormControlFrame::GetScrollbarWidth(p2t);
+      scrollbarHeight = scrollbarWidth;
+    }
+
+    if (!heightExplicit) {
+      desiredSize.height += scrollbarHeight;
+      minSize.height     += scrollbarHeight;
+    } 
+    if (!widthExplicit) {
+      desiredSize.width += scrollbarWidth;
+      minSize.width     += scrollbarWidth;
+    }
+  }
+  desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+  desiredSize.height += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+
+  aDesiredSize.width   = desiredSize.width;
+  aDesiredSize.height  = desiredSize.height;
+  aDesiredSize.ascent  = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  if (aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = minSize.width;
+    aDesiredSize.maxElementSize->height = minSize.height;
+  }
+
+  return NS_OK;
+
+}
+
+
+PRInt32
+nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContext, 
+                                              nsIRenderingContext*  aRendContext,
+                                              nsIFormControlFrame*  aFrame,
+                                              const nsSize&         aCSSSize, 
+                                              nsInputDimensionSpec& aSpec, 
+                                              nsSize&               aDesiredSize, 
+                                              nsSize&               aMinSize, 
+                                              PRBool&               aWidthExplicit, 
+                                              PRBool&               aHeightExplicit, 
+                                              nscoord&              aRowHeight,
+                                              nsMargin&             aBorder,
+                                              nsMargin&             aPadding) 
+{
+  nscoord charWidth   = 0; 
+  aWidthExplicit      = PR_FALSE;
+  aHeightExplicit     = PR_FALSE;
+
+  aDesiredSize.width  = CSS_NOTSET;
+  aDesiredSize.height = CSS_NOTSET;
+
+  nsHTMLValue colAttr;
+  nsresult    colStatus;
+  nsHTMLValue rowAttr;
+  nsresult    rowStatus;
+  if (NS_ERROR_FAILURE == GetColRowSizeAttr(aFrame, 
+                                            aSpec.mColSizeAttr, colAttr, colStatus,
+                                            aSpec.mRowSizeAttr, rowAttr, rowStatus)) {
+    return 0;
+  }
+
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
+  // determine the width, char height, row height
+  if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
+    PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+    col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, col, aDesiredSize, aRendContext);
+    aMinSize.width = aDesiredSize.width;
+  } else {
+    charWidth = nsFormControlHelper::GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+    aMinSize.width = aDesiredSize.width;
+    if (CSS_NOTSET != aCSSSize.width) {  // css provides width
+      NS_ASSERTION(aCSSSize.width >= 0, "form control's computed width is < 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.width) {
+        aDesiredSize.width = aCSSSize.width;
+        aWidthExplicit = PR_TRUE;
+      }
+    }
+  }
+
+  nscoord fontHeight  = 0;
+  //nscoord fontLeading = 0;
+  // get leading
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(res) && fontMet) {
+    aRendContext->SetFont(fontMet);
+    fontMet->GetHeight(fontHeight);
+    // leading is NOT suppose to be added in
+    //fontMet->GetLeading(fontLeading);
+    //aDesiredSize.height += fontLeading;
+  }
+  aRowHeight      = aDesiredSize.height;
+  aMinSize.height = aDesiredSize.height;
+  PRInt32 numRows = 0;
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
+    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
+                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
+    aDesiredSize.height = aDesiredSize.height * numRows;
+  } else {
+    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
+    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.height) {
+        aDesiredSize.height = aCSSSize.height;
+        aHeightExplicit = PR_TRUE;
+      }
+    }
+  }
+
+  numRows = (aRowHeight > 0) ? (aDesiredSize.height / aRowHeight) : 0;
+  if (numRows == 1) {
+    PRInt32 type;
+    GetType(&type);
+    if (NS_FORM_TEXTAREA == type) {
+      aDesiredSize.height += fontHeight;
+    }
+  }
+
+  return numRows;
+}
+
+
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
@@ -544,7 +776,7 @@ nsGfxTextControlFrame2::CreateFrameFor(nsIPresContext*   aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-#define DIV_STRING "user-focus: none; overflow:scroll; border: 0px !important; padding: 0px; margin:0px"
+#define DIV_STRING "user-focus: none; overflow:auto; border: 0px !important; padding: 0px; margin:0px"
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -681,6 +913,8 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 
 
 
+
+
 NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
@@ -736,10 +970,83 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
       }
     }
   }
+  else if (eReflowReason_Initial == aReflowState.reason)
+  {
+    nsFormControlFrame::RegUnRegAccessKey(nsnull, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
+  }
 
-  nsresult rv = ReflowChild(child, aPresContext, aDesiredSize, kidReflowState, 0, 0, 0, aStatus);
+//get margins
+  // Figure out if we are doing Quirks or Standard
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+
+  nsMargin border;
+  border.SizeTo(0, 0, 0, 0);
+  nsMargin padding;
+  padding.SizeTo(0, 0, 0, 0);
+  // Get the CSS border
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  spacing->CalcBorderFor(this, border);
+  spacing->CalcPaddingFor(this, padding);
+
+  // calculate the the desired size for the text control
+  // use the suggested size if it has been set
+  nsresult rv = NS_OK;
+  nsHTMLReflowState suggestedReflowState(aReflowState);
+  if ((NS_FORMSIZE_NOTSET != mSuggestedWidth) || 
+      (NS_FORMSIZE_NOTSET != mSuggestedHeight)) 
+  {
+      // Honor the suggested width and/or height.
+    if (NS_FORMSIZE_NOTSET != mSuggestedWidth) 
+    {
+      suggestedReflowState.mComputedWidth = mSuggestedWidth;
+      aDesiredSize.width = mSuggestedWidth;
+    }
+
+    if (NS_FORMSIZE_NOTSET != mSuggestedHeight) 
+    {
+      suggestedReflowState.mComputedHeight = mSuggestedHeight;
+      aDesiredSize.height = mSuggestedHeight;
+    }
+    rv = NS_OK;
+  
+    aDesiredSize.ascent = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+
+    aStatus = NS_FRAME_COMPLETE;
+  } 
+  else 
+  {
+    // this is the right way
+    // Quirks mode will NOT obey CSS border and padding
+    // GetDesiredSize calculates the size without CSS borders
+    // the nsLeafFrame::Reflow will add in the borders
+    if (eCompatibility_NavQuirks == mode) {
+      //rv = ReflowNavQuirks(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
+    } else {
+      rv = ReflowStandard(aPresContext, aDesiredSize, aReflowState, aStatus, border, padding);
+    }
+
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+      if (aReflowState.mComputedWidth > aDesiredSize.width) {
+        aDesiredSize.width = aReflowState.mComputedWidth;
+      }
+    }
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+      if (aReflowState.mComputedHeight > aDesiredSize.height) {
+        aDesiredSize.height = aReflowState.mComputedHeight;
+      }
+    }
+  }
+
+
+  nsHTMLReflowMetrics kidReflowDesiredSize(0,0);
+  
+  rv = ReflowChild(child, aPresContext, kidReflowDesiredSize, kidReflowState, 0, 0, 0, aStatus);
  // Place and size the child.
-  FinishReflowChild(child, aPresContext, aDesiredSize, aReflowState.mComputedBorderPadding.left,
+  FinishReflowChild(child, aPresContext, kidReflowDesiredSize, aReflowState.mComputedBorderPadding.left,
                     aReflowState.mComputedBorderPadding.top, 0);
 
   aStatus = NS_FRAME_COMPLETE;
@@ -791,6 +1098,23 @@ nsGfxTextControlFrame2::GetType(PRInt32* aType) const
   return rv;
 }
 
+nsresult
+nsGfxTextControlFrame2::GetSizeFromContent(PRInt32* aSize) const
+{
+  *aSize = -1;
+  nsresult result = NS_CONTENT_ATTR_NOT_THERE;
+  nsIHTMLContent* content = nsnull;
+  mContent->QueryInterface(kIHTMLContentIID, (void**) &content);
+  if (nsnull != content) {
+    nsHTMLValue value;
+    result = content->GetHTMLAttribute(nsHTMLAtoms::size, value);
+    if (eHTMLUnit_Integer == value.GetUnit()) { 
+      *aSize = value.GetIntValue();
+    }
+    NS_RELEASE(content);
+  }
+  return result;
+}
 
 void    nsGfxTextControlFrame2::SetFocus(PRBool aOn , PRBool aRepaint){}
 void    nsGfxTextControlFrame2::ScrollIntoView(nsIPresContext* aPresContext){}
@@ -843,6 +1167,8 @@ nsGfxTextControlFrame2::IsSuccessful(nsIFormControlFrame* aSubmitter)
 NS_IMETHODIMP 
 nsGfxTextControlFrame2::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 {
+  mSuggestedWidth = aWidth;
+  mSuggestedHeight = aHeight;
   return NS_OK;
 }
 
@@ -1281,6 +1607,18 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
   //look for scroll view below this frame go along first child list
   nsIFrame *first;
   FirstChild(aPresContext,nsnull, &first);
+
+//we must turn off scrollbars for singleline text controls
+  PRInt32 type;
+  GetType(&type);
+  if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) 
+  {
+    nsIScrollableFrame *scrollableFrame = nsnull;
+    if (first)
+      first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
+    if (scrollableFrame)
+      scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
+  }
   while(first)
   {
     nsIScrollableView *scrollView;

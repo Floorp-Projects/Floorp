@@ -30,7 +30,9 @@
 #include "nsIStatefulFrame.h"
 #include "nsIEditor.h"
 #include "nsIGfxTextControlFrame.h"
-
+#include "nsFormControlHelper.h"//for the inputdimensions
+#include "nsHTMLValue.h" //for nsHTMLValue
+#include "nsIFontMetrics.h"
 
 class nsIPresState;
 class nsGfxTextControlFrame;
@@ -139,6 +141,37 @@ protected:
   virtual PRBool IsSingleLineTextControl() const;
   virtual PRBool IsPlainTextControl() const;
   virtual PRBool IsPasswordTextControl() const;
+  nsresult GetSizeFromContent(PRInt32* aSize) const;
+  PRInt32 GetDefaultColumnWidth() const { return (PRInt32)(20); } // this was DEFAULT_PIXEL_WIDTH
+
+  nsresult GetColRowSizeAttr(nsIFormControlFrame*  aFrame,
+                             nsIAtom *     aColSizeAttr,
+                             nsHTMLValue & aColSize,
+                             nsresult &    aColStatus,
+                             nsIAtom *     aRowSizeAttr,
+                             nsHTMLValue & aRowSize,
+                             nsresult &    aRowStatus);
+
+  NS_IMETHOD ReflowStandard(nsIPresContext*          aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aReflowState,
+                            nsReflowStatus&          aStatus,
+                            nsMargin&                aBorder,
+                            nsMargin&                aPadding);
+
+  PRInt32 CalculateSizeStandard (nsIPresContext*       aPresContext, 
+                                  nsIRenderingContext*  aRendContext,
+                                  nsIFormControlFrame*  aFrame,
+                                  const nsSize&         aCSSSize, 
+                                  nsInputDimensionSpec& aSpec, 
+                                  nsSize&               aDesiredSize, 
+                                  nsSize&               aMinSize, 
+                                  PRBool&               aWidthExplicit, 
+                                  PRBool&               aHeightExplicit, 
+                                  nscoord&              aRowHeight,
+                                  nsMargin&             aBorder,
+                                  nsMargin&             aPadding);
+
 
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
@@ -149,7 +182,12 @@ protected:
 private:
   nsCOMPtr<nsIEditor> mEditor;
   nsCOMPtr<nsISelectionController> mSelCon;
-  nsString *mCachedState;
+
+  //cached sizes and states
+  nsString*    mCachedState;
+  nscoord      mSuggestedWidth;
+  nscoord      mSuggestedHeight;
+
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
   nsTextAreaSelectionImpl *mTextSelImpl;
