@@ -1209,7 +1209,8 @@ NS_IMETHODIMP nsView :: GetClientData(void *&aData) const
 
 NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
                                      nsWidgetInitData *aWidgetInitData,
-                                     nsNativeWidget aNative)
+                                     nsNativeWidget aNative,
+                                     PRBool aEnableDragDrop)
 {
   nsIDeviceContext  *dx;
   nsRect            trect = mBounds;
@@ -1238,6 +1239,9 @@ NS_IMETHODIMP nsView :: CreateWidget(const nsIID &aWindowIID,
         GetOffsetFromWidget(nsnull, nsnull, parent);
         mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
         NS_IF_RELEASE(parent);
+      }
+      if (aEnableDragDrop) {
+        mWindow->EnableDragDrop(PR_TRUE);
       }
     }
   }
