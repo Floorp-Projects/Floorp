@@ -77,7 +77,7 @@ public:
   void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
   nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);
 
-  PRBool CanSubmit(nsFormControlFrame& aFrame);
+  PRBool CanSubmit(nsIFormControlFrame *aFrame);
 
   NS_IMETHOD GetMethod(PRInt32* aMethod);
   NS_IMETHOD GetEnctype(PRInt32* aEnctype);

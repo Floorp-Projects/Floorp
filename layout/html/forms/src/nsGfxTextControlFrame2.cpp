@@ -74,6 +74,12 @@
 #include "nsBoxLayoutState.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h" //getframetype
+//for keylistener for "return" check
+#include "nsIDOMKeyListener.h" 
+#include "nsIDOMKeyEvent.h"
+#include "nsIPrivateDOMEvent.h"
+#include "nsIDOMEventReceiver.h"
+
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -95,7 +101,7 @@ class nsTextAreaKeyListener : public nsIDOMKeyListener, public nsSupportsWeakRef
 {
 public:
   /** the default constructor
-   */
+   */ 
   nsTextAreaKeyListener();
   /** the default destructor. virtual due to the possibility of derivation.
    */
@@ -192,7 +198,6 @@ nsTextAreaKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
   }
   PRUint32     keyCode;
-  PRUint32 flags;
   keyEvent->GetKeyCode(&keyCode);
   if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode
       || nsIDOMKeyEvent::DOM_VK_ENTER==keyCode)
@@ -264,7 +269,7 @@ public:
   //END INTERFACES
 
 
-
+  nsWeakPtr &GetPresShell(){return mPresShellWeak;}
 private:
   nsCOMPtr<nsIFrameSelection> mFrameSelection;
   nsCOMPtr<nsIContent>        mLimiter;
@@ -1223,6 +1228,12 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                                    getter_AddRefs(frameSel));
 //create selection controller
     mTextSelImpl = new nsTextAreaSelectionImpl(frameSel,shell,content);
+    if (!mTextSelImpl)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mTextKeyListener = new nsTextAreaKeyListener();
+    if (!mTextKeyListener)
+      return NS_ERROR_OUT_OF_MEMORY;
+    mTextKeyListener->SetFrame(this);
     mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)mTextSelImpl);//this will addref it once
     mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 //get the flags 
@@ -2088,6 +2099,43 @@ nsGfxTextControlFrame2::DoesAttributeExist(nsIAtom *aAtt)
   return rv;
 }
 
+void
+nsGfxTextControlFrame2::SubmitAttempt()
+{
+  // Submit the form
+  if (mFormFrame && mTextSelImpl && mFormFrame->CanSubmit(this)) {
+    nsIContent *formContent = nsnull;
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+
+    nsWeakPtr &shell = mTextSelImpl->GetPresShell();
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
+    if (!presShell) return;
+    {
+      nsCOMPtr<nsIPresContext> context;
+      if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
+      {
+        mFormFrame->GetContent(&formContent);
+        if (nsnull != formContent) {
+          nsEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_FORM_SUBMIT;
+
+          formContent->HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          NS_RELEASE(formContent);
+        }
+
+        if (nsEventStatus_eConsumeNoDefault != status) {
+          mFormFrame->OnSubmit(context, this);
+        }
+      }
+    }
+  }
+}
+
+
+//======
+//privates
 
 nsString *
 nsGfxTextControlFrame2::GetCachedString()
@@ -2217,6 +2265,15 @@ nsGfxTextControlFrame2::SetInitialChildList(nsIPresContext* aPresContext,
       first->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void **) &scrollableFrame);
     if (scrollableFrame)
       scrollableFrame->SetScrollbarVisibility(aPresContext,PR_FALSE,PR_FALSE);
+    //register keylistener
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
+    {
+      // register the event listeners with the DOM event reveiver
+      rv = erP->AddEventListenerByIID(mTextKeyListener, NS_GET_IID(nsIDOMKeyListener));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register key listener");
+    }
+
   }
   while(first)
   {

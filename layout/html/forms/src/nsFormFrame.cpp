@@ -174,13 +174,15 @@ nsFormFrame::~nsFormFrame()
 }
 
 PRBool 
-nsFormFrame::CanSubmit(nsFormControlFrame& aFrame)
+nsFormFrame::CanSubmit(nsIFormControlFrame *aFrame)
 { 
-  if (mTextSubmitter == &aFrame) {
+  if (!aFrame)
+    return PR_FALSE;
+  if (mTextSubmitter == aFrame) {
     return PR_TRUE;
   }
   PRInt32 type;
-  aFrame.GetType(&type);
+  aFrame->GetType(&type);
   if ((NS_FORM_INPUT_SUBMIT == type) || (NS_FORM_INPUT_IMAGE == type)) {
     return PR_TRUE;
   }

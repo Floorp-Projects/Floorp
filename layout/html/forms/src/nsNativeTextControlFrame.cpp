@@ -89,7 +89,7 @@ nsNativeTextControlFrame::~nsNativeTextControlFrame()
 void
 nsNativeTextControlFrame::EnterPressed(nsIPresContext* aPresContext) 
 {
-  if (mFormFrame && mFormFrame->CanSubmit(*this)) {
+  if (mFormFrame && mFormFrame->CanSubmit(this)) {
     nsIContent *formContent = nsnull;
 
     mFormFrame->GetContent(&formContent);

@@ -1082,7 +1082,7 @@ nsGfxTextControlFrame::EnterPressed(nsIPresContext* aPresContext)
   }
 
   // Submit the form
-  if (mFormFrame && mFormFrame->CanSubmit(*this)) {
+  if (mFormFrame && mFormFrame->CanSubmit(this)) {
     nsIContent *formContent = nsnull;
 
     nsEventStatus status = nsEventStatus_eIgnore;
