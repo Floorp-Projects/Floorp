@@ -60,7 +60,9 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
 #include "prlog.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsAutoLock.h"
@@ -288,7 +290,7 @@ nsNSSComponent::~nsNSSComponent()
 #endif /*DEBUG*/ 
 #endif /*XP_MAC*/
 
-static void setOCSPOptions(nsIPref * pref);
+static void setOCSPOptions(nsIPrefBranch * pref);
 
 NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const char *name,
@@ -344,7 +346,7 @@ nsNSSComponent::SkipOcsp()
 NS_IMETHODIMP
 nsNSSComponent::SkipOcspOff()
 {
-  setOCSPOptions(mPref);
+  setOCSPOptions(mPrefBranch);
   return NS_OK;
 }
 
@@ -606,7 +608,7 @@ nsresult nsNSSComponent::GetNSSCipherIDFromPrefString(const nsACString &aPrefStr
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-static void setOCSPOptions(nsIPref * pref)
+static void setOCSPOptions(nsIPrefBranch * pref)
 {
   nsNSSShutDownPreventionLock locker;
   // Set up OCSP //
@@ -626,8 +628,8 @@ static void setOCSPOptions(nsIPref * pref)
       char *url = nsnull;
 
       // Get the signing CA and service url //
-      pref->CopyCharPref("security.OCSP.signingCA", &signingCA);
-      pref->CopyCharPref("security.OCSP.URL", &url);
+      pref->GetCharPref("security.OCSP.signingCA", &signingCA);
+      pref->GetCharPref("security.OCSP.URL", &url);
 
       // Set OCSP up
       CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
@@ -712,7 +714,7 @@ nsresult nsNSSComponent::getParamsForNextCrlToDownload(nsAutoString *url, PRTime
   char *tempUrl;
   nsresult rv;
   
-  nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID,&rv);
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
   if(NS_FAILED(rv)){
     return rv;
   }
@@ -1111,7 +1113,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
   #endif
 
     PRBool supress_warning_preference = PR_FALSE;
-    rv = mPref->GetBoolPref("security.suppress_nss_rw_impossible_warning", &supress_warning_preference);
+    rv = mPrefBranch->GetBoolPref("security.suppress_nss_rw_impossible_warning", &supress_warning_preference);
 
     if (NS_FAILED(rv)) {
       supress_warning_preference = PR_FALSE;
@@ -1164,16 +1166,16 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
       PK11_SetPasswordFunc(PK11PasswordPrompt);
 
-      // Register a callback so we can inform NSS when these prefs change
-      mPref->RegisterCallback("security.", nsNSSComponent::PrefChangedCallback,
-                              (void*) this);
+      // Register an observer so we can inform NSS when these prefs change
+      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefBranch);
+      pbi->AddObserver("security.", this, PR_FALSE);
 
       PRBool enabled;
-      mPref->GetBoolPref("security.enable_ssl2", &enabled);
+      mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
-      mPref->GetBoolPref("security.enable_ssl3", &enabled);
+      mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
-      mPref->GetBoolPref("security.enable_tls", &enabled);
+      mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
 
       // Disable any ciphers that NSS might have enabled by default
@@ -1185,7 +1187,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
 
       // Now only set SSL/TLS ciphers we knew about at compile time
       for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-        mPref->GetBoolPref(cp->pref, &enabled);
+        mPrefBranch->GetBoolPref(cp->pref, &enabled);
 
         SSL_CipherPrefSetDefault(cp->id, enabled);
       }
@@ -1201,7 +1203,7 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
       PORT_SetUCS2_ASCIIConversionFunction(pip_ucs2_ascii_conversion_fn);
 
       // Set up OCSP //
-      setOCSPOptions(mPref);
+      setOCSPOptions(mPrefBranch);
 
       InstallLoadableRoots();
 
@@ -1246,9 +1248,9 @@ nsNSSComponent::ShutdownNSS()
 
     PK11_SetPasswordFunc((PK11PasswordFunc)nsnull);
 
-    if (mPref) {
-      mPref->UnregisterCallback("security.", nsNSSComponent::PrefChangedCallback,
-                                (void*) this);
+    if (mPrefBranch) {
+      nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefBranch);
+      pbi->RemoveObserver("security.", this);
     }
 
     SSL_ClearSessionCache();
@@ -1281,9 +1283,9 @@ nsNSSComponent::Init()
     return rv;
   }      
 
-  if (!mPref) {
-    mPref = do_GetService(NS_PREF_CONTRACTID);
-    NS_ASSERTION(mPref, "Unable to get pref service");
+  if (!mPrefBranch) {
+    mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    NS_ASSERTION(mPrefBranch, "Unable to get pref service");
   }
 
   // Do that before NSS init, to make sure we won't get unloaded.
@@ -1515,44 +1517,6 @@ nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
   return NS_OK;
 }
 
-int PR_CALLBACK
-nsNSSComponent::PrefChangedCallback(const char* aPrefName, void* data)
-{
-  nsNSSComponent* nss = NS_STATIC_CAST(nsNSSComponent*, data);
-  if (nss)
-    nss->PrefChanged(aPrefName);
-  return 0;
-}
-
-void
-nsNSSComponent::PrefChanged(const char* prefName)
-{
-  nsNSSShutDownPreventionLock locker;
-  PRBool enabled;
-
-  if (!nsCRT::strcmp(prefName, "security.enable_ssl2")) {
-    mPref->GetBoolPref("security.enable_ssl2", &enabled);
-    SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
-  } else if (!nsCRT::strcmp(prefName, "security.enable_ssl3")) {
-    mPref->GetBoolPref("security.enable_ssl3", &enabled);
-    SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
-  } else if (!nsCRT::strcmp(prefName, "security.enable_tls")) {
-    mPref->GetBoolPref("security.enable_tls", &enabled);
-    SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
-  } else if (!nsCRT::strcmp(prefName, "security.OCSP.enabled")) {
-    setOCSPOptions(mPref);
-  } else {
-    /* Look through the cipher table and set according to pref setting */
-    for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
-      if (!nsCRT::strcmp(prefName, cp->pref)) {
-        mPref->GetBoolPref(cp->pref, &enabled);
-        SSL_CipherPrefSetDefault(cp->id, enabled);
-        break;
-      }
-    }
-  }
-}
-
 #define DEBUG_PSM_PROFILE
 
 #ifdef DEBUG_PSM_PROFILE
@@ -1698,7 +1662,33 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     PK11_LogoutAll();
     LogoutAuthenticatedPK11();
   }
+  else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) { 
+    nsNSSShutDownPreventionLock locker;
+    PRBool enabled;
+    NS_ConvertUCS2toUTF8  prefName(someData);
 
+    if (prefName.Equals("security.enable_ssl2")) {
+      mPrefBranch->GetBoolPref("security.enable_ssl2", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_SSL2, enabled);
+    } else if (prefName.Equals("security.enable_ssl3")) {
+      mPrefBranch->GetBoolPref("security.enable_ssl3", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_SSL3, enabled);
+    } else if (prefName.Equals("security.enable_tls")) {
+      mPrefBranch->GetBoolPref("security.enable_tls", &enabled);
+      SSL_OptionSetDefault(SSL_ENABLE_TLS, enabled);
+    } else if (prefName.Equals("security.OCSP.enabled")) {
+      setOCSPOptions(mPrefBranch);
+    } else {
+      /* Look through the cipher table and set according to pref setting */
+      for (CipherPref* cp = CipherPrefs; cp->pref; ++cp) {
+        if (prefName.Equals(cp->pref)) {
+          mPrefBranch->GetBoolPref(cp->pref, &enabled);
+          SSL_CipherPrefSetDefault(cp->id, enabled);
+          break;
+        }
+      }
+    }
+  }
 
 #ifdef DEBUG
   else if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_NET_TEARDOWN_TOPIC) == 0) {
@@ -2112,7 +2102,7 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
       nsCString errMsg;
       PRInt32 errCnt;
 
-      nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID,&rv);
+      nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID,&rv);
       if(NS_FAILED(rv)){
         return rv;
       }
@@ -2129,7 +2119,8 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
         pref->SetIntPref(updateErrCntPrefStr.get(),errCnt+1);
       }
       pref->SetCharPref(updateErrDetailPrefStr.get(),errMsg.get());
-      pref->SavePrefFile(nsnull);
+      nsCOMPtr<nsIPrefService> prefSvc(do_QueryInterface(pref));
+      prefSvc->SavePrefFile(nsnull);
     }else{
       nsString message;
       nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));

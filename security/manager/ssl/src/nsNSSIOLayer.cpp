@@ -45,7 +45,8 @@
 #include "prlog.h"
 #include "prnetdb.h"
 #include "nsIPrompt.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsIWebProgressListener.h"
 #include "nsIChannel.h"
@@ -1794,9 +1795,9 @@ nsresult nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 
 	NS_ENSURE_ARG_POINTER(certChoice);
 
-	nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+	nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-	ret = prefService->CopyCharPref("security.default_personal_cert", &mode);
+	ret = pref->GetCharPref("security.default_personal_cert", &mode);
 	if (NS_FAILED(ret)) {
 		goto loser;
 	}

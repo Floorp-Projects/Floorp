@@ -46,10 +46,11 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialogs)
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
 #define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
@@ -73,7 +74,7 @@ nsSecurityWarningDialogs::Init()
 {
   nsresult rv;
 
-  mPref = do_GetService(kPrefCID, &rv);
+  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStringBundleService> service = do_GetService(kCStringBundleServiceCID, &rv);
@@ -147,7 +148,7 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
 
   // Get user's preference for this alert
   PRBool prefValue;
-  rv = mPref->GetBoolPref(prefName, &prefValue);
+  rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
   if (NS_FAILED(rv)) prefValue = PR_TRUE;
 
   // Stop if alert is not requested
@@ -162,7 +163,7 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
   showOncePref += ".show_once";
 
   PRBool showOnce = PR_FALSE;
-  mPref->GetBoolPref(showOncePref.get(), &showOnce);
+  mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)
     prefValue = PR_FALSE;
@@ -186,9 +187,9 @@ nsSecurityWarningDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *pr
   if (NS_FAILED(rv)) return rv;
       
   if (!prefValue) {
-    mPref->SetBoolPref(prefName, PR_FALSE);
+    mPrefBranch->SetBoolPref(prefName, PR_FALSE);
   } else if (showOnce) {
-    mPref->SetBoolPref(showOncePref.get(), PR_FALSE);
+    mPrefBranch->SetBoolPref(showOncePref.get(), PR_FALSE);
   }
 
   return rv;
@@ -233,7 +234,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   PRBool prefValue = PR_TRUE;
   
   if (prefName != nsnull) {
-    rv = mPref->GetBoolPref(prefName, &prefValue);
+    rv = mPrefBranch->GetBoolPref(prefName, &prefValue);
     if (NS_FAILED(rv)) prefValue = PR_TRUE;
   }
   
@@ -248,7 +249,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   showOncePref += ".show_once";
 
   PRBool showOnce = PR_FALSE;
-  mPref->GetBoolPref(showOncePref.get(), &showOnce);
+  mPrefBranch->GetBoolPref(showOncePref.get(), &showOnce);
 
   if (showOnce)
     prefValue = PR_FALSE;
@@ -301,9 +302,9 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   *_result = (buttonPressed != 1);
 
   if (!prefValue && prefName != nsnull) {
-    mPref->SetBoolPref(prefName, PR_FALSE);
+    mPrefBranch->SetBoolPref(prefName, PR_FALSE);
   } else if (prefValue && showOnce) {
-    mPref->SetBoolPref(showOncePref.get(), PR_FALSE);
+    mPrefBranch->SetBoolPref(showOncePref.get(), PR_FALSE);
   }
 
   return rv;

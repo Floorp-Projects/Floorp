@@ -51,7 +51,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
-#include "nsIPref.h"
 
 #define NS_NSSDIALOGS_CID \
   { 0x518e071f, 0x1dd2, 0x11b2, \

@@ -41,7 +41,7 @@
 #define nsSecurityWarningDialogs_h
 
 #include "nsISecurityWarningDialogs.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 
@@ -64,7 +64,7 @@ protected:
                    const PRUnichar *messageName, 
                    const PRUnichar *showAgainName, PRBool* _result);
   nsCOMPtr<nsIStringBundle> mStringBundle;
-  nsCOMPtr<nsIPref> mPref;
+  nsCOMPtr<nsIPrefBranch> mPrefBranch;
 };
 
 #define NS_SECURITYWARNINGDIALOGS_CID \
