@@ -38,6 +38,10 @@
 #include <sys/filio.h>
 #endif
 
+#if defined(NTO)
+#include <sys/statvfs.h>
+#endif
+
 /*
  * Make sure _PRSockLen_t is 32-bit, because we will cast a PRUint32* or
  * PRInt32* pointer to a _PRSockLen_t* pointer.
@@ -3358,7 +3362,71 @@ void _PR_Unblock_IO_Wait(PRThread *thr)
 
 int _MD_unix_get_nonblocking_connect_error(int osfd)
 {
-#if defined(NCR) || defined(UNIXWARE) || defined(SNI) || defined(NEC)
+#if defined(NTO)
+    /* Neutrino does not support the SO_ERROR socket option */
+    PRInt32      rv;
+    PRNetAddr    addr;
+    _PRSockLen_t addrlen = sizeof(addr);
+
+    /* Test to see if we are using the Tiny TCP/IP Stack or the Full one. */
+    struct statvfs superblock;
+    rv = fstatvfs(osfd, &superblock);
+    if (rv == 0) {
+        if (strcmp(superblock.f_basetype, "ttcpip") == 0) {
+            /* Using the Tiny Stack! */
+            rv = getpeername(osfd, (struct sockaddr *) &addr,
+                    (_PRSockLen_t *) &addrlen);
+            if (rv == -1) {
+                int errno_copy = errno;    /* make a copy so I don't
+                                            * accidentally reset */
+
+                if (errno_copy == ENOTCONN) {
+                    struct stat StatInfo;
+                    rv = fstat(osfd, &StatInfo);
+                    if (rv == 0) {
+                        time_t current_time = time(NULL);
+
+                        /*
+                         * this is a real hack, can't explain why it
+                         * works it just does
+                         */
+                        if (abs(current_time - StatInfo.st_atime) < 5) {
+                            return ECONNREFUSED;
+                        } else {
+                            return ETIMEDOUT;
+                        }
+                    } else {
+                        return ECONNREFUSED;
+                    }
+                } else {
+                    return errno_copy;
+                }
+            } else {
+                /* No Error */
+                return 0;
+            }
+        } else {
+            /* Have the FULL Stack which supports SO_ERROR */
+            /* Hasn't been written yet, never been tested! */
+            /* Jerry.Kirk@Nexwarecorp.com */
+
+            int err;
+            _PRSockLen_t optlen = sizeof(err);
+
+            printf("_MD_unix_get_nonblocking_connect_error: "
+                    "Assuming Large TCP/IP Stack -REVISIT- Never Tested!\n");
+
+            if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                    (char *) &err, &optlen) == -1) {
+                return errno;
+            } else {
+                return err;
+            }		
+        }
+    } else {
+        return ECONNREFUSED;
+    }	
+#elif defined(NCR) || defined(UNIXWARE) || defined(SNI) || defined(NEC)
     /*
      * getsockopt() fails with EPIPE, so use getmsg() instead.
      */
