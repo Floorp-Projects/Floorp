@@ -66,6 +66,7 @@
 #define IMAP_MAIL_DIR_50_NAME        NS_LITERAL_CSTRING("ImapMail")
 #define NEWS_DIR_50_NAME             NS_LITERAL_CSTRING("News")
 #define MSG_FOLDER_CACHE_DIR_50_NAME NS_LITERAL_CSTRING("panacea.dat")
+#define STORAGE_FILE_50_NAME         NS_LITERAL_CSTRING("storage.sdb")
 
 //*****************************************************************************
 // nsProfileDirServiceProvider::nsProfileDirServiceProvider
@@ -308,6 +309,12 @@ nsProfileDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFi
     if (NS_SUCCEEDED(rv))
       rv = localFile->AppendNative(MSG_FOLDER_CACHE_DIR_50_NAME);
   }
+  else if (strcmp(prop, NS_APP_STORAGE_50_FILE) == 0) {
+    rv = domainDir->Clone(getter_AddRefs(localFile));
+    if (NS_SUCCEEDED(rv))
+      rv = localFile->AppendNative(STORAGE_FILE_50_NAME);
+  }
+
   
   if (localFile && NS_SUCCEEDED(rv))
     return CallQueryInterface(localFile, _retval);
