@@ -68,6 +68,11 @@ public:
                                        JSContext* aContext,
                                        jsval aValue);
 
+  static NS_EXPORT PRBool nsConvertJSValToXPCObject(nsISupports** aSupports,
+                                                    REFNSIID aIID,
+                                                    JSContext* aContext,
+                                                    jsval aValue);
+
   static NS_EXPORT void nsConvertJSValToString(nsString& aString,
                                      JSContext* aContext,
                                      jsval aValue);

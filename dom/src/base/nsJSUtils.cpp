@@ -219,6 +219,42 @@ nsJSUtils::nsConvertJSValToObject(nsISupports** aSupports,
   return JS_TRUE;
 }
 
+NS_EXPORT PRBool
+nsJSUtils::nsConvertJSValToXPCObject(nsISupports** aSupports,
+                                     REFNSIID aIID,
+                                     JSContext* aContext,
+                                     jsval aValue)
+{
+  *aSupports = nsnull;
+  if (JSVAL_IS_NULL(aValue)) {
+    return JS_TRUE;
+  }
+  else if (JSVAL_IS_OBJECT(aValue)) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+    if (NS_FAILED(rv)) return JS_FALSE;
+
+    nsIXPConnectWrappedNative* wrapper;
+    rv = xpc->GetWrappedNativeOfJSObject(aContext, JSVAL_TO_OBJECT(aValue), &wrapper);
+    if (NS_FAILED(rv)) return JS_FALSE;
+
+    nsISupports* native;
+    rv = wrapper->GetNative(&native);
+    NS_RELEASE(wrapper);
+    if (NS_FAILED(rv)) return JS_FALSE;
+
+    rv = native->QueryInterface(aIID, (void**) aSupports);
+    NS_RELEASE(native);
+    if (NS_FAILED(rv)) return JS_FALSE;
+
+    return JS_TRUE;
+  }
+  else {
+    return JS_FALSE;
+  }
+}
+
+
 NS_EXPORT void 
 nsJSUtils::nsConvertJSValToString(nsString& aString,
                                   JSContext* aContext,
