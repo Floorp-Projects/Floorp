@@ -30,6 +30,8 @@ function onPreInit(account, accountValues)
     var type = parent.getAccountValue(account, accountValues, "server", "type");
     
     hideShowControls(type);
+
+    enableBiffUI();
 }
 
 
@@ -69,7 +71,7 @@ function hideShowControls(serverType)
         // adding support for hiding multiple server types using hideFor="server1,server2"
         var hideForBool = false;
         var hideForTokens = hideFor.split(",");
-        for (j = 0; j < hideForTokens.length; j++) {
+        for (var j = 0; j < hideForTokens.length; j++) {
             if (hideForTokens[j] == serverType) {
                 hideForBool = true;
                 break;
@@ -170,4 +172,20 @@ function secureSelect() {
         document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(true);
     else
         document.getElementById("server.port").value = protocolInfo.getDefaultServerPort(false);
+}
+
+function enableBiffUI()
+{ 
+    var parentCheckBox = document.getElementById('server.doBiff');
+    var checkBox = document.getElementById('server.downloadOnBiff');
+    var textField = document.getElementById('server.biffMinutes');
+
+    if (parentCheckBox.getAttribute("checked")) {
+      checkBox.setAttribute("disabled", "true");
+      textField.setAttribute("disabled", "true");
+    }
+    else {
+      checkBox.setAttribute("disabled", "false");
+      textField.setAttribute("disabled", "false");
+    } 
 }

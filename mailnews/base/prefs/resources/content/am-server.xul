@@ -64,7 +64,8 @@
             value="&savePassword.label;"/>
 -->
   <box orient="horizontal" autostretch="never">
-    <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"/>
+    <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"
+     oncommand="enableBiffUI()"/>
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
     <text class="label" for="server.biffMinutes" value="&biffEnd.label;"/>
   </box>
