@@ -123,7 +123,9 @@ SetupRegistry(void)
 
     // xpcom
     static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+    static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kAllocatorCID,             NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
