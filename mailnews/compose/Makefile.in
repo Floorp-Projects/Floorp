@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src tests
+DIRS = public src build tests
 
 include $(topsrcdir)/config/config.mk
 
