@@ -4355,7 +4355,7 @@
 
 
 (defparameter *default-primitives*
-  '((neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
+  '((neg (-> (integer) integer) #'- :unary :minus nil %prefix% %prefix%)
     (* (-> (integer integer) integer) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %unary%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
