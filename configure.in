@@ -836,6 +836,7 @@ AC_SUBST(LIBS)
 AC_SUBST(MKSHLIB)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
+AC_SUBST(DLL_SUFFIX)
 
 dnl Check for missing components
 if [ test -n "$MISSING_X" ]; then
@@ -853,6 +854,11 @@ fi
 if [ test -n "$MISSING_NSPR" ]; then
     AC_MSG_ERROR([Could not find the following nspr libraries or could not run sample program: $MISSING_NSPR]);
 fi
+
+dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
+mkdir lib
+mkdir modules
+mkdir modules/security
 
 NG_MAKEFILES="
 Makefile
@@ -943,13 +949,11 @@ layout/xml/document/Makefile
 layout/xml/document/public/Makefile
 layout/xml/document/src/Makefile
 layout/tools/Makefile
-lib/Makefile
 lib/liblayer/Makefile
 lib/liblayer/include/Makefile
 lib/liblayer/src/Makefile
 lib/libpwcac/Makefile
 lib/xp/Makefile
-modules/Makefile
 modules/libimg/Makefile
 modules/libimg/classes/Makefile
 modules/libimg/classes/netscape/Makefile
@@ -976,7 +980,6 @@ modules/plugin/nglsrc/Makefile
 modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
-modules/security/Makefile
 modules/security/freenav/Makefile
 modules/zlib/Makefile
 modules/zlib/src/Makefile
