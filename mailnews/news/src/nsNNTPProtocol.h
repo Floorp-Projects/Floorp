@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -30,6 +30,7 @@
 #include "nsIBufferOutputStream.h"
 #include "nsINntpUrl.h"
 #include "nsINntpIncomingServer.h"
+#include "nsINNTPProtocol.h"
 
 #include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
 
@@ -144,19 +145,15 @@ NEWS_FREE,
 NEWS_FINISHED
 } StatesEnum;
 
-class nsNNTPProtocol : public nsMsgProtocol
+class nsNNTPProtocol : public nsINNTPProtocol, public nsMsgProtocol
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSINNTPPROTOCOL
 	// Creating a protocol instance requires the URL 
 	// need to call Initialize after we do a new of nsNNTPProtocol
 	nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow);	
 	virtual ~nsNNTPProtocol();
-
-	// initialization function given a news url
-	NS_IMETHOD Initialize(void);
-
-	// aConsumer is typically a display stream you may want the results to be displayed into...
-	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
 	// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg);
@@ -164,6 +161,8 @@ public:
 	char * m_ProxyServer;		/* proxy server hostname */
 
 	NS_IMETHOD Cancel(nsresult status);  // handle stop button
+
+  nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
 	// over-rides from nsMsgProtocol
@@ -175,7 +174,9 @@ private:
 	// and then calls the base class to transmit the data
 	PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
-    void ParseHeaderForCancel(char *buf);
+  nsresult CleanupAfterRunningUrl();
+
+  void ParseHeaderForCancel(char *buf);
 
     static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
 
@@ -198,6 +199,9 @@ private:
 
 	// the nsINntpURL that is currently running
 	nsCOMPtr<nsINntpUrl> m_runningURL;
+  PRBool      m_connectionBusy;
+  PRBool      m_fromCache;  // is this connection from the cache?
+  PRTime      m_lastActiveTimeStamp;
 	nsNewsAction m_newsAction;
 
 	// Generic state information -- What state are we in? What state do we want to go to

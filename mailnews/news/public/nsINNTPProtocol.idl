@@ -27,6 +27,7 @@ interface nsIURI;
 interface nsINntpUrl;
 interface nsISupportsArray;
 interface nsIMsgFolder;
+interface nsIMsgWindow;
 
 [scriptable, uuid(30106238-0991-11d4-a565-0060b0fc04b7)]
 interface nsINNTPProtocol : nsISupports {
@@ -37,15 +38,11 @@ interface nsINNTPProtocol : nsISupports {
 	/////////////////////////////////////////////////////////////////////////
 	void IsBusy(out boolean aIsConnectionBusy);
 
-	// Protocol instance examines the url, looking at the host name,
-	// user name and folder the action would be on in order to figure out
-	// if it can process this url. I decided to push the semantics about
-	// whether a connection can handle a url down into the connection level
-	// instead of in the connection cache.
-	void CanHandleUrl(in nsINntpUrl aNntpUrl, out boolean aCanRunUrl,
-                            out boolean hasToWait);
+	void LoadNewsUrl(in nsIURI aUri, in nsISupports aConsumer);
+	void Initialize(in nsIURI aURL, in nsIMsgWindow aMsgWindow);
+
     // Get last active time stamp
     void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
-
+	void CloseConnection();
 };

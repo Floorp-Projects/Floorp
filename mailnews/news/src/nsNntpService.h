@@ -71,6 +71,7 @@ protected:
   
   // a convience routine used to put together news urls.
   nsresult ConstructNntpUrl(const char * urlString, const char * newsgroupName, nsMsgKey key, nsIUrlListener *aUrlListener,  nsIURI ** aUrl);
+  nsresult  GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol);
   // a convience routine to run news urls
   nsresult RunNewsUrl (nsIURI * aUrl, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer);
   static PRBool findNewsServerWithGroup(nsISupports *aElement, void *data);

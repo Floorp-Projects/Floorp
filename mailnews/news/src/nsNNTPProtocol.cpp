@@ -443,6 +443,13 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
     return NS_ERROR_NO_INTERFACE;
 }
 
+NS_IMPL_ADDREF_INHERITED(nsNNTPProtocol, nsMsgProtocol)
+NS_IMPL_RELEASE_INHERITED(nsNNTPProtocol, nsMsgProtocol)
+
+NS_INTERFACE_MAP_BEGIN(nsNNTPProtocol)
+    NS_INTERFACE_MAP_ENTRY(nsINNTPProtocol)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
+
 nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     : nsMsgProtocol(aURL)
 {
@@ -463,18 +470,20 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     m_commandSpecificData = nsnull;
     m_searchData = nsnull;
 
-    if (aMsgWindow) {
+    if (aMsgWindow) 
         m_msgWindow = aMsgWindow;
-    }
 
 	m_runningURL = null_nsCOMPtr();
-
+  m_connectionBusy = PR_FALSE;
+  m_fromCache = PR_FALSE;
+  LL_I2L(m_lastActiveTimeStamp, 0);
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
     if (m_nntpServer) {
         m_nntpServer->WriteNewsrcFile();
+        m_nntpServer->RemoveConnection(this);
     }
 	PR_FREEIF(m_currentGroup);
     if (m_lineStreamBuffer) {
@@ -482,11 +491,15 @@ nsNNTPProtocol::~nsNNTPProtocol()
     }
 }
 
-nsresult nsNNTPProtocol::Initialize(void)
+NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 {
     nsresult rv = NS_OK;
     net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
     PRBool isSecure = PR_FALSE;
+
+    if (aMsgWindow) 
+        m_msgWindow = aMsgWindow;
+    nsMsgProtocol::InitFromURI(aURL);
 
 	rv = m_url->GetHost(getter_Copies(m_hostName));
 	if (NS_FAILED(rv)) return rv;
@@ -541,6 +554,7 @@ nsresult nsNNTPProtocol::Initialize(void)
 	// query the URL for a nsINNTPUrl
    
 	m_runningURL = do_QueryInterface(m_url);
+  m_connectionBusy = PR_TRUE;
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -551,25 +565,27 @@ nsresult nsNNTPProtocol::Initialize(void)
 		m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
 		m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
 	}
-    else {
-      return rv;
-    }
+  else {
+    return rv;
+  }
 	
-	// call base class to set up the transport
+  if (!m_socketIsOpen)
+  {
+  // call base class to set up the transport
     if (isSecure) {
 	    rv = OpenNetworkSocket(m_url, "ssl");
     }
     else {
 	    rv = OpenNetworkSocket(m_url, nsnull);
     }
-
+  }
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
 	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
 
 	m_nextState = SEND_FIRST_NNTP_COMMAND;
-	m_nextStateAfterResponse = NNTP_CONNECT;
+  m_nextStateAfterResponse = NNTP_CONNECT;
 	m_typeWanted = 0;
 	m_responseCode = 0;
 	m_previousResponseCode = 0;
@@ -625,6 +641,27 @@ nsNNTPProtocol::InitializeNewsFolderFromUri(const char *uri)
         return NS_OK;
 }
 
+/* void IsBusy (out boolean aIsConnectionBusy); */
+NS_IMETHODIMP nsNNTPProtocol::IsBusy(PRBool *aIsConnectionBusy)
+{
+  NS_ENSURE_ARG_POINTER(aIsConnectionBusy);
+  *aIsConnectionBusy = m_connectionBusy;
+  return NS_OK;
+}
+
+/* void GetLastActiveTimeStamp (out PRTime aTimeStamp); */
+NS_IMETHODIMP nsNNTPProtocol::GetLastActiveTimeStamp(PRTime *aTimeStamp)
+{
+  NS_ENSURE_ARG_POINTER(aTimeStamp);
+  *aTimeStamp = m_lastActiveTimeStamp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsNNTPProtocol::LoadNewsUrl(nsIURI * aURL, nsISupports * aConsumer)
+{
+  return LoadUrl(aURL, aConsumer);
+}
+
 
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
@@ -637,6 +674,14 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsCOMPtr <nsINNTPNewsgroupPost> message;
   nsresult rv = NS_OK;
 
+  // if this connection comes from the cache, we need to initialize the
+  // load group here, by generating the start request notification.
+  if (m_fromCache)
+  {
+	  if (m_channelListener)
+		  rv = m_channelListener->OnStartRequest(this, m_channelContext);
+  }
+
   m_articleNumber = -1;
   rv = aURL->GetHost(getter_Copies(m_hostName));
   if (NS_FAILED(rv)) return rv;
@@ -645,6 +690,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 
   m_runningURL = do_QueryInterface(aURL, &rv);
   if (NS_FAILED(rv)) return rv;
+  m_connectionBusy = PR_TRUE;
   m_runningURL->GetNewsAction(&m_newsAction);
 
   // okay, now fill in our event sinks...Note that each getter ref counts before
@@ -4929,10 +4975,20 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// cache so we aren't creating new connections to process each request...
 				// but until that time, we always want to properly shutdown the connection
 
+
+        m_connectionBusy = PR_FALSE;
+#ifdef DEBUG_bienvenu
+#define USE_CONN_CACHE
+#endif
+#ifdef USE_CONN_CACHE
+        mailnewsurl->SetUrlState(PR_FALSE, NS_OK);
+        m_lastActiveTimeStamp = PR_Now(); // remmeber when we last used this connection.
+        return CleanupAfterRunningUrl();
+#else
 				SendData(mailnewsurl, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
 				m_nextState = NEWS_FINISHED; // so we don't spin in the free state
-				return NS_OK;
-				break;
+        return NS_OK;
+#endif
 			case NEWS_FINISHED:
 				return NS_OK;
 				break;
@@ -4954,7 +5010,13 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 	return NS_OK; /* keep going */
 }
 
-nsresult nsNNTPProtocol::CloseSocket()
+NS_IMETHODIMP nsNNTPProtocol::CloseConnection()
+{
+	SendData(nsnull, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
+  return NS_OK;
+}
+
+nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
 {
   /* do we need to know if we're parsing xover to call finish xover?  */
   /* yes, I think we do! Why did I think we should??? */
@@ -4962,7 +5024,15 @@ nsresult nsNNTPProtocol::CloseSocket()
      data, there was an error or we were interrupted or
      something.  So, tell libmsg there was an abnormal
      exit so that it can free its data. */
-            
+  
+  nsresult rv = NS_OK;
+
+	if (m_channelListener)
+		rv = m_channelListener->OnStopRequest(this, m_channelContext, NS_OK, nsnull);
+
+	if (m_loadGroup)
+		m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, NS_OK, nsnull);
+
 	if (m_newsgroupList)
 	{
 		int status;
@@ -4977,10 +5047,6 @@ nsresult nsNNTPProtocol::CloseSocket()
          we be releasing it here? */
       /* NS_RELEASE(m_newsgroup->GetNewsgroupList()); */
 	}
-#ifdef UNREADY_CODE
-	if (cd->control_con)
-		cd->control_con->last_used_time = PR_Now();
-#endif
 
     PR_FREEIF(m_path);
     PR_FREEIF(m_responseText);
@@ -4996,7 +5062,13 @@ nsresult nsNNTPProtocol::CloseSocket()
     m_cancelID = nsnull;
     
 	m_runningURL = null_nsCOMPtr();
+  m_connectionBusy = PR_FALSE;
+  return NS_OK;
+}
 
+nsresult nsNNTPProtocol::CloseSocket()
+{
+  CleanupAfterRunningUrl(); // is this needed?
 	return nsMsgProtocol::CloseSocket();
 }
 

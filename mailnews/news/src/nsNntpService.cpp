@@ -774,10 +774,11 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
+  // ### try to access cache - but can't find server yet...
   nntpProtocol = new nsNNTPProtocol(mailnewsurl, aMsgWindow);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
-  rv = nntpProtocol->Initialize();
+  rv = nntpProtocol->Initialize(mailnewsurl, aMsgWindow);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsINNTPNewsgroupPost> post;
@@ -790,7 +791,7 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   rv = nntpUrl->SetMessageToPost(post);
   if (NS_FAILED(rv)) return rv;
             
-  rv = nntpProtocol->LoadUrl(mailnewsurl, /* aConsumer */ nsnull);
+  rv = nntpProtocol->LoadNewsUrl(mailnewsurl, /* aConsumer */ nsnull);
 		
   if (_retval)
 	  nntpUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
@@ -842,21 +843,53 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 
 }
 
+nsresult
+nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTPProtocol **aProtocol)
+{
+  nsXPIDLCString hostName;
+  nsXPIDLCString userName;
+
+  nsresult rv = aUri->GetHost(getter_Copies(hostName));
+  rv = aUri->GetPreHost(getter_Copies(userName));
+
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // find the incoming server
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsCOMPtr<nsINntpIncomingServer> nntpServer;
+  rv = accountManager->FindServer(userName,
+                                hostName,
+                                "nntp",
+                                getter_AddRefs(server));
+
+  if (NS_FAILED(rv) || !server)
+    return rv;
+
+  nntpServer = do_QueryInterface(server, &rv);
+
+  if (!nntpServer || NS_FAILED(rv))
+    return rv;
+
+  rv = nntpServer->GetNntpConnection(aUri, aMsgWindow, aProtocol);
+  if (NS_FAILED(rv) || !*aProtocol) 
+    return NS_ERROR_OUT_OF_MEMORY;
+  return rv;
+}
 nsresult 
 nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer)
 {
   nsresult rv;
 
   // almost there...now create a nntp protocol instance to run the url in...
-  nsNNTPProtocol *nntpProtocol = nsnull;
+  nsCOMPtr <nsINNTPProtocol> nntpProtocol;
+  rv = GetProtocolForUri(aUri, aMsgWindow, getter_AddRefs(nntpProtocol));
 
-  nntpProtocol = new nsNNTPProtocol(aUri, aMsgWindow);
-  if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
-  
-  rv = nntpProtocol->Initialize();
+  if (NS_SUCCEEDED(rv))
+    rv = nntpProtocol->Initialize(aUri, aMsgWindow);
   if (NS_FAILED(rv)) return rv;
   
-  rv = nntpProtocol->LoadUrl(aUri, aConsumer);
+  rv = nntpProtocol->LoadNewsUrl(aUri, aConsumer);
   return rv;
 }
 
@@ -1061,13 +1094,13 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 NS_IMETHODIMP nsNntpService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
-	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol(aURI, nsnull);
-	if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
-  
-	rv = nntpProtocol->Initialize();
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr <nsINNTPProtocol> nntpProtocol;
+  rv = GetProtocolForUri(aURI, nsnull, getter_AddRefs(nntpProtocol));
+  if (NS_SUCCEEDED(rv))
+	  rv = nntpProtocol->Initialize(aURI, nsnull);
+  if (NS_FAILED(rv)) return rv;
 
-    return nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
+  return nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 }
 
 NS_IMETHODIMP

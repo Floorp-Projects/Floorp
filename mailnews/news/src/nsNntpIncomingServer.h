@@ -36,6 +36,9 @@
 
 #include "nsEnumeratorUtils.h" 
 
+class nsINntpUrl;
+class nsIMsgMailNewsUrl;
+
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer
@@ -51,6 +54,11 @@ public:
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD PerformExpand();
+protected:
+  nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
+                                             nsIMsgWindow *window);
+    PRBool ConnectionTimeOut(nsINNTPProtocol* aNntpConnection);
+    nsCOMPtr<nsISupportsArray> m_connectionCache;
 	NS_IMETHOD PerformBiff();
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 

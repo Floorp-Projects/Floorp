@@ -31,10 +31,11 @@
 #include "nsFileStream.h"
 #include "nsCOMPtr.h"
 #include "nsINntpService.h"
-
+#include "nsINNTPProtocol.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
+#include "nsNNTPProtocol.h"
 
 #define NEW_NEWS_DIR_NAME        "News"
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
@@ -61,10 +62,11 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
 
 nsNntpIncomingServer::nsNntpIncomingServer()
 {    
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
-    mNewsrcHasChanged = PR_FALSE;
+  mNewsrcHasChanged = PR_FALSE;
 	mGroupsEnumerator = nsnull;
+	NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
 }
 
 
@@ -308,8 +310,162 @@ nsNntpIncomingServer::GetNewsrcHasChanged(PRBool *aNewsrcHasChanged)
 NS_IMETHODIMP
 nsNntpIncomingServer::CloseCachedConnections()
 {
-    return WriteNewsrcFile();
+	// iterate through the connection cache for a connection that can handle this url.
+	PRUint32 cnt;
+  nsCOMPtr<nsISupports> aSupport;
+  nsCOMPtr<nsINNTPProtocol> connection;
+
+  if (m_connectionCache)
+  {
+    nsresult rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+    for (PRUint32 i = 0; i < cnt; i++) 
+	  {
+      aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+      connection = do_QueryInterface(aSupport);
+		  if (connection)
+    	  rv = connection->CloseConnection();
+	  }
+  }
+  return WriteNewsrcFile();
 }
+
+NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaximumConnectionsNumber,
+                       "max_cached_connections");
+
+PRBool
+nsNntpIncomingServer::ConnectionTimeOut(nsINNTPProtocol* aConnection)
+{
+    PRBool retVal = PR_FALSE;
+    if (!aConnection) return retVal;
+    nsresult rv;
+
+    PR_CEnterMonitor(this);
+
+    PRTime cacheTimeoutLimits;
+
+    LL_I2L(cacheTimeoutLimits, 170 * 1000000); // 170 seconds in microseconds
+    PRTime lastActiveTimeStamp;
+    rv = aConnection->GetLastActiveTimeStamp(&lastActiveTimeStamp);
+
+    PRTime elapsedTime;
+    LL_SUB(elapsedTime, PR_Now(), lastActiveTimeStamp);
+    PRTime t;
+    LL_SUB(t, elapsedTime, cacheTimeoutLimits);
+    if (LL_GE_ZERO(t))
+    {
+        nsCOMPtr<nsINNTPProtocol> aProtocol(do_QueryInterface(aConnection,
+                                                              &rv));
+        if (NS_SUCCEEDED(rv) && aProtocol)
+        {
+            m_connectionCache->RemoveElement(aConnection);
+            retVal = PR_TRUE;
+        }
+    }
+    PR_CExitMonitor(this);
+    return retVal;
+}
+
+
+nsresult
+nsNntpIncomingServer::CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
+                                             nsIMsgWindow *aMsgWindow)
+{
+	// create a new connection and add it to the connection cache
+	// we may need to flag the protocol connection as busy so we don't get
+    // a race 
+	// condition where someone else goes through this code 
+	nsNNTPProtocol * protocolInstance = new nsNNTPProtocol(url, aMsgWindow);
+  if (!protocolInstance)
+    return NS_ERROR_OUT_OF_MEMORY;
+//	nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
+//                                            NS_GET_IID(nsINntpProtocol),
+//                                            (void **) &protocolInstance);
+  nsresult rv = protocolInstance->QueryInterface(NS_GET_IID(nsINNTPProtocol), (void **) aNntpConnection);
+	// take the protocol instance and add it to the connectionCache
+	if (NS_SUCCEEDED(rv) && *aNntpConnection)
+		m_connectionCache->AppendElement(*aNntpConnection);
+	return rv;
+}
+
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetNntpConnection(nsIURI * aUri, nsIMsgWindow *aMsgWindow,
+                                           nsINNTPProtocol ** aNntpConnection)
+{
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsINNTPProtocol> connection;
+	nsCOMPtr<nsINNTPProtocol> freeConnection;
+  PRBool isBusy = PR_FALSE;
+
+  PR_CEnterMonitor(this);
+
+  PRInt32 maxConnections = 2; // default to be 2
+  rv = GetMaximumConnectionsNumber(&maxConnections);
+  if (NS_FAILED(rv) || maxConnections == 0)
+  {
+    maxConnections = 2;
+    rv = SetMaximumConnectionsNumber(maxConnections);
+  }
+  else if (maxConnections < 1)
+  {   // forced to use at least 1
+    maxConnections = 1;
+    rv = SetMaximumConnectionsNumber(maxConnections);
+  }
+
+  *aNntpConnection = nsnull;
+	// iterate through the connection cache for a connection that can handle this url.
+	PRUint32 cnt;
+  nsCOMPtr<nsISupports> aSupport;
+
+  rv = m_connectionCache->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  for (PRUint32 i = 0; i < cnt && !isBusy; i++) 
+	{
+    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+    connection = do_QueryInterface(aSupport);
+		if (connection)
+    	rv = connection->IsBusy(&isBusy);
+    if (NS_FAILED(rv)) 
+    {
+        connection = null_nsCOMPtr();
+        continue;
+    }
+    if (!freeConnection && !isBusy && connection)
+    {
+       freeConnection = connection;
+    }
+	}
+    
+  if (ConnectionTimeOut(connection))
+      connection = null_nsCOMPtr();
+  if (ConnectionTimeOut(freeConnection))
+      freeConnection = null_nsCOMPtr();
+
+	// if we got here and we have a connection, then we should return it!
+	if (!isBusy && connection)
+	{
+		*aNntpConnection = freeConnection;
+    freeConnection->Initialize(aUri, aMsgWindow);
+		NS_IF_ADDREF(*aNntpConnection);
+	}
+	else // have no queueing mechanism - just create the protocol instance.
+	{	
+		rv = CreateProtocolInstance(aNntpConnection, aUri, aMsgWindow);
+	}
+  return rv;
+}
+
+
+/* void RemoveConnection (in nsINNTPProtocol aNntpConnection); */
+NS_IMETHODIMP nsNntpIncomingServer::RemoveConnection(nsINNTPProtocol *aNntpConnection)
+{
+    if (aNntpConnection)
+        m_connectionCache->RemoveElement(aNntpConnection);
+
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsNntpIncomingServer::AddSubscribedNewsgroups()

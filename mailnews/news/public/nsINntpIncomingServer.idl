@@ -24,6 +24,9 @@
 #include "nsIFileSpec.idl"
 
 interface nsIMsgNewsFolder;
+interface nsINNTPProtocol;
+interface nsIURI;
+interface nsIMsgWindow;
 
 [scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
 interface nsINntpIncomingServer : nsISupports {
@@ -49,6 +52,7 @@ interface nsINntpIncomingServer : nsISupports {
 
     attribute boolean newsrcHasChanged;
 
+	attribute long maximumConnectionsNumber;
 	/* used when populating the subscribe dialog */
 	void addNewNewsgroup(in string name, in string state, in string count);
 	void addSubscribedNewsgroups();
@@ -57,4 +61,10 @@ interface nsINntpIncomingServer : nsISupports {
 	readonly attribute nsISupports firstGroupNeedingCounts;
 
 	void displaySubscribedGroup(in nsIMsgNewsFolder msgFolder, in long firstMessage, in long lastMessage, in long totalMessages);
+
+
+	void GetNntpConnection(in nsIURI url, in nsIMsgWindow window,
+                                           out nsINNTPProtocol aNntpConnection);
+	void RemoveConnection(in nsINNTPProtocol aNntpConnection);
+
 };
