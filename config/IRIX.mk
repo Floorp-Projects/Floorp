@@ -87,6 +87,10 @@ endif
 ifndef NS_USE_GCC
 CC			= cc
 CCC			= CC -woff 3247
+
+# Use C++ compiler for loading -- ld doesn't pass enough info
+# to resolve static class objects in shared libraries.
+LD			= $(CCC)
 endif
 
 ifeq ($(OS_RELEASE)$(OS_VERSION),5.3)
