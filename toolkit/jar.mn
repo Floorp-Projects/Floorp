@@ -7,6 +7,8 @@ toolkit.jar:
 +        content/global/finddialog.js                       (content/finddialog.js)
          content/global/charset.js                          (content/charset.js)
 +        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
++        content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
+
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
 +        locale/en-US/global/finddialog.dtd                 (locale/finddialog.dtd)
