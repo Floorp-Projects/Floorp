@@ -87,9 +87,7 @@ DIRS += xpfe extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
-ifndef NECKO
 DIRS += mailnews
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk
