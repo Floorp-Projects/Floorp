@@ -928,21 +928,12 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
-   if( calendarEventDisplay.recur == true )
-   {
-      DateHtml = document.createElement( "description" );
-      DateText = document.createTextNode( "This is a repeating event." );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   }
-   else
-   {
-      DateHtml = document.createElement( "description" );
-      startDate = new Date( calendarEventDisplay.event.end.getTime() );
-      DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
-      DateHtml.appendChild( DateText );
-      HolderBox.appendChild( DateHtml );
-   }
+   DateHtml = document.createElement( "description" );
+   startDate = new Date( calendarEventDisplay.displayEndDate );
+   DateText = document.createTextNode( "End: "+gCalendarWindow.dateFormater.getFormatedDate( startDate )+" "+gCalendarWindow.dateFormater.getFormatedTime( startDate ) );
+   DateHtml.appendChild( DateText );
+   HolderBox.appendChild( DateHtml );
+   
 
    if (calendarEventDisplay.event.description)
    {
