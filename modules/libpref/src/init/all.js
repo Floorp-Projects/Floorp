@@ -501,8 +501,12 @@ pref("network.cookie.warnAboutCookies",     false);
 pref("network.cookie.lifetime.enabled",     false);
 pref("network.cookie.lifetime.behavior",    0);
 pref("network.cookie.lifetime.days",        90);
-pref("network.cookie.p3p",                  "drdraaaa");
-pref("network.cookie.p3plevel",             1);
+
+// The following default value is for p3p medium mode.
+// See extensions/cookie/resources/content/p3p.xul for the definitions of low/medium/hi
+pref("network.cookie.p3p",                  "ffffaaaa");
+pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=custom
+
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
