@@ -15,53 +15,78 @@
     <content orient="vertical"/>
 
     <implementation>
-      <property name="selectedTab">
-        <setter>
-        <![CDATA[
-          if (!val)
-            throw Components.results.NS_ERROR_NULL_POINTER;
-          var tabs = this.getElementsByTagNameNS(
-              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-              "tabs");
-          tabs = tabs.length ? tabs[0] : null;
-          if (tabs)
-            tabs.selectedTab = val;
-          return val;
-        ]]>
-        </setter>
-        
+      <property name="_tabs">
         <getter>
         <![CDATA[
           var tabs = this.getElementsByTagNameNS(
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
               "tabs");
-          tabs = tabs.length ? tabs[0] : null;
-          return tabs ? tabs.selectedTab : null;
+          return tabs.length ? tabs[0] : null;
         ]]>
         </getter>
+      </property>
+
+      <property name="_tabpanels">
+        <getter>
+        <![CDATA[
+          var tabpanels = this.getElementsByTagNameNS(
+              "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+              "tabpanels");
+          return tabpanels.length ? tabpanels[0] : null;
+        ]]>
+        </getter>
+      </property>
+      
+      <property name="selectedIndex"
+                onget="return this._tabs ? this._tabs.selectedIndex : null;">
+        <setter>
+        <![CDATA[
+          if (this._tabs)
+            this._tabs.selectedIndex = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedTab"
+                onget="return this._tabs ? this._tabs.selectedItem : null;">
+        <setter>
+        <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (this._tabs)
+            this._tabs.selectedItem = val;
+          return val;
+        ]]>
+        </setter>
+      </property>
+
+      <property name="selectedPanel"
+                onget="return this._tabpanels ? this._tabpanels.selectedPanel : null;">
+        <setter>
+        <![CDATA[
+          if (!val)
+            throw Components.results.NS_ERROR_NULL_POINTER;
+          if (this._tabpanels)
+            this._tabpanels.selectedPanel = val;
+          return val;
+        ]]>
+        </setter>
       </property>
     </implementation>
     
     <handlers>
       <handler event="keypress" keycode="vk_tab" modifiers="control">
         <![CDATA[
-         var tabs = this.getElementsByTagNameNS(
-                                                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                  "tabs");
-         tabs = tabs.length ? tabs[0] : null;
-         if (tabs)
-           tabs.advanceSelectedTab(1);
+         if (this._tabs)
+           this._tabs.advanceSelectedTab(1);
          ]]>
       </handler>
       
       <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
         <![CDATA[
-         var tabs = this.getElementsByTagNameNS(
-                                                  "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                  "tabs");
-         tabs = tabs.length ? tabs[0] : null;
-         if (tabs)
-           tabs.advanceSelectedTab(-1);
+         if (this._tabs)
+           this._tabs.advanceSelectedTab(-1);
          ]]>
       </handler>
     </handlers>
@@ -69,7 +94,7 @@
 
   <binding id="tabs" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlElement">
       <constructor>
       <![CDATA[
         // first and last tabs need to be able to have unique styles
@@ -85,14 +110,37 @@
           else if (tabs.length == 1)
           tabs[0].setAttribute("first-tab", "true");
         }
-        this.selectedTab = tabs[0];
+        this.selectedItem = tabs[0];
         var o = this.getAttribute("orient");
         if (!o)
           this.setAttribute("orient", "horizontal");
       ]]>
       </constructor>
       
-      <property name="selectedTab">
+      <property name="selectedIndex">
+        <getter>
+        <![CDATA[
+          for (var i = 0; i < this.childNodes.length; i++) {
+            if (this.childNodes[i].selected)
+              return i;
+          }
+          // throw an exception when no tab is selected (we shouldn't get here)
+          throw Components.results.NS_ERROR_FAILURE;
+        ]]></getter>
+        
+        <setter>
+        <![CDATA[
+          var tabs = this.getElementsByTagNameNS(
+                         "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                         "tab");
+          var tab = tabs.length >= val ? null : tabs[val];
+          if (tab)
+            this.selectedItem = tab;
+          return tab;
+        ]]></setter>
+      </property>
+
+      <property name="selectedItem">
         <getter>
         <![CDATA[
           for (var i = 0; i < this.childNodes.length; i++) {
@@ -107,6 +155,7 @@
         <![CDATA[
           if (!val)
             throw Components.results.NS_ERROR_NULL_POINTER;
+            
           if (!val.selected)
             val.selected = true;
           var selectedIndex = 0;
@@ -118,7 +167,7 @@
                 selectedIndex = i;
             }
           }
-
+          
           // Fire an onselect event for the tabs element.
           var event = document.createEvent('Events');
           event.initEvent('select', false, true);
@@ -135,8 +184,9 @@
                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                "tabpanels");
           tabpanels = tabpanels.length ? tabpanels[0] : null;
+          // This will cause an onselect event to fire for the tabpanel element.
           if (tabpanels)
-            tabpanels.index = selectedIndex; // This will cause an onselect event to fire for the tabpanel element.
+            tabpanels.selectedIndex = selectedIndex; 
           return val;
         ]]>
         </setter>
@@ -146,34 +196,66 @@
         <parameter name="aDir"/>
         <body>
         <![CDATA[
-          var next = this.selectedTab[aDir == -1 ? "previousSibling" : "nextSibling"];
+          var next = this.selectedItem[aDir == -1 ? "previousSibling" : "nextSibling"];
           if (next && !next.getAttribute("hidden")) {
-            this.selectedTab = next;
+            this.selectedItem = next;
             next.focus();
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var tab = document.createElementNS(XULNS, "tab");
+          tab.setAttribute("label", label);
+          tab.setAttribute("value", value);
+          this.appendChild(tab);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="insertItemAt">
+        <parameter name="index"/>
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var tab = document.createElementNS(XULNS, "tab");
+          tab.setAttribute("label", label);
+          tab.setAttribute("value", value);
+          var before = this.childNodes[index];
+          if (before)
+            this.insertBefore(tab, before);
+          else
+            this.appendChild(tab);
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeItemAt">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var remove = this.childNodes[index];
+          if (remove)
+            this.removeChild(remove);
         ]]>
         </body>
       </method>
     </implementation>
   </binding>
   
-  <binding id="tabpanels" display="xul:deck"
-           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <implementation>
-      <!-- should be defined on deck! -->
-      <property name="index"
-                onget="return this.getAttribute('index');">
-        <setter>
-          if (this.index == val)
-            return val;
-          this.setAttribute("index", val);
-          var event = document.createEvent('Events');
-          event.initEvent('select', false, true);
-          this.dispatchEvent(event);
-          return val;
-        </setter>
-      </property>
-    </implementation>
+  <binding id="tabpanels"
+           extends="chrome://global/content/bindings/general.xml#deck">
+    <resources>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
+    </resources>
   </binding>
 
   <binding id="tab" display="xul:button"
@@ -225,7 +307,7 @@
             break;
           tabs = tabs.parentNode;
         } while(tabs.localName != "tabbox");
-        tabs.selectedTab = this;
+        tabs.selectedItem = this;
         if (!this.selected) this.selected = true;
       ]]>
       </handler>

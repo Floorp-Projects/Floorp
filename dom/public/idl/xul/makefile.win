@@ -37,6 +37,8 @@ XPIDLSRCS =					\
   .\nsIDOMXULDescriptionElement.idl       \
   .\nsIDOMXULLabelElement.idl             \
 	.\nsIDOMXULImageElement.idl             \
+  .\nsIDOMXULSelectControlElement.idl     \
+  .\nsIDOMXULSelectControlItemElement.idl     \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

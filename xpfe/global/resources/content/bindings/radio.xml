@@ -9,7 +9,7 @@
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlElement">
       <property name="value" onset="this.setAttribute('value',val); return val;"
                             onget="return this.getAttribute('value');"/>
       <property name="disabled">
@@ -121,6 +121,50 @@
             }
           }
           this.selectedItem.doCommand();
+        ]]>
+        </body>
+      </method>
+
+      <method name="appendItem">
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var radio = document.createElementNS(XULNS, "radio");
+          radio.setAttribute("label", label);
+          radio.setAttribute("value", value);
+          this.appendChild(radio);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="insertItemAt">
+        <parameter name="index"/>
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var radio = document.createElementNS(XULNS, "radio");
+          radio.setAttribute("label", label);
+          radio.setAttribute("value", value);
+          var before = this.childNodes[index];
+          if (before)
+            this.insertBefore(radio, before);
+          else
+            this.appendChild(radio);
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeItemAt">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var remove = this.childNodes[index];
+          if (remove)
+            this.removeChild(remove);
         ]]>
         </body>
       </method>

@@ -37,7 +37,7 @@
       </handler>
     </handlers>
 
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlElement">
       <constructor>
         this.setInitialSelection()
       </constructor>
@@ -165,6 +165,59 @@
           ]]>
         </setter>
       </property>
+      
+      <method name="appendItem">
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var popup = this.getElementsByTagName("menupopup")[0];
+          if (popup) {
+            var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var item = document.createElementNS(XULNS, "menuitem");
+            item.setAttribute("label", label);
+            item.setAttribute("value", value);
+            popup.appendChild(item);
+          }
+        ]]>
+        </body>
+      </method>
+      
+      <method name="insertItemAt">
+        <parameter name="index"/>
+        <parameter name="label"/>
+        <parameter name="value"/>
+        <body>
+        <![CDATA[
+          var popup = this.getElementsByTagName("menupopup")[0];
+          if (popup) {
+            var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var item = document.createElementNS(XULNS, "menuitem");
+            item.setAttribute("label", label);
+            item.setAttribute("value", value);
+            var before = popup.childNodes[index];
+            if (before)
+              popup.insertBefore(item, before);
+            else
+              popup.appendChild(item);
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeItemAt">
+        <parameter name="index"/>
+        <body>
+        <![CDATA[
+          var popup = this.getElementsByTagName("menupopup")[0];
+          if (popup) {
+            var remove = popup.childNodes[index];
+            if (remove)
+              popup.removeChild(remove);
+          }
+        ]]>
+        </body>
+      </method>
     </implementation>  
   </binding>
 
