@@ -39,6 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"

@@ -24,6 +24,7 @@
 #import "CHPageProxyIcon.h"
 #import "BookmarksService.h"
 #import "MainController.h"
+#include "nsCRT.h"
 
 @implementation CHPageProxyIcon
 

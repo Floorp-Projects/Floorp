@@ -46,6 +46,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMCharacterData.h"
 #include "nsString.h"
+#include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIXMLHttpRequest.h"
