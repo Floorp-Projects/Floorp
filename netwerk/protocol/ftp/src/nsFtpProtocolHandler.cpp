@@ -38,6 +38,18 @@ nsFtpProtocolHandler::~nsFtpProtocolHandler() {
 
 NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, nsIProtocolHandler::GetIID());
 
+NS_METHOD
+nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
+{
+    nsFtpProtocolHandler* ph = new nsFtpProtocolHandler();
+    if (ph == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(ph);
+    nsresult rv = ph->QueryInterface(aIID, aResult);
+    NS_RELEASE(ph);
+    return rv;
+}
+    
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:
 
@@ -119,18 +131,12 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                  nsIChannel* *result)
 {
     nsresult rv;
-
-    nsIProgressEventSink* eventSink;
-    rv = eventSinkGetter->GetEventSink(verb, nsIProgressEventSink::GetIID(), 
-                                       (nsISupports**)&eventSink);
+    
+    nsFTPChannel* channel;
+    rv = nsFTPChannel::Create(nsnull, nsIFTPChannel::GetIID(), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    nsFTPChannel* channel = new nsFTPChannel();
-    if (channel == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(channel);
-
-    rv = channel->Init((nsIURI*)url, eventSink, eventQueue);    // XXX bogus cast -- fix
+    rv = channel->Init(verb, url, eventSinkGetter, eventQueue);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsIFactory.h"
+#include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsFtpProtocolHandler.h"
@@ -24,79 +24,6 @@
 
 static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFtpProtocolHandlerCID,   NS_FTPPROTOCOLHANDLER_CID);
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsNetFactory : public nsIFactory
-{
-public:
-    nsNetFactory(const nsCID &aClass);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~nsNetFactory();
-
-protected:
-    nsCID       mClassID;
-};
-
-////////////////////////////////////////////////////////////////////////
-
-nsNetFactory::nsNetFactory(const nsCID &aClass)
-    : mClassID(aClass)
-{
-    NS_INIT_REFCNT();
-}
-
-nsNetFactory::~nsNetFactory()
-{
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-NS_IMPL_ISUPPORTS(nsNetFactory, nsIFactory::GetIID());
-
-NS_IMETHODIMP
-nsNetFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)
-{
-    nsresult rv = NS_OK;
-
-    if (aResult == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kFtpProtocolHandlerCID)) {
-        if (aOuter) return NS_ERROR_NO_AGGREGATION;
-
-        nsFtpProtocolHandler* net = new nsFtpProtocolHandler();
-        if (net == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        inst = net;
-    }
-    else {
-        return NS_ERROR_NO_INTERFACE;
-    }
-
-    NS_ADDREF(inst);
-    *aResult = inst;
-    return rv;
-}
-
-nsresult nsNetFactory::LockFactory(PRBool aLock)
-{
-    // Not implemented in simplest case.
-    return NS_OK;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -108,16 +35,21 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
+    nsresult rv;
     if (aFactory == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-    nsNetFactory* factory = new nsNetFactory(aClass);
-    if (factory == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsIGenericFactory* fact;
+    if (aClass.Equals(kFtpProtocolHandlerCID)) {
+        rv = NS_NewGenericFactory(&fact, nsFtpProtocolHandler::Create);
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
+    }
 
-    NS_ADDREF(factory);
-    *aFactory = factory;
-    return NS_OK;
+    if (NS_SUCCEEDED(rv))
+        *aFactory = fact;
+    return rv;
 }
 
 extern "C" PR_IMPLEMENT(nsresult)

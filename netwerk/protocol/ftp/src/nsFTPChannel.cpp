@@ -25,6 +25,7 @@
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
+#include "nsIEventSinkGetter.h"
 
 #include "prprf.h" // PR_sscanf
 
@@ -83,21 +84,41 @@ nsFTPChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
 }
 
 nsresult
-nsFTPChannel::Init(nsIURI* aURL, nsIProgressEventSink* aEventSink, nsIEventQueue* aEventQueue) {
- 
-    if (mConnected)
-        return NS_ERROR_NOT_IMPLEMENTED;
+nsFTPChannel::Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
+                   nsIEventQueue* queue)
+{
+    nsresult rv;
 
-    mUrl = aURL;
+    if (mConnected)
+        return NS_ERROR_FAILURE;
+
+    mUrl = uri;
     NS_ADDREF(mUrl);
 
-    mEventQueue = aEventQueue;
+    mEventQueue = queue;
     NS_ADDREF(mEventQueue);
 
-    mEventSink = aEventSink;
+    nsIProgressEventSink* eventSink;
+    rv = getter->GetEventSink(verb, nsIProgressEventSink::GetIID(), 
+                              (nsISupports**)&eventSink);
+    if (NS_FAILED(rv)) return rv;
+
+    mEventSink = eventSink;
     NS_ADDREF(mEventSink);
 
     return NS_OK;
+}
+
+NS_METHOD
+nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
+{
+    nsFTPChannel* fc = new nsFTPChannel();
+    if (fc == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(fc);
+    nsresult rv = fc->QueryInterface(aIID, aResult);
+    NS_RELEASE(fc);
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
