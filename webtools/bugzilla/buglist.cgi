@@ -45,6 +45,7 @@ sub sillyness {
     $zz = @::legal_severity;
     $zz = @::legal_target_milestone;
     $zz = @::versions;
+    $zz = @::target_milestone;
 };
 
 my $serverpush = 0;
@@ -1232,9 +1233,11 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 </TR>";
 
     if (Param("usetargetmilestone")) {
-        push(@::legal_target_milestone, " ");
-        my $tfm_popup = make_options(\@::legal_target_milestone,
-                                     $::dontchange);
+        my @legal_milestone;
+        if(1 == @prod_list) {
+            @legal_milestone = @{$::target_milestone{$prod_list[0]}};
+        }
+        my $tfm_popup = make_options(\@legal_milestone, $::dontchange);
         print "
     <TR>
     <TD ALIGN=RIGHT><B>Target milestone:</B></TD>

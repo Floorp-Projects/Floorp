@@ -38,6 +38,7 @@ sub bug_form_pl_sillyness {
     $zz = @::legal_priority;
     $zz = @::legal_resolution_no_dup;
     $zz = @::legal_severity;
+    $zz = %::target_milestone;
 }
 
 my $loginok = quietly_check_login();
@@ -207,14 +208,11 @@ if (Param("usetargetmilestone")) {
     if ($url eq "") {
         $url = "notargetmilestone.html";
     }
-    if ($bug{'target_milestone'} eq "") {
-        $bug{'target_milestone'} = " ";
-    }
-    push(@::legal_target_milestone, " ");
+
     print "
 <TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
 <TD><SELECT NAME=target_milestone>" .
-    make_options(\@::legal_target_milestone,
+    make_options($::target_milestone{$bug{'product'}},
                  $bug{'target_milestone'}) .
                      "</SELECT></TD>";
 }

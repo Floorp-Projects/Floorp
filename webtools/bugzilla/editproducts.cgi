@@ -485,6 +485,29 @@ if ($action eq 'del') {
         print "<FONT COLOR=\"red\">missing</FONT>";
     }
 
+    #
+    # Adding listing for associated target milestones - matthew@zeroknowledge.com
+    #
+    if (Param('usetargetmilestone')) {
+        print "</TD>\n</TR><TR>\n";
+        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\">Edit milestones:</A></TH>\n";
+        print "  <TD>";
+        SendSQL("SELECT value
+                 FROM milestones
+                 WHERE product=" . SqlQuote($product) . "
+                 ORDER BY sortkey,value");
+        if(MoreSQLData()) {
+            my $br = 0;
+            while ( MoreSQLData() ) {
+                my ($milestone) = FetchSQLData();
+                print "<BR>" if $br;
+                print $milestone;
+                $br = 1;
+            }
+        } else {
+            print "<FONT COLOR=\"red\">missing</FONT>";
+        }
+    }
 
     print "</TD>\n</TR><TR>\n";
     print "  <TD VALIGN=\"top\">Bugs:</TD>\n";
@@ -548,7 +571,8 @@ if ($action eq 'delete') {
                          versions WRITE,
                          products WRITE,
                          groups WRITE,
-                         profiles WRITE");
+                         profiles WRITE,
+                         milestones WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -588,6 +612,11 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM versions
              WHERE program=" . SqlQuote($product));
     print "Versions deleted.<P>\n";
+
+    # deleting associated target milestones - matthew@zeroknowledge.com
+    SendSQL("DELETE FROM milestones
+             WHERE product=" . SqlQuote($product));
+    print "Milestones deleted.<BR>\n";
 
     SendSQL("DELETE FROM products
              WHERE product=" . SqlQuote($product));
@@ -700,6 +729,29 @@ if ($action eq 'edit') {
         print "<FONT COLOR=\"red\">missing</FONT>";
     }
 
+    #
+    # Adding listing for associated target milestones - matthew@zeroknowledge.com
+    #
+    if (Param('usetargetmilestone')) {
+        print "</TD>\n</TR><TR>\n";
+        print "  <TH ALIGN=\"right\" VALIGN=\"top\"><A HREF=\"editmilestones.cgi?product=", url_quote($product), "\">Edit milestones:</A></TH>\n";
+        print "  <TD>";
+        SendSQL("SELECT value
+                 FROM milestones
+                 WHERE product=" . SqlQuote($product) . "
+                 ORDER BY sortkey,value");
+        if(MoreSQLData()) {
+            my $br = 0;
+            while ( MoreSQLData() ) {
+                my ($milestone) = FetchSQLData();
+                print "<BR>" if $br;
+                print $milestone;
+                $br = 1;
+            }
+        } else {
+            print "<FONT COLOR=\"red\">missing</FONT>";
+        }
+    }
 
     print "</TD>\n</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Bugs:</TH>\n";
@@ -782,7 +834,8 @@ if ($action eq 'update') {
                          products WRITE,
                          versions WRITE,
                          groups WRITE,
-                         profiles WRITE");
+                         profiles WRITE,
+                         milestones WRITE");
 
     if ($disallownew ne $disallownewold) {
         $disallownew ||= 0;
@@ -923,6 +976,7 @@ if ($action eq 'update') {
         SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
+        SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
 	# Need to do an update to groups as well.  If there is a corresponding
 	# bug group, whether usebuggroups is currently set or not, we want to
 	# update it so it will match in the future.  If there is no group, this

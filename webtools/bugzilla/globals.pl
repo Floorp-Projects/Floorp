@@ -260,7 +260,23 @@ sub Version_element {
     return make_popup("version", $versionlist, $defversion, 1, $onchange);
 }
         
+sub Milestone_element {
+    my ($tm, $prod, $onchange) = (@_);
+    my $tmlist;
+    if (!defined $::target_milestone{$prod}) {
+        $tmlist = [];
+    } else {
+        $tmlist = $::target_milestone{$prod};
+    }
 
+    my $deftm = $tmlist->[0];
+
+    if (lsearch($tmlist, $tm) >= 0) {
+        $deftm = $tm;
+    }
+
+    return make_popup("target_milestone", $tmlist, $deftm, 1, $onchange);
+}
 
 # Generate a string which, when later interpreted by the Perl compiler, will
 # be the same as the given string.
@@ -427,11 +443,24 @@ sub GenerateVersionTable {
     print FID GenerateCode('$::anyvotesallowed');
 
     if ($dotargetmilestone) {
-        my $last = Param("nummilestones");
-        my $i;
-        for ($i=1 ; $i<=$last ; $i++) {
-            push(@::legal_target_milestone, "M$i");
+        # reading target milestones in from the database - matthew@zeroknowledge.com
+        SendSQL("SELECT value, product FROM milestones ORDER BY sortkey, value");
+        my @line;
+        my %tmarray;
+        @::legal_target_milestone = ();
+        while(@line = FetchSQLData()) {
+            my ($tm, $pr) = (@line);
+            if (!defined $::target_milestone{$pr}) {
+                $::target_milestone{$pr} = [];
+            }
+            push @{$::target_milestone{$pr}}, $tm;
+            if (!exists $tmarray{$tm}) {
+                $tmarray{$tm} = 1;
+                push(@::legal_target_milestone, $tm);
+            }
         }
+
+        print FID GenerateCode('%::target_milestone');
         print FID GenerateCode('@::legal_target_milestone');
         print FID GenerateCode('%::milestoneurl');
     }

@@ -282,12 +282,14 @@ my $jscript = << 'ENDSCRIPT';
 <!--
 var cpts = new Array();
 var vers = new Array();
+var tms  = new Array();
 ENDSCRIPT
 
 
 my $p;
 my $v;
 my $c;
+my $m;
 my $i = 0;
 my $j = 0;
 
@@ -299,6 +301,10 @@ foreach $v (@::legal_versions) {
     $jscript .= "vers['$v'] = new Array();\n";
 }
 
+my $tm;
+foreach $tm (@::legal_target_milestone) {
+    $jscript .= "tms['$tm'] = new Array();\n";
+}
 
 for $p (@::legal_product) {
     if ($::components{$p}) {
@@ -310,6 +316,12 @@ for $p (@::legal_product) {
     if ($::versions{$p}) {
         foreach $v (@{$::versions{$p}}) {
             $jscript .= "vers['$v'][vers['$v'].length] = '$p';\n";
+        }
+    }
+
+    if ($::target_milestone{$p}) {
+        foreach $m (@{$::target_milestone{$p}}) {
+            $jscript .= "tms['$m'][tms['$m'].length] = '$p';\n";
         }
     }
 }
@@ -404,8 +416,39 @@ function selectProduct(f) {
         }
     }
 
+    var tmsel = new Array();
+    for (i=0 ; i<f.target_milestone.length ; i++) {
+        if (f.target_milestone[i].selected) {
+            tmsel[f.target_milestone[i].value] = 1;
+        }
+    }
 
+    f.target_milestone.options.length = 0;
 
+    for (tm in tms) {
+        if (typeof(tms[v]) == 'function') continue;
+        var doit = doall;
+        for (i=0 ; !doit && i<f.product.length ; i++) {
+            if (f.product[i].selected) {
+                var p = f.product[i].value;
+                for (j in tms[tm]) {
+                    if (typeof(tms[tm][j]) == 'function') continue;
+                    var p2 = tms[tm][j];
+                    if (p2 == p) {
+                        doit = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (doit) {
+            var l = f.target_milestone.length;
+            f.target_milestone[l] = new Option(tm, tm);
+            if (tmsel[tm]) {
+                f.target_milestone[l].selected = true;
+            }
+        }
+    }
 
 }
 // -->
@@ -431,7 +474,6 @@ PutHeader("Bugzilla Query Page", "Query",
           0, $jscript);
 
 push @::legal_resolution, "---"; # Oy, what a hack.
-push @::legal_target_milestone, "---"; # Oy, what a hack.
 
 my @logfields = ("[Bug creation]", @::log_columns);
 

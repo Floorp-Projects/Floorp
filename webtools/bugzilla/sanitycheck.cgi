@@ -194,6 +194,25 @@ foreach my $ref (@checklist) {
     }
 }
 
+# Adding check for Target Milestones / products - matthew@zeroknowledge.com
+Status("Checking milestone/products");
+
+@checklist = ();
+SendSQL("select distinct product, target_milestone from bugs");
+while (@row = FetchSQLData()) {
+    my @copy = @row;
+    push(@checklist, \@copy);
+}
+
+foreach my $ref (@checklist) {
+    my ($product, $milestone) = (@$ref);
+    SendSQL("SELECT count(*) FROM milestones WHERE product = '$product' AND value = '$milestone'");
+    if(FetchOneColumn() != 1) {
+        Alert("Bug(s) found with invalud product/milestone: $product/$milestone");
+    }
+}
+
+
 
 Status("Checking components/products");
 

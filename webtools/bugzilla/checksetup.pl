@@ -752,6 +752,12 @@ $table{keyworddefs} =
      unique(name)';
 
 
+$table{milestones} =
+    'value varchar(190) not null,
+     product varchar(64) not null,
+     sortkey smallint not null,
+     unique (product, value)';
+
 $table{shadowlog} =
     'id int not null auto_increment primary key,
      ts timestamp,
@@ -1492,6 +1498,44 @@ AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
 AddField('products', 'votestoconfirm', 'smallint not null');
 AddField('profiles', 'blessgroupset', 'bigint not null');
 
+
+# 2000-03-21 Adding a table for target milestones to 
+# database - matthew@zeroknowledge.com
+
+$sth = $dbh->prepare("SELECT count(*) from milestones");
+$sth->execute();
+if (!($sth->fetchrow_arrayref()->[0])) {
+    print "Replacing blank milestones...\n";
+    $dbh->do("UPDATE bugs SET target_milestone = '---', delta_ts=delta_ts WHERE target_milestone = ' '");
+    
+# Populate milestone table with all exisiting values in database
+    $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
+    $sth->execute();
+    
+    print "Populating milestones table...\n";
+    
+    my $value;
+    my $product;
+    while(($value, $product) = $sth->fetchrow_array())
+    {
+        # check if the value already exists
+        my $sortkey = substr($value, 1);
+        if ($sortkey !~ /^\d+$/) {
+            $sortkey = 0;
+        } else {
+            $sortkey *= 10;
+        }
+        $value = $dbh->quote($value);
+        $product = $dbh->quote($product);
+        my $s2 = $dbh->prepare("SELECT value FROM milestones WHERE value = $value AND product = $product");
+        $s2->execute();
+        
+        if(!$s2->fetchrow_array())
+        {
+            $dbh->do("INSERT INTO milestones(value, product, sortkey) VALUES($value, $product, $sortkey)");
+        }
+    }
+}
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your

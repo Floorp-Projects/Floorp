@@ -39,6 +39,7 @@ use vars %::versions,
     %::legal_opsys,
     %::legal_platform,
     %::legal_priority,
+    %::target_milestone,
     %::legal_severity;
 
 my $whoid = confirm_login();
@@ -53,6 +54,11 @@ if ( Param("strictvaluechecks") ) {
     CheckFormFieldDefined(\%::FORM, 'product');
     CheckFormFieldDefined(\%::FORM, 'version');
     CheckFormFieldDefined(\%::FORM, 'component');
+
+    # check if target milestone is defined - matthew@zeroknowledge.com
+    if ( Param("usetargetmilestone") ) {
+        CheckFormFieldDefined(\%::FORM, 'target_milestone');
+    }
 }
 
 if ($::FORM{'product'} ne $::dontchange) {
@@ -71,12 +77,18 @@ if ($::FORM{'product'} ne $::dontchange) {
     #
     my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
     my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
-    if (!$vok || !$cok) {
-        print "<H1>Changing product means changing version and component.</H1>\n";
-        print "You have chosen a new product, and now the version and/or\n";
+
+    my $mok = 1;   # so it won't affect the 'if' statement if milestones aren't used
+    if ( Param("usetargetmilestone") ) {
+       $mok = lsearch($::target_milestone{$prod}, $::FORM{'target_milestone'}) >= 0;
+    }
+
+    if (!$vok || !$cok || !$mok) {
+        print "<H1>Changing product means changing version, target milestone and component.</H1>\n";
+        print "You have chosen a new product, and now the version, target milestone and/or\n";
         print "component fields are not correct.  (Or, possibly, the bug did\n";
-        print "not have a valid component or version field in the first place.)\n";
-        print "Anyway, please set the version and component now.<p>\n";
+        print "not have a valid target milestone, component or version field in the first place.)\n";
+        print "Anyway, please set the version, target milestone and component now.<p>\n";
         print "<form>\n";
         print "<table>\n";
         print "<tr>\n";
@@ -86,12 +98,19 @@ if ($::FORM{'product'} ne $::dontchange) {
         print "<td align=right><b>Version:</b></td>\n";
         print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
         print "</tr><tr>\n";
+
+        if ( Param("usetargetmilestone") ) {
+            print "<td align=right><b>Target Milestone:</b></td>\n";
+            print "<td>" . Milestone_element($::FORM{'target_milestone'}, $prod) . "</td>\n";
+            print "</tr><tr>\n";
+        }
+
         print "<td align=right><b>Component:</b></td>\n";
         print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
         print "</tr>\n";
         print "</table>\n";
         foreach my $i (keys %::FORM) {
-            if ($i ne 'version' && $i ne 'component') {
+            if ($i ne 'version' && $i ne 'component' && $i ne 'target_milestone') {
                 print "<input type=hidden name=$i value=\"" .
                 value_quote($::FORM{$i}) . "\">\n";
             }
