@@ -767,7 +767,10 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          aFile);
         }
 #endif
+        default:
+            break;
     }
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 #if defined (XP_MACOSX)
