@@ -115,14 +115,6 @@ standalone. Make sure you did "<tt>configure --enable-modules=xpcom"</tt></ol>
 5.0&nbsp; Whats the difference between Standalone and non-Standalone XPCOM</h3>
 Here is what we had to do to get a working standalone XPCOM
 <ol>
-<li>
-Disabled all forms of unicode conversion. nsString, nsCRT were using this
-in various forms. Only ASCII is expected to work. Other charsets including
-unicode are not guaranteed to work.</li>
-
-<li>
-Disabled nsUnicharInputStream. This causes nsPersistentProperties to always
-fail.</li>
 
 <li>
 Disabled control of XPT from preferences.</li>
@@ -137,20 +129,16 @@ used by the mozilla browser.
 
 <ol>
 <li>
-Enable XPCOM to work with unicode. Unicode, ASCII and ISO8859-1 will be
-the charset that will be self supported by XPCOM.</li>
-
-<li>
-Optional exclusion of specific features into standalone XPCOM like unicode
-support, registry, xpconnect. Tweeking these options will cause reduction
+Optional exclusion of specific features into standalone XPCOM like
+registry, xpconnect. Tweeking these options will cause reduction
 in memory requirements and size.</li>
 
 <li>
 Get <tt>xpcom/tests</tt> directory upto date and documented.</li>
 
 <li>
-Make standalone XPCOM the only deliverable from xpcom. No more <tt>#ifndef
-XPCOM_STANDALONE</tt></li>
+Make standalone XPCOM the only deliverable from xpcom. <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=66759">No more <tt>#ifndef
+XPCOM_STANDALONE</tt></a></li>
 
 <li>
 Update this document for both Windows and Mac.</li>
