@@ -293,13 +293,18 @@ nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 NS_IMETHODIMP
 nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
 {
+  nsresult rv = NS_OK;
   nsHTMLValue empty(eHTMLUnit_Empty);
   if (aDefaultChecked) {                                                     
-    return mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
+    rv = mInner.SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
   } else {                                                            
-    mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
-    return NS_OK;                                                   
-  }                                                                 
+    rv = mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);             
+  }
+  if (NS_SUCCEEDED(rv)) {
+    //When setting DefaultChecked, we must also reset Checked (DOM Errata)
+    SetChecked(aDefaultChecked);
+  }
+  return rv;
 }
   
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, DefaultValue, defaultvalue)
