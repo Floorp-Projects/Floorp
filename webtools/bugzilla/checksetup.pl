@@ -426,7 +426,8 @@ if ($webservergroup) {
                 'processmail',
                 'whineatnews.pl',
                 'collectstats.pl',
-                'checksetup.pl';
+                'checksetup.pl',
+                'syncshadowdb';
 
     chmod 0770, 'data', 'shadow';
     chmod 0666, glob('data/*');

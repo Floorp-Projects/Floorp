@@ -25,6 +25,7 @@ require "CGI.pl";
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
+    $zz = $::usergroupset;
 }
 
 my $userid;
