@@ -96,7 +96,6 @@ RootFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Construct the root content frame and set its style context
   mFirstChild = new RootContentFrame(mContent, this);
-  mChildCount = 1;
   nsIStyleContext* pseudoStyleContext =
     aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::rootContentPseudo, this);
   mFirstChild->SetStyleContext(&aPresContext, pseudoStyleContext);
@@ -155,8 +154,6 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
     nsRect  rect(0, 0, desiredSize.width, desiredSize.height);
     mFirstChild->SetRect(rect);
     mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-
-    mLastContentOffset = ((RootContentFrame*)mFirstChild)->GetLastContentOffset();
   }
 
   // Return the max size as our desired size
@@ -384,7 +381,6 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
             NS_ASSERTION(nsnull == kidNextSibling, "unexpected sibling");
 #endif
             kidFrame->SetNextSibling(continuingPage);
-            mChildCount++;
           }
   
           // Get the next page
@@ -448,8 +444,6 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   // We are always a pseudo-frame; make sure our content offset is
   // properly pushed upwards
   nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
-  parent->PropagateContentOffsets(this, mFirstContentOffset,
-                                  mLastContentOffset, mLastContentIsComplete);
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
