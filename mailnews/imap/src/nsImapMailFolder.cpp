@@ -821,14 +821,13 @@ NS_IMETHODIMP
 nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 {
 	nsresult rv;
-	nsMsgKeyArray keysToMarkRead;
 
 	// tell the folder to do it, which will mark them read in the db.
 	rv = nsMsgFolder::MarkMessagesRead(messages, markRead);
 	if (NS_SUCCEEDED(rv))
 	{
 		nsCString messageIds;
-		nsMsgKeyArray srcKeyArray;
+        nsMsgKeyArray keysToMarkRead;
 		rv = BuildIdsAndKeyArray(messages, messageIds, keysToMarkRead);
 		if (NS_FAILED(rv)) return rv;
 
@@ -967,104 +966,81 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     nsString2 uri("", eOneByte);
     char* hostName = nsnull;
 	char *userName = nsnull;
+    PRBool isTrashFolder = PR_FALSE;
+    nsCString messageIds;
+    nsMsgKeyArray srcKeyArray;
 
-    rv = GetHostname(&hostName);
+    rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
     if (NS_FAILED(rv)) return rv;
 
-    rv = GetUsername(&userName);
-    if (NS_FAILED(rv)) return rv;
-
-    uri.Append(kImapRootURI);
-    uri.Append('/');
-	uri.Append(userName);
-	uri.Append('@');
-    uri.Append(hostName);
-    PR_FREEIF(hostName);
-	PR_FREEIF(userName);
-
-    SetTransactionManager(txnMgr);
-
-    NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-    if(NS_FAILED(rv)) return rv;
-
-    rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIFolder>hostFolder(do_QueryInterface(res, &rv));
-    if(NS_FAILED(rv)) return rv;
-
-    rv = hostFolder->GetSubFolders(getter_AddRefs(aEnumerator));
-    if(NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupports> aItem;
-    nsCOMPtr<nsIMsgFolder> trashFolder;
-
-    rv = aEnumerator->First();
-    while(NS_SUCCEEDED(rv))
+    rv = GetFlag(MSG_FOLDER_FLAG_TRASH, &isTrashFolder);
+    if (NS_SUCCEEDED(rv) && isTrashFolder)
     {
-        rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
-        if (NS_FAILED(rv)) break;
-        nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
-        if (NS_SUCCEEDED(rv))
-        {
-            PRUnichar* aName = nsnull;
-            rv = aMsgFolder->GetName(&aName);
-            if (NS_SUCCEEDED(rv) && nsCRT::strcmp(aName, "Trash") == 0)
-            {
-                delete [] aName;
-                trashFolder = aMsgFolder;
-                break;
-            }
-            else
-				delete [] aName;
-        }
-        rv = aEnumerator->Next();
+        return StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     }
-    if(NS_SUCCEEDED(rv) && trashFolder)
+    else
     {
-        nsCOMPtr<nsIMsgFolder> srcFolder;
-        nsCOMPtr<nsISupports>srcSupport;
-        PRUint32 count = 0;
-        rv = messages->Count(&count);
+        SetTransactionManager(txnMgr);
         
-        rv = QueryInterface(nsIMsgFolder::GetIID(),
-                            getter_AddRefs(srcFolder));
-        if (NS_SUCCEEDED(rv))
-            srcSupport = do_QueryInterface(srcFolder, &rv);
-
-        nsCString messageIds;
-        nsMsgKeyArray srcKeyArray;
-        rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
-        if (NS_FAILED(rv)) return rv;
-        rv = InitCopyState(srcSupport, messages, PR_TRUE, PR_TRUE, nsnull);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsISupports> copySupport = do_QueryInterface(m_copyState);
-        m_copyState->m_curIndex = m_copyState->m_totalCount;
-        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-        if (NS_SUCCEEDED(rv) && imapService)
-            rv = imapService->OnlineMessageCopy(m_eventQueue,
-                                                this, messageIds.GetBuffer(),
-                                                trashFolder, PR_TRUE, PR_TRUE,
-                                                this, nsnull,
-                                                copySupport);
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr<nsIMsgFolder> rootFolder;
+        rv = GetRootFolder(getter_AddRefs(rootFolder));
+        if (NS_SUCCEEDED(rv) && rootFolder)
         {
-            nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-                this, &srcKeyArray, messageIds.GetBuffer(), trashFolder,
-                PR_TRUE, PR_TRUE, m_eventQueue, this);
+            nsCOMPtr<nsIMsgFolder> trashFolder;
+            PRUint32 numFolders = 0;
+            rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH,
+                                                getter_AddRefs(trashFolder),
+                                                1, &numFolders);
 
-            if (undoMsgTxn)
-                rv = undoMsgTxn->QueryInterface(
-                    nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
-                    getter_AddRefs(m_copyState->m_undoMsgTxn) );
-            if (undoMsgTxn)
+            if(NS_SUCCEEDED(rv) && trashFolder)
             {
-                nsString undoString = count > 1 ? "Undo Delete Messages" :
-                    "Undo Delete Message";
-                nsString redoString = count > 1 ? "Redo Delete Messages" :
-                    "Redo Delete Message";
-                rv = undoMsgTxn->SetUndoString(&undoString);
-                rv = undoMsgTxn->SetRedoString(&redoString);
+                nsCOMPtr<nsIMsgFolder> srcFolder;
+                nsCOMPtr<nsISupports>srcSupport;
+                PRUint32 count = 0;
+                rv = messages->Count(&count);
+                
+                rv = QueryInterface(nsIMsgFolder::GetIID(),
+                                    getter_AddRefs(srcFolder));
+                if (NS_SUCCEEDED(rv))
+                    srcSupport = do_QueryInterface(srcFolder, &rv);
+                
+                rv = InitCopyState(srcSupport, messages, PR_TRUE, PR_TRUE,
+                                   nsnull); 
+                if (NS_FAILED(rv)) return rv;
+                nsCOMPtr<nsISupports> copySupport =
+                    do_QueryInterface(m_copyState); 
+                m_copyState->m_curIndex = m_copyState->m_totalCount;
+                NS_WITH_SERVICE(nsIImapService, imapService, kCImapService,
+                                &rv); 
+                if (NS_SUCCEEDED(rv) && imapService)
+                    rv = imapService->OnlineMessageCopy(
+                        m_eventQueue, this, messageIds.GetBuffer(),
+                        trashFolder, PR_TRUE, PR_TRUE, this, nsnull,
+                        copySupport);
+
+                if (NS_SUCCEEDED(rv))
+                {
+                    nsImapMoveCopyMsgTxn* undoMsgTxn = new
+                        nsImapMoveCopyMsgTxn( 
+                            this, &srcKeyArray, messageIds.GetBuffer(),
+                            trashFolder, PR_TRUE, PR_TRUE, m_eventQueue, this);
+
+                    if (undoMsgTxn)
+                        rv = undoMsgTxn->QueryInterface(
+                            nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
+                            getter_AddRefs(m_copyState->m_undoMsgTxn) );
+                    if (undoMsgTxn)
+                    {
+                        nsString undoString = count > 1 ? 
+                            "Undo Delete Messages" :
+                            "Undo Delete Message";
+                        nsString redoString = count > 1 ? 
+                            "Redo Delete Messages" :
+                            "Redo Delete Message";
+                        rv = undoMsgTxn->SetUndoString(&undoString);
+                        rv = undoMsgTxn->SetRedoString(&redoString);
+                    }
+                }
             }
         }
     }
@@ -1835,22 +1811,28 @@ nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool add
 	if (PR_TRUE/* !NET_IsOffline() */)
 	{
 	    NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-		if (addFlags)
-		{
-			nsCString msgIds;
-
-			AllocateUidStringFromKeyArray(keysToFlag, msgIds);
-			imapService->AddMessageFlags(m_eventQueue, this, nsnull, nsnull, msgIds, flags, PR_TRUE);
-		}
-		else
-		{
-			nsCString msgIds;
-
-			AllocateUidStringFromKeyArray(keysToFlag, msgIds);
-			imapService->SubtractMessageFlags(m_eventQueue, this, nsnull, nsnull, msgIds, flags, PR_TRUE);
-		}
-		// If we are not offline, we want to add the flag changes to the server
-		// use the imap service to add or remove flags.
+        if (NS_SUCCEEDED(rv))
+        {
+            if (addFlags)
+            {
+                nsCString msgIds;
+                
+                AllocateUidStringFromKeyArray(keysToFlag, msgIds);
+                imapService->AddMessageFlags(m_eventQueue, this, nsnull,
+                                             nsnull, msgIds, flags, PR_TRUE);
+            }
+            else
+            {
+                nsCString msgIds;
+                
+                AllocateUidStringFromKeyArray(keysToFlag, msgIds);
+                imapService->SubtractMessageFlags(m_eventQueue, this, nsnull,
+                                                  nsnull, msgIds, flags,
+                                                  PR_TRUE);
+            }
+            // force to update the thread pane view
+            rv = imapService->SelectFolder(m_eventQueue, this, this, nsnull);
+        }
 	}
 	else
 	{
