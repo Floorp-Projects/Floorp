@@ -1105,7 +1105,7 @@ int CRDFOutliner::DetermineClickLocation(CPoint point)
 			int area = point.x % iImageWidth; // Determine where within the particular level the click occurred
 			int left = (iImageWidth - iBarWidth) / 2;
 			int right = left + iBarWidth;
-			if (area >= left && area <= right) // Hard-code it for now.
+			if (area >= left && area <= right) 
 				return CLICKED_BAR;
 		}
 

@@ -1571,7 +1571,8 @@ void COutliner::OnSysColorChange ( )
 {
 
     CWnd::OnSysColorChange ( );
-	m_pIImage->ReInitialize();
+	if (m_pIImage)
+		m_pIImage->ReInitialize();
 	m_pIUserImage->ReInitialize();
     Invalidate ( );
 }
