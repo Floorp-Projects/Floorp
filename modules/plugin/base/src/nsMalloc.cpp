@@ -109,7 +109,7 @@ nsMalloc::HeapMinimize(void)
 {
 #ifdef XP_MAC
     // something wonderful
-    CallCacheFlushers(0x7fffffff);
+//    CallCacheFlushers(0x7fffffff);
 #endif
 }
 
