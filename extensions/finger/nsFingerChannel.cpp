@@ -48,8 +48,8 @@ nsFingerChannel::nsFingerChannel():
 nsFingerChannel::~nsFingerChannel() {
 }
 
-NS_IMPL_ISUPPORTS4(nsFingerChannel, nsIChannel, nsIRequest,
-                   nsIStreamListener, nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsFingerChannel, nsIChannel, nsIRequest,
+                              nsIStreamListener, nsIStreamObserver)
 
 nsresult
 nsFingerChannel::Init(const char* verb, 
@@ -110,7 +110,6 @@ nsFingerChannel::Init(const char* verb,
     if (NS_FAILED(rv)) return rv;
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
-
     return NS_OK;
 }
 
@@ -138,7 +137,12 @@ nsFingerChannel::IsPending(PRBool *result)
 NS_IMETHODIMP
 nsFingerChannel::Cancel(void)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_FAILURE;
+
+    if (mTransport) {
+      rv = mTransport->Cancel();
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -201,20 +205,7 @@ nsFingerChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_ret
 NS_IMETHODIMP
 nsFingerChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
 {
-    nsresult rv = NS_OK;
-
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, BUFFER_SEG_SIZE,
-      BUFFER_MAX_SIZE, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = channel->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
-
-    return channel->AsyncOpen(observer, ctxt);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -236,6 +227,8 @@ nsFingerChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     if (NS_FAILED(rv)) return rv;
 
     mListener = aListener;
+    mResponseContext = ctxt;
+    mTransport = channel;
 
     return SendRequest(channel);
 }
@@ -301,13 +294,7 @@ nsFingerChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsFingerChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-    if (mLoadGroup) // if we already had a load group remove ourselves...
-      (void)mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
-
     mLoadGroup = aLoadGroup;
-    if (mLoadGroup) {
-        return mLoadGroup->AddChannel(this, nsnull);
-    }
     return NS_OK;
 }
 
@@ -372,18 +359,20 @@ nsFingerChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
 #endif
     nsresult rv = NS_OK;
 
-    if (!mActAsObserver) {
+    if (NS_FAILED(aStatus) || !mActAsObserver) {
         if (mLoadGroup) {
           rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
           if (NS_FAILED(rv)) return rv;
         }
-        return mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+        rv = mListener->OnStopRequest(this, aContext, aStatus, aMsg);
+        mTransport = 0;
+        return rv;
     } else {
         // at this point we know the request has been sent.
         // we're no longer acting as an observer.
  
         mActAsObserver = PR_FALSE;
-        return aChannel->AsyncRead(0, -1, 0, this);
+        return aChannel->AsyncRead(0, -1, mResponseContext, this);
     }
 
 }
@@ -406,6 +395,10 @@ nsFingerChannel::SendRequest(nsIChannel* aChannel) {
   nsCOMPtr<nsISupports> result;
   nsCOMPtr<nsIInputStream> charstream;
   nsCString requestBuffer(mUser);
+
+  if (mLoadGroup) {
+    mLoadGroup->AddChannel(this, nsnull);
+  }
 
   requestBuffer.Append(CRLF);
 
