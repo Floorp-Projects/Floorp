@@ -356,7 +356,7 @@ private:
         NMD_METHOD      = 0x1,
         NMD_ATTRIB_RO   = 0x2,
         NMD_ATTRIB_RW   = 0x3,
-        NMD_CAT_MASK    = 0x3, // & mask for the categories above
+        NMD_CAT_MASK    = 0x3  // & mask for the categories above
         // any new bits start at 0x04
     };
 
@@ -566,8 +566,8 @@ class nsXPCArbitraryScriptable : public nsIXPCScriptable
 {
 public:
     // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
 
 public:
     nsXPCArbitraryScriptable();
