@@ -118,6 +118,21 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
   // get focus and disable status from base class
   nsFormControlAccessible::GetAccState(_retval);
   *_retval |= STATE_FOCUSABLE;
+
+  // Buttons can be checked -- they simply appear pressed in rather than checked
+  nsCOMPtr<nsIDOMXULButtonElement> xulButtonElement(do_QueryInterface(mDOMNode));
+  if (xulButtonElement) {
+    PRBool checked = PR_FALSE;
+    PRInt32 checkState = 0;
+    xulButtonElement->GetChecked(&checked);
+    if (checked) {
+      *_retval |= STATE_PRESSED;
+      xulButtonElement->GetCheckState(&checkState);
+      if (checkState == nsIDOMXULButtonElement::CHECKSTATE_MIXED)  
+        *_retval |= STATE_MIXED;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -198,15 +213,95 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetAccState(PRUint32 *_retval)
   nsFormControlAccessible::GetAccState(_retval);
 
   // Determine Checked state
-  PRBool checked = PR_FALSE;
-
   nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
-  if (xulCheckboxElement)
-      xulCheckboxElement->GetChecked(&checked);
-
-  if (checked) 
-    *_retval |= STATE_CHECKED;
+  if (xulCheckboxElement) {
+    PRBool checked = PR_FALSE;
+    xulCheckboxElement->GetChecked(&checked);
+    if (checked) {
+      *_retval |= STATE_CHECKED;
+      PRInt32 checkState = 0;
+      xulCheckboxElement->GetCheckState(&checkState);
+      if (checkState == nsIDOMXULCheckboxElement::CHECKSTATE_MIXED)   
+        *_retval |= STATE_MIXED;
+    }
+  }
   
   return NS_OK;
 }
 
+/**
+  * XUL groupbox
+  */
+
+nsXULGroupboxAccessible::nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsXULGroupboxAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_GROUPING;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULGroupboxAccessible::GetAccState(PRUint32 *_retval)
+{
+  // Groupbox doesn't support any states!
+  *_retval = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULGroupboxAccessible::GetAccName(nsAWritableString& _retval)
+{
+  _retval.Assign(NS_LITERAL_STRING(""));  // Default name is blank 
+
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if (element) {
+    nsCOMPtr<nsIDOMNodeList> captions;
+    element->GetElementsByTagName(NS_LITERAL_STRING("caption"), getter_AddRefs(captions));
+    if (captions) {
+      nsCOMPtr<nsIDOMNode> captionNode;
+      captions->Item(0, getter_AddRefs(captionNode));
+      if (captionNode) {
+        element = do_QueryInterface(captionNode);
+        NS_ASSERTION(element, "No nsIDOMElement for caption node!");
+        element->GetAttribute(NS_LITERAL_STRING("label"), _retval) ;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+/**
+  * progressmeter
+  */
+
+nsXULProgressMeterAccessible::nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_PROGRESSBAR;
+  return NS_OK;
+}
+
+/**
+  * No states supported for progressmeter
+  */
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccState(PRUint32 *_retval)
+{
+  *_retval =0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAWritableString& _retval)
+{
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No element for DOM node!");
+  element->GetAttribute(NS_LITERAL_STRING("value"), _retval);
+  _retval.Append(NS_LITERAL_STRING("%"));
+  return NS_OK;
+}

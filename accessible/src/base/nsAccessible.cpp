@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *       John Gaunt (jgaunt@netscape.com)
+ *       Aaron Leventhal (aaronl@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -115,53 +116,7 @@ static gnsAccessibles = 0;
 
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
-
-
-/** This class is used to walk the DOM tree. It skips
-  * everything but nodes that either implement nsIAccessible
-  * or have primary frames that implement "GetAccessible"
-  */
-
-struct WalkState {
-  nsCOMPtr<nsIAccessible> accessible;
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsCOMPtr<nsIDOMNodeList> siblingList;
-  PRInt32 siblingIndex;  // Holds a state flag or an index into the siblingList
-  WalkState *prevState;
-};
-
- 
-class nsAccessibleTreeWalker {
-public:
-  nsAccessibleTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent, 
-    PRInt32 aCachedSiblingIndex, nsIDOMNodeList *aCachedSiblingList);
-  ~nsAccessibleTreeWalker();
-
-  NS_IMETHOD GetNextSibling();
-  NS_IMETHOD GetPreviousSibling();
-  NS_IMETHOD GetParent();
-  NS_IMETHOD GetFirstChild();
-  NS_IMETHOD GetLastChild();
-  PRInt32 GetChildCount();
-  WalkState mState;
-
-protected:
-  NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
-  PRBool GetAccessible();
-  NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
-  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
-  void GetKids(nsIDOMNode *aParent);
-
-  void ClearState();
-  NS_IMETHOD PushState();
-  NS_IMETHOD PopState();
-
-  nsCOMPtr<nsIWeakReference> mPresShell;
-  nsCOMPtr<nsIAccessibilityService> mAccService;
-  nsCOMPtr<nsIBindingManager> mBindingManager;
-};
-
-nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList): 
+nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList, PRBool aWalkAnonContent): 
   mPresShell(aPresShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 {
   mState.domNode = aNode;
@@ -169,15 +124,18 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
   mState.prevState = nsnull;
   mState.siblingList = aSiblingList;
 
-  NS_ASSERTION((aSiblingIndex >= 0) == (aSiblingList != nsnull), "Cached sibling list and sibling index not in sync.");
+  if (mState.siblingIndex < 0)
+    mState.siblingList = nsnull;
 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (shell) {
-    nsCOMPtr<nsIDocument> doc;
-    shell->GetDocument(getter_AddRefs(doc)); 
-    doc->GetBindingManager(getter_AddRefs(mBindingManager));
+  if (aWalkAnonContent) {
+    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+    if (shell) {
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc)); 
+      doc->GetBindingManager(getter_AddRefs(mBindingManager));
+    }
   }
-   MOZ_COUNT_CTOR(nsAccessibleTreeWalker);
+  MOZ_COUNT_CTOR(nsAccessibleTreeWalker);
 }
 
 nsAccessibleTreeWalker::~nsAccessibleTreeWalker()
@@ -331,6 +289,9 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
     else {
       // if next is accessible, use it 
       mState.domNode = next;
+      if (IsHidden())
+        continue;
+
       if (GetAccessible())
         return NS_OK;
 
@@ -344,6 +305,19 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
     }
   }
   return NS_ERROR_FAILURE;
+}
+
+PRBool nsAccessibleTreeWalker::IsHidden()
+{
+  PRBool isHidden = PR_FALSE;
+
+  nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(mState.domNode));
+  if (xulElt) {
+    xulElt->GetHidden(&isHidden);
+    if (!isHidden)
+      xulElt->GetCollapsed(&isHidden);
+  }
+  return isHidden;
 }
 
 NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
@@ -365,7 +339,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
   // Recursive loop: depth first search for first accessible child
   while (next) {
     mState.domNode = next;
-    if (GetAccessible() || NS_SUCCEEDED(GetFirstChild()))
+    if (!IsHidden() && (GetAccessible() || NS_SUCCEEDED(GetFirstChild())))
       return NS_OK;
     if (mState.siblingIndex == eSiblingsWalkNormalDOM)  // Indicates we must use normal DOM calls to traverse here
       mState.domNode->GetNextSibling(getter_AddRefs(next));
@@ -499,8 +473,9 @@ NS_IMETHODIMP nsAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 a
 {
   if (aParent)
     mParent = aParent;
+  if (aSiblingList) 
+    mSiblingList = aSiblingList;
   mSiblingIndex = aSiblingIndex;
-  mSiblingList = aSiblingList;
   return NS_OK;
 }
 
@@ -513,7 +488,8 @@ NS_IMETHODIMP nsAccessible::GetAccParent(nsIAccessible **  aAccParent)
   }
 
   *aAccParent = nsnull;
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList); 
+  // Last argument of PR_TRUE indicates to walk anonymous content
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE); 
   if (NS_SUCCEEDED(walker.GetParent())) {
     *aAccParent = mParent = walker.mState.accessible;
     NS_ADDREF(*aAccParent);
@@ -527,7 +503,8 @@ NS_IMETHODIMP nsAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling)
 { 
   *aAccNextSibling = nsnull;
 
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList);
+  // Last argument of PR_TRUE indicates to walk anonymous content
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE);
 
   if (NS_SUCCEEDED(walker.GetNextSibling())) {
     *aAccNextSibling = walker.mState.accessible;
@@ -544,7 +521,8 @@ NS_IMETHODIMP nsAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPreviousS
 {  
   *aAccPreviousSibling = nsnull;
 
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList);
+  // Last argument of PR_TRUE indicates to walk anonymous content
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE);
   if (NS_SUCCEEDED(walker.GetPreviousSibling())) {
     *aAccPreviousSibling = walker.mState.accessible;
     NS_ADDREF(*aAccPreviousSibling);
@@ -560,7 +538,7 @@ NS_IMETHODIMP nsAccessible::GetAccFirstChild(nsIAccessible * *aAccFirstChild)
 {  
   *aAccFirstChild = nsnull;
 
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList);
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE);
   if (NS_SUCCEEDED(walker.GetFirstChild())) {
     *aAccFirstChild = walker.mState.accessible;
     NS_ADDREF(*aAccFirstChild);
@@ -575,7 +553,7 @@ NS_IMETHODIMP nsAccessible::GetAccLastChild(nsIAccessible * *aAccLastChild)
 {  
   *aAccLastChild = nsnull;
 
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList);
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE);
   if (NS_SUCCEEDED(walker.GetLastChild())) {
     *aAccLastChild = walker.mState.accessible;
     NS_ADDREF(*aAccLastChild);
@@ -588,7 +566,7 @@ NS_IMETHODIMP nsAccessible::GetAccLastChild(nsIAccessible * *aAccLastChild)
 /* readonly attribute long accChildCount; */
 NS_IMETHODIMP nsAccessible::GetAccChildCount(PRInt32 *aAccChildCount) 
 {
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList);
+  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_TRUE);
   *aAccChildCount = walker.GetChildCount();
 
   return NS_OK;  
@@ -648,7 +626,7 @@ PRBool nsAccessible::IsEntirelyVisible()
     return PR_FALSE;
 
   // Get the bounds of the current frame, relative to the current view.
-  // We don't use the more accurate GetAccBounds, because that is more expensive 
+  // We don't use the more accurate AccGetBounds, because that is more expensive 
   // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough indicator
   nsRect relFrameRect;
   nsIView *containingView = nsnull;
@@ -705,10 +683,20 @@ NS_IMETHODIMP nsAccessible::GetAccState(PRUint32 *aAccState)
 
   nsCOMPtr<nsIDOMElement> currElement(do_QueryInterface(mDOMNode));
   if (currElement) {
-    *aAccState |= STATE_FOCUSABLE;
-    nsCOMPtr<nsIDOMElement> focusedElement;
-    if (NS_SUCCEEDED(GetFocusedElement(getter_AddRefs(focusedElement))) && focusedElement == currElement)
-      *aAccState |= STATE_FOCUSED;
+    // Set STATE_UNAVAILABLE state based on disabled attribute
+    // The disabled attribute is mostly used in XUL elements and HTML forms, but
+    // if someone sets it on another attribute, 
+    // it seems reasonable to consider it unavailable
+    PRBool isDisabled = PR_FALSE;
+    currElement->HasAttribute(NS_LITERAL_STRING("disabled"), &isDisabled);
+    if (isDisabled)  
+      *aAccState |= STATE_UNAVAILABLE;
+    else { 
+      *aAccState |= STATE_FOCUSABLE;
+      nsCOMPtr<nsIDOMElement> focusedElement;
+      if (NS_SUCCEEDED(GetFocusedElement(getter_AddRefs(focusedElement))) && focusedElement == currElement)
+        *aAccState |= STATE_FOCUSED;
+    }
   }
 
   // Check if STATE_OFFSCREEN bitflag should be turned on for this object
@@ -752,34 +740,48 @@ NS_IMETHODIMP nsAccessible::GetAccFocused(nsIAccessible * *aAccFocused)
 
   /* nsIAccessible accGetChildAt (in long x, in long y); */
 NS_IMETHODIMP nsAccessible::AccGetAt(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
-{
-  PRInt32 x,y,w,h;
+{  
+  PRInt32 x, y, w, h;
   AccGetBounds(&x,&y,&w,&h);
-  if (tx > x && tx < x + w && ty > y && ty < y + h)
+
+  if (tx >= x && tx < x + w && ty >= y && ty < y + h)
   {
     nsCOMPtr<nsIAccessible> child;
     nsCOMPtr<nsIAccessible> next;
     GetAccFirstChild(getter_AddRefs(child));
+
     PRInt32 cx,cy,cw,ch;
 
-    while(child) {
-      child->AccGetBounds(&cx,&cy,&cw,&ch);
-      if (tx > cx && tx < cx + cw && ty > cy && ty < cy + ch) 
-      {
-        *_retval = child;
-        NS_ADDREF(*_retval);
-        return NS_OK;
+    while (child) {
+      // First test if offscreen bit is set for menus
+      // We don't want to walk into offscreen menus or menu items
+      PRUint32 role = ROLE_NOTHING, state = 0;
+      child->GetAccRole(&role);
+
+      if (role == ROLE_MENUPOPUP || role == ROLE_MENUITEM || role == ROLE_SEPARATOR) {
+        child->GetAccState(&state);
+        if (role == ROLE_MENUPOPUP && (state&STATE_OFFSCREEN) == 0) {
+          // Skip menupopup layer and go straight to menuitem's
+          return child->AccGetAt(tx, ty, _retval);
+        }
+      }
+
+      if ((state & STATE_OFFSCREEN) == 0) {   // Don't walk into offscreen menu items
+        child->AccGetBounds(&cx,&cy,&cw,&ch);
+        if (tx >= cx && tx < cx + cw && ty >= cy && ty < cy + ch) 
+        {
+          *_retval = child;
+          NS_ADDREF(*_retval);
+          return NS_OK;
+        }
       }
       child->GetAccNextSibling(getter_AddRefs(next));
       child = next;
     }
-
-    *_retval = this;
-    NS_ADDREF(this);
-    return NS_OK;
   }
 
-  *_retval = nsnull;
+  *_retval = this;
+  NS_ADDREF(this);
   return NS_OK;
 }
 
@@ -790,143 +792,52 @@ NS_IMETHODIMP nsAccessible::AccGetDOMNode(nsIDOMNode **_retval)
     return NS_OK;
 }
 
-  
-//-------------------------------------------------------
-// This gets ref counted copies of the PresShell, PresContext, 
-// and Root Content for a given nsIDocShell
-nsresult 
-nsAccessible::GetDocShellObjects(nsIDocShell*     aDocShell,
-                                 nsIPresShell**   aPresShell, 
-                                 nsIPresContext** aPresContext, 
-                                 nsIContent**     aContent)
+void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect)
 {
-  NS_ENSURE_ARG_POINTER(aDocShell);
-  NS_ENSURE_ARG_POINTER(aPresShell);
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aContent);
+  aRect->x = aRect->y = 0;
 
-
-  aDocShell->GetPresShell(aPresShell); // this addrefs
-  if (*aPresShell == nsnull) return NS_ERROR_FAILURE;
-
-  aDocShell->GetPresContext(aPresContext); // this addrefs
-  if (*aPresContext == nsnull) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> doc;
-  (*aPresShell)->GetDocument(getter_AddRefs(doc));
-  if (!doc) return NS_ERROR_FAILURE;
-
-  return doc->GetRootContent(aContent); // this addrefs
-}
-
-//-------------------------------------------------------
-// 
-
-// Calculate a frame's position in screen coordinates
-nsresult
-nsAccessible::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
-                                       nsIFrame *aFrame, 
-                                       nsRect& aAbsoluteTwipsRect, 
-                                       nsRect& aAbsolutePixelRect)
-{
-  //XXX: This code needs to take the view's offset into account when calculating
-  //the absolute coordinate of the frame.
-  nsresult rv = NS_OK;
- 
-  aFrame->GetRect(aAbsoluteTwipsRect);
-  // zero these out, 
-  // because the GetOffsetFromView figures them out
-  // We're only keeping the height and width in aAbsoluteTwipsRect
-  aAbsoluteTwipsRect.x = 0;
-  aAbsoluteTwipsRect.y = 0;
-
-    // Get conversions between twips and pixels
-  float t2p;
-  float p2t;
-  aPresContext->GetTwipsToPixels(&t2p);
-  aPresContext->GetPixelsToTwips(&p2t);
-  
-   // Add in frame's offset from it it's containing view
-  nsIView *containingView = nsnull;
-  nsPoint offset(0,0);
-  rv = aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
-  if (containingView == nsnull) {
-    aFrame->GetView(aPresContext, &containingView);
-    nsRect r;
-    aFrame->GetRect(r);
-    offset.x = r.x;
-    offset.y = r.y;
-  }
-  if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
-    aAbsoluteTwipsRect.x += offset.x;
-    aAbsoluteTwipsRect.y += offset.y;
-
-    nsPoint viewOffset;
-    containingView->GetPosition(&viewOffset.x, &viewOffset.y);
-    nsIView * parent;
-    containingView->GetParent(parent);
-
-    // if we don't have a parent view then 
-    // check to see if we have a widget and adjust our offset for the widget
-    if (parent == nsnull) {
-      nsIWidget * widget;
-      containingView->GetWidget(widget);
-      if (nsnull != widget) {
-        // Add in the absolute offset of the widget.
-        nsRect absBounds;
-        nsRect lc;
-        widget->WidgetToScreen(lc, absBounds);
-        // Convert widget coordinates to twips   
-        aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
-        aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-        NS_RELEASE(widget);
-      }
-      rv = NS_OK;
-    } else {
-
-      while (nsnull != parent) {
-        nsPoint po;
-        parent->GetPosition(&po.x, &po.y);
-        viewOffset.x += po.x;
-        viewOffset.y += po.y;
-        nsIScrollableView * scrollView;
-        if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
-          nscoord x;
-          nscoord y;
-          scrollView->GetScrollPosition(x, y);
-          viewOffset.x -= x;
-          viewOffset.y -= y;
-        }
-        nsIWidget * widget;
-        parent->GetWidget(widget);
-        if (nsnull != widget) {
-          // Add in the absolute offset of the widget.
-          nsRect absBounds;
-          nsRect lc;
-          widget->WidgetToScreen(lc, absBounds);
-          // Convert widget coordinates to twips   
-          aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
-          aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
-          NS_RELEASE(widget);
+  if (aPresContext) {
+    PRInt32 offsetX = 0;
+    PRInt32 offsetY = 0;
+    nsCOMPtr<nsIWidget> widget;
+    
+    while (aFrame) {
+      // Look for a widget so we can get screen coordinates
+      nsIView* view = nsnull;
+      aFrame->GetView(aPresContext, &view);
+      if (view) {
+        view->GetWidget(*getter_AddRefs(widget));
+        if (widget)
           break;
-        }
-        parent->GetParent(parent);
       }
-      aAbsoluteTwipsRect.x += viewOffset.x;
-      aAbsoluteTwipsRect.y += viewOffset.y;
+      
+      // No widget yet, so count up the coordinates of the frame 
+      nsPoint origin;
+      aFrame->GetOrigin(origin);
+      offsetX += origin.x;
+      offsetY += origin.y;
+  
+      aFrame->GetParent(&aFrame);
+    }
+    
+    if (widget) {
+      // Get the scale from that Presentation Context
+      float t2p;
+      aPresContext->GetTwipsToPixels(&t2p);
+      
+      // Convert to pixels using that scale
+      offsetX = NSTwipsToIntPixels(offsetX, t2p);
+      offsetY = NSTwipsToIntPixels(offsetY, t2p);
+      
+      // Add the widget's screen coordinates to the offset we've counted
+      nsRect oldBox(0,0,0,0);
+      widget->WidgetToScreen(oldBox, *aRect);
+      aRect->x += offsetX;
+      aRect->y += offsetY;
     }
   }
-
-   // convert to pixel coordinates
-  if (NS_SUCCEEDED(rv)) {
-   aAbsolutePixelRect.x = NSTwipsToIntPixels(aAbsoluteTwipsRect.x, t2p);
-   aAbsolutePixelRect.y = NSTwipsToIntPixels(aAbsoluteTwipsRect.y, t2p);
-   aAbsolutePixelRect.width = NSTwipsToIntPixels(aAbsoluteTwipsRect.width, t2p);
-   aAbsolutePixelRect.height = NSTwipsToIntPixels(aAbsoluteTwipsRect.height, t2p);
-  }
-
-  return rv;
 }
+
 
 
 void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
@@ -948,39 +859,43 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
   if (!firstFrame)
     return;
 
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(presContext);
+
   // Find common relative parent
   // This is an ancestor frame that will incompass all frames for this content node.
   // We need the relative parent so we can get absolute screen coordinates
   nsIFrame *ancestorFrame = firstFrame;
+
   while (ancestorFrame) {  
     *aBoundingFrame = ancestorFrame;
-    if (IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::blockFrame) || 
-        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::areaFrame)) {
+    nsIView *view = nsnull;
+    ancestorFrame->GetView(presContext, &view);
+    if (view ||
+        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::areaFrame) ||
+        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::rootFrame) ||
+        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::tableFrame) ||
+        IsCorrectFrameType(ancestorFrame, nsLayoutAtoms::scrollFrame))
       break;
-    }
     ancestorFrame->GetParent(&ancestorFrame); 
   }
-
-  // Get ready for loop
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(presContext);
 
   nsIFrame *iterFrame = firstFrame;
   nsCOMPtr<nsIContent> firstContent(do_QueryInterface(mDOMNode));
   nsCOMPtr<nsIContent> iterContent(firstContent);
-  nsRect currFrameBounds;
   PRInt32 depth = 0;
 
   // Look only at frames below this depth, or at this depth (if we're still on the content node we started with)
   while (iterContent == firstContent || depth > 0) {
     // Coordinates will come back relative to parent frame
     nsIFrame *parentFrame = iterFrame;
+    nsRect currFrameBounds;
     iterFrame->GetRect(currFrameBounds);
-
+ 
     // Make this frame's bounds relative to common parent frame
-    while (parentFrame != *aBoundingFrame) {  
+    while (parentFrame != *aBoundingFrame) {
       parentFrame->GetParent(&parentFrame);
-      if (!parentFrame) 
+      if (!parentFrame)
         break;
       nsRect parentFrameBounds;
       parentFrame->GetRect(parentFrameBounds);
@@ -1029,7 +944,6 @@ void nsAccessible::GetBounds(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
 /* void accGetBounds (out long x, out long y, out long width, out long height); */
 NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
-
   // This routine will get the entire rectange for all the frames in this node
   // -------------------------------------------------------------------------
   //      Primary Frame for node
@@ -1044,13 +958,12 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
     *x = *y = *width = *height = 0;
     return NS_ERROR_FAILURE;
   }
-
   presContext->GetTwipsToPixels(&t2p);   // Get pixels to twips conversion factor
 
   nsRect unionRectTwips;
-  nsIFrame* aRelativeFrame = nsnull;
-  GetBounds(unionRectTwips, &aRelativeFrame);   // Unions up all primary frames for this node and all siblings after it
-  if (!aRelativeFrame) {
+  nsIFrame* aBoundingFrame = nsnull;
+  GetBounds(unionRectTwips, &aBoundingFrame);   // Unions up all primary frames for this node and all siblings after it
+  if (!aBoundingFrame) {
     *x = *y = *width = *height = 0;
     return NS_ERROR_FAILURE;
   }
@@ -1063,17 +976,11 @@ NS_IMETHODIMP nsAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width,
   // We have the union of the rectangle, now we need to put it in absolute screen coords
 
   if (presContext) {
-    nsRect orgRectTwips, frameRectTwips, orgRectPixels;
+    nsRect orgRectPixels;
 
-    // Get the offset of this frame in screen coordinates
-    if (NS_SUCCEEDED(GetAbsoluteFramePosition(presContext, aRelativeFrame, orgRectTwips, orgRectPixels))) {
-      aRelativeFrame->GetRect(frameRectTwips);   // Usually just the primary frame, but can be the choice list frame for an nsSelectAccessible
-      // Add in the absolute coorinates.
-      // Since these absolute coordinates are for the primary frame, 
-      // also subtract the difference between our primary frame and our bounds frame
-      *x += orgRectPixels.x - NSTwipsToIntPixels(frameRectTwips.x, t2p);
-      *y += orgRectPixels.y - NSTwipsToIntPixels(frameRectTwips.y, t2p);
-    }
+    GetScreenOrigin(presContext, aBoundingFrame, &orgRectPixels);
+    *x += orgRectPixels.x;
+    *y += orgRectPixels.y;
   }
 
   return NS_OK;

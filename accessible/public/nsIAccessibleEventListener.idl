@@ -36,6 +36,10 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_SELECTION_ADD      = 0x8007;
   const unsigned long EVENT_SELECTION_REMOVE   = 0x8008;
   const unsigned long EVENT_SELECTION_WITHIN   = 0x8009;
+  const unsigned long EVENT_MENUSTART          = 0x0004;
+  const unsigned long EVENT_MENUEND            = 0x0005;
+  const unsigned long EVENT_MENUPOPUPSTART     = 0x0006;
+  const unsigned long EVENT_MENUPOPUPEND       = 0x0007;
 
   void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget);
 };

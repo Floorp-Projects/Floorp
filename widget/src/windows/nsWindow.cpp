@@ -1139,6 +1139,7 @@ static BOOL CALLBACK DummyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
+
 nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -1273,11 +1274,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      }
    }*/
 
-
     // call the event callback to notify about creation
 
     DispatchStandardEvent(NS_CREATE);
     SubclassWindow(TRUE);
+
     return(NS_OK);
 }
 
@@ -5993,13 +5994,16 @@ void nsWindow::CreateRootAccessible()
 {
   // Create this as early as possible in new window, if accessibility is turned on
   // We need it to be created early so it can generate accessibility events right away
-  nsCOMPtr<nsIAccessible> acc;
-  DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
-  // create the COM accessible object
-  if (acc) {
-     HWND wnd = GetWindowHandle();
-     mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
-     mRootAccessible->AddRef();
+
+  if (!mRootAccessible) {
+    nsCOMPtr<nsIAccessible> acc;
+    DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
+    // create the COM accessible object
+    if (acc) {
+       HWND wnd = GetWindowHandle();
+       mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
+       mRootAccessible->AddRef();
+    }
   }
 }
 #endif

@@ -39,7 +39,15 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="browser" extends="xul:browser">
-    <implementation type="application/x-javascript">
+    <implementation type="application/x-javascript" implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createIFrameAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
 
       <property name="canGoBack"
                 onget="return this.webNavigation.canGoBack;"

@@ -189,4 +189,5 @@ interface nsIAccessible : nsISupports
   const unsigned long  ROLE_CLOCK               = 0x0000003D;
   const unsigned long  ROLE_SPLITBUTTON         = 0x0000003E;   // New in MSAA 2.0 
   const unsigned long  ROLE_IPADDRESS           = 0x0000003F;   // New in MSAA 2.0 
+  const unsigned long  ROLE_NOTHING             = 0xffffffff;
 };

@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt     (jgaunt@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,26 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMXULLabeledControlEl.idl"
+#include "nsIDOMElement.idl"
+#include "nsIDOMXULElement.idl"
 
-[scriptable, uuid(6852d9a6-1dd2-11b2-a29d-cd7977a91b1b)]
-interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
-  const short CHECKSTATE_UNCHECKED = 0;
-  const short CHECKSTATE_CHECKED = 1;
-  const short CHECKSTATE_MIXED = 2;
+[scriptable, uuid(c32390a8-2bd8-4d1b-bf9f-1b1d0a944d19)]
+interface nsIDOMXULPopupElement : nsIDOMXULElement {
+  const unsigned short      BEFORE_START                   = 1;
+  const unsigned short      BEFORE_END                     = 2;
+  const unsigned short      AFTER_START                    = 3;
+  const unsigned short      AFTER_END                      = 4;
+  const unsigned short      START_BEFORE                   = 5;
+  const unsigned short      START_AFTER                    = 6;
+  const unsigned short      END_BEFORE                     = 7;
+  const unsigned short      END_AFTER                      = 8;
+  const unsigned short      OVERLAP                        = 9;
+  const unsigned short      AT_POINTER                     = 10;
+  const unsigned short      AFTER_POINTER                  = 11;
 
-  attribute DOMString type;
-  attribute DOMString dlgType;
-
-  // For buttons of type="menu" only.
-  attribute boolean open;
+  attribute DOMString position;
   
-  // For buttons of type="checkbox" only.
-  attribute boolean checked;
-  attribute long checkState;
-  attribute boolean autoCheck;
-
-  // For buttons of type="radio" only.
-  attribute DOMString group;
+  void showPopup(in unsigned short alignment, 
+                 in nsIDOMElement target,
+                 in nsIDOMElement anchor);
+  void hidePopup();
 };
 

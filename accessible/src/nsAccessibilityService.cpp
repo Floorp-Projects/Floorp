@@ -67,7 +67,9 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsXULFormControlAccessible.h"
+#include "nsXULColorPickerAccessible.h"
 #include "nsXULTextAccessible.h"
+#include "nsXULMenuAccessible.h"
 #include "nsString.h"
 
 // IFrame
@@ -95,24 +97,41 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAccessibilityService, nsIAccessibilityService);
 NS_IMETHODIMP 
 nsAccessibilityService::CreateRootAccessible(nsISupports* aPresContext, nsISupports* aFrame, nsIAccessible **_retval)
 {
-  // XXX - jgaunt - looks like we aren't using this
-  //nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrame);
+  *_retval = nsnull;
 
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
 
   nsCOMPtr<nsIPresShell> presShell;
   presContext->GetShell(getter_AddRefs(presShell));
+  NS_ASSERTION(presShell,"Error no presshell!!");
 
-  NS_ASSERTION(presShell,"Error not presshell!!");
+  nsCOMPtr<nsISupports> pcContainer;
+  presContext->GetContainer(getter_AddRefs(pcContainer));
+  NS_ASSERTION(pcContainer,"Error no container for pres context!!!");
 
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
+  NS_ASSERTION(treeItem,"Error no tree item for pres context container!!!");
 
-  *_retval = new nsRootAccessible(weakShell);
+  nsCOMPtr<nsIDocShellTreeItem> treeItemParent;
+  treeItem->GetParent(getter_AddRefs(treeItemParent));
+  if (treeItemParent) {
+    // We only create root accessibles for the true root, othewise create an iframe/iframeroot accessible
+    nsCOMPtr<nsIDocument> document;
+    nsCOMPtr<nsIContent> rootContent;
+    presShell->GetDocument(getter_AddRefs(document));
+    nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(document));
+    if (rootNode)
+      GetAccessibleFor(rootNode, _retval);
+  }
+  else {
+    nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+    *_retval = new nsRootAccessible(weakShell);
+    NS_IF_ADDREF(*_retval);
+  }
+
   if (! *_retval) 
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(*_retval);
+    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -208,6 +227,32 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULCheckboxAccessible(nsIDOMNode *aN
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessibilityService::CreateXULColorPickerAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULColorPickerAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULColorPickerTileAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULColorPickerTileAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
 /* nsIAccessible createHTMRadioButtonAccessible (in nsISupports aPresShell, in nsISupports aFrame); */
 NS_IMETHODIMP nsAccessibilityService::CreateHTMLRadioButtonAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
@@ -269,6 +314,59 @@ NS_IMETHODIMP nsAccessibilityService::CreateXULButtonAccessible(nsIDOMNode *aNod
 
   // reusing the HTML accessible widget and enhancing for XUL
   *_retval = new nsXULButtonAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULMenubarAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULMenubarAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULMenupopupAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULMenupopupAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULMenuitemAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULMenuitemAccessible(aNode, weakShell);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULMenuSeparatorAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULMenuSeparatorAccessible(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -356,6 +454,32 @@ NS_IMETHODIMP nsAccessibilityService::CreateHTMLTableCellAccessible(nsISupports 
 
   *_retval = new nsHTMLTableCellAccessible(node, weakShell);
   if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULGroupboxAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULGroupboxAccessible(aNode, weakShell);
+  if (! *_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAccessibilityService::CreateXULProgressMeterAccessible(nsIDOMNode *aNode, nsIAccessible **_retval)
+{
+  nsCOMPtr<nsIWeakReference> weakShell;
+  GetShellFromNode(aNode, getter_AddRefs(weakShell));
+
+  *_retval = new nsXULProgressMeterAccessible(aNode, weakShell);
+  if (! *_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*_retval);
@@ -540,45 +664,42 @@ nsAccessibilityService::CreateHTMLBlockAccessible(nsIDOMNode* aDOMNode, nsISuppo
 }
 
 NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLIFrameAccessible(nsIDOMNode* aDOMNode, nsISupports* aPresContext, nsIAccessible **_retval)
+nsAccessibilityService::CreateIFrameAccessible(nsIDOMNode* aDOMNode, nsIAccessible **_retval)
 {
   *_retval = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
   NS_ASSERTION(content,"Error non nsIContent passed to accessible factory!!!");
 
-  nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
-  NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
+  nsCOMPtr<nsIWeakReference> outerWeakShell;
+  GetShellFromNode(aDOMNode, getter_AddRefs(outerWeakShell));
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presContext->GetShell(getter_AddRefs(presShell)); 
-  NS_ASSERTION(presShell,"Error non PresShell passed to accessible factory!!!");
-
-  nsCOMPtr<nsIWeakReference> weakRef = do_GetWeakReference(presShell);
+  nsCOMPtr<nsIPresShell> outerPresShell(do_QueryReferent(outerWeakShell));
+  nsCOMPtr<nsIPresContext> outerPresContext;
+  outerPresShell->GetPresContext(getter_AddRefs(outerPresContext));
+  NS_ASSERTION(outerPresContext,"No outer pres context in CreateHTMLIFrameAccessible!");
 
   nsCOMPtr<nsIDocument> doc;
   if (NS_SUCCEEDED(content->GetDocument(*getter_AddRefs(doc))) && doc) {
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-    if (presShell) {
+    if (outerPresShell) {
       nsCOMPtr<nsISupports> supps;
-      presShell->GetSubShellFor(content, getter_AddRefs(supps));
+      outerPresShell->GetSubShellFor(content, getter_AddRefs(supps));
       if (supps) {
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(supps));
         if (docShell) {
-          nsCOMPtr<nsIPresShell> ps;
-          docShell->GetPresShell(getter_AddRefs(ps));
-          if (ps) {
-            nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(ps);
+          nsCOMPtr<nsIPresShell> innerPresShell;
+          docShell->GetPresShell(getter_AddRefs(innerPresShell));
+          if (innerPresShell) {
+            nsCOMPtr<nsIWeakReference> innerWeakShell(do_GetWeakReference(innerPresShell));
             nsCOMPtr<nsIDocument> innerDoc;
-            ps->GetDocument(getter_AddRefs(innerDoc)); 
+            innerPresShell->GetDocument(getter_AddRefs(innerDoc)); 
             if (innerDoc) {
-              nsCOMPtr<nsIAccessible> root = new nsHTMLIFrameRootAccessible(aDOMNode, wr);
-              if ( root ) {
-                nsHTMLIFrameAccessible* frameAcc = new nsHTMLIFrameAccessible(aDOMNode, root, weakRef, innerDoc);
-                if ( frameAcc != nsnull ) {
-                  *_retval = NS_STATIC_CAST(nsIAccessible*, frameAcc);
-                  if ( *_retval ) {
+              nsCOMPtr<nsIAccessible> innerRootAccessible(new nsHTMLIFrameRootAccessible(aDOMNode, innerWeakShell));
+              if (innerRootAccessible) {
+                nsHTMLIFrameAccessible* outerRootAccessible = new nsHTMLIFrameAccessible(aDOMNode, innerRootAccessible, outerWeakShell, innerDoc);
+                if (outerRootAccessible) {
+                  *_retval = NS_STATIC_CAST(nsIAccessible*, outerRootAccessible);
+                  if (*_retval) {
                     NS_ADDREF(*_retval);
                     return NS_OK;
                   }
@@ -651,19 +772,26 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
 {
   *_retval = nsnull;
 
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(aNode, "GetAccessibleFor() called with no node.");
 
   nsCOMPtr<nsIAccessible> newAcc;
 
-  nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
-  if (accProv)  {
-    accProv->GetAccessible(getter_AddRefs(newAcc));
-    if (newAcc) {
-      *_retval = newAcc;
-      NS_ADDREF(*_retval);
-      return NS_OK;
+  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aNode)); 
+  if (xulElement) {
+#ifdef DEBUG_aaronl
+    // Please leave this in for now, it's a convenient debugging method
+    nsAutoString name;
+    aNode->GetLocalName(name);
+    if (name.Equals(NS_LITERAL_STRING("browser")))
+      printf("## aaronl debugging\n");
+#endif
+    nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
+    if (accProv) {
+      accProv->GetAccessible(_retval); 
+      if (*_retval)
+        return NS_OK;
     }
+    return NS_ERROR_FAILURE;
   }
 
   // ---- Get the document for this node  ----
@@ -701,11 +829,12 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     nsCOMPtr<nsIPresShell> ownerShell;
     nsCOMPtr<nsIContent> ownerContent;
     GetOwnerFor(shell, getter_AddRefs(ownerShell), getter_AddRefs(ownerContent));
-    if (content) {
+    if (ownerContent) {
       shell = ownerShell;
       content = ownerContent;
     }
     else {
+      // Nothing above us, return the root accessible
       doc->GetRootContent(getter_AddRefs(content));
       nsIFrame* frame = nsnull;
       shell->GetPrimaryFrameFor(content, &frame);
@@ -713,18 +842,11 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
         return NS_ERROR_FAILURE;
       nsCOMPtr<nsIPresContext> presContext;
       shell->GetPresContext(getter_AddRefs(presContext));
-      CreateRootAccessible(presContext, frame, getter_AddRefs(newAcc));
-      *_retval = newAcc;
-      NS_ADDREF(*_retval);
-
-      return NS_OK;
-
+      return CreateRootAccessible(presContext, frame, _retval);
     }
   }
 
-  // ---- If still no nsIContent, return ----
-  if (!content)
-    return NS_ERROR_FAILURE;
+  NS_ASSERTION(content, "GetAccessibleFor() called with no content.");
 
   // ---- Try using frame to get IAccessible ----
   nsIFrame* frame = nsnull;

@@ -17,7 +17,20 @@
       </xul:arrowscrollbox>
     </content>
 
-    <implementation>
+    <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            if (this.localName == "popup" || this.localName == "menupopup") {
+              var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+              if (accService)
+                return accService.createXULMenupopupAccessible(this);
+              }
+            return null;
+          ]]>
+        </getter>
+      </property>
+
       <property name="position" onget="return this.getAttribute('position');"
                                 onset="this.setAttribute('position', val); return val;"/>
       <property name="popupBoxObject">

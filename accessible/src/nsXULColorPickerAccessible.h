@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,8 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s):  John Gaunt     (jgaunt@netscape.com)
+ * Author: Aaron Leventhal (aaronl@netscape.com)
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,26 +37,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMXULLabeledControlEl.idl"
+#ifndef _nsXULColorPickerAccessible_H_
+#define _nsXULColorPickerAccessible_H_
 
-[scriptable, uuid(6852d9a6-1dd2-11b2-a29d-cd7977a91b1b)]
-interface nsIDOMXULButtonElement : nsIDOMXULLabeledControlElement {
-  const short CHECKSTATE_UNCHECKED = 0;
-  const short CHECKSTATE_CHECKED = 1;
-  const short CHECKSTATE_MIXED = 2;
+// NOTE: alphabetically ordered
+#include "nsXULFormControlAccessible.h"
 
-  attribute DOMString type;
-  attribute DOMString dlgType;
-
-  // For buttons of type="menu" only.
-  attribute boolean open;
-  
-  // For buttons of type="checkbox" only.
-  attribute boolean checked;
-  attribute long checkState;
-  attribute boolean autoCheck;
-
-  // For buttons of type="radio" only.
-  attribute DOMString group;
+class nsXULColorPickerTileAccessible : public nsXULButtonAccessible
+{
+public:
+  nsXULColorPickerTileAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
 };
 
+class nsXULColorPickerAccessible : public nsXULColorPickerTileAccessible
+{
+public:
+  nsXULColorPickerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+};
+
+#endif  

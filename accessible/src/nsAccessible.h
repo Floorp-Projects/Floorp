@@ -43,6 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsGenericAccessible.h"
 #include "nsIAccessible.h"
+#include "nsIAccessibilityService.h"
 #include "nsIDOMNode.h"
 #include "nsIFocusController.h"
 #include "nsIPresContext.h"
@@ -65,11 +66,13 @@ enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};  // Used in si
 class nsAccessible : public nsGenericAccessible
 {
 public:
-
   // to eliminate the confusion of "magic numbers" -- if ( 0 ){ foo; }
   enum { eAction_Switch=0, eAction_Jump=0, eAction_Click=0 };
   // how many actions
   enum { eNo_Action=0, eSingle_Action=1 };
+
+  nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  virtual ~nsAccessible();
 
   NS_IMETHOD GetAccName(nsAWritableString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
@@ -87,58 +90,25 @@ public:
   NS_IMETHOD AccTakeFocus(void); 
   NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval); 
 
-  public:
-    nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-    virtual ~nsAccessible();
-
-    virtual void GetListAtomForFrame(nsIFrame* aFrame, nsIAtom*& aList) { aList = nsnull; }
-
-    // Helper Routines for Sub-Docs
-    static nsresult GetDocShellObjects(nsIDocShell*     aDocShell,
-                                nsIPresShell**   aPresShell, 
-                                nsIPresContext** aPresContext, 
-                                nsIContent**     aContent);
-    static nsresult GetDocShells(nsIPresShell* aPresShell,
-                          nsIDocShell** aDocShell,
-                          nsIDocShell** aParentDocShell);
-    static nsresult GetParentPresShellAndContent(nsIPresShell*  aPresShell,
-                                          nsIPresShell** aParentPresShell,
-                                          nsIContent**   aSubShellContent);
-
-    static PRBool FindContentForWebShell(nsIPresShell* aParentPresShell,
-                                  nsIContent*   aParentContent,
-                                  nsIWebShell*  aWebShell,
-                                  nsIContent**  aFoundContent);
-    nsresult CalcOffset(nsIFrame* aFrame,
-                        nsIPresContext * aPresContext,
-                        nsRect& aRect);
-    nsresult GetAbsPosition(nsIPresShell* aPresShell, nsPoint& aPoint);
-    nsresult GetAbsoluteFramePosition(nsIPresContext* aPresContext,
-                                      nsIFrame *aFrame, 
-                                      nsRect& aAbsoluteTwipsRect, 
-                                      nsRect& aAbsolutePixelRect);
-    static nsresult GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut);
-
-    // helper method to verify frames
-    static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
-
-protected:
-  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
-  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
-  NS_IMETHOD GetHTMLAccName(nsAWritableString& _retval); 
-  NS_IMETHOD GetXULAccName(nsAWritableString& _retval); 
-
 protected:
   virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
   PRBool IsEntirelyVisible(); 
+  NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAWritableString& _retval);
+  NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, nsAReadableString *aId, nsAWritableString *aLabel);
+  NS_IMETHOD GetHTMLAccName(nsAWritableString& _retval);
+  NS_IMETHOD GetXULAccName(nsAWritableString& _retval);
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAWritableString *aFlatString, nsAReadableString& textEquivalent);
   NS_IMETHOD GetFocusedElement(nsIDOMElement **aFocusedElement);
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
+  // helper method to verify frames
+  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+  static nsresult GetTranslatedString(PRUnichar *aKey, nsAWritableString *aStringOut);
+  void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
 
   // Data Members
   nsCOMPtr<nsIDOMNode> mDOMNode;
@@ -146,6 +116,52 @@ protected:
   nsCOMPtr<nsIAccessible> mParent;
   nsCOMPtr<nsIDOMNodeList> mSiblingList; // If some of our computed siblings are anonymous content nodes, cache node list
   PRInt32 mSiblingIndex; // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
+};
+
+
+/** This class is used to walk the DOM tree. It skips
+  * everything but nodes that either implement nsIAccessible
+  * or have primary frames that implement "GetAccessible"
+  */
+
+struct WalkState {
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsCOMPtr<nsIDOMNodeList> siblingList;
+  PRInt32 siblingIndex;  // Holds a state flag or an index into the siblingList
+  WalkState *prevState;
+};
+
+ 
+class nsAccessibleTreeWalker {
+public:
+  nsAccessibleTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent, 
+    PRInt32 aCachedSiblingIndex, nsIDOMNodeList *aCachedSiblingList, PRBool mWalkAnonymousContent);
+  ~nsAccessibleTreeWalker();
+
+  NS_IMETHOD GetNextSibling();
+  NS_IMETHOD GetPreviousSibling();
+  NS_IMETHOD GetParent();
+  NS_IMETHOD GetFirstChild();
+  NS_IMETHOD GetLastChild();
+  PRInt32 GetChildCount();
+  WalkState mState;
+
+protected:
+  NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
+  PRBool IsHidden();
+  PRBool GetAccessible();
+  NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
+  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
+  void GetKids(nsIDOMNode *aParent);
+
+  void ClearState();
+  NS_IMETHOD PushState();
+  NS_IMETHOD PopState();
+
+  nsCOMPtr<nsIWeakReference> mPresShell;
+  nsCOMPtr<nsIAccessibilityService> mAccService;
+  nsCOMPtr<nsIBindingManager> mBindingManager;
 };
 
 #endif  

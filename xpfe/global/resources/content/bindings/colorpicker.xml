@@ -293,6 +293,9 @@
             this.resetHover();
             aCell.setAttribute("hover", "true");
             this.mHoverCell = aCell;
+            var event = document.createEvent('Events');
+            event.initEvent('DOMMenuItemActive', false, true);
+            aCell.dispatchEvent(event);
           }
         ]]></body>
       </method>
@@ -423,7 +426,15 @@
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider" >
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULColorPickerAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
     
       <property name="open" onget="return this.mOpen"/>
 
@@ -541,6 +552,19 @@
         this.openPopup();
       ]]></handler>
     </handlers>
+  </binding>
+
+  <binding id="colorpickertile">
+    <implementation implements="nsIAccessibleProvider" >
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULColorPickerTileAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
 </bindings>

@@ -217,8 +217,7 @@ nsMenuBarFrame::ToggleMenuActiveState()
     InstallKeyboardNavigator();
 
     // Set the active menu to be the top left item (e.g., the File menu).
-    // We use an attribute called "active" to track the current active menu.
-    nsCOMPtr<nsIContent> firstMenuItem;
+    // We use an attribute called "menuactive" to track the current active menu.
     nsIMenuFrame* firstFrame;
     GetNextMenuItem(nsnull, &firstFrame);
     if (firstFrame) {

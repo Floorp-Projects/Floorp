@@ -25,7 +25,7 @@
       </xul:hbox>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
       <constructor>
         this.setAttribute("empty", "true");
       </constructor>
@@ -50,6 +50,15 @@
           
           return p;
         ]]></setter>
+      </property>
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULProgressMeterAccessible(this): null);
+          ]]>
+        </getter>
       </property>
     </implementation>
   </binding>

@@ -44,6 +44,7 @@
 #include "nsIAccessibleEventListener.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDOMFormListener.h"
+#include "nsIDOMXULListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDocument.h"
 #include "nsIAccessibilityService.h"
@@ -51,6 +52,7 @@
 #include "nsIWeakReference.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsIWebProgress.h"
 
 
 class nsDocAccessibleMixin
@@ -64,7 +66,6 @@ class nsDocAccessibleMixin
 
   protected:
     NS_IMETHOD GetDocShellFromPS(nsIPresShell* aPresShell, nsIDocShell** aDocShell);
-    PRBool mTopLevelDocument;
     nsCOMPtr<nsIDocument> mDocument;
 };
 
@@ -74,6 +75,7 @@ class nsRootAccessible : public nsAccessible,
                          public nsIAccessibleEventReceiver,
                          public nsIDOMFocusListener,
                          public nsIDOMFormListener,
+                         public nsIDOMXULListener,
                          public nsIWebProgressListener,
                          public nsITimerCallback, 
                          public nsSupportsWeakReference
@@ -113,8 +115,16 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD Select(nsIDOMEvent* aEvent);
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
+    NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);
+    NS_IMETHOD PopupShown(nsIDOMEvent* aEvent);
+    NS_IMETHOD PopupHiding(nsIDOMEvent* aEvent);
+    NS_IMETHOD PopupHidden(nsIDOMEvent* aEvent);
+    NS_IMETHOD Close(nsIDOMEvent* aEvent);
+    NS_IMETHOD Command(nsIDOMEvent* aEvent);
+    NS_IMETHOD Broadcast(nsIDOMEvent* aEvent);
+    NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent);
+
     NS_IMETHOD_(void) Notify(nsITimer *timer);
-    NS_IMETHOD StartDocReadyTimer();
 
     NS_DECL_NSIACCESSIBLEDOCUMENT
     NS_DECL_NSIWEBPROGRESSLISTENER
@@ -123,6 +133,10 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD GetTargetNode(nsIDOMEvent *aEvent, nsCOMPtr<nsIDOMNode>& aTargetNode);
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
+    void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
+    void StartDocReadyTimer();
+
+    static PRUint32 gInstanceCount;
 
     // mListener is not a com pointer. We don't own the listener
     // it is the callers responsibility to remove the listener
@@ -130,8 +144,10 @@ class nsRootAccessible : public nsAccessible,
     // We don't need a weak reference, because we're owned by this listener
     nsIAccessibleEventListener *mListener;
 
+    static nsIDOMNode * gLastFocusedNode; // we do our own refcounting for this
+
     nsCOMPtr<nsITimer> mTimer;
-    nsCOMPtr<nsIDOMNode> mCurrentFocus;
+    nsCOMPtr<nsIWebProgress> mWebProgress;
     nsCOMPtr<nsIAccessibilityService> mAccService;
     EBusyState mBusy;
 };

@@ -68,7 +68,6 @@ private:
   NS_IMETHOD GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
   void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
-
 };
 
 #endif /* __nsIAccessibilityService_h__ */

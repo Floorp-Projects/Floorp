@@ -202,7 +202,15 @@
   </binding>
 
   <binding id="iframe">
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createIFrameAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
       <property name="docShell"
                 readonly="true"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIIFrameBoxObject).docShell"/>
