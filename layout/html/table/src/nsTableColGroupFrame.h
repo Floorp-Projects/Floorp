@@ -44,11 +44,10 @@
 class nsTableColFrame;
 class nsTableFrame;
 
-
 enum nsTableColGroupType {
   eColGroupContent            = 0, // there is real col group content associated   
   eColGroupAnonymousCol       = 1, // the result of a col
-  eColGroupAnonymousCell      = 2 // the result of a cell alone
+  eColGroupAnonymousCell      = 2  // the result of a cell alone
 };
 
 /**
@@ -225,23 +224,16 @@ protected:
                               nsReflowStatus&          aStatus,
                               nsIFrame *               aNextFrame);
 
-// data members
-
+  // data members
   PRInt32 mColCount;
-
-  /** the starting column index this col group represents. Must be >= 0. */
+  // the starting column index this col group represents. Must be >= 0. 
   PRInt32 mStartColIndex;
-
-  struct ColGroupBits {
-    unsigned int mType:4;       
-    unsigned int mUnused:28;                         
-  } mBits;
 };
 
 inline nsTableColGroupFrame::nsTableColGroupFrame()
 : mColCount(0), mStartColIndex(0)
 { 
-  mBits.mType = 0;
+  SetType(eColGroupContent);
 }
   
 inline PRInt32 nsTableColGroupFrame::GetStartColumnIndex()

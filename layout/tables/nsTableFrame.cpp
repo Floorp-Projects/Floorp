@@ -185,7 +185,6 @@ nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull),
-    mPercentBasisForRows(0),
     mPreferredWidth(0),
     mNumDescendantReflowsPending(0),
     mNumDescendantTimeoutReflowsPending(0)
@@ -1268,7 +1267,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
     kidFrame->GetFrameType(getter_AddRefs(frameType));
     if (nsLayoutAtoms::tableCellFrame == kidType.get()) {
       nsTableCellFrame* cellFrame = (nsTableCellFrame*)kidFrame;
-      stopTelling = tableFrame->CellChangedWidth(*cellFrame, cellFrame->GetPass1MaxElementSize(), 
+      stopTelling = tableFrame->CellChangedWidth(*cellFrame, cellFrame->GetPass1MaxElementWidth(), 
                                                  cellFrame->GetMaximumWidth(), PR_TRUE);
     }
   }
@@ -1897,8 +1896,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
  
   PRBool doCollapse = PR_FALSE;
 
-  ComputePercentBasisForRows(aReflowState);
-
   aDesiredSize.width = aReflowState.availableWidth;
 
   nsReflowReason nextReason = aReflowState.reason;
@@ -2239,23 +2236,6 @@ nsTableFrame::MoveOverflowToChildList(nsIPresContext* aPresContext)
     result = PR_TRUE;
   }
   return result;
-}
-
-
-void nsTableFrame::ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState)
-{
-  nscoord height = CalcBorderBoxHeight(aReflowState);
-  if ((height > 0) && (height != NS_UNCONSTRAINEDSIZE)) {
-    // exclude our border and padding
-    nsMargin borderPadding = aReflowState.mComputedBorderPadding;
-    height -= borderPadding.top + borderPadding.bottom;
-
-    height = PR_MAX(0, height);
-  }
-  else {
-    height = 0;
-  }
-  mPercentBasisForRows = height;
 }
 
 NS_METHOD 
@@ -3655,7 +3635,7 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
   nsTableColFrame* colFrame = GetColFrame(colIndex);
   if (!colFrame) return PR_TRUE; // should never happen
 
-  nscoord cellMin = (aCellWasDestroyed) ? 0 : aCellFrame.GetPass1MaxElementSize().width;
+  nscoord cellMin = (aCellWasDestroyed) ? 0 : aCellFrame.GetPass1MaxElementWidth();
   nscoord cellMax = (aCellWasDestroyed) ? 0 : aCellFrame.GetMaximumWidth();
   nscoord colMin  = colFrame->GetWidth(MIN_CON);
   nscoord colMax  = colFrame->GetWidth(DES_CON);
@@ -3680,7 +3660,7 @@ nsTableFrame::CellChangedWidth(const nsTableCellFrame& aCellFrame,
       for (rowX = 0; rowX < numRows; rowX++) {
         nsTableCellFrame* cellFrame = GetCellInfoAt(rowX, colIndex, &originates, &colSpan);
         if (cellFrame && originates && (1 == colSpan)) {
-          minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementSize().width);
+          minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementWidth());
         }
       }
       // update the columns's new min width

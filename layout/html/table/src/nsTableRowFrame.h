@@ -179,15 +179,6 @@ public:
    */
   nscoord GetMaxCellAscent() const;
  
-#if 0 // nobody uses this
-  /** 
-   * returns the max-descent amongst all the cells that have
-   * 'vertical-align: baseline', *ignoring* any cell with rowspans.
-   * returns 0 if we don't have any cell with 'vertical-align: baseline'
-   */
-  nscoord GetMaxCellDescent() const;
-#endif
-
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;
 

@@ -52,24 +52,19 @@
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
 
+#define COL_GROUP_TYPE_BITS          0xC0000000 // uses bits 31-32 from mState
+#define COL_GROUP_TYPE_OFFSET        30
 
-#define COLGROUP_TYPE_CONTENT              0x0
-#define COLGROUP_TYPE_ANONYMOUS_COL        0x1
-#define COLGROUP_TYPE_ANONYMOUS_CELL       0x2
-
-nsTableColGroupType nsTableColGroupFrame::GetType() const {
-  switch(mBits.mType) {
-  case COLGROUP_TYPE_ANONYMOUS_COL:
-    return eColGroupAnonymousCol;
-  case COLGROUP_TYPE_ANONYMOUS_CELL:
-    return eColGroupAnonymousCell;
-  default:
-    return eColGroupContent;
-  }
+nsTableColGroupType 
+nsTableColGroupFrame::GetType() const 
+{
+  return (nsTableColGroupType)((mState & COL_GROUP_TYPE_BITS) >> COL_GROUP_TYPE_OFFSET);
 }
 
-void nsTableColGroupFrame::SetType(nsTableColGroupType aType) {
-  mBits.mType = aType - eColGroupContent;
+void nsTableColGroupFrame::SetType(nsTableColGroupType aType) 
+{
+  PRUint32 type = aType - eColGroupContent;
+  mState |= (type << COL_GROUP_TYPE_OFFSET);
 }
 
 void nsTableColGroupFrame::ResetColIndices(nsIPresContext* aPresContext,

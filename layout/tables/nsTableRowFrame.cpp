@@ -1019,7 +1019,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           }
   
           nscoord oldMaxWidth     = cellFrame->GetMaximumWidth();
-          nscoord oldMaxElemWidth = cellFrame->GetPass1MaxElementSize().width;
+          nscoord oldMaxElemWidth = cellFrame->GetPass1MaxElementWidth();
 
           // Reflow the child
           nsTableCellReflowState kidReflowState(aPresContext, aReflowState, 
@@ -1032,10 +1032,12 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
             nscoord maxWidth = (NS_UNCONSTRAINEDSIZE == availCellWidth) 
                                 ? desiredSize.width : desiredSize.mMaximumWidth;
             // save the max element width and max width
-            cellFrame->SetPass1MaxElementSize(desiredSize.width, *desiredSize.maxElementSize);
-            if (desiredSize.maxElementSize->width > desiredSize.width) {
-              NS_ASSERTION(PR_FALSE, "max element width exceeded desired width");
-              desiredSize.width = desiredSize.maxElementSize->width;
+            if (desiredSize.maxElementSize) {
+              cellFrame->SetPass1MaxElementWidth(desiredSize.width, desiredSize.maxElementSize->width);
+              if (desiredSize.maxElementSize->width > desiredSize.width) {
+                NS_ASSERTION(PR_FALSE, "max element width exceeded desired width");
+                desiredSize.width = desiredSize.maxElementSize->width;
+              }
             }
             cellFrame->SetMaximumWidth(maxWidth);
           }
@@ -1237,7 +1239,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     nsTableCellReflowState kidRS(aPresContext, aReflowState, aNextFrame, cellAvailSize);
 
     // Remember the current desired size, we'll need it later
-    nsSize  oldCellMinSize      = cellFrame->GetPass1MaxElementSize();
+    nscoord oldCellMinWidth     = cellFrame->GetPass1MaxElementWidth();
     nscoord oldCellMaximumWidth = cellFrame->GetMaximumWidth();
     nsSize  oldCellDesSize      = cellFrame->GetDesiredSize();
     nscoord oldCellDesAscent    = cellFrame->GetDesiredAscent();
@@ -1253,7 +1255,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     nscoord initCellDesDescent = cellMet.descent;
     
     // cache the max-elem and maximum widths
-    cellFrame->SetPass1MaxElementSize(cellMet.width, kidMaxElementSize);
+    cellFrame->SetPass1MaxElementWidth(cellMet.width, kidMaxElementSize.width);
     cellFrame->SetMaximumWidth(cellMet.mMaximumWidth);
 
     // Calculate the cell's actual size given its pass2 size. This function
@@ -1325,7 +1327,7 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
 
     // Notify the table if the cell width changed so it can decide whether to rebalance
     if (!aDesiredSize.mNothingChanged) {
-      aTableFrame.CellChangedWidth(*cellFrame, oldCellMinSize.width, oldCellMaximumWidth); 
+      aTableFrame.CellChangedWidth(*cellFrame, oldCellMinWidth, oldCellMaximumWidth); 
     } 
 
     // Return our desired size. Note that our desired width is just whatever width
