@@ -41,13 +41,20 @@
 #define nsFontFreeType_h__
 
 #include "nsFontMetricsGTK.h"
-#include "nsFreeType.h"
+/*
+ * since this patch won't delete "gfx/src/x11shared/nsFreeType.h",
+ * using "freetype/nsFreeType.h" will prevent this file from
+ * including the one under "x11shared". This can be changed to
+ * "#include nsFreeType.h" safely after deleting
+ * unused "x11shared/nsFreeType.h".
+ */
+#include "freetype/nsFreeType.h"
 
 #if (!defined(MOZ_ENABLE_FREETYPE2))
-class nsFreeTypeFace;
 class nsFreeTypeFont : public nsFontGTK {
 public:
-  static nsFreeTypeFont *NewFont(nsFreeTypeFace *, PRUint16, const char *);
+  static nsFreeTypeFont *NewFont(nsITrueTypeFontCatalogEntry*,
+                                 PRUint16, const char *);
 };
 #else
 
@@ -57,16 +64,15 @@ public:
 #include FT_CACHE_IMAGE_H
 #include FT_TRUETYPE_TABLES_H
 
-class nsFreeTypeFace;
-
 class nsFreeTypeFont : public nsFontGTK
 {
 public:
 
   nsFreeTypeFont();
-  nsFreeTypeFont(nsFreeTypeFace *, PRUint16, const char *);
+  nsFreeTypeFont(nsITrueTypeFontCatalogEntry *, PRUint16, const char *);
   virtual ~nsFreeTypeFont(void);
-  static nsFreeTypeFont *NewFont(nsFreeTypeFace *, PRUint16, const char *);
+  static nsFreeTypeFont *NewFont(nsITrueTypeFontCatalogEntry*,
+                                 PRUint16, const char *);
 
   void LoadFont(void);
 
@@ -114,7 +120,7 @@ public:
 
 protected:
   XImage *GetXImage(PRUint32 width, PRUint32 height);
-  nsFreeTypeFace *mFaceID;
+  nsITrueTypeFontCatalogEntry *mFaceID;
   PRUint16        mPixelSize;
   FTC_Image_Desc  mImageDesc;
 };
