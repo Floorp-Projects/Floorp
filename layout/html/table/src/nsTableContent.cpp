@@ -89,7 +89,7 @@ nsresult nsTableContent::QueryInterface(const nsIID& aIID,
     AddRef();
     return NS_OK;
   }
-  return nsHTMLContent::QueryInterface(aIID, aInstancePtrResult);
+  return nsHTMLTagContent::QueryInterface(aIID, aInstancePtrResult);
 }
 
 /**
