@@ -336,11 +336,11 @@ nsHTMLTextAreaElement::Select()
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    if (nsnull != formControlFrame ) { 
-      nsIPresContext* presContext;
-      nsGenericHTMLElement::GetPresContext(this, &presContext);
+    if (formControlFrame )
+    {
+      nsCOMPtr<nsIPresContext> presContext;
+      nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
       formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
-      NS_IF_RELEASE(presContext);
       return NS_OK;
     }
   }
