@@ -1663,14 +1663,35 @@ nsBookmarksService::ReadBookmarks()
 nsresult
 nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 {
-	nsSpecialSystemDirectory bookmarksFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	nsresult rv;
 
-	// XXX we should get this from prefs.
-	bookmarksFile += "res";
-	bookmarksFile += "samples";
-	bookmarksFile += "bookmarks.html";
+	// Look for bookmarks.html in the current profile
+	// directory. This is as convoluted as it seems because we
+	// want to 1) not break viewer (which has no profiles), and 2)
+	// still deal reasonably (in the short term) when no
+	// bookmarks.html is installed in the profile directory.
+	nsFileSpec bookmarksFile;
+	do {
+		NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+		if (NS_FAILED(rv)) break;
 
-	nsresult		rv = NS_ERROR_FAILURE;
+		rv = profile->GetCurrentProfileDir(&bookmarksFile);
+		if (NS_FAILED(rv)) break;
+
+		bookmarksFile += "bookmarks.html";
+
+		if (! bookmarksFile.Exists())
+			rv = NS_ERROR_FAILURE;
+	} while (0);
+
+	if (NS_FAILED(rv)) {
+		bookmarksFile = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+		bookmarksFile += "res";
+		bookmarksFile += "samples";
+		bookmarksFile += "bookmarks.html";
+	}
+
+	rv = NS_ERROR_FAILURE;
 	nsOutputFileStream	strm(bookmarksFile);
 	if (strm.is_open())
 	{
