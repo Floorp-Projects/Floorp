@@ -409,6 +409,11 @@ function htmlVA (attribs, href, contents)
     
 function init()
 {    
+    const WW_CTRID = "@mozilla.org/embedcomp/window-watcher;1";
+    const nsIWindowWatcher = Components.interfaces.nsIWindowWatcher;
+    console.windowWatcher =
+        Components.classes[WW_CTRID].getService(nsIWindowWatcher);
+
     initPrefs();
     initCommands();
     initMenus();
@@ -416,6 +421,8 @@ function init()
     
     disableDebugCommands();
     
+    console.files = new Object();
+
     console._outputDocument = 
         document.getElementById("output-iframe").contentDocument;
 
@@ -458,11 +465,14 @@ function init()
 
     dispatch("commands");
     dispatch("help");
+
+    initHandlers();
 }
 
 function destroy ()
 {
     destroyOutliners();
+    destroyHandlers();
     detachDebugger();
 }
 
@@ -642,11 +652,11 @@ function con_scrolldn ()
     window.frames[0].scrollTo(0, window.frames[0].document.height);
 }
 
-function SourceText (scriptContainer)
+function SourceText (scriptContainer, url)
 {
     this.lines = new Array();
     this.tabWidth = console.prefs["sourcetext.tab.width"];
-    this.fileName = scriptContainer.fileName;
+    this.fileName = url;
     this.scriptContainer = scriptContainer;
     this.lineMap = new Array();
 }
@@ -676,7 +686,10 @@ function st_marginclick (e, line)
     }
     else
     {
-        setBreakpoint (this.fileName, line);
+        if (this.scriptContainer)
+            setBreakpoint (this.fileName, line);
+        else
+            setFutureBreakpoint (this.fileName, line);
     }
     console.sourceView.outliner.invalidateRow(line - 1);
 }
@@ -799,8 +812,11 @@ function st_loadsrc (cb)
             if (ary)
                 sourceText.tabWidth = ary[1];
             
-            sourceText.scriptContainer.guessFunctionNames(sourceText);
-            sourceText.markBreakableLines();
+            if (sourceText.scriptContainer)
+            {
+                sourceText.scriptContainer.guessFunctionNames(sourceText);
+                sourceText.markBreakableLines();
+            }
             sourceText.isLoaded = true;
             sourceText.invalidate();
             callall(status);
@@ -810,7 +826,7 @@ function st_loadsrc (cb)
 
     var ex;
     var src;
-    var url = this.scriptContainer.fileName;
+    var url = this.fileName;
     console.pushStatus (getMsg(MSN_STATUS_LOADING, url));
     try
     {

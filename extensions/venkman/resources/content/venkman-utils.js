@@ -26,6 +26,11 @@
 var dumpln;
 var dd;
 
+const nsIXULWindow          = Components.interfaces.nsIXULWindow;
+const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
+const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
+const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
+
 if (typeof document == "undefined") /* in xpcshell */
 {
     dumpln = print;
@@ -262,6 +267,36 @@ function Clone (obj)
 
     return robj;
     
+}
+
+function getXULWindowFromWindow (win)
+{
+    var ex;
+    try
+    {
+        var requestor = win.QueryInterface(nsIInterfaceRequestor);
+        var nav = requestor.getInterface(nsIWebNavigation);
+        var dsti = nav.QueryInterface(nsIDocShellTreeItem);
+        var owner = dsti.treeOwner;
+        requestor = owner.QueryInterface(nsIInterfaceRequestor);
+        return requestor.getInterface(nsIXULWindow);
+    }
+    catch (ex)
+    {
+        //dd ("not a nsIXULWindow: " + formatException(ex));
+        /* ignore no-interface exception */
+    }
+
+    return null;
+}
+
+function getPathFromURL (url)
+{
+    var ary = url.match(/^(.*\/)([^\/?]+)(\?|$)/);
+    if (ary)
+        return ary[1];
+
+    return url;
 }
 
 function getFileFromPath (path)

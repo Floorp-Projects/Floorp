@@ -83,6 +83,8 @@ function cmdDumpContexts()
                               
                                   dd ("enumerateContext: Index " + i +
                                       ", Version " + context.version +
+                                      ", Options " + context.options +
+                                      ", Private " + context.privateData +
                                       ", Tag " + context.tag +
                                       ", Title " + title +
                                       ", Scripts Enabled " +

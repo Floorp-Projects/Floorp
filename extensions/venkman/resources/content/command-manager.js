@@ -729,30 +729,36 @@ function parse_parseargsraw (e)
         var parseResult;
         var currentArg;
         e.currentArgIndex = 0;
-        currentArg = e.command.argNames[e.currentArgIndex];
-        
-        while (e.currentArgIndex < argc && e.unparsedData)
+
+        if (argc)
         {
-            if (currentArg != ":")
-            {
-                if (!this.parseArgument (e, currentArg))
-                    return false;
-            }
-            ++e.currentArgIndex;
             currentArg = e.command.argNames[e.currentArgIndex];
-        }
+        
+            while (e.unparsedData)
+            {
+                if (currentArg != ":")
+                {
+                    if (!this.parseArgument (e, currentArg))
+                        return false;
+                }
+                if (++e.currentArgIndex < argc)
+                    currentArg = e.command.argNames[e.currentArgIndex];
+                else
+                    break;
+            }
 
-        if (e.currentArgIndex < argc && currentArg != ":")
-        {
-            /* parse loop completed because it ran out of data.  We haven't
-             * parsed all of the declared arguments, and we're not stopped
-             * at an optional marker, so we must be missing something
-             * required... */
-            e.parseError = getMsg(MSN_ERR_REQUIRED_PARAM, 
-                                  e.command.argNames[e.currentArgIndex]);
-            return false;
+            if (e.currentArgIndex < argc && currentArg != ":")
+            {
+                /* parse loop completed because it ran out of data.  We haven't
+                 * parsed all of the declared arguments, and we're not stopped
+                 * at an optional marker, so we must be missing something
+                 * required... */
+                e.parseError = getMsg(MSN_ERR_REQUIRED_PARAM, 
+                                      e.command.argNames[e.currentArgIndex]);
+                return false;
+            }
         }
-
+        
         if (e.unparsedData)
         {
             /* parse loop completed with unparsed data, which means we've

@@ -124,6 +124,8 @@ function initMenus()
      
     /* Context menu for project view */
     C("project-outliner", "project");
+     m("find-url");
+     m("-");
      m("clear-all", {enabledif:
                      "cx.target instanceof BPRecord || " +
                      "(has('breakpointLabel') && cx.target.childData.length)"});

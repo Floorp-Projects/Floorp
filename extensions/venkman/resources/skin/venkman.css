@@ -207,6 +207,10 @@ outlinerchildren:-moz-outliner-image(breakpoint-col, breakpoint) {
     list-style-image: url("chrome://venkman/skin/images/breakpoint-line.gif");
 }
 
+outlinerchildren:-moz-outliner-image(breakpoint-col, future-breakpoint) {
+    list-style-image: url("chrome://venkman/skin/images/breakpoint-future-line.gif");
+}
+
 outlinerchildren:-moz-outliner-image(current-frame-flag){
     list-style-image: url("chrome://venkman/skin/images/current-frame.gif");
 }
@@ -222,6 +226,22 @@ outlinerchildren:-moz-outliner-image(project-col-0,pj-blacklist){
 
 outlinerchildren:-moz-outliner-image(project-col-0,pj-bl-item){
     list-style-image: url("chrome://venkman/skin/images/proj-bl-item.png");
+}
+
+outlinerchildren:-moz-outliner-image(project-col-0,pj-windows){
+    list-style-image: url("chrome://venkman/skin/images/proj-windows.png");
+}
+
+outlinerchildren:-moz-outliner-image(project-col-0,pj-window){
+    list-style-image: url("chrome://venkman/skin/images/proj-window.png");
+}
+
+outlinerchildren:-moz-outliner-image(project-col-0,pj-files){
+    list-style-image: url("chrome://venkman/skin/images/proj-files.png");
+}
+
+outlinerchildren:-moz-outliner-image(project-col-0,pj-file){
+    list-style-image: url("chrome://venkman/skin/images/file-js.png");
 }
 
 outlinerchildren:-moz-outliner-image(project-col-0,pj-breakpoints){

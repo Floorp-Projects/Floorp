@@ -33,6 +33,69 @@
  *
  */
 
+function initHandlers()
+{
+    function wwObserve (subject, topic, data)
+    {
+        dd ("wwObserver::Observe " + subject + ", " + topic);
+        if (topic == "domwindowopened")
+            console.onWindowOpen (subject);
+        else
+            console.onWindowClose (subject);
+    };
+
+    console.wwObserver = {observe: wwObserve};
+    console.windowWatcher.registerNotification (console.wwObserver);
+}
+
+function destroyHandlers()
+{
+    const WW_CTRID = "@mozilla.org/embedcomp/window-watcher;1";
+    const nsIWindowWatcher = Components.interfaces.nsIWindowWatcher;
+    var ww = Components.classes[WW_CTRID].getService(nsIWindowWatcher);
+    ww.unregisterNotification (console.wwObserver);
+}
+
+console.onWindowOpen =
+function con_winopen (win)
+{
+    if (win.location.href == "about:blank" || win.location.href == "")
+    {
+        //dd ("not loaded yet?");
+        setTimeout (con_winopen, 100, win);
+        return;
+    }
+    
+    //dd ("window opened: " + win); // + ", " + getInterfaces(win));
+    console.windows.appendChild (new WindowRecord(win));
+    win.addEventListener ("load", console.onWindowLoad, false);
+    win.addEventListener ("unload", console.onWindowUnload, false);
+    console.scriptsView.freeze();
+}
+
+console.onWindowLoad =
+function con_winload (e)
+{
+    console.scriptsView.thaw();
+}
+
+console.onWindowUnload =
+function con_winunload (e)
+{
+    console.scriptsView.thaw();
+}
+
+console.onWindowClose =
+function con_winunload (win)
+{
+    //dd ("window closed: " + win);
+    var winRecord = console.windows.locateChildByWindow(win);
+    if (!ASSERT(winRecord, "onWindowClose: Can't find window record."))
+        return;
+    console.windows.removeChildAtIndex(winRecord.childIndex);
+    console.scriptsView.freeze();
+}
+
 console.onDebugTrap =
 function con_ondt ()
 {
@@ -257,9 +320,9 @@ function con_projsel (e)
     }
 
     if (row instanceof BPRecord)
-        dispatch ("find-bp", {breakpointRec: row});        
-    else
-        dd ("not a bp record");
+        dispatch ("find-bp", {breakpointRec: row});
+    else if (row instanceof FileRecord || row instanceof WindowRecord)
+        dispatch ("find-url", {url: row.url});
 }
             
 console.onStackSelect =

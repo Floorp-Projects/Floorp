@@ -62,7 +62,7 @@ function initCommands(commandObject)
          ["find-creator",   cmdFindCreatorOrCtor,  0],
          ["find-ctor",      cmdFindCreatorOrCtor,  0],
          ["find-frame",     cmdFindFrame,          CMD_NEED_STACK],
-         ["find-url",       cmdFindURL,            0],
+         ["find-url",       cmdFindURL,            CMD_CONSOLE],
          ["find-url-soft",  cmdFindURL,            0],
          ["find-script",    cmdFindScript,         0],
          ["finish",         cmdFinish,             CMD_CONSOLE | CMD_NEED_STACK],
@@ -528,17 +528,9 @@ function cmdFinish (e)
 
 function cmdFindBp (e)
 {
-    var containerRec = console.scripts[e.breakpointRec.fileName];
-    if (!containerRec)
-    {
-        dd ("breakpoint in unknown source");
-        return false;
-    }
-
-    var sourceView = console.sourceView;
-    cmdFindURL ({url: containerRec.fileName,
-                  rangeStart: e.breakpointRec.line,
-                  rangeEnd: e.breakpointRec.line});
+    cmdFindURL ({url: e.breakpointRec.fileName,
+                 rangeStart: e.breakpointRec.line,
+                 rangeEnd: e.breakpointRec.line});
     return true;
 }
 
@@ -576,11 +568,14 @@ function cmdFindURL (e)
         return true;
     }
     
-    if (!(e.url in console.scripts))
-    {
-        display (getMsg (MSN_ERR_NO_SCRIPT, e.url), MT_ERROR);
-        return false;
-    }
+    var sourceText;
+    
+    if (e.url in console.scripts)
+        sourceText = console.scripts[e.url].sourceText;
+    else if (e.url in console.files)
+        sourceText = console.files[e.url];
+    else
+        sourceText = console.files[e.url] = new SourceText (null, e.url);
 
     console.sourceView.details = null;
     console.highlightFile = e.url;
@@ -600,7 +595,7 @@ function cmdFindURL (e)
     if ("lineNumber" in e && e.lineNumber != null)
         line = e.lineNumber;
 
-    console.sourceView.displaySourceText(console.scripts[e.url].sourceText);
+    console.sourceView.displaySourceText(sourceText);
     console.sourceView.outliner.invalidate();
     if ("command" in e && e.command.name == "find-url-soft")
         console.sourceView.softScrollTo (line);

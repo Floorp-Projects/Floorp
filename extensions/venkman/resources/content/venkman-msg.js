@@ -119,6 +119,8 @@ const MSG_TYPE_VOID       = getMsg("msg.type.void");
 
 const MSG_CLASS_XPCOBJ    = getMsg("msg.class.xpcobj");
 const MSG_BLACKLIST       = getMsg("msg.blacklist");
+const MSG_WINDOW_REC      = getMsg("msg.window.rec");
+const MSG_FILES_REC       = getMsg("msg.files.rec");
 const MSG_BREAK_REC       = getMsg("msg.break.rec");
 const MSG_CALL_STACK      = getMsg("msg.callstack");
 

@@ -80,6 +80,7 @@ function initOutliners()
     console.sourceView.atomHighlightRange = atomsvc.getAtom("highlight-range");
     console.sourceView.atomHighlightEnd   = atomsvc.getAtom("highlight-end");
     console.sourceView.atomBreakpoint     = atomsvc.getAtom("breakpoint");
+    console.sourceView.atomFBreakpoint    = atomsvc.getAtom("future-breakpoint");
     console.sourceView.atomCode           = atomsvc.getAtom("code");
     console.sourceView.atomPrettyPrint    = atomsvc.getAtom("prettyprint");
     console.sourceView.atomWhitespace     = atomsvc.getAtom("whitespace");
@@ -127,6 +128,10 @@ function initOutliners()
     
     console.projectView.atomBlacklist   = atomsvc.getAtom("pj-blacklist");
     console.projectView.atomBLItem      = atomsvc.getAtom("pj-bl-item");
+    console.projectView.atomWindows     = atomsvc.getAtom("pj-windows");
+    console.projectView.atomWindow      = atomsvc.getAtom("pj-window");
+    console.projectView.atomFiles       = atomsvc.getAtom("pj-files");
+    console.projectView.atomFile        = atomsvc.getAtom("pj-file");
     console.projectView.atomBreakpoints = atomsvc.getAtom("pj-breakpoints");
     console.projectView.atomBreakpoint  = atomsvc.getAtom("pj-breakpoint");
     
@@ -134,13 +139,26 @@ function initOutliners()
     console.blacklist.reserveChildren();
     //console.projectView.childData.appendChild (console.blacklist);
 
+    console.windows.property = console.projectView.atomWindows;
+    console.windows.reserveChildren();
+    console.projectView.childData.appendChild (console.windows);
+
     console.breakpoints.property = console.projectView.atomBreakpoints;
     console.breakpoints.reserveChildren();
     console.projectView.childData.appendChild (console.breakpoints);
 
+    WindowRecord.prototype.property = console.projectView.atomWindow;
+    FileContainerRecord.prototype.property = console.projectView.atomFiles;
+    FileRecord.prototype.property = console.projectView.atomFile;
     BPRecord.prototype.property = console.projectView.atomBreakpoint;
     BLRecord.prototype.property = console.projectView.atomBLItem;
     
+    var enumerator = console.windowWatcher.getWindowEnumerator();
+    while (enumerator.hasMoreElements())
+    {
+        var win = enumerator.getNext();
+        console.windows.appendChild (new WindowRecord(win));
+    }   
 }
 
 function destroyOutliners()
@@ -386,12 +404,21 @@ function sv_cellprops (row, colID, properties)
             properties.AppendElement(this.atomPrettyPrint);
         if (typeof this.childData.lines[row] == "object" &&
             "bpRecord" in this.childData.lines[row])
-            properties.AppendElement(this.atomBreakpoint);
+        {
+            if (this.childData.lines[row].bpRecord.scriptRecords.length)
+                properties.AppendElement(this.atomBreakpoint);
+            else
+                properties.AppendElement(this.atomFBreakpoint);
+        }
         else if ("lineMap" in this.childData && row in this.childData.lineMap &&
                  this.childData.lineMap[row] & this.LINE_BREAKABLE)
+        {
             properties.AppendElement(this.atomCode);
+        }
         else
+        {
             properties.AppendElement(this.atomWhitespace);
+        }
     }
     
     if ("highlightStart" in console)
@@ -462,35 +489,31 @@ function ScriptContainerRecord(fileName)
     this.group = 4;
     this.bpcount = 0;
 
-    var ary = this.fileName.match(/\/([^\/?]+)(\?|$)/);
+    this.shortName = getFileFromPath(this.fileName);
+    ary = this.shortName.match (/\.(js|html|xul|xml)$/i);
     if (ary)
     {
-        this.shortName = ary[1];
-        ary = this.shortName.match (/\.(js|html|xul|xml)$/i);
-        if (ary)
+        switch (ary[1].toLowerCase())
         {
-            switch (ary[1].toLowerCase())
-            {
-                case "js":
-                    this.fileType = sov.atomJS;
-                    this.group = 0;
-                    break;
-                    
-                case "html":
-                    this.group = 1;
-                    this.fileType = sov.atomHTML;
-                    break;
-                    
-                case "xul":
-                    this.group = 2;
-                    this.fileType = sov.atomXUL;
-                    break;
-                    
-                case "xml":
-                    this.group = 3;
-                    this.fileType = sov.atomXML;
-                    break;
-            }
+        case "js":
+            this.fileType = sov.atomJS;
+            this.group = 0;
+            break;
+            
+        case "html":
+            this.group = 1;
+            this.fileType = sov.atomHTML;
+            break;
+            
+        case "xul":
+            this.group = 2;
+            this.fileType = sov.atomXUL;
+            break;
+            
+        case "xml":
+            this.group = 3;
+            this.fileType = sov.atomXML;
+            break;
         }
     }
     
@@ -522,7 +545,7 @@ ScriptContainerRecord.prototype.__defineGetter__ ("sourceText", scr_gettext);
 function scr_gettext ()
 {
     if (!("_sourceText" in this))
-        this._sourceText = new SourceText (this);
+        this._sourceText = new SourceText (this, this.fileName);
     return this._sourceText;
 }
 
@@ -1439,9 +1462,13 @@ function pv_getcx(cx)
     if (rec instanceof BPRecord)
     {
         cx.breakpointRec = rec;
-        cx.fileName = rec.fileName;
+        cx.url = cx.fileName = rec.fileName;
         cx.lineNumber = rec.line;
         cx.breakpointIndex = rec.childIndex;
+    }
+    else if (rec instanceof WindowRecord || rec instanceof FileRecord)
+    {
+        cx.url = cx.fileName = rec.url;
     }
     
     var rangeCount = this.outliner.selection.getRangeCount();
@@ -1449,6 +1476,7 @@ function pv_getcx(cx)
     {
         cx.breakpointRecList = new Array();
         cx.breakpointIndexList = new Array();
+        cx.fileList = cx.urlList = new Array();
     }
     
     for (var range = 0; range < rangeCount; ++range)
@@ -1465,7 +1493,12 @@ function pv_getcx(cx)
             {
                 cx.breakpointRecList.push(rec);
                 cx.breakpointIndexList.push(rec.childIndex);
+                cx.fileList.push (rec.fileName);
             }
+            else if (rec instanceof WindowRecord || rec instanceof FileRecord)
+            {
+                cx.fileList.push (rec.url);
+            }    
         }
     }
 
@@ -1520,6 +1553,120 @@ function BLRecord (fileName, functionName, startLine, endLine)
     this.endLine = endLine;
     this.enabled = true;
 }
+
+console.windows = new TOLabelRecord ("project-col-0", MSG_WINDOW_REC,
+                                     ["project-col-1", "project-col-2", 
+                                      "project-col-3", "project-col-4"]);
+
+console.windows.locateChildByWindow =
+function win_find (win)
+{
+    for (var i = 0; i < this.childData.length; ++i)
+    {
+        var child = this.childData[i];
+        if (child.window == win)
+            return child;
+    }
+
+    return null;
+}
+
+function WindowRecord (win, baseURL)
+{
+    function none() { return ""; };
+    this.setColumnPropertyName ("project-col-0", "shortName");
+    this.setColumnPropertyName ("project-col-1", none);
+    this.setColumnPropertyName ("project-col-2", none);
+    this.setColumnPropertyName ("project-col-3", none);
+
+    this.window = win;
+    this.url = win.location.href;
+    if (this.url.search(/^\w+:/) == -1 && "url")
+    {
+        this.url = baseURL + url;
+        this.baseURL = baseURL;
+    }
+    else
+    {
+        this.baseURL = getPathFromURL(this.url);
+    }
+    
+    this.shortName = getFileFromPath (this.url);
+    
+    this.reserveChildren();
+    this.filesRecord = new FileContainerRecord();
+}
+
+WindowRecord.prototype = new TreeOViewRecord(projectShare);
+
+WindowRecord.prototype.onPreOpen =
+function wr_preopen()
+{   
+    this.childData = new Array();
+    console.projectView.freeze();
+
+    this.appendChild(this.filesRecord);    
+
+    var framesLength = this.window.frames.length;
+    for (var i = 0; i < framesLength; ++i)
+    {
+        this.appendChild(new WindowRecord(this.window.frames[i].window,
+                                          this.baseURL));
+    }
+
+    console.projectView.thaw();
+}
+    
+function FileContainerRecord ()
+{
+    function files() { return MSG_FILES_REC; }
+    function none() { return ""; }
+    this.setColumnPropertyName ("project-col-0", files);
+    this.setColumnPropertyName ("project-col-1", none);
+    this.setColumnPropertyName ("project-col-2", none);
+    this.setColumnPropertyName ("project-col-3", none);
+    this.reserveChildren();
+}
+
+FileContainerRecord.prototype = new TreeOViewRecord(projectShare);
+
+FileContainerRecord.prototype.onPreOpen =
+function fcr_preopen ()
+{
+    if (!this.parentRecord)
+        return;
+    
+    this.childData = new Array();
+    var doc = this.parentRecord.window.document;
+    var nodeList = doc.getElementsByTagName("script");
+    
+    console.projectView.freeze();
+    for (var i = 0; i < nodeList.length; ++i)
+    {
+        var url = nodeList.item(i).getAttribute("src");
+        if (url)
+        {
+            if (url.search(/^\w+:/) == -1)
+                url = getPathFromURL (this.parentRecord.url) + url;
+            this.appendChild(new FileRecord(url));
+        }
+    }
+    console.projectView.thaw();
+}
+
+function FileRecord (url)
+{
+    function none() { return ""; }
+    this.setColumnPropertyName ("project-col-0", "shortName");
+    this.setColumnPropertyName ("project-col-1", none);
+    this.setColumnPropertyName ("project-col-2", none);
+    this.setColumnPropertyName ("project-col-3", none);
+
+    this.url = url;
+    this.shortName = getFileFromPath(url);
+}
+
+FileRecord.prototype = new TreeOViewRecord(projectShare);
 
 console.breakpoints = new TOLabelRecord ("project-col-0", MSG_BREAK_REC,
                                          ["project-col-1", "project-col-2", 

@@ -44,11 +44,6 @@ const jsdIScript          = Components.interfaces.jsdIScript;
 const jsdIStackFrame      = Components.interfaces.jsdIStackFrame;
 const jsdIFilter          = Components.interfaces.jsdIFilter;
 
-const nsIXULWindow          = Components.interfaces.nsIXULWindow;
-const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
-const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
-const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
-
 const PCMAP_SOURCETEXT    = jsdIScript.PCMAP_SOURCETEXT;
 const PCMAP_PRETTYPRINT   = jsdIScript.PCMAP_PRETTYPRINT;
 
@@ -102,30 +97,16 @@ function vnk_exehook (frame, type, rv)
         var glob = cx.globalObject;
         if (glob)
         {
-            try
-            {
-                var val = glob.getWrappedValue();
-                var requestor = val.QueryInterface(nsIInterfaceRequestor);
-                var nav = requestor.getInterface(nsIWebNavigation);
-                var dsti = nav.QueryInterface(nsIDocShellTreeItem);
-                var owner = dsti.treeOwner;
-                requestor = owner.QueryInterface(nsIInterfaceRequestor);
-                targetWindow = requestor.getInterface(nsIXULWindow);
-                console.targetWindow = targetWindow;
+            console.targetWindow =
+                getXULWindowFromWindow(glob.getWrappedValue());
                 /*
                 targetWindow.enabled = false;
                 if (targetWindow.modalMien)
                 {
                     wasModal = true;
                     targetWindow.modalMien = false;
-                }
+                    }
                 */
-            }
-            catch (ex)
-            {
-                dd ("not a nsIXULWindow: " + formatException(ex));
-                /* ignore no-interface exception */
-            }
         }
     }
                   
@@ -853,16 +834,21 @@ function clearBreakpointByNumber (number)
 
     var fileName = bpr.fileName;
     var line = bpr.line;
-    var sourceRecord = console.scripts[fileName];
 
-    if (sourceRecord.sourceText.isLoaded &&
-        sourceRecord.sourceText.lines[line - 1])
+    var sourceText;
+    
+    if (fileName in console.scripts)
+        sourceText = console.scripts[fileName].sourceText;
+    else if (fileName in console.files)
+        sourceText = console.files[fileName];
+
+    if (sourceText && sourceText.isLoaded && sourceText.lines[line - 1])
     {
-        delete sourceRecord.sourceText.lines[line - 1].bpRecord;
+        delete sourceText.lines[line - 1].bpRecord;
         if (console.sourceView.childData.fileName == fileName)
             console.sourceView.outliner.invalidateRow (line - 1);
     }
-
+    
     console.breakpoints.removeChildAtIndex(number);
     return bpr;
 }
@@ -929,8 +915,19 @@ function setFutureBreakpoint (filePattern, line)
     
     bpr = new BPRecord (filePattern, line);
     
+    if (filePattern in console.files)
+    {
+        var sourceText = console.files[filePattern];
+        if (sourceText.isLoaded)
+        {
+            sourceText.lines[line - 1].bpRecord = bpr;
+            if (console.sourceView.childData.fileName == filePattern)
+                console.sourceView.outliner.invalidateRow (line - 1);
+        }
+    }
+    
     console.breakpoints.appendChild (bpr);
-    display (getMsg(MSN_FBP_CREATED, [filePattern, line]));
+    feedback (getMsg(MSN_FBP_CREATED, [filePattern, line]));
     
     return bpr;
 }
