@@ -22,7 +22,7 @@
 #include "MailNewsTypes.h"
 #include "nsString2.h"
 
-class nsMsgDatabase;
+class nsIMsgDatabase;
 class nsIMsgFolder;
 class nsMsgSearchAdapter;
 
@@ -255,15 +255,15 @@ public:
 	virtual ~nsMsgSearchTerm ();
 
 	void StripQuotedPrintable (unsigned char*);
-	int32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsMsgDatabase * db);
+	PRInt32 GetNextIMAPOfflineMsgLine (char * buf, int bufferSize, int msgOffset, nsIMessage * msg, nsIMsgDatabase * db);
 
 
-	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMsgFolder * msg, nsMsgDatabase * db);
-	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMsgFolder * msg, nsMsgDatabase *db,
+	nsresult MatchBody (nsMsgScopeTerm*, PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMessage * msg, nsIMsgDatabase * db);
+	nsresult MatchArbitraryHeader (nsMsgScopeTerm *,PRUint32 offset, PRUint32 length, PRInt16 csid, nsIMessage * msg, nsIMsgDatabase *db,
 											char * headers, /* NULL terminated header list for msgs being filtered. Ignored unless ForFilters */
 											PRUint32 headersSize, /* size of the NULL terminated list of headers */
 											PRBool ForFilters /* true if we are filtering */);
-	nsresult MatchString (const char *, PRInt16 csid, PRBool body = FALSE);
+	nsresult MatchString (nsString2 *, PRInt16 csid, PRBool body = FALSE);
 	nsresult MatchDate (time_t);
 	nsresult MatchStatus (PRUint32);
 	nsresult MatchPriority (nsMsgPriority);
@@ -306,6 +306,72 @@ typedef struct nsMsgSearchMenuItem
     char name[kMsgSearchMenuLength];
     PRBool isEnabled;
 } nsMsgSearchMenuItem;
+
+
+//---------------------------------------------------------------------------
+// MSG_BodyHandler: used to retrive lines from POP and IMAP offline messages.
+// This is a helper class used by MSG_SearchTerm::MatchBody
+//---------------------------------------------------------------------------
+class nsMsgBodyHandler
+{
+public:
+	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMessage * msg, nsIMsgDatabase * db);
+	
+	// we can also create a body handler when doing arbitrary header filtering...we need the list of headers and the header size as well
+	// if we are doing filtering...if ForFilters is false, headers and headersSize is ignored!!!
+	nsMsgBodyHandler (nsMsgScopeTerm *, PRUint32 offset, PRUint32 length, nsIMessage * msg, nsIMsgDatabase * db,
+					 char * headers /* NULL terminated list of headers */, PRUint32 headersSize, PRBool ForFilters);
+
+	virtual ~nsMsgBodyHandler();
+
+	// Returns nextline 
+	PRInt32 GetNextLine(char * buf, int bufSize);    // returns next message line in buf, up to bufSize bytes.
+
+	// Transformations
+	void SetStripHtml (PRBool strip) { m_stripHtml = strip; }
+	void SetStripHeaders (PRBool strip) { m_stripHeaders = strip; }
+
+protected:
+	void Initialize();  // common initialization code
+
+	// filter related methods. For filtering we always use the headers list instead of the database...
+	PRBool m_Filtering;
+	PRInt32 GetNextFilterLine(char * buf, int bufSize);
+	char * m_headers;  // pointer into the headers list in the original message hdr db...
+	PRUint32 m_headersSize;
+	PRUint32 m_headerBytesRead;
+
+	// local / POP related methods
+    void OpenLocalFolder();
+	PRInt32 GetNextLocalLine(char * buf, int bufSize);      // goes through the mail folder 
+
+	nsMsgScopeTerm *m_scope;
+
+	// local file state
+//	XP_File	*m_localFile;
+	// need a file stream here, I bet.
+	PRInt32 m_localFileOffset;       // current offset into the mail folder file
+	PRUint32 m_numLocalLines;
+
+	// Offline IMAP related methods & state
+	PRInt32 GetNextIMAPLine(char * buf, int bufSize);     // goes through the MessageDB 
+	nsIMessage * m_msgHdr;
+	nsIMsgDatabase * m_db;
+	PRInt32 m_IMAPMessageOffset;
+	PRBool m_OfflineIMAP;		 // TRUE if we are in Offline IMAP mode, FALSE otherwise
+
+	// News related methods & state
+	PRInt32 m_NewsArticleOffset;
+	PRInt32 GetNextNewsLine (nsIMsgDatabase * newsDB, char * buf, int bufSize);  // goes through the NewsDB
+
+	// Transformations
+	PRBool m_stripHeaders;		// TRUE if we're supposed to strip of message headers
+	PRBool m_stripHtml;		// TRUE if we're supposed to strip off HTML tags
+	PRBool m_passedHeaders;	// TRUE if we've already skipped over the headers
+	PRBool m_messageIsHtml;	// TRUE if the Content-type header claims text/html
+	PRInt32 ApplyTransformations (char *buf, PRInt32 length, PRBool &returnThisLine);
+	void StripHtml (char *buf);
+};
 
 
 

@@ -209,7 +209,6 @@ nsresult nsMsgFilter::SaveRule()
 {
 	nsresult err = NS_OK;
 	char			*relativePath = nsnull;
-	const char		*folderDirectory;
 	nsMsgFilterList	*filterList = GetFilterList();
 	nsString2	actionFilingStr(eOneByte);
 
@@ -244,7 +243,6 @@ nsresult nsMsgFilter::SaveRule()
 			searchIndex++)
 	{
 		nsString2	stream(eOneByte);
-		int16		length;
 
 		nsMsgSearchTerm * term = (nsMsgSearchTerm *) m_termList.ElementAt(searchIndex);
 		if (term == NULL)

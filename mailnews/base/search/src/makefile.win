@@ -30,12 +30,14 @@ CPPSRCS=    nsMsgFilterService.cpp\
 			nsMsgFilterList.cpp\
 			nsMsgFilter.cpp\
 			nsMsgSearchTerm.cpp\
+			nsMsgBodyHandler.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			.\$(OBJDIR)\nsMsgFilterList.obj\
 			.\$(OBJDIR)\nsMsgFilter.obj\
 			.\$(OBJDIR)\nsMsgSearchTerm.obj\
+			.\$(OBJDIR)\nsMsgBodyHandler.obj\
 			$(NULL)
 
 
