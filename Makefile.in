@@ -67,8 +67,8 @@ DIRS +=				\
   modules/plugin		\
   modules/libjar		\
   caps				\
-  htmlparser			\
   expat             \
+  htmlparser			\
   gfx				\
   dom				\
   view				\
