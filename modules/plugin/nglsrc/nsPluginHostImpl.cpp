@@ -3683,7 +3683,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCo
   rv = cookieService->GetCookieString(uriIn, cookieString);
   
   if (NS_FAILED(rv) || 
-      (((PRInt32) inOutCookieSize) < cookieString.Length())) {
+      (inOutCookieSize < cookieString.Length())) {
     return NS_ERROR_FAILURE;
   }
   bufPtr = cookieString.ToCString((char *) inOutCookieBuffer, 
