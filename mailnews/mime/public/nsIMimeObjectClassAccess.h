@@ -62,12 +62,12 @@ public:
 
   // The following group of calls expose the pointers for the object
   // system within libmime.
-  NS_IMETHOD    GetmimeInlineTextClass(MimeInlineTextClass **ptr);
-  NS_IMETHOD    GetmimeLeafClass(MimeLeafClass **ptr);
-  NS_IMETHOD    GetmimeObjectClass(MimeObjectClass **ptr);
-  NS_IMETHOD    GetmimeContainerClass(MimeContainerClass **ptr);
-  NS_IMETHOD    GetmimeMultipartClass(MimeMultipartClass **ptr);
-  NS_IMETHOD    GetmimeMultipartSignedClass(MimeMultipartSignedClass **ptr);
+  NS_IMETHOD    GetmimeInlineTextClass(MimeInlineTextClass **ptr) = 0;
+  NS_IMETHOD    GetmimeLeafClass(MimeLeafClass **ptr) = 0;
+  NS_IMETHOD    GetmimeObjectClass(MimeObjectClass **ptr) = 0;
+  NS_IMETHOD    GetmimeContainerClass(MimeContainerClass **ptr) = 0;
+  NS_IMETHOD    GetmimeMultipartClass(MimeMultipartClass **ptr) = 0;
+  NS_IMETHOD    GetmimeMultipartSignedClass(MimeMultipartSignedClass **ptr) = 0;
 }; 
 
 #endif /* nsIMimeObjectClassAccess_h_ */
