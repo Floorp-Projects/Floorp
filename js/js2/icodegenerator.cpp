@@ -174,7 +174,7 @@ ICodeModule *ICodeGenerator::complete(JSType *resultType)
                                             parameterList,
                                             mPermanentRegister.size(), 
                                             mInstructionMap, 
-                                            resultType);
+                                            resultType, mExceptionRegister.first);
     if (pLabels) {
         uint32 i;
         uint32 parameterInits = pLabels->size() - 1;        // there's an extra label at the end for the actual entryPoint
@@ -2423,11 +2423,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     // Bind the incoming exception ...
                     if (mExceptionRegister.first == NotABanana)
                         mExceptionRegister = allocateRegister(&Any_Type);
+                    allocateVariable(c->name, mExceptionRegister);
 
                     genStmt(c->stmt);
                     if (finallyLabel)
                         jsr(finallyLabel);
-                    throwStmt(mExceptionRegister);
                     c = c->next;
                 }
             }
@@ -2568,7 +2568,8 @@ void ICodeGenerator::readICode(const char *fileName)
                                                             theParameterList,       /* ParameterList *parameters */
                                                             icp.mMaxRegister, 
                                                             NULL,                   /* InstructionMap *instructionMap */
-                                                            resultType);
+                                                            resultType, 
+                                                            NotABanana);            /* exception register */
                         thisClass->defineMethod(methodName, new JSFunction(icm));
                     }
                 }
