@@ -42,7 +42,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/pref-publish.xul \
 	$(srcdir)/pref-select.html \
 	$(srcdir)/pref-smart_browsing.xul \
-	$(srcdir)/pref-smartupdate.html \
+	$(srcdir)/pref-smartupdate.xul \
 	$(srcdir)/PrefsWindow.html \
 	$(srcdir)/PrefsWindow.js \
 	$(srcdir)/PrefsWindow.xul \
