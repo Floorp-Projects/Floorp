@@ -55,7 +55,7 @@ interface nsIFontEnumerator : nsISupports
 
   /* 
    * update the global font list
-   * @param None
+   * return true if font list is changed
    */
-  void UpdateFontList();
+  boolean updateFontList();
 };

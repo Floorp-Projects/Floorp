@@ -4709,9 +4709,25 @@ nsFontEnumeratorWin::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsFontEnumeratorWin::UpdateFontList()
+NS_IMETHODIMP
+nsFontEnumeratorWin::UpdateFontList(PRBool *updateFontList)
 {
+  PRBool haveFontForLang = PR_FALSE;
+  int charSetCounter = 0;
+  PRUint16 maskBitBefore = 0;
+
+  // initialize updateFontList
+  *updateFontList = PR_FALSE;
+
+  // iterate langGoup; skip DEFAULT
+  for (charSetCounter = 1; charSetCounter < eCharSet_COUNT; charSetCounter++) {
+    HaveFontFor(gCharSetInfo[charSetCounter].mLangGroup, &haveFontForLang);
+    if (haveFontForLang)  {
+      maskBitBefore |= PR_BIT(charSetCounter);
+      haveFontForLang = PR_FALSE;
+    }
+  }
+  
   // delete gGlobalFont
   if (nsFontMetricsWin::gGlobalFonts) {
     for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
@@ -4732,5 +4748,17 @@ nsFontEnumeratorWin::UpdateFontList()
   }
   ::ReleaseDC(nsnull, dc);
   
+  PRUint16 maskBitAfter = 0;
+  // iterate langGoup again; skip DEFAULT
+  for (charSetCounter = 1; charSetCounter < eCharSet_COUNT; charSetCounter++) {
+    HaveFontFor(gCharSetInfo[charSetCounter].mLangGroup, &haveFontForLang);
+    if (haveFontForLang)  {
+      maskBitAfter |= PR_BIT(charSetCounter);
+      haveFontForLang = PR_FALSE;
+    }
+  }
+
+  // check for change
+  *updateFontList = (maskBitBefore != maskBitAfter);
   return NS_OK;
 }

@@ -2998,24 +2998,27 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_FONTCHANGE: 
           {
             nsresult rv;
+            PRBool didChange = PR_FALSE;
 
             // update the global font list
             nsCOMPtr<nsIFontEnumerator> fontEnum = do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
             if (NS_SUCCEEDED(rv)) {
-              fontEnum->UpdateFontList();
-            }
-
-            // update device context font cache
-            // Dirty but easiest way: 
-            // Changing nsIPref entry which triggers callbacks
-            // and flows into calling mDeviceContext->FlushFontCache()
-            // to update the font cache in all the instance of Browsers
-            nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
-            if (NS_SUCCEEDED(rv)) { 
-              PRBool fontInternalChange = PR_FALSE;  
-              pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
-              pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
-            }
+              fontEnum->UpdateFontList(&didChange);
+              //didChange is TRUE only if new font langGroup is added to the list.
+              if (didChange)  {
+                // update device context font cache
+                // Dirty but easiest way: 
+                // Changing nsIPref entry which triggers callbacks
+                // and flows into calling mDeviceContext->FlushFontCache()
+                // to update the font cache in all the instance of Browsers
+                nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
+                if (NS_SUCCEEDED(rv)) { 
+                  PRBool fontInternalChange = PR_FALSE;  
+                  pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
+                  pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
+                }
+              }
+            } //if (NS_SUCCEEDED(rv))
           }
           break;
 
