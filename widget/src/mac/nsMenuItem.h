@@ -48,6 +48,8 @@ public:
                     PRBool         aIsSeparator);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetLabel(nsString &aText);
+  NS_IMETHOD SetShortcutChar(const nsString &aText);
+  NS_IMETHOD GetShortcutChar(nsString &aText);
   NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
@@ -64,7 +66,9 @@ public:
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
-
+  NS_IMETHOD SetModifiers(PRUint8 aModifiers);
+  NS_IMETHOD GetModifiers(PRUint8 * aModifiers);
+    
   // nsIMenuListener interface
   nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
@@ -89,6 +93,7 @@ protected:
   //Widget GetNativeParent();
 
   nsString   mLabel;
+  nsString   mKeyEquivalent;
   PRUint32   mCommand;
 
   nsIMenu      * mMenuParent;
@@ -101,6 +106,8 @@ protected:
   
   nsIWebShell   *   mWebShell;
   nsIDOMElement *   mDOMElement;
+  
+   PRUint8           mModifiers;
 };
 
 #endif // nsMenuItem_h__

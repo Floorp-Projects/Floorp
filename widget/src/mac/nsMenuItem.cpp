@@ -81,6 +81,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mIsSeparator = PR_FALSE;
   mWebShell    = nsnull;
   mDOMElement  = nsnull;
+  mKeyEquivalent = " ";
 }
 
 //-------------------------------------------------------------------------
@@ -437,4 +438,36 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
     mWebShell = aWebShell;
 	return NS_OK;
 }
+   
+   //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetModifiers(PRUint8 * aModifiers) 
+{
+  nsresult res = NS_OK;
+  *aModifiers = mModifiers; 
+  return res; 
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetModifiers(PRUint8 aModifiers)
+{
+    nsresult res = NS_OK;
     
+    mModifiers = aModifiers;
+    return res;
+}
+ 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetShortcutChar(const nsString &aText)
+{
+    nsresult res = NS_OK;
+    mKeyEquivalent = aText;
+    return res;
+} 
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetShortcutChar(nsString &aText)
+{
+    nsresult res = NS_OK;
+    aText = mKeyEquivalent;
+    return res;
+} 
