@@ -482,7 +482,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         // object that is member of the current container element;
         // rather, it specifies a "simple" property of the container
         // element. Skip it.
-        if (!IsWidgetProperty(aElement, property))
+        if (!IsContainmentProperty(aElement, property))
             continue;
 
         // Create a second cursor that'll enumerate all of the values
@@ -503,7 +503,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 
             nsCOMPtr<nsIRDFResource> valueResource;
             if (NS_SUCCEEDED(value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)))
-                && IsWidgetProperty(aElement, property)) {
+                && IsContainmentProperty(aElement, property)) {
 			/* XXX hack: always append value resource 1st!
 			       due to sort callback implementation */
                 	tempArray->AppendElement(valueResource);
@@ -601,9 +601,9 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
         nsCOMPtr<nsIRDFResource> resource;
         if (NS_SUCCEEDED(aObject->QueryInterface(kIRDFResourceIID,
                                                  (void**) getter_AddRefs(resource)))
-            && IsWidgetProperty(element, aPredicate)) {
+            && IsContainmentProperty(element, aPredicate)) {
             // Okay, the object _is_ a resource, and the predicate is
-            // a widget property. So this'll be a new item in the widget
+            // a containment property. So this'll be a new item in the widget
             // control.
 
             // But if the contents of aElement _haven't_ yet been
@@ -648,9 +648,82 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
 
 NS_IMETHODIMP
 RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
-                               nsIRDFResource* aPredicate,
-                               nsIRDFNode* aObject)
+                                  nsIRDFResource* aPredicate,
+                                  nsIRDFNode* aObject)
 {
+    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+    if (! mDocument)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv;
+
+    nsCOMPtr<nsISupportsArray> elements;
+    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
+        NS_ERROR("unable to create new ISupportsArray");
+        return rv;
+    }
+
+    // Find all the elements in the content model that correspond to
+    // aSubject: for each, we'll try to build XUL children if
+    // appropriate.
+    if (NS_FAILED(rv = mDocument->GetElementsForResource(aSubject, elements))) {
+        NS_ERROR("unable to retrieve elements from resource");
+        return rv;
+    }
+
+    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
+        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
+        
+        // XXX somehow figure out if building XUL kids on this
+        // particular element makes any sense whatsoever.
+
+        // We'll start by making sure that the element at least has
+        // the same parent has the content model builder's root
+        if (!IsElementInWidget(element))
+            continue;
+        
+        nsCOMPtr<nsIRDFResource> resource;
+        if (NS_SUCCEEDED(aObject->QueryInterface(kIRDFResourceIID,
+                                                 (void**) getter_AddRefs(resource)))
+            && IsContainmentProperty(element, aPredicate)) {
+            // Okay, the object _is_ a resource, and the predicate is
+            // a containment property. So this'll be a new item in the widget
+            // control.
+
+            // But if the contents of aElement _haven't_ yet been
+            // generated, then just ignore the unassertion: nothing is
+            // in the content model to remove.
+            nsAutoString contentsGenerated;
+            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
+                                                     kItemContentsGeneratedAtom,
+                                                     contentsGenerated))) {
+                NS_ERROR("severe problem trying to get attribute");
+                return rv;
+            }
+
+            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
+                contentsGenerated.EqualsIgnoreCase("true")) {
+                // Okay, it's a "live" element, so go ahead and append the new
+                // child to this node.
+                if (NS_FAILED(rv = RemoveWidgetItem(element, aPredicate, resource))) {
+                    NS_ERROR("unable to create new widget item");
+                    return rv;
+                }
+            }
+        }
+        else {
+            // Either the object of the assertion is not a resource,
+            // or the object is a resource and the predicate is not a
+            // tree property. So this won't be a new row in the
+            // table. See if we can use it to set a cell value on the
+            // current element.
+            /* XXX: WHAT THE HECK IS THIS HERE FOR? - Dave
+            if (NS_FAILED(rv = SetCellValue(element, aPredicate, aObject))) {
+                NS_ERROR("unable to set cell value");
+                return rv;
+            }*/
+        }
+    }
     return NS_OK;
 }
 
@@ -1151,7 +1224,7 @@ RDFGenericBuilderImpl::IsWidgetInsertionRootElement(nsIContent* element)
 }
 
 PRBool
-RDFGenericBuilderImpl::IsWidgetProperty(nsIContent* aElement, nsIRDFResource* aProperty)
+RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty)
 {
     // XXX is this okay to _always_ treat ordinal properties as tree
     // properties? Probably not...
