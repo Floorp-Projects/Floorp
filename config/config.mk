@@ -538,7 +538,7 @@ DEFINES		+= -DUNIX_LDAP
 endif
 
 #
-# Platform dependent switching off of NSPR, JAVA and MOCHA
+# Platform dependent switching off of NSPR, JAVA
 #
 ifndef NO_NSPR
 DEFINES		+= -DNSPR
@@ -577,9 +577,7 @@ ifdef JAVA_OR_NSJVM	# XXX fix -- su can't depend on java
 MOZ_SMARTUPDATE	= 1
 endif
 
-ifndef NO_MOCHA
-DEFINES		+= -DMOCHA -DJS_THREADSAFE
-endif
+DEFINES		+= -DJS_THREADSAFE
 
 ifdef FORTEZZA
 DEFINES		+= -DFORTEZZA
