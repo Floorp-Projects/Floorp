@@ -158,7 +158,7 @@
     //   returned value:
     //      hide, disable, enable for .capture and .prefill
     function getStateFromFormsArray(content, threshhold) {
-      formsArray = content.document.forms;
+      var formsArray = content.document.forms;
       if (!formsArray) {
         return {capture: hide, prefill: hide};
       }
@@ -307,7 +307,6 @@
       }
 
       // process frames if any
-      var formsArray;
       var framesArray = content.frames;
       var rv;
       if (framesArray.length != 0) {
