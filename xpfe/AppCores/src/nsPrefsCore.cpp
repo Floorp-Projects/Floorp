@@ -73,6 +73,8 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
     static PRBool firstTime = PR_TRUE;
 #endif
 
+void DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow, nsCOMPtr<nsIWebShellWindow> *webWindow);
+
 //----------------------------------------------------------------------------------------
 nsPrefsCore::nsPrefsCore()
 //----------------------------------------------------------------------------------------
@@ -611,23 +613,24 @@ NS_IMETHODIMP nsPrefsCore::Init(const nsString& aId)
 } // nsPrefsCore::Init
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* /*aCurrentFrontWin*/)
+NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
 //----------------------------------------------------------------------------------------
 {
-    // Get app shell service.
+    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
+    nsresult           rv;
+    nsString           controllerCID;
     nsIAppShellService *appShell;
-    nsresult rv = nsServiceManager::GetService(
-                        kAppShellServiceCID,
-                        kIAppShellServiceIID,
-                        (nsISupports**)&appShell);
+    nsIWebShellWindow  *window;
 
+    window = nsnull;
+
+    nsCOMPtr<nsIURL> urlObj;
+    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/PrefsWindow.html");
     if (NS_FAILED(rv))
         return rv;
 
-    nsString controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
-    nsCOMPtr<nsIURL> url;
-    rv = NS_NewURL(getter_AddRefs(url), "resource:/res/samples/PrefsWindow.html");
+    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
+                                    (nsISupports**) &appShell);
     if (NS_FAILED(rv))
         return rv;
 
@@ -635,17 +638,29 @@ NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* /*aCurrentFrontWin*/)
     //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
     nsIXULWindowCallbacks *cb = nsnull;
 
-    nsIWebShellWindow* newWindow;
-    rv = appShell->CreateDialogWindow(
-                       nsnull,
-                       url,
-                       controllerCID,
-                       newWindow,
-                       nsnull,
-                       cb,
-                       504, 436 );
-    if (newWindow != nsnull)
-        newWindow->ShowModal();
+    // hardwired temporary hack.  See nsAppRunner.cpp at main()
+    controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+
+    nsCOMPtr<nsIWebShellWindow> parent;
+    DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
+    appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+                                 nsnull, cb, 504, 436);
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+
+    if (window != nsnull) {
+        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
+        nsresult gotParent;
+        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
+                             NS_ERROR_FAILURE;
+        // Windows OS is the only one that needs the parent disabled, or cares
+        // arguably this should be done by the new window, within ShowModal...
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_FALSE);
+        window->ShowModal();
+        if (NS_SUCCEEDED(gotParent))
+            parentWindowWidgetThing->Enable(PR_TRUE);
+    }
+
     return rv;
 } // nsPrefsCore::ShowWindow
 
@@ -698,25 +713,29 @@ NS_IMETHODIMP nsPrefsCore::PanelLoaded(nsIDOMWindow* aWin)
     return NS_OK;
 }
 
-//----------------------------------------------------------------------------------------
-static nsCOMPtr<nsIWebShellWindow>
-    DOMWindowToWebShellWindow(nsIDOMWindow *DOMWindow)
-// horribly complicated routine simply to convert from one to the other
+
+//----------------------------------------------------------------------------------------    
+static void DOMWindowToWebShellWindow(
+              nsIDOMWindow *DOMWindow,
+              nsCOMPtr<nsIWebShellWindow> *webWindow)
 //----------------------------------------------------------------------------------------    
 {
-    nsCOMPtr<nsIWebShellWindow> webWindow;
-    nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
-    nsCOMPtr<nsIWebShell> webshell;
-    if (globalScript)
-        globalScript->GetWebShell(getter_AddRefs(webshell));
-    if (webshell)
-    {
-        nsCOMPtr<nsIWebShellContainer> webshellContainer;
-        webshell->GetContainer(*getter_AddRefs(webshellContainer));
-        webWindow = do_QueryInterface(webshellContainer);
-    }
-    return webWindow;
+  if (!DOMWindow)
+    return; // with webWindow unchanged -- its constructor gives it a null ptr
+
+  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
+  nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+  if (globalScript)
+    globalScript->GetWebShell(getter_AddRefs(webshell));
+  if (webshell)
+    webshell->GetRootWebShellEvenIfChrome(*getter_AddRefs(rootWebshell));
+  if (rootWebshell) {
+    nsCOMPtr<nsIWebShellContainer> webshellContainer;
+    rootWebshell->GetContainer(*getter_AddRefs(webshellContainer));
+    *webWindow = do_QueryInterface(webshellContainer);
+  }
 }
+
 
 //----------------------------------------------------------------------------------------
 static nsresult Close(nsIDOMWindow*& dw)
@@ -728,7 +747,8 @@ static nsresult Close(nsIDOMWindow*& dw)
     dw->GetTop(&top);
     if (!top)
         return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(top);
+    nsCOMPtr<nsIWebShellWindow> parent;
+    DOMWindowToWebShellWindow(top, &parent);
     if (parent)
         parent->Close();
     NS_IF_RELEASE(dw);
