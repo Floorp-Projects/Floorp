@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  mozcomps \
 		  pref \
+		  necko \
 		  $(NULL)
 EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
