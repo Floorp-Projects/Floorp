@@ -106,6 +106,10 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
   if (m_preSearchKeys.GetSize())
   {
     // restore saved id array and flags array
+    // first, remove all the search hits
+    if (mOutliner)
+      mOutliner->RowCountChanged(0, m_keys.GetSize() * -1);
+
     m_keys.RemoveAll();
     m_flags.RemoveAll();
     m_levels.RemoveAll();
@@ -115,10 +119,14 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
     ClearPreSearchInfo();
     ClearPrevIdArray();  // previous cached info about non threaded display is not useful
     InitSort(m_sortType, m_sortOrder);
+
+    // now, account for adding all the pre search items back.
+    if (mOutliner)
+      mOutliner->RowCountChanged(0, m_keys.GetSize());
   }
   else
   {
-    rv=InitThreadedView(nsnull);
+    rv = InitThreadedView(nsnull);
   }
   return rv;
 }
@@ -796,11 +804,10 @@ nsMsgThreadedDBView::OnNewSearch()
   {
     SavePreSearchInfo();  //save the folder view to reload it later. 
   }
+  
   if (mOutliner)
-  {
-    PRInt32 viewSize = m_keys.GetSize();
-    mOutliner->RowCountChanged(0, -viewSize); // all rows gone.
-  }
+    mOutliner->RowCountChanged(0, m_keys.GetSize() * -1); // all rows gone.
+
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
