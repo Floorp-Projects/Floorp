@@ -437,3 +437,30 @@ NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::SetShortcutChar(const nsString &aText)
+{
+  mKeyEquivalent = aText;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::GetShortcutChar(nsString &aText)
+{
+  aText = mKeyEquivalent;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::SetModifiers(PRUint8 aModifiers)
+{
+  mModifiers = aModifiers;
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::GetModifiers(PRUint8 * aModifiers)
+{
+  *aModifiers = mModifiers; 
+  return NS_OK;
+}
