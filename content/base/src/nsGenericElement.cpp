@@ -349,6 +349,7 @@ nsCheapVoidArray::SwitchToVector()
 {
   void* child = GetSingleChild();
 
+  // XXX Probably should be nsAutoVoidArray to avoid extra alloc - check bloat!
   mChildren = (void*)new nsVoidArray();
   nsVoidArray* vector = GetChildVector();
   if (vector && child) {
@@ -1896,7 +1897,7 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 
   // lazy allocation of range list
   if (!mDOMSlots->mRangeList) {
-    mDOMSlots->mRangeList = new nsVoidArray();
+    mDOMSlots->mRangeList = new nsAutoVoidArray();
   }
   if (!mDOMSlots->mRangeList) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3006,7 +3007,7 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
 
   if (!mAttributes) {
-    mAttributes = new nsVoidArray();
+    mAttributes = new nsAutoVoidArray();
     NS_ENSURE_TRUE(mAttributes, NS_ERROR_OUT_OF_MEMORY);
   }
 

@@ -150,7 +150,7 @@ public:
 
   nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
 
-  nsVoidArray mElements;  // Holds WEAK references - bug 36639
+  nsAutoVoidArray mElements;  // Holds WEAK references - bug 36639
 
   // This hash holds on to all form controls that are not named form
   // control (see IsNamedFormControl()), this is needed to properly

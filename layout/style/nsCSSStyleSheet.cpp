@@ -675,7 +675,7 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
-  nsVoidArray           mSheets;
+  nsAutoVoidArray       mSheets;
 
   nsIURI*               mURL;
 
@@ -814,7 +814,7 @@ protected:
 
   CSSStyleSheetInner*   mInner;
 
-  nsVoidArray*          mRuleProcessors;
+  nsAutoVoidArray*      mRuleProcessors;
 
   friend class CSSRuleProcessor;
   friend class DOMMediaListImpl;
@@ -1778,7 +1778,7 @@ CSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
   if (NS_SUCCEEDED(result) && cssProcessor) {
     cssProcessor->AppendStyleSheet(this);
     if (! mRuleProcessors) {
-      mRuleProcessors = new nsVoidArray();
+      mRuleProcessors = new nsAutoVoidArray();
     }
     if (mRuleProcessors) {
       NS_ASSERTION(-1 == mRuleProcessors->IndexOf(cssProcessor), "processor already registered");

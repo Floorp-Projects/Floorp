@@ -222,7 +222,7 @@ private:
   nsXBLService* mXBLService; // [WEAK]
 
   nsCOMPtr<nsIStreamListener> mInner;
-  nsVoidArray mBindingRequests;
+  nsAutoVoidArray mBindingRequests;
   
   nsCOMPtr<nsIWeakReference> mDocument;
   nsCOMPtr<nsIDocument> mBindingDocument;

@@ -142,11 +142,11 @@ protected:
   PRInt32           mStartRootIndex;
   PRInt32           mEndRootIndex;
   PRBool            mHaltRangeHint;  
-  nsVoidArray       mCommonAncestors;
-  nsVoidArray       mStartNodes;
-  nsVoidArray       mStartOffsets;
-  nsVoidArray       mEndNodes;
-  nsVoidArray       mEndOffsets;
+  nsAutoVoidArray   mCommonAncestors;
+  nsAutoVoidArray   mStartNodes;
+  nsAutoVoidArray   mStartOffsets;
+  nsAutoVoidArray   mEndNodes;
+  nsAutoVoidArray   mEndOffsets;
 };
 
 #ifdef XP_MAC

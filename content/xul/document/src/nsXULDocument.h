@@ -523,7 +523,8 @@ protected:
     // NOTE, THIS IS STILL IN PROGRESS, TALK TO PINK OR SCC BEFORE CHANGING
 
     nsCOMPtr<nsIArena>         mArena;
-    nsVoidArray                mObservers;
+    // This always has at least one observer
+    nsAutoVoidArray            mObservers;
     nsString                   mDocumentTitle;
     nsCOMPtr<nsIURI>           mDocumentURL;        // [OWNER] ??? compare with loader
     nsCOMPtr<nsIURI>           mDocumentBaseURL;
@@ -535,11 +536,15 @@ protected:
     nsIScriptGlobalObject*     mScriptGlobalObject; // [WEAK]
     nsXULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
     nsString                   mCharSetID;
-    nsVoidArray                mCharSetObservers;
+    // This is set in nsPresContext::Init, which calls SetShell.
+    // Since I think this is almost always done, take the 32-byte hit for
+    // an nsAutoVoidArray instead of having it be a separate allocation.
+    nsAutoVoidArray            mCharSetObservers;
     nsVoidArray                mStyleSheets;
     nsCOMPtr<nsISelection>  mSelection;          // [OWNER]
     PRInt8                     mDisplaySelection;
-    nsVoidArray                mPresShells;
+    // if we're attached to a DocumentViewImpl, we have a presshell
+    nsAutoVoidArray            mPresShells;
     nsCOMPtr<nsIEventListenerManager> mListenerManager;   // [OWNER]
     nsCOMPtr<nsINameSpaceManager>     mNameSpaceManager;  // [OWNER]
     nsCOMPtr<nsIHTMLStyleSheet>       mAttrStyleSheet;    // [OWNER]

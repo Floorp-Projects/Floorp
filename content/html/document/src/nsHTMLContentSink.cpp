@@ -375,7 +375,7 @@ public:
   nsIDOMHTMLFormElement* mCurrentForm;
   nsIHTMLContent* mCurrentMap;
 
-  nsVoidArray mContextStack;
+  nsAutoVoidArray mContextStack;
   SinkContext* mCurrentContext;
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;

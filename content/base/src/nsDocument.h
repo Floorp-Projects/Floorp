@@ -546,8 +546,8 @@ protected:
   nsCOMPtr<nsISupportsArray> mChildren; // contains owning references
   nsIContent* mRootContent; // a weak reference to the only element in
                             // mChildren, or null if no such element exists.
-  nsVoidArray mStyleSheets;
-  nsVoidArray mObservers;
+  nsAutoVoidArray mStyleSheets;
+  nsAutoVoidArray mObservers; // basically always has at least 1 entry
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
   nsIEventListenerManager* mListenerManager;
   PRBool mInDestructor;

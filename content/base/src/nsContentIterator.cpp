@@ -786,10 +786,11 @@ protected:
   nsContentSubtreeIterator& operator=(const nsContentSubtreeIterator&);
 
   nsCOMPtr<nsIDOMRange> mRange;
-  nsVoidArray mStartNodes;
-  nsVoidArray mStartOffsets;
-  nsVoidArray mEndNodes;
-  nsVoidArray mEndOffsets;
+  // these arrays all typically are used and have elements
+  nsAutoVoidArray mStartNodes;
+  nsAutoVoidArray mStartOffsets;
+  nsAutoVoidArray mEndNodes;
+  nsAutoVoidArray mEndOffsets;
 };
 
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);

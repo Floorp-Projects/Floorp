@@ -54,7 +54,7 @@ public:
   NS_IMETHOD Reset();
 
 protected:
-  nsVoidArray mElements;
+  nsAutoVoidArray mElements;
 };
 
 
