@@ -514,7 +514,7 @@ nsOperaProfileMigrator::ParseColor(nsINIParser* aParser, char* aSectionName, cha
   nsresult rv;
   PRInt32 r, g, b;
 
-  rv |= GetInteger(aParser, aSectionName, "Red", &r);
+  rv = GetInteger(aParser, aSectionName, "Red", &r);
   rv |= GetInteger(aParser, aSectionName, "Green", &g);
   rv |= GetInteger(aParser, aSectionName, "Blue", &b);
   if (NS_FAILED(rv)) 
