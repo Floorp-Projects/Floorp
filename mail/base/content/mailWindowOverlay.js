@@ -2003,14 +2003,13 @@ function HandleJunkStatusChanged(folder)
   var loadedMessage = GetLoadedMessage();
   if (loadedMessage && (!(/type=x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
   {
-    var messageURI = GetLoadedMessage();
     // if multiple message are selected
     // and we change the junk status
     // we don't want to show the junk bar
     // (since the message pane is blank)
-    if (messageURI && (GetNumSelectedMessages() == 1))
+    if (GetNumSelectedMessages() == 1)
     {
-      var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
+      var msgHdr = messenger.messageServiceFromURI(loadedMessage).messageURIToMsgHdr(loadedMessage);
 
       if (msgHdr)
       {
@@ -2065,8 +2064,7 @@ function SetUpJunkBar(aMsgHdr)
  
   goUpdateCommand('button_junk');
 
-  // simulate XOR
-  return (isJunk && isAlreadyCollapsed) || (!isJunk && !junkBar);
+  return (isJunk && isAlreadyCollapsed) || (!isJunk && !isAlreadyCollapsed);
 }
 
 function MarkCurrentMessageAsRead()
