@@ -39,7 +39,7 @@
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_TRUE;
+static PRBool gsDebug = PR_FALSE;
 static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsTiming = PR_FALSE;
 static PRBool gsDebugMBP = PR_FALSE;

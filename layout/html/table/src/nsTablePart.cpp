@@ -1090,9 +1090,9 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
       aContext->GetData(kStyleSpacingSID);
     float p2t = aPresContext->GetPixelsToTwips();
     nscoord twips = aForCell
-      ? NS_TO_INT_ROUND(1 * p2t)
-      : NS_TO_INT_ROUND(value.GetIntValue() * p2t);
-    nscoord two = NS_TO_INT_ROUND(2 * p2t);
+      ? nscoord(NS_INT_PIXELS_TO_TWIPS(1, p2t))
+      : nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetIntValue(), p2t));
+    nscoord two = nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t));
 
 #if 0
     // XXX do I need to do this or can I assert that it's zero?
