@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 #include <Pt.h>
 
 #include "nsILookAndFeel.h"
@@ -89,12 +88,9 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
   {
     PtArg_t arg;
     
-    NS_ALLOC_STR_BUF(label, aText, aText.Length());
-
-    PtSetArg( &arg, Pt_ARG_TEXT_STRING, label, 0 );
+    PtSetArg( &arg, Pt_ARG_TEXT_STRING,
+              NS_LossyConvertUCS2toASCII(aText).get(), 0 );
     PtSetResources( mWidget, 1, &arg );
-
-    NS_FREE_STR_BUF(label);
   }
 
   return NS_OK;

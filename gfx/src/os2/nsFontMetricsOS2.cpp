@@ -640,39 +640,33 @@ nsFontMetricsOS2::FindGenericFont(HDC aPS, BOOL bBold, BOOL bItalic)
   if (mTriedAllGenerics) {
     return nsnull;
   }
-  nsAutoString prefix;
-  prefix.AssignWithConversion("font.name.");
-  prefix.Append(*mGeneric);
-  char name[128];
+  nsCAutoString prefix(NS_LITERAL_CSTRING("font.name.") +
+                       NS_LossyConvertUCS2toASCII(*mGeneric));
   if (mLangGroup) {
-    nsAutoString pref = prefix;
-    pref.AppendWithConversion('.');
+    nsCAutoString pref(prefix + NS_LITERAL_CSTRING("."));
     const PRUnichar* langGroup = nsnull;
     mLangGroup->GetUnicode(&langGroup);
-    pref.Append(langGroup);
-    pref.ToCString(name, sizeof(name));
+    pref.Append(NS_LossyConvertUCS2toASCII(langGroup));
     char* value = nsnull;
-    gPref->CopyCharPref(name, &value);
+    gPref->CopyCharPref(pref.get(), &value);
     FATTRS* font = LoadGenericFont(aPS, bBold, bItalic, &value);
     if (font) {
       return font;
     }
-    gPref->CopyDefaultCharPref(name, &value);
+    gPref->CopyDefaultCharPref(pref.get(), &value);
     font = LoadGenericFont(aPS, bBold, bItalic, &value);
     if (font) {
       return font;
     }
   }
-  prefix.ToCString(name, sizeof(name));
   PrefEnumInfo info = { nsnull, aPS, nsnull, this };
-  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
+  gPref->EnumerateChildren(prefix.get(), PrefEnumCallback, &info);
   if (info.mFont) {
     return info.mFont;
   }
 #if 0
-  prefix.ToCString(name, sizeof(name));
   PrefEnumInfo info = { aChar, aPS, nsnull, this };
-  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
+  gPref->EnumerateChildren(prefix.get(), PrefEnumCallback, &info);
   if (info.mFont) {
     return info.mFont;
   }
@@ -912,11 +906,9 @@ nsresult nsFontMetricsOS2::RealizeFont()
    // 6) Encoding
    // There doesn't seem to be any encoding stuff yet, so guess.
    // (XXX unicode hack; use same codepage as converter!)
-  char name[128];
   const PRUnichar* langGroup = nsnull;
   mLangGroup->GetUnicode(&langGroup);
-  nsAutoString langName(langGroup);
-  langName.ToCString(name, sizeof(name));
+  nsCAutoString name(NS_LossyConvertUCS2toASCII(langGroup).get());
   for (int j=0; j < eCharSet_COUNT; j++ )
   {
     if (name[0] == gCharSetInfo[j].mLangGroup[0])

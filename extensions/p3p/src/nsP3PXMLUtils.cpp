@@ -122,10 +122,8 @@ nsP3PXMLUtils::FindTag( nsStringArray  *aNameChoices,
 
       if (NS_SUCCEEDED( rv ) && sTagNameSpace.EqualsWithConversion( aNameSpace )) {
 #ifdef DEBUG_P3P
-        char  csBuffer[32];
-
-        sName.ToCString( csBuffer, 32 );
-        printf( "P3P:    Tag found: %s\n", csBuffer );
+        printf( "P3P:    Tag found: %s\n",
+                 NS_LossyConvertUCS2toASCII(sName).get() );
 #endif
 
         bFound = PR_TRUE;

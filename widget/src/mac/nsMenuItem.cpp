@@ -49,8 +49,6 @@
 #include "nsDynamicMDEF.h"
 #include "nsGUIEvent.h"
 
-#include "nsStringUtil.h"
-
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsINameSpaceManager.h"

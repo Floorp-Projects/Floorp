@@ -841,7 +841,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
   if (nsnull != mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
     fputs(" ", out);
   }
   

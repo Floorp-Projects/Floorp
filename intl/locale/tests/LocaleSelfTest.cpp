@@ -376,22 +376,23 @@ static void TestSortPrint1(nsString *string_array, int len)
 
 static void TestSortPrintToFile(nsString *string_array, int len)
 {
-  char cstr[512];
   for (int i = 0; i < len; i++) {
 #ifdef WIN32
-  int len = WideCharToMultiByte(GetACP(), 0,
-                                (LPCWSTR ) string_array[i].get(),  string_array[i].Length(),
-                                cstr, 512, NULL,  NULL);
-  cstr[len] = '\0';
-#else
-    string_array[i].ToCString(cstr, 512);
-#endif
+    char cstr[512];
+    int len = WideCharToMultiByte(GetACP(), 0,
+                                  (LPCWSTR ) string_array[i].get(),  string_array[i].Length(),
+                                  cstr, 512, NULL,  NULL);
+    cstr[len] = '\0';
     fprintf(g_outfp, "%s\n", cstr);
+#else
+    fprintf(g_outfp, "%s\n",
+            NS_LossyConvertUCS2ToASCII(string_array[i]).get());
+#endif
   }
   fprintf(g_outfp, "\n");
 }
 
-static void DebugPrintCompResult(nsString string1, nsString string2, int result)
+static void DebugPrintCompResult(const nsString& string1, const nsString& string2, int result)
 {
 #ifdef WIN32
   char s[512];
@@ -420,12 +421,8 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
   printf(" %s\n", s);
 #else
     // Warning: casting to char*
-    char *cstr = ToNewCString(string1);
-    
-    if (cstr) {
-      cout << cstr << ' ';
-      delete [] cstr;
-    }
+    cout << NS_LossyConvertUCS2toASCII(string1).get() << ' ';
+
     switch ((int)result) {
     case 0:
       cout << "==";
@@ -437,11 +434,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
       cout << '<';
       break;
     }
-    cstr = ToNewCString(string2);
-    if (cstr) {
-      cout << ' ' << cstr << '\n';
-      delete [] cstr;
-    }
+    cout << ' ' << NS_LossyConvertUCS2toASCII(string2).get() << '\n';
 #endif
 }
 
@@ -906,7 +899,6 @@ static void Test_nsLocale()
   nsString localeName;
   nsIWin32Locale* win32Locale;
   LCID lcid;
-  char cstr[32];
   nsresult res;
 
   if (NS_SUCCEEDED(res = nsComponentManager::CreateInstance(
@@ -915,27 +907,27 @@ static void Test_nsLocale()
     localeName.SetString("en-US");
     res = win32Locale->GetPlatformLocale(&localeName, &lcid);
     printf("LCID for en-US is 1033\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
     localeName.SetString("en-GB");
     res = win32Locale->GetPlatformLocale(&localeName, &lcid);
     printf("LCID for en-GB is 2057\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
     localeName.SetString("fr-FR");
     res = win32Locale->GetPlatformLocale(&localeName, &lcid);
     printf("LCID for fr-FR is 1036\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
     localeName.SetString("de-DE");
     res = win32Locale->GetPlatformLocale(&localeName, &lcid);
     printf("LCID for de-DE is 1031\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
     localeName.SetString("ja-JP");
     res = win32Locale->GetPlatformLocale(&localeName, &lcid);
     printf("LCID for ja-JP is 1041\n");
-    printf("result: locale = %s LCID = 0x%0.4x %d\n", localeName.ToCString(cstr, 32), lcid, lcid);
+    printf("result: locale = %s LCID = 0x%0.4x %d\n", NS_LossyConvertUCS2toASCII(localeName).get(), lcid, lcid);
 
     win32Locale->Release();
   }
@@ -944,30 +936,29 @@ static void Test_nsLocale()
   char locale[32];
   size_t length = 32;
   nsIPosixLocale* posixLocale;
-  char cstr[32];
   nsresult res;
 
   if (NS_SUCCEEDED(res = nsComponentManager::CreateInstance(
                          kPosixLocaleFactoryCID, NULL, kIPosixLocaleIID, (void**)&posixLocale))) {
     localeName.SetString("en-US");
     res = posixLocale->GetPlatformLocale(&localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
     localeName.SetString("en-GB");
     res = posixLocale->GetPlatformLocale(&localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
     localeName.SetString("fr-FR");
     res = posixLocale->GetPlatformLocale(&localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
     localeName.SetString("de-DE");
     res = posixLocale->GetPlatformLocale(&localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
     localeName.SetString("ja-JP");
     res = posixLocale->GetPlatformLocale(&localeName, locale, length);
-    printf("result: locale = %s POSIX = %s\n", localeName.ToCString(cstr, 32), locale);
+    printf("result: locale = %s POSIX = %s\n", NS_LossyConvertUCS2toASCII(localeName).get(), locale);
 
     posixLocale->Release();
   }

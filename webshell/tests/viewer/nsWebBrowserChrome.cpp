@@ -602,7 +602,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIRequest* aRequest,
   if(mBrowserWindow->mShowLoadTimes)
      {
      printf("Loading ");
-     fputs(msg, stdout);
+     fputs(NS_LossyConvertUCS2toASCII(msg).get(), stdout);
      PRTime delta;
      LL_SUB(delta, endLoadTime, mBrowserWindow->mLoadStartTime);
      double usecs;

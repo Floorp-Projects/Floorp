@@ -1554,7 +1554,7 @@ static void DumpFrames(FILE*                 out,
     if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
       frameDebug->GetFrameName(tmp);
     }
-    fputs(tmp, out);
+    fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
     nsFrameState state;
     child->GetFrameState(&state);
     PRBool isSelected;

@@ -146,7 +146,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 
         if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
           frameDebug->GetFrameName(frameName);
-          fputs(frameName, out);
+          fputs(NS_LossyConvertUCS2toASCII(frameName).get(), out);
         }
       }
       fprintf(out, " %s region={%d,%d,%d,%d} combinedArea={%d,%d,%d,%d}",

@@ -5325,9 +5325,8 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
   nsAutoString TagName;
   aElement->GetTagName(TagName);
   TagName.ToLowerCase();
-  char szTagName[64];
-  TagName.ToCString(szTagName, 64);
-  printf("***** Element clicked on: %s, x=%d, y=%d\n", szTagName, x, y);
+  printf("***** Element clicked on: %s, x=%d, y=%d\n",
+         NS_LossyConvertUCS2toASCII(TagName).get(), x, y);
 #endif
 */
   if (mDisplayMode == eDisplayModeAllTags) 

@@ -2226,7 +2226,7 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
     buffer.Append(value);
 
     fputs(" ", out);
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
     NS_RELEASE(attr);
   }
 }
@@ -2244,7 +2244,7 @@ nsGenericHTMLElement::List(FILE* out, PRInt32 aIndent) const
   if (tag != nsnull) {
     nsAutoString buf;
     tag->ToString(buf);
-    fputs(buf, out);
+    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
     NS_RELEASE(tag);
   }
   fprintf(out, "@%p", this);
@@ -2285,7 +2285,7 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
   if (tag != nsnull) {
     tag->ToString(buf);
     fputs("<",out);
-    fputs(buf, out);
+    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
 
     if(aDumpAll) ListAttributes(out);
 
@@ -2308,7 +2308,7 @@ nsGenericHTMLElement::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) co
     }
     for (index = aIndent; --index >= 0; ) fputs("  ", out);
     fputs("</",out);
-    fputs(buf, out);
+    fputs(NS_LossyConvertUCS2toASCII(buf).get(), out);
     fputs(">",out);
 
     if(aIndent) fputs("\n", out);

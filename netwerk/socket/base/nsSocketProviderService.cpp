@@ -89,25 +89,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketProviderService, nsISocketProviderService)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_TYPE_LENGTH 128
-
-#define MAX_SOCKET_TYPE_CONTRACTID_LENGTH   (MAX_TYPE_LENGTH + NS_NETWORK_SOCKET_CONTRACTID_PREFIX_LENGTH + 1)
-
 NS_IMETHODIMP
 nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketProvider **_result)
 {
   nsresult rv;
 
-  char buf[MAX_SOCKET_TYPE_CONTRACTID_LENGTH];
+  nsCAutoString contractID(
+          nsDependentCString(NS_NETWORK_SOCKET_CONTRACTID_PREFIX) +
+          nsDependentCString(aSocketType));
 
-    // STRING USE WARNING: perhaps |contractID| should be an |nsCAutoString| -- scc
-  nsAutoString contractID;
-  contractID.AssignWithConversion(NS_NETWORK_SOCKET_CONTRACTID_PREFIX);
-
-  contractID.AppendWithConversion(aSocketType);
-  contractID.ToCString(buf, MAX_SOCKET_TYPE_CONTRACTID_LENGTH);
-
-  rv = nsServiceManager::GetService(buf, NS_GET_IID(nsISocketProvider), (nsISupports **)_result);
+  rv = CallGetService(contractID.get(), _result);
   if (NS_FAILED(rv)) 
       return NS_ERROR_UNKNOWN_SOCKET_TYPE;
 

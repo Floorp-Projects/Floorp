@@ -3505,8 +3505,6 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   nsIPluginInstance* instance = NULL;
   nsCOMPtr<nsIPlugin> plugin;
   const char* mimetype;
-  nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
-  char buf[255];  // todo: need to use a const
 
   if(!aURL)
     return NS_ERROR_FAILURE;
@@ -3534,15 +3532,13 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   else
     mimetype = aMimeType;
 
-    strContractID.AppendWithConversion(mimetype);
-    strContractID.ToCString(buf, 255);     // todo: need to use a const
+  nsCAutoString contractID(
+          NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
+          nsDependentCString(mimetype));
 
-    GetPluginFactory(mimetype, getter_AddRefs(plugin));
+  GetPluginFactory(mimetype, getter_AddRefs(plugin));
 
-    result = nsComponentManager::CreateInstance(buf,
-                                                nsnull,
-                                                nsIPluginInstance::GetIID(),
-                                                (void**)&instance);
+  result = CallCreateInstance(contractID.get(), &instance);
 
 #ifdef XP_WIN
     PRBool isJavaPlugin = PR_FALSE;
@@ -3662,20 +3658,18 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   nsIPluginInstance* instance = NULL;
   nsCOMPtr<nsIPlugin> plugin = NULL;
   const char* mimetype;
-  nsString strContractID; strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
-  char buf[255];  // todo: need to use a const
 
   if(!aURL)
     return NS_ERROR_FAILURE;
 
   mimetype = aMimeType;
 
-  strContractID.AppendWithConversion("*");
-  strContractID.ToCString(buf, 255);     // todo: need to use a const
+  nsCAutoString contractID(
+          NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*"));
   
   GetPluginFactory("*", getter_AddRefs(plugin));
 
-  result = nsComponentManager::CreateInstance(buf, nsnull, nsIPluginInstance::GetIID(), (void**)&instance);
+  result = CallCreateInstance(contractID, &instance);
 
   // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
   if (NS_FAILED(result)) 
@@ -4184,12 +4178,11 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       // nsIPlugin* of xpcom plugins can be found thru a call to
       //  nsComponentManager::GetClassObject()
       nsCID clsid;
-      char buf[255];
-      nsString strContractID; 
-      strContractID.AssignWithConversion (NS_INLINE_PLUGIN_CONTRACTID_PREFIX);
-      strContractID.AppendWithConversion(aMimeType);
-      strContractID.ToCString(buf, 255);
-      nsresult rv = nsComponentManager::ContractIDToClassID(buf, &clsid);
+      nsCAutoString contractID(
+              NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
+              nsDependentCString(aMimeType));
+      nsresult rv =
+          nsComponentManager::ContractIDToClassID(contractID.get(), &clsid);
       if (NS_SUCCEEDED(rv))
       {
         rv = nsComponentManager::GetClassObject(clsid, nsIPlugin::GetIID(), (void**)&plugin);

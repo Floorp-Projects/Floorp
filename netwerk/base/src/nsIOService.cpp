@@ -292,10 +292,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsIOService,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_SCHEME_LENGTH       64      // XXX big enough?
-
-#define MAX_NET_CONTRACTID_LENGTH   (MAX_SCHEME_LENGTH + NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH + 1)
-
 NS_IMETHODIMP
 nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handler)
 {
@@ -408,20 +404,19 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     rv = GetCachedProtocolHandler(scheme, result);
     if (NS_SUCCEEDED(rv)) return NS_OK;
 
-    char buf[MAX_NET_CONTRACTID_LENGTH];
     nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
     contractID += scheme;
     contractID.ToLowerCase();
-    contractID.ToCString(buf, MAX_NET_CONTRACTID_LENGTH);
 
-    rv = nsServiceManager::GetService(buf, NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
+    rv = CallGetService(contractID.get(), result);
     if (NS_FAILED(rv)) 
     {
       // okay we don't have a protocol handler to handle this url type, so use the default protocol handler.
       // this will cause urls to get dispatched out to the OS ('cause we can't do anything with them) when 
       // we try to read from a channel created by the default protocol handler.
 
-      rv = nsServiceManager::GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default", NS_GET_IID(nsIProtocolHandler), (nsISupports **)result);
+      rv = CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX"default",
+                          result);
       if (NS_FAILED(rv)) return NS_ERROR_UNKNOWN_PROTOCOL;
     }
 

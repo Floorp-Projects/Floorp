@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 //=============================================================================
 //
@@ -99,13 +98,11 @@ void nsButton::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 NS_METHOD nsButton::SetLabel(const nsString& aText)
 {
-    NS_ALLOC_STR_BUF(label, aText, 256);
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG,
+           ("nsButton::SetLabel to %s()\n",
+            NS_LossyConvertUCS2toASCII(aText).get()));
 
-    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsButton::SetLabel to %s()\n", label));
-
-    ((QPushButton *)mWidget)->setText(label);
-
-    NS_FREE_STR_BUF(label);
+    ((QPushButton *)mWidget)->setText(NS_LossyConvertUCS2toASCII(aText).get());
 
     return (NS_OK);
 }

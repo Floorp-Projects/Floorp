@@ -66,10 +66,11 @@ static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
 
 extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
-  char  buffer[10];
-  aColorSpec.ToCString(buffer, sizeof(buffer));
+  // XXXldb nsStackString<10>
+  NS_LossyConvertUCS2toASCII bufferStr(aColorSpec);
+  const char* buffer = bufferStr.get();
 
-  int nameLen = PL_strlen(buffer);
+  int nameLen = bufferStr.Length();
   if ((nameLen == 3) || (nameLen == 6)) {
     // Make sure the digits are legal
     for (int i = 0; i < nameLen; i++) {
@@ -113,15 +114,16 @@ extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec, nscolor* aRes
 // compatible with legacy Nav behavior
 extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
-  char  buffer[30];
-  char* colorSpec = &(buffer[0]);
-  aColorSpec.ToCString(buffer, sizeof(buffer));
+  // XXXldb nsStackString<30>
+  NS_LossyConvertUCS2toASCII buffer(aColorSpec);
 
-  if ('#' == buffer[0]) {
-    colorSpec++;
+  int nameLen = buffer.Length();
+  const char* colorSpec = buffer.get();
+  if ('#' == colorSpec[0]) {
+    ++colorSpec;
+    --nameLen;
   }
 
-  int nameLen = PL_strlen(colorSpec);
   if (3 < nameLen) {
     // Convert the ascii to binary
     int dpc = (nameLen / 3) + (((nameLen % 3) != 0) ? 1 : 0);

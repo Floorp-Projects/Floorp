@@ -42,7 +42,6 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
 #include "nsIMenuListener.h"
 #include "nsQEventHandler.h"
 

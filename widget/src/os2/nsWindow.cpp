@@ -50,7 +50,6 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
-#include "nsStringUtil.h"
 #include "nsGfxCIID.h"
 #include "prtime.h"
 // #include "nsTooltipManager.h"

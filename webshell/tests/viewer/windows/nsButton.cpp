@@ -131,9 +131,7 @@ NS_METHOD nsButton::SetLabel(const nsString& aText)
   if (NULL == mWnd) {
     return NS_ERROR_FAILURE;
   }
-  NS_ALLOC_STR_BUF(label, aText, 256);
-  VERIFY(::SetWindowText(mWnd, label));
-  NS_FREE_STR_BUF(label);
+  VERIFY(::SetWindowText(mWnd, NS_LossyConvertUCS2toASCII(aText).get()));
   return NS_OK;
 }
 

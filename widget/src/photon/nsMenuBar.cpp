@@ -44,7 +44,6 @@
 #include "nsIWidget.h"
 
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"

@@ -221,7 +221,7 @@ nsXMLCDATASection::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-  fputs(tmp, out);
+  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
 
   fputs(">\n", out);
   return NS_OK;

@@ -55,7 +55,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
+#include "plstr.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"

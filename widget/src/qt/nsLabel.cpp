@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 
 //=============================================================================
@@ -162,12 +161,7 @@ NS_METHOD nsLabel::SetLabel(const nsString& aText)
     PR_LOG(QtWidgetsLM, 
            PR_LOG_DEBUG, 
            ("nsLabel::SetLabel()\n"));
-    NS_ALLOC_STR_BUF(label, aText, 256);
-
-    ((QLabel *)mWidget)->setText(label);
-
-    NS_FREE_STR_BUF(label);
-
+    ((QLabel *)mWidget)->setText(NS_LossyConvertUCS2toASCII(aText).get());
     return NS_OK;
 }
 

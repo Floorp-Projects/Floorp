@@ -2520,7 +2520,7 @@ static void DumpAWebShell(nsIDocShellTreeItem* aShellItem, FILE* out, PRInt32 aI
   aShellItem->GetName(getter_Copies(name));
   aShellItem->GetSameTypeParent(getter_AddRefs(parent));
   str.Assign(name);
-  fputs(str, out);
+  fputs(NS_LossyConvertUCS2toASCII(str).get(), out);
   fprintf(out, "' parent=%p <\n", parent.get());
 
   aIndent++;
@@ -2745,11 +2745,10 @@ static void ShowReport(FILE* out, nsISizeOfHandler* aHandler)
     for (; entry < end; entry++) {
       nsAutoString type;
       entry->mKey->ToString(type);
-      char cbuf[20];
-      type.ToCString(cbuf, sizeof(cbuf));
 
       fprintf(out, "%-20s %5d %9d %7d %7d %7d\n",
-              cbuf, entry->mCount, entry->mTotalSize,
+              NS_LossyConvertUCS2toASCII(type).get(),
+              entry->mCount, entry->mTotalSize,
               entry->mMinSize, entry->mMaxSize,
               entry->mCount ? entry->mTotalSize / entry->mCount : 0);
     }
@@ -3430,7 +3429,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
           fprintf(stdout, "%d: \"", index + 1);
           nsAutoString title;
           titles.StringAt(index, title);
-          fputs(title, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(title).get(), stdout);
           fprintf(stdout, "\" %s%s\n", 
                   ((title.EqualsIgnoreCase(current)) ? "<< current " : ""), 
                   ((title.EqualsIgnoreCase(defaultStyle)) ? "** default" : ""));
@@ -3453,7 +3452,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
           fputs("Selecting default style sheet \"", stdout);
-          fputs(defaultStyle, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(defaultStyle).get(), stdout);
           fputs("\"\n", stdout);
           shell->SelectAlternateStyleSheet(defaultStyle);
         }
@@ -3475,7 +3474,7 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
         nsAutoString  title;
         titles.StringAt(aID - VIEWER_SELECT_STYLE_ONE, title);
         fputs("Selecting alternate style sheet \"", stdout);
-        fputs(title, stdout);
+        fputs(NS_LossyConvertUCS2toASCII(title).get(), stdout);
         fputs("\"\n", stdout);
         shell->SelectAlternateStyleSheet(title);
         NS_RELEASE(shell);

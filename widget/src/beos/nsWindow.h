@@ -49,7 +49,6 @@
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
-#include "nsStringUtil.h"
 #include "nsString.h"
 
 #include "nsVoidArray.h"

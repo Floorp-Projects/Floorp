@@ -42,8 +42,6 @@
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 
-#include "nsStringUtil.h"
-
 #include "nsIPopUpMenu.h"
 
 #include "nsCOMPtr.h"

@@ -46,7 +46,6 @@
 #include "nsRect.h"
 #include "nsIRegion.h"
 #include "nsTransform2D.h"
-#include "nsStringUtil.h"
 //#include "sysmets.h"
 #include "nsGfxCIID.h"
 #include "resource.h"

@@ -1424,7 +1424,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s forwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(uc2, stdout);
+        fputs(NS_LossyConvertUCS2toASCII(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, 0, preModeValue[preMode], NS_STYLE_TEXT_TRANSFORM_NONE);
@@ -1436,7 +1436,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(tmp, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d (%d) contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, *expectedResults, contentLen, tx.mOffset);
@@ -1457,7 +1457,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
       if (gNoisy) {
         nsAutoString uc2(st->text);
         printf("%s backwards test: '", isAsciiTest ? "ascii" : "unicode");
-        fputs(uc2, stdout);
+        fputs(NS_LossyConvertUCS2toASCII(uc2).get(), stdout);
         printf("'\n");
       }
       tx.Init2(&frag, frag.GetLength(), NS_STYLE_WHITESPACE_NORMAL,
@@ -1468,7 +1468,7 @@ nsTextTransformer::SelfTest(nsILineBreaker* aLineBreaker,
         if (gNoisy) {
           nsAutoString tmp(bp, wordLen);
           printf("  '");
-          fputs(tmp, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(tmp).get(), stdout);
           printf("': ws=%s wordLen=%d contentLen=%d (offset=%d)\n",
                  ws ? "yes" : "no",
                  wordLen, contentLen, tx.mOffset);

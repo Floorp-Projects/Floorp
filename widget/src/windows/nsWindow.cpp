@@ -59,7 +59,6 @@
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
-#include "nsStringUtil.h"
 #include <windows.h>
 
 //#include <winuser.h>

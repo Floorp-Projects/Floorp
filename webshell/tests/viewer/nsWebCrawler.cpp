@@ -282,7 +282,8 @@ nsWebCrawler::DumpRegressionData()
               PerformRegressionTest(regressionFileName);
             }
             else {
-              fputs(regressionFileName, stdout);
+              fputs(NS_LossyConvertUCS2toASCII(regressionFileName).get(),
+                    stdout);
               printf(" - being written\n");
             }
           }
@@ -561,7 +562,7 @@ nsWebCrawler::AddURL(const nsString& aURL)
   mPendingURLs.AppendElement(url);
   if (mVerbose) {
     printf("WebCrawler: adding '");
-    fputs(aURL, stdout);
+    fputs(NS_LossyConvertUCS2toASCII(aURL).get(), stdout);
     printf("'\n");
   }
 }
@@ -702,7 +703,7 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
         nsString* s = (nsString*) mAvoidDomains.ElementAt(i);
         if (s && EndsWith(*s, host, hostlen)) {
           printf("Avoiding '");
-          fputs(aURLSpec, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(aURLSpec).get(), stdout);
           printf("'\n");
           return PR_FALSE;
         }
@@ -732,7 +733,7 @@ void
 nsWebCrawler::RecordLoadedURL(const nsString& aURL)
 {
   if (nsnull != mRecord) {
-    fputs(aURL, mRecord);
+    fputs(NS_LossyConvertUCS2toASCII(aURL).get(), mRecord);
     fputs("\n", mRecord);
     fflush(mRecord);
   }
@@ -765,14 +766,14 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
           mPendingURLs.AppendElement(new nsString(absURLSpec));
           if (mVerbose) {
             printf("Adding '");
-            fputs(absURLSpec, stdout);
+            fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
             printf("'\n");
           }
         }
         else {
           if (mVerbose) {
             printf("Skipping '");
-            fputs(absURLSpec, stdout);
+            fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
             printf("'\n");
           }
         }
@@ -780,7 +781,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
       else {
         if (mVerbose) {
           printf("Already visited '");
-          fputs(absURLSpec, stdout);
+          fputs(NS_LossyConvertUCS2toASCII(absURLSpec).get(), stdout);
           printf("'\n");
         }
       }

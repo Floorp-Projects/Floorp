@@ -87,10 +87,10 @@ public:
 private:
 
   /* nsEditorTxnLog private methods. */
-  const char *GetString(nsITransaction *aTransaction, char *aBuffer, PRInt32 aBufLength);
   nsresult PrintIndent(PRInt32 aIndentLevel);
   nsresult Write(const char *aBuffer);
   nsresult WriteInt(const char *aFormat, PRInt32 aInt);
+  nsresult WriteTransaction(nsITransaction *aTransaction);
   nsresult Flush();
 };
 

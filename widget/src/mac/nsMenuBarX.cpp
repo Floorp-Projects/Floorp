@@ -50,7 +50,6 @@
 #include "nsISupports.h"
 #include "nsIWidget.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"

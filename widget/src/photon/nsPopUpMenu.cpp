@@ -41,7 +41,6 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
 #include "nsPhWidgetLog.h"
 
 NS_IMPL_ISUPPORTS1(nsPopUpMenu, nsIPopUpMenu)

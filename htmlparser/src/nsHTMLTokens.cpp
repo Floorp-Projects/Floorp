@@ -256,9 +256,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
  *  @return  
  */
 void CStartToken::DebugDumpSource(nsOutputStream& out) {
-  char buffer[1000];
-  mTextValue.ToCString(buffer,sizeof(buffer));
-  out << "<" << buffer;
+  out << "<" << NS_LossyConvertUCS2toASCII(mTextValue).get();
   if(!mAttributed)
     out << ">";
 }
@@ -445,9 +443,7 @@ PRInt32 CEndToken::GetTokenType(void) {
  *  @return  
  */
 void CEndToken::DebugDumpSource(nsOutputStream& out) {
-  char buffer[1000];
-  mTextValue.ToCString(buffer,sizeof(buffer));
-  out << "</" << buffer << ">";
+  out << "</" << NS_LossyConvertUCS2toASCII(mTextValue).get() << ">";
 }
 
 const nsAReadableString& CEndToken::GetStringValue()
@@ -1444,12 +1440,10 @@ void CAttributeToken::SanitizeKey() {
  *  @return  
  */
 void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
-  char buffer[200];
-  nsCAutoString str;
-  CopyUCS2toASCII(mTextKey, str);
-  out << "[" << GetClassName() << "] " << str.get() << "=";
-  mTextValue.ToCString(buffer,sizeof(buffer));
-  out << buffer << ": " << mTypeID << nsEndl;
+  out << "[" << GetClassName() << "] "
+      << NS_LossyConvertUCS2toASCII(mTextKey).get() << "="
+      << NS_LossyConvertUCS2toASCII(mTextValue).get() << ": " << mTypeID
+      << nsEndl;
 }
 
 const nsAReadableString& CAttributeToken::GetStringValue(void)
@@ -1782,16 +1776,12 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
  *  @return  
  */
 void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
-  static char buffer[1000];
-  nsCAutoString str;
-  CopyUCS2toASCII(mTextKey, str);
-  out << " " << str.get();
-  if(mTextValue.Length()){
-    mTextValue.ToCString(buffer,sizeof(buffer));
-    out << "=" << buffer;
+  out << " " << NS_LossyConvertUCS2toASCII(mTextKey).get();
+  if (!mTextValue.IsEmpty()) {
+    out << "=" << NS_LossyConvertUCS2toASCII(mTextValue).get();
   }
   if(mLastAttribute)
-    out<<">";
+    out << ">";
 }
 
 void CAttributeToken::SetKey(const nsAReadableString& aKey)

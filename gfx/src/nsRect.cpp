@@ -220,6 +220,6 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   tmp.AppendWithConversion(", ");
   tmp.AppendFloat(NSTwipsToFloatPoints(rect.height));
   tmp.AppendWithConversion("}");
-  fputs(tmp, out);
+  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
   return out;
 }

@@ -45,7 +45,6 @@
 #include "nsIMenuListener.h"
 #include "nsIToolkit.h"
 #include "nsIAppShell.h"
-#include "nsStringUtil.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"

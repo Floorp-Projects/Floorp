@@ -40,7 +40,6 @@
 #include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include <Pt.h>
 #include "nsPhWidgetLog.h"
@@ -98,12 +97,9 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
 
   if (mWidget)
   {
-    NS_ALLOC_STR_BUF(buf, aText, aText.Length());
-
-    PtSetArg(&arg[0], Pt_ARG_TEXT_STRING, buf, 0);
+    PtSetArg(&arg[0], Pt_ARG_TEXT_STRING,
+             NS_LossyConvertUCS2toASCII(aText).get(), 0);
     PtSetResources(mWidget, 1, arg);
-
-    NS_FREE_STR_BUF(buf);
   }
 
   aActualSize = aText.Length();
@@ -117,9 +113,9 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
  PRUint32  currentTextLength;
   if (mWidget)
   {
-    NS_ALLOC_STR_BUF(buf, aText, aText.Length());
-		PtTextModifyText(mWidget,0,0,aStartPos,buf,aText.Length());
-    NS_FREE_STR_BUF(buf);
+    PtTextModifyText(mWidget, 0, 0, aStartPos,
+                     NS_LossyConvertUCS2toASCII(aText).get(),
+                     aText.Length());
   }
   aActualSize = aText.Length();
 

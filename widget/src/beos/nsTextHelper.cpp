@@ -41,7 +41,6 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
 #include <TextView.h>
 
 NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)

@@ -241,8 +241,7 @@ SetOperator(OperatorData*   aOperatorData,
   gOperatorTable->Put(&key, aOperatorData);
 
 #ifdef NS_DEBUG
-  char str[200];
-  aAttributes.ToCString(str, sizeof(str));
+  NS_LossyConvertUCS2toASCII str(aAttributes);
 #endif
   // Loop over the space-delimited list of attributes to get the name:value pairs
   aAttributes.Append(kNullCh);  // put an extra null at the end
@@ -262,7 +261,7 @@ SetOperator(OperatorData*   aOperatorData,
     }
     if ((kColonCh!=*end) && (kEqualCh!=*end)) {
 #ifdef NS_DEBUG
-      printf("Bad MathML operator: %s\n", str);
+      printf("Bad MathML operator: %s\n", str.get());
 #endif
       return PR_TRUE;
     }

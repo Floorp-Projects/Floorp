@@ -44,7 +44,6 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsStringUtil.h"
 
 #define DBG 0
 
@@ -111,9 +110,7 @@ PRUint32  nsTextHelper::SetText(const nsString& aText)
   //printf("SetText Password %d\n", mIsPassword);
   if (!mIsPassword) 
   	{
-    NS_ALLOC_STR_BUF(buf, aText, 512);
-    //XmTextSetString(mWidget, buf);
-    NS_FREE_STR_BUF(buf);
+    //XmTextSetString(mWidget, NS_LossyConvertUCS2toASCII(aText).get());
   	} 
   else 
   	{
@@ -137,9 +134,7 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
 
   if (!mIsPassword) 
   	{
-    NS_ALLOC_STR_BUF(buf, aText, 512);
-    //XmTextInsert(mWidget, aStartPos, buf);
-    NS_FREE_STR_BUF(buf);
+    //XmTextInsert(mWidget, aStartPos, NS_LossyConvertUCS2toASCII(aText).get());
   	} 
  	else 
  		{

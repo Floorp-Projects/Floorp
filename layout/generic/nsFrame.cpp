@@ -2601,7 +2601,7 @@ nsFrame::DumpRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
   nsAutoString name;
   GetFrameName(name);
   XMLQuote(name);
-  fputs(name, out);
+  fputs(NS_LossyConvertUCS2toASCII(name).get(), out);
   fprintf(out, "\" state=\"%d\" parent=\"%ld\">\n",
           mState, PRUptrdiff(mParent));
 
@@ -2665,7 +2665,7 @@ nsFrame::DumpBaseRegressionData(nsIPresContext* aPresContext, FILE* out, PRInt32
         list->ToString(listName);
         fprintf(out, "<child-list name=\"");
         XMLQuote(listName);
-        fputs(listName, out);
+        fputs(NS_LossyConvertUCS2toASCII(listName).get(), out);
         fprintf(out, "\">\n");
       }
       else {

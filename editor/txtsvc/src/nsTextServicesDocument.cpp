@@ -4477,15 +4477,12 @@ void
 nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
 {
   nsString tmpStr, str;
-  char tmpBuf[256];
-  nsIAtom *atom = 0;
+  nsCOMPtr<nsIAtom> atom;
   nsresult result;
 
-  aContent->GetTag(atom);
+  aContent->GetTag(*getter_AddRefs(atom));
   atom->ToString(tmpStr);
-  tmpStr.ToCString(tmpBuf, 256);
-
-  printf("%s", tmpBuf);
+  printf("%s", NS_LossyConvertUCS2toASCII(tmpStr).get());
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
 
@@ -4505,8 +4502,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
       if (NS_FAILED(result))
         return;
 
-      str.ToCString(tmpBuf, 256);
-      printf(":  \"%s\"", tmpBuf);
+      printf(":  \"%s\"", NS_LossyConvertUCS2toASCII(str).get());
     }
   }
 

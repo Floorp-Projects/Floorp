@@ -169,11 +169,11 @@ NS_METHOD nsCheckButton::GetState(PRBool& aState)
 NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
 {
   if (mWidget) {
-    NS_ALLOC_STR_BUF(label, aText, 256);
+    NS_LossyConvertUCS2toASCII label(aText);
     if (mLabel) {
-      gtk_label_set(GTK_LABEL(mLabel), label);
+      gtk_label_set(GTK_LABEL(mLabel), label.get());
     } else {
-      mLabel = gtk_label_new(label);
+      mLabel = gtk_label_new(label.get());
       gtk_misc_set_alignment (GTK_MISC (mLabel), 0.0, 0.5);
       gtk_container_add(GTK_CONTAINER(mCheckButton), mLabel);
       gtk_widget_show(mLabel);
@@ -182,7 +182,6 @@ NS_METHOD nsCheckButton::SetLabel(const nsString& aText)
                          GTK_SIGNAL_FUNC(DestroySignal),
                          this);
     }
-    NS_FREE_STR_BUF(label);
   }
   return NS_OK;
 }

@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "plstr.h"
 
 #include "nsMemory.h"
 
@@ -494,7 +495,7 @@ NS_IMETHODIMP mozXMLTermStream::Read(char* buf, PRUint32 count,
   }
 
   // Copy portion of string
-  mUTF8Buffer.ToCString(buf, *_retval, mUTF8Offset);
+  PL_strncpyz(buf, mUTF8Buffer.get() + mUTF8Offset, *_retval);
 
   mUTF8Offset += *_retval;
 

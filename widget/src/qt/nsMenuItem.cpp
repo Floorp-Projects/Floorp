@@ -40,7 +40,6 @@
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
 
-#include "nsStringUtil.h"
 #include "nsIPopUpMenu.h"
 #include "nsQEventHandler.h"
 #include "nsCOMPtr.h"

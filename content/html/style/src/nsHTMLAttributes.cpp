@@ -765,7 +765,7 @@ nsHTMLMappedAttributes::List(FILE* out, PRInt32 aIndent) const
     PRInt32 index;
     for (index = aIndent; --index >= 0; ) fputs("  ", out);
     attr->ToString(buffer);
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
     fputs("\n", out);
     attr = attr->mNext;
   }
@@ -1518,7 +1518,7 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
       buffer.AppendWithConversion(" = ");
       value.AppendToString(buffer);
     }
-    fputs(buffer, out);
+    fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
   }
   return NS_OK;
 }

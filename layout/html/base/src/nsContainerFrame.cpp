@@ -1107,7 +1107,7 @@ nsContainerFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent)
       nsAutoString tmp;
       if (nsnull != listName) {
         listName->ToString(tmp);
-        fputs(tmp, out);
+        fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
       }
       fputs("<\n", out);
       while (nsnull != kid) {

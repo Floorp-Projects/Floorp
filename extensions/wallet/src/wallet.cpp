@@ -342,29 +342,24 @@ wallet_Pause(){
 
 static void
 wallet_DumpAutoString(const nsString& as){
-  char s[100];
-  as.ToCString(s, sizeof(s));
-  fprintf(stdout, "%s\n", s);
+  fprintf(stdout, "%s\n", NS_LossyConvertUCS2toASCII(as).get());
 }
 
 static void
 wallet_Dump(nsVoidArray * list) {
   wallet_MapElement * mapElementPtr;
-  char item1[100];
-  char item2[100];
-  char item[100];
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    mapElementPtr->item1.ToCString(item1, sizeof(item1));
-    mapElementPtr->item2.ToCString(item2, sizeof(item2));
-    fprintf(stdout, "%s %s \n", item1, item2);
+    fprintf(stdout, "%s %s \n",
+            NS_LossyConvertUCS2toASCII(mapElementPtr->item1).get(),
+            NS_LossyConvertUCS2toASCII(mapElementPtr->item2).get());
     wallet_Sublist * sublistPtr;
     PRInt32 count2 = LIST_COUNT(mapElementPtr->itemList);
     for (PRInt32 i2=0; i2<count2; i2++) {
       sublistPtr = NS_STATIC_CAST(wallet_Sublist*, mapElementPtr->itemList->ElementAt(i2));
-      sublistPtr->item.ToCString(item, sizeof(item));
-      fprintf(stdout, "     %s \n", item);
+      fprintf(stdout, "     %s \n",
+              NS_LossyConvertUCS2toASCII(sublistPtr->item).get());
     }
   }
   wallet_Pause();

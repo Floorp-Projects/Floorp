@@ -117,7 +117,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
            nsString * pstr = (nsString *)g_duplicateList->ElementAt(n);
            if (pstr->Equals(aURLSpec)) {
               fputs ("Robot: (duplicate '",stdout);
-              fputs (aURLSpec,stdout);
+              fputs (NS_LossyConvertUCS2toASCII(aURLSpec).get(),stdout);
               fputs ("')\n",stdout);
               return NS_OK;
            }
@@ -134,7 +134,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
      }
      else {
         fputs ("Robot: (cannot process URL types '",stdout);
-        fputs (aURLSpec,stdout);
+        fputs (NS_LossyConvertUCS2toASCII(aURLSpec).get(),stdout);
         fputs ("')\n",stdout);
      }
   }
@@ -273,7 +273,7 @@ extern "C" NS_EXPORT int DebugRobot(
     NS_RELEASE(uri);
     if (NS_OK != rv) {
       printf("invalid URL: '");
-      fputs(*urlName, stdout);
+      fputs(NS_LossyConvertUCS2toASCII(*urlName).get(), stdout);
       printf("'\n");
       NS_RELEASE(myObserver);
       return -1;
@@ -284,7 +284,7 @@ extern "C" NS_EXPORT int DebugRobot(
     fputs ("Robot: parsing(",stdout);
     fputs (str_num,stdout);
     fputs (") ",stdout);
-    fputs (*urlName,stdout);
+    fputs (NS_LossyConvertUCS2toASCII(*urlName).get(),stdout);
     fputs ("...",stdout);
 
     delete urlName;

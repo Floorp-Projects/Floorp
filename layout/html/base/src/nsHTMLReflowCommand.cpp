@@ -321,13 +321,13 @@ NS_IMETHODIMP nsHTMLReflowCommand::List(FILE* out) const
     fprintf(out, " attr=");
     nsAutoString attr;
     mAttribute->ToString(attr);
-    fputs(attr, out);
+    fputs(NS_LossyConvertUCS2toASCII(attr).get(), out);
   }
   if (mListName) {
     fprintf(out, " list=");
     nsAutoString attr;
     mListName->ToString(attr);
-    fputs(attr, out);
+    fputs(NS_LossyConvertUCS2toASCII(attr).get(), out);
   }
   fprintf(out, "\n");
 
