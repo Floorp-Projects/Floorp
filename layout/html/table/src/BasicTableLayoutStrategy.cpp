@@ -135,10 +135,10 @@ BasicTableLayoutStrategy::~BasicTableLayoutStrategy()
 PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext* aPresContext,
                                                      nsIStyleContext *aTableStyle,
                                                      const nsReflowState& aReflowState,
-                                                     PRInt32 aMaxWidth, 
-                                                     PRInt32 &aTotalFixedWidth,
-                                                     PRInt32 &aMinTableWidth,
-                                                     PRInt32 &aMaxTableWidth,
+                                                     nscoord aMaxWidth, 
+                                                     nscoord &aTotalFixedWidth,
+                                                     nscoord &aMinTableWidth,
+                                                     nscoord &aMaxTableWidth,
                                                      nsSize* aMaxElementSize)
 {
   PRBool result = PR_TRUE;
@@ -615,14 +615,14 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   NS_ASSERTION(nsnull==tablePIF, "never ever call me on a continuing frame!");
 #endif
 
-  PRBool result = PR_TRUE;
+  PRBool  result = PR_TRUE;
   nscoord tableWidth=0;               // the width of the table as a result of setting column widths
   PRInt32 totalSlices=0;              // the total number of slices the proportional-width columns request
   nsVoidArray *proportionalColumnsList=nsnull; // a list of the columns that are proportional-width
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   nsVoidArray *columnLayoutData = mTableFrame->GetColumnLayoutData();
   PRInt32 numCols = columnLayoutData->Count();
-  PRInt32 * effectiveColumnWidths = new PRInt32[numCols]; // used for Nav4 compatible table fluffing
+  nscoord * effectiveColumnWidths = new nscoord[numCols]; // used for Nav4 compatible table fluffing
   nsCRT::memset (effectiveColumnWidths, 0, numCols*sizeof(PRInt32));
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
@@ -740,7 +740,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
           maxColWidth = cellDesiredWidth;
         // effectiveColumnWidth is the width as if no cells with colspans existed
         if ((1==colSpan) && (effectiveColumnWidths[colIndex] < maxColWidth))
-          effectiveColumnWidths[colIndex] = maxColWidth;
+          effectiveColumnWidths[colIndex] = cellDesiredWidth;
         if (gsDebug==PR_TRUE) 
           printf ("    after cell %d, minColWidth=%d  maxColWidth=%d  effColWidth[%d]=%d\n", 
                   cellIndex, minColWidth, maxColWidth, 
@@ -750,7 +750,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
           SpanInfo *spanInfo = new SpanInfo(colSpan-1, cellMinWidth, cellDesiredWidth);
           if (nsnull==spanList)
             spanList = new nsVoidArray();
-          spanList->AppendElement          (spanInfo);
+          spanList->AppendElement(spanInfo);
         }
       }
 
@@ -887,7 +887,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
       nscoord widthPerSlice = widthRemaining/totalSlices;
       PRInt32 numSpecifiedProportionalColumns = proportionalColumnsList->Count();
       for (PRInt32 i=0; i<numSpecifiedProportionalColumns; i++)
-      {
+      { // for every proportionally-sized column, set the col width to the computed width
         ProportionalColumnLayoutStruct * info = 
           (ProportionalColumnLayoutStruct *)(proportionalColumnsList->ElementAt(i));
         nscoord computedColWidth = info->mProportion*widthPerSlice;
@@ -896,11 +896,12 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
           printf ("  3 proportional step 2: col %d given %d proportion of remaining space %d, set to width = %d\n", 
                   info->mColIndex, info->mProportion, widthRemaining, computedColWidth);
         tableWidth += computedColWidth;
+        effectiveColumnWidths[info->mColIndex] = computedColWidth;
         delete info;
       }
     }
     else
-    {
+    { // we're in an unconstrained situation, so give each column the max of the max column widths
       PRInt32 numSpecifiedProportionalColumns = proportionalColumnsList->Count();
       PRInt32 maxOfMaxColWidths = 0;
       PRInt32 i;
@@ -920,6 +921,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
           printf ("  3 proportional step 2 (unconstrained!): col %d set to width = %d\n", 
                   info->mColIndex, maxOfMaxColWidths);
         tableWidth += maxOfMaxColWidths;
+        effectiveColumnWidths[info->mColIndex] = maxOfMaxColWidths;
         delete info;
       }
     }
@@ -929,9 +931,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   // next, if the specified width of the table is greater than the table's computed width, expand the
   // table's computed width to match the specified width, giving the extra space to proportionately-sized
   // columns if possible.
-  if (aTableFixedWidth > tableWidth)
+  if (aAvailWidth > tableWidth)
   {
-    DistributeExcessSpace(aTableFixedWidth, tableWidth, numCols, effectiveColumnWidths);
+    DistributeExcessSpace(aAvailWidth, tableWidth, effectiveColumnWidths);
   }
   // today we always allocate effectiveColumnWidths, but tomorrow we might be smarter, so leave the check in
   if (nsnull!=effectiveColumnWidths)
@@ -941,14 +943,15 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
   return result;
 }
 
+// take the extra space in the table and distribute it proportionately (based on desired width)
+// give extra space to auto-width cells first, or if there are none to all cells
 void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
                                                      nscoord  aComputedTableWidth, 
-                                                     PRInt32  aNumCols,
-                                                     PRInt32 *aColWidths)
+                                                     nscoord *aColWidths)
 {
-  nscoord excess = aTableFixedWidth - aComputedTableWidth;
-  if (gsDebug) printf ("fixed width %d > computed table width %d, excess = %d\n",
-                        aTableFixedWidth, aComputedTableWidth, excess);
+  nscoord excess = 0;
+  if (PR_TRUE==gsDebug) printf ("DistributeExcessSpace: fixed width %d > computed table width %d\n",
+                                aTableFixedWidth, aComputedTableWidth);
   // if there are auto-sized columns, give them the extra space
   PRInt32 numAutoColumns=0;
   PRInt32 *autoColumns=nsnull;
@@ -969,14 +972,15 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
       else
         totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
     }
+    excess = aTableFixedWidth - totalEffectiveWidthOfAutoColumns;
     // 2. next, compute the proportion to be added to each column, and add it
     for (i = 0; i<numAutoColumns; i++)
     {
       PRInt32 colIndex = autoColumns[i];
-      nscoord oldColWidth = mTableFrame->GetColumnWidth(autoColumns[i]);
+      nscoord oldColWidth = aColWidths[colIndex];
       float percent;
       if (0!=totalEffectiveWidthOfAutoColumns)
-        percent = ((float)(aColWidths[autoColumns[i]]))/((float)totalEffectiveWidthOfAutoColumns);
+        percent = ((float)(aColWidths[colIndex]))/((float)totalEffectiveWidthOfAutoColumns);
       else
         percent = ((float)1)/((float)numAutoColumns);
       nscoord excessForThisColumn = (nscoord)(excess*percent);
@@ -991,10 +995,11 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
   // (they must be all fixed and percentage-width columns, or we would have gone into the block above)
   else
   {
-    nscoord excessPerColumn = excess/aNumCols;
+    excess = aTableFixedWidth - aComputedTableWidth;
+    nscoord excessPerColumn = excess/mNumCols;
     if (gsDebug==PR_TRUE) 
       printf("  aTableFixedWidth specified as %d, expanding columns by excess = %d\n", aTableFixedWidth, excess);
-    for (PRInt32 colIndex = 0; colIndex<aNumCols; colIndex++)
+    for (PRInt32 colIndex = 0; colIndex<mNumCols; colIndex++)
     {
       nscoord oldColWidth = aColWidths[colIndex];
       if (0==oldColWidth)
@@ -1003,7 +1008,7 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
       if (0!=aComputedTableWidth)
         percent = (float)oldColWidth/(float)aComputedTableWidth;
       else
-        percent = (float)1/(float)aNumCols;
+        percent = (float)1/(float)mNumCols;
       nscoord excessForThisColumn = (nscoord)(excess*percent);
       nscoord colWidth = excessForThisColumn+oldColWidth;
       if (gsDebug==PR_TRUE) 
@@ -1019,10 +1024,10 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aTableFixedWidth,
  */
 PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPresContext,
                                                             const nsReflowState& aReflowState,
-                                                            PRInt32 aAvailWidth,
-                                                            PRInt32 aMaxWidth,
-                                                            PRInt32 aMinTableWidth, 
-                                                            PRInt32 aMaxTableWidth)
+                                                            nscoord aAvailWidth,
+                                                            nscoord aMaxWidth,
+                                                            nscoord aMinTableWidth, 
+                                                            nscoord aMaxTableWidth)
 {
 #ifdef DEBUG
   nsIFrame *tablePIF=nsnull;
@@ -1037,16 +1042,20 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
   nsVoidArray *proportionalColumnsList=nsnull; // a list of the columns that are proportional-width
   PRBool equalWidthColumns = PR_TRUE; // remember if we're in the special case where all
                                       // proportional-width columns are equal (if any are anything other than 1)
+  PRBool atLeastOneAutoWidthColumn = PR_FALSE;  // true if at least one column is auto-width, requiring us to post-process
   nsVoidArray *spanList=nsnull;       // a list of the cells that span columns
   nsVoidArray *columnLayoutData = mTableFrame->GetColumnLayoutData();
   PRInt32 numCols = columnLayoutData->Count();
-  PRInt32 * effectiveColumnWidths = new PRInt32[numCols]; // used for Nav4 compatible table fluffing
-  nsCRT::memset (effectiveColumnWidths, 0, numCols*sizeof(PRInt32));
+  nscoord * effectiveMaxColumnWidths = new nscoord[numCols]; // used for Nav4 compatible table fluffing
+  nsCRT::memset (effectiveMaxColumnWidths, 0, numCols*sizeof(PRInt32));
+  nscoord * effectiveMinColumnWidths = new nscoord[numCols]; // used for Nav4 compatible table fluffing
+  nsCRT::memset (effectiveMinColumnWidths, 0, numCols*sizeof(PRInt32));
   for (PRInt32 colIndex = 0; colIndex<numCols; colIndex++)
   { 
     if (gsDebug==PR_TRUE) printf ("  for col %d\n", colIndex);
-    PRInt32 minColWidth = 0;
-    PRInt32 maxColWidth = 0;
+    nscoord minColWidth = 0;
+    nscoord maxColWidth = 0;
+    
     // Get column information
     nsColLayoutData * colData = (nsColLayoutData *)(columnLayoutData->ElementAt(colIndex));
     nsVoidArray *cells = colData->GetCells();
@@ -1149,17 +1158,22 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
         if (PR_TRUE==gsDebug)
           printf("factoring in cell %d with colSpan=%d\n  factoring in min=%d and desired=%d\n", 
                  cellIndex, colSpan, cellMinWidth, cellDesiredWidth);
+        // remember the widest min cell width
         if (minColWidth < cellMinWidth)
           minColWidth = cellMinWidth;
+        // effectiveMinColumnWidth is the width as if no cells with colspans existed
+        if ((1==colSpan) && (effectiveMinColumnWidths[colIndex] < minColWidth))
+          effectiveMinColumnWidths[colIndex] = cellMinWidth;
+        // remember the max desired cell width
         if (maxColWidth < cellDesiredWidth)
           maxColWidth = cellDesiredWidth;
-        // effectiveColumnWidth is the width as if no cells with colspans existed
-        if ((1==colSpan) && (effectiveColumnWidths[colIndex] < maxColWidth))
-          effectiveColumnWidths[colIndex] = cellDesiredWidth;
+        // effectiveMaxColumnWidth is the width as if no cells with colspans existed
+        if ((1==colSpan) && (effectiveMaxColumnWidths[colIndex] < maxColWidth))
+          effectiveMaxColumnWidths[colIndex] = cellDesiredWidth;
         if (gsDebug==PR_TRUE) 
-          printf ("    after cell %d, minColWidth=%d  maxColWidth=%d  effColWidth[%d]=%d\n", 
+          printf ("    after cell %d, minColWidth=%d  maxColWidth=%d  effColWidth[%d]=%d,%d\n", 
                   cellIndex, minColWidth, maxColWidth, 
-                  colIndex, effectiveColumnWidths[colIndex]);
+                  colIndex, effectiveMaxColumnWidths[colIndex], effectiveMaxColumnWidths[colIndex]);
         if (1<colSpan)
         {
           // add the cell to our list of spanners
@@ -1174,8 +1188,11 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
       {
         printf ("  for determining width of col %d %s:\n",
                 colIndex, !IsFixedWidth(colPosition)? "(P)":"(A)");
-        printf ("    minTableWidth = %d and maxTableWidth = %d\n", aMinTableWidth, aMaxTableWidth);
-        printf ("    minColWidth = %d and maxColWidth = %d\n", minColWidth, maxColWidth);
+        printf ("    minTableWidth = %d and maxTableWidth = %d\n", 
+                aMinTableWidth, aMaxTableWidth);
+        printf ("    minColWidth = %d, maxColWidth = %d, eff=%d,%d\n", 
+                minColWidth, maxColWidth, effectiveMinColumnWidths[colIndex], 
+                effectiveMaxColumnWidths[colIndex]);
         printf ("    aAvailWidth = %d\n", aAvailWidth);
       }
 
@@ -1222,18 +1239,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
                   colIndex, mTableFrame->GetColumnWidth(colIndex), aAvailWidth);
       }
       else if (PR_TRUE==isAutoWidth)
-      { // column's width is determined by its content
-        PRUint32 W = aMaxWidth - aMinTableWidth;
-        PRUint32 D = aMaxTableWidth - aMinTableWidth;
-        if (0==D) // fixed-size table
-          D=1;
-        // XXX really need to use effectiveColumnWidths[colIndex] here
-        PRUint32 d = maxColWidth - minColWidth;   // XXX: if this is 0, set to minColWidth?
-        PRInt32 width = (d*W)/D;
-        mTableFrame->SetColumnWidth(colIndex, minColWidth + width);
-        if (gsDebug==PR_TRUE) 
-          printf ("  4 auto-width:  col %d  W=%d  D=%d  d=%d, set to width = %d\n", 
-                  colIndex, W, D, d, mTableFrame->GetColumnWidth(colIndex));
+      { // column's width is determined by its content, done in post-processing
+        mTableFrame->SetColumnWidth(colIndex, 0); // set to 0 width for now
+        atLeastOneAutoWidthColumn = PR_TRUE;
       }
       else if (-1!=specifiedProportionColumnWidth)
       { // we need to save these and do them after all other columns have been calculated
@@ -1309,7 +1317,11 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
     }
   }
   /* --- post-process if necessary --- */
-  // first, assign a width to proportional-width columns
+  if (PR_TRUE==atLeastOneAutoWidthColumn)
+  { // proportionately distribute the remaining space to autowidth columns
+    DistributeRemainingSpace(aMaxWidth, tableWidth, effectiveMinColumnWidths, effectiveMaxColumnWidths);
+  }
+  // second, assign a width to proportional-width columns
   if (nsnull!=proportionalColumnsList)
   {
     // first, figure out the amount of space per slice
@@ -1339,14 +1351,76 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( nsIPresContext* aPre
     }
     delete proportionalColumnsList;
   }
-  
+
+  // clean up
   // today we always allocate effectiveColumnWidths, but tomorrow we might be smarter, so leave the check in
-  if (nsnull!=effectiveColumnWidths)
-    delete [] effectiveColumnWidths;
+  if (nsnull!=effectiveMinColumnWidths)
+    delete [] effectiveMinColumnWidths;  
+  if (nsnull!=effectiveMaxColumnWidths)
+    delete [] effectiveMaxColumnWidths;
   if (nsnull!=spanList)
     delete spanList;
 
   return result;
+}
+
+//XXX: make sure aTFW takes into account fixed width cells already assigned
+// take the remaining space in the table and distribute it proportionately 
+// to the auto-width cells in the table (based on desired width)
+void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableFixedWidth,
+                                                        nscoord  aComputedTableWidth, 
+                                                        nscoord *aMinColWidths,
+                                                        nscoord *aMaxColWidths)
+{
+  if (PR_TRUE==gsDebug) 
+    printf ("DistributeRemainingSpace: fixed width %d > computed table width %d\n",
+            aTableFixedWidth, aComputedTableWidth);
+  // if there are auto-sized columns, give them the extra space
+  PRInt32 numAutoColumns=0;
+  PRInt32 *autoColumns=nsnull;
+  // availWidth is the difference between the total available width and the 
+  // amount of space already assigned, assuming auto col widths were assigned 0.
+  nscoord availWidth = aTableFixedWidth - aComputedTableWidth;
+  mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
+  if (0!=numAutoColumns)
+  {
+    // there's at least one auto-width column, so give it (them) the extra space
+    // proportionately distributed extra space, based on the column's desired size
+    nscoord totalEffectiveWidthOfAutoColumns = 0;
+    // 1. first, get the total width of the auto columns
+    PRInt32 i;
+    for (i = 0; i<numAutoColumns; i++)
+    {
+      if (0!=aMaxColWidths[autoColumns[i]])
+        totalEffectiveWidthOfAutoColumns += aMaxColWidths[autoColumns[i]];
+      else
+        totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
+    }
+    if (gsDebug==PR_TRUE) 
+      printf("  aTableFixedWidth specified as %d, availWidth is = %d\n", 
+             aTableFixedWidth, availWidth);
+    
+    // 2. next, compute the proportion to be added to each column, and add it
+    for (i = 0; i<numAutoColumns; i++)
+    {
+      PRInt32 colIndex = autoColumns[i];
+      float percent;
+      if (0!=aTableFixedWidth)
+        percent = ((float)(aMaxColWidths[colIndex]))/((float)totalEffectiveWidthOfAutoColumns);
+      else
+        percent = ((float)1)/((float)numAutoColumns);
+      nscoord colWidth = (nscoord)(availWidth*percent);
+      if (colWidth<aMinColWidths[colIndex])
+      {
+        availWidth -= (aMinColWidths[colIndex]-colWidth);
+        colWidth=aMinColWidths[colIndex];
+      }
+      if (gsDebug==PR_TRUE) 
+        printf("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
+               colIndex, aMaxColWidths[colIndex], colWidth);
+      mTableFrame->SetColumnWidth(colIndex, colWidth);
+    }
+  }
 }
 
 

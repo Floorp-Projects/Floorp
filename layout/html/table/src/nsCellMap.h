@@ -38,7 +38,7 @@ class nsCellMap
 {
 protected:
   /** storage for CellData pointers */
-  PRInt32 *mCells;
+  PRInt32 *mCells;       ///XXX CellData *?
 
   /** the number of rows */
   int mRowCount;      // in java, we could just do fCellMap.length;
