@@ -519,13 +519,14 @@ nsHTMLOptionElement::GetText(nsAString& aText)
 {
   PRInt32 numNodes, i;
 
-  aText.SetLength(0);
+  aText.Truncate();
 
   nsresult rv = ChildCount(numNodes);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  nsAutoString text;
   for (i = 0; i < numNodes; i++) {
     nsCOMPtr<nsIContent> node;
 
@@ -535,23 +536,24 @@ nsHTMLOptionElement::GetText(nsAString& aText)
       nsCOMPtr<nsIDOMText> domText(do_QueryInterface(node));
 
       if (domText) {
-        rv = domText->GetData(aText);
-
-        nsAutoString text(aText);
-
-        // the option could be all spaces, so compress the white space
-        // then make sure it's not empty, if the option is all
-        // whitespace then we return the whitespace
-
-        text.CompressWhitespace(PR_TRUE, PR_TRUE);
-
-        if (!text.IsEmpty()) {
-          aText.Assign(text);
-          break;
+        rv = domText->GetData(text);
+        if (NS_FAILED(rv)) {
+          aText.Truncate();
+          return rv;
         }
-      }
 
+        aText.Append(text);
+      }
     }
+  }
+
+  // the option could be all spaces, so compress the white space
+  // then make sure it's not empty, if the option is all
+  // whitespace then we return the whitespace
+  text = aText;
+  text.CompressWhitespace(PR_TRUE, PR_TRUE);
+  if (!text.IsEmpty()) {
+    aText = text;
   }
 
   return NS_OK;
