@@ -56,8 +56,6 @@ XPIDLSRCS =                         \
         .\nsIBufferOutputStream.idl \
         .\nsIScriptableInputStream.idl \
         .\nsIStorageStream.idl      \
-        .\nsIFile.idl               \
-        .\nsILocalFile.idl          \
         $(NULL)
 
 ################################################################################
@@ -76,7 +74,6 @@ LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                       \
-        .\$(OBJDIR)\nsLocalFileWin.obj           \
         .\$(OBJDIR)\nsBinaryStream.obj           \
         .\$(OBJDIR)\nsEscape.obj                 \
         .\$(OBJDIR)\nsLinebreakConverter.obj     \
