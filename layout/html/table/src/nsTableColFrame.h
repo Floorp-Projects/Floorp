@@ -24,7 +24,6 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsTableFrame.h"
 
 class nsVoidArray;
 class nsTableCellFrame;

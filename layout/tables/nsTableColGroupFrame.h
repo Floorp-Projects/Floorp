@@ -24,10 +24,10 @@
 
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsTableColFrame.h"
 
 class nsTableColFrame;
 class nsTableFrame;
-enum nsTableColType;
 
 enum nsTableColGroupType {
   eColGroupContent            = 0, // there is real col group content associated   

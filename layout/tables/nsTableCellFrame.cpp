@@ -19,8 +19,9 @@
  *
  * Contributor(s): 
  */
-#include "nsTableCellFrame.h"
+#include "nsTableFrame.h"
 #include "nsTableColFrame.h"
+#include "nsTableCellFrame.h"
 #include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
