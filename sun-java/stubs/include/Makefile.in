@@ -28,6 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= java
 
+SDK_HEADERS	 = \
+		jni.h \
+		jni_md.h \
+		jri.h \
+		jri_md.h \
+		jritypes.h \
+		$(NULL)
+
 EXPORTS		= \
 		bool.h \
 		interpreter.h \

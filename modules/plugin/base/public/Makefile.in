@@ -41,6 +41,11 @@ EXPORTS		= \
 		npupp.h \
 		$(NULL)
 
+SDK_HEADERS	 = \
+		npapi.h \
+		npupp.h \
+		$(NULL)
+
 XPIDLSRCS 	= \
 		nspluginroot.idl \
 		nsIPluginStreamInfo.idl \
