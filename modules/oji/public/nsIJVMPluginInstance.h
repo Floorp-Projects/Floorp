@@ -29,22 +29,15 @@
 #ifndef nsIJVMPluginInstance_h___
 #define nsIJVMPluginInstance_h___
 
+#ifndef nsISupports_h___
 #include "nsISupports.h"
+#endif
+#ifndef JNI_H
+#include "jni.h"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Instance Interface
-
-class nsIJVMPluginInstance : public nsISupports {
-public:
-
-    // This method is called when LiveConnect wants to find the Java object
-    // associated with this plugin instance, e.g. the Applet or JavaBean object.
-    NS_IMETHOD
-    GetJavaObject(jobject *result) = 0;
-
-    NS_IMETHOD
-    GetText(const char* *result) = 0;
-};
 
 #define NS_IJVMPLUGININSTANCE_IID                    \
 { /* a0c057d0-01c1-11d2-815b-006008119d7a */         \
@@ -53,6 +46,19 @@ public:
     0x11d2,                                          \
     {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
+
+class nsIJVMPluginInstance : public nsISupports {
+public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGININSTANCE_IID)
+	
+    // This method is called when LiveConnect wants to find the Java object
+    // associated with this plugin instance, e.g. the Applet or JavaBean object.
+    NS_IMETHOD
+    GetJavaObject(jobject *result) = 0;
+
+    NS_IMETHOD
+    GetText(const char* *result) = 0;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
