@@ -47,9 +47,9 @@ public:
   virtual ~nsWindow();
 
   // nsIsupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-  NS_IMETHOD            QueryInterface(const nsIID& aIID, void** aInstancePtr);
+//  NS_IMETHOD_(nsrefcnt) AddRef();
+//  NS_IMETHOD_(nsrefcnt) Release();
+//  NS_IMETHOD            QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
   virtual void          ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
   NS_IMETHOD            PreCreateWidget(nsWidgetInitData *aWidgetInitData);
@@ -101,6 +101,9 @@ protected:
   static int            ResizeWorkProc( void *data );
 
   PtWidget_t            *mClientWidget;
+  PtWidget_t            *mShell;         /* used for toplevel windows */
+  PRBool                mIsDestroyingWindow;
+
   nsIFontMetrics        *mFontMetrics;
   PRBool                mClipChildren;
   PRBool                mClipSiblings;

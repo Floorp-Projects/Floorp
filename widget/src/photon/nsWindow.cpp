@@ -49,6 +49,7 @@ PRBool  nsWindow::mResizeQueueInited = PR_FALSE;
 DamageQueueEntry *nsWindow::mResizeQueue = nsnull;
 PtWorkProcId_t *nsWindow::mResizeProcID = nsnull;
 
+#if 0
 // for nsISupports
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
@@ -77,6 +78,7 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
+#endif
 
 
 //-------------------------------------------------------------------------
@@ -90,11 +92,12 @@ nsWindow::nsWindow()
   NS_INIT_REFCNT();
 
   mClientWidget    = nsnull;
+  mShell           = nsnull;
   mFontMetrics     = nsnull;
   mClipChildren    = PR_FALSE;
   mClipSiblings    = PR_FALSE;
-  mBorderStyle     = eBorderStyle_all;
-  mWindowType      = eWindowType_toplevel;
+  mBorderStyle     = eBorderStyle_default;
+  mWindowType      = eWindowType_child;
   mIsResizing      = PR_FALSE;
   mFont            = nsnull;
   mMenuBar         = nsnull;
@@ -104,6 +107,8 @@ nsWindow::nsWindow()
   mFrameTop        = 0;
   mFrameBottom     = 0;
 
+  mIsDestroyingWindow = PR_FALSE;
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  border=%X, window=%X\n", mBorderStyle, mWindowType ));
 }
 
@@ -125,6 +130,16 @@ nsWindow::~nsWindow()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::~nsWindow (%p) - Not Implemented.\n", this ));
 
+#if 1
+  mIsDestroyingWindow = PR_TRUE;
+  if ( (mWindowType == eWindowType_dialog) ||
+       (mWindowType == eWindowType_popup) ||
+	   (mWindowType == eWindowType_toplevel) )
+  {
+    Destroy();
+  }
+  NS_IF_RELEASE(mMenuBar);
+#else
   if( mWidget )
   {
     RemoveResizeWidget();
@@ -132,12 +147,38 @@ nsWindow::~nsWindow()
   }
 
   mIsDestroying = PR_TRUE;
+#endif
 }
 
 NS_METHOD nsWindow::Destroy(void)
 {
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::Destroy (%p) - Not Implemented.\n", this ));
+
+#if 1
+  NS_IF_RELEASE(mMenuBar);
+
+  // Call base class first... we need to ensure that upper management
+  // knows about the close so that if this is the main application
+  // window, for example, the application will exit as it should.
+
+  if (mIsDestroyingWindow == PR_TRUE)
+  {
+    nsBaseWidget::Destroy();
+    if (PR_FALSE == mOnDestroyCalled)
+	{
+        nsWidget::OnDestroy();
+    }
+  }
+
+  RemoveResizeWidget();
+  RemoveDamagedWidget( mWidget );
+
+#else
   RemoveResizeWidget();
   nsWidget::Destroy();
+#endif
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -189,19 +230,25 @@ NS_METHOD nsWindow::PreCreateWidget(nsWidgetInitData *aInitData)
 {
 //  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget\n"));
 
-  mClipChildren = aInitData->clipChildren;
-  mClipSiblings = aInitData->clipSiblings;
+  if (nsnull != aInitData)
+  {
+    //mClipChildren = aInitData->clipChildren;
+    //mClipSiblings = aInitData->clipSiblings;
 
-  SetWindowType( aInitData->mWindowType );
-  SetBorderStyle( aInitData->mBorderStyle );
+    SetWindowType( aInitData->mWindowType );
+    SetBorderStyle( aInitData->mBorderStyle );
 
-//  mBorderStyle = aInitData->mBorderStyle;
-//  mWindowType = aInitData->mWindowType;
+    //mBorderStyle = aInitData->mBorderStyle;
+    //mWindowType = aInitData->mWindowType;
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
-    mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::PreCreateWidget mClipChildren=<%d> mClipSiblings=<%d> mBorderStyle=<%d> mWindowType=<%d>\n",
+      mClipChildren, mClipSiblings, mBorderStyle, mWindowType));
 
-  return NS_OK;
+
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 
@@ -235,12 +282,15 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
   switch( mWindowType )
   {
   case eWindowType_toplevel :
+    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = toplevel\n" ));
     break;
   case eWindowType_dialog :
+    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = dialog\n" ));
     break;
   case eWindowType_popup :
+    mIsToplevel = PR_TRUE;
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  window type = popup\n" ));
     break;
   case eWindowType_child :
@@ -254,7 +304,8 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Child window class\n" ));
 
-    if(( mWindowType == eWindowType_dialog ) || ( mWindowType == eWindowType_toplevel ))
+    if ( ( mWindowType == eWindowType_dialog ) || 
+	     ( mWindowType == eWindowType_toplevel ) )
     {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  Trying to creata a child window w/ wrong window type.\n" ));
       return result;
@@ -418,9 +469,19 @@ NS_METHOD nsWindow::CreateNative(PtWidget_t *parentWidget)
     {
       PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
       PtAddEventHandler( mWidget,
-        Ph_EV_KEY | Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
+        Ph_EV_PTR_MOTION_BUTTON | Ph_EV_PTR_MOTION_NOBUTTON |
         Ph_EV_BUT_PRESS | Ph_EV_BUT_RELEASE |Ph_EV_BOUNDARY,
         RawEventHandler, this );
+
+      PtArg_t arg;
+      PtRawCallback_t callback;
+		
+		callback.event_mask = ( Ph_EV_KEY ) ;
+		callback.event_f = RawEventHandler;
+		callback.data = this;
+		PtSetArg( &arg, Pt_CB_FILTER, &callback, 0 );
+		PtSetResources( mWidget, 1, &arg );
+		
     }
     else if( !parentWidget )
     {
@@ -717,6 +778,11 @@ PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
     PR_LOG(PhWidLog, PR_LOG_DEBUG, (" nsWindow::OnKey - mEventCallback=<%p>\n", mEventCallback));
     return DispatchWindowEvent(&aEvent);
   }
+  else
+  {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, (" nsWindow::OnKey - mEventCallback=<%p> Discarding Event!\n", mEventCallback));
+    printf("nsWindow::OnKey Discarding Event, no mEventCallback\n");  
+  }  
   return PR_FALSE;
 }
 
@@ -892,7 +958,7 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
   // a menu listener, call "listener->MenuSelected(event)"
 
 
-  if( aCbInfo->reason == Pt_CB_RAW )
+//  if( aCbInfo->reason == Pt_CB_RAW )
   {
     PhEvent_t* event = aCbInfo->event;
 
@@ -901,6 +967,9 @@ PRBool nsWindow::HandleEvent( PtCallbackInfo_t* aCbInfo )
     case Ph_EV_KEY:
       {
         PhKeyEvent_t* keyev = (PhKeyEvent_t*) PhGetData( event );
+
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::HandleEvent keyev=<%p>\n", keyev));
+
 		result = DispatchKeyEvent(keyev);
       }
       break;

@@ -126,18 +126,23 @@ class nsWidget : public nsBaseWidget
     static int RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
     virtual PRBool HandleEvent( PtCallbackInfo_t* aCbInfo );
     
-  // Utility functions
-
+    /* Utility functions */
     PRBool     ConvertStatus(nsEventStatus aStatus);
+
 	/* Convert Photon key codes to Mozilla key codes */
-    PRUint32   nsConvertKey(unsigned long keysym); 
+    PRUint32   nsConvertKey(unsigned long keysym);
+    void       InitKeyEvent(PhKeyEvent_t *aPhKeyEvent, nsWidget *aWidget,
+	                               nsKeyEvent &aKeyEvent, PRUint32 aEventType);
+
     PRBool     DispatchMouseEvent(PhPoint_t &aPos, PRUint32 aEvent);
     PRBool     DispatchStandardEvent(PRUint32 aMsg);
     PRBool     DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent);
-  // are we a "top level" widget?
-    PRBool     mIsToplevel;
+  
     void       EnableDamage( PtWidget_t *widget, PRBool enable );
     PRBool     GetParentClippedArea( nsRect &rect );
+
+ public:
+    PRBool     mIsToplevel; 	// are we a "top level" widget?
 
  protected:
     virtual void InitCallbacks(char * aName = nsnull);
@@ -185,6 +190,10 @@ class nsWidget : public nsBaseWidget
     static PtWorkProcId_t   *mWorkProcID;
 //    PRBool mCreateHold;
 //    PRBool mHold;
+
+private:
+  static nsILookAndFeel *sLookAndFeel;
+  static PRUint32 sWidgetCount;
 };
 
 #endif /* nsWidget_h__ */
