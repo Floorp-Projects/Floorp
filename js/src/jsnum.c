@@ -381,6 +381,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 
     rt = cx->runtime;
     if (!rt->jsNaN) {
+#ifndef __MWERKS__
 #ifdef XP_PC
 #ifdef XP_OS2
 	/*DSR071597 - I have no idea what this really does other than mucking with the floating     */
@@ -393,8 +394,9 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         /* On Alpha platform this is handled via Compiler option */
         _control87(MCW_EM, MCW_EM);
 #endif
-#endif
-#endif
+#endif /* XP_OS2 */
+#endif /* XP_PC */
+#endif /* __MWERKS__ */
 
 	u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
 	u.s.lo = 0xffffffff;

@@ -1566,7 +1566,7 @@ date_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 	 * full year be used in the result string.
 	 */
 	result_len = PRMJ_FormatTime(buf, sizeof buf,
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__MWERKS__)
 				   "%#c",
 #else
 				   "%c",
