@@ -122,6 +122,82 @@ Check your webserver configuration.\n";
     print "TEST-OK Webserver is preventing fetch of $url.\n";
 }
 
+eval 'use GD';
+if ($@ eq '') {
+    undef $/;
+
+    # Ensure major versions of GD and libgd match
+    # Windows's GD module include libgd.dll, guarenteed to match
+
+    if ($^O !~ /MSWin32/i) {
+        my $gdlib = `gdlib-config --version 2>&1`;
+        $gdlib =~ s/\n$//;
+        if (!$gdlib) {
+            print "TEST-WARNING Failed to run gdlib-config, assuming gdlib " .
+                  "version 1.x\n";
+            $gdlib = '1.x';
+        }
+        my $gd = $GD::VERSION;
+
+        my $verstring = "GD version $gd, libgd version $gdlib";
+
+        $gdlib =~ s/^([^\.]+)\..*/$1/;
+        $gd =~ s/^([^\.]+)\..*/$1/;
+
+        if ($gdlib == $gd) {
+            print "TEST-OK $verstring; Major versions match.\n";
+        } else {
+            print "TEST-FAIL $verstring; Major versions do not match\n";
+        }
+    }
+
+    # Test GD
+
+    eval {
+        my $image = new GD::Image(100, 100);
+        my $black = $image->colorAllocate(0, 0, 0);
+        my $white = $image->colorAllocate(255, 255, 255);
+        my $red = $image->colorAllocate(255, 0, 0);
+        my $blue = $image->colorAllocate(0, 0, 255);
+        $image->transparent($white);
+        $image->rectangle(0, 0, 99, 99, $black);
+        $image->arc(50, 50, 95, 75, 0, 360, $blue);
+        $image->fill(50, 50, $red);
+
+        if ($image->can('png')) {
+            create_file('data/testgd-local.png', $image->png);
+            check_image('data/testgd-local.png', 't/testgd.png', 'GD', 'PNG');
+        } else {
+            die "GD doesn't support PNG generation\n";
+        }
+    };
+    if ($@ ne '') {
+        print "TEST-FAILED GD returned: $@\n";
+    }
+
+    # Test Chart
+
+    eval 'use Chart::Lines';
+    if ($@) {
+        print "TEST-FAILED Chart::Lines is not installed\n";
+    } else {
+        eval {
+            my $chart = Chart::Lines->new(400, 400);
+
+            $chart->add_pt('foo', 30, 25);
+            $chart->add_pt('bar', 16, 32);
+
+            my $type = $chart->can('gif') ? 'gif' : 'png';
+            $chart->$type("data/testchart-local.$type");
+            check_image("data/testchart-local.$type", "t/testchart.$type",
+                "Chart", uc($type));
+        };
+        if ($@ ne '') {
+            print "TEST-FAILED Chart returned: $@\n";
+        }
+    }
+}
+
 sub fetch {
     my $url = shift;
     my $rtn;
@@ -169,3 +245,33 @@ sub fetch {
     return($rtn);
 }
 
+sub check_image {
+    my ($local_file, $test_file, $library, $image_type) = @_;
+    if (read_file($local_file) eq read_file($test_file)) {
+        print "TEST-OK $library library generated a good $image_type image\n";
+        unlink $local_file;
+    } else {
+        print "TEST-WARNING $library library generated a $image_type that " .
+              "didn't match the expected image.\nIt has been saved as " .
+              "$local_file and should be compared with $test_file\n";
+    }
+}
+
+sub create_file {
+    my ($filename, $content) = @_;
+    open(FH, ">$filename")
+        or die "Failed to create $filename: $!\n";
+    binmode FH;
+    print FH $content;
+    close FH;
+}
+
+sub read_file {
+    my ($filename) = @_;
+    open(FH, $filename)
+        or die "Failed to open $filename: $!\n";
+    binmode FH;
+    my $content = <FH>;
+    close FH;
+    return $content;
+}
