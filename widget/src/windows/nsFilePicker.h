@@ -51,6 +51,8 @@ public:
   NS_IMETHOD SetDefaultString(const PRUnichar * aDefaultString);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD Show(PRInt16 *_retval); 

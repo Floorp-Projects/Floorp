@@ -77,6 +77,13 @@ interface nsIFilePicker : nsISupports
   attribute wstring defaultString;
 
  /**
+  * The filter which is currently selected in the File Picker dialog
+  *
+  * @return Returns the index (0 based) of the selected filter in the filter list. 
+  */
+  attribute long filterIndex;
+
+ /**
   * Set the directory that the file open/save dialog initially displays
   *
   * @param      displayDirectory  the name of the directory

@@ -39,6 +39,8 @@ public:
                   PRInt16 aMode);
 
   NS_IMETHOD AppendFilters(PRInt32 filterMask);
+  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
 
 protected:
 
