@@ -45,4 +45,4 @@ export PATH
 MOZILLA_FIVE_HOME=.
 export MOZILLA_FIVE_HOME
 
-exec mozilla-installer-bin
+exec ./mozilla-installer-bin --sync
