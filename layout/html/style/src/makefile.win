@@ -22,7 +22,7 @@ LIBRARY_NAME=raptorhtmlstyle_s
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-DEFINES=-D_IMPL_NS_HTML -I..\..\base\src 
+DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=nsCSSKeywords.cpp nsCSSLayout.cpp nsCSSDeclaration.cpp \
     nsCSSParser.cpp nsCSSProps.cpp nsCSSRendering.cpp nsCSSScanner.cpp \
@@ -36,7 +36,9 @@ CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
     .\$(OBJDIR)\nsCSSStyleSheet.obj .\$(OBJDIR)\nsHTMLAttributes.obj \
     .\$(OBJDIR)\nsHTMLStyleSheet.obj .\$(OBJDIR)\nsHTMLValue.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+  -I..\..\..\base\src \
+  -I..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

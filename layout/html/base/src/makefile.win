@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=raptorhtmlbase_s 
 MODULE=raptor 
 REQUIRES=xpcom raptor 
-DEFINES=-D_IMPL_NS_HTML -I..\..\style\src -I$(PUBLIC)\dom 
+DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=			\
  nsBRPart.cpp			\
@@ -85,7 +85,9 @@ CPP_OBJS=				\
 
 EXPORTS=nsGlobalVariables.h
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+ -I..\..\style\src -I$(PUBLIC)\dom \
+ -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

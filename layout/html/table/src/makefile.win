@@ -22,8 +22,7 @@ LIBRARY_NAME=raptorhtmltable_s
 MODULE=raptor 
 REQUIRES=xpcom raptor 
 
-DEFINES=-D_IMPL_NS_HTML -I..\..\base\src -I..\..\style\src \
-    -I$(PUBLIC)\dom 
+DEFINES=-D_IMPL_NS_HTML
 
 CPPSRCS=nsCellLayoutData.cpp nsCellMap.cpp nsColLayoutData.cpp \
     nsTableCaption.cpp nsTableCaptionFrame.cpp nsTableCell.cpp \
@@ -42,7 +41,10 @@ CPP_OBJS=.\$(OBJDIR)\nsCellLayoutData.obj .\$(OBJDIR)\nsCellMap.obj \
     .\$(OBJDIR)\nsTableRow.obj .\$(OBJDIR)\nsTableRowFrame.obj \
     .\$(OBJDIR)\nsTableRowGroup.obj .\$(OBJDIR)\nsTableRowGroupFrame.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+  -I..\..\base\src -I..\..\style\src \
+  -I..\..\..\base\src \
+  -I$(PUBLIC)\dom 
 
 LCFLAGS = \
         $(LCFLAGS) \
