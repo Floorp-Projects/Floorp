@@ -46,7 +46,7 @@ public:
     PicHandle mPicHandle;
 }; // class nsSplashScreenMac
 
-NS_IMPL_ISUPPORTS1(nsSplashScreenMac, nsISplashScreen)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSplashScreenMac, nsISplashScreen)
 
 NS_IMETHODIMP
 nsSplashScreenMac::Show() {

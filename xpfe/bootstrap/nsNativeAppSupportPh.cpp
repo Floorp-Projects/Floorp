@@ -53,7 +53,7 @@ public:
     PtWidget_t *mDialog;
 }; // class nsSplashScreenPh
 
-NS_IMPL_ISUPPORTS1(nsSplashScreenPh, nsISplashScreen)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSplashScreenPh, nsISplashScreen)
 
 NS_IMETHODIMP
 nsSplashScreenPh::Show()
