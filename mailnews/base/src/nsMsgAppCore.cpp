@@ -76,7 +76,7 @@ public:
   NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
-  NS_IMETHOD OpenURL(char * url);
+  NS_IMETHOD OpenURL(const char * url);
 
 private:
   
@@ -369,7 +369,7 @@ void nsMsgAppCore::InitializeFolderRoot()
 }
 
 NS_IMETHODIMP
-nsMsgAppCore::OpenURL(char * url)
+nsMsgAppCore::OpenURL(const char * url)
 {
 	// mscott, okay this is all temporary hack code to support the Demo menu item which allows us to load
 	// some hard coded news and mailbox urls.....it will ALL eventually go away.......

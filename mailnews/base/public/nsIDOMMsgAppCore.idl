@@ -53,7 +53,7 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 %{ C++
 
 
-extern "C" NS_DOM 
+extern "C" 
 nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
  
 %}

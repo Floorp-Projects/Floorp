@@ -7,18 +7,12 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
+#include "nsID.h" /* interface nsID */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsIDOMMsgAppCore */
 
@@ -45,14 +39,13 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   NS_IMETHOD SetWindow(nsIDOMWindow *ptr) = 0;
 
   /* void OpenURL (in string str); */
-  NS_IMETHOD OpenURL(char *str) = 0;
+  NS_IMETHOD OpenURL(const char *str) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
   static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIDOMMsgAppCore *priv);
 #endif
 };
-
 extern "C" 
 nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
  
