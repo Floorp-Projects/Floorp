@@ -38,6 +38,10 @@ FULL_NSPR_CFLAGS=-I$(includedir)/nspr
 FULL_NSPR_LIBS=$(subst -L$(libdir),-L$(mozappdir),$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
 endif
 
+ifdef MOZ_ENABLE_GTK
+SUPERWIN_LIBS=-lgtksuperwin
+endif
+
 _DEFS = $(subst \,\\\\\,$(ACDEFINES))
 
 pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
@@ -64,6 +68,7 @@ mozilla-config:: mozilla-config.in Makefile.in Makefile $(DEPTH)/config/autoconf
 	-e "s|%includedir%|$(includedir)|" \
 	-e "s|%libdir%|$(mozappdir)|" \
 	-e "s|%MOZILLA_VERSION%|$(MOZILLA_VERSION)|" \
+	-e "s|%SUPERWIN_LIBS%|$(SUPERWIN_LIBS)|" \
 	-e "s|%DEFS%|$(_DEFS)|" \
 	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
 	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
