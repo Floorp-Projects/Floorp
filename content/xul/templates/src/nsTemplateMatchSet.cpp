@@ -213,7 +213,12 @@ nsTemplateMatchRefSet::Add(const nsTemplateMatch* aMatch)
             temp[i] = mStorageElements.mInlineMatches.mEntries[i];
 
         // Clobber the union; we'll treat it as a hashtable now.
-        PL_DHashTableInit(&mStorageElements.mTable, &gOps, nsnull, sizeof(Entry), PL_DHASH_MIN_SIZE);
+        if (!PL_DHashTableInit(&mStorageElements.mTable, &gOps, nsnull,
+                               sizeof(Entry), PL_DHASH_MIN_SIZE)) {
+            for (i = count - 1; i >= 0; --i)
+                mStorageElements.mInlineMatches.mEntries[i] = temp[i];
+            return PR_FALSE;
+        }
 
         // Now that we've table-ized this thing, mCount better be a
         // big freaking number, since it's sharing space with a
