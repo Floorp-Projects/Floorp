@@ -4,7 +4,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<window id="main-window"
+<window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical"
@@ -12,8 +12,7 @@
   width="426" height="300"
   class="dialog">
 
-<script src="chrome://global/content/strres.js"/>
-<script src="chrome://global/content/filepicker.js"/>
+<html:script src="chrome://global/content/filepicker.js"/>
 
 <box align="horizontal">
   <text value="Look in:"/>
@@ -25,7 +24,7 @@
 </box>
 
 <box align="horizontal" flex="1">
-  <tree id="directoryList" flex="1" onkeyup="onKeyup(event)">
+  <tree id="directoryList" flex="1">
     <treecolgroup>
       <treecol flex="1"/>
       <treecol flex="1"/>
@@ -43,7 +42,7 @@
 
 <box align="horizontal">
   <text value="File name:"/>
-  <textfield type="text" id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
+  <html:input type="text" id="textInput" onkeypress="if (event.which == 13) { onOK(); }" flex="1"/>
 </box>
 
 <box align="horizontal">

@@ -10,8 +10,6 @@ var filePickerMode;
 var currentFilter;
 var lastClicked;
 
-var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
-
 function onLoad() {
 
   if (window.arguments) {
@@ -28,8 +26,8 @@ function onLoad() {
 
     window.title = title;
 
-    textInput = document.getElementById("textInput");
     if (initialText) {
+      textInput = document.getElementById("textInput");
       textInput.value = initialText;
     }
     /* build filter popup */
@@ -59,8 +57,6 @@ function onLoad() {
   addToHistory(sfile.path);
 
   getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
-
-  textInput.focus();
 }
 
 function onFilterChanged(target)
@@ -126,7 +122,7 @@ function onOK()
   case nsIFilePicker.modeSave:
     if (isFile) {
       // we need to pop up a dialog asking if you want to save
-      rv = window.confirm(file.path + bundle.GetStringFromName("confirmFileReplacing"));
+      rv = window.confirm(file.path + "already exists.  Do you want to replace it?");
       if (rv)
         ret = nsIFilePicker.returnReplace;
       else
@@ -162,12 +158,10 @@ function onCancel()
   return true;
 }
 
-
-// node corresponds to a treerow
-function goIn(node) {
+function onClick(e) {
 
   var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
-  file.initWithPath(node.getAttribute("path"));
+  file.initWithPath(e.target.parentNode.getAttribute("path"));
 
   if (!file.isDirectory()) {
     textInput = document.getElementById("textInput");
@@ -175,24 +169,15 @@ function goIn(node) {
     lastClicked = file.leafName;
   }
 
-  if (file.isDirectory()) {
-    gotoDirectory(file.path);
-  } else if (file.isFile()) {
-      /* what about symlinks? what if they symlink to a directory? */
-      return doOKButton();
+  if (e.detail == 2) {
+    if (file.isDirectory()) {
+      gotoDirectory(file.path);
+    }
+    else if (file.isFile()) {
+	/* what about symlinks? what if they symlink to a directory? */
+ 	return doOKButton();
+    }
   }
-}
-
-function onClick(e) {
-  if (e.detail == 2)
-    goIn(e.target.parentNode);
-}
-
-function onKeyup(e) {
-  if (e.keyCode == 13)
-    goIn(e.target.selectedItems[0].firstChild);
-  else if (e.keyCode == 8)
-    goUp();
 }
 
 function dirSort(e1, e2)
@@ -309,10 +294,6 @@ function createTree(parentElement, dirArray)
 
   /* append treeChildren to parent (tree) */
   parentElement.appendChild(treeChildren);
-
-  /* select first available treeitem */
-  if (treeChildren.firstChild)
-    parentElement.selectItem(treeChildren.firstChild);
 }
 
 function getDirectoryContents(parentElement, dirContents)
