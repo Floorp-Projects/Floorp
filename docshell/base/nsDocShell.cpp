@@ -958,6 +958,52 @@ NS_IMETHODIMP nsDocShell::SetFocus()
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsDocShell::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
+   PRBool* aTookFocus)
+{
+   NS_ENSURE_ARG_POINTER(aTookFocus);
+
+   // Next person we should call is first the parent otherwise the 
+   // docshell tree owner.
+   nsCOMPtr<nsIBaseWindow> nextCallWin(do_QueryInterface(mParent));
+   if(!nextCallWin)
+      {//XXX Enable this when docShellTreeOwner is added
+      //nextCallWin = do_QueryInterface(mDocShellTreeOwner);
+      }
+
+   //If the current focus is us, offer it to the next owner.
+   if(aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow*, this))
+      {
+      if(nextCallWin)
+         return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+      return NS_OK;
+      }
+
+   //Otherwise, check the chilren and offer it to the next sibling.
+   PRInt32 i;
+   PRInt32 n = mChildren.Count();
+   for(i = 0; i < n; i++)
+      {
+      nsCOMPtr<nsIBaseWindow> 
+         child(do_QueryInterface((nsISupports*)mChildren.ElementAt(i)));
+      if(child.get() == aCurrentFocus)
+         {
+         while(++i < n)
+            {
+            child = do_QueryInterface((nsISupports*)mChildren.ElementAt(++i));
+            if(NS_SUCCEEDED(child->SetFocus()))
+               {
+               *aTookFocus = PR_TRUE;
+               return NS_OK;
+               }
+            }
+         }
+      }
+   if(nextCallWin)
+      return nextCallWin->FocusAvailable(aCurrentFocus, aTookFocus);
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsDocShell::GetTitle(PRUnichar** title)
 {
    NS_ENSURE_ARG_POINTER(title);
