@@ -42,6 +42,15 @@ CSRCS = \
 		oldxp.c		\
 		$(NULL)
 
+EXTRA_DSO_LDOPTS = \
+	$(NSPR_LIBS)	\
+	-L$(DIST)/bin	\
+	-L$(DIST)/lib	\
+	-lxp			\
+	-lraptorbase	\
+	-lxpcom			\
+	$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
