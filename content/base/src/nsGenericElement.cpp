@@ -584,7 +584,6 @@ nsGenericElement::nsGenericElement()
   mContent = nsnull;
   mDOMSlots = nsnull;
   mListenerManager = nsnull;
-  mRangeList = nsnull;
 }
 
 nsGenericElement::~nsGenericElement()
@@ -595,6 +594,7 @@ nsGenericElement::~nsGenericElement()
     if (nsnull != mDOMSlots->mChildNodes) {
       mDOMSlots->mChildNodes->DropReference();
       NS_RELEASE(mDOMSlots->mChildNodes);
+      delete mDOMSlots->mRangeList;
     }
     if (nsnull != mDOMSlots->mStyle) {
       mDOMSlots->mStyle->DropReference();
@@ -603,7 +603,6 @@ nsGenericElement::~nsGenericElement()
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
-  delete mRangeList;
 }
 
 nsDOMSlots *
@@ -614,6 +613,7 @@ nsGenericElement::GetDOMSlots()
     mDOMSlots->mScriptObject = nsnull;
     mDOMSlots->mChildNodes = nsnull;
     mDOMSlots->mStyle = nsnull;
+    mDOMSlots->mRangeList = nsnull;
   }
   
   return mDOMSlots;
@@ -1008,15 +1008,16 @@ nsGenericElement::HandleDOMEvent(nsIPresContext& aPresContext,
 nsresult 
 nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 {
+  if (nsnull == mDOMSlots) GetDOMSlots();
   // lazy allocation of range list
-  if (nsnull == mRangeList) {
-    mRangeList = new nsVoidArray();
+  if (nsnull == mDOMSlots->mRangeList) {
+    mDOMSlots->mRangeList = new nsVoidArray();
   }
-  if (nsnull == mRangeList) {
+  if (nsnull == mDOMSlots->mRangeList) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   // dont need to addref - this call is made by the range object itself
-  PRBool rv = mRangeList->AppendElement(&aRange);
+  PRBool rv = mDOMSlots->mRangeList->AppendElement(&aRange);
   if (rv)  return NS_OK;
   return NS_ERROR_FAILURE;
 }
@@ -1025,12 +1026,35 @@ nsGenericElement::RangeAdd(nsIDOMRange& aRange)
 nsresult 
 nsGenericElement::RangeRemove(nsIDOMRange& aRange)
 {
-  if (mRangeList) {
+  if (mDOMSlots && mDOMSlots->mRangeList) {
     // dont need to release - this call is made by the range object itself
-    PRBool rv = mRangeList->RemoveElement(&aRange);
-    if (rv)  return NS_OK;
+    PRBool rv = mDOMSlots->mRangeList->RemoveElement(&aRange);
+    if (rv) {
+      if (mDOMSlots->mRangeList->Count() == 0) {
+        delete mDOMSlots->mRangeList;
+        if ( (mDOMSlots->mScriptObject == nsnull) &&
+             (mDOMSlots->mChildNodes == nsnull) &&
+             (mDOMSlots->mStyle == nsnull) ) {
+          PR_DELETE(mDOMSlots);
+        }
+      }
+      return NS_OK;
+    }
   }
   return NS_ERROR_FAILURE;
+}
+
+
+nsresult 
+nsGenericElement::GetRangeList(nsVoidArray*& aResult) const
+{
+  if (mDOMSlots && mDOMSlots->mRangeList) {
+    aResult = mDOMSlots->mRangeList;
+  }
+  else {
+    aResult = nsnull;
+  }
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

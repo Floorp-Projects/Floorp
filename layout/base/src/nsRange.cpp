@@ -20,6 +20,8 @@
  * nsRange.cpp: Implementation of the nsIDOMRange object.
  */
 
+#include "nsRange.h"
+
 #include "nsIDOMRange.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -28,107 +30,17 @@
 #include "nsVoidArray.h"
 #include "nsIDOMText.h"
 #include "nsContentIterator.h"
+#include "nsIDOMNodeList.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
-class nsRange : public nsIDOMRange
-{
-public:
-  NS_DECL_ISUPPORTS
 
-  nsRange();
-  virtual ~nsRange();
-
-  // IsPositioned attribute disappeared from the dom spec
-  NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
-
-  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);
-  NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
-
-  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);
-  NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
-
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
-
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);
-
-  NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling);
-  NS_IMETHOD    SetStartAfter(nsIDOMNode* aSibling);
-
-  NS_IMETHOD    SetEnd(nsIDOMNode* aParent, PRInt32 aOffset);
-  NS_IMETHOD    SetEndBefore(nsIDOMNode* aSibling);
-  NS_IMETHOD    SetEndAfter(nsIDOMNode* aSibling);
-
-  NS_IMETHOD    Collapse(PRBool aToStart);
-
-  NS_IMETHOD    Unposition();
-
-  NS_IMETHOD    SelectNode(nsIDOMNode* aN);
-  NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);
-
-  NS_IMETHOD    CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret);
-
-  NS_IMETHOD    DeleteContents();
-
-  NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn);
-  NS_IMETHOD    CloneContents(nsIDOMDocumentFragment** aReturn);
-
-  NS_IMETHOD    InsertNode(nsIDOMNode* aN);
-  NS_IMETHOD    SurroundContents(nsIDOMNode* aN);
-
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn);
-
-  NS_IMETHOD    ToString(nsString& aReturn);
-
-private:
-  PRBool       mIsPositioned;
-  nsIDOMNode   *mStartParent;
-  nsIDOMNode   *mEndParent;
-  PRInt32      mStartOffset;
-  PRInt32      mEndOffset;
-  nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
-  nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
-  nsVoidArray  *mStartAncestorOffsets; //
-  nsVoidArray  *mEndAncestorOffsets;   //
-
-  // no copy's or assigns
-  nsRange(const nsRange&);
-  nsRange& operator=(const nsRange&);
-  
-  // helper routines
-  
-  static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
-  static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
-  static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
-  
-  static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
-                                      PRInt32 nodeOffset,
-                                      nsIDOMNode* clonedNode,
-                                      nsIDOMNode* commonParent,
-                                      nsIDOMDocumentFragment* docfrag,
-                                      PRBool leftP);
-
-  nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
-                             nsIDOMNode* aEndN, PRInt32 aEndOffset);
-
-  PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
-                             nsIDOMNode* aEndN, PRInt32 aEndOff);
-                       
-  nsresult      IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult);
-  
-  nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
-  
-  
-  PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
-                        nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
-  
-
-};
+/******************************************************
+ * non members
+ ******************************************************/
 
 nsresult
 NS_NewRange(nsIDOMRange** aInstancePtrResult)
@@ -136,6 +48,27 @@ NS_NewRange(nsIDOMRange** aInstancePtrResult)
   nsRange * range = new nsRange();
   return range->QueryInterface(kIRangeIID, (void**) aInstancePtrResult);
 }
+
+
+// Returns -1 if point1 < point2, 1, if point1 > point2,
+// 0 if error or if point1 == point2.
+PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
+                      nsIDOMNode* aParent2, PRInt32 aOffset2)
+{
+  if (aParent1 == aParent2 && aOffset1 == aOffset2)
+    return 0;
+  nsRange* range = new nsRange;
+  nsresult res = range->SetStart(aParent1, aOffset1);
+  if (!NS_SUCCEEDED(res))
+    return 0;
+  res = range->SetEnd(aParent2, aOffset2);
+  delete range;
+  if (NS_SUCCEEDED(res))
+    return -1;
+  else
+    return 1;
+}
+
 
 /******************************************************
  * constructor/destructor
@@ -158,6 +91,7 @@ nsRange::nsRange()
 
 nsRange::~nsRange() 
 {
+  DoSetRange(nsnull,0,nsnull,0); // we want the side effects (releases and list removals)
   delete mStartAncestors;
   delete mEndAncestors;
   delete mStartAncestorOffsets;
@@ -193,31 +127,6 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
 
 
 /******************************************************
- * Public helper routines
- ******************************************************/
-
-//
-// Returns -1 if point1 < point2, 1, if point1 > point2,
-// 0 if error or if point1 == point2.
-//
-PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
-                      nsIDOMNode* aParent2, PRInt32 aOffset2)
-{
-  if (aParent1 == aParent2 && aOffset1 == aOffset2)
-    return 0;
-  nsRange* range = new nsRange;
-  nsresult res = range->SetStart(aParent1, aOffset1);
-  if (!NS_SUCCEEDED(res))
-    return 0;
-  res = range->SetEnd(aParent2, aOffset2);
-  delete range;
-  if (NS_SUCCEEDED(res))
-    return -1;
-  else
-    return 1;
-}
-
-/******************************************************
  * Private helper routines
  ******************************************************/
 
@@ -248,25 +157,94 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 
   return retval;
 }
+
+
+nsresult nsRange::AddToListOf(nsIDOMNode* aNode)
+{
+  if (!aNode)
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
   
+  nsIContent *cN;
+
+  nsresult res = aNode->QueryInterface(kIContentIID, (void**)&cN);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::AddToListOf");
+    NS_IF_RELEASE(cN);
+    return res;
+  }
+
+  res = cN->RangeAdd(NS_STATIC_CAST(nsIDOMRange,*this));
+  return res;
+}
+  
+
+nsresult nsRange::RemoveFromListOf(nsIDOMNode* aNode)
+{
+  if (!aNode)
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+  
+  nsIContent *cN;
+
+  nsresult res = aNode->QueryInterface(kIContentIID, (void**)&cN);
+  if (!NS_SUCCEEDED(res)) 
+  {
+    NS_NOTREACHED("nsRange::RemoveFromListOf");
+    NS_IF_RELEASE(cN);
+    return res;
+  }
+
+  res = cN->RangeRemove(NS_STATIC_CAST(nsIDOMRange,*this));
+  return res;
+}
+
+// It's important that all setting of the range start/end pionts 
+// go through this function, which will do all the right voodoo
+// for both refcounting and content notification of range ownership  
 nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
                              nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
   if (mStartParent != aStartN)
   {
-    NS_IF_RELEASE(mStartParent);
+    if (mStartParent) // if it had a former start node, take it off it's list
+    {
+      RemoveFromListOf(mStartParent);
+      NS_RELEASE(mStartParent);
+    }
     mStartParent = aStartN;
-    NS_ADDREF(mStartParent);
+    if (mStartParent) // if it has a new start node, put it on it's list
+    {
+      AddToListOf(mStartParent);
+      NS_ADDREF(mStartParent);
+    }
   }
   mStartOffset = aStartOffset;
+  
   if (mEndParent != aEndN)
   {
-    NS_IF_RELEASE(mEndParent);
+    if (mEndParent) // if it had a former end node, take it off it's list
+    {
+      RemoveFromListOf(mEndParent);
+      NS_RELEASE(mEndParent);
+    }
     mEndParent = aEndN;
-    NS_ADDREF(mEndParent);
+    if (mEndParent) // if it has a new end node, put it on it's list
+    {
+      AddToListOf(mEndParent);
+      NS_ADDREF(mEndParent);
+    }
   }
   mEndOffset = aEndOffset;
   
+  if (mStartParent) mIsPositioned = PR_TRUE;
+  else mIsPositioned = PR_FALSE;
+  
+  // FIX ME need to handle error cases 
+  // (range lists return error, or setting only one endpoint to null)
   return NS_OK;
 }
 
@@ -717,31 +695,17 @@ nsresult nsRange::Collapse(PRBool aToStart)
 
   if (aToStart)
   {
-    NS_IF_RELEASE(mEndParent);
-    NS_IF_ADDREF(mStartParent);
-    mEndParent = mStartParent;
-    mEndOffset = mStartOffset;
-    return NS_OK;
+    return DoSetRange(mStartParent,mStartOffset,mStartParent,mStartOffset);
   }
   else
   {
-    NS_IF_RELEASE(mStartParent);
-    NS_IF_ADDREF(mEndParent);
-    mStartParent = mEndParent;
-    mStartOffset = mEndOffset;
-    return NS_OK;
+    return DoSetRange(mEndParent,mEndOffset,mEndParent,mEndOffset);
   }
 }
 
 nsresult nsRange::Unposition()
 {
-  NS_IF_RELEASE(mStartParent);
-  mStartParent = nsnull;
-  mStartOffset = 0;
-  NS_IF_RELEASE(mEndParent);
-  mEndParent = nsnull;
-  mEndOffset = 0;
-  mIsPositioned = PR_FALSE;
+  return DoSetRange(nsnull,0,nsnull,0);
   return NS_OK;
 }
 
@@ -752,29 +716,24 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
   if (!NS_SUCCEEDED(res))
     return res;
 
-  if (mIsPositioned)
-    Unposition();
-  NS_IF_ADDREF(parent);
-  mStartParent = parent;
-  mStartOffset = 0;      // XXX NO DIRECT WAY TO GET CHILD # OF THIS NODE!
-  NS_IF_ADDREF(parent);
-  mEndParent = parent;
-  mEndOffset = mStartOffset;
-  return NS_OK;
+  PRInt32 indx = IndexOf(aN);
+  return DoSetRange(parent,indx,parent,indx+1);
 }
 
 nsresult nsRange::SelectNodeContents(nsIDOMNode* aN)
 {
-  if (mIsPositioned)
-    Unposition();
-
-  NS_IF_ADDREF(aN);
-  mStartParent = aN;
-  mStartOffset = 0;
-  NS_IF_ADDREF(aN);
-  mEndParent = aN;
-  mEndOffset = 0;        // WRONG!  SHOULD BE # OF LAST CHILD!
-  return NS_OK;
+  nsIDOMNodeList *aChildNodes;
+  nsresult res = aN->GetChildNodes(&aChildNodes);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  if (aChildNodes==nsnull)
+    return NS_ERROR_UNEXPECTED;
+  PRUint32 indx;
+  res = aChildNodes->GetLength(&indx);
+  NS_RELEASE(aChildNodes);
+  if (!NS_SUCCEEDED(res))
+    return res;
+  return DoSetRange(aN,0,aN,indx);
 }
 
 nsresult nsRange::DeleteContents()
@@ -1077,6 +1036,8 @@ nsRange::CloneSibsAndParents(nsIDOMNode* parentNode, PRInt32 nodeOffset,
   // XXX This is fine for left children but it will include too much
   // XXX instead of stopping at the left children of the end node.
   //
+  
+  return res;
 }
 
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)

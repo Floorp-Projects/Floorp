@@ -656,10 +656,24 @@ nsGenericDOMDataNode::RangeRemove(nsIDOMRange& aRange)
   if (mRangeList) {
     // dont need to release - this call is made by the range object itself
     PRBool rv = mRangeList->RemoveElement(&aRange);
-    if (rv)  return NS_OK;
+    if (rv) {
+      if (mRangeList->Count() == 0) {
+        delete mRangeList;
+      }
+      return NS_OK;
+    }
   }
   return NS_ERROR_FAILURE;
 }
+
+
+nsresult 
+nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
+{
+  aResult = mRangeList;
+  return NS_OK;
+}
+
 
 //----------------------------------------------------------------------
 

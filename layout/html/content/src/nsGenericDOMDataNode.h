@@ -152,6 +152,7 @@ struct nsGenericDOMDataNode {
                           nsEventStatus& aEventStatus);
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
+  nsresult GetRangeList(nsVoidArray*& aResult) const;
 
   // Implementation for nsIHTMLContent
   nsresult Compact();
@@ -470,6 +471,9 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
     return _g.RangeRemove(aRange);                                         \
+  }                                                                        \
+  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
+    return _g.GetRangeList(aResult);                                       \
   }                                                                        
 
 
