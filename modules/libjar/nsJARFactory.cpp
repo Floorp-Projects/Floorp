@@ -31,14 +31,13 @@
 #include "prlog.h"
 
 #include "xp_regexp.h"
-#include "nsRepository.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 #include "nsJAR.h"
 #include "nsIJARFactory.h"
 
-/* XPCOM includes */
-//#include "nsIComponentManager.h"
 
 
 /*********************************
@@ -197,22 +196,52 @@ NSGetFactory(nsISupports* serviceMgr,
  * XPCOM registry stuff
  *---------------------------------------------------------*/
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServiceMgr, const char *path)
+NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult result;
+#ifdef NS_DEBUG
+  printf("***  Libjar is being registered\n");
+#endif
 
-  printf("*** Libjar is being registered\n");
-  nsRepository::RegisterComponent(kJAR_CID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  nsresult rv;
 
-  return NS_OK;
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                           nsIComponentManager::GetIID(), 
+                           (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->RegisterComponent(kJAR_CID,
+                                      NULL, NULL, path,
+                                      PR_TRUE, PR_TRUE);
+
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServiceMgr, const char *path)
+NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
-  nsresult result;
-  //nsRepository::UnregisterFactory(kJAR_CID, path);
-  return NS_OK;
+#ifdef NS_DEBUG
+  printf("*** Libjar is being unregistered\n");
+#endif
+
+  nsresult rv;
+
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  nsIComponentManager* compMgr;
+  rv = servMgr->GetService(kComponentManagerCID, 
+                               nsIComponentManager::GetIID(), 
+                               (nsISupports**)&compMgr);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->UnregisterComponent(kJAR_CID, path);
+  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  return rv;
 }
 

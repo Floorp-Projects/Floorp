@@ -20,14 +20,16 @@
  *
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
+#ifndef nsZipArchive_h_
+#define nsZipArchive_h_
 
 #define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
 #define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
 #define ZIP_TABSIZE   256
 #define ZIP_BUFLEN    32767
-
 
 
 
@@ -61,6 +63,7 @@ private:
   //-- prevent copies and assignments
   nsZipItem& operator=(const nsZipItem& rhs);
   nsZipItem(const nsZipItem& rhs);
+
 };
 
 
@@ -119,10 +122,9 @@ public:
    * FindNext
    *
    * @param   aFind   the Find structure returned by FindInit
-   * @param   aBuf    A buffer to hold filenames that match pattern
-   * @param   aSize   size of the buffer
+   * @param   aResult the next item that matches the pattern
    */
-  PRInt32 FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize );
+  PRInt32 FindNext( nsZipFind* aFind, nsZipItem** aResult);
 
   PRInt32 FindFree( nsZipFind *aFind );
 
@@ -155,13 +157,18 @@ private:
 class nsZipFind
 {
   friend class nsZipArchive;
+#ifdef STANDALONE
   friend PRInt32 ZIP_FindNext( void*, char*, PRUint16 );
   friend PRInt32 ZIP_FindFree( void* );
+#endif
+
 public:
   const PRInt32       kMagic;
 
   nsZipFind( nsZipArchive* aZip, char* aPattern, PRBool regExp );
   ~nsZipFind();
+
+  nsZipArchive* GetArchive();
 
 private:
   nsZipArchive* mArchive;
@@ -174,3 +181,5 @@ private:
   nsZipFind& operator=(const nsZipFind& rhs);
   nsZipFind(const nsZipFind& rhs);
 };
+
+#endif /* nsZipArchive_h_ */

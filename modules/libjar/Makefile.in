@@ -25,6 +25,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		    = jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
 
+XPIDLSRCS=nsIZip.idl \
+          nsIJAR.idl \
+          $(NULL)
+
 CPPSRCS = \
 	nsZipArchive.cpp \
 	nsJAR.cpp \

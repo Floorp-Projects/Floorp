@@ -44,6 +44,7 @@
 #define ZIP_ERR_UNSUPPORTED   -7
 #define ZIP_ERR_SMALLBUF      -8
 
+#ifdef STANDALONE
 
 PR_BEGIN_EXTERN_C
 
@@ -83,5 +84,8 @@ PR_EXTERN(PRInt32) ZIP_FindFree( void* hFind );
 
 
 PR_END_EXTERN_C
+
+#endif /* STANDALONE */
+
 
 #endif /* _zipfile_h */

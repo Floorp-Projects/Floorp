@@ -20,6 +20,7 @@
  *
  * Contributors:
  *     Don Bragg <dbragg@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 
@@ -27,8 +28,10 @@
 #define nsJAR_h__
 
 #include "prtypes.h"
-#include "nsJARIIDs.h"
 #include "nsIJAR.h"
+#include "nsIEnumerator.h"
+#include "nsZipArchive.h"
+#include "zipfile.h"
 
 
 /*-------------------------------------------------------------------------
@@ -40,10 +43,6 @@
  *------------------------------------------------------------------------*/
 class nsJAR : public nsIJAR
 {
-  //private:
-
-    nsZipArchive zip;
-
   public:
 
     nsJAR();
@@ -53,12 +52,71 @@ class nsJAR : public nsIJAR
   
     NS_DECL_ISUPPORTS
     
-    NS_IMETHODIMP Open(const char* zipFileName, PRInt32 *aResult);
-   
-    NS_IMETHODIMP Extract(const char * aFilename, const char * aOutname, PRInt32 *aResult);
+    NS_IMETHOD Open(const char *aZipFileName, PRInt32 *_retval);
+    NS_IMETHOD Extract(const char *aFilename, const char *aOutname, PRInt32 *_retval);
+    NS_IMETHOD Find(const char *aPattern, nsISimpleEnumerator **_retval);
+  
+  private:
 
-    NS_IMETHODIMP Find( const char * aPattern, nsZipFind *aResult);
+    nsZipArchive zip;
+};
 
+
+
+
+/**
+ * nsJARItem
+ *
+ * An individual JAR entry. A set of nsJARItems macthing a
+ * supplied pattern are returned in a nsJAREnumerator.
+ */
+class nsJARItem : public nsZipItem, public nsIJARItem
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    //NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARITEM_CID );
+
+    // nsIJARItem methods
+    NS_IMETHOD GetName(char * *aName);
+    NS_IMETHOD GetCompression(PRUint16 *aCompression);
+    NS_IMETHOD GetSize(PRUint32 *aSize);
+    NS_IMETHOD GetRealsize(PRUint32 *aRealsize);
+    NS_IMETHOD GetCrc32(PRUint32 *aCrc32);
+
+    nsJARItem(nsZipItem* aOther);
+    nsJARItem();
+    virtual ~nsJARItem();
+};
+
+
+
+
+/**
+ * nsJAREnumerator
+ *
+ * Enumerates a list of files in a zip archive 
+ * (based on a pattern match in its member nsZipFind).
+ */
+class nsJAREnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    //NS_DEFINE_STATIC_CID_ACCESSOR( NS_JARENUMERATOR_CID );
+
+    // nsISimpleEnumerator methods
+    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD GetNext(nsISupports** aResult);
+
+    nsJAREnumerator(nsZipFind *aFind);
+    virtual ~nsJAREnumerator();
+
+protected:
+    nsZipArchive *mArchive; // pointer extracted from mFind for efficiency
+    nsZipFind    *mFind;
+    nsZipItem    *mCurr;    // raw pointer to an nsZipItem owned by mArchive -- DON'T delete
+    PRBool        mIsCurrStale;
 };
 
 #endif /* nsJAR_h__ */

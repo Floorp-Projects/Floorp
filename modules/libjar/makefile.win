@@ -1,4 +1,4 @@
-#!gmake
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -35,7 +35,11 @@ DLLNAME=jar$(VERSION_NUMBER)
 DLL=$(OBJDIR)\$(DLLNAME).dll
 MAPFILE=$(DLLNAME).map
 
-EXPORTS=zipfile.h nsIJAR.h nsIZip.h nsJARIIDs.h
+XPIDLSRCS=.\nsIZip.idl \
+          .\nsIJAR.idl \
+          $(NULL)
+
+EXPORTS=zipfile.h
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJAR.obj \
@@ -61,11 +65,11 @@ LLIBS=                        \
 include <$(DEPTH)/config/rules.mak>
 
 install:: $(DLL)
-    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+    $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
   $(RM) $(OBJS)
-  $(RM) $(DIST)\bin\$(DLLNAME).dll
+  $(RM) $(DIST)\bin\components\$(DLLNAME).dll
   $(RM) $(DIST)\lib\$(DLLNAME).lib
 
