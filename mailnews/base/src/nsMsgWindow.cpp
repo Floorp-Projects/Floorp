@@ -35,6 +35,8 @@
 #include "nsILoadGroup.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsPIDOMWindow.h"
 
 
@@ -99,6 +101,7 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
 
   // make sure the status feedback object
   // knows the window is going away...
+
   if (mStatusFeedback)
     mStatusFeedback->CloseWindow(); 
 
@@ -117,7 +120,19 @@ NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeed
 
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
 {
+
+  nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mMessageWindowWebShell));
+  nsCOMPtr<nsIWebProgressListener> webProgressListener(do_QueryInterface(mStatusFeedback));
+
 	mStatusFeedback = aStatusFeedback;
+
+  // register our status feedback object
+  if (mStatusFeedback && mMessageWindowWebShell)
+  {
+    webProgressListener = do_QueryInterface(mStatusFeedback);
+    webProgress->AddProgressListener(webProgressListener);
+  }
+
 	return NS_OK;
 }
 
@@ -217,14 +232,14 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 	nsresult rv = NS_OK;
 
 	nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(aWindow));
-   nsCOMPtr<nsIDocShell> docShell;
+  nsCOMPtr<nsIDocShell> docShell;
 	if (globalScript)
 		globalScript->GetDocShell(getter_AddRefs(docShell));
 
    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
 
    if(docShellAsItem)
-      {
+   {
       nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
       docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
 
@@ -245,18 +260,19 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
       nsCOMPtr<nsIWebShell> msgWebShell(do_QueryInterface(msgDocShellItem));
       // we don't own mMessageWindowWebShell so don't try to keep a reference to it!
       mMessageWindowWebShell = msgWebShell;
-      }
+      SetStatusFeedback(mStatusFeedback);
+   }
 
 	//Get nsIMsgWindowCommands object
-     nsCOMPtr<nsISupports> xpConnectObj;
-     nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
-     if (piDOMWindow)
-     {
-        nsAutoString msgWindowCommandsWinId; 
-		msgWindowCommandsWinId.AssignWithConversion("MsgWindowCommands");
-        piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
-        mMsgWindowCommands = do_QueryInterface(xpConnectObj);
-     }
+   nsCOMPtr<nsISupports> xpConnectObj;
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
+   if (piDOMWindow)
+   {
+      nsAutoString msgWindowCommandsWinId; 
+		  msgWindowCommandsWinId.AssignWithConversion("MsgWindowCommands");
+      piDOMWindow->GetObjectProperty(msgWindowCommandsWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+      mMsgWindowCommands = do_QueryInterface(xpConnectObj);
+    }
 
 	return rv;
 }
