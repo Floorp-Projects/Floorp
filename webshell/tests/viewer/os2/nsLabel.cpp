@@ -194,7 +194,7 @@ PCSZ nsLabel::WindowClass()
 //-------------------------------------------------------------------------
 ULONG nsLabel::WindowStyle()
 { 
-  ULONG style =  WS_CLIPSIBLINGS; 
+  ULONG style =  WS_CLIPSIBLINGS | SS_TEXT; 
   switch (mAlignment) {
     case eAlign_Right : style |= DT_RIGHT; break;
     case eAlign_Left  : style |= DT_LEFT;  break;
