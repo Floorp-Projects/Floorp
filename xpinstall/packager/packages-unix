@@ -145,6 +145,7 @@ bin/components/mozucth.xpt
 bin/components/mozxfer.xpt
 bin/components/libnecko.so
 bin/components/libnecko2.so
+bin/components/libnkcache.so
 bin/components/necko.xpt
 bin/components/mimetype.xpt
 bin/components/necko_cache.xpt
