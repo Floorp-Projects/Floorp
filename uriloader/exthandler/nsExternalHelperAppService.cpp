@@ -116,6 +116,7 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { IMAGE_ICO, "ico,cur", "ICO Image", 0, 0 },
   { IMAGE_MNG, "mng", "MNG Image", 0, 0 },
   { IMAGE_JNG, "jng", "JNG Image", 0, 0 },
+  { IMAGE_XBM, "xbm", "XBM Image", 0, 0 },
   { APPLICATION_XPINSTALL, "xpi", "XPInstall Install", 'xpi*','MOSS' },
 };
 

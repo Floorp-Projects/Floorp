@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= ppm png gif jpeg bmp mng
+DIRS		= ppm png gif jpeg bmp mng xbm
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= icon/win icon

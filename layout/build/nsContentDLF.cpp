@@ -136,6 +136,9 @@ static const char* const gImageTypes[] = {
   "image/x-icon",
   "video/x-mng",
   "image/x-jng",
+  "image/x-xbitmap",
+  "image/x-xbm",
+  "image/xbm",
   0
 };
 
