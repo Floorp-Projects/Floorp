@@ -410,7 +410,6 @@
                   flex="1" contenttooltip="aHTMLTooltip"
                   contentcontextmenu="contentAreaContextMenu"
                   onnewtab="BrowserOpenTab();"
-                  autocompleteenabled="true"
                   autocompletepopup="PopupAutoComplete"
                   ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                   onclick="return contentAreaClick(event, false);"/>

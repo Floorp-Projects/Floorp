@@ -465,6 +465,7 @@ function delayedStartup()
   gFormFillPrefListener = new FormFillPrefListener();
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
+  gFormFillPrefListener.toggleFormFill();
 
   // Enable/Disable URL Bar Auto Fill
   gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
@@ -637,7 +638,8 @@ FormFillPrefListener.prototype =
     }
     catch (e) {
     }
-    gBrowser.setAttribute("autocompleteenabled", gFormFillEnabled);
+    var formController = Components.classes["@mozilla.org/satchel/form-fill-controller;1"].getService(Components.interfaces.nsIAutoCompleteInput);
+    formController.disableAutoComplete = !gFormFillEnabled;
 
     var searchBar = document.getElementById("search-bar");
     if (searchBar) {

@@ -354,9 +354,7 @@
         <body>
           <![CDATA[
             this.removeEventListener("load", this.handleEvent, true);
-            
-            if (this.hasAttribute("autocompleteenabled"))
-              this.attachFormFill();
+            this.attachFormFill();
          ]]>
         </body>
       </method>
