@@ -348,6 +348,7 @@ extern "C" void RunInstallOnThread(void *data)
             {
                 // Go ahead and run!!
                 jsval rval;
+                jsval installedFiles;
 
                 PRBool ok = JS_EvaluateScript(  cx, 
                                                 glob,
@@ -357,24 +358,36 @@ extern "C" void RunInstallOnThread(void *data)
                                                 0,
                                                 &rval);
 
-                if (!ok)
+
+                if(!ok)
                 {
                     // problem compiling or running script
+                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                       JSVAL_TO_BOOLEAN(installedFiles))
+                    {
+                        nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                        a->InternalAbort(nsInstall::SCRIPT_ERROR);
+                    }
+
                     finalStatus = nsInstall::SCRIPT_ERROR;
                 }
                 else
                 {
                     // check to make sure the script sent back a status
                     jsval sent;
+
+                    if(JS_GetProperty(cx, glob, "_installedFiles", &installedFiles) &&
+                       JSVAL_TO_BOOLEAN(installedFiles))
+                    {
+                      nsInstall *a = (nsInstall*)JS_GetPrivate(cx, glob);
+                      a->InternalAbort(nsInstall::SCRIPT_ERROR);
+                    }
+
                     if ( JS_GetProperty( cx, glob, "_statusSent", &sent ) &&
                          JSVAL_TO_BOOLEAN(sent) )
-                    {
                         sendStatus = PR_FALSE;
-                    }
                     else
-                    {
                         finalStatus = nsInstall::SCRIPT_ERROR;
-                    }
                 }
 
                 JS_DestroyContext(cx);
