@@ -37,7 +37,7 @@ public:
 class InvokeTestTarget : public InvokeTestTargetInterface
 {
 public:
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval);
 
