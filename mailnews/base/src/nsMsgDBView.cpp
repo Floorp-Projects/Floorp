@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  * Jan Varga (varga@utcru.sk)
+ * Håkan Waara (hwaara@chello.se)
  */
 
 #include "msgCore.h"
@@ -4048,33 +4049,17 @@ NS_IMETHODIMP nsMsgDBView::GetMsgFolder(nsIMsgFolder **aMsgFolder)
 
 NS_IMETHODIMP 
 nsMsgDBView::GetNumSelected(PRUint32 *numSelected)
-{
+{ 
   NS_ENSURE_ARG_POINTER(numSelected);
-  *numSelected = 0;
-  if (!mOutlinerSelection) {
+    
+  if (!mOutlinerSelection) 
+  {
+    *numSelected = 0;
     return NS_OK;
   }
-   
-  // we could just use GetSelectedIndices(), we don't for performance
-  // we don't need to know the rows that are selected, just
-  // how many of them.  no need to allocate a nsUInt32Array
-  // just to throw it away.  we call this a lot from the 
-  // front end JS, so make it fast.
-  PRInt32 selectionCount;
-  nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
-  for (PRInt32 i = 0; i < selectionCount; i++) {
-    PRInt32 startRange;
-    PRInt32 endRange;
-    rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRInt32 viewSize = GetSize();
-    if (startRange >= 0 && startRange < viewSize) {
-      for (PRInt32 rangeIndex = startRange; rangeIndex <= endRange && rangeIndex < viewSize; rangeIndex++) {
-        (*numSelected)++;
-      }
-    }
-  }
-  return NS_OK;
+  
+  // We call this a lot from the front end JS, so make it fast.
+  return mOutlinerSelection->GetCount((PRInt32*)numSelected);
 }
 
 NS_IMETHODIMP 
