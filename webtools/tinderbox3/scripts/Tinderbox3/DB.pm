@@ -17,8 +17,13 @@ our $dbname = "tbox3";
 our $username = "";
 our $password = "";
 sub get_dbh {
-  my $dbh = DBI->connect("dbi:$dbtype:dbname=$dbname", $username, $password, { RaiseError => 1, AutoCommit => 0 });
+  my $dbh = DBI->connect("dbi:$dbtype:dbname=$dbname", $username, $password, { RaiseError => 1 });
   return $dbh;
+}
+
+sub maybe_commit {
+  my ($dbh) = @_;
+  # $dbh->commit();
 }
 
 sub check_edit_tree {
@@ -93,7 +98,7 @@ sub update_patch_action {
 
       # Perform patch insert
       $dbh->do("INSERT INTO tbox_patch (tree_name, patch_name, patch_ref, patch_ref_url, patch, in_use) VALUES (?, ?, ?, ?, ?, ?)", undef, $tree, $patch_name, $patch_ref, $patch_ref_url, $patch, $in_use);
-      $dbh->commit();
+      maybe_commit($dbh);
 
     } else {
       # Check security
@@ -104,7 +109,7 @@ sub update_patch_action {
       if (!$rows) {
         die "Could not find patch!";
       }
-      $dbh->commit();
+      maybe_commit($dbh);
     }
 
   } elsif ($action eq 'delete_patch') {
@@ -118,7 +123,7 @@ sub update_patch_action {
     if (!$rows) {
       die "Delete failed.  No such tree / patch.";
     }
-    $dbh->commit;
+    maybe_commit($dbh);
 
   } elsif ($action eq 'stop_using_patch' || $action eq 'start_using_patch') {
     # Check security
@@ -129,7 +134,7 @@ sub update_patch_action {
     if (!$rows) {
       die "Update failed.  No such tree / patch.";
     }
-    $dbh->commit;
+    maybe_commit($dbh);
   }
 
   return $patch_id;
@@ -209,7 +214,7 @@ sub update_tree_action {
       $i++;
     }
 
-    $dbh->commit;
+    maybe_commit($dbh);
 
     # Return the new tree name
     $tree = $newtree;
@@ -231,7 +236,7 @@ sub update_tree_action {
     if (!$rows) {
       die "No tree named $tree!";
     }
-    $dbh->commit;
+    maybe_commit($dbh);
   }
 
   return $tree;
@@ -278,7 +283,7 @@ sub update_machine_action {
       $i++;
     }
 
-    $dbh->commit;
+    maybe_commit($dbh);
   } elsif ($action eq 'kick_machine') {
     die "Must pass machine_id!" if !$machine_id;
 
@@ -297,7 +302,7 @@ sub update_machine_action {
     if (!$rows) {
       die "Could not update machine!";
     }
-    $dbh->commit;
+    maybe_commit($dbh);
   } elsif ($action eq 'delete_machine') {
     die "Must pass machine_id!" if !$machine_id;
 
@@ -310,7 +315,7 @@ sub update_machine_action {
     $row = $dbh->do('DELETE FROM tbox_machine WHERE machine_id = ?', undef, $machine_id);
     die "Could not delete machine" if !$row;
     delete_logs($machine_id);
-    $dbh->commit;
+    maybe_commit($dbh);
 
   }
   return $machine_id;
@@ -349,14 +354,14 @@ sub update_bonsai_action {
       $dbh->do("INSERT INTO tbox_bonsai (tree_name, display_name, bonsai_url, module, branch, directory, cvsroot) VALUES (?, ?, ?, ?, ?, ?, ?)", undef, $tree, $display_name, $bonsai_url, $module, $branch, $directory, $cvsroot);
       $bonsai_id = sql_get_last_id($dbh, 'tbox_bonsai_id_seq');
     }
-    $dbh->commit();
+    maybe_commit($dbh);
   } elsif ($action eq "delete_bonsai") {
     Tinderbox3::Bonsai::clear_cache($dbh, $bonsai_id);
     my $rows = $dbh->do("DELETE FROM tbox_bonsai WHERE bonsai_id = ?", undef, $bonsai_id);
     if (!$rows) {
       die "Could not delete bonsai!";
     }
-    $dbh->commit();
+    maybe_commit($dbh);
   }
 
   return ($tree, $bonsai_id);
