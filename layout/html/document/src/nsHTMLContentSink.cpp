@@ -2192,7 +2192,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsAutoString  type;
 
       GetAttributeValueAt(aNode, i, type, nsnull);
-      isJavaScript = type.EqualsIgnoreCase("text/javascript");
+      isJavaScript = type.EqualsIgnoreCase("text/javascript") || 
+        type.EqualsIgnoreCase("application/x-javascript");
     }
     else if (key.EqualsIgnoreCase("language")) {
       nsAutoString  lang;
