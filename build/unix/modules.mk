@@ -50,7 +50,7 @@ BUILD_MODULE_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom
 BUILD_MODULE_DEP_DIRS_xpcom	= intl modules/libjar
 
 BUILD_MODULE_DIRS_psm		= $(BUILD_MODULE_DIRS_dbm) $(BUILD_MODULE_DIRS_xpcom) security netwerk/base/public netwerk/socket/base dom/public $(BUILD_MODULE_DIRS_js) extensions/psm-glue
-BUILD_MODULE_DEP_DIRS_psm	= $(BUILD_MODULE_DEP_DIRS_xpcom) uriloader/base modules/libpref/public profile/public caps/idl modules/appfilelocprovider/public netwerk/protocol/http/public js/src gfx/idl gfx/public rdf/base/idl xpfe/appshell/public widget/public docshell/base layout/html/forms/public layout/base/public rdf/content/public dom/src/base modules/oji/public caps/include
+BUILD_MODULE_DEP_DIRS_psm	= $(BUILD_MODULE_DEP_DIRS_xpcom) uriloader/base modules/libpref/public profile/public caps/idl modules/appfilelocprovider/public netwerk/protocol/http/public gfx/idl gfx/public rdf/base/idl xpfe/appshell/public widget/public docshell/base layout/html/forms/public layout/base/public rdf/content/public dom/src/base modules/oji/public caps/include
 
 BUILD_MODULE_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DIRS_$(mod)))
 BUILD_MODULE_DEP_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DEP_DIRS_$(mod)))
