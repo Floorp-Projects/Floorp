@@ -485,6 +485,11 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 	return NS_OK;
 }
 
+inline PRUint16 COLOR8TOCOLOR16(PRUint8 color8)
+{
+	// return (color8 == 0xFF ? 0xFFFF : (color8 << 8));
+	return (color8 << 8) | color8;	/* (color8 * 257) == (color8 * 0x0101) */
+}
 
 //-------------------------------------------------------------------------
 //	StartDraw
@@ -528,7 +533,6 @@ void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 	}
 
 	// set the background & foreground colors
-	#define COLOR8TOCOLOR16(color8)	 (color8 == 0xFF ? 0xFFFF : (color8 << 8))
 	nscolor color = GetBackgroundColor();
 	RGBColor macColor;
 	macColor.red   = COLOR8TOCOLOR16(NS_GET_R(color));
