@@ -124,21 +124,21 @@ public:
 
   NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
 
+  // XXX this are going to be replaced with set/get container
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler) = 0;
-
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult) = 0;
 
   /**
-   * Get the currently visible portion of the RootContent ILayoutable.
-   * The units returned are in pixels. An acceptable answer is "null"
-   * which means "I don't know".
-   * <h2>Speculative</h2>
+   * Get the visible area associated with this presentation context.
+   * This is the size of the visiable area that is used for
+   * presenting the document. The returned value is in the standard
+   * nscoord units (as scaled by the device context).
    */
   virtual void GetVisibleArea(nsRect& aResult) = 0;
 
   /**
-   * Set the currently visible area. This is the size and location
-   * of the visible portion of the RootContent ILayoutable.
+   * Set the currently visible area. The units for r are standard
+   * nscoord units (as scaled by the device context).
    */
   virtual void SetVisibleArea(const nsRect& r) = 0;
 
