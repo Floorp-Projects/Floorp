@@ -1982,10 +1982,13 @@ nsFontMetricsXlib::GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
   XChar2b buf[512];
   int ret;
   int len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-    (char*) buf, sizeof(buf));
+                                         (char*) buf, sizeof(buf));
   // XXX this is slow as dirt.
   XFontStruct *font_struct = aFont->mFont;
-  ret = XTextWidth16(font_struct, buf, len / 2);
+  if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
+    ret = XTextWidth(font_struct, (char *)buf, len);
+  else
+    ret = XTextWidth16(font_struct, buf, len/2); 
   return ret;
 }
 
@@ -1996,10 +1999,18 @@ nsFontMetricsXlib::DrawString(nsDrawingSurfaceXlib* aSurface, nsFontXlib* aFont,
   XChar2b buf[512];
   int len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
     (char*) buf, sizeof(buf));
-  XDrawString16(gDisplay,
+  XFontStruct *font_struct = aFont->mFont;
+  if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
+    XDrawString(gDisplay,
                 aSurface->GetDrawable(),
                 aSurface->GetGC(),
-                aX, aY, buf, (len / 2));
+                aX, aY, (char *)buf, len);
+  else
+    XDrawString16(gDisplay,
+                  aSurface->GetDrawable(),
+                  aSurface->GetGC(),
+                  aX, aY, buf, len/2);
+  
 }
 
 nsresult
