@@ -24,6 +24,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
+<?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
 <?xul-overlay href="chrome://sidebar/content/sidebarOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
@@ -578,8 +579,11 @@ Rights Reserved.
 	    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"
 							 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
+      <!-- msg header view -->
+      <toolbox id="msgHeaderView"/>
+    
     	<!-- message view -->
-		  <html:iframe flex="3" style="height:0px" name="messagepane" src="about:blank"/>
+		  <html:iframe id="messagepane" flex="3" style="height:0px" name="messagepane" type="content-primary" src="about:blank"/>
 
 		<box id="status-bar">
 		  <box align="vertical" style="width:100px">
