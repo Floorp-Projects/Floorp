@@ -45,11 +45,6 @@ public:
 
   NS_IMETHOD Compact();
 
-  NS_IMETHOD CreateFrame(nsIPresContext* aPresContext,
-                         nsIFrame* aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*& aResult);
-
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
   NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;

@@ -265,21 +265,6 @@ nsInputRadio::SetChecked(PRBool aValue, PRBool aSetInitialValue)
   }
 }
 
-nsresult
-nsInputRadio::CreateFrame(nsIPresContext* aPresContext,
-                          nsIFrame* aParentFrame,
-                          nsIStyleContext* aStyleContext,
-                          nsIFrame*& aResult)
-{
-  nsIFrame* frame = new nsInputRadioFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
 void nsInputRadio::GetType(nsString& aResult) const
 {
   aResult = "radio";

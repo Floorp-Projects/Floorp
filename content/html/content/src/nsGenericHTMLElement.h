@@ -147,10 +147,6 @@ public:
   nsresult GetStyleRule(nsIStyleRule*& aResult);
   nsresult ToHTMLString(nsString& aResult) const;
   nsresult ToHTML(FILE* out) const;
-  nsresult CreateFrame(nsIPresContext*  aPresContext,
-                       nsIFrame*        aParentFrame,
-                       nsIStyleContext* aStyleContext,
-                       nsIFrame*&       aResult);
 
   // Implementation for nsIJSScriptObject
   virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -738,13 +734,6 @@ public:
   NS_IMETHOD ToHTML(FILE* out) const {                                 \
     return _g.ToHTML(out);                                             \
   }                                                                    \
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,                \
-                         nsIFrame*        aParentFrame,                \
-                         nsIStyleContext* aStyleContext,               \
-                         nsIFrame*&       aResult) {                   \
-    return _g.CreateFrame(aPresContext, aParentFrame, aStyleContext,   \
-                          aResult);                                    \
-  }                                                                    \
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
                                const nsString& aValue,                 \
                                nsHTMLValue& aResult);                  \
@@ -801,13 +790,6 @@ public:
   }                                                                    \
   NS_IMETHOD ToHTML(FILE* out) const {                                 \
     return _g.ToHTML(out);                                             \
-  }                                                                    \
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,                \
-                         nsIFrame*        aParentFrame,                \
-                         nsIStyleContext* aStyleContext,               \
-                         nsIFrame*&       aResult) {                   \
-    return _g.CreateFrame(aPresContext, aParentFrame, aStyleContext,   \
-                          aResult);                                    \
   }                                                                    \
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
                                const nsString& aValue,                 \

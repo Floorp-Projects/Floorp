@@ -51,11 +51,6 @@ public:
 
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
   virtual PRInt32 GetMaxNumValues();

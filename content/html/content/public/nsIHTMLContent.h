@@ -96,15 +96,6 @@ public:
   NS_IMETHOD ToHTMLString(nsString& aResult) const = 0;
 
   NS_IMETHOD ToHTML(FILE* out) const = 0;
-
-  /**
-   * Used by the html content's delegate to create a frame
-   * for the content.
-   */
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult) = 0;
 };
 
 #endif /* nsIHTMLContent_h___ */

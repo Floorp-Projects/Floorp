@@ -495,13 +495,6 @@ struct nsGenericDOMDataNode {
   }                                                                    \
   NS_IMETHOD ToHTMLString(nsString& aResult) const;                    \
   NS_IMETHOD ToHTML(FILE* out) const;                                  \
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,                \
-                         nsIFrame*        aParentFrame,                \
-                         nsIStyleContext* aStyleContext,               \
-                         nsIFrame*&       aResult) {                   \
-    NS_NOTREACHED("whoops");                                           \
-    return NS_ERROR_FAILURE;                                           \
-  }                                                                    \
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
                                const nsString& aValue,                 \
                                nsHTMLValue& aResult) {                 \

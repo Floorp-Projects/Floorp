@@ -28,11 +28,6 @@ public:
   typedef nsInput nsInputCheckboxSuper;
   nsInputCheckbox (nsIAtom* aTag, nsIFormManager* aManager);
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
                           PRBool aNotify);
 

@@ -1470,66 +1470,6 @@ extern nsresult NS_NewHRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 extern nsresult NS_NewObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                                   nsIFrame*& aNewFrame);
 
-nsresult
-nsHTMLGenericContent::CreateFrame(nsIPresContext*  aPresContext,
-                                  nsIFrame*        aParentFrame,
-                                  nsIStyleContext* aStyleContext,
-                                  nsIFrame*&       aResult)
-{
-  nsIFrame* frame = nsnull;
-  nsresult rv = NS_OK;
-
-  // Handle specific frame types
-  if (mTag == nsHTMLAtoms::applet) {
-    rv = NS_NewObjectFrame(mContent, aParentFrame, frame);
-  }
-  else if (mTag == nsHTMLAtoms::br) {
-    rv = NS_NewBRFrame(mContent, aParentFrame, frame);
-  }
-  else if (mTag == nsHTMLAtoms::hr) {
-    rv = NS_NewHRFrame(mContent, aParentFrame, frame);
-  }
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // XXX add code in here to force the odd ones into the empty frame?
-  // AREA, HEAD, META, MAP, etc...
-
-  if (nsnull == frame) {
-    // When there is no explicit frame to create, assume it's a
-    // container and let style dictate the rest.
-    const nsStyleDisplay* styleDisplay = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
-
-    // Use style to choose what kind of frame to create
-    nsresult rv;
-    switch (styleDisplay->mDisplay) {
-    case NS_STYLE_DISPLAY_BLOCK:
-    case NS_STYLE_DISPLAY_LIST_ITEM:
-      rv = NS_NewCSSBlockFrame(&frame, mContent, aParentFrame);
-      break;
-
-    case NS_STYLE_DISPLAY_INLINE:
-      rv = NS_NewCSSInlineFrame(&frame, mContent, aParentFrame);
-      break;
-
-    default:
-      // Create an empty frame for holding content that is not being
-      // reflowed.
-      rv = nsFrame::NewFrame(&frame, mContent, aParentFrame);
-      break;
-    }
-    if (NS_OK != rv) {
-      return rv;
-    }
-  }
-
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 // nsIScriptObjectOwner implementation

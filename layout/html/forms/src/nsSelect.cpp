@@ -89,11 +89,6 @@ public:
   typedef nsInput nsSelectSuper;
   nsSelect (nsIAtom* aTag, nsIFormManager* aFormMan);
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
-
   nsOption* GetNthOption(PRInt32 aIndex);
 
   NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue,
@@ -129,11 +124,6 @@ public:
   typedef nsInput nsOptionSuper;
 
   nsOption (nsIAtom* aTag);
-
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
@@ -437,21 +427,6 @@ void nsSelect::GetType(nsString& aResult) const
   aResult = "select";
 }
 
-nsresult
-nsSelect::CreateFrame(nsIPresContext* aPresContext,
-                      nsIFrame* aParentFrame,
-                      nsIStyleContext* aStyleContext,
-                      nsIFrame*& aResult)
-{
-  nsIFrame* frame = new nsSelectFrame(this, aParentFrame);
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsSelect::SetAttribute(nsIAtom* aAttribute,
                        const nsString& aValue,
@@ -642,22 +617,6 @@ nsOption::~nsOption()
 void nsOption::GetType(nsString& aResult) const
 {
   aResult = "select";
-}
-
-nsresult
-nsOption::CreateFrame(nsIPresContext* aPresContext,
-                      nsIFrame* aParentFrame,
-                      nsIStyleContext* aStyleContext,
-                      nsIFrame*& aResult)
-{
-  nsIFrame* frame;
-  nsresult rv = nsFrame::NewFrame(&frame, this, aParentFrame);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
 }
 
 nsresult nsOption::QueryInterface(REFNSIID aIID, void** aInstancePtr)

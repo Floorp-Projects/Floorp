@@ -242,41 +242,6 @@ nsHTMLContainer::Compact()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
-                             nsIFrame* aParentFrame,
-                             nsIStyleContext* aStyleContext,
-                             nsIFrame*& aResult)
-{
-  const nsStyleDisplay* styleDisplay =
-    (const nsStyleDisplay*) aStyleContext->GetStyleData(eStyleStruct_Display);
-
-  // Use style to choose what kind of frame to create
-  nsIFrame* frame = nsnull;
-  nsresult rv;
-  switch (styleDisplay->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-    rv = NS_NewBlockFrame(this, aParentFrame, frame);
-    break;
-
-  case NS_STYLE_DISPLAY_INLINE:
-    rv = NS_NewInlineFrame(this, aParentFrame, frame);
-    break;
-
-  default:
-    // Create an empty frame for holding content that is not being
-    // reflowed.
-    rv = nsFrame::NewFrame(&frame, this, aParentFrame);
-    break;
-  }
-  if (NS_OK == rv) {
-    frame->SetStyleContext(aPresContext, aStyleContext);
-  }
-  aResult = frame;
-  return rv;
-}
-
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
