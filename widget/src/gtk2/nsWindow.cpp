@@ -1374,6 +1374,8 @@ nsWindow::OnSizeAllocate(GtkWidget *aWidget, GtkAllocation *aAllocation)
     nsRect rect(aAllocation->x, aAllocation->y,
                 aAllocation->width, aAllocation->height);
 
+    ResizeTransparencyBitmap(rect.width, rect.height);
+
     mBounds.width = rect.width;
     mBounds.height = rect.height;
 
@@ -2733,6 +2735,9 @@ void
 nsWindow::ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight)
 {
     if (!mTransparencyBitmap)
+        return;
+
+    if (aNewWidth == mBounds.width && aNewHeight == mBounds.height)
         return;
 
     PRInt32 newSize = ((aNewWidth+7)/8)*aNewHeight;
