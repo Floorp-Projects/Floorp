@@ -41,6 +41,7 @@ class EmbedProgress;
 class EmbedWindow;
 class EmbedContentListener;
 class EmbedEventListener;
+class EmbedStream;
 
 class EmbedPrivate {
 
@@ -63,6 +64,10 @@ class EmbedPrivate {
   static void SetCompPath     (char *aPath);
   static void SetProfilePath  (char *aDir, char *aName);
 
+  nsresult OpenStream         (const char *aBaseURI, const char *aContentType);
+  nsresult AppendToStream     (const char *aData, PRInt32 aLen);
+  nsresult CloseStream        (void);
+
   // This function will find the specific EmbedPrivate object for a
   // given nsIWebBrowserChrome.
   static EmbedPrivate *FindPrivateForBrowser(nsIWebBrowserChrome *aBrowser);
@@ -83,6 +88,8 @@ class EmbedPrivate {
   nsCOMPtr<nsISupports>          mContentListenerGuard;
   EmbedEventListener            *mEventListener;
   nsCOMPtr<nsISupports>          mEventListenerGuard;
+  EmbedStream                   *mStream;
+  nsCOMPtr<nsISupports>          mStreamGuard;
 
   nsCOMPtr<nsIWebNavigation>     mNavigation;
   nsCOMPtr<nsISHistory>          mSessionHistory;
