@@ -154,7 +154,7 @@ nsCmdLineService::GetURLToLoad(char ** aResult)
 NS_IMETHODIMP
 nsCmdLineService::GetProgramName(char ** aResult)
 {
-  nsresult  rv=nsnull;
+  nsresult rv = NS_OK;
 
   *aResult = (char *)mArgValueList.ElementAt(0);
 
@@ -254,7 +254,53 @@ nsCmdLineService::~nsCmdLineService()
   }
 }
 
+NS_IMETHODIMP
+nsCmdLineService::GetHandlerForParam(const char *aParam,
+                                     nsICmdLineHandler** aResult)
+{
+  nsresult rv;
 
+  // allocate temp on the stack
+  nsAutoVoidArray oneParameter;
+
+  nsVoidArray *paramList;
+  
+  // if user passed in "null", then we want to go through each one
+  if (!aParam)
+    paramList = &mArgList;
+  else {
+    oneParameter.AppendElement((void *)aParam);
+    paramList = &oneParameter;
+  }
+
+  PRUint32 i;
+  for (i=0; i< paramList->Count(); i++) {
+    const char *param = (const char*)paramList->ElementAt(i);
+    
+    // skip past leading / and -
+    if (*param == '-' || *param == '/') {
+      ++param;
+      if (*param == *(param-1)) // skip "--" or "//"
+        ++param;
+    }
+    
+    nsCAutoString
+      contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
+    
+    contractID += param;
+
+    nsCOMPtr<nsICmdLineHandler> handler =
+      do_GetService(contractID.get(), &rv);
+    if (NS_FAILED(rv)) continue;
+
+    *aResult = handler;
+    NS_ADDREF(*aResult);
+    return NS_OK;
+  }
+
+  // went through all the parameters, didn't find one
+  return NS_ERROR_FAILURE;
+}
 
 #if 0
 NS_IMETHODIMP
