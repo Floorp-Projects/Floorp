@@ -180,6 +180,8 @@ nsJSContext::~nsJSContext()
   if (NS_SUCCEEDED(rv))
     xpc->AbandonJSContext(mContext);
 
+  /* Remove global object reference to window object, so it can be collected. */
+  JS_SetGlobalObject(mContext, nsnull);
   JS_DestroyContext(mContext);
 }
 
@@ -220,7 +222,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
   }
   else {
     // norris TODO: Using GetGlobalObject to get principals is broken?
-    nsCOMPtr<nsIScriptGlobalObject> global = GetGlobalObject();
+    nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
     if (!global)
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global, &rv);
@@ -505,6 +507,9 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& 
     return NS_ERROR_FAILURE;
   if (aHandler)
     *aHandler = (void*) JS_GetFunctionObject(fun);
+
+  /* Break scope link to avoid entraining compilation scope. */
+  JS_SetParent(mContext, (JSObject *)*aHandler, nsnull);
   return NS_OK;
 }
 
