@@ -333,6 +333,13 @@ static const nsModuleComponentInfo components[] =
 #endif
 };
 
+PR_STATIC_CALLBACK(nsresult)
+nsGfxGTKModuleCtor(nsIModule *self)
+{
+  nsImageGTK::Startup();
+  return NS_OK;
+}
+
 PR_STATIC_CALLBACK(void)
 nsGfxGTKModuleDtor(nsIModule *self)
 {
@@ -345,5 +352,5 @@ nsGfxGTKModuleDtor(nsIModule *self)
 #endif
 }
 
-NS_IMPL_NSGETMODULE_WITH_DTOR(nsGfxGTKModule, components, nsGfxGTKModuleDtor)
-
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(nsGfxGTKModule, components,
+                                   nsGfxGTKModuleCtor, nsGfxGTKModuleDtor)

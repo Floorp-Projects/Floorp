@@ -70,6 +70,10 @@
 static GdkGC *s1bitGC = nsnull;
 static GdkGC *sXbitGC = nsnull;
 
+/* XFree86 <= 4.3 has a bug in their stipple code (fbgc.c < 1.13) that
+   prevents us from doing fast tiling. */
+static PRBool sNeedSlowTile = PR_FALSE;
+
 NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
 
 //------------------------------------------------------------
@@ -138,6 +142,15 @@ nsImageGTK::~nsImageGTK()
   printf("nsImageGTK::~nsImageGTK(this=%p)\n",
          this);
 #endif
+}
+
+/* static */ void
+nsImageGTK::Startup()
+{
+  Display *dpy = GDK_DISPLAY();
+
+  if (strstr(ServerVendor(dpy), "XFree86") && VendorRelease(dpy) <= 40300000)
+    sNeedSlowTile = PR_TRUE;
 }
 
 /* static */ void
@@ -1689,6 +1702,43 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
   gdk_gc_unref(gc);
 }
 
+void nsImageGTK::SlowTile(nsDrawingSurfaceGTK *aSurface,
+                          const nsRect &aTileRect,
+                          PRInt32 aSXOffset, PRInt32 aSYOffset)
+{
+  GdkPixmap *tileImg;
+  GdkPixmap *tileMask;
+
+  nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
+
+  tileImg = gdk_pixmap_new(nsnull, aTileRect.width, 
+                           aTileRect.height, aSurface->GetDepth());
+#ifdef MOZ_WIDGET_GTK2
+  gdk_drawable_set_colormap(GDK_DRAWABLE(tileImg), gdk_rgb_get_colormap());
+#endif
+  TilePixmap(mImagePixmap, tileImg, aSXOffset, aSYOffset, tmpRect,
+             tmpRect, PR_FALSE);
+
+  // tile alpha mask
+  tileMask = gdk_pixmap_new(nsnull, aTileRect.width, aTileRect.height,
+                            mAlphaDepth);
+  TilePixmap(mAlphaPixmap, tileMask, aSXOffset, aSYOffset, tmpRect,
+             tmpRect, PR_FALSE);
+
+  GdkGC *fgc = gdk_gc_new(aSurface->GetDrawable());
+  gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
+  gdk_gc_set_clip_origin(fgc, aTileRect.x, aTileRect.y);
+
+  // and copy it back
+  gdk_window_copy_area(aSurface->GetDrawable(), fgc, aTileRect.x,
+                       aTileRect.y, tileImg, 0, 0,
+                       aTileRect.width, aTileRect.height);
+  gdk_gc_unref(fgc);
+
+  gdk_pixmap_unref(tileImg);
+  gdk_pixmap_unref(tileMask);
+}
+
 
 NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    nsIDrawingSurface* aSurface,
@@ -1780,6 +1830,11 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   }
 
   if (mAlphaDepth == 1) {
+    if (sNeedSlowTile) {
+      SlowTile(drawing, aTileRect, aSXOffset, aSYOffset);
+      return NS_OK;
+    }
+
     GdkGC *tileGC;
     GdkGCValues values;
     GdkGCValuesMask valuesMask;
