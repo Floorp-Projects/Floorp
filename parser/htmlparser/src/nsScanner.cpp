@@ -34,6 +34,8 @@ const int   kBufsize=1;
 const int   kBufsize=64;
 #endif
 
+// #define DEFAULTCHARSET "Shift_JIS"
+#define DEFAULTCHARSET "ISO-8859-1"
 
 /**
  *  Use this constructor if you want i/o to be based on 
@@ -53,8 +55,9 @@ nsScanner::nsScanner(nsString& anHTMLString) :
   mOffset=0;
   mMarkPos=-1;
   mFileStream=0;
+  nsAutoString defaultCharset(DEFAULTCHARSET);
   mUnicodeDecoder = nsnull;
-  InitUnicodeDecoder();
+  SetDocumentCharset(defaultCharset);
 }
 
 /**
@@ -88,7 +91,8 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream) :
     #endif
   } //if
   mUnicodeDecoder = nsnull;
-  InitUnicodeDecoder();
+  nsAutoString defaultCharset(DEFAULTCHARSET);
+  SetDocumentCharset(defaultCharset);
 
 }
 
@@ -111,12 +115,7 @@ nsScanner::nsScanner(nsString& aFilename,fstream& aStream,PRBool assumeOwnership
   mOwnsStream=assumeOwnership;
   mFileStream=&aStream;
   mUnicodeDecoder = nsnull;
-  InitUnicodeDecoder();
-}
-
-void nsScanner::InitUnicodeDecoder()
-{
-  nsAutoString defaultCharset("ISO-8859-1");
+  nsAutoString defaultCharset(DEFAULTCHARSET);
   SetDocumentCharset(defaultCharset);
 }
 
