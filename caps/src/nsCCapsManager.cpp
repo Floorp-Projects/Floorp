@@ -22,11 +22,10 @@
 #include "nsPrincipalArray.h"
 #include "nsCaps.h"
 #include "nsICapsSecurityCallbacks.h"
-//#include "nsLoadZig.h"
 #include "secnav.h"
 #ifdef MOZ_SECURITY
-#include "navhook.h"
-#include "jarutil.h"
+	#include "navhook.h"
+	#include "jarutil.h"
 #endif /* MOZ_SECURITY */
 
 #define ALL_JAVA_PERMISSION "AllJavaPermission"
@@ -73,7 +72,7 @@ nsCCapsManager::CreateCertificatePrincipal(const unsigned char **certChain, PRUi
 	return nsPrincipalManager::GetPrincipalManager()->CreateCertificatePrincipal(certChain,certChainLengths,noOfCerts,prin);
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::GetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 * privilegeState)
 {
 	* privilegeState = nsIPrivilege::PrivilegeState_Blank;
@@ -88,7 +87,7 @@ nsCCapsManager::GetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::SetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 privilegeState)
 {
 	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
@@ -101,7 +100,7 @@ nsCCapsManager::SetPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::AskPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRInt16 * privilegeState)
 {
 	nsITarget * target = nsTarget::FindTarget(ALL_JAVA_PERMISSION);
@@ -125,24 +124,22 @@ nsCCapsManager::AskPermission(nsIPrincipal * prin, nsITarget * ignoreTarget, PRI
  *
  * @param result - is true if principal was successfully registered with the system
  */
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::Initialize(PRBool * result)
 {
 //	* result = nsCapsInitialize();
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface)
 {
-	//XXX write me  
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::RegisterPrincipal(nsIPrincipal * prin)
 {
-//	if (principalManager != NULL) privilegeManager->RegisterPrincipal(prin);
 	return NS_OK;
 }
 
@@ -157,7 +154,7 @@ nsCCapsManager::RegisterPrincipal(nsIPrincipal * prin)
  * @param ret_val - is true if user has given permission for the given principal and 
  *                  target
  */
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::EnablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool * ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
@@ -171,18 +168,7 @@ nsCCapsManager::EnablePrivilege(nsIScriptContext * context, const char* targetNa
 	return NS_OK;
 }
 
-/**
- * Returns if the user granted permission for the principal located at the given 
- * stack depth for the given target. 
- *
- * @param context     - is the parameter JS needs to determinte the principal 
- * @param targetName  - is the name of the target.
- * @param callerDepth - is the depth of JS stack frame, which JS uses to determinte the 
- *                      principal 
- * @param ret_val - is true if user has given permission for the given principal and 
- *                 target
- */
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::IsPrivilegeEnabled(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
@@ -195,7 +181,7 @@ nsCCapsManager::IsPrivilegeEnabled(nsIScriptContext * context, const char* targe
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::RevertPrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
@@ -207,7 +193,7 @@ nsCCapsManager::RevertPrivilege(nsIScriptContext * context, const char* targetNa
 	return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::DisablePrivilege(nsIScriptContext * context, const char* targetName, PRInt32 callerDepth, PRBool *ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char*)targetName);
@@ -219,23 +205,6 @@ nsCCapsManager::DisablePrivilege(nsIScriptContext * context, const char* targetN
 	return NS_OK;
 }
 
-/* interfaces for nsIPrincipal object, may be we should move some of them to nsIprincipal */
-/**************
-//Principals must be created by type, the nsPrincipal data member is deprecated
-NS_METHOD
-nsCCapsManager::NewPrincipal(PRInt16 *principalType, void* key, PRUint32 key_len, void *zig, nsIPrincipal** ret_val)
-{
-  nsIPrincipal* pNSIPrincipal;
-  nsPrincipal *pNSPrincipal = new nsPrincipal(type, key, key_len, zig);
-  if (pNSPrincipal->isCodebase()) {
-      pNSIPrincipal = (nsIPrincipal*)new nsCodebasePrincipal(pNSPrincipal);
-  } else {
-      pNSIPrincipal = (nsIPrincipal*)new nsCertificatePrincipal(pNSPrincipal);
-  }
-  *ret_val = pNSIPrincipal;
-  return NS_OK;
-}
-*********************/
 //XXX: todo: This method is covered by to nsIPrincipal object, should not be part of caps
 //XXX: nsPrincipal struct if deprecated, access as nsIPrincipal
 //do not use IsCodebaseExact, Tostring, or any other of the principal specific objects from here
@@ -299,7 +268,7 @@ nsCCapsManager::CreateMixedPrincipalArray(void *aZig, const char * name, const c
  * nsCapsGetPermission(struct nsPrivilege *privilege)
  * nsCapsGetPrivilege(struct nsPrivilegeTable *annotation, struct nsITarget *target)
  */
-NS_METHOD
+NS_IMETHODIMP
 nsCCapsManager::IsAllowed(void *annotation, const char * targetName, PRBool * ret_val)
 {
 	nsITarget *target = nsTarget::FindTarget((char *)targetName);
