@@ -29,10 +29,9 @@
 
 /* Primary cursor is text I-beam */
 
-*:scrolled-content {
+*:scrolled-content, a:link {
   cursor: text;
 }
-
 
 /* Use default arrow over objects with size that 
    are selected when clicked on.
