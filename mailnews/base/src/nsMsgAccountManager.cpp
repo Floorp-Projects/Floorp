@@ -60,6 +60,7 @@
 #endif
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
+#define PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT "mail.accountmanager.defaultaccount"
 #define PREF_MAIL_SERVER_PREFIX "mail.server."
 #define ACCOUNT_PREFIX "account"
 #define SERVER_PREFIX "server"
@@ -552,12 +553,11 @@ nsMsgAccountManager::removeKeyedAccount(const char *key)
 NS_IMETHODIMP
 nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 {
+  NS_ENSURE_ARG_POINTER(aDefaultAccount);
   nsresult rv;
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
   
-  if (!aDefaultAccount) return NS_ERROR_NULL_POINTER;
-
   if (!m_defaultAccount) {
     PRUint32 count;
     m_accounts->Count(&count);
@@ -569,13 +569,19 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsISupports> element;
-    rv = m_accounts->GetElementAt(0, getter_AddRefs(element));
-
+    nsXPIDLCString defaultKey;
+    rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT,
+                               getter_Copies(defaultKey));
+    
     if (NS_SUCCEEDED(rv)) {
-      m_defaultAccount = do_QueryInterface(element, &rv);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "GetDefaultAccount(): bad array");
+      GetAccount(defaultKey, getter_AddRefs(m_defaultAccount));
+    } else {
+      rv = m_accounts->QueryElementAt(0, NS_GET_IID(nsIMsgAccount),
+                                      (void **)getter_AddRefs(m_defaultAccount));
+      if (NS_SUCCEEDED(rv))
+        SetDefaultAccount(m_defaultAccount);
     }
+
   }
   
   *aDefaultAccount = m_defaultAccount;
@@ -587,11 +593,41 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
 NS_IMETHODIMP
 nsMsgAccountManager::SetDefaultAccount(nsIMsgAccount * aDefaultAccount)
 {
-  // make sure it's in the account list
-  NS_ENSURE_ARG_POINTER(aDefaultAccount);
-  m_defaultAccount = dont_QueryInterface(aDefaultAccount);
+  // TODO make sure it's in the account list
+  if (aDefaultAccount)
+    m_defaultAccount = dont_QueryInterface(aDefaultAccount);
+  else
+    m_defaultAccount = nsnull;
+
+  // it's ok if this fails
+  setDefaultAccountPref(aDefaultAccount);
+  
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgAccountManager::setDefaultAccountPref(nsIMsgAccount* aDefaultAccount)
+{
+  nsresult rv;
+  
+  rv = getPrefService();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (aDefaultAccount) {
+    nsXPIDLCString key;
+    rv = aDefaultAccount->GetKey(getter_Copies(key));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT, key);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  else
+    // don't care if this fails
+    m_prefs->ClearUserPref(PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT);
+
+  return NS_OK;
+}
+    
 
 // enumaration for sending unload notifications
 PRBool

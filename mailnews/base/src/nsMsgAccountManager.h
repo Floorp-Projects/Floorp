@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -80,11 +80,14 @@ private:
 
   /* internal destruction routines - fixes prefs */
   nsresult removeKeyedAccount(const char *key);
+
+
+  // sets the pref for the defualt server
+  nsresult setDefaultAccountPref(nsIMsgAccount *aDefaultAccount);
     
   // hash table enumerators
 
-
-  //
+  // add each member of a hash table to an nsISupports array
   static PRBool hashElementToArray(nsHashKey *aKey, void *aData,
                                    void *closure);
 
