@@ -226,34 +226,14 @@ nsMsgHeaderParser::nsMsgHeaderParser()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  m_USAsciiToUtf8CharsetConverter = nsnull;
   mUnicodeConverter = do_GetService(kCMimeConverterCID);
 }
 
 nsMsgHeaderParser::~nsMsgHeaderParser()
 {
-	delete m_USAsciiToUtf8CharsetConverter;
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgHeaderParser, nsIMsgHeaderParser)
-
-MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
-{
-	if (!m_USAsciiToUtf8CharsetConverter)
-	{
-		m_USAsciiToUtf8CharsetConverter = new MimeCharsetConverterClass;
-		if (m_USAsciiToUtf8CharsetConverter)
-		{
-			nsresult rv = m_USAsciiToUtf8CharsetConverter->Initialize("us-ascii","UTF-8", PR_FALSE);
-			if (!NS_SUCCEEDED(rv))
-			{
-				delete m_USAsciiToUtf8CharsetConverter;
-				m_USAsciiToUtf8CharsetConverter = nsnull;
-			}
-		}
-	}
-	return m_USAsciiToUtf8CharsetConverter;
-}
 
 NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *line, 
                                                             nsISimpleEnumerator **aResultEnumerator)
@@ -288,7 +268,6 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *lin
 nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
 {
   char *utf8Str, *outStrings;
-  MimeCharsetConverterClass *converter = nsnull;
   nsresult rv=NS_OK;
 
   if (nsnull == line || MIME_ConvertString(CHARSET(charset), "UTF-8", line, &utf8Str) != 0) {
@@ -310,12 +289,9 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
     // convert array of strings
 	if (!charset)
 	{
-		converter = GetUSAsciiToUtf8CharsetConverter();
-		if (converter)
-			rv = converter->Convert(*names, len_all, &outStrings, &outStrLen, nsnull);
-	}
-	if (!converter)
-	{
+    outStrings = (char *)PL_strdup(*names);
+    rv = NS_OK;
+  } else {
 		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *names, 
                             len_all, &outStrings, &outStrLen, NULL) ; 
 	}
@@ -336,14 +312,9 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
     // convert array of strings
 	if (!charset)
 	{
-		converter = GetUSAsciiToUtf8CharsetConverter();
-		if (converter)
-			rv = converter->Convert(*addresses, 
-                            len_all, &outStrings, &outStrLen, nsnull);
-	}
-	// if non null charset, or couldn't get a converter, use MIME_ function.
-	if (!converter)
-	{
+    outStrings = (char *)PL_strdup(*addresses);
+    rv = NS_OK;
+  } else {
 		rv = MIME_ConvertCharset(PR_FALSE, "UTF-8", CHARSET(charset), *addresses, 
                             len_all, &outStrings, &outStrLen, NULL);
 	}

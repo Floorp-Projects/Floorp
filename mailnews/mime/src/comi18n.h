@@ -36,54 +36,32 @@ class nsIUnicodeDecoder;
 class nsIUnicodeEncoder;
 class nsIStringCharsetDetector;
 
-class MimeCharsetConverterClass {
-public:
-  MimeCharsetConverterClass();
-  virtual ~MimeCharsetConverterClass();
-
-  // Initialize converters for charsets, fails if converter not available.
-  // 
-  PRInt32 Initialize(const char* from_charset, const char* to_charset, 
-                     const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
-
-  // Converts input buffer or duplicates input if converters not available (and returns 0).
-  // Also duplicates input if convertion not needed.
-  // C string is generated for converted string.
-  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, 
-                  char** outBuffer, PRInt32* outLength,
-                  PRInt32* numUnConverted);
-
-  static nsIStringCharsetDetector *mDetector;  // charset detector
-
-protected:
-  nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
-  nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
-  PRBool NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset);
-
-private:
-  nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
-  nsIUnicodeEncoder *mEncoder;          // encoder (convert from unicode)
-  nsIUnicodeDecoder *mDecoderDetected;  // decoder of detected charset (after when auto detection succeeded)
-  PRInt32 mMaxNumCharsDetect;           // maximum number of characters in bytes to abort auto detection 
-                                        // (-1 for no limit)
-  PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
-  PRBool mAutoDetect;                   // true if apply auto detection
-  nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
-  nsString mOutputCharset;              // output charset for need conversion check
-  static nsCString mDetectorContractID;     // ContractID of charset detector
-};
-
-  
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 /**
+ * Decode MIME header to UTF-8.
+ * This is a replacement for MIME_DecodeMimePartIIStr
+ * Uses MIME_ConvertCharset if the decoded string needs a conversion.
+ *
+ *
+ * @param header      [IN] A header to decode.
+ * @param default_charset     [IN] Default charset to apply to ulabeled non-UTF-8 8bit data
+ * @param override_charset    [IN] If PR_TRUE, default_charset used instead of any charset labeling other than UTF-8
+ * @param eatContinuations    [IN] If PR_TRUE, unfold headers
+ * @return            Decoded buffer (in C string) or return NULL if the header needs no conversion
+ */
+extern "C" char *MIME_DecodeMimeHeader(const char *header, 
+                                       const char *default_charset,
+                                       PRBool override_charset,
+                                       PRBool eatContinuations);
+
+/**
  * If a header is MIME encoded then decode a header and sets a charset name.
- * This is a replacement for INTL_DecodeMimePartIIStr.
- * Unlike INTL_DecodeMimePartIIStr, this does not apply any charset conversion.
- * Use MIME_ConvertCharset if the decoded string needs a conversion.
+ * Obsolete.
+ * Uses MIME_ConvertCharset if the decoded string needs a conversion.
  *
  *
  * @param header      [IN] A header to decode.

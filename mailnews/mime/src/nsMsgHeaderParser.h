@@ -50,10 +50,8 @@ public:
 
   NS_DECL_NSIMSGHEADERPARSER
 	
-	MimeCharsetConverterClass *GetUSAsciiToUtf8CharsetConverter();
 protected:
   nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
-  MimeCharsetConverterClass *m_USAsciiToUtf8CharsetConverter;
 }; 
 
 #endif /* nsMSGRFCPARSER_h__ */

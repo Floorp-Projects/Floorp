@@ -56,7 +56,7 @@ extern "C"  char * MIME_StripContinuations(char *original);
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Pasted from the old code (xp_wrap.c)
-//  Removed multi byte support because we use utf-8 internally and no overwrap with us-ascii.
+//  Removed multi byte support because we use UTF-8 internally and no overwrap with us-ascii.
 
 #undef OUTPUT
 #define OUTPUT(b) \
@@ -528,7 +528,7 @@ static char *intlmime_encode_next8bitword(char *src)
     {
       break;
     }
-    p++; // the string is utf-8 thus no conflict with scanning chars (which is all us-ascii).
+    p++; // the string is UTF-8 thus no conflict with scanning chars (which is all us-ascii).
   }
 
   if (non_ascii)
@@ -628,7 +628,7 @@ char * utf8_mime_encode_mail_address(char *charset, const char *src, int maxLine
   *retbuf = '\0';
 
   // loop for separating encoded words by the separators
-  // the input string is utf-8 at this point
+  // the input string is UTF-8 at this point
   srclen = nsCRT::strlen(srcbuf);
 
 convert_and_encode:
@@ -685,17 +685,17 @@ convert_and_encode:
           end = q;
           break;
         }
-        q++;  // the string is utf-8 thus no conflict with scanning chars (which is all us-ascii).
+        q++;  // the string is UTF-8 thus no conflict with scanning chars (which is all us-ascii).
       }
     }
 
-    // convert utf-8 to mail charset
+    // convert UTF-8 to mail charset
     /* get the to_be_converted_buffer's len */
     len = nsCRT::strlen(begin);
 
     if ( !intlmime_only_ascii_str(begin) )
     {
-      // now the input is utf-8, a character may be more than 2 bytes len
+      // now the input is UTF-8, a character may be more than 2 bytes len
       // so we may over estimate (i.e. threshold may be smaller) but wrapping early is no problem, I think.
 
       /*
@@ -720,7 +720,7 @@ convert_and_encode:
       }
 
       // loop for line wrapping: estimate converted/encoded length 
-      // and apply conversion (utf-8 to mail charset)
+      // and apply conversion (UTF-8 to mail charset)
 
       /* iEffectLen - the max byte-string length of JIS ( converted form S-JIS )
          name - such as "iso-2022-jp", the encoding name, MUST be shorter than 23 bytes
@@ -749,7 +749,7 @@ convert_and_encode:
           */
           return NULL;
         }
-        // utf-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
+        // UTF-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
         PRUnichar *u = NULL;
         nsAutoString fmt; fmt.AssignWithConversion("%s");
         char aChar = begin[len];
@@ -957,7 +957,7 @@ convert_and_encode:
 
 */
 
-// input utf-8, return NULL in case of error.
+// input UTF-8, return NULL in case of error.
 static
 char *utf8_EncodeMimePartIIStr(const char *subject, char *charset, int maxLineLen)
 {
@@ -1048,12 +1048,89 @@ static char *intlmime_decode_q(const char *in, unsigned length)
   return NULL;
 }
 
+static PRBool intl_is_legal_utf8(const char *input, unsigned len)
+{
+  int c;
+
+  while (len) {
+    c = (unsigned char)*input++;
+    len--;
+    if (c == 0x1B) break;
+    if ((c & 0x80) == 0) continue;
+    if ((c & 0xE0) == 0xC0) {
+      if (len < 1 || (*input & 0xC0) != 0x80 ||
+        ((c & 0x1F)<<6) + (*input & 0x3f) < 0x80) {
+        return PR_FALSE;
+      }
+      input++;
+      len--;
+    } else if ((c & 0xF0) == 0xE0) {
+      if (len < 2 || (input[0] & 0xC0) != 0x80 ||
+        (input[1] & 0xC0) != 0x80) {
+        return PR_FALSE;
+      }
+      input += 2;
+      len -= 2;
+    } else if ((c & 0xF8) == 0xF0) {
+      if (len < 3 || (input[0] & 0xC0) != 0x80 ||
+        (input[1] & 0xC0) != 0x80 || (input[2] & 0xC0) != 0x80) {
+        return PR_FALSE;
+      }
+      input += 2;
+      len -= 2;
+    } else {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
+static void intl_copy_uncoded_header(char **output, const char *input,
+  unsigned len, const char *default_charset)
+{
+  int c;
+  char *dest = *output;
+  char *utf8_text;
+  PRInt32 output_len;
+
+  if (!default_charset) {
+    memcpy(dest, input, len);
+    *output = dest + len;
+    return;
+  }
+
+  // Copy as long as it's US-ASCII.  An ESC may indicate ISO 2022
+  while (len && (c = (unsigned char)*input++) != 0x1B && !(c & 0x80)) {
+    *dest++ = c;
+    len--;
+  }
+  if (!len) {
+    *output = dest;
+    return;
+  }
+  input--;
+
+  // If not legal UTF-8, treat as default charset
+  if (!intl_is_legal_utf8(input, len) &&
+      MIME_ConvertCharset(PR_FALSE, default_charset, "UTF-8",
+                          input, len, &utf8_text, &output_len, NULL) == 0) {
+    memcpy(dest, utf8_text, output_len);
+    *output = dest + output_len;
+    PR_Free(utf8_text);
+  } else {
+    memcpy(dest, input, len);
+    *output = dest + len;
+  }
+}
+
 static char *especials = "()<>@,;:\\\"/[]?.=";
 
 static
-char *intl_decode_mime_part2_str(const char *header)
+char *intl_decode_mime_part2_str(const char *header,
+  const char *default_charset, PRBool override_charset)
 {
   char *output_p = NULL;
+  PRInt32 output_len;
   char *retbuff = NULL;
   const char *p, *q, *r;
   char *decoded_text, *utf8_text;
@@ -1066,7 +1143,7 @@ char *intl_decode_mime_part2_str(const char *header)
   charset[0] = '\0';
 
   /* Assume no more than 2X expansion due to UTF-8 conversion */
-  retbuff = (char *)PR_Malloc(2*strlen(header)+1);
+  retbuff = (char *)PR_Malloc(2*nsCRT::strlen(header)+1);
 
   if (retbuff == NULL)
     return NULL;
@@ -1084,8 +1161,7 @@ char *intl_decode_mime_part2_str(const char *header)
 
     if (!last_saw_encoded_word || q < p) {
       /* copy the part before the encoded-word */
-      PL_strncpy(output_p, begin, p - begin);
-      output_p += p - begin;
+      intl_copy_uncoded_header(&output_p, begin, p - begin, default_charset);
       begin = p;
     }
 
@@ -1123,7 +1199,7 @@ char *intl_decode_mime_part2_str(const char *header)
 
     r = q;
     for (r = q + 2; *r != '?'; r++) {
-      if (*r <= ' ') goto badsyntax;
+      if (*r < ' ') goto badsyntax;
     }
     if (r == q + 2 || r[1] != '=') goto badsyntax;
 
@@ -1135,9 +1211,16 @@ char *intl_decode_mime_part2_str(const char *header)
     if (decoded_text == NULL)
       goto badsyntax;
 
-    if (MIME_ConvertString(charset, "UTF-8", decoded_text, &utf8_text) == 0) {
-      PL_strcpy(output_p, (char *)utf8_text);
-      output_p += nsCRT::strlen(utf8_text);
+    // Override charset if requested.  Never override labeled UTF-8.
+    if (override_charset && 0 != nsCRT::strcasecmp(charset, "UTF-8")) {
+      PL_strcpy(charset, default_charset);
+    }
+
+    if (MIME_ConvertCharset(PR_FALSE, charset, "UTF-8", 
+                            decoded_text, nsCRT::strlen(decoded_text),
+                            &utf8_text, &output_len, NULL) == 0) {
+      memcpy(output_p, utf8_text, output_len);
+      output_p += output_len;
       PR_Free(utf8_text);
     } else {
       PL_strcpy(output_p, "\347\277\275"); /* UTF-8 encoding of U+FFFD */
@@ -1157,12 +1240,52 @@ char *intl_decode_mime_part2_str(const char *header)
     begin = p;
     last_saw_encoded_word = 0;
   }
-  PL_strcpy(output_p, (char *)begin);     /* put the tail back  */
+
+  /* put the tail back  */
+  intl_copy_uncoded_header(&output_p, begin, nsCRT::strlen(begin), default_charset);
+  *output_p = '\0';
 
   return retbuff;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+class MimeCharsetConverterClass {
+public:
+  MimeCharsetConverterClass();
+  virtual ~MimeCharsetConverterClass();
+
+  // Initialize converters for charsets, fails if converter not available.
+  // 
+  PRInt32 Initialize(const char* from_charset, const char* to_charset, 
+                     const PRBool autoDetect=PR_FALSE, const PRInt32 maxNumCharsDetect=-1);
+
+  // Converts input buffer or duplicates input if converters not available (and returns 0).
+  // Also duplicates input if convertion not needed.
+  // C string is generated for converted string.
+  PRInt32 Convert(const char* inBuffer, const PRInt32 inLength, 
+                  char** outBuffer, PRInt32* outLength,
+                  PRInt32* numUnConverted);
+
+  static nsIStringCharsetDetector *mDetector;  // charset detector
+
+protected:
+  nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
+  nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
+  PRBool NeedCharsetConversion(const nsString& from_charset, const nsString& to_charset);
+
+private:
+  nsIUnicodeDecoder *mDecoder;          // decoder (convert to unicode)  
+  nsIUnicodeEncoder *mEncoder;          // encoder (convert from unicode)
+  nsIUnicodeDecoder *mDecoderDetected;  // decoder of detected charset (after when auto detection succeeded)
+  PRInt32 mMaxNumCharsDetect;           // maximum number of characters in bytes to abort auto detection 
+                                        // (-1 for no limit)
+  PRInt32 mNumChars;                    // accumulated number of characters converted in bytes
+  PRBool mAutoDetect;                   // true if apply auto detection
+  nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
+  nsString mOutputCharset;              // output charset for need conversion check
+  static nsCString mDetectorContractID;     // ContractID of charset detector
+};
 
 nsIStringCharsetDetector* MimeCharsetConverterClass::mDetector = NULL;
 nsCString MimeCharsetConverterClass::mDetectorContractID;
@@ -1456,6 +1579,32 @@ PRInt32 MIME_ConvertCharset(const PRBool autoDetection, const char* from_charset
   return res;
 }
 
+extern "C" char *MIME_DecodeMimeHeader(const char *header, 
+                                       const char *default_charset,
+                                       PRBool override_charset,
+                                       PRBool eatContinuations)
+{
+  char *result = nsnull;
+
+  if (header == 0)
+    return nsnull;
+
+  // If no MIME encoded then do nothing otherwise decode the input.
+  if (PL_strstr(header, "=?") ||
+      (default_charset && !intl_is_legal_utf8(header, nsCRT::strlen(header)))) {
+	  result = intl_decode_mime_part2_str(header, default_charset, override_charset);
+  } else if (eatContinuations && 
+             (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {
+    result = nsCRT::strdup(header);
+  } else {
+    eatContinuations = PR_FALSE;
+  }
+  if (eatContinuations)
+    result = MIME_StripContinuations(result);
+
+  return result;
+}  
+
 extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
                                           PRBool eatContinuations)
 {
@@ -1466,7 +1615,7 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
 
   // If no MIME encoded then do nothing otherwise decode the input.
   if (*header != '\0' && PL_strstr(header, "=?")) {
-	  result = intl_decode_mime_part2_str(header);
+	  result = intl_decode_mime_part2_str(header, NULL, PR_FALSE);
       if (charset) PL_strcpy(charset, "UTF-8");
   }
   else if (charset && *charset == '\0') {
@@ -1514,19 +1663,4 @@ void comi18n_destructor()
 
 } /* end of extern "C" */
 // END PUBLIC INTERFACE
-
-/*
-main()
-{
-        char *encoded, *decoded;
-        printf("mime\n");
-        encoded = intl_EncodeMimePartIIStr("hello worldÉ", INTL_CsidToCharsetNamePt(0), PR_TRUE,
-kMIME_ENCODED_WORD_SIZE);
-        printf("%s\n", encoded);
-        decoded = intl_DecodeMimePartIIStr((const char *) encoded,
-nsCRT::strlen(encoded), PR_TRUE);
-
-        return 0;
-}
-*/
 
