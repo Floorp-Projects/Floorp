@@ -524,13 +524,20 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) = 0;
 
     /**
-     * Set the widget's MenuBar's visibility, without affecting ownership
-     * or any other sticky considerations.
+     * Set the widget's MenuBar's visibility
      *
      * @param aShow PR_TRUE to show, PR_FALSE to hide
      */
 
     NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;
+
+    /**
+     * Query whether the widget's MenuBar is visible
+     *
+     * @param aVisible PR_TRUE if currently visible, PR_FALSE if not
+     */
+
+    NS_IMETHOD IsMenuBarVisible(PRBool *aVisible) = 0;
 
     /**
      * Set the collection of tooltip rectangles.

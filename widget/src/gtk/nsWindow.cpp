@@ -597,7 +597,14 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 
 NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
 {
-  return NS_ERROR_FAILURE; // DRaM
+  return NS_ERROR_FAILURE; // todo: danm
+}
+
+
+NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  *aVisible = PR_TRUE;
+  return NS_ERROR_FAILURE; // todo: danm
 }
 
 //----------------------------------------------------------------------
