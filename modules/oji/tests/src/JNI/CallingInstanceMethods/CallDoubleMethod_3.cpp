@@ -26,7 +26,7 @@ JNI_OJIAPITest(JNIEnv_CallDoubleMethod_3)
   GET_JNI_FOR_TEST
 
   IMPLEMENT_GetMethodID_METHOD("Test1", "Test1_method_double", "(ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)D");
-  jdouble value = env->CallDoubleMethod(obj, MethodID, JNI_TRUE, 0, 'a', 1, 123, 0, 0, MAX_JDOUBLE, NULL, NULL);
+  jdouble value = env->CallDoubleMethod(obj, MethodID, (jboolean)JNI_TRUE, (jbyte)MIN_JBYTE, (jchar)0, (jshort)1, (jint)123, (jlong)20, (jfloat)10., (jdouble)MAX_JDOUBLE, (jobject)NULL, (jobject)NULL);
   if(value == MAX_JDOUBLE){
      return TestResult::PASS("CallDoubleMethod for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)D) return correct value");
   }else{

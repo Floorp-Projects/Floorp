@@ -27,8 +27,8 @@ JNI_OJIAPITest(JNIEnv_GetStaticFloatField_6)
 
   IMPLEMENT_GetStaticFieldID_METHOD("Test1", "static_name_float", "F");
   env->SetStaticFloatField(clazz, fieldID, MAX_JFLOAT);
-  jint value = env->GetStaticFloatField(clazz, fieldID);
-  printf("value = %d\n", (int)value);
+  jfloat value = env->GetStaticFloatField(clazz, fieldID);
+  printf("value = %f\n", value);
   if(value==MAX_JFLOAT){
      return TestResult::PASS("GetStaticFloatField with val == MAX_JFLOAT return correct value");
   }else{

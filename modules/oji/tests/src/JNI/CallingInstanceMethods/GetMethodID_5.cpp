@@ -25,10 +25,18 @@ JNI_OJIAPITest(JNIEnv_GetMethodID_5)
 {
   GET_JNI_FOR_TEST
 
-  IMPLEMENT_GetMethodID_METHOD("Test1", "name_not_exist", "(Ljava/lang/String;)V");
+        jclass clazz = env->FindClass("Test1");
+        if(clazz == NULL){ 
+            return TestResult::FAIL("Cannot find class"); 
+        } 
+        jmethodID MethodID = env->GetMethodID(clazz, "name_not_exist", "(Ljava/lang/String;)V");
+        printf("ID of method = %d\n", (int)MethodID); 
+
+  //IMPLEMENT_GetMethodID_METHOD("Test1", "name_not_exist", "(Ljava/lang/String;)V");
   //env->CallVoidMethod(obj, MethodID, 10);
 
-  if(MethodID == NULL){
+  if(MethodID == NULL && env->ExceptionOccurred()) {
+    env->ExceptionDescribe(); //exception should be thrown){
     return TestResult::PASS("GetMethodID for not existing name return 0, its correct");
   }else{
     return TestResult::FAIL("GetMethodID for not existing name doesnt return 0, its incorrect");

@@ -31,7 +31,7 @@ JNI_OJIAPITest(JNIEnv_IsSameObject_4)
   jobject obj2 = env->AllocObject(clazz1);
   jobject obj = env->AllocObject(clazz);
 
-  if(env->IsSameObject(NULL, NULL) ){
+  if(env->IsSameObject(NULL, NULL) == JNI_FALSE){
       return TestResult::FAIL("IsSameObject(NULL, NULL) return incorrect value");
   }else{
       return TestResult::PASS("IsSameObject(NULL, NULL) return correct value");

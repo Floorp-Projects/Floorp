@@ -17,6 +17,12 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+!if defined(MOZ_DEBUG)
+WIN32DIR=WIN32_D.OBJ
+!else
+WIN32DIR=WIN32_O.OBJ
+!endif
+
 INCLUDES = $(INCLUDES) \
 	-I. \
 	-I$(TOP_DIR)/src/include \
@@ -24,10 +30,14 @@ INCLUDES = $(INCLUDES) \
 	-I$(JAVAHOME)/include/win32 \
 	-I$(MOZILLA_HOME)/include \
 	-I$(MOZILLA_HOME)/dist/include \
-	-I$(MOZILLA_HOME)/dist/WIN32_D.OBJ/include \
-	-I$(MOZILLA_HOME)/dist/WIN32_D.OBJ/include/obsolete 
+	-I$(MOZILLA_HOME)/dist/$(WIN32DIR)/include \
+	-I$(MOZILLA_HOME)/dist/$(WIN32DIR)/include/obsolete 
 
 
+!if defined(MOZ_DEBUG)
+DEFINES=-DXP_PC -DXP_WIN -DDEBUG
+!else
 DEFINES=-DXP_PC -DXP_WIN
+!endif
 
 CC_OBJ=@cl $(DEFINES) /Zi /nologo $(INCLUDES) /c /Fo$(OBJ_DIR)\ /Fd$(OBJ_DIR)/default.pdb

@@ -42,7 +42,7 @@ JNI_OJIAPITest(JNIEnv_CallStaticIntMethod_14)
   args[9].l = NULL;
   jint value = env->CallStaticIntMethodA(clazz, MethodID, args);
   jthrowable excep = env->ExceptionOccurred();
-  if(value==121){
+  if(value==0){ //value shouldn't change
      if((excep != NULL) && (env->IsInstanceOf(excep, clazz_exp))){
        printf("Exception Occurred, it is correct!!!!\n");
        return TestResult::PASS("CallStaticIntMethodA for no-modifiers inherited from superclass method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)I) return correct value");

@@ -37,9 +37,10 @@ JNI_OJIAPITest(JNIEnv_CallObjectMethod_7)
   if(arr==NULL){
       printf("arr is NULL!\n");
   }
-  jobjectArray value = (jobjectArray)env->CallObjectMethod(obj, MethodID, JNI_TRUE, 0, 'a', MIN_JSHORT, 123, 0, 0, MAX_JDOUBLE, jpath, NULL);
+  jobjectArray value = (jobjectArray)env->CallObjectMethod(obj, MethodID, (jboolean)JNI_TRUE, (jbyte)MIN_JBYTE, (jchar)0, (jshort)1, (jint)123, (jlong)20, (jfloat)10., (jdouble)100, (jobject)jpath, (jobject)arr);
   if(value == NULL){
      printf("value is NULL!!! \n\n");
+     return TestResult::FAIL("CallObjectMethod for public not inherited method (sig = (ZBCSIJFDLjava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;) return NULL");
   }
   jstring str_ret = (jstring)env->GetObjectArrayElement(value, (jsize) 1);
   char* str_chars_ret = (char *) env->GetStringUTFChars(str, NULL);
