@@ -104,6 +104,7 @@ sub registerWebServices {
     my $self = shift;
     # install the web-related services
     $self->register(qw(
+        PLIF::Input::CGI::GetPathInfo
         PLIF::Input::CGI::Get
         PLIF::Input::CGI::Head
         PLIF::Input::CGI::PostURLEncoded
