@@ -5275,8 +5275,14 @@ BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
 }
 
 PR_STATIC_CALLBACK(PRBool)
-ReResolveMenus(nsIFrame *aFrame, void *aClosure)
+ReResolveMenusAndOutliners(nsIFrame *aFrame, void *aClosure)
 {
+  // Outliners have a special style cache that needs to be flushed when
+  // the theme changes.
+  nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(aFrame));
+  if (outlinerBox)
+    outlinerBox->ClearStyleAndImageCaches();
+
   // We deliberately don't re-resolve style on a menu's popup
   // sub-content, since doing so slows menus to a crawl.  That means we
   // have to special-case them on a skin switch, and ensure that the
@@ -5382,7 +5388,7 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     if (aRebuildRuleTree) {
       GetRootFrame(&rootFrame);
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    &ReResolveMenus, nsnull);
+                                    &ReResolveMenusAndOutliners, nsnull);
     }
   }
 

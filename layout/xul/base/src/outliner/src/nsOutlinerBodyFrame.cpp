@@ -1856,16 +1856,6 @@ nsLineStyle nsOutlinerBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderSt
   }
 }
 
-NS_IMETHODIMP
-nsOutlinerBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
-{
-  mStyleCache.Clear();
-  mImageCache = nsnull;
-  mScrollbar = nsnull;
-
-  return nsLeafBoxFrame::DidSetStyleContext(aPresContext);
-}
-
 // Painting routines
 NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
@@ -3179,6 +3169,15 @@ nsOutlinerBodyFrame::GetBaseElement(nsIContent** aContent)
 
   *aContent = parent;
   NS_IF_ADDREF(*aContent);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::ClearStyleAndImageCaches()
+{
+  mStyleCache.Clear();
+  delete mImageCache;
+  mImageCache = nsnull;
+  mScrollbar = nsnull;
   return NS_OK;
 }
 

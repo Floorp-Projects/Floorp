@@ -252,9 +252,6 @@ public:
                   nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow);
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  // Overridden nsIFrame method to clear style cache
-  NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
-
   // Painting methods.
   // Paint is the generic nsIFrame paint method.  We override this method
   // to paint our contents (our rows and cells).

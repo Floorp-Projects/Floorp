@@ -164,6 +164,11 @@ interface nsIOutlinerBoxObject : nsISupports
   void onDragExit ( in nsIDOMEvent event ) ;
   void onDragOver ( in nsIDOMEvent event)  ;
   void onDragDrop ( in nsIDOMEvent event ) ;
+  
+  /**
+   * Called on a theme switch to flush out the outliner's style and image caches.
+   */
+  void clearStyleAndImageCaches();
 };
 
 %{C++
