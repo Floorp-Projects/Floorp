@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.1 2000/03/31 19:41:24 relyea%netscape.com Exp $
+ * $Id: secport.h,v 1.2 2001/05/21 21:25:32 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -217,12 +217,12 @@ char *PORT_Strdup(const char *);
 
 #endif /* XP_STRING_FUNCS */
 
-typedef PRBool (* PORTCharConversionWSwapFunc) (PRBool toUnicode,
+typedef PRBool (PR_CALLBACK * PORTCharConversionWSwapFunc) (PRBool toUnicode,
 			unsigned char *inBuf, unsigned int inBufLen,
 			unsigned char *outBuf, unsigned int maxOutBufLen,
 			unsigned int *outBufLen, PRBool swapBytes);
 
-typedef PRBool (* PORTCharConversionFunc) (PRBool toUnicode,
+typedef PRBool (PR_CALLBACK * PORTCharConversionFunc) (PRBool toUnicode,
 			unsigned char *inBuf, unsigned int inBufLen,
 			unsigned char *outBuf, unsigned int maxOutBufLen,
 			unsigned int *outBufLen);

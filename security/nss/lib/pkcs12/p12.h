@@ -40,31 +40,39 @@
 #include "secpkcs7.h"
 #include "p12t.h"
 
-typedef int (* PKCS12OpenFunction)(void *arg);
-typedef int (* PKCS12ReadFunction)(void *arg, unsigned char *buffer, 
-				   unsigned int *lenRead, unsigned int maxLen);
-typedef int (* PKCS12WriteFunction)(void *arg, unsigned char *buffer, 
-				    unsigned int *bufLen, unsigned int *lenWritten);
-typedef int (* PKCS12CloseFunction)(void *arg);
-typedef SECStatus (* PKCS12UnicodeConvertFunction)(PRArenaPool *arena,
-						   SECItem *dest, SECItem *src,
-						   PRBool toUnicode, 
-						   PRBool swapBytes);
-typedef void (* SEC_PKCS12EncoderOutputCallback)(void *arg, const char *buf,
-						 unsigned long len);
-typedef void (* SEC_PKCS12DecoderOutputCallback)(void *arg, const char *buf,
-						 unsigned long len);
-typedef SECItem * (* SEC_PKCS12NicknameCollisionCallback)(SECItem *old_nickname,
-							  PRBool *cancel,
-							  void *arg);
+typedef int (PR_CALLBACK * PKCS12OpenFunction)(void *arg);
+typedef int (PR_CALLBACK * PKCS12ReadFunction)(void *arg,
+                                               unsigned char *buffer, 
+                                               unsigned int *lenRead,
+                                               unsigned int maxLen);
+typedef int (PR_CALLBACK * PKCS12WriteFunction)(void *arg,
+                                                unsigned char *buffer, 
+                                                unsigned int *bufLen,
+                                                unsigned int *lenWritten);
+typedef int (PR_CALLBACK * PKCS12CloseFunction)(void *arg);
+typedef SECStatus (PR_CALLBACK * PKCS12UnicodeConvertFunction)(
+                                 PRArenaPool *arena,
+                                 SECItem *dest, SECItem *src,
+                                 PRBool toUnicode,
+                                 PRBool swapBytes);
+typedef void (PR_CALLBACK * SEC_PKCS12EncoderOutputCallback)(
+                            void *arg, const char *buf,
+                            unsigned long len);
+typedef void (PR_CALLBACK * SEC_PKCS12DecoderOutputCallback)(
+                            void *arg, const char *buf,
+                            unsigned long len);
+typedef SECItem * (PR_CALLBACK * SEC_PKCS12NicknameCollisionCallback)(
+                                 SECItem *old_nickname,
+                                 PRBool *cancel,
+                                 void *arg);
 
 
 
 
-typedef SECStatus (*digestOpenFn)(void *arg, PRBool readData);
-typedef SECStatus (*digestCloseFn)(void *arg, PRBool removeFile);
-typedef int (*digestIOFn)(void *arg, unsigned char *buf, 
-			  unsigned long len);
+typedef SECStatus (PR_CALLBACK *digestOpenFn)(void *arg, PRBool readData);
+typedef SECStatus (PR_CALLBACK *digestCloseFn)(void *arg, PRBool removeFile);
+typedef int (PR_CALLBACK *digestIOFn)(void *arg, unsigned char *buf, 
+                                      unsigned long len);
 
 typedef struct SEC_PKCS12ExportContextStr SEC_PKCS12ExportContext;
 typedef struct SEC_PKCS12SafeInfoStr SEC_PKCS12SafeInfo;

@@ -82,6 +82,9 @@ ifneq ($(OS_TARGET),WIN16)
 endif
 endif
 
+ifeq ($(OS_ARCH),OS2)
+CPORLN = cp
+endif
 
 ifeq ($(OS_ARCH),IRIX)
 ifeq ($(USE_N32),1)

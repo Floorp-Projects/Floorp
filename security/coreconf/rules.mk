@@ -266,6 +266,13 @@ alltags:
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs etags -a
 	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' \) -print | xargs ctags -a
 
+ifdef XP_OS2_VACPP
+# list of libs (such as -lnspr4) do not work for our compiler
+# change it to be $(DIST)/lib/nspr4.lib
+EXTRA_SHARED_LIBS := $(filter-out -L%,$(EXTRA_SHARED_LIBS))
+EXTRA_SHARED_LIBS := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_SHARED_LIBS))
+endif
+
 $(PROGRAM): $(BUILT_SRCS) $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH),WINNT)
@@ -294,7 +301,7 @@ endif
 
 
 ifeq ($(OS_ARCH),OS2)
-$(IMPORT_LIBRARY): $(BUILT_SRCS) $(OBJS)
+$(IMPORT_LIBRARY): $(BUILT_SRCS) $(SHARED_LIBRARY)
 	rm -f $@
 	$(IMPLIB) $@ $(patsubst %.lib,%.dll.def,$@)
 	$(RANLIB) $@
@@ -329,7 +336,16 @@ ifeq ($(OS_ARCH),OS2)
 	@cmd /C "echo CODE    LOADONCALL MOVEABLE DISCARDABLE >>$@.def"
 	@cmd /C "echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >>$@.def"	
 	@cmd /C "echo EXPORTS >>$@.def"
-	@cmd /C "$(FILTER) $(OBJS) >>$@.def"
+	$(FILTER) $(OBJS) >>$@.def
+ifdef SUB_SHLOBJS
+	@echo Number of words in OBJ list = $(words $(SUB_SHLOBJS))
+	@echo If above number is over 100, need to reedit coreconf/rules.mk
+	-$(FILTER) $(wordlist 1,20,$(SUB_SHLOBJS)) >>$@.def
+	-$(FILTER) $(wordlist 21,40,$(SUB_SHLOBJS)) >>$@.def
+	-$(FILTER) $(wordlist 41,60,$(SUB_SHLOBJS)) >>$@.def
+	-$(FILTER) $(wordlist 61,80,$(SUB_SHLOBJS)) >>$@.def
+	-$(FILTER) $(wordlist 81,100,$(SUB_SHLOBJS)) >>$@.def
+endif
 endif #OS2
 ifdef XP_OS2_VACPP
 	$(MKSHLIB) $(DLLFLAGS) $(LDFLAGS) $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS) $@.def
