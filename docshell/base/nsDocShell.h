@@ -107,9 +107,9 @@ protected:
    nsresult EnsureScriptEnvironment();
 
    void SetCurrentURI(nsIURI* aUri);
-   nsresult CreateContentViewer(const char* aContentType, const char* aCommand,
+   nsresult CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
-   nsresult NewContentViewerObj(const char* aContentType, const char* aCommand,
+   nsresult NewContentViewerObj(const char* aContentType, nsURILoadCommand aCommand,
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
 
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
