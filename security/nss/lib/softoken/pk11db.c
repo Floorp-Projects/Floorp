@@ -581,7 +581,7 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 	}
     }
     if (internal) {
-	parameters = pk11_formatValue(arena,defParams,'"');
+	parameters = PORT_ArenaStrdup(arena,defParams);
     }
 
     /* decode SSL cipher enable flags */

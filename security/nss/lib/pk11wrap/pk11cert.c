@@ -2802,7 +2802,6 @@ isOnList(CERTCertList *certList,CERTCertificate *cert)
 	}
 	return PR_FALSE;
 }
-
 static SECStatus
 pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 {
@@ -2871,6 +2870,13 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
     return SECSuccess;
 }
 
+static SECStatus
+pk11ListCertCallbackStub(CERTCertificate *cert, void *arg)
+{
+    return pk11ListCertCallback(cert, NULL, arg);
+}
+
+
 
 CERTCertList *
 PK11_ListCerts(PK11CertListType type, void *pwarg)
@@ -2899,7 +2905,7 @@ PK11_ListCerts(PK11CertListType type, void *pwarg)
     listCerts.type = type;
     listCerts.certList = certList;
     /* XXX need to fix, this callback is of a different form */
-    pk11cb.callback = pk11ListCertCallback;
+    pk11cb.callback = pk11ListCertCallbackStub;
     pk11cb.arg = &listCerts;
     NSSTrustDomain_TraverseCertificates(defaultTD, convert_cert, &pk11cb);
     return certList;

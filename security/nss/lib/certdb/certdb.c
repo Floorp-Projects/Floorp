@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.17 2001/11/08 00:14:39 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.18 2001/11/20 18:28:38 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1593,20 +1593,24 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
     ret = PR_FALSE;
     type = 0;
     
-    if ( cert->isperm ) {
+    if ( cert->trust ) {
 	trust = cert->trust;
-	if ( ( trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) {
+	if ( ( ( trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
+	   ( ( trust->sslFlags & CERTDB_TRUSTED_CA ) == CERTDB_TRUSTED_CA ) ) {
 	    ret = PR_TRUE;
 	    type |= NS_CERT_TYPE_SSL_CA;
 	}
 	
-	if ( ( trust->emailFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) {
+	if ( ( ( trust->emailFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
+	  ( ( trust->emailFlags & CERTDB_TRUSTED_CA ) == CERTDB_TRUSTED_CA ) ) {
 	    ret = PR_TRUE;
 	    type |= NS_CERT_TYPE_EMAIL_CA;
 	}
 	
-	if ( ( trust->objectSigningFlags & CERTDB_VALID_CA ) ==
-	    CERTDB_VALID_CA ) {
+	if ( ( ( trust->objectSigningFlags & CERTDB_VALID_CA ) 
+						== CERTDB_VALID_CA ) ||
+          ( ( trust->objectSigningFlags & CERTDB_TRUSTED_CA ) 
+						== CERTDB_TRUSTED_CA ) ) {
 	    ret = PR_TRUE;
 	    type |= NS_CERT_TYPE_OBJECT_SIGNING_CA;
 	}

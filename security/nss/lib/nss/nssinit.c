@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.28 2001/11/19 19:04:50 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.29 2001/11/20 18:28:41 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -195,12 +195,19 @@ PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
 }
 
 static char *
-nss_addEscape(char *string, char quote)
+nss_addEscape(const char *string, char quote)
 {
-    int len = PORT_Strlen(string);
-    char *newString = PORT_ZAlloc(2*len+1); /* worst case */
-    char *src,*dest;
+    char *newString = 0;
+    int escapes = 0, size = 0;
+    const char *src;
+    char *dest;
 
+    for (src=string; *src ; src++) {
+	if ((*src == quote) || (*src == '\\')) escapes++;
+	size++;
+    }
+
+    newString = PORT_ZAlloc(escapes+size+1); 
     if (newString == NULL) {
 	return NULL;
     }
@@ -215,6 +222,26 @@ nss_addEscape(char *string, char quote)
     return newString;
 }
 
+static char *
+nss_doubleEscape(const char *string)
+{
+    char *round1 = NULL;
+    char *retValue = NULL;
+    if (string == NULL) {
+	goto done;
+    }
+    round1 = nss_addEscape(string,'\'');
+    if (round1) {
+	retValue = nss_addEscape(round1,'"');
+	PORT_Free(round1);
+    }
+
+done:
+    if (retValue == NULL) {
+	retValue = PORT_Strdup("");
+    }
+    return retValue;
+}
 
 
 /*
@@ -243,6 +270,7 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
     char *moduleSpec = NULL;
     char *flags = NULL;
     SECStatus rv = SECFailure;
+    char *lconfigdir,*lcertPrefix,*lkeyPrefix,*lsecmodName;
 
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 						pk11_password_required);
@@ -252,23 +280,20 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
      * configdir is double nested, and Windows uses the same character
      * for file seps as we use for escapes! (sigh).
      */
-    if (configdir) {
-	char *esc_configdir;
-	esc_configdir = nss_addEscape(configdir,'\'');
-	if (esc_configdir) {
-	    configdir = nss_addEscape(esc_configdir,'"');
-	    PORT_Free(esc_configdir);
-	}
-    }
+    lconfigdir = nss_doubleEscape(configdir);
+    lcertPrefix = nss_doubleEscape(certPrefix);
+    lkeyPrefix = nss_doubleEscape(keyPrefix);
+    lsecmodName = nss_doubleEscape(secmodName);
 
-    moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir='%s' certPrefix=%s keyPrefix=%s secmod=%s flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
+    moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir='%s' certPrefix='%s' keyPrefix='%s' secmod='%s' flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
 		pk11_config_name ? pk11_config_name : NSS_DEFAULT_MOD_NAME,
-		configdir,certPrefix,keyPrefix,secmodName,flags,
+		lconfigdir,lcertPrefix,lkeyPrefix,lsecmodName,flags,
 		pk11_config_strings ? pk11_config_strings : "");
     PORT_Free(flags);
-    if (configdir) {
-	PORT_Free(configdir);
-    }
+    PORT_Free(lconfigdir);
+    PORT_Free(lcertPrefix);
+    PORT_Free(lkeyPrefix);
+    PORT_Free(lsecmodName);
 
     if (moduleSpec) {
 	SECMODModule *module = SECMOD_LoadModule(moduleSpec,NULL,PR_TRUE);
