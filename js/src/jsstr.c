@@ -1474,8 +1474,7 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
 
       lambda_out:
         js_FreeStack(cx, mark);
-        if (cx->regExpStatics.moreParens)
-            JS_free(cx, cx->regExpStatics.moreParens);
+        JS_free(cx, cx->regExpStatics.moreParens);  /* JS_free is null-safe */
         cx->regExpStatics = save;
         return ok;
     }
