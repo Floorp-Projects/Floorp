@@ -404,7 +404,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
   PRBool useQuotes = PR_FALSE;
   PRBool excludeHeader = PR_FALSE;
   PRBool ignoreValue = PR_FALSE;
-  char *arbitraryHeader = nsnull;
+  nsCAutoString arbitraryHeader;
   const char *whichMnemonic = nsnull;
   const char *orHeaderMnemonic = nsnull;
   
@@ -540,14 +540,10 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
             term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
             if (!arbitraryHeaderTerm.IsEmpty())
             {
-              arbitraryHeader = new char [strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
-              if (!arbitraryHeader)
-                return NS_ERROR_OUT_OF_MEMORY;
-              arbitraryHeader[0] = '\0';
-              PL_strcat(arbitraryHeader, " \"");
-              PL_strcat(arbitraryHeader, (const char *)arbitraryHeaderTerm);
-              PL_strcat(arbitraryHeader, "\" ");
-              whichMnemonic = arbitraryHeader;
+              arbitraryHeader.AssignLiteral(" \"");
+              arbitraryHeader.Append(arbitraryHeaderTerm);
+              arbitraryHeader.AppendLiteral("\" ");
+              whichMnemonic = arbitraryHeader.get();
             }
             else
               return NS_ERROR_FAILURE;
@@ -735,8 +731,6 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
         
         if (value && valueWasAllocated)
           PR_Free (value);
-        if (arbitraryHeader)
-          delete arbitraryHeader;
         
         *ppOutTerm = encoding;
         
@@ -784,12 +778,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
   PRUint32 termCount;
   searchTerms->Count(&termCount);
   PRUint32 i = 0;
-  int encodingLength = 0;
   
-  // Build up an array of encodings, one per query term
-  char **termEncodings = new char *[termCount];
-  if (!termEncodings)
-    return NS_ERROR_OUT_OF_MEMORY;
   // create our expression
   nsMsgSearchBoolExpression * expression = new nsMsgSearchBoolExpression();
   if (!expression)
@@ -797,60 +786,31 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
   
   for (i = 0; i < termCount && NS_SUCCEEDED(err); i++)
   {
+    char *termEncoding;
     nsCOMPtr<nsIMsgSearchTerm> pTerm;
     searchTerms->QueryElementAt(i, NS_GET_IID(nsIMsgSearchTerm),
       (void **)getter_AddRefs(pTerm));
-    err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncodings[i]);
-    if (NS_SUCCEEDED(err) && nsnull != termEncodings[i])
+    err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncoding);
+    if (NS_SUCCEEDED(err) && nsnull != termEncoding)
     {
-      encodingLength += strlen(termEncodings[i]) + 1;
-      expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm,termEncodings[i]);
+      expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm, termEncoding);
+      delete [] termEncoding;
     }
   }
   
   if (NS_SUCCEEDED(err)) 
   {
     // Catenate the intermediate encodings together into a big string
-    char *totalEncoding = new char [encodingLength + (!reallyDredd ? strlen(m_kImapUnDeleted) : 0) + 1];
-    nsCString encodingBuff;
+    nsCAutoString encodingBuff;
     
-    if (totalEncoding)
-    {
-      totalEncoding[0] = '\0';
-      
-      int offset = 0;       // offset into starting place for the buffer
-      if (!reallyDredd)
-        PL_strcat(totalEncoding, m_kImapUnDeleted);
-      
-      if (!reallyDredd)
-      {
-        encodingBuff.Append(m_kImapUnDeleted);
-        offset = strlen(m_kImapUnDeleted);
-      }
-      
-      expression->GenerateEncodeStr(&encodingBuff);
-      
-      for (i = 0; i < termCount; i++)
-      {
-        if (termEncodings[i])
-        {
-          PL_strcat (totalEncoding, termEncodings[i]);
-          delete [] termEncodings[i];
-        }
-      }
-    }
-    else
-      err = NS_ERROR_OUT_OF_MEMORY;
-    
-    delete totalEncoding;
-    delete expression;
-    
-    // Set output parameter if we encoded the query successfully
-    if (NS_SUCCEEDED(err))
-      *ppOutEncoding = ToNewCString(encodingBuff);
+    if (!reallyDredd)
+      encodingBuff.Append(m_kImapUnDeleted);
+
+    expression->GenerateEncodeStr(&encodingBuff);
+    *ppOutEncoding = ToNewCString(encodingBuff);
   }
   
-  delete [] termEncodings;
+  delete expression;
   
   return err;
 }
