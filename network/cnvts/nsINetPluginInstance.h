@@ -31,7 +31,7 @@ public:
     Initialize(nsINetOStream* out_stream, const char *stream_name) = 0;
 
     NS_IMETHOD
-    GetMIMEOutput(const char* *result) = 0;
+    GetMIMEOutput(const char* *result, const char *stream_name) = 0;
 
     NS_IMETHOD
     Start(void) = 0;

@@ -204,7 +204,7 @@ NET_PluginStream(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w)
 			break;
 		}
 
-		plugin_inst->GetMIMEOutput(&mime_type_out);
+		plugin_inst->GetMIMEOutput(&mime_type_out, URL_s->address);
 
 		if (mime_type_out != NULL)
 		{
