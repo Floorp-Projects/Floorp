@@ -142,7 +142,8 @@ my @namelist = sort(keys %names);
 
 my @data;
 
-my @labels = grep(s/^\d+-//, @datelist); # Strip years off of labels.
+my @labels = @datelist;
+grep(s/^\d+-//, @labels); # Strip years off of labels.
 
 push @data, \@labels;
 
