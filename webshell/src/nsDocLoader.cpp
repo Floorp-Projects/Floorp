@@ -1392,8 +1392,9 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
    * If the entry is not found in the list, then it must have been cancelled
    * via Stop(...). So ignore just it... 
    */
-  rv = m_LoadingDocsList->RemoveElement(aBindInfo);
-  if (PR_FALSE != rv) {
+  nsresult res;
+  res = m_LoadingDocsList->RemoveElement(aBindInfo);
+  if (NS_SUCCEEDED(res)) {
     nsILoadAttribs* loadAttributes;
     nsURLLoadType loadType = nsURLLoadNormal;
 
@@ -1432,7 +1433,7 @@ void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRIn
    */
    IsBusy(bIsBusy);
 
-  if ((PR_FALSE != bIsForegroundURL) && (!bIsBusy)) {
+  if (bIsForegroundURL && !bIsBusy) {
 #if defined(DEBUG)
     const char* buffer;
 
