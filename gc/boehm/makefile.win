@@ -57,7 +57,7 @@ INCS = $(INCS)                  \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::

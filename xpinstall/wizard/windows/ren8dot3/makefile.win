@@ -34,7 +34,7 @@ OBJS =                          \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(PROGRAM)
+install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\install
 
 clobber_all::

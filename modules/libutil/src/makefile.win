@@ -31,5 +31,5 @@ C_OBJS=.\$(OBJDIR)\obs.obj
 
 !include $(DEPTH)\config\rules.mak
 
-libs::  $(LIBRARY)
+install::  $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\

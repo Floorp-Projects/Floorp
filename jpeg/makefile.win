@@ -142,12 +142,9 @@ MAPFILE= $(DLLNAME).map
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-export:: 
-libs:: $(DLL)
+install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-
-install:: export libs
 
 clobber::
 	$(RM) $(JPEG_OBJS)

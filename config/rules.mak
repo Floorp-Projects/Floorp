@@ -112,10 +112,14 @@ W32LOBJS = $(OBJS: .= +-.)
 !endif
 
 
-all:: 
+all::
+    @date /T
+    @time /T
     $(NMAKE) -f makefile.win export
     $(NMAKE) -f makefile.win libs
     $(NMAKE) -f makefile.win install
+    @date /T
+    @time /T
 
 #//------------------------------------------------------------------------
 #//
@@ -353,7 +357,7 @@ export::
     @$(W95MAKE) export $(MAKEDIR) $(DIRS)
 !endif # DIRS
 
-libs:: w95libs $(LIBRARY)
+install:: w95libs $(LIBRARY)
 
 w95libs::
 !ifdef DIRS
@@ -451,9 +455,14 @@ $(OBJS)
 
 export:: $(DIRS)
 
-libs:: $(DIRS) $(LIBRARY)
+libs:: 
+    @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    @echo !! THE libs BUILD PHASE HAS BEEN CANCELED DUE TO LACK OF INTEREST  
+    @echo !! (This saves 4 minutes (out of 42.5) doing a complete build on my
+    @echo !! PII 400mhz running NT4.) 
+    @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-install:: $(DIRS)
+install:: $(DIRS) $(LIBRARY)
 
 depend:: $(DIRS)
 

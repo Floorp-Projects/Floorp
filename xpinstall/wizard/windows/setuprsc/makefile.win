@@ -44,7 +44,7 @@ docopy:
 
 export:: docopy
 
-libs:: $(DLL)
+install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\install
 
 clobber::

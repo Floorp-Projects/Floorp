@@ -61,7 +61,7 @@ include <$(DEPTH)\config\rules.mak>
  asaxp /I..\..\..\public -Fo.\$(OBJDIR)\$(*B).obj $(*B).s
 !endif
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::

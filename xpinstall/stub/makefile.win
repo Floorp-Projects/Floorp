@@ -43,7 +43,7 @@ LINCS =                        \
 
 include <$(DEPTH)\config\rules.mak>
 
-libs:: $(DLL)
+install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 
 clobber::

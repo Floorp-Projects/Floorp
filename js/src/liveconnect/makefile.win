@@ -171,7 +171,7 @@ include <$(DEPTH)/config/rules.mak>
 
 export::  INSTALL_FILES
 
-libs::  $(DLL)
+install::  $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

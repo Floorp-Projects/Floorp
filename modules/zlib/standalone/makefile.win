@@ -61,7 +61,7 @@ docopy:
 
 export:: docopy
 
-libs:: $(LIBRARY)
+install:: $(LIBRARY)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE)_s.lib $(DIST)\lib
 
 clobber::
