@@ -16,8 +16,6 @@
 	pages = new Object();
 	pages[0] = "resource:/res/profile/content1.xul";
 	pages[1] = "resource:/res/profile/content2.xul";
-	pages[2] = "resource:/res/profile/content3.xul";
-	pages[3] = "resource:/res/profile/contentManager4.xul";
 
 	function BrowserLoadURL(func)
 	{
@@ -27,7 +25,7 @@
 			}
 		}
 		parent.frames[0].commit();
-		dump("*****************************count: "+count+"\n");
+		//dump("*****************************count: "+count+"\n");
 		parent.frames[0].location.replace( pages[count] );
 		parent.count = count;
 		parent.frames[1].location.replace("resource:/res/profile/navigationManagerStart.xul");
@@ -36,9 +34,9 @@
 
 	function SetValue(name, value)
 	{
-		dump("Set Value");
-		dump("name: "+name+"\n");
-		dump("value: "+value+"\n");
+		//dump("Set Value");
+		//dump("name: "+name+"\n");
+		//dump("value: "+value+"\n");
 	}
 
 
