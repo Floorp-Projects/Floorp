@@ -288,15 +288,15 @@
                                   accesskey="&showTaskbarCmd.accesskey;"
                                   oncommand="goToggleToolbar('status-bar', 'menu_showTaskbar')"
                                   checked="true" type="checkbox"/>
-                        <menuitem id="menu_showCardPane"
-                                  label="&showCardPane.label;"
-                                  accesskey="&showCardPane.accesskey;"
-                                  oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
-                                  checked="true" type="checkbox"/>
                         <menuseparator/>
                         <menuitem id="menu_customizeToolbar" oncommand="CustomizeMailToolbar('ab-toolbox');" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
                     </menupopup>
                 </menu>
+                <menuitem id="menu_showCardPane"
+                          label="&showCardPane.label;"
+                          accesskey="&showCardPane.accesskey;"
+                          oncommand="goToggleSplitter('results-splitter', 'menu_showCardPane')"
+                          checked="true" type="checkbox"/>
                 <menuseparator/>
                 <menu label="&menu_ShowNameAs.label;" accesskey="&menu_ShowNameAs.accesskey;">
                     <menupopup>

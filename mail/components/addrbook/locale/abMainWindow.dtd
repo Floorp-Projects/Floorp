@@ -86,10 +86,10 @@
 <!ENTITY showSearchToolbarCmd.accesskey                 "e">
 <!ENTITY showTaskbarCmd.label                           "Status Bar">
 <!ENTITY showTaskbarCmd.accesskey                       "S">
-<!ENTITY showCardPane.label                             "Card Summary Pane">
-<!ENTITY showCardPane.accesskey                         "a">
 <!ENTITY customizeToolbar.label                         "Customize...">
 <!ENTITY customizeToolbar.accesskey                     "C">
+<!ENTITY showCardPane.label                             "Card Summary Pane">
+<!ENTITY showCardPane.accesskey                         "C">
 <!ENTITY menu_ShowNameAs.label                          "Show Name As">
 <!ENTITY menu_ShowNameAs.accesskey                      "n"> 
 <!ENTITY firstLastCmd.label                             "First, Last">
