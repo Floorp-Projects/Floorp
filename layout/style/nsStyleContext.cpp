@@ -137,7 +137,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
 
     case eStyleUnit_Inherit:
       nsIFrame* parentFrame;
-      aFrame->GetParent(parentFrame);  // XXX may not be direct parent...
+      aFrame->GetParent(&parentFrame);  // XXX may not be direct parent...
       if (nsnull != parentFrame) {
         nsIStyleContext* parentContext;
         parentFrame->GetStyleContext(&parentContext);
@@ -168,7 +168,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
         nscoord baseWidth = 0;
         PRBool  isBase = PR_FALSE;
         nsIFrame* frame;
-        aFrame->GetParent(frame);
+        aFrame->GetParent(&frame);
         while (nsnull != frame) {
           frame->IsPercentageBase(isBase);
           if (isBase) {
@@ -177,7 +177,7 @@ static nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
             baseWidth = size.width; // not really width, need to subtract out padding...
             break;
           }
-          frame->GetParent(frame);
+          frame->GetParent(&frame);
         }
         result = (nscoord)((float)baseWidth * aCoord.GetPercentValue());
       }

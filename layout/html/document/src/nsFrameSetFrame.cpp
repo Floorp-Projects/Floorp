@@ -381,7 +381,7 @@ nsHTMLFramesetFrame* nsHTMLFramesetFrame::GetFramesetParent(nsIFrame* aChild)
         nsIAtom* tag;
         contentParent2->GetTag(tag);
         if (nsHTMLAtoms::frameset == tag) {
-          aChild->GetParent((nsIFrame*&)parent);
+          aChild->GetParent((nsIFrame**)&parent);
         }
         NS_IF_RELEASE(tag);
         NS_RELEASE(contentParent2);
@@ -1593,7 +1593,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       nsHTMLFramesetFrame* parentFrame = nsnull;
-      GetParent((nsIFrame*&)parentFrame);
+      GetParent((nsIFrame**)&parentFrame);
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);
       aEventStatus = nsEventStatus_eConsumeNoDefault;
 	    break;

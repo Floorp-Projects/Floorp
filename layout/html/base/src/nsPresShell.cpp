@@ -1282,7 +1282,7 @@ PresShell::ReconstructFrames(void)
         // Get the frame that corresponds to the document element
         GetPrimaryFrameFor(rootContent, docElementFrame);
         if (nsnull != docElementFrame) {
-          docElementFrame->GetParent(parentFrame);
+          docElementFrame->GetParent(&parentFrame);
           
           EnterReflowLock();
           rv = mStyleSet->ReconstructFrames(mPresContext, rootContent,

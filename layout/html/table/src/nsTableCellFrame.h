@@ -214,7 +214,7 @@ public:
 inline PRInt32 nsTableCellFrame::GetRowIndex()
 {
   nsTableRowFrame * row;
-  GetParent((nsIFrame *&)row);
+  GetParent((nsIFrame **)&row);
   if (nsnull!=row)
     return row->GetRowIndex();
   else

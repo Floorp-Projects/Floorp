@@ -708,12 +708,12 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
       // first, need to get the nearest containing content object
       GetContent(&lastColGroupElement);                                          // ADDREF a: lastColGroupElement++  (either here or in the loop below)
       nsIFrame *parentFrame;
-      GetParent(parentFrame);
+      GetParent(&parentFrame);
       while (nsnull==lastColGroupElement)
       {
         parentFrame->GetContent(&lastColGroupElement);
         if (nsnull==lastColGroupElement)
-          parentFrame->GetParent(parentFrame);
+          parentFrame->GetParent(&parentFrame);
       }
       // now we have a ref-counted "lastColGroupElement" content object
       nsIStyleContext* colGroupStyleContext =
@@ -970,7 +970,7 @@ void nsTableFrame::DumpCellMap ()
           {
             nsTableCellFrame *cell = cd->mRealCell->mCell;
             nsTableRowFrame *row;
-            cell->GetParent((nsIFrame *&)row);
+            cell->GetParent((nsIFrame **)&row);
             int rr = row->GetRowIndex ();
             int cc = cell->GetColIndex ();
             printf("S%d,%d ", rr, cc);
@@ -978,7 +978,7 @@ void nsTableFrame::DumpCellMap ()
             {
               cell = cd->mOverlap->mCell;
               nsTableRowFrame* row2;
-              cell->GetParent((nsIFrame *&)row2);
+              cell->GetParent((nsIFrame **)&row2);
               rr = row2->GetRowIndex ();
               cc = cell->GetColIndex ();
               printf("O%d,%c ", rr, cc);
@@ -1188,7 +1188,7 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
     if (nsnull!=cellFrame)
     {
       nsIFrame *rowFrame;
-      cellFrame->GetParent(rowFrame);
+      cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(0));
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(0));
@@ -1212,7 +1212,7 @@ void nsTableFrame::DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresCo
     if (nsnull!=cellFrame)
     {
       nsIFrame *rowFrame;
-      cellFrame->GetParent(rowFrame);
+      cellFrame->GetParent(&rowFrame);
       rowFrame->GetRect(rowRect);
       nsBorderEdge *leftBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(lastRowIndex));
       nsBorderEdge *rightBorder = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(lastRowIndex));
@@ -1332,7 +1332,7 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
   //    2. colgroup
   nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
   nsIFrame *colGroupFrame;
-  colFrame->GetParent(colGroupFrame);
+  colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
   styles.AppendElement((void*)spacing);
   //    3. col
@@ -1350,10 +1350,10 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
-    cellFrame->GetParent(rowFrame);
+    cellFrame->GetParent(&rowFrame);
     rowFrame->GetRect(rowRect);
     nsIFrame *rowGroupFrame;
-    rowFrame->GetParent(rowGroupFrame);
+    rowFrame->GetParent(&rowGroupFrame);
     rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
     //    5. row
@@ -1446,7 +1446,7 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   //    2. colgroup //XXX: need to test if we're really on a colgroup border
   nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
   nsIFrame *colGroupFrame;
-  colFrame->GetParent(colGroupFrame);
+  colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
   styles.AppendElement((void*)spacing);
   //    3. col
@@ -1464,10 +1464,10 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
-    cellFrame->GetParent(rowFrame);
+    cellFrame->GetParent(&rowFrame);
     rowFrame->GetRect(rowRect);
     nsIFrame *rowGroupFrame;
-    rowFrame->GetParent(rowGroupFrame);
+    rowFrame->GetParent(&rowGroupFrame);
     if (nsnull==rightNeighborFrame)
     { // if rightNeighborFrame is null, our right neighbor is the table so we include the rowgroup and row
       rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
@@ -1545,7 +1545,7 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   //    2. colgroup
   nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
   nsIFrame *colGroupFrame;
-  colFrame->GetParent(colGroupFrame);
+  colFrame->GetParent(&colGroupFrame);
   colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
   styles.AppendElement((void*)spacing);
   //    3. col
@@ -1562,9 +1562,9 @@ void nsTableFrame::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
-    cellFrame->GetParent(rowFrame);
+    cellFrame->GetParent(&rowFrame);
     nsIFrame *rowGroupFrame;
-    rowFrame->GetParent(rowGroupFrame);
+    rowFrame->GetParent(&rowGroupFrame);
     rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
     //    5. row
@@ -1664,7 +1664,7 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
     //    2. colgroup   // XXX: need to deterine if we're on a colgroup boundary
     nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
     nsIFrame *colGroupFrame;
-    colFrame->GetParent(colGroupFrame);
+    colFrame->GetParent(&colGroupFrame);
     colGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
     //    3. col
@@ -1683,10 +1683,10 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   if (nsnull!=cellFrame)
   {
     nsIFrame *rowFrame;
-    cellFrame->GetParent(rowFrame);
+    cellFrame->GetParent(&rowFrame);
     rowFrame->GetRect(rowRect);
     nsIFrame *rowGroupFrame;
-    rowFrame->GetParent(rowGroupFrame);
+    rowFrame->GetParent(&rowGroupFrame);
     rowGroupFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
     //    5. row
@@ -2670,7 +2670,7 @@ NS_METHOD nsTableFrame::IncrementalReflow(nsIPresContext& aPresContext,
   {
     // this is the target if target is either this or the outer table frame containing this inner frame
     nsIFrame *outerTableFrame=nsnull;
-    GetParent(outerTableFrame);
+    GetParent(&outerTableFrame);
     if ((this==target) || (outerTableFrame==target))
       rv = IR_TargetIsMe(aPresContext, aDesiredSize, state, aStatus);
     else
@@ -4572,7 +4572,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
   if (nsnull!=aSourceFrame)
   {
     // "result" is the result of intermediate calls, not the result we return from this method
-    nsresult result = aSourceFrame->GetParent((nsIFrame *&)parentFrame); 
+    nsresult result = aSourceFrame->GetParent((nsIFrame **)&parentFrame); 
     while ((NS_OK==result) && (nsnull!=parentFrame))
     {
       const nsStyleDisplay *display;
@@ -4583,7 +4583,7 @@ NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aT
         rv = NS_OK; // only set if we found the table frame
         break;
       }
-      result = parentFrame->GetParent((nsIFrame *&)parentFrame);
+      result = parentFrame->GetParent((nsIFrame **)&parentFrame);
     }
   }
   NS_POSTCONDITION(nsnull!=aTableFrame, "unable to find table parent. aTableFrame null.");
@@ -4716,7 +4716,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
           // we only want to do this for inner table frames, so check the frame's parent to make sure it is an outer table frame
           // we know that if both the frame and it's parent map to NS_STYLE_DISPLAY_TABLE, then we have an inner table frame 
           nsIFrame * tableFrameParent;
-          rs->frame->GetParent(tableFrameParent);
+          rs->frame->GetParent(&tableFrameParent);
           tableFrameParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
           if (NS_STYLE_DISPLAY_TABLE==display->mDisplay)
           {
@@ -4887,7 +4887,7 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
 nscoord nsTableFrame::GetMinCaptionWidth()
 {
   nsIFrame *outerTableFrame=nsnull;
-  GetParent(outerTableFrame);
+  GetParent(&outerTableFrame);
   return (((nsTableOuterFrame *)outerTableFrame)->GetMinCaptionWidth());
 }
 

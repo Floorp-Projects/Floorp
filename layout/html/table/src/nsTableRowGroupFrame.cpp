@@ -999,7 +999,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
       mStyleContext->GetPseudoType(pseudoTag);
       if (pseudoTag == nsHTMLAtoms::scrolledContentPseudo) {
         nsIFrame* scrollFrame;
-        GetParent(scrollFrame);
+        GetParent(&scrollFrame);
         const nsStyleDisplay *display;
         scrollFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
         if ((NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) ||

@@ -602,7 +602,7 @@ NS_IMETHODIMP
 nsHTMLFrameInnerFrame::GetParentContent(nsIContent*& aContent)
 {
   nsHTMLFrameOuterFrame* parent;
-  GetParent((nsIFrame*&)parent);
+  GetParent((nsIFrame**)&parent);
 
   nsIContent* content;
   nsresult    rv = parent->GetContent(&content);

@@ -3451,7 +3451,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
     while ((nsnull != line) && (nsnull != aDeletedFrame)) {
 #ifdef NS_DEBUG
       nsIFrame* parent;
-      aDeletedFrame->GetParent(parent);
+      aDeletedFrame->GetParent(&parent);
       NS_ASSERTION(flow == parent, "messed up delete code");
 #endif
       NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
@@ -3535,7 +3535,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext& aPresContext,
           // the loop so that we advance to the next parent.
 #ifdef NS_DEBUG
           nsIFrame* parent;
-          aDeletedFrame->GetParent(parent);
+          aDeletedFrame->GetParent(&parent);
           NS_ASSERTION(parent != flow, "strange continuation");
 #endif
           break;
@@ -3666,7 +3666,7 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
    
   aChild->GetNextInFlow(nextInFlow);
   NS_PRECONDITION(nsnull != nextInFlow, "null next-in-flow");
-  nextInFlow->GetParent((nsIFrame*&)parent);
+  nextInFlow->GetParent((nsIFrame**)&parent);
 
   // If the next-in-flow has a next-in-flow then delete it, too (and
   // delete it first).
@@ -3907,7 +3907,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 {
   for (;;) {
     nsIFrame* parent;
-    aFrame->GetParent(parent);
+    aFrame->GetParent(&parent);
     if (parent == mBlock) {
       nsIFrame* child = mCurrentLine->mFirstChild;
       PRInt32 n = mCurrentLine->ChildCount();
@@ -4318,7 +4318,7 @@ PRBool
 nsBlockFrame::IsChild(nsIFrame* aFrame)
 {
   nsIFrame* parent;
-  aFrame->GetParent(parent);
+  aFrame->GetParent(&parent);
   if (parent != (nsIFrame*)this) {
     return PR_FALSE;
   }

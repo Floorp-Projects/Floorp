@@ -601,7 +601,7 @@ getNextFrame(nsIFrame *aStart)
       return result;
     }
     else
-      if (NS_FAILED(parent->GetParent(result)) || !result)
+      if (NS_FAILED(parent->GetParent(&result)) || !result)
         return nsnull;
       else 
         parent = result;

@@ -90,7 +90,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
   
   // Get row group frame
   nsIFrame* pRowGroupFrame = nsnull;
-  aParent->GetParent(pRowGroupFrame);
+  aParent->GetParent(&pRowGroupFrame);
   if (pRowGroupFrame != nsnull)
   {
 		// Get the display type of the row group frame and see if it's a header or body
@@ -107,7 +107,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 			else mIsHeader = PR_FALSE;
 
 			// Get the table frame.
-			pRowGroupFrame->GetParent((nsIFrame*&)mTreeFrame);
+			pRowGroupFrame->GetParent((nsIFrame**)mTreeFrame);
 		}
   }
 
@@ -236,7 +236,7 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 		// Get the frame that corresponds to the document element
 		pShell->GetPrimaryFrameFor(pRoot, docElementFrame);
 		if (nsnull != docElementFrame) {
-		  docElementFrame->GetParent(parentFrame);
+		  docElementFrame->GetParent(&parentFrame);
       
 		  pShell->EnterReflowLock();
 		  pStyleSet->ReconstructFrames(&aPresContext, pRoot,

@@ -140,7 +140,7 @@ public:
                            const nsStyleStruct*& aStyleStruct) const;
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIStyleContext* aParentContext);
-  NS_IMETHOD  GetParent(nsIFrame*& aParent) const;
+  NS_IMETHOD  GetParent(nsIFrame** aParent) const;
   NS_IMETHOD  SetParent(const nsIFrame* aParent);
   NS_IMETHOD  GetRect(nsRect& aRect) const;
   NS_IMETHOD  GetOrigin(nsPoint& aPoint) const;

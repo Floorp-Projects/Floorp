@@ -82,7 +82,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 	  {
 		  while (aFrame && pTag && pTag != nsXULAtoms::treeitem)
 		  {
-			  aFrame->GetParent(aFrame);
+			  aFrame->GetParent(&aFrame);
 			  
 			  // nsCOMPtr correctly handles releasing the old |pContent| and |pTag|
 			  aFrame->GetContent(getter_AddRefs(pContent));

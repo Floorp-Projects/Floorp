@@ -159,7 +159,7 @@ protected:
   static PRBool ParentIsInlineFrame(nsIFrame* aFrame, nsIFrame** aParent) {
     void* tmp;
     nsIFrame* parent;
-    aFrame->GetParent(parent);
+    aFrame->GetParent(&parent);
     *aParent = parent;
     if (NS_SUCCEEDED(parent->QueryInterface(kInlineFrameCID, &tmp))) {
       return PR_TRUE;
@@ -708,7 +708,7 @@ nsInlineFrame::InsertBlockFrames(nsIPresContext& aPresContext,
   else {
     // First see if the insertion is inside the anonymous block
     nsIFrame* prevFrameParent;
-    aPrevFrame->GetParent(prevFrameParent);
+    aPrevFrame->GetParent(&prevFrameParent);
     if (nsLineLayout::TreatFrameAsBlock(prevFrameParent)) {
       // The previous frame's parent is an anonymous block. This means
       // that the new block frames can be safely inserted there.
@@ -862,7 +862,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
   }
   else {
     nsIFrame* prevFrameParent;
-    aPrevFrame->GetParent(prevFrameParent);
+    aPrevFrame->GetParent(&prevFrameParent);
     if (nsLineLayout::TreatFrameAsBlock(prevFrameParent)) {
       nsAnonymousBlockFrame* anonymousBlock;
       anonymousBlock = (nsAnonymousBlockFrame*) prevFrameParent;
@@ -893,7 +893,7 @@ nsInlineFrame::InsertInlineFrames(nsIPresContext& aPresContext,
         // aPrevFrame is the last frame that should be in the
         // anonymous block.
         nsInlineFrame* anonymousBlockParent;
-        anonymousBlock->GetParent((nsIFrame*&)anonymousBlockParent);
+        anonymousBlock->GetParent((nsIFrame**)&anonymousBlockParent);
 
         // Place the inline frames after the anonymous block
         nsIFrame* frame = aFrameList;
@@ -1022,13 +1022,13 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
             // First get the last frame out of the picture; delete any
             // continuations it might have.
             nsInlineFrame* anonymousBlockParent;
-            anonymousBlock->GetParent((nsIFrame*&) anonymousBlockParent);
+            anonymousBlock->GetParent((nsIFrame**) &anonymousBlockParent);
             nsAnonymousBlockFrame* ab = anonymousBlock;
             anonymousBlock->RemoveFramesFrom(aOldFrame);
             aOldFrame->DeleteFrame(aPresContext);
             while (nsnull != nextInFlow) {
               nsIFrame* nextParent;
-              nextInFlow->GetParent(nextParent);
+              nextInFlow->GetParent(&nextParent);
               if (nextParent != ab) {
                 ab = (nsAnonymousBlockFrame*) nextParent;
               }
@@ -1098,13 +1098,13 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
           // is the frame we are trying to remove). Make sure we
           // remove aOldFrame's continuations if it has any...
           nsInlineFrame* anonymousBlockParent;
-          anonymousBlock->GetParent((nsIFrame*&) anonymousBlockParent);
+          anonymousBlock->GetParent((nsIFrame**) &anonymousBlockParent);
           anonymousBlock->RemoveFirstFrame();
           aOldFrame->GetNextInFlow(nextInFlow);
           aOldFrame->DeleteFrame(aPresContext);
           while (nsnull != nextInFlow) {
             nsIFrame* nextParent;
-            nextInFlow->GetParent(nextParent);
+            nextInFlow->GetParent(&nextParent);
             if (nextParent != anonymousBlock) {
               anonymousBlock = (nsAnonymousBlockFrame*) nextParent;
             }

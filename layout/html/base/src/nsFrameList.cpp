@@ -339,7 +339,7 @@ nsFrameList::VerifyParent(nsIFrame* aParent) const
   nsIFrame* frame = mFirstChild;
   while (nsnull != frame) {
     nsIFrame* parent;
-    frame->GetParent(parent);
+    frame->GetParent(&parent);
     NS_ASSERTION(parent == aParent, "bad parent");
     frame->GetNextSibling(frame);
   }
