@@ -53,7 +53,7 @@
 #include "nsIDeviceContext.h" // to measure fonts
 #include "nsIPresState.h" //for saving state
 #include "nsLinebreakConverter.h" //to strip out carriage returns
-
+#include "nsIEditorMailSupport.h"
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
@@ -1095,6 +1095,45 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
       if (!found)
         rv = NS_ERROR_FAILURE;
     }
+    nsCOMPtr<nsIEditorMailSupport> mailEditor(do_QueryInterface(mEditor));
+    if (mailEditor)
+    {
+      nsHTMLValue colAttr;
+      nsresult    colStatus;
+      nsHTMLValue rowAttr;
+      nsresult    rowStatus;
+      PRInt32 type;
+      GetType(&type);
+      nsInputDimensionSpec *spec;
+      if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+        PRInt32 width = 0;
+        if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
+          width = GetDefaultColumnWidth();
+        }
+        spec = new nsInputDimensionSpec(nsnull, PR_FALSE, nsnull,
+                                      nsnull, width, 
+                                      PR_FALSE, nsnull, 1);
+      } else {
+        spec = new nsInputDimensionSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
+                                      nsnull, GetDefaultColumnWidth(), 
+                                      PR_FALSE, nsHTMLAtoms::rows, 1);
+      }
+      if (spec)
+      {
+        if (NS_FAILED(GetColRowSizeAttr(this, 
+                                                spec->mColSizeAttr, colAttr, colStatus,
+                                                spec->mRowSizeAttr, rowAttr, rowStatus)))
+          return NS_ERROR_FAILURE;
+        PRInt32 col =-1;
+        if (!(colAttr.GetUnit() == eHTMLUnit_Null))
+        {
+          col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+          col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+        }
+        mailEditor->SetBodyWrapWidth(col);
+      }
+    }
+
 
 
 //get the caret
@@ -1772,11 +1811,12 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsString& aValue)
 
     nsFormControlHelper::nsHTMLTextWrap wrapProp;
     nsresult rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+    flags |= nsIDocumentEncoder::OutputPreformatted;
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
     {
       if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
       {
-        flags |= nsIDocumentEncoder::OutputFormatted;
+        flags |= nsIDocumentEncoder::OutputWrap;
       }
     }
 
