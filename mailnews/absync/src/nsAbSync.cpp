@@ -33,6 +33,8 @@
 #include "nsRDFCID.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsEscape.h"
+#include "nsSyncDecoderRing.h"
 
 static NS_DEFINE_CID(kCAbSyncPostEngineCID, NS_ABSYNC_POST_ENGINE_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -40,95 +42,6 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
-
-// Address book fields!
-const char *kFirstNameColumn = "FirstName";
-const char *kLastNameColumn = "LastName";
-const char *kDisplayNameColumn = "DisplayName";
-const char *kNicknameColumn = "NickName";
-const char *kPriEmailColumn = "PrimaryEmail";
-const char *k2ndEmailColumn = "SecondEmail";
-const char *kPlainTextColumn = "SendPlainText";
-const char *kWorkPhoneColumn = "WorkPhone";
-const char *kHomePhoneColumn = "HomePhone";
-const char *kFaxColumn = "FaxNumber";
-const char *kPagerColumn = "PagerNumber";
-const char *kCellularColumn = "CellularNumber";
-const char *kHomeAddressColumn = "HomeAddress";
-const char *kHomeAddress2Column = "HomeAddress2";
-const char *kHomeCityColumn = "HomeCity";
-const char *kHomeStateColumn = "HomeState";
-const char *kHomeZipCodeColumn = "HomeZipCode";
-const char *kHomeCountryColumn = "HomeCountry";
-const char *kWorkAddressColumn = "WorkAddress";
-const char *kWorkAddress2Column = "WorkAddress2";
-const char *kWorkCityColumn = "WorkCity";
-const char *kWorkStateColumn = "WorkState";
-const char *kWorkZipCodeColumn = "WorkZipCode";
-const char *kWorkCountryColumn = "WorkCountry";
-const char *kJobTitleColumn = "JobTitle";
-const char *kDepartmentColumn = "Department";
-const char *kCompanyColumn = "Company";
-const char *kWebPage1Column = "WebPage1";
-const char *kWebPage2Column = "WebPage2";
-const char *kBirthYearColumn = "BirthYear";
-const char *kBirthMonthColumn = "BirthMonth";
-const char *kBirthDayColumn = "BirthDay";
-const char *kCustom1Column = "Custom1";
-const char *kCustom2Column = "Custom2";
-const char *kCustom3Column = "Custom3";
-const char *kCustom4Column = "Custom4";
-const char *kNotesColumn = "Notes";
-const char *kLastModifiedDateColumn = "LastModifiedDate";
-
-// Server record fields!
-const char *kServerFirstNameColumn = "fname";
-const char *kServerLastNameColumn = "lname";
-const char *kServerDisplayNameColumn = "screen_name";
-const char *kServerNicknameColumn = "NickName";
-const char *kServerPriEmailColumn = "email1";
-const char *kServer2ndEmailColumn = "email2";
-const char *kServerPlainTextColumn = "SendPlainText";
-const char *kServerWorkPhoneColumn = "work_phone";
-const char *kServerHomePhoneColumn = "home_phone";
-const char *kServerFaxColumn = "fax";
-const char *kServerPagerColumn = "pager";
-const char *kServerCellularColumn = "cell_phone";
-const char *kServerHomeAddressColumn = "home_add1";
-const char *kServerHomeAddress2Column = "home_add2";
-const char *kServerHomeCityColumn = "home_city";
-const char *kServerHomeStateColumn = "home_state";
-const char *kServerHomeZipCodeColumn = "home_zip";
-const char *kServerHomeCountryColumn = "home_country";
-const char *kServerWorkAddressColumn = "work_add1";
-const char *kServerWorkAddress2Column = "work_add2";
-const char *kServerWorkCityColumn = "work_city";
-const char *kServerWorkStateColumn = "work_state";
-const char *kServerWorkZipCodeColumn = "work_zip";
-const char *kServerWorkCountryColumn = "work_country";
-const char *kServerJobTitleColumn = "JobTitle";
-const char *kServerDepartmentColumn = "Department";
-const char *kServerCompanyColumn = "Company";
-const char *kServerWebPage1Column = "WebPage1";
-const char *kServerWebPage2Column = "WebPage2";
-const char *kServerBirthYearColumn = "BirthYear";
-const char *kServerBirthMonthColumn = "BirthMonth";
-const char *kServerBirthDayColumn = "BirthDay";
-const char *kServerCustom1Column = "Custom1";
-const char *kServerCustom2Column = "Custom2";
-const char *kServerCustom3Column = "Custom3";
-const char *kServerCustom4Column = "Custom4";
-const char *kServerNotesColumn = "Notes";
-const char *kServerLastModifiedDateColumn = "LastModifiedDate";
-
-// So far, we aren't really doing anything with these!
-const char *kAddressCharSetColumn = "AddrCharSet";
-const char *kMailListName = "ListName";
-const char *kMailListNickName = "ListNickName";
-const char *kMailListDescription = "ListDescription";
-const char *kMailListTotalAddresses = "ListTotalAddresses";
-// So far, we aren't really doing anything with these!
- 
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsAbSync, nsIAbSync)
@@ -151,6 +64,10 @@ nsAbSync::nsAbSync()
   mHistoryFile = nsnull;
   mOldSyncMapingTable = nsnull;
   mNewSyncMapingTable = nsnull;
+  mNewServerTable = nsnull;
+
+  mLastChangeNum = 1;
+  mUserName = nsString("RHPizzarro").ToNewCString();
 
   InitSchemaColumns();
 }
@@ -164,8 +81,15 @@ nsAbSync::InternalCleanup()
   PR_FREEIF(mAbSyncServer);
   PR_FREEIF(mAbSyncAddressBook);
   PR_FREEIF(mAbSyncAddressBookFileName);
+
+  PR_FREEIF(mOldSyncMapingTable);
+  PR_FREEIF(mNewSyncMapingTable);
+  PR_FREEIF(mNewServerTable);
+
   if (mHistoryFile)
     mHistoryFile->CloseStream();
+
+  PR_FREEIF(mUserName);
 
   return NS_OK;
 }
@@ -407,6 +331,8 @@ NS_IMETHODIMP nsAbSync::OnStopOperation(PRInt32 aTransactionID, nsresult aStatus
 
   NotifyListenersOnStopSync(aTransactionID, aStatus, aMsg);
   InternalCleanup();
+
+  mCurrentState = nsIAbSyncState::nsIAbSyncIdle;
   return NS_OK;
 }
 
@@ -429,6 +355,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   nsresult      rv;
   char          *postSpec = nsnull;
   char          *protocolRequest = nsnull;
+  char          *prefixStr = nsnull;
 
   // If we are already running...don't let anything new start...
   if (mCurrentState != nsIAbSyncState::nsIAbSyncIdle)
@@ -442,11 +369,11 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
   if (NS_FAILED(rv) || !prefs) 
     return NS_ERROR_FAILURE;
 
-  mAbSyncPort = 5000;
-
-  prefs->CopyCharPref("mail.absync.server",        &mAbSyncServer);
-  prefs->GetIntPref  ("mail.absync.port",          &mAbSyncPort);
-  prefs->CopyCharPref("mail.absync.address_book",  &mAbSyncAddressBook);
+  prefs->CopyCharPref("mail.absync.server",           &mAbSyncServer);
+  prefs->CopyCharPref("mail.absync.address_book",     &mAbSyncAddressBook);
+  prefs->GetIntPref  ("mail.absync.last_change",      &mLastChangeNum);
+  if (NS_FAILED(prefs->GetIntPref("mail.absync.port", &mAbSyncPort)))
+    mAbSyncPort = 5000;
 
   // Did we get sane values...
   if (!mAbSyncServer)
@@ -455,7 +382,7 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     goto EarlyExit;
   }
 
-  postSpec = PR_smprintf("http://%s:%d", mAbSyncServer, mAbSyncPort);
+  postSpec = PR_smprintf("http://%s", mAbSyncServer);
   if (!postSpec)  
   {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -506,12 +433,24 @@ NS_IMETHODIMP nsAbSync::PerformAbSync(PRInt32 *aTransactionID)
     mPostEngine->AddPostListener((nsIAbSyncPostListener *)this);
   }
 
+  // Ok, add the header to this protocol string information...
+  prefixStr = PR_smprintf("last=%u&protocol=%d&client=2&ver=Demo&", mLastChangeNum, ABSYNC_PROTOCOL);
+  if (!prefixStr)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    OnStopOperation(mTransactionID, NS_OK, nsnull, nsnull);
+    goto EarlyExit;
+  }
+
+  mPostString.Insert(prefixStr, 0);
+  nsCRT::free(prefixStr);
+
   protocolRequest = mPostString.ToNewCString();
   if (!protocolRequest)
     goto EarlyExit;
 
   // Ok, FIRE!
-  rv = mPostEngine->SendAbRequest(postSpec, protocolRequest, mTransactionID);
+  rv = mPostEngine->SendAbRequest(postSpec, mAbSyncPort, protocolRequest, mTransactionID);
   if (NS_SUCCEEDED(rv))
     mCurrentState = nsIAbSyncState::nsIAbSyncRunning;
 
@@ -556,30 +495,55 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 }
 
 NS_IMETHODIMP    
-nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRInt32 id, nsString &protLine)
+nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &protLine)
 {
   PRUnichar     *aName = nsnull;
+  nsString      tProtLine = "";
+
+  if (aAddId)
+  {
+    PRUint32    aKey;
+    if (NS_FAILED(aCard->GetKey(&aKey)))
+      return NS_ERROR_FAILURE;
+
+    char *tVal = PR_smprintf("%d", (aKey * -1));
+    if (tVal)
+    {
+      tProtLine.Append("%26cid%3D");
+      tProtLine.Append(tVal);
+      nsCRT::free(tVal);
+    }
+  }
 
   for (PRInt32 i=0; i<kMaxColumns; i++)
   {
-    if (NS_SUCCEEDED(aCard->GetCardValue(mSchemaMappingList[0].abField, &aName)) && (aName) && (*aName))
+    if (NS_SUCCEEDED(aCard->GetCardValue(mSchemaMappingList[i].abField, &aName)) && (aName) && (*aName))
     {
-      protLine.Append("&");
-      protLine.Append(mSchemaMappingList[0].serverField);
-
-      if (id >= 0)
+      if (nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
       {
-        char *tVal = PR_smprintf("%d", id);
-        if (tVal)
-        {
-          protLine.Append(tVal);
-          nsCRT::free(tVal);
-        }
+        tProtLine.Append("&");
+        tProtLine.Append(mSchemaMappingList[i].serverField);
+        tProtLine.Append("=");
+        tProtLine.Append(aName);
       }
-
-      protLine.Append("=");
-      protLine.Append(aName);
     }
+  }
+
+  if (tProtLine != "")
+  {
+    char *tLine = tProtLine.ToNewCString();
+    if (!tLine)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    char *escData = nsEscape(tLine, url_Path);
+    if (escData)
+    {
+      tProtLine = escData;
+    }
+
+    PR_FREEIF(tLine);
+    PR_FREEIF(escData);
+    protLine = tProtLine;
   }
 
   return NS_OK;
@@ -633,9 +597,9 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   {
     while (counter < mOldTableSize)
     {
-      if (mOldSyncMapingTable[counter]->localID == newSyncRecord->localID)
+      if (mOldSyncMapingTable[counter].localID == newSyncRecord->localID)
       {
-        historyRecord = mOldSyncMapingTable[counter];
+        historyRecord = &(mOldSyncMapingTable[counter]);
         break;
       }
 
@@ -646,7 +610,7 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   //
   // Now, build up the compare protocol line for this entry.
   //
-  if (NS_FAILED(GenerateProtocolForCard(aCard, -1, tempProtocolLine)))
+  if (NS_FAILED(GenerateProtocolForCard(aCard, PR_FALSE, tempProtocolLine)))
     return PR_FALSE;
 
   // Get the CRC for this temp entry line...
@@ -667,7 +631,7 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   if (historyRecord)
   {
     newSyncRecord->serverID = historyRecord->serverID;
-    historyRecord->flags &= SYNC_PROCESSED;
+    historyRecord->flags |= SYNC_PROCESSED;
   }
 
   // If this is a record that has changed from comparing CRC's, then
@@ -675,19 +639,29 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   // going up to the server
   //
   if ( (!historyRecord) || (historyRecord->CRC != newSyncRecord->CRC) )
-  {
-    mCurrentPostRecord++;
-    if (NS_FAILED(GenerateProtocolForCard(aCard, mCurrentPostRecord, protLine)))
+  {      
+    PRUint32    aKey;
+    if (NS_FAILED(aCard->GetKey(&aKey)))
       return PR_FALSE;
-    else
+    
+    // Needs to be negative, so make it so!
+    char *tVal = PR_smprintf("%d", (aKey * -1));
+    if (tVal)
     {
-      if (!historyRecord)
-        newSyncRecord->flags &= SYNC_ADD;
-      else
-        newSyncRecord->flags &= SYNC_MODIFIED;
-
-      return PR_TRUE;
+      protLine.Append("%26cid%3D");
+      protLine.Append(tVal);
+      protLine.Append(tempProtocolLine);
+      nsCRT::free(tVal);
     }
+    else
+      return PR_FALSE;
+
+    if (!historyRecord)
+      newSyncRecord->flags |= SYNC_ADD;
+    else
+      newSyncRecord->flags |= SYNC_MODIFIED;
+    
+    return PR_TRUE;
   }
   else  // This is the same record as before.
   {
@@ -712,9 +686,12 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   // Init size vars...
   mOldTableSize = 0;
   mNewTableSize = 0;
+  mNewServerTableSize = 0;
   PR_FREEIF(mOldSyncMapingTable);
   PR_FREEIF(mNewSyncMapingTable);
+  PR_FREEIF(mNewServerTable);
   mCurrentPostRecord = 1;
+  mNewServerTableSize = 0;
 
   //
   // First thing we need to do is open the absync.dat file
@@ -726,7 +703,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   if (NS_FAILED(rv)) 
     return rv;
 
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mHistoryFile));
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(mHistoryFile));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -756,7 +733,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         goto GetOut;
       }
 
-      mOldSyncMapingTable = (syncMappingRecord **) PR_MALLOC(mOldTableSize);
+      mOldSyncMapingTable = (syncMappingRecord *) PR_MALLOC(mOldTableSize);
       if (!mOldSyncMapingTable)
       {
         rv = NS_ERROR_OUT_OF_MEMORY;;
@@ -779,6 +756,8 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           rv = NS_ERROR_OUT_OF_MEMORY;;
           goto GetOut;
         }
+
+        readCount++;
       }
     }
   }
@@ -801,7 +780,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
     mNewTableSize++;
   } while (NS_SUCCEEDED(cardEnum->Next()));
 
-  mNewSyncMapingTable = (syncMappingRecord **) PR_MALLOC(mNewTableSize * sizeof(syncMappingRecord));
+  mNewSyncMapingTable = (syncMappingRecord *) PR_MALLOC(mNewTableSize * sizeof(syncMappingRecord));
   if (!mNewSyncMapingTable)
   {
     rv = NS_ERROR_OUT_OF_MEMORY;;
@@ -826,25 +805,46 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         // First, we need to fill out the localID for this entry. This should
         // be the ID from the local database for this card entry
         //
-        // RICHIE - Need access to the unique ID from Candice.
-        // mNewSyncMapingTable[workCounter] = card.???
-        mNewSyncMapingTable[workCounter]->localID = workCounter;
+        PRUint32    aKey;
+        if (NS_FAILED(card->GetKey(&aKey)))
+          continue;
 
-        if (ThisCardHasChanged(card, mNewSyncMapingTable[workCounter], singleProtocolLine))
+        mNewSyncMapingTable[workCounter].localID = aKey;
+
+        if (ThisCardHasChanged(card, &(mNewSyncMapingTable[workCounter]), singleProtocolLine))
         {
           // If we get here, we should look at the flags in the mNewSyncMapingTable to see
           // what we should add to the protocol header area and then tack on the singleProtcolLine
           // we got back from this call.
           //
-          if (mNewSyncMapingTable[workCounter]->flags && SYNC_ADD)
+          if (mNewSyncMapingTable[workCounter].flags && SYNC_ADD)
           {
-            mPostString.Append("add:");
+            char *tVal3 = PR_smprintf("%d", mCurrentPostRecord);
+            if (tVal3)
+            {
+              mPostString.Append(tVal3);
+              mPostString.Append("=");
+            }
+
+            mPostString.Append(SYNC_ESCAPE_ADDUSER);
             mPostString.Append(singleProtocolLine);
+
+            PR_FREEIF(tVal3);
+            mCurrentPostRecord++;
           }
-          else if (mNewSyncMapingTable[workCounter]->flags && SYNC_MODIFIED)
+          else if (mNewSyncMapingTable[workCounter].flags && SYNC_MODIFIED)
           {
-            mPostString.Append("modify:");
+            char *tVal4 = PR_smprintf("%d", mCurrentPostRecord);
+            if (tVal4)
+            {
+              mPostString.Append(tVal4);
+              mPostString.Append("=");
+            }
+
+            mPostString.Append(SYNC_ESCAPE_MOD);
             mPostString.Append(singleProtocolLine);
+            PR_FREEIF(tVal4);
+            mCurrentPostRecord++;
           }
         }
       }
@@ -863,15 +863,24 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
   readCount = 0;
   while (readCount < mOldTableSize)
   {
-    if (!(mOldSyncMapingTable[readCount]->flags && SYNC_PROCESSED))
+    if (!(mOldSyncMapingTable[readCount].flags && SYNC_PROCESSED))
     {
-      char *tVal = PR_smprintf("%d", mOldSyncMapingTable[readCount]->serverID);
+      char *tVal = PR_smprintf("%d", mOldSyncMapingTable[readCount].serverID);
       if (tVal)
       {
-        mCurrentPostRecord++;
-        mPostString.Append("&op=del&id=");
+        char *tVal2 = PR_smprintf("%d", mCurrentPostRecord);
+        if (tVal2)
+        {
+          mPostString.Append(tVal2);
+          mPostString.Append("=");
+        }
+
+        mPostString.Append(SYNC_ESCAPE_DEL);
+        mPostString.Append("%26id=");
         mPostString.Append(tVal);
         nsCRT::free(tVal);
+        nsCRT::free(tVal2);
+        mCurrentPostRecord++;
       }
     }
 
@@ -881,8 +890,6 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
 GetOut:
   if (mHistoryFile)
     mHistoryFile->CloseStream();
-
-  mHistoryFile = nsnull;
 
   if (NS_FAILED(rv))
   {
@@ -907,7 +914,7 @@ nsAbSync::AnalyzeTheLocalAddressBook()
   // Get the address book entry
   nsCOMPtr <nsIRDFResource>     resource = nsnull;
   nsCOMPtr <nsIAbDirectory>     directory = nsnull;
-  nsIAbCard                     *urlArgCard;
+  nsIAbCard                     *urlArgCard = nsnull;
   PRUnichar                     *workEmail = nsnull;
   char                          *charEmail = nsnull;
   PRUnichar                     *workAb = nsnull;
@@ -958,11 +965,242 @@ EarlyExit:
   return rv;
 }
 
+///////////////////////////////////////////////
+// The following is for protocol parsing
+///////////////////////////////////////////////
+
+#define     SERVER_OP_RETURN          "~op_return"
+#define     SERVER_NEW_RECORDS        "~new_records_section "
+#define     SERVER_DELETED_RECORDS    "~deleted_records_section "
+#define     SERVER_LAST_CHANGED       "~last_chg"
+
+// Return true if the server returned an error...
+PRBool
+nsAbSync::ErrorFromServer(char **errString)
+{
+  if (!nsCRT::strncasecmp(mProtocolOffset, "err ", 4))
+  {
+    *errString = mProtocolOffset + 4;
+    return PR_TRUE;
+  }
+  else
+    return PR_FALSE;
+}
+
+// If this returns true, we are done with the data...
+PRBool
+nsAbSync::DecoderDone()
+{
+  if ( (!*mProtocolOffset) )
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
+nsresult        
+nsAbSync::ProcessOpReturn()
+{
+  return NS_OK;
+}
+
+nsresult        
+nsAbSync::ProcessNewRecords()
+{
+  return NS_OK;
+}
+
+nsresult        
+nsAbSync::ProcessDeletedRecords()
+{
+  return NS_OK;
+}
+
+nsresult        
+nsAbSync::ProcessLastChange()
+{
+  char      *aLine = nsnull;
+
+  if (NS_FAILED(AdvanceToNextLine()))
+    return NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(ExtractCurrentLine(&aLine)))
+  {
+    if (aLine)
+    {
+      mLastChangeNum = nsCRT::atoi(nsString(aLine).GetUnicode());
+      PR_FREEIF(aLine);
+    }
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+nsresult        
+nsAbSync::ExtractCurrentLine(char   **aLine)
+{
+  nsString    extractString = ""; 
+
+  *aLine = nsnull;
+  while (*mProtocolOffset)
+  {
+    while ( (*mProtocolOffset != CR) && (*mProtocolOffset == LF) )
+    {
+      extractString.Append(*mProtocolOffset);
+      mProtocolOffset++;
+    }
+  }
+
+  if (!*mProtocolOffset)
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
+nsresult        
+nsAbSync::AdvanceToNextLine()
+{
+  while (*mProtocolOffset)
+  {
+    while ( (*mProtocolOffset != CR) && (*mProtocolOffset != LF) )
+      mProtocolOffset++;
+  }
+
+  if (!*mProtocolOffset)
+    return NS_ERROR_FAILURE;
+
+  while (*mProtocolOffset)
+  {
+    while ( (*mProtocolOffset == CR) || (*mProtocolOffset == LF) )
+      mProtocolOffset++;
+  }
+
+  if (!*mProtocolOffset)
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
+PRBool
+nsAbSync::ParseNextSection()
+{
+  nsresult      rv = NS_OK;
+
+  while ( (*mProtocolOffset == CR) || (*mProtocolOffset == LF) )
+    mProtocolOffset++;
+
+  if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_OP_RETURN, nsCRT::strlen(SERVER_OP_RETURN)))
+    rv = ProcessOpReturn();
+  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_NEW_RECORDS, nsCRT::strlen(SERVER_NEW_RECORDS)))
+    rv = ProcessNewRecords();
+  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_DELETED_RECORDS, nsCRT::strlen(SERVER_DELETED_RECORDS)))
+    rv = ProcessDeletedRecords();
+  else if (!nsCRT::strncasecmp(mProtocolOffset, SERVER_LAST_CHANGED, nsCRT::strlen(SERVER_LAST_CHANGED)))
+    rv = ProcessLastChange();
+
+  return PR_TRUE;
+}
+
 //
 // This is the response side of getting things back from the server
 //
 nsresult
 nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 {
+  nsresult        rv = NS_OK;
+  PRUint32        writeCount = 0;
+  PRInt32         writeSize = 0;
+  char            *errorString; 
+  PRBool          parseOk = PR_TRUE;
+
+  // If no response, then this is a problem...
+  if (!aProtocolResponse)
+  {
+    printf("\7RICHIE: Server returned invalid response!\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Assign the vars...
+  mProtocolResponse = (char *)aProtocolResponse;
+  mProtocolOffset = (char *)aProtocolResponse;
+
+  if (ErrorFromServer(&errorString))
+  {
+    printf("\7RICHIE: Server error: %s\n", errorString);
+    return NS_ERROR_FAILURE;
+  }
+
+  while ( (!DecoderDone()) && (parseOk) )
+  {
+    parseOk = ParseNextSection();
+  }
+
+  // Now, write out the history file with the new information
+  //
+  if (!mHistoryFile)
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto ExitEarly;
+  }
+
+  /***********RICHIE
+  if (NS_FAILED(mHistoryFile->OpenStreamForWriting()))
+  {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+    goto ExitEarly;
+  }
+
+  //
+  // Now, when we get here, we should go through the old history and see if
+  // there are records we need to delete since we didn't touch them when comparing
+  // against the current address book
+  //
+
+  // Ok, this handles the entries that we knew about before we started.
+  while (writeCount < mNewTableSize)
+  {
+    
+    if (NS_FAILED(mHistoryFile->Write((char *)&(mNewSyncMapingTable[writeCount]), 
+                                     sizeof(syncMappingRecord), &writeSize))
+                                     || (writeSize != sizeof(syncMappingRecord)))
+    {
+      rv = NS_ERROR_OUT_OF_MEMORY;;
+      goto ExitEarly;
+    }
+
+    writeCount++;
+  }
+
+  // These are entries that we got back from the server that are new
+  // to us!
+  writeCount = 0;
+  while (writeCount < mNewServerTableSize)
+  {
+    
+    if (NS_FAILED(mHistoryFile->Write((char *)&(mNewServerTable[writeCount]), 
+                                     sizeof(syncMappingRecord), &writeSize))
+                                     || (writeSize != sizeof(syncMappingRecord)))
+    {
+      rv = NS_ERROR_OUT_OF_MEMORY;;
+      goto ExitEarly;
+    }
+
+    writeCount++;
+  }
+
+  if (mHistoryFile)
+    mHistoryFile->CloseStream();
+*************** RICHIE */
+
+ExitEarly:
+  if (mLastChangeNum > 1)
+  {
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+    {
+      prefs->SetIntPref("mail.absync.last_change", mLastChangeNum);
+    }
+  }
+
   return NS_OK;
 }

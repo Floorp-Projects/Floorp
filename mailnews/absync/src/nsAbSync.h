@@ -79,6 +79,25 @@ typedef struct {
 #define     SYNC_RENUMBER     0x0010    // Renumber on the server
 #define     SYNC_PROCESSED    0x8000    // We processed the entry...nothing to do
 
+#define SYNC_ALLTAGS             1000
+#define SYNC_EMAILS              2000
+#define ABSYNC_PROTOCOL          3
+
+#define SYNC_ESCAPE_ADDUSER             "op%3Dadd"
+#define SYNC_ESCAPE_MOD                 "op%3Dmod"
+#define SYNC_ESCAPE_DEL                 "op%3Ddel"
+
+//mailing list
+#define SYNC_ESCAPE_MAIL_ADD            "op%3DmaillistCreate"
+#define SYNC_ESCAPE_MAIL_MOD            "op%3DmaillistRen"
+#define SYNC_ESCAPE_MAIL_DEL            "op%3DmaillistDel"
+#define SYNC_ESCAPE_MAIL_EMAIL_MOD      "op%3DemailstringUpdate"
+#define SYNC_ESCAPE_MAIL_CONTACT_ADD    "op%3DmaillistAdd"
+#define SYNC_ESCAPE_MAIL_CONTACT_DEL    "op%3DmaillistMemberDel"
+
+// group
+#define SYNC_ESCAPE_GROUP_DEL            "op%3DgrpDel"
+
 //
 // We need this structure for mapping our field names to the server
 // field names
@@ -115,7 +134,7 @@ private:
 
   NS_IMETHOD      OpenAB(char *aAbName, nsIAddrDatabase **aDatabase);
   NS_IMETHOD      AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory);
-  NS_IMETHOD      GenerateProtocolForCard(nsIAbCard *aCard, PRInt32 id, nsString &protLine);
+  NS_IMETHOD      GenerateProtocolForCard(nsIAbCard *aCard, PRBool  aAddId, nsString &protLine);
   PRBool          ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *syncRecord, nsString &protLine);
   nsresult        InternalCleanup();
 
@@ -124,6 +143,9 @@ private:
   nsIAbSyncListener               **mListenerArray;
   PRInt32                         mListenerArrayCount;
   PRInt32                         mCurrentState;
+
+  PRInt32                         mLastChangeNum;
+  char                            *mUserName;
 
   // Setting for ABSync operations...
   char                            *mAbSyncServer;
@@ -137,11 +159,30 @@ private:
   nsCOMPtr<nsIFileSpec>           mHistoryFile;
 
   PRUint32                        mOldTableSize;
-  syncMappingRecord               **mOldSyncMapingTable;
+  syncMappingRecord               *mOldSyncMapingTable;  // Old history table...
   PRUint32                        mNewTableSize;
-  syncMappingRecord               **mNewSyncMapingTable;
+  syncMappingRecord               *mNewSyncMapingTable;   // New table after reading address book
+  PRUint32                        mNewServerTableSize;
+  syncMappingRecord               *mNewServerTable;       // New entries from the server
+
+  char                            *mProtocolResponse;     // what the server said...
+  char                            *mProtocolOffset;       // where in the buffer are we?
 
   schemaStruct                    mSchemaMappingList[kMaxColumns];
+
+  ///////////////////////////////////////////////
+  // The following is for protocol parsing
+  ///////////////////////////////////////////////
+  PRBool          ErrorFromServer(char **errString);      // Return true if the server returned an error...
+  PRBool          DecoderDone();                          // If this returns true, we are done with the data...
+  PRBool          ParseNextSection();                     // Deal with next section
+  nsresult        AdvanceToNextLine();
+  nsresult        ExtractCurrentLine(char **aLine);
+
+  nsresult        ProcessOpReturn();
+  nsresult        ProcessNewRecords();
+  nsresult        ProcessDeletedRecords();
+  nsresult        ProcessLastChange();
 };
 
 #endif /* __nsIAbSync_h__ */

@@ -45,22 +45,18 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 /* 
  * This function will be used by the factory to generate an 
- * mime object class object....
+ * object class object....
  */
-nsresult NS_NewPostEngine(nsAbSyncPostEngine ** aInstancePtrResult)
+NS_METHOD
+nsAbSyncPostEngine::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsAbSyncPostEngine *obj = new nsAbSyncPostEngine();
-		if (obj)
-			return obj->QueryInterface(NS_GET_IID(nsIStreamListener), (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the object 
-	}
-	else
-		return NS_ERROR_NULL_POINTER; // aInstancePtrResult was NULL....
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    nsAbSyncPostEngine *ph = new nsAbSyncPostEngine();
+    if (ph == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return ph->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ADDREF(nsAbSyncPostEngine)
@@ -72,6 +68,7 @@ NS_INTERFACE_MAP_BEGIN(nsAbSyncPostEngine)
    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
+   NS_INTERFACE_MAP_ENTRY(nsIAbSyncPostEngine)
 NS_INTERFACE_MAP_END
 
 /* 
@@ -311,28 +308,27 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, nsPostCompletionCallback  cb,
   if (!postData)
     return NS_ERROR_INVALID_ARG;
 
-  rv = NS_NewPostDataStream(&postStream, PR_FALSE, postData, 0);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<nsIChannel> channel;
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull), NS_ERROR_FAILURE);
   
-  // Tag the post stream onto the channel...
+/**
+  // RICHIE
+  // Tag the post stream onto the channel...but never seemed to work...so putting it
+  // directly on the URL spec
   nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  mMessageSize = nsCRT::strlen(postData);
   httpChannel->SetRequestMethod(HM_POST);
-  httpChannel->SetPostDataStream(postStream);
+  httpChannel->SetUploadStream(postStream);
+**/
 
   // let's try uri dispatching...
   nsCOMPtr<nsIURILoader> pURILoader (do_GetService(NS_URI_LOADER_PROGID));
   NS_ENSURE_TRUE(pURILoader, NS_ERROR_FAILURE);
   nsCOMPtr<nsISupports> openContext;
   nsCOMPtr<nsISupports> cntListener (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, this)));
-  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, cntListener);
+  rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull, cntListener);
 
   mURL = dont_QueryInterface(aURL);
   mCallback = cb;
@@ -452,7 +448,7 @@ nsAbSyncPostEngine::NotifyListenersOnStopSending(PRInt32 aTransactionID, nsresul
 
 // Utility to create a nsIURI object...
 extern "C" nsresult 
-nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
+nsEngineNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
 {  
   nsresult  res;
 
@@ -496,8 +492,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::GetCurrentState(PRInt32 *_retval)
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 
-/* void SendAbRequest (in string aProtocolRequest, out PRInt32 aTransactionID); */
-NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, const char *aProtocolRequest, PRInt32 aTransactionID)
+NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort, const char *aProtocolRequest, PRInt32 aTransactionID)
 {
   nsresult  rv;
   nsIURI    *workURI = nsnull;
@@ -510,9 +505,17 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, const char *a
   mProtocolResponse = "";
   mTotalWritten = 0;
 
-  rv = nsMimeNewURI(&workURI, aSpec, nsnull);
+  char *tSpec = PR_smprintf("%s?%s", aSpec, aProtocolRequest);
+  if (!tSpec)
+    return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the string */
+
+  rv = nsEngineNewURI(&workURI, tSpec, nsnull);
   if (NS_FAILED(rv) || (!workURI))
     return NS_ERROR_FAILURE;
+
+  PR_FREEIF(tSpec);
+  if (aPort > 0)
+    workURI->SetPort(aPort);
 
   rv = FireURLRequest(workURI, PostDoneCallback, this, aProtocolRequest);
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;

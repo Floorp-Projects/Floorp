@@ -30,6 +30,7 @@ include <$(DEPTH)\config\config.mak>
 EXPORTS=    nsAbSyncPostEngine.h             \
             nsAbSync.h                       \
             nsAbSyncCRCModel.h               \
+            nsSyncDecoderRing.h              \
             $(NULL)
 
 ################################################################################
@@ -40,6 +41,7 @@ LIBRARY_NAME=absync_s
 CPP_OBJS=   .\$(OBJDIR)\nsAbSyncPostEngine.obj             \
             .\$(OBJDIR)\nsAbSync.obj           	           \
             .\$(OBJDIR)\nsAbSyncCRCModel.obj               \
+            .\$(OBJDIR)\nsSyncDecoderRing.obj              \
             $(NULL)
 
 

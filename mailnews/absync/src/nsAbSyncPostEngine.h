@@ -65,6 +65,8 @@ public:
 						nsPostCompletionCallback cb,
 						void *tagData);
 
+  static NS_METHOD    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
   // Methods for nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
   // Methods for nsIStreamObserver
@@ -101,8 +103,5 @@ private:
   nsIAbSyncPostListener           **mListenerArray;
   PRInt32                         mListenerArrayCount;
 }; 
-
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewPostEngine(nsAbSyncPostEngine **aInstancePtrResult);
 
 #endif /* nsAbSyncPostEngine_h_ */

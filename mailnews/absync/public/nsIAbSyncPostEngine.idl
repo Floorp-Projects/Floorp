@@ -47,5 +47,5 @@ interface nsIAbSyncPostEngine : nsISupports {
    * Send the protocol request and get a transaction ID in return that
    * will be sent along with all sync listener operations
    */
-  void    SendAbRequest(in string aSpec, in string aProtocolRequest, in PRInt32 aTransactionID);
+  void    SendAbRequest(in string aSpec, in PRInt32 aPort, in string aProtocolRequest, in PRInt32 aTransactionID);
 };

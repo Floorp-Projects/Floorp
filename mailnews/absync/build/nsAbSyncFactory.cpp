@@ -37,7 +37,7 @@
 #include "nsAbSyncPostEngine.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSync);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSyncPostEngine);
+// NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbSyncPostEngine);
 
 ////////////////////////////////////////////////////////////
 //
@@ -52,8 +52,7 @@ static nsModuleComponentInfo components[] =
   { "Addressbook Sync Post Engine",
     NS_ABSYNC_POST_ENGINE_CID,
     NS_ABSYNC_POST_ENGINE_PROGID,
-    nsAbSyncPostEngineConstructor }
+    nsAbSyncPostEngine::Create }
 };
 
-  
 NS_IMPL_NSGETMODULE("nsAbSyncModule", components)
