@@ -67,7 +67,7 @@ sub setup_vars {
         $ld_lib_path = "LD_LIBRARY_PATH";
     }
 
-    my $dbg_suffix = "_DBG";
+    my $dbg_suffix = "_dbg";
     $ENV{BUILD_OPT} and $dbg_suffix = "";
 
     $ENV{CLASSPATH}  = "";
@@ -77,7 +77,8 @@ sub setup_vars {
         shift @$argv;
         my $dist_dir = shift @$argv or usage("did not provide dist_dir");
 
-        $ENV{CLASSPATH} .= "$dist_dir/../classes$dbg_suffix";
+        $ENV{CLASSPATH} .= "$dist_dir/../xpclass$dbg_suffix.jar";
+        ( -f $ENV{CLASSPATH} ) or die "$ENV{CLASSPATH} does not exist";
         $ENV{$ld_lib_path} = $ENV{$ld_lib_path} . $pathsep . "$dist_dir/lib";
         $nss_lib_dir = "$dist_dir/lib"
     } elsif( $$argv[0] eq "release" ) {
@@ -178,3 +179,10 @@ print STDERR "============= test signing\n";
 $result = system("$java org.mozilla.jss.tests.SigTest $testdir " .
             "\"$signingToken\" $pwfile"); $result >>=8;
 $result and die "SigTest returned $result";
+
+# test Secret Decoder Ring
+#
+print STDERR "============= test Secret Decoder Ring\n";
+$result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
+$result >>=8;
+$result and die "TestSDR returned $result";
