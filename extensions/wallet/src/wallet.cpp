@@ -2792,12 +2792,12 @@ WLLT_FetchFromNetCenter() {
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
+  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/SchemaConcat.tbl",
                        dirSpec, "SchemaConcat.tbl");
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/URLFieldSchema.tbl",
+  rv = NS_NewURItoFile("http://people.netscape.com/morse/wallet/FieldSchema.tbl",
                        dirSpec, "FieldSchema.tbl");
   if (NS_FAILED(rv)) {
     return;
