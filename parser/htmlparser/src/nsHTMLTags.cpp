@@ -150,6 +150,17 @@ nsHTMLTags::GetStringValue(nsHTMLTag aTag)
   }
 }
 
+const char* nsHTMLTags::GetCStringValue(nsHTMLTag aTag) {
+  NS_ASSERTION(gTagArray, "no lookup table, needs addref");
+  if ((eHTMLTag_unknown < aTag) && 
+      (aTag < NS_HTML_TAG_MAX) && gTagArray) {
+    return gTagArray[aTag - 1].mStr.mStr;
+  }
+  else {
+    static const char* kNullStr="";
+    return kNullStr;
+  }
+}
 
 
 #ifdef NS_DEBUG

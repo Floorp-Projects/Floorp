@@ -4,7 +4,7 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
@@ -89,91 +89,6 @@ static char gShowCRC;
 
 
 
-/***************************************************************
-  This the ITagHandler deque deallocator, needed by the 
-  CTagHandlerRegister
- ***************************************************************/
-class CTagHandlerDeallocator: public nsDequeFunctor{
-public:
-  virtual void* operator()(void* aObject) {
-    nsITagHandler*  tagHandler = (nsITagHandler*)aObject;
-    delete tagHandler;
-    return 0;
-  }
-};
-
-/***************************************************************
-  This funtor will be called for each item in the TagHandler que to 
-  check for a Tag name, and setting the current TagHandler when it is reached
- ***************************************************************/
-class CTagFinder: public nsDequeFunctor{
-
-public:
-  CTagFinder(){}
-  void Initialize(const nsString &aTagName) {mTagName = aTagName;}
-
-  virtual ~CTagFinder() {
-  }
-
-  virtual void* operator()(void* aObject) {
-    nsString* theString = ((nsITagHandler*)aObject)->GetString();
-    if( theString->Equals(mTagName)){
-      return aObject;
-    }
-    return(0); 
-  }
-
-  nsAutoString  mTagName;
-};
-
-/***************************************************************
-  This a an object that will keep track of TagHandlers in 
-  the DTD.  Uses a factory pattern
- ***************************************************************/
-class CTagHandlerRegister {
-public:
-  
-  CTagHandlerRegister();
-
-  ~CTagHandlerRegister();
-
-  void RegisterTagHandler(nsITagHandler *aTagHandler){
-    mTagHandlerDeque.Push(aTagHandler);
-  }
-  
-  nsITagHandler*  FindTagHandler(const nsString &aTagName){
-    nsITagHandler* foundHandler = nsnull;
-
-    mTagFinder.Initialize(aTagName);
-    mTagHandlerDeque.Begin();
-    foundHandler = (nsITagHandler*) mTagHandlerDeque.FirstThat(mTagFinder);
-    return foundHandler;
-  }
-  
-  nsDeque                 mTagHandlerDeque;
-  CTagFinder              mTagFinder;
-};
-
-MOZ_DECL_CTOR_COUNTER(CTagHandlerRegister);
-
-CTagHandlerRegister::CTagHandlerRegister() : mTagHandlerDeque(new CTagHandlerDeallocator())
-{
-  MOZ_COUNT_CTOR(CTagHandlerRegister);
-}
-
-CTagHandlerRegister::~CTagHandlerRegister() 
-{
-  MOZ_COUNT_DTOR(CTagHandlerRegister);
-}
-
-/************************************************************************
-  The CTagHandlerRegister for a CNavDTD.
-  This is where special taghanders for our tags can be managed and called from
-  Note:  This can also be attached to some object so it can be refcounted 
-  and destroyed if you want this to go away when not imbedded.
- ************************************************************************/
-//CTagHandlerRegister gTagHandlerRegister;
-
 
 /************************************************************************
   And now for the main class -- CNavDTD...
@@ -242,6 +157,8 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mShared
   mExpectedCRC32=0;
   mDTDState=NS_OK;
   mStyleHandlingEnabled=PR_TRUE;
+  mIsText=PR_FALSE;
+  mRequestedHead=PR_FALSE;
 
   if(!gHTMLElements) {
     InitializeElementTable();
@@ -452,9 +369,21 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
  */
 eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, nsString& aBuffer, PRInt32 aVersion) {
   eAutoDetectResult result=eUnknownDetect;
- 
-  if(!aCommand.Equals(kViewSourceCommand)) {
+
+
+  if(aCommand.Equals(kViewSourceCommand)) {
+    if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
+      result=ePrimaryDetect;
+    }
+    else if(aContentType.Equals(kRTFTextContentType)){ 
+      result=ePrimaryDetect;
+    }
+  }
+  else {
     if(PR_TRUE==aContentType.Equals(kHTMLTextContentType)) {
+      result=ePrimaryDetect;
+    }
+    if(PR_TRUE==aContentType.Equals(kPlainTextContentType)) {
       result=ePrimaryDetect;
     }
     else {
@@ -492,6 +421,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
   mHasOpenScript=PR_FALSE;
   mParseMode=aParseMode;
   mStyleHandlingEnabled=(eParseMode_quirks==mParseMode);
+  mRequestedHead=PR_FALSE;
     
   if((aNotifySink) && (aSink)) {
 
@@ -500,6 +430,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
 
     mTokenRecycler=0;
     mStyleHandlingEnabled=PR_TRUE;
+
+    mIsText=aSourceType.Equals(kPlainTextContentType) || aSourceType.Equals(kRTFTextContentType);
 
     if(aSink && (!mSink)) {
       result=aSink->QueryInterface(kIHTMLContentSinkIID, (void **)&mSink);
@@ -516,6 +448,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,
       mExpectedCRC32=0;
     }
   }
+
   return result;
 }
 
@@ -542,12 +475,17 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
       mTokenRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
       if(mSink) {
 
-      
-
         if(!mBodyContext->GetCount()) {
             //if the content model is empty, then begin by opening <html>...
           CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_html,"html");
           HandleStartToken(theToken); //this token should get pushed on the context stack, don't recycle it.
+
+          if(mIsText) {
+              //we do this little trick for text files, in both normal and viewsource mode...
+            CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_pre);
+            HandleStartToken(theToken); 
+          }
+
         }
 
         while(NS_SUCCEEDED(result)){
@@ -883,30 +821,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
   }//if
   return result;
 }
-
-/**
- *  This method causes all tokens to be dispatched to the given tag handler.
- *
- *  @update  gess 3/25/98
- *  @param   aHandler -- object to receive subsequent tokens...
- *  @return  error code (usually 0)
- */
-nsresult CNavDTD::CaptureTokenPump(nsITagHandler* aHandler) {
-  nsresult result=NS_OK;
-  return result;
-}
-
-/**
- *  This method releases the token-pump capture obtained in CaptureTokenPump()
- *
- *  @update  gess 3/25/98
- *  @param   aHandler -- object that received tokens...
- *  @return  error code (usually 0)
- */
-nsresult CNavDTD::ReleaseTokenPump(nsITagHandler* aHandler){
-  nsresult result=NS_OK;
-  return result;
-}
  
 /**
  * This gets called after we've handled a given start tag.
@@ -940,9 +854,9 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
       {        
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
-        const nsString& theText=aNode.GetSkippedContent();
-        if(0<theText.Length()) {
-          CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE,PR_FALSE);
+        const nsString& theString=aNode.GetSkippedContent();
+        if(0<theString.Length()) {
+          CViewSourceHTML::WriteText(theString,*mSink,PR_TRUE,PR_FALSE);
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         START_TIMER()
@@ -1105,22 +1019,27 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
           if(theChildAgrees && theChildIsContainer) {
             if ((theParentTag!=aChildTag) && (!nsHTMLElement::IsResidualStyleTag(aChildTag))) { 
               
-              PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
+              if(gHTMLElements[theParentTag].IsBlockEntity()) {
+                PRInt32 theChildIndex=GetIndexOfChildOrSynonym(*mBodyContext,aChildTag);
               
-              if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
+                if((kNotFound<theChildIndex) && (theChildIndex<theIndex)) {
 
-              /*-------------------------------------------------------------------------------------
-                Here's a tricky case from bug 22596:  <h5><li><h5>
+                /*-------------------------------------------------------------------------------------
+                  1.  Here's a tricky case from bug 22596:  <h5><li><h5>
 
-                How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
-                (Afterall, the <h5> is a legal child of the <LI>).
+                      How do we know that the 2nd <h5> should close the <LI> rather than nest inside the <LI>?
+                      (Afterall, the <h5> is a legal child of the <LI>).
               
-                The way you know is that there is no root between the two, so the <h5> binds more
-                tightly to the 1st <h5> than to the <LI>.
-               -------------------------------------------------------------------------------------*/
+                      The way you know is that there is no root between the two, so the <h5> binds more
+                      tightly to the 1st <h5> than to the <LI>.
 
-                theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
-              } //if
+                  2.  Also, bug 6148 shows this case: <SPAN><DIV><SPAN>
+                      From this case we learned not to execute this logic if the parent is a block.
+                 -------------------------------------------------------------------------------------*/
+
+                  theChildAgrees=CanBeContained(aChildTag,*mBodyContext);
+                } //if
+              }//if
             } //if
           } //if
         } //if parentcontains
@@ -1417,6 +1336,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             if(mHadBody || mHadFrameset) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,theNode);
               isTokenHandled=PR_TRUE;
+              mRequestedHead=PR_TRUE;
             }
             break;
           default:
@@ -1457,7 +1377,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          theHeadIsParent=(!mHasOpenBody);
+          theHeadIsParent=((!mHasOpenBody) || mRequestedHead);
           mHasOpenScript=PR_TRUE;
 
         default:
@@ -1645,6 +1565,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag,mTokenizer,mTokenRecycler,mLineNumber);
+      mRequestedHead=PR_FALSE;
       //ok to fall through...
 
     case eHTMLTag_form:
@@ -2068,7 +1989,10 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
   // XXX rickg This linefeed conversion stuff should be moved out of
   // the parser and into the form element code
   PRBool aMustConvertLinebreaks = PR_FALSE;
-  
+
+  mScratch.Truncate();
+  aNode.SetSkippedContent(mScratch);
+
   for(aIndex=0;aIndex<aMax;aIndex++){
     CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
 
@@ -2079,16 +2003,18 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     // the start token as mTrailing content and will get appended in 
     // start token's GetSource();
     if(eToken_attribute!=theTokenType) {
-      if((eHTMLTag_textarea==theNodeTag) && (eToken_entity==theTokenType)) {
-        ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
-        // since this is an entity, we know that it's only one character.
-        // check to see if it's a CR, in which case we'll need to do line
-        // termination conversion at the end.
-        aMustConvertLinebreaks |= (mScratch[0] == kCR);
+      if (eToken_entity==theTokenType) {
+        if((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag)) {
+          ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
+          // since this is an entity, we know that it's only one character.
+          // check to see if it's a CR, in which case we'll need to do line
+          // termination conversion at the end.
+          aMustConvertLinebreaks |= (mScratch[0] == kCR);
+        }
       }
       else theNextToken->GetSource(mScratch);
 
-      aNode.mSkippedContent+=mScratch;
+      aNode.mSkippedContent->Append(mScratch);
     }
     mTokenRecycler->RecycleToken(theNextToken);
   }
@@ -2106,13 +2032,13 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     aNode.mSkippedContent.ReplaceChar("\r", kNewLine);
     */
 #if 1
-    nsLinebreakConverter::ConvertStringLineBreaks(aNode.mSkippedContent,
+    nsLinebreakConverter::ConvertStringLineBreaks(*aNode.mSkippedContent,
          nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
 #endif
   }
   
   // Let's hope that this does not hamper the  PERFORMANCE!!
-  mLineNumber += aNode.mSkippedContent.CountChar(kNewLine);
+  mLineNumber += aNode.mSkippedContent->CountChar(kNewLine);
   return NS_OK;
 }
             
@@ -2879,8 +2805,19 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
   PRBool     isDefaultNode=PR_FALSE;
 
 
-  if (nsHTMLElement::IsResidualStyleTag(aTag))
+  if (nsHTMLElement::IsResidualStyleTag(aTag)) {
+    /***********************************************************************
+     *  Here's an interesting problem:
+     *
+     *  If there's an <a> on the RS-stack, and you're trying to open 
+     *  another <a>, the one on the RS-stack should be discarded.
+     *
+     *  I'm updating OpenTransientStyles to throw old <a>'s away.
+     *
+     ***********************************************************************/
+
     OpenTransientStyles(aTag); 
+  }
 
 #ifdef ENABLE_CRC
   #define K_OPENOP 100
@@ -3362,16 +3299,16 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
     if(NS_OK==result) {
       if(eHTMLTag_title==theTag) {
 
-        ///XXX this evil hack is necessary only for beta.
-        //Post beta, lets make the GetSkippedContent() call non-const.
-
         const nsString& theString=aNode->GetSkippedContent();
-        nsString* theStr=(nsString*)&theString;
-        theStr->CompressWhitespace();
+        PRInt32 theLen=theString.Length();
+        CBufDescriptor theBD(theString.GetUnicode(), PR_TRUE, theLen+1, theLen);
+        nsAutoString theString2(theBD);
+
+        theString2.CompressWhitespace();
 
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
-        mSink->SetTitle(theString);
+        mSink->SetTitle(theString2);
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
         START_TIMER()
 
@@ -3454,7 +3391,7 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 nsresult CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
   nsresult result=NS_OK;
   if(!mTokenizer) {
-    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,PR_FALSE);
+    result=NS_NewHTMLTokenizer(&mTokenizer,mParseMode,mIsText);
   }
   aTokenizer=mTokenizer;
   return result;

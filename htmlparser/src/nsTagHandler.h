@@ -88,4 +88,64 @@ public:
 
 };
 
+
+/**
+ *  This class defines an object that describes the baseline group that a given
+ *  element belongs to.
+ *  
+ *  @update  rgess 1/15/00
+ */
+class nsElementGroup {
+public:
+  nsElementGroup(PRInt32 aGroupBits) {
+    mGroupBits=aGroupBits;
+  }
+
+  nsElementGroup(const nsElementGroup& aGroup) {
+    mGroupBits=aGroup.mGroupBits;
+  }
+
+  nsElementGroup& operator=(const nsElementGroup& aGroup) {
+    mGroupBits=aGroup.mGroupBits;
+    return *this;
+  }
+
+  ~nsElementGroup() {
+    mGroupBits=0;
+  }
+
+private:
+  PRInt32 mGroupBits;
+};
+
+
+/**
+ *  This class defines an object that describes the each element (tag).
+ *  
+ *  @update  rgess 1/15/00
+ */
+class nsElement {
+public:
+  nsElement() {
+    mGroup=0;
+  }
+  
+  nsElement(const nsElement& aGroup){
+    mGroup=aGroup.mGroup;
+  }
+  
+  nsElement& operator=(const nsElement& aGroup) {
+    mGroup=aGroup.mGroup;
+    return *this;
+  }
+
+  ~nsElement() {
+    mGroup=0;
+  }
+
+private:
+  nsElementGroup* mGroup;
+};
+
+
 #endif 

@@ -174,11 +174,11 @@ class nsCParserNode :  public nsIParserNode {
      */
     virtual CToken* PopAttributeToken();
     
-    PRInt32       mLineNumber;
-    CToken*       mToken;
-    nsDeque*      mAttributes;
-    nsAutoString  mSkippedContent;
-    PRInt32       mUseCount;
+    PRInt32   mLineNumber;
+    CToken*   mToken;
+    nsDeque*  mAttributes;
+    nsString* mSkippedContent;
+    PRInt32   mUseCount;
 
     nsITokenRecycler* mRecycler;
 };

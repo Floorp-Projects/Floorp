@@ -37,6 +37,7 @@
 #include "nshtmlpars.h"
 #include "nsVoidArray.h"
 #include "nsDeque.h"
+#include "nsToken.h"
 
 #define NS_RTF_DTD_IID      \
   {0xa39c6bfc, 0x15f0,  0x11d2,  \
@@ -45,6 +46,7 @@
 class nsIParserNode;
 class nsParser;
 class nsITokenizer;
+class nsIHTMLContentSink;
 
 enum eRTFTokenTypes {
   eRTFToken_unknown=0,
@@ -63,6 +65,8 @@ enum eRTFTags {
   eRTFCtrl_linefeed,
   eRTFCtrl_return,
   eRTFCtrl_begincontrol,
+  eRTFCtrl_text,
+  eRTFCtrl_ansi,
   eRTFCtrl_bold, 
   eRTFCtrl_bin,
   eRTFCtrl_blue,
@@ -89,58 +93,43 @@ enum eRTFTags {
   eRTFCtrl_tab,
   eRTFCtrl_title,
   eRTFCtrl_underline,
-  eRTFCtrl_startgroup,
-  eRTFCtrl_endgroup,
+  eRTFCtrl_startgroup,    // {
+  eRTFCtrl_endgroup,      // }
   eRTFCtrl_last //make sure this stays the last token...
 };
 
 
 
 /**
- * 
+ * Represents the token of RTF. Always has form \xxxx<optarg>delimiter
+ *
  * @update	gess7/8/98
  * @param 
  * @return
  */
 class CRTFControlWord : public CToken {
 public:
-                  CRTFControlWord(char* aKey);
-  virtual PRInt32 GetTokenType();
-  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-protected:
-  nsString  mArgument;
+            CRTFControlWord(eRTFTags aTagID);
+  virtual   PRInt32   GetTokenType();
+  virtual   nsresult  Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+
+  eRTFTags  mTag;
+  nsAutoString mArgument;
 };
 
 
 /**
- * 
- * @update	gess7/8/98
- * @param 
- * @return
- */
-class CRTFGroup: public CToken {
-public:
-                  CRTFGroup(char* aKey,PRBool aStartGroup);
-  virtual PRInt32 GetTokenType();
-  virtual void    SetGroupStart(PRBool aFlag);
-  virtual PRBool  IsGroupStart();
-  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-protected:
-          PRBool  mStart;
-};
-
-
-/**
- * 
+ * This represents the document content.
+ *
  * @update	gess7/8/98
  * @param 
  * @return
  */
 class CRTFContent: public CToken {
 public:
-                  CRTFContent(PRUnichar* aValue);
-  virtual PRInt32 GetTokenType();
-  virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
+                    CRTFContent(PRUnichar* aKey=0);
+  virtual PRInt32   GetTokenType();
+  virtual nsresult  Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
 };
 
 
@@ -231,14 +220,6 @@ class CRtfDTD : public nsIDTD {
      *  @param   aToken -- token object to be put into content model
      *  @return  0 if all is well; non-zero is an error
      */
-    NS_IMETHOD HandleGroup(CToken* aToken);
-
-    /**
-     *  
-     *  @update  gess 3/25/98
-     *  @param   aToken -- token object to be put into content model
-     *  @return  0 if all is well; non-zero is an error
-     */
     NS_IMETHOD HandleControlWord(CToken* aToken);
 
     /**
@@ -256,25 +237,6 @@ class CRtfDTD : public nsIDTD {
      *  @return  0 if all is well; non-zero is an error
      */
     NS_IMETHOD HandleToken(CToken* aToken,nsIParser* aParser);
-
-    /**
-     *  This method causes all tokens to be dispatched to the given tag handler.
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object to receive subsequent tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD CaptureTokenPump(nsITagHandler* aHandler);
-
-    /**
-     *  This method releases the token-pump capture obtained in CaptureTokenPump()
-     *
-     *  @update  gess 3/25/98
-  	 *  @param   aHandler -- object that received tokens...
-	   *  @return	 error code (usually 0)
-     */
-    NS_IMETHOD ReleaseTokenPump(nsITagHandler* aHandler);
-
   
     /**
      * 
@@ -375,6 +337,18 @@ protected:
     nsParser*           mParser;
     char*               mFilename;
     nsITokenizer*       mTokenizer;
+    PRBool              mHasHeader;
+    nsDeque             mGroups;
+    PRInt32             mGroupCount;
+    nsIHTMLContentSink* mSink;
+
+private:
+    nsresult  PushGroup();
+    nsresult  PopGroup();
+    nsresult  OpenContainer(eHTMLTags aTag,const char* aTagName);
+    nsresult  CloseContainer(eHTMLTags aTag);
+    nsresult  AddLeafContainer(eHTMLTags aTag,const char* aTagName);
+    nsresult  EmitStyleContainer(CToken* aToken,eRTFTags aTag,PRBool aState);
 };
 
 extern NS_HTMLPARS nsresult NS_NewRTF_DTD(nsIDTD** aInstancePtrResult);

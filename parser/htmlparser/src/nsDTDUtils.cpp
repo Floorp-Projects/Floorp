@@ -193,6 +193,42 @@ void nsEntryStack::Append(nsEntryStack *aStack) {
   }
 } 
  
+/**
+ * 
+ * 
+ * @update  gess 01/25/00
+ */
+nsIParserNode* nsEntryStack::Remove(eHTMLTags aTag) {
+  nsIParserNode* result=0;
+
+  if(0<mCount) {
+    result=mEntries[--mCount].mNode;
+
+    ((nsCParserNode*)result)->mUseCount--;
+    ((nsCParserNode*)result)->mToken->mUseCount--;
+    mEntries[mCount].mNode=0;
+    mEntries[mCount].mStyles=0;
+
+    nsEntryStack* theStyleStack=mEntries[mCount].mParent;
+
+    if(theStyleStack) {
+      //now we have to tell the residual style stack where this tag
+      //originated that it's no longer in use.
+      PRUint32 scount=theStyleStack->mCount;
+      PRUint32 sindex=0;
+
+      nsTagEntry *theStyleEntry=theStyleStack->mEntries;
+      for(sindex=scount-1;sindex>0;sindex--){            
+        if(theStyleEntry->mTag==mEntries[mCount].mTag) {
+          theStyleEntry->mParent=0;  //this tells us that the style is not open at any level
+          break;
+        }
+        theStyleEntry++;
+      } //for
+    }
+  }
+  return result;
+}
 
 /**
  * 
@@ -558,6 +594,33 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
   return 0;
 }
 
+/** 
+ * 
+ * This is similar to popstyle, except that it removes the
+ * style tag given from anywhere in the style stack, and
+ * not just at the top.
+ *
+ * @update  gess 01/26/00
+ */
+nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
+
+  PRInt32 theLevel=0;
+
+  for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
+    nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
+    if(theStack) {
+      if(aTag==theStack->Last()) {
+        return theStack->Pop();
+        mResidualStyleCount--;
+      } else {
+        // NS_ERROR("bad residual style entry");
+      }
+    } 
+  }
+
+  return 0;
+}
+
 /**************************************************************
   Now define the tokenrecycler class...
  **************************************************************/
@@ -732,7 +795,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
   int i,j=0;
   int written;
   for(i=1;i<eHTMLTag_text;i++){
-    const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
+    const char* tag=nsHTMLTags::GetCStringValue((eHTMLTags)i);
     out << endl << endl << "Tag: <" << tag << ">" << endl;
     out << prefix;
     written=0;
@@ -743,7 +806,7 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
           written=0;
         }
         if(theDTD.CanContain(i,j)){
-          tag=nsHTMLTags::GetStringValue((eHTMLTags)j);
+          tag=nsHTMLTags::GetCStringValue((eHTMLTags)j);
           if(tag) {
             out<< tag << ", ";
             written++;

@@ -77,6 +77,7 @@ public:
   void            PushFront(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
   void            Append(nsEntryStack *theStack);
   nsIParserNode*  Pop(void);
+  nsIParserNode*  Remove(eHTMLTags aTag);
   nsIParserNode*  NodeAt(PRInt32 anIndex) const;
   eHTMLTags       First() const;
   eHTMLTags       TagAt(PRInt32 anIndex) const;
@@ -154,6 +155,7 @@ public:
   void            PushStyles(nsEntryStack *theStyles);
   nsIParserNode*  PopStyle(void);
   nsIParserNode*  PopStyle(eHTMLTags aTag);
+  nsIParserNode*  RemoveStyle(eHTMLTags aTag);
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;

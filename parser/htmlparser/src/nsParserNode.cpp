@@ -47,7 +47,7 @@ nsString& GetEmptyString() {
  *  @return  
  */
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): 
-    nsIParserNode(), mSkippedContent("") {
+    nsIParserNode() {
   NS_INIT_REFCNT();
 
   static int theNodeCount=0;
@@ -57,6 +57,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
   mToken=aToken;
   mRecycler=aRecycler;
   mUseCount=0;
+  mSkippedContent=0;
 }
 
 static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
@@ -89,6 +90,10 @@ nsCParserNode::~nsCParserNode() {
     delete mAttributes;
     mAttributes=0;
   }
+  if(mSkippedContent) {
+    delete mSkippedContent;
+  }
+  mSkippedContent=0;
 }
 
 
@@ -110,7 +115,9 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
     RecycleTokens(mRecycler,*mAttributes);
   mToken=aToken;
   mUseCount=0;
-  mSkippedContent.Truncate();
+  if(mSkippedContent) {
+    mSkippedContent->Truncate();
+  }
   return NS_OK;
 }
 
@@ -201,8 +208,11 @@ const nsString& nsCParserNode::GetText() const {
  *  @return  string ref of text from internal token
  */
 const nsString& nsCParserNode::GetSkippedContent() const {
-  return mSkippedContent;
+  if(mSkippedContent)
+    return *mSkippedContent;
+  return GetEmptyString();
 }
+
 
 /**
  *  Get text value of this node, which translates into 
@@ -213,7 +223,10 @@ const nsString& nsCParserNode::GetSkippedContent() const {
  *  @return  string ref of text from internal token
  */
 void nsCParserNode::SetSkippedContent(nsString& aString) {
-  mSkippedContent=aString;
+  if(!mSkippedContent) {
+    mSkippedContent=new nsString(aString);
+  }
+  else *mSkippedContent=aString;
 }
 
 /**

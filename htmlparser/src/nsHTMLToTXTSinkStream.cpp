@@ -53,7 +53,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 const  PRInt32 gTabSize=4;
 const  PRInt32 gOLNumberWidth = 3;
-const  PRInt32 gIndentSizeList = MaxInt(gTabSize, gOLNumberWidth + 3);
+const  PRInt32 gIndentSizeList = (gTabSize<gOLNumberWidth+3) ? gTabSize: gOLNumberWidth+3;
                                // Indention of non-first lines of ul and ol
 
 static PRBool IsInline(eHTMLTags aTag);
@@ -759,13 +759,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   printf("        '%s'    ", text.ToNewCString());
 #endif
 
-  if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select)
-  {
-    // Don't output the contents of SELECT elements;
-    // Might be nice, eventually, to output just the selected element.
-    return NS_OK;
-  }
-  else if (type == eHTMLTag_text)
+  if (type == eHTMLTag_text)
   {
     Write(text);
   } 
