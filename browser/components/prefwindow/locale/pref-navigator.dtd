@@ -11,11 +11,9 @@
 <!ENTITY  useBlank.label            "Use Blank Page">
 <!ENTITY  useBlank.accesskey        "B">
 
-#ifdef XP_WIN
 <!ENTITY defaultBrowserGroup.label  "Default Browser">
 <!ENTITY defaultBrowserButton.label "Set Default Browser">
 <!ENTITY makeDefaultText            "Set &brandShortName; as your default browser.">
-#endif
 
 <!-- XXXben oh please, can we do better than this text-wise? -->
 <!ENTITY showConnections.label      "Connection Settings...">
