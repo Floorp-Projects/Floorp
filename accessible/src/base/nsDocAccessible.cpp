@@ -382,6 +382,10 @@ void nsDocAccessible::RemoveContentDocListeners()
 
 void nsDocAccessible::FireDocLoadFinished()
 {
+  NS_ASSERTION(mDocument, "No Document - Bug 202972");
+  if (!mDocument)
+    return;
+
   // Hook up our new accessible with our parent
   if (!mParent) {
     nsCOMPtr<nsIDocument> parentDoc;
