@@ -1652,8 +1652,11 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 		char * headers = m_headers.GetBuffer();
 		PRUint32 headersSize = m_headers.GetBufferPos();
 		nsresult matchTermStatus;
-        matchTermStatus = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, msgHdr, inbox, 
-											m_mailDB, headers, headersSize, this);
+        if (m_filterList)
+            matchTermStatus =
+                m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule,
+                                                msgHdr, inbox, m_mailDB,
+                                                headers, headersSize, this);
 	}
 
 	if (pMoved)
