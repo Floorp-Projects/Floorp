@@ -3582,7 +3582,7 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECompositionStringLength,NULL,0);
 		(*textRangeListResult)[0].mEndOffset = substringLength;
-		(*textRangeListResult)[0].mRangeType = mIMEAttributeString[0];
+		(*textRangeListResult)[0].mRangeType = NS_TEXTRANGE_RAWINPUT;
 		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
 								mIMECursorPosition,NULL,0);
 		(*textRangeListResult)[0].mStartOffset=substringLength;
