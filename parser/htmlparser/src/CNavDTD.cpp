@@ -386,7 +386,7 @@ eAutoDetectResult CNavDTD::CanParse(nsString& aContentType, nsString& aCommand, 
  * @param 
  * @return
  */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
+nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
@@ -395,6 +395,8 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   mHadFrameset=PR_FALSE;
   mLineNumber=1;
   mHasOpenScript=PR_FALSE;
+  mParseMode=aParseMode;
+
   if((aNotifySink) && (aSink)) {
 
     STOP_TIMER();
@@ -790,9 +792,9 @@ static
 PRInt32 GetIndexOfChildOrSynonym(nsEntryStack& aTagStack,eHTMLTags aChildTag) {
   PRInt32 theChildIndex=aTagStack.GetTopmostIndexOf(aChildTag);
   if(kNotFound==theChildIndex) {
-    CTagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
+    TagList* theSynTags=gHTMLElements[aChildTag].GetSynonymousTags(); //get the list of tags that THIS tag can close
     if(theSynTags) {
-      theChildIndex=theSynTags->GetTopmostIndexOf(aTagStack);
+      theChildIndex=GetTopmostIndexOf(aTagStack,*theSynTags);
     } 
     else{
       theChildIndex=aTagStack.GetCount();
@@ -834,11 +836,11 @@ PRBool CanBeContained(eHTMLTags aChildTag,nsEntryStack& aTagStack) {
 
   PRBool result=PR_TRUE;
   if(aTagStack.GetCount()){
-    CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
-    CTagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
+    TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    TagList* theSpecialParents=gHTMLElements[aChildTag].GetSpecialParents();
     if(theRootTags) {
-      PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);          
-      PRInt32 theSPIndex=(theSpecialParents) ? theSpecialParents->GetTopmostIndexOf(aTagStack) : kNotFound;  
+      PRInt32 theRootIndex=GetTopmostIndexOf(aTagStack,*theRootTags);          
+      PRInt32 theSPIndex=(theSpecialParents) ? GetTopmostIndexOf(aTagStack,*theSpecialParents) : kNotFound;  
       PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aChildTag);
       PRInt32 theBaseIndex=(theRootIndex>theSPIndex) ? theRootIndex : theSPIndex;
 
@@ -1275,13 +1277,13 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 static
-PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsEntryStack& aTagStack,eHTMLTags aTag,PRBool anEndTag) {
-  PRInt32 theRootIndex=aRootTagList.GetTopmostIndexOf(aTagStack);          
-  CTagList* theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
+PRBool HasCloseablePeerAboveRoot(TagList& aRootTagList,nsEntryStack& aTagStack,eHTMLTags aTag,PRBool anEndTag) {
+  PRInt32 theRootIndex=GetTopmostIndexOf(aTagStack,aRootTagList);          
+  TagList* theCloseTags=(anEndTag) ? gHTMLElements[aTag].GetAutoCloseEndTags() : gHTMLElements[aTag].GetAutoCloseStartTags();
   PRInt32 theChildIndex=-1;
 
   if(theCloseTags) {
-    theChildIndex=theCloseTags->GetTopmostIndexOf(aTagStack);
+    theChildIndex=GetTopmostIndexOf(aTagStack,*theCloseTags);
   }
   else {
     if((anEndTag) || (!gHTMLElements[aTag].CanContainSelf()))
@@ -1330,16 +1332,16 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsEntryStack& aTagS
                 3. Otherwise its non-specified and we simply presume we can close it.
           */
 
-        CTagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
-        CTagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
+        TagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
+        TagList* theRootTags=gHTMLElements[aCurrentTag].GetEndRootTags();
       
         if(theCloseTags){  
             //at a min., this code is needed for H1..H6
         
           while(theChildIndex<--theTopIndex) {
             eHTMLTags theNextTag=aTagStack[theTopIndex];
-            if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
-              if(PR_TRUE==theRootTags->Contains(theNextTag)) {
+            if(PR_FALSE==Contains(theNextTag,*theCloseTags)) {
+              if(PR_TRUE==Contains(theNextTag,*theRootTags)) {
                 return eHTMLTag_unknown; //we encountered a tag in root list so fail (because we're gated).
               }
               //otherwise presume it's something we can simply ignore and continue search...
@@ -1408,8 +1410,12 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_br:
       {
-        CToken* theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,eHTMLTag_br);
-        result=HandleStartToken(theToken);
+          //This is special NAV-QUIRKS code that allows users
+          //to use </BR>, even though that isn't a legitimate tag.
+        if(eParseMode_quirks==mParseMode) {
+          CStartToken theToken(eHTMLTag_br);
+          result=HandleStartToken(&theToken);
+        }
       }
       break;
     
@@ -1428,8 +1434,14 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
               // Oh boy!! we found a "stray" block entity. Nav4.x and IE introduce line break in
               // such cases. So, let's simulate that effect for compatibility.
               // Ex. <html><body>Hello</P>There</body></html>
+#if 0
+              mTokenizer->PushTokenFront(aToken); //put this end token back...
+              CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
+              mTokenizer->PushTokenFront(theToken); //put this new token onto stack...
+#endif
               CHTMLToken* theToken = (CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,theChildTag);
               result=HandleToken(theToken,mParser);
+
             }
             else return result;
           }
@@ -1849,8 +1861,8 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
             result=PR_TRUE;
             break;
           }//if
-          CTagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
-          aChildTag=theTagList->GetTagAt(0);
+          TagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
+          aChildTag=GetTagAt(0,*theTagList);
           if(aChildTag==theTempTag) break;
           parentCanContain=CanContain(aParentTag,aChildTag);
           ++thePropLevel;
@@ -1999,9 +2011,9 @@ PRBool CNavDTD::BackwardPropagate(nsString& aSequence,eHTMLTags aParentTag,eHTML
   eHTMLTags theParentTag=aParentTag; //just init to get past first condition...
 
   do {
-    CTagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
+    TagList* theRootTags=gHTMLElements[aChildTag].GetRootTags();
     if(theRootTags) {
-      theParentTag=theRootTags->GetTagAt(0);
+      theParentTag=GetTagAt(0,*theRootTags);
       if(CanContain(theParentTag,aChildTag)) {
         //we've found a complete sequence, so push the parent...
         aChildTag=theParentTag;
@@ -2716,8 +2728,8 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aClosedByStartTag){
   }
   
   nsresult result=NS_OK;
-  CTagList* theRootTags=gHTMLElements[aTag].GetRootTags();
-  eHTMLTags theParentTag=theRootTags->GetTagAt(0);
+  TagList* theRootTags=gHTMLElements[aTag].GetRootTags();
+  eHTMLTags theParentTag=GetTagAt(0,*theRootTags);
   pos=GetTopmostIndexOf(theParentTag);
   if(kNotFound!=pos) {
     //the parent container is open, so close it instead
@@ -2765,24 +2777,42 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
     
     result=mSink->AddLeaf(aNode);
 
-#if 1
     PRBool done=PR_FALSE;
     nsCParserNode*  theNode=CreateNode();
+
+    CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+
     while(!done) {
       CToken*   theToken=mTokenizer->PeekToken();
       if(theToken) {
-        eHTMLTags theTag=(eHTMLTags)theToken->GetTypeID();
+        theTag=(eHTMLTags)theToken->GetTypeID();
         switch(theTag) {
           case eHTMLTag_newline:
             mLineNumber++;
-          case eHTMLTag_text:
           case eHTMLTag_whitespace:
             {
               theToken=mTokenizer->PopToken();
-              theNode->Init(theToken,mLineNumber,GetTokenRecycler());
+              theNode->Init(theToken,mLineNumber,0);
               result=mSink->AddLeaf(*theNode);
+              if(theRecycler) {
+                theRecycler->RecycleToken(theToken);
+              }
+              else delete theToken;
             }
             break;
+          case eHTMLTag_text:
+            if(mHasOpenBody && (!mHasOpenHead)) {
+              theToken=mTokenizer->PopToken();
+              theNode->Init(theToken,mLineNumber);
+              result=mSink->AddLeaf(*theNode);
+              if(theRecycler) {
+                theRecycler->RecycleToken(theToken);
+              }
+              else delete theToken;
+            }
+            else done=PR_TRUE;
+            break;
+
           default:
             done=PR_TRUE;
         } //switch
@@ -2790,8 +2820,6 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
       else done=PR_TRUE;
     } //while
     RecycleNode(theNode);
-
-#endif
     
     START_TIMER();
 

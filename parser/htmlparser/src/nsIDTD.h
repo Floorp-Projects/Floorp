@@ -46,6 +46,14 @@ enum eAutoDetectResult {
   eInvalidDetect
 };
 
+enum  eParseMode {
+  
+  eParseMode_unknown=0,
+  eParseMode_quirks,    //pre 5.0 versions
+  eParseMode_noquirks,  //raptor versions...)
+  eParseMode_other,
+  eParseMode_autodetect
+};
 
 class nsIParser;
 class CToken;
@@ -94,7 +102,11 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink=0)=0;
+    NS_IMETHOD WillBuildModel(  nsString& aFilename,
+                                PRBool aNotifySink,
+                                nsString& aSourceType,
+                                eParseMode  aParseMode,
+                                nsIContentSink* aSink=0)=0;
 
     /**
      * Called by the parser after the parsing process has concluded

@@ -32,12 +32,8 @@
  * @param 
  * @return
  */
-PRBool CTagList::Contains(eHTMLTags aTag){
-  PRBool result=PR_FALSE;
-  if(mTagList) {
-    result=FindTagInSet(aTag,mTagList,mCount);
-  }
-  else result=FindTagInSet(aTag,mTags,mCount);
+PRBool Contains(eHTMLTags aTag,TagList& aTagList){
+  PRBool result=FindTagInSet(aTag,aTagList.mTags,aTagList.mCount);
   return result;
 }
 
@@ -47,11 +43,11 @@ PRBool CTagList::Contains(eHTMLTags aTag){
  * @param  
  * @return
  */
-PRInt32 CTagList::GetTopmostIndexOf(nsEntryStack& aTagStack){
+PRInt32 GetTopmostIndexOf(nsEntryStack& aTagStack,TagList& aTagList){
   int max = aTagStack.GetCount();
-  int index;
+  int index=0;
   for(index=max-1;index>=0;index--){
-    if(Contains(aTagStack[index])) {
+    if(FindTagInSet(aTagStack[index],aTagList.mTags,aTagList.mCount)) {
       return index;
     }
   }
@@ -64,154 +60,120 @@ PRInt32 CTagList::GetTopmostIndexOf(nsEntryStack& aTagStack){
  * @param 
  * @return
  */
-PRInt32 CTagList::GetBottommostIndexOf(nsEntryStack& aTagStack,PRInt32 aStartOffset){
-  int max = aTagStack.GetCount();
-  int index;
-  for(index=aStartOffset;index<max;index++){
-    if(Contains(aTagStack[index])) {
-      return index;
-    }
-  }
-  return kNotFound;
-}
-
-/**
- * 
- * @update	gess 01/04/99
- * @param 
- * @return
- */
-eHTMLTags CTagList::GetTagAt(PRUint32 anIndex) const{
+eHTMLTags GetTagAt(PRUint32 anIndex,TagList& aTagList) {
   eHTMLTags result=eHTMLTag_unknown;
-  if(anIndex<mCount){
-    result=(mTagList) ? mTagList[anIndex] : mTags[anIndex];
+  if(anIndex<aTagList.mCount){
+    result=aTagList.mTags[anIndex];
   }
   return result;
 }
 
- 
-  
+
 /***************************************************************************** 
   Now it's time to list all the html elements all with their capabilities...
 ******************************************************************************/
 
 
 //First, define the set of taglists for tags with special parents...
-CTagList  gAParents(1,0,eHTMLTag_map);
-CTagList  gInAddress(1,0,eHTMLTag_address);
-CTagList  gInHead(1,0,eHTMLTag_head);
-CTagList  gInTable(1,0,eHTMLTag_table);
-CTagList  gInHTML(1,0,eHTMLTag_html);
-CTagList  gInBody(1,0,eHTMLTag_body);
-CTagList  gInForm(1,0,eHTMLTag_form);
-CTagList  gInFieldset(1,0,eHTMLTag_fieldset);
-CTagList  gInTR(1,0,eHTMLTag_tr);
-CTagList  gInDL(2,0,eHTMLTag_dl,eHTMLTag_body);
-CTagList  gInFrameset(1,0,eHTMLTag_frameset);
-CTagList  gInNoframes(1,0,eHTMLTag_noframes);
-CTagList  gInP(4,0,eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table);
-CTagList  gOptgroupParents(2,0,eHTMLTag_optgroup,eHTMLTag_select);
-CTagList  gBodyParents(2,0,eHTMLTag_html,eHTMLTag_noframes);
-CTagList  gColParents(2,0,eHTMLTag_table,eHTMLTag_colgroup);
-CTagList  gFramesetParents(2,0,eHTMLTag_html,eHTMLTag_frameset);
-CTagList  gLegendParents(1,0,eHTMLTag_fieldset);
-CTagList  gAreaParent(1,0,eHTMLTag_map);
-CTagList  gParamParents(2,0,eHTMLTag_applet,eHTMLTag_object);
-CTagList  gTRParents(4,0,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table);
-
-static eHTMLTags gTREndParentList[]={eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th};
-CTagList  gTREndParents(sizeof(gTREndParentList)/sizeof(eHTMLTag_unknown),gTREndParentList);
+TagList  gAParents={1,eHTMLTag_map};
+TagList  gInAddress={1,eHTMLTag_address};
+TagList  gInHead={1,eHTMLTag_head};
+TagList  gInTable={1,eHTMLTag_table};
+TagList  gInHTML={1,eHTMLTag_html};
+TagList  gInBody={1,eHTMLTag_body};
+TagList  gInForm={1,eHTMLTag_form};
+TagList  gInFieldset={1,eHTMLTag_fieldset};
+TagList  gInTR={1,eHTMLTag_tr};
+TagList  gInDL={2,eHTMLTag_dl,eHTMLTag_body};
+TagList  gInFrameset={1,eHTMLTag_frameset};
+TagList  gInNoframes={1,eHTMLTag_noframes};
+TagList  gInP={4,eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table};
+TagList  gOptgroupParents={2,eHTMLTag_optgroup,eHTMLTag_select};
+TagList  gBodyParents={2,eHTMLTag_html,eHTMLTag_noframes};
+TagList  gColParents={2,eHTMLTag_table,eHTMLTag_colgroup};
+TagList  gFramesetParents={2,eHTMLTag_html,eHTMLTag_frameset};
+TagList  gLegendParents={1,eHTMLTag_fieldset};
+TagList  gAreaParent={1,eHTMLTag_map};
+TagList  gParamParents={2,eHTMLTag_applet,eHTMLTag_object};
+TagList  gTRParents={4,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table};
+TagList  gTREndParents={6,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th};
 
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
 //*********************************************************************************************
 
-CTagList  gContainsText(4,0,eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity);
-CTagList  gUnknownKids(2,0,eHTMLTag_html,eHTMLTag_frameset);
-CTagList  gContainsOpts(3,0,eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script);
-CTagList  gContainsParam(1,0,eHTMLTag_param);
-CTagList  gColgroupKids(1,0,eHTMLTag_col); 
-CTagList  gAddressKids(1,0,eHTMLTag_p);
-CTagList  gBodyKids(5,0,eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li);
-CTagList  gButtonKids(2,0,eHTMLTag_caption,eHTMLTag_legend);
-CTagList  gDLKids(2,0,eHTMLTag_dd,eHTMLTag_dt);
-CTagList  gDTKids(1,0,eHTMLTag_dt);
-CTagList  gFieldsetKids(2,0,eHTMLTag_legend,eHTMLTag_text);
-CTagList  gFontKids(2,0,eHTMLTag_legend,eHTMLTag_text);
-CTagList  gFormKids(1,0,eHTMLTag_keygen);
-CTagList  gFramesetKids(3,0,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes);
+TagList  gContainsText={4,eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity};
+TagList  gUnknownKids={2,eHTMLTag_html,eHTMLTag_frameset};
+TagList  gContainsOpts={3,eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script};
+TagList  gContainsParam={1,eHTMLTag_param};
+TagList  gColgroupKids={1,eHTMLTag_col}; 
+TagList  gAddressKids={1,eHTMLTag_p};
+TagList  gBodyKids={5,eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li};
+TagList  gButtonKids={2,eHTMLTag_caption,eHTMLTag_legend};
+TagList  gDLKids={2,eHTMLTag_dd,eHTMLTag_dt};
+TagList  gDTKids={1,eHTMLTag_dt};
+TagList  gFieldsetKids={2,eHTMLTag_legend,eHTMLTag_text};
+TagList  gFontKids={2,eHTMLTag_legend,eHTMLTag_text};
+TagList  gFormKids={1,eHTMLTag_keygen};
+TagList  gFramesetKids={3,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes};
 
-static eHTMLTags gHTMLKidList[]={eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace};
-CTagList  gHtmlKids(sizeof(gHTMLKidList)/sizeof(eHTMLTag_unknown),gHTMLKidList);
+TagList  gHtmlKids={8,eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace};
+TagList  gHeadKids={9,eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript};
 
-static eHTMLTags gHeadKidList[]=
-  {eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript};
-CTagList  gHeadKids(sizeof(gHeadKidList)/sizeof(eHTMLTag_unknown),gHeadKidList);
+TagList  gLIKids={2,eHTMLTag_ol,eHTMLTag_ul};
+TagList  gMapKids={1,eHTMLTag_area};
+TagList  gNoframesKids={1,eHTMLTag_body};
+TagList  gPreKids={2,eHTMLTag_hr,eHTMLTag_center};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-CTagList  gLIKids(2,0,eHTMLTag_ol,eHTMLTag_ul);
-CTagList  gMapKids(1,0,eHTMLTag_area);
-CTagList  gNoframesKids(1,0,eHTMLTag_body);
-CTagList  gPreKids(2,0,eHTMLTag_hr,eHTMLTag_center);  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
-
-static eHTMLTags gTableList[]={ eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
-                                // eHTMLTag_td,
-                                eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
-                                eHTMLTag_map,eHTMLTag_script,eHTMLTag_input};
-CTagList  gTableKids(sizeof(gTableList)/sizeof(eHTMLTag_unknown),gTableList);
-
-static eHTMLTags gTableElemList[]={eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr};
-CTagList  gTableElemKids(sizeof(gTableElemList)/sizeof(eHTMLTag_unknown),gTableElemList);
-
-static eHTMLTags gTRList[]=   {eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input};
-CTagList  gTRKids(sizeof(gTRList)/sizeof(eHTMLTag_unknown),gTRList);
- 
-CTagList  gTBodyKids(3,0,eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input);
-CTagList  gULKids(2,0,eHTMLTag_li,eHTMLTag_p);
+TagList  gTableKids={10,eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
+                     eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
+                     eHTMLTag_map,eHTMLTag_script,eHTMLTag_input};
+  
+TagList  gTableElemKids={7,eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr};
+TagList  gTRKids={6,eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input};
+TagList  gTBodyKids={3,eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input};
+TagList  gULKids={2,eHTMLTag_li,eHTMLTag_p};
 
 
 //*********************************************************************************************
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-CTagList  gRootTags(3,0,eHTMLTag_body,eHTMLTag_td,eHTMLTag_table);
-CTagList  gHTMLRootTags(1,0,eHTMLTag_unknown);
+TagList  gRootTags={3,eHTMLTag_body,eHTMLTag_td,eHTMLTag_table};
+TagList  gHTMLRootTags={1,eHTMLTag_unknown};
 
-static eHTMLTags gLIList[]={eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td};
-CTagList  gLIRootTags(sizeof(gLIList)/sizeof(eHTMLTag_unknown),gLIList);
+TagList  gLIRootTags={7,eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td};
 
-CTagList  gOLRootTags(3,0,eHTMLTag_body,eHTMLTag_li,eHTMLTag_td);
-CTagList  gTDRootTags(3,0,eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table);
-CTagList  gNoframeRoot(2,0,eHTMLTag_body,eHTMLTag_frameset);
-
+TagList  gOLRootTags={3,eHTMLTag_body,eHTMLTag_li,eHTMLTag_td};
+TagList  gTDRootTags={3,eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table};
+TagList  gNoframeRoot={2,eHTMLTag_body,eHTMLTag_frameset};
 
 //*********************************************************************************************
 // The following tag lists are used to define the autoclose properties of the html elements...
 //*********************************************************************************************
 
-CTagList  gAutoClose(2,0,eHTMLTag_body,eHTMLTag_td);
-CTagList  gBodyAutoClose(1,0,eHTMLTag_head);
-CTagList  gTBodyAutoClose(3,0,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody);
-CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
-CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
-CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
-CTagList  gHRAutoClose(1,0,eHTMLTag_p);
-CTagList  gOLAutoClose(3,0,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul);
-CTagList  gDivAutoClose(1,0,eHTMLTag_p);
+TagList  gBodyAutoClose={1,eHTMLTag_head};
+TagList  gTBodyAutoClose={3,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody};
+TagList  gCaptionAutoClose={1,eHTMLTag_tbody};
+TagList  gLIAutoClose={2,eHTMLTag_p,eHTMLTag_li};
+TagList  gPAutoClose={2,eHTMLTag_p,eHTMLTag_li};
+TagList  gHRAutoClose={1,eHTMLTag_p};
+TagList  gOLAutoClose={3,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul};
+TagList  gDivAutoClose={1,eHTMLTag_p};
 
-static eHTMLTags gHxList[]={eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6};
-CTagList  gHeadingTags(sizeof(gHxList)/sizeof(eHTMLTag_unknown),gHxList);
+TagList  gHeadingTags={6,eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6};
 
-CTagList  gTRCloseTags(3,0,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th);
-CTagList  gTDCloseTags(2,0,eHTMLTag_td,eHTMLTag_th);
-CTagList  gDTCloseTags(3,0,eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p);
-CTagList  gULCloseTags(1,0,eHTMLTag_li);
+TagList  gTRCloseTags={3,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th};
+TagList  gTDCloseTags={2,eHTMLTag_td,eHTMLTag_th};
+TagList  gDTCloseTags={3,eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p};
+TagList  gULCloseTags={1,eHTMLTag_li};
 
 //*********************************************************************************************
 // The following tag lists are used to define the non-autoclose properties of the html elements...
 //*********************************************************************************************
 
-CTagList  gDontAutoClose(1,0,eHTMLTag_td);
+TagList  gDontAutoClose={1,eHTMLTag_td};
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
@@ -238,19 +200,19 @@ nsHTMLElement* gHTMLElements=0;
 void Initialize(eHTMLTags aTag,
                 eHTMLTags aRequiredAncestor,
                 eHTMLTags aExcludingAncestor, 
-                CTagList* aRootNodes, 
-                CTagList* aEndRootNodes,
-                CTagList* aAutocloseStart,    
-                CTagList* aAutocloseEnd,      
-                CTagList* aSynonymousTags,    
-                CTagList* aDontAutocloseEnd,  
+                TagList* aRootNodes, 
+                TagList* aEndRootNodes,
+                TagList* aAutocloseStart,    
+                TagList* aAutocloseEnd,      
+                TagList* aSynonymousTags,    
+                TagList* aDontAutocloseEnd,  
                 int       aParentBits,        
                 int       aInclusionBits, 
                 int       aExclusionBits,     
                 int       aSpecialProperties,
                 int       aPropagateRange,
-                CTagList* aSpecialParents,    
-                CTagList* aSpecialKids,    
+                TagList* aSpecialParents,    
+                TagList* aSpecialKids,    
                 eHTMLTags aSkipTarget
                 ) 
 {
@@ -1610,7 +1572,7 @@ PRBool nsHTMLElement::CanExclude(eHTMLTags aChild) const{
 
     //Note that special kids takes precedence over exclusions...
   if(mSpecialKids) {
-    if(mSpecialKids->Contains(aChild)) {
+    if(Contains(aChild,*mSpecialKids)) {
       return PR_FALSE;
     }
   }
@@ -1654,7 +1616,7 @@ PRBool nsHTMLElement::CanOmitStartTag(eHTMLTags aChild) const{
  * @return
  */
 PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
-  PRBool result=FindTagInSet(aChild,gHeadKidList,sizeof(gHeadKidList)/sizeof(eHTMLTag_body));
+  PRBool result=Contains(aChild,gHeadKids);
   return result;
 }
 
@@ -1667,10 +1629,10 @@ PRBool nsHTMLElement::IsChildOfHead(eHTMLTags aChild) {
  */
 PRBool nsHTMLElement::SectionContains(eHTMLTags aChild,PRBool allowDepthSearch) {
   PRBool result=PR_FALSE;
-  CTagList* theRootTags=gHTMLElements[aChild].GetRootTags();
+  TagList* theRootTags=gHTMLElements[aChild].GetRootTags();
   if(theRootTags){
-    if(!theRootTags->Contains(mTagID)){
-      eHTMLTags theRootBase=(theRootTags->mTagList) ? theRootTags->mTagList[0] : theRootTags->mTags[0];
+    if(!Contains(mTagID,*theRootTags)){
+      eHTMLTags theRootBase=GetTagAt(0,*theRootTags);
       if((eHTMLTag_unknown!=theRootBase) && (allowDepthSearch))
         result=SectionContains(theRootBase,allowDepthSearch);
     }
@@ -1711,7 +1673,7 @@ PRBool nsHTMLElement::IsStyleTag(eHTMLTags aChild) {
  * @return
  */
 PRBool nsHTMLElement::IsHeadingTag(eHTMLTags aChild) {
-  return gHeadingTags.Contains(aChild);
+  return Contains(aChild,gHeadingTags);
 }
 
 
@@ -1782,8 +1744,10 @@ PRBool nsHTMLElement::CanContainSelf(void) const {
 PRBool nsHTMLElement::CanAutoCloseTag(eHTMLTags aTag) const{
   PRBool result=PR_TRUE;
   if((mTagID>=eHTMLTag_unknown) & (mTagID<=eHTMLTag_userdefined)) {
-    CTagList* theTagList=gHTMLElements[mTagID].GetNonAutoCloseEndTags();
-    if(theTagList) return !theTagList->Contains(aTag);
+    TagList* theTagList=gHTMLElements[mTagID].GetNonAutoCloseEndTags();
+    if(theTagList) {
+      result=!Contains(aTag,*theTagList);
+    }
   }
   return result;
 }
@@ -1875,9 +1839,9 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
       return CanContainSelf();  //not many tags can contain themselves...
     }
 
-    CTagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
+    TagList* theCloseTags=gHTMLElements[aChild].GetAutoCloseStartTags();
     if(theCloseTags){
-      if(theCloseTags->Contains(mTagID))
+      if(Contains(mTagID,*theCloseTags))
         return PR_FALSE;
     }
 
@@ -1911,7 +1875,7 @@ PRBool nsHTMLElement::CanContain(eHTMLTags aChild) const{
     }
  
     if(mSpecialKids) {
-      if(mSpecialKids->Contains(aChild)) {
+      if(Contains(aChild,*mSpecialKids)) {
         return PR_TRUE;
       }
     }

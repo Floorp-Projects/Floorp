@@ -257,7 +257,7 @@ eAutoDetectResult CRtfDTD::CanParse(nsString& aContentType, nsString& aCommand, 
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsString& aSourceType,nsIContentSink* aSink){
+NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString& aSourceType,eParseMode aParseMode,nsIContentSink* aSink){
   nsresult result=NS_OK;
   return result;
 }

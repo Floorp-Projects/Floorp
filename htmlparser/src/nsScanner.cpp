@@ -566,22 +566,23 @@ nsresult nsScanner::SkipTo(nsString& aValidSet){
   return result;
 }
 
-
+#if 0
 void DoErrTest(nsString& aString) {
   PRInt32 pos=aString.FindChar(0);
   if(kNotFound<pos) {
-    if(aString.Length()-1!=pos) 
-      int x=10;
+    if(aString.Length()-1!=pos) {
+    }
   }
 }
 
 void DoErrTest(nsCString& aString) {
   PRInt32 pos=aString.FindChar(0);
   if(kNotFound<pos) {
-    if(aString.Length()-1!=pos) 
-      int x=10;
+    if(aString.Length()-1!=pos) {
+    }
   }
 }
+#endif
 
 /**
  *  Skip over chars as long as they're in aValidSet
@@ -1019,7 +1020,6 @@ nsresult nsScanner::ReadUntil(nsString& aString,
                              PRBool addTerminal){
   PRUnichar theChar=0;
   nsresult  result=NS_OK;
-  PRInt32 thePos=0;
 
   const PRUnichar*  theBuf=mBuffer.GetUnicode();
   PRInt32           theOrigin=mOffset;
