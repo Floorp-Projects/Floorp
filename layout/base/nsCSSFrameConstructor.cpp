@@ -3045,8 +3045,8 @@ nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
       // XXXbz evil hack for HTML forms.... see similar in
       // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
       (!aChildContent->IsContentOfType(nsIContent::eHTML) ||
-       !aChildContent->GetNodeInfo()->Equals(kNameSpaceID_None,
-                                             nsHTMLAtoms::form))) {
+       !aChildContent->GetNodeInfo()->Equals(nsHTMLAtoms::form,
+                                             kNameSpaceID_None))) {
     nsTableCreator tableCreator(aState.mPresShell);
     nsresult rv = GetPseudoCellFrame(aState.mPresShell, aState.mPresContext,
                                      tableCreator, aState, *aParentFrame);
@@ -3819,7 +3819,7 @@ nsCSSFrameConstructor::TableProcessChild(nsIPresShell*            aPresShell,
                    aChildContent->IsContentOfType(nsIContent::eTEXT),
                    "Non-#text nodes should have a nodeinfo here!");
       if (aChildContent->IsContentOfType(nsIContent::eHTML) &&
-          childNodeInfo->Equals(kNameSpaceID_None, nsHTMLAtoms::form) &&
+          childNodeInfo->Equals(nsHTMLAtoms::form, kNameSpaceID_None) &&
           aParentContent->IsContentOfType(nsIContent::eHTML)) {
         nsINodeInfo *parentNodeInfo = aParentContent->GetNodeInfo();
 
