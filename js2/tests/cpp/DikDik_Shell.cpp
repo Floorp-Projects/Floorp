@@ -113,7 +113,7 @@ static JSValue load(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, ui
     return kUndefinedValue;
 }
 
-static JSValue print(Context *, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+static JSValue print(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     for (uint32 i = 0; i < argc; i++) {
         stdOut << argv[i] << "\n";
@@ -121,7 +121,7 @@ static JSValue print(Context *, const JSValue& /*thisValue*/, JSValue *argv, uin
     return kUndefinedValue;
 }
 
-static JSValue version(Context *, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue version(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
 {
     return JSValue(2.0);
 }
@@ -143,6 +143,12 @@ static JSValue dikdik(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * 
 {
     extern void do_dikdik(Formatter &f);
     do_dikdik(stdOut);
+    return kUndefinedValue;
+}
+
+static JSValue quit(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    exit(0);
     return kUndefinedValue;
 }
 
@@ -279,6 +285,7 @@ int main(int argc, char **argv)
         globalObject->defineVariable(&cx, widenCString("trace"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, trace, NULL)));
         globalObject->defineVariable(&cx, widenCString("dikdik"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, dikdik, NULL)));
         globalObject->defineVariable(&cx, widenCString("version"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, version, NULL)));
+        globalObject->defineVariable(&cx, widenCString("quit"), (NamespaceList *)(NULL), Property::NoAttribute, NULL, JSValue(new JSFunction(&cx, quit, NULL)));
 
         bool doInteractive = true;
         int result = 0;
