@@ -2271,9 +2271,11 @@ struct callinfo info[NFRAMES];
       register int i;
       
       info[nframes].ci_pc = fp->fr_savpc;
+#     if NARGS > 0
       for (i = 0; i < NARGS; i++) {
 	info[nframes].ci_arg[i] = ~(fp->fr_arg[i]);
       }
+#     endif
   }
   if (nframes < NFRAMES) info[nframes].ci_pc = 0;
 }
