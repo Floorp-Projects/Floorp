@@ -2707,7 +2707,7 @@ nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnicha
 }
 
 // Internal helper function. Parameters are not checked.
-static inline nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
+static nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 {
     nsresult rv;
     nsAutoString aStr;
@@ -2727,6 +2727,8 @@ static inline nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
          (as inserted by recognizers) */
       nsAutoString href;
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+
+      *_retval = nsIMsgCompConvertible::Altering;
 
       rv = node->GetAttributes(getter_AddRefs(pAttributes));
       if (NS_SUCCEEDED(rv) && pAttributes)
@@ -2760,14 +2762,14 @@ static inline nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           }
         }
       }
-
-      // It isn't, so don't ignore
-      *_retval = nsIMsgCompConvertible::Altering;
     }
     else if (aCStr.EqualsIgnoreCase("blockquote"))
     {
       // Skip <blockquote type=cite>
       nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+
+      *_retval = nsIMsgCompConvertible::Yes;
+
       rv = node->GetAttributes(getter_AddRefs(pAttributes));
       if (NS_SUCCEEDED(rv) && pAttributes)
       {
@@ -2784,9 +2786,6 @@ static inline nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
           }
         }
       }
-
-      // It isn't, so don't ignore
-      *_retval = nsIMsgCompConvertible::Yes;
     }
 
 #if 0
