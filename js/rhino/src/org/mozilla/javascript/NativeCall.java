@@ -70,21 +70,21 @@ public final class NativeCall extends IdScriptableObject
             for (int i=0; i < function.argCount; i++) {
                 Object val = i < args.length ? args[i]
                                              : Undefined.instance;
-                super.put(argNames[i], this, val);
+                defineProperty(argNames[i], val, PERMANENT);
             }
         }
 
         // initialize "arguments" property but only if it was not overriden by
         // the parameter with the same name
         if (!super.has("arguments", this)) {
-            super.put("arguments", this, new Arguments(this));
+            defineProperty("arguments", new Arguments(this), PERMANENT);
         }
 
         if (argNames != null) {
             for (int i = function.argCount; i != argNames.length; i++) {
                 String name = argNames[i];
                 if (!super.has(name, this)) {
-                    super.put(name, this, Undefined.instance);
+            		defineProperty(name, Undefined.instance, PERMANENT);
                 }
             }
         }
