@@ -43,18 +43,12 @@
 #include "nsCOMPtr.h"
 #include "nsIWindowCreator.h"
 #include "nsIPromptService.h"
-#include "nsIBadCertListener.h"
-#include "nsISecurityWarningDialogs.h"
-#include "nsINSSDialogs.h"
 #include "nsIStringBundle.h"
 #include "nsIHelperAppLauncherDialog.h"
-#include "nsIDownload.h"
-#include "nsIWebProgressListener.h"
 
 class nsCocoaBrowserService :  public nsIWindowCreator,
                                public nsIPromptService,
                                public nsIFactory, 
-                               public nsIBadCertListener, public nsISecurityWarningDialogs, public nsINSSDialogs,
                                public nsIHelperAppLauncherDialog
 {
 public:
@@ -65,9 +59,6 @@ public:
   NS_DECL_NSIWINDOWCREATOR
   NS_DECL_NSIPROMPTSERVICE
   NS_DECL_NSIFACTORY
-  NS_DECL_NSINSSDIALOGS
-  NS_DECL_NSIBADCERTLISTENER
-  NS_DECL_NSISECURITYWARNINGDIALOGS
   NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
   
   static nsresult InitEmbedding();
@@ -81,19 +72,11 @@ public:
   static PRUint32 sNumBrowsers;
 
 private:
-
-  nsresult EnsureSecurityStringBundle();
-  
-  nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                   const PRUnichar *messageName,
-                   const PRUnichar *showAgainName);
-  
   NSString *GetCommonDialogLocaleString(const char *s);
   NSString *GetButtonStringFromFlags(PRUint32 btnFlags, PRUint32 btnIDAndShift,
                                      const PRUnichar *btnTitle);
 
   nsCOMPtr<nsIStringBundle> mCommonDialogStringBundle;
-  nsCOMPtr<nsIStringBundle> mSecurityStringBundle;
   
   static nsCocoaBrowserService* sSingleton;
   static nsAlertController* sController;
