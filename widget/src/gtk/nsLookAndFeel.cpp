@@ -432,10 +432,13 @@ nsLookAndFeel::InitColors()
   gtk_menu_append(GTK_MENU(menu), menuitem);
 
   gtk_widget_set_rc_style(accel_label);
+  gtk_widget_set_rc_style(menu);
+  gtk_widget_realize(menu);
+  gtk_widget_realize(accel_label);
+
   style = gtk_widget_get_style(accel_label);
   sMenuText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
 
-  gtk_widget_set_rc_style(menu);
   style = gtk_widget_get_style(menu);
   sMenuBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
 
@@ -446,12 +449,17 @@ nsLookAndFeel::InitColors()
   GtkWidget *parent = gtk_fixed_new();
   GtkWidget *button = gtk_button_new();
   GtkWidget *label = gtk_label_new("M");
+  GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
   
   gtk_container_add(GTK_CONTAINER(button), label);
   gtk_container_add(GTK_CONTAINER(parent), button);
+  gtk_container_add(GTK_CONTAINER(window), parent);
 
   gtk_widget_set_rc_style(button);
   gtk_widget_set_rc_style(label);
+
+  gtk_widget_realize(button);
+  gtk_widget_realize(label);
 
   style = gtk_widget_get_style(label);
   sButtonText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
@@ -463,7 +471,7 @@ nsLookAndFeel::InitColors()
   sButtonInnerDarkBorder =
     GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
 
-  gtk_widget_unref(parent);
+  gtk_widget_destroy(window);
 
 }
 
