@@ -847,7 +847,6 @@ void nsXtWidget_ResetResize_Callback(XtPointer call_data)
 
 void nsXtWidget_Refresh_Callback(XtPointer call_data)
 {
-    printf("In timer\n");
     nsWindow* widgetWindow = (nsWindow*)call_data;
     nsRect bounds;
     widgetWindow->GetResizeRect(&bounds); 

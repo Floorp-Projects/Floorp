@@ -1063,9 +1063,7 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
   
   if (aImage != nsnull) {
     ((nsImageUnix*)aImage)->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
-  } else {
-    printf("Image is NULL!\n");
-  }
+  } 
 }
 
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)

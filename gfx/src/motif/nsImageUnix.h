@@ -37,7 +37,7 @@ public:
   */
   virtual PRInt32     GetHeight()         { return mHeight; }
   virtual PRInt32     GetWidth()          { return mWidth; }
-  virtual PRUint8*    GetBits()           { printf("return Bits 0x%x\n", mImageBits);return mImageBits; }
+  virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual void*       GetBitInfo()        { return nsnull; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
