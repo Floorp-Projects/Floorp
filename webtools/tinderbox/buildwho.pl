@@ -80,14 +80,16 @@ sub build_who {
     $query_module=$cvs_module;
     $query_branch=$cvs_branch;
 
-    $result = &query_checkins;
+    open(WHOLOG, ">$tree/who.dat" );
 
-    
+    chdir "../bonsai";
+    $::TreeID = $bonsai_tree;
+    $result = &query_checkins(%mod_map);
+
     $last_who='';
     $last_date=0;
-    open(WHOLOG, ">$tree/who.dat" );
     for $ci (@$result) {
-        if( $ci->[$CI_DATE] != $last_date || $ci->[$CI_WHO] != $last_who ){
+        if( $ci->[$CI_DATE] != $last_date || $ci->[$CI_WHO] ne $last_who ){
             print WHOLOG "$ci->[$CI_DATE]|$ci->[$CI_WHO]\n";
         }
         $last_who=$ci->[$CI_WHO];
