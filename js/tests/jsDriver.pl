@@ -607,7 +607,7 @@ sub get_xpc_engine_command {
     }
 
     if ($os_type eq "WIN") {
-        $m5_home =~ s/\//\\/g;
+        $m5_home = &get_win_path ($m5_home);
     }
 
     return $m5_home . "xpcshell";
@@ -693,7 +693,7 @@ sub get_sm_engine_command {
     }
 
     if ($os_type eq "WIN") {
-        $retval =~ s/\//\\/g;
+        $retval = &get_win_path ($retval);
     }
 
     return $retval;
@@ -754,7 +754,7 @@ sub get_dd_engine_command {
     }
 
     if ($os_type eq "WIN") {
-        $retval =~ s/\//\\/g;
+        $retval = &get_win_path ($retval);
     }
 
     return $retval;
@@ -809,7 +809,7 @@ sub get_lc_engine_command {
     }
 
     if ($os_type eq "WIN") {
-        $retval =~ s/\//\\/g;
+        $retval = &get_win_path ($retval);
     }
 
     return $retval;
@@ -833,6 +833,27 @@ sub get_os_type {
     &dd ("get_os_type returning '$uname'.");
     return $uname;
 
+}
+
+#
+# Windows shells require "/" or "\" as path separator.
+# Use the one required for the shell we're in.
+#
+sub get_win_path {
+  my ($path) = @_;
+  my $win_sep = &get_win_sep;
+  $path =~ s/$path_sep/$win_sep/g;
+  return $path;
+}
+
+#
+# Windows shells require "/" or "\" as path separator.
+# Find out the one used in our Windows shell.
+#
+sub get_win_sep {
+  my $path = $ENV{"PATH"} || $ENV{"Path"} || $ENV{"path"};
+  $path =~ /\\|\//;
+  return $&;
 }
 
 sub get_test_list {
