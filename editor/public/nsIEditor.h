@@ -67,7 +67,15 @@ public:
    *
    * @param aProperty An enum that will recieve the various properties that can be applied from the current selection.
    */
-  virtual nsresult GetProperties(PROPERTIES &aProperty)=0;
+  virtual nsresult GetProperties(PROPERTIES **aProperty)=0;
+
+  /**
+   * InsertString() Inserts a string at the current location
+   *
+   * @param aString An nsString that is the string to be inserted
+   */
+  virtual nsresult InsertString(nsString *aString)=0;
+
 };
 
 /*Factory Method to create an Editor*/

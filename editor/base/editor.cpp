@@ -19,11 +19,13 @@
 
 #include "editor.h"
 #include "nsIDOMEventReceiver.h" 
+#include "nsIDOMText.h"
+#include "nsIDOMElement.h"
 
 //class implementations are in order they are declared in editor.h
 
 
-Editor::Editor()
+nsEditor::nsEditor()
 {
   //initialize member variables here
 }
@@ -32,8 +34,9 @@ Editor::Editor()
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 
-Editor::~Editor()
+nsEditor::~nsEditor()
 {
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
@@ -53,14 +56,14 @@ Editor::~Editor()
 //BEGIN nsIEditor interface implementations
 
 
-NS_IMPL_ADDREF(Editor)
+NS_IMPL_ADDREF(nsEditor)
 
-NS_IMPL_RELEASE(Editor)
+NS_IMPL_RELEASE(nsEditor)
 
 
 
 nsresult
-Editor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -83,10 +86,10 @@ Editor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult
-Editor::Init(nsIDOMDocument *aDomInterface)
+nsEditor::Init(nsIDOMDocument *aDomInterface)
 {
   if (!aDomInterface)
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_NULL_POINTER;
 
   mDomInterfaceP = aDomInterface;
 
@@ -119,12 +122,20 @@ Editor::Init(nsIDOMDocument *aDomInterface)
 
 
 
+nsresult
+nsEditor::InsertString(nsString *aString)
+{
+  return AppendText(aString);
+}
+
+
+
 //END nsIEditorInterfaces
 
 
-//BEGIN Editor Calls from public
+//BEGIN nsEditor Calls from public
 PRBool
-Editor::KeyDown(int aKeycode)
+nsEditor::KeyDown(int aKeycode)
 {
   return PR_TRUE;
 }
@@ -132,16 +143,92 @@ Editor::KeyDown(int aKeycode)
 
 
 PRBool
-Editor::MouseClick(int aX,int aY)
+nsEditor::MouseClick(int aX,int aY)
 {
   return PR_FALSE;
 }
-//END Editor Calls from public
+//END nsEditor Calls from public
 
 
 
-//BEGIN Editor Private methods
-//END Editor Private methods
+//BEGIN nsEditor Private methods
+
+
+
+nsresult
+nsEditor::AppendText(nsString *aStr)
+{
+  COM_auto_ptr<nsIDOMNode> mNode;
+  COM_auto_ptr<nsIDOMText> mText;
+  if (!aStr)
+    return NS_ERROR_NULL_POINTER;
+  if (NS_SUCCEEDED(GetCurrentNode(func_AddRefs(mNode))) && 
+      NS_SUCCEEDED(mNode->QueryInterface(kIDOMTextIID, func_AddRefs(mText)))) {
+    mText->AppendData(*aStr);
+  }
+
+  return NS_OK;
+}
+
+
+
+nsresult
+nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
+{
+  /* If no node set, get first text node */
+  COM_auto_ptr<nsIDOMNode> docNode;
+
+  if (NS_SUCCEEDED(mDomInterfaceP->GetFirstChild(func_AddRefs(docNode))))
+  {
+    *aNode = docNode;
+    NS_ADDREF(*aNode);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+
+nsresult
+nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
+{
+  assert(aRetNode != 0); // they better give me a place to put the answer
+
+  PRUint16 mType;
+  PRBool mCNodes;
+
+  COM_auto_ptr<nsIDOMNode> answer;
+  
+  aNode->GetNodeType(&mType);
+
+  if (nsIDOMNode::ELEMENT_NODE == mType) {
+    if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
+    {
+      COM_auto_ptr<nsIDOMNode> mNode;
+
+      aNode->GetFirstChild(func_AddRefs(mNode));
+      while(!answer) 
+      {
+        GetFirstTextNode(mNode, func_AddRefs(answer));
+        mNode->GetNextSibling(func_AddRefs(mNode));
+      }
+    }
+  }
+  else if (nsIDOMNode::TEXT_NODE == mType) {
+    answer = aNode;
+  }
+
+    // OK, now return the answer, if any
+  *aRetNode = answer;
+  if (*aRetNode)
+    NS_IF_ADDREF(*aRetNode);
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+//END nsEditor Private methods
 
 
 
@@ -152,7 +239,7 @@ Editor::MouseClick(int aX,int aY)
 nsresult 
 NS_InitEditor(nsIEditor ** aInstancePtrResult, nsIDOMDocument *aDomDoc)
 {
-  Editor* editor = new Editor();
+  nsEditor* editor = new nsEditor();
   if (NULL == editor) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
