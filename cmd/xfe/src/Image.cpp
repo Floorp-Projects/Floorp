@@ -305,6 +305,8 @@ fe_DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt
     
    if (context)
        frameHandle = (XFE_Frame *)ViewGlue_getFrame(context);
+   if (!frameHandle)
+     return;
 
    /* Check the context type. If it is anything other than MWContextIcon
     * let it do the regular image processing. If it is MWContextIcon,
