@@ -85,6 +85,8 @@ public:
 
   NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName)=0;
 
+  NS_IMETHOD    GetBaseURI(nsAWritableString& aBaseURI)=0;
+
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
@@ -122,6 +124,7 @@ public:
   NS_IMETHOD    GetPrefix(nsAWritableString& aPrefix);  \
   NS_IMETHOD    SetPrefix(const nsAReadableString& aPrefix);  \
   NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName);  \
+  NS_IMETHOD    GetBaseURI(nsAWritableString& aBaseURI);  \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);  \
@@ -151,6 +154,7 @@ public:
   NS_IMETHOD    GetPrefix(nsAWritableString& aPrefix) { return _to GetPrefix(aPrefix); } \
   NS_IMETHOD    SetPrefix(const nsAReadableString& aPrefix) { return _to SetPrefix(aPrefix); } \
   NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName) { return _to GetLocalName(aLocalName); } \
+  NS_IMETHOD    GetBaseURI(nsAWritableString& aBaseURI) { return _to GetBaseURI(aBaseURI); } \
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn) { return _to InsertBefore(aNewChild, aRefChild, aReturn); }  \
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to ReplaceChild(aNewChild, aOldChild, aReturn); }  \
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) { return _to RemoveChild(aOldChild, aReturn); }  \

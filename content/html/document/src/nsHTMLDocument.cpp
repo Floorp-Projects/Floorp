@@ -1705,6 +1705,21 @@ nsHTMLDocument::IsSupported(const nsAReadableString& aFeature,
   return nsDocument::IsSupported(aFeature, aVersion, aReturn);
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
+{
+  aURI.Truncate();
+  nsCOMPtr<nsIURI> uri(do_QueryInterface(mBaseURL ? mBaseURL : mDocumentURL));
+  if (uri) {
+    nsXPIDLCString spec;
+    uri->GetSpec(getter_Copies(spec));
+    if (spec) {
+      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+    }
+  }
+  return NS_OK;
+}
+
 
 //
 // nsIDOMHTMLDocument interface implementation

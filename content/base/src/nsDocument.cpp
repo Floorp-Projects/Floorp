@@ -2738,6 +2738,20 @@ nsDocument::IsSupported(const nsAReadableString& aFeature,
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
+NS_IMETHODIMP
+nsDocument::GetBaseURI(nsAWritableString &aURI)
+{
+  aURI.Truncate();
+  if (mDocumentURL) {
+    nsXPIDLCString spec;
+    mDocumentURL->GetSpec(getter_Copies(spec));
+    if (spec) {
+      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP    
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {

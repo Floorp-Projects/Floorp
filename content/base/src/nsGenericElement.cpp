@@ -81,6 +81,9 @@
 
 #include "jsapi.h"
 
+// baseURI
+#include "nsIXMLDocument.h"
+
 //----------------------------------------------------------------------
 
 nsChildContentList::nsChildContentList(nsIContent *aContent)
@@ -693,6 +696,56 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
 
   *aReturn = !!attrCount;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericElement::GetXMLBaseURI(nsIURI **aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  aURI=nsnull;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGenericElement::GetBaseURI(nsAWritableString& aURI)
+{
+  aURI.Truncate();
+  nsCOMPtr<nsIURI> uri;
+  nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
+  if (xmlDoc) {
+    // XML documents can use the XML Base (W3C spec) way of setting the base
+    // per element. We look at this node and its ancestors until we find
+    // the first XML content and get it's base.
+    nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIContent*,this)));
+    while (content) {
+      nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
+      if (xmlContent) {
+        xmlContent->GetXMLBaseURI(getter_AddRefs(uri));
+        break;
+      }
+      nsCOMPtr<nsIContent> tmp(content);
+      tmp->GetParent(*getter_AddRefs(content));
+    }
+  }
+
+  if (!uri && mDocument) {
+    // HTML document or for some reason there was no XML content in XML document
+    mDocument->GetBaseURL(*getter_AddRefs(uri));
+    if (!uri) {
+      uri = dont_AddRef(mDocument->GetDocumentURL());
+    }
+  }
+
+  if (uri) {
+    nsXPIDLCString spec;
+    uri->GetSpec(getter_Copies(spec));
+    if (spec) {
+      CopyASCIItoUCS2(nsLiteralCString(spec), aURI);
+    }
+  }
+  
   return NS_OK;
 }
 

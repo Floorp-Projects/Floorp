@@ -739,6 +739,7 @@
     "navigator.vendorsub", \
     "node.appendchild", \
     "node.attributes", \
+    "node.baseuri", \
     "node.childnodes", \
     "node.clonenode", \
     "node.firstchild", \

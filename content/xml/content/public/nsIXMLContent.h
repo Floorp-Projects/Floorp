@@ -30,6 +30,7 @@
 class nsINameSpace;
 class nsINodeInfo;
 class nsIWebShell;
+class nsIURI;
 
 #define NS_IXMLCONTENT_IID \
  { 0xa6cf90cb, 0x15b3, 0x11d2, \
@@ -55,6 +56,8 @@ public:
    * links, so processing should usually stop after that as well.
    */
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell) = 0;
+
+  NS_IMETHOD GetXMLBaseURI(nsIURI **aURI) = 0;
 };
 
 // Some return values for MaybeTriggerAutoLink

@@ -78,8 +78,8 @@ public:
 
 #define NS_FORWARD_IDOMNSDOCUMENT(_to)  \
   NS_IMETHOD    GetCharacterSet(nsAWritableString& aCharacterSet) { return _to GetCharacterSet(aCharacterSet); } \
-  NS_IMETHOD    GetDir(nsAWritableString& aDir);  \
-  NS_IMETHOD    SetDir(const nsAReadableString& aDir);  \
+  NS_IMETHOD    GetDir(nsAWritableString& aDir) { return _to GetDir(aDir); } \
+  NS_IMETHOD    SetDir(const nsAReadableString& aDir) { return _to SetDir(aDir); } \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    GetLocation(jsval* aLocation) { return _to GetLocation(aLocation); } \
   NS_IMETHOD    SetLocation(jsval aLocation) { return _to SetLocation(aLocation); } \

@@ -210,6 +210,7 @@ public:
   NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
   NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
+  NS_IMETHOD GetXMLBaseURI(nsIURI **aURI);
 
   // nsIHTMLContent interface methods
   NS_IMETHOD Compact();
@@ -268,6 +269,7 @@ public:
   NS_IMETHOD IsSupported(const nsAReadableString& aFeature,
                          const nsAReadableString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
+  NS_IMETHOD GetBaseURI(nsAWritableString& aURI);
 
   // nsIDOMElement method implementation
   NS_IMETHOD GetTagName(nsAWritableString& aTagName);
@@ -471,5 +473,6 @@ protected:
   NS_IMETHOD    Normalize() { return _to Normalize(); }  \
   NS_IMETHOD    IsSupported(const nsAReadableString& aFeature, const nsAReadableString& aVersion, PRBool* aReturn) { return _to IsSupported(aFeature, aVersion, aReturn); }  \
   NS_IMETHOD    HasAttributes(PRBool* aReturn) { return _to HasAttributes(aReturn); }  \
+  NS_IMETHOD    GetBaseURI(nsAWritableString& aURI) { return _to GetBaseURI(aURI); }  \
 
 #endif /* nsGenericElement_h___ */
