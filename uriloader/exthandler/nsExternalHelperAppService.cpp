@@ -1414,6 +1414,9 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
     }
   }
   if (NS_FAILED(rv)) {
+    rv = GetMIMEInfoForExtensionFromExtras(aFileExt, getter_AddRefs(info));
+  }
+  if (NS_FAILED(rv)) {
     return rv;
   } /* endif */
 
@@ -1556,6 +1559,54 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char
 
           *aMIMEInfo = mimeInfo;
           NS_ADDREF(*aMIMEInfo);
+      }
+  }
+
+  return rv;
+}
+
+nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const char* aExtension, nsIMIMEInfo ** aMIMEInfo )
+{
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  NS_ENSURE_ARG( aMIMEInfo );
+  
+  *aMIMEInfo = 0;
+
+  // Look for default entry with matching extension.
+  nsDependentCString extension(aExtension);
+  nsDependentCString::const_iterator start, end, iter;
+  PRInt32 numEntries = sizeof(extraMimeEntries) / sizeof(extraMimeEntries[0]);
+  for (PRInt32 index = 0; !*aMIMEInfo && index < numEntries; index++)
+  {
+      nsDependentCString extList(extraMimeEntries[index].mFileExtensions);
+      extList.BeginReading(start);
+      extList.EndReading(end);
+      iter = start;
+      while (start != end)
+      {
+          FindCharInReadable(',', iter, end);
+          if (Compare(Substring(start, iter),
+                      extension,
+                      nsCaseInsensitiveCStringComparator()) == 0)
+          {
+              // This is the one.  Create MIMEInfo object and set
+              // attributes appropriately.
+              nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID,&rv));
+              NS_ENSURE_SUCCESS( rv, rv );
+
+              mimeInfo->SetFileExtensions(extraMimeEntries[index].mFileExtensions);
+              mimeInfo->SetMIMEType(extraMimeEntries[index].mMimeType);
+              mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription).get());
+              mimeInfo->SetMacType(extraMimeEntries[index].mMactype);
+              mimeInfo->SetMacCreator(extraMimeEntries[index].mMacCreator);
+              *aMIMEInfo = mimeInfo;
+              NS_ADDREF(*aMIMEInfo);
+              break;
+          }
+          if (iter != end) {
+            ++iter;
+          }
+          start = iter;
       }
   }
 

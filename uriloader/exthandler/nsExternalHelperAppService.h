@@ -115,6 +115,7 @@ protected:
   virtual nsresult AddMimeInfoToCache(nsIMIMEInfo * aMIMEInfo);
   virtual nsresult AddDefaultMimeTypesToCache();
   virtual nsresult GetMIMEInfoForMimeTypeFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
+  virtual nsresult GetMIMEInfoForExtensionFromExtras(const char * aContentType, nsIMIMEInfo ** aMIMEInfo );
 
 protected:
   // functions related to the tempory file cleanup service provided by nsExternalHelperAppService
