@@ -12,7 +12,7 @@ function OnLoadAddressBook()
 	OnLoadCardView();
 	
 	try {
-		top.addressbook.SetWebShellWindow(window)
+		top.addressbook.setWebShellWindow(window)
 	}
 	catch (ex) {
 		dump("failed to set webshell window\n");

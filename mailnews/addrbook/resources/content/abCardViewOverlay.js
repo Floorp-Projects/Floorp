@@ -76,54 +76,54 @@ function DisplayCardViewPane(abNode)
 	var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 	
 	// FIX ME - this should use a i18n name routine in JS
-	var name = card.DisplayName;
-	if ( card.FirstName.length + card.LastName.length > 0 )
-		name = card.FirstName + " " + card.LastName;
+	var name = card.displayName;
+	if ( card.firstName.length + card.lastName.length > 0 )
+		name = card.firstName + " " + card.lastName;
 	
 	var nickname;
-	if ( card.NickName )
-		nickname = "\"" + card.NickName + "\"";
+	if ( card.nickName )
+		nickname = "\"" + card.nickName + "\"";
 		
 	var data = top.cvData;
 	var visible;
 	
 	// set fields in card view pane
 
-	cvSetNode(data.CardTitle, "Card for " + card.DisplayName);
+	cvSetNode(data.CardTitle, "Card for " + card.displayName);
 	
 	// Name section
 	cvSetNode(data.cvhName, name);
 	cvSetNode(data.cvNickname, nickname);
-	cvSetNode(data.cvEmail1, card.PrimaryEmail);
-	cvSetNode(data.cvEmail2, card.SecondEmail);
+	cvSetNode(data.cvEmail1, card.primaryEmail);
+	cvSetNode(data.cvEmail2, card.secondEmail);
 	// Home section
-	visible = cvSetNode(data.cvHomeAddress, card.HomeAddress);
-	visible = cvSetNode(data.cvHomeAddress2, card.HomeAddress2) || visible;
-	visible = cvSetCityStateZip(data.cvHomeCityStZip, card.HomeCity, card.HomeState, card.HomeZipCode) || visible;
-	visible = cvSetNode(data.cvHomeCountry, card.HomeCountry) || visible;
+	visible = cvSetNode(data.cvHomeAddress, card.homeAddress);
+	visible = cvSetNode(data.cvHomeAddress2, card.homeAddress2) || visible;
+	visible = cvSetCityStateZip(data.cvHomeCityStZip, card.homeCity, card.homeState, card.homeZipCode) || visible;
+	visible = cvSetNode(data.cvHomeCountry, card.homeCountry) || visible;
 	cvSetVisible(data.cvhHome, visible);
 	// Other section
-	visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.Custom1);
-	visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.Custom2) || visible;
-	visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.Custom3) || visible;
-	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.Custom4) || visible;
-	visible = cvSetNode(data.cvNotes, card.Notes) || visible;
+	visible = cvSetNodeWithLabel(data.cvCustom1, zCustom1, card.custom1);
+	visible = cvSetNodeWithLabel(data.cvCustom2, zCustom2, card.custom2) || visible;
+	visible = cvSetNodeWithLabel(data.cvCustom3, zCustom3, card.custom3) || visible;
+	visible = cvSetNodeWithLabel(data.cvCustom4, zCustom4, card.custom4) || visible;
+	visible = cvSetNode(data.cvNotes, card.notes) || visible;
 	cvSetVisible(data.cvhOther, visible);
 	// Phone section
-	visible = cvSetNodeWithLabel(data.cvPhWork, zWork, card.WorkPhone);
-	visible = cvSetNodeWithLabel(data.cvPhHome, zHome, card.HomePhone) || visible;
-	visible = cvSetNodeWithLabel(data.cvPhFax, zFax, card.FaxNumber) || visible;
-	visible = cvSetNodeWithLabel(data.cvPhCellular, zCellular, card.CellularNumber) || visible;
-	visible = cvSetNodeWithLabel(data.cvPhPager, zPager, card.PagerNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhWork, zWork, card.workPhone);
+	visible = cvSetNodeWithLabel(data.cvPhHome, zHome, card.homePhone) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhFax, zFax, card.faxNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhCellular, zCellular, card.cellularNumber) || visible;
+	visible = cvSetNodeWithLabel(data.cvPhPager, zPager, card.pagerNumber) || visible;
 	cvSetVisible(data.cvhPhone, visible);
 	// Work section
-	visible = cvSetNode(data.cvJobTitle, card.JobTitle);
-	visible = cvSetNode(data.cvDepartment, card.Department) || visible;
-	visible = cvSetNode(data.cvCompany, card.Company) || visible;
-	visible = cvSetNode(data.cvWorkAddress, card.WorkAddress) || visible;
-	visible = cvSetNode(data.cvWorkAddress2, card.WorkAddress2) || visible;
-	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.WorkCity, card.WorkState, card.WorkZipCode) || visible;
-	visible = cvSetNode(data.cvWorkCountry, card.WorkCountry) || visible;
+	visible = cvSetNode(data.cvJobTitle, card.jobTitle);
+	visible = cvSetNode(data.cvDepartment, card.department) || visible;
+	visible = cvSetNode(data.cvCompany, card.company) || visible;
+	visible = cvSetNode(data.cvWorkAddress, card.workAddress) || visible;
+	visible = cvSetNode(data.cvWorkAddress2, card.workAddress2) || visible;
+	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.workCity, card.workState, card.workZipCode) || visible;
+	visible = cvSetNode(data.cvWorkCountry, card.workCountry) || visible;
 	cvSetVisible(data.cvhWork, visible);
 
 	// make the card view box visible

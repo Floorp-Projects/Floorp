@@ -223,7 +223,7 @@ function GetSelectedAddresses()
 			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
 			if ( selectedAddresses )
 				selectedAddresses += ",";
-			selectedAddresses += "\"" + card.DisplayName + "\" <" + card.PrimaryEmail + ">";
+			selectedAddresses += "\"" + card.displayName + "\" <" + card.primaryEmail + ">";
 		}
 	}
 	return selectedAddresses;	
