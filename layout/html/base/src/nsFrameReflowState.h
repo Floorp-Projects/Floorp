@@ -75,11 +75,10 @@ public:
   // The frames border+padding value
   nsMargin mBorderPadding;
 
-  // The running margin value. This value is a copy of
-  // nsReflowMetrics.mCarriedInTopMargin before the first frame is
-  // reflowed, and after a frame is reflowed and placed it will be the
-  // collapsed bottom margin value from the frame.
-  nscoord mRunningMargin;
+  PRBool mIsMarginRoot;
+
+  nscoord mCollapsedTopMargin;
+  nscoord mPrevBottomMargin;
 };
 
 #endif /* nsFrameReflowState_h___ */

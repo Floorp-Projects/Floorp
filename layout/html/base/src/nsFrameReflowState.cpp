@@ -21,6 +21,7 @@
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
 #include "nsIHTMLReflow.h"
+#include "nsIContent.h"
 
 nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
                                        const nsHTMLReflowState& aReflowState,
@@ -64,8 +65,37 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
   // Set mDirection value
   mDirection = mStyleDisplay->mDirection;
 
-  // Initialize running margin value
-  mRunningMargin = aMetrics.mCarriedInTopMargin;
+  // See if this container frame will act as a root for margin
+  // collapsing behavior.
+  mIsMarginRoot = PR_FALSE;
+  if ((0 != mBorderPadding.top) || (0 != mBorderPadding.bottom)) {
+    mIsMarginRoot = PR_TRUE;
+  }
+  else {
+    // A sleazy way to detect a block frame that's acting on behalf of
+    // another frame to reflow the other frames contents.
+    // XXX a better solution puhleeze!
+    nsIFrame* parent;
+    frame->GetGeometricParent(parent);
+    if (nsnull != parent) {
+      nsIContent* parentContent;
+      parent->GetContent(parentContent);
+      if (nsnull != parentContent) {
+        nsIContent* frameContent;
+        frame->GetContent(frameContent);
+        if (nsnull != frameContent) {
+          if (parentContent == frameContent) {
+            mIsMarginRoot = PR_TRUE;
+          }
+          NS_RELEASE(frameContent);
+        }
+        NS_RELEASE(parentContent);
+      }
+    }
+  }
+
+  mCollapsedTopMargin = 0;
+  mPrevBottomMargin = 0;
 }
 
 nsFrameReflowState::~nsFrameReflowState()
