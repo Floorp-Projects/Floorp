@@ -275,7 +275,7 @@ endif
 RPATHFLAG = ..:../lib:../../lib:../../../lib:../../../../lib
 
 ifeq ($(OS_ARCH), SunOS)
-# include $ORIGIN in run time library path (work on Solaris 8 10/01 and later
+# include $ORIGIN in run time library path (works on Solaris 8 10/01 and later)
 RPATHFLAG := \$$ORIGIN/../lib:\$$ORIGIN/../../lib:$(RPATHFLAG)
 
 # flag to pass to cc when linking to set runtime shared library search path
