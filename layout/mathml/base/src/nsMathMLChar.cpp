@@ -262,8 +262,11 @@ nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
     nsAutoString key, value; key.AssignWithConversion(cbuf);
     nsresult rv = mGlyphProperties->GetStringProperty(key, value);
     if (NS_FAILED(rv)) return 0;
+    // Chop the trailing # portion if any ...
+    PRInt32 comment = value.RFindChar('#');
+    if (comment > 0) value.Truncate(comment);
+    value.CompressWhitespace();
     mGlyphCache.Assign(value);
-    mGlyphCache.CompressWhitespace();
     mCharCache = ch;
   }
 
@@ -556,7 +559,7 @@ StretchyFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   for (PRInt32 i = 0; i < gGlyphTableList->Count(); i++) {
     nsGlyphTable* glyphTable = (nsGlyphTable*)gGlyphTableList->ElementAt(i);
     if (kNotFound == currList->IndexOf(glyphTable)) { // avoid duplicates
-      nsAutoString(fontName);
+      nsAutoString fontName;
       glyphTable->GetFontName(fontName);
       if (fontName.EqualsIgnoreCase(aFamily) && glyphTable->Has(currChar)) {
         currList->AppendElement(glyphTable); // the table is retained
