@@ -55,10 +55,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -74,10 +74,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -94,10 +94,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -114,10 +114,10 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -133,10 +133,10 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -154,10 +154,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -193,10 +193,10 @@ $(OBJS): makefile.win \
         $(LINCS_1)
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -229,10 +229,10 @@ $(OBJS): makefile.win \
         $(LLIBS)
         $(OS_LIBS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -253,10 +253,10 @@ $(OBJS): makefile.win \
         $(OS_LIBS)
         /link $(LFLAGS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -283,10 +283,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -303,10 +303,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -324,10 +324,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
@@ -344,10 +344,10 @@ $(OBJS): makefile.win \
         $(LINCS_1) 
         $(INCS)
         -Fd$(PDBFILE)
-!ifdef MAPFILE
+!if defined(MOZ_MAPINFO)
         -Fm$(MAPFILE)
 !endif
-!ifdef CODFILE
+!if defined(MOZ_CODINFO)
         -Fa$(CODFILE)
         -FAsc
 !endif
