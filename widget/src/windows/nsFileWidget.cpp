@@ -26,7 +26,6 @@
 #include <windows.h>
 #include <SHLOBJ.H>
 
-static NS_DEFINE_IID(kIFileWidgetIID,    NS_IFILEWIDGET_IID);
 
 NS_IMPL_ADDREF(nsFileWidget)
 NS_IMPL_RELEASE(nsFileWidget)
@@ -68,7 +67,7 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(kIFileWidgetIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIFileWidget>::GetIID())) {
     *aInstancePtr = (void*) ((nsIFileWidget*)this);
     NS_ADDREF_THIS();
     return NS_OK;

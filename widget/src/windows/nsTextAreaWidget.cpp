@@ -85,17 +85,13 @@ void nsTextAreaWidget::SetUpForPaint(HDC aHDC)
 nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 
-  static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-
-  if (aIID.Equals(kITextAreaWidgetIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsITextAreaWidget>::GetIID())) {
       nsITextAreaWidget* textArea = this;
       *aInstancePtr = (void*) (textArea);
       NS_ADDREF_THIS();
       return NS_OK;
   } 
-  else if (aIID.Equals(kIWidgetIID))
+  else if (aIID.Equals(nsCOMTypeInfo<nsIWidget>::GetIID()))
   {
       nsIWidget* widget = this;
       *aInstancePtr = (void*) (widget);

@@ -39,13 +39,6 @@
 #include "nsIMenuListener.h"
 #include "nsIComponentManager.h"
 
-// IIDs
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIContextMenuIID,  NS_ICONTEXTMENU_IID);
-static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
-static NS_DEFINE_IID(kIWidgetIID,   NS_IWIDGET_IID);
-
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_IID(kContextMenuCID,  NS_CONTEXTMENU_CID);
@@ -61,17 +54,17 @@ nsresult nsContextMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;                                                  
                                                                                         
-  if (aIID.Equals(kIContextMenuIID)) {                                         
+  if (aIID.Equals(nsCOMTypeInfo<nsIContextMenu>::GetIID())) {                                         
     *aInstancePtr = (void*)(nsIContextMenu*) this;                                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kIMenuListenerIID)) {                                      
+  if (aIID.Equals(nsCOMTypeInfo<nsIMenuListener>::GetIID())) {                                      
     *aInstancePtr = (void*)(nsIMenuListener*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }                                                     
-  if (aIID.Equals(kISupportsIID)) {                                      
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
     *aInstancePtr = (void*)(nsISupports*)(nsIContextMenu*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
@@ -127,7 +120,7 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignmen
   if(aParent)
   {
       nsIWidget * parent = nsnull;
-      aParent->QueryInterface(kIWidgetIID, (void**) &parent); // This does the addref
+      aParent->QueryInterface(nsCOMTypeInfo<nsIWidget>::GetIID(), (void**) &parent); // This does the addref
       if(parent)
 	  {
         mParentWindow = parent;
@@ -145,7 +138,7 @@ NS_METHOD nsContextMenu::GetParent(nsISupports*& aParent)
 {
   aParent = nsnull;
   if (nsnull != mParentWindow) {
-    return mParentWindow->QueryInterface(kISupportsIID,(void**)&aParent);
+    return mParentWindow->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),(void**)&aParent);
   } 
 
   return NS_ERROR_FAILURE;
@@ -159,7 +152,7 @@ NS_METHOD nsContextMenu::AddItem(nsISupports * aItem)
   {
     // Figure out what we're adding
 		nsIMenuItem * menuitem = nsnull;
-		aItem->QueryInterface(kIMenuItemIID, (void**) &menuitem);
+    aItem->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void**) &menuitem);
 		if(menuitem)
 		{
 			// case menuitem
@@ -169,7 +162,7 @@ NS_METHOD nsContextMenu::AddItem(nsISupports * aItem)
 		else
 		{
 			nsIMenu * menu = nsnull;
-			aItem->QueryInterface(kIMenuIID, (void**) &menu);
+      aItem->QueryInterface(nsCOMTypeInfo<nsIMenu>::GetIID(), (void**) &menu);
 			if(menu)
 			{
 				// case menu
@@ -296,7 +289,7 @@ NS_METHOD nsContextMenu::InsertItemAt(const PRUint32 aCount, nsISupports * aMenu
 NS_METHOD nsContextMenu::InsertSeparator(const PRUint32 aCount)
 {
   nsISupports * supports = nsnull;
-  QueryInterface(kISupportsIID, (void**) &supports);
+  QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
   nsMenuItem * item = new nsMenuItem();
   if(supports) {	
     item->Create(supports, "", PR_FALSE);
@@ -479,12 +472,12 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   if (identifier > 0) {
     // Dispatch to MenuItemSelected
     nsIContextMenu * menu;
-    QueryInterface(kIContextMenuIID, (void**) &menu);
+    QueryInterface(nsCOMTypeInfo<nsIContextMenu>::GetIID(), (void**) &menu);
     nsIMenuItem * menuItem = FindMenuItem(menu, identifier);
     NS_RELEASE(menu);
     if (menuItem) {
       nsIMenuListener * listener;
-      if (NS_OK == menuItem->QueryInterface(kIMenuListenerIID, (void **)&listener)) {
+      if (NS_OK == menuItem->QueryInterface(nsCOMTypeInfo<nsIMenuListener>::GetIID(), (void **)&listener)) {
         listener->MenuItemSelected(aMenuEvent);
         NS_RELEASE(listener);
       }
@@ -504,12 +497,12 @@ nsIMenuItem * nsContextMenu::FindMenuItem(nsIContextMenu * aMenu, PRUint32 aId)
     nsIContextMenu     * menu;
 
     aMenu->GetItemAt(i, item);
-    if (NS_OK == item->QueryInterface(kIMenuItemIID, (void **)&menuItem)) {
+    if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void **)&menuItem)) {
       if (((nsMenuItem *)menuItem)->GetCmdId() == (PRInt32)aId) {
         NS_RELEASE(item);
         return menuItem;
       }
-    } else if (NS_OK == item->QueryInterface(kIContextMenuIID, (void **)&menu)) {
+    } else if (NS_OK == item->QueryInterface(nsCOMTypeInfo<nsIContextMenu>::GetIID(), (void **)&menu)) {
       nsIMenuItem * fndItem = FindMenuItem(menu, aId);
       NS_RELEASE(menu);
       if (nsnull != fndItem) {
@@ -609,12 +602,12 @@ void nsContextMenu::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, 0);   
 	
     nsISupports * supports = nsnull;
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
     pParentMenu->AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports);
           
@@ -658,11 +651,11 @@ void nsContextMenu::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, nsCOMTypeInfo<nsIMenu>::GetIID(), (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
-    pParentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
     pnsMenu->Create(supports, menuName);
     NS_RELEASE(supports); // Balance QI
 
@@ -671,7 +664,7 @@ void nsContextMenu::LoadSubMenu(
 
     // Make nsMenu a child of parent nsMenu. The parent takes ownership
     supports = nsnull;
-    pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
 	pParentMenu->AddItem(supports);
 	NS_RELEASE(supports);
 
@@ -702,12 +695,12 @@ void nsContextMenu::LoadMenuItem(
   menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, nsCOMTypeInfo<nsIMenuItem>::GetIID(), (void**)&pnsMenuItem);
   if (NS_OK == rv) {
     pnsMenuItem->Create(pParentMenu, menuitemName, 0);   
 	
     nsISupports * supports = nsnull;
-    pnsMenuItem->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenuItem->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
     pParentMenu->AddItem(supports); // Parent should now own menu item
     NS_RELEASE(supports);
           
@@ -751,11 +744,11 @@ void nsContextMenu::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, nsCOMTypeInfo<nsIMenu>::GetIID(), (void**)&pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
-    pParentMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pParentMenu->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
     pnsMenu->Create(supports, menuName);
     NS_RELEASE(supports); // Balance QI
 
@@ -764,7 +757,7 @@ void nsContextMenu::LoadSubMenu(
 
     // Make nsMenu a child of parent nsMenu. The parent takes ownership
     supports = nsnull;
-    pnsMenu->QueryInterface(kISupportsIID, (void**) &supports);
+    pnsMenu->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**) &supports);
 	pParentMenu->AddItem(supports);
 	NS_RELEASE(supports);
 

@@ -59,8 +59,7 @@ nsresult nsTabWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kInsTabWidgetIID, NS_ITABWIDGET_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsTabWidgetIID)) {
+  if (result == NS_NOINTERFACE && aIID.Equals(nsCOMTypeInfo<nsITabWidget>::GetIID())) {
       *aInstancePtr = (void*) ((nsITabWidget*)this);
       NS_ADDREF_THIS();
       result = NS_OK;

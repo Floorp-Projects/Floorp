@@ -180,15 +180,13 @@ nsComboBox::~nsComboBox()
 //-------------------------------------------------------------------------
 nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-  static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
 
-  if (aIID.Equals(kInsComboBoxIID)) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIComboBox>::GetIID())) {
     *aInstancePtr = (void*) ((nsIComboBox*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  else if (aIID.Equals(kInsListWidgetIID)) {
+  else if (aIID.Equals(nsCOMTypeInfo<nsIListWidget>::GetIID())) {
     *aInstancePtr = (void*) ((nsIListWidget*)this);
     NS_ADDREF_THIS();
     return NS_OK;
