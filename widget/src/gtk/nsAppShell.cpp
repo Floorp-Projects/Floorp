@@ -165,6 +165,8 @@ HandleColormapPrefs( void )
  
 	rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
 	if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 ) {
+		if ( ivalue > 6*6*6 )	// workaround for old GdkRGB's
+			ivalue = 6*6*6;
 		gdk_rgb_set_min_colors( ivalue );
 		return;
 	}
@@ -174,7 +176,7 @@ HandleColormapPrefs( void )
 	rv = prefs->GetBoolPref(PREF_INSTALLCMAP, &bvalue);
 	if (NS_SUCCEEDED(rv)) {
 		if ( PR_TRUE == bvalue )
-			gdk_rgb_set_min_colors( 255 );	// force it
+			gdk_rgb_set_install( TRUE );	// force it
 		else
 			gdk_rgb_set_min_colors( 0 );
 	}
