@@ -64,6 +64,7 @@ XPIDLSRCS	= \
 		nsIRDFXMLSerializer.idl \
 		nsIRDFXMLSink.idl \
 		nsIRDFXMLSource.idl \
+		nsIRDFInferDataSource.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

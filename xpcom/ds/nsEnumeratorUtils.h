@@ -93,4 +93,32 @@ NS_NewSingletonEnumerator(nsISimpleEnumerator* *result,
 
 ////////////////////////////////////////////////////////////////////////
 
+class NS_COM nsUnionEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator methods
+    NS_IMETHOD HasMoreElements(PRBool* aResult);
+    NS_IMETHOD GetNext(nsISupports** aResult);
+
+    nsUnionEnumerator(nsISimpleEnumerator* firstEnumerator,
+                      nsISimpleEnumerator* secondEnumerator);
+
+private:
+    ~nsUnionEnumerator();
+
+protected:
+    nsCOMPtr<nsISimpleEnumerator> mFirstEnumerator, mSecondEnumerator;
+    PRBool mConsumed;
+    PRBool mAtSecond;
+};
+
+extern "C" NS_COM nsresult
+NS_NewUnionEnumerator(nsISimpleEnumerator* *result,
+                      nsISimpleEnumerator* firstEnumerator,
+                      nsISimpleEnumerator* secondEnumerator);
+
+////////////////////////////////////////////////////////////////////////
+
 #endif /* nsEnumeratorUtils_h__ */
