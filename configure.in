@@ -2251,9 +2251,6 @@ then
 				CXXFLAGS="$CXXFLAGS -mt" 
 			fi
 			;;
-	*-*-netbsd*)
-		USE_PTHREADS=
-		_PTHREAD_LDFLAGS=
 	esac
 fi
 
