@@ -29,6 +29,7 @@
 #include "nsParserError.h"
 // #include "nsParser.h"
 #include "nsIParser.h"
+#include "prlog.h"
 
 
  /************************************************************************
@@ -42,6 +43,7 @@ static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 
 static CTokenRecycler* gTokenRecycler=0;
 static nsDeque* gTokenDeque=0;
+static XML_Parser gExpatParser=0;
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -153,11 +155,7 @@ nsExpatTokenizer::~nsExpatTokenizer(){
  *******************************************************************/
 
 /* Called immediately after an error has occurred in expat.  Creates
-   an error token and pushes it onto the token queue.  The DTD
-   will process this token and either try to correct the error or 
-   propagate the error to the content sink. 
-   
-   Creates an nsParserError o
+   an error token and pushes it onto the token queue.
 */
 void nsExpatTokenizer::PushXMLErrorToken(void)
 {
@@ -179,10 +177,11 @@ void nsExpatTokenizer::PushXMLErrorToken(void)
   AddToken(theToken, NS_OK, *gTokenDeque);
 }
 
-nsresult nsExpatTokenizer::ParseXMLBuffer(const char *buffer){
+nsresult nsExpatTokenizer::ParseXMLBuffer(const char *aBuffer, PRUint32 aLength){
   nsresult result=NS_OK;
   if (mExpatParser) {
-    if (!XML_Parse(mExpatParser, buffer, strlen(buffer), PR_FALSE)) {      
+    PR_ASSERT(aLength == strlen(aBuffer));
+    if (!XML_Parse(mExpatParser, aBuffer, aLength, PR_FALSE)) {      
       PushXMLErrorToken();      
     }
   }
@@ -213,12 +212,14 @@ nsresult nsExpatTokenizer::ConsumeToken(nsScanner& aScanner) {
   // scanned and pass that data to expat.
   nsresult result = NS_OK;
   nsString& theBuffer = aScanner.GetBuffer();
-  if(0<theBuffer.Length()) {
+  PRInt32 length = theBuffer.Length();
+  if(0 < length) {
     char* expatBuffer = theBuffer.ToNewCString();
     if (expatBuffer) {      
       gTokenRecycler=(CTokenRecycler*)GetTokenRecycler();
       gTokenDeque=&mTokenDeque;
-      result = ParseXMLBuffer(expatBuffer);
+      gExpatParser = mExpatParser;
+      result = ParseXMLBuffer(expatBuffer, length);
       delete [] expatBuffer;
     }
     theBuffer.Truncate(0);    
@@ -262,6 +263,7 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   CToken* theToken=gTokenRecycler->CreateTokenOfType(eToken_end,eHTMLTag_unknown);
   if(theToken) {
     nsString& theString=theToken->GetStringValueXXX();
+    theString.SetString(name);
     AddToken(theToken,NS_OK,*gTokenDeque);
   }
   else{
@@ -269,26 +271,55 @@ void nsExpatTokenizer::HandleEndElement(void *userData, const XML_Char *name) {
   }
 }
 
-void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) {
- // NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleCharacterData() not yet implemented.");
-  CToken* theToken=0;
-  switch(s[0]){
-    case kNewLine:
-    case CR:
-      theToken=gTokenRecycler->CreateTokenOfType(eToken_newline,eHTMLTag_unknown); break;
-    case kSpace:
-    case kTab:
-      theToken=gTokenRecycler->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown); break;
-    default:
-      theToken=gTokenRecycler->CreateTokenOfType(eToken_text,eHTMLTag_unknown);
+void nsExpatTokenizer::HandleCharacterData(void *userData, const XML_Char *s, int len) { 
+  CCDATASectionToken* currentCDataToken = (CCDATASectionToken*) userData;
+  PRBool StartOfCDataSection = (!currentCDataToken && len == 0);
+  PRBool EndOfCDataSection = (currentCDataToken && len == 0);
+
+  // Either create a new token (if not currently within a CDATA section) or add the
+  // current string from expat to the current CDATA token.
+
+  if (StartOfCDataSection) {
+    // Set up state so that we know that we are within a CDATA section.
+    currentCDataToken = (CCDATASectionToken*) gTokenRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown);
+    XML_SetUserData(gExpatParser, (void *) currentCDataToken);
   }
-  if(theToken) {
-    nsString& theString=theToken->GetStringValueXXX();
+  else if (EndOfCDataSection) {
+    // We've reached the end of the current CDATA section. Push the current CDATA token
+    // onto the token queue and reset state to being outside a CDATA section.
+    CToken* tempCDATAToken = (CToken*) currentCDataToken;
+    AddToken(tempCDATAToken,NS_OK,*gTokenDeque);
+    currentCDataToken = 0;
+    XML_SetUserData(gExpatParser, 0);
+  }
+  else if (currentCDataToken) {
+    // While there exists a current CDATA token, keep appending all strings from expat into it.
+    nsString& theString = currentCDataToken->GetStringValueXXX();
     theString.Append(s,len);
-    AddToken(theToken,NS_OK,*gTokenDeque);
-    return;
   }
-  //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+  else {
+    CToken* newToken = 0;
+
+    switch(s[0]){
+      case kNewLine:
+      case CR:
+        newToken=gTokenRecycler->CreateTokenOfType(eToken_newline,eHTMLTag_unknown); break;
+      case kSpace:
+      case kTab:
+        newToken=gTokenRecycler->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown); break;
+      default:
+        newToken=gTokenRecycler->CreateTokenOfType(eToken_text,eHTMLTag_unknown);
+    }
+    
+    if(newToken) {
+      nsString& theString=newToken->GetStringValueXXX();
+      theString.Append(s,len);
+      AddToken(newToken,NS_OK,*gTokenDeque);
+    }
+    else {
+      //THROW A HUGE ERROR IF WE CANT CREATE A TOKEN!
+    }
+  }  
 }
 
 void nsExpatTokenizer::HandleProcessingInstruction(void *userData, const XML_Char *target, const XML_Char *data){
