@@ -53,7 +53,7 @@ CPPSRCS         = \
 # LOBJS = $(topsrcdir)/rdf/chrome/src/nsChromeProtocolHandler.$(OBJ_SUFFIX)
 
 
-LOCAL_INCLUDES	= -I$(DEPTH)/rdf/chrome/src
+LOCAL_INCLUDES	= -I$(topsrcdir)/rdf/chrome/src
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
