@@ -84,6 +84,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
     uint32          flags;          /* statement state flags, see below */
     uint32          tryCount;       /* total count of try statements parsed */
     JSStmtInfo      *topStmt;       /* top of statement info stack */
+    JSAtomList      decls;          /* const and var declaration atom list */
 };
 
 #define TCF_IN_FUNCTION 0x01        /* parsing inside function body */
@@ -92,14 +93,21 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_IN_FOR_INIT 0x08        /* parsing init expr of for; exclude 'in' */
 
 #define TREE_CONTEXT_INIT(tc) \
-    ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL)
+    ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL,               \
+     ATOM_LIST_INIT(&(tc)->decls))
+
+#define TREE_CONTEXT_FREE(tc) \
+    ((void)0)
 
 struct JSCodeGenerator {
     void            *codeMark;      /* low watermark in cx->codePool */
+    void            *noteMark;      /* low watermark in cx->notePool */
     void            *tempMark;      /* low watermark in cx->tempPool */
-    jsbytecode      *base;          /* base of JS bytecode vector */
-    jsbytecode      *limit;         /* one byte beyond end of bytecode */
-    jsbytecode      *next;          /* pointer to next free bytecode */
+    struct {
+        jsbytecode  *base;          /* base of JS bytecode vector */
+        jsbytecode  *limit;         /* one byte beyond end of bytecode */
+        jsbytecode  *next;          /* pointer to next free bytecode */
+    } prolog, main, *current;
     const char      *filename;      /* null or weak link to source filename */
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
     uintN           currentLine;    /* line number for tree-based srcnote gen */
@@ -116,13 +124,27 @@ struct JSCodeGenerator {
     size_t          tryNoteSpace;   /* # of bytes allocated at tryBase */
 };
 
-#define CG_CODE(cg,offset)  ((cg)->base + (offset))
-#define CG_OFFSET(cg)       PTRDIFF((cg)->next, (cg)->base, jsbytecode)
+#define CG_BASE(cg)             ((cg)->current->base)
+#define CG_LIMIT(cg)            ((cg)->current->limit)
+#define CG_NEXT(cg)             ((cg)->current->next)
+#define CG_CODE(cg,offset)      (CG_BASE(cg) + (offset))
+#define CG_OFFSET(cg)           PTRDIFF(CG_NEXT(cg), CG_BASE(cg), jsbytecode)
+
+#define CG_PROLOG_BASE(cg)      ((cg)->prolog.base)
+#define CG_PROLOG_LIMIT(cg)     ((cg)->prolog.limit)
+#define CG_PROLOG_NEXT(cg)      ((cg)->prolog.next)
+#define CG_PROLOG_CODE(cg,poff) (CG_PROLOG_BASE(cg) + (poff))
+#define CG_PROLOG_OFFSET(cg)    PTRDIFF(CG_PROLOG_NEXT(cg), CG_PROLOG_BASE(cg),\
+                                        jsbytecode)
+
+#define CG_SWITCH_TO_MAIN(cg)   ((cg)->current = &(cg)->main)
+#define CG_SWITCH_TO_PROLOG(cg) ((cg)->current = &(cg)->prolog)
 
 /*
- * Initialize cg to allocate bytecode space from cx->codePool, and srcnote
- * space from cx->tempPool.  Return true on success.  Report an error and
- * return false if the initial code segment can't be allocated.
+ * Initialize cg to allocate bytecode space from cx->codePool, source note
+ * space from cx->notePool, and all other arena-allocated temporaries from
+ * cx->tempPool.  Return true on success.  Report an error and return false
+ * if the initial code segment can't be allocated.
  */
 extern JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
@@ -130,10 +152,11 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
 		     JSPrincipals *principals);
 
 /*
- * Release cx->codePool and cx->tempPool to marks set by js_InitCodeGenerator.
- * Note that cgs are magic: they own tempPool and codePool "tops-of-stack" 
- * above their codeMark and tempMark points.  This means you cannot alloc
- * from tempPool and save the pointer beyond the next JS_FinishCodeGenerator.
+ * Release cx->codePool, cx->notePool, and cx->tempPool to marks set by
+ * js_InitCodeGenerator.  Note that cgs are magic: they own the arena pool
+ * "tops-of-stack" space above their codeMark, noteMark, and tempMark points.
+ * This means you cannot alloc from tempPool and save the pointer beyond the
+ * next JS_FinishCodeGenerator.
  */
 extern JS_FRIEND_API(void)
 js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg);
@@ -232,9 +255,14 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
  * Source notes generated along with bytecode for decompiling and debugging.
  * A source note is a uint8 with 5 bits of type and 3 of offset from the pc of
  * the previous note.  If 3 bits of offset aren't enough, extended delta notes
- * (SRC_XDELTA) consisting of 2 set high order bits followed by 6 offset bits
+ * (SRC_XDELTA) consisting of 3 set high order bits followed by 5 offset bits
  * are emitted before the next note.  Some notes have operand offsets encoded
  * immediately after them, in note bytes or byte-triples.
+ *
+ *                 Source Note               Extended Delta
+ *              +7-6-5-4-3+2-1-0+           +7-6-5+4-3-2-1-0+
+ *              |note-type|delta|           |1 1 1|ext-delta|
+ *              +---------+-----+           +-----+---------+
  *
  * At most one "gettable" note (i.e., a note of type other than SRC_NEWLINE,
  * SRC_SETLINE, and SRC_XDELTA) applies to a given bytecode.
@@ -251,7 +279,7 @@ typedef enum JSSrcNoteType {
     SRC_CONTINUE    = 5,        /* JSOP_GOTO is a continue, not a break;
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,] */
-    SRC_VAR         = 6,        /* JSOP_NAME/FORNAME with a var declaration */
+    SRC_VAR         = 6,        /* JSOP_NAME/SETNAME/FORNAME in a var decl */
     SRC_PCDELTA     = 7,        /* offset from comma-operator to next POP,
 				   or from CONDSWITCH to first CASE opcode */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
@@ -269,14 +297,18 @@ typedef enum JSSrcNoteType {
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
     SRC_TRYFIN	    = 20,       /* JSOP_NOP for try or finally section */
     SRC_CATCH       = 21,       /* catch block has guard */
-    SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 23,       /* a file-absolute source line number note */
-    SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
+    SRC_CONST       = 22,       /* JSOP_SETCONST in a const decl */
+    SRC_RESERVED1   = 23,       /* reserved for future use */
+    SRC_RESERVED2   = 24,       /* reserved for future use */
+    SRC_RESERVED3   = 25,       /* reserved for future use */
+    SRC_NEWLINE     = 26,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 27,       /* a file-absolute source line number note */
+    SRC_XDELTA      = 28        /* 28-31 are for extended delta notes */
 } JSSrcNoteType;
 
 #define SN_TYPE_BITS            5
 #define SN_DELTA_BITS           3
-#define SN_XDELTA_BITS          6
+#define SN_XDELTA_BITS          5
 #define SN_TYPE_MASK            (JS_BITMASK(SN_TYPE_BITS) << SN_DELTA_BITS)
 #define SN_DELTA_MASK           ((ptrdiff_t)JS_BITMASK(SN_DELTA_BITS))
 #define SN_XDELTA_MASK          ((ptrdiff_t)JS_BITMASK(SN_XDELTA_BITS))
@@ -313,8 +345,8 @@ typedef enum JSSrcNoteType {
 #define SN_3BYTE_OFFSET_MASK    0x7f
 
 extern JS_FRIEND_DATA(const char *) js_SrcNoteName[];
-extern JS_FRIEND_DATA(uint8) js_SrcNoteArity[];
-extern JS_FRIEND_API(uintN) js_SrcNoteLength(jssrcnote *sn);
+extern JS_FRIEND_DATA(uint8)        js_SrcNoteArity[];
+extern JS_FRIEND_API(uintN)         js_SrcNoteLength(jssrcnote *sn);
 
 #define SN_LENGTH(sn)           ((js_SrcNoteArity[SN_TYPE(sn)] == 0) ? 1      \
 				 : js_SrcNoteLength(sn))
@@ -351,7 +383,7 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 		    uintN which, ptrdiff_t offset);
 
 /*
- * Finish taking source notes in cx's tempPool by copying them to new
+ * Finish taking source notes in cx's notePool by copying them to new
  * stable store allocated via JS_malloc.  Return null on malloc failure,
  * which means this function reported an error.
  */

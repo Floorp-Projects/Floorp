@@ -992,6 +992,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSRuntime *rt;
     JSStackFrame *fp;
     JSScript *script;
+    JSVersion newvers, oldvers;
     JSObject *obj, *obj2, *proto, *parent;
     JSBranchCallback onbranch;
     JSBool ok, cond;
@@ -1002,7 +1003,7 @@ js_Interpret(JSContext *cx, jsval *result)
     JSOp op, op2;
     JSCodeSpec *cs;
     JSAtom *atom;
-    uintN argc, slot;
+    uintN argc, slot, attrs;
     jsval *vp, lval, rval, ltmp, rtmp;
     jsid id;
     JSObject *withobj, *origobj, *propobj;
@@ -1030,9 +1031,6 @@ js_Interpret(JSContext *cx, jsval *result)
     JSFunction *fun2;
     JSObject *closure;
 #endif
-#if JS_HAS_EXPORT_IMPORT || JS_HAS_GETTER_SETTER
-    uintN attrs;
-#endif
 #if JS_HAS_GETTER_SETTER
     JSPropertyOp getter, setter;
 #endif
@@ -1055,6 +1053,14 @@ js_Interpret(JSContext *cx, jsval *result)
     fp = cx->fp;
     script = fp->script;
     obj = fp->scopeChain;
+
+    /*
+     * Optimized Get and SetVersion for proper script language versioning.
+     */
+    newvers = script->version;
+    oldvers = cx->version;
+    if (newvers != oldvers)
+        JS_SetVersion(cx, newvers);
 
     /*
      * Prepare to call a user-supplied branch handler, and abort the script
@@ -1543,30 +1549,18 @@ js_Interpret(JSContext *cx, jsval *result)
     }                                                                         \
 }
 
-	  case JSOP_SETNAME:
-	    /* Get an immediate atom naming the variable to set. */
-	    atom = GET_ATOM(cx, script, pc);
-	    id   = (jsid)atom;
-
-	    SAVE_SP(fp);
-	    ok = js_FindVariable(cx, id, &obj, &obj2, &prop);
-	    if (!ok)
-		goto out;
-	    JS_ASSERT(prop);
-
-	    OBJ_DROP_PROPERTY(cx, obj2, prop);
-
-	    /* Pop the right-hand side and set obj[id] to it. */
-	    rval = POP();
-
-	    /* Try to hit the property cache, FindVariable primes it. */
-	    CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
-	    if (!ok)
-		goto out;
-
-	    /* Push the right-hand side as our result. */
-	    PUSH_OPND(rval);
-	    break;
+	  case JSOP_SETCONST:
+            obj = js_FindVariableScope(cx, &fun);
+            atom = GET_ATOM(cx, script, pc);
+            rval = POP();
+            ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, rval, NULL, NULL,
+                                     JSPROP_ENUMERATE | JSPROP_PERMANENT |
+                                     JSPROP_READONLY,
+                                     NULL);
+            if (!ok)
+                goto out;
+            PUSH_OPND(rval);
+            break;
 
 	  case JSOP_BINDNAME:
 	    atom = GET_ATOM(cx, script, pc);
@@ -1578,7 +1572,7 @@ js_Interpret(JSContext *cx, jsval *result)
 	    PUSH_OPND(OBJECT_TO_JSVAL(obj));
 	    break;
 
-	  case JSOP_SETNAME2:
+	  case JSOP_SETNAME:
 	    atom = GET_ATOM(cx, script, pc);
 	    id   = (jsid)atom;
 	    rval = POP();
@@ -2647,6 +2641,42 @@ js_Interpret(JSContext *cx, jsval *result)
 	    *vp = sp[-1];
 	    break;
 
+	  case JSOP_DEFFUN:
+	    /* We must be at top-level ("box") scope, not inside a with. */
+	    JS_ASSERT(fp->scopeChain == js_FindVariableScope(cx, &fun));
+
+	    atom = GET_ATOM(cx, script, pc);
+	    obj = ATOM_TO_OBJECT(atom);
+	    fun = JS_GetPrivate(cx, obj);
+	    attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+	    ok = OBJ_DEFINE_PROPERTY(cx, fp->scopeChain, (jsid)fun->atom,
+	                             attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+	                             (attrs & JSFUN_GETTER)
+	                             ? (JSPropertyOp) obj
+	                             : NULL,
+	                             (attrs & JSFUN_SETTER)
+	                             ? (JSPropertyOp) obj
+	                             : NULL,
+	                             attrs | JSPROP_ENUMERATE,
+				     NULL);
+	    if (!ok)
+	    	goto out;
+	    break;
+
+	  case JSOP_DEFCONST:
+	  case JSOP_DEFVAR:
+	    atom = GET_ATOM(cx, script, pc);
+	    obj = js_FindVariableScope(cx, &fun);
+	    JS_ASSERT(!fun);
+	    attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+	    if (op == JSOP_DEFCONST)
+	    	attrs |= JSPROP_READONLY;
+	    ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
+				     NULL, NULL, attrs, NULL);
+	    if (!ok)
+	    	goto out;
+	    break;
+
 #if JS_HAS_GETTER_SETTER
           case JSOP_GETTER:
           case JSOP_SETTER:
@@ -2655,7 +2685,7 @@ js_Interpret(JSContext *cx, jsval *result)
             cs = &js_CodeSpec[op2];
             len = cs->length;
             switch (op2) {
-              case JSOP_SETNAME2:
+              case JSOP_SETNAME:
               case JSOP_SETPROP:
                 atom = GET_ATOM(cx, script, pc);
                 id   = (jsid)atom;
@@ -2687,7 +2717,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 JS_ASSERT(JSVAL_IS_OBJECT(lval));
                 obj = JSVAL_TO_OBJECT(lval);
                 break;
-#endif
+#endif /* JS_HAS_INITIALIZERS */
 
               default:
                 JS_ASSERT(0);
@@ -2718,7 +2748,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (cs->ndefs)
                 PUSH_OPND(rval);
             break;
-#endif
+#endif /* JS_HAS_GETTER_SETTER */
 
 #if JS_HAS_INITIALIZERS
 	  case JSOP_NEWINIT:
@@ -2997,6 +3027,8 @@ no_catch:
      * Restore the previous frame's execution state.
      */
     js_FreeStack(cx, mark);
+    if (newvers != oldvers)
+        JS_SetVersion(cx, oldvers);
     cx->interpLevel--;
     return ok;
 }

@@ -63,6 +63,8 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
+char js_const_str[]         = "const";
+char js_var_str[]           = "var";
 char js_function_str[]      = "function";
 char js_in_str[]            = "in";
 char js_instanceof_str[]    = "instanceof";
@@ -110,6 +112,8 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
     pc = script->code;
     end = pc + script->length;
     while (pc < end) {
+	if (pc == script->main)
+	    fputs("main:\n", fp);
 	len = js_Disassemble1(cx, script, pc, pc - script->code, lines, fp);
 	if (!len)
 	    return;
@@ -757,6 +761,25 @@ GetSlotAtom(JSScope *scope, JSPropertyOp getter, uintN slot)
     return NULL;
 }
 
+static const char *
+VarPrefix(jssrcnote *sn)
+{
+    char *kw;
+    static char buf[8];
+
+    kw = NULL;
+    if (sn) {
+        if (SN_TYPE(sn) == SRC_VAR)
+            kw = js_var_str;
+        else if (SN_TYPE(sn) == SRC_CONST)
+            kw = js_const_str;
+    }
+    if (!kw)
+        return "";
+    JS_snprintf(buf, sizeof buf, "%s ", kw);
+    return buf;
+}
+
 static JSBool
 Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 {
@@ -1320,8 +1343,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		oplen = js_CodeSpec[JSOP_IFEQ].length;
 		len = GET_JUMP_OFFSET(pc);
               do_forinbody:
-		js_printf(jp, "\tfor (%s%s",
-			  (sn && SN_TYPE(sn) == SRC_VAR) ? "var " : "", lval);
+		js_printf(jp, "\tfor (%s%s", VarPrefix(sn), lval);
 		if (atom)
 		    js_printf(jp, ".%s", ATOM_BYTES(atom));
 		else if (xval)
@@ -1386,13 +1408,13 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		LOCAL_ASSERT(atom);
 		goto do_setname;
 
+	      case JSOP_SETCONST:
 	      case JSOP_SETNAME:
-	      case JSOP_SETNAME2:
 		atom = GET_ATOM(cx, jp->script, pc);
 	      do_setname:
 		lval = ATOM_BYTES(atom);
 		rval = POP_STR();
-		if (op == JSOP_SETNAME2)
+		if (op == JSOP_SETNAME)
 		    (void) PopOff(ss, op);
 		if ((sn = js_GetSrcNote(jp->script, pc - 1)) != NULL &&
 		    SN_TYPE(sn) == SRC_ASSIGNOP) {
@@ -1401,8 +1423,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		} else {
 		    sn = js_GetSrcNote(jp->script, pc);
 		    todo = Sprint(&ss->sprinter, "%s%s = %s",
-				  (sn && SN_TYPE(sn) == SRC_VAR) ? "var " : "",
-				  lval, rval);
+				  VarPrefix(sn), lval, rval);
 		}
 		break;
 
@@ -1640,9 +1661,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		atom = GET_ATOM(cx, jp->script, pc);
 	      do_name:
 		sn = js_GetSrcNote(jp->script, pc);
-		todo = Sprint(&ss->sprinter,
-			      (sn && SN_TYPE(sn) == SRC_VAR) ? "var %s" : "%s",
-			      ATOM_BYTES(atom));
+		todo = Sprint(&ss->sprinter, "%s%s",
+			      VarPrefix(sn), ATOM_BYTES(atom));
 		break;
 
 	      case JSOP_UINT16:
@@ -1885,7 +1905,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		obj = ATOM_TO_OBJECT(atom);
 		fun = JS_GetPrivate(cx, obj);
 		jp2 = js_NewPrinter(cx, JS_GetFunctionName(fun), jp->indent,
-                                    jp->pretty);
+                                    JS_FALSE);
 		if (!jp2)
 		    return JS_FALSE;
 		jp2->scope = jp->scope;
@@ -2068,9 +2088,10 @@ js_DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len)
 {
     SprintStack ss;
     JSContext *cx;
-    void *mark;
-    JSScript *oldscript;
+    void *mark, *space;
+    size_t offsetsz, opcodesz;
     JSBool ok;
+    JSScript *oldscript;
     char *last;
 
     /* Initialize a sprinter for use with the offset stack. */
@@ -2079,14 +2100,16 @@ js_DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len)
     mark = JS_ARENA_MARK(&cx->tempPool);
     INIT_SPRINTER(cx, &ss.sprinter, &cx->tempPool, PAREN_SLOP);
 
-    /* Initialize the offset and opcode stacks. */
-    ss.offsets = JS_malloc(cx, script->depth * sizeof *ss.offsets);
-    ss.opcodes = JS_malloc(cx, script->depth * sizeof *ss.opcodes);
-    if (!ss.offsets || !ss.opcodes) {
-	if (ss.offsets)
-	    JS_free(cx, ss.offsets);
-	return JS_FALSE;
+    /* Allocate the parallel (to avoid padding) offset and opcode stacks. */
+    offsetsz = script->depth * sizeof(ptrdiff_t);
+    opcodesz = script->depth * sizeof(jsbytecode);
+    JS_ARENA_ALLOCATE(space, &cx->tempPool, offsetsz + opcodesz);
+    if (!space) {
+	ok = JS_FALSE;
+        goto out;
     }
+    ss.offsets = (ptrdiff_t *) space;
+    ss.opcodes = (jsbytecode *) ((char *)space + offsetsz);
     ss.top = 0;
 
     /* Call recursive subroutine to do the hard work. */
@@ -2103,9 +2126,8 @@ js_DecompileCode(JSPrinter *jp, JSScript *script, jsbytecode *pc, uintN len)
 	js_printf(jp, "%s", last);
     }
 
-    /* Free and clear temporary stuff. */
-    JS_free(cx, ss.offsets);
-    JS_free(cx, ss.opcodes);
+out:
+    /* Free all temporary stuff allocated under this call. */
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
 }

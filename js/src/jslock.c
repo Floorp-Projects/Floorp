@@ -618,23 +618,19 @@ js_Unlock(JSThinLock *tl, jsword me)
 void
 js_LockRuntime(JSRuntime *rt)
 {
-    jsword me = CurrentThreadId();
-    JSThinLock *tl;
-
-    JS_ASSERT(Thin_RemoveWait(ReadWord(rt->rtLock.owner)) != me);
-    tl = &rt->rtLock;
-    JS_LOCK0(tl,me);
+    PR_Lock(rt->rtLock);
+#ifdef DEBUG
+    rt->rtLockOwner = CurrentThreadId();
+#endif
 }
 
 void
 js_UnlockRuntime(JSRuntime *rt)
 {
-    jsword me = CurrentThreadId();
-    JSThinLock *tl;
-
-    JS_ASSERT(Thin_RemoveWait(ReadWord(rt->rtLock.owner)) == me);
-    tl = &rt->rtLock;
-    JS_UNLOCK0(tl,me);
+#ifdef DEBUG
+    rt->rtLockOwner = 0;
+#endif
+    PR_Unlock(rt->rtLock);
 }
 
 static JS_INLINE void
@@ -738,7 +734,7 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
 JSBool
 js_IsRuntimeLocked(JSRuntime *rt)
 {
-    return CurrentThreadId() == Thin_RemoveWait(ReadWord(rt->rtLock.owner));
+    return CurrentThreadId() == rt->rtLockOwner;
 }
 
 JSBool

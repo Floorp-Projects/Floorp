@@ -123,6 +123,8 @@ struct JSCodeSpec {
     uint32              format;         /* immediate operand format */
 };
 
+extern char             js_const_str[];
+extern char             js_var_str[];
 extern char             js_function_str[];
 extern char             js_in_str[];
 extern char             js_instanceof_str[];

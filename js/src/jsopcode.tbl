@@ -75,7 +75,7 @@ OPDEF(JSOP_FORPROP,   10, "forprop",    NULL,         3,  2,  1,  0,  JOF_CONST|
 OPDEF(JSOP_FORELEM,   11, "forelem",    NULL,         1,  3,  1,  0,  JOF_BYTE |JOF_ELEM|JOF_SET)
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
 OPDEF(JSOP_DUP2,      13, "dup2",       NULL,         1,  2,  4,  0,  JOF_BYTE)
-OPDEF(JSOP_SETNAME,   14, "setname",    NULL,         3,  1,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_SETCONST,  14, "setconst",   NULL,         3,  1,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
 OPDEF(JSOP_BITOR,     15, "bitor",      "|",          1,  2,  1,  2,  JOF_BYTE)
 OPDEF(JSOP_BITXOR,    16, "bitxor",     "^",          1,  2,  1,  3,  JOF_BYTE)
 OPDEF(JSOP_BITAND,    17, "bitand",     "&",          1,  2,  1,  4,  JOF_BYTE)
@@ -198,7 +198,7 @@ OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-complaint assignment ops. */
 OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME)
-OPDEF(JSOP_SETNAME2,  109,"setname2",   NULL,         3,  2,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_SETNAME,   109,"setname",    NULL,         3,  2,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
 
 /* Exception handling ops. */
 OPDEF(JSOP_THROW,     110,"throw",      NULL,         1,  1,  0,  0,  JOF_BYTE)
@@ -244,3 +244,10 @@ OPDEF(JSOP_ENUMELEM,  122,"enumelem",   NULL,         1,  3,  0,  1,  JOF_BYTE |
  */
 OPDEF(JSOP_GETTER,    123,js_getter_str,js_getter_str,1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_SETTER,    124,js_setter_str,js_setter_str,1,  0,  0,  0,  JOF_BYTE)
+
+/*
+ * Prolog bytecodes for defining function, var, and const names.
+ */
+OPDEF(JSOP_DEFFUN,    125,"deffun",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_DEFCONST,  126,"defconst",   NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME|JOF_SET)
+OPDEF(JSOP_DEFVAR,    127,"defvar",     NULL,         3,  0,  0,  0,  JOF_CONST|JOF_NAME)
