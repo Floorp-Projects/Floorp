@@ -13,7 +13,7 @@
     <title>[% title %]</title>
     [% Param('headerhtml') %]
     [% jscript %]
-    <style>
+    <style type="text/css">
       [% style %]
     </style>
   </head>
