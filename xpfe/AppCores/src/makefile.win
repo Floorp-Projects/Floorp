@@ -91,7 +91,7 @@ OBJS = \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
 	$(MAKE_INSTALL) ..\xul\MailAppShell.html     $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\MailAppShellNoTB.html $(DIST)\bin\res\samples
@@ -201,7 +201,7 @@ install:: $(DLL)
 
 clobber::
 	rm -f $(DIST)\lib\$(MODULE).lib
-	rm -f $(DIST)\bin\components\$(MODULE).dll
+	rm -f $(DIST)\bin\$(MODULE).dll
 	rm -f $(DIST)\bin\res\samples\MailAppShell.html
 	rm -f $(DIST)\bin\res\samples\MailAppShellNoTB.html
 	rm -f $(DIST)\bin\res\samples\MailFrame.html
