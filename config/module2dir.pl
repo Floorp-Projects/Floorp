@@ -22,7 +22,6 @@ END_USAGE
 }
 
 my %map = (
-  'absyncsvc',          'mailnews/absync',
   'access-proxy',       'extensions/access-builtin/accessproxy',
   'accessibility',      'accessible',
   'addrbook',           'mailnews/addrbook',
