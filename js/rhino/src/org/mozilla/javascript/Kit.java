@@ -112,7 +112,8 @@ public class Kit
      * <tt>ex.initCause(cause)</tt> or otherwise do nothing.
      * @return The <tt>ex</tt> argument.
      */
-    public static Throwable initCause(Throwable ex, Throwable cause)
+    public static RuntimeException initCause(RuntimeException ex,
+                                             Throwable cause)
     {
         if (Throwable_initCause != null) {
             Object[] args = { cause };
