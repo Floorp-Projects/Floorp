@@ -221,8 +221,6 @@ public:
                             nsRect&              aDesiredRect,
                             nsReflowStatus&      aStatus);
 
-  nsLineData* GetFirstLine();
-
   static nsBlockReflowState* FindBlockReflowState(nsIPresContext* aPresContext,
                                                   nsIFrame* aFrame);
 
@@ -292,9 +290,19 @@ protected:
 
   nsresult ReflowUnmapped(nsBlockReflowState& aState);
 
+  nsLineData* GetFirstLine();
+
+  void SetFirstChild(nsIFrame* aFirstChild) {
+    if (nsnull == mFirstChild) {
+      mFirstChild = aFirstChild;
+    }
+  }
+
   nsLineData* mLines;
   nsVoidArray* mRunInFloaters;  // placeholder frames for floaters to display
                                 // at the top line
+
+  friend struct nsLineLayout;
 };
 
 #endif /* nsBlockFrame_h___ */
