@@ -316,6 +316,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
     mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
     if ( aSpec != nsnull ) {
+      aSpec->GetCopies(mPrintSetup->num_copies);
       aSpec->GetGrayscale( isGray );
       if ( isGray == PR_TRUE ) {
         mPrintSetup->color = PR_FALSE; 
@@ -2004,7 +2005,12 @@ FILE *f;
 
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%%%Page: %d %d\n", mPageNumber, mPageNumber);
-  fprintf(f, "%%%%BeginPageSetup\n/pagelevel save def\n");
+  fprintf(f, "%%%%BeginPageSetup\n");
+  if(mPrintSetup->num_copies != 1) {
+    fprintf(f, "1 dict dup /NumCopies %d put setpagedevice\n",
+      mPrintSetup->num_copies);
+  }
+  fprintf(f,"/pagelevel save def\n");
   if (mPrintContext->prSetup->landscape){
     fprintf(f, "%d 0 translate 90 rotate\n",PAGE_TO_POINT_I(mPrintContext->prSetup->height));
   }

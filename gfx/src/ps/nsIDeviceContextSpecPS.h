@@ -163,6 +163,15 @@ public:
     * Returns W/H in Twips from Paper Size H/W
     */
    NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight) = 0;
+ 
+   /*
+    * Return number of copies to print
+    * @update
+    * @param aCopies
+    * @return
+    */
+   NS_IMETHOD GetCopies ( int &aCopies ) = 0;
+
 };
 
 #endif /* !nsIDeviceContextSpecPS_h___ */
