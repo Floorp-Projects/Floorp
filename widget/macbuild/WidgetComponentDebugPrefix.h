@@ -20,10 +20,5 @@
  * Contributor(s): 
  */
 
-#include "WidgetComponentConfig.h"
 #include "MacPrefix_debug.h"
-
-#if !TARGET_CARBON
-#define USE_MENUSELECT 1
-#endif
-
+#include "WidgetComponentConfig.h"

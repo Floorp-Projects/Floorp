@@ -20,6 +20,6 @@
  * Contributor(s): 
  */
 
-#include "WidgetComponentConfig.h"
 #include "MacPrefix.h"
+#include "WidgetComponentConfig.h"
 
