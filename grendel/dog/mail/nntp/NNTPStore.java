@@ -16,7 +16,7 @@
  * The Initial Developer of the Original Code is dog.
  * Portions created by dog are Copyright (C) 1998 dog <dog@dog.net.uk>. All Rights Reserved.
  *
- * Contributor(s): n/a.
+ * Contributor(s): Edwin Woudt <edwin@woudt.nl>
  */
 
 package dog.mail.nntp;
@@ -411,14 +411,15 @@ public class NNTPStore extends Store implements StatusSource {
 	// Attempts to discover which newsgroups exist and which articles have been read.
 	void readNewsrc() {
 		try {
+		  File newsrc;
       String osname = System.getProperties().getProperty("os.name");
       if (osname.startsWith("Windows") || osname.startsWith("Win32") ||
           osname.startsWith("Win16") || osname.startsWith("16-bit Windows")) {
-  			File newsrc = new File(System.getProperty("user.home")+File.separator+"news-"+getHostName()+".rc");
+  			newsrc = new File(System.getProperty("user.home")+File.separator+"news-"+getHostName()+".rc");
   			if (!newsrc.exists())
   				newsrc = new File(System.getProperty("user.home")+File.separator+"news.rc");
   	  } else {
-  			File newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
+  			newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc-"+getHostName());
   			if (!newsrc.exists())
   				newsrc = new File(System.getProperty("user.home")+File.separator+".newsrc");
       }
