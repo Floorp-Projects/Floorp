@@ -353,22 +353,25 @@ const char * nsSmtpProtocol::GetUserDomainName()
 // we suppport the nsIStreamListener interface 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-// stop binding is a "notification" informing us that the stream associated with aURL is going away. 
-NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
+// stop binding is a "notification" informing us that the stream
+// associated with aURL is going away. 
+NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
+nsresult aStatus)
 {
-  if (aStatus == NS_OK && m_totalAmountRead == 0) {
+  if (aStatus == NS_OK && m_nextState != SMTP_FREE) {
     // if we are getting OnStopRequest() with NS_OK, 
-    // but we haven't read any bytes, that's spells trouble.
-    // it means that the server has dropped us before we could read anything
-    // for example, see bug #158059
-    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP connection closed, but no data read, so report error"));
-    nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, NS_ERROR_CONNECTION_REFUSED);
+    // but we haven't finished clean, that's spells trouble.
+    // it means that the server has dropped us before we could send the whole mail
+    // for example, see bug #200647
+    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS,
+ ("SMTP connection dropped after %ld total bytes read", m_totalAmountRead));
+    nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, NS_ERROR_NET_INTERRUPT);
   }
-	else
+  else
     nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, aStatus);
 
-	// okay, we've been told that the send is done and the connection is going away. So 
-	// we need to release all of our state
+  // okay, we've been told that the send is done and the connection is going away. So 
+  // we need to release all of our state
   return nsMsgAsyncWriteProtocol::CloseSocket();
 }
 
@@ -650,19 +653,34 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
 
     if (m_responseCode != 250)
     {
-      /* EHLO must not be implemented by the server so fall back to the HELO case */
-
-        if (m_prefTrySSL == PREF_SSL_ALWAYS)
+        /* EHLO must not be implemented by the server so fall back to the HELO case */
+        if (m_responseCode >= 500 && m_responseCode < 550)
         {
-            m_nextState = SMTP_ERROR_DONE;
-            m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+            if (m_prefTrySSL == PREF_SSL_ALWAYS)
+            {
+                m_nextState = SMTP_ERROR_DONE;
+                m_urlErrorState = NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER;
+                return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
+            }
+
+            buffer = "HELO ";
+            buffer += GetUserDomainName();
+            buffer += CRLF;
+            status = SendData(url, buffer.get());
+        }
+        // e.g. getting 421 "Server says unauthorized, bye"
+        else
+        {
+#ifdef DEBUG
+            nsresult rv = 
+#endif
+            nsExplainErrorDetails(m_runningURL,
+                          NS_ERROR_SMTP_SERVER_ERROR, m_responseText.get());
+            NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
+
+            m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
             return(NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
         }
-        buffer = "HELO ";
-        buffer += GetUserDomainName();
-        buffer += CRLF;
-
-        status = SendData(url, buffer.get());
 
         m_nextState = SMTP_RESPONSE;
         m_nextStateAfterResponse = SMTP_SEND_HELO_RESPONSE;
