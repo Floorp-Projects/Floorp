@@ -59,11 +59,7 @@ public:
    * Initialize an image group with a device context. All images
    * in this group will be decoded for the specified device context.
    */
-#ifdef NECKO
-  virtual nsresult Init(nsIDeviceContext *aDeviceContext) = 0;
-#else
   virtual nsresult Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup) = 0;
-#endif
 
   /** 
    * Add an observers to be informed of image group notifications.
