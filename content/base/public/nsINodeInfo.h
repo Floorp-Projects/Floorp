@@ -154,11 +154,18 @@ public:
    * namespace ID.
    */
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsString& aName) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsString& aName,
+                             const nsString& aPrefix) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsString& aName, PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
                              PRInt32 aNamespaceID) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsString& aName, const nsString& aPrefix,
+                             PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID) = 0;
+  NS_IMETHOD_(PRBool) NamespaceEquals(const nsString& aNamespaceURI) = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs

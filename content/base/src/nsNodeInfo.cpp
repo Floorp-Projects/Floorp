@@ -213,6 +213,18 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom)
 
 
 NS_IMETHODIMP_(PRBool)
+nsNodeInfo::Equals(const nsString& aName)
+{
+  if (!mInner.mName) return PR_FALSE;
+
+  const PRUnichar *name;
+  mInner.mName->GetUnicode(&name);
+
+  return aName.Equals(name);
+}
+
+
+NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom)
 {
   return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
@@ -220,9 +232,36 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom)
 
 
 NS_IMETHODIMP_(PRBool)
+nsNodeInfo::Equals(const nsString& aName, const nsString& aPrefix)
+{
+  if (!mInner.mName) return PR_FALSE;
+
+  const PRUnichar *name, *prefix = nsnull;
+  mInner.mName->GetUnicode(&name);
+
+  if (mInner.mPrefix)
+    mInner.mPrefix->GetUnicode(&prefix);
+
+  return aName.Equals(name) && aPrefix.Equals(prefix);
+}
+
+
+NS_IMETHODIMP_(PRBool)
 nsNodeInfo::Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID)
 {
   return (mInner.mName == aNameAtom) && (mInner.mNamespaceID == aNamespaceID);
+}
+
+
+NS_IMETHODIMP_(PRBool)
+nsNodeInfo::Equals(const nsString& aName, PRInt32 aNamespaceID)
+{
+  if (!mInner.mName) return PR_FALSE;
+
+  const PRUnichar *name;
+  mInner.mName->GetUnicode(&name);
+
+  return aName.Equals(name) && (mInner.mNamespaceID == aNamespaceID);
 }
 
 
@@ -237,9 +276,42 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
 
 
 NS_IMETHODIMP_(PRBool)
+nsNodeInfo::Equals(const nsString& aName, const nsString& aPrefix,
+                   PRInt32 aNamespaceID)
+{
+  if (!mInner.mName) return PR_FALSE;
+
+  const PRUnichar *name, *prefix = nsnull;
+  mInner.mName->GetUnicode(&name);
+
+  if (mInner.mPrefix)
+    mInner.mPrefix->GetUnicode(&prefix);
+
+  return aName.Equals(name) && aPrefix.Equals(prefix) &&
+         (mInner.mNamespaceID == aNamespaceID);
+}
+
+
+NS_IMETHODIMP_(PRBool)
 nsNodeInfo::NamespaceEquals(PRInt32 aNamespaceID)
 {
   return mInner.mNamespaceID == aNamespaceID;
+}
+
+
+NS_IMETHODIMP_(PRBool)
+nsNodeInfo::NamespaceEquals(const nsString& aNamespaceURI)
+{
+  NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsINameSpaceManager> nsmgr;
+
+  NS_ENSURE_SUCCESS(mOwnerManager->GetNamespaceManager(*getter_AddRefs(nsmgr)),
+                    NS_ERROR_NOT_INITIALIZED);
+
+  PRInt32 nsid;
+  nsmgr->GetNameSpaceID(aNamespaceURI, nsid);
+
+  return mInner.mNamespaceID == nsid;
 }
 
 
