@@ -59,6 +59,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
+    // XXX:  EventSink(...) should AddRef the returned pointer...
     m_pConnection->EventSink(&pSink);
     NS_VERIFY(pSink, "No HTTP Event Sink!");
 
@@ -68,7 +69,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     {
  
         // why do I need the connection in the constructor... get rid.. TODO
-        m_pResponse = new nsHTTPResponse (m_pConnection, inStr);
+        m_pResponse = new nsHTTPResponse (m_pConnection, /* inStr */ i_pStream);
         if (!m_pResponse)
         {
             NS_ERROR("Failed to create the response object!");
@@ -87,11 +88,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
     char partHeader[kMAX_FIRST_LINE_SIZE];
     int partHeaderLen = 0;
 
-    PRBool bHeadersDone = PR_FALSE;
-    PRBool bFirstLineParsed = PR_FALSE;
-
-    
-    while (!bHeadersDone)
+    while (!m_bHeadersDone)
     {
         //TODO optimize this further!
         char buffer[kMAX_FIRST_LINE_SIZE];  
@@ -106,7 +103,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             char* lineStart = p;
             if (*lineStart == '\0' || *lineStart == CR)
             {
-                bHeadersDone = PR_TRUE;
+                m_bHeadersDone = PR_TRUE;
                 // we read extra so save it for the other headers
                 if (buffer+length > p)
                 {
@@ -122,7 +119,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
             }
             while ((*p != LF) && (buffer+length > p))
                 ++p;
-            if (!bFirstLineParsed)
+            if (!m_bFirstLineParsed)
             {
                 char server_version[8]; // HTTP/1.1 
                 PRUint32 stat = 0;
@@ -133,7 +130,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                 m_pResponse->SetStatus(stat);
                 m_pResponse->SetStatusString(stat_str);
                 p++;
-                bFirstLineParsed = PR_TRUE;
+                m_bFirstLineParsed = PR_TRUE;
             }
             else
             {
@@ -168,14 +165,14 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         }
     }
 
-    if (bHeadersDone)
+    if (m_bHeadersDone)
     {
         nsresult rv;
         nsIStreamListener* internalListener = nsnull;
 
         // Get our end of the pipe between us and the user's GetInputStream()
         rv = m_pConnection->GetResponseDataListener(&internalListener);
-        if (NS_SUCCEEDED(rv)) {
+        if (internalListener) {
             // post the data to the stream listener
             // XXX this is the wrong data and offsets I think.
             rv = internalListener->OnDataAvailable(context, i_pStream, i_SourceOffset, i_Length);
@@ -185,7 +182,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         }
 
         // do whatever we want for the event sink
-        return pSink->OnDataAvailable(context, inStr, i_SourceOffset, i_Length);
+        return pSink->OnDataAvailable(context, /* inStr */i_pStream, i_SourceOffset, i_Length);
     }
 
     return NS_OK;
@@ -194,18 +191,37 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 NS_IMETHODIMP
 nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 {
+    nsresult rv;
+    nsIHTTPEventSink* pSink= nsnull;
+
     //TODO globally replace printf with trace calls. 
     //printf("nsHTTPResponseListener::OnStartBinding...\n");
-    m_pConnection = NS_STATIC_CAST(nsIHTTPConnection*, i_pContext);
-    NS_ADDREF(m_pConnection);
 
-    nsIHTTPEventSink* pSink= nsnull;
-    nsresult rv = m_pConnection->EventSink(&pSink);
-    if (NS_FAILED(rv))
-        NS_ERROR("No HTTP Event Sink!");
-    rv = pSink->OnStartBinding(i_pContext);
-   
-    return NS_OK;
+    // Initialize header varaibles...  
+    m_bHeadersDone     = PR_FALSE;
+    m_bFirstLineParsed = PR_FALSE;
+
+    if (i_pContext) {
+        rv = i_pContext->QueryInterface(nsIHTTPConnection::GetIID(), 
+                                        (void**)&m_pConnection);
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        // XXX:  EventSink(...) should AddRef the returned pointer...
+        rv = m_pConnection->EventSink(&pSink);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("No HTTP Event Sink!");
+        }
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = pSink->OnStartBinding(i_pContext);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP
