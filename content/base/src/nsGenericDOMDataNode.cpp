@@ -707,7 +707,8 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   
   //Local handling stage
   if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
-      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)) {
+      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)
+      && !(aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)) {
     aEvent->flags |= aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, nsnull, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;

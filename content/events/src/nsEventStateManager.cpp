@@ -170,6 +170,7 @@ nsEventStateManager::nsEventStateManager()
   mAccessKeys = nsnull;
   mBrowseWithCaret = PR_FALSE;
   hHover = PR_FALSE;
+  mLeftClickOnly = PR_TRUE;
 
   NS_INIT_REFCNT();
 
@@ -195,6 +196,7 @@ nsEventStateManager::Init()
 
   if (NS_SUCCEEDED(rv)) {
     mPrefService->GetBoolPref("nglayout.events.showHierarchicalHover", &hHover);
+    mPrefService->GetBoolPref("nglayout.events.dispatchLeftClickOnly", &mLeftClickOnly);
   }
 
   return rv;
@@ -2457,6 +2459,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   nsMouseEvent event;
   nsCOMPtr<nsIContent> mouseContent;
+  PRInt32 flags = NS_EVENT_FLAG_INIT;
 
   mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
 
@@ -2470,9 +2473,11 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
       break;
     case NS_MOUSE_MIDDLE_BUTTON_UP:
       event.message = NS_MOUSE_MIDDLE_CLICK;
+      flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     case NS_MOUSE_RIGHT_BUTTON_UP:
       event.message = NS_MOUSE_RIGHT_CLICK;
+      flags |= mLeftClickOnly ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
       break;
     }
 
@@ -2489,7 +2494,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     mPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
-      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, NS_EVENT_FLAG_INIT, aStatus);
+      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, flags, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
         nsMouseEvent event2;
         //fire double click
@@ -2515,7 +2520,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
         event2.isAlt = aEvent->isAlt;
         event2.isMeta = aEvent->isMeta;
 
-        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget, mouseContent, NS_EVENT_FLAG_INIT, aStatus);
+        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget, mouseContent, flags, aStatus);
       }
     }
   }

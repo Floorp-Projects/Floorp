@@ -57,9 +57,6 @@ typedef struct {
   PRUint8 mSubTypeCapture;
 } nsListenerStruct;
 
-//Flag must live higher than all event flags in nsGUIEvent.h
-#define NS_PRIV_EVENT_FLAG_SCRIPT 0x80
-
 //These define the internal type of the EventListenerManager
 //No listener type defined, should happen only at creation
 #define NS_ELM_NONE   0

@@ -234,6 +234,8 @@ protected:
 
   nsIPresContext* mPresContext;      // Not refcnted
   nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
+  //Pref for dispatching middle and right clicks to content
+  PRBool mLeftClickOnly;
 
   PRUint32 mLClickCount;
   PRUint32 mMClickCount;
