@@ -903,7 +903,8 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
                                             getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
 
-    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2("UTF-8"), kCharsetFromDocTypeDefault);
+    nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+    parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink);
 
     rv = parser->QueryInterface(NS_GET_IID(nsIStreamListener), getter_AddRefs(mParser));
