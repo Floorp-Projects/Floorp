@@ -30,6 +30,7 @@ classic.jar:
         skin/classic/browser/o3-bookmark-folder-n.png       (skin/o3-bookmark-folder-n.png)
         skin/classic/browser/o3-bookmark-folder-h.png       (skin/o3-bookmark-folder-h.png)
         skin/classic/browser/o3-bookmark-folder-d.png       (skin/o3-bookmark-folder-d.png)
+        skin/classic/browser/o3-imap-dropmarker.png       (skin/o3-imap-dropmarker.png)
         skin/classic/browser/trash-open.gif          (skin/trash-open.gif)
         skin/classic/browser/trash-closed.gif        (skin/trash-closed.gif)
         skin/classic/browser/customizeToolbar.css    (skin/customizeToolbar.css)
