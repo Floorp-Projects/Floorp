@@ -197,7 +197,6 @@ void CFormSelectMult::DisplayFormElement(LTRB& Rect)
 					CyaFont	*pMyFont;
 					VOID2CX(GetContext(), CWinCX)->SelectNetscapeFont( pDC, GetTextAttr(), pMyFont );
 					if (pMyFont) {
-						SetWidgetFont(pDC, m_pWidget->m_hWnd);
                         lo_FormElementOptionData *pOptionData = (lo_FormElementOptionData *)GetElementSelectData()->options;
                         if(pOptionData) {
                             char *pCurrent = NULL;
@@ -615,8 +614,6 @@ void CFormSelectMult::FillSizeInfo()
             if(pDC) {
 				pDCCX->SelectNetscapeFont( pDC, GetTextAttr(), pMyFont );
 				if (pMyFont) {
-                //  Select the font.
-					SetWidgetFont(pDC, m_pWidget->m_hWnd);
 					SIZE csz;
 					CIntlWin::GetTextExtentPointWithCyaFont(pMyFont, 
 						INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(GetContext()->GetContext())),

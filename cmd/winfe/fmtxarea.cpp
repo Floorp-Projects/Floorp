@@ -134,7 +134,6 @@ void CFormTextarea::DisplayFormElement(LTRB& Rect)
 						pDCCX->ReleaseContextDC(pDC);
 						return;
 					}
-					SetWidgetFont(pDC, m_pWidget->m_hWnd);
                     r.left += pMyFont->GetMeanWidth() - pDCCX->Pix2TwipsY(2);
 
 					//  Decide the output area for all text.
@@ -665,7 +664,6 @@ void CFormTextarea::FillSizeInfo()
 					
 					pDCCX->SelectNetscapeFont( pDC, GetTextAttr(), pMyFont );
 					if (pMyFont) {
-						SetWidgetFont(pDC, m_pWidget->m_hWnd);
                         int32 lColumns = 20;
                         int32 lRows = 1;
 

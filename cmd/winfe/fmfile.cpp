@@ -207,8 +207,6 @@ void CFormFile::CreateWidget()
 					text_attr->FE_Data = pMyFont;
 
 					//	Figure up width and height we would like.
-//					int32 lWidgetWidth = tm.tmMaxCharWidth;
-//					int32 lWidgetHeight = tm.tmHeight + tm.tmHeight / 2;
 					int32 lWidgetWidth = pMyFont->GetMaxWidth();
 					int32 lWidgetHeight = pMyFont->GetHeight() + pMyFont->GetHeight() / 2;
 
@@ -288,7 +286,7 @@ void CFormFile::CreateWidget()
 					int32 lWidgetHeight = 0;
 
 
-					SetWidgetFont(pDC->GetSafeHdc(), m_pWidget->m_hWnd);
+					SetWidgetFont(pDC->GetSafeHdc(), m_pBrowse->m_hWnd);
 					//	Determine caption text.
     				char *pCaption = szLoadString(IDS_BROWSE_BUTTON);
 					if(GetElementMinimalData() && GetElementMinimalData()->value)	{

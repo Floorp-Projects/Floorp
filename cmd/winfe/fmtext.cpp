@@ -100,7 +100,6 @@ void CFormText::DisplayFormElement(LTRB& Rect)
 						
 						pDCCX->SelectNetscapeFont( pDC, GetTextAttr(), pMyFont );
 						if (pMyFont) {
-							SetWidgetFont(pDC, m_pWidget->m_hWnd);
                             int32 lTextLength = XP_STRLEN(pText);
                             char *pTextBuf = new char[lTextLength + 1];
                             if(pTextBuf)    {
@@ -428,7 +427,6 @@ void CFormText::FillSizeInfo()
 					
 					pDCCX->SelectNetscapeFont( pDC, GetTextAttr(), pMyFont );
 					if (pMyFont) {
-						SetWidgetFont(pDC, m_pWidget->m_hWnd);
 						lWidth = pMyFont->GetMaxWidth();
 						lHeight = pMyFont->GetHeight() + pMyFont->GetHeight() / 2 + pDCCX->Twips2PixY(EDIT_SPACE);
 

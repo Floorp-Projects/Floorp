@@ -76,16 +76,19 @@ void SyncTimeoutPeriod(DWORD dwTickCount)
         }
     }
 
-    ASSERT(!uTimeoutTimer || (uTimeoutTimer && !(theApp.m_pMainWnd == NULL || theApp.m_pMainWnd->m_hWnd == NULL)));
-
+    //  If there's no window, we should clear the timer.
+    if(NULL == theApp.m_pMainWnd || NULL == theApp.m_pMainWnd->m_hWnd)  {
+        uTimeoutTimer = 0;
+        dwNextFire = (DWORD)-1;
+        theApp.m_bIdleProcessTimeouts = FALSE;
+    }
     //  If there's no list, we should clear the timer.
-    if(!gTimeOutList && theApp.m_pMainWnd && theApp.m_pMainWnd->m_hWnd)    {
+    else if(!gTimeOutList)    {
         if(uTimeoutTimer)   {
             VERIFY(::KillTimer(theApp.m_pMainWnd->m_hWnd, 777));
             uTimeoutTimer = 0;
             dwNextFire = (DWORD)-1;
         }
-        //  Explicitly clear the idle binding if set previously.
         theApp.m_bIdleProcessTimeouts = FALSE;
     }
     else if(theApp.m_pMainWnd && theApp.m_pMainWnd->m_hWnd)   {

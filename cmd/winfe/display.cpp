@@ -330,7 +330,15 @@ NET_StreamClass *external_viewer_disk_stream(int iFormatOut, void *pDataObj, URL
 	switch(pHelper->how_handle)	{
 	case HANDLE_UNKNOWN:	{
 		//	See what this is supposed to do via user input.
-		CUnknownTypeDlg dlgUnknown(GetFrame(pContext)->GetFrameWnd(), pUrl->content_type, pHelper);
+        CFrameWnd *pFrame = NULL;
+        CFrameGlue *pGlue = GetFrame(pContext);
+        if(pGlue)   {
+            pFrame = pGlue->GetFrameWnd();
+        }
+        else    {
+            pFrame = FEU_GetLastActiveFrame(MWContextAny, TRUE);
+        }
+		CUnknownTypeDlg dlgUnknown(pFrame, pUrl->content_type, pHelper);
 		int iDlg = dlgUnknown.DoModal();
 		if(iDlg == IDCANCEL)	{
 			//	User hit cancel.  Abort the load.
