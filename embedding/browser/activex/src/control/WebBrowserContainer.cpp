@@ -85,7 +85,7 @@ NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *res
 ///////////////////////////////////////////////////////////////////////////////
 // nsIContextMenuListener
 
-NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRInt32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
     m_pOwner->ShowContextMenu(aContextFlags);
     return NS_OK;
