@@ -25,3 +25,4 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= public src editor signonviewer cookieviewer walletpreview build
 
 include $(topsrcdir)/config/rules.mk
+
