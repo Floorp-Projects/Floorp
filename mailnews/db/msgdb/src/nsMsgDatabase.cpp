@@ -188,8 +188,12 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 			hdr->GetMessageKey(&key);
 
 #ifdef USE_PLD_HASHTABLE
-   PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_REMOVE);
-   NS_RELEASE(hdr); // get rid of extra ref the cache was holding.
+    PLDHashEntryHdr *entry = PL_DHashTableOperate(m_cachedHeaders, (const void *) key, PL_DHASH_LOOKUP);
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
+    {
+     PL_DHashTableOperate(m_cachedHeaders, (void *) key, PL_DHASH_REMOVE);
+     NS_RELEASE(hdr); // get rid of extra ref the cache was holding.
+    }
 
 #else
 		nsCAutoString strKey;
