@@ -77,14 +77,23 @@ function goPreferences(id, pane)
 
 function toggleToolbar( id )
 {
-	dump( "togglinh toolbar "+id+"\n");
+	dump( "toggling toolbar "+id+"\n");
 	var toolbar = document.getElementById( id );
 	if ( toolbar )
 	{
 	 	var attribValue = toolbar.getAttribute("hidden") ;
 	
-		dump("hide toolbar");
-		toolbar.setAttribute("hidden", !attribValue);
-		
+		//dump("set hidden to "+!attribValue+"\n");
+		if ( attribValue != false )
+		{
+		//	dump( "Show \n");
+			toolbar.setAttribute("hidden", "" );
+		}
+		else
+		{
+		//	dump("hide \n");
+			toolbar.setAttribute("hidden", true );
+		}
+		document.persist(id, 'hidden')
 	}
 }
