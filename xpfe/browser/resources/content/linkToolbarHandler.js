@@ -196,6 +196,7 @@ function()
     var testVal = this.relValues[i].toLowerCase();
     if ((testVal == "stylesheet") || 
       (testVal == "icon") ||
+      (testVal == "fontdef") ||
       (testVal.match(/^p3pv/)) ||
       (testVal.match(/^schema./)))
       return true;
