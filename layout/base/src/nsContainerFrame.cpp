@@ -438,23 +438,15 @@ void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
  * the frames are placed on the overflow list (and the geometric parent is
  * left unchanged).
  *
- * Updates the next-in-flow's child count and content offsets. Does
- * <b>not</b> update the pusher's child count or last content offset.
+ * Updates the next-in-flow's child count. Does <b>not</b> update the
+ * pusher's child count.
  *
  * @param   aFromChild the first child frame to push. It is disconnected from
  *            aPrevSibling
  * @param   aPrevSibling aFromChild's previous sibling. Must not be null. It's
  *            an error to push a parent's first child frame
- * @param   aNextInFlowsLastChildIsComplete the next-in-flow's
- *            mLastContentIsComplete flag. This is used when refilling an
- *            empty next-in-flow that was drained by the caller.
- *
  */
-// Note: we cannot VerifyLastIsComplete here because the caller is
-// responsible for setting it.
-void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
-                                    nsIFrame* aPrevSibling,
-                                    PRBool aNextInFlowsLastContentIsComplete)
+void nsContainerFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
 {
   NS_PRECONDITION(nsnull != aFromChild, "null pointer");
   NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
@@ -477,15 +469,6 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 #ifdef NOISY
     ListTag(stdout);
     printf(": pushing kids (childCount=%d)\n", mChildCount);
-    {
-      nsContainerFrame* flow = (nsContainerFrame*) mNextInFlow;
-      while (flow != 0) {
-        printf("  %p: [%d,%d,%c]\n",
-               flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-               (flow->mLastContentIsComplete ? 'T' : 'F'));
-        flow = (nsContainerFrame*) flow->mNextInFlow;
-      }
-    }
 #endif
     // Compute the number of children being pushed, and for each child change
     // its geometric parent. Remember the last child
@@ -516,15 +499,6 @@ void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
 #ifdef NOISY
     ListTag(stdout);
     printf(": push kids done (childCount=%d)\n", mChildCount);
-    {
-      nsContainerFrame* flow = (nsContainerFrame*) mNextInFlow;
-      while (flow != 0) {
-        printf("  %p: [%d,%d,%c]\n",
-               flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-               (flow->mLastContentIsComplete ? 'T' : 'F'));
-        flow = (nsContainerFrame*) flow->mNextInFlow;
-      }
-    }
 #endif
   } else {
     // Add the frames to our overflow list
