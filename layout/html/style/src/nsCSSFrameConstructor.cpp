@@ -5434,6 +5434,14 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
     content->SetParent(aParent);
     content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+    content->SetBindingParent(content);
+    nsCOMPtr<nsIContent> child;
+    PRInt32 childCount;
+    content->ChildCount(childCount);
+    for (PRInt32 j = 0; j < childCount; j++) {
+      content->ChildAt(j, *getter_AddRefs(child));
+      child->SetParent(content);
+    }
 
     nsIFrame * newFrame = nsnull;
     nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);

@@ -629,6 +629,18 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
   GetOutermostStyleScope(aContent, getter_AddRefs(parent));
 
   WalkRules(aFunc, aData, parent, aContent);
+
+  if (parent) {
+    // We cut ourselves off, but we still need to walk the document's attribute sheet
+    // so that inline style continues to work on anonymous content.
+    nsCOMPtr<nsIDocument> document;
+    aContent->GetDocument(*getter_AddRefs(document));
+    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(document));
+    nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+    container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));  
+    nsCOMPtr<nsIStyleRuleProcessor> inlineCSS(do_QueryInterface(inlineSheet));
+    (*aFunc)((nsISupports*)(inlineCSS.get()), aData);
+  }
   return NS_OK;
 }
 
