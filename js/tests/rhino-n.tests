@@ -1,7 +1,20 @@
+# Rhino skip list
+# These tests are skipped by Rhino either because a bug with a regression 
+# test has yet to be fixed, or because the test is not applicable to Rhino.
+# 
+# Unfixed bugs:
+#
 # bug 83051
 ecma_3/Function/scope-001.js
 # bug 59861
 ecma/Date/15.9.4.3.js
+#See bug number 94506 
+ecma_3/Function/regress-94506.js
+#See bug number 9141
+js1_2/regexp/regress-9141.js
+#
+# Unfixable bugs:
+#
 # fails due to bad java implementation of number formatting on 
 # pretty much all platforms
 ecma/LexicalConventions/7.7.3.js
@@ -44,6 +57,8 @@ js1_5/Regress/regress-68498-003.js
 #Rhino compiled mode is limited by Java classfile size limitations
 js1_5/Regress/regress-89443.js
 js1_5/Regress/regress-90445.js
+js1_5/Regress/regress-97646-001-n.js
+js1_5/Regress/regress-97646-002-n.js
 #Rhino doesn't implement the (non-ECMA) toSource() method
 js1_5/Regress/regress-44009.js
 js1_5/Object/regress-90596-001.js
@@ -54,3 +69,5 @@ js1_5/Object/regress-96284-002.js
 #Skip these two; see http://bugzilla.mozilla.org/show_bug.cgi?id=81086
 ecma_3/Statements/regress-74474-002.js
 ecma_3/Statements/regress-74474-003.js
+#Compiled mode cannot catch infinite recursion errors
+js1_5/Regress/regress-96128-n.js
