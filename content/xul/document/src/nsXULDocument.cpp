@@ -4655,9 +4655,9 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     // Resume walking other documents that waited for this one's load
     nsXULDocument* doc;
     while ((doc = *docp) != nsnull) {
-        doc->ResumeWalk();
         *docp = doc->mNextSrcLoadWaiter;
         doc->mNextSrcLoadWaiter = nsnull;
+        doc->ResumeWalk();
         NS_RELEASE(doc);
     }
     return rv;
