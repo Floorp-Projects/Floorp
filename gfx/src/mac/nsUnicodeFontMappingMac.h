@@ -42,6 +42,7 @@
 #include "nsUnicodeBlock.h"
 #include "nsIDeviceContext.h"
 #include "nsFont.h"
+#include "nsVoidArray.h"
  
 class nsUnicodeMappingUtil;
 class nsUnicodeFontMappingCache;
@@ -50,12 +51,20 @@ class nsUnicodeFontMappingMac {
 public:
    nsUnicodeFontMappingMac(nsFont* aFont, nsIDeviceContext *aDeviceContext, 
    		const nsString& aLangGroup, const nsString& aLANG);
+   ~nsUnicodeFontMappingMac();
+   		
    short GetFontID(PRUnichar aChar);
    inline const short *GetScriptFallbackFonts() {
    		return mScriptFallbackFontIDs;
    }
    PRBool Equals(const nsUnicodeFontMappingMac& anther);
    
+   PRBool ConvertUnicodeToGlyphs(short aFontNum, ConstUniCharArrayPtr aString,
+       ByteCount aStringLength, char *aBuffer, ByteCount aBufferLength, 
+       ByteCount& oActualLength, ByteCount& oBytesRead, OptionBits opts);
+
+   static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData);
+
 protected:
    PRBool ScriptMapInitComplete();
    void InitByFontFamily(nsFont* aFont, nsIDeviceContext *aDeviceContext);
@@ -68,6 +77,8 @@ private:
    
    PRInt8 mPrivBlockToScript [kUnicodeBlockVarScriptMax] ;
    short  mScriptFallbackFontIDs [smPseudoTotalScripts] ;
+   nsAutoVoidArray mFontList;
+
    static nsUnicodeMappingUtil* gUtil;
 };
 

@@ -385,6 +385,11 @@ void nsATSUIToolkit::StartDraw(
   	return;
   }
 
+  // ATSUSetTextPointerLocation won't invalidate atsui's internal cache if aCharPt is
+  // the same address it already has.  therefore, since we are definitely changing the
+  // text here, we should explicitly invalidate any existing caches
+  ::ATSUClearLayoutCache(oLayout, kATSUFromTextBeginning);
+  
   err = ATSUSetTextPointerLocation( oLayout, (ConstUniCharArrayPtr)aCharPt, 0, 1, 1);
   if (noErr != err) {
     NS_WARNING("ATSUSetTextPointerLocation failed");
@@ -466,6 +471,7 @@ nsATSUIToolkit::GetBoundingMetrics(
     return NS_ERROR_FAILURE;
   }
 
+  // return the values in points, the caller will convert them into twips
   oBoundingMetrics.leftBearing = rect.left;
   oBoundingMetrics.rightBearing = rect.right;
   oBoundingMetrics.ascent = -rect.top;

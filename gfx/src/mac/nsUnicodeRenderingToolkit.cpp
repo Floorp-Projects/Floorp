@@ -53,7 +53,7 @@
 
 #define BAD_FONT_NUM -1
 #define BAD_SCRIPT 0x7F
-#define STACK_TREASHOLD 1000
+#define STACK_TRESHOLD 1000
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //#define DISABLE_TEC_FALLBACK
@@ -139,39 +139,6 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 #define IN_ARABIC_PRESENTATION_A_OR_B(a) (IN_ARABIC_PRESENTATION_A(a) || IN_ARABIC_PRESENTATION_B(a))
 
 //------------------------------------------------------------------------
-static UnicodeToTextInfo gConverters[32] = { 
-	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
-	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
-	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
-	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull
-};
-//------------------------------------------------------------------------
-UnicodeToTextInfo nsUnicodeRenderingToolkit :: GetConverterByScript(ScriptCode sc)
-{
-  // because the Mac QuickDraw BIDI support are quite different from other platform
-  // we try not to use them and use the XP BIDI feature
-  // those text will be drawn by ATSUI intead one character at a time
-  if ((sc == smArabic) || (sc == smHebrew))
-     return nsnull;
-	NS_PRECONDITION(sc < 32, "illegal script id");
-  if(sc >= 32)
-    return nsnull;
-  if (gConverters[sc] != nsnull) {
-    return gConverters[sc];
-  }
-  OSStatus err = noErr;
-    
-  //
-  TextEncoding scriptEncoding;
-  err = ::UpgradeScriptInfoToTextEncoding(sc, kTextLanguageDontCare, kTextRegionDontCare, nsnull, &scriptEncoding);
-  if ( noErr == err ) 
- 	  err = ::CreateUnicodeToTextInfoByEncoding(scriptEncoding, &gConverters[sc] );
-
-  if (noErr != err) 
-    gConverters[sc] = nsnull;
-  return gConverters[sc];
-}
-//------------------------------------------------------------------------
 #pragma mark -
 //------------------------------------------------------------------------
 
@@ -190,9 +157,8 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
   const PRUnichar *aCharPt, 
   nsTextDimensions& oDim, 
   short origFontNum, 
-  const short* scriptFallbackFonts)
+  nsUnicodeFontMappingMac& fontMapping)
 {
-  OSStatus err = noErr;
   char buf[20];
   ByteCount processBytes = 0;
   ByteCount outLen = 0;
@@ -200,6 +166,7 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
   nsUnicodeFallbackCache* cache = GetTECFallbackCache();
   short aWidth;
   FontInfo finfo;
+  const short *scriptFallbackFonts = fontMapping.GetScriptFallbackFonts();
   
   if ((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
   {
@@ -219,17 +186,10 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
   {
     if (BAD_SCRIPT == fallbackScript)
       return PR_FALSE;
-      
-    UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-    if (fallbackConverter) 
-    {
-      err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
-                                       (ConstUniCharArrayPtr) aCharPt, 
-                                        kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-                                        STACK_TREASHOLD, &processBytes, &outLen, 
-                                       (LogicalAddress)buf);
-      if (outLen > 0) 
-      {
+    
+    if(fontMapping.ConvertUnicodeToGlyphs(scriptFallbackFonts[fallbackScript], aCharPt, 1,
+        buf, STACK_TRESHOLD, outLen, processBytes, kUnicodeLooseMappingsMask))
+    {  
         ::TextFont(scriptFallbackFonts[fallbackScript]);
         GetScriptTextWidth(buf, outLen, aWidth);
         ::GetFontInfo(&finfo);
@@ -237,7 +197,6 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
         oDim.descent = finfo.descent;
         oDim.width = aWidth;
         ::TextFont(origFontNum);
-      }
     }
     return PR_TRUE;
   }
@@ -246,27 +205,19 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
   {
     if (BAD_FONT_NUM != scriptFallbackFonts[fallbackScript])
     {
-      UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-      if (fallbackConverter) 
-      {
-        err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
-                                         (ConstUniCharArrayPtr) aCharPt, 
-                                         kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-                                         STACK_TREASHOLD, &processBytes, &outLen, 
-                                         (LogicalAddress)buf);
-        if (outLen > 0)
+        if(fontMapping.ConvertUnicodeToGlyphs(scriptFallbackFonts[fallbackScript], aCharPt, 1,
+            buf, STACK_TRESHOLD, outLen, processBytes, kUnicodeLooseMappingsMask))
         {
-          NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
-          ::TextFont(scriptFallbackFonts[fallbackScript]);
-          GetScriptTextWidth(buf, outLen, aWidth);
-          ::GetFontInfo(&finfo);
-          oDim.ascent = finfo.ascent;
-          oDim.descent = finfo.descent;
-          oDim.width = aWidth;
-          ::TextFont(origFontNum);        
-          break;
-        }                                      
-      }          
+            NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+            ::TextFont(scriptFallbackFonts[fallbackScript]);
+            GetScriptTextWidth(buf, outLen, aWidth);
+            ::GetFontInfo(&finfo);
+            oDim.ascent = finfo.ascent;
+            oDim.descent = finfo.descent;
+            oDim.width = aWidth;
+            ::TextFont(origFontNum);        
+            break;
+        }          
     }
   }
   
@@ -280,20 +231,84 @@ nsUnicodeRenderingToolkit::TECFallbackGetDimensions(
 }
 //------------------------------------------------------------------------
 
+#if MOZ_MATHML
+PRBool nsUnicodeRenderingToolkit::TECFallbackGetBoundingMetrics(
+    const PRUnichar *aCharPt,
+    nsBoundingMetrics& oBoundingMetrics,
+    short fontNum,
+    nsUnicodeFontMappingMac& fontMapping)
+{
+    char buf[STACK_TRESHOLD];
+    ByteCount processBytes = 0;
+    ByteCount outLen = 0;
+    ScriptCode fallbackScript;
+    nsUnicodeFallbackCache* cache = GetTECFallbackCache();
+    const short *scriptFallbackFonts = fontMapping.GetScriptFallbackFonts();
+    
+    if((0xf780 <= *aCharPt) && (*aCharPt <= 0xf7ff))
+    {
+        // If we are encountering our PUA characters for User-Defined characters, we better
+        // just drop the high-byte and return the width for the low-byte.
+        *buf = (*aCharPt & 0x00FF);
+        GetScriptTextBoundingMetrics(buf, 1, ::FontToScript(fontNum), oBoundingMetrics);
+        return PR_TRUE;
+    }
+    else if(cache->Get(*aCharPt, fallbackScript))
+    {
+        if(BAD_SCRIPT == fallbackScript)
+            return PR_FALSE;
+        
+        if(fontMapping.ConvertUnicodeToGlyphs(scriptFallbackFonts[fallbackScript], aCharPt, 1,
+            buf, STACK_TRESHOLD, outLen, processBytes, kUnicodeLooseMappingsMask))
+        {  
+            ::TextFont(scriptFallbackFonts[fallbackScript]);
+            GetScriptTextBoundingMetrics(buf, outLen, fallbackScript, oBoundingMetrics);
+            ::TextFont(fontNum);
+        }
+        return PR_TRUE;
+    }
+    
+    for(fallbackScript = 0; fallbackScript < 32; fallbackScript++)
+    {
+        if(BAD_FONT_NUM != scriptFallbackFonts[fallbackScript])
+        {
+            if(fontMapping.ConvertUnicodeToGlyphs(scriptFallbackFonts[fallbackScript], aCharPt, 1,
+                buf, STACK_TRESHOLD, outLen, processBytes, kUnicodeLooseMappingsMask))
+            {
+                NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+                ::TextFont(scriptFallbackFonts[fallbackScript]);
+                GetScriptTextBoundingMetrics(buf, outLen, fallbackScript, oBoundingMetrics);           
+                ::TextFont(fontNum);
+                break;
+            }   
+        }
+    }
+    
+    if(0 == outLen)
+        fallbackScript = BAD_SCRIPT;
+        
+    // put into cache
+    cache->Set(*aCharPt, fallbackScript);
+    
+    return (BAD_SCRIPT != fallbackScript);
+}
+#endif // MOZ_MATHML
+//------------------------------------------------------------------------
+
 PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
   const PRUnichar *aCharPt, 
   PRInt32 x, 
   PRInt32 y, 
   short& oWidth, 
   short origFontNum, 
-  const short* scriptFallbackFonts)
+  nsUnicodeFontMappingMac& fontMapping)
 {
-  OSStatus err = noErr;
   char buf[20];
   ByteCount processBytes = 0;
   ByteCount outLen = 0;
   ScriptCode fallbackScript;
   nsUnicodeFallbackCache* cache = GetTECFallbackCache();
+  const short *scriptFallbackFonts = fontMapping.GetScriptFallbackFonts();
   
   // since we always call TECFallbackGetWidth before TECFallbackDrawChar
   // we could assume that we can always get the script code from cache.
@@ -310,21 +325,13 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
   {
     if (BAD_SCRIPT == fallbackScript)
       return PR_FALSE;
-      
-    UnicodeToTextInfo fallbackConverter = GetConverterByScript(fallbackScript);
-    if (fallbackConverter) 
+    
+    if(fontMapping.ConvertUnicodeToGlyphs(scriptFallbackFonts[fallbackScript], aCharPt, 1,
+        buf, STACK_TRESHOLD, outLen, processBytes, kUnicodeLooseMappingsMask))
     {
-      err = ::ConvertFromUnicodeToText(fallbackConverter, (ByteCount)(2), 
-                                       (ConstUniCharArrayPtr) aCharPt, 
-                                       kUnicodeLooseMappingsMask , 0, NULL, 0, NULL,
-                                       STACK_TREASHOLD, &processBytes, &outLen, 
-                                       (LogicalAddress)buf);
-      if (outLen > 0) 
-      {
         ::TextFont(scriptFallbackFonts[fallbackScript]);
         DrawScriptText(buf, outLen, x, y, oWidth);
         ::TextFont(origFontNum);
-      }
     }
     return PR_TRUE;
   }
@@ -1056,6 +1063,95 @@ void nsUnicodeRenderingToolkit :: GetScriptTextWidth(
 {
  	oWidth = ::TextWidth(buf, 0, aLen);
 }
+
+#if MOZ_MATHML
+//------------------------------------------------------------------------
+void nsUnicodeRenderingToolkit::GetScriptTextBoundingMetrics(
+    const char* buf,
+    ByteCount aLen,
+    ScriptCode aScript,
+    nsBoundingMetrics& oBoundingMetrics)
+{
+    Point scale = { 1, 1 };
+    Fixed stackWidths[STACK_TRESHOLD], *widths;
+    Fixed stackLefts[STACK_TRESHOLD], *lefts;
+    Rect stackRects[STACK_TRESHOLD], *rects;
+    OSStatus err;
+
+    NS_PRECONDITION(aLen > 0, "length must be greater than 0");
+
+    if(aLen > STACK_TRESHOLD)
+    {
+        widths = (Fixed*) nsMemory::Alloc(aLen * sizeof(Fixed));
+        lefts = (Fixed*) nsMemory::Alloc(aLen * sizeof(Fixed));
+        rects = (Rect*) nsMemory::Alloc(aLen * sizeof(Fixed));
+        
+        // if any of the allocations failed the 'else' case below will be executed
+    }
+    else
+    {
+        widths = stackWidths;
+        lefts = stackLefts;
+        rects = stackRects;
+    }
+
+    if(!GetOutlinePreferred())
+        SetOutlinePreferred(PR_TRUE);
+
+    if(widths && lefts && rects &&
+        (err = ::OutlineMetrics(aLen, buf, scale, scale, NULL, NULL, widths, lefts, rects)) == noErr)
+    {
+        ByteCount byteIndex = 0, glyphIndex = 0;
+
+        while(byteIndex < aLen)
+        {
+            nsBoundingMetrics bounds;
+            bounds.leftBearing = rects[glyphIndex].left + FixRound(lefts[glyphIndex]);
+            bounds.rightBearing = rects[glyphIndex].right + FixRound(lefts[glyphIndex]);
+            bounds.ascent = rects[glyphIndex].bottom;
+            bounds.descent = -rects[glyphIndex].top;
+            bounds.width = FixRound(widths[glyphIndex]);
+
+            if(glyphIndex == 0)
+                oBoundingMetrics = bounds;
+            else
+                oBoundingMetrics += bounds;
+
+            // for two byte characters byteIndex will increase by 2
+            //   while glyph index will only increase by 1
+            if(CharacterByteType((Ptr) buf, byteIndex, aScript) == smFirstByte)
+                byteIndex += 2;
+            else
+                byteIndex++;
+            glyphIndex++;
+        }
+    }
+    else
+    {
+        NS_WARNING("OulineMetrics failed");
+
+        FontInfo fInfo;
+        ::GetFontInfo(&fInfo);
+
+        oBoundingMetrics.leftBearing = 0;
+        oBoundingMetrics.rightBearing = ::TextWidth(buf, 0, aLen);
+        oBoundingMetrics.ascent = fInfo.ascent;
+        oBoundingMetrics.descent = fInfo.descent;
+        oBoundingMetrics.width = oBoundingMetrics.rightBearing;
+    }
+
+    if(aLen > STACK_TRESHOLD)
+    {
+        if(widths)
+            nsMemory::Free(widths);
+        if(lefts)
+            nsMemory::Free(lefts);
+        if(rects)
+            nsMemory::Free(rects);
+    }
+}
+#endif // MOZ_MATHML
+
 //------------------------------------------------------------------------
 void nsUnicodeRenderingToolkit :: DrawScriptText(
 	const char* buf, 
@@ -1076,11 +1172,11 @@ void nsUnicodeRenderingToolkit :: DrawScriptText(
 nsresult 
 nsUnicodeRenderingToolkit::GetTextSegmentWidth(
 			const PRUnichar *aString, PRUint32 aLength, 
-			short fontNum, const short *scriptFallbackFonts, 
+			short fontNum, nsUnicodeFontMappingMac& fontMapping, 
 			PRUint32& oWidth)
 {
   nsTextDimensions dim;
-  nsresult res = GetTextSegmentDimensions(aString, aLength, fontNum, scriptFallbackFonts, dim);
+  nsresult res = GetTextSegmentDimensions(aString, aLength, fontNum, fontMapping, dim);
   oWidth = dim.width;
   return res;
 }
@@ -1090,7 +1186,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentWidth(
 nsresult 
 nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       const PRUnichar *aString, PRUint32 aLength, 
-      short fontNum, const short *scriptFallbackFonts, 
+      short fontNum, nsUnicodeFontMappingMac& fontMapping, 
       nsTextDimensions& oDim)
 {
   oDim.Clear();
@@ -1102,12 +1198,12 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
   char *heapBuf = nsnull;
   PRUint32 heapBufSize = 0;
   short thisWidth = 0;
-  char stackBuf[STACK_TREASHOLD];
+  char stackBuf[STACK_TRESHOLD];
   char *buf ;
   ByteCount processBytes;
   ByteCount outLen;
-  OSStatus err = noErr;
-
+  const short *scriptFallbackFonts = fontMapping.GetScriptFallbackFonts();
+  
   ::TextFont(fontNum);
   
   FontInfo fInfo;
@@ -1117,13 +1213,10 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
   segDim.descent = fInfo.descent;
   oDim.Combine(segDim);
   
-  ScriptCode script = ::FontToScript(fontNum);
-  UnicodeToTextInfo converter = GetConverterByScript(script);
-    
   // find buf from stack or heap. We only need to do this once in this function.
   // put this out of the loop for performance...
   ByteCount bufLen = aLength * 2 + 10;
-  if (bufLen > STACK_TREASHOLD)
+  if (bufLen > STACK_TRESHOLD)
   {
     if (bufLen > heapBufSize)
     {
@@ -1138,38 +1231,29 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
   } 
   else 
   {
-    bufLen = STACK_TREASHOLD;
+    bufLen = STACK_TRESHOLD;
     buf = stackBuf;
   }
   do {
-    if (converter)
+    outLen = 0;
+    processBytes = 0;
+
+    if(fontMapping.ConvertUnicodeToGlyphs(fontNum, aString, aLength - processLen,
+            buf, bufLen, outLen, processBytes, 0))
     {
-      outLen = 0;
-      err = noErr;
-      processBytes = 0;
-      err = ::ConvertFromUnicodeToText(converter, (ByteCount)(2*(aLength - processLen)), 
-                                       (ConstUniCharArrayPtr) aString, 
-                                       0 , 0, NULL, 0, NULL,
-                                       bufLen, &processBytes, &outLen, 
-                                       (LogicalAddress)buf);
-                  
-      // no mater if failed or not, as long as it convert some text, we process it.
-      if (outLen > 0)
-      {
         GetScriptTextWidth(buf, outLen, thisWidth);
       
         segDim.Clear();
         segDim.width = thisWidth;
         oDim.Combine(segDim);
-
+    
         NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
-
+    
         PRInt32 processUnicode = processBytes / 2;
         processLen += processUnicode;
         aString += processUnicode;
-      }
-         
     }
+         
     // Cannot precess by TEC, process one char a time by fallback mechanism
     if (processLen < aLength)
     {
@@ -1178,7 +1262,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
       
 #ifndef DISABLE_TEC_FALLBACK
       // Fallback by try different Script code
-     fallbackDone = TECFallbackGetDimensions(aString, segDim, fontNum, scriptFallbackFonts);
+     fallbackDone = TECFallbackGetDimensions(aString, segDim, fontNum, fontMapping);
 #endif
 
       //
@@ -1269,7 +1353,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentDimensions(
 nsresult
 nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       const PRUnichar *aString, PRUint32 aLength,
-      short fontNum, const short *scriptFallbackFonts,
+      short fontNum, nsUnicodeFontMappingMac& fontMapping,
       nsBoundingMetrics& oBoundingMetrics)
 {
   oBoundingMetrics.Clear();
@@ -1279,15 +1363,72 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
   PRBool firstTime = PR_TRUE;
   PRUint32 processLen = 0;
   nsBoundingMetrics segBoundingMetrics;
+  char *heapBuf = nsnull;
+  PRUint32 heapBufSize = 0;
+  char stackBuf[STACK_TRESHOLD];
+  char *buf;
+  ByteCount processBytes;
+  ByteCount outLen;
+  
+  ::TextFont(fontNum);
+  ScriptCode script = ::FontToScript(fontNum);
+  
+  // find buf from stack or heap. We only need to do this once in this function.
+  // put this out of the loop for performance...
+  ByteCount bufLen = aLength * 2 + 10;
+  if (bufLen > STACK_TRESHOLD)
+  {
+    if (bufLen > heapBufSize)
+    {
+      if (heapBuf)
+        nsMemory::Free(heapBuf);
+      heapBuf = (char*) nsMemory::Alloc(bufLen);
+      heapBufSize = bufLen;
+      if (nsnull == heapBuf) 
+        return NS_ERROR_OUT_OF_MEMORY;
+    } 
+    buf = heapBuf;
+  } 
+  else 
+  {
+    bufLen = STACK_TRESHOLD;
+    buf = stackBuf;
+  }
 
   do {
-    // should this be tried with the TEC & OutlineMetrics here?
+    outLen = 0;
+    processBytes = 0;
+        
+    if(fontMapping.ConvertUnicodeToGlyphs(fontNum, aString, aLength - processLen,
+        buf, bufLen, outLen, processBytes, 0))
+    {
+        segBoundingMetrics.Clear();
+        GetScriptTextBoundingMetrics(buf, outLen, script, segBoundingMetrics);
+        
+        if(firstTime) {
+            firstTime = PR_FALSE;
+            oBoundingMetrics = segBoundingMetrics;
+        }
+        else
+            oBoundingMetrics += segBoundingMetrics;
+        
+        NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+        
+        PRInt32 processUnicode = processBytes / 2;
+        processLen += processUnicode;
+        aString += processUnicode;
+    }
+    
     // Cannot process by TEC, process one char a time by fallback mechanism
     if (processLen < aLength)
     {
       PRBool fallbackDone = PR_FALSE;
       segBoundingMetrics.Clear();
-      
+
+#ifndef DISABLE_TEC_FALLBACK
+      fallbackDone = TECFallbackGetBoundingMetrics(aString, segBoundingMetrics, fontNum, fontMapping);
+#endif
+
 #ifndef DISABLE_ATSUI_FALLBACK  
       // Fallback by using ATSUI
       if (!fallbackDone)  
@@ -1321,7 +1462,11 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
       processLen++;
     }
   } while (processLen < aLength);
-    
+  
+  // release buffer if it is from heap
+  if (heapBuf)
+    nsMemory::Free(heapBuf);
+  
   return NS_OK;
 }
 #endif // MOZ_MATHML
@@ -1330,7 +1475,7 @@ nsUnicodeRenderingToolkit::GetTextSegmentBoundingMetrics(
 
 nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 			const PRUnichar *aString, PRUint32 aLength, 
-			short fontNum, const short *scriptFallbackFonts, 
+			short fontNum, nsUnicodeFontMappingMac& fontMapping, 
 			PRInt32 x, PRInt32 y, PRUint32& oWidth)
 {
 	if(aLength == 0) {
@@ -1343,20 +1488,18 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
     char *heapBuf = nsnull;
     PRUint32 heapBufSize = 0;
     short thisWidth = 0;
-    char stackBuf[STACK_TREASHOLD];
+    char stackBuf[STACK_TRESHOLD];
     char *buf ;
     ByteCount processBytes;
     ByteCount outLen;
-  	OSStatus err = noErr;
+  	const short *scriptFallbackFonts = fontMapping.GetScriptFallbackFonts();
 
     ::TextFont(fontNum);
-    ScriptCode script = ::FontToScript(fontNum);
-    UnicodeToTextInfo converter = GetConverterByScript(script);
   	
   	// find buf from stack or heap. We only need to do this once in this function.
   	// put this out of the loop for performance...
   	ByteCount bufLen = aLength * 2 + 10;
-  	if( bufLen > STACK_TREASHOLD)
+  	if( bufLen > STACK_TRESHOLD)
   	{
   	 	if(bufLen > heapBufSize )
   	 	{
@@ -1370,37 +1513,29 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
   	 	} 
   	 	buf = heapBuf;
   	 } else {
-  	 	bufLen = STACK_TREASHOLD;
+  	 	bufLen = STACK_TRESHOLD;
   	 	buf = stackBuf;
   	}
 
     do {
-  	  if(converter)
-  	  {
-	  	outLen = 0;
- 	  	err = noErr;
-  	  	processBytes = 0;
-  	  	err = ::ConvertFromUnicodeToText(converter, (ByteCount)(2*(aLength - processLen)), (ConstUniCharArrayPtr) aString, 
-  	  	 						0 , 0, NULL, 0, NULL,
-  	  	 						bufLen, &processBytes, &outLen, 
-  	  	                        (LogicalAddress)buf);
-  	  	   	  	 
-  	  	 // no matter if failed or not, as long as it convert some text, we process it.
-  	  	 if(outLen > 0)
-  	  	 {
-			DrawScriptText(buf, outLen, x, y, thisWidth);
-			
-			textWidth += thisWidth;
-  		    x += thisWidth;			
-
- 	  	 	NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
-
-  	  	 	PRInt32 processUnicode = processBytes / 2;
-  	  	 	processLen += processUnicode;
-  	  	 	aString += processUnicode;
-  	  	 }
+      outLen = 0;
+      processBytes = 0;
+        
+      if(fontMapping.ConvertUnicodeToGlyphs(fontNum, aString, aLength - processLen,
+                buf, bufLen, outLen, processBytes, 0))
+      {
+        DrawScriptText(buf, outLen, x, y, thisWidth);
+        
+        textWidth += thisWidth;
+        x += thisWidth;			
+        
+        NS_PRECONDITION(0 == (processBytes % 2), "strange conversion result");
+        
+        PRInt32 processUnicode = processBytes / 2;
+        processLen += processUnicode;
+        aString += processUnicode;
+      }
   	  	 
-  	  }
   	  // Cannot precess by TEC, process one char a time by fallback mechanism
   	  if( processLen < aLength)
   	  {
@@ -1408,7 +1543,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 
 #ifndef DISABLE_TEC_FALLBACK
 		  // Fallback by try different Script code
-		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, scriptFallbackFonts);
+		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, fontMapping);
 #endif
 		  //
 		  // We really don't care too much of performance after this
@@ -1504,21 +1639,20 @@ nsUnicodeRenderingToolkit::GetTextDimensions(const PRUnichar *aString, PRUint32 
   nsTextDimensions textDim;
   nsTextDimensions thisDim;
   
-  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
   for(i =0, start = 0; i < aLength; i++)
   {
     fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
     if ((fontNum[0] != fontNum[1]) && (0 != i))
     {  // start new font run...
       thisDim.Clear();
-      res =  GetTextSegmentDimensions(aString+start, i - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisDim);
+      res =  GetTextSegmentDimensions(aString+start, i - start, fontNum[(i + 1) % 2], *fontmap, thisDim);
       if (NS_FAILED (res)) 
         return res;    
       textDim.Combine(thisDim);
       start = i;
     }
   }
-  res = GetTextSegmentDimensions(aString+start, aLength - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisDim);
+  res = GetTextSegmentDimensions(aString+start, aLength - start, fontNum[(i + 1) % 2], *fontmap, thisDim);
   if (NS_FAILED (res)) 
     return res;    
   textDim.Combine(thisDim);
@@ -1543,42 +1677,39 @@ nsUnicodeRenderingToolkit::GetTextBoundingMetrics(const PRUnichar *aString, PRUi
   short fontNum[2];
   fontNum[0] = fontNum[1] = BAD_FONT_NUM;
   PRUint32 start;
-
   PRBool firstTime = PR_TRUE;
-  nsBoundingMetrics textBoundingMetrics;
   nsBoundingMetrics thisBoundingMetrics;
 
-  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
   for(i =0, start = 0; i < aLength; i++)
   {
     fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
     if ((fontNum[0] != fontNum[1]) && (0 != i))
     {  // start new font run...
-      res = GetTextSegmentBoundingMetrics(aString+start, i - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisBoundingMetrics);
+      res = GetTextSegmentBoundingMetrics(aString+start, i - start, fontNum[(i + 1) % 2], *fontmap, thisBoundingMetrics);
       if (NS_FAILED (res))
         return res;
       if (firstTime) {
         firstTime = PR_FALSE;
-        textBoundingMetrics = thisBoundingMetrics;
+        aBoundingMetrics = thisBoundingMetrics;
       }
       else
-        textBoundingMetrics += thisBoundingMetrics;
+        aBoundingMetrics += thisBoundingMetrics;
       start = i;
     }
   }
-  res = GetTextSegmentBoundingMetrics(aString+start, aLength - start, fontNum[(i + 1) % 2], scriptFallbackFonts, thisBoundingMetrics);
+  res = GetTextSegmentBoundingMetrics(aString+start, aLength - start, fontNum[(i + 1) % 2], *fontmap, thisBoundingMetrics);
   if (NS_FAILED (res))
     return res;
   if (firstTime)
-    textBoundingMetrics = thisBoundingMetrics;
+    aBoundingMetrics = thisBoundingMetrics;
   else
-    textBoundingMetrics += thisBoundingMetrics;
+    aBoundingMetrics += thisBoundingMetrics;
 
-  aBoundingMetrics.leftBearing = NSToCoordRound(float(textBoundingMetrics.leftBearing) * mP2T);
-  aBoundingMetrics.rightBearing = NSToCoordRound(float(textBoundingMetrics.rightBearing) * mP2T);
-  aBoundingMetrics.ascent = NSToCoordRound(float(textBoundingMetrics.ascent) * mP2T);
-  aBoundingMetrics.descent = NSToCoordRound(float(textBoundingMetrics.descent) * mP2T);
-  aBoundingMetrics.width = NSToCoordRound(float(textBoundingMetrics.width) * mP2T);
+  aBoundingMetrics.leftBearing = NSToCoordRound(float(aBoundingMetrics.leftBearing) * mP2T);
+  aBoundingMetrics.rightBearing = NSToCoordRound(float(aBoundingMetrics.rightBearing) * mP2T);
+  aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
+  aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
+  aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
 
   return res;
 }
@@ -1602,7 +1733,6 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
   PRUint32 i;
   PRInt32 currentX = aX;
   PRUint32 thisWidth = 0;
-  const short *scriptFallbackFonts = fontmap->GetScriptFallbackFonts();
 	
   if (aSpacing)
   {
@@ -1624,7 +1754,7 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
 
       PRInt32 transformedX = currentX, ignoreY = 0;
       mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-      res = DrawTextSegment(aString+i, drawLen, curFontNum, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+      res = DrawTextSegment(aString+i, drawLen, curFontNum, *fontmap, transformedX, transformedY, thisWidth);
 	    if (NS_FAILED(res))
 	 		  return res;
       
@@ -1654,7 +1784,7 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
 	          PRInt32 transformedX = currentX, ignoreY = 0;
 	          mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
 	          
-            res = DrawTextSegment(aString + start, i - start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+            res = DrawTextSegment(aString + start, i - start, thisFont, *fontmap, transformedX, transformedY, thisWidth);
 	    	  	if (NS_FAILED(res))
 	    	 		  return res;
 	    	 		
@@ -1667,7 +1797,7 @@ nsUnicodeRenderingToolkit::DrawString(const PRUnichar *aString, PRUint32 aLength
 
 	    PRInt32 transformedX = currentX, ignoreY = 0;
 	    mGS->mTMatrix.TransformCoord(&transformedX, &ignoreY);
-      res = DrawTextSegment(aString+start, aLength-start, thisFont, scriptFallbackFonts, transformedX, transformedY, thisWidth);
+      res = DrawTextSegment(aString+start, aLength-start, thisFont, *fontmap, transformedX, transformedY, thisWidth);
     if (NS_FAILED(res))
       return res;
   }
