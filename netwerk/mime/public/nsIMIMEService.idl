@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
+#include "nsIURI.idl"
 
 
 %{C++
@@ -40,6 +41,11 @@
 interface nsIMIMEService : nsISupports {
 	// return a nsIMIMEInfo for the given file extension.
 	nsIMIMEInfo GetFromExtension(in string aFileExt);
+
+    // return a string representing the content-type
+    void GetTypeFromExtension(in string aFileExt, out string aContentType);
+
+    void GetTypeFromURI(in nsIURI aURI, out string aContentType);
 
 	// return a nsIMIMEInfo for the given MIME type.
 	nsIMIMEInfo GetFromMIMEType(in string aMIMEType);
