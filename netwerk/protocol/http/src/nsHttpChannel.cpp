@@ -34,6 +34,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
 #include "nsIMIMEService.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
@@ -1465,6 +1466,15 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         rv = ioService->NewURI(nsDependentCString(location), nsnull, mURI,
                                getter_AddRefs(newURI));
         if (NS_FAILED(rv)) return rv;
+
+        // verify that this is a legal redirect
+        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+        if (securityManager) {
+            rv = securityManager->CheckLoadURI(mURI, newURI,
+                                               nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
+            if (NS_FAILED(rv)) return rv;
+        }
 
         // Kill the current cache entry if we are redirecting
         // back to ourself.

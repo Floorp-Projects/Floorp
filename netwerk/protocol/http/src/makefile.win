@@ -29,6 +29,8 @@ REQUIRES	= xpcom \
 		  intl \
 		  exthandler \
 		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
