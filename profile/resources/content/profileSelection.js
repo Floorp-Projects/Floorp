@@ -236,30 +236,6 @@ function onExit()
   return true;
 }
 
-function foo()
-{
-  if( !set ) {
-    if( profileManagerMode == "manager" )
-      oldCaptionManager = document.getElementById( "caption" ).firstChild.nodeValue;
-    else
-      oldCaptionSelection = document.getElementById( "caption" ).firstChild.nodeValue;
-    ChangeCaption( "What Is Mozollia?" ); // DO NOT LOCALIZE!
-    set = true;
-  }
-  else {
-    var tempCaption = document.getElementById( "caption" ).firstChild.nodeValue;
-    if( profileManagerMode == "manager" ) {
-      ChangeCaption( oldCaptionManager );
-      oldCaptionManager = tempCaption;
-    }
-    else {
-      ChangeCaption( oldCaptionSelection )
-      oldCaptionSelection = tempCaption;
-    }
-    set = false;
-  }
-}
-
 function SetUpOKCancelButtons()
 {
   doSetOKCancel( onStart, onExit, null, null );
