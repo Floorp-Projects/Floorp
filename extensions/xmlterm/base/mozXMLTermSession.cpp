@@ -56,6 +56,7 @@
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermSession.h"
 #include "nsISelectionController.h"
+#include "nsReadableUtils.h"
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermSession definition
