@@ -198,11 +198,17 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp)
     if (!XPT_Do16(&my_cursor, &str->length))
         goto error;
 
+    if (cursor->state->mode == XPT_DECODE)
+        if (!(str->bytes = malloc(str->length)))
+            goto error;
     for (i = 0; i < str->length; i++)
         if (!XPT_Do8(&my_cursor, &str->bytes[i]))
-            goto error;
+            goto error_2;
 
     return PR_TRUE;
+
+ error_2:
+    free(str->bytes);
 
     XPT_ERROR_HANDLE(str);
 }
