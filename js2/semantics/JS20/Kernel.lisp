@@ -12,19 +12,22 @@
 
 ; Convert the results of the lexer's actions into a token suitable for the parser.
 (defun js-lexer-results-to-token (token-value line-break)
-  (if (eq token-value :end-of-input)
-    (values *end-marker* nil)
+  (cond
+   ((eq token-value :end-of-input)
+    (values *end-marker* nil))
+   ((stringp token-value)
+    (values (if line-break (terminal-lf-terminal '$string) '$string) token-value))
+   (t
     (let ((data (second token-value)))
       (multiple-value-bind (token token-arg)
                            (ecase (first token-value)
                              (l:identifier (values '$identifier data))
                              ((l:keyword l:punctuator) (values (intern (string-upcase data)) nil))
                              (l:number (values '$number data))
-                             (l:string (values '$string data))
                              (l:regular-expression (values '$regular-expression data)))
         (when line-break
           (setq token (terminal-lf-terminal token)))
-        (values token token-arg)))))
+        (values token token-arg))))))
 
 
 ; Lex and parse the input-string of tokens to produce a list of action results.
