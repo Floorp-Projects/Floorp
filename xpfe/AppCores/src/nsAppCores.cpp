@@ -20,6 +20,7 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsMailCoreFactory.h"
+#include "nsRDFCoreFactory.h"
 #include "nsToolbarCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
 #include "nsEditorAppCoreFactory.h"
@@ -34,6 +35,7 @@ static PRInt32 gInstanceCnt = 0;
 
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kMailCoreCID,        NS_MAILCORE_CID);
+static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
@@ -57,6 +59,7 @@ NSRegisterSelf(const char *path)
     printf("*** AppCores is being registered\n");
     nsRepository::RegisterFactory(kAppCoresManagerCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kMailCoreCID, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterFactory(kRDFCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kToolbarCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kToolkitCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kBrowserAppCoreCID, path, PR_TRUE, PR_TRUE);
@@ -71,6 +74,7 @@ NSUnregisterSelf(const char *path)
     
     nsRepository::UnregisterFactory(kAppCoresManagerCID, path);
     nsRepository::UnregisterFactory(kMailCoreCID, path);
+    nsRepository::UnregisterFactory(kRDFCoreCID, path);
     nsRepository::UnregisterFactory(kToolbarCoreCID, path);
     nsRepository::UnregisterFactory(kToolkitCoreCID, path);
     nsRepository::UnregisterFactory(kBrowserAppCoreCID, path);
@@ -100,6 +104,10 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
     else if ( aClass.Equals(kMailCoreCID) )
     {
         inst = new nsMailCoreFactory();      
+    }
+    else if ( aClass.Equals(kRDFCoreCID) )
+    {
+        inst = new nsRDFCoreFactory();      
     }
     else if ( aClass.Equals(kToolbarCoreCID) )
     {
