@@ -38,9 +38,8 @@ class nsContentList : public nsIDOMNodeList,
                       public nsIDOMHTMLCollection, 
                       public nsIScriptObjectOwner, 
                       public nsIDocumentObserver {
-protected:
-  nsContentList(nsIDocument *aDocument);
 public:
+  nsContentList(nsIDocument *aDocument);
   nsContentList(nsIDocument *aDocument, 
                 nsIAtom* aMatchAtom, 
                 PRInt32 aMatchNameSpaceId,
@@ -119,10 +118,11 @@ public:
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
-protected:
-  nsresult Match(nsIContent *aContent, PRBool *aMatch);
   nsresult Add(nsIContent *aContent);
   nsresult Remove(nsIContent *aContent);
+
+protected:
+  nsresult Match(nsIContent *aContent, PRBool *aMatch);
   nsresult Reset();
   void Init(nsIDocument *aDocument);
   void PopulateWith(nsIContent *aContent, PRBool aIncludeRoot);
