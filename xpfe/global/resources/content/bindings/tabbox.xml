@@ -118,7 +118,12 @@
                 selectedIndex = i;
             }
           }
-          var tabpanels = this.parentNode.getElementsByTagNameNS(
+
+          var parent = this.parentNode;
+          while (parent && parent.localName != 'tabbox')
+            parent = parent.parentNode;
+
+          var tabpanels = parent.getElementsByTagNameNS(
                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                "tabpanels");
           tabpanels = tabpanels.length ? tabpanels[0] : null;
@@ -149,8 +154,17 @@
     <implementation>
       <!-- should be defined on deck! -->
       <property name="index"
-                onget="return this.getAttribute('index');"
-                onset="this.setAttribute('index',val); return val;"/>
+                onget="return this.getAttribute('index');">
+        <setter>
+          if (this.index == val)
+            return;
+          this.setAttribute("index", val);
+          var event = document.createEvent('Events');
+          event.initEvent('select', false, true);
+          this.dispatchEvent(event);
+          return val;
+        </setter>
+      </property>
     </implementation>
   </binding>
 

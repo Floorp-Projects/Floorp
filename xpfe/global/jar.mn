@@ -42,6 +42,7 @@ toolkit.jar:
         content/global/nsUserSettings.js            (resources/content/nsUserSettings.js) 
         content/global/xul.css                      (resources/content/xul.css) 
         content/global/build.dtd                    (build.dtd)
+        content/global/bindings/browser.css         (resources/content/bindings/browser.css)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)
         content/global/bindings/button.xml          (resources/content/bindings/button.xml)
         content/global/bindings/checkbox.xml        (resources/content/bindings/checkbox.xml)
