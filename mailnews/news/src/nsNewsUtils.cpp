@@ -160,7 +160,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   rv = nsGetNewsServer(username.GetBuffer(),
                        hostname.GetBuffer(), getter_AddRefs(server));
   // now ask the server what it's root is
-  char *localPath;
+  char *localPath = nsnull;
   if (NS_SUCCEEDED(rv))
     rv = server->GetLocalPath(&localPath);
 
