@@ -758,6 +758,10 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   if (uri)
       uri->GetHost(hostname);
 
+  // Strip www.
+  if (Substring(hostname, 0, 4).Equals(NS_LITERAL_CSTRING("www.")))
+    hostname.Cut(0, 4);
+
   SetRowValue(row, kToken_HostnameColumn, hostname.get());
 
   *aResult = row;
