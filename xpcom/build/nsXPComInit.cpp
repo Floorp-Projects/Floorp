@@ -55,6 +55,7 @@ static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
 // io
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
+static NS_DEFINE_CID(kDirectoryIteratorCID, NS_DIRECTORYITERATOR_CID);
 // components
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
@@ -85,7 +86,7 @@ static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 //	- There exists no global Registry. Registry can be created from the component manager.
 //
 
-nsresult
+static nsresult
 RegisterGenericFactory(nsIComponentManager* compMgr, const nsCID& cid, const char* className,
                        const char *progid, nsIGenericFactory::ConstructorProcPtr constr)
 {
@@ -182,6 +183,12 @@ nsresult NS_InitXPCOM(nsIServiceManager* *result)
                                 NS_FILESPEC_CLASSNAME,
                                 NS_FILESPEC_PROGID,
                                 nsFileSpecImpl::Create);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kDirectoryIteratorCID,
+                                NS_DIRECTORYITERATOR_CLASSNAME,
+                                NS_DIRECTORYITERATOR_PROGID,
+                                nsDirectoryIteratorImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kPageManagerCID,
