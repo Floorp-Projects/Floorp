@@ -33,10 +33,10 @@
 #include <TextUtils.h>
 #include <string.h>
 
-static nsresult getApplicationDir(nsNativeFileSpec& outAppDir)
+static nsresult getApplicationDir(nsFileSpec& outAppDir)
 {
 	// Use the process manager to get the application's FSSpec,
-	// then construct an nsNativeFileSpec that encapsulates it.
+	// then construct an nsFileSpec that encapsulates it.
 	FSSpec spec;
 	ProcessInfoRec info;
 	info.processInfoLength = sizeof(info);
@@ -44,7 +44,7 @@ static nsresult getApplicationDir(nsNativeFileSpec& outAppDir)
 	info.processAppSpec = &spec;
 	ProcessSerialNumber psn = { 0, kCurrentProcess };
 	OSErr result = GetProcessInformation(&psn, &info);
-	nsNativeFileSpec appSpec(spec);
+	nsFileSpec appSpec(spec);
 	appSpec.GetParent(outAppDir);
 	return NS_OK;
 }
@@ -66,7 +66,7 @@ nsPluginsDir::nsPluginsDir()
 
 nsPluginsDir::~nsPluginsDir() {}
 
-PRBool nsPluginsDir::IsPluginFile(const nsNativeFileSpec& fileSpec)
+PRBool nsPluginsDir::IsPluginFile(const nsFileSpec& fileSpec)
 {
 	// look at file's creator/type and make sure it is a code fragment, etc.
 	FInfo info;
@@ -77,8 +77,8 @@ PRBool nsPluginsDir::IsPluginFile(const nsNativeFileSpec& fileSpec)
 	return false;
 }
 
-nsPluginFile::nsPluginFile(const nsNativeFileSpec& spec)
-	:	nsNativeFileSpec(spec)
+nsPluginFile::nsPluginFile(const nsFileSpec& spec)
+	:	nsFileSpec(spec)
 {
 }
 

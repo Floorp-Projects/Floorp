@@ -71,7 +71,6 @@
 static NS_DEFINE_IID(kIDTDIID,               NS_IDTD_IID);
 static NS_DEFINE_IID(kIInputStreamIID,       NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kINameSpaceManagerIID,  NS_INAMESPACEMANAGER_IID);
-static NS_DEFINE_IID(kIOutputStreamIID,      NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIParserIID,            NS_IPARSER_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,    NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,     NS_IRDFDATASOURCE_IID);
@@ -95,58 +94,6 @@ static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 #include "rdf.h"
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal);
-
-
-////////////////////////////////////////////////////////////////////////
-// FileOutputStreamImpl
-
-// XXX Eventually, it'd be nice if we could just open an output stream
-// on a URL. That'd obsolete the need for this...
-
-class FileOutputStreamImpl : public nsIOutputStream
-{
-private:
-    nsOutputFileStream mStream;
-
-public:
-    FileOutputStreamImpl(const nsFilePath& path)
-        : mStream(path)
-    {
-        NS_INIT_REFCNT();
-    }
-
-    virtual ~FileOutputStreamImpl(void) {
-        Close();
-    }
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIBaseStream interface
-    NS_IMETHOD Close(void) {
-        mStream.close();
-        return NS_OK;
-    }
-
-    // nsIOutputStream interface
-    NS_IMETHOD Write(const char* aBuf,
-                     PRUint32 aOffset,
-                     PRUint32 aCount,
-                     PRUint32 *aWriteCount)
-    {
-        PRInt32 written = mStream.write(aBuf + aOffset, aCount);
-        if (written == -1) {
-            *aWriteCount = 0;
-            return NS_ERROR_FAILURE; // XXX right error code?
-        }
-        else {
-            *aWriteCount = written;
-            return NS_OK;
-        }
-    }
-};
-
-NS_IMPL_ISUPPORTS(FileOutputStreamImpl, kIOutputStreamIID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -705,21 +652,19 @@ RDFXMLDataSourceImpl::Flush(void)
         return rv;
 
     nsFileURL url(uri);
-    nsFilePath path(url);
+    nsFileSpec path(url);
 
-    FileOutputStreamImpl* out = new FileOutputStreamImpl(path);
-    if (! out)
-        return NS_ERROR_OUT_OF_MEMORY;
+    nsOutputFileStream out(path);
+    if (! out.is_open())
+        return NS_ERROR_FAILURE;
 
-	NS_ADDREF(out);
-
-    if (NS_FAILED(rv = Serialize(out)))
+    nsCOMPtr<nsIOutputStream> outIStream = out.GetIStream();
+    if (NS_FAILED(rv = Serialize(outIStream)))
         goto done;
 
     mIsDirty = PR_FALSE;
 
 done:
-    NS_IF_RELEASE(out);
     return NS_OK;
 }
 

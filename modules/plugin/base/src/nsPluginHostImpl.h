@@ -30,7 +30,7 @@
 #include "nsPluginsDir.h"
 
 class ns4xPlugin;
-class nsNativeFileSpec;
+class nsFileSpec;
 
 class nsPluginTag
 {
@@ -216,7 +216,7 @@ private:
   nsresult
   NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
 
-  PRLibrary* LoadPluginLibrary(const nsNativeFileSpec &pluginSpec);
+  PRLibrary* LoadPluginLibrary(const nsFileSpec &pluginSpec);
 
   PRLibrary* LoadPluginLibrary(const char* pluginPath, const char* path);
 

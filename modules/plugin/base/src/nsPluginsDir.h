@@ -26,9 +26,9 @@
  * Provides a cross-platform way to obtain the location of the plugins
  * directory. Once constructed, can be used with nsDirectoryIterator to
  * scan the plugins directory. An nsPluginFileSpec can be constructed from the
- * nsNativeFileSpec returned by the iterator.
+ * nsFileSpec returned by the iterator.
  */
-class nsPluginsDir : public nsNativeFileSpec {
+class nsPluginsDir : public nsFileSpec {
 public:
 	/**
 	 * Locates the plugins directory in a platform-dependent manner.
@@ -39,7 +39,7 @@ public:
 	/**
 	 * Determines whether or not the given file is actually a plugin file.
 	 */
-	PRBool IsPluginFile(const nsNativeFileSpec& fileSpec);
+	PRBool IsPluginFile(const nsFileSpec& fileSpec);
 };
 
 struct PRLibrary;
@@ -62,14 +62,14 @@ struct nsPluginInfo {
  * library. Insulates core nsIPluginHost implementations from these
  * details.
  */
-class nsPluginFile : public nsNativeFileSpec {
+class nsPluginFile : public nsFileSpec {
 public:
 	/**
 	 * If spec corresponds to a valid plugin file, constructs a reference
 	 * to a plugin file on disk. Plugins are typically located using the
 	 * nsPluginsDir class.
 	 */
-	nsPluginFile(const nsNativeFileSpec& spec);
+	nsPluginFile(const nsFileSpec& spec);
 	virtual ~nsPluginFile();
 
 	/**

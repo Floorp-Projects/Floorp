@@ -1869,7 +1869,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 			break;
 
 		for (nsDirectoryIterator iter(pluginsDir); iter; iter++) {
-			const nsNativeFileSpec& file = iter;
+			const nsFileSpec& file = iter;
 			if (pluginsDir.IsPluginFile(file)) {
 				nsPluginFile pluginFile(file);
 				// load the plugin's library so we can ask it some questions.
@@ -2270,7 +2270,7 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
 
 // private methods
 
-PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const nsNativeFileSpec &pluginSpec)
+PRLibrary* nsPluginHostImpl::LoadPluginLibrary(const nsFileSpec &pluginSpec)
 {
 	PRLibrary* plugin = NULL;
 
