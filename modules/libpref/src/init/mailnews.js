@@ -299,12 +299,12 @@ pref("ldap_2.autoComplete.nicknameHasPrecedence",               false);
 pref("ldap_2.autoComplete.numAddresBooks",						15); // number of address books to search for name completion.
 
 pref("ldap_2.servers.pab.position",								1);
-pref("ldap_2.servers.pab.description",							"chrome://messenger/locale/addressbook/addressbook.properties");
+pref("ldap_2.servers.pab.description",							"chrome://messenger/locale/addressbook/addressBook.properties");
 pref("ldap_2.servers.pab.dirType",								2);
 pref("ldap_2.servers.pab.isOffline",							false);
 
 pref("ldap_2.servers.history.position",							2);
-pref("ldap_2.servers.history.description",						"chrome://messenger/locale/addressbook/addressbook.properties");
+pref("ldap_2.servers.history.description",						"chrome://messenger/locale/addressbook/addressBook.properties");
 pref("ldap_2.servers.history.dirType",							2);
 pref("ldap_2.servers.history.isOffline",						false);
 
