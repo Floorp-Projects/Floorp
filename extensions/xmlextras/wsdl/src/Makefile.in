@@ -45,10 +45,6 @@ CPPSRCS	= 				\
 		nsWSDLDefinitions.cpp	\
 		$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS	+=	nsWSDLInterfaceInfo.cpp 
-endif
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../schema/src \
 		$(NULL)

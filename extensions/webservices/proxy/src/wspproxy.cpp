@@ -47,7 +47,6 @@
 #include "nsISOAPEncoding.h"
 #include "nsIComponentManager.h"
 #include "nsVoidArray.h"
-#include "nsSOAPUtils.h"
 
 #define NS_SOAP_1_1_ENCODING_NAMESPACE \
    "http://schemas.xmlsoap.org/soap/encoding/"
@@ -67,6 +66,7 @@ WSPProxy::~WSPProxy()
 NS_IMETHODIMP
 WSPProxy::Init(nsIWSDLPort* aPort,
                nsIInterfaceInfo* aPrimaryInterface,
+               nsIInterfaceInfoManager* aInterfaceInfoManager,
                const nsAString& aQualifier,
                PRBool aIsAsync)
 {
@@ -75,14 +75,27 @@ WSPProxy::Init(nsIWSDLPort* aPort,
 
   mPort = aPort;
   mPrimaryInterface = aPrimaryInterface;
+  mInterfaceInfoManager = aInterfaceInfoManager;
   mPrimaryInterface->GetIIDShared(&mIID);
   mQualifier.Assign(aQualifier);
   mIsAsync = aIsAsync;
+
+  nsresult rv;
+
+  mInterfaces = do_CreateInstance(NS_SCRIPTABLE_INTERFACES_CONTRACTID, &rv);
+  if (!mInterfaces) {
+    return rv;
+  }
+  
+  rv = mInterfaces->SetManager(mInterfaceInfoManager);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   
   if (mIsAsync) {
     // Get the completion method info
     const nsXPTMethodInfo* listenerGetter;
-    nsresult rv = mPrimaryInterface->GetMethodInfo(3, &listenerGetter);
+    rv = mPrimaryInterface->GetMethodInfo(3, &listenerGetter);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -177,6 +190,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   else {
     methodOffset = 3;
   }
+
   nsCOMPtr<nsIWSDLOperation> operation;
   rv = mPort->GetOperation(methodIndex - methodOffset, 
                            getter_AddRefs(operation));
@@ -255,19 +269,8 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   // Set up the parameters to the call
   PRUint32 i, partCount;
   input->GetPartCount(&partCount);
-
-  PRUint32 parameterOrderCount;
-  operation->GetParameterOrderCount(&parameterOrderCount);
-
-  // The whichParam array stores the index of the parameter that
-  // corresponds to each part. The exception to there being a
-  // direct correspondence between part and parameter indices is
-  // the existence of a parameterOrder attribute for the operation
-  // or parameters that are arrays (and have lengths associated
-  // with them).
-#define MAX_PARTS 128
-  PRUint32 whichParam[MAX_PARTS];
-  PRUint32 arrayOffset = 0;
+  
+  PRUint32 maxParamIndex = info->GetParamCount()-1;
 
   // Iterate through the parts to figure out how many are
   // body vs. header blocks
@@ -281,25 +284,6 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
 
     nsAutoString paramName;
     part->GetName(paramName);
-
-    // If the part is an array, then 
-    if (IsArray(part)) {
-      arrayOffset++;
-    }
-
-    // If there's a parameter count, then the order of the incoming
-    // parameter may be different than the part order.
-    if (parameterOrderCount) {
-      PRUint32 pindex;
-      rv = operation->GetParameterIndex(paramName, &pindex);
-      if (NS_FAILED(rv)) {
-        return NS_ERROR_FAILURE;
-      }
-      whichParam[i] = pindex + arrayOffset;
-    }
-    else {
-      whichParam[i] = i + arrayOffset;
-    }
 
     rv = part->GetBinding(getter_AddRefs(binding));
     if (NS_FAILED(rv)) {
@@ -359,8 +343,8 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   }
 
   // Now iterate through the parameters and set up the parameter blocks
-  PRUint32 bodyEntry = 0, headerEntry = 0;
-  for (i = 0; i < partCount; i++) {
+  PRUint32 bodyEntry = 0, headerEntry = 0, paramIndex = 0;
+  for (i = 0; i < partCount; paramIndex++, i++) {
     input->GetPart(i, getter_AddRefs(part));
     part->GetBinding(getter_AddRefs(binding));
     nsCOMPtr<nsISOAPPartBinding> partBinding = do_QueryInterface(binding);
@@ -434,19 +418,27 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
       }
     }
 
-    const nsXPTParamInfo& paramInfo = info->GetParam(whichParam[i]);
-    PRUint32 arrayLength = 0;
-    if (IsArray(part)) {
-      arrayLength = params[whichParam[i]-1].val.u32;
-#ifdef DEBUG
-      const nsXPTType& arrayType = paramInfo.GetType();
-      NS_ASSERTION(arrayType.IsArray(), "WSPProxy:: array type incorrect");
-#endif
+    // Look ahead in the param info array to see if the current part has to be
+    // treated as an array. If so then get the array length from the current 
+    // param and increment the param index.
+
+    PRUint32 arrayLength;
+
+    if (paramIndex < maxParamIndex &&
+        info->GetParam((PRUint8)(paramIndex+1)).GetType().IsArray()) {
+      arrayLength = params[paramIndex++].val.u32;
     }
+    else {
+      arrayLength = 0;
+    }
+
+    NS_ASSERTION(paramIndex <= maxParamIndex, "WSDL/IInfo param count mismatch");
+    
+    const nsXPTParamInfo& paramInfo = info->GetParam(paramIndex);
 
     nsCOMPtr<nsIVariant> value;
     rv = ParameterToVariant(mPrimaryInterface, methodIndex,
-                            &paramInfo, params[whichParam[i]], 
+                            &paramInfo, params[paramIndex], 
                             arrayLength, getter_AddRefs(value));
     if (NS_FAILED(rv)) {
       goto call_method_end;
@@ -465,8 +457,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
   }
 
   WSPCallContext* ccInst;
-  ccInst = new WSPCallContext(this, call, methodName, 
-                              operation);
+  ccInst = new WSPCallContext(this, call, methodName, operation);
   if (!ccInst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto call_method_end;
@@ -507,7 +498,7 @@ WSPProxy::CallMethod(PRUint16 methodIndex,
     *retval = cc;
     NS_ADDREF(*retval);
     
-    rv = ccInst->CallAsync(methodIndex-1, mAsyncListener);
+    rv = ccInst->CallAsync(methodIndex, mAsyncListener);
     if (NS_FAILED(rv)) {
       goto call_method_end;
     }
@@ -527,64 +518,6 @@ call_method_end:
     NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(headerCount, headerBlocks);
   }
   return rv;
-}
-
-PRBool
-WSPProxy::IsArray(nsIWSDLPart* aPart)
-{
-  nsCOMPtr<nsISchemaComponent> schemaComponent;
-  nsresult rv = aPart->GetSchemaComponent(getter_AddRefs(schemaComponent));
-  if (NS_FAILED(rv)) {
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsISchemaType> type;
-  nsCOMPtr<nsISchemaElement> element = do_QueryInterface(schemaComponent);
-  if (element) {
-    rv = element->GetType(getter_AddRefs(type));
-    if (NS_FAILED(rv)) {
-      return PR_FALSE;
-    }
-  }
-  else {
-    type = do_QueryInterface(schemaComponent, &rv);
-    if (NS_FAILED(rv)) {
-      return PR_FALSE;
-    }
-  }
-
-  nsCOMPtr<nsISchemaComplexType> complexType(do_QueryInterface(type));
-  if (!complexType) {
-    return PR_FALSE;
-  }
-
-  while (complexType) {
-    PRUint16 derivation;
-    complexType->GetDerivation(&derivation);
-    if (derivation == nsISchemaComplexType::DERIVATION_SELF_CONTAINED) {
-      break;
-    }
-    nsCOMPtr<nsISchemaType> base;
-    complexType->GetBaseType(getter_AddRefs(base));
-    complexType = do_QueryInterface(base);
-  }
-  
-  // If the base type is not a complex type, then we're done
-  if (!complexType) {
-    return PR_FALSE;
-  }
-
-  nsAutoString name, ns;
-  complexType->GetName(name);
-  complexType->GetTargetNamespace(ns);
-
-  if (name.Equals(NS_LITERAL_STRING("Array")) &&
-      (ns.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
-       ns.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE)))) {
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
 }
 
 nsresult
@@ -1209,6 +1142,60 @@ NS_IMETHODIMP
 WSPProxy::GetPendingCalls(nsISimpleEnumerator * *aPendingCalls)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult WSPProxy::GetInterfaceName(PRBool listener, char** retval)
+{
+  if (!mPrimaryInterface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const char* rawName;
+  nsresult rv = mPrimaryInterface->GetNameShared(&rawName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCAutoString name;
+
+  if (listener) {
+    if (mIsAsync) {
+      name.Assign(rawName, strlen(rawName) - (sizeof("Async")-1) );
+    }
+    else {
+      name.Assign(rawName);
+    }
+    name.Append("Listener");
+  }
+  else {
+    name.Assign(rawName);
+  }
+
+  *retval = (char*) nsMemory::Clone(name.get(), name.Length()+1);
+  return *retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+/* readonly attribute string primaryInterfaceName; */
+NS_IMETHODIMP 
+WSPProxy::GetPrimaryInterfaceName(char * *aPrimaryInterfaceName)
+{
+  return GetInterfaceName(PR_FALSE, aPrimaryInterfaceName);
+}
+
+/* readonly attribute string primaryAsyncListenerInterfaceName; */
+NS_IMETHODIMP 
+WSPProxy::GetPrimaryAsyncListenerInterfaceName(char * *aPrimaryAsyncListenerInterfaceName)
+{
+  return GetInterfaceName(PR_TRUE, aPrimaryAsyncListenerInterfaceName);
+}
+
+/* readonly attribute nsIScriptableInterfaces interfaces; */
+NS_IMETHODIMP 
+WSPProxy::GetInterfaces(nsIScriptableInterfaces * *aInterfaces)
+{
+  *aInterfaces = mInterfaces;
+  NS_IF_ADDREF(*aInterfaces);
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////

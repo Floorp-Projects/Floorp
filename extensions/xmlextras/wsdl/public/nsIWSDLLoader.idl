@@ -40,7 +40,7 @@ interface nsIWSDLLoader : nsISupports {
                               in boolean sync);
 };
 
-[scriptable, function, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
+[scriptable, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLLoadListener : nsISupports {
   void onLoad(in nsIWSDLPort port);
   void onError(in nsresult status,

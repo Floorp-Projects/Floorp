@@ -40,15 +40,29 @@
 
 #include "wspprivate.h"
 
-WSPException::WSPException(nsISOAPFault* aFault, 
-			   nsresult aStatus)
-  : mFault(aFault), mStatus(aStatus)
+WSPException::WSPException(nsISOAPFault* aFault, nsresult aStatus)
+  : mFault(aFault), mData(nsnull), mStatus(aStatus), mMsg(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
 
+WSPException::WSPException(nsresult aStatus, const char* aMsg, 
+                           nsISupports* aData)
+  : mFault(nsnull), mData(aData), mStatus(aStatus), mMsg(nsnull)
+{
+  NS_INIT_ISUPPORTS();
+
+  if (aMsg) {
+    mMsg = (char*) nsMemory::Clone(aMsg, strlen(aMsg)+1);
+  }
+}
+
+
 WSPException::~WSPException()
 {
+  if (mMsg) {
+    nsMemory::Free(mMsg);
+  }
 }
 
 NS_IMPL_ISUPPORTS1_CI(WSPException, nsIException)
@@ -65,7 +79,12 @@ WSPException::GetMessage(char * *aMessage)
     mFault->GetFaultString(faultString);
     *aMessage = ToNewUTF8String(faultString);
   }
+  else if (mMsg) {
+    *aMessage = (char*) nsMemory::Clone(mMsg, strlen(mMsg)+1);
+  }
+
   return NS_OK;
+
 }
 
 /* readonly attribute nsresult result; */
@@ -141,7 +160,16 @@ NS_IMETHODIMP
 WSPException::GetData(nsISupports * *aData)
 {
   NS_ENSURE_ARG_POINTER(aData);
-  *aData = mFault;
+  if (mFault) {
+    *aData = mFault;
+  }
+  else if (mData) {
+    *aData = mData;
+  }
+  else {
+    *aData = nsnull;
+  }
+
   NS_IF_ADDREF(*aData);
   return NS_OK;
 }
@@ -150,6 +178,10 @@ WSPException::GetData(nsISupports * *aData)
 NS_IMETHODIMP 
 WSPException::ToString(char **_retval)
 {
-  return GetName(_retval);
+  if (mFault) {
+    return GetName(_retval);
+  }
+  // else
+  return GetMessage(_retval);
 }
 

@@ -179,7 +179,7 @@ nsWSDLLoader::GetResolvedURI(const nsAString& aWSDLURI,
       }
     }
     
-    rv = NS_NewURI(aURI, aWSDLURI, baseURI);
+    rv = NS_NewURI(aURI, aWSDLURI, nsnull, baseURI);
     if (NS_FAILED(rv)) return rv;
     
     rv = secMan->CheckLoadURIFromScript(cx, *aURI);
@@ -212,8 +212,8 @@ nsWSDLLoader::Load(const nsAString& wsdlURI,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsXPIDLCString spec;
-  resolvedURI->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  resolvedURI->GetSpec(spec);
 
   nsCOMPtr<nsIDOMEventListener> listener;
   nsWSDLLoadRequest* request = new nsWSDLLoadRequest(PR_TRUE, nsnull,
@@ -246,8 +246,8 @@ nsWSDLLoader::LoadAsync(const nsAString& wsdlURI,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nsXPIDLCString spec;
-  resolvedURI->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  resolvedURI->GetSpec(spec);
 
   nsCOMPtr<nsIDOMEventListener> listener;
   nsWSDLLoadRequest* request = new nsWSDLLoadRequest(PR_FALSE, aListener,
@@ -441,7 +441,7 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
     nsCOMPtr<nsIDOMDocument> document;
     
     rv = mRequest->GetResponseXML(getter_AddRefs(document));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && document) {
       nsCOMPtr<nsIDOMElement> element;
       
       document->GetDocumentElement(getter_AddRefs(element));
@@ -451,14 +451,14 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
 
           nsCOMPtr<nsIChannel> channel;
           nsCOMPtr<nsIURI> uri;
-          nsXPIDLCString spec;
+          nsCAutoString spec;
           
           mRequest->GetChannel(getter_AddRefs(channel));
           
           if (channel) {
             channel->GetURI(getter_AddRefs(uri));
             if (uri) {
-              uri->GetSpec(getter_Copies(spec));
+              uri->GetSpec(spec);
             }
           }
           
@@ -806,13 +806,13 @@ nsWSDLLoadRequest::ProcessImportElement(nsIDOMElement* aElement,
     return rv;
   }
 
-  rv = NS_NewURI(getter_AddRefs(uri), location, baseURI);
+  rv = NS_NewURI(getter_AddRefs(uri), location, nsnull, baseURI);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  nsXPIDLCString spec;
-  uri->GetSpec(getter_Copies(spec));
+  nsCAutoString spec;
+  uri->GetSpec(spec);
 
   rv = LoadDefinition(NS_ConvertUTF8toUCS2(spec.get()));
   if (NS_FAILED(rv)) {

@@ -40,18 +40,23 @@ function ask() {
     
     number = parseInt(number, 10);
     if(number && !isNaN(number)) {
-        talkToMe.number = number;
-        proxy.setListener(talkToMe);
-        proxy.isPrimeNumber(number);
+        try {
+            netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+            talkToMe.number = number;
+            proxy.setListener(talkToMe);
+            proxy.isPrimeNumber(number);
+        } catch(e) {
+            alert("error: "+e);
+        }
     }
 
 }
 
 
 //const ISPRIMEURL = "http://green.nscp.aoltw.net/vidur/wsdl/statistics.wsdl";
-const ISPRIMEURL = "http://bugsfree.nscp.aoltw.net/pub/statistics.wsdl";
+//const ISPRIMEURL = "http://bugsfree.nscp.aoltw.net/pub/statistics.wsdl";
 //const ISPRIMEURL = "http://bugsfree.nscp.aoltw.net/pub/statistics2.wsdl";
-//const ISPRIMEURL = "http://213.23.125.181:8080/statistics.wsdl";
+const ISPRIMEURL = "http://213.23.125.181:8080/statistics.wsdl";
 
 const ISPRIMEPORT = "SpheonJSAOPStatisticsPort";
 

@@ -47,6 +47,10 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  $(NULL)
 
+ifdef MOZ_WSP
+REQUIRES += iiextras
+endif
+
 CPPSRCS		= nsXMLExtrasModule.cpp
 
 SHARED_LIBRARY_LIBS = \

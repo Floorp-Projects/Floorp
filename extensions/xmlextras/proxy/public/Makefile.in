@@ -31,6 +31,7 @@ XPIDL_MODULE	= wsproxy
 
 XPIDLSRCS	= \
 		nsIWebServiceProxy.idl \
+		nsIWSPInterfaceInfoService.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

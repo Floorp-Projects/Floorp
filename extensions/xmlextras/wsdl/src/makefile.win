@@ -41,7 +41,6 @@ REQUIRES = xpcom \
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsWSDLLoader.obj		\
 	.\$(OBJDIR)\nsWSDLDefinitions.obj	\
-	.\$(OBJDIR)\nsWSDLInterfaceInfo.obj	\
 	$(NULL)
 
 EXPORTS =					\

@@ -43,6 +43,120 @@
 // NSPR includes
 #include "prprf.h"
 
+/***************************************************************************/
+class WSPAsyncProxyCreator : public nsIWSDLLoadListener
+{
+public:
+  WSPAsyncProxyCreator();
+  virtual ~WSPAsyncProxyCreator();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSDLLOADLISTENER
+
+  nsresult Run(const nsAString & wsdlURL, 
+               const nsAString & portname, 
+               const nsAString & qualifier, 
+               PRBool isAsync, 
+               nsIWebServiceProxyCreationListener* aListener);
+
+private:
+  nsString mWSDLURL;
+  nsString mPortName; 
+  nsString mQualifier; 
+  PRBool   mIsAsync;
+  nsCOMPtr<nsIWebServiceProxyCreationListener> mListener;
+};
+
+WSPAsyncProxyCreator::WSPAsyncProxyCreator()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+WSPAsyncProxyCreator::~WSPAsyncProxyCreator()
+{
+  // do nothing...  
+}
+
+NS_IMPL_ISUPPORTS1(WSPAsyncProxyCreator, nsIWSDLLoadListener)
+
+nsresult 
+WSPAsyncProxyCreator::Run(const nsAString & wsdlURL, 
+                          const nsAString & portname, 
+                          const nsAString & qualifier, 
+                          PRBool isAsync, 
+                          nsIWebServiceProxyCreationListener* aListener)
+{
+  mWSDLURL   = wsdlURL;
+  mPortName  = portname;
+  mQualifier = qualifier;
+  mIsAsync   = isAsync;
+  mListener  = aListener;
+
+  nsresult rv;
+  nsCOMPtr<nsIWSDLLoader> loader = do_CreateInstance(NS_WSDLLOADER_CONTRACTID, &rv);
+  if (!loader) {
+    return rv;
+  }
+  
+  rv = loader->LoadAsync(mWSDLURL, mPortName, this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  return NS_OK;
+}
+
+/* void onLoad (in nsIWSDLPort port); */
+NS_IMETHODIMP 
+WSPAsyncProxyCreator::OnLoad(nsIWSDLPort *port)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIWSPInterfaceInfoService> iis = do_GetService(NS_WSP_INTERFACEINFOSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return OnError(rv, NS_LITERAL_STRING("Can't get nsIWSPInterfaceInfoService"));
+  }
+  nsCOMPtr<nsIInterfaceInfoManager> manager;
+  nsCOMPtr<nsIInterfaceInfo> iinfo;
+  
+  rv = iis->InfoForPort(port, mWSDLURL, mQualifier, mIsAsync, 
+                        getter_AddRefs(manager), getter_AddRefs(iinfo));
+  if (NS_FAILED(rv)) {
+    return OnError(rv, NS_LITERAL_STRING("Couldn't find interface info for port"));
+  }
+
+  nsCOMPtr<nsIWebServiceProxy> proxy(do_CreateInstance(NS_WEBSERVICEPROXY_CONTRACTID, &rv));
+  if (!proxy) {
+    return OnError(rv, NS_LITERAL_STRING("Couldn't create proxy"));
+  }
+
+  // XXX We want to pass the manager too.
+  rv = proxy->Init(port, iinfo, manager, mQualifier, mIsAsync);
+  if (NS_FAILED(rv)) {
+    return OnError(rv, NS_LITERAL_STRING("Couldn't init proxy"));
+  }
+
+  mListener->OnLoad(proxy);
+  return NS_OK;
+}
+
+/* void onError (in nsresult status, in AString statusMessage); */
+NS_IMETHODIMP 
+WSPAsyncProxyCreator::OnError(nsresult status, const nsAString & statusMessage)
+{
+  // XXX need to build an exception. It would be nice to have a generic
+  // exception class!
+
+  nsCAutoString temp(ToNewUTF8String(statusMessage));
+  nsCOMPtr<nsIException> e = new WSPException(status, temp.get(), nsnull);
+
+  mListener->OnError(e);
+  return NS_OK;
+}
+
+
+/***************************************************************************/
+
 WSPFactory::WSPFactory()
 {
   NS_INIT_ISUPPORTS();
@@ -52,7 +166,7 @@ WSPFactory::~WSPFactory()
 {
 }
 
-NS_IMPL_ISUPPORTS1(WSPFactory, nsIWebServiceProxyFactory)
+NS_IMPL_ISUPPORTS1_CI(WSPFactory, nsIWebServiceProxyFactory)
 
 /* nsIWebServiceProxy createProxy (in AString wsdlURL, in AString portname, in AString qualifier, in boolean isAsync); */
 NS_IMETHODIMP 
@@ -73,7 +187,10 @@ WSPFactory::CreateProxyAsync(const nsAString & wsdlURL,
                              PRBool isAsync, 
                              nsIWebServiceProxyCreationListener *listener)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<WSPAsyncProxyCreator> creator = new WSPAsyncProxyCreator();
+  if(!creator)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return creator->Run(wsdlURL, portname, qualifier, isAsync, listener);
 }
 
 
@@ -95,19 +212,32 @@ WSPFactory::C2XML(const nsACString& aCIdentifier,
     if (ch == P2M_ESCAPE_CHARACTER) {
       // Grab the next 4 characters that make up the
       // escape sequence
-      char buf[5];
       PRUint16 i;
+      PRUint16 acc = 0;
       for (i = 0; (i < 4) && (current != end); i++) {
-        buf[i] = *current++;
+        acc <<= 4;
+        ch = *current++;
+        if (('0' <= ch) && (ch <= '9')) {
+          acc += ch - '0';
+        }
+        else if (('a' <= ch) && (ch <= 'f')) {
+          acc += ch - ('a' - 10);
+        }
+        else if (('A' <= ch) && (ch <= 'F')) {
+          acc += ch - ('A' - 10);
+        }
+        else {
+          return NS_ERROR_FAILURE;
+        }
       }
+
       // If we didn't get through the entire escape sequence, then
       // it's an error.
       if (i < 4) {
         return NS_ERROR_FAILURE;
       }
-      buf[4] = 0;
 
-      PR_sscanf(buf, "%hx", &uch);
+      uch = PRUnichar(acc);
     }
     else {
       uch = PRUnichar(ch);
@@ -140,7 +270,14 @@ WSPFactory::XML2C(const nsAString& aXMLIndentifier,
       // Escape the character and append to the string
       char buf[6];
       buf[0] = P2M_ESCAPE_CHARACTER;
-      PR_snprintf(buf+1, 5, "%hx", uch);
+      
+      for (int i = 3; i >= 0; i--) {
+        PRUint16 v = (uch >> 4*i) & 0xf;
+        buf[4-i] = (char) (v + ((v > 9) ? 'a'-10 : '0'));
+      }
+      
+      buf[5] = 0;
+      
       aCIdentifier.Append(buf, 5);
     }
   }

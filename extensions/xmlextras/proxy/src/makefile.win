@@ -37,9 +37,11 @@ REQUIRES = xpcom \
 	   js \
 	   necko \
 	   dom \
+	   iiextras \
 	   $(NULL)
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\wspinfoservice.obj	\
 	.\$(OBJDIR)\wspproxy.obj		\
 	.\$(OBJDIR)\wspcallcontext.obj		\
 	.\$(OBJDIR)\wspfactory.obj		\

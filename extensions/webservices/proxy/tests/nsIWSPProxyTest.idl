@@ -99,16 +99,17 @@ interface SpheonJSAOPStatisticsPortType : nsISupports {
 
 [scriptable, uuid(7b7b9508-8a0a-4b41-bf35-167804376c40)]
 interface SpheonJSAOPStatisticsPortTypeListener : nsISupports {
-  void getStatisticsCallback(in nsIException error, in statisticStruct retval);
-  void isPrimeNumberCallback(in nsIException error, in boolean retval);
-  void crossSumCallback(in nsIException error, in PRInt32 retval);
+  void onError(in nsIException error, in nsIWebServiceCallContext cx);
+  void getStatisticsCallback(in statisticStruct retval, in nsIWebServiceCallContext cx);
+  void isPrimeNumberCallback(in boolean retval, in nsIWebServiceCallContext cx);
+  void crossSumCallback(in PRInt32 retval, in nsIWebServiceCallContext cx);
 };
 
 [scriptable, uuid(bbae3748-d7eb-453c-8b48-7b760f7075f6)]
 interface SpheonJSAOPStatisticsPortTypeAsync : nsISupports {
   void setListener(in SpheonJSAOPStatisticsPortTypeListener listener);
   nsIWebServiceCallContext getStatistics(in PRUint32 valsLength,
-				 [array, size_is(valsLength)] in double vals);
+            [array, size_is(valsLength)] in double vals);
   nsIWebServiceCallContext isPrimeNumber(in PRInt32 prime);
   nsIWebServiceCallContext crossSum(in PRInt32 sum);
 };

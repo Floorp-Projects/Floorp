@@ -188,7 +188,7 @@ nsresult
 WSPCallContext::CallCompletionListener()
 {
   nsresult rv;
-#define PARAM_BUFFER_COUNT     8
+#define PARAM_BUFFER_COUNT     8  /* Never set less than 2 */
 
   if (!mProxy) {
     return NS_OK;
@@ -248,13 +248,19 @@ WSPCallContext::CallCompletionListener()
   
   // If we have an exception, report it now
   if (mException) {
-    dispatchParams[0].val.p = NS_STATIC_CAST(void*, mException);
+    dispatchParams[0].val.p = NS_STATIC_CAST(nsIException*, mException);
     dispatchParams[0].SetValIsInterface();
+
+    dispatchParams[1].val.p = NS_STATIC_CAST(nsIWebServiceCallContext*, this);
+    dispatchParams[1].SetValIsInterface();
     
-    rv = XPTC_InvokeByIndex(mAsyncListener, mListenerMethodIndex,
-                            paramCount, dispatchParams);
+    rv = XPTC_InvokeByIndex(mAsyncListener, 3, 2, dispatchParams);
   }
   else if (response) {
+    // pre-fill the call context into param 0.
+    dispatchParams[0].val.p = NS_STATIC_CAST(nsIWebServiceCallContext*, this);
+    dispatchParams[0].SetValIsInterface();
+
     nsCOMPtr<nsIWSDLBinding> binding;
     rv = mOperation->GetBinding(getter_AddRefs(binding));
     if (NS_FAILED(rv)) {
@@ -287,8 +293,10 @@ WSPCallContext::CallCompletionListener()
     PRUint32 partCount;
     output->GetPartCount(&partCount);
 
-    PRUint32 bodyEntry = 0, headerEntry = 0, arrayOffset = 0;
-    for (i = 0; i < partCount; i++) {
+    PRUint32 maxParamIndex = methodInfo->GetParamCount()-1;
+    
+    PRUint32 bodyEntry = 0, headerEntry = 0, paramIndex = 0;
+    for (i = 0; i < partCount; paramIndex++, i++) {
       nsCOMPtr<nsIWSDLPart> part;
       rv = output->GetPart(i, getter_AddRefs(part));
       if (NS_FAILED(rv)) {
@@ -344,11 +352,16 @@ WSPCallContext::CallCompletionListener()
         goto call_completion_end;
       }
 
-      nsXPTCVariant* vars = dispatchParams+i+1+arrayOffset;
-      if (WSPProxy::IsArray(part)) {
-        arrayOffset++;
+      nsXPTCVariant* vars = dispatchParams+paramIndex;
+     
+      if (paramIndex < maxParamIndex &&
+          methodInfo->GetParam((PRUint8)(paramIndex+1)).GetType().IsArray()) {
+        paramIndex++;        
       }
-      const nsXPTParamInfo& paramInfo = methodInfo->GetParam(i+1+arrayOffset);
+
+      NS_ASSERTION(paramIndex <= maxParamIndex, "WSDL/IInfo param count mismatch");
+      
+      const nsXPTParamInfo& paramInfo = methodInfo->GetParam(paramIndex);
       rv = WSPProxy::VariantToInParameter(listenerInterfaceInfo,
                                           mListenerMethodIndex,
                                           &paramInfo,
@@ -357,6 +370,12 @@ WSPCallContext::CallCompletionListener()
         goto call_completion_end;
       }
     }
+
+    NS_ASSERTION(paramIndex == maxParamIndex, "WSDL/IInfo param count mismatch");
+
+    dispatchParams[paramIndex].val.p = 
+        NS_STATIC_CAST(nsIWebServiceCallContext*, this);
+    dispatchParams[paramIndex].SetValIsInterface();
 
     rv = XPTC_InvokeByIndex(mAsyncListener, mListenerMethodIndex,
                             paramCount, dispatchParams);    

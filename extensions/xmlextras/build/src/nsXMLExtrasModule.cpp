@@ -174,7 +174,16 @@ NS_DECL_CLASSINFO(nsSOAPPartBinding)
 NS_DECL_CLASSINFO(WSPComplexTypeWrapper)
 NS_DECL_CLASSINFO(WSPCallContext)
 NS_DECL_CLASSINFO(WSPException)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSPInterfaceInfoService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(WSPFactory)
+NS_DECL_CLASSINFO(WSPFactory)
 #endif // MOZ_WSP
+
+// {79998DE9-1E34-45e0-A587-F9CCC8DB00DD}
+#define NS_WSP_INTERFACE_INFO_SERVICE_CID           \
+ {0x79998de9, 0x1e34, 0x45e0,                       \
+ { 0xa5, 0x87, 0xf9, 0xcc, 0xc8, 0xdb, 0x0, 0xdd } }
 
 class nsXMLExtrasNameset : public nsISupports
 {
@@ -336,6 +345,11 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "WSDLLoader",
                                 NS_WSDLLOADER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "WebServiceProxyFactory",
+                                NS_WEBSERVICEPROXYFACTORY_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif // MOZ_WSP
@@ -595,6 +609,13 @@ static const nsModuleComponentInfo components[] = {
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(WSPException), nsnull, 
     &NS_CLASSINFO_NAME(WSPException), nsIClassInfo::DOM_OBJECT },
+  { "nsWSPInterfaceInfoService", NS_WSP_INTERFACE_INFO_SERVICE_CID, 
+    NS_WSP_INTERFACEINFOSERVICE_CONTRACTID,
+    nsWSPInterfaceInfoServiceConstructor},
+  { "WSPFactory", NS_WEBSERVICEPROXYFACTORY_CLASSID, 
+    NS_WEBSERVICEPROXYFACTORY_CONTRACTID, WSPFactoryConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(WSPFactory), nsnull, 
+    &NS_CLASSINFO_NAME(WSPFactory), nsIClassInfo::DOM_OBJECT }
 #endif // MOZ_WSP
 };
 

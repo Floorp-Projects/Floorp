@@ -39,9 +39,11 @@ REQUIRES = xpcom \
 	   js \
 	   necko \
 	   dom \
+	   iiextras \
 	   $(NULL)
 
 CPPSRCS=					\
+	wspinfoservice.cpp	\
 	wspproxy.cpp				\
 	wspcallcontext.cpp			\
 	wspfactory.cpp				\

@@ -41,8 +41,14 @@
 #ifndef __wspprivate_h__
 #define __wspprivate_h__
 
-#include "nsIWebServiceProxy.h"
-#include "nsIWSDL.h"
+// XPCOM includes
+#include "nsCOMPtr.h"
+#include "nsSupportsArray.h"
+#include "nsIPropertyBag.h"
+#include "nsIException.h"
+#include "nsIExceptionService.h"
+#include "nsIServiceManager.h"
+#include "nsAString.h"
 
 // SOAP includes
 #include "nsISOAPCall.h"
@@ -50,21 +56,28 @@
 #include "nsISOAPResponseListener.h"
 #include "nsISOAPCallCompletion.h"
 #include "nsISOAPFault.h"
+#include "nsSOAPUtils.h"
 
 // interface info includes
 #include "xptcall.h"
 #include "nsIInterfaceInfo.h"
 
-// XPCOM includes
-#include "nsCOMPtr.h"
-#include "nsSupportsArray.h"
-#include "nsIPropertyBag.h"
-#include "nsIException.h"
+// WSDL includes
+#include "nsIWSDL.h"
+#include "nsIWSDLLoader.h"
+#include "nsIWSDLSoapBinding.h"
+
+// iix includes
+#include "nsIGenericInterfaceInfoSet.h"
+
+// Proxy includes
+#include "nsIWebServiceProxy.h"
+#include "nsIWSPInterfaceInfoService.h"
 
 // Forward decls
 class WSPCallContext;
 
-class WSPFactory : public nsIWebServiceProxyFactory 
+class WSPFactory : public nsIWebServiceProxyFactory
 {
 public:
   WSPFactory();
@@ -138,7 +151,6 @@ public:
                                         const nsXPTParamInfo* aParamInfo,
                                         nsIVariant* aVariant,
                                         nsXPTCMiniVariant* aMiniVariant);
-  static PRBool IsArray(nsIWSDLPart* aPart);
   static nsresult WrapInPropertyBag(nsISupports* aInstance,
                                     nsIInterfaceInfo* aInterfaceInfo,
                                     nsIPropertyBag** aPropertyBag);
@@ -146,15 +158,21 @@ public:
                                     nsIInterfaceInfo* aInterfaceInfo,
                                     nsISupports** aComplexType);
 
+
+protected:
+  nsresult GetInterfaceName(PRBool listener, char** retval);
+
 protected:
   nsCOMPtr<nsIWSDLPort> mPort;
   nsCOMPtr<nsIInterfaceInfo> mPrimaryInterface;
+  nsCOMPtr<nsIInterfaceInfoManager> mInterfaceInfoManager;
   nsString mQualifier;
   PRBool mIsAsync;
   nsSupportsArray mPendingCalls;
   const nsIID* mIID;
   nsCOMPtr<nsISupports> mAsyncListener;
   nsCOMPtr<nsIInterfaceInfo> mListenerInterfaceInfo;
+  nsCOMPtr<nsIScriptableInterfaces> mInterfaces;
 };
 
 class WSPCallContext : public nsIWebServiceSOAPCallContext,
@@ -196,6 +214,7 @@ class WSPException : public nsIException
 {
 public:
   WSPException(nsISOAPFault* aFault, nsresult aStatus);
+  WSPException(nsresult aStatus, const char* aMsg, nsISupports* aData);
   virtual ~WSPException();
 
   NS_DECL_ISUPPORTS
@@ -203,7 +222,9 @@ public:
 
 protected:
   nsCOMPtr<nsISOAPFault> mFault;
+  nsCOMPtr<nsISupports> mData;
   nsresult mStatus;
+  char* mMsg;
 };
 
 class WSPComplexTypeWrapper : public nsIWebServiceComplexTypeWrapper,
@@ -254,6 +275,16 @@ protected:
   nsCOMPtr<nsIPropertyBag> mPropertyBag;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
   const nsIID* mIID;
+};
+
+class nsWSPInterfaceInfoService : public nsIWSPInterfaceInfoService
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSPINTERFACEINFOSERVICE
+
+  nsWSPInterfaceInfoService();
+  virtual ~nsWSPInterfaceInfoService();
 };
 
 #define NS_WEBSERVICECALLCONTEXT_CLASSID          \

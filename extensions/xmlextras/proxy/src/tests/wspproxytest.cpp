@@ -489,7 +489,7 @@ WSPProxyTest::OnLoad(nsIWSDLPort *port)
     return NS_OK;    
   }
 
-  proxy->Init(port, iinfo, NS_LITERAL_STRING("foo"), PR_TRUE);
+  proxy->Init(port, iinfo, manager, NS_LITERAL_STRING("foo"), PR_TRUE);
 
   mProxy = do_QueryInterface(proxy);
   if (!mProxy) {
@@ -516,17 +516,19 @@ WSPProxyTest::OnError(nsresult status, const nsAString & statusMessage)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-/* void getStatisticsCallback (in nsIException error, in statisticStruct retval); */
-NS_IMETHODIMP 
-WSPProxyTest::GetStatisticsCallback(nsIException *error, statisticStruct *retval)
+/* void onError (in nsIException error, in nsIWebServiceCallContext cx); */
+NS_IMETHODIMP WSPProxyTest::OnError(nsIException *error, nsIWebServiceCallContext *cx)
 {
-  if (error) {
-    nsXPIDLCString str;
-    error->ToString(getter_Copies(str));
-    mListener->OnIsPrimeProxyTestComplete(NS_ConvertASCIItoUCS2(str.get()));
-  }
-  else if (!retval) {
+  nsXPIDLCString str;
+  error->ToString(getter_Copies(str));
+  mListener->OnIsPrimeProxyTestComplete(NS_ConvertASCIItoUCS2(str.get()));
+  return NS_OK;
+}
+
+/* void getStatisticsCallback (in statisticStruct retval, in nsIWebServiceCallContext cx); */
+NS_IMETHODIMP WSPProxyTest::GetStatisticsCallback(statisticStruct *retval, nsIWebServiceCallContext *cx)
+{
+  if (!retval) {
     mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Incorrect value returned from IsPrimeNumber"));
   }
   else {
@@ -543,16 +545,10 @@ WSPProxyTest::GetStatisticsCallback(nsIException *error, statisticStruct *retval
   return NS_OK;
 }
 
-/* void isPrimeNumberCallback (in nsIException error, in boolean retval); */
-NS_IMETHODIMP 
-WSPProxyTest::IsPrimeNumberCallback(nsIException *error, PRBool retval)
+/* void isPrimeNumberCallback (in boolean retval, in nsIWebServiceCallContext cx); */
+NS_IMETHODIMP WSPProxyTest::IsPrimeNumberCallback(PRBool retval, nsIWebServiceCallContext *cx)
 {
-  if (error) {
-    nsXPIDLCString str;
-    error->ToString(getter_Copies(str));
-    mListener->OnIsPrimeProxyTestComplete(NS_ConvertASCIItoUCS2(str.get()));
-  }
-  else if (!retval) {
+  if (!retval) {
     mListener->OnIsPrimeProxyTestComplete(NS_LITERAL_STRING("Incorrect value returned from IsPrimeNumber"));
   }
   else {
@@ -572,13 +568,11 @@ WSPProxyTest::IsPrimeNumberCallback(nsIException *error, PRBool retval)
   return NS_OK;
 }
 
-/* void crossSumCallback (in nsIException error, in PRInt32 retval); */
-NS_IMETHODIMP 
-WSPProxyTest::CrossSumCallback(nsIException *error, PRInt32 retval)
+/* void crossSumCallback (in PRInt32 retval, in nsIWebServiceCallContext cx); */
+NS_IMETHODIMP WSPProxyTest::CrossSumCallback(PRInt32 retval, nsIWebServiceCallContext *cx)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 ///////////////////////////////////////////////////
 //

@@ -51,15 +51,10 @@
 interface nsIWSPInterfaceInfoService : nsISupports
 {
     nsIInterfaceInfo infoForPort(in nsIWSDLPort aPort, 
-                                 in AString qualifier,
-                                 in PRBool isAsync,
+                                 in AString aPortURL,
+                                 in AString aQualifier,
+                                 in PRBool aIsAsync,
                                  out nsIInterfaceInfoManager aSet);
-
-    AString identifier_C2XML(in string aCIdentifier);
-    string  identifier_XML2C(in AString aXMLIndentifier);
-
-    // need to export this at all?
-    [notxpcom] nsresult newUniqueID(out nsID aID);
 };
 
 %{ C++

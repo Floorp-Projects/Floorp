@@ -44,6 +44,7 @@
 #include "nsIException.idl"
 #include "nsISOAPResponse.idl"
 #include "nsISOAPBlock.idl"
+#include "nsIScriptableInterfaces.idl"
 
 %{ C++
 #include "nsAString.h"
@@ -158,6 +159,7 @@ interface nsIWebServiceProxy : nsISupports {
   
   [noscript] void Init(in nsIWSDLPort aPort, 
                        in nsIInterfaceInfo aPrimaryInterface,
+                       in nsIInterfaceInfoManager aInterfaceInfoManager,
                        in AString aQualifier,
                        in boolean aIsAsync);
 
@@ -180,13 +182,6 @@ interface nsIWebServiceProxy : nsISupports {
    */
   readonly attribute AString qualifier;
 
-  /**
-   * The collection of interfaces related to this service proxy. This
-   * will include the primary interface implemented by the service
-   * proxy as well as any listener or complex type interfaces required
-   * for method parameters and return values.
-   */
-  // readonly attribute nsIXPCComponents_Interfaces  interfaces;
 
   /**
    * An enumerator that returns the set of pending calls for the
@@ -196,6 +191,28 @@ interface nsIWebServiceProxy : nsISupports {
    * @see nsIWebServiceCallContext
    */
   readonly attribute nsISimpleEnumerator pendingCalls;  
+
+  
+  /**
+   * The name of the primary interface for this proxy. This may or may not be
+   * the async version depending on whether or not this is an async proxy.
+   */
+  readonly attribute string primaryInterfaceName;
+  
+  /**
+   * The name of the primary async listener interface for this proxy. 
+   * This will be null if this is not an async proxy.
+   */
+  readonly attribute string primaryAsyncListenerInterfaceName;
+
+  /**
+   * The collection of interfaces related to this service proxy. This
+   * will include the primary interface implemented by the service
+   * proxy as well as any listener or complex type interfaces required
+   * for method parameters and return values.
+   * NOTE: only interesting from JavaScript.
+   */
+  readonly attribute nsIScriptableInterfaces interfaces;
 };
 
 
@@ -288,6 +305,11 @@ interface nsIWebServicePropertyBagWrapper : nsISupports {
 };
  
 %{ C++
+
+#define NS_WEBSERVICEPROXYFACTORY_CLASSID           \
+{ /* 4E557E69-CCE0-47da-A7D3-2A7ED666F566 */        \
+ 0x4e557e69, 0xcce0, 0x47da,                        \
+ {0xa7, 0xd3, 0x2a, 0x7e, 0xd6, 0x66, 0xf5, 0x66}}
 #define NS_WEBSERVICEPROXYFACTORY_CONTRACTID "@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"
 
 #define NS_WEBSERVICEPROXY_CLASSID                  \

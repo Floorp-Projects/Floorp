@@ -3,3 +3,4 @@
 #
 
 nsIWebServiceProxy.idl
+nsIWSPInterfaceInfoService.idl

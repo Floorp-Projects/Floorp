@@ -30,6 +30,9 @@ REQUIRES	= xpcom \
 		  appstartup \
 		  xpconnect \
 		  content \
+!if defined(MOZ_WSP)
+		  iiextras \
+!endif
 		  $(NULL)
 LIBRARY_NAME=xmlextras
 MODULE_NAME=nsXMLExtrasModule

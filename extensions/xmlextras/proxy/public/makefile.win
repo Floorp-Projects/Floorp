@@ -22,6 +22,7 @@
 DEPTH=..\..\..\..
 
 XPIDLSRCS = .\nsIWebServiceProxy.idl \
+	    .\nsIWSPInterfaceInfoService.idl \
 	    $(NULL)
 
 MODULE=xmlextras
