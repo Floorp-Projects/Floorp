@@ -60,7 +60,7 @@ use Net::FTP;
 
 $|++;
 
-my $VERSION = "1.62"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.63"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -152,10 +152,12 @@ my $last_uuid = 0;
 
 # leave @trees empty if you don't want tinderbox details
 
-my @trees = qw (SeaMonkey SeaMonkey-Ports);
+my @all_trees = qw (SeaMonkey SeaMonkey-Ports);
+my @trees = qw (SeaMonkey);
 if ($nick =~ /grend/) {
     @trees = qw (Grendel);
 }
+my $all_trees;
 my $trees;
 my $status;
 my $last_tree;
@@ -780,9 +782,9 @@ sub bot_tinderbox {
         $bustage = 0;
         $buf = "$t " . ($$status{$t} ? "<$$status{$t}> " : "") . ": ";
         # politely report failures
-        if (! exists $$trees{$t})
+        if (! exists $$all_trees{$t})
             {
-            $buf .= "unknown tree \"$t\", trees include @trees. ";
+            $buf .= "unknown tree \"$t\", trees include @all_trees. ";
             }
         else
             {
