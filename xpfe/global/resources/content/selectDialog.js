@@ -46,6 +46,7 @@ function selectDialogOnLoad()
 	}
 	
 	var windowTitle = param.GetString( 0 );
+	dump("title: "+ windowTitle +"\n");
 	window.title = windowTitle;
 	 
 	listBox = document.getElementById("list");
@@ -67,6 +68,7 @@ function selectDialogOnLoad()
 	// Move to the right location
 	moveToAlertPosition();
 	param.SetInt(0, 1 );
+        centerWindowOnScreen();
 }
 
 
