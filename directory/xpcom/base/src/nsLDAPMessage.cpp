@@ -220,7 +220,8 @@ nsLDAPMessage::NextAttribute(char* *aAttribute)
 	if (lderr == LDAP_SUCCESS) {
 	    return NS_OK;
 	} else {
-	    // XXX should really propagate lderr upwards
+	    // XXX should really propagate lderr & associated strings upwards..
+	    // maybe need to turn LdErrno into an interface
 	    //
 	    return NS_ERROR_FAILURE;
 	}
