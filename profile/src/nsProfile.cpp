@@ -442,7 +442,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileName; currProfileName.AssignWithConversion(cmdResult);
 
 #ifdef DEBUG_profile
-            printf("ProfileName : %s\n", cmdResult);
+            printf("ProfileName : %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
             PRBool exists;
             rv = ProfileExists(currProfileName.GetUnicode(), &exists);
@@ -519,7 +519,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 rv = locator->ForgetProfileDir();
             }
 #ifdef DEBUG_profile_verbose
-            printf("profileName & profileDir are: %s\n", cmdResult);
+            printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
 
             nsAutoString currProfileDir; currProfileDir.AssignWithConversion(currProfileDirSpec.GetNativePathCString());
