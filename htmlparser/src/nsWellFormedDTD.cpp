@@ -329,34 +329,8 @@ nsITokenRecycler* CWellFormedDTD::GetTokenRecycler(void){
  * @return  ptr to tokenizer
  */
 nsITokenizer* CWellFormedDTD::GetTokenizer(void) {
-  if(!mTokenizer) {
-    PRBool  theExpatState=PR_TRUE;
-#ifndef XP_MAC
-    char* theEnvString = PR_GetEnv("NOEXPAT");
-    if(theEnvString){
-      if(('1'==theEnvString[0]) || ('Y'==theEnvString[0]) || ('y'==theEnvString[0])) {
-        theExpatState=PR_FALSE;  //this indicates that the EXPAT flag was found in the environment.
-      }
-    }
-#else
-	// Check for the existence of a file called EXPAT in the current directory
-	nsSpecialSystemDirectory expatFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-	expatFile += "NOEXPAT";
-	theExpatState = (!expatFile.Exists());
-#endif
-    if(theExpatState) {
-      mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
-#ifdef DEBUG_nisheeth
-	  printf("Using Expat for parsing XML...\n");
-#endif
-    }      
-    else {
-      mTokenizer=(nsHTMLTokenizer*)new nsXMLTokenizer();
-#ifdef DEBUG_nisheeth
-	  printf("Using internal parser for parsing XML...\n");
-#endif
-    }
-  }
+  if(!mTokenizer)
+    mTokenizer=(nsHTMLTokenizer*)new nsExpatTokenizer();
   return mTokenizer;
 }
 
