@@ -76,25 +76,41 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS = nsXULAppAPI.h
 
-CPPSRCS = \
-	nsAppRunner.cpp \
+SHAREDSRCS = \
 	nsNativeAppSupportBase.cpp \
 	nsSigHandlers.cpp \
 	nsWindowCreator.cpp \
-	nsXREDirProvider.cpp \
 	showOSAlert.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS += nsNativeAppSupportWin.cpp
+SHAREDSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
-CPPSRCS += nsNativeAppSupportGtk.cpp
+SHAREDSRCS += nsNativeAppSupportGtk.cpp
+endif
+
+CPPSRCS = \
+	$(SHAREDSRCS) \
+	nsAppRunner.cpp \
+	nsXREDirProvider.cpp \
+	$(NULL)
+
+GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
+ifeq ($(OS_ARCH),WINNT)
+GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDSRCS))
 endif
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += -I$(topsrcdir)/xpfe/bootstrap
 CXXFLAGS += $(TK_CFLAGS)
 
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDSRCS))
+ifeq ($(OS_ARCH),WINNT)
+	$(INSTALL) $^ $(srcdir)
+else
+	$(INSTALL) $^ .
+endif
