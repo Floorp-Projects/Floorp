@@ -1,0 +1,50 @@
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+   -   Dan Haddix (dan6992@hotmail.com)
+  -->
+
+<!-- These strings are generic to all or most of the editor's dialogs. -->
+<!-- They should be moved into a "common" file -->
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">
+
+<!-- This button is for the progressive disclosure of additional editing functionality -->
+<!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Editor.properties STRING BUNDLE FILE -->
+<!ENTITY MoreButton.label "More">
+<!ENTITY FewerButton.label "Fewer">
+
+<!-- These strings are for use specifically in the editor's image map dialog. -->
+
+<!-- Window title -->
+<!ENTITY windowTitle.label "Image Map Editor">
+
+<!-- Toolbar image locations -->
+<!ENTITY pointerIcon.url "chrome://editor/skin/images/pointertool.gif">
+<!ENTITY rectangleIcon.url "chrome://editor/skin/images/rectangletool.gif">
+<!ENTITY circleIcon.url "chrome://editor/skin/images/circletool.gif">
+<!ENTITY polygonIcon.url "chrome://editor/skin/images/polygontool.gif">
+<!ENTITY cutIcon.url "chrome://editor/skin/images/cut.gif">
+<!ENTITY copyIcon.url "chrome://editor/skin/images/copy.gif">
+<!ENTITY pasteIcon.url "chrome://editor/skin/images/paste.gif">
+<!ENTITY zoomInIcon.url "chrome://editor/skin/images/zoomin.gif">
+<!ENTITY zoomOutIcon.url "chrome://editor/skin/images/zoomout.gif">
+<!ENTITY contrastIcon.url "chrome://editor/skin/images/contrast.gif">
