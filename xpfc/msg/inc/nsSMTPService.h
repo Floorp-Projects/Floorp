@@ -41,6 +41,10 @@ public:
                       nsIMessage& aMessage,
                       nsISMTPObserver * aObserver = nsnull);
 
+  NS_IMETHOD SendMail(nsString& aServer, 
+                      nsIMIMEMessage& aMIMEMessage,
+                      nsISMTPObserver * aObserver = nsnull);
+
 
 protected:
   ~nsSMTPService();

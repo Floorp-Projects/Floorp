@@ -79,7 +79,7 @@ nsresult nsMessage::GetSender(nsString& aSender)
   return NS_OK;
 }
 
-nsresult nsMessage::GetReciepients(nsString& aRecipients)
+nsresult nsMessage::GetRecipients(nsString& aRecipients)
 {
   aRecipients = mRecipients;
   return NS_OK;
