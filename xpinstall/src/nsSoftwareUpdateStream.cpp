@@ -44,7 +44,7 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(nsInstallInfo *nextInstall)
     NS_INIT_REFCNT();
     
     mInstallInfo = nextInstall;
-    mOutFileDesc = PR_Open(nsAutoCString(nextInstall->GetLocalFile()),  PR_CREATE_FILE | PR_RDWR, 0644);
+    mOutFileDesc = PR_Open(nsAutoCString(nextInstall->GetLocalFile()),  PR_CREATE_FILE | PR_RDWR, 0744);
     
     if(mOutFileDesc == NULL)
     {

@@ -73,8 +73,6 @@ class nsInstallPatch : public nsInstallObject
        
 
         PRInt32  NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patchfile, nsFileSpec **newFile);
-        PRInt32  NativeReplace (const nsFileSpec& target, nsFileSpec& tempFile);
-        PRInt32  NativeDeleteFile(nsFileSpec* doomedFile);
         void*    HashFilePath(const nsFilePath& aPath);
 };
 

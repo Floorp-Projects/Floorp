@@ -62,6 +62,8 @@ public:
   NS_IMETHOD    ToString(nsString& aReturn)=0;
 
   NS_IMETHOD    CompareTo(nsIDOMInstallVersion* aVersionObject, PRInt32* aReturn)=0;
+  NS_IMETHOD    CompareTo(const nsString& aString, PRInt32* aReturn)=0;
+  NS_IMETHOD    CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)=0;
 };
 
 
@@ -77,6 +79,8 @@ public:
   NS_IMETHOD    Init(const nsString& aVersionString);  \
   NS_IMETHOD    ToString(nsString& aReturn);  \
   NS_IMETHOD    CompareTo(nsIDOMInstallVersion* aVersionObject, PRInt32* aReturn);  \
+  NS_IMETHOD    CompareTo(const nsString& aString, PRInt32* aReturn);  \
+  NS_IMETHOD    CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn);  \
 
 
 
@@ -92,6 +96,8 @@ public:
   NS_IMETHOD    Init(const nsString& aVersionString) { return _to##Init(aVersionString); }  \
   NS_IMETHOD    ToString(nsString& aReturn) { return _to##ToString(aReturn); }  \
   NS_IMETHOD    CompareTo(nsIDOMInstallVersion* aVersionObject, PRInt32* aReturn) { return _to##CompareTo(aVersionObject, aReturn); }  \
+  NS_IMETHOD    CompareTo(const nsString& aString, PRInt32* aReturn) { return _to##CompareTo(aString, aReturn); }  \
+  NS_IMETHOD    CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn) { return _to##CompareTo(aMajor, aMinor, aRelease, aBuild, aReturn); }  \
 
 
 extern nsresult NS_InitInstallVersionClass(nsIScriptContext *aContext, void **aPrototype);

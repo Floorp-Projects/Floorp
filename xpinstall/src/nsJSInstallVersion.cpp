@@ -31,6 +31,24 @@
 #include "nsRepository.h"
 #include "nsDOMCID.h"
 
+extern void nsCvrtJSValToStr(nsString&  aString,
+                             JSContext* aContext,
+                             jsval      aValue);
+
+extern void nsCvrtStrToJSVal(const nsString& aProp,
+                             JSContext* aContext,
+                             jsval* aReturn);
+
+extern PRBool nsCvrtJSValToBool(PRBool* aProp,
+                                JSContext* aContext,
+                                jsval aValue);
+
+extern PRBool nsCvrtJSValToObj(nsISupports** aSupports,
+                               REFNSIID aIID,
+                               const nsString& aTypeName,
+                               JSContext* aContext,
+                               jsval aValue);
+
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
@@ -319,9 +337,14 @@ PR_STATIC_CALLBACK(JSBool)
 InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallVersion *nativeThis = (nsIDOMInstallVersion*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRInt32 nativeRet;
-  nsIDOMInstallVersionPtr b0;
+  JSBool                  rBool = JS_FALSE;
+  PRInt32                 nativeRet;
+  nsString                b0str;
+  PRInt32                 b0int;
+  PRInt32                 b1int;
+  PRInt32                 b2int;
+  PRInt32                 b3int;
+  nsIDOMInstallVersionPtr versionObj;
 
   *rval = JSVAL_NULL;
 
@@ -330,24 +353,81 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  if(argc >= 4)
+  {
+    //  public int CompareTo(int    major,
+    //                       int    minor,
+    //                       int    release,
+    //                       int    build);
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIInstallVersionIID,
-                                           "InstallVersion",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
+    if(!JSVAL_IS_INT(argv[0]))
+    {
+        JS_ReportError(cx, "1st parameter must be a number");
+        return JS_FALSE;
+    }
+    else if(!JSVAL_IS_INT(argv[1]))
+    {
+        JS_ReportError(cx, "2nd parameter must be a number");
+        return JS_FALSE;
+    }
+    else if(!JSVAL_IS_INT(argv[2]))
+    {
+        JS_ReportError(cx, "3rd parameter must be a number");
+        return JS_FALSE;
+    }
+    else if(!JSVAL_IS_INT(argv[3]))
+    {
+        JS_ReportError(cx, "4th parameter must be a number");
+        return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->CompareTo(b0, &nativeRet)) {
+    b0int = JSVAL_TO_INT(argv[0]);
+    b1int = JSVAL_TO_INT(argv[1]);
+    b2int = JSVAL_TO_INT(argv[2]);
+    b3int = JSVAL_TO_INT(argv[3]);
+
+    if(NS_OK != nativeThis->CompareTo(b0int, b1int, b2int, b3int, &nativeRet))
+    {
       return JS_FALSE;
     }
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
-  else {
-    JS_ReportError(cx, "Function compareTo requires 1 parameters");
+  else if(argc >= 1)
+  {
+     //   public int AddDirectory(String version);  --OR--  VersionInfo version
+
+    if(JSVAL_IS_OBJECT(argv[0]))
+    {
+        if(JS_FALSE == nsCvrtJSValToObj((nsISupports **)&versionObj,
+                                         kIInstallVersionIID,
+                                         "InstallVersion",
+                                         cx,
+                                         argv[0]))
+        {
+          return JS_FALSE;
+        }
+
+        if(NS_OK != nativeThis->CompareTo(versionObj, &nativeRet))
+        {
+          return JS_FALSE;
+        }
+    }
+    else
+    {
+        nsCvrtJSValToStr(b0str, cx, argv[0]);
+
+        if(NS_OK != nativeThis->CompareTo(b0str, &nativeRet))
+        {
+          return JS_FALSE;
+        }
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+  else
+  {
+    JS_ReportError(cx, "Function compareTo requires 4 parameters");
     return JS_FALSE;
   }
 

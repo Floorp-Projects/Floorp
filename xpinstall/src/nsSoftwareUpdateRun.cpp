@@ -1,21 +1,65 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ *
+ * Contributors:
+ *     Daniel Veditz <dveditz@netscape.com>
+ *     Douglas Turner <dougt@netscape.com>
+ */
+
 #include "nsSoftwareUpdate.h"
 #include "nsSoftwareUpdateRun.h"
+#include "nsSoftwareUpdateIIDs.h"
 
 #include "nsInstall.h"
 #include "zipfile.h"
 
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
+
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
 
 #include "nspr.h"
 #include "jsapi.h"
 
-#include "nsISoftwareUpdate.h"
-#include "nsSoftwareUpdateIIDs.h"
+#if 0
+#include "nsIEventQueueService.h"
+#include "nsXPComCIID.h"
+
+#include "nsIURL.h"
+
+#include "nsAppShellProxy.h"
+
+
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
+#endif
 
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
+
+
+
 
 static JSClass global_class = 
 {
@@ -23,6 +67,7 @@ static JSClass global_class =
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
 };
+
 
 extern PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args);
 
@@ -119,7 +164,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     installJSFileSpec.MakeUnique();
 
     // Extract the install.js file.
-    rv  = ZIP_ExtractFile( hZip, "install.js", installJSFileSpec.GetCString() );
+    rv  = ZIP_ExtractFile( hZip, "install.js", nsprPath(installJSFileSpec) );
     if (rv != ZIP_OK)
     {
         ZIP_CloseArchive(&hZip);
@@ -146,8 +191,9 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     {
         delete [] buffer;
     }
-    
+
     ZIP_CloseArchive(&hZip);
+    fileStream.close();
     installJSFileSpec.Delete(PR_FALSE);
         
     return rv;   
@@ -223,6 +269,24 @@ static nsresult SetupInstallContext(const char* jarFile,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 PRInt32 RunInstall(nsInstallInfo *installInfo)
 {   
+#if 0
+    // We are one the UI Thread.  Get and save the eventQueue.
+    // Create the Event Queue for the UI thread...
+    nsIEventQueueService* eventQService;
+    nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                               kIEventQueueServiceIID,
+                                               (nsISupports **)&eventQService);
+    PLEventQueue* thisEventQueue;
+    if (NS_OK == rv) 
+    {
+
+        rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), 
+                                                &thisEventQueue);
+
+    }
+
+    installInfo->SetUIEventQueue(thisEventQueue);
+#endif
     PR_CreateThread(PR_USER_THREAD,
                     RunInstallOnThread,
                     (void*)installInfo, 
@@ -245,20 +309,62 @@ PRInt32 RunInstall(nsInstallInfo *installInfo)
 extern "C" void RunInstallOnThread(void *data)
 {
     nsInstallInfo *installInfo = (nsInstallInfo*)data;
+    nsresult rv;
 
+
+#if 0  
+  /*
+   * Create the Application Shell instance...
+   */
+  nsIAppShellService* appShell;
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (NS_FAILED(rv)) 
+  {
+    return;
+  }
+
+  nsAppShellProxy *appShellProxy = new nsAppShellProxy(installInfo->GetUIEventQueue(), appShell);
+
+  // DO NOT CALL INIT!  appShellProxy->Initialize();
+  
+  nsString *aCID = new nsString("00000000-dead-beef-0000-000000000000");
+  nsIWebShellWindow* newWindow;
+  nsIURL* url;
+  char* urlstr = "resource:/res/samples/xpinstallprogress.xul";
+  NS_NewURL(&url, urlstr);
+
+
+  appShellProxy->CreateDialogWindow(nsnull, 
+                                    url, 
+                                    *aCID, 
+                                    newWindow,
+                                    nsnull, 
+                                    nsnull, 
+                                    250, 
+                                    125);
+    
+#endif
+  
     RunInstall( (const char*) nsAutoCString( installInfo->GetLocalFile() ), 
                 (const char*) nsAutoCString( installInfo->GetFlags()     ), 
                 (const char*) nsAutoCString( installInfo->GetArguments() ),
                 (const char*) nsAutoCString( installInfo->GetFromURL()   ));
 
+#if 0
+    appShellProxy->CloseTopLevelWindow(newWindow);
+
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
     // After Install, we need to update the queue.
+#endif
 
     nsISoftwareUpdate *softwareUpdate;
 
-    nsresult rv = nsComponentManager::CreateInstance(  kSoftwareUpdateCID, 
-                                                       nsnull,
-                                                       kISoftwareUpdateIID,
-                                                       (void**) &softwareUpdate);
+    rv = nsComponentManager::CreateInstance( kSoftwareUpdateCID, 
+                                             nsnull,
+                                             kISoftwareUpdateIID,
+                                              (void**) &softwareUpdate);
 
     if (NS_FAILED(rv)) 
     {

@@ -46,7 +46,7 @@ class nsInstallFolder
        
     private:
         
-        nsFileSpec*  mUrlPath;
+        nsFileSpec*  mFileSpec;
 
 		void         SetDirectoryPath(const nsString& aFolderID, const nsString& aRelativePath);
         void         PickDefaultDirectory();

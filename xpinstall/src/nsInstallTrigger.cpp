@@ -124,8 +124,25 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
 
 
 NS_IMETHODIMP    
+nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn)
+{
+// fix: aFlags is not processed!
+    nsInstallInfo *nextInstall = new nsInstallInfo( aURL,  "",  ""); 
+
+    // start the download (this will clean itself up)
+    
+    nsSoftwareUpdateListener *downloader = new nsSoftwareUpdateListener(nextInstall);
+
+    *aReturn = NS_OK;  // maybe we should do something more.
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsInstallTrigger::StartSoftwareUpdate(const nsString& aURL, PRInt32* aReturn)
 {
+    PRInt32 aFlags = 0;
+
+// fix: aFlags is not processed!
     nsInstallInfo *nextInstall = new nsInstallInfo( aURL,  "",  ""); 
 
     // start the download (this will clean itself up)
@@ -143,7 +160,49 @@ nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString
 }
 
 NS_IMETHODIMP    
+nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, PRInt32 aDiffLevel, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32 aMode, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32 aMode, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::CompareVersion(const nsString& aRegName, PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsInstallTrigger::CompareVersion(const nsString& aRegName, const nsString& aVersion, PRInt32* aReturn)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsInstallTrigger::CompareVersion(const nsString& aRegName, nsIDOMInstallVersion* aVersion, PRInt32* aReturn)
 {
     return NS_OK;
 }

@@ -38,17 +38,21 @@ LCFLAGS =          \
         $(DEFINES) \
         $(NULL)
 
-LINCS=                                 \
-        -I$(XPDIST)\public\xpinstall   \
-        -I$(XPDIST)\public\jar         \
-        -I$(XPDIST)\public\libreg      \
-        -I$(XPDIST)\public\netlib      \
-        -I$(XPDIST)\public\xpcom       \
-        -I$(XPDIST)\public\pref        \
-        -I$(XPDIST)\public\js          \
-        -I$(XPDIST)\public\dom         \
-        -I$(XPDIST)\public\raptor      \
-        -I$(XPDIST)\public\nspr2       \
+LINCS=                          \
+        -I$(PUBLIC)\libxpt      \
+        -I$(PUBLIC)\xptinfo     \
+        -I$(PUBLIC)\xptcall     \
+        -I$(PUBLIC)\xpinstall   \
+        -I$(PUBLIC)\jar         \
+        -I$(PUBLIC)\libreg      \
+        -I$(PUBLIC)\netlib      \
+        -I$(PUBLIC)\xpcom       \
+        -I$(PUBLIC)\pref        \
+        -I$(PUBLIC)\js          \
+        -I$(PUBLIC)\dom         \
+        -I$(PUBLIC)\raptor      \
+        -I$(PUBLIC)\nspr2       \
+		-I$(PUBLIC)\zlib        \
         $(NULL)
 
 LLIBS =                                \
@@ -59,10 +63,11 @@ LLIBS =                                \
         $(DIST)\lib\xppref32.lib       \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \
-        $(DIST)\lib\jsdomevents_s.lib    \
+        $(DIST)\lib\jsdomevents_s.lib  \
         $(DIST)\lib\raptorbase.lib     \
+		$(DIST)\lib\zlib.lib           \
+		$(DIST)\lib\plc3.lib           \
         $(LIBNSPR)                     \
-        $(DIST)\lib\plc3.lib           \
         $(NULL)
 
 
@@ -81,7 +86,9 @@ OBJS =                                          \
        .\$(OBJDIR)\nsInstallDelete.obj          \
        .\$(OBJDIR)\nsInstallExecute.obj         \
        .\$(OBJDIR)\nsInstallPatch.obj           \
-        .\$(OBJDIR)\ScheduledTasks.obj          \
+       .\$(OBJDIR)\nsInstallUninstall.obj       \
+       .\$(OBJDIR)\nsInstallResources.obj       \
+       .\$(OBJDIR)\ScheduledTasks.obj           \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
