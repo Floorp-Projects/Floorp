@@ -682,6 +682,11 @@ function GetSelectedFolderResource()
 
 function ChangeMessagePaneVisibility(now_hidden)
 {
+  // we also have to hide the File/Attachments menuitem
+  node = document.getElementById("fileAttachmentMenu");
+  if (node)
+    node.hidden = now_hidden;
+
   if (gDBView) {
     // the collapsed state is the state after we released the mouse 
     // so we take it as it is

@@ -119,32 +119,7 @@ function goUpdateMailMenuItems(commandset)
 
 function file_init()
 {
-    if (!gMessengerBundle)
-        gMessengerBundle = document.getElementById("bundle_messenger");
-    file_attachments();
-/* file_attachments() can return false to indicate a load failure,
-   but if you return false to oncreate then
-   the popup menu will not display which is not a good thing.
- */
-
   document.commandDispatcher.updateCommands('create-menu-file');
-}
-
-function file_attachments()
-{
-  var numAttachments = GetNumberOfAttachmentsForDisplayedMessage();
-  var amParent=document.getElementById('fileAttachmentMenu');
-  if (!amParent)
-    return false;
-
-  // hide the attachment menu item if the message does not have any messages..
-  if (numAttachments > 0)
-  {
-    amParent.removeAttribute('hidden');
-  }
-  else
-    amParent.setAttribute('hidden',true);
-  return true;
 }
 
 function InitEditMessagesMenu()

@@ -402,6 +402,11 @@ var messageHeaderSink = {
       // we only need to do this on the first attachment
       var numAttachments = currentAttachments.length;
       if (numAttachments == 1) {
+        // we also have to enable the File/Attachments menuitem
+        var node = document.getElementById("fileAttachmentMenu");
+        if (node)
+          node.removeAttribute("disabled");
+
         try {
           // convert the uri into a hdr
           var hdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
@@ -736,6 +741,11 @@ function HideMessageHeaderPane()
   node = document.getElementById("expandedHeaderView");
   if (node)
     node.collapsed = true;
+
+  // we also have to disable the File/Attachments menuitem
+  node = document.getElementById("fileAttachmentMenu");
+  if (node)
+    node.setAttribute("disabled", "true");
 
   node = document.getElementById("attachmentView");
   if (node)
@@ -1289,6 +1299,11 @@ function SaveAllAttachments()
 
 function ClearAttachmentList() 
 { 
+  // we also have to disable the File/Attachments menuitem
+  node = document.getElementById("fileAttachmentMenu");
+  if (node)
+    node.setAttribute("disabled", "true");
+
   // clear selection
   var list = document.getElementById('attachmentList');
 
