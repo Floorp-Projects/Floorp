@@ -33,7 +33,7 @@ package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
-for my $key (qw (bug_id product version rep_platform op_sys bug_status 
+for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
                 resolution priority bug_severity component assigned_to
                 reporter bug_file_loc short_desc target_milestone 
                 qa_contact status_whiteboard creation_ts groupset 
@@ -74,9 +74,12 @@ sub initBug  {
   my $self = shift();
   my ($bug_id, $user_id) = (@_);
 
+  # If the bug ID isn't numeric, it might be an alias, so try to convert it.
+  $bug_id = &::BugAliasToID($bug_id) if $bug_id !~ /^[1-9][0-9]*$/;
+  
   my $old_bug_id = $bug_id;
   if ((! defined $bug_id) || (!$bug_id) || (!&::detaint_natural($bug_id))) {
-      # no bug number given
+      # no bug number given or the alias didn't match a bug
       $self->{'bug_id'} = $old_bug_id;
       $self->{'error'} = "InvalidBugId";
       return $self;
@@ -108,7 +111,7 @@ sub initBug  {
 
   my $query = "
     select
-      bugs.bug_id, product, version, rep_platform, op_sys, bug_status,
+      bugs.bug_id, alias, product, version, rep_platform, op_sys, bug_status,
       resolution, priority, bug_severity, component, assigned_to, reporter,
       bug_file_loc, short_desc, target_milestone, qa_contact,
       status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
@@ -123,7 +126,7 @@ sub initBug  {
   if (@row = &::FetchSQLData()) {
     my $count = 0;
     my %fields;
-    foreach my $field ("bug_id", "product", "version", "rep_platform",
+    foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
                        "op_sys", "bug_status", "resolution", "priority",
                        "bug_severity", "component", "assigned_to", "reporter",
                        "bug_file_loc", "short_desc", "target_milestone",
@@ -248,7 +251,7 @@ sub emitXML {
 
   $xml .= "<bug>\n";
 
-  foreach my $field ("bug_id", "bug_status", "product",
+  foreach my $field ("bug_id", "alias", "bug_status", "product",
       "priority", "version", "rep_platform", "assigned_to", "delta_ts", 
       "component", "reporter", "target_milestone", "bug_severity", 
       "creation_ts", "qa_contact", "op_sys", "resolution", "bug_file_loc",

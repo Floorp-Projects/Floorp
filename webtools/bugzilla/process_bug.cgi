@@ -101,6 +101,24 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
 
 ValidateComment($::FORM{'comment'});
 
+# If the bug(s) being modified have dependencies, validate them
+# and rebuild the list with the validated values.  This is important
+# because there are situations where validation changes the value
+# instead of throwing an error, f.e. when one or more of the values
+# is a bug alias that gets converted to its corresponding bug ID
+# during validation.
+foreach my $field ("dependson", "blocked") {
+    if (defined($::FORM{$field}) && $::FORM{$field} ne "") {
+        my @validvalues;
+        foreach my $id (split(/[\s,]+/, $::FORM{$field})) {
+            next unless $id;
+            ValidateBugID($id, 1);
+            push(@validvalues, $id);
+        }
+        $::FORM{$field} = join(",", @validvalues);
+    }
+}
+
 ######################################################################
 # End Data/Security Validation
 ######################################################################
@@ -497,6 +515,63 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
     }
 }
 
+# If this installation uses bug aliases, and the user is changing the alias,
+# add this change to the query.
+if (Param("usebugaliases") && defined($::FORM{'alias'})) {
+    my $alias = trim($::FORM{'alias'});
+    
+    # Since aliases are unique (like bug numbers), they can only be changed
+    # for one bug at a time, so ignore the alias change unless only a single
+    # bug is being changed.
+    if (scalar(@idlist) == 1) {
+        # Validate the alias if the user entered one.
+        if ($alias ne "") {
+            # Make sure the alias isn't too long.
+            if (length($alias) > 20) {
+                ThrowUserError("Bug aliases cannot be longer than 20 characters.
+                  Please choose a shorter alias.");
+            }
+
+            # Make sure the alias is unique.
+            my $escaped_alias = SqlQuote($alias);
+            SendSQL("SELECT bug_id FROM bugs WHERE alias = $escaped_alias " . 
+                    "AND bug_id != $idlist[0]");
+            my $id = FetchOneColumn();
+            if ($id) {
+                my $escaped_alias = html_quote($alias);
+                my $bug_link = GetBugLink($id, "Bug $id");
+                ThrowUserError("$bug_link has already taken the alias 
+                  <em>$escaped_alias</em>.  Please choose another one.");
+            }
+
+            # Make sure the alias isn't just a number.
+            if ($alias =~ /^\d+$/) {
+                ThrowUserError("You gave this bug the alias <em>$alias</em>,
+                  but aliases cannot be merely numbers, since they could
+                  then be confused with bug IDs.  Please choose another
+                  alias containing at least one letter.");
+            }
+
+            # Make sure the alias has no commas or spaces.
+            if ($alias =~ /[, ]/) {
+                my $escaped_alias = html_quote($alias);
+                ThrowUserError("The alias you entered, <em>$escaped_alias</em>,
+                  contains one or more commas or spaces.  Aliases cannot contain
+                  commas or spaces because those characters are used to separate
+                  aliases from each other in lists.  Please choose another alias
+                  that does not contain commas and spaces.");
+            }
+        }
+        
+        # Add the alias change to the query.  If the field contains the blank 
+        # value, make the field be NULL to indicate that the bug has no alias.
+        # Otherwise, if the field contains a value, update the record 
+        # with that value.
+        DoComma();
+        $::query .= "alias = ";
+        $::query .= ($alias eq "") ? "NULL" : SqlQuote($alias);
+    }
+}
 
 if (defined $::FORM{'qa_contact'}) {
     my $name = trim($::FORM{'qa_contact'});
@@ -909,23 +984,8 @@ foreach my $id (@idlist) {
             $deptree{$target} = [];
             my %seen;
             foreach my $i (split('[\s,]+', $::FORM{$target})) {
-                if ($i eq "") {
-                    next;
-                }
-
-                my $orig = $i;
-                if (!detaint_natural($i)) {
-                    ThrowUserError("$orig is not a legal bug number", undef, "abort");
-                }
-
-                # Don't use CanSeeBug, since we want to keep deps to bugs a
-                # user can't see
-                SendSQL("select bug_id from bugs where bug_id = " .
-                        SqlQuote($i));
-                my $comp = FetchOneColumn();
-                if ($comp ne $i) {
-                    ThrowUserError("$i is not a legal bug number", undef, "abort");
-                }
+                next if $i eq "";
+                
                 if ($id eq $i) {
                     ThrowUserError("You can't make a bug blocked or dependent on itself.",
                                    undef,

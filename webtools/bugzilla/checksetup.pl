@@ -1134,7 +1134,7 @@ my $drh = DBI->install_driver($db_base)
 if ($my_db_check) {
     # Do we have the database itself?
 
-    my $sql_want = "3.22.5";  # minimum version of MySQL
+    my $sql_want = "3.23.6";  # minimum version of MySQL
 
 # original DSN line was:
 #    my $dsn = "DBI:$db_base:$my_db_name;$my_db_host;$my_db_port";
@@ -1332,7 +1332,8 @@ $table{bugs} =
     everconfirmed tinyint not null,
     reporter_accessible tinyint not null default 1,
     cclist_accessible tinyint not null default 1,
-
+    alias varchar(20),
+    
     index (assigned_to),
     index (creation_ts),
     index (delta_ts),
@@ -1347,7 +1348,9 @@ $table{bugs} =
     index (resolution),
     index (target_milestone),
     index (qa_contact),
-    index (votes)';
+    index (votes),
+    
+    unique(alias)';
 
 
 $table{cc} =
@@ -1564,6 +1567,30 @@ $table{tokens} =
 # Create tables
 ###########################################################################
 
+# Figure out if any existing tables are of type ISAM and convert them
+# to type MyISAM if so.  ISAM tables are deprecated in MySQL 3.23,
+# which Bugzilla now requires, and they don't support more than 16 
+# indexes per table, which Bugzilla needs.
+my $sth = $dbh->prepare("SHOW TABLE STATUS FROM $::db_name");
+$sth->execute;
+my @isam_tables = ();
+while (my ($name, $type) = $sth->fetchrow_array) {
+    push(@isam_tables, $name) if $type eq "ISAM";
+}
+
+if(scalar(@isam_tables)) {
+    print "One or more of the tables in your existing MySQL database are of type ISAM.\n" . 
+          "ISAM tables are deprecated in MySQL 3.23 and don't support more than 16 indexes\n" . 
+          "per table, which Bugzilla needs.  Converting your ISAM tables to type MyISAM:\n\n";
+    foreach my $table (@isam_tables) {
+        print "Converting table $table... ";
+        $dbh->do("ALTER TABLE $table TYPE = MYISAM");
+        print "done.\n";
+    }
+    print "\nISAM->MyISAM table conversion done.\n\n";
+}
+
+
 # Get a list of the existing tables (if any) in the database
 my @tables = map { $_ =~ s/.*\.//; $_ } $dbh->tables;
 #print 'Tables: ', join " ", @tables, "\n";
@@ -1591,10 +1618,6 @@ while (my ($tabname, $fielddef) = each %table) {
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n)")
         or die "Could not create table '$tabname'. Please check your '$db_base' access.\n";
 }
-
-
-
-
 
 ###########################################################################
 # Populate groups table
@@ -1733,6 +1756,7 @@ AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
         0);
 AddFDef("longdesc", "Comment", 0);
+AddFDef("alias", "Alias", 0);
     
     
 
@@ -1861,7 +1885,7 @@ sub bailout {   # this is just in case we get interrupted while getting passwd
     exit 1;
 }
 
-my $sth = $dbh->prepare(<<_End_Of_SQL_);
+$sth = $dbh->prepare(<<_End_Of_SQL_);
   SELECT login_name
   FROM profiles
   WHERE groupset=9223372036854775807
@@ -2953,6 +2977,14 @@ if (GetFieldDef("logincookies", "hostname")) {
     # Now update the logincookies schema
     DropField("logincookies", "hostname");
     AddField("logincookies", "ipaddr", "varchar(40) NOT NULL");
+}
+
+# 2002-07-03 myk@mozilla.org bug99203:
+# Add a bug alias field to the bugs table so bugs can be referenced by alias
+# in addition to ID.
+if (!GetFieldDef("bugs", "alias")) {
+    AddField("bugs", "alias", "VARCHAR(20)");
+    $dbh->do("ALTER TABLE bugs ADD UNIQUE (alias)");
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your

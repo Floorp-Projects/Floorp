@@ -400,6 +400,12 @@ DefParam("usedependencies",
          "b",
          1);
 
+DefParam("usebugaliases",
+         "Do you wish to use bug aliases, which allow you to assign bugs 
+          an easy-to-remember name by which you can refer to them?",
+         "b",
+         0);
+
 DefParam("webdotbase",
          "It is possible to show graphs of dependent bugs. You may set this parameter to
 any of the following:

@@ -248,22 +248,55 @@ sub CheckFormFieldDefined (\%$) {
       }
 }
 
+sub BugAliasToID {
+    # Queries the database for the bug with a given alias, and returns
+    # the ID of the bug if it exists or the undefined value if it doesn't.
+    
+    my ($alias) = @_;
+    
+    return undef unless Param("usebugaliases");
+    
+    PushGlobalSQLState();
+    SendSQL("SELECT bug_id FROM bugs WHERE alias = " . SqlQuote($alias));
+    my $id = FetchOneColumn();
+    PopGlobalSQLState();
+    
+    return $id;
+}
+
 sub ValidateBugID {
     # Validates and verifies a bug ID, making sure the number is a 
     # positive integer, that it represents an existing bug in the
     # database, and that the user is authorized to access that bug.
     # We detaint the number here, too
 
-    $_[0] = trim($_[0]); # Allow whitespace arround the number
-    detaint_natural($_[0])
-      || DisplayError("The bug number is invalid. If you are trying to use " .
-                      "QuickSearch, you need to enable JavaScript in your " .
-                      "browser. To help us fix this limitation, look " .
-                      "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
-      && exit;
-
-    my ($id) = @_;
-
+    my ($id, $skip_authorization) = @_;
+    
+    # Get rid of white-space around the ID.
+    $id = trim($id);
+    
+    # If the ID isn't a number, it might be an alias, so try to convert it.
+    if ($id !~ /^[1-9][0-9]*$/) {
+        $id = BugAliasToID($id);
+        if (!$id) {
+            my $html_id = html_quote($_[0]);
+            my $alias_specific_message = Param("usebugaliases") ? 
+              " (it is neither a bug number nor an alias to a bug number)" : "";
+            DisplayError(qq|
+              The bug number <em>$html_id</em> is invalid$alias_specific_message.
+              If you are trying to use QuickSearch, you need to enable JavaScript 
+              in your browser. To help us fix this limitation, add your comments 
+              to <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">bug 
+              70907</a>.
+            |);
+            exit;
+        }
+    }
+    
+    # Modify the calling code's original variable to contain the trimmed,
+    # converted-from-alias ID.
+    $_[0] = $id;
+    
     # Get the values of the usergroupset and userid global variables
     # and write them to local variables for use within this function,
     # setting those local variables to the default value of zero if
@@ -276,6 +309,8 @@ sub ValidateBugID {
       || DisplayError("Bug #$id does not exist.")
         && exit;
 
+    return if $skip_authorization;
+    
     return if CanSeeBug($id, $::userid, $::usergroupset);
 
     # The user did not pass any of the authorization tests, which means they

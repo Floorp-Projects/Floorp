@@ -49,6 +49,12 @@
       <td>
         <a href="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
           [% bug.bug_id %]</a>
+          [% IF Param("usebugaliases") %]
+            <label title="a name for the bug that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+              <b>alias:</b>
+              <input name="alias" value="[% bug.alias FILTER html %]" size="20" maxlength="20">
+            </label>
+          [% END %]
       </td>
       
       <td>&nbsp;</td>
