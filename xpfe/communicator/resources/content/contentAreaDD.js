@@ -87,8 +87,14 @@ var contentAreaDNDObserver = {
         {
           if (aEvent.altKey && findParentNode(draggedNode, 'a'))
             return false;
-          
-          switch (draggedNode.localName.toUpperCase())
+
+          var local_name = draggedNode.localName;
+
+          if (local_name) {
+            local_name.toUpperCase();
+          }
+
+          switch (local_name)
             {
               case 'AREA':
               case 'IMG':
