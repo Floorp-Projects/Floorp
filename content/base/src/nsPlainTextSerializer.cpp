@@ -717,6 +717,19 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   else if (type == eHTMLTag_span) {
     ++mSpanLevel;
   }
+  else if (type == eHTMLTag_blockquote) {
+    EnsureVerticalSpace(1);
+
+    nsAutoString value;
+    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
+
+    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
+      mCiteQuoteLevel++;
+    }
+    else {
+      mIndent += kTabSize; // Check for some maximum value?
+    }
+  }
 
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
@@ -766,20 +779,6 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
            // for h(x), run x-1 times
         mIndent += kIndentIncrementHeaders;
       }
-    }
-  }
-  else if (type == eHTMLTag_blockquote) {
-    EnsureVerticalSpace(1);
-
-    nsAutoString value;
-    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
-
-    if (NS_SUCCEEDED(rv) &&
-        NS_LossyConvertUCS2toASCII(value).Equals("cite", nsCaseInsensitiveCStringComparator())) {
-      mCiteQuoteLevel++;
-    }
-    else {
-      mIndent += kTabSize; // Check for some maximum value?
     }
   }
   else if (type == eHTMLTag_a && !IsCurrentNodeConverted()) {
@@ -887,8 +886,23 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
       mFloatingLines = 0;
     mLineBreakDue = PR_TRUE;
   }
+  else if (type == eHTMLTag_blockquote) {
+    FlushLine();    // Is this needed?
+
+    nsAutoString value;
+    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
+
+    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
+      mCiteQuoteLevel--;
+    }
+    else {
+      mIndent -= kTabSize;
+    }
+
+    mFloatingLines = 1;
+    mLineBreakDue = PR_TRUE;
+  }
   else if (IsBlockLevel(aTag)
-           && type != eHTMLTag_blockquote
            && type != eHTMLTag_script
            && type != eHTMLTag_doctypeDecl
            && type != eHTMLTag_markupDecl) {
@@ -927,22 +941,6 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
         mIndent -= kIndentIncrementHeaders;
       }
     }
-    EnsureVerticalSpace(1);
-  }
-  else if (type == eHTMLTag_blockquote) {
-    FlushLine();    // Is this needed?
-
-    nsAutoString value;
-    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
-
-    if (NS_SUCCEEDED(rv)  &&
-        NS_LossyConvertUCS2toASCII(value).Equals("cite", nsCaseInsensitiveCStringComparator())) {
-      mCiteQuoteLevel--;
-    }
-    else {
-      mIndent -= kTabSize;
-    }
-
     EnsureVerticalSpace(1);
   }
   else if (type == eHTMLTag_a && !IsCurrentNodeConverted() && !mURL.IsEmpty()) {
