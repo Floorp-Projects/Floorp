@@ -19,8 +19,9 @@
 #define nsIFrameImageLoader_h___
 
 #include "nslayout.h"
-#include "nsIImageObserver.h"
+#include "nsISupports.h"
 #include "nsColor.h"
+
 class nsIFrame;
 class nsIImage;
 class nsIImageGroup;
@@ -28,17 +29,19 @@ class nsIPresContext;
 class nsString;
 struct nsSize;
 
-/* a9970300-e918-11d1-89cc-006008911b81 */
+/* a6cf90ec-15b3-11d2-932e-00805f8add32 */
 #define NS_IFRAME_IMAGE_LOADER_IID \
- { 0xa9970300,0xe918,0x11d1,{0x89, 0xcc, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
-
+ { 0xa6cf90ec, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 // Type of callback function used during image loading. The frame
 // image loader will invoke this callback as notifications occur from
 // the image library.
-typedef nsresult (*nsFrameImageLoaderCB)(nsIPresContext& aPresContext,
-                                         nsIFrame* aFrame,
-                                         PRIntn aStatus);
+class nsIFrameImageLoader;
+typedef nsresult (*nsIFrameImageLoaderCB)(nsIPresContext* aPresContext,
+                                          nsIFrameImageLoader* aLoader,
+                                          nsIFrame* aFrame,
+                                          void* aClosure,
+                                          PRUint32 aStatus);
 
 /**
  * Abstract interface for frame image loaders. Frame image loaders
@@ -46,39 +49,47 @@ typedef nsresult (*nsFrameImageLoaderCB)(nsIPresContext& aPresContext,
  * generate the appropriate rendering/reflow operation for a target
  * frame.
  */
-class nsIFrameImageLoader : public nsIImageRequestObserver {
+class nsIFrameImageLoader : public nsISupports {
 public:
   NS_IMETHOD Init(nsIPresContext* aPresContext,
                   nsIImageGroup* aGroup,
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
-                  nsIFrame* aTargetFrame,
-                  const nsSize& aDesiredSize,
-                  nsFrameImageLoaderCB aCallBack,
-                  PRBool aNeedSizeUpdate,
-                  PRBool aNeedErrorNotification) = 0;
+                  const nsSize* aDesiredSize,
+                  nsIFrame* aFrame,
+                  nsIFrameImageLoaderCB aCallBack,
+                  void* aClosure) = 0;
 
   NS_IMETHOD StopImageLoad() = 0;
 
   NS_IMETHOD AbortImageLoad() = 0;
 
-  NS_IMETHOD GetTargetFrame(nsIFrame*& aFrameResult) const = 0;
+  NS_IMETHOD IsSameImageRequest(const nsString& aURL,
+                                const nscolor* aBackgroundColor,
+                                const nsSize* aDesiredSize,
+                                PRBool* aResult) = 0;
 
-  NS_IMETHOD GetURL(nsString& aResult) const = 0;
+  NS_IMETHOD AddFrame(nsIFrame* aFrame, nsIFrameImageLoaderCB aCallBack,
+                      void* aClosure) = 0;
 
-  NS_IMETHOD GetImage(nsIImage*& aResult) const = 0;
+  NS_IMETHOD RemoveFrame(nsIFrame* aFrame) = 0;
 
-  NS_IMETHOD GetSize(nsSize& aResult) const = 0;
+  NS_IMETHOD SafeToDestroy(PRBool* aResult) = 0;
 
-  NS_IMETHOD GetImageLoadStatus(PRIntn& aLoadStatus) const = 0;
+  NS_IMETHOD GetURL(nsString& aResult) = 0;
+
+  NS_IMETHOD GetImage(nsIImage** aResult) = 0;
+
+  // Return the size of the image, in twips
+  NS_IMETHOD GetSize(nsSize& aResult) = 0;
+
+  NS_IMETHOD GetImageLoadStatus(PRUint32* aLoadStatus) = 0;
 };
 
 // Image load status bit values
 #define NS_IMAGE_LOAD_STATUS_NONE             0x0
-#define NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED   0x1
-#define NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE   0x2
-#define NS_IMAGE_LOAD_STATUS_IMAGE_READY      0x4
-#define NS_IMAGE_LOAD_STATUS_ERROR            0x8
-#define NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED  0x10
+#define NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE   0x1
+#define NS_IMAGE_LOAD_STATUS_IMAGE_READY      0x2
+#define NS_IMAGE_LOAD_STATUS_ERROR            0x4
 
 #endif /* nsIFrameImageLoader_h___ */
