@@ -141,8 +141,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
     // create a new input stream channel
     rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
                                   this,
-                                  nsDependentCString(aContentType),
-                                  EmptyCString());
+                                  nsDependentCString(aContentType));
     if (NS_FAILED(rv))
         return rv;
 
