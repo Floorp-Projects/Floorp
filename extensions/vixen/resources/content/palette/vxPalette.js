@@ -34,7 +34,7 @@ var vxPalette =
     var nElements = this.incrementElementCount("button");
     var attributes = ["value", "id"];
     var values = ["Button " + nElements, "button_" + nElements];
-    this.insertSingleElement("button", attributes, values, "Insert Button");    
+    this.insertSingleElement("button", attributes, values, "Insert Button " + nElements);    
   },
 
   insertTextFieldElement: function (aType)
@@ -42,7 +42,7 @@ var vxPalette =
     var nElements = this.incrementElementCount("textfield");
     var attributes = ["value", "id"];
     var values = ["Textfield " + nElements, "textfield_" + nElements];
-    this.insertSingleElement("textfield", attributes, values, "Insert Textfield");
+    this.insertSingleElement("textfield", attributes, values, "Insert Textfield " + nElements);
   },
 
   insertRadioGroup: function ()

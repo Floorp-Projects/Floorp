@@ -90,7 +90,7 @@ vxVFDTransactionManager.prototype =
       
       // likewise with the RDF Seq.
       var seqCount = this.mTxnSeq.GetCount();
-      for (var i = seqCount-1; i >= this.mTxnStack.index; i--)
+      for (var i = seqCount; i > this.mTxnStack.index; i--)
         this.mTxnSeq.RemoveElementAt(i, true);
     }
     
