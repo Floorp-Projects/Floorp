@@ -1,0 +1,91 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
+
+#include "nsISupports.idl"
+
+interface nsIMsgDatabase;
+
+typedef long nsMsgViewSortOrderValue;
+typedef long nsMsgViewSortTypeValue;
+typedef long nsMsgViewTypeValue;
+
+[scriptable, uuid(682a18be-fd18-11d4-a5be-0060b0fc04b7)]
+interface nsMsgViewSortOrder
+{
+	const nsMsgViewSortOrderValue none = 0;
+	const nsMsgViewSortOrderValue ascending = 1;
+	const nsMsgViewSortOrderValue descending = 2;
+};
+
+[scriptable, uuid(b2f31bca-fd18-11d4-a5be-0060b0fc04b7)]
+interface nsMsgViewSortType
+{
+	const nsMsgViewSortTypeValue byDate = 0x12;
+	const nsMsgViewSortTypeValue bySubject = 0x13;
+	const nsMsgViewSortTypeValue byAuthor = 0x14;
+	const nsMsgViewSortTypeValue byId = 0x15;
+	const nsMsgViewSortTypeValue byThread = 0x16;
+	const nsMsgViewSortTypeValue byPriority = 0x17;
+	const nsMsgViewSortTypeValue byStatus = 0x18;
+	const nsMsgViewSortTypeValue bySize = 0x19;
+	const nsMsgViewSortTypeValue byFlagged = 0x1a;
+	const nsMsgViewSortTypeValue byUnread = 0x1b;
+	const nsMsgViewSortTypeValue byRecipient = 0x1c;
+};
+
+[scriptable, uuid(4063bcf8-fd19-11d4-a5be-0060b0fc04b7)]
+interface nsMsgViewType
+{
+    /** 
+     * this view type matches any other view type, 
+	 * for the purpose of matching cached views.
+	 * Else, it's equivalent to allThreads
+     */
+	const nsMsgViewTypeValue anyView = 0; 
+
+    /** 
+     * default view, no killed threads
+     */
+	const nsMsgViewTypeValue allThreads = 1;			
+
+	const nsMsgViewTypeValue onlyThreadsWithNew = 2;
+	const nsMsgViewTypeValue onlyNewHeaders = 3;		
+	const nsMsgViewTypeValue watchedThreadsWithNew = 4;
+
+    /** 
+     * view built up on demand
+     */
+	const nsMsgViewTypeValue cacheless = 5;	
+};
+
+
+[scriptable, uuid(704c7d28-fd1a-11d4-a5be-0060b0fc04b7)]
+interface nsIMsgDBView : nsISupports
+{
+    void open(in nsIMsgDatabase msgDB, in nsMsgViewSortType viewType);
+    void close();
+
+    void init(out long pCount);
+    void addKeys(out long pKeys, out long pFlags, in string pLevels, in nsMsgViewSortType sortType, in long numKeysToAdd);
+
+    void sort(in nsMsgViewSortType sortType, in nsMsgViewSortOrder sortOrder);
+};
