@@ -77,7 +77,7 @@ addThis();
 
 /*
  * function scope -
-
+ */
 status = inSection(2);
 try
 {
@@ -93,7 +93,7 @@ catch(e)
 }
 expect = TEST_PASSED;
 addThis();
- */
+
 
 /*
  * eval scope -
