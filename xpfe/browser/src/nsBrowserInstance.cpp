@@ -1390,8 +1390,11 @@ NS_IMETHODIMP
 nsBrowserInstance::DoContent(const char *aContentType, nsURILoadCommand aCommand, const char *aWindowTarget, 
                              nsIChannel *aChannel, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
-   NS_ERROR("This shouldn't be getting called");
-   return NS_ERROR_FAILURE;
+  // forward the DoContent call to our content area webshell
+  nsCOMPtr<nsIURIContentListener> ctnListener (do_GetInterface(mContentAreaDocShell));
+  if (ctnListener)
+    return ctnListener->DoContent(aContentType, aCommand, aWindowTarget, aChannel, aContentHandler, aAbortProcess);
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
