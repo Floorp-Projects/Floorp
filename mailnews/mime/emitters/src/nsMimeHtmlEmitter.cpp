@@ -34,6 +34,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
+#include "prtime.h"
 
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
@@ -188,11 +189,25 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
     if (headerSink)
     {
-        // Convert UTF-8 to UCS2
-        *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerInfo->value).GetUnicode());
+      char buffer[128];
+      const char * headerValue = headerInfo->value;
 
-        if (NS_SUCCEEDED(rv))
-          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue);
+      if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
+      {
+        // let's try some fancy date formatting...
+        PRExplodedTime explode;
+        PRTime dateTime;
+        PR_ParseTimeString(headerInfo->value, PR_FALSE, &dateTime);
+
+        PR_ExplodeTime( dateTime, PR_LocalTimeParameters, &explode);
+        PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
+        headerValue = buffer;
+      }
+       // Convert UTF-8 to UCS2
+       *((PRUnichar **)getter_Copies(unicodeHeaderValue)) = nsXPIDLString::Copy(NS_ConvertUTF8toUCS2(headerValue).GetUnicode());
+
+       if (NS_SUCCEEDED(rv))
+         headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue);
     }
   }
 
