@@ -421,12 +421,184 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
   return NS_OK;
 }
 
+nsDOMEventRTTearoff *nsDOMEventRTTearoff::mCachedEventTearoff[];
+PRUint32 nsDOMEventRTTearoff::mCachedEventTearoffCount = 0;
+
+
+nsDOMEventRTTearoff::nsDOMEventRTTearoff(nsIContent *aContent)
+  : mContent(aContent)
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsDOMEventRTTearoff::~nsDOMEventRTTearoff()
+{
+};
+
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventTarget)) ||
+      aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
+    nsIDOMEventReceiver *inst = this;
+
+    NS_ADDREF(inst);
+
+    *aInstancePtr = inst;
+
+    return NS_OK;
+  }
+
+  return mContent->QueryInterface(aIID, aInstancePtr);
+}
+
+
+NS_IMPL_ADDREF(nsDOMEventRTTearoff)
+NS_IMPL_RELEASE_WITH_DESTROY(nsDOMEventRTTearoff, LastRelease())
+
+
+nsDOMEventRTTearoff *
+nsDOMEventRTTearoff::Create(nsIContent *aContent)
+{
+  if (mCachedEventTearoffCount) {
+    // We have cached unused instances of this class, return a cached
+    // instance in stead of always creating a new one.
+    nsDOMEventRTTearoff *tearoff =
+      mCachedEventTearoff[--mCachedEventTearoffCount];
+
+    // Set the back pointer to the content object
+    tearoff->mContent = aContent;
+
+    return tearoff;
+  }
+
+  // The cache is empty, this means we haveto create a new instance.
+  return new nsDOMEventRTTearoff(aContent);
+}
+
+// static
+void
+nsDOMEventRTTearoff::Shutdown()
+{
+  // Clear our cache.
+  while (mCachedEventTearoffCount) {
+    delete mCachedEventTearoff[--mCachedEventTearoffCount];
+  }
+}
+
+void
+nsDOMEventRTTearoff::LastRelease()
+{
+  if (mCachedEventTearoffCount < NS_EVENT_TEAROFF_CACHE_SIZE) {
+    // There's still space in the cache for one more instance, put
+    // this instance in the cache in stead of deleting it.
+    mCachedEventTearoff[mCachedEventTearoffCount++] = this;
+
+    mContent = nsnull;
+
+    // The defcount balancing and destructor re-entrancy code in
+    // Release() sets mRefCnt to 1 so we haveto set it to 0 here to
+    // prevent leaks
+    mRefCnt = 0;
+
+    return;
+  }
+
+  delete this;
+}
+
+nsresult
+nsDOMEventRTTearoff::GetEventReceiver(nsIDOMEventReceiver **aReceiver)
+{
+  nsCOMPtr<nsIEventListenerManager> listener_manager;
+  nsresult rv = mContent->GetListenerManager(getter_AddRefs(listener_manager));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CallQueryInterface(listener_manager, aReceiver);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                           const nsIID& aIID)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->AddEventListenerByIID(aListener, aIID);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                              const nsIID& aIID)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->RemoveEventListenerByIID(aListener, aIID);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::GetListenerManager(nsIEventListenerManager** aResult)
+{
+  return mContent->GetListenerManager(aResult);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::HandleEvent(nsIDOMEvent *aEvent)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->HandleEvent(aEvent);
+}
+
+// nsIDOMEventTarget
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::AddEventListener(const nsAReadableString& type,
+                                      nsIDOMEventListener *listener,
+                                      PRBool useCapture)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->AddEventListener(type, listener, useCapture);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::RemoveEventListener(const nsAReadableString& type,
+                                         nsIDOMEventListener *listener,
+                                         PRBool useCapture)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->RemoveEventListener(type, listener, useCapture);
+}
+
+NS_IMETHODIMP
+nsDOMEventRTTearoff::DispatchEvent(nsIDOMEvent *evt)
+{
+  nsCOMPtr<nsIDOMEventReceiver> event_receiver;
+  nsresult rv = GetEventReceiver(getter_AddRefs(event_receiver));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return event_receiver->DispatchEvent(evt);
+}
+
 
 //----------------------------------------------------------------------
 
 /* static */ void
 nsGenericElement::Shutdown()
 {
+  nsDOMEventRTTearoff::Shutdown();
 }
 
 nsGenericElement::nsGenericElement() : mDocument(nsnull), mParent(nsnull),
@@ -2372,27 +2544,22 @@ nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIContent *, this);
   } else if (aIID.Equals(NS_GET_IID(nsIStyledContent))) {
     inst = NS_STATIC_CAST(nsIStyledContent *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
+    inst = new nsNode3Tearoff(this);
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver)) ||
              aIID.Equals(NS_GET_IID(nsIDOMEventTarget))) {
-    nsCOMPtr<nsIEventListenerManager> man;
-
-    GetListenerManager(getter_AddRefs(man));
-
-    if (man) {
-      return man->QueryInterface(aIID, aInstancePtr);
-    }
-
-    return NS_NOINTERFACE;
-  }
-  else if (mDocument) {
+    inst = NS_STATIC_CAST(nsIDOMEventReceiver *,
+                          nsDOMEventRTTearoff::Create(this));
+    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
+  } else if (mDocument) {
     nsCOMPtr<nsIBindingManager> manager;
     mDocument->GetBindingManager(getter_AddRefs(manager));
     if (manager)
       return manager->GetBindingImplementation(this, aIID, aInstancePtr);
 
     return NS_NOINTERFACE;
-  }
-  else {
+  } else {
     return NS_NOINTERFACE;
   }
 

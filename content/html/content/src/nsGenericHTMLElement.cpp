@@ -517,9 +517,6 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
     inst = NS_STATIC_CAST(nsIDOMElementCSSInlineStyle *,
                           new nsGenericHTMLElementTearoff(this));
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOM3Node))) {
-    inst = new nsNode3Tearoff(this);
-    NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
     return NS_NOINTERFACE;
   }
