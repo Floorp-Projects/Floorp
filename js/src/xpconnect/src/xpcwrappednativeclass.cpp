@@ -340,8 +340,9 @@ nsXPCWrappedNativeClass::HandlePossibleNameCaseError(JSContext* cx, jsid id)
             char* locationStr = nsnull;
 
             nsCOMPtr<nsIXPCException> e =
-                dont_AddRef(nsXPCException::NewException("", NS_OK, 
-                                                         nsnull, nsnull));
+                dont_AddRef(NS_STATIC_CAST(nsIXPCException*,
+                                           nsXPCException::NewException("", 
+                                                        NS_OK, nsnull, nsnull)));
 
             nsCOMPtr<nsIJSStackFrameLocation> loc = nsnull;
             if(e)
