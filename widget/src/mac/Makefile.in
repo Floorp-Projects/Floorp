@@ -53,6 +53,10 @@ REQUIRES  = xpcom \
           exthandler \
           $(NULL)
 
+ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
+endif
+
 GFX_LCPPSRCS = \
         nsRepeater.cpp \
         nsRegionMac.cpp \
