@@ -3544,9 +3544,8 @@ NS_IMETHODIMP
 nsDocument::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsDocument::IsDefaultNamespace()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
