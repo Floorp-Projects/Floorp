@@ -46,8 +46,13 @@ function Startup()
     dump("Not all dialog controls were found!!!\n");
   }
 
-  // Set initial focus
+  selection = editorShell.GetContentsAs("text/html", 1);
+  selection = (selection.replace(/<body>/,"")).replace(/<\/body>/,"");
+  //dump("Got selection: '" + selection + "'\n");
+  if (selection != "")
+    dialog.srcInput.value = selection;
 
+  // Set initial focus
   dialog.srcInput.focus();
 }
 
