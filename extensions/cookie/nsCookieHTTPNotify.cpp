@@ -29,7 +29,6 @@
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
-#include "nsMemory.h"
 #include "nsINetModuleMgr.h" 
 #include "nsILoadGroup.h"
 #include "nsICategoryManager.h"
@@ -64,12 +63,9 @@ NS_METHOD nsCookieHTTPNotify::RegisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
-    char *cidString = cid.ToString();
     nsXPIDLCString prevEntry;
-    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", cidString,
+    rv = catman->AddCategoryEntry(NS_HTTP_STARTUP_CATEGORY, "Http Cookie Notify", NS_COOKIEHTTPNOTIFY_PROGID,
                                   PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
-    nsMemory::Free(cidString);
 
     return NS_OK;
 
@@ -83,12 +79,9 @@ NS_METHOD nsCookieHTTPNotify::UnregisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCID cid = NS_COOKIEHTTPNOTIFY_CID;
-    char *cidString = cid.ToString();
     nsXPIDLCString prevEntry;
-    rv = catman->DeleteCategoryEntry("http-startup-category", cidString, PR_TRUE,
+    rv = catman->DeleteCategoryEntry("http-startup-category", NS_COOKIEHTTPNOTIFY_PROGID, PR_TRUE,
                                      getter_Copies(prevEntry));
-    nsMemory::Free(cidString);
 
     // Return value is not used from this function.
     return NS_OK;
