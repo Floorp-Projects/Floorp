@@ -1774,8 +1774,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }
       else {
         // Map carriage returns to newlines
-        if ((tmp.Length() > 0) && (tmp.CharAt(0) == '\r')) {
-          if (tmp.CharAt(0) == '\r') {
+        if(tmp.Length() > 0) {
+          if(tmp.CharAt(0) == '\r') {
             tmp.AssignWithConversion("\n");
           }
           rv = AddText(tmp);
