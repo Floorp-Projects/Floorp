@@ -58,6 +58,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
 
   // now bind the handler to the application we want to launch when we the handler is done
   // receiving all the data...
+  handler->Init(nsnull /* this should be a nsIFile that represents the app */);
 
   return NS_OK;
 
