@@ -9093,6 +9093,122 @@ of access. It should be granted by system administrators only.")
 ResDef(CAPS_TARGET_URL_SILENTINSTALL, (CAPS_MSG_BASE + 201), "\
 #SilentInstall")
 
+
+/* The following messages are for Software Update */
+#define SU_MSG_BASE XP_MSG_BASE + 4000
+
+ResDef(SU_DETAILS_DELETE_COMPONENT, (SU_MSG_BASE + 1), "\
+Delete component ")
+
+ResDef(SU_DETAILS_DELETE_FILE, (SU_MSG_BASE + 2), "\
+Delete ")
+
+ResDef(SU_DETAILS_EXECUTE_PROGRESS, (SU_MSG_BASE + 3), "\
+Execute {0}")
+
+ResDef(SU_DETAILS_EXECUTE_PROGRESS2, (SU_MSG_BASE + 4), "\
+Execute {0} ({1})")
+
+ResDef(SU_DETAILS_INSTALL_FILE_MSG_ID, (SU_MSG_BASE + 5), "\
+Install ")
+
+ResDef(SU_DETAILS_PATCH, (SU_MSG_BASE + 6), "\
+Patch ")
+
+ResDef(SU_DETAILS_REPLACE_FILE_MSG_ID, (SU_MSG_BASE + 7), "\
+Replace ")
+
+ResDef(SU_DETAILS_UNINSTALL, (SU_MSG_BASE + 8), "\
+Uninstall ")
+
+ResDef(SU_ERROR_BAD_JS_ARGUMENT, (SU_MSG_BASE + 9), "\
+Verification failed. 'this' must be passed to SoftwareUpdate constructor. ")
+
+ResDef(SU_ERROR_BAD_PACKAGE_NAME, (SU_MSG_BASE + 10), "\
+Package name is null or empty in StartInstall.")
+
+ResDef(SU_ERROR_BAD_PACKAGE_NAME_AS, (SU_MSG_BASE + 11), "\
+Bad package name in AddSubcomponent. Did you call StartInstall()?")
+
+ResDef(SU_ERROR_EXTRACT_FAILED, (SU_MSG_BASE + 12), "\
+Extraction of JAR file failed.")
+
+ResDef(SU_ERROR_FILE_IS_DIRECTORY, (SU_MSG_BASE + 13), "\
+Failure while deleting file. File is a directory. ")
+
+ResDef(SU_ERROR_FILE_READ_ONLY, (SU_MSG_BASE + 14), "\
+Failure while deleting file. File is read only. ")
+
+ResDef(SU_ERROR_INSTALL_FILE_UNEXPECTED, (SU_MSG_BASE + 15), "\
+Unexpected error when installing a file ")
+
+ResDef(SU_ERROR_MISSING_INSTALLER, (SU_MSG_BASE + 16), "\
+Could not get installer name out of the global MIME headers inside the JAR file.")
+
+ResDef(SU_ERROR_NOT_IN_REGISTRY, (SU_MSG_BASE + 17), "\
+Failure while deleting component. Component not found in registry. ")
+
+ResDef(SU_ERROR_NO_CERTIFICATE, (SU_MSG_BASE + 18), "\
+Installer script does not have a certificate.")
+
+ResDef(SU_ERROR_NO_SUCH_COMPONENT, (SU_MSG_BASE + 19), "\
+No such component ")
+
+ResDef(SU_ERROR_OUT_OF_MEMORY, (SU_MSG_BASE + 20), "\
+Out of memory")
+
+ResDef(SU_ERROR_SMART_UPDATE_DISABLED, (SU_MSG_BASE + 21), "\
+SmartUpdate disabled")
+
+ResDef(SU_ERROR_TOO_MANY_CERTIFICATES, (SU_MSG_BASE + 22), "\
+Installer script had more than one certificate")
+
+ResDef(SU_ERROR_UNEXPECTED, (SU_MSG_BASE + 23), "\
+Unexpected error in ")
+
+ResDef(SU_ERROR_VERIFICATION_FAILED, (SU_MSG_BASE + 24), "\
+Security integrity check failed.")
+
+ResDef(SU_ERROR_WIN_PROFILE_MUST_CALL_START, (SU_MSG_BASE + 25), "\
+Must call StartInstall() to initialize SoftwareUpdate.")
+
+ResDef(SU_INSTALLWIN_INSTALLING, (SU_MSG_BASE + 26), "\
+Installing... ")
+
+ResDef(SU_INSTALLWIN_TITLE, (SU_MSG_BASE + 27), "\
+SmartUpdate: %s")
+
+ResDef(SU_INSTALLWIN_UNPACKING, (SU_MSG_BASE + 28), "\
+Unpacking files for installation ")
+
+ResDef(SU_PROGRESS_DOWNLOAD_LINE1, (SU_MSG_BASE + 29), "\
+Location: %s")
+
+ResDef(SU_PROGRESS_DOWNLOAD_TITLE, (SU_MSG_BASE + 30), "\
+SmartUpdate: Downloading Install")
+
+ResDef(SU_SMARTUPDATE, (SU_MSG_BASE + 31), "\
+SmartUpdate\nConfigure software installation")
+
+ResDef(SU_UNINSTALL, (SU_MSG_BASE + 32), "\
+Uninstall ")
+
+ResDef(SU_CONTINUE_UNINSTALL, (SU_MSG_BASE + 33), "\
+Are you sure you want to uninstall %s? ")
+
+ResDef(SU_ERROR_UNINSTALL, (SU_MSG_BASE + 34), "\
+Error in uninstall")
+
+ResDef(REGPACK_PROGRESS_TITLE, (SU_MSG_BASE + 35), "\
+Updating Netscape Client Registry")
+
+ResDef(REGPACK_PROGRESS_LINE1, (SU_MSG_BASE + 36), "\
+Communicator is updating your Netscape registry.")
+
+ResDef(REGPACK_PROGRESS_LINE2, (SU_MSG_BASE + 37), "\
+%d bytes of %d bytes")
+
+
 END_STR(mcom_include_xp_msg_i_strings)
 
 /* WARNING: DO NOT TAKE ERROR CODE -666, it is used internally
