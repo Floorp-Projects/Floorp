@@ -98,7 +98,7 @@ NS_METHOD  nsTextHelper::SetText(const nsString &aText, PRUint32& aActualSize)
   if (mWidget)
   {
     PtSetArg(&arg[0], Pt_ARG_TEXT_STRING,
-             NS_LossyConvertUCS2toASCII(aText).get(), 0);
+             NS_ConvertUCS2toUFT8(aText).get(), 0);
     PtSetResources(mWidget, 1, arg);
   }
 
@@ -114,7 +114,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
   if (mWidget)
   {
     PtTextModifyText(mWidget, 0, 0, aStartPos,
-                     NS_LossyConvertUCS2toASCII(aText).get(),
+                     NS_ConvertUCS2toUTF8(aText).get(),
                      aText.Length());
   }
   aActualSize = aText.Length();
