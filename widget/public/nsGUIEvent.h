@@ -481,6 +481,7 @@ enum nsDragDropEventStatus {
        (((evnt)->message == NS_TEXT_EVENT) ||  \
         ((evnt)->message == NS_COMPOSITION_START) ||  \
         ((evnt)->message == NS_COMPOSITION_END) || \
+        ((evnt)->message == NS_RECONVERSION_QUERY) || \
         ((evnt)->message == NS_COMPOSITION_QUERY))
 
 /*
