@@ -787,6 +787,12 @@ public abstract class ScriptableObject implements Scriptable {
                 prefix = functionPrefix;
             else if (name.startsWith(staticFunctionPrefix))
                 prefix = staticFunctionPrefix;
+            else if (name.startsWith(propertyPrefix))
+                prefix = propertyPrefix;
+            else if (name.startsWith(getterPrefix))
+                prefix = getterPrefix;
+            else if (name.startsWith(setterPrefix))
+                prefix = setterPrefix;
             if (prefix != null) {
                 hasPrefix = true;
                 name = name.substring(prefix.length());

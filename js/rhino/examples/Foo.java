@@ -96,7 +96,7 @@ public class Foo extends ScriptableObject {
      *
      * Resets the counter to 0.
      */
-    public void resetCounter() {
+    public void jsFunction_resetCounter() {
         counter = 0;
     }
 
@@ -106,7 +106,7 @@ public class Foo extends ScriptableObject {
      * If "setCounter" had been defined in this class, the runtime would
      * call the setter when the property is assigned to.
      */
-    public int getCounter() {
+    public int jsGet_counter() {
         return counter++;
     }
 
@@ -128,8 +128,8 @@ public class Foo extends ScriptableObject {
      *            thread is not associated with a Context
      * @see org.mozilla.javascript.ScriptableObject#getTopLevelScope
      */
-    public static Object varargs(Context cx, Scriptable thisObj,
-                                 Object[] args, Function funObj)
+    public static Object jsFunction_varargs(Context cx, Scriptable thisObj,
+                                            Object[] args, Function funObj)
     {
         StringBuffer buf = new StringBuffer();
         buf.append("this = ");
