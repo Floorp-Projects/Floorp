@@ -137,7 +137,8 @@ enum ERLEState {
     eRLEStateNeedSecondEscapeByte,
     eRLEStateNeedXDelta,
     eRLEStateNeedYDelta,    // mStateData will hold x delta
-    eRLEStateAbsoluteMode   // mStateData will hold count of existing data to read
+    eRLEStateAbsoluteMode,  // mStateData will hold count of existing data to read
+    eRLEStateAbsoluteModePadded // As above, but another byte of data has to be read as padding
 };
 
 class nsBMPDecoder : public imgIDecoder
