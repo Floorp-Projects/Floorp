@@ -43,6 +43,8 @@ public:
 
   nsIImage* GetImage();
 
+  nsresult SetURL(const nsString& aURLSpec);
+
   nsresult LoadImage(nsIPresContext* aPresContext,
                      nsIFrame* aForFrame,
                      PRBool aNeedSizeUpdate,
@@ -57,6 +59,7 @@ protected:
   nsIFrameImageLoader* mImageLoader;
   PRPackedBool mLoadImageFailed;
   PRPackedBool mLoadBrokenImageFailed;
+  nsString* mURLSpec;
 };
 
 #endif /* nsHTMLImage_h___ */
