@@ -61,37 +61,30 @@
 
    <unifinder id="calendar-unifinder-overlay">
    
-        <tabbox flex="1"> 
-           <toolbar id="unifinder-toolbar">
-              <!--
-              <unifinder-button id="unifinder-new-category-button" class="unifinder-new-category-button" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.newfolder.tooltip;" oncommand="unifinderNewCategoryCommand()" />
-              -->
-              <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
-              <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
-           </toolbar>
-           
-           <tabs  class="unifinder-tab" orient="horizontal" >
-             <tab label="&calendar.main.tab.label;" />
-             <tab label="&unifinder.tab.search.label;" />
-           </tabs>
-               
-           <tabpanels flex="1">
-               
-               <box>
-                   <vbox id="unifinder-categories-box" flex="1"/>
-               </box>
-               
-               <box flex="1">
-                   <vbox  flex="1"  >
-                       <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
-                       <tree id="unifinder-search-results-tree" flex="1" />
-                   </vbox>
-               </box>
-           
-           </tabpanels>
-        </tabbox> 
-
-
+        <!--
+        <unifinder-button id="unifinder-new-category-button" class="unifinder-new-category-button" tooltip="aTooltip" tooltiptext="&unifinder.toolbar.newfolder.tooltip;" oncommand="unifinderNewCategoryCommand()" />
+        -->
+        <unifinder-button id="unifinder-remove-button" class="unifinder-remove-button" tooltip="aTooltip" tooltiptext="&calendar.tools.delete.tooltip;" oncommand="unifinderRemoveCommand()" />
+        <unifinder-button id="unifinder-modify-button" class="unifinder-modify-button" tooltip="aTooltip" tooltiptext="&calendar.tools.modify.tooltip;" oncommand="unifinderModifyCommand()" />
+ 
+        <box flex="1">
+            <tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
+                <tabs  class="unifinder-tab" orient="horizontal" >
+                    <tab label="&calendar.main.tab.label;" />
+                    <tab label="&unifinder.tab.search.label;" />
+                </tabs>
+                
+                <spacer class="unifinder-tabs-spacer" />
+                
+                <tabpanels  flex="1">
+                    <vbox id="unifinder-categories-box" flex="1"/>
+                    <vbox flex="1">
+                        <unifinder-search-controls keypressfunction="unifinderSearchKeyPress( this, event )" />
+                        <tree id="unifinder-search-results-tree" flex="1" />
+                    </vbox>
+                </tabpanels>
+            </tabbox>
+        </box>
    </unifinder>     
 
   </overlay>

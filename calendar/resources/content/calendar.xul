@@ -113,7 +113,9 @@
  <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
  <popup id="unifinder-options-menu">
+     <!--
      <menuitem label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
+     -->
      <menuitem label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
      <menuitem label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
  </popup>

@@ -64,11 +64,7 @@
             </xul:toolbar>
           </xul:toolbox>
         </xul:box>
-          <xul:tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
-            <children includes="tabs"/>
-            <xul:spacer class="unifinder-tabs-spacer" />
-            <children includes="tabpanels"/>
-          </xul:tabbox>
+        <children />
       </xul:box>
     </content>
     <implementation>
@@ -130,9 +126,9 @@
 
   <binding id="unifinder-search-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
-        <xul:hbox>
+        <xul:hbox pack="center" align="start" flex="1">
             <xul:label for="unifinder-search-field" value="&unifinder.search.options.searchfor;" />
-            <xul:textbox class="dialog-field" id="unifinder-search-field" 
+            <xul:textbox id="unifinder-search-field" 
                      inherits="onkeypress=keypressfunction" flex="1"/>  
         </xul:hbox>
     </content>
@@ -140,7 +136,7 @@
 
   <binding id="unifinder-history-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
-        <xul:hbox class="unifinder-sub-control-box-class">
+        <xul:hbox class="unifinder-sub-control-box-class" align="start" pack="center">
             <xul:label for="unifinder-history-menu" value="&unifinder.history.options.documentsused;"/>
             <xul:menulist  class="dialog-field"  label="&unifinder.history.menu.today;" data="day" >
                 <xul:menupopup >
