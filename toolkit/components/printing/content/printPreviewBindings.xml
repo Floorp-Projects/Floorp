@@ -221,9 +221,7 @@
             this.updateSettings();
 
             // Now do PrintPreview
-            var print    = PrintUtils.getWebBrowserPrint();
-            var settings = print.currentPrintSettings;
-            this.doPrintPreview(print, settings, this.mTotalPages, null);
+            PrintUtils.printPreview();
           }
         ]]>
         </body>
@@ -340,91 +338,6 @@
         </body>
       </method>
 
-      <method name="doPrintPreview">
-        <parameter name="aWebBrowserPrint"/>
-        <parameter name="aPrintSettings"/>
-        <parameter name="aTotalPages"/>
-        <parameter name="aScaleCombobox"/>
-        <body>
-        <![CDATA[
-
-          // This observer is called once the progress dialog has been "opened"
-          this.mPrintPreviewObs = {
-              mDOMWin:null,
-              mWebBrowserPrint:null,
-              mPrintSettings:null,
-              mWebProgress:null,
-              mTotalPages:null,
-              mScaleCombobox:null,
-
-              observe: function(aSubject, aTopic, aData)
-              {
-                // First do PrintPreview
-                this.mWebBrowserPrint.printPreview(this.mPrintSettings, this.mDOMWin, this.mWebProgress.value);
-
-                // update total number of pages since this could have changed
-                this.mTotalPages.value = this.mWebBrowserPrint.printPreviewNumPages;
-                if (this.mScaleCombobox) {
-                  this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
-                }
-              },
-
-              QueryInterface : function(iid)
-              {
-               if (iid.equals(Components.interfaces.nsIObserver) || iid.equals(Components.interfaces.nsISupportsWeakReference))
-                return this;
-     
-               throw Components.results.NS_NOINTERFACE;
-              }
-          };
-
-          var ifreq;
-          var webBrowserPrint;  
-          var domWin;  
-          try {
-            ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-            domWin = ifreq.QueryInterface(Components.interfaces.nsIDOMWindow);
-          } catch (e) {
-            // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
-            // causing an exception to be thrown which we catch here.
-            // Unfortunately this will also consume helpful failures, so add a
-            //dump(e); // if you need to debug
-          }
-
-          // Here we get the PrintingPromptService tso we can display the PP Progress from script
-          // For the browser implemented via XUL with the PP toolbar we cannot let it be
-          // automatically opened from the print engine because the XUL scrollbars in the PP window
-          // will layout before the content window and a crash will occur.
-          //
-          // Doing it all from script, means it lays out before hand and we can let printing do it's own thing
-          this.mWebProgress = new Object();
-
-          // set up observer's global data for invoking Print Preview
-          this.mPrintPreviewObs.mDOMWin          = domWin;
-          this.mPrintPreviewObs.mWebBrowserPrint = aWebBrowserPrint;
-          this.mPrintPreviewObs.mPrintSettings   = aPrintSettings;
-          this.mPrintPreviewObs.mWebProgress     = this.mWebProgress;
-          this.mPrintPreviewObs.mTotalPages      = aTotalPages;
-          this.mPrintPreviewObs.mScaleCombobox   = aScaleCombobox;
-
-          var printPreviewParams    = new Object();
-          var notifyOnOpen          = new Object();
-          var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
-                                          .getService(Components.interfaces.nsIPrintingPromptService);
-          if (printingPromptService) {
-            printingPromptService.showProgress(domWin, aWebBrowserPrint, aPrintSettings, 
-                                               this.mPrintPreviewObs, false, this.mWebProgress, 
-                                               printPreviewParams, notifyOnOpen);
-            if (printPreviewParams.value) {
-              var webNav = getWebNavigation();
-              printPreviewParams.value.docTitle = webNav.document.title;
-              printPreviewParams.value.docURL   = webNav.currentURI.spec;
-            }
-          }
-        ]]>
-        </body>
-      </method>
-
       <method name="scale">
         <parameter name="aValue"/>
         <body>
@@ -434,11 +347,10 @@
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
               settings.shrinkToFit = true;
-              this.doPrintPreview(print, settings, this.mTotalPages, this.mScaleCombobox);
-              return;
-            } else {
-              return;
+              PrintUtils.saveSettings(settings);
+              PrintUtils.printPreview();
             }
+            return;
           }
 
           if (aValue == "Custom") {
@@ -456,7 +368,8 @@
 
           settings.shrinkToFit = false;
           settings.scaling = aValue;
-          this.doPrintPreview(print, settings, this.mTotalPages, null);
+          PrintUtils.saveSettings(settings);
+          PrintUtils.printPreview();
         ]]>
         </body>
       </method>
@@ -483,7 +396,8 @@
           var print = PrintUtils.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
-          this.doPrintPreview(print, settings, this.mTotalPages, null);
+          PrintUtils.saveSettings(settings);
+          PrintUtils.printPreview();
         ]]>
         </body>
       </method>
