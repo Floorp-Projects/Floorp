@@ -559,9 +559,8 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
             mEvent.message = NS_MOUSE_ENTER;
             mTargetContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
             mStateManager->SetLastMouseOverContent(mTargetContent);
-
-            NS_RELEASE(mStateManager);
           }
+          NS_RELEASE(mStateManager);
           NS_IF_RELEASE(mLastContent);
         }
       }
