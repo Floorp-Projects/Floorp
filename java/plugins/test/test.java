@@ -53,6 +53,7 @@ class TestInstance implements PlugletInstance {
     Panel panel;
     Button button;
     List list;
+    PlugletInstancePeer peer;
     public TestInstance() {
 	org.mozilla.util.Debug.print("--TestInstance.TestInstance() \n");
 	panel = new Panel();
@@ -84,6 +85,7 @@ class TestInstance implements PlugletInstance {
      */
 
     public void initialize(PlugletInstancePeer peer) {
+	this.peer = peer;
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
 	peer.showStatus("Hello world");
 	org.mozilla.util.Debug.print("--TestInstance.initialize  "+peer.getMIMEType());
@@ -141,7 +143,17 @@ class TestInstance implements PlugletInstance {
      * @param frame the pluglet panel
      */
     public void setWindow(Frame frame) {
-	org.mozilla.util.Debug.print("--Test...SetWindow "+frame);
+	org.mozilla.util.Debug.print("--Test...SetWindow "+frame+"\n");
+	if(frame == null) {
+	    return;
+        }
+        PlugletTagInfo info = peer.getTagInfo();
+	if (info instanceof PlugletTagInfo2) {
+	    PlugletTagInfo2 info2 = (PlugletTagInfo2)info;
+	    frame.setSize(info2.getWidth(),info2.getHeight());
+	    org.mozilla.util.Debug.print("--TestInstance.SetWindow width "+info2.getWidth()+ " height "+info2.getHeight()+"\n");
+	    org.mozilla.util.Debug.print("--Test...SetWindow "+frame+"\n");
+	}
 	frame.add(panel);
 	frame.pack();
 	frame.show();
