@@ -41,8 +41,14 @@ nsSlidingSharedBufferList::DiscardUnreferencedPrefix( Buffer* aRecentlyReleasedB
   {
     if ( aRecentlyReleasedBuffer == mFirstBuffer )
       {
-        while ( mFirstBuffer && !mFirstBuffer->IsReferenced() )
-          delete UnlinkBuffer(mFirstBuffer);
+        while ( mFirstBuffer && !mFirstBuffer->IsReferenced() ) {
+          Buffer *buffer = UnlinkBuffer(mFirstBuffer);
+          if (mFreeProc && !buffer->IsSingleAllocationWithBuffer()) {
+            (*mFreeProc)(buffer->DataStart(), mClientData);
+            buffer->DataStart(nsnull);
+          }
+          delete buffer;
+        }
       }
   }
 
@@ -275,6 +281,13 @@ nsSlidingSubstring::GetReadableFragment( nsReadableFragment<PRUnichar>& aFragmen
 
 nsSlidingString::nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd )
     : nsSlidingSubstring(new nsSlidingSharedBufferList(nsSlidingSharedBufferList::NewWrappingBuffer(aStorageStart, aDataEnd, aStorageEnd)))
+  {
+    // nothing else to do here
+  }
+
+nsSlidingString::nsSlidingString( PRUnichar* aStorageStart, PRUnichar* aDataEnd, PRUnichar* aStorageEnd,
+                                  nsFreeProc *aFreeProc, void *aClientData )
+    : nsSlidingSubstring(new nsSlidingSharedBufferList(nsSlidingSharedBufferList::NewWrappingBuffer(aStorageStart, aDataEnd, aStorageEnd), aFreeProc, aClientData))
   {
     // nothing else to do here
   }
