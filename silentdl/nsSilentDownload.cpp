@@ -151,9 +151,13 @@ GetSilentDownloadDirectory(char* directory)
 static void 
 GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interval)
 {
+    *enabled = PR_FALSE;
+    *bytes_range = 0;
+    *interval   = 0;
+
     PREF_GetBoolPref( "SilentDownload.enabled", (XP_Bool*)enabled);
-    if (!enabled)
-        return;
+    if (*enabled == PR_FALSE)
+       return;
 
    
     if (PREF_OK != PREF_GetIntPref("SilentDownload.range", (int32*)*bytes_range)) 
@@ -281,12 +285,15 @@ nsSilentDownloadManager::nsSilentDownloadManager()
     
     PR_AtomicIncrement(&gInstanceCnt);
     NS_INIT_REFCNT();
+    
+    Startup();
 }
 
 
 nsSilentDownloadManager::~nsSilentDownloadManager()
 {
     PR_AtomicDecrement(&gInstanceCnt);  
+    Shutdown();
 }
 
 nsresult
@@ -788,7 +795,6 @@ nsSilentDownloadTask::Init(const nsString& aId, const nsString& aUrl, const nsSt
     mState = nsIDOMSilentDownloadTask::SDL_NOT_ADDED;
 
     mListener = new nsSilentDownloadListener();
-    mListener->AddRef();
     mListener->SetSilentDownloadInfo(this);
 
     nsSilentDownloadManager* sdm = new nsSilentDownloadManager();
@@ -954,20 +960,19 @@ nsSilentDownloadTask::DownloadSelf(PRInt32 range)
 
     pURL->GetLoadAttribs(&loadAttr);
     loadAttr->SetLoadType(nsURLLoadBackground);
-    
-
-    byteRangeString =   PR_sprintf_append(  byteRangeString, 
-                                            "bytes=%ld-%ld",
-                                            mNextByte,
-                                            mNextByte+range);
-
-    loadAttr->SetByteRangeHeader(byteRangeString);
-    
-    PR_FREEIF(byteRangeString);
 
     if (mState != nsIDOMSilentDownloadTask::SDL_DOWNLOADING_NOW)
     {
         /* Do Byte Range Stuff */
+		byteRangeString =   PR_sprintf_append(  byteRangeString, 
+                                            "bytes=%ld-%ld",
+                                            mNextByte,
+                                            mNextByte+range);
+
+		loadAttr->SetByteRangeHeader(byteRangeString);
+		
+		PR_FREEIF(byteRangeString);
+
     }
 
     result = NS_OpenURL(pURL, mListener);

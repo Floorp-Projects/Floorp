@@ -64,7 +64,7 @@ class nsSilentDownloadListener : public nsIStreamListener
         NS_METHOD SetSilentDownloadInfo(nsIDOMSilentDownloadTask* con);
 
     protected:
-        ~nsSilentDownloadListener();
+        virtual ~nsSilentDownloadListener();
 
     private:
          //
@@ -83,7 +83,7 @@ class nsSilentDownloadTask : public nsIScriptObjectOwner, public nsIDOMSilentDow
     public:
     
            nsSilentDownloadTask();
-           ~nsSilentDownloadTask();
+           virtual ~nsSilentDownloadTask();
                          
 
         NS_DECL_ISUPPORTS
@@ -156,7 +156,7 @@ class nsSilentDownloadManager : public nsIScriptObjectOwner, public nsIDOMSilent
     public:
     
         nsSilentDownloadManager();
-        ~nsSilentDownloadManager();
+        virtual ~nsSilentDownloadManager();
                
         NS_DECL_ISUPPORTS
 
@@ -201,7 +201,7 @@ class nsSilentDownloadManagerFactory : public nsIFactory
     public:
         
         nsSilentDownloadManagerFactory();
-        ~nsSilentDownloadManagerFactory();
+        virtual ~nsSilentDownloadManagerFactory();
         
         PRBool CanUnload(void);
 
@@ -225,7 +225,7 @@ class nsSilentDownloadTaskFactory : public nsIFactory
     public:
         
         nsSilentDownloadTaskFactory();
-        ~nsSilentDownloadTaskFactory();
+        virtual ~nsSilentDownloadTaskFactory();
         
         PRBool CanUnload(void);
 
@@ -247,7 +247,7 @@ class nsSilentDownloadNameSet : public nsIScriptExternalNameSet
 {
     public:
         nsSilentDownloadNameSet();
-        ~nsSilentDownloadNameSet();
+        virtual ~nsSilentDownloadNameSet();
 
         NS_DECL_ISUPPORTS
             NS_IMETHOD InitializeClasses(nsIScriptContext* aScriptContext);
