@@ -58,5 +58,5 @@ interface nsICookieManager2 : nsICookieManager
   [noscript]
   void add(in AUTF8String aDomain, in AUTF8String aPath,
            in ACString aName, in ACString aValue,
-           in boolean aSecure, in PRint32 aExpires);
+           in boolean aSecure, in PRInt32 aExpires);
 };
