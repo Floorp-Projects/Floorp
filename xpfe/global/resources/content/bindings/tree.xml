@@ -66,9 +66,11 @@
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
+      <!-- contentView is obsolete (see bug 202391) -->
       <property name="contentView"
                 onget="return this.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
+      <!-- builderView is obsolete (see bug 202393) -->
       <property name="builderView"
                 onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
@@ -277,6 +279,7 @@
            this.treeBoxObject.scrollByLines(-1);
            return;
          }
+
          var c = this.currentIndex;
          if (c == -1 || c == 0)
            return;
@@ -436,7 +439,7 @@
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="control any">
         <![CDATA[
-          var l = this.view.rowCount - 1;
+         var l = this.view.rowCount - 1;
          if (l < 0)
            return;
          // Normal behaviour is to select the last row
@@ -461,7 +464,7 @@
         <![CDATA[
          if (this.view.selection.single)
            return;
-          var l = this.view.rowCount - 1;
+         var l = this.view.rowCount - 1;
          // Extend the selection from the existing pivot, if any
          this.view.selection.rangedSelect(-1, l, event.ctrlKey);
          this.treeBoxObject.ensureRowIsVisible(l);
