@@ -117,7 +117,7 @@ public:
   NS_IMETHOD           Destroy();
   void                 ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
   void                 ApplyTransparencyBitmap();
-#ifdef INCLUDE_XUL
+#ifdef MOZ_XUL
   NS_IMETHOD           SetWindowTranslucency(PRBool aTransparent);
   NS_IMETHOD           GetWindowTranslucency(PRBool& aTransparent);
   NS_IMETHOD           UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
