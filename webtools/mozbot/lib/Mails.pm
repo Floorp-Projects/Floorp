@@ -97,7 +97,22 @@ end
 ##########################################################
 
 sub ServerDown {
-    my ($server, $port, $nick, $ircname, $username) = @_;
+    my ($server, $port, $localAddr, $nick, $ircname, $username) = @_;
+    my $localAddrMessage;
+    if (defined($localAddr)) {
+        $localAddrMessage = <<end;
+You've configured me to assume that '$localAddr' is the address of the
+network interface to use. If this is wrong, change the localAddr
+setting in the configuration file (or remove it to enable autodetect).
+end
+    } else {
+        $localAddrMessage = <<end;
+I'm currently autodetecting the address of the network interface to
+use. If this host has more than one interface, set the localAddr
+setting in the configuration file to the IP address of the outgoing
+connection I should use.
+end
+    }
     return &mailowner("Help! I can't talk to $server:$port!", <<end);
 
 Hello Sir or Madam!
@@ -118,6 +133,8 @@ Here is what I was trying to connect to:
   Ircname: $ircname
  Username: $username
 
+$localAddrMessage
+
 Hope that helps.
 
 Cheers,
@@ -128,7 +145,7 @@ sub ServerUp {
     my ($server) = @_;
     return &mailowner("Woohoo! $server let me in!", <<end);
 
-Helo again.
+Hello again.
 
 You'll be happy to know that everything turned out for the better.
 

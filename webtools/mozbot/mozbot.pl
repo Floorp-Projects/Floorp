@@ -128,7 +128,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.5 $;
+my $VERSION = q$Revision: 2.6 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -185,7 +185,7 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 
 # - setup variables
 # note: owner is only used by the Mails module
-my ($server, $port, @nicks, @channels, %channelKeys, $owner, @modulenames, @ignoredUsers);
+my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner, @modulenames, @ignoredUsers);
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
@@ -199,6 +199,7 @@ my $helpline = 'see http://www.mozilla.org/projects/mozbot/'; # used in IRC name
 &registerConfigVariables(
     [\$server, 'server'],
     [\$port, 'port'],
+    [\$localAddr, 'localAddr'],
     [\@nicks, 'nicks'],
     [\$nick, 'currentnick'], # pointer into @nicks
     [\@channels, 'channels'],
@@ -293,9 +294,15 @@ sub connect {
              Nick => $nicks[$nick],
              Ircname => "$NAME $VERSION; $helpline",
              Username => $USERNAME,
+             LocalAddr => $localAddr,
            )) {
-        &debug("could not connect - are you sure '$server:$port' is a valid host?");
-        $mailed = &Mails::ServerDown($server, $port, $nicks[$nick], "$NAME $VERSION; $helpline", $nicks[0]) unless $mailed;
+        &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
+        if (defined($localAddr)) {
+            &debug("Is '$localAddr' the correct address of the interface to use?");
+        } else {
+            &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
+        }
+        $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "$NAME $VERSION; $helpline", $nicks[0]) unless $mailed;
         sleep($sleepdelay);
         &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \@nicks, \$nick, \$owner, \$sleepdelay));
         &debug("connecting to $server:$port...");
