@@ -116,7 +116,7 @@
                   accesskey="&forOriginatingSiteOnly.accesskey;"
                   oncommand="updateImagePref()"
                   style="margin-left: 23px;"/>
-        <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior" prefattribute="value" wsm_attributes="value"/>
+        <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior"/>
       </vbox>
       <vbox>
         <button id="manageImages" class="uniWidthButton"

@@ -197,12 +197,12 @@ nsPrefWindow.prototype =
                         var elt = itemObject.localname;
                         var prefattribute = itemObject.prefattribute;
                         if (!prefattribute) {
-                          if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
-                            prefattribute = "value";
-                          else if (elt == "checkbox")
+                          if (elt == "checkbox")
                             prefattribute = "checked";
                           else if (elt == "button")
                             prefattribute = "disabled";
+                          else
+                            prefattribute = "value";
                         }
                         
                         var value = itemObject[prefattribute];
@@ -328,12 +328,12 @@ nsPrefWindow.prototype =
                     var prefdefval    = prefElements[i].getAttribute( "prefdefval" );
                     var prefattribute = prefElements[i].getAttribute( "prefattribute" );
                     if (!prefattribute) {
-                      if (elt == "radiogroup" || elt == "textbox" || elt == "menulist")
-                        prefattribute = "value";
-                      else if (elt == "checkbox")
+                      if (elt == "checkbox")
                         prefattribute = "checked";
                       else if (elt == "button")
                         prefattribute = "disabled";
+                      else
+                        prefattribute = "value";
                     }
                     var prefvalue = this.getPref( preftype, prefstring );
                     if( prefvalue == "!/!ERROR_UNDEFINED_PREF!/!" )
