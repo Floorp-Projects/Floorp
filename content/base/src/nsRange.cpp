@@ -2269,22 +2269,22 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
 }
   
 
-nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged, PRInt32 aEndChanged, PRInt32 aReplaceLength)
+nsresult
+nsRange::TextOwnerChanged(nsIContent* aTextNode, nsVoidArray *aRangeList,
+                          PRInt32 aStartChanged, PRInt32 aEndChanged,
+                          PRInt32 aReplaceLength)
 {
-  // sanity check - null nodes shouldn't have enclosed ranges
-  if (!aTextNode) return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(aRangeList,
+               "Don't call TextOwnerChanged if aTextNode is not in a range!");
+  NS_ASSERTION(aTextNode, "Null nodes don't have enclosed ranges!");
 
-  nsCOMPtr<nsIContent> textNode( do_QueryInterface(aTextNode) );
-  const nsVoidArray *theRangeList = aTextNode->GetRangeList();
-  // the caller already checked to see if there was a range list
-  
-  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(textNode));
+  nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(aTextNode));
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  PRInt32   count = theRangeList->Count();
+  PRInt32   count = aRangeList->Count();
   for (PRInt32 loop = 0; loop < count; loop++)
   {
-    nsRange* theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))); 
+    nsRange* theRange = NS_STATIC_CAST(nsRange*, (aRangeList->ElementAt(loop))); 
     NS_ASSERTION(theRange, "oops, no range");
 
     // sanity check - do range and content agree over ownership?
