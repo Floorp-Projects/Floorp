@@ -184,6 +184,12 @@ NS_IMETHODIMP nsPrintProgress::UnregisterListener(nsIWebProgressListener *listen
   return NS_OK;
 }
 
+/* void doneIniting (); */
+NS_IMETHODIMP nsPrintProgress::DoneIniting()
+{
+  return NS_OK;
+}
+
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
 NS_IMETHODIMP nsPrintProgress::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {

@@ -131,12 +131,13 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     return DoDialog(parent, block, webBrowserPrint, printSettings, kPrintDialogURL);
 }
 
-/* void showProgress (in nsIDOMWindow parent, in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, out nsIWebProgressListener webProgressListener); */
+/* void showProgress (in nsIDOMWindow parent, in nsIWebBrowserPrint webBrowserPrint, in nsIPrintSettings printSettings, in nsIObserver openDialogObserver, in boolean isForPrinting, out nsIWebProgressListener webProgressListener, out nsIPrintProgressParams printProgressParams, out boolean notifyOnOpen); */
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowProgress(nsIDOMWindow*           parent, 
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
+                                      PRBool                   isForPrinting,
                                       nsIWebProgressListener** webProgressListener,
                                       nsIPrintProgressParams** printProgressParams,
                                       PRBool*                  notifyOnOpen)

@@ -192,6 +192,7 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
                                       nsIWebBrowserPrint*      webBrowserPrint,    // ok to be null
                                       nsIPrintSettings*        printSettings,      // ok to be null
                                       nsIObserver*             openDialogObserver, // ok to be null
+                                      PRBool                   isForPrinting,
                                       nsIWebProgressListener** webProgressListener,
                                       nsIPrintProgressParams** printProgressParams,
                                       PRBool*                  notifyOnOpen)
