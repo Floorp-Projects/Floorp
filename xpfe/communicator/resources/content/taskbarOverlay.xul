@@ -8,7 +8,8 @@
 ]>
 
 <overlay id="taskbarOverlay"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:nc="http://home.netscape.com/NC-rdf#">
 
   <box id="taskbarMenuBox" datasources="chrome://communicator/locale/taskbar.rdf"
        ref="chrome://communicator/locale/taskbar.rdf#root" 
@@ -31,7 +32,7 @@
       <rule parent="box">
         <button class="button-toolbar-4" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#title"
                 crop="right"/>
-     </rule>
+      </rule>
 
       <!-- Recursive rules for nested folders -->
       <rule iscontainer="true">
@@ -51,6 +52,14 @@
         </menupopup>
       </rule>
       
+
+      <!-- Menu separators -->
+      <rule nc:separator="sep">
+        <menupopup>
+           <menuseparator  uri="rdf:*"  />
+        </menupopup>
+      </rule>
+
       <rule>
         <menupopup>
           <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#title"
