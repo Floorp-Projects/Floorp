@@ -391,8 +391,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports *aSubject,
                                const PRUnichar *aData) 
 {
   nsresult rv = NS_OK;
-  if (!nsCRT::strcmp(aTopic, APPSTARTUP_CATEGORY))
+  if (!nsCRT::strcmp(aTopic, "parser-service-start")) {
     rv = Start();
+  }
   return rv;
 }
 
