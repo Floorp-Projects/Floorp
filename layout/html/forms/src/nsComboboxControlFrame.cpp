@@ -794,19 +794,14 @@ GetSelect(nsIContent * aContent)
 static nsIDOMHTMLCollection* 
 GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull)
 {
-  nsIDOMNSHTMLOptionCollection* optCol = nsnull;
   nsIDOMHTMLCollection* options = nsnull;
   if (!aSelect) {
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(aContent));
     if (selectElement) {
-      selectElement->GetOptions(&optCol);  // AddRefs (1)
+      selectElement->GetOptions(&options);  // AddRefs (1)
     }
   } else {
-    aSelect->GetOptions(&optCol); // AddRefs (1)
-  }
-  if (optCol) {
-    nsresult res = optCol->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)&options); // AddRefs (2)
-    NS_RELEASE(optCol); // Release (1)
+    aSelect->GetOptions(&options); // AddRefs (1)
   }
   return options;
 }
@@ -1296,9 +1291,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsHTMLReflowMetrics dropdownDesiredSize(nsnull);
 
   // Check to see if this a fully unconstrained reflow
-  PRBool fullyUnconstrained = firstPassState.availableWidth == NS_UNCONSTRAINEDSIZE &&
-                              firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE && 
-                              firstPassState.availableHeight == NS_UNCONSTRAINEDSIZE &&
+  PRBool fullyUnconstrained = firstPassState.mComputedWidth == NS_UNCONSTRAINEDSIZE && 
                               firstPassState.mComputedHeight == NS_UNCONSTRAINEDSIZE;
 
   PRBool forceReflow = PR_FALSE;
