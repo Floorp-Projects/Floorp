@@ -24,7 +24,6 @@ DEPTH=..\..\..
 EXPORTS =				\
 	nslayout.h			\
 	nsContentPolicyUtils.h          \
-	nsDocumentImpl.h          \
 	nsHTMLReflowState.h		\
 	nsIAutoCopy.h			\
 	nsICaret.h			\
