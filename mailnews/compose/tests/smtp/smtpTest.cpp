@@ -62,6 +62,7 @@
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL   "libpref.so"
 #define APPCORES_DLL  "libappcores.so"
+#define APPSHELL_DLL "libnsappshell.so"
 #endif
 #endif
 
