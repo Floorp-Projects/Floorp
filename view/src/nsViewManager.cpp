@@ -2242,6 +2242,13 @@ nsEventStatus nsViewManager::HandleEvent(nsView* aView, nsGUIEvent* aEvent, PRBo
 
 NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 {
+  // Along with nsView::SetVisibility, we enforce that the mouse grabber
+  // can never be a hidden view.
+  if (aView && NS_STATIC_CAST(nsView*, aView)->GetVisibility()
+               == nsViewVisibility_kHide) {
+    aView = nsnull;
+  }
+
 #ifdef DEBUG_mjudge
   if (aView)
     {
