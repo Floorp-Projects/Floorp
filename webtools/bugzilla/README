@@ -178,6 +178,10 @@ use version 1.18 or 1.19, because newer versions have dropped support
 for GIFs in favor of PNGs, and bugzilla has not yet been updated to
 deal with this.
 
+   The latest version of the GD library can be found at:
+
+   http://www.boutell.com/gd/
+
 1.8. Chart::Base Perl module (0.99 through 0.99b)
 
    The Chart module provides bugzilla with on-the-fly charting
