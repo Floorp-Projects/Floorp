@@ -1117,8 +1117,10 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
             fp->fd = -1;
         }
     }
-    if (tmmon)
+    if (tmmon) {
         PR_DestroyMonitor(tmmon);
+        tmmon = 0;
+    }
 }
 
 PR_IMPLEMENT(void) NS_TraceMallocDisable()
