@@ -827,7 +827,7 @@ alpha*-*-osf*)
 	MOZ_DEBUG_FLAGS='-g3'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g -std1'
 	CFLAGS="$CFLAGS -std1 -ieee"
-	CXXFLAGS="$CXXFLAGS -noexceptions -ieee"
+	CXXFLAGS="$CXXFLAGS -noexceptions -ieee -tlocal"
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
@@ -2730,12 +2730,14 @@ MOZ_MONOLITHIC_TOOLKIT=1
 
 dnl The following are the only platforms I tested  -ramiro
 dnl OpenVMS added by Colin Blake
+dnl Tru64   added by Jim Nance
 case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
     *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-aix*)     MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-*-osf*)     MOZ_MONOLITHIC_TOOLKIT= ;;
 esac
 
 
