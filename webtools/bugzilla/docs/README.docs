@@ -106,22 +106,34 @@ NOTES:
 
   Here are the commands I use to maintain this documentation.
   You MUST have DocBook 4.1 set up correctly in order for this to work.
-  Substitute your own path to "ldp.dsl" for "$LDP_HOME".
+  Substitute your own path to "ldp.dsl" for "$LDP_HOME".  Additionally,
+  there is now a dependency on "xml.dcl" since we converted the Guide
+  to XML.  Note that below, it is hard-coded to
+  /usr/share/doc/openjade-1.3/pubtext/xml.dcl.  Modify it to point to
+  openjade's xml.dcl on your system.
 
 
 To create HTML documentation:
 bash$ cd html
-bash$ jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-../sgml/Bugzilla-Guide.sgml
+bash$  jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+/usr/share/doc/openjade-1.3/pubtext/xml.dcl ../sgml/Bugzilla-Guide.sgml
 
 To create HTML documentation as a single big HTML file:
 bash$ cd html
-bash$ jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
-../sgml/Bugzilla-Guide.sgml >Bugzilla-Guide.html
+bash$  jade -V nochunks -t sgml -i html -d $LDP_HOME/ldp.dsl\#html \
+/usr/share/doc/openjade-1.3/pubtext/xml.dcl ../sgml/Bugzilla-Guide.sgml
 
 To create TXT documentation as a single big TXT file:
 bash$ cd txt
 bash$ lynx -dump -nolist ../html/Bugzilla-Guide.html >Bugzilla-Guide.txt
+
+
+## Change for XML
+There's a small change in how you use Jade now that we've converted the
+Bugzilla Guide to XML from SGML.  Now call Jade this way to compile HTML
+documentation:
+
+(I need to remove the hard-coded path to xml.dcl for openjade)
 
 Sincerely,
  Matthew P. Barnson
