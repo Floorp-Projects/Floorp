@@ -149,8 +149,8 @@ nsHTTPRequest::~nsHTTPRequest()
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports methods:
 
-NS_IMPL_ADDREF(nsHTTPRequest);
-NS_IMPL_RELEASE(nsHTTPRequest);
+NS_IMPL_THREADSAFE_ADDREF(nsHTTPRequest);
+NS_IMPL_THREADSAFE_RELEASE(nsHTTPRequest);
 
 NS_IMETHODIMP
 nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
