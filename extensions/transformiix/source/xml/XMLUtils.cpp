@@ -31,6 +31,7 @@
 
 #include "XMLUtils.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "txAtoms.h"
 #include "txStringUtils.h"
 
