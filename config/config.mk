@@ -486,6 +486,11 @@ ifndef _ENABLE_PIC
 ENABLE_PROFILE_GENERATE=1
 _ENABLE_PIC=1
 endif
+else
+# For static builds, always enable profile generation for non-PIC objects.
+ifndef _ENABLE_PIC
+ENABLE_PROFILE_GENERATE=1
+endif
 endif
 
 #
