@@ -32,7 +32,6 @@
 toolbox {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
-  border-top: 1px solid ThreeDShadow;
 }
 
 /* ::::: toolbar & menubar ::::: */
@@ -43,6 +42,11 @@ menubar {
   min-height: 20px;
   border-top: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDShadow;
+}
+
+toolbar:first-child, menubar:first-child
+{
+  border-top: none;
 }
 
 /* ::::: toolbar decorations ::::: */
