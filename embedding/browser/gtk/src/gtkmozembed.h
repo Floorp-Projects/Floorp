@@ -52,10 +52,10 @@ struct _GtkMozEmbedClass
   void (* js_status)           (GtkMozEmbed *embed);
   void (* location)            (GtkMozEmbed *embed);
   void (* title)               (GtkMozEmbed *embed);
-  void (* progress)            (GtkMozEmbed *embed, gint maxprogress,
-				gint curprogress);
+  void (* progress)            (GtkMozEmbed *embed, gint curprogress,
+				gint maxprogress);
   void (* progress_all)        (GtkMozEmbed *embed, const char *aURI,
-				gint maxprogress, gint curprogress);
+				gint curprogress, gint maxprogress);
   void (* net_state)           (GtkMozEmbed *embed, gint state, guint status);
   void (* net_state_all)       (GtkMozEmbed *embed, const char *aURI,
 				gint state, guint status);
