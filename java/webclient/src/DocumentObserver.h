@@ -45,23 +45,11 @@ class DocumentObserver : public nsIDocumentLoaderObserver {
 				 const char* aCommand);
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			       nsIChannel* channel, 
-			       nsresult aStatus,
-#else
-			       nsIURI* aURL, 
-			       PRInt32 aStatus,
-#endif
-			       nsIDocumentLoaderObserver* aObserver);
+			       nsresult aStatus);
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
-			    nsIChannel* channel, 
-#else
-			    nsIURI* aURL, 
-			    const char* aContentType, 
-#endif
-                            nsIContentViewer* aViewer);  
+			    nsIChannel* channel);  
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
 #ifdef NECKO

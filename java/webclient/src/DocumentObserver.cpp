@@ -58,14 +58,8 @@ NS_IMETHODIMP DocumentObserver::QueryInterface(REFNSIID aIID, void** aInstance)
 }
 
   NS_IMETHODIMP DocumentObserver::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
 			       nsIChannel* channel, 
-			       nsresult aStatus,
-#else
-			       nsIURI* aURL, 
-			       PRInt32 aStatus,
-#endif
-			       nsIDocumentLoaderObserver* aObserver) {
+			       nsresult aStatus) {
     printf("!!DocumentObserver.cpp: OnEndDocumentLoad\n");
     fireDocumentLoadEvent("enddocumentload");
    
@@ -90,13 +84,7 @@ void fireDocumentLoadEvent(char *eventname) {
 }
 
   NS_IMETHODIMP DocumentObserver::OnStartURLLoad(nsIDocumentLoader* loader, 
-#ifdef NECKO
-			    nsIChannel* channel, 
-#else
-			    nsIURI* aURL, 
-			    const char* aContentType, 
-#endif
-                            nsIContentViewer* aViewer) {
+			    nsIChannel* channel) {
     printf("!DocumentObserver: OnStartURLLoad\n");
     fireDocumentLoadEvent("startURLload");
 
