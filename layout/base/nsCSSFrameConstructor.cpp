@@ -69,6 +69,7 @@
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #include "nsTreeFrame.h"
+#include "nsTreeOuterFrame.h"
 #include "nsTreeRowGroupFrame.h"
 #include "nsToolboxFrame.h"
 #include "nsToolbarFrame.h"
@@ -317,6 +318,7 @@ nsFrameConstructorSaveState::~nsFrameConstructorSaveState()
 
 // Structure used when creating table frames.
 struct nsTableCreator {
+  virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableColFrame(nsIFrame** aNewFrame);
@@ -325,6 +327,11 @@ struct nsTableCreator {
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   virtual PRBool IsTreeCreator() { return PR_FALSE; };
 };
+
+nsresult
+nsTableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame) {
+  return NS_NewTableOuterFrame(aNewFrame);
+}
 
 nsresult
 nsTableCreator::CreateTableFrame(nsIFrame** aNewFrame) {
@@ -360,12 +367,19 @@ nsTableCreator::CreateTableCellFrame(nsIFrame** aNewFrame) {
 
 // Structure used when creating tree frames
 struct nsTreeCreator: public nsTableCreator {
+  nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
   nsresult CreateTableFrame(nsIFrame** aNewFrame);
   nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
   nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
 
   PRBool IsTreeCreator() { return PR_TRUE; };
 };
+
+nsresult
+nsTreeCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
+{
+  return NS_NewTreeOuterFrame(aNewFrame);
+}
 
 nsresult
 nsTreeCreator::CreateTableFrame(nsIFrame** aNewFrame)
@@ -911,7 +925,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresContext*          aPresContext
   nsIFrame* captionFrame   = nsnull;
 
   // Create an anonymous table outer frame which holds the caption and table frame
-  NS_NewTableOuterFrame(&aNewFrame);
+  aTableCreator.CreateTableOuterFrame(&aNewFrame);
 
   // Init the table outer frame and see if we need to create a view, e.g.
   // the frame is absolutely positioned
@@ -1134,7 +1148,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresContext*          aPr
     aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo, 
                                                tableParentSC, PR_FALSE,
                                                getter_AddRefs(outerStyleContext));
-    rv = NS_NewTableOuterFrame(&aOuterFrame);
+    rv = aTableCreator.CreateTableOuterFrame(&aOuterFrame);
     if (NS_FAILED(rv)) return rv;
     aOuterFrame->Init(*aPresContext, aContent, tableParent, outerStyleContext,
                       nsnull);
