@@ -1154,6 +1154,7 @@ nsScriptSecurityManager::GetBaseURIScheme(nsIURI* aURI, char** aScheme)
         if ((strcmp(page, "blank") == 0)   ||
             (strcmp(page, "") == 0)        ||
             (strcmp(page, "mozilla") == 0) ||
+            (strcmp(page, "logo") == 0)    ||
             (strcmp(page, "credits") == 0))
         {
             *aScheme = nsCRT::strdup("about safe");
