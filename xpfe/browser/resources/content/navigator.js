@@ -400,7 +400,7 @@ function Startup()
     }
   }
   // now load bookmarks after a delay
-  setTimeout(LoadBookmarksCallback, 100);
+  setTimeout(LoadBookmarksCallback, 0);
 }
 
 function LoadBookmarksCallback()
