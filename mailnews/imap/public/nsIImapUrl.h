@@ -43,10 +43,6 @@
 
 #define IMAP_PORT 143
 
-typedef enum {
-	nsImapActionSendText = 0      // a state used for testing purposes to send raw url text straight to the server....
-} nsImapAction;
-
 class nsIImapUrl : public nsIMsgMailNewsUrl
 {
 public:
@@ -54,6 +50,51 @@ public:
     static nsIID iid = NS_IIMAPURL_IID;
     return iid;
   }
+
+	typedef enum {
+		nsImapActionSendText = 0,      // a state used for testing purposes to send raw url text straight to the server....
+		// kAuthenticatedStateURL urls 
+		nsImapTest,
+		nsImapSelectFolder,
+		nsImapLiteSelectFolder,
+		nsImapExpungeFolder,
+		nsImapCreateFolder,
+		nsImapDeleteFolder,
+		nsImapRenameFolder,
+		nsImapMoveFolderHierarchy,
+		nsImapLsubFolders,
+		nsImapGetMailAccountUrl,
+		nsImapDiscoverChildrenUrl,
+		nsImapDiscoverLevelChildrenUrl,
+		nsImapDiscoverAllBoxesUrl,
+		nsImapDiscoverAllAndSubscribedBoxesUrl,
+		nsImapAppendMsgFromFile,
+		nsImapSubscribe,
+		nsImapUnsubscribe,
+		nsImapRefreshACL,
+		nsImapRefreshAllACLs,
+		nsImapListFolder,
+		nsImapUpgradeToSubscription,
+		nsImapFolderStatus,
+		nsImapRefreshFolderUrls,
+        
+		// kSelectedStateURL urls
+		nsImapMsgFetch,
+		nsImapMsgHeader,
+		nsImapSearch,
+		nsImapDeleteMsg,
+		nsImapDeleteAllMsgs,
+		nsImapAddMsgFlags,
+		nsImapSubtractMsgFlags,
+		nsImapSetMsgFlags,
+		nsImapOnlineCopy,
+		nsImapOnlineMove,
+		nsImapOnlineToOfflineCopy,
+		nsImapOnlineToOfflineMove,
+		nsImapOfflineToOnlineMove,
+		nsImapBiff,
+		nsImapSelectNoopFolder
+	} nsImapAction;
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap specific event sinks to bind to to your url
