@@ -381,10 +381,3 @@ interface nsIEditorShell : nsISupports
   void StartLogging(in nsIFileSpec logFile);
   void StopLogging();
 };
-
-
-%{C++
-extern nsresult
-NS_NewEditorShell(nsIEditorShell** aEditorShell);
-%}
-

@@ -235,18 +235,6 @@ nsTextServicesDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsresult
-NS_NewTextServicesDocument(nsTextServicesDocument** result)
-{
-  nsTextServicesDocument* textServicesDocument = new nsTextServicesDocument();
-  if (! textServicesDocument) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *result = textServicesDocument;
-  NS_ADDREF(*result);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsTextServicesDocument::InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell)
 {
