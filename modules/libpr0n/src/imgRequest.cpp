@@ -393,7 +393,6 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
     if (proxy) proxy->OnStartDecode(request, cx);
   }
 
-#ifdef MOZ_NEW_CACHE
   /* In the case of streaming jpegs, it is possible to get multiple OnStartDecodes which
      indicates the beginning of a new decode.
      The cache entry's size therefore needs to be reset to 0 here.  If we do not do this,
@@ -401,7 +400,6 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
    */
   if (mCacheEntry)
     mCacheEntry->SetDataSize(0);
-#endif
 
   return NS_OK;
 }
@@ -467,7 +465,6 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
 
   LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
 
-#ifdef MOZ_NEW_CACHE
   if (mCacheEntry) {
     PRUint32 cacheSize = 0;
 
@@ -481,7 +478,6 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
 
     mCacheEntry->SetDataSize(cacheSize + imageSize + alphaSize);
   }
-#endif
 
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
@@ -568,7 +564,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     if (proxy) proxy->OnStartRequest(aRequest, ctxt);
   }
 
-#if defined(MOZ_NEW_CACHE)
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
   /* get the expires info */
@@ -590,7 +585,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       }
     }
   }
-#endif
 
   return NS_OK;
 }
