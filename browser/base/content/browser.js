@@ -94,6 +94,7 @@ var gOldCloseHandler = null; // close handler before we went into print preview
 var gInPrintPreviewMode = false;
 var gWebProgress = null;
 var gFormHistory = null;
+var gFormFillEnabled = true;
 
 const dlObserver = {
   observe: function(subject, topic, state) {  
@@ -445,6 +446,13 @@ function delayedStartup()
   var observerService = Components.classes["@mozilla.org/observer-service;1"]
                                   .getService(Components.interfaces.nsIObserverService);
   observerService.addObserver(dlObserver, "dl-start", false);
+  
+  // Enable/Disable Form Fill
+  var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
+
+  // Initialize
+  gFormFillPrefListener.toggleFormFill();
 
   updateHomeTooltip();
 }
@@ -488,6 +496,41 @@ function Shutdown()
     appCore.close();
 }
 
+const gFormFillPrefListener =
+{
+  domain: "browser.formfill.enable",
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
+      return;
+      
+    this.toggleFormFill();
+    this.toggleAutoCompleteInSearchBar();
+  },
+  
+  toggleFormFill: function ()
+  {
+    try {
+      gFormFillEnabled = gPrefService.getBoolPref(this.domain);
+    }
+    catch (e) {
+    }
+    if (gFormFillEnabled)
+      gBrowser.attachFormFill();
+    else
+      gBrowser.detachFormFill();
+  },
+  
+  toggleAutoCompleteInSearchBar: function()
+  {
+    var searchBar = document.getElementById("search-bar");
+    if (gFormFillEnabled)
+      searchBar.removeAttribute("disableautocomplete");
+    else
+      searchBar.setAttribute("disableautocomplete", "true");
+  }
+}
+ 
 function ctrlNumberTabSelection(event)
 {
   if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
@@ -1289,10 +1332,12 @@ function handleSearchBarCommand(aEvent)
   var searchBar = document.getElementById("search-bar");
 
   // Save the current value in the form history
-  if (!gFormHistory)
-    gFormHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                             .getService(Components.interfaces.nsIFormHistory);
-  gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
+  if (gFormFillEnabled) {
+    if (!gFormHistory)
+      gFormHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
+                              .getService(Components.interfaces.nsIFormHistory);
+    gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
+  }
 
   if (searchBar.hasAttribute("searchmode")) {
     gURLBar.value = searchBar.searchValue;
@@ -3147,20 +3192,10 @@ function toggleSidebar(aCommandID) {
   sidebarTitle.setAttribute("value", title);
 }
 
-function goPreferences(containerID, paneURL, itemID)
+function openPreferences()
 {
-  //check for an existing pref window and focus it; it's not application modal
-  const kWindowMediatorContractID = "@mozilla.org/appshell/window-mediator;1";
-  const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
-  const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
-  var lastPrefWindow = kWindowMediator.getMostRecentWindow("mozilla:preferences");
-  if (lastPrefWindow)
-    lastPrefWindow.focus();
-  else {
-    var features = "chrome,titlebar,resizable";
-    openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
-               features, paneURL, containerID, itemID);
-  }
+  openDialog("chrome://browser/content/pref/pref.xul","PrefWindow", 
+             "chrome,titlebar,resizable,modal");
 }
 
 function updateHomeTooltip()

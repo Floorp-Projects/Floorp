@@ -746,7 +746,7 @@
               <menuseparator id="prefSep"/>
               <menuitem label="&preferencesCmd.label;"
                         accesskey="&preferencesCmd.accesskey;"
-                        oncommand="goPreferences('navigator', 'chrome://browser/content/pref/pref-navigator.xul', 'navigator')"/>
+                        oncommand="openPreferences();"/>
             </menupopup>
           </menu>
     
