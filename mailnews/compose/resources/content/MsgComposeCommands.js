@@ -27,7 +27,7 @@ var nsIMsgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var nsIMsgCompType = Components.interfaces.nsIMsgCompType;
 var nsIMsgCompFormat = Components.interfaces.nsIMsgCompFormat;
 var nsIAbPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
-var nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+var nsIPlaintextEditorMail = Components.interfaces.nsIPlaintextEditor;
 
 
 /**
@@ -151,7 +151,7 @@ function ReleaseGlobalVariables()
 
 function disableEditableFields()
 {
-  editorShell.editor.flags |= nsIPlaintextEditor.eEditorReadonlyMask;
+  editorShell.editor.flags |= nsIPlaintextEditorMail.eEditorReadonlyMask;
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -161,7 +161,7 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  editorShell.editor.flags ^= nsIPlaintextEditor.eEditorReadonlyMask;
+  editorShell.editor.flags ^= nsIPlaintextEditorMail.eEditorReadonlyMask;
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
