@@ -709,6 +709,7 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
 
     mSpaceManager->Translate(dx, mY);
     kidFrame->WillReflow(*mPresContext);
+    kidFrame->MoveTo(dx, mY);
     rv = mBlock->ReflowBlockChild(kidFrame, mPresContext,
                                   mSpaceManager, kidMetrics, kidReflowState,
                                   kidRect, kidReflowStatus);
@@ -721,27 +722,39 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     kidMetrics.descent = 0;
   }
   else {
+    // Apply bottom margin speculatively before reflowing the child
+    nscoord bottomMargin = mBlockReflowState.mPrevPosBottomMargin -
+      mBlockReflowState.mPrevNegBottomMargin;
+    if (!mMarginApplied) {
+      // Before we place the first inline child on this line apply
+      // the previous block's bottom margin.
+      mY += bottomMargin;
+      mBlockReflowState.mY += bottomMargin;
+    }
+
     // Reflow the inline child
     kidFrame->WillReflow(*mPresContext);
+    kidFrame->MoveTo(dx, mY);
     rv = mBlock->ReflowInlineChild(kidFrame, mPresContext, kidMetrics,
                                    kidReflowState, kidReflowStatus);
 
-    // After we reflow the inline child we will know whether or not it
-    // has any height/width. If it doesn't have any height/width then
-    // we do not yet apply any previous block bottom margin.
-    if ((0 != kidMetrics.height) && !mMarginApplied) {
-      // Before we place the first inline child on this line apply
-      // the previous block's bottom margin.
-      nscoord bottomMargin = mBlockReflowState.mPrevPosBottomMargin -
-        mBlockReflowState.mPrevNegBottomMargin;
-      mY += bottomMargin;
-      mBlockReflowState.mY += bottomMargin;
-      // XXX tell block what bottomMargin ended up being so that it can
-      // undo it if it ends up pushing the line.
-      mMarginApplied = PR_TRUE;
-      mBlockReflowState.mPrevPosBottomMargin = 0;
-      mBlockReflowState.mPrevNegBottomMargin = 0;
+    // See if speculative application of the margin should stick
+    if (!mMarginApplied) {
+      if (0 == kidMetrics.height) {
+        // No, undo margin application when we get a zero height child.
+        mY -= bottomMargin;
+        mBlockReflowState.mY -= bottomMargin;
+      }
+      else {
+        // Yes, keep the margin application.
+        mMarginApplied = PR_TRUE;
+        mBlockReflowState.mPrevPosBottomMargin = 0;
+        mBlockReflowState.mPrevNegBottomMargin = 0;
+        // XXX tell block what bottomMargin ended up being so that it can
+        // undo it if it ends up pushing the line.
+      }
     }
+
     kidRect.x = dx;
     kidRect.y = mY;
     kidRect.width = kidMetrics.width;
