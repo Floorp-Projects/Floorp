@@ -1709,28 +1709,32 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     rv = smtpServer->GetUsername(getter_Copies(username));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    nsCAutoString promptValue(username);
+    const PRUnichar *formatStrings[] =
+    {
+      NS_ConvertASCIItoUCS2(username).get()
+    };
 
     PRBool hideHostnameForPassword = PR_FALSE;
     rv = prefBranch->GetBoolPref(prefName.get(), &hideHostnameForPassword);
     if (NS_SUCCEEDED(rv) && hideHostnameForPassword) {
       // for certain redirector types, we don't want to show the
       // hostname to the user when prompting for password
+      formatStrings[1] = nsnull;
     }
     else {
       nsXPIDLCString hostname;      
       rv = smtpServer->GetHostname(getter_Copies(hostname));
       NS_ENSURE_SUCCESS(rv, rv);
-      promptValue.Append("@");
-      promptValue.Append(hostname);
+      formatStrings[1] = NS_ConvertASCIItoUCS2(hostname).get();
     }
 
-    rv = PromptForPassword(smtpServer, smtpUrl, NS_ConvertASCIItoUCS2(promptValue).get(), aPassword);
+    rv = PromptForPassword(smtpServer, smtpUrl, formatStrings, aPassword);
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
 
-nsresult nsSmtpProtocol::PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar *aPromptValue, char **aPassword)
+nsresult
+nsSmtpProtocol::PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar **formatStrings, char **aPassword)
 {
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -1740,15 +1744,15 @@ nsresult nsSmtpProtocol::PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUr
   rv = stringService->CreateBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties", getter_AddRefs(composeStringBundle));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  const PRUnichar *formatStrings[] =
-  {
-    aPromptValue,
-  };
- 
   nsXPIDLString passwordPromptString;
-  rv = composeStringBundle->FormatStringFromID(NS_SMTP_PASSWORD_PROMPT,
-    formatStrings, 1,
-    getter_Copies(passwordPromptString));
+  if(formatStrings[1])
+    rv = composeStringBundle->FormatStringFromID(NS_SMTP_PASSWORD_PROMPT2,
+      formatStrings, 2,
+      getter_Copies(passwordPromptString));
+  else
+    rv = composeStringBundle->FormatStringFromID(NS_SMTP_PASSWORD_PROMPT1,
+      formatStrings, 1,
+      getter_Copies(passwordPromptString));
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIAuthPrompt> netPrompt;
@@ -1802,7 +1806,13 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
     rv = smtpServer->GetHostname(getter_Copies(hostname));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = PromptForPassword(smtpServer, smtpUrl, NS_ConvertASCIItoUCS2(hostname).get(), aPassword);
+    const PRUnichar *formatStrings[] =
+    {
+      NS_ConvertASCIItoUCS2(hostname).get(),
+      nsnull
+    };
+
+    rv = PromptForPassword(smtpServer, smtpUrl, formatStrings, aPassword);
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }

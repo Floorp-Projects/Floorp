@@ -107,7 +107,8 @@ private:
 #define NS_MSG_LARGE_MESSAGE_WARNING                NS_MSG_GENERATE_FAILURE(12541)
 
 #define NS_SMTP_PASSWORD_PROMPT_TITLE               12542
-#define NS_SMTP_PASSWORD_PROMPT                     12543
+#define NS_SMTP_PASSWORD_PROMPT1                    12543
+#define NS_SMTP_PASSWORD_PROMPT2                    12570
 #define NS_SMTP_CONNECTING_TO_SERVER                NS_MSG_GENERATE_SUCCESS(12545)
 
 #define NS_MSG_SENDING_MESSAGE                      NS_MSG_GENERATE_SUCCESS(12550)

@@ -248,7 +248,7 @@ private:
     const char * GetUserDomainName();
     nsresult GetPassword(char **aPassword);
     nsresult GetUsernamePassword(char **aUsername, char **aPassword);
-    nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar *aPromptValue, char **aPassword);
+    nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar **formatStrings, char **aPassword);
 
     void BackupAuthFlags();
     void RestoreAuthFlags();
