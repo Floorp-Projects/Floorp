@@ -180,3 +180,6 @@
   font-style: italic;
 }
 
+.tree-folder-checkbox {
+  list-style-image: none;
+}

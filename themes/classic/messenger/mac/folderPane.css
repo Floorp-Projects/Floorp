@@ -188,3 +188,7 @@ treeitem[empty="true"] > treerow > .tree-cell-folderpane-icon > .tree-cell-twist
     visibility            : hidden;
   }      
 
+.tree-folder-checkbox 
+  {
+    list-style-image: none;
+  }

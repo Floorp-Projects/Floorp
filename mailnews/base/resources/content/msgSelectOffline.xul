@@ -21,6 +21,7 @@ Rights Reserved.
 
 Contributors:
     dianesun@netscape.com
+    Håkan Waara <hwaara@chello.se>
 
 -->
 
@@ -35,6 +36,7 @@ Contributors:
         orient="vertical"
         class="dialog"
         width="450" height="400"
+        persist="width height"
         onload="selectOnLoad();">
 		
 <script src="chrome://global/content/strres.js"/>
@@ -50,7 +52,7 @@ Contributors:
     <keyset id="keyset"/>
     <html class="desc">&MsgSelectDesc.label;</html>
 
-    <grid flex="1" style="width: 40em; height: 25em;">
+    <grid flex="1">
 
     <rows>
     <row flex="1">
@@ -67,21 +69,16 @@ Contributors:
                   ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
                   Synchronize="rdf:http://home.netscape.com/NC-rdf#Synchronize">
 
-            <treerow class="tree-folder-row" 
-                     IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer">
-					 <!--
-                <treecell indent="true" class="treecell-image" allowevents="true"
-                          Synchronize="rdf:http://home.netscape.com/NC-rdf#Synchronize">
-					-->
-					<treecell indent="true" allowevents="true">
-                    <checkbox id="selectBox" checked="rdf:http://home.netscape.com/NC-rdf#Synchronize"
-	                          hidden="rdf:http://home.netscape.com/NC-rdf#SyncDisabled"/>					 
-                    </treecell>
+            <treerow class="tree-folder-row" IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer">
                 <treecell  indent="true" class="treecell-indent tree-cell-folderpane-icon" 
                            label="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
                            SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                            IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                            ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <treecell indent="true" allowevents="true" align="center">
+                    <checkbox id="selectBox" checked="rdf:http://home.netscape.com/NC-rdf#Synchronize"
+	                      hidden="rdf:http://home.netscape.com/NC-rdf#SyncDisabled" class="tree-folder-checkbox"/>
+                </treecell>
             </treerow>
         </treeitem>
     </treechildren>
@@ -89,15 +86,15 @@ Contributors:
     </template>
 
     <treecolgroup>		
-        <treecol persist="hidden"  flex="5" id="SyncColumn" resource="http://home.netscape.com/NC-rdf#Synchronize"/>
+        <treecol persist="hidden width" id="SyncColumn" resource="http://home.netscape.com/NC-rdf#Synchronize"/>
         <splitter class="tree-splitter"/>		  
-        <treecol persist="hidden width"  flex="5" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
+        <treecol persist="hidden width" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
     </treecolgroup>
 
     <treehead>	
         <treerow> 
-            <treecell class="treecell-header" label="&MsgSelectInd.label;"/> 			  
             <treecell class="treecell-header" label="&MsgSelectItems.label;"/>
+            <treecell class="treecell-header" label="&MsgSelectInd.label;"/>
         </treerow>
     </treehead>
     </tree>

@@ -76,7 +76,7 @@ function syncCancelButton()
 function OnSelect()
 {	  
 
-   top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "chrome,titlebar,resizable=yes");
+   top.window.openDialog("chrome://messenger/content/msgSelectOffline.xul", "", "centerscreen,chrome,titlebar,resizable=yes");
    return true;
 
 }
