@@ -197,6 +197,11 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 index, nsIMessage **result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
+	// mork doesn't seem to handle this correctly, so deal with going off
+	// the end here.
+	if (index > m_numChildren)
+		return NS_OK;
+
 	nsIMdbTableRowCursor *rowCursor;
 	ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
 
@@ -276,8 +281,27 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
 {
     NS_INIT_REFCNT();
 	mCurKey = startKey;
-	mChildIndex = 0;
+	mChildIndex = 1;
 	mThread = thread;
+	if (mCurKey != nsMsgKey_None)
+	{
+		nsMsgKey msgKey = nsMsgKey_None;
+		nsresult rv = mThread->GetChildHdrAt(0, &mResultHdr);
+		if (NS_SUCCEEDED(rv) && mResultHdr)
+		{
+			// we're only doing one level of threading, so check if caller is
+			// asking for children of the first message in the thread or not.
+			// if not, we will tell him there are no children.
+			mResultHdr->GetMessageKey(&msgKey);
+			if (msgKey != mCurKey)
+				mDone = PR_TRUE;
+
+			NS_RELEASE(mResultHdr);
+			mResultHdr = nsnull;
+
+		}
+		mChildIndex = 1;
+	}
     NS_ADDREF(thread);
 }
 
@@ -306,7 +330,7 @@ NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
 		rv = mThread->GetChildHdrAt(0, &mResultHdr);
 		mChildIndex = 1;
 	}
-	else
+	else if (!mDone)
 	{
 		rv  = mThread->GetChildHdrAt(mChildIndex++, &mResultHdr);
 	}
