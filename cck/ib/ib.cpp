@@ -3237,10 +3237,6 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 //						networkPath + "\\" + Components[i].archive, TRUE);
 
 			WritePrivateProfileString("General", "url", ftpLocation, configiniPath);
-			WritePrivateProfileString("Redirect", "Status", "Disabled", configiniPath);
-			WritePrivateProfileString("Site Selector", NULL, "", configiniPath);
-			WritePrivateProfileString("Site Selector", "Identifier0", "Site0", configiniPath);
-			WritePrivateProfileString("Site Selector", "Description0", "Default", configiniPath);
 			WritePrivateProfileString("Site Selector", "Domain0", ftpLocation, configiniPath);
 			// HTTP support for network installer 
 			CString httpstr = ftpLocation.Left(7);
