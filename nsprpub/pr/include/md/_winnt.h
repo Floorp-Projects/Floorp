@@ -172,6 +172,9 @@ struct _MDThread {
     void            *fiber_arg;         /* arg to main fiber routine */
     PRUint32         fiber_stacksize;   /* stacksize for fiber */
     PRInt32          fiber_last_error;  /* last error for the fiber */
+    void (*start)(void *);              /* used by _PR_MD_CREATE_THREAD to
+                                         * pass its 'start' argument to
+                                         * pr_root. */
 };
 
 struct _MDThreadStack {

@@ -112,6 +112,9 @@ struct _MDThread {
     struct PRThread *prev, *next;       /* used by the cvar wait queue to
                                          * chain the PRThread structures
                                          * together */
+    void (*start)(void *);              /* used by _PR_MD_CREATE_THREAD to
+                                         * pass its 'start' argument to
+                                         * pr_root. */
 };
 
 struct _MDThreadStack {

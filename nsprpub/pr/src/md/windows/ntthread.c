@@ -191,6 +191,14 @@ _PR_MD_INIT_THREAD(PRThread *thread)
     return PR_SUCCESS;
 }
 
+static unsigned __stdcall
+pr_root(void *arg)
+{
+    PRThread *thread = (PRThread *)arg;
+    thread->md.start(thread);
+    return 0;
+}
+
 PRStatus 
 _PR_MD_CREATE_THREAD(PRThread *thread, 
                   void (*start)(void *), 
@@ -200,23 +208,14 @@ _PR_MD_CREATE_THREAD(PRThread *thread,
                   PRUint32 stackSize)
 {
 
-#if 0
-    thread->md.handle = CreateThread(
-                    NULL,                             /* security attrib */
-                    thread->stack->stackSize,         /* stack size      */
-                    (LPTHREAD_START_ROUTINE)start,    /* startup routine */
-                    (void *)thread,                   /* thread param    */
-                    CREATE_SUSPENDED,                 /* create flags    */
-                    &(thread->id) );                  /* thread id       */
-#else
+    thread->md.start = start;
     thread->md.handle = (HANDLE) _beginthreadex(
                     NULL,
                     thread->stack->stackSize,
-                    (unsigned (__stdcall *)(void *))start,
+                    pr_root,
                     (void *)thread,
                     CREATE_SUSPENDED,
                     &(thread->id));
-#endif
     if(!thread->md.handle) {
         PRErrorCode prerror;
         thread->md.fiber_last_error = GetLastError();
