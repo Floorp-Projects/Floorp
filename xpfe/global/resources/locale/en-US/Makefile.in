@@ -49,6 +49,7 @@ CHROME_L10N = \
 		languageNames.properties \
 		regionNames.properties \
 		commonDialogs.properties \
+		plugins.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
