@@ -95,6 +95,9 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 #define NEW_MAIL_DIR_NAME	"Mail"
 #define NEW_NEWS_DIR_NAME	"News"
 #define NEW_IMAPMAIL_DIR_NAME	"ImapMail"
+#define DEFAULT_4X_DRAFTS_FOLDER_NAME "Drafts"
+#define DEFAULT_4X_SENT_FOLDER_NAME "Sent"
+#define DEFAULT_4X_TEMPLATES_FOLDER_NAME "Templates"
 
 /* we are going to clear these after migration */
 #define PREF_4X_MAIL_IDENTITY_USEREMAIL "mail.identity.useremail"
@@ -135,7 +138,7 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 #define PREF_4X_NEWS_NOTIFY_SIZE "news.notify.size"
 #define PREF_4X_NEWS_MARK_OLD_READ "news.mark_old_read"
 
-#define CONVERT_4X_URI(IDENTITY,MACRO_GETTER,MACRO_SETTER) \
+#define CONVERT_4X_URI(IDENTITY,DEFAULT_FOLDER_NAME,MACRO_GETTER,MACRO_SETTER) \
 { \
   nsXPIDLCString macro_oldStr; \
   nsresult macro_rv; \
@@ -146,13 +149,11 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
   }\
   else {	\
     char *converted_uri = nsnull; \
-    macro_rv = Convert4XUri((const char *)macro_oldStr, &converted_uri); \
+    macro_rv = Convert4XUri((const char *)macro_oldStr, DEFAULT_FOLDER_NAME, &converted_uri); \
     if (NS_FAILED(macro_rv)) { \
-      printf("FAIL: %s -> %s\n",(const char *)macro_oldStr,""); \
       IDENTITY->MACRO_SETTER("");	\
     } \
     else { \
-      printf("PASS: %s -> %s\n",(const char *)macro_oldStr,converted_uri); \
       IDENTITY->MACRO_SETTER(converted_uri); \
     } \
     PR_FREEIF(converted_uri); \
@@ -181,6 +182,21 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
                 	DEST_ID->MACRO_SETTER(NS_CONST_CAST(char*,(const char*)macro_oldStr));	\
         	}	\
 	}
+
+#define MIGRATE_SIMPLE_FILE_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
+  { \
+    nsresult macro_rv; \
+    nsCOMPtr <nsIFileSpec>macro_spec;	\
+    macro_rv = m_prefs->GetFilePref(PREFNAME, getter_AddRefs(macro_spec)); \
+    if (NS_SUCCEEDED(macro_rv)) { \
+	char *macro_oldStr = nsnull; \
+	macro_rv = macro_spec->GetUnixStyleFilePath(&macro_oldStr);	\
+    	if (NS_SUCCEEDED(macro_rv)) { \
+		MACRO_OBJECT->MACRO_METHOD(macro_oldStr); \
+	}	\
+	PR_FREEIF(macro_oldStr); \
+    } \
+  }
 
 #define MIGRATE_SIMPLE_STR_PREF(PREFNAME,MACRO_OBJECT,MACRO_METHOD) \
   { \
@@ -411,7 +427,7 @@ private:
   static char *getUniqueAccountKey(const char* prefix,
                                    nsISupportsArray *accounts);
 
-  nsresult Convert4XUri(const char *old_uri, char **new_uri);
+  nsresult Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri);
   
   nsresult getPrefService();
   nsIPref *m_prefs;
@@ -1374,10 +1390,10 @@ nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IDENTITY_ORGANIZATION,identity,SetOrganization)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_COMPOSE_HTML,identity,SetComposeHtml)
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_DRAFTS,identity,SetDraftFolder)
-  CONVERT_4X_URI(identity,GetDraftFolder,SetDraftFolder)
+  CONVERT_4X_URI(identity,DEFAULT_4X_DRAFTS_FOLDER_NAME,GetDraftFolder,SetDraftFolder)
     
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_TEMPLATES,identity,SetStationaryFolder)
-  CONVERT_4X_URI(identity,GetStationaryFolder,SetStationaryFolder)
+  CONVERT_4X_URI(identity,DEFAULT_4X_TEMPLATES_FOLDER_NAME,GetStationaryFolder,SetStationaryFolder)
     
   // what about the new 5.0 spam folder pref?
   return NS_OK;
@@ -1403,13 +1419,18 @@ nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
       
   PRBool news_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_NEWS_USE_IMAP_SENTMAIL, &news_used_uri_for_sent_in_4x);
-  if (news_used_uri_for_sent_in_4x) {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
+  if (NS_FAILED(rv)) {
+	  MIGRATE_SIMPLE_FILE_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
   }
   else {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
+	  if (news_used_uri_for_sent_in_4x) {
+	    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
+	  }
+	  else {
+	    MIGRATE_SIMPLE_FILE_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
+	  }
   }
-  CONVERT_4X_URI(identity,GetFccFolder,SetFccFolder)
+  CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
 
   return NS_OK;
 }
@@ -1426,20 +1447,25 @@ nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
     
   PRBool imap_used_uri_for_sent_in_4x;
   rv = m_prefs->GetBoolPref(PREF_4X_MAIL_USE_IMAP_SENTMAIL, &imap_used_uri_for_sent_in_4x);
-  if (imap_used_uri_for_sent_in_4x) {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
+  if (NS_FAILED(rv)) {
+	MIGRATE_SIMPLE_FILE_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
   }
   else {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
+	if (imap_used_uri_for_sent_in_4x) {
+		MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
+	}
+	else {
+		MIGRATE_SIMPLE_FILE_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
+	}
   }
-  CONVERT_4X_URI(identity,GetFccFolder,SetFccFolder)
+  CONVERT_4X_URI(identity,DEFAULT_4X_SENT_FOLDER_NAME,GetFccFolder,SetFccFolder)
     
   return NS_OK;
 }
 
 // caller will free the memory
 nsresult
-nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
+nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folder_name, char **new_uri)
 {
   nsresult rv;
   *new_uri = nsnull;
@@ -1456,30 +1482,77 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 
 #ifdef DEBUG_ACCOUNTMANAGER
   printf("old 4.x folder uri = >%s<\n", old_uri);
-#endif
+#endif /* DEBUG_ACCOUNTMANAGER */
 
   if (PL_strncasecmp(IMAP_SCHEMA,old_uri,IMAP_SCHEMA_LENGTH) == 0) {
-    // 4.x IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
+	nsCOMPtr <nsIURL> url;
+	nsXPIDLCString hostname;
+	nsXPIDLCString username;
+
+	rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), getter_AddRefs(url));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = url->SetSpec(old_uri);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = url->GetHost(getter_Copies(hostname));
+        if (NS_FAILED(rv)) return rv;
+        rv = url->GetPreHost(getter_Copies(username));  
+	if (NS_FAILED(rv)) return rv;
+
+	// in 4.x, mac and windows stored the URI as IMAP://<hostname> 
+	// if the URI was the default folder on the server.
+	// If it wasn't the default folder, they would have stored it as
+	if (!username || (PL_strlen((const char *)username) == 0)) {
+		char *imap_username = nsnull;
+		char *prefname = nsnull;
+		prefname = PR_smprintf("mail.imap.server.%s.userName", (const char *)hostname);
+		if (!prefname) return NS_ERROR_FAILURE;
+
+		rv = m_prefs->CopyCharPref(prefname, &imap_username);
+		PR_FREEIF(prefname);
+		if (NS_FAILED(rv) || !imap_username || !*imap_username) {
+			*new_uri = PR_smprintf("");
+			return NS_ERROR_FAILURE;
+		}
+		else {
+			// new_uri = imap://<username>@<hostname>/<folder name>
 #ifdef DEBUG_ACCOUNTMANAGER
-    printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri + IMAP_SCHEMA_LENGTH);
-#endif
-    *new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,old_uri + IMAP_SCHEMA_LENGTH);
-    return NS_OK;
+			printf("new_uri = %s/%s@%s/%s\n",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
+#endif /* DEBUG_ACCOUNTMANAGER */
+			*new_uri = PR_smprintf("%s/%s@%s/%s",IMAP_SCHEMA, imap_username, (const char *)hostname, default_folder_name);
+			return NS_OK;      
+		}
+        }
+        else {
+		// IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
+#ifdef DEBUG_ACCOUNTMANAGER
+		printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
+#endif /* DEBUG_ACCOUNTMANAGER */
+		*new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,old_uri+IMAP_SCHEMA_LENGTH);
+		return NS_OK;
+	}
   }
 
   char *usernameAtHostname = nsnull;
+  nsCOMPtr <nsIFileSpec> mail_dir;
   char *mail_directory_value = nsnull;
-  rv = m_prefs->CopyCharPref(PREF_PREMIGRATION_MAIL_DIRECTORY, &mail_directory_value);
+  rv = m_prefs->GetFilePref(PREF_PREMIGRATION_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+  if (NS_SUCCEEDED(rv)) {
+	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
+  }
   if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_MAIL_DIRECTORY,PREF_MAIL_DIRECTORY);
 #endif
     PR_FREEIF(mail_directory_value);
 
-    rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
-    if (NS_FAILED(rv)) return rv;
+    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+    if (NS_SUCCEEDED(rv)) {
+	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
+    } 
 
-    if (!mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
+    if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
       NS_ASSERTION(0,"failed to get a base value for the mail.directory");
       return NS_ERROR_UNEXPECTED;
     }
@@ -1519,36 +1592,14 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
     return NS_ERROR_UNEXPECTED;
   }
 
+  // mail_directory_value is already in UNIX style at this point...
   if (PL_strncasecmp(MAILBOX_SCHEMA,old_uri,MAILBOX_SCHEMA_LENGTH) == 0) {
 #ifdef DEBUG_ACCOUNTMANAGER
 	printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
 #endif
-
-        // in 4.x, the mail.directory pref was stored in native path fashion.
-        // we need to convert it to unix style, to do the uri conversion.
-        // do nothing if on UNIX
-#ifdef XP_UNIX
-	char *mail_directory_value_unix_style = mail_directory_value;
-#else
-	char *mail_directory_value_unix_style = nsnull;
-	nsCOMPtr <nsIFileSpec> spec;
-	rv = NS_NewFileSpec(getter_AddRefs(spec));
-	if (NS_FAILED(rv)) return rv;
-
-	rv=spec->SetNativePath(mail_directory_value);
-	if (NS_FAILED(rv)) return rv;
-
-	rv=spec->GetUnixStyleFilePath(&mail_directory_value_unix_style);
-	if (NS_FAILED(rv)) return rv;     
-#endif /* XP_UNIX */
-
 	// the extra -1 is because in 4.x, we had this:
 	// mailbox:<PATH> instead of mailbox:/<PATH> 
-	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value_unix_style) -1); 
-
-#ifndef XP_UNIX
-	PR_FREEIF(mail_directory_value_unix_style);
-#endif /* !XP_UNIX */
+	*new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1); 
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1648,7 +1699,11 @@ nsMsgAccountManager::CreateLocalMailAccount(nsIMsgIdentity *identity)
   // if the "mail.directory" pref is set, use that.
   // if they used -installer, this pref will point to where their files got copied
   if (identity) {
-    rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
+    nsCOMPtr <nsIFileSpec> mail_dir;
+    rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mail_dir));
+    if (NS_SUCCEEDED(rv)) {
+	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
+    }
   }
   else {
     rv = NS_ERROR_FAILURE;
@@ -2165,12 +2220,16 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
     // in 4.x, on UNIX, the "news.directory" pref pointed to the directory to where
     // the newsrc files lived.  we don't want that for the newsHostsDir.
 #ifdef USE_NEWSRC_MAP_FILE
-  // if they used -installer, this pref will point to where their files got copied
-    rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
+    // if they used -installer, this pref will point to where their files got copied
+    nsCOMPtr <nsIFileSpec> news_dir;
+    rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(news_dir));
+    if (NS_SUCCEEDED(rv)) {
+	rv = news_dir->GetUnixStyleFilePath(&news_directory_value);
+    } 
 #else
     rv = NS_ERROR_FAILURE;
 #endif /* USE_NEWSRC_MAP_FILE */
-	if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
+    if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
       newsHostsDir = news_directory_value;
       PR_FREEIF(news_directory_value);
     }
@@ -2301,16 +2360,23 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
-    rv = m_prefs->CopyCharPref(PREF_PREMIGRATION_NEWS_DIRECTORY, &news_directory_value);
+    nsCOMPtr <nsIFileSpec> news_dir;
+    rv = m_prefs->GetFilePref(PREF_PREMIGRATION_NEWS_DIRECTORY, getter_AddRefs(news_dir));
+    if (NS_SUCCEEDED(rv)) {
+          rv = news_dir->GetUnixStyleFilePath(&news_directory_value);
+    } 
     if (NS_FAILED(rv) || !news_directory_value || (PL_strlen(news_directory_value) == 0)) {
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_NEWS_DIRECTORY,PREF_NEWS_DIRECTORY);
 #endif
       PR_FREEIF(news_directory_value);
-      rv = m_prefs->CopyCharPref(PREF_NEWS_DIRECTORY, &news_directory_value);
+      rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(news_dir));
+      if (NS_SUCCEEDED(rv)) {
+            rv = news_dir->GetUnixStyleFilePath(&news_directory_value);
+      } 
     }
     
-	if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
+    if (NS_SUCCEEDED(rv) && news_directory_value && (PL_strlen(news_directory_value) > 0)) {
       newsrcDir = news_directory_value;
       PR_FREEIF(news_directory_value);
     }
