@@ -149,10 +149,10 @@
                   <textbox id="location-field"/>
                 </row>
                 <!-- Description -->
-                <!-- XXX localise &newevent.description.label; -->
                 <row flex="1" align="start">
                    <hbox class="field-label-box-class" pack="end">
-                       <label for="description-field" value="Description"/>
+                       <label for="description-field"
+                              value="&newevent.description.label;"/>
                    </hbox>
                    <textbox id="description-field"
                             multiline="true"
@@ -291,11 +291,10 @@
                       <spacer width="10px"/>
                       <hbox pack="end" align="center">
                         <checkbox id="all-day-event-checkbox"
-                                  label="All Day"
+                                  label="&newevent.alldayevent.label;"
                                   oncommand="commandAllDay()"
                                   hidden-controller="event"
                                   hidden="true"/>
-                        <!-- XXX localize &newevent.alldayevent.label; -->
                       </hbox>
                       <spacer flex="1"/>
                     </hbox>
@@ -649,13 +648,16 @@
                 <radio disable-controller="repeat"
                        id="advanced-repeat-dayofmonth"
                        label="&newevent.advanced.repeat.dayofmonth.label;"
-                       selected="true"/>
+                       selected="true"
+                       class="indent"/>
                 <radio disable-controller="repeat"
                        id="advanced-repeat-dayofweek"
-                       label="&newevent.advanced.repeat.dayofweek.label;"/>
+                       label="&newevent.advanced.repeat.dayofweek.label;"
+                       class="indent"/>
                 <radio disable-controller="repeat"
                        id="advanced-repeat-dayofweek-last"
                        label="&newevent.advanced.repeat.lastdayofweek.label;"
+                       class="indent"
                        disabled="true"/>
               </radiogroup>
             </vbox>
@@ -665,11 +667,14 @@
             <spacer class="repeat-left-spacer" />
             <radiogroup id="repeat-until-group"
                         disable-controller="repeat">
-              <radio id="repeat-forever-radio"
-                     disable-controller="repeat"
-                     label="&newevent.forever.label;"
-                     oncommand="commandUntil()"/>
-              <hbox>
+              <hbox class="indent">
+                <radio id="repeat-forever-radio"
+                       disable-controller="repeat"
+                       label="&newevent.forever.label;"
+                       oncommand="commandUntil()"
+                       selected="true"/>
+              </hbox>
+              <hbox class="indent">
                 <radio id="repeat-numberoftimes-radio"
                        disable-controller="repeat"
                        label="&newevent.numberoftimes.label;"
@@ -677,7 +682,7 @@
                 <textbox id="repeat-numberoftimes-textbox"
                          disable-controller="repeat"/>
               </hbox>
-              <hbox>
+              <hbox class="indent">
                 <radio id="repeat-until-radio"
                        disable-controller="repeat"
                        label="&newevent.until.label;"

@@ -89,15 +89,6 @@ var gDuration = -1;   // used to preserve duration when changing event start.
 
 const DEFAULT_ALARM_LENGTH = 15; //default number of time units, an alarm goes off before an event
 
-const kRepeatDay_0 = 1<<0;//Sunday
-const kRepeatDay_1 = 1<<1;//Monday
-const kRepeatDay_2 = 1<<2;//Tuesday
-const kRepeatDay_3 = 1<<3;//Wednesday
-const kRepeatDay_4 = 1<<4;//Thursday
-const kRepeatDay_5 = 1<<5;//Friday
-const kRepeatDay_6 = 1<<6;//Saturday
-
-
 var gStartDate = new Date( );
 // Note: gEndDate is *exclusive* end date, so duration = end - start.
 // For all-day(s) events (no times), displayed end date is one day earlier.
@@ -312,7 +303,6 @@ function loadCalendarEventDialog()
     // Set up widgets so they're not empty. Event values will override.
     document.getElementById("repeat-end-date-picker").value = new Date();
     document.getElementById("exceptions-date-picker").value = new Date();
-    setFieldValue("repeat-forever-radio", true, "selected");
 
     if (event.recurrenceInfo) {
         // we can only display at most one rule and one set of exceptions;
@@ -343,7 +333,6 @@ function loadCalendarEventDialog()
         }
 
         if (theRule) {
-            debugVar(theRule.type);
             setFieldValue("repeat-checkbox", true, "checked");
             setFieldValue("repeat-length-field", theRule.interval);
             menuListSelectItem("repeat-length-units", theRule.type);
@@ -355,6 +344,7 @@ function loadCalendarEventDialog()
                     setFieldValue( "advanced-repeat-week-"+i, false, "checked" );
                     setFieldValue( "advanced-repeat-week-"+i, false, "today" );
                     for (var j = 0; j < recurWeekdays.length; j++) {
+                        //libical day #s are one more than ours
                         if ((i + 1) == recurWeekdays[j]) {
                             setFieldValue( "advanced-repeat-week-"+i, true, "checked" );
                         }
@@ -363,7 +353,6 @@ function loadCalendarEventDialog()
 
                 //get day number for event's start date, and check and disable it
                 var dayNumber = document.getElementById( "start-datetime" ).value.getDay();
-                debugVar(dayNumber);
                 setFieldValue( "advanced-repeat-week-"+dayNumber, true, "checked" );
                 setFieldValue( "advanced-repeat-week-"+dayNumber, true, "disabled" );
                 setFieldValue( "advanced-repeat-week-"+dayNumber, true, "today" );
@@ -1180,15 +1169,15 @@ function updateAdvancedWeekRepeat()
 function updateAdvancedRepeatDayOfMonth()
 {
     //get the day number for today.
-    var dayNumber = document.getElementById( "start-datetime" ).value.getDate();
-    var dayExtension = getDayExtension( dayNumber );
-    var weekNumber = getWeekNumberOfMonth();
-    var calStrings = document.getElementById("bundle_calendar");
+    var dayNumber      = document.getElementById( "start-datetime" ).value.getDate();
+    var dayExtension   = getDayExtension( dayNumber );
+    var weekNumber     = getWeekNumberOfMonth();
+    var calStrings     = document.getElementById("bundle_calendar");
     var weekNumberText = getWeekNumberText( weekNumber );
-    var dayOfWeekText = getDayOfWeek( dayNumber );
-    var ofTheMonthText = getFieldValue( "ofthemonth-text" );
-    var lastText = getFieldValue( "last-text" );
-    var onTheText = getFieldValue( "onthe-text" );
+    var dayOfWeekText  = getDayOfWeek( dayNumber );
+    var ofTheMonthText = document.getElementById( "ofthemonth-text" ).getAttribute( "value" );
+    var lastText       = document.getElementById( "last-text" ).getAttribute( "value" );
+    var onTheText      = document.getElementById( "onthe-text" ).getAttribute( "value" );
     var dayNumberWithOrdinal = dayNumber + dayExtension;
     var repeatSentence = calStrings.getFormattedString( "weekDayMonthLabel", [onTheText, dayNumberWithOrdinal, ofTheMonthText] );
 

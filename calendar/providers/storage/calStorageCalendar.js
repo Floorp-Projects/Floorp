@@ -833,13 +833,13 @@ calStorageCalendar.prototype = {
                     for (var i = 0; i < rtypes.length; i++) {
                         var comp = "BY" + rtypes[i].toUpperCase();
                         if (row[rtypes[i]]) {
-                            var rstr = row[rtypes[i+1]].split(",");
+                            var rstr = row[rtypes[i]].split(",");
                             var rarray = [];
                             for (var j = 0; j < rstr.length; j++) {
                                 rarray[j] = parseInt(rstr[j]);
                             }
 
-                            rec.setComponent (comp, rarray.length, rarray);
+                            ritem.setComponent (comp, rarray.length, rarray);
                         }
                     }
                 }
