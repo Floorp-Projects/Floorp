@@ -682,22 +682,3 @@ cleanup:
 }
 
 
-void 
-PQG_DestroyParams(PQGParams *params)
-{
-    if (!params) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return;
-    }
-    PORT_FreeArena(params->arena, PR_TRUE);
-}
-
-void 
-PQG_DestroyVerify(PQGVerify *vfy)
-{
-    if (!vfy) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return;
-    }
-    PORT_FreeArena(vfy->arena, PR_TRUE);
-}
