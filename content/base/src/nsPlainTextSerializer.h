@@ -117,6 +117,8 @@ public:
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref);
+  NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
+
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
