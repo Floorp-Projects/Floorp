@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\..
 
-MODULE=bookmarks
+MODULE=search
 
 XPIDLSRCS =                   \
     .\nsISearchService.idl    \
