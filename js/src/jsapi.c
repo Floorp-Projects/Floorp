@@ -2659,6 +2659,19 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
+                     JSExecPart part, jsval *rval)
+{
+    JSScript tmp = *script;
+
+    if (part == JSEXEC_PROLOG)
+        tmp.length = PTRDIFF(tmp.main, tmp.code, jsbytecode);
+    else
+        tmp.code = tmp.main;
+    return JS_ExecuteScript(cx, obj, &tmp, rval);
+}
+
+JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
 		  const char *bytes, uintN length,
 		  const char *filename, uintN lineno,

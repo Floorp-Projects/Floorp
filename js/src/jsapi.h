@@ -985,6 +985,16 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent);
 extern JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval);
 
+/*
+ * Execute either the function-defining prolog of a script, or the script's
+ * main body, but not both.
+ */
+typedef enum JSExecPart { JSEXEC_PROLOG, JSEXEC_MAIN } JSExecPart;
+
+extern JS_PUBLIC_API(JSBool)
+JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
+                     JSExecPart part, jsval *rval);
+
 extern JS_PUBLIC_API(JSBool)
 JS_EvaluateScript(JSContext *cx, JSObject *obj,
 		  const char *bytes, uintN length,
