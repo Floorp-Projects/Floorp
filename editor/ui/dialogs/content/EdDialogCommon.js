@@ -25,9 +25,17 @@
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
-var SelectionOnly = 1; 
-var FormatedWithDoctype  = 2; 
-var FormatedWithoutDoctype = 6; 
+// Bummer! Can't get at enums from nsIDocumentEncoder.h
+var gOutputSelectionOnly = 1;
+var gOutputFormatted     = 2;
+var gOutputNoDoctype     = 4;
+var gOutputBodyOnly      = 8;
+var gOutputPreformatted  = 16;
+var gOutputWrap          = 32;
+var gOutputFormatFlowed  = 64;
+var gOutputAbsoluteLinks = 128;
+var gOutputEncodeEntities = 256;
+
 var maxPixels  = 10000;
 // For dialogs that expand in size. Default is smaller size see "onMoreFewer()" below
 var SeeMore = false;
@@ -535,7 +543,7 @@ function onCancel()
 
 function GetSelectionAsText()
 {
-  return editorShell.GetContentsAs("text/plain", SelectionOnly);
+  return editorShell.GetContentsAs("text/plain", gOutputSelectionOnly);
 }
 
 
