@@ -38,19 +38,20 @@ $results_server           = "tegu.mozilla.org";
 # Timeouts, values are in seconds.
 #
 
-$CreateProfileTimeout           = 45;
-$RegxpcomTestTimeout            = 15;
+$CreateProfileTimeout             = 45;
+$RegxpcomTestTimeout              = 15;
 
-$AliveTestTimeout               = 45;
-$ViewerTestTimeout              = 45;
-$EmbedTestTimeout               = 45;
-$BloatTestTimeout               = 120;    # seconds
-$MailBloatTestTimeout           = 120;    # seconds
-$JavaTestTimeout                = 45;
-$DomTestTimeout	                = 45;     # seconds
-$LayoutPerformanceTestTimeout   = 1200;  # seconds
-$StartupPerformanceTestTimeout  = 60;    # seconds
-$XULWindowOpenTestTimeout	    = 150;   # seconds
+$AliveTestTimeout                 = 45;
+$ViewerTestTimeout                = 45;
+$EmbedTestTimeout                 = 45;
+$BloatTestTimeout                 = 120;   # seconds
+$MailBloatTestTimeout             = 120;   # seconds
+$JavaTestTimeout                  = 45;
+$DomTestTimeout	                  = 45;    # seconds
+$LayoutPerformanceTestTimeout     = 1200;  # entire test, seconds
+$LayoutPerformanceTestPageTimeout = 30000; # each page, ms
+$StartupPerformanceTestTimeout    = 60;    # seconds
+$XULWindowOpenTestTimeout	      = 150;   # seconds
 
 
 $MozConfigFileName = 'mozconfig';
