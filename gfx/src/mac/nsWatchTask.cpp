@@ -46,14 +46,7 @@ nsWatchTask :: nsWatchTask ( )
   : mChecksum('mozz'), mSelf(this), mTicks(::TickCount()), mBusy(PR_FALSE), mSuspended(PR_FALSE),
      mInstallSucceeded(PR_FALSE), mAnimation(0)
 {
-  // setup the task
-  mTask.qType = vType;
-	mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
-  mTask.vblCount = kRepeatInterval;
-  mTask.vblPhase = 0;
-  
-  // install it
-  mInstallSucceeded = ::VInstall((QElemPtr)&mTask) == noErr;
+
 }
 
 
@@ -63,6 +56,28 @@ nsWatchTask :: ~nsWatchTask ( )
     ::VRemove ( (QElemPtr)&mTask );
   InitCursor();
 }
+
+
+//
+// Start
+//
+// Registers the VBL task and does other various init tasks to begin
+// watching for time away from the event loop. It is ok to call other
+// methods on this object w/out calling Start().
+//
+void
+nsWatchTask :: Start ( )
+{
+  // setup the task
+  mTask.qType = vType;
+	mTask.vblAddr = NewVBLProc((VBLProcPtr)DoWatchTask);
+  mTask.vblCount = kRepeatInterval;
+  mTask.vblPhase = 0;
+  
+  // install it
+  mInstallSucceeded = ::VInstall((QElemPtr)&mTask) == noErr;
+
+} // Start
 
 
 //

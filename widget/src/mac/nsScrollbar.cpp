@@ -26,6 +26,8 @@
 #include <ControlDefinitions.h>
 #endif
 
+#include "nsWatchTask.h"
+
 NS_IMPL_ADDREF(nsScrollbar);
 NS_IMPL_RELEASE(nsScrollbar);
 
@@ -206,7 +208,9 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 						// which lets you pass the action proc to TrackControl
 						// for the thumb (this was illegal in previous
 						// versions of the defproc).
+						nsWatchTask::GetTask().Suspend();
 						::TrackControl(mControl, thePoint, sControlActionProc);
+						nsWatchTask::GetTask().Resume();
 						// We don't dispatch the mouseDown event because mouseUp is eaten
 						// by TrackControl anyway and the only messages the app really
 						// cares about are the NS_SCROLLBAR_xxx messages.
