@@ -29,7 +29,7 @@ PRMonitor *getEditorMonitor();
 
 
 /** implementation of an editor object.  it will be the controler/focal point 
- *  for the main editor services. i.e. the GUIControler, publishing, transaction 
+ *  for the main editor services. i.e. the GUIManager, publishing, transaction 
  *  manager, event interfaces. the idea for the event interfaces is to have them 
  *  delegate the actual commands to the editor independent of the XPFE implementation.
  */

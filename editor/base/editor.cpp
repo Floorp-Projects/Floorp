@@ -18,6 +18,7 @@
 
 
 #include "editor.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
