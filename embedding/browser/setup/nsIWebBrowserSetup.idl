@@ -24,12 +24,18 @@
 #include "nsIEnumerator.idl"
 
 /**
- * The nsIBrowserEmbedSetup    
+ * The nsIWebBrowserSetup    
  */
 
 [scriptable, uuid(F15398A0-8018-11d3-AF70-00A024FFC08C)]
-interface nsIBrowserEmbedSetup : nsISupports
+interface nsIWebBrowserSetup : nsISupports
 {
-	void ChangeCurrentUser(in wstring newUser);
+	/*
+	Changes the Current User for the profile to the one selected.  If one
+	does not exist for the name passed in, one will be created.
+
+	@param user - User to change the profile to. 
+	*/
+	void ChangeCurrentUser(in wstring user);
 	readonly attribute nsIEnumerator userList;
 };
