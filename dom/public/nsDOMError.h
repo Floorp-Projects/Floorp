@@ -49,6 +49,14 @@
 #define NS_ERROR_DOM_NAMESPACE_ERR               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,14)
 #define NS_ERROR_DOM_SYNTAX_ERR                  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,15)
 
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-2/range.html */
+
+// Note! These should have their own error MODULE and correct codes
+// (101 should be 1, 102 should be 2)
+#define NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,101)
+#define NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,102)
+
+
 /* DOM error codes defined by us */
 
 #define NS_ERROR_DOM_SECURITY_ERR                NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,1000)
