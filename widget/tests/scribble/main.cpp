@@ -44,7 +44,6 @@ void main(int argc, char **argv)
 #include "xp_mcom.h"
 #include "net.h"
 #include "xp_linebuf.h"
-#include "mkbuf.h"
 
 extern "C" XP_Bool ValidateDocData(MWContext *window_id) 
 { 

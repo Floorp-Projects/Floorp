@@ -77,7 +77,6 @@ LIBS := \
 	-lnetcnvts \
 	-lnetlib \
 	-lsockstuburl \
-	-lnetutil \
 	-lnetwork \
 	-lpwcac \
 	-lraptorwebwidget \
