@@ -53,6 +53,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
 #include "CNavDTD.h"
@@ -695,14 +696,13 @@ NS_IMETHODIMP nsHTMLDocument::SetTitle(const nsString& aTitle)
     nsIPresShell* shell = (nsIPresShell*) mPresShells.ElementAt(i);
     nsCOMPtr<nsIPresContext> cx;
     shell->GetPresContext(getter_AddRefs(cx));
-    nsISupports* container;
-    if (NS_OK == cx->GetContainer(&container)) {
-      if (nsnull != container) {
-        nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(container);
-        if (webShell) {
+    nsCOMPtr<nsISupports> container;
+    if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
+      if (container) {
+        nsCOMPtr<nsIBaseWindow> webShell(do_QueryInterface(container));
+        if(webShell) {
           webShell->SetTitle(aTitle.GetUnicode());
         }
-        NS_RELEASE(container);
       }
     }
   }
