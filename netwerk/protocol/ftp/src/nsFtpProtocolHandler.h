@@ -81,17 +81,19 @@ protected:
     // Stuff for the timer callback function
     struct timerStruct {
         nsCOMPtr<nsITimer> timer;
-        nsCOMPtr<nsFtpControlConnection> conn;
+        nsFtpControlConnection *conn;
         char* key;
         
-        timerStruct() : key(nsnull) {}
+        timerStruct() : conn(nsnull), key(nsnull) {}
         
         ~timerStruct() {
             if (timer)
                 timer->Cancel();
             CRTFREEIF(key);
-            if (conn)
+            if (conn) {
                 conn->Disconnect(NS_ERROR_ABORT);
+                NS_RELEASE(conn);
+            }
         }
     };
 
