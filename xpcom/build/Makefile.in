@@ -1,0 +1,86 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+include $(topsrcdir)/config/config.mk
+
+LIBRARY_NAME = xpcom
+
+MODULE = xpcom
+
+CPPSRCS =			\
+	dlldeps.cpp		\
+	nsXPComInit.cpp		\
+	$(NULL)
+
+EXPORTS =			\
+	nsIXPComService.h	\
+	$(NULL)
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+REQUIRES = xpcom
+
+LOCAL_INCLUDES +=			\
+	-I$(srcdir)/../base		\
+	-I$(srcdir)/../ds		\
+	-I$(srcdir)/../io		\
+	-I$(srcdir)/../components	\
+	-I$(srcdir)/../threads		\
+	$(NULL)
+
+DEFINES += -D_IMPL_NS_COM -D_IMPL_NS_BASE
+
+SHARED_LIBRARY_LIBS =			 \
+	$(DIST)/lib/libxpcombase_s.a	 \
+	$(DIST)/lib/libxpcomds_s.a	 \
+	$(DIST)/lib/libxpcomio_s.a	 \
+	$(DIST)/lib/libxpcomcomponents_s.a	 \
+	$(DIST)/lib/libxpcomthreads_s.a	 \
+	$(DIST)/lib/libreg.a	 \
+	$(NULL)
+
+ifeq ($(OS_ARCH),HP-UX)
+EXTRA_DSO_LDOPTS = -c objs/objslist
+else
+EXTRA_DSO_LDOPTS =	       \
+	$(MKSHLIB_FORCE_ALL)   \
+	$(SHARED_LIBRARY_LIBS) \
+	$(MKSHLIB_UNFORCE_ALL)
+endif
+
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),HP-UX)
+shared_library_objs: $(SHARED_LIBRARY_LIBS)
+	rm -rf objs
+	mkdir objs
+	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
+	| awk '{ print "objs/"$$3 }' > objs/objslist
+
+$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
+else
+$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+endif
