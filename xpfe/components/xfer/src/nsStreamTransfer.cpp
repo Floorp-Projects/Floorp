@@ -207,26 +207,18 @@ nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const
       
         if ( picker ) {
             // Prompt for file name.
-            nsCOMPtr<nsIFileSpec> startDir;
+            nsCOMPtr<nsILocalFile> startDir;
 
             // Pull in the user's preferences and get the default download directory.
             NS_WITH_SERVICE( nsIPref, prefs, NS_PREF_PROGID, &rv );
             if ( NS_SUCCEEDED( rv ) && prefs ) {
-                prefs->GetFilePref( "browser.download.dir", getter_AddRefs( startDir ) );
+                prefs->GetFileXPref( "browser.download.dir", getter_AddRefs( startDir ) );
                 if ( startDir ) {
                     PRBool isValid = PR_FALSE;
-                    startDir->IsValid( &isValid );
+                    startDir->Exists( &isValid );
                     if ( isValid ) {
-                        // Set file picker so startDir is used.
-                        nsXPIDLCString nativeStartDir;
-                        startDir->GetNativePath( getter_Copies( nativeStartDir ) );
-                        nsCOMPtr<nsILocalFile> startLocalFile;
-                        if ( NS_SUCCEEDED( NS_NewLocalFile( nativeStartDir, PR_FALSE, getter_AddRefs( startLocalFile ) ) ) ) {
-                            #ifdef DEBUG_law
-                            printf( "\nSetting display directory to %s\n\n", (const char*)nativeStartDir );
-                            #endif
-                            picker->SetDisplayDirectory( startLocalFile );
-                        }
+                      // Set file picker so startDir is used.
+                      picker->SetDisplayDirectory( startDir );
                     }
                 }
             }
@@ -282,9 +274,21 @@ nsStreamTransfer::SelectFile( nsIDOMWindow *parent, nsIFileSpec **aResult, const
 
                 if ( NS_SUCCEEDED( rv ) && prefs ) {
                     // Save selected directory for next time.
-                    rv = (*aResult)->GetParent( getter_AddRefs( startDir ) );
+                    nsCOMPtr<nsIFileSpec> startDirPath;
+                    rv = (*aResult)->GetParent( getter_AddRefs(startDirPath));
+
+                    // go through nsFileSpec to get to nsILocalFile
+                    nsFileSpec startDirSpec;
+
+                    if (NS_SUCCEEDED(rv))
+                      rv = startDirPath->GetFileSpec(&startDirSpec);
+                    
+                    if (NS_SUCCEEDED(rv))
+                      rv = NS_FileSpecToIFile(&startDirSpec,
+                                              getter_AddRefs(startDir));
+                    
                     if ( NS_SUCCEEDED( rv ) && startDir ) {
-                        prefs->SetFilePref( "browser.download.dir", startDir, PR_FALSE );
+                        prefs->SetFileXPref( "browser.download.dir", startDir);
                         #ifdef DEBUG_law
                         printf( "\nbrowser.download.dir has been reset\n\n" );
                         #endif
