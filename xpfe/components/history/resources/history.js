@@ -91,7 +91,7 @@ function OpenURL(event, node)
 	{
 	}
 
-    window.open(url,'history');
-
+   // window.open(url,'history');
+    window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url ); // get right sized window
     return(true);
 }
