@@ -38,14 +38,18 @@
 
 #include "nsISupports.idl"
 
-interface nsIInputStream;
+interface nsIZipReader;
 interface nsIRDFDataSource;
 interface nsIUpdateItem;
 
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
 {
-  void installExtensionFromStream(in nsIInputStream aStream, in boolean aUseProfile);
+  const unsigned long FLAG_INSTALL_PROFILE = 0x01;
+  const unsigned long FLAG_INSTALL_GLOBAL  = 0x02;
+
+  void installExtensionFromXPI(in nsIZipReader aZipReader, in unsigned long aFlags);
+
   void uninstallExtension(in string aExtensionID);
   void enableExtension(in string aExtensionID);
   void disableExtension(in string aExtensionID);
