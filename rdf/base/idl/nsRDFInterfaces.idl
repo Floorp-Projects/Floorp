@@ -32,79 +32,151 @@
 #include "nscore.h" // for PRUnichar
 %}
 
+// An nsIRDFNode object is an abstract placeholder for a node in the
+// RDF data model. Its concreted implementations (e.g., nsIRDFResource
+// or nsIRDFLiteral) are the actual objects that populate the graph.
 [uuid(0F78DA50-8321-11d2-8EAC-00805F29F370)]
 interface nsIRDFNode : nsISupports {
+    // Determine if two nodes are identical
     boolean EqualsNode(in nsIRDFNode aNode);
 };
 
-
+// An nsIRDFResource is an object that has unique identity in the 
+// RDF data model. The object's identity is determined by its URI.
 [uuid(E0C493D1-9542-11d2-8EB8-00805F29F370)]
 interface nsIRDFResource : nsIRDFNode {
+    // The single-byte string value of the resource
     readonly attribute string Value;
+
+    // This method is called by the nsIRDFService after constructing
+    // a resource object to initialize it's URI. You would not normally
+    // call this method directly
     void Init(in string uri);
+
+    // Determine if two resources are identical.
     boolean EqualsResource(in nsIRDFResource aResource);
+
+    // Determine if the resource has the given URI.
     boolean EqualsString(in string aURI);
 };
 
+// A literal node in the graph, whose value is a string.
 [uuid(E0C493D2-9542-11d2-8EB8-00805F29F370)]
 interface nsIRDFLiteral : nsIRDFNode {
+    // The Unicode string value of the literal.
     readonly attribute wstring Value;
+
+    // Determine if two literals are identical.
     boolean EqualsLiteral(in nsIRDFLiteral aLiteral);
 };
 
+// A literal node in the graph, whose value is a date
 [uuid(E13A24E1-C77A-11d2-80BE-006097B76B8E)]
 interface nsIRDFDate : nsIRDFNode {
+    // The date value of the literal
     readonly attribute long long Value;
+
+    // Determine if the date is equal to another
+    //
+    // XXX Is this really necessary?
     boolean EqualsDate(in nsIRDFDate aDate);
 };
 
+// A literal node in the graph, whose value is an integer
 [uuid(E13A24E3-C77A-11d2-80BE-006097B76B8E)]
 interface nsIRDFInt : nsIRDFNode {
+    // The integer value of the literal
     readonly attribute long Value;
+
+    // Determine if the integer is equal to another
+    //
+    // XXX Is this really necessary?
     boolean EqualsInt(in nsIRDFInt aInt);
 };
 
 interface nsIRDFDataSource;
 
+// An enumeration interface
 [uuid(1C2ABDB0-4CEF-11D2-BC16-00805F912FE7)]
 interface nsIRDFCursor : nsISupports {
+    // Advance the cursor to the next element.
+    //
+    // @return NS_ERROR_RDF_CURSOR_EMPTY if the cursor has reached the
+    // end and there are no more elements to enumerate; otherwise,
+    // NS_OK unless a catastrophic error occurs.
     void Advance();
+
+    // The data source from which the current item was obtained.
     readonly attribute nsIRDFDataSource DataSource;
+
+    // Irrespective of the query, a cursor is an interator over a set;
+    // this member is the current value of the cursor.
     readonly attribute nsIRDFNode Value;
 };
 
+// An nsIRDFAssertionCursor is an iterator over a set of assertions,
+// each of which has a source node, a target node, an arc label, and a
+// truth value.
 [uuid(1ED57100-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFAssertionCursor : nsIRDFCursor {
+
+    // The source node of the current assertion.
     readonly attribute nsIRDFResource Source;
+
+    // The label of the current assertion
     readonly attribute nsIRDFResource Label;
+
+    // The target node of the current assertion
     readonly attribute nsIRDFNode     Target;
+
+    // The truth value of the current assertion
     readonly attribute boolean TruthValue;
 };
 
 
+// An nsIRDFArcsInCursor enumerates the unique labels of 
+// the arcs that terminate ("point in to") a node.
 [uuid(1ED57102-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFArcsInCursor : nsIRDFCursor {
+    // The label of the current arc
     readonly attribute nsIRDFResource Label;
+
+    // The target of the current arc (always the same for a given
+    // arcs-in cursor).
     readonly attribute nsIRDFNode     Target;
 };
 
+// An nsIRDFArcsOutCursor enumerates the unique labels of
+// arcs that original ("point out of") a resource.
 [uuid(1ED57101-9904-11d2-8EBA-00805F29F370)]
 interface nsIRDFArcsOutCursor : nsIRDFCursor {
+    // The source of the current arc (always the same for a give
+    // arcs-out cursor).
     readonly attribute nsIRDFResource Source;
+
+    // The label of the current arc
     readonly attribute nsIRDFResource Label;
 };
 
+// An nsIRDFResourceCursor enumerats a set of resources
 [uuid(C2850C10-B0CF-11d2-A684-00104BDE6048)]
 interface nsIRDFResourceCursor : nsIRDFCursor {
+    // The current resource
     readonly attribute nsIRDFResource Resource;
 };
 
+// An nsIRDFObserver object is an observer that will be notified
+// when assertions are made or removed from a datasource
 [uuid(3CC75360-484A-11D2-BC16-00805F912FE7)]
 interface nsIRDFObserver : nsISupports {
+    // This method is called whenever a new assertion is made
+    // in the data source
     void OnAssert(in nsIRDFResource aSource,
                   in nsIRDFResource aLabel,
                   in nsIRDFNode     aTarget);
 
+    // This method is called whenever an assertion is removed
+    // from the data source
     void OnUnassert(in nsIRDFResource aSource,
                     in nsIRDFResource aLabel,
                     in nsIRDFNode     aTarget);
@@ -113,85 +185,211 @@ interface nsIRDFObserver : nsISupports {
 
 [uuid(0F78DA58-8321-11d2-8EAC-00805F29F370)]
 interface nsIRDFDataSource : nsISupports {
+    // Specify the URI for the data source: this is the prefix
+    // that will be used to register the data source in the
+    // data source registry.
     void Init(in string uri);
+
+    // The URI of the data source.
     readonly attribute string URI;
 
+    // Find an RDF resource that points to a given node over the
+    // specified arc & truth value
+    //
+    // @return NS_RDF_NO_VALUE if there is no source that leads
+    // to the target with the specified property.
     nsIRDFResource GetSource(in nsIRDFResource aProperty,
                              in nsIRDFNode     aTarget,
                              in boolean        aTruthValue);
 
+    // Find all RDF resources that point to a given node over the
+    // specified arc & truth value
+    //
+    // @return NS_OK unless a catastrophic error occurs. If the
+    // method returns NS_OK, you may assume that nsIRDFCursor points
+    // to a valid (but possibly empty) cursor.
     nsIRDFAssertionCursor GetSources(in nsIRDFResource aProperty,
                                      in nsIRDFNode     aTarget,
                                      in boolean        aTruthValue);
 
+    // Find a child of that is related to the source by the given arc
+    // arc and truth value
+    //
+    // @return NS_RDF_NO_VALUE if there is no target accessable from the
+    // source via the specified property.
     nsIRDFNode GetTarget(in nsIRDFResource aSource,
                          in nsIRDFResource aProperty,
                          in boolean        aTruthValue);
 
+    // Find all children of that are related to the source by the given arc
+    // arc and truth value.
+    //
+    // @return NS_OK unless a catastrophic error occurs. If the
+    // method returns NS_OK, you may assume that nsIRDFCursor points
+    // to a valid (but possibly empty) cursor.
     nsIRDFAssertionCursor GetTargets(in nsIRDFResource aSource,
                                      in nsIRDFResource aProperty,
                                      in boolean aTruthValue);
 
+    // Add an assertion to the graph.
     void Assert(in nsIRDFResource aSource, 
                 in nsIRDFResource aProperty, 
                 in nsIRDFNode     aTarget,
                 in boolean        aTruthValue);
 
+    // Remove an assertion from the graph.
     void Unassert(in nsIRDFResource aSource,
                   in nsIRDFResource aProperty,
                   in nsIRDFNode     aTarget);
 
+    // Query whether an assertion exists in this graph.
     boolean HasAssertion(in nsIRDFResource aSource,
                          in nsIRDFResource aProperty,
                          in nsIRDFNode     aTarget,
                          in boolean        aTruthValue);
 
+    // Add an observer to this data source.
     void AddObserver(in nsIRDFObserver aObserver);
 
+    // Remove an observer from this data source
     void RemoveObserver(in nsIRDFObserver aObserver);
 
+    // Get a cursor to iterate over all the arcs that point into a node.
+    //
+    // @return NS_OK unless a catastrophic error occurs. If the method
+    // returns NS_OK, you may assume that labels points to a valid (but
+    // possible empty) nsIRDFCursor object.
     nsIRDFArcsInCursor ArcLabelsIn(in nsIRDFNode aNode);
 
+    // Get a cursor to iterate over all the arcs that originate in
+    // a resource.
+    //
+    // @return NS_OK unless a catastrophic error occurs. If the method
+    // returns NS_OK, you may assume that labels points to a valid (but
+    // possible empty) nsIRDFCursor object.
     nsIRDFArcsOutCursor ArcLabelsOut(in nsIRDFResource aSource);
 
+    // Retrieve all of the resources that the data source currently
+    // refers to.
     nsIRDFResourceCursor GetAllResources();
 
+    // Request that a data source write it's contents out to 
+    // permanent storage if applicable.
     void Flush();
 
+    // Returns the set of all commands defined for a given source.
     nsIEnumerator GetAllCommands(in nsIRDFResource aSource);
 
+    // Returns whether a given command is enabled for a set of sources. 
     boolean IsCommandEnabled(in nsISupportsArray aSources,
                              in nsIRDFResource   aCommand,
                              in nsISupportsArray aArguments);
 
+    // Perform the specified command on set of sources.
     void DoCommand(in nsISupportsArray aSources,
                    in nsIRDFResource   aCommand,
                    in nsISupportsArray aArguments);
 };
 
+// An nsIRDFCompositeDataSource composes individual data sources, providing
+// the illusion of a single, coherent RDF graph.
 [uuid(96343820-307C-11D2-BC15-00805F912FE7)]
 interface nsIRDFCompositeDataSource : nsIRDFDataSource {
+    // Add a datasource the the database.
     void AddDataSource(in nsIRDFDataSource aDataSource);
+
+    // Remove a datasource from the database
     void RemoveDataSource(in nsIRDFDataSource aDataSource);
 };
 
+// The RDF service interface. This is a singleton object, and should be
+// obtained from the <tt>nsServiceManager</tt>.
 [uuid(BFD05261-834C-11d2-8EAC-00805F29F370)]
 interface nsIRDFService : nsISupports {
-    // Resource management routines
-
+    // Construct an RDF resource from a single-byte URI. <tt>nsIRDFSerivce</tt>
+    // caches resources that are in-use, so multiple calls to <tt>GetResource()</tt>
+    // for the same <tt>uri</tt> will return identical pointers. FindResource
+    // is used to find out whether there already exists a resource corresponding to that url.
     nsIRDFResource GetResource(in string aURI);
+
+    // Construct an RDF resource from a Unicode URI. This is provided
+    // as a convenience method, allowing automatic, in-line C++
+    // conversion from <tt>nsString</tt> objects. The <tt>uri</tt> will
+    // be converted to a single-byte representation internally.
     nsIRDFResource GetUnicodeResource(in wstring aURI);
+
+    // Construct an RDF literal from a Unicode string.
     nsIRDFLiteral  GetLiteral(in wstring aValue);
+
+    // Construct an RDF literal from a PRTime.
     nsIRDFDate     GetDateLiteral(in long long aValue);
+
+    // Construct an RDF literal from an int.
     nsIRDFInt      GetIntLiteral(in long aValue);
 
+    // Registers a resource with the RDF system, making it unique w.r.t.
+    // GetResource.
+    //
+    // An implementation of nsIRDFResource should call this in its
+    // Init() method if it wishes the resource to be globally unique
+    // (which is usually the case).
+    //
+    // NOTE that the resource will <i>not</i> be ref-counted by the
+    // RDF service: the assumption is that the resource implementation
+    // will call nsIRDFService::UnregisterResource() when the last
+    // reference to the resource is released.
+    //
+    // NOTE that the nsIRDFService implementation may choose to
+    // maintain a reference to the resource's URI; therefore, the
+    // resource implementation should ensure that the resource's URI
+    // (accessable via nsIRDFResource::GetValue(const char* *aURI)) is
+    // valid before calling RegisterResource(). Furthermore, the
+    // resource implementation should ensure that this pointer
+    // <i>remains</i> valid for the lifetime of the resource. (The
+    // implementation of the resource cache in nsIRDFService uses the
+    // URI maintained "internally" in the resource as a key into the
+    // cache rather than copying the resource URI itself.)
     void RegisterResource(in nsIRDFResource aResource, in boolean aReplace);
+
+    // Called to notify the resource manager that a resource is no
+    // longer in use. This method should only be called from the
+    // destructor of a "custom" resource implementation to notify the
+    // RDF service that the last reference to the resource has been
+    // released, so the resource is no longer valid.
+    //
+    // NOTE. As mentioned in nsIRDFResourceFactory::CreateResource(),
+    // the RDF service will use the result of
+    // nsIRDFResource::GetValue() as a key into its cache. For this
+    // reason, you must always un-cache the resource <b>before</b>
+    // releasing the storage for the <tt>const char*</tt> URI.
     void UnregisterResource(in nsIRDFResource aResource);
 
+    // Register a <i>named data source</i>. The RDF service will call
+    // <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under
+    // which to register the data source.
+    //
+    // Note that the data source will <i>not</i> be refcounted by the
+    // RDF service! The assumption is that an RDF data source
+    // registers with the service once it is initialized (via
+    // <tt>nsIRDFDataSource::Init()</tt>), and unregisters when the
+    // last reference to the data source is released.
     void RegisterDataSource(in nsIRDFDataSource aDataSource,
                             in boolean          aReplace);
 
+    // Unregister a <i>named data source</i>. The RDF service will call
+    // <tt>nsIRDFDataSource::GetURI()</tt> to determine the URI under which the
+    // data source was registered.
     void UnregisterDataSource(in nsIRDFDataSource aDataSource);
 
+    // Get the <i>named data source</i> corresponding to the URI. If a data
+    // source has been registered via <tt>RegisterDataSource()</tt>, that
+    // data source will be returned.
+    //
+    // If no data source is currently
+    // registered for the specified URI, and a data source <i>constructor</i>
+    // function has been registered via <tt>RegisterDatasourceConstructor()</tt>,
+    // the RDF service will call the constructor to attempt to construct a
+    // new data source. If construction is successful, the data source will
+    // be initialized via <tt>nsIRDFDataSource::Init()</tt>.
     nsIRDFDataSource GetDataSource(in string aURI);
 };
