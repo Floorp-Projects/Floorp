@@ -20,13 +20,17 @@
 #include "net.h"
 #include "secnav.h"
 #include "ldap.h"
+
+#ifdef MOZ_SECURITY
 #include "certldap.h"
 #include "mkcertld.h"
+#endif
 
 PRIVATE int32
 net_CertLdapLoad(ActiveEntry *ce)
 {
     int err = 0;
+#ifdef MOZ_SECURITY
     CertLdapConnData *connData;
     
     connData = SECNAV_CertLdapLoad(ce->URL_s);
@@ -38,7 +42,7 @@ net_CertLdapLoad(ActiveEntry *ce)
     if ( err ) {
 	ce->status = err;
     } else {
-
+#endif
 #ifdef NSPR20_DISABLED /* need to convert to PRFileDesc */
 	ce->socket = connData->fd;
 #endif
@@ -50,26 +54,30 @@ net_CertLdapLoad(ActiveEntry *ce)
 #else
 	NET_SetCallNetlibAllTheTime(ce->window_id, "mkcertld");
 #endif
+#ifdef MOZ_SECURITY
     }
-    
+#endif    
     return(err);
 }
 
 PRIVATE int32
 net_ProcessCertLdap(ActiveEntry *ce)
 {
-    int err;
+    int err = 0;
+#ifdef MOZ_SECURITY
     CertLdapConnData *connData;
     
     connData = (CertLdapConnData *)ce->con_data;
+#endif
 
 #ifdef XP_UNIX
     NET_ClearConnectSelect(ce->window_id, connData->fd);
     NET_SetReadSelect(ce->window_id, connData->fd);
 #endif
 
+#ifdef MOZ_SECURITY
     err = SECNAV_CertLdapProcess(connData);
-    
+#endif    
     if ( err ) {
 	if ( err == 1 ) {
 	    /* done */
@@ -94,11 +102,13 @@ PRIVATE int32
 net_InterruptCertLdap(ActiveEntry *ce)
 {
     int err;
+#ifdef MOZ_SECURITY
     CertLdapConnData *connData;
     
     connData = (CertLdapConnData *)ce->con_data;
 
     err = SECNAV_CertLdapInterrupt(connData);
+#endif
     ce->status = MK_INTERRUPTED;
 
 #ifdef XP_UNIX
