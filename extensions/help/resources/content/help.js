@@ -445,12 +445,7 @@ function doFind() {
   for (var i=0; i < RE.length; ++i) {
     if (RE[i] == "")
       continue;
-    if (RE[i].length > 3) {
-        RE[i] = new RegExp(RE[i].substring(0, RE[i].length-1) +"\w?", "i");
-    } else {
-        RE[i] = new RegExp(RE[i], "i");
-    }
-
+    RE[i] = new RegExp(RE[i], "i");
   }
  emptySearch = true;
   // search TOC
