@@ -63,6 +63,9 @@
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
 
+#include "nsLayoutAtoms.h"
+#include "nsIFrame.h"
+
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mLoadingEnabled(PR_TRUE),
@@ -411,18 +414,79 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
+  // It may be that one of our frames has replaced itself with alt text... This
+  // would only have happened if our mCurrentRequest had issues, and we would
+  // have set it to null by now in that case.  Have to save that information
+  // here, since LoadImage may clobber the value of mCurrentRequest.
+  PRBool mayNeedReframe = !mCurrentRequest;
+  
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
-  return loader->LoadImage(imageURI,                /* uri to load */
-                           documentURI,             /* initialDocumentURI */
-                           documentURI,             /* referrer */
-                           loadGroup,               /* loadgroup */
-                           this,                    /* imgIDecoderObserver */
-                           doc,                     /* uniquification key */
-                           nsIRequest::LOAD_NORMAL, /* load flags */
-                           nsnull,                  /* cache key */
-                           nsnull,                  /* existing request*/
-                           getter_AddRefs(req));
+  rv = loader->LoadImage(imageURI,                /* uri to load */
+                         documentURI,             /* initialDocumentURI */
+                         documentURI,             /* referrer */
+                         loadGroup,               /* loadgroup */
+                         this,                    /* imgIDecoderObserver */
+                         doc,                     /* uniquification key */
+                         nsIRequest::LOAD_NORMAL, /* load flags */
+                         nsnull,                  /* cache key */
+                         nsnull,                  /* existing request*/
+                         getter_AddRefs(req));
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mayNeedReframe) {
+    // We're all set
+    return NS_OK;
+  }
+
+  // Only continue if we have a parent and a document -- that would mean we're
+  // a useful chunk of the content model and _may_ have a frame.  This should
+  // eliminate things like SetAttr calls during the parsing process, as well as
+  // things like setting src on |new Image()|-type things.
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
+  NS_ENSURE_TRUE(thisContent, rv);
+
+  nsCOMPtr<nsIDocument> tempDoc;
+  thisContent->GetDocument(*getter_AddRefs(tempDoc));
+  if (!doc) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> parent;
+  thisContent->GetParent(*getter_AddRefs(parent));
+  if (!parent) {
+    return NS_OK;
+  }
+
+  // OK, now for each PresShell, see whether we have a frame -- this tends to
+  // be expensive, which is why it's the last check....  If we have a frame
+  // and it's not of the right type, reframe it.
+  PRInt32 numShells = doc->GetNumberOfShells();
+  for (PRInt32 i = 0; i < numShells; ++i) {
+    nsCOMPtr<nsIPresShell> shell;
+    doc->GetShellAt(i, getter_AddRefs(shell));
+    if (shell) {
+      nsIFrame* frame = nsnull;
+      shell->GetPrimaryFrameFor(thisContent, &frame);
+      if (frame) {
+        // XXXbz I don't like this one bit... we really need a better way of
+        // doing the CantRenderReplacedElement stuff.. In particular, it needs
+        // to be easily detectable.  For example, I suspect that this code will
+        // fail for <object> in the current CantRenderReplacedElement
+        // implementation...
+        nsCOMPtr<nsIAtom> frameType;
+        frame->GetFrameType(getter_AddRefs(frameType));
+        if (frameType != nsLayoutAtoms::imageFrame &&
+            frameType != nsLayoutAtoms::imageControlFrame &&
+            frameType != nsLayoutAtoms::objectFrame) {
+          shell->RecreateFramesFor(thisContent);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 void
