@@ -349,26 +349,29 @@ MsgAppCoreGetMessageHeader(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
 
   if (argc >= 2) {
-              rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&tree,
-                                                                                                                                                      nsIDOMXULTreeElement::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[0]);
-
-              rBool = rBool && nsJSUtils::nsConvertJSValToObject((nsISupports**)&nodeList,
-                                                                                                                                                      nsIDOMNodeList::GetIID(),
-                                  typeName,
-                                  cx,
-                                  argv[1]);
+      rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&tree,
+                                                nsIDOMXULTreeElement::GetIID(),
+                                                typeName,
+                                                cx,
+                                                argv[0]);
+      
+      rBool = rBool && nsJSUtils::nsConvertJSValToObject(
+                                            (nsISupports**)&nodeList,
+                                            nsIDOMNodeList::GetIID(),
+                                            typeName,
+                                            cx,
+                                            argv[1]);
 
               
-    if (!rBool || NS_OK != nativeThis->GetMessageHeader(tree, nodeList, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-              NS_RELEASE(nodeList);
-              NS_RELEASE(tree);
-    *rval = (jsval) nativeRet;
+      if (!rBool || NS_OK != nativeThis->GetMessageHeader(tree,
+                                                          nodeList, 
+                                                          &nativeRet)) {
+          return JS_FALSE;
+      }
+      
+      NS_RELEASE(nodeList);
+      NS_RELEASE(tree);
+      nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
   }
   else {
     JS_ReportError(cx, "Function ReplyMessage requires 1 parameters");
