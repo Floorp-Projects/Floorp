@@ -303,6 +303,9 @@ nsInstall::AddDirectory(const nsString& aRegName,
         *aReturn = SaveError(nsInstall::INVALID_ARGUMENTS);
         return NS_OK;
     }
+
+    nsString jarsrc(aJarSource);
+    jarsrc.Append("/*");
     
     result = SanityCheck();
     
@@ -339,17 +342,14 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     nsVector *paths = new nsVector();
     
-    result = ExtractDirEntries(aJarSource, paths);
-    
-    PRInt32  pathsUpperBound = paths->GetUpperBound();
-
+    result = ExtractDirEntries(jarsrc, paths);
     if (result != nsInstall::SUCCESS)
     {
         *aReturn = SaveError( result );
         return NS_OK;
     }
     
-    for (int i=0; i< pathsUpperBound; i++)
+    for (PRUint32 i=0; i <= paths->GetUpperBound(); i++)
     {
         nsString *thisPath = (nsString *)paths->Get(i);
 
@@ -1700,7 +1700,7 @@ PRInt32
 nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 {
     PRInt32 err;
-    char    buf[512];
+    char    buf[512];  // XXX: need an XP "max path"
 
     if ( paths )
     {
@@ -1708,10 +1708,14 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVector *paths)
 
         if ( find ) 
         {
+            PRInt32 prefix_length = directory.Length() - 1;
+            if ( prefix_length >= sizeof(buf)-1 )
+                return UNEXPECTED_ERROR;
+
             err = ZIP_FindNext( find, buf, sizeof(buf) );
             while ( err == ZIP_OK ) 
             {
-                paths->Add(new nsString(buf));
+                paths->Add(new nsString(buf+prefix_length));
                 err = ZIP_FindNext( find, buf, sizeof(buf) );
             }
             ZIP_FindFree( find );
