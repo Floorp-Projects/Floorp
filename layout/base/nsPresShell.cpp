@@ -6115,8 +6115,10 @@ PresShell::IsVisible()
 NS_IMETHODIMP_(void)
 PresShell::WillPaint()
 {
-  // Don't reenter reflow and don't reflow during frame construction
-  if (mIsReflowing || mChangeNestCount) {
+  // Don't reenter reflow and don't reflow during frame construction.  Also
+  // don't bother reflowing if some viewmanager in our tree is painting while
+  // we still have painting suppressed.
+  if (mIsReflowing || mChangeNestCount || mPaintingSuppressed) {
     return;
   }
   
