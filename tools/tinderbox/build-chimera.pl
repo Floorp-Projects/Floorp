@@ -88,7 +88,8 @@ sub main {
         my $foo = Cwd::getcwd();
         TinderUtils::print_log "cwd = $foo\n";
         
-        # opt = Deployment, debug = Development
+        # opt = Deployment, debug = Development.
+        # Add   -target NavigatorStatic   for static build.
         $status = TinderUtils::run_shell_command("pbxbuild -buildstyle \"Deployment\"");
         TinderUtils::print_log "Status from pbxbuild: $status\n";
       }
