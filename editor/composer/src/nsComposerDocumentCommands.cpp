@@ -328,6 +328,27 @@ nsSetDocumentStateCommand::GetCommandStateParams(const char *aCommandName,
 
     return aParams->SetBooleanValue(STATE_ATTRIBUTE, modified);
   }
+  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentReadOnly"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+
+    PRUint32 flags;
+    editor->GetFlags(&flags);
+    PRBool isReadOnly = flags & nsIPlaintextEditor::eEditorReadonlyMask;
+    return aParams->SetBooleanValue(STATE_ATTRIBUTE, isReadOnly);
+  }
+  else if (!nsCRT::strcmp(aCommandName, "cmd_setDocumentUseCSS"))
+  {
+    NS_ENSURE_ARG_POINTER(aParams);
+    nsCOMPtr<nsIHTMLEditor> htmleditor = do_QueryInterface(refCon);
+    if (!htmleditor)
+      return NS_ERROR_INVALID_ARG;
+
+    PRBool isCSS;
+    htmleditor->GetIsCSSEnabled(&isCSS);
+    return aParams->SetBooleanValue(STATE_ATTRIBUTE, isCSS);
+  }
+
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
