@@ -122,6 +122,27 @@ externalref XfeManagerClassRec xfeManagerClassRec;
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XfeManagerLayableInfoRec												*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+typedef struct _XfeLayableChildrenInfoRec
+{
+	XfeLinked			children;				/* Layable children		*/
+	Cardinal			num_children;			/* Num layable children	*/
+
+	Dimension			max_width;				/* Max children width	*/
+	Dimension			max_height;				/* Max children height	*/
+
+	Dimension			min_width;				/* Min children width	*/
+	Dimension			min_height;				/* Min children height	*/
+
+	Dimension			total_width;			/* Total children width	*/
+	Dimension			total_height;			/* Total children height*/
+
+} XfeLayableChildrenInfoRec, *XfeLayableChildrenInfo;
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManagerPart														*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -162,8 +183,7 @@ typedef struct _XfeManagerPart
 	Cardinal			num_private_components;	/* Num private components*/
 
 	/* Layable children resources */
-	Cardinal			num_layable_children;	/* Num layable children	*/
-	XfeLinked			layable_children;		/* Layable children		*/
+	XfeLayableChildrenInfoRec	lc_info;
 
 	/* Debug resources */
 #ifdef DEBUG
@@ -177,6 +197,7 @@ typedef struct _XfeManagerPart
 
 	XRectangle			widget_rect;			/* Widget Rect			*/
 	XfeDimensionsRec	old_dimensions;			/* Old dimensions		*/
+
 } XfeManagerPart;
 
 /*----------------------------------------------------------------------*/
@@ -320,11 +341,8 @@ _XfeManagerComponentInfo			(Widget			w,
 									 Dimension *	max_height_out);
 /*----------------------------------------------------------------------*/
 extern void
-_XfeManagerGetLayableChildrenInfo	(Widget			w,
-									 WidgetList *	layable_children_out,
-									 Cardinal *		num_layable_children_out,
-									 Dimension *	max_width_out,
-									 Dimension *	max_height_out);
+_XfeManagerGetLayableChildrenInfo	(Widget							w,
+									 XfeLayableChildrenInfoRec *	info);
 /*----------------------------------------------------------------------*/
 extern void
 _XfeManagerPropagateSetValues		(Widget			ow,
@@ -549,12 +567,6 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 #define _XfemNumPrivateComponents(w) \
 (((XfeManagerWidget) (w))->xfe_manager . num_private_components)
 /*----------------------------------------------------------------------*/
-#define _XfemLayableChildren(w) \
-(((XfeManagerWidget) (w))->xfe_manager . layable_children)
-/*----------------------------------------------------------------------*/
-#define _XfemNumLayableChildren(w) \
-(((XfeManagerWidget) (w))->xfe_manager . num_layable_children)
-/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -566,6 +578,24 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 (((XfeManagerWidget) (w))->xfe_manager . debug_trace)
 /*----------------------------------------------------------------------*/
 #endif
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeManager layable children info access macros						*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#define _XfemLCInfo(w) \
+(((XfeManagerWidget) (w))->xfe_manager . lc_info)
+/*----------------------------------------------------------------------*/
+#define _XfemLayableChildren(w)				(_XfemLCInfo(w) . children)
+#define _XfemNumLayableChildren(w)			(_XfemLCInfo(w) . num_children)
+#define _XfemMaxLayableChildrenWidth(w)		(_XfemLCInfo(w) . max_width)
+#define _XfemMaxLayableChildrenHeight(w)	(_XfemLCInfo(w) . max_height)
+#define _XfemMinLayableChildrenWidth(w)		(_XfemLCInfo(w) . min_width)
+#define _XfemMinLayableChildrenHeight(w)	(_XfemLCInfo(w) . min_height)
+#define _XfemTotalLayableChildrenWidth(w)	(_XfemLCInfo(w) . total_width)
+#define _XfemTotalLayableChildrenHeight(w)	(_XfemLCInfo(w) . total_height)
+/*----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -581,8 +611,8 @@ _XfeManagerPropagateSetValues		(Widget			ow,
 #define _XfemOffsetTop(w)		(_XfemShadowThickness(w) +	\
 								 _XfemMarginTop(w))
 /*----------------------------------------------------------------------*/
-#define _XfemOffsetBottom(w)		(_XfemShadowThickness(w) +	\
-									 _XfemMarginBottom(w))
+#define _XfemOffsetBottom(w)	(_XfemShadowThickness(w) +	\
+								 _XfemMarginBottom(w))
 /*----------------------------------------------------------------------*/
 #define _XfemRectHeight(w)		(_XfemWidgetRect(w) . height)
 /*----------------------------------------------------------------------*/

@@ -121,6 +121,9 @@ static void		DrawShadow					(Widget,XEvent *,Region,
 /* Layable children functions											*/
 /*																		*/
 /*----------------------------------------------------------------------*/
+static void		LayableInfoUpdate		(Widget);
+static void		LayableInfoFree			(Widget);
+
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -327,22 +330,76 @@ static XtResource resources[] =
 
 	/* Layable children resources */
 	{ 
-		XmNnumLayableChildren,
-		XmCReadOnly,
-		XmRCardinal,
-		sizeof(Cardinal),
-		XtOffsetOf(XfeManagerRec , xfe_manager . num_layable_children),
-		XmRImmediate, 
-		(XtPointer) 0
-    },
-	{ 
 		XmNlayableChildren,
 		XmCReadOnly,
 		XmRLinkedChildren,
 		sizeof(XfeLinked),
-		XtOffsetOf(XfeManagerRec , xfe_manager . layable_children),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . children),
 		XmRImmediate, 
 		(XtPointer) NULL
+    },
+	{ 
+		XmNnumLayableChildren,
+		XmCReadOnly,
+		XmRCardinal,
+		sizeof(Cardinal),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . num_children),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNmaxLayableChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . max_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNmaxLayableChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . max_height),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNminLayableChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . min_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNminLayableChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . min_height),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalLayableChildrenWidth,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . total_width),
+		XmRImmediate, 
+		(XtPointer) 0
+    },
+	{ 
+		XmNtotalLayableChildrenHeight,
+		XmCDimension,
+		XmRDimension,
+		sizeof(Dimension),
+		XtOffsetOf(XfeManagerRec , xfe_manager . lc_info . total_height),
+		XmRImmediate, 
+		(XtPointer) 0
     },
 
 #ifdef DEBUG
@@ -683,12 +740,6 @@ Initialize(Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeRepTypeCheck(nw,XmRShadowType,&_XfemShadowType(nw),
 					XfeDEFAULT_SHADOW_TYPE);
 
-	/* Construct list of layable children if needed */
-	if (_XfeManagerCountLayableChildren(nw))
-	{
-		_XfemLayableChildren(nw) = XfeLinkedConstruct();
-	}
-
     /* Finish of initialization */
     _XfeManagerChainInitialize(rw,nw,xfeManagerWidgetClass);
 }
@@ -718,30 +769,25 @@ Realize(Widget w,XtValueMask *mask,XSetWindowAttributes* wa)
 static void
 Destroy(Widget w)
 {
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,"Destroy",NULL);
+#endif
+
     /* Remove all CallBacks */
     /* XtRemoveAllCallbacks(w,XmNlayoutCallback); */
     /* XtRemoveAllCallbacks(w,XmNresizeCallback); */
     /* XtRemoveAllCallbacks(w,XmNexposeCallback); */
 
-	/* Free the layable children list */
-	if (_XfemLayableChildren(w) != NULL)
-	{
-		XtFree((char *) _XfemLayableChildren(w));
-	}
-
-/* 	printf("Destroy(%s)\n",XtName(w)); */
-
-	/* Destroy list of layable children if needed */
-	if (_XfemLayableChildren(w) != NULL)
-	{
-		XfeLinkedDestroy(_XfemLayableChildren(w),NULL,NULL);
-	}
+	/* Cleanup the layable children info */
+	LayableInfoFree(w);
 }
 /*----------------------------------------------------------------------*/
 static void
 Resize(Widget w)
 {
-	/*printf("%s: Resize to (%d,%d)\n",XtName(w),_XfeWidth(w),_XfeHeight(w));*/
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,"Resize",NULL);
+#endif
 
     /* Obtain the Prefered Geometry */
     _XfeManagerPreferredGeometry(w,
@@ -1048,16 +1094,6 @@ InsertChild(Widget child)
     /* Accept or reject other children */
     else if (_XfeManagerAcceptChild(child))
     {
-		/* Add child to layable children list if needed */
-		if (_XfeManagerCountLayableChildren(w) &&
-			_XfeManagerChildIsLayable(child))
-		{
-			XfeLinkNode node = XfeLinkedInsertAtTail(_XfemLayableChildren(w),
-													 child);
-
-			_XfeManagerLinkNode(child) = node;
-		}
-
         /* Call XmManager's InsertChild */
         (*mwc->composite_class.insert_child)(child);
 
@@ -1091,20 +1127,6 @@ DeleteChild(Widget child)
     /* Leave private components alone */
     if (!_XfeManagerPrivateComponent(child))
     {
-		/* Remove child from layable children list if needed */
-		if (_XfeManagerLinkNode(child) != NULL)
-		{
-			Widget node_data = 
-				(Widget) XfeLinkedRemoveNode(_XfemLayableChildren(w),
-											 _XfeManagerLinkNode(child));
-
-
-			assert( node_data != NULL );
-			assert( node_data == child );
-
-			_XfeManagerLinkNode(child) = NULL;
-		}
-
         /* Delete the child and relayout if necessary */
         layout = _XfeManagerDeleteChild(child);
 	}
@@ -1126,13 +1148,29 @@ DeleteChild(Widget child)
 static void
 ChangeManaged(Widget w)
 {
-/* 	printf("ChangeManaged(%s)\n",XtName(w)); */
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,
+						   "ChangeManaged",
+						   "%s",
+						   (_XfemIgnoreConfigure(w) ? " - ignored" : ""),
+						   "NULL");
+#endif
+
+#if 0
+	/* Update the layuable children info */
+	LayableInfoUpdate(w);
+#endif	
 
     /* Update widget geometry only if ignore_configure is False */
     if (!_XfemIgnoreConfigure(w))
     {
 		Boolean		change_width = False;
 		Boolean		change_height = False;
+
+#if 1
+		/* Update the layuable children info */
+		LayableInfoUpdate(w);
+#endif
 
 #if 0
 		/* Prepare the Widget */
@@ -1793,6 +1831,69 @@ DrawShadow(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* Layable children functions											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+static void
+LayableInfoUpdate(Widget w)
+{
+	/* Make sure this class needs to count layable children */
+	if (!_XfeManagerCountLayableChildren(w))
+	{
+		return;
+    }
+
+	/* Reset the lc info */
+	LayableInfoFree(w);
+
+	/* Make sure the widget is alive */
+	if (!_XfeIsAlive(w))
+	{
+		return;
+	}
+
+#ifdef DEBUG
+	XfeDebugPrintfFunction(w,"LayableInfoUpdate",NULL);
+#endif
+
+	/* Obtain the layable children info */
+	_XfeManagerGetLayableChildrenInfo(w,&_XfemLCInfo(w));
+}
+/*----------------------------------------------------------------------*/
+static void
+LayableInfoFree(Widget w)
+{
+	/* Make sure this class needs to count layable children */
+	if (!_XfeManagerCountLayableChildren(w))
+	{
+		return;
+    }
+
+	/* Destroy the layable children list if needed */
+	if (_XfemLayableChildren(w) != NULL)
+	{
+		XfeLinkedDestroy(_XfemLayableChildren(w),NULL,NULL);
+	}
+
+	/* Initialize the layable children info */
+	_XfemLayableChildren(w) = NULL;
+
+	_XfemNumLayableChildren(w) = 0;
+
+	_XfemMaxLayableChildrenWidth(w) = 0;
+	_XfemMaxLayableChildrenHeight(w) = 0;
+
+	_XfemMinLayableChildrenWidth(w) = 0;
+	_XfemMinLayableChildrenHeight(w) = 0;
+
+	_XfemTotalLayableChildrenWidth(w) = 0;
+	_XfemTotalLayableChildrenHeight(w) = 0;
+}
+/*----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XfeManager Method invocation functions								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -2308,88 +2409,81 @@ _XfeManagerComponentInfo(Widget				w,
 /*																		*/
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfeManagerGetLayableChildrenInfo(Widget		w,
-								  WidgetList *	layable_children_out,
-								  Cardinal *	num_layable_children_out,
-								  Dimension *	max_width_out,
-								  Dimension *	max_height_out)
+_XfeManagerGetLayableChildrenInfo(Widget						w,
+								  XfeLayableChildrenInfoRec *	info)
 {
 	Widget				child;
 	Cardinal			i;
-	WidgetList			layable_children = NULL;
-	Cardinal			num_layable_children = 0;
-	Dimension			max_width = 0;
-	Dimension			max_height = 0;
 
+	assert( _XfeIsAlive(w) );
 	assert( XfeIsManager(w) );
 
-	assert( layable_children_out != NULL );
-	assert( num_layable_children_out != NULL );
+	assert( info != NULL );
 
+	/* Initialize the results */
+	info->children = NULL;
+	info->num_children = 0;
+
+	info->max_width = 0;
+	info->max_height = 0;
+
+	info->min_width = 0;
+	info->min_height = 0;
+
+	info->total_width = 0;
+	info->total_height = 0;
+	
 	/* Proceed only if children exist */
 	if (_XfemNumChildren(w) > 0)
 	{
-		num_layable_children = 0;
-
-		/* Allocate a layable children array with num_children elements */
-		layable_children = 
-			(WidgetList) XtMalloc(sizeof(Widget) * _XfemNumChildren(w));
-
+		/* Allocate a layable children linked list */
+		info->children = XfeLinkedConstruct();
+		
 		/* Iterate through all the items */
 		for (i = 0; i < _XfemNumChildren(w); i++)
 		{
 			child = _XfeChildrenIndex(w,i);
 
-			/* Look for layable children and add them to the array */
+			/* Look for layable children and add them to the list */
 			if (_XfeManagerChildIsLayable(child))
 			{
-				layable_children[num_layable_children] = child;	
+				/* Add a node to the list for this child */
+				XfeLinkNode node = 
+					XfeLinkedInsertAtTail(info->children,child);
 
-				num_layable_children++;
-
-				/* Keep track of largest width */
-				if (_XfeWidth(child) > max_width)
-				{
-					max_width = _XfeWidth(child);
-				}
+				/* Point child's link node constraint resource to the node */
+				_XfeManagerLinkNode(child) = node;
 				
-				/* Keep track of largest height */
-				if (_XfeHeight(child) > max_height)
+				/* Keep track of the largest width */
+				if (_XfeWidth(child) > info->max_width)
 				{
-					max_height = _XfeHeight(child);
+					info->max_width = _XfeWidth(child);
+				}
+				/* Keep track of the smallest width */
+				else if (_XfeWidth(child) < info->min_width)
+				{
+					info->min_width = _XfeWidth(child);
+				}
+
+				/* Keep track of the largest height */
+				if (_XfeHeight(child) > info->max_height)
+				{
+					info->max_height = _XfeHeight(child);
+				}
+				/* Keep track of the smallest height */
+				else if (_XfeHeight(child) < info->min_height)
+				{
+					info->min_height = _XfeHeight(child);
+				}
+
+				/* Keep track of the total width and height */
+				else if (_XfeHeight(child) < info->min_height)
+				{
+					info->total_width += _XfeWidth(child);
+					info->total_height += _XfeHeight(child);
 				}
 			}
 		}
-
-		/* Free the array if no layable children exist */
-		if (num_layable_children == 0)
-		{
-			XtFree((char *) layable_children);
-
-			layable_children = NULL;			
-		}
-		/* Adjust the layable children size if needed */
-		else if (num_layable_children != _XfemNumChildren(w))
-		{
-			layable_children = 
-				(WidgetList) XtRealloc((char *) layable_children,
-									   sizeof(Widget) * num_layable_children);
-		}
-	}
-
-	*layable_children_out = layable_children;
-	*num_layable_children_out = num_layable_children;
-
-	/* Assign max width if needed */
-	if (max_width_out) 
-	{
-		*max_width_out = max_width;
-	}
-
-	/* Assign max height if needed */
-	if (max_height_out) 
-	{
-		*max_height_out = max_height;
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -2405,6 +2499,8 @@ XfeManagerLayout(Widget w)
 {
 	assert( _XfeIsAlive(w) );
 	assert( XfeIsManager(w) );
+
+	LayableInfoUpdate(w);
 
 	XfeResize(w);
 
