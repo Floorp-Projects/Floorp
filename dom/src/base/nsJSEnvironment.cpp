@@ -1675,6 +1675,68 @@ static JSFunctionSpec TraceMallocFunctions[] = {
 
 #endif /* NS_TRACE_MALLOC */
 
+#ifdef MOZ_JPROF
+
+#include <signal.h>
+
+inline PRBool
+IsJProfAction(struct sigaction *action)
+{
+    return (action->sa_sigaction &&
+            action->sa_flags == SA_RESTART | SA_SIGINFO);
+}
+
+static JSBool
+JProfStartProfiling(JSContext *cx, JSObject *obj,
+                    uintN argc, jsval *argv, jsval *rval)
+{
+    // Figure out whether we're dealing with SIGPROF, SIGALRM, or
+    // SIGPOLL profiling (SIGALRM for JP_REALTIME, SIGPOLL for
+    // JP_RTC_HZ)
+    struct sigaction action;
+
+    sigaction(SIGALRM, nsnull, &action);
+    if (IsJProfAction(&action)) {
+        printf("Beginning real-time jprof profiling.\n");
+        raise(SIGALRM);
+        return JS_TRUE;
+    }
+
+    sigaction(SIGPROF, nsnull, &action);
+    if (IsJProfAction(&action)) {
+        printf("Beginning process-time jprof profiling.\n");
+        raise(SIGPROF);
+        return JS_TRUE;
+    }
+
+    sigaction(SIGPOLL, nsnull, &action);
+    if (IsJProfAction(&action)) {
+        printf("Beginning rtc-based jprof profiling.\n");
+        raise(SIGPOLL);
+        return JS_TRUE;
+    }
+
+    printf("Could not start jprof-profiling since JPROF_FLAGS was not set.\n");
+    return JS_TRUE;
+}
+
+static JSBool
+JProfStopProfiling(JSContext *cx, JSObject *obj,
+                   uintN argc, jsval *argv, jsval *rval)
+{
+    raise(SIGUSR1);
+    printf("Stopped jprof profiling.\n");
+    return JS_TRUE;
+}
+
+static JSFunctionSpec JProfFunctions[] = {
+    {"JProfStartProfiling",        JProfStartProfiling,        0, 0, 0},
+    {"JProfStopProfiling",         JProfStopProfiling,         0, 0, 0},
+    {nsnull,                       nsnull,                     0, 0, 0}
+};
+
+#endif /* defined(MOZ_JPROF) */
+
 nsresult
 nsJSContext::InitClasses()
 {
@@ -1703,6 +1765,11 @@ nsJSContext::InitClasses()
 #ifdef NS_TRACE_MALLOC
   // Attempt to initialize TraceMalloc functions
   ::JS_DefineFunctions(mContext, globalObj, TraceMallocFunctions);
+#endif
+
+#ifdef MOZ_JPROF
+  // Attempt to initialize JProf functions
+  ::JS_DefineFunctions(mContext, globalObj, JProfFunctions);
 #endif
 
   return rv;
