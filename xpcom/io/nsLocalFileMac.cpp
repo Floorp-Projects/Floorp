@@ -753,6 +753,8 @@ nsLocalFile::nsLocalFile()
 :	mInitType(eNotInitialized)
 ,	mLastResolveFlag(PR_FALSE)
 ,	mHaveFileInfo(PR_FALSE)
+,   mType('????')
+,   mCreator('MOSS')
 {
 	NS_INIT_REFCNT();
 
@@ -904,7 +906,7 @@ nsLocalFile::Clone(nsIFile **file)
 		case eInitWithFSSpec:
 			// Slightly more complex as we need to set the FSSpec and any appended
 			// path info
-			// ????? Should we just set this to the resolved spec ?????
+			// `? Should we just set this to the resolved spec ?????
 			localFileMac->InitWithFSSpec(&mSpec);
 			// Now set any appended path info
 			char *appendedPath;
@@ -977,7 +979,7 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 		return MacErrorMapper(err);
 	
 	if (flags & PR_CREATE_FILE)
-		err = ::FSpCreate(&spec, 'MOSS', 'TEXT', 0);
+		err = ::FSpCreate(&spec, mCreator, mType, 0);
 	   
 	/* If opening with the PR_EXCL flag the existence of the file prior to opening is an error */
 	if ((flags & PR_EXCL) &&  (err == dupFNErr))
@@ -1085,9 +1087,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	switch (type)
 	{
 		case NORMAL_FILE_TYPE:
-			// We really should use some sort of meaningful file type/creator but where
-			// do we get the info from?
-			err = ::FSpCreate(&mResolvedSpec, '????', '????', smCurrentScript);
+			err = ::FSpCreate(&mResolvedSpec, mType, mCreator, smCurrentScript);
 			return (MacErrorMapper(err));
 			break;
 
@@ -2389,8 +2389,13 @@ NS_IMETHODIMP nsLocalFile::GetFileTypeAndCreator(OSType *type, OSType *creator)
 	FInfo info;
 	OSErr err = ::FSpGetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
+	{
+		*type    = mType;
+		*creator = mCreator;
 		return NS_ERROR_FILE_NOT_FOUND;
-	*type = info.fdType;
+	}
+	
+    *type = info.fdType;
 	*creator = info.fdCreator;	
 	
 	return NS_OK;
@@ -2398,6 +2403,9 @@ NS_IMETHODIMP nsLocalFile::GetFileTypeAndCreator(OSType *type, OSType *creator)
 
 NS_IMETHODIMP nsLocalFile::SetFileTypeAndCreator(OSType type, OSType creator)
 {
+	mType    = type;
+	mCreator = creator;
+	
 	FInfo info;
 	OSErr err = ::FSpGetFInfo(&mTargetSpec, &info);
 	if (err != noErr)
