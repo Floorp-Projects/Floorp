@@ -277,10 +277,9 @@ protected:
   // Data Members
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;
-  PRPackedBool mChangesSinceDragStart;
 
-  PRInt32      mSelectedIndexWhenPoppedDown;
   nsIComboboxControlFrame *mComboboxFrame;
+  PRPackedBool mChangesSinceDragStart;
   PRPackedBool mButtonDown;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;

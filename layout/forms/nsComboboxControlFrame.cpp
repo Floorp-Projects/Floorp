@@ -304,7 +304,6 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 
   mGoodToGo = PR_FALSE;
 
-  mNeedToFireOnChange = PR_FALSE;
   mRecentSelectedIndex = -1;
 
   //Shrink the area around it's contents
@@ -489,25 +488,6 @@ nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
   return 0;
 }
 
-
-void
-nsComboboxControlFrame::CheckFireOnChange()
-{
-  // Fire onChange if selected index has changed due to keyboard
-  // (see nsListControlFrame::UpdateSelection)
-  if (mNeedToFireOnChange) {
-    PRInt32 selectedIndex;
-    mListControlFrame->GetSelectedIndex(&selectedIndex);
-    if (selectedIndex != mRecentSelectedIndex) {
-      // mNeedToFireOnChange will be set to false from within FireOnChange
-      mListControlFrame->FireOnChange();
-    } else {
-      // Need to set it to false anyway ... just in case
-      SetNeedToFireOnChange(PR_FALSE);
-    }
-  }
-}
-
 void 
 nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
@@ -522,9 +502,8 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     mFocused = nsnull;
     if (mDroppedDown) {
       mListControlFrame->ComboboxFinish(mDisplayedIndex);
-    } else {
-      CheckFireOnChange();
     }
+    mListControlFrame->FireOnChange();
   }
 
   // This is needed on a temporary basis. It causes the focus
@@ -1949,16 +1928,6 @@ nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  // Toggle list open and close on F4, Alt-Down or Alt-Up
-  if (aEvent->message == NS_KEY_PRESS) {
-    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-    nsInputEvent *inputEvent = (nsInputEvent*)aEvent;
-    if (!inputEvent->isShift && !inputEvent->isControl && !inputEvent->isMeta && 
-        !mDroppedDown && keyEvent->keyCode == NS_VK_RETURN) {
-      CheckFireOnChange();
-    }
-  }
-
   // If we have style that affects how we are selected, feed event down to
   // nsFrame::HandleEvent so that selection takes place when appropriate.
   const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
@@ -2300,21 +2269,16 @@ nsComboboxControlFrame::RollupFromList(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComboboxControlFrame::SetNeedToFireOnChange(PRBool aNeedToFireOnChange)
+NS_IMETHODIMP_(PRBool)
+nsComboboxControlFrame::NeededToFireOnChange()
 {
-  mNeedToFireOnChange = aNeedToFireOnChange;
-  //
-  // If we're setting to false, then that means onChange was fired while
-  // we still may have focus.  We must set recently selected index so that
-  // when we lose focus, we will be able to tell whether the index has changed
-  // since this time.  See SetFocus().
-  //
-  if (!aNeedToFireOnChange) {
-    mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
-  }
+  PRInt32 index;
+  mListControlFrame->GetSelectedIndex(&index);
+  if (index == mRecentSelectedIndex)
+    return PR_FALSE;
 
-  return NS_OK;
+  mRecentSelectedIndex = index;
+  return PR_TRUE;
 }
 
 NS_METHOD 

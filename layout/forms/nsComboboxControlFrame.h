@@ -175,7 +175,7 @@ public:
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
   NS_IMETHOD RedisplaySelectedText();
-  NS_IMETHOD SetNeedToFireOnChange(PRBool aNeedToFireOnChange);
+  NS_IMETHOD_(PRBool) NeededToFireOnChange();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
@@ -249,7 +249,6 @@ protected:
   nsresult RedisplayText(PRInt32 aIndex);
   nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
-  NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
 
   void ReflowCombobox(nsIPresContext *         aPresContext,
                       const nsHTMLReflowState& aReflowState,
@@ -287,7 +286,6 @@ protected:
 
   PRPackedBool          mDroppedDown;             // Current state of the dropdown list, PR_TRUE is dropped down
   PRPackedBool          mGoodToGo;
-  PRPackedBool          mNeedToFireOnChange;
 
   PRInt32               mRecentSelectedIndex;
   PRInt32               mDisplayedIndex;

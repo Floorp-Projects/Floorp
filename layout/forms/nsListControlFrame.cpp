@@ -2393,7 +2393,6 @@ nsListControlFrame::UpdateSelection()
     // if it's a combobox, display the new text
     if (mComboboxFrame) {
       rv = mComboboxFrame->RedisplaySelectedText();
-      rv = mComboboxFrame->SetNeedToFireOnChange(PR_TRUE);
     }
     // if it's a listbox, fire on change
     else if (mIsAllContentHere) {
@@ -2420,10 +2419,6 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
     }
 
     mComboboxFrame->RollupFromList(mPresContext);
-
-    if (aIndex != mSelectedIndexWhenPoppedDown) {
-      FireOnChange();
-    }
   }
 
   return NS_OK;
@@ -2442,9 +2437,9 @@ nsListControlFrame::FireOnChange()
 {
   nsresult rv = NS_OK;
   
-  // Since we're firing onChange, we don't want to fire it anymore.
   if (mComboboxFrame) {
-    mComboboxFrame->SetNeedToFireOnChange(PR_FALSE);
+    if (!mComboboxFrame->NeededToFireOnChange())
+      return NS_OK;
   }
 
   // Dispatch the NS_FORM_CHANGE event
@@ -2565,10 +2560,9 @@ nsListControlFrame::SyncViewWithFrame(nsIPresContext* aPresContext)
 NS_IMETHODIMP 
 nsListControlFrame::AboutToDropDown()
 {
-  PRInt32 selectedIndex;
-  GetSelectedIndex(&selectedIndex);
-  mSelectedIndexWhenPoppedDown = selectedIndex;
   if (mIsAllContentHere && mIsAllFramesHere && mHasBeenInitialized) {
+    PRInt32 selectedIndex;
+    GetSelectedIndex(&selectedIndex);
     ScrollToIndex(selectedIndex);
 #ifdef ACCESSIBILITY
     FireMenuItemActiveEvent(); // Inform assistive tech what got focus
@@ -2591,8 +2585,6 @@ nsListControlFrame::AboutToRollup()
   // To deal with this we say "whatever is in the combobox is canonical."
   // - IF the combobox is different from the current selected index, we
   //   reset the index.
-  // - IF the combobox is different from the index when it was popped down,
-  //   we fire onChange() since it has changed.
 
   if (IsInDropDownMode() == PR_TRUE) {
     PRInt32 index;
@@ -2777,6 +2769,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 
       if (kNothingSelected != selectedIndex) {
         ComboboxFinish(selectedIndex);
+        FireOnChange();
       }
 
       mouseEvent->clickCount = 1;
@@ -3317,8 +3310,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         mComboboxFrame->IsDroppedDown(&droppedDown);
         if (droppedDown) {
           ComboboxFinish(mEndSelectionIndex);
-          aKeyEvent->PreventDefault();
         }
+        FireOnChange();
         return NS_OK;
       } else {
         newIndex = mEndSelectionIndex;
@@ -3326,9 +3319,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_ESCAPE: {
-      if (IsInDropDownMode() == PR_TRUE) {
-        ComboboxFinish(mSelectedIndexWhenPoppedDown);
-      }
+      AboutToRollup();
       } break;
 
     case nsIDOMKeyEvent::DOM_VK_PAGE_UP: {
