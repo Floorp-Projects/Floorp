@@ -2781,7 +2781,7 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
             return NS_ERROR_NULL_POINTER;
 
           // Don't need to QI (subclass)
-          nsCOMPtr<nsIStyleSheet> styleSheet = cssStyleSheet;
+          nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(cssStyleSheet);
           nsCOMPtr<nsIStyleSet> styleSet;
           rv = ps->GetStyleSet(getter_AddRefs(styleSet));
           if (NS_SUCCEEDED(rv)) {
