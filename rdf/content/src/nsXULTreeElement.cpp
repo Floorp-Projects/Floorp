@@ -64,8 +64,6 @@ nsXULTreeElement::QueryInterface(REFNSIID aIID, void** aResult)
 nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 :nsXULElement(aOuter)
 {
-    MOZ_COUNT_CTOR(RDF_nsXULTreeElement);
-
   if (gRefCnt++ == 0) {
     kSelectedAtom    = NS_NewAtom("selected");
   }
@@ -89,7 +87,6 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
 
 nsXULTreeElement::~nsXULTreeElement()
 {
-    MOZ_COUNT_DTOR(RDF_nsXULTreeElement);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: nsXULTreeElement\n", gInstanceCount);

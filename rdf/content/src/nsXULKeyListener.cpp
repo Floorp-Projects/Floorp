@@ -230,14 +230,11 @@ private:
 
 nsXULKeyListenerImpl::nsXULKeyListenerImpl(void)
 {
-	MOZ_COUNT_CTOR(RDF_nsXULKeyListenerImpl);
-
 	NS_INIT_REFCNT();	
 }
 
 nsXULKeyListenerImpl::~nsXULKeyListenerImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_nsXULKeyListenerImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: nsXULKeyListenerImpl\n", gInstanceCount);

@@ -311,8 +311,6 @@ RDFContainerUtilsImpl::MakeAlt(nsIRDFDataSource *aDataSource, nsIRDFResource *aR
 
 RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 {
-    MOZ_COUNT_CTOR(RDF_RDFContainerUtilsImpl);
-
     NS_INIT_REFCNT();
 
     if (gRefCnt++ == 0) {
@@ -336,7 +334,6 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
 
 RDFContainerUtilsImpl::~RDFContainerUtilsImpl()
 {
-    MOZ_COUNT_DTOR(RDF_RDFContainerUtilsImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: RDFContainerUtilsImpl\n", gInstanceCount);

@@ -147,7 +147,6 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
       mAllowNegativeAssertions(aAllowNegativeAssertions),
       mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
 {
-	MOZ_COUNT_CTOR(RDF_CompositeEnumeratorImpl);
 	NS_INIT_REFCNT();
 	NS_ADDREF(mCompositeDataSource);
 }
@@ -155,7 +154,6 @@ CompositeEnumeratorImpl::CompositeEnumeratorImpl(CompositeDataSourceImpl* aCompo
 
 CompositeEnumeratorImpl::~CompositeEnumeratorImpl(void)
 {
-	MOZ_COUNT_DTOR(RDF_CompositeEnumeratorImpl);
 #ifdef DEBUG_REFS
 	--gInstanceCount;
 	fprintf(stdout, "%d - RDF: CompositeEnumeratorImpl\n", gInstanceCount);
@@ -384,13 +382,11 @@ CompositeArcsInOutEnumeratorImpl::CompositeArcsInOutEnumeratorImpl(
       mAllowNegativeAssertions(aAllowNegativeAssertions),
       mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
 {
-    MOZ_COUNT_CTOR(RDF_CompositeArcsInOutEnumeratorImpl);
     NS_ADDREF(mNode);
 }
 
 CompositeArcsInOutEnumeratorImpl::~CompositeArcsInOutEnumeratorImpl()
 {
-    MOZ_COUNT_DTOR(RDF_CompositeArcsInOutEnumeratorImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: CompositeArcsInOutEnumeratorImpl\n", gInstanceCount);
@@ -475,8 +471,6 @@ CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
       mAllowNegativeAssertions(aAllowNegativeAssertions),
       mCoalesceDuplicateArcs(aCoalesceDuplicateArcs)
 {
-    MOZ_COUNT_CTOR(RDF_CompositeAssertionEnumeratorImpl);
-
     NS_IF_ADDREF(mSource);
     NS_ADDREF(mProperty); // always must be specified
     NS_IF_ADDREF(mTarget);
@@ -484,7 +478,6 @@ CompositeAssertionEnumeratorImpl::CompositeAssertionEnumeratorImpl(
 
 CompositeAssertionEnumeratorImpl::~CompositeAssertionEnumeratorImpl()
 {
-    MOZ_COUNT_DTOR(RDF_CompositeAssertionEnumeratorImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: CompositeAssertionEnumeratorImpl\n", gInstanceCount);
@@ -544,8 +537,6 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 	: mAllowNegativeAssertions(PR_TRUE),
 	  mCoalesceDuplicateArcs(PR_TRUE)
 {
-    MOZ_COUNT_CTOR(RDF_CompositeDataSourceImpl);
-
     NS_INIT_REFCNT();
 
 #ifdef PR_LOGGING
@@ -557,7 +548,6 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 
 CompositeDataSourceImpl::~CompositeDataSourceImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_CompositeDataSourceImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: CompositeDataSourceImpl\n", gInstanceCount);

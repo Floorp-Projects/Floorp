@@ -426,13 +426,11 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
       mRoot(nsnull),
       mTimer(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_RDFGenericBuilderImpl);
     NS_INIT_REFCNT();
 }
 
 RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 {
-  MOZ_COUNT_DTOR(RDF_RDFGenericBuilderImpl);
 #ifdef DEBUG_REFS
   --gInstanceCount;
   fprintf(stdout, "%d - RDF: RDFGenericBuilderImpl\n", gInstanceCount);

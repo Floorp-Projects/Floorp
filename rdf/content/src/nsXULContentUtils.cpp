@@ -166,8 +166,6 @@ nsIAtom* nsXULContentUtils::kTargetsAtom;
 
 nsXULContentUtils::nsXULContentUtils()
 {
-    MOZ_COUNT_CTOR(RDF_nsXULContentUtils);
-
     NS_INIT_REFCNT();
 }
 
@@ -203,7 +201,6 @@ nsXULContentUtils::Init()
 
 nsXULContentUtils::~nsXULContentUtils()
 {
-    MOZ_COUNT_DTOR(RDF_nsXULContentUtils);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: nsXULContentUtils\n", gInstanceCount);

@@ -259,8 +259,6 @@ PRInt32  XULSortServiceImpl::kNameSpaceID_RDF;
 
 XULSortServiceImpl::XULSortServiceImpl(void)
 {
-	MOZ_COUNT_CTOR(RDF_XULSortServiceImpl);
-
 	NS_INIT_REFCNT();
 	if (gRefCnt == 0)
 	{
@@ -360,7 +358,6 @@ XULSortServiceImpl::XULSortServiceImpl(void)
 
 XULSortServiceImpl::~XULSortServiceImpl(void)
 {
-    MOZ_COUNT_DTOR(RDF_XULSortServiceImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: XULSortServiceImpl\n", gInstanceCount);

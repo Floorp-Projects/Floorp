@@ -121,8 +121,6 @@ XULPopupListenerImpl::XULPopupListenerImpl(void)
     mMouseClientX(0), mMouseClientY(0),
     mPossibleTooltipNode(nsnull)
 {
-	MOZ_COUNT_CTOR(RDF_XULPopupListenerImpl);
-
 	NS_INIT_REFCNT();	
 }
 
@@ -131,7 +129,6 @@ XULPopupListenerImpl::~XULPopupListenerImpl(void)
   //XXX do we need to close the popup here? Will we get the right events as
   //XXX the topLevel window is going away when the closebox is pressed?
 
-    MOZ_COUNT_DTOR(RDF_XULPopupListenerImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: XULPopupListenerImpl\n", gInstanceCount);

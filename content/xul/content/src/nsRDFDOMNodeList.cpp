@@ -54,14 +54,11 @@ nsRDFDOMNodeList::nsRDFDOMNodeList(void)
       mElements(nsnull),
       mScriptObject(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_nsRDFDOMNodeList);
-
     NS_INIT_REFCNT();
 }
 
 nsRDFDOMNodeList::~nsRDFDOMNodeList(void)
 {
-    MOZ_COUNT_DTOR(RDF_nsRDFDOMNodeList);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: nsRDFDOMNodeList\n", gInstanceCount);

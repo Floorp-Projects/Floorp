@@ -307,8 +307,6 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
       mTruthValue(aTruthValue),
       mNextAssertion(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_InMemoryAssertionEnumeratorImpl);
-
     NS_INIT_REFCNT();
 
     NS_ADDREF(mDataSource);
@@ -326,7 +324,6 @@ InMemoryAssertionEnumeratorImpl::InMemoryAssertionEnumeratorImpl(
 
 InMemoryAssertionEnumeratorImpl::~InMemoryAssertionEnumeratorImpl()
 {
-    MOZ_COUNT_DTOR(RDF_InMemoryAssertionEnumeratorImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: InMemoryAssertionEnumeratorImpl\n", gInstanceCount);
@@ -441,8 +438,6 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
       mTarget(aTarget),
       mCurrent(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_InMemoryArcsEnumeratorImpl);
-
     NS_INIT_REFCNT();
     NS_ADDREF(mDataSource);
     NS_IF_ADDREF(mSource);
@@ -459,7 +454,6 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
 
 InMemoryArcsEnumeratorImpl::~InMemoryArcsEnumeratorImpl()
 {
-    MOZ_COUNT_DTOR(RDF_InMemoryArcsEnumeratorImpl);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: InMemoryArcsEnumeratorImpl\n", gInstanceCount);
@@ -584,8 +578,6 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
       mReverseArcs(nsnull),
       mLock(nsnull)
 {
-    MOZ_COUNT_CTOR(RDF_InMemoryDataSource);
-
     NS_INIT_AGGREGATED(aOuter);
 }
 
@@ -628,7 +620,6 @@ InMemoryDataSource::Init()
 
 InMemoryDataSource::~InMemoryDataSource()
 {
-    MOZ_COUNT_DTOR(RDF_InMemoryDataSource);
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
