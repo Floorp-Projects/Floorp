@@ -44,6 +44,7 @@ $build{all} = 1;
 $build{dist} = 0;
 $build{stubs} = 0;
 $build{common} = 0;
+$build{intl} = 0;
 $build{nglayout} = 0;
 $build{resources} = 0;
 $build{editor} = 0;
