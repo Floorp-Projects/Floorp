@@ -107,7 +107,7 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
 class nsEntryStack;  //forware declare to make compilers happy.
 
 struct nsTagEntry {
-  nsTagEntry::nsTagEntry() 
+  nsTagEntry ()
     : mTag(eHTMLTag_unknown), mNode(0), mParent(0), mStyles(0){}
   eHTMLTags       mTag;  //for speedier access to tag id
   nsCParserNode*  mNode;
