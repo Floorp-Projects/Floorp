@@ -48,7 +48,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
-#include "nsISimpleEnumerator.h"
+#include "nsIStringEnumerator.h"
 #include "nsIOutputStream.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIInputStreamPump.h"
@@ -222,11 +222,11 @@ private:
     PRUint32                          mUploadStreamHasHeaders   : 1;
     PRUint32                          mAuthRetryPending         : 1;
 
-    class nsContentEncodings : public nsISimpleEnumerator
+    class nsContentEncodings : public nsIUTF8StringEnumerator
     {
     public:
         NS_DECL_ISUPPORTS
-        NS_DECL_NSISIMPLEENUMERATOR
+        NS_DECL_NSIUTF8STRINGENUMERATOR
 
         nsContentEncodings(nsIHttpChannel* aChannel, const char* aEncodingHeader);
         virtual ~nsContentEncodings();
