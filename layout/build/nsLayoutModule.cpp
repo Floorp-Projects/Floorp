@@ -371,6 +371,8 @@ static Components gComponents[] = {
   { "Presentation shell", NS_PRESSHELL_CID, nsnull, },
   // XXX end ick
 
+  { "XML document encoder", NS_TEXT_ENCODER_CID,
+    NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", },
   { "HTML document encoder", NS_TEXT_ENCODER_CID,
     NS_DOC_ENCODER_CONTRACTID_BASE "text/html", },
   { "Plaintext document encoder", NS_TEXT_ENCODER_CID,
