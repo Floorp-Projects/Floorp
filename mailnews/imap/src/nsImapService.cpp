@@ -90,6 +90,18 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     nsXPIDLCString onlineName;
     rv = aFolder->GetOnlineName(getter_Copies(onlineName));
     if (NS_FAILED(rv)) return rv;
+	if ((const char *)onlineName == nsnull || nsCRT::strlen((const char *) onlineName) == 0)
+	{
+		char *uri = nsnull;
+		rv = aImapFolder->GetURI(&uri);
+		if (NS_FAILED(rv)) return rv;
+		char * hostname = nsnull;
+		rv = aImapFolder->GetHostname(&hostname);
+		if (NS_FAILED(rv)) return rv;
+		rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(onlineName));
+		PR_FREEIF(uri);
+		PR_FREEIF(hostname);
+	}
 	*folderName = nsEscape((const char *) onlineName, url_Path);
     return rv;
 }
