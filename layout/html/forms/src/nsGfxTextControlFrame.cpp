@@ -2678,6 +2678,7 @@ nsGfxTextControlFrame::InstallEditor()
     result = mEditor->Init(mDoc, presShell, editorFlags);
     if (NS_FAILED(result)) { return result; }
 
+#if 0
     nsCOMPtr<nsIPresShell> framePresShell;
     mFramePresContext->GetShell(getter_AddRefs(framePresShell));
     nsCOMPtr<nsIDocument> frameDocument;
@@ -2690,6 +2691,7 @@ nsGfxTextControlFrame::InstallEditor()
     // when the pointer is over the editor control
 
     eDocument->SetParentDocument(frameDocument);
+#endif
 
     // set data from the text control into the editor
     result = InitializeTextControl(presShell, mDoc);
