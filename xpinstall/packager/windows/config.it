@@ -560,6 +560,10 @@ Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
 Timing=post launchapp
 Destination=[SETUP PATH]\install_wizard.log
 
+[Delete File2]
+Timing=post download
+Destination=[SETUP PATH]\chrome\installed-chrome.txt
+
 
 ;Remove DirectoryX sections
 ;[Remove Directory0]
