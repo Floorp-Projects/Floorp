@@ -395,8 +395,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 }
 
 
-static nsHTTPHandler * 
-nsHTTPHandler::GetInstance(void)
+nsHTTPHandler * nsHTTPHandler::GetInstance(void)
 {
     static nsHTTPHandler* pHandler = new nsHTTPHandler();
     NS_ADDREF(pHandler);
