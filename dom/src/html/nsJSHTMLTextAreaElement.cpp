@@ -34,17 +34,23 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIControllers.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kINSHTMLTextAreaElementIID, NS_IDOMNSHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
+static NS_DEFINE_IID(kIControllersIID, NS_ICONTROLLERS_IID);
 
 NS_DEF_PTR(nsIDOMHTMLFormElement);
+NS_DEF_PTR(nsIDOMNSHTMLTextAreaElement);
 NS_DEF_PTR(nsIDOMHTMLTextAreaElement);
+NS_DEF_PTR(nsIControllers);
 
 //
 // HTMLTextAreaElement property ids
@@ -60,7 +66,8 @@ enum HTMLTextAreaElement_slots {
   HTMLTEXTAREAELEMENT_ROWS = -8,
   HTMLTEXTAREAELEMENT_TABINDEX = -9,
   HTMLTEXTAREAELEMENT_TYPE = -10,
-  HTMLTEXTAREAELEMENT_VALUE = -11
+  HTMLTEXTAREAELEMENT_VALUE = -11,
+  NSHTMLTEXTAREAELEMENT_CONTROLLERS = -12
 };
 
 /***********************************************************************/
@@ -280,6 +287,33 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
         }
         else {
           return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case NSHTMLTEXTAREAELEMENT_CONTROLLERS:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmltextareaelement.controllers", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIControllers* prop;
+        nsIDOMNSHTMLTextAreaElement* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLTextAreaElementIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetControllers(&prop);
+          if(NS_SUCCEEDED(result)) {
+          // get the js object; n.b., this will do a release on 'prop'
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIControllers::GetIID(), cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
         }
         break;
       }
@@ -668,6 +702,7 @@ static JSPropertySpec HTMLTextAreaElementProperties[] =
   {"tabIndex",    HTMLTEXTAREAELEMENT_TABINDEX,    JSPROP_ENUMERATE},
   {"type",    HTMLTEXTAREAELEMENT_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"value",    HTMLTEXTAREAELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"controllers",    NSHTMLTEXTAREAELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
