@@ -270,7 +270,7 @@ foreach i $list {
         if {$info(removed) < 0} {
             set str_removed $info(removed)
         } else {
-            set str_removed "-0"
+            set str_removed "-$info(removed)"
         }
         puts "<tt>+$info(added)<br>$str_removed"
         puts "</TD>"
