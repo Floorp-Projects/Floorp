@@ -291,7 +291,7 @@ sub build_blame {
     my $rcs_filename = "$cvsroot/$file,v";
 
     unless (-e $rcs_filename) {
-#      warn "Unable to find $rcs_filename\n";
+      warn "Unable to find $rcs_filename\n";
       $unblamed{$file} = 1;
       next;
     }
@@ -312,11 +312,10 @@ sub build_blame {
       for $ignore_rec (@ignore_match) {
         for my $warn_rec (@{ $line_rec->{list}}) {
           if ($warn_rec->{warning_text} =~ /$ignore_rec->{warning}/
-              and $warn_rec->{source} =~ /$ignore_rec->{source}/
+              and $source_text =~ /$ignore_rec->{source}/
              and not $warn_rec->{ignore}) {
             $warn_rec->{ignore} = 1;
             $line_rec->{ignorecount}++;
-            warn "ignored $warn_rec->{warning_text}\n";
             next LINE;
           }
         }
