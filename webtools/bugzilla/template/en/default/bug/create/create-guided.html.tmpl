@@ -259,7 +259,7 @@ function PutDescription() {
 
   [%# We override rep_platform and op_sys for simplicity. The values chosen
       are based on which are most common in the b.m.o database %]
-  [% rep_platform = [ "All", "PC", "Macintosh", "Sun", "Other" ] %]
+  [% rep_platform = [ "PC", "Macintosh", "All", "Other" ] %]
 
   <tr bgcolor="[% tablecolour %]">
     <td align="right" valign="middle">
@@ -270,10 +270,9 @@ function PutDescription() {
     </td>
   </tr>
 
-  [% op_sys = [ "All", "Windows 95", "Windows 98", "Windows NT", "Windows ME",
-                "Windows 2000", "Windows XP", "Mac System 8.6", 
-                "Mac System 9.x", "MacOS X", "Linux", "Solaris", 
-                "FreeBSD", "other" ] %]
+  [% op_sys = [ "Windows 98", "Windows NT", "Windows 2000", "Windows XP",
+                "Mac System 9.x", "MacOS X",
+                "Linux", "All", "other" ] %]
 
   <tr>
     <td align="right" valign="middle">
@@ -532,9 +531,14 @@ function PutDescription() {
 
 [% BLOCK select %]
   <select name="[% sel %]">
+    [%- IF default.$sel %]
+      <option value="[% default.$sel FILTER html %]" selected="selected">
+        [% default.$sel FILTER html -%]
+      </option>
+    [% END %]
     [%- FOREACH x = $sel %]
-      <option value="[% x FILTER html %]"
-        [% " selected=\"selected\"" IF x == default.$sel %]>
+      [% NEXT IF x == default.$sel %]
+      <option value="[% x FILTER html %]">
         [% x FILTER html -%]
       </option>
     [%- END %]
