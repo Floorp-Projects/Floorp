@@ -235,6 +235,9 @@ function checkUserServerChanges(showAlert) {
       var slot = vals[1];
       //dump("In checkUserServerChanges() ***: accountValues[" + type + "][" + slot + "] = " + getFormElementValue(pageElements[i]) + "/" + accountValues[type][slot] + "\n");
 
+      // if this type doesn't exist (just removed) then return.
+      if (! accountValues[type]) return true;
+
       if (slot == "realHostName") {
         oldHost = accountValues[type][slot];
         newHost = getFormElementValue(pageElements[i]);
