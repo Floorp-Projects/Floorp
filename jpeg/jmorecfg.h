@@ -252,6 +252,13 @@ typedef unsigned int JDIMENSION;
  * than fight.
  */
 
+/* For some reason, on SunOS 5.3 HAVE_BOOLEAN gets defined when using
+ * gcc, but boolean doesn't.  Even if you use -UHAVE_BOOLEAN, it still
+ * gets reset somewhere.
+ */
+#if defined(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES) && defined(HAVE_BOOLEAN)
+#undef HAVE_BOOLEAN
+#endif
 #ifndef HAVE_BOOLEAN
 typedef unsigned char boolean;
 #endif

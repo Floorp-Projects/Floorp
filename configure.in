@@ -770,8 +770,7 @@ dnl the qsort routine under solaris is faulty
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
-	  dnl So jmorecfg.h won't redefine boolean.
-	  AC_DEFINE(HAVE_BOOLEAN)
+	  AC_DEFINE(MUST_UNDEF_HAVE_BOOLEAN_AFTER_INCLUDES)
        fi
     fi
     ;;
