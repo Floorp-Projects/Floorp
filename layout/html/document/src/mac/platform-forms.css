@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url("resource:/res/forms.css");
+@import url("resource://gre/res/forms.css");
 
 input,
 textarea {
