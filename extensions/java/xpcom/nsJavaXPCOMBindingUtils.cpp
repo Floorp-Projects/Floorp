@@ -454,7 +454,7 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
   nsresult rv = NS_GetMainEventQ(getter_AddRefs(eventQ));
   if (NS_SUCCEEDED(rv))
     rv = NS_ProxyRelease(eventQ, mInstance);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to get MainEventQ");
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
 }
 
 JavaXPCOMInstance*
