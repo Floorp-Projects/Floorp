@@ -124,15 +124,23 @@ friend class nsDequeIterator;
    */
   void* PopFront(void);
 
- 
+  /**
+  	* Return bottom item  without removing it.
+  	*
+  	* @update	sford11/25/99
+  	* @param	none
+  	* @return ptr to first item in container
+  	*/
+  	
+  void* Peek(void);
   /**
    * Return topmost item without removing it.
    * 
-   * @update	gess4/18/98
+   * @update	sford 11/25/99	
    * @param   none
    * @return  ptr to first item in container
    */
-  void* Peek(void);
+  void* PeekFront(void);
   
   /**
    * method used to retrieve ptr to

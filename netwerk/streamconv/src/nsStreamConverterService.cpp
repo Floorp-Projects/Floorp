@@ -359,7 +359,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
     // Now generate the shortest path tree.
     grayQ->Push(source);
     while (0 < grayQ->GetSize()) {
-        nsHashKey *currentHead = (nsHashKey*)grayQ->Peek();
+        nsHashKey *currentHead = (nsHashKey*)grayQ->PeekFront();
         SCTableData *data2 = (SCTableData*)mAdjacencyList->Get(currentHead);
         if (!data2) return NS_ERROR_FAILURE;
         nsVoidArray *edges = (nsVoidArray*)data2->data;

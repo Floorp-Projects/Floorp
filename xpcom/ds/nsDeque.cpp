@@ -248,16 +248,32 @@ void* nsDeque::PopFront() {
   }
   return result;
 }
+/**
+ * This method gets called you want to peek at the bottom
+ * member without removing it.
+ *
+ * @update	sford 11/25/99
+ * @param   nada
+ * @return  last item in container
+ */
+void* nsDeque::Peek() {
+	void* result=0;
+	if(mSize>0) {
+		int offset=mOrigin+mSize-1;	
+		result=mData[offset];
+	}
+	return result;
+}	
 
 /**
  * This method gets called you want to peek at the topmost
  * member without removing it.
  *
- * @update	gess4/18/98
+ * @update  sford 11/25/99	
  * @param   nada
  * @return  last item in container
  */
-void* nsDeque::Peek() {
+void* nsDeque::PeekFront() {
   void* result=0;
   if(mSize>0) {
     result=mData[mOrigin];
