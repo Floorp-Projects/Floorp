@@ -187,7 +187,7 @@ NS_IMETHODIMP nsHTMLImageMapAccessible::GetObject(PRInt32 aIndex,
 {
   nsCOMPtr<nsIAccessible> areaAccessible;
   nsresult rv = GetChildAt(aIndex, getter_AddRefs(areaAccessible));
-  NS_IF_ADDREF(*aAccessible = areaAccessible);
+  areaAccessible.swap(*aAccessible);
   return rv;
 }
 
