@@ -269,9 +269,13 @@ sub main {
                                             "_x_x_mozilla_page_load",
                                             ",");
 
-        # Print failure message if we fail 2nd time.
-        unless($layout_time) {
-            TinderUtils::print_log "TinderboxPrint:Tp:[CRASH]\n";
+        if($layout_time) {
+          chomp($layout_time);
+          my @times = split(',', $layout_time);
+          $layout_time = $times[0];  # Set layout time to first number that we scraped.
+        } else {
+          # Print failure message if we fail 2nd time.
+          TinderUtils::print_log "TinderboxPrint:Tp:[CRASH]\n";
         }
     }
 
