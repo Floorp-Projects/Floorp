@@ -1218,9 +1218,9 @@ HDC   dc1 = NULL;
     mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
     mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
 
-    mStrikeoutSize = MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
+    mStrikeoutSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
-    mUnderlineSize = MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
+    mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
   }
   else {
