@@ -116,7 +116,7 @@ void CEditDictionary::MakeDictionaryChangesPermanent() {
 
 	STableCell 	currCellLoc(1,1);
 	Str255			currCellData;
-	int					maxsize = 255;
+	Uint32		maxsize = 255;
 	
 	mISpellChecker->ResetPersonalDictionary();
 	for (currCellLoc.row = 1; currCellLoc.row <= mNumWords; currCellLoc.row++) {
@@ -254,7 +254,7 @@ CEditDictionary::CEditDictionary(LStream *inStream)	: mNumWords(0),
 void CEditDictionary::SetISpellChecker(ISpellChecker *i)	{
 
 	STableCell	cell(0, 1);
-	int unusedNumber;
+	Uint32 unusedNumber;
 	char word_buffer[max_word_length];
 	int curr_word_length;
 	
