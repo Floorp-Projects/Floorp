@@ -32,8 +32,8 @@
 #include <Types.h>
 #include <QuickDraw.h>
 
-class nsIScreen;
-class nsIScreenManager;
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
 
 
 class nsDeviceContextMac : public DeviceContextImpl
