@@ -49,5 +49,7 @@ CPPSRCS		= \
 
 EXPORTS		= nsHTTPCID.h
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 

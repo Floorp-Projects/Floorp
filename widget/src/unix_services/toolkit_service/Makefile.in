@@ -38,7 +38,9 @@ CPPSRCS		= \
 
 EXPORTS		= nsIUnixToolkitService.h
 
-EXTRA_DSO_LDOPTS = $(TOOLKIT_TK_LIBS)
+EXTRA_DSO_LDOPTS = $(TOOLKIT_TK_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

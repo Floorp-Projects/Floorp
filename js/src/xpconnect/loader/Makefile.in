@@ -36,3 +36,8 @@ ifneq ($(OS_ARCH),BeOS)
 LIBS		+= -lmozjs -lxpcom $(NSPR_LIBS)
 endif
 
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		-lmozjs \
+		$(NULL)
+

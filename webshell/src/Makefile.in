@@ -41,6 +41,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		-ljsdom \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 ifdef MOZ_PERF
 EXTRA_DSO_LDOPTS += \

@@ -45,7 +45,13 @@ CPPSRCS		= \
 		nsAppCores.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -ljsdom
+EXTRA_DSO_LDOPTS += \
+		-L$(DIST)/bin \
+                $(MOZ_COMPONENT_LIBS) \
+                -lmozjs \
+                -ljsdom \
+                $(NULL)
+
 
 include $(topsrcdir)/config/rules.mk
 

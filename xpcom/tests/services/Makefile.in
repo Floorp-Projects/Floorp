@@ -32,5 +32,7 @@ CPPSRCS		= MyService.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/..
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_XPCOM_LIBS)
+
 include $(topsrcdir)/config/rules.mk
 

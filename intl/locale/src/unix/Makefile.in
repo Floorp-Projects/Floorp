@@ -41,7 +41,9 @@ CPPSRCS		= \
 		nsPosixLocaleFactory.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lnslocale_s
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lnslocale_s \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

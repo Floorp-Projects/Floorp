@@ -147,6 +147,8 @@ endif
 OS_CFLAGS	+= -tm-
 endif
 
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_NSPR_LIBS)
+
 # When using gcc the assembly is inlined in the C-file (see jslock.c)
 ifdef NS_USE_NATIVE
 ASFILES		= $(notdir $(wildcard $(srcdir)/*_$(OS_ARCH).s))
