@@ -29,7 +29,7 @@ Rights Reserved.
 
 <window xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="subscribeDialog.title;"
+        title="&subscribeDialog.title;"
         orient="vertical"
         class="dialog"
         width="500"
