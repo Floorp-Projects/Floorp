@@ -4275,7 +4275,7 @@ alpha*-*-osf*)
     if test "$GNU_CC"; then
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
-	MOZ_DEBUG_FLAGS='-gall'
+	MOZ_DEBUG_FLAGS='-g3'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g -std1'
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
 	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact -noexceptions"
