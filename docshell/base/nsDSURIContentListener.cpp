@@ -119,7 +119,16 @@ NS_IMETHODIMP nsDSURIContentListener::IsPreferred(const char* aContentType,
       return mParentContentListener->IsPreferred(aContentType, aCommand, 
          aWindowTarget, aDesiredContentType, aCanHandle);
    else
-     *aCanHandle = PR_FALSE;
+   {
+     // we used to return false here if we didn't have a parent properly registered at the top of
+     // the docshell hierarchy to dictate what content types this docshell should be a preferred handler for.
+     // But this really makes it hard for developers using iframe or browser tags because then they need to 
+     // make sure they implement nsIURIContentListener otherwise all link clicks would get sent to another window
+     // because we said we weren't the preferred handler type. I'm going to change the default now...if we can handle the 
+     // content, and someone didn't EXPLICITLY set a nsIURIContentListener at the top of our docshell chain, then we'll
+     // now always attempt to process the content ourselves...
+     return CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, aCanHandle);
+   }
 
    return NS_OK;
 }
