@@ -22,4 +22,4 @@
  
 #include <MacHeaders.h>
 
-#define DEBUG 1
+#define MIW_DEBUG 1
