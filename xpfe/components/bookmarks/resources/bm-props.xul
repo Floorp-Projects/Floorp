@@ -20,7 +20,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "resource:/res/samples/bm-props.dtd" >
+<!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bm-props.dtd" >
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
