@@ -2,7 +2,7 @@
 # Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile,v 1.11 2004/10/08 04:15:23 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.12 2004/10/09 01:53:26 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
@@ -94,7 +94,7 @@ $(ROOT)/usr/share/lib/mps/amd64:
 
 $(ROOT)/usr/lib/mps:
 	mkdir -p $@
-	$(CP) -r $(DIST)/lib/*.so $@
+	$(CP) -r $(DIST32)/lib/*.so $@
 ifdef JSS3_LOCATION
 	$(CP) $(JSS3_LOCATION)/$(OBJ32)/lib/libjss3.so $@
 endif
