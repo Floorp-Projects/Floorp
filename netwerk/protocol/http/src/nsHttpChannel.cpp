@@ -1663,7 +1663,7 @@ nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 {
     NS_ENSURE_ARG_POINTER(securityInfo);
     *securityInfo = mSecurityInfo;
-    NS_ADDREF(*securityInfo);
+    NS_IF_ADDREF(*securityInfo);
     return NS_OK;
 }
 
