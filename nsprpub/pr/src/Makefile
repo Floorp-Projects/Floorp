@@ -38,9 +38,6 @@ OPTIMIZER =
 export OPTIMIZER
 OS_LIBS			= -lm
 else	# 4.1.3_U1
-ifeq ($(OS_RELEASE),5.4_i86pc)
-OS_LIBS                 = -lthread -lposix4 -lsocket -lnsl -lgen -lresolv -ldl
-else
 ifdef USE_PTHREADS
 OS_LIBS			= -lpthread -lposix4 -lsocket -lnsl -ldl
 else
@@ -50,7 +47,6 @@ else
 OS_LIBS			= -lthread -lposix4 -lsocket -lnsl -ldl
 endif	# LOCAL_THREADS_ONLY
 endif	# USE_PTHREADS
-endif	# 5.4_i86pc
 endif	# 4.1.3_U1
 endif	# SunOS
 
@@ -144,61 +140,61 @@ endif
 #
 
 OBJS = \
-    io/$(OBJDIR)/prmwait.o \
-    io/$(OBJDIR)/prmapopt.o \
-    io/$(OBJDIR)/priometh.o \
-    io/$(OBJDIR)/prlayer.o \
-    io/$(OBJDIR)/prlog.o \
-    io/$(OBJDIR)/prmmap.o \
-    io/$(OBJDIR)/prprf.o \
-    io/$(OBJDIR)/prscanf.o \
-    io/$(OBJDIR)/prstdio.o \
-    threads/$(OBJDIR)/prcmon.o \
-    linking/$(OBJDIR)/prlink.o \
-    malloc/$(OBJDIR)/prmalloc.o \
-    malloc/$(OBJDIR)/prmem.o \
-    md/$(OBJDIR)/prosdep.o \
-    memory/$(OBJDIR)/prseg.o \
-    misc/$(OBJDIR)/pralarm.o \
-    misc/$(OBJDIR)/pratom.o \
-    misc/$(OBJDIR)/prdtoa.o \
-    misc/$(OBJDIR)/prenv.o \
-    misc/$(OBJDIR)/prerror.o \
-    misc/$(OBJDIR)/prinit.o \
-    misc/$(OBJDIR)/prinrval.o \
-    misc/$(OBJDIR)/prlog2.o \
-    misc/$(OBJDIR)/prlong.o \
-    misc/$(OBJDIR)/prnetdb.o \
-    misc/$(OBJDIR)/prsystem.o \
-    misc/$(OBJDIR)/prthinfo.o \
-    misc/$(OBJDIR)/prtime.o
+    io/$(OBJDIR)/prmwait.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prmapopt.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/priometh.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prlayer.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prlog.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prmmap.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prprf.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prscanf.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prstdio.$(OBJ_SUFFIX) \
+    threads/$(OBJDIR)/prcmon.$(OBJ_SUFFIX) \
+    linking/$(OBJDIR)/prlink.$(OBJ_SUFFIX) \
+    malloc/$(OBJDIR)/prmalloc.$(OBJ_SUFFIX) \
+    malloc/$(OBJDIR)/prmem.$(OBJ_SUFFIX) \
+    md/$(OBJDIR)/prosdep.$(OBJ_SUFFIX) \
+    memory/$(OBJDIR)/prseg.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pralarm.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/pratom.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prdtoa.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prenv.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prerror.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prinit.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prinrval.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prlog2.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prlong.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prnetdb.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prsystem.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prthinfo.$(OBJ_SUFFIX) \
+    misc/$(OBJDIR)/prtime.$(OBJ_SUFFIX)
 
 ifdef USE_PTHREADS
 OBJS += \
-    pthreads/$(OBJDIR)/ptsynch.o \
-    pthreads/$(OBJDIR)/ptio.o \
-    pthreads/$(OBJDIR)/ptthread.o \
-    pthreads/$(OBJDIR)/ptmisc.o
+    pthreads/$(OBJDIR)/ptsynch.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptio.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptthread.$(OBJ_SUFFIX) \
+    pthreads/$(OBJDIR)/ptmisc.$(OBJ_SUFFIX)
 else
 OBJS += \
-    io/$(OBJDIR)/prdir.o \
-    io/$(OBJDIR)/prfile.o \
-    io/$(OBJDIR)/prio.o \
-    io/$(OBJDIR)/prsocket.o \
-	threads/$(OBJDIR)/prcthr.o \
-	threads/$(OBJDIR)/prdump.o \
-	threads/$(OBJDIR)/prmon.o \
-	threads/$(OBJDIR)/prsem.o \
-	threads/$(OBJDIR)/prtpd.o \
-	threads/combined/$(OBJDIR)/prucpu.o \
-	threads/combined/$(OBJDIR)/prucv.o \
-	threads/combined/$(OBJDIR)/prulock.o \
-	threads/combined/$(OBJDIR)/prustack.o \
-	threads/combined/$(OBJDIR)/pruthr.o
+    io/$(OBJDIR)/prdir.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prfile.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prio.$(OBJ_SUFFIX) \
+    io/$(OBJDIR)/prsocket.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prcthr.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prdump.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prmon.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prsem.$(OBJ_SUFFIX) \
+	threads/$(OBJDIR)/prtpd.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prucpu.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prucv.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prulock.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/prustack.$(OBJ_SUFFIX) \
+	threads/combined/$(OBJDIR)/pruthr.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(USE_IPV6), 1)
-OBJS += io/$(OBJDIR)/pripv6.o
+OBJS += io/$(OBJDIR)/pripv6.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
@@ -209,17 +205,17 @@ RESNAME=nspr.rc
 endif
 
 ifeq ($(OS_TARGET), WIN16)
-OBJS +=	md/windows/$(OBJDIR)/w16null.o \
-	md/windows/$(OBJDIR)/w16proc.o      \
-	md/windows/$(OBJDIR)/w16thred.o      \
-	md/windows/$(OBJDIR)/w16fmem.o      \
-	md/windows/$(OBJDIR)/w16sock.o      \
-	md/windows/$(OBJDIR)/w16mem.o      \
-    md/windows/$(OBJDIR)/w16io.o       \
-    md/windows/$(OBJDIR)/w16gc.o       \
-    md/windows/$(OBJDIR)/w16error.o       \
-    md/windows/$(OBJDIR)/w16callb.o       \
-	md/windows/$(OBJDIR)/ntinrval.o
+OBJS +=	md/windows/$(OBJDIR)/w16null.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w16proc.$(OBJ_SUFFIX)      \
+	md/windows/$(OBJDIR)/w16thred.$(OBJ_SUFFIX)      \
+	md/windows/$(OBJDIR)/w16fmem.$(OBJ_SUFFIX)      \
+	md/windows/$(OBJDIR)/w16sock.$(OBJ_SUFFIX)      \
+	md/windows/$(OBJDIR)/w16mem.$(OBJ_SUFFIX)      \
+    md/windows/$(OBJDIR)/w16io.$(OBJ_SUFFIX)       \
+    md/windows/$(OBJDIR)/w16gc.$(OBJ_SUFFIX)       \
+    md/windows/$(OBJDIR)/w16error.$(OBJ_SUFFIX)       \
+    md/windows/$(OBJDIR)/w16callb.$(OBJ_SUFFIX)       \
+	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX)
 EXTRA_LIBS += $(MOD_DEPTH)/tools/winsock.lib
 W16_EXPORTS = EXPORT _malloc.2=_PR_MD_malloc RESIDENT, \
 	_realloc.3=_PR_MD_realloc RESIDENT, \
@@ -233,39 +229,37 @@ W16_EXPORTS = EXPORT _malloc.2=_PR_MD_malloc RESIDENT, \
     _fprintf.12=_PR_MD_fprintf RESIDENT
 else
 ifeq ($(OS_TARGET), WIN95)
-OBJS +=	md/windows/$(OBJDIR)/w95io.o \
-	md/windows/$(OBJDIR)/w95sock.o \
-	md/windows/$(OBJDIR)/w95thred.o \
-	md/windows/$(OBJDIR)/w95cv.o \
-	md/windows/$(OBJDIR)/ntgc.o \
-	md/windows/$(OBJDIR)/ntmisc.o \
-	md/windows/$(OBJDIR)/ntinrval.o \
-	md/windows/$(OBJDIR)/ntsem.o	\
-	md/windows/$(OBJDIR)/win32_errors.o \
-	md/windows/$(OBJDIR)/w32poll.o
+OBJS +=	md/windows/$(OBJDIR)/w95io.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w95sock.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w95thred.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w95cv.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntmisc.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
+	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 else
 ifeq ($(OS_TARGET), OS2)
-OBJS +=	md/os2/$(OBJDIR)/os2io.o \
-	md/os2/$(OBJDIR)/os2sock.o \
-	md/os2/$(OBJDIR)/os2thred.o \
-	md/os2/$(OBJDIR)/os2cv.o \
-	md/os2/$(OBJDIR)/os2gc.o \
-	md/os2/$(OBJDIR)/os2misc.o \
-	md/os2/$(OBJDIR)/os2inrval.o \
-	md/os2/$(OBJDIR)/os2sem.o	\
-	md/os2/$(OBJDIR)/os2_errors.o \
-	md/os2/$(OBJDIR)/os2poll.o \
-	md/os2/$(OBJDIR)/ramsem.o \
-	md/os2/$(OBJDIR)/sem_x86.o
+OBJS +=	md/os2/$(OBJDIR)/os2io.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2sock.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2thred.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2cv.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2gc.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2misc.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2inrval.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2sem.$(OBJ_SUFFIX)	\
+	md/os2/$(OBJDIR)/os2_errors.$(OBJ_SUFFIX) \
+	md/os2/$(OBJDIR)/os2poll.$(OBJ_SUFFIX)
 else
-OBJS +=	md/windows/$(OBJDIR)/ntio.o \
-	md/windows/$(OBJDIR)/ntgc.o \
-	md/windows/$(OBJDIR)/ntthread.o \
-	md/windows/$(OBJDIR)/ntmisc.o \
-	md/windows/$(OBJDIR)/ntinrval.o \
-	md/windows/$(OBJDIR)/ntsem.o	\
-	md/windows/$(OBJDIR)/win32_errors.o \
-	md/windows/$(OBJDIR)/w32poll.o
+OBJS +=	md/windows/$(OBJDIR)/ntio.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntgc.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntthread.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntmisc.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntinrval.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/ntsem.$(OBJ_SUFFIX)	\
+	md/windows/$(OBJDIR)/win32_errors.$(OBJ_SUFFIX) \
+	md/windows/$(OBJDIR)/w32poll.$(OBJ_SUFFIX)
 endif
 endif
 endif

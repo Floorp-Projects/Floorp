@@ -23,12 +23,7 @@ export NSPR20=1
 
 include $(MOD_DEPTH)/config/config.mk
 
-#
-# On all platforms, we build ds and libc.
-#
 DIRS = ds libc msgc
-ifneq (,$(filter-out WIN16 NEWS-OS,$(OS_TARGET)))
-endif
 
 include $(MOD_DEPTH)/config/rules.mk
 

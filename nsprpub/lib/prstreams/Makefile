@@ -42,7 +42,7 @@ CXXSRCS =           \
 	prstrms.cpp    \
 	$(NULL)
 
-OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.o))
+OBJS = $(addprefix $(OBJDIR)/,$(CXXSRCS:.cpp=.$(OBJ_SUFFIX)))
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq (,$(filter-out WIN16 OS2,$(OS_TARGET)))
@@ -56,11 +56,20 @@ EXTRA_LIBS = $(DIST)/lib/libnspr$(MOD_VERSION).lib
 endif
 else
 ifeq ($(OS_ARCH), AIX)
-ifeq ($(CLASSIC_NSPR),1)
-OS_LIBS += -lC -lc
-else
-OS_LIBS += -lC_r -lc_r
-endif
+  ifeq ($(OS_RELEASE), 4.1)
+    ifeq ($(CLASSIC_NSPR),1)
+    OS_LIBS += -lC -lc
+    else
+    OS_LIBS += -lC_r -lc_r
+    endif
+  else
+    ifeq ($(CLASSIC_NSPR),1)
+    MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib -p 0
+    else
+    MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0
+    endif
+    OS_LIBS += -ldl
+  endif
 endif
 ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 EXTRA_LIBS = -L$(DIST)/lib -lnspr$(MOD_VERSION)_shr
@@ -72,7 +81,7 @@ endif
 # On NCR and SCO_SV, we can't link with extra libraries when
 # we build a shared library.  If we do so, the linker doesn't
 # complain, but we would run into weird problems at run-time.
-# Therefore on these platforms, we link just the .o files.
+# Therefore on these platforms, we link just the object files.
 ifeq ($(OS_ARCH),NCR)
 EXTRA_LIBS =
 endif

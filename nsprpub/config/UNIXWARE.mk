@@ -16,6 +16,23 @@
 #
 
 #
-# Config stuff for HP-UXB.10.30.
+# Config stuff for SCO UnixWare
 #
-include $(MOD_DEPTH)/config/HP-UX.mk
+
+include $(MOD_DEPTH)/config/UNIX.mk
+
+CC		= $(NSDEPTH)/build/hcc
+CCC		= $(NSDEPTH)/build/hcpp
+
+RANLIB		= true
+
+DEFINES		+= -D_PR_LOCAL_THREADS_ONLY
+OS_CFLAGS	= -DSVR4 -DSYSV -DUNIXWARE
+
+MKSHLIB		= $(LD) $(DSO_LDOPTS)
+DSO_LDOPTS	= -G
+
+CPU_ARCH	= x86
+ARCH		= sco
+
+NOSUCHFILE	= /no-such-file

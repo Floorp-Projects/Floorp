@@ -161,7 +161,7 @@ ifeq ($(OS_ARCH), AIX)
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-    ifeq ($(OS_TEST),i86pc)
+    ifeq ($(CPU_ARCH),x86)
 	ASFILES = os_$(OS_ARCH)_x86.s
     else
 	ifneq ($(OS_RELEASE),4.1.3_U1)
@@ -183,7 +183,7 @@ TARGETS		= $(OBJS)
 ifeq ($(OS_ARCH),AIX)
 ifneq ($(OS_RELEASE),4.2)
 ifneq ($(USE_PTHREADS), 1)
-#TARGETS		+= $(OBJDIR)/aixwrap.o
+#TARGETS		+= $(OBJDIR)/aixwrap.$(OBJ_SUFFIX)
 endif
 endif
 endif
@@ -194,7 +194,7 @@ ifeq ($(OS_ARCH),SunOS)
 			LIBRARY_NAME = $(ULTRASPARC_LIBRARY)
 			LIBRARY_VERSION = $(MOD_VERSION)
             ULTRASPARC_ASFILES = os_$(OS_ARCH)_ultrasparc.s
-            ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.o))
+            ULTRASPARC_ASOBJS = $(addprefix $(OBJDIR)/,$(ULTRASPARC_ASFILES:.s=.$(OBJ_SUFFIX)))
 			TARGETS		+= $(ULTRASPARC_ASOBJS) $(SHARED_LIBRARY)
 		endif
 	endif
@@ -208,7 +208,7 @@ export:: $(TARGETS)
 #ifeq ($(OS_ARCH),AIX)
 #ifneq ($(OS_RELEASE),4.2)
 #ifneq ($(USE_PTHREADS), 1)
-#	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.o $(DIST)/lib
+#	$(INSTALL) -m 444 $(OBJDIR)/aixwrap.$(OBJ_SUFFIX) $(DIST)/lib
 #endif
 #endif
 #endif

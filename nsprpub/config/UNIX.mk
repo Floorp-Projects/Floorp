@@ -16,6 +16,7 @@
 #
 
 XP_DEFINE	= -DXP_UNIX
+OBJ_SUFFIX	= o
 LIB_SUFFIX	= a
 DLL_SUFFIX	= so
 AR		= ar cr $@

@@ -48,7 +48,7 @@ CFLAGS		= $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 NOMD_CFLAGS	= $(OPTIMIZER) $(NOMD_OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 				$(XCFLAGS)
 
-include $(MOD_DEPTH)/config/$(OS_CONFIG).mk
+include $(MOD_DEPTH)/config/$(OS_TARGET).mk
 
 # Figure out where the binary code lives.
 BUILD		= $(OBJDIR_NAME)

@@ -19,4 +19,4 @@
 # Config stuff for WIN95
 #
 
-include $(MOD_DEPTH)/config/WINNT.mk
+include $(MOD_DEPTH)/config/WIN32.mk

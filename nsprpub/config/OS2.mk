@@ -48,6 +48,7 @@ RC = rc.exe
 GARBAGE =
 
 XP_DEFINE = -DXP_PC
+OBJ_SUFFIX = obj
 LIB_SUFFIX = lib
 DLL_SUFFIX = dll
 

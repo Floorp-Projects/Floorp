@@ -31,8 +31,8 @@ endif
 INCLUDES = -I$(DIST)/include
 
 
-OBJS = $(OBJDIR)/mygetval.o \
-	$(OBJDIR)/mysetval.o
+OBJS = $(OBJDIR)/mygetval.$(OBJ_SUFFIX) \
+	$(OBJDIR)/mysetval.$(OBJ_SUFFIX)
 
 ifeq ($(OS_TARGET), WIN16)
 W16OBJS = $(subst $(space),$(comma)$(space),$(OBJS))

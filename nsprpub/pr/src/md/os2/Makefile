@@ -43,7 +43,6 @@ INCLUDES = -I$(DIST)/include/private -I$(DIST)/include
 include $(MOD_DEPTH)/config/rules.mk
 
 export:: $(TARGETS)
-	@cmd /C "copy *.obj $(OBJDIR)\*.o > nul"
 
 install:: export
 

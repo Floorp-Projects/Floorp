@@ -16,7 +16,11 @@
 #
 
 #
-# Config stuff for OS/2 4.0.
+# Config stuff for SunOS.
+# 4 and 5 are vastly different, so we use 2 different files.
 #
-
-include $(MOD_DEPTH)/config/OS2.mk
+ifeq ($(basename $(OS_RELEASE)),4.1)
+include $(MOD_DEPTH)/config/SunOS4.mk
+else
+include $(MOD_DEPTH)/config/SunOS5.mk
+endif

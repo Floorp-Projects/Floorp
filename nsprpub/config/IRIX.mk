@@ -39,7 +39,7 @@ endif
 else
 CC			= cc
 CCC         = CC
-ODD_CFLAGS		= -fullwarn -xansi -rdata_shared
+ODD_CFLAGS		= -fullwarn -xansi
 ifdef BUILD_OPT
 
 ifeq ($(USE_N32),1)
@@ -53,7 +53,8 @@ endif
 # For 6.x machines, include this flag
 ifeq (6.,$(findstring 6.,$(OS_RELEASE)))
 ifeq ($(USE_N32),1)
-ODD_CFLAGS		+= -n32 -exceptions
+ODD_CFLAGS		+= -n32 -exceptions -woff 1209,1642,3201
+COMPILER_TAG		= _n32
 else
 ODD_CFLAGS		+=  -32 -multigot
 endif
@@ -91,11 +92,16 @@ else
 OS_CFLAGS		+= $(NOMD_OS_CFLAGS)
 endif
 
+# catch unresolved symbols
+ifeq ($(basename $(OS_RELEASE)),6)
+SHLIB_LD_OPTS = -no_unresolved
+endif
+
 ifeq ($(USE_N32),1)
 SHLIB_LD_OPTS		+= -n32
 endif
 
-MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -shared -soname $(@:$(OBJDIR)/%.so=%.so)
+MKSHLIB			= $(LD) $(SHLIB_LD_OPTS) -rdata_shared -shared -soname $(@:$(OBJDIR)/%.so=%.so)
 
 HAVE_PURIFY		= 1
 

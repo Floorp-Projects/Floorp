@@ -16,7 +16,7 @@
 #
 
 #
-# Config stuff for NCR SysVr4 v 3.0
+# Config stuff for NCR SVR4 MP-RAS
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk

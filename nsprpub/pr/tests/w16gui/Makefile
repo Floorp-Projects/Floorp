@@ -24,7 +24,7 @@ MOD_DEPTH = ../../..
 include $(MOD_DEPTH)/config/config.mk
 
 INCLUDES = -I$(DIST)/include
-W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.o
+W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
 
 CSRCS = poppad.c \
        popfile.c \
@@ -51,11 +51,11 @@ $(OBJDIR)/poppad.exe: $(OBJS)
 	echo option stack=16K >>w16link
 	echo debug $(DEBUGTYPE) all >>w16link
 	echo file >>w16link
-	echo $(OBJDIR)\\poppad.o, >>w16link
-	echo $(OBJDIR)\\popfile.o, >>w16link
-	echo $(OBJDIR)\\popfont.o, >>w16link
-	echo $(OBJDIR)\\popfind.o, >>w16link
-	echo $(OBJDIR)\\popprnt0.o, >>w16link
+	echo $(OBJDIR)\\poppad.$(OBJ_SUFFIX), >>w16link
+	echo $(OBJDIR)\\popfile.$(OBJ_SUFFIX), >>w16link
+	echo $(OBJDIR)\\popfont.$(OBJ_SUFFIX), >>w16link
+	echo $(OBJDIR)\\popfind.$(OBJ_SUFFIX), >>w16link
+	echo $(OBJDIR)\\popprnt0.$(OBJ_SUFFIX), >>w16link
 	echo $(W16STDIO) >>w16link
 	echo library $(LIBPR)      >>w16link
 	echo library $(LIBPLDS)	   >>w16link
