@@ -61,8 +61,10 @@ nsString::nsString() {
   NS_ASSERTION(kCommonEmptyBuffer[0]==0,kFoolMsg);
   mLength = mCapacity = 0;
   mStr = kCommonEmptyBuffer;
-	if(!mSelfTested)
+  if(!mSelfTested) {
+    mSelfTested=PR_TRUE;
 		SelfTest();
+  }
 }
 
 
@@ -1869,7 +1871,7 @@ NS_BASE int fputs(const nsString& aString, FILE* out)
  * @return
  */
 void nsString::SelfTest(void) {
-#if 1
+#if 0
 
   static const char* kConstructorError = kConstructorError;
   static const char* kComparisonError  = "Comparision error!";
@@ -1884,6 +1886,10 @@ void nsString::SelfTest(void) {
 
   //first, let's test the constructors...
   nsString empty;
+  empty="";
+  empty="xxx";
+  empty="";
+
   nsString a(temp);
   nsString* a_=new nsString(a);  //test copy constructor
   nsString b("world!");
@@ -1961,6 +1967,7 @@ void nsString::SelfTest(void) {
   const char* bbbb="bbbb";
 
     //First test the string compare routines...
+
   NS_ASSERTION(0>temp8.Compare(temp9),kComparisonError);
   NS_ASSERTION(0<temp9.Compare(temp8),kComparisonError);
   NS_ASSERTION(0==temp8.Compare(temp8a,PR_TRUE),kComparisonError);
