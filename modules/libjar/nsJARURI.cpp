@@ -170,96 +170,72 @@ nsJARURI::SetScheme(const char * aScheme)
 NS_IMETHODIMP
 nsJARURI::GetUsername(char * *aUsername)
 {
-    if (mJARFile)
-        return mJARFile->GetUsername(aUsername);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetUsername(const char * aUsername)
 {
-    if (mJARFile)
-        return mJARFile->SetUsername(aUsername);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::GetPassword(char * *aPassword)
 {
-    if (mJARFile)
-        return mJARFile->GetPassword(aPassword);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetPassword(const char * aPassword)
 {
-    if (mJARFile)
-        return mJARFile->SetPassword(aPassword);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::GetPreHost(char * *aPreHost)
 {
-    if (mJARFile)
-        return mJARFile->GetPreHost(aPreHost);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetPreHost(const char * aPreHost)
 {
-    if (mJARFile)
-        return mJARFile->SetPreHost(aPreHost);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::GetHost(char * *aHost)
 {
-    if (mJARFile)
-        return mJARFile->GetHost(aHost);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetHost(const char * aHost)
 {
-    if (mJARFile)
-        return mJARFile->SetHost(aHost);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::GetPort(PRInt32 *aPort)
 {
-    if (mJARFile)
-        return mJARFile->GetPort(aPort);
     return NS_ERROR_FAILURE;
 }
  
 NS_IMETHODIMP
 nsJARURI::SetPort(PRInt32 aPort)
 {
-    if (mJARFile)
-        return mJARFile->SetPort(aPort);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::GetPath(char * *aPath)
 {
-    if (mJARFile)
-        return mJARFile->GetPath(aPath);
     return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsJARURI::SetPath(const char * aPath)
 {
-    if (mJARFile)
-        return mJARFile->SetPath(aPath);
     return NS_ERROR_FAILURE;
 }
 
