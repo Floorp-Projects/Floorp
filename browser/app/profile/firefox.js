@@ -102,7 +102,7 @@ pref("update.severity", 0);
 pref("update.extensions.count", 0);
 
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&sourceid=mozilla-search&q=");
+pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
@@ -153,6 +153,10 @@ pref("browser.download.manager.flashCount", 2);
 pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
 // pointer to the Web Search url (content area context menu)
 pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
+
+pref("browser.search.param.Google.1.name", "chrome://browser/content/searchconfig.properties");
+pref("browser.search.param.Google.1.custom", "chrome://browser/content/searchconfig.properties");
+pref("browser.search.param.Google.1.default", "chrome://browser/content/searchconfig.properties");
 
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)

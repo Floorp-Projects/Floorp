@@ -12,7 +12,6 @@
 >
 
 <input name="q" user>
-<input name="sourceid" value="mozilla-search">
 <inputnext name="start" factor="10">
 <inputprev name="start" factor="10">
 <input name="ie" value="utf-8">
