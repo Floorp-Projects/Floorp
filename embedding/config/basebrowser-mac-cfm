@@ -228,6 +228,10 @@ Components:nsIStringBundle.xpt
 defaults:pref:all.js
 defaults:pref:macprefs.js
 
+; required if using nsHelperAppDlg.js component
+defaults:Profile:mimeTypes.rdf
+defaults:Profile:US:mimeTypes.rdf
+
 ; uriloader
 Components:uriLoader.shlb
 Components:uriLoader.xpt
