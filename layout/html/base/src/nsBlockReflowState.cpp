@@ -42,9 +42,8 @@
 #include "nsIHTMLContent.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
-
-// XXX temporary for :first-letter support
 #include "nsITextContent.h"
+#include "nsStyleChangeList.h"
 
 // XXX for IsEmptyLine
 #include "nsTextFragment.h"
@@ -59,7 +58,7 @@
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_INCREMENTAL_REFLOW
-#undef NOISY_FINAL_SIZE
+#define NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
 #undef NOISY_DAMAGE_REPAIR
 #undef NOISY_COMBINED_AREA
@@ -248,6 +247,7 @@ public:
 
   void PlaceFloater(nsPlaceholderFrame* aFloater,
                     const nsMargin& aFloaterMargins,
+                    const nsMargin& aFloaterOffsets,
                     PRBool* aIsLeftFloater,
                     nsPoint* aNewOrigin);
 
@@ -283,7 +283,7 @@ public:
 #ifdef NOISY_MAX_ELEMENT_SIZE
     if ((mMaxElementSize.width != oldSize.width) ||
         (mMaxElementSize.height != oldSize.height)) {
-      nsFrame::IndentBy(stdout, GetDepth());
+      nsFrame::IndentBy(stdout, mBlock->GetDepth());
       if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
         printf("PASS1 ");
       }
@@ -933,6 +933,27 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
     }
   }
+
+  // It is possible that we just acquired first-line style. See if
+  // this is the case, and if so, fix things up.
+  if (0 == (NS_BLOCK_HAS_FIRST_LINE_STYLE & mState)) {
+    nsCOMPtr<nsIStyleContext> fls(getter_AddRefs(GetFirstLineStyle(aPresContext)));
+    if (fls) {
+      // Now we do have first-line style. Therefore we need to wrap up
+      // the inline-frames in a first-line frame.
+      mState |= NS_BLOCK_HAS_FIRST_LINE_STYLE;
+      rv = WrapFramesInFirstLineFrame(aPresContext);
+
+      // Force a reflow so that the first-line is reflowed properly
+      aChangeList->AppendChange(this, NS_STYLE_HINT_REFLOW);
+      if (ourChange < NS_STYLE_HINT_REFLOW) {
+        ourChange = NS_STYLE_HINT_REFLOW;
+      }
+      if (aLocalChange) {
+        *aLocalChange = ourChange;
+      }
+    }
+  }
   return rv;
 }
 
@@ -1578,6 +1599,11 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
     line = line->mNext;
   }
+  if (mBullet && !mLines) {
+    nsRect r;
+    mBullet->GetRect(r);
+    xa = r.x;
+  }
 #ifdef NOISY_COMBINED_AREA
   IndentBy(stdout, GetDepth());
   ListTag(stdout);
@@ -2025,6 +2051,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       line = line->mNext;
       aState.mLineLayout->AdvanceToNextLine();
     }
+  }
+
+  // Handle an odd-ball case: a list-item with no lines
+  if (mBullet && HaveOutsideBullet() && !mLines) {
+    PlaceBullet(aState);
   }
 
 #ifdef NOISY_INCREMENTAL_REFLOW
@@ -3271,10 +3302,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nsLineLayout* lineLayout = aState.mLineLayout;
   PRBool addedBullet = PR_FALSE;
   if (HaveOutsideBullet() && (aLine == mLines) &&
-      !lineLayout->IsZeroHeight()) {
-    nsHTMLReflowMetrics metrics(nsnull);
-    ReflowBullet(aState, metrics);
-    lineLayout->AddBulletFrame(mBullet, metrics);
+      (!lineLayout->IsZeroHeight() || !aLine->mNext)) {
+    PlaceBullet(aState);
     addedBullet = PR_TRUE;
   }
   nsSize maxElementSize;
@@ -3359,6 +3388,16 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   aState.mY = newY;
   if (aState.mComputeMaxElementSize) {
+#ifdef NOISY_MAX_ELEMENT_SIZE
+    IndentBy(stdout, GetDepth());
+    if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
+      printf("PASS1 ");
+    }
+    ListTag(stdout);
+    printf(": line.floaters=%d band.floaterCount=%d\n",
+           aLine->mFloaters ? aLine->mFloaters->Count() : -1,
+           aState.mBand.GetFloaterCount());
+#endif
     if (0 != aState.mBand.GetFloaterCount()) {
       // Add in floater impacts to the lines max-element-size
       ComputeLineMaxElementSize(aState, aLine, &maxElementSize);
@@ -4529,7 +4568,8 @@ nsresult
 nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsPlaceholderFrame* aPlaceholder,
                             nsRect& aCombinedRect,
-                            nsMargin& aMarginResult)
+                            nsMargin& aMarginResult,
+                            nsMargin& aComputedOffsetsResult)
 {
   // Reflow the floater. Since floaters are continued we given them an
   // unbounded height. Floaters with an auto width are sized to zero
@@ -4545,10 +4585,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Reflow the floater
   nsReflowStatus frameReflowStatus;
-  nsMargin computedOffsets;
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE,
                                 0, isAdjacentWithTop,
-                                computedOffsets, frameReflowStatus);
+                                aComputedOffsetsResult, frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4602,7 +4641,9 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
   if (mLineLayout->CanPlaceFloaterNow()) {
     nsRect combinedArea;
     nsMargin floaterMargins;
-    mBlock->ReflowFloater(*this, aPlaceholder, combinedArea, floaterMargins);
+    nsMargin floaterOffsets;
+    mBlock->ReflowFloater(*this, aPlaceholder, combinedArea, floaterMargins,
+                          floaterOffsets);
 
     // Because we are in the middle of reflowing a placeholder frame
     // within a line (and possibly nested in an inline frame or two
@@ -4616,7 +4657,8 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
     nsPoint origin;
-    PlaceFloater(aPlaceholder, floaterMargins, &isLeftFloater, &origin);
+    PlaceFloater(aPlaceholder, floaterMargins, floaterOffsets,
+                 &isLeftFloater, &origin);
 
     // Update the floater combined-area
     combinedArea.x += origin.x;
@@ -4783,6 +4825,7 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
 void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
                                  const nsMargin& aFloaterMargins,
+                                 const nsMargin& aFloaterOffsets,
                                  PRBool* aIsLeftFloater,
                                  nsPoint* aNewOrigin)
 {
@@ -4797,10 +4840,13 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // Get the type of floater
   const nsStyleDisplay* floaterDisplay;
   const nsStyleSpacing* floaterSpacing;
+  const nsStylePosition* floaterPosition;
   floater->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&)floaterDisplay);
   floater->GetStyleData(eStyleStruct_Spacing,
                         (const nsStyleStruct*&)floaterSpacing);
+  floater->GetStyleData(eStyleStruct_Position,
+                        (const nsStyleStruct*&)floaterPosition);
 
   // See if the floater should clear any preceeding floaters...
   if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
@@ -4869,6 +4915,12 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // translation, therefore we have to factor in our border/padding.
   nscoord x = borderPadding.left + aFloaterMargins.left + region.x;
   nscoord y = borderPadding.top + aFloaterMargins.top + region.y;
+
+  // If floater is relatively positioned, factor that in as well
+  if (NS_STYLE_POSITION_RELATIVE == floaterPosition->mPosition) {
+    x += aFloaterOffsets.left;
+    y += aFloaterOffsets.top;
+  }
   floater->MoveTo(x, y);
   if (aNewOrigin) {
     aNewOrigin->x = x;
@@ -4908,13 +4960,14 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
       // Before we can place it we have to reflow it
       nsRect combinedArea;
       nsMargin floaterMargins;
+      nsMargin floaterOffsets;
       mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
-                            floaterMargins);
+                            floaterMargins, floaterOffsets);
 
       PRBool isLeftFloater;
       nsPoint origin;
-      PlaceFloater(placeholderFrame, floaterMargins, &isLeftFloater,
-                   &origin);
+      PlaceFloater(placeholderFrame, floaterMargins, floaterOffsets,
+                   &isLeftFloater, &origin);
 
       // Update the floater combined-area
       combinedArea.x += origin.x;
@@ -4941,12 +4994,14 @@ nsBlockReflowState::PlaceCurrentLineFloaters(nsVoidArray* aFloaters)
       // Before we can place it we have to reflow it
       nsRect combinedArea;
       nsMargin floaterMargins;
+      nsMargin floaterOffsets;
       mBlock->ReflowFloater(*this, placeholderFrame, combinedArea,
-                            floaterMargins);
+                            floaterMargins, floaterOffsets);
 
       PRBool isLeftFloater;
       nsPoint origin;
-      PlaceFloater(placeholderFrame, floaterMargins, &isLeftFloater, &origin);
+      PlaceFloater(placeholderFrame, floaterMargins, floaterOffsets,
+                   &isLeftFloater, &origin);
 
       // Update the floater combined-area
       combinedArea.x += origin.x;
@@ -5402,6 +5457,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
+#if 0
 void
 nsBlockFrame::RenumberLists()
 {
@@ -5456,6 +5512,122 @@ nsBlockFrame::RenumberLists()
     block = (nsBlockFrame*) block->mNextInFlow;
   }
 }
+#endif
+
+PRBool
+nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
+{
+  const nsStyleContent* styleContent;
+  aFrame->GetStyleData(eStyleStruct_Content,
+                       (const nsStyleStruct*&) styleContent);
+  if (0 != styleContent->CounterResetCount()) {
+    // Winner
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+void
+nsBlockFrame::RenumberLists()
+{
+  if (!FrameStartsCounterScope(this)) {
+    // If this frame doesn't start a counter scope then we don't need
+    // to renumber child list items.
+    return;
+  }
+
+  // Setup initial list ordinal value
+  // XXX Map html's start property to counter-reset style
+  PRInt32 ordinal = 1;
+  nsIHTMLContent* hc;
+  if (mContent && (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**) &hc))) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE ==
+        hc->GetHTMLAttribute(nsHTMLAtoms::start, value)) {
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        ordinal = value.GetIntValue();
+        if (ordinal <= 0) {
+          ordinal = 1;
+        }
+      }
+    }
+    NS_RELEASE(hc);
+  }
+
+  // Get to first-in-flow
+  nsBlockFrame* block = this;
+  while (nsnull != block->mPrevInFlow) {
+    block = (nsBlockFrame*) block->mPrevInFlow;
+  }
+
+  RenumberListsIn(block, &ordinal);
+}
+
+void
+nsBlockFrame::RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal)
+{
+  nsresult rv;
+
+  // For each flow-block...
+  while (nsnull != aContainerFrame) {
+    // For each frame in the flow-block...
+    nsIFrame* kid;
+    aContainerFrame->FirstChild(nsnull, &kid);
+    while (nsnull != kid) {
+      // If the frame is a list-item and the frame implements our
+      // block frame API then get it's bullet and set the list item
+      // ordinal.
+      const nsStyleDisplay* display;
+      kid->GetStyleData(eStyleStruct_Display,
+                        (const nsStyleStruct*&) display);
+      if (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay) {
+        // Make certain that the frame isa block-frame in case
+        // something foriegn has crept in.
+        nsBlockFrame* listItem;
+        rv = kid->QueryInterface(kBlockFrameCID, (void**)&listItem);
+        if (NS_SUCCEEDED(rv)) {
+          if (nsnull != listItem->mBullet) {
+            *aOrdinal = listItem->mBullet->SetListItemOrdinal(*aOrdinal);
+          }
+
+          // XXX temporary? if the list-item has child list-items they
+          // should be numbered too; especially since the list-item is
+          // itself (ASSUMED!) not to be a counter-reseter.
+          RenumberListsIn(kid, aOrdinal);
+        }
+      }
+      else if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
+        if (FrameStartsCounterScope(kid)) {
+          // Don't bother recursing into a block frame that is a new
+          // counter scope. Any list-items in there will be handled by
+          // it.
+        }
+        else {
+          // If the display=block element ISA block-frame then go
+          // ahead and recurse into it as it might have child
+          // list-items.
+          nsBlockFrame* kidBlock;
+          rv = kid->QueryInterface(kBlockFrameCID, (void**) &kidBlock);
+          if (NS_SUCCEEDED(rv)) {
+            RenumberListsIn(kid, aOrdinal);
+          }
+        }
+      } else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+        // If the display=inline element ISA nsInlineFrame then go
+        // ahead and recurse into it as it might have child
+        // list-items.
+        nsInlineFrame* kidInline;
+        rv = kid->QueryInterface(nsInlineFrame::kInlineFrameCID,
+                                 (void**) &kidInline);
+        if (NS_SUCCEEDED(rv)) {
+          RenumberListsIn(kid, aOrdinal);
+        }
+      }
+      kid->GetNextSibling(&kid);
+    }
+    aContainerFrame->GetNextInFlow(&aContainerFrame);
+  }
+}
 
 void
 nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
@@ -5479,13 +5651,32 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
 
   // Place the bullet now; use its right margin to distance it
   // from the rest of the frames in the line
-  const nsMargin& bp = aState.BorderPadding();
-  nscoord x = bp.left - reflowState.computedMargin.right - aMetrics.width;
+  nscoord x = - reflowState.computedMargin.right - aMetrics.width;
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
+  const nsMargin& bp = aState.BorderPadding();
   nscoord y = bp.top;
   mBullet->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
+}
+
+void
+nsBlockFrame::PlaceBullet(nsBlockReflowState& aState)
+{
+  // First reflow the bullet
+  nsLineLayout* lineLayout = aState.mLineLayout;
+  nsHTMLReflowMetrics metrics(nsnull);
+  ReflowBullet(aState, metrics);
+  if (mLines) {
+    // If we have at least one line then let line-layout position the
+    // bullet (this way the bullet is vertically aligned properly).
+    lineLayout->AddBulletFrame(mBullet, metrics);
+  }
+  else {
+    // There are no lines so we have to fake up some y motion so that
+    // we end up with *some* height.
+    aState.mY += metrics.height;
+  }
 }
 
 //XXX get rid of this -- its slow

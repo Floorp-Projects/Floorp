@@ -266,7 +266,8 @@ protected:
   nsresult ReflowFloater(nsBlockReflowState& aState,
                          nsPlaceholderFrame* aPlaceholder,
                          nsRect& aCombinedRect,
-                         nsMargin& aMarginResult);
+                         nsMargin& aMarginResult,
+                         nsMargin& aComputedOffsetsResult);
 
   //----------------------------------------
   // Methods for pushing/pulling lines/frames
@@ -317,12 +318,23 @@ protected:
 
   void BuildFloaterList();
 
+  //----------------------------------------
+  // List handling kludge
+
   void RenumberLists();
+
+  void RenumberListsIn(nsIFrame* aContainerFrame, PRInt32* aOrdinal);
+
+  PRBool FrameStartsCounterScope(nsIFrame* aFrame);
 
   void UpdateBulletPosition();
 
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
+
+  void PlaceBullet(nsBlockReflowState& aState);
+
+  //----------------------------------------
 
   nsIFrame* LastChild();
 
