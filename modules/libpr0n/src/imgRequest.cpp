@@ -634,6 +634,9 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = 0; i < count; i++) {
     imgRequestProxy *proxy = NS_STATIC_CAST(imgRequestProxy*, mObservers[i]);
+    /* calling OnStopRequest may result in the death of |proxy| so don't use the
+       pointer after this call.
+     */
     if (proxy) proxy->OnStopRequest(aRequest, ctxt, status);
   }
 
