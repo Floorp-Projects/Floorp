@@ -19,12 +19,6 @@ DEPTH = ../..
 
 include $(DEPTH)/config/config.mk
 
-# Rhapsody is using a copy of the viewer source
-# as a starting point for the ybfe.
-ifeq ($(OS_ARCH),Rhapsody)
-DIRS = $(DEPTH)/cmd/ybfe
-else
 DIRS = viewer 
-endif
 
 include $(DEPTH)/config/rules.mk
