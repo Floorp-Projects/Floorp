@@ -1099,10 +1099,15 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
                                         RowReflowState& aReflowState,
                                         nsIFrame*       aKidFrame,
                                         nscoord&        aMaxCellTopMargin,
-                                        nscoord&        aMaxCellBottomMargin)
+                                        nscoord&        aMaxCellBottomMargin,
+                                        nsSize*         aMaxElementSize)
 {
   // Initialize OUT parameters
   aMaxCellTopMargin = aMaxCellBottomMargin = 0;
+  if (aMaxElementSize) {
+    aMaxElementSize->width = 0;
+    aMaxElementSize->height = 0;
+  }
 
   // Walk the child frames (except aKidFrame) and find the table cell frames
   for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
@@ -1146,11 +1151,16 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
           }
         }
 
-        // XXX We also need to recover the max element size if requested by the
-        // caller...
-        //
-        // We should be using GetReflowMetrics() to get information from the
-        // table cell, and that will include the max element size...
+        // Recover the max element size if requested
+        if (aMaxElementSize) {
+          PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame*)frame);
+          nsSize  kidMaxElementSize = ((nsTableCellFrame *)frame)->GetPass1MaxElementSize();
+
+          aMaxElementSize->width += kidMaxElementSize.width;
+          if (1 == rowSpan) {
+            aMaxElementSize->height = PR_MAX(aMaxElementSize->height, kidMaxElementSize.height);
+          }
+        }
       }
     }
   }
@@ -1266,7 +1276,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
   {
     // Recover our reflow state
     nscoord maxCellTopMargin, maxCellBottomMargin;
-    RecoverState(aPresContext, aReflowState, aNextFrame, maxCellTopMargin, maxCellBottomMargin);
+    RecoverState(aPresContext, aReflowState, aNextFrame, maxCellTopMargin,
+                 maxCellBottomMargin, aDesiredSize.maxElementSize);
 
     // Get the frame's margins
     nsMargin  kidMargin;
@@ -1292,11 +1303,11 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     nsSize  kidAvailSize(cellAvailWidth, NS_UNCONSTRAINEDSIZE);
 
     // Pass along the reflow command
-    nsSize          kidMaxElementSize;
+    nsSize              kidMaxElementSize;
     nsHTMLReflowMetrics desiredSize(&kidMaxElementSize);
-    nsHTMLReflowState kidReflowState(aPresContext,
-                                     aReflowState.reflowState,
-                                     aNextFrame, kidAvailSize);
+    nsHTMLReflowState   kidReflowState(aPresContext,
+                                       aReflowState.reflowState,
+                                       aNextFrame, kidAvailSize);
 
     // Remember the current desired size, we'll need it later
     nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
@@ -1392,7 +1403,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
     aDesiredSize.width = aReflowState.availSize.width;
-    aDesiredSize.height = aReflowState.maxCellVertSpace;   
+    aDesiredSize.height = aReflowState.maxCellVertSpace;
   }
   else
   { // pass reflow to unknown frame child
@@ -1465,6 +1476,12 @@ nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
   case eReflowReason_Incremental:
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
     break;
+  }
+
+  // If we computed our max element element size, then cache it so we can return
+  // it later when asked
+  if (aDesiredSize.maxElementSize) {
+    mMaxElementSize = *aDesiredSize.maxElementSize;
   }
 
   if (nsDebugTable::gRflRow) nsTableFrame::DebugReflow("TR::Rfl ex", this, nsnull, &aDesiredSize);

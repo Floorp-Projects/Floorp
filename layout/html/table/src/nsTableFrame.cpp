@@ -1968,6 +1968,7 @@ PRBool nsTableFrame::NeedsReflow(const nsHTMLReflowState& aReflowState)
 nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                                  InnerTableReflowState& aReflowState,
                                                  nsIFrame*              aKidFrame,
+                                                 nsSize*                aMaxElementSize,
                                                  nscoord                aDeltaY)
 {
   NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
@@ -1993,6 +1994,25 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext&        aPresCon
   
       // Adjust the running y-offset
       aReflowState.y += kidRect.height;
+
+      // Update the max element size
+      //XXX: this should call into layout strategy to get the width field
+      if (aMaxElementSize) 
+      {
+        const nsStyleSpacing* tableSpacing;
+        GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
+        nsMargin borderPadding;
+        GetTableBorder (borderPadding); // gets the max border thickness for each edge
+        nsMargin padding;
+        tableSpacing->GetPadding(padding);
+        borderPadding += padding;
+        nscoord cellSpacing = GetCellSpacingX();
+        nsSize  kidMaxElementSize;
+        ((nsTableRowGroupFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
+        nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
+        aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
+        aMaxElementSize->height += kidMaxElementSize.height;
+      }
   
       // Adjust the y-origin if its position actually changed
       if (aDeltaY != 0) {
@@ -3131,7 +3151,8 @@ NS_METHOD nsTableFrame::IR_StyleChanged(nsIPresContext&        aPresContext,
 // data member does not include the table's border/padding...
 nsresult
 nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
-                           nsIFrame*              aKidFrame)
+                           nsIFrame*              aKidFrame,
+                           nsSize*                aMaxElementSize)
 {
   // Walk the list of children looking for aKidFrame
   for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
@@ -3173,6 +3194,25 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
     if (frame != aReflowState.footerFrame) {
       aReflowState.y += kidSize.height;
     }
+
+    // Update the max element size
+    //XXX: this should call into layout strategy to get the width field
+    if (nsnull != aMaxElementSize) 
+    {
+      const nsStyleSpacing* tableSpacing;
+      GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
+      nsMargin borderPadding;
+      GetTableBorder (borderPadding); // gets the max border thickness for each edge
+      nsMargin padding;
+      tableSpacing->GetPadding(padding);
+      borderPadding += padding;
+      nscoord cellSpacing = GetCellSpacingX();
+      nsSize  kidMaxElementSize;
+      ((nsTableRowGroupFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
+      nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
+      aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidWidth); 
+      aMaxElementSize->height += kidMaxElementSize.height;
+    }
   }
 
   return NS_OK;
@@ -3187,14 +3227,16 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
 {
   nsresult rv;
   // Recover the state as if aNextFrame is about to be reflowed
-  RecoverState(aReflowState, aNextFrame);
+  RecoverState(aReflowState, aNextFrame, aDesiredSize.maxElementSize);
 
   // Remember the old rect
   nsRect  oldKidRect;
   aNextFrame->GetRect(oldKidRect);
 
   // Pass along the reflow command
-  nsHTMLReflowMetrics desiredSize(nsnull);
+  nsSize               kidMaxElementSize;
+  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize
+                                                              : nsnull);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                    aNextFrame, aReflowState.availSize);
 
@@ -3216,12 +3258,30 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
     aReflowState.availSize.height -= kidRect.height;
   }
 
+  // Update the max element size
+  //XXX: this should call into layout strategy to get the width field
+  if (nsnull != aDesiredSize.maxElementSize) 
+  {
+    const nsStyleSpacing* tableSpacing;
+    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
+    nsMargin borderPadding;
+    GetTableBorder (borderPadding); // gets the max border thickness for each edge
+    nsMargin padding;
+    tableSpacing->GetPadding(padding);
+    borderPadding += padding;
+    nscoord cellSpacing = GetCellSpacingX();
+    nscoord kidWidth = kidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
+    aDesiredSize.maxElementSize->width = PR_MAX(aDesiredSize.maxElementSize->width, kidWidth); 
+    aDesiredSize.maxElementSize->height += kidMaxElementSize.height;
+  }
+
   // If the column width info is valid, then adjust the row group frames
   // that follow. Otherwise, return and we'll recompute the column widths
   // and reflow all the row group frames
   if (!NeedsReflow(aReflowState.reflowState)) {
     // Adjust the row groups that follow
-    AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, desiredSize.height -
+    AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+                              aDesiredSize.maxElementSize, desiredSize.height -
                               oldKidRect.height);
     
     // Return our size and our status

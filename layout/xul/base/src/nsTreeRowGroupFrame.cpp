@@ -628,7 +628,7 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
   if (aNextFrame && (aNextFrame == mScrollbar)) {
     nsresult rv;
     // Recover the state as if aNextFrame is about to be reflowed
-    RecoverState(aReflowState, aNextFrame);
+    RecoverState(aReflowState, aNextFrame, aDesiredSize.maxElementSize);
 
     // Remember the old rect
     nsRect  oldKidRect;

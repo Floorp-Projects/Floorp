@@ -794,19 +794,27 @@ nsresult
 nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContext,
                                                 RowGroupReflowState& aReflowState,
                                                 nsIFrame*            aKidFrame,
+                                                nsSize*              aMaxElementSize,
                                                 nscoord              aDeltaY)
 {
   NS_PRECONDITION(NS_UNCONSTRAINEDSIZE == aReflowState.reflowState.availableHeight,
                   "we're not in galley mode");
   nsIFrame* lastKidFrame = aKidFrame;
 
-  if (aDeltaY != 0) {
-    // Move the frames that follow aKidFrame by aDeltaY
-    nsIFrame* kidFrame;
+  // Move the frames that follow aKidFrame by aDeltaY and update the max element
+  // size
+  nsIFrame* kidFrame;
+  for (aKidFrame->GetNextSibling(&kidFrame); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+    // Update the max element size
+    if (aMaxElementSize) {
+      nsSize kidMaxElementSize;
+      ((nsTableRowFrame*)kidFrame)->GetMaxElementSize(kidMaxElementSize);
+      
+      aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
+    }
 
-    GetNextFrame(aKidFrame, &kidFrame);
-
-    while (nsnull != kidFrame) {
+    // Move the frame if we need to
+    if (aDeltaY != 0) {
       nsPoint origin;
   
       // Adjust the y-origin
@@ -819,16 +827,12 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContex
       if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
         htmlReflow->WillReflow(aPresContext);
       }
+      
       kidFrame->MoveTo(origin.x, origin.y);
-
-      // Get the next frame
-      lastKidFrame = kidFrame;
-      GetNextFrame(kidFrame, &kidFrame);
     }
 
-  } else {
-    // Get the last frame
-    lastKidFrame = GetLastFrame();
+    // Remember the last frame
+    lastKidFrame = kidFrame;
   }
 
   // Update our running y-offset to reflect the bottommost child
@@ -1071,6 +1075,12 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
+  // If we computed our max element element size, then cache it so we can return
+  // it later when asked
+  if (aDesiredSize.maxElementSize) {
+    mMaxElementSize = *aDesiredSize.maxElementSize;
+  }
+  
   if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl ex", this, nsnull, &aDesiredSize);
   return rv;
 }
@@ -1401,7 +1411,8 @@ NS_METHOD nsTableRowGroupFrame::GetHeightOfRows(nscoord& aResult)
 // - firstRow
 nsresult
 nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
-                                   nsIFrame*            aKidFrame)
+                                   nsIFrame*            aKidFrame,
+                                   nsSize*              aMaxElementSize)
 {
   // Walk the list of children looking for aKidFrame
   for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
@@ -1420,20 +1431,20 @@ nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
     }
 
     // Update the maximum element size
-    if (aReflowState.firstRow) {
-      aReflowState.firstRow = PR_FALSE;
-      // XXX Today you can't ask for max-element-size when doing an
-      // incremental reflow
-#if 0
-      if (aMaxElementSize) {
-        aMaxElementSize->width = aKidMaxElementSize.width;
-        aMaxElementSize->height = aKidMaxElementSize.height;
+    if (aMaxElementSize) {
+      // Get the row frame's cached max element size
+      nsSize kidMaxElementSize;
+      ((nsTableRowFrame*)frame)->GetMaxElementSize(kidMaxElementSize);
+    
+      if (aReflowState.firstRow) {
+        aMaxElementSize->width = kidMaxElementSize.width;
+        aMaxElementSize->height = kidMaxElementSize.height;
+      } else {
+        aMaxElementSize->width = PR_MAX(aMaxElementSize->width, kidMaxElementSize.width);
       }
-
-    } else if (aMaxElementSize) {
-        aMaxElementSize->width = PR_MAX(aMaxElementSize->width, aKidMaxElementSize.width);
-#endif
     }
+
+    aReflowState.firstRow = PR_FALSE;
   }
 
   return NS_OK;
@@ -1448,7 +1459,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
 {
   nsresult rv;
   // Recover the state as if aNextFrame is about to be reflowed
-  RecoverState(aReflowState, aNextFrame);
+  RecoverState(aReflowState, aNextFrame, aDesiredSize.maxElementSize);
 
   // Remember the old rect
   nsRect  oldKidRect;
@@ -1457,15 +1468,15 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
   // Pass along the reflow command
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState.reflowState,
                                      aNextFrame, aReflowState.availSize);
-  nsHTMLReflowMetrics desiredSize(nsnull);
+  nsSize              kidMaxElementSize;
+  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
   // Place the row frame
-  nsSize  kidMaxElementSize;
   nsRect  kidRect(0, aReflowState.y, desiredSize.width, desiredSize.height);
-  PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect, nsnull,
-             kidMaxElementSize);
+  PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect,
+             aDesiredSize.maxElementSize, kidMaxElementSize);
 
   // See if the table needs a reflow (e.g., if the column widths have
   // changed). If so, just return and don't bother adjusting the rows
@@ -1479,14 +1490,16 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
       ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
       
       // Adjust the frames that follow...
-      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, desiredSize.height -
-                                oldKidRect.height);
+      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+                                aDesiredSize.maxElementSize,
+                                desiredSize.height - oldKidRect.height);
       aDesiredSize.height = aReflowState.y;
     
     } else {
       // Adjust the frames that follow...
-      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame, desiredSize.height -
-                                oldKidRect.height);
+      AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
+                                aDesiredSize.maxElementSize,
+                                desiredSize.height - oldKidRect.height);
   
       // Now recalculate the row heights
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);

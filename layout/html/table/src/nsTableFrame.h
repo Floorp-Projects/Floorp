@@ -550,10 +550,12 @@ protected:
   NS_IMETHOD AdjustSiblingsAfterReflow(nsIPresContext&        aPresContext,
                                        InnerTableReflowState& aReflowState,
                                        nsIFrame*              aKidFrame,
+                                       nsSize*                aMaxElementSize,
                                        nscoord                aDeltaY);
   
   nsresult RecoverState(InnerTableReflowState& aReflowState,
-                        nsIFrame*              aKidFrame);
+                        nsIFrame*              aKidFrame,
+                        nsSize*                aMaxElementSize);
 
   NS_METHOD AdjustForCollapsingRowGroup(nsIFrame* aRowGroupFrame, 
                                         PRInt32& aRowX);
