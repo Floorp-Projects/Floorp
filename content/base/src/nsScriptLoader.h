@@ -29,7 +29,7 @@
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIURI.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIDocument.h"
 #include "nsIStreamLoader.h"
 
@@ -67,8 +67,8 @@ protected:
   void ProcessPendingReqests();
 
   nsIDocument* mDocument;                   // [WEAK]
-  nsSupportsArray mObservers;
-  nsSupportsArray mPendingRequests;
+  nsCOMArray<nsIScriptLoaderObserver> mObservers;
+  nsCOMArray<nsScriptLoadRequest> mPendingRequests;
   PRBool mEnabled;
 };
 
