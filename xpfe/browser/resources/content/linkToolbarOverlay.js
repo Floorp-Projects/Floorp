@@ -76,6 +76,17 @@ function(event)
   linkToolbarHandler.clearAllItems();
 }
 
+LinkToolbarUI.prototype.tabSelected =
+function(event)
+{
+  if (event.originalTarget.localName != "tabs" ||
+      !linkToolbarUI.isLinkToolbarEnabled())
+    return;
+
+  linkToolbarHandler.clearAllItems();
+  linkToolbarUI.fullSlowRefresh();
+}
+
 LinkToolbarUI.prototype.fullSlowRefresh =
 function()
 {
@@ -216,6 +227,8 @@ function()
   if (linkToolbarUI.isLinkToolbarEnabled())
   {
     if (!linkToolbarUI.addHandlerActive) {
+      contentArea.addEventListener("select", linkToolbarUI.tabSelected,
+                                   false);
       contentArea.addEventListener("DOMLinkAdded", linkToolbarUI.linkAdded,
                                    true);
       linkToolbarUI.addHandlerActive = true;
@@ -223,6 +236,8 @@ function()
   } else
   {
     if (linkToolbarUI.addHandlerActive) {
+      contentArea.removeEventListener("select", linkToolbarUI.tabSelected,
+                                      false);
       contentArea.removeEventListener("DOMLinkAdded", linkToolbarUI.linkAdded,
                                       true);
       linkToolbarUI.addHandlerActive = false;
