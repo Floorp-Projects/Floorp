@@ -684,6 +684,7 @@ SECMOD_CanDeleteInternalModule;
 ;+    global:
 PK11_GetPBEIV;
 PK11_SaveContextAlloc;
+CERT_VerifyCertChain;
 ;+    local:
 ;+       *;
 ;+};

@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.15 2002/03/14 04:12:11 wtc%netscape.com Exp $
+ * $Id: cert.h,v 1.16 2002/06/19 15:58:22 rangansen%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -547,6 +547,11 @@ CERT_VerifyCert(CERTCertDBHandle *handle, CERTCertificate *cert,
 extern SECStatus
 CERT_VerifyCertNow(CERTCertDBHandle *handle, CERTCertificate *cert,
 		   PRBool checkSig, SECCertUsage certUsage, void *wincx);
+
+SECStatus
+CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
+		     PRBool checkSig, SECCertUsage certUsage, int64 t,
+		     void *wincx, CERTVerifyLog *log);
 
 /*
 ** This must only be called on a cert that is known to have an issuer
