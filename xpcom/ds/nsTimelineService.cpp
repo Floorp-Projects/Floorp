@@ -57,7 +57,7 @@ static PRFileDesc *timelineFD = PR_STDERR;
 static PRHashTable *timers;
 static PRLock *timerLock;
 static int indent;
-static PRBool gTimelineDisabled = PR_FALSE;
+static PRBool gTimelineDisabled = PR_TRUE;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsTimelineService, nsITimelineService)
@@ -224,8 +224,8 @@ static void TimelineInit(void)
     }
 
     // Runtime disable of timeline
-    if (PR_GetEnv("NS_TIMELINE_DISABLE"))
-        gTimelineDisabled = PR_TRUE;
+    if (PR_GetEnv("NS_TIMELINE_ENABLE"))
+        gTimelineDisabled = PR_FALSE;
 }
 
 static void ParseTime(PRTime tm, PRInt32& secs, PRInt32& msecs)
