@@ -1776,7 +1776,7 @@ NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString,
       {
       // for non-DEBUG builds, tuck xul errors under the rug, and
       // only show those originating from content.
-#ifdef DEBUG;
+#ifdef DEBUG
       showAlert = PR_TRUE;
 #else
       showAlert = PR_FALSE;
