@@ -67,4 +67,9 @@ interface nsIHTMLDocShell : nsISupports
 	Commented out as nsCharsetSource should be something IDL like
 	void GetCharacterSetHint(in wstring hintCharset, in nsCharsetSource charsetSource);
 	*/
+
+	/**
+	* Tell the window to shrink-to-fit or grow-to-fit its contents
+	*/
+	void sizeToContent();
 };
