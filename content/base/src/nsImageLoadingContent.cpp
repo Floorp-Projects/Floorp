@@ -66,11 +66,17 @@
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
 
+// Statics
+imgILoader* nsImageLoadingContent::sImgLoader = nsnull;
+nsIIOService* nsImageLoadingContent::sIOService = nsnull;
+
 nsImageLoadingContent::nsImageLoadingContent()
   : mObserverList(nsnull),
     mLoadingEnabled(PR_TRUE),
     mImageIsBlocked(PR_FALSE)
 {
+  if (!sImgLoader)
+    mLoadingEnabled = PR_FALSE;
 }
 
 nsImageLoadingContent::~nsImageLoadingContent()
@@ -84,6 +90,23 @@ nsImageLoadingContent::~nsImageLoadingContent()
   }
   NS_ASSERTION(!mObserverList.mObserver && !mObserverList.mNext,
                "Observers still registered?");
+}
+
+void
+nsImageLoadingContent::Initialize()
+{
+  // If this fails, NS_NewURI will try to get the service itself
+  CallGetService("@mozilla.org/network/io-service;1", &sIOService);
+
+  // Ignore failure and just don't load images
+  CallGetService("@mozilla.org/image/loader;1", &sImgLoader);
+}
+
+void
+nsImageLoadingContent::Shutdown()
+{
+  NS_IF_RELEASE(sImgLoader);
+  NS_IF_RELEASE(sIOService);
 }
 
 // Macro to call some func on each observer.  This handles observers
@@ -200,7 +223,8 @@ nsImageLoadingContent::GetLoadingEnabled(PRBool *aLoadingEnabled)
 NS_IMETHODIMP
 nsImageLoadingContent::SetLoadingEnabled(PRBool aLoadingEnabled)
 {
-  mLoadingEnabled = aLoadingEnabled;
+  if (sImgLoader)
+    mLoadingEnabled = aLoadingEnabled;
   return NS_OK;
 }
 
@@ -323,23 +347,21 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   
   NS_ENSURE_ARG_POINTER(aChannel);
 
+  if (!sImgLoader)
+    return NS_ERROR_NULL_POINTER;
+
   // XXX what should we do with content policies here, if anything?
   // Shouldn't that be done before the start of the load?
   
-  // Get the image loader...
-  nsresult rv;
-  nsCOMPtr<imgILoader> loader = do_GetService("@mozilla.org/image/loader;1", &rv);
-  NS_ENSURE_TRUE(loader, rv);
-
   nsCOMPtr<nsIDocument> doc;
-  rv = GetOurDocument(getter_AddRefs(doc));
+  nsresult rv = GetOurDocument(getter_AddRefs(doc));
   NS_ENSURE_TRUE(doc, rv);
 
   CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED);
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
 
-  return loader->LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
+  return sImgLoader->LoadImageWithChannel(aChannel, this, doc, aListener, getter_AddRefs(req));
 }
 
 // XXX This should be a protected method, not an interface method!!!
@@ -380,10 +402,6 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   NS_ENSURE_SUCCESS(rv, rv);
 
   
-  // Now get the image loader...
-  nsCOMPtr<imgILoader> loader = do_GetService("@mozilla.org/image/loader;1", &rv);
-  NS_ENSURE_TRUE(loader, rv);
-
   // If we'll be loading a new image, we want to cancel our existing
   // requests; the question is what reason to pass in.  If everything
   // is going smoothly, that reason should be
@@ -422,16 +440,16 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
-  rv = loader->LoadImage(imageURI,                /* uri to load */
-                         documentURI,             /* initialDocumentURI */
-                         documentURI,             /* referrer */
-                         loadGroup,               /* loadgroup */
-                         this,                    /* imgIDecoderObserver */
-                         doc,                     /* uniquification key */
-                         nsIRequest::LOAD_NORMAL, /* load flags */
-                         nsnull,                  /* cache key */
-                         nsnull,                  /* existing request*/
-                         getter_AddRefs(req));
+  rv = sImgLoader->LoadImage(imageURI,                /* uri to load */
+                             documentURI,             /* initialDocumentURI */
+                             documentURI,             /* referrer */
+                             loadGroup,               /* loadgroup */
+                             this,                    /* imgIDecoderObserver */
+                             doc,                     /* uniquification key */
+                             nsIRequest::LOAD_NORMAL, /* load flags */
+                             nsnull,                  /* cache key */
+                             nsnull,                  /* existing request*/
+                             getter_AddRefs(req));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -593,7 +611,8 @@ nsImageLoadingContent::StringToURI(const nsACString& aSpec,
   return NS_NewURI(aURI,
                    aSpec,
                    charset.IsEmpty() ? nsnull : NS_ConvertUCS2toUTF8(charset).get(),
-                   baseURL);
+                   baseURL,
+                   sIOService);
 }
 
 
