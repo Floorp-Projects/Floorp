@@ -312,14 +312,8 @@ nsGlobalHistory::MatchExpiration(nsIMdbRow *row, PRInt64* expirationDate)
   // hidden and typed urls always match because they're invalid,
   // so we want to expire them asap.  (if they were valid, they'd
   // have been unhidden -- see AddExistingPageToDatabase)
-  PRInt32 isTyped = 0;
-  rv = GetRowValue(row, kToken_TypedColumn, &isTyped);
-  if (NS_SUCCEEDED(rv) && isTyped) {
-    PRInt32 isHidden = 0;
-    rv = GetRowValue(row, kToken_HiddenColumn, &isHidden);
-    if (NS_SUCCEEDED(rv) && isHidden)
-      return PR_TRUE;
-  }
+  if (HasCell(mEnv, row, kToken_HiddenColumn) && HasCell(mEnv, row, kToken_TypedColumn))
+    return PR_TRUE;
 
   PRInt64 lastVisitedTime;
   rv = GetRowValue(row, kToken_LastVisitDateColumn, &lastVisitedTime);
@@ -685,10 +679,10 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
     
     rv = NotifyAssert(kNC_HistoryRoot, kNC_child, url);
     if (NS_FAILED(rv)) return rv;
+    
+    NotifyFindAssertions(url, row);
   }
-
-  NotifyFindAssertions(url, row);
-  
+ 
   SetDirty();
   
   return rv;
@@ -705,10 +699,8 @@ nsGlobalHistory::AddExistingPageToDatabase(nsIMdbRow *row,
   
   // if the page was typed, unhide it now because it's
   // known to be valid
-  PRInt32 isTyped;
-  rv = GetRowValue(row, kToken_TypedColumn, &isTyped);
-  if (NS_SUCCEEDED(rv) && isTyped)
-    SetRowValue(row, kToken_HiddenColumn, 0);
+  if (HasCell(mEnv, row, kToken_TypedColumn))
+    row->CutColumn(mEnv, kToken_HiddenColumn);
 
   // Update last visit date.
   // First get the old date so we can update observers...
@@ -3697,7 +3689,6 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
 
       const char* startPtr;
       PRInt32 yarnLength = yarn.mYarn_Fill;
-
       // account for null strings
       if (yarn.mYarn_Buf)
         startPtr = (const char *)yarn.mYarn_Buf;
@@ -3711,8 +3702,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       nsASingleFragmentCString::const_iterator start, end;
       rowVal.BeginReading(start);
       rowVal.EndReading(end);
-      
-      // is the cell in unicode or not? Hmm...let's assume so?
+  
       NS_ConvertUCS2toUTF8 utf8Value(term->text);
       
       if (term->method.Equals("is")) {
