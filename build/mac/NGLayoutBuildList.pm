@@ -1116,6 +1116,7 @@ sub MakeResourceAliases()
 	 my($navigator_chrome_dir) = "$chrome_dir" . "Navigator";
     _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",             "$navigator_chrome_dir:content:default");
     _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                "$navigator_chrome_dir:skin:default");
+	_InstallResources("mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",		"$navigator_chrome_dir:locale:en-US:", 0);
 
 	 my($global_chrome_dir) = "$chrome_dir" . "Global";
     _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",			"$global_chrome_dir:content:default");
