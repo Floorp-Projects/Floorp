@@ -39,7 +39,8 @@
 #define nsOEAddressIterator_h___
 
 #include "WabObject.h"
-#include "nsAddrDatabase.h"
+#include "nsIAddrDatabase.h"
+#include "mdb.h"
 #include "nsString.h"
 
 class nsOEAddressIterator : public CWabIterator {

@@ -42,7 +42,7 @@
 #include "nsString.h"
 #include "nsAbIPCCard.h"
 #include "nsIAbCard.h"
-#include "nsAddrDatabase.h"
+#include "nsIAddrDatabase.h"
 #include "nsILocalFile.h"
 #include "nsIAbDirectory.h"
 

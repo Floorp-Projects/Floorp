@@ -39,7 +39,8 @@
 #include "nsCOMPtr.h"
 #include "nsEudoraAddress.h"
 
-#include "nsAddrDatabase.h"
+#include "nsIAddrDatabase.h"
+#include "mdb.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIServiceManager.h"

@@ -41,7 +41,6 @@
 #include "nsAbIPCCard.h"
 #include "nsUnicharUtils.h"
 #include "nsAbMDBCard.h"
-#include "nsAddrDatabase.h"
 #include "prdtoa.h"
 #include "PalmSyncImp.h"
 
