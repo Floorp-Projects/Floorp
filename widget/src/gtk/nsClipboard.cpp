@@ -37,6 +37,7 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 
+#include "nsTextFormatter.h"
 #include "nsVoidArray.h"
 
 
@@ -665,8 +666,33 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
   switch (type)
   {
-  case GDK_TARGET_STRING:
   case TARGET_UTF8:
+    {
+      mSelectionData = *aSD;
+
+      static const PRUnichar unicodeFormatter[] = {
+        (PRUnichar)'%',
+        (PRUnichar)'s',
+        (PRUnichar)0,
+      };
+      // convert aSD->data (UTF8) to Unicode and place the unicode data in mSelectionData.data
+      PRUnichar *unicodeString = nsTextFormatter::smprintf(unicodeFormatter, aSD->data);
+
+      if (!unicodeString) // this would be bad wouldn't it?
+        return;
+
+      int len = sizeof(unicodeString);
+      mSelectionData.data = g_new(guchar, len + 2);
+      memcpy(mSelectionData.data,
+             unicodeString,
+             len);
+      nsTextFormatter::smprintf_free(unicodeString);
+      mSelectionData.type = TARGET_TEXT_UNICODE;
+      mSelectionData.length = len;
+    }
+    break;
+
+  case GDK_TARGET_STRING:
   case TARGET_TEXT_PLAIN:
   case TARGET_TEXT_XIF:
   case TARGET_TEXT_UNICODE:

@@ -687,8 +687,8 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
 {
-  nsIFontMetrics *fontMetrics;
-  mContext->GetMetricsFor(aFont, fontMetrics);
+  nsCOMPtr<nsIFontMetrics> fontMetrics;
+  mContext->GetMetricsFor(aFont, *getter_AddRefs(fontMetrics));
 
   if (!fontMetrics)
     return NS_ERROR_FAILURE;
@@ -699,15 +699,12 @@ NS_IMETHODIMP nsWidget::SetFont(const nsFont &aFont)
     // FIXME avoid fontset problems....
     if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET) {
       g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
-      NS_RELEASE(fontMetrics);
       return NS_ERROR_FAILURE;
     }
 
     if (mWidget) 
       SetFontNative((GdkFont *)fontHandle);
   }
-
-  NS_RELEASE(fontMetrics);
 
   return NS_OK;
 }

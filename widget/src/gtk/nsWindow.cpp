@@ -530,8 +530,7 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
             aX, aY, aWidth, aHeight);
   }
 #endif // NS_DEBUG
-  if (mEventCallback) 
-  {
+  if (mEventCallback) {
 
     nsPaintEvent event;
     nsRect rect(aX, aY, aWidth, aHeight);
@@ -547,19 +546,8 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     event.region = nsnull;
     
     event.renderingContext = GetRenderingContext();
-    if (event.renderingContext)
-    {
-      PRBool rv;
-      
-      if (aClipRegion != nsnull)
-        event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *aClipRegion),
-                                              nsClipCombine_kReplace, rv);
-      else
-      {
-        nsRect clipRect (aX, aY, aWidth, aHeight);
-        event.renderingContext->SetClipRect(clipRect,
-                                            nsClipCombine_kReplace, rv);
-      }
+    if (event.renderingContext) {
+
 #ifdef NS_DEBUG
       if (WANT_PAINT_FLASHING)
       {
@@ -601,28 +589,41 @@ NS_IMETHODIMP nsWindow::Update(void)
     UnqueueDraw();
 
   if (!mUpdateArea->IsEmpty()) {
-    nsRegionRectSet *regionRectSet = nsnull;
 
-    if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
-      return NS_ERROR_FAILURE;
+    PRUint32 numRects;
+    mUpdateArea->GetNumRects(&numRects);
 
-    PRUint32 len;
-    PRUint32 i;
+    // if we have 1 or more than 10 rects, just paint the bounding box otherwise
+    // lets paint each rect by itself
 
-    len = regionRectSet->mRectsLen;
+    if (numRects != 1 && numRects < 10) {
+      nsRegionRectSet *regionRectSet = nsnull;
 
-    for (i=0;i<len;++i)
-    {
-      nsRegionRect *r = &(regionRectSet->mRects[i]);
-      DoPaint (r->x, r->y, r->width, r->height, mUpdateArea);
+      if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
+        return NS_ERROR_FAILURE;
+
+      PRUint32 len;
+      PRUint32 i;
+      
+      len = regionRectSet->mRectsLen;
+      
+      for (i=0;i<len;++i) {
+        nsRegionRect *r = &(regionRectSet->mRects[i]);
+        DoPaint (r->x, r->y, r->width, r->height, mUpdateArea);
+      }
+      
+      mUpdateArea->FreeRects(regionRectSet);
+      
+      mUpdateArea->SetTo(0, 0, 0, 0);
+      return NS_OK;
+    } else {
+      PRInt32 x, y, w, h;
+      mUpdateArea->GetBoundingBox(&x, &y, &w, &h);
+      DoPaint (x, y, w, h, mUpdateArea);
+      mUpdateArea->SetTo(0, 0, 0, 0);
     }
 
-    mUpdateArea->FreeRects(regionRectSet);
-
-    mUpdateArea->SetTo(0, 0, 0, 0);
-    return NS_OK;
-  }
-  else {
+  } else {
     //  g_print("nsWidget::Update(this=%p): avoided update of empty area\n", this);
   }
 
@@ -636,9 +637,10 @@ NS_IMETHODIMP nsWindow::Update(void)
   if (children) {
     nsCOMPtr<nsISupports> isupp;
 
+    nsCOMPtr<nsIWidget> child;
     while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))) && isupp) {
 
-      nsCOMPtr<nsIWidget> child = do_QueryInterface(isupp);
+      child = do_QueryInterface(isupp);
 
       if (child) {
         child->Update();
@@ -682,9 +684,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
       gdk_cursor_destroy(cursor);
     }
   } else {
-#ifdef DEBUG_pavlov
-    printf("ungrabbing widget\n");
-#endif
     // make sure that the grab window is marked as released
     if (mGrabWindow == this) {
       mGrabWindow = NULL;
@@ -734,7 +733,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 
   if (!mSuperWin)
     return NS_OK;
-  
+
   mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
 
   if (aIsSynchronous)
@@ -1869,19 +1868,19 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
       nsAutoString charset("");
       result = platform->GetCharset(kPlatformCharsetSel_WindowManager, charset);
       if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
-	NS_WITH_SERVICE(nsICharsetConverterManager, manager,
-	  NS_CHARSETCONVERTERMANAGER_PROGID, &result);
-	if (manager && NS_SUCCEEDED(result)) {
-	  result = manager->GetUnicodeEncoder(&charset, &converter);
-	  if (NS_FAILED(result) && converter) {
-	    NS_RELEASE(converter);
-	    converter = nsnull;
-	  }
-	  else if (converter) {
-	    result = converter->SetOutputErrorBehavior(
-	      nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-	  }
-	}
+        NS_WITH_SERVICE(nsICharsetConverterManager, manager,
+                        NS_CHARSETCONVERTERMANAGER_PROGID, &result);
+        if (manager && NS_SUCCEEDED(result)) {
+          result = manager->GetUnicodeEncoder(&charset, &converter);
+          if (NS_FAILED(result) && converter) {
+            NS_RELEASE(converter);
+            converter = nsnull;
+          }
+          else if (converter) {
+            result = converter->SetOutputErrorBehavior(
+                                                       nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+          }
+        }
       }
     }
     NS_ASSERTION(converter, "cannot get convert for window title");
@@ -1894,7 +1893,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     PRInt32 srcLen = aTitle.Length() + 1;
     PRInt32 destLen = sizeof(titleStr) - 1;
     result = converter->Convert(aTitle.GetUnicode(), &srcLen, titleStr,
-      &destLen);
+                                &destLen);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot convert title string");
     if (titleStr[0] && NS_SUCCEEDED(result)) {
       titleStr[destLen] = 0;
@@ -2021,7 +2020,7 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
   
   if (event.rect->width == 0 || event.rect->height == 0)
   {
-    //printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
+    //    printf("********\n****** got an expose for 0x0 window?? - ignoring paint for 0x0\n");
     NS_RELEASE(aTimer);
     mExposeTimer = nsnull;
     delete event.rect;
@@ -2041,13 +2040,7 @@ NS_IMETHODIMP_(void) nsWindow::Notify(nsITimer* aTimer)
 #endif // NS_DEBUG
 
   event.renderingContext = GetRenderingContext();
-  if (event.renderingContext)
-  {
-    PRBool rv;
-      
-    event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
-                                          nsClipCombine_kReplace, rv);
-    
+  if (event.renderingContext) {
     DispatchWindowEvent(&event);
     NS_RELEASE(event.renderingContext);
     //      NS_RELEASE(mUpdateArea);
@@ -2164,16 +2157,9 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
 
 
     event.renderingContext = GetRenderingContext();
-    if (event.renderingContext)
-    {
-      PRBool rv;
-
-      event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
-                                            nsClipCombine_kReplace, rv);
-
+    if (event.renderingContext) {
       result = DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
-      //      NS_RELEASE(mUpdateArea);
     }
 
 
@@ -2266,6 +2252,13 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
              this,
              bState, mWindowType);
 #endif
+
+      /* bug #8002 -- this has weird side effects like causing the window to come to the front whenever you mouse over it.
+
+        if (GTK_WIDGET_VISIBLE(mShell) && GTK_WIDGET_REALIZED(mShell) && mShell->window)
+          gdk_window_raise(mShell->window);
+      */
+
       gtk_widget_show(mMozArea);
       gtk_widget_show(mShell);
     }
@@ -2340,7 +2333,7 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
     {
       // XXX don't move the window if it is toplevel window.. this keeps us from moving the
       // window's title bar off the screen in some Window managers
-      if (mWindowType != eWindowType_toplevel)
+      //      if (mWindowType != eWindowType_toplevel)
         gtk_widget_set_uposition(mShell, aX, aY);
     }
     else
