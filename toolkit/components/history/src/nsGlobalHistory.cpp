@@ -1364,7 +1364,9 @@ nsGlobalHistory::MarkPageAsTyped(const char* aURL)
   nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
+    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     rv = AddNewPageToDatabase(uri, GetNow(), PR_FALSE, PR_TRUE, getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
