@@ -74,10 +74,8 @@
         <radiogroup id="mode" oncommand="dialog.toggleChoice()" align="stretch">
             <hbox>
                 <radio id="useSystemDefault"
-                       flex="1"
                        label="&useSystemDefault.noDesc.label;"
                        accesskey="&useSystemDefault.accesskey;"/>
-                <spacer flex="1"/>
             </hbox>
             <hbox align="center">
                 <radio id="openUsing"
@@ -96,7 +94,6 @@
                 <radio id="saveToDisk"
                        label="&saveToDisk.label;"
                        accesskey="&saveToDisk.accesskey;"/>
-                <spacer flex="1"/>
             </hbox>
         </radiogroup>
         
