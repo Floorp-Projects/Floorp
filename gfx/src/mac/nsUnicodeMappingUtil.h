@@ -69,7 +69,7 @@ public:
 			else
 				return mGenericFontMapping[aScript][aType]; 
 	}
-    inline nsUnicodeFontMappingCache* GetFontMappingCache() { return gCache; };
+    inline nsUnicodeFontMappingCache* GetFontMappingCache() { return mCache; };
 	
   ScriptCode MapLangGroupToScriptCode(const char* aLangGroup);
 	static nsUnicodeMappingUtil* GetSingleton();
@@ -86,7 +86,7 @@ private:
 	PRUint32 mScriptEnabled;
 	short 	 mScriptFontMapping[smPseudoTotalScripts];
 	PRInt8   mBlockToScriptMapping[kUnicodeBlockSize];
-	nsUnicodeFontMappingCache*	gCache;
+	nsUnicodeFontMappingCache*	mCache;
 	
 	static nsUnicodeMappingUtil* gSingleton;
 
