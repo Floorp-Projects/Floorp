@@ -34,7 +34,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsScrollbar.h"
-
 #include <gtk/gtkscrollbar.h>
 
 nsScrollbar::nsScrollbar(PRBool aIsVertical)
@@ -49,6 +48,194 @@ nsScrollbar::~nsScrollbar()
 NS_IMPL_ADDREF_INHERITED(nsScrollbar, nsCommonWidget)
 NS_IMPL_RELEASE_INHERITED(nsScrollbar, nsCommonWidget)
 NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsIWidget)
+
+// nsIWidget
+
+NS_IMETHODIMP
+nsScrollbar::Create(nsIWidget        *aParent,
+                    const nsRect     &aRect,
+                    EVENT_CALLBACK   aHandleEventFunction,
+                    nsIDeviceContext *aContext,
+                    nsIAppShell      *aAppShell,
+                    nsIToolkit       *aToolkit,
+                    nsWidgetInitData *aInitData)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Create(nsNativeWidget aParent,
+                    const nsRect     &aRect,
+                    EVENT_CALLBACK   aHandleEventFunction,
+                    nsIDeviceContext *aContext,
+                    nsIAppShell      *aAppShell,
+                    nsIToolkit       *aToolkit,
+                    nsWidgetInitData *aInitData)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Show(PRBool aState)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::IsVisible(PRBool & aState)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Move(PRInt32 aX, PRInt32 aY)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool   aRepaint)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                    PRBool   aRepaint)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Enable(PRBool aState)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetFocus(PRBool aRaise)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsIFontMetrics*
+nsScrollbar::GetFont(void)
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetFont(const nsFont &aFont)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Invalidate(PRBool aIsSynchronous)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Update()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetColorMap(nsColorMap *aColorMap)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void*
+nsScrollbar::GetNativeData(PRUint32 aDataType)
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetTitle(const nsString& aTitle)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetMenuBar(nsIMenuBar * aMenuBar)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::ShowMenuBar(PRBool aShow)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::BeginResizingChildren(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::EndResizingChildren(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsScrollbar::CaptureRollupEvents(nsIRollupListener * aListener,
+                                 PRBool aDoCapture,
+                                 PRBool aConsumeRollupEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+// nsIScrollbar
 
 NS_IMETHODIMP
 nsScrollbar::SetMaxRange(PRUint32 aEndRange)
