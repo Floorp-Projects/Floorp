@@ -68,7 +68,8 @@ BOOL CSumDlg::OnInitDialog()
 			&& GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 
-			&& GlobalWidgetArray[i].type != "GroupBox" )
+			&& GlobalWidgetArray[i].type != "GroupBox" 
+			&& GlobalWidgetArray[i].type != "BoldGroup" )
 		{
 			if (GlobalWidgetArray[i].name != "")
 			{
