@@ -32,7 +32,6 @@ EXPORTS =				\
 	nsIRDFObserver.h		\
         nsIRDFRegistry.h		\
         nsIRDFResourceManager.h		\
-	nsIRDFService.h			\
         nsRDFCID.h			\
         $(NULL)
 
