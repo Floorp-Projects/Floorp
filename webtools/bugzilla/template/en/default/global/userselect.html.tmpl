@@ -23,6 +23,7 @@
   # accesskey: optional, input only; accesskey attribute value
   # size: optional, input only; size attribute value
   # emptyok: optional, select only;  if true, prepend menu option to start of select
+  # multiple: optional, do multiselect box, value is size (height) of box
   #
   #%]
 
@@ -30,6 +31,7 @@
 <select name="[% name FILTER html %]"
   [% IF onchange %] onchange="[% onchange FILTER html %]" [% END %]
   [% IF accesskey %] accesskey="[% accesskey FILTER html %]" [% END %]
+  [% IF multiple %] multiple="multiple" size="[% multiple FILTER html %]" [% END %]
 >
   [% IF emptyok %]
     <option value=""></option>
