@@ -354,13 +354,33 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
     }
   }
   else if (eCSSUnit_Integer == unit) {
-    nsILookAndFeel* look = nsnull;
-    if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
-      nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)aValue.GetIntValue();
-      if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
-        result = PR_TRUE;
+    PRInt32 intValue = aValue.GetIntValue();
+    if (0 <= intValue) {
+      nsILookAndFeel* look = nsnull;
+      if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
+        nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID) intValue;
+        if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
+          result = PR_TRUE;
+        }
+        NS_RELEASE(look);
       }
-      NS_RELEASE(look);
+    }
+    else {
+      switch (intValue) {
+        case NS_COLOR_MOZ_HYPERLINKTEXT:
+          if (NS_SUCCEEDED(aPresContext->GetDefaultLinkColor(&aResult))) {
+            result = PR_TRUE;
+          }
+          break;
+        case NS_COLOR_MOZ_VISITEDHYPERLINKTEXT:
+          if (NS_SUCCEEDED(aPresContext->GetDefaultVisitedLinkColor(&aResult))) {
+            result = PR_TRUE;
+          }
+          break;
+        default:
+          NS_NOTREACHED("Should never have an unknown negative colorID.");
+          break;
+      }
     }
   }
   else if (eCSSUnit_Inherit == unit) {
@@ -2407,6 +2427,18 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
   if (eCSSUnit_Enumerated == textData.mDecoration.GetUnit()) {
     PRInt32 td = textData.mDecoration.GetIntValue();
     text->mTextDecoration = td;
+    if (td & NS_STYLE_TEXT_DECORATION_PREF_ANCHORS) {
+      PRBool underlineLinks = PR_TRUE;
+      nsresult res = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks, underlineLinks);
+      if (NS_SUCCEEDED(res)) {
+        if (underlineLinks) {
+          text->mTextDecoration |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        }
+        else {
+          text->mTextDecoration &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        }
+      }
+    }
   }
   else if (eCSSUnit_None == textData.mDecoration.GetUnit()) {
     text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;

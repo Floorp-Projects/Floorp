@@ -225,6 +225,10 @@
 #define NS_STYLE_BG_REPEAT_Y                    0x02
 #define NS_STYLE_BG_REPEAT_XY                   0x03
 
+// See nsStyleColor
+#define NS_COLOR_MOZ_HYPERLINKTEXT              -1
+#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
+
 // See nsStyleTable
 #define NS_STYLE_BORDER_COLLAPSE                0
 #define NS_STYLE_BORDER_SEPARATE                1
@@ -527,6 +531,7 @@
 #define NS_STYLE_TEXT_DECORATION_LINE_THROUGH   NS_FONT_DECORATION_LINE_THROUGH
 #define NS_STYLE_TEXT_DECORATION_BLINK          0x08
 #define NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL   0x10
+#define NS_STYLE_TEXT_DECORATION_PREF_ANCHORS   0x20
 
 // See nsStyleText
 #define NS_STYLE_TEXT_TRANSFORM_NONE            0

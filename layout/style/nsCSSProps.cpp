@@ -320,6 +320,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
   eCSSKeyword__moz_dialogtext, nsILookAndFeel::eColor__moz_dialogtext,
   eCSSKeyword__moz_dragtargetzone, nsILookAndFeel::eColor__moz_dragtargetzone,
+  eCSSKeyword__moz_hyperlinktext, NS_COLOR_MOZ_HYPERLINKTEXT,
   eCSSKeyword__moz_mac_focusring, nsILookAndFeel::eColor__moz_mac_focusring,
   eCSSKeyword__moz_mac_menuselect, nsILookAndFeel::eColor__moz_mac_menuselect,
   eCSSKeyword__moz_mac_menushadow, nsILookAndFeel::eColor__moz_mac_menushadow,
@@ -331,6 +332,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_accentregularshadow, nsILookAndFeel::eColor__moz_mac_accentregularshadow,
   eCSSKeyword__moz_mac_accentdarkshadow, nsILookAndFeel::eColor__moz_mac_accentdarkshadow,
   eCSSKeyword__moz_mac_accentdarkestshadow, nsILookAndFeel::eColor__moz_mac_accentdarkestshadow,
+  eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT,
   -1,-1
 };
 
@@ -700,6 +702,7 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
   eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_OVERLINE,
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
   eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_BLINK,
+  eCSSKeyword__moz_anchor_decoration, NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
   -1,-1
 };
 
