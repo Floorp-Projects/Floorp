@@ -109,7 +109,7 @@
     <command id="cmd_newEditorDraft"/> -->
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
-    <command id="Browser:EditPage" oncommand="editPageOrFrame();"/>
+    <command id="Browser:EditPage" oncommand="editPageOrFrame();" observes="isImage"/>
     <command id="Browser:Open" oncommand="BrowserOpenWindow();"/>
     <command id="Browser:PrintSetup" oncommand="BrowserPrintSetup();"/>
     <command id="Browser:Print" oncommand="BrowserPrint();"/>
@@ -125,7 +125,7 @@
     <command id="cmd_copy"/>
     <command id="cmd_paste"/>
     <command id="cmd_delete"/>
-    <command id="cmd_selectAll"/>
+    <command id="cmd_selectAll" observes="isImage"/>
 
     <!-- Content area context menu -->
     <command id="cmd_copyLink"/>
@@ -137,8 +137,8 @@
     <command id="View:PageInfo"   oncommand="BrowserPageInfo(getBrowser().contentDocument);"/>
   
     <!-- Search Menu -->
-    <command id="Browser:Find" oncommand="BrowserFind();" />
-    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" /> 
+    <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
+    <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
     <!-- Bookmarks Menu -->
     <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
@@ -164,6 +164,7 @@
     <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
     <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
     <broadcaster id="cmd_viewcomponentbar" oncommand="goToggleToolbar('component-bar', 'cmd_viewcomponentbar');" checked="true"/>
+    <broadcaster id="isImage"/>
   </broadcasterset>
 
   <!-- Menu -->
@@ -228,9 +229,9 @@
         <menuseparator />
   
         <!-- overlayed from viewZoomOverlay.xul -->
-        <menu id="menu_textZoom"/>
+        <menu id="menu_textZoom" observes="isImage"/>
 
-        <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false">
+        <menu label="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false" observes="isImage">
           <menupopup onpopupshowing="stylesheetFillPopup(this);"
                      oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
             <menuitem label="&useStyleSheetNone.label;" type="radio"/>
@@ -244,12 +245,12 @@
         <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
         <menuseparator />
         
-        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" id="menuitem-translate" oncommand="Translate();"/>
-        
+        <menuitem accesskey="&translateMenu.accesskey;" label="&translateMenu.label;" observes="isImage" oncommand="Translate();"/>
+
         <menuitem label="&webContentMenu.label;" accesskey="&webContentMenu.accesskey;" oncommand="goPreferences('pref-contentpacks.xul','chrome://content-packs/content/pref-contentpacks.xul');">
         </menuitem>
         
-        <menu id="charsetMenu" />
+        <menu id="charsetMenu" observes="isImage"/>
 
         <menuseparator/>
         <menu label="&applyTheme.label;" accesskey="&applyTheme.accesskey;">
