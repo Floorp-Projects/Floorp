@@ -318,7 +318,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
       //
       // Note that if the width is too big that's okay and we allow the
       // child to extend horizontally outside of the reflow area
-      PushChildren(kidFrame, prevKidFrame, PR_TRUE);
+      PushChildren(kidFrame, prevKidFrame);
       result = PR_FALSE;
       break;
     }
@@ -371,7 +371,7 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
        
       kidFrame->GetNextSibling(nextSibling);
       if (nsnull != nextSibling) {
-        PushChildren(nextSibling, kidFrame, PR_TRUE);
+        PushChildren(nextSibling, kidFrame);
       }
       result = PR_FALSE;
       break;
@@ -513,7 +513,7 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
         // we pass PR_TRUE into PushChidren
         kidFrame->SetNextSibling(continuingFrame);
 
-        PushChildren(continuingFrame, kidFrame, PR_TRUE);
+        PushChildren(continuingFrame, kidFrame);
       }
 
       // If the child isn't complete then it means that we've used up
