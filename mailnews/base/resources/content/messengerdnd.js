@@ -270,9 +270,7 @@ function DropOnFolderTree(event)
 	var nextMessage;
     var messageTree;
 
-	if (targetServer == sourceServer)
-	{
-        if (isNews)
+        if (isNews) //news to pop or imap is always a copy
         {
             try
             {
@@ -308,30 +306,6 @@ function DropOnFolderTree(event)
                               dump ( "Exception : CopyMessages \n");
                            }
         }
-	}
-	else
-	{
-		if (!ctrlKeydown)
-		{
-			messageTree = GetThreadTree();
-			nextMessage = GetNextMessageAfterDelete(messageTree.selectedItems);
-			if(nextMessage)
-				gNextMessageAfterDelete = nextMessage.getAttribute('id');
-			else
-				gNextMessageAfterDelete = null;
-		}
-                try {
-		messenger.CopyMessages(treeDatabase,
-							   sourceRescource,
-							   targetNode, messageList, !ctrlKeydown);
-                }
-                 catch(e)
-                 { 
-                   gNextMessageAfterDelete = null;
-                   dump ( "Exception : CopyMessages \n");
-                 }
-	}
-
 	return(false);
 }
 
