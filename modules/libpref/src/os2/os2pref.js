@@ -182,7 +182,7 @@ pref("layout.word_select.stop_at_punctuation", false);
 // image font.  If true, will substitute a vector font for a given
 // image font if the given size is smaller/larger than can be handled
 // by the image font.
-pref("font.substitute_vector_fonts", true);
+pref("browser.display.substitute_vector_fonts", true);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only

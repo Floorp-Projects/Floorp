@@ -48,6 +48,7 @@
 
 class GraphicsState;
 class nsDrawingSurfaceOS2;
+class nsFontOS2;
 
 class nsRenderingContextOS2 : public nsRenderingContextImpl,
                               nsIRenderingContextOS2
@@ -235,13 +236,12 @@ protected:
   GraphicsState       *mStates;
   nsVoidArray         *mStateCache;
   nsIFontMetrics      *mFontMetrics;     // current font
-  nsIFontMetrics      *mCurrFontMetrics; // currently selected font
   nscolor              mCurrFillColor;   // currently selected fill color
   PRBool               mPreservedInitialClipRegion;
   PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
   HPS                  mPS;              // GPI presentation space of current drawing surface
   nsIWidget           *mDCOwner;         // Parent widget
-  FATTRS               mCurrFont;
+  nsFontOS2           *mCurrFontOS2;
 
   PRBool            mRightToLeftText;
 };
