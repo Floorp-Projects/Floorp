@@ -14,6 +14,7 @@
 				F512F52B02D1287F01072C9F,
 				F5A3669702CCFAF601DC3354,
 				F512F52C02D1287F01072C9F,
+				F558137B030AEF9B0176F207,
 				F50D9DE602ECC32301BB4219,
 				F512F52D02D1287F01072C9F,
 			);
@@ -267,7 +268,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -481,6 +482,8 @@
 				F558099F02F22169015DF512,
 				F549ACE50302DEBB01026D5D,
 				F549ACE80302DEF001026D5D,
+				F558137E030AEF9C0176F207,
+				F558137F030AEF9C0176F207,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -605,6 +608,8 @@
 				F55809A002F22169015DF512,
 				F549ACE00302DE6101026D5D,
 				F549ACE10302DE6101026D5D,
+				F5581380030AEF9C0176F207,
+				F5581381030AEF9C0176F207,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -1513,6 +1518,8 @@
 				F5D33CBC02EF61A901A967F3,
 				F566BD1202EFA9AD01A967F3,
 				F549ACE70302DEF001026D5D,
+				F5581379030AEF9B0176F207,
+				F558137A030AEF9B0176F207,
 			);
 			isa = PBXGroup;
 			name = Headers;
@@ -3106,6 +3113,84 @@
 		};
 		F55809A202F22169015DF512 = {
 			fileRef = F558099E02F22168015DF512;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581379030AEF9B0176F207 = {
+			isa = PBXFileReference;
+			path = RemoteDataProvider.h;
+			refType = 4;
+		};
+		F558137A030AEF9B0176F207 = {
+			isa = PBXFileReference;
+			path = SiteIconProvider.h;
+			refType = 4;
+		};
+		F558137B030AEF9B0176F207 = {
+			children = (
+				F558137C030AEF9B0176F207,
+				F558137D030AEF9B0176F207,
+			);
+			isa = PBXGroup;
+			name = "Site icons";
+			path = "";
+			refType = 4;
+		};
+		F558137C030AEF9B0176F207 = {
+			isa = PBXFileReference;
+			path = RemoteDataProvider.mm;
+			refType = 4;
+		};
+		F558137D030AEF9B0176F207 = {
+			isa = PBXFileReference;
+			path = SiteIconProvider.mm;
+			refType = 4;
+		};
+		F558137E030AEF9C0176F207 = {
+			fileRef = F5581379030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558137F030AEF9C0176F207 = {
+			fileRef = F558137A030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581380030AEF9C0176F207 = {
+			fileRef = F558137C030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581381030AEF9C0176F207 = {
+			fileRef = F558137D030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581382030AEF9C0176F207 = {
+			fileRef = F558137A030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581383030AEF9C0176F207 = {
+			fileRef = F5581379030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581384030AEF9C0176F207 = {
+			fileRef = F558137D030AEF9B0176F207;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5581385030AEF9C0176F207 = {
+			fileRef = F558137C030AEF9B0176F207;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -5124,7 +5209,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/nkcache ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom ../dist/include/ \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -5337,6 +5422,8 @@
 				F55809A102F22169015DF512,
 				F549ACE60302DEBB01026D5D,
 				F549ACE90302DEF001026D5D,
+				F5581382030AEF9C0176F207,
+				F5581383030AEF9C0176F207,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -5462,6 +5549,8 @@
 				F55809A202F22169015DF512,
 				F549ACE20302DE6101026D5D,
 				F549ACE30302DE6101026D5D,
+				F5581384030AEF9C0176F207,
+				F5581385030AEF9C0176F207,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
