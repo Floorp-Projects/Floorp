@@ -24,3 +24,4 @@
 <!ENTITY sidebar.picker.label        "Add">
 <!ENTITY sidebar.customize.label     "customize...">
 <!ENTITY sidebarCmd.label            "Sidebar">
+<!ENTITY sidebar.loading.label       "loading...">
