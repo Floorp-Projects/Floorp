@@ -628,7 +628,7 @@
 
             if (this.mTabbedMode) {
               // We need to update a tab.
-              for (i = 0; i < this.childNodes.length; i++) {
+              for (i = 0; i < this.browsers.length; i++) {
                 if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
                   if (!contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
                                                 uri, event.originalTarget, this.browsers[i].contentWindow))
