@@ -55,6 +55,8 @@
   ]]>
   </script>
 
+  <description>&prefPara;</description>
+
   <hbox align="start">
   <groupbox flex="1">
     <caption label="&prefDirect.label;"/>
@@ -104,5 +106,8 @@
     </vbox>
   </groupbox>
   </hbox>
+
+  <description>&prefPipeWarning;</description>
+
 </page>
 
