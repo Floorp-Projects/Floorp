@@ -5,21 +5,21 @@
    License Version 1.1 (the "License"); you may not use this file
    except in compliance with the License. You may obtain a copy of
    the License at http://www.mozilla.org/NPL/
-    
+
    Software distributed under the License is distributed on an "AS
    IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
    implied. See the License for the specific language governing
    rights and limitations under the License.
-    
+
    The Original Code is Mozilla Communicator client code, released
    March 31, 1998.
-   
+
    The Initial Developer of the Original Code is Netscape
    Communications Corporation. Portions created by Netscape are
    Copyright (C) 1998-1999 Netscape Communications Corporation. All
    Rights Reserved.
-   
-   Contributor(s): 
+
+   Contributor(s):
      Ben Goodger <ben@netscape.com>
   -->
 
@@ -35,7 +35,7 @@
   var _elementIDs = []; // hack
 ]]>
 </script>
-  
+
 <tree id="prefsTree" seltype="single" hidecolumnpicker="true"
           onselect="if( hPrefWindow ) hPrefWindow.switchPage();">
   <treecols>
@@ -44,19 +44,21 @@
   <treechildren id="panelChildren">
     <treeitem id="navigator">
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-navigator.xul" label="&navigator.label;"/>
       </treerow>
     </treeitem>
     <treeitem>
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-fonts.xul" label="&fonts.label;"/>
       </treerow>
     </treeitem>
+<!-- out until we un-global ourselves
     <treeitem id="themes-panel">
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-themes.xul" label="&themes.label;"/>
       </treerow>
     </treeitem>
+-->
     <!-- XXX remove this when overlays.rdf works for navigator -->
     <treeitem>
       <treerow>
@@ -65,7 +67,7 @@
     </treeitem>
     <treeitem id="advancedItem">
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/> 
+        <treecell url="chrome://browser/content/pref/pref-advanced.xul" label="&advance.label;"/>
       </treerow>
     </treeitem>
   </treechildren>
