@@ -1219,6 +1219,7 @@ nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   PRBool isServer = PR_FALSE;
+  PRUint32 parentFlags = 0;
 
   if (!result) return rv;
   *result = PR_FALSE;
@@ -1226,13 +1227,17 @@ nsresult nsMsgLocalMailFolder::IsChildOfTrash(PRBool *result)
   rv = GetIsServer(&isServer);
   if (NS_FAILED(rv) || isServer) return rv;
 
+  rv= GetFlags(&parentFlags);  //this is the parent folder
+  if (parentFlags & MSG_FOLDER_FLAG_TRASH) {
+      *result = PR_TRUE;
+      return rv;
+  }
+
   nsCOMPtr<nsIFolder> parent;
   nsCOMPtr<nsIMsgFolder> parentFolder;
   nsCOMPtr<nsIMsgFolder> thisFolder;
   rv = QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)
                       getter_AddRefs(thisFolder));
-
-  PRUint32 parentFlags = 0;
 
   while (!isServer && thisFolder) {
     rv = thisFolder->GetParent(getter_AddRefs(parent));
@@ -1350,7 +1355,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
   rv = IsChildOfTrash(&isChildOfTrash);
 
   if (isChildOfTrash)
+  {
+	PRUint32 count;
+	rv = folders->Count(&count);
+	nsCOMPtr<nsIMsgFolder> folder;
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(i));
+		folder = do_QueryInterface(supports);
+		if(folder)	
+	          folder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
+	}
     return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
+  }
 
   nsCOMPtr<nsIDocShell> docShell;
   if (!msgWindow) return NS_ERROR_NULL_POINTER;
