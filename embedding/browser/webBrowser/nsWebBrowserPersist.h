@@ -69,6 +69,7 @@ private:
     nsresult MakeFilenameFromURI(nsIURI *aURI, nsIChannel *aChannel, nsString &aFilename);
     nsresult StoreURIAttribute(nsIDOMNode *aNode, char *aAttribute, PRBool aNeedsPersisting = PR_TRUE, nsString *aFilename = nsnull);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute);
+    nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
     nsresult SaveDocumentToFileWithFixup(
         nsIDocument    *pDocument,
@@ -102,6 +103,8 @@ private:
     PRUint32                  mFrameCounter;
     PRUint32                  mTaskCounter;
     nsCString                 mDataPath;
+    PRBool                    mDataPathIsRelative;
+    nsCString                 mRelativeDataPathURL;
     nsHashtable               mURIMap;
     PRBool                    mFirstAndOnlyUse;
 };

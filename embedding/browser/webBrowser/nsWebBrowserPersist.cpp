@@ -43,6 +43,9 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDiskDocument.h"
 
+#include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLLinkElement.h"
@@ -64,6 +67,7 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mFileCounter(1),
     mFrameCounter(1),
     mTaskCounter(0),
+    mDataPathIsRelative(PR_FALSE),
     mFirstAndOnlyUse(PR_TRUE)
 {
     NS_INIT_REFCNT();
@@ -167,11 +171,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     }
 
     // Create a local file object
-    nsString filename; filename.AssignWithConversion(aFileName);
-    nsFileSpec target(filename);
-
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(target, PR_FALSE, getter_AddRefs(file));
+    rv = NS_NewLocalFile(aFileName, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv))
     {
         OnEndDownload();
@@ -230,13 +231,15 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
     doc->GetBaseURL(*getter_AddRefs(mBaseURI));
 
     nsCOMPtr<nsILocalFile> fileSpec(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
+    {
        OnEndDownload();
        return rv;
     }
     
     rv = fileSpec->InitWithPath(aFileName);
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv))
+    {
        OnEndDownload();
        return rv;
     }
@@ -247,6 +250,12 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         // Sanity check & create the specified data path
         nsCOMPtr<nsILocalFile> dataPath;
         rv = NS_NewLocalFile(aDataPath, PR_FALSE, getter_AddRefs(dataPath));
+        if (NS_FAILED(rv))
+        {
+            OnEndDownload();
+            return NS_ERROR_FAILURE;
+        }
+
         dataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0664);
         PRBool exists = PR_FALSE;
         PRBool isDirectory = PR_FALSE;
@@ -256,6 +265,45 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         {
             OnEndDownload();
             return NS_ERROR_FAILURE;
+        }
+
+        // Test if the data path is relative to the base directory -
+        // the one that the document is saved into.
+        
+        mDataPathIsRelative = PR_FALSE;
+        nsCOMPtr<nsIFile> baseDir;
+        fileSpec->GetParent(getter_AddRefs(baseDir));
+
+        // Starting with the data dir work back through it's parents
+        // checking if one of them is the base directory.
+
+        nsCAutoString relativePathURL;
+
+        nsCOMPtr<nsIFile> dataDirParent;
+        dataDirParent = dataPath;
+        while (dataDirParent)
+        {
+            PRBool sameDir = PR_FALSE;
+            dataDirParent->Equals(baseDir, &sameDir);
+            if (sameDir)
+            {
+                mRelativeDataPathURL = relativePathURL;
+                mDataPathIsRelative = PR_TRUE;
+                break;
+            }
+
+            nsXPIDLCString dirName;
+            dataDirParent->GetLeafName(getter_Copies(dirName));
+
+            nsCAutoString newRelativePathURL;
+            newRelativePathURL = dirName.get();
+            newRelativePathURL.Append("/");
+            newRelativePathURL.Append(relativePathURL);
+            relativePathURL = newRelativePathURL;
+
+            nsCOMPtr<nsIFile> newDataDirParent;
+            rv = dataDirParent->GetParent(getter_AddRefs(newDataDirParent));
+            dataDirParent = newDataDirParent;
         }
 
         // Try and get the MIME lookup service
@@ -280,8 +328,8 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
         nodeFixup = new nsEncoderNodeFixup;
         nodeFixup->mWebBrowserPersist = this;
 
-        // Set the document base to ensure relative links still work
-        SetDocumentBase(aDocument, mBaseURI);
+        // Remove document base so relative links work on the persisted version
+        SetDocumentBase(aDocument, nsnull);
 
         // Save the document, fixing up the links as it goes out
         rv = SaveDocumentToFileWithFixup(
@@ -293,6 +341,9 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(nsIDOMDocument *aDocument, const
             contentType,
             charType,
             0);
+
+        // Restore the document's BASE URL
+        SetDocumentBase(aDocument, mBaseURI);
 
         mURIMap.Enumerate(CleanupURIMap, this);
         mURIMap.Reset();
@@ -455,6 +506,7 @@ nsWebBrowserPersist::OnEndDownload()
     PRBool abortOperation = PR_FALSE;
     OnProgress(PROGRESS_END_URI, mURI, &abortOperation);
     OnProgress(PROGRESS_FINISHED, nsnull, &abortOperation);
+    Release();
 }
 
 
@@ -493,7 +545,6 @@ nsWebBrowserPersist::PersistURIs(nsHashKey *aKey, void *aData, void* closure)
     persist->AddRef();
     persist->SetProgressListener(NS_STATIC_CAST(nsIWebBrowserPersistProgress *, pthis));
     rv = persist->SaveURI(uri, nsnull, filePath);
-    persist->Release();
 
     return PR_TRUE;
 }
@@ -520,6 +571,13 @@ nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode, PRBool *aAbort)
     {
         StoreURIAttribute(aNode, "src");
         StoreURIAttribute(aNode, "lowsrc");
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNode);
+    if (nodeAsBody)
+    {
+        StoreURIAttribute(aNode, "background");
         return NS_OK;
     }
     
@@ -583,11 +641,37 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(nsIDOMNode *aNodeIn, nsID
 {
     *aNodeOut = nsnull;
 
-    // Test the node to see if it's an image, frame, iframe, css, js
+    // Fix up href and file links in the elements
+
+    nsCOMPtr<nsIDOMHTMLAnchorElement> nodeAsAnchor = do_QueryInterface(aNodeIn);
+    if (nodeAsAnchor)
+    {
+        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        FixupAnchor(*aNodeOut);
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLAreaElement> nodeAsArea = do_QueryInterface(aNodeIn);
+    if (nodeAsArea)
+    {
+        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        FixupAnchor(*aNodeOut);
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIDOMHTMLBodyElement> nodeAsBody = do_QueryInterface(aNodeIn);
+    if (nodeAsBody)
+    {
+        aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        FixupNodeAttribute(*aNodeOut, "background");
+        return NS_OK;
+    }
+
     nsCOMPtr<nsIDOMHTMLImageElement> nodeAsImage = do_QueryInterface(aNodeIn);
     if (nodeAsImage)
     {
         aNodeIn->CloneNode(PR_FALSE, aNodeOut);
+        FixupAnchor(*aNodeOut);
         FixupNodeAttribute(*aNodeOut, "src");
         FixupNodeAttribute(*aNodeOut, "lowsrc");
         return NS_OK;
@@ -701,10 +785,26 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute)
         if (mURIMap.Exists(&key))
         {
             nsString filename = ((URIData *) mURIMap.Get(&key))->mFilename;
-            nsFileSpec filespec(mDataPath);
-            filespec += filename;
-            nsFileURL fileurl(filespec);
-            nsString newValue; newValue.AssignWithConversion(fileurl.GetURLString());
+            nsAutoString newValue;
+            
+            if (mDataPathIsRelative)
+            {
+                nsCAutoString rawPathURL;
+                rawPathURL.Assign(mRelativeDataPathURL);
+                rawPathURL.AppendWithConversion(filename);
+                newValue.AssignWithConversion(nsEscape(rawPathURL, url_Path));
+            }
+            else
+            {
+                nsCOMPtr<nsILocalFile> file;
+                NS_NewLocalFile(mDataPath, PR_FALSE, getter_AddRefs(file));
+                file->AppendUnicode(filename.get());
+
+                nsXPIDLCString fileurl;
+                file->GetURL(getter_Copies(fileurl));
+                newValue.AssignWithConversion(fileurl);
+            }
+
             attrNode->SetNodeValue(newValue);
         }
     }
@@ -712,6 +812,45 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode, char *aAttribute)
     return NS_OK;
 }
 
+nsresult
+nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
+{
+    NS_ENSURE_ARG_POINTER(aNode);
+
+    nsCOMPtr<nsIDOMNamedNodeMap> attrMap;
+    nsCOMPtr<nsIDOMNode> attrNode;
+    nsresult rv = aNode->GetAttributes(getter_AddRefs(attrMap));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    // Make all anchor links absolute so they point off onto the Internet
+    nsString attribute; attribute.AssignWithConversion("href");
+    rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
+    if (attrNode)
+    {
+        nsString oldValue;
+        attrNode->GetNodeValue(oldValue);
+        nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
+
+        // Skip self-referencing bookmarks
+        if (oldCValue.Length() > 0 && oldCValue.CharAt(0) == '#')
+        {
+            return NS_OK;
+        }
+
+        // Make a new URI to replace the current one
+        nsCOMPtr<nsIURI> newURI;
+        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), mBaseURI);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLCString uriSpec;
+            newURI->GetSpec(getter_Copies(uriSpec));
+            nsAutoString newValue; newValue.AssignWithConversion(uriSpec);
+            attrNode->SetNodeValue(newValue);
+        }
+    }
+
+    return NS_OK;
+}
 
 nsresult
 nsWebBrowserPersist::StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet)
@@ -723,12 +862,18 @@ nsWebBrowserPersist::StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet)
 nsresult
 nsWebBrowserPersist::SaveSubframeContent(nsIDOMDocument *aFrameContent, const nsString &aFilename)
 {
+    nsresult rv;
+
     // Work out the path for the frame
-    nsFileSpec frameFileSpec(mDataPath);
-    frameFileSpec += aFilename;
+    nsCOMPtr<nsILocalFile> frameFile;
+    rv = NS_NewLocalFile(mDataPath, PR_FALSE, getter_AddRefs(frameFile));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    frameFile->AppendUnicode(aFilename.get());
 
     // Work out the path for the frame data
-    nsFileSpec frameDatapathSpec(mDataPath);
+    nsCOMPtr<nsILocalFile> frameDatapath;
+    rv = NS_NewLocalFile(mDataPath, PR_FALSE, getter_AddRefs(frameDatapath));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     nsString dataname;
     char * tmp = PR_smprintf("subframe_%d", mFrameCounter++);
     if (tmp == nsnull)
@@ -737,16 +882,20 @@ nsWebBrowserPersist::SaveSubframeContent(nsIDOMDocument *aFrameContent, const ns
     }
     dataname.AssignWithConversion(tmp);
     PR_smprintf_free(tmp);
-    frameDatapathSpec += dataname;
+    frameDatapath->AppendUnicode(dataname.get());
 
     // Create a new persistence object to persist the frame
     nsWebBrowserPersist *framePersist = new nsWebBrowserPersist;
     if (framePersist)
     {
+        nsXPIDLCString filename;
+        frameFile->GetTarget(getter_Copies(filename));
+        nsXPIDLCString datapath;
+        frameDatapath->GetTarget(getter_Copies(datapath));
+
         framePersist->AddRef();
         framePersist->SetProgressListener(NS_STATIC_CAST(nsIWebBrowserPersistProgress *, this));
-        framePersist->SaveDocument(aFrameContent, frameFileSpec.GetCString(), frameDatapathSpec.GetCString());
-        framePersist->Release();
+        framePersist->SaveDocument(aFrameContent, filename.get(), datapath.get());
     }
 
     return NS_OK;
@@ -913,6 +1062,8 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsIChannel *aChannel, nsS
     // TODO we can get a suggested file name from the http channel and
     // failing that from the uri with code like below, but how can we be
     // sure it will be a legal file name for the platform?
+    // We would have to ensure it only contained legal characters, was
+    // a legal length and was unique.
 
 //    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
 //    if (url)
@@ -927,6 +1078,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsIChannel *aChannel, nsS
 //        }
 //    }
 
+    //
     if (aFilename.Length() == 0)
     {
         // file_X is a dumb name but it's better than nothing
@@ -950,9 +1102,6 @@ nsWebBrowserPersist::SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI
     {
         return NS_ERROR_FAILURE;
     }
-
-    nsXPIDLCString uriSpec;
-    aBaseURI->GetSpec(getter_Copies(uriSpec));
 
     // Find the head element
     nsCOMPtr<nsIDOMElement> headElement;
@@ -988,19 +1137,33 @@ nsWebBrowserPersist::SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI
         baseList->Item(0, getter_AddRefs(baseNode));
         baseElement = do_QueryInterface(baseNode);
     }
-    if (!baseElement)
-    {
-        nsCOMPtr<nsIDOMNode> newNode;
-        aDocument->CreateElement(NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseElement));
-        headElement->AppendChild(baseElement, getter_AddRefs(newNode));
-    }
-    if (!baseElement)
-    {
-        return NS_ERROR_FAILURE;
-    }
 
-    nsString href; href.AssignWithConversion(uriSpec);
-    baseElement->SetAttribute(NS_ConvertASCIItoUCS2("href"), href);
+    // Add or remove the BASE element
+    if (aBaseURI)
+    {
+        if (!baseElement)
+        {
+            nsCOMPtr<nsIDOMNode> newNode;
+            aDocument->CreateElement(NS_ConvertASCIItoUCS2("base"), getter_AddRefs(baseElement));
+            headElement->AppendChild(baseElement, getter_AddRefs(newNode));
+        }
+        if (!baseElement)
+        {
+            return NS_ERROR_FAILURE;
+        }
+        nsXPIDLCString uriSpec;
+        aBaseURI->GetSpec(getter_Copies(uriSpec));
+        nsString href; href.AssignWithConversion(uriSpec);
+        baseElement->SetAttribute(NS_ConvertASCIItoUCS2("href"), href);
+    }
+    else
+    {
+        if (baseElement)
+        {
+            nsCOMPtr<nsIDOMNode> node;
+            headElement->RemoveChild(baseElement, getter_AddRefs(node));
+        }
+    }
 
     return NS_OK;
 }
