@@ -1020,9 +1020,11 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                          * object) scope.  Count remaining ancestors in order
                          * to realloc spvec.
                          */
+                        JSScopeProperty *tmp = sprop;
                         do {
-                            i++;
-                        } while ((sprop = sprop->parent) != NULL);
+                            if (SCOPE_GET_PROPERTY(scope, tmp->id))
+                                i++;
+                        } while ((tmp = tmp->parent) != NULL);
                         spp2 = (JSScopeProperty **)
                             JS_realloc(cx, spvec,
                                        (splen + i) * sizeof(JSScopeProperty *));
@@ -1035,7 +1037,6 @@ js_AddScopeProperty(JSContext *cx, JSScope *scope, jsid id,
                         memmove(spvec + i, spvec,
                                 splen * sizeof(JSScopeProperty *));
                         splen += i;
-                        sprop = spvec[i];
                     }
 
                     spvec[--i] = sprop;
