@@ -91,6 +91,7 @@ static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCRegionIID, NS_REGION_CID);
+static NS_DEFINE_IID(kCBlenderIID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -142,6 +143,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCRegionIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCBlenderIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCViewManagerCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCScrollingViewCID, VIEW_DLL, PR_FALSE, PR_FALSE);
