@@ -434,7 +434,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     } else {
         sharpid = (jsatomid) he->value;
         if (sharpid == 0) {
-            sharpid = ++map->sharpgen << 1;
+            sharpid = ++map->sharpgen << SHARP_ID_SHIFT;
             he->value = (void *) sharpid;
         }
         ida = NULL;
@@ -457,7 +457,8 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
     char buf[20];
     size_t len;
 
-    *sp = NULL; /* Set to null in case we return an early error. */
+    /* Set to null in case we return an early error. */
+    *sp = NULL;
     map = &cx->sharpObjectMap;
     table = map->table;
     if (!table) {
@@ -509,7 +510,8 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         *sp = NULL;
     } else {
         len = JS_snprintf(buf, sizeof buf, "#%u%c",
-                          sharpid >> 1, (sharpid & SHARP_BIT) ? '#' : '=');
+                          sharpid >> SHARP_ID_SHIFT,
+                          (sharpid & SHARP_BIT) ? '#' : '=');
         *sp = js_InflateString(cx, buf, len);
         if (!*sp) {
             if (ida)
