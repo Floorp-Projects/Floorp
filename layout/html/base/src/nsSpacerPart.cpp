@@ -23,10 +23,8 @@
 #include "nsIPresShell.h"
 #include "nsHTMLAtoms.h"
 #include "nsUnitConversion.h"
-#if 0
+#include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIHTMLAttributes.h"
-#endif
 
 // Spacer type's
 #define TYPE_WORD  0            // horizontal space
@@ -54,19 +52,17 @@ public:
                                nsIFrame* aParentFrame,
                                nsIStyleContext* aStyleContext,
                                nsIFrame*& aResult);
-
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
 
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aValue) const;
-
-  virtual nsContentAttr GetAttribute(const nsString& aName,
-                                     nsString& aResult) const;
-
-  PRUint8 mType;
+  PRUint8 GetType();
 
 protected:
   virtual ~SpacerPart();
+  nsContentAttr AttributeToString(nsIAtom*     aAttribute,
+                                  nsHTMLValue& aValue,
+                                  nsString&    aResult) const;
 };
 
 //----------------------------------------------------------------------
@@ -86,25 +82,12 @@ NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
                               nsReflowStatus&      aStatus)
 {
   // Get cached state for containing block frame
-  nsBlockReflowState* state = nsnull;
-#if XXX
-  nsIFrame* parent = mGeometricParent;
-  while (nsnull != parent) {
-    nsresult status = parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
-    if (NS_OK == status) {
-      nsHTMLFrameType type = ft->GetFrameType();
-      if (eHTMLFrame_Block == type) {
-        break;
-      }
-    }
-    parent->GetGeometricParent(parent);
+  nsLineLayout* lineLayoutState = nsnull;
+  nsBlockReflowState* state =
+    nsBlockFrame::FindBlockReflowState(aPresContext, this);
+  if (nsnull != state) {
+    lineLayoutState = state->mCurrentLine;
   }
-  if (nsnull != parent) {
-    nsIPresShell* shell = aPresContext->GetShell();
-    state = (nsBlockReflowState*) shell->GetCachedData(parent);
-    NS_RELEASE(shell);
-  }
-#endif
 
   // By default, we have no area
   aDesiredSize.width = 0;
@@ -121,35 +104,26 @@ NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
   nscoord width = 0;
   nscoord height = 0;
   SpacerPart* part = (SpacerPart*) mContent;
-  PRUint8 type = part->mType;
+  PRUint8 type = part->GetType();
   nsContentAttr ca;
   if (type != TYPE_IMAGE) {
     nsHTMLValue val;
     ca = part->GetAttribute(nsHTMLAtoms::size, val);
     if (eContentAttr_HasValue == ca) {
-      // XXX percent???
-      float p2t = aPresContext->GetPixelsToTwips();
-      width = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
+      width = val.GetPixelValue();
     }
   } else {
     nsHTMLValue val;
-    float p2t = aPresContext->GetPixelsToTwips();
     ca = part->GetAttribute(nsHTMLAtoms::width, val);
     if (eContentAttr_HasValue == ca) {
       if (eHTMLUnit_Pixel == val.GetUnit()) {
-        width = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
-      }
-      else if (eHTMLUnit_Percent == val.GetUnit()) {
-        // XXX percent of what?
+        width = val.GetPixelValue();
       }
     }
     ca = part->GetAttribute(nsHTMLAtoms::height, val);
     if (eContentAttr_HasValue == ca) {
       if (eHTMLUnit_Pixel == val.GetUnit()) {
-        height = (nscoord)NS_INT_PIXELS_TO_TWIPS(val.GetPixelValue(), p2t);
-      }
-      else if (eHTMLUnit_Percent == val.GetUnit()) {
-        // XXX percent of what?
+        height = val.GetPixelValue();
       }
     }
   }
@@ -160,24 +134,17 @@ NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
     if (0 != width) {
       aDesiredSize.width = nscoord(width * p2t);
     }
-    else {
-      // XXX navigator ignores spacers of size 0 and won't cause a word
-      // break; we need a keepWithPrevious flag to fix this bug
-    }
     break;
 
   case TYPE_LINE:
     if (0 != width) {
-#if XXX
-      state->breakBeforeChild = PR_TRUE;
-      state->breakAfterChild = PR_TRUE;
-#endif
+      if (nsnull != lineLayoutState) {
+        lineLayoutState->mReflowResult =
+          NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
+        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
+      }
       aDesiredSize.height = nscoord(width * p2t);
       aDesiredSize.ascent = aDesiredSize.height;
-    }
-    else {
-      // XXX navigator ignores spacers of size 0 and won't cause a word
-      // break; we need a keepWithPrevious flag to fix this bug
     }
     break;
 
@@ -218,90 +185,109 @@ SpacerPart::CreateFrame(nsIPresContext*  aPresContext,
   return NS_OK;
 }
 
-void SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+PRUint8
+SpacerPart::GetType()
 {
+  PRUint8 type = TYPE_WORD;
+  nsHTMLValue value;
+  if (eContentAttr_HasValue ==
+      nsHTMLTagContent::GetAttribute(nsHTMLAtoms::type, value)) {
+    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+      type = value.GetIntValue();
+    }
+  }
+  return type;
+}
+
+static nsHTMLTagContent::EnumTable kTypeTable[] = {
+  { "line", TYPE_LINE },
+  { "vert", TYPE_LINE },
+  { "vertical", TYPE_LINE },
+  { "block", TYPE_IMAGE },
+  { 0 }
+};
+
+void
+SpacerPart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::type) {
-    PRUint8 type = TYPE_WORD;
-    if (aValue.EqualsIgnoreCase("line") ||
-        aValue.EqualsIgnoreCase("vert") ||
-        aValue.EqualsIgnoreCase("vertical")) {
-      type = TYPE_LINE;
+    if (ParseEnumValue(aValue, kTypeTable, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
     }
-    else if (aValue.EqualsIgnoreCase("block")) {
-      type = TYPE_IMAGE;
-    }
-    mType = type;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    nsHTMLValue val;
     ParseValue(aValue, 0, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    nsHTMLValue val;
     ParseAlignParam(aValue, val);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
-    nsHTMLValue val;
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
+  else {
+    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
+  }
 }
 
-nsContentAttr SpacerPart::GetAttribute(const nsString& aName,
-                                       nsString& aResult) const
+void
+SpacerPart::MapAttributesInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext)
 {
-  aResult.SetLength(0);
-  nsIAtom* atom = NS_NewAtom(aName);
-  nsContentAttr ca = eContentAttr_NotThere;
-  nsHTMLValue value;
-  if (atom == nsHTMLAtoms::type) {
-    switch (mType) {
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    nsStyleDisplay* display = (nsStyleDisplay*)
+      aContext->GetData(eStyleStruct_Display);
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+      switch (value.GetIntValue()) {
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        display->mFloats = NS_STYLE_FLOAT_LEFT;
+        break;
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        display->mFloats = NS_STYLE_FLOAT_RIGHT;
+        break;
+      default:
+        break;
+      }
+    }
+    PRUint8 type = GetType();
+    switch (type) {
     case TYPE_WORD:
-      break;
-    case TYPE_LINE:
-      aResult.Append("line");
-      ca = eContentAttr_HasValue;
-      break;
     case TYPE_IMAGE:
-      aResult.Append("block");
-      ca = eContentAttr_HasValue;
+      break;
+
+    case TYPE_LINE:
+      // This is not strictly 100% compatible: if the spacer is given
+      // a width of zero then it is basically ignored.
+      display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
       break;
     }
   }
-  else if ((atom == nsHTMLAtoms::size) ||
-           (atom == nsHTMLAtoms::width) ||
-           (atom == nsHTMLAtoms::height)) {
-    if (eContentAttr_HasValue == nsHTMLTagContent::GetAttribute(atom, value)) {
-      ValueOrPercentToString(value, aResult);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (atom == nsHTMLAtoms::align) {
-    if (eContentAttr_HasValue == nsHTMLTagContent::GetAttribute(atom, value)) {
-      AlignParamToString(value, aResult);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  NS_RELEASE(atom);
-  return ca;
 }
 
-nsContentAttr SpacerPart::GetAttribute(nsIAtom* aAttribute,
-                                       nsHTMLValue& aValue) const
+nsContentAttr
+SpacerPart::AttributeToString(nsIAtom*     aAttribute,
+                              nsHTMLValue& aValue,
+                              nsString&    aResult) const
 {
-  aValue.Reset();
-  if ((mType != TYPE_IMAGE) &&
-      ((aAttribute == nsHTMLAtoms::width) ||
-       (aAttribute == nsHTMLAtoms::height) ||
-       (aAttribute == nsHTMLAtoms::align))) {
-    // Pretend that these attributes are not present when the spacer
-    // is not a block spacer.
-    return eContentAttr_NotThere;
+  if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      EnumValueToString(aValue, kTypeTable, aResult);
+      return eContentAttr_HasValue;
+    }
   }
-  return nsHTMLTagContent::GetAttribute(aAttribute, aValue);
+  else if (aAttribute == nsHTMLAtoms::type) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      AlignParamToString(aValue, aResult);
+      return eContentAttr_HasValue;
+    }
+  }
+  return eContentAttr_NotThere;
 }
 
 nsresult
