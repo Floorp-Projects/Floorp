@@ -83,14 +83,7 @@ public class ImporterTopLevel extends ScriptableObject {
     }
 
     private void init() {
-        String[] names = { "importClass", "importPackage" };
-
-        try {
-            this.defineFunctionProperties(names, ImporterTopLevel.class,
-                                          ScriptableObject.DONTENUM);
-        } catch (PropertyException e) {
-            throw new Error();  // should never happen
-        }
+        (new ImporterFunctions(this)).define(this);
     }
 
     public String getClassName() {
@@ -138,8 +131,8 @@ public class ImporterTopLevel extends ScriptableObject {
         return result;
     }
 
-    public static void importClass(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj) {
+    void importClass(Context cx, Scriptable thisObj, Object[] args)
+    {
         for (int i=0; i<args.length; i++) {
             Object cl = args[i];
             if (!(cl instanceof NativeJavaClass)) {
@@ -157,8 +150,8 @@ public class ImporterTopLevel extends ScriptableObject {
         }
     }
 
-    public static void importPackage(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj) {
+    void importPackage(Context cx, Scriptable thisObj, Object[] args)
+    {
         Scriptable importedPackages;
         Object plist = thisObj.get("_packages_", thisObj);
         if (plist == NOT_FOUND) {
@@ -185,4 +178,43 @@ public class ImporterTopLevel extends ScriptableObject {
                 importedPackages.put(elements.length,importedPackages,pkg);
         }
     }
+}
+
+final class ImporterFunctions implements IdFunctionMaster
+{
+    ImporterFunctions(ImporterTopLevel importer)
+    {
+        this.importer = importer;
+    }
+
+    void define(Scriptable scope)
+    {
+        IdFunction.define(scope, "importClass", this, Id_importClass);
+        IdFunction.define(scope, "importPackage", this, Id_importPackage);
+    }
+
+    public Object execMethod(int methodId, IdFunction function, Context cx,
+                             Scriptable scope, Scriptable thisObj,
+                             Object[] args)
+        throws JavaScriptException
+    {
+        if (methodId == Id_importClass) {
+            importer.importClass(cx, thisObj, args);
+        } else {
+            if (methodId != Id_importPackage) Context.codeBug();
+            importer.importPackage(cx, thisObj, args);
+        }
+        return Undefined.instance;
+    }
+
+    public int methodArity(int methodId)
+    {
+        return 1;
+    }
+
+    private static final int
+        Id_importClass    =  1,
+        Id_importPackage  =  2;
+
+    private ImporterTopLevel importer;
 }
