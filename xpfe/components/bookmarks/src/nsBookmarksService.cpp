@@ -317,7 +317,7 @@ class BookmarkParser {
 private:
   nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
   nsIRDFDataSource*           mDataSource;
-  const char*                 mIEFavoritesRoot;
+  nsCString                   mIEFavoritesRoot;
   PRBool                      mFoundIEFavoritesRoot;
   PRBool                      mFoundPersonalToolbarFolder;
   PRBool                      mIsImportOperation;
@@ -348,7 +348,7 @@ protected:
 
 	nsresult setFolderHint(nsIRDFResource *newSource, nsIRDFResource *objType);
 
-	static nsresult CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
+	static nsresult CreateAnonymousResource(nsIRDFResource** aResult);
 
 	nsresult Unescape(nsString &text);
 
@@ -399,7 +399,7 @@ public:
            const PRUnichar* aCharset,
            PRInt32          aIndex);
 
-	nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
+	nsresult SetIEFavoritesRoot(nsCString& IEFavoritesRootURL)
 	{
 		mIEFavoritesRoot = IEFavoritesRootURL;
 		return(NS_OK);
@@ -470,7 +470,6 @@ BookmarkParser::Init(nsFileSpec *fileSpec, nsIRDFDataSource *aDataSource,
                      const nsString &defaultPersonalToolbarName, PRBool aIsImportOperation)
 {
 	mDataSource = aDataSource;
-	mIEFavoritesRoot = nsnull;
 	mFoundIEFavoritesRoot = PR_FALSE;
 	mFoundPersonalToolbarFolder = PR_FALSE;
   mIsImportOperation = aIsImportOperation;
@@ -874,7 +873,7 @@ BookmarkParser::Unescape(nsString &text)
 
 
 nsresult
-BookmarkParser::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
+BookmarkParser::CreateAnonymousResource(nsIRDFResource** aResult)
 {
 	static PRInt32 gNext = 0;
 	if (! gNext) {
@@ -885,7 +884,7 @@ BookmarkParser::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
 	uri.AppendWithConversion("#$");
 	uri.AppendInt(++gNext, 16);
 
-	return gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(*aResult));
+	return gRDF->GetUnicodeResource(uri.GetUnicode(), aResult);
 }
 
 
@@ -1098,7 +1097,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
     if ((!bookmark) && (isBookmarkFlag == PR_FALSE))
     {
 		// We've never seen this folder before. Assign it an anonymous ID
-		rv = CreateAnonymousResource(address_of(bookmark));
+		rv = CreateAnonymousResource(getter_AddRefs(bookmark));
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create anonymous resource for folder");
     }
     else if (bookmark.get() == kNC_PersonalToolbarFolder)
@@ -1108,14 +1107,14 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
     if (bookmark)
     {
-        const char  *bookmarkURI = nsnull;
-        bookmark->GetValueConst(&bookmarkURI);
+        nsXPIDLCString bookmarkURI;
+        bookmark->GetValueConst(getter_Shares(bookmarkURI));
 
-		bookmarkNode = bookmark;
+        bookmarkNode = bookmark;
 
         // assert appropriate node type
         PRBool		isIEFavoriteRoot = PR_FALSE;
-        if (nsnull != mIEFavoritesRoot)
+        if (!mIEFavoritesRoot.IsEmpty())
         {
             if (!nsCRT::strcmp(mIEFavoritesRoot, bookmarkURI))
             {
@@ -1397,9 +1396,9 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 
 	PRBool		isIEFavoriteRoot = PR_FALSE;
 
-	if (nsnull != mIEFavoritesRoot)
+	if (!mIEFavoritesRoot.IsEmpty())
 	{
-		if (!PL_strcmp(aURL, mIEFavoritesRoot))
+		if (mIEFavoritesRoot.EqualsIgnoreCase(aURL))
 		{
 			mFoundIEFavoritesRoot = PR_TRUE;
 			isIEFavoriteRoot = PR_TRUE;
@@ -1482,7 +1481,7 @@ BookmarkParser::ParseBookmarkSeparator(const nsString &aLine, const nsCOMPtr<nsI
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	separator;
 
-	if (NS_SUCCEEDED(rv = CreateAnonymousResource(address_of(separator))))
+	if (NS_SUCCEEDED(rv = CreateAnonymousResource(getter_AddRefs(separator))))
 	{
 		nsAutoString		defaultSeparatorName;
 		defaultSeparatorName.AssignWithConversion("-----");
@@ -2797,6 +2796,11 @@ nsBookmarksService::FindShortcut(const PRUnichar *aUserInput, char **aShortcutUR
 	return NS_RDF_NO_VALUE;
 }
 
+NS_IMETHODIMP 
+nsBookmarksService::GetAnonymousResource(nsIRDFResource** aResult)
+{
+  return BookmarkParser::CreateAnonymousResource(aResult);
+}
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -3513,7 +3517,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
 
   if (!newResource) {
     // We're a folder, or some other type of anonymous resource.
-    rv = BookmarkParser::CreateAnonymousResource(address_of(newResource));
+    rv = BookmarkParser::CreateAnonymousResource(getter_AddRefs(newResource));
     if (NS_FAILED(rv)) return rv;
   }
 
@@ -3627,7 +3631,7 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
 	// else if setting a new Personal Toolbar Folder, we need to work some magic!
 
 	nsCOMPtr<nsIRDFResource>	newAnonURL;
-	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(address_of(newAnonURL))))
+	if (NS_FAILED(rv = BookmarkParser::CreateAnonymousResource(getter_AddRefs(newAnonURL))))
 		return(rv);
 	// Note: use our Change() method, not mInner->Change(), due to Bookmarks magical #URL handling
 	rv = Change(kNC_PersonalToolbarFolder, kNC_URL, kNC_PersonalToolbarFolder, newAnonURL);
@@ -4082,18 +4086,16 @@ nsBookmarksService::ReadBookmarks()
 		parser.Init(&bookmarksFile, mInner, mPersonalToolbarName);
 
 #ifdef	XP_MAC
-		parser.SetIEFavoritesRoot(kURINC_IEFavoritesRoot);
+		parser.SetIEFavoritesRoot(nsCString(kURINC_IEFavoritesRoot));
 #endif
 
 #ifdef	XP_WIN
 		nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
-		nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
-		const char			*favoritesURL = ieFavoritesURLSpec.GetAsString();
+		nsFileURL ieFavoritesURLSpec(ieFavoritesFile);
+		const char* favoritesURL = ieFavoritesURLSpec.GetAsString();
 		if (favoritesURL)
-		{
 			ieFavoritesURL = strdup(favoritesURL);
-		}
-		parser.SetIEFavoritesRoot(ieFavoritesURL);
+		parser.SetIEFavoritesRoot(nsCString(ieFavoritesURL));
 #endif
 
 #ifdef	XP_BEOS
@@ -4106,10 +4108,8 @@ nsBookmarksService::ReadBookmarks()
 
 		const char			*constNetPositiveURL = netPositiveURLSpec.GetAsString();
 		if (constNetPositiveURL)
-		{
 			netPositiveURL = strdup(constNetPositiveURL);
-		}
-		parser.SetIEFavoritesRoot(netPositiveURL);
+		parser.SetIEFavoritesRoot(nsCString(netPositiveURL));
 #endif
 
 		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
@@ -4138,8 +4138,15 @@ nsBookmarksService::ReadBookmarks()
 		parser.ParserFoundIEFavoritesRoot(&foundIERoot);
 	} // <-- scope the stream to get the open/close automatically.
 	
-	// look for and import any IE Favorites
-	nsAutoString	ieTitle;
+	// Look for and import any IE favorites. Only do this if the pref 
+  // |browser.bookmarks.import_system_favorites| is set. 
+  // Se bug 22642 for details. 
+  PRBool useSystemBookmarks = PR_TRUE;
+  nsCOMPtr<nsIPref> prefSvc(do_GetService("@mozilla.org/preferences;1"));
+  if (prefSvc)
+      prefSvc->GetBoolPref("browser.bookmarks.import_system_favorites", &useSystemBookmarks);
+  
+  nsAutoString	ieTitle;
 	getLocaleString("ImportedIEFavorites", ieTitle);
 
 #ifdef	XP_BEOS
@@ -4149,7 +4156,7 @@ nsBookmarksService::ReadBookmarks()
 
 #ifdef	XP_MAC
 	// if the IE Favorites root isn't somewhere in bookmarks.html, add it
-	if (!foundIERoot)
+	if (useSystemBookmarks && !foundIERoot)
 	{
 		nsCOMPtr<nsIRDFContainer> bookmarksRoot;
 		rv = nsComponentManager::CreateInstance(kRDFContainerCID,
@@ -4182,7 +4189,7 @@ nsBookmarksService::ReadBookmarks()
 		}
 
 		// if the IE Favorites root isn't somewhere in bookmarks.html, add it
-		if (!foundIERoot)
+		if (useSystemBookmarks && !foundIERoot)
 		{
 			nsCOMPtr<nsIRDFContainer> container;
 			rv = nsComponentManager::CreateInstance(kRDFContainerCID,
@@ -4217,7 +4224,7 @@ nsBookmarksService::ReadBookmarks()
 		}
 
 		// if the Favorites root isn't somewhere in bookmarks.html, add it
-		if (!foundIERoot)
+		if (useSystemBookmarks && !foundIERoot)
 		{
 			nsCOMPtr<nsIRDFContainer> container;
 			rv = nsComponentManager::CreateInstance(kRDFContainerCID,
