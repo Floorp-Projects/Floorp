@@ -27,6 +27,7 @@
 <?xml-stylesheet href="chrome://cview/skin" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
 <!--
   including tasksOverlay.xul imports the tasks menu, it will appear

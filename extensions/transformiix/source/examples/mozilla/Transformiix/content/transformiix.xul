@@ -31,6 +31,7 @@
 <?xml-stylesheet href="chrome://Transformiix/skin" type="text/css"?>
 -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoadTransformiix();">

@@ -23,6 +23,7 @@
 
 <?xml-stylesheet href="chrome://xmlterm/skin/xmlterm.css" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window>
 <window id="xmlterm-window" xmlns:html="http://www.w3.org/TR/REC-html40"
