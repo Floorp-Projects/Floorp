@@ -321,7 +321,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
     aReturn.Assign(mText.Get2b() + aStart, amount);
   }
   else {
-    aReturn.Assign(NS_ConvertASCIItoUCS2(mText.Get1b() + aStart, amount), amount);
+    aReturn.Assign(NS_ConvertASCIItoUCS2(mText.Get1b() + aStart, amount).get(), amount);
   }
 
   return NS_OK;
@@ -999,7 +999,7 @@ nsGenericDOMDataNode::CopyText(nsAWritableString& aResult)
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()),
+    aResult.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()).get(),
                    mText.GetLength());
   }
   return NS_OK;
