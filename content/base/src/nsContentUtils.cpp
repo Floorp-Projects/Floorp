@@ -1623,9 +1623,9 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
     const PRUnichar* end;
     qName.EndReading(end);
 
-    nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(colon + 1, end));
+    nsCOMPtr<nsIAtom> prefix = do_GetAtom(Substring(qName.get(), colon));
 
-    rv = aNodeInfoManager->GetNodeInfo(Substring(qName.get(), colon), prefix,
+    rv = aNodeInfoManager->GetNodeInfo(Substring(colon + 1, end), prefix,
                                        aNamespaceURI, aNodeInfo);
   }
   else {
