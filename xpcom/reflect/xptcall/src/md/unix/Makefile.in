@@ -103,6 +103,18 @@ CPPSRCS		= \
 endif
 endif
 
+# HP-UX/PA32
+ifeq ($(OS_ARCH),HP-UX)
+CPPSRCS		= \
+		  xptcinvoke_pa32.cpp \
+		  xptcstubs_pa32.cpp \
+		  $(NULL)
+ASFILES		= \
+		  xptcstubs_asm_pa32.s \
+		  xptcinvoke_asm_pa32.s \
+		  $(NULL)
+endif
+
 # AIX/PPC
 ifeq ($(OS_ARCH),AIX)
 CPPSRCS		= \
