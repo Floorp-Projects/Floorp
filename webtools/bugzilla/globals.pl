@@ -250,8 +250,8 @@ sub GenerateVersionTable {
     print $fh "#\n";
 
     require Data::Dumper;
-    print($fh,Data::Dumper->Dump([\@::log_columns, \%::versions],
-                                 ['*::log_columns', '*::versions']));
+    print $fh (Data::Dumper->Dump([\@::log_columns, \%::versions],
+                                  ['*::log_columns', '*::versions']));
 
     foreach my $i (@list) {
         if (!defined $::components{$i}) {
@@ -259,23 +259,23 @@ sub GenerateVersionTable {
         }
     }
     @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
-    print($fh,Data::Dumper->Dump([\@::legal_versions, \%::components],
-                                 ['*::legal_versions', '*::components']));
+    print $fh (Data::Dumper->Dump([\@::legal_versions, \%::components],
+                                  ['*::legal_versions', '*::components']));
     @::legal_components = sort {uc($a) cmp uc($b)} keys(%carray);
 
-    print($fh,Data::Dumper->Dump([\@::legal_components, \@::legal_product,
-                                  \@::legal_priority, \@::legal_severity,
-                                  \@::legal_platform, \@::legal_opsys,
-                                  \@::legal_bug_status, \@::legal_resolution],
-                                 ['*::legal_components', '*::legal_product',
-                                  '*::legal_priority', '*::legal_severity',
-                                  '*::legal_platform', '*::legal_opsys',
-                                  '*::legal_bug_status', '*::legal_resolution']));
+    print $fh (Data::Dumper->Dump([\@::legal_components, \@::legal_product,
+                                   \@::legal_priority, \@::legal_severity,
+                                   \@::legal_platform, \@::legal_opsys,
+                                   \@::legal_bug_status, \@::legal_resolution],
+                                  ['*::legal_components', '*::legal_product',
+                                   '*::legal_priority', '*::legal_severity',
+                                   '*::legal_platform', '*::legal_opsys',
+                                   '*::legal_bug_status', '*::legal_resolution']));
 
-    print($fh,Data::Dumper->Dump([\@::settable_resolution, \%::proddesc,
-                                  \@::enterable_products, \%::prodmaxvotes],
-                                 ['*::settable_resolution', '*::proddesc',
-                                  '*::enterable_products', '*::prodmaxvotes']));
+    print $fh (Data::Dumper->Dump([\@::settable_resolution, \%::proddesc,
+                                   \@::enterable_products, \%::prodmaxvotes],
+                                  ['*::settable_resolution', '*::proddesc',
+                                   '*::enterable_products', '*::prodmaxvotes']));
 
     if ($dotargetmilestone) {
         # reading target milestones in from the database - matthew@zeroknowledge.com
@@ -298,12 +298,12 @@ sub GenerateVersionTable {
             }
         }
 
-        print($fh,Data::Dumper->Dump([\%::target_milestone,
-                                      \@::legal_target_milestone,
-                                      \%::milestoneurl],
-                                     ['*::target_milestone',
-                                      '*::legal_target_milestone',
-                                      '*::milestoneurl']));
+        print $fh (Data::Dumper->Dump([\%::target_milestone,
+                                       \@::legal_target_milestone,
+                                       \%::milestoneurl],
+                                      ['*::target_milestone',
+                                       '*::legal_target_milestone',
+                                       '*::milestoneurl']));
     }
 
     SendSQL("SELECT id, name FROM keyworddefs ORDER BY name");
@@ -314,8 +314,8 @@ sub GenerateVersionTable {
         $::keywordsbyname{$name} = $id;
     }
 
-    print($fh,Data::Dumper->Dump([\@::legal_keywords, \%::keywordsbyname],
-                                 ['*::legal_keywords', '*::keywordsbyname']));
+    print $fh (Data::Dumper->Dump([\@::legal_keywords, \%::keywordsbyname],
+                                  ['*::legal_keywords', '*::keywordsbyname']));
 
     print $fh "1;\n";
     close $fh;
