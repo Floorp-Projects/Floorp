@@ -157,9 +157,6 @@ checkout:
 	$(CVSCO) $(DEPTH)/nglayout.mk
 	(cd $(SRCDIR); $(MAKE) -f nglayout.mk pull_all)
 
-# Pull xpfe
-	$(CVSCO) $(SRCDIR)/xpfe
-
 
 #
 # build it
