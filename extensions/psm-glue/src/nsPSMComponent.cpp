@@ -63,7 +63,7 @@
 #define PSM_FILE_NAME "psm.exe"
 #elif XP_UNIX
 #define PSM_FILE_NAME "start-psm"
-#else XP_MAC
+#else
 #define PSM_FILE_NAME "psm"
 #endif
 
