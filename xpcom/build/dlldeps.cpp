@@ -46,6 +46,7 @@
 #include "nsInterfaceInfo.h"
 #include "xptcall.h"
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsIGenericFactory.h"
 #include "nsAVLTree.h"
 #include "nsHashtableEnumerator.h"
@@ -129,5 +130,6 @@ void XXXNeverCalled()
     NS_NewBinaryInputStream(0, 0);
     nsString foo;
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
-      nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+    nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+	NS_NewLocalFile(NULL, NULL);
 }
