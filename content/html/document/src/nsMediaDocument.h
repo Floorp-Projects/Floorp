@@ -68,6 +68,7 @@ class nsMediaDocumentStreamListener: public nsIStreamListener
 {
 public:
   nsMediaDocumentStreamListener(nsMediaDocument *aDocument);
+  nsMediaDocumentStreamListener() {};
   virtual ~nsMediaDocumentStreamListener();
   void SetStreamListener(nsIStreamListener *aListener);
 
