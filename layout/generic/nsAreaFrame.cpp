@@ -97,7 +97,7 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
 NS_IMETHODIMP
 nsAreaFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  mAbsoluteFrames.DeleteFrames(aPresContext);
+  mAbsoluteContainer.DeleteFrames(aPresContext);
   return nsBlockFrame::DeleteFrame(aPresContext);
 }
 
@@ -109,8 +109,7 @@ nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsresult  rv;
 
   if (nsLayoutAtoms::absoluteList == aListName) {
-    mAbsoluteFrames.SetFrames(aChildList);
-    rv = NS_OK;
+    rv = mAbsoluteContainer.SetInitialChildList(aPresContext, aListName, aChildList);
   } else {
     rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
@@ -140,8 +139,7 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (aListName == nsLayoutAtoms::absoluteList) {
-    *aFirstChild = mAbsoluteFrames.FirstChild();
-    return NS_OK;
+    return mAbsoluteContainer.FirstChild(aListName, aFirstChild);
   }
 
   return nsBlockFrame::FirstChild(aListName, aFirstChild);
@@ -210,102 +208,7 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
 NS_IMETHODIMP
 nsAreaFrame::GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const
 {
-  aXMost = aYMost = 0;
-  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); nsnull != f; f->GetNextSibling(&f)) {
-    // Get the frame's x-most and y-most. This is for its flowed content only
-    nsRect  rect;
-    f->GetRect(rect);
-
-    if (rect.XMost() > aXMost) {
-      aXMost = rect.XMost();
-    }
-    if (rect.YMost() > aYMost) {
-      aYMost = rect.YMost();
-    }
-
-    // If the child frame is also an area frame, then take into account its child
-    // absolutely positioned elements
-    nsIAreaFrame* areaFrame;
-    if (NS_SUCCEEDED(f->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
-      nscoord xMost, yMost;
-
-      areaFrame->GetPositionedInfo(xMost, yMost);
-      // Convert to our coordinate space
-      xMost += rect.x;
-      yMost += rect.y;
-
-      if (xMost > aXMost) {
-        aXMost = xMost;
-      }
-      if (yMost > aYMost) {
-        aYMost = yMost;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-/**
- * Called by Reflow() to handle the case where it's an incremental reflow
- * targeted at us of an absolutely positioned child frame
- */
-nsresult
-nsAreaFrame::IncrementalReflow(nsIPresContext&          aPresContext,
-                               const nsHTMLReflowState& aReflowState)
-{
-  nsIReflowCommand::ReflowType  type;
-  nsIFrame*                     newFrames;
-  PRInt32                       numFrames = 0;
-
-  // Get the type of reflow command
-  aReflowState.reflowCommand->GetType(type);
-
-  // Handle each specific type
-  if (nsIReflowCommand::FrameAppended == type) {
-    // Add the frames to our list of absolutely position frames
-    aReflowState.reflowCommand->GetChildFrame(newFrames);
-    NS_ASSERTION(nsnull != newFrames, "null child list");
-    numFrames = LengthOf(newFrames);
-    mAbsoluteFrames.AppendFrames(nsnull, newFrames);
-
-  } else if (nsIReflowCommand::FrameRemoved == type) {
-    // Get the new frame
-    nsIFrame* childFrame;
-    aReflowState.reflowCommand->GetChildFrame(childFrame);
-
-    PRBool result = mAbsoluteFrames.DeleteFrame(aPresContext, childFrame);
-    NS_ASSERTION(result, "didn't find frame to delete");
-
-  } else if (nsIReflowCommand::FrameInserted == type) {
-    // Get the previous sibling
-    nsIFrame* prevSibling;
-    aReflowState.reflowCommand->GetPrevSiblingFrame(prevSibling);
-
-    // Insert the new frames
-    aReflowState.reflowCommand->GetChildFrame(newFrames);
-    NS_ASSERTION(nsnull != newFrames, "null child list");
-    numFrames = LengthOf(newFrames);
-    mAbsoluteFrames.InsertFrames(nsnull, prevSibling, newFrames);
-
-  } else {
-    NS_ASSERTION(PR_FALSE, "unexpected reflow type");
-  }
-
-  // For inserted and appended reflow commands we need to reflow the
-  // newly added frames
-  if ((nsIReflowCommand::FrameAppended == type) ||
-      (nsIReflowCommand::FrameInserted == type)) {
-
-    while (numFrames-- > 0) {
-      nsReflowStatus  status;
-
-      ReflowAbsoluteFrame(aPresContext, aReflowState, newFrames, PR_TRUE, status);
-      newFrames->GetNextSibling(&newFrames);
-    }
-  }
-
-  return NS_OK;
+  return mAbsoluteContainer.GetPositionedInfo(aXMost, aYMost);
 }
 
 NS_IMETHODIMP
@@ -324,57 +227,13 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 
   // See if it's an incremental reflow command
   if (eReflowReason_Incremental == aReflowState.reason) {
-    PRBool  handled = PR_FALSE;
+    // Give the absolute positioning code a chance to handle it
+    PRBool  handled;
+    
+    mAbsoluteContainer.IncrementalReflow(aPresContext, aReflowState, handled);
 
-    // See if it's targeted at us
-    nsIFrame* targetFrame;
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-
-    if (this == targetFrame) {
-      nsIAtom*  listName;
-      PRBool    isAbsoluteChild;
-
-      // It's targeted at us. See if the child frame is absolutely positioned
-      aReflowState.reflowCommand->GetChildListName(listName);
-      isAbsoluteChild = nsLayoutAtoms::absoluteList == listName;
-      NS_IF_RELEASE(listName);
-
-      if (isAbsoluteChild) {
-        rv = IncrementalReflow(aPresContext, aReflowState);
-        handled = PR_TRUE;
-      }
-
-    } else {
-      // Peek at the next frame in the reflow path
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame, PR_FALSE);
-
-      // See if it's one of our absolutely positioned child frames
-      NS_ASSERTION(nsnull != nextFrame, "next frame in reflow command is null."); 
-      if (mAbsoluteFrames.ContainsFrame(nextFrame)) {
-        // Remove the next frame from the reflow path
-        aReflowState.reflowCommand->GetNext(nextFrame, PR_TRUE);
-
-        nsReflowStatus  kidStatus;
-        rv = ReflowAbsoluteFrame(aPresContext, aReflowState, nextFrame,
-                                 PR_FALSE, kidStatus);
-        // XXX Make sure the frame is repainted. For the time being, since we
-        // have no idea what actually changed repaint it all...
-        nsIView*  view;
-        nextFrame->GetView(&view);
-        if (nsnull != view) {
-          nsIViewManager* viewMgr;
-          view->GetViewManager(viewMgr);
-          if (nsnull != viewMgr) {
-            viewMgr->UpdateView(view, (nsIRegion*)nsnull, NS_VMREFRESH_NO_SYNC);
-            NS_RELEASE(viewMgr);
-          }
-        }
-        handled = PR_TRUE;
-      }
-    }
-
-    // If we handled the incremental reflow, then we're all done
+    // If the incremental reflow command was handled by the absolute positioning
+    // code, then we're all done
     if (handled) {
       // Just return our current size as our desired size
       aDesiredSize.width = mRect.width;
@@ -388,9 +247,7 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-  // Set the space manager.
-  // Note: we don't do this for absolutely positioned child frames, because they
-  // have their own space manager
+  // If we have one then set the space manager
   if (nsnull != mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
@@ -400,12 +257,14 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
     mSpaceManager->ClearRegions();
   }
 
+  // Let the block frame do its reflow first
   rv = nsBlockFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  // Reflow the absolutely positioned child frames. We need to do this even for
-  // an incremental reflow, because some of the absolutely positioned child frames
-  // may have 'auto' for an offset
-  ReflowAbsoluteFrames(aPresContext, aReflowState);
+  // Let the absolutely positioned container reflow any absolutely positioned
+  // child frames that need to be reflowed
+  if (NS_SUCCEEDED(rv)) {
+    rv = mAbsoluteContainer.Reflow(aPresContext, aReflowState);
+  }
 
   // Compute our desired size taking into account floaters that stick outside
   // our box. Note that if this frame has a height specified by CSS then we
@@ -474,83 +333,6 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   return rv;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Helper functions
-
-// XXX Optimize the case where it's a resize reflow and the absolutely
-// positioned child has the exact same size and position and skip the
-// reflow...
-nsresult
-nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
-                                 const nsHTMLReflowState& aReflowState,
-                                 nsIFrame*                aKidFrame,
-                                 PRBool                   aInitialReflow,
-                                 nsReflowStatus&          aStatus)
-{
-  nsresult  rv;
-  nsMargin  border;
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  spacing->GetBorder(border);
-  
-  nsIHTMLReflow*  htmlReflow;
-  rv = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_SUCCEEDED(rv)) {
-    htmlReflow->WillReflow(aPresContext);
-
-    nsSize              availSize(aReflowState.computedWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowMetrics kidDesiredSize(nsnull);
-    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                       availSize);
-
-    // If it's the initial reflow, then override the reflow reason. This is
-    // used when frames are inserted incrementally
-    if (aInitialReflow) {
-      kidReflowState.reason = eReflowReason_Initial;
-    }
-
-    rv = htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
-
-    // XXX If the child had a fixed height, then make sure it respected it...
-    if (NS_AUTOHEIGHT != kidReflowState.computedHeight) {
-      if (kidDesiredSize.height < kidReflowState.computedHeight) {
-        kidDesiredSize.height = kidReflowState.computedHeight;
-        kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
-                                 kidReflowState.mComputedBorderPadding.bottom;
-      }
-    }
-    
-    // Position the child relative to our padding edge
-    nsRect  rect(border.left + kidReflowState.computedOffsets.left + kidReflowState.computedMargin.left,
-                 border.top + kidReflowState.computedOffsets.top + kidReflowState.computedMargin.top,
-                 kidDesiredSize.width, kidDesiredSize.height);
-    aKidFrame->SetRect(rect);
-  }
-
-  return rv;
-}
-
-// Called by Reflow() to reflow the absolutely positioned child frames.
-void
-nsAreaFrame::ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
-                                  const nsHTMLReflowState& aReflowState)
-{
-  // Make a copy of the reflow state. If the reason is eReflowReason_Incremental,
-  // then change it to eReflowReason_Resize
-  nsHTMLReflowState reflowState(aReflowState);
-  if (eReflowReason_Incremental == reflowState.reason) {
-    reflowState.reason = eReflowReason_Resize;
-  }
-
-  nsIFrame* kidFrame;
-  for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
-    // Reflow the frame
-    nsReflowStatus  kidStatus;
-    ReflowAbsoluteFrame(aPresContext, reflowState, kidFrame, PR_FALSE,
-                        kidStatus);
-  }
 }
 
 NS_IMETHODIMP
