@@ -467,14 +467,14 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
         if (colon) {
             *colon = '\0';
             nsCAutoString headerStr(cursor);
-            headerStr.StripWhitespace();
+            headerStr.CompressWhitespace();
             headerStr.ToLowerCase();
             nsCOMPtr<nsIAtom> header = NS_NewAtom(headerStr.GetBuffer());
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
             *colon = ':';
 
             nsCAutoString headerVal(colon + 1);
-            headerVal.StripWhitespace();
+            headerVal.CompressWhitespace();
 
             // examine header
             if (headerStr.Equals("content-type")) {
