@@ -123,6 +123,7 @@ protected:
 
 		// handle control tracking
 	virtual void HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boolean inPrevInside) ;
+	virtual void DoneTracking ( SInt16 inHotSpot, Boolean /* inGoodTrack */) ;
 
 	bool IsMouseInFrame ( ) const { return mMouseInFrame; } ;
 	

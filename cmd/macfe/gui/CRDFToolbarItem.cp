@@ -405,6 +405,9 @@ CRDFPushButton :: MouseWithin ( Point /*inPortPt*/, const EventRecord & /*inMacE
 void 
 CRDFPushButton :: MouseLeave( )
 {
+	if ( !IsMouseInFrame() )
+		return;
+	
 	mMouseInFrame = false;
 	if (IsActive() && IsEnabled()) {
 		// since we can't simply draw the border w/ xor, we need to get the toolbar
@@ -437,6 +440,25 @@ CRDFPushButton :: HotSpotAction(short /* inHotSpot */, Boolean inCurrInside, Boo
 
 } // HotSpotAction
 
+
+//
+// DoneTracking
+//
+// Reset the toolbar back to its original state.
+//
+void
+CRDFPushButton :: DoneTracking( SInt16 inHotSpot, Boolean inGoodTrack )
+{		
+	SetTrackInside(false);
+
+	if ( inGoodTrack ) {	
+		// draw parent, then redraw us.
+		GetSuperView()->Draw(NULL);
+		Draw(NULL);
+	}
+	else
+		MouseLeave();		// mouse has left the building. Redraw the correct state now, not later
+}
 
 #pragma mark -
 
