@@ -36,6 +36,7 @@
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
+#if 0
 // XXX this code needs to move far away from here
 static nsIImageManager* gImageManager = nsnull;
 static void InitImageLibrary()
@@ -50,8 +51,9 @@ static void InitImageLibrary()
   printf("can't initialize image library\n");
 }
 // XXX end code with no home...
+#endif
 
-class ImageLoader :  nsIImageRequestObserver {
+class ImageLoader :  public nsIImageRequestObserver {
 public:
   ImageLoader(nsPresContext* aCX, nsIImageGroup* aGroup, nsIFrame* aFrame);
   ~ImageLoader();

@@ -206,7 +206,7 @@ nsInputFrame::ResizeReflow(nsIPresContext* aPresContext,
     GetParentWithView(parWithView);
 	  parWithView->GetView(parView);
 
-	  const nsIID id = GetCID();
+	  const nsIID& id = GetCID();
     nsInputWidgetData* initData = GetWidgetInitData(); // needs to be deleted
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData, nsnull, 0, nsnull,
@@ -277,14 +277,14 @@ nsInputFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
   }
 }
 
-const nsIID
+const nsIID&
 nsInputFrame::GetIID()
 {
   static NS_DEFINE_IID(kButtonIID, NS_IBUTTON_IID);
   return kButtonIID;
 }
   
-const nsIID
+const nsIID&
 nsInputFrame::GetCID()
 {
   static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);

@@ -53,9 +53,9 @@ public:
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
-  virtual const nsIID GetCID();
+  virtual const nsIID& GetCID();
 
-  virtual const nsIID GetIID();
+  virtual const nsIID& GetIID();
 
   PRBool IsComboBox();
 
@@ -153,7 +153,7 @@ nsSelectFrame::IsComboBox()
   return content->IsComboBox();
 }
 
-const nsIID
+const nsIID&
 nsSelectFrame::GetIID()
 {
   if (IsComboBox()) {
@@ -164,7 +164,7 @@ nsSelectFrame::GetIID()
   }
 }
   
-const nsIID
+const nsIID&
 nsSelectFrame::GetCID()
 {
   static NS_DEFINE_IID(kComboCID, NS_COMBOBOX_CID);

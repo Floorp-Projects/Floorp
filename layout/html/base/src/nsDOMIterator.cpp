@@ -19,7 +19,6 @@
 #include "nsDOMIterator.h"
 #include "nsIDOMNode.h"
 
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 
 nsDOMIterator::nsDOMIterator(nsIContent &aContent) : mContent(aContent)

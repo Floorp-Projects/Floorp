@@ -220,7 +220,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  PRInt32 count = ((nsnull != mRules) ? mRules->Count() : 0);
+  PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
 
   for (PRInt32 index = 0; index < count; index++) {
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
@@ -272,12 +272,12 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
-  if (nsnull == mFirstChild) {
+  if (mFirstChild.IsNull()) {
     mFirstChild.SetAddRef(aSheet);
   }
   else {
     nsICSSStyleSheet* child = mFirstChild;
-    while (nsnull != ((CSSStyleSheetImpl*)child)->mNext) {
+    while (((CSSStyleSheetImpl*)child)->mNext.IsNotNull()) {
       child = ((CSSStyleSheetImpl*)child)->mNext;
     }
     ((CSSStyleSheetImpl*)child)->mNext.SetAddRef(aSheet);
@@ -289,7 +289,7 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   NS_PRECONDITION(nsnull != aRule, "null arg");
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
-  if (nsnull == mRules) {
+  if (mRules.IsNull()) {
     if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
       return;
   }
@@ -309,7 +309,7 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
-  if (nsnull == mRules) {
+  if (mRules.IsNull()) {
     if (NS_OK != NS_NewISupportsArray(mRules.AssignPtr()))
       return;
   }
@@ -343,7 +343,7 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  PRInt32 count = ((nsnull != mRules) ? mRules->Count() : 0);
+  PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
 
   for (index = 0; index < count; index++) {
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);

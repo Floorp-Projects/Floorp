@@ -237,5 +237,5 @@ nsIFrame* nsReflowCommand::GetNext() const
   if (count > 0) {
     rv = (nsIFrame*) mPath[count - 1];
   }
-  return nsnull;
+  return rv;
 }

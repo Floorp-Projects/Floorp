@@ -220,7 +220,6 @@ NS_METHOD nsBodyFrame::VerifyTree() const
   NS_ASSERTION(mFirstContentOffset <= mLastContentOffset, "bad offsets");
 
   // Verify child content offsets
-  PRInt32 offset = mFirstContentOffset;
   nsIFrame* child = mFirstChild;
   while (nsnull != child) {
     // Make sure that the child's tree is valid

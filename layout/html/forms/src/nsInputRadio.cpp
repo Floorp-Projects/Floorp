@@ -41,9 +41,9 @@ public:
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView);
 
-  virtual const nsIID GetCID();
+  virtual const nsIID& GetCID();
 
-  virtual const nsIID GetIID();
+  virtual const nsIID& GetIID();
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
@@ -69,14 +69,14 @@ nsInputRadioFrame::~nsInputRadioFrame()
 }
 
 
-const nsIID
+const nsIID&
 nsInputRadioFrame::GetIID()
 {
   static NS_DEFINE_IID(kRadioIID, NS_IRADIOBUTTON_IID);
   return kRadioIID;
 }
   
-const nsIID
+const nsIID&
 nsInputRadioFrame::GetCID()
 {
   static NS_DEFINE_IID(kRadioCID, NS_RADIOBUTTON_CID);

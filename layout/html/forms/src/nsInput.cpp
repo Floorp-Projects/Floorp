@@ -30,7 +30,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nscoord.h"
+#include "nsCoord.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include "nsHTMLForms.h"

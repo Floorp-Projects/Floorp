@@ -1162,7 +1162,6 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
 
   PRBool result = PR_TRUE;
   nsIFrame* kidFrame;
-  nsIFrame* prevKidFrame = nsnull;
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; ) {
     nsIContentPtr kid;
@@ -1218,7 +1217,6 @@ nsBlockFrame::ReflowMappedChildren(nsIPresContext* aCX,
     }
 
     // Get the next child frame
-    prevKidFrame = kidFrame;
     kidFrame->GetNextSibling(kidFrame);
   }
 
@@ -1255,7 +1253,7 @@ PRBool nsBlockFrame::MoreToReflow(nsIPresContext* aCX)
     // Get the next content object that we would like to reflow
     PRInt32 kidIndex = NextChildOffset();
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull != kid) {
+    if (kid.IsNotNull()) {
       // Resolve style for the kid
       nsIStyleContextPtr kidSC = aCX->ResolveStyleContextFor(kid, this);
       nsStyleDisplay* kidStyleDisplay = (nsStyleDisplay*)
@@ -1318,7 +1316,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
   for (;;) {
     // Get the next content object
     nsIContentPtr kid = mContent->ChildAt(kidIndex);
-    if (nsnull == kid) {
+    if (kid.IsNull()) {
       result = frComplete;
       break;
     }
@@ -1340,7 +1338,6 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
     } else if (nsnull == kidPrevInFlow) {
       // Create initial frame for the child
       nsIContentDelegate* kidDel;
-      nsresult fr;
       switch (kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
@@ -1369,7 +1366,7 @@ nsBlockFrame::ReflowAppendedChildren(nsIPresContext* aCX,
 
       default:
         NS_ASSERTION(nsnull == kidPrevInFlow, "bad prev in flow");
-        fr = nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
+        nsFrame::NewFrame(&kidFrame, kid, kidIndex, this);
         break;
       }
       kidFrame->SetStyleContext(kidSC);
