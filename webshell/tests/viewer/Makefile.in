@@ -106,6 +106,11 @@ XP_DIST_LIBS		= \
 			-lgkgfx \
 			$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+RESFILE		= viewer.res
+XP_DIST_LIBS	+= -lxpwidgets_s -lDebugRobot
+endif
+
 ifdef MOZ_OJI
 XP_DIST_LIBS		+= -ljsj
 endif
@@ -114,6 +119,7 @@ XP_DIST_LIBS		+= -lmozutil_s
 endif
 
 XP_DIST_LIBS		+= \
+			$(EXTRA_DSO_LIBS) \
 			$(XPCOM_LIBS) \
 			$(MOZ_JS_LIBS) \
 			$(NULL)
@@ -166,12 +172,9 @@ CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 GARBAGE			+= $(PROGRAM)_gtk $(PROGRAM)_qt $(PROGRAM)_xlib
 
 ifeq ($(OS_ARCH),WINNT)
-RESFILE		= viewer.res
 OS_LIBS		+= shell32.lib ole32.lib oleaut32.lib oleacc.lib \
 	imm32.lib uuid.lib comdlg32.lib
 LDFLAGS		+= -SUBSYSTEM:CONSOLE
-EXTRA_DSO_LIBS	+= xpwidgets_s
-
 ifdef MOZ_NO_DEBUG_RTL
 CXXFLAGS	+= -DMOZ_NO_DEBUG_RTL
 endif

@@ -27,7 +27,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= ds32$(BIN_SUFFIX)
-RESFILE		= ds32.res
 
 USE_NON_MT_LIBS = 1
 

@@ -32,6 +32,10 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsGIFModule2
 
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LIBS	= gkgfx
+endif
+
 REQUIRES	= xpcom \
 		  gfx \
 		  gfx2 \
@@ -41,6 +45,7 @@ REQUIRES	= xpcom \
 CPPSRCS		= GIF2.cpp nsGIFDecoder2.cpp nsGIFModule.cpp
 
 EXTRA_DSO_LDOPTS = $(GIF_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

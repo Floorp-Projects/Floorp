@@ -77,5 +77,9 @@ CPPSRCS		= \
 		morkZone.cpp \
 		$(NULL)
 
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS		+= morkSearchRowCursor.cpp
+endif
+
 include $(topsrcdir)/config/rules.mk
 
