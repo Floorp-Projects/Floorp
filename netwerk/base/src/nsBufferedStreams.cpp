@@ -478,12 +478,17 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
 ////////////////////////////////////////////////////////////////////////////////
 // nsBufferedOutputStream
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsBufferedOutputStream, 
-                             nsBufferedStream,
-                             nsIOutputStream,
-                             nsIBufferedOutputStream,
-                             nsIStreamBufferAccess)
- 
+NS_IMPL_ADDREF_INHERITED(nsBufferedOutputStream, nsBufferedStream)
+NS_IMPL_RELEASE_INHERITED(nsBufferedOutputStream, nsBufferedStream)
+// This QI uses NS_INTERFACE_MAP_ENTRY_CONDITIONAL to check for
+// non-nullness of mSafeStream.
+NS_INTERFACE_MAP_BEGIN(nsBufferedOutputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISafeOutputStream, mSafeStream)
+    NS_INTERFACE_MAP_ENTRY(nsIBufferedOutputStream)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamBufferAccess)
+NS_INTERFACE_MAP_END_INHERITING(nsBufferedStream)
+
 NS_METHOD
 nsBufferedOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -501,6 +506,9 @@ nsBufferedOutputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 NS_IMETHODIMP
 nsBufferedOutputStream::Init(nsIOutputStream* stream, PRUint32 bufferSize)
 {
+    // QI stream to an nsISafeOutputStream, to see if we should support it
+    mSafeStream = do_QueryInterface(stream);
+
     return nsBufferedStream::Init(stream, bufferSize);
 }
 
@@ -571,6 +579,28 @@ nsBufferedOutputStream::Flush()
     memcpy(mBuffer, mBuffer + amt, rem);
     mFillPoint = mCursor = rem;
     return NS_ERROR_FAILURE;        // didn't flush all
+}
+
+// nsISafeOutputStream
+NS_IMETHODIMP
+nsBufferedOutputStream::Finish()
+{
+    // flush the stream, to write out any buffered data...
+    nsresult rv = nsBufferedOutputStream::Flush();
+    if (NS_FAILED(rv))
+        NS_WARNING("failed to flush buffered data! possible dataloss");
+
+    // ... and finish the underlying stream...
+    if (NS_SUCCEEDED(rv))
+        rv = mSafeStream->Finish();
+    else
+        Sink()->Close();
+
+    // ... and close the buffered stream, so any further attempts to flush/close
+    // the buffered stream won't cause errors.
+    nsBufferedStream::Close();
+
+    return rv;
 }
 
 static NS_METHOD

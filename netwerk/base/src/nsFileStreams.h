@@ -42,6 +42,7 @@
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISafeOutputStream.h"
 #include "nsISeekableStream.h"
 #include "nsILineInputStream.h"
 #include "nsCOMPtr.h"
@@ -154,11 +155,11 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsSafeFileOutputStream : public nsFileOutputStream,
-                               public nsISafeFileOutputStream
+                               public nsISafeOutputStream
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSISAFEFILEOUTPUTSTREAM
+    NS_DECL_NSISAFEOUTPUTSTREAM
 
     nsSafeFileOutputStream() :
         mWriteResult(NS_OK) {}

@@ -491,7 +491,7 @@ nsFileOutputStream::IsNonBlocking(PRBool *aNonBlocking)
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsSafeFileOutputStream, 
                              nsFileOutputStream,
-                             nsISafeFileOutputStream,
+                             nsISafeOutputStream,
                              nsIOutputStream,
                              nsIFileOutputStream)
 
@@ -505,6 +505,7 @@ nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
         mTargetFileExists = PR_TRUE; // Safer to assume it exists - we just do more work.
     }
 
+    // XXXdwitte I think we want to be following symlinks here... see e.g. bug 206567.
     nsCOMPtr<nsIFile> tempResult;
     rv = file->Clone(getter_AddRefs(tempResult));
     if (NS_SUCCEEDED(rv) && mTargetFileExists) {
@@ -514,7 +515,7 @@ nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
             origPerm = perm;
         }
         // XXX What if |perm| is more restrictive then |origPerm|?
-        // This leaves the user supplied permssions as they were.
+        // This leaves the user supplied permissions as they were.
         rv = tempResult->CreateUnique(nsIFile::NORMAL_FILE_TYPE, origPerm);
     }
     if (NS_SUCCEEDED(rv)) {

@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISafeOutputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIRequestObserverProxy.h"
 #include "nsIStreamListenerProxy.h" // XXX for nsIAsyncStreamListener
@@ -730,8 +731,7 @@ NS_NewLocalFileOutputStream(nsIOutputStream **aResult,
     return rv;
 }
 
-// Returns a file output stream. The object can be QI-ed to
-// nsISafeFileOuputStream.
+// returns a file output stream which can be QI'ed to nsISafeOutputStream.
 inline nsresult
 NS_NewSafeLocalFileOutputStream(nsIOutputStream **aResult,
                                 nsIFile          *aFile,
@@ -816,6 +816,8 @@ NS_NewBufferedInputStream(nsIInputStream **aResult,
     return rv;
 }
 
+// note: the resulting stream can be QI'ed to nsISafeOutputStream iff the
+// provided stream supports it.
 inline nsresult
 NS_NewBufferedOutputStream(nsIOutputStream **aResult,
                            nsIOutputStream  *aStr,

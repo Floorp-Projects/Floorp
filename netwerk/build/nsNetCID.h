@@ -435,7 +435,7 @@
     {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-// component implementing nsISafeFileOutputStream
+// component implementing nsISafeOutputStream
 #define NS_SAFELOCALFILEOUTPUTSTREAM_CLASSNAME \
     "nsSafeFileOutputStream"
 #define NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID \

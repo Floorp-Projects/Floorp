@@ -41,6 +41,7 @@
 #include "nsIBufferedStreams.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISafeOutputStream.h"
 #include "nsISeekableStream.h"
 #include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
@@ -114,12 +115,14 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBufferedOutputStream : public nsBufferedStream, 
+                               public nsISafeOutputStream,
                                public nsIBufferedOutputStream,
                                public nsIStreamBufferAccess
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIOUTPUTSTREAM
+    NS_DECL_NSISAFEOUTPUTSTREAM
     NS_DECL_NSIBUFFEREDOUTPUTSTREAM
     NS_DECL_NSISTREAMBUFFERACCESS
 
@@ -135,6 +138,8 @@ public:
 
 protected:
     NS_IMETHOD Fill() { return NS_OK; } // no-op for input streams
+
+    nsCOMPtr<nsISafeOutputStream> mSafeStream; // QI'd from mStream
 };
 
 ////////////////////////////////////////////////////////////////////////////////
