@@ -157,6 +157,7 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
     storageOutputStream->Close();
 
     // You gotta really want it.
+#ifdef PR_LOGGING
     if (PR_LOG_TEST(gDAVLog, 5)) {
         nsCOMPtr<nsIInputStream> logInputStream;
         rv = storageStream->NewInputStream(0, getter_AddRefs(logInputStream));
@@ -173,6 +174,7 @@ nsWebDAVService::SendDocumentToChannel(nsIDocument *doc,
         
         delete [] buf;
     }
+#endif
 
     nsCOMPtr<nsIInputStream> inputStream;
     rv = storageStream->NewInputStream(0, getter_AddRefs(inputStream));
