@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.21 $ 
-# $Date: 2001/07/20 19:05:11 $ 
+# $Revision: 1.22 $ 
+# $Date: 2001/08/02 20:04:20 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -730,12 +730,11 @@ sub apply_db_updates {
 
   scalar(@sorted_files) || return 0;
 
-  foreach $update_file (@sorted_files) {
-    my $full_file = "$dirname/$update_file";
-    my ($record) = Persistence::load_structure($full_file);
+  foreach $file (@sorted_files) {
+    my ($record) = Persistence::load_structure($file);
 
     ($record) ||
-      die("Error reading Build update file '$full_file'.\n");
+      die("Error reading Build update file '$file'.\n");
 
     my ($build) = $record->{'buildname'};
     my ($buildstatus) = $record->{'status'};
@@ -747,22 +746,22 @@ sub apply_db_updates {
     # sanity check the record, taint checks are done in processmail.
     {
       BuildStatus::is_status_valid($buildstatus) ||
-        die("Error in updatefile: $full_file, Status not valid");
+        die("Error in updatefile: $file, Status not valid");
       
       ($tree eq $record->{'tree'}) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "Tree: $tree, equal to Tree: $record->{'tree'}.");
 
       (main::is_time_valid($starttime)) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "starttime: $starttime, is not a valid time.");
 
       (main::is_time_valid($timenow)) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "timenow: $timenow, is not a valid time.");
 
       ($starttime <= $timenow) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "starttime: $starttime, is less then timenow: $timenow.");
 
    }  
@@ -897,7 +896,7 @@ sub apply_db_updates {
 
   $self->savetree_db($tree);
 
-  $self->unlink_files($dirname, @sorted_files);
+  $self->unlink_files(@sorted_files);
   
   return scalar(@sorted_files);
 }

@@ -4,8 +4,8 @@
 # mailprocessing program.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:04:59 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/08/02 20:04:25 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
@@ -326,7 +326,7 @@ sub write_update_file {
 
   $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
 
-  $update_file = main::extract_filename_chars($update_file);
+  $update_file = main::extract_safe_filename($update_file);
 
   # We are done, tell the tinderserver about this build.  
 

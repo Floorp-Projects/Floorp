@@ -79,7 +79,7 @@ use Utils;
 use HTMLPopUp;
 use TinderDB::BasicTxtDB;
 
-$VERSION = ( qw $Revision: 1.9 $ )[1];
+$VERSION = ( qw $Revision: 1.10 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -150,10 +150,10 @@ sub apply_db_updates {
     # This require will set a variable called $record with all
     # the info from this build update.
 
-    my ($record) = Persistence::load_structure("$dirname/$update_file");
+    my ($record) = Persistence::load_structure("$update_file");
 
     ($record) ||
-      die("Error reading Notice update file '$dirname/$update_file'.\n");
+      die("Error reading Notice update file '$update_file'.\n");
 
     my $time = $record->{'time'};
     my $mailaddr = $record->{'mailaddr'};
@@ -177,7 +177,7 @@ sub apply_db_updates {
 
   $self->savetree_db($tree);
 
-  $self->unlink_files($dirname, @sorted_files);
+  $self->unlink_files(@sorted_files);
   
   return scalar(@sorted_files);
 }

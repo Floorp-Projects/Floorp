@@ -74,7 +74,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -119,12 +119,11 @@ sub apply_db_updates {
 
   scalar(@sorted_files) || return 0;
 
-  foreach $update_file (@sorted_files) {
-    my ($full_file) = "$dirname/$update_file";
-    my ($record) = Persistence::load_structure($full_file);
+  foreach $file (@sorted_files) {
+    my ($record) = Persistence::load_structure($file);
 
     ($record) ||
-      die("Error reading Bug Tracking update file '$full_file'.\n");
+      die("Error reading Bug Tracking update file '$file'.\n");
 
     my($timenow) =  $record->{'tinderbox_timenow'};
     
@@ -134,11 +133,11 @@ sub apply_db_updates {
     # sanity check the record, taint checks are done in processmail.
     {
       ($tree eq $record->{'tinderbox_tree'}) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "Tree: $tree, not equal to Tree: $record->{'tree'}.");
 
       (main::is_time_valid($timenow)) ||
-        die("Error in updatefile: $full_file, ".
+        die("Error in updatefile: $file, ".
             "timenow: $timenow, is not a valid time.");
    }  
 
@@ -169,7 +168,7 @@ sub apply_db_updates {
 
   $self->savetree_db($tree);
 
-  $self->unlink_files($dirname, @sorted_files);
+  $self->unlink_files(@sorted_files);
   
   return scalar(@sorted_files);
 }
@@ -278,7 +277,7 @@ sub status_table_row {
 	  $num_rows++;
 	  $table .= (
 		     "\t".
-		     "<font size=-1><tt>$field</tt></font>".
+		     "<tt>$field</tt>".
 		     ": ".
 		     $value.
 		     "<br>\n".

@@ -9,8 +9,8 @@
 # browser.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/20 19:05:07 $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/08/02 20:04:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Storable.pm,v $ 
 # $Name:  $ 
@@ -71,7 +71,7 @@ sub save_structure {
   my ($data_refs, $data_file,) = @_;
 
   # This may be the output of a glob, make it taint safe.
-  $data_file = main::extract_filename_chars($data_file);
+  $data_file = main::extract_safe_filename($data_file);
 
   my ($tmpfile) = "$data_file.$main::UID";
 
@@ -89,7 +89,7 @@ sub load_structure {
   my ($data_file,) = @_;
 
   # This may be the output of a glob, make it taint safe.
-  $data_file = main::extract_filename_chars($data_file);
+  $data_file = main::extract_safe_filename($data_file);
 
   (-r $data_file) || (-R $data_file) ||
     die("data file: $data_file is not readable\n");
