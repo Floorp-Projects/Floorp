@@ -128,7 +128,7 @@ nsAppShell::nsAppShell()
   if (!mInitializedToolbox)
   {
     InitializeMacToolbox();
-    mInitializedToolbox == PR_TRUE;
+    mInitializedToolbox = PR_TRUE;
   }
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
