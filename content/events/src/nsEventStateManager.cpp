@@ -152,6 +152,44 @@ enum {
  MOUSE_SCROLL_TEXTSIZE
 };
 
+/******************************************************************/
+/* CurrentEventShepherd pushes a new current event onto           */
+/* nsEventStateManager and pops it when destroyed                 */
+/******************************************************************/
+
+class CurrentEventShepherd {
+public:
+  CurrentEventShepherd(nsEventStateManager *aManager, nsEvent *aEvent);
+  CurrentEventShepherd(nsEventStateManager *aManager);
+  ~CurrentEventShepherd();
+  void SetRestoreEvent(nsEvent *aEvent) { mRestoreEvent = aEvent; }
+  void SetCurrentEvent(nsEvent *aEvent) { mManager->mCurrentEvent = aEvent; }
+
+private:
+  nsEvent             *mRestoreEvent;
+  nsEventStateManager *mManager;
+};
+CurrentEventShepherd::CurrentEventShepherd(nsEventStateManager *aManager,
+                                           nsEvent *aEvent)
+{
+  mRestoreEvent = aManager->mCurrentEvent;
+  mManager = aManager;
+  SetCurrentEvent(aEvent);
+}
+CurrentEventShepherd::CurrentEventShepherd(nsEventStateManager *aManager)
+{
+  mRestoreEvent = aManager->mCurrentEvent;
+  mManager = aManager;
+}
+CurrentEventShepherd::~CurrentEventShepherd()
+{
+  mManager->mCurrentEvent = mRestoreEvent;
+}
+
+/******************************************************************/
+/* nsEventStateManager                                            */
+/******************************************************************/
+
 nsEventStateManager::nsEventStateManager()
   : mGestureDownPoint(0,0),
     mGestureDownRefPoint(0,0),
@@ -166,6 +204,7 @@ nsEventStateManager::nsEventStateManager()
 
   mConsumeFocusEvents = PR_FALSE;
   mLockCursor = 0;
+  mCurrentEvent = 0;
 
   // init d&d gesture state machine variables
   mIsTrackingDragGesture = PR_FALSE;
@@ -2411,6 +2450,7 @@ nsEventStateManager::DispatchMouseEvent(nsIPresContext* aPresContext,
   mCurrentRelatedContent = aRelatedContent;
 
   BeforeDispatchEvent();
+  CurrentEventShepherd shepherd(this, &event);
   if (aTargetContent) {
     aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status); 
@@ -2462,6 +2502,7 @@ nsEventStateManager::MaybeDispatchMouseEventToIframe(
           event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
           event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
 
+          CurrentEventShepherd shepherd(this, &event);
           parentShell->HandleDOMEventWithTarget(docContent, &event, &status);
         }
       }
@@ -3997,6 +4038,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
   if (previousFocus && !previousFocus->GetDocument())
     previousFocus = nsnull;
 
+  CurrentEventShepherd shepherd(this);
+
   if (nsnull != gLastFocusedPresContext) {
 
     nsCOMPtr<nsIContent> focusAfterBlur;
@@ -4030,7 +4073,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
           //fire blur
           nsEventStatus status = nsEventStatus_eIgnore;
           nsEvent event(NS_BLUR_CONTENT);
-          
+          shepherd.SetCurrentEvent(&event);
+
           EnsureDocument(presShell);
           
           // Make sure we're not switching command dispatchers, if so, surpress the blurred one
@@ -4086,6 +4130,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     if (gLastFocusedDocument && (gLastFocusedDocument != mDocument) && globalObject) {  
       nsEventStatus status = nsEventStatus_eIgnore;
       nsEvent event(NS_BLUR_CONTENT);
+      shepherd.SetCurrentEvent(&event);
 
       // Make sure we're not switching command dispatchers, if so, surpress the blurred one
       if (mDocument) {
@@ -4172,6 +4217,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     //fire focus
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_FOCUS_CONTENT);
+    shepherd.SetCurrentEvent(&event);
 
     if (nsnull != mPresContext) {
       nsCxPusher pusher(aContent);
@@ -4193,6 +4239,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext,
     //see bugzilla bug 93521
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event(NS_FOCUS_CONTENT);
+    shepherd.SetCurrentEvent(&event);
+
     if (nsnull != mPresContext && mDocument) {
       nsCxPusher pusher(mDocument);
       mDocument->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);

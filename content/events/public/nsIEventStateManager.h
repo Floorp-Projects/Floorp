@@ -79,6 +79,11 @@ public:
                              nsEventStatus* aStatus,
                              nsIView* aView) = 0;
 
+  // optional notification methods so downstream clients can know
+  // what event is being processed
+  NS_IMETHOD SetCurrentEvent(nsEvent *aEvent) = 0;
+  NS_IMETHOD GetCurrentEvent(nsEvent **aEvent) = 0; // 0 if none
+
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
