@@ -15,7 +15,7 @@
 # Reserved.
 #
 
-DEPTH = ../../../..
+DEPTH = ../../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
