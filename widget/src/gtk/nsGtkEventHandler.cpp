@@ -221,7 +221,7 @@ static Bool checkForExpose(Display *dpy, XEvent *evt, XtPointer client_data)
 #endif
 
 //==============================================================
-void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, gpointer p)
+gint nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow *)p;
 
@@ -235,12 +235,8 @@ void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
   rect.width  = event->area.width;
   rect.height = event->area.height;
 
-
-  if (widgetWindow->GetResized())
-   return;
-
   if (event->type == GDK_NO_EXPOSE) {
-    return;
+    return FALSE;
   }
 /* FIXME
   Display* display = XtDisplay(w);
@@ -257,66 +253,80 @@ void nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
   }
 */
   widgetWindow->OnPaint(pevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsPaintEvent pevent;
   nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_ENTER);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   if (DBG) fprintf(stderr, "***************** nsGtkWidget_LeaveMask_EventHandler\n");
   nsWindow * widgetWindow = (nsWindow *)p;
   nsMouseEvent mevent;
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
   widgetWindow->DispatchMouseEvent(mevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -328,10 +338,12 @@ void nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
                          cbs->reason == XmCR_FOCUS?NS_GOTFOCUS:NS_LOSTFOCUS);
   widgetWindow->DispatchFocus(event);
 #endif
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -341,20 +353,24 @@ void nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
   nsScrollbarEvent sevent;
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
 #endif
+
+  return FALSE;
 }
 
 //==============================================================
-void CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
 {
   nsCheckButton *checkBtn = (nsCheckButton*)gtk_object_get_user_data(GTK_OBJECT(w));
   if (GTK_TOGGLE_BUTTON(w)->active)
     checkBtn->Armed();
   else
     checkBtn->DisArmed();
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -365,10 +381,12 @@ void nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
   nsGtkWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
   radioBtn->DispatchMouseEvent(mevent);
 #endif
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -380,11 +398,13 @@ void nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
   nsGtkWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
   radioBtn->DispatchMouseEvent(mevent);
 #endif
+
+  return FALSE;
 }
 
 
 //==============================================================
-void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
 {
   //  nsScrollbar *widget = (nsScrollbar*)gtk_object_get_user_data(GTK_OBJECT(w));
   nsScrollbar *widget = (nsScrollbar*) p;
@@ -441,7 +461,7 @@ void nsGtkWidget_Scrollbar_Callback(GtkWidget *w, gpointer p)
 
 
 //==============================================================
-void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -461,12 +481,7 @@ void nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p)
 }
 
 //==============================================================
-void nsGtkWidget_Resize_Callback(GtkWidget *w, gpointer p)
-{
-}
-
-//==============================================================
-void nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p)
+gint nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p)
 {
   nsKeyEvent kevent;
   nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event);
@@ -510,7 +525,7 @@ void nsGtkWidget_Text_Callback(GtkWidget *w, GdkEvent* event, gpointer p)
 }
 
 //==============================================================
-void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -519,10 +534,12 @@ void nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
     widgetWindow->OnCancel();
   }
 #endif
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
 {
   nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
 #if 0
@@ -531,6 +548,8 @@ void nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
     widgetWindow->OnOk();
   }
 #endif
+
+  return FALSE;
 }
 
 //==============================================================
@@ -551,25 +570,29 @@ void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
 }
 
 //==============================================================
-void nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsKeyEvent kevent;
   nsGtkWidget_InitNSKeyEvent(NS_KEY_DOWN, kevent, w, p, event);
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_DOWN, kevent.keyCode, &kevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
+gint nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer p)
 {
   nsKeyEvent kevent;
   nsGtkWidget_InitNSKeyEvent(NS_KEY_UP, kevent, w, p, event);
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
+
+  return FALSE;
 }
 
 //==============================================================
-void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
+gint nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
 {
   nsIMenuItem * menuItem = (nsIMenuItem *)p;
   if (menuItem != NULL) {
@@ -585,4 +608,52 @@ void nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
     nsEventStatus status;
     mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
   }
+
+  return FALSE;
+}
+
+gint nsGtkWidget_Resize_EventHandler(GtkWidget *w, GtkAllocation *allocation, gpointer data)
+{
+  nsWindow *win = (nsWindow*)data;
+
+  nsRect winBounds, sizeBounds;
+  win->GetBounds(winBounds);
+  g_print("resize event handler:\n\tallocation->w=%d allocation->h=%d window.w=%d window.h=%d\n",
+          allocation->width, allocation->height, winBounds.width, winBounds.height);
+  if (winBounds.width != allocation->width ||
+      winBounds.height != allocation->height) {
+    g_print("\tAllocation != current window bounds.  Resize.\n");
+
+    nsSizeEvent sizeEvent;
+    sizeEvent.eventStructType = NS_SIZE_EVENT;
+    sizeEvent.message         = NS_SIZE;
+    sizeEvent.point.x         = winBounds.x;
+    sizeEvent.point.y         = winBounds.y;
+    sizeEvent.time            = PR_IntervalNow();
+
+    // nsGUIEvent
+    sizeEvent.widget          = win;
+    sizeEvent.nativeMsg       = nsnull;
+
+    winBounds.width = sizeBounds.width = allocation->width;
+    winBounds.height = sizeBounds.height = allocation->height;
+    sizeBounds.x = 0;
+    sizeBounds.y = 0;
+
+    // nsSizeEvent
+    sizeEvent.windowSize     = &sizeBounds;
+    sizeEvent.mWinWidth      = winBounds.width;
+    sizeEvent.mWinHeight     = winBounds.height;
+
+    win->OnResize(sizeEvent);
+    //    win->SetBounds(winBounds);
+
+    nsPaintEvent pevent;
+    pevent.message = NS_PAINT;
+    pevent.widget = win;
+    pevent.time = PR_IntervalNow();
+    pevent.rect = (nsRect *)&sizeBounds;
+    win->OnPaint(pevent);
+  }
+  return FALSE;
 }

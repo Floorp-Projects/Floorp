@@ -18,7 +18,6 @@
 
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include "gtklayout.h"
 #include <gtk/gtkprivate.h>
 
 #include "nsWindow.h"
@@ -45,8 +44,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 extern GtkWidget *gAppContext;
 
-void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data);
-static void window_realize_callback(GtkWidget *window, gpointer data);
+static gint window_realize_callback(GtkWidget *window, gpointer data);
 static void set_icon (GdkWindow * w);
 
 //-------------------------------------------------------------------------
@@ -122,10 +120,12 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
-static void window_realize_callback(GtkWidget *window, gpointer data)
+static gint window_realize_callback(GtkWidget *window, gpointer data)
 {
   if (window->window)
     set_icon(window->window);
+
+  return FALSE;
 }
 
 static void set_icon (GdkWindow * w)
@@ -250,19 +250,7 @@ void nsWindow::InitCallbacks(char * aName)
                      "motion_notify_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_ButtonMotionMask_EventHandler),
 		     this);
-/*
-  XtAddEventHandler(mWidget,
-		    PointerMotionMask,
-		    PR_FALSE,
-		    nsXtWidget_MotionMask_EventHandler,
-		    this);
 
-  XtAddEventHandler(mWidget,
-		    EnterWindowMask,
-		    PR_FALSE,
-		    nsXtWidget_EnterMask_EventHandler,
-		    this);
-*/
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
 		     GTK_SIGNAL_FUNC(nsGtkWidget_EnterMask_EventHandler),
@@ -290,8 +278,8 @@ void nsWindow::InitCallbacks(char * aName)
 
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "size_allocate",
-		     GTK_SIGNAL_FUNC(DoResize),
-		     this);
+         GTK_SIGNAL_FUNC(nsGtkWidget_Resize_EventHandler),
+         this);
 }
 
 //-------------------------------------------------------------------------
@@ -316,7 +304,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-  nsWidget::Resize(aWidth, aHeight,aRepaint);
+  nsWidget::Resize(aWidth, aHeight, aRepaint);
 #if 0
   NS_NOTYETIMPLEMENTED("nsWindow::Resize");
   if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n",
@@ -340,15 +328,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
 {
   nsWindow::Resize(aWidth, aHeight, aRepaint);
   nsWidget::Move(aX,aY);
-#if 0
-  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
-  mBounds.x      = aX;
-  mBounds.y      = aY;
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
-                        XmNwidth, aWidth, XmNheight, aHeight, nsnull);
-#endif
+
   return NS_OK;
 }
 
@@ -360,7 +340,7 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
 NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 {
   mBounds = aRect;
-  //Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -784,44 +764,41 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 }
 
 
-//
-//-----------------------------------------------------
-// Resize handler code for child and main windows.
-//-----------------------------------------------------
-//
-
-gint ResetResize(gpointer call_data)
+static gint DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
 {
-    nsWindow* widgetWindow = (nsWindow*)call_data;
-    widgetWindow->SetResized(PR_FALSE);
-    return FALSE;
-}
+  nsWindow *win = (nsWindow*)data;
 
-gint DoRefresh(gpointer call_data)
-{
-    nsWindow *win = (nsWindow*)call_data;
-
-    nsRect bounds;
-    win->GetResizeRect(&bounds);
+  nsRect bounds;
+  win->GetBounds(bounds);
+  g_print("DoResized called a->w %d a->h %d b.w %d b.h %d\n",
+          allocation->width, allocation->height, bounds.width, bounds.height);
+  if (bounds.width != allocation->width ||
+      bounds.height != allocation->height) {
+    g_print("RESIZE!\n");
 
     nsSizeEvent sizeEvent;
     sizeEvent.eventStructType = NS_SIZE_EVENT;
     sizeEvent.message         = NS_SIZE;
-    sizeEvent.point.x         = 0;
-    sizeEvent.point.y         = 0;
+    sizeEvent.point.x         = bounds.x;
+    sizeEvent.point.y         = bounds.y;
     sizeEvent.time            = PR_IntervalNow();
 
     // nsGUIEvent
     sizeEvent.widget          = win;
     sizeEvent.nativeMsg       = nsnull;
 
+    bounds.width = allocation->width;
+    bounds.height = allocation->height;
+    bounds.x = 0;
+    bounds.y = 0;
+
     // nsSizeEvent
     sizeEvent.windowSize     = &bounds;
     sizeEvent.mWinWidth      = bounds.width;
     sizeEvent.mWinHeight     = bounds.height;
 
-    win->SetBounds(bounds);
     win->OnResize(sizeEvent);
+    win->SetBounds(bounds);
 
     nsPaintEvent pevent;
     pevent.message = NS_PAINT;
@@ -829,36 +806,8 @@ gint DoRefresh(gpointer call_data)
     pevent.time = PR_IntervalNow();
     pevent.rect = (nsRect *)&bounds;
     win->OnPaint(pevent);
-
-    //    gtk_idle_add((GtkFunction)ResetResize, win);
-    gtk_timeout_add(10, (GtkFunction)ResetResize, win);
-    return FALSE;
-}
-
-
-void DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
-{
-//  g_print("DoResized called\n");
-  nsWindow *win = (nsWindow*)data;
-
-  nsRect bounds;
-  bounds.width = allocation->width;
-  bounds.height = allocation->height;
-  bounds.x = 0;
-  bounds.y = 0;
-  win->SetResizeRect(bounds);
-
-  if (!win->GetResized()) {
-    if (win->IsChild()) {
-      DoRefresh(win);
-    }
-    else {
-      // gtk_idle_add((GtkFunction)DoRefresh, win);
-      gtk_timeout_add(250, (GtkFunction)DoRefresh, win);
-    }
   }
-
-  win->SetResized(PR_TRUE);
+  return TRUE;  /*  Stop the handling of this signal */
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
