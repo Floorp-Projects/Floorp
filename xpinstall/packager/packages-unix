@@ -11,9 +11,9 @@
 [install]
 bin/libjsdom.so
 bin/libmozjs.so
-bin/libnspr3.so
-bin/libplc3.so
-bin/libplds3.so
+bin/libnspr4.so
+bin/libplc4.so
+bin/libplds4.so
 bin/libxpcom.so
 bin/components/libxpistub.so
 bin/components/libxpinstall.so
