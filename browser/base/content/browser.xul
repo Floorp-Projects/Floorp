@@ -675,6 +675,8 @@ Contributor(s):
               <menupopup>
                 <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                           label="rdf:http://home.netscape.com/NC-rdf#Name" 
+                          image="rdf:http://home.netscape.com/NC-rdf#Icon"
+                          validate="never"
                           status="rdf:http://home.netscape.com/WEB-rdf#status"/>
               </menupopup>
             </rule>
