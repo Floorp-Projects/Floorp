@@ -38,6 +38,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsICSSParser.h"
 #include "nsIDOMDocument.h"
 #include "prprf.h"
@@ -53,7 +54,7 @@
   ((nsWebWidget*) ((char*)this - nsWebWidget::GetOuterOffset()))
 
 // Machine independent implementation portion of the web widget
-class WebWidgetImpl : public nsIWebWidget, public nsIScriptObjectOwner {
+class WebWidgetImpl : public nsIWebWidget {
 public:
   WebWidgetImpl();
   ~WebWidgetImpl();
@@ -108,9 +109,6 @@ public:
   NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD ReleaseScriptContext();
 
-  NS_IMETHOD GetScriptObject(JSContext *aContext, void** aScriptObject);
-  NS_IMETHOD ResetScriptObject();
-
 private:
   nsresult ProvideDefaultHandlers();
   void ForceRefresh();
@@ -126,8 +124,8 @@ private:
   nsIStyleSheet* mUAStyleSheet;
   nsILinkHandler* mLinkHandler;
   nsISupports* mContainer;
+  nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
-  void* mScriptObject;
 
   static nsIWebWidget* gRootWebWidget;
 };
@@ -152,11 +150,6 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
-    AddRef();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
     AddRef();
     return NS_OK;
   }
@@ -193,6 +186,7 @@ WebWidgetImpl::~WebWidgetImpl()
   NS_IF_RELEASE(mUAStyleSheet);
 
   NS_IF_RELEASE(mScriptContext);
+  NS_IF_RELEASE(mScriptGlobal);
 }
 
 nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
@@ -447,6 +441,10 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
     // Break circular reference first
     mPresShell->EndObservingDocument();
 
+    if (nsnull != mScriptGlobal) {
+      mScriptGlobal->SetNewDocument(nsnull);
+    }
+
     // Then release the shell
     NS_RELEASE(mPresShell);
     mPresShell = nsnull;
@@ -497,6 +495,15 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
   }
 
   PRTime start = PR_Now();
+
+  if (nsnull != mScriptGlobal) {
+    nsIDOMDocument *domdoc;
+    GetDOMDocument(&domdoc);
+    if (nsnull != domdoc) {
+      mScriptGlobal->SetNewDocument(domdoc);
+      NS_RELEASE(domdoc);
+    }
+  }
 
   // Now load the document
   mPresShell->EnterReflowLock();
@@ -748,12 +755,26 @@ nsresult WebWidgetImpl::GetScriptContext(nsIScriptContext **aContext)
   NS_PRECONDITION(nsnull != aContext, "null arg");
   nsresult res = NS_OK;
 
+  if (nsnull == mScriptGlobal) {
+    res = NS_NewScriptGlobalObject(&mScriptGlobal);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    nsIDOMDocument *document;
+    res = GetDOMDocument(&document);
+    if (NS_OK != res) {
+      return res;
+    }
+    mScriptGlobal->SetNewDocument(document);
+    NS_RELEASE(document);
+  }
+
   if (nsnull == mScriptContext) {
-    res = NS_CreateContext(this, &mScriptContext);
+    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
   }
 
   if (NS_OK == res) {
-    NS_ADDREF(mScriptContext);
     *aContext = mScriptContext;
   }
 
@@ -762,23 +783,18 @@ nsresult WebWidgetImpl::GetScriptContext(nsIScriptContext **aContext)
 
 nsresult WebWidgetImpl::GetDOMDocument(nsIDOMDocument** aDocument)
 {
+  nsresult res = NS_OK;
   nsIDocument *doc = GetDocument();
   *aDocument = nsnull;
 
   static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
    
   if (doc != nsnull) {
-    return doc->QueryInterface(kIDOMDocumentIID, (void**)aDocument);
+    res = doc->QueryInterface(kIDOMDocumentIID, (void**)aDocument);
     NS_RELEASE(doc);
   }
 
-  return NS_OK; 
-}
-
-nsresult WebWidgetImpl::ResetScriptObject()
-{
-  mScriptObject = nsnull;
-  return NS_OK;
+  return res;
 }
 
 nsresult WebWidgetImpl::ReleaseScriptContext()
@@ -787,21 +803,6 @@ nsresult WebWidgetImpl::ReleaseScriptContext()
   mScriptContext = nsnull;
 
   return NS_OK;
-}
-
-nsresult WebWidgetImpl::GetScriptObject(JSContext *aContext, void** aScriptObject)
-{
-  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    mScriptObject = mScriptContext->GetGlobalObject();
-    if (nsnull == mScriptObject) {
-      res = NS_ERROR_FAILURE;
-    }
-  }
-  
-  *aScriptObject = (void*)mScriptObject;
-  return res;
 }
 
 /*******************************************
