@@ -465,6 +465,72 @@ EditorAppCoreInsertText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
+// Native method InsertLink
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->InsertLink()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertLink requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method InsertImage
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertImage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->InsertImage()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertImage requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Exit
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -666,6 +732,8 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"selectAll",          EditorAppCoreSelectAll,     0},
   {"showClipboard",          EditorAppCoreShowClipboard,     0},
   {"insertText",          EditorAppCoreInsertText,     1},
+  {"insertLink",          EditorAppCoreInsertLink,     0},
+  {"insertImage",          EditorAppCoreInsertImage,     0},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},

@@ -482,9 +482,9 @@ newWindow(char* urlName) {
   nsString controllerCID;
 
   char *  urlstr=nsnull;
-  char *   progname = nsnull;
-  char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
+  //char *   progname = nsnull;
+  //char *   width=nsnull, *height=nsnull;
+  //char *  iconic_state=nsnull;
 
   nsIAppShellService* appShell = nsnull;
   urlstr = urlName;
@@ -728,6 +728,35 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
   }
 
   return err;
+}
+
+// Pop up the link dialog once we have dialogs ...  for now, hardwire it
+NS_IMETHODIMP
+nsEditorAppCore::InsertLink()
+{
+  if (!mEditor)
+    return NS_ERROR_FAILURE;
+
+  nsString tmpString ("http://www.mozilla.org/editor/");
+  return mEditor->InsertLink(tmpString);
+}
+
+// Pop up the image dialog once we have dialogs ...  for now, hardwire it
+NS_IMETHODIMP
+nsEditorAppCore::InsertImage()
+{
+  if (!mEditor)
+    return NS_ERROR_FAILURE;
+
+  nsString url ("http://www.mozilla.org/editor/images/pensplat.gif");
+  nsString width("100");
+  nsString height("138");
+  nsString hspace("0");
+  nsString border("1");
+  nsString alt ("[pen splat]");
+  nsString align ("left");
+  return mEditor->InsertImage(url, width, height, hspace, hspace, border,
+                              alt, align);
 }
 
 //----------------------------------------
