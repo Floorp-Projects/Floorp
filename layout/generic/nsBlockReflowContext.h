@@ -22,7 +22,6 @@
 #include "nsIHTMLReflow.h"
 
 class nsBlockFrame;
-class nsFrameReflowState;
 class nsIFrame;
 class nsIPresContext;
 class nsLineLayout;

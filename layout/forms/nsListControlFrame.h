@@ -19,7 +19,6 @@
 #ifndef nsListControlFrame_h___
 #define nsListControlFrame_h___
 
-//#include "nsHTMLContainerFrame.h"
 #include "nsScrollFrame.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIPresContext.h"
