@@ -271,16 +271,18 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = getServerForFolderNode(source, getter_AddRefs(server));
 
-    if (NS_SUCCEEDED(rv) && server) {
-      PRInt32 accountNum;
-      nsCOMPtr<nsIMsgAccountManager> am =
-          do_QueryReferent(mAccountManager);
-      rv = am->FindServerIndex(server, &accountNum);
-      if (NS_FAILED(rv)) return rv;
-      
-      accountNum += 1000;
-      str.Append(accountNum);
-    }
+    // only answer for servers!
+    if (NS_FAILED(rv) || !server)
+        return NS_RDF_NO_VALUE;
+    
+    PRInt32 accountNum;
+    nsCOMPtr<nsIMsgAccountManager> am =
+        do_QueryReferent(mAccountManager);
+    rv = am->FindServerIndex(server, &accountNum);
+    if (NS_FAILED(rv)) return rv;
+    
+    accountNum += 1000;
+    str.Append(accountNum);
   }
 
   // GetTargets() stuff - need to return a valid answer so that
