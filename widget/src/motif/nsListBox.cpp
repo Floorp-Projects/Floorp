@@ -119,14 +119,14 @@ PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 
   XmString str = XmStringCreate(val, XmFONTLIST_DEFAULT_TAG);
 
-  int index = XmListItemPos(mWidget, str)-1;
-  if (index < aStartPos) {
-    index = -1;
+  int inx = XmListItemPos(mWidget, str)-1;
+  if (inx < aStartPos) {
+    inx = -1;
   }
   NS_FREE_STR_BUF(val);
   XmStringFree(str);
 
-  return index;
+  return inx;
 }
 
 //-------------------------------------------------------------------------
@@ -213,12 +213,12 @@ PRInt32 nsListBox::GetSelectedIndex()
     int   count;
 
     if (XmListGetSelectedPos(mWidget, &list, &count)) {
-      int index = -1;
+      int inx = -1;
       if (count > 0) {
-        index = list[0]-1;
+        inx = list[0]-1;
       }
       XtFree((char *)list);
-      return index;
+      return inx;
     }
   } else {
     NS_ASSERTION(PR_FALSE, "Multi selection list box does not support GetSelectedIndex()");

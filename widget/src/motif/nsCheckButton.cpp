@@ -184,7 +184,6 @@ void nsCheckButton::DisArmed()
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState) 
 {
-  int state = aState;
   if (mIsArmed) {
     mNewValue    = aState;
     mValueWasSet = PR_TRUE;

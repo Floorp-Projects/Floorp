@@ -202,7 +202,6 @@ void nsRadioButton::DisArmed()
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState) 
 {
-  int state = aState;
   if (mIsArmed) {
     mNewValue    = aState;
     mValueWasSet = PR_TRUE;

@@ -167,7 +167,6 @@ NS_METHOD nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
   XmTextPosition left  = (XmTextPosition)aStartSel;
   XmTextPosition right = (XmTextPosition)aEndSel;
 
-  Time time;
   XmTextSetSelection(mWidget, left, right, 0);
   return NS_OK;
 }

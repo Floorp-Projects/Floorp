@@ -65,7 +65,7 @@ NS_METHOD nsTextWidget::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
+  if (DBG) fprintf(stderr, "aParent 0x%x\n", (unsigned int)aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);

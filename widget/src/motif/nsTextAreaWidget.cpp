@@ -62,7 +62,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
   aParent->AddChild(this);
   Widget parentWidget = nsnull;
 
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
+  if (DBG) fprintf(stderr, "aParent 0x%x\n", (unsigned int)aParent);
 
   if (aParent) {
     parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
@@ -73,7 +73,7 @@ NS_METHOD nsTextAreaWidget::Create(nsIWidget *aParent,
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
+  if (DBG) fprintf(stderr, "Parent 0x%x\n", (unsigned int)parentWidget);
 
   mWidget = ::XtVaCreateManagedWidget("button",
                                     xmTextWidgetClass, 
