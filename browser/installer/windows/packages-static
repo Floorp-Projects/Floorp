@@ -184,7 +184,7 @@ bin\chrome\toolkit.jar
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
-bin\defaults\pref\firebird.js
+bin\defaults\pref\firefox.js
 bin\greprefs\all.js
 bin\greprefs\security-prefs.js
 bin\greprefs\xpinstall.js
