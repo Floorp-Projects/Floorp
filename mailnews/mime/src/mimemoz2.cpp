@@ -1774,194 +1774,10 @@ ResetChannelCharset(MimeObject *obj)
 }
 
   ////////////////////////////////////////////////////////////
-  // Functions to set up mail/news font
+  // Function to get up mail/news font
   ////////////////////////////////////////////////////////////
 
-// input: part of pref key for font name and size, e.g. "font.name.serif.", "font.size.fixed." ,
-// output: HTML tag to the caller allocated buffer
-static int DoLanguageSensitiveFont(MimeObject *obj, const char *prefixName, const char *prefixSize)
-{
-  nsCOMPtr<nsICharsetConverterManager> aCharSets;
-  nsCOMPtr<nsIAtom> aLangGroup;
-  MimeInlineText  *text = (MimeInlineText *) obj;
-  nsAutoString aCharset;
-  const PRUnichar* langGroup = nsnull;
-  nsCAutoString aPrefStr(prefixName);
-  nsresult rv;
-  int status = -1;
 
-
-  if (!text->charset || !(*text->charset))
-    goto done;
-
-  // no alias resolution for performance
-  // if we get alias then no font tag to be generated (i think that's acceptable).
-  aCharset.AssignWithConversion(text->charset);
-  aCharset.ToLowerCase();
-
-
-  aCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
-  if (aCharSets) {
-    // get a language, e.g. x-western, ja
-    rv = aCharSets->GetCharsetLangGroup(&aCharset, getter_AddRefs(aLangGroup));
-    if (NS_FAILED(rv))
-      goto done;
-    rv = aLangGroup->GetUnicode(&langGroup);
-    if (NS_FAILED(rv))
-      goto done;
-  
-    // append the language to the pref string
-    aPrefStr.AppendWithConversion(langGroup);
-
-    nsIPref *aPrefs = GetPrefServiceManager(obj->options);
-  
-    if (aPrefs) {
-      nsCAutoString fontName;
-      PRUnichar *unicode = nsnull;
-      PRInt32 fontSize;
-      PRInt32 screenRes;
-     
-      // get a font name from pref, could be non ascii (need charset conversion)
-      // this is not necessary if we insert this tag after the message is converted to UTF-8
-      rv = aPrefs->CopyUnicharPref(aPrefStr, &unicode);
-      if (NS_FAILED(rv))
-        goto done;
-
-      nsAutoString tempStr(unicode);
-      PR_FREEIF(unicode);
-
-      nsCAutoString charsetCStr;
-      charsetCStr.AssignWithConversion(aCharset);
-      rv = nsMsgI18NConvertFromUnicode(charsetCStr, tempStr, fontName);
-      if (NS_FAILED(rv))
-        goto done;
-
-      // get a font size from pref
-      aPrefStr.Assign(prefixSize);
-      aPrefStr.AppendWithConversion(langGroup);
-      rv = aPrefs->GetIntPref(aPrefStr, &fontSize);
-      if (NS_FAILED(rv))
-        goto done;
-
-      // get a screen resolution
-      rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
-      if (NS_FAILED(rv))
-        goto done;
-
-      fontSize = fontSize * 72 / screenRes;
-
-      char buf[256];
-      if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
-        PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
-      else
-        PR_snprintf(buf, 256, "<pre style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
-    
-      status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
-    }
-  }
-
-done:
-  // if nothing has been written then write out just "<div>" to match with "</div>"
-  if (status == -1) {
-    if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
-      status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
-    else
-      status = MimeObject_write(obj, "<pre>", 5, PR_FALSE);
-  }
-
-  return status;
-}
-
-int BeginMailNewsFont(MimeObject *obj)
-{
-  nsIPref *aPrefs = GetPrefServiceManager(obj->options);
-  int status = -1;
-  nsresult rv;
-
-  // check Content-Type:
-  PRBool bTEXT_HTML = PR_FALSE;
-  if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
-    bTEXT_HTML = PR_TRUE;
-  else if (nsCRT::strcasecmp(obj->content_type, TEXT_PLAIN))
-    goto done;  // not supported type
-
-  if (aPrefs) {
-    // if indicated by the pref, do language sensitive font selection (slower)
-    PRBool  languageSensitiveFont = PR_FALSE;
-    rv = aPrefs->GetBoolPref("mailnews.language_sensitive_font", &languageSensitiveFont);
-    if (NS_SUCCEEDED(rv) && languageSensitiveFont)
-      return bTEXT_HTML ?
-                DoLanguageSensitiveFont(obj, "font.name.serif.", "font.size.variable.") :
-                DoLanguageSensitiveFont(obj, "font.name.monospace.", "font.size.fixed.");
-
-    // otherwise, use the mailnews font setting from pref
-    MimeInlineText  *text = (MimeInlineText *) obj;
-    nsString aCharset;
-    PRUnichar *unicode = nsnull;
-    nsCAutoString fontName;
-    PRInt32 fontSize;
-    PRInt32 screenRes;
-
-    if (!text->charset || !(*text->charset))
-      goto done;
-    aCharset.AssignWithConversion(text->charset);
-
-    // get a font name from pref, could be non ascii (need charset conversion)
-    // this is not necessary if we insert this tag after the message is converted to UTF-8
-    rv = aPrefs->CopyUnicharPref(bTEXT_HTML ? "mailnews.font.name.html" : "mailnews.font.name.plain", &unicode);
-    if (NS_FAILED(rv))
-      goto done;
-    nsAutoString tempStr(unicode);
-    PR_FREEIF(unicode);
-    nsCAutoString charsetCStr;
-    charsetCStr.AssignWithConversion(aCharset);
-    rv = nsMsgI18NConvertFromUnicode(charsetCStr, tempStr, fontName);
-    if (NS_FAILED(rv))
-      goto done;
-
-    // get a font size from pref
-    rv = aPrefs->GetIntPref(bTEXT_HTML ? "mailnews.font.size.html" : "mailnews.font.size.plain", &fontSize);
-    if (NS_FAILED(rv))
-      goto done;
-
-    // get a screen resolution
-    rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
-    if (NS_FAILED(rv))
-      goto done;
-
-    fontSize = fontSize * 72 / screenRes;
-  
-    char buf[256];
-
-    if (bTEXT_HTML)
-      PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
-    else
-      PR_snprintf(buf, 256, "<pre style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
-
-    status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
-
-  }
-done:
-  // if nothing has been written then write out just "<div>" to match with "</div>"
-  if (status == -1) {
-    if (bTEXT_HTML)
-      status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
-    else
-      status = MimeObject_write(obj, "<pre>", 5, PR_FALSE);
-  }
-  
-  return status;
-}
-
-int EndMailNewsFont(MimeObject *obj)
-{
-  if (!nsCRT::strcasecmp(obj->content_type, TEXT_HTML))
-    return MimeObject_write(obj, "</div>", 6, PR_FALSE);
-  else
-    return MimeObject_write(obj, "</pre>", 6, PR_FALSE);
-}
-
-// TODO: rewrite BeginMailNewFont to use this.
 nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontSize)
 {
   nsresult rv = NS_OK;
@@ -1973,6 +1789,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
     nsCAutoString aCharset;
     PRUnichar *unicode = nsnull;
     nsCAutoString convertedStr;
+    nsCAutoString variableFontType;   // serif, sans-serif
 
     // get a charset
     if (!text->charset || !(*text->charset))
@@ -1984,6 +1801,16 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
     if (NS_FAILED(rv))
       return rv;
 
+    // get variable font type
+    char* variable_font_type = nsnull;
+    rv = aPrefs->CopyCharPref("font.default", &variable_font_type);
+    if (NS_FAILED(rv))
+      return rv;
+    if (!variable_font_type)
+      return NS_ERROR_FAILURE;
+    variableFontType.Assign(variable_font_type);
+    PR_FREEIF(variable_font_type);
+
     // if indicated by the pref, do language sensitive font selection
     PRBool  languageSensitiveFont = PR_FALSE;
     rv = aPrefs->GetBoolPref("mailnews.language_sensitive_font", &languageSensitiveFont);
@@ -1991,7 +1818,16 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       nsCOMPtr<nsICharsetConverterManager> aCharSets;
       nsCOMPtr<nsIAtom> aLangGroup;
       const PRUnichar* langGroup = nsnull;
-      nsCAutoString aPrefStr(!styleFixed ? "font.name.serif." : "font.name.monospace.");
+      nsCAutoString aPrefStr;
+      
+      if (styleFixed) {
+        aPrefStr.Assign("font.name.monospace.");
+      }
+      else {
+        aPrefStr.Assign("font.name.");
+        aPrefStr.Append(variableFontType);
+        aPrefStr.Append(".");
+      }
 
       aCharset.ToLowerCase();
 

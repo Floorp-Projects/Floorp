@@ -55,10 +55,25 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
   if (status < 0) return status;
   
   if (!obj->output_p) return 0;
-  
+
+  // Set a default font (otherwise unicode font will be used since the data is UTF-8).
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = BeginMailNewsFont(obj);  
+  {
+    char buf[256];            // local buffer for html tag
+    char fontName[128];       // default font name
+    PRInt32 fontSize;         // default font size
+    if (NS_SUCCEEDED(GetMailNewsFont(obj, PR_FALSE, fontName, 128, &fontSize)))
+    {
+      PR_snprintf(buf, 256, "<div style=\"font-family: %s; font-size: %dpt;\">", (const char *) fontName, fontSize);
+      status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
+    }
+    else
+    {
+      status = MimeObject_write(obj, "<div>", 5, PR_FALSE);
+    }
+    if(status<0) return status;
+  }
 
   MimeInlineTextHTML  *textHTML = (MimeInlineTextHTML *) obj;
   
@@ -213,7 +228,7 @@ MimeInlineTextHTML_parse_eof (MimeObject *obj, PRBool abort_p)
 
   if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
-    status = EndMailNewsFont(obj);
+    status = MimeObject_write(obj, "</div>", 6, PR_FALSE);
 
   if (obj->output_p &&
 	  obj->options &&
