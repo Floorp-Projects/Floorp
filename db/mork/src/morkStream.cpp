@@ -277,31 +277,6 @@ morkStream::PutStringThenNewline(morkEnv* ev, const char* inString)
 }
 
 mork_size
-morkStream::PutStringThenNewlineThenSpace(morkEnv* ev, const char* inString)
-  // PutStringThenNewlineThenSpace() returns total number of bytes written.
-{
-  mork_size outSize = 0;
-  if ( inString )
-  {
-    outSize = MORK_STRLEN(inString);
-    if ( outSize && ev->Good() ) // any bytes to write?
-    {
-      this->Write(ev, inString, outSize);
-      if ( ev->Good() )
-      {
-        outSize += this->PutLineBreak(ev);
-        if ( ev->Good() )
-        {
-          this->Putc(ev, ' ');
-          ++outSize;
-        }
-      }
-    }
-  }
-  return outSize;
-}
-
-mork_size
 morkStream::PutByteThenNewline(morkEnv* ev, int inByte)
   // PutByteThenNewline() returns total number of bytes written.
 {
@@ -309,24 +284,6 @@ morkStream::PutByteThenNewline(morkEnv* ev, int inByte)
   this->Putc(ev, inByte);
   if ( ev->Good() )
     outSize += this->PutLineBreak(ev);
-  return outSize;
-}
-
-mork_size
-morkStream::PutByteThenNewlineThenSpace(morkEnv* ev, int inByte)
-  // PutByteThenNewlineThenSpace() returns total number of bytes written.
-{
-  mork_size outSize = 1; // one for the following byte
-  this->Putc(ev, inByte);
-  if ( ev->Good() )
-  {
-    outSize += this->PutLineBreak(ev);
-    if ( ev->Good() )
-    {
-      this->Putc(ev, ' ');
-      ++outSize;
-    }
-  }
   return outSize;
 }
 

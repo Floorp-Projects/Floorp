@@ -759,7 +759,6 @@ morkStore::MidToOid(morkEnv* ev, const morkMid& inMid, mdbOid* outOid)
   const morkBuf* buf = inMid.mMid_Buf;
   if ( buf && !outOid->mOid_Scope )
   {
-    mdbOid oid = inMid.mMid_Oid;
     if ( buf->mBuf_Fill <= morkBookAtom_kMaxBodySize )
     {
       if ( buf->mBuf_Fill == 1 )
