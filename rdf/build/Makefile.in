@@ -100,5 +100,9 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History
 	$(INSTALL) $(srcdir)/../resources/dom-test-1.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/dom-test-2.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/dom-test-3.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/dom-test-4.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/dom-test-5.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/dom-test-1.css $(DIST)/bin/res/rdf
-
+	$(INSTALL) $(srcdir)/../resources/dom-test-4.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/xpidl-test-1.xul $(DIST)/bin/res/rdf

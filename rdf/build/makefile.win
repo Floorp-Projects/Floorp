@@ -87,6 +87,10 @@ install:: $(DLL)
         $(MAKE_INSTALL) ..\resources\History\h1.hst $(DIST)\bin\res\rdf\History
         $(MAKE_INSTALL) ..\resources\dom-test-1.xul $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\dom-test-2.xul $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\dom-test-3.xul $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\dom-test-4.xul $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\dom-test-5.xul $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\dom-test-1.css $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\dom-test-4.css $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\xpidl-test-1.xul $(DIST)\bin\res\rdf
 
