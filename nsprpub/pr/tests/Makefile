@@ -69,6 +69,7 @@ CSRCS =             \
 	initclk.c		\
 	inrval.c		\
 	instrumt.c      \
+	intrio.c        \
 	intrupt.c       \
 	io_timeout.c    \
 	ioconthr.c      \
