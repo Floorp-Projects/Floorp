@@ -775,21 +775,28 @@ my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 if ($my_webservergroup && !$silent) {
-    if ($< != 0) { # zach: if not root, yell at them, bug 87398 
-        print <<EOF;
+    if ($^O !~ /MSWin32/i) {
+        # if on unix, see if we need to print a warning about a webservergroup
+        # that we can't chgrp to
+        my $webservergid = (getgrnam($my_webservergroup))[2]
+                           or die("no such group: $my_webservergroup");
+        if ($< != 0 && !grep(/^$webservergid$/, split(" ", $)))) {
+            print <<EOF;
 
-Warning: you have entered a value for the "webservergroup" parameter
-in localconfig, but you are not running this script as $::root.
-This can cause permissions problems and decreased security.  If you
-experience problems running Bugzilla scripts, log in as $::root and re-run
-this script, or remove the value of the "webservergroup" parameter.
-Note that any warnings about "uninitialized values" that you may
-see below are caused by this.
+Warning: you have entered a value for the "webservergroup" parameter in 
+localconfig, but you are not either a) running this script as $::root; or b) a 
+member of this group. This can cause permissions problems and decreased 
+security.  If you experience problems running Bugzilla scripts, log in as 
+$::root and re-run this script, become a member of the group, or remove the 
+value of the "webservergroup" parameter. Note that any warnings about 
+"uninitialized values" that you may see below are caused by this.
 
 EOF
+        }
     }
 
-    if ($^O =~ /MSWin32/i) {
+    else {
+        # if on Win32, print a reminder that setting this value adds no security
         print <<EOF;
       
 Warning: You have set webservergroup in your localconfig.
