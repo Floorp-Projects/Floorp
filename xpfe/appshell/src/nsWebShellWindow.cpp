@@ -640,6 +640,26 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                       // Make nsMenuItem a child of nsMenu
                       //pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
                       ConnectCommandToOneGUINode(menuitemNode);
+                      //-----------------------------------------------------------
+                      // This block contains temporary menu hookup code.
+                      //-----------------------------------------------------------
+                      {
+                        nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(menuitemNode));
+                        if (!domElement)
+                          return;
+
+                        nsAutoString cmdAtom("cmd");
+                        nsString cmdName;
+
+                        domElement->GetAttribute(cmdAtom, cmdName);
+                        nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(cmdName));
+                        if (cmd) {
+                          nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(cmd));
+                          pnsMenuItem->AddMenuListener(listener);
+                        }
+
+                      }
+                      //-----------------------------------------------------------
     
                     }
                   }
