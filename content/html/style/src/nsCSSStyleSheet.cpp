@@ -2377,7 +2377,7 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 #ifdef NECKO
   char* urlSpec = nsnull;
   nsresult rv = mInner->mURL->GetSpec(&urlSpec);
-  if (urlSpec) {
+  if (NS_SUCCEEDED(rv) && urlSpec) {
     fputs(urlSpec, out);
     nsCRT::free(urlSpec);
   }
