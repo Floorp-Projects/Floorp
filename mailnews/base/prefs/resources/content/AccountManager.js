@@ -627,7 +627,8 @@ function getAccountFromServerId(serverId) {
 //
 function getPageFormElements() {
  try {
-	var pageElements = top.frames["contentFrame"].document.controls;
+	var pageElements =
+      top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
 	return pageElements;
  }
  catch (ex) {

@@ -53,7 +53,7 @@ function initServerType() {
 
 function hideShowControls(serverType)
 {
-    var controls = document.controls;
+    var controls = document.getElementsByAttribute("wsm_persist", "true");
     var len = controls.length;
     for (var i=0; i<len; i++) {
         var control = controls[i];
@@ -131,8 +131,10 @@ function getImapServer() {
 
 function saveServerLocally(imapServer)
 {
-    var controls = document.controls;
-
+    dump("Saving values in " + imapServer + ":\n");
+    for (var i in imapServer) {
+        dump("imapServer." + i + " = " + imapServer[i] + "\n");
+    }
     // boolean prefs, JS does the conversion for us
     document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders;
     document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription;

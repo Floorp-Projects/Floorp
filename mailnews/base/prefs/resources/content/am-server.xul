@@ -14,11 +14,11 @@
   <script src="chrome://messenger/content/am-server.js"/>
   <script src="chrome://global/content/strres.js"/>
 
-  <html:input type="hidden" name="server.type" id="server.type"/>
-  <html:input type="hidden" name="server.hostName" id="server.hostName"/>
-  <html:input type="hidden" name="server.username" id="server.username"/>
+  <html:input wsm_persist="true" type="hidden" name="server.type" id="server.type"/>
+  <html:input wsm_persist="true" type="hidden" name="server.hostName" id="server.hostName"/>
+  <html:input wsm_persist="true" type="hidden" name="server.username" id="server.username"/>
 
-  <box class="box-smallheader" title="&serverSettings.label;"/>
+  <box wsm_persist="true" class="box-smallheader" title="&serverSettings.label;"/>
 
   <grid>
     <columns>
@@ -42,41 +42,41 @@
   </grid>
   <spring class="spacer"/>
   <box id="serverPrefContainer" hidden="true" orient="vertical">
-  <box orient="horizontal"><html:input name="server.isSecure"
+  <box orient="horizontal"><html:input wsm_persist="true" name="server.isSecure"
                         id="server.isSecure"
                         type="checkbox"/>
             <html:label for="server.isSecure">&isSecure.label;</html:label>
   </box>
-  <box orient="horizontal"><html:input name="server.rememberPassword"
+  <box orient="horizontal"><html:input wsm_persist="true" name="server.rememberPassword"
                         id="server.rememberPassword"
                         type="checkbox"/>
             <html:label for="server.rememberPassword">&savePassword.label;</html:label>
   </box>
-  <box orient="horizontal"><html:input name="server.doBiff"
+  <box orient="horizontal"><html:input wsm_persist="true" name="server.doBiff"
                         id="server.doBiff"
                         type="checkbox"/>
             <html:label for="server.doBiff">&biffStart.label;</html:label>
-            <html:input name="server.biffMinutes" type="text" size="3"/>
+            <html:input wsm_persist="true" name="server.biffMinutes" type="text" size="3"/>
             &biffEnd.label;
   </box>
   <box style="margin-left: 2em">
-    <html:input name="server.downloadOnBiff"
+    <html:input wsm_persist="true" name="server.downloadOnBiff"
                 id="server.downloadOnBiff"
                 type="checkbox"/>
     <html:label for="server.downloadOnBiff">&downloadOnBiff.label;</html:label>
   </box>
-  <box><html:input name="pop3.leaveMessagesOnServer" id="pop3.leaveMessagesOnServer" type="checkbox"/>
+  <box><html:input wsm_persist="true" name="pop3.leaveMessagesOnServer" id="pop3.leaveMessagesOnServer" type="checkbox"/>
             <html:label for="pop3.leaveMessagesOnServer">&leaveOnServer.label;</html:label>
   </box>
-  <box><html:input name="pop3.deleteMailLeftOnServer" id="pop3.deleteMailLeftOnServer" type="checkbox"/>
-            <html:label for="pop3.deleteMailLeftOnServer">&deleteOnServer.label;</html:label>
+  <box><html:input wsm_persist="true" name="pop3.deleteMailLeftOnServer" id="pop3.deleteMailLeftOnServer" type="checkbox"/>
+            <html:label wsm_persist="true" for="pop3.deleteMailLeftOnServer">&deleteOnServer.label;</html:label>
   </box>
 
 
   <!-- IMAP -->
   <box>
     <text value="&deleteMessagePrefix.label;"/>
-    <html:select name="imap.deleteModel">
+    <html:select wsm_persist="true" name="imap.deleteModel">
           <html:option value="1">&modelMoveToTrash.label;</html:option>
           <html:option value="0">&modelMarkDeleted.label;</html:option>
           <html:option value="2">&modelDeleteImmediately.label;</html:option>
@@ -84,11 +84,11 @@
   </box>
 
   <box>
-    <html:input name="imap.cleanupInboxOnExit" id="imap.cleanupInboxOnExit" type="checkbox"/>
+    <html:input wsm_persist="true" name="imap.cleanupInboxOnExit" id="imap.cleanupInboxOnExit" type="checkbox"/>
     <html:label for="imap.cleanupInboxOnExit">&expungeOnExit.label;</html:label>
   </box>
   <box>
-    <html:input name="imap.emptyTrashOnExit" id="imap.emptyTrashOnExit" type="checkbox"/>
+    <html:input wsm_persist="true" name="imap.emptyTrashOnExit" id="imap.emptyTrashOnExit" type="checkbox"/>
     <html:label for="imap.emptyTrashOnExit">&emptyTrashOnExit.label;</html:label>
   </box>
   <box iscontrolcontainer="true">
@@ -98,23 +98,23 @@
                     onclick="openImapAdvanced(event);"/>
     </box>
 
-    <html:input type="hidden" id="imap.dualUseFolders" name="imap.dualUseFolders"/>
-    <html:input type="hidden" id="imap.usingSubscription" name="imap.usingSubscription"/>
-    <html:input type="hidden" id="imap.personalNamespace" name="imap.personalNamespace"/>
-    <html:input type="hidden" id="imap.publicNamespace" name="imap.publicNamespace"/>
-    <html:input type="hidden" id="imap.otherUsersNamespace" name="imap.otherUsersNamespace"/>
-    <html:input type="hidden" id="imap.serverDirectory" name="imap.serverDirectory"/>
-    <html:input type="hidden" id="imap.overrideNamespaces" name="imap.overrideNamespaces"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.dualUseFolders" name="imap.dualUseFolders"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.usingSubscription" name="imap.usingSubscription"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.personalNamespace" name="imap.personalNamespace"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.publicNamespace" name="imap.publicNamespace"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.otherUsersNamespace" name="imap.otherUsersNamespace"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.serverDirectory" name="imap.serverDirectory"/>
+    <html:input wsm_persist="true" type="hidden" id="imap.overrideNamespaces" name="imap.overrideNamespaces"/>
   </box>
 
   <!-- News -->
   <box orient="horizontal">
     <box>
-      <html:input name="nntp.notifyOn" id="nntp.notifyOn" type="checkbox"/>
+      <html:input wsm_persist="true" name="nntp.notifyOn" id="nntp.notifyOn" type="checkbox"/>
       <html:label for="nntp.notifyOn">&maxMessagesStart.label;</html:label>
     </box>
     <box>
-      <html:input name="nntp.maxArticles" type="text" size="6"/>
+      <html:input wsm_persist="true" name="nntp.maxArticles" type="text" size="6"/>
  		    &maxMessagesEnd.label;
     </box>
   </box>
@@ -123,11 +123,11 @@
          <title><text value="&abbreviate.label;"/></title>
 
          <box>
-           <html:input reversed="true" id="nntp.abbreviate.on" name="nntp.abbreviate" type="radio"/>
+           <html:input wsm_persist="true" reversed="true" id="nntp.abbreviate.on" name="nntp.abbreviate" type="radio"/>
            <html:label for="nntp.abbreviate.on" >&abbreviateOn.label;</html:label>
          </box>
          <box>
-           <html:input id="id.nntp.abbreviate.off" name="nntp.abbreviate" type="radio"/>
+           <html:input wsm_persist="true" id="id.nntp.abbreviate.off" name="nntp.abbreviate" type="radio"/>
            <html:label for="id.nntp.abbreviate.off" >&abbreviateOff.label;</html:label>
          </box>
       </titledbox>
@@ -135,12 +135,12 @@
 
   <box orient="vertical">
     <text value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
-    <html:input type="text" size="60" id="nntp.newsrcFilePath" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
+    <html:input wsm_persist="true" type="text" size="60" id="nntp.newsrcFilePath" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
   </box>
   </box>
   <spring flex="100%"/>
   <box orient="vertical">
     <text value="&localPath.label;" for="server.localPath"/>
-    <html:input type="text" size="60" id="server.localPath" name="server.localPath" datatype="nsIFileSpec"/>
+    <html:input wsm_persist="true" type="text" size="60" id="server.localPath" name="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>

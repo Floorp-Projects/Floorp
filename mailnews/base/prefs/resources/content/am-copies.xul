@@ -16,17 +16,17 @@
 <script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
 <script src="chrome://messenger/content/am-copies.js"/>
 
-<html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
-<html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
-<html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
-<html:input type="hidden" name="identity.email" id="identity.email"/>
+<html:input wsm_persist="true" type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
+<html:input wsm_persist="true" type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
+<html:input wsm_persist="true" type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
+<html:input wsm_persist="true" type="hidden" name="identity.email" id="identity.email"/>
 
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   <text class="label" value="&sendingPrefix.label;"/>
 
   <box>
     <box flex="1">
-      <html:input name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
+      <html:input wsm_persist="true" name="identity.doFcc" id="identity.doFcc" type="checkbox"/>
       <html:label for="identity.doFcc" flex="1">&fccMailFolder.label;</html:label>
     </box>
 
@@ -36,14 +36,14 @@
 	</box>
   </box>
   <box>
-    <html:input name="identity.bccSelf" id="identity.bccSelf" type="checkbox"/>
-    <html:label for="identity.bccSelf"><text before="&bccAccount.label; &lt;" id="bccemail" after="&gt;"/>
+    <html:input wsm_persist="true" name="identity.bccSelf" id="identity.bccSelf" type="checkbox"/>
+    <html:label wsm_persist="true" for="identity.bccSelf"><text before="&bccAccount.label; &lt;" id="bccemail" after="&gt;"/>
 </html:label>
   </box>
   <box>
-    <html:input name="identity.bccOthers" id="identity.bccOthers" type="checkbox"/>
+    <html:input wsm_persist="true" name="identity.bccOthers" id="identity.bccOthers" type="checkbox"/>
     <html:label for="identity.bccOthers">&bccAddress.label;</html:label>
-    <html:input type="text" name="identity.bccList"/>
+    <html:input wsm_persist="true" type="text" name="identity.bccList"/>
   </box>
 
 <spring class="spacer"/>

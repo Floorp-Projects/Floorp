@@ -20,7 +20,7 @@
 
   <box>
      <text class="label" value="&smtpHostname.label;"/>
-     <html:input type="text" size="30" name="smtp.hostname"/>
+     <html:input wsm_persist="true" type="text" size="30" name="smtp.hostname"/>
   </box>
   <grid width="100%">
     <columns>
@@ -29,7 +29,7 @@
     </columns>
   <rows>
     <row>
-      <html:input type="checkbox" id="smtp.useUsername" name="smtp.useUsername"/>
+      <html:input wsm_persist="true" type="checkbox" id="smtp.useUsername" name="smtp.useUsername"/>
       <html:label for="smtp.useUsername">&smtpAlwaysUseName.label;</html:label>
     </row>
 
@@ -37,18 +37,18 @@
       <text/>
       <box>
         <text class="label" value="&smtpUsername.label;"/>
-        <html:input type="text" size="30" name="smtp.username" flex="100%"/>
+        <html:input wsm_persist="true" type="text" size="30" name="smtp.username" flex="100%"/>
       </box>
   </row>
   <row>
     <text/>
     <box>
-      <html:input type="checkbox" id="smtp.savePassword" name="smtp.savePassword"/>
+      <html:input wsm_persist="true" type="checkbox" id="smtp.savePassword" name="smtp.savePassword"/>
       <html:label for="smtp.savePassword">&smtpSavePassword.label;</html:label>
     </box>
   </row>
   <row>
-      <html:input id="smtp.isSecure" name="smtp.isSecure" type="checkbox"/>
+      <html:input wsm_persist="true" id="smtp.isSecure" name="smtp.isSecure" type="checkbox"/>
       <html:label for="smtp.isSecure">&smtpUseSecure.label;</html:label>
   </row>
   </rows>

@@ -24,13 +24,13 @@
     <rows>
       <row>
         <text class="label" value="&accountName.label;" for="server.prettyName"/>
-        <html:input type="text" size="30" name="server.prettyName" id="server.prettyName"/>
+        <html:input wsm_persist="true" type="text" size="30" name="server.prettyName" id="server.prettyName"/>
       </row>
     </rows>
   </grid>
   <spring flex="1"/>
   <box align="vertical">
     <text value="&localPath.label;"/>
-    <html:input type="text" size="60" name="server.localPath" datatype="nsIFileSpec"/>
+    <html:input wsm_persist="true" type="text" size="60" name="server.localPath" datatype="nsIFileSpec"/>
   </box>
 </window>
