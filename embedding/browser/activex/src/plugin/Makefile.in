@@ -45,6 +45,10 @@ REQUIRES = \
     js \
     pref \
     xpconnect \
+    docshell \
+    webshell \
+    necko \
+    windowwatcher \
     $(NULL)
 XPIFILE         = mozactivex.xpi
 

@@ -242,6 +242,10 @@ SOURCE=.\ItemContainer.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\IWebBrowserImpl.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\MozillaBrowser.h
 # End Source File
 # Begin Source File
@@ -299,7 +303,7 @@ SOURCE=.\MozillaControl.rc
 # End Group
 # Begin Source File
 
-SOURCE=.\makefile.win
+SOURCE=.\Makefile.in
 # End Source File
 # End Target
 # End Project
