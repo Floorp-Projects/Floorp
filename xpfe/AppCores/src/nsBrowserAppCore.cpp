@@ -197,19 +197,7 @@ nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
-#ifdef NECKO
-  if (aIID.Equals(nsIPrompt::GetIID())) {
-    *aInstancePtr = (void*) ((nsIPrompt*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#else
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtr = (void*) ((nsINetSupport*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif
+
   /* This isn't supported any more
   if (aIID.Equals(kIStreamObserverIID)) {
     *aInstancePtr = (void*) ((nsIStreamObserver*)this);
@@ -1689,7 +1677,7 @@ nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
 {
 
    if (mSHistory)
-      mSHistory->GetURLForIndex(aIndex, aURL);
+     return  mSHistory->GetURLForIndex(aIndex, aURL);
    return NS_OK;
 }
 
@@ -2036,143 +2024,6 @@ nsBrowserAppCore::DoDialog()
 
 //----------------------------------------------------------------------
 
-#ifdef NECKO
-
-NS_IMETHODIMP
-nsBrowserAppCore::Alert(const PRUnichar *text)
-{
-  if (APP_DEBUG) printf("Alert\n");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::Confirm(const PRUnichar *text,
-                          PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("Confirm\n");
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::ConfirmYN(const PRUnichar *text,
-                          PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("ConfirmYN\n");
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::ConfirmCheck(const PRUnichar *text, 
-                               const PRUnichar *checkMsg, 
-                               PRBool *checkValue, 
-                               PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("ConfirmCheck\n");
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::ConfirmCheckYN(const PRUnichar *text, 
-                               const PRUnichar *checkMsg, 
-                               PRBool *checkValue, 
-                               PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("ConfirmCheckYN\n");
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::Prompt(const PRUnichar *text,
-                         const PRUnichar *defaultText,
-                         PRUnichar **resultText,
-                         PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("Prompt\n");
-  *resultText = nsnull;
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::PromptUsernameAndPassword(const PRUnichar *text,
-                                            PRUnichar **user,
-                                            PRUnichar **pwd,
-                                            PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("PromptUserAndPassword\n");
-  DoDialog();
-  *result = bResult;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::PromptPassword(const PRUnichar *text,
-                                 PRUnichar **pwd,
-                                 PRBool *result)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("PromptPassword\n");
-  *result = bResult;
-  return NS_OK;
-}
-
-#else // !NECKO
-
-NS_IMETHODIMP_(void)
-nsBrowserAppCore::Alert(const nsString &aText)
-{
-  if (APP_DEBUG) printf("Alert\n");
-}
-
-NS_IMETHODIMP_(PRBool)
-nsBrowserAppCore::Confirm(const nsString &aText)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("Confirm\n");
-  return bResult;
-}
-
-NS_IMETHODIMP_(PRBool)
-nsBrowserAppCore::Prompt(const nsString &aText,
-                   const nsString &aDefault,
-                   nsString &aResult)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("Prompt\n");
-  return bResult;
-}
-
-NS_IMETHODIMP_(PRBool) 
-nsBrowserAppCore::PromptUserAndPassword(const nsString &aText,
-                                  nsString &aUser,
-                                  nsString &aPassword)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("PromptUserAndPassword\n");
-  DoDialog();
-  return bResult;
-}
-
-NS_IMETHODIMP_(PRBool) 
-nsBrowserAppCore::PromptPassword(const nsString &aText,
-                           nsString &aPassword)
-{
-  PRBool bResult = PR_FALSE;
-  if (APP_DEBUG) printf("PromptPassword\n");
-  return bResult;
-}
-
-#endif // !NECKO
 
 
 static nsresult
