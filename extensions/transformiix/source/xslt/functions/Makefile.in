@@ -27,9 +27,11 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = transformiix
+LIBRARY_NAME = txxsltfunctions_s
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
+
 ifndef TX_EXE
 REQUIRES +=	  dom \
 		  content \
@@ -49,10 +51,12 @@ CPPSRCS = CurrentFunctionCall.cpp      \
           txFormatNumberFunctionCall.cpp \
           txKeyFunctionCall.cpp
 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../xpath \
   -I$(srcdir)/../../xml/dom -I$(srcdir)/../../xml -I$(srcdir) \
   -I$(srcdir)/../../xml/parser -I$(srcdir)/.. -I$(srcdir)/../util
-
-libs:: $(OBJS)
