@@ -53,12 +53,12 @@
       <rows>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" text-align="right" value="&numRowsEditField.label;" />
-          <textfield class="narrow" id="rowsInput" onkeyup="forceInteger(this.id)" />
+          <textfield class="narrow" id="rowsInput" onkeyup="ChangeRowOrColumn(this.id)" />
           <spring/>
         </row>
         <row valign="middle" text-align="right" autostretch="never">
           <text class="label align-right" value="&numColumnsEditField.label;" />
-          <textfield class="narrow" id="columnsInput" onkeyup="forceInteger(this.id)" />
+          <textfield class="narrow" id="columnsInput" onkeyup="ChangeRowOrColumn(this.id)" />
           <spring/>
         </row>
         <row valign="middle" text-align="right" autostretch="never">

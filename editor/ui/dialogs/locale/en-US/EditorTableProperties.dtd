@@ -53,7 +53,8 @@
 <!ENTITY cellChangeSelectionMsg.label     "When moving the selection:">
 <!ENTITY cellApplyBeforeMove.label        "Apply changes before moving">
 <!ENTITY cellKeepCurrentData.label        "Keep current settings">
-<!ENTITY cellSpan.label                   "Span:">
+<!ENTITY cellRowSpan.label                "Row Span:">
+<!ENTITY cellColSpan.label                "Column Span:">
 <!ENTITY cellContentAlignment.label       "Content Alignment">
 <!ENTITY cellHorizontal.label             "Horizontal:">
 <!ENTITY cellVertical.label               "Vertical:">
@@ -68,8 +69,6 @@
 <!ENTITY cellAlignBottom.label            "Bottom">
 <!ENTITY cellAlignJustify.label           "Justify">
 <!ENTITY cellAlignAtChar.label            "At Character:">
-<!ENTITY cellSpanRows.label               "rows">
-<!ENTITY cellSpanCols.label               "columns">
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
 <!-- Don't translate <html:br/> -->
 <!ENTITY cellUseCheckboxHelp.label        "Use checkboxes to determine which properties<html:br/>are applied to all selected cells">

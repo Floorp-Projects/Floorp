@@ -34,4 +34,4 @@
 <!ENTITY background.label "Background:">
 <!ENTITY colon.character ":">
 <!ENTITY backgroundImage.label "Background Image:">
-<!ENTITY backgroundImage.tooltip "Use an image file as the background for your document">
+<!ENTITY backgroundImage.tooltip "Use an image file as the background for your page">

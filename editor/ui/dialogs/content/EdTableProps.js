@@ -107,17 +107,6 @@ function Startup()
   dialog.TableCaptionList = document.getElementById("TableCaptionList");
   dialog.TableInheritColor = document.getElementById("TableInheritColor");
 
-  dialog.RowsCheckbox = document.getElementById("RowsCheckbox");
-  dialog.ColumnsCheckbox = document.getElementById("ColumnsCheckbox");
-  dialog.TableHeightCheckbox = document.getElementById("TableHeightCheckbox");
-  dialog.TableWidthCheckbox = document.getElementById("TableWidthCheckbox");
-  dialog.TableBorderCheckbox = document.getElementById("TableBorderCheckbox");
-  dialog.CellSpacingCheckbox = document.getElementById("CellSpacingCheckbox");
-  dialog.CellPaddingCheckbox = document.getElementById("CellPaddingCheckbox");
-  dialog.TableHAlignCheckbox = document.getElementById("TableHAlignCheckbox");
-  dialog.TableCaptionCheckbox = document.getElementById("TableCaptionCheckbox");
-  dialog.TableColorCheckbox = document.getElementById("TableColorCheckbox");
-
   // Cell Panel
   dialog.SelectionList = document.getElementById("SelectionList");
   dialog.PreviousButton = document.getElementById("PreviousButton");
@@ -146,7 +135,6 @@ function Startup()
   dialog.CellVAlignCheckbox = document.getElementById("CellVAlignCheckbox");
   dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
   dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
-  dialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
 
   TabPanel = document.getElementById("TabPanel");
   var TableTab = document.getElementById("TableTab");
@@ -900,9 +888,11 @@ function ValidateData()
 //   so the checkbox is automatically set
 function SetCheckbox(checkboxID)
 {
-  // Set associated checkbox
-  document.getElementById(checkboxID).checked = true;
-
+  if (checkboxID && checkboxID.length > 0)
+  {
+    // Set associated checkbox
+    document.getElementById(checkboxID).checked = true;
+  }
   if (currentPanel == CellPanel)
     CellDataChanged = true;
 }
@@ -941,55 +931,52 @@ function ConfirmDeleteCells()
 
 function ApplyTableAttributes()
 {
-  if (dialog.TableCaptionCheckbox.checked)
-  {
-    var newAlign = dialog.TableCaptionList.selectedItem.data;
-    if (!newAlign) newAlign = "";
+  var newAlign = dialog.TableCaptionList.selectedItem.data;
+  if (!newAlign) newAlign = "";
 
+  if (TableCaptionElement)
+  {
+    // Get current alignment
+    var align = TableCaptionElement.align.toLowerCase();
+    // This is the default
+    if (!align) align = "top";
+
+    if (newAlign == "")
+    {
+      // Remove existing caption
+      editorShell.DeleteElement(TableCaptionElement);
+      TableCaptionElement = null;
+    } 
+    else if( align != newAlign)
+    {
+      if (align == "top") // This is default, so don't explicitly set it
+        editorShell.RemoveAttribute(TableCaptionElement, "align");
+      else
+        editorShell.SetAttribute(TableCaptionElement, "align", newAlign);
+    }
+  } 
+  else if (newAlign != "")
+  {
+    // Create and insert a caption:
+    TableCaptionElement = editorShell.CreateElementWithDefaults("caption");
     if (TableCaptionElement)
     {
-      // Get current alignment
-      var align = TableCaptionElement.align.toLowerCase();
-      // This is the default
-      if (!align) align = "top";
-
-      if (newAlign == "")
-      {
-        // Remove existing caption
-        editorShell.DeleteElement(TableCaptionElement);
-        TableCaptionElement = null;
-      } 
-      else if( align != newAlign)
-      {
-        if (align == "top") // This is default, so don't explicitly set it
-          editorShell.RemoveAttribute(TableCaptionElement, "align");
-        else
-          editorShell.SetAttribute(TableCaptionElement, "align", newAlign);
-      }
-    } 
-    else if (newAlign != "")
-    {
-      // Create and insert a caption:
-      TableCaptionElement = editorShell.CreateElementWithDefaults("caption");
-      if (TableCaptionElement)
-      {
-        if (newAlign != "top")
-          TableCaptionElement.setAttribute("align", newAlign);
-        
+      if (newAlign != "top")
+        TableCaptionElement.setAttribute("align", newAlign);
+      
 dump("Insert a table caption...\n");
-        // Insert it into the table - caption is always inserted as first child
-        //  but check if we are inserting inside a <tbody>
-        var parent;
-        if (TableElement.firstChild.nodeName.toLowerCase == "tbody")
-          parent = TableElement.firstChild;
-        else
-           parent = TableElement;
+      // Insert it into the table - caption is always inserted as first child
+      //  but check if we are inserting inside a <tbody>
+      var parent;
+      if (TableElement.firstChild.nodeName.toLowerCase == "tbody")
+        parent = TableElement.firstChild;
+      else
+         parent = TableElement;
 
-        editorShell.InsertElement(TableCaptionElement, parent, 0);
+      editorShell.InsertElement(TableCaptionElement, parent, 0);
 
-        // Put selecton back where it was
-        ChangeSelection(RESET_SELECTION);
-      }
+      // Put selecton back where it was
+      ChangeSelection(RESET_SELECTION);
     }
   }
 
@@ -998,14 +985,14 @@ dump("Insert a table caption...\n");
   // If user is deleting any cells and get confirmation
   // (This is a global to the dialog and we ask only once per dialog session)
   if ( !canDelete &&
-       (dialog.RowsCheckbox.checked && newRowCount < rowCount ||
-        dialog.ColumnsCheckbox.checked && newColCount < colCount) &&
+       (newRowCount < rowCount ||
+        newColCount < colCount) &&
        ConfirmDeleteCells() )
   {
     canDelete = true;
   }
 
-  if (dialog.RowsCheckbox.checked && newRowCount != rowCount)
+  if (newRowCount != rowCount)
   {
     countDelta = newRowCount - rowCount;
     if (newRowCount > rowCount)
@@ -1072,7 +1059,7 @@ dump("Insert a table caption...\n");
     }
   }
 
-  if (dialog.ColumnsCheckbox.checked && newColCount != colCount)
+  if (newColCount != colCount)
   {
     countDelta = newColCount - colCount;
 
@@ -1136,26 +1123,13 @@ dump("Insert a table caption...\n");
     }
   }
 
-  if (dialog.TableHeightCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "height");
-
-  if (dialog.TableWidthCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "width");
-
-  if (dialog.TableBorderCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "border");
-
-  if (dialog.CellSpacingCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "cellspacing");
-
-  if (dialog.CellPaddingCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "cellpadding");
-
-  if (dialog.TableHAlignCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "align");
-
-  if (dialog.TableColorCheckbox.checked)
-    CloneAttribute(TableElement, globalTableElement, "bgcolor");
+  CloneAttribute(TableElement, globalTableElement, "height");
+  CloneAttribute(TableElement, globalTableElement, "width");
+  CloneAttribute(TableElement, globalTableElement, "border");
+  CloneAttribute(TableElement, globalTableElement, "cellspacing");
+  CloneAttribute(TableElement, globalTableElement, "cellpadding");
+  CloneAttribute(TableElement, globalTableElement, "align");
+  CloneAttribute(TableElement, globalTableElement, "bgcolor");
 }
 
 function ApplyCellAttributes()
@@ -1196,8 +1170,7 @@ function ApplyAttributesToOneCell(destElement)
   if (dialog.TextWrapCheckbox.checked)
     CloneAttribute(destElement, globalCellElement, "nowrap");
 
-  if (dialog.CellColorCheckbox.checked)
-    CloneAttribute(destElement, globalCellElement, "bgcolor");
+  CloneAttribute(destElement, globalCellElement, "bgcolor");
 
   if (dialog.CellStyleCheckbox.checked)
   {

@@ -183,7 +183,7 @@ function ReplaceWhitespace(string, charReplace) {
 // Replace whitespace with "_" and allow only "word" characters (a-z,A-Z,0-9 and _)
 function PrepareStringForURL(string)
 {
-  return ReplaceWhitespace(string,"_").replace(/\W+/g,'')
+  return ReplaceWhitespace(string,"_").replace(/\W+/g,'');
 }
 
 // this function takes an elementID and a flag

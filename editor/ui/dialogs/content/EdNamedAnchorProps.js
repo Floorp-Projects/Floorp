@@ -85,6 +85,17 @@ function InitDialog()
   nameInput.value = globalElement.getAttribute("name");
 }
 
+function ChangeName()
+{
+  if (nameInput.value.length > 0)
+  {
+    // Replace spaces with "_" and strip other non-URL characters
+    // Note: we could use ConvertAndEscape, but then we'd
+    //  have to UnConverAndEscape beforehand - too messy!
+    nameInput.value = PrepareStringForURL(nameInput.value.replace(/\s+/g, "_"));
+  }
+}
+
 function AnchorNameExists(name)
 {
   anchorList = editorShell.editorDocument.anchors;
@@ -102,7 +113,8 @@ function AnchorNameExists(name)
 function ValidateData()
 {
   var name = TrimString(nameInput.value);
-  if (name.length == 0) {
+  if (name.length == 0)
+  {
       ShowInputErrorMessage(GetString("MissingAnchorNameError"));
       SetTextfieldFocus(nameInput);
       return false;
@@ -112,7 +124,8 @@ function ValidateData()
     //  have to UnConverAndEscape beforehand - too messy!
     name = PrepareStringForURL(name);
 
-    if (AnchorNameExists(name)) {
+    if (AnchorNameExists(name))
+    {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
       SetTextfieldFocus(nameInput);
       return false;

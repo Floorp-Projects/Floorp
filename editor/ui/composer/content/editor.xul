@@ -154,7 +154,7 @@
     <button id="previewButton"/>
     <menubutton id="printButton" />
     <button id="spellingButton"/>
-    <spring class="separator_small"/>
+    <spring style="width: 8px"/>
     <button id="imageButton"/>
     <button id="hlineButton"/>
     <button id="tableButton"/>

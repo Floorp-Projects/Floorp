@@ -76,10 +76,10 @@ function Startup()
     dialog.widthPixelOrPercentMenulist.selectedIndex = 1;
   }
 
-  dialog.rowsInput.focus();
-
   // Resize window
   window.sizeToContent();
+
+  SetTextfieldFocus(dialog.rowsInput);
 }
 
 // Set dialog widgets with attribute data
@@ -94,6 +94,19 @@ function InitDialog()
   dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "heightInput","heightPixelOrPercentMenulist", gPixel);
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
+
+function ChangeRowOrColumn(id)
+{
+  // Allow only integers
+  forceInteger(id);
+
+  // Enable OK only if both rows and columns have a value > 0
+  SetElementEnabledById("ok", dialog.rowsInput.value.length > 0 && 
+                              dialog.rowsInput.value > 0 &&
+                              dialog.columnsInput.value.length > 0 &&
+                              dialog.columnsInput.value > 0);
+}
+
 
 // Get and validate data from widgets.
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()

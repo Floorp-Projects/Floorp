@@ -725,7 +725,6 @@ var nsObjectPropertiesCommand =
                element.nodeName == "table" ||
                element.nodeName == "td"    ||
                element.nodeName == "a"))
-//               window.editorShell.GetSelectedElement("href")));
     }
     return false;
   },

@@ -893,28 +893,7 @@ function SetDisplayMode(mode)
       // Switch to the sourceWindow (second in the deck)
       gContentWindowDeck.setAttribute("index","1");
 
-      // Hide menus that are completely disabled
-      // Note: ShowMenuItem is implemented in EditorContextMenu.js
-      CollapseItem("editMenu", true);
-      CollapseItem("insertMenu", true);
-      CollapseItem("formatMenu", true);
-      CollapseItem("tableMenu", true);
-
-      // Collapse allitems in the view menu except mode switch items
-      SetViewMenuForHTMLSource(true);
-
-      DisableItem("viewToolbar", true);
-      DisableItem("viewSep1", true);
-      DisableItem("viewSep1", true);
-      DisableItem("composerCharsetMenu", true);
-
-      DisableItem("findButton", true);
-      DisableItem("spellingButton", true);
-      DisableItem("imageButton", true);
-      DisableItem("hlineButton", true);
-      DisableItem("tableButton", true);
-      DisableItem("linkButton", true);
-      DisableItem("namedAnchorButton", true);
+      DisableMenusForHTMLSource(true);
 
       //Hide the formating toolbar if not already hidden
       gFormatToolbarHidden = gFormatToolbar.getAttribute("hidden");
@@ -931,20 +910,7 @@ function SetDisplayMode(mode)
       gContentWindowDeck.setAttribute("index","0");
 
       // Restore menus and toolbars
-      CollapseItem("editMenu", false);
-      CollapseItem("insertMenu", false);
-      CollapseItem("formatMenu", false);
-      CollapseItem("tableMenu", false);
-
-      SetViewMenuForHTMLSource(false);
-
-      DisableItem("findButton", false);
-      DisableItem("spellingButton", false);
-      DisableItem("imageButton", false);
-      DisableItem("hlineButton", false);
-      DisableItem("tableButton", false);
-      DisableItem("linkButton", false);
-      DisableItem("namedAnchorButton", false);
+      DisableMenusForHTMLSource(false);
 
       if (gFormatToolbarHidden != "true")
       {
@@ -959,8 +925,28 @@ dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbar
 }
 
 // We disable all items in View menu except Edit mode and sidebar items
-function SetViewMenuForHTMLSource(disable)
+function DisableMenusForHTMLSource(disable)
 {
+  // Disable toolbar buttons
+  DisableItem("findButton", disable);
+  DisableItem("spellingButton", disable);
+  DisableItem("imageButton", disable);
+  DisableItem("hlineButton", disable);
+  DisableItem("tableButton", disable);
+  DisableItem("linkButton", disable);
+  DisableItem("namedAnchorButton", disable);
+
+  // Top-level menus that we completely hide
+  CollapseItem("insertMenu", disable);
+  CollapseItem("formatMenu", disable);
+  CollapseItem("tableMenu", disable);
+
+  // Edit menu items
+  DisableItem("menu_find", disable);
+  DisableItem("menu_findnext", disable);
+  DisableItem("menu_checkspelling", disable);
+
+  // Disable all items in the view menu except mode switch items
   var viewMenu = document.getElementById("viewMenu");
   // menuitems are children of the menupopup child
   var children = viewMenu.firstChild.childNodes;
@@ -976,27 +962,6 @@ function SetViewMenuForHTMLSource(disable)
       DisableItem(item.id, disable);
     }
   }
-}
-
-function DisableMenuItem(id, disable)
-{
-dump("DisableMenuItem: item id="+id+": "+disable+"\n");
-  var item = document.getElementById(id);
-  if (item)
-  {
-	  if(disable != (item.getAttribute("disabled") == true))
-    {
-		  if (disable)
-        item.setAttribute("disabled", disable);
-      else
-      {
-dump("Remove disable\n");
-        item.removeAttribute("disabled");
-      }
-    }
-  }
-  else
-    dump("DisableMenuItem: item id="+id+" not found\n");
 }
 
 function EditorToggleParagraphMarks()

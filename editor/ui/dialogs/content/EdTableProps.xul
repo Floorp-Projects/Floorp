@@ -150,9 +150,9 @@
             </box>
     	      <menupopup>
               <colorpicker id="tableBackgroundCP" palettename="standard" 
-                onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode);"/>
+                onclick="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',null, this.parentNode);"/>
               <button class="dialog" value="&defaultColor.label;" 
-                oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW','TableColorCheckbox', this.parentNode)"/>
+                oncommand="GetColorAndUpdate('tableBackgroundCP','tableBackgroundCW',null, this.parentNode)"/>
     	      </menupopup>
           </menu>
           <spring class="spacer"/>
@@ -211,17 +211,15 @@
           </grid>
           <spring class="bigspacer"/>
           <grid>
-            <columns><column/><column/><column/></columns>
+            <columns><column/><column/></columns>
             <rows>
               <row valign="middle" autostretch="never">
-                <checkbox id="RowSpanCheckbox" value="&cellSpan.label;"/>
+                <checkbox id="RowSpanCheckbox" value="&cellRowSpan.label;"/>
                 <textfield class="narrow" id="RowSpanInput" onkeyup="ChangeIntTextfield(this.id,'RowSpanCheckbox');"/>
-                <text align="left" value="&cellSpanRows.label;"/>
               </row>
               <row valign="middle" autostretch="never">
-                <checkbox id="ColSpanCheckbox" value="&cellSpan.label;"/>
+                <checkbox id="ColSpanCheckbox" value="&cellColSpan.label;"/>
                 <textfield class="narrow" id="ColSpanInput" onkeyup="ChangeIntTextfield(this.id,'ColSpanCheckbox');"/>
-                <text align="left" value="&cellSpanCols.label;"/>
               </row>
             </rows>
           </grid>
