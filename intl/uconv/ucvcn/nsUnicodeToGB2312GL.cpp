@@ -71,7 +71,7 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
 	PRInt32 i=0;
 	PRInt32 iSrcLength = 0;
   DByte *pDestDBCode;
-  DByte *pSrcDBCode; 
+  DByte *pSrcDBCode;
 	PRInt32 iDestLength = 0;
   PRUnichar unicode;
   PRUint8 left, right;
@@ -137,17 +137,6 @@ NS_IMETHODIMP nsUnicodeToGB2312GL::ConvertNoBuff(const PRUnichar * aSrc,
 	*aSrcLength = iSrcLength;
   
   return res;
-}
-
-
-nsresult nsUnicodeToGB2312GL::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToGB2312GL();
-  if(p) {
-    *aResult = p;
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 //----------------------------------------------------------------------

@@ -56,16 +56,6 @@ nsUnicodeToGB2312::nsUnicodeToGB2312()
 {
 }
 
-nsresult nsUnicodeToGB2312::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToGB2312();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 

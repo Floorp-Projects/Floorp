@@ -19,3 +19,31 @@
  *
  * Contributor(s): 
  */
+#ifndef nsCP936ToUnicode_h___
+#define nsCP936ToUnicode_h___
+
+#include "nsUCvCnSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsCP936ToUnicode [declaration]
+
+/**
+ * A character set converter from CP936 to Unicode.
+ * 
+ *
+ * @created         07/Sept/1999
+ * @author  Yueheng Xu, Yueheng.Xu@intel.com
+ */
+class nsCP936ToUnicode : public nsGBKToUnicode
+{
+public:
+		  
+  /**
+   * Class constructor.
+   */
+  nsCP936ToUnicode(){};
+
+};
+
+#endif /* nsCP936ToUnicode_h___ */
+

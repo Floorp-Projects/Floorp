@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -10,12 +10,40 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
  */
+
+#ifndef nsUnicodeToCP936_h___
+#define nsUnicodeToCP936_h___
+
+#include "nsUCvCnSupport.h"
+
+//----------------------------------------------------------------------
+// Class nsUnicodeToCP936 [declaration]
+
+/**
+ * A character set converter from Unicode to GB2312.
+ *
+ * @created         06/Apr/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsUnicodeToCP936 : public nsUnicodeToGBK
+{
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToCP936() {};
+
+
+};
+
+#endif /* nsUnicodeToCP936_h___ */

@@ -63,12 +63,6 @@ nsGB2312ToUnicode::nsGB2312ToUnicode()
 {
 }
 
-nsresult nsGB2312ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsGB2312ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 

@@ -138,17 +138,6 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
   return res;
 }
 
-
-nsresult nsUnicodeToGB2312V2::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToGB2312V2();
-  if(p) {
-    *aResult = p;
-    return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
