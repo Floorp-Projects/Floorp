@@ -129,7 +129,7 @@ function (aContentType, aCommand, aWindowContext, aRequest)
 
     // Create new XMLterm window
     var appShellSvc = Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
-    var domWin = appShellSvc.getHiddenDOMWindow();
+    var domWin = appShellSvc.hiddenDOMWindow;
     domWin.open(xmltermChromeURL,"_blank", "chrome,menubar,toolbar,resizable");
 }
 

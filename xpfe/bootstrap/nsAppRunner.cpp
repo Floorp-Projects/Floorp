@@ -346,7 +346,9 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
                            const nsAFlatString& aAppArgs)
 {
-  return OpenWindow(aChromeURL, aAppArgs, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+  return OpenWindow(aChromeURL, aAppArgs,
+                    nsIAppShellService::SIZE_TO_CONTENT,
+                    nsIAppShellService::SIZE_TO_CONTENT);
 }
 
 static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
@@ -374,11 +376,11 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
   sarg->SetData(aAppArgs.get());
 
   nsCAutoString features("chrome,dialog=no,all");
-  if (aHeight != NS_SIZETOCONTENT) {
+  if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
     features.Append(",height=");
     features.AppendInt(aHeight);
   }
-  if (aWidth != NS_SIZETOCONTENT) {
+  if (aWidth != nsIAppShellService::SIZE_TO_CONTENT) {
     features.Append(",width=");
     features.AppendInt(aWidth);
   }
@@ -634,8 +636,8 @@ static PRBool IsStartupCommand(const char *arg)
 static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
 {
 	nsresult rv;
-	PRInt32 height  = NS_SIZETOCONTENT;
-	PRInt32 width  = NS_SIZETOCONTENT;
+	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
+	PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
 	nsXPIDLCString tempString;
 
 	// Get the value of -width option
@@ -814,8 +816,8 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
       } 
 
       // No window exists so lets create a browser one
-      PRInt32 height = NS_SIZETOCONTENT;
-      PRInt32 width  = NS_SIZETOCONTENT;
+      PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
+      PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
 				
       // Get the value of -width option
       nsXPIDLCString tempString;

@@ -23,6 +23,7 @@
 #define __nsAppShellService_h
 
 #include "nsIAppShellService.h"
+#include "nsINativeAppSupport.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIAppShell.h"

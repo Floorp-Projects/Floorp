@@ -1267,8 +1267,8 @@ NS_IMETHODIMP nsXULWindow::CreateNewChromeWindow(PRInt32 aChromeFlags,
 
    nsCOMPtr<nsIXULWindow> newWindow;
    appShell->CreateTopLevelWindow(parent, nsnull, PR_FALSE, PR_FALSE,
-      aChromeFlags, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
-      getter_AddRefs(newWindow));
+      aChromeFlags, nsIAppShellService::SIZE_TO_CONTENT,
+      nsIAppShellService::SIZE_TO_CONTENT, getter_AddRefs(newWindow));
 
    NS_ENSURE_TRUE(newWindow, NS_ERROR_FAILURE);
 

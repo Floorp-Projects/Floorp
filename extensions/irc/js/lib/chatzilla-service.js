@@ -131,7 +131,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     {
         var ass =
             Components.classes[ASS_CONTRACTID].getService(nsIAppShellService);
-        w = ass.getHiddenDOMWindow();
+        w = ass.hiddenDOMWindow;
 
         var args = new Object ();
         args.url = channel.URI.spec;

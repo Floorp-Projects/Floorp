@@ -680,8 +680,8 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       aParent->GetZlevel(&zlevel);
 #endif
 
-    if (aInitialWidth == NS_SIZETOCONTENT ||
-        aInitialHeight == NS_SIZETOCONTENT) {
+    if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||
+        aInitialHeight == nsIAppShellService::SIZE_TO_CONTENT) {
       aInitialWidth = 1;
       aInitialHeight = 1;
       intrinsicallySized = PR_TRUE;

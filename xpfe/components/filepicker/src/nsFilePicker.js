@@ -165,7 +165,7 @@ nsFilePicker.prototype = {
       } else {
         try {
           var appShellService = Components.classes[APPSHELL_SERV_CONTRACTID].getService(nsIAppShellService);
-          parent = appShellService.getHiddenDOMWindow();
+          parent = appShellService.hiddenDOMWindow;
         } catch(ex) {
           debug("Can't get parent.  xpconnect hates me so we can't get one from the appShellService.\n");
           debug(ex + "\n");
