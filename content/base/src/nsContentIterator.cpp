@@ -1116,7 +1116,10 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
   if (!oldParentStack.SizeTo(mIndexes.Count()+1))
     return NS_ERROR_FAILURE;
 
-  // plus one for the node we're currently on.
+  // We want to loop mIndexes.Count() + 1 times here, because we want to make
+  // sure we include mCommonParent in the oldParentStack, for use in the next
+  // for loop, and mIndexes only has entries for nodes from tempNode up through
+  // an ancestor of tempNode that's a child of mCommonParent.
   for (PRInt32 i = mIndexes.Count()+1; i > 0 && tempNode; i--)
   {
     // Insert at head since we're walking up
@@ -1131,7 +1134,7 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
     {
       // The position was moved to a parent of the current position. 
       // All we need to do is drop some indexes.  Shortcut here.
-      mIndexes.RemoveElementsAt(mIndexes.Count() - (oldParentStack.Count()+1),
+      mIndexes.RemoveElementsAt(mIndexes.Count() - oldParentStack.Count(),
                                 oldParentStack.Count());
       mIsDone = PR_FALSE;
       return NS_OK;
@@ -1159,11 +1162,12 @@ nsContentIterator::PositionAt(nsIContent* aCurNode)
       // ok, the parent IS on the old stack!  Rework things.
       // we want newIndexes to replace all nodes equal to or below the match
       // Note that index oldParentStack.Count()-1 is the last node, which is
-      // one BELOW the last index in the mIndexes stack.
+      // one BELOW the last index in the mIndexes stack.  In other words, we
+      // want to remove elements starting at index (indx+1).
       PRInt32 numToDrop = oldParentStack.Count()-(1+indx);
       if (numToDrop > 0)
         mIndexes.RemoveElementsAt(mIndexes.Count() - numToDrop,numToDrop);
-      mIndexes.InsertElementsAt(newIndexes,mIndexes.Count());
+      mIndexes.AppendElements(newIndexes);
 
       break;
     }
