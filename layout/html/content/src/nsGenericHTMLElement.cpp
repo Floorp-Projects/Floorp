@@ -466,6 +466,7 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   }
 
   if ((nsnull != mDocument) && (nsnull != mAttributes)) {
+    ReparseStyleAttribute();
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
       mAttributes->SetStyleSheet(sheet);
@@ -619,57 +620,15 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   if (nsHTMLAtoms::style == aAttribute) {
-    PRBool isCSS = PR_TRUE;
-    if (nsnull != mDocument) {
-      nsAutoString  styleType;
-      mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
-      if (0 < styleType.Length()) {
-        isCSS = styleType.EqualsIgnoreCase("text/css");
-      }
+    if (mDocument) {
+      nsHTMLValue parsedValue;
+      ParseStyleAttribute(aValue, parsedValue);
+      result = SetHTMLAttribute(aAttribute, parsedValue, aNotify);
     }
-    if (isCSS) {
-      nsICSSLoader* cssLoader = nsnull;
-      nsICSSParser* cssParser = nsnull;
-      nsIHTMLContentContainer* htmlContainer;
-      result = mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
-      if (NS_SUCCEEDED(result)) {
-        result = htmlContainer->GetCSSLoader(cssLoader);
-        if (cssLoader) {
-          result = cssLoader->GetParserFor(nsnull, &cssParser);
-        }
-        else {
-          result = NS_NewCSSParser(&cssParser);
-        }
-        NS_RELEASE(htmlContainer);
-      }
-      if (NS_FAILED(result)) {
-        return result;
-      }
-
-      nsIURI* docURL = nsnull;
-      if (nsnull != mDocument) {
-        mDocument->GetBaseURL(docURL);
-      }
-
-      nsIStyleRule* rule;
-      result = cssParser->ParseDeclarations(aValue, docURL, rule);
-      if (cssLoader) {
-        cssLoader->RecycleParser(cssParser);
-        NS_RELEASE(cssLoader);
-      }
-      else {
-        NS_RELEASE(cssParser);
-      }
-      NS_IF_RELEASE(docURL);
-      if ((NS_OK == result) && (nsnull != rule)) {
-        result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
-        NS_RELEASE(rule);
-      }
-      else {
-        result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
-      }
-      return NS_OK;
+    else {  // store it as string, will parse it later
+      result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
     }
+    return result;
   }
   else {
     // Check for event handlers
@@ -1945,6 +1904,86 @@ nsGenericHTMLElement::ScrollingValueToString(PRBool aStandardMode,
     return EnumValueToString(aValue, kScrollingQuirksTable, aResult);
   }
 }
+
+nsresult  
+nsGenericHTMLElement::ReparseStyleAttribute(void)
+{
+  nsresult result = NS_OK;
+  nsHTMLValue oldValue;
+  if (NS_CONTENT_ATTR_HAS_VALUE == GetHTMLAttribute(nsHTMLAtoms::style, oldValue)) {
+    if (eHTMLUnit_String == oldValue.GetUnit()) {
+      nsHTMLValue parsedValue;
+      nsAutoString  stringValue;
+      result = ParseStyleAttribute(oldValue.GetStringValue(stringValue), parsedValue);
+      if (NS_SUCCEEDED(result) && (eHTMLUnit_String != parsedValue.GetUnit())) {
+        result = SetHTMLAttribute(nsHTMLAtoms::style, parsedValue, PR_FALSE);
+      }
+    }
+  }
+  return result;
+}
+
+nsresult  
+nsGenericHTMLElement::ParseStyleAttribute(const nsString& aValue, nsHTMLValue& aResult)
+{
+  nsresult result = NS_OK;
+
+  if (mDocument) {
+    PRBool isCSS = PR_TRUE; // asume CSS until proven otherwise
+
+    nsAutoString  styleType;
+    mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
+    if (0 < styleType.Length()) {
+      isCSS = styleType.EqualsIgnoreCase("text/css");
+    }
+
+    if (isCSS) {
+      nsICSSLoader* cssLoader = nsnull;
+      nsICSSParser* cssParser = nsnull;
+      nsIHTMLContentContainer* htmlContainer;
+
+      result = mDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer);
+      if (NS_SUCCEEDED(result) && htmlContainer) {
+        result = htmlContainer->GetCSSLoader(cssLoader);
+        NS_RELEASE(htmlContainer);
+      }
+      if (NS_SUCCEEDED(result) && cssLoader) {
+        result = cssLoader->GetParserFor(nsnull, &cssParser);
+      }
+      else {
+        result = NS_NewCSSParser(&cssParser);
+      }
+      if (NS_SUCCEEDED(result) && cssParser) {
+        nsIURI* docURL = nsnull;
+        mDocument->GetBaseURL(docURL);
+
+        nsIStyleRule* rule;
+        result = cssParser->ParseDeclarations(aValue, docURL, rule);
+        if (cssLoader) {
+          cssLoader->RecycleParser(cssParser);
+          NS_RELEASE(cssLoader);
+        }
+        else {
+          NS_RELEASE(cssParser);
+        }
+        NS_IF_RELEASE(docURL);
+
+        if (NS_SUCCEEDED(result) && rule) {
+          aResult.SetISupportsValue(rule);
+          NS_RELEASE(rule);
+          return NS_OK;
+        }
+      }
+      else {
+        NS_IF_RELEASE(cssLoader);
+      }
+    }
+  }
+  aResult.SetStringValue(aValue);
+  return result;
+}
+
+
 
 /**
  * Handle attributes common to all html elements

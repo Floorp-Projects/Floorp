@@ -237,6 +237,9 @@ public:
                                        const nsHTMLValue& aValue,
                                        nsString& aResult);
 
+  nsresult  ReparseStyleAttribute(void);
+  nsresult  ParseStyleAttribute(const nsString& aValue, nsHTMLValue& aResult);
+
   /** Attribute Mapping Helpers
    *
    * All attributes that are mapped into style contexts must have a 
