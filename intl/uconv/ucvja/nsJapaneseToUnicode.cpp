@@ -133,20 +133,23 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
               ibmnec = gSjisIBMNECmap[ibmnec - 0xFA40]; // IBMNECmap offset is 0xFA40
             }
             if ( ibmnec == 0 ) {
-              *dest++ = 0xFFFD;
+              *dest++ = 0x30FB;
               mState=0;
               if(dest >= destEnd)
                 goto error1;
             } else {
-              *dest++ = gJis0208map[fbIdx[(ibmnec >> 8) & 0x7F ] 
+              PRUnichar ch = gJis0208map[fbIdx[(ibmnec >> 8) & 0x7F ] 
                                    + sbIdx[ibmnec & 0x00FF]];
+              if(ch == 0xfffd)
+                ch = 0x30fb;
+              *dest++ = ch;
               if(dest >= destEnd)
                 goto error1;
               ibmnec = 0;
               mState = 0;
-              break;
             }
           } 
+          break;
 
           case 0:
           if(*src & 0x80 && *src != (unsigned char)0xa0)
@@ -159,15 +162,27 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                if( mData > 0xFF00)
                {
                  if(0xFFFD == mData) {
-                   if((0x80 != *src) && (0xa0 != *src) & (0xfd != *src) &&
-                      (0xfd != *src) && (0xfe != *src) & (0xff != *src))
-                      mState = 3;  // two byte undefined
+                   // IE convert fd-ff as single byte and convert to
+                   // U+f8f1 to U+f8f3
+                   if((0xfd == *src) || (0xfe == *src) || (0xff == *src))
+                   {
+                     *dest++ = (PRUnichar) 0xf8f1 + 
+                                   (*src - (unsigned char)(0xfd));
+                     if(dest >= destEnd)
+                        goto error1;
+                   } else {
+                     if((0x80 != *src) && (0xa0 != *src))
+                       mState = 3;  // two byte undefined
+                   }
                  } else {
                    if((0xfa == *src) || (0xfb == *src) || (0xfc == *src)) {
                      ibmnec=((*src) << 8) & 0xFF00;
                      mState = 4; // IBM Extra
                    } else {
-                     *dest++ = mData; // JIS 0201
+                     if(mData == 0xfffd)
+                       *dest++ = 0x30fb;
+                     else 
+                       *dest++ = mData; // JIS 0201
                      if(dest >= destEnd)
                        goto error1;
                    }
@@ -188,14 +203,12 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
-               *dest++ = 0xFFFD;
-               // if the first byte is valid for SJIS but the second 
-               // is not while being a valid US-ASCII(i.e. < 0x40), save it
-               // instead of eating it up !
-               if ( ! (*src & 0xc0)  )
-                 *dest++ = (PRUnichar) *src;
+               *dest++ = 0x30FB;
             } else {
-               *dest++ = gJis0208map[mData+off];
+               PRUnichar ch = gJis0208map[mData+off];
+               if(ch == 0xfffd) 
+                 ch = 0x30fb;
+               *dest++ = ch;
             }
             if(dest >= destEnd)
               goto error1;
@@ -207,10 +220,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
           {
             PRUint8 off = sbIdx[*src];
             if(0xFF == off) {
-               *dest++ = 0xFFFD;
-               // see the comment above for mstate=1
-               if ( ! (*src & 0xc0)  )
-                 *dest++ = (PRUnichar) *src;
+               *dest++ = 0x30fb;
             } else {
                *dest++ = mData + off;
             }
@@ -222,7 +232,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
 
           case 3: // two bytes undefined
           {
-            *dest++ = 0xFFFD;
+            *dest++ = 0x30fb;
             if(dest >= destEnd)
               goto error1;
             mState = 0;
