@@ -278,7 +278,7 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     eventBox = document.createElement( "box" );
     eventBox.setAttribute( "id", "multiweek-view-event-box-" + itemOccurrence.id );
     eventBox.setAttribute( "name", "multiweek-view-event-box-"+ itemOccurrence.id );
-    eventBox.setAttribute("class", "multiweek-view-event-class");
+    eventBox.setAttribute("class", "multiweek-view-event-class default");
     
     eventBox.setAttribute( "eventbox", "multiweekview" );
 
@@ -904,13 +904,13 @@ MultiweekView.prototype.setFictitiousEvents = function multiweekView_setFictitio
   // Make a box item to hold the event
   var eventBox = document.createElement( "box" );
   eventBox.setAttribute( "id", "multiweek-view-event-box-fictitious" );
-  eventBox.setAttribute( "class", "multiweek-view-event-class" );
+  eventBox.setAttribute( "class", "multiweek-view-event-class default" );
   eventBox.setAttribute( "eventbox", "multiweekview" );
   dayBoxItem.appendChild( eventBox );
   // Make a text item to show the event title
   var eventBoxText = document.createElement( "label" );
   eventBoxText.setAttribute( "crop", "end" );
-  eventBoxText.setAttribute( "class", "multiweek-day-event-text-class" );
+  eventBoxText.setAttribute( "class", "multiweek-day-event-text-class");
   // To format the starting time of the event display as "12:15 titleevent"
   eventBoxText.setAttribute( "value",  "12:15 fictitious event");
   //you need this flex in order for text to crop

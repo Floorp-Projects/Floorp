@@ -325,7 +325,7 @@ DayView.prototype.createAllDayEventBox = function dayview_createAllDayEventBox( 
    eventBox.setAttribute( "name", "day-view-event-box-" + calendarEventDisplay.event.id );
    
    eventBox.setAttribute("class", "day-view-event-class");
-   //this.setEventboxClass( eventBox, calendarEventDisplay.event, "day-view-all-day");
+   this.setEventboxClass( eventBox, calendarEventDisplay.event, "day-view-all-day");
    
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
@@ -431,7 +431,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
 
    // set the event box to be of class day-view-event-class and the appropriate calendar-color class
    eventBox.setAttribute("class", "day-view-event-class");
-   //this.setEventboxClass( eventBox, calEvent, "day-view");
+   this.setEventboxClass( eventBox, calEvent, "day-view");
 
    eventBox.setAttribute( "top", eventTop );
    eventBox.setAttribute( "left", eventLeft );

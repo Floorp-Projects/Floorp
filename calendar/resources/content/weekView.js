@@ -120,7 +120,7 @@ WeekView.prototype.refreshEvents = function()
     this.highestEndHour = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "event.defaultendhour", 17);
 
     //now hide those that aren't applicable
-    for (i = 0; i < 24; i++) {
+    for (var i = 0; i < 24; i++) {
         document.getElementById("week-view-row-"+i).removeAttribute("collapsed");
     }
     for (i = 0; i < this.lowestStartHour; i++) {
@@ -406,12 +406,11 @@ dump(this.displayEndDate+"\n");
     var boxLeft = document.getElementById("week-tree-day-"+index+"-item-"+startHour).boxObject.x - 
                   document.getElementById( "week-view-content-box" ).boxObject.x +
                   ( /*calendarEventDisplay.startDrawSlot*/0 * eventSlotWidth );
-    dump(boxLeft + "\n");
+    //dump(boxLeft + "\n");
     eventBox.setAttribute("left", boxLeft);
    
     // set the event box to be of class week-view-event-class and the appropriate calendar-color class
-    //this.setEventboxClass(eventBox, calItem, "week-view");
-    eventBox.setAttribute("class", "week-view-event-class");
+    this.setEventboxClass(eventBox, calEvent, "week-view");
   
     eventBox.setAttribute("eventbox", "weekview");
     eventBox.setAttribute("dayindex", index + 1);

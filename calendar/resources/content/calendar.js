@@ -87,9 +87,6 @@ var gEventSource = null;
 // single global instance of CalendarWindow
 var gCalendarWindow;
 
-// style sheet number for calendar
-var gCalendarStyleSheet;
-
 //an array of indexes to boxes for the week view
 var gHeaderDateItemArray = null;
 
@@ -152,12 +149,12 @@ var categoryPrefObserver =
         }
       }
 
-      var catergoryPrefBranch = prefService.getBranch("calendar.category.color.");
+      var categoryPrefBranch = prefService.getBranch("calendar.category.color.");
       var prefCount = { value: 0 };
-      var prefArray = catergoryPrefBranch.getChildList("", prefCount);
+      var prefArray = categoryPrefBranch.getChildList("", prefCount);
       for (i = 0; i < prefArray.length; ++i) {
          var prefName = prefArray[i];
-         var prefValue = catergoryPrefBranch.getCharPref(prefName);
+         var prefValue = categoryPrefBranch.getCharPref(prefName);
          this.mCalendarStyleSheet.insertRule(".event-category-" + prefName + " { border-color: " + prefValue +" !important; }", 1);
       }
    }
@@ -193,104 +190,86 @@ function calendarInit()
    	
    checkForMailNews();
 
-    //updateColors();
+   updateColors();
 }
 
 function updateColors()
 {
-   // Change made by CofC for Calendar Coloring
-   // initialize calendar color style rules in the calendar's styleSheet
+    // Change made by CofC for Calendar Coloring
+    // initialize calendar color style rules in the calendar's styleSheet
 
-   // find calendar's style sheet index
-   var i;
-   for (i=0; i<document.styleSheets.length; i++)
-   {
-      if (document.styleSheets[i].href.match(/chrome.*\/skin.*\/calendar.css$/))
-      {
-          gCalendarStyleSheet = document.styleSheets[i];
-          break;
-      }
-   }
+    // find calendar's style sheet index
+    for (var i in document.styleSheets) {
+        if (document.styleSheets[i].href.match(
+                /chrome.*\/skin.*\/calendar.css$/ )) {
+            var calStyleSheet = document.styleSheets[i];
+            break;
+        }
+    }
 
-   var calendarNode;
-   var containerName;
-   var calendarColor;
+    // get the list of all calendars from the manager
+    const calMgr = getCalendarManager();
+    var count = {};
+    var calendars = calMgr.getCalendars(count);
+    
+    var calListItems = document.getElementById( "list-calendars-listbox" )
+        .getElementsByTagName("listitem");
 
-   // loop through the calendars via the rootSequence of the RDF datasource
-   var seq = gCalendarWindow.calendarManager.rdf.getRootSeq("urn:calendarcontainer");
-   var list = seq.getSubNodes();
-   var calListItems = document.getElementById( "list-calendars-listbox" ).getElementsByTagName("listitem");
+    for(i in calendars) {
+        // XXX need to get this from the calendar prefs
+        const containerName = "default";
 
-   for(i=0; i<list.length;i++)
-   {
+        // XXX need to get this from the calendar prefs
+        const calendarColor = "#FFFFFF"; // XXX what is default?
 
-     calendarNode = gCalendarWindow.calendarManager.rdf.getNode( list[i].subject );
-     
-     // grab the container name and use it for the name of the style rule
-     containerName = list[i].subject.split(":")[2];
+        // if the calendar had a color attribute create a style sheet for it
+        if (calendarColor != null) {
+            calStyleSheet.insertRule("." + containerName
+                                     + " { background-color:"
+                                     + calendarColor + "!important;}", 1);
+            calStyleSheet.insertRule("." + containerName + " { color:"
+                                     + getContrastingTextColor(calendarColor)
+                                     + "!important;}", 1);
+            //dump("calListItems[0] = " + calListItems[0] + "\n");
+            //dump("calListItems[1] = " + calListItems[1] + "\n");
+            var calListItem = calListItems[i];
+            if (calListItem && calListItem.childNodes[0]) {
+                calListItem.childNodes[0]
+                    .setAttribute("class", "calendar-list-item-class "
+                                  + containerName);
+            }
+        }
+    }
 
-     // obtain calendar color from the rdf datasource
-     calendarColor = calendarNode.getAttribute("http://home.netscape.com/NC-rdf#color");
+    // Setup css classes for category colors
+    var catergoryPrefBranch = prefService.getBranch("");
+    var pbi = catergoryPrefBranch.QueryInterface(
+        Components.interfaces.nsIPrefBranchInternal);
+    pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
+    categoryPrefObserver.mCalendarStyleSheet = calStyleSheet;
+    categoryPrefObserver.observe(null, null, "");
 
-     // if the calendar had a color attribute create a style sheet for it
-     if (calendarColor != null)
-     {
-       gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
+    if( ("arguments" in window) && (window.arguments.length) &&
+        (typeof(window.arguments[0]) == "object") &&
+        ("channel" in window.arguments[0]) ) {
+        gCalendarWindow.calendarManager.checkCalendarURL( 
+            window.arguments[0].channel );
+    }
 
-       var calcColor = calendarColor.replace(/#/g, "");
-       var red = parseInt(calcColor.substring(0, 2), 16);
-       var green = parseInt(calcColor.substring(2, 4), 16);
-       var blue = parseInt(calcColor.substring(4, 6), 16);
+    // a bit of a hack since the menulist doesn't remember the selected value
+    var value = document.getElementById( 'event-filter-menulist' ).value;
+    document.getElementById( 'event-filter-menulist' ).selectedItem = 
+        document.getElementById( 'event-filter-'+value );
 
-       // Calculate the L(ightness) value of the HSL color system.
-       // L = (max(R, G, B) + min(R, G, B)) / 2
-       var max = Math.max(Math.max(red, green), blue);
-       var min = Math.min(Math.min(red, green), blue);
-       var lightness = (max + min) / 2;
+    // XXX busted somehow, so I've commented it out for now.  also, why the
+    // heck are we doing this here?
+    //gEventSource.alarmObserver.firePendingAlarms();
 
-       // Consider all colors with less than 50% Lightness as dark colors
-       // and use white as the foreground color; otherwise use black.
-       // Actually we use a treshold a bit below 50%, so colors like
-       // #FF0000, #00FF00 and #0000FF still get black text which looked
-       // better when we tested this.
-       if (lightness < 120) {
-         gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " white" + "!important;}", 1);
-       } else {
-         gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " black" + "!important;}", 1);
-       }
-       var calListItem = calListItems[i+1];
-       if (calListItem && calListItem.childNodes[0]) {
-         calListItem.childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
-       }
-     }
-   }
+    // All is settled, enable feedbacks to observers
+    gICalLib.batchMode = false;
 
-   // Setup css classes for category colors
-   var catergoryPrefBranch = prefService.getBranch("");
-   var pbi = catergoryPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-   pbi.addObserver("calendar.category.color.", categoryPrefObserver, false);
-   categoryPrefObserver.mCalendarStyleSheet = gCalendarStyleSheet;
-   categoryPrefObserver.observe(null, null, "");
-
-   if( ("arguments" in window) &&
-       (window.arguments.length) &&
-       (typeof(window.arguments[0]) == "object") &&
-       ("channel" in window.arguments[0]) )
-   {
-      gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].channel );
-   }
-
-   //a bit of a hack since the menulist doesn't remember the selected value     
-   var value = document.getElementById( 'event-filter-menulist' ).value;
-   document.getElementById( 'event-filter-menulist' ).selectedItem = document.getElementById( 'event-filter-'+value );
-
-   gEventSource.alarmObserver.firePendingAlarms();
-
-   //All is settled, enable feedbacks to observers
-   gICalLib.batchMode = false;
-
-   var toolbox = document.getElementById("calendar-toolbox");
-   toolbox.customizeDone = CalendarToolboxCustomizeDone;
+    var toolbox = document.getElementById("calendar-toolbox");
+    toolbox.customizeDone = CalendarToolboxCustomizeDone;
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -743,7 +722,7 @@ function getCalendar()
        return selectedCalendar;
    } catch(e) {
        newCalendarDialog();
-       var selectedCalendar = calendarList.currentItem.calendar;
+       selectedCalendar = calendarList.currentItem.calendar;
        return selectedCalendar;
    }
 }
@@ -1701,3 +1680,36 @@ function addCalendarToUI(doc, calendar)
     if (calendarList.selectedIndex == -1)
         calendarList.selectedIndex = 0;
 }
+
+
+/**
+ * Pick whichever of "black" or "white" will look better when used as a text
+ * color against a background of bgColor. 
+ *
+ * @param bgColor   the background color as a "#RRGGBB" string
+ */
+function getContrastingTextColor(bgColor)
+{
+    var calcColor = bgColor.replace(/#/g, "");
+    var red = parseInt(calcColor.substring(0, 2), 16);
+    var green = parseInt(calcColor.substring(2, 4), 16);
+    var blue = parseInt(calcColor.substring(4, 6), 16);
+
+    // Calculate the L(ightness) value of the HSL color system.
+    // L = (max(R, G, B) + min(R, G, B)) / 2
+    var max = Math.max(Math.max(red, green), blue);
+    var min = Math.min(Math.min(red, green), blue);
+    var lightness = (max + min) / 2;
+
+    // Consider all colors with less than 50% Lightness as dark colors
+    // and use white as the foreground color; otherwise use black.
+    // Actually we use a threshold a bit below 50%, so colors like
+    // #FF0000, #00FF00 and #0000FF still get black text which looked
+    // better when we tested this.
+    if (lightness < 120) {
+        return "white";
+    }
+    
+    return "black";
+}
+

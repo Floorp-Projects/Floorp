@@ -760,8 +760,8 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
 
 CalendarView.prototype.setEventboxClass = function calView_setEventboxClass(aEventBox, aEvent, aViewType)
 {
-   var containerName = gCalendarWindow.calendarManager.getCalendarByName(
-                           aEvent.parent.server ).subject.split(":")[2];
+   // XXX this isn't really const, of course; need to get it from prefs
+   const containerName = "default";
 
    // set the event box to be of class <aViewType>-event-class
    // and the appropriate calendar-color class

@@ -259,13 +259,13 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
     eventBox.setAttribute("name", "month-view-event-box-" + itemOccurrence.id );
     //eventBox.setAttribute( "event"+toString(calendarEventDisplay.event.id), true );
 
-    //this.setEventboxClass(eventBox, calendarEventDisplay.event, "month-view");
-    eventBox.setAttribute("class", "month-view-event-class");
+    this.setEventboxClass(eventBox, calEvent, "month-view");
+    eventBox.setAttribute("class", "month-view-event-class default");
     
     eventBox.setAttribute("eventbox", "monthview" );
     eventBox.setAttribute("onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute("ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
+//    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
     eventBox.setAttribute("tooltip", "eventTooltip" );
     eventBox.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
     // add a property to the event box that holds the calendarEvent that the
