@@ -50,7 +50,6 @@ nsPopUpMenu::~nsPopUpMenu()
 }
 
 
-
 //-------------------------------------------------------------------------
 //
 // Create the proper widget
@@ -72,18 +71,62 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(const nsString &aText)
 {
+  char * labelStr = mLabel.ToNewCString();
+  GtkWidget *widget;
+
+  widget = gtk_menu_item_new_with_label (labelStr);
+  gtk_widget_show(widget);
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
+
+  delete[] labelStr;
+
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddItem(nsIMenuItem * aMenuItem)
 {
+  GtkWidget *widget;
+  void *voidData;
+  
+  aMenuItem->GetNativeData(voidData);
+  widget = GTK_WIDGET(voidData);
+
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
+
+  // XXX add aMenuItem to internal data structor list
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 {
+  nsString Label;
+  GtkWidget *item=NULL, *parentmenu=NULL, *newmenu=NULL;
+  char *labelStr;
+  void *voidData=NULL;
+  
+  aMenu->GetLabel(Label);
+
+  labelStr = Label.ToNewCString();
+
+  GetNativeData(voidData);
+  parentmenu = GTK_WIDGET(voidData);
+
+  item = gtk_menu_item_new_with_label (labelStr);
+  gtk_widget_show(item);
+  gtk_menu_shell_append (GTK_MENU_SHELL (parentmenu), item);
+
+  delete[] labelStr;
+
+  voidData = NULL;
+
+  aMenu->GetNativeData(voidData);
+  newmenu = GTK_WIDGET(voidData);
+
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), newmenu);
+
+  // XXX add aMenu to internal data structor list
   return NS_OK;
 }
 
@@ -92,12 +135,8 @@ NS_METHOD nsPopUpMenu::AddSeparator()
 {
   GtkWidget *widget;
   widget = gtk_menu_item_new ();
+  gtk_widget_show(widget);
   gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
-#if 0
-  Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
-                                          mMenu,
-                                          NULL);
-#endif
   return NS_OK;
 }
 
@@ -144,9 +183,25 @@ NS_METHOD nsPopUpMenu::RemoveAll()
 }
 
 //-------------------------------------------------------------------------
+void nsPopUpMenu::GetXY(GtkMenu *menu, gint *x, gint *y, gpointer user_data)
+{
+  *x = mX;
+  *y = mY;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
 {
+  mX = aX;
+  mY = aY;
 
+  gtk_menu_popup (GTK_MENU(mMenu),
+		  NULL,
+		  NULL,
+                  GetXY,
+		  NULL,
+		  0,
+		  GDK_CURRENT_TIME);
   return NS_OK;
 }
 
