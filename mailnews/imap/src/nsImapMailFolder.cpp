@@ -1013,7 +1013,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                 PR_TRUE, PR_TRUE, m_eventQueue, this);
 
             if (undoMsgTxn)
-                m_copyState->undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+                m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
             if (undoMsgTxn)
             {
                 nsString undoString = count > 1 ? "Undo Delete Messages" :
@@ -2350,11 +2350,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 {
                     if (NS_SUCCEEDED(aExitCode))
                     {
-                        if (m_copyState->isMoveOrDraft)
+                        if (m_copyState->m_isMoveOrDraft)
                         {
                             nsCOMPtr<nsIMsgFolder> srcFolder;
                             srcFolder =
-                                do_QueryInterface(m_copyState->srcSupport,
+                                do_QueryInterface(m_copyState->m_srcSupport,
                                                   &rv);
                             nsCOMPtr<nsIMsgDatabase> srcDB;
                             if (NS_SUCCEEDED(rv))
@@ -2365,14 +2365,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                                 nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
                                 nsMsgKeyArray srcKeyArray;
                                 msgTxn =
-                                    do_QueryInterface(m_copyState->undoMsgTxn); 
+                                    do_QueryInterface(m_copyState->m_undoMsgTxn); 
                                 if (msgTxn)
                                     msgTxn->GetSrcKeyArray(srcKeyArray);
                                 srcDB->DeleteMessages(&srcKeyArray, nsnull);
                             }
                         }
                         if (m_transactionManager)
-                            m_transactionManager->Do(m_copyState->undoMsgTxn);
+                            m_transactionManager->Do(m_copyState->m_undoMsgTxn);
                     }
                     ClearCopyState(aExitCode);
                 }
@@ -2467,7 +2467,7 @@ nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
     if (copyState)
     {
         nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
-        msgTxn = do_QueryInterface(mailCopyState->undoMsgTxn, &rv);
+        msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
     }
     if (msgTxn)
         msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
@@ -2484,8 +2484,8 @@ nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
     if (copyState)
     {
         nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
-        if (mailCopyState->listener)
-            mailCopyState->listener->SetMessageKey(aKey);
+        if (mailCopyState->m_listener)
+            mailCopyState->m_listener->SetMessageKey(aKey);
     }
     return NS_OK;
 }    
@@ -2499,8 +2499,8 @@ nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
     if (copyState)
     {
         nsImapMailCopyState* mailCopyState = (nsImapMailCopyState*) copyState;
-        if (mailCopyState->listener)
-            rv = mailCopyState->listener->GetMessageId(messageId);
+        if (mailCopyState->m_listener)
+            rv = mailCopyState->m_listener->GetMessageId(messageId);
     }
     return rv;
 }
@@ -2779,7 +2779,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
         nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
             srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
             PR_TRUE, isMove, m_eventQueue, urlListener);
-        m_copyState->undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
+        m_copyState->m_undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
     }
 
 done:
@@ -2846,23 +2846,23 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     return rv;
 }
 
-nsImapMailCopyState::nsImapMailCopyState() : msgService(nsnull),
-    isMoveOrDraft(PR_FALSE), curIndex(0), totalCount(0), dataBuffer(nsnull)
+nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
+    m_isMoveOrDraft(PR_FALSE), m_curIndex(0), m_totalCount(0), m_dataBuffer(nsnull)
 {
 }
 
 nsImapMailCopyState::~nsImapMailCopyState()
 {
-    PR_FREEIF(dataBuffer);
-    if (msgService && message)
+    PR_FREEIF(m_dataBuffer);
+    if (m_msgService && m_message)
     {
-        nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(message));
+        nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(m_message));
         if (msgNode)
         {
             char* uri;
             msgNode->GetValue(&uri);
             if (uri)
-                ReleaseMessageServiceFromURI(uri, msgService);
+                ReleaseMessageServiceFromURI(uri, m_msgService);
         }
     }
 }
@@ -2882,18 +2882,18 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
     if (!m_copyState) return NS_ERROR_OUT_OF_MEMORY;
 
     if (srcSupport)
-        m_copyState->srcSupport = do_QueryInterface(srcSupport, &rv);
+        m_copyState->m_srcSupport = do_QueryInterface(srcSupport, &rv);
 
     if (NS_SUCCEEDED(rv))
     {
-        m_copyState->messages = do_QueryInterface(messages, &rv);
+        m_copyState->m_messages = do_QueryInterface(messages, &rv);
         if (NS_SUCCEEDED(rv))
-            rv = messages->Count(&m_copyState->totalCount);
+            rv = messages->Count(&m_copyState->m_totalCount);
     }
-    m_copyState->isMoveOrDraft = isMoveOrDraft;
+    m_copyState->m_isMoveOrDraft = isMoveOrDraft;
 
     if (listener)
-        m_copyState->listener = do_QueryInterface(listener, &rv);
+        m_copyState->m_listener = do_QueryInterface(listener, &rv);
         
     return rv;
 }
@@ -2907,7 +2907,7 @@ nsImapMailFolder::ClearCopyState(nsresult rv)
         NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
                         kMsgCopyServiceCID, &result); 
         if (NS_SUCCEEDED(result))
-            copyService->NotifyCompletion(m_copyState->srcSupport, this, rv);
+            copyService->NotifyCompletion(m_copyState->m_srcSupport, this, rv);
       
         delete m_copyState;
         m_copyState = nsnull;

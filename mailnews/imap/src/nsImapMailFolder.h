@@ -50,17 +50,17 @@ struct nsImapMailCopyState
     nsImapMailCopyState();
     virtual ~nsImapMailCopyState();
 
-    nsCOMPtr<nsISupports> srcSupport;
-    nsCOMPtr<nsISupportsArray> messages;
-    nsCOMPtr<nsMsgTxn> undoMsgTxn;
-    nsCOMPtr<nsIMessage> message;
-    nsCOMPtr<nsIMsgCopyServiceListener> listener;
+    nsCOMPtr<nsISupports> m_srcSupport;
+    nsCOMPtr<nsISupportsArray> m_messages;
+    nsCOMPtr<nsMsgTxn> m_undoMsgTxn;
+    nsCOMPtr<nsIMessage> m_message;
+    nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
 
-    nsIMsgMessageService* msgService;
-    PRBool isMoveOrDraft;
-    PRUint32 curIndex;
-    PRUint32 totalCount;
-    char *dataBuffer;
+    nsIMsgMessageService* m_msgService;
+    PRBool m_isMoveOrDraft;
+    PRUint32 m_curIndex;
+    PRUint32 m_totalCount;
+    char *m_dataBuffer;
 };
 
 class nsImapMailFolder : public nsMsgDBFolder, 
