@@ -559,7 +559,7 @@ sub BuildViewerProjects()
 	my($D) = $main::DEBUG ? "Debug" : "";
 	my($dist_dir) = _getDistDirectory();
 
-	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D.shlb", "viewer.toc", 0, 0);
+	BuildOneProject(":mozilla:webshell:tests:viewer:mac:viewer.mcp",			"viewer$D", "viewer.toc", 0, 0);
 
 #	BuildOneProject(":mozilla:xpfe:macbuild:xpfeviewer.mcp",					"xpfeviewer$D.shlb", "xpfeviewer.toc", 0, 0);
 
