@@ -23,9 +23,11 @@ DEFINES= -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME= lwbrk
 
 OBJS= \
+	.\$(OBJDIR)\rulebrk.obj \
 	$(NULL)
 
 CSRCS= \
+        rulebrk.c \
 	$(NULL)
 
 CPPSRCS= \
