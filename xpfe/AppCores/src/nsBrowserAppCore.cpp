@@ -688,8 +688,8 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
         } while (0);
         delete[] urlSpec;
     }
-    
-    // Stop the throbber
+     // Stop the throbber and set the urlbar string
+    setAttribute( mWebShell, "urlbar", "value", spec );
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
     printf("Document %s loaded successfully\n", spec);
    return NS_OK;
