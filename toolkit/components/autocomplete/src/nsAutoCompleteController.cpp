@@ -46,13 +46,13 @@
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
-static const char *kCompleteConcatSeparator = " >> ";
+// static const char *kCompleteConcatSeparator = " >> ";
 
 NS_IMPL_ISUPPORTS4(nsAutoCompleteController, nsIAutoCompleteController, nsIAutoCompleteObserver, nsITimerCallback, nsITreeView)
 
 nsAutoCompleteController::nsAutoCompleteController() :
-  mNeedToComplete(PR_FALSE),
   mEnterAfterSearch(PR_FALSE),
+  mNeedToComplete(PR_FALSE),
   mDefaultIndexCompleted(PR_FALSE),
   mBackspaced(PR_FALSE),
   mSearchStatus(0),
@@ -206,12 +206,12 @@ nsAutoCompleteController::HandleText()
   }
 
   // Kick off the search, but only if the cursor is at the end of the textbox
-  PRBool selectionStart;
+  PRInt32 selectionStart;
   mInput->GetSelectionStart(&selectionStart);
-  PRBool selectionEnd;
+  PRInt32 selectionEnd;
   mInput->GetSelectionEnd(&selectionEnd);
 
-  if (selectionStart == selectionEnd && selectionStart == mSearchString.Length())
+  if (selectionStart == selectionEnd && selectionStart == (PRInt32) mSearchString.Length())
     StartSearchTimer();
 
   return NS_OK;
@@ -957,7 +957,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
 nsresult
 nsAutoCompleteController::GetResultValueAt(PRInt32 aIndex, PRBool aValueOnly, nsAString & _retval)
 {
-  NS_ENSURE_TRUE(aIndex >= 0 && aIndex < mRowCount, NS_ERROR_ILLEGAL_VALUE);
+  NS_ENSURE_TRUE(aIndex >= 0 && (PRUint32) aIndex < mRowCount, NS_ERROR_ILLEGAL_VALUE);
 
   PRInt32 searchIndex;
   PRInt32 rowIndex;
@@ -1011,7 +1011,7 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
       result->GetMatchCount(&rowCount);
     }
     
-    if (index + rowCount-1 >= aRowIndex) {
+    if (index + rowCount-1 >= (PRUint32) aRowIndex) {
       *aSearchIndex = i;
       *aItemIndex = aRowIndex - index;
       return NS_OK;
