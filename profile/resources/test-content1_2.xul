@@ -66,6 +66,7 @@ function commit()
 setTimeout("foo()", 0);
 </html:script>
 
+<html:div flex="100%" style="width: 100%; height: 100%;">
 
 <html:div>&intro;</html:div> 
 <html:br/>
@@ -80,5 +81,6 @@ setTimeout("foo()", 0);
 <html:br/>
 <html:br/>
 <html:div>&para;</html:div> 
+</html:div>
 
 </window>
