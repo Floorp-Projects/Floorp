@@ -2382,6 +2382,7 @@ nsEditorShell::ConfirmWithCancel(const nsString& aTitle, const nsString& aQuesti
     nsAutoString yes = aYesString ? *aYesString : GetString("Yes");
     nsAutoString no = aNoString ? *aNoString : GetString("No");
     nsAutoString cancel = GetString("Cancel");
+    block->SetString( nsICommonDialogs::eDialogTitle, aTitle.GetUnicode() );
     //Note: "button0" is always Ok or Yes action, "button1" is Cancel
     block->SetString( nsICommonDialogs::eButton0Text, yes.GetUnicode() ); 
     block->SetString( nsICommonDialogs::eButton1Text, cancel.GetUnicode() ); 
