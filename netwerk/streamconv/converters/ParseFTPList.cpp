@@ -297,17 +297,17 @@ int ParseFTPList(const char *line, struct list_state *state,
         else if (numtoks != 4 && numtoks != 6)
           ;
         else if (numtoks == 6 && (
-                 toklen[4] < 3 || *tokens[4] != '[' ||        /* owner */
-                           (tokens[4][toklen[4]-1]) != ']' ||
                  toklen[5] < 4 || *tokens[5] != '(' ||        /* perms */
                            (tokens[5][toklen[5]-1]) != ')'  ))
           ;
         else if (  (toklen[2] == 10 || toklen[2] == 11) &&      
                         (tokens[2][toklen[2]-5]) == '-' &&
                         (tokens[2][toklen[2]-9]) == '-' &&
-         (toklen[3]==4 || toklen[3]==5 || toklen[3]==7 ||  /* time */
-                                          toklen[3]==8) &&        
-                        (tokens[3][toklen[3]-3]) == ':' &&
+        (((toklen[3]==4 || toklen[3]==5 || toklen[3]==7 || toklen[3]==8) &&
+                        (tokens[3][toklen[3]-3]) == ':' ) ||
+         ((toklen[3]==10 || toklen[3]==11 ) &&
+                        (tokens[3][toklen[3]-3]) == '.' )
+        ) &&  /* time in [H]H:MM[:SS[.CC]] format */
                                     isdigit(*tokens[1]) && /* size */
                                     isdigit(*tokens[2]) && /* date */
                                     isdigit(*tokens[3])    /* time */
@@ -328,6 +328,8 @@ int ParseFTPList(const char *line, struct list_state *state,
           *   CII-MANUAL.TEX;1  213/216  29-JAN-1996 03:33:12  [ANONYMOU,ANONYMOUS] (RWED,RWED,,)
           * CMU/VMS-IP FTP
           *   [VMSSERV.FILES]ALARM.DIR;1 1/3 5-MAR-1993 18:09
+          * TCPware FTP
+          *   FOO.BAR;1 4 5-MAR-1993 18:09:01.12
           * Long filename example:
           *   THIS-IS-A-LONG-VMS-FILENAME.AND-THIS-IS-A-LONG-VMS-FILETYPE\r\n
           *                    213[/nnn]  29-JAN-1996 03:33[:nn]  [ANONYMOU,ANONYMOUS] (RWED,RWED,,)
@@ -466,6 +468,13 @@ int ParseFTPList(const char *line, struct list_state *state,
             while (pos < toklen[1] && (tokens[1][pos]) != '/')
               pos++;
             
+/*
+ * I've never seen size come back in bytes, its always in blocks, and 
+ * the following test fails. So, always perform the "size in blocks".
+ * I'm leaving the "size in bytes" code if'd out in case we ever need
+ * to re-instate it.
+*/
+#if 0
             if (pos < toklen[1] && ( (pos<<1) > (toklen[1]-1) ||
                  (strtoul(tokens[1], (char **)0, 10) > 
                   strtoul(tokens[1]+pos+1, (char **)0, 10))        ))
@@ -476,6 +485,7 @@ int ParseFTPList(const char *line, struct list_state *state,
               result->fe_size[pos] = '\0';
             }
             else /* size is in blocks */
+#endif
             {
               /* size requires multiplication by blocksize. 
                *
@@ -486,8 +496,20 @@ int ParseFTPList(const char *line, struct list_state *state,
                * LISTing's filesize, so we won't (like ftpmirror).
                *
                * ulltoa(((unsigned long long)fsz)<<9, result->fe_size, 10);
+               *
+               * A block is always 512 bytes on OpenVMS, compute size.
+               * So its rounded up to the next block, so what, its better
+               * than not showing the size at all.
+               * A block is always 512 bytes on OpenVMS, compute size.
+               * So its rounded up to the next block, so what, its better
+               * than not showing the size at all.
               */
-              result->fe_size[0] = '\0';
+              PRUint64 fsz, factor;
+              LL_UI2L(fsz, strtoul(tokens[1], (char **)0, 10));
+              LL_UI2L(factor, 512);
+              LL_MUL(fsz, fsz, factor);
+              PR_snprintf(result->fe_size, sizeof(result->fe_size), 
+                          "%lld", fsz);
             } 
 
           } /* if (result->fe_type != 'd') */
@@ -511,7 +533,7 @@ int ParseFTPList(const char *line, struct list_state *state,
             month_num = 0;
           result->fe_time.tm_month = month_num;
           result->fe_time.tm_mday = atoi(tokens[2]);
-          result->fe_time.tm_year = atoi(p+4) - 1900;
+          result->fe_time.tm_year = atoi(p+4); // NSPR wants year as XXXX
 
           p = tokens[3] + 2;
           if (*p == ':')

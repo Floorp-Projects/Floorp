@@ -1167,18 +1167,18 @@ FTP_STATE
 nsFtpState::R_pwd() {
     if (mResponseCode/100 != 2) 
         return FTP_ERROR;
-    if (mServerType != FTP_VMS_TYPE) {
-        nsCAutoString respStr(mResponseMsg);
-        PRInt32 pos = respStr.FindChar('"');
+    nsCAutoString respStr(mResponseMsg);
+    PRInt32 pos = respStr.FindChar('"');
+    if (pos > -1) {
+        respStr.Cut(0,pos+1);
+        pos = respStr.FindChar('"');
         if (pos > -1) {
-            respStr.Cut(0,pos+1);
-            pos = respStr.FindChar('"');
-            if (pos > -1) {
-                respStr.Truncate(pos);
-                if (respStr.Last() != '/')
-                    respStr.Append("/");
-                mPwd = respStr;
-            }
+            respStr.Truncate(pos);
+            if (mServerType == FTP_VMS_TYPE)
+                ConvertDirspecFromVMS(respStr);
+            if (respStr.Last() != '/')
+                respStr.Append("/");
+            mPwd = respStr;
         }
     }
     return FTP_S_TYPE;
@@ -1291,12 +1291,10 @@ nsFtpState::R_type() {
 nsresult
 nsFtpState::S_cwd() {
     nsCAutoString cwdStr(mPath);
+    if (cwdStr.IsEmpty() || cwdStr.First() != '/')
+        cwdStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertDirspecToVMS(cwdStr);
-    else {
-        if (cwdStr.IsEmpty() || cwdStr.First() != '/')
-            cwdStr.Insert(mPwd,0);
-    }
     cwdStr.Insert("CWD ",0);
     cwdStr.Append(CRLF);
 
@@ -1318,12 +1316,10 @@ nsFtpState::R_cwd() {
 nsresult
 nsFtpState::S_size() {
     nsCAutoString sizeBuf(mPath);
+    if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
+        sizeBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(sizeBuf);
-    else {
-        if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
-            sizeBuf.Insert(mPwd,0);
-    }
     sizeBuf.Insert("SIZE ",0);
     sizeBuf.Append(CRLF);
 
@@ -1344,12 +1340,10 @@ nsFtpState::R_size() {
 nsresult
 nsFtpState::S_mdtm() {
     nsCAutoString mdtmBuf(mPath);
+    if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
+        mdtmBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(mdtmBuf);
-    else {
-        if (mdtmBuf.IsEmpty() || mdtmBuf.First() != '/')
-            mdtmBuf.Insert(mPwd,0);
-    }
     mdtmBuf.Insert("MDTM ",0);
     mdtmBuf.Append(CRLF);
 
@@ -1485,9 +1479,14 @@ nsFtpState::S_list() {
 
     mDRequestForwarder->SetEntityID(nsnull);
 
-    nsCAutoString listString("LIST" CRLF);
+    nsCAutoString listString;
+    if (mServerType == FTP_VMS_TYPE)
+        listString.Append("LIST *.*;0" CRLF);
+    else
+        listString.Append("LIST" CRLF);
 
     return SendFTPCommand(listString);
+
 }
 
 FTP_STATE
@@ -1513,12 +1512,10 @@ nsresult
 nsFtpState::S_retr() {
     nsresult rv = NS_OK;
     nsCAutoString retrStr(mPath);
+    if (retrStr.IsEmpty() || retrStr.First() != '/')
+        retrStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(retrStr);
-    else {
-        if (retrStr.IsEmpty() || retrStr.First() != '/')
-            retrStr.Insert(mPwd,0);
-    }
     retrStr.Insert("RETR ",0);
     retrStr.Append(CRLF);
     
@@ -1557,12 +1554,6 @@ nsFtpState::R_retr() {
     // If we encounter any at this point, do not try CWD and abort.
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
-
-    if (mServerType == FTP_VMS_TYPE) {
-        // We don't handle VMS directory listings yet. If we continue, we get
-        // scs->AsyncConvertData failed (rv=80004005)
-        return FTP_ERROR;
-    }
 
     if (mResponseCode/100 == 5) {
         mRETRFailed = PR_TRUE;
@@ -2535,31 +2526,125 @@ nsFtpState::SendFTPCommand(nsCString& command)
     return NS_ERROR_FAILURE;
 }
 
-// Convert a relative unix-style filespec to VMS format
-void 
-nsFtpState::ConvertFilespecToVMS(nsCString& fileSpec)
+// Convert a unix-style filespec to VMS format
+// /foo/fred/barney/file.txt -> foo:[fred.barney]file.txt
+// /foo/file.txt -> foo:[000000]file.txt
+void
+nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
 {
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS %s\n", this, fileSpec.get())); 
-    if (fileSpec.IsEmpty()) {
-        fileSpec.Insert("[]",0);
-    }
-    else {
-        PRInt32 endDir = fileSpec.RFindChar('/');
-        if (endDir > -1) {
-            fileSpec.Cut(endDir,1);
-            fileSpec.Insert(']',endDir);
-            fileSpec.Insert("[.",0);
-            fileSpec.ReplaceChar('/','.');
+    int ntok=1;
+    char *t, *nextToken;
+    nsCAutoString fileStringCopy;
+
+    // Get a writeable copy we can strtok with.
+    fileStringCopy = fileString;
+    t = nsCRT::strtok((char *)fileStringCopy.get(), "/", &nextToken);
+    if (t) while (nsCRT::strtok(nextToken, "/", &nextToken)) ntok++; // count number of terms (tokens)
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS ntok: %d\n", this, ntok));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
+
+    if (fileString.First() == '/') {
+        // absolute filespec
+        //   /        -> []
+        //   /a       -> a (doesn't really make much sense)
+        //   /a/b     -> a:[000000]b
+        //   /a/b/c   -> a:[b]c
+        //   /a/b/c/d -> a:[b.c]d
+        if (ntok == 1) {
+            if (fileString.Length() == 1) {
+                // Just a slash
+                fileString.Truncate();
+                fileString.Append("[]");
+            }
+            else {
+                // just copy the name part (drop the leading slash)
+                fileStringCopy = fileString;
+                fileString = Substring(fileStringCopy, 1,
+                                       fileStringCopy.Length()-1);
+            }
+        }
+        else {
+            // Get another copy since the last one was written to.
+            fileStringCopy = fileString;
+            fileString.Truncate();
+            fileString.Append(nsCRT::strtok((char *)fileStringCopy.get(), 
+                              "/", &nextToken));
+            fileString.Append(":[");
+            if (ntok > 2) {
+                for (int i=2; i<ntok; i++) {
+                    if (i > 2) fileString.Append('.');
+                    fileString.Append(nsCRT::strtok(nextToken,
+                                      "/", &nextToken));
+                }
+            }
+            else {
+                fileString.Append("000000");
+            }
+            fileString.Append(']');
+            fileString.Append(nsCRT::strtok(nextToken, "/", &nextToken));
+        }
+    } else {
+       // relative filespec
+        //   a       -> a
+        //   a/b     -> [.a]b
+        //   a/b/c   -> [.a.b]c
+        if (ntok == 1) {
+            // no slashes, just use the name as is
+        }
+        else {
+            // Get another copy since the last one was written to.
+            fileStringCopy = fileString;
+            fileString.Truncate();
+            fileString.Append("[.");
+            fileString.Append(nsCRT::strtok((char*)fileStringCopy.get(),
+                              "/", &nextToken));
+            if (ntok > 2) {
+                for (int i=2; i<ntok; i++) {
+                    fileString.Append('.');
+                    fileString.Append(nsCRT::strtok(nextToken,
+                                      "/", &nextToken));
+                }
+            }
+            fileString.Append(']');
+            fileString.Append(nsCRT::strtok(nextToken, "/", &nextToken));
         }
     }
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS   to: \"%s\"\n", this, fileString.get()));
 }
 
-// Convert a relative unix-style dirspec to VMS format
-void 
+// Convert a unix-style dirspec to VMS format
+// /foo/fred/barney/rubble -> foo:[fred.barney.rubble]
+// /foo/fred -> foo:[fred]
+// /foo -> foo:[000000]
+// (null) -> (null)
+void
 nsFtpState::ConvertDirspecToVMS(nsCString& dirSpec)
 {
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecToVMS %s\n", this, dirSpec.get())); 
-    dirSpec.ReplaceChar('/','.');
-    dirSpec.Insert("[.",0);
-    dirSpec.Append(']');
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecToVMS from: \"%s\"\n", this, dirSpec.get()));
+    if (!dirSpec.IsEmpty()) {
+        if (dirSpec.Last() != '/')
+            dirSpec.Append("/");
+        // we can use the filespec routine if we make it look like a file name
+        dirSpec.Append('x');
+        ConvertFilespecToVMS(dirSpec);
+        dirSpec.Truncate(dirSpec.Length()-1);
+    }
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecToVMS   to: \"%s\"\n", this, dirSpec.get()));
+}
+
+// Convert an absolute VMS style dirspec to UNIX format
+void
+nsFtpState::ConvertDirspecFromVMS(nsCString& dirSpec)
+{
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecFromVMS from: \"%s\"\n", this, dirSpec.get()));
+    if (dirSpec.IsEmpty()) {
+        dirSpec.Insert('.', 0);
+    }
+    else {
+        dirSpec.Insert('/', 0);
+        dirSpec.ReplaceSubstring(":[", "/");
+        dirSpec.ReplaceChar('.', '/');
+        dirSpec.ReplaceChar(']', '/');
+    }
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertDirspecFromVMS   to: \"%s\"\n", this, dirSpec.get()));
 }
