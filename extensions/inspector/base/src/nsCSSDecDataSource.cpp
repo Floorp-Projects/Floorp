@@ -148,7 +148,7 @@ nsCSSDecDataSource::GetURI(char* *aURI)
   NS_PRECONDITION(aURI != nsnull, "null ptr");
   if (! aURI) return NS_ERROR_NULL_POINTER;
 
-  *aURI = nsXPIDLCString::Copy("rdf:" NS_CSSDECDATASOURCE_ID);
+  *aURI = nsCRT::strdup("rdf:" NS_CSSDECDATASOURCE_ID);
 	if (! *aURI) return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
