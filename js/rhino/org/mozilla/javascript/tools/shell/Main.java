@@ -186,6 +186,7 @@ public class Main {
                 continue;
             }
             if (arg.equals("-f")) {
+                global.processStdin = false;
                 if (++i == args.length)
                     usage(arg);
                 if (args[i].equals("-"))
