@@ -790,8 +790,11 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
   } 
   aCellAvailWidth = aColAvailWidth;
 
-  // for a cell with a colspan > 1, use its fix width (if set) as the  avail width 
-  if (aTableFrame.GetEffectiveColSpan(aCellFrame) > 1) {
+  nsFrameState  frameState;
+  aCellFrame.GetFrameState(&frameState);
+  // for a cell with a colspan > 1, use its fix width (if set) as the avail width 
+  // if this is its initial reflow
+  if ((frameState & NS_FRAME_FIRST_REFLOW) && (aTableFrame.GetEffectiveColSpan(aCellFrame) > 1)) {
     // see if the cell has a style width specified
     const nsStylePosition* cellPosition;
     aCellFrame.GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)cellPosition);
