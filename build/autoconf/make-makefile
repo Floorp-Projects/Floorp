@@ -132,23 +132,12 @@ sub parse_arguments {
 sub create_directories {
   my @makefiles = @_;
   my @dirs = ();
-  my %have_seen = ();
   my $ac_file;
   foreach $ac_file (@makefiles) {
-    next if $ac_file =~ /:/;
-    my $ac_dir = dirname($ac_file);
-    while (not defined $have_seen{$ac_dir}) {
-      $have_seen{$ac_dir} = 1;
-      last if -d $ac_dir;
-      push @dirs, $ac_dir;
-      $ac_dir =~ s/\/[^\/]+$//;
-    }
+    push @dirs, dirname($ac_file);
   }
   # Call mkdir with the directories sorted by subdir count (how many /'s)
-  system "mkdir ". join(' ', sort {
-                                    split(/\//,$a) <=> split(/\//,$b)
-                                  } @dirs
-                       ) if @dirs;
+  system "mkdir -p ". join(' ', @dirs) if @dirs;
 }
 
 # Find the top of the source directory
