@@ -39,21 +39,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*--------------------------------------------------------------------
- *   C A L E N D A R
- *-------------------------------------------------------------------*/
-
-#calendar-top-box
-{
-   overflow:auto;
-}
-
-
-/*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
  *-------------------------------------------------------------------*/
 #calendar-deck{
     overflow:auto;
 }
+
 #calendar-bar > .toolbar-holder > .toolbar-primary-icon {
   background-image: url("chrome://calendar/skin/calendar_topbar.gif");
 }
@@ -270,24 +261,6 @@
     -moz-image-region: rect(0px 96px 21px 64px);
   }
 
-
-/*
-**  U N I F I N D E R  S T U F F
-*/
-.unifinder-calendar-event-icon-class
-{
-   list-style-image         : url( "chrome://calendar/skin/event.png" );
-}
-
-.unifinder-calendar-event-icon-class[alarm="true"]
-{
-   list-style-image         : url( "chrome://calendar/skin/event_alarm.png" );
-}
-
-.unifinder-calendar-event-icon-class[recur="true"]
-{
-   list-style-image         : url( "chrome://calendar/skin/event_repeating.png" );
-}
 
 /*<<-------------------------------------------------/\/\/\ Month*/
 
@@ -861,7 +834,7 @@
    background-image        : url("chrome://calendar/skin/week-view-corner.png");
    background-position     : 100% 0%;
    background-repeat       : no-repeat;
-   width:43px;
+   width                   : 43px;
 }
 
 #week-view-header-days
@@ -875,7 +848,7 @@
 .weekview-daynumber-class
 {
    -moz-box-align       : center;
-   display: -moz-stack;
+   display              : -moz-stack;
 }
 
 #week-view-header
@@ -885,21 +858,21 @@
    font-family             : Arial, Helvetica;
    text-align              : center; 
    font-weight             : bold;
-   background-color 	   : #ffffff;
+   background-color 	      : #ffffff;
 }
 
 .week-header-date{
-   font-size: 33px;
-   font-weight: bold;
-   color: #C7DED8;
+   font-size               : 33px;
+   font-weight             : bold;
+   color                   : #C7DED8;
 }
 .week-header-date-text{
-   top: 15px;
+   top                     : 15px;
 }
 
 #week-view-header-spacer{
-   background-color: #fff;
-   width: 19px;
+   background-color        : #fffffff;
+   width                   : 19px;
 }
 
 
@@ -993,7 +966,8 @@
    border-bottom        : 1px solid #2085c4;
 }
 
-*[weekend="true"]{
+.month-day-box-class[weekend="true"],
+.week-view-hour-box-class[weekend="true"]{
    background-color 		: #FFF9EF;
 }
 
