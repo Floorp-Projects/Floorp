@@ -2270,6 +2270,73 @@ nsBrowserWindow::ConfirmCheck(const PRUnichar *dialogTitle,
 }
 
 NS_IMETHODIMP
+nsBrowserWindow::ConfirmEx(const PRUnichar *dialogTitle,
+                           const PRUnichar *text,
+                           PRUint32 button0And1Flags,
+                           const PRUnichar *button2Title,
+                           const PRUnichar *checkMsg,
+                           PRBool *checkValue,
+                           PRInt32 *buttonPressed)
+{
+  nsCAutoString str; str.AssignWithConversion(text);
+  const char* msg= nsnull;
+
+  msg = str.get();
+  if (nsnull != msg) {
+    printf("Browser Window Confirm: %s (", msg);
+
+    int numberButtons = 0;
+    for (int buttonID = 0; buttonID < 2; buttonID++) { 
+      
+      const char *buttonText = nsnull;
+      switch (button0And1Flags & 0xff) {
+        case nsIPrompt::BUTTON_TITLE_OK:
+          buttonText = "OK";
+          break;
+        case nsIPrompt::BUTTON_TITLE_CANCEL:
+          buttonText = "Cancel";
+          break;
+        case nsIPrompt::BUTTON_TITLE_YES:
+          buttonText = "Yes";
+          break;
+        case nsIPrompt::BUTTON_TITLE_NO:
+          buttonText = "No";
+          break;
+        case nsIPrompt::BUTTON_TITLE_SAVE:
+          buttonText = "Save";
+          break;
+        case nsIPrompt::BUTTON_TITLE_REVERT:
+          buttonText = "Revert";
+          break;
+      }
+      if (buttonText) {
+        if (numberButtons)
+          putchar(',');
+        printf("%s=%d", buttonText, numberButtons++);
+      }
+      button0And1Flags >>= 8;
+    }
+    if (button2Title) {
+      if (numberButtons)
+        putchar(',');
+      nsCAutoString buttonTitle; buttonTitle.AssignWithConversion(button2Title);
+      printf("%s=%d", buttonTitle.get(), numberButtons++);
+    }
+    printf(")? ");
+    
+    char c;
+    for (;;) {
+      c = getchar();
+      if (isdigit(c) && c - '0' < numberButtons) {
+        *buttonPressed = c - '0';
+        break;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsBrowserWindow::Prompt(const PRUnichar *dialogTitle,
                         const PRUnichar *text,
                         PRUnichar **answer,
@@ -2378,33 +2445,6 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 }
 
 nsresult nsBrowserWindow::Select(const PRUnichar *, const PRUnichar *, PRUint32 , const PRUnichar **, PRInt32 *, PRBool *_retval)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsBrowserWindow::UniversalDialog
-	(const PRUnichar *inTitleMessage,
-	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
-	const PRUnichar *inMsg, /* main message for dialog */
-	const PRUnichar *inCheckboxMsg, /* message for checkbox */
-	const PRUnichar *inButton0Text, /* text for first button */
-	const PRUnichar *inButton1Text, /* text for second button */
-	const PRUnichar *inButton2Text, /* text for third button */
-	const PRUnichar *inButton3Text, /* text for fourth button */
-	const PRUnichar *inEditfield1Msg, /*message for first edit field */
-	const PRUnichar *inEditfield2Msg, /* message for second edit field */
-	PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
-	PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
-	const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
-		/* examples are
-		   "chrome://global/skin/question-icon.gif" for question mark,
-		   "chrome://global/skin/alert-icon.gif" for exclamation mark
-		*/
-	PRBool *inoutCheckboxState, /* initial and final state of check box */
-	PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
-	PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
-	PRInt32 inEditField1Password, /* is first edit field a password field */
-	PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
 {
 	return NS_OK;
 }

@@ -307,12 +307,11 @@ var homeButtonObserver = {
       var pressedVal = { };
       var promptTitle = gNavigatorBundle.getString("droponhometitle");
       var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
-      var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
-      var iconURL     = "chrome://navigator/skin/home.gif"; // evil evil common dialog code! evil!
 
-      promptService.universalDialog(window, null, promptTitle, promptMsg, null,
-                                          okButton, null, null, null, null, null, { }, { },
-                                          iconURL, { }, 2, 0, null, pressedVal);
+      promptService.confirmEx(window, promptTitle, promptMsg,
+                              (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
+                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+                              null, null, {value:0}, pressedVal);
 
       if (pressedVal.value == 0) {
         nsPreferences.setUnicharPref("browser.startup.homepage", url);

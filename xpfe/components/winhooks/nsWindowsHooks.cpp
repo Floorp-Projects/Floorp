@@ -324,26 +324,11 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                             //    o Yes
                             //    o Cancel
                             //    o No
-                            // because UniversalDialog will move "Cancel" to the right.
-                            rv = promptService->UniversalDialog( aParent,
-                                                                    0, // title          
-                                                                    title,    // dlg title
-                                                                    text,     // dlg text      
-                                                                    labelArg, // Checkbox label
-                                                                    yesButtonLabel,    // yes button
-                                                                    cancelButtonLabel, // cancel button
-                                                                    noButtonLabel,     // no button
-                                                                    0, // button 3
-                                                                    0, // edit 1 msg
-                                                                    0, // edit 2 msg
-                                                                    0, // edit 1 value
-                                                                    0, // edit 2 value
-                                                                    0, // icon (q-mark)
-                                                                    &showDialog,
-                                                                    3, // 3 buttons
-                                                                    0, // no edit fields
-                                                                    PR_FALSE, // no pw
-                                                                    &dlgResult );
+                            rv = promptService->ConfirmEx(aParent, title, text,
+                                                          (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
+                                                          (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_1),
+                                                          cancelButtonLabel, labelArg, &showDialog, &dlgResult);
+                            
                             if ( NS_SUCCEEDED( rv ) ) {
                                 // Did they say go ahead?
                                 switch ( dlgResult ) {

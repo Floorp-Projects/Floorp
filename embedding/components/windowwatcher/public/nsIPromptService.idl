@@ -37,26 +37,99 @@ interface nsIDOMWindow;
 [scriptable, uuid(1630C61A-325E-49ca-8759-A31B16C47AA5)]
 interface nsIPromptService : nsISupports
 {
+  /**
+   * Puts up an alert dialog with an OK button.
+   */
   void alert(in nsIDOMWindow parent,
               in wstring dialogTitle,
               in wstring text);
 
+  /**
+   * Puts up an alert dialog with an OK button and
+   * a message with a checkbox.
+   */
   void alertCheck(in nsIDOMWindow parent,
                   in wstring dialogTitle,
                   in wstring text,
                   in wstring checkMsg,
                   out boolean checkValue);
 
+  /**
+   * Puts up a dialog with OK and Cancel buttons.
+   * @return true for OK, false for Cancel
+   */
   boolean confirm(in nsIDOMWindow parent,
                   in wstring dialogTitle,
                   in wstring text);
 
+  /**
+   * Puts up a dialog with OK and Cancel buttons, and
+   * a message with a single checkbox.
+   * @return true for OK, false for Cancel
+   */
   boolean confirmCheck(in nsIDOMWindow parent,
                         in wstring dialogTitle,
                         in wstring text,
                         in wstring checkMsg,
                         out boolean checkValue);
 
+  /**
+   * Puts up a dialog with up to 3 buttons and an optional checkbox.
+   *
+   * @param dialogTitle
+   * @param text
+   * @param button0And1Flags  The titles and positions for buttons 0 and 1
+   * @param button2Title      The title for button 2 or null if no button
+   * @param checkMsg          null if no checkbox
+   * @param checkValue    
+   * @param buttonPressed
+   *
+   * Buttons are numbered 0 - 2. The implementation can decide whether
+   * the sequence goes from right to left or left to right.
+   * Button 0 will be the default button.
+   *
+   * Buttons 0 and 1 use predefined titles which are specified by the
+   * following flags. Each title constant can be multiplied by the button
+   * position value to assign a title to that particular button.
+   *
+   * Button 2, if present, is specified by a string
+   */
+   
+  const unsigned long BUTTON_POS_0              = 1;
+  const unsigned long BUTTON_POS_1              = 1 << 8;
+   
+  const unsigned long BUTTON_TITLE_OK            = 1;
+  const unsigned long BUTTON_TITLE_CANCEL        = 2;
+  const unsigned long BUTTON_TITLE_YES           = 3;
+  const unsigned long BUTTON_TITLE_NO            = 4;
+  const unsigned long BUTTON_TITLE_SAVE          = 5;
+  const unsigned long BUTTON_TITLE_REVERT        = 6;
+   
+  const unsigned long STD_OK_CANCEL_BUTTONS      = (BUTTON_TITLE_OK * BUTTON_POS_0) +
+                                                    (BUTTON_TITLE_CANCEL * BUTTON_POS_1);
+
+  void confirmEx(in nsIDOMWindow parent,
+                 in wstring dialogTitle,
+                 in wstring text,
+                 in unsigned long button0And1Flags,
+                 in wstring button2Title,
+                 in wstring checkMsg,
+                 inout boolean checkValue,
+                 out PRInt32 buttonPressed);
+
+  /**
+   * Puts up a dialog with an edit field and an optional checkbox.
+   *
+   * @param dialogTitle
+   * @param text
+   * @param value         in: Pre-fills the dialog field if non-null
+   *                      out: If result is true, a newly allocated
+   *                      string. If result is false, in string is not
+   *                      touched.
+   * @param checkMsg      if null, will use default title - "Remember Value"
+   * @param checkValue    if null, check box will not be shown       
+   * @return true for OK, false for Cancel
+   */                        
   boolean prompt(in nsIDOMWindow parent,
                  in wstring dialogTitle,
                  in wstring text,
@@ -64,6 +137,23 @@ interface nsIPromptService : nsISupports
                  in wstring checkMsg,
                  inout boolean checkValue);
 
+  /**
+   * Puts up a dialog with an edit field, a password field, and an optional checkbox.
+   *
+   * @param dialogTitle
+   * @param text
+   * @param username      in: Pre-fills the dialog field if non-null
+   *                      out: If result is true, a newly allocated
+   *                      string. If result is false, in string is not
+   *                      touched.
+   * @param password      in: Pre-fills the dialog field if non-null
+   *                      out: If result is true, a newly allocated
+   *                      string. If result is false, in string is not
+   *                      touched.
+   * @param checkMsg      if null, will use default title - "Remember Name and Password"
+   * @param checkValue    if null, check box will not be shown    
+   * @return true for OK, false for Cancel
+   */                        
   boolean promptUsernameAndPassword(in nsIDOMWindow parent,
                                     in wstring dialogTitle,
                                     in wstring text,
@@ -72,39 +162,35 @@ interface nsIPromptService : nsISupports
                                     in wstring checkMsg,
                                     inout boolean checkValue);
 
+  /**
+   * Puts up a dialog with a password field and an optional checkbox.
+   *
+   * @param dialogTitle
+   * @param text
+   * @param password      in: Pre-fills the dialog field if non-null
+   *                      out: If result is true, a newly allocated
+   *                      string. If result is false, in string is not
+   *                      touched.
+   * @param checkMsg      if null, will use default title - "Remember Password"
+   * @param checkValue    if null, check box will not be shown    
+   * @return true for OK, false for Cancel
+   */                        
   boolean promptPassword(in nsIDOMWindow parent,
                          in wstring dialogTitle,
                          in wstring text,
                          inout wstring password,
                          in wstring checkMsg,
                          inout boolean checkValue);
-  
+
+  /**
+   * Puts up a dialog box which has a list box of strings
+   */                                                 
   boolean select(in nsIDOMWindow parent,
                   in wstring dialogTitle,
                   in wstring text,
                   in  PRUint32 count,
                   [array, size_is(count)] in wstring selectList,
                   out long outSelection);
-
-  void universalDialog(in nsIDOMWindow parent,
-                        in wstring titleMessage,
-                        in wstring dialogTitle,
-                        in wstring text,
-                        in wstring checkboxMsg,
-                        in wstring button0Text,
-                        in wstring button1Text,
-                        in wstring button2Text,
-                        in wstring button3Text,
-                        in wstring editfield1Msg,
-                        in wstring editfield2Msg,
-                        inout wstring editfield1Value,
-                        inout wstring editfield2Value,
-                        in wstring iconURL,
-                        inout boolean checkboxState,
-                        in PRInt32 numberButtons,
-                        in PRInt32 numberEditfields,
-                        in PRInt32 editField1Password,
-                        out PRInt32 buttonPressed);
 };
 
 %{C++

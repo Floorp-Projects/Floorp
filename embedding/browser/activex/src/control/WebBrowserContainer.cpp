@@ -135,6 +135,12 @@ NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, c
     return NS_OK;
 }
 
+/* void confirmEx (in wstring dialogTitle, in wstring text, in unsigned long button0And1Flags, in wstring button2Title, in wstring checkMsg, inout boolean checkValue, out PRInt32 buttonPressed); */
+NS_IMETHODIMP CWebBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 button0And1Flags, const PRUnichar *button2Title, const PRUnichar *checkMsg, PRBool *checkValue, PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* boolean prompt (in wstring dialogTitle, in wstring text, inout wstring answer, in wstring checkMsg, inout boolean checkValue); */
 NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
                                            PRUnichar **answer, const PRUnichar *checkMsg,
@@ -166,12 +172,6 @@ NS_IMETHODIMP CWebBrowserContainer::PromptPassword(const PRUnichar *dialogTitle,
 
 /* boolean select (in wstring inDialogTitle, in wstring inMsg, in PRUint32 inCount, [array, size_is (inCount)] in wstring inList, out long outSelection); */
 NS_IMETHODIMP CWebBrowserContainer::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void universalDialog (in wstring inTitleMessage, in wstring inDialogTitle, in wstring inMsg, in wstring inCheckboxMsg, in wstring inButton0Text, in wstring inButton1Text, in wstring inButton2Text, in wstring inButton3Text, in wstring inEditfield1Msg, in wstring inEditfield2Msg, inout wstring inoutEditfield1Value, inout wstring inoutEditfield2Value, in wstring inIConURL, inout boolean inoutCheckboxState, in PRInt32 inNumberButtons, in PRInt32 inNumberEditfields, in PRInt32 inEditField1Password, out PRInt32 outButtonPressed); */
-NS_IMETHODIMP CWebBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage, const PRUnichar *inDialogTitle, const PRUnichar *inMsg, const PRUnichar *inCheckboxMsg, const PRUnichar *inButton0Text, const PRUnichar *inButton1Text, const PRUnichar *inButton2Text, const PRUnichar *inButton3Text, const PRUnichar *inEditfield1Msg, const PRUnichar *inEditfield2Msg, PRUnichar **inoutEditfield1Value, PRUnichar **inoutEditfield2Value, const PRUnichar *inIConURL, PRBool *inoutCheckboxState, PRInt32 inNumberButtons, PRInt32 inNumberEditfields, PRInt32 inEditField1Password, PRInt32 *outButtonPressed)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -605,6 +605,12 @@ NS_IMETHODIMP nsWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, con
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* void confirmEx (in wstring dialogTitle, in wstring text, in unsigned long button0And1Flags, in wstring button2Title, in wstring checkMsg, inout boolean checkValue, out PRInt32 buttonPressed); */
+NS_IMETHODIMP nsWebBrowserChrome::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 button0And1Flags, const PRUnichar *button2Title, const PRUnichar *checkMsg, PRBool *checkValue, PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* boolean prompt (in wstring dialogTitle, in wstring text, inout wstring answer, in wstring checkMsg, inout boolean checkValue); */
 NS_IMETHODIMP nsWebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **answer, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
@@ -629,8 +635,3 @@ NS_IMETHODIMP nsWebBrowserChrome::Select(const PRUnichar *dialogTitle, const PRU
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void universalDialog (in wstring titleMessage, in wstring dialogTitle, in wstring text, in wstring checkboxMsg, in wstring button0Text, in wstring button1Text, in wstring button2Text, in wstring button3Text, in wstring editfield1Msg, in wstring editfield2Msg, inout wstring editfield1Value, inout wstring editfield2Value, in wstring iconURL, inout boolean checkboxState, in PRInt32 numberButtons, in PRInt32 numberEditfields, in PRInt32 editField1Password, out PRInt32 buttonPressed); */
-NS_IMETHODIMP nsWebBrowserChrome::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text, const PRUnichar *button1Text, const PRUnichar *button2Text, const PRUnichar *button3Text, const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg, PRUnichar **editfield1Value, PRUnichar **editfield2Value, const PRUnichar *iconURL, PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields, PRInt32 editField1Password, PRInt32 *buttonPressed)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}

@@ -645,6 +645,17 @@ NS_IMETHODIMP CWebBrowserChrome::ConfirmCheck(const PRUnichar *dialogTitle, cons
     return NS_OK;
 }
 
+NS_IMETHODIMP CWebBrowserChrome::ConfirmEx(const PRUnichar *dialogTitle,
+                                           const PRUnichar *text,
+                                           PRUint32 button0And1Flags,
+                                           const PRUnichar *button2Title,
+                                           const PRUnichar *checkMsg,
+                                           PRBool *checkValue,
+                                           PRInt32 *buttonPressed)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP CWebBrowserChrome::Prompt(const PRUnichar *dialogTitle,
                                         const PRUnichar *text,
                                         PRUnichar **answer,
@@ -911,192 +922,6 @@ NS_IMETHODIMP CWebBrowserChrome::Select(const PRUnichar *inDialogTitle, const PR
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::UniversalDialog(const PRUnichar *inTitleMessage,
-                                                 const PRUnichar *inDialogTitle,
-                                                 const PRUnichar *inMsg,
-                                                 const PRUnichar *inCheckboxMsg,
-                                                 const PRUnichar *inButton0Text,
-                                                 const PRUnichar *inButton1Text,
-                                                 const PRUnichar *inButton2Text,
-                                                 const PRUnichar *inButton3Text,
-                                                 const PRUnichar *inEditfield1Msg,
-                                                 const PRUnichar *inEditfield2Msg,
-                                                 PRUnichar **inoutEditfield1Value,
-                                                 PRUnichar **inoutEditfield2Value,
-                                                 const PRUnichar *inIConURL,
-                                                 PRBool *inoutCheckboxState,
-                                                 PRInt32 inNumberButtons,
-                                                 PRInt32 inNumberEditfields,
-                                                 PRInt32 inEditField1Password,
-                                                 PRInt32 *outButtonPressed)
-{
-    NS_ENSURE_ARG_POINTER(outButtonPressed);
-
-    // NOTE: inEditField1Password is not used. PowerPlant's LEditText
-    // does not allow being switched from being a password field to
-    // being clear text. An override needs to be made which allows this
-      
-    nsresult resultErr = NS_OK;
-
-    StDialogHandler	theHandler(dlog_Universal, mBrowserWindow);
-    LWindow			    *theDialog = theHandler.GetDialog();
-    nsCAutoString   cStr;
-    Str255          pStr;
-    LCheckBox       *checkbox = nsnull;
-
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inDialogTitle), pStr);
-    theDialog->SetDescriptor(pStr);
-
-    LStaticText	*msgText = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('Msg '));
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inMsg), cStr);
-    cStr.ReplaceChar('\n', '\r');
-    msgText->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-
-    checkbox = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID('Chck'));    
-    if (inCheckboxMsg && inoutCheckboxState)
-    {
-      CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inCheckboxMsg), pStr);
-      checkbox->SetDescriptor(pStr);
-      checkbox->SetValue(*inoutCheckboxState);
-    }
-    else
-    {
-      checkbox->Hide();
-      checkbox->Disable();
-    }
-    
-    LEditText *edit1Value = nsnull;
-    LEditText *edit2Value = nsnull;
-       
-    if (inNumberEditfields > 0)
-    {  
-        LStaticText *edit1Msg = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('EdM1'));
-        if (inEditfield1Msg)
-        {
-          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield1Msg), cStr);
-          edit1Msg->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-        }    
-        edit1Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV1'));
-        if (inoutEditfield1Value)
-        {
-          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield1Value), cStr);
-          edit1Value->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-        }
-        
-        if (inNumberEditfields > 1)
-        {
-            LStaticText *edit2Msg = dynamic_cast<LStaticText*>(theDialog->FindPaneByID('EdM2'));
-            if (inEditfield2Msg)
-            {
-              CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield2Msg), cStr);
-              edit2Msg->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-            }
-            edit2Value = dynamic_cast<LEditText*>(theDialog->FindPaneByID('EdV2'));
-            if (inoutEditfield2Value)
-            {
-              CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(*inoutEditfield2Value), cStr);
-              edit2Value->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-            }
-        }
-        else
-        {
-            // One edit field. If inEditField1Password is TRUE, we need to turn the first field,
-            // which by default is not a password field, into a password field.
-        }
-    }
-    
-    // If 1 or more edit fields are not shown, shrink the view enclosing the edit fields
-    // which will hide them. Also, resize the dialog box. All the items below the edit fields
-    // are sticky to the bottom and will be shifted up when we resize the window.
-    
-    SInt32 vShrink = (2 - inNumberEditfields) * 32;
-    if (vShrink)
-    {
-        LView *editFieldsEncl = dynamic_cast<LView*>(theDialog->FindPaneByID('Encl'));
-        editFieldsEncl->ResizeFrameBy(0, vShrink, false);
-        theDialog->ResizeWindowBy(0, vShrink);
-    }
-    
-    const PRUnichar* buttonTitles[4] = { inButton0Text, inButton1Text, inButton2Text, inButton3Text };
-    
-    for (PaneIDT buttonID = 1; buttonID <= 4; buttonID++)
-    {
-      LPushButton *aButton = dynamic_cast<LPushButton*>(theDialog->FindPaneByID(buttonID));
-      if (buttonID <= inNumberButtons)
-      {
-        if (buttonTitles[buttonID - 1])
-        {
-          CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(inEditfield1Msg), pStr);
-          aButton->SetDescriptor(pStr);
-        }
-      }
-      else
-      {
-        aButton->Hide();
-        aButton->Disable();
-      }
-    }
- 
-    if (edit1Value)
-        theDialog->SetLatentSub(edit1Value);   
-    theDialog->Show();
-    theDialog->Select();
-	
-	while (true)  // This is our modal dialog event loop
-	{				
-		MessageT	hitMessage = theHandler.DoDialog();
-		
-		if (hitMessage == msg_OK)
-		{
-		    *outButtonPressed = 0;        
-   		    break;
-   		}
-   		else if (hitMessage == msg_Cancel)
-   		{
-   		    *outButtonPressed = 1;
-   		    break;
-   		}
-   		else if (hitMessage == 3)
-   		{
-   		    *outButtonPressed = 1003;
-   		    break;
-   		}
-   		else if (hitMessage == 4)
-   		{
-   		    *outButtonPressed = 1004;
-   		    break;
-   		}
-	}
-
-  nsAutoString    ucStr;
-
-  if (inoutEditfield1Value && edit1Value)
-  {
-    nsMemory::Free(*inoutEditfield1Value);
-    *inoutEditfield1Value = nsnull;
-    edit1Value->GetDescriptor(pStr);
-    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-    *inoutEditfield1Value = ucStr.ToNewUnicode();
-    if (*inoutEditfield1Value == nsnull)
-      resultErr = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (inoutEditfield2Value && edit2Value)
-  {
-    nsMemory::Free(*inoutEditfield2Value);
-    *inoutEditfield2Value = nsnull;
-    edit2Value->GetDescriptor(pStr);
-    CPlatformUCSConversion::GetInstance()->PlatformToUCS(pStr, ucStr);
-    *inoutEditfield2Value = ucStr.ToNewUnicode();
-    if (*inoutEditfield2Value == nsnull)
-      resultErr = NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (inoutCheckboxState)
-    *inoutCheckboxState = checkbox->GetValue();
-
-  return resultErr;
-}
 
 //*****************************************************************************
 // CWebBrowserChrome::nsIContextMenuListener
