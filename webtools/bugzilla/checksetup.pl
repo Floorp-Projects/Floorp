@@ -708,6 +708,9 @@ if ($my_webservergroup) {
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
     chown $<, $webservergid, glob('*');
+    if (-e ".htaccess") { chown $<, $webservergid, ".htaccess" } # glob('*') doesn't catch dotfiles
+    if (-e "data/.htaccess") { chown $<, $webservergid, "data/.htaccess" }
+    if (-e "data/webdot/.htaccess") { chown $<, $webservergid, "data/webdot/.htaccess" }
     fixPerms('*',027);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
