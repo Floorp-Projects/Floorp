@@ -41,6 +41,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include "prtypes.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -53,21 +54,21 @@ static int    do_tree_dump = 0;
 static char   *function_dump = NULL;
 static int32  min_subtotal = 0;
 
-static int accum_byte(uint32 *uip)
+static int accum_byte(FILE *fp, uint32 *uip)
 {
-    int c = getchar();
+    int c = getc(fp);
     if (c == EOF)
         return 0;
     *uip = (*uip << 8) | c;
     return 1;
 }
 
-static int get_uint32(uint32 *uip)
+static int get_uint32(FILE *fp, uint32 *uip)
 {
     int c;
     uint32 ui;
 
-    c = getchar();
+    c = getc(fp);
     if (c == EOF)
         return 0;
     ui = 0;
@@ -78,22 +79,22 @@ static int get_uint32(uint32 *uip)
             if (c & 0x20) {
                 c &= 0x1f;
                 if (c & 0x10) {
-                    if (!accum_byte(&ui))
+                    if (!accum_byte(fp, &ui))
                         return 0;
                 } else {
                     ui = (uint32) c;
                 }
-                if (!accum_byte(&ui))
+                if (!accum_byte(fp, &ui))
                     return 0;
             } else {
                 ui = (uint32) c;
             }
-            if (!accum_byte(&ui))
+            if (!accum_byte(fp, &ui))
                 return 0;
         } else {
             ui = (uint32) c;
         }
-        if (!accum_byte(&ui))
+        if (!accum_byte(fp, &ui))
             return 0;
     } else {
         ui = (uint32) c;
@@ -102,7 +103,7 @@ static int get_uint32(uint32 *uip)
     return 1;
 }
 
-static char *get_string(void)
+static char *get_string(FILE *fp)
 {
     char *cp;
     int c;
@@ -112,7 +113,7 @@ static char *get_string(void)
 
     cp = bp;
     do {
-        c = getchar();
+        c = getc(fp);
         if (c == EOF)
             return 0;
         if (cp == ep) {
@@ -152,43 +153,48 @@ typedef struct logevent {
             uint32  oldsize;
             uint32  size;
         } alloc;
+        struct {
+            struct nsTMStats tmstats;
+            uint32 calltree_maxkids_parent;
+            uint32 calltree_maxstack_top;
+        } stats;
     } u;
 } logevent;
 
-static int get_logevent(logevent *event)
+static int get_logevent(FILE *fp, logevent *event)
 {
     int c;
     char *s;
 
-    c = getchar();
+    c = getc(fp);
     if (c == EOF)
         return 0;
     event->type = (char) c;
-    if (!get_uint32(&event->serial))
+    if (!get_uint32(fp, &event->serial))
         return 0;
     switch (c) {
       case 'L':
-        s = get_string();
+        s = get_string(fp);
         if (!s)
             return 0;
         event->u.libname = s;
         break;
 
       case 'N':
-        if (!get_uint32(&event->u.method.library))
+        if (!get_uint32(fp, &event->u.method.library))
             return 0;
-        s = get_string();
+        s = get_string(fp);
         if (!s)
             return 0;
         event->u.method.name = s;
         break;
 
       case 'S':
-        if (!get_uint32(&event->u.site.parent))
+        if (!get_uint32(fp, &event->u.site.parent))
             return 0;
-        if (!get_uint32(&event->u.site.method))
+        if (!get_uint32(fp, &event->u.site.method))
             return 0;
-        if (!get_uint32(&event->u.site.offset))
+        if (!get_uint32(fp, &event->u.site.offset))
             return 0;
         break;
 
@@ -196,15 +202,40 @@ static int get_logevent(logevent *event)
       case 'C':
       case 'F':
         event->u.alloc.oldsize = 0;
-        if (!get_uint32(&event->u.alloc.size))
+        if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
         break;
 
       case 'R':
-        if (!get_uint32(&event->u.alloc.oldsize))
+        if (!get_uint32(fp, &event->u.alloc.oldsize))
             return 0;
-        if (!get_uint32(&event->u.alloc.size))
+        if (!get_uint32(fp, &event->u.alloc.size))
             return 0;
+        break;
+
+      case 'Z':
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxstack)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxdepth)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_parents)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_maxkids)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidhits)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidmisses)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calltree_kidsteps)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.callsite_recurrences)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.backtrace_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.backtrace_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.btmalloc_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.dladdr_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.malloc_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.malloc_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calloc_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.calloc_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.realloc_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.realloc_failures)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.free_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.tmstats.null_free_calls)) return 0;
+        if (!get_uint32(fp, &event->u.stats.calltree_maxkids_parent)) return 0;
+        if (!get_uint32(fp, &event->u.stats.calltree_maxstack_top)) return 0;
         break;
     }
     return 1;
@@ -563,7 +594,7 @@ static void dump_graphedge_list(graphedge *list, FILE *fp)
 {
     int32 total;
     graphedge *edge;
-    char buf[32];
+    char buf[16];
 
     fputs("<td valign=top>", fp);
     total = 0;
@@ -652,7 +683,7 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
               "<tr>"
                 "<th>%s</th>"
                 "<th>Mean&nbsp;Size</th>"
-                "<th>Standard Deviation</th>"
+                "<th>StdDev</th>"
                 "<th>Allocations<th>"
               "</tr>\n",
             title);
@@ -683,7 +714,7 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
                   "<td valign=top>%s</td>"
                   "<td valign=top>%s</td>"
                   "<td valign=top>%s</td>"
-                "</tr>",
+                "</tr>\n",
                 (namelen > 65) ? 45 : (int)namelen, name,
                 (namelen > 65) ? "<i>...</i>" : "",
                 prettybig((uint32)mean, buf1, sizeof buf1),
@@ -695,83 +726,21 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
     free((void*) table);
 }
 
-static const char magic[] = NS_TRACE_MALLOC_LOGFILE_MAGIC;
+static const char magic[] = NS_TRACE_MALLOC_MAGIC;
 
-int main(int argc, char **argv)
+static void process(const char *filename, FILE *fp)
 {
-    int c;
-    FILE *fp;
-    char buf[16];
-    time_t start;
+    char buf[NS_TRACE_MALLOC_MAGIC_SIZE];
     logevent event;
 
-    program = *argv;
-
-    while ((c = getopt(argc, argv, "dtf:m:")) != EOF) {
-        switch (c) {
-          case 'd':
-            sort_by_direct = 1;
-            break;
-          case 't':
-            do_tree_dump = 1;
-            break;
-          case 'f':
-            function_dump = optarg;
-            break;
-          case 'm':
-            min_subtotal = atoi(optarg);
-            break;
-          default:
-            fprintf(stderr,
-        "usage: %s [-dt] [-f function-dump-filename] [-m min] [output.html]\n",
-                    program);
-            return 2;
-        }
+    if (read(fileno(fp), buf, sizeof buf) != sizeof buf ||
+        strncmp(buf, magic, sizeof buf) != 0) {
+        fprintf(stderr, "%s: bad magic string %s at start of %s.\n",
+                program, buf, filename);
+        exit(1);
     }
 
-    argc -= optind;
-    argv += optind;
-    if (argc == 0) {
-        fp = stdout;
-    } else {
-        fp = fopen(*argv, "w");
-        if (!fp) {
-            fprintf(stderr, "%s: can't open %s: %s\n",
-                    program, *argv, strerror(errno));
-            return 1;
-        }
-    }
-
-    if (read(0, buf, 16) != 16 || strncmp(buf, magic, 16) != 0) {
-        fprintf(stderr, "%s: bad magic string %s at start of standard input.\n",
-                program, buf);
-        return 1;
-    }
-
-    start = time(NULL);
-    fprintf(fp, "%s starting at %s", program, ctime(&start));
-    fflush(fp);
-
-    libraries = PL_NewHashTable(100, hash_serial, PL_CompareValues,
-                                PL_CompareStrings, &graphnode_hashallocops,
-                                NULL);
-    components = PL_NewHashTable(10000, PL_HashString, PL_CompareStrings,
-                                 PL_CompareValues, &component_hashallocops,
-                                 NULL);
-    methods = PL_NewHashTable(10000, hash_serial, PL_CompareValues,
-                              PL_CompareStrings, &graphnode_hashallocops,
-                              NULL);
-    callsites = PL_NewHashTable(200000, hash_serial, PL_CompareValues,
-                                PL_CompareValues, &callsite_hashallocops,
-                                NULL);
-    calltree_root.entry.value = (void*) strdup("root");
-    if (!libraries || !components || !methods || !callsites ||
-        !calltree_root.entry.value) {
-        perror(program);
-        return 1;
-    }
-
-    while (get_logevent(&event)) {
+    while (get_logevent(fp, &event)) {
         switch (event.type) {
           case 'L': {
             const void *key;
@@ -783,12 +752,12 @@ int main(int argc, char **argv)
             hep = PL_HashTableRawLookup(libraries, hash, key);
             he = *hep;
             PR_ASSERT(!he);
-            if (he) return 2;
+            if (he) exit(2);
 
             he = PL_HashTableRawAdd(libraries, hep, hash, key, event.u.libname);
             if (!he) {
                 perror(program);
-                return 1;
+                exit(1);
             }
             break;
           }
@@ -805,13 +774,13 @@ int main(int argc, char **argv)
             hep = PL_HashTableRawLookup(methods, hash, key);
             he = *hep;
             PR_ASSERT(!he);
-            if (he) return 2;
+            if (he) exit(2);
 
             name = event.u.method.name;
             he = PL_HashTableRawAdd(methods, hep, hash, key, name);
             if (!he) {
                 perror(program);
-                return 1;
+                exit(1);
             }
             meth = (graphnode*) he;
 
@@ -870,7 +839,7 @@ int main(int argc, char **argv)
             hep = PL_HashTableRawLookup(callsites, hash, key);
             he = *hep;
             PR_ASSERT(!he);
-            if (he) return 2;
+            if (he) exit(2);
 
             if (event.u.site.parent == 0) {
                 parent = &calltree_root;
@@ -880,7 +849,7 @@ int main(int argc, char **argv)
                 parent = (callsite*)
                          *PL_HashTableRawLookup(callsites, phash, pkey);
                 if (!parent) {
-                    fprintf(fp, "### no parent for %lu (%lu)!\n",
+                    fprintf(stdout, "### no parent for %lu (%lu)!\n",
                             (unsigned long) event.serial,
                             (unsigned long) event.u.site.parent);
                     continue;
@@ -890,7 +859,7 @@ int main(int argc, char **argv)
             he = PL_HashTableRawAdd(callsites, hep, hash, key, NULL);
             if (!he) {
                 perror(program);
-                return 1;
+                exit(1);
             }
 
             site = (callsite*) he;
@@ -923,7 +892,7 @@ int main(int argc, char **argv)
             hash = hash_serial(key);
             site = (callsite*) *PL_HashTableRawLookup(callsites, hash, key);
             if (!site) {
-                fprintf(fp, "### no callsite for '%c' (%lu)!\n",
+                fprintf(stdout, "### no callsite for '%c' (%lu)!\n",
                         event.type, (unsigned long) event.serial);
                 continue;
             }
@@ -972,26 +941,188 @@ int main(int argc, char **argv)
 
           case 'F':
             break;
+
+          case 'Z':
+            fprintf(stdout,
+                    "<p><table border=1>"
+                      "<tr><th>Counter</th><th>Value</th></tr>\n"
+                      "<tr><td>maximum actual stack depth</td><td>%lu</td></tr>\n"
+                      "<tr><td>maximum callsite tree depth</td><td>%lu</td></tr>\n"
+                      "<tr><td>number of parent callsites</td><td>%lu</td></tr>\n"
+                      "<tr><td>maximum kids per parent</td><td>%lu</td></tr>\n"
+                      "<tr><td>hits looking for a kid</td><td>%lu</td></tr>\n"
+                      "<tr><td>misses looking for a kid</td><td>%lu</td></tr>\n"
+                      "<tr><td>steps over other kids</td><td>%lu</td></tr>\n"
+                      "<tr><td>callsite recurrences</td><td>%lu</td></tr>\n"
+                      "<tr><td>number of stack backtraces</td><td>%lu</td></tr>\n"
+                      "<tr><td>backtrace failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>backtrace malloc failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>backtrace dladdr failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>malloc calls</td><td>%lu</td></tr>\n"
+                      "<tr><td>malloc failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>calloc calls</td><td>%lu</td></tr>\n"
+                      "<tr><td>calloc failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>realloc calls</td><td>%lu</td></tr>\n"
+                      "<tr><td>realloc failures</td><td>%lu</td></tr>\n"
+                      "<tr><td>free calls</td><td>%lu</td></tr>\n"
+                    "<tr><td>free(null) calls</td><td>%lu</td></tr>\n"
+                    "</table>",
+                    (unsigned long) event.u.stats.tmstats.calltree_maxstack,
+                    (unsigned long) event.u.stats.tmstats.calltree_maxdepth,
+                    (unsigned long) event.u.stats.tmstats.calltree_parents,
+                    (unsigned long) event.u.stats.tmstats.calltree_maxkids,
+                    (unsigned long) event.u.stats.tmstats.calltree_kidhits,
+                    (unsigned long) event.u.stats.tmstats.calltree_kidmisses,
+                    (unsigned long) event.u.stats.tmstats.calltree_kidsteps,
+                    (unsigned long) event.u.stats.tmstats.callsite_recurrences,
+                    (unsigned long) event.u.stats.tmstats.backtrace_calls,
+                    (unsigned long) event.u.stats.tmstats.backtrace_failures,
+                    (unsigned long) event.u.stats.tmstats.btmalloc_failures,
+                    (unsigned long) event.u.stats.tmstats.dladdr_failures,
+                    (unsigned long) event.u.stats.tmstats.malloc_calls,
+                    (unsigned long) event.u.stats.tmstats.malloc_failures,
+                    (unsigned long) event.u.stats.tmstats.calloc_calls,
+                    (unsigned long) event.u.stats.tmstats.calloc_failures,
+                    (unsigned long) event.u.stats.tmstats.realloc_calls,
+                    (unsigned long) event.u.stats.tmstats.realloc_failures,
+                    (unsigned long) event.u.stats.tmstats.free_calls,
+                    (unsigned long) event.u.stats.tmstats.null_free_calls);
+
+            if (event.u.stats.calltree_maxkids_parent) {
+                const void *key;
+                PLHashNumber hash;
+                callsite *site;
+
+                key = (const void*) event.u.stats.calltree_maxkids_parent;
+                hash = hash_serial(key);
+                site = (callsite*) *PL_HashTableRawLookup(callsites, hash, key);
+                if (site && site->method) {
+                    fprintf(stdout, "<p>callsite with the most kids: %s</p>",
+                            graphnode_name(site->method));
+                }
+            }
+
+            if (event.u.stats.calltree_maxstack_top) {
+                const void *key;
+                PLHashNumber hash;
+                callsite *site;
+
+                key = (const void*) event.u.stats.calltree_maxstack_top;
+                hash = hash_serial(key);
+                site = (callsite*) *PL_HashTableRawLookup(callsites, hash, key);
+                fputs("<p>deepest callsite tree path:\n"
+                      "<table border=1>\n"
+                        "<tr><th>Method</th><th>Offset</th></tr>\n",
+                      stdout);
+                while (site) {
+                    fprintf(stdout,
+                        "<tr><td>%s</td><td>0x%08lX</td></tr>\n",
+                            site->method ? graphnode_name(site->method) : "???",
+                            (unsigned long) site->offset);
+                    site = site->parent;
+                }
+                fputs("</table>\n<hr>\n", stdout);
+            }
+            break;
+        }
+    }
+}
+
+int main(int argc, char **argv)
+{
+    time_t start;
+    int c, i;
+    FILE *fp;
+
+    program = *argv;
+    start = time(NULL);
+    fprintf(stdout, "%s starting at %s", program, ctime(&start));
+    fflush(stdout);
+
+    libraries = PL_NewHashTable(100, hash_serial, PL_CompareValues,
+                                PL_CompareStrings, &graphnode_hashallocops,
+                                NULL);
+    components = PL_NewHashTable(10000, PL_HashString, PL_CompareStrings,
+                                 PL_CompareValues, &component_hashallocops,
+                                 NULL);
+    methods = PL_NewHashTable(10000, hash_serial, PL_CompareValues,
+                              PL_CompareStrings, &graphnode_hashallocops,
+                              NULL);
+    callsites = PL_NewHashTable(200000, hash_serial, PL_CompareValues,
+                                PL_CompareValues, &callsite_hashallocops,
+                                NULL);
+    calltree_root.entry.value = (void*) strdup("root");
+    if (!libraries || !components || !methods || !callsites ||
+        !calltree_root.entry.value) {
+        perror(program);
+        exit(1);
+    }
+
+    while ((c = getopt(argc, argv, "dtf:m:")) != EOF) {
+        switch (c) {
+          case 'd':
+            sort_by_direct = 1;
+            break;
+          case 't':
+            do_tree_dump = 1;
+            break;
+          case 'f':
+            function_dump = optarg;
+            break;
+          case 'm':
+            min_subtotal = atoi(optarg);
+            break;
+          default:
+            fprintf(stderr,
+        "usage: %s [-dt] [-f function-dump-filename] [-m min] [output.html]\n",
+                    program);
+            exit(2);
+        }
+    }
+
+    argc -= optind;
+    argv += optind;
+    if (argc == 0) {
+        process("standard input", stdin);
+    } else {
+        for (i = 0; i < argc; i++) {
+            fp = fopen(argv[i], "r");
+            if (!fp) {
+                fprintf(stderr, "%s: can't open %s: %s\n",
+                        program, argv[i], strerror(errno));
+                exit(1);
+            }
+            process(argv[i], fp);
+            fclose(fp);
         }
     }
 
     compute_callsite_totals(&calltree_root);
-    walk_callsite_tree(&calltree_root, 0, 0, fp);
+    walk_callsite_tree(&calltree_root, 0, 0, stdout);
 
-    dump_graph(libraries, "Library", fp);
-    fputs("<hr>\n", fp);
-    dump_graph(components, "Class or Component", fp);
+    dump_graph(libraries, "Library", stdout);
+    fputs("<hr>\n", stdout);
+    dump_graph(components, "Class or Component", stdout);
     if (function_dump) {
-        fclose(fp);
-        fp = fopen(function_dump, "w");
-        if (!fp) {
-            fprintf(stderr, "%s: can't open %s: %s\n",
-                    program, function_dump, strerror(errno));
-            return 1;
+        struct stat sb, fsb;
+
+        fstat(fileno(stdout), &sb);
+        if (stat(function_dump, &fsb) == 0 &&
+            fsb.st_dev == sb.st_dev && fsb.st_ino == sb.st_ino) {
+            fp = stdout;
+            fputs("<hr>\n", fp);
+        } else {
+            fp = fopen(function_dump, "w");
+            if (!fp) {
+                fprintf(stderr, "%s: can't open %s: %s\n",
+                        program, function_dump, strerror(errno));
+                exit(1);
+            }
         }
         dump_graph(methods, "Function or Method", fp);
+        if (fp != stdout)
+            fclose(fp);
     }
 
-    fclose(fp);
-    return 0;
+    exit(0);
 }
