@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.16 2003/09/30 01:15:43 jpierre%netscape.com Exp $
+ * $Id: ocsp.c,v 1.17 2003/10/24 17:17:37 wchang0222%aol.com Exp $
  */
 
 #include "prerror.h"
@@ -1757,13 +1757,9 @@ ocsp_ConnectToHost(const char *host, PRUint16 port)
 	hostIndex = 0;
 	do {
 	    hostIndex = PR_EnumerateHostEnt(hostIndex, &hostEntry, port, &addr);
-	    if (hostIndex < 0)
+	    if (hostIndex <= 0)
 		goto loser;
-	} while (PR_Connect(sock, &addr, timeout) != PR_SUCCESS
-		 && hostIndex > 0);
-
-        if (hostIndex == 0)
-	    goto loser;
+	} while (PR_Connect(sock, &addr, timeout) != PR_SUCCESS);
 
 	PORT_Free(netdbbuf);
     } else {
