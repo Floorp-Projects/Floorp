@@ -708,9 +708,9 @@ nsInsertPlaintextCommand::IsCommandEnabled(const char * aCommandName,
                                            PRBool *outCmdEnabled)
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
-  nsCOMPtr<nsIPlaintextEditor> editor = do_QueryInterface(refCon);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
   if (editor)
-    return editor->GetCanModify(outCmdEnabled);
+    return editor->GetIsDocumentEditable(outCmdEnabled);
 
   *outCmdEnabled = PR_FALSE;
   return NS_ERROR_NOT_IMPLEMENTED;
