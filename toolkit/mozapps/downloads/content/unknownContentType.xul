@@ -97,8 +97,12 @@
       </hbox>
       
       <separator/>
+#ifdef XP_UNIX
 #ifdef XP_MACOSX
       <description id="settingsChange" hidden="true">&settingsChangeMac.label;</description>
+#else
+      <description id="settingsChange" hidden="true">&settingsChangeUnix.label;</description>
+#endif
 #else
       <description id="settingsChange" hidden="true">&settingsChange.label;</description>
 #endif

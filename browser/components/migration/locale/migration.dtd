@@ -2,6 +2,7 @@
 <!ENTITY migrationWizard.title          "Import Wizard">
 
 <!ENTITY importFrom.label               "Import Options, Bookmarks, History, Passwords and other data from:">
+<!ENTITY importFromUnix.label           "Import Preferences, Bookmarks, History, Passwords and other data from:">
 
 <!ENTITY importFromIE.label             "Microsoft Internet Explorer">
 <!ENTITY importFromIE.accesskey         "M">

@@ -160,6 +160,8 @@
 <!ENTITY selectAllCmd.accesskey       "A"> 
 <!ENTITY preferencesCmd.label       "Options...">
 <!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY preferencesCmdUnix.label       "Preferences">
+<!ENTITY preferencesCmdUnix.accesskey     "n"> 
 
 <!ENTITY viewMenu.label         "View"> 
 <!ENTITY viewMenu.accesskey       "V"> 

@@ -69,6 +69,11 @@
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:image class="extension-button" anonid="options-button" 
+#ifdef XP_WIN
+                     tooltiptext="&options.tooltip;" 
+#else
+                     tooltiptext="&optionsUnix.tooltip;" 
+#endif
                      tooltiptext="&options.tooltip;" 
                      onclick="this.parentNode.parentNode.parentNode.fireEvent('options');"/>
           <xul:image class="extension-button" anonid="about-button" 

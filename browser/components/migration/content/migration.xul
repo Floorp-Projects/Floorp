@@ -55,7 +55,11 @@
               label="&importSource.title;"
               onpageshow="MigrationWizard.onImportSourcePageShow();"
               onpageadvanced="MigrationWizard.onImportSourcePageAdvanced();">
+#ifdef XP_WIN
     <description>&importFrom.label;</description>
+#else
+    <description>&importFromUnix.label;</description>
+#endif
     
     <radiogroup id="importSourceGroup">
 #ifdef XP_UNIX

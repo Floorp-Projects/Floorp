@@ -2,6 +2,7 @@
 
 <!-- LOCALIZATION NOTE : FILE UI for the outer parts of the Prefs dialog -->
 <!ENTITY  prefWindow.title            "Options">
+<!ENTITY  prefWindowUnix.title        "Preferences">
 
 <!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the
      preference dialog's <window> node, which specifies the width and height

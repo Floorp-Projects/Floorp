@@ -72,7 +72,7 @@
          oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
     <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options" 
+    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
          oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
   </keyset>
   
@@ -99,7 +99,11 @@
     <menuitem id="menuitem_useTheme" default="true" command="cmd_useTheme"
               label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;"/>
     <menuitem id="menuitem_options" default="true" command="cmd_options"
+#ifdef XP_WIN
               label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
+#else
+              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;"/>
+#endif
     <menuitem id="menuitem_homepage" command="cmd_homepage"
               label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"/>
     <menuitem id="menuitem_about" command="cmd_about"

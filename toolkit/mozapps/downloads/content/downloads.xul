@@ -164,9 +164,15 @@
               label="&cmd.cleanUp.label;" accesskey="&cmd.cleanUp.accesskey;" tooltiptext="&cmd.cleanUp.tooltip;" 
               command="cmd_cleanUp"/>
       <separator id="commandBarSeparator"/>              
+#ifdef XP_WIN
       <button id="optionsButton" 
               label="&cmd.options.label;" accesskey="&cmd.options.accesskey;" 
               oncommand="onDownloadShowOptions();"/>
+#else
+      <button id="optionsButton" 
+              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;" 
+              oncommand="onDownloadShowOptions();"/>
+#endif
     </hbox>
     
     <resizer id="windowResizer" dir="bottomright"/>
