@@ -256,6 +256,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mWindowMadeHere(PR_FALSE)
 	, mIsDialog(PR_FALSE)
 	, mMacEventHandler(nsnull)
+	, mAcceptsActivation(PR_TRUE)
 {
 	mMacEventHandler.reset(new nsMacEventHandler(this));
 	strcpy(gInstanceClassName, "nsMacWindow");
@@ -330,13 +331,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		{
 			case eWindowType_popup:
 			    // (pinkerton)
-			    // Added very very early support for |eBorderStyle_BorderlessTopLevel| but
-			    // it isn't correct because it takes the focus away from the main window
-			    // The main window must remain active.
+			    // Added very very early support for |eBorderStyle_BorderlessTopLevel| 
+			    // and sets mAcceptsActivation to false so we don't activate the window
+			    // when we show it.
 			    //
 			    // ...fall through...
 			    mOffsetParent = aParent;
 			    theToolkit =  (nsIToolkit*)(aParent->GetToolkit());
+
+                mAcceptsActivation = PR_FALSE;
 
 			case eWindowType_child:
 				wDefProcID = plainDBox;
@@ -510,11 +513,19 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 	
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
-  // not adequate (pinkerton).
+  // not adequate, unless we don't want activation (popups). (pinkerton).
   if ( bState )
   {
-    ::ShowWindow(mWindowPtr);
-    ::SelectWindow(mWindowPtr);
+    if ( mAcceptsActivation )
+    {
+      ::ShowWindow(mWindowPtr);
+      ::SelectWindow(mWindowPtr);
+    }
+    else
+    {
+      ::BringToFront(mWindowPtr);
+      ::ShowHide(mWindowPtr, true);
+    }
   }
   else
     ::HideWindow(mWindowPtr);

@@ -945,6 +945,12 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 	WindowPtr		whichWindow;
 	short partCode = ::FindWindow(aOSEvent.where, &whichWindow);
 
+    if(whichWindow != ::FrontWindow()) {
+    	if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
+			gRollupListener->Rollup();
+		}
+    }
+ 
 	switch (partCode)
 	{
 		case inDrag:
