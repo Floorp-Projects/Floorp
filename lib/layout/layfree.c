@@ -506,6 +506,13 @@ lo_ScrapeElement(MWContext *context, LO_Element *element)
 					element->lo_embed.embed_index);
 			element->lo_embed.session_data = NULL;
 			break;
+#ifdef SHACK
+	    case LO_BUILTIN:
+			FE_FreeBuiltinElement (context, (LO_BuiltinStruct *)element);
+			/* maybe other stuff here */
+			break;
+#endif /* SHACK */
+
 #ifdef JAVA
 		case LO_JAVA:
 			FE_HideJavaAppElement(context, element->lo_java.session_data);
