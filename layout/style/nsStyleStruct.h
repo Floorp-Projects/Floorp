@@ -840,6 +840,9 @@ struct nsStyleContentData {
     nsIURI    *mURL;
   } mContent;
 
+  // empty constructor to keep Sun compiler happy
+  nsStyleContentData() {}
+
   ~nsStyleContentData() {
     if (mType == eStyleContentType_URL) {
       NS_IF_RELEASE(mContent.mURL);
