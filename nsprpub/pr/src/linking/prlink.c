@@ -845,11 +845,17 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
 			cookie = 0;
 			while (get_next_image_info(0, &cookie, &info) == B_OK) {
-				char *endOfName = info.name + strlen(info.name) - strlen(name);
-				if (endOfName < info.name)
-					continue;
-
-				if (strcmp(name, endOfName) == 0) {
+				char *endOfSystemName = strrchr(info.name, '/');
+				char *endOfPassedName = strrchr(name, '/');
+				if( 0 == endOfSystemName ) 
+					endOfSystemName=info.name;
+				else
+					endOfSystemName++;
+				if( 0 == endOfPassedName )
+					endOfPassedName=name;
+				else
+					endOfPassedName++;
+				if (strcmp(endOfSystemName, endOfPassedName) == 0) {
 					/* this is the actual component - remember it */
 					h = info.id;
 					break;
