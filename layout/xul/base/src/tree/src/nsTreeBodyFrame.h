@@ -272,90 +272,92 @@ public:
                    PRUint32             aFlags = 0);
 
   // This method paints a specific column background of the tree.
-  NS_IMETHOD PaintColumn(nsTreeColumn*        aColumn,
-                         const nsRect&        aColumnRect,
+  nsresult PaintColumn(nsTreeColumn*        aColumn,
+                       const nsRect&        aColumnRect,
+                       nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a single row in the tree.
+  nsresult PaintRow(PRInt32              aRowIndex,
+                    const nsRect&        aRowRect,
+                    nsIPresContext*      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    const nsRect&        aDirtyRect,
+                    nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a specific cell in a given row of the tree.
+  nsresult PaintCell(PRInt32              aRowIndex, 
+                     nsTreeColumn*        aColumn,
+                     const nsRect&        aCellRect,
+                     nsIPresContext*      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer);
+
+  // This method paints the twisty inside a cell in the primary column of an tree.
+  nsresult PaintTwisty(PRInt32              aRowIndex,
+                       nsTreeColumn*        aColumn,
+                       const nsRect&        aTwistyRect,
+                       nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       const nsRect&        aDirtyRect,
+                       nsFramePaintLayer    aWhichLayer,
+                       nscoord&             aRemainingWidth,
+                       nscoord&             aCurrX);
+
+  // This method paints the image inside the cell of an tree.
+  nsresult PaintImage(PRInt32              aRowIndex,
+                      nsTreeColumn*        aColumn,
+                      const nsRect&        aImageRect,
+                      nsIPresContext*      aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect&        aDirtyRect,
+                      nsFramePaintLayer    aWhichLayer,
+                      nscoord&             aRemainingWidth,
+                      nscoord&             aCurrX);
+
+  // This method paints the text string inside a particular cell of the tree.
+  nsresult PaintText(PRInt32              aRowIndex, 
+                     nsTreeColumn*        aColumn,
+                     const nsRect&        aTextRect,
+                     nsIPresContext*      aPresContext,
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect,
+                     nsFramePaintLayer    aWhichLayer);
+
+  // This method paints the checkbox inside a particular cell of the tree.
+  nsresult PaintCheckbox(PRInt32              aRowIndex, 
+                         nsTreeColumn*        aColumn,
+                         const nsRect&        aCheckboxRect,
                          nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nsFramePaintLayer    aWhichLayer);
 
-  // This method paints a single row in the tree.
-  NS_IMETHOD PaintRow(PRInt32              aRowIndex,
-                      const nsRect&        aRowRect,
-                      nsIPresContext*      aPresContext,
-                      nsIRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect,
-                      nsFramePaintLayer    aWhichLayer);
-
-  // This method paints a specific cell in a given row of the tree.
-  NS_IMETHOD PaintCell(PRInt32              aRowIndex, 
-                       nsTreeColumn*        aColumn,
-                       const nsRect&        aCellRect,
-                       nsIPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer);
-
-  // This method paints the twisty inside a cell in the primary column of an tree.
-  NS_IMETHOD PaintTwisty(PRInt32              aRowIndex,
-                         nsTreeColumn*        aColumn,
-                         const nsRect&        aTwistyRect,
-                         nsIPresContext*      aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect&        aDirtyRect,
-                         nsFramePaintLayer    aWhichLayer,
-                         nscoord&             aRemainingWidth,
-                         nscoord&             aCurrX);
-
-  // This method paints the image inside the cell of an tree.
-  NS_IMETHOD PaintImage(PRInt32              aRowIndex,
-                        nsTreeColumn*        aColumn,
-                        const nsRect&        aImageRect,
-                        nsIPresContext*      aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect&        aDirtyRect,
-                        nsFramePaintLayer    aWhichLayer,
-                        nscoord&             aRemainingWidth,
-                        nscoord&             aCurrX);
-
-  // This method paints the text string inside a particular cell of the tree.
-  NS_IMETHOD PaintText(PRInt32              aRowIndex, 
-                       nsTreeColumn*        aColumn,
-                       const nsRect&        aTextRect,
-                       nsIPresContext*      aPresContext,
-                       nsIRenderingContext& aRenderingContext,
-                       const nsRect&        aDirtyRect,
-                       nsFramePaintLayer    aWhichLayer);
-
-  // This method paints the checkbox inside a particular cell of the tree.
-  NS_IMETHOD PaintCheckbox(PRInt32              aRowIndex, 
-                           nsTreeColumn*        aColumn,
-                           const nsRect&        aCheckboxRect,
-                           nsIPresContext*      aPresContext,
-                           nsIRenderingContext& aRenderingContext,
-                           const nsRect&        aDirtyRect,
-                           nsFramePaintLayer    aWhichLayer);
-
   // This method paints the progress meter inside a particular cell of the tree.
-  NS_IMETHOD PaintProgressMeter(PRInt32              aRowIndex, 
-                                nsTreeColumn*    aColumn,
-                                const nsRect&        aProgressMeterRect,
-                                nsIPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
-                                const nsRect&        aDirtyRect,
-                                nsFramePaintLayer    aWhichLayer);
+  nsresult PaintProgressMeter(PRInt32              aRowIndex, 
+                              nsTreeColumn*        aColumn,
+                              const nsRect&        aProgressMeterRect,
+                              nsIPresContext*      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect,
+                              nsFramePaintLayer    aWhichLayer);
 
   // This method paints a drop feedback of the tree.
-  NS_IMETHOD PaintDropFeedback(nsIPresContext*      aPresContext,
-                               nsIRenderingContext& aRenderingContext,
-                               const nsRect&        aDirtyRect,
-                               nsFramePaintLayer    aWhichLayer);
+  nsresult PaintDropFeedback(nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
-  NS_IMETHOD PaintBackgroundLayer(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, 
-                                  nsIRenderingContext& aRenderingContext, 
-                                  const nsRect& aRect, const nsRect& aDirtyRect);
+  nsresult PaintBackgroundLayer(nsIStyleContext*     aStyleContext,
+                                nsIPresContext*      aPresContext, 
+                                nsIRenderingContext& aRenderingContext, 
+                                const nsRect&        aRect,
+                                const nsRect&        aDirtyRect);
 
   // This method is called whenever an treecol is added or removed and
   // the column cache needs to be rebuilt.
