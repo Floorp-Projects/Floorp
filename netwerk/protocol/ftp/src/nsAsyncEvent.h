@@ -36,7 +36,7 @@ public:
     nsAsyncEvent(nsIChannel* channel, nsISupports* context);
     virtual ~nsAsyncEvent();
 
-    nsresult Fire();
+    nsresult Fire(nsIEventQueue *aEventQ);
 
     NS_IMETHOD HandleEvent() = 0;
 
