@@ -74,14 +74,6 @@ Examples of script series
 sane way.
 
 
-Reconnect timer
-	Protocols based on HTTP (e.g. WMAP) may re-connect during a
-session.  Currently this is logged as a connect error and then another
-connect in order to get the current connection graph right.  There
-should be a separate reconnect timer that the connection count graph
-knows about.
-
-
 Fix FORMAT clash
 	At the start of a test, each client process outputs the
 information needed to report all its protocols.  When there are

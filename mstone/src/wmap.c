@@ -49,7 +49,8 @@
   There is one of these for every command in every thread.
 */
 typedef struct wmap_stats {
-    event_timer_t	connect;
+    event_timer_t	connect;	/* initial connections */
+    event_timer_t	reconnect;	/* re connections */
     event_timer_t	banner;		/* get initial screen */
     event_timer_t	login;		/* do authentication */
     event_timer_t	cmd;		/* arbitrary commands */
@@ -148,7 +149,8 @@ static int doWmapCommandResponse(
     event_timer_t *timer, char *command, char *response, int buflen, parseMsgPtr_t);
 static int WmapParseNameValue(pmail_command_t cmd, char *name, char *tok);
 
-static int wmapConnect(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
+static int wmapConnect(ptcx_t ptcx, mail_command_t *cmd, doWMAP_state_t *me, event_timer_t *timer);
+
 static int wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
 static int wmapLogin(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
 static int wmapLogout(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me);
@@ -383,6 +385,7 @@ WmapStatsUpdate(protocol_t *proto, cmd_stats_t *sum, cmd_stats_t *incr)
 
     event_sum(&sum->idle,	&incr->idle);
     event_sum(&ss->connect,	&is->connect);
+    event_sum(&ss->reconnect,	&is->reconnect);
     event_sum(&ss->banner,	&is->banner);
     event_sum(&ss->login, 	&is->login);
     event_sum(&ss->cmd, 	&is->cmd);
@@ -394,6 +397,7 @@ WmapStatsUpdate(protocol_t *proto, cmd_stats_t *sum, cmd_stats_t *incr)
     event_reset(&incr->combined);	/* figure out total */
     event_sum(&incr->combined, &incr->idle);
     event_sum(&incr->combined, &is->connect);
+    event_sum(&incr->combined, &is->reconnect);
     event_sum(&incr->combined, &is->banner);
     event_sum(&incr->combined, &is->login);
     event_sum(&incr->combined, &is->cmd);
@@ -424,10 +428,13 @@ WmapStatsOutput(protocol_t *proto, cmd_stats_t *ptimer, char *buf)
     event_to_text(&stats->connect, eventtextbuf);
     sprintf(&buf[strlen(buf)], "conn=%s ", eventtextbuf);
 
+    event_to_text(&stats->reconnect, eventtextbuf);
+    sprintf(&buf[strlen(buf)], "reconn=%s ", eventtextbuf);
+
     event_to_text(&stats->banner, eventtextbuf);
     sprintf(&buf[strlen(buf)], "banner=%s ", eventtextbuf);
 
-    event_to_text(&stats->banner, eventtextbuf);
+    event_to_text(&stats->login, eventtextbuf);
     sprintf(&buf[strlen(buf)], "login=%s ", eventtextbuf);
 
     event_to_text(&stats->cmd, eventtextbuf);
@@ -458,7 +465,7 @@ WmapStatsFormat(protocol_t *pp,
 {
     static char	*timerList[] = {	/* must match order of StatsOutput */
 	"total",
-	"conn", "banner", "login", "cmd", "headers", "submit", "retrieve", "logout",
+	"conn", "reconn", "banner", "login", "cmd", "headers", "submit", "retrieve", "logout",
 	"idle" };
 
     char	**tp;
@@ -496,27 +503,26 @@ WmapStatsFormat(protocol_t *pp,
   No data is exchanged.
 */
 static int
-wmapConnect(ptcx_t ptcx,
-	    mail_command_t *cmd,
-	    cmd_stats_t *ptimer,
-	    doWMAP_state_t *me)
+wmapConnect (
+    ptcx_t ptcx,
+    mail_command_t	*cmd,
+    doWMAP_state_t	*me,
+    event_timer_t	*timer)
 {
     wmap_command_t	*wmap = (wmap_command_t *)cmd->data;
-    wmap_stats_t	*stats = (wmap_stats_t *)ptimer->data;
     int		rc=0;
     NETPORT		port;
-
     port = wmap->portNum;
 
     D_PRINTF(stderr, "wmapConnect()\n");
 
-    event_start(ptcx, &stats->connect);
+    event_start(ptcx, timer);
     ptcx->sock = connectsock(ptcx, wmap->mailServer, &wmap->hostInfo,
 			     port, "tcp");
-    event_stop(ptcx, &stats->connect);
+    event_stop(ptcx, timer);
     if (BADSOCKET(ptcx->sock)) {
 	if (gf_timeexpired < EXIT_FAST) {
-	    stats->connect.errs++;
+	    timer->errs++;
 	    returnerr(debugfile,
 		      "%s<wmapConnect: WMAP Couldn't connect to %s: %s\n",
 		      ptcx->errMsg, wmap->mailServer, neterrstr());
@@ -536,10 +542,10 @@ wmapConnect(ptcx_t ptcx,
 }
 
 /*
-  readWmapResponse handles the details of reading a HTTP response
-  It takes and interactive parsing function and a response buffer.
-  The response buffer will hold the last 1/2 buffer or more of the data stream.
-  This allows errors to be handled by the calling routine.
+  readWmapResponse handles the details of reading a HTTP response It
+  takes and interactive parsing function and a response buffer.  The
+  response buffer will hold at least the last 1/2 buffer of the data
+  stream.  This allows errors to be handled by the calling routine.
   Long responses should be parsed on the fly by the parsing callback.
 
   readWmapResponse handles find the content-length and header break.
@@ -810,8 +816,8 @@ doWmapCommandResponse (
     D_PRINTF(stderr, "WmapCommandResponse() command=[%.99s]\n", command);
 
     while (retries++ < HTTP_MAX_RECONNECTS) {
-	if (BADSOCKET(ptcx->sock)) {	/* connect/reconnect */
-	    ret = wmapConnect(ptcx, cmd, ptimer, me);
+	if (BADSOCKET(ptcx->sock)) {
+	    ret = wmapConnect(ptcx, cmd, me, &stats->reconnect);
 	    if (ret == -1) {
 		return -1;
 	    }
@@ -822,7 +828,7 @@ doWmapCommandResponse (
 	ret = sendCommand(ptcx, ptcx->sock, command);
 	if (ret == -1) {
 	    event_stop(ptcx, timer);
-	    stats->connect.errs++;
+	    stats->reconnect.errs++;
 	    /* this can only mean an IO error.  Probably EPIPE */
 	    NETCLOSE(ptcx->sock);
 	    ptcx->sock = BADSOCKET_VALUE;
@@ -837,9 +843,10 @@ doWmapCommandResponse (
 	event_stop(ptcx, timer);
 	if (ret == 0) {			/* got nothing */
 	    /* Probably an IO error.  It will be definate if re-tried. */
+	    MS_usleep (5000);		/* time for bytes to show up */
 	    continue;			/* just re-try it */
 	} else if (ret == -1) {		/* IO error */
-	    stats->connect.errs++;
+	    stats->reconnect.errs++;
 	    NETCLOSE(ptcx->sock);
 	    ptcx->sock = BADSOCKET_VALUE;
 	    strcat (ptcx->errMsg, "<WmapCommandResponse");
@@ -868,7 +875,7 @@ doWmapCommandResponse (
 	return ret;
     }
     
-    stats->connect.errs++;
+    stats->reconnect.errs++;
     NETCLOSE(ptcx->sock);
     ptcx->sock = BADSOCKET_VALUE;
     strcat (ptcx->errMsg, "<WmapCommandResponse: Too many connection retries");
@@ -888,8 +895,8 @@ wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
     char	command[MAX_COMMAND_LEN];
     int		rc = 0;
 
-    if (BADSOCKET(ptcx->sock)) {
-	rc = wmapConnect(ptcx, cmd, ptimer, me);
+    if (BADSOCKET(ptcx->sock)) {	/* should always be true */
+	rc = wmapConnect(ptcx, cmd, me, &stats->connect);
 	if (rc == -1) {
 	    return -1;
 	}
@@ -927,7 +934,11 @@ wmapBanner(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
   Parse off the re-direct URL and session ID.
 */
 static int
-wmapLogin(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t *me)
+wmapLogin(
+    ptcx_t ptcx,
+    mail_command_t *cmd,
+    cmd_stats_t *ptimer,
+    doWMAP_state_t *me)
 {
     wmap_command_t	*wmap = (wmap_command_t *)cmd->data;
     wmap_stats_t	*stats = (wmap_stats_t *)ptimer->data;
@@ -942,7 +953,7 @@ wmapLogin(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t 
     char	*cp;
 
     if (BADSOCKET(ptcx->sock)) {
-	rc = wmapConnect(ptcx, cmd, ptimer, me);
+	rc = wmapConnect(ptcx, cmd, me, &stats->reconnect);
 	if (rc == -1) {
 	    return -1;
 	}
@@ -1108,7 +1119,7 @@ wmapLogout(ptcx_t ptcx, mail_command_t *cmd, cmd_stats_t *ptimer, doWMAP_state_t
     int		rc = 0;
 
     if (BADSOCKET(ptcx->sock)) {
-	rc = wmapConnect(ptcx, cmd, ptimer, me);
+	rc = wmapConnect(ptcx, cmd, me, &stats->reconnect);
 	if (rc == -1) {
 	    return -1;
 	}
