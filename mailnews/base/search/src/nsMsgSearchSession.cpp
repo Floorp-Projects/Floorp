@@ -66,8 +66,14 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
                                   PRBool BooleanANDp,
                                   const char *arbitraryHeader)
 {
+    // stupid gcc
+    nsMsgSearchBooleanOperator boolOp;
+    if (BooleanANDp)
+        boolOp = (nsMsgSearchBooleanOperator)nsMsgSearchBooleanOp::BooleanAND;
+    else
+        boolOp = (nsMsgSearchBooleanOperator)nsMsgSearchBooleanOp::BooleanOR;
 	nsMsgSearchTerm *pTerm = new nsMsgSearchTerm (attrib, op, value,
-                                                  BooleanANDp ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR, arbitraryHeader);
+                                                  boolOp, arbitraryHeader);
 	if (nsnull == pTerm)
 		return NS_ERROR_OUT_OF_MEMORY;
 	m_termList->AppendElement (pTerm);
