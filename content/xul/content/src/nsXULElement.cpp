@@ -3297,7 +3297,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID,
         // need to remove ourselves completely.
         if (mDocument &&
             (aNameSpaceID == kNameSpaceID_None) && 
-            (aName == nsXULAtoms::observes))
+            (aName == nsXULAtoms::observes || aName == nsXULAtoms::command))
         {
             // Do a getElementById to retrieve the broadcaster.
             nsCOMPtr<nsIDOMElement> broadcaster;
