@@ -29,6 +29,7 @@ var FolderPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
+		dump("FolderPaneController.IsCommandEnabled\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -69,6 +70,7 @@ var ThreadPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
+		dump("ThreadPaneController.IsCommandEnabled\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
