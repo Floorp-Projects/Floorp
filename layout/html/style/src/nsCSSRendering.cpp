@@ -2202,6 +2202,7 @@ PRInt16       borderRadii[4],i;
       aRenderingContext.GetCurrentTransform(theTransform);
       aRenderingContext.GetDeviceContext(theDevContext);
       theDevContext->GetAppUnitsToDevUnits(app2dev);
+      NS_RELEASE(theDevContext);
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
 
