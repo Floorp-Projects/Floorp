@@ -727,7 +727,7 @@ public:
     //-- Path Operators
     //-- RELATIVE_OP is the default
     //-- LF, changed from static const short to enum
-    enum _PathOperator { ANCESTOR_OP=1, PARENT_OP, RELATIVE_OP} ;
+    enum PathOperator { RELATIVE_OP, DESCENDANT_OP };
 
     /**
      * Creates a new PathExpr
@@ -743,7 +743,7 @@ public:
      * Adds the Expr to this PathExpr
      * @param expr the Expr to add to this PathExpr
     **/
-    void addExpr(Expr* expr, short ancestryOp);
+    void addExpr(Expr* expr, PathOperator pathOp);
 
     /**
      * Virtual methods from Expr 
@@ -755,11 +755,9 @@ public:
 
 private:
 
-    virtual MBool isAbsolute();
-
     struct PathExprItem {
         Expr* expr;
-        short ancestryOp;
+        PathOperator pathOp;
     };
 
    List expressions;
@@ -779,13 +777,15 @@ private:
 /**
  * This class represents a RootExpr, which only matches the Document node
 **/
-class RootExpr : public PathExpr {
+class RootExpr : public Expr {
 
 public:
 
-      //------------------/
-     //- Public Methods -/
-    //------------------/
+    /**
+     * Creates a new RootExpr
+     * @param aSerialize should this RootExpr be serialized
+     */
+    RootExpr(MBool aSerialize);
 
     /**
      * Virtual methods from Expr 
@@ -794,6 +794,10 @@ public:
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
+
+private:
+    // When a RootExpr is used in a PathExpr it shouldn't be serialized
+    MBool mSerialize;
 
 }; //-- RootExpr
 

@@ -26,6 +26,14 @@
 #include "Expr.h"
 
 /**
+ * Creates a new RootExpr
+ * @param aSerialize should this RootExpr be serialized
+ */
+RootExpr::RootExpr(MBool aSerialize) {
+    mSerialize = aSerialize;
+}
+
+/**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
  * @param ps the ContextState containing the stack information needed
@@ -34,8 +42,20 @@
 **/
 ExprResult* RootExpr::evaluate(Node* context, ContextState* cs) {
     NodeSet* nodeSet = new NodeSet();
-    if ( !context ) return nodeSet;
-    nodeSet->add(context->getOwnerDocument());
+    if (!nodeSet) {
+        // XXX ErrorReport: out of memory
+        NS_ASSERTION(0, "out of memory");
+        return 0;
+    }
+    
+    if (!context)
+        return nodeSet;
+
+    if (context->getNodeType() != Node::DOCUMENT_NODE)
+        nodeSet->add(context->getOwnerDocument());
+    else
+        nodeSet->add(context);
+
     return nodeSet;
 } //-- evaluate
 
@@ -52,10 +72,7 @@ double RootExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs)
  * the given context
 **/
 MBool RootExpr::matches(Node* node, Node* context, ContextState* cs) {
-    if ( node ) {
-        return (MBool) (node->getNodeType() == Node::DOCUMENT_NODE);
-    }
-    return MB_FALSE;
+    return node && (node->getNodeType() == Node::DOCUMENT_NODE);
 } //-- matches
 
 /**
@@ -67,6 +84,6 @@ MBool RootExpr::matches(Node* node, Node* context, ContextState* cs) {
  * @return the String representation of this Expr.
 **/
 void RootExpr::toString(String& dest) {
-    dest.append('/');
+    if (mSerialize)
+        dest.append('/');
 } //-- toString
-
