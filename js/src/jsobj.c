@@ -1480,7 +1480,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 	if (!sym) {
 	    clasp = LOCKED_OBJ_GET_CLASS(obj);
 	    resolve = clasp->resolve;
-	    if (resolve != JS_ResolveStub) {
+	    if (resolve && resolve != JS_ResolveStub) {
 		if (clasp->flags & JSCLASS_NEW_RESOLVE) {
 		    newresolve = (JSNewResolveOp)resolve;
 		    flags = 0;
