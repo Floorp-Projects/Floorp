@@ -70,6 +70,7 @@ PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
+extern PRIntn pref_HashTableEnumerateEntries(PLHashEnumerator f, void *arg);
 
 NSPR_END_EXTERN_C
 
