@@ -17,7 +17,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-chdir '/d/webdocs/projects/tinderbox';
+# Figure out which directory tinderbox is in by looking at argv[0]
+
+$tinderboxdir = $0;
+$tinderboxdir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
+if ($tinderboxdir eq "") {
+    $tinderboxdir = ".";
+}
+
+print "tinderbox = $tinderboxdir\n"; 
+
+chdir $tinderboxdir || die "Couldn't chdir to $tinderboxdir"; 
 
 #print "cd ok\n";
 
