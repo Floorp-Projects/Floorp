@@ -50,6 +50,10 @@ else
 DIRS        = ps
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),cocoa)
+DIRS	    += mac
+endif
+
 ifneq (,$(filter beos os2 mac windows,$(MOZ_GFX_TOOLKIT)))
 DIRS        += $(MOZ_GFX_TOOLKIT)
 endif
