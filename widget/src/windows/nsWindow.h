@@ -187,6 +187,9 @@ protected:
     PRBool      mIsAltDown;
     PRBool      mIsDestroying;
 
+    PRInt32     mWidth;
+    PRInt32     mHeight;
+
     // keep the list of children
     class Enumerator : public nsIEnumerator {
         nsIWidget   **mChildrens;

@@ -43,6 +43,7 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 
   vm->mFrameRate = 0;
   vm->SetFrameRate(fr);
+//printf("timer composite...\n");
   vm->Composite();
 }
 
@@ -217,6 +218,7 @@ void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
   if (nsnull != mRootView)
     mRootView->SetDimensions(width, height);
 
+//printf("new dims: %4.2f %4.2f...\n", width / 20.0f, height / 20.0f);
   // Inform the presentation shell that we've been resized
   if (nsnull != presShell)
   {
@@ -284,6 +286,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   nscoord             xoff, yoff;
   float               scale;
 
+//printf("refreshing region...\n");
   //force double buffering because of non-opaque views?
 
   if (mTransCnt > 0)
@@ -353,6 +356,9 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
   //force double buffering because of non-opaque views?
 
+//printf("refreshing rect... ");
+//stdout << *rect;
+//printf("\n");
   if (mTransCnt > 0)
     aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
@@ -468,6 +474,9 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
   nsIView *par = aView;
   nscoord x, y;
 
+  if ((aRect.width == 0) || (aRect.height == 0))
+    return;
+
   if (gsDebug)
   {
     printf("ViewManager::UpdateView: %x, rect ", aView);
@@ -475,7 +484,16 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
     printf("\n");
   }
 
-  if (nsnull != aView)
+  if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
+  {
+    nscoord xoff, yoff;
+
+    GetWindowOffsets(&xoff, &yoff);
+
+    trect.x += xoff;
+    trect.y += yoff;
+  }
+  else if (nsnull != aView)
   {
     do
     {
@@ -489,6 +507,9 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
     while (par = par->GetParent());
   }
 
+//printf("updating... ");
+//stdout << trect;
+//printf("\n");
 #ifdef USE_DIRTY_RECT
 
   if (mDirtyRect.IsEmpty())

@@ -369,6 +369,7 @@ nsWindow::nsWindow(nsISupports *aOuter) : nsObject(aOuter)
     mDeferredPositioner = NULL;
     mLastPoint.x   = 0;
     mLastPoint.y   = 0;
+    mWidth = mHeight = 0;
 }
 
 
@@ -1486,7 +1487,42 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               // the window origin in screen coordinates...
               RECT r;
               ::GetClientRect(mWnd, &r);
-              nsRect rect(wp->x, wp->y, PRInt32(r.right - r.left), PRInt32(r.bottom - r.top));
+              PRInt32 newWidth, newHeight;
+              newWidth = PRInt32(r.right - r.left);
+              newHeight = PRInt32(r.bottom - r.top);
+              nsRect rect(wp->x, wp->y, newWidth, newHeight);
+              if (newWidth > mWidth)
+              {
+                RECT drect;
+
+                //getting wider
+
+                drect.left = wp->x + mWidth;
+                drect.top = wp->y;
+                drect.right = drect.left + (newWidth - mWidth);
+                drect.bottom = drect.top + newHeight;
+
+//                ::InvalidateRect(mWnd, &drect, FALSE);
+                ::RedrawWindow(mWnd, &drect, NULL,
+                               RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+              }
+              if (newHeight > mHeight)
+              {
+                RECT drect;
+
+                //getting taller
+
+                drect.left = wp->x;
+                drect.top = wp->y + mHeight;
+                drect.right = drect.left + newWidth;
+                drect.bottom = drect.top + (newHeight - mHeight);
+
+//                ::InvalidateRect(mWnd, &drect, FALSE);
+                ::RedrawWindow(mWnd, &drect, NULL,
+                               RDW_INVALIDATE | RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ERASENOW | RDW_ALLCHILDREN);
+              }
+              mWidth = newWidth;
+              mHeight = newHeight;
               ///nsRect rect(wp->x, wp->y, wp->cx, wp->cy);
               result = OnResize(rect);
             }
@@ -1550,7 +1586,7 @@ LPCTSTR nsWindow::WindowClass()
     if (!nsWindow::sIsRegistered) {
         WNDCLASS wc;
 
-        // wc.style            = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+//        wc.style            = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
         wc.style            = CS_DBLCLKS;
         wc.lpfnWndProc      = ::DefWindowProc;
         wc.cbClsExtra       = 0;
@@ -1682,7 +1718,6 @@ PRBool nsWindow::OnPaint()
     HDC hDC = ::BeginPaint(mWnd, &ps);
 
     if (ps.rcPaint.left || ps.rcPaint.right || ps.rcPaint.top || ps.rcPaint.bottom) {
-
         // call the event callback 
         if (mEventCallback) {
             nsPaintEvent event;
@@ -1695,21 +1730,29 @@ PRBool nsWindow::OnPaint()
                         ps.rcPaint.bottom - ps.rcPaint.top);
             event.rect = &rect;
 
+            ::EndPaint(mWnd, &ps);
+
             static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
             static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
             if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
             {
+              hDC = ::GetDC(mWnd);
               event.renderingContext->Init(mContext, (nsDrawingSurface)hDC);
               result = DispatchEvent(&event);
               NS_RELEASE(event.renderingContext);
+              ::ReleaseDC(mWnd, hDC);
             }
             else
               result = PR_FALSE;
         }
+        else
+            ::EndPaint(mWnd, &ps);
     }
+    else
+        ::EndPaint(mWnd, &ps);
 
-    ::EndPaint(mWnd, &ps);
+//    ::EndPaint(mWnd, &ps);
 
     return result;
 }
