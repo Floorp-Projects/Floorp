@@ -639,15 +639,18 @@ function onFormSelect()
 
     var labels = form.getElementsByTagName("label");
     var llength = labels.length;
+    var label;
 
     for (i = 0; i < llength; i++)
     {
-      var whatfor = labels[i].hasAttribute("for") ?
-        theDocument.getElementById(labels[i].getAttribute("for")) :
-        findFirstControl(labels[i]);
+      label = labels[i];
+      var whatfor = label.hasAttribute("for") ?
+        theDocument.getElementById(label.getAttribute("for")) :
+        findFirstControl(label);
 
-      if (whatfor && (whatfor.form == form)) {
-        var labeltext = getValueText(labels[i]);
+      if (whatfor && (whatfor.form == form)) 
+      {
+        var labeltext = getValueText(label);
         for (var j = 0; j < length; j++)
           if (formfields[j] == whatfor)
             fieldView.setCellText(j, "field-label", labeltext);
@@ -942,20 +945,28 @@ function makePreview(row)
 //******** Other Misc Stuff
 // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
 // parse a node to extract the contents of the node
-// linkNode doesn't really _have_ to be link
-function getValueText(linkNode)
+function getValueText(node)
 {
   var valueText = "";
-  
-  var length = linkNode.childNodes.length;
+
+  // form input elements don't generally contain information that is useful to our callers, so return nothing
+  if (node instanceof nsIInputElement || node instanceof nsISelectElement || node instanceof nsITextareaElement)
+    return valueText;
+
+  // otherwise recurse for each child
+  var length = node.childNodes.length;
   for (var i = 0; i < length; i++)
   {
-    var childNode = linkNode.childNodes[i];
+    var childNode = node.childNodes[i];
     var nodeType = childNode.nodeType;
+
+    // text nodes are where the goods are
     if (nodeType == Node.TEXT_NODE)
       valueText += " " + childNode.nodeValue;
+    // and elements can have more text inside them
     else if (nodeType == Node.ELEMENT_NODE)
     {
+      // images are special, we want to capture the alt text as if the image weren't there
       if (childNode instanceof nsIImageElement)
         valueText += " " + getAltText(childNode);
       else
