@@ -420,6 +420,13 @@ ber_put_seqorset( BerElement *ber )
 	Seqorset	*next;
 	Seqorset	**sos = &ber->ber_sos;
 
+	if ( *sos == NULL ) {
+		/*
+		 * No sequence or set to put... fatal error.
+		 */
+		return( -1 );
+	}
+
 	/*
 	 * If this is the toplevel sequence or set, we need to actually
 	 * write the stuff out.  Otherwise, it's already been put in
