@@ -181,7 +181,7 @@ Rights Reserved.
 	<broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
 	<!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
 
-	<broadcaster id="broadcaster_throbber" busy="false"/>
+  <broadcaster id="Editor:Throbber" busy="false"/>
 </broadcasterset>
 
 <broadcaster id="args" value="editorType=default"/>
@@ -556,15 +556,14 @@ Rights Reserved.
 		                }"
         />
 
-    <box id="status-bar">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter mode="normal" value="0">
-			</progressmeter>
-			<spring flex="100%"/>
-		</box>
-		<button id="statusText" align="right" flex="100%" value="&defaultStatusText.label;"/>
-    </box>
+    <!-- Some of this is from globarOverlay.xul -->
+    <statusbar id="status-bar">
+      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+      <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
+          <observes element="Editor:Throbber" attribute="busy"/>
+      </progressmeter>
+      <statusbarpanel id="statusText" value="&defaultStatusText.label;" flex="1" crop="right"/>
+    </statusbar>
 
 <!-- /box -->
 	<box id="taskbar" class="toolbox-bottom"/>
