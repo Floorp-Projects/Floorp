@@ -1483,6 +1483,7 @@ nsLocalFile::Exists(PRBool *_retval)
 {
     NS_ENSURE_ARG(_retval);
 
+    MakeDirty();
     nsresult rv = ResolveAndStat( PR_TRUE );
     
     if (NS_SUCCEEDED(rv))
