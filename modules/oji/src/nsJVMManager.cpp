@@ -67,6 +67,7 @@ extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
@@ -105,7 +106,10 @@ static nsIJVMPlugin*
 GetRunningJVM()
 {
     nsIJVMPlugin* jvm = NULL;
-    nsJVMManager* jvmMgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return jvm;
+    nsJVMManager* jvmMgr = (nsJVMManager *)managerService.get();
     if (jvmMgr) {
         nsJVMStatus status = jvmMgr->GetJVMStatus();
         if (status == nsJVMStatus_Enabled)
@@ -113,7 +117,6 @@ GetRunningJVM()
         if (status == nsJVMStatus_Running) {
             jvm = jvmMgr->GetJVMPlugin();
         }
-        jvmMgr->Release();
     }
     return jvm;
 }
