@@ -3264,10 +3264,12 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
     }
     if (NS_FAILED(rv)) { 
       // Things didn't turn out well, just return the reflow metrics.
-      aMetrics.mBoundingMetrics.ascent  =  aMetrics.ascent;
-      aMetrics.mBoundingMetrics.descent = -aMetrics.descent;
-      aMetrics.mBoundingMetrics.width   =  aMetrics.width;
+      aMetrics.mBoundingMetrics.ascent  = aMetrics.ascent;
+      aMetrics.mBoundingMetrics.descent = aMetrics.descent;
+      aMetrics.mBoundingMetrics.width   = aMetrics.width;
+#ifdef MOZ_MATHML_BOUNDINGMETRICS
       printf("nsTextFrame: could not perform GetBoundingMetrics()\n");
+#endif
     }
   }
 #endif
