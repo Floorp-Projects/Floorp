@@ -44,6 +44,9 @@ IDLSRCS		= \
 		Plugin.idl \
 		MimeType.idl \
 		DOMException.idl \
+		CRMFObject.idl \
+		Crypto.idl \
+		Pkcs11.idl \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk

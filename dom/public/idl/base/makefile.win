@@ -26,7 +26,7 @@ MODULE=raptor
 
 IDLSRCS= Navigator.idl Location.idl WindowCollection.idl Screen.idl History.idl \
 	BarProp.idl PluginArray.idl MimeTypeArray.idl Plugin.idl MimeType.idl \
-	DOMException.idl
+	DOMException.idl Crypto.idl CRMFObject.idl Pkcs11.idl
 
 GLOBAL_IDLSRC= Window.idl
 
