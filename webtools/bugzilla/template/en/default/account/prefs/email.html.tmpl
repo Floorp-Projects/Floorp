@@ -18,7 +18,6 @@
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
   #                 Myk Melez <myk@mozilla.org>
-  #                 Shane H. W. Travis <travis@sedsystems.ca>
   #%]
 
 [%# INTERFACE:
@@ -36,7 +35,6 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% useqacontact = Param('useqacontact') %]
-[% usevotes = Param('usevotes') %]
 
 <table>
   [% IF Param('supportwatchers') %]
@@ -142,7 +140,7 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
 
 <table width="100%" border="1">
   <tr>
-    <td colspan="[% (useqacontact AND usevotes) ? '5' : ((useqacontact OR usevotes) ? '4' : '3') %]" align="center" width="50%">
+    <td colspan="[% useqacontact ? '5' : '4' %]" align="center" width="50%">
       <b>When my relationship to this [% terms.bug %] is:</b>
     </td>
     <td rowspan="2" width="50%">
@@ -165,11 +163,9 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
     <td align="center" width="10%">
       <b>CC</b>
     </td>
-    [% IF usevotes %]
-      <td align="center" width="10%">
-        <b>Voter</b>
-      </td>
-    [% END %]
+    <td align="center" width="10%">
+      <b>Voter</b>
+    </td>
   </tr>
 
 [% bugLabelLower = BLOCK %]
@@ -200,7 +196,6 @@ document.write('<input type="button" value="Disable All Mail" onclick="SetCheckb
       [% FOREACH role = [ "Reporter", "Owner", "QAcontact", "CClist", "Voter" ]
        %]
         [% NEXT IF role == "QAcontact" AND NOT useqacontact %]
-        [% NEXT IF role == "Voter" AND NOT usevotes %]
         <td align="center">
           <input type="checkbox" name="email[% role %][% reason.name %]" value="on"
             [% " checked" IF $role.${reason.name} %]>
