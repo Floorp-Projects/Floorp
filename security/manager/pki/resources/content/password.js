@@ -75,11 +75,6 @@ function onLoad()
     // Return value 0 means "canceled"
     params.SetInt(1, 0);
   }
-
-  if (params) {
-    // Return value 0 means "canceled"
-    params.SetInt(1, 0);
-  }
 }
 
 function onP12Load()
