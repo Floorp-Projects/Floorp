@@ -178,10 +178,16 @@ protected:
 	// Property list
 	PropertyList			m_PropertyList;
 	
+	// Ready status of control
+	READYSTATE				m_nReadyState;
+
 	virtual HRESULT CreateWebShell();
 	virtual BOOL IsValid();
 
 public:
+// IOleObjectImpl overrides
+	HRESULT InPlaceActivate(LONG iVerb, const RECT* prcPosRect);
+
 // IOleObject overrides
 	virtual HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite);
 
