@@ -77,7 +77,7 @@ Contributor(s): ______________________________________. -->
   <script type="application/x-javascript" src="chrome://browser/content/browser-2.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/navigatorDD.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
-
+  <script type="application/x-javascript" src="chrome://global/content/charsetOverlay.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/policy/policy.js"/>
 
   <!-- hook for stringbundle overlays -->
