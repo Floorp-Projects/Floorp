@@ -92,6 +92,8 @@ public class ScriptRuntime {
     public static boolean toBoolean(Object val) {
         if (val == null)
             return false;
+        if (val instanceof Boolean)
+            return ((Boolean) val).booleanValue();
         if (val instanceof Scriptable) {
             if (Context.getContext().isVersionECMA1()) {
                 // pure ECMA
@@ -101,6 +103,8 @@ public class ScriptRuntime {
             val = ((Scriptable) val).getDefaultValue(BooleanClass);
             if (val instanceof Scriptable)
                 throw errorWithClassName("msg.primitive.expected", val);
+            if (val instanceof Boolean)
+                return ((Boolean) val).booleanValue();
             // fall through
         }
         if (val instanceof String)
@@ -109,8 +113,6 @@ public class ScriptRuntime {
             double d = ((Number) val).doubleValue();
             return (d == d && d != 0.0);
         }
-        if (val instanceof Boolean)
-            return ((Boolean) val).booleanValue();
         throw errorWithClassName("msg.invalid.type", val);
     }
 
@@ -125,16 +127,18 @@ public class ScriptRuntime {
     public static double toNumber(Object val) {
         if (val == null)
             return +0.0;
+        if (val instanceof Number)
+            return ((Number) val).doubleValue();
         if (val instanceof Scriptable) {
             val = ((Scriptable) val).getDefaultValue(NumberClass);
             if (val != null && val instanceof Scriptable)
                 throw errorWithClassName("msg.primitive.expected", val);
+            if (val instanceof Number)
+                return ((Number) val).doubleValue();
             // fall through
         }
         if (val instanceof String)
             return toNumber((String) val);
-        if (val instanceof Number)
-            return ((Number) val).doubleValue();
         if (val instanceof Boolean)
             return ((Boolean) val).booleanValue() ? 1 : +0.0;
         throw errorWithClassName("msg.invalid.type", val);
@@ -760,7 +764,7 @@ public class ScriptRuntime {
         }
         catch (ClassCastException e) {
             return null;
-        }
+        } 
         if (s == null) {
             return null;
         }
@@ -782,9 +786,9 @@ public class ScriptRuntime {
 
     public static Object setProto(Object obj, Object value, Scriptable scope) {
         Scriptable start;
-        if (obj instanceof Scriptable) {
+        try {
             start = (Scriptable) obj;
-        } else {
+        } catch(ClassCastException e) {
             start = toObject(scope, obj);
         }
         Scriptable result = value == null ? null : toObject(scope, value);
@@ -805,9 +809,9 @@ public class ScriptRuntime {
 
     public static Object setParent(Object obj, Object value, Scriptable scope) {
         Scriptable start;
-        if (obj instanceof Scriptable) {
+        try {
             start = (Scriptable) obj;
-        } else {
+        } catch(ClassCastException e) {
             start = toObject(scope, obj);
         }
         Scriptable result = value == null ? null : toObject(scope, value);
@@ -830,9 +834,9 @@ public class ScriptRuntime {
                                  Scriptable scope)
     {
         Scriptable start;
-        if (obj instanceof Scriptable) {
+        try {
             start = (Scriptable) obj;
-        } else {
+        } catch(ClassCastException e) {
             start = toObject(scope, obj);
         }
         if (start == null) {
@@ -936,6 +940,7 @@ public class ScriptRuntime {
         return 0;
     }
 
+
     public static Object getElem(Object obj, Object id, Scriptable scope) {
         int index;
         String s;
@@ -953,10 +958,12 @@ public class ScriptRuntime {
                 index = 0;
             }
         }
-
-        Scriptable start = obj instanceof Scriptable
-                           ? (Scriptable) obj
-                           : toObject(scope, obj);
+        Scriptable start;
+        try {
+            start = (Scriptable)obj;
+        } catch (ClassCastException e) {
+            start = toObject(scope, obj);
+        }
         if (s != null) {
             return getStrIdElem(start, s);
         }
@@ -1019,9 +1026,12 @@ public class ScriptRuntime {
             }
         }
 
-        Scriptable start = obj instanceof Scriptable
-                     ? (Scriptable) obj
-                     : toObject(scope, obj);
+        Scriptable start;
+        try {
+            start = (Scriptable) obj;
+        } catch (ClassCastException e) {
+            start = toObject(scope, obj);
+        }
         if (s != null) {
             return setStrIdElem(start, s, value, scope);
         }
@@ -1227,7 +1237,6 @@ public class ScriptRuntime {
             throw NativeGlobal.typeError1
                 ("msg.isnt.function", toString(fun), scope);
         }
-
         Scriptable thisObj;
         if (thisArg instanceof Scriptable || thisArg == null) {
             thisObj = (Scriptable) thisArg;
@@ -1368,6 +1377,10 @@ public class ScriptRuntime {
     // as "~toInt32(val)"
 
     public static Object add(Object val1, Object val2) {
+        if(val1 instanceof Number && val2 instanceof Number) {
+            return new Double(((Number)val1).doubleValue() +
+                              ((Number)val2).doubleValue());
+        }
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (val2 instanceof Scriptable)
@@ -1422,9 +1435,9 @@ public class ScriptRuntime {
 
     public static Object postIncrement(Object obj, String id, Scriptable scope) {
         Scriptable start;
-        if (obj instanceof Scriptable) {
+        try {
             start = (Scriptable) obj;
-        } else {
+        } catch (ClassCastException e) {
             start = toObject(scope, obj);
         }
         if (start == null) {
@@ -1515,9 +1528,9 @@ public class ScriptRuntime {
 
     public static Object postDecrement(Object obj, String id, Scriptable scope) {
         Scriptable start;
-        if (obj instanceof Scriptable) {
+        try {
             start = (Scriptable) obj;
-        } else {
+        } catch (ClassCastException e) {
             start = toObject(scope, obj);
         }
         if (start == null) {
@@ -1560,10 +1573,10 @@ public class ScriptRuntime {
             return ScriptableClass;
         if (obj == Undefined.instance)
             return UndefinedClass;
-        if (obj instanceof Scriptable)
-            return ScriptableClass;
         if (obj instanceof Number)
             return NumberClass;
+        if (obj instanceof Scriptable)
+            return ScriptableClass;
         return obj.getClass();
     }
 
@@ -1761,6 +1774,13 @@ public class ScriptRuntime {
     }
 
     public static int cmp_LT(Object val1, Object val2) {
+        if(val1 instanceof Number && val2 instanceof Number) {
+            double d1 = ((Number)val1).doubleValue();
+            double d2 = ((Number)val2).doubleValue();
+            if(d1 != d1) return 0;
+            if(d2 != d2) return 0;
+            return d1 < d2 ? 1 : 0;
+        }
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(NumberClass);
         if (val2 instanceof Scriptable)
@@ -1785,6 +1805,13 @@ public class ScriptRuntime {
     }
 
     public static int cmp_LE(Object val1, Object val2) {
+        if(val1 instanceof Number && val2 instanceof Number) {
+            double d1 = ((Number)val1).doubleValue();
+            double d2 = ((Number)val2).doubleValue();
+            if(d1 != d1) return 0;
+            if(d2 != d2) return 0;
+            return d1 <= d2 ? 1 : 0;
+        }
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(NumberClass);
         if (val2 instanceof Scriptable)
@@ -1936,7 +1963,7 @@ public class ScriptRuntime {
 
     public static Scriptable initVarObj(Context cx, Scriptable scope,
                                         NativeFunction funObj,
-                                        Scriptable thisObj, Object[] args)
+                                        Scriptable thisObj, Object[] args) 
     {
         NativeCall result = new NativeCall(cx, scope, funObj, thisObj, args);
         String[] argNames = funObj.argNames;
