@@ -37,6 +37,7 @@
 
 #include "nsSoftwareUpdate.h"
 
+#include "nsInstall.h"
 #include "nsInstallVersion.h"
 #include "nsIDOMInstallVersion.h"
 
@@ -296,10 +297,15 @@ nsInstallVersion::ToString(nsString& aReturn)
 nsresult
 nsInstallVersion::StringToVersionNumbers(const nsString& version, PRInt32 *aMajor, PRInt32 *aMinor, PRInt32 *aRelease, PRInt32 *aBuild)    
 {
-    PRInt32 errorCode;
+    PRInt32 errorCode = nsInstall::UNEXPECTED_ERROR;
+
+    if (!aMajor || !aMinor || !aRelease || !aBuild)
+        return nsInstall::INVALID_ARGUMENTS;
+
+    *aMajor = *aMinor = *aRelease = *aBuild = 0;
 
     int dot = version.FindChar('.', 0);
-    
+
     if ( dot == -1 ) 
     {
         *aMajor = version.ToInteger(&errorCode);

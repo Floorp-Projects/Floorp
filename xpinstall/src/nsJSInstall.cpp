@@ -1661,7 +1661,7 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::BAD_PACKAGE_NAME,           "BAD_PACKAGE_NAME"             },
     { nsInstall::UNEXPECTED_ERROR,           "UNEXPECTED_ERROR"             },
     { nsInstall::ACCESS_DENIED,              "ACCESS_DENIED"                },
-
+    { nsInstall::EXECUTION_ERROR,            "EXECUTION_ERROR"              },
     { nsInstall::NO_INSTALL_SCRIPT,          "NO_INSTALL_SCRIPT"            },
 
 
