@@ -71,8 +71,7 @@ public:
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) const;
 
     ////////////////////////////////////////////////////////////////////////
-
-    void Initialize(const nsString& url);
+    // Implementation methods
 
     RDF GetDB(void) const {
         return mDB;
