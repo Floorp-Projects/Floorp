@@ -323,11 +323,12 @@ nsIWidget * nsView :: GetWidget()
 void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
 {
   rc.PushState();
-  rc.Translate(mBounds.x, mBounds.y);
 
   if (mClipRect.IsEmpty() == PR_FALSE)
   {
     nsRect  trect;
+
+    rc.Translate(mBounds.x, mBounds.y);
 
     trect.x = mClipRect.x;
     trect.y = mClipRect.y;
@@ -335,6 +336,11 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect)
     trect.height = (mClipRect.height - mClipRect.y) + 1;
 
     rc.SetClipRect(trect, PR_TRUE);
+  }
+  else
+  {
+    rc.SetClipRect(mBounds, PR_TRUE);
+    rc.Translate(mBounds.x, mBounds.y);
   }
 
   if (nsnull != mFrame)
