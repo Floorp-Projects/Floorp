@@ -7959,7 +7959,7 @@ NS_IMETHODIMP nsImapMockChannel::GetContentCharset(nsACString &aContentCharset)
 
 NS_IMETHODIMP nsImapMockChannel::SetContentCharset(const nsACString &aContentCharset)
 {
-  NS_NOTREACHED("nsImapMockChannel::SetContentCharset");
+  NS_WARNING("nsImapMockChannel::SetContentCharset() not implemented");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
