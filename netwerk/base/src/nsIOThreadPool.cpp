@@ -59,6 +59,13 @@ static PRLogModuleInfo *gIOThreadPoolLog = nsnull;
 
 //-----------------------------------------------------------------------------
 // pool of joinable threads used for general purpose i/o tasks
+//
+// the main entry point to this class is nsIEventTarget.  events posted to
+// the thread pool are dispatched on one of the threads.  a variable number
+// of threads are maintained.  the threads die off if they remain idle for
+// more than THREAD_IDLE_TIMEOUT.  the thread pool shuts down when it receives
+// the "xpcom-shutdown" event.
+//-----------------------------------------------------------------------------
 
 class nsIOThreadPool : public nsIEventTarget
                      , public nsIObserver

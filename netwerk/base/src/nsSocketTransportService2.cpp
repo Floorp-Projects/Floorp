@@ -56,9 +56,8 @@ PRLogModuleInfo *gSocketTransportLog = nsnull;
 nsSocketTransportService *gSocketTransportService = nsnull;
 PRThread                 *gSocketThread           = nsnull;
 
-#define PLEVENT_FROM_LINK(_link)                                     \
-    NS_REINTERPRET_CAST(PLEvent *,                                   \
-        NS_REINTERPRET_CAST(char *, _link) - offsetof(PLEvent, link))
+#define PLEVENT_FROM_LINK(_link) \
+    ((PLEvent*) ((char*) (_link) - offsetof(PLEvent, link)))
 
 static inline void
 MoveCList(PRCList &from, PRCList &to)
