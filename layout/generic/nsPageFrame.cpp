@@ -50,6 +50,7 @@
 #include "nsIPrintPreviewContext.h"
 #include "nsIPrintContext.h"
 #include "nsPageContentFrame.h"
+#include "nsTextFrame.h" // for function BinarySearchForPosition
 
 #include "nsIView.h" // view flags for clipping
 #include "nsCSSRendering.h"
@@ -518,24 +519,26 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
   if (aStr.Length() > 0 && 
       ((aHeaderFooter == eHeader && aHeight < mMargin.top) ||
        (aHeaderFooter == eFooter && aHeight < mMargin.bottom))) {
-    // measure the width of the text
     nsAutoString str;
     ProcessSpecialCodes(aStr, str);
 
-    PRInt32 width;
-    aRenderingContext.GetWidth(str, width);
-    PRBool addEllipse = PR_FALSE;
+    PRInt32 indx;
+    PRInt32 textWidth = 0;
+    const PRUnichar* text = str.get();
 
-    // trim the text and add the elipses if it won't fit
-    while (width >= contentWidth && str.Length() > 1) {
-      str.SetLength(str.Length()-1);
-      aRenderingContext.GetWidth(str, width);
-      addEllipse = PR_TRUE;
+    PRInt32 len = (PRInt32)str.Length();
+    if (len == 0) {
+      return; // bail is empty string
     }
-    if (addEllipse && str.Length() > 3) {
-      str.SetLength(str.Length()-3);
-      str.Append(NS_LITERAL_STRING("..."));
-      aRenderingContext.GetWidth(str, width);
+    // find how much text fits, the "position" is the size of the avilable area
+    if (BinarySearchForPosition(&aRenderingContext, text, 0, 0, 0, len,
+                                PRInt32(contentWidth), indx, textWidth)) {
+      if (indx < len-1 && len > 3) {
+        str.SetLength(indx-3);
+        str.Append(NS_LITERAL_STRING("..."));
+      }
+    } else { 
+      return; // bail if couldn't find the correct length
     }
 
     // cacl the x and y positions of the text

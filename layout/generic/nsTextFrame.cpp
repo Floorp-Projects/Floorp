@@ -3306,6 +3306,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 }
 
 //---------------------------------------------------
+// Also defined for external use in nsTextFrame.h
+//
 // Uses a binary search for find where the cursor falls in the line of text
 // It also keeps track of the part of the string that has already been measured
 // so it doesn't have to keep measuring the same text over and over
@@ -3316,9 +3318,9 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
 //
 // aTextWidth returns the (in twips) the length of the text that falls before the cursor
 // aIndex contains the index of the text where the cursor falls
-static PRBool
+PRBool
 BinarySearchForPosition(nsIRenderingContext* acx, 
-                        PRUnichar* aText,
+                        const PRUnichar* aText,
                         PRInt32    aBaseWidth,
                         PRInt32    aBaseInx,
                         PRInt32    aStartInx, 
