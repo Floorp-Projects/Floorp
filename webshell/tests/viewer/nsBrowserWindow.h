@@ -43,8 +43,7 @@ class nsIPresShell;
  */
 class nsBrowserWindow : public nsIBrowserWindow,
                         public nsIStreamObserver,
-                        public nsIWebShellContainer,
-                        public nsIScriptContextOwner
+                        public nsIWebShellContainer
 {
 public:
   void* operator new(size_t sz) {
@@ -77,10 +76,6 @@ public:
   NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax,
                         const nsString& aMsg);
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
-
-  // nsIScriptContextOwner
-  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
-  NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL);
@@ -143,9 +138,6 @@ public:
 
   // "Status bar"
   nsITextWidget* mStatus;
-
-  nsIScriptGlobalObject *mScriptGlobal;
-  nsIScriptContext* mScriptContext;
 
   // Global window collection
   static nsVoidArray gBrowsers;
