@@ -975,6 +975,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       printf(": WARNING: xmost:%d\n", xmost);
     }
 #endif
+    /*sec*/ //printf("%p RecoverState aState.mKidXMost=%d\n", this, xmost); 
     mKidXMost = xmost;
   }
   if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
@@ -1159,12 +1160,14 @@ nsBlockFrame::nsBlockFrame()
 
 nsBlockFrame::~nsBlockFrame()
 {
+  
   nsTextRun::DeleteTextRuns(mTextRuns);
 }
 
 NS_IMETHODIMP
 nsBlockFrame::Destroy(nsIPresContext* aPresContext)
 {
+  mAbsoluteContainer.DestroyFrames(this, aPresContext);
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
   if (HaveOutsideBullet()) {
@@ -1353,7 +1356,10 @@ nsBlockFrame::FirstChild(nsIPresContext* aPresContext,
                          nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
-  if (nsnull == aListName) {
+  if (aListName == nsLayoutAtoms::absoluteList) {
+    return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
+  }
+  else if (nsnull == aListName) {
     *aFirstChild = (nsnull != mLines) ? mLines->mFirstChild : nsnull;
     return NS_OK;
   }
@@ -1397,6 +1403,10 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
     *aListName = nsLayoutAtoms::bulletList;
     NS_ADDREF(*aListName);
     break;
+  case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
+    *aListName = nsLayoutAtoms::absoluteList;
+    NS_ADDREF(*aListName);
+    break;
   }
   return NS_OK;
 }
@@ -1414,13 +1424,52 @@ nsBlockFrame::IsPercentageBase(PRBool& aBase) const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
+static void
+CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
+                         nscoord                  aFrameWidth,
+                         nscoord                  aFrameHeight,
+                         nscoord&                 aContainingBlockWidth,
+                         nscoord&                 aContainingBlockHeight)
+{
+  aContainingBlockWidth = -1;  // have reflow state calculate
+  aContainingBlockHeight = -1; // have reflow state calculate
+
+  // The issue there is that for a 'height' of 'auto' the reflow state code
+  // won't know how to calculate the containing block height because it's
+  // calculated bottom up. We don't really want to do this for the initial
+  // containing block so that's why we have the check for if the element
+  // is absolutely or relatively positioned
+  if (aReflowState.mStylePosition->IsAbsolutelyPositioned() ||
+      (NS_STYLE_POSITION_RELATIVE == aReflowState.mStylePosition->mPosition)) {
+    aContainingBlockWidth = aFrameWidth;
+    aContainingBlockHeight = aFrameHeight;
+
+    // Containing block is relative to the padding edge
+    nsMargin  border;
+    if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
+    aContainingBlockWidth -= border.left + border.right;
+    aContainingBlockHeight -= border.top + border.bottom;
+  }
+}
+
+
 NS_IMETHODIMP
 nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+    /*sec*/ //ListTag(stdout);
+  /*
+    printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
+           aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
+           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+           */
+
   DO_GLOBAL_REFLOW_COUNT("nsBlockFrame", aReflowState.reason);
+
 #ifdef DEBUG
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
@@ -1439,6 +1488,59 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     ctc = nsLineBox::GetCtorCount();
   }
 #endif
+
+  // See if it's an incremental reflow command
+  if (eReflowReason_Incremental == aReflowState.reason) {
+    // Give the absolute positioning code a chance to handle it
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
+    PRBool  handled;
+    nsRect  childBounds;
+
+    CalculateContainingBlock(aReflowState, mRect.width, mRect.height,
+                             containingBlockWidth, containingBlockHeight);
+    
+    mAbsoluteContainer.IncrementalReflow(this, aPresContext, aReflowState,
+                                         containingBlockWidth, containingBlockHeight,
+                                         handled, childBounds);
+
+    // If the incremental reflow command was handled by the absolute positioning
+    // code, then we're all done
+    if (handled) {
+      // Just return our current size as our desired size.
+      // XXX We need to know the overflow area for the flowed content, and
+      // we don't have a way to get that currently so for the time being pretend
+      // a resize reflow occured
+#if 0
+      aMetrics.width = mRect.width;
+      aMetrics.height = mRect.height;
+      aMetrics.ascent = mRect.height;
+      aMetrics.descent = 0;
+  
+      // Whether or not we're complete hasn't changed
+      aStatus = (nsnull != mNextInFlow) ? NS_FRAME_NOT_COMPLETE : NS_FRAME_COMPLETE;
+#else
+      nsHTMLReflowState reflowState(aReflowState);
+      reflowState.reason = eReflowReason_Resize;
+      reflowState.reflowCommand = nsnull;
+      nsBlockFrame::Reflow(aPresContext, aMetrics, reflowState, aStatus);
+#endif
+      
+      // Factor the absolutely positioned child bounds into the overflow area
+      aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+
+      // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+      if ((aMetrics.mOverflowArea.x < 0) ||
+          (aMetrics.mOverflowArea.y < 0) ||
+          (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+          (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+        mState |= NS_FRAME_OUTSIDE_CHILDREN;
+      } else {
+        mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+      }
+      return NS_OK;
+    }
+  }
 
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
 #ifdef DEBUG_kipp
@@ -1768,6 +1870,35 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  // Let the absolutely positioned container reflow any absolutely positioned
+  // child frames that need to be reflowed, e.g., elements with a percentage
+  // based width/height
+  if (NS_SUCCEEDED(rv) && mAbsoluteContainer.HasAbsoluteFrames()) {
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
+    nsRect  childBounds;
+
+    CalculateContainingBlock(aReflowState, aMetrics.width, aMetrics.height,
+                             containingBlockWidth, containingBlockHeight);
+
+    rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                   containingBlockWidth, containingBlockHeight,
+                                   childBounds);
+
+    // Factor the absolutely positioned child bounds into the overflow area
+    aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea, childBounds);
+
+    // Make sure the NS_FRAME_OUTSIDE_CHILDREN flag is set correctly
+    if ((aMetrics.mOverflowArea.x < 0) ||
+        (aMetrics.mOverflowArea.y < 0) ||
+        (aMetrics.mOverflowArea.XMost() > aMetrics.width) ||
+        (aMetrics.mOverflowArea.YMost() > aMetrics.height)) {
+      mState |= NS_FRAME_OUTSIDE_CHILDREN;
+    } else {
+      mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
+    }
+  }
+
 #ifdef DEBUG
   if (gNoisy) {
     gNoiseIndent--;
@@ -1813,6 +1944,13 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     printf("%s\n", buf);
   }
 #endif
+  /*
+  if (aMetrics.maxElementSize) {
+    printf("block %p returning with maxElementSize=%d,%d\n", this,
+           aMetrics.maxElementSize->width,
+           aMetrics.maxElementSize->height);
+  }
+  */
   return rv;
 }
 
@@ -1942,6 +2080,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   else {
     // Compute final width
     nscoord maxWidth = 0, maxHeight = 0;
+    /*SEC*///printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
     nscoord minWidth = aState.mKidXMost + borderPadding.right;
     if (!HaveAutoWidth(aReflowState)) {
       // Use style defined width
@@ -2165,6 +2304,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // If we're requested to update our maximum width, then compute it
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
     // We need to add in for the right border/padding
+    // The line below should be completely unnecessary if max element sizes are 
+    // computed correctly. But I found a case where this wasn't true.
+    // Still investigating, leaving the line in as a place holder
+    // XXX, should be unnecessary:  aMetrics.mMaximumWidth = PR_MAX(aMetrics.mMaximumWidth, aMetrics.width);
     aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
   }
 
@@ -3646,6 +3789,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                        applyTopMargin, aState.mPrevBottomMargin,
                        aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
+  if (PR_TRUE==brc.BlockShouldInvalidateItself()) {
+    Invalidate(aState.mPresContext, mRect);
+  }
+
   if (frame == aState.mNextRCFrame) {
     // NULL out mNextRCFrame so if we reflow it again we don't think it's still
     // an incremental reflow
@@ -4720,10 +4867,11 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // then make sure we take up all of the available width
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
     aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
-
+    /*sec*/ //printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
   }
   else if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
+    /*sec*/ //printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
   }
 }
 
@@ -4908,7 +5056,11 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
   if (nsnull == aFrameList) {
     return NS_OK;
   }
-  if (nsLayoutAtoms::floaterList == aListName) {
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    return mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
+                                           aFrameList);
+  }
+  else if (nsLayoutAtoms::floaterList == aListName) {
     // XXX we don't *really* care about this right now because we are
     // BuildFloaterList ing still
     mFloaters.AppendFrames(nsnull, aFrameList);
@@ -4951,7 +5103,11 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList)
 {
-  if (nsLayoutAtoms::floaterList == aListName) {
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    return mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
+                                           aPrevFrame, aFrameList);
+  }
+  else if (nsLayoutAtoms::floaterList == aListName) {
     // XXX we don't *really* care about this right now because we are
     // BuildFloaterList'ing still
     mFloaters.AppendFrames(nsnull, aFrameList);
@@ -5111,7 +5267,10 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
     printf("\n");
 #endif
 
-  if (nsLayoutAtoms::floaterList == aListName) {
+  if (nsLayoutAtoms::absoluteList == aListName) {
+      return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+  }
+  else if (nsLayoutAtoms::floaterList == aListName) {
     // Remove floater from the floater list first
     mFloaters.RemoveFrame(aOldFrame);
 
@@ -5360,6 +5519,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0,
                                 isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
+  if (PR_TRUE==brc.BlockShouldInvalidateItself()) {
+    Invalidate(aState.mPresContext, mRect);
+  }
   if (floater == aState.mNextRCFrame) {
     // NULL out mNextRCFrame so if we reflow it again we don't think it's still
     // an incremental reflow
@@ -5394,7 +5556,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // If we computed it, then stash away the max-element-size for later
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
-    aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
+    nsSize mes = brc.GetMaxElementSize();
+    mes.SizeBy(aMarginResult.left + aMarginResult.right, 
+               aMarginResult.top  + aMarginResult.bottom);
+    aState.StoreMaxElementSize(floater, mes);
   }
 
   return NS_OK;
@@ -6146,17 +6311,8 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv)){
-      nsCOMPtr<nsISelectionController> selCon;
-      rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
       nsCOMPtr<nsIFrameSelection> frameselection;
-      if (NS_SUCCEEDED(rv) && selCon)
-      {
-        frameselection = do_QueryInterface(selCon); //this MAY implement
-      }
-      if (!frameselection)
-        shell->GetFrameSelection(getter_AddRefs(frameselection));
-      if (frameselection)
-      {
+      if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
           PRBool mouseDown = PR_FALSE;
           if (NS_FAILED(frameselection->GetMouseDownState(&mouseDown)) || !mouseDown) 
             return NS_OK;//do not handle
@@ -6326,6 +6482,34 @@ nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {  
+  if (aChild) {
+    // See if the child is absolutely positioned
+    nsFrameState  childState;
+    aChild->GetFrameState(&childState);
+    if (childState & NS_FRAME_OUT_OF_FLOW) {
+      const nsStylePosition*  position;
+      aChild->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+
+      if (position->IsAbsolutelyPositioned()) {
+        // Generate a reflow command to reflow our dirty absolutely
+        // positioned child frames.
+        // XXX Note that we don't currently try and coalesce the reflow commands,
+        // although we should. We can't use the NS_FRAME_HAS_DIRTY_CHILDREN
+        // flag, because that's used to indicate whether in-flow children are
+        // dirty...
+        nsIReflowCommand* reflowCmd;
+        nsresult          rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                                       nsIReflowCommand::ReflowDirty);
+        if (NS_SUCCEEDED(rv)) {
+          reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
+          aPresShell->AppendReflowCommand(reflowCmd);
+          NS_RELEASE(reflowCmd);
+        }
+        return rv;
+      }
+    }
+  }
+  
   // Mark the line containing the child frame dirty.
   if (aChild) {    
     PRBool isFloater;
@@ -6505,7 +6689,10 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsresult rv = NS_OK;
 
-  if (nsLayoutAtoms::floaterList == aListName) {
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
+  }
+  else if (nsLayoutAtoms::floaterList == aListName) {
     mFloaters.SetFrames(aChildList);
   }
   else {
