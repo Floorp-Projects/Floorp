@@ -1436,6 +1436,12 @@ nsXMLHttpRequest::Unload(nsIDOMEvent* aEvent)
 }
 
 nsresult
+nsXMLHttpRequest::BeforeUnload(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
 nsXMLHttpRequest::Abort(nsIDOMEvent* aEvent)
 {
   Abort();

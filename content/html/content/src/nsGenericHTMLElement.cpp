@@ -1809,6 +1809,7 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
           aName == nsLayoutAtoms::onmousemove                   ||
           aName == nsLayoutAtoms::onload                        ||
           aName == nsLayoutAtoms::onunload                      ||
+          aName == nsLayoutAtoms::onbeforeunload                ||
           aName == nsLayoutAtoms::onabort                       ||
           aName == nsLayoutAtoms::onerror                       ||
           aName == nsLayoutAtoms::onfocus                       ||

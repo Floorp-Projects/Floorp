@@ -64,6 +64,13 @@ public:
   NS_IMETHOD Load(nsIDOMEvent* aEvent) = 0;
 
   /**
+   * Processes a page beforeUnload event
+   * @param aMouseEvent @see nsIDOMEvent.h
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent) = 0;
+
+  /**
    * Processes a page unload event
    * @param aMouseEvent @see nsIDOMEvent.h 
    * @returns whether the event was consumed or ignored. @see nsresult

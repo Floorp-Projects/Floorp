@@ -94,9 +94,8 @@ public:
                                        PRUint32 aLineNo,
                                        PRBool aShared,
                                        void** aHandler);
-  virtual nsresult CallEventHandler(void *aTarget, void *aHandler, 
-                                    PRUint32 argc, void *argv,
-                                    PRBool *aBoolResult);
+  virtual nsresult CallEventHandler(JSObject *aTarget, JSObject *aHandler, 
+                                    uintN argc, jsval *argv, jsval* rval);
   virtual nsresult BindCompiledEventHandler(void *aTarget,
                                             nsIAtom *aName,
                                             void *aHandler);

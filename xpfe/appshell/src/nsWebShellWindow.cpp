@@ -1489,26 +1489,25 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
      than it otherwise would.) */
   nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
 
-  nsresult rv;
-  nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner(do_QueryInterface(mWebShell));
-  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
 
-  if (globalObjectOwner) {
-    if (NS_SUCCEEDED(globalObjectOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) && globalObject) {
-      nsCOMPtr<nsIContentViewer> contentViewer;
-      if (NS_SUCCEEDED(mDocShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
-        nsCOMPtr<nsIDocumentViewer> docViewer;
-        nsCOMPtr<nsIPresContext> presContext;
-        docViewer = do_QueryInterface(contentViewer);
-        if (docViewer && NS_SUCCEEDED(docViewer->GetPresContext(getter_AddRefs(presContext)))) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event(NS_XUL_CLOSE);
-          rv = globalObject->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-          if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
-            return PR_TRUE;
-          // else fall through and return PR_FALSE
-        }
-      }
+  if (globalObject) {
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+    nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+
+    if (docViewer) {
+      nsCOMPtr<nsIPresContext> presContext;
+      docViewer->GetPresContext(getter_AddRefs(presContext));
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsMouseEvent event(NS_XUL_CLOSE);
+
+      nsresult rv = globalObject->HandleDOMEvent(presContext, &event, nsnull,
+                                                 NS_EVENT_FLAG_INIT, &status);
+      if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
+        return PR_TRUE;
+      // else fall through and return PR_FALSE
     }
   }
 

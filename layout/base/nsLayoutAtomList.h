@@ -147,6 +147,7 @@ LAYOUT_ATOM(viewProperty, "ViewProperty")
 
   // Alphabetical list of event handler names
 LAYOUT_ATOM(onabort, "onabort")
+LAYOUT_ATOM(onbeforeunload, "onbeforeunload")
 LAYOUT_ATOM(onblur, "onblur")
 LAYOUT_ATOM(onbroadcast, "onbroadcast")
 LAYOUT_ATOM(onchange, "onchange")

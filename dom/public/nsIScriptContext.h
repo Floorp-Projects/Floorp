@@ -195,9 +195,9 @@ public:
    * @param aBoolResult out parameter returning boolean function result, or
    *        true if the result was not boolean.
    **/
-  virtual nsresult CallEventHandler(void* aTarget, void* aHandler,
-                                    PRUint32 argc, void* argv,
-                                    PRBool* aBoolResult) = 0;
+  virtual nsresult CallEventHandler(JSObject* aTarget, JSObject* aHandler,
+                                    uintN argc, jsval* argv,
+                                    jsval* rval) = 0;
 
   /**
    * Bind an already-compiled event handler function to a name in the given

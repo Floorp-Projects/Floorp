@@ -199,6 +199,10 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 
+static const char kDOMStringBundleURL[] =
+  "chrome://communicator/locale/dom/dom.properties";
+
+
 #ifdef NS_DEBUG
 
 #undef NOISY_VIEWER
@@ -414,9 +418,11 @@ protected:
 
   nsIWidget* mParentWidget;          // purposely won't be ref counted
 
+  PRPackedBool         mInPermitUnload;
+
 #ifdef NS_PRINTING
+  PRPackedBool          mClosingWhilePrinting;
   nsPrintEngine*        mPrintEngine;
-  PRBool                mClosingWhilePrinting;
   nsCOMPtr<nsIDOMWindowInternal> mDialogParentWin;
 #if NS_PRINT_PREVIEW
   // These data member support delayed printing when the document is loading
@@ -962,6 +968,104 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
+DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
+{
+  *aPermitUnload = PR_TRUE;
+
+  if (!mDocument || mInPermitUnload) {
+    return NS_OK;
+  }
+
+  // First, get the script global object from the document...
+  nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+
+  if (!global) {
+    // This is odd, but not fatal
+    NS_WARNING("nsIScriptGlobalObject not set for document!");
+    return NS_OK;
+  }
+
+  // Now, fire an BeforeUnload event to the document and see if it's ok
+  // to unload...
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsBeforePageUnloadEvent event(NS_BEFORE_PAGE_UNLOAD);
+
+  // In evil cases we might be destroyed while handling the
+  // onbeforeunload event, don't let that happen.
+  nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+
+  mInPermitUnload = PR_TRUE;
+  nsresult rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+                                       NS_EVENT_FLAG_INIT, &status);
+  mInPermitUnload = PR_FALSE;
+
+  if (NS_SUCCEEDED(rv) && event.flags & NS_EVENT_FLAG_NO_DEFAULT) {
+    // Ask the user if it's ok to unload the current page
+
+    nsCOMPtr<nsIPrompt> prompt(do_GetInterface(mContainer));
+
+    if (prompt) {
+      nsCOMPtr<nsIStringBundleService>
+        stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+      NS_ENSURE_TRUE(stringService, NS_OK);
+
+      nsCOMPtr<nsIStringBundle> bundle;
+      stringService->CreateBundle(kDOMStringBundleURL, getter_AddRefs(bundle));
+      NS_ENSURE_TRUE(bundle, NS_OK);
+
+      nsXPIDLString preMsg, postMsg;
+      nsresult rv;
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("OnBeforeUnloadPreMessage").get(), getter_Copies(preMsg));
+      rv |= bundle->GetStringFromName(NS_LITERAL_STRING("OnBeforeUnloadPostMessage").get(), getter_Copies(postMsg));
+
+      // GetStringFromName can succeed, yet give NULL strings back.
+      if (NS_FAILED(rv) || !preMsg || !postMsg) {
+        NS_ERROR("Failed to get strings from dom.properties!");
+        return NS_OK;
+      }
+
+      // Limit the length of the text the page can inject into this
+      // dialogue to 1024 characters.
+      PRInt32 len = PR_MIN(event.text.Length(), 1024);
+
+      nsAutoString msg(preMsg + NS_LITERAL_STRING("\n\n") +
+                       StringHead(event.text, len) +
+                       NS_LITERAL_STRING("\n\n") + postMsg);
+
+      // This doesn't pass a title, which makes the title be
+      // "Confirm", is that ok, or do we want a localizable title for
+      // this dialogue?
+      if (NS_FAILED(prompt->Confirm(nsnull, msg.get(), aPermitUnload))) {
+        *aPermitUnload = PR_TRUE;
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDocShellTreeNode> docShellNode(do_QueryInterface(mContainer));
+
+  if (docShellNode) {
+    PRInt32 childCount;
+    docShellNode->GetChildCount(&childCount);
+
+    for (PRInt32 i = 0; i < childCount && *aPermitUnload; ++i) {
+      nsCOMPtr<nsIDocShellTreeItem> item;
+      docShellNode->GetChildAt(i, getter_AddRefs(item));
+
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
+      nsCOMPtr<nsIContentViewer> cv;
+
+      docShell->GetContentViewer(getter_AddRefs(cv));
+
+      if (cv) {
+        cv->PermitUnload(aPermitUnload);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentViewerImpl::Unload()
 {
   mEnableRendering = PR_FALSE;
@@ -971,11 +1075,11 @@ DocumentViewerImpl::Unload()
   }
 
   // First, get the script global object from the document...
-  nsCOMPtr<nsIScriptGlobalObject> global = mDocument->GetScriptGlobalObject();
+  nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
 
   if (!global) {
     // Fail if no ScriptGlobalObject is available...
-    NS_ASSERTION(0, "nsIScriptGlobalObject not set for document!");
+    NS_ERROR("nsIScriptGlobalObject not set for document!");
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -1120,6 +1224,8 @@ DocumentViewerImpl::Destroy()
     mPresShell->Destroy();
     mPresShell = nsnull;
   }
+
+  mContainer = nsnull;
 
   return NS_OK;
 }

@@ -117,6 +117,7 @@ public:
 
     // nsIDOMLoadListener
     NS_IMETHOD Load(nsIDOMEvent* aEvent);
+    NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
     NS_IMETHOD Unload(nsIDOMEvent* aEvent);
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
@@ -157,6 +158,7 @@ public:
 
     // nsIDOMLoadListener
     NS_IMETHOD Load(nsIDOMEvent* aEvent);
+    NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
     NS_IMETHOD Unload(nsIDOMEvent* aEvent);
     NS_IMETHOD Abort(nsIDOMEvent* aEvent);
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
@@ -195,6 +197,18 @@ txLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 
     if (listener) {
         return listener->Load(aEvent);
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+txLoadListenerProxy::BeforeUnload(nsIDOMEvent* aEvent)
+{
+    nsCOMPtr<nsIDOMLoadListener> listener = do_QueryReferent(mParent);
+
+    if (listener) {
+        return listener->BeforeUnload(aEvent);
     }
 
     return NS_OK;
@@ -461,6 +475,14 @@ nsSyncLoader::Load(nsIDOMEvent* aEvent)
         mLoading = PR_FALSE;
         mLoadSuccess = PR_TRUE;
     }
+
+    return NS_OK;
+}
+
+nsresult
+nsSyncLoader::BeforeUnload(nsIDOMEvent* aEvent)
+{
+    // Like, whatever.
 
     return NS_OK;
 }

@@ -240,6 +240,7 @@ protected:
   static jsval sOnchange_id;
   static jsval sOnselect_id;
   static jsval sOnload_id;
+  static jsval sOnbeforeunload_id;
   static jsval sOnunload_id;
   static jsval sOnabort_id;
   static jsval sOnerror_id;

@@ -64,10 +64,10 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsIURI.h"
 
-static const char* const mEventNames[] = {
+static const char* const sEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
-  "focus", "blur", "load", "unload", "abort", "error",
+  "focus", "blur", "load", "beforeunload", "unload", "abort", "error",
   "submit", "reset", "change", "select", "input", "paint" ,"text",
   "popupshowing", "popupshown", "popuphiding", "popuphidden", "close", "command", "broadcast", "commandupdate",
   "dragenter", "dragover", "dragexit", "dragdrop", "draggesture", "resize",
@@ -1482,113 +1482,115 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MOUSE_LEFT_BUTTON_DOWN:
   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
   case NS_MOUSE_RIGHT_BUTTON_DOWN:
-    return mEventNames[eDOMEvents_mousedown];
+    return sEventNames[eDOMEvents_mousedown];
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
-    return mEventNames[eDOMEvents_mouseup];
+    return sEventNames[eDOMEvents_mouseup];
   case NS_MOUSE_LEFT_CLICK:
   case NS_MOUSE_MIDDLE_CLICK:
   case NS_MOUSE_RIGHT_CLICK:
-    return mEventNames[eDOMEvents_click];
+    return sEventNames[eDOMEvents_click];
   case NS_MOUSE_LEFT_DOUBLECLICK:
   case NS_MOUSE_MIDDLE_DOUBLECLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
-    return mEventNames[eDOMEvents_dblclick];
+    return sEventNames[eDOMEvents_dblclick];
   case NS_MOUSE_ENTER_SYNTH:
-    return mEventNames[eDOMEvents_mouseover];
+    return sEventNames[eDOMEvents_mouseover];
   case NS_MOUSE_EXIT_SYNTH:
-    return mEventNames[eDOMEvents_mouseout];
+    return sEventNames[eDOMEvents_mouseout];
   case NS_MOUSE_MOVE:
-    return mEventNames[eDOMEvents_mousemove];
+    return sEventNames[eDOMEvents_mousemove];
   case NS_KEY_UP:
-    return mEventNames[eDOMEvents_keyup];
+    return sEventNames[eDOMEvents_keyup];
   case NS_KEY_DOWN:
-    return mEventNames[eDOMEvents_keydown];
+    return sEventNames[eDOMEvents_keydown];
   case NS_KEY_PRESS:
-    return mEventNames[eDOMEvents_keypress];
+    return sEventNames[eDOMEvents_keypress];
   case NS_FOCUS_CONTENT:
-    return mEventNames[eDOMEvents_focus];
+    return sEventNames[eDOMEvents_focus];
   case NS_BLUR_CONTENT:
-    return mEventNames[eDOMEvents_blur];
+    return sEventNames[eDOMEvents_blur];
   case NS_XUL_CLOSE:
-    return mEventNames[eDOMEvents_close];
+    return sEventNames[eDOMEvents_close];
   case NS_PAGE_LOAD:
   case NS_IMAGE_LOAD:
   case NS_SCRIPT_LOAD:
-    return mEventNames[eDOMEvents_load];
+    return sEventNames[eDOMEvents_load];
+  case NS_BEFORE_PAGE_UNLOAD:
+    return sEventNames[eDOMEvents_beforeunload];
   case NS_PAGE_UNLOAD:
-    return mEventNames[eDOMEvents_unload];
+    return sEventNames[eDOMEvents_unload];
   case NS_IMAGE_ABORT:
-    return mEventNames[eDOMEvents_abort];
+    return sEventNames[eDOMEvents_abort];
   case NS_IMAGE_ERROR:
   case NS_SCRIPT_ERROR:
-    return mEventNames[eDOMEvents_error];
+    return sEventNames[eDOMEvents_error];
   case NS_FORM_SUBMIT:
-    return mEventNames[eDOMEvents_submit];
+    return sEventNames[eDOMEvents_submit];
   case NS_FORM_RESET:
-    return mEventNames[eDOMEvents_reset];
+    return sEventNames[eDOMEvents_reset];
   case NS_FORM_CHANGE:
-    return mEventNames[eDOMEvents_change];
+    return sEventNames[eDOMEvents_change];
   case NS_FORM_SELECTED:
-    return mEventNames[eDOMEvents_select];
+    return sEventNames[eDOMEvents_select];
   case NS_FORM_INPUT:
-    return mEventNames[eDOMEvents_input];
+    return sEventNames[eDOMEvents_input];
   case NS_PAINT:
-    return mEventNames[eDOMEvents_paint];
+    return sEventNames[eDOMEvents_paint];
   case NS_RESIZE_EVENT:
-    return mEventNames[eDOMEvents_resize];
+    return sEventNames[eDOMEvents_resize];
   case NS_SCROLL_EVENT:
-    return mEventNames[eDOMEvents_scroll];
+    return sEventNames[eDOMEvents_scroll];
   case NS_TEXT_TEXT:
-	  return mEventNames[eDOMEvents_text];
+	  return sEventNames[eDOMEvents_text];
   case NS_XUL_POPUP_SHOWING:
-    return mEventNames[eDOMEvents_popupShowing];
+    return sEventNames[eDOMEvents_popupShowing];
   case NS_XUL_POPUP_SHOWN:
-    return mEventNames[eDOMEvents_popupShown];
+    return sEventNames[eDOMEvents_popupShown];
   case NS_XUL_POPUP_HIDING:
-    return mEventNames[eDOMEvents_popupHiding];
+    return sEventNames[eDOMEvents_popupHiding];
   case NS_XUL_POPUP_HIDDEN:
-    return mEventNames[eDOMEvents_popupHidden];
+    return sEventNames[eDOMEvents_popupHidden];
   case NS_XUL_COMMAND:
-    return mEventNames[eDOMEvents_command];
+    return sEventNames[eDOMEvents_command];
   case NS_XUL_BROADCAST:
-    return mEventNames[eDOMEvents_broadcast];
+    return sEventNames[eDOMEvents_broadcast];
   case NS_XUL_COMMAND_UPDATE:
-    return mEventNames[eDOMEvents_commandupdate];
+    return sEventNames[eDOMEvents_commandupdate];
   case NS_DRAGDROP_ENTER:
-    return mEventNames[eDOMEvents_dragenter];
+    return sEventNames[eDOMEvents_dragenter];
   case NS_DRAGDROP_OVER_SYNTH:
-    return mEventNames[eDOMEvents_dragover];
+    return sEventNames[eDOMEvents_dragover];
   case NS_DRAGDROP_EXIT_SYNTH:
-    return mEventNames[eDOMEvents_dragexit];
+    return sEventNames[eDOMEvents_dragexit];
   case NS_DRAGDROP_DROP:
-    return mEventNames[eDOMEvents_dragdrop];
+    return sEventNames[eDOMEvents_dragdrop];
   case NS_DRAGDROP_GESTURE:
-    return mEventNames[eDOMEvents_draggesture];
+    return sEventNames[eDOMEvents_draggesture];
   case NS_SCROLLPORT_OVERFLOW:
-    return mEventNames[eDOMEvents_overflow];
+    return sEventNames[eDOMEvents_overflow];
   case NS_SCROLLPORT_UNDERFLOW:
-    return mEventNames[eDOMEvents_underflow];
+    return sEventNames[eDOMEvents_underflow];
   case NS_SCROLLPORT_OVERFLOWCHANGED:
-    return mEventNames[eDOMEvents_overflowchanged];
+    return sEventNames[eDOMEvents_overflowchanged];
   case NS_MUTATION_SUBTREEMODIFIED:
-    return mEventNames[eDOMEvents_subtreemodified];
+    return sEventNames[eDOMEvents_subtreemodified];
   case NS_MUTATION_NODEINSERTED:
-    return mEventNames[eDOMEvents_nodeinserted];
+    return sEventNames[eDOMEvents_nodeinserted];
   case NS_MUTATION_NODEREMOVED:
-    return mEventNames[eDOMEvents_noderemoved];
+    return sEventNames[eDOMEvents_noderemoved];
   case NS_MUTATION_NODEREMOVEDFROMDOCUMENT:
-    return mEventNames[eDOMEvents_noderemovedfromdocument];
+    return sEventNames[eDOMEvents_noderemovedfromdocument];
   case NS_MUTATION_NODEINSERTEDINTODOCUMENT:
-    return mEventNames[eDOMEvents_nodeinsertedintodocument];
+    return sEventNames[eDOMEvents_nodeinsertedintodocument];
   case NS_MUTATION_ATTRMODIFIED:
-    return mEventNames[eDOMEvents_attrmodified];
+    return sEventNames[eDOMEvents_attrmodified];
   case NS_MUTATION_CHARACTERDATAMODIFIED:
-    return mEventNames[eDOMEvents_characterdatamodified];
+    return sEventNames[eDOMEvents_characterdatamodified];
   case NS_CONTEXTMENU:
   case NS_CONTEXTMENU_KEY:
-    return mEventNames[eDOMEvents_contextmenu];
+    return sEventNames[eDOMEvents_contextmenu];
   default:
     break;
   }

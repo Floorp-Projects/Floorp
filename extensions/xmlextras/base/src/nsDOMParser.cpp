@@ -302,6 +302,12 @@ nsDOMParser::Load(nsIDOMEvent* aEvent)
 }
 
 nsresult
+nsDOMParser::BeforeUnload(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
 nsDOMParser::Unload(nsIDOMEvent* aEvent)
 {
   return NS_OK;

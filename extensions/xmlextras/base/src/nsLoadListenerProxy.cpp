@@ -75,6 +75,18 @@ nsLoadListenerProxy::Load(nsIDOMEvent* aEvent)
 }
 
 NS_IMETHODIMP
+nsLoadListenerProxy::BeforeUnload(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
+
+  if (listener) {
+    return listener->BeforeUnload(aEvent);
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDOMLoadListener> listener(do_QueryReferent(mParent));
