@@ -55,6 +55,12 @@ class nsGCCache
     return GetGCFromDW(window, gcv, flags, NULL);
   }
 
+private:
+  static struct GCData gc_cache [30];
+  static int gc_cache_fp;
+  static int gc_cache_wrapped_p;
+  static GdkRegion * gdk_region_copy(GdkRegion *region);
+  static GdkRegion *copyRegion;
 };
 
 #endif

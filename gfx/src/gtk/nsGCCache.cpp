@@ -25,9 +25,11 @@
 #include "nsGCCache.h"
 /* The GC cache is shared among all windows, since it doesn't hog
    any scarce resources (like colormap entries.) */
-static struct GCData gc_cache [30];
-static int gc_cache_fp;
-static int gc_cache_wrapped_p = 0;
+
+struct GCData nsGCCache::gc_cache[30];
+int nsGCCache::gc_cache_fp = 0;
+int nsGCCache::gc_cache_wrapped_p = 0;
+GdkRegion *nsGCCache::copyRegion = NULL;
 
 nsGCCache::nsGCCache()
 {
@@ -39,9 +41,9 @@ nsGCCache::~nsGCCache()
 
 }
 
-static GdkRegion *gdk_region_copy(GdkRegion *region)
+GdkRegion *
+nsGCCache::gdk_region_copy(GdkRegion *region)
 {
-  static GdkRegion *copyRegion;
   if (!copyRegion) copyRegion = gdk_region_new();
 
   return gdk_regions_union(region, copyRegion);
