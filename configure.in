@@ -1996,14 +1996,31 @@ else
 fi
 
 dnl 
-dnl MOZILLA_CLIENT
 dnl NO_MDUPDATE
 dnl
 dnl These are set just to be safe.  It is possible that NSPR doesnt
 dnl use these anymore.
 dnl 
-MOZ_NSPRENV_MOZILLA_CLIENT=
 MOZ_NSPRENV_NO_MDUPDATE=1
+
+dnl 
+dnl MOZILLA_CLIENT
+dnl
+dnl On linux libc5, MOZILLA_CLIENT needs to be set so that NSPR chooses 
+dnl the correct threading implementation (user threads - not pthreads)
+dnl 
+dnl But, on libc6 linux, you cant set MOZILLA_CLIENT for NSPR cause it
+dnl screws things up.
+dnl
+MOZ_NSPRENV_MOZILLA_CLIENT=
+case "$target" in
+	*-linux*)
+		if test ! -x /lib/libc.so.6
+		then
+			MOZ_NSPRENV_MOZILLA_CLIENT=1
+		fi
+	;;
+esac
 
 dnl 
 dnl DIST
