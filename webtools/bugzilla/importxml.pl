@@ -28,6 +28,21 @@
 use diagnostics;
 use strict;
 
+#####################################################################
+#
+# This script is used import bugs from another installation of bugzilla.
+# Moving a bug on another system will send mail to an alias provided by
+# the administrator of the target installation (you). Set up an alias
+# similar to the one given below so this mail will be automatically 
+# run by this script and imported into your database.  Run 'newaliases'
+# after adding this alias to your aliases file. Make sure your sendmail
+# installation is configured to allow mail aliases to execute code. 
+#
+# bugzilla-import: "|/usr/bin/perl /opt/bugzilla/importxml.pl"
+#
+#####################################################################
+
+
 # figure out which path this script lives in. Set the current path to
 # this and add it to @INC so this will work when run as part of mail
 # alias by the mailer daemon
