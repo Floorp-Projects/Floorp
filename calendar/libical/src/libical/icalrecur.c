@@ -3,7 +3,7 @@
   FILE: icalrecur.c
   CREATOR: eric 16 May 2000
   
-  $Id: icalrecur.c,v 1.1.1.2 2005/01/24 22:10:58 mvl%exedo.nl Exp $
+  $Id: icalrecur.c,v 1.63 2005/02/15 17:39:00 acampi Exp $
   $Locker:  $
     
 
@@ -154,6 +154,10 @@ typedef long intptr_t;
 #include <string.h> /* for strdup and strchr*/
 #include <assert.h>
 #include <stddef.h> /* For offsetof() macro */
+
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
 
 #include "pvl.h"
 
