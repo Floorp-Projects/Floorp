@@ -394,7 +394,6 @@ NS_IMETHODIMP
 nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
   if (nsnull == mCells) {
-    NS_ADDREF(nsHTMLAtoms::td);
     mCells = new GenericElementCollection(this, nsHTMLAtoms::td);
     NS_ADDREF(mCells); // this table's reference, released in the destructor
   }
