@@ -347,7 +347,7 @@ PRBool nsGfxRadioControlFrame::GetRadioState()
 void nsGfxRadioControlFrame::SetRadioState(nsIPresContext* aPresContext, PRBool aValue)
 {
   mChecked = aValue;
-	nsFormControlHelper::ForceDrawFrame(aPresContext, this);
+  nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
 void 
@@ -370,7 +370,14 @@ nsGfxRadioControlFrame::InitializeControl(nsIPresContext* aPresContext)
   if (!primaryPresShell) return;
 
   if (presShell.get() == primaryPresShell.get()) {
-    nsFormControlHelper::Reset(this, aPresContext);
+    // set the widget to the initial state
+    // XXX We can't use reset because radio buttons fire onChange
+    // from content (much to our dismay)
+    PRBool checked = PR_FALSE;
+    nsresult rv = GetDefaultCheckState(&checked);
+    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+      SetRadioState(aPresContext, checked);
+    }
   }
 }
 

@@ -313,7 +313,15 @@ nsGfxCheckboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
   if (!primaryPresShell) return;
 
   if (presShell.get() == primaryPresShell.get()) {
-    nsFormControlHelper::Reset(this, aPresContext);
+    // Reset the value
+    // XXX We set the checkbox directly in the frame, because
+    // content fires onChange :(
+    PRBool checked = PR_FALSE;
+    nsresult rv = GetDefaultCheckState(&checked);
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+      SetCheckboxState (aPresContext, checked ? eOn : eOff );
+    }
   }
 }
 
