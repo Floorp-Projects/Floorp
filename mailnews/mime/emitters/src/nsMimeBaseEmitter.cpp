@@ -485,7 +485,7 @@ nsMimeBaseEmitter::UpdateCharacterSet(const char *aCharset)
     
     if (NS_SUCCEEDED(mChannel->GetContentType(&contentType)) && contentType)
     {
-      char *cPtr = (char *) PL_strstr(contentType, "charset=");
+      char *cPtr = (char *) PL_strcasestr(contentType, "charset=");
 
       if (cPtr)
       {
