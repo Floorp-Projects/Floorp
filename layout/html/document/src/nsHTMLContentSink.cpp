@@ -341,6 +341,23 @@ PRInt32 HTMLContentSink::SetTitle(const nsString& aValue)
   }
   mTitle->CompressWhitespace(PR_TRUE, PR_TRUE);
   ((nsHTMLDocument*)mDocument)->SetTitle(*mTitle);
+
+  if (nsnull == mHead) {
+    nsIAtom* atom = NS_NewAtom("HEAD");
+    nsresult rv = NS_NewHTMLHead(&mHead, atom);
+    if (NS_OK == rv) {
+      mRoot->InsertChildAt(mHead, 0, PR_FALSE);
+    }
+    NS_RELEASE(atom);
+  }
+
+  nsIAtom* atom = NS_NewAtom("TITLE");
+  nsIHTMLContent* it = nsnull;
+  nsresult rv = NS_NewHTMLTitle(&it, atom, aValue);
+  if (NS_OK == rv) {
+    mHead->AppendChild(it, PR_FALSE);
+  }
+  NS_RELEASE(atom);
   return 0;
 }
 
