@@ -421,7 +421,7 @@ nsHTMLEditor::GetFirstSelectedCell(nsCOMPtr<nsIDOMElement> &aCell)
         // loop through the content iterator for each content node
         nsCOMPtr<nsIContent> content;
 
-        while (NS_COMFALSE == iter->IsDone())
+        while (NS_ENUMERATOR_FALSE == iter->IsDone())
         {
           res = iter->CurrentNode(getter_AddRefs(content));
           // Not likely!
