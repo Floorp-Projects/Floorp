@@ -2177,6 +2177,36 @@ CMTStatus CMT_RandomUpdate(PCMT_CONTROL control, void *data, size_t numbytes);
  */
 CMTStatus CMT_FlushPendingRandomData(PCMT_CONTROL control);
 
+/*
+ * FUNCTION: CMT_SDREncrypt
+ * ----------------------------------
+ * INPUTS
+ *    control
+ *        A control connection that has been established with the psm server.
+ *    key
+ *        A buffer containing the key identifier to use for encrypting. May
+ *        be NULL if keyLen is 0, which uses the "default" key.
+ *    keyLen
+ *        The length of the key identifier.
+ *    data
+ *        A buffer containing the data to encrypt
+ *    dataLen
+ *        The length of the data buffer
+ *    result
+ *        Recieves a pointer to a buffer containing the result of the
+ *        encryption.
+ *    resultLen
+ *        Receives the length of the result buffer
+ * NOTES
+ *
+ * RETURN
+ *     CMTSuccess - the encryption worked.
+ *     CMTFailure - some (unspecified) error occurred  (needs work)
+ */
+CMTStatus CMT_SDREncrypt(PCMT_CONTROL control, 
+               const unsigned char *key, CMUint32 keyLen,
+               const unsigned char *data, CMUint32 dataLen,
+               unsigned char **result, CMUint32 *resultLen);
 
 /* Lock operations */
 void CMT_LockConnection(PCMT_CONTROL control);
