@@ -203,6 +203,10 @@ moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
   }
   
   TSOffsetStyleGCs(style, x, y);
+
+  // Some themes check the widget state themselves.
+  gtk_toggle_button_set_active(gCheckboxWidget, selected);
+
   if (isradio)
     gtk_paint_option(style, window, state_type, shadow_type, cliprect,
                      gCheckboxWidget, "radiobutton", x, y, width, height);
