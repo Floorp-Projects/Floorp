@@ -23,29 +23,35 @@
  *    Darin Fisher    <darin@netscape.com>
  */
 
-
 #include "nsISupports.idl"
 #include "nsICache.idl"
 
 interface nsICacheEntryDescriptor;
 interface nsICacheListener;
 
-
 [scriptable, uuid(b4b419ad-28b7-4d25-9988-20fa98505a19)]
 interface nsICacheSession : nsISupports
 {
-    /*
-     * Synchronous cache access. This returns a unique descriptor each
-     * time it is called, even if the same key is specified. When
-     * called by multiple threads for write access, only one writeable
+    /**
+     * A cache session can only give out one cache entry descriptor with
+     * WRITE access at a time.  Until the client calls MarkValid on its
+     * descriptor, other attempts to open the same cache entry will 
+     * block.
+     */
+
+    /**
+     * Synchronous cache access.  This returns a unique descriptor each
+     * time it is called, even if the same key is specified.  When
+     * called by multiple threads for write access, only one writable
      * descriptor will be granted.
      */
-    nsICacheEntryDescriptor  openCacheEntry(in string             key,
-                                            in nsCacheAccessMode  accessRequested);
+    nsICacheEntryDescriptor openCacheEntry(in string            key,
+                                           in nsCacheAccessMode accessRequested);
 
-
-    /*
+    /**
      * Asynchronous cache access. Does not block the calling thread.
+     * Instead, the listener will be notified when the descriptor is
+     * available.
      */
     void asyncOpenCacheEntry(in string            key,
                              in nsCacheAccessMode accessRequested,

@@ -23,94 +23,117 @@
  *    Darin Fisher    <darin@netscape.com>
  */
 
-
-
 typedef long nsCacheStoragePolicy;
 typedef long nsCacheAccessMode;
 
+/**
+ * nsICache is a namespace for various cache constants.  It does not represent
+ * an actual object.
+ */
 [scriptable, uuid(ec1c0063-197d-44bb-84ba-7525d50fc937)]
 interface nsICache
 {
     /**
-     * Cache Access Mode
+     * Access Modes
      *
      *
      * Mode Requested | Not Cached          | Cached
-     * --------------------------------------------------------------------------
-     * READ           | NS_NOT_IN_CACHE     | NS_OK
-     *                | Flags = 0           | Flags = READ
-     *                | No Channel          | Channel
-     * --------------------------------------------------------------------------
+     * ------------------------------------------------------------------------
+     * READ           | KEY_NOT_FOUND       | NS_OK
+     *                | Mode = NONE         | Mode = READ
+     *                | No Descriptor       | Descriptor
+     * ------------------------------------------------------------------------
      * WRITE          | NS_OK               | NS_OK            (Cache manager
-     *                | Flags = WRITE       | Flags = WRITE     dooms existing
-     *                | Channel             | Channel           cache object)
-     * --------------------------------------------------------------------------
-     * READ|WRITE     | NS_OK               | NS_OK
-     * (1st req.)     | Flags = WRITE       | Flags = READ|WRITE
-     *                | Channel             | Channel
-     * --------------------------------------------------------------------------
-     * READ|WRITE     | N/A                 | NS_OK
-     * (Nth req.)     |                     | Flags = READ
-     *                |                     | Channel
-     * --------------------------------------------------------------------------
+     *                | Mode = WRITE        | Mode = WRITE      dooms existing
+     *                | Descriptor          | Descriptor        cache entry)
+     * ------------------------------------------------------------------------
+     * READ_WRITE     | NS_OK               | NS_OK
+     * (1st req.)     | Mode = WRITE        | Mode = READ_WRITE
+     *                | Descriptor          | Descriptor
+     * ------------------------------------------------------------------------
+     * READ_WRITE     | N/A                 | NS_OK
+     * (Nth req.)     |                     | Mode = READ
+     *                |                     | Descriptor
+     * ------------------------------------------------------------------------
      *
      *
-     * If you think that you might need to modify cached data or meta data, then
-     * you must open a cache entry with the WRITE flag set.  Only one cache 
-     * entry descriptor, per cache entry, will be granted WRITE permission.
+     * Access Requested:
+     *
+     * READ	       - I only want to READ, if there isn't an entry just fail
+     * WRITE       - I have something new I want to write into the cache, make
+     *               me a new entry and doom the old one, if any.
+     * READ_WRITE  - I want to READ, but I'm willing to update an existing
+     *               entry if necessary, or create a new one if none exists.
+     *
+     *
+     * Access Granted:
+     *
+     * NONE        - No descriptor is provided. You get zilch. Nada. Nothing.
+     * READ		   - You can READ from this descriptor.
+     * WRITE	   - You must WRITE to this descriptor because the cache entry
+     *               was just created for you.
+     * READ_WRITE  - You can READ the descriptor to determine if it's valid,
+     *               you may WRITE if it needs updating.
+     *
+     *
+     * Comments:
+     *
+     * If you think that you might need to modify cached data or meta data,
+     * then you must open a cache entry requesting WRITE access.  Only one
+     * cache entry descriptor, per cache entry, will be granted WRITE access.
      * 
-     * Usually, you will set both the READ and WRITE flags in order to first test
-     * the meta data and informational fields to determine if a write (ie. going
-     * to the net) may actually be necessary.  If you determine that it is not,
-     * then you would mark the cache entry as valid (using MarkValid) and then 
-     * simply read the data from the cache.
+     * Usually, you will request READ_WRITE access in order to first test the
+     * meta data and informational fields to determine if a write (ie. going
+     * to the net) may actually be necessary.  If you determine that it is 
+     * not, then you would mark the cache entry as valid (using MarkValid) and
+     * then simply read the data from the cache.
      *
-     * A descriptor granted WRITE access has exclusive access to the cache entry
-     * up until the point at which it marks it as valid.  Once the
-     * cache entry has been "validated", other descriptors with READ access may be
+     * A descriptor granted WRITE access has exclusive access to the cache
+     * entry up to the point at which it marks it as valid.  Once the cache
+     * entry has been "validated", other descriptors with READ access may be
      * opened to the cache entry.
      *
-     * If you make a request for READ|WRITE access to a cache entry, the cache
+     * If you make a request for READ_WRITE access to a cache entry, the cache
      * service will downgrade your access to READ if there is already a
      * cache entry descriptor open with WRITE access.
      *
-     * If you make a request for WRITE access to a cache entry (without the READ
-     * flag set) and another descriptor with WRITE access is currently
-     * open, then the existing cache entry will be 'doomed', and you will be given
-     * a descriptor (with WRITE access only) to a new cache entry.
+     * If you make a request for only WRITE access to a cache entry and another
+     * descriptor with WRITE access is currently open, then the existing cache
+     * entry will be 'doomed', and you will be given a descriptor (with WRITE
+     * access only) to a new cache entry.
      *
-     * Access Requested:
-     * READ	       - I only want to READ, if there isn't an entry just fail
-     * WRITE       - I have something new I want to write into the cache, make me a new
-     *               entry and doom the old one, if any.
-     * READ_WRITE  - I want to READ, but I'm willing to update an existing entry if
-     *               necessary, or create a new one if none exists.
-     *
-     * Access Granted:
-     * NO_ACCESS   - No descriptor is provided. You get zilch. Nada. Nothing.
-     * READ		   - You can READ from this descriptor
-     * WRITE	   - You must WRITE to this descriptor because the cache entry was just
-     *               created for you
-     * READ_WRITE  - You can READ the descriptor to determine if it's valid,
-     *               you may WRITE if it needs updating
      */
-    const nsCacheAccessMode  ACCESS_NONE       = 0;
-    const nsCacheAccessMode  ACCESS_READ       = 1;
-    const nsCacheAccessMode  ACCESS_WRITE      = 2;
-    const nsCacheAccessMode  ACCESS_READ_WRITE = 3;
+    const nsCacheAccessMode ACCESS_NONE       = 0;
+    const nsCacheAccessMode ACCESS_READ       = 1;
+    const nsCacheAccessMode ACCESS_WRITE      = 2;
+    const nsCacheAccessMode ACCESS_READ_WRITE = 3;
 
     /**
      * Storage Policy
+     *
+     * The storage policy of a cache entry determines the device(s) to which
+     * it belongs.  See nsICacheSession and nsICacheEntryDescriptor for more
+     * details.
+     *
+     * STORE_ANYWHERE  - Allows the cache entry to be stored in any device.
+     *                   The cache service decides which cache device to use
+     *                   based on "some resource management calculation."
+     * STORE_IN_MEMORY - Requires the cache entry to reside in non-persistent
+     *                   storage (ie. typically in system RAM).
+     * STORE_ON_DISK   - Requires the cache entry to reside in persistent
+     *                   storage (ie. typically on a system's hard disk).
      */
-    const nsCacheStoragePolicy  STORE_ANYWHERE  = 0;
-    const nsCacheStoragePolicy  STORE_IN_MEMORY = 1;
-    const nsCacheStoragePolicy  STORE_ON_DISK   = 2;
+    const nsCacheStoragePolicy STORE_ANYWHERE  = 0;
+    const nsCacheStoragePolicy STORE_IN_MEMORY = 1;
+    const nsCacheStoragePolicy STORE_ON_DISK   = 2;
 };
-
 
 
 %{C++
 
+/**
+ * Cache specific nsresult error codes
+ */
 #define NS_ERROR_CACHE_KEY_NOT_FOUND        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 60)
 #define NS_ERROR_CACHE_DATA_IS_STREAM       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 61)
 #define NS_ERROR_CACHE_DATA_IS_NOT_STREAM   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 62)

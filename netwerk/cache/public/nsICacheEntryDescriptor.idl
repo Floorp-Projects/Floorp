@@ -30,53 +30,79 @@
 interface nsISimpleEnumerator;
 interface nsICacheListener;
 
-
 [scriptable, uuid(49c1a11d-f5d2-4f09-8262-551e64908ada)]
 interface nsICacheEntryDescriptor : nsISupports
 {
     /**
-     * attributes from cache entry
+     * Get the key identifying the cache entry.
      */
-    
-    readonly attribute string   key;
-    readonly attribute long     fetchCount;
-    readonly attribute PRTime   lastFetched;
-    readonly attribute PRTime   lastValidated;
-
-    attribute PRTime  expirationTime;
-
-    attribute unsigned long  dataSize;
-
+    readonly attribute string key;
 
     /**
-     *  Indicate whether the cached data is a stream or object.
+     * Get the number of times the cache entry has been opened.
      */
-    boolean  isStreamBased();
+    readonly attribute long fetchCount;
 
     /**
-     *  If the cache entry is a stream, a transport can be requested.
+     * Get the last time the cache entry was opened.
      */
-    readonly attribute nsITransport  transport;
+    readonly attribute PRTime lastFetched;
 
     /**
-     * If the cache entry is not a stream, you can request the non-persistent
-     * cached object.
+     * Get the last time the cache entry was marked valid.
      */
-    attribute nsISupports  cacheElement;
+    readonly attribute PRTime lastValidated;
+
+    /**
+     * Get the expiration time of the cache entry.
+     */
+    attribute PRTime expirationTime;
+
+    /**
+     * Find out whether or not the cache entry is stream based.
+     */
+    boolean isStreamBased();
+
+    /**
+     * Get/set the cache entry data size.  This attribute can only be set if
+     * the cache entry IS NOT stream based.
+     */
+    attribute unsigned long dataSize;
+
+    /**
+     * Get a transport to the cache data.  This will fail if the cache entry
+     * IS NOT stream based.
+     */
+    readonly attribute nsITransport transport;
+
+    /**
+     * Get/set the cache data element.  This will fail if the cache entry
+     * IS stream based.  The cache entry holds a strong reference to this
+     * object.  The object will be released when the cache entry is destroyed.
+     */
+    attribute nsISupports cacheElement;
      
     /**
-     * Access granted to this descriptor. (see nsICacheService.idl)
+     * Get the access granted to this descriptor.  See nsICache.idl for the
+     * definitions of the access modes and a thorough description of their
+     * corresponding meanings.
      */
-    readonly attribute unsigned long accessGranted;
+    readonly attribute nsCacheAccessMode accessGranted;
     
     /**
-     *  
+     * Get/set the storage policy of the cache entry.  See nsICache.idl for
+     * the definitions of the storage policies.
      */
     attribute nsCacheStoragePolicy storagePolicy;
     
     /**
      * Doom the cache entry this descriptor references in order to slate it for 
      * removal.  Once doomed a cache entry cannot be undoomed.
+     *
+     * A descriptor with WRITE access can doom the cache entry and choose to
+     * fail pending requests.  This means that pending requests will not get
+     * a cache descriptor.  This is meant as a tool for clients that wish to
+     * instruct pending requests to skip the cache.
      */
     void doom();
     void doomAndFailPendingRequests(in nsresult status);
@@ -88,11 +114,13 @@ interface nsICacheEntryDescriptor : nsISupports
     void markValid();
     
     /**
-     * Methods for accessing  MetaData.
+     * Methods for accessing meta data.  Meta data is a table of key/value
+     * string pairs.  The strings do not have to conform to any particular
+     * charset, but they must be null terminated.
      */
-    string  getMetaDataElement(in string  key);
-    void    setMetadataElement(in string  key, in string  value);
+    string getMetaDataElement(in string key);
+    void   setMetadataElement(in string key, in string value);
     
-    nsISimpleEnumerator  getMetaDataEnumerator(); /* todo */
+    nsISimpleEnumerator getMetaDataEnumerator(); /* todo */
 };
 
