@@ -81,31 +81,27 @@ char szOSTempDir[CCHMAXPATH];
 
 BOOL isFAT(char* szPath)
 {
-    APIRET rc;
-    ULONG ulSize;
-    PFSQBUFFER2 pfsqbuf2;
-    CHAR szDrive[3];
+  APIRET rc;
+  ULONG ulSize;
+  PFSQBUFFER2 pfsqbuf2;
+  CHAR szDrive[3];
 
-    ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
-    pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
-    strncpy(szDrive, szPath, 2);
-    szDrive[2] = '\0';
+  ulSize = sizeof(FSQBUFFER2) + 3 * CCHMAXPATH;
+  pfsqbuf2 = (PFSQBUFFER2)malloc(ulSize);
+  strncpy(szDrive, szPath, 2);
+  szDrive[2] = '\0';
 
-    DosError(FERR_DISABLEHARDERR);
-    rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
-                          pfsqbuf2, &ulSize);
-    DosError(FERR_ENABLEHARDERR);
+  DosError(FERR_DISABLEHARDERR);
+  rc = DosQueryFSAttach(szDrive, 0, FSAIL_QUERYNAME,
+                        pfsqbuf2, &ulSize);
+  DosError(FERR_ENABLEHARDERR);
 
-    if (rc == NO_ERROR) {
-      if (strcmp((char*)(pfsqbuf2->szFSDName + pfsqbuf2->cbName), "FAT") == 0) {
-        return TRUE;
-      }
-    }
   if (rc == NO_ERROR) {
-    return FALSE;
-  } else {
-    return TRUE;
+    if (strcmp((char*)(pfsqbuf2->szFSDName + pfsqbuf2->cbName), "FAT") != 0)
+      return FALSE;
   }
+
+  return TRUE;
 }
 
 HWND FindWindow(PCSZ pszAtomString)
@@ -121,12 +117,9 @@ HWND FindWindow(PCSZ pszAtomString)
     while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
     {
       ULONG ulWindowWord;
-      ulWindowWord = WinQueryWindowULong(hwnd, QWL_STYLE);
-      if (ulWindowWord & CS_FRAME) {
-        ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
-        if (ulWindowWord == atom) {
-          break;
-        }
+      ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
+      if (ulWindowWord == atom) {
+        break;
       }
     }
   }
@@ -479,10 +472,8 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   char                szSetupFile[CCHMAXPATH];
   char                szUninstallFile[CCHMAXPATH];
   char                szArcLstFile[CCHMAXPATH];
-  BOOL                bRet;
   char                szText[256];
   char                szTempPath[CCHMAXPATH];
-  char                szTmp[CCHMAXPATH];
   char                szFilename[CCHMAXPATH];
   char                szBuf[MAX_BUF];
   ULONG               ulLen;
@@ -494,8 +485,6 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   WinLoadString(0, NULLHANDLE, IDS_STATUS_LAUNCHING_SETUP, sizeof(szText), szText);
   WinSetWindowText(WinWindowFromID(hwndDlg, IDC_STATUS), szText);
 
-  GetFullTempPathName(NULL, sizeof(szTempPath), szTempPath);
-
   // Setup program is in the directory specified for temporary files
   GetFullTempPathName("Archive.lst",   sizeof(szArcLstFile),    szArcLstFile);
   GetFullTempPathName("SETUP.EXE",     sizeof(szSetupFile),     szSetupFile);
@@ -505,6 +494,7 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   if(FileExists(szUninstallFile) && (*szBuf != '\0'))
   {
     strcpy(szCmdLine, szUninstallFile);
+    ulLen = strlen(szUninstallFile);
   }
   else
   {
@@ -513,15 +503,15 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
     PTIB ptib;
     char buffer[CCHMAXPATH];
     DosGetInfoBlocks( &ptib, &ppib);
-    DosQueryModuleName( ppib->pib_hmte, sizeof(szBuf), szBuf);
+    DosQueryModuleName(ppib->pib_hmte, sizeof(szBuf), szBuf);
     ParsePath(szBuf, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
 
     strcat(szCmdLine, " -n ");
     strcat(szCmdLine, szFilename);
+    ulLen = strlen(szSetupFile);
   }
 
-  if(szCmdLine != NULL)
-    strcat(szCmdLine, szCmdLineToSetup);
+  strcat(szCmdLine, szCmdLineToSetup);
 
   // Launch the installer
   RESULTCODES rcChild;
@@ -530,7 +520,7 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
 
   szCmdLine[strlen(szCmdLine)] = '\0';
   szCmdLine[strlen(szCmdLine)+1] = '\0';
-  szCmdLine[strlen(szSetupFile)] = '\0';
+  szCmdLine[ulLen] = '\0';
 
   DosExecPgm(szLoadError,
              sizeof(szLoadError),
@@ -538,7 +528,7 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
              szCmdLine,
              NULL,
              &rcChild,
-             szSetupFile);
+             szCmdLine);
 
   if(ulMode != SILENT)
   {
@@ -553,10 +543,11 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
 
   DeleteTempFiles(ulNumFiles);
 
-  GetFullTempPathName("Archive.lst", sizeof(szTmp), szTmp);
-  DosDelete(szTmp);
-  GetFullTempPathName("xpcom.ns", sizeof(szTmp), szTmp);
-  DirectoryRemove(szTmp, TRUE);
+  GetFullTempPathName("Archive.lst", sizeof(szTempPath), szTempPath);
+  DosDelete(szTempPath);
+  GetFullTempPathName("xpcom.ns", sizeof(szTempPath), szTempPath);
+  DirectoryRemove(szTempPath, TRUE);
+  GetFullTempPathName(NULL, sizeof(szTempPath), szTempPath);
   DirectoryRemove(szTempPath, FALSE);
 
   return TRUE;
@@ -566,11 +557,13 @@ main(int argc, char *argv[], char *envp[])
 {
   HAB hab;
   HMQ hmq;
-  QMSG qmsg;
   HWND hwndFW, hwndDlg;
+  ATOM atom;
 
   hab = WinInitialize(0);
   hmq = WinCreateMsgQueue(hab,0);
+
+  atom = WinAddAtom(WinQuerySystemAtomTable(), "NSExtracting");
 
   char *tempEnvVar = NULL;
 
@@ -622,16 +615,13 @@ main(int argc, char *argv[], char *envp[])
     strcat(szOSTempDir, "TEMP");
   }
 
-
   WinLoadString(0, NULLHANDLE, IDS_TITLE, MAX_BUF, szTitle);
 
-#ifdef OLDCODE
   /* Allow only one instance of nsinstall to run.
    * Detect a previous instance of nsinstall, bring it to the 
    * foreground, and quit current instance */
-  if(FindWindow(CLASS_NAME_SETUP_DLG) != NULL)
+  if(FindWindow("NSExtracting") != NULL)
     return(1);
-#endif
 
   /* Allow only one instance of Setup to run.
    * Detect a previous instance of Setup, and quit */
@@ -661,6 +651,7 @@ main(int argc, char *argv[], char *envp[])
   if(ulMode != SILENT)
   {
     hwndDlg = WinLoadDlg(HWND_DESKTOP, HWND_DESKTOP, DialogProc, NULLHANDLE, IDD_EXTRACTING, NULL);
+    WinSetWindowULong(hwndDlg, QWL_USER, atom);
     WinSetWindowPos(hwndDlg, 0, 0, 0, 0, 0, SWP_SHOW | SWP_ACTIVATE);
   }
 
@@ -671,6 +662,8 @@ main(int argc, char *argv[], char *envp[])
     // Launch the install program and wait for it to finish
     RunInstaller(ulNumFiles, hwndDlg);
   }
+
+  WinDeleteAtom(WinQuerySystemAtomTable(), atom);
 
   WinDestroyMsgQueue(hmq);
   WinTerminate(hab);
