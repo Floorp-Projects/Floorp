@@ -34,11 +34,14 @@ public:
   virtual void SetShell(nsIPresShell* aShell);
   virtual nsIPresShell* GetShell();
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
-                                                  nsIFrame* aParentFrame);
+                                                  nsIFrame* aParentFrame,
+                                                  PRBool aForceUnique = PR_FALSE);
   virtual nsIStyleContext* ResolvePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                        nsIFrame* aParentFrame);
+                                                        nsIFrame* aParentFrame,
+                                                        PRBool aForceUnique = PR_FALSE);
   virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
-                                                      nsIFrame* aParentFrame);
+                                                      nsIFrame* aParentFrame,
+                                                      PRBool aForceUnique = PR_FALSE);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
