@@ -1305,6 +1305,13 @@ nsInstall::FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_CREATE, aTarget, aReturn);
 
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1341,6 +1348,13 @@ nsInstall::FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_REMOVE, aTarget, aFlags, aReturn);
 
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1366,6 +1380,13 @@ PRInt32
 nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_DIR_RENAME, aSrc, aTarget, aReturn);
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
 
   if (ifop == nsnull)
   {
@@ -1393,6 +1414,13 @@ nsInstall::FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_COPY, aSrc, aTarget, aReturn);
 
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1419,6 +1447,13 @@ nsInstall::FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_DELETE, aTarget, aFlags, aReturn);
 
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1444,6 +1479,13 @@ PRInt32
 nsInstall::FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_EXECUTE, aTarget, aParams, aReturn);
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
 
   if (ifop == nsnull)
   {
@@ -1526,6 +1568,13 @@ nsInstall::FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_MOVE, aSrc, aTarget, aReturn);
 
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
   if (ifop == nsnull)
   {
       *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
@@ -1551,6 +1600,13 @@ PRInt32
 nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn)
 {
   nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_FILE_RENAME, aSrc, aTarget, aReturn);
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
 
   if (ifop == nsnull)
   {
