@@ -323,8 +323,8 @@ template <class DestinationType>
 inline
 nsresult
 CallGetService( const nsCID &aClass,
-                DestinationType** aDestination,
-                nsIShutdownListener* shutdownListener = nsnull)
+                nsIShutdownListener* shutdownListener,
+                DestinationType** aDestination)
   {
     NS_PRECONDITION(aDestination, "null parameter");
 
@@ -337,9 +337,23 @@ CallGetService( const nsCID &aClass,
 template <class DestinationType>
 inline
 nsresult
+CallGetService( const nsCID &aClass,
+                DestinationType** aDestination)
+  {
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsServiceManager::GetService(aClass,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(nsISupports**, aDestination),
+               nsnull);
+  }
+
+template <class DestinationType>
+inline
+nsresult
 CallGetService( const char *aContractID,
-                DestinationType** aDestination,
-                nsIShutdownListener* shutdownListener = nsnull)
+                nsIShutdownListener* shutdownListener,
+                DestinationType** aDestination)
   {
     NS_PRECONDITION(aContractID, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
@@ -349,6 +363,22 @@ CallGetService( const char *aContractID,
                NS_REINTERPRET_CAST(nsISupports**, aDestination),
                shutdownListener);
   }
+
+template <class DestinationType>
+inline
+nsresult
+CallGetService( const char *aContractID,
+                DestinationType** aDestination)
+  {
+    NS_PRECONDITION(aContractID, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
+
+    return nsServiceManager::GetService(aContractID,
+               NS_GET_IID(DestinationType),
+               NS_REINTERPRET_CAST(nsISupports**, aDestination),
+               nsnull);
+  }
+
 ////////////////////////////////////////////////////////////////////////////////
 // NS_WITH_SERVICE: macro to make using services easier. 
 // 
