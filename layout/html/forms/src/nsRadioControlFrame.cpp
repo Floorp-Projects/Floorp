@@ -130,9 +130,9 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
   nsresult result = GetDefaultCheckState(&checked);
   if (NS_CONTENT_ATTR_HAS_VALUE == result) {
     if (PR_TRUE == checked)
-      SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
+      SetRadioControlFrameState(NS_STRING_TRUE);
     else
-      SetProperty(nsHTMLAtoms::checked, NS_STRING_FALSE);
+      SetRadioControlFrameState(NS_STRING_FALSE);
   }
 
   if (mWidget != nsnull) {
@@ -185,7 +185,7 @@ nsRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 void 
 nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
-  SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
+  SetRadioControlFrameState(NS_STRING_TRUE);
   
   if (mFormFrame) {
      // The form frame will determine which radio button needs
@@ -219,11 +219,11 @@ nsRadioControlFrame::SetChecked(PRBool aValue, PRBool aSetInitialValue)
     }
   }
 
- if (PR_TRUE == aValue)
-    SetProperty(nsHTMLAtoms::checked, NS_STRING_TRUE);
-  else
-    SetProperty(nsHTMLAtoms::checked, NS_STRING_FALSE);  
-  
+  if (PR_TRUE == aValue) {
+    SetRadioControlFrameState(NS_STRING_TRUE);
+  } else {
+    SetRadioControlFrameState(NS_STRING_FALSE);
+  }
 }
 
 
@@ -430,7 +430,11 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
 NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
-    SetRadioControlFrameState(aValue);
+    SetRadioControlFrameState(NS_STRING_TRUE);
+    if (mFormFrame) {
+      PRBool state = (aValue == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
+      mFormFrame->OnRadioChecked(*this, state);
+    }
   }
   else {
     return nsFormControlFrame::SetProperty(aName, aValue);
