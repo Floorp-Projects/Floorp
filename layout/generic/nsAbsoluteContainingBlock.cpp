@@ -571,12 +571,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       if (kidReflowState.mComputedWidth < kidReflowState.mComputedMinWidth) {
         kidReflowState.mComputedWidth = kidReflowState.mComputedMinWidth;
       }
-    } else if (NS_UNCONSTRAINEDSIZE != availWidth) {
-      if (aContainingBlockWidth != -1) {
-        availWidth = aContainingBlockWidth;
-      } else {
-        availWidth = aReflowState.mComputedWidth;
-      }
+    } else if (situation == SHRINK_TO_FIT_AVAILWIDTH) {
+      NS_ASSERTION(availWidth != NS_UNCONSTRAINEDSIZE,
+                   "shrink-to-fit: expected a constrained available width");
       PRInt32 maxWidth = availWidth -
         (kidReflowState.mComputedMargin.left + kidReflowState.mComputedBorderPadding.left +
          kidReflowState.mComputedBorderPadding.right + kidReflowState.mComputedMargin.right);
