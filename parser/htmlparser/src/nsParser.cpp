@@ -66,6 +66,7 @@
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIFragmentContentSink.h"
+#include "nsStreamUtils.h"
 
 #ifdef MOZ_VIEW_SOURCE
 #include "nsViewSourceHTML.h" 
@@ -2570,6 +2571,8 @@ nsresult nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
   NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||
                    eOnDataAvail == mParserContext->mStreamListenerState),
             "Error: OnStartRequest() must be called before OnDataAvailable()");
+  NS_PRECONDITION(NS_InputStreamIsBuffered(pIStream),
+                  "Must have a buffered input stream");
 
   nsresult rv = NS_OK;
 
