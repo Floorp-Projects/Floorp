@@ -174,11 +174,12 @@
   </box>
 
   <separator/>
-
-  <text id="more-panels-link" value="&sidebar.more.label;"
-    onclick="BrowseMorePanels()"/>
-
-  <box id="okCancelButtonsRight" />
+  
+  <box>
+    <button id="more-panels-link" value="&sidebar.more.label;" oncommand="BrowseMorePanels()"/>
+    <spring flex="1"/>
+    <box id="okCancelButtonsRight" />
+  </box>
 
 </window>
 
