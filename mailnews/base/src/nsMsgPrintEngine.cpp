@@ -670,6 +670,7 @@ nsMsgPrintEngine::PrintMsgWindow()
       // don't show the actual url when printing mail messages or addressbook cards.
       // for mail, it can review the salt.  for addrbook, it's a data:// url, which
       // means nothing to the end user.
+      // needs to be " " and not "" or nsnull, otherwise, we'll still print the url
       mPrintSettings->SetDocURL(NS_LITERAL_STRING(" ").get());
 
       nsresult rv = NS_ERROR_FAILURE;
