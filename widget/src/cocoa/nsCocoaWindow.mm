@@ -395,7 +395,7 @@ nsresult nsCocoaWindow::StandardCreate(nsIWidget *aParent,
       features = 0;
 
     // XXXdwh Just don't make popup windows yet.  They mess up the world.
-    if (features == 0)
+    if (mWindowType == eWindowType_popup)
       return NS_OK;
 
     mWindow = [[NSWindow alloc] initWithContentRect:rect styleMask:features 
@@ -878,14 +878,10 @@ nsCocoaWindow::IsVisible(PRBool & aState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
-  // XXXdwh This just messes up the world because it blurs the window
-  // behind.  Until we have a better solution, just comment this out.
-  /*
   if ( bState )
     [mWindow orderFront:NULL];
   else
     [mWindow orderOut:NULL];
-  */
 
   mVisible = bState;
 
