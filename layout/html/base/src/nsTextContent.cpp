@@ -605,6 +605,13 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         aRenderingContext.SetColor(NS_RGB(255,255,255));
 
         // Render the text
+        {
+          char buf[255];
+          int len = s - s0;
+          strncpy(buf, s0, len);
+          buf[len] = 0;
+          printf("1 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
+        }
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
         const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
         aRenderingContext.SetColor(color->mColor);
@@ -669,13 +676,31 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
         rect.width--;
         rect.height--;
 
+        {
+          char buf[255];
+          int len = s - s0;
+          strncpy(buf, s0, len);
+          buf[len] = 0;
+          printf("2 - Drawing [%s] at [%d,%d,%d,%d]\n", buf, rect.x, rect.y, rect.width, rect.height);
+          if (strstr(buf, "size=4")) {
+            int xx = 0;
+            xx++;
+          }
+        }
+
+        /*nsSelctionPoint * startPnt = range->GetStartPoint();
+        nsSelctionPoint * endPnt   = range->GetEndPoint();
+        if (mContent == startPnt->GetContent()) {
+          PRInt32 offset = startPnt->GetOffset();
+
+        }*/ 
+
         nsIFontMetrics * fm = aRenderingContext.GetFontMetrics();
 
         aRenderingContext.SetColor(NS_RGB(0,0,0));
         aRenderingContext.FillRect(rect);
 
         aRenderingContext.SetColor(NS_RGB(255,255,255));
-
         // Render the text
         aRenderingContext.DrawString(s0, s - s0, dx, dy, mRect.width);
         const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
