@@ -15,15 +15,24 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):  Henry Sobotka <sobotka@axess.com>
+ *                  00/01: general review and update against Win/Unix versions
  *
  */
 
 #include "nsIPlatformCharset.h"
-#include "nsUConvDll.h"
 #include "pratom.h"
+#include "nsURLProperties.h"
+#include "nsCOMPtr.h"
+#include "nsIOS2Locale.h"
+#include "nsLocaleCID.h"
+#include "nsUConvDll.h"
+#include "nsIComponentManager.h"
 #include <unidef.h>
 #include <ulsitem.h>
+
+NS_DEFINE_IID(kIOS2LocaleIID,NS_IOS2LOCALE_IID);
+NS_DEFINE_CID(kOS2LocaleFactoryCID,NS_OS2LOCALEFACTORY_CID);
 
 // 90% copied from the unix version 
 
@@ -37,6 +46,7 @@ public:
   virtual ~nsOS2Charset();
 
   NS_IMETHOD GetCharset( nsPlatformCharsetSel selector, nsString& oResult);
+  NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
 
 private:
   nsString mCharset;
@@ -76,7 +86,65 @@ nsOS2Charset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
    return NS_OK;
 }
 
-//----------------------------------------------------------------------
+// XXXX STUB
+NS_IMETHODIMP 
+nsOS2Charset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
+{
+  return NS_OK;
+}
+
+class nsOS2CharsetFactory : public nsIFactory {
+   NS_DECL_ISUPPORTS
+
+public:
+   nsOS2CharsetFactory() {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(&g_InstanceCount);
+   }
+   virtual ~nsOS2CharsetFactory() {
+     PR_AtomicDecrement(&g_InstanceCount);
+   }
+
+   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
+   NS_IMETHOD LockFactory(PRBool aLock);
+ 
+};
+
+NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS( nsOS2CharsetFactory , kIFactoryIID);
+
+NS_IMETHODIMP nsOS2CharsetFactory::CreateInstance(
+    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
+{
+  if( !aResult) 
+        return NS_ERROR_NULL_POINTER;
+  if( aDelegate) 
+        return NS_ERROR_NO_AGGREGATION;
+
+  *aResult = NULL;
+  nsISupports *inst = new nsOS2Charset;
+  if( !inst)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult res =inst->QueryInterface(aIID, aResult);
+  if(NS_FAILED(res))
+     delete inst;
+  
+  return res;
+}
+NS_IMETHODIMP nsOS2CharsetFactory::LockFactory(PRBool aLock)
+{
+  if(aLock)
+     PR_AtomicIncrement( &g_LockCount );
+  else
+     PR_AtomicDecrement( &g_LockCount );
+  return NS_OK;
+}
+
+nsIFactory* NEW_PLATFORMCHARSETFACTORY()
+{
+  return new nsOS2CharsetFactory();
+}
 
 NS_IMETHODIMP
 NS_NewPlatformCharset(nsISupports* aOuter, 
