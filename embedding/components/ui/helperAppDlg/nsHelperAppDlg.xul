@@ -36,13 +36,11 @@
 ]>            
 
 <window id="nsHelperAppDlg"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="dialog.initDialog()"
         style="width: 40em;"
-        class="dialog"
-        orient="vertical">
+        class="dialog">
 
             
     <keyset id="dialogKeys"/>
@@ -50,43 +48,40 @@
     <vbox>
       <hbox flex="1">
         <vbox flex="1">
-          <html id="intro">&intro.label;</html>    
+          <description id="intro">&intro.label;</description>    
           <description id="location" crop="center" value=""/>
           <separator orient="horizontal" class="thin"/>
-          <html id="prompt">&prompt.label;</html>
+          <description id="prompt">&prompt.label;</description>
         </vbox>
         <image id="contentTypeImage"/>
       </hbox>
 
       <separator orient="horizontal" class="thin"/>
-      <radiogroup id="mode" orient="vertical" oncommand="dialog.toggleChoice()">
+      <radiogroup id="mode" oncommand="dialog.toggleChoice()">
         <hbox flex="1">
-          <hbox autostretch="never" flex="1">
-            <radio id="openUsing" flex="1"
-                   group="mode"
+          <hbox align="center" flex="1">
+            <radio id="openUsing"
                    label="&openUsing.label;"
                    accesskey="&openUsing.accesskey;"/>
           </hbox>
                
-          <hbox class="indent" autostretch="never">
+          <hbox class="indent" align="center">
             <button id="chooseApp"
-                    class="dialog"
                     label="&chooseApp.label;"
                     accesskey="&chooseApp.accesskey;"
                     oncommand="dialog.chooseApp()"/>
           </hbox>
         </hbox>
         <vbox>
-          <hbox autostretch="never">
+          <hbox align="center">
             <radio id="saveToDisk"
-                       group="mode"
-                       label="&saveToDisk.label;"
-                       accesskey="&saveToDisk.accesskey;"/>
+                   label="&saveToDisk.label;"
+                   accesskey="&saveToDisk.accesskey;"/>
           </hbox>
         </vbox>
       </radiogroup>
       <separator orient="horizontal" class="thin"/>
-      <hbox autostretch="never">
+      <hbox align="center">
         <checkbox id="alwaysAskMe" label="&alwaysAsk.label;" accesskey="&alwaysAsk.accesskey;"/>
       </hbox>
     </vbox>
@@ -94,8 +89,8 @@
     <separator class="groove"/>
 
     <hbox>
-      <button class="dialog" id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
-        oncommand="dialog.setDefault()"/>
+      <button id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
+              oncommand="dialog.setDefault()"/>
       <spacer flex="1"/>
       <hbox id="okCancelButtonsRight"/>
     </hbox>
