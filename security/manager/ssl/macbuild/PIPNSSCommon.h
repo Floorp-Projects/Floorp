@@ -37,4 +37,3 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NSS_3_4

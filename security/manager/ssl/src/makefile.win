@@ -73,20 +73,11 @@ REQUIRES	= \
 
 include <$(DEPTH)/config/config.mak>
 
-NSS_3_4=1
-
-!if !defined(NSS_3_4)
-CFLAGS = $(CFLAGS) -DNSS_USE_STATIC_LIBS
-!endif
-
 LINCS = $(LINCS)     \
     -I$(XPDIST)/public/security \
     -I$(XPDIST)/private/security \
     $(NULL)
 
-
-!if defined(NSS_3_4)
-CFLAGS=$(CFLAGS) -DNSS_3_4
 
 SUB_LIBRARIES   = \
     $(DIST)/lib/crmf.lib \
@@ -95,24 +86,6 @@ SUB_LIBRARIES   = \
     $(DIST)/lib/nss3.lib \
     $(DIST)/lib/softokn3.lib \
     $(NULL)
-!else
-SUB_LIBRARIES   = \
-    $(DIST)/lib/smime.lib \
-    $(DIST)/lib/crmf.lib \
-    $(DIST)/lib/ssl.lib \
-    $(DIST)/lib/nss.lib \
-    $(DIST)/lib/certhi.lib \
-    $(DIST)/lib/cryptohi.lib \
-    $(DIST)/lib/pk11wrap.lib \
-    $(DIST)/lib/certdb.lib \
-    $(DIST)/lib/softoken.lib \
-    $(DIST)/lib/pkcs12.lib \
-    $(DIST)/lib/pkcs7.lib \
-    $(DIST)/lib/freebl.lib \
-    $(DIST)/lib/secutil.lib \
-    $(DIST)/lib/dbm.lib \
-    $(NULL)
-!endif
 
 LLIBS   = \
     $(LIBNSPR) \
@@ -150,9 +123,7 @@ include <$(DEPTH)\config\rules.mak>
 
 libs:: $(DLL)
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
-!if defined(NSS_3_4)
     $(MAKE_INSTALL) $(DIST)\lib\softokn3.dll $(DIST)\bin
     $(MAKE_INSTALL) $(DIST)\lib\nss3.dll $(DIST)\bin
     $(MAKE_INSTALL) $(DIST)\lib\smime3.dll $(DIST)\bin
     $(MAKE_INSTALL) $(DIST)\lib\ssl3.dll $(DIST)\bin
-!endif

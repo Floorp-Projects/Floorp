@@ -161,7 +161,6 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # 
 # NSS libs needed for final link in static build
 # 
-NSS_3_4=1
 
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 NSS_LIBS	= \

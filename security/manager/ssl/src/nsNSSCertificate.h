@@ -40,12 +40,10 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 
-#ifdef NSS_3_4
 /* private NSS defines used by PSM */
 /* (must be declated before cert.h) */
 #define CERT_NewTempCertificate __CERT_NewTempCertificate
 #define CERT_AddTempCertToPerm __CERT_AddTempCertToPerm
-#endif
 
 #include "prtypes.h"
 #include "cert.h"

@@ -93,12 +93,6 @@ REQUIRES	= nspr \
 		  pipboot \
 		  $(NULL)
 
-NSS_3_4=1
-
-ifdef NSS_3_4
-DEFINES += -DNSS_3_4
-endif
-
 EXTRA_DEPS = $(NSS_DEP_LIBS)
 
 include $(topsrcdir)/config/rules.mk
