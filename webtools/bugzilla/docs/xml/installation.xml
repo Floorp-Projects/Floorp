@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.59 2004/01/24 18:31:00 gerv%gerv.net Exp $ -->
+<!-- $Id: installation.xml,v 1.60 2004/02/02 16:33:36 jocuri%softhome.net Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -639,7 +639,7 @@
         <screen>  <prompt>mysql&gt;</prompt> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
          DROP,REFERENCES ON bugs.* TO bugs@localhost
          IDENTIFIED BY '<replaceable>$db_pass</replaceable>';
-  <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES</screen>
+  <prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;</screen>
 
         <note>
           <para>If you are using MySQL 4, you need to add
