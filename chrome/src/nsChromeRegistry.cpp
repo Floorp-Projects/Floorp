@@ -115,7 +115,7 @@
 static NS_DEFINE_CID(kCSSLoaderCID, NS_CSS_LOADER_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-nsChromeRegistry* gChromeRegistry;
+nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 #define CHROME_URI "http://www.mozilla.org/rdf/chrome#"
 
@@ -399,10 +399,14 @@ nsChromeRegistry::Init()
       !mStyleHash.Init())
     return NS_ERROR_FAILURE;
 
-  gChromeRegistry = this;
-
   mSelectedLocale = NS_LITERAL_CSTRING("en-US");
   mSelectedSkin = NS_LITERAL_CSTRING("classic/1.0");
+
+  // This initialization process is fairly complicated and may cause reentrant
+  // getservice calls to resolve chrome URIs (especially locale files). We
+  // don't want that, so we inform the protocol handler about our existence
+  // before we are actually fully initialized.
+  gChromeRegistry = this;
 
   nsCOMPtr<nsIPrefBranch2> prefs (do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs) {
@@ -448,6 +452,8 @@ nsChromeRegistry::Init()
   }
 
   CheckForNewChrome();
+
+  mInitialized = PR_TRUE;
 
   return NS_OK;
 }
@@ -586,7 +592,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
                                                        PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry))
-    return NS_ERROR_FAILURE;
+    return mInitialized ? NS_ERROR_FAILURE : NS_ERROR_NOT_INITIALIZED;
 
   if (entry->flags & PackageEntry::PLATFORM_PACKAGE) {
 #if defined(XP_WIN) || defined(XP_OS2)
