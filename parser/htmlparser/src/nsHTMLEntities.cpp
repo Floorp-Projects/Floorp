@@ -155,8 +155,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
     //this little piece of code exists because entities may or may not have the terminating ';'.
     //if we see it, strip if off for this test...
 
-    PRUnichar theLastChar=GetCharAt(aEntity,aEntity.mLength-1);
-    if(';'==theLastChar) {
+    if(';'==aEntity.Last()) {
       nsCAutoString temp(aEntity);
       temp.Truncate(aEntity.mLength-1);
       return EntityToUnicode(temp);
@@ -177,9 +176,13 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 PRInt32 
 nsHTMLEntities::EntityToUnicode(const nsString& aEntity) {
   nsCAutoString theEntity(aEntity);
-  PRInt32 result=EntityToUnicode(theEntity);
-  return result;
+  if(';'==theEntity.Last()) {
+    theEntity.Truncate(theEntity.Length()-1);
+  }
+
+  return EntityToUnicode(theEntity);
 }
+
 
 const nsCString& 
 nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
