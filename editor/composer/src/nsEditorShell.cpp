@@ -757,6 +757,32 @@ nsresult nsEditorShell::GetDocumentEventReceiver(nsIDOMEventReceiver **aEventRec
   return rv;
 }
 
+nsresult
+nsEditorShell::GetDocShellFromContentWindow(nsIDocShell **aDocShell)
+{
+  if (!aDocShell)
+    return NS_ERROR_NULL_POINTER;
+  if (!mContentWindow)
+    return NS_ERROR_FAILURE;
+
+  nsresult  rv;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryReferent(mContentWindow, &rv);
+  if (NS_FAILED(rv) || !globalObj)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
+  {
+    NS_ASSERTION(0, "Failed to get docShell from mContentWindow");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  *aDocShell = docShell;
+  NS_ADDREF(*aDocShell);
+  
+  return NS_OK;
+}
 
 NS_IMETHODIMP    
 nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
@@ -768,13 +794,10 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   mContentWindow = getter_AddRefs( NS_GetWeakReference(aWin) );  // weak reference to aWin
   //mContentWindow = aWin;
 
-  nsresult  rv;
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryReferent(mContentWindow, &rv);
-  if (NS_FAILED(rv) || !globalObj)
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsresult rv = GetDocShellFromContentWindow(getter_AddRefs(docShell));
+  if (NS_FAILED(rv)) return rv;
   if (!docShell)
     return NS_ERROR_FAILURE;
     
@@ -2966,27 +2989,20 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
   nsresult res = NS_OK;
   if (editor)
     res = editor->SetDocumentCharacterSet(nsAutoString(characterSet));
-  
-  if(NS_SUCCEEDED(res)) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryReferent(mContentWindow));
-    if (!globalObj) {
-      return NS_ERROR_FAILURE;
-    }
 
-    nsCOMPtr<nsIDocShell> docShell;
-    globalObj->GetDocShell(getter_AddRefs(docShell));
-    if (docShell)
-    {
-      nsCOMPtr<nsIContentViewer> childCV;
-      NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
-      if (childCV)
-      {
-        nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
-        if (markupCV) {
-          NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(characterSet), NS_ERROR_FAILURE);
-          NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(characterSet), NS_ERROR_FAILURE);
-        }
-      }
+  nsCOMPtr<nsIDocShell> docShell;
+  res = GetDocShellFromContentWindow(getter_AddRefs(docShell));
+  if (NS_FAILED(res)) return res;
+  if (!docShell) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIContentViewer> childCV;
+  NS_ENSURE_SUCCESS(docShell->GetContentViewer(getter_AddRefs(childCV)), NS_ERROR_FAILURE);
+  if (childCV)
+  {
+    nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
+    if (markupCV) {
+      NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(characterSet), NS_ERROR_FAILURE);
+      NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(characterSet), NS_ERROR_FAILURE);
     }
   }
   return res;
@@ -5001,7 +5017,46 @@ nsEditorShell::OnLocationChange(nsIWebProgress *aProgress,
                                 nsIRequest *aRequest,
                                 nsIURI *aURI)
 {
-  return NS_OK;
+
+  nsCOMPtr<nsIDocShell> docShell;
+  nsresult rv = GetDocShellFromContentWindow(getter_AddRefs(docShell));
+  if (!docShell) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  rv = GetDocument( docShell, getter_AddRefs(doc) );
+  if (NS_FAILED(rv)) return rv;
+  if (!doc) return NS_ERROR_FAILURE;
+
+  // Set the new document URL
+  rv = doc->SetDocumentURL(aURI);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  if (!doc) return NS_ERROR_FAILURE;
+
+  // Look for an HTML <base> tag
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  rv = domDoc->GetElementsByTagName(NS_LITERAL_STRING("base"), getter_AddRefs(nodeList));
+  if (NS_FAILED(rv)) return rv;
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMNode> baseNode;
+  if (nodeList)
+  {
+    PRUint32 count;
+    nodeList->GetLength(&count);
+    if (count >= 1)
+    {
+      rv = nodeList->Item(0, getter_AddRefs(baseNode));
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+  // If no base tag, then set baseURL to the document's URL
+  // This is very important, else relative URLs for links and images are busted!
+  if (!baseNode)
+    rv = doc->SetBaseURL(aURI);
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -5116,6 +5171,13 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
   GetBundleString(NS_LITERAL_STRING("LoadingDone"), doneText);
   SetChromeAttribute(mDocShell, "statusText", NS_LITERAL_STRING("label"), doneText);
 
+  if (!mCloseWindowWhenLoaded && NS_FAILED(aStatus))
+  {
+    mCloseWindowWhenLoaded = PR_TRUE;
+    if (aStatus == NS_ERROR_FILE_NOT_FOUND)
+      mCantEditReason = eCantEditFileNotFound;
+  }
+
   // Display an Alert dialog if the page cannot be edited...
   if (mCloseWindowWhenLoaded)
   {
@@ -5132,15 +5194,19 @@ nsresult nsEditorShell::EndPageLoad(nsIDOMWindow *aDOMWindow,
         stringID.AssignWithConversion("CantEditMimeTypeMsg");
         break;
       case eCantEditOther:
+      default:
         stringID.AssignWithConversion("CantEditDocumentMsg");
         break;
-      default:
-        // Do nothing.
-        break;
     }
-    
-    GetBundleString(stringID, alertMessage);
-    Alert(alertLabel, alertMessage);
+    // Network code pops up an alert dialog if file wasn't found,
+    //  so we don't need to
+    //TODO: Would it be possible to simple change channel URL to "about:blank"
+    //      so we leave window up with empty page instead of closing it?
+    if (mCantEditReason != eCantEditFileNotFound)
+    {
+      GetBundleString(stringID, alertMessage);
+      Alert(alertLabel, alertMessage);
+    }
 
     nsCOMPtr<nsIBaseWindow> baseWindow;
     GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
