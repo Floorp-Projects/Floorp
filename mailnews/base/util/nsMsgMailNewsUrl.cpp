@@ -123,26 +123,35 @@ nsresult nsMsgMailNewsUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
 	return NS_OK;
 }
 
-nsresult nsMsgMailNewsUrl::SetErrorMessage (char * errorMessage)
+nsresult nsMsgMailNewsUrl::SetErrorMessage (const char * errorMessage)
 {
-	if (errorMessage)
-	{
-		PR_FREEIF(m_errorMessage);
-		m_errorMessage = errorMessage;
-	}
+	// functionality has been moved to nsIMsgStatusFeedback
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage)
+{
+	// functionality has been moved to nsIMsgStatusFeedback
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback)
+{
+	if (aMsgFeedback)
+		m_statusFeedback = aMsgFeedback; // don't ref count this...we don't own it
 	return NS_OK;
 }
 
-nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage) const
+NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback)
 {
-	if (errorMessage)
-	{
-		if (m_errorMessage)
-			*errorMessage = nsCRT::strdup(m_errorMessage);
-		else
-			*errorMessage = nsnull;
-	}
-    return NS_OK;
+	// note: it is okay to return a null status feedback and not return an error
+	// it's possible the url really doesn't have status feedback
+	nsresult rv = NS_OK;
+	if (aMsgFeedback)
+		*aMsgFeedback = m_statusFeedback;
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

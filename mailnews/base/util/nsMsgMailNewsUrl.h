@@ -25,6 +25,7 @@
 #include "nsIUrlListenerManager.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgStatusFeedback.h"
 #include "nsIURL.h"
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -57,9 +58,12 @@ public:
 	// Getters and Setters for the nsMsgMailNewsUrl specific info....
 	///////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SetErrorMessage (char * errorMessage);
+	NS_IMETHOD SetErrorMessage (const char * errorMessage);
 	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
+	NS_IMETHOD GetErrorMessage (char ** errorMessage);
+
+	NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback);
+	NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback);
 
 	// if you really want to know what the current state of the url is (running or not
 	// running) you should look into becoming a urlListener...
@@ -122,8 +126,15 @@ protected:
 	virtual ~nsMsgMailNewsUrl();
 
 	nsCOMPtr<nsIURL> m_baseURL;
-	char		*m_errorMessage;
 
+	// ownership model --> the status feedback has the same lifetime as the 
+	// root webshell for the window. This has a life time greater than all
+	// mailnews urls running in that root window. So we should NOT own the status
+	// feedback object in the individual urls. Please don't change this to a com ptr
+	// without thinking long and hard about why you need to do it. 
+	
+	nsIMsgStatusFeedback * m_statusFeedback;
+	char		*m_errorMessage;
 	PRBool		m_runningUrl;
 
 	// manager of all of current url listeners....
