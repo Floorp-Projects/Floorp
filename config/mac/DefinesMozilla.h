@@ -36,7 +36,7 @@
 #define SingleSignon 1
 #define ClientWallet 1
 
-// 98-07-29 pinnkerton -- defines to turn on feature. REMOVE WHEN THIS LANDS.
+// 98-07-29 pinkerton -- defines to turn on feature. REMOVE WHEN THIS LANDS.
 #define PRIVACY_POLICIES 1
 
 // 98-08-10 joe -- temporary item to turn on ENDER (html textareas) before it fully lands
@@ -49,6 +49,9 @@
 #define MOZ_ENDER_MIME 1
 
 #define USE_NSREG 1
+
+// 99-05-11 pinkerton -- temp item to turn on drag and drop code in Ender. REMOVE WHEN THIS LANDS
+#define NEW_DRAG_AND_DROP 1
 
 //  used to change string class
 //#define USE_STRING2	1
