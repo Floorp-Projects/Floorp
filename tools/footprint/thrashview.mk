@@ -34,6 +34,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-CXXFLAGS=-g
+CXXFLAGS=-O2
 LDLIBS=-L/usr/X11R6/lib -lX11
 thrashview: thrashview.cpp
