@@ -1,0 +1,15 @@
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Description about="NC:FlashRoot">
+    <NC:child>
+       <RDF:Description id="flash2">
+         <NC:type resource="http://home.netscape.com/NC-rdf#OnlinePresence" />
+         <NC:source>Chris Waterson</NC:source>
+         <NC:description>Are you there?</NC:description>
+         <NC:timestamp>Tue Apr 27 01:05:34 PDT 1999</NC:timestamp>
+       </RDF:Description>
+    </NC:child>
+  </RDF:Description>
+</RDF:RDF>
+

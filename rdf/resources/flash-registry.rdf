@@ -1,0 +1,14 @@
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <RDF:Bag ID="NC:FlashDataSources">
+    <!-- demo ware! -->
+    <RDF:li resource="resource:/res/rdf/remote-flash-1.rdf" />
+    <RDF:li resource="resource:/res/rdf/remote-flash-2.rdf" />
+    <RDF:li resource="resource:/res/rdf/remote-flash-3.rdf" />
+  </RDF:Bag>
+
+  <RDF:Bag ID="NC:FlashStyleSheets">
+  </RDF:Bag>
+</RDF:RDF>
+

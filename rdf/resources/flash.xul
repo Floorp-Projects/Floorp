@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="flash.js" />
+
+  <tree id="tree"
+        flex="100%"
+        datasources="rdf:bookmarks"
+        onclick="OpenURL(event.target.parentNode);">
+
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#source" />
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
+    <treecol rdf:resource="http://home.netscape.com/NC-rdf#timestamp" />
+
+    <!-- XXX We probably won't have a treehead in the end, but we'll put it here for now... -->
+    <treehead>
+      <treeitem>
+        <treecell>Source</treecell>
+        <treecell>Description</treecell>
+        <treecell>Time</treecell>
+      </treeitem>
+    </treehead>
+
+    <treebody id="NC:FlashRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" />
+  </tree>
+</window>
