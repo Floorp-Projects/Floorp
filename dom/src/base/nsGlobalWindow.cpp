@@ -1031,7 +1031,7 @@ GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeWindowTo(aOuterWidth, r.height);
+    mBrowser->SizeWindowTo(aOuterWidth, r.height, PR_FALSE, PR_FALSE);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -1063,7 +1063,7 @@ GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeWindowTo(r.width, aOuterHeight);
+    mBrowser->SizeWindowTo(r.width, aOuterHeight, PR_FALSE, PR_FALSE);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -1694,7 +1694,7 @@ GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
   nsIBrowserWindow *mBrowser;
 
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->SizeWindowTo(aWidth, aHeight);
+    mBrowser->SizeWindowTo(aWidth, aHeight, PR_FALSE, PR_FALSE);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -1709,7 +1709,8 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
     nsRect r;
     mBrowser->GetWindowBounds(r);
 
-    mBrowser->SizeWindowTo(r.width + aWidthDif, r.height + aHeightDif);
+    mBrowser->SizeWindowTo(r.width + aWidthDif, r.height + aHeightDif,
+                           PR_FALSE, PR_FALSE);
     NS_RELEASE(mBrowser);
   }
   return NS_OK;
@@ -2750,7 +2751,8 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
 
       if (openAsContent) {
         openedWindow->SizeWindowTo(defaultBounds.width + contentOffsets.width,
-                                   defaultBounds.height + contentOffsets.height);
+                                   defaultBounds.height + contentOffsets.height,
+                                   sizeSpecified, sizeSpecified);
         // oy. sizing the content makes sense: that's what the user asked for,
         // however, it doesn't have the desired effect because all sizing
         // functions eventually end up sizing the window, and the subwindows
@@ -2760,7 +2762,8 @@ GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell,
         // and probably effectively the same thing.
 //      openedWindow->SizeContentTo(defaultBounds.width, defaultBounds.height);
       } else if (sizeSpecified)
-        openedWindow->SizeWindowTo(defaultBounds.width, defaultBounds.height);
+        openedWindow->SizeWindowTo(defaultBounds.width, defaultBounds.height,
+                                   PR_FALSE, PR_FALSE);
 
       openedWindow->MoveTo(defaultBounds.x + contentOffsets.x,
                       defaultBounds.y + contentOffsets.y);
