@@ -301,7 +301,7 @@ RDFXULBuilderImpl::RDFXULBuilderImpl(void)
 
         kContainerAtom            = NS_NewAtom("container");
         kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
-        kXULIncludeSrcAtom        = NS_NewAtom("includesrc");
+        kXULIncludeSrcAtom        = NS_NewAtom("foopy");
         kIdAtom                   = NS_NewAtom("id");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kTreeAtom                 = NS_NewAtom("tree");
@@ -642,9 +642,6 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
         
-        nsCOMPtr<nsISupports> supportsInfo;
-        supportsInfo = do_QueryInterface(docInfo);
-
         // Turn the content viewer into a webshell
         nsCOMPtr<nsIWebShell> webshell;
         webshell = do_QueryInterface(container);
@@ -659,19 +656,8 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             return rv;
         }
 
-        char* commandChars = command.ToNewCString();
-
-        docLoader->LoadDocument(includeSrc,
-                                commandChars,
-                                container,
-                                nsnull,
-                                nsnull,
-                                nsnull,
-                                nsURLReload,
-                                0);//,
-                                //supportsInfo.get());
-
-        delete [] commandChars;
+        docLoader->LoadSubDocument(includeSrc,
+                                   docInfo.get());
     }
 
     return rv;
