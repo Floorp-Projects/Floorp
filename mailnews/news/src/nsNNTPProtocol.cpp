@@ -2398,6 +2398,31 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
   return;
 }
 
+nsresult
+nsNNTPProtocol::SetNewsFolder()
+{
+	nsresult rv;
+
+	// xxx todo:  I need to fix this so this is passed in when I create the nsNNTPProtocol
+
+    if (!m_newsFolder) {
+        nsCAutoString folderURI = "news://";
+        folderURI += (const char *)m_hostName;
+        folderURI += "/";
+
+        nsXPIDLCString newsgroupName;
+        rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
+		if (NS_FAILED(rv)) return rv;
+
+        if ((const char *)newsgroupName) {
+            folderURI += (const char *)newsgroupName;
+            rv = InitializeNewsFolderFromUri((const char *)folderURI);
+			if (NS_FAILED(rv)) return rv;
+        }
+    }
+	return NS_OK;
+}
+
 PRInt32 nsNNTPProtocol::BeginAuthorization()
 {
 	char * command = 0;
@@ -2406,20 +2431,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	PRInt32 status = 0;
 	nsXPIDLCString cachedUsername;
 
-    if (!m_newsFolder) {
-        if (!m_runningURL) return NS_ERROR_FAILURE;
-
-        nsCAutoString folderURI = "news://";
-        folderURI += (const char *)m_hostName;
-        folderURI += "/";
-        
-        nsXPIDLCString newsgroupName;
-        rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
-        if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
-            folderURI += (const char *)newsgroupName;
-            rv = InitializeNewsFolderFromUri((const char *)folderURI);
-        }
-    }
+	SetNewsFolder();
 
     if (m_newsFolder) {
 	    rv = m_newsFolder->GetGroupUsername(getter_Copies(cachedUsername));
@@ -2524,21 +2536,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
         nsXPIDLCString password;
 	    nsXPIDLCString cachedPassword;
 
-        if (!m_newsFolder) {
-            if (!m_runningURL) return NS_ERROR_FAILURE;
-
-            nsCAutoString folderURI = "news://";
-            folderURI += (const char *)m_hostName;
-            folderURI += "/";
-
-            nsXPIDLCString newsgroupName;
-            rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
-            if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
-                folderURI += (const char *)newsgroupName;
-                rv = InitializeNewsFolderFromUri((const char *)folderURI);
-            }
-        }
-
+		SetNewsFolder();
         if (m_newsFolder) {
             rv = m_newsFolder->GetGroupPassword(getter_Copies(cachedPassword));
         }
@@ -3795,6 +3793,8 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	MSG_CompositionFields *fields = NULL;
 #endif 
 
+	SetNewsFolder();
+
   /* #### Should we do a more real check than this?  If the POST command
 	 didn't respond with "MK_NNTP_RESPONSE_POST_SEND_NOW Ok", then it's not ready for us to throw a
 	 message at it...   But the normal posting code doesn't do this check.
@@ -3857,7 +3857,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
       if (NS_SUCCEEDED(rv) && accountManager) {
           nsCOMPtr<nsISupportsArray> identities;
           rv = accountManager->GetAllIdentities(getter_AddRefs(identities));
-          if (NS_FAILED(rv)) return rv;
+          if (NS_FAILED(rv)) return -1;
 
           // CheckIfAuthor will set cancelInfo.from if a match is found
           identities->EnumerateForwards(CheckIfAuthor, (void *)&cancelInfo);
@@ -3968,32 +3968,23 @@ PRInt32 nsNNTPProtocol::DoCancel()
 	}
 
 	
-    if (!m_runningURL) return NS_ERROR_FAILURE;
+    if (!m_runningURL) return -1;
 
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);
-
-	if (!m_newsFolder) {
-        nsCAutoString folderURI = "news://";
-        folderURI += (const char *)m_hostName;
-        folderURI += "/";
-        
-        nsXPIDLCString newsgroupName;
-        rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
-        if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
-            folderURI += (const char *)newsgroupName;
-            rv = InitializeNewsFolderFromUri((const char *)folderURI);
-        }
-    }
 
     NS_ASSERTION(NS_SUCCEEDED(rv) && m_newsFolder && (key != nsMsgKey_None), "need more to remove this message from the db");
     if ((key != nsMsgKey_None) && (m_newsFolder)) {
 		rv = m_newsFolder->RemoveMessage(key);
     }
   }
-    
+   
 FAIL:
+  NS_ASSERTION(m_newsFolder,"no news folder");
+  if (m_newsFolder) {
+  	rv = m_newsFolder->CancelComplete();
+  }
   PR_FREEIF (id);
   PR_FREEIF (cancelInfo.old_from);
   PR_FREEIF (cancelInfo.from);

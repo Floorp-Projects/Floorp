@@ -1674,3 +1674,9 @@ NS_IMETHODIMP nsMsgNewsFolder::RemoveMessage(nsMsgKey key)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgNewsFolder::CancelComplete()
+{
+  NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+  return NS_OK;
+}

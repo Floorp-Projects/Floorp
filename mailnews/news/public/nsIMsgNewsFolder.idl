@@ -51,4 +51,5 @@ interface nsIMsgNewsFolder : nsISupports {
   void SetNewsrcHasChanged(in boolean newsrcHasChanged);
   void updateSummaryFromNNTPInfo(in long oldest, in long youngest, in long total);
   void removeMessage(in nsMsgKey key); 
+  void cancelComplete();
 };

@@ -395,6 +395,7 @@ private:
 
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	void SetProgressStatus(char * message);
+	nsresult SetNewsFolder();		/* sets m_newsFolder, if not already set */
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
