@@ -47,6 +47,7 @@ extern LPSTR            szEGlobalAlloc;
 extern LPSTR            szEStringLoad;
 extern LPSTR            szEDllLoad;
 extern LPSTR            szEStringNull;
+extern LPSTR            szEOutOfMemory;
 extern LPSTR            szTempSetupPath;
 
 extern LPSTR            szSetupDir;
@@ -76,6 +77,7 @@ extern BOOL             gbRestrictedAccess;
 extern BOOL             gbDownloadTriggered;
 extern BOOL             gbAllowMultipleInstalls;
 extern BOOL             gbForceInstall;
+extern BOOL             gbForceInstallGre;
 
 extern setupGen         sgProduct;
 extern diS              diSetup;

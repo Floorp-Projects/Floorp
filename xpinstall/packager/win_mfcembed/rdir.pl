@@ -45,7 +45,7 @@ sub remove_dir_structure
 {
     my($curr_dir) = @_;
     $save_cwd     = cwd();
-    $save_cwd     =~ s/\//\\/g;
+    $save_cwd     =~ s/\\/\//g;
     if((-e "$curr_dir") && (-d "$curr_dir"))
     {
         remove_all_dir($curr_dir);
@@ -94,7 +94,7 @@ sub remove_directory
     my($save_cwd);
 
     $save_cwd = cwd();
-    $save_cwd =~ s/\//\\/g;
+    $save_cwd =~ s/\\/\//g;
 
     if(-e "$directory")
     {

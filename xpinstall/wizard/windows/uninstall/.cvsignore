@@ -6,4 +6,5 @@ rdi.pdb
 uninstall.ilk
 uninstall.pdb
 uninstall.res
+uninstall.aps
 Makefile

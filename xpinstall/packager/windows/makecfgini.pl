@@ -66,7 +66,7 @@ if($#ARGV < 5)
        staging path  : path to where the components are staged at
 
        .xpi path     : path to where the .xpi files have been built to
-                       ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install\\xpi
+                       ie: d:/builds/mozilla/dist/win32_o.obj/install/xpi
 
        redirect file : url to where the redirect.ini file will be staged at.
 
@@ -134,11 +134,11 @@ while($line = <fpInIt>)
 
       if($componentName =~ /\$UninstallFileZip\$/i)
       {
-        $installSize = OutputInstallSizeArchive("$inXpiPath\\$fileUninstallZip") * 2;
+        $installSize = OutputInstallSizeArchive("$inXpiPath/$fileUninstallZip") * 2;
       }
       else
       {
-        $installSize = OutputInstallSize("$inStagePath\\$componentName");
+        $installSize = OutputInstallSize("$inStagePath/$componentName");
 
         # special oji consideration here.  Since it's an installer that 
         # seamonkey installer will be calling, the disk space allocation
@@ -146,6 +146,11 @@ while($line = <fpInIt>)
         if($componentName =~ /oji/i)
         {
           $installSize = int($installSize * 3.62);
+        }
+
+        if($componentName =~ /gre/i)
+        {
+          $installSize = int($installSize * 4.48);
         }
       }
     }
@@ -155,7 +160,7 @@ while($line = <fpInIt>)
     {
       if($line =~ /\$InstallSizeSystem\$/i)
       {
-        $installSizeSystem = OutputInstallSizeSystem($line, "$inStagePath\\$componentName");
+        $installSizeSystem = OutputInstallSizeSystem($line, "$inStagePath/$componentName");
       }
     }
 
@@ -174,7 +179,7 @@ while($line = <fpInIt>)
       $componentName = $colonSplit[1];
       chop($componentName);
       $componentName      =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
-      $installSizeArchive = OutputInstallSizeArchive("$inXpiPath\\$componentName");
+      $installSizeArchive = OutputInstallSizeArchive("$inXpiPath/$componentName");
     }
 
     print fpOutIni "Install Size Archive=$installSizeArchive\n";
@@ -253,7 +258,7 @@ sub OutputInstallSize()
   my($installSize);
 
   print "   calculating size for $inPath\n";
-  $installSize    = `$ENV{MOZ_TOOLS}\\bin\\ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+  $installSize    = `$ENV{WIZ_distInstallPath}/ds32.exe /D /L0 /A /S /C 32768 $inPath`;
   $installSize   += 32768; # take into account install.js
   $installSize    = int($installSize / 1024);
   $installSize   += 1;
@@ -290,8 +295,8 @@ sub OutputInstallSizeSystem()
       foreach(@commaSplit)
       {
         # calculate the size of component installed using ds32.exe in Kbytes
-        print "   calculating size for $inPath\\$_";
-        $installSizeSystem += `$ENV{MOZ_TOOLS}\\bin\\ds32.exe /D /L0 /A /S /C 32768 $inPath\\$_`;
+        print "   calculating size for $inPath/$_";
+        $installSizeSystem += `$ENV{WIZ_distInstallPath}/ds32.exe /D /L0 /A /S /C 32768 $inPath/$_`;
       }
     }
   }

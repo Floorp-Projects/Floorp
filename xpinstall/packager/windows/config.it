@@ -172,8 +172,8 @@ Description Long=Program will be installed with the minimal options.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
 C0=Component XPCOM
-C1=Component Navigator
-C2=Component PSM
+C1=Component GRE
+C2=Component Navigator
 C3=Component Uninstaller
 C4=Component US English Profile Defaults
 C5=Component En US lang pack
@@ -192,9 +192,9 @@ Description Long=Program will be installed with the most common options.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
 C0=Component XPCOM
-C1=Component Navigator
-C2=Component MailNews
-C3=Component PSM
+C1=Component GRE
+C2=Component Navigator
+C3=Component MailNews
 C4=Component Uninstaller
 C5=Component Chatzilla
 C6=Component Venkman
@@ -218,9 +218,9 @@ Description Long=You may choose the options you want to install.  Recommended fo
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
 C0=Component XPCOM
-C1=Component Navigator
-C2=Component MailNews
-C3=Component PSM
+C1=Component GRE
+C2=Component Navigator
+C3=Component MailNews
 C4=Component Uninstaller
 C5=Component Chatzilla
 C6=Component Venkman
@@ -367,23 +367,6 @@ Message Retry0=Some files have failed the CRC check and are being downloaded aga
 ;           is required for the file to be replaced correctly.
 Show Dialog=AUTO
 
-; These SmartDownload sections contain information to configure SmartDownload.
-; The info is applied to all components to be downloaded.
-[SmartDownload-Netscape Install]
-;core_file=base.zip
-;core_dir=[SETUP PATH]
-no_ads=true
-silent=false
-execution=false
-confirm_install=false
-;extract_msg=Uncompressing Mozilla.  Please wait...
-
-[SmartDownload-Proxy]
-
-[SmartDownload-Execution]
-exe=
-exe_param=
-
 [Check Instance0]
 Class Name=MozillaMessageWindow
 Window Name=
@@ -404,15 +387,6 @@ Extra Cmd0 Reg Name=
 Extra Cmd0 Parameter=-kill
 
 
-[Component XPCOM]
-Description Short=Mozilla XPCOM
-;*** LOCALIZE ME BABY ***
-Description Long=Install Engine
-Archive=xpcom.xpi
-$InstallSize$:xpcom
-$InstallSizeSystem$
-$InstallSizeArchive$:xpcom.xpi
-;
 ;DependeeX=Component A means
 ;  - if Component A gets checked this component gets checked
 ;  - if Component A gets unchecked this component gets unchecked
@@ -503,8 +477,38 @@ $InstallSizeArchive$:xpcom.xpi
 ;                   is greater than or equal to the SupersedeMinVersion the component
 ;                   will be superseded.
 ;
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\xpcom.dll
+
+;We're not installing Component XPCOM because we're using it
+;for it's xpinstall engine from the TEMP dir.  The files that
+;this component has are already in Component GRE.
+[Component XPCOM]
+Description Short=Mozilla XPCOM
+;*** LOCALIZE ME BABY ***
+Description Long=Install Engine
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+$InstallSizeSystem$
+$InstallSizeArchive$:xpcom.xpi
+Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+
+[Component GRE]
+;*** LOCALIZE ME BABY ***
+Description Short=GRE
+;*** LOCALIZE ME BABY ***
+Description Long=Gecko Runtime Environment
+Archive=gre-win32-installer.zip
+Archive Uncompressed=gre-win32-installer.exe
+$InstallSize$:gre
+$InstallSizeSystem$
+$InstallSizeArchive$:gre-win32-installer.zip
+Attributes=SELECTED|UNCOMPRESS|SUPERSEDE|LAUNCHAPP
+Parameter=-mmi -ma -app $ProductName$ -app_path "[SETUP PATH]\$MainExeFile$"
+SupersedeType=GRE
+SupersedeWinReg0=HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE
+;SupersedeWinReg1=HKEY_LOCAL_MACHINE\Software\Aol\GRE_private
+SupersedeVersion0=0.0.0.0
+SupersedeMinVersion=0.0.0.0
+SupersedeMaxVersion=0.0.0.0
 
 [Component Navigator]
 Description Short=Navigator
@@ -632,18 +636,6 @@ Force Upgrade File0=[SETUP PATH]\Components\fullsoft.dll
 ; particular dialog.
 Random Install Percentage=100
 
-[Component PSM]
-Description Short=Personal Security Manager
-;*** LOCALIZE ME BABY ***
-Description Long=for secure browsing and email; required for SSL(https) and S/MIME
-Archive=psm.xpi
-$InstallSize$:psm
-$InstallSizeSystem$
-$InstallSizeArchive$:psm.xpi
-Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\Components\pipnss.dll
-Force Upgrade File1=[SETUP PATH]\psm.exe
-
 [Core]
 Source=[XPI PATH]\xpcom.xpi
 Destination=[WIZTEMP]\xpcom.ns
@@ -651,6 +643,11 @@ $InstallSize$:xpcom
 Cleanup=TRUE
 ;*** LOCALIZE ME BABY ***
 Message=Preparing Install, please wait...
+; Status= values: Disabled, Enabled
+; If nothing is set, default value is Enabled.  If set to Disabled,
+; it will then use GRE as the xpinstall engine, in which case, there
+; should be a GRE component in this installer package!
+Status=Enabled
 
 [Redirect]
 Status=Disabled
@@ -823,6 +820,34 @@ Overwrite Name=TRUE
 Timing=pre smartupdate
 
 [Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Description
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry5]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Uninstall Log Folder
+Name Value=[SETUP PATH]\Uninstall
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry6]
 Root Key=HKEY_CURRENT_USER
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$
@@ -836,7 +861,7 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
-[Windows Registry5]
+[Windows Registry7]
 Root Key=HKEY_CURRENT_USER
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$
@@ -850,7 +875,7 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
-[Windows Registry6]
+[Windows Registry8]
 Root Key=HKEY_CURRENT_USER
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$
@@ -864,7 +889,7 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
-[Windows Registry7]
+[Windows Registry9]
 Root Key=HKEY_CURRENT_USER
 ;*** LOCALIZE ME BABY ***
 Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
@@ -878,7 +903,35 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
-[Windows Registry8]
+[Windows Registry10]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Description
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry11]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Uninstall Log Folder
+Name Value=[SETUP PATH]\Uninstall
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry12]
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=DisplayName
@@ -891,7 +944,7 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
-[Windows Registry9]
+[Windows Registry13]
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
 Name=UninstallString
@@ -907,7 +960,7 @@ Timing=post smartupdate
 
 ; The following keys are to help JRE's installer locate where mozilla gets
 ; installed to.  It has not been updated to look for the new keys.
-[Windows Registry10]
+[Windows Registry14]
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Mozilla
 Name=

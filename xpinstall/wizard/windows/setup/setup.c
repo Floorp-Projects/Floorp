@@ -48,6 +48,7 @@ LPSTR           szEStringLoad;
 LPSTR           szEDllLoad;
 LPSTR           szEStringNull;
 LPSTR           szTempSetupPath;
+LPSTR           szEOutOfMemory;
 
 LPSTR           szSetupDir;
 LPSTR           szTempDir;
@@ -79,6 +80,10 @@ BOOL            gbRestrictedAccess;
 BOOL            gbDownloadTriggered;
 BOOL            gbAllowMultipleInstalls = FALSE;
 BOOL            gbForceInstall = FALSE;
+/* XXX For now, we want to always force the installation of GRE until
+ * GRE is appropriately versioned.  See bug 180383
+ */
+BOOL            gbForceInstallGre = TRUE;
 
 setupGen        sgProduct;
 diS             diSetup;
@@ -103,6 +108,7 @@ installGui      sgInstallGui;
 sems            gErrorMessageStream;
 sysinfo         gSystemInfo;
 dsN             *gdsnComponentDSRequirement = NULL;
+
 
 /* do not add setup.exe to the list because we figure out the filename
  * by calling GetModuleFileName() */
@@ -129,9 +135,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   if(!hPrevInstance)
   {
-    ParseCommandLine(lpszCmdLine);
-    
-    if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
+    if(InitSetupGeneral())
+      PostQuitMessage(1);
+    else if(ParseCommandLine(lpszCmdLine))
+      PostQuitMessage(1);
+    else if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
     {
     /* Allow only one instance of setup to run.
      * Detect a previous instance of setup, bring it to the 
@@ -197,6 +205,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
+  /* garbage collection */
+  DeInitSetupGeneral();
   if(iRv != WIZ_SETUP_ALREADY_RUNNING)
     /* Do clean up before exiting from the application */
     DeInitialize();

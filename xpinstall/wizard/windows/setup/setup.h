@@ -66,8 +66,35 @@ typedef int PRInt32;
 #define FILE_ALL_JS                     "all-proxy.js"
 #define VR_DEFAULT_PRODUCT_NAME         "Mozilla"
 
-#define LOG_IT                          TRUE
-#define DO_NOT_LOG_IT                   FALSE
+#define FORCE_ADD_TO_UNINSTALL_LOG        TRUE
+#define DO_NOT_FORCE_ADD_TO_UNINSTALL_LOG FALSE
+
+/* defines that indicate whether something should
+ * be logged to the install_wizardX.log or not
+ * for uninstallation purposes.
+ */
+#define ADD_TO_UNINSTALL_LOG            TRUE
+#define DO_NOT_ADD_TO_UNINSTALL_LOG     FALSE
+
+/* defines that indeicate whether an install command
+ * should have '*dnu*' prepended.  '*dnu*' is parsed
+ * by the uninstaller and signals that the specific
+ * install command should _not_ be undone.
+ */
+#define DNU_UNINSTALL                   FALSE
+#define DNU_DO_NOT_UNINSTALL            TRUE
+
+#define WINREG_OVERWRITE_KEY            TRUE
+#define WINREG_DO_NOT_OVERWRITE_KEY     FALSE
+#define WINREG_OVERWRITE_NAME           TRUE
+#define WINREG_DO_NOT_OVERWRITE_NAME    FALSE
+
+#define INCLUDE_INVISIBLE_OBJS          TRUE
+#define SKIP_INVISIBLE_OBJS             FALSE
+
+#define APPPATH_GRE_PATH_SET            0x00000000
+#define APPPATH_GRE_PATH_NOT_SET        0x00000001
+#define APPPATH_GRE_PATH_ALREADY_SET    0x00000002
 
 #define NEXT_DLG                        1
 #define PREV_DLG                        2
@@ -75,6 +102,13 @@ typedef int PRInt32;
 
 #define MAX_CRC_FAILED_DOWNLOAD_RETRIES 3
 #define MAX_FILE_DOWNLOAD_RETRIES       3
+
+#define STATUS_DISABLED                 0
+#define STATUS_ENABLED                  1
+
+/* WS: WinSpawn wait values */
+#define WS_DO_NOT_WAIT                  FALSE
+#define WS_WAIT                         TRUE
 
 #define BAR_MARGIN                      1
 #define BAR_SPACING                     0
@@ -166,6 +200,10 @@ typedef int PRInt32;
 #define WIZ_CRC_FAIL                    1028
 #define WIZ_SETUP_ALREADY_RUNNING       1029
 #define WIZ_TOO_MANY_NETWORK_ERRORS     1030
+#define WIZ_ERROR_PARSING_INTERNAL_STR  1031
+#define WIZ_ERROR_REGKEY                1032
+#define WIZ_ERROR_INIT                  1033
+#define WIZ_ERROR_LOADING_RESOURCE_LIB  1034
 
 /* E: Errors */
 #define E_REBOOT                        999
@@ -180,6 +218,7 @@ typedef int PRInt32;
 #define FO_ERROR_INCR_EXCEEDS_LIMIT     5
 
 /* Mode of Setup to run in */
+#define NOT_SET                         -1
 #define NORMAL                          0
 #define SILENT                          1
 #define AUTO                            2
@@ -389,7 +428,7 @@ typedef struct dlgReboot
 
 typedef struct setupStruct
 {
-  DWORD     dwMode;
+  int       mode;
   DWORD     dwCustomType;
   DWORD     dwNumberOfComponents;
   LPSTR     szPath;
@@ -433,6 +472,7 @@ typedef struct sinfoXpcomFile
   LPSTR       szDestination;
   LPSTR       szMessage;
   BOOL        bCleanup;
+  BOOL        bStatus;
   ULONGLONG   ullInstallSize;
 } siCF;
 

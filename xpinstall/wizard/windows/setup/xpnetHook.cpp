@@ -1190,7 +1190,7 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
   double dPercentSoFar;
   int    iRv = nsFTPConn::OK;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     SetStatusUrl();
 
@@ -1347,7 +1347,7 @@ UpdateGaugeFileProgressBar(double value)
 	int	        nBars;
   static long lModLastValue = 0;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_PROGRESS_BAR))
       return;
@@ -1506,7 +1506,7 @@ void InitDownloadDlg(void)
 {
 	WNDCLASS	wc;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     memset(&wc, 0, sizeof(wc));
     wc.style          = CS_GLOBALCLASS;
@@ -1525,7 +1525,7 @@ void InitDownloadDlg(void)
 
 void DeInitDownloadDlg()
 {
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);

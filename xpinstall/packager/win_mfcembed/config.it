@@ -294,15 +294,6 @@ Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with ins
 ; the process id of this app instance window found.
 Close All Process Windows=TRUE
 
-;[Component XPCOM]
-;Description Short=Mozilla XPCOM
-;;*** LOCALIZE ME BABY ***
-;Description Long=Install Engine
-;Archive=xpcom.xpi
-;$InstallSize$:xpcom
-;$InstallSizeSystem$
-;$InstallSizeArchive$:xpcom.xpi
-
 ;
 ;DependeeX=Component A means
 ;  - if Component A gets checked this component gets checked
@@ -394,8 +385,17 @@ Close All Process Windows=TRUE
 ;                   is greater than or equal to the SupersedeMinVersion the component
 ;                   will be superseded.
 ;
-Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\xpcom.dll
+
+;[Component XPCOM]
+;Description Short=Mozilla XPCOM
+;;*** LOCALIZE ME BABY ***
+;Description Long=Install Engine
+;Archive=xpcom.xpi
+;$InstallSize$:xpcom
+;$InstallSizeSystem$
+;$InstallSizeArchive$:xpcom.xpi
+;Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+;Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
 [Component MFCEmbed]
 Description Short=MFCEmbed

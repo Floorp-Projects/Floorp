@@ -76,11 +76,11 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
   else
     wsprintf(szErrorString, "%s", szMsg);
 
-  if((ugUninstall.dwMode != SILENT) && (ugUninstall.dwMode != AUTO))
+  if((ugUninstall.mode != SILENT) && (ugUninstall.mode != AUTO))
   {
     MessageBox(hWndMain, szErrorString, NULL, MB_ICONEXCLAMATION);
   }
-  else if(ugUninstall.dwMode == AUTO)
+  else if(ugUninstall.mode == AUTO)
   {
     ShowMessage(szErrorString, TRUE);
     Delay(5);
@@ -156,7 +156,6 @@ void Delay(DWORD dwSeconds)
 HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
-  HWND hwndFW;
 
   hDlgMessage = NULL;
   DetermineOSVersion();
@@ -176,20 +175,8 @@ HRESULT Initialize(HINSTANCE hInstance)
   if((szClassName = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  lstrcpy(szClassName, CLASS_NAME);
-
-  /* Allow only one instance of setup to run.
-   * Detect a previous instance of setup, bring it to the 
-   * foreground, and quit current instance */
-  if((hwndFW = FindWindow(szClassName, szClassName)) != NULL)
-  {
-    ShowWindow(hwndFW, SW_RESTORE);
-    SetForegroundWindow(hwndFW);
-    return(1);
-  }
-
+  lstrcpy(szClassName, CLASS_NAME_UNINSTALL_DLG);
   hAccelTable = LoadAccelerators(hInst, szClassName);
-
   if((szUninstallDir = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
@@ -238,6 +225,33 @@ HRESULT Initialize(HINSTANCE hInstance)
   lstrcpy(szOSTempDir, szTempDir);
   AppendBackSlash(szTempDir, MAX_BUF);
   lstrcat(szTempDir, WIZ_TEMP_DIR);
+
+  /*  if multiple installer instances are allowed; 
+      each instance requires a unique temp directory
+   */
+  if(gbAllowMultipleInstalls)
+  {
+    DWORD dwLen = lstrlen(szTempDir);
+
+    if (strncmp(szUninstallDir, szTempDir, dwLen) == 0)
+    {
+      lstrcpy(szTempDir, szUninstallDir);
+    }
+    else
+    {
+      int i;
+      for(i = 1; i <= 100 && (FileExists(szTempDir) != FALSE); i++)
+      {
+        itoa(i, (szTempDir + dwLen), 10);
+      }
+    
+      if (FileExists(szTempDir) != FALSE)
+      {
+        MessageBox(hWndMain, "Cannot create temp directory", NULL, MB_OK | MB_ICONEXCLAMATION);
+        exit(1);
+      }
+    }
+  }
 
   if(!FileExists(szTempDir))
   {
@@ -477,18 +491,24 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
 
 void SetUninstallRunMode(LPSTR szMode)
 {
+  /* Check to see if mode has already been set.  If so,
+   * then do not override it.
+   */
+  if(ugUninstall.mode != NOT_SET)
+    return;
+
   if(lstrcmpi(szMode, "NORMAL") == 0)
-    ugUninstall.dwMode = NORMAL;
+    ugUninstall.mode = NORMAL;
   if(lstrcmpi(szMode, "AUTO") == 0)
-    ugUninstall.dwMode = AUTO;
+    ugUninstall.mode = AUTO;
   if(lstrcmpi(szMode, "SILENT") == 0)
-    ugUninstall.dwMode = SILENT;
+    ugUninstall.mode = SILENT;
   if(lstrcmpi(szMode, "SHOWICONS") == 0)
-    ugUninstall.dwMode = SHOWICONS;
+    ugUninstall.mode = SHOWICONS;
   if(lstrcmpi(szMode, "HIDEICONS") == 0)
-    ugUninstall.dwMode = HIDEICONS;
+    ugUninstall.mode = HIDEICONS;
   if(lstrcmpi(szMode, "SETDEFAULT") == 0)
-    ugUninstall.dwMode = SETDEFAULT;
+    ugUninstall.mode = SETDEFAULT;
 }
 
 void RemoveBackSlash(LPSTR szInput)
@@ -776,7 +796,7 @@ void DeInitDlgUninstall(diU *diDialog)
 
 HRESULT InitUninstallGeneral()
 {
-  ugUninstall.dwMode = NORMAL;
+  ugUninstall.mode = NOT_SET;
 
   if((ugUninstall.szAppPath                 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -896,7 +916,7 @@ BOOL IsWin95Debute()
   return(bIsWin95Debute);
 }
 
-void ParseCommandLine(LPSTR lpszCmdLine)
+DWORD ParseCommandLine(LPSTR lpszCmdLine)
 {
   char  szArgVBuf[MAX_BUF];
   int   i;
@@ -965,9 +985,14 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     {
       ugUninstall.bVerbose = TRUE;
     }
+    else if(!lstrcmpi(szArgVBuf, "-mmi") || !lstrcmpi(szArgVBuf, "/mmi"))
+    {
+      gbAllowMultipleInstalls = TRUE;    
+    }
 
     ++i;
   }
+  return(WIZ_OK);
 }
 
 int PreCheckInstance(char *szSection, char *szIniFile)
@@ -1100,7 +1125,7 @@ HRESULT CheckInstances()
       {
         if(*szMessage != '\0')
         {
-          switch(ugUninstall.dwMode)
+          switch(ugUninstall.mode)
           {
             case NORMAL:
               switch(MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION | MB_RETRYCANCEL))
@@ -1457,7 +1482,7 @@ DWORD CleanupAppList()
   siALTmp = siALHead;
   while(siALTmp != NULL)
   {
-    if(lstrcmp(siALTmp->szAppID, szDefaultApp) == 0)
+    if(lstrcmpi(siALTmp->szAppID, szDefaultApp) == 0)
       bFoundDefaultApp = TRUE;
 
     // ProcessAppItem returns the # of installations of the App
@@ -1498,11 +1523,11 @@ DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
   char szUninstKey[MAX_BUF];
 
   GetPrivateProfileString("General", "Default AppID", "", szBuf, sizeof(szBuf), szFileIniUninstall);
-  bDefaultApp = (lstrcmp(szAppID, szBuf) == 0);
+  bDefaultApp = (lstrcmpi(szAppID, szBuf) == 0);
 
   wsprintf(szKey, "%s\\%s", szKeyAppList, szAppID);
 
-  if(lstrcmp(szAppID, ugUninstall.szClientAppID) == 0) // This is the app that the user said 
+  if(lstrcmpi(szAppID, ugUninstall.szClientAppID) == 0) // This is the app that the user said 
   {                                                    //    on the command-line to uninstall.
 
     if((ugUninstall.szClientAppPath[0] == '\0') || (bDefaultApp)) //If we didn't get an /app_path or this
@@ -1522,7 +1547,7 @@ DWORD ProcessAppItem(HKEY hkRootKey, LPSTR szKeyAppList, LPSTR szAppID)
         && (dwIndex < dwUpperLimit) )                   //   through the list looking for that instance.
     {
       GetWinReg(hkRootKey, szKey, szName, szBuf, MAX_BUF);
-      if( (lstrcmp(szBuf, ugUninstall.szClientAppPath) == 0) || (!FileExists(szBuf)) )
+      if( (lstrcmpi(szBuf, ugUninstall.szClientAppPath) == 0) || (!FileExists(szBuf)) )
         RemovePathToExeXX(hkRootKey, szKey, dwIndex, dwUpperLimit);
       else
         dwCount++;
@@ -1662,7 +1687,7 @@ HRESULT GetUninstallLogPath()
   return(0);
 }
 
-HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
+HRESULT ParseUninstallIni()
 {
   char szBuf[MAX_BUF];
   char szKeyCrypted[MAX_BUF];
@@ -1672,9 +1697,6 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   char fontSize[MAX_BUF];
   char charSet[MAX_BUF];
 
-  if(InitUninstallGeneral())
-    return(1);
-
   lstrcpy(ugUninstall.szLogFilename, FILE_LOG_INSTALL);
 
   GetPrivateProfileString("General", "Shared Install", "", szBuf, MAX_BUF, szFileIniUninstall);
@@ -1683,9 +1705,8 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, MAX_BUF, szFileIniUninstall);
   SetUninstallRunMode(szBuf);
-  ParseCommandLine(lpszCmdLine);
 
-  if((ugUninstall.dwMode != SHOWICONS) && (ugUninstall.dwMode != HIDEICONS) && (ugUninstall.dwMode != SETDEFAULT))
+  if((ugUninstall.mode != SHOWICONS) && (ugUninstall.mode != HIDEICONS) && (ugUninstall.mode != SETDEFAULT))
     if(CheckInstances())
       return(1);
   if(InitDlgUninstall(&diUninstall))
@@ -1738,7 +1759,7 @@ HRESULT ParseUninstallIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diUninstall.bShowDialog = TRUE;
 
-  switch(ugUninstall.dwMode)
+  switch(ugUninstall.mode)
   {
     case AUTO:
     case SILENT:
@@ -2249,7 +2270,7 @@ BOOL WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
   char  szBuf[MAX_BUF];
   BOOL  bNameExists = FALSE;
 
-  szBuf[0] = '/0';
+  szBuf[0] = '\0';
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     dwSize = sizeof(szBuf);
@@ -2284,7 +2305,6 @@ void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
 void DeInitialize()
 {
   DeInitDlgUninstall(&diUninstall);
-  DeInitUninstallGeneral();
 
   FreeMemory(&szTempDir);
   FreeMemory(&szOSTempDir);

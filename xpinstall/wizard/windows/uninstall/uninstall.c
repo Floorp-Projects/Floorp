@@ -56,6 +56,8 @@ DWORD           dwScreenY;
 
 DWORD           gdwWhatToDo;
 
+BOOL            gbAllowMultipleInstalls = FALSE;
+
 uninstallGen    ugUninstall;
 diU             diUninstall;
 
@@ -70,11 +72,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
   MSG   msg;
   char  szBuf[MAX_BUF];
+  int   iRv = WIZ_OK;
+  HWND  hwndFW;
 
   if(!hPrevInstance)
   {
     hInst = GetModuleHandle(NULL);
-    if(Initialize(hInst))
+    if(InitUninstallGeneral())
+      PostQuitMessage(1);
+    else if(ParseCommandLine(lpszCmdLine))
+      PostQuitMessage(1);
+    else if((hwndFW = FindWindow(CLASS_NAME_UNINSTALL_DLG, NULL)) != NULL && !gbAllowMultipleInstalls)
+    {
+    /* Allow only one instance of setup to run.
+     * Detect a previous instance of setup, bring it to the 
+     * foreground, and quit current instance */
+
+      ShowWindow(hwndFW, SW_RESTORE);
+      SetForegroundWindow(hwndFW);
+      iRv = WIZ_SETUP_ALREADY_RUNNING;
+      PostQuitMessage(1);
+    }
+    else if(Initialize(hInst))
     {
       PostQuitMessage(1);
     }
@@ -89,7 +108,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
       }
       PostQuitMessage(1);
     }
-    else if(ParseUninstallIni(lpszCmdLine))
+    else if(ParseUninstallIni())
     {
       PostQuitMessage(1);
     }
@@ -98,9 +117,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
       if(diUninstall.bShowDialog == TRUE)
         hDlgUninstall = InstantiateDialog(hWndMain, DLG_UNINSTALL, diUninstall.szTitle, DlgProcUninstall);
       // Assumes that SHOWICONS, HIDEICONS, and SETDEFAULT never show dialogs
-      else if((ugUninstall.dwMode == SHOWICONS) || (ugUninstall.dwMode == HIDEICONS))
+      else if((ugUninstall.mode == SHOWICONS) || (ugUninstall.mode == HIDEICONS))
         ParseDefaultsInfo();
-      else if(ugUninstall.dwMode == SETDEFAULT)
+      else if(ugUninstall.mode == SETDEFAULT)
         SetDefault();
       else
         ParseAllUninstallLogs();
@@ -119,8 +138,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     }
   }
 
-  /* Do clean up before exiting from the application */
-  DeInitialize();
+  /* garbage collection */
+  DeInitUninstallGeneral();
+  if(iRv != WIZ_SETUP_ALREADY_RUNNING)
+    /* Do clean up before exiting from the application */
+    DeInitialize();
 
   return(msg.wParam);
 } /*  End of WinMain */

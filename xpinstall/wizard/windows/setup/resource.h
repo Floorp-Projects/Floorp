@@ -33,6 +33,7 @@
 #define IDS_ERROR_STRING_LOAD           2
 #define IDS_ERROR_STRING_NULL           4
 #define IDS_ERROR_GLOBALALLOC           5
+#define IDS_ERROR_OUTOFMEMORY           6
 
 // Next default values for new objects
 // 

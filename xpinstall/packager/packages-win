@@ -8,6 +8,24 @@
 ; ; file comment
 ;
 
+; *****
+; *
+; * NOTE: Many files that were listed in [browser] have been moved to the
+; *       following pacakges file lists:
+; *
+; *         embedding\config\gre-win
+; *         embedding\config\gre-installer-win
+; *         embedding\config\basebrowser-win
+; *         embedding\config\basebrowser-installer-win
+; *
+; *       [psm] has been moved from this package file list because its
+; *       files have been merged with GRE's package file list:
+; *
+; *         embedding\config\basebrowser-win
+; *         embedding\config\basebrowser-installer-win
+; *
+; *****
+
 bin/.autoreg
 
 [langenus]
@@ -42,49 +60,30 @@ bin\defaults\profile\search.rdf
 bin\defaults\profile\mimeTypes.rdf
 bin\defaults\messenger\mailViews.dat
 
-[xpcom]
-; files required to initialize xpinstall for Install Wizard
-bin\js3250.dll
-bin\mozreg.dll
-bin\nspr4.dll
-bin\plc4.dll
-bin\plds4.dll
-bin\xpcom.dll
-bin\xpistub.dll
-bin\zlib.dll
-bin\components\jar50.dll
-bin\components\xpinstal.dll
-;install\ren8dot3.exe,bin\ren8dot3.exe
-
 [browser]
 ; files listed in xpcom (missing in this section) will be installed as part of the browser
 bin\README.txt,bin\readme.txt
 bin\LICENSE,bin\license.txt
-bin\gkgfx.dll
-bin\components\gkgfxwin.dll
-bin\components\gkwidget.dll
 bin\jpeg3250.dll
 bin\jsj3250.dll
 bin\mozilla.exe
-bin\mozctl.dll
-bin\mozctlx.dll
 bin\regxpcom.exe
 bin\xpicleanup.exe
 bin\res\cmessage.txt
-bin\components\accessibility.dll
-bin\components\accessibility.xpt
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
-bin\components\appshell.xpt
-bin\components\appshell.dll
 bin\components\appcomps.dll
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
 bin\components\directory.xpt
 bin\components\downloadmanager.xpt
-bin\components\embedcomponents.dll
+
+; These 3 files need to be in browser.xpi as well as xpcom.xpi (listed in xpcom-win.pkg)
+bin\nspr4.dll
+bin\plc4.dll
+bin\plds4.dll
+
 bin\components\commandhandler.xpt
-bin\components\history.xpt
 bin\components\winhooks.xpt
 bin\components\alerts.xpt
 bin\components\related.xpt
@@ -92,64 +91,20 @@ bin\components\search.xpt
 bin\components\timebomb.xpt
 bin\components\urlbarhistory.xpt
 bin\components\urlwidgt.xpt
-bin\components\caps.dll
-bin\components\caps.xpt
 bin\components\chardetc.dll
-bin\components\universalchardet.dll
-bin\components\chrome.dll
-bin\components\chrome.xpt
-bin\components\cookie.dll
 bin\components\cookie.xpt
 bin\components\composer.dll
 bin\components\composer.xpt
-bin\components\docshell.dll
-bin\components\docshell_base.xpt
-bin\components\jsdom.dll
 bin\components\jsd3250.dll
 bin\components\jsdservice.xpt
-bin\components\dom.xpt
-bin\components\dom_base.xpt
-bin\components\dom_core.xpt
-bin\components\dom_css.xpt
-bin\components\dom_events.xpt
-bin\components\dom_html.xpt
-bin\components\dom_range.xpt
-bin\components\dom_stylesheets.xpt
-bin\components\dom_traversal.xpt
-bin\components\dom_views.xpt
-bin\components\dom_xbl.xpt
-bin\components\dom_xpath.xpt
-bin\components\dom_xul.xpt
-bin\components\editor.xpt
-bin\components\editor.dll
 bin\components\evntloop.dll
 bin\components\find.xpt
-bin\components\gfx.xpt
-bin\components\content_base.xpt
 bin\components\content_html.xpt
 bin\components\content_xslt.xpt
-bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
-bin\components\gklayout.dll
-bin\components\gkparser.dll
-bin\components\gkplugin.dll
-bin\components\gkview.dll
-bin\components\imgmng.dll
-bin\components\imglib2.dll
-bin\components\imglib2.xpt
-bin\components\imgicon.dll
-bin\components\imgicon.xpt
-bin\components\intl.xpt
 bin\components\chardet.xpt
-bin\components\jar.xpt
 bin\components\jsconsole-clhandler.js
-bin\components\jsurl.dll
-bin\components\jsurl.xpt
-bin\components\layout_base.xpt
-bin\components\layout_xul.xpt
 bin\components\layout_xul_tree.xpt
-bin\components\locale.xpt
-bin\components\i18n.dll
 bin\components\mork.dll
 bin\components\mozbrwsr.xpt
 bin\components\mozcomps.xpt
@@ -158,104 +113,46 @@ bin\components\mozfind.xpt
 bin\components\mozucth.dll
 bin\components\mozucth.xpt
 bin\components\nativapp.dll
-bin\components\necko.dll
-bin\components\necko2.dll
-bin\components\necko.xpt
 bin\components\mimetype.xpt
-bin\components\necko_cache.xpt
-bin\components\necko_strconv.xpt
-bin\components\necko_about.xpt
-bin\components\necko_data.xpt
-bin\components\necko_dns.xpt
-bin\components\necko_ftp.xpt
-bin\components\necko_http.xpt
-bin\components\necko_jar.xpt
-bin\components\necko_res.xpt
-bin\components\necko_cookie.xpt
-bin\components\necko_file.xpt
 bin\components\necko_socket.xpt
-bin\components\necko_viewsource.xpt
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
-bin\components\oji.dll
-bin\components\oji.xpt
-bin\components\pref.xpt
 bin\components\prefmigr.xpt
-bin\components\profile.dll
-bin\components\profile.xpt
 bin\components\proxyObject.xpt
-bin\components\rdf.dll
-bin\components\rdf.xpt
 bin\components\regviewer.xpt
 bin\components\regviewr.dll
-bin\components\shistory.dll
-bin\components\shistory.xpt
 bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\tridentprofile.dll
-bin\components\tridentprofile.xpt
-bin\components\txtsvc.xpt
+bin\components\tridentprofile.xpt 
 bin\components\txmgr.dll
 bin\components\txmgr.xpt
-bin\components\uconv.dll
-bin\components\uconv.xpt
-bin\components\ucvmath.dll
-bin\components\unicharutil.xpt
-bin\components\urildr.dll
-bin\components\uriloader.xpt
 bin\components\exthandler.xpt
 bin\components\util.xpt
-bin\components\wallet.dll
-bin\components\wallet.xpt
 bin\components\walleteditor.xpt
 bin\components\walletpreview.xpt
-bin\components\webbrwsr.dll
-bin\components\webBrowser_core.xpt
 bin\components\embed_base.xpt
-bin\components\webbrowserpersist.xpt
 bin\components\webshell_idls.xpt
 bin\components\widget.xpt
-bin\components\windowwatcher.xpt
 bin\components\windowds.xpt
 bin\components\wlltvwrs.dll
-bin\components\xpc3250.dll
-bin\components\xpcom_base.xpt
-bin\components\xpcom_components.xpt
-bin\components\xpcom_ds.xpt
-bin\components\xpcom_eventloop_windows.xpt
-bin\components\xpcom_eventloop_xp.xpt
-bin\components\xpcom_io.xpt
-bin\components\xpcom_nativeapp.xpt
-bin\components\xpcom_thread.xpt
-bin\components\xpcom_xpti.xpt
-bin\components\xpconnect.xpt
-bin\components\xpinstall.xpt
-bin\components\xppref32.dll
 bin\components\autoconfig.dll
 bin\components\autoconfig.xpt
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
-bin\plugins\npnul32.dll
-bin\components\xmlextras.xpt
-bin\components\xmlextras.dll
 bin\components\xmlsoap.xpt
 bin\components\xmlschema.xpt
-bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\nsKillAll.js
-bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
-bin\components\nsDownloadProgressListener.js
 bin\components\transformiix.dll
 bin\ISimpleDOMNodeMarshal.dll
 bin\ISimpleDOMDocumentMarshal.dll
 bin\components\nsSetDefaultBrowser.js
 bin\components\typeaheadfind.xpt
 bin\components\typeaheadfind.dll
-; ActiveX plugin
-bin\plugins\npmozax.dll
 bin\components\nsAxSecurityPolicy.js
 
 ; LDAP components need to be in the browser for AutoConfig
@@ -413,18 +310,8 @@ bin\components\venkman-service.js
 bin\chrome\venkman.jar
 bin\chrome\icons\default\venkman-window.ico
 
-[psm]
-bin\nssckbi.dll
-bin\components\pipboot.dll
-bin\components\pipboot.xpt
-bin\components\pipnss.dll
-bin\components\pipnss.xpt
 bin\components\pippki.dll
 bin\components\pippki.xpt
-bin\nss3.dll
-bin\smime3.dll
-bin\softokn3.dll
-bin\ssl3.dll
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
 

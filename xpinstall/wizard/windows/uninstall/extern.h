@@ -55,6 +55,8 @@ extern DWORD            dwScreenY;
 
 extern DWORD            gdwWhatToDo;
 
+extern BOOL             gbAllowMultipleInstalls;
+
 extern uninstallGen     ugUninstall;
 extern diU              diUninstall;
 

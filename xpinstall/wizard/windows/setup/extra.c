@@ -32,6 +32,7 @@
 #include "xpi.h"
 #include "logging.h"
 #include "nsEscape.h"
+#include <logkeys.h>
 #include <winnls.h>
 #include <winver.h>
 #include <tlhelp32.h>
@@ -48,6 +49,11 @@
 #define PN_PROCESS          TEXT("Process")
 #define PN_THREAD           TEXT("Thread")
 
+/* CW: Close Window */
+#define CW_CLOSE_ALL               0x00000001
+#define CW_CLOSE_VISIBLE_ONLY      0x00000002
+#define CW_CHECK_VISIBLE_ONLY      0x00000003
+
 #define FTPSTR_LEN (sizeof(szFtp) - 1)
 #define HTTPSTR_LEN (sizeof(szHttp) - 1)
 
@@ -61,6 +67,15 @@ typedef PERF_INSTANCE_DEFINITION    PERF_INSTANCE,  *PPERF_INSTANCE;
 TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
 DWORD   PX_PROCESS;
 DWORD   PX_THREAD;
+HRESULT InitGre(greInfo *gre);
+void    DeInitGre(greInfo *gre);
+void    LaunchExistingGreInstaller(greInfo *gre);
+void    UpdateGREAppInstallerProgress(int percent);
+HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize);
+HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre);
+
+static greInfo gGre;
+DWORD  gCWState;
 
 char *ArchiveExtensions[] = {"zip",
                              "xpi",
@@ -68,14 +83,7 @@ char *ArchiveExtensions[] = {"zip",
                              ""};
 
 #define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
-
-typedef struct structVer
-{
-  ULONGLONG ullMajor;
-  ULONGLONG ullMinor;
-  ULONGLONG ullRelease;
-  ULONGLONG ullBuild;
-} verBlock;
+#define APP_PATHS_KEY "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\%s"
 
 //GRE app installer progress bar integration
 typedef LONG (CALLBACK* LPFNDLLFUNC)(LPCTSTR,INT);
@@ -88,9 +96,6 @@ LPSTR szProxyDLLPath;
 LPFNDLLFUNC lpfnProgressUpd;
 HINSTANCE hGREAppInstallerProxyDLL;
 
-void  TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion);
-BOOL  GetFileVersion(LPSTR szFile, verBlock *vbVersion);
-int   CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew);
 BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize);
 DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name);
 PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex);
@@ -150,11 +155,11 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
   else
     wsprintf(szErrorString, "%s", szMsg);
 
-  if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
+  if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
   {
     MessageBox(hWndMain, szErrorString, NULL, MB_ICONEXCLAMATION);
   }
-  else if(sgProduct.dwMode == AUTO)
+  else if(sgProduct.mode == AUTO)
   {
     ShowMessage(szErrorString, TRUE);
     Delay(5);
@@ -596,6 +601,8 @@ HRESULT Initialize(HINSTANCE hInstance)
     return(1);
   if(NS_LoadStringAlloc(hInstance, IDS_ERROR_STRING_NULL, &szEStringNull,  MAX_BUF))
     return(1);
+  if(NS_LoadStringAlloc(hInstance, IDS_ERROR_OUTOFMEMORY, &szEOutOfMemory, MAX_BUF))
+    return(1);
 
   GetModuleFileName(NULL, szBuf, sizeof(szBuf));
   ParsePath(szBuf, szCurrentProcessDir,
@@ -615,7 +622,7 @@ HRESULT Initialize(HINSTANCE hInstance)
     {
       wsprintf(szBuf, szEDllLoad, szFullFilename);
       PrintError(szBuf, ERROR_CODE_HIDE);
-      return(1);
+      return(WIZ_ERROR_LOADING_RESOURCE_LIB);
     }
   }
 
@@ -647,7 +654,7 @@ HRESULT Initialize(HINSTANCE hInstance)
     return(1);
 
   if((szFileIniInstall = NS_GlobalAlloc(MAX_BUF)) == NULL)
-  return(1);
+    return(1);
 
   // determine the system's TEMP path
   if(GetTempPath(MAX_BUF, szTempDir) == 0)
@@ -699,7 +706,7 @@ HRESULT Initialize(HINSTANCE hInstance)
   if(!FileExists(szTempDir))
   {
     AppendBackSlash(szTempDir, MAX_BUF);
-    CreateDirectoriesAll(szTempDir, FALSE);
+    CreateDirectoriesAll(szTempDir, DO_NOT_ADD_TO_UNINSTALL_LOG);
     if(!FileExists(szTempDir))
     {
       char szECreateTempDir[MAX_BUF];
@@ -799,6 +806,24 @@ LPSTR GetFirstNonSpace(LPSTR lpszString)
   }
 
   return(NULL);
+}
+
+/* Function to locate the first character c in lpszString,
+ * and return a pointer to it. */
+LPSTR MozStrChar(LPSTR lpszString, char c)
+{
+  char* p = lpszString;
+
+  if(!p)
+    return NULL;
+
+  while (*p && (*p != c))
+    p = CharNext(p);
+
+  if (*p == '\0')  // null means end of string
+    return NULL;
+
+  return p;
 }
 
 /* Function to return the argument count given a command line input
@@ -1409,12 +1434,21 @@ HRESULT AddArchiveToIdiFile(siC *siCObject,
 
 void SetSetupRunMode(LPSTR szMode)
 {
+  /* Check to see if mode has already been set.  If so,
+   * then do not override it.
+   * We don't want to override this value because it could have been
+   * set via the command line argument as opposed to the config.ini
+   * having been parse.  Command line arguments take precedence.
+   */
+  if(sgProduct.mode != NOT_SET)
+    return;
+
   if(lstrcmpi(szMode, "NORMAL") == 0)
-    sgProduct.dwMode = NORMAL;
+    sgProduct.mode = NORMAL;
   if(lstrcmpi(szMode, "AUTO") == 0)
-    sgProduct.dwMode = AUTO;
+    sgProduct.mode = AUTO;
   if(lstrcmpi(szMode, "SILENT") == 0)
-    sgProduct.dwMode = SILENT;
+    sgProduct.mode = SILENT;
 }
 
 BOOL CheckForArchiveExtension(LPSTR szFile)
@@ -1998,90 +2032,339 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, BOOL bURLPath,
   }
 }
 
-HRESULT LaunchApps()
+/* Function: GetInstalledGreConfigIni()
+ *       in: greInfo *aGre: gre class containing the location of GRE
+ *           already installed.
+ *      out: char *aGreConfigIni, DWORD aGreConfigIniBufSize: contains
+ *           the full path to the installed GRE installer's config.ini
+ *           file.
+ *  purpose: To get the full path to the installed GRE installer's
+ *           config.ini file.
+ */
+HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize)
 {
-  DWORD     dwIndex0;
+  char buf[MAX_BUF];
+
+  if(!aGre || !aGreConfigIni || (*aGre->homePath == '\0'))
+    return(WIZ_ERROR_UNDEFINED);
+
+  *aGreConfigIni = '\0';
+  MozCopyStr(aGre->homePath, buf, sizeof(buf));
+  AppendBackSlash(buf, sizeof(buf));
+  wsprintf(aGreConfigIni, "%sSetup\\%s", buf, FILE_INI_CONFIG);
+  return(WIZ_OK);
+}
+
+/* Function: GetInfoFromInstalledGreConfigIni()
+ *       in: greInfo *aGre: gre class to fill the info for.
+ *      out: returns info in aGre.
+ *  purpose: To retrieve the GRE uninstaller file (full path) from
+ *           the installed GRE's config.ini file.
+ *           GetGrePathFromGreInstaller() retrieves information from
+ *           the GRE installer's config.ini, not from the installed
+ *           GRE installer's config.ini file.
+ */
+HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre)
+{
+  HRESULT rv = WIZ_ERROR_UNDEFINED;
+  char    greConfigIni[MAX_BUF];
+  char    buf[MAX_BUF];
+  char    greUninstallerFilename[MAX_BUF];
+
+  if(!aGre)
+    return(rv);
+
+  *aGre->uninstallerAppPath = '\0';
+  rv = GetInstalledGreConfigIni(aGre, greConfigIni, sizeof(greConfigIni));
+  if(WIZ_OK == rv)
+  {
+    GetPrivateProfileString("General", "Uninstall Filename", "", greUninstallerFilename, sizeof(greUninstallerFilename), greConfigIni);
+    wsprintf(buf, "[WINDIR]\\%s", greUninstallerFilename);
+    DecryptString(aGre->uninstallerAppPath, buf);
+    GetPrivateProfileString("General", "User Agent", "", aGre->userAgent, sizeof(aGre->userAgent), greConfigIni);
+  }
+  return(rv);
+}
+
+/* Function: GetGrePathFromGreInstaller()
+ *       in: char    *aGreInstallerFile: full path to the gre installer.
+ *           greInfo *aGre: gre class to fill the homePath for.
+ *      out: returns homePath in aGre.
+ *  purpose: To retrieve the GRE home path from the GRE installer.
+ */
+void GetGrePathFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
+{
+  char szBuf[MAX_BUF];
+  char extractedConfigFile[MAX_BUF];
+  int  size = 0;
+
+  if(!aGre)
+    return;
+
+  *aGre->homePath = '\0';
+
+  /* uncompress gre installer's config.ini file in order to parse for:
+   *   [General]
+   *   Path=
+   */
+  wsprintf(szBuf, "-mmi -ms -u %s", FILE_INI_CONFIG);
+  WinSpawn(aGreInstallerFile, szBuf, szOSTempDir, SW_SHOWNORMAL, WS_WAIT);
+  MozCopyStr(szOSTempDir, extractedConfigFile, sizeof(extractedConfigFile));
+  AppendBackSlash(extractedConfigFile, sizeof(extractedConfigFile));
+  lstrcat(extractedConfigFile, FILE_INI_CONFIG);
+  GetPrivateProfileString("General", "Path", "", szBuf, sizeof(szBuf), extractedConfigFile);
+  DecryptString(aGre->homePath, szBuf);
+  DeleteFile(extractedConfigFile);
+}
+
+void LaunchOneComponent(siC *siCObject, greInfo *aGre)
+{
   BOOL      bArchiveFound;
-  siC       *siCObject = NULL;
   char      szArchive[MAX_BUF];
   char      szMsg[MAX_BUF];
 
-  LogISLaunchApps(W_START);
-  if(!GetPrivateProfileString("Messages", "MSG_CONFIGURING", "", szMsg, sizeof(szMsg), szFileIniInstall))
-    return(1);
+  if(!siCObject)
+    /* nothing to do return */
+    return;
 
+  GetPrivateProfileString("Messages", "MSG_CONFIGURING", "", szMsg, sizeof(szMsg), szFileIniInstall);
+
+  /* launch 3rd party executable */
+  if((siCObject->dwAttributes & SIC_SELECTED) && (siCObject->dwAttributes & SIC_LAUNCHAPP))
+  {
+    bArchiveFound = TRUE;
+    lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
+    AppendBackSlash(szArchive, sizeof(szArchive));
+    lstrcat(szArchive, siCObject->szArchiveName);
+    if((*sgProduct.szAlternateArchiveSearchPath == '\0') || !FileExists(szArchive))
+    {
+      lstrcpy(szArchive, szSetupDir);
+      AppendBackSlash(szArchive, sizeof(szArchive));
+      lstrcat(szArchive, siCObject->szArchiveName);
+      if(!FileExists(szArchive))
+      {
+        lstrcpy(szArchive, szTempDir);
+        AppendBackSlash(szArchive, sizeof(szArchive));
+        lstrcat(szArchive, siCObject->szArchiveName);
+        if(!FileExists(szArchive))
+        {
+          bArchiveFound = FALSE;
+        }
+      }
+    }
+
+    if(bArchiveFound)
+    {
+      char szParameterBuf[MAX_BUF];
+      char szSpawnFile[MAX_BUF];
+      char szMessageString[MAX_BUF];
+      DWORD dwErr = FO_SUCCESS;
+
+      *szMessageString = '\0';
+      if(*szMsg != '\0')
+      {
+        wsprintf(szMessageString, szMsg, siCObject->szDescriptionShort);
+        ShowMessage(szMessageString, TRUE);
+      }
+
+      DecryptString(szParameterBuf, siCObject->szParameter);
+      lstrcpy(szSpawnFile, szArchive);
+      if(siCObject->dwAttributes & SIC_UNCOMPRESS)
+      {
+        if((dwErr = FileUncompress(szArchive, szTempDir)) == FO_SUCCESS)
+        {
+          lstrcpy(szSpawnFile, szTempDir);
+          AppendBackSlash(szSpawnFile, sizeof(szSpawnFile));
+          lstrcat(szSpawnFile, siCObject->szArchiveNameUncompressed);
+        }
+
+        LogISLaunchAppsComponentUncompress(siCObject->szDescriptionShort, dwErr);
+        if(dwErr != FO_SUCCESS)
+        {
+          if(*szMessageString != '\0')
+            ShowMessage(szMessageString, FALSE);
+          return;
+        }
+      }
+
+      if(aGre)
+      {
+        GetGrePathFromGreInstaller(szSpawnFile, aGre);
+
+        /* Force the install of GRE if '-fgre' is passed.
+         * Passing '-f' to GRE's installer will force it to install
+         * regardless of version found on system.  If '-f' is already
+         * present in the parameter, it will do no harm to pass it again. */
+        if(gbForceInstallGre)
+          lstrcat(szParameterBuf, " -f");
+      }
+
+      LogISLaunchAppsComponent(siCObject->szDescriptionShort);
+      WinSpawn(szSpawnFile, szParameterBuf, szTempDir, SW_SHOWNORMAL, WS_WAIT);
+
+      if(siCObject->dwAttributes & SIC_UNCOMPRESS)
+        FileDelete(szSpawnFile);
+
+      if(*szMessageString != '\0')
+        ShowMessage(szMessageString, FALSE);
+    }
+  }
+}
+
+void LaunchExistingGreInstaller(greInfo *aGre)
+{
+  char      szMsg[MAX_BUF];
+  char      szParameterBuf[MAX_BUF];
+  char      szMessageString[MAX_BUF];
+  siC       *siCObject = aGre->siCGreComponent;
+
+  if((!siCObject) || !FileExists(aGre->installerAppPath))
+    /* nothing to do return */
+    return;
+
+  GetPrivateProfileString("Messages", "MSG_CONFIGURING", "", szMsg, sizeof(szMsg), szFileIniInstall);
+
+  *szMessageString = '\0';
+  if(*szMsg != '\0')
+  {
+    wsprintf(szMessageString, szMsg, siCObject->szDescriptionShort);
+    ShowMessage(szMessageString, TRUE);
+  }
+
+  DecryptString(szParameterBuf, siCObject->szParameter);
+  LogISLaunchAppsComponent(siCObject->szDescriptionShort);
+  WinSpawn(aGre->installerAppPath, szParameterBuf, szTempDir, SW_SHOWNORMAL, WS_WAIT);
+  if(*szMessageString != '\0')
+    ShowMessage(szMessageString, FALSE);
+}
+
+HRESULT LaunchApps()
+{
+  DWORD     dwIndex0;
+  siC       *siCObject = NULL;
+
+  LogISLaunchApps(W_START);
   dwIndex0 = 0;
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
     /* launch 3rd party executable */
-    if((siCObject->dwAttributes & SIC_SELECTED) && (siCObject->dwAttributes & SIC_LAUNCHAPP))
-    {
-      bArchiveFound = TRUE;
-      lstrcpy(szArchive, sgProduct.szAlternateArchiveSearchPath);
-      AppendBackSlash(szArchive, sizeof(szArchive));
-      lstrcat(szArchive, siCObject->szArchiveName);
-      if((*sgProduct.szAlternateArchiveSearchPath == '\0') || !FileExists(szArchive))
-      {
-        lstrcpy(szArchive, szSetupDir);
-        AppendBackSlash(szArchive, sizeof(szArchive));
-        lstrcat(szArchive, siCObject->szArchiveName);
-        if(!FileExists(szArchive))
-        {
-          lstrcpy(szArchive, szTempDir);
-          AppendBackSlash(szArchive, sizeof(szArchive));
-          lstrcat(szArchive, siCObject->szArchiveName);
-          if(!FileExists(szArchive))
-          {
-            bArchiveFound = FALSE;
-          }
-        }
-      }
-
-      if(bArchiveFound)
-      {
-        char szParameterBuf[MAX_BUF];
-        char szSpawnFile[MAX_BUF];
-        char szMessageString[MAX_BUF];
-        DWORD dwErr = FO_SUCCESS;
-
-        wsprintf(szMessageString, szMsg, siCObject->szDescriptionShort);
-        ShowMessage(szMessageString, TRUE);
-        DecryptString(szParameterBuf, siCObject->szParameter);
-
-        lstrcpy(szSpawnFile, szArchive);
-        if(siCObject->dwAttributes & SIC_UNCOMPRESS)
-        {
-          if((dwErr = FileUncompress(szArchive, szTempDir)) == FO_SUCCESS)
-          {
-            lstrcpy(szSpawnFile, szTempDir);
-            AppendBackSlash(szSpawnFile, sizeof(szSpawnFile));
-            lstrcat(szSpawnFile, siCObject->szArchiveNameUncompressed);
-          }
-
-          LogISLaunchAppsComponentUncompress(siCObject->szDescriptionShort, dwErr);
-          if(dwErr != FO_SUCCESS)
-          {
-            ShowMessage(szMessageString, FALSE);
-            continue;
-          }
-        }
-
-        LogISLaunchAppsComponent(siCObject->szDescriptionShort);
-        WinSpawn(szSpawnFile, szParameterBuf, szTempDir, SW_SHOWNORMAL, TRUE);
-
-        if(siCObject->dwAttributes & SIC_UNCOMPRESS)
-          FileDelete(szSpawnFile);
-
-        ShowMessage(szMessageString, FALSE);
-      }
-    }
+    LaunchOneComponent(siCObject, NULL);
     ++dwIndex0;
     siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   }
 
   LogISLaunchApps(W_END);
   return(0);
+}
+
+/* Function: ProcessGre()
+ *       in: none.
+ *      out: path to where gre is installed at.
+ *  purpose: To install GRE on the system, so this installer can use it's
+ *           xpinstall engine.  It uses gre->homePath to see if GRE is already
+ *           installed on the system.  If GRE is already present on the system,
+ *           gre->homePath is guaranteed to contain it's destination path.
+ */
+HRESULT ProcessGre(greInfo *aGre)
+{
+  char greUninstallCommand[MAX_BUF];
+  /* If aGre->homePath does not exist, it means that a compatible version of GRE was
+   * not found on the system, so we need to install one.  We also need to get the
+   * path to where it's going to install the GRE for in case we need to use it
+   * as the xpinstall engine.
+   *
+   * If gbForceInstallGre is true, then force an installation of GRE regardless
+   * if it's already on the system.  Also save the GRE's destination path to
+   * aGre->homePath.
+   *
+   * If aGre->homePath does exist, then we simply call LaunchExistingGreInstaller()
+   * to run the existing GRE's installer app to register mozilla.
+   */
+  if((*aGre->homePath == '\0') || (gbForceInstallGre))
+    LaunchOneComponent(aGre->siCGreComponent, aGre);
+  else
+    LaunchExistingGreInstaller(aGre);
+
+  /* XXX instead of unsetting the SELECTED attribute, set the DOWNLOAD_ONLY attribute
+   * in the config.ini file.
+   */
+  /* Unset "Component GRE"'s SELECTED attribute so it doesn't get spawned again later from LaunchApps() */
+  aGre->siCGreComponent->dwAttributes &= ~SIC_SELECTED;
+
+  /* Log the GRE uninstall command to call in order for this app's uninstaller to
+   * uninstall GRE.
+   */
+  if(GetInfoFromInstalledGreConfigIni(aGre) == WIZ_OK)
+  {
+    wsprintf(greUninstallCommand,
+             "\"%s\" -mmi -ms -app %s -ua \"%s\"",
+             aGre->uninstallerAppPath,
+             sgProduct.szProductNameInternal,
+             aGre->userAgent);
+    UpdateInstallLog(KEY_UNINSTALL_COMMAND, greUninstallCommand, DNU_UNINSTALL);
+  }
+  return(WIZ_OK);
+}
+
+/* Function: GetXpinstallPath()
+ *       in: none.
+ *      out: path to where xpinstall engine is at.
+ *  purpose: To retrieve the full path of where a valid xpinstall engine is
+ *           installed at.
+ *           * If we're using xpcom.xpi, then append 'bin' to the returned
+ *             path because when xpcom.xpi is uncompressed, xpinstall will be
+ *             within a 'bin' subdir.
+ *           * If we're using GRE, then simply just return the GRE
+ *             destination path.
+ */
+void GetXpinstallPath(char *aPath, int aPathBufSize)
+{
+  if(siCFXpcomFile.bStatus == STATUS_ENABLED)
+  {
+    MozCopyStr(siCFXpcomFile.szDestination, aPath, aPathBufSize);
+    AppendBackSlash(aPath, aPathBufSize);
+    lstrcat(aPath, "bin");
+  }
+  else
+    MozCopyStr(gGre.homePath, aPath, aPathBufSize);
+}
+
+/* Function: ProcessXpinstallEngine()
+ *       in: none.
+ *      out: none.
+ *  purpose: To setup the xpinstall engine either by:
+ *             1) uncompressing xpcom.xpi into the temp dir.
+ *             2) locating existing compatible version of GRE.
+ *             3) installing GRE that was downloaded with this product.
+ *
+ *           Since GRE installer uses the same native installer as the Mozilla
+ *           installer, xpcom.xpi should be used only by the GRE installer.
+ *           All other installers should be using GRE (either finding one on
+ *           the local system, or installer its own copy).
+ */
+HRESULT ProcessXpinstallEngine()
+{
+  HRESULT rv = WIZ_ERROR_UNDEFINED;
+
+  if(*siCFXpcomFile.szMessage != '\0')
+    ShowMessage(siCFXpcomFile.szMessage, TRUE);
+
+  /* If product to be installed is _not_ GRE, then call ProcessGRE.
+   * ProcessGre() will either install GRE or simply run the existing
+   * GRE's installer that's already on the system.  This will setup
+   * GRE so it can be used as the xpinstall engine (if it's needed).
+   */
+  if(lstrcmpi(sgProduct.szProductNameInternal, "GRE") != 0)
+    rv = ProcessGre(&gGre);
+
+  if((WIZ_OK == rv) && (siCFXpcomFile.bStatus == STATUS_ENABLED))
+    rv = ProcessXpcomFile();
+
+  if(*siCFXpcomFile.szMessage != '\0')
+    ShowMessage(siCFXpcomFile.szMessage, FALSE);
+
+  return(rv);
 }
 
 char *GetOSTypeString(char *szOSType, DWORD dwOSTypeBufSize)
@@ -2589,10 +2872,8 @@ void DeInitDlgReboot(diR *diDialog)
 
 HRESULT InitSetupGeneral()
 {
-  char szBuf[MAX_BUF];
-
   gSystemInfo.bRefreshIcons      = FALSE; 
-  sgProduct.dwMode               = NORMAL;
+  sgProduct.mode                 = NOT_SET;
   sgProduct.bSharedInst          = FALSE;
   sgProduct.bInstallFiles        = TRUE;
   sgProduct.dwCustomType         = ST_RADIO0;
@@ -2630,9 +2911,6 @@ HRESULT InitSetupGeneral()
 
   if((szSiteSelectorDescription               = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
-  if(GetPrivateProfileString("Messages", "CB_DEFAULT", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    lstrcpy(szSiteSelectorDescription, szBuf);
-
   if((sgProduct.szAppID                       = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((sgProduct.szAppPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -2715,6 +2993,7 @@ HRESULT InitSXpcomFile()
     return(1);
 
   siCFXpcomFile.bCleanup         = TRUE;
+  siCFXpcomFile.bStatus          = STATUS_ENABLED;
   siCFXpcomFile.ullInstallSize   = 0;
   return(0);
 }
@@ -2724,6 +3003,42 @@ void DeInitSXpcomFile()
   FreeMemory(&(siCFXpcomFile.szSource));
   FreeMemory(&(siCFXpcomFile.szDestination));
   FreeMemory(&(siCFXpcomFile.szMessage));
+}
+
+/* Function: InitGre()
+ *       in: gre structure.
+ *      out: gre structure.
+ *  purpose: To initialize a newly created greInfo structure.
+ */
+HRESULT InitGre(greInfo *gre)
+{
+  gre->homePath[0]           = '\0';
+  gre->installerAppPath[0]   = '\0';
+  gre->uninstallerAppPath[0] = '\0';
+  gre->userAgent[0]          = '\0';
+  gre->minVersion.ullMajor   = 0;
+  gre->minVersion.ullMinor   = 0;
+  gre->minVersion.ullRelease = 0;
+  gre->minVersion.ullBuild   = 0;
+  gre->maxVersion.ullMajor   = 0;
+  gre->maxVersion.ullMinor   = 0;
+  gre->maxVersion.ullRelease = 0;
+  gre->maxVersion.ullBuild   = 0;
+  gre->greSupersedeList      = NULL;
+  gre->greInstalledList      = NULL;
+  gre->siCGreComponent       = NULL;
+  return(WIZ_OK);
+}
+
+/* Function: DeInitGre()
+ *       in: gre structure.
+ *      out: gre structure.
+ *  purpose: To cleanup allocated memory to a greInfo structure.
+ */
+void DeInitGre(greInfo *gre)
+{
+  DeleteGverList(gre->greSupersedeList);
+  DeleteGverList(gre->greInstalledList);
 }
 
 siC *CreateSiCNode()
@@ -3122,7 +3437,7 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
      * selected the destination path for the product.  The destination path is
      * critical to the checking of the Force Upgrade. */
     ResolveForceUpgrade(siCNode);
-    ResolveSupersede(siCNode);
+    ResolveSupersede(siCNode, &gGre);
     siCNode = siCNode->Next;
   } while((siCNode != NULL) && (siCNode != siComponents));
 
@@ -3671,7 +3986,8 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
   /* add the amount of disk space it will take for the 
      xpinstall engine in the TEMP area */
   if(dwType == DSR_TEMP)
-    ullTotalSize += siCFXpcomFile.ullInstallSize;
+    if(siCFXpcomFile.bStatus == STATUS_ENABLED)
+      ullTotalSize += siCFXpcomFile.ullInstallSize;
 
   return(ullTotalSize);
 }
@@ -3800,11 +4116,11 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   wsprintf(szBuf3, "%s KB\n\n",          szDSAvailable);
   wsprintf(szBufMsg, szDlgDiskSpaceCheckMsg, szBufRootPath, szBuf1, szBuf2, szBuf3);
 
-  if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
+  if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
   {
     return(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, dwDlgType | MB_ICONEXCLAMATION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND));
   }
-  else if(sgProduct.dwMode == AUTO)
+  else if(sgProduct.mode == AUTO)
   {
     ShowMessage(szBufMsg, TRUE);
     Delay(5);
@@ -3992,7 +4308,8 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
   /* take the uncompressed size of Xpcom into account */
   if(*szTempDir != '\0')
-    UpdatePathDiskSpaceRequired(szTempDir, siCFXpcomFile.ullInstallSize, dsnComponentDSRequirement);
+    if(siCFXpcomFile.bStatus == STATUS_ENABLED)
+      UpdatePathDiskSpaceRequired(szTempDir, siCFXpcomFile.ullInstallSize, dsnComponentDSRequirement);
 
   return(hResult);
 }
@@ -4148,80 +4465,6 @@ siC *SiCNodeFind(siC *siCHeadNode, char *szInReferenceName)
   } while((siCNode != NULL) && (siCNode != siCHeadNode));
 
   return(NULL);
-}
-
-BOOL ResolveSupersede(siC *siCObject)
-{
-  DWORD dwIndex;
-  char  szFilePath[MAX_BUF];
-  char  szSupersedeFile[MAX_BUF];
-  char  szSupersedeVersion[MAX_BUF];
-  char  szType[MAX_BUF_TINY];
-  char  szKey[MAX_BUF_TINY];
-  verBlock  vbVersionNew;
-  verBlock  vbVersionOld;
-
-  siCObject->bSupersede = FALSE;
-  if(siCObject->dwAttributes & SIC_SUPERSEDE)
-  {
-    dwIndex = 0;
-    GetPrivateProfileString(siCObject->szReferenceName, "SupersedeType", "", szType, sizeof(szType), szFileIniConfig);
-    if(*szType !='\0')
-    {
-      if(lstrcmpi(szType, "File Exists") == 0)
-      {
-        wsprintf(szKey, "SupersedeFile%d", dwIndex);        
-        GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
-        while(*szSupersedeFile != '\0')
-        {
-          DecryptString(szFilePath, szSupersedeFile);
-          if(FileExists(szFilePath))
-          {
-            wsprintf(szKey, "SupersedeMinVersion%d",dwIndex);
-            GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeVersion, sizeof(szSupersedeVersion), szFileIniConfig);
-            if(*szSupersedeVersion != '\0')
-            {
-              if (GetFileVersion(szFilePath,&vbVersionOld))
-              {
-                /* If we can get the version, and it is greater than or equal to the SupersedeVersion
-                 * set supersede.  If we cannot get the version, do not supersede the file. */
-                TranslateVersionStr(szSupersedeVersion, &vbVersionNew);
-                if ( CompareVersion(vbVersionOld,vbVersionNew) >= 0)
-                {  
-                  siCObject->bSupersede = TRUE;
-                  break;  /* Found at least one file, so break out of while loop */
-                }
-              }
-            }
-            else
-            { /* The file exists, and there's no version to check.  set Supersede */
-              siCObject->bSupersede = TRUE;
-              break;  /* Found at least one file, so break out of while loop */
-            }
-          }
-          wsprintf(szKey, "SupersedeFile%d", ++dwIndex);        
-          GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szSupersedeFile, sizeof(szSupersedeFile), szFileIniConfig);
-        }
-      }
-    }
-
-    if(siCObject->bSupersede)
-    {
-      siCObject->dwAttributes &= ~SIC_SELECTED;
-      siCObject->dwAttributes |= SIC_DISABLED;
-      siCObject->dwAttributes |= SIC_INVISIBLE;
-    }
-    else
-      /* Make sure to unset the DISABLED bit.  If the Setup Type is other than
-       * Custom, then we don't care if it's DISABLED or not because this flag
-       * is only used in the Custom dialogs.
-       *
-       * If the Setup Type is Custom and this component is DISABLED by default
-       * via the config.ini, it's default value will be restored in the
-       * SiCNodeSetItemsSelected() function that called ResolveSupersede(). */
-      siCObject->dwAttributes &= ~SIC_DISABLED;
-  }
-  return(siCObject->bSupersede);
 }
 
 BOOL ResolveForceUpgrade(siC *siCObject)
@@ -5048,7 +5291,11 @@ void PrintUsage(void)
    * -app: ID of application which is launching the installer  (Shared installs)
    * -app_path: Points to representative file of app (Shared installs)
    * -dd [path]: Suggested install destination directory. (Shared installs)
-   * -f: Force install (Shared installs)
+   * -f: Force install of GRE installer (Shared installs), though it'll work
+   *    for non GRE installers too.
+   * -fgre: Force 'Component GRE' to be downloaded, run, and installed.  This
+   *    bypasses GRE's logic of determining when to install by running its
+   *    installer with a '-f' flag.
    * -n [filename]: setup's parent's process filename
    * -ma: run setup in Auto mode
    * -mmi: Allow multiple installer instances. (Shared installs)
@@ -5070,9 +5317,9 @@ void PrintUsage(void)
   GetPrivateProfileString("Strings", "UsageMsg Usage", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if (lstrlen(szBuf) > 0)
   {
-  wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
-  PrintError(szUsageMsg, ERROR_CODE_HIDE);
-}
+    wsprintf(szUsageMsg, szBuf, szProcessFilename, "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n", "\n");
+    PrintError(szUsageMsg, ERROR_CODE_HIDE);
+  }
 }
 
 DWORD ParseCommandLine(LPSTR lpszCmdLine)
@@ -5107,6 +5354,10 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       ++i;
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szAlternateArchiveSearchPath, szArgVBuf);
+    }
+    else if(!lstrcmpi(szArgVBuf, "-fgre") || !lstrcmpi(szArgVBuf, "/fgre"))
+    {
+      gbForceInstallGre = TRUE;
     }
     else if(!lstrcmpi(szArgVBuf, "-f") || !lstrcmpi(szArgVBuf, "/f"))
     {
@@ -5351,7 +5602,7 @@ int PreCheckInstance(char *szSection, char *szIniFile)
       bContinue = FALSE;
 
       /* Run the file */
-      WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
+      WinSpawn(szFile, szParameter, szPath, SW_HIDE, WS_WAIT);
 
       /* Even though WinSpawn is suppose to wait for the app to finish, this
        * does not really work that way for trying to quit the browser when
@@ -5366,33 +5617,67 @@ int PreCheckInstance(char *szSection, char *szIniFile)
 }
 
 // Windows callback function that processes each window found to be running.
-// This function will close all the _visible_ windows that match a processes
-// passed in from lParam.
+// This function will close all the visible and invisible windows that
+// match a processes passed in from lParam.
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
+  BOOL  rv = TRUE;
   DWORD dwProcessId;
 
   GetWindowThreadProcessId(hwnd, &dwProcessId);
   if(dwProcessId == (DWORD)lParam)
   {
-    // only close the windows that are visible
-    if(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)
-      SendMessage(hwnd, WM_CLOSE, (WPARAM)1, (LPARAM)0);
+    switch(gCWState)
+    {
+      case CW_CLOSE_ALL:
+        SendMessage(hwnd, WM_CLOSE, (WPARAM)1, (LPARAM)0);
+        break;
+
+      case CW_CLOSE_VISIBLE_ONLY:
+        // only close the windows that are visible
+        if(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)
+          SendMessage(hwnd, WM_CLOSE, (WPARAM)1, (LPARAM)0);
+        break;
+
+      case CW_CHECK_VISIBLE_ONLY:
+        /* Check for visible windows.  If there are any, then the previous
+         * call to close all visible windows had failed (most likely due
+         * to user canceling a save request on a window) */
+        if(GetWindowLong(hwnd, GWL_STYLE) & WS_VISIBLE)
+          rv = FALSE;
+        break;
+    }
   }
 
-  return(TRUE); // continue with the enumeration! it will automatically stop
-                // when there's no more windows to process.
+  return(rv); // Returning TRUE will continue with the enumeration!
+              // it will automatically stop when there's no more
+              // windows to process.
+              // Returning FALSE will stop immediately.
 }
 
 
-DWORD CloseAllWindowsOfWindowHandle(HWND hwndWindow)
+BOOL CloseAllWindowsOfWindowHandle(HWND hwndWindow)
 {
   DWORD dwProcessId;
+  BOOL  rv = TRUE;
 
   GetWindowThreadProcessId(hwndWindow, &dwProcessId);
+
+  /* only close the visible windows */
+  gCWState = CW_CLOSE_VISIBLE_ONLY;
   EnumWindows(EnumWindowsProc, dwProcessId);
 
-  return(WIZ_OK);
+  /* only check to make sure that the visible windows were closed */
+  gCWState = CW_CHECK_VISIBLE_ONLY;
+  rv = EnumWindows(EnumWindowsProc, dwProcessId);
+  if(rv)
+  {
+    /* All visible windows have been closed.  Close all remaining windows now */
+    gCWState = CW_CLOSE_ALL;
+    EnumWindows(EnumWindowsProc, dwProcessId);
+  }
+
+  return(rv);
 }
 
 HRESULT CheckInstances()
@@ -5405,7 +5690,6 @@ HRESULT CheckInstances()
   char  szAttention[MAX_BUF];
   char  szMessage[MAX_BUF];
   char  szMessageFullInstaller[MAX_BUF];
-  char  szIndex[MAX_BUF];
   int   iIndex;
   BOOL  bContinue;
   BOOL  bCloseAllWindows;
@@ -5424,11 +5708,7 @@ HRESULT CheckInstances()
     ZeroMemory(szMessage,              sizeof(szMessage));
     ZeroMemory(szMessageFullInstaller, sizeof(szMessageFullInstaller));
 
-    ++iIndex;
-    itoa(iIndex, szIndex, 10);
-    lstrcpy(szSection, "Check Instance");
-    lstrcat(szSection, szIndex);
-
+    wsprintf(szSection, "Check Instance%d", ++iIndex);
     GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", szAttention, sizeof(szAttention), szFileIniInstall);
     GetPrivateProfileString(szSection, "Message", "", szMessage, sizeof(szMessage), szFileIniConfig);
     GetPrivateProfileString(szSection, "Message Full Installer", "", szMessageFullInstaller, sizeof(szMessageFullInstaller), szFileIniConfig);
@@ -5447,7 +5727,7 @@ HRESULT CheckInstances()
         {
           if(*szMessage != '\0')
           {
-            switch(sgProduct.dwMode)
+            switch(sgProduct.mode)
             {
               case NORMAL:
                 switch(MessageBox(hWndMain, szMessage, szAttention, MB_ICONEXCLAMATION))
@@ -5522,7 +5802,8 @@ HRESULT CheckInstances()
       {
         if(*szMessage != '\0')
         {
-          switch(sgProduct.dwMode)
+          BOOL rv = FALSE;
+          switch(sgProduct.mode)
           {
             case NORMAL:
               switch(MessageBox(hWndMain, szMessage, szAttention, MB_ICONEXCLAMATION))
@@ -5535,7 +5816,7 @@ HRESULT CheckInstances()
                 case IDOK:
                   /* User selected to retry.  Reset counter */
                   if(bCloseAllWindows)
-                      CloseAllWindowsOfWindowHandle(hwndFW);
+                    CloseAllWindowsOfWindowHandle(hwndFW);
 
                   iIndex = -1;
                   break;
@@ -5551,18 +5832,20 @@ HRESULT CheckInstances()
               ShowMessage(szMessage, FALSE);
 
               if(bCloseAllWindows)
-                CloseAllWindowsOfWindowHandle(hwndFW);
+                rv = !CloseAllWindowsOfWindowHandle(hwndFW);
 
-              return(TRUE);
+              return(rv);
 
             case SILENT:
               /* Setup mode is SILENT.  Just auto close
                * all the windows associated with the process */
 
               if(bCloseAllWindows)
-                CloseAllWindowsOfWindowHandle(hwndFW);
+                /* return value of TRUE means all windows were
+                 * successfully closed, so do not auto quit the installer */
+                rv = !CloseAllWindowsOfWindowHandle(hwndFW);
 
-              return(TRUE);
+              return(rv);
           }
         }
         else
@@ -5575,91 +5858,6 @@ HRESULT CheckInstances()
   }
 
   return(FALSE);
-}
-
-BOOL GetFileVersion(LPSTR szFile, verBlock *vbVersion)
-{
-  UINT              uLen;
-  UINT              dwLen;
-  BOOL              bRv;
-  DWORD             dwHandle;
-  LPVOID            lpData;
-  LPVOID            lpBuffer;
-  VS_FIXEDFILEINFO  *lpBuffer2;
-
-  vbVersion->ullMajor   = 0;
-  vbVersion->ullMinor   = 0;
-  vbVersion->ullRelease = 0;
-  vbVersion->ullBuild   = 0;
-  if(FileExists(szFile))
-  {
-    bRv    = TRUE;
-    dwLen  = GetFileVersionInfoSize(szFile, &dwHandle);
-    lpData = (LPVOID)malloc(sizeof(long)*dwLen);
-    uLen   = 0;
-
-    if(GetFileVersionInfo(szFile, dwHandle, dwLen, lpData) != 0)
-    {
-      if(VerQueryValue(lpData, "\\", &lpBuffer, &uLen) != 0)
-      {
-        lpBuffer2             = (VS_FIXEDFILEINFO *)lpBuffer;
-        vbVersion->ullMajor   = HIWORD(lpBuffer2->dwFileVersionMS);
-        vbVersion->ullMinor   = LOWORD(lpBuffer2->dwFileVersionMS);
-        vbVersion->ullRelease = HIWORD(lpBuffer2->dwFileVersionLS);
-        vbVersion->ullBuild   = LOWORD(lpBuffer2->dwFileVersionLS);
-      }
-    }
-    free(lpData);
-  }
-  else
-    /* File does not exist */
-    bRv = FALSE;
-
-  return(bRv);
-}
-
-void TranslateVersionStr(LPSTR szVersion, verBlock *vbVersion)
-{
-  LPSTR szNum1 = NULL;
-  LPSTR szNum2 = NULL;
-  LPSTR szNum3 = NULL;
-  LPSTR szNum4 = NULL;
-
-  szNum1 = strtok(szVersion, ".");
-  szNum2 = strtok(NULL,      ".");
-  szNum3 = strtok(NULL,      ".");
-  szNum4 = strtok(NULL,      ".");
-
-  vbVersion->ullMajor   = _atoi64(szNum1);
-  vbVersion->ullMinor   = _atoi64(szNum2);
-  vbVersion->ullRelease = _atoi64(szNum3);
-  vbVersion->ullBuild   = _atoi64(szNum4);
-}
-
-int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
-{
-  if(vbVersionOld.ullMajor > vbVersionNew.ullMajor)
-    return(4);
-  else if(vbVersionOld.ullMajor < vbVersionNew.ullMajor)
-    return(-4);
-
-  if(vbVersionOld.ullMinor > vbVersionNew.ullMinor)
-    return(3);
-  else if(vbVersionOld.ullMinor < vbVersionNew.ullMinor)
-    return(-3);
-
-  if(vbVersionOld.ullRelease > vbVersionNew.ullRelease)
-    return(2);
-  else if(vbVersionOld.ullRelease < vbVersionNew.ullRelease)
-    return(-2);
-
-  if(vbVersionOld.ullBuild > vbVersionNew.ullBuild)
-    return(1);
-  else if(vbVersionOld.ullBuild < vbVersionNew.ullBuild)
-    return(-1);
-
-  /* the versions are all the same */
-  return(0);
 }
 
 void RefreshIcons()
@@ -5802,7 +6000,7 @@ int StartupCheckArchives(void)
     char szTitle[MAX_BUF_TINY];
 
     case WIZ_CRC_FAIL:
-      switch(sgProduct.dwMode)
+      switch(sgProduct.mode)
       {
         case NORMAL:
           if(GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf, sizeof(szBuf), szFileIniInstall))
@@ -5851,8 +6049,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   char szShowDialog[MAX_BUF];
   DWORD dwPreviousUnfinishedState;
 
-  if(InitSetupGeneral())
-    return(1);
   if(InitDlgWelcome(&diWelcome))
     return(1);
   if(InitDlgLicense(&diLicense))
@@ -5883,12 +6079,12 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitSXpcomFile())
     return(1);
+  if(InitGre(&gGre))
+    return(WIZ_ERROR_INIT);
  
   /* get install Mode information */
   GetPrivateProfileString("General", "Run Mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
   SetSetupRunMode(szBuf);
-  if(ParseCommandLine(lpszCmdLine))
-    return(1);
 
   /* find out if we are doing a shared install */
   GetPrivateProfileString("General", "Shared Install", "", szBuf, sizeof(szBuf), szFileIniConfig);
@@ -5932,7 +6128,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     char szTitle[MAX_BUF_TINY];
     int  iRvMB;
 
-    switch(sgProduct.dwMode)
+    switch(sgProduct.mode)
     {
       case NORMAL:
         if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "", szBuf, sizeof(szBuf), szFileIniInstall))
@@ -6275,7 +6471,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szBuf, "HIDE") == 0)
     gdwSiteSelectorStatus = SS_HIDE;
 
-  switch(sgProduct.dwMode)
+  switch(sgProduct.mode)
   {
     case AUTO:
     case SILENT:
@@ -6373,6 +6569,11 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     siCFXpcomFile.bCleanup = FALSE;
   else
     siCFXpcomFile.bCleanup = TRUE;
+  GetPrivateProfileString("Core",                           "Status",           "", szBuf,                        sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "DISABLED") == 0)
+    siCFXpcomFile.bStatus = STATUS_DISABLED;
+  else
+    siCFXpcomFile.bStatus = STATUS_ENABLED;
 
   LogISProductInfo();
   LogMSProductInfo();
@@ -6387,7 +6588,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   {
     char szTitle[MAX_BUF_TINY];
 
-    switch(sgProduct.dwMode)
+    switch(sgProduct.mode)
     {
       case NORMAL:
         if(!GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf, sizeof(szBuf), szFileIniInstall))
@@ -6414,7 +6615,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     // wrt saved downloaded files and making sure CRC checks are performed on
     // them.
     gbPreviousUnfinishedDownload = TRUE;
-    switch(sgProduct.dwMode)
+    switch(sgProduct.mode)
     {
       case NORMAL:
         if(!GetPrivateProfileString("Messages", "STR_MESSAGEBOX_TITLE", "", szBuf, sizeof(szBuf), szFileIniInstall))
@@ -6500,6 +6701,7 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "RESUME_", "", sgInstallGui.szResume_, sizeof(sgInstallGui.szResume_), szFileIniInstall);
   GetPrivateProfileString("General", "CHECKED", "",   sgInstallGui.szChecked,   sizeof(sgInstallGui.szChecked),   szFileIniInstall);
   GetPrivateProfileString("General", "UNCHECKED", "", sgInstallGui.szUnchecked, sizeof(sgInstallGui.szUnchecked), szFileIniInstall);
+  GetPrivateProfileString("Messages", "CB_DEFAULT", "", szSiteSelectorDescription, MAX_BUF, szFileIniInstall);
 
   return(0);
 }
@@ -7174,6 +7376,11 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
       lstrcpy(szVariable,szBuf);
     }
   }
+  else if(lstrcmpi(szVariable, "GRE PATH") == 0)
+  {
+    if(*gGre.homePath != '\0')
+      lstrcpy(szVariable, gGre.homePath);
+  }
   else
     return(FALSE);
 
@@ -7325,7 +7532,7 @@ int ExtractDirEntries(char* directory, void* vZip)
       err = ZIP_FindNext( find, buf, sizeof(buf) );
       while ( err == ZIP_OK ) 
       {
-        CreateDirectoriesAll(buf, FALSE);
+        CreateDirectoriesAll(buf, DO_NOT_ADD_TO_UNINSTALL_LOG);
         if(buf[lstrlen(buf) - 1] != '/')
           // only extract if it's a file
           result = ZIP_ExtractFile(vZip, buf, buf);
@@ -7680,6 +7887,7 @@ void DeInitialize()
     SendErrorMessage();
 
   DeInitSiComponents(&siComponents);
+  DeInitGre(&gGre);
   DeInitSXpcomFile();
   DeInitSDObject();
   DeInitDlgReboot(&diReboot);
@@ -7695,7 +7903,6 @@ void DeInitialize()
   DeInitDlgWelcome(&diWelcome);
   DeInitDlgLicense(&diLicense);
   DeInitDlgQuickLaunch(&diQuickLaunch);
-  DeInitSetupGeneral();
   DeInitDSNode(&gdsnComponentDSRequirement);
   DeInitErrorMessageStream();
 
@@ -7706,6 +7913,7 @@ void DeInitialize()
   FreeMemory(&szFileIniConfig);
   FreeMemory(&szFileIniInstall);
   FreeMemory(&szEGlobalAlloc);
+  FreeMemory(&szEOutOfMemory);
   FreeMemory(&szEDllLoad);
   FreeMemory(&szEStringLoad);
   FreeMemory(&szEStringNull);
@@ -7758,7 +7966,7 @@ void SaveInstallerFiles()
   AppendBackSlash(szDestination, sizeof(szDestination));
 
   /* copy all files from the ns_temp dir to the install dir */
-  CreateDirectoriesAll(szDestination, TRUE);
+  CreateDirectoriesAll(szDestination, ADD_TO_UNINSTALL_LOG);
 
   /* copy the self extracting file that spawned setup.exe, if one exists */
   if((*sgProduct.szAlternateArchiveSearchPath != '\0') && (*sgProduct.szParentProcessFilename != '\0'))
@@ -7819,6 +8027,123 @@ void SaveInstallerFiles()
   }
 }
 
+/* Function: AddGrePathToApplicationAppPathsKey()
+ *       in: none.
+ *      out: result value indicating gre path was set or not.
+ *  purpose: To prepend the GRE path to the applications App Paths
+ *           key in the windows registry.  It will only be prepended
+ *           if it does not already exist.
+ */
+int AddGrePathToApplicationAppPathsKey()
+{
+  int  rv = APPPATH_GRE_PATH_NOT_SET;
+  char path[MAX_BUF];
+  char fullAppPathsKey[MAX_BUF];
+  char keyPathUpr[MAX_BUF];
+  char grePathUpr[MAX_BUF];
+  char newPath[MAX_BUF];
+  char pathStr[] = "Path";
+
+  /* only add gre path if this is instance of the installer is
+   * not installing GRE, else return. */
+  if(lstrcmpi(sgProduct.szProductNameInternal, "GRE") == 0)
+    return(rv);
+
+  if(!sgProduct.szProgramName || (*sgProduct.szProgramName == '\0'))
+    return(rv);
+
+  /* if gGre.homePath is not set at this point, we should try to set it */
+  if(*gGre.homePath == '\0')
+  {
+    siC  *siCObject = NULL;
+    int  index;
+    char greInstaller[MAX_BUF];
+    char greInstallerUncompressed[MAX_BUF];
+    BOOL fileUncompressed = FALSE;
+
+    /* Hard coded GRE component name.  The GRE component name has to be
+     * 'Component GRE' in config.ini, or we'll fail. */
+    index = SiCNodeGetIndexRN("Component GRE");
+    if(index == -1)
+      return(rv);
+
+    /* Get the internal GRE component object */
+    siCObject = SiCNodeGetObject(index, INCLUDE_INVISIBLE_OBJS, AC_ALL);
+    if(!siCObject ||
+      (LocateJar(siCObject, greInstaller, sizeof(greInstaller), TRUE) == AP_NOT_FOUND))
+      return(rv);
+
+    /* If this object is a .zip file (which probably is, it's attribute
+     * will contain SIC_UNCOMPRESS, in which case we'll need to uncompress
+     * this file to get at the .exe file. */
+    AppendBackSlash(greInstaller, sizeof(greInstaller));
+    lstrcat(greInstaller, siCObject->szArchiveName);
+    if(siCObject->dwAttributes & SIC_UNCOMPRESS)
+    {
+      /* Build the full path including filename to the GRE installer
+       * .exe file */
+      MozCopyStr(szTempDir, greInstallerUncompressed, sizeof(greInstallerUncompressed));
+      AppendBackSlash(greInstallerUncompressed, sizeof(greInstallerUncompressed));
+      lstrcat(greInstallerUncompressed, siCObject->szArchiveNameUncompressed);
+
+      /* If it's not already there, then we need to uncompress it */
+      if(!FileExists(greInstallerUncompressed))
+      {
+        /* Uncompress the GRE component .zip file into the %TEMP%\ns_temp dir. */
+        if(FileUncompress(greInstaller, szTempDir) != FO_SUCCESS)
+          return(rv);
+
+        fileUncompressed = TRUE;
+      }
+    }
+    else
+      MozCopyStr(greInstallerUncompressed, greInstaller, sizeof(greInstaller));
+
+    /* Finally attempt to retrieve the GRE destination path from it's
+     * config.ini file */
+    GetGrePathFromGreInstaller(greInstallerUncompressed, &gGre);
+
+    /* Delete the file only if we uncompressed it */
+    if(fileUncompressed)
+      /* Regardless if GetGrePathFromGreInstaller() succeeds or fails, we
+       * need to clean the uncompressed file from the temp dir. */
+      DeleteFile(greInstallerUncompressed);
+
+    if(*gGre.homePath == '\0')
+      return(rv);
+  }
+
+  wsprintf(fullAppPathsKey, APP_PATHS_KEY,  sgProduct.szProgramName);
+  GetWinReg(HKEY_LOCAL_MACHINE, fullAppPathsKey, pathStr, path, sizeof(path));
+  if(*path == '\0')
+    MozCopyStr(gGre.homePath, newPath, sizeof(newPath));
+  else
+  {
+    rv = APPPATH_GRE_PATH_SET;
+    MozCopyStr(path, keyPathUpr, sizeof(keyPathUpr));
+    MozCopyStr(gGre.homePath, grePathUpr, sizeof(grePathUpr));
+    strupr(grePathUpr);
+    strupr(keyPathUpr);
+    if(!strstr(keyPathUpr, grePathUpr))
+      wsprintf(newPath, "%s;%s", gGre.homePath, path);
+    else
+      rv = APPPATH_GRE_PATH_ALREADY_SET;
+  }
+
+  if(rv != APPPATH_GRE_PATH_ALREADY_SET)
+    SetWinReg(HKEY_LOCAL_MACHINE,
+              fullAppPathsKey,
+              WINREG_OVERWRITE_KEY,
+              pathStr,
+              WINREG_OVERWRITE_NAME,
+              REG_SZ,
+              newPath,
+              lstrlen(newPath),
+              ADD_TO_UNINSTALL_LOG,
+              DNU_DO_NOT_UNINSTALL);
+
+  return(rv);
+}
 
 
 

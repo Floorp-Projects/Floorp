@@ -48,7 +48,7 @@ BOOL AskCancelDlg(HWND hDlg)
   char szMsg[MAX_BUF];
   BOOL bRv = FALSE;
 
-  if((sgProduct.dwMode != SILENT) && (sgProduct.dwMode != AUTO))
+  if((sgProduct.mode != SILENT) && (sgProduct.mode != AUTO))
   {
     if(!GetPrivateProfileString("Messages", "DLGQUITTITLE", "", szDlgQuitTitle, sizeof(szDlgQuitTitle), szFileIniInstall))
       PostQuitMessage(1);
@@ -345,7 +345,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             {
               char szBuf2[MAX_PATH];
 
-              if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
+              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
 
@@ -719,7 +719,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             {
               char szBuf2[MAX_PATH];
 
-              if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
+              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
 
@@ -2495,7 +2495,7 @@ void ShowMessage(LPSTR szMessage, BOOL bShow)
 {
   char szBuf[MAX_BUF];
  
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     if((bShow) && (hDlgMessage == NULL))
     {
@@ -2825,6 +2825,10 @@ void CommitInstall(void)
         }
         AppendBackSlash(szDestPath, sizeof(szDestPath));
 
+        /* Create the destination path here in case it had not been created,
+         * as in the case of silent or auto mode installs */
+        CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
+
         /* Set global var, that determines where the log file is to update, to
          * not use the TEMP dir *before* the FileCopy() calls because we want
          * to log the FileCopy() calls to where the log files were copied to.
@@ -2877,7 +2881,7 @@ void CommitInstall(void)
             /* PRE_XPCOM process file manipulation functions */
             ProcessFileOpsForAll(T_PRE_XPCOM);
 
-            if(ProcessXpcomFile() != FO_SUCCESS)
+            if(ProcessXpinstallEngine() != WIZ_OK)
             {
               bSDUserCanceled = TRUE;
               CleanupXpcomFile();
@@ -2908,12 +2912,7 @@ void CommitInstall(void)
             }
 
             lstrcat(szDestPath, "uninstall\\");
-            CreateDirectoriesAll(szDestPath, TRUE);
-
-            /* save the installer files in the local machine */
-            if(diAdditionalOptions.bSaveInstaller)
-              SaveInstallerFiles();
-
+            CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
             hrErr = SmartUpdateJars();
           }
           else
@@ -2933,6 +2932,13 @@ void CommitInstall(void)
               ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
 
               LaunchApps();
+
+              // XXX ignore.  Part of testings.
+              /* Prepend GRE's path to the application's App Paths key
+               * in the windows registry.  If this install instance happens
+               * to be installing GRE, the function will not prepend the
+               * GRE path. */
+              //AddGrePathToApplicationAppPathsKey();
 
               /* POST_LAUNCHAPP process file manipulation functions */
               ProcessFileOpsForAll(T_POST_LAUNCHAPP);

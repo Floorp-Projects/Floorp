@@ -175,8 +175,9 @@ Readme App=notepad.exe
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
 ; this Setup Type is selected.
-C0=Component GRE
-C1=Component Uninstaller
+C0=Component XPCOM
+C1=Component GRE
+C2=Component Uninstaller
 
 [Dialog Select Components]
 Show Dialog=FALSE
@@ -295,15 +296,6 @@ Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with ins
 ; the process id of this app instance window found.
 Close All Process Windows=TRUE
 
-;[Component XPCOM]
-;Description Short=Mozilla XPCOM
-;;*** LOCALIZE ME BABY ***
-;Description Long=Install Engine
-;Archive=xpcom.xpi
-;$InstallSize$:xpcom
-;$InstallSizeSystem$
-;$InstallSizeArchive$:xpcom.xpi
-
 ;
 ;DependeeX=Component A means
 ;  - if Component A gets checked this component gets checked
@@ -395,6 +387,15 @@ Close All Process Windows=TRUE
 ;                   is greater than or equal to the SupersedeMinVersion the component
 ;                   will be superseded.
 ;
+
+[Component XPCOM]
+Description Short=Mozilla XPCOM
+;*** LOCALIZE ME BABY ***
+Description Long=Install Engine
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+$InstallSizeSystem$
+$InstallSizeArchive$:xpcom.xpi
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\xpcom.dll
 
