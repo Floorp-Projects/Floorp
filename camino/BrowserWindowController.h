@@ -248,6 +248,12 @@ class nsIDOMNode;
 
 - (CHBookmarksToolbar*) bookmarksToolbar;
 
+- (BOOL) isResponderGeckoView:(NSResponder*) responder;
+
+// called when the internal window focus has changed
+// this allows us to dispatch activate and deactivate events as necessary
+- (void) focusChangedFrom:(NSResponder*) oldResponder to:(NSResponder*) newResponder;
+
 // Called to get cached versions of our security icons
 + (NSImage*) insecureIcon;
 + (NSImage*) secureIcon;

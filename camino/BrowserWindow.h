@@ -6,4 +6,6 @@
 {
   IBOutlet id mAutoCompleteTextField;
 }
+
+-(BOOL) makeFirstResponder:(NSResponder*) responder;
 @end
