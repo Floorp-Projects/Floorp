@@ -152,9 +152,6 @@ class _XPCOMBase:
     def __hash__(self):
         return hash(self._comobj_)
 
-    def __repr__(self):
-        return "<XPCOM object '%s'>" % (self._object_name_,)
-
     # See if the object support strings.
     def __str__(self):
         try:
@@ -328,8 +325,15 @@ class Component(_XPCOMBase):
         # We can advantage from nsIClassInfo - use it.
         if not self._tried_classinfo_:
             self._build_all_supported_interfaces_()
-        return _XPCOMBase.__repr__(self)
-    
+        assert self._tried_classinfo_, "Should have tried the class info by now!"
+        infos = self.__dict__['_interface_infos_']
+        if infos:
+            iface_names = ",".join([iid.name for iid in infos.keys()])
+            iface_desc = " (implementing %s)" % (iface_names,)
+        else:
+            iface_desc = " (with no class info)"
+        return "<XPCOM component '%s'%s>" % (self._object_name_,iface_desc)
+
 class _Interface(_XPCOMBase):
     def __init__(self, comobj, iid, method_infos, getters, setters, constants):
         self.__dict__['_comobj_'] = comobj
@@ -392,6 +396,9 @@ class _Interface(_XPCOMBase):
             raise RuntimeError, "Can't set properties with this many args!"
         real_param_infos = ( param_infos, (val,) )
         return XPTC_InvokeByIndex(self, method_index, real_param_infos)
+
+    def __repr__(self):
+        return "<XPCOM interface '%s'>" % (self._object_name_,)
 
 
 # Called by the _xpcom C++ framework to wrap interfaces up just
