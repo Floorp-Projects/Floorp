@@ -39,6 +39,22 @@ sub _initialize {
 
     $self = $self->SUPER::_initialize;
 
+    # Remove FULLTEXT index types from the schemas.
+    foreach my $table (keys %{ $self->{schema} }) {
+        if ($self->{schema}{$table}{INDEXES}) {
+            foreach my $index (@{ $self->{schema}{$table}{INDEXES} }) {
+                if (ref($index) eq 'HASH') {
+                    delete($index->{TYPE}) if ($index->{TYPE} eq 'FULLTEXT');
+                }
+            }
+            foreach my $index (@{ $self->{abstract_schema}{$table}{INDEXES} }) {
+                if (ref($index) eq 'HASH') {
+                    delete($index->{TYPE}) if ($index->{TYPE} eq 'FULLTEXT');
+                }
+            }
+        }
+    }
+
     $self->{db_specific} = {
 
         BOOLEAN =>      'smallint',
