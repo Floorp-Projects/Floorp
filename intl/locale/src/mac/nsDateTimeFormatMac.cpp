@@ -373,8 +373,9 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   // get time string
   if (timeFormatSelector != kTimeFormatNone) {
     // modify itl0 to force 24 hour time cycle !
-    if (timeFormatSelector == kTimeFormatSecondsForce24Hour || 
-        timeFormatSelector == kTimeFormatNoSecondsForce24Hour) {
+    if ( itl0Handle &&
+       (timeFormatSelector == kTimeFormatSecondsForce24Hour || 
+        timeFormatSelector == kTimeFormatNoSecondsForce24Hour)) {
       Intl0Hndl itl0HandleToModify = (Intl0Hndl) itl0Handle;
       UInt8 timeCycle = (**itl0HandleToModify).timeCycle;
       (**itl0HandleToModify).timeCycle = timeCycle24;
