@@ -39,12 +39,11 @@
 #include "nsIPref.h"
 #include "nsEscape.h"
 #include "nsSmtpServer.h"
-#include "nsIPrompt.h"
-#include "nsIWalletService.h"
+#include "nsIObserverService.h"
+#include "nsNetUtil.h"
+#include "nsIAuthPrompt.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-
-static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 NS_IMPL_ADDREF(nsSmtpServer)
 NS_IMPL_RELEASE(nsSmtpServer)
@@ -324,21 +323,19 @@ nsSmtpServer::GetUsernamePasswordWithUI(const PRUnichar * aPromptMessage, const
 NS_IMETHODIMP
 nsSmtpServer::ForgetPassword()
 {
-    nsresult rv;
-    nsCOMPtr<nsIWalletService> walletservice = 
-             do_GetService(kWalletServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    if (os) {
+        nsXPIDLCString serverUri;
+        rv = GetServerURI(getter_Copies(serverUri));
+        if (NS_FAILED(rv)) return rv;
 
-    
-    nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), serverUri);
+        rv = os->NotifyObservers(uri, "login-failed", nsnull);
+    }
 
     rv = SetPassword("");
-    if (NS_FAILED(rv)) return rv;
-    
-    
-    rv = walletservice->SI_RemoveUser((const char *)serverUri, nsnull);
     return rv;
 }
 

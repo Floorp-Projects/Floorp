@@ -780,7 +780,7 @@ nsMsgIncomingServer::StorePassword()
         nsCOMPtr<nsIURI> uri;
         NS_NewURI(getter_AddRefs(uri), serverSpec);
 
-        rv = os->NotifyObservers(uri, "login-succeeded", PromiseFlatString(NS_ConvertUTF8toUCS2(pwd)).get());
+        rv = os->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUCS2(pwd).get());
     }
 
     return rv;
