@@ -913,11 +913,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   rv = appShell->Run();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to run appshell");
 
-#ifdef NS_TRACE_MALLOC
-  // XXX we crash somewhere under nsAppShellService::Shutdown...
-  NS_TraceMallocShutdown();
-#endif
-
   /*
    * Shut down the Shell instance...  This is done even if the Run(...)
    * method returned an error.
