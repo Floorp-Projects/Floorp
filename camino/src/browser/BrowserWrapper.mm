@@ -365,22 +365,41 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         [mTab setLabel:@"Untitled"];
 }
 
-// called when a toolip should be shown/hidden
+//
+// onShowTooltip:where:withText
+//
+// Unfortunately, we can't use cocoa's apis here because they rely on setting a region
+// and waiting. We already have waited and we just want to display the tooltip, so we
+// drop down to the Carbon help manager routines.
+//
 - (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
 {
-  NSLog([text description]);
-#if 0
-  // This doesn't work, and i'm not sure why
-  [mBrowserView setToolTip:text];
-  NSToolTipTag tag = [mBrowserView addToolTipRect:[mBrowserView bounds] owner:text userData:nil];
-  printf("tag is %d\n", tag);
+#if NOT_YET
+  HMHelpContentRec info;
+  info.version = kMacHelpVersion;
+  
+  // convert to global coordinates, which is what HMDisplayTag expects
+  NSPoint p = {where.x, where.y};
+  p = [[self window] convertBaseToScreen:[self convertPoint:p toView:nil]];
+  Rect r = {p.y, p.x, p.y + 30, p.x + 30};
+  info.absHotRect = r;
+  info.tagSide = kHMOutsideBottomCenterAligned;
+  
+  // setup the content of the tooltip. recall that a NSString is really just a CFString under the hood
+  info.content[0].contentType = kHMCFStringContent;
+  info.content[0].u.tagCFString = (CFStringRef) text;
+  info.content[1] = info.content[0];
+  
+  ::HMDisplayTag(&info);
 #endif
 }
 
 - (void)onHideTooltip
 {
+#if NOT_YET
   NSLog(@"hiding");
-  [mBrowserView removeAllToolTips];
+  ::HMHideTag();
+#endif
 }
 
 // Called when a context menu should be shown.
@@ -496,5 +515,6 @@ unrequested popups (including this one) from opening."
 {
   return mBrowserView;
 }
+
 
 @end
