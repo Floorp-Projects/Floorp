@@ -328,7 +328,7 @@ BEGIN
     IDS_STR_FILE_NUMBER     "File #:"
     IDS_STR_FILENAME        "Filename:"
     IDS_MSG_SMARTUPDATE_START "Initializing SmartUpdate, please wait..."
-    IDS_MSG_CONFIGURING     "Please wait, configuring %s"
+    IDS_MSG_CONFIGURING     "Configuring %s, please wait..."
 END
 
 #endif    // English (U.S.) resources
