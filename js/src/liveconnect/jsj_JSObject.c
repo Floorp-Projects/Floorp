@@ -182,7 +182,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     if (he) {
         /* Tell the JavaScript GC about this object since the only reference
            to it may be in Java-land. */
-        JS_AddRoot(cx, (void*)&he->key);
+        JS_AddNamedRoot(cx, (void*)&he->key, "&he->key");
     } else {
         JS_ReportOutOfMemory(cx);
         /* No need to delete java_wrapper_obj because Java GC will reclaim it */
@@ -282,7 +282,7 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
         goto done;
     }
  
-    JS_AddRoot(cx, &handle->js_obj);
+    JS_AddNamedRoot(cx, &handle->js_obj, "&handle->js_obj");
 
 done:
         
@@ -1136,7 +1136,7 @@ Java_netscape_javascript_JSObject_call(JNIEnv *jEnv, jobject java_wrapper_obj,
 
         if (!jsj_ConvertJavaObjectToJSValue(cx, jEnv, arg, &argv[arg_num]))
             goto cleanup_argv;
-        JS_AddRoot(cx, &argv[arg_num]);
+        JS_AddNamedRoot(cx, &argv[arg_num], "&argv[arg_num]");
     }
 
     if (!JS_GetUCProperty(cx, js_obj, function_name_ucs2, function_name_len,

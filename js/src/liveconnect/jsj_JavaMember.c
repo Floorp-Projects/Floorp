@@ -83,10 +83,10 @@ jsj_CreateJavaMember(JSContext *cx, jsval method_val, jsval field_val)
 
     JS_SetPrivate(cx, JavaMember_obj, (void *)member_val);
     member_val->method_val = method_val;
-    JS_AddRoot(cx, &member_val->method_val);
+    JS_AddNamedRoot(cx, &member_val->method_val, "&member_val->method_val");
     member_val->field_val = field_val;
     if (JSVAL_IS_GCTHING(field_val))
-        JS_AddRoot(cx, &member_val->field_val);
+        JS_AddNamedRoot(cx, &member_val->field_val, "&member_val->field_val");
 
     return JavaMember_obj;
 }
