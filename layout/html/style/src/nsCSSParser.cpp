@@ -2483,6 +2483,6 @@ PRBool CSSParserImpl::ParseTextDecoration(PRInt32* aErrorCode,
   if (0 == decoration) {
     return PR_FALSE;
   }
-  aDeclaration->AppendValue(aName, nsCSSValue(decoration, eCSSUnit_Integer));
+  aDeclaration->AppendValue(aName, nsCSSValue(decoration, eCSSUnit_Enumerated));
   return PR_TRUE;
 }
