@@ -23,7 +23,7 @@
 DEPTH=..\..\..
 
 DIRS=$(DIRS) nsinstall \
-!if "$(WINOS)"=="WINNT"
+!if "$(OS_TARGET)"=="WINNT" || "$(WINOS)"=="WINNT"
              nsztool   \
 !endif
              setup     \
