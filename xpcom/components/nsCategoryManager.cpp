@@ -48,26 +48,21 @@
 static
 NS_IMETHODIMP
 ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
-    /*
-      ...works with |nsHashtableEnumerator| to make the hash keys enumerable.
-    */
-  {
-    nsresult status;
-    nsCOMPtr<nsISupportsString> obj = do_CreateInstance(NS_SUPPORTS_STRING_PROGID, &status);
-    if ( obj )
-      {
-          // BULLSHIT ALERT: use |nsCAutoString| to deflate to single-byte until I can add, e.g.,
-          //  |nsCStringKey| to hashtable
-        const nsString& s = NS_STATIC_CAST(nsStringKey*, key)->GetString();
-	nsCAutoString tmpStr;
-	tmpStr.AssignWithConversion(s);
-        status = obj->SetDataWithLength(tmpStr.Length(), tmpStr);
-      }
-
-    *_retval = obj;
-    NS_IF_ADDREF(*_retval);
-    return status;
+  /*
+    ...works with |nsHashtableEnumerator| to make the hash keys enumerable.
+  */
+{
+  nsresult status;
+  nsCOMPtr<nsISupportsString> obj = do_CreateInstance(NS_SUPPORTS_STRING_PROGID, &status);
+  if ( obj ) {
+    nsCStringKey* strkey = NS_STATIC_CAST(nsCStringKey*, key);
+    status = obj->SetDataWithLength(strkey->GetStringLength(), strkey->GetString());
   }
+
+  *_retval = obj;
+  NS_IF_ADDREF(*_retval);
+  return status;
+}
 
 
 
@@ -104,7 +99,7 @@ class CategoryNode
 LeafNode*
 CategoryNode::find_leaf( const char* aLeafName )
   {
-    nsStringKey leafNameKey(aLeafName);
+    nsCStringKey leafNameKey(aLeafName);
     return NS_STATIC_CAST(LeafNode*, Get(&leafNameKey));
   }
 
@@ -236,7 +231,7 @@ nsCategoryManager::~nsCategoryManager()
 CategoryNode*
 nsCategoryManager::find_category( const char* aCategoryName )
   {
-    nsStringKey categoryNameKey(aCategoryName);
+    nsCStringKey categoryNameKey(aCategoryName);
     return NS_STATIC_CAST(CategoryNode*, Get(&categoryNameKey));
   }
 
@@ -297,7 +292,7 @@ nsCategoryManager::GetCategoryEntryRaw( const char *aCategoryName,
     CategoryNode* category = find_category(aCategoryName);
     if (category) 
       {
-        nsStringKey entryKey(aEntryName);
+        nsCStringKey entryKey(aEntryName);
         LeafNode* entry = NS_STATIC_CAST(LeafNode*, category->Get(&entryKey));
         if (entry)
           status = (*_retval = nsXPIDLCString::Copy(*entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -337,7 +332,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
       {
           // That category doesn't exist yet; let's make it.
         category = new CategoryNode;
-        nsStringKey categoryNameKey(aCategoryName);
+        nsCStringKey categoryNameKey(aCategoryName);
         Put(&categoryNameKey, category);
       }
 
@@ -365,7 +360,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
           // If you didn't say 'replace', and there was already an entry there,
           //  then we can't put your value in, or make it persistent (see below)
         entry = new LeafNode(aValue);
-        nsStringKey entryNameKey(aEntryName);
+        nsCStringKey entryNameKey(aEntryName);
         category->Put(&entryNameKey, entry);
 
           // If you said 'persist' but not 'replace', and an entry
@@ -406,7 +401,7 @@ nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
     CategoryNode* category = find_category(aCategoryName);
     if (category)
       {
-        nsStringKey entryKey(aEntryName);
+        nsCStringKey entryKey(aEntryName);
         category->RemoveAndDelete(&entryKey);
       }
 
@@ -425,7 +420,7 @@ nsCategoryManager::DeleteCategory( const char *aCategoryName )
     NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
 
       // QUESTION: consider whether this should be an error
-    nsStringKey categoryKey(aCategoryName);
+    nsCStringKey categoryKey(aCategoryName);
     return RemoveAndDelete(&categoryKey) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
   }
 

@@ -97,18 +97,6 @@ static PRBool get_method_type(const char* sig, PRUint32& arg_count, jni_type*& a
 	return PR_FALSE;
 }
 
-class JNIHashKey : public nsHashKey {
-public:
-	JNIHashKey(void* key) : mKey(key) {}
-
-	virtual PRUint32 HashValue(void) const { return PRUint32(mKey); }
-	virtual PRBool Equals(const nsHashKey *aKey) const { return mKey == ((JNIHashKey*)aKey)->mKey; }
-	virtual nsHashKey *Clone(void) const { return new JNIHashKey(mKey); }
-
-private:
-	void* mKey;
-};
-
 struct JNIMember {
 	char* mName;
 	char* mSignature;
@@ -444,7 +432,7 @@ private:
 		jmethodID outMethodID = NULL;
 		nsresult result = secureEnv->GetMethodID(clazz, name, sig, &outMethodID);
 		if (result == NS_OK && outMethodID != NULL) {
-			JNIHashKey key(outMethodID);
+			nsVoidKey key(outMethodID);
 			JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
 			if (method == NULL) {
 				method = new JNIMethod(name, sig, outMethodID);
@@ -662,7 +650,7 @@ private:
 		jfieldID outFieldID = NULL;
 		nsresult result = secureEnv->GetFieldID(clazz, name, sig, &outFieldID);
 		if (result == NS_OK && outFieldID != NULL) {
-			JNIHashKey key(outFieldID);
+			nsVoidKey key(outFieldID);
 			JNIField* field = (JNIField*) theIDTable->Get(&key);
 			if (field == NULL) {
 				field = new JNIField(name, sig, outFieldID);
@@ -741,7 +729,7 @@ private:
 		jmethodID outMethodID = NULL;
 		nsresult result = secureEnv->GetStaticMethodID(clazz, name, sig, &outMethodID);
 		if (result == NS_OK && outMethodID != NULL) {
-			JNIHashKey key(outMethodID);
+			nsVoidKey key(outMethodID);
 			JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
 			if (method == NULL) {
 				method = new JNIMethod(name, sig, outMethodID);
@@ -849,7 +837,7 @@ private:
 		jfieldID outFieldID = NULL;
 		nsresult result = secureEnv->GetStaticFieldID(clazz, name, sig, &outFieldID);
 		if (result == NS_OK && outFieldID != NULL) {
-			JNIHashKey key(outFieldID);
+			nsVoidKey key(outFieldID);
 			JNIField* field = (JNIField*) theIDTable->Get(&key);
 			if (field == NULL) {
 				field = new JNIField(name, sig, outFieldID);

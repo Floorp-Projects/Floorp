@@ -851,7 +851,8 @@ nsFormControlList::GetNamedObject(JSContext* aContext, jsval aID, JSObject** aOb
 
   if (mLookupTable) {
     // Get the hash entry
-    nsStringKey key(str);
+    nsString ustr; ustr.AssignWithConversion(str);
+    nsStringKey key(ustr);
 
     nsCOMPtr<nsISupports> tmp = dont_AddRef((nsISupports *)mLookupTable->Get(&key));
 

@@ -751,7 +751,7 @@ class FontNameKey : public nsHashKey
 public:
   FontNameKey(const nsString& aString);
 
-  virtual PRUint32 HashValue(void) const;
+  virtual PRUint32 HashCode(void) const;
   virtual PRBool Equals(const nsHashKey *aKey) const;
   virtual nsHashKey *Clone(void) const;
 
@@ -763,11 +763,11 @@ FontNameKey::FontNameKey(const nsString& aString)
 	mString.Assign(aString);
 }
 
-PRUint32 FontNameKey::HashValue(void) const
+PRUint32 FontNameKey::HashCode(void) const
 {
   nsString str;
   mString.ToLowerCase(str);
-	return nsCRT::HashValue(str.GetUnicode());
+	return nsCRT::HashCode(str.GetUnicode(), str.Length());
 }
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const

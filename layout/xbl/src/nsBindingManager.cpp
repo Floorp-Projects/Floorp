@@ -303,7 +303,7 @@ nsBindingManager::PutXBLDocument(nsIDocument* aDocument)
   char* aString;
   uri->GetSpec(&aString);
 
-  nsStringKey key(aString);
+  nsCStringKey key(aString);
   mDocumentTable->Put(&key, aDocument);
 
   return NS_OK;
@@ -316,7 +316,7 @@ nsBindingManager::GetXBLDocument(const nsCString& aURL, nsIDocument** aResult)
   if (!mDocumentTable)
     return NS_OK;
 
-  nsStringKey key(aURL);
+  nsCStringKey key(aURL);
   *aResult = NS_STATIC_CAST(nsIDocument*, mDocumentTable->Get(&key)); // Addref happens here.
   return NS_OK;
 }
@@ -327,7 +327,7 @@ nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIStreamListener
   if (!mLoadingDocTable)
     mLoadingDocTable = new nsSupportsHashtable();
 
-  nsStringKey key(aURL);
+  nsCStringKey key(aURL);
   mLoadingDocTable->Put(&key, aListener);
 
   return NS_OK;
@@ -340,7 +340,7 @@ nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIStreamListener
   if (!mLoadingDocTable)
     return NS_OK;
 
-  nsStringKey key(aURL);
+  nsCStringKey key(aURL);
   *aResult = NS_STATIC_CAST(nsIStreamListener*, mLoadingDocTable->Get(&key)); // Addref happens here.
   return NS_OK;
 }
@@ -351,7 +351,7 @@ nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
   if (!mLoadingDocTable)
     return NS_OK;
 
-  nsStringKey key(aURL);
+  nsCStringKey key(aURL);
   mLoadingDocTable->Remove(&key);
 
   return NS_OK;

@@ -431,7 +431,6 @@ struct NS_COM nsStr {
    */
   static PRUint32 HashCode(const nsStr& aDest);
 
-
 #ifndef NEW_STRING_APIS
   static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
     StrAppend(aDest, aSource, anOffset, aCount);

@@ -452,8 +452,9 @@ GetNAME(HDC aDC, nsString* aName)
 static PLHashNumber
 HashKey(const void* aString)
 {
+  const nsString* str = (const nsString*)aString;
   return (PLHashNumber)
-    nsCRT::HashValue(((const nsString*) aString)->GetUnicode());
+    nsCRT::HashCode(str->GetUnicode(), str->Length());
 }
 
 static PRIntn
@@ -2112,7 +2113,7 @@ HashKeyFontWeight(const void* aFontWeightEntry)
 {
   const nsString* string = &((const nsFontWeightEntry*) aFontWeightEntry)->mFontName;
   return (PLHashNumber)
-    nsCRT::HashValue(string->GetUnicode());
+    nsCRT::HashCode(string->GetUnicode(), string->Length());
 }
 
 static PRIntn

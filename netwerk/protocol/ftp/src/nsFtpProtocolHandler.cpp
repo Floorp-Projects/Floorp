@@ -245,7 +245,7 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 NS_IMETHODIMP
 nsFtpProtocolHandler::RemoveConn(const char *aKey, nsConnectionCacheObj* *_retval) {
     NS_ASSERTION(_retval, "null pointer");
-    nsStringKey key(aKey);
+    nsCStringKey key(aKey);
     nsAutoLock lock(mLock);
     *_retval = (nsConnectionCacheObj*)mRootConnectionList->Remove(&key);
     return NS_OK;
@@ -254,7 +254,7 @@ nsFtpProtocolHandler::RemoveConn(const char *aKey, nsConnectionCacheObj* *_retva
 NS_IMETHODIMP
 nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) {
     NS_ASSERTION(aConn, "null pointer");
-    nsStringKey key(aKey);
+    nsCStringKey key(aKey);
     nsAutoLock lock(mLock);
     mRootConnectionList->Put(&key, aConn);
     return NS_OK;

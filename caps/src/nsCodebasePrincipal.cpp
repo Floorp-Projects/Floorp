@@ -74,7 +74,7 @@ nsCodebasePrincipal::HashValue(PRUint32 *result)
     nsXPIDLCString origin;
     if (NS_FAILED(GetOrigin(getter_Copies(origin))))
         return NS_ERROR_FAILURE;
-    *result = nsCRT::HashValue(origin);
+    *result = nsCRT::HashCode(origin, nsCRT::strlen(origin));
     return NS_OK;
 }
 

@@ -1683,7 +1683,7 @@ nsScriptSecurityManager::GetPrefName(nsIPrincipal *principal,
                     }
                     p++;
                 }
-                nsStringKey key(nextToLastDot ? nextToLastDot+1 : s);
+                nsCStringKey key(nextToLastDot ? nextToLastDot+1 : s);
                 nsDomainEntry *de = (nsDomainEntry *) mOriginToPolicyMap->Get(&key);
                 while (de) {
                     if (de->Matches(s)) {
@@ -1849,7 +1849,7 @@ nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName,
                 if (*r == ' ' || *r == '\0') {
                     working = (*r != '\0');
                     *r = '\0';
-                    nsStringKey key(nextToLastDot ? nextToLastDot+1 : q);
+                    nsCStringKey key(nextToLastDot ? nextToLastDot+1 : q);
                     nsDomainEntry *value = new nsDomainEntry(q, policyName, 
                                                              policyLength);
                     if (!value)

@@ -27,34 +27,14 @@
 
 MOZ_DECL_CTOR_COUNTER(HistoryKey);
 
-class HistoryKey: public nsHashKey {
- private:
-   PRUint32 itsHash;
-   
+class HistoryKey: public nsVoidKey {
  public:
-   HistoryKey(PRUint32 aContentID, nsIStatefulFrame::StateType aStateType) {
-     MOZ_COUNT_CTOR(HistoryKey);
-     itsHash = aContentID * nsIStatefulFrame::eNumStateTypes + aStateType;
+   HistoryKey(PRUint32 aContentID, nsIStatefulFrame::StateType aStateType)
+       : nsVoidKey((void*)(aContentID * nsIStatefulFrame::eNumStateTypes + aStateType)) {
    }
 
-   HistoryKey(PRUint32 aKey) {
-     MOZ_COUNT_CTOR(HistoryKey);
-     itsHash = aKey;
-   }
-   ~HistoryKey() {
-     MOZ_COUNT_DTOR(HistoryKey);
-   }
-
-   PRUint32 HashValue(void) const {
-     return itsHash;
-   }
- 
-   PRBool Equals(const nsHashKey *aKey) const {
-     return (itsHash == (((const HistoryKey *) aKey)->HashValue())) ? PR_TRUE : PR_FALSE;
-   }
- 
-   nsHashKey *Clone(void) const {
-     return new HistoryKey(itsHash);
+   HistoryKey(PRUint32 aKey) 
+       : nsVoidKey((void*)aKey) {
    }
 };
 

@@ -312,7 +312,7 @@ nsresult nsComponentManagerImpl::Init(void)
     mLoaders = new nsSupportsHashtable(16, /* Thread safe */ PR_TRUE);
     if (mLoaders == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsStringKey loaderKey(nativeComponentType);
+    nsCStringKey loaderKey(nativeComponentType);
     mLoaders->Put(&loaderKey, mNativeComponentLoader);
     }
 
@@ -937,7 +937,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         }
 
         // put the {progid, Cid} mapping into our map
-        nsStringKey key(progidString);
+        nsCStringKey key(progidString);
         mProgIDs->Put(&key, aClass);
         //  printf("Populating [ %s, %s ]\n", cidString, progidString);
     }
@@ -959,7 +959,7 @@ nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
         return NS_ERROR_NULL_POINTER;
     }
     
-    nsStringKey key(aProgID);
+    nsCStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid)
     {
@@ -1120,7 +1120,7 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
     nsresult res = NS_ERROR_FACTORY_NOT_REGISTERED;
 
 #ifdef USE_REGISTRY
-    nsStringKey key(aProgID);
+    nsCStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid) {
         if (cid == &kNoCID) {
@@ -1674,7 +1674,7 @@ nsresult
 nsComponentManagerImpl::GetLoaderForType(const char *aType,
                                          nsIComponentLoader **aLoader)
 {
-    nsStringKey typeKey(aType);
+    nsCStringKey typeKey(aType);
     nsresult rv;
 
     nsCOMPtr<nsIComponentLoader> loader;
@@ -2229,14 +2229,8 @@ ConvertProgIDKeyToString(nsHashKey *key, void *data, void *convert_data,
                                          (void **)&strHolder);
     if(NS_SUCCEEDED(rv))
     {
-        nsStringKey *strKey = (nsStringKey *) key;
-        const nsString& str = strKey->GetString();
-        char* yetAnotherCopyOfTheString = str.ToNewCString();
-        if(yetAnotherCopyOfTheString)
-        {
-            strHolder->SetData(yetAnotherCopyOfTheString);
-            delete [] yetAnotherCopyOfTheString;
-        }
+        nsCStringKey *strKey = (nsCStringKey *) key;
+        strHolder->SetData(strKey->GetString());
         *retval = strHolder;
     }
     else

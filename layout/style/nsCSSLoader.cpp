@@ -84,7 +84,7 @@ public:
     char* urlStr;
     mURL->GetSpec(&urlStr);
     if (urlStr) {
-      mHashValue = nsCRT::HashValue(urlStr);
+      mHashValue = nsCRT::HashCode(urlStr, nsCRT::strlen(urlStr));
       nsCRT::free(urlStr);
     }
   }
@@ -104,7 +104,7 @@ public:
     NS_RELEASE(mURL);
   }
 
-  virtual PRUint32 HashValue(void) const
+  virtual PRUint32 HashCode(void) const
   {
     return mHashValue;
   }
@@ -124,48 +124,6 @@ public:
 
   nsIURI*   mURL;
   PRUint32  mHashValue;
-};
-
-MOZ_DECL_CTOR_COUNTER(SupportsKey);
-
-class SupportsKey: public nsHashKey {
-public:
-  SupportsKey(nsISupports* aSupports)
-    : nsHashKey(),
-      mSupports(aSupports)
-  { // note: does not hold reference on supports pointer
-    MOZ_COUNT_CTOR(SupportsKey);
-  }
-
-  SupportsKey(const SupportsKey& aKey)
-    : nsHashKey(),
-      mSupports(aKey.mSupports)
-  {
-    MOZ_COUNT_CTOR(SupportsKey);
-  }
-
-  virtual ~SupportsKey(void)
-  {
-    MOZ_COUNT_DTOR(SupportsKey);
-  }
-
-  virtual PRUint32 HashValue(void) const
-  {
-    return (PRUint32)mSupports;
-  }
-
-  virtual PRBool Equals(const nsHashKey* aKey) const
-  {
-    SupportsKey* key = (SupportsKey*)aKey;
-    return PRBool(mSupports == key->mSupports);
-  }
-
-  virtual nsHashKey *Clone(void) const
-  {
-    return new SupportsKey(*this);
-  }
-
-  nsISupports*  mSupports;
 };
 
 class SheetLoadData : public nsIStreamLoaderObserver
@@ -1113,7 +1071,7 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
   aSheet->GetTitle(title);
   aSheet->SetEnabled(! IsAlternate(title));
 
-  SupportsKey key(mDocument);
+  nsISupportsKey key(mDocument);
   nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
     sheetMap = new nsVoidArray();
@@ -1153,7 +1111,7 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
     return NS_ERROR_NULL_POINTER;
   }
 
-  SupportsKey key(aParentSheet);
+  nsISupportsKey key(aParentSheet);
   nsVoidArray*  sheetMap = (nsVoidArray*)mSheetMapTable.Get(&key);
   if (! sheetMap) {
     sheetMap = new nsVoidArray();

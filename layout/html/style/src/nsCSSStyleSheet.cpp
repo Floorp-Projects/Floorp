@@ -86,7 +86,7 @@ public:
   AtomKey(nsIAtom* aAtom);
   AtomKey(const AtomKey& aKey);
   virtual ~AtomKey(void);
-  virtual PRUint32 HashValue(void) const;
+  virtual PRUint32 HashCode(void) const;
   virtual PRBool Equals(const nsHashKey *aKey) const;
   virtual nsHashKey *Clone(void) const;
   nsIAtom*  mAtom;
@@ -109,7 +109,7 @@ AtomKey::~AtomKey(void)
   NS_RELEASE(mAtom);
 }
 
-PRUint32 AtomKey::HashValue(void) const
+PRUint32 AtomKey::HashCode(void) const
 {
   return (PRUint32)mAtom;
 }

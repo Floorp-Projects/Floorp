@@ -108,6 +108,11 @@ public:
     ::memcpy(aDest, aSrc, (size_t)aCount);
   }
 
+  static PRInt32 memcmp(void* aDest, const void* aSrc, PRUint32 aCount) {
+    NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
+    return ::memcmp(aDest, aSrc, (size_t)aCount);
+  }
+
   static void memmove(void* aDest, const void* aSrc, PRUint32 aCount) {
     NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
     ::memmove(aDest, aSrc, (size_t)aCount);
@@ -167,6 +172,10 @@ public:
     return PL_strdup(str);
   }
 
+  static char* strndup(const char* str, PRUint32 len) {
+    return PL_strndup(str, len);
+  }
+
   static void free(char* str) {
     PL_strfree(str);
   }
@@ -223,11 +232,13 @@ public:
   // free the memory
   static PRUnichar* strdup(const PRUnichar* str);
 
+  static PRUnichar* strndup(const PRUnichar* str, PRUint32 len);
+
   static void free(PRUnichar* str) {
   	nsCppSharedAllocator<PRUnichar> shared_allocator;
   	shared_allocator.deallocate(str, 0 /*we never new or kept the size*/);
   }
-
+#if 0
   /// Compute a hashcode for a C string
   static PRUint32 HashValue(const char* s1);
 
@@ -239,6 +250,9 @@ public:
 
   /// Same as above except that we return the length in s1len
   static PRUint32 HashValue(const PRUnichar* s1, PRUint32* s1len);
+#endif
+  static PRUint32 HashCode(const char* str, PRUint32 strLen);
+  static PRUint32 HashCode(const PRUnichar* str, PRUint32 strLen);
 
   /// String to integer.
   static PRInt32 atoi( const PRUnichar *string );

@@ -747,7 +747,7 @@ nsXBLService::GetBindingDocument(nsIContent* aBoundElement, const nsCString& aUR
   *aResult = nsnull;
   
   // We've got a file.  Check our XBL document cache.
-  nsStringKey key(aURLStr);
+  nsCStringKey key(aURLStr);
   nsCOMPtr<nsIDocument> document;
   if (gXULUtils->UseXULCache()) {
     // The first line of defense is the chrome cache.  

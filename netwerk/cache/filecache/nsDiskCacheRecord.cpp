@@ -141,11 +141,12 @@ nsDiskCacheRecord::GetKey(PRUint32 *length, char** _retval)
     return NS_ERROR_NULL_POINTER ;
 
   *length = mKeyLength ;
-  *_retval = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char))) ;
+  *_retval = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char) + 1)) ;
   if(!*_retval)
     return NS_ERROR_OUT_OF_MEMORY ;
 
   memcpy(*_retval, mKey, mKeyLength) ;
+  (*_retval)[mKeyLength] = '\0';	// null terminate because this gets used in a string key for a hashtable
 
   return NS_OK ;
 }

@@ -62,7 +62,7 @@ public:
         NS_IF_RELEASE(mKey);
     }
     
-    PRUint32 HashValue(void) const {
+    PRUint32 HashCode(void) const {
         PRUint32 hash;
         mKey->HashValue(&hash);
         return hash;

@@ -324,7 +324,7 @@ nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
   if (aFilename)
   {
     //-- Find the item
-    nsStringKey key(aFilename);
+    nsCStringKey key(aFilename);
     nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
     if (!manItem)
       return NS_OK;
@@ -586,7 +586,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
                 curItemMF->mType = JAR_INVALID;
             }
             //-- Check for duplicates
-            nsStringKey key(curItemName);
+            nsCStringKey key(curItemName);
             if (mManifestData.Exists(&key))
               curItemMF->mType = JAR_INVALID;
           }
@@ -600,7 +600,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
           CalculateDigest(verifier, sectionStart, sectionLength,
                           &(curItemMF->calculatedSectionDigest));
           //-- Save item in the hashtable
-          nsStringKey itemKey(curItemName);
+          nsCStringKey itemKey(curItemName);
           mManifestData.Put(&itemKey, (void*)curItemMF);
         }
         if (nextLineStart == nsnull) // end-of-file
@@ -616,7 +616,7 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
         if (foundName)
         {
           nsJARManifestItem* curItemSF;
-          nsStringKey key(curItemName);
+          nsCStringKey key(curItemName);
           curItemSF = (nsJARManifestItem*)mManifestData.Get(&key);
           if(curItemSF)
           {
@@ -852,7 +852,7 @@ PrintManItem(nsHashKey* aKey, void* aData, void* closure)
   nsJARManifestItem* manItem = (nsJARManifestItem*)aData;
     if (manItem)
     {
-      nsStringKey* key2 = (nsStringKey*)aKey;
+      nsCStringKey* key2 = (nsCStringKey*)aKey;
       char* name = key2->GetString().ToNewCString();
       if (!(PL_strcmp(name, "") == 0))
         printf("%s s=%i\n",name, manItem->status);
@@ -1146,7 +1146,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   rv = zipFile->GetPath(getter_Copies(path));
   if (NS_FAILED(rv)) return rv;
 
-  nsStringKey key(path);
+  nsCStringKey key(path);
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry) {
     *result = entry->mZip;
@@ -1204,7 +1204,7 @@ nsZipReaderCache::ReleaseZip(nsIZipReader* zip)
   rv = zipFile->GetPath(getter_Copies(path));
   if (NS_FAILED(rv)) return rv;
 
-  nsStringKey key(path);
+  nsCStringKey key(path);
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry == nsnull)
     return NS_ERROR_FAILURE;

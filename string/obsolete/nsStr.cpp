@@ -780,25 +780,10 @@ CBufDescriptor::CBufDescriptor(const PRUnichar* aString,PRBool aStackBased,PRUin
 PRUint32
 nsStr::HashCode(const nsStr& aDest)
 {
-	if (aDest.mCharSize == eTwoByte) {
-    PRUint32 h;
-    PRUint32 n = aDest.mLength;
-    PRUint32 m;
-    const PRUnichar* c;
-    h = 0;
-    
-    c = aDest.mUStr;
-    if (n < 16) {	/* Hash every char in a short string. */
-      for(; n; c++, n--)
-        h = (h >> 28) ^ (h << 4) ^ *c;
-    }
-    else {	/* Sample a la java.lang.String.hash(). */
-      for(m = n / 8; n >= m; c += m, n -= m)
-        h = (h >> 28) ^ (h << 4) ^ *c;
-    }
-    return h; 
-  }
-  return (PRUint32)PL_HashString((const void*) aDest.mStr);
+	if (aDest.mCharSize == eTwoByte)
+    return nsCRT::HashCode(aDest.mUStr, aDest.mLength);
+  else 
+    return nsCRT::HashCode(aDest.mStr, aDest.mLength);
 }
 
 #ifdef NS_STR_STATS

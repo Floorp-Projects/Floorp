@@ -642,7 +642,7 @@ nsresult nsExtensibleStringBundle::GetSimpleEnumeration(nsISimpleEnumerator ** a
 
 struct bundleCacheEntry_t {
   PRCList list;
-  nsStringKey *mHashKey;
+  nsCStringKey *mHashKey;
   // do not use a nsCOMPtr - this is a struct not a class!
   nsIStringBundle* mBundle;
 };
@@ -668,7 +668,7 @@ private:
   void flushBundleCache();
   
   bundleCacheEntry_t *insertIntoCache(nsIStringBundle *aBundle,
-                                      nsStringKey *aHashKey);
+                                      nsCStringKey *aHashKey);
 
   static void recycleEntry(bundleCacheEntry_t*);
   
@@ -757,7 +757,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
   nsXPIDLCString newSpec;
 
-  nsStringKey completeKey(aURLSpec);
+  nsCStringKey completeKey(aURLSpec);
 
   bundleCacheEntry_t* cacheEntry =
     (bundleCacheEntry_t*)mBundleMap.Get(&completeKey);
@@ -794,7 +794,7 @@ nsStringBundleService::getStringBundle(const char *aURLSpec,
 
 bundleCacheEntry_t *
 nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
-                                       nsStringKey* aHashKey)
+                                       nsCStringKey* aHashKey)
 {
   bundleCacheEntry_t *cacheEntry;
   
@@ -825,7 +825,7 @@ nsStringBundleService::insertIntoCache(nsIStringBundle* aBundle,
   cacheEntry->mBundle = aBundle;
   NS_ADDREF(cacheEntry->mBundle);
 
-  cacheEntry->mHashKey = (nsStringKey*)aHashKey->Clone();
+  cacheEntry->mHashKey = (nsCStringKey*)aHashKey->Clone();
   
   // insert the entry into the cache and map, make it the MRU
   mBundleMap.Put(cacheEntry->mHashKey, cacheEntry);

@@ -118,8 +118,7 @@ public:
                        PRInt32 proxyType,
                        nsISupports* aObj,
     				   nsProxyEventClass* aClass,
-                       nsProxyEventObject* root,
-                       const char * hashStr);
+                       nsProxyEventObject* root);
     
     virtual ~nsProxyEventObject();
     
@@ -131,8 +130,6 @@ public:
 
 protected:
     PRLock                *mLock;
-
-    nsStringKey           mHashKey;
 
     nsCOMPtr<nsProxyEventClass>  mClass;
     nsCOMPtr<nsProxyObject> mProxyObject;

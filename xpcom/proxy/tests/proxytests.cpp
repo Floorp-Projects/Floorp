@@ -133,7 +133,7 @@ nsTestXPCFoo2::~nsTestXPCFoo2()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsTestXPCFoo2,NS_GET_IID(nsITestProxy))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsTestXPCFoo2, nsITestProxy)
 
 NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {

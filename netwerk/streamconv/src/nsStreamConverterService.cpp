@@ -185,9 +185,9 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     // each MIME-type is represented as a key in our hashtable.
 
     PRBool delFrom = PR_TRUE, delTo = PR_TRUE;
-    nsStringKey *fromKey = new nsStringKey(fromStr.GetBuffer());
+    nsCStringKey *fromKey = new nsCStringKey(fromStr.GetBuffer());
     if (!fromKey) return NS_ERROR_OUT_OF_MEMORY;
-    nsStringKey *toKey = new nsStringKey(toStr.GetBuffer());
+    nsCStringKey *toKey = new nsCStringKey(toStr.GetBuffer());
     if (!toKey) {
         delete fromKey;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -355,7 +355,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
     rv = ParseFromTo(aProgID, fromC, toC);
     if (NS_FAILED(rv)) return rv;
 
-    nsStringKey *source = new nsStringKey(fromC.GetBuffer());
+    nsCStringKey *source = new nsCStringKey(fromC.GetBuffer());
     if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
@@ -390,7 +390,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
             nsStr::Initialize(curVertexStr, eOneByte);
             curVertexAtom->ToString(curVertexStr);
             char * curVertexCString = curVertexStr.ToNewCString();
-            nsStringKey *curVertex = new nsStringKey(curVertexCString);
+            nsCStringKey *curVertex = new nsCStringKey(curVertexCString);
             nsMemory::Free(curVertexCString);
 
             SCTableData *data3 = (SCTableData*)lBFSTable.Get(curVertex);
@@ -408,7 +408,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
             }
         }
         headVertexState->color = black;
-        nsStringKey *cur = (nsStringKey*)grayQ->PopFront();
+        nsCStringKey *cur = (nsCStringKey*)grayQ->PopFront();
         delete cur;
         cur = nsnull;
     }
@@ -426,7 +426,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsCStringArray **aE
     nsCString ProgIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsCStringArray *shortestPath = new nsCStringArray();
     //nsVoidArray *shortestPath = new nsVoidArray();
-    nsStringKey *toMIMEType = new nsStringKey(toStr);
+    nsCStringKey *toMIMEType = new nsCStringKey(toStr);
     data = (SCTableData*)lBFSTable.Get(toMIMEType);
     delete toMIMEType;
 

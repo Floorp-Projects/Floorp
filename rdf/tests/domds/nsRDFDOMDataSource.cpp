@@ -286,7 +286,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
   
   // what node is this?
   if (aSource == kNC_DOMRoot) {
-    nsStringKey frameMode("frame");
+    nsCStringKey frameMode("frame");
     if (mModeTable.Get(&frameMode))
       rv = getTargetsForKnownObject(mRootFrame, aProperty, PR_TRUE, arcs);
     else
@@ -750,7 +750,7 @@ nsRDFDOMDataSource::getTargetForKnownObject(nsISupports* object,
   nsresult rv;
 
   // should we display nsIFrames?
-  nsStringKey frameMode("frame");
+  nsCStringKey frameMode("frame");
   if (mModeTable.Get(&frameMode)) {
     nsIFrame *frame;
     rv = object->QueryInterface(kFrameIID, (void **)&frame);
@@ -760,7 +760,7 @@ nsRDFDOMDataSource::getTargetForKnownObject(nsISupports* object,
   }
 
   // should we display nsIDOMNodes?
-  nsStringKey domMode("dom");
+  nsCStringKey domMode("dom");
   if (mModeTable.Get(&domMode)) {
     
     // nsIDOMNode
@@ -879,7 +879,7 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
   }
 
   // nsIFrame (testing right now)
-  nsStringKey frameKey("frame");
+  nsCStringKey frameKey("frame");
   if (mModeTable.Get(&frameKey)) {
     nsIFrame* frame;
     rv = object->QueryInterface(kFrameIID, (void **)&frame);
@@ -890,7 +890,7 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
   }
   
   // nsIDOMNode hierarchy
-  nsStringKey domKey("dom");
+  nsCStringKey domKey("dom");
   if (mModeTable.Get(&domKey)) {
 
     // try HTML first
@@ -908,7 +908,7 @@ nsRDFDOMDataSource::getTargetsForKnownObject(nsISupports *object,
   }
 
   // nsIContent hierarchy
-  nsStringKey contentKey("content");
+  nsCStringKey contentKey("content");
   if (mModeTable.Get(&contentKey) && !useDOM) {
     // start at nsIStyleContent and work upwards
     nsCOMPtr<nsIStyledContent> styledContent =
@@ -934,7 +934,7 @@ nsRDFDOMDataSource::appendLeafObject(nsString& name,
                                nsISupportsArray* arcs)
 {
   nsresult rv;
-  nsStringKey leafKey("leaf");
+  nsCStringKey leafKey("leaf");
   if (!mModeTable.Get(&leafKey)) return NS_OK;
   
   nsIRDFDOMViewerObject* viewerObject;
@@ -1268,7 +1268,7 @@ nsRDFDOMDataSource::SetMode(const char *mode, PRBool active)
 {
   printf("Turning %s the %s mode\n", active ? "ON" : "OFF",
          mode);
-  nsStringKey modeKey(mode);
+  nsCStringKey modeKey(mode);
   mModeTable.Put(&modeKey, (void *)active);
   return NS_OK;
 }
@@ -1276,7 +1276,7 @@ nsRDFDOMDataSource::SetMode(const char *mode, PRBool active)
 nsresult
 nsRDFDOMDataSource::GetMode(const char *mode, PRBool *active)
 {
-  nsStringKey modeKey(mode);
+  nsCStringKey modeKey(mode);
   *active = (PRBool)mModeTable.Get(&modeKey);
   return NS_OK;
 }

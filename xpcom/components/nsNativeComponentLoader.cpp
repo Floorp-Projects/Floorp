@@ -785,7 +785,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     if (NS_FAILED(rv))
         return rv;
 
-    nsStringKey key(persistentDescriptor);
+    nsCStringKey key(persistentDescriptor);
 
     // Get the registry representation of the dll, if any
     nsDll *dll;
@@ -1108,7 +1108,7 @@ nsNativeComponentLoader::CreateDll(nsIFile *aSpec, const char *aLocation,
     nsCOMPtr<nsIFile> spec;
     nsresult rv;
 
-    nsStringKey key(aLocation);
+    nsCStringKey key(aLocation);
     dll = (nsDll *)mDllStore->Get(&key);
     if (dll)
     {

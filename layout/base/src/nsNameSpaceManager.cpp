@@ -47,59 +47,6 @@ static nsVoidArray* gURIArray;
 
 MOZ_DECL_CTOR_COUNTER(NameSpaceURIKey);
 
-class NameSpaceURIKey : public nsHashKey {
-public:
-  NameSpaceURIKey(const nsString* aString)
-    : mString(aString)
-  {
-    MOZ_COUNT_CTOR(NameSpaceURIKey);
-  }
-
-  virtual ~NameSpaceURIKey(void)
-  {
-    MOZ_COUNT_DTOR(NameSpaceURIKey);
-  }
-
-  virtual PRUint32 HashValue(void) const
-  {
-#if 1 // case insensitive XXX should this be case sensitive???
-    PRUint32 hash = 0;
-    const PRUnichar* string = mString->GetUnicode();
-    PRUnichar ch;
-    while ((ch = *string++) != 0) {
-      // FYI: hash = hash*37 + ch
-      ch = nsCRT::ToLower(ch);
-      hash = ((hash << 5) + (hash << 2) + hash) + ch;
-    }
-    return hash;
-#else
-    if (nsnull != mString) {
-      return nsCRT::HashValue(mString->GetUnicode());
-    }
-    return 0;
-#endif
-  }
-
-  virtual PRBool Equals(const nsHashKey *aKey) const
-  {
-    const nsString* other = ((const NameSpaceURIKey*)aKey)->mString;
-    if (nsnull != mString) {
-      if (nsnull != other) {
-        return mString->EqualsIgnoreCase(*other); // XXX case sensitive?
-      }
-      return PR_FALSE;
-    }
-    return PRBool(nsnull == other);
-  }
-
-  virtual nsHashKey *Clone(void) const
-  {
-    return new NameSpaceURIKey(mString);
-  }
-
-  const nsString* mString;
-};
-
 static void AddRefTable()
 {
   if (0 == gNameSpaceTableRefs++) {
@@ -119,11 +66,11 @@ static void AddRefTable()
     gURIArray->AppendElement(xhtml); 
     gURIArray->AppendElement(xlink);
     gURIArray->AppendElement(html); 
-    NameSpaceURIKey xmlnsKey(xmlns);
-    NameSpaceURIKey xmlKey(xml);
-    NameSpaceURIKey xhtmlKey(xhtml);
-    NameSpaceURIKey xlinkKey(xlink);
-    NameSpaceURIKey htmlKey(html);
+    nsStringKey xmlnsKey(*xmlns);
+    nsStringKey xmlKey(*xml);
+    nsStringKey xhtmlKey(*xhtml);
+    nsStringKey xlinkKey(*xlink);
+    nsStringKey htmlKey(*html);
     gURIToIDTable->Put(&xmlnsKey, (void*)kNameSpaceID_XMLNS);
     gURIToIDTable->Put(&xmlKey, (void*)kNameSpaceID_XML);
     gURIToIDTable->Put(&xhtmlKey, (void*)kNameSpaceID_HTML);
@@ -152,7 +99,7 @@ static void ReleaseTable()
 static PRInt32 FindNameSpaceID(const nsString& aURI)
 {
   NS_ASSERTION(nsnull != gURIToIDTable, "no URI table");
-  NameSpaceURIKey key(&aURI);
+  nsStringKey key(aURI);
   void* value = gURIToIDTable->Get(&key);
   if (nsnull != value) {
     return PRInt32(value);
@@ -446,7 +393,7 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsString& aURI,
     nsString* uri = new nsString(aURI);
     gURIArray->AppendElement(uri); 
     id = gURIArray->Count();  // id is index + 1
-    NameSpaceURIKey key(uri);
+    nsStringKey key(*uri);
     gURIToIDTable->Put(&key, (void*)id);
   }
   aNameSpaceID = id;

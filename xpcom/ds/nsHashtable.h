@@ -35,17 +35,37 @@
 
 #include "plhash.h"
 #include "prlock.h"
-#include "nsCom.h"
+#include "nscom.h"
 #include "nscore.h"
+
+class nsHashtable;
+class nsStringKey;
 
 class NS_COM nsHashKey {
 protected:
   nsHashKey(void);
+
 public:
   virtual ~nsHashKey(void);
-  virtual PRUint32 HashValue(void) const = 0;
+  virtual PRUint32 HashCode(void) const = 0;
   virtual PRBool Equals(const nsHashKey *aKey) const = 0;
-  virtual nsHashKey *Clone(void) const = 0;
+  virtual nsHashKey *Clone() const = 0;
+
+#ifdef DEBUG
+public:
+  // used for verification that we're casting to the correct key type
+  enum nsHashKeyType {
+    UnknownKey,
+    SupportsKey,
+    VoidKey,
+    IDKey,
+    CStringKey,
+    StringKey,
+  };
+  nsHashKeyType GetKeyType() const { return mKeyType; }
+protected:
+  nsHashKeyType mKeyType;
+#endif
 };
 
 // Enumerator callback function. Use
@@ -55,14 +75,14 @@ typedef PRBool (*PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, 
 class NS_COM nsHashtable {
 protected:
   // members  
-  PLHashTable *hashtable;
-  PRLock *mLock;
+  PLHashTable           mHashtable;
+  PRLock*               mLock;
 
 public:
   nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
   virtual ~nsHashtable();
 
-  PRInt32 Count(void) { return hashtable->nentries; }
+  PRInt32 Count(void) { return mHashtable.nentries; }
   PRBool Exists(nsHashKey *aKey);
   void *Put(nsHashKey *aKey, void *aData);
   void *Get(nsHashKey *aKey);
@@ -152,6 +172,9 @@ protected:
   
 public:
   nsISupportsKey(nsISupports* key) {
+#ifdef DEBUG
+    mKeyType = SupportsKey;
+#endif
     mKey = key;
     NS_IF_ADDREF(mKey);
   }
@@ -160,15 +183,16 @@ public:
     NS_IF_RELEASE(mKey);
   }
   
-  PRUint32 HashValue(void) const {
+  PRUint32 HashCode(void) const {
     return (PRUint32)mKey;
   }
 
   PRBool Equals(const nsHashKey *aKey) const {
+    NS_ASSERTION(aKey->GetKeyType() == SupportsKey, "mismatched key types");
     return (mKey == ((nsISupportsKey *) aKey)->mKey);
   }
 
-  nsHashKey *Clone(void) const {
+  nsHashKey *Clone() const {
     return new nsISupportsKey(mKey);
   }
 };
@@ -178,24 +202,30 @@ public:
 
 class nsVoidKey : public nsHashKey {
 protected:
-  const void* mKey;
+  void* mKey;
   
 public:
-  nsVoidKey(const void* key) {
+  nsVoidKey(void* key) {
+#ifdef DEBUG
+    mKeyType = VoidKey;
+#endif
     mKey = key;
   }
   
-  PRUint32 HashValue(void) const {
+  PRUint32 HashCode(void) const {
     return (PRUint32)mKey;
   }
 
   PRBool Equals(const nsHashKey *aKey) const {
+    NS_ASSERTION(aKey->GetKeyType() == VoidKey, "mismatched key types");
     return (mKey == ((const nsVoidKey *) aKey)->mKey);
   }
 
-  nsHashKey *Clone(void) const {
+  nsHashKey *Clone() const {
     return new nsVoidKey(mKey);
   }
+
+  void* GetValue() { return mKey; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,18 +239,22 @@ protected:
   
 public:
   nsIDKey(const nsID &aID) {
+#ifdef DEBUG
+    mKeyType = IDKey;
+#endif
     mID = aID;
   }
   
-  PRUint32 HashValue(void) const {
+  PRUint32 HashCode(void) const {
     return mID.m0;
   }
 
   PRBool Equals(const nsHashKey *aKey) const {
+    NS_ASSERTION(aKey->GetKeyType() == IDKey, "mismatched key types");
     return (mID.Equals(((const nsIDKey *) aKey)->mID));
   }
 
-  nsHashKey *Clone(void) const {
+  nsHashKey *Clone() const {
     return new nsIDKey(mID);
   }
 };
@@ -231,54 +265,54 @@ public:
 
 #include "nsString.h"
 
-class NS_COM nsStringKey : public nsHashKey {
-protected:
-  nsAutoString mStr;
-
+class NS_COM nsCStringKey : public nsHashKey {
 public:
-  nsStringKey(const char* str);
-  nsStringKey(const PRUnichar* str);
-  nsStringKey(const nsString& str);
-  nsStringKey(const nsCString& str);
+  // If strLen is not passed, and defaults to -1, the assumption here is that str
+  // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
+  // length. If ownsString is true, destroying the string key will destroy str:
+  nsCStringKey(const char* str, PRUint32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  nsCStringKey(const nsCString& str);
+  ~nsCStringKey(void);
 
-  ~nsStringKey(void);
-
-  PRUint32 HashValue(void) const;
-
+  PRUint32 HashCode(void) const;
   PRBool Equals(const nsHashKey* aKey) const;
-
   nsHashKey* Clone() const;
 
   // For when the owner of the hashtable wants to peek at the actual
   // string in the key. No copy is made, so be careful.
-  const nsString& GetString() const;
+  const char* GetString() const { return mStr; }
+  PRUint32 GetStringLength() const { return mStrLen; }
+
+protected:
+  char*         mStr;
+  PRUint32      mStrLen;
+  PRBool        mOwnsStr;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// nsOpaqueKey: Where keys are opaque byte-array blobs
-
-#include "nsString.h"
-
-class NS_COM nsOpaqueKey : public nsHashKey {
-protected:
-  const char* mOpaqueKey;         // Byte array of opaque data
-  PRUint32    mKeyLength;         // Length, in bytes, of mOpaqueKey
-
+class NS_COM nsStringKey : public nsHashKey {
 public:
-  // Note opaque keys are not copied by this constructor.  If you want a private
-  // copy in each hash key, you must create one and pass it in to this function.
-  nsOpaqueKey(const char* aOpaqueKey, PRUint32 aKeyLength);
+  // If strLen is not passed, and defaults to -1, the assumption here is that str
+  // does not contain embedded nulls, i.e. nsCRT::strlen will be used to determine the
+  // length. If ownsString is true, destroying the string key will destroy str:
+  nsStringKey(const PRUnichar* str, PRUint32 strLen = -1, PRBool ownsStr = PR_FALSE);
+  nsStringKey(const nsString& str);
+  ~nsStringKey(void);
 
-  ~nsOpaqueKey(void);
-
-  PRUint32 HashValue(void) const;
+  PRUint32 HashCode(void) const;
   PRBool Equals(const nsHashKey* aKey) const;
   nsHashKey* Clone() const;
 
   // For when the owner of the hashtable wants to peek at the actual
-  // opaque array in the key. No copy is made, so be careful.
-  const char* GetKey() const;
-  PRUint32 GetKeyLength() const;
+  // string in the key. No copy is made, so be careful.
+  const PRUnichar* GetString() const { return mStr; }
+  PRUint32 GetStringLength() const { return mStrLen; }
+
+protected:
+  PRUnichar*    mStr;
+  PRUint32      mStrLen;
+  PRBool        mOwnsStr;
 };
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif

@@ -73,7 +73,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     }
     else // If this principal is marked invalid, can't enable any capabilities
     {
-        nsStringKey invalidKey(Invalid);
+        nsCStringKey invalidKey(Invalid);
         if (mCapabilities->Exists(&invalidKey))
         {
            *result = nsIPrincipal::ENABLE_DENIED;
@@ -87,7 +87,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
         const char *space = PL_strchr(start, ' ');
         int len = space ? space - start : nsCRT::strlen(start);
         nsCAutoString capString(start, len);
-        nsStringKey key(capString);
+        nsCStringKey key(capString);
         PRInt16 value = (PRInt16)(PRInt32)mCapabilities->Get(&key);
         if (value == 0)
             value = nsIPrincipal::ENABLE_UNKNOWN;
@@ -110,7 +110,7 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
     }
     else // If this principal is marked invalid, can't enable any capabilities
     {
-        nsStringKey invalidKey(Invalid);
+        nsCStringKey invalidKey(Invalid);
         if (mCapabilities->Exists(&invalidKey))
             return NS_OK;
     }
@@ -123,7 +123,7 @@ nsBasePrincipal::SetCanEnableCapability(const char *capability,
         const char *space = PL_strchr(start, ' ');
         int len = space ? space - start : nsCRT::strlen(start);
         nsCAutoString capString(start, len);
-        nsStringKey key(capString);
+        nsCStringKey key(capString);
         mCapabilities->Put(&key, (void *) canEnable);
         if (!space)
             return NS_OK;
@@ -145,7 +145,7 @@ nsBasePrincipal::IsCapabilityEnabled(const char *capability, void *annotation,
         const char *space = PL_strchr(start, ' ');
         int len = space ? space - start : nsCRT::strlen(start);
         nsCAutoString capString(start, len);
-        nsStringKey key(capString);
+        nsCStringKey key(capString);
         *result = (ht->Get(&key) == (void *) AnnotationEnabled);
         if (!*result) {
             // If any single capability is not enabled, then return false.
@@ -180,7 +180,7 @@ nsBasePrincipal::RevertCapability(const char *capability, void **annotation)
             const char *space = PL_strchr(start, ' ');
             int len = space ? space - start : nsCRT::strlen(start);
             nsCAutoString capString(start, len);
-            nsStringKey key(capString);
+            nsCStringKey key(capString);
             ht->Remove(&key);
             if (!space)
                 return NS_OK;
@@ -208,7 +208,7 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
         const char *space = PL_strchr(start, ' ');
         int len = space ? space - start : nsCRT::strlen(start);
         nsCAutoString capString(start, len);
-        nsStringKey key(capString);
+        nsCStringKey key(capString);
         nsHashtable *ht = (nsHashtable *) *annotation;
         ht->Put(&key, (void *) value);
         if (!space)
@@ -260,15 +260,16 @@ AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
 {
     CapabilityList* capList = (CapabilityList*)capListPtr;
     PRInt16 value = (PRInt16)(PRInt32)aData;
+    nsCStringKey* key = (nsCStringKey *)aKey;
     if (value == nsIPrincipal::ENABLE_GRANTED)
     {
-        capList->granted->AppendWithConversion(((nsStringKey *) aKey)->GetString());
-        capList->granted->Append(' ');
+        capList->granted->Append(key->GetString(), key->GetStringLength());
+        capList->granted += ' ';
     }
     else if (value == nsIPrincipal::ENABLE_DENIED)
     {
-        capList->denied->AppendWithConversion(((nsStringKey *) aKey)->GetString());
-        capList->denied->Append(' ');
+        capList->denied->Append(key->GetString(), key->GetStringLength());
+        capList->denied += ' ';
     }
     return PR_TRUE;
 }

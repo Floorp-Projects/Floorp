@@ -274,7 +274,7 @@ protected:
         nsIURIKey(nsIURI* key) : mKey(key) {}
         ~nsIURIKey(void) {}
 
-        PRUint32 HashValue(void) const {
+        PRUint32 HashCode(void) const {
             nsXPIDLCString spec;
             mKey->GetSpec(getter_Copies(spec));
             return (PRUint32) PL_HashString(spec);

@@ -123,7 +123,9 @@ nsResChannel::Substitutions::Init()
     char* root;
     rv = channel->mResourceURI->GetHost(&root);
     if (NS_SUCCEEDED(rv)) {
-        rv = channel->mHandler->GetSubstitutions(root, getter_AddRefs(mSubstitutions));
+		char* strRoot = root;
+		if (strRoot == nsnull) strRoot = "";	// don't pass null to GetSubstitutions
+        rv = channel->mHandler->GetSubstitutions(strRoot, getter_AddRefs(mSubstitutions));
         nsCRT::free(root);
     }
     return rv;

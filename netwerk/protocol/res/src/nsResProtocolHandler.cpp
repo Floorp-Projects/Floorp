@@ -245,7 +245,7 @@ nsResProtocolHandler::PrependSubstitution(const char *root, const char *urlStr)
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
-    nsStringKey key(root);
+    nsCStringKey key(root);
     nsCOMPtr<nsISupportsArray> strings;
     nsCOMPtr<nsISupportsArray> newStrings;
 
@@ -281,7 +281,7 @@ nsResProtocolHandler::AppendSubstitution(const char *root, const char *urlStr)
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
-    nsStringKey key(root);
+    nsCStringKey key(root);
     nsCOMPtr<nsISupportsArray> strings;
     nsCOMPtr<nsISupportsArray> newStrings;
 
@@ -337,7 +337,7 @@ nsResProtocolHandler::RemoveSubstitution(const char *root, const char *urlStr)
     rv = ioServ->NewURI(urlStr, nsnull, getter_AddRefs(url));
     if (NS_FAILED(rv)) return rv;
 
-    nsStringKey key(root);
+    nsCStringKey key(root);
     nsCOMPtr<nsISupportsArray> strings;
     nsCOMPtr<nsISupportsArray> newStrings;
 
@@ -368,7 +368,7 @@ nsResProtocolHandler::GetSubstitutions(const char *root, nsISupportsArray* *resu
     nsresult rv;
     nsAutoLock lock(mLock);
 
-    nsStringKey key(root);
+    nsCStringKey key(root);
     nsISupportsArray* strings = (nsISupportsArray*)mSubstitutions.Get(&key);
     if (strings == nsnull) {
         rv = NS_NewISupportsArray(&strings);
@@ -382,7 +382,7 @@ nsResProtocolHandler::GetSubstitutions(const char *root, nsISupportsArray* *resu
 NS_IMETHODIMP
 nsResProtocolHandler::HasSubstitutions(const char *root, PRBool *result)
 {
-    nsStringKey key(root);
+    nsCStringKey key(root);
     *result = mSubstitutions.Exists(&key);
     return NS_OK;
 }
