@@ -289,7 +289,7 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
         nsCOMPtr<nsISimpleEnumerator> entries;
         rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
         if(NS_FAILED(rv) || !entries)
-            return PR_FALSE;
+            continue;
 
         PRUint32 count = 0;
         PRBool hasMore;
