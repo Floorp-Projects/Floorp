@@ -1198,8 +1198,8 @@ extern "C" JSBool pref_InitInitialObjects()
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
-    nsIFileSpec* componentsDir;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &componentsDir);
+    nsIFileSpec* defaultPrefDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &defaultPrefDir);
     if (NS_FAILED(rv))
     	return JS_TRUE;
 	static const char* specialFiles[] = {
@@ -1223,13 +1223,13 @@ extern "C" JSBool pref_InitInitialObjects()
         	(const nsID&)nsIDirectoryIterator::GetIID(),
         	(void**)&i);
     NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a directory iterator.");
-    if (!i || NS_FAILED(i->Init(componentsDir, PR_TRUE)))
+    if (!i || NS_FAILED(i->Init(defaultPrefDir, PR_TRUE)))
     	return JS_FALSE;
 
 	// Get any old child of the components directory. Warning: aliases get resolved, so
 	// SetLeafName will not work here.
     nsIFileSpec* specialChild;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &specialChild);
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &specialChild);
     if (NS_FAILED(rv))
     	return JS_TRUE;
 	if NS_FAILED(specialChild->AppendRelativeUnixPath((char*)specialFiles[0]))
@@ -1285,7 +1285,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
         nsIFileSpec* specialChild2;
-        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_ComponentsDirectory, &specialChild2)))
+        if (NS_FAILED(locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &specialChild2)))
 	    	continue;
 		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
