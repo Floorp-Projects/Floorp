@@ -78,11 +78,20 @@ static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 #include "nsMsgDBCID.h"
 
 #include "nsIPref.h"
-
-#define DOWNLOAD_HEADERS_URL "chrome://messenger/content/downloadheaders.xul"
+#include "nsIDialogParamBlock.h"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+
+#define DOWNLOAD_HEADERS_URL "chrome://messenger/content/downloadheaders.xul"
+
+#define USER_HIT_OK_INT_ARG 0
+#define DOWNLOAD_ALL_INT_ARG 1
+#define ARTICLE_COUNT_INT_ARG 2
+
+#define GROUPNAME_STRING_ARG 0
+#define SERVERKEY_STRING_ARG 1
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -212,33 +221,39 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
 }
 
 static nsresult 
-openWindow( const PRUnichar *chrome, const PRUnichar *args ) 
+openWindow( const char *chromeURL, nsIDialogParamBlock *ioParamBlock) 
 {
     nsCOMPtr<nsIDOMWindow> hiddenWindow;
     JSContext *jsContext = nsnull;
     nsresult rv;
+    
     NS_WITH_SERVICE( nsIAppShellService, appShell, kAppShellServiceCID, &rv )
-    if ( NS_SUCCEEDED( rv ) ) {
-        rv = appShell->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
-                                                    &jsContext );
-        if ( NS_SUCCEEDED( rv ) ) {
-            // Set up arguments for "window.openDialog"
-            void *stackPtr;
-            jsval *argv = JS_PushArguments( jsContext,
-                                            &stackPtr,
-                                            "WssW",
-                                            chrome,
-                                            "_blank",
-                                            "chrome,modal,dialog",
-                                            args );
-            if ( argv ) {
-                nsCOMPtr<nsIDOMWindow> newWindow;                                                          rv = hiddenWindow->OpenDialog( jsContext,
-                                               argv,
-                                               4,
-                                               getter_AddRefs( newWindow ) );                              JS_PopArguments( jsContext, stackPtr );
-            }
-        }
+    if (NS_FAILED(rv)) return rv;
+
+    // todo, we should not be using the hidden window for this.  we should be using the nsIMsgWindow for the parent
+    rv = appShell->GetHiddenWindowAndJSContext(getter_AddRefs(hiddenWindow),&jsContext);
+    if (NS_FAILED(rv)) return rv;
+
+    void *stackPtr;
+    jsval *argv = JS_PushArguments( jsContext,
+                                    &stackPtr,
+                                    "sss%ip",
+                                    chromeURL,
+                                    "_blank",
+                                    "chrome,modal,dialog",
+                                    (const nsIID*)(&NS_GET_IID(nsIDialogParamBlock)), 
+                                    (nsISupports*)ioParamBlock);
+
+    if (!argv) {
+        return NS_ERROR_FAILURE;
     }
+
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = hiddenWindow->OpenDialog(jsContext,
+                                  argv,
+                                  4,
+                                  getter_AddRefs(newWindow));
+    JS_PopArguments( jsContext, stackPtr );
     return rv;
 }       
 
@@ -427,8 +442,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				m_downloadAll = PR_FALSE;   
 			
 				// todo list:
-				// if they hit cancel, download should be false
-				// if they clicked on download all,  m_downloadAll should be true
+                // use nsINewsDownloadHeadersDialogArgs instead of nsIDialogParamBlock
+                // don't use prefs for dialog values, use the arg block
 				// m_promptedAlready may not be saved
 				// m_getOldMessages may not be set.
 			
@@ -437,21 +452,49 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(
 				printf("download = %d\n", download);
 				printf("download all = %d\n", m_downloadAll);
 #endif /* DEBUG_NEWS */
-				nsAutoString args = "";
-				args.Append(*last - *first + 1);
-				args.Append(",");
-				args.Append(m_groupName);
-				args.Append(",");
+                
+                nsCOMPtr<nsIDialogParamBlock> ioParamBlock = do_CreateInstance(kDialogParamBlockCID, &rv);
+                if (NS_FAILED(rv)) return rv;
+
+                rv = ioParamBlock->SetInt(ARTICLE_COUNT_INT_ARG, *last - *first + 1);
+                if (NS_FAILED(rv)) return rv;
+        
+                rv = ioParamBlock->SetString(GROUPNAME_STRING_ARG, nsString(m_groupName).GetUnicode());
+                if (NS_FAILED(rv)) return rv;
 
 				// get the server key
 				nsXPIDLCString serverKey;
 				rv = server->GetKey(getter_Copies(serverKey));
 				if (NS_FAILED(rv)) return rv;
-				args.Append((const char *)serverKey);
 
-				rv = openWindow( nsString(DOWNLOAD_HEADERS_URL).GetUnicode(), args.GetUnicode() ); 
+                rv = ioParamBlock->SetString(SERVERKEY_STRING_ARG, nsString((const char *)serverKey).GetUnicode());
+                if (NS_FAILED(rv)) return rv;
+
+				rv = openWindow(DOWNLOAD_HEADERS_URL, ioParamBlock); 
 				NS_ASSERTION(NS_SUCCEEDED(rv), "failed to open download headers dialog");
+                if (NS_FAILED(rv)) return rv;
+            
+                PRInt32 buttonPressed = 0;
+                rv = ioParamBlock->GetInt(USER_HIT_OK_INT_ARG,&buttonPressed);
+                if (NS_FAILED(rv)) return rv;
+                if (buttonPressed) {
+                    download = PR_TRUE;
+                }   
+                else {
+                    download = PR_FALSE;
+                }
+
 				if (download) {
+                    rv = ioParamBlock->GetInt(DOWNLOAD_ALL_INT_ARG,&buttonPressed);
+                    if (NS_FAILED(rv)) return rv;
+                    
+                    if (buttonPressed) {
+                        m_downloadAll = PR_TRUE;
+                    }
+                    else {
+                        m_downloadAll = PR_FALSE;
+                    }
+
 					m_maxArticles = 0;
 
                     rv = nntpServer->GetMaxArticles(&m_maxArticles); 

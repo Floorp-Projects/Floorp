@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *	sspitzer@netscape.com
+ *	Seth Spitzer <sspitzer@netscape.com>
  */  
 
 var newmessages = "";
@@ -33,19 +33,24 @@ var numberElement = null;
 
 var server = null;
 var nntpServer = null;
-
+var param = null;
 
 
 function OnLoad()
 {
-	doSetOKCancel(OkButtonCallback, null);
+	doSetOKCancel(OkButtonCallback, CancelButtonCallback);
 
 	if (window.arguments && window.arguments[0]) {
-		var args = window.arguments[0].split(",");
-		// args will be of the form <number>,<newsgroup name>,<serverid>
-		newmessages = args[0];
-		newsgroupname = args[1];
-		serverid = args[2];
+        dump ("param = " + window.arguments[0] + "\n");
+        param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock );
+        dump ("after QI param = " + window.arguments[0] + "\n");
+    
+		newmessages = param.GetInt(2);
+		newsgroupname = param.GetString(0);
+		serverid = param.GetString(1);
+
+        param.SetInt(0, 0); /* by default, act like the user hit cancel */
+        param.SetInt(1, 0); /* by default, act like the user did not select download all */
 
 		dump("new message count = " + newmessages + "\n");
 		dump("newsgroup name = " + newsgroupname + "\n");
@@ -87,5 +92,23 @@ function OkButtonCallback() {
 	nntpServer.maxArticles = numberElement.value;
 	nntpServer.markOldRead = markreadElement.checked;
 
+    var radio = document.getElementById("all");
+    if (radio) {
+        dump("radio value " + radio.checked + "\n");
+        if (radio.checked) {
+            param.SetInt(1, 1); /* the user selected download all */
+        }
+        else {
+            param.SetInt(1, 0); /* the user did not select download all */
+        }
+    }
+
+    param.SetInt(0, 1); /* user hit OK */
+
+	return true;
+}
+
+function CancelButtonCallback() {
+    param.SetInt(0, 0); /* user hit Cancel */
 	return true;
 }
