@@ -40,12 +40,15 @@ import java.security.spec.*;
 import org.mozilla.jss.crypto.InvalidKeyFormatException;
 import org.mozilla.jss.crypto.PrivateKey;
 import org.mozilla.jss.crypto.TokenSupplierManager;
+import org.mozilla.jss.crypto.SignatureAlgorithm;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.pkcs11.PK11PubKey;
 import org.mozilla.jss.pkcs11.PK11PrivKey;
 import org.mozilla.jss.pkix.primitive.*;
+import org.mozilla.jss.util.Assert;
 import java.security.Key;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
 {
@@ -63,12 +66,31 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
 
             return PK11PubKey.fromRaw( PrivateKey.RSA, ASN1Util.encode(seq) );
         } else if( keySpec instanceof DSAPublicKeySpec ) {
+            // We need to import both the public value and the PQG parameters.
+            // The only way to get all that information to NSS is through
+            // a SubjectPublicKeyInfo. So we encode all the information
+            // into an SPKI and then throw that down to NSS.
+            // This operation is very computationally expensive and wasteful.
+
             DSAPublicKeySpec spec = (DSAPublicKeySpec) keySpec;
 
-            // Generate a DER DSA public key
-            INTEGER pubval = new INTEGER( spec.getY() );
+            SEQUENCE pqg = new SEQUENCE();
+            pqg.addElement( new INTEGER(spec.getP()) );
+            pqg.addElement( new INTEGER(spec.getQ()) );
+            pqg.addElement( new INTEGER(spec.getG()) );
+            OBJECT_IDENTIFIER oid = null;
+            try {
+                oid = SignatureAlgorithm.DSASignature.toOID();
+            } catch(NoSuchAlgorithmException ex ) {
+                Assert.notReached("no such algorithm as DSA?");
+            }
+            AlgorithmIdentifier algID = new AlgorithmIdentifier( oid, pqg );
+            INTEGER publicValue = new INTEGER(spec.getY());
+            byte[] encodedPublicValue = ASN1Util.encode(publicValue);
+            SubjectPublicKeyInfo spki = new SubjectPublicKeyInfo(
+                algID, new BIT_STRING(encodedPublicValue, 0) );
 
-            return PK11PubKey.fromRaw( PrivateKey.DSA, ASN1Util.encode(pubval));
+            return PK11PubKey.fromSPKI( ASN1Util.encode(spki) );
         } else if( keySpec instanceof X509EncodedKeySpec ) {
             //
             // SubjectPublicKeyInfo
