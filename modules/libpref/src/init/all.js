@@ -277,8 +277,10 @@ pref("network.http.keep-alive.max-connections-per-server", 8);
 pref("network.http.connect.timeout",  30);	// in seconds
 pref("network.http.request.timeout", 120);	// in seconds
 
-// Accept header
+// Headers
 pref("network.http.accept.default", "text/xml, application/xml, application/xhtml+xml, text/html;q=0.9, image/png, image/jpeg, image/gif;q=0.2, text/plain;q=0.8, text/css, */*;q=0.1");
+
+pref("network.http.sendRefererHeader",      2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 
 // Enable http compression: comment this out in case of problems with 1.1
 pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
@@ -336,7 +338,6 @@ pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.warnAboutCookies",     false);
 pref("signon.rememberSignons",              true);
-pref("network.sendRefererHeader",           2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
