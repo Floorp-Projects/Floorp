@@ -2718,7 +2718,7 @@ public class Interpreter
                     debuggerFrame.onExit(cx, false, result);
             }
         }
-        if (idata.itsNeedsActivation) {
+        if (idata.itsNeedsActivation || debuggerFrame != null) {
             ScriptRuntime.popActivation(cx);
         }
 
