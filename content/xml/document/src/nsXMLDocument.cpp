@@ -168,7 +168,7 @@ nsXMLDocument::StartDocumentLoad(nsIURL *aUrl,
         // XXX For now, we'll use the HTML DTD
         NS_NewWellFormed_DTD(&theDTD);
         mParser->RegisterDTD(theDTD);
-
+        mParser->SetCommand(aCommand);
         mParser->SetContentSink(sink);
         mParser->Parse(aUrl);
       }

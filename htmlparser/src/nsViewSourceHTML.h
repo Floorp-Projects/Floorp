@@ -234,6 +234,7 @@ protected:
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsDeque             mTokenDeque;
+    PRBool              mIsHTML;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

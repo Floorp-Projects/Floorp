@@ -57,6 +57,7 @@ static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID);
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
+static const char* kXMLTextContentType = "text/xml";
 static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
@@ -182,6 +183,7 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mTokenDeque(gTokenKiller) {
   mSink=0;
   mFilename;
   mLineNumber=0;
+  mIsHTML=PR_FALSE;
 }
 
 /**
@@ -217,6 +219,9 @@ nsresult CViewSourceHTML::CreateNewInstance(nsIDTD** aInstancePtrResult){
  */
 PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
   PRBool result=(aContentType.Equals(kHTMLTextContentType) && (aCommand.Equals(kViewSourceCommand)));
+  if(!result) {
+    result=(aContentType.Equals(kXMLTextContentType) && (aCommand.Equals(kViewSourceCommand)));
+  }
   return result;
 }
 
@@ -230,6 +235,8 @@ PRBool CViewSourceHTML::CanParse(nsString& aContentType, nsString& aCommand, PRI
 eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kHTMLTextContentType)) 
+    result=eValidDetect;
+  else if(PR_TRUE==aType.Equals(kXMLTextContentType)) 
     result=eValidDetect;
   return result;
 }
@@ -249,6 +256,7 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
     result = mSink->WillBuildModel();
 
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+    mIsHTML=(0<aFilename.RFind(".htm",PR_TRUE));
     {
       nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
 
@@ -261,12 +269,10 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
       CStartToken theBodyToken(eHTMLTag_body);
       nsCParserNode theBodyNode(&theBodyToken,0);
       theSink->OpenBody(theBodyNode);
-
-      SetFont("courier","-1",PR_TRUE,*mSink);
-
-
     }
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+
+    SetFont("courier","-1",PR_TRUE,*mSink);
+
   }
 
   return result;
@@ -285,7 +291,6 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifyS
 
   if((aNotifySink) && (mSink)) {
 
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
     {
       nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
 
@@ -302,10 +307,9 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifyS
       CEndToken theHTMLToken(eHTMLTag_html);
       nsCParserNode theHTMLNode(&theBodyToken,0);
       theSink->CloseHTML(theBodyNode);
-
-      result = mSink->DidBuildModel(1);
     }
-    /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+
+    result = mSink->DidBuildModel(1);
 
   }
   return result;
@@ -759,11 +763,11 @@ PRBool CViewSourceHTML::IsContainer(PRInt32 aTag) const{
  *  @param   aTag -- tag to test for containership
  *  @return  PR_TRUE if given tag can contain other tags
  */
-PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken) {
+PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken,PRBool aIsHTML) {
   static nsString     theString;
   static nsAutoString theLTEntity("lt");
   static nsAutoString theGTEntity("gt");
-  static const char*  theColors[]={"purple","red"};
+  static const char*  theColors[][2]={{"purple","purple"},{"purple","red"}};
 
   PRBool result=PR_TRUE;
 
@@ -772,7 +776,7 @@ PRBool EmitTag(nsCParserNode& aNode,nsIContentSink& aSink,PRBool anEndToken) {
   aSink.AddLeaf(theStartNode);
 
   SetStyle(eHTMLTag_b,PR_TRUE,aSink);
-  SetColor(theColors[eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
+  SetColor(theColors[aIsHTML][eHTMLTag_userdefined==aNode.GetNodeType()],PR_TRUE,aSink);
 
   if(anEndToken)
     theString="/";
@@ -869,19 +873,19 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       break;
 
     case eToken_comment:
+    case eToken_instruction:
       {
-        SetColor("green",PR_TRUE,*mSink);
+        static const char* colors[] = {"orange","green"};
+        SetColor(colors[eToken_comment==theType],PR_TRUE,*mSink);
+        SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
         CTextToken theTextToken(aToken->GetStringValueXXX());
         nsCParserNode theTextNode(&theTextToken,mLineNumber);
         result=mSink->AddLeaf(theTextNode); 
+        SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
         SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
       }
       break;
     
-    case eToken_instruction:
-      result=mSink->AddProcessingInstruction(theNode); 
-      break;
-
     case eToken_start:
       {
         PRInt16 attrCount=aToken->GetAttributeCount();
@@ -904,7 +908,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken) {
       //intentionally fall through...
 
     case eToken_end:
-      EmitTag(theNode,*mSink,theEndTag);
+      EmitTag(theNode,*mSink,theEndTag,mIsHTML);
       break;
 
     case eToken_style:

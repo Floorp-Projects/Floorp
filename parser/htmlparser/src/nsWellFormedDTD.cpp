@@ -57,6 +57,7 @@ static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID);
 //static const char* kNullToken = "Error: Null token given";
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kXMLTextContentType = "text/xml";
+static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
 static CTokenRecycler gTokenRecycler;
@@ -168,7 +169,10 @@ nsresult CWellFormedDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
  * @return  TRUE if this DTD can satisfy the request; FALSE otherwise.
  */
 PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRInt32 aVersion){
-  PRBool result=aContentType.Equals(kXMLTextContentType);
+  PRBool result=PR_FALSE;
+  if(!aCommand.Equals(kViewSourceCommand)) {
+    result=aContentType.Equals(kXMLTextContentType);
+  }
   return result;
 }
 

@@ -92,8 +92,8 @@ class nsIParser : public nsISupports {
      *  this allows us to select a DTD which can do, say, view-source.
      *  
      *  @update  gess 3/25/98
-     *  @param   aContentSink -- ptr to content sink that will receive output
-     *  @return	 ptr to previously set contentsink (usually null)  
+     *  @param   aCommand -- ptrs to string that contains command
+     *  @return	 nada
      */
     virtual void SetCommand(const char* aCommand)=0;
 

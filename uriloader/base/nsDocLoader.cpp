@@ -220,7 +220,7 @@ static char* gPluginTypes[] = {
     "audio/midi",
     "audio/x-midi",
     "audio/wav",
-    "audio/x-wav",
+    "audio/x-wav", 
     "audio/aiff",
     "audio/x-aiff",
     "audio/basic",
@@ -238,6 +238,10 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                  nsIContentViewer** aDocViewer)
 {
     nsresult rv = NS_ERROR_FAILURE;
+
+    if(0==PL_strcmp(gXMLTypes[0],aContentType))
+      if(0==PL_strcmp(aCommand,"view-source"))
+        aContentType=gValidTypes[0];
 
     int typeIndex=0;
     while(gValidTypes[typeIndex]) {
