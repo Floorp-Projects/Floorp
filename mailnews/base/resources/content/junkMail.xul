@@ -44,15 +44,17 @@
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger/locale/junkMail.dtd">
 
-<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog id="junkMailDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         windowtype="mailnews:junk"
         title="&window.title;"
         onload="onJunkMailLoad();"
         buttons="accept,cancel,help"
-	ondialogaccept="return onAccept();"
-	ondialoghelp="return doHelpButton();">
+        ondialogaccept="return onAccept();"
+        ondialoghelp="return doHelpButton();"
+        persist="screenX screenY">
 
   <script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>

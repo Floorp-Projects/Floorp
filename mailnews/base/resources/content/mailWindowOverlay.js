@@ -2154,7 +2154,8 @@ function MsgJunkMail()
     preselectedFolder = GetFirstSelectedMsgFolder();
 
   var args = { folder: preselectedFolder };
-  OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
+  window.openDialog("chrome://messenger/content/junkMail.xul", "",
+                    "chrome,resizable=no,modal,dialog", args);
 }
 
 function MsgJunkMailInfo(aCheckFirstUse)
