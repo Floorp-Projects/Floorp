@@ -824,7 +824,10 @@ CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
 CERT_GetPrevGeneralName;
 CERT_GetPrevNameConstraint;
+HASH_Clone;
+HASH_HashBuf;
 HASH_ResultLenByOidTag;
+HASH_ResultLenContext;
 SECOID_AddEntry;
 ;+    local:
 ;+       *;
