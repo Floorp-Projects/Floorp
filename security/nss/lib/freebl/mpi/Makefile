@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.5 2000/07/28 23:11:12 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.6 2000/08/11 05:01:59 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -60,13 +60,37 @@ PERL=perl
 ## the file 'mpi-config.h' instead.
 ##
 MPICMN = -I. -DMP_API_COMPATIBLE
+CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -O3 $(MPICMN)
-#CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
-#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
-CFLAGS= -O $(MPICMN)
+
+#IRIX
+#CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC \
+ -DMP_USE_32 $(MPICMN)
+
+#Alpha/OSF1
+#CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT $(MPICMN)
+
+#Solaris
+#CFLAGS= -O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+ -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
+ -DNSS_USE_64 $(MPICMN)
+#CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+ -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -D_PR_GLOBAL_THREADS_ONLY \
+ $(MPICMN)
+
+#HPUX
+#CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE -Aa +e +DA2.0W +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
+ -DNSS_USE_64 $(MPICMN)
+#CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
+ -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX $(MPICMN)
+
 
 ##
 ## Define LIBS to include any libraries you need to link against.
@@ -103,7 +127,7 @@ SRCS=   mpi.c mpprime.c mplogic.c mpmontg.c mpi-test.c primes.c tests/ \
 	utils/bbsrand.c utils/prng.c utils/primegen.c \
 	utils/basecvt.c utils/makeprime.c\
 	utils/fact.c utils/exptmod.c utils/pi.c utils/metime.c \
-	utils/mpi.h utils/mpprime.h mulsqr.c karatsuba.c \
+	utils/mpi.h utils/mpprime.h mulsqr.c \
 	make-test-arrays test-arrays.txt all-tests make-logtab \
 	types.pl stats timetest multest
 
@@ -215,10 +239,6 @@ metime: libmpi.a utils/metime.c
 mulsqr: logtab.h mpi.h mpi-config.h mpi.c mpprime.h mpprime.c mulsqr.c
 	$(CC) $(CFLAGS) -DMP_SQUARE=1 -o mulsqr mpi.c mpprime.c mulsqr.c $(LIBS)
 
-karatsuba: logtab.h mpi-config.h mpi.o mpprime.o karatsuba.c
-	$(CC) $(CFLAGS) -DMP_KARATSUBA=1 -o karatsuba mpi.o mpprime.o \
-		karatsuba.c $(LIBS)
-
 basecvt: mpi.o utils/basecvt.c
 	$(CC) $(CFLAGS) -o basecvt utils/basecvt.c mpi.o $(LIBS)
 
@@ -236,6 +256,9 @@ makeprime: libmpi.a utils/makeprime.c
 
 prng: utils/bbs_rand.o mpi.o utils/prng.c
 	$(CC) $(CFLAGS) -o prng utils/prng.c mpi.o bbs_rand.o $(LIBS)
+
+karatsuba: libmpi.a utils/karatsuba.c
+	$(CC) $(CFLAGS) -o karatsuba utils/karatsuba.c libmpi.a $(LIBS)
 
 tests: mptest1 mptest2 mptest3 mptest3a mptest4 mptest4a mptest4b \
 	mptest6 bbsrand
@@ -268,7 +291,7 @@ hex2dec: mpi.o utils/hex2dec.c
 	$(CC) $(CFLAGS) -o hex2dec mpi.o utils/hex2dec.c $(LIBS)
 
 clean:
-	rm -f *.o
+	rm -f *.o *.a 
 	rm -f core
 	rm -f *~ .*~
 	rm -f utils/*.o
