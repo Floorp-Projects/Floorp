@@ -251,7 +251,9 @@ var paletteDNDObserver = {
       }
       toolbarItem = toolbarItem.nextSibling;
     }
-    
+    if (!item)
+      return;
+
     // We're going back in the palette now, so we have to readd the flex
     // and width which we removed when moving the item to the toolbar.
     // (These attributes help space the items properly in the palette.)
