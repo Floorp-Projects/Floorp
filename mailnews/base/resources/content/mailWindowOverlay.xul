@@ -489,8 +489,8 @@ Rights Reserved.
   </popup>
 
   <popup id="messagePaneContext"   
-   oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
-     ondestroy="contextMenu.onDestroy(); contextMenu = null;">
+     oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
+     ondestroy="gMessagePaneContextMenu.onDestroy(); gMessagePaneContextMenu = null;">
         <menuitem id="context-openlink"
                   label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
