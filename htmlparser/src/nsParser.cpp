@@ -1972,13 +1972,26 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 }
 
 
-#define UCS2_BE "UTF-16BE"
-#define UCS2_LE "UTF-16LE"
+#define UTF16_BE "UTF-16BE"
+#define UTF16_LE "UTF-16LE"
 #define UCS4_BE "UTF-32BE"
 #define UCS4_LE "UTF-32LE"
 #define UCS4_2143 "X-ISO-10646-UCS-4-2143"
 #define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 #define UTF8 "UTF-8"
+
+static inline PRBool IsSecondMarker(unsigned char aChar)
+{
+  switch (aChar) {
+    case '!':
+    case '?':
+    case 'h':
+    case 'H':
+      return PR_TRUE;
+    default:
+      return PR_FALSE;
+  }
+}
 
 static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset, PRInt32& oCharsetSource) {
  oCharsetSource= kCharsetFromAutoDetection;
@@ -1993,34 +2006,45 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
    case 0x00:
      if(0x00==aBytes[1]) {
         // 00 00
-        if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
+        if((0xFE==aBytes[2]) && (0xFF==aBytes[3])) {
+           // 00 00 FE FF UCS-4, big-endian machine (1234 order)
+           oCharset.AssignWithConversion(UCS4_BE);
+        } else if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
            // 00 00 00 3C UCS-4, big-endian machine (1234 order)
            oCharset.AssignWithConversion(UCS4_BE);
+        } else if((0xFF==aBytes[2]) && (0xFE==aBytes[3])) {
+           // 00 00 FF FE UCS-4, unusual octet order (2143)
+           oCharset.AssignWithConversion(UCS4_2143);
         } else if((0x3C==aBytes[2]) && (0x00==aBytes[3])) {
            // 00 00 3C 00 UCS-4, unusual octet order (2143)
            oCharset.AssignWithConversion(UCS4_2143);
         } 
-     } else if(0x3C==aBytes[1]) {
-        // 00 3C
-        if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
+        oCharsetSource = kCharsetFromByteOrderMark;
+     } else if((0x3C==aBytes[1]) && (0x00==aBytes[2])) {
+        // 00 3C 00
+        if(IsSecondMarker(aBytes[3])) {
+           // 00 3C 00 SM UTF-16,  big-endian, no Byte Order Mark 
+           oCharset.AssignWithConversion(UTF16_BE); 
+        } else if((0x00==aBytes[3])) {
            // 00 3C 00 00 UCS-4, unusual octet order (3412)
            oCharset.AssignWithConversion(UCS4_3412);
-        } else if((0x00==aBytes[2]) && (0x3F==aBytes[3])) {
-           // 00 3C 00 3F UTF-16, big-endian, no Byte Order Mark
-           oCharset.AssignWithConversion(UCS2_BE); // should change to UTF-16BE
         } 
+        oCharsetSource = kCharsetFromByteOrderMark;
      }
    break;
    case 0x3C:
-     if(0x00==aBytes[1]) {
-        // 3C 00
-        if((0x00==aBytes[2]) && (0x00==aBytes[3])) {
+     if(0x00==aBytes[1] && (0x00==aBytes[3])) {
+        // 3C 00 XX 00
+        if(IsSecondMarker(aBytes[2])) {
+           // 3C 00 SM 00 UTF-16,  little-endian, no Byte Order Mark 
+           oCharset.AssignWithConversion(UTF16_LE); 
+        } else if((0x00==aBytes[2])) {
            // 3C 00 00 00 UCS-4, little-endian machine (4321 order)
-           oCharset.AssignWithConversion(UCS4_LE);
-        } else if((0x3F==aBytes[2]) && (0x00==aBytes[3])) {
-           // 3C 00 3F 00 UTF-16, little-endian, no Byte Order Mark
-           oCharset.AssignWithConversion(UCS2_LE); // should change to UTF-16LE
+           oCharset.AssignWithConversion(UCS4_LE); 
         } 
+        oCharsetSource = kCharsetFromByteOrderMark;
+     // For html, meta tag detector is invoked before this so that we have 
+     // to deal only with XML here.
      } else if(                     (0x3F==aBytes[1]) &&
                (0x78==aBytes[2]) && (0x6D==aBytes[3]) &&
                (0 == PL_strncmp("<?xml", (char*)aBytes, 5 ))) {
@@ -2112,17 +2136,25 @@ static PRBool DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
    break;
    case 0xFE:
      if(0xFF==aBytes[1]) {
-        // FE FF
-        // UTF-16, big-endian 
-        oCharset.AssignWithConversion(UCS2_BE); // should change to UTF-16BE
+        if(0x00==aBytes[2] && 0x00==aBytes[3]) {
+          // FE FF 00 00  UCS-4, unusual octet order (3412)
+          oCharset.AssignWithConversion(UCS4_3412);
+        } else {
+          // FE FF UTF-16, big-endian 
+          oCharset.AssignWithConversion(UTF16_BE); 
+        }
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    case 0xFF:
      if(0xFE==aBytes[1]) {
+        if(0x00==aBytes[2] && 0x00==aBytes[3]) 
+         // FF FE 00 00  UTF-32, little-endian
+           oCharset.AssignWithConversion(UCS4_LE); 
+        else
         // FF FE
         // UTF-16, little-endian 
-        oCharset.AssignWithConversion(UCS2_LE); // should change to UTF-16LE
+           oCharset.AssignWithConversion(UTF16_LE); 
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
