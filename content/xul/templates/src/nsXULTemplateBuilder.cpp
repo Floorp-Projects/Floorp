@@ -5074,7 +5074,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         else if (backup != mark && aTextCallback) {
             // Okay, we've found a variable, and there's some vanilla
             // text that's been buffered up. Flush it.
-            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup), aClosure);
+            (*aTextCallback)(this, Substring(mark, backup), aClosure);
         }
 
         // Construct a substring that is the symbol we need to look up
@@ -5100,14 +5100,14 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         if (c != PRUnichar('^'))
             --iter;
 
-        (*aVariableCallback)(this, Substring(aAttributeValue, first, last), aClosure);
+        (*aVariableCallback)(this, Substring(first, last), aClosure);
         mark = iter;
         ++mark;
     }
 
     if (backup != mark && aTextCallback) {
         // If there's any text left over, then fire the text callback
-        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup), aClosure);
+        (*aTextCallback)(this, Substring(mark, backup), aClosure);
     }
 }
 
