@@ -41,8 +41,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "unidef.h"     
-
+#include <os2.h>
 
 // {F25F74F0-FB59-11d3-A9F2-00203522A03C}
 #define NS_IOS2LOCALE_IID	                    \
@@ -55,7 +54,7 @@ class nsIOS2Locale : public nsISupports
  public:
 
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOS2LOCALE_IID)
-   NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,size_t length)=0;
+   NS_IMETHOD GetPlatformLocale(const nsAString& locale, PULONG os2Codepage) = 0;
    NS_IMETHOD GetXPLocale(const char* os2Locale, nsAString& locale)=0;
 };
 
