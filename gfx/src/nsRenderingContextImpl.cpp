@@ -151,7 +151,7 @@ nsRenderingContextImpl::DrawPath(nsPathPoint aPointArray[],PRInt32 aNumPts)
 {
 PRInt32               i;
 nsPathPoint           pts[20];
-nsPathPoint           *pp0,*np,*pp;
+nsPathPoint           *pp0,*np=0,*pp;
 QBezierCurve          thecurve;
 nsPathIter            *thePathIter;
 nsPathIter::eSegType  curveType;
@@ -224,8 +224,12 @@ PRInt16         fx,fy,smag;
   // divide the curve into 2 pieces
 	MidPointDivide(&curve1,&curve2);
 	
-	fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
-	fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
+
+  // for now to fix the build
+	//fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
+	//fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
+  fx = 1;
+  fy = 1;
 
 	smag = fx+fy-(PR_MIN(fx,fy)>>1);
   //smag = fx*fx + fy*fy;
