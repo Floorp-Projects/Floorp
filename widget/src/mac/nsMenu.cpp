@@ -188,6 +188,7 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   ::InsertMenu((MenuHandle)menuHandle, hierMenu);
   PRInt16 temp = mMacMenuIDCount;
   ::SetMenuItemHierarchicalID((MenuHandle) mMacMenuHandle, mNumMenuItems, --temp);
+ 
   return NS_OK;
 }
 
@@ -284,6 +285,30 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 	  eventStatus = menuListener->MenuSelected(aMenuEvent);
 	  NS_IF_RELEASE(menuListener);
 	}
+  } 
+  else
+  {
+    // Make sure none of our submenus are the ones that should be handling this
+      for (int i = mMenuItemVoidArray.Count(); i > 0; i--)
+	  {
+	    if(nsnull != mMenuItemVoidArray[i-1])
+	    {
+		    nsIMenu * submenu = nsnull;
+		    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuIID, &submenu);
+		    if(submenu)
+		    {
+			    nsIMenuListener * menuListener = nsnull;
+			    ((nsISupports*)mMenuItemVoidArray[i-1])->QueryInterface(kIMenuListenerIID, &menuListener);
+			    if(menuListener){
+			      eventStatus = menuListener->MenuSelected(aMenuEvent);
+			      NS_IF_RELEASE(menuListener);
+			      if(nsEventStatus_eIgnore != eventStatus)
+			        return eventStatus;
+			    }
+		    }
+		}
+	  }
+  
   }
   return eventStatus;
 }
