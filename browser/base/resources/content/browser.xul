@@ -153,13 +153,8 @@ Contributor(s):
   <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
   <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" observes="isImage"/>
   
-  <command id="Browser:AddBookmarkAs" label="&addCurPageAsCmd.label;"
-           accesskey="&addCurPageAsCmd.accesskey;"
-           oncommand="addBookmarkAs(document.getElementById('content'));"/>
-  <command id="Browser:AddGroupmarkAs" label="&addCurTabsAsCmd.label;"
-           accesskey="&addCurTabsAsCmd.accesskey;"
-           oncommand="addGroupmarkAs(); event.preventBubble();"/>
-  <command id="Browser:ManageBookmark" label="&manBookmarksCmd.label;" accesskey="&manBookmarksCmd.accesskey;" 
+  <command id="Browser:AddBookmarkAs" oncommand="addBookmarkAs(document.getElementById('content'));"/>
+  <command id="Browser:ManageBookmark"
            oncommand="BrowserEditBookmarks();" />
   
   <command id="Browser:Home"    oncommand="BrowserHome();"/>
@@ -234,10 +229,6 @@ Contributor(s):
 
   <popupset id="bookmarksPopupset"/>
  
-    <!-- This is a generic context menu for a content area. It contains 
-         each and every possible menu choice.  The appropriate items are
-         hidden/shown upon display, based on what the user has clicked-on.
-     -->
     <popup id="contentAreaContextMenu"
            onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
            onpopuphiding="gContextMenu = null;">
@@ -681,10 +672,17 @@ Contributor(s):
             </rule>
           </template>
           <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
-            <!-- for some reason these don't work as command="" -->
-            <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
-            <menuitem id="bookmarks_groupmark" observes="Browser:AddGroupmarkAs"/>
-            <menuitem key="manBookmarkKb"   observes="Browser:ManageBookmark"/>
+            <menuitem key="addBookmarkAsKb"
+                      label="&addCurPageAsCmd.label;"
+                      accesskey="&addCurPageAsCmd.accesskey;"
+                      command="Browser:AddBookmarkAs"/>
+            <menuitem id="bookmarks_groupmark" label="&addCurTabsAsCmd.label;"
+                      accesskey="&addCurTabsAsCmd.accesskey;"
+                      oncommand="addGroupmarkAs(); event.preventBubble();"/>
+            <menuitem key="manBookmarkKb" 
+                      label="&manBookmarksCmd.label;"
+                      accesskey="&manBookmarksCmd.accesskey;"    
+                      command="Browser:ManageBookmark"/>
             <menuseparator/>
           </menupopup>
         </menu>
@@ -951,7 +949,7 @@ Contributor(s):
     </vbox>  
   </hbox>
 
-  <statusbar id="status-bar" class="chromeclass-status"
+  <statusbar class="chromeclass-status"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
     <statusbarpanel class="statusbarpanel-progress">

@@ -3668,11 +3668,6 @@ function deleteHistoryItems(aParent)
       }
   }
 
-function updateGoMenu(event)
-  {
-    FillHistoryMenu(event.target, "go");
-  }
-
 const nsIDOMWindowInternal = Components.interfaces.nsIDOMWindowInternal;
 const nsIWindowMediator = Components.interfaces.nsIWindowMediator;
 const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
