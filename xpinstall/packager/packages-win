@@ -234,8 +234,6 @@ bin\defaults\wallet\DistinguishedSchema.tbl
 bin\defaults\wallet\SchemaStrings.tbl
 bin\defaults\wallet\PositionalSchema.tbl
 bin\defaults\wallet\StateSchema.tbl
-bin\res\rdf\article.gif
-bin\res\rdf\document.gif
 bin\res\rdf\folder-closed.gif
 bin\res\rdf\folder-open.gif
 bin\res\rdf\loading.gif
