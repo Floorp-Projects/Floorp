@@ -528,7 +528,9 @@ PR_IMPLEMENT(void) PREF_CleanupPrefs()
 		PR_HashTableDestroy(gHashTable);
 	gHashTable = NULL;
 
-    free(gSavedLine);
+ 	if (!gSavedLine)
+		free(gSavedLine);
+	gSavedLine = NULL;
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 	if (gFileName)
