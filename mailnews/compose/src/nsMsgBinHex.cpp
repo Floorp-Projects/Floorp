@@ -256,8 +256,8 @@ int binhex_encode_next(
 	if (p_bh_encode_obj->s_overflow)
 	{
 		memcpy(p_bh_encode_obj->overflow, 
-				p_bh_encode_obj->outbuff, 
-				p_bh_encode_obj->s_overflow);
+		       p_bh_encode_obj->outbuff, 
+		       p_bh_encode_obj->s_overflow);
 				
 		p_bh_encode_obj->pos_outbuff = p_bh_encode_obj->s_overflow;
 		p_bh_encode_obj->s_overflow = 0;
@@ -289,14 +289,14 @@ int binhex_encode_next(
 				p_bh_encode_obj->state = BINHEX_STATE_HEADER;
 				
 				memcpy(p_bh_encode_obj->name,
-							in_buff, 
-							in_size);	
+				       in_buff, 
+				       in_size);	
 			}
 			else if  (p_bh_encode_obj->state == BINHEX_STATE_HEADER)
 			{
 				memcpy(&(p_bh_encode_obj->head),
-							in_buff, 
-							sizeof(binhex_header));
+				       in_buff, 
+				       sizeof(binhex_header));
 				
 				if (in_size == 20)	/* in the platform that alignment is 4-bytes. */
 					in_size = 18;
@@ -366,7 +366,7 @@ int binhex_reencode_head(
 	
 	/* make a copy before do the encoding, -- it may modify the head!!!. */
 	memcpy(buff, (char*)&p_bh_encode_obj->head, 
-						sizeof(binhex_header));
+	       sizeof(binhex_header));
 	if (18 < sizeof(binhex_header))
 	{
 		/* we get an alignment problem here.	*/
@@ -720,8 +720,8 @@ PRIVATE void binhex_process(
 					}					
 					
 					    memcpy(p_bh_decode_obj->name, 
-							reply.sfFile.name, 
-							*(reply.sfFile.name)+1);	/* save the new file name.	*/
+					           reply.sfFile.name, 
+					           *(reply.sfFile.name)+1);	/* save the new file name.	*/
 						
 					p_bh_decode_obj->vRefNum = reply.sfFile.vRefNum;
 					p_bh_decode_obj->parID   = reply.sfFile.parID;

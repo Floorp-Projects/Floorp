@@ -100,8 +100,8 @@ nsSegmentedBuffer::AppendNewSegment()
         if (mFirstSegmentIndex > mLastSegmentIndex) {
             // deal with wrap around case
             memcpy(&mSegmentArray[mSegmentArrayCount],
-                          mSegmentArray,
-                          mLastSegmentIndex * sizeof(char*));
+                   mSegmentArray,
+                   mLastSegmentIndex * sizeof(char*));
             nsCRT::memset(mSegmentArray, 0, mLastSegmentIndex * sizeof(char*));
             mLastSegmentIndex += mSegmentArrayCount;
             nsCRT::memset(&mSegmentArray[mLastSegmentIndex], 0,

@@ -118,10 +118,6 @@ public:
    ****  nsCRT::memcpy() is no longer supported.  
    ****  Please use memcpy from standard C instead.
    ****/
-  static void memcpy(void* aDest, const void* aSrc, PRUint32 aCount) {
-    NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
-    ::memcpy(aDest, aSrc, (size_t)aCount);
-  }
 
   static PRInt32 memcmp(const void* aDest, const void* aSrc, PRUint32 aCount) {
     NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");

@@ -274,8 +274,8 @@ net_AppleDouble_Decode_Write (
 	{
 		size = 1024 - obj->bytes_in_buff;
 		memcpy(obj->in_buff+obj->bytes_in_buff, 
-					s, 
-					size);
+		       s, 
+		       size);
 		s += size;
 		l -= size;
 		
@@ -296,8 +296,8 @@ net_AppleDouble_Decode_Write (
 	{
 		/* and we are sure we will not get overflow with the buff. */ 
 		memcpy(obj->in_buff+obj->bytes_in_buff, 
-					s, 
-					l);
+		       s, 
+		       l);
 		obj->bytes_in_buff += l;
 	}
 	return status;

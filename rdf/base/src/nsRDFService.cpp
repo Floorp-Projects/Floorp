@@ -394,7 +394,7 @@ public:
         NS_INIT_REFCNT();
         mData.mLength = aLength;
         mData.mBytes = new PRUint8[aLength];
-        nsCRT::memcpy(mData.mBytes, aBytes, aLength);
+        memcpy(mData.mBytes, aBytes, aLength);
         NS_ADDREF(gRDFService);
         gRDFService->RegisterBlob(this);
     }

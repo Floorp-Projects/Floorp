@@ -1635,7 +1635,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     n -= contentLen;
     if (aTextBuffer != nsnull) {
       memcpy(aTextBuffer->mBuffer + dstOffset, bp,
-                    sizeof(PRUnichar)*wordLen);
+             sizeof(PRUnichar)*wordLen);
     }
     dstOffset += wordLen;
   }

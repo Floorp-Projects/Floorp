@@ -224,7 +224,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 	  data->part_buffer_fp + size < data->part_buffer_size)
 	{
 	  memcpy(data->part_buffer + data->part_buffer_fp,
-				buf, size);
+	         buf, size);
 	  data->part_buffer_fp += size;
 	}
 

@@ -89,7 +89,7 @@ mime_ReBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 		size = net_buffer_size;
 	  if (size > 0)
 		{
-          memcpy ((*bufferP) + (*buffer_fpP), net_buffer, size);
+		  memcpy ((*bufferP) + (*buffer_fpP), net_buffer, size);
 		  (*buffer_fpP) += size;
 		  net_buffer += size;
 		  net_buffer_size -= size;

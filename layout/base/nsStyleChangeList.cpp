@@ -85,8 +85,8 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 
         if (aContent == mArray[index].mContent) { // remove this change
           mCount--;
           if (index < mCount) { // move later changes down
-            memcpy(&(mArray[index]), &(mArray[index + 1]), 
-                          (mCount - index) * sizeof(nsStyleChangeData));
+            memcpy(&mArray[index], &mArray[index + 1], 
+                   (mCount - index) * sizeof(nsStyleChangeData));
           }
         }
       }

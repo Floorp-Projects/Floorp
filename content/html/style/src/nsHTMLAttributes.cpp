@@ -1085,8 +1085,8 @@ HTMLAttributesImpl::UnsetAttributeName(nsIAtom* aAttrName, PRBool& aFound)
           memcpy(mNameBuffer, mAttrNames, index * sizeof(nsIAtom*));
         }
         if (index < mAttrCount) {
-          memcpy(&(mNameBuffer[index]), &(mAttrNames[index + 1]), 
-                        (mAttrCount - index) * sizeof(nsIAtom*));
+          memcpy(&mNameBuffer[index], &mAttrNames[index + 1], 
+                 (mAttrCount - index) * sizeof(nsIAtom*));
         }
         delete [] mAttrNames;
         mAttrNames = mNameBuffer;

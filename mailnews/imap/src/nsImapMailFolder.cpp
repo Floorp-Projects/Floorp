@@ -2672,7 +2672,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             {
                 m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);
                 memcpy(m_copyState->m_dataBuffer, start,
-                              m_copyState->m_leftOver+1); // including null
+                       m_copyState->m_leftOver+1); // including null
                 maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
             }
         }

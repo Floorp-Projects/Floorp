@@ -88,7 +88,7 @@ nsAutoTextBuffer::GrowTo(PRInt32 aNewSize, PRBool aCopyToHead)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     memcpy(&newBuffer[aCopyToHead ? 0 : mBufferLen],
-                  mBuffer, sizeof(PRUnichar) * mBufferLen);
+           mBuffer, sizeof(PRUnichar) * mBufferLen);
     if (mBuffer != mAutoBuffer) {
       delete [] mBuffer;
     }
