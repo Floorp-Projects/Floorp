@@ -41,6 +41,7 @@
 #include "nsAccessibleEventData.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIAccessibleCaret.h"
+#include "nsIChromeEventHandler.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
@@ -48,6 +49,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
@@ -58,6 +60,7 @@
 #include "nsIServiceManager.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
+#include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #ifdef MOZ_XUL
@@ -137,6 +140,23 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   return NS_OK;
 }
 
+void
+nsRootAccessible::GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget)
+{
+  nsCOMPtr<nsIDOMWindow> domWin;
+  GetWindow(getter_AddRefs(domWin));
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWin));
+  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  if (privateDOMWindow) {
+    privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  }
+
+  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(chromeEventHandler));
+
+  *aChromeTarget = target;
+  NS_IF_ADDREF(*aChromeTarget);
+}
+
 NS_IMETHODIMP nsRootAccessible::AddEventListeners()
 {
   // use AddEventListener from the nsIDOMEventTarget interface
@@ -175,6 +195,16 @@ NS_IMETHODIMP nsRootAccessible::AddEventListeners()
 
     AddContentDocListeners();
   }
+
+  GetChromeEventHandler(getter_AddRefs(target));
+  NS_ASSERTION(target, "No chrome event handler for document");
+  if (target) {   
+    // onunload doesn't fire unless we use chrome event handler for target
+    target->AddEventListener(NS_LITERAL_STRING("unload"), 
+                             NS_STATIC_CAST(nsIDOMXULListener*, this), 
+                             PR_TRUE);
+  }
+
   if (!mCaretAccessible)
     mAccService->CreateCaretAccessible(mDOMNode, this, getter_AddRefs(mCaretAccessible));
 
@@ -196,6 +226,12 @@ NS_IMETHODIMP nsRootAccessible::RemoveEventListeners()
     target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
   }
 
+  GetChromeEventHandler(getter_AddRefs(target));
+  if (target) {
+    target->RemoveEventListener(NS_LITERAL_STRING("unload"), 
+                                NS_STATIC_CAST(nsIDOMXULListener*, this), 
+                                PR_TRUE);
+  }
   RemoveContentDocListeners();
 
   if (mCaretAccessible) {
@@ -243,6 +279,9 @@ void nsRootAccessible::GetEventShell(nsIDOMNode *aNode, nsIPresShell **aEventShe
   nsCOMPtr<nsIDOMDocument> domDocument;
   aNode->GetOwnerDocument(getter_AddRefs(domDocument));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
+  if (!doc) {   // This is necessary when the node is the document node
+    doc = do_QueryInterface(aNode);
+  }
   if (doc)
     doc->GetShellAt(0, aEventShell);
 }
@@ -327,7 +366,13 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #endif
 
-  if (eventType.EqualsIgnoreCase("focus") || eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
+  if (eventType.EqualsIgnoreCase("unload")) {
+    nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(accessible));
+    NS_ASSERTION(accDoc, "No document for unload event target");
+    accDoc->Destroy();
+  }
+  else if (eventType.EqualsIgnoreCase("focus") || 
+           eventType.EqualsIgnoreCase("DOMMenuItemActive")) { 
     if (optionTargetNode &&
         NS_SUCCEEDED(mAccService->GetAccessibleInShell(optionTargetNode, eventShell,
                                                        getter_AddRefs(accessible)))) {
