@@ -159,6 +159,7 @@ public:
  
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
+  NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
 protected:
   virtual ~nsViewManager();
 
@@ -371,6 +372,7 @@ public:
 protected:
   nscoord           mX;
   nscoord           mY;
+  PRBool            mAllowDoubleBuffering;
 
 #ifdef NS_VM_PERF_METRICS
   MOZ_TIMER_DECLARE(mWatch) //  Measures compositing+paint time for current document
