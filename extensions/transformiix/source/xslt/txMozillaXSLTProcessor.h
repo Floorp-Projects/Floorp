@@ -159,6 +159,8 @@ private:
     nsresult DoTransform();
     void notifyError();
     nsresult ensureStylesheet();
+    nsresult TransformToDoc(nsIDOMDocument *aOutputDoc,
+                            nsIDOMDocument **aResult);
 
     nsRefPtr<txStylesheet> mStylesheet;
     nsIDocument* mStylesheetDocument; // weak

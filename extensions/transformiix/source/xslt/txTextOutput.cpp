@@ -63,7 +63,7 @@ void txTextOutput::comment(const nsAString& aData)
 {
 }
 
-void txTextOutput::endDocument()
+void txTextOutput::endDocument(nsresult aResult)
 {
 }
 

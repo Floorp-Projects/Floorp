@@ -224,7 +224,7 @@ txStandaloneXSLTProcessor::transform(txXPathNode& aSource,
 
     // Process root of XML source document
     nsresult rv = txXSLTProcessor::execute(es);
-    es.end();
+    es.end(rv);
 
 #ifndef XP_WIN
     aOut.sync_with_stdio(sync);

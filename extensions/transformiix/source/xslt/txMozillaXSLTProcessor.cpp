@@ -292,31 +292,7 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
     mSource = aSourceDOM;
 
-    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSourceDOM));
-    if (!sourceNode) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    aSourceDOM->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(aSourceDOM);
-    }
-
-    txExecutionState es(mStylesheet);
-
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, aOutputDoc,
-                                         nsnull);
-    es.mOutputHandlerFactory = &handlerFactory;
-
-    es.init(*sourceNode, &mVariables);
-
-    // Process root of XML source document
-    rv = txXSLTProcessor::execute(es);
-    // XXX setup exception context, bug 204658
-    es.end();
-
-    return rv;
+    return TransformToDoc(aOutputDoc, nsnull);
 }
 
 NS_IMETHODIMP
@@ -350,36 +326,7 @@ txMozillaXSLTProcessor::DoTransform()
     NS_ENSURE_TRUE(mStylesheet, NS_ERROR_UNEXPECTED);
     NS_ASSERTION(mObserver, "no observer");
 
-    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(mSource));
-    if (!sourceNode) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(mSource);
-    }
-
-    txExecutionState es(mStylesheet);
-
-    // XXX Need to add error observers
-
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, nsnull,
-                                         mObserver);
-    es.mOutputHandlerFactory = &handlerFactory;
-
-    es.init(*sourceNode, &mVariables);
-
-    // Process root of XML source document
-    nsresult rv = txXSLTProcessor::execute(es);
-    if (NS_FAILED(rv) && mObserver) {
-        // XXX set up context information, bug 204655
-        reportError(rv, nsnull, nsnull);
-    }
-    es.end();
-
-    return rv;
+    return TransformToDoc(nsnull, nsnull);
 }
 
 NS_IMETHODIMP
@@ -439,36 +386,49 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     nsresult rv = ensureStylesheet();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(aSource));
+    mSource = aSource;
+
+    return TransformToDoc(nsnull, aResult);
+}
+
+nsresult
+txMozillaXSLTProcessor::TransformToDoc(nsIDOMDocument *aOutputDoc,
+                                       nsIDOMDocument **aResult)
+{
+    nsAutoPtr<txXPathNode> sourceNode(txXPathNativeNode::createXPathNode(mSource));
     if (!sourceNode) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
     nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    aSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
+    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
     if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(aSource);
+        sourceDOMDocument = do_QueryInterface(mSource);
     }
 
     txExecutionState es(mStylesheet);
 
     // XXX Need to add error observers
 
-    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, nsnull,
-                                         nsnull);
+    txToDocHandlerFactory handlerFactory(&es, sourceDOMDocument, aOutputDoc,
+                                         mObserver);
     es.mOutputHandlerFactory = &handlerFactory;
 
     es.init(*sourceNode, &mVariables);
 
     // Process root of XML source document
-    rv = txXSLTProcessor::execute(es);
-    // XXX setup exception context, bug 204658
-    es.end();
-
+    nsresult rv = txXSLTProcessor::execute(es);
+    es.end(rv);
     if (NS_SUCCEEDED(rv)) {
-        txAOutputXMLEventHandler* handler =
-            NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
-        handler->getOutputDocument(aResult);
+        if (aResult) {
+            txAOutputXMLEventHandler* handler =
+                NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
+            handler->getOutputDocument(aResult);
+        }
+    }
+    else if (mObserver) {
+        // XXX set up context information, bug 204655
+        reportError(rv, nsnull, nsnull);
     }
 
     return rv;
@@ -511,7 +471,7 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     // Process root of XML source document
     rv = txXSLTProcessor::execute(es);
     // XXX setup exception context, bug 204658
-    es.end();
+    es.end(rv);
 
     return rv;
 }

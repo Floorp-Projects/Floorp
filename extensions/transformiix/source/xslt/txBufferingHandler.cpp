@@ -208,7 +208,7 @@ txBufferingHandler::comment(const nsAString& aData)
 }
 
 void
-txBufferingHandler::endDocument()
+txBufferingHandler::endDocument(nsresult aResult)
 {
     if (!mBuffer) {
         return;

@@ -59,18 +59,28 @@ void txUnknownHandler::attribute(const nsAString& aName,
     // XXX ErrorReport: Signal this?
 }
 
-void txUnknownHandler::endDocument()
+void txUnknownHandler::endDocument(nsresult aResult)
 {
+    if (NS_FAILED(aResult)) {
+        return;
+    }
+
     // This is an unusual case, no output method has been set and we
     // didn't create a document element. Switching to XML output mode
     // anyway.
+
+    // Make sure that mEs->mResultHandler == this is true, otherwise we'll
+    // leak mEs->mResultHandler in createHandlerAndFlush and we'll crash on
+    // the last line (delete this).
+    NS_ASSERTION(mEs->mResultHandler == this,
+                 "We're leaking mEs->mResultHandler and are going to crash.");
 
     nsresult rv = createHandlerAndFlush(eXMLOutput, EmptyString(),
                                         kNameSpaceID_None);
     if (NS_FAILED(rv))
         return;
 
-    mEs->mResultHandler->endDocument();
+    mEs->mResultHandler->endDocument(aResult);
 
     delete this;
 }
@@ -78,6 +88,12 @@ void txUnknownHandler::endDocument()
 void txUnknownHandler::startElement(const nsAString& aName,
                                     const PRInt32 aNsID)
 {
+    // Make sure that mEs->mResultHandler == this is true, otherwise we'll
+    // leak mEs->mResultHandler in createHandlerAndFlush and we may crash
+    // later on trying to delete this handler again.
+    NS_ASSERTION(mEs->mResultHandler == this,
+                 "We're leaking mEs->mResultHandler.");
+
     nsresult rv = NS_OK;
     txOutputFormat* format = mEs->mStylesheet->getOutputFormat();
     if (format->mMethod != eMethodNotSet) {
@@ -109,7 +125,7 @@ nsresult txUnknownHandler::createHandlerAndFlush(txOutputMethod aMethod,
     format.merge(*mEs->mStylesheet->getOutputFormat());
     format.mMethod = aMethod;
 
-    txAXMLEventHandler* handler = 0;
+    txAXMLEventHandler *handler = nsnull;
     nsresult rv = mEs->mOutputHandlerFactory->createHandlerWith(&format, aName,
                                                                 aNsID,
                                                                 &handler);
