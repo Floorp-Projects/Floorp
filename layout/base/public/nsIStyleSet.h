@@ -302,9 +302,9 @@ protected:
   static nsUniqueStyleItems *mInstance;
 };
 
-#define UNIQUE_STYLE_ITEMS(_name) \
-  nsUniqueStyleItems* ##_name = nsUniqueStyleItems::GetUniqueStyleItems(); \
-  NS_ASSERTION(##_name != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleImtes factory");
+#define UNIQUE_STYLE_ITEMS(__ptr) \
+  nsUniqueStyleItems* __ptr = nsUniqueStyleItems::GetUniqueStyleItems(); \
+  NS_ASSERTION(__ptr != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleItems factory");
 
 /** a simple struct (that may someday be expanded) 
   * that contains data supplied by the caller to help
