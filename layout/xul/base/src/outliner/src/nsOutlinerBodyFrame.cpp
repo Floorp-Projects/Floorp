@@ -2521,16 +2521,16 @@ nsOutlinerBodyFrame :: ComputeDropPosition ( nsIDOMEvent* inEvent, PRInt32* outR
       mView->IsContainer ( row, &isContainer );
       if ( isContainer ) {
         // for a container, use a 25%/50%/25% breakdown
-        if ( yOffset < rint(0.25 * mRowHeight) )
+        if ( yOffset < mRowHeight / 4 )
           *outOrient = kBeforeRow;
-        else if ( yOffset > mRowHeight - rint(0.25 * mRowHeight) )
+        else if ( yOffset > mRowHeight - (mRowHeight / 4) )
           *outOrient = kAfterRow;
         else
           *outOrient = kOnRow;
       }
       else {
         // for a non-container use a 50%/50% breakdown
-        if ( yOffset < rint(0.5 * mRowHeight) )
+        if ( yOffset < mRowHeight / 2 )
           *outOrient = kBeforeRow;
         else
           *outOrient = kAfterRow;        
