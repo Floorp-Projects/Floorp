@@ -119,12 +119,17 @@ IL_ViewStream(FO_Present_Types format_out, void *newshack, URL_Struct *urls,
     char *image_url;
 
 	/* multi-part reconnect hack */
-
 	ic = (il_container*)urls->fe_data;
-	if(ic && ic->multi)
+
+    /* Extreme editor hack! This value is used when loading images
+       so we use the converter we did in 4.06 code.
+       If we don't, this code triggers parsing of the image URL,
+       which has very bad effects in the editor! */
+	if((urls && urls->owner_id == 0x000000ED) || (ic && ic->multi))
 	{
 		return IL_NewStream(format_out, IL_UNKNOWN, urls, cx);
 	}
+
 
 	/* Create stream object */
     if (!(stream = XP_NEW_ZAP(NET_StreamClass))) {
