@@ -1,7 +1,0 @@
-downloadstatus[state="0"] {
-  -moz-binding: url("chrome://communicator/content/downloadmanager/downloadmanager.xml#status-progress");
-}
-
-downloadstatus {
-  -moz-binding: url("chrome://communicator/content/downloadmanager/downloadmanager.xml#status-text");
-}
