@@ -69,6 +69,7 @@ public:
   // Called when an attribute changes on a binding.
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;
 
+  NS_IMETHOD UnhookEventHandlers() = 0;
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument) = 0;
 
   NS_IMETHOD GetBindingURI(nsString& aResult) = 0;

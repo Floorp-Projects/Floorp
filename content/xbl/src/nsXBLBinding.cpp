@@ -67,7 +67,7 @@
 #include "nsIDOMNamedNodeMap.h"
 
 #include "nsXBLEventHandler.h"
-#include "nsIXBLBinding.h"
+#include "nsXBLBinding.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static char kNameSpaceSeparator = ':';
@@ -129,130 +129,6 @@ XBLBindingCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 {
   return JS_FALSE;
 }
-
-// *********************************************************************/
-// The XBLBinding class
-
-class nsXBLBinding: public nsIXBLBinding
-{
-  NS_DECL_ISUPPORTS
-
-  // nsIXBLBinding
-  NS_IMETHOD GetBaseBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD SetBaseBinding(nsIXBLBinding* aBinding);
-
-  NS_IMETHOD GetAnonymousContent(nsIContent** aParent);
-  NS_IMETHOD SetAnonymousContent(nsIContent* aParent);
-
-  NS_IMETHOD GetBindingElement(nsIContent** aResult);
-  NS_IMETHOD SetBindingElement(nsIContent* aElement);
-
-  NS_IMETHOD GetBoundElement(nsIContent** aResult);
-  NS_IMETHOD SetBoundElement(nsIContent* aElement);
-
-  NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
-  NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
-  NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
-
-  NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
-
-  NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
-
-  NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
-
-  NS_IMETHOD GetBindingURI(nsString& aResult);
-  
-  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult);
-  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints);
-
-  NS_IMETHOD IsStyleBinding(PRBool* aResult) { *aResult = mIsStyleBinding; return NS_OK; };
-  NS_IMETHOD SetIsStyleBinding(PRBool aIsStyle) { mIsStyleBinding = aIsStyle; return NS_OK; };
-
-  NS_IMETHOD GetRootBinding(nsIXBLBinding** aResult);
-  NS_IMETHOD GetFirstStyleBinding(nsIXBLBinding** aResult);
-
-public:
-  nsXBLBinding();
-  virtual ~nsXBLBinding();
-
-  NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
-
-  PRBool AllowScripts();
-
-  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
-  
-// Static members
-  static PRUint32 gRefCnt;
-  
-  static nsIAtom* kContentAtom;
-  static nsIAtom* kInterfaceAtom;
-  static nsIAtom* kHandlersAtom;
-  static nsIAtom* kExcludesAtom;
-  static nsIAtom* kIncludesAtom;
-  static nsIAtom* kInheritsAtom;
-  static nsIAtom* kTypeAtom;
-  static nsIAtom* kCapturerAtom;
-  static nsIAtom* kExtendsAtom;
-  static nsIAtom* kChildrenAtom;
-  static nsIAtom* kMethodAtom;
-  static nsIAtom* kArgumentAtom;
-  static nsIAtom* kBodyAtom;
-  static nsIAtom* kPropertyAtom;
-  static nsIAtom* kOnSetAtom;
-  static nsIAtom* kOnGetAtom;
-  static nsIAtom* kGetterAtom;
-  static nsIAtom* kSetterAtom;
-  static nsIAtom* kHTMLAtom;
-  static nsIAtom* kValueAtom;
-  static nsIAtom* kNameAtom;
-  static nsIAtom* kReadOnlyAtom;
-  static nsIAtom* kURIAtom;
-  static nsIAtom* kAttachToAtom;
-
-  // Used to easily obtain the correct IID for an event.
-  struct EventHandlerMapEntry {
-    const char*  mAttributeName;
-    nsIAtom*     mAttributeAtom;
-    const nsIID* mHandlerIID;
-  };
-
-  static EventHandlerMapEntry kEventHandlerMap[];
-
-// Internal member functions
-protected:
-  NS_IMETHOD InitClass(const nsCString& aClassName,
-                       nsIScriptContext* aContext, nsIDocument* aDocument,
-                       void** aScriptObject, void** aClassObject);
-
-  void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
-  void GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult);
-  void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray* aList);
-  void BuildInsertionTable();
-  void GetNestedChildren();
-  PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
-
-  NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
-
-  PRBool IsMouseHandler(const nsString& aName);
-  PRBool IsKeyHandler(const nsString& aName);
-  PRBool IsFocusHandler(const nsString& aName);
-  PRBool IsXULHandler(const nsString& aName);
-
-  static void GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound);
-
-// MEMBER VARIABLES
-protected:
-  nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
-  nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
-  nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
-     
-  nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
-  
-  PRBool mIsStyleBinding;
-
-  nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
-  nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.
-};
 
 // Static initialization
 PRUint32 nsXBLBinding::gRefCnt = 0;
@@ -338,7 +214,8 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 nsXBLBinding::nsXBLBinding(void)
 : mAttributeTable(nsnull),
   mInsertionPointTable(nsnull),
-  mIsStyleBinding(PR_TRUE)
+  mIsStyleBinding(PR_TRUE),
+  mFirstHandler(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -612,6 +489,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
   nsCOMPtr<nsIContent> handlers;
   GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
 
+  nsXBLEventHandler* currHandler = nsnull;
   if (handlers && AllowScripts()) {
     // Now walk the handlers and add event listeners to the bound
     // element.
@@ -658,6 +536,15 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
             NS_NewXBLEventHandler(mBoundElement, child, type, &handler);
+
+            // We chain all our event handlers together for easy
+            // removal later (if/when the binding dies).
+            if (!currHandler)
+              mFirstHandler = handler;
+            else 
+              currHandler->SetNextHandler(handler);
+
+            currHandler = handler;
 
             // Figure out if we're using capturing or not.
             PRBool useCapture = PR_FALSE;
@@ -1082,20 +969,33 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
 }
 
 NS_IMETHODIMP
+nsXBLBinding::UnhookEventHandlers()
+{
+  if (mFirstHandler) {
+    // Unhook our event handlers.
+    mFirstHandler->RemoveEventHandlers();
+    mFirstHandler = nsnull;
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
   if (aOldDocument != aNewDocument) {
+    mFirstHandler = nsnull;
+
     if (mNextBinding)
       mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
 
     // Only style bindings get their prototypes unhooked.
-    // XXX Stay in sync! What if a layered binding has an <interface>?!
-    if (!aNewDocument && !mIsStyleBinding) {
+    if (mIsStyleBinding) {
       // Now the binding dies.  Unhook our prototypes.
       nsCOMPtr<nsIContent> interfaceElement;
       GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
 
-      if (interfaceElement) {   
+      if (interfaceElement) { 
         nsCOMPtr<nsIScriptGlobalObject> global;
         aOldDocument->GetScriptGlobalObject(getter_AddRefs(global));
         if (global) {
@@ -1106,6 +1006,8 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mBoundElement));
             owner->GetScriptObject(context, (void**)&scriptObject);
             if (scriptObject) {
+              // XXX Stay in sync! What if a layered binding has an <interface>?!
+    
               // XXX Sanity check to make sure our class name matches
               // Pull ourselves out of the proto chain.
               JSContext* jscontext = (JSContext*)context->GetNativeContext();
@@ -1121,8 +1023,11 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     // Update the anonymous content.
     nsCOMPtr<nsIContent> anonymous;
     GetAnonymousContent(getter_AddRefs(anonymous));
-    if (anonymous)
-      anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts());
+    if (anonymous) {
+      if (mIsStyleBinding)
+        anonymous->SetDocument(nsnull, PR_TRUE, AllowScripts()); // Kill it.
+      else anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts()); // Keep it around.
+    }
   }
 
   return NS_OK;
