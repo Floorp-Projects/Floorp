@@ -902,7 +902,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
     nscoord           hwidth, hheight;
     nscoord           vwidth, vheight;
     PRUint32          oldsizey = mSizeY, oldsizex = mSizeX;
-    nsRect            area(0, 0, 0, 0);
+    // nsRect            area(0, 0, 0, 0);
     nscoord           offx, offy;
     float             scale;
     nsRect            controlRect(0, 0, mBounds.width, mBounds.height);

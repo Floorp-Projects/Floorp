@@ -471,7 +471,7 @@ NS_IMETHODIMP nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
             nsIView     *curview, *preview = this;
             nsVoidArray *views = (nsVoidArray *)new nsVoidArray();
             nsVoidArray *rects = (nsVoidArray *)new nsVoidArray();
-            nscoord     posx, posy;
+            // nscoord     posx, posy;
             nsRect      damRect = rect;
 
             localcx->PushState();
