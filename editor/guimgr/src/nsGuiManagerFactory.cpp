@@ -121,3 +121,15 @@ nsGuiManagerFactory::~nsGuiManagerFactory()
 {
   nsRepository::UnregisterFactory(kIGuiManagerFactoryIID, (nsIFactory *)this); //we are out of ref counts anyway
 }
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+{
+  return nsRepository::RegisterComponent(kIGuiManagerFactoryIID,
+                                       NULL, NULL, path,
+                                       PR_TRUE, PR_TRUE);
+}
+
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+{
+  return nsRepository::UnregisterFactory(kIGuiManagerFactoryIID, path);
+}

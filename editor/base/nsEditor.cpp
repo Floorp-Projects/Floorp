@@ -67,6 +67,8 @@ static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIPresShellIID,        NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kITextEditFactoryIID,  NS_ITEXTEDITORFACTORY_IID);
+static NS_DEFINE_IID(kIHTMLEditFactoryIID,  NS_IHTMLEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
 static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
@@ -168,14 +170,39 @@ NSCanUnload(nsISupports* serviceMgr)
 extern "C" NS_EXPORT nsresult 
 NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
-  return nsRepository::RegisterComponent(kIEditFactoryIID, NULL, NULL, path, 
-                                       PR_TRUE, PR_TRUE); //this will register the factory with the xpcom dll.
+  nsresult result = NS_ERROR_UNEXPECTED;
+  //this will register the editor classes with the xpcom dll.
+  result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL, path, 
+                                           PR_TRUE, PR_TRUE);
+  if (NS_SUCCEEDED(result))
+  {
+    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL, path, 
+                                             PR_TRUE, PR_TRUE);
+    if (NS_SUCCEEDED(result))
+    {
+      result = nsRepository::RegisterComponent(kHTMLEditorCID, NULL, NULL, path, 
+                                                PR_TRUE, PR_TRUE);
+    }
+  }
+  return result;
 }
 
 extern "C" NS_EXPORT nsresult 
 NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
-  return nsRepository::UnregisterFactory(kIEditFactoryIID, path);//this will unregister the factory with the xpcom dll.
+  nsresult result = NS_ERROR_UNEXPECTED;
+  result = nsRepository::UnregisterFactory(kIEditFactoryIID, path);
+  
+
+  if (NS_SUCCEEDED(result))
+  {
+    result = nsRepository::UnregisterFactory(kITextEditFactoryIID, path);
+    if (NS_SUCCEEDED(result))
+    {
+      result = nsRepository::UnregisterFactory(kIHTMLEditFactoryIID, path);
+    }
+  }
+  return result;
 }
 
 //END EXPORTS

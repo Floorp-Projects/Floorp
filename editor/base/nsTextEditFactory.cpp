@@ -125,10 +125,3 @@ nsTextEditFactory::~nsTextEditFactory()
 {
   //nsRepository::UnregisterFactory(mCID, (nsIFactory *)this); //we are out of ref counts anyway
 }
-
-
-
-
-
-
-
