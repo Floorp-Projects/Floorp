@@ -809,7 +809,7 @@ static char* pc2name(word pc, char name[], long size)
 extern void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
 extern int GC_address_to_source(char* codeAddr, char symbolName[256], char fileName[256], UInt32* fileOffset);
 
-#if NFRAMES > 1
+#if NFRAMES > 2
 
 void GC_print_callers(struct callinfo info[NFRAMES])
 {

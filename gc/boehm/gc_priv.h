@@ -225,7 +225,7 @@ typedef char * ptr_t;	/* A generic pointer to which we can add	*/
  * Number of frames and arguments to save in objects allocated by
  * debugging allocator.
  */
-#   define NFRAMES 1    /* Number of frames to save. Even for		*/
+#   define NFRAMES 2    /* Number of frames to save. Even for		*/
                         /* alignment reasons.				*/
 #   define NARGS 0      /* Mumber of arguments to save for each call.	*/
 
