@@ -5228,19 +5228,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         return rv;
     }
 
-    // Check if the page doesn't want to be unloaded. The javascript:
-    // protocol handler deals with this for javascript: URLs.
-    if (!bIsJavascript && mContentViewer) {
-        PRBool okToUnload;
-        rv = mContentViewer->PermitUnload(&okToUnload);
-
-        if (NS_SUCCEEDED(rv) && !okToUnload) {
-            // The user chose not to unload the page, interrupt the
-            // load.
-            return NS_OK;
-        }
-    }
-
     //
     // Load is being targetted at this docshell so return an error if the
     // docshell is in the process of being destroyed.
@@ -5349,6 +5336,19 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     shEntry->SetTitle(mTitle.get());
             }
 
+            return NS_OK;
+        }
+    }
+
+    // Check if the page doesn't want to be unloaded. The javascript:
+    // protocol handler deals with this for javascript: URLs.
+    if (!bIsJavascript && mContentViewer) {
+        PRBool okToUnload;
+        rv = mContentViewer->PermitUnload(&okToUnload);
+
+        if (NS_SUCCEEDED(rv) && !okToUnload) {
+            // The user chose not to unload the page, interrupt the
+            // load.
             return NS_OK;
         }
     }
