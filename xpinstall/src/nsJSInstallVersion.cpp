@@ -28,7 +28,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMInstallVersion.h"
 #include "nsIScriptNameSpaceManager.h"
@@ -62,8 +61,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIInstallVersionIID, NS_IDOMINSTALLVERSION_IID);
-
-NS_DEF_PTR(nsIDOMInstallVersion);
 
 //
 // InstallVersion property ids
@@ -348,7 +345,6 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   PRInt32                 b1int;
   PRInt32                 b2int;
   PRInt32                 b3int;
-  nsIDOMInstallVersionPtr versionObj;
 
   *rval = JSVAL_NULL;
 
@@ -403,7 +399,9 @@ InstallVersionCompareTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
     if(JSVAL_IS_OBJECT(argv[0]))
     {
-        if(JS_FALSE == ConvertJSValToObj((nsISupports **)&versionObj,
+        nsCOMPtr<nsIDOMInstallVersion> versionObj;
+
+        if(JS_FALSE == ConvertJSValToObj(getter_AddRefs(versionObj),
                                          kIInstallVersionIID,
                                          "InstallVersion",
                                          cx,

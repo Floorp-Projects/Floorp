@@ -982,8 +982,9 @@ void CSSStyleRuleImpl::GetSourceSelectorText(nsString& aSelectorText) const
 
 nsICSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 {
-  NS_IF_ADDREF(mDeclaration);
-  return mDeclaration;
+  nsICSSDeclaration* result = mDeclaration;
+  NS_IF_ADDREF(result);
+  return result;
 }
 
 void CSSStyleRuleImpl::SetDeclaration(nsICSSDeclaration* aDeclaration)

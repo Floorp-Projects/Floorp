@@ -962,8 +962,8 @@ nsGenericElement::GetNameSpaceID(PRInt32& aResult) const
 nsresult
 nsGenericElement::GetTag(nsIAtom*& aResult) const
 {
-  NS_IF_ADDREF(mTag);
   aResult = mTag;
+  NS_IF_ADDREF(aResult);
   return NS_OK;
 }
 

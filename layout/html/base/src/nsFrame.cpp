@@ -417,8 +417,8 @@ NS_IMETHODIMP
 nsFrame::GetContent(nsIContent** aContent) const
 {
   NS_PRECONDITION(nsnull != aContent, "null OUT parameter pointer");
-  NS_IF_ADDREF(mContent);
   *aContent = mContent;
+  NS_IF_ADDREF(*aContent);
   return NS_OK;
 }
 

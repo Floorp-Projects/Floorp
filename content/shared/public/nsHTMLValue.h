@@ -142,8 +142,9 @@ inline nsISupports* nsHTMLValue::GetISupportsValue(void) const
 {
   NS_ASSERTION(mUnit == eHTMLUnit_ISupports, "not an ISupports value");
   if (mUnit == eHTMLUnit_ISupports) {
-    NS_IF_ADDREF(mValue.mISupports);
-    return mValue.mISupports;
+    nsISupports *result = mValue.mISupports;
+    NS_IF_ADDREF(result);
+    return result;
   }
   return nsnull;
 }

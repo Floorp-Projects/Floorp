@@ -27,7 +27,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIPtr.h"
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIDOMInstallVersion.h"
@@ -60,8 +59,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIInstallTriggerGlobalIID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
-
-NS_DEF_PTR(nsIDOMInstallTriggerGlobal);
 
 //
 // InstallTriggerGlobal finalizer

@@ -26,10 +26,7 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
-#include "nsIPtr.h"
 #include "nsHTMLIIDs.h"
-
-NS_DEF_PTR(nsIStyleContext);
 
 FixedTableLayoutStrategy::FixedTableLayoutStrategy(nsTableFrame *aFrame)
   : BasicTableLayoutStrategy(aFrame)

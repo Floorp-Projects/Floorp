@@ -30,15 +30,12 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
-#include "nsIPtr.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
 #include "nsIPresShell.h"
 #include "nsLayoutAtoms.h"
-
-NS_DEF_PTR(nsIContent);
 
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLTableColElementIID, NS_IDOMHTMLTABLECOLELEMENT_IID);
