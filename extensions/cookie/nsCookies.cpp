@@ -368,7 +368,11 @@ cookie_TrimLifetime(time_t expires) {
   // return potentially-trimmed lifetime
   if (cookie_GetLifetimePref() == COOKIE_Trim) {
     // a limit of zero means expire cookies at end of session
-    if (cookie_lifetimeLimit == 0) {
+    //    however we need to test for case of cookie being intentionally set to a time
+    //    in the past (trick that servers use to delete cookies) and not turn that into
+    //    a cookie that exires at end of current session.
+    if ((cookie_lifetimeLimit == 0) &&
+        ((unsigned)expires > (unsigned)get_current_time())) {
       return 0;
     }
     time_t limit = cookie_GetLifetimeTime();
@@ -1368,7 +1372,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
 
   /* Get the time the cookie is supposed to expire according to the expires attribute*/
   ptr = PL_strcasestr(setCookieHeader, "expires=");
-  if(ptr && !downgrade) {
+  if(ptr) {
     char *date =  ptr+8;
     char origLast = '\0';
     for(ptr=date; *ptr != '\0'; ptr++) {
@@ -1378,7 +1382,12 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
         break;
       }
     }
-    expires = cookie_ParseDate(date);
+    // Before downgrading we need to test for case of cookie being intentionally set to a
+    // time in the past (trick that servers use to delete cookies) and not turn that into
+    // a cookie that exires at end of current session.
+    if (!downgrade || ((unsigned)cookie_ParseDate(date) <= (unsigned)get_current_time())) {
+      expires = cookie_ParseDate(date);
+    }
     *ptr=origLast;
   }
   if (server_date) {
@@ -1402,9 +1411,15 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   /* If max-age attribute is present, it overrides expires attribute */
 #define MAXAGE "max-age="
   ptr = PL_strcasestr(setCookieHeader, MAXAGE);
-  if(ptr && !downgrade) {
+  if(ptr) {
     ptr += PL_strlen(MAXAGE);
     gmtCookieExpires = get_current_time() + atoi(ptr);
+    // Before downgrading we need to test for case of cookie being intentionally set to a
+    // time in the past (trick that servers use to delete cookies) and not turn that into
+    // a cookie that exires at end of current session.
+    if (downgrade && ((unsigned)gmtCookieExpires > (unsigned)get_current_time())) {
+      gmtCookieExpires = 0;
+    }
   }
 
   cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires, ioService, aHttpChannel);
