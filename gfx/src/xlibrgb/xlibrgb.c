@@ -1603,7 +1603,7 @@ xxlib_rgb_preprocess_dm_565 (XlibRgbHandle *handle)
       handle->DM_565 = malloc(sizeof(uint32) * DM_WIDTH * DM_HEIGHT);
       for (i = 0; i < DM_WIDTH * DM_HEIGHT; i++)
         {
-          dith = DM[0][i] >> 3;
+          dith = DM[i / DM_WIDTH][i % DM_WIDTH] >> 3;
           handle->DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
 #ifdef VERBOSE
           printf ("%i %x %x\n", i, dith, handle->DM_565[i]);

@@ -22,8 +22,8 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -1451,31 +1451,31 @@ static PRUint8 GetCat(PRUnichar u)
     //
     // Handle U+0000 to U+06FF
     if( (u<=((PRUnichar)0x06FF))) {
-        pat = gGenCatPat[gGenCatIdx1 [( u -(PRUnichar) 0x0000 )]];
+        pat = gGenCatPat[gGenCatIdx1 [( u -(PRUnichar) 0x0000 ) / 8]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+0900 to U+11FF
     if((((PRUnichar)0x0900)<=u)&&(u<=((PRUnichar)0x11FF))) {
-        pat = gGenCatPat[gGenCatIdx2 [( u -(PRUnichar) 0x0900 )]];
+        pat = gGenCatPat[gGenCatIdx2 [( u -(PRUnichar) 0x0900 ) / 8]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+1E00 to U+27FF
     if((((PRUnichar)0x1E00)<=u)&&(u<=((PRUnichar)0x27FF))) {
-        pat = gGenCatPat[gGenCatIdx3 [( u -(PRUnichar) 0x1E00 )]];
+        pat = gGenCatPat[gGenCatIdx3 [( u -(PRUnichar) 0x1E00 ) / 8]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+3000 to U+33FF
     if((((PRUnichar)0x3000)<=u)&&(u<=((PRUnichar)0x33FF))) {
-        pat = gGenCatPat[gGenCatIdx4 [( u -(PRUnichar) 0x3000 )]];
+        pat = gGenCatPat[gGenCatIdx4 [( u -(PRUnichar) 0x3000 ) / 8]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+F900 to U+FFFF
     if((((PRUnichar)0xF900)<=u)&&(u<=((PRUnichar)0xFFFF))) {
-        pat = gGenCatPat[gGenCatIdx5 [( u -(PRUnichar) 0xF900 )]];
+        pat = gGenCatPat[gGenCatIdx5 [( u -(PRUnichar) 0xF900 ) / 8]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 

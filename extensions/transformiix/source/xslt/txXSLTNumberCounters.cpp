@@ -196,7 +196,7 @@ void txDecimalCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 
 void txAlphaCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 {
-    PRUnichar buf[11];
+    PRUnichar buf[12];
     buf[11] = 0;
     PRInt32 pos = 11;
     while (aNumber > 0) {
