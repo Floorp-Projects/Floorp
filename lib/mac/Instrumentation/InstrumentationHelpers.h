@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *        Simon Fraser  sfraser@netscape.com
  */
 
 
@@ -46,16 +47,8 @@
 	Setting up your tree
 	--------------------
 	
-	After a clean build, make aliases to the following files from the SDK
-	somewhere in dist (I usually throw them into dist:mac):
-	
-	Instrumentation.h
-	InstrumentationMacros.h
-	InstrumentationLib
-	
-	Make an alias to this file in the same place in dist:
-	
-	InstrumentationHelpers.h	
+	Put the headers and libraries from the Instrumentation SDK into
+	a folder in your CodeWarrior 'Mac OS Support' folder.
 	
 	How to use
 	----------
