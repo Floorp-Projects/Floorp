@@ -81,6 +81,7 @@ input {
   font: -moz-field;
   text-align: start;
   text-transform: none;
+  vertical-align: text-bottom;
   cursor: text;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
@@ -258,6 +259,7 @@ input[type="image"] {
   padding: 0;
   border: none;
   background-color: transparent;
+  vertical-align: baseline;
   font-family: sans-serif;
   font-size: small;
   cursor: pointer;
@@ -307,6 +309,7 @@ input[type="radio"] {
   height: 13px;
   margin: 3px 3px 0px 5px;
   padding: 0;
+  vertical-align: baseline;
   cursor: default;
   -moz-binding: none;
 
@@ -382,15 +385,12 @@ input[type="submit"] {
   color: ButtonText; 
   font: -moz-button;
   white-space: pre;
+  vertical-align: text-bottom;
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-user-focus: normal;
   -moz-binding: none;
-}
-
-button {
-  vertical-align: text-bottom; /* Till we fix it to have the right baseline */
 }
 
 *|*:-moz-button-content {

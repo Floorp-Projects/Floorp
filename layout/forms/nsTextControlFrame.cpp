@@ -2235,20 +2235,9 @@ nsTextControlFrame::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 NS_IMETHODIMP
 nsTextControlFrame::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
-  nsresult rv;
-  if (IsSingleLineTextControl()) {
-    // First calculate the ascent of the text inside
-    rv = nsStackFrame::GetAscent(aState, aAscent);
-    NS_ENSURE_SUCCESS(rv, rv);
-  
-    // Now adjust the ascent for our borders and padding
-    aAscent += aState.GetReflowState()->mComputedBorderPadding.top;
-  } else {
-    // For a textarea or <editor>, just don't bother for now
-    nsSize size;
-    rv = GetPrefSize(aState, size);
-    aAscent = size.height;
-  }
+  nsSize size;
+  nsresult rv = GetPrefSize(aState, size);
+  aAscent = size.height;
   
   return rv;
 }
