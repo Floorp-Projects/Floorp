@@ -235,7 +235,7 @@ public final class OptRuntime extends ScriptRuntime {
     }
 
     public static Object callSimple(Context cx, String id, Scriptable scope,
-                              Object[] args)
+                                    Object[] args)
         throws JavaScriptException
     {
         Scriptable obj = scope;
@@ -256,8 +256,10 @@ public final class OptRuntime extends ScriptRuntime {
         }
         if ((prop == null) || (prop == Scriptable.NOT_FOUND)) {
             Object[] errorArgs = { id };
-            throw Context.reportRuntimeError(
-                    getMessage("msg.is.not.defined", errorArgs));
+            throw NativeGlobal.constructError(
+                        cx, "ReferenceError",
+                        ScriptRuntime.getMessage("msg.is.not.defined", errorArgs),
+                        scope);
         }
         
         while (thisArg instanceof NativeWith)
