@@ -32,12 +32,11 @@
  * GPL.
  */
 
-
+#include "nssrenam.h"
 #include "cmmf.h"
 #include "cmmfi.h"
 #include "secitem.h"
 #include "secder.h"
-#include "nssrenam.h"
 
 SECStatus 
 cmmf_DestroyPKIStatusInfo (CMMFPKIStatusInfo *info, PRBool freeit)
