@@ -126,6 +126,8 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_CONTROL,    GDK_Control_R },
   { NS_VK_ALT,        GDK_Alt_L },
   { NS_VK_ALT,        GDK_Alt_R },
+  { NS_VK_META,       GDK_Meta_L },
+  { NS_VK_META,       GDK_Meta_R },
   { NS_VK_PAUSE,      GDK_Pause },
   { NS_VK_CAPS_LOCK,  GDK_Caps_Lock },
   { NS_VK_ESCAPE,     GDK_Escape },
@@ -334,8 +336,7 @@ void InitKeyEvent(GdkEventKey *aGEK,
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    // XXX For meta key, state is 0, and so are keyval and string.  Sigh!
-    anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isMeta = (aGEK->state & GDK_MOD4_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
@@ -356,8 +357,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    // XXX
-    anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isMeta = (aGEK->state & GDK_MOD4_MASK) ? PR_TRUE : PR_FALSE;
 
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
     if (anEvent.charCode) {
