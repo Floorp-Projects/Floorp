@@ -194,6 +194,15 @@ enum {
   openAbused,       // it's a popup. disallow it, but allow domain override.
   openOverridden    // disallow window open
 };
+// CheckOpenAllow return values:
+enum {
+  allowNot = 0,     // the window opening was denied
+  allowNoAbuse,     // allowed: not a popup
+  allowSelf,        // allowed: it's the same window (_self, _top, et.al.)
+  allowExtant,      // allowed: an already open window
+  allowWhitelisted  // allowed: it's whitelisted or popup blocking is disabled
+};
+
 
 // return true if eventName is contained within events, delimited by spaces
 static PRBool
@@ -3125,34 +3134,39 @@ GlobalWindowImpl::CheckForAbusePoint()
    A popup generally will be allowed if it's from a white-listed domain,
    or if its target is an extant window.
    Returns PR_TRUE if the window should be opened. */
-PRBool GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
-                                        const nsAString &aName)
+PRUint32
+GlobalWindowImpl::CheckOpenAllow(PRUint32 aAbuseLevel,
+                                 const nsAString &aName)
 {
-  PRBool allowWindow = PR_TRUE;
+  PRUint32 allowWindow = allowNoAbuse; // (also used for openControlled)
   
-  if (aAbuseLevel == openOverridden ||
-      aAbuseLevel == openAbused && IsPopupBlocked(mDocument)) {
-    allowWindow = PR_FALSE;
+  if (aAbuseLevel >= openAbused) {
+    allowWindow = allowNot;
+
     // However it might still not be blocked.
-    // Special case items that don't actually open new windows.
-    nsAutoString name(aName);
-    // _main is an IE target which should be case-insensitive but isn't
-    // see bug 217886 for details
-    if (!name.IsEmpty()) {
-      if (name.LowerCaseEqualsLiteral("_top") ||
-          name.LowerCaseEqualsLiteral("_self") ||
-          name.LowerCaseEqualsLiteral("_content") ||
-          name.EqualsLiteral("_main"))
-        allowWindow = PR_TRUE;
-      else {
-        nsCOMPtr<nsIWindowWatcher> wwatch =
-            do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-        if (wwatch) {
-          nsCOMPtr<nsIDOMWindow> namedWindow;
-          wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
-                                  getter_AddRefs(namedWindow));
-          if (namedWindow)
-            allowWindow = PR_TRUE;
+    if (aAbuseLevel == openAbused && !IsPopupBlocked(mDocument))
+      allowWindow = allowWhitelisted;
+    else {
+      // Special case items that don't actually open new windows.
+      nsAutoString name(aName);
+      if (!name.IsEmpty()) {
+        // _main is an IE target which should be case-insensitive but isn't
+        // see bug 217886 for details
+        if (name.LowerCaseEqualsLiteral("_top") ||
+            name.LowerCaseEqualsLiteral("_self") ||
+            name.LowerCaseEqualsLiteral("_content") ||
+            name.EqualsLiteral("_main"))
+          allowWindow = allowSelf;
+        else {
+          nsCOMPtr<nsIWindowWatcher> wwatch =
+              do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+          if (wwatch) {
+            nsCOMPtr<nsIDOMWindow> namedWindow;
+            wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
+                                    getter_AddRefs(namedWindow));
+            if (namedWindow)
+              allowWindow = allowExtant;
+          }
         }
       }
     }
@@ -3236,7 +3250,8 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
   nsresult rv;
 
   PRUint32 abuseLevel = CheckForAbusePoint();
-  if (!CheckOpenAllow(abuseLevel, aName)) {
+  PRUint32 allowReason = CheckOpenAllow(abuseLevel, aName);
+  if (allowReason == allowNot) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aOptions);
     return NS_ERROR_FAILURE; // unlike the public Open method, return an error
   }
@@ -3244,10 +3259,12 @@ GlobalWindowImpl::Open(const nsAString& aUrl,
   rv = OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
                     _retval);
   if (NS_SUCCEEDED(rv)) {
-    if (abuseLevel >= openControlled) {
+    if (abuseLevel >= openControlled && allowReason != allowSelf) {
       GlobalWindowImpl *opened = NS_STATIC_CAST(GlobalWindowImpl*, *_retval);
-      opened->SetPopupSpamWindow(PR_TRUE);
-      ++gOpenPopupSpamCount;
+      if (!opened->IsPopupSpamWindow()) {
+        opened->SetPopupSpamWindow(PR_TRUE);
+        ++gOpenPopupSpamCount;
+      }
     }
     if (abuseLevel >= openAbused)
       FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aOptions);
@@ -3297,7 +3314,8 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
   }
 
   PRUint32 abuseLevel = CheckForAbusePoint();
-  if (!CheckOpenAllow(abuseLevel, name)) {
+  PRUint32 allowReason = CheckOpenAllow(abuseLevel, name);
+  if (allowReason == allowNot) {
     FireAbuseEvents(PR_TRUE, PR_FALSE, url, options);
     return NS_OK; // don't open the window, but also don't throw a JS exception
   }
@@ -3328,10 +3346,12 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
       (*_retval)->GetDocument(getter_AddRefs(doc));
     }
     
-    if (abuseLevel >= openControlled) {
+    if (abuseLevel >= openControlled && allowReason != allowSelf) {
       GlobalWindowImpl *opened = NS_STATIC_CAST(GlobalWindowImpl*, *_retval);
-      opened->SetPopupSpamWindow(PR_TRUE);
-      ++gOpenPopupSpamCount;
+      if (!opened->IsPopupSpamWindow()) {
+        opened->SetPopupSpamWindow(PR_TRUE);
+        ++gOpenPopupSpamCount;
+      }
     }
     if (abuseLevel >= openAbused)
       FireAbuseEvents(PR_FALSE, PR_TRUE, url, options);

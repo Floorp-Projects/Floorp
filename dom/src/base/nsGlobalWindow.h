@@ -245,7 +245,7 @@ protected:
                          float* aT2P);
   nsresult SecurityCheckURL(const char *aURL);
   PRUint32 CheckForAbusePoint();
-  PRBool   CheckOpenAllow(PRUint32 aAbuseLevel, const nsAString &aName);
+  PRUint32 CheckOpenAllow(PRUint32 aAbuseLevel, const nsAString &aName);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                            const nsAString &aPopupURL,
                            const nsAString &aPopupWindowFeatures);
