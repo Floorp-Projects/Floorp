@@ -187,6 +187,10 @@ public:
   static PRUnichar ToUpper(PRUnichar aChar);
 
   static PRUnichar ToLower(PRUnichar aChar);
+  
+  static PRBool IsUpper(PRUnichar aChar);
+
+  static PRBool IsLower(PRUnichar aChar);
 };
 
 #endif /* nsCRT_h___ */
