@@ -219,16 +219,23 @@ nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 // cache m_folderStream to make updating mozilla status flags fast
 NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
+#ifndef XP_MAC
   if (!m_folderStream)
-	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
-  return NS_OK;
+	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
+#endif  
+return NS_OK;
 }
 
 NS_IMETHODIMP nsMailDatabase::EndBatch()
 {
+#ifndef XP_MAC
 	if (m_folderStream)
-		delete m_folderStream;
+    {
+      m_folderStream->close();  
+	  delete m_folderStream;
+    }
 	m_folderStream = NULL;
+#endif
   return NS_OK;
 }
 
@@ -237,10 +244,13 @@ NS_IMETHODIMP nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChan
 {
 	nsresult ret = NS_OK;
   if (!m_folderStream)
-	  m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
+	  m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
 	ret = nsMsgDatabase::DeleteMessages(nsMsgKeys, instigator);
 	if (m_folderStream)
-		delete m_folderStream;
+    {
+      m_folderStream->close();
+	  delete m_folderStream;
+    }
 	m_folderStream = NULL;
 	SetFolderInfoValid(m_folderSpec, 0, 0);
 	return ret;
@@ -256,8 +266,9 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
 	if (nsMsgDatabase::SetHdrFlag(msgHdr, bSet, flag))
 	{
 		UpdateFolderFlag(msgHdr, bSet, flag, &fileStream);
-		if (fileStream != NULL)
+		if (fileStream)
         {
+            fileStream->close();
 			delete fileStream;
 			SetFolderInfoValid(m_folderSpec, 0, 0);
 		}
