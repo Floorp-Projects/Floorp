@@ -31,11 +31,9 @@ CPPSRCS = \
 LIBS =	\
 		-L$(DIST)/lib			\
 		-L$(DIST)/bin			\
+		$(NSPR_LIBS)				\
 		-lxpcom					\
 		-lreg					\
-		-lnspr3				\
-		-lplc3					\
-		-lplds3				\
 		$(NULL)
 
 
