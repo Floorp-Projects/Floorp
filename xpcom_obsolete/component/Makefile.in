@@ -33,7 +33,9 @@ ifneq ($(OS_ARCH),WINNT)
 SHORT_LIBNAME	= xpcomctc
 endif
 
+ifdef MINIMO
 EXPORT_LIBRARY  = 1
+endif
 IS_COMPONENT	= 1
 GRE_MODULE	= 1
 
