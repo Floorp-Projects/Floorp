@@ -46,6 +46,8 @@ public:
                         nsSize &aSize);
 #endif
 
+protected:
+  nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
 };
 
 #endif

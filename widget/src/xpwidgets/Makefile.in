@@ -37,6 +37,7 @@ CPPSRCS		= \
 		nsBaseClipboard.cpp \
 		nsFileSpecWithUIImpl.cpp \
 		nsPrimitiveHelpers.cpp \
+		nsXPLookAndFeel.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= \

@@ -35,6 +35,7 @@ CPPSRCS = \
 	nsTransferable.cpp         \
 	nsXIFFormatConverter.cpp         \
 	nsPrimitiveHelpers.cpp         \
+	nsXPLookAndFeel.cpp         \
 	$(NULL)
 
 MODULE=raptor 
@@ -48,6 +49,7 @@ OBJS= \
 	.\$(OBJDIR)\nsTransferable.obj  \
 	.\$(OBJDIR)\nsXIFFormatConverter.obj  \
 	.\$(OBJDIR)\nsPrimitiveHelpers.obj  \
+	.\$(OBJDIR)\nsXPLookAndFeel.obj  \
 	$(NULL)
 
 LINCS=                                  \

@@ -45,6 +45,9 @@ public:
                         const PRInt32             aFontSize, 
                         nsSize &aSize);
 #endif
+
+protected:
+  nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
 };
 
 #endif
