@@ -777,8 +777,6 @@ InitGlobals(void)
   }
 #endif
 
-  nsresult res;
-
   nsServiceManager::GetService(kCharSetManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
   if (!gCharSetManager) {
@@ -809,13 +807,13 @@ InitGlobals(void)
   }
 
   PRInt32 scale_minimum = 0;
-  gPref->GetIntPref("font.scale.outline.min", &scale_minimum);
-  if (NS_SUCCEEDED(res)) {
+  rv = gPref->GetIntPref("font.scale.outline.min", &scale_minimum);
+  if (NS_SUCCEEDED(rv)) {
     gOutlineScaleMinimum = scale_minimum;
     SIZE_FONT_PRINTF(("gOutlineScaleMinimum = %d", gOutlineScaleMinimum));
   }
-  gPref->GetIntPref("font.scale.bitmap.min", &scale_minimum);
-  if (NS_SUCCEEDED(res)) {
+  rv = gPref->GetIntPref("font.scale.bitmap.min", &scale_minimum);
+  if (NS_SUCCEEDED(rv)) {
     gBitmapScaleMinimum = scale_minimum;
     SIZE_FONT_PRINTF(("gBitmapScaleMinimum = %d", gBitmapScaleMinimum));
   }
