@@ -157,8 +157,13 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
           </hbox>
         </vbox>
         <vbox>
-          <button id="runFiltersButton" label="&runFilters.label;" 
+          <button id="runFiltersButton" 
+                  label="&runFilters.label;" 
                   accesskey="&runFilters.accesskey;" 
+                  runlabel="&runFilters.label;" 
+                  runaccesskey="&runFilters.accesskey;" 
+                  stoplabel="&stopFilters.label;" 
+                  stopaccesskey="&stopFilters.label;" 
                   oncommand="runSelectedFilters();" disabled="true"/>
         </vbox>
       </row>
@@ -166,6 +171,11 @@ Contributor(s):  Hkan Waara <hwaara@chello.se>
   </grid>
 
   <separator/>
+
+  <hbox id="statusContainerBox">
+    <label id="statusText" crop="right" flex="1"/> 
+    <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+  </hbox>
 
 </dialog>
 

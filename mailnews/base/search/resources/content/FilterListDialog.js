@@ -18,45 +18,79 @@
  * Rights Reserved.
  */
 
-var rdf;
+var gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
-var editButton;
-var deleteButton;
-var reorderUpButton;
-var reorderDownButton;
-var runFiltersFolderPickerLabel;
-var runFiltersFolderPicker;
-var runFiltersButton;
-
-const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
-
+var gEditButton;
+var gDeleteButton;
+var gReorderUpButton;
+var gReorderDownButton;
+var gRunFiltersFolderPickerLabel;
+var gRunFiltersFolderPicker;
+var gRunFiltersButton;
 var gFilterBundle;
 var gPromptService;
 var gFilterListMsgWindow = null;
 var gFilterTree;
+var gStatusBar;
+var gStatusText;
+var gCurrentServerURI = null;
+
+var gStatusFeedback = {
+	showStatusString: function(status)
+  {
+    gStatusText.setAttribute("value", status);
+  },
+	startMeteors: function()
+  {
+    // change run button to be a stop button
+    gRunFiltersButton.setAttribute("label", gRunFiltersButton.getAttribute("stoplabel"));
+    gRunFiltersButton.setAttribute("accesskey", gRunFiltersButton.getAttribute("stopaccesskey"));
+    gStatusBar.setAttribute("mode", "undetermined");
+  },
+	stopMeteors: function() 
+  {
+    // change run button to be a stop button
+    gRunFiltersButton.setAttribute("label", gRunFiltersButton.getAttribute("runlabel"));
+    gRunFiltersButton.setAttribute("accesskey", gRunFiltersButton.getAttribute("runaccesskey"));
+    gStatusBar.setAttribute("mode", "normal");
+  },
+  showProgress: function(percentage)
+  {
+      //dump("XXX progress" + percentage + "\n");
+  },
+  closeWindow: function()
+  {
+    // if we are running, and the user closes the window, stop.
+    // XXX todo, prompt first, though.
+    if (gRunFiltersButton.getAttribute("label") == gRunFiltersButton.getAttribute("stoplabel")) {
+      gFilterListMsgWindow.StopUrls();
+    }
+  }
+};
+
+const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 function onLoad()
 {
-    rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-
     var gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
     gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
 
-    var msgWindowContractID = "@mozilla.org/messenger/msgwindow;1";
-    var nsIMsgWindow = Components.interfaces.nsIMsgWindow;
-    gFilterListMsgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
+    gFilterListMsgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createInstance(Components.interfaces.nsIMsgWindow);
+    gFilterListMsgWindow.statusFeedback = gStatusFeedback;
     gFilterListMsgWindow.SetDOMWindow(window); 
 
     gFilterBundle = document.getElementById("bundle_filter");
     gFilterTree = document.getElementById("filterTree");
 
-    editButton = document.getElementById("editButton");
-    deleteButton = document.getElementById("deleteButton");
-    reorderUpButton = document.getElementById("reorderUpButton");
-    reorderDownButton = document.getElementById("reorderDownButton");
-    runFiltersFolderPickerLabel = document.getElementById("folderPickerPrefix");
-    runFiltersFolderPicker = document.getElementById("runFiltersFolder");
-    runFiltersButton = document.getElementById("runFiltersButton");
+    gEditButton = document.getElementById("editButton");
+    gDeleteButton = document.getElementById("deleteButton");
+    gReorderUpButton = document.getElementById("reorderUpButton");
+    gReorderDownButton = document.getElementById("reorderDownButton");
+    gRunFiltersFolderPickerLabel = document.getElementById("folderPickerPrefix");
+    gRunFiltersFolderPicker = document.getElementById("runFiltersFolder");
+    gRunFiltersButton = document.getElementById("runFiltersButton");
+    gStatusBar = document.getElementById("statusbar-icon");
+    gStatusText = document.getElementById("statusText");
 
     updateButtons();
 
@@ -89,7 +123,7 @@ function onCancel()
         firstItem = getServerThatCanHaveFilters();
     
     if (firstItem) {
-        var resource = rdf.GetResource(firstItem);
+        var resource = gRDF.GetResource(firstItem);
         var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgFolder)
         {
@@ -114,13 +148,16 @@ function onCancel()
 function onServerClick(event)
 {
     var item = event.target;
-    setServer(item.id, true);
+    setServer(item.id);
 }
 
 // roots the tree at the specified server
-function setServer(uri, rebuild)
+function setServer(uri)
 {
-   var resource = rdf.GetResource(uri);
+   if (uri == gCurrentServerURI)
+     return;
+
+   var resource = gRDF.GetResource(uri);
    var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
    //Calling getFilterList will detect any errors in rules.dat, backup the file, and alert the user
@@ -130,26 +167,22 @@ function setServer(uri, rebuild)
    if (msgFolder)
      msgFolder.getFilterList(gFilterListMsgWindow);
 
-   gFilterTree.setAttribute("ref", uri);
-
+   rebuildFilterTree(uri);
+   
    // root the folder picker to this server
-   runFiltersFolderPicker.setAttribute("ref", uri);
+   gRunFiltersFolderPicker.setAttribute("ref", uri);
    // select the first folder., for POP3 and IMAP, the INBOX
-   runFiltersFolderPicker.selectedIndex = 0;
-   SetFolderPicker(runFiltersFolderPicker.selectedItem.getAttribute("id"),"runFiltersFolder");
-
-   // rebuild tree, since we changed the uri, and clear selection
-   if (rebuild) {
-     gFilterTree.view.selection.clearSelection();
-     gFilterTree.builder.rebuild();
-   }
+   gRunFiltersFolderPicker.selectedIndex = 0;
+   SetFolderPicker(gRunFiltersFolderPicker.selectedItem.getAttribute("id"),"runFiltersFolder");
 
    updateButtons();
+
+   gCurrentServerURI = uri;
 }
 
 function toggleFilter(aFilterURI)
 {
-    var filterResource = rdf.GetResource(aFilterURI);
+    var filterResource = gRDF.GetResource(aFilterURI);
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
@@ -163,7 +196,7 @@ function selectServer(uri)
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", uri);
     serverMenu.selectedItem = menuitems[0];
-    setServer(uri, false);
+    setServer(uri);
 }
 
 function getFilter(index)
@@ -193,7 +226,7 @@ function currentFilterList()
 {
     var serverMenu = document.getElementById("serverMenu");
     var serverUri = serverMenu.value;
-    var filterList = rdf.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
+    var filterList = gRDF.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
     return filterList;
 }
 
@@ -232,7 +265,8 @@ function onDeleteFilter()
 
     var confirmStr = gFilterBundle.getString("deleteFilterConfirmation");
 
-    if (!window.confirm(confirmStr)) return;
+    if (!window.confirm(confirmStr)) 
+      return;
 
     filterList.removeFilter(filter);
     refreshFilterList();
@@ -251,7 +285,7 @@ function onDown(event)
 function viewLog()
 {
   var uri = gFilterTree.getAttribute("ref");
-  var server = rdf.GetResource(uri).QueryInterface(Components.interfaces.nsIMsgFolder).server;
+  var server = gRDF.GetResource(uri).QueryInterface(Components.interfaces.nsIMsgFolder).server;
 
   var filterList = currentFilterList();
   var args = {filterList: filterList};
@@ -261,8 +295,14 @@ function viewLog()
 
 function runSelectedFilters()
 {
-  var folderURI = runFiltersFolderPicker.getAttribute("uri");
-  var resource = rdf.GetResource(folderURI);
+  // if run button has "stop" label, do stop.
+  if (gRunFiltersButton.getAttribute("label") == gRunFiltersButton.getAttribute("stoplabel")) {
+    gFilterListMsgWindow.StopUrls();
+    return;
+  }
+  
+  var folderURI = gRunFiltersFolderPicker.getAttribute("uri");
+  var resource = gRDF.GetResource(folderURI);
   var msgFolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
   var filterService = Components.classes["@mozilla.org/messenger/services/filters;1"].getService(Components.interfaces.nsIMsgFilterService);
   var filterList = filterService.getTempFilterList(msgFolder);
@@ -284,6 +324,7 @@ function runSelectedFilters()
       }
     }
   }
+
   filterService.applyFiltersToFolders(filterList, folders, gFilterListMsgWindow);
 }
 
@@ -291,11 +332,18 @@ function moveCurrentFilter(motion)
 {
     var filterList = currentFilterList();
     var filter = currentFilter();
-    if (!filterList) return;
-    if (!filter) return;
+    if (!filterList || !filter) 
+      return;
 
     filterList.moveFilter(filter, motion);
     refreshFilterList();
+}
+
+function rebuildFilterTree(uri)
+{
+  gFilterTree.view.selection.clearSelection();
+  gFilterTree.removeAttribute("ref");
+  gFilterTree.setAttribute("ref", uri);
 }
 
 function refreshFilterList() 
@@ -306,9 +354,7 @@ function refreshFilterList()
     // store the selected resource before we rebuild the tree
     var selectedRes = gFilterTree.currentIndex >= 0 ? gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex) : null;
 
-    // rebuild the tree   
-    gFilterTree.view.selection.clearSelection();
-    gFilterTree.builder.rebuild();
+    rebuildFilterTree(gCurrentServerURI);
 
     // restore selection to the previous selected resource
     if (selectedRes) {
@@ -327,19 +373,19 @@ function updateButtons()
     var oneFilterSelected = (numFiltersSelected == 1);
 
     // "edit" and "delete" only enabled when one filter selected
-    editButton.disabled = !oneFilterSelected;
-    deleteButton.disabled = !oneFilterSelected;
+    gEditButton.disabled = !oneFilterSelected;
+    gDeleteButton.disabled = !oneFilterSelected;
 
     // we can run multiple filters on a folder
     // so only disable this UI if no filters are selected
-    runFiltersFolderPickerLabel.disabled = !numFiltersSelected;
-    runFiltersFolderPicker.disabled = !numFiltersSelected;
-    runFiltersButton.disabled = !numFiltersSelected;
+    gRunFiltersFolderPickerLabel.disabled = !numFiltersSelected;
+    gRunFiltersFolderPicker.disabled = !numFiltersSelected;
+    gRunFiltersButton.disabled = !numFiltersSelected;
 
     // "up" enabled only if one filter selected, and it's not the first
-    reorderUpButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex > 0);
+    gReorderUpButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex > 0);
     // "down" enabled only if one filter selected, and it's not the last
-    reorderDownButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex < gFilterTree.view.rowCount-1);
+    gReorderDownButton.disabled = !(oneFilterSelected && gFilterTree.currentIndex < gFilterTree.view.rowCount-1);
 }
 
 /**
