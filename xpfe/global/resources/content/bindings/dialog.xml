@@ -326,8 +326,7 @@
 
   <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
     <content>
-      <xul:label class="dialogheader-title" xbl:inherits="value=title"/>
-      <xul:spacer flex="1"/>
+      <xul:label class="dialogheader-title" xbl:inherits="value=title,crop" crop="right" flex="1"/>
       <xul:label class="dialogheader-description" xbl:inherits="value=description"/>
     </content>
   </binding>
