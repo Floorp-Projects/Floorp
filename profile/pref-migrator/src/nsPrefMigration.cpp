@@ -917,7 +917,9 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
   rv = RenameAndMoveFilterFiles(profilePath);
   if (NS_FAILED(rv)) return rv;
 #endif /* MAIL_FILTER_FILE_NAME_SUFFIX_IN_4x */
-                       
+     
+  fsStream.close();
+                  
   return rv;
 }
 
