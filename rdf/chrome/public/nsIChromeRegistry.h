@@ -20,6 +20,7 @@
 #define nsIChromeRegistry_h__
 
 #include "nsISupports.h"
+#include "nsString.h"
 
 // {D8C7D8A1-E84C-11d2-BF87-00105A1B0627}
 #define NS_ICHROMEREGISTRY_IID \
@@ -31,6 +32,7 @@ public:
     static const nsIID& GetIID() { static nsIID iid = NS_ICHROMEREGISTRY_IID; return iid; }
     
     NS_IMETHOD Init() = 0;
+    NS_IMETHOD ConvertChromeURL(const nsString& chromeURL, nsString& answer) = 0;
 };
 
 // for component registration

@@ -54,6 +54,7 @@ public:
 
     // nsIChromeRegistry methods:
     NS_IMETHOD Init();
+    NS_IMETHOD ConvertChromeURL(const nsString& chromeURL, nsString& answer);
 
     // nsIRDFObserver methods:
     NS_IMETHOD OnAssert(nsIRDFResource* subject,
@@ -144,8 +145,12 @@ nsChromeRegistry::Init()
       
   }
 
-  rv = gRegistryDB->AddObserver(this);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self as registry observer");
+  if (gRegistryDB)
+  {
+      rv = gRegistryDB->AddObserver(this);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self as registry observer");
+  }
+  
   return rv;
 }
 
@@ -203,6 +208,12 @@ nsChromeRegistry::QueryInterface(REFNSIID aIID, void** aResult)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChromeRegistry methods:
+
+NS_IMETHODIMP
+nsChromeRegistry::ConvertChromeURL(const nsString& chromeURL, nsString& answer)
+{
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRDFObserver methods:
