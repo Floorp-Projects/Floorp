@@ -911,6 +911,10 @@ CERT_FindSMimeProfile(CERTCertificate *cert)
     NSSCryptoContext *cc;
     SECItem *rvItem = NULL;
 
+    if (!cert || !cert->emailAddr || !cert->emailAddr[0]) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     c = STAN_GetNSSCertificate(cert);
     if (!c) return NULL;
     cc = c->object.cryptoContext;
