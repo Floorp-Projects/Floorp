@@ -145,6 +145,7 @@ NS_IMPL_ISUPPORTS1(nsJARDownloadObserver, nsIStreamObserver)
 nsJARChannel::nsJARChannel()
     : mContentType(nsnull),
       mContentLength(-1),
+      mLoadAttributes(LOAD_NORMAL),
       mStartPosition(0),
       mReadCount(-1),
       mJAREntry(nsnull),
