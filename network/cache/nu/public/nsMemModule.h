@@ -27,6 +27,9 @@
 
 #include "nsCacheModule.h"
 #include "nsMemCacheObject.h"
+#include "nsCachePref.h"
+
+//#include "nsHash.h" // TODO - replace with nsHashtable when the XPCOM_BRANCH merges
 
 //#include <nsHashtable.h>
 /*
@@ -35,13 +38,11 @@ static const NS_MEMMODULE_IID =
 { 0x5d51b250, 0xe6c2, 0x11d1, { 0xaf, 0xe5, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
 */
 
-static const PRUint32 DEFAULT_SIZE= 5*1024*1024;
-
 class nsMemModule : public nsCacheModule
 {
 
 public:
-    nsMemModule(const PRUint32 size=DEFAULT_SIZE);
+    nsMemModule(const PRUint32 size=nsCachePref::MemCacheSize());
     ~nsMemModule();
 
 /*
@@ -65,22 +66,24 @@ protected:
 private:
     nsMemCacheObject* m_pFirstObject;
 
-//    nsHashtable m_ht;
+    //nsHash m_ht; //TODO replace with nsHashtable
     //Optimization
     nsMemCacheObject* m_pLastObject;
 
     nsMemModule(const nsMemModule& mm);
     nsMemModule& operator=(const nsMemModule& mm);
 
-    /*
+/*    
     class nsMemKey : public nsHashKey
     {
     public:
-      PRUint32 HashValue();
-      PRBool Equals(nsHashKey *aKey);
-      nsHashKey *Clone();
+                    nsMemKey();
+                    ~nsMemKey();
+      PRUint32      HashValue();
+      PRBool        Equals(nsHashKey *aKey);
+      nsHashKey*    Clone();
     };
-    */
+*/    
 };
 
 #endif

@@ -25,19 +25,37 @@
 * 
 */
 #include "nsCacheModule.h"
+#include "nsCachePref.h"
+#include "mcom_db.h"
 
 class nsDiskModule : public nsCacheModule
 {
 
 public:
-    nsDiskModule(const PRUint32 size);
+    nsDiskModule(const PRUint32 size = nsCachePref::DiskCacheSize());
     ~nsDiskModule();
-    PRBool          AddObject(nsCacheObject* i_pObject);
-    nsCacheObject*  GetObject(PRUint32 i_index) const;
+
+    // Cache module interface
+    PRBool          AddObject(nsCacheObject* io_pObject);
+	PRBool          Contains(nsCacheObject* io_pObject) const;
+    PRBool          Contains(const char* i_url) const;
+	nsCacheObject*	GetObject(const PRUint32 i_index) const;
+	nsCacheObject*	GetObject(const char* i_url) const;
 
 private:
+    enum sync_frequency
+    {
+        EVERYTIME,
+        IDLE,
+        NEVER
+    } m_Sync;
+
+    PRBool          InitDB(void);
+
     nsDiskModule(const nsDiskModule& dm);
     nsDiskModule& operator=(const nsDiskModule& dm);
+
+    DB* m_pDB;
 };
 
 #endif

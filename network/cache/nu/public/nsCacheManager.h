@@ -40,48 +40,47 @@ class nsCacheManager //: public nsISupports
 {
     /* Change entries from 32 to 16 bit */
 public:
-	nsCacheManager();
-	~nsCacheManager();
-
-	PRInt32		    AddModule(nsCacheModule* i_cacheModule);
-    
-    PRBool          Contains(const char* i_url) const;
-    
-    /* Number of modules in the cache manager */
-	PRInt32		    Entries() const;
-	
-    /* Singleton */
-	static nsCacheManager* 
-				    GetInstance();
-    
-    nsCacheObject*  GetObject(const char* i_url) const;
-	nsCacheModule*  GetModule(PRInt32 i_index) const;
-
-    nsMemModule*    GetMemModule() const;
-    nsDiskModule*   GetDiskModule() const;
-
-	const char*     Trace() const;
-
-    /* Performance measure- microseconds */
-    PRUint32        WorstCaseTime() const;
-
-protected:
-    void            Init();
-    nsCacheModule*
-				LastModule() const;
-
    enum modules
    {
        MEM =0,
        DISK=1
    };
 
-private:
-	nsCacheModule* m_pFirstModule;
-    nsCachePref* m_pPref;
+    nsCacheManager();
+    ~nsCacheManager();
 
-	nsCacheManager(const nsCacheManager& cm);
-	nsCacheManager& operator=(const nsCacheManager& cm);	
+    PRInt32         AddModule(nsCacheModule* i_cacheModule);
+    
+    PRBool          Contains(const char* i_url) const;
+    
+    /* Number of modules in the cache manager */
+    PRInt32         Entries() const;
+    
+    /* Singleton */
+    static nsCacheManager* 
+                    GetInstance();
+    
+    nsCacheObject*  GetObject(const char* i_url) const;
+    nsCacheModule*  GetModule(PRInt32 i_index) const;
+
+    nsMemModule*    GetMemModule() const;
+    nsDiskModule*   GetDiskModule() const;
+
+    const char*     Trace() const;
+
+    /* Performance measure- microseconds */
+    PRUint32        WorstCaseTime(void) const;
+
+protected:
+    void            Init();
+    nsCacheModule*
+                    LastModule() const;
+
+private:
+    nsCacheModule* m_pFirstModule;
+
+    nsCacheManager(const nsCacheManager& cm);
+    nsCacheManager& operator=(const nsCacheManager& cm);
 };
 
 #endif
