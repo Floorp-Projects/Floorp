@@ -680,13 +680,13 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
 	    if(shiftValue == "true")
-	      modifiers |= kMenuShiftModifier;
+	      modifiers |= knsMenuItemShiftModifier;
 	    
 	    if(altValue == "true")
-	      modifiers |= kMenuOptionModifier;
+	      modifiers |= knsMenuItemAltModifier;
 	    
 	    if(commandValue == "false")
-	     modifiers |= kMenuNoCommandModifier;
+	     modifiers |= knsMenuItemCommandModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
     }
