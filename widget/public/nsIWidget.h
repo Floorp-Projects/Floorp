@@ -326,6 +326,19 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD IsVisible(PRBool & aState) = 0;
 
     /**
+     * Perform platform-dependent sanity check on a potential window position.
+     * This is guaranteed to work only for top-level windows.
+     *
+     * @param aX in: an x position expressed in screen coordinates.
+     *           out: the x position constrained to fit on the screen(s).
+     * @param aY in: an y position expressed in screen coordinates.
+     *           out: the y position constrained to fit on the screen(s).
+     * @return vapid success indication. but see also the parameters.
+     *
+     **/
+    NS_IMETHOD ConstrainPosition(PRInt32 *aX, PRInt32 *aY) = 0;
+
+    /**
      * Move this widget.
      *
      * @param aX the new x position expressed in the parent's coordinate system
