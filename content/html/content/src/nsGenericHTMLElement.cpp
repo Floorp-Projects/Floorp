@@ -1304,6 +1304,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
           nsICSSDeclaration* decl = cssRule->GetDeclaration();
           if (nsnull != decl) {
             decl->ToString(aResult);
+            NS_RELEASE(decl);
           }
           NS_RELEASE(cssRule);
         }
