@@ -1179,6 +1179,31 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // We need to do the save/open immediately, then.
     PRInt32 action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction( &action );
+#ifdef XP_WIN
+    /* We need to see whether the file we've got here could be
+     * executable.  If it could, we had better not try to open it!
+     * This code mirrors the code in
+     * nsExternalAppHandler::LaunchWithApplication so that what we
+     * test here is as close as possible to what will really be
+     * happening if we decide to execute
+     */
+    nsCOMPtr<nsIFile> fileToTest;
+    rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(fileToTest));
+    if (NS_SUCCEEDED(rv)) {
+      rv = fileToTest->Append(mSuggestedFileName);
+      if (NS_SUCCEEDED(rv)) {
+        PRBool isExecutable = PR_TRUE;
+        fileToTest->IsExecutable(&isExecutable);
+        if (isExecutable) {
+          action = nsIMIMEInfo::saveToDisk;
+        }
+      }
+    }
+
+    if (NS_FAILED(rv)) {  // Paranoia is good
+      action = nsIMIMEInfo::saveToDisk;
+    }
+#endif
     if ( action == nsIMIMEInfo::saveToDisk )
     {
         rv = SaveToDisk(nsnull, PR_FALSE);
