@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   David Hyatt <hyatt@netscape.com> (Original Author)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -48,6 +49,10 @@
 #include "nsHTMLTokens.h"
 #include "nsIURI.h"
 #include "nsTextFragment.h"
+#include "nsXULElement.h"
+#include "nsXULAtoms.h"
+
+static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
@@ -250,6 +255,130 @@ nsXBLContentSink::AddLeaf(const nsIParserNode& aNode)
   return nsXMLContentSink::AddLeaf(aNode);
 }
 
+nsresult
+nsXBLContentSink::AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement)
+{
+  // Add tag attributes to the element
+  nsresult rv;
+  PRInt32 count = aNode.GetAttributeCount();
+
+  // Create storage for the attributes
+  nsXULPrototypeAttribute* attrs = nsnull;
+  if (count > 0) {
+    attrs = new nsXULPrototypeAttribute[count];
+    if (!attrs)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  aElement->mAttributes    = attrs;
+  aElement->mNumAttributes = count;
+
+  // Copy the attributes into the prototype
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  
+  for (PRInt32 i = 0; i < count; i++) {
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    PRInt32 nameSpaceID;
+
+    if (nameSpacePrefix)
+        nameSpaceID = GetNameSpaceId(nameSpacePrefix);
+    else {
+      if (nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+        nameSpaceID = kNameSpaceID_XMLNS;
+      else
+        nameSpaceID = kNameSpaceID_None;
+    }
+
+    if (kNameSpaceID_Unknown == nameSpaceID) {
+      nameSpaceID = kNameSpaceID_None;
+      nameAtom = dont_AddRef(NS_NewAtom(key));
+      nameSpacePrefix = nsnull;
+    } 
+
+    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
+                                  *getter_AddRefs(attrs->mNodeInfo));
+    
+    const nsAReadableString& valueStr = aNode.GetValueAt(i);
+    attrs->mValue.SetValue(valueStr);
+    ++attrs;
+  }
+
+  // XUL elements may require some additional work to compute
+  // derived information.
+  if (aElement->mNodeInfo->NamespaceEquals(nsXULAtoms::nameSpaceID)) {
+    nsAutoString value;
+
+    // Compute the element's class list if the element has a 'class' attribute.
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      rv = nsClassList::ParseClasses(&aElement->mClassList, value);
+      if (NS_FAILED(rv)) return rv;
+    }
+
+    // Parse the element's 'style' attribute
+    rv = aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::style, value);
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+      if (!mCSSParser) {
+          rv = nsComponentManager::CreateInstance(kCSSParserCID,
+                                                  nsnull,
+                                                  NS_GET_IID(nsICSSParser),
+                                                  getter_AddRefs(mCSSParser));
+
+          if (NS_FAILED(rv)) return rv;
+      }
+
+      rv = mCSSParser->ParseStyleAttribute(value, mDocumentURL,
+                             getter_AddRefs(aElement->mInlineStyleRule));
+
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");
+      if (NS_FAILED(rv)) return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXBLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
+                                nsINodeInfo* aNodeInfo, nsIContent** aResult)
+{
+  if (aNameSpaceID == nsXULAtoms::nameSpaceID) {
+    nsXULPrototypeElement* prototype = new nsXULPrototypeElement(0);
+    if (!prototype)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    prototype->mType = nsXULPrototypeNode::eType_RefCounted_Element;
+    prototype->mNodeInfo = aNodeInfo;
+    
+    AddAttributesToXULPrototype(aNode, prototype);
+
+    nsresult rv = nsXULElement::Create(prototype, mDocument, PR_TRUE, aResult);
+    if (NS_FAILED(rv)) return rv;
+    return NS_OK;
+  }
+  else
+    return nsXMLContentSink::CreateElement(aNode, aNameSpaceID, aNodeInfo, aResult);
+}
+
+nsresult 
+nsXBLContentSink::AddAttributes(const nsIParserNode& aNode,
+                                nsIContent* aContent,
+                                PRBool aIsHTML)
+{
+  if (aContent->IsContentOfType(nsIContent::eXUL))
+    return NS_OK; // Nothing to do, since the proto already has the attrs.
+  else 
+    return nsXMLContentSink::AddAttributes(aNode, aContent, aIsHTML);
+}
+
 void 
 nsXBLContentSink::ConstructBinding()
 {
@@ -288,7 +417,7 @@ nsXBLContentSink::ConstructHandler(const nsIParserNode& aNode)
     SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
                  getter_AddRefs(nameAtom));
 
-    if (nameSpacePrefix || nameAtom.get() == nsLayoutAtoms::xmlnsNameSpace)
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
       continue;
 
     // Is this attribute one of the ones we care about?

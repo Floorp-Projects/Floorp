@@ -43,6 +43,8 @@
 #include "nsXBLDocumentInfo.h"
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLPrototypeHandler.h"
+#include "nsICSSParser.h"
+#include "nsLayoutCID.h"
 
 typedef enum {
   eXBL_InDocument,
@@ -62,6 +64,8 @@ typedef enum {
   eXBL_InGetter,
   eXBL_InSetter
 } XBLSecondaryState;
+
+class nsXULPrototypeElement;
 
 // The XBL content sink overrides the XML content sink to
 // builds its own lightweight data structures for the <resources>,
@@ -86,16 +90,24 @@ protected:
   PRBool OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpaceID, nsIAtom* aTagName);
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
+  nsresult CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
+                         nsINodeInfo* aNodeInfo, nsIContent** aResult);
+  nsresult AddAttributes(const nsIParserNode& aNode,
+                         nsIContent* aContent,
+                         PRBool aIsHTML);
 
   // Our own helpers for constructing XBL prototype objects.
   void ConstructBinding();
   void ConstructHandler(const nsIParserNode& aNode);
+  nsresult AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
 
 protected:
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
   nsIXBLDocumentInfo* mDocInfo;
   PRBool mIsChromeOrResource; // For bug #45989
+
+  nsCOMPtr<nsICSSParser> mCSSParser;            // [OWNER]
 
   nsCOMPtr<nsIXBLPrototypeBinding> mBinding;
   nsCOMPtr<nsIXBLPrototypeHandler> mHandler;

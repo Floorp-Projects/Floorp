@@ -743,24 +743,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       }
     }
   }
-  else {
-    // The first step here is to see if someone has provided their
-    // own content element implementation (e.g., XUL or MathML).  
-    // This is done based off a contractid/namespace scheme.
-    nsCOMPtr<nsIElementFactory> elementFactory;
-
-    GetElementFactory(nameSpaceID, getter_AddRefs(elementFactory));
-    if (elementFactory) {
-      // Create the content element using the element factory.
-      elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
-    }
-    else {
-      nsCOMPtr<nsIXMLContent> xmlContent;
-      result = NS_NewXMLElement(getter_AddRefs(xmlContent), nodeInfo);
-
-      content = do_QueryInterface(xmlContent);
-    }
-  }
+  else
+    CreateElement(aNode, nameSpaceID, nodeInfo, getter_AddRefs(content));
   
   if (NS_OK == result) {
     PRInt32 id;
@@ -821,6 +805,27 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   }
 
   return result;
+}
+
+nsresult
+nsXMLContentSink::CreateElement(const nsIParserNode& aNode, PRInt32 aNameSpaceID, 
+                                nsINodeInfo* aNodeInfo, nsIContent** aResult)
+{
+  // The first step here is to see if someone has provided their
+  // own content element implementation (e.g., XUL or MathML).  
+  // This is done based off a contractid/namespace scheme. 
+  nsCOMPtr<nsIElementFactory> elementFactory;
+  GetElementFactory(aNameSpaceID, getter_AddRefs(elementFactory));
+  if (elementFactory)
+    // Create the content element using the element factory.
+    elementFactory->CreateInstanceByTag(aNodeInfo, aResult);
+  else {
+    nsCOMPtr<nsIXMLContent> xmlContent;
+    NS_NewXMLElement(getter_AddRefs(xmlContent), aNodeInfo);
+    return CallQueryInterface(xmlContent, aResult);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -1253,8 +1253,7 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
             continue;
         }
 
-        nsAutoString    valueStr;
-        valueStr = aNode.GetValueAt(i);
+        const nsAReadableString& valueStr = aNode.GetValueAt(i);
 
         attrs->mValue.SetValue( valueStr );
 

@@ -515,6 +515,12 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
+    if (mPrototype && mPrototype->mType == nsXULPrototypeNode::eType_RefCounted_Element) {
+        mPrototype->mRefCnt--;
+        if (mPrototype->mRefCnt == 0)
+            delete mPrototype;
+    }
+
     delete mSlots;
 
     //NS_IF_RELEASE(mDocument); // not refcounted
@@ -553,10 +559,6 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! aPrototype)
         return NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
-    if (! aDocument)
-        return NS_ERROR_NULL_POINTER;
-
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
@@ -575,6 +577,9 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 
     element->mPrototype = aPrototype;
     element->mDocument = aDocument;
+
+    if (aPrototype->mType == nsXULPrototypeNode::eType_RefCounted_Element)
+        aPrototype->mRefCnt++;
 
     if (aIsScriptable) {
         // Check each attribute on the prototype to see if we need to do
