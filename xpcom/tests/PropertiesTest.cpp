@@ -24,7 +24,7 @@
 #define NS_IMPL_IDS
 
 #include "nsIEventQueueService.h"
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
