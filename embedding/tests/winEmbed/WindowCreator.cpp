@@ -41,6 +41,6 @@ WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
                                   nsIWebBrowserChrome **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    ::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
+    AppCallbacks::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
 }
