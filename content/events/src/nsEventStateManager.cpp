@@ -62,9 +62,11 @@
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
+#include "nsIChromeEventHandler.h"
+#include "nsIFocusController.h"
+
 #include "nsXULAtoms.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIObserverService.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
@@ -333,16 +335,16 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           blurevent.message = NS_BLUR_CONTENT;
       
           if(gLastFocusedPresContext) {
-            nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+            nsCOMPtr<nsIFocusController> focusController;
 
             nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
             gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
             nsCOMPtr<nsIDOMWindowInternal> rootWindow;
             nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
             if(ourWindow) {
-              ourWindow->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
-              if (commandDispatcher)
-                commandDispatcher->SetSuppressFocus(PR_TRUE);
+              ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+              if (focusController)
+                focusController->SetSuppressFocus(PR_TRUE);
             }
             
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
@@ -350,8 +352,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
               gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
               
 
-            if (commandDispatcher) {
-              commandDispatcher->SetSuppressFocus(PR_FALSE);
+            if (focusController) {
+              focusController->SetSuppressFocus(PR_FALSE);
             }
           }
         }
@@ -399,55 +401,29 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // objects.
       EnsureDocument(aPresContext);
 
-      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+      nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIDOMElement> focusedElement;
       nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
       nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(mDocument);
 
-      if (xulDoc) {
-        // See if we have a command dispatcher attached.
-        xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-        if (commandDispatcher) {
-          // Obtain focus info from the command dispatcher.
-          commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
-          commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
-          
-          commandDispatcher->SetSuppressFocusScroll(PR_TRUE);
-        }
+      nsCOMPtr<nsIScriptGlobalObject> globalObj;
+      mDocument->GetScriptGlobalObject(getter_AddRefs(globalObj));
+      nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObj));
+      win->GetRootFocusController(getter_AddRefs(focusController));
+
+      if (focusController) {
+        // Obtain focus info from the command dispatcher.
+        focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+        focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+        
+        focusController->SetSuppressFocusScroll(PR_TRUE);
       }
 
 	    if (!focusedWindow) {
-          nsCOMPtr<nsIScriptGlobalObject> globalObject;
-          mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-          focusedWindow = do_QueryInterface(globalObject);
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        focusedWindow = do_QueryInterface(globalObject);
       }
-
-	    // Sill no focused XULDocument, that is bad
-	    if(!xulDoc && focusedWindow)
-	    {
-		    nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(focusedWindow);
-        if(privateWindow){
-		      nsCOMPtr<nsIDOMWindowInternal> privateRootWindow;
-		      privateWindow->GetPrivateRoot(getter_AddRefs(privateRootWindow));
-          if(privateRootWindow) {
-			      nsCOMPtr<nsIDOMDocument> privateParentDoc;
-			      privateRootWindow->GetDocument(getter_AddRefs(privateParentDoc));
-            xulDoc = do_QueryInterface(privateParentDoc);
-          }
-        }
-		  
-		    if (xulDoc) {
-          // See if we have a command dispatcher attached.
-          xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-          if (commandDispatcher) {
-            // Obtain focus info from the command dispatcher.
-            commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
-            commandDispatcher->GetFocusedElement(getter_AddRefs(focusedElement));
-            
-            commandDispatcher->SetSuppressFocusScroll(PR_TRUE);
-          }
-        }
-	    }
 
       // Focus the DOM window.
       NS_WARN_IF_FALSE(focusedWindow,"check why focusedWindow is null!!!");
@@ -470,16 +446,16 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         }  
       }
 
-      if (commandDispatcher) {
-        commandDispatcher->SetActive(PR_TRUE);
+      if (focusController) {
+        focusController->SetActive(PR_TRUE);
         
         PRBool isSuppressed;
-        commandDispatcher->GetSuppressFocus(&isSuppressed);
+        focusController->GetSuppressFocus(&isSuppressed);
         while(isSuppressed){
-          commandDispatcher->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
-          commandDispatcher->GetSuppressFocus(&isSuppressed);
+          focusController->SetSuppressFocus(PR_FALSE); // Unsuppress and let the command dispatcher listen again.
+          focusController->GetSuppressFocus(&isSuppressed);
         }
-        commandDispatcher->SetSuppressFocusScroll(PR_FALSE);
+        focusController->SetSuppressFocusScroll(PR_FALSE);
       }  
     }
   break;
@@ -508,24 +484,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // de-activation.  This will cause it to remember the last
       // focused sub-window and sub-element for this top-level
       // window.
-      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
+      nsCOMPtr<nsIFocusController> focusController;
       nsCOMPtr<nsIDOMWindowInternal> rootWindow;
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
-        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-        if(rootWindow) {
-          nsCOMPtr<nsIDOMDocument> rootDocument;
-          rootWindow->GetDocument(getter_AddRefs(rootDocument));
-
-          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-          if (xulDoc) {
-            // See if we have a command dispatcher attached.
-            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-            if (commandDispatcher) {
-              // Suppress the command dispatcher.
-              commandDispatcher->SetSuppressFocus(PR_TRUE);
-            }
-          }
+        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        if (focusController) {
+          // Suppress the command dispatcher.
+          focusController->SetSuppressFocus(PR_TRUE);
         }
       }
 
@@ -577,9 +543,9 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         gLastFocusedPresContext = nsnull;
       }             
 
-      if (commandDispatcher) {
-        commandDispatcher->SetActive(PR_FALSE);
-        //commandDispatcher->SetSuppressFocus(PR_FALSE);
+      if (focusController) {
+        focusController->SetActive(PR_FALSE);
+        //focusController->SetSuppressFocus(PR_FALSE);
       }
     } 
     
@@ -955,7 +921,6 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       PRInt32 action = 0;
       PRInt32 numLines = 0;
       PRBool aBool;
-
       if (msEvent->isShift) {
         mPrefService->GetIntPref("mousewheel.withshiftkey.action", &action);
         mPrefService->GetBoolPref("mousewheel.withshiftkey.sysnumlines",
@@ -2687,8 +2652,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
           
           // Make sure we're not switching command dispatchers, if so, surpress the blurred one
           if(gLastFocusedDocument && mDocument) {
-            nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
-            nsCOMPtr<nsIDOMXULCommandDispatcher> oldCommandDispatcher;
+            nsCOMPtr<nsIFocusController> newFocusController;
+            nsCOMPtr<nsIFocusController> oldFocusController;
             nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
             nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
             nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
@@ -2698,11 +2663,11 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
             nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
             if(newWindow)
-              newWindow->GetRootCommandDispatcher(getter_AddRefs(newCommandDispatcher));
+              newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
             if(oldWindow)
-			  oldWindow->GetRootCommandDispatcher(getter_AddRefs(oldCommandDispatcher));
-            if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
-              oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
+			  oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
+            if(oldFocusController && oldFocusController != newFocusController)
+              oldFocusController->SetSuppressFocus(PR_TRUE);
           }
           
           nsCOMPtr<nsIEventStateManager> esm;
@@ -2737,8 +2702,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
 	  	  // Make sure we're not switching command dispatchers, if so, surpress the blurred one
 		  if(mDocument) {
-		    nsCOMPtr<nsIDOMXULCommandDispatcher> newCommandDispatcher;
-            nsCOMPtr<nsIDOMXULCommandDispatcher> oldCommandDispatcher;
+		    nsCOMPtr<nsIFocusController> newFocusController;
+            nsCOMPtr<nsIFocusController> oldFocusController;
 		    nsCOMPtr<nsPIDOMWindow> oldPIDOMWindow;
 		    nsCOMPtr<nsPIDOMWindow> newPIDOMWindow;
 		    nsCOMPtr<nsIScriptGlobalObject> oldGlobal;
@@ -2748,10 +2713,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
 		    nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
 
-		    newWindow->GetRootCommandDispatcher(getter_AddRefs(newCommandDispatcher));
-		    oldWindow->GetRootCommandDispatcher(getter_AddRefs(oldCommandDispatcher));
-            if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
-			  oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
+		    newWindow->GetRootFocusController(getter_AddRefs(newFocusController));
+		    oldWindow->GetRootFocusController(getter_AddRefs(oldFocusController));
+            if(oldFocusController && oldFocusController != newFocusController)
+			  oldFocusController->SetSuppressFocus(PR_TRUE);
 		  }
 
       nsCOMPtr<nsIEventStateManager> esm;
@@ -2962,6 +2927,12 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent)
           nsCOMPtr<nsIContent> target(do_QueryInterface(aTarget));
           if (target) {
             ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+          }
+          else {
+            nsCOMPtr<nsIChromeEventHandler> target(do_QueryInterface(aTarget));
+            if (target) {
+              ret = target->HandleChromeEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+            }
           }
         }
       }

@@ -36,6 +36,7 @@ CPPSRCS =			 \
 	nsJSNavigator.cpp        \
 	nsJSLocation.cpp	 \
 	nsJSWindowCollection.cpp \
+  nsFocusController.cpp \
 	nsGlobalWindow.cpp       \
 	nsLocation.cpp		 \
 	nsDOMWindowList.cpp	 \
@@ -53,6 +54,7 @@ CPPSRCS =			 \
 	nsJSCrypto.cpp		\
 	nsJSCMRFObject.cpp	\
 	nsJSPkcs11.cpp		\
+  nsWindowRoot.cpp \
 	$(NULL)
 
 EXPORTS=nsJSUtils.h
@@ -67,6 +69,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSDOMException.obj	\
 	.\$(OBJDIR)\nsJSEnvironment.obj		\
 	.\$(OBJDIR)\nsJSWindow.obj		\
+  .\$(OBJDIR)\nsFocusController.obj \
 	.\$(OBJDIR)\nsGlobalWindow.obj		\
 	.\$(OBJDIR)\nsJSNavigator.obj		\
 	.\$(OBJDIR)\nsLocation.obj		\
@@ -87,6 +90,7 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSCrypto.obj		\
 	.\$(OBJDIR)\nsJSCRMFObject.obj		\
 	.\$(OBJDIR)\nsJSPkcs11.obj		\
+  .\$(OBJDIR)\nsWindowRoot.obj \
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \

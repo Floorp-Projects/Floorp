@@ -39,12 +39,13 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIFocusController.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
+#include "nsPIWindowRoot.h"
 
 PRUint32 nsXBLWindowKeyHandler::gRefCnt = 0;
 nsIAtom* nsXBLWindowKeyHandler::kKeyDownAtom = nsnull;
@@ -90,16 +91,16 @@ NS_IMPL_ISUPPORTS1(nsXBLWindowKeyHandler, nsIDOMKeyListener)
 PRBool
 nsXBLWindowKeyHandler::IsEditor()
 {
-  nsCOMPtr<nsPIDOMWindow> privateWindow(do_QueryInterface(mReceiver));
-  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-  privateWindow->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
-  if (!commandDispatcher) {
-    NS_WARNING("********* Problem for embedding. They have no command dispatcher!!!\n");
+  nsCOMPtr<nsPIWindowRoot> windowRoot(do_QueryInterface(mReceiver));
+  nsCOMPtr<nsIFocusController> focusController;
+  windowRoot->GetFocusController(getter_AddRefs(focusController));
+  if (!focusController) {
+    NS_WARNING("********* Something went wrong! No focus controller on the root!!!\n");
     return PR_FALSE;
   }
 
   nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-  commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
   if (!focusedWindow)
     return PR_FALSE;
   

@@ -1413,11 +1413,6 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
         if (mRootContent)
             mRootContent->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
-        // Break circular reference for the case where the currently
-        // focused window is ourself.
-        if (mCommandDispatcher)
-            mCommandDispatcher->SetFocusedWindow(nsnull);
-
         // set all builder references to document to nsnull -- out of band notification
         // to break ownership cycle
         if (mBuilders) {
@@ -3828,18 +3823,9 @@ nsXULDocument::Init()
     mNodeInfoManager->Init(mNameSpaceManager);
 
     // Create our command dispatcher and hook it up.
-    rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
+    rv = nsXULCommandDispatcher::Create(this, getter_AddRefs(mCommandDispatcher));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
     if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIDOMEventListener> commandDispatcher =
-        do_QueryInterface(mCommandDispatcher);
-
-    if (commandDispatcher) {
-        // Take the focus tracker and add it as an event listener for focus and blur events.
-        AddEventListener(NS_LITERAL_STRING("focus"), commandDispatcher, PR_TRUE);
-        AddEventListener(NS_LITERAL_STRING("blur"), commandDispatcher, PR_TRUE);
-    }
    
     // Get the local store. Yeah, I know. I wish GetService() used a
     // 'void**', too.

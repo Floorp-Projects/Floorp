@@ -30,6 +30,7 @@
 #include "prprf.h"
 #include "nsIComponentManager.h"
 
+#include "nsIFocusController.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -635,13 +636,13 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   
   if (privContent)
   {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-    privContent->GetRootCommandDispatcher(getter_AddRefs(commandDispatcher));
+    nsCOMPtr<nsIFocusController> focusController;
+    privContent->GetRootFocusController(getter_AddRefs(focusController));
     
-    if (commandDispatcher)
+    if (focusController)
     {
       nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
-      commandDispatcher->GetFocusedWindow(getter_AddRefs(focussedWindow));
+      focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
 
       if (focussedWindow.get() == contentInternal.get())    // now see if we are focussed
       {

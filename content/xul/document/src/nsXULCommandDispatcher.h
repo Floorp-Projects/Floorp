@@ -42,21 +42,22 @@
 
 class nsIDOMElement;
 class nsPIDOMWindow;
-
+class nsIFocusController;
 
 class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
-                               public nsIDOMFocusListener,
                                public nsIScriptObjectOwner,
                                public nsSupportsWeakReference
 {
 protected:
-    nsXULCommandDispatcher(void);
-    virtual ~nsXULCommandDispatcher(void);
+    nsXULCommandDispatcher(nsIDocument* aDocument);
+    virtual ~nsXULCommandDispatcher();
+
+    void EnsureFocusController();
 
 public:
 
     static NS_IMETHODIMP
-    Create(nsIDOMXULCommandDispatcher** aResult);
+    Create(nsIDocument* aDocument, nsIDOMXULCommandDispatcher** aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -64,50 +65,31 @@ public:
     // nsIDOMXULCommandDispatcher interface
     NS_DECL_IDOMXULCOMMANDDISPATCHER
 
-    // nsIDOMFocusListener
-    virtual nsresult Focus(nsIDOMEvent* aEvent);
-    virtual nsresult Blur(nsIDOMEvent* aEvent);
-
-    // nsIDOMEventListener
-    virtual nsresult HandleEvent(nsIDOMEvent* anEvent) { return NS_OK; };
-
     // nsIScriptObjectOwner interface
     NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-public:
-    static nsresult GetParentWindowFromDocument(nsIDOMDocument* aElement, nsIDOMWindowInternal** aWindow);
-
 protected:
-    void* mScriptObject;       // ????
+    nsIFocusController* mFocusController; // Weak. We always die before the focus controller does.
+    nsIDocument* mDocument; // Weak.
 
-    // XXX THis was supposed to be WEAK, but c'mon, that's an accident
-    // waiting to happen! If somebody deletes the node, then asks us
-    // for the focus, we'll get killed!
-    nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
-    nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
-
-    //PRBool mSuppressFocus;
-    PRUint32 mSuppressFocus;
-    PRBool mSuppressFocusScroll;
-	PRBool mActive;
-	PRBool mFocusInitialized;
+    void* mScriptObject;
 
     class Updater {
     public:
-        Updater(nsIDOMElement* aElement,
-                const nsAReadableString& aEvents,
-                const nsAReadableString& aTargets)
-            : mElement(aElement),
-              mEvents(aEvents),
-              mTargets(aTargets),
-              mNext(nsnull)
-        {}
+      Updater(nsIDOMElement* aElement,
+              const nsAReadableString& aEvents,
+              const nsAReadableString& aTargets)
+          : mElement(aElement),
+            mEvents(aEvents),
+            mTargets(aTargets),
+            mNext(nsnull)
+      {}
 
-        nsIDOMElement* mElement; // [WEAK]
-        nsString       mEvents;
-        nsString       mTargets;
-        Updater*       mNext;
+      nsIDOMElement* mElement; // [WEAK]
+      nsString       mEvents;
+      nsString       mTargets;
+      Updater*       mNext;
     };
 
     Updater* mUpdaters;

@@ -111,10 +111,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-#ifdef INCLUDE_XUL
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULCommandDispatcher.h"
-#endif // INCLUDE_XUL
+#include "nsIFocusController.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -2111,68 +2108,52 @@ PresShell::EndObservingDocument()
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
-#ifdef INCLUDE_XUL
 static void CheckForFocus(nsIDocument* aDocument)
 {
   // Now that we have a root frame, set focus in to the presshell, but
   // only do this if our window is currently focused
   // Restore focus if we're the active window or a parent of a previously
   // active window.
-  // XXX The XUL dependency will go away when the focus tracking portion
-  // of the command dispatcher moves into the embedding layer.
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   aDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));  
-  nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(globalObject);
-  ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-  NS_ASSERTION(rootWindow , "cannot get rootWindow");
-  if(nsnull == rootWindow)
-    return;
-  nsCOMPtr<nsIDOMDocument> rootDocument;
-  rootWindow->GetDocument(getter_AddRefs(rootDocument));
+  nsCOMPtr<nsIFocusController> focusController;
+  ourWindow->GetRootFocusController(getter_AddRefs(focusController));
 
-  nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-  nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-  if (xulDoc) {
-    // See if we have a command dispatcher attached.
-    xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-    if (commandDispatcher) {
-      // Suppress the command dispatcher.
-      commandDispatcher->SetSuppressFocus(PR_TRUE);
-      nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
-      commandDispatcher->GetFocusedWindow(getter_AddRefs(focusedWindow));
-      
-      // See if the command dispatcher is holding on to an orphan window.
-      // This happens when you move from an inner frame to an outer frame
-      // (e.g., _parent, _top)
-      if (focusedWindow) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        focusedWindow->GetDocument(getter_AddRefs(domDoc));
-        if (!domDoc) {
-          // We're pointing to garbage. Go ahead and let this
-          // presshell take the focus.
-          focusedWindow = do_QueryInterface(ourWindow);
-          commandDispatcher->SetFocusedWindow(focusedWindow);
-        }
+  if (focusController) {
+    // Suppress the command dispatcher.
+    focusController->SetSuppressFocus(PR_TRUE);
+    nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+    focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+    
+    // See if the command dispatcher is holding on to an orphan window.
+    // This happens when you move from an inner frame to an outer frame
+    // (e.g., _parent, _top)
+    if (focusedWindow) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      focusedWindow->GetDocument(getter_AddRefs(domDoc));
+      if (!domDoc) {
+        // We're pointing to garbage. Go ahead and let this
+        // presshell take the focus.
+        focusedWindow = do_QueryInterface(ourWindow);
+        focusController->SetFocusedWindow(focusedWindow);
       }
-
-      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(ourWindow);
-      if (domWindow == focusedWindow) {
-        PRBool active;
-        commandDispatcher->GetActive(&active);
-        commandDispatcher->SetFocusedElement(nsnull);
-        if(active) {
-          // We need to restore focus and make sure we null
-          // out the focused element.
-          domWindow->Focus();
-        }
-      }
-      commandDispatcher->SetSuppressFocus(PR_FALSE);
     }
+
+    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(ourWindow);
+    if (domWindow == focusedWindow) {
+      PRBool active;
+      focusController->GetActive(&active);
+      focusController->SetFocusedElement(nsnull);
+      if(active) {
+        // We need to restore focus and make sure we null
+        // out the focused element.
+        domWindow->Focus();
+      }
+    }
+    focusController->SetSuppressFocus(PR_FALSE);
   }
 }
-#endif
-
 
 nsresult
 PresShell::NotifyReflowObservers(const char *aData)
@@ -2294,9 +2275,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
       mFrameManager->SetRootFrame(rootFrame);
     }
 
-#ifdef INCLUDE_XUL
     CheckForFocus(mDocument);
-#endif
 
     // Have the style sheet processor construct frame for the root
     // content object down
@@ -2516,8 +2495,7 @@ NS_IMETHODIMP
 PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
-
-#ifdef INCLUDE_XUL    
+  
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
   // event. If we are, we do not want to scroll the frame into view.
@@ -2525,40 +2503,28 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   // window. When they reactivate the window, the expected behavior
   // is not for the anchor link to scroll back into view. That is what
   // this check is preventing.
-  // XXX: The dependency on the command dispatcher needs to be fixed.
   nsCOMPtr<nsIContent> content;
   aFrame->GetContent(getter_AddRefs(content));
   if(content) {
     nsCOMPtr<nsIDocument> document;
     content->GetDocument(*getter_AddRefs(document));
     if(document){
-      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+      nsCOMPtr<nsIFocusController> focusController;
+	    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+	    document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
-        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-        if(rootWindow) {
-          nsCOMPtr<nsIDOMDocument> rootDocument;
-          rootWindow->GetDocument(getter_AddRefs(rootDocument));
-
-          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-          if (xulDoc) {
-            // See if we have a command dispatcher attached.
-            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-            if (commandDispatcher) {
-              PRBool dontScroll;
-              commandDispatcher->GetSuppressFocusScroll(&dontScroll);
-              if(dontScroll)
-                return NS_OK;
-			}
-		  }
-		}
-	  }
+        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        if (focusController) {
+          PRBool dontScroll;
+          focusController->GetSuppressFocusScroll(&dontScroll);
+          if(dontScroll)
+            return NS_OK;
+        }
+      }
     }
   }
-#endif    
+    
   if (IsScrollingEnabled())
     return ScrollFrameIntoView(aFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -3406,7 +3372,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   if (!aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-#ifdef INCLUDE_XUL
+
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
   // event. If we are, we do not want to scroll the frame into view.
@@ -3421,33 +3387,22 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     nsCOMPtr<nsIDocument> document;
     content->GetDocument(*getter_AddRefs(document));
     if(document){
-      nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-	  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-	  document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
+      nsCOMPtr<nsIFocusController> focusController;
+	    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
+	    document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
       nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
       if(ourWindow) {
-        ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-        if(rootWindow) {
-          nsCOMPtr<nsIDOMDocument> rootDocument;
-          rootWindow->GetDocument(getter_AddRefs(rootDocument));
-
-          nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-          if (xulDoc) {
-            // See if we have a command dispatcher attached.
-            xulDoc->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-            if (commandDispatcher) {
-              PRBool dontScroll;
-              commandDispatcher->GetSuppressFocusScroll(&dontScroll);
-              if(dontScroll)
-                return NS_OK;
-			}
-		  }
-		}
-	  }
+        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+        if (focusController) {
+          PRBool dontScroll;
+          focusController->GetSuppressFocusScroll(&dontScroll);
+          if(dontScroll)
+            return NS_OK;
+        }
+      }
     }
   }
-#endif
+
   if (mViewManager) {
     // Get the viewport scroller
     nsIScrollableView* scrollingView;

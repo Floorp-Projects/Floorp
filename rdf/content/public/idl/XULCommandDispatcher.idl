@@ -5,9 +5,6 @@ interface XULCommandDispatcher {
 
 	attribute Element focusedElement;
 	attribute WindowInternal focusedWindow;
-    attribute boolean suppressFocus;
-	attribute boolean suppressFocusScroll;
-    attribute boolean active;
 
 	void addCommandUpdater(in Element updater, in DOMString events, in DOMString targets);
 	void removeCommandUpdater(in Element updater);
@@ -15,6 +12,5 @@ interface XULCommandDispatcher {
 	void updateCommands(in DOMString eventName);
 
 	xpidl nsIController getControllerForCommand(in DOMString command);
-
 	xpidl nsIControllers getControllers();
 };
