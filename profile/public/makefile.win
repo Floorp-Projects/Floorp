@@ -22,9 +22,6 @@ MODULE=profile
 DEPTH=..\.. 
 EXPORTS= profileSwitch.h \
          nsIProfile.h \
-         nsIAccount.h \
-         dialshr.h \
-         resource.h \
 	     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
