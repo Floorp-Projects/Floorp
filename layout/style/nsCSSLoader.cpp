@@ -219,6 +219,7 @@ public:
   SheetLoadData(CSSLoaderImpl* aLoader,
                 nsIURI* aURI,
                 nsICSSStyleSheet* aSheet,
+                PRBool aSyncLoad,
                 nsICSSLoaderObserver* aObserver);
                  
   
@@ -379,6 +380,7 @@ public:
 private:
   nsresult CreateSheet(nsIURI* aURI,
                        PRUint32 aDefaultNameSpaceID,
+                       PRBool aSyncLoad,
                        StyleSheetState& aSheetState,
                        nsICSSStyleSheet** aSheet);
 
@@ -505,6 +507,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
 SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
                              nsIURI* aURI,
                              nsICSSStyleSheet* aSheet,
+                             PRBool aSyncLoad,
                              nsICSSLoaderObserver* aObserver)
   : mLoader(aLoader),
     mParserToUnblock(nsnull),
@@ -513,7 +516,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader,
     mNext(nsnull),
     mParentData(nsnull),
     mPendingChildren(0),
-    mSyncLoad(nsnull == aObserver),
+    mSyncLoad(aSyncLoad),
     mIsAgent(PR_TRUE),
     mIsLoading(PR_FALSE),
     mIsCancelled(PR_FALSE),
@@ -1231,6 +1234,7 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle)
 nsresult
 CSSLoaderImpl::CreateSheet(nsIURI* aURI,
                            PRUint32 aDefaultNameSpaceID,
+                           PRBool aSyncLoad,
                            StyleSheetState& aSheetState,
                            nsICSSStyleSheet** aSheet)
 {
@@ -1242,51 +1246,53 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
   aSheetState = eSheetStateUnknown;
   
   if (aURI) {
-    // First, complete sheets
     aSheetState = eSheetComplete;
-
     nsCOMPtr<nsICSSStyleSheet> sheet;
-    URLKey key(aURI);
-    sheet = dont_AddRef(NS_STATIC_CAST(nsICSSStyleSheet*,
-                                       mCompleteSheets.Get(&key)));
-    LOG(("  From completed: %p", sheet.get()));
 
-    // Then the XUL cache
+    // First, the XUL cache
 #ifdef INCLUDE_XUL
-    if (!sheet && IsChromeURI(aURI)) {
+    if (IsChromeURI(aURI)) {
       nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
       if (cache) {
         PRBool enabled;
         cache->GetEnabled(&enabled);
         if (enabled) {
           cache->GetStyleSheet(aURI, getter_AddRefs(sheet));
+          LOG(("  From XUL cache: %p", sheet.get()));
         }
       }
     }
-    LOG(("  From XUL cache: %p", sheet.get()));
 #endif
 
-    // Then loading sheets
     if (!sheet) {
-      aSheetState = eSheetLoading;
-      SheetLoadData* loadData =
-        NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Get(&key));
-      if (loadData) {
-        sheet = loadData->mSheet;
-      }
-    }
-    LOG(("  From loading: %p", sheet.get()));
+      // Then complete sheets
+      URLKey key(aURI);
+      sheet = dont_AddRef(NS_STATIC_CAST(nsICSSStyleSheet*,
+                                         mCompleteSheets.Get(&key)));
+      LOG(("  From completed: %p", sheet.get()));
+    
+      // Then loading sheets
+      if (!sheet && !aSyncLoad) {
+        aSheetState = eSheetLoading;
+        SheetLoadData* loadData =
+          NS_STATIC_CAST(SheetLoadData*, mLoadingDatas.Get(&key));
+        if (loadData) {
+          sheet = loadData->mSheet;
+          LOG(("  From loading: %p", sheet.get()));
+        }
 
-    // Then alternate sheets
-    if (!sheet) {
-      aSheetState = eSheetPending;
-      SheetLoadData* loadData =
-        NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Get(&key));
-      if (loadData) {
-        sheet = loadData->mSheet;
+        // Then alternate sheets
+        if (!sheet) {
+          aSheetState = eSheetPending;
+          SheetLoadData* loadData =
+            NS_STATIC_CAST(SheetLoadData*, mPendingDatas.Get(&key));
+          if (loadData) {
+            sheet = loadData->mSheet;
+            LOG(("  From pending: %p", sheet.get()));
+          }
+        }
       }
     }
-    LOG(("  From pending: %p", sheet.get()));
 
     if (sheet) {
       // We can use this cached sheet if it's either incomplete or unmodified
@@ -1310,6 +1316,7 @@ CSSLoaderImpl::CreateSheet(nsIURI* aURI,
     if (!sheetURI) {
       // Inline style.  Use the document's base URL so that @import in
       // the inline sheet picks up the right base.
+      NS_ASSERTION(mDocument, "How did we get in here without a document?");
       mDocument->GetBaseURL(*getter_AddRefs(sheetURI));
     }
 
@@ -1523,9 +1530,10 @@ CSSLoaderImpl::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   
   if (aLoadData->mSyncLoad) {
     LOG(("  Synchronous load"));
-    // Just load it; if we aren't sharing it by now it's too late.  We could
-    // look at the deferred load list, but the chances of anything being
-    // loaded as both an alternate and a UA sheet are slim, so don't bother.
+    NS_ASSERTION(aSheetState == eSheetNeedsParser,
+                 "Sync loads can't reuse existing async loads");
+    
+    // Just load it
     nsCOMPtr<nsIInputStream> stream;
     rv = NS_OpenURI(getter_AddRefs(stream), uriClone);
     if (NS_FAILED(rv)) {
@@ -1705,6 +1713,8 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aStream,
 
   NS_ASSERTION(aLoadData->mPendingChildren >= 0,
                "Negatively many kids?");
+  NS_ASSERTION(aLoadData->mPendingChildren == 0 || !aLoadData->mSyncLoad,
+               "Sync load has leftover pending children!");
   
   if (aLoadData->mPendingChildren == 0) {
     LOG(("  No pending kids from parse"));
@@ -1811,6 +1821,7 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
         nsCOMPtr<nsICSSStyleSheet> sheet;
         cache->GetStyleSheet(aLoadData->mURI, getter_AddRefs(sheet));
         if (!sheet) {
+          LOG(("  Putting sheet in XUL prototype cache"));
           cache->PutStyleSheet(aLoadData->mSheet);
         }
       }
@@ -1853,7 +1864,7 @@ CSSLoaderImpl::LoadInlineStyle(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(nsnull, aDefaultNameSpaceID, state,
+  nsresult rv = CreateSheet(nsnull, aDefaultNameSpaceID, PR_FALSE, state,
                             getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ASSERTION(state == eSheetNeedsParser,
@@ -1919,7 +1930,8 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  rv = CreateSheet(aURL, aDefaultNameSpaceID, state, getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, aDefaultNameSpaceID, PR_FALSE, state,
+                   getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = PrepareSheet(sheet, aTitle, aMedia);
@@ -2032,7 +2044,9 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   // loop) do so
   nsCOMPtr<nsICSSStyleSheet> sheet;
   StyleSheetState state;
-  rv = CreateSheet(aURL, aDefaultNameSpaceID, state, getter_AddRefs(sheet));
+  rv = CreateSheet(aURL, aDefaultNameSpaceID,
+                   parentData ? parentData->mSyncLoad : PR_FALSE,
+                   state, getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = PrepareSheet(sheet, NS_LITERAL_STRING(""), aMedia);
@@ -2100,11 +2114,14 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
 
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
-  nsresult rv = CreateSheet(aURL, kNameSpaceID_Unknown, state,
+  PRBool syncLoad = (aObserver == nsnull);
+  
+  nsresult rv = CreateSheet(aURL, kNameSpaceID_Unknown, syncLoad, state,
                             getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PrepareSheet(sheet, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""));
+  NS_NAMED_LITERAL_STRING(empty, "");
+  rv = PrepareSheet(sheet, empty, empty);
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (aSheet) {
@@ -2122,7 +2139,7 @@ CSSLoaderImpl::InternalLoadAgentSheet(nsIURI* aURL,
     return NS_OK;
   }
 
-  SheetLoadData* data = new SheetLoadData(this, aURL, sheet, aObserver);
+  SheetLoadData* data = new SheetLoadData(this, aURL, sheet, syncLoad, aObserver);
 
   if (!data) {
     sheet->SetComplete();
