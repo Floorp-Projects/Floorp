@@ -657,14 +657,14 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         nsFindDialog *dialog = new nsFindDialog( this, context );
 
         nsCOMPtr<nsIWebShellWindow> newWindow;
-        rv = GetAppShell()->CreateTopLevelWindow( nsnull,
-                                                  url,
-                                                  PR_TRUE,
-                                                  getter_AddRefs(newWindow),
-                                                  nsnull,
-                                                  dialog,
-                                                  0,
-                                                  0 );
+        rv = GetAppShell()->CreateDialogWindow( nsnull,
+                                                url,
+                                                PR_TRUE,
+                                                getter_AddRefs(newWindow),
+                                                nsnull,
+                                                dialog,
+                                                NS_SIZETOCONTENT,
+                                                NS_SIZETOCONTENT );
 
         if ( NS_SUCCEEDED( rv ) ) {
             // Tell the dialog its nsIWebShellWindow.
