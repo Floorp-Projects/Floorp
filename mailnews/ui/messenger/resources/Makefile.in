@@ -68,6 +68,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/am-copies.xul		\
 	$(srcdir)/am-advanced.xul	\
 	$(srcdir)/SearchDialog.xul	\
+	$(srcdir)/FilterListDialog.xul	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/preftree.css" type="text/css"?>
+
+<!DOCTYPE window>
+
+
+<window
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<box align="vertical" style="width: 100%">
+  <box align="horizontal" flex="100%">
+    <box align="vertical" style="width:100%;" flex="100%" class="cleanborder">
+    <html:div>Filters will be applied in the following order:</html:div>
+    <tree id="filterTree">
+      <treebody>
+        <treeitem open="true">
+        <treecell><treeindentation/>Sample Server 1</treecell>
+        <treechildren>
+          <treeitem>
+            <treecell><treeindentation/>People from work</treecell>
+          </treeitem>
+          <treeitem>
+            <treecell><treeindentation/>People from work</treecell>
+          </treeitem>
+        </treechildren>
+        </treeitem>
+
+        <treeitem open="true">
+        <treecell><treeindentation/>Sample Server 2</treecell>
+        <treechildren>
+          <treeitem>
+            <treecell><treeindentation/>People from college</treecell>
+          </treeitem>
+          <treeitem>
+            <treecell><treeindentation/>SPAM</treecell>
+          </treeitem>
+        </treechildren>
+        </treeitem>
+
+    </treebody>
+
+    </tree>
+    </box>
+    <box align="vertical" class="padded">
+      <titledbutton class="push" value="New.."/>
+      <titledbutton class="push" value="Edit.."/>
+      <titledbutton class="push" value="Delete"/>
+    </box>
+  </box>
+  <box align="horizontal" class="padded">
+    <checkbox/>
+    <html:div>Log Filter Use</html:div>
+    <spring flex="100%"/>
+    <titledbutton class="push" value="View Log"/>
+  </box>
+  <box align="vertical" class="cleanborder">
+    <html:div>Description</html:div>
+    <html:div>(description goes here..)</html:div>
+  </box>
+</box>
+
+</window>
