@@ -108,6 +108,8 @@
 	
 	#include "CDragBar.h"
 	#include "CDragBarContainer.h"
+	#include "CRDFToolbarContainer.h"
+	#include "CRDFToolbar.h"
 	#include "CDragBarDockControl.h"
 	#include "CPatternedGrippyPane.h"
 	#include "CDividerGrippyPane.h"
@@ -297,6 +299,7 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CDragBar);
 	RegisterClass_(CDragBarContainer);
 	RegisterClass_(CDragBarDockControl);
+	RegisterClass_(CRDFToolbarContainer);
 	RegisterClass_(CBrokeredView);
 	RegisterClass_(CSwatchBrokerView);
 	RegisterClass_(CToolbarDragBar);
