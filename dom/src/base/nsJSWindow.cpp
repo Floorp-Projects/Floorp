@@ -858,6 +858,39 @@ WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method Print
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Print()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function print requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method MoveTo
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1452,6 +1485,7 @@ static JSFunctionSpec WindowMethods[] =
   {"forward",          WindowForward,     0},
   {"home",          WindowHome,     0},
   {"stop",          WindowStop,     0},
+  {"print",          WindowPrint,     0},
   {"moveTo",          WindowMoveTo,     2},
   {"moveBy",          WindowMoveBy,     2},
   {"resizeTo",          WindowResizeTo,     2},

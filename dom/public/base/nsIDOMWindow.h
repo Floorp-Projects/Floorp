@@ -108,6 +108,8 @@ public:
 
   NS_IMETHOD    Stop()=0;
 
+  NS_IMETHOD    Print()=0;
+
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos)=0;
 
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif)=0;
@@ -174,6 +176,7 @@ public:
   NS_IMETHOD    Forward();  \
   NS_IMETHOD    Home();  \
   NS_IMETHOD    Stop();  \
+  NS_IMETHOD    Print();  \
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos);  \
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif);  \
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);  \
@@ -230,6 +233,7 @@ public:
   NS_IMETHOD    Forward() { return _to##Forward(); }  \
   NS_IMETHOD    Home() { return _to##Home(); }  \
   NS_IMETHOD    Stop() { return _to##Stop(); }  \
+  NS_IMETHOD    Print() { return _to##Print(); }  \
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos) { return _to##MoveTo(aXPos, aYPos); }  \
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif) { return _to##MoveBy(aXDif, aYDif); }  \
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight) { return _to##ResizeTo(aWidth, aHeight); }  \

@@ -119,6 +119,7 @@ public:
   NS_IMETHOD    Back();
   NS_IMETHOD    Home();
   NS_IMETHOD    Stop();
+  NS_IMETHOD    Print();
   NS_IMETHOD    MoveTo(PRInt32 aXPos, PRInt32 aYPos);
   NS_IMETHOD    MoveBy(PRInt32 aXDif, PRInt32 aYDif);
   NS_IMETHOD    ResizeTo(PRInt32 aWidth, PRInt32 aHeight);

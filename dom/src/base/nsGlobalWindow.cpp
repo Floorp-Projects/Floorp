@@ -51,6 +51,7 @@
 #include "nsCRT.h"
 #include "nsRect.h"
 #include "nsINetSupport.h"
+#include "nsIContentViewer.h"
 
 #include "jsapi.h"
 
@@ -753,6 +754,21 @@ NS_IMETHODIMP
 GlobalWindowImpl::Stop()
 {
   mWebShell->Stop();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Print()
+{
+  nsIContentViewer *viewer = nsnull;
+
+  mWebShell->GetContentViewer(&viewer);
+
+  if (nsnull != viewer)
+  {
+    viewer->Print();
+    NS_RELEASE(viewer);
+  }
   return NS_OK;
 }
 
