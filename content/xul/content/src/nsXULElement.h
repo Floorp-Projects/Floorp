@@ -329,7 +329,6 @@ protected:
     // pseudo-constants
     static nsrefcnt             gRefCnt;
     static nsIRDFService*       gRDFService;
-    static nsIXBLService*       gXBLService;
     static nsINameSpaceManager* gNameSpaceManager;
     static nsIXULContentUtils*  gXULUtils;
     static PRInt32              kNameSpaceID_RDF;
