@@ -73,6 +73,7 @@ EXTRA_DSO_LIBS  += addrbook_s
 
 EXTRA_DSO_LDOPTS= \
         $(EXTRA_DSO_LIBS) \
+        $(MOZ_XPCOM_OBSOLETE_LIBS) \
         $(XPCOM_LIBS) \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(NSPR_LIBS) \
