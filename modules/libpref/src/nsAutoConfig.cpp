@@ -26,7 +26,7 @@
 #include "nsIURI.h"
 #include "nsIHttpChannel.h"
 #include "nsIFileStreams.h"
-#include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "prmem.h"
 #include "jsapi.h"
 #include "prefapi.h"
@@ -377,12 +377,9 @@ nsresult nsAutoConfig::readOfflineFile()
     // execute the javascript file
     
     nsCOMPtr<nsIFile> failoverFile; 
-    rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(failoverFile));
     if (NS_FAILED(rv)) return reportError();
-#ifdef XP_MAC
-    failoverFile->Append("Essential Files");
-#endif
     
     failoverFile->Append("failover.jsc");
     rv = evaluateLocalFile(failoverFile);
@@ -429,12 +426,9 @@ nsresult nsAutoConfig::writeFailoverFile()
     nsCOMPtr<nsIOutputStream> outStr;
     PRUint32 amt;
 
-    rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, 
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(failoverFile));
     if (NS_FAILED(rv)) return rv;
-#ifdef XP_MAC
-    failoverFile->Append("Essential Files");
-#endif
     
     failoverFile->Append("failover.jsc");
     
