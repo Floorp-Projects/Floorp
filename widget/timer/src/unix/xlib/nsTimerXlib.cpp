@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Tony Tsui <tony@igleaus.com.au>
  */
 
 #include "nsTimerXlib.h"
@@ -27,41 +28,53 @@
 #include "nsIServiceManager.h"
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
+#include "nsVoidArray.h"
 #include <unistd.h>
 #include <stdio.h>
 
 #include "prlog.h"
 
+#include <X11/Xlib.h>
+
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
 #ifndef MOZ_MONOLITHIC_TOOLKIT
 static int  NS_TimeToNextTimeout(struct timeval *aTimer);
-static void NS_ProcessTimeouts(void);
+static void NS_ProcessTimeouts(Display *aDisplay);
 #else
 extern "C" int  NS_TimeToNextTimeout(struct timeval *aTimer);
-extern "C" void NS_ProcessTimeouts(void);
+extern "C" void NS_ProcessTimeouts(Display *aDisplay);
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
-nsTimerXlib *nsTimerXlib::gTimerList = NULL;
-struct timeval nsTimerXlib::gTimer = {0, 0};
-struct timeval nsTimerXlib::gNextFire = {0, 0};
+nsVoidArray *nsTimerXlib::gHighestList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gHighList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gNormalList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gLowList = (nsVoidArray *)nsnull;
+nsVoidArray *nsTimerXlib::gLowestList = (nsVoidArray *)nsnull;
+PRBool nsTimerXlib::gTimeoutAdded = PR_FALSE;
+PRBool nsTimerXlib::gProcessingTimer = PR_FALSE;
 
 nsTimerXlib::nsTimerXlib()
 {
-  //printf("nsTimerXlib::nsTimerXlib (%p) called.\n",
-  //this);
+#ifdef TIMER_DEBUG
+  fprintf(stderr, "nsTimerXlib::nsTimerXlib (%p) called.\n", this);
+#endif
+
   NS_INIT_REFCNT();
   mFunc = NULL;
   mCallback = NULL;
-  mNext = NULL;
+  mDelay = 0;
   mClosure = NULL;
+  mPriority = 0;
   mType = NS_TYPE_ONE_SHOT;
 }
 
 nsTimerXlib::~nsTimerXlib()
 {
-  //printf("nsTimerXlib::~nsTimerXlib (%p) called.\n",
-  //       this);
+#ifdef TIMER_DEBUG
+  fprintf(stderr, "nsTimerXlib::~nsTimerXlib (%p) called.\n", this);
+#endif
+  
   Cancel();
   NS_IF_RELEASE(mCallback);
 }
@@ -70,80 +83,86 @@ NS_IMPL_ISUPPORTS(nsTimerXlib, kITimerIID)
 
 nsresult
 nsTimerXlib::Init(nsTimerCallbackFunc aFunc,
-                void *aClosure,
-                PRUint32 aDelay,
-                PRUint32 aPriority,
-                PRUint32 aType
-                )
+                  void *aClosure,
+                  PRUint32 aDelay,
+                  PRUint32 aPriority,
+                  PRUint32 aType )
 {
   mFunc = aFunc;
   mClosure = aClosure;
+  mPriority = aPriority;
   mType = aType;
-  return Init(aDelay);
+  return Init(aDelay, aPriority);
 }
 
 nsresult 
 nsTimerXlib::Init(nsITimerCallback *aCallback,
-                PRUint32 aDelay,
-                PRUint32 aPriority,
-                PRUint32 aType
-                )
+                  PRUint32 aDelay,
+                  PRUint32 aPriority,
+                  PRUint32 aType)
 {
   mType = aType;
   mCallback = aCallback;
   NS_ADDREF(mCallback);
-  
-  return Init(aDelay);
+  return Init(aDelay, aPriority);
 }
 
 nsresult
-nsTimerXlib::Init(PRUint32 aDelay)
+nsTimerXlib::Init(PRUint32 aDelay, PRUint32 aPriority)
 {
   struct timeval Now;
-  //  printf("nsTimerXlib::Init (%p) called with delay %d\n",
-  //this, aDelay);
-  // get the cuurent time
+#ifdef TIMER_DEBUG
+  fprintf(stderr, "nsTimerXlib::Init (%p) called with delay %d\n", this, aDelay);
+#endif
+  
   mDelay = aDelay;
+  // get the cuurent time
+  
   gettimeofday(&Now, NULL);
   mFireTime.tv_sec = Now.tv_sec + (aDelay / 1000);
   mFireTime.tv_usec = Now.tv_usec + ((aDelay%1000) * 1000);
-  if (mFireTime.tv_usec >= 1000000) {
+
+  if (mFireTime.tv_usec >= 1000000) 
+  {
     mFireTime.tv_sec++;
     mFireTime.tv_usec -= 1000000;
   }
-  //printf("fire set to %ld / %ld\n",
-  //mFireTime.tv_sec, mFireTime.tv_usec);
-  // set the next pointer to nothing.
-  mNext = NULL;
-  // add ourself to the list
-  if (!gTimerList) {
-    // no list here.  I'm the start!
-    //printf("This is the beginning of the list..\n");
-    gTimerList = this;
-  }
-  else {
-    // is it before everything else on the list?
-    if ((mFireTime.tv_sec < gTimerList->mFireTime.tv_sec) &&
-        (mFireTime.tv_usec < gTimerList->mFireTime.tv_usec)) {
-      //      printf("This is before the head of the list...\n");
-      mNext = gTimerList;
-      gTimerList = this;
-    }
-    else {
-      nsTimerXlib *pPrev = gTimerList;
-      nsTimerXlib *pCurrent = gTimerList;
-      while (pCurrent && ((pCurrent->mFireTime.tv_sec <= mFireTime.tv_sec) &&
-                          (pCurrent->mFireTime.tv_usec <= mFireTime.tv_usec))) {
-        pPrev = pCurrent;
-        pCurrent = pCurrent->mNext;
-      }
-      PR_ASSERT(pPrev);
 
-      // isnert it after pPrev ( this could be at the end of the list)
-      mNext = pPrev->mNext;
-      pPrev->mNext = this;
-    }
+#ifdef TIMER_DEBUG
+  fprintf(stderr, "fire set to %ld / %ld\n", mFireTime.tv_sec, mFireTime.tv_usec);
+#endif
+
+  if (!gTimeoutAdded)
+  {
+    nsTimerXlib::gHighestList = new nsVoidArray;
+    nsTimerXlib::gHighList = new nsVoidArray;
+    nsTimerXlib::gNormalList = new nsVoidArray;
+    nsTimerXlib::gLowList = new nsVoidArray;
+    nsTimerXlib::gLowestList = new nsVoidArray;
+    
+    nsTimerXlib::gTimeoutAdded = PR_TRUE;
   }
+
+  switch (aPriority)
+  {
+    case NS_PRIORITY_HIGHEST:
+      nsTimerXlib::gHighestList->InsertElementAt(this, 0);
+      break;
+    case NS_PRIORITY_HIGH:
+      nsTimerXlib::gHighList->InsertElementAt(this, 0);
+      break;
+    case NS_PRIORITY_NORMAL:
+      nsTimerXlib::gNormalList->InsertElementAt(this, 0);
+      break;
+    case NS_PRIORITY_LOW:
+      nsTimerXlib::gLowList->InsertElementAt(this, 0);
+      break;
+    case NS_PRIORITY_LOWEST:
+      nsTimerXlib::gLowestList->InsertElementAt(this, 0);
+      break;
+  }
+
+  //FIXME Do we need this???? 
   NS_ADDREF(this);
 
   EnsureWindowService();
@@ -152,12 +171,22 @@ nsTimerXlib::Init(PRUint32 aDelay)
 }
 
 PRBool
-nsTimerXlib::Fire(struct timeval *aNow)
+nsTimerXlib::Fire()
 {
   nsCOMPtr<nsITimer> kungFuDeathGrip = this;
-  //  printf("nsTimerXlib::Fire (%p) called at %ld / %ld\n",
-  //         this,
-  //aNow->tv_sec, aNow->tv_usec);
+
+#ifdef TIMER_DEBUG
+  fprintf(stderr, "*** PRIORITY is %x ***\n", mPriority);
+#endif
+  
+  timeval aNow;
+  gettimeofday(&aNow, NULL);
+
+#ifdef TIMER_DEBUG  
+  fprintf(stderr, "nsTimerXlib::Fire (%p) called at %ld / %ld\n",
+          this, aNow.tv_sec, aNow.tv_usec);
+#endif
+  
   if (mFunc != NULL) {
     (*mFunc)(this, mClosure);
   }
@@ -171,78 +200,100 @@ nsTimerXlib::Fire(struct timeval *aNow)
 void
 nsTimerXlib::Cancel()
 {
-  nsTimerXlib *me = this;
-  nsTimerXlib *p;
-  //  printf("nsTimerXlib::Cancel (%p) called.\n",
-  //         this);
-  if (gTimerList == this) {
-    // first element in the list lossage...
-    gTimerList = mNext;
-  }
-  else {
-    // walk until there's no next pointer
-    for (p = gTimerList; p && p->mNext && (p->mNext != this); p = p->mNext)
-      ;
 
-    // if we found something valid pull it out of the list
-    if (p && p->mNext && p->mNext == this) {
-      p->mNext = mNext;
-    }
-    else {
-      // get out before we delete something that looks bogus
-      return;
-    }
+  switch(mPriority)
+  {
+    case NS_PRIORITY_HIGHEST:
+      nsTimerXlib::gHighestList->RemoveElement(this);
+      break;
+    case NS_PRIORITY_HIGH:
+      nsTimerXlib::gHighList->RemoveElement(this);
+      break;
+    case NS_PRIORITY_NORMAL:
+      nsTimerXlib::gNormalList->RemoveElement(this);
+      break;
+    case NS_PRIORITY_LOW:
+      nsTimerXlib::gLowList->RemoveElement(this);
+      break;
+    case NS_PRIORITY_LOWEST:
+      nsTimerXlib::gLowestList->RemoveElement(this);
+      break;
   }
-  // if we got here it must have been a valid element so trash it
-  NS_RELEASE(me);
-  
 }
 
 void
-nsTimerXlib::ProcessTimeouts(struct timeval *aNow)
+nsTimerXlib::ProcessTimeouts(nsVoidArray *array)
 {
-  nsTimerXlib *p = gTimerList;
-  nsTimerXlib *tmp;
+  PRInt32 count = array->Count();
+
+  if (count == 0)
+    return;
+  
+  nsTimerXlib *timer;
+  
+  struct timeval aNow;
   struct timeval ntv;
   int res;
 
-  if (aNow->tv_sec == 0 &&
-      aNow->tv_usec == 0) {
-    gettimeofday(aNow, NULL);
-  }
-  //  printf("nsTimerXlib::ProcessTimeouts called at %ld / %ld\n",
-  //         aNow->tv_sec, aNow->tv_usec);
-  while (p) {
-    if ((p->mFireTime.tv_sec < aNow->tv_sec) ||
-        ((p->mFireTime.tv_sec == aNow->tv_sec) &&
-         (p->mFireTime.tv_usec <= aNow->tv_usec))) {
-      //  Make sure that the timer cannot be deleted during the
-      //  Fire(...) call which may release *all* other references
-      //  to p...
-      //printf("Firing timeout for (%p)\n",
-      //           p);
-      NS_ADDREF(p);
-      res = p->Fire(aNow);      
-      if (res == 0) {
-        p->Cancel();
-        NS_RELEASE(p);
-        p = gTimerList;
-      } else {
+  gettimeofday(&aNow, NULL);
 
-        gettimeofday(&ntv, NULL);
-        p->mFireTime.tv_sec = ntv.tv_sec + (p->mDelay / 1000);
-        p->mFireTime.tv_usec = ntv.tv_usec + ((p->mDelay%1000) * 1000);
-        tmp = p;
-        p = p->mNext;
-        NS_RELEASE(tmp);
+#ifdef TIMER_DEBUG  
+  fprintf(stderr, "nsTimerXlib::ProcessTimeouts called at %ld / %ld\n",
+         aNow.tv_sec, aNow.tv_usec);
+#endif
+  
+  for (int i = count; i >=0; i--)
+  {
+    timer = (nsTimerXlib*)array->ElementAt(i);
 
+    if (timer)
+    {
+     
+      if ((timer->mFireTime.tv_sec < aNow.tv_sec) ||
+          ((timer->mFireTime.tv_sec == aNow.tv_sec) &&
+           (timer->mFireTime.tv_usec <= aNow.tv_usec))) 
+      {
+        //  Make sure that the timer cannot be deleted during the
+        //  Fire(...) call which may release *all* other references
+        //  to p...
+#ifdef TIMER_DEBUG
+        fprintf(stderr, "Firing timeout for (%p)\n", timer);
+#endif
+//        NS_ADDREF(timer); //FIXME: Does this still apply??? TonyT
+      
+        res = timer->Fire();      
+      
+        if (res == 0) 
+        {
+          array->RemoveElement(timer);
+//          NS_RELEASE(timer); //FIXME: Ditto to above.
+        }
+        else 
+        {
+          gettimeofday(&ntv, NULL);
+          timer->mFireTime.tv_sec = ntv.tv_sec + (timer->mDelay / 1000);
+          timer->mFireTime.tv_usec = ntv.tv_usec + ((timer->mDelay%1000) * 1000);
+        }     
       }
-    }
-    else {
-      p = p->mNext;
     }
   }
 }
+
+void nsTimerXlib::SetDelay(PRUint32 aDelay) 
+{
+  mDelay = aDelay;
+}
+
+void nsTimerXlib::SetPriority(PRUint32 aPriority) 
+{
+  mPriority = aPriority;
+}
+              
+void nsTimerXlib::SetType(PRUint32 aType) 
+{
+  mType = aType;
+}
+           
 
 #ifndef MOZ_MONOLITHIC_TOOLKIT
 static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
@@ -290,9 +341,28 @@ int NS_TimeToNextTimeout(struct timeval *aTimer)
     printf("NS_TimeToNextTimeout() lives!\n");
   }
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
-
+  
   nsTimerXlib *timer;
-  timer = nsTimerXlib::gTimerList;
+
+  // Find the next timeout.
+  
+  if (nsTimerXlib::gHighestList->Count() > 0)
+    timer = (nsTimerXlib*)nsTimerXlib::gHighestList->ElementAt(0);
+  else
+    if (nsTimerXlib::gHighList->Count() > 0)
+      timer = (nsTimerXlib*)nsTimerXlib::gHighList->ElementAt(0);
+    else
+      if (nsTimerXlib::gNormalList->Count() > 0)
+        timer = (nsTimerXlib*)nsTimerXlib::gNormalList->ElementAt(0);
+      else
+        if (nsTimerXlib::gLowList->Count() > 0)
+          timer = (nsTimerXlib*)nsTimerXlib::gLowList->ElementAt(0);
+        else
+          if (nsTimerXlib::gLowestList->Count() > 0)
+            timer = (nsTimerXlib*)nsTimerXlib::gLowestList->ElementAt(0);
+          else
+            timer = NULL;
+    
   if (timer) {
     if ((timer->mFireTime.tv_sec < aTimer->tv_sec) ||
         ((timer->mFireTime.tv_sec == aTimer->tv_sec) &&
@@ -330,7 +400,7 @@ static
 extern "C"
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 void
-NS_ProcessTimeouts(void) 
+NS_ProcessTimeouts(Display *aDisplay) 
 {
 #ifndef MOZ_MONOLITHIC_TOOLKIT
   static int once = 1;
@@ -343,10 +413,27 @@ NS_ProcessTimeouts(void)
   }
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
-  struct timeval now;
-  now.tv_sec = 0;
-  now.tv_usec = 0;
-  nsTimerXlib::ProcessTimeouts(&now);
+
+  nsTimerXlib::gProcessingTimer = PR_TRUE;
+
+  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighestList);
+  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gHighList);
+  nsTimerXlib::ProcessTimeouts(nsTimerXlib::gNormalList);
+
+  if (XPending(aDisplay) == 0)
+  {
+#ifdef TIMER_DEBUG
+    fprintf(stderr, "\n Handling Low Priority Stuff!!! Display is 0x%x\n", aDisplay);
+#endif    
+    nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowList);
+    nsTimerXlib::ProcessTimeouts(nsTimerXlib::gLowestList);
+  }
+#ifdef TIMER_DEBUG  
+  else
+    fprintf(stderr, "\n Handling Event Stuff!!!", aDisplay);
+#endif
+  
+  nsTimerXlib::gProcessingTimer = PR_FALSE;
 }
 
 #ifdef MOZ_MONOLITHIC_TOOLKIT
