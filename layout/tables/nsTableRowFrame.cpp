@@ -602,6 +602,8 @@ nsTableRowFrame::GetFrameForPoint(nsIPresContext*        aPresContext,
   // the NS_FRAME_OUTSIDE_CHILDREN bit of mState set correctly (see
   // nsIFrame.h).
 
+  // XXXldb Do we need this anymore?
+
   // I imagine fixing this would help performance of GetFrameForPoint in
   // tables.  It may also fix problems with relative positioning.
 
@@ -984,9 +986,15 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           }
         }
         else { 
-          nsSize priorSize = cellFrame->GetDesiredSize();
-          desiredSize.width = priorSize.width;
-          desiredSize.height = priorSize.height;
+          desiredSize.width = cellDesiredSize.width;
+          desiredSize.height = cellDesiredSize.height;
+          nsRect *overflowArea =
+            cellFrame->GetOverflowAreaProperty(aPresContext);
+          if (overflowArea)
+            desiredSize.mOverflowArea = *overflowArea;
+          else
+            desiredSize.mOverflowArea.SetRect(0, 0, cellDesiredSize.width,
+                                              cellDesiredSize.height);
           
           // if we are in a floated table, our position is not yet established, so we cannot reposition our views
           // the containing glock will do this for us after positioning the table
