@@ -14,6 +14,7 @@
  * created by Alexander Larsson are Copyright (C) 1999
  * Alexander Larsson. All Rights Reserved. 
  */
+#include "nscore.h"
 #include "GtkMozillaInputStream.h"
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
