@@ -3187,24 +3187,6 @@ MOZ_ARG_DISABLE_BOOL(jsd,
     MOZ_JSDEBUGGER=)
 
 
-dnl =========================================================
-dnl = Blackwood Java Code                                   =
-dnl =========================================================
-if test "$no_x" != "yes"
-then
-	AC_ARG_ENABLE(java-supplement,
-	[  --enable-java-supplement
-                          Enable Blackwood Java Code],
-	[
-		if test "$enableval" = "yes"
-		then
-			MOZ_JAVA_SUPPLEMENT=1
-    	else
-			MOZ_JAVA_SUPPLEMENT=
-    	fi
-	])
-fi
-
 dnl ========================================================
 dnl = This turns on xinerama support.  We just can't use the
 dnl = autodetection of the libraries since on Red Hat 7 linking with
@@ -4118,7 +4100,8 @@ MOZ_AUTO_DEPS=1
 fi
 MOZ_ARG_DISABLE_BOOL(auto-deps,
 [  --disable-auto-deps     Do not automatically generate dependency info],
-    MOZ_AUTO_DEPS=)
+    MOZ_AUTO_DEPS=,
+    MOZ_AUTO_DEPS=1)
 
 if test -n "$MOZ_AUTO_DEPS"; then
 dnl ========================================================
