@@ -45,7 +45,7 @@ SPFPROG = .\$(OBJDIR)\spf2ldif.exe
 
 MODULE=rdf 
 LIBRARY_NAME=rdf 
-REQUIRES=nspr dbm java js htmldlgs util img layer pref ldap
+REQUIRES=nspr dbm java js htmldlgs util img layer pref ldap parse
 
 C_OBJS=.\$(OBJDIR)\vocab.obj \
        .\$(OBJDIR)\mcf.obj \
@@ -88,7 +88,9 @@ LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\dbm \
     -I$(XPDIST)\public\img -I$(XPDIST)\public\layer \
     -I$(XPDIST)\public\ldap \
     -I$(XPDIST)\public\pref \
-    -I$(XPDIST)\public\network
+    -I$(XPDIST)\public\network \
+    -I$(XPDIST)\public\parse
+
      
 !endif
 

@@ -24,7 +24,7 @@ MODULE		= rdf
 LIBRARY_NAME	= $(LITE_PREFIX)rdf
 LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
 
-REQUIRES	= nspr dbm java js htmldlgs util img layer pref ldap network
+REQUIRES	= nspr dbm java js htmldlgs util img layer pref ldap network parse
 
 JNI_GEN		= netscape.rdf.core.NativeRDF netscape.rdf.core.NativeRDFEnumeration
 
