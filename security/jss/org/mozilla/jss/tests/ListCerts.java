@@ -1,0 +1,70 @@
+/* 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape Security Services for Java.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+package com.netscape.jss.crypto;
+
+import com.netscape.jss.CryptoManager;
+
+public class ListCerts {
+
+    public static void main(String args[]) {
+
+      try {
+
+        if( args.length != 2 ) {
+            System.out.println("Usage: ListCerts <dbdir> <nickname>");
+            return;
+        }
+        String dbdir = args[0];
+        String nickname = args[1];
+
+        CryptoManager.initialize(dbdir+"/secmod.db", dbdir+"/key3.db",
+                    dbdir+"/cert7.db");
+
+        CryptoManager cm = CryptoManager.getInstance();
+
+        X509Certificate[] certs = cm.findCertsByNickname(nickname);
+
+        System.out.println(certs.length + " certs found with this nickname.");
+
+        for(int i=0; i < certs.length; i++) {
+            System.out.println("\nSubject: "+certs[i].getSubjectDN());
+            System.out.println("Issuer: "+certs[i].getIssuerDN());
+        }
+
+        System.out.println("END");
+        
+      } catch( Exception e ) {
+        e.printStackTrace();
+      }
+    }
+}

@@ -1,0 +1,160 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape Security Services for Java.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+
+CORE_DEPTH = ../../../../..
+
+MODULE = ninja
+
+NS_USE_JDK = 1
+
+REQUIRES =      nspr20 dbm security
+
+PACKAGE =       com/netscape/jss/crypto
+
+JNI_GEN =											\
+			com.netscape.jss.crypto.Algorithm		\
+			com.netscape.jss.crypto.EncryptionAlgorithm		\
+			com.netscape.jss.crypto.PQGParams       \
+			$(NULL)
+
+PRIVATE_EXPORTS =                                   \
+                    Algorithm.h                     \
+                    $(NULL)
+
+CLASSES =	                                        \
+            Algorithm                      \
+			AlreadyInitializedException	\
+            BadPaddingException             \
+            Cipher                         \
+            CryptoStore                    \
+            CryptoToken                    \
+            DigestAlgorithm                \
+            EncryptionAlgorithm            \
+            HMACAlgorithm                       \
+            IllegalBlockSizeException       \
+			InvalidDERException					\
+            InvalidKeyFormatException       \
+            InternalCertificate              \
+            IVParameterSpec                 \
+			KeyAlreadyImportedException     \
+            KeyGenAlgorithm                 \
+            KeyGenerator                   \
+			KeyPairAlgorithm				\
+			KeyPairGenerator				\
+			KeyPairGeneratorSpi				\
+            KeyWrapAlgorithm                    \
+            KeyWrapper                          \
+            JSSMessageDigest                       \
+            NoSuchItemOnTokenException      \
+            NoSuchPaddingException              \
+			ObjectNotFoundException				\
+            PBEAlgorithm                        \
+            PBEKeyGenParams                     \
+            PrivateKey                   \
+            PQGParams                           \
+            PQGParamGenException                \
+            RSAParameterSpec                    \
+            JSSSecureRandom                        \
+            ShortBufferException            \
+            Signature                       \
+            SignatureSpi                       \
+            SignatureAlgorithm             \
+            SymmetricKey                        \
+            TokenCertificate              \
+            TokenException                 \
+            TokenSupplier			\
+            TokenSupplierManager		\
+            Tunnel                          \
+            X509Certificate              \
+            $(NULL)
+
+PRIVATE_CLASSES =							\
+			$(NULL)
+
+JSRCS =	                                        \
+            Algorithm.java                      \
+			AlreadyInitializedException.java	\
+            BadPaddingException.java             \
+            Cipher.java                         \
+            CryptoStore.java                    \
+            CryptoToken.java                    \
+            DigestAlgorithm.java                \
+            EncryptionAlgorithm.java            \
+            HMACAlgorithm.java                  \
+            IllegalBlockSizeException.java       \
+			InvalidDERException.java				\
+            InvalidKeyFormatException.java          \
+            InternalCertificate.java             \
+            IVParameterSpec.java                 \
+			KeyAlreadyImportedException.java    \
+            KeyGenAlgorithm.java                \
+            KeyGenerator.java                   \
+            KeyPairAlgorithm.java               \
+            KeyPairGenerator.java               \
+            KeyPairGeneratorSpi.java            \
+            KeyWrapAlgorithm.java               \
+            KeyWrapper.java                     \
+            JSSMessageDigest.java                  \
+            NoSuchItemOnTokenException.java		\
+            NoSuchPaddingException.java         \
+			ObjectNotFoundException.java		\
+            PBEAlgorithm.java                   \
+            PBEKeyGenParams.java                \
+            PrivateKey.java                  \
+            PQGParams.java                      \
+            PQGParamGenException.java           \
+            RSAParameterSpec.java               \
+            JSSSecureRandom.java                   \
+            ShortBufferException.java            \
+            Signature.java                      \
+            SignatureAlgorithm.java             \
+            SignatureSpi.java                   \
+            SymmetricKey.java                   \
+            TokenCertificate.java             \
+            TokenException.java                 \
+            Tunnel.java                         \
+            TokenSupplier.java                   \
+            TokenSupplierManager.java            \
+            X509Certificate.java             \
+            $(NULL)
+
+PRIVATE_JSRCS =                                 \
+                $(NULL)
+
+
+CSRCS =		Algorithm.c							\
+            PQGParams.c                         \
+			$(NULL)
+
+
+LIBRARY_NAME = jsscrypto

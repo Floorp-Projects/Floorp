@@ -1,0 +1,387 @@
+The contents of this file are subject to the Mozilla Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Netscape Security Services for Java.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation.  Portions created by Netscape are 
+Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+Rights Reserved.
+
+Contributor(s):
+
+Alternatively, the contents of this file may be used under the
+terms of the GNU General Public License Version 2 or later (the
+"GPL"), in which case the provisions of the GPL are applicable 
+instead of those above.  If you wish to allow use of your 
+version of this file only under the terms of the GPL and not to
+allow others to use your version of this file under the MPL,
+indicate your decision by deleting the provisions above and
+replace them with the notice and other provisions required by
+the GPL.  If you do not delete the provisions above, a recipient
+may use your version of this file under either the MPL or the
+GPL.
+****************************************************************
+
+Ninja 1.5
+Build 1998????
+
+****************************************************************
+**
+**  Directory organization of this release
+**
+****************************************************************
+
+The domestic version of this release is located under:
+- /m/dist/ninja/domestic/JSS_1_5
+
+The export version of this release is located under:
+- /m/dist/ninja/export/JSS_1_5
+
+Each version of the release consists of the following:
+- a JAR file, xpclass.jar, that contains all of the public class files.
+
+- a JAR file, xpclass_g.jar, that contains all of the debuggable public class
+  files.
+
+- <platform> directories: where <platform> is of the form
+  <os-name><os-version>[_<compiler>][_<implementation strategy>]_<DBG/OPT>.OBJ
+  For example,
+      IRIX6.2_DBG.OBJ (debug build)
+      SunOS5.5.1_OPT.OBJ (optimized build)
+      SunOS5.5.1_gcc_DBG.OBJ (built using the non-native compiler gcc)
+      OSF1V4.0_PTH_DBG.OBJ (PTH means the implementation uses pthreads.)
+      AIX4.1_PTH_USER_DBG.OBJ (PTH_USER means the implementation is
+          a combination of user-level threads and pthreads.)
+
+  Under each <platform> directory is the file, mdbinary.jar.  This is a
+  JAR file containing the compiled programs and libraries.
+
+************************************************************
+**
+**  Java Cross-platform code
+**  (Debug and Optimized, Domestic and Export)
+**
+************************************************************
+
+All java code is built once per tree instance, and MUST be
+built using the latest JDK available on all of the platforms.
+At the current time, this is JDK 1.1.6.
+
+************************************************************
+**
+**  Platforms supported for Native JNI code
+**  (Debug and Optimized, Domestic and Export)
+**
+************************************************************
+
+The following platforms are supported:
+- Solaris on sparc:  2.5.1  (built with cc and JDK 1.1.6 libraries
+                             running on native threads [Sun threads])
+- Solaris on sparc:  2.6    (symbolically linked to corresponding
+                             Solaris 2.5.1 releases)
+- WIN95: 4.0                (built with Visual C++ 5.0 and JDK 1.1.6
+                             libraries running on non-fiberous threads)
+- WINNT: 4.0                (symbolically linked to corresponding
+                             Windows 95 4.0 releases)
+- HP-UX: B.11.00            (built with cc and JDK 1.1.5 libraries
+                             running on native threads [pthreads])
+
+************************************************************
+**
+**  Future platforms supported for Native JNI code
+**  (Debug and Optimized, Domestic and Export)
+**
+************************************************************
+
+The following platforms will be supported in the near future:
+- AIX:   4.3                (built with cc and JDK 1.1.6 libraries
+                             running on native threads [pthreads])
+- IRIX:  6.2                (built with cc with "-n32" and JDK 1.1.5
+                             libraries running on native threads [pthreads])
+- OSF/1: 4.0D               (built with cc and JDK 1.1.6 libraries
+                             running on native threads [pthreads])
+- Linux: 2.1                (built with gcc and JDK 1.1.3 libraries
+                             running on native threads [pthreads])
+
+************************************************************
+**
+**  How to build Ninja yourself
+**
+************************************************************
+
+To build this version of Ninja yourself, execute the following
+instructions:
+
+On UNIX machines (assuming tcsh):
+
+    For the FIRST INSTANCE of Ninja in your build tree:
+
+     1) IMPORTANT:  If you have NOT built Ninja in your current tree, and
+                    this is the FIRST platform that you are building it on,
+                    then you MUST set the following environment variable
+                    in order to build JAVA and JNI headers!!!  Additionally,
+                    this platform MUST utilize the latest "approved" version
+                    of the JDK, since JAVA and JNI headers are only ever
+                    built ONCE per instance of build tree!!!  Note that at
+                    the time of this writing, the only acceptible INITIAL
+                    UNIX build platforms are Sun, AIX, and OSF/1.
+
+        setenv NS_USE_JDK_TOOLSET 1
+
+     2) You MAY need to set the following environment variables for this
+        platform:
+
+        setenv CVSROOT /m/src
+        setenv USE_PTHREADS 1
+        setenv USE_N32 1
+        setenv JAVA_HOME [...]
+
+     3) You MAY need to unset the following environment variables for this
+        platform:
+
+        unsetenv CVSREAD
+        unsetenv JAVAC
+        unsetenv JAVAH
+        unsetenv JMC
+        unsetenv USE_PTHREADS
+        unsetenv USE_N32
+
+     4) Check out the following source code directories (FIRST TIME ONLY!)
+
+        cvs co ns/coreconf
+        cvs co -r JSS_1_5 ns/ninja
+        cvs co ns/security/lib
+        cvs co -r JSS_1_5 ns/security/lib/manifest.mn
+
+     5) Setup ns/coreconf to reference the correct compiler paths for this
+        platform
+
+        cd ns/coreconf
+        source ./.cshrc
+
+     6) Build "nsinstall" executable for this platform
+
+        gmake
+        gmake BUILD_OPT=1
+
+     7) Import Ninja support files for this platform
+
+        cd ../ninja
+        gmake import
+        gmake BUILD_OPT=1 import
+
+     8) Change to the security directory
+
+        cd ../security/lib
+
+     9) Build the security library
+
+        gmake private_export
+        gmake
+        gmake BUILD_OPT=1
+
+    10) Change back to the ninja directory
+
+        cd ../../ninja
+
+    11) Create Ninja private exports (FIRST TIME ONLY!)
+
+        gmake private_export
+
+    12) Begin building Ninja from a "fresh" tree (FIRST TIME ONLY!)
+
+        gmake clean
+        gmake BUILD_OPT=1 clean
+
+    13) Build "standard debuggable" version for this UNIX
+        (e. g. - SunOS5.5.1_DBG.OBJ)
+
+        gmake
+
+    14) Build "standard optimized" version for this UNIX
+        (e. g. - SunOS5.5.1_OPT.OBJ)
+
+        gmake BUILD_OPT=1
+
+    15) You MUST always ensure that the following environment variable
+        is UNSET for ALL of the remaining builds!!!:
+
+        unsetenv NS_USE_JDK_TOOLSET
+
+    16) Build "_g debuggable" version for this UNIX
+        (e. g. - SunOS5.5.1_DBG.OBJ)
+
+        gmake JDK_DEBUG=1
+
+
+    For the FOLLOWING INSTANCES of Ninja in your build tree:
+
+    17) You MUST always ensure that the following environment variables
+        are UNSET for ALL of the remaining builds!!!:
+
+        unsetenv NS_USE_JDK_TOOLSET
+        unsetenv USE_PTHREADS
+        unsetenv USE_N32
+
+    18) You MAY need to set the following environment variables for this
+        platform:
+
+        setenv CVSROOT /m/src
+        setenv USE_PTHREADS 1 (this MUST be set on IRIX ONLY!!!)
+        setenv USE_N32 1      (this MUST be set on IRIX ONLY!!!)
+		setenv JAVA_HOME [...]
+
+    19) You MAY need to unset the following environment variables for this
+        platform:
+
+        unsetenv CVSREAD
+        unsetenv JAVAC
+        unsetenv JAVAH
+        unsetenv JMC
+
+    20) Setup ns/coreconf to reference the correct compiler paths for this
+        platform
+
+        cd ns/coreconf
+        source ./.cshrc
+
+    21) Build "nsinstall" executable for this platform
+
+        gmake
+        gmake BUILD_OPT=1
+
+    22) Import Ninja support files for this platform
+
+        cd ../ninja
+        gmake import
+        gmake BUILD_OPT=1 import
+
+    23) Change to the security directory
+
+        cd ../security/lib
+
+    24) Build the security library
+
+        gmake private_export
+        gmake
+        gmake BUILD_OPT=1
+
+    25) Change back to the ninja directory
+
+        cd ../../ninja
+
+    26) Build "standard debuggable" version for this UNIX
+        (e. g. - SunOS5.5.1_DBG.OBJ)
+
+        gmake
+
+    27) Build "standard optimized" version for this UNIX
+        (e. g. - SunOS5.5.1_OPT.OBJ)
+
+        gmake BUILD_OPT=1
+
+    28) Build "_g debuggable" version for this UNIX
+        (e. g. - SunOS5.5.1_DBG.OBJ)
+
+        gmake JDK_DEBUG=1
+
+
+
+On Windows NT machines (assuming DOS shell):
+
+    For the FIRST INSTANCE of Ninja in your build tree:
+
+     1) IMPORTANT:  If you have NOT built Ninja in your current tree, and
+                    this is the FIRST platform that you are building it on,
+                    then you MUST set the following environment variable
+                    in order to build JAVA and JNI headers!!!  Additionally,
+                    this platform MUST utilize the latest "approved" version
+                    of the JDK, since JAVA and JNI headers are only ever
+                    built ONCE per instance of build tree!!!
+
+        set NS_USE_JDK_TOOLSET=1
+
+     2) Set the following environment variables for this platform:
+
+        set OS_TARGET=WIN95
+        set CVSROOT=:pserver:<username>@cvsserver:/m/src
+        set JAVA_HOME=[location of local JDK] (use UNIX forward slashes!)
+
+     3) You MAY need to unset the following environment variables for this
+        platform:
+
+        unset CVSREAD
+        unset JAVAC
+        unset JAVAH
+        unset JMC
+
+     4) Check out the following source code directories (FIRST TIME ONLY!)
+
+        cvs login
+        cvs co ns/coreconf
+        cvs co -r JSS_1_5 ns/ninja
+        cvs co ns/security/lib
+        cvs co -r JSS_1_5 ns/security/lib/manifest.mn
+
+     5) Import Ninja support files for this platform
+
+        cd ..\ninja
+        gmake import
+        gmake BUILD_OPT=1 import
+
+     6) Change to the security directory
+
+        cd ..\security\lib
+
+     7) Build the security library
+
+        gmake private_export
+        gmake
+        gmake BUILD_OPT=1
+
+     8) Change back to the ninja directory
+
+        cd ..\..\ninja
+
+     9) Create Ninja private exports (FIRST TIME ONLY!)
+
+        gmake private_export
+
+    10) HACK:  Use the MKS toolkit shell (sh.exe) instead of shmsdos.exe!!!
+
+        copy shmsdos.exe shmsdos.sav
+        copy [MKS home]\sh.exe shmsdos.exe
+
+    11) Begin building Ninja from a "fresh" tree (FIRST TIME ONLY!)
+
+        gmake clean
+        gmake BUILD_OPT=1 clean
+
+    12) Build "standard debuggable" WIN954.0_DBG.OBJ version
+
+        gmake
+
+    13) Build "standard optimized" WIN954.0_OPT.OBJ version
+
+        gmake BUILD_OPT=1
+
+    14) You MUST always ensure that the following environment variable
+        is UNSET for ALL of the remaining builds!!!:
+
+        unset NS_USE_JDK_TOOLSET
+
+    15) Build "_g debuggable" WIN954.0_DBG.OBJ version
+
+        gmake JDK_DEBUG=1
+
+    16) IMPORTANT:  Restore original shmsdos.exe!!!
+
+        copy shmsdos.sav shmsdos.exe

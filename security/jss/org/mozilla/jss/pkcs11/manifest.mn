@@ -1,0 +1,170 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape Security Services for Java.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+# 
+
+CORE_DEPTH = ../../../../..
+
+MODULE = ninja
+
+NS_USE_JDK = 1
+
+REQUIRES =      nspr20 dbm security
+
+PACKAGE =       com/netscape/jss/pkcs11
+
+# These are meant to be used within Ninja only.
+PRIVATE_EXPORTS =   pk11util.h       \
+					secmodi.h        \
+					secmodti.h       \
+					rsa.h            \
+                    $(NULL)
+
+JNI_GEN =   										\
+			com.netscape.jss.pkcs11.CertProxy		\
+			com.netscape.jss.pkcs11.CipherContextProxy \
+            com.netscape.jss.pkcs11.PK11Module    \
+            com.netscape.jss.pkcs11.ModuleProxy     \
+			com.netscape.jss.pkcs11.PK11Cert		\
+			com.netscape.jss.pkcs11.PK11Cipher		\
+            com.netscape.jss.pkcs11.PK11KeyWrapper  \
+			com.netscape.jss.pkcs11.PK11MessageDigest \
+            com.netscape.jss.pkcs11.PK11PrivKey     \
+            com.netscape.jss.pkcs11.PK11PubKey     \
+            com.netscape.jss.pkcs11.PK11SymKey      \
+			com.netscape.jss.pkcs11.PK11KeyPairGenerator	\
+            com.netscape.jss.pkcs11.PK11KeyGenerator    \
+            com.netscape.jss.pkcs11.PrivateKeyProxy    \
+            com.netscape.jss.pkcs11.PublicKeyProxy    \
+            com.netscape.jss.pkcs11.SymKeyProxy    \
+            com.netscape.jss.pkcs11.KeyProxy		\
+			com.netscape.jss.pkcs11.PK11Token		\
+			com.netscape.jss.pkcs11.TokenProxy		\
+            com.netscape.jss.pkcs11.PK11Signature   \
+            com.netscape.jss.pkcs11.PK11Store       \
+            com.netscape.jss.pkcs11.PK11KeyPairGenerator \
+            com.netscape.jss.pkcs11.SigContextProxy \
+            com.netscape.jss.pkcs11.PK11RSAPublicKey \
+            com.netscape.jss.pkcs11.PK11DSAPublicKey \
+            com.netscape.jss.pkcs11.PK11SecureRandom \
+            $(NULL)
+
+CLASSES =	                                        \
+			CertProxy								\
+            CipherContextProxy                      \
+			KeyProxy								\
+			KeyType							\
+            ModuleProxy                     \
+			PK11Cert						\
+			PK11Cipher							\
+			PK11InternalCert						\
+			PK11TokenCert						\
+			PK11InternalTokenCert						\
+            PK11DSAPublicKey                \
+            PK11Key                            \
+            PK11KeyGenerator                \
+            PK11KeyPairGenerator             \
+            PK11KeyWrapper                      \
+			PK11MessageDigest					\
+            PK11Module                            \
+            PK11PrivKey                     \
+            PK11PubKey                      \
+            PK11RSAPublicKey                \
+            PK11Signature                  \
+            PK11SymKey                              \
+			PK11Store						\
+			PK11Token						\
+			PK11SecureRandom						\
+			PrivateKeyProxy							\
+			PublicKeyProxy							\
+            SigContextProxy                         \
+			SymKeyProxy						\
+			TokenCallbackInfo						\
+			TokenProxy						\
+            Tunnel                          \
+            $(NULL)
+
+PRIVATE_CLASSES = 									\
+                    pwcb                            \
+					$(NULL)
+
+
+JSRCS =	                                        \
+            CipherContextProxy.java                 \
+			KeyProxy.java							\
+			KeyType.java							\
+            ModuleProxy.java                        \
+			PK11Cert.java						\
+			PK11Cipher.java							\
+            PK11DSAPublicKey.java               \
+			PK11InternalCert.java						\
+			PK11InternalTokenCert.java						\
+            PK11Key.java                            \
+            PK11KeyGenerator.java                   \
+			PK11KeyPairGenerator.java				\
+            PK11KeyWrapper.java                      \
+			PK11MessageDigest.java					\
+            PK11Module.java                       \
+            PK11PrivKey.java                     \
+            PK11PubKey.java                      \
+            PK11RSAPublicKey.java               \
+            PK11SecureRandom.java               \
+            PK11Signature.java                  \
+			PK11Store.java						\
+            PK11SymKey.java                         \
+			PK11Token.java						\
+			PK11TokenCert.java						\
+			TokenProxy.java						\
+            Tunnel.java                         \
+            $(NULL)
+
+PRIVATE_JSRCS = 
+
+
+CSRCS =                             \
+			PK11Cert.c				\
+			PK11Cipher.c			\
+            PK11KeyGenerator.c      \
+            PK11KeyPairGenerator.c  \
+            PK11KeyWrapper.c        \
+			PK11MessageDigest.c		\
+            PK11Module.c            \
+            PK11PrivKey.c       \
+            PK11PubKey.c        \
+            PK11Signature.c         \
+			PK11SecureRandom.c		\
+			PK11Store.c				\
+            PK11SymKey.c            \
+			PK11Token.c				\
+            $(NULL)
+
+
+LIBRARY_NAME = jsspkcs11
