@@ -413,40 +413,6 @@ nsHTMLSelectElement::GetLength(PRUint32* aLength)
   return NS_ERROR_FAILURE;
 }
 
-static PRBool
-FindDefaultSelected(nsIContent* aContent, PRInt32* aSelectedIndex)
-{
-  PRInt32 numChildren;
-  aContent->ChildCount(numChildren);
-  nsIContent* child = nsnull;
-  PRBool selected = PR_FALSE;
-
-  nsIDOMHTMLOptionElement* option = nsnull;
-  for (int i = 0; i < numChildren; i++) {
-    aContent->ChildAt(i, child);
-    if (nsnull != child) {
-      nsresult result = child->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
-      if ((NS_OK == result) && option) {
-        option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
-        NS_RELEASE(option);
-        if (selected) {
-          NS_RELEASE(child);
-          break;
-        }
-        else {
-          *aSelectedIndex++;
-        }
-      } else if ((selected = FindDefaultSelected(child, aSelectedIndex)) ==  PR_TRUE) {
-        NS_RELEASE(child);
-        break;
-      }
-      NS_RELEASE(child);
-    }
-  }
- 
-  return selected;
-}
-
 //NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
