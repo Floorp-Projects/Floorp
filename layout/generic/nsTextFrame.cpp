@@ -634,7 +634,7 @@ public:
     }
 
     ~TextStyle() {
-      NS_RELEASE(mNormalFont);
+      NS_IF_RELEASE(mNormalFont);
       NS_IF_RELEASE(mSmallFont);
 
     mFont = nsnull;
@@ -4558,8 +4558,18 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 
   aTextData.mX = 0;
   if (aTextData.mMeasureText) {
-    aTs.mNormalFont->GetMaxAscent(aTextData.mAscent);
-    aTs.mNormalFont->GetMaxDescent(aTextData.mDescent);
+    // NOTE: in some cases, when font resources are exhausted, we end up with no normal font.
+    //       This will cause a crash because we are not handling it at the source and everyplace else 
+    //       assumes the normal font is non-null.  
+    //       This bit of ASSERTION / Runtime checking is to prevent the crash, but is only wallpaper.
+    //       We need to handle the problem when the font is being realized - currently that just throws 
+    //       an assertion and we continue on.
+    //       See bug 117736
+    NS_ASSERTION(aTs.mNormalFont, "null normal font, probably ran out of font resources");
+    if (aTs.mNormalFont) {
+      aTs.mNormalFont->GetMaxAscent(aTextData.mAscent);
+      aTs.mNormalFont->GetMaxDescent(aTextData.mDescent);
+    }
   }
   for (;;firstThing = PR_FALSE) {
 #ifdef IBMBIDI
