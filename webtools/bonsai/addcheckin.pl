@@ -24,6 +24,8 @@ require 'globals.pl';
 
 use vars qw($BatchID @TreeList @LegalDirs);
 
+use File::Path;
+
 if (@::CheckInList) {
      die '@::CheckInList is valid ?!?';
 }
@@ -85,8 +87,7 @@ LINE:
                     
                     Lock();
                     unless (-d "data/taginfo/$mungedname") {
-                         system("mkdir", "-p", "data/taginfo/$mungedname");
-                         system("chmod", "-R", "777", "data/taginfo/$mungedname");
+                        mkpath(["data/taginfo/$mungedname"], 1, 0777);
                     }
                     if (open(TAGFILE, ">> $filename")) {
                          print TAGFILE "$tagtime|" . join('|', @data) .  "\n";
@@ -119,8 +120,7 @@ LINE:
           $mungedname =~ s!^_!!;
           $filename = "data/checkinlog/$mungedname";
           unless (-d "data/checkinlog") {
-               system("mkdir", "-p", "data/checkinlog");
-               system("chmod", "-R", "777", "data/checkinlog");
+              mkpath(["data/checkinlog"], 1, 0777);
           }
           if (open(TID, ">> $filename")) {
                print TID "${appendjunk}LOGCOMMENT\n$plainlog:ENDLOGCOMMENT\n";

@@ -135,6 +135,7 @@ my $opt_rev               = $request->param('diff_mode');
 my $opt_subdir            = $request->param('subdir');
 my $opt_branch            = $request->param('branch');
 my $opt_command           = $request->param('command');
+my $url_file              = url_quote($opt_file);
 
 if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
 
@@ -218,14 +219,14 @@ sub do_diff_frameset {
     print "<TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>\n";
     print "<FRAMESET ROWS='*,90' FRAMESPACING=0 BORDER=1>\n";
 
-    print "  <FRAME NAME=diff+$opt_file+$opt_rev1+$opt_rev2 ",
+    print "  <FRAME NAME=diff+$url_file+$opt_rev1+$opt_rev2 ",
           "         SRC=\"$magic_url&command=DIFF";
     print "&root=$opt_root" if defined($opt_root);
-    print "&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
+    print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
 
     print "  <FRAME SRC=\"$magic_url&command=DIFF_LINKS";
     print "&root=$opt_root" if defined($opt_root);
-    print "&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
+    print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2\">\n";
     print "</FRAMESET>\n";
 }
 
@@ -255,7 +256,7 @@ sub do_diff_links {
 
     chdir($dir);
 
-    open(RCSDIFF, "$rcsdiff -r$opt_rev1 -r$opt_rev2 $opt_file 2>/dev/null |");
+    open(RCSDIFF, "$rcsdiff -r$opt_rev1 -r$opt_rev2 " . shell_escape($opt_file) . " 2>/dev/null |");
 
     print '<FORM><TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0><TR VALIGN=TOP>';
 
@@ -269,12 +270,12 @@ sub do_diff_links {
 # In this case, make the default behavior be that blame revisions match the requested
 # diff version, rather than always showing the tip.
 
-    my $blame_link = "$blame_base?file=$opt_subdir/$opt_file&rev=$opt_rev2";
+    my $blame_link = "$blame_base?file=$opt_subdir/$url_file&rev=$opt_rev2";
     $blame_link .= "&root=$opt_root" if defined($opt_root);
-    my $diff_link = "$magic_url&command=DIRECTORY&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2";
+    my $diff_link = "$magic_url&command=DIRECTORY&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2";
     $diff_link .= "&root=$opt_root" if defined($opt_root);
     my $graph_row = Param('cvsgraph') ? <<"--endquote--" : "";
-<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF="cvsgraph.cgi?file=$opt_subdir/$opt_file" TARGET="_top"><B>graph:</B></A></TD>
+<TR><TD NOWRAP ALIGN=RIGHT VALIGN=TOP><A HREF="cvsgraph.cgi?file=$opt_subdir/$url_file" TARGET="_top"><B>graph:</B></A></TD>
 <TD NOWRAP>View the revision tree as a graph</TD></TR>
 --endquote--
 
@@ -318,10 +319,10 @@ sub do_diff_links {
         }
 
         print '&nbsp' x (4 - length($line));
-        print "<A TARGET='diff+$opt_file+$opt_rev1+$opt_rev2'",
+        print "<A TARGET='diff+$url_file+$opt_rev1+$opt_rev2'",
               "       HREF=\"$magic_url&command=DIFF";
         print "&root=$opt_root" if defined($opt_root);
-        print "&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2#$anchor_num\"",
+        print "&file=$url_file&rev1=$opt_rev1&rev2=$opt_rev2#$anchor_num\"",
               "       ONCLICK='anchor = $anchor_num'>$line</A> ";
         $anchor_num++;
     }
@@ -461,6 +462,7 @@ sub do_directory {
 
     foreach my $file (split(/\+/, $opt_files)) {
         my ($path) = "$dir/$file,v";
+        my ($ufile) = url_quote($file);
 
         CheckHidden($path);
         $path = "$dir/Attic/$file,v" if (! -r $path);
@@ -471,7 +473,7 @@ sub do_directory {
 
         print "<TR><TD NOWRAP><B>";
         print "<A HREF=\"$lxr_link\">$file</A><BR>";
-        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$file";
+        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$ufile";
         print "&rev=$opt_branch" if $opt_branch;
         print "&root=$opt_root" if defined($opt_root);
         print "\">Change Log</A></B></TD>\n";
@@ -496,7 +498,7 @@ sub do_directory {
                 print '<TD VALIGN=TOP>';
                 print "<A HREF=\"$magic_url&command=DIRECTORY";
                 print "&root=$opt_root" if defined($opt_root);
-                print "&files=$opt_files&branch=$opt_branch&skip=", $opt_skip + $MAX_REVS, "\"><i>Prior revisions</i></A>", "</TD>\n";
+                print "&files=" . url_quote($opt_files) . "&branch=$opt_branch&skip=", $opt_skip + $MAX_REVS, "\"><i>Prior revisions</i></A>", "</TD>\n";
                 last;
             }
 
@@ -505,7 +507,7 @@ sub do_directory {
             if ( $prev && $rev ) {
                 $href_open = "<A HREF=\"$magic_url&command=DIFF_FRAMESET";
                 $href_open .= "&root=$opt_root" if defined($opt_root);
-                $href_open .= "&file=$file&rev1=$prev&rev2=$rev\">";
+                $href_open .= "&file=$ufile&rev1=$prev&rev2=$rev\">";
                 $href_close = "</A>";
             }
             print "<TD>$href_open$rev$href_close<BR>";
@@ -523,7 +525,7 @@ sub do_directory {
             last if !$revs_remaining--;
             print "<TD><A HREF=\"$magic_url&command=LOG";
             print "root=$opt_root" if defined($opt_root);
-            print "&file=$file&rev=$rev\">$::revision_author{$rev}</A>",
+            print "&file=$ufile&rev=$rev\">$::revision_author{$rev}</A>",
             "</TD>\n";
         }
         print "</TR>\n";}
@@ -593,8 +595,8 @@ sub html_diff {
     my ($old_line);
     my ($point, $mark); 
 
-    open(DIFF, "$rcsdiff -f -r$rev1 -r$rev2 $file 2>/dev/null |");
-    open(OLDREV, "$cocommand -p$rev1 $file 2>/dev/null |");
+    open(DIFF, "$rcsdiff -f -r$rev1 -r$rev2 " . shell_escape($file) . " 2>/dev/null |");
+    open(OLDREV, "$cocommand -p$rev1 " . shell_escape($file) . " 2>/dev/null |");
 
     $anchor_num = 0;
 

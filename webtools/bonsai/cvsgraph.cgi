@@ -72,6 +72,7 @@ if ($filename eq '') {
 }
 
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+my $url_filename = url_quote($filename);
 
 # Handle the "root" argument
 #
@@ -177,7 +178,7 @@ function hideMessage() { return false }
 system(@cvsgraph_cmd, $rcs_filename);
 
 if (!defined $::FORM{'image'}) {
-    print qq{<img src="cvsgraph.cgi?file=$::FORM{'file'}&image=1" };
+    print qq{<img src="cvsgraph.cgi?file=$url_filename&image=1" };
     print qq{usemap="#revmap" alt="$filename" border="0" onclick="hideMessage()">\n};
     if ($::use_dom) {
 	require 'cvsblame.pl';

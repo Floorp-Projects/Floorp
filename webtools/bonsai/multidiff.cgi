@@ -28,6 +28,7 @@
 use diagnostics;
 use strict;
 
+require 'CGI.pl';
 require 'globals.pl';
 
 $|=1;
@@ -83,7 +84,7 @@ for my $k (@revs) {
     if (IsHidden($fullname)) {
         next;
     }
-    open( DIFF, "$rcsdiffcommand -u -r$prevrev -r$rev $fullname 2>&1|" );
+    open( DIFF, "$rcsdiffcommand -u -r$prevrev -r$rev" . escape_shell($fullname) ." 2>&1|" );
     while(<DIFF>){
 		if (($_ =~ /RCS file/) || ($_ =~ /rcsdiff/)) { 
 			$_ =~ s/(^.*)(.*\/)(.*)/$1 $3/;

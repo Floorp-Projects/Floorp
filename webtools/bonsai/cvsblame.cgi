@@ -54,7 +54,6 @@ sub sillyness {
 
 require 'CGI.pl';
 require 'cvsblame.pl';
-require 'lloydcgi.pl';
 use SourceChecker;
 
 # Cope with the cookie and print the header, first thing.  That way, if
@@ -101,8 +100,9 @@ if ($filename eq '')
     print "\nFiles in the CVSROOT dir cannot be viewed.\n";
     exit;
 }
-
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+my $url_filename = url_quote($filename);
+my $url_file_tail = url_quote($file_tail);
 
 # Handle the "rev" argument
 #
@@ -253,11 +253,11 @@ print "<A HREF='$lxr_path'>$file_tail</a> ";
 my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvsgraph.cgi?file=$filename">Revision Graph</A>
+         <A HREF="cvsgraph.cgi?file=$url_filename">Revision Graph</A>
         </TD>
 --endquote--
 
-print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
+print " (<A HREF='cvsblame.cgi?file=$url_filename&rev=$revision&root=$root'";
 print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
 print " onmouseover=\"showMessage('$revision','top')\" id=\"line_top\"" if $::use_dom;
 print ">";
@@ -279,7 +279,7 @@ print qq(
         </TD>
        </TR><TR>
         <TD NOWRAP>
-         <A HREF="cvslog.cgi?file=$filename$revstr">Full Change Log</A>
+         <A HREF="cvslog.cgi?file=$url_filename$revstr">Full Change Log</A>
         </TD>
 $graph_cell
        </TR>
@@ -370,9 +370,9 @@ foreach $revision (@::revision_map)
         $revision_width = max($revision_width,length($revision));
 
 	if ($::prev_revision{$revision}) {
-	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
+	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$url_file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
 	} else {
-	  $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
+	  $output .= "<A HREF=\"cvsblame.cgi?file=$url_filename&rev=$revision&root=$root\"";
 	}
 	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $::use_layers;
         $output .= " onmouseover=\"showMessage('$revision','$line')\" id=\"line_$line\"" if $::use_dom;
@@ -806,7 +806,7 @@ sub leave_html_comments {
 
     # Now fix the breakage of <username> stuff on xfe. -byrd
     if ($text =~ /(.*)<(.*@.*)>(.*\n)/) {
-        $text = $1 . "<A HREF=mailto:$2?subject=$filename>$2</A>" . $3;
+        $text = $1 . "<A HREF=mailto:$2?subject=$url_filename>$2</A>" . $3;
     }
 
     return $text;

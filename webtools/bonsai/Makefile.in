@@ -55,9 +55,7 @@ FILES = CGI.pl			\
 	cvsblame.pl		\
 	cvsguess.cgi		\
 	cvsgraph.cgi		\
-	cvsindex.pl		\
 	cvslog.cgi		\
-	cvsmenu.pl		\
 	cvsquery.cgi		\
 	cvsquery.pl		\
 	cvsqueryform.cgi	\
@@ -79,25 +77,18 @@ FILES = CGI.pl			\
 	globals.pl		\
 	handleAdminMail.pl	\
 	handleCheckinMail.pl	\
-	header.pl		\
 	index.html		\
-	indextest.pl		\
-	lloydcgi.pl		\
 	maketables.sh		\
 	moduleanalyse.cgi	\
 	modules.pl		\
 	multidiff.cgi		\
 	openmessage		\
-	processqueue.pl		\
 	rebuildcvshistory.cgi	\
 	repophook.cgi		\
-	reposfiles.pl		\
 	rview.cgi		\
 	showcheckins.cgi	\
 	switchtree.cgi		\
-	testlock.pl		\
 	toplevel.cgi		\
-	utils.pl		\
 	viewold.cgi
 
 all: trapdoor treeconfig.pl params

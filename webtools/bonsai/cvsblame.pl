@@ -409,7 +409,7 @@ sub parse_rcs_deltatext {
 sub parse_rcs_file {
     my $path = shift;
     if (defined $path) {
-    	open (RCSFILE, "< $path");
+    	open (RCSFILE, $path);
     }	
     print "Reading RCS admin...\n" if ($debug >= 2);
     &parse_rcs_admin();
@@ -545,13 +545,13 @@ sub parse_cvs_file {
     @::revision_map = ();
     CheckHidden($rcs_pathname);
 
-    if (!open(RCSFILE, "< $rcs_pathname")) {
+    if (!open(RCSFILE, $rcs_pathname)) {
         my ($name, $path, $suffix) = fileparse($rcs_pathname);
         my $deleted_pathname = "${path}Attic/$name$suffix";
         die "$::progname: error: This file appeared to be under CVS control, " .
             "but the RCS file is inaccessible.\n" .
             "(Couldn't open '$rcs_pathname' or '$deleted_pathname').\n"
-          if !open(RCSFILE, "< $deleted_pathname");
+          if !open(RCSFILE, $deleted_pathname);
     }
     &parse_rcs_file();
     close(RCSFILE);
@@ -727,7 +727,7 @@ sub read_cvs_entries
 
     return if (! -d $cvsdir);
 
-    return if !open(ENTRIES, "< $cvsdir/Entries");
+    return if !open(ENTRIES, "$cvsdir/Entries");
     
     while(<ENTRIES>) {
         chop;
@@ -740,7 +740,7 @@ sub read_cvs_entries
     }
     close(ENTRIES);
 
-    return if !open(REPOSITORY, "< $cvsdir/Repository");
+    return if !open(REPOSITORY, "$cvsdir/Repository");
     $repository = <REPOSITORY>;
     chop($repository);
     close(REPOSITORY);

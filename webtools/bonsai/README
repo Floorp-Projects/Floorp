@@ -79,7 +79,9 @@ Makefile.in:		"make install" lets you specify where you store
 SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
 			Called by: nobody
 
-SourceChecker.pm	Callled by: SourceChecker.cgi
+SourceChecker.pm	Called by: 
+				SourceChecker.cgi
+				cvsblame.cgi when passed sanitize=<dictionary>
 
 addcheckin.pl		Perl. Add a checkin to a Bonsai hook. Determines
 			if the tree was open or closed at the time, shunts
@@ -142,7 +144,7 @@ bonsai.gif		a bonsai tree.
 closemessage	 	HTML, text that gets sent to all people on the hook
 			when the tree is closed.	
 
-configure		Configure script (generated from configure.in?)
+configure		Configure script (generated from configure.in)
 
 configure.in		Configure.in script
 
@@ -154,6 +156,12 @@ countcheckins.cgi	Perl.  Draws a graph of checkins for the various
 			Calls: nobody
 
 createlegaldirs.pl	Use this to create the 'legaldirs' file for a module.
+			Called by (via globals.pl LoadDirList):
+				addcheckin.pl
+				moduleanalyse.cgi
+				rebuildcvshistory.cgi
+				repophook.cgi
+				rview.cgi
 
 cvsblame.cgi		Runs through a CVS file and tells you who changed what.
 			Calls:
@@ -172,7 +180,7 @@ cvsblame.cgi		Runs through a CVS file and tells you who changed what.
 				cvsview2.cgi
 				moduleanalyse.cgi
 
-cvsblame.pl			Runs through a CVS file and tells you who changed what.
+cvsblame.pl		Runs through a CVS file and tells you who changed what.
 			Called by:
 				cvsblame.cgi
 				cvslog.cgi
@@ -192,7 +200,7 @@ cvsguess.cgi		Given a file name, try to figure out what directory
 				cvsblame.cgi file= rev= mark= #
 			Called by: *tinderbox
 
-cvsindex.pl		???
+cvsindex.pl		???  			DELETE
 
 cvslog.cgi		Web interface to "cvs log".
 			Calls:
@@ -217,7 +225,7 @@ cvslog.cgi		Web interface to "cvs log".
 				cvsblame.cgi
 				cvslog.cgi
 
-cvsmenu.pl		???
+cvsmenu.pl		???				DELETE
 
 cvsquery.cgi		Displays the results of a query entered in cvsqueryform
 			Called by: 
@@ -235,11 +243,7 @@ cvsquery.cgi		Displays the results of a query entered in cvsqueryform
 				../registry/who.cgi email=
 				http://scopus.mcom.com/bugsplat/show_bug.cgi
 
-cvsquery.gi		???
-			Calls:
-				cvsquery.pl
-
-cvsquery.pl		???
+cvsquery.pl		Actual query functions used by cvsquery.cgi
 			Called by: 
 				cvsquery.cgi
 
@@ -267,7 +271,7 @@ cvsqueryform.cgi	Main screen to let you query the CVS database.
 					maxdate=
 					cvsroot=
 
-cvsregexp.html		???
+cvsregexp.html		Description of MySQL regular expression syntax
 
 cvsview2.cgi		Lets you view CVS diffs.
 			Called by:
@@ -361,7 +365,13 @@ editwhiteboard.cgi	Perl.  Edits the free-for-all whiteboard.
 			Calls:
 				doeditwhiteboard.cgi
 
-globals.pl		???
+get_line.pl		Provides line parsing function, get_line
+			Calls: nobody
+			Called by:
+				cvsquery.pl
+				modules.pl
+
+globals.pl		Common functions used by various scripts.
 
 handleAdminMail.pl 	Perl. Mail is piped to this script and parsed.  
 			Calls:
@@ -370,27 +380,20 @@ handleAdminMail.pl 	Perl. Mail is piped to this script and parsed.
 handleCheckinMail.pl	Perl. Mail is piped to this script and parsed. It
 			then adds a checkin to a Bonsai hook.
 
-header.pl		???
+header.pl		???				DELETE
 
 index.html		loads cvsqueryform.cgi
 
-indextest.pl		???
+indextest.pl		???				DELETE
 
 lloydcgi.pl		parses CGI args from $QUERY_STRING and leaves them
 			in $form{$key}; and puts cookies in %cookie_jar.
 			Calls: nobody
-			Called by: everybody
+			Called by: whohastouchedwhat.cgi
 
-localprofile.cgi	Perl.  Display peoples contact info.  Left-over code
-			from before we started getting this info from LDAP.
+maketables.sh		Creates sql database & tables used by bonsai.
 			Called by:
 				nobody
-			Calls:
-				editprofile.cgi
-				profile.cgi
-
-maketables.sh		???
-			Unused?
 
 moduleanalyse.cgi	Shows the directories in a module.
 			Called by:
@@ -400,11 +403,10 @@ moduleanalyse.cgi	Shows the directories in a module.
 				rview.cgi dir= cvsroot=
 				cvsblame.cgi file= root=
 
-modules.pl		???
+modules.pl		Populates $::modules{} with list of CVS modules 
+			from $cvsroot/CVSROOT/modules.			
 			Called by:
-				branchspam.cgi
 				cvsqueryform.cgi
-				moduleanalyse.cgi
 
 multidiff.cgi		Implements the "Show me ALL the Diffs" button
 			Called by:
@@ -414,21 +416,10 @@ multidiff.cgi		Implements the "Show me ALL the Diffs" button
 			Calls:
 				nobody
 
-myglobrecur.pl		???
+openmessage	 	Mail template that gets sent to people when they first
+			check into the tree
 
-openmessage		???
-
-perlifyconfig.pl	???
-
-processqueue.pl		???
-
-profile.cgi		Perl.  Stupid interface to LDAP to show all the info
-			about a person.
-			Called by:
-				localprofile.cgi
-				show2.cgi
-			Calls:
-				profile.cgi person=
+processqueue.pl		Pipes data/queue files to dolog.pl.	DELETE
 
 rebuildcvshistory.cgi	Perl.  Admin script to go rebuild the bonsai database 
 			from CVS.
@@ -437,15 +428,14 @@ rebuildcvshistory.cgi	Perl.  Admin script to go rebuild the bonsai database
 			Calls:
 				nobody
 
-rebuilddatabase.pl	???
-
 repophook.cgi		Perl.  Rebuilds a bonsai hook from the bonsai database.
 			Called by:
 				admin.cgi
 			Calls:
 				nobody
 
-reposfiles.pl		???
+reposfiles.pl		Generates a list of all files in the repository.
+			DELETE
 
 rview.cgi		Lets you browse a directory in a CVS repository.
 			Called by:
@@ -476,15 +466,13 @@ showcheckins.cgi	Perl.  Shows some set of checkins in a bonsai hook.
 					command=DIRECTORY
 				multidiff.cgi allchanges=
 
-status/			???
-
 switchtree.cgi		Perl.  Lets you choose a different bonsai branch.
 			Called by:
 				toplevel.cgi
 			Calls:
 				nobody
 
-testlock.pl		???
+testlock.pl		Tests the Un/Lock functionality of utils.pl. DELETE
 
 toplevel.cgi		Perl.  Main interface to the bonsai hook.
 			Called by:
@@ -511,9 +499,10 @@ toplevel.cgi		Perl.  Main interface to the bonsai hook.
 				contacthelp.html
 				http://warp/client/dogbert/buildlore/index.html
 
-trapdoor.c		???
+trapdoor.c		Runs crypt on passwd
 
-utils.pl		???
+utils.pl		Ancient globals.pl. 			DELETE
+			Called by: testlock.pl  whohastouchedwhat.cgi
 
 viewold.cgi		Perl.  Lets you choose an old bonsai hook to view.
 			Called by:

@@ -43,7 +43,7 @@ sub url_decode {
 # Quotify a string, suitable for putting into a URL.
 sub url_quote {
     my($toencode) = (@_);
-    $toencode=~s/([^a-zA-Z0-9_\-.])/uc sprintf("%%%02x",ord($1))/eg;
+    $toencode =~ s/([^a-zA-Z0-9_\-\/.])/uc sprintf("%%%02x",ord($1))/eg;
     return $toencode;
 }
 

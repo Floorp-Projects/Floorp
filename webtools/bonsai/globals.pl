@@ -26,6 +26,7 @@ $::TreeID = "default";
 use diagnostics;
 use strict;
 use DBI;
+use File::Path;
 
 use Date::Format;               # For time2str().
 use Date::Parse;                # For str2time().
@@ -517,11 +518,10 @@ sub DataDir {
 
      # Make sure it exists...
      unless (-d $dir) {
-          system ("rm", "-rf", $dir);
-          system ("mkdir", "-p", $dir);
-          die "Couldn't create '$dir'\n"
-               unless (-d $dir);
-          chmod(0777, $dir);
+         rmtree([$dir], 1, 1);
+         mkpath([$dir], 0, 0777);
+         die "Couldn't create '$dir'\n"
+             unless (-d $dir);
      }
 
      return $dir;

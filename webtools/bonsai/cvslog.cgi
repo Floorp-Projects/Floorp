@@ -48,7 +48,6 @@ sub sillyness {
 
 require 'CGI.pl';
 require 'cvsblame.pl';
-use SourceChecker;
 
 # Some Globals
 #
@@ -68,7 +67,8 @@ if ($filename eq '')
     exit;
 }
 my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
-
+my $url_filename = url_quote($filename);
+my $url_file_tail = url_quote($file_tail);
 
 # Handle the "rev" argument
 #
@@ -199,7 +199,7 @@ print "<A HREF='$lxr_path'>$file_tail</a> ";
 my $graph_cell = Param('cvsgraph') ? <<"--endquote--" : "";
        </TR><TR>
         <TD>
-         <A HREF="cvsgraph.cgi?file=$filename">graph</A>&nbsp;
+         <A HREF="cvsgraph.cgi?file=$url_filename">graph</A>&nbsp;
         </TD><TD NOWRAP>
          View the revision history as a graph
         </TD>
@@ -227,13 +227,13 @@ print qq(
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$file_tail&branch=$::opt_rev">diff</A>
+         <A HREF="cvsview2.cgi?command=DIRECTORY&subdir=$rcs_path&files=$url_file_tail&branch=$::opt_rev">diff</A>
         </TD><TD NOWRAP>
          Compare any two version.
         </TD>
        </TR><TR>
         <TD>
-         <A HREF="cvsblame.cgi?file=$filename&rev=$::opt_rev&cvsroot=$root">blame</A>&nbsp;
+         <A HREF="cvsblame.cgi?file=$url_filename&rev=$::opt_rev&cvsroot=$root">blame</A>&nbsp;
         </TD><TD NOWRAP>
          Annotate the author of each line.
         </TD>
@@ -255,9 +255,9 @@ $graph_cell
 my $table_tag = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH='100%'>";
 my $table_header_tag = "";
 if ($opt_sort eq 'author') {
-    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=revision&author=$author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=date&author=$author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=revision&author=$author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=date&author=$author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
 } else {
-    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=author&author=$author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
+    $table_header_tag .= "<TH ALIGN=LEFT>Rev<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$url_filename&root=$root&rev=$browse_revtag&sort=author&author=$author_arg'>Author</A><TH ALIGN=LEFT>Date<TH><TH ALIGN=LEFT>Log";
 }
 
 $table_header_tag = &url_encode3($table_header_tag);
@@ -307,11 +307,11 @@ foreach $revision (@revisions)
     my $anchor = "<A HREF=cvsview2.cgi";
 
     if (defined($::prev_revision{$revision})) {
-        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail&branch=$::opt_rev"
+        $anchor .= "?diff_mode=context&whitespace_mode=show&file=$url_file_tail&branch=$::opt_rev"
             ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
             ."&rev1=$::prev_revision{$revision}&rev2=$revision";
     } else {
-        $anchor .= "?files=$file_tail"
+        $anchor .= "?files=$url_file_tail"
             ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision&branch=$::opt_rev";
         $anchor .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
     }
