@@ -19,7 +19,7 @@ DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\locale\en-US
+DISTBROWSER=$(DIST)\bin\chrome\addressbook\locale\en-US
 
 
 install::

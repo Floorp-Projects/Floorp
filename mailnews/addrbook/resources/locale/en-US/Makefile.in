@@ -35,5 +35,5 @@ EXPORT_RESOURCE_CONTENT = \
 	$(NULL)
 
 install:: 
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/global/locale/en-US
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/addressbook/locale/en-US
 
