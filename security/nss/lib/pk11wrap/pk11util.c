@@ -249,6 +249,12 @@ SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule) {
     return secmod_AddModuleToList(&modulesDB,newModule);
 }
 
+SECMODModule *
+SECMOD_GetDefaultDBModule(void)
+{
+	return SECMOD_ReferenceModule(defaultDBModule);
+}
+
 /*
  * get the list of PKCS11 modules that are available.
  */
@@ -416,7 +422,7 @@ SECMOD_DeleteInternalModule(char *name) {
 	internalModule = SECMOD_ReferenceModule(newModule);
 	SECMOD_AddModule(internalModule);
 	SECMOD_DestroyModule(oldModule);
- 	SECMOD_DeletePermDB(mlp->module);
+ 	pk11_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
     }
     return rv;
