@@ -3984,13 +3984,14 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
     if (rightNode)
     {
       secondSplitParent = mHTMLEditor->GetLeftmostChild(rightNode);
-      // don't try to split br's...
-      // note: probably should only split containers, but being more conservative in changes for now.
+      // don't try to split non-containers (br's, images, hr's, etc)
       if (!secondSplitParent) secondSplitParent = rightNode;
-      if (nsTextEditUtils::IsBreak(secondSplitParent))
+      if (!mHTMLEditor->IsContainer(secondSplitParent))
       {
-        savedBR = secondSplitParent;
-        savedBR->GetParentNode(getter_AddRefs(tmp));
+        if (nsTextEditUtils::IsBreak(secondSplitParent))
+          savedBR = secondSplitParent;
+
+        secondSplitParent->GetParentNode(getter_AddRefs(tmp));
         secondSplitParent = tmp;
       }
       offset = 0;
