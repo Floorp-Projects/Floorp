@@ -1461,11 +1461,10 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  nsFileSpec root;
-  rv = nsGetMailboxRoot(root);
+  rv = nsGetMailboxRoot(pathResult);
   if (NS_FAILED(rv)) return rv;
   
-  nsAutoString path((root));
+  nsAutoString path="";
   uri.Cut(0, nsCRT::strlen(rootURI));
 
   PRInt32 uriLen = uri.Length();
@@ -1502,7 +1501,9 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     uri.Cut(0, pos);
     uriLen -= pos;
   }
-  pathResult = path;
+
+  if(path.Length() > 0)
+	  pathResult +=path;
   return NS_OK;
 }
 
