@@ -89,7 +89,7 @@ if(-d "$DEPTH\\stage")
 # The destination cannot be a sub directory of the source
 # pkgcp.pl will get very unhappy
 
-mkdir("$DEPTH\\stage", 775);
+mkdir("$DEPTH\\stage", 0775);
 system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $DEPTH\\stage -f $cwdPackager\\packages-static-win -o dos -v");
 
 chdir("$cwdPackager\\windows");

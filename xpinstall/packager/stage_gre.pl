@@ -53,9 +53,9 @@ sub StageProduct
   StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/basebrowser-installer-win.pkg", $dirDistPackagesProductName);
   StageUtils::CopyAdditionalPackage("$dirMozRoot/embedding/config/gre-installer-win.pkg",         $dirDistPackagesProductName);
 
-  mkdir("$aDirStage", 775) if (!(-e "$aDirStage"));
-  mkdir("$aDirStage/$aProductName", 775) if (!(-e "$aDirStage/$aProductName"));
-  mkdir("$aDirStage/$aProductName/gre", 775) if (!(-e "$aDirStage/$aProductName/gre"));
+  mkdir("$aDirStage", 0775) if (!(-e "$aDirStage"));
+  mkdir("$aDirStage/$aProductName", 0775) if (!(-e "$aDirStage/$aProductName"));
+  mkdir("$aDirStage/$aProductName/gre", 0775) if (!(-e "$aDirStage/$aProductName/gre"));
 
   # Call pkgcp.pl on each of the package list
   system("perl \"$dirMozPackager/pkgcp.pl\" -s \"$aDirSrcDist\"     -d \"$dirStageProductName\" -f \"$dirDistPackagesProductName/xpcom-win.pkg\" -o $aOsPkg -v");

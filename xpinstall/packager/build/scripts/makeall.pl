@@ -540,7 +540,7 @@ sub VerifyComponents()
     if($mComponent =~ /talkback/i)
     {
       print " place holder: $inStagePath\\$mComponent\n";
-      mkdir("$inStagePath\\$mComponent", 775);
+      mkdir("$inStagePath\\$mComponent", 0775);
     }
     elsif(-d "$inStagePath\\$mComponent")
     {

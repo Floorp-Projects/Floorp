@@ -105,7 +105,7 @@ if(-d "$DEPTH/stage")
 # The destination cannot be a sub directory of the source.
 # pkgcp.pl will get very unhappy.
 
-mkdir("$DEPTH/stage", 775);
+mkdir("$DEPTH/stage", 0775);
 system("perl $cwdPackager/pkgcp.pl -s $cwdDist -d $DEPTH/stage -f $cwdPackager/packages-os2 -o unix -v");
 system("perl $cwdPackager/xptlink.pl -s $cwdDist -d $DEPTH/stage -o unix -v");
 
