@@ -858,6 +858,9 @@ nsMsgSearchValidityTable::nsMsgSearchValidityTable ()
 			SetValidButNotShown (i,j, PR_FALSE);
 		}
 	m_numAvailAttribs = 0;   // # of attributes marked with at least one available operator
+  // assume default is Subject, which it is for mail and news search
+  // it's not for LDAP, so we'll call SetDefaultAttrib()
+  m_defaultAttrib = nsMsgSearchAttrib::Subject;
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgSearchValidityTable, nsIMsgSearchValidityTable)
@@ -958,10 +961,16 @@ nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribut
                                                 PRUint32 *aLength,
                                                 nsMsgSearchOpValue **aResult)
 {
+    nsMsgSearchAttribValue attr;
+    if (aAttribute == nsMsgSearchAttrib::Default)
+      attr = m_defaultAttrib;
+    else
+      attr = aAttribute;
+
     PRUint32 totalOperators=0;
     PRInt32 i;
     for (i=0; i<nsMsgSearchOp::kNumMsgSearchOperators; i++) {
-        if (m_table[aAttribute][i].bitAvailable)
+        if (m_table[attr][i].bitAvailable)
             totalOperators++;
     }
 
@@ -971,7 +980,7 @@ nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribut
     
     PRUint32 numStored = 0;
     for (i=0; i<nsMsgSearchOp::kNumMsgSearchOperators;i++) {
-        if (m_table[aAttribute][i].bitAvailable)
+        if (m_table[attr][i].bitAvailable)
             array[numStored++] = i;
     }
 
@@ -979,6 +988,13 @@ nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribut
     *aLength = totalOperators;
     *aResult = array;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchValidityTable::SetDefaultAttrib(nsMsgSearchAttribValue aAttribute)
+{
+  m_defaultAttrib = aAttribute;
+  return NS_OK;
 }
 
 
@@ -1055,13 +1071,16 @@ nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsIMsgSearchValid
 		*ppOutTable = m_newsExTable;
 		break;
 #endif
-#ifdef DOING_LDAP
 	case nsMsgSearchScope::LDAP:
 		if (!m_ldapTable)
 			err = InitLdapTable ();
 		*ppOutTable = m_ldapTable;
 		break;
-#endif
+  case nsMsgSearchScope::LocalAB:
+		if (!m_localABTable)
+			err = InitLocalABTable ();
+		*ppOutTable = m_localABTable;
+		break;
 	default:                 
 		NS_ASSERTION(PR_FALSE, "invalid table type");
 		err = NS_MSG_ERROR_INVALID_SEARCH_TERM;
@@ -1120,4 +1139,109 @@ nsMsgSearchValidityManager::InitOtherHeadersInTable (nsIMsgSearchValidityTable *
     }
   }
   return NS_OK;
+}
+
+
+nsresult nsMsgSearchValidityManager::EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib)
+{
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::Contains, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::Contains, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::DoesntContain, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::DoesntContain, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::Is, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::Is, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::Isnt, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::Isnt, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::BeginsWith, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::BeginsWith, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::EndsWith, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::EndsWith, 1);
+        table->SetAvailable (aSearchAttrib, nsMsgSearchOp::SoundsLike, 1);
+        table->SetEnabled   (aSearchAttrib, nsMsgSearchOp::SoundsLike, 1);
+        return NS_OK;
+}
+
+nsresult nsMsgSearchValidityManager::InitLdapTable()
+{
+  NS_ASSERTION(!m_ldapTable,"don't call this twice!");
+
+	nsresult rv = NewTable (getter_AddRefs(m_ldapTable));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = m_ldapTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Name);
+	NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Email);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::PhoneNumber);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Organization);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Department);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::City);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_ldapTable, nsMsgSearchAttrib::Street);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+nsresult nsMsgSearchValidityManager::InitLocalABTable()
+{
+  NS_ASSERTION(!m_localABTable,"don't call this twice!");
+
+	nsresult rv = NewTable (getter_AddRefs(m_localABTable));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = m_localABTable->SetDefaultAttrib(nsMsgSearchAttrib::Name);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Name);
+	NS_ENSURE_SUCCESS(rv,rv);
+ 
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Email);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Nickname);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::WorkPhone);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::HomePhone);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Fax);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Pager);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Mobile);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::ScreenName);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Title);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Organization);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::Department);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = EnableDirectoryAttribute(m_localABTable, nsMsgSearchAttrib::AdditionalEmail);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  return rv;
 }

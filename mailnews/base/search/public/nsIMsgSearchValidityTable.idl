@@ -49,7 +49,7 @@ interface nsIMsgSearchValidityTable : nsISupports {
                     in nsMsgSearchOpValue op, in boolean enabled);
     void setValidButNotShown(in nsMsgSearchAttribValue attrib,
                              in nsMsgSearchOpValue op, in boolean valid);
-
+    
     boolean getAvailable(in nsMsgSearchAttribValue attrib,
                          in nsMsgSearchOpValue op);
     boolean getEnabled(in nsMsgSearchAttribValue attrib,
@@ -70,4 +70,5 @@ interface nsIMsgSearchValidityTable : nsISupports {
                                [retval, array, size_is(length)]
                                out nsMsgSearchOpValue operators);
 
+	void setDefaultAttrib(in nsMsgSearchAttribValue defaultAttrib);
 };

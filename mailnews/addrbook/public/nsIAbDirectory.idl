@@ -50,7 +50,6 @@
 // used for when creating new directories
 // either from user input, or during bootstrapping
 [scriptable, uuid(f94812de-1dd1-11b2-b0ab-9eb5e055f712)]
-
 interface nsIAbDirectoryProperties : nsISupports {
   attribute AString description;
   attribute string URI;

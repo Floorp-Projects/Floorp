@@ -197,28 +197,29 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue scope,
 			return NS_ERROR_NULL_POINTER;
 	}
 
-	nsresult err = NS_OK;
-
 	nsMsgSearchScopeTerm *pScopeTerm = new nsMsgSearchScopeTerm(this, scope, folder);
-	if (pScopeTerm)
-		m_scopeList.AppendElement(pScopeTerm);
-		else
-			err = NS_ERROR_OUT_OF_MEMORY;
-	
+  if (!pScopeTerm)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	return err;
+  m_scopeList.AppendElement(pScopeTerm);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchSession::AddDirectoryScopeTerm(nsMsgSearchScopeValue scope)
+{
+	nsMsgSearchScopeTerm *pScopeTerm = new nsMsgSearchScopeTerm(this, scope, nsnull);
+  if (!pScopeTerm)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  m_scopeList.AppendElement(pScopeTerm);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgSearchSession::ClearScopes()
 {
     DestroyScopeList();
     return NS_OK;
-}
-
-/* [noscript] void AddLdapScope (in nsMsgDIRServer server); */
-NS_IMETHODIMP nsMsgSearchSession::AddLdapScope(nsMsgDIRServer * server)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* [noscript] boolean ScopeUsesCustomHeaders (in nsMsgSearchScope scope, in voidStar selection, in boolean forFilters); */

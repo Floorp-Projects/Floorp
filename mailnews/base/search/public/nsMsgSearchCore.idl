@@ -56,14 +56,15 @@ interface nsMsgSearchScope {
     const nsMsgSearchScopeValue news = 4;
     const nsMsgSearchScopeValue newsEx = 5;
     const nsMsgSearchScopeValue LDAP = 6;
-    const nsMsgSearchScopeValue allSearchableGroups = 7;
+	const nsMsgSearchScopeValue LocalAB = 7;
+    const nsMsgSearchScopeValue allSearchableGroups = 8;
 };
 
 typedef long nsMsgSearchAttribValue;
 
 [scriptable, uuid(68c8710a-304e-11d3-97bf-00a0c900d445)]
 interface nsMsgSearchAttrib {
-
+    const nsMsgSearchAttribValue Default = -1;
     const nsMsgSearchAttribValue Subject = 0;	/* mail and news */
     const nsMsgSearchAttribValue Sender = 1;   
     const nsMsgSearchAttribValue Body = 2;	
@@ -75,54 +76,34 @@ interface nsMsgSearchAttrib {
     const nsMsgSearchAttribValue CC = 7;
     const nsMsgSearchAttribValue ToOrCC = 8;
 
-    const nsMsgSearchAttribValue CommonName = 9;   /* LDAP only */
-    const nsMsgSearchAttribValue RFC822Address = 10;	
-    const nsMsgSearchAttribValue PhoneNumber = 11;
-    const nsMsgSearchAttribValue Organization = 12;
-    const nsMsgSearchAttribValue OrgUnit = 13;
-    const nsMsgSearchAttribValue Locality = 14;
-    const nsMsgSearchAttribValue StreetAddress = 15;
-    const nsMsgSearchAttribValue Size = 16;
-    const nsMsgSearchAttribValue AnyText = 17;      /* any header or body */
-	const nsMsgSearchAttribValue Keywords = 18;
+	const nsMsgSearchAttribValue Location = 9;          /* result list only */
+    const nsMsgSearchAttribValue MessageKey = 10;        /* message result elems */
+	const nsMsgSearchAttribValue AgeInDays = 11; 
+    const nsMsgSearchAttribValue FolderInfo = 12;        /* for "view thread context" from result */
+    const nsMsgSearchAttribValue Size = 13;
+    const nsMsgSearchAttribValue AnyText = 14;
+    const nsMsgSearchAttribValue Keywords = 15;
 
-    const nsMsgSearchAttribValue DistinguishedName = 19; /* LDAP result elem only */
-    const nsMsgSearchAttribValue ObjectClass = 20;       
-    const nsMsgSearchAttribValue JpegFile = 21;
+	const nsMsgSearchAttribValue Name = 16;
+    const nsMsgSearchAttribValue Email = 17;
+    const nsMsgSearchAttribValue PhoneNumber = 18;
+    const nsMsgSearchAttribValue City = 19;
+	const nsMsgSearchAttribValue Street = 20;
+    const nsMsgSearchAttribValue Nickname = 21;
+    const nsMsgSearchAttribValue WorkPhone = 22;
+    const nsMsgSearchAttribValue HomePhone = 23;
+    const nsMsgSearchAttribValue Fax = 24;
+    const nsMsgSearchAttribValue Pager = 25;
+    const nsMsgSearchAttribValue Mobile = 26;
+    const nsMsgSearchAttribValue ScreenName = 27;
+    const nsMsgSearchAttribValue Title = 28;
+    const nsMsgSearchAttribValue Organization = 29;
+    const nsMsgSearchAttribValue Department = 30;
+    const nsMsgSearchAttribValue AdditionalEmail = 31;
 
-    const nsMsgSearchAttribValue Location = 22;          /* result list only */
-    const nsMsgSearchAttribValue MessageKey = 23;        /* message result elems */
+	
+    // 32 - 48, reserved for ab / LDAP;
 
-	const nsMsgSearchAttribValue AgeInDays = 24;    /* for purging old news articles */
-
-	const nsMsgSearchAttribValue GivenName = 25;    /* for sorting LDAP results */
-	const nsMsgSearchAttribValue Surname = 26; 
-
-	const nsMsgSearchAttribValue FolderInfo = 27;	/* for "view thread context" from result */
-
-	const nsMsgSearchAttribValue Custom1 = 28;		/* custom LDAP attributes */
-	const nsMsgSearchAttribValue Custom2 = 29;
-	const nsMsgSearchAttribValue Custom3 = 30;
-	const nsMsgSearchAttribValue Custom4 = 31;
-	const nsMsgSearchAttribValue Custom5 = 32;
-
-	const nsMsgSearchAttribValue MessageId = 33; 
-	/* the following are LDAP specific attributes */
-	const nsMsgSearchAttribValue nsnMsgSearchAttribCarlicense = 34;
-	const nsMsgSearchAttribValue BusinessCategory = 35;
-	const nsMsgSearchAttribValue DepartmentNumber = 36;
-	const nsMsgSearchAttribValue Description = 37;
-	const nsMsgSearchAttribValue EmployeeType = 38;
-	const nsMsgSearchAttribValue FaxNumber = 39;
-	const nsMsgSearchAttribValue Manager = 40;
-	const nsMsgSearchAttribValue PostalAddress = 41;
-	const nsMsgSearchAttribValue PostalCode = 42;
-	const nsMsgSearchAttribValue Secretary = 43;
-	const nsMsgSearchAttribValue Title = 44;
-	const nsMsgSearchAttribValue Nickname = 45;
-	const nsMsgSearchAttribValue HomePhone = 46;
-	const nsMsgSearchAttribValue Pager = 47;
-	const nsMsgSearchAttribValue Cellular = 48;
     //49 is for showing customize... in ui headers start from 50 onwards up until 99.
 	const nsMsgSearchAttribValue OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these... */
 
@@ -218,12 +199,6 @@ typedef struct nsMsgSearchValue
 %}
 
 [ptr] native nsMsgSearchTerm(nsMsgSearchTerm);
-
-[ptr] native nsMsgDIRServer(nsMsgDIRServer);
-%{C++
-class nsMsgDIRServer;
-%}
-
 
 %{C++
 #define IS_STRING_ATTRIBUTE(_a) \

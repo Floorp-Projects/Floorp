@@ -1,5 +1,5 @@
-<!-- extracted from SearchDialog.xul -->
 
+<!-- for SearchDialog.xul -->
 <!ENTITY searchHeading.label         "Search for messages in:">
 <!ENTITY searchHeading.accesskey     "S">
 <!ENTITY searchSubfolders.label      "Search subfolders">
@@ -24,3 +24,10 @@
 <!ENTITY fileButton.accesskey        "i">
 <!ENTITY goToFolderButton.label      "Open Message Folder">
 <!ENTITY goToFolderButton.accesskey  "r">
+
+<!-- for ABSearchDialog.xul -->
+<!ENTITY abSearchHeading.label       "Search for names in:">
+<!ENTITY abSearchHeading.accesskey   "S">
+<!ENTITY propertiesButton.label      "Properties">
+<!ENTITY propertiesButton.accesskey  "P">
+<!ENTITY abSearchDialogTitle.label   "Advanced Directory Search">

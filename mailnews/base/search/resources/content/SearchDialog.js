@@ -503,16 +503,6 @@ function IsThreadAndMessagePaneSplitterCollapsed()
     return true;
 }
 
-function setMsgDatasourceWindow(ds, msgwindow)
-{
-    try {
-        var msgDatasource = ds.QueryInterface(nsIMsgRDFDataSource);
-        msgDatasource.window = msgwindow;
-    } catch (ex) {
-        dump("error setting DS on " + ds + ": " + ex + "\n");
-    }
-}
-
 // used to toggle functionality for Search/Stop button.
 function onSearchButton(event)
 {

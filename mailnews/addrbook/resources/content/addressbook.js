@@ -449,7 +449,14 @@ function AbResultsPaneDoubleClick(card)
 
 function onAdvancedAbSearch()
 {
-  dump("XXX onAdvancedAbSearch\n");
+  var selectedItems = dirTree.selectedItems;
+  if (selectedItems.length != 1)
+    return;
+
+  var selectedABURI = selectedItems[0].getAttribute('id');
+
+  window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
+                    "chrome,resizable,status,centerscreen,dialog=no", {directory: selectedABURI} );
 }
 
 function onEnterInSearchBar()

@@ -1100,6 +1100,7 @@ Rights Reserved.
       <menuitem label="&searchMailCmd.label;" key="key_searchMail" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages()"/>
       <menuseparator/>
       <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin(xlateURL('urn:clienturl:srchmenu:srchinternet'));"/>
+      <menuitem label="&searchAddressesCmd.label;" accesskey="&searchAddressesCmd.accesskey;" oncommand="MsgSearchAddresses(null)"/>
     </menupopup>
   </menu>
   <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">

@@ -53,7 +53,9 @@ function AbResultsPaneOnClick(event)
 
       if (gAbView) {
         var node = document.getElementById(gAbView.URI);
-        sortDirection = node.getAttribute("sortDirection");
+        if (node) {
+          sortDirection = node.getAttribute("sortDirection");
+        }
         if (sortDirection == kDefaultDescending)
           sortDirection = kDefaultAscending;
         else 

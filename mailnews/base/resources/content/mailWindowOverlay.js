@@ -1028,6 +1028,19 @@ function MsgSearchMessages()
                           "chrome,resizable,status,centerscreen,dialog=no", { folder: preselectedFolder });
 }
 
+function MsgSearchAddresses()
+{
+    var windowManagerInterface = GetWindowMediator();
+    var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
+
+    if (abSearchWindow)
+        abSearchWindow.focus();
+    else
+        window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
+                          "chrome,resizable,status,centerscreen,dialog=no", {directory: null});
+}
+
+
 function MsgFilters(emailAddress)
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();

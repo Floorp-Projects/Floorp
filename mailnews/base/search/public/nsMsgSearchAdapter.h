@@ -160,6 +160,8 @@ protected:
 		PRUint16 bitValidButNotShown : 1;
 	} vtBits;
   vtBits m_table [nsMsgSearchAttrib::kNumMsgSearchAttributes][nsMsgSearchOp::kNumMsgSearchOperators];
+private:    
+  nsMsgSearchAttribValue m_defaultAttrib;
 };
 
 // Using getters and setters seems a little nicer then dumping the 2-D array
@@ -192,7 +194,9 @@ public:
   
 	nsresult GetTable (int, nsMsgSearchValidityTable**);
   
+#ifdef DOING_EXNEWSSEARCH
 	nsresult PostProcessValidityTable (nsINntpIncomingServer *);
+#endif
 
 protected:
 
@@ -203,9 +207,14 @@ protected:
     nsCOMPtr<nsIMsgSearchValidityTable> m_offlineMailTable;
     nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailTable;
     nsCOMPtr<nsIMsgSearchValidityTable> m_onlineMailFilterTable;
+
     nsCOMPtr<nsIMsgSearchValidityTable> m_newsTable;
+#ifdef DOING_EXNEWSSEARCH
     nsCOMPtr<nsIMsgSearchValidityTable> m_newsExTable;
+#endif
     nsCOMPtr<nsIMsgSearchValidityTable> m_localNewsTable; // used for local news searching or offline news searching...
+    nsCOMPtr<nsIMsgSearchValidityTable> m_ldapTable;
+    nsCOMPtr<nsIMsgSearchValidityTable> m_localABTable;
 
 	nsresult NewTable (nsIMsgSearchValidityTable **);
 
@@ -214,10 +223,15 @@ protected:
 	nsresult InitOnlineMailFilterTable ();
 	nsresult InitNewsTable ();
 	nsresult InitLocalNewsTable(); 
+
+#ifdef DOING_EXNEWSSEARCH
 	nsresult InitNewsExTable (nsINntpIncomingServer *host = nsnull);
+#endif
   nsresult InitOtherHeadersInTable(nsIMsgSearchValidityTable *table, const char *customHeaders);
 
-	void EnableLdapAttribute (nsMsgSearchAttribValue, PRBool enabled = PR_TRUE);
+  nsresult InitLdapTable();
+  nsresult InitLocalABTable();
+	nsresult EnableDirectoryAttribute(nsIMsgSearchValidityTable *table, nsMsgSearchAttribValue aSearchAttrib);
 };
 
 #endif

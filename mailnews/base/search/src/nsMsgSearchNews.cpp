@@ -724,7 +724,7 @@ nsresult nsMsgSearchValidityManager::InitNewsTable ()
 	return err;
 }
 
-
+#ifdef DOING_EXNEWSSEARCH
 nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINntpIncomingServer *newsHost)
 {
 	nsresult err = NS_OK;
@@ -809,8 +809,8 @@ nsresult nsMsgSearchValidityManager::InitNewsExTable (nsINntpIncomingServer *new
 	return err;
 }
 
-
 nsresult nsMsgSearchValidityManager::PostProcessValidityTable (nsINntpIncomingServer *host)
 {
 	return InitNewsExTable (host);
 }
+#endif

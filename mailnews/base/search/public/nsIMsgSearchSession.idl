@@ -86,11 +86,9 @@ interface nsIMsgSearchSession :  nsISupports {
     void addScopeTerm(in nsMsgSearchScopeValue scope,
                       in nsIMsgFolder folder);
 
+    void addDirectoryScopeTerm(in nsMsgSearchScopeValue scope);
+
     void clearScopes();
-    
-    /* special cases for LDAP since LDAP isn't really a folderInfo */
-    [noscript] void AddLdapScope(in nsMsgDIRServer server);
-    /* void AddAllLdapScopes(XP_List* dirServerList); */
 
     /* Call this function everytime the scope changes! It informs the FE if 
        the current scope support custom header use. FEs should not display the
