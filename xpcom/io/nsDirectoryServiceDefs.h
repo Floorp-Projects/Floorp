@@ -51,22 +51,59 @@
 
 #ifndef nsDirectoryServiceDefs_h___
 #define nsDirectoryServiceDefs_h___
-                                                                                                                       
-#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
-#define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
-#define NS_XPCOM_COMPONENT_DIR                  "ComsD"
-#define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
 
-#define NS_GRE_DIR                              "GreD"
-#define NS_GRE_COMPONENT_DIR                    "GreComsD" 
-
-#define NS_XPCOM_XPTI_REGISTRY_FILE             "XptiRegF"
+/* General OS specific locations */
 
 #define NS_OS_HOME_DIR                          "Home"
-#define NS_OS_DRIVE_DIR                         "DrvD"
 #define NS_OS_TEMP_DIR                          "TmpD"
-#define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
 #define NS_OS_CURRENT_WORKING_DIR               "CurWorkD"
+
+/* Property returns the directory in which the procces was started from.  
+ * On Unix this will be the path in the MOZILLA_FIVE_HOME env var and if 
+ * unset will be the current working directory. 
+ */
+#define NS_OS_CURRENT_PROCESS_DIR               "CurProcD"
+                                                                                                                       
+/* This location is similar to NS_OS_CURRENT_PROCESS_DIR, however, 
+ * NS_XPCOM_CURRENT_PROCESS_DIR can be overriden by passing a "bin
+ * directory" to NS_InitXPCOM2(). 
+ */
+#define NS_XPCOM_CURRENT_PROCESS_DIR            "XCurProcD"
+
+/* Property will return the location of the application components
+ * directory.  By default, this directory will be contained in the 
+ * NS_XPCOM_CURRENT_PROCESS_DIR.
+ */
+#define NS_XPCOM_COMPONENT_DIR                  "ComsD"
+
+/* Property will return the location of the application components
+ * registry file.
+ */
+#define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
+
+/* Property will return the location of the application XPTI
+ * registry file.
+ */
+#define NS_XPCOM_XPTI_REGISTRY_FILE             "XptiRegF"
+
+/* Property will return the location of the the XPCOM Shared Library.
+ */
+#define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
+
+/* Property will return the current location of the the GRE directory.  
+ * If no GRE is used, this propery will behave like 
+ * NS_XPCOM_CURRENT_PROCESS_DIR.
+ */
+#define NS_GRE_DIR                              "GreD"
+
+/* Property will return the current location of the the GRE component 
+ * directory.  If no GRE is used, this propery will behave like 
+ * NS_XPCOM_COMPONENT_DIR.
+ */
+#define NS_GRE_COMPONENT_DIR                    "GreComsD" 
+
+
+/* Platform Specific Locations */
 
 #if !defined (XP_UNIX) || defined(XP_MACOSX)
     #define NS_OS_SYSTEM_DIR                    "SysD"
@@ -145,6 +182,11 @@
     #define NS_BEOS_HOME_DIR                    "Home"
     #define NS_BEOS_DESKTOP_DIR                 "Desk"
 #endif
+
+/* Deprecated */
+
+#define NS_OS_DRIVE_DIR                         "DrvD"
+
 
 
 #endif
