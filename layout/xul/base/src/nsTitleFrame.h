@@ -25,22 +25,19 @@
 
 #include "nsBoxFrame.h"
 
-#define NS_TITLE_FRAME_CID \
-{ 0x73801d40, 0x5a22, 0x12d2, { 0x80, 0x46, 0x0, 0x60, 0x2, 0x14, 0xa7, 0x90 } }
-
 class nsTitleFrame : public nsBoxFrame {
 public:
 
   nsTitleFrame(nsIPresShell* aShell);
-  virtual ~nsTitleFrame();
-
-  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // we are always a vertical box.
   virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal) { aIsHorizontal = PR_FALSE; return PR_TRUE; }
 
   // never autostretch we align out children.
   virtual PRBool GetInitialAutoStretch(PRBool& aStretch) { aStretch = PR_FALSE; return PR_TRUE; }
+
+    // we are always flexible
+  virtual PRBool GetDefaultFlex(PRInt32& aFlex) { aFlex = 1; return PR_TRUE; }
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;

@@ -105,6 +105,28 @@ vbox {
   behavior: url(chrome://global/content/xulBindings.xml#vbox);
 }
 
+/******** TitledBox *******/
+
+box.titledbox-title {
+}
+
+box.titledbox-body {
+   vertical-align: inherit;
+   text-align: inherit;
+}
+
+titledbox {
+  behavior: url(chrome://global/content/xulBindings.xml#titledbox);
+}
+
+titledbox[value] {
+  behavior: url(chrome://global/content/xulBindings.xml#titledboxvalue);
+}
+
+title {
+  behavior: url(chrome://global/content/xulBindings.xml#title);
+}
+
 /******* ToolBox & ToolBar *******/
 
 toolbox { 

@@ -234,3 +234,13 @@ nsTempleLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
   return NS_OK;
 }
 
+// redefined because the normal GetMinSize in sprocket looks at flex
+// if the child is not flexible then its min size is its pref size.
+// but in this case its up to the column. The column's flex is the
+// flex thats used.
+NS_IMETHODIMP
+nsTempleLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
+{
+  return nsSprocketLayout::GetMinSize(aBox, aState, aSize);
+}
+

@@ -120,14 +120,75 @@ nsObeliskLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
 NS_IMETHODIMP
 nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
 {
-  nsresult rv = nsMonumentLayout::GetMinSize(aBox, aState, aSize); 
+  //nsresult rv = nsMonumentLayout::GetMinSize(aBox, aState, aSize); 
+
+   PRBool isHorizontal = PR_FALSE;
+   aBox->GetOrientation(isHorizontal);
+
+   aSize.width = 0;
+   aSize.height = 0;
+
+   // run through all the children and get there min, max, and preferred sizes
+   // return us the size of the box
+
+   nsIBox* child = nsnull;
+   aBox->GetChildBox(&child);
+
+   // our flexes are determined by the other temple. So in getting out min size we need to 
+   // iterator over our temples obelisks.
+
+   nsTempleLayout* temple = nsnull;
+   nsIBox* aTempleBox = nsnull;
+   GetOtherTemple(aBox, &temple, &aTempleBox);
+
+   nsMonumentIterator it(aTempleBox);
+   
+   while (child) 
+   {  
+       // ignore collapsed children
+      //PRBool isCollapsed = PR_FALSE;
+      //aBox->IsCollapsed(aState, isCollapsed);
+
+      //if (!isCollapsed)
+      //{
+        nsSize min(0,0);
+        nsSize pref(0,0);
+        nscoord flex = 0;
+
+        child->GetMinSize(aState, min);        
+
+        // get the next obelisk and use its flex.
+        nsObeliskLayout* obelisk;
+        it.GetNextObelisk(&obelisk, PR_TRUE);
+        nsIBox* obeliskBox = nsnull;
+        it.GetBox(&obeliskBox);
+
+        if (obeliskBox) {
+           obeliskBox->GetFlex(aState, flex);
+        } else {
+           child->GetFlex(aState, flex);
+        }
+
+        // if the child is not flexible then
+        // its min size is its pref size.
+        if (flex == 0)  {
+            child->GetPrefSize(aState, pref);
+            if (isHorizontal)
+               min.width = pref.width;
+            else
+               min.height = pref.height;
+        }
+
+        AddMargin(child, min);
+        AddLargestSize(aSize, min, isHorizontal);
+      //}
+
+      child->GetNextBox(&child);
+   }
 
   UpdateMonuments(aBox, aState);
 
   nsBoxSizeList* node = mOtherMonumentList;
-
-  PRBool isHorizontal = PR_FALSE;
-  aBox->GetOrientation(isHorizontal);
 
   if (node) {
     // if the infos pref width is greater than aSize's use it.
@@ -151,7 +212,7 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
       s2 = s;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

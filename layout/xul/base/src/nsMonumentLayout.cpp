@@ -35,7 +35,7 @@
 
 // ----- Monument Iterator -----
 
-nsLayoutIterator::nsLayoutIterator(nsIBox* aBox):mBox(nsnull),mStartBox(aBox),mScrollFrameCount(0)
+nsLayoutIterator::nsLayoutIterator(nsIBox* aBox):mBox(nsnull),mStartBox(aBox),mParentCount(0)
 {
 }
 
@@ -46,46 +46,75 @@ nsLayoutIterator::Reset()
 }
 
 PRBool
-nsLayoutIterator::GetNextLayout(nsIBoxLayout** aLayout)
+nsLayoutIterator::GetNextLayout(nsIBoxLayout** aLayout, PRBool aSearchChildren)
 {
   if (mBox == nsnull) {
     mBox = mStartBox;
   } else {
-    mBox->GetNextBox(&mBox);
+    if (aSearchChildren) {
+       mParents[mParentCount++] = mBox;
+       NS_ASSERTION(mParentCount < PARENT_STACK_SIZE, "Stack overflow!!");
+       mBox->GetChildBox(&mBox);
+    } else {
+       mBox->GetNextBox(&mBox);
+    }
   }
 
-  if (!mBox) {
+  return DigDeep(aLayout, aSearchChildren);  
+}
 
-    if (mScrollFrameCount > 0) {
-      mBox = mScrollFrames[--mScrollFrameCount];
-      return GetNextLayout(aLayout);
+PRBool
+nsLayoutIterator::DigDeep(nsIBoxLayout** aLayout, PRBool aSearchChildren)
+{
+  // if our box is null. See if we have any parents on the stack
+  // if so pop them off and continue.
+  if (!mBox) {
+    if (mParentCount > 0) {
+      mBox = mParents[--mParentCount];
+      mBox->GetNextBox(&mBox);
+      return DigDeep(aLayout, aSearchChildren);
     }
 
     *aLayout = nsnull;
     return PR_FALSE;
   }
 
+  // if its a scrollframe. Then continue down into the scrolled frame
   nsresult rv = NS_OK;
   nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(mBox, &rv);
   if (scrollFrame) {
      nsIFrame* scrolledFrame = nsnull;
      scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
      NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
-     mScrollFrames[mScrollFrameCount++] = mBox;
+     mParents[mParentCount++] = mBox;
+     NS_ASSERTION(mParentCount < PARENT_STACK_SIZE, "Stack overflow!!");
      nsCOMPtr<nsIBox> b = do_QueryInterface(scrolledFrame);
      mBox = b;
   }
 
+  // get the layout manager
   nsCOMPtr<nsIBoxLayout> layout;
-
+  
   mBox->GetLayoutManager(getter_AddRefs(layout));
+
+  // if we are supposed to search our children. And the layout manager
+  // was null. Then dig into the children.
+  if (aSearchChildren && !layout)
+  {
+       mParents[mParentCount++] = mBox;
+       NS_ASSERTION(mParentCount < PARENT_STACK_SIZE, "Stack overflow!!");
+       mBox->GetChildBox(&mBox);
+       return DigDeep(aLayout, aSearchChildren);
+  }
 
   *aLayout = layout;
   NS_IF_ADDREF(*aLayout);
-
-  return PR_TRUE; 
-
+  if (layout) 
+    return PR_TRUE;
+  else
+    return PR_FALSE;
 }
+
 
 // ---- Monument Iterator -----
 
@@ -94,11 +123,11 @@ nsMonumentIterator::nsMonumentIterator(nsIBox* aBox):nsLayoutIterator(aBox)
 }
 
 PRBool
-nsMonumentIterator::GetNextMonument(nsIMonument** aMonument)
+nsMonumentIterator::GetNextMonument(nsIMonument** aMonument, PRBool aSearchChildren)
 {
   nsCOMPtr<nsIBoxLayout> layout;
 
-  while(GetNextLayout(getter_AddRefs(layout))) {
+  while(GetNextLayout(getter_AddRefs(layout), aSearchChildren)) {
     if (layout) 
     {
       nsresult rv = NS_OK;
@@ -111,6 +140,38 @@ nsMonumentIterator::GetNextMonument(nsIMonument** aMonument)
       }
     }
   }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsMonumentIterator::GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChildren)
+{
+  nsCOMPtr<nsIMonument> monument;
+  PRBool searchChildren = aSearchChildren;
+
+  while(GetNextMonument(getter_AddRefs(monument), searchChildren)) {
+
+    searchChildren = aSearchChildren;
+    if (monument) 
+    {
+      *aObelisk = nsnull;
+      monument->CastToObelisk(aObelisk);
+
+      if (*aObelisk) {
+        return PR_TRUE;
+      }
+
+      // ok we found another grid. Don't enter it.
+      nsGridLayout* grid = nsnull;
+      monument->CastToGrid(&grid);
+      if (grid) {
+         searchChildren = PR_FALSE;
+      }
+    }
+  }
+  
+  *aObelisk = nsnull;
 
   return PR_FALSE;
 }

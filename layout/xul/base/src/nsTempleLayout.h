@@ -46,6 +46,7 @@ public:
   NS_IMETHOD ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
   NS_IMETHOD DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex);
+  NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
 
 protected:
 

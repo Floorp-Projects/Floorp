@@ -23,25 +23,6 @@
 // YY need to pass isMultiple before create called
 
 #include "nsTitleFrame.h"
-
-/*
-#include "nsTitleFrame.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsISupports.h"
-#include "nsIAtom.h"
-#include "nsIHTMLContent.h"
-#include "nsHTMLIIDs.h"
-#include "nsHTMLParts.h"
-#include "nsHTMLAtoms.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
-#include "nsFont.h"
-#include "nsFormControlFrame.h"
-*/
-
-static NS_DEFINE_IID(kTitleFrameCID, NS_TITLE_FRAME_CID);
  
 nsresult
 NS_NewTitleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
@@ -61,27 +42,6 @@ NS_NewTitleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 nsTitleFrame::nsTitleFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
 }
-
-nsTitleFrame::~nsTitleFrame()
-{
-}
-
-// Frames are not refcounted, no need to AddRef
-NS_IMETHODIMP
-nsTitleFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kTitleFrameCID)) {
-    *aInstancePtrResult = (void*) ((nsTitleFrame*)this);
-    return NS_OK;
-  }
-  return nsBoxFrame::QueryInterface(aIID, aInstancePtrResult);
-}
-
-
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
