@@ -53,7 +53,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSecurityWarningDialogs, nsISecurityWarningDialog
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
-#define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
+#define STRING_BUNDLE_URL    "chrome://pipnss/locale/security.properties"
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
 #define WEAK_SITE_PREF       "security.warn_entering_weak"

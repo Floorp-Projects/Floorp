@@ -225,7 +225,7 @@ nsresult
 SecurityDialogs::EnsureSecurityStringBundle()
 {
   if (!mSecurityStringBundle) {
-    #define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+    #define STRING_BUNDLE_URL "chrome://pipnss/locale/security.properties"
     nsCOMPtr<nsIStringBundleService> service = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if ( service ) {
           nsresult rv = service->CreateBundle(STRING_BUNDLE_URL, getter_AddRefs(mSecurityStringBundle));
