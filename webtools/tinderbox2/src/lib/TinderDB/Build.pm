@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.60 $ 
-# $Date: 2003/04/20 00:52:46 $ 
+# $Revision: 1.61 $ 
+# $Date: 2003/04/20 20:21:52 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -155,7 +155,7 @@ use VCDisplay;
 use Utils;
 use TinderConfig;
 use TinderDB::Notice;
-use TinderHeader;
+#use TinderHeader;
 
 
 $VERSION = '#tinder_version#';
@@ -282,22 +282,22 @@ sub latest_errors {
 
   foreach $buildname (@build_names) {
 
-      my ($last_err);
+      my ($last_error);
       foreach $db_index (0 .. $#{ $DATABASE{$tree}{$buildname}{'recs'} }) {
       
         my ($rec) = $DATABASE{$tree}{$buildname}{'recs'}[$db_index];
-        my ($builderrs) = $rec->{'errors'};
+        my ($builderrors) = $rec->{'errors'};
         my ($buildstatus) = $rec->{'status'};
       
         (BuildStatus::is_status_final($buildstatus))  ||
           next;
 
-        $last_err = $builderrs;
+        $last_error = $builderrors;
         last;
       } # foreach $db_index
 
-      if ($last_err) {
-        push @outrow, $last_err;
+      if ($last_error) {
+        push @outrow, $last_error;
       } else {
 
         # If we really have no data try and get 
