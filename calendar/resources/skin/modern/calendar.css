@@ -269,6 +269,7 @@ button.calendar-management-button:hover:active
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
+	 min-height:	54px;
 }
 
 #month-view-box{
@@ -548,12 +549,12 @@ button.calendar-management-button:hover:active
  * Box for title, next, prev controls
  *-------------------------------------------------------------------*/
 
-
 #day-controls-box
 {
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
+	 min-height:	54px;
 }
 
 #day-specific-title-box
@@ -779,6 +780,7 @@ button.calendar-management-button:hover:active
     -moz-box-align:center;
     -moz-box-pack:center;
     margin:0px 15px;
+	 min-height:	54px;
 }
 
 #week-next-button
