@@ -39,6 +39,7 @@
 
 
 #include "TypeInState.h"
+#include "nsEditor.h"
 
 /********************************************************************
  *                     XPCOM cruft 
@@ -74,6 +75,7 @@ TypeInState::TypeInState() :
  mSetArray()
 ,mClearedArray()
 ,mRelativeFontSize(0)
+,mLastSelectionOffset(0)
 {
   NS_INIT_REFCNT();
   Reset();
@@ -83,8 +85,50 @@ TypeInState::~TypeInState()
 {
 }
 
-NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *,short)
-{ 
+NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection *aSelection,short)
+{
+  // XXX: Selection currently generates bogus selection changed notifications
+  // XXX: (bug 140303). It can notify us when the selection hasn't actually
+  // XXX: changed, and it notifies us more than once for the same change.
+  // XXX:
+  // XXX: The following code attempts to work around the bogus notifications,
+  // XXX: and should probably be removed once bug 140303 is fixed.
+  // XXX:
+  // XXX: This code temporarily fixes the problem where clicking the mouse in
+  // XXX: the same location clears the type-in-state.
+
+  if (aSelection)
+  {
+    PRBool isCollapsed = PR_FALSE;
+    nsresult result = aSelection->GetIsCollapsed(&isCollapsed);
+
+    if (NS_FAILED(result)) return result;
+
+    if (isCollapsed)
+    {
+      nsCOMPtr<nsIDOMNode> selNode;
+      PRInt32 selOffset = 0;
+
+      result = nsEditor::GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+
+      if (NS_FAILED(result)) return result;
+
+      if (selNode && selNode == mLastSelectionContainer && selOffset == mLastSelectionOffset)
+      {
+        // We got a bogus selection changed notification!
+        return NS_OK;
+      }
+
+      mLastSelectionContainer = selNode;
+      mLastSelectionOffset = selOffset;
+    }
+    else
+    {
+      mLastSelectionContainer = nsnull;
+      mLastSelectionOffset = 0;
+    }
+  }
+
   Reset(); 
   return NS_OK;
 }

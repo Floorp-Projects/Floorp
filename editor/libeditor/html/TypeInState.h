@@ -39,6 +39,9 @@
 #ifndef TypeInState_h__
 #define TypeInState_h__
 
+#include "nsCOMPtr.h"
+#include "nsIDOMNode.h"
+#include "nsISelection.h"
 #include "nsISelectionListener.h"
 #include "nsIEditProperty.h"
 #include "nsString.h"
@@ -108,6 +111,8 @@ protected:
   nsVoidArray mSetArray;
   nsVoidArray mClearedArray;
   PRInt32 mRelativeFontSize;
+  nsCOMPtr<nsIDOMNode> mLastSelectionContainer;
+  PRInt32 mLastSelectionOffset;
 };
 
 
