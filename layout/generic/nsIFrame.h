@@ -142,7 +142,7 @@ public:
   /**
    * Get the style data associated with this frame
    */
-  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) = 0;
+  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const = 0;
 
   /**
    * Accessor functions for geometric and content parent.
@@ -421,6 +421,16 @@ public:
    * recursively upwards.
    */
   NS_IMETHOD  GetWindow(nsIWidget*&) const = 0;
+
+  /**
+   * Is this frame a "containing block"?
+   */
+  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
+
+  /**
+   * Gets the size of an "auto" margin.
+   */
+  NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const = 0;
 
   /**
    * Sibling pointer used to link together frames

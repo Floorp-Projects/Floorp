@@ -51,7 +51,7 @@ public:
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext, nsIStyleContext* aContext);
 
   // Get the style struct associated with this frame
-  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct);
+  NS_IMETHOD  GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const;
 
 
   // Geometric and content parent
@@ -166,6 +166,10 @@ public:
   // Returns the closest geometric parent that has a view which has a
   // a window.
   NS_IMETHOD  GetWindow(nsIWidget*&) const;
+
+  // Style sizing methods
+  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
+  NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;
 
   // Sibling pointer used to link together frames
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;

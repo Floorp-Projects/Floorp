@@ -57,6 +57,9 @@ PRInt32      fTrackerAddListMax = 0;
 PRBool  gTrackerDebug   = PR_FALSE;
 PRBool  gCalcDebug      = PR_FALSE;
 
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+
 // [HACK] Foward Declarations
 void BuildContentList(nsIContent*aContent);
 PRBool IsInRange(nsIContent * aStartContent, nsIContent * aEndContent, nsIContent * aContent);
@@ -258,7 +261,7 @@ NS_METHOD nsFrame::DidSetStyleContext(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_METHOD nsFrame::GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct)
+NS_METHOD nsFrame::GetStyleData(const nsIID& aSID, nsStyleStruct*& aStyleStruct) const
 {
   NS_ASSERTION(mStyleContext!=nsnull,"null style context");
   if (mStyleContext) {
@@ -1185,6 +1188,36 @@ NS_METHOD nsFrame::GetWindow(nsIWidget*& aWindow) const
   NS_POSTCONDITION(nsnull != aWindow, "no window in frame tree");
   return NS_OK;
 }
+
+
+// Style sizing methods
+NS_METHOD nsFrame::IsPercentageBase(PRBool& aBase) const
+{
+  nsStylePosition* position;
+  GetStyleData(kStylePositionSID, (nsStyleStruct*&)position);
+  if (position->mPosition != NS_STYLE_POSITION_NORMAL) {
+    aBase = PR_TRUE;
+  }
+  else {
+    nsStyleDisplay* display;
+    GetStyleData(kStyleDisplaySID, (nsStyleStruct*&)display);
+    if ((display->mDisplay == NS_STYLE_DISPLAY_BLOCK) || 
+        (display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM)) {
+      aBase = PR_TRUE;
+    }
+    else {
+      aBase = PR_FALSE;
+    }
+  }
+  return NS_OK;
+}
+
+NS_METHOD nsFrame::GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const
+{
+  aSize = 0;  // XXX probably not right, subclass override?
+  return NS_OK;
+}
+
 
 // Sibling pointer used to link together frames
 
