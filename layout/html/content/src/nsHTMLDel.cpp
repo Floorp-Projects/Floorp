@@ -124,37 +124,15 @@ nsHTMLDel::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLDel::GetCite(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::cite, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDel::SetCite(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::cite, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLDel::GetDateTime(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::datetime, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDel::SetDateTime(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::datetime, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLDel, Cite, cite, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLDel, DateTime, datetime, eSetAttrNotify_None)
 
 NS_IMETHODIMP
 nsHTMLDel::StringToAttribute(nsIAtom* aAttribute,
                              const nsString& aValue,
                              nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -163,6 +141,7 @@ nsHTMLDel::AttributeToString(nsIAtom* aAttribute,
                              nsHTMLValue& aValue,
                              nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -170,6 +149,7 @@ NS_IMETHODIMP
 nsHTMLDel::MapAttributesInto(nsIStyleContext* aContext,
                              nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 

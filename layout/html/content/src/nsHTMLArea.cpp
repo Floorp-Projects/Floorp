@@ -136,126 +136,14 @@ nsHTMLArea::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLArea::GetAccessKey(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::accesskey, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetAccessKey(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::accesskey, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetAlt(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::alt, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetAlt(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::alt, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetCoords(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::coords, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetCoords(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::coords, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetHref(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::href, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetHref(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::href, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetNoHref(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::nohref, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetNoHref(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::nohref, empty, eSetAttrNotify_None);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::nohref);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetShape(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::shape, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetShape(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::shape, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetTabIndex(PRInt32* aValue)
-{
-  nsHTMLValue value;
-  *aValue = -1;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(nsHTMLAtoms::tabindex, value)) {
-    if (value.GetUnit() == eHTMLUnit_Integer) {
-      *aValue = value.GetIntValue();
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetTabIndex(PRInt32 aValue)
-{
-  nsHTMLValue value(aValue, eHTMLUnit_Integer);
-  return mInner.SetAttr(nsHTMLAtoms::tabindex, value, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLArea::GetTarget(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::target, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLArea::SetTarget(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::target, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLArea, AccessKey, accesskey, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLArea, Alt, alt, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLArea, Coords, coords, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLArea, Href, href, eSetAttrNotify_None)
+NS_IMPL_BOOL_ATTR(nsHTMLArea, NoHref, nohref, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLArea, Shape, shape, eSetAttrNotify_None)
+NS_IMPL_INT_ATTR(nsHTMLArea, TabIndex, tabindex, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLArea, Target, target, eSetAttrNotify_None)
 
 NS_IMETHODIMP
 nsHTMLArea::StringToAttribute(nsIAtom* aAttribute,

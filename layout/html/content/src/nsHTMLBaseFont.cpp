@@ -126,50 +126,16 @@ nsHTMLBaseFont::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLBaseFont::GetColor(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::color, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFont::SetColor(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::color, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFont::GetFace(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::face, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFont::SetFace(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::face, aValue, eSetAttrNotify_Reflow);
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFont::GetSize(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::size, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFont::SetSize(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::size, aValue, eSetAttrNotify_Reflow);
-}
+NS_IMPL_STRING_ATTR(nsHTMLBaseFont, Color, color, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLBaseFont, Face, face, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLBaseFont, Size, size, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLBaseFont::StringToAttribute(nsIAtom* aAttribute,
                                   const nsString& aValue,
                                   nsHTMLValue& aResult)
 {
+  // XXX write me
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -178,6 +144,7 @@ nsHTMLBaseFont::AttributeToString(nsIAtom* aAttribute,
                                   nsHTMLValue& aValue,
                                   nsString& aResult) const
 {
+  // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
@@ -185,6 +152,7 @@ NS_IMETHODIMP
 nsHTMLBaseFont::MapAttributesInto(nsIStyleContext* aContext,
                                   nsIPresContext* aPresContext)
 {
+  // XXX write me?
   return NS_OK;
 }
 

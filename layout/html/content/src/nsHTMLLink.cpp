@@ -138,131 +138,15 @@ nsHTMLLink::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLLink::GetCharset(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetCharset(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetDisabled(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::disabled, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetDisabled(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::disabled, empty, eSetAttrNotify_Render);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::disabled);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetHref(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::href, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetHref(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::href, aValue, eSetAttrNotify_Render);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetHreflang(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::hreflang, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetHreflang(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::hreflang, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetMedia(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::media, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetMedia(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::media, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetRel(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::rel, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetRel(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::rel, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetRev(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::rev, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetRev(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::rev, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetTarget(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::target, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetTarget(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::target, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLLink::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLLink::SetType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_BOOL_ATTR(nsHTMLLink, Disabled, disabled, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Charset, charset, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Href, href, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Hreflang, hreflang, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Media, media, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Rel, rel, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Rev, rev, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Target, target, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLLink, Type, type, eSetAttrNotify_Restart)
 
 NS_IMETHODIMP
 nsHTMLLink::StringToAttribute(nsIAtom* aAttribute,

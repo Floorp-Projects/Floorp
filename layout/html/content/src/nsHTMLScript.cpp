@@ -183,66 +183,10 @@ nsHTMLScript::SetEvent(const nsString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLScript::GetCharset(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScript::SetCharset(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::charset, aValue, eSetAttrNotify_None);
-}
-
-NS_IMETHODIMP
-nsHTMLScript::GetDefer(PRBool* aValue)
-{
-  nsHTMLValue val;
-  *aValue = NS_CONTENT_ATTR_HAS_VALUE ==
-    mInner.GetAttribute(nsHTMLAtoms::defer, val);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScript::SetDefer(PRBool aValue)
-{
-  nsAutoString empty;
-  if (aValue) {
-    return mInner.SetAttr(nsHTMLAtoms::defer, empty, eSetAttrNotify_None);
-  }
-  else {
-    mInner.UnsetAttribute(nsHTMLAtoms::defer);
-    return NS_OK;
-  }
-}
-
-NS_IMETHODIMP
-nsHTMLScript::GetSrc(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::src, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScript::SetSrc(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::src, aValue, eSetAttrNotify_Restart);
-}
-
-NS_IMETHODIMP
-nsHTMLScript::GetType(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::type, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScript::SetType(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::type, aValue, eSetAttrNotify_None);
-}
+NS_IMPL_STRING_ATTR(nsHTMLScript, Charset, charset, eSetAttrNotify_None)
+NS_IMPL_BOOL_ATTR(nsHTMLScript, Defer, defer, eSetAttrNotify_None)
+NS_IMPL_STRING_ATTR(nsHTMLScript, Src, src, eSetAttrNotify_Restart)
+NS_IMPL_STRING_ATTR(nsHTMLScript, Type, type, eSetAttrNotify_Restart)
 
 NS_IMETHODIMP
 nsHTMLScript::StringToAttribute(nsIAtom* aAttribute,

@@ -124,18 +124,7 @@ nsHTMLDiv::CloneNode(nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLDiv::GetAlign(nsString& aValue)
-{
-  mInner.GetAttribute(nsHTMLAtoms::align, aValue);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDiv::SetAlign(const nsString& aValue)
-{
-  return mInner.SetAttr(nsHTMLAtoms::align, aValue, eSetAttrNotify_Reflow);
-}
+NS_IMPL_STRING_ATTR(nsHTMLDiv, Align, align, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLDiv::StringToAttribute(nsIAtom* aAttribute,
@@ -168,6 +157,7 @@ NS_IMETHODIMP
 nsHTMLDiv::MapAttributesInto(nsIStyleContext* aContext,
                              nsIPresContext* aPresContext)
 {
+  // XXX write me
   return NS_OK;
 }
 
