@@ -18,11 +18,10 @@
 DEPTH=..\..\..
 
 
+MODULE=mozbrwsr
 
-MODULE=raptor 
-
-EXPORTS =                     \
-    nsBrowserCIDs.h           \
+XPIDLSRCS=\
+    .\nsIBrowserInstance.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
