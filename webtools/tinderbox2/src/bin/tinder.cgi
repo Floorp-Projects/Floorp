@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.5 $ 
-# $Date: 2000/08/31 22:00:26 $ 
+# $Revision: 1.6 $ 
+# $Date: 2000/09/18 19:30:28 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -34,20 +34,6 @@
 
 
 
-# we must filter user input to prevent this:
-
-# http://www.ciac.org/ciac/bulletins/k-021.shtml
-
-#   When a victim with scripts enabled in their browser reads this
-#   message, the malicious code may be executed
-#   unexpectedly. Scripting tags that can be embedded in this way
-#   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
-
-# note that since we want some tags to be allowed (href) but not
-# others.  This requirement breaks the taint perl mechanisms for
-# checking as we can not escape every '<>'.
-
-
 # Standard perl libraries
 use File::Basename;
 use Sys::Syslog;
@@ -75,12 +61,7 @@ $VERSION = '#tinder_version#';
 
 $DEFAULT_DISPLAY_HOURS = $TinderConfig::DEFAULT_DISPLAY_HOURS || (6);
 
-
-# localtime(2000 * 1000 * 1000) = 'Tue May 17 23:33:20 2033'
-
-$LARGEST_VALID_TIME = (2000 * 1000 * 1000);
-
-
+$MAX_DISPLAY_HOURS = 100;
 
 sub usage {
 
@@ -233,12 +214,6 @@ sub parse_args {
   
   my ($end_time) = $form{"end-time"};
   
-  if ( !($end_time) ) {
-    my ($display_hours) = ( $form{'display-hours'} || 
-                          $DEFAULT_DISPLAY_HOURS );
-    $end_time = $start_time - ($display_hours * 60 * 60);
-  }
-
   if(grep /noignore/, keys %form) {
     $NOIGNORE = 1;
   }
@@ -256,31 +231,44 @@ sub parse_args {
   
   # check that we are given valid arguments
 
-  ( ($start_time > 0) && ($start_time < $LARGEST_VALID_TIME) ) ||
+  if ($tree) {
+    (TreeData::tree_exists($tree)) ||
+      die("tree: $tree does not exist\n");    
+
+    # tree is safe, untaint it.
+    $tree =~ m/(.*)/;
+    $tree = $1;
+  }
+
+  $start_time = extract_digits($start_time);
+  (is_time_valid($start_time)) ||
     die("Can not prepare web page with start_time: $start_time. \n");
   
-  ( ($end_time > 0) && ($end_time < $LARGEST_VALID_TIME) ) ||
+  if ( !($end_time) ) {
+    my ($display_hours) = ( $form{'display-hours'} || 
+                            $DEFAULT_DISPLAY_HOURS );
+    $display_hours = extract_digits($display_hours);
+    $end_time = $start_time - ($display_hours * 60 * 60);
+  }
+  
+  $end_time = extract_digits($end_time);
+  (is_time_valid($end_time)) ||
     die("Can not prepare web page with end_time: $end_time. \n");
     
   {
-    my ($display_hours) = ($start_time - $end_time) / (60 * 60);
+    my ($display_hours) = int (($start_time - $end_time) / (60 * 60));
 
     ($display_hours > 0) ||
       die("start_time must be greater then end_time.".
           " start_time: $start_time, end_time: $end_time. \n");
     
-    ($display_hours < 1000) ||
+    ($display_hours <= $MAX_DISPLAY_HOURS) ||
       die("Number of hours to display is too large. \n");
    }
 
   ( ($daemon_mode) || ($tree) ) ||
     die("If you are not running in daemon mode you must specify a tree\n");
   
-  if ($tree) {
-    (TreeData::tree_exists($tree)) ||
-      die("tree: $tree does not exist\n");    
-  }
-
   # This prevents us from 'loosing' builds between the spaces of the
   # grid and would cause our rendering algorithm to get off by one
   # build creating problems in the whole grid display.
@@ -344,9 +332,9 @@ sub HTML_status_page {
   my ($display_hours) =  sprintf '%d', ( $display_time / (60*60) );
   my ($next_date) = $times_vec->[0] - $display_time;
 
-  my ($display_2hours) = $display_hours*2;
-  my ($display_4hours) = $display_hours*4;
-  my ($display_8hours) = $display_hours*8;
+  my ($display_2hours) = min($display_hours*2, $MAX_DISPLAY_HOURS);
+  my ($display_4hours) = min($display_hours*4, $MAX_DISPLAY_HOURS);
+  my ($display_8hours) = min($display_hours*8, $MAX_DISPLAY_HOURS);
   my ($links) = 
     HTMLPopUp::Link(
                     "linktxt"=>"Show next $display_hours hours", 
