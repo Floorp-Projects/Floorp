@@ -584,7 +584,10 @@ function RenameFolder(name)
         {
             var folder = folderList[0];
             if (folder)
+            {
+                tree.clearItemSelection();
                 messenger.RenameFolder(tree.database, folder, name);
+            }
         }
     }
 }
