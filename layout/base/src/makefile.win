@@ -34,7 +34,8 @@ CPPSRCS =				\
 	nsStyleContext.cpp		\
 	nsStyleCoord.cpp		\
 	nsStyleSet.cpp			\
-	nsXIFConverter.cpp			\
+	nsTextFragment.cpp		\
+	nsXIFConverter.cpp		\
 	$(NULL)
 
 MODULE=raptor 
@@ -55,6 +56,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsStyleContext.obj		\
 	.\$(OBJDIR)\nsStyleCoord.obj		\
 	.\$(OBJDIR)\nsStyleSet.obj		\
+	.\$(OBJDIR)\nsTextFragment.obj		\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
 	$(NULL)
 

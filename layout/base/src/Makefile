@@ -35,7 +35,8 @@ CPPSRCS =				\
 	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
-	nsXIFConverter.cpp			\
+	nsTextFragment.cpp		\
+	nsXIFConverter.cpp		\
 	$(NULL)
 
 MODULE = raptor
