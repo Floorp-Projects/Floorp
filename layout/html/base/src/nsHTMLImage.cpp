@@ -276,8 +276,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
           (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
         // shows up we will reflow to the new size.
-        aDesiredSize.width = 0;
-        aDesiredSize.height = 0;
+        aDesiredSize.width = 1;
+        aDesiredSize.height = 1;
       }
       else {
         float p2t = aPresContext->GetPixelsToTwips();
@@ -303,8 +303,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         }
         else {
           // Screwy image
-          aDesiredSize.width = 0;
-          aDesiredSize.height = 0;
+          aDesiredSize.width = 1;
+          aDesiredSize.height = 1;
         }
       }
     }
@@ -315,8 +315,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
         (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
       // shows up we will reflow to the new size.
-      aDesiredSize.width = 0;
-      aDesiredSize.height = 0;
+      aDesiredSize.width = 1;
+      aDesiredSize.height = 1;
     } else {
       float p2t = aPresContext->GetPixelsToTwips();
       nsSize imageSize;
@@ -825,12 +825,20 @@ void nsHTMLImage::MapAttributesInto(nsIStyleContext* aContext,
       aContext->GetMutableStyleData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
       aContext->GetMutableStyleData(eStyleStruct_Text);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStyleCoord three(nscoord(p2t*3));
     switch (mAlign) {
     case NS_STYLE_TEXT_ALIGN_LEFT:
       display->mFloats = NS_STYLE_FLOAT_LEFT;
+      spacing->mMargin.SetLeft(three);
+      spacing->mMargin.SetRight(three);
       break;
     case NS_STYLE_TEXT_ALIGN_RIGHT:
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      spacing->mMargin.SetLeft(three);
+      spacing->mMargin.SetRight(three);
       break;
     default:
       text->mVerticalAlign.SetIntValue(mAlign, eStyleUnit_Enumerated);
