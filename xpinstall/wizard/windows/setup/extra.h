@@ -35,8 +35,8 @@ HRESULT           NS_LoadStringAlloc(HANDLE hInstance, DWORD dwID, LPSTR *szStri
 HRESULT           NS_LoadString(HANDLE hInstance, DWORD dwID, LPSTR szStringBuf, DWORD dwStringBuf);
 HRESULT           WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, int iShowCmd, BOOL bWait);
 HRESULT           ParseConfigIni(LPSTR lpszCmdLine);
-HRESULT           DecriptString(LPSTR szOutputStr, LPSTR szInputStr);
-HRESULT           DecriptVariable(LPSTR szVariable, DWORD dwVariableSize);
+HRESULT           DecryptString(LPSTR szOutputStr, LPSTR szInputStr);
+HRESULT           DecryptVariable(LPSTR szVariable, DWORD dwVariableSize);
 void              GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, DWORD dwSize);
 void              SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR szData, DWORD dwSize);
 HRESULT           InitSetupGeneral(void);
@@ -114,6 +114,7 @@ HRESULT           ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSReq
 void              SetCustomType(void);
 void              GetAlternateArchiveSearchPath(LPSTR lpszCmdLine);
 BOOL              NeedReboot(void);
+BOOL              LocatePreviousPath(LPSTR szPath, DWORD dwPathSize);
 
 BOOL              bSDInit;
 

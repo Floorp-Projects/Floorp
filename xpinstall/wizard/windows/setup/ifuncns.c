@@ -177,9 +177,9 @@ HRESULT ProcessUncompressFile(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szSource, szBuf);
+      DecryptString(szSource, szBuf);
       GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
 
       GetPrivateProfileString(szSection, "Message",     "", szBuf, MAX_BUF, szFileIniConfig);
       ShowMessage(szBuf, TRUE);
@@ -275,9 +275,9 @@ HRESULT ProcessMoveFile(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szSource, szBuf);
+      DecryptString(szSource, szBuf);
       GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
       FileMove(szSource, szDestination);
     }
 
@@ -363,9 +363,9 @@ HRESULT ProcessCopyFile(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szSource, szBuf);
+      DecryptString(szSource, szBuf);
       GetPrivateProfileString(szSection, "Destination", "", szBuf, MAX_BUF, szFileIniConfig);
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
 
       GetPrivateProfileString(szSection, "Fail If Exists", "", szBuf, MAX_BUF, szFileIniConfig);
       if(lstrcmpi(szBuf, "TRUE") == 0)
@@ -425,7 +425,7 @@ HRESULT ProcessCreateDirectory(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
       AppendBackSlash(szDestination, sizeof(szDestination));
       CreateDirectoriesAll(szDestination);
     }
@@ -498,7 +498,7 @@ HRESULT ProcessDeleteFile(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
       FileDelete(szDestination);
     }
 
@@ -576,7 +576,7 @@ HRESULT ProcessRemoveDirectory(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szDestination, szBuf);
+      DecryptString(szDestination, szBuf);
       GetPrivateProfileString(szSection, "Remove subdirs", "", szBuf, MAX_BUF, szFileIniConfig);
       bRemoveSubdirs = FALSE;
       if(lstrcmpi(szBuf, "TRUE") == 0)
@@ -614,11 +614,11 @@ HRESULT ProcessRunApp(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection, szFileIniConfig))
     {
-      DecriptString(szTarget, szBuf);
+      DecryptString(szTarget, szBuf);
       GetPrivateProfileString(szSection, "Parameters", "", szBuf, MAX_BUF, szFileIniConfig);
-      DecriptString(szParameters, szBuf);
+      DecryptString(szParameters, szBuf);
       GetPrivateProfileString(szSection, "WorkingDir", "", szBuf, MAX_BUF, szFileIniConfig);
-      DecriptString(szWorkingDir, szBuf);
+      DecryptString(szWorkingDir, szBuf);
       GetPrivateProfileString(szSection, "Wait", "", szBuf, MAX_BUF, szFileIniConfig);
 
       if(lstrcmpi(szBuf, "FALSE") == 0)
@@ -671,7 +671,7 @@ HRESULT ProcessProgramFolder(DWORD dwTiming)
   {
     if(TimingCheck(dwTiming, szSection0, szFileIniConfig))
     {
-      DecriptString(szProgramFolder, szBuf);
+      DecryptString(szProgramFolder, szBuf);
 
       dwIndex1 = 0;
       itoa(dwIndex1, szIndex1, 10);
@@ -681,15 +681,15 @@ HRESULT ProcessProgramFolder(DWORD dwTiming)
       GetPrivateProfileString(szSection1, "File", "", szBuf, MAX_BUF, szFileIniConfig);
       while(*szBuf != '\0')
       {
-        DecriptString(szFile, szBuf);
+        DecryptString(szFile, szBuf);
         GetPrivateProfileString(szSection1, "Arguments",    "", szBuf, MAX_BUF, szFileIniConfig);
-        DecriptString(szArguments, szBuf);
+        DecryptString(szArguments, szBuf);
         GetPrivateProfileString(szSection1, "Working Dir",  "", szBuf, MAX_BUF, szFileIniConfig);
-        DecriptString(szWorkingDir, szBuf);
+        DecryptString(szWorkingDir, szBuf);
         GetPrivateProfileString(szSection1, "Description",  "", szBuf, MAX_BUF, szFileIniConfig);
-        DecriptString(szDescription, szBuf);
+        DecryptString(szDescription, szBuf);
         GetPrivateProfileString(szSection1, "Icon Path",    "", szBuf, MAX_BUF, szFileIniConfig);
-        DecriptString(szIconPath, szBuf);
+        DecryptString(szIconPath, szBuf);
         GetPrivateProfileString(szSection1, "Icon Id",      "", szBuf, MAX_BUF, szFileIniConfig);
         if(*szBuf != '\0')
           dwIconId = atol(szBuf);
@@ -732,7 +732,7 @@ HRESULT ProcessProgramFolderShowCmd()
   GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, MAX_BUF, szFileIniConfig);
   while(*szBuf != '\0')
   {
-    DecriptString(szProgramFolder, szBuf);
+    DecryptString(szProgramFolder, szBuf);
     GetPrivateProfileString(szSection0, "Show Folder", "", szBuf, MAX_BUF, szFileIniConfig);
 
     if(strcmpi(szBuf, "HIDE") == 0)

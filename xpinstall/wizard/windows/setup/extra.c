@@ -603,7 +603,7 @@ HRESULT RetrieveArchives()
      any jar files needed to be downloaded */
   if(FileExists(szFileIdiGetArchives))
   {
-    DecriptString(szBuf, siSDObject.szCoreDir);
+    DecryptString(szBuf, siSDObject.szCoreDir);
     lstrcpy(siSDObject.szCoreDir, szBuf);
 
     WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szCoreFile,        szFileIdiGetArchives);
@@ -926,6 +926,10 @@ HRESULT InitDlgSetupType(diST *diDialog)
     return(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+  if((diDialog->szReadmeFilename = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szReadmeApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
 
   diDialog->stSetupType0.dwItems = 0;
   diDialog->stSetupType1.dwItems = 0;
@@ -959,6 +963,8 @@ void DeInitDlgSetupType(diST *diDialog)
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szMessage0));
 
+  FreeMemory(&(diDialog->szReadmeFilename));
+  FreeMemory(&(diDialog->szReadmeApp));
   FreeMemory(&(diDialog->stSetupType0.szDescriptionShort));
   FreeMemory(&(diDialog->stSetupType0.szDescriptionLong));
   FreeMemory(&(diDialog->stSetupType1.szDescriptionShort));
@@ -1978,7 +1984,7 @@ void InitSiComponents(char *szFileIni)
 
     /* get commandline parameter for component */
     GetPrivateProfileString(szComponentItem, "Parameter", "", szBuf, MAX_BUF, szFileIni);
-    DecriptString(siCTemp->szParameter, szBuf);
+    DecryptString(siCTemp->szParameter, szBuf);
 
     /* get install size required in destination for component.  Sould be in Kilobytes */
     GetPrivateProfileString(szComponentItem, "Install Size", "", szBuf, MAX_BUF, szFileIni);
@@ -2305,18 +2311,23 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Product Name", "", sgProduct.szProductName, MAX_BUF, szFileIniConfig);
   
   /* get main install path */
-  GetPrivateProfileString("General", "Path", "", szBuf, MAX_BUF, szFileIniConfig);
-  DecriptString(sgProduct.szPath, szBuf);
+  if(LocatePreviousPath(sgProduct.szPath, MAX_PATH) == FALSE)
+  {
+    GetPrivateProfileString("General", "Path", "", szBuf, MAX_BUF, szFileIniConfig);
+    DecryptString(sgProduct.szPath, szBuf);
+  }
+  RemoveBackSlash(sgProduct.szPath);
+
   /* make a copy of sgProduct.szPath to be used in the Setup Type dialog */
   lstrcpy(szTempSetupPath, sgProduct.szPath);
   
   /* get main program folder path */
   GetPrivateProfileString("General", "Program Folder Path", "", szBuf, MAX_BUF, szFileIniConfig);
-  DecriptString(sgProduct.szProgramFolderPath, szBuf);
+  DecryptString(sgProduct.szProgramFolderPath, szBuf);
   
   /* get main program folder name */
   GetPrivateProfileString("General", "Program Folder Name", "", szBuf, MAX_BUF, szFileIniConfig);
-  DecriptString(sgProduct.szProgramFolderName, szBuf);
+  DecryptString(sgProduct.szProgramFolderName, szBuf);
 
   /* get setup title strings */
   GetPrivateProfileString("General", "Setup Title0", "", sgProduct.szSetupTitle0, MAX_BUF, szFileIniConfig);
@@ -2324,26 +2335,28 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Setup Title2", "", sgProduct.szSetupTitle2, MAX_BUF, szFileIniConfig);
 
   /* Welcome dialog */
-  GetPrivateProfileString("Dialog Welcome",             "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Welcome",             "Title",        "", diWelcome.szTitle,               MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Welcome",             "Message0",     "", diWelcome.szMessage0,            MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Welcome",             "Message1",     "", diWelcome.szMessage1,            MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Welcome",             "Message2",     "", diWelcome.szMessage2,            MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Title",           "", diWelcome.szTitle,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Message0",        "", diWelcome.szMessage0,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Message1",        "", diWelcome.szMessage1,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Welcome",             "Message2",        "", diWelcome.szMessage2,          MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diWelcome.bShowDialog = TRUE;
 
   /* License dialog */
-  GetPrivateProfileString("Dialog License",             "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "Title",        "", diLicense.szTitle,               MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "License File", "", diLicense.szLicenseFilename,     MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog License",             "Message0",     "", diLicense.szMessage0,            MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Show Dialog",     "", szShowDialog,                  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Title",           "", diLicense.szTitle,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "License File",    "", diLicense.szLicenseFilename,   MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog License",             "Message0",        "", diLicense.szMessage0,          MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diLicense.bShowDialog = TRUE;
 
   /* Setup Type dialog */
-  GetPrivateProfileString("Dialog Setup Type",          "Show Dialog",  "", szShowDialog,                    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Setup Type",          "Title",        "", diSetupType.szTitle,             MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Setup Type",          "Message0",     "", diSetupType.szMessage0,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Show Dialog",     "", szShowDialog,                  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Title",           "", diSetupType.szTitle,           MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Message0",        "", diSetupType.szMessage0,        MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Readme Filename", "", diSetupType.szReadmeFilename,  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Setup Type",          "Readme App",      "", diSetupType.szReadmeApp,       MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diSetupType.bShowDialog = TRUE;
 
@@ -2532,9 +2545,9 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("SmartDownload-Execution",        "exe_param",        "", siSDObject.szExeParam,        MAX_BUF, szFileIniConfig);
 
   GetPrivateProfileString("Core",                           "Source",           "", szBuf,                        MAX_BUF, szFileIniConfig);
-  DecriptString(siCFCoreFile.szSource, szBuf);
+  DecryptString(siCFCoreFile.szSource, szBuf);
   GetPrivateProfileString("Core",                           "Destination",      "", szBuf,                        MAX_BUF, szFileIniConfig);
-  DecriptString(siCFCoreFile.szDestination, szBuf);
+  DecryptString(siCFCoreFile.szDestination, szBuf);
   GetPrivateProfileString("Core",                           "Message",          "", siCFCoreFile.szMessage,       MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Core",                           "Cleanup",          "", szBuf,                        MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szBuf, "FALSE") == 0)
@@ -2552,6 +2565,118 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   ReleaseDC(hWndMain, hdc);
 
   return(0);
+}
+
+BOOL LocatePreviousPath(LPSTR szPath, DWORD dwPathSize)
+{
+  DWORD dwIndex;
+  char  szIndex[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szHKey[MAX_BUF];
+  char  szHRoot[MAX_BUF];
+  char  szName[MAX_BUF];
+  char  szVerifyExistance[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  BOOL  bDecryptKey;
+  BOOL  bContainsFilename;
+  BOOL  bReturn;
+  HKEY  hkeyRoot;
+
+  bReturn = FALSE;
+  dwIndex = 0;
+  itoa(dwIndex, szIndex, 10);
+  lstrcpy(szSection, "Locate Previous Product Path");
+  lstrcat(szSection, szIndex);
+  GetPrivateProfileString(szSection, "HKey", "", szHKey, MAX_BUF, szFileIniConfig);
+  while(*szHKey != '\0')
+  {
+    bReturn = FALSE;
+    ZeroMemory(szPath, dwPathSize);
+
+    GetPrivateProfileString(szSection, "HRoot",               "", szHRoot,           MAX_BUF, szFileIniConfig);
+    GetPrivateProfileString(szSection, "Name",                "", szName,            MAX_BUF, szFileIniConfig);
+    GetPrivateProfileString(szSection, "Verify Existance",    "", szVerifyExistance, MAX_BUF, szFileIniConfig);
+    GetPrivateProfileString(szSection, "Decrypt HKey",        "", szBuf,             MAX_BUF, szFileIniConfig);
+    if(lstrcmpi(szBuf, "FALSE") == 0)
+      bDecryptKey = FALSE;
+    else
+      bDecryptKey = TRUE;
+
+    GetPrivateProfileString(szSection, "Contains Filename",   "", szBuf, MAX_BUF, szFileIniConfig);
+    if(lstrcmpi(szBuf, "FALSE") == 0)
+      bContainsFilename = FALSE;
+    else
+      bContainsFilename = TRUE;
+
+    if(lstrcmpi(szHRoot, "HKEY_CLASSES_ROOT") == 0)
+      hkeyRoot = HKEY_CLASSES_ROOT;
+    else if(lstrcmpi(szHRoot, "HKEY_CURRENT_CONFIG") == 0)
+      hkeyRoot = HKEY_CURRENT_CONFIG;
+    else if(lstrcmpi(szHRoot, "HKEY_CURRENT_USER") == 0)
+      hkeyRoot = HKEY_CURRENT_USER;
+    else if(lstrcmpi(szHRoot, "HKEY_LOCAL_MACHINE") == 0)
+      hkeyRoot = HKEY_LOCAL_MACHINE;
+    else if(lstrcmpi(szHRoot, "HKEY_USERS") == 0)
+      hkeyRoot = HKEY_USERS;
+
+    if(bDecryptKey == TRUE)
+    {
+      DecryptString(szBuf, szHKey);
+      lstrcpy(szHKey, szBuf);
+    }
+
+    GetWinReg(hkeyRoot, szHKey, szName, szBuf, sizeof(szBuf));
+    if(*szBuf != '\0')
+    {
+      if(lstrcmpi(szVerifyExistance, "FILE") == 0)
+      {
+        if(FileExists(szBuf))
+        {
+          if(bContainsFilename == TRUE)
+            ParsePath(szBuf, szPath, dwPathSize, PP_PATH_ONLY);
+          else
+            lstrcpy(szPath, szBuf);
+
+          bReturn = TRUE;
+        }
+        else
+          bReturn = FALSE;
+      }
+      else if(lstrcmpi(szVerifyExistance, "PATH") == 0)
+      {
+        if(bContainsFilename == TRUE)
+          ParsePath(szBuf, szPath, dwPathSize, PP_PATH_ONLY);
+        else
+          lstrcpy(szPath, szBuf);
+
+        if(FileExists(szPath))
+          bReturn = TRUE;
+        else
+          bReturn = FALSE;
+      }
+      else
+      {
+        if(bContainsFilename == TRUE)
+          ParsePath(szBuf, szPath, dwPathSize, PP_PATH_ONLY);
+        else
+          lstrcpy(szPath, szBuf);
+
+        bReturn = TRUE;
+      }
+
+      // break if a valid path was found, else keep looking
+      if(bReturn == TRUE)
+        break;
+    }
+
+    ++dwIndex;
+    itoa(dwIndex, szIndex, 10);
+    lstrcpy(szSection, "Locate Previous Product Path");
+    lstrcat(szSection, szIndex);
+    GetPrivateProfileString(szSection, "HKey", "", szHKey, MAX_BUF, szFileIniConfig);
+  }
+
+  return(bReturn);
 }
 
 void SetCustomType()
@@ -2606,13 +2731,14 @@ void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, D
   DWORD dwErr;
   char  szBuf[MAX_BUF];
 
-  memset(szBuf, '\0', MAX_BUF);
+  ZeroMemory(szBuf, sizeof(szBuf));
+  ZeroMemory(szReturnValue, dwSize);
 
   if((dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_READ, &hkResult)) == ERROR_SUCCESS)
   {
     dwErr = RegQueryValueEx(hkResult, szName, 0, NULL, szBuf, &dwSize);
 
-    if((*szReturnValue != '\0') && (dwErr == ERROR_SUCCESS))
+    if((*szBuf != '\0') && (dwErr == ERROR_SUCCESS))
       ExpandEnvironmentStrings(szBuf, szReturnValue, MAX_BUF);
     else
       *szReturnValue = '\0';
@@ -2651,7 +2777,7 @@ void SetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, DWORD dwType, LPSTR sz
   }
 }
 
-HRESULT DecriptVariable(LPSTR szVariable, DWORD dwVariableSize)
+HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
 {
   char szBuf[MAX_BUF];
   char szKey[MAX_BUF];
@@ -2659,10 +2785,10 @@ HRESULT DecriptVariable(LPSTR szVariable, DWORD dwVariableSize)
   char szValue[MAX_BUF];
 
   /* zero out the memory allocations */
-  ZeroMemory(szBuf,   sizeof(szBuf));
-  ZeroMemory(szKey,   sizeof(szKey));
-  ZeroMemory(szName,  sizeof(szName));
-  ZeroMemory(szValue, sizeof(szValue));
+  ZeroMemory(szBuf,       sizeof(szBuf));
+  ZeroMemory(szKey,       sizeof(szKey));
+  ZeroMemory(szName,      sizeof(szName));
+  ZeroMemory(szValue,     sizeof(szValue));
 
   if(lstrcmpi(szVariable, "PROGRAMFILESDIR") == 0)
   {
@@ -2915,13 +3041,33 @@ HRESULT DecriptVariable(LPSTR szVariable, DWORD dwVariableSize)
     AppendBackSlash(szVariable, dwVariableSize);
     lstrcat(szVariable, sgProduct.szProgramFolderName);
   }
+  else if(lstrcmpi(szVariable, "Netscape Seamonkey CurrentVersion") == 0)
+  {
+    /* parse for the current Netscape WinReg key */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Netscape\\Netscape Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
+
+    if(*szBuf == '\0')
+      return(FALSE);
+
+    wsprintf(szVariable, "Software\\Netscape\\Netscape Seamonkey\\%s", szBuf);
+  }
+  else if(lstrcmpi(szVariable, "Mozilla Seamonkey CurrentVersion") == 0)
+  {
+    /* parse for the current Mozilla WinReg key */
+    GetWinReg(HKEY_LOCAL_MACHINE, "Software\\Mozilla\\Mozilla Seamonkey", "CurrentVersion", szBuf, sizeof(szBuf));
+
+    if(*szBuf == '\0')
+      return(FALSE);
+
+    wsprintf(szVariable, "Software\\Mozilla\\Mozilla Seamonkey\\%s", szBuf);
+  }
   else
     return(FALSE);
 
   return(TRUE);
 }
 
-HRESULT DecriptString(LPSTR szOutputStr, LPSTR szInputStr)
+HRESULT DecryptString(LPSTR szOutputStr, LPSTR szInputStr)
 {
   DWORD dwLenInputStr;
   DWORD dwCounter;
@@ -2935,7 +3081,7 @@ HRESULT DecriptString(LPSTR szOutputStr, LPSTR szInputStr)
   char  szResultStr[MAX_BUF];
   BOOL  bFoundVar;
   BOOL  bBeginParse;
-  BOOL  bDecripted;
+  BOOL  bDecrypted;
 
   /* zero out the memory addresses */
   memset(szBuf,       '\0', MAX_BUF);
@@ -3008,14 +3154,14 @@ HRESULT DecriptString(LPSTR szOutputStr, LPSTR szInputStr)
       }
 
       RemoveBackSlash(szVariable);
-      bDecripted = TRUE;
+      bDecrypted = TRUE;
     }
     else
     {
-      bDecripted = DecriptVariable(szVariable, MAX_BUF);
+      bDecrypted = DecryptVariable(szVariable, MAX_BUF);
     }
 
-    if(!bDecripted)
+    if(!bDecrypted)
     {
       /* Variable was not able to be dcripted. */
       /* Leave the variable as it was read in by adding the '[' and ']' */
@@ -3030,9 +3176,9 @@ HRESULT DecriptString(LPSTR szOutputStr, LPSTR szInputStr)
     lstrcat(szOutputStr, szVariable);
     lstrcat(szOutputStr, szAppend);
 
-    if(bDecripted)
+    if(bDecrypted)
     {
-      DecriptString(szResultStr, szOutputStr);
+      DecryptString(szResultStr, szOutputStr);
       lstrcpy(szOutputStr, szResultStr);
     }
   }

@@ -7,7 +7,7 @@
 ;            values.
 Run Mode=Normal
 
-Product Name=Netscape Seamonkey
+Product Name=Mozilla Seamonkey
 
 ; Destination Path values:
 ;   PROGRAMFILESDIR
@@ -45,7 +45,7 @@ Path=[PROGRAMFILESDIR]\Netscape\Seamonkey
 ;   MEDIAPATH
 ;   CONFIGPATH (supported only under Windows95 and Windows98)
 ;   DEVICEPATH
-Program Folder Name=Netscape Seamonkey
+Program Folder Name=Mozilla Seamonkey
 Program Folder Path=[COMMON_PROGRAMS]
 
 ; Default Setup Type values:
@@ -55,9 +55,24 @@ Program Folder Path=[COMMON_PROGRAMS]
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 0
 
-Setup Title0=Netscape Seamonkey Setup
+Setup Title0=Mozilla Seamonkey Setup
 Setup Title1=Build $Version$
 Setup Title2=
+
+; HKey:              valid decryptable setup keys are [Mozilla Seamonkey CurrentVersion]
+;                    and [Mozilla Seamonkey CurrentVersion].
+; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
+; Contains Filename: tells setup that the path contains filename needed to be removed before
+;                    using it as a path.
+; Verify Existance:  FILE or PATH
+;
+[Locate Previous Product Path0]
+HRoot=HKEY_LOCAL_MACHINE
+HKey=[Netscape Seamonkey CurrentVersion]\Main
+Name=Install Directory
+Decrypt HKey=TRUE
+Contains Filename=FALSE
+Verify Existance=
 
 [Dialog Welcome]
 Show Dialog=TRUE
@@ -77,6 +92,8 @@ Message1=
 Show Dialog=TRUE
 Title=Setup Type
 Message0=Click the type of Setup you prefer, then click Next.
+Readme Filename=readme.txt
+Readme App=notepad.exe
 
 ; at least one Setup Type needs to be set, and up to 4 can be
 ; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
@@ -131,24 +148,24 @@ Message0=
 [Dialog Windows Integration]
 Show Dialog=FALSE
 Title=Windows Integration
-Message0=Check the Netscape Preference options you would like Setup to perform.
-Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Netscape Communicator and Microsoft Internet Explorer.
+Message0=Check the Mozilla Preference options you would like Setup to perform.
+Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Mozilla Communicator and Microsoft Internet Explorer.
 
 ; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=FALSE
-Description=Make Netscape Communicator my default Internet browser
+Description=Make Mozilla Communicator my default Internet browser
 Archive=
 
 [Windows Integration-Item1]
 CheckBoxState=FALSE
-Description=Make Netscape Netcenter my home page
+Description=Make Mozilla Netcenter my home page
 Archive=
 
 [Windows Integration-Item2]
 CheckBoxState=FALSE
-Description=Use Netscape Netcenter to search the Web
+Description=Use Mozilla Netcenter to search the Web
 Archive=
 
 [Dialog Program Folder]
@@ -193,7 +210,7 @@ exe_param=
 ; Components dialog) for installation.
 ; There is no limit to the number of components to install.
 [Component0]
-Description Short=Netscape Seamonkey
+Description Short=Mozilla Seamonkey
 Description Long=Browser software for the internet
 Archive=core.xpi
 $InstallSize$:core
@@ -216,7 +233,7 @@ Archive=mail.xpi
 $InstallSize$:mail
 $InstallSizeSystem$
 $InstallSizeArchive$:mail.xpi
-;Dependency0=Netscape Seamonkey
+;Dependency0=Mozilla Seamonkey
 ; Attributes can be the following values:
 ;   SELECTED  - the component is selected to be installed by default.
 ;   INVISIBLE - the component is not shown in the Select Components dialog.
@@ -303,7 +320,7 @@ Message=Preparing SmartUpdate, please wait...
 ;Delete FileX sections
 [Delete File0]
 Timing=post download
-Destination=[COMMON_PROGRAMS]\Netscape Seamonkey\Netscape AppRunner.lnk
+Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
 
 ;Remove DirectoryX sections
 ;[Remove Directory0]
@@ -353,7 +370,7 @@ Program Folder=[Default Folder]
 File=[SETUP PATH]\mozilla.exe
 Arguments=
 Working Dir=[SETUP PATH]
-Description=Netscape Mozilla
+Description=Mozilla Seamonkey
 Icon Path=[SETUP PATH]\mozilla.exe
 Icon Id=0
 
@@ -361,7 +378,7 @@ Icon Id=0
 ;File=[SETUP PATH]\bin\viewer.exe
 ;Arguments=
 ;Working Dir=[SETUP PATH]
-;Description=Netscape Viewer
+;Description=Mozilla Viewer
 ;Icon Path=[SETUP PATH]\bin\viewer.exe
 ;Icon Id=0
 

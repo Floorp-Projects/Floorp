@@ -27,24 +27,26 @@
 # in the format of $Variable$ and replace it with the appropriate
 # value(s).
 #
-# Input: .jst file        - which is a .js template
-#        default version  - a julian date in the form of:
-#                           major.minor.release.yydoy
-#                           ie: 5.0.0.99256
-#        staging path     - path to where the components are staged at
+# Input: .jst file              - which is a .js template
+#        default version        - a julian date in the form of:
+#                                 major.minor.release.yydoy
+#                                 ie: 5.0.0.99256
+#        user agent             - user agent of product
+#        component staging path - path to where the components are staged at
 #
 #        ie: perl makejs.pl core.jst 5.0.0.99256
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 2)
+if($#ARGV < 3)
 {
-  die "usage: $0 <.jst file> <default version> <staging path>
+  die "usage: $0 <.jst file> <default version> <UserAgent> <staging path>
 
        .jst file              : .js template input file
        default version        : default julian base version number to use in the
                                 form of: major.minor.release.yydoy
                                 ie: 5.0.0.99256
+       user agent             : user agent of product (5.0b1 [en])
        component staging path : path to where this component is staged at
                                 ie: z:\\stage\\windows\\32bit\\en\\5.0\\core
        \n";
@@ -52,7 +54,8 @@ if($#ARGV < 2)
 
 $inJstFile        = $ARGV[0];
 $inVersion        = $ARGV[1];
-$inStagePath      = $ARGV[2];
+$inUserAgent      = $ARGV[2];
+$inStagePath      = $ARGV[3];
 
 # Get the name of the file replacing the .jst extension with a .js extension
 @inJstFileSplit   = split(/\./,$inJstFile);
@@ -77,6 +80,10 @@ while($line = <fpInTemplate>)
   if($line =~ /\$Version\$/i)
   {
     $line =~ s/\$Version\$/$inVersion/i;
+  }
+  elsif($line =~ /\$UserAgent\$/i)
+  {
+    $line =~ s/\$UserAgent\$/$inUserAgent/i;
   }
   elsif($line =~ /\$SpaceRequired\$/i) # For each line read, search and replace $InstallSize$ with the calculated size
   {

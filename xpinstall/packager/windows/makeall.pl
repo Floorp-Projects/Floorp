@@ -50,6 +50,7 @@ $inStagePath          = $ARGV[2];
 $inDistPath           = $ARGV[3];
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
+$userAgent            = "5.0b1 (en)";
 
 # Check for existance of staging path
 if(!(-e "$inStagePath"))
@@ -112,7 +113,7 @@ sub MakeJsFile
   my($componentName) = @_;
 
   # Make .js file
-  if(system("perl makejs.pl $componentName.jst $inDefaultVersion $inStagePath\\$componentName") != 0)
+  if(system("perl makejs.pl $componentName.jst $inDefaultVersion \"$userAgent\" $inStagePath\\$componentName") != 0)
   {
     exit(1);
   }
