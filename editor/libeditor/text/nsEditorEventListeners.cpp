@@ -799,6 +799,10 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 {
   // ...figure out if a drag should be started...
   
+  // ...until we have this implemented, just eat the drag event so it
+  // ...doesn't leak out into the rest of the app/handlers.
+  aDragEvent->PreventBubble();
+  
   return NS_OK;
 }
 
