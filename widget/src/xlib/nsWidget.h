@@ -25,6 +25,7 @@
 #include "nsBaseWidget.h"
 #include "nsHashtable.h"
 #include "prlog.h"
+#include <nsIXlibWindowService.h>
 
 #ifdef DEBUG_blizzard
 #define XLIB_WIDGET_NOISY
@@ -116,6 +117,10 @@ public:
 
   PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
 
+  static nsresult         SetXlibWindowCallback(nsXlibWindowCallback *aCallback);
+  static nsresult         XWindowCreated(Window aWindow);
+  static nsresult         XWindowDestroyed(Window aWindow);
+
 protected:
 
   // private event functions
@@ -137,6 +142,7 @@ protected:
   static void  AddWindowCallback   (Window aWindow, nsWidget *aWidget);
   static void  DeleteWindowCallback(Window aWindow);
   static       nsHashtable *window_list;
+  static       nsXlibWindowCallback *mWindowCallback;
 
   // here's how we add children
   // there's no geometry information here because that should be in the mBounds
