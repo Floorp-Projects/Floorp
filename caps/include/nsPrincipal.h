@@ -76,6 +76,8 @@ public:
 
 	PRBool isSecurePrincipal(void);
 
+	PRBool isFileCodeBase(void);
+
 	PRBool isCert(void);
 
 	PRBool isCertFingerprint(void);
