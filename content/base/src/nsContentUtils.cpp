@@ -2213,7 +2213,7 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
   "chrome://global/locale/xbl.properties",
   "chrome://global/locale/xul.properties",
   "chrome://global/locale/layout_errors.properties",
-  "chrome://communicator/locale/layout/HtmlForm.properties",
+  "chrome://global/locale/layout/HtmlForm.properties",
   "chrome://global/locale/printing.properties",
   "chrome://communicator/locale/dom/dom.properties"
 };
