@@ -192,11 +192,8 @@ protected:
   HRGN              mClipRegion;
   //default objects
   HBRUSH            mOrigSolidBrush;
-  HBRUSH            mWhiteBrush;
   HFONT             mOrigFont;
-  HFONT             mDefFont;
   HPEN              mOrigSolidPen;
-  HPEN              mBlackPen;
   HPALETTE          mOrigPalette;
   //state management
   GraphicsState     *mStates;
