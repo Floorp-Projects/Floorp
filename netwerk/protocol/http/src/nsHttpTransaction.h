@@ -205,6 +205,11 @@ private:
     PRPackedBool                    mNoContent;           // expecting an empty entity body?
     PRPackedBool                    mReceivedData;
     PRPackedBool                    mDestroying;
+    PRPackedBool                    mClosed;
+
+    // mClosed           := transaction has been explicitly closed
+    // mTransactionDone  := transaction ran to completion or was interrupted
+    // mResponseComplete := transaction ran to completion
 };
 
 #endif // nsHttpTransaction_h__
