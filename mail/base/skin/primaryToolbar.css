@@ -331,15 +331,15 @@ toolbar[iconsize="small"] #button-delete[disabled] {
   -moz-image-region: rect(40px 140px 60px 120px) !important;
 } 
 
-toolbar[iconsize="small"] #button-junk{
+toolbar[iconsize="small"] .junk-button{
   -moz-image-region: rect(0px 160px 20px 140px);
 }
 
-toolbar[iconsize="small"] #button-junk:hover {
+toolbar[iconsize="small"] .junk-button:hover {
   -moz-image-region: rect(20px 160px 40px 140px);
 }
 
-toolbar[iconsize="small"] #button-junk[disabled="true"] {
+toolbar[iconsize="small"] .junk-button[disabled="true"] {
   -moz-image-region: rect(40px 160px 60px 140px) !important;
 }
 
