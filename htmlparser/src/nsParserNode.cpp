@@ -102,7 +102,10 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
   if(mAttributes && (mAttributes->GetSize())) {
     CToken* theAttrToken=0;
     while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      IF_FREE(theAttrToken, aTokenAllocator);
+      // nsViewSourceHTML.cpp:513 creates nsCParserNodes with a NULL token allocator
+      // need to check to see if mTokenAllocator is non-null
+      if(aTokenAllocator)
+        IF_FREE(theAttrToken, aTokenAllocator);
     }
   }
   mToken=aToken;
@@ -343,7 +346,10 @@ nsresult nsCParserNode::ReleaseAll() {
   if(mAttributes) {
     CToken* theAttrToken=0;
     while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      IF_FREE(theAttrToken, mTokenAllocator);
+      // nsViewSourceHTML.cpp:513 creates nsCParserNodes with a NULL token allocator
+      // need to check to see if mTokenAllocator is non-null
+      if(mTokenAllocator)
+        IF_FREE(theAttrToken, mTokenAllocator);
     }
     delete mAttributes;
     mAttributes=0;
