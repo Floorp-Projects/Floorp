@@ -383,7 +383,6 @@ public:
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -601,7 +600,6 @@ public:
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD GetFlags(PRUint32* aFlags);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {

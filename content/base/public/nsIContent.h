@@ -99,20 +99,6 @@ public:
   NS_IMETHOD SetParent(nsIContent* aParent) = 0;
 
   /**
-   * Get whether this content is C++-generated anonymous content
-   * @see nsIAnonymousContentCreator
-   * @return whether this content is anonymous
-   */
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const = 0;
-
-  /**
-   * Set whether this content is anonymous
-   * @see nsIAnonymousContentCreator
-   * @param aAnonymous whether this content is anonymous
-   */
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) = 0;
-
-  /**
    * Get the namespace that this element's tag is defined in
    * @param aResult the namespace [OUT]
    */

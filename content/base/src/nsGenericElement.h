@@ -71,34 +71,26 @@ class nsINodeInfo;
 
 typedef unsigned long PtrBits;
 
-/** This bit will be set if the nsGenericElement has nsDOMSlots */
+// This bit will be set if the nsGenericElement has nsDOMSlots
 #define GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS   0x00000001U
 
-/**
- * This bit will be set if the element has a range list in the range list hash
- */
+// This bit will be set if the element has a range list in the range
+// list hash
 #define GENERIC_ELEMENT_HAS_RANGELIST          0x00000002U
 
-/**
- * This bit will be set if the element has a listener manager in the listener
- * manager hash
- */
+// This bit will be set if the element has a listener manager in the
+// listener manager hash
 #define GENERIC_ELEMENT_HAS_LISTENERMANAGER    0x00000004U
 
-/** Whether this content is anonymous */
-#define GENERIC_ELEMENT_IS_ANONYMOUS           0x00000008U
+// The number of bits to shift the bit field to get at the content ID
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 3
 
-/** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 4
-
-/** This mask masks out the bits that are used for the content ID */
+// This mask masks out the bits that are used for the content ID
 #define GENERIC_ELEMENT_CONTENT_ID_MASK \
   ((~PtrBits(0)) << GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
 
-/**
- * The largest value for content ID that fits in
- * GENERIC_ELEMENT_CONTENT_ID_MASK
- */
+// The largest value for content ID that fits in
+// GENERIC_ELEMENT_CONTENT_ID_MASK
 #define GENERIC_ELEMENT_CONTENT_ID_MAX_VALUE \
   ((~PtrBits(0)) >> GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET)
 
@@ -347,8 +339,6 @@ public:
                          PRBool aCompileEventHandlers);
   NS_IMETHOD GetParent(nsIContent*& aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
-  NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
-  NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
   NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpaceID) const;
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
