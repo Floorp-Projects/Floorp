@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= sockstuburl
-LIBRARY_NAME	= sockstubpurl
+LIBRARY_NAME	= sockstuburl
 
 CPPCSRCS		= \
 	sockstub.cpp	\
