@@ -965,10 +965,10 @@ TextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     nsIFontMetrics* nextFont;
     nscoord nextY, glyphWidth;
     PRUnichar ch = *aBuffer;
-    if (aTextStyle.mSmallCaps && XP_IS_LOWERCASE(ch)) {
+    if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
       nextFont = aTextStyle.mSmallFont;
       nextY = smallY;
-      ch = XP_TO_UPPER(ch);
+      ch = nsCRT::ToUpper(ch);
       if (lastFont != aTextStyle.mSmallFont) {
         aRenderingContext.SetFont(aTextStyle.mSmallFont);
         aRenderingContext.GetWidth(ch, charWidth);
@@ -1086,9 +1086,9 @@ TextFrame::GetWidth(nsIRenderingContext& aRenderingContext,
   for (; --aLength >= 0; aBuffer++) {
     nsIFontMetrics* nextFont;
     PRUnichar ch = *aBuffer;
-    if (aTextStyle.mSmallCaps && XP_IS_LOWERCASE(ch)) {
+    if (aTextStyle.mSmallCaps && nsCRT::IsLower(ch)) {
       nextFont = aTextStyle.mSmallFont;
-      ch = XP_TO_UPPER(ch);
+      ch = nsCRT::ToUpper(ch);
     }
     else {
       nextFont = aTextStyle.mNormalFont;
