@@ -16,7 +16,7 @@
  * Reserved.
  */
  
-//	This file is included by nsFile.cpp, and includes the Unix-specific
+//	This file is included by nsFileSpec.cpp, and includes the Unix-specific
 //	implementations.
 
 //----------------------------------------------------------------------------------------

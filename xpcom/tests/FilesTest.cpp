@@ -17,7 +17,7 @@ void FileTest::WriteStuff(ostream& s)
 	s << "File URL initialized to:     \"" << (string&)fileURL << "\""<< endl;
 	
 	// Initialize a Unix path from a URL
-	nsUnixFilePath filePath(fileURL);
+	nsFilePath filePath(fileURL);
 	s << "As a unix path:              \"" << (string&)filePath << "\""<< endl;
 	
 	// Initialize a native file spec from a URL
@@ -62,21 +62,25 @@ void main()
 	
 	// Test of nsOutputFileStream
 
-	nsUnixFilePath myTextFilePath("/Development/iotest.txt");
+	nsFilePath myTextFilePath("/Development/iotest.txt");
 
-	cout << "WRITING IDENTICAL OUTPUT TO " << myTextFilePath << endl << endl;
-	nsOutputFileStream testStream(myTextFilePath);
-	FileTest::WriteStuff(testStream);
-		
+	{
+		cout << "WRITING IDENTICAL OUTPUT TO " << myTextFilePath << endl << endl;
+		nsOutputFileStream testStream(myTextFilePath);
+		FileTest::WriteStuff(testStream);
+	}	// <-- Scope closes the stream (and the file).
+
 	// Test of nsInputFileStream
 
-	cout << "READING BACK DATA FROM " << myTextFilePath << endl << endl;
-	nsInputFileStream testStream2(myTextFilePath);
-	char line[1000];
-	while (!testStream2.eof())
 	{
-		testStream2.getline(line, sizeof(line), '\n');
-		cout << line << endl;
+		cout << "READING BACK DATA FROM " << myTextFilePath << endl << endl;
+		nsInputFileStream testStream2(myTextFilePath);
+		char line[1000];
+		while (!testStream2.eof())
+		{
+			testStream2.getline(line, sizeof(line), '\n');
+			cout << line << endl;
+		}
 	}
 		
 } // main

@@ -125,7 +125,7 @@ void nsFileURL::operator = (const nsFileURL& inOther)
 }
 
 //----------------------------------------------------------------------------------------
-nsFileURL::nsFileURL(const nsUnixFilePath& inOther)
+nsFileURL::nsFileURL(const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
 	mURL = kFileURLPrefix + ((string&)inOther);
@@ -134,7 +134,7 @@ nsFileURL::nsFileURL(const nsUnixFilePath& inOther)
 #endif
 }
 //----------------------------------------------------------------------------------------
-void nsFileURL::operator = (const nsUnixFilePath& inOther)
+void nsFileURL::operator = (const nsFilePath& inOther)
 //----------------------------------------------------------------------------------------
 {
 	mURL = kFileURLPrefix + ((string&)inOther);
@@ -147,7 +147,7 @@ void nsFileURL::operator = (const nsUnixFilePath& inOther)
 nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix + (std::string&)nsUnixFilePath(inOther);
+	mURL = kFileURLPrefix + (std::string&)nsFilePath(inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther;
 #endif
@@ -156,18 +156,18 @@ nsFileURL::nsFileURL(const nsNativeFileSpec& inOther)
 void nsFileURL::operator = (const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mURL = kFileURLPrefix +  (std::string&)nsUnixFilePath(inOther);
+	mURL = kFileURLPrefix +  (std::string&)nsFilePath(inOther);
 #ifdef XP_MAC
 	mNativeFileSpec  = inOther;
 #endif
 }
 
 //========================================================================================
-//								nsUnixFilePath implementation
+//								nsFilePath implementation
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-nsUnixFilePath::nsUnixFilePath(const std::string& inString)
+nsFilePath::nsFilePath(const std::string& inString)
 //----------------------------------------------------------------------------------------
 :	mPath(inString)
 #ifdef XP_MAC
@@ -178,7 +178,7 @@ nsUnixFilePath::nsUnixFilePath(const std::string& inString)
 }
 
 //----------------------------------------------------------------------------------------
-nsUnixFilePath::nsUnixFilePath(const nsFileURL& inOther)
+nsFilePath::nsFilePath(const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 :	mPath(((string&)inOther).substr(
 			kFileURLPrefixLength, ((string&)inOther).length() - kFileURLPrefixLength))
@@ -189,7 +189,7 @@ nsUnixFilePath::nsUnixFilePath(const nsFileURL& inOther)
 }
 
 //----------------------------------------------------------------------------------------
-void nsUnixFilePath::operator = (const std::string& inString)
+void nsFilePath::operator = (const std::string& inString)
 //----------------------------------------------------------------------------------------
 {
 	mPath = inString;
@@ -200,7 +200,7 @@ void nsUnixFilePath::operator = (const std::string& inString)
 }
 
 //----------------------------------------------------------------------------------------
-void nsUnixFilePath::operator = (const nsFileURL& inOther)
+void nsFilePath::operator = (const nsFileURL& inOther)
 //----------------------------------------------------------------------------------------
 {
 	mPath = ((string&)inOther).substr(

@@ -16,28 +16,92 @@
  * Reserved.
  */
 
-//	First checked in on 98/11/20 by John R. McMullen.  Checked in again 98/12/04.
+//    First checked in on 98/11/20 by John R. McMullen in the wrong directory.
+//    Checked in again 98/12/04.
+//    Polished version 98/12/08.
+
+//========================================================================================
+//
+//  Classes defined:
+//
+//      nsFilePath, nsFileURL, nsNativeFileSpec.
+//
+//  This suite provides the following services:
+//
+//      1.  Encapsulates all platform-specific file details, so that files can be
+//          described correctly without any platform #ifdefs
+//
+//      2.  Type safety.  This will fix the problems that used to occur because people
+//          confused file paths.  They used to use const char*, which could mean three
+//          or four different things.  Bugs were introduced as people coded, right up
+//          to the moment Communicator 4.5 shipped.
+//
+//      3.  Used in conjunction with nsFileStream.h (q.v.), this supports all the power
+//          and readability of the ansi stream syntax.  ALL METHODS OF istream, ostream,
+//          AND iostream ARE AVAILABLE!
+//
+//          Basic example:
+//
+//              nsFilePath myPath("/Development/iotest.txt");
+//
+//              nsOutputFileStream testStream(myPath);
+//              testStream << "Hello World" << endl;
+//
+//      4.  Handy methods for manipulating file specifiers safely, e.g. MakeUnique(),
+//          SetLeafName(), Exists().
+//
+//      5.  Easy cross-conversion.
+//
+//          Examples:
+//
+//              Initialize a URL from a string without suffix
+//
+//                  nsFileURL fileURL("file:///Development/MPW/MPW%20Shell");
+//
+//              Initialize a Unix path from a URL
+//
+//                  nsFilePath filePath(fileURL);
+//
+//              Initialize a native file spec from a URL
+//
+//                  nsNativeFileSpec fileSpec(fileURL);
+//
+//              Make the spec unique (this one has no suffix).
+//
+//                  fileSpec.MakeUnique();
+//
+//              Assign the spec to a URL
+//
+//                  fileURL = fileSpec;
+//
+//              Assign a unix path using a string with a suffix.
+//
+//                  filePath = "/Development/MPW/SysErrs.err";
+//
+//              Assign to a file spec using a unix path.
+//
+//                  fileSpec = filePath;
+//
+//              Make this unique (this one has a suffix).
+//
+//                  fileSpec.MakeUnique();
+//
+//      6.  Fixes a bug that have been there for a long time, and
+//          is inevitable if you use NSPR alone, where files are described as paths.
+//
+//          The problem affects platforms (Macintosh) in which a path does not fully
+//          specify a file, because two volumes can have the same name.  This
+//          is solved by holding a "private" native file spec inside the
+//          nsFilePath and nsFileURL classes, which is used when appropriate.
+//
+//      Not yet done:
+//
+//          Equality operators... much more.
+//
+//========================================================================================
 
 #ifndef _FILESPEC_H_
 #define _FILESPEC_H_
-
-//========================================================================================
-//	This is intended to be part of the API for all C++ in the mozilla code base from now on.
-//	It provides
-//		*	Type-safe ways of describing files (no more char* parameters)
-//		*	Conversions between these
-//		*	Methods for testing existence and for forcing uniqueness.
-//
-//		A file specification can come from two outside sources:
-//			1.	A file:// URL, or
-//			2.	A native spec (such as an OS-based save/open dialog and the like).
-//		Therefore, these are the only ingredients one can use to make a file specification.
-//
-//		Once one of our spec types has been made, conversions are provided between them
-//
-//		In addition, string accessors are provided, because people like to manipulate
-//		nsFileURL and nsUnixFilePath strings directly.
-//========================================================================================
 
 #include <string>
 #include "nsDebug.h"
@@ -49,7 +113,7 @@
 // Here are the allowable ways to describe a file.
 //========================================================================================
 
-class nsUnixFilePath; 				// This can be passed to NSPR file I/O routines.
+class nsFilePath;                 // This can be passed to NSPR file I/O routines.
 class nsFileURL;
 class nsNativeFileSpec;
 
@@ -58,202 +122,202 @@ class nsNativeFileSpec;
 
 //========================================================================================
 class nsNativeFileSpec
-//	This is whatever each platform really prefers to describe files as. 
+//    This is whatever each platform really prefers to describe files as.  Declared first
+//  because the other two types have an embeded nsNativeFileSpec object.
 //========================================================================================
 {
-	public:
-								nsNativeFileSpec();
-								nsNativeFileSpec(const std::string& inString);
-								nsNativeFileSpec(const nsUnixFilePath& inPath);
-								nsNativeFileSpec(const nsFileURL& inURL);
-								nsNativeFileSpec(const nsNativeFileSpec& inPath);
+    public:
+                                nsNativeFileSpec();
+        explicit                nsNativeFileSpec(const std::string& inString);
+                                nsNativeFileSpec(const nsFilePath& inPath);
+                                nsNativeFileSpec(const nsFileURL& inURL);
+                                nsNativeFileSpec(const nsNativeFileSpec& inPath);
 
-		void					operator = (const std::string& inPath);
-		void					operator = (const nsUnixFilePath& inPath);
-		void					operator = (const nsFileURL& inURL);
-		void					operator = (const nsNativeFileSpec& inOther);
+        void                    operator = (const std::string& inPath);
+        void                    operator = (const nsFilePath& inPath);
+        void                    operator = (const nsFileURL& inURL);
+        void                    operator = (const nsNativeFileSpec& inOther);
 
 #ifdef XP_MAC
-		// For Macintosh people, this is meant to be useful in its own right as a C++ version
-		// of the FSSPec class.		
-								nsNativeFileSpec(
-									short vRefNum,
-									long parID,
-									ConstStr255Param name);
-								nsNativeFileSpec(const FSSpec& inSpec)
-									: mSpec(inSpec), mError(noErr) {}
+        // For Macintosh people, this is meant to be useful in its own right as a C++ version
+        // of the FSSPec class.        
+                                nsNativeFileSpec(
+                                    short vRefNum,
+                                    long parID,
+                                    ConstStr255Param name);
+                                nsNativeFileSpec(const FSSpec& inSpec)
+                                    : mSpec(inSpec), mError(noErr) {}
 
-								operator FSSpec* () { return &mSpec; }
-								operator const FSSpec* const () { return &mSpec; }
-								operator FSSpec& () { return mSpec; }
-								operator const FSSpec& () const { return mSpec; }
-		bool					Valid() const { return mError == noErr; }
-		OSErr					Error() const { return mError; }
-		void					MakeUnique(ConstStr255Param inSuggestedLeafName);
-		StringPtr				GetLeafPName() { return mSpec.name; }
-		ConstStr255Param		GetLeafPName() const { return mSpec.name; }
+                                operator FSSpec* () { return &mSpec; }
+                                operator const FSSpec* const () { return &mSpec; }
+                                operator FSSpec& () { return mSpec; }
+                                operator const FSSpec& () const { return mSpec; }
+        bool                    Valid() const { return mError == noErr; }
+        OSErr                   Error() const { return mError; }
+        void                    MakeUnique(ConstStr255Param inSuggestedLeafName);
+        StringPtr               GetLeafPName() { return mSpec.name; }
+        ConstStr255Param        GetLeafPName() const { return mSpec.name; }
 #else
-		bool					Valid() const { return TRUE; } // Fixme.
+        bool                    Valid() const { return TRUE; } // Fixme.
 #endif
 
 #if DEBUG
-		friend					ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
+        friend                  ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
 #endif
-		string					GetLeafName() const;
-		void					SetLeafName(const std::string& inLeafName);
-		bool					Exists() const;
-		void					MakeUnique();
-		void					MakeUnique(const std::string& inSuggestedLeafName);
-	
-	private:
-								friend class nsUnixFilePath;
+        string                  GetLeafName() const;
+        void                    SetLeafName(const std::string& inLeafName);
+        bool                    Exists() const;
+        void                    MakeUnique();
+        void                    MakeUnique(const std::string& inSuggestedLeafName);
+    
+    private:
+                                friend class nsFilePath;
 #ifdef XP_MAC
-		FSSpec					mSpec;
-		OSErr					mError;
+        FSSpec                    mSpec;
+        OSErr                    mError;
 #elif defined(XP_UNIX) || defined(XP_WIN)
-		std::string				mPath;
+        std::string                mPath;
 #endif
 }; // class nsNativeFileSpec
 
 //========================================================================================
 class nsFileURL
-//	This is an escaped string that looks like "file:///foo/bar/mumble%20fish".  Since URLs
-//	are the standard way of doing things in mozilla, this allows a string constructor,
-//	which just stashes the string with no conversion.
+//    This is an escaped string that looks like "file:///foo/bar/mumble%20fish".  Since URLs
+//    are the standard way of doing things in mozilla, this allows a string constructor,
+//    which just stashes the string with no conversion.
 //========================================================================================
 {
-	public:
-								nsFileURL(const nsFileURL& inURL);
-								nsFileURL(const std::string& inString);
-								nsFileURL(const nsUnixFilePath& inPath);
-								nsFileURL(const nsNativeFileSpec& inPath);
-									
-								operator std::string& () { return mURL; }
-									// This is the only automatic conversion to string
-									// that is provided, because a naked string should
-									// only mean a file URL.
+    public:
+                                nsFileURL(const nsFileURL& inURL);
+        explicit                nsFileURL(const std::string& inString);
+                                nsFileURL(const nsFilePath& inPath);
+                                nsFileURL(const nsNativeFileSpec& inPath);
 
-//		std::string 			GetString() const { return mPath; }
-									// may be needed for implementation reasons,
-									// but should not provide a conversion constructor.
+//        std::string             GetString() const { return mPath; }
+                                    // may be needed for implementation reasons,
+                                    // but should not provide a conversion constructor.
 
-		void					operator = (const nsFileURL& inURL);
-		void					operator = (const std::string& inString);
-		void					operator = (const nsUnixFilePath& inOther);
-		void					operator = (const nsNativeFileSpec& inOther);
+        void                    operator = (const nsFileURL& inURL);
+        void                    operator = (const std::string& inString);
+        void                    operator = (const nsFilePath& inOther);
+        void                    operator = (const nsNativeFileSpec& inOther);
 
 #ifdef XP_MAC
-								// Accessor to allow quick assignment to a mNativeFileSpec
-		const nsNativeFileSpec&	GetNativeSpec() const { return mNativeFileSpec; }
+                                // Accessor to allow quick assignment to a mNativeFileSpec
+        const nsNativeFileSpec& GetNativeSpec() const { return mNativeFileSpec; }
 #endif
-	private:
-	
-		std::string				mURL;
+    private:
+        // Should not be defined (only nsFilePath is to be treated as strings.
+                                operator std::string& ();
+    private:
+    
+        std::string             mURL;
 #ifdef XP_MAC
-		// Since the path on the macintosh does not uniquely specify a file (volumes
-		// can have the same name), stash the secret nsNativeFileSpec, too.
-		nsNativeFileSpec		mNativeFileSpec;
+        // Since the path on the macintosh does not uniquely specify a file (volumes
+        // can have the same name), stash the secret nsNativeFileSpec, too.
+        nsNativeFileSpec        mNativeFileSpec;
 #endif
 }; // class nsFileURL
 
 //========================================================================================
-class nsUnixFilePath
-//	This is a string that looks like "/foo/bar/mumble%20fish".  Same as nsFileURL, but
-//	without the "file:// prefix".
+class nsFilePath
+//    This is a string that looks like "/foo/bar/mumble%20fish".  Same as nsFileURL, but
+//    without the "file:// prefix".
 //========================================================================================
 {
-	public:
-								nsUnixFilePath(const nsUnixFilePath& inPath);
-								nsUnixFilePath(const std::string& inString);
-								nsUnixFilePath(const nsFileURL& inURL);
-								nsUnixFilePath(const nsNativeFileSpec& inPath);
+    public:
+                                nsFilePath(const nsFilePath& inPath);
+        explicit                nsFilePath(const std::string& inString);
+                                nsFilePath(const nsFileURL& inURL);
+                                nsFilePath(const nsNativeFileSpec& inPath);
 
-								
-								operator const char* () const { return mPath.c_str(); }
-									// This is the only automatic conversion to const char*
-									// that is provided, and it allows the
-									// path to be "passed" to NSPR file routines.
+                                
+                                operator const char* () const { return mPath.c_str(); }
+                                    // This is the only automatic conversion to const char*
+                                    // that is provided, and it allows the
+                                    // path to be "passed" to NSPR file routines.
+                                operator std::string& () { return mPath; }
+                                    // This is the only automatic conversion to string
+                                    // that is provided, because a naked string should
+                                    // only mean a standard file path.
 
-		void					operator = (const nsUnixFilePath& inPath);
-		void					operator = (const std::string& inString);
-		void					operator = (const nsFileURL& inURL);
-		void					operator = (const nsNativeFileSpec& inOther);
+        void                    operator = (const nsFilePath& inPath);
+        void                    operator = (const std::string& inString);
+        void                    operator = (const nsFileURL& inURL);
+        void                    operator = (const nsNativeFileSpec& inOther);
 
 #ifdef XP_MAC
-	public:
-								// Accessor to allow quick assignment to a mNativeFileSpec
-		const nsNativeFileSpec&	GetNativeSpec() const { return mNativeFileSpec; }
+    public:
+                                // Accessor to allow quick assignment to a mNativeFileSpec
+        const nsNativeFileSpec& GetNativeSpec() const { return mNativeFileSpec; }
 #endif
 
-	private:
-		// Should not be defined (only file URLs are to be treated as strings.
-								operator std::string& ();
-	private:
+    private:
 
-		std::string				mPath;
+        std::string                mPath;
 #ifdef XP_MAC
-		// Since the path on the macintosh does not uniquely specify a file (volumes
-		// can have the same name), stash the secret nsNativeFileSpec, too.
-		nsNativeFileSpec		mNativeFileSpec;
+        // Since the path on the macintosh does not uniquely specify a file (volumes
+        // can have the same name), stash the secret nsNativeFileSpec, too.
+        nsNativeFileSpec        mNativeFileSpec;
 #endif
-}; // class nsUnixFilePath
+}; // class nsFilePath
 
 #ifdef XP_UNIX
 //========================================================================================
-//								UNIX nsUnixFilePath implementation
+//                                UNIX nsFilePath implementation
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-inline nsUnixFilePath::nsUnixFilePath(const nsNativeFileSpec& inOther)
+inline nsFilePath::nsFilePath(const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
-:	mPath((std::string&)inOther)
+:    mPath((std::string&)inOther)
 {
 }
 //----------------------------------------------------------------------------------------
-inline void nsUnixFilePath::operator = (const nsNativeFileSpec& inOther)
+inline void nsFilePath::operator = (const nsNativeFileSpec& inOther)
 //----------------------------------------------------------------------------------------
 {
-	mPath = (std::string&)inOther;
+    mPath = (std::string&)inOther;
 }
 #endif // XP_UNIX
 
 //========================================================================================
-//								COMMON nsNativeFileSpec implementation
+//                                COMMON nsNativeFileSpec implementation
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
 inline nsNativeFileSpec::nsNativeFileSpec(const nsFileURL& inURL)
 //----------------------------------------------------------------------------------------
 {
-	*this = nsUnixFilePath(inURL); // convert to unix path first
+    *this = nsFilePath(inURL); // convert to unix path first
 }
 
 //----------------------------------------------------------------------------------------
 inline void nsNativeFileSpec::operator = (const nsFileURL& inURL)
 //----------------------------------------------------------------------------------------
 {
-	*this = nsUnixFilePath(inURL); // convert to unix path first
+    *this = nsFilePath(inURL); // convert to unix path first
 }
 
 //========================================================================================
-//								UNIX & WIN nsNativeFileSpec implementation
+//                                UNIX & WIN nsNativeFileSpec implementation
 //========================================================================================
 
 #ifdef XP_UNIX
 //----------------------------------------------------------------------------------------
-inline nsNativeFileSpec::nsNativeFileSpec(const nsUnixFilePath& inPath)
+inline nsNativeFileSpec::nsNativeFileSpec(const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
-:	mPath((std::string&)inPath)
+:    mPath((std::string&)inPath)
 {
 }
 #endif // XP_UNIX
 
 #ifdef XP_UNIX
 //----------------------------------------------------------------------------------------
-inline void nsNativeFileSpec::operator = (const nsUnixFilePath& inPath)
+inline void nsNativeFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
 {
-	mPath = (std::string&)inPath;
+    mPath = (std::string&)inPath;
 }
 #endif //XP_UNIX
 
@@ -261,7 +325,7 @@ inline void nsNativeFileSpec::operator = (const nsUnixFilePath& inPath)
 //----------------------------------------------------------------------------------------
 inline nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
-:	mPath((std::string&)inSpec)
+:    mPath((std::string&)inSpec)
 {
 }
 #endif //XP_UNIX
@@ -270,7 +334,7 @@ inline nsNativeFileSpec::nsNativeFileSpec(const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 inline nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
 //----------------------------------------------------------------------------------------
-:	mPath(inString)
+:    mPath(inString)
 {
 }
 #endif //XP_UNIX
@@ -280,7 +344,7 @@ inline nsNativeFileSpec::nsNativeFileSpec(const std::string& inString)
 inline void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
 {
-	mPath = (std::string&)inSpec;
+    mPath = (std::string&)inSpec;
 }
 #endif //XP_UNIX
 
@@ -290,7 +354,7 @@ inline void nsNativeFileSpec::operator = (const nsNativeFileSpec& inSpec)
 inline nsNativeFileSpec::operator = (const std::string& inString)
 //----------------------------------------------------------------------------------------
 {
-	mPath = inString;
+    mPath = inString;
 }
 #endif //XP_UNIX
 
@@ -299,7 +363,7 @@ inline nsNativeFileSpec::operator = (const std::string& inString)
 inline ostream& operator << (ostream& s, const nsNativeFileSpec& spec)
 //----------------------------------------------------------------------------------------
 {
-	return (s << (std::string&)spec.mPath);
+    return (s << (std::string&)spec.mPath);
 }
 #endif // DEBUG && XP_UNIX
 
