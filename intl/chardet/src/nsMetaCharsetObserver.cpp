@@ -44,7 +44,6 @@
 #include "nsISupports.h"
 #include "nsCRT.h"
 #include "nsIParser.h"
-#include "nsIAppStartupNotifier.h"
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
