@@ -145,6 +145,15 @@ pr_FindSymbolInProg(const char *name)
     return sym;
 }
 
+#elif defined(USE_MACH_DYLD)
+
+static void *
+pr_FindSymbolInProg(const char *name)
+{
+    /* FIXME: not implemented */
+    return NULL;
+}
+
 #else
 
 #error "The zone allocator is not supported on this platform"
