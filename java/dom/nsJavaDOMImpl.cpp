@@ -317,8 +317,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 					       nsIChannel* channel, 
-					       nsresult aStatus,
-					       nsIDocumentLoaderObserver* aObserver)
+					       nsresult aStatus)
 {
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;
@@ -343,8 +342,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
-					    nsIChannel* channel, 
-					    nsIContentViewer* aViewer)
+					    nsIChannel* channel)
 {
   char* urlSpec = (char*) "";
   nsIURI* url = nsnull;

@@ -22,12 +22,10 @@ class nsJavaDOMImpl : public nsIJavaDOM {
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
 			       nsIChannel* channel, 
-			       nsresult aStatus,
-			       nsIDocumentLoaderObserver* aObserver);
+			       nsresult aStatus);
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIChannel* channel, 
-                            nsIContentViewer* aViewer);
+			    nsIChannel* channel); 
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
 			       nsIChannel* channel, 

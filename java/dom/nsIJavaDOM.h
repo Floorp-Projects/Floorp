@@ -49,12 +49,10 @@ class nsIJavaDOM : public nsIDocumentLoaderObserver {
 
   NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
 			       nsIChannel* channel, 
-			       nsresult aStatus,
-			       nsIDocumentLoaderObserver* aObserver) = 0;
+			       nsresult aStatus) = 0;
 
   NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-			    nsIChannel* channel, 
-                            nsIContentViewer* aViewer) = 0;  
+			    nsIChannel* channel) = 0;
 
   NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
 			       nsIChannel* channel, 
