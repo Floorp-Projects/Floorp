@@ -543,7 +543,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupTurboEnable()
         return NS_OK;               // already enabled, no need to do this
 
     HKEY hKey;
-    LONG res = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_SET_VALUE, &hKey );
+    LONG res = ::RegCreateKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL );
     if ( res != ERROR_SUCCESS )
       return NS_OK;
     char fileName[_MAX_PATH];
