@@ -29,3 +29,5 @@ nsIEmbeddingSiteWindow.idl
 nsIWebBrowserPersist.idl
 nsIWebBrowserFocus.idl
 nsIWebBrowserPrint.idl
+nsITooltipListener.idl
+nsITooltipTextProvider.idl

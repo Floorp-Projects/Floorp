@@ -21,53 +21,45 @@
  *   Mike Pinkerton <pinkerton@netscape.com>
  *
  * Contributor(s): 
+ *   Adam Lock <adamlock@netscape.com>
  */
  
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
-
-//
-// nsITooltipTextProvider
-//
-// Interface implemented by a tooltip text provider service, returns
-// the text to display above a particular node (e.g. the TITLE tag).
-//
-[uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
-interface nsITooltipTextProvider : nsISupports
-{
-    boolean getNodeText(in nsIDOMNode aNode, out wstring aText);
-};
-
-%{ C++
-#define NS_TOOLTIPTEXTPROVIDER_CONTRACTID \
-"@mozilla.org/embedcomp/tooltiptextprovider;1"
-%}
-
-//
-// nsITooltipListener interface
-//
-// Used to tell an embedding client when a tooltip should be displayed or hidden.
-//
+/**
+ * An optional interface for embedding clients wishing to receive
+ * notifications for when a tooltip should be displayed or removed.
+ * The embedder implements this interface on the web browser chrome
+ * object associated with the window that notifications are required
+ * for.
+ *
+ * @see nsITooltipTextProvider
+ *
+ * @status FROZEN
+ */
 [uuid(44b78386-1dd2-11b2-9ad2-e4eee2ca1916)]
 interface nsITooltipListener : nsISupports
 {
-    // Called when the tooltip should be displayed. The tooltip will
-    // time out after a pre-determined length of time. 
-    //
-    // aXCoords, aYCoords - the X/Y coordinates of where to display
-    //    the tooltip. Note these coordinates are local to the the browser
-    //    content area, not the top-level window.
-    // aTipText - the text to display, obtained from the TITLE attribute
-    //    on the node (or a containing parent) over which the mouse is hovering.
-    //    This is a unicode string.
-    //
-    // Returning any result other than NS_OK will cause Gecko to
-    // behave as if no tooltip was displayed (no auto-timeout, etc).
-  void onShowTooltip ( in long aXCoords, in long aYCoords, in wstring aTipText ) ;
+    /**
+     * Called when a tooltip should be displayed.
+     *
+     * @param aXCoords The tooltip left edge X coordinate.
+     * @param aYCoords The tooltip top edge Y coordinate.
+     * @param aTipText The text to display in the tooltip, typically obtained
+     *        from the TITLE attribute of the node (or containing parent)
+     *        over which the pointer has been positioned.
+     *
+     * @note
+     * Coordinates are specified in pixels, relative to the top-left
+     * corner of the browser area.
+     *
+     * @return <code>NS_OK</code> if the tooltip was displayed.
+     */
+    void onShowTooltip(in long aXCoords, in long aYCoords, in wstring aTipText);
   
-    // Called when the tooltip should be hidden, either by a mouse move
-    // or an auto-hide of the tooltip.
-  void onHideTooltip ( ) ;
+    /**
+     * Called when the tooltip should be hidden, either because the pointer
+     * has moved or the tooltip has timed out.
+     */
+    void onHideTooltip();
 };
-
