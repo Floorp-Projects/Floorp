@@ -18,7 +18,7 @@
 
 #include "nsIBaseStream.idl"
 
-[object, uuid[022396f0-93b5-11d1-895b-006008911b81)]
+[object, uuid(022396f0-93b5-11d1-895b-006008911b81)]
 interface nsIInputStream : nsIBaseStream {
 
   unsigned long GetLength();
