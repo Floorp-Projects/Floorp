@@ -3558,6 +3558,7 @@ function BrowserToolbarChanged()
   if (homeButton) {
     var homePage = getHomePage();
     homeButton.setAttribute("tooltiptext", homePage);
+  }
   window.XULBrowserWindow.init();
 }
 
