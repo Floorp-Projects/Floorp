@@ -305,9 +305,13 @@ void MIME_ConformToStandard (PRBool conform_p)
 	*/
 	if (conform_p)
 		mime_headers_use_quoted_printable_p = PR_TRUE;
-	else
-		PREF_GetBoolPref("mail.strictly_mime_headers", 
-					 &mime_headers_use_quoted_printable_p);
+  else {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) {
+      rv = prefs->GetBoolPref("mail.strictly_mime_headers", &mime_headers_use_quoted_printable_p);
+    }
+  }
 	mime_use_quoted_printable_p = conform_p;
 }
 
@@ -4468,12 +4472,14 @@ nsMsgSendMimeDeliveryState::Init(
 	else
 		return MK_OUT_OF_MEMORY;
 
-  // TODO: We should read the pref "mail.strictly_mime_headers" somewhere
-  // and pass it to MIME_ConformToStandard().
-  MIME_ConformToStandard(PR_TRUE);
-  // Get the default charset from pref, use this for the charset for now.
-  // TODO: For reply/forward, original charset need to be used instead.
-  // TODO: Also need to update charset for the charset menu.
+  PRBool strictly_mime = PR_FALSE;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) {
+    rv = prefs->GetBoolPref("mail.strictly_mime", &strictly_mime);
+  }
+  MIME_ConformToStandard(strictly_mime);
+
   m_fields->SetCharacterSet(fields->GetCharacterSet(), NULL);
 
 	m_fields->SetOwner(pane);
