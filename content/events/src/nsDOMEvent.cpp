@@ -1190,6 +1190,7 @@ nsresult
 nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 {
   nsCOMPtr<nsIAtom> atom= do_GetAtom(NS_LITERAL_STRING("on") + aEventTypeArg);
+  mEvent->message = NS_USER_DEFINED_EVENT;
 
   if (mEvent->eventStructType == NS_MOUSE_EVENT) {
     if (atom == nsLayoutAtoms::onmousedown)
@@ -1252,10 +1253,10 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
     else if (atom == nsLayoutAtoms::onDOMSubtreeModified)
       mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
   }
-  else {
-    mEvent->message = NS_USER_DEFINED_EVENT;
+
+  if (mEvent->message == NS_USER_DEFINED_EVENT)
     mEvent->userType = new nsStringKey(aEventTypeArg);
-  }
+
   return NS_OK;
 }
 
