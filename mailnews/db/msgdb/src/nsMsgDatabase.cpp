@@ -663,7 +663,7 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 	nsresult	err = NS_OK;
 	nsIMdbThumb	*commitThumb = NULL;
 
-	commitType = nsMsgDBCommitType::kCompressCommit;	// ### until incremental writing works.
+//	commitType = nsMsgDBCommitType::kCompressCommit;	// ### until incremental writing works.
 
 	if (m_mdbStore)
 	{
