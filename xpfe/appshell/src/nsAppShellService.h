@@ -73,6 +73,7 @@ protected:
                                  PRBool aIsHiddenWindow, nsIXULWindow **aResult);
   nsresult SetXPConnectSafeContext();
   nsresult ClearXPConnectSafeContext();
+  void     AttemptingQuit(PRBool aAttempt);
 
   nsCOMPtr<nsIAppShell> mAppShell;
   nsCOMPtr<nsICmdLineService> mCmdLineService;
@@ -82,12 +83,11 @@ protected:
   PRBool mDeleteCalled;
   nsCOMPtr<nsISplashScreen> mSplashScreen;
   nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
-  PRBool mInProfileStartup;
 
-  PRUint16 mModalWindowCount;
-  // Set when the appshell service is going away.
-  PRBool mShuttingDown;
-  PRBool mQuitOnLastWindowClosing;
+  PRUint16     mModalWindowCount;
+  PRInt32      mConsiderQuitStopper; // if > 0, Quit(eConsiderQuit) fails
+  PRPackedBool mShuttingDown;   // Quit method reentrancy check
+  PRPackedBool mAttemptingQuit; // Quit(eAttemptQuit) still trying
 
   // A "last event" that is used to flush the appshell's event queue.
   struct ExitEvent {

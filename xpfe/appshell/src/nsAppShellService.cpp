@@ -103,11 +103,11 @@ static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 #define gInstallRestartTopic     "xpinstall-restart"
 
 nsAppShellService::nsAppShellService() : 
-  mDeleteCalled( PR_FALSE ),
-  mInProfileStartup( PR_FALSE ),
-  mModalWindowCount( 0 ),
-  mShuttingDown( PR_FALSE ),
-  mQuitOnLastWindowClosing( PR_TRUE )
+  mDeleteCalled(PR_FALSE),
+  mModalWindowCount(0),
+  mConsiderQuitStopper(0),
+  mShuttingDown(PR_FALSE),
+  mAttemptingQuit(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -229,6 +229,29 @@ nsresult nsAppShellService::ClearXPConnectSafeContext()
   return rv;
 }
 
+/* We know we're trying to quit the app, but may not be able to do so
+   immediately. Enter a state where we're more ready to quit.
+   (Does useful work only on the Mac.) */
+void
+nsAppShellService::AttemptingQuit(PRBool aAttempt)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  if (aAttempt) {
+    // now even the Mac wants to quit when the last window is closed
+    if (!mAttemptingQuit)
+      ExitLastWindowClosingSurvivalArea();
+    mAttemptingQuit = PR_TRUE;
+  } else {
+    // changed our mind. back to normal.
+    if (mAttemptingQuit)
+      EnterLastWindowClosingSurvivalArea();
+    mAttemptingQuit = PR_FALSE;
+  }
+#else
+  mAttemptingQuit = aAttempt;
+#endif
+}
+
 NS_IMETHODIMP
 nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool canInteract)
 {
@@ -237,11 +260,9 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    mInProfileStartup = PR_TRUE;
-    PRBool saveQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
-    mQuitOnLastWindowClosing = PR_FALSE;
-        
-    // If we being launched in turbo mode, profile mgr cannot show UI
+    EnterLastWindowClosingSurvivalArea();
+
+    // If we are being launched in turbo mode, profile mgr cannot show UI
     rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
     if (!canInteract && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
         NS_WARNING("nsIProfileInternal::StartupWithArgs returned NS_ERROR_PROFILE_REQUIRES_INTERACTION");       
@@ -254,8 +275,7 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
         rv = NS_OK;
     }
 
-    mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;
-    mInProfileStartup = PR_FALSE;
+    ExitLastWindowClosingSurvivalArea();
 
     // if Quit() was called while we were starting up we have a failure situation...
     if (mShuttingDown)
@@ -463,7 +483,6 @@ nsAppShellService::Quit(PRUint32 aFerocity)
 
   if (mShuttingDown)
     return NS_OK;
-  mShuttingDown = PR_TRUE;
 
   /* eForceQuit doesn't actually work; it can cause a subtle crash if
      there are windows open which have unload handlers which open
@@ -471,7 +490,9 @@ nsAppShellService::Quit(PRUint32 aFerocity)
   if (aFerocity == eForceQuit)
     return NS_ERROR_FAILURE;
 
-  if (aFerocity == eConsiderQuit && mQuitOnLastWindowClosing) {
+  mShuttingDown = PR_TRUE;
+
+  if (aFerocity == eConsiderQuit && mConsiderQuitStopper == 0) {
     // attempt quit if the last window has been unregistered/closed
 
     PRBool windowsRemain = PR_TRUE;
@@ -485,15 +506,6 @@ nsAppShellService::Quit(PRUint32 aFerocity)
     if (!windowsRemain) {
       aFerocity = eAttemptQuit;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-      // if no hidden window is available (perhaps due to initial
-      // Profile Manager window being cancelled), then just quit. We don't have
-      // to worry about focusing the hidden window, because it will get
-      // activated by the OS since it is visible (but waaaay offscreen).
-      nsCOMPtr<nsIBaseWindow> hiddenWin(do_QueryInterface(mHiddenWindow));
-      if (hiddenWin)
-        aFerocity = eConsiderQuit; // don't quit after all
-#else
       // Check to see if we should quit in this case.
       if (mNativeAppSupport) {
         PRBool serverMode = PR_FALSE;
@@ -505,7 +517,6 @@ nsAppShellService::Quit(PRUint32 aFerocity)
           return NS_OK;
         }
       }
-#endif 
     }
   }
 
@@ -514,6 +525,9 @@ nsAppShellService::Quit(PRUint32 aFerocity)
      this code is part of the eForceQuit case, so I'm checking against
      that value anyway. Reviewers made me add this comment. */
   if (aFerocity == eAttemptQuit || aFerocity == eForceQuit) {
+
+    AttemptingQuit(PR_TRUE);
+
     /* Enumerate through each open window and close it. It's important to do
        this before we forcequit because this can control whether we really quit
        at all. e.g. if one of these windows has an unload handler that
@@ -636,9 +650,7 @@ nsAppShellService::HandleExitEvent(PLEvent* aEvent)
   event->mService->mAppShell->Exit();
 
   // We're done "shutting down".
-  // unless we are currently "starting up" in which case this event wasn't properly handled.
-  if (!event->mService->mInProfileStartup)
-    event->mService->mShuttingDown = PR_FALSE;
+  event->mService->mShuttingDown = PR_FALSE;
 
   return nsnull;
 }
@@ -918,6 +930,9 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
     }
   }
 
+  // an ongoing attempt to quit is stopped by a newly opened window
+  AttemptingQuit(PR_FALSE);
+
   return NS_OK;
 }
 
@@ -1015,18 +1030,18 @@ nsAppShellService::TopLevelWindowIsModal(nsIXULWindow *aWindow, PRBool aModal)
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetQuitOnLastWindowClosing(PRBool *aQuitOnLastWindowClosing)
+nsAppShellService::EnterLastWindowClosingSurvivalArea(void)
 {
-    NS_ENSURE_ARG_POINTER(aQuitOnLastWindowClosing);
-    *aQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
-    return NS_OK;
+  PR_AtomicIncrement(&mConsiderQuitStopper);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppShellService::SetQuitOnLastWindowClosing(PRBool aQuitOnLastWindowClosing)
+nsAppShellService::ExitLastWindowClosingSurvivalArea(void)
 {
-    mQuitOnLastWindowClosing = aQuitOnLastWindowClosing;
-    return NS_OK;
+  NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
+  PR_AtomicDecrement(&mConsiderQuitStopper);
+  return NS_OK;
 }
 
 

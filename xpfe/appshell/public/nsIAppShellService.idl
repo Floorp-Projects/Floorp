@@ -191,10 +191,14 @@ interface nsIAppShellService : nsISupports
   void hideSplashScreen();
   
   /**
-   * We may need to show a XUL dialog before there are any other windows.
-   * In this case we don't nescesarily want to quit when it is closed.
-   * Use with extreme caution.
+   * During application startup (and at other times!) we may temporarily
+   * encounter a situation where all application windows will be closed
+   * but we don't want to take this as a signal to quit the app. Bracket
+   * the code where the last window could close with these.
+   * (And at application startup, on platforms that don't normally quit
+   * when the last window has closed, call Enter once, but not Exit)
    */
-  attribute boolean quitOnLastWindowClosing;
-
+  void enterLastWindowClosingSurvivalArea();
+  void exitLastWindowClosingSurvivalArea();
 };
+

@@ -1792,14 +1792,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
         native->SetIsServerMode( PR_FALSE );
 
         // close app if there are no more top-level windows.
-        PRBool quitIfNoWindows = PR_FALSE;
-        appShell->GetQuitOnLastWindowClosing( &quitIfNoWindows );
-        if (quitIfNoWindows) {
-          nsCOMPtr<nsIDOMWindowInternal> win;
-          GetMostRecentWindow( 0, getter_AddRefs( win ) );
-          if (!win)
-            appShell->Quit(nsIAppShellService::eAttemptQuit);
-        }
+        appShell->Quit(nsIAppShellService::eConsiderQuit);
       }
 
       return;
