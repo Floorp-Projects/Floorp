@@ -392,6 +392,7 @@ NSPR_4.1 {
 
 NSPR_4.3 {
 	global:
+		LL_MaxUint;
 		PR_CallOnceWithArg;
 		PR_GetLibraryFilePathname;
 } NSPR_4.1;

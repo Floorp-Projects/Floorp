@@ -223,6 +223,9 @@ int thread_resume(PRThread *thr_id) {
 ** realise and hadn't "nailed down". So we now need to nail it down
 ** to its Mozilla 1.1 position and have to insert 51 additional stubs
 ** in order to achive this (stubs 4-54).
+**
+** Over time some of these stubs will get reused by new symbols.
+**   - Stub54 is replaced by LL_MaxUint
 */
 
 void PR_VMS_Stub1(void) { }
@@ -278,4 +281,3 @@ void PR_VMS_Stub50(void) { }
 void PR_VMS_Stub51(void) { }
 void PR_VMS_Stub52(void) { }
 void PR_VMS_Stub53(void) { }
-void PR_VMS_Stub54(void) { }

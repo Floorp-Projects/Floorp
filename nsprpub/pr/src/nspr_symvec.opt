@@ -1,6 +1,6 @@
 ! Fixed section of symbol vector for LIBNSPR4 (non-debug)
 !
-GSMATCH=LEQUAL,2,4
+GSMATCH=LEQUAL,2,5
 case_sensitive=YES
 !
 ! --------------------------------------------------------------------------
@@ -27,6 +27,9 @@ case_sensitive=YES
 ! is used by OJI. So insert stubs to force the PR_CreateThread entry down
 ! to its Mozilla 1.1 (and Java 1.4-0) location so that everyone can play
 ! together and be happy.
+! --------------------------------------------------------------------------
+! Ident 2,5 introduced for post Mozilla 1.3.
+! LL_MaxUint introduced. Replaces Stub54.
 ! --------------------------------------------------------------------------
 !
 SYMBOL_VECTOR=(PR_Accept=PROCEDURE)
@@ -422,7 +425,8 @@ SYMBOL_VECTOR=(PT_FPrintStats=PROCEDURE)
 SYMBOL_VECTOR=(SetExecutionEnvironment=PROCEDURE)
 !
 ! Start of 2,4 additions
-! 51 stubs so that PR_CreateThread ends up at 1B70.
+! 51 stubs (4 thru 54) so that PR_CreateThread ends up at 1B70.
+! Over time some of these stubs will get replaced by new symbols.
 !
 SYMBOL_VECTOR=(PR_VMS_Stub4=PROCEDURE)
 SYMBOL_VECTOR=(PR_VMS_Stub5=PROCEDURE)
@@ -474,7 +478,7 @@ SYMBOL_VECTOR=(PR_VMS_Stub50=PROCEDURE)
 SYMBOL_VECTOR=(PR_VMS_Stub51=PROCEDURE)
 SYMBOL_VECTOR=(PR_VMS_Stub52=PROCEDURE)
 SYMBOL_VECTOR=(PR_VMS_Stub53=PROCEDURE)
-SYMBOL_VECTOR=(PR_VMS_Stub54=PROCEDURE)
+SYMBOL_VECTOR=(LL_MaxUint=PROCEDURE)
 !
 SYMBOL_VECTOR=(PR_CallOnceWithArg=PROCEDURE)
 SYMBOL_VECTOR=(PR_GetLibraryFilePathname=PROCEDURE)

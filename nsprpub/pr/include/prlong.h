@@ -51,6 +51,7 @@ PR_BEGIN_EXTERN_C
 ** DEFINES:     LL_MaxInt
 **              LL_MinInt
 **              LL_Zero
+**              LL_MaxUint
 ** DESCRIPTION:
 **      Various interesting constants and static variable
 **      initializer
@@ -62,15 +63,19 @@ PRInt64 __pascal __loadds __export
     LL_MinInt(void);
 PRInt64 __pascal __loadds __export
     LL_Zero(void);
+PRUint64 __pascal __loadds __export
+    LL_MaxUint(void);
 #else
 NSPR_API(PRInt64) LL_MaxInt(void);
 NSPR_API(PRInt64) LL_MinInt(void);
 NSPR_API(PRInt64) LL_Zero(void);
+NSPR_API(PRUint64) LL_MaxUint(void);
 #endif
 
 #define LL_MAXINT   LL_MaxInt()
 #define LL_MININT   LL_MinInt()
 #define LL_ZERO     LL_Zero()
+#define LL_MAXUINT  LL_MaxUint()
 
 #if defined(HAVE_LONG_LONG)
 
