@@ -139,7 +139,7 @@ BEGIN
     DEFPUSHBUTTON   "Create New Configuration",IDOK,109,98,94,14
     PUSHBUTTON      "Cancel",IDCANCEL,209,98,50,14
     LTEXT           "Name of new configuration:",IDC_STATIC,7,7,173,13
-    LTEXT           "The CCK tool creates a new configuration directory in C:\\CCK\\Configs. Within your new configuration directory, the CCK tool creates a \\Workspace directory, for example, C:\\CCK\\Configs\\CustomBuild01\\Workspace.",
+    LTEXT           "The tool creates a new configuration directory in the 'configs' directory. Within your new configuration directory, the tool creates a \\Workspace directory, for example, configs\\CustomConfig\\Workspace.",
                     IDC_STATIC1,7,39,253,26
     LTEXT           "You can use the Workspace directory as a convenient place in which to store your custom files.",
                     IDC_STATIC2,7,69,248,17
