@@ -1243,9 +1243,6 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   }
   catch (e)
   {
-    var saveDocStr = GetString("SaveDocument");
-    var failedStr = GetString("SaveFileFailed");
-    AlertWithTitle(saveDocStr, failedStr);
     success = false;
   }
 
@@ -1259,6 +1256,12 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
       // Set UI based on whether we're editing a remote or local url
       SetSaveAndPublishUI(urlstring);
     } catch (e) {}
+  }
+  else
+  {
+    var saveDocStr = GetString("SaveDocument");
+    var failedStr = GetString("SaveFileFailed");
+    AlertWithTitle(saveDocStr, failedStr);
   }
   return success;
 }
