@@ -111,9 +111,7 @@ nsRDFFactory::CreateInstance(nsISupports *aOuter,
         inst = static_cast<nsITreeDataModel*>(new nsRDFTreeDataModel());
     }
     else if (mClassID.Equals(kRDFToolbarDataModelCID)) {
-#if 0
         inst = static_cast<nsIToolbarDataModel*>(new nsRDFToolbarDataModel());
-#endif
     }
 
     if (! inst)

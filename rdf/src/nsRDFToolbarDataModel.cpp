@@ -65,35 +65,33 @@ nsRDFToolbarDataModel::QueryInterface(const nsIID& iid, void** result)
 }
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDataModel implementation -- delgates to superclass
 
-#if 0
 NS_IMETHODIMP
 nsRDFToolbarDataModel::InitFromURL(const nsString& url)
 {
-    return NS_OK;
+    return nsRDFDataModel::InitFromURL(url);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModel::InitFromResource(nsIDMItem* pResource)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::InitFromResource(pResource);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModel::GetDMWidget(nsIDMWidget*& widget) const
 {
-    widget = mModel.GetWidget();
-    return NS_OK;
+    return nsRDFDataModel::GetDMWidget(widget);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModel::SetDMWidget(nsIDMWidget* widget)
 {
-    mModel.SetWidget(widget);
-    return NS_OK;
+    return nsRDFDataModel::SetDMWidget(widget);
 }
 
 
@@ -101,13 +99,16 @@ nsRDFToolbarDataModel::SetDMWidget(nsIDMWidget* widget)
 NS_IMETHODIMP
 nsRDFToolbarDataModel::GetStringPropertyValue(nsString& value, const nsString& property) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::GetStringPropertyValue(value, property);
 }
 
 
 NS_IMETHODIMP
 nsRDFToolbarDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModel::GetIntPropertyValue(value, property);
 }
-#endif
+
+////////////////////////////////////////////////////////////////////////
+// nsIToolbarDataModel interface
+

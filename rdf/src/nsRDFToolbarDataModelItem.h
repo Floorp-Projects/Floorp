@@ -34,15 +34,15 @@ public:
     virtual ~nsRDFToolbarDataModelItem(void);
 
     ////////////////////////////////////////////////////////////////////////
-    // nsISupports interface
+    // nsISupports interface -- delegates to superclass
 
     NS_IMETHOD_(nsrefcnt) AddRef(void);
     NS_IMETHOD_(nsrefcnt) Release(void);
     NS_IMETHOD QueryInterface(const nsIID& iid, void** result);
 
-#if 0
+
     ////////////////////////////////////////////////////////////////////////
-    // nsIDMItem interface
+    // nsIDMItem interface -- delegates to superclass
 
     // Inspectors
     NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) const;
@@ -60,7 +60,7 @@ public:
     // Methods to query the data model for a specific item displayed within the widget.
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const;
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const;
-#endif
+
 
     ////////////////////////////////////////////////////////////////////////
     // nsIToolbarItem interface

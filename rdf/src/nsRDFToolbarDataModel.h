@@ -34,19 +34,14 @@ public:
     virtual ~nsRDFToolbarDataModel(void);
 
     ////////////////////////////////////////////////////////////////////////
-    // nsISupports interface
-
-#if 0
-    NS_DECL_ISUPPORTS
-#endif
+    // nsISupports interface -- delegates to superclass
 
     NS_IMETHOD_(nsrefcnt) AddRef(void);
     NS_IMETHOD_(nsrefcnt) Release(void);
     NS_IMETHOD QueryInterface(const nsIID& iid, void** result);
 
-#if 0
     ////////////////////////////////////////////////////////////////////////
-    // nsIDataModel interface
+    // nsIDataModel interface -- delegates to superclass
 
     // Initializers
     NS_IMETHOD InitFromURL(const nsString& url);
@@ -61,7 +56,6 @@ public:
     // Methods to query the data model for property values for an entire widget.
     NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) const;
     NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) const;
-#endif
 
     ////////////////////////////////////////////////////////////////////////
     // nsIToolbarDataModel interface

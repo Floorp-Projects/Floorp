@@ -72,27 +72,24 @@ nsRDFTreeDataModelItem::QueryInterface(const nsIID& iid, void** result)
 
 
 ////////////////////////////////////////////////////////////////////////
+// nsIDMItem interface -- delgates to superclass
 
-#if 0
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetIconImage(image, group);
 }
-
-
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetOpenState(PRBool& result) const
 {
-    result = IsOpen();
-    return NS_OK;
+    return nsRDFDataModelItem::GetOpenState(result);
 }
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetChildCount(PRUint32& count) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetChildCount(count);
 }
 
 
@@ -100,35 +97,33 @@ nsRDFTreeDataModelItem::GetChildCount(PRUint32& count) const
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetNthChild(pItem, item);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetParent(nsIDMItem*& pItem) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetParent(pItem);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetStringPropertyValue(nsString& result, const nsString& property) const
 {
-    // 1. convert the property to a URI
-    // 2. ask the RDF database for the value of the property
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetStringPropertyValue(result, property);
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsRDFDataModelItem::GetIntPropertyValue(value, itemProperty);
 }
-#endif
+
 
 ////////////////////////////////////////////////////////////////////////
-
+// nsITreeDMItem interface
 
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) const
