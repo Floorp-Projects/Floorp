@@ -320,7 +320,6 @@ public:
     PRUint8  mHadFrameset:1;
     PRUint8  mHasOpenHead:1;
     PRUint8  mTransitional:1;
-    PRUint8  mHadDocTypeDecl:1;
   };
 
   union {
