@@ -484,6 +484,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+                // else ...
                 *((const nsID**)d) = NULL;
                 return JS_TRUE;
             }
@@ -510,6 +517,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+                // else ...
                 *((char**)d) = NULL;
                 return JS_TRUE;
             }
@@ -541,6 +555,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+                // else ...
                 *((jschar**)d) = NULL;
                 return JS_TRUE;
             }
@@ -575,6 +596,13 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
 
             if(JSVAL_IS_VOID(s) || JSVAL_IS_NULL(s))
             {
+                if(type.IsReference())
+                {
+                    if(pErr)
+                        *pErr = XPCJSError::BAD_CONVERT_JS_NULL_REF;
+                    return JS_FALSE;
+                }
+                // else ...
                 *((nsISupports**)d) = NULL;
                 return JS_TRUE;
             }
