@@ -80,7 +80,7 @@ endif
 endif
 	cd ../nss; gmake nss_RelEng_bld
 ifeq ($(OS_ARCH), WINNT)
-	gmake import IMPORTS=nlslayer/m14 
+	gmake import IMPORTS=nlslayer/m16
 else
 	gmake import IMPORTS=nlslayer/m14 RELEASE_TREE=/h/tortoise/export/share/builds/components
 endif
