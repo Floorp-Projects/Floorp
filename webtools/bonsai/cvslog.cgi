@@ -70,6 +70,7 @@ my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 
 # Handle the "rev" argument
 #
+$::opt_rev = "";
 $::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
 my $browse_revtag = 'HEAD';
 $browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
