@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.5 2000/07/28 22:55:56 nelsonb%netscape.com Exp $
+ *  $Id: mpi.h,v 1.6 2000/08/01 01:38:28 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -143,8 +143,8 @@ void    mp_set_prec(mp_size prec);
 /* Memory management       */
 mp_err mp_init(mp_int *mp);
 mp_err mp_init_size(mp_int *mp, mp_size prec);
-mp_err mp_init_copy(mp_int *mp, mp_int *from);
-mp_err mp_copy(mp_int *from, mp_int *to);
+mp_err mp_init_copy(mp_int *mp, const mp_int *from);
+mp_err mp_copy(const mp_int *from, mp_int *to);
 void   mp_exch(mp_int *mp1, mp_int *mp2);
 void   mp_clear(mp_int *mp);
 void   mp_zero(mp_int *mp);
@@ -152,57 +152,57 @@ void   mp_set(mp_int *mp, mp_digit d);
 mp_err mp_set_int(mp_int *mp, long z);
 
 /* Single digit arithmetic */
-mp_err mp_add_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_sub_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_mul_d(mp_int *a, mp_digit d, mp_int *b);
-mp_err mp_mul_2(mp_int *a, mp_int *c);
-mp_err mp_div_d(mp_int *a, mp_digit d, mp_int *q, mp_digit *r);
-mp_err mp_div_2(mp_int *a, mp_int *c);
-mp_err mp_expt_d(mp_int *a, mp_digit d, mp_int *c);
+mp_err mp_add_d(const mp_int *a, mp_digit d, mp_int *b);
+mp_err mp_sub_d(const mp_int *a, mp_digit d, mp_int *b);
+mp_err mp_mul_d(const mp_int *a, mp_digit d, mp_int *b);
+mp_err mp_mul_2(const mp_int *a, mp_int *c);
+mp_err mp_div_d(const mp_int *a, mp_digit d, mp_int *q, mp_digit *r);
+mp_err mp_div_2(const mp_int *a, mp_int *c);
+mp_err mp_expt_d(const mp_int *a, mp_digit d, mp_int *c);
 
 /* Sign manipulations      */
-mp_err mp_abs(mp_int *a, mp_int *b);
-mp_err mp_neg(mp_int *a, mp_int *b);
+mp_err mp_abs(const mp_int *a, mp_int *b);
+mp_err mp_neg(const mp_int *a, mp_int *b);
 
 /* Full arithmetic         */
-mp_err mp_add(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_sub(mp_int *a, mp_int *b, mp_int *c);
-mp_err mp_mul(mp_int *a, mp_int *b, mp_int *c);
+mp_err mp_add(const mp_int *a, const mp_int *b, mp_int *c);
+mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c);
+mp_err mp_mul(const mp_int *a, const mp_int *b, mp_int *c);
 #if MP_SQUARE
-mp_err mp_sqr(mp_int *a, mp_int *b);
+mp_err mp_sqr(const mp_int *a, mp_int *b);
 #else
 #define mp_sqr(a, b) mp_mul(a, a, b)
 #endif
-mp_err mp_div(mp_int *a, mp_int *b, mp_int *q, mp_int *r);
-mp_err mp_div_2d(mp_int *a, mp_digit d, mp_int *q, mp_int *r);
+mp_err mp_div(const mp_int *a, const mp_int *b, mp_int *q, mp_int *r);
+mp_err mp_div_2d(const mp_int *a, mp_digit d, mp_int *q, mp_int *r);
 mp_err mp_expt(mp_int *a, mp_int *b, mp_int *c);
 mp_err mp_2expt(mp_int *a, mp_digit k);
-mp_err mp_sqrt(mp_int *a, mp_int *b);
+mp_err mp_sqrt(const mp_int *a, mp_int *b);
 
 /* Modular arithmetic      */
 #if MP_MODARITH
-mp_err mp_mod(mp_int *a, mp_int *m, mp_int *c);
-mp_err mp_mod_d(mp_int *a, mp_digit d, mp_digit *c);
-mp_err mp_addmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_submod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_mulmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
+mp_err mp_mod(const mp_int *a, const mp_int *m, mp_int *c);
+mp_err mp_mod_d(const mp_int *a, mp_digit d, mp_digit *c);
+mp_err mp_addmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
+mp_err mp_submod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
+mp_err mp_mulmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
 #if MP_SQUARE
-mp_err mp_sqrmod(mp_int *a, mp_int *m, mp_int *c);
+mp_err mp_sqrmod(const mp_int *a, const mp_int *m, mp_int *c);
 #else
 #define mp_sqrmod(a, m, c) mp_mulmod(a, a, m, c)
 #endif
-mp_err mp_exptmod(mp_int *a, mp_int *b, mp_int *m, mp_int *c);
-mp_err mp_exptmod_d(mp_int *a, mp_digit d, mp_int *m, mp_int *c);
+mp_err mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
+mp_err mp_exptmod_d(const mp_int *a, mp_digit d, const mp_int *m, mp_int *c);
 #endif /* MP_MODARITH */
 
 /* Comparisons             */
-int    mp_cmp_z(mp_int *a);
-int    mp_cmp_d(mp_int *a, mp_digit d);
-int    mp_cmp(mp_int *a, mp_int *b);
+int    mp_cmp_z(const mp_int *a);
+int    mp_cmp_d(const mp_int *a, mp_digit d);
+int    mp_cmp(const mp_int *a, const mp_int *b);
 int    mp_cmp_mag(mp_int *a, mp_int *b);
-int    mp_cmp_int(mp_int *a, long z);
-int    mp_isodd(mp_int *a);
-int    mp_iseven(mp_int *a);
+int    mp_cmp_int(const mp_int *a, long z);
+int    mp_isodd(const mp_int *a);
+int    mp_iseven(const mp_int *a);
 
 /* Number theoretic        */
 #if MP_NUMTH
