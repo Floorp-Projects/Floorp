@@ -58,25 +58,40 @@
  * intended the array to be modified, it would have returned an
  * nsIMutableArray!
  *
+ * null is a valid entry in the array, and as such any nsISupports
+ * parameters may be null, except where noted.
+ *
  * @status UNDER_REVIEW
  */
 [scriptable, uuid(114744d9-c369-456e-b55a-52fe52880d2d)]
 interface nsIArray : nsISupports
 {
     /**
-     * number of elements in the array
+     * length
+     *
+     * number of elements in the array.
      */
     readonly attribute unsigned long length;
 
     /**
-     * Retrieve a specific element of the array
+     * queryElementAt()
+     *
+     * Retrieve a specific element of the array, and QueryInterface it
+     * to the specified interface.
+     * 
+     * @param index position of element
+     * @param uuid the IID of the requested interface
+     * @param result the object, QI'd to the requested interface
      */
     void queryElementAt(in unsigned long index,
                         in nsIIDRef uuid,
                         [iid_is(uuid), retval] out nsQIResult result);
     
     /**
-     * get the position of a specific element
+     * indexOf()
+     * 
+     * Get the position of a specific element.
+     * 
      * @param startIndex The initial element to search in the array
      *                   To start at the beginning, use 0 as the
      *                   startIndex
@@ -90,13 +105,11 @@ interface nsIArray : nsISupports
 
     /**
      * enumerate the array
+     *
      * @returns a new enumerator positioned at the start of the array
      */
     nsISimpleEnumerator enumerate();
 
-    /**
-     * Do we need some sort of enumeration callback system for speed?
-     */
 };
 
 /**
@@ -112,23 +125,38 @@ interface nsIArray : nsISupports
 interface nsIMutableArray : nsIArray
 {
     /**
-     * append an element at the end of the array
+     * appendElement()
+     * 
+     * Append an element at the end of the array.
+     *
+     * @param element The element to append
      */
     void appendElement(in nsISupports element);
 
     /**
-     * remove an element at a specific position
-     * To remove a specific element, use indexOf
+     * removeElementAt()
+     * 
+     * Remove an element at a specific position.
+     * To remove a specific element, use indexOf() to find the index
+     * first, then call removeElementAt().
+     *
+     * @param index the position of the item
+     *
      */
     void removeElementAt(in unsigned long index);
 
     /**
+     * insertElementAt()
      *
+     * Insert an element at the given position, and move all elements
+     * stored at a higher position up one.
      */
     void insertElementAt(in nsISupports element, in unsigned long index);
     
     /**
-     * clear the entire array
+     * clear()
+     *
+     * clear the entire array, releasing all stored objects
      */
     void clear();
 };
