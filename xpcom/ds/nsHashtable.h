@@ -82,7 +82,7 @@ protected:
   PRBool                mEnumerating;
 
 public:
-  nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
+  nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
   virtual ~nsHashtable();
 
   PRInt32 Count(void) { return mHashtable.nentries; }
@@ -108,7 +108,7 @@ public:
                     void* cloneElementClosure,
                     nsHashtableEnumFunc destroyElementFun,
                     void* destroyElementClosure,
-                    PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
+                    PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
   ~nsObjectHashtable();
 
   nsHashtable *Clone();
@@ -135,7 +135,7 @@ class NS_COM nsSupportsHashtable
 public:
   typedef PRBool (* PR_CALLBACK EnumFunc) (nsHashKey *aKey, void *aData, void* closure);
 
-  nsSupportsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE)
+  nsSupportsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE)
     : nsHashtable(aSize, threadSafe) {}
   ~nsSupportsHashtable();
 
