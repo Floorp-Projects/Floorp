@@ -72,7 +72,7 @@
     #define NS_OS_SYSTEM_DIR                    "SysD"
 #endif
 
-#if defined(XP_MAC)
+#if defined (XP_MACOSX)
     #define NS_MAC_DESKTOP_DIR                  "Desk"
     #define NS_MAC_TRASH_DIR                    "Trsh"
     #define NS_MAC_STARTUP_DIR                  "Strt"
@@ -81,16 +81,30 @@
     #define NS_MAC_CONTROL_PANELS_DIR           "CntlPnl"
     #define NS_MAC_EXTENSIONS_DIR               "Exts"
     #define NS_MAC_FONTS_DIR                    "Fnts"
-    #define NS_MAC_CLASSICPREFS_DIR             "ClassicPrfs"
     #define NS_MAC_PREFS_DIR                    "Prfs"
     #define NS_MAC_DOCUMENTS_DIR                "Docs"
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
-    #define NS_MAC_HOME_DIR                     "Home"
+    #define NS_OSX_HOME_DIR                     "Home"
+    #define NS_MAC_HOME_DIR                     NS_OSX_HOME_DIR
     #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
     #define NS_MAC_USER_LIB_DIR                 "ULibDir"   // Only available under OS X
-#elif defined (XP_MACOSX)
-    #define NS_MAC_HOME_DIR                     "Home"
-    #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
+    #define NS_OSX_DEFAULT_DOWNLOAD_DIR         NS_MAC_DEFAULT_DOWNLOAD_DIR
+    #define NS_OSX_USER_DESKTOP_DIR             "UsrDsk"
+    #define NS_OSX_LOCAL_DESKTOP_DIR            "LocDsk"
+    #define NS_OSX_USER_APPLICATIONS_DIR        "UsrApp"
+    #define NS_OSX_LOCAL_APPLICATIONS_DIR       "LocApp"
+    #define NS_OSX_USER_DOCUMENTS_DIR           "UsrDocs"
+    #define NS_OSX_LOCAL_DOCUMENTS_DIR          "LocDocs"
+    #define NS_OSX_USER_INTERNET_PLUGIN_DIR     "UsrIntrntPlgn"
+    #define NS_OSX_LOCAL_INTERNET_PLUGIN_DIR    "LoclIntrntPlgn"
+    #define NS_OSX_USER_FRAMEWORKS_DIR          "UsrFrmwrks"
+    #define NS_OSX_LOCAL_FRAMEWORKS_DIR         "LocFrmwrks"
+    #define NS_OSX_USER_PREFERENCES_DIR         "UsrPrfs"
+    #define NS_OSX_LOCAL_PREFERENCES_DIR        "LocPrfs"
+    #define NS_OSX_PICTURE_DOCUMENTS_DIR        "Pct"
+    #define NS_OSX_MOVIE_DOCUMENTS_DIR          "Mov"
+    #define NS_OSX_MUSIC_DOCUMENTS_DIR          "Music"
+    #define NS_OSX_INTERNET_SITES_DIR           "IntrntSts"
 #elif defined (XP_WIN)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
     #define NS_WIN_HOME_DIR                     "Home"

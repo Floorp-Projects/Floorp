@@ -92,7 +92,7 @@ public:
     static nsIAtom *sOS_TemporaryDirectory;
     static nsIAtom *sOS_CurrentProcessDirectory;
     static nsIAtom *sOS_CurrentWorkingDirectory;
-#if defined(XP_MAC)
+#if defined (XP_MACOSX)
     static nsIAtom *sDirectory;
     static nsIAtom *sDesktopDirectory;
     static nsIAtom *sTrashDirectory;
@@ -102,16 +102,28 @@ public:
     static nsIAtom *sControlPanelDirectory;
     static nsIAtom *sExtensionDirectory;
     static nsIAtom *sFontsDirectory;
-    static nsIAtom *sClassicPreferencesDirectory;
     static nsIAtom *sPreferencesDirectory;
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
-    static nsIAtom *sHomeDirectory;
-    static nsIAtom *sDefaultDownloadDirectory;
     static nsIAtom *sUserLibDirectory;
-#elif defined (XP_MACOSX)
     static nsIAtom *sHomeDirectory;
     static nsIAtom *sDefaultDownloadDirectory;
+    static nsIAtom *sUserDesktopDirectory;
+    static nsIAtom *sLocalDesktopDirectory;
+    static nsIAtom *sUserApplicationsDirectory;
+    static nsIAtom *sLocalApplicationsDirectory;
+    static nsIAtom *sUserDocumentsDirectory;
+    static nsIAtom *sLocalDocumentsDirectory;
+    static nsIAtom *sUserInternetPlugInDirectory;
+    static nsIAtom *sLocalInternetPlugInDirectory;
+    static nsIAtom *sUserFrameworksDirectory;
+    static nsIAtom *sLocalFrameworksDirectory;
+    static nsIAtom *sUserPreferencesDirectory;
+    static nsIAtom *sLocalPreferencesDirectory;
+    static nsIAtom *sPictureDocumentsDirectory;
+    static nsIAtom *sMovieDocumentsDirectory;
+    static nsIAtom *sMusicDocumentsDirectory;
+    static nsIAtom *sInternetSitesDirectory;
 #elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
