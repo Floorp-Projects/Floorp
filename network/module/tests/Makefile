@@ -25,7 +25,7 @@ CPPSRCS = \
 
 INCLUDES+=-I../src -I$(DIST)/include
 
-REQUIRES = raptor netlib xpcom
+REQUIRES = raptor netlib xpcom pref
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
