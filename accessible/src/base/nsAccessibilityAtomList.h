@@ -63,11 +63,16 @@ ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 
   // Alphabetical list of tag names
 ACCESSIBILITY_ATOM(a, "a")
+ACCESSIBILITY_ATOM(label, "label")
 ACCESSIBILITY_ATOM(ol, "ol")
 ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(ul, "ul")
 
   // Alphabetical list of attributes
+ACCESSIBILITY_ATOM(accesskey, "accesskey")
+ACCESSIBILITY_ATOM(control, "control")
+ACCESSIBILITY_ATOM(_for, "for")
+ACCESSIBILITY_ATOM(form, "form")
 ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
