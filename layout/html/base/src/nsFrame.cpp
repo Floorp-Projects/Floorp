@@ -831,7 +831,8 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
 //    PRUint32 contentOffset = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+                                 getter_AddRefs(newContent),
                                  startPos, contentOffsetEnd))){
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
@@ -850,8 +851,8 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
  */
 NS_IMETHODIMP
 nsFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus)
 {
    if (!DisplaySelection(aPresContext)) {
     return NS_OK;
@@ -874,8 +875,10 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
       if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
-                       getter_AddRefs(newContent), startPos, contentOffsetEnd))){
-        //find which word needs to be selected! use peek offset one way then the other
+                                   getter_AddRefs(newContent),
+                                   startPos, contentOffsetEnd))) {
+        // find which word needs to be selected! use peek offset one
+        // way then the other
         nsCOMPtr<nsIContent> startContent;
         nsCOMPtr<nsIDOMNode> startNode;
         nsCOMPtr<nsIContent> endContent;
@@ -928,8 +931,8 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext, 
-                              nsGUIEvent*     aEvent,
-                              nsEventStatus&  aEventStatus)
+                                  nsGUIEvent*     aEvent,
+                                  nsEventStatus&  aEventStatus)
 {
   if (!DisplaySelection(aPresContext)) {
     return NS_OK;
@@ -941,8 +944,9 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
     PRInt32 startPos = 0;
     PRInt32 contentOffsetEnd = 0;
     nsCOMPtr<nsIContent> newContent;
-    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x, getter_AddRefs(newContent), 
-                                 startPos, contentOffsetEnd))){
+    if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
+                                 getter_AddRefs(newContent), 
+                                 startPos, contentOffsetEnd))) {
       nsCOMPtr<nsIFrameSelection> frameselection;
       if (NS_SUCCEEDED(shell->GetFrameSelection(getter_AddRefs(frameselection))) && frameselection){
         frameselection->HandleClick(newContent, startPos, contentOffsetEnd , PR_TRUE, PR_FALSE); //TRUE IS THE DIFFERENCE for continue selection
@@ -954,8 +958,8 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext, 
-                                 nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus)
+                                     nsGUIEvent*     aEvent,
+                                     nsEventStatus&  aEventStatus)
 {
   return NS_OK;
 }
@@ -964,10 +968,10 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
 //-- GetPosition
 //--------------------------------------------------------------------------
 NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
-                         nscoord         aXCoord,
-                         nsIContent **   aNewContent,
-                         PRInt32&        aContentOffset,
-                         PRInt32&        aContentOffsetEnd)
+                                   nscoord         aXCoord,
+                                   nsIContent **   aNewContent,
+                                   PRInt32&        aContentOffset,
+                                   PRInt32&        aContentOffsetEnd)
 {
   //default getposition will return parent as newcontent
   //also aActualContentOffset will be 0
@@ -977,8 +981,9 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
     return NS_ERROR_NULL_POINTER;
   nsresult result;
 
-  //traverse through children and look for the best one to give this to
-  //if it fails the getposition call, make it yourself// also only look at primary list
+  // Traverse through children and look for the best one to give this
+  // to if it fails the getposition call, make it yourself also only
+  // look at primary list
   nsIFrame *kid;
   nsIFrame *closestFrame = nsnull;
   nsresult rv = FirstChild(nsnull, &kid);
@@ -1009,11 +1014,13 @@ NS_IMETHODIMP nsFrame::GetPosition(nsIPresContext& aCX,
       
       kid->GetNextSibling(&kid);
     }
-    if (closestFrame)
-      return closestFrame->GetPosition(aCX,aXCoord,aNewContent,aContentOffset,aContentOffsetEnd);
+    if (closestFrame) {
+      return closestFrame->GetPosition(aCX, aXCoord, aNewContent,
+                                       aContentOffset, aContentOffsetEnd);
+    }
   }
-  result = mContent->GetParent(*aNewContent);
 
+  result = mContent->GetParent(*aNewContent);
   if (*aNewContent){
     result = (*aNewContent)->IndexOf(mContent, aContentOffset);
     if (NS_FAILED(result)) 
@@ -1854,7 +1861,8 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
       //resultFrame is not a block frame
 
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
-      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,resultFrame);
+      result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
+                                    resultFrame);
       if (NS_FAILED(result))
         return result;
       nsISupports *isupports = nsnull;
@@ -1864,7 +1872,9 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
         result = aTracker->GetPresContext(getter_AddRefs(context));
 
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
-          aResultContent,*aContentOffset, *aContentOffset);
+                                          aResultContent,
+                                          *aContentOffset,
+                                          *aContentOffset);
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -1886,14 +1896,16 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
 
       if (!found){
         resultFrame = storeOldResultFrame;
-        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,resultFrame);
+        result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF,
+                                      resultFrame);
       }
       while ( !found ){
         nsCOMPtr<nsIPresContext> context;
         result = aTracker->GetPresContext(getter_AddRefs(context));
 
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
-          aResultContent,*aContentOffset, *aContentOffset);
+                                          aResultContent, *aContentOffset,
+                                          *aContentOffset);
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -2038,7 +2050,9 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         if (firstFrame)
         {
           result = firstFrame->GetPosition(*(context.get()),0,
-                      getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
+                                           getter_AddRefs(aPos->mResultContent),
+                                           aPos->mContentOffset,
+                                           aPos->mContentOffset);
         }
       }
       else
@@ -2058,8 +2072,11 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
             usedRect.x = offsetPoint.x;
             usedRect.y = offsetPoint.y;
 
-            result = nextFrame->GetPosition(*(context.get()),2*usedRect.width,//2* just to be sure we are off the edge
-                        getter_AddRefs(aPos->mResultContent),aPos->mContentOffset, aPos->mContentOffset);
+            result = nextFrame->GetPosition(*(context.get()),
+                                            2*usedRect.width,//2* just to be sure we are off the edge
+                                            getter_AddRefs(aPos->mResultContent),
+                                            aPos->mContentOffset,
+                                            aPos->mContentOffset);
             if (NS_SUCCEEDED(result))
               found = PR_TRUE;
             else
