@@ -37,10 +37,9 @@ const kVerticalMailLayout = 2;
 var gMessengerBundle;
 var gPromptService;
 var gOfflinePromptsBundle;
-var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
-var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+var gPrefBranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch(null);
 var gPrintSettings = null;
 var gWindowReuse  = 0;
 var gMarkViewedMessageAsReadTimer = null; // if the user has configured the app to mark a message as read if it is viewed for more than n seconds
@@ -49,7 +48,7 @@ var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
 if (gTimelineEnabled) {
   try {
-    gTimelineEnabled = gPrefs.getBoolPref("mailnews.timeline_is_enabled");
+    gTimelineEnabled = gPrefBranch.getBoolPref("mailnews.timeline_is_enabled");
     if (gTimelineEnabled) {
       gTimelineService = 
         Components.classes["@mozilla.org;timeline-service;1"].getService(Components.interfaces.nsITimelineService);
@@ -74,14 +73,8 @@ function menu_new_init()
   if (!gMessengerBundle)
     gMessengerBundle = document.getElementById("bundle_messenger");
 
-  if (!nsPrefBranch) {
-    var prefService = Components.classes["@mozilla.org/preferences-service;1"];
-    prefService = prefService.getService();
-    prefService = prefService.QueryInterface(Components.interfaces.nsIPrefService);
-    nsPrefBranch = prefService.getBranch(null);
-  }
   var newAccountItem = document.getElementById('newAccountMenuItem');
-  if (nsPrefBranch.prefIsLocked("mail.disable_new_account_addition"))
+  if (gPrefBranch.prefIsLocked("mail.disable_new_account_addition"))
     newAccountItem.setAttribute("disabled","true");
 
   // Change "New Folder..." menu according to the context
@@ -304,7 +297,7 @@ function InitViewMessageViewMenu()
     unreadMenuItem.setAttribute("checked", currentViewValue == 1); // from msgViewPickerOveraly.xul, <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
   
   for (var i = 1; i <= 5; i++) {
-    var prefString = gPrefs.getComplexValue("mailnews.labels.description." + i, Components.interfaces.nsIPrefLocalizedString).data;
+    var prefString = gPrefBranch.getComplexValue("mailnews.labels.description." + i, Components.interfaces.nsIPrefLocalizedString).data;
     var viewLabelMenuItem = document.getElementById("viewLabelMenuItem" + i);
     viewLabelMenuItem.setAttribute("label", prefString);
     viewLabelMenuItem.setAttribute("checked", (i == (currentViewValue - 1)));  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
@@ -998,7 +991,7 @@ function MsgForwardMessage(event)
 {
   var forwardType = 0;
   try {
-    forwardType = gPrefs.getIntPref("mail.forward_message_mode");
+    forwardType = gPrefBranch.getIntPref("mail.forward_message_mode");
   }
   catch (ex) {
     dump("failed to retrieve pref mail.forward_message_mode");
@@ -1207,7 +1200,7 @@ function MsgOpenSelectedMessages()
   var indices = GetSelectedIndices(dbView);
   var numMessages = indices.length;
 
-  gWindowReuse = gPrefs.getBoolPref("mailnews.reuse_message_window");
+  gWindowReuse = gPrefBranch.getBoolPref("mailnews.reuse_message_window");
   // This is a radio type button pref, currently with only 2 buttons.
   // We need to keep the pref type as 'bool' for backwards compatibility
   // with 4.x migrated prefs.  For future radio button(s), please use another
@@ -1445,45 +1438,45 @@ function MsgApplyFilters()
 
 function ChangeMailLayout(newLayout)
 {
-  gPrefs.setIntPref("mail.pane_config.dynamic", newLayout);
+  gPrefBranch.setIntPref("mail.pane_config.dynamic", newLayout);
   return true;
 }
 
 function MsgViewAllHeaders()
 {
-    gPrefs.setIntPref("mail.show_headers",2);
+    gPrefBranch.setIntPref("mail.show_headers",2);
     MsgReload();
     return true;
 }
 
 function MsgViewNormalHeaders()
 {
-    gPrefs.setIntPref("mail.show_headers",1);
+    gPrefBranch.setIntPref("mail.show_headers",1);
     MsgReload();
     return true;
 }
 
 function MsgViewBriefHeaders()
 {
-    gPrefs.setIntPref("mail.show_headers",0);
+    gPrefBranch.setIntPref("mail.show_headers",0);
     MsgReload();
     return true;
 }
 
 function MsgBodyAllowHTML()
 {
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
-    gPrefs.setIntPref("mailnews.display.html_as", 0);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", 0);
+    gPrefBranch.setBoolPref("mailnews.display.prefer_plaintext", false);
+    gPrefBranch.setIntPref("mailnews.display.html_as", 0);
+    gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers", 0);
     MsgReload();
     return true;
 }
 
 function MsgBodySanitized()
 {
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
-    gPrefs.setIntPref("mailnews.display.html_as", 3);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
+    gPrefBranch.setBoolPref("mailnews.display.prefer_plaintext", false);
+    gPrefBranch.setIntPref("mailnews.display.html_as", 3);
+    gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers",
                       disallow_classes_no_html);
     MsgReload();
     return true;
@@ -1491,9 +1484,9 @@ function MsgBodySanitized()
 
 function MsgBodyAsPlaintext()
 {
-    gPrefs.setBoolPref("mailnews.display.prefer_plaintext", true);
-    gPrefs.setIntPref("mailnews.display.html_as", 1);
-    gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", disallow_classes_no_html);
+    gPrefBranch.setBoolPref("mailnews.display.prefer_plaintext", true);
+    gPrefBranch.setIntPref("mailnews.display.html_as", 1);
+    gPrefBranch.setIntPref("mailnews.display.disallow_mime_handlers", disallow_classes_no_html);
     MsgReload();
     return true;
 }
@@ -1542,12 +1535,7 @@ function GetPrintSettings()
 
   try {
     if (gPrintSettings == null) {
-      var useGlobalPrintSettings = true;
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                           .getService(Components.interfaces.nsIPrefBranch);
-      if (pref) {
-        useGlobalPrintSettings = pref.getBoolPref("print.use_global_printsettings", false);
-      }
+      var useGlobalPrintSettings = gPrefBranch.getBoolPref("print.use_global_printsettings");
 
       // I would rather be using nsIWebBrowserPrint API
       // but I really don't have a document at this point
@@ -2031,7 +2019,7 @@ function HandleJunkStatusChanged(folder)
 
       if (msgHdr)
       {
-        var sanitizeJunkMail = gPrefs.getBoolPref("mailnews.display.sanitizeJunkMail");
+        var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
         if (sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
         {
           // we used to only reload the message if we were toggling the message to NOT JUNK from junk
@@ -2107,13 +2095,13 @@ function OnMsgLoaded(aUrl)
     // we just finished loading a message. set a timer to actually mark the message is read after n seconds
     // where n can be configured by the user.
 
-    var markReadOnADelay = gPrefs.getBoolPref("mailnews.mark_message_read.delay");
+    var markReadOnADelay = gPrefBranch.getBoolPref("mailnews.mark_message_read.delay");
 
     if (msgHdr && !msgHdr.isRead)
     {
       var wintype = document.firstChild.getAttribute('windowtype');
       if (markReadOnADelay && wintype == "mail:3pane") // only use the timer if viewing using the 3-pane preview pane and the user has set the pref
-        gMarkViewedMessageAsReadTimer = setTimeout(MarkCurrentMessageAsRead, gPrefs.getIntPref("mailnews.mark_message_read.delay.interval") * 1000);
+        gMarkViewedMessageAsReadTimer = setTimeout(MarkCurrentMessageAsRead, gPrefBranch.getIntPref("mailnews.mark_message_read.delay.interval") * 1000);
       else
         MarkCurrentMessageAsRead();
     }
@@ -2307,7 +2295,7 @@ function loadThrobberUrl(urlPref)
 {
     var url;
     try {
-        url = gPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
+        url = gPrefBranch.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
         messenger.launchExternalURL(url);  
     } catch (ex) {}
 }
