@@ -79,7 +79,10 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
         PRBool dir;
         rv = aFile->IsDirectory(&dir);
         if (NS_FAILED(rv))
-            NS_WARNING(nsPrintfCString(128, "Cannot tell if %s is a directory or file", escPath.get()).get());
+            NS_WARNING(PromiseFlatCString(
+                NS_LITERAL_CSTRING("Cannot tell if ") +
+                escPath + NS_LITERAL_CSTRING(" is a directory or file")
+            ).get());
         else if (dir) {
             // make sure we have a trailing slash
             escPath += "/";
