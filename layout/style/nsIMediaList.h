@@ -68,7 +68,7 @@ public:
   nsIAtom* MediumAt(PRInt32 aIndex) { return mArray[aIndex]; }
   void Clear() { mArray.Clear(); }
 
-private:
+protected:
   ~nsMediaList();
 
   nsresult Delete(const nsAString & aOldMedium);
