@@ -98,9 +98,16 @@ interface nsIMsgIdentity : nsISupports {
   attribute string draftsFolderPickerMode;
   attribute string tmplFolderPickerMode;  
 
+
+  // Don't call bccSelf, bccOthers, and bccList directly, they are 
+  // only used for migration and backward compatability. Use doBcc
+  // and doBccList instead.
   attribute boolean bccSelf;
   attribute boolean bccOthers;
   attribute string bccList;
+
+  attribute boolean doBcc;
+  attribute string doBccList;
 
   attribute string draftFolder;
   attribute string stationeryFolder;

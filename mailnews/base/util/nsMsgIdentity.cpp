@@ -474,6 +474,92 @@ NS_IMPL_IDPREF_BOOL(BccSelf, "bcc_self");
 NS_IMPL_IDPREF_BOOL(BccOthers, "bcc_other");
 NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
 
+NS_IMETHODIMP
+nsMsgIdentity::GetDoBcc(PRBool *aValue)
+{
+  nsresult rv = getPrefService();
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  char *prefName = getPrefName(m_identityKey, "doBcc");
+  rv = m_prefBranch->GetBoolPref(prefName, aValue);
+  PR_Free(prefName);
+  
+  if (NS_SUCCEEDED(rv))
+    return GetBoolAttribute("doBcc", aValue);
+
+  PRBool bccSelf = PR_FALSE;
+  rv = GetBccSelf(&bccSelf);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool bccOthers = PR_FALSE;
+  rv = GetBccOthers(&bccOthers);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString others;
+  rv = GetBccList(getter_Copies(others));
+  NS_ENSURE_SUCCESS(rv,rv);
+    
+  *aValue = bccSelf || (bccOthers && !others.IsEmpty());
+
+  return SetDoBcc(*aValue);  
+}
+
+NS_IMETHODIMP
+nsMsgIdentity::SetDoBcc(PRBool aValue)
+{
+  return SetBoolAttribute("doBcc", aValue);
+}
+
+NS_IMETHODIMP
+nsMsgIdentity::GetDoBccList(char **aValue)
+{
+  nsresult rv = getPrefService();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  char *prefName = getPrefName(m_identityKey, "doBccList");
+  rv = m_prefBranch->GetCharPref(prefName, aValue);
+  PR_Free(prefName);
+
+  if (NS_SUCCEEDED(rv))
+    return GetCharAttribute("doBccList", aValue);
+  
+  nsCAutoString result;
+
+  PRBool bccSelf = PR_FALSE;
+  rv = GetBccSelf(&bccSelf);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  if (bccSelf) {
+    nsXPIDLCString email;
+    GetEmail(getter_Copies(email));
+    result += email; 
+  }
+  
+  PRBool bccOthers = PR_FALSE;
+  rv = GetBccOthers(&bccOthers);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString others;
+  rv = GetBccList(getter_Copies(others));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (bccOthers && !others.IsEmpty()) {
+    if (bccSelf)
+      result += ",";
+    result += others;
+  }
+  
+  *aValue = ToNewCString(result);
+  
+  return SetDoBccList(*aValue);  
+}
+
+NS_IMETHODIMP
+nsMsgIdentity::SetDoBccList(const char *aValue)
+{
+  return SetCharAttribute("doBccList", aValue);
+}
+
 NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder");
 NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder");
 

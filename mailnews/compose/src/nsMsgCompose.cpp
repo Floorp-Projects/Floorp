@@ -1412,41 +1412,24 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       }
 
       /* Setup bcc field */
-      PRBool  bccSelf, bccOthers;
-      m_identity->GetBccSelf(&bccSelf);
-      m_identity->GetBccOthers(&bccOthers);
-      if (bccSelf || bccOthers) 
+      PRBool doBcc;
+      m_identity->GetDoBcc(&doBcc);
+      if (doBcc) 
       {
         nsXPIDLCString bccStr;
         bccStr.Assign(m_compFields->GetBcc());
 
-        if (bccSelf)
-        {
-          bccStr.BeginReading(start);
-          bccStr.EndReading(end);
-
-          nsXPIDLCString email;
-          m_identity->GetEmail(getter_Copies(email));
-          if (FindInReadable(email, start, end) == PR_FALSE) {
-            if (bccStr.Length() > 0)
-              bccStr.Append(',');
-            bccStr.Append(email);
-          }
-        }
-
-        if (bccOthers)
-        {
           bccStr.BeginReading(start);
           bccStr.EndReading(end);
 
           nsXPIDLCString bccList;
-          m_identity->GetBccList(getter_Copies(bccList));
+        m_identity->GetDoBccList(getter_Copies(bccList));
           if (FindInReadable(bccList, start, end) == PR_FALSE) {
             if (bccStr.Length() > 0)
               bccStr.Append(',');
             bccStr.Append(bccList);
           }
-        }
+
         m_compFields->SetBcc(bccStr.get());
       }
   }

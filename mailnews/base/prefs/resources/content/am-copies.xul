@@ -29,7 +29,6 @@
                 pref="true" preftype="string" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.stationary_folder"/>
   <label hidden="true" wsm_persist="true" id="identity.email"/>
-  
   <label hidden="true" wsm_persist="true" id="identity.fccFolderPickerMode"
                 pref="true" preftype="int" prefattribute="value"
                 prefstring="mail.identity.%identitykey%.fcc_folder_picker_mode"/>
@@ -81,20 +80,13 @@
     </radiogroup>
 
     <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.bccSelf" 
-                before="&bccAccount.label; &lt;" after="&gt;" 
-                prefattribute="value" flex="1"
-                prefstring="mail.identity.%identitykey%.bcc_self"/>
-    </hbox>
-
-    <hbox align="center">
-      <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"
-                oncommand="setupBCCTextbox();"
+      <checkbox wsm_persist="true" id="identity.doBcc" label="&bccAddress.label;"
+                oncommand="setupBccTextbox();"
                 prefattribute="value" 
-                prefstring="mail.identity.%identitykey%.bcc_other"/>
+                prefstring="mail.identity.%identitykey%.doBcc"/>
 
-      <textbox wsm_persist="true" id="identity.bccList" flex="1"
-               prefstring="mail.identity.%identitykey%.bcc_other_list" class="uri-element"/>
+      <textbox wsm_persist="true" id="identity.doBccList" flex="1"
+               prefstring="mail.identity.%identitykey%.doBccList" class="uri-element"/>
     </hbox>
 
   </groupbox>

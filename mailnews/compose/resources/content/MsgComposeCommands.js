@@ -2387,26 +2387,15 @@ function LoadIdentity(startup)
           var prevReplyTo = prevIdentity.replyTo;
           var prevBcc = "";
           var prevReceipt = prevIdentity.requestReturnReceipt;
-          if (prevIdentity.bccSelf)
-            prevBcc += prevIdentity.email;
-          if (prevIdentity.bccOthers)
-          {
-            if (prevBcc != "")
-              prevBcc += ","
-            prevBcc += prevIdentity.bccList;
-          }
+
+          if (prevIdentity.doBcc)
+            prevBcc += prevIdentity.doBccList;
 
           var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
           var newReceipt = gCurrentIdentity.requestReturnReceipt;
-          if (gCurrentIdentity.bccSelf)
-            newBcc += gCurrentIdentity.email;
-          if (gCurrentIdentity.bccOthers)
-          {
-            if (newBcc != "")
-              newBcc += ","
-            newBcc += gCurrentIdentity.bccList;
-          }
+          if (gCurrentIdentity.doBcc)
+            newBcc += gCurrentIdentity.doBccList;          
 
           var needToCleanUp = false;
           var msgCompFields = gMsgCompose.compFields;

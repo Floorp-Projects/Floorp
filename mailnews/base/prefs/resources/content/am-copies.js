@@ -60,9 +60,10 @@ function onInit() {
                      tmplAccountPickerId, 
                      "identity.stationeryFolder", 
                      tmplFolderPickerId);
-    initBccSelf();
+    
+    setupBccTextbox();
     setupFccItems();
-    setupBCCTextbox();
+
     SetSpecialFolderNamesWithDelims();
 }
 
@@ -162,29 +163,6 @@ function InitFolderDisplay(fieldname, pickerId) {
     var formElement = document.getElementById(fieldname);
     var uri = formElement.getAttribute("value");
     SetFolderPicker(uri,pickerId);
-}
-
-function initBccSelf() {
-    var bccValue = document.getElementById("identity.email").getAttribute("value");
-    setDivText("identity.bccSelf",bccValue);
-}
-
-function setDivText(divid, str) {
-    var divtag = document.getElementById(divid);
-
-    var newstr="";
-    if (divtag) {
-        
-        if (divtag.getAttribute("before"))
-            newstr += divtag.getAttribute("before");
-        
-        newstr += str;
-        
-        if (divtag.getAttribute("after"))
-            newstr += divtag.getAttribute("after");
-        
-        divtag.setAttribute("label", newstr);
-    }
 }
 
 // Capture any menulist changes
@@ -325,12 +303,12 @@ function setupFccItems()
 }
 
 // Disable BCC textbox if BCC checkbox is not checked
-function setupBCCTextbox()
+function setupBccTextbox()
 {
-    var BCCChecked = document.getElementById("identity.bccOthers").checked;
-    var BCCTextbox = document.getElementById("identity.bccList");
+    var bccChecked = document.getElementById("identity.doBcc").checked;
+    var bccTextbox = document.getElementById("identity.doBccList");
 
-    BCCTextbox.disabled = !BCCChecked;
+    bccTextbox.disabled = !bccChecked;
 }
 
 // Set up picker settings for Sent Folder 
