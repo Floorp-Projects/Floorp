@@ -11,9 +11,14 @@
 	      readonly  attribute   Node	        target;
 	      readonly  attribute   Node	        currentNode;
 	      readonly  attribute   unsigned short	eventPhase;
+        readonly attribute boolean          bubbles;
+        readonly attribute boolean          cancelable;
 
 		    void					preventBubble();
 		    void					preventCapture();
 		    void					preventDefault();
+        void          initEvent(in wstring eventTypeArg, 
+                                in boolean canBubbleArg, 
+                                in boolean cancelableArg);
       };
 

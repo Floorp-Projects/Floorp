@@ -84,3 +84,10 @@
 	   void	addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
 	   void	removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
 	 };
+
+     interface AbstractView {
+ /* IID: { 0xf51ebade, 0x8b1a, 0x11d3, \
+  { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } */
+
+      noscript readonly attribute  Document document;
+   };

@@ -19,7 +19,7 @@
 #ifndef nsJSEventListener_h__
 #define nsJSEventListener_h__
 
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIScriptEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "jsapi.h"

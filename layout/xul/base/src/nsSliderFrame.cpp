@@ -42,7 +42,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIViewManager.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsDocument.h"
 #include "nsTitledButtonFrame.h"
 #include "nsScrollbarButtonFrame.h"
@@ -766,15 +766,15 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   nsIContent* scrollbar = GetScrollBar();
   PRBool isHorizontal = IsHorizontal(scrollbar);
 
-  nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
 
   RemoveListener();
   DragThumb(mPresContext, PR_TRUE);
   PRInt32 c = 0;
   if (isHorizontal)
-     uiEvent->GetClientX(&c);
+     mouseEvent->GetClientX(&c);
   else
-     uiEvent->GetClientY(&c);
+     mouseEvent->GetClientY(&c);
 
   mDragStartPx = c;
   nsIFrame* thumbFrame = mFrames.FirstChild();

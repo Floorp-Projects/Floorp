@@ -87,6 +87,8 @@ public:
 
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble)=0;
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble)=0;
+
+  NS_IMETHOD    GetIsChar(PRBool* aIsChar)=0;
 };
 
 
@@ -100,6 +102,7 @@ public:
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset);  \
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);  \
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);  \
+  NS_IMETHOD    GetIsChar(PRBool* aIsChar);  \
 
 
 
@@ -113,6 +116,7 @@ public:
   NS_IMETHOD    GetRangeOffset(PRInt32* aRangeOffset) { return _to GetRangeOffset(aRangeOffset); } \
   NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to GetCancelBubble(aCancelBubble); } \
   NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to SetCancelBubble(aCancelBubble); } \
+  NS_IMETHOD    GetIsChar(PRBool* aIsChar) { return _to GetIsChar(aIsChar); } \
 
 
 #endif // nsIDOMNSUIEvent_h__

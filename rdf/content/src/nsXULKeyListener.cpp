@@ -23,7 +23,7 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
 #include "nsINSEvent.h"
@@ -346,8 +346,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 	nsIDOMNode* target = nsnull;
 	aKeyEvent->GetTarget(&target);
 
-	nsIDOMUIEvent * theEvent;
-	aKeyEvent->QueryInterface(kIDomUIEventIID, (void**)&theEvent);
+	nsIDOMKeyEvent * keyEvent;
+	aKeyEvent->QueryInterface(kIDomUIEventIID, (void**)&keyEvent);
 	// Find a keyset node
 
 	// locate the window element which holds the top level key bindings
@@ -423,18 +423,18 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
                         if(code.IsEmpty()) {
                           // HACK for temporary compatibility
                           if(aEventType == eKeyPress)
-                            theEvent->GetCharCode(&theChar);
+                            keyEvent->GetCharCode(&theChar);
                           else
-                            theEvent->GetKeyCode(&theChar);
+                            keyEvent->GetKeyCode(&theChar);
                             
                         } else {
                           // We want a keycode
-                          theEvent->GetKeyCode(&theChar);
+                          keyEvent->GetKeyCode(&theChar);
                           gotKeyCode = PR_TRUE;
                         }
 					} else {
 					  // We want a charcode
-					  theEvent->GetCharCode(&theChar);
+					  keyEvent->GetCharCode(&theChar);
 					  gotCharCode = PR_TRUE;
 					}		
 						
@@ -485,8 +485,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 					// Test Command attribute
 					PRBool isCommand = PR_FALSE;
 					PRBool isControl = PR_FALSE;
-					theEvent->GetMetaKey(&isCommand);
-					theEvent->GetCtrlKey(&isControl);
+					keyEvent->GetMetaKey(&isCommand);
+					keyEvent->GetCtrlKey(&isControl);
 					if (((isCommand && (modCommand==0)) ||
 					    (!isCommand && (modCommand==1))) || 
 					    ((isControl && (modControl==0)) ||
@@ -516,7 +516,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 					  modShift = 0;
 					  
 					PRBool isShift = PR_FALSE;
-					theEvent->GetShiftKey(&isShift);
+					keyEvent->GetShiftKey(&isShift);
 					if ((isShift && (modShift==0)) || 
 					   (!isShift && (modShift==1)))
 					{
@@ -533,7 +533,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 					  modAlt = 0;
 					  
 					PRBool isAlt = PR_FALSE;
-					theEvent->GetAltKey(&isAlt);
+					keyEvent->GetAltKey(&isAlt);
 					if ((isAlt && (modAlt==0)) || 
 					   (!isAlt && (modAlt==1))) 
 					{

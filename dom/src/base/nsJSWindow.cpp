@@ -33,6 +33,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMBarProp.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMScreen.h"
 #include "nsIDOMHistory.h"
 #include "nsIDOMEventListener.h"
@@ -50,6 +51,7 @@ static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIBarPropIID, NS_IDOMBARPROP_IID);
+static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 static NS_DEFINE_IID(kIHistoryIID, NS_IDOMHISTORY_IID);
 static NS_DEFINE_IID(kIEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -63,6 +65,7 @@ NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMBarProp);
+NS_DEF_PTR(nsIDOMAbstractView);
 NS_DEF_PTR(nsIDOMScreen);
 NS_DEF_PTR(nsIDOMHistory);
 NS_DEF_PTR(nsIDOMEventListener);

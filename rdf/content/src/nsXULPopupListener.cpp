@@ -34,7 +34,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsITimer.h"
 
 
@@ -188,16 +188,16 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 {
   PRUint16 button;
 
-  nsCOMPtr<nsIDOMUIEvent> uiEvent;
-  uiEvent = do_QueryInterface(aMouseEvent);
-  if (!uiEvent) {
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent;
+  mouseEvent = do_QueryInterface(aMouseEvent);
+  if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
   // Get the node that was clicked on.
   nsCOMPtr<nsIDOMNode> targetNode;        
-  uiEvent->GetTarget( getter_AddRefs( targetNode ) );
+  mouseEvent->GetTarget( getter_AddRefs( targetNode ) );
 
   // Get the document with the popup.
   nsCOMPtr<nsIDocument> document;
@@ -221,7 +221,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   switch (popupType) {
     case eXULPopupType_popup:
       // Check for left mouse button down
-      uiEvent->GetButton(&button);
+      mouseEvent->GetButton(&button);
       if (button == 1) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
@@ -231,11 +231,11 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 #ifdef	XP_MAC
       // XXX: Handle Mac (currently checks if CTRL key is down)
 	    PRBool	ctrlKey = PR_FALSE;
-	    uiEvent->GetCtrlKey(&ctrlKey);
+	    mouseEvent->GetCtrlKey(&ctrlKey);
 	    if (ctrlKey == PR_TRUE)
 #else
       // Check for right mouse button down
-      uiEvent->GetButton(&button);
+      mouseEvent->GetButton(&button);
       if (button == 3)
 #endif
       {
@@ -266,15 +266,15 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
   
-  nsCOMPtr<nsIDOMUIEvent> uiEvent ( do_QueryInterface(aMouseEvent) );
-  if (!uiEvent)
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
+  if (!mouseEvent)
     return NS_OK;
 
   // stash the coordinates of the event so that we can still get back to it from within the 
   // timer scallback. Also stash the node that started this so we can put it into the
   // document later on (if the timer ever fires).
-  uiEvent->GetClientX(&mMouseClientX);
-  uiEvent->GetClientY(&mMouseClientY);
+  mouseEvent->GetClientX(&mMouseClientX);
+  mouseEvent->GetClientY(&mMouseClientY);
 
   //XXX recognize when a popup is already up and immediately show the
   //XXX tooltip for the new item if the dom element is different than
@@ -383,15 +383,15 @@ nsresult
 XULPopupListenerImpl::LaunchPopup ( nsIDOMEvent* anEvent )
 {
   // Retrieve our x and y position.
-  nsCOMPtr<nsIDOMUIEvent> uiEvent ( do_QueryInterface(anEvent) );
-  if (!uiEvent) {
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(anEvent) );
+  if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
   PRInt32 xPos, yPos;
-  uiEvent->GetClientX(&xPos); 
-  uiEvent->GetClientY(&yPos); 
+  mouseEvent->GetClientX(&xPos); 
+  mouseEvent->GetClientY(&yPos); 
 
   return LaunchPopup(xPos, yPos);
 }

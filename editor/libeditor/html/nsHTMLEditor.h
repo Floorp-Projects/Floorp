@@ -35,6 +35,8 @@
 #include "TypeInState.h"
 #include "nsEditRules.h"
 
+class nsIDOMKeyEvent;
+
 /**
  * The HTML editor implementation.<br>
  * Use to edit HTML document represented as a DOM tree. 
@@ -61,7 +63,7 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
-  NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent);
+  NS_IMETHOD EditorKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHOD TypedText(const nsString& aString, PRInt32 aAction);
 
   NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);

@@ -4,6 +4,8 @@
 
 nsIDOMEvent.h
 nsIDOMUIEvent.h
+nsIDOMKeyEvent.h
+nsIDOMMouseEvent.h
 nsIDOMNSUIEvent.h
 nsIDOMEventListener.h
 nsIDOMEventCapturer.h

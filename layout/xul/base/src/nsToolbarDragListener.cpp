@@ -21,7 +21,7 @@
 #include "nsToolbarFrame.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
@@ -157,10 +157,10 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
   //
   
   // get mouse coordinates and translate them into twips
-  nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aDragEvent));
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aDragEvent));
   PRInt32 x,y = 0;
-  uiEvent->GetClientX(&x);
-  uiEvent->GetClientY(&y);
+  mouseEvent->GetClientX(&x);
+  mouseEvent->GetClientY(&y);
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);

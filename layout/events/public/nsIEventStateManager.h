@@ -59,6 +59,7 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
   NS_IMETHOD GetEventTargetContent(nsIContent** aContent) = 0;
+  NS_IMETHOD GetEventRelatedContent(nsIContent** aContent) = 0;
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;

@@ -23,6 +23,7 @@ MODULE=raptor
 IDLSRCS =  \
 	Event.idl \
 	UIEvent.idl \
+	MouseKeyEvent.idl \
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreEvents
 JSSTUB_DESTDIR=$(DEPTH)\dom\src\events

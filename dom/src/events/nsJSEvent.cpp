@@ -49,7 +49,9 @@ enum Event_slots {
   EVENT_TYPE = -1,
   EVENT_TARGET = -2,
   EVENT_CURRENTNODE = -3,
-  EVENT_EVENTPHASE = -4
+  EVENT_EVENTPHASE = -4,
+  EVENT_BUBBLES = -5,
+  EVENT_CANCELABLE = -6
 };
 
 /***********************************************************************/
@@ -141,6 +143,42 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         result = a->GetEventPhase(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case EVENT_BUBBLES:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "event.bubbles", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        nsresult result = NS_OK;
+        result = a->GetBubbles(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case EVENT_CANCELABLE:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "event.cancelable", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        nsresult result = NS_OK;
+        result = a->GetCancelable(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
           return nsJSUtils::nsReportError(cx, result);
@@ -351,6 +389,63 @@ EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 }
 
 
+//
+// Native method InitEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+EventInitEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEvent *nativeThis = (nsIDOMEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  PRBool b1;
+  PRBool b2;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "event.initevent",PR_FALSE , &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 3) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+    }
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+    }
+
+    result = nativeThis->InitEvent(b0, b1, b2);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Event
@@ -378,6 +473,8 @@ static JSPropertySpec EventProperties[] =
   {"target",    EVENT_TARGET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"currentNode",    EVENT_CURRENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"eventPhase",    EVENT_EVENTPHASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"bubbles",    EVENT_BUBBLES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cancelable",    EVENT_CANCELABLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -390,6 +487,7 @@ static JSFunctionSpec EventMethods[] =
   {"preventBubble",          EventPreventBubble,     0},
   {"preventCapture",          EventPreventCapture,     0},
   {"preventDefault",          EventPreventDefault,     0},
+  {"initEvent",          EventInitEvent,     3},
   {0}
 };
 

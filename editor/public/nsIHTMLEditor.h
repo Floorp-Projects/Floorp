@@ -33,7 +33,7 @@ class nsStringArray;
 class nsIAtom;
 class nsIDOMNode;
 class nsIDOMElement;
-class nsIDOMUIEvent;
+class nsIDOMKeyEvent;
 
 
 class nsIHTMLEditor : public nsISupports
@@ -152,7 +152,7 @@ public:
    * EditorKeyPress consumes a keyevent.
    * @param aKeyEvent    key event to consume
    */
-  NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent)=0;
+  NS_IMETHOD EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)=0;
 
   /** 
    * TypedText responds to user typing.  Provides a logging bottleneck for typing.

@@ -34,6 +34,8 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIDOMUIEventIID, NS_IDOMUIEVENT_IID);
+static NS_DEFINE_IID(kIDOMKeyEventIID, NS_IDOMKEYEVENT_IID);
+static NS_DEFINE_IID(kIDOMMouseEventIID, NS_IDOMMOUSEEVENT_IID);
 static NS_DEFINE_IID(kIDOMNSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIPrivateTextEventIID, NS_IPRIVATETEXTEVENT_IID);
@@ -105,12 +107,22 @@ nsresult nsDOMEvent::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIDOMEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMEvent*)this);
+    *aInstancePtrResult = (void*) ((nsIDOMEvent*)(nsIDOMUIEvent*)(nsIDOMMouseEvent*)this);
     AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kIDOMUIEventIID)) {
-    *aInstancePtrResult = (void*) ((nsIDOMUIEvent*)this);
+    *aInstancePtrResult = (void*) ((nsIDOMUIEvent*)(nsIDOMMouseEvent*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMMouseEventIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMMouseEvent*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMKeyEventIID)) {
+    *aInstancePtrResult = (void*) ((nsIDOMKeyEvent*)this);
     AddRef();
     return NS_OK;
   }
@@ -205,19 +217,31 @@ NS_IMETHODIMP
 nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 {
   if (mEvent->flags & NS_EVENT_FLAG_CAPTURE) {
-    *aEventPhase = CAPTURING_PHASE;
+    *aEventPhase = nsIDOMMouseEvent::CAPTURING_PHASE;
   }
   else if (mEvent->flags & NS_EVENT_FLAG_BUBBLE) {
-    *aEventPhase = BUBBLING_PHASE;
+    *aEventPhase = nsIDOMMouseEvent::BUBBLING_PHASE;
   }
   else if (mEvent->flags & NS_EVENT_FLAG_INIT) {
-    *aEventPhase = AT_TARGET;
+    *aEventPhase = nsIDOMMouseEvent::AT_TARGET;
   }
   else {
     *aEventPhase = 0;
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetBubbles(PRBool* aBubbles)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetCancelable(PRBool* aCancelable)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -243,6 +267,18 @@ nsDOMEvent::PreventDefault()
 {
   mEvent->flags |= NS_EVENT_FLAG_NO_DEFAULT;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetView(nsIDOMAbstractView** aView)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::GetDetail(PRInt32* aDetail)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_METHOD nsDOMEvent::GetText(nsString& aText)
@@ -555,6 +591,28 @@ NS_METHOD nsDOMEvent::GetClickCount(PRUint16* aClickCount)
   return NS_OK;
 }
 
+NS_METHOD nsDOMEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
+{
+  nsIEventStateManager *manager;
+  nsIContent *relatedContent;
+  nsresult ret = NS_OK;
+
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    manager->GetEventRelatedContent(&relatedContent);
+    NS_RELEASE(manager);
+  }
+  
+  if (relatedContent) {    
+    ret = relatedContent->QueryInterface(kIDOMNodeIID, (void**)aRelatedNode);
+    NS_RELEASE(relatedContent);
+  }
+  else {
+    *aRelatedNode = nsnull;
+  }
+
+  return ret;
+}
+
 // nsINSEventInterface
 NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
 {
@@ -693,6 +751,52 @@ NS_METHOD nsDOMEvent::SetCancelBubble(PRBool aCancelBubble)
   }
   return NS_OK;
 }
+
+NS_METHOD nsDOMEvent::GetIsChar(PRBool* aIsChar)
+{
+  if (!mEvent) {
+    *aIsChar = PR_FALSE;
+    return NS_OK;
+  }
+  if (mEvent->eventStructType == NS_KEY_EVENT) {
+    *aIsChar = ((nsKeyEvent*)mEvent)->isChar;
+    return NS_OK;
+  }
+  if (mEvent->eventStructType == NS_TEXT_EVENT) {
+    *aIsChar = ((nsTextEvent*)mEvent)->isChar;
+    return NS_OK;
+  }
+
+  *aIsChar = PR_FALSE;
+  return NS_OK;
+}
+
+//XXX The following four methods are for custom event dispatch inside the DOM.
+//They will be implemented post-beta
+NS_IMETHODIMP
+nsDOMEvent::InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 NS_METHOD nsDOMEvent::DuplicatePrivateData()
 {
