@@ -30,5 +30,5 @@ FILES := \
 FILES := $(addprefix $(srcdir)/, $(FILES))
 
 install::
-	$(INSTALL) $(FILES) $(DIST)/bin/profile/defaults/profile/chrome
-	$(INSTALL) $(FILES) $(DIST)/bin/profile/defaults/profile/US/chrome
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/chrome
+	$(INSTALL) $(FILES) $(DIST)/bin/defaults/profile/US/chrome
