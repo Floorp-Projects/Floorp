@@ -39,6 +39,7 @@
 
 #include "pratom.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
 #include "nsIServiceManager.h"
@@ -98,9 +99,9 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID
 #define PICS_TO_UPPER(x) ((((PRUint32) (x)) > 0x7f) ? x : toupper(x))
 #define PICS_TO_LOWER(x) ((((PRUint32) (x)) > 0x7f) ? x : tolower(x))
 
-#define PICS_IS_ALPHA(x) ((((PRUint32) (x)) > 0x7f) ? 0 : isalpha(x))
-#define PICS_IS_DIGIT(x) ((((PRUint32) (x)) > 0x7f) ? 0 : isdigit(x))
-#define PICS_IS_SPACE(x) ((((PRUint32) (x)) > 0x7f) ? 0 : isspace(x))
+#define PICS_IS_ALPHA(x) NS_IS_ALPHA(x)
+#define PICS_IS_DIGIT(x) NS_IS_DIGIT(x)
+#define PICS_IS_SPACE(x) NS_IS_SPACE(x)
 
 
 

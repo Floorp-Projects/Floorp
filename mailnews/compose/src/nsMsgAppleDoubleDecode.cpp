@@ -39,7 +39,7 @@ DecodingDone( appledouble_decode_object* p_ap_decode_obj )
 	fspec.vRefNum = p_ap_decode_obj->vRefNum;
 	fspec.parID   = p_ap_decode_obj->dirId;
 	fspec.name[0] = nsCRT::strlen(p_ap_decode_obj->fname);
-	XP_STRCPY((char*)fspec.name+1, p_ap_decode_obj->fname);
+	strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
 	CMimeMapper * mapper = CPrefs::sMimeTypes.FindMimeType(fspec);
 	if( mapper && (mapper->GetLoadAction() == CMimeMapper::Launch ) )
 	{

@@ -365,7 +365,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
   // mac file system only has one handle, and they compete for the file position.
   // Prevent closing the file from under the incorporate stuff. #82785.
   int32 savedPosition = -1;
-  if (!fid && gIncorporatePath && !XP_STRCMP(m_folderSpec, gIncorporatePath))
+  if (!fid && gIncorporatePath && !strcmp(m_folderSpec, gIncorporatePath))
   {
 		fid = gIncorporateFID;
                 savedPosition = ftell(gIncorporateFID); // so we can restore it.

@@ -54,7 +54,6 @@
 #include "prlog.h"
 #include "plstr.h"
 #include "prmem.h"
-#include "xp_str.h"
 #include "prprf.h"
 
 #define LDAP_PORT 389

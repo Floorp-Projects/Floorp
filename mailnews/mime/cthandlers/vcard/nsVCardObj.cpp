@@ -85,7 +85,6 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #include "plstr.h"
 #include "msgCore.h"
 #include "prprf.h"
-#define NOT_NULL(X) X
 
 /* debugging utilities */
 #define DBG_(x)

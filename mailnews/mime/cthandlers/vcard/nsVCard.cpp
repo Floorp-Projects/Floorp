@@ -146,8 +146,6 @@ char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
 
 #include "prmem.h"
 #include "plstr.h"
-#	define NOT_NULL(X)	X
-
 
 #ifndef FALSE
 #define FALSE 0
