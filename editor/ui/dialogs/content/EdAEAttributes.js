@@ -123,6 +123,7 @@ var gVAlignTable =
    are signal to do input filtering:
     "#"  Allow only integer values
     "%"  Allow integer values or a number ending in "%"
+    "+"  Allow integer values and allow "+" or "-" as first character
     "!"  Allow only one character
     "^"  The first character can be only be A-Z, a-z, hyphen, underscore, colon or period
     "$"  is an attribute required by HTML DTD
@@ -616,7 +617,7 @@ gHTMLAttr.fieldset =
 // this is deprecated //
 gHTMLAttr.font =
 [
-  "#size",
+  "+size",
   "color",
   "face",
   "-",
