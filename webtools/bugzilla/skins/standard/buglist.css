@@ -35,7 +35,7 @@ table.bz_buglist td, table.bz_buglist th {
 
 /* For styling rows; by default striped white and gray */
 tr.bz_odd {
-    background-color: #e6e6e6;
+    background-color: #F7F7F7;
 }
 
 tr.bz_even {
