@@ -267,7 +267,7 @@ static JSValue array_constructor(Context *, const JSValues& argv)
             return JSValue(result);
         }
         else
-            return JSValue(new JSArray(JSValue::valueToInt32(argv[1]).i32));
+            return JSValue(new JSArray(JSValue::valueToUInt32(argv[1]).u32));
     else
         return JSValue(new JSArray());
 }
