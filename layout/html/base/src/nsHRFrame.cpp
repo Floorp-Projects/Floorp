@@ -20,7 +20,6 @@
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
 #include "nsIRenderingContext.h"
-#include "nsGlobalVariables.h"
 #include "nsIStyleContext.h"
 #include "nsColor.h"
 #include "nsIPresContext.h"
@@ -40,8 +39,10 @@ static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 // default hr thickness in pixels
 #define DEFAULT_THICKNESS 3
 
-class HRuleFrame : public nsLeafFrame {
+class HRuleFrame : public nsFrame {
 public:
+  HRuleFrame();
+
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -52,17 +53,10 @@ public:
                    nsFramePaintLayer aWhichLayer);
 
 protected:
-  virtual ~HRuleFrame();
-
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
-
   PRBool GetNoShade();
-  PRInt32 GetThickness();
 
   nsMargin mBorderPadding;
-  nscoord mComputedWidth;
+  nscoord mThickness;
 };
 
 nsresult
@@ -76,7 +70,7 @@ NS_NewHRFrame(nsIFrame*& aResult)
   return NS_OK;
 }
 
-HRuleFrame::~HRuleFrame()
+HRuleFrame::HRuleFrame()
 {
 }
 
@@ -98,7 +92,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
-  nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
+  nscoord thickness = mThickness;
 
   // Get style data
   nscoord x0 = mBorderPadding.left;
@@ -108,27 +102,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   nscoord height = mRect.height -
     (mBorderPadding.top + mBorderPadding.bottom);
 
-  nscoord newWidth = mComputedWidth;
-  if (newWidth < width) {
-    // center or right align rule within the extra space
-    const nsStyleText* text =
-      (const nsStyleText*) mStyleContext->GetStyleData(eStyleStruct_Text);
-    switch (text->mTextAlign) {
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      x0 += width - newWidth;
-      break;
-
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-      break;
-
-    default:
-    case NS_STYLE_TEXT_ALIGN_CENTER:
-      x0 += (width - newWidth) / 2;
-      break;
-    }
-  }
-  width = newWidth;
-
   // Center hrule vertically within the available space
   y0 += (height - thickness) / 2;
   height = thickness;
@@ -137,10 +110,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   // three decision criteria: rendering to the printer or the display, is the
   // "Beveled Lines" checkbox set in the page setup dialog, and does the tag
   // have the NOSHADE attribute set.
-  PRBool printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
-
-  PRBool bevel = nsGlobalVariables::Instance()->GetBeveledLines();
-
 	PRBool noShadeAttribute = GetNoShade();
 
   // Now that we have the data to make the shading criteria, we next
@@ -150,7 +119,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 
   const nsStyleColor* color;
   // Draw a "shadowed" box around the rule area
-  if (!noShadeAttribute && ((printing && bevel) || !printing)) {
+  if (!noShadeAttribute) {
     nsRect rect(x0, y0, width, height);
 
     const nsStyleSpacing* spacing = 
@@ -165,15 +134,10 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
                                 mStyleContext, 0);
   } else {
     nscolor colors[2]; 
-    PRBool blackLines = nsGlobalVariables::Instance()->GetBlackLines(); 
-    if (printing && blackLines) { 
-      colors[0] = NS_RGB(0,0,0); 
-    } 
-    else { 
-      // Get the background color that applies to this HR 
-      color = nsStyleUtil::FindNonTransparentBackground(mStyleContext); 
-      NS_Get3DColors(colors, color->mBackgroundColor); 
-    } 
+    // Get the background color that applies to this HR 
+    color = nsStyleUtil::FindNonTransparentBackground(mStyleContext); 
+    NS_Get3DColors(colors, color->mBackgroundColor); 
+
     // When a rule is not shaded, then we use a uniform color and
     // draw half-circles on the end points.
     aRenderingContext.SetColor (colors[0]);
@@ -201,24 +165,60 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  // XXX add in code to check for width/height being set via css
-  // and if set use them instead of calling GetDesiredSize.
+  // Compute the width
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
+    aDesiredSize.width = aReflowState.computedWidth;
+  }
+  else {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
+      aDesiredSize.width = nscoord(p2t);
+    }
+    else {
+      aDesiredSize.width = aReflowState.availableWidth;
+    }
+  }
+  aDesiredSize.width += aReflowState.mComputedBorderPadding.left +
+    aReflowState.mComputedBorderPadding.right;
 
+  // Get the thickness of the rule. Note that this specifies the
+  // height of the rule, not the height of the frame.
+  nscoord thickness;
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.computedHeight) {
+    thickness = aReflowState.computedHeight;
+  }
+  else {
+    thickness = NSIntPixelsToTwips(DEFAULT_THICKNESS, p2t);
+  }
+  mThickness = thickness;
 
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
-  AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize,
-                       mBorderPadding);
+  // Compute height of "line" that hrule will layout within. Use the
+  // font-size to do this.
+  nscoord minLineHeight = thickness + NSIntPixelsToTwips(2, p2t);
+  const nsStyleFont* font;
+  GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
+  const nsFont& f = font->mFont;
+  nsCOMPtr<nsIFontMetrics> fm;
+  aPresContext.GetMetricsFor(f, getter_AddRefs(fm));
+  nscoord fontHeight;
+  fm->GetHeight(fontHeight);
 
-  // HR's do not impact the max-element-size, unless a width is specified
-  // otherwise tables behave badly. This makes sense they are springy.
+  aDesiredSize.height =
+    (minLineHeight < fontHeight ? fontHeight : minLineHeight) +
+    aReflowState.mComputedBorderPadding.top +
+    aReflowState.mComputedBorderPadding.bottom;
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  // HR's do not impact the max-element-size, unless a width is
+  // specified otherwise tables behave badly. This makes sense -- they
+  // are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-    if (aReflowState.HaveFixedContentWidth()) {
-      const nsStylePosition* pos;
-      GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
-      if (eStyleUnit_Percent == pos->mWidth.GetUnit()) {
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.computedWidth) {
+      if (eStyleUnit_Percent ==
+          aReflowState.mStylePosition->mWidth.GetUnit()) {
         // When the HR is using a percentage width, make sure it
         // remains springy.
         aDesiredSize.maxElementSize->width = onePixel;
@@ -226,104 +226,15 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
       else {
         aDesiredSize.maxElementSize->width = aReflowState.computedWidth;
       }
-      aDesiredSize.maxElementSize->height = onePixel;
     }
     else {
       aDesiredSize.maxElementSize->width = onePixel;
-      aDesiredSize.maxElementSize->height = onePixel;
     }
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
-}
-
-void
-HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                           const nsHTMLReflowState& aReflowState,
-                           nsHTMLReflowMetrics& aDesiredSize)
-{
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-
-  if (aReflowState.HaveFixedContentWidth()) {
-    aDesiredSize.width = aReflowState.computedWidth;
-  }
-  else {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
-      aDesiredSize.width =  nscoord(p2t);
-    }
-    else {
-      aDesiredSize.width = aReflowState.availableWidth;
-    }
-  }
-  mComputedWidth = aDesiredSize.width;
-  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
-    if (aDesiredSize.width  < aReflowState.availableWidth) {
-      aDesiredSize.width = aReflowState.availableWidth;
-    }
-  }
-
-  // XXX should we interpret css's height property as thickness? or as
-  // line-height? In the meantime, ignore it...
-  nscoord lineHeight;
-
-  // Get the thickness of the rule (this is not css's height property)
-  nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
-
-  // Compute height of "line" that hrule will layout within. Use the
-  // default font to do this.
-  lineHeight = thickness + NSIntPixelsToTwips(2, p2t);
-  const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated();
-  nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(defaultFont, getter_AddRefs(fm));
-  nscoord defaultLineHeight;
-  fm->GetHeight(defaultLineHeight);
-  if (lineHeight < defaultLineHeight) {
-    lineHeight = defaultLineHeight;
-  }
-
-  aDesiredSize.height = lineHeight;
-  aDesiredSize.ascent = lineHeight;
-  aDesiredSize.descent = 0;
-}
-
-PRInt32
-HRuleFrame::GetThickness()
-{
-  PRInt32 result = DEFAULT_THICKNESS;
-
-  // See if the underlying content is an HR that also implements the
-  // nsIHTMLContent API.
-  // XXX the dependency on nsIHTMLContent is done to avoid reparsing
-  // the size value.
-  nsIDOMHTMLHRElement* hr = nsnull;
-  nsIHTMLContent* hc = nsnull;
-  mContent->QueryInterface(kIDOMHTMLHRElementIID, (void**) &hr);
-  mContent->QueryInterface(kIHTMLContentIID, (void**) &hc);
-  if ((nsnull != hr) && (nsnull != hc)) {
-    // Winner. Get the size attribute to determine how thick the HR
-    // should be.
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        hc->GetHTMLAttribute(nsHTMLAtoms::size, value)) {
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        PRInt32 pixels = value.GetPixelValue();
-        switch (pixels) {
-        case 0:
-        case 1:
-          result = 1;
-          break;
-        default:
-          result = pixels + 1;
-          break;
-        }
-      }
-    }
-  }
-  NS_IF_RELEASE(hc);
-  NS_IF_RELEASE(hr);
-  return result;
 }
 
 PRBool
