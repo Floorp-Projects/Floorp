@@ -22,19 +22,27 @@
 
 
 #include "nsIDOMProcessingInstruction.h"
+#include "nsIDOMLinkStyle.h"
+#include "nsIDOMStyleSheet.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIStyleSheet.h"
+#include "nsIURI.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsGenericElement.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsLayoutAtoms.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsIXMLContent.h"
 
-static NS_DEFINE_IID(kIDOMProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
+#include "nsNetUtil.h"
+
 
 class nsXMLProcessingInstruction : public nsIDOMProcessingInstruction,
+                                   public nsIDOMLinkStyle,
                                    public nsIScriptObjectOwner,
                                    public nsIContent
 {
@@ -49,9 +57,10 @@ public:
   NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(mInner)
 
   // nsIDOMProcessingInstruction
-  NS_IMETHOD    GetTarget(nsString& aTarget);
-  NS_IMETHOD    GetData(nsString& aData);
-  NS_IMETHOD    SetData(const nsString& aData);
+  NS_DECL_IDOMPROCESSINGINSTRUCTION
+
+  // nsIDOMLinkStyle
+  NS_DECL_IDOMLINKSTYLE
 
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -63,6 +72,8 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
+  PRBool GetAttrValue(const char *aAttr, nsString& aValue);
+
   // XXX Processing instructions are currently implemented by using
   // the generic CharacterData inner object, even though PIs are not
   // character data. This is done simply for convenience and should
@@ -104,47 +115,53 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 NS_IMPL_ADDREF(nsXMLProcessingInstruction)
 NS_IMPL_RELEASE(nsXMLProcessingInstruction)
 
-nsresult 
+nsresult
 nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {
   if (NULL == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (aIID.Equals(kISupportsIID)) {                          
-    nsIDOMProcessingInstruction* tmp = this;                                
-    nsISupports* tmp2 = tmp;                                
-    *aInstancePtrResult = (void*) tmp2;                                  
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(kIDOMNodeIID)) {                           
-    nsIDOMNode* tmp = this;                                
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(kIDOMEventReceiverIID)) {                  
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {
+    nsIDOMProcessingInstruction* tmp = this;
+    nsISupports* tmp2 = tmp;
+    *aInstancePtrResult = (void*) tmp2;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
+    nsIDOMNode* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
     nsCOMPtr<nsIEventListenerManager> man;
     if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){
       return man->QueryInterface(kIDOMEventReceiverIID, (void**)aInstancePtrResult);
-    }     
+    }
     return NS_NOINTERFACE;
-  }                                                         
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {                 
-    nsIScriptObjectOwner* tmp = this;                      
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
-  }                                                         
-  if (aIID.Equals(kIContentIID)) {                           
-    nsIContent* tmp = this;                                
-    *aInstancePtrResult = (void*) tmp;                                   
-    NS_ADDREF_THIS();                                       
-    return NS_OK;                                           
   }
-  if (aIID.Equals(kIDOMProcessingInstructionIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIContent))) {
+    nsIContent* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMProcessingInstruction))) {
     nsIDOMProcessingInstruction* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIDOMLinkStyle))) {
+    nsIDOMLinkStyle *tmp = this;
     *aInstancePtrResult = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -152,7 +169,7 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsXMLProcessingInstruction::GetTarget(nsString& aTarget)
 {
   aTarget=mTarget;
@@ -160,13 +177,13 @@ nsXMLProcessingInstruction::GetTarget(nsString& aTarget)
   return NS_OK;
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsXMLProcessingInstruction::GetData(nsString& aData)
 {
   return mInner.GetData(aData);
 }
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsXMLProcessingInstruction::SetData(const nsString& aData)
 {
   // XXX Check if this is a stylesheet PI. If so, we may need
@@ -174,22 +191,127 @@ nsXMLProcessingInstruction::SetData(const nsString& aData)
   return mInner.SetData(this, aData);
 }
 
-NS_IMETHODIMP 
-nsXMLProcessingInstruction::GetScriptObject(nsIScriptContext* aContext, 
+PRBool
+nsXMLProcessingInstruction::GetAttrValue(const char *aAttr, nsString& aValue)
+{
+  nsAutoString data;
+
+  mInner.GetData(data);
+
+  while (1) {
+    aValue.Truncate();
+
+    PRInt32 pos = data.Find(aAttr);
+
+    if (pos < 0)
+      return PR_FALSE;
+
+    // Cut off data up to the end of the attr string
+    data.Cut(0, pos + nsCRT::strlen(aAttr));
+    data.CompressWhitespace();
+
+    if (data.First() != '=')
+      continue;
+
+    // Cut off the '='
+    data.Cut(0, 1);
+    data.CompressWhitespace();
+
+    PRUnichar q = data.First();
+
+    if (q != '"' && q != '\'')
+      continue;
+
+    // Cut off the first quote character
+    data.Cut(0, 1);
+
+    pos = data.FindChar(q);
+
+    if (pos < 0)
+      return PR_FALSE;
+
+    aValue.Assign(data, pos);
+
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::GetSheet(nsIDOMStyleSheet** aSheet)
+{
+  NS_ENSURE_ARG_POINTER(aSheet);
+  *aSheet = nsnull;
+
+  if (!mInner.mDocument)
+    return NS_OK;
+
+  nsAutoString data;
+  GetData(data);
+
+  if (!mTarget.EqualsWithConversion("xml-stylesheet")) {
+    return NS_OK;
+  }
+
+  if (!GetAttrValue("href", data))
+    return NS_OK;
+
+  nsCOMPtr<nsIURI> baseURI;
+
+  mInner.mDocument->GetBaseURL(*getter_AddRefs(baseURI));
+
+  nsString href;
+
+  NS_MakeAbsoluteURI(href, data, baseURI);
+
+  PRInt32 i, count;
+
+  count = mInner.mDocument->GetNumberOfStyleSheets();
+
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsIStyleSheet> sheet;
+    sheet = dont_AddRef(mInner.mDocument->GetStyleSheetAt(i));
+
+    if (!sheet)
+      continue;
+
+    nsCOMPtr<nsIURI> url;
+
+    sheet->GetURL(*getter_AddRefs(url));
+
+    if (!url)
+      continue;
+
+    nsXPIDLCString urlspec;
+
+    url->GetSpec(getter_Copies(urlspec));
+
+    if (href.EqualsWithConversion(urlspec)) {
+      return sheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet),
+                                   (void **)aSheet);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLProcessingInstruction::GetScriptObject(nsIScriptContext* aContext,
                                             void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
     nsIDOMScriptObjectFactory *factory;
-    
+
     res = nsGenericElement::GetScriptObjectFactory(&factory);
     if (NS_OK != res) {
       return res;
     }
-    
-    res = factory->NewScriptProcessingInstruction(aContext, 
+
+    res = factory->NewScriptProcessingInstruction(aContext,
                                                   (nsISupports*)(nsIDOMProcessingInstruction*)this,
-                                                  mInner.mParent, 
+                                                  mInner.mParent,
                                                   (void**)&mScriptObject);
 
     NS_RELEASE(factory);
@@ -198,7 +320,7 @@ nsXMLProcessingInstruction::GetScriptObject(nsIScriptContext* aContext,
   return res;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLProcessingInstruction::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = aScriptObject;
@@ -206,7 +328,7 @@ nsXMLProcessingInstruction::SetScriptObject(void *aScriptObject)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
 {
   aResult = nsLayoutAtoms::processingInstructionTagName;
@@ -214,7 +336,7 @@ nsXMLProcessingInstruction::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsXMLProcessingInstruction::GetNodeInfo(nsINodeInfo*& aResult) const
 {
   aResult = nsnull;
@@ -246,7 +368,7 @@ nsXMLProcessingInstruction::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aReturn);
 }
 
 NS_IMETHODIMP
@@ -282,14 +404,14 @@ nsXMLProcessingInstruction::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::GetContentID(PRUint32* aID) 
+nsXMLProcessingInstruction::GetContentID(PRUint32* aID)
 {
   *aID = 0;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsXMLProcessingInstruction::SetContentID(PRUint32 aID) 
+nsXMLProcessingInstruction::SetContentID(PRUint32 aID)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
