@@ -3859,8 +3859,8 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
 
       // Mark next line dirty in case SplitLine didn't end up
       // pushing any frames.
-      nsLineBox* next = aLine.next();
-      if ((nsnull != next) && !next->IsBlock()) {
+      nsLineList_iterator next = aLine.next();
+      if (next != end_lines() && !next->IsBlock()) {
         next->MarkDirty();
       }
     }
@@ -4883,10 +4883,11 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
     }
   }
  found_frame:;
-  NS_ASSERTION(line != line_end, "can't find deleted frame in lines");
-  NS_ASSERTION(!prevSibling || prevSibling->GetNextSibling() == aDeletedFrame, "bad prevSibling");
-  if (line == line_end) 
+  if (line == line_end) {
+    NS_ERROR("can't find deleted frame in lines");
     return NS_ERROR_FAILURE;
+  }
+  NS_ASSERTION(!prevSibling || prevSibling->GetNextSibling() == aDeletedFrame, "bad prevSibling");
 
   // Remove frame and all of its continuations
   while (nsnull != aDeletedFrame) {
