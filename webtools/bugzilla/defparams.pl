@@ -100,7 +100,7 @@ sub check_webdotbase {
         if(-e "data/webdot/.htaccess") {
             open HTACCESS, "data/webdot/.htaccess";
             if(! grep(/ \\\.png\$/,<HTACCESS>)) {
-                return "Dependency graph images are not accessible.\nDelete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+                return "Dependency graph images are not accessible.\nAssuming that you have not modified the file, delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
             }
             close HTACCESS;
         }
