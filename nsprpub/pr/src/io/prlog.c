@@ -361,7 +361,7 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
 #else
     PRFileDesc *newLogFile;
 
-    newLogFile = PR_Open(file, PR_WRONLY|PR_CREATE_FILE, 0666);
+    newLogFile = PR_Open(file, PR_WRONLY|PR_CREATE_FILE|PR_TRUNCATE, 0666);
     if (newLogFile) {
         if (logFile && logFile != _pr_stdout && logFile != _pr_stderr) {
             PR_Close(logFile);
