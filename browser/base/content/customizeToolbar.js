@@ -55,8 +55,10 @@ function buildDialog()
   if (!modeValue)
     modeValue = "full";
   modeList.value = modeValue;
-  if (modeValue == "text")
+  if (modeValue == "text") {
     useSmallIcons.disabled = true;
+    useSmallIcons.checked = false;
+  }
   
   var cloneToolbarBox = document.getElementById("cloned-bar-container");
   var paletteBox = document.getElementById("palette-box");
@@ -556,5 +558,12 @@ function updateToolbarMode(modeValue)
   gToolbarChanged = true;
   
   var iconSizeCheckbox = document.getElementById("smallicons");
-  iconSizeCheckbox.disabled = modeValue == "text";
+  if (modeValue == "text") {
+    iconSizeCheckbox.disabled = true;
+    iconSizeCheckbox.checked = false;
+    updateIconSize(false);
+  }
+  else {
+    iconSizeCheckbox.disabled = false;
+  }
 }
