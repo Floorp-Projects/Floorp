@@ -24,6 +24,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMAppCoresManager.h"
 #include "prio.h"
+#include "nsVoidArray.h"
 
 class nsIScriptContext;
 class nsIDOMBaseAppCore;
@@ -31,15 +32,6 @@ class nsIDOMBaseAppCore;
 ////////////////////////////////////////////////////////////////////////////////
 // nsAppCoresManager:
 ////////////////////////////////////////////////////////////////////////////////
-typedef struct _SDL_TaskList SDL_TaskList;
-
-typedef struct _SDL_TaskList
-{
-    nsIDOMBaseAppCore  *task;
-    SDL_TaskList       *next;
-
-} SDL_TaskList;
-
 class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCoresManager
 {
   public:
@@ -63,7 +55,8 @@ class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCoresMana
     NS_IMETHOD    Find(const nsString& aId, nsIDOMBaseAppCore** aReturn);
 
   private:
-    void  *mScriptObject;
+    void        *mScriptObject;
+    nsVoidArray  mList;
 
         
 };
