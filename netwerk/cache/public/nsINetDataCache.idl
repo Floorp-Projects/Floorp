@@ -19,17 +19,20 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsICachedNetData;
-interface nsISimpleEnumerator;
+interface nsINetDataCacheRecord;
+interface nsIEnumerator;
 interface nsIFileSpec;
 
 /**
- * A network-data cache is used to cache the responses to network
- * retrieval commands.  Each cache entry may contain both content,
- * e.g. GIF image data, and associated metadata, e.g. HTTP headers.
- * Each entry in the cache is indexed by a key.  This key is a
- * combination of a URI string and opaque keyData.  The latter can be
- * used, for example, to contain HTTP form post key/value pairs.
+ * The nsINetDataCache defines a network-data cache, used to cache the
+ * responses to network retrieval commands.  This interface, along with
+ * nsINetDataCacheRecord, is implemented by the memory cache, the disk cache
+ * and, optionally, by some extension caches.
+ *
+ * Each cache entry may contain both content, e.g. GIF image data, and
+ * associated metadata, e.g. HTTP headers.  Each entry is indexed by two
+ * different keys: a record id number and a key created by combining the URI
+ * with a "secondary key", e.g. HTTP post data.
  *
  * The nsINetDataCache interface is agnostic as to where the data is
  * stored and whether the storage is volatile or persistent.  The
@@ -46,33 +49,27 @@ interface nsINetDataCache : nsISupports
 	readonly attribute wstring Description;
   
     /**
-     * Returns true if cached data is available for the given URI,
-     * even if only partial data is stored.  The optionally-NULL
-     * secondaryKey argument can be used for form post data in the
-     * case of HTTP.
+     * Returns true if cached data is available for the given opaque key,
+     * even if only partial data is stored.
      */
-    boolean Contains(in nsIURI uri, in string secondaryKey);
+    boolean Contains([size_is(length)] in string key, in PRUint32 length);
 
     /**
-     * Fetch the cache entry record for the given URI.  If one does not exist,
-     * create a new, empty record.
-	 */
-    nsICachedNetData GetCachedNetData(in nsIURI uri);
+     * Fetch the cache entry record for the given opaque key.  If one does not
+     * exist, create a new, empty record.
+     */
+    nsINetDataCacheRecord GetCachedNetData([size_is(length)] in string key,
+                                           in PRUint32 length);
+
+    /**
+     * Fetch the cache entry record for the given URI using the record ID as a key.
+     */
+    nsINetDataCacheRecord GetCachedNetDataByID(in PRInt32 RecordID);
 
 	/**
 	 * False indicates that this cache is entirely bypassed.
 	 */
     attribute boolean enabled;
-
-	/**
-	 * The least-recently-used (retrieved) cache entry.
-	 */
-	readonly attribute nsICachedNetData LRU;
-
-	/**
-	 * Contains the cache entry with the youngest expiration date
-	 */
-	readonly attribute nsICachedNetData NextToExpire;
 
 	/**
 	 * This attribute will be false for the memory cache and the disk cache,
@@ -81,14 +78,19 @@ interface nsINetDataCache : nsISupports
 	readonly attribute boolean ReadOnly;
 
     /**
-     * Total number of unexpired URI entries stored in the cache.
+     * Total number of URI entries stored in the cache.
      */
-    readonly attribute unsigned long NumEntries;
+    readonly attribute PRUint32 NumEntries;
 
     /**
-     * Enumerate the unexpired URI entries stored in the cache.
+     * Maximum number of URI entries that may be stored in the cache.
      */
-    nsISimpleEnumerator EnumerateCacheEntries();
+    readonly attribute PRUint32 MaxEntries;
+
+    /**
+     * Enumerate the URI entries stored in the cache.
+     */
+    nsIEnumerator NewCacheEntryEnumerator();
 	
 	/**
 	 * Contains a reference to the next cache in search order.  For the memory
@@ -103,7 +105,7 @@ interface nsINetDataCache : nsISupports
      * cause cache entries to be evicted from the cache to accomodate the
      * requested capacity.
 	 */
-    attribute long Capacity;
+    attribute PRUint32 Capacity;
 
     /**
      * An estimate of the amount of storage occupied by the cache, in kB.
@@ -111,7 +113,7 @@ interface nsINetDataCache : nsISupports
      * and heap fragmentation (in the memory cache) or block quantization (in
      * the disk cache).
 	 */
-    readonly attribute long StorageInUse;
+    readonly attribute PRUint32 StorageInUse;
 
     /**
      * Remove all entries from a writable cache.  This could be used, for
@@ -122,4 +124,3 @@ interface nsINetDataCache : nsISupports
 	 */
     void RemoveAll();
 };
-
