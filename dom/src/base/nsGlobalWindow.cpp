@@ -815,8 +815,8 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
 
-      return content->HandleDOMEvent(nsnull, &event, nsnull,
-                                     NS_EVENT_FLAG_INIT, &status);
+      ret = content->HandleDOMEvent(nsnull, &event, nsnull,
+                                    NS_EVENT_FLAG_INIT, &status);
     }
   }
 
