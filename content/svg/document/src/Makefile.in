@@ -60,7 +60,8 @@ REQUIRES	= content \
 		  caps \
 		  locale \
 		  view \
-		  xpconnect
+		  xpconnect \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsSVGDocument.cpp \
