@@ -56,8 +56,6 @@ CHROME_SKIN	= \
 		list-down.gif \
 		list-up-dis.gif \
 		list-up.gif \
-		panel-expand.gif \
-		panel-collapse.gif \
 		sidebar-bottomright-cap.gif \
 		sidebar-topright-cap.gif \
 		$(NULL)
