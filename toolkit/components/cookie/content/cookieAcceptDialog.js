@@ -43,9 +43,8 @@ var cookieBundle;
 var gDateService = null;
 
 var showDetails = "";
-var showDetailsAccessKey = "";
 var hideDetails = "";
-var hideDetailsAccessKey = "";
+var detailsAccessKey = "";
 
 function onload()
 {
@@ -54,7 +53,9 @@ function onload()
   var dialog = document.documentElement;
 
   document.getElementById("ok").label = dialog.getAttribute("acceptLabel");
+  document.getElementById("ok").accessKey = dialog.getAttribute("acceptKey");
   document.getElementById("cancel").label = dialog.getAttribute("cancelLabel");
+  document.getElementById("cancel").accessKey = dialog.getAttribute("cancelKey");
 
   if (!gDateService) {
     const nsScriptableDateFormat_CONTRACTID = "@mozilla.org/intl/scriptabledateformat;1";
@@ -68,20 +69,18 @@ function onload()
   //cache strings
   if (!showDetails) {
     showDetails = cookieBundle.getString('showDetails');
-    showDetailsAccessKey = cookieBundle.getString('showDetailsAccessKey');
   }
   if (!hideDetails) {
     hideDetails = cookieBundle.getString('hideDetails');
-    hideDetailsAccessKey = cookieBundle.getString('hideDetailsAccessKey');
   }
+  detailsAccessKey = cookieBundle.getString('detailsAccessKey');
 
   if (document.getElementById('infobox').hidden) {
     document.getElementById('disclosureButton').setAttribute("label",showDetails);
-    document.getElementById('disclosureButton').setAttribute("accesskey",showDetailsAccessKey);
   } else {
     document.getElementById('disclosureButton').setAttribute("label",hideDetails);
-    document.getElementById('disclosureButton').setAttribute("accesskey",hideDetailsAccessKey);
   }
+  document.getElementById('disclosureButton').setAttribute("accesskey",detailsAccessKey);
 
   if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0]) {
     try {
@@ -157,11 +156,9 @@ function showhideinfo()
   if (infobox.hidden) {
     infobox.setAttribute("hidden","false");
     document.getElementById('disclosureButton').setAttribute("label",hideDetails);
-    document.getElementById('disclosureButton').setAttribute("accesskey",hideDetailsAccessKey);
   } else {
     infobox.setAttribute("hidden","true");
     document.getElementById('disclosureButton').setAttribute("label",showDetails);
-    document.getElementById('disclosureButton').setAttribute("accesskey",showDetailsAccessKey);
   }
   sizeToContent();
 }

@@ -46,7 +46,9 @@
 <!-- use buttons="disclosure" to hide ok/cancel buttons. Those are added manually later -->
 <dialog id="cookieAcceptDialog"
     acceptLabel="&button.allow.label;"
+    acceptKey="&button.allow.accesskey;"
     cancelLabel="&button.deny.label;"
+    cancelKey="&button.deny.accesskey;"
     onload="onload();"
     ondialogaccept="return doOKButton();"
     title="&dialog.title;"
