@@ -504,15 +504,26 @@ done:
 OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFragConnectionID *outConnectionID)
 {
 	UInt32		fragOffset, fragLength;
+    short       fragNameLength;
 	Ptr				main;
-	Str255		fragName = "\p";
+    Str255      fragName;
 	Str255		errName;
 	OSErr			err;
 	
 	err = GetNamedFragmentOffsets(fileSpec, fragmentName, &fragOffset, &fragLength);
 	if (err != noErr) return err;
 				
-	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fileSpec->name, 
+    // convert fragment name to pascal string
+    fragNameLength = strlen(fragmentName);
+    if (fragNameLength > 255)
+        fragNameLength = 255;
+    BlockMoveData(fragmentName, &fragName[1], fragNameLength);
+    fragName[0] = fragNameLength;
+    
+    // Note that we pass the fragment name as the 4th param to GetDiskFragment.
+    // This value affects the ability of debuggers, and the Talkback system,
+    // to match code fragments with symbol files
+    err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
 					kLoadCFrag, outConnectionID, &main, errName);
 
 	return err;
@@ -555,7 +566,10 @@ OSErr NSLoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragmentIndex,
 		fragName[0] = nameLen;
 	}
 
-	err = GetDiskFragment(fileSpec, fragOffset, fragLength, fileSpec->name, 
+    // Note that we pass the fragment name as the 4th param to GetDiskFragment.
+    // This value affects the ability of debuggers, and the Talkback system,
+    // to match code fragments with symbol files
+    err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
 					kLoadCFrag, outConnectionID, &main, errName);
 	if (err != noErr)
 	{

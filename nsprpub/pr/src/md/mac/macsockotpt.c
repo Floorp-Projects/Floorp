@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <Gestalt.h>
+#include <Files.h>
 #include <OpenTransport.h>
 #include <OSUtils.h>
 

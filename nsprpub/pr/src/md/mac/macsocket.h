@@ -39,6 +39,7 @@
 // Interface visible to xp code
 // C socket type definitions and routines
 // from sys/socket.h
+#include <Files.h>
 #include <OpenTptInternet.h>	// All the internet typedefs
 #include <utime.h>				// For timeval
 /*
