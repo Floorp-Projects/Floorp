@@ -42,9 +42,6 @@
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kIContentSinkIID, NS_ICONTENT_SINK_IID);
-static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -66,8 +63,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
   nsresult res = NS_OK;
   
   // If the converter is ucs2, then do not use a converter
-  nsString ucs2("ucs2");
-  if (aCharset.Equals(ucs2))
+  if (aCharset.Equals("ucs2"))
   {
     NS_IF_RELEASE(mUnicodeEncoder);
     return res;
@@ -128,13 +124,13 @@ nsHTMLToTXTSinkStream::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
-  if(aIID.Equals(kISupportsIID)) {
+  if(aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIContentSinkIID)) {
+  else if(aIID.Equals(NS_GET_IID(nsIContentSink))) {
     *aInstancePtr = (nsIContentSink*)(this);
   }
-  else if(aIID.Equals(kIHTMLContentSinkIID)) {
+  else if(aIID.Equals(NS_GET_IID(nsIHTMLContentSink))) {
     *aInstancePtr = (nsIHTMLContentSink*)(this);
   }
   else {
@@ -171,7 +167,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
   it->SetWrapColumn(aWrapColumn);
   if (aCharsetOverride != nsnull)
     it->SetCharsetOverride(aCharsetOverride);
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aInstancePtrResult);
 }
 
 
@@ -193,9 +189,9 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetWrapColumn(aWrapColumn);
-  nsString ucs2("ucs2");
+  nsAutoString ucs2(CBufDescriptor("ucs2", PR_TRUE, strlen("ucs2")));
   it->SetCharsetOverride(&ucs2);
-  return it->QueryInterface(kIHTMLContentSinkIID, (void **)aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIHTMLContentSink), (void **)aInstancePtrResult);
 }
 
 // Someday may want to make this non-const:
@@ -474,12 +470,12 @@ nsHTMLToTXTSinkStream::EndContext(PRInt32 aPosition)
 }
 
 void nsHTMLToTXTSinkStream::EnsureBufferSize(PRInt32 aNewSize)
-{
-  if (mBufferSize < aNewSize)
+{  
+    if (mBufferSize < aNewSize)
   {
-    delete [] mBuffer;
+    nsAllocator::Free(mBuffer);
     mBufferSize = 2*aNewSize+1; // make the twice as large
-    mBuffer = new char[mBufferSize];
+    mBuffer = NS_STATIC_CAST(char*, nsAllocator::Alloc(mBufferSize));
     if(mBuffer){
       mBuffer[0] = 0;
       mBufferLength = 0;
@@ -494,10 +490,8 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
   if (mUnicodeEncoder == nsnull)
   {
     NS_WARNING("The unicode encoder needs to be initialized");
-    char* str = aSrc.ToNewCString();
     EnsureBufferSize(aSrc.Length()+1);
-    strcpy(mBuffer, str);
-    delete[] str;
+    aSrc.ToCString ( mBuffer, aSrc.Length()+1 );
     return;
   }
 
@@ -541,7 +535,6 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
  */
 void nsHTMLToTXTSinkStream::Write(const nsString& aString)
 {
-
   // If a encoder is being used then convert first convert the input string
   if (mUnicodeEncoder != nsnull)
   {
@@ -667,7 +660,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_li)
   {
-    nsString temp("*");
+    nsAutoString temp(CBufDescriptor("*", PR_TRUE, strlen("*")));
     if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_ol)
     {
       if (mOLStackIndex > 0)
@@ -687,7 +680,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     mIndent += gTabSize;
   else if (type == eHTMLTag_pre)
   {
-    nsString temp(NS_LINEBREAK);
+    nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
     Write(temp);
     mColPos = 0;
   }
@@ -700,7 +693,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_ol:
     case eHTMLTag_p:
     {
-      nsString temp(NS_LINEBREAK);
+      nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
       Write(temp);
       mColPos = 0;
       break;
@@ -755,7 +748,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     {
       if (mFlags & nsIDocumentEncoder::OutputFormatted)
       {
-        nsString temp(NS_LINEBREAK);
+        nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
         Write(temp);
         mColPos = 0;
       }
@@ -786,7 +779,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   {
     if (mColPos > mIndent)
     {
-      nsString temp(" ");
+      nsAutoString temp(CBufDescriptor(" ", PR_TRUE, 2));
       Write(temp);
       mColPos++;
     }
@@ -813,7 +806,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_br)
   {
     // Do this even if we're not doing formatted output:
-    nsString temp (NS_LINEBREAK);
+    nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
     Write(temp);
     mColPos = 0;
   }
@@ -834,7 +827,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     }
     else if (type == eHTMLTag_newline)
     {
-      nsString temp(NS_LINEBREAK);
+      nsAutoString temp(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
       Write(temp);
       mColPos = 0;
     }
@@ -856,14 +849,14 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
     // Indent at the beginning of the line, if necessary
     if (mColPos == 0 && mIndent > 0)
     {
-      char* spaces = new char[mIndent+1];
+      char* spaces = NS_STATIC_CAST(char*, nsAllocator::Alloc(mIndent+1));
       for (int i=0; i<mIndent; ++i)
         spaces[i] = ' ';
       spaces[mIndent] = '\0';
-      nsString temp(spaces);
+      nsAutoString temp(CBufDescriptor(spaces, PR_TRUE, strlen(spaces)));
       Write (temp);
       mColPos += mIndent;
-      delete[] spaces;
+      nsAllocator::Free(spaces);
     }
 
     // Write whatever chunk of the string we can fit:
@@ -884,7 +877,7 @@ nsHTMLToTXTSinkStream::WriteWrapped(const nsString& aString)
         // In that case, write a linebreak and come around again.
         if (mColPos > mIndent)
         {
-          nsAutoString linebreak(NS_LINEBREAK);
+          nsAutoString linebreak(CBufDescriptor(NS_LINEBREAK, PR_TRUE, strlen(NS_LINEBREAK)));
           Write(linebreak);
           mColPos = 0;
           continue;
