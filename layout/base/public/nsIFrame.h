@@ -65,33 +65,57 @@ struct nsReflowMetrics {
  */
 #define NS_UNCONSTRAINEDSIZE NS_MAXSIZE
 
+//----------------------------------------------------------------------
+
 /**
  * Reflow status returned by the reflow methods.
  *
- * NS_FRAME_COMPLETE bit flag means the frame maps all its content. If this bit
- * isn't set it means the frame doesn't map all its content, and that the parent
- * frame should create a continuing frame.
+ * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
+ * content and that the parent frame should create a continuing frame.
+ * If this bit isn't set it means the frame does map all its content.
  *
- * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is dirty, and
- * also needs to be reflowed. This status only makes sense for a frame that is
- * not complete, i.e. you wouldn't set both NS_FRAME_COMPLETE and
- * NS_FRAME_REFLOW_NEXTINFLOW
+ * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
+ * dirty, and also needs to be reflowed. This status only makes sense
+ * for a frame that is not complete, i.e. you wouldn't set both
+ * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW
  *
  * @see #ResizeReflow()
  * @see #IncrementalReflow()
  * @see #CreateContinuingFrame()
  */
-typedef PRUint32  nsReflowStatus;
+typedef PRUint32 nsReflowStatus;
 
-#define NS_FRAME_COMPLETE           0x01
-#define NS_FRAME_REFLOW_NEXTINFLOW  0x02
+#define NS_FRAME_COMPLETE          0            // Note: not a bit!
+#define NS_FRAME_NOT_COMPLETE      0x1
+#define NS_FRAME_REFLOW_NEXTINFLOW 0x2
 
 #define NS_FRAME_IS_COMPLETE(status)\
-  (((status) & NS_FRAME_COMPLETE) == NS_FRAME_COMPLETE)
-#define NS_FRAME_IS_NOT_COMPLETE(status)\
-  (((status) & NS_FRAME_COMPLETE) == 0)
+  (0 == ((status) & NS_FRAME_NOT_COMPLETE))
 
-#define NS_FRAME_NOT_COMPLETE       0
+#define NS_FRAME_IS_NOT_COMPLETE(status)\
+  (0 != ((status) & NS_FRAME_NOT_COMPLETE))
+
+//----------------------------------------------------------------------
+
+/**
+ * Frame state bits. Any bits not listed here are reserved for future
+ * extensions, but must be stored by the frames.
+ */
+typedef PRUint32 nsFrameState;
+
+#define NS_FRAME_IN_REFLOW 0x00000001
+
+//----------------------------------------------------------------------
+
+/**
+ * DidReflow status values.
+ */
+typedef PRBool nsDidReflowStatus;
+
+#define NS_FRAME_REFLOW_NOT_FINISHED PR_FALSE
+#define NS_FRAME_REFLOW_FINISHED     PR_TRUE
+
+//----------------------------------------------------------------------
 
 /**
  * A frame in the layout model. This interface is supported by all frame
@@ -201,25 +225,64 @@ public:
                           PRInt32&        aCursor) = 0;
 
   /**
+   * Get the current frame-state value for this frame. aResult is
+   * filled in with the state bits. The return value has no
+   * meaning.
+   */
+  NS_IMETHOD  GetFrameState(nsFrameState& aResult) = 0;
+
+  /**
+   * Set the current frame-state value for this frame. The return
+   * value has no meaning.
+   */
+  NS_IMETHOD  SetFrameState(nsFrameState aNewState) = 0;
+
+  /**
+   * Pre-reflow hook. Before a frame is incrementally reflowed or
+   * resize-reflowed this method will be called warning the frame of
+   * the impending reflow. This call may be invoked zero or more times
+   * before a subsequent DidReflow call. This method when called the
+   * first time will set the NS_FRAME_IN_REFLOW bit in the frame
+   * state bits.
+   */
+  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext) = 0;
+
+  /**
+   * Post-reflow hook. After a frame is incrementally reflowed or
+   * resize-reflowed this method will be called telling the frame of
+   * the outcome. This call may be invoked many times, while
+   * NS_FRAME_IN_REFLOW is set, before it is finally called once with
+   * a NS_FRAME_REFLOW_COMPLETE value. When called with a
+   * NS_FRAME_REFLOW_COMPLETE value the NS_FRAME_IN_REFLOW bit in the
+   * frame state will be cleared.
+   */
+  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus) = 0;
+
+  /**
    * Resize reflow. The frame is given a maximum size and asked for its desired
    * size. This is the frame's opportunity to reflow its children.
    *
    * @param aDesiredSize <i>out</i> parameter where you should return the
    *          desired size and ascent/descent info. You should include any
    *          space you want for border/padding in the desired size you return.
-   * @param aMaxSize the available space in which to lay out. Each dimension
-   *          can either be constrained or unconstrained (a value of
-   *          NS_UNCONSTRAINEDSIZE). If constrained you should choose a value that's
-   *          less than or equal to the constrained size. If unconstrained you can
-   *          choose as large a value as you like.
    *
-   *          It's okay to return a desired size that exceeds the max size if that's
-   *          the smallest you can be, i.e. it's your minimum size.
+   * @param aMaxSize the available space in which to lay out. Each
+   *          dimension can either be constrained or unconstrained (a
+   *          value of NS_UNCONSTRAINEDSIZE). If constrained you
+   *          should choose a value that's less than or equal to the
+   *          constrained size. If unconstrained you can choose as
+   *          large a value as you like.
    *
-   * @param aMaxElementSize an optional parameter for returning your maximum
-   *          element size. If may be null in which case you don't have to compute
-   *          a maximum element size. The maximum element size must be less than or
-   *          equal to your desired size.
+   *          It's okay to return a desired size that exceeds the max
+   *          size if that's the smallest you can be, i.e. it's your
+   *          minimum size.
+   *
+   * @param aMaxElementSize an optional parameter for returning your
+   *          maximum element size. If may be null in which case you
+   *          don't have to compute a maximum element size. The
+   *          maximum element size must be less than or equal to your
+   *          desired size.
    */
   NS_IMETHOD  ResizeReflow(nsIPresContext*  aPresContext,
                            nsReflowMetrics& aDesiredSize,
