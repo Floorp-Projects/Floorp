@@ -398,6 +398,17 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			case eWindowType_dialog:
         if (aInitData)
         {
+          // Prior to Carbon, defProcs were solely about appearance. If told to create a dialog,
+          // we could use, for example, |kWindowMovableModalDialogProc| even if the dialog wasn't
+          // supposed to be modal. Carbon breaks this assumption, enforcing modality when using these
+          // particular proc ids. As a result, when compiling under Carbon we have to use the
+          // standard window proc id's and below, after we have a windowPtr, we'll hide the closebox
+          // that comes with the standard window proc.
+          //
+          // I'm making the assumption here that any dialog created w/out a titlebar is modal and am
+          // therefore keeping the old modal dialog proc. I'm only special-casing dialogs with a 
+          // titlebar since those are the only ones that might end up not being modal.
+          
           switch (aInitData->mBorderStyle)
           {
             case eBorderStyle_none:
@@ -405,7 +416,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
               
             case eBorderStyle_all:
-              wDefProcID = kWindowMovableModalGrowProc;   // should we add a close box (kWindowGrowDocumentProc) ?
+              #if TARGET_CARBON
+                wDefProcID = kWindowGrowDocumentProc;
+              #else
+                wDefProcID = kWindowMovableModalGrowProc;   // should we add a close box (kWindowGrowDocumentProc) ?
+              #endif
               break;
               
             case eBorderStyle_default:
@@ -413,17 +428,25 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
             
             default:
-              // we ignore the clase flag here, since mac dialogs should never have a close box.
+              // we ignore the close flag here, since mac dialogs should never have a close box.
               switch(aInitData->mBorderStyle & (eBorderStyle_resizeh | eBorderStyle_title))
               {
                 // combinations of individual options.
                 case eBorderStyle_title:
-                  wDefProcID = kWindowMovableModalDialogProc;
+                  #if TARGET_CARBON
+                    wDefProcID = kWindowDocumentProc;
+                  #else
+                    wDefProcID = kWindowMovableModalDialogProc;
+                  #endif
                   break;
                                     
                 case eBorderStyle_resizeh:
                 case (eBorderStyle_title | eBorderStyle_resizeh):
-                  wDefProcID = kWindowMovableModalGrowProc;   // this is the only kind of resizable dialog.
+                  #if TARGET_CARBON
+                    wDefProcID = kWindowGrowDocumentProc;
+                  #else
+                    wDefProcID = kWindowMovableModalGrowProc;   // this is the only kind of resizable dialog.
+                  #endif
                   break;
                                   
                 default:
@@ -437,7 +460,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 					wDefProcID = kWindowModalDialogProc;
 					goAwayFlag = true; // revisit this below
         }
-        
+                
         hOffset = kDialogMarginWidth;
         vOffset = kDialogTitleBarHeight;
 				break;
@@ -526,15 +549,22 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
 #if TARGET_CARBON
-  // OSX enforces window layering so we have to make sure that popups can
-  // appear over modal dialogs (at the top of the layering chain). Create
-  // the popup like normal and change its window class to the modal layer.
-  //
-  // XXX This needs to use ::SetWindowGroup() when we move to headers that
-  // XXX support it.
-  if ( mWindowType == eWindowType_popup )
+  if ( mWindowType == eWindowType_popup ) {
+    // OSX enforces window layering so we have to make sure that popups can
+    // appear over modal dialogs (at the top of the layering chain). Create
+    // the popup like normal and change its window class to the modal layer.
+    //
+    // XXX This needs to use ::SetWindowGroup() when we move to headers that
+    // XXX support it.
     ::SetWindowClass(mWindowPtr, kModalWindowClass);
-
+  }
+  else if ( mWindowType == eWindowType_dialog ) {
+    // Dialogs on mac don't have a close box, but we probably used a defproc above that
+    // contains one. Thankfully, carbon lets us turn it off after the window has been 
+    // created. Do so. We currently leave the collapse widget for all dialogs.
+    ::ChangeWindowAttributes(mWindowPtr, 0L, kWindowCloseBoxAttribute );
+  }
+  
   // Setup the live window resizing
   if ( mWindowType == eWindowType_toplevel || mWindowType == eWindowType_invisible ) {
     ::ChangeWindowAttributes ( mWindowPtr, kWindowLiveResizeAttribute, kWindowNoAttributes );
