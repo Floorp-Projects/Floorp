@@ -3616,6 +3616,8 @@ case "$target" in
 	if test -z "${BUILD_STATIC_LIBS}" -o -n "${BUILD_SHARED_LIBS}"; then
 	    if test -f /usr/lpp/xlC/bin/makeC++SharedLib_r; then
 		AIX_SHLIB_BIN='/usr/lpp/xlC/bin/makeC++SharedLib_r'
+	    elif test -f /usr/vacpp/bin/makeC++SharedLib_r; then
+		AIX_SHLIB_BIN='/usr/vacpp/bin/makeC++SharedLib_r'
 	    elif test -f /usr/ibmcxx/bin/makeC++SharedLib_r; then
 		AIX_SHLIB_BIN='/usr/ibmcxx/bin/makeC++SharedLib_r'
 	    fi
