@@ -1,12 +1,10 @@
-
 function prefCacheSelectFolder()
 {
-  dump("prefCacheSelectFolder \n");
   bundle = srGetStrBundle("chrome://pref/locale/prefutilities.properties");
   var folderField = document.getElementById("browserCacheDirectory");
-  var url = getFileOrFolderURL( bundle.GetStringFromName("cachefolder"), true );
+  var url = getFileOrFolderSpec( bundle.GetStringFromName("cachefolder"), true );
   if( url != -1 )
-    folderField.value = url;
+    folderField.value = url.URLString;
 }
 
 function prefClearMemCache()

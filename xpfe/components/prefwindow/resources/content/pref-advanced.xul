@@ -44,7 +44,7 @@
 	<html:div >
     <html:input type="checkbox" id="advancedJavaAllow" 
                 prefdefval="true"
-                pref="true" preftype="bool" prefstring="advanced.java.allow"/>
+                pref="true" preftype="bool" prefstring="security.enable_java"/>
 		<html:label for="advancedJavaAllow" accesskey="&enbJavaCheck.accesskey;" tabindex="0">
 			&enbJavaCheck.label;
 		</html:label>
