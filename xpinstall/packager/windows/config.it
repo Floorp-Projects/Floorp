@@ -641,10 +641,8 @@ $InstallSize$:psm
 $InstallSizeSystem$
 $InstallSizeArchive$:psm.xpi
 Attributes=SELECTED|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\psm.exe
-
-
-
+Force Upgrade File0=[SETUP PATH]\Components\psm.xpt
+Force Upgrade File1=[SETUP PATH]\psm.exe
 
 [Core]
 Source=[XPI PATH]\xpcom.xpi
