@@ -52,7 +52,10 @@
 #include <ncurses.h>
 #endif
 
+#ifndef _REENTRANT
 #define _REENTRANT
+#endif /* !_REENTRANT */
+
 #include <pthread.h>
 
 #ifdef SOLARIS
