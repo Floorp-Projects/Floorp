@@ -785,7 +785,7 @@ function delayedStartup()
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
   // Set up Sanitize Item
-  // gSanitizeListener = new SanitizeListener();
+  gSanitizeListener = new SanitizeListener();
 
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
 
@@ -916,6 +916,9 @@ function Shutdown()
     pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
   } catch (ex) {
   }
+  
+  if (gSanitizeListener)
+    gSanitizeListener.shutdown();
 
   BrowserOffline.uninit();
   
@@ -1131,11 +1134,6 @@ SanitizeListener.prototype =
       this._setSanitizeItem();
       break;
     case "quit-application-granted":
-      var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
-      pbi.removeObserver(this.promptDomain, this);
-
-      this._os.removeObserver(this, "quit-application-granted");
-      
       if (gPrefService.getBoolPref(this.shutdownDomain) &&
           !gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
         this.sanitize(null);
@@ -1143,6 +1141,14 @@ SanitizeListener.prototype =
       }
       break;
     }
+  },
+  
+  shutdown: function ()
+  {
+    var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+    pbi.removeObserver(this.promptDomain, this);
+
+    this._os.removeObserver(this, "quit-application-granted");
   },
   
   _setSanitizeItem: function ()
