@@ -187,6 +187,10 @@ class nsWidget : public nsBaseWidget
 
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
+  // Static method used to trampoline to OnDestroySignal
+  static gint DestroySignal(GtkWidget *      aGtkWidget,
+                            nsWidget*        aWidget);
+
 private:
 
   //////////////////////////////////////////////////////////////////
@@ -217,9 +221,6 @@ private:
 
   static gint RealizeSignal(GtkWidget *      aWidget, 
                             gpointer         aData);
-
-  static gint DestroySignal(GtkWidget *      aGtkWidget,
-                            nsWidget*        aWidget);
 
   //////////////////////////////////////////////////////////////////
   //
