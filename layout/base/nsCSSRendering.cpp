@@ -2509,9 +2509,16 @@ FindElementBackground(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIContent> content;
   aForFrame->GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMHTMLBodyElement> body = do_QueryInterface(content);
-  if (!body || !parentFrame)
-    return PR_TRUE; // not frame for BODY element
+  if (!content || !content->IsContentOfType(nsIContent::eHTML))
+    return PR_TRUE;  // not frame for an HTML element
+  
+  if (!parentFrame)
+    return PR_TRUE; // no parent to look at
+  
+  nsCOMPtr<nsIAtom> tag;
+  content->GetTag(*getter_AddRefs(tag));
+  if (tag != nsHTMLAtoms::body)
+    return PR_TRUE; // not frame for <BODY> element
 
   // We should only look at the <html> background if we're in an HTML document
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
