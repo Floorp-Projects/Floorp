@@ -169,7 +169,8 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
 #if defined (XP_MACOSX)
     rv = profileFile->SetPersistentDescriptor(nsDependentCString(profilePath));
 #else
-    rv = profileFile->InitWithNativePath(nsDependentCString(profilePath));
+    NS_ConvertUTF8toUTF16 widePath(profilePath);
+    rv = profileFile->InitWithPath(widePath);
 #endif
     if (NS_FAILED(rv)) continue;
 
