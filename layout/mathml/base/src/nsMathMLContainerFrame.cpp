@@ -1170,28 +1170,34 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
 
-  nsRect rect;
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
-  while (childFrame) {
-    childFrame->GetRect(rect);
-    aDesiredSize.width += rect.width;
-    if (aDesiredSize.descent < rect.x) aDesiredSize.descent = rect.x;
-    if (aDesiredSize.ascent < rect.y) aDesiredSize.ascent = rect.y;
-    childFrame->GetNextSibling(&childFrame);
+  const nsStyleFont* font;
+  aFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+  nscoord ascent = 0, descent = 0;
+  if (fm) {
+    fm->GetMaxAscent(ascent);
+    fm->GetMaxDescent(descent);
   }
+
+  nsBoundingMetrics bm;
+  NS_STATIC_CAST(nsMathMLContainerFrame*, aFrame)->GetBoundingMetrics(bm);
+  aDesiredSize.mBoundingMetrics = bm;
+  aDesiredSize.width = bm.width;
+  aDesiredSize.ascent = PR_MAX(bm.ascent, ascent);
+  aDesiredSize.descent = PR_MAX(bm.descent, descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  NS_STATIC_CAST(nsMathMLContainerFrame*,
-                 aFrame)->GetBoundingMetrics(aDesiredSize.mBoundingMetrics);
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
+    nsRect rect;
+    nsIFrame* childFrame;
     aFrame->FirstChild(aPresContext, nsnull, &childFrame);
     while (childFrame) {
       childFrame->GetRect(rect);
       nsHTMLReflowMetrics childSize(nsnull);
       childSize.width = rect.width;
-      childSize.height = rect.height;
+      childSize.height = aDesiredSize.height; //rect.height;
 
       // place and size the child
       dy = aDesiredSize.ascent - rect.y;

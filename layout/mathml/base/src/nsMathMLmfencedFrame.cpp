@@ -300,6 +300,8 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
   // the *same* initial aDesiredSize.mBoundingMetrics. If we were to use the base
   // method here, our stretchy frames will be stretched and placed, and we may
   // end up stretching our fences/separators with a different aDesiredSize.
+  // XXX The above decision was revisited in bug 121748 and this code can be
+  // refactored to use nsMathMLContainerFrame::Reflow() at some stage.
 
   PRInt32 count = 0;
   nsReflowStatus childStatus;
@@ -382,6 +384,10 @@ nsMathMLmfencedFrame::doReflow(nsIPresContext*          aPresContext,
       }
       childFrame->GetNextSibling(&childFrame);
     }
+    // bug 121748: for surrounding fences & separators, use a size that covers everything
+    mathMLFrame->GetPreferredStretchSize(aPresContext, *aReflowState.rendContext,
+                                         STRETCH_CONSIDER_EMBELLISHMENTS,
+                                         stretchDir, containerSize);
   }
 
   //////////////////////////////////////////
