@@ -78,6 +78,7 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
+		nsDOMLists.cpp \
 		nsGeneratedIterator.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \

@@ -274,6 +274,12 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULTreeBuilder_id,
 #endif
 
+  // DOMStringList object
+  eDOMClassInfo_DOMStringList_id,
+
+  // NameList object used by the DOM
+  eDOMClassInfo_NameList_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

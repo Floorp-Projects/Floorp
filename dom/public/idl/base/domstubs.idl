@@ -78,6 +78,8 @@ interface nsIDOMNodeList;
 interface nsIDOMNotation;
 interface nsIDOMProcessingInstruction;
 interface nsIDOMText;
+interface nsIDOMDOMStringList;
+interface nsIDOMNameList;
 
 // Needed for raises() in our IDL
 interface DOMException;

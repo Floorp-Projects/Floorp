@@ -105,6 +105,8 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMDOMStringList.h"
+#include "nsIDOMNameList.h"
 
 // HTMLFormElement helper includes
 #include "nsIForm.h"
@@ -831,6 +833,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
 #endif
+
+  NS_DEFINE_CLASSINFO_DATA(DOMStringList, nsStringListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(NameList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2242,6 +2250,15 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
 #endif
+
+  DOM_CLASSINFO_MAP_BEGIN(DOMStringList, nsIDOMDOMStringList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NameList, nsIDOMNameList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNameList)
+  DOM_CLASSINFO_MAP_END
+
 
 #ifdef NS_DEBUG
   {
@@ -4684,12 +4701,11 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return NS_OK;
 }
 
-
-// NodeList scriptable helper
+// Generic array scriptable helper.
 
 NS_IMETHODIMP
-nsArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                     JSObject *obj, PRBool *_retval)
+nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *obj, PRBool *_retval)
 {
   // Recursion protection in case someone tries to be smart and call
   // the enumerate hook from a user defined .length getter, or
@@ -4723,6 +4739,8 @@ nsArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   return ok ? NS_OK : NS_ERROR_UNEXPECTED;
 }
+
+// NodeList scriptable helper
 
 nsresult
 nsArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
@@ -4767,6 +4785,19 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return NS_OK;
+}
+
+
+// StringList scriptable helper
+
+nsresult
+nsStringListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
+                            nsAString& aResult)
+{
+  nsCOMPtr<nsIDOMDOMStringList> list(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+
+  return list->Item(aIndex, aResult);
 }
 
 
