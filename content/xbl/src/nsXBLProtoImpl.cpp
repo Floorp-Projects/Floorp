@@ -83,7 +83,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   for (nsXBLProtoImplMember* curr = mMembers;
        curr;
        curr = curr->GetNext())
-    curr->InstallMember(context, aBoundElement, targetScriptObject, targetClassObject);
+    curr->InstallMember(context, aBoundElement, targetScriptObject,
+                        targetClassObject, mClassName);
   return NS_OK;
 }
 

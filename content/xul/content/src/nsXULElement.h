@@ -456,7 +456,7 @@ public:
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
-    NS_IMETHOD GetBindingParent(nsIContent** aContent);
+    NS_IMETHOD GetBindingParent(nsIContent** aContent) const;
     NS_IMETHOD SetBindingParent(nsIContent* aParent);
     NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
     NS_IMETHOD GetBaseURL(nsIURI** aURI) const;
@@ -498,6 +498,8 @@ public:
                                    void* aTarget,
                                    nsIAtom *aName,
                                    const nsAString& aBody,
+                                   const char* aURL,
+                                   PRUint32 aLineNo,
                                    void** aHandler);
     NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
 

@@ -1726,6 +1726,8 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                                   void* aTarget,
                                   nsIAtom *aName,
                                   const nsAString& aBody,
+                                  const char* aURL,
+                                  PRUint32 aLineNo,
                                   void** aHandler)
 {
     nsresult rv;
@@ -1746,7 +1748,8 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     }
 
     // Compile the event handler
-    rv = aContext->CompileEventHandler(scopeObject, aName, aBody, !scopeObject,
+    rv = aContext->CompileEventHandler(scopeObject, aName, aBody,
+                                       aURL, aLineNo, !scopeObject,
                                        aHandler);
     if (NS_FAILED(rv)) return rv;
 

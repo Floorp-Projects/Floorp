@@ -51,6 +51,7 @@ class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIDOMEventReceiver;
+class nsXBLPrototypeBinding;
 
 #define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
 #define NS_HANDLER_TYPE_XBL_COMMAND     (1 << 1)
@@ -69,7 +70,8 @@ public:
                         const PRUnichar* aAction, const PRUnichar* aCommand,
                         const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
                         const PRUnichar* aModifiers, const PRUnichar* aButton,
-                        const PRUnichar* aClickCount, const PRUnichar* aPreventDefault);
+                        const PRUnichar* aClickCount, const PRUnichar* aPreventDefault,
+                        nsXBLPrototypeBinding* aBinding);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
@@ -84,10 +86,7 @@ public:
   void AppendHandlerText(const nsAString& aText);
 
   void SetLineNumber(PRUint32 aLineNumber) {
-    // XXXbz JS event handlers do not have line numbers associated to
-    // them... see the XXXbe comment in nsJSContext::CompileEventHandler
-    // We can get line numbers here easily; getting the filename/URI
-    // of the script will be much harder...
+    mLineNumber = aLineNumber;
   }
 
   PRUint8 GetPhase() { return mPhase; }
@@ -141,10 +140,13 @@ protected:
 protected:
   union {
     nsIContent* mHandlerElement;  // For XUL <key> element handlers.
-    PRUnichar* mHandlerText;      // For XBL handlers (we don't build an element for the <handler>,
-                                  // and instead we cache the JS text or command name that we should
-                                  // use.
+    PRUnichar* mHandlerText;      // For XBL handlers (we don't build an
+                                  // element for the <handler>, and instead we
+                                  // cache the JS text or command name that we
+                                  // should use.
   };
+
+  PRUint32 mLineNumber;  // The line number we started at in the XBL file
   
   // The following four values make up 32 bits.
   PRUint8 mPhase;            // The phase (capturing, bubbling)
@@ -167,6 +169,7 @@ protected:
   // Prototype handlers are chained. We own the next handler in the chain.
   nsXBLPrototypeHandler* mNextHandler;
   nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
+  nsXBLPrototypeBinding* mPrototypeBinding; // the binding owns us
 };
 
 #endif

@@ -105,9 +105,14 @@ public:
   nsXBLProtoImplMember* GetNext() { return mNext; };
   void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; };
 
-  virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                 void* aScriptObject, void* aTargetClassObject)=0;
-  virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject)=0;
+  virtual nsresult InstallMember(nsIScriptContext* aContext,
+                                 nsIContent* aBoundElement, 
+                                 void* aScriptObject,
+                                 void* aTargetClassObject,
+                                 const nsCString& aClassStr) = 0;
+  virtual nsresult CompileMember(nsIScriptContext* aContext,
+                                 const nsCString& aClassStr,
+                                 void* aClassObject)=0;
 
 protected:
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.

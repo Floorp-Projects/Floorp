@@ -77,7 +77,7 @@ public:
    *                     nsnull to use a default scope
    * @param aPrincipal the principal that produced the script
    * @param aURL the URL or filename for error messages
-   * @param aLineNo the starting line number for the script for error messages
+   * @param aLineNo the starting line number of the script for error messages
    * @param aVersion the script language version to use when executing
    * @param aRetValue the result of executing the script
    * @param aIsUndefined true if the result of executing the script is the
@@ -113,7 +113,7 @@ public:
    *                     or nsnull to use a default scope
    * @param aPrincipal the principal that produced the script
    * @param aURL the URL or filename for error messages
-   * @param aLineNo the starting line number for the script for error messages
+   * @param aLineNo the starting line number of the script for error messages
    * @param aVersion the script language version to use when executing
    * @param aScriptObject an executable object that's the result of compiling
    *                      the script.  The caller is responsible for GC rooting
@@ -161,6 +161,8 @@ public:
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
    * @param aBody the event handler function's body
+   * @param aURL the URL or filename for error messages
+   * @param aLineNo the starting line number of the script for error messages
    * @param aShared flag telling whether the compiled event handler will be
    *        shared via nsIScriptEventHandlerOwner, in which case any static
    *        link compiled into it based on aTarget should be cleared, both
@@ -175,6 +177,8 @@ public:
   NS_IMETHOD CompileEventHandler(void* aTarget,
                                  nsIAtom* aName,
                                  const nsAString& aBody,
+                                 const char* aURL,
+                                 PRUint32 aLineNo,
                                  PRBool aShared,
                                  void** aHandler) = 0;
 

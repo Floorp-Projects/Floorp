@@ -924,10 +924,11 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
         // Always let the handler owner compile the event handler, as
         // it may want to use a special context or scope object.
         rv = handlerOwner->CompileEventHandler(aContext, scriptObject, aName,
-                                               aBody, &handler);
+                                               aBody, nsnull, 0, &handler);
       }
       else {
         rv = aContext->CompileEventHandler(scriptObject, aName, aBody,
+                                           nsnull, 0,
                                            (handlerOwner != nsnull),
                                            &handler);
       }
@@ -1115,10 +1116,13 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
           // handler, as it may want to use a special
           // context or scope object.
           result = handlerOwner->CompileEventHandler(aContext, jsobj, aName,
-                                                     handlerBody, &handler);
+                                                     handlerBody,
+                                                     nsnull, 0,
+                                                     &handler);
         }
         else {
           result = aContext->CompileEventHandler(jsobj, aName, handlerBody,
+                                                 nsnull, 0,
                                                  (handlerOwner != nsnull),
                                                  &handler);
         }

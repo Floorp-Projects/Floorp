@@ -56,17 +56,22 @@ public:
 
   void AppendFieldText(const nsAString& aText);
   void SetLineNumber(PRUint32 aLineNumber) {
-    // XXXbz fields need to have a URI in InstallMember (see XXX
-    // comment there) before line number reporting will be useful.
+    mLineNumber = aLineNumber;
   }
   
-  virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                 void* aScriptObject, void* aTargetClassObject);
-  virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject);
+  virtual nsresult InstallMember(nsIScriptContext* aContext,
+                                 nsIContent* aBoundElement, 
+                                 void* aScriptObject,
+                                 void* aTargetClassObject,
+                                 const nsCString& aClassStr);
+  virtual nsresult CompileMember(nsIScriptContext* aContext,
+                                 const nsCString& aClassStr,
+                                 void* aClassObject);
 
 protected:
   PRUnichar* mFieldText;
   PRUint32 mFieldTextLength;
+  PRUint32 mLineNumber;
   uintN mJSAttributes;
 };
 

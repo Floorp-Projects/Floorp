@@ -64,9 +64,14 @@ public:
   void SetGetterLineNumber(PRUint32 aLineNumber);
   void SetSetterLineNumber(PRUint32 aLineNumber);
 
-  virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
-                                 void* aScriptObject, void* aTargetClassObject);
-  virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject);
+  virtual nsresult InstallMember(nsIScriptContext* aContext,
+                                 nsIContent* aBoundElement, 
+                                 void* aScriptObject,
+                                 void* aTargetClassObject,
+                                 const nsCString& aClassStr);
+  virtual nsresult CompileMember(nsIScriptContext* aContext,
+                                 const nsCString& aClassStr,
+                                 void* aClassObject);
 
 protected:
   union {
