@@ -143,72 +143,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSSocketInfo,
                               nsISSLStatusProvider)
 
 NS_IMETHODIMP
-nsNSSSocketInfo::GetHostName(char * *aHostName)
-{
-  if (mHostName.IsEmpty())
-    *aHostName = nsnull;
-  else
-    *aHostName = mHostName.ToNewCString();
-  return NS_OK;
-}
-
-
-nsresult 
-nsNSSSocketInfo::SetHostName(const char *aHostName)
-{
-  mHostName.AssignWithConversion(aHostName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetHostPort(PRInt32 *aPort)
-{
-  *aPort = mHostPort;
-  return NS_OK;
-}
-
-nsresult 
-nsNSSSocketInfo::SetHostPort(PRInt32 aPort)
-{
-  mHostPort = aPort;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetProxyName(char** aName)
-{
-  if (mProxyName.IsEmpty())
-    *aName = nsnull;
-  else
-    *aName = mProxyName.ToNewCString();
-  return NS_OK;
-}
-
-
-nsresult 
-nsNSSSocketInfo::SetProxyName(const char* aName)
-{
-  mProxyName.AssignWithConversion(aName);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsNSSSocketInfo::GetProxyPort(PRInt32* aPort)
-{
-  *aPort = mProxyPort;
-  return NS_OK;
-}
-
-nsresult
-nsNSSSocketInfo::SetProxyPort(PRInt32 aPort)
-{
-  mProxyPort = aPort;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
   *aCallbacks = mCallbacks;
@@ -1545,10 +1479,6 @@ nsSSLIOLayerAddToSocket(const char* host,
   
   NS_ADDREF(infoObject);
   
-  infoObject->SetHostName(host);
-  infoObject->SetHostPort(port);
-  infoObject->SetProxyName(proxyHost);
-  infoObject->SetProxyPort(proxyPort);
   infoObject->SetForTLSStepUp(forTLSStepUp);
 
   char* peerId;
