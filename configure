@@ -7458,7 +7458,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
+  USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
 else
   echo "$ac_t""no" 1>&6
 echo $ac_n "checking for pthread_attr_init in -lc_r""... $ac_c" 1>&6
@@ -7496,7 +7496,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
+  USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
 else
   echo "$ac_t""no" 1>&6
 echo $ac_n "checking for pthread_attr_init in -lc""... $ac_c" 1>&6
@@ -7534,7 +7534,7 @@ LIBS="$ac_save_LIBS"
 fi
 if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
   echo "$ac_t""yes" 1>&6
-  _HAVE_PTHREADS=1 
+  USE_PTHREADS=1 
 else
   echo "$ac_t""no" 1>&6
 fi
