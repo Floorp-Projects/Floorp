@@ -30,9 +30,7 @@
 #include "pprthred.h"
 #include "plstr.h"
 #include "jni.h"
-#ifdef MOCHA
 #include "libmocha.h"
-#endif
 
 extern "C" void jvm_InitLCGlue(void);      // in lcglue.cpp
 
