@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsWinCharset.cpp		\
 	nsCharsetAliasImp.cpp		\
 	nsUConvDll.cpp			\
+#	nsMappingCache.cpp		\
 	nsURLProperties.cpp		\
 	$(NULL)
 
@@ -45,6 +46,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
 	.\$(OBJDIR)\nsCharsetAliasImp.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
+#	.\$(OBJDIR)\nsMappingCache.obj 		\
 	.\$(OBJDIR)\nsURLProperties.obj 		\
 	$(NULL)
 
@@ -90,7 +92,10 @@ install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
+	$(MAKE_INSTALL) .\wincharset.properties $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\bin\res\charsetalias.properties
+	rm -f $(DIST)\bin\res\wincharset.properties
