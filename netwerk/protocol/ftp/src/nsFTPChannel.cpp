@@ -581,7 +581,7 @@ nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
             NS_ERROR("ftp state is null.");
     }
 
-    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending)
+    if (!mEventSink || (mLoadFlags & LOAD_BACKGROUND) || !mIsPending || NS_FAILED(mStatus))
         return NS_OK;
 
     return mEventSink->OnStatus(this, mUserContext, aStatus,

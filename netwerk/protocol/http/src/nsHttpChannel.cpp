@@ -3188,8 +3188,8 @@ NS_IMETHODIMP
 nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                  PRUint32 progress, PRUint32 progressMax)
 {
-    // block socket status event after OnStopRequest has been fired.
-    if (mProgressSink && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
+    // block socket status event after Cancel or OnStopRequest has been called.
+    if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {
         LOG(("sending status notification [this=%x status=%x progress=%u/%u]\n",
             this, status, progress, progressMax));
 

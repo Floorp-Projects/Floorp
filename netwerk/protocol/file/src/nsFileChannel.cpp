@@ -165,6 +165,7 @@ NS_IMETHODIMP
 nsFileChannel::Cancel(nsresult status)
 {
     NS_ENSURE_TRUE(mRequest, NS_ERROR_UNEXPECTED);
+    mStatus = status;
     return mRequest->Cancel(status);
 }
 
@@ -596,7 +597,7 @@ nsFileChannel::OnTransportStatus(nsITransport *trans, nsresult status,
                                  PRUint32 progress, PRUint32 progressMax)
 {
     // suppress status notification if channel is no longer pending!
-    if (mProgressSink && mRequest && !(mLoadFlags & LOAD_BACKGROUND)) {
+    if (mProgressSink && NS_SUCCEEDED(mStatus) && mRequest && !(mLoadFlags & LOAD_BACKGROUND)) {
         // file channel does not send OnStatus events!
         if (status == nsITransport::STATUS_READING ||
             status == nsITransport::STATUS_WRITING) {
