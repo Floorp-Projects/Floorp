@@ -1,6 +1,0 @@
-nsICachedNetData.idl
-nsINetDataCache.idl
-nsINetDataCacheManager.idl
-nsINetDataCacheRecord.idl
-nsINetDataDiskCache.idl
-nsIStreamAsFile.idl
