@@ -452,14 +452,20 @@ $index_html = 0;
 END
 
 if (!LocalVarExists('mysqlpath')) {
-    my $mysql_binaries = `which mysql`;
-    if ($mysql_binaries =~ /no mysql/ || $mysql_binaries eq '') {
-        # If which didn't find it, just provide a reasonable default
-        $mysql_binaries = "/usr/bin";
+    my $mysql_binaries;
+    if ($^O !~ /MSWin32/i) {
+        $mysql_binaries = `which mysql`;
+        if ($mysql_binaries =~ /no mysql/ || $mysql_binaries eq '') {
+            # If which didn't find it, just provide a reasonable default
+            $mysql_binaries = "/usr/bin";
+        } else {
+            $mysql_binaries =~ s:/mysql\n$::;
+        }
     } else {
-        $mysql_binaries =~ s:/mysql\n$::;
-    }
-
+        # provide a reasonable default for Windows
+        $mysql_binaries = 'c:\mysql\bin';
+    }    
+    
     LocalVar('mysqlpath', <<"END");
 #
 # In order to do certain functions in Bugzilla (such as sync the shadow
@@ -467,18 +473,23 @@ if (!LocalVarExists('mysqlpath')) {
 # Because it's possible that these files aren't in your path, you can specify
 # their location here.
 # Please specify only the directory name, with no trailing slash.
-\$mysqlpath = "$mysql_binaries";
+\$mysqlpath = '$mysql_binaries';
 END
 }
 
 
 if (!LocalVarExists('cvsbin')) {
-    my $cvs_executable = `which cvs`;
-    if ($cvs_executable =~ /no cvs/ || $cvs_executable eq '') {
-        # If which didn't find it, just set to blank
-        $cvs_executable = "";
+    my $cvs_executable;
+    if ($^O !~ /MSWin32/i) {
+        $cvs_executable = `which cvs`;
+        if ($cvs_executable =~ /no cvs/ || $cvs_executable eq '') {
+            # If which didn't find it, just set to blank
+            $cvs_executable = "";
+        } else {
+            chomp $cvs_executable;
+        }
     } else {
-        chomp $cvs_executable;
+        $cvs_executable = "";
     }
 
     LocalVar('cvsbin', <<"END");
@@ -493,20 +504,25 @@ END
 
 
 if (!LocalVarExists('interdiffbin')) {
-    my $interdiff_executable = `which interdiff`;
-    if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
-        if (!$silent) {
-            print "\nOPTIONAL NOTE: If you want to ";
-            print "be able to use the\n 'difference between two patches' ";
-            print "feature of Bugzilla (requires\n the PatchReader Perl module ";
-            print "as well), you should install\n patchutils from ";
-            print "http://cyberelk.net/tim/patchutils/\n\n";
-        }
+    my $interdiff_executable;
+    if ($^O !~ /MSWin32/i) {
+        $interdiff_executable = `which interdiff`;
+        if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
+            if (!$silent) {
+                print "\nOPTIONAL NOTE: If you want to ";
+                print "be able to use the\n 'difference between two patches' ";
+                print "feature of Bugzilla (requires\n the PatchReader Perl module ";
+                print "as well), you should install\n patchutils from ";
+                print "http://cyberelk.net/tim/patchutils/\n\n";
+            }
 
-        # If which didn't find it, set to blank
-        $interdiff_executable = "";
+            # If which didn't find it, set to blank
+            $interdiff_executable = "";
+        } else {
+            chomp $interdiff_executable;
+        }
     } else {
-        chomp $interdiff_executable;
+        $interdiff_executable = "";
     }
 
     LocalVar('interdiffbin', <<"END");
@@ -522,12 +538,17 @@ END
 
 
 if (!LocalVarExists('diffpath')) {
-    my $diff_binaries = `which diff`;
-    if ($diff_binaries =~ /no diff/ || $diff_binaries eq '') {
-        # If which didn't find it, set to blank
-        $diff_binaries = "";
+    my $diff_binaries;
+    if ($^O !~ /MSWin32/i) {
+        $diff_binaries = `which diff`;
+        if ($diff_binaries =~ /no diff/ || $diff_binaries eq '') {
+            # If which didn't find it, set to blank
+            $diff_binaries = "";
+        } else {
+            $diff_binaries =~ s:/diff\n$::;
+        }
     } else {
-        $diff_binaries =~ s:/diff\n$::;
+        $diff_binaries = "";
     }
 
     LocalVar('diffpath', <<"END");
@@ -556,8 +577,14 @@ LocalVar('create_htaccess', <<'END');
 $create_htaccess = 1;
 END
 
-    
-LocalVar('webservergroup', '
+my $webservergroup_default;
+if ($^O !~ /MSWin32/i) {
+    $webservergroup_default = 'nobody';
+} else {
+    $webservergroup_default = '';
+}
+
+LocalVar('webservergroup', <<"END");
 #
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
@@ -569,8 +596,8 @@ LocalVar('webservergroup', '
 # and you cannot set this up any other way. YOU HAVE BEEN WARNED.
 # If you set this to anything besides "", you will need to run checksetup.pl
 # as root, or as a user who is a member of the specified group.
-$webservergroup = "nobody";
-');
+\$webservergroup = "$webservergroup_default";
+END
 
 
 
@@ -745,6 +772,20 @@ see below are caused by this.
 
 EOF
     }
+
+    if ($^O =~ /MSWin32/i) {
+        print <<EOF;
+      
+Warning: You have set webservergroup in your localconfig.
+Please understand that this does not bring you any security when
+running under Windows.
+Verify that the file permissions in your Bugzilla directory are
+suitable for your system.
+Avoid unnecessary write access.
+
+EOF
+    }
+
 } else {
     # Theres no webservergroup, this is very very very very bad.
     # However, if we're being run on windows, then this option doesn't
@@ -1249,59 +1290,61 @@ sub fixPerms {
     }
 }
 
-if ($my_webservergroup) {
-    # Funny! getgrname returns the GID if fed with NAME ...
-    my $webservergid = getgrnam($my_webservergroup) 
+if ($^O !~ /MSWin32/i) {
+    if ($my_webservergroup) {
+        # Funny! getgrname returns the GID if fed with NAME ...
+        my $webservergid = getgrnam($my_webservergroup) 
         or die("no such group: $my_webservergroup");
-    # chown needs to be called with a valid uid, not 0.  $< returns the
-    # caller's uid.  Maybe there should be a $bugzillauid, and call with that
-    # userid.
-    fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
-    fixPerms("$datadir/.htaccess", $<, $webservergid, 027);
-    fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
-    fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
-    fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
-    fixPerms($webdotdir, $<, $webservergid, 007, 1);
-    fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
-    fixPerms("$datadir/params", $<, $webservergid, 017);
-    fixPerms('*', $<, $webservergid, 027);
-    fixPerms('Bugzilla', $<, $webservergid, 027, 1);
-    fixPerms($templatedir, $<, $webservergid, 027, 1);
-    fixPerms('css', $<, $webservergid, 027, 1);
-    fixPerms('js', $<, $webservergid, 027, 1);
-    chmod 0644, 'globals.pl';
-    chmod 0644, 'RelationSet.pm';
-
-    # Don't use fixPerms here, because it won't change perms on the directory
-    # unless its using recursion
-    chown $<, $webservergid, $datadir;
-    chmod 0771, $datadir;
-    chown $<, $webservergid, 'graphs';
-    chmod 0770, 'graphs';
-} else {
-    # get current gid from $( list
-    my $gid = (split " ", $()[0];
-    fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
-    fixPerms("$datadir/.htaccess", $<, $gid, 022);
-    fixPerms("$datadir/duplicates", $<, $gid, 022, 1);
-    fixPerms("$datadir/mining", $<, $gid, 022, 1);
-    fixPerms("$datadir/template", $<, $gid, 000, 1); # webserver will write to these
-    fixPerms($webdotdir, $<, $gid, 000, 1);
-    chmod 01777, $webdotdir;
-    fixPerms("$webdotdir/.htaccess", $<, $gid, 022);
-    fixPerms("$datadir/params", $<, $gid, 011);
-    fixPerms('*', $<, $gid, 022);
-    fixPerms('Bugzilla', $<, $gid, 022, 1);
-    fixPerms($templatedir, $<, $gid, 022, 1);
-    fixPerms('css', $<, $gid, 022, 1);
-    fixPerms('js', $<, $gid, 022, 1);
-
-    # Don't use fixPerms here, because it won't change perms on the directory
-    # unless its using recursion
-    chown $<, $gid, $datadir;
-    chmod 0777, $datadir;
-    chown $<, $gid, 'graphs';
-    chmod 01777, 'graphs';
+        # chown needs to be called with a valid uid, not 0.  $< returns the
+        # caller's uid.  Maybe there should be a $bugzillauid, and call with that
+        # userid.
+        fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
+        fixPerms("$datadir/.htaccess", $<, $webservergid, 027);
+        fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
+        fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
+        fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
+        fixPerms($webdotdir, $<, $webservergid, 007, 1);
+        fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
+        fixPerms("$datadir/params", $<, $webservergid, 017);
+        fixPerms('*', $<, $webservergid, 027);
+        fixPerms('Bugzilla', $<, $webservergid, 027, 1);
+        fixPerms($templatedir, $<, $webservergid, 027, 1);
+        fixPerms('css', $<, $webservergid, 027, 1);
+        fixPerms('js', $<, $webservergid, 027, 1);
+        chmod 0644, 'globals.pl';
+        chmod 0644, 'RelationSet.pm';
+        
+        # Don't use fixPerms here, because it won't change perms on the directory
+        # unless its using recursion
+        chown $<, $webservergid, $datadir;
+        chmod 0771, $datadir;
+        chown $<, $webservergid, 'graphs';
+        chmod 0770, 'graphs';
+    } else {
+        # get current gid from $( list
+        my $gid = (split " ", $()[0];
+        fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
+        fixPerms("$datadir/.htaccess", $<, $gid, 022);
+        fixPerms("$datadir/duplicates", $<, $gid, 022, 1);
+        fixPerms("$datadir/mining", $<, $gid, 022, 1);
+        fixPerms("$datadir/template", $<, $gid, 000, 1); # webserver will write to these
+        fixPerms($webdotdir, $<, $gid, 000, 1);
+        chmod 01777, $webdotdir;
+        fixPerms("$webdotdir/.htaccess", $<, $gid, 022);
+        fixPerms("$datadir/params", $<, $gid, 011);
+        fixPerms('*', $<, $gid, 022);
+        fixPerms('Bugzilla', $<, $gid, 022, 1);
+        fixPerms($templatedir, $<, $gid, 022, 1);
+        fixPerms('css', $<, $gid, 022, 1);
+        fixPerms('js', $<, $gid, 022, 1);
+        
+        # Don't use fixPerms here, because it won't change perms on the directory
+        # unless its using recursion
+        chown $<, $gid, $datadir;
+        chmod 0777, $datadir;
+        chown $<, $gid, 'graphs';
+        chmod 01777, 'graphs';
+    }
 }
 
 ###########################################################################
@@ -3877,7 +3920,9 @@ if (!GroupDoesExist("canconfirm")) {
 
 
 sub bailout {   # this is just in case we get interrupted while getting passwd
-    system("stty","echo"); # re-enable input echoing
+    if ($^O !~ /MSWin32/i) {
+        system("stty","echo"); # re-enable input echoing
+    }
     exit 1;
 }
 
@@ -4028,7 +4073,9 @@ if ($sth->rows == 0) {
     $SIG{QUIT} = \&bailout;
     $SIG{TERM} = \&bailout;
 
-    system("stty","-echo");  # disable input echoing
+    if ($^O !~ /MSWin32/i) {
+        system("stty","-echo");  # disable input echoing
+    }
 
     while( $pass1 ne $pass2 ) {
       while( $pass1 eq "" || $pass1 !~ /^[[:print:]]{3,16}$/ ) {
@@ -4060,7 +4107,10 @@ if ($sth->rows == 0) {
     # Crypt the administrator's password
     my $cryptedpassword = Crypt($pass1);
 
-    system("stty","echo"); # re-enable input echoing
+    if ($^O !~ /MSWin32/i) {
+        system("stty","echo"); # re-enable input echoing
+    }
+
     $SIG{HUP}  = 'DEFAULT'; # and remove our interrupt hooks
     $SIG{INT}  = 'DEFAULT';
     $SIG{QUIT} = 'DEFAULT';
