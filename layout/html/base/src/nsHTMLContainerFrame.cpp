@@ -192,7 +192,8 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
       frame->GetStyleContext(getter_AddRefs(styleContext));
       const nsStyleDisplay* styleDisplay;
       ::GetStyleData(styleContext.get(), &styleDisplay);
-      if (!styleDisplay->IsBlockLevel()) {
+      if (!styleDisplay->IsBlockLevel() &&
+          styleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL) {
         // If an inline frame is discovered while walking up the tree,
         // we should stop according to CSS3 draft. CSS2 is rather vague
         // about this.
