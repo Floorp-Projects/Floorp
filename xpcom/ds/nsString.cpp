@@ -633,8 +633,11 @@ nsString& nsString::SetString(const char* anISOLatin1,PRInt32 aLength) {
     PRInt32 len=(aLength<0) ? nsCRT::strlen(anISOLatin1) : aLength; 
     if(mCapacity<=len) 
       EnsureCapacityFor(len);
-    for(int i=0;i<len;i++) {
-      mStr[i]=chartype(anISOLatin1[i]);
+    const unsigned char* from = (const unsigned char*) anISOLatin1;
+    const unsigned char* end = from + len;
+    PRUnichar* dst = mStr;
+    while (from < end) {
+      *dst++ = PRUnichar(*from++);
     }
     mLength=len;
     mStr[mLength]=0;
@@ -725,8 +728,11 @@ nsString& nsString::Append(const char* anISOLatin1,PRInt32 aLength) {
     if(mLength+len >= mCapacity) {
       EnsureCapacityFor(mLength+len);
     }
-    for(int i=0;i<len;i++) {
-      mStr[mLength+i]=chartype(anISOLatin1[i]);
+    const unsigned char* from = (const unsigned char*) anISOLatin1;
+    const unsigned char* end = from + len;
+    PRUnichar* to = mStr + mLength;
+    while (from < end) {
+      *to++ = PRUnichar(*from++);
     }
     mLength+=len;
     mStr[mLength]=0;
@@ -1113,8 +1119,8 @@ PRBool nsString::IsSpace(PRUnichar aChar) {
  *  @return  this
  */
 nsString& nsString::Trim(const char* aTrimSet,
-                               PRBool aEliminateLeading,
-                               PRBool aEliminateTrailing)
+                         PRBool aEliminateLeading,
+                         PRBool aEliminateTrailing)
 {
   PRUnichar* from = mStr;
   PRUnichar* end = mStr + mLength-1;
