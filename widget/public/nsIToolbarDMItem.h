@@ -21,6 +21,7 @@
 
 #include "prthread.h"
 #include "nsString.h"
+#include "nsIDMItem.h"
 
 class nsIImage;
 class nsIImageGroup;
@@ -29,7 +30,7 @@ class nsIImageGroup;
 #define NS_ITOOLBARDMITEM_IID \
 { 0x77edfec1, 0x7956, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsIToolbarDMItem : public nsISupports
+class nsIToolbarDMItem : public nsIDMItem
 {
 public:
 	// Inspectors

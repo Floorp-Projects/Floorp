@@ -33,6 +33,10 @@ class nsIDataModel : public nsISupports
 {
 
 public:
+	// Initializers
+	NS_IMETHOD InitFromURL(const nsString& url) = 0;
+	NS_IMETHOD InitFromResource(nsIDMItem* pResource) = 0;
+
 	// Inspectors
 	NS_IMETHOD GetDMWidget(nsIDMWidget*& pWidget) const = 0;
 	
