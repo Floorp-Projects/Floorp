@@ -69,6 +69,11 @@ public:
   virtual nsIURL* GetDocumentURL() const;
 
   /**
+   * Return the URLGroup for the document. May return null.
+   */
+  virtual nsIURLGroup* GetDocumentURLGroup() const;
+
+  /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
@@ -275,6 +280,7 @@ protected:
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURL* mDocumentURL;
+  nsIURLGroup* mDocumentURLGroup;
   nsCharSetID mCharacterSet;
   nsIDocument* mParentDocument;
   nsVoidArray mSubDocuments;
