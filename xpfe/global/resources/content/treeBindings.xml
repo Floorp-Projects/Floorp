@@ -201,7 +201,7 @@
            return;
          if (this.selectedItems[0].getAttribute("open") != "true") {
            var el = this.selectedItems[0].parentNode.parentNode 
-           if (el) this.selectItem(el);
+           if ( el && (el.tagName != "tree") ) this.selectItem(el);
          }
          else {
            var el = this.selectedItems[0];
