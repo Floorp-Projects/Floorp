@@ -32,6 +32,7 @@
 #include "nsIPluginManager.h"
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
+#include "nsLiveConnect.h"
 #include "nsplugin.h"
 #include "nsDebug.h"
 
@@ -181,6 +182,9 @@ public:
      */
     NS_IMETHOD
     HeapMinimize(void);
+
+private:
+	nsILiveconnect* mLiveconnect;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1060,14 +1064,17 @@ NPP_HandleEvent(NPP instance, void* event)
 //
 //******************************************************************************
 
-CPluginManager::CPluginManager(void) 
+CPluginManager::CPluginManager(void)
 {
     // Set reference count to 0.
     NS_INIT_REFCNT();
+    
+    mLiveconnect = NULL;
 }
 
 CPluginManager::~CPluginManager(void) 
 {
+	NS_IF_RELEASE(mLiveconnect);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1183,6 +1190,13 @@ CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID,
 	// the only service we support currently is nsIAllocator.
 	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kAllocatorCID)) {
 		return QueryInterface(aIID, (void**) result);
+	}
+	if (aClass.Equals(nsILiveconnect::GetCID())) {
+		if (mLiveconnect == NULL) {
+			mLiveconnect = new nsLiveconnect;
+			NS_IF_ADDREF(mLiveconnect);
+		}
+		return mLiveconnect->QueryInterface(aIID, result);
 	}
 	return NS_ERROR_SERVICE_NOT_FOUND;
 }
