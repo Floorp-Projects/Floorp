@@ -256,7 +256,7 @@ Contributor(s): ______________________________________. -->
   	<menu id="BookmarksMenu" />
    
   <menu accesskey="t" id="tasksMenu"/>
-  <menu accesskey="h" id="helpMenu"/>
+   <menu accesskey="h" id="menu_Help"/>
 
   // Menu for testing.
   <menu accesskey="d" value="&debugMenu.label;">
