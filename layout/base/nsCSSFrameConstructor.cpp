@@ -209,6 +209,8 @@ extern nsresult
 NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
 extern nsresult
 NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame *aParentFrame, nsIFrame** newFrame);
+nsresult
+NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -7289,6 +7291,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   else if (aTag == nsSVGAtoms::use) {
     processChildren = PR_TRUE;
     rv = NS_NewSVGUseFrame(aPresShell, aContent, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::marker) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGMarkerFrame(aPresShell, aContent, &newFrame);
   }
   
   if (newFrame == nsnull) {

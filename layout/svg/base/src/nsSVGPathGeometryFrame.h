@@ -47,6 +47,7 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsISVGOuterSVGFrame.h"
+#include "nsSVGMarkerFrame.h"
 
 class nsPresContext;
 class nsIDOMSVGMatrix;
@@ -122,6 +123,10 @@ protected:
 private:
   nsCOMPtr<nsISVGRendererPathGeometry> mGeometry;
   PRUint32 mUpdateFlags;
+
+  void GetMarkerFrames(nsSVGMarkerFrame **markerStart,
+                       nsSVGMarkerFrame **markerMid,
+                       nsSVGMarkerFrame **markerEnd);
 };
 
 #endif // __NS_SVGPATHGEOMETRYFRAME_H__

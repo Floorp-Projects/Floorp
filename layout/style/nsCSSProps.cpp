@@ -1405,6 +1405,15 @@ static const nsCSSProperty gPauseSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+#ifdef MOZ_SVG
+static const nsCSSProperty gMarkerSubpropTable[] = {
+  eCSSProperty_marker_start,
+  eCSSProperty_marker_mid,
+  eCSSProperty_marker_end,
+  eCSSProperty_UNKNOWN
+};
+#endif
+
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
     #define CSS_PROP_SHORTHAND(name_, id_, method_) g##method_##SubpropTable,

@@ -864,9 +864,12 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
     fprintf(out, "%s ", URICString(svg->mFill.mPaint.mPaintServer).get());
   else
     fprintf(out, "%ld ", (long)svg->mFill.mPaint.mColor);
-  fprintf(out, "%f %d %d %d %d ",
+  fprintf(out, "%f %d %s %s %s %d %d %d ",
           svg->mFillOpacity,
           (int)svg->mFillRule,
+          URICString(svg->mMarkerEnd).get(),
+          URICString(svg->mMarkerMid).get(),
+          URICString(svg->mMarkerStart).get(),
           (int)svg->mPointerEvents,
           (int)svg->mShapeRendering,
           (int)svg->mStroke.mType);

@@ -4446,6 +4446,36 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     svg->mFillRule = parentSVG->mFillRule;
   }
+  
+  // marker-end: url, none, inherit
+  if (eCSSUnit_URL == SVGData.mMarkerEnd.GetUnit()) {
+    svg->mMarkerEnd = SVGData.mMarkerEnd.GetURLValue();
+  } else if (eCSSUnit_None == SVGData.mMarkerEnd.GetUnit()) {
+    svg->mMarkerEnd = nsnull;
+  } else if (eCSSUnit_Inherit == SVGData.mMarkerEnd.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mMarkerEnd = parentSVG->mMarkerEnd;
+  }
+
+  // marker-mid: url, none, inherit
+  if (eCSSUnit_URL == SVGData.mMarkerMid.GetUnit()) {
+    svg->mMarkerMid = SVGData.mMarkerMid.GetURLValue();
+  } else if (eCSSUnit_None == SVGData.mMarkerMid.GetUnit()) {
+    svg->mMarkerMid = nsnull;
+  } else if (eCSSUnit_Inherit == SVGData.mMarkerMid.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mMarkerMid = parentSVG->mMarkerMid;
+  }
+
+  // marker-start: url, none, inherit
+  if (eCSSUnit_URL == SVGData.mMarkerStart.GetUnit()) {
+    svg->mMarkerStart = SVGData.mMarkerStart.GetURLValue();
+  } else if (eCSSUnit_None == SVGData.mMarkerStart.GetUnit()) {
+    svg->mMarkerStart = nsnull;
+  } else if (eCSSUnit_Inherit == SVGData.mMarkerStart.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mMarkerStart = parentSVG->mMarkerStart;
+  }
 
   // stop-color: 
   SetSVGPaint(SVGData.mStopColor, parentSVG->mStopColor, mPresContext, svg->mStopColor, inherited);

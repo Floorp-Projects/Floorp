@@ -192,6 +192,12 @@ private:
                               PRInt32 & aBgPositionY) const;
   void  TryOverflowShorthand(nsAString & aString,
                              PRInt32 & aOverflowX, PRInt32 & aOverflowY) const;
+#ifdef MOZ_SVG
+  void  TryMarkerShorthand(nsAString & aString,
+                           PRInt32 & aMarkerEnd,
+                           PRInt32 & aMarkerMid,
+                           PRInt32 & aMarkerStart) const;
+#endif
 
   PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
                                        PRInt32 aThird, PRInt32 aFourth,

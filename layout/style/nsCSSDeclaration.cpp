@@ -645,6 +645,17 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       }
       break;
     }
+#ifdef MOZ_SVG
+    case eCSSProperty_marker: {
+      nsCSSValue endValue, midValue, startValue;
+      GetValueOrImportantValue(eCSSProperty_marker_end, endValue);
+      GetValueOrImportantValue(eCSSProperty_marker_mid, midValue);
+      GetValueOrImportantValue(eCSSProperty_marker_start, startValue);
+      if (endValue == midValue && midValue == startValue)
+        AppendValueToString(eCSSProperty_marker_end, aValue);
+      break;
+    }
+#endif
     default:
       NS_NOTREACHED("no other shorthands");
       break;
@@ -972,6 +983,35 @@ nsCSSDeclaration::TryOverflowShorthand(nsAString & aString,
   }
 }
 
+#ifdef MOZ_SVG
+void
+nsCSSDeclaration::TryMarkerShorthand(nsAString & aString,
+                                     PRInt32 & aMarkerEnd,
+                                     PRInt32 & aMarkerMid,
+                                     PRInt32 & aMarkerStart) const
+{
+  PRBool isImportant;
+  if (aMarkerEnd && aMarkerMid && aMarkerEnd &&
+      AllPropertiesSameImportance(aMarkerEnd, aMarkerMid, aMarkerStart,
+                                  0, 0, 0, isImportant)) {
+    nsCSSValue endValue, midValue, startValue;
+    GetValueOrImportantValue(eCSSProperty_marker_end, endValue);
+    GetValueOrImportantValue(eCSSProperty_marker_mid, midValue);
+    GetValueOrImportantValue(eCSSProperty_marker_start, startValue);
+    if (endValue == midValue && midValue == startValue) {
+      AppendASCIItoUTF16(nsCSSProps::GetStringValue(eCSSProperty_marker),
+                         aString);
+      aString.AppendLiteral(": ");
+
+      AppendCSSValueToString(eCSSProperty_marker_end, endValue, aString);
+      AppendImportanceToString(isImportant, aString);
+      aString.AppendLiteral("; ");
+      aMarkerEnd = aMarkerMid = aMarkerStart = 0;
+    }
+  }
+}
+#endif
+
 #define NS_CASE_OUTPUT_PROPERTY_VALUE(_prop, _index) \
 case _prop: \
           if (_index) { \
@@ -1018,6 +1058,10 @@ nsCSSDeclaration::ToString(nsAString& aString) const
   PRInt32 bgPositionX = 0, bgPositionY = 0;
   PRInt32 overflowX = 0, overflowY = 0;
   PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
+#ifdef MOZ_SVG
+  PRInt32 markerEnd = 0, markerMid = 0, markerStart = 0;
+#endif
+
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
     switch (property) {
@@ -1079,6 +1123,12 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 
       case eCSSProperty_overflow_x:            overflowX     = index+1; break;
       case eCSSProperty_overflow_y:            overflowY     = index+1; break;
+
+#ifdef MOZ_SVG
+      case eCSSProperty_marker_end:            markerEnd     = index+1; break;
+      case eCSSProperty_marker_mid:            markerMid     = index+1; break;
+      case eCSSProperty_marker_start:          markerStart   = index+1; break;
+#endif
 
       default: break;
     }
@@ -1149,6 +1199,9 @@ nsCSSDeclaration::ToString(nsAString& aString) const
                          bgColor, bgImage, bgRepeat, bgAttachment,
                          bgPositionX, bgPositionY);
   TryOverflowShorthand(aString, overflowX, overflowY);
+#ifdef MOZ_SVG
+  TryMarkerShorthand(aString, markerEnd, markerMid, markerStart);
+#endif
 
   for (index = 0; index < count; index++) {
     nsCSSProperty property = OrderValueAt(index);
@@ -1226,6 +1279,12 @@ nsCSSDeclaration::ToString(nsAString& aString) const
 
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_x, overflowX)
       NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_overflow_y, overflowY)
+
+#ifdef MOZ_SVG
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_marker_end, markerEnd)
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_marker_mid, markerMid)
+      NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_marker_start, markerStart)
+#endif
 
       case eCSSProperty_margin_left_ltr_source:
       case eCSSProperty_margin_left_rtl_source:

@@ -1208,6 +1208,9 @@ nsCSSSVG::nsCSSSVG(const nsCSSSVG& aCopy)
       mFill(aCopy.mFill),
       mFillOpacity(aCopy.mFillOpacity),
       mFillRule(aCopy.mFillRule),
+      mMarkerEnd(aCopy.mMarkerEnd),
+      mMarkerMid(aCopy.mMarkerMid),
+      mMarkerStart(aCopy.mMarkerStart),
       mPointerEvents(aCopy.mPointerEvents),
       mShapeRendering(aCopy.mShapeRendering),
       mStopColor(aCopy.mStopColor),
@@ -1244,6 +1247,9 @@ void nsCSSSVG::List(FILE* out, PRInt32 aIndent) const
   mFill.AppendToString(buffer, eCSSProperty_fill);
   mFillOpacity.AppendToString(buffer, eCSSProperty_fill_opacity);
   mFillRule.AppendToString(buffer, eCSSProperty_fill_rule);
+  mMarkerEnd.AppendToString(buffer, eCSSProperty_marker_end);
+  mMarkerMid.AppendToString(buffer, eCSSProperty_marker_mid);
+  mMarkerStart.AppendToString(buffer, eCSSProperty_marker_start);
   mPointerEvents.AppendToString(buffer, eCSSProperty_pointer_events);
   mShapeRendering.AppendToString(buffer, eCSSProperty_shape_rendering);
   mStopColor.AppendToString(buffer, eCSSProperty_stop_color);

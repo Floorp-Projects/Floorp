@@ -424,6 +424,15 @@ nsSVGElement::sViewportsMap[] = {
   { nsnull }
 };
 
+// PresentationAttributes-Makers
+/* static */ const nsGenericElement::MappedAttributeEntry
+nsSVGElement::sMarkersMap[] = {
+  { &nsSVGAtoms::marker_end },
+  { &nsSVGAtoms::marker_mid },
+  { &nsSVGAtoms::marker_start },
+  { nsnull }
+};
+
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 

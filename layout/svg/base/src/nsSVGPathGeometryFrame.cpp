@@ -53,6 +53,9 @@
 #include "nsSVGAtoms.h"
 #include "nsCRT.h"
 #include "prdtoa.h"
+#include "nsSVGMarkerFrame.h"
+#include "nsISVGMarkable.h"
+#include "nsIViewManager.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGPathGeometryFrame
@@ -154,16 +157,66 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsPresContext* aPresContext)
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
+// marker helper
+void
+nsSVGPathGeometryFrame::GetMarkerFrames(nsSVGMarkerFrame **markerStart,
+                                        nsSVGMarkerFrame **markerMid,
+                                        nsSVGMarkerFrame **markerEnd)
+{
+  nsIURI *aURI;
+
+  *markerStart = *markerMid = *markerEnd = NULL;
+  
+  aURI = GetStyleSVG()->mMarkerEnd;
+  if (aURI)
+    NS_GetSVGMarkerFrame(markerEnd, aURI, mContent);
+    
+  aURI = GetStyleSVG()->mMarkerMid;
+  if (aURI)
+    NS_GetSVGMarkerFrame(markerMid, aURI, mContent);
+  
+  aURI = GetStyleSVG()->mMarkerStart;
+  if (aURI)
+    NS_GetSVGMarkerFrame(markerStart, aURI, mContent);
+}
+
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
-#ifdef DEBUG
-  //printf("nsSVGPathGeometryFrame(%p)::Paint\n", this);
-#endif
   if (!GetStyleVisibility()->IsVisible())
     return NS_OK;
 
   GetGeometry()->Render(canvas);
+  
+  nsISVGMarkable *markable;
+  CallQueryInterface(this, &markable);
+
+  if (markable) {
+    nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+    GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
+
+    if (!markerEnd && !markerMid && !markerStart)
+      return NS_OK;
+
+    float strokeWidth;
+    GetStrokeWidth(&strokeWidth);
+
+    nsVoidArray marks;
+    markable->GetMarkPoints(&marks);
+
+    PRUint32 num = marks.Count();
+
+    if (markerStart)
+      markerStart->PaintMark(canvas, this, (nsSVGMark *)marks[0], strokeWidth);
+
+    if (markerMid)
+      for (PRUint32 i = 1; i < num - 1; i++)
+        markerMid->PaintMark(canvas, this, (nsSVGMark *)marks[i], strokeWidth);
+
+    if (markerEnd)
+      markerEnd->PaintMark(canvas, this, (nsSVGMark *)marks[num-1], strokeWidth);
+  }
+
   return NS_OK;
 }
 
@@ -189,6 +242,51 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 {
   nsISVGRendererRegion *region = nsnull;
   GetGeometry()->GetCoveredRegion(&region);
+
+  nsISVGMarkable *markable;
+  CallQueryInterface(this, &markable);
+
+  if (markable) {
+    nsSVGMarkerFrame *markerEnd, *markerMid, *markerStart;
+    GetMarkerFrames(&markerStart, &markerMid, &markerEnd);
+
+    if (!markerEnd && !markerMid && !markerStart)
+      return region;
+
+    float strokeWidth;
+    GetStrokeWidth(&strokeWidth);
+
+    nsVoidArray marks;
+    markable->GetMarkPoints(&marks);
+
+    PRUint32 num = marks.Count();
+
+    if (markerStart) {
+      nsCOMPtr<nsISVGRendererRegion> mark;
+      mark = markerStart->RegionMark(this, (nsSVGMark *)marks[0], strokeWidth);
+
+      nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+      mark->Combine(tmp, &region);
+    }
+
+    if (markerMid)
+      for (PRUint32 i = 1; i < num - 1; i++) {
+        nsCOMPtr<nsISVGRendererRegion> mark;
+        mark = markerMid->RegionMark(this, (nsSVGMark *)marks[i], strokeWidth);
+
+        nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+        mark->Combine(tmp, &region);
+      }
+
+    if (markerEnd) {
+      nsCOMPtr<nsISVGRendererRegion> mark;
+      mark = markerEnd->RegionMark(this, (nsSVGMark *)marks[num-1], strokeWidth);
+
+      nsCOMPtr<nsISVGRendererRegion> tmp = dont_AddRef(region);
+      mark->Combine(tmp, &region);
+    }
+  }
+
   return region;
 }
 
@@ -578,8 +676,19 @@ void nsSVGPathGeometryFrame::UpdateGraphic(PRUint32 flags)
   if (!suspended) {
     nsCOMPtr<nsISVGRendererRegion> dirty_region;
     GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region)
-      outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+    if (dirty_region) {
+      // if we're painting a marker, this will get called during paint
+      // when the region already be invalidated as needed
+
+      nsIView *view = GetClosestView();
+      if (!view) return;
+      nsIViewManager *vm = view->GetViewManager();
+      PRBool painting;
+      vm->IsPainting(painting);
+
+      if (!painting)
+        outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
+    }
     mUpdateFlags = 0;
   }  
 }
