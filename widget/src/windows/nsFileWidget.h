@@ -82,7 +82,7 @@ class nsFileWidget : public nsIFileWidget
   protected:
 
     static void GetFileSystemCharset(nsString & fileSystemCharset);
-    char * ConvertToFileSystemCharset(const PRUnichar *inString);
+    char * ConvertToFileSystemCharset(const PRUnichar *inString, PRInt32 inLength=-1);
     PRUnichar * ConvertFromFileSystemCharset(const char *inString);
 
      HWND                   mWnd;
