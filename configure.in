@@ -1337,7 +1337,7 @@ alpha*-*-osf*)
     if test "$GNU_CC"; then
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
-	MOZ_DEBUG_FLAGS='-g3'
+	MOZ_DEBUG_FLAGS='-g'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g'
 	CFLAGS="$CFLAGS -ieee"
 	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
@@ -3840,7 +3840,7 @@ dnl = bug reports.
 dnl ========================================================
 MOZ_DEBUG=1
 
-if test ! "$MOZ_DEBUG_FLAGS"
+if test -z "$MOZ_DEBUG_FLAGS"
 then
     case "$target" in
     *-irix*)
@@ -3888,7 +3888,7 @@ dnl ========================================================
 dnl = Enable code optimization. OFF by default.
 dnl ========================================================
 MOZ_OPTIMIZE=
-if test ! "$MOZ_OPTIMIZE_FLAGS"; then
+if test -z "$MOZ_OPTIMIZE_FLAGS"; then
 	MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
