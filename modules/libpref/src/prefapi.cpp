@@ -289,7 +289,7 @@ PrefResult pref_OpenFile(
 #endif
 	}
 	JS_GC(gMochaContext);
-	return (ok);
+	return ok;
 }
 #endif /* PREF_SUPPORT_OLD_PATH_STRINGS */
 
@@ -623,6 +623,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	return ok;
 }
 
+#if 0 /* OBSOLETE */
 PR_IMPLEMENT(JSBool)
 PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
 {
@@ -633,15 +634,17 @@ PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
 	
 	return ret;
 }
+#endif /* OBSOLETE */
 
+#if 0 /* OBSOLETE */
 PR_IMPLEMENT(JSBool)
 PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 {
-	JSBool ok;
+	JSBool ok = JS_FALSE;
 	jsval result;
 	
 	if (!gMochaContext || !gMochaPrefObject)
-		return PREF_NOT_INITIALIZED;
+		return JS_FALSE;
 
 	JS_BeginRequest(gMochaContext);
 	ok = JS_EvaluateScript(gMochaContext, gMochaPrefObject,
@@ -651,7 +654,9 @@ PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 	/* Hey, this really returns a JSBool */
 	return ok;
 }
+#endif /* OBSOLETE */
 
+#if 0 /* OBSOLETE */
 PR_IMPLEMENT(JSBool)
 PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 {
@@ -659,7 +664,7 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 	jsval result;
 	
 	if (!gMochaContext || !gGlobalConfigObject)
-		return PREF_NOT_INITIALIZED;
+		return JS_FALSE;
 	
 	JS_BeginRequest(gMochaContext);
 	ok = JS_EvaluateScript(gMochaContext, gGlobalConfigObject,
@@ -669,6 +674,7 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 	/* Hey, this really returns a JSBool */
 	return ok;
 }
+#endif /* OBSOLETE */
 
 static char * str_escape(const char * original)
 {
