@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
  
 
-/* to build this, build mozilla/netwerk/util/netwerkUtil.mcp
+/* to build this, build mozilla/widget/macbuild/_WidgetSupport.mcp
  * I hope I'm the last person to waste 30 minutes looking for the project that builds this file */
 #pragma export on
 

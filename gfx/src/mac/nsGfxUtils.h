@@ -203,6 +203,43 @@ protected:
 
 
 //------------------------------------------------------------------------
+// utility class to temporarily set and restore the origin.
+// Assumes that the port has already been set up.
+//------------------------------------------------------------------------
+class StOriginSetter
+{
+public:
+
+  StOriginSetter(WindowRef wind, const Point* newOrigin = nsnull)
+  {
+    ::GetWindowPortBounds(wind, &mSavePortRect);
+    if (newOrigin)
+      ::SetOrigin(newOrigin->h, newOrigin->v);
+    else
+      ::SetOrigin(0, 0);
+  }
+  
+  StOriginSetter(CGrafPtr grafPort, const Point* newOrigin = nsnull)
+  {
+    ::GetPortBounds(grafPort, &mSavePortRect);
+    if (newOrigin)
+      ::SetOrigin(newOrigin->h, newOrigin->v);
+    else
+      ::SetOrigin(0, 0);
+  }
+  
+  ~StOriginSetter()
+  {
+    ::SetOrigin(mSavePortRect.left, mSavePortRect.top);
+  }
+
+protected:
+  
+  Rect    mSavePortRect;
+
+};
+
+//------------------------------------------------------------------------
 // utility GWorld port setting class
 //
 // This should *only* be used to set the port temporarily to the
