@@ -447,6 +447,11 @@ static nsresult openPrefFile(nsIFile* aFile, PRBool aIsErrorFatal,
   PRUint32 amtRead = 0;
   rv = inStr->Read(readBuf, fileSize, &amtRead);
   NS_ASSERTION((amtRead == fileSize), "failed to read the entire prefs file!!");
+ #ifdef XP_OS2 /* OS/2 workaround - our system editor adds an EOF character */
+     if (readBuf[amtRead - 1] == 0x1A) {
+        amtRead--;
+     }
+ #endif
   if (NS_SUCCEEDED(rv)) {
     if (!PREF_EvaluateConfigScript(readBuf, amtRead, nsnull, aIsGlobalContext, PR_TRUE,
                                    aSkipFirstLine))
