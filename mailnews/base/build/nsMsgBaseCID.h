@@ -97,6 +97,20 @@
  {0xb7, 0xfc, 0x0, 0x80, 0x5f, 0x5, 0xff, 0xa5 }}
 
 //
+// nsMsgIncomingServer
+#define NS_MSGINCOMINGSERVER_PROGID_PREFIX \
+  "component://netscape/messenger/server&type="
+
+#define NS_MSGINCOMINGSERVER_PROGID \
+  NS_MSGINCOMINGSERVER_PROGID_PREFIX "generic"
+
+/* {66e5ff08-5126-11d3-9711-006008948010} */
+#define NS_MSGINCOMINGSERVER_CID \
+  {0x66e5ff08, 0x5126, 0x11d3, \
+    {0x97, 0x11, 0x00, 0x60, 0x08, 0x94, 0x80, 0x10}}
+
+
+//
 // nsMsgAccount
 //
 #define NS_MSGACCOUNT_PROGID \
