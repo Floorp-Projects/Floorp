@@ -139,20 +139,20 @@
 
 /* ::::: directory pane icons ::::: */
 
-treechildren:-moz-tree-image(DirCol) {
+treechildren::-moz-tree-image(DirCol) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.gif");
 }
 
-treechildren:-moz-tree-image(DirCol, IsMailList-true) {
+treechildren::-moz-tree-image(DirCol, IsMailList-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.gif");
 }
 
-treechildren:-moz-tree-image(DirCol, IsRemote-true) {
+treechildren::-moz-tree-image(DirCol, IsRemote-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook.gif");
 }
 
-treechildren:-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
+treechildren::-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/secure-remote-addrbook.gif");
 }
 
@@ -166,12 +166,12 @@ treechildren:-moz-tree-image(DirCol, IsRemote-true, IsSecure-true) {
 
 /* ::::: results pane ::::: */
 
-treechildren:-moz-tree-image(GeneratedName) {
+treechildren::-moz-tree-image(GeneratedName) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
 }
 
-treechildren:-moz-tree-image(GeneratedName, MailList) {
+treechildren::-moz-tree-image(GeneratedName, MailList) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.gif");
 }

@@ -30,18 +30,18 @@
 
 /* ::::: thread decoration ::::: */
 
-treechildren:-moz-tree-cell-text(read) {
+treechildren::-moz-tree-cell-text(read) {
   font-weight: normal;
 }
 
-treechildren:-moz-tree-cell-text(unread) {
+treechildren::-moz-tree-cell-text(unread) {
   font-weight: bold;
 }
 
 /* on a collapsed thread, if the top level message is read, but the thread has
  * unread children, underline the text.  4.x mac did this, very slick 
  */
-treechildren:-moz-tree-cell-text(container, closed, hasUnread, read) {
+treechildren::-moz-tree-cell-text(container, closed, hasUnread, read) {
   text-decoration: underline;
 }
 
@@ -50,27 +50,27 @@ treechildren:-moz-tree-cell-text(container, closed, hasUnread, read) {
  ****  Priority colors currently not being used at the moment.  It has been
  ****  disabled so as to not conflict with the labels color feature.
  ****
-treechildren:-moz-tree-cell-text(priorityCol, priority-highest) {
+treechildren::-moz-tree-cell-text(priorityCol, priority-highest) {
   color: red;
 }
 
-treechildren:-moz-tree-cell-text(priorityCol, priority-high) {
+treechildren::-moz-tree-cell-text(priorityCol, priority-high) {
   color: rgb(128, 0, 0);
 }
 
-treechildren:-moz-tree-cell-text(priorityCol, priority-lowest) {
+treechildren::-moz-tree-cell-text(priorityCol, priority-lowest) {
   color: rgb(170, 170, 170);
 }
 
-treechildren:-moz-tree-cell-text(priorityCol, priority-low) {
+treechildren::-moz-tree-cell-text(priorityCol, priority-low) {
   color: rgb(85, 85, 85);
 }
 
-treechildren:-moz-tree-cell-text(priorityCol, selected) {
+treechildren::-moz-tree-cell-text(priorityCol, selected) {
   color: -moz-DialogText;
 }
 
-treechildren:-moz-tree-cell-text(priorityCol, selected, focus) {
+treechildren::-moz-tree-cell-text(priorityCol, selected, focus) {
   color: HighlightText;
 }
  ****/
@@ -93,19 +93,19 @@ treecol.threadColumnHeader[sortDirection="descending"] {
   list-style-image: url("chrome://messenger/skin/icons/threadcol.gif");
 }
 
-treechildren:-moz-tree-image(threadCol, container) {
+treechildren::-moz-tree-image(threadCol, container) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
 }
 
-treechildren:-moz-tree-image(threadCol, container, open) {
+treechildren::-moz-tree-image(threadCol, container, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
 }
 
-treechildren:-moz-tree-image(threadCol, container, hasUnread) {
+treechildren::-moz-tree-image(threadCol, container, hasUnread) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
 }
 
-treechildren:-moz-tree-image(threadCol, container, hasUnread, open) {
+treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
 }
 
@@ -115,11 +115,11 @@ treecol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol.gif");
 }
 
-treechildren:-moz-tree-image(unreadButtonColHeader) {
+treechildren::-moz-tree-image(unreadButtonColHeader) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
 }
 
-treechildren:-moz-tree-image(unreadButtonColHeader, unread) {
+treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
   list-style-image: url("chrome://messenger/skin/icons/unreadmail.gif");
 }
 
@@ -129,11 +129,11 @@ treecol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flagcol.gif");
 }
 
-treechildren:-moz-tree-image(flaggedCol) {
+treechildren::-moz-tree-image(flaggedCol) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
 }
 
-treechildren:-moz-tree-image(flaggedCol, flagged) {
+treechildren::-moz-tree-image(flaggedCol, flagged) {
   list-style-image: url("chrome://messenger/skin/icons/flaggedmail.gif");
 }
 
@@ -145,18 +145,18 @@ treecol.junkStatusHeader {
 }
 
 /* "unknown" now looks like "not junk".  see bug #182386 */
-treechildren:-moz-tree-image(junkStatusCol) {
+treechildren::-moz-tree-image(junkStatusCol) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
   padding-left: 0px;
   padding-right: 4px;
 }
 
-treechildren:-moz-tree-image(junkStatusCol, junk) {
+treechildren::-moz-tree-image(junkStatusCol, junk) {
   list-style-image: url("chrome://messenger/skin/icons/folder-junk.gif");
   margin-right: -1px;
 }
 
-treechildren:-moz-tree-image(junkStatusCol, notjunk) {
+treechildren::-moz-tree-image(junkStatusCol, notjunk) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
   padding-left: 0px;
   padding-right: 4px;
@@ -164,74 +164,74 @@ treechildren:-moz-tree-image(junkStatusCol, notjunk) {
 
 /* ..... subject column ..... */
 
-treechildren:-moz-tree-image(subjectCol) {
+treechildren::-moz-tree-image(subjectCol) {
   margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, new) {
+treechildren::-moz-tree-image(subjectCol, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, attach) {
+treechildren::-moz-tree-image(subjectCol, attach) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, imapdeleted) {
+treechildren::-moz-tree-image(subjectCol, imapdeleted) {
   list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, news) {
+treechildren::-moz-tree-image(subjectCol, news) {
   list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, news, attach) {
+treechildren::-moz-tree-image(subjectCol, news, attach) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-attach.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, news, attach, offline) {
+treechildren::-moz-tree-image(subjectCol, news, attach, offline) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-attach-offl.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, news, new) {
+treechildren::-moz-tree-image(subjectCol, news, new) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }
 
-treechildren:-moz-tree-image(subjectCol, news, new, attach) {
+treechildren::-moz-tree-image(subjectCol, news, new, attach) {
   list-style-image: url("chrome://messenger/skin/icons/message-news-new-attach.gif");
 }
 
 /* ..... new thread icons for watch and ignore ..... */
 
-treechildren:-moz-tree-image(news, threadCol, watch) {
+treechildren::-moz-tree-image(news, threadCol, watch) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, ignore) {
+treechildren::-moz-tree-image(news, threadCol, ignore) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-kill.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, watch) {
+treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, ignore) {
+treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-closed-kill.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, watch, open) {
+treechildren::-moz-tree-image(news, threadCol, container, hasUnread, watch, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-open-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, hasUnread, ignore, open) {
+treechildren::-moz-tree-image(news, threadCol, container, hasUnread, ignore, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-new-open-kill.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, watch, open) {
+treechildren::-moz-tree-image(news, threadCol, container, watch, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-open-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, ignore, open) {
+treechildren::-moz-tree-image(news, threadCol, container, ignore, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-open-kill.gif");
 }
 
