@@ -146,14 +146,12 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 export:: private_export
 
 ifdef MOZILLA_BSAFE_BUILD
-ifeq ($(OS_ARCH),WINNT)
-libbsafe=bsafe$(BSAFEVER).lib
-else
-libbsafe=libbsafe.$(LIB_SUFFIX)
-endif
 
 private_export::
-	$(NSINSTALL) -m 777 $(libbsafe) $(DIST)/lib;
+ifeq ($(OS_ARCH), WINNT)
+	rm -f $(DIST)/lib/bsafe$(BSAFEVER).lib
+endif
+	$(NSINSTALL) -R $(BSAFEPATH) $(DIST)/lib;
 
 endif
 
