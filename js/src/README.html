@@ -90,11 +90,13 @@ js shell, and play with the object named "it" (start by setting 'it.noisy
 <a NAME="Build"></a>Build conventions (standalone JS engine and shell)
 (OUT OF DATE!)</h2>
 These build directions refer only to building the standalone JavaScript
-engine and shell.&nbsp; To build within the browser, refer to the <a href="http://www.mozilla.org/docs/">build
+engine and shell.&nbsp; To build within the browser, refer to the <a 
+href="http://www.mozilla.org/build/">build
 directions</a> on the mozilla.org website.
 <p>By default, all platforms build a version of the JS engine that is <i>not</i>
 threadsafe.&nbsp; If you require thread-safety, you must also populate
-the <tt>mozilla/dist</tt> directory with <a href="http://www.mozilla.org/docs/tplist/catCode/nsprdesc.htm">NSPR</a>
+the <tt>mozilla/dist</tt> directory with <a href="http://www.mozilla.org/projects/nspr/reference/html/"
+>NSPR</a>
 headers and libraries.&nbsp; (NSPR implements a portable threading library,
 among other things.&nbsp; The source is downloadable via <a href="http://www.mozilla.org/cvs.html">CVS</a>
 from <tt><a href="http://lxr.mozilla.org/mozilla/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp;
