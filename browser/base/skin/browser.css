@@ -88,6 +88,10 @@ toolbarbutton.bookmark-item[dragover-top="true"] {
   border: 1px solid #000000;
 }
 
+#PersonalToolbar {
+  min-height: 26px;
+}
+
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,
