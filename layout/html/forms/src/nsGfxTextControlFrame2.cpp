@@ -92,6 +92,7 @@
 #include "nsRange.h" //for selection settting helper func (i cant believe this is exported!?)
 #include "nsIScriptGlobalObject.h" //needed for notify selection changed to update the menus ect.
 #include "nsIDOMWindow.h" //needed for notify selection changed to update the menus ect.
+#include "nsITextContent.h" //needed to create initial text control content
 
 
 #define DEFAULT_COLUMN_WIDTH 20
@@ -1368,31 +1369,36 @@ NS_IMETHODIMP
 nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
                                            nsISupportsArray& aChildList)
 {
-//create editor
-//create selection
-//init editor with div.
-//====
+  // Get the PresShell
 
-//get the presshell
   mState |= NS_FRAME_INDEPENDENT_SELECTION;
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_FAILED(rv) || !shell)
-    return rv?rv:NS_ERROR_FAILURE;
 
-//get the document
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  // Get the DOM document
+
   nsCOMPtr<nsIDocument> doc;
   rv = shell->GetDocument(getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!doc)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(doc, &rv);
-  if (NS_FAILED(rv) || !domdoc)
-    return rv?rv:NS_ERROR_FAILURE;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!domdoc)
+    return NS_ERROR_FAILURE;
   
-  nsCOMPtr<nsIContent> content;
-  
-////
+  // Now create a DIV and add it to the anonymous content child list.
+
   NS_WITH_SERVICE(nsIElementFactory, elementFactory,
                   NS_ELEMENT_FACTORY_PROGID_PREFIX
                   "http://www.w3.org/1999/xhtml",
@@ -1401,165 +1407,253 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsINodeInfoManager> nodeInfoManager;
-  doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+  rv = doc->GetNodeInfoManager(*getter_AddRefs(nodeInfoManager));
+
+  if (NS_FAILED(rv))
+    return rv;
+
   NS_ENSURE_TRUE(nodeInfoManager, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull, kNameSpaceID_HTML, *getter_AddRefs(nodeInfo));
+  rv = nodeInfoManager->GetNodeInfo(nsHTMLAtoms::div, nsnull, kNameSpaceID_HTML, *getter_AddRefs(nodeInfo));
 
-  elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(content));
+  if (NS_FAILED(rv))
+    return rv;
 
-////
-  if (content)
+  if (!nodeInfo)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> divContent;
+
+  rv = elementFactory->CreateInstanceByTag(nodeInfo, getter_AddRefs(divContent));
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (!divContent)
+    return NS_ERROR_FAILURE;
+
+
+  // Set the neccessary style attributes on the text control.
+
+  if (IsSingleLineTextControl())
+    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING_SINGLELINE), PR_FALSE);
+  else
+    rv = divContent->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // rv = divContent->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_ConvertToString("true"), PR_FALSE);
+  rv = aChildList.AppendElement(divContent);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Get the default value for the textfield.
+
+  nsAutoString defaultValue;
+  rv = GetText(&defaultValue, PR_TRUE);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // If we have a default value, create a textnode for it
+  // and insert it under the DIV we created.
+
+  if (defaultValue.Length() > 0)
   {
-    if (IsSingleLineTextControl())
-      content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING_SINGLELINE), PR_FALSE);
-    else
-      content->SetAttribute(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertToString(DIV_STRING), PR_FALSE);
-    //content->SetAttribute(kNameSpaceID_None,nsXULAtoms::debug, NS_ConvertToString("true"), PR_FALSE);
-    aChildList.AppendElement(content);
+    nsCOMPtr<nsIContent> textContent;
+    rv = NS_NewTextNode(getter_AddRefs(textContent));
 
-//make the editor
-    rv = nsComponentManager::CreateInstance(kHTMLEditorCID,
-                                                nsnull,
-                                                NS_GET_IID(nsIEditor), getter_AddRefs(mEditor));
     if (NS_FAILED(rv))
       return rv;
-    if (!mEditor) 
-      return NS_ERROR_OUT_OF_MEMORY;
 
-//create selection
-    nsCOMPtr<nsIFrameSelection> frameSel;
-    rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
-                                                   NS_GET_IID(nsIFrameSelection),
-                                                   getter_AddRefs(frameSel));
-//create selection controller
-    mTextSelImpl = new nsTextInputSelectionImpl(frameSel,shell,content);
-    if (!mTextSelImpl)
-      return NS_ERROR_OUT_OF_MEMORY;
-    mTextListener = new nsTextInputListener();
-    if (!mTextListener)
-      return NS_ERROR_OUT_OF_MEMORY;
-    mTextListener->SetFrame(this);
-    mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)mTextSelImpl);//this will addref it once
-    mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-//get the flags 
-    PRUint32 editorFlags = 0;
-    if (IsPlainTextControl())
-      editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
-    if (IsSingleLineTextControl())
-      editorFlags |= nsIHTMLEditor::eEditorSingleLineMask;
-    if (IsPasswordTextControl())
-      editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
+    if (! textContent)
+      return NS_ERROR_FAILURE;
 
-//initialize the editor
-    mEditor->Init(domdoc, shell, content, mSelCon, editorFlags);
+    nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(textContent);
 
-//initialize the controller for the editor
-    nsCOMPtr<nsIControllers> controllers;
-    nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
-    if (inputElement)
-      inputElement->GetControllers(getter_AddRefs(controllers));
-    else
-    {
-      nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
-      textAreaElement->GetControllers(getter_AddRefs(controllers));
-    }
+    if (!charData)
+      return NS_ERROR_NO_INTERFACE;
 
-    if (controllers)
-    {
-      PRUint32 numControllers;
-      PRBool found = PR_FALSE;
-      rv = controllers->GetControllerCount(&numControllers);
-      for (PRUint32 i = 0; i < numControllers; i ++)
-      {
-        nsCOMPtr<nsIController> controller;
-        rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
-        if (NS_SUCCEEDED(rv) && controller)
-        {
-          nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
-          if (editController)
-          {
-            editController->SetCommandRefCon(mEditor);
-            found = PR_TRUE;
-          }
-        }
-      }
-      if (!found)
-        rv = NS_ERROR_FAILURE;
-    }
-    nsCOMPtr<nsIEditorMailSupport> mailEditor(do_QueryInterface(mEditor));
-    if (mailEditor)
-    {
-      nsHTMLValue colAttr;
-      nsresult    colStatus;
-      nsHTMLValue rowAttr;
-      nsresult    rowStatus;
-      PRInt32 type;
-      GetType(&type);
-      nsInputDimensionSpec *spec;
-      if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
-        PRInt32 width = 0;
-        if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-          width = GetDefaultColumnWidth();
-        }
-        spec = new nsInputDimensionSpec(nsnull, PR_FALSE, nsnull,
-                                      nsnull, width, 
-                                      PR_FALSE, nsnull, 1);
-      } else {
-        spec = new nsInputDimensionSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
-                                      nsnull, GetDefaultColumnWidth(), 
-                                      PR_FALSE, nsHTMLAtoms::rows, 1);
-      }
-      if (spec)
-      {
-        if (NS_FAILED(GetColRowSizeAttr(this, 
-                                                spec->mColSizeAttr, colAttr, colStatus,
-                                                spec->mRowSizeAttr, rowAttr, rowStatus)))
-          return NS_ERROR_FAILURE;
-        PRInt32 col =-1;
-        if (!(colAttr.GetUnit() == eHTMLUnit_Null))
-        {
-          col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
-          col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-        }
-        mailEditor->SetBodyWrapWidth(col);
-        delete spec;
-      }
-    }
+    rv = charData->SetData(defaultValue);
 
-//set max text field length
-    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-    if (htmlEditor)
-    {
-      PRInt32 maxLength;
-      rv = GetMaxLength(&maxLength);
-      if (NS_CONTENT_ATTR_NOT_THERE != rv)
-      { 
-        htmlEditor->SetMaxTextLength(maxLength);
-      }
-    }
-    
-//get the caret
-    nsCOMPtr<nsIDOMSelection> domSelection;
-    if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
-    {
-      nsCOMPtr<nsICaret> caret;
-      nsCOMPtr<nsIDOMSelectionListener> listener;
-      if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
-      {
-        listener = do_QueryInterface(caret);
-        if (listener)
-        {
-          domSelection->AddSelectionListener(listener);
-        }
-      }
-      listener = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,mTextListener));//ambiguous
-      if (listener)
-        domSelection->AddSelectionListener(listener);
-    }
+    if (NS_FAILED(rv))
+      return rv;
 
+    rv = divContent->AppendChildTo(textContent, PR_FALSE);
+
+    if (NS_FAILED(rv))
+      return rv;
   }
+
+  // Create an editor
+
+  rv = nsComponentManager::CreateInstance(kHTMLEditorCID,
+                                              nsnull,
+                                              NS_GET_IID(nsIEditor), getter_AddRefs(mEditor));
+  if (NS_FAILED(rv))
+    return rv;
+  if (!mEditor) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // Create selection
+
+  nsCOMPtr<nsIFrameSelection> frameSel;
+  rv = nsComponentManager::CreateInstance(kFrameSelectionCID, nsnull,
+                                                 NS_GET_IID(nsIFrameSelection),
+                                                 getter_AddRefs(frameSel));
+
+  // Create a SelectionController
+
+  mTextSelImpl = new nsTextInputSelectionImpl(frameSel,shell,divContent);
+  if (!mTextSelImpl)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mTextListener = new nsTextInputListener();
+  if (!mTextListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  mTextListener->SetFrame(this);
+  mSelCon =  do_QueryInterface((nsISupports *)(nsISelectionController *)mTextSelImpl);//this will addref it once
+  if (!mSelCon)
+    return NS_ERROR_NO_INTERFACE;
+  mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+
+  // Setup the editor flags
+
+  PRUint32 editorFlags = 0;
+  if (IsPlainTextControl())
+    editorFlags |= nsIHTMLEditor::eEditorPlaintextMask;
+  if (IsSingleLineTextControl())
+    editorFlags |= nsIHTMLEditor::eEditorSingleLineMask;
+  if (IsPasswordTextControl())
+    editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
+
+  // Now initialize the editor.
+  //
+  // NOTE: Conversion of '\n' to <BR> happens inside the
+  //       editor's Init() call.
+
+  rv = mEditor->Init(domdoc, shell, divContent, mSelCon, editorFlags);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Initialize the controller for the editor
+
+  nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIDOMNSHTMLInputElement> inputElement = do_QueryInterface(mContent);
+  if (inputElement)
+    rv = inputElement->GetControllers(getter_AddRefs(controllers));
+  else
+  {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaElement = do_QueryInterface(mContent);
+
+    if (!textAreaElement)
+      return NS_ERROR_FAILURE;
+
+    rv = textAreaElement->GetControllers(getter_AddRefs(controllers));
+  }
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (controllers)
+  {
+    PRUint32 numControllers;
+    PRBool found = PR_FALSE;
+    rv = controllers->GetControllerCount(&numControllers);
+    for (PRUint32 i = 0; i < numControllers; i ++)
+    {
+      nsCOMPtr<nsIController> controller;
+      rv = controllers->GetControllerAt(i, getter_AddRefs(controller));
+      if (NS_SUCCEEDED(rv) && controller)
+      {
+        nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
+        if (editController)
+        {
+          editController->SetCommandRefCon(mEditor);
+          found = PR_TRUE;
+        }
+      }
+    }
+    if (!found)
+      rv = NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIEditorMailSupport> mailEditor(do_QueryInterface(mEditor));
+  if (mailEditor)
+  {
+    nsHTMLValue colAttr;
+    nsresult    colStatus;
+    nsHTMLValue rowAttr;
+    nsresult    rowStatus;
+    PRInt32 type;
+    GetType(&type);
+    nsInputDimensionSpec *spec;
+    if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
+      PRInt32 width = 0;
+      if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
+        width = GetDefaultColumnWidth();
+      }
+      spec = new nsInputDimensionSpec(nsnull, PR_FALSE, nsnull,
+                                    nsnull, width, 
+                                    PR_FALSE, nsnull, 1);
+    } else {
+      spec = new nsInputDimensionSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, 
+                                    nsnull, GetDefaultColumnWidth(), 
+                                    PR_FALSE, nsHTMLAtoms::rows, 1);
+    }
+    if (spec)
+    {
+      if (NS_FAILED(GetColRowSizeAttr(this, 
+                                              spec->mColSizeAttr, colAttr, colStatus,
+                                              spec->mRowSizeAttr, rowAttr, rowStatus)))
+        return NS_ERROR_FAILURE;
+      PRInt32 col =-1;
+      if (!(colAttr.GetUnit() == eHTMLUnit_Null))
+      {
+        col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
+        col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
+      }
+      mailEditor->SetBodyWrapWidth(col);
+      delete spec;
+    }
+  }
+
+  // Set max text field length
+
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    PRInt32 maxLength;
+    rv = GetMaxLength(&maxLength);
+    if (NS_CONTENT_ATTR_NOT_THERE != rv)
+    { 
+      htmlEditor->SetMaxTextLength(maxLength);
+    }
+  }
+    
+  // Get the caret and make it a selection listener.
+
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  if (NS_SUCCEEDED(mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSelection))) && domSelection)
+  {
+    nsCOMPtr<nsICaret> caret;
+    nsCOMPtr<nsIDOMSelectionListener> listener;
+    if (NS_SUCCEEDED(shell->GetCaret(getter_AddRefs(caret))) && caret)
+    {
+      listener = do_QueryInterface(caret);
+      if (listener)
+      {
+        domSelection->AddSelectionListener(listener);
+      }
+    }
+    listener = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,mTextListener));//ambiguous
+    if (listener)
+      domSelection->AddSelectionListener(listener);
+  }
+
   return NS_OK;
 }
 
@@ -1598,35 +1692,6 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   {
     nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    nsCOMPtr<nsIHTMLContent> htmlContent;
-    if (mCachedState) //we have to initialize the editor with this value.
-    {
-      SetTextControlFrameState(*mCachedState);
-    }
-    else
-    {
-      nsString value;
-      if (mContent)
-      {
-        htmlContent = do_QueryInterface(mContent);
-        if (htmlContent) 
-        {
-          nsHTMLValue htmlValue;
-          if (NS_CONTENT_ATTR_HAS_VALUE ==
-              htmlContent->GetHTMLAttribute(nsHTMLAtoms::value, htmlValue)) 
-          {
-            if (eHTMLUnit_String == htmlValue.GetUnit()) 
-            {
-              htmlValue.GetStringValue(value);
-            }
-          }
-        }
-      }
-      if (value.Length())
-      {
-          SetTextControlFrameState(value);
-      }        
-    }
     mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
   }
 
@@ -1769,7 +1834,8 @@ void    nsGfxTextControlFrame2::MouseClicked(nsIPresContext* aPresContext){}
 
 void    nsGfxTextControlFrame2::Reset(nsIPresContext* aPresContext)
 {
-  nsString temp;
+  nsAutoString temp;
+  GetText(&temp, PR_TRUE);
   SetTextControlFrameState(temp);
 }
 
