@@ -209,7 +209,8 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fGetNameValuePair(JRIEnv *env,
 
 		ret = GetPrivateProfileString(section, name, "", buf, INI_BUFFER_SIZE, file);
 
-		len = (short)ret + 1;
+		// len = (short)ret + 1; // This appears to be incorrect, causes null char in string
+		len = (short)ret;
 	}
 
 	value = JRI_NewStringPlatform(env, buf, len, NULL, 0);

@@ -522,7 +522,8 @@ java_lang_String * getRegElement(JRIEnv *env,
 			}
 
 
-			long length = 1 + strlen(value);  // 1 extra for the null char
+			// long length = 1 + strlen(value);  // 1 extra for the null char -- WRONG!
+			long length = strlen(value);
 
 			if (extendLen == TRUE) {
 				rtnValue = (char *)malloc(sizeof(char) * length);
