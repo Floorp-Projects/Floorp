@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= util
-LIBRARY_NAME	= util
+LIBRARY_NAME	= mozutil
 
 CSRCS		= obs.c
 

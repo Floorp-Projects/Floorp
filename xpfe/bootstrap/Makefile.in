@@ -80,7 +80,7 @@ EX_LIBS=\
 	-limg		\
 	$(JPEG_LIBS)	\
 	$(PNG_LIBS)	\
-	-lutil		\
+	-lmozutil	\
 	-lxp		\
 	-lxpcom		\
 	$(NSPR_LIBS)	\

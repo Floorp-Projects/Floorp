@@ -127,15 +127,15 @@ EX_LIBS = \
 	-lstubnj \
 	-lstubsj \
 	-ltestdynamic \
-	-lutil \
+	-lmozutil \
 	-lxp \
 	-lxpcom \
-	-lutil \
+	-lmozutil \
 	-lxp \
 	-lxpcom \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
-	-ldbm \
+	-lmozdbm \
 	$(NULL)
 
 PROGS = viewer
