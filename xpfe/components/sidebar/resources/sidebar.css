@@ -109,29 +109,26 @@ box#sidebox
 
 box.sidebartitle
 {
-  background-color: #505888;
-  font: 10pt sans-serif;
+  background-color: #666699;
+  border-top: 1px solid #9999CC;
 }
 
 box.panelbar
 {
-  background-color: #006870;
-  font: 10pt sans-serif;
+  background-color: #339999;
+  font-weight: bold;
+  border-top: 1px solid #99CCCC;
 }
 
 div.sidebartitlelabel
 {
   color: white;
   padding: 5px;
-  font: 3mm tahoma,arial,helvetica,sans-serif;
 }
 
 titledbutton.paneltitle
 { 
-  margin: 1px;
-  padding: 1px;
   color: white;
-  font: 3mm tahoma,arial,helvetica,sans-serif;
 }
 
 treecell titledbutton
