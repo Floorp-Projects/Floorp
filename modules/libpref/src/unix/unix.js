@@ -293,16 +293,16 @@ pref("font.min-size.fixed.zh-TW", 10);
  *                                         "pattern3");
  */
 /* reject font if accept pattern does not match it... */
-pref("font.x11.acceptfontpattern", ".*");
+//pref("font.x11.acceptfontpattern", ".*");
 /* reject font if reject pattern matches it... */
-pref("font.x11.rejectfontpattern", 
-     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
+//pref("font.x11.rejectfontpattern", 
+//     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
 /* reject font if accept pattern does not match it... */
-pref("printer.font.xprint.acceptfontpattern", ".*");
+//pref("printer.font.xprint.acceptfontpattern", ".*");
 /* reject font if reject pattern matches it... */
-pref("printer.font.xprint.rejectfontpattern", 
-     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
+//pref("printer.font.xprint.rejectfontpattern", 
+//     "fname=-urw.*;scalable=false;outline_scaled=false;xdisplay=.*;xdpy=.*;ydpy=.*;xdevice=.*");
 
 // ps font
 // this list is used by the postscript font
