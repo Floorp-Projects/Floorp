@@ -6,7 +6,7 @@
 <!ENTITY convertibleDefault.label "">
 <!ENTITY convertibleYes.label "Your message can be converted to plaintext without losing information.">
 <!ENTITY convertibleAltering.label "Your message can be converted to plaintext without losing important information. However, the plaintext version might look different from what you saw in the composer.">
-<!ENTITY convertibleNo.label "However, you used formatting (e.g. colors) that cannot be converted to plaintext.">
+<!ENTITY convertibleNo.label "However, you used formatting (e.g. colors) that will not be converted to plaintext.">
 
 <!ENTITY question.label "Would you like to convert the message to plaintext or send it in HTML anyway?">
 

@@ -18,8 +18,10 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *     Ben Bucksch <mozilla@bucksch.org>
+ *     Pierre Phaneuf <pp@ludusdesign.com>
  */
+
 #include "nsMsgCompose.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNode.h"
@@ -128,6 +130,14 @@ nsMsgCompose::nsMsgCompose()
    		m_compFields->SetCharacterSet(default_mail_charset);
     	PR_Free(default_mail_charset);
   	}
+
+  // For TagConvertible
+  // Read and cache pref
+  mConvertStructs = PR_FALSE;
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+    prefs->GetBoolPref("converter.html2txt.structs", &mConvertStructs);
 
 	m_composeHTML = PR_FALSE;
 }
@@ -1991,12 +2001,12 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 
   static const char      htmlBreak[] = "<BR>";
   static const char      dashes[] = "-- ";
-  static const char      htmlsigopen[] = "<div class=\"signature\">";
+  static const char      htmlsigopen[] = "<div class=\"moz-signature\">";
   static const char      htmlsigclose[] = "</div>";    /* XXX: Due to a bug in
                              4.x' HTML editor, it will not be able to
                              break this HTML sig, if quoted (for the user to
                              interleave a comment). */
-  static const char      preopen[] = "<pre class=\"signature\">";
+  static const char      preopen[] = "<pre class=\"moz-signature\">";
   static const char      preclose[] = "</pre>";
 
   if (imageSig)
@@ -2696,163 +2706,194 @@ nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnicha
     return rv;
 }
 
-// Internal helper function. Parameters are not checked.
-static nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
+/* Decides which tags trigger which convertible mode, i.e. here is the logic
+   for BodyConvertible */
+// Helper function. Parameters are not checked.
+nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 {
     nsresult rv;
-    nsAutoString aStr;
-    nsCOMPtr<nsIDOMNode> pItem;
-    PRBool hasChild;
 
     *_retval = nsIMsgCompConvertible::No;
 
-    rv = node->GetNodeName(aStr);
+    nsAutoString elementStr;
+    rv = node->GetNodeName(elementStr);
     if (NS_FAILED(rv))
       return rv;
-    nsCAutoString aCStr; aCStr.AssignWithConversion(aStr);
+    nsCAutoString element; element.AssignWithConversion(elementStr);
 
-    if (aCStr.EqualsIgnoreCase("a"))
-    {
-      /* Ignore anchor tag, if the URI is the same as the text
-         (as inserted by recognizers) */
-      nsAutoString href;
-      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
-
-      *_retval = nsIMsgCompConvertible::Altering;
-
-      rv = node->GetAttributes(getter_AddRefs(pAttributes));
-      if (NS_SUCCEEDED(rv) && pAttributes)
-      {
-        nsAutoString attributeName; attributeName.AssignWithConversion("href");
-        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
-        if (NS_SUCCEEDED(rv) && pItem)
-        {
-          rv = pItem->GetNodeValue(href);
-          if (NS_SUCCEEDED(rv))
-          {
-            rv = node->HasChildNodes(&hasChild);
-            if (NS_SUCCEEDED(rv) && hasChild)
-            {
-              nsCOMPtr<nsIDOMNodeList> children;
-              rv = node->GetChildNodes(getter_AddRefs(children));
-              if (NS_SUCCEEDED(rv) && children)
-              {
-                rv = children->Item(0, getter_AddRefs(pItem));
-                if (NS_SUCCEEDED(rv) && pItem)
-                {
-                  rv = pItem->GetNodeValue(aStr);
-                  if (NS_SUCCEEDED(rv))
-                  {
-                    if (aStr.Compare(href) == 0)
-                      *_retval = nsIMsgCompConvertible::Plain;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    else if (aCStr.EqualsIgnoreCase("blockquote"))
-    {
-      // Skip <blockquote type=cite>
-      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
-
-      *_retval = nsIMsgCompConvertible::Yes;
-
-      rv = node->GetAttributes(getter_AddRefs(pAttributes));
-      if (NS_SUCCEEDED(rv) && pAttributes)
-      {
-        nsAutoString attributeName; attributeName.AssignWithConversion("type");
-        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
-        if (NS_SUCCEEDED(rv) && pItem)
-        {
-          rv = pItem->GetNodeValue(aStr);
-          if (NS_SUCCEEDED(rv))
-          {
-            aCStr.StripChars("\"");
-            if (aCStr.EqualsIgnoreCase("cite"))
-              *_retval = nsIMsgCompConvertible::Plain;
-          }
-        }
-      }
-    }
-
-#if 0
-    /* This is for an edge case: A Mozilla user replies to plaintext per HTML
-       and the recipient of that HTML msg, also a Mozilla user, replies to
-       that again. Then we'll have to recognize the stuff inserted by our
-       TXT->HTML converter. Let's see, if this is actually a problem and
-       worth the processing time.
-       Bug 44552. */
-    else if (aCStr.EqualsIgnoreCase("div") ||
-             aCStr.EqualsIgnoreCase("span") ||
-             aCStr.EqualsIgnoreCase("em") ||
-             aCStr.EqualsIgnoreCase("strong") ||
-             aCStr.EqualsIgnoreCase("a"))
-    {
-      /* skip only if inserted by our [TXT|HTML]->HTML converter
-         (might be in a quote) */
-      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
-      rv = node->GetAttributes(getter_AddRefs(pAttributes));
-      if (NS_SUCCEEDED(rv) && pAttributes)
-      {
-        nsAutoString attributeName; attributeName.AssignWithConversion("class");
-        pAttributes->GetNamedItem(attributeName, getter_AddRefs(pItem));
-        if (NS_SUCCEEDED(rv) && pItem)
-        {
-          rv = pItem->GetNodeValue(aStr);
-          if (NS_SUCCEEDED(rv)
-              && (aCStr.EqualsIgnoreCase("txt", 3) ||
-                  aCStr.EqualsIgnoreCase("\"txt", 4)))
-            *_retval = nsIMsgCompConvertible::Plain;
-        }
-      }
-    }
-#endif
-    else if (
-              aCStr.EqualsIgnoreCase("html") ||
-              aCStr.EqualsIgnoreCase("head") ||
-              aCStr.EqualsIgnoreCase("body") ||
-              aCStr.EqualsIgnoreCase("p") ||
-              aCStr.EqualsIgnoreCase("br") ||
-              aCStr.EqualsIgnoreCase("pre") ||
-              aCStr.EqualsIgnoreCase("tt") ||
-              aCStr.EqualsIgnoreCase("#text")
+    nsCOMPtr<nsIDOMNode> pItem;
+    if      (
+              element.EqualsIgnoreCase("#text") ||
+              element.EqualsIgnoreCase("br") ||
+              element.EqualsIgnoreCase("p") ||
+              element.EqualsIgnoreCase("pre") ||
+              element.EqualsIgnoreCase("tt") ||
+              element.EqualsIgnoreCase("html") ||
+              element.EqualsIgnoreCase("head") ||
+              element.EqualsIgnoreCase("title") ||
+              element.EqualsIgnoreCase("body")
             )
     {
       *_retval = nsIMsgCompConvertible::Plain;
     }
     else if (
-              //aCStr.EqualsIgnoreCase("blockquote") || // see above
-              aCStr.EqualsIgnoreCase("ul") ||
-              aCStr.EqualsIgnoreCase("ol") ||
-              aCStr.EqualsIgnoreCase("li") ||
-              aCStr.EqualsIgnoreCase("dl") ||
-              aCStr.EqualsIgnoreCase("dt") ||
-              aCStr.EqualsIgnoreCase("dd")
+              //element.EqualsIgnoreCase("blockquote") || // see below
+              element.EqualsIgnoreCase("ul") ||
+              element.EqualsIgnoreCase("ol") ||
+              element.EqualsIgnoreCase("li") ||
+              element.EqualsIgnoreCase("dl") ||
+              element.EqualsIgnoreCase("dt") ||
+              element.EqualsIgnoreCase("dd")
             )
     {
       *_retval = nsIMsgCompConvertible::Yes;
     }
     else if (
-              aCStr.EqualsIgnoreCase("h1") ||
-              aCStr.EqualsIgnoreCase("h2") ||
-              aCStr.EqualsIgnoreCase("h3") ||
-              aCStr.EqualsIgnoreCase("h4") ||
-              aCStr.EqualsIgnoreCase("h5") ||
-              aCStr.EqualsIgnoreCase("h6") ||
-              //aCStr.EqualsIgnoreCase("a") || // see above
-              aCStr.EqualsIgnoreCase("em") ||
-              aCStr.EqualsIgnoreCase("strong") ||
-              aCStr.EqualsIgnoreCase("code") ||
-              aCStr.EqualsIgnoreCase("b") ||
-              aCStr.EqualsIgnoreCase("i") ||
-              aCStr.EqualsIgnoreCase("u") ||
-              aCStr.EqualsIgnoreCase("hr")
+              //element.EqualsIgnoreCase("a") || // see below
+              element.EqualsIgnoreCase("h1") ||
+              element.EqualsIgnoreCase("h2") ||
+              element.EqualsIgnoreCase("h3") ||
+              element.EqualsIgnoreCase("h4") ||
+              element.EqualsIgnoreCase("h5") ||
+              element.EqualsIgnoreCase("h6") ||
+              element.EqualsIgnoreCase("hr") ||
+              (
+                mConvertStructs
+                &&
+                (
+                  element.EqualsIgnoreCase("em") ||
+                  element.EqualsIgnoreCase("strong") ||
+                  element.EqualsIgnoreCase("code") ||
+                  element.EqualsIgnoreCase("b") ||
+                  element.EqualsIgnoreCase("i") ||
+                  element.EqualsIgnoreCase("u")
+                )
+              )
             )
     {
       *_retval = nsIMsgCompConvertible::Altering;
+    }
+    else if (element.EqualsIgnoreCase("blockquote"))
+    {
+      // Skip <blockquote type=cite>
+      *_retval = nsIMsgCompConvertible::Yes;
+
+      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+      if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
+          && pAttributes)
+      {
+        nsAutoString typeName; typeName.AssignWithConversion("type");
+        if (NS_SUCCEEDED(pAttributes->GetNamedItem(typeName,
+                                                   getter_AddRefs(pItem)))
+            && pItem)
+        {
+          nsAutoString typeValue;
+          if (NS_SUCCEEDED(pItem->GetNodeValue(typeValue)))
+          {
+            typeValue.StripChars("\"");
+            if (typeValue.EqualsWithConversion("cite", PR_TRUE))
+              *_retval = nsIMsgCompConvertible::Plain;
+          }
+        }
+      }
+    }
+    else if (
+              element.EqualsIgnoreCase("div") ||
+              element.EqualsIgnoreCase("span") ||
+              element.EqualsIgnoreCase("a")
+            )
+    {
+      /* Do some special checks for these tags. They are inside this |else if|
+         for performance reasons */
+      nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+
+      /* First, test, if the <a>, <div> or <span> is inserted by our
+         [TXT|HTML]->HTML converter */
+      /* This is for an edge case: A Mozilla user replies to plaintext per HTML
+         and the recipient of that HTML msg, also a Mozilla user, replies to
+         that again. Then we'll have to recognize the stuff inserted by our
+         TXT->HTML converter. */
+      if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
+          && pAttributes)
+      {
+        nsAutoString className;
+        className.AssignWithConversion("class");
+        if (NS_SUCCEEDED(pAttributes->GetNamedItem(className,
+                                                   getter_AddRefs(pItem)))
+            && pItem)
+        {
+          nsAutoString classValue;
+          if (NS_SUCCEEDED(pItem->GetNodeValue(classValue))
+              && (classValue.EqualsIgnoreCase("moz-txt", 7) ||
+                  classValue.EqualsIgnoreCase("\"moz-txt", 8)))
+          {
+            *_retval = nsIMsgCompConvertible::Plain;
+            return rv;  // Inconsistent :-(
+          }
+        }
+      }
+
+      // Maybe, it's an <a> element inserted by another recognizer (e.g. 4.x')
+      if (element.EqualsIgnoreCase("a"))
+      {
+        /* Ignore anchor tag, if the URI is the same as the text
+           (as inserted by recognizers) */
+        *_retval = nsIMsgCompConvertible::Altering;
+
+        if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
+            && pAttributes)
+        {
+          nsAutoString hrefName; hrefName.AssignWithConversion("href");
+          if (NS_SUCCEEDED(pAttributes->GetNamedItem(hrefName,
+                                                     getter_AddRefs(pItem)))
+              && pItem)
+          {
+            nsAutoString hrefValue;
+            PRBool hasChild;
+            if (NS_SUCCEEDED(pItem->GetNodeValue(hrefValue))
+                && NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
+            {
+              nsCOMPtr<nsIDOMNodeList> children;
+              if (NS_SUCCEEDED(node->GetChildNodes(getter_AddRefs(children)))
+                  && children
+                  && NS_SUCCEEDED(children->Item(0, getter_AddRefs(pItem)))
+                  && pItem)
+              {
+                nsAutoString textValue;
+                if (NS_SUCCEEDED(pItem->GetNodeValue(textValue))
+                    && textValue == hrefValue)
+                  *_retval = nsIMsgCompConvertible::Plain;
+              }
+            }
+          }
+        }
+      }
+
+      // Lastly, test, if it is just a "simple" <div> or <span>
+      else if (
+                element.EqualsIgnoreCase("div") ||
+                element.EqualsIgnoreCase("span")
+              )
+      {
+        /* skip only if no style attribute */
+        *_retval = nsIMsgCompConvertible::Plain;
+
+        if (NS_SUCCEEDED(node->GetAttributes(getter_AddRefs(pAttributes)))
+            && pAttributes)
+        {
+          nsAutoString styleName;
+          styleName.AssignWithConversion("style");
+          if (NS_SUCCEEDED(pAttributes->GetNamedItem(styleName,
+                                                     getter_AddRefs(pItem)))
+              && pItem)
+          {
+            nsAutoString styleValue;
+            if (NS_SUCCEEDED(pItem->GetNodeValue(styleValue))
+                && !styleValue.IsEmpty())
+              *_retval = nsIMsgCompConvertible::No;
+          }
+        }
+      }
     }
 
     return rv;
@@ -2872,28 +2913,27 @@ nsresult nsMsgCompose::BodyConvertible(nsIDOMNode *node,  PRInt32 *_retval)
 
     // Walk tree recursively to check the children
     PRBool hasChild;
-    rv = node->HasChildNodes(&hasChild);
-    if (NS_SUCCEEDED(rv) && hasChild)
+    if (NS_SUCCEEDED(node->HasChildNodes(&hasChild)) && hasChild)
     {
-        nsCOMPtr<nsIDOMNodeList> children;
-        rv = node->GetChildNodes(getter_AddRefs(children));
-        if (NS_SUCCEEDED(rv) && children)
+      nsCOMPtr<nsIDOMNodeList> children;
+      if (NS_SUCCEEDED(node->GetChildNodes(getter_AddRefs(children)))
+          && children)
+      {
+        PRUint32 nbrOfElements;
+        rv = children->GetLength(&nbrOfElements);
+        for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < nbrOfElements; i++)
         {
-            PRUint32 nbrOfElements;
-            rv = children->GetLength(&nbrOfElements);
-            for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < nbrOfElements; i++)
-            {
-                nsCOMPtr<nsIDOMNode> pItem;
-                rv = children->Item(i, getter_AddRefs(pItem));
-                if (NS_SUCCEEDED(rv) && pItem)
-                {
-                    PRInt32 curresult;
-                    rv = BodyConvertible(pItem, &curresult);
-                    if (NS_SUCCEEDED(rv) && curresult > result)
-                        result = curresult;
-                }
-            }
+          nsCOMPtr<nsIDOMNode> pItem;
+          if (NS_SUCCEEDED(children->Item(i, getter_AddRefs(pItem)))
+              && pItem)
+          {
+            PRInt32 curresult;
+            rv = BodyConvertible(pItem, &curresult);
+            if (NS_SUCCEEDED(rv) && curresult > result)
+              result = curresult;
+          }
         }
+      }
     }
 
     *_retval = result;
@@ -2927,7 +2967,8 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   {
     if (m_composeHTML)
     {
-      //In html, the signature is inside an element with the class=signature, it's must be the last node
+      /* In html, the signature is inside an element with
+         class="moz-signature", it's must be the last node */
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
       if (element)
       {
@@ -2938,7 +2979,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
         rv = element->GetAttribute(attributeName, attributeValue);
         if (NS_SUCCEEDED(rv))
         {
-          if (attributeValue.Find("signature", PR_TRUE) != kNotFound)
+          if (attributeValue.Find("moz-signature", PR_TRUE) != kNotFound)
           {
             //Now, I am sure I get the right node!
             editor->BeginTransaction();
