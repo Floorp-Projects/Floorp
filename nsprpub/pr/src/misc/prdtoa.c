@@ -97,6 +97,9 @@
  *	significant byte has the lowest address.
  * #define IEEE_MC68k for IEEE-arithmetic machines where the most
  *	significant byte has the lowest address.
+ * #define IEEE_ARM for IEEE-arithmetic machines where the two words
+ *	in a double are stored in big endian order but the two shorts
+ * 	in a word are still stored in little endian order.
  * #define Long int on machines with 32-bit ints and 64-bit longs.
  * #define Sudden_Underflow for IEEE-format machines without gradual
  *	underflow (i.e., that flush to zero on underflow).
@@ -129,7 +132,10 @@
  *	is not strictly legal and can cause trouble with aggressively
  *	optimizing compilers (e.g., gcc 2.95.1 under -O2).
  */
-#if  defined(IS_LITTLE_ENDIAN)
+#if defined(__arm) || defined(__arm__) || defined(__arm26__) \
+    || defined(__arm32__)
+#define IEEE_ARM
+#elif defined(IS_LITTLE_ENDIAN)
 #define IEEE_8087
 #else
 #define IEEE_MC68k
@@ -167,6 +173,9 @@ extern void *MALLOC(size_t);
 #define IEEE_ARITHMETIC
 #endif
 #ifdef IEEE_8087
+#define IEEE_ARITHMETIC
+#endif
+#ifdef IEEE_ARM
 #define IEEE_ARITHMETIC
 #endif
 
@@ -227,8 +236,8 @@ extern void *MALLOC(size_t);
 #define Sign_Extend(a,b) /*no-op*/
 #endif
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM)	!= 1
-Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
+#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(IEEE_ARM) + defined(VAX) + defined(IBM)	!= 1
+Exactly one of IEEE_8087, IEEE_MC68k, IEEE_ARM, VAX, or IBM should be defined.
 #endif
 
 typedef union { double d; unsigned Long L[2]; } U;
@@ -257,7 +266,7 @@ typedef union { double d; unsigned Long L[2]; } U;
  * An alternative that might be better on some machines is
  * #define Storeinc(a,b,c) (*a++ = b << 16 | c & 0xffff)
  */
-#if defined(IEEE_8087) + defined(VAX)
+#if defined(IEEE_8087) + defined(IEEE_ARM) + defined(VAX)
 #define Storeinc(a,b,c) (((unsigned short *)a)[1] = (unsigned short)b, \
 ((unsigned short *)a)[0] = (unsigned short)c, a++)
 #else
@@ -271,7 +280,7 @@ typedef union { double d; unsigned Long L[2]; } U;
 /* Quick_max = floor((P-1)*log(FLT_RADIX)/log(10) - 1) */
 /* Int_max = floor(P*log(FLT_RADIX)/log(10) - 1) */
 
-#if defined(IEEE_8087) + defined(IEEE_MC68k)
+#if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(IEEE_ARM)
 #define Exp_shift  20
 #define Exp_shift1 20
 #define Exp_msk1    0x100000
