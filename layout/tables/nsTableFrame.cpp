@@ -1776,23 +1776,28 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
         // Check for an overflow list, and append any row group frames being pushed
         MoveOverflowToChildList(aPresContext);
 
-        if (IsAutoLayout()) {     
-          // only do pass1 reflow on an auto layout table
-          nsTableReflowState reflowState(aReflowState, *this, eReflowReason_Initial,
-                                         NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
-          // reflow the children
-          ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus);
-        }
-        if (!mPrevInFlow) {
+        if (!mPrevInFlow) { // only do pass1 on a first in flow
+          if (IsAutoLayout()) {     
+            // only do pass1 reflow on an auto layout table
+            nsTableReflowState reflowState(aReflowState, *this, eReflowReason_Initial,
+                                           NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
+            // reflow the children
+            ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus);
+          }
           mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
         }
       }
       else { // XXX put this back in when bug 70150 is fixed
         // NS_ASSERTION(PR_FALSE, "intial reflow called twice");
       }
-      SetHadInitialReflow(PR_TRUE);
-      SetNeedStrategyBalance(PR_TRUE); // force a balance and then a pass2 reflow 
-      nextReason = eReflowReason_Resize;
+      if (!mPrevInFlow) {
+        SetHadInitialReflow(PR_TRUE);
+        SetNeedStrategyBalance(PR_TRUE); // force a balance and then a pass2 reflow 
+        nextReason = eReflowReason_Resize;
+      }
+      else {
+        nextReason = eReflowReason_Initial;
+      }
       break; 
     }
     case eReflowReason_Incremental:
@@ -1820,6 +1825,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   // which require either a strategy init or balance. This isn't done during an
   // unconstrained reflow because it is useless, and we will be reflowed again later.
   if (NeedsReflow(aReflowState) && (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
+    PRBool haveReflowedColGroups = PR_TRUE;
     if (!mPrevInFlow) {
       if (NeedStrategyInit()) {
         mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
@@ -1828,12 +1834,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       if (NeedStrategyBalance()) {
         BalanceColumnWidths(aPresContext, aReflowState); 
       }
+      haveReflowedColGroups = HaveReflowedColGroups();
     }
     // Constrain our reflow width to the computed table width (of the 1st in flow).
     aDesiredSize.width = GetDesiredWidth();
     nsTableReflowState reflowState(aReflowState, *this, nextReason, 
                                    aDesiredSize.width, aReflowState.availableHeight);
-    ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus);
+    ReflowChildren(aPresContext, reflowState, haveReflowedColGroups, PR_FALSE, aStatus);
 
     // If we're here that means we had to reflow all the rows, e.g., the column widths 
     // changed. We need to make sure that any damaged areas are repainted
@@ -2822,6 +2829,9 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
   nsresult  rv = NS_OK;
   nscoord   cellSpacingY = GetCellSpacingY();
 
+  PRBool isPaginated;
+  aPresContext->IsPaginated(&isPaginated);
+
   nsVoidArray rowGroups;
   PRUint32 numRowGroups;
   OrderRowGroups(rowGroups, numRowGroups, &aReflowState.firstBodySection);
@@ -2841,27 +2851,38 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
 
     if (doReflowChild) {
       nsSize kidAvailSize(aReflowState.availSize);
+      // if this is a tbody in paginated mode reduce the height by a repeated footer
+      nsIFrame* repeatedFooter = nsnull;
+      nscoord repeatedFooterHeight = 0;
+      if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.height)) {
+        const nsStyleDisplay* display;
+        kidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay) { // the child is a tbody
+          nsIFrame* lastChild = (nsIFrame*)rowGroups.ElementAt(numRowGroups - 1);
+          lastChild->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+          if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == display->mDisplay) { // the last child is a tfoot
+            if (((nsTableRowGroupFrame*)lastChild)->IsRepeatable()) {
+              nsRect rect;
+              lastChild->GetRect(rect);
+              repeatedFooterHeight = rect.height;
+              if (repeatedFooterHeight + cellSpacingY < kidAvailSize.height) {
+                repeatedFooter = lastChild;
+                kidAvailSize.height -= repeatedFooterHeight + cellSpacingY;
+              }
+            }
+          }
+        }
+      }
+
       nsHTMLReflowMetrics desiredSize(nsnull);
       desiredSize.width = desiredSize.height = desiredSize.ascent = desiredSize.descent = 0;
   
-      PRBool didFirstBody = PR_FALSE;
-      if (childX < numRowGroups) {
-        // Keep track of the first body section row group
-        if (kidFrame == aReflowState.firstBodySection) {
-          didFirstBody = PR_TRUE;
-        }
-  
+      if (childX < numRowGroups) {  
         // Reflow the child into the available space
         nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
                                           kidFrame, kidAvailSize, aReflowState.reason);
         // XXX fix up bad mComputedWidth for scroll frame
         kidReflowState.mComputedWidth = PR_MAX(kidReflowState.mComputedWidth, 0);
-  
-        if (didFirstBody && (kidFrame != aReflowState.firstBodySection)) {
-          // If this isn't the first row group frame or the header or footer, then
-          // we can't be at the top of the page anymore...
-          kidReflowState.isTopOfPage = PR_FALSE;
-        }
   
         aReflowState.y += cellSpacingY;
         
@@ -2874,17 +2895,6 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
                          aReflowState.x, aReflowState.y, 0, aStatus);
         haveReflowedRowGroup = PR_TRUE;
 
-        // Did the child fit?
-        if (desiredSize.height > kidAvailSize.height) {
-          if (aReflowState.firstBodySection && (kidFrame != aReflowState.firstBodySection)) {
-            // The child is too tall to fit at all in the available space, and it's
-            // not a header/footer or our first row group frame
-            PushChildren(aPresContext, kidFrame, prevKidFrame);
-            aStatus = NS_FRAME_NOT_COMPLETE;
-            break;
-          }
-        }
-  
         // Place the child
         PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
   
@@ -2921,6 +2931,16 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
           kidFrame->GetNextSibling(&nextSibling);
           if (nsnull != nextSibling) {
             PushChildren(aPresContext, nextSibling, kidFrame);
+          }
+          if (repeatedFooter) {
+            kidAvailSize.height = repeatedFooterHeight;
+            nsHTMLReflowState footerReflowState(aPresContext, aReflowState.reflowState,
+                                                repeatedFooter, kidAvailSize, aReflowState.reason);
+            aReflowState.y += cellSpacingY;
+            nsReflowStatus footerStatus;
+            rv = ReflowChild(repeatedFooter, aPresContext, desiredSize, footerReflowState,
+                             aReflowState.x, aReflowState.y, 0, footerStatus);
+            PlaceChild(aPresContext, aReflowState, repeatedFooter, desiredSize);
           }
           break;
         }
@@ -2962,7 +2982,8 @@ nsTableFrame::ReflowChildren(nsIPresContext*      aPresContext,
     for (nsIFrame* kidFrame = mColGroups.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
       nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, kidFrame,
                                        aReflowState.availSize, aReflowState.reason);
-      ReflowChild(kidFrame, aPresContext, kidMet, kidReflowState, 0, 0, 0, aStatus);
+      nsReflowStatus cgStatus;
+      ReflowChild(kidFrame, aPresContext, kidMet, kidReflowState, 0, 0, 0, cgStatus);
       FinishReflowChild(kidFrame, aPresContext, kidMet, 0, 0, 0);
     }
     SetHaveReflowedColGroups(PR_TRUE);
@@ -3270,13 +3291,16 @@ nsTableFrame::CalcDesiredHeight(nsIPresContext*          aPresContext,
   OrderRowGroups(rowGroups, numRowGroups, nsnull);
   if (numRowGroups <= 0) return 0;
 
-  nsIFrame* lastChild = (nsIFrame*)rowGroups.ElementAt(numRowGroups - 1);
-  if (!lastChild) return 0;
+  nscoord naturalHeight = borderPadding.top + cellSpacingY + borderPadding.bottom;
+  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+    nsIFrame* rg = (nsIFrame*)rowGroups.ElementAt(rgX);
+    if (rg) {
+      nsRect rgRect;
+      rg->GetRect(rgRect);
+      naturalHeight += rgRect.height + cellSpacingY;
+    }
+  }
 
-  nsRect lastRect;
-  lastChild->GetRect(lastRect);
-
-  nscoord naturalHeight = lastRect.YMost() + cellSpacingY + borderPadding.bottom;
   nscoord desiredHeight = naturalHeight;
 
   // see if a specified table height requires diving additional space to rows

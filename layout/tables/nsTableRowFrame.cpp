@@ -776,6 +776,8 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
 
   nsTableFrame* tableFrame = &aTableFrame;
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
+  nsIFrame* tablePrevInFlow;
+  tableFrame->GetPrevInFlow(&tablePrevInFlow);
 
   nsresult rv = NS_OK;
 
@@ -850,7 +852,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
           if (frameState & NS_FRAME_FIRST_REFLOW) {
             reason = eReflowReason_Initial;
             cellFrame->DidSetStyleContext(aPresContext); // XXX check this
-            if (!mPrevInFlow && isAutoLayout) {
+            if (!tablePrevInFlow && isAutoLayout) {
               // request the maximum width if availWidth is constrained
               // XXX we could just do this always, but blocks have some problems
               if (NS_UNCONSTRAINEDSIZE != availWidth) {
