@@ -31,12 +31,6 @@
 #include "nsIDOMClassInfo.h"
 
 
-// XPConnect interface list for XPathProcessor
-NS_CLASSINFO_MAP_BEGIN(XPathProcessor)
-  NS_CLASSINFO_MAP_ENTRY(nsIXPathNodeSelector)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for XPathProcessor
 NS_INTERFACE_MAP_BEGIN(XPathProcessor)
   NS_INTERFACE_MAP_ENTRY(nsIXPathNodeSelector)

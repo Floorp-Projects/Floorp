@@ -97,13 +97,6 @@ NS_IMPL_ADDREF(nsHTMLBaseFontElement)
 NS_IMPL_RELEASE(nsHTMLBaseFontElement)
 
 
-// XPConnect interface list for nsHTMLBaseFontElement
-NS_CLASSINFO_MAP_BEGIN(HTMLBaseFontElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBaseFontElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLBaseFontElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBaseFontElement,
                                     nsGenericHTMLLeafElement)

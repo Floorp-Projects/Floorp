@@ -282,12 +282,6 @@ nsComputedDOMStyle::~nsComputedDOMStyle()
 }
 
 
-// XPConnect interface list for nsComputedDOMStyle
-NS_CLASSINFO_MAP_BEGIN(ComputedCSSStyleDeclaration)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsComputedDOMStyle
 NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
   NS_INTERFACE_MAP_ENTRY(nsIComputedDOMStyle)

@@ -102,12 +102,6 @@ nsXMLEntity::~nsXMLEntity()
 }
 
 
-// XPConnect interface list for nsXMLEntity
-NS_CLASSINFO_MAP_BEGIN(Entity)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEntity)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLEntity
 NS_INTERFACE_MAP_BEGIN(nsXMLEntity)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()

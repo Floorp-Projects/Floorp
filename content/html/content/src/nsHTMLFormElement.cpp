@@ -269,14 +269,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLFormElement
-NS_CLASSINFO_MAP_BEGIN(HTMLFormElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFormElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLFormElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFormElement,
                                     nsGenericHTMLContainerElement)
@@ -701,13 +693,6 @@ nsFormControlList::Clear()
     mNoNameLookupTable->Reset(FormControlResetEnumFunction);
   }
 }
-
-
-// XPConnect interface list for nsFormControlList
-NS_CLASSINFO_MAP_BEGIN(HTMLFormControlCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
-NS_CLASSINFO_MAP_END
 
 
 // XPConnect interface list for nsFormControlList

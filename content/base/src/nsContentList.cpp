@@ -48,12 +48,6 @@ nsBaseContentList::~nsBaseContentList()
 }
 
 
-// XPConnect interface list for nsBaseContentList
-NS_CLASSINFO_MAP_BEGIN(NodeList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsBaseContentList
 NS_INTERFACE_MAP_BEGIN(nsBaseContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
@@ -360,13 +354,6 @@ nsContentList::~nsContentList()
 
   delete mData;
 }
-
-
-// XPConnect interface list for nsContentList
-NS_CLASSINFO_MAP_BEGIN(HTMLCollection)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for nsContentList

@@ -137,12 +137,6 @@ private:
 const char * nsCrypto::kPSMComponentContractID = PSM_COMPONENT_CONTRACTID;
 
 
-// XPConnect interface list for nsCrypto
-NS_CLASSINFO_MAP_BEGIN(Crypto)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCrypto)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsCrypto
 NS_INTERFACE_MAP_BEGIN(nsCrypto)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCrypto)
@@ -155,12 +149,6 @@ NS_IMPL_ADDREF(nsCrypto)
 NS_IMPL_RELEASE(nsCrypto)
 
 
-// XPConnect interface list for nsCRMFObject
-NS_CLASSINFO_MAP_BEGIN(CRMFObject)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMCRMFObject)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsCRMFObject
 NS_INTERFACE_MAP_BEGIN(nsCRMFObject)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCRMFObject)
@@ -171,12 +159,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsCRMFObject)
 NS_IMPL_RELEASE(nsCRMFObject)
-
-
-// XPConnect interface list for nsPkcs11
-NS_CLASSINFO_MAP_BEGIN(Pkcs11)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMPkcs11)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for nsPkcs11

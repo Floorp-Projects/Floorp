@@ -139,12 +139,6 @@ XSLTProcessor::~XSLTProcessor() {
 
 #ifndef TX_EXE
 
-// XPConnect interface list for XSLTProcessor
-NS_CLASSINFO_MAP_BEGIN(XSLTProcessor)
-  NS_CLASSINFO_MAP_ENTRY(nsIDocumentTransformer)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for XSLTProcessor
 NS_INTERFACE_MAP_BEGIN(XSLTProcessor)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)

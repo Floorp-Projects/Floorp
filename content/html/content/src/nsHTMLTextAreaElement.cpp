@@ -144,14 +144,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTextAreaElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTextAreaElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLTextAreaElement
-NS_CLASSINFO_MAP_BEGIN(HTMLTextAreaElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLTextAreaElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLTextAreaElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLTextAreaElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTextAreaElement,
                                     nsGenericHTMLContainerFormElement)

@@ -172,14 +172,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLLinkElement
-NS_CLASSINFO_MAP_BEGIN(HTMLLinkElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLinkElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMLinkStyle)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLLinkElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLinkElement,
                                     nsGenericHTMLLeafElement)

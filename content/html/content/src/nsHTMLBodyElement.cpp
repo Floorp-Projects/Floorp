@@ -709,13 +709,6 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 
 
 
-// XPConnect interface list for nsHTMLBodyElement
-NS_CLASSINFO_MAP_BEGIN(HTMLBodyElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLBodyElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLBodyElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLBodyElement,
                                     nsGenericHTMLContainerElement)

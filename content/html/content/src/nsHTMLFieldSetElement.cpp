@@ -107,13 +107,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLFieldSetElement
-NS_CLASSINFO_MAP_BEGIN(HTMLFieldSetElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLFieldSetElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLFieldSetElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFieldSetElement,
                                     nsGenericHTMLContainerFormElement)

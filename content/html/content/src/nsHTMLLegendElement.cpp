@@ -110,13 +110,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 
 
-// XPConnect interface list for nsHTMLLegendElement
-NS_CLASSINFO_MAP_BEGIN(HTMLLegendElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLegendElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLLegendElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLLegendElement,
                                     nsGenericHTMLContainerFormElement)

@@ -47,12 +47,6 @@ ScreenImpl::~ScreenImpl()
 }
 
 
-// XPConnect interface list for ScreenImpl
-NS_CLASSINFO_MAP_BEGIN(Screen)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMScreen)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for ScreenImpl
 NS_INTERFACE_MAP_BEGIN(ScreenImpl)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

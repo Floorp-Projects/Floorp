@@ -97,12 +97,6 @@ nsXMLNotation::~nsXMLNotation()
 }
 
 
-// XPConnect interface list for nsXMLNotation
-NS_CLASSINFO_MAP_BEGIN(Notation)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNotation)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLNotation
 NS_INTERFACE_MAP_BEGIN(nsXMLNotation)
   NS_INTERFACE_MAP_ENTRY_DOM_DATA()

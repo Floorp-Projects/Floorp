@@ -55,11 +55,6 @@ nsDOMMutationEvent::~nsDOMMutationEvent() {
   
 }
 
-// XPConnect interface list for nsDOMMutationEvent
-NS_CLASSINFO_MAP_BEGIN(MutationEvent)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMMutationEvent)
-NS_CLASSINFO_MAP_END
-
 NS_INTERFACE_MAP_BEGIN(nsDOMMutationEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMutationEvent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMMutationEvent)

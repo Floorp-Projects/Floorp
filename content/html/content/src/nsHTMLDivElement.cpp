@@ -109,13 +109,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDivElement, nsGenericElement)
 
 
 
-// XPConnect interface list for nsHTMLDivElement
-NS_CLASSINFO_MAP_BEGIN(HTMLDivElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDivElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLDivElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDivElement,
                                     nsGenericHTMLContainerElement)

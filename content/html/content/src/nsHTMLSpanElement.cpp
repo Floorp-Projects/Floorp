@@ -91,13 +91,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLSpanElement
-NS_CLASSINFO_MAP_BEGIN(HTMLSpanElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLSpanElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSpanElement,
                                     nsGenericHTMLContainerElement)

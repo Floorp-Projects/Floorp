@@ -230,14 +230,6 @@ nsXMLHttpRequest::~nsXMLHttpRequest()
 }
 
 
-// XPConnect interface list for nsXMLHttpRequest
-NS_CLASSINFO_MAP_BEGIN(XMLHttpRequest)
-  NS_CLASSINFO_MAP_ENTRY(nsIXMLHttpRequest)
-  NS_CLASSINFO_MAP_ENTRY(nsIJSXMLHttpRequest)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXMLHttpRequest
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLHttpRequest)

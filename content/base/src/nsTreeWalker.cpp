@@ -96,11 +96,6 @@ nsTreeWalker::~nsTreeWalker()
  * nsISupports stuff
  */
 
-// XPConnect interface list for nsDOMDocumentType
-NS_CLASSINFO_MAP_BEGIN(TreeWalker)
-    NS_CLASSINFO_MAP_ENTRY(nsIDOMTreeWalker)
-NS_CLASSINFO_MAP_END
-
 // QueryInterface implementation for nsDOMDocumentType
 NS_INTERFACE_MAP_BEGIN(nsTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)

@@ -142,14 +142,6 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLButtonElement, nsGenericElement);
 NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement);
 
 
-// XPConnect interface list for nsHTMLButtonElement
-NS_CLASSINFO_MAP_BEGIN(HTMLButtonElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMHTMLButtonElement)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLButtonElement)
-  NS_CLASSINFO_MAP_ENTRY_FUNCTION(GetGenericHTMLElementIIDs)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLButtonElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLButtonElement,
                                     nsGenericHTMLContainerFormElement)

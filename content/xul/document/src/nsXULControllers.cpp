@@ -86,12 +86,6 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult)
     return rv;
 }
 
-// XPConnect interface list for nsXULControllers
-NS_CLASSINFO_MAP_BEGIN(XULControllers)
-  NS_CLASSINFO_MAP_ENTRY(nsIControllers)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsXULControllers
 NS_INTERFACE_MAP_BEGIN(nsXULControllers)
   NS_INTERFACE_MAP_ENTRY(nsIControllers)

@@ -41,12 +41,6 @@ BarPropImpl::~BarPropImpl()
 }
 
 
-// XPConnect interface list for BarPropImpl
-NS_CLASSINFO_MAP_BEGIN(BarProp)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMBarProp)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for BarPropImpl
 NS_INTERFACE_MAP_BEGIN(BarPropImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBarProp)

@@ -50,12 +50,6 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 // Implement our nsISupports methods
 
-// XPConnect interface list for nsBoxObject
-NS_CLASSINFO_MAP_BEGIN(BoxObject)
-  NS_CLASSINFO_MAP_ENTRY(nsIBoxObject)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsBoxObject
 NS_INTERFACE_MAP_BEGIN(nsBoxObject)
   NS_INTERFACE_MAP_ENTRY(nsIBoxObject)

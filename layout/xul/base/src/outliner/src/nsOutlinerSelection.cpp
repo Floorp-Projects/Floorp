@@ -249,11 +249,6 @@ nsOutlinerSelection::~nsOutlinerSelection()
   delete mFirstRange;
 }
 
-// XPConnect interface list for nsBoxObject
-NS_CLASSINFO_MAP_BEGIN(OutlinerSelection)
-  NS_CLASSINFO_MAP_ENTRY(nsIOutlinerSelection)
-NS_CLASSINFO_MAP_END
-
 // QueryInterface implementation for nsBoxObject
 NS_INTERFACE_MAP_BEGIN(nsOutlinerSelection)
   NS_INTERFACE_MAP_ENTRY(nsIOutlinerSelection)

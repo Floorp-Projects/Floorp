@@ -141,12 +141,6 @@ nsDOMStyleSheetList::~nsDOMStyleSheetList()
 
 
 // XXX couldn't we use the GetIIDs method from CSSStyleSheetList here?
-// XPConnect interface list for nsDOMStyleSheetList
-NS_CLASSINFO_MAP_BEGIN(DocumentStyleSheetList)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMStyleSheetList)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsDOMStyleSheetList
 NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
@@ -314,12 +308,6 @@ nsDOMImplementation::nsDOMImplementation(nsIURI* aBaseURI)
 nsDOMImplementation::~nsDOMImplementation()
 {
 }
-
-// XPConnect interface list for nsDOMImplementation
-NS_CLASSINFO_MAP_BEGIN(DOMImplementation)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDOMImplementation)
-NS_CLASSINFO_MAP_END
-
 
 // QueryInterface implementation for nsDOMImplementation
 NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)

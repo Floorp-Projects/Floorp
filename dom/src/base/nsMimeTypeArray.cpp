@@ -49,12 +49,6 @@ MimeTypeArrayImpl::~MimeTypeArrayImpl()
 }
 
 
-// XPConnect interface list for MimeTypeArrayImpl
-NS_CLASSINFO_MAP_BEGIN(MimeTypeArray)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMMimeTypeArray)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for MimeTypeArrayImpl
 NS_INTERFACE_MAP_BEGIN(MimeTypeArrayImpl)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -184,12 +178,6 @@ MimeTypeElementImpl::~MimeTypeElementImpl()
 {
 	NS_IF_RELEASE(mMimeType);
 }
-
-
-// XPConnect interface list for MimeTypeElementImpl
-NS_CLASSINFO_MAP_BEGIN(MimeType)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMMimeType)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for MimeTypeElementImpl

@@ -204,19 +204,6 @@ nsXMLDocument::~nsXMLDocument()
 }
 
 
-// XPConnect interface list for nsXMLDocument
-NS_CLASSINFO_MAP_BEGIN(Document)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocument)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsHTMLAnchorElement
 NS_INTERFACE_MAP_BEGIN(nsXMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIXMLDocument)

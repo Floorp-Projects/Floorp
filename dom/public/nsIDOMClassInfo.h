@@ -187,17 +187,6 @@ enum nsDOMClassInfoID {
  * nsIClassInfo helper macros
  */
 
-#define NS_CLASSINFO_MAP_BEGIN(_class)
-
-#define NS_CLASSINFO_MAP_BEGIN_EXPORTED(_class)
-
-#define NS_CLASSINFO_MAP_ENTRY(_interface)
-
-#define NS_CLASSINFO_MAP_ENTRY_FUNCTION(_function)
-
-#define NS_CLASSINFO_MAP_END
-
-
 #include "nsIServiceManager.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"

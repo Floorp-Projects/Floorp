@@ -57,13 +57,6 @@ PluginArrayImpl::~PluginArrayImpl()
 }
 
 
-// XPConnect interface list for PluginArrayImpl
-NS_CLASSINFO_MAP_BEGIN(PluginArray)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMPluginArray)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMJSPluginArray)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for PluginArrayImpl
 NS_INTERFACE_MAP_BEGIN(PluginArrayImpl)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMPluginArray)
@@ -281,12 +274,6 @@ PluginElementImpl::~PluginElementImpl()
     delete[] mMimeTypeArray;
   }
 }
-
-
-// XPConnect interface list for PluginElementImpl
-NS_CLASSINFO_MAP_BEGIN(Plugin)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMPlugin)
-NS_CLASSINFO_MAP_END
 
 
 // QueryInterface implementation for PluginElementImpl

@@ -214,13 +214,6 @@ nsDocumentFragment::~nsDocumentFragment()
 }
 
 
-// XPConnect interface list for nsDocumentFragment
-NS_CLASSINFO_MAP_BEGIN(DocumentFragment)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOMDocumentFragment)
-  NS_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
-NS_CLASSINFO_MAP_END
-
-
 // QueryInterface implementation for nsDocumentFragment
 NS_INTERFACE_MAP_BEGIN(nsDocumentFragment)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentFragment)
