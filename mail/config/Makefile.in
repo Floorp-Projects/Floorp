@@ -33,7 +33,7 @@ _PLATFORM = dos
 
 mail_chrome: mail-jar.mn
 
--$(RM) -rf $(DIST)/$(APP_NAME)/
+	-$(RM) -rf $(DIST)/$(APP_NAME)/
 
 ifeq ($(OS_ARCH),WINNT)
 	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/comm
