@@ -915,7 +915,7 @@
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-      <toolbaritem id="bookmarks-toolbar" title="&bookmarksItem.title;" flex="1">
+      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
         <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px;">
           <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"
                 flex="1" style="min-width:0px; width:0px;margin-left: 3px;" 
@@ -1009,7 +1009,7 @@
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
     <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
-             customizable="true" defaultset="bookmarks-toolbar" mode="icons"
+             customizable="true" defaultset="personal-bookmarks" mode="icons"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"/>
     
   </toolbox>
