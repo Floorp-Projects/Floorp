@@ -1437,12 +1437,17 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     PRBool tallestCellGotShorter = PR_FALSE;
 #ifndef MOZ_MATHML
     if (initCellDesSize.height < oldCellDesSize.height) {
-      nscoord width  = initCellDesSize.width;
-      nscoord height = initCellDesSize.height;
-      CalculateCellActualSize(aNextFrame, width, height, cellAvailWidth); // considers style
-      nscoord tallest = GetTallestCell();
-      if ((height == tallest) && (cellMet.height < tallest)) {
+      if (oldCellDesSize.height == GetTallestCell()) {
         tallestCellGotShorter = PR_TRUE;
+      }
+      else {
+        nscoord width  = initCellDesSize.width;
+        nscoord height = initCellDesSize.height;
+        CalculateCellActualSize(aNextFrame, width, height, cellAvailWidth); // considers style
+        nscoord tallest = GetTallestCell();
+        if ((height == tallest) && (cellMet.height < tallest)) {
+          tallestCellGotShorter = PR_TRUE;
+        }
       }
     }
     if (tallestCellGotShorter) {
