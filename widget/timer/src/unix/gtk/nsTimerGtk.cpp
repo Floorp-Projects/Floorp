@@ -20,6 +20,7 @@
  * Contributor(s):
  *  Stuart Parmenter <pavlov@netscape.com>
  *  Alexander Larsson (alla@lysator.liu.se)
+ *  Christopher Blizzard <blizzard@mozilla.org>
  */
 
 #define INTERVAL 10
@@ -210,6 +211,7 @@ nsVoidArray *nsTimerGtk::gLowList = (nsVoidArray *)nsnull;
 nsVoidArray *nsTimerGtk::gLowestList = (nsVoidArray *)nsnull;
 PRBool nsTimerGtk::gTimeoutAdded = PR_FALSE;
 PRBool nsTimerGtk::gProcessingTimer = PR_FALSE;
+guint  nsTimerGtk::gTimerID = 0;
 
 nsTimerGtk::nsTimerGtk()
 {
@@ -308,7 +310,7 @@ nsresult nsTimerGtk::Init(nsTimerCallbackFunc aFunc,
     nsTimerGtk::gNormalList = new nsVoidArray;
     nsTimerGtk::gLowList = new nsVoidArray;
     nsTimerGtk::gLowestList = new nsVoidArray;
-    gtk_timeout_add ( INTERVAL, TimerCallbackFunc, (gpointer) this );
+    gTimerID = gtk_timeout_add ( INTERVAL, TimerCallbackFunc, (gpointer)0);
     nsTimerGtk::gTimeoutAdded = PR_TRUE;
   }
 
@@ -356,7 +358,7 @@ nsresult nsTimerGtk::Init(nsITimerCallback *aCallback,
     nsTimerGtk::gNormalList = new nsVoidArray;
     nsTimerGtk::gLowList = new nsVoidArray;
     nsTimerGtk::gLowestList = new nsVoidArray;
-    gtk_timeout_add (INTERVAL, TimerCallbackFunc, (gpointer) this );
+    gTimerID = gtk_timeout_add (INTERVAL, TimerCallbackFunc, (gpointer)0);
     nsTimerGtk::gTimeoutAdded = PR_TRUE;
   }
   
@@ -384,6 +386,11 @@ nsresult nsTimerGtk::Init(nsITimerCallback *aCallback,
 
 void nsTimerGtk::Shutdown()
 {
+    if (gTimeoutAdded) {
+      gtk_timeout_remove(gTimerID);
+      gTimerID = 0;
+    }
+
     delete nsTimerGtk::gHighestList;
     nsTimerGtk::gHighestList = nsnull;
 

@@ -118,6 +118,7 @@ public:
   static nsVoidArray  *gLowestList;
   static PRBool        gTimeoutAdded;
   static PRBool        gProcessingTimer;
+  static guint         gTimerID;
 
   TimeVal              mSchedTime;
   PRUint32             mDelay;
