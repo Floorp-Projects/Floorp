@@ -7,7 +7,6 @@ s:\mozilla\dist\win32_d.obj\bin\viewer -o s:\mozilla\layout\html\tests\table\cor
 goto done
 
 :baseline
-delay=1
 s:\mozilla\dist\win32_d.obj\bin\viewer -o s:\mozilla\layout\html\tests\table\core\ -f s:\mozilla\layout\html\tests\table\core\file_list.txt
 goto done
 
