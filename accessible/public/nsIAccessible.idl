@@ -480,8 +480,8 @@ interface nsIAccessible : nsISupports
   enum { ROLE_CLIENT = 10U };
   enum { ROLE_MENUPOPUP = 11U };
   enum { ROLE_MENUITEM = 12U };
-  enum { ROLE_RADIO_MENUITEM = 12U }; // Same as ROLE_MENUITEM
-  enum { ROLE_CHECK_MENUITEM = 12U }; // Same as ROLE_MENUITEM
+  enum { ROLE_RADIO_MENU_ITEM = 12U }; // Same as ROLE_MENUITEM
+  enum { ROLE_CHECK_MENU_ITEM = 12U }; // Same as ROLE_MENUITEM
   enum { ROLE_TOOLTIP = 13U };
   enum { ROLE_APPLICATION = 14U };
   enum { ROLE_DOCUMENT = 15U };
