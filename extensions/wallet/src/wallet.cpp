@@ -83,6 +83,16 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 #include "prlong.h"
 #include "prinrval.h"
 
+#include "prlog.h"
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsWallet:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+PRLogModuleInfo* gWalletLog = nsnull;
+
+
 /********************************************************/
 /* The following data and procedures are for preference */
 /********************************************************/
@@ -315,18 +325,26 @@ InputConsumer::OnDataAvailable(nsIChannel* channel,
                                PRUint32 aSourceOffset,
                                PRUint32 aLength)
 {
+  PR_LOG(gWalletLog, PR_LOG_ALWAYS,
+    ("InputConsumer::OnDataAvailable[%x]. aLength%u\n", this, aLength));
   char buf[1001];
   PRUint32 amt;
-  nsresult rv;
+  nsresult rv = NS_OK;
   do {
+    amt = 0;
     rv = aIStream->Read(buf, 1000, &amt);
-    if (amt == 0) break;
-    if (NS_FAILED(rv)) return rv;
+    if (amt == 0) {
+      rv = NS_OK;
+      break;
+    }
+    if (NS_FAILED(rv)) {
+      break;
+    }
     buf[amt] = '\0';
     mOutFile->write(buf,amt);
   } while (amt);
-
-  return NS_OK;
+  PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("InputConsumer::OnDataAvailable[%x] done.\n", this));
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -335,6 +353,7 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
                              nsresult aStatus,
                              const PRUnichar* aMsg)
 {
+  PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("InputConsumer::OnStopRequest[%x]\n", this));
   PRUint32 httpStatus;
   nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
   if (pHTTPCon) {
@@ -366,6 +385,8 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 {
     nsresult rv;
     gKeepRunning = 0;
+    if (gWalletLog == nsnull)
+        gWalletLog = PR_NewLogModule ("nsWallet");
 
     // Create the Event Queue for this thread...
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
@@ -452,8 +473,10 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 #else
         PLEvent *gEvent;
         rv = gEventQ->GetEvent(&gEvent);
+        PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("NS_NewURItoFile::GetEvent, rv=%u\n", rv));
         if (NS_SUCCEEDED(rv)) {
             rv  = gEventQ->HandleEvent(gEvent);
+            PR_LOG(gWalletLog, PR_LOG_ALWAYS, ("NS_NewURItoFile::HandleEvent completed, rv=%u\n", rv));
         }
 #endif /* !WIN32 */
     }
@@ -1065,6 +1088,35 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
   return NS_OK;
 }
 
+PUBLIC void
+WLLT_ExpirePassword() {
+  nsresult rv = wallet_CryptSetup();
+  if (NS_SUCCEEDED(rv)) {
+//    rv = gSecretDecoderRing->Logout();
+  }
+  PRUnichar * message;
+  if (NS_FAILED(rv)) {
+    message = Wallet_Localize("PasswordNotExired");
+  } else {
+    message = Wallet_Localize("PasswordExpired");
+  }
+  Wallet_Alert(message);
+  Recycle(message);
+}
+
+PUBLIC
+void WLLT_ChangePassword() {
+  nsresult rv = wallet_CryptSetup();
+  if (NS_SUCCEEDED(rv)) {
+//    rv = gSecretDecoderRing->ChangePassword();
+  }
+  if (NS_FAILED(rv)) {
+    PRUnichar * message = Wallet_Localize("PasswordNotChanged");
+    Wallet_Alert(message);
+    Recycle(message);
+  }
+}
+
 PUBLIC nsresult
 Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
 
@@ -1456,10 +1508,6 @@ const char schemaConcatFileName[] = "SchemaConcat.tbl";
 #ifdef AutoCapture
 const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 #endif
-
-PUBLIC void
-WLLT_ExpirePassword() {
-}
 
 
 /******************************************************/
@@ -2489,11 +2537,6 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
 //    wallet_Dump(wallet_SchemaToValue_list);
 #endif
 
-}
-
-PUBLIC
-void WLLT_ChangePassword() {
-  return;
 }
 
 void
