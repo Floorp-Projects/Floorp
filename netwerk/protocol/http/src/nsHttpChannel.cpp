@@ -1872,9 +1872,10 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
 //-----------------------------------------------------------------------------
 
 // buf contains "domain\user"
-static void ParseUserDomain(PRUnichar *buf,
-                            const PRUnichar **user,
-                            const PRUnichar **domain)
+static void
+ParseUserDomain(PRUnichar *buf,
+                const PRUnichar **user,
+                const PRUnichar **domain)
 {
     PRUnichar *p = buf;
     while (*p && *p != '\\') ++p;
@@ -1886,10 +1887,11 @@ static void ParseUserDomain(PRUnichar *buf,
 }
 
 // helper function for setting identity from raw user:pass
-static void SetIdent(nsHttpAuthIdentity &ident,
-                     PRUint32 authFlags,
-                     PRUnichar *userBuf,
-                     PRUnichar *passBuf)
+static void
+SetIdent(nsHttpAuthIdentity &ident,
+         PRUint32 authFlags,
+         PRUnichar *userBuf,
+         PRUnichar *passBuf)
 {
     const PRUnichar *user = userBuf;
     const PRUnichar *domain = nsnull;
@@ -1898,6 +1900,66 @@ static void SetIdent(nsHttpAuthIdentity &ident,
         ParseUserDomain(userBuf, &user, &domain);
 
     ident.Set(domain, user, passBuf);
+}
+
+// generate credentials for the given challenge, and update the auth cache.
+nsresult
+nsHttpChannel::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
+                                   PRBool proxyAuth,
+                                   const char *host,
+                                   PRInt32 port,
+                                   const char *directory,
+                                   const char *realm,
+                                   const char *challenge,
+                                   const nsHttpAuthIdentity &ident,
+                                   nsCOMPtr<nsISupports> &sessionState,
+                                   char **result)
+{
+    nsresult rv;
+    PRUint32 authFlags;
+
+    rv = auth->GetAuthFlags(&authFlags);
+    if (NS_FAILED(rv)) return rv;
+
+    nsISupports *ss = sessionState;
+    rv = auth->GenerateCredentials(this,
+                                   challenge,
+                                   proxyAuth,
+                                   ident.Domain(),
+                                   ident.User(),
+                                   ident.Password(),
+                                   &ss,
+                                   &mAuthContinuationState,
+                                   result);
+    sessionState.swap(ss);
+    if (NS_FAILED(rv)) return rv;
+
+    // don't log this in release build since it could contain sensitive info.
+#ifdef DEBUG 
+    LOG(("generated creds: %s\n", *result));
+#endif
+
+    // find out if this authenticator allows reuse of credentials and/or
+    // challenge.
+    PRBool saveCreds =
+        authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS;
+    PRBool saveChallenge =
+        authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE;
+
+    // this getter never fails
+    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
+
+    // create a cache entry.  we do this even though we don't yet know that
+    // these credentials are valid b/c we need to avoid prompting the user
+    // more than once in case the credentials are valid.
+    //
+    // if the credentials are not reusable, then we don't bother sticking
+    // them in the auth cache.
+    rv = authCache->SetAuthEntry(host, port, directory, realm,
+                                 saveCreds ? *result : nsnull,
+                                 saveChallenge ? challenge : nsnull,
+                                 ident, ss);
+    return rv;
 }
 
 nsresult
@@ -1986,9 +2048,8 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
     LOG(("nsHttpChannel::GetCredentialsForChallenge [this=%x proxyAuth=%d challenges=%s]\n",
         this, proxyAuth, challenge));
 
+    // this getter never fails
     nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
-    if (!authCache)
-        return NS_ERROR_NOT_INITIALIZED;
 
     PRUint32 authFlags;
     nsresult rv = auth->GetAuthFlags(&authFlags);
@@ -2112,48 +2173,22 @@ nsHttpChannel::GetCredentialsForChallenge(const char *challenge,
         }
     }
 
+    //
     // get credentials for the given user:pass
+    //
+    // always store the credentials we're trying now so that they will be used
+    // on subsequent links.  This will potentially remove good credentials from
+    // the cache.  This is ok as we don't want to use cached credentials if the
+    // user specified something on the URI or in another manner.  This is so
+    // that we don't transparently authenticate as someone they're not
+    // expecting to authenticate as.
+    //
     nsXPIDLCString result;
-    sessionState = sessionStateGrip;
-    rv = auth->GenerateCredentials(this, challenge,
-                                   proxyAuth,
-                                   ident->Domain(),
-                                   ident->User(),
-                                   ident->Password(),
-                                   &sessionState,
-                                   &mAuthContinuationState,
-                                   getter_Copies(result));
-    sessionStateGrip.swap(sessionState);
-    if (NS_SUCCEEDED(rv)) {
-        LOG(("generated creds: %s\n", result.get()));
-
-        // let's try these credentials
+    rv = GenCredsAndSetEntry(auth, proxyAuth, host, port, path.get(),
+                             realm.get(), challenge, *ident, sessionStateGrip,
+                             getter_Copies(result));
+    if (NS_SUCCEEDED(rv))
         creds = result;
-
-        // always store the credentials we're trying now so that they will
-        // be used on subsequent links.  This will potentially remove good
-        // credentials from the cache.  This is ok as we don't want to use
-        // cached credentials if the user specified something on the URI
-        // or in another manner.  This is so that we don't transparently
-        // authenticate as someone they're not expecting to authenticate as.
-
-        // find out if this authenticator allows reuse of credentials
-        PRBool saveCreds
-                = (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
-        PRBool saveChallenge
-                = (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
-
-        // create a cache entry.  we do this even though we don't yet know that
-        // these credentials are valid b/c we need to avoid prompting the user
-        // more than once in case the credentials are valid.
-        //
-        // if the credentials are not reusable, then we don't bother sticking
-        // them in the auth cache.
-        rv = authCache->SetAuthEntry(host, port, path.get(), realm.get(),
-                                     saveCreds ? creds.get() : nsnull,
-                                     saveChallenge ? challenge : nsnull,
-                                     *ident, sessionState);
-    }
     return rv;
 }
 
@@ -2376,29 +2411,12 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
             nsCAutoString unused;
             rv = ParseChallenge(challenge, unused, getter_AddRefs(auth));
             if (NS_SUCCEEDED(rv)) {
-                nsISupports *sessionState = entry->mMetaData;
-                rv = auth->GenerateCredentials(this, challenge,
-                                               header == nsHttp::Proxy_Authorization,
-                                               ident.Domain(),
-                                               ident.User(),
-                                               ident.Password(),
-                                               &sessionState,
-                                               &mAuthContinuationState,
-                                               getter_Copies(temp));
-
-                entry->mMetaData.swap(sessionState);
-                if (NS_SUCCEEDED(rv)) {
+                PRBool proxyAuth = (header == nsHttp::Proxy_Authorization);
+                rv = GenCredsAndSetEntry(auth, proxyAuth, host, port, path,
+                                         entry->Realm(), challenge, ident,
+                                         entry->mMetaData, getter_Copies(temp));
+                if (NS_SUCCEEDED(rv))
                     creds = temp.get();
-
-                    //
-                    // set the cached authorization credentials to
-                    // those we used (in case we used the URI
-                    // specified credentials)
-                    rv = authCache->SetAuthEntry(host, port, path,
-                                                 entry->Realm(),
-                                                 creds, challenge,
-                                                 ident, sessionState);
-                }
             }
         }
         if (creds[0]) {
@@ -2414,25 +2432,26 @@ void
 nsHttpChannel::AddAuthorizationHeaders()
 {
     LOG(("nsHttpChannel::AddAuthorizationHeaders? [this=%x]\n", this));
-    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
-    if (authCache) {
-        // check if proxy credentials should be sent
-        const char *proxyHost = mConnectionInfo->ProxyHost();
-        if (proxyHost)
-            SetAuthorizationHeader(authCache, nsHttp::Proxy_Authorization,
-                                   proxyHost, mConnectionInfo->ProxyPort(),
-                                   nsnull, // proxy has no path
-                                   mProxyIdent);
 
-        // check if server credentials should be sent
-        nsCAutoString path;
-        if (NS_SUCCEEDED(GetCurrentPath(path)))
-            SetAuthorizationHeader(authCache, nsHttp::Authorization,
-                                   mConnectionInfo->Host(),
-                                   mConnectionInfo->Port(),
-                                   path.get(),
-                                   mIdent);
-    }
+    // this getter never fails
+    nsHttpAuthCache *authCache = gHttpHandler->AuthCache();
+
+    // check if proxy credentials should be sent
+    const char *proxyHost = mConnectionInfo->ProxyHost();
+    if (proxyHost)
+        SetAuthorizationHeader(authCache, nsHttp::Proxy_Authorization,
+                               proxyHost, mConnectionInfo->ProxyPort(),
+                               nsnull, // proxy has no path
+                               mProxyIdent);
+
+    // check if server credentials should be sent
+    nsCAutoString path;
+    if (NS_SUCCEEDED(GetCurrentPath(path)))
+        SetAuthorizationHeader(authCache, nsHttp::Authorization,
+                               mConnectionInfo->Host(),
+                               mConnectionInfo->Port(),
+                               path.get(),
+                               mIdent);
 }
 
 nsresult
