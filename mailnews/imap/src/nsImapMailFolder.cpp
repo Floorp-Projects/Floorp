@@ -882,6 +882,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
         imapFolder->SetBoxFlags(flags);
    
+        child->SetFlag(MSG_FOLDER_FLAG_ELIDED);
         nsXPIDLString unicodeName;
         rv = CreateUnicodeStringFromUtf7(folderName, getter_Copies(unicodeName));
         if (NS_SUCCEEDED(rv))
