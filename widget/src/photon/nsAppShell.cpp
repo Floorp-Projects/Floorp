@@ -40,30 +40,9 @@ NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 PRBool            nsAppShell::mPtInited = PR_FALSE;
 
 #include <prlog.h>
-PRLogModuleInfo  *PhWidLog = NULL;
-unsigned char PhWidLogState = 0;		/* 0= Not Enabled */
+PRLogModuleInfo  *PhWidLog =  PR_NewLogModule("PhWidLog");
 #include "nsPhWidgetLog.h"
 
-#if 1
-void SigUsr1Handler(int signo)
-{
-  printf("SigUsr1Handler: PhWidLogState=<%d>\n", PhWidLogState);
-  
-  if (PhWidLogState)
-    PhWidLogState=0;
-  else
-    PhWidLogState=1;
-
-#if 1
-  /* Should do this in a function in GFX */
-  extern unsigned char PhGfxLogState;
-  if (PhGfxLogState)
-    PhGfxLogState=0;
-  else
-    PhGfxLogState=1;
-#endif
-}
-#endif
 
 //-------------------------------------------------------------------------
 //
@@ -84,24 +63,6 @@ nsAppShell::nsAppShell()
     PtInit( NULL );
     PtChannelCreate(); // Force use of pulses
     mPtInited = PR_TRUE;
-
-#if 1
-extern int double_buffer;
-//extern int raw_container_color;
-
-  if (getenv("DOUBLE_BUFFER")!=0)
-  {
-    double_buffer = atoi(getenv("DOUBLE_BUFFER"));
-  }
-  printf ("double_buffer: %d\n",double_buffer);
-
-/*  if (getenv("RAW_CONTAINER_COLOR")!=0)
-  {
-    raw_container_color = atoi(getenv("RAW_CONTAINER_COLOR"));
-  }
-  printf ("raw_container_color: %d\n",raw_container_color);
-*/
-#endif
   }
 }
 
