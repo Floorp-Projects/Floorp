@@ -16,7 +16,6 @@ function Init() {
     pref.SetDefaultIntPref('sidebar.width', 170);
     //    pref.SetIntPref(pref.GetIntPref('sidebar.width'));
     pref.SetDefaultBoolPref('sidebar.open', true);
-    pref.SavePrefFile();
     if (pref.GetBoolPref('sidebar.open')) {
       toggleOpenClose();
     }
@@ -37,7 +36,6 @@ function toggleOpenClose() {
   if (pref) {
     pref.SetBoolPref('sidebar.open', !isSidebarOpen);
     width = pref.GetIntPref('sidebar.width');
-    pref.SavePrefFile();
   }
 
   if (isSidebarOpen)
