@@ -428,6 +428,17 @@ nsEditorShell::DoEditorMode(nsIWebShell *aWebShell)
   return err;
 }
 
+
+NS_IMETHODIMP
+nsEditorShell::UpdateInterfaceState(void)
+{
+  if (!mStateMaintainer)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  return mStateMaintainer->ForceUpdate();
+}  
+
+
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 NS_IMETHODIMP    
