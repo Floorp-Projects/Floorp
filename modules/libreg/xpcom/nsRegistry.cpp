@@ -1414,8 +1414,8 @@ NS_IMETHODIMP nsRegistry::UnescapeKey(PRUint8* escaped, PRUint32 termination, PR
         {
             if (e - b >= 2)
             {
-                char* c1 = strchr(sEscapeKeyHex, *(b++));
-                char* c2 = strchr(sEscapeKeyHex, *(b++));
+                const char* c1 = strchr(sEscapeKeyHex, *(b++));
+                const char* c2 = strchr(sEscapeKeyHex, *(b++));
                 if (c1 != nsnull
                     && c2 != nsnull)
                 {
