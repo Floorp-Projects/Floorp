@@ -682,31 +682,6 @@ class nsCOMPtr
 
 #endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
 
-      // This is going to become private soon, once all users of
-      // nsCOMPtr stop using it.  It may even become:
-      // void operator&() const {}
-    private:
-      const nsCOMPtr<T>*
-      operator&() const
-          // This is private to prevent accidental use of |operator&|
-          // instead of |getter_AddRefs|, which can happen if the result
-          // is cast.
-
-          // To pass an nsCOMPtr as an out parameter to a function, either
-          // (preferably) pass by reference or use |address_of|.
-        {
-          return this;
-        }
-
-      nsCOMPtr<T>*
-      operator&()
-          // This version is also needed so things will compile before
-          // all the uses are removed and we make it private.  After it's
-          // private, we won't need two anymore.
-        {
-          return this;
-        }
-
     public:
       nsDerivedSafe<T>&
       operator*() const
@@ -902,31 +877,6 @@ class nsCOMPtr<nsISupports>
         }
 
 #endif // CANT_RESOLVE_CPP_CONST_AMBIGUITY
-
-      // This is going to become private soon, once all users of
-      // nsCOMPtr stop using it.  It may even become:
-      // void operator&() const {}
-    private:
-      const nsCOMPtr<nsISupports>*
-      operator&() const
-          // This is private to prevent accidental use of |operator&|
-          // instead of |getter_AddRefs|, which can happen if the result
-          // is cast.
-
-          // To pass an nsCOMPtr as an out parameter to a function, either
-          // (preferably) pass by reference or use |address_of|.
-        {
-          return this;
-        }
-
-      nsCOMPtr<nsISupports>*
-      operator&()
-          // This version is also needed so things will compile before
-          // all the uses are removed and we make it private.  After it's
-          // private, we won't need two anymore.
-        {
-          return this;
-        }
 
     public:
 
