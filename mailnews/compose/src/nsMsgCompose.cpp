@@ -540,7 +540,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
           {
             bodyString = outCString;
             newBody = PR_TRUE;
-            mEntityConversionDone = PR_TRUE;
+
+            if ( (deliverMode == nsIMsgCompDeliverMode::Now) ||
+                 (deliverMode == nsIMsgCompDeliverMode::Later) )  
+              mEntityConversionDone = PR_TRUE;
           }
         }
       }
@@ -680,7 +683,10 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
             }
           }
 
-          mEntityConversionDone = PR_TRUE;
+          if ( (deliverMode == nsIMsgCompDeliverMode::Now) ||
+               (deliverMode == nsIMsgCompDeliverMode::Later) )
+            mEntityConversionDone = PR_TRUE;
+
 			    m_compFields->SetBody(outCString);
 			    PR_Free(outCString);
 		    }
