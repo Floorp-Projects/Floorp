@@ -956,7 +956,7 @@ void CWizardUI::CreateControls()
 			if (curWidget->action.function == "GenerateFileList" ||
 				curWidget->action.function == "GenerateDirList")
 			{
-				CString ext = CString(curWidget->action.parameters);				
+				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
 				theApp.GenerateList(curWidget->action.function, curWidget, ext);
 			}
 			else
@@ -988,7 +988,7 @@ void CWizardUI::CreateControls()
 			if (curWidget->action.function == "GenerateFileList" ||
 				curWidget->action.function == "GenerateDirList")
 			{
-				CString ext = CString(curWidget->action.parameters);				
+				CString ext = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
 				theApp.GenerateList(curWidget->action.function, curWidget, ext);
 			}
 			else

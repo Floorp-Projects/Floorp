@@ -1468,7 +1468,7 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	WIDGET* curWidget = targetWidget;
 
 	CFileFind fileList;
-	BOOL dirFound = fileList.FindFile(CString(currDirPath) + parentDirPath);
+	BOOL dirFound = fileList.FindFile(parentDirPath);
 
 	if(curWidget->type == "ListBox")
 	{
