@@ -410,6 +410,8 @@ function EnsureRowInThreadTreeIsVisible(index)
 
 function RerootThreadPane()
 {
+  SetNewsFolderColumns();
+
   var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
   if (treeView)
   {

@@ -144,7 +144,8 @@ nsMsgDBView::nsMsgDBView()
   m_deletingRows = PR_FALSE;
   mJunkIndices = nsnull;
   mNumJunkIndices = 0;
-  
+  mShowSizeInLines = PR_FALSE;
+
   /* mCommandsNeedDisablingBecauseOffline - A boolean that tell us if we needed to disable commands because we're offline w/o a downloaded msg select */
   
   mCommandsNeedDisablingBecauseOffline = PR_FALSE;  
@@ -679,8 +680,8 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
   nsAutoString formattedSizeString;
   PRUint32 msgSize = 0;
   
-  // for news, show the line count not the size
-  if (mIsNews) 
+  // for news, show the line count, not the size if the user wants so
+  if (mShowSizeInLines)
   {
     aHdr->GetLineCount(&msgSize);
     formattedSizeString.AppendInt(msgSize);
@@ -1766,6 +1767,18 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
 
     mIsNews = !strcmp("nntp",type.get());
     GetImapDeleteModel(nsnull);
+
+    if (mIsNews)
+    {
+      nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefs)
+      {
+        PRBool temp;
+        rv = prefs->GetBoolPref("news.show_size_in_lines", &temp);
+        if (NS_SUCCEEDED(rv))
+          mShowSizeInLines = temp;
+      }
+    }
   }
   return NS_OK;
 }
@@ -1843,6 +1856,12 @@ NS_IMETHODIMP nsMsgDBView::SetSuppressMsgDisplay(PRBool aSuppressDisplay)
 NS_IMETHODIMP nsMsgDBView::GetSuppressMsgDisplay(PRBool * aSuppressDisplay)
 {
   *aSuppressDisplay = mSuppressMsgDisplay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::GetUsingLines(PRBool * aUsingLines)
+{
+  *aUsingLines = mShowSizeInLines;
   return NS_OK;
 }
 
@@ -3250,7 +3269,7 @@ nsresult nsMsgDBView::GetLongField(nsIMsgDBHdr *msgHdr, nsMsgViewSortTypeValue s
   switch (sortType) 
   {
     case nsMsgViewSortType::bySize:
-      rv = (mIsNews) ? msgHdr->GetLineCount(result) : msgHdr->GetMessageSize(result);
+      rv = (mShowSizeInLines) ? msgHdr->GetLineCount(result) : msgHdr->GetMessageSize(result);
       break;
     case nsMsgViewSortType::byPriority: 
         nsMsgPriorityValue priority;
@@ -5751,6 +5770,7 @@ nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMess
   if (m_db)
     aNewMsgDBView->m_db->AddListener(aNewMsgDBView);
   aNewMsgDBView->mIsNews = mIsNews;
+  aNewMsgDBView->mShowSizeInLines = mShowSizeInLines;
   aNewMsgDBView->mHeaderParser = mHeaderParser;
   aNewMsgDBView->mDeleteModel = mDeleteModel;
   aNewMsgDBView->m_flags.CopyArray(m_flags);

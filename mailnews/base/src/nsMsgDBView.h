@@ -331,7 +331,8 @@ protected:
   // and decendents of those folders
   // (like the "Sent" folder, "Sent/Old Sent")
   // the Sender column really shows recipients.
-  PRPackedBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
+  PRPackedBool mIsNews;             // we have special icons for news
+  PRPackedBool mShowSizeInLines;    // for news we show lines instead of size when true
   PRPackedBool m_sortValid;
   PRUint8      m_saveRestoreSelectionDepth;
 

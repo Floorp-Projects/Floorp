@@ -297,8 +297,6 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   // folder.setAttribute('ref', "");
-  // show "Lines" for news, "Size" for mail
-  SetNewsFolderColumns(isNewsURI(uri));
 
   // null this out, so we don't try sort.
   if (gDBView) {
@@ -432,11 +430,11 @@ function SetSentFolderColumns(isSentFolder)
   }
 }
 
-function SetNewsFolderColumns(isNewsFolder)
+function SetNewsFolderColumns()
 {
   var sizeColumn = document.getElementById("sizeCol");
 
-  if (isNewsFolder) {
+  if (gDBView.usingLines) {
      sizeColumn.setAttribute("label",gMessengerBundle.getString("linesColumnHeader"));
   }
   else {
