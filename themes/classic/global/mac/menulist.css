@@ -232,47 +232,80 @@
     list-style-image  : url("chrome://global/skin/menulist-dis-arrow.gif");
   }
 
-/** rules for EDITABLE menulists (aka 'comboboxes'). 
- **/
 
-/* outer frame */
-  menulist[editable="true"] 
-    {
-      padding             : 0px;
-    }
 
-/* icon display frame */
-  menulist[editable="true"] > .menu-icon 
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-      background-color    : white;
-      padding             : 1px;
+
+
+
+
+/**
+ * Editable menulists (comboboxes) 
+ */
+  
+menulist[editable="true"] 
+  {
+    -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
+    padding             : 0px;
+  }
+   
+.menulist-editable-text 
+  {
+    
+    border                : none !important;
+    margin                : 0px !important;
+    
+    
+  }
+
+menulist[editable="true"] > .menulist-internal-box
+{
       border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-right        : none;
-      border-bottom       : 1px inset #CCCCCC;
-    }
-
-/* text display frame */    
-  menulist[editable="true"] > .menu-text 
-    {
-      border-left         : none;
       border-top          : 1px inset #CCCCCC;
       border-right        : 1px inset #CCCCCC;
       border-bottom       : 1px inset #CCCCCC;
       margin              : 0px 2px 0px 0px;
-    }
+}
 
-/* drop marker display frame */
-  menulist[editable="true"] > .menu-dropmarker 
+menulist[editable="true"] > .menulist-internal-box > .menulist-display-box
+  {
+    margin                : 0px;
+  }
+
+menulist[editable="true"]:focus > .menulist-internal-box > .menulist-display-box
+  {
+    border                : none !important;
+  }
+
+menulist[editable="true"] > .menulist-internal-box > .menulist-dropmarker-box-1 
 	{
       border              : 1px outset #CCCCCC;
+      min-width	          : 20px;
 	}
 
-  menulist[editable="true"][open="true"] > .menu-dropmarker 
+menulist[editable="true"][open="true"] > .menulist-internal-box > .menulist-dropmarker-box-1,
+menulist[editable="true"]:focus > .menulist-internal-box > .menulist-dropmarker-box-1 
     {
       border              : 1px inset #CCCCCC;
+      background-color    : #666666;
     }
+
+
+menulist[editable="true"] > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2 >.menulist-dropmarker
+	{
+    list-style-image  : url("chrome://global/skin/menulist-arrow.gif");
+    margin            : 0px 4px 0px 6px;
+	}
+
+
+menulist[editable="true"][open="true"] > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2 >.menulist-dropmarker,
+menulist[editable="true"]:focus > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2 >.menulist-dropmarker
+	{
+    list-style-image  : url("chrome://global/skin/menulist-active-arrow.gif");
+
+	}
+
+
+
 
 /* rules for popups and separators associated with menulists */
 
