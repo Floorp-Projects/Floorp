@@ -83,7 +83,7 @@ Requires Ant version 1.2 or later
   <target name="copy-examples" depends="init">
     <mkdir dir="${dist.dir}/examples"/>
     <copy todir="${dist.dir}/examples">
-      <fileset dir="examples" includes="*.java,*.js,*.html" />
+      <fileset dir="examples" includes="**/*.java,**/*.js,**/*.html" />
     </copy>
   </target>
 
