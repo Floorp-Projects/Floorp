@@ -37,16 +37,11 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocShell)
 {
+  nsresult rv;
   NS_INIT_ISUPPORTS();
   mScriptObject = nsnull;
   mNavigator = navigator; // don't ADDREF here, needed for parent of script object.
-
-  if (nsServiceManager::GetService(kPluginManagerCID,
-                                   NS_GET_IID(nsIPluginHost),
-                                   (nsISupports**)&mPluginHost) != NS_OK) {
-    mPluginHost = nsnull;
-  }
-
+  mPluginHost = do_GetService(kPluginManagerCID, &rv);
   mPluginCount = 0;
   mPluginArray = nsnull;
   mDocShell = aDocShell;
@@ -54,9 +49,6 @@ PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator, nsIDocShell *aDocSh
 
 PluginArrayImpl::~PluginArrayImpl()
 {
-  if (mPluginHost != nsnull)
-    nsServiceManager::ReleaseService(kPluginManagerCID, mPluginHost);
-
   if (mPluginArray != nsnull) {
     for (PRUint32 i = 0; i < mPluginCount; i++) {
       NS_IF_RELEASE(mPluginArray[i]);
@@ -172,6 +164,27 @@ PluginArrayImpl::NamedItem(const nsAReadableString& aName,
   return NS_OK;
 }
 
+nsresult
+PluginArrayImpl::GetPluginHost(nsIPluginHost** aPluginHost)
+{
+  NS_ENSURE_ARG_POINTER(aPluginHost);
+
+  nsresult rv = NS_OK;
+
+  if (!mPluginHost) {
+    mPluginHost = do_GetService(kPluginManagerCID, &rv);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  *aPluginHost = mPluginHost;
+  NS_IF_ADDREF(*aPluginHost);
+
+  return rv;
+}
+
 void
 PluginArrayImpl::SetDocShell(nsIDocShell* aDocShell)
 {
@@ -194,12 +207,11 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
   mPluginCount = 0;
   mPluginArray = nsnull;
 
-  if (mPluginHost == nsnull)
-    res = nsServiceManager::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginHost), (nsISupports**)&mPluginHost);
-
+  if (!mPluginHost)
+    mPluginHost = do_GetService(kPluginManagerCID, &res);
+  
   if(NS_FAILED(res))
   {
-    mPluginHost = nsnull;
     return res;
   }
 
