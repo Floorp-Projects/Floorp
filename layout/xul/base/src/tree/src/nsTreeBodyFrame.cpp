@@ -1703,6 +1703,9 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
     mContent->GetDocument(*getter_AddRefs(doc));
+    if (!doc)
+      // The page is currently being torn down.  Why bother.
+      return NS_ERROR_FAILURE;
     doc->GetBaseURL(*getter_AddRefs(baseURI));
 
     nsCOMPtr<nsIURI> srcURI;
