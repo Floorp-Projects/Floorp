@@ -119,8 +119,6 @@ protected:
   virtual ~nsDeviceContextSpecBeOS();
  
 public:
-  static nsStringArray *globalPrinterList;
-  static int globalNumPrinters;
   int InitializeGlobalPrinters();
   void FreeGlobalPrinters();
 

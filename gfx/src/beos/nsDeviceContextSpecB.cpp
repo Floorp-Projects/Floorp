@@ -86,9 +86,6 @@ protected:
 GlobalPrinters GlobalPrinters::mGlobalPrinters;
 nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 int            GlobalPrinters::mGlobalNumPrinters = 0;
-//---------------
-nsStringArray* nsDeviceContextSpecBeOS::mGlobalPrinterList = nsnull;
-int nsDeviceContextSpecBeOS::mGlobalNumPrinters = 0;
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecBeOS
