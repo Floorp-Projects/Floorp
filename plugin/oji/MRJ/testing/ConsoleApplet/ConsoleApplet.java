@@ -35,27 +35,40 @@ import java.applet.*;
 import java.awt.event.*;
 
 public class ConsoleApplet extends Applet {
-	TextArea text;
+	TextArea console;
 
 	public ConsoleApplet() {
 		setLayout(new BorderLayout());	
-		add(text = new TextArea(), BorderLayout.CENTER);
+		add(console = new TextArea(), BorderLayout.CENTER);
 
-		ActionListener dumpThreadsListener =
-			new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					dumpThreads();
-				}
-			};
+		Panel panel = new Panel();
+		add(panel, BorderLayout.SOUTH);
 
-		// Create a dump threads button.
+		// clear console button.
+		ActionListener clearConsoleListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				console.setText("");
+			}
+		};
+
+		Button clearConsole = new Button("Clear");
+		clearConsole.addActionListener(clearConsoleListener);
+		panel.add(clearConsole);
+
+		// dump threads button.
+		ActionListener dumpThreadsListener = new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dumpThreads();
+			}
+		};
+
 		Button dumpThreads = new Button("Dump Threads");
 		dumpThreads.addActionListener(dumpThreadsListener);
-		add(dumpThreads, BorderLayout.SOUTH);
+		panel.add(dumpThreads);
 	}
 	
 	public void init() {
-		Console.init(text);
+		Console.init(console);
 	}
 
 	public void destroy() {
