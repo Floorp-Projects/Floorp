@@ -67,7 +67,7 @@ public:
    *  should be allocated. (The bits pointers, initially NULL-valued,
    *  should not be altered.) 
    */
-  virtual void NewPixmap(void* aDisplayContext, 
+  NS_IMETHOD NewPixmap(void* aDisplayContext, 
 			PRInt32 aWidth, PRInt32 aHeight, 
 			IL_Pixmap* aImage, IL_Pixmap* aMask)=0;
 
@@ -80,7 +80,7 @@ public:
    *  upper-left-hand corner of the pixmap as the origin, increasing
    *  left-to-right, top-to-bottom. 
    */
-  virtual void UpdatePixmap(void* aDisplayContext, 
+  NS_IMETHOD UpdatePixmap(void* aDisplayContext, 
 			    IL_Pixmap* aImage, 
 			    PRInt32 aXOffset, PRInt32 aYOffset, 
 			    PRInt32 aWidth, PRInt32 aHeight)=0;
@@ -104,7 +104,7 @@ public:
    *  could be used, for example, by an X11 front-end to free the client-side
    *  image data, preserving only the server pixmap. 
    */
-  virtual void ControlPixmapBits(void* aDisplayContext, 
+  NS_IMETHOD ControlPixmapBits(void* aDisplayContext, 
 				 IL_Pixmap* aImage, PRUint32 aControlMsg)=0;
 
   /**
@@ -113,7 +113,7 @@ public:
    *  information and the IL_Pixmap structure itself will be freed by the Image
    *  Library. 
    */
-  virtual void DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)=0;
+  NS_IMETHOD DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)=0;
 
   /** 
    *  Render a rectangular portion of the given pixmap.
@@ -132,7 +132,7 @@ public:
    *  may differ from those of the pixmap storage if the callee
    *  supports scaling. 
    */
-  virtual void DisplayPixmap(void* aDisplayContext, 
+  NS_IMETHOD DisplayPixmap(void* aDisplayContext, 
 			     IL_Pixmap* aImage, IL_Pixmap* aMask, 
 			     PRInt32 aX, PRInt32 aY, 
 			     PRInt32 aXOffset, PRInt32 aYOffset, 
@@ -142,7 +142,7 @@ public:
    *  <bold>(Probably temporary and subject to change).</bold>
    *  Display an icon. x and y are in document coordinates. 
    */
-  virtual void DisplayIcon(void* aDisplayContext, 
+  NS_IMETHOD DisplayIcon(void* aDisplayContext, 
 			   PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)=0;
 
   /**
@@ -150,7 +150,7 @@ public:
    *  This method should fill in the targets of the width and
    *  height pointers to indicate icon dimensions 
    */
-  virtual void GetIconDimensions(void* aDisplayContext, 
+  NS_IMETHOD GetIconDimensions(void* aDisplayContext, 
 				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
 				 PRUint32 aIconNumber)=0;
 };

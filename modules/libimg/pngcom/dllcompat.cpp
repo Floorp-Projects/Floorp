@@ -35,6 +35,8 @@ the local dll. So far,
 #include "prmem.h"
 #include "xp_mcom.h"
 
+#include "nsCRT.h"
+
 PR_BEGIN_EXTERN_C
 int MK_UNABLE_TO_LOCATE_FILE = -1;
 int MK_OUT_OF_MEMORY = -2;
@@ -82,7 +84,7 @@ NET_BACat (char **destination,
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMMOVE (*destination + destination_length, source, source_length);
+            nsCRT::memmove(*destination + destination_length, source, source_length);
 
           } 
 		else 
@@ -91,7 +93,7 @@ NET_BACat (char **destination,
             if (*destination == NULL) 
 	          return(NULL);
 
-            XP_MEMCPY(*destination, source, source_length);
+            nsCRT::memcpy(*destination, source, source_length);
           }
     }
 

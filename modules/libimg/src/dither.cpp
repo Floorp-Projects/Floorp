@@ -21,6 +21,7 @@
 
 #include "jpeglib.h"
 #include "jerror.h"
+#include "nsCRT.h"
 
  /* cope with brain-damaged compilers that don't make sizeof return a size_t */
  #ifdef SIZEOF
@@ -80,7 +81,7 @@ il_setup_quantize(void)
 	the_sample_range_limit = table;
 
 	/* First segment of "simple" table: limit[x] = 0 for x < 0 */
-	XP_BZERO(table - (MAXJSAMPLE+1), (MAXJSAMPLE+1) * SIZEOF(JSAMPLE));
+    nsCRT::zero(table - (MAXJSAMPLE+1), (MAXJSAMPLE+1) * SIZEOF(JSAMPLE));
 
 	/* Main part of "simple" table: limit[x] = x */
 	for (i = 0; i <= MAXJSAMPLE; i++)
@@ -93,9 +94,9 @@ il_setup_quantize(void)
 		table[i] = MAXJSAMPLE;
 
 	/* Second half of post-IDCT table */
-	XP_BZERO(table + (2 * (MAXJSAMPLE+1)),
+	nsCRT::zero(table + (2 * (MAXJSAMPLE+1)),
 			(2 * (MAXJSAMPLE+1) - CENTERJSAMPLE) * SIZEOF(JSAMPLE));
-	XP_MEMCPY(table + (4 * (MAXJSAMPLE+1) - CENTERJSAMPLE),
+    nsCRT::memcpy(table + (4 * (MAXJSAMPLE+1) - CENTERJSAMPLE),
 			the_sample_range_limit, CENTERJSAMPLE * SIZEOF(JSAMPLE));
 
 	return TRUE;
@@ -230,7 +231,7 @@ il_quantize_fs_dither(il_container *ic, const uint8 *mask,
         for (col = width; col > 0; col--)
             *output_ptr++ &= ~*maskp++;
     } else {
-        XP_BZERO((void XP_HUGE *) output_buf,
+        nsCRT::zero((void XP_HUGE *) output_buf,
                  (size_t) (width * SIZEOF(JSAMPLE)));
     }
 

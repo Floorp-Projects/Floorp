@@ -50,51 +50,6 @@
 
 #define XP_HUGE_CHAR_PTR char XP_HUGE *
 
-/*
- * These will be replaced with their PL_ equivalents.
- */
-#define XP_MEMCPY(d, s, n)        memcpy((d), (s), (n))
-
-/* NOTE: XP_MEMMOVE gurantees that overlaps will be properly handled */
-#ifdef SUNOS4
-#define XP_MEMMOVE(Dest,Src,Len)  bcopy((Src),(Dest),(Len))
-#else
-#define XP_MEMMOVE(Dest,Src,Len)  memmove((Dest),(Src),(Len))
-#endif /* SUNOS4 */
-
-#define XP_MEMSET                  memset
-#define XP_BZERO(a,b)	           memset(a,0,b)
-
-/* NOTE: XP_BCOPY gurantees that overlaps will be properly handled */
-#ifdef XP_WIN16
-
-	XP_BEGIN_PROTOS
-	extern void WIN16_bcopy(char *, char *, unsigned long);
-	XP_END_PROTOS
-
-	#define XP_BCOPY(PTR_FROM, PTR_TO, LEN) \
-	        		(WIN16_bcopy((char *) (PTR_FROM), (char *)(PTR_TO), (LEN)))
-
-#else
-
-	#define XP_BCOPY(Src,Dest,Len)  XP_MEMMOVE((Dest),(Src),(Len))
-
-#endif /* XP_WIN16 */
-
-#define XP_SPRINTF                	sprintf
-#define XP_SAFE_SPRINTF		PR_snprintf
-#define XP_MEMCMP                 	memcmp
-#define XP_VSPRINTF               	vsprintf
-
-#if !defined(XP_RANDOM) || !defined(XP_SRANDOM)   /* defined in both xp_mcom.h and xp_str.h */
-#if defined(HAVE_RANDOM) && !defined(__QNX__)     /* QNX 4.24 _has_ random, but no prototype */
-#define XP_RANDOM		random
-#define XP_SRANDOM(seed)	srandom((seed))
-#else
-#define XP_RANDOM		rand
-#define XP_SRANDOM(seed)	srand((seed))
-#endif
-#endif
 
 typedef void
 (*TimeoutCallbackFunction) (void * closure);
@@ -123,13 +78,8 @@ extern void XP_QSORT(void *, size_t, size_t,
 extern char * NET_BACopy (char **dest, const char *src, size_t src_length);
 extern char * NET_BACat  (char **dest, size_t dest_length, const char *src, size_t src_length);
 
-/*
- * Malloc'd string manipulation
- *
- * notice that they are dereferenced by the define!
- */
-#define StrAllocCopy(dest, src) NET_SACopy (&(dest), src)
-#define StrAllocCat(dest, src)  NET_SACat  (&(dest), src)
+
+
 extern char * NET_SACopy (char **dest, const char *src);
 extern char * NET_SACat  (char **dest, const char *src);
 

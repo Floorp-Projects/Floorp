@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.11 1999/10/19 21:48:03 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.12 1999/10/21 22:16:45 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -36,12 +36,8 @@
 #include "prtime.h"
 #include "prlong.h"
 
-#include "xpcompat.h"
-
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures */
-
-//#include "nsIImgDecoder.h"
 
 typedef struct _IL_GroupContext IL_GroupContext;
 typedef struct _IL_ImageReq IL_ImageReq;
@@ -57,7 +53,6 @@ typedef struct il_container_struct il_container;
 #include "ilIURL.h"
 #include "ilINetReader.h"
 #include "ilIImageRenderer.h"
-//#include "nsIImgDecCB.h"
 
 
 #include "il.h"
@@ -372,13 +367,6 @@ extern void IL_StreamAbort(il_container *ic, int status);
 extern void IL_StreamComplete(il_container *ic, PRBool is_multipart);
 extern void IL_NetRequestDone(il_container *ic, ilIURL *urls, int status);
 extern PRBool IL_StreamCreated(il_container *ic, ilIURL *urls, char* type);
-
-#if 0
-extern int  il_xbm_init(il_container *ic);
-extern int  il_xbm_write(il_container *, const uint8 *, int32);
-extern void il_xbm_complete(il_container *ic);
-extern void il_xbm_abort(il_container *ic);
-#endif
 
 /* Allocate and initialize the destination image's transparent_pixel with
    the Image Library's preferred transparency color i.e. the background color

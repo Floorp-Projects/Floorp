@@ -33,30 +33,30 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual void NewPixmap(void* aDisplayContext, 
+  NS_IMETHOD NewPixmap(void* aDisplayContext, 
 			                   PRInt32 aWidth, PRInt32 aHeight, 
 			                   IL_Pixmap* aImage, IL_Pixmap* aMask);
 
-  virtual void UpdatePixmap(void* aDisplayContext, 
+  NS_IMETHOD UpdatePixmap(void* aDisplayContext, 
 			                      IL_Pixmap* aImage, 
 			                      PRInt32 aXOffset, PRInt32 aYOffset, 
 			                      PRInt32 aWidth, PRInt32 aHeight);
 
-  virtual void ControlPixmapBits(void* aDisplayContext, 
+  NS_IMETHOD ControlPixmapBits(void* aDisplayContext, 
 				                         IL_Pixmap* aImage, PRUint32 aControlMsg);
 
-  virtual void DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage);
+  NS_IMETHOD DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage);
   
-  virtual void DisplayPixmap(void* aDisplayContext, 
+  NS_IMETHOD DisplayPixmap(void* aDisplayContext, 
                   			     IL_Pixmap* aImage, IL_Pixmap* aMask, 
                   			     PRInt32 aX, PRInt32 aY, 
                   			     PRInt32 aXOffset, PRInt32 aYOffset, 
                   			     PRInt32 aWidth, PRInt32 aHeight);
 
-  virtual void DisplayIcon(void* aDisplayContext, 
+  NS_IMETHOD DisplayIcon(void* aDisplayContext, 
 			                     PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber);
 
-  virtual void GetIconDimensions(void* aDisplayContext, 
+  NS_IMETHOD GetIconDimensions(void* aDisplayContext, 
                         				 PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
                         				 PRUint32 aIconNumber);
 };
@@ -68,7 +68,8 @@ ImageRendererImpl::ImageRendererImpl()
 
 NS_IMPL_ISUPPORTS(ImageRendererImpl, kIImageRendererIID)
 
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::NewPixmap(void* aDisplayContext, 
 			                       PRInt32 aWidth, PRInt32 aHeight, 
                       	     IL_Pixmap* aImage, IL_Pixmap* aMask)
@@ -85,7 +86,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   rv = nsComponentManager::CreateInstance(kImageCID, nsnull, kImageIID, (void **)&img);
   if (NS_OK != rv) {
     // XXX What about error handling?
-    return;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Have the image match the depth and color space associated with the
@@ -108,14 +109,17 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
   if(aImage->header.alpha_bits == 8)
       maskflag = nsMaskRequirements_kNeeds8Bit;
 
-  img->Init(aWidth, aHeight, depth, maskflag);
+  rv = img->Init(aWidth, aHeight, depth, maskflag);
+  if(NS_FAILED(rv)){
+      //ptn dont forget cleanup of colorsp.
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // Update the pixmap image and mask information
   aImage->bits = img->GetBits();
   aImage->client_data = img;  // we don't need to add a ref here, because there's
                               // already one from the call to create the image object
  
-
   aImage->header.width = aWidth;
   aImage->header.height = aHeight;
   aImage->header.widthBytes = img->GetLineStride();
@@ -162,9 +166,11 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
                                                              (blue >> 3)];
     }
   }
+  return NS_OK;
 }
 
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::UpdatePixmap(void* aDisplayContext, 
 				                        IL_Pixmap* aImage, 
 				                        PRInt32 aXOffset, PRInt32 aYOffset, 
@@ -175,9 +181,11 @@ ImageRendererImpl::UpdatePixmap(void* aDisplayContext,
   nsRect            drect(aXOffset, aYOffset, aWidth, aHeight);
 
   img->ImageUpdated(dc, nsImageUpdateFlags_kBitsChanged, &drect);
+  return NS_OK;
 }
 
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::ControlPixmapBits(void* aDisplayContext, 
 				                             IL_Pixmap* aImage, PRUint32 aControlMsg)
 {
@@ -187,9 +195,11 @@ ImageRendererImpl::ControlPixmapBits(void* aDisplayContext,
   if (aControlMsg == IL_RELEASE_BITS) {
     img->Optimize(dc);
   }
+    return NS_OK;
 }
 
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
 {
   nsIImage *img = (nsIImage *)aImage->client_data;
@@ -198,9 +208,11 @@ ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
   if (img) {
     NS_RELEASE(img);
   }
+  return NS_OK;
 }
   
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::DisplayPixmap(void* aDisplayContext, 
 				                         IL_Pixmap* aImage, IL_Pixmap* aMask, 
                         				 PRInt32 aX, PRInt32 aY, 
@@ -209,21 +221,26 @@ ImageRendererImpl::DisplayPixmap(void* aDisplayContext,
 {
   // Image library doesn't drive the display process.
   // XXX Why is this part of the API?
+      return NS_OK;
 }
 
-void 
+
+NS_IMETHODIMP 
 ImageRendererImpl::DisplayIcon(void* aDisplayContext, 
 			                         PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
+      return NS_OK;
 }
 
-void 
+
+NS_IMETHODIMP
 ImageRendererImpl::GetIconDimensions(void* aDisplayContext, 
 				                             PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
                         				     PRUint32 aIconNumber)
 {
   // XXX Why is this part of the API?
+      return NS_OK;
 }
 
 extern "C" NS_GFX_(nsresult)

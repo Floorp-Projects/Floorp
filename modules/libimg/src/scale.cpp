@@ -26,6 +26,7 @@
 #include "il.h"                 /* Image library external API */
 
 #include "nsCRT.h"
+#include "xpcompat.h" //temporary, for timers
 
 #include "nsVoidArray.h"        
 #include "nsITimer.h"
@@ -943,7 +944,7 @@ il_emit_row(
                            return ;
                 }
                 il_scale_alpha8( alphabitstart, len, scalemask, column_count);
-                XP_MEMCPY(alphabitstart, scalemask, column_count);
+                nsCRT::memcpy(alphabitstart, scalemask, column_count);
                 PR_Free(scalemask);
             }
             
@@ -972,7 +973,7 @@ il_emit_row(
         if (nsCRT::strncasecmp(ic->type, "image/art",9)==0){
               /* No scaling needed*/
               if (len == column_count)
-                 XP_MEMCPY(maskp, cbuf, mask_header->widthBytes);
+                  nsCRT::memcpy(maskp, cbuf, mask_header->widthBytes);
               else /* Scale */
                  il_scale_mask(cbuf, (int)len,
                                dcolumn_start,
@@ -1224,13 +1225,13 @@ il_emit_row(
                 il_overlay(out + offset, dp + offset, byte_mask, column_count,
                            (img_color_space->pixmap_depth/8));
             else
-                XP_MEMCPY(dp + offset, out + offset,
+                nsCRT::memcpy(dp + offset, out + offset,
                           (img_color_space->pixmap_depth/8) * column_count);
         }
 
         /* Duplicate the mask also. */  
         if (maskp) {
-               XP_MEMCPY(mp, maskp, mask_header->widthBytes);
+               nsCRT::memcpy(mp, maskp, mask_header->widthBytes);
         }
     }
 

@@ -27,12 +27,11 @@
 #include "nsIImgDecoder.h"
 #include "nsImgDCallbk.h"
 #include "nsIComponentManager.h"
-#include "xpcompat.h"
+#include "xpcompat.h" //temporary, for timers
 
 #include "prtypes.h"
 #include "prprf.h"
-
-//#include "il_strm.h"
+#include "nsCRT.h"
 
 
 PR_BEGIN_EXTERN_C
@@ -203,9 +202,9 @@ il_description_notify(il_container *ic)
     IL_ImageReq *image_req;
     NI_PixmapHeader *img_header = &ic->image->header;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
-    XP_SPRINTF(buf, XP_GetString(XP_MSG_IMAGE_PIXELS), ic->type,
+    PR_snprintf(buf, sizeof(buf), XP_GetString(XP_MSG_IMAGE_PIXELS), ic->type,
                img_header->width, img_header->height);
 
 	PR_ASSERT(ic->clients);
@@ -226,7 +225,7 @@ il_dimensions_notify(il_container *ic, int dest_width, int dest_height)
     IL_MessageData message_data;
     IL_ImageReq *image_req;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
 	PR_ASSERT(ic->clients);
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
@@ -244,7 +243,7 @@ il_transparent_notify(il_container *ic)
     IL_MessageData message_data;
     IL_ImageReq *image_req;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
 	PR_ASSERT(ic->clients);
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
@@ -262,7 +261,7 @@ il_pixmap_update_notify(il_container *ic)
     IL_Rect *update_rect = &message_data.update_rect;
     IL_ImageReq *image_req;
 
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
     update_rect->x_origin = 0;
     update_rect->y_origin = (uint16)ic->update_start_row;
@@ -289,7 +288,7 @@ il_image_complete_notify(il_container *ic)
     IL_MessageData message_data;
     IL_ImageReq *image_req;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
@@ -306,7 +305,7 @@ il_frame_complete_notify(il_container *ic)
     IL_MessageData message_data;
     IL_ImageReq *image_req;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
     for (image_req = ic->clients; image_req; image_req = image_req->next) {
         message_data.image_instance = image_req;
@@ -352,7 +351,7 @@ il_progress_notify(il_container *ic)
     IL_ImageReq *image_req;
     NI_PixmapHeader *img_header = &ic->image->header;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
 
     /* No more progress bars for GIF animations after initial load. */
     if (ic->is_looping)
@@ -411,7 +410,7 @@ il_cache_return_notify(IL_ImageReq *image_req)
     IL_MessageData message_data;
     il_container *ic = image_req->ic;
 
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
     message_data.image_instance = image_req;
 
     /* This function should only be called if the dimensions are known. */
@@ -435,10 +434,10 @@ il_cache_return_notify(IL_ImageReq *image_req)
 
     /* Now send observers a pixmap update notification for the displayable
        area of the image. */
-    XP_BCOPY(&ic->displayable_rect, &message_data.update_rect,
+    nsCRT::memmove(&message_data.update_rect, &ic->displayable_rect, 
              sizeof(IL_Rect));
     XP_NotifyObservers(image_req->obs_list, IL_PIXMAP_UPDATE, &message_data);
-    XP_BZERO(&message_data.update_rect, sizeof(IL_Rect));
+    nsCRT::zero(&message_data.update_rect, sizeof(IL_Rect));
 
     if (ic->state == IC_COMPLETE) {
         /* Send the observers a frame complete message. */
@@ -460,7 +459,7 @@ il_image_destroyed_notify(IL_ImageReq *image_req)
 {
     IL_MessageData message_data;
     
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
     message_data.image_instance = image_req;
     XP_NotifyObservers(image_req->obs_list, IL_IMAGE_DESTROYED, &message_data);
 
@@ -480,7 +479,7 @@ il_icon_notify(IL_ImageReq *image_req, int icon_number,
     int icon_width, icon_height;
     IL_MessageData message_data;
 
-    XP_BZERO(&message_data, sizeof(IL_MessageData));
+    nsCRT::zero(&message_data, sizeof(IL_MessageData));
   
     /* Obtain the dimensions of the icon. */
     img_cx->img_cb->GetIconDimensions(img_cx->dpy_cx, &icon_width,
@@ -508,7 +507,7 @@ il_group_notify(IL_GroupContext *img_cx, XP_ObservableMsg message)
 {
     IL_GroupMessageData message_data;
     
-    XP_BZERO(&message_data, sizeof(IL_GroupMessageData));
+    nsCRT::zero(&message_data, sizeof(IL_GroupMessageData));
     
     /* Fill in the message data and notify observers. */
     message_data.display_context = img_cx->dpy_cx;
@@ -548,10 +547,10 @@ il_init_image_transparent_pixel(il_container *ic)
     if (!img_trans_pixel) {
         img_trans_pixel = PR_NEWZAP(IL_IRGB);
         if (!img_trans_pixel)
-            return FALSE;
+            return PR_FALSE;
 
         if (ic->background_color) {
-            XP_MEMCPY(img_trans_pixel, ic->background_color, sizeof(IL_IRGB));
+            nsCRT::memcpy(img_trans_pixel, ic->background_color, sizeof(IL_IRGB));
         }
         else {
             /* A mask will always be used if no background color was
@@ -561,7 +560,7 @@ il_init_image_transparent_pixel(il_container *ic)
         ic->image->header.transparent_pixel = img_trans_pixel;
     }
 
-    return TRUE;
+    return PR_TRUE;
 }
 
 /* Destroy the destination image's transparent pixel. */
@@ -729,7 +728,7 @@ il_size(il_container *ic)
                     src_header->transparent_pixel = ic->background_color;
                     img_header->transparent_pixel = ic->background_color;
                
-                    XP_MEMCPY(img_trans_pixel, ic->background_color, sizeof(IL_IRGB)); 
+                    nsCRT::memcpy(img_trans_pixel, ic->background_color, sizeof(IL_IRGB)); 
 */
                 }else{
 /*
@@ -1376,7 +1375,7 @@ il_container_complete(il_container *ic)
         /* This is a looping image whose loop count has reached zero, so
            set the container's state to indicate that it is no longer
            looping. */
-        ic->is_looping = FALSE;			 
+        ic->is_looping = PR_FALSE;			 
 
         /* Inform the client contexts that the container has stopped
            looping. */
@@ -1489,7 +1488,7 @@ il_image_complete(il_container *ic)
                             /* If this is the end of the first pass of the
                                animation, then set the state of the container
                                to indicate that we have started looping. */
-                            ic->is_looping = TRUE;
+                            ic->is_looping = PR_TRUE;
 
                             /* At this point the animation is considered to have
                                loaded, so we need to tell the client contexts that
@@ -1629,7 +1628,7 @@ IL_StreamCreated(il_container *ic,
 
 #ifndef M12N                    /* XXXM12N Fix me. */
 #ifdef XP_MAC
-    ic->image->hasUniqueColormap = FALSE;
+    ic->image->hasUniqueColormap = PR_FALSE;
 #endif
 #endif /* M12N */
 
@@ -1927,7 +1926,7 @@ IL_GetImage(const char* image_url,
     /* Give the client a handle into the imagelib world. */
     image_req->ic = ic;
 
-    is_view_image = FALSE;
+    is_view_image = PR_FALSE;
   
     if (!il_add_client(img_cx, ic, image_req, is_view_image))
     {
@@ -2028,7 +2027,7 @@ IL_GetImage(const char* image_url,
     ic->net_cx->AddReferer(url);
 #endif
 
-    ic->is_looping = FALSE;
+    ic->is_looping = PR_FALSE;
     ic->url = url;
 	/* Record the fact that we are calling NetLib to load a URL. */
     ic->is_url_loading = PR_TRUE;
@@ -2108,7 +2107,7 @@ IL_InterruptContext(IL_GroupContext *img_cx)
         ic = ic_list->ic;
         for (image_req = ic->clients; image_req; image_req = image_req->next) {
             if (image_req->img_cx == img_cx) {
-                image_req->stopped = TRUE;
+                image_req->stopped = PR_TRUE;
             }
         }
     }
@@ -2119,7 +2118,7 @@ IL_IMPLEMENT(void)
 IL_InterruptRequest(IL_ImageReq *image_req)
 {
   if (image_req != NULL) {
-	image_req->stopped = TRUE;
+	image_req->stopped = PR_TRUE;
   }
 }
 
@@ -2162,7 +2161,7 @@ IL_NewGroupContext(void *dpy_cx,
     img_cx->dpy_cx = dpy_cx;
     img_cx->img_cb = img_cb;
 
-    img_cx->progressive_display = TRUE;
+    img_cx->progressive_display = PR_TRUE;
 
     /* Create an observer list for the image context. */
     if (XP_NewObserverList((void *)img_cx, &img_cx->obs_list)

@@ -19,23 +19,17 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.2 1999/05/27 22:33:55 pnunn%netscape.com Exp $
+ *   $Id: il_util.cpp,v 3.3 1999/10/21 22:16:59 pnunn%netscape.com Exp $
  */
 
 
-#include "xpcompat.h"
+//#include "xpcompat.h"
+#include "nsCRT.h"
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures. */
 #include "prtypes.h"
 #include "prmem.h"
 
-/* mwh this is for Win 16 comipler. */
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 #include "il_util.h"            /* Public API. */
 #include "il_utilp.h"           /* Private header file. */
@@ -64,7 +58,7 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
     /* Colormap size and offsets for computing the colormap indices. */
     size = base_offset + red_size * green_size * blue_size;
     if (size > CUBE_MAX_SIZE)
-        return FALSE;
+        return PR_FALSE;
     red_offset = green_size * blue_size;
     green_offset = blue_size;
 
@@ -85,15 +79,15 @@ il_NewColorCube(uint32 red_size, uint32 green_size, uint32 blue_size,
        allocate space for a full palette. */
     map = (IL_RGB *)PR_Calloc(256, sizeof(IL_RGB));
     if (!map)
-        return FALSE;
+        return PR_FALSE;
 
     lookup_table = (uint8 *)PR_Calloc(LOOKUP_TABLE_SIZE, 1);
     if (!lookup_table)
-        return FALSE;
+        return PR_FALSE;
 
     done = (uint8 *)PR_Calloc(size, 1);
     if (!done)
-        return FALSE;
+        return PR_FALSE;
     
     ptr = lookup_table;
     for (i = 0; i < LOOKUP_TABLE_RED; i++)
@@ -296,7 +290,7 @@ IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color)
     IL_RGB *map_entry;
 
     if (num_colors > max_colors)
-        return FALSE;
+        return PR_FALSE;
 
     map_entry = map + num_colors;
     map_entry->red = new_color->red;
@@ -307,7 +301,7 @@ IL_AddColorToColorMap(IL_ColorMap *cmap, IL_IRGB *new_color)
 
     cmap->num_colors++;
 
-    return TRUE;
+    return PR_TRUE;
 }
 
 /* Free all memory associated with a given colormap.
@@ -352,7 +346,7 @@ IL_CreateTrueColorSpace(IL_RGBBits *rgb, uint8 pixmap_depth)
     color_space->type = NI_TrueColor;
 
     /* RGB bit allocation and offsets. */
-    XP_MEMCPY(&color_space->bit_alloc.rgb, rgb, sizeof(IL_RGBBits));
+    nsCRT::memcpy(&color_space->bit_alloc.rgb, rgb, sizeof(IL_RGBBits));
 
     color_space->pixmap_depth = pixmap_depth; /* Destination image depth. */
 
@@ -394,7 +388,7 @@ IL_CreatePseudoColorSpace(IL_ColorMap *cmap, uint8 index_depth,
 
    /* Copy the contents of the IL_ColorMap structure.  This copies the map
       and table pointers, not the arrays themselves. */
-    XP_MEMCPY(&color_space->cmap, cmap, sizeof(IL_ColorMap)); 
+    nsCRT::memcpy(&color_space->cmap, cmap, sizeof(IL_ColorMap)); 
     PR_FREEIF(cmap);
 
     /* Create the private part of the color_space */
