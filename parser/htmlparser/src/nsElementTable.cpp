@@ -859,9 +859,9 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kNone, kNone, kNone,	
-      /*special props, prop-range*/       kDiscardTag, kDefaultPropRange,
-      /*special parents,kids,skip*/       0,0,eHTMLTag_noembed);
+      /*parent,incl,exclgroups*/          kFlowEntity, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0, kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_noframes,

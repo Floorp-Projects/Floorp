@@ -817,9 +817,12 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
         PRBool isPCDATA = eHTMLTag_textarea == theTag ||
                           eHTMLTag_title    == theTag;
 
+        // XXX This is an evil hack, we should be able to handle these properly
+        // in the DTD.
         if ((eHTMLTag_iframe == theTag   && (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
             (eHTMLTag_noframes == theTag && (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
-            (eHTMLTag_noscript == theTag && (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED))) {
+            (eHTMLTag_noscript == theTag && (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED)) ||
+            (eHTMLTag_noembed == theTag)) {
           isCDATA = PR_TRUE;
         }
 
@@ -844,7 +847,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
                                                      mFlags,
                                                      done);
 
-            // Only flush tokens for <script>, to give oursevles more of a
+            // Only flush tokens for <script>, to give ourselves more of a
             // chance of allowing inlines to contain blocks.
             aFlushTokens = done && theTag == eHTMLTag_script;
           }
