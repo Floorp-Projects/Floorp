@@ -269,15 +269,6 @@ public:
 
       if (NS_FAILED(result))
         return result;
-
-    } else {
-      // The time "Init" will addref the listener which is "this" object.
-      // So if the timer has already been created then the "this" pointer is
-      // already addef'ed and will be addref'ed again when it is re-inited
-      // below, so we release here in anticipation of the Init and it's addref
-      NS_ASSERTION(mRefCnt > 1, "This must always be greater than 1");
-
-      NS_RELEASE_THIS();
     }
     result = mTimer->InitWithCallback(this, mDelay, nsITimer::TYPE_ONE_SHOT);
 
