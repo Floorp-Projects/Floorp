@@ -1,2 +1,4 @@
 This is the source code for "mozbot", the IRC bot who hangs out in the
 #mozilla channel at irc.mozilla.org.
+
+See the INSTALL file for installation and configuration instructions.

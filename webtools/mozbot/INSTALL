@@ -256,7 +256,10 @@ The main variables are:
 
    channelKeys -- a mapping of (lowercase) channel names to keys. It
    is assumed that any channel without an entry in this variable has
-   no key.
+   no key. For example, to tell mozbot that the key for channel
+   #channel is 'password', you would use:
+
+      /msg mozbot vars Admin channelKeys '+|#channel|password'
 
    autojoin -- whether (1) or not (0) the module should automatically
    add a new channel to its "channels" list when the bot joins a new
