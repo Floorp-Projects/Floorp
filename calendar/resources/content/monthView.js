@@ -409,14 +409,9 @@ MonthView.prototype.refreshDisplay = function( )
    for (var i=-2; i < 3; i++){
       titleMonthArray[i] = newMonth + i;
       titleMonthArray[i] = (titleMonthArray[i] >= 0)? titleMonthArray[i] % 12 : titleMonthArray[i] + 12;
-      try{
-	 titleMonthArray[i] = this.calendarWindow.dateFormater.getMonthName( titleMonthArray[i] );
-	 var idName = i + "-month-title";
-	 document.getElementById( idName ).setAttribute( "value" , titleMonthArray[i] );
-      }catch(errorObj){
-	 alert(toDebug);
-	 alert(errorObj);
-      }
+      titleMonthArray[i] = this.calendarWindow.dateFormater.getMonthName( titleMonthArray[i] );
+      var idName = i + "-month-title";
+      document.getElementById( idName ).setAttribute( "value" , titleMonthArray[i] );
    }
 	document.getElementById( "0-year-title" ).setAttribute( "value" , newYear );
    
@@ -436,7 +431,7 @@ MonthView.prototype.refreshDisplay = function( )
       NewArrayOfDayNames.push( FirstElement );
    }
 
-   //set the day names (Some people start on Sunday, others start on Monday 
+   //set the day names 
    for( i = 1; i <= 7; i++ )
    {
       document.getElementById( "month-view-header-day-"+i ).value = NewArrayOfDayNames[ (i-1) ];
@@ -470,11 +465,28 @@ MonthView.prototype.refreshDisplay = function( )
       if( dayIndex < firstDayOfWeek || dayNumber > lastDayOfMonth )
       {
          // this day box is NOT in the month, 
-         
-         dayNumberItem.setAttribute( "value" , "" );  
+         dayBoxItem.dayNumber = null;
+
          dayBoxItem.setAttribute( "empty" , "true" );  
          dayBoxItem.setAttribute( "weekend", "false" );
-         dayBoxItem.dayNumber = null;
+         
+         if( dayIndex < firstDayOfWeek )
+         {
+            var thisDate = new Date( newYear, newMonth, 1-(firstDayOfWeek - dayIndex ) );
+            
+            dayBoxItem.date = thisDate;
+
+            dayNumberItem.setAttribute( "value" , thisDate.getDate() );  
+
+         }
+         else
+         {
+            var thisDate = new Date( newYear, newMonth, lastDayOfMonth+( dayIndex - lastDayOfMonth - firstDayOfWeek + 1 ) );
+            
+            dayBoxItem.date = thisDate;
+
+            dayNumberItem.setAttribute( "value" , thisDate.getDate() );  
+         }
       }  
       else
       {
@@ -732,6 +744,10 @@ MonthView.prototype.doubleClickDay = function( dayBoxItem )
       
       newEvent( startDate, false );
 
+   }
+   else
+   {
+      newEvent( dayBoxItem.date, false );
    }
 }
 
