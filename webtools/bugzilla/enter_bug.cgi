@@ -34,7 +34,7 @@ if {![info exists FORM(product)]} {
         }
         exit
     }
-    set $FORM(product) [array names versions]
+    set FORM(product) [array names versions]
 }
 
 set product $FORM(product)
