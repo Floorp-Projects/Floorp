@@ -52,6 +52,17 @@ nsComponentsDlg::Next()
 }
 
 int
+nsComponentsDlg::Parse(nsINIParser *aParser)
+{
+    int err = OK;
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
 nsComponentsDlg::SetMsg0(char *aMsg)
 {
     if (!aMsg)

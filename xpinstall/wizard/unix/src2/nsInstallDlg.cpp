@@ -48,6 +48,17 @@ nsInstallDlg::Next()
 }
 
 int
+nsInstallDlg::Parse(nsINIParser *aParser)
+{
+    int err = OK;
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
 nsInstallDlg::SetMsg0(char *aMsg)
 {
     if (!aMsg)

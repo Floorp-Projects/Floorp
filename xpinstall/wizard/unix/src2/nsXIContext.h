@@ -22,40 +22,46 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-#ifndef _NS_LICENSEDLG_H_
-#define _NS_LICENSEDLG_H_
+#ifndef _NS_XICONTEXT_H_
+#define _NS_XICONTEXT_H_
 
-#include "nsXInstallerDlg.h"
-#include "XIErrors.h"
+#include <gtk/gtk.h>
 
-class nsLicenseDlg : public nsXInstallerDlg
+#include "nsLicenseDlg.h"
+#include "nsWelcomeDlg.h"
+#include "nsSetupTypeDlg.h"
+#include "nsComponentsDlg.h"
+#include "nsInstallDlg.h"
+
+class nsXInstaller;
+
+class nsXIContext
 {
 public:
-    nsLicenseDlg();
-    ~nsLicenseDlg();
+    nsXIContext();
+    ~nsXIContext();
+
+    nsXInstaller        *me;
 
 /*-------------------------------------------------------------------*
- *   Navigation
+ *   Dialog Contexts
  *-------------------------------------------------------------------*/
-    int     Back();
-    int     Next();
-    
-    int     Parse(nsINIParser *aParser);
+    nsLicenseDlg        *ldlg;
+    nsWelcomeDlg        *wdlg;
+    nsSetupTypeDlg      *sdlg;
+    nsComponentsDlg     *cdlg;
+    nsInstallDlg        *idlg;
 
 /*-------------------------------------------------------------------*
- *   INI Properties
+ *   Global Widgets
  *-------------------------------------------------------------------*/
-    int     SetLicenseFile(char *aLicenseFile);
-    char *  GetLicenseFile();
-    int     SetMsg0(char *aMsg);
-    char *  GetMsg0();
-    int     SetMsg1(char *aMsg);
-    char *  GetMsg1();
+    GtkWidget           *window;    /* unique canvas for dialogs */
+    GtkWidget           *back;      /* back button */
+    GtkWidget           *next;      /* next button */
+    GtkWidget           *logo;      /* branding icon: an xpm image */
+    GtkWidget           *mainbox;   /* vbox holding all except logo */
+    GtkWidget           *canvas;    /* vbox for mutable dlgs (no nav btns) */
 
-private:
-    char    *mLicenseFile;
-    char    *mMsg0;
-    char    *mMsg1;
 };
 
-#endif /* _NS_LICENSEDLG_H_ */
+#endif /* _NS_XICONTEXT_H_ */

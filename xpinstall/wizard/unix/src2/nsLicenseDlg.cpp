@@ -54,6 +54,17 @@ nsLicenseDlg::Next()
 }
 
 int
+nsLicenseDlg::Parse(nsINIParser *aParser)
+{
+    int err = OK;
+
+    return err;
+
+BAIL:
+    return err;
+}
+
+int
 nsLicenseDlg::SetLicenseFile(char *aLicenseFile)
 {
     if (!aLicenseFile)

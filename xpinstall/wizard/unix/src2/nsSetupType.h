@@ -25,7 +25,7 @@
 #ifndef _NS_SETUPTYPE_H_
 #define _NS_SETUPTYPE_H_
 
-#include "XILimits.h"
+#include "XIDefines.h"
 #include "XIErrors.h"
 
 #include "nsComponent.h"

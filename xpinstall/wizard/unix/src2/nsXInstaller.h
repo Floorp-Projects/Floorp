@@ -25,8 +25,16 @@
 #ifndef _NS_XINSTALLER_H_
 #define _NS_XINSTALLER_H_
 
+#include <gtk/gtk.h>
 #include <stdio.h>
+#include "XIDefines.h"
 #include "XIErrors.h"
+
+#include "nsINIParser.h"
+#include "nsLicenseDlg.h"
+#include "nsXIContext.h"
+
+extern nsXIContext *gCtx; 
 
 class nsXInstaller
 {
@@ -35,13 +43,15 @@ public:
     ~nsXInstaller();
 
     int ParseConfig();
-    int Run();
-
-private:
-    int StartWizard();
+    int RunWizard(int argc, char **argv);
     int Download();
     int Extract();
-    int Install();    
+    int Install();
+
+private:
+    int InitContext();
+    int DrawLogo();
+    int DrawNavButtons();
 };
 
 int     main(int argc, char **argv);
