@@ -43,6 +43,10 @@ groupbox {
   min-width: 10em;
 }
 
+.MinWidth15em {
+  min-width: 15em;
+}
+
 .MinWidth20em {
   min-width: 20em;
 }

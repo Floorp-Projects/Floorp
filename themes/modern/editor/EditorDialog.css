@@ -41,6 +41,10 @@
   min-width: 10em;
 }
 
+.MinWidth15em {
+  min-width: 15em;
+}
+
 .MinWidth20em {
   min-width: 20em;
 }
@@ -279,4 +283,3 @@ tree.list {
   min-width: 100px;
   min-height: 50px;
 }
-
