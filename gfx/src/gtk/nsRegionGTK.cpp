@@ -270,7 +270,6 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
   if (!mRegion)
     return NS_OK;
 
-
   nsRegionRectSet   *rects = nsnull;
   GdkRegionPrivate  *priv = nsnull;
   Region            pRegion;
