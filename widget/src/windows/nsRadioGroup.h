@@ -75,7 +75,7 @@ protected:
         virtual nsresult Next();
         virtual nsresult Prev();
         virtual nsresult CurrentItem(nsISupports **aItem);
-        virtual nsresult IsDone(PRBool *aDone);
+        virtual nsresult IsDone();
 
         void Append(nsIRadioButton* aWidget);
         void Remove(nsIRadioButton* aWidget);

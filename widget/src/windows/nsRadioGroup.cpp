@@ -363,15 +363,14 @@ nsRadioGroup::Enumerator::Last()
 
  
 nsresult
-nsRadioGroup::Enumerator::IsDone(PRBool *aDone)
+nsRadioGroup::Enumerator::IsDone()
 {
-    if (!aDone)
-        return NS_ERROR_NULL_POINTER;
     if ((mCurrentPosition == (mArraySize -1)) || mArraySize <= 0 ){ //empty lists always return done
-        *aDone = PR_TRUE;
+        return NS_OK;
     }
-    else
-        *aDone = PR_FALSE;
+    else{
+        return NS_COMFALSE;
+    }
     return NS_OK;
 }
 
