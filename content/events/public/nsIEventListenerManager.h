@@ -138,11 +138,26 @@ public:
   virtual nsresult ReleaseEvent(nsIDOMEventListener *aListener) = 0;
 
   /**
-  * Removes all events listeners registered by this instance of the listener
+  * Removes all event listeners registered by this instance of the listener
   * manager.
   */
 
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly) = 0;
+
+  /**
+  * Sets the principal of the entity being listened to.
+  *
+  * Used for security checks that ensure that events can't propagate past
+  * trust boundaries.
+  */
+
+  virtual nsresult SetPrincipal(nsIPrincipal *aListenedToPrincipal) = 0;
+
+  /**
+  * Gets the principal of the entity being listened to.
+  */
+
+  virtual nsresult GetPrincipal(nsIPrincipal **aListenedToPrincipal) = 0;
 };
 
 extern NS_HTML nsresult NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult); 

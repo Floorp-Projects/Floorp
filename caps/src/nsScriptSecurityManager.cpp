@@ -325,6 +325,20 @@ nsScriptSecurityManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsScriptSecurityManager);
 NS_IMPL_RELEASE(nsScriptSecurityManager);
 
+inline PRBool
+GetBit(unsigned char *bitVector, PRInt32 index) 
+{
+    unsigned char c = bitVector[index >> 3];
+    c &= (1 << (index & 7));
+    return c != 0;
+}
+
+inline void
+SetBit(unsigned char *bitVector, PRInt32 index) 
+{
+    bitVector[index >> 3] |= (1 << (index & 7));
+}
+
 
 ///////////////////////////////////////////////////
 // Methods implementing nsIScriptSecurityManager //
@@ -337,14 +351,14 @@ nsScriptSecurityManager::CheckScriptAccess(nsIScriptContext *aContext,
 {
     nsDOMProp domProp = (nsDOMProp) domPropInt;
     *aResult = PR_FALSE;
-    PolicyType type = domPropertyPolicyTypes[domProp];
-    if (type == POLICY_TYPE_NONE) {
+    if (!GetBit(hasPolicyVector, domPropInt)) {
+        // No policy for this DOM property, so just allow access.
         *aResult = PR_TRUE;
         return NS_OK;
     }
     JSContext *cx = (JSContext *)aContext->GetNativeContext();
     nsXPIDLCString capability;
-    PRInt32 secLevel = GetSecurityLevel(cx, domProp, type, isWrite,
+    PRInt32 secLevel = GetSecurityLevel(cx, domProp, isWrite,
                                         getter_Copies(capability));
     switch (secLevel) {
       case SCRIPT_SECURITY_ALL_ACCESS:
@@ -461,6 +475,37 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI,
     }
 
     return NS_ERROR_DOM_BAD_URI;
+}
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckCanListenTo(nsIPrincipal *principal) 
+{
+    nsCOMPtr<nsIPrincipal> subject;
+    nsresult rv;
+    PRBool hasSubject;
+    if (NS_FAILED(rv = HasSubjectPrincipal(&hasSubject)))
+        return rv;
+    if (!hasSubject)
+        return NS_OK;       // No script code, so native code has access.
+    if (NS_FAILED(rv = GetSubjectPrincipal(getter_AddRefs(subject))))
+        return rv;
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(subject);
+    PRBool equals;
+    if (codebase && NS_SUCCEEDED(codebase->SameOrigin(principal, &equals))) {
+        if (equals) 
+            return NS_OK;   // Listener and Listened-to have same origin
+    }
+
+    PRBool enabled;
+    if (NS_SUCCEEDED(IsCapabilityEnabled("UniversalBrowserRead", &enabled))) {
+        if (enabled)
+            return NS_OK;   // Capability allows access
+    }
+
+    // Report error
+    JSContext *cx = GetCurrentContext();
+    JS_ReportError(cx, "Access denied to listen to events across origins");
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP
@@ -810,7 +855,8 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mPrincipals(nsnull)
 {
     NS_INIT_REFCNT();
-    memset(domPropertyPolicyTypes, 0, sizeof(domPropertyPolicyTypes));
+    memset(hasPolicyVector, 0, sizeof(hasPolicyVector));
+    memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
     InitFromPrefs();
 }
 
@@ -948,11 +994,10 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
 
 PRInt32 
 nsScriptSecurityManager::GetSecurityLevel(JSContext *cx, nsDOMProp domProp, 
-                                          PolicyType type, PRBool isWrite, 
-                                          char **capability)
+                                          PRBool isWrite, char **capability)
 {
     nsXPIDLCString prefName;
-    if (NS_FAILED(GetPrefName(cx, domProp, type, getter_Copies(prefName))))
+    if (NS_FAILED(GetPrefName(cx, domProp, getter_Copies(prefName))))
         return SCRIPT_SECURITY_NO_ACCESS;
     PRInt32 secLevel;
     char *secLevelString;
@@ -1893,14 +1938,14 @@ static char *domPropNames[NS_DOM_PROP_MAX] = {
 
 NS_IMETHODIMP
 nsScriptSecurityManager::GetPrefName(JSContext *cx, nsDOMProp domProp, 
-                                     PolicyType type, char **result)
+                                     char **result)
 {
     nsresult rv;
     static const char *defaultStr = "default";
     nsAutoString s = "security.policy.";
-    if (type == POLICY_TYPE_DEFAULT) {
+    if (!GetBit(hasDomainPolicyVector, domProp)) {
         s += defaultStr;
-    } else if (type == POLICY_TYPE_PERDOMAIN) {
+    } else {
         nsCOMPtr<nsIPrincipal> principal;
         if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
             return NS_ERROR_FAILURE;
@@ -1963,13 +2008,14 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 }
 
 struct PolicyEnumeratorInfo {
-    nsScriptSecurityManager::PolicyType *policies;
     nsIPref *prefs;
     nsScriptSecurityManager *secMan;
 };
 
-PR_STATIC_CALLBACK(void)
-enumeratePolicy(const char *prefName, void *data) {
+void 
+nsScriptSecurityManager::enumeratePolicyCallback(const char *prefName, 
+                                                 void *data)
+{
     if (!prefName || !*prefName)
         return;
     PolicyEnumeratorInfo *info = (PolicyEnumeratorInfo *) data;
@@ -2029,12 +2075,9 @@ enumeratePolicy(const char *prefName, void *data) {
         int domPropLength = dots[4] - domPropName;
         nsDOMProp domProp = findDomProp(domPropName, domPropLength);
         if (domProp < NS_DOM_PROP_MAX) {
-            nsScriptSecurityManager::PolicyType *policyType = 
-                info->policies + domProp;
+            SetBit(info->secMan->hasPolicyVector, domProp);
             if (!isDefault)
-                *policyType = nsScriptSecurityManager::POLICY_TYPE_PERDOMAIN;
-            else if (*policyType == nsScriptSecurityManager::POLICY_TYPE_NONE)
-                *policyType = nsScriptSecurityManager::POLICY_TYPE_DEFAULT;
+                SetBit(info->secMan->hasDomainPolicyVector, domProp);
             return;
         }
     } 
@@ -2049,10 +2092,10 @@ nsScriptSecurityManager::InitFromPrefs()
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
     PolicyEnumeratorInfo info;
-    info.policies = domPropertyPolicyTypes;
     info.prefs = prefs;
     info.secMan = this;
-    prefs->EnumerateChildren("security.policy", enumeratePolicy,
+    prefs->EnumerateChildren("security.policy", 
+                             nsScriptSecurityManager::enumeratePolicyCallback,
                              (void *) &info);
     return NS_OK;
 }

@@ -49,12 +49,6 @@ public:
     static nsScriptSecurityManager *
     GetScriptSecurityManager();
     
-    enum PolicyType {
-        POLICY_TYPE_NONE = 0,
-        POLICY_TYPE_DEFAULT = 1,
-        POLICY_TYPE_PERDOMAIN = 2
-    };
-
     nsObjectHashtable *mOriginToPolicyMap;
 
 private:
@@ -68,12 +62,11 @@ private:
     CheckPermissions(JSContext *aCx, JSObject *aObj, const char *aCapability, 
                      PRBool* result);
     PRInt32 
-    GetSecurityLevel(JSContext *cx, nsDOMProp domProp, PolicyType type, 
-                     PRBool isWrite, char **capability);
+    GetSecurityLevel(JSContext *cx, nsDOMProp domProp, PRBool isWrite, 
+                     char **capability);
 
     NS_IMETHOD
-    GetPrefName(JSContext *cx, nsDOMProp domProp, PolicyType type, 
-                char **result);
+    GetPrefName(JSContext *cx, nsDOMProp domProp, char **result);
 
     NS_IMETHOD
     CheckXPCPermissions(JSContext *cx);
@@ -81,9 +74,13 @@ private:
     NS_IMETHOD
     InitFromPrefs();
 
+    static void
+    enumeratePolicyCallback(const char *prefName, void *data);
+
     nsIPrincipal *mSystemPrincipal;
     nsSupportsHashtable *mPrincipals;
-    PolicyType domPropertyPolicyTypes[NS_DOM_PROP_MAX];
+    unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
+    unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };
 
 #endif /*_NS_SCRIPT_SECURITY_MANAGER_H_*/
