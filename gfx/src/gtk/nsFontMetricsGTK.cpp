@@ -189,6 +189,7 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 static int gFontMetricsGTKCount = 0;
 static int gInitialized = 0;
+static PRBool gAllowDoubleByteSpecialChars = PR_TRUE;
 
 // XXX many of these statics need to be freed at shutdown time
 
@@ -212,6 +213,7 @@ static nsFontNodeArray* gGlobalList = nsnull;
 static nsIAtom* gUnicode = nsnull;
 static nsIAtom* gUserDefined = nsnull;
 static nsIAtom* gUsersLocale = nsnull;
+static nsIAtom* gWesternLocale = nsnull;
 
 static gint SingleByteConvert(nsFontCharSetInfo* aSelf, XFontStruct* aFont,
   const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen);
@@ -564,6 +566,21 @@ atomToName(nsIAtom* aAtom)
 }
 
 static PRUint32 gUserDefinedMap[2048];
+static PRUint32 gDoubleByteSpecialCharsMap[2048];
+
+//
+// smart quotes (and other special chars) in Asian (double byte)
+// fonts are too large to use is western fonts.
+// Here we define those characters.
+//
+static PRUnichar gDoubleByteSpecialChars[] = {
+  0x0152, 0x0153, 0x0160, 0x0161, 0x0178, 0x017D, 0x017E, 0x0192,
+  0x02C6, 0x02DC, 0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C,
+  0x201D, 0x201E, 0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039,
+  0x203A, 0x20AC, 0x2122,
+  0
+};
+
 
 static PRBool
 FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)
@@ -715,6 +732,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
   NS_IF_RELEASE(gUsersLocale);
+  NS_IF_RELEASE(gWesternLocale);
   if (gWeights) {
     delete gWeights;
     gWeights = nsnull;
@@ -750,6 +768,16 @@ InitGlobals(void)
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
+  }
+
+  // get the "disable double byte font special chars" setting
+  PRBool val = PR_TRUE;
+  nsresult rv = gPref->GetBoolPref("font.allow_double_byte_special_chars", &val);
+  if (NS_SUCCEEDED(rv))
+    gAllowDoubleByteSpecialChars = val;
+  // setup the double byte font special chars glyph map
+  for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+    SET_REPRESENTABLE(gDoubleByteSpecialCharsMap, gDoubleByteSpecialChars[i]);
   }
 
   gNodes = new nsHashtable();
@@ -843,6 +871,7 @@ InitGlobals(void)
   if (!gUsersLocale) {
     gUsersLocale = NS_NewAtom("x-western");
   }
+  gWesternLocale = NS_NewAtom("x-western");
   if (!gUsersLocale) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -939,6 +968,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
 
   nsresult res;
+  mDocConverterType = nsnull;
 
   if (!gInitialized) {
     res = InitGlobals();
@@ -1601,37 +1631,14 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
          * be in these large double byte fonts. So, we disable those
          * characters here. Revisit this decision later.
          */
-        if (aSelf->Convert == DoubleByteConvert) {
+        if ((aSelf->Convert == DoubleByteConvert) 
+            && (!gAllowDoubleByteSpecialChars)) {
           PRUint32* map = aSelf->mMap;
 #undef REMOVE_CHAR
 #define REMOVE_CHAR(map, c)  (map)[(c) >> 5] &= ~(1L << ((c) & 0x1f))
-          REMOVE_CHAR(map, 0x20AC);
-          REMOVE_CHAR(map, 0x201A);
-          REMOVE_CHAR(map, 0x0192);
-          REMOVE_CHAR(map, 0x201E);
-          REMOVE_CHAR(map, 0x2026);
-          REMOVE_CHAR(map, 0x2020);
-          REMOVE_CHAR(map, 0x2021);
-          REMOVE_CHAR(map, 0x02C6);
-          REMOVE_CHAR(map, 0x2030);
-          REMOVE_CHAR(map, 0x0160);
-          REMOVE_CHAR(map, 0x2039);
-          REMOVE_CHAR(map, 0x0152);
-          REMOVE_CHAR(map, 0x017D);
-          REMOVE_CHAR(map, 0x2018);
-          REMOVE_CHAR(map, 0x2019);
-          REMOVE_CHAR(map, 0x201C);
-          REMOVE_CHAR(map, 0x201D);
-          REMOVE_CHAR(map, 0x2022);
-          REMOVE_CHAR(map, 0x2013);
-          REMOVE_CHAR(map, 0x2014);
-          REMOVE_CHAR(map, 0x02DC);
-          REMOVE_CHAR(map, 0x2122);
-          REMOVE_CHAR(map, 0x0161);
-          REMOVE_CHAR(map, 0x203A);
-          REMOVE_CHAR(map, 0x0153);
-          REMOVE_CHAR(map, 0x017E);
-          REMOVE_CHAR(map, 0x0178);
+          for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+            REMOVE_CHAR(map, gDoubleByteSpecialChars[i]);
+          }
         }
       }
       else {
@@ -2270,6 +2277,31 @@ nsFontGTKUserDefined::GetBoundingMetrics(const PRUnichar*   aString,
 #endif
 
 nsFontGTK*
+nsFontMetricsGTK::AddToLoadedFontsList(nsFontGTK* aFont)
+{
+  if (mLoadedFontsCount == mLoadedFontsAlloc) {
+    int newSize;
+    if (mLoadedFontsAlloc) {
+      newSize = (2 * mLoadedFontsAlloc);
+    }
+    else {
+      newSize = 1;
+    }
+    nsFontGTK** newPointer = (nsFontGTK**) 
+      PR_Realloc(mLoadedFonts, newSize * sizeof(nsFontGTK*));
+    if (newPointer) {
+      mLoadedFonts = newPointer;
+      mLoadedFontsAlloc = newSize;
+    }
+    else {
+      return nsnull;
+    }
+  }
+  mLoadedFonts[mLoadedFontsCount++] = aFont;
+  return aFont;
+}
+
+nsFontGTK*
 nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
   nsFontCharSetInfo* aCharSet, PRUnichar aChar, const char *aName)
 {
@@ -2392,27 +2424,7 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     font = font->mUserDefinedFont;
   }
 
-  if (mLoadedFontsCount == mLoadedFontsAlloc) {
-    int newSize;
-    if (mLoadedFontsAlloc) {
-      newSize = (2 * mLoadedFontsAlloc);
-    }
-    else {
-      newSize = 1;
-    }
-    nsFontGTK** newPointer = (nsFontGTK**) 
-      PR_Realloc(mLoadedFonts, newSize * sizeof(nsFontGTK*));
-    if (newPointer) {
-      mLoadedFonts = newPointer;
-      mLoadedFontsAlloc = newSize;
-    }
-    else {
-      return nsnull;
-    }
-  }
-  mLoadedFonts[mLoadedFontsCount++] = font;
-
-  return font;
+  return AddToLoadedFontsList(font);
 }
 
 static int
@@ -2611,6 +2623,29 @@ nsFontNode::FillStyleHoles(void)
 #ifdef DEBUG_DUMP_TREE
   DumpFamily(this);
 #endif
+}
+
+static void
+SetCharsetLangGroup(nsFontCharSetInfo* aCharSetInfo)
+{
+  if (!aCharSetInfo->mCharSet || aCharSetInfo->mLangGroup)
+    return;
+
+  nsCOMPtr<nsIAtom> charset;
+  nsresult res = gCharSetManager->GetCharsetAtom2(aCharSetInfo->mCharSet,
+                                             getter_AddRefs(charset));
+  if (NS_SUCCEEDED(res)) {
+    res = gCharSetManager->GetCharsetLangGroup(charset,
+                                             &aCharSetInfo->mLangGroup);
+    if (NS_FAILED(res)) {
+      aCharSetInfo->mLangGroup = NS_NewAtom("");
+#ifdef NOISY_FONTS
+#ifdef DEBUG
+      printf("=== cannot get lang group for %s\n", aCharSetInfo->mCharSet);
+#endif
+#endif
+    }
+  }
 }
 
 #define WEIGHT_INDEX(weight) (((weight) / 100) - 1)
@@ -2848,22 +2883,7 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
 #endif
       charSetInfo = &Unknown;
     }
-    if (charSetInfo->mCharSet && (!charSetInfo->mLangGroup)) {
-      nsCOMPtr<nsIAtom> charset;
-      nsresult res = gCharSetManager->GetCharsetAtom2(charSetInfo->mCharSet,
-        getter_AddRefs(charset));
-      if (NS_SUCCEEDED(res)) {
-        res = gCharSetManager->GetCharsetLangGroup(charset,
-          &charSetInfo->mLangGroup);
-        if (NS_FAILED(res)) {
-#ifdef NOISY_FONTS
-#ifdef DEBUG
-          printf("=== cannot get lang group for %s\n", charSetInfo->mCharSet);
-#endif
-#endif
-        }
-      }
-    }
+    SetCharsetLangGroup(charSetInfo);
     SetFontLangGroupInfo(charSetMap);
 
     nsCAutoString nodeName(foundry);
@@ -3394,6 +3414,60 @@ nsFontMetricsGTK::FindStyleSheetGenericFont(PRUnichar aChar)
   }
 
   //
+  // Asian smart quote glyphs are much too large for western
+  // documents so if this is a single byte document add a
+  // special "font" to tranliterate those chars rather than
+  // possibly find them in double byte fonts
+  //
+  // (risk management: since we are close to a ship point we have a 
+  //  control (gAllowDoubleByteSpecialChars) to disable this new feature)
+  //
+if (gAllowDoubleByteSpecialChars) {
+  if (!mDocConverterType) {
+    if (mLoadedFontsCount) {
+      FIND_FONT_PRINTF(("just use the 1st converter type"));
+      nsFontGTK* first_font = mLoadedFonts[0];
+      if (first_font->mCharSetInfo) {
+        mDocConverterType = first_font->mCharSetInfo->Convert;
+        if (mDocConverterType == SingleByteConvert ) {
+          FIND_FONT_PRINTF(("single byte converter for %s", atomToName(mLangGroup)));
+        }
+        else {
+          FIND_FONT_PRINTF(("double byte converter for %s", atomToName(mLangGroup)));
+        }
+      }
+    }
+    if (!mDocConverterType) {
+      NS_ASSERTION(mDocConverterType!=nsnull, "failed to get converter type");
+      FIND_FONT_PRINTF(("failed to get converter type for %s", atomToName(mLangGroup)));
+      mDocConverterType = SingleByteConvert;
+    }
+    if (mDocConverterType == SingleByteConvert) {
+      // before we put in the transliterator to disable double byte special chars
+      // make sure we search x-western to get the EURO sign
+      nsFontGTK* western_font = nsnull;
+      if (mLangGroup != gWesternLocale)
+        western_font = FindLangGroupPrefFont(gWesternLocale, aChar);
+      nsFontGTK* sub_font = FindSubstituteFont(aChar);
+      NS_ASSERTION(sub_font, "failed to get a special chars substitute font");
+      if (sub_font) {
+        sub_font->mMap = gDoubleByteSpecialCharsMap;
+        AddToLoadedFontsList(sub_font);
+      }
+      if (western_font) {
+        NS_ASSERTION(western_font->SupportsChar(aChar), "font supposed to support this char");
+        return font;
+      }
+      else if (sub_font) {
+        FIND_FONT_PRINTF(("      transliterate special chars for single byte docs"));
+        if (FONT_HAS_GLYPH(sub_font->mMap, aChar))
+          return sub_font;
+      }
+    }
+  }
+}
+
+  //
   // find font based on user's locale's lang group
   // if different from documents locale
   if (gUsersLocale != mLangGroup) {
@@ -3616,11 +3690,16 @@ nsFontMetricsGTK::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCStr
       continue;
     }
 
+    if (!charSetMap->mInfo->mLangGroup) {
+      SetCharsetLangGroup(charSetMap->mInfo);
+    }
+
     if (!mFontLangGroup->mFontLangGroupAtom) {
       SetFontLangGroupInfo(charSetMap);
     }
 
-    if (aLangGroup != mFontLangGroup->mFontLangGroupAtom) {
+    if ((aLangGroup != mFontLangGroup->mFontLangGroupAtom) 
+       && (aLangGroup != charSetMap->mInfo->mLangGroup)) {
       continue;
     }
     // look for a font with this charset (registry-encoding) & char
