@@ -227,20 +227,6 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
         }
 
       }
-      // Now we need to URL-escape the string. 
-      // XXX andreas.otte has warned that using the nsIIOService::Escape
-      // method in this way may be too conservative (e.g., it won't
-      // escape a "#" character that appears in a hostname -- does that
-      // matter?) But, since there's nothing better, we'll do it...
-      static const PRInt32 kEscapeConservatively = esc_Forced - 1;
-
-      // XXX Unfortunately, we can't escape "in place". Maybe the new string
-      // APIs will make that better some day.
-      nsCAutoString escaped;
-      nsresult rv = nsStdEscape(spec.get(), kEscapeConservatively, escaped);
-      if (NS_FAILED(rv))
-        return rv;
-      spec = escaped;
     }
   }
 
