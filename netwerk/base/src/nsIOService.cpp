@@ -69,7 +69,6 @@ PRInt32 gBadPortList[] = {
   42,   // name     
   43,   // nicname  
   53,   // domain  
-  70,   // gopher
   77,   // priv-rjs 
   79,   // finger   
   87,   // ttylink  
