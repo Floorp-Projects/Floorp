@@ -39,7 +39,6 @@
 #TARGETS        = $(LIBRARY)
 #SHARED_LIBRARY =
 #IMPORT_LIBRARY =
-#PURE_LIBRARY   =
 #PROGRAM        =
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.

@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.2 $ $Date: 2000/09/06 22:11:57 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.3 $ $Date: 2001/02/02 01:49:22 $ $Name:  $"
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
@@ -44,6 +44,5 @@ endif
 TARGETS        = $(LIBRARY)
 SHARED_LIBRARY =
 IMPORT_LIBRARY =
-PURE_LIBRARY   =
 PROGRAM        =
 
