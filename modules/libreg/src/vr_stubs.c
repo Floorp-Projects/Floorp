@@ -166,7 +166,7 @@ extern XP_File vr_fileOpen(const char *name, const char * mode)
 	FSSpec	newFSSpec;
 	
 #ifdef STANDALONE_REGISTRY
-	errno = 0; // reset errno (only if we're using stdio)
+	errno = 0; /* reset errno (only if we're using stdio) */
 #endif
 
 	anErr = FSpLocationFromFullPath(strlen(name), name, &newFSSpec);
@@ -262,7 +262,7 @@ extern int nr_RenameFile(char *from, char *to)
 	FSSpec			beforeRenameSpec;
 	
 #ifdef STANDALONE_REGISTRY
-	errno = 0; // reset errno (only if we're using stdio)
+	errno = 0; /* reset errno (only if we're using stdio) */
 #endif
 
 	if (from && to) {
@@ -272,19 +272,19 @@ extern int nr_RenameFile(char *from, char *to)
     	err = FSpLocationFromFullPath(XP_STRLEN(to), to, &toSpec);
         if (err != noErr && err != fnfErr) goto exit;
     	
-    	// make an FSSpec for the destination directory
+    	/* make an FSSpec for the destination directory */
 		err = FSMakeFSSpec(toSpec.vRefNum, toSpec.parID, nil, &destDirSpec);
-    	if (err != noErr) goto exit; // parent directory must exist
+    	if (err != noErr) goto exit; /* parent directory must exist */
 
-		// move it to the directory specified
+		/* move it to the directory specified */
     	err = FSpCatMove(&fromSpec, &destDirSpec);
     	if (err != noErr) goto exit;
 	    
-	    // make a new FSSpec for the file or directory in its new location	
+	    /* make a new FSSpec for the file or directory in its new location	*/
 		err = FSMakeFSSpec(toSpec.vRefNum, toSpec.parID, fromSpec.name, &beforeRenameSpec);
     	if (err != noErr) goto exit;
     	
-    	// rename the file or directory
+    	/* rename the file or directory */
     	err = FSpRename(&beforeRenameSpec, toSpec.name);
 	}
 		
