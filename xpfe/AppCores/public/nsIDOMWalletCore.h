@@ -44,6 +44,8 @@ public:
   NS_IMETHOD    SaveWallet(const nsString& aResults)=0;
 
   NS_IMETHOD    CancelWallet()=0;
+
+  NS_IMETHOD    GetPrefillList(nsString& aReturn)=0;
 };
 
 
@@ -53,6 +55,7 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SaveWallet(const nsString& aResults);  \
   NS_IMETHOD    CancelWallet();  \
+  NS_IMETHOD    GetPrefillList(nsString& aReturn);  \
 
 
 
@@ -62,6 +65,7 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin) { return _to PanelLoaded(aWin); }  \
   NS_IMETHOD    SaveWallet(const nsString& aResults) { return _to SaveWallet(aResults); }  \
   NS_IMETHOD    CancelWallet() { return _to CancelWallet(); }  \
+  NS_IMETHOD    GetPrefillList(nsString& aReturn) { return _to GetPrefillList(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitWalletCoreClass(nsIScriptContext *aContext, void **aPrototype);

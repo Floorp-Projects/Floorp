@@ -29,6 +29,11 @@ function StartUp(windowName)
 	}
 }
 
+function DoGetPrefillList()
+{
+        return walletCore.GetPrefillList();
+}
+
 function DoSave(results)
 {
 	walletCore.SaveWallet(results);

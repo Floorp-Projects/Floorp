@@ -329,6 +329,40 @@ WalletCoreCancelWallet(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 }
 
 
+//
+// Native method GetPrefillList
+//
+PR_STATIC_CALLBACK(JSBool)
+WalletCoreGetPrefillList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWalletCore *nativeThis = (nsIDOMWalletCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->GetPrefillList(nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetPrefillList requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for WalletCore
@@ -366,6 +400,7 @@ static JSFunctionSpec WalletCoreMethods[] =
   {"PanelLoaded",          WalletCorePanelLoaded,     1},
   {"SaveWallet",          WalletCoreSaveWallet,     1},
   {"CancelWallet",          WalletCoreCancelWallet,     0},
+  {"GetPrefillList",          WalletCoreGetPrefillList,     0},
   {0}
 };
 

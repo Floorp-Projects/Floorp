@@ -324,3 +324,21 @@ NS_IMETHODIMP nsWalletCore::CancelWallet()
     return Close(mPanelWindow);
 }
 
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsWalletCore::GetPrefillList(nsString& aPrefillList)
+//----------------------------------------------------------------------------------------
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_GetPrefillListForViewer(aPrefillList);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+
+    return NS_OK;
+}
+
+
