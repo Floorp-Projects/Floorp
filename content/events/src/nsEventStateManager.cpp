@@ -49,6 +49,7 @@
 #include "nsIPrefBranchInternal.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLAtoms.h"
+#include "nsIEditorDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -4949,6 +4950,14 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
     nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
     if (treeItem) 
       treeItem->GetItemType(&itemType);
+    nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(treeItem));
+    if (editorDocShell) {
+      PRBool isEditable;
+      editorDocShell->GetEditable(&isEditable);
+      if (isEditable) {
+        return NS_OK;  // Move focus to caret only if browsing, not editing
+      }
+    }
   }
 
   if (itemType != nsIDocShellTreeItem::typeChrome) {
