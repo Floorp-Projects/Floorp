@@ -416,7 +416,7 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
    if(mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
-   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem);
+   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
