@@ -41,12 +41,12 @@
 <!ENTITY eventMenuCmd.accesskey     "k">
 
 <!ENTITY event.new.event           "Nov dogodek">
-<!ENTITY event.new.event.accesskey "d">
+<!ENTITY event.new.event.accesskey "g">
 
 <!ENTITY event.new.todo     "Nov opravek">
 <!ENTITY event.new.todo.accesskey "o">
 
-<!ENTITY calendar.new.server.label "New Calendar">
+<!ENTITY calendar.new.server.label "Nov koledar">
 <!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event   "Uredi">
@@ -115,22 +115,22 @@
 <!ENTITY goNextCmd.label                "Naslednji">
 <!ENTITY goNextCmd.accesskey            "s">
 
-<!ENTITY taskMenu.label                "Tasks">
-<!ENTITY taskMenu.accesskey            "T">
+<!ENTITY taskMenu.label                "Opravila">
+<!ENTITY taskMenu.accesskey            "a">
 
-<!ENTITY toolsMenu.label                "Tools">
-<!ENTITY toolsMenu.accesskey            "o">
+<!ENTITY toolsMenu.label                "Orodja">
+<!ENTITY toolsMenu.accesskey            "O">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "Konzola JavaScript">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.label     "Brskalnik">
 <!ENTITY navigatorCmd.accesskey "B">
 
-<!ENTITY messengerCmd.label     "Mail">
-<!ENTITY messengerCmd.accesskey "M">
+<!ENTITY messengerCmd.label     "Pošta">
+<!ENTITY messengerCmd.accesskey "P">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "Adresar">
 <!ENTITY addressBookCmd.accesskey "A">
 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.accesskey            "P">

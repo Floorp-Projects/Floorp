@@ -45,9 +45,9 @@
 <!ENTITY calendar.views.label       "Pogledi">
 <!ENTITY calendar.timezone.label    "Moj časovni pas">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Nastavitve Koledarja">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategorija">
 
 <!ENTITY pref.mainbox.label         "Splošne nastavitve">
 <!ENTITY pref.alarmgoesoff.label "Ko se vklopi alarm:">
@@ -119,8 +119,8 @@
 <!ENTITY pref.calendar.view.allview.caption "Splošno">
 <!ENTITY pref.calendar.view.dayview.caption "Dnevni pogled">
 <!ENTITY pref.calendar.view.weekview.caption "Tedenski pogled">
-<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
-<!ENTITY pref.calendar.view.monthview.caption "Month View">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Tedenski in mesečni pogledi">
+<!ENTITY pref.calendar.view.monthview.caption "Mesečni pogled">
 <!ENTITY pref.calendar.view.multiweekview.caption "Večtedenski pogled">
 
 <!ENTITY pref.calendar.view.restrict.label "Pogled omejiti na">
