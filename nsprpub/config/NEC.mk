@@ -27,7 +27,7 @@ ifdef NS_USE_GCC
 CC			= gcc
 CCC			= g++
 else
-CC			= $(NSDEPTH)/build/hcc -Xa -KGnum=0 -KOlimit=4000
+CC			= $(NSDEPTH)/build/hcc cc -Xa -KGnum=0 -KOlimit=4000
 CCC			= g++
 endif
 
