@@ -74,16 +74,22 @@ sub mozLock($) {
     my ($inlockfile) = @_;
     my ($lockhandle, $lockfile);
     $lockfile = priv_abspath($inlockfile);
-    $lockcounter = 0;
-    while ( -e $lockfile && $lockcounter < $locklimit) {
-	$lockcounter++;
-	sleep(1);
-    }
-    die "$0: Could not get lockfile $lockfile.\nRemove $lockfile to clear up\n" if ($lockcounter >= $locklimit);
-    $lockhandle = new IO::File || die "Could not create filehandle for $lockfile: $!\n";
     #print "LOCK: $lockfile\n";
-    open($lockhandle, ">$lockfile") || die "$lockfile: $!\n";
-    $lockhash{$lockfile} = $lockhandle;
+    $lockcounter = 0;
+    $lockhandle = new IO::File || die "Could not create filehandle for $lockfile: $!\n";    
+    while ($lockcounter < $locklimit) {
+	if (! -e $lockfile) {
+	    open($lockhandle, ">$lockfile") || die "$lockfile: $!\n";
+	    $lockhash{$lockfile} = $lockhandle;
+	    last;
+	}
+	$lockcounter++;
+	sleep($locksleep);
+    }
+    if ($lockcounter >= $locklimit) {
+	undef $lockhandle;
+	die "$0: Could not get lockfile $lockfile.\nRemove $lockfile to clear up\n";
+    }
 }
 
 sub mozUnlock($) {
