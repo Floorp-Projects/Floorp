@@ -220,15 +220,6 @@ nsTableRowGroupFrame::InitRepeatedFrame(nsTableRowGroupFrame* aHeaderFooterFrame
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsTableRowGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                          nsIAtom*        aListName,
-                                          nsIFrame*       aChildList)
-{
-  mFrames.SetFrames(aChildList);
-  return NS_OK;
-}
-
 NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect&        aDirtyRect,

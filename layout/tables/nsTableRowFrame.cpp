@@ -116,15 +116,6 @@ nsTableRowFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aChildList)
-{
-  mFrames.SetFrames(aChildList);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
 {
   if (gsDebug) printf("Row InitChildren: begin\n");
