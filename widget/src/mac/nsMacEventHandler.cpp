@@ -307,6 +307,7 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 
 	// nsKeyEvent
   keyEvent.keyCode		= ConvertMacToRaptorKeyCode(aOSEvent.message, aOSEvent.modifiers);
+    keyEvent.charCode    = (aOSEvent.message & charCodeMask);
 
 	return(focusedWidget->DispatchWindowEvent(keyEvent));
 }
