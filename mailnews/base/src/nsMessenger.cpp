@@ -180,7 +180,7 @@ ConvertBufToPlainText(nsString &aConBuf)
 
     parser->SetContentSink(sink);
 
-    nsAutoString mimeStr; mimeStr.AppendWithConversion("text/html");
+    nsAutoString mimeStr(NS_LITERAL_STRING("text/html").get());
     parser->Parse(aConBuf, 0, mimeStr, PR_FALSE, PR_TRUE);
 
     //
@@ -299,7 +299,6 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 
   mMsgWindow = aMsgWindow;
 
-  nsAutoString  docShellName; docShellName.AssignWithConversion("messagepane");
   NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -320,7 +319,7 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   if (rootDocShellAsNode) 
   {
     nsCOMPtr<nsIDocShellTreeItem> childAsItem;
-    nsresult rv = rootDocShellAsNode->FindChildWithName(docShellName.get(),
+    nsresult rv = rootDocShellAsNode->FindChildWithName(NS_LITERAL_STRING("messagepane").get(),
       PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(childAsItem));
 
     mDocShell = do_QueryInterface(childAsItem);
@@ -903,9 +902,9 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             // a "printing" operation
             //
             if (saveAsFileType == 1)
-                urlString.AppendWithConversion("?header=saveas");
+                urlString.Append(NS_LITERAL_STRING("?header=saveas").get());
             else
-                urlString.AppendWithConversion("?header=print");
+                urlString.Append(NS_LITERAL_STRING("?header=print").get());
             
             urlCString = ToNewCString(urlString);
             rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));

@@ -93,8 +93,7 @@ nsMsgServiceProviderService::Init()
     nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
     if (NS_SUCCEEDED(rv)) {
       nsXPIDLString lc_name;
-      nsAutoString tmpstr; tmpstr.AssignWithConversion("global-region");
-      rv = chromeRegistry->GetSelectedLocale(tmpstr.get(), getter_Copies(lc_name));
+      rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(lc_name));
       if (NS_SUCCEEDED(rv) && (const PRUnichar *)lc_name && nsCRT::strlen((const PRUnichar *)lc_name)) {
 
           nsCOMPtr<nsIFile> tmpdataFilesDir;

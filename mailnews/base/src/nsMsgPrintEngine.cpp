@@ -201,7 +201,6 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   }
 
   mWindow = aWin;
-  nsAutoString  docShellName; docShellName.AssignWithConversion("printengine");
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
@@ -215,12 +214,11 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
   docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
 
-  nsAutoString childName; childName.AssignWithConversion("printengine");
   nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
   NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> childItem;
-  rootAsNode->FindChildWithName(childName.get(), PR_TRUE, PR_FALSE, nsnull,
+  rootAsNode->FindChildWithName(NS_LITERAL_STRING("printengine").get(), PR_TRUE, PR_FALSE, nsnull,
     getter_AddRefs(childItem));
 
   mDocShell = do_QueryInterface(childItem);
