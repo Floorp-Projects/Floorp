@@ -658,7 +658,7 @@ protected:
 public:
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex     
-  PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex);
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
 
   // Returns PR_TRUE if there is a cell originating in aRowIndex
   // which spans into the next row
