@@ -1421,7 +1421,21 @@ Wallet_UTF8Put(nsOutputFileStream& strm, PRUnichar c) {
 
 PUBLIC PRUnichar
 Wallet_UTF8Get(nsInputFileStream& strm) {
-  PRUnichar c = (strm.get() & 0xFF);
+  const PRUint32 buflen = 1000;
+  static char buf[buflen+1];
+  static PRUint32 last = 0;
+  static PRUint32 next = 0;
+  PRUnichar c;
+  if (next >= last) {
+    next = 0;
+    last = strm.read(buf, buflen);
+    if (last <= 0 || strm.eof()) {
+      /* note that eof is not set until we read past the end of the file */
+      return 0;
+    }
+  }
+  c = (buf[next++] & 0xFF);
+
   if ((c & 0x80) == 0x00) {
     return c;
   } else if ((c & 0xE0) == 0xC0) {
@@ -1556,8 +1570,8 @@ wallet_GetLine(nsInputFileStream& strm, nsString& line)
   for (;;) {
     c = Wallet_UTF8Get(strm);
 
-    /* note that eof is not set until we read past the end of the file */
-    if (strm.eof()) {
+    /* check for eof */
+    if (c == 0) {
       return -1;
     }
 
