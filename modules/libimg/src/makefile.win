@@ -44,43 +44,24 @@ LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
 LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 !endif
 
-LCFLAGS		= $(LCFLAGS) /TP
+LCFLAGS		= $(LCFLAGS) /TP 
 
-!ifdef STANDALONE_IMAGE_LIB
-LLIBS=$(DIST)\lib\png.lib \
- 	$(LIBNSPR)  \
-	$(LIBJPEG)  \
+LLIBS= $(LIBNSPR)  \
 	$(DIST)\lib\plc3.lib	\
 	$(DIST)\lib\util.lib            \
-	$(DIST)\lib\zip$(MOZ_BITS)$(VERSION_NUMBER).lib \
 	$(DIST)\lib\xpcom32.lib \
+	$(DIST)\lib\raptorbase.lib \
 !ifdef NU_CACHE
 	$(DIST)\lib\cache.lib \
 !endif
 	$(NULL)
-!else
-LLIBS=$(DIST)\lib\png.lib \
-	$(NULL)
-!endif
 
 MISCDEP=$(LLIBS)
-!ifndef STANDALONE_IMAGE_LIB
-OBJS=.\$(OBJDIR)\MIMGCB.obj \
-	$(NULL)
 
-CSRCS =		   \
-	_jmc\MIMGCB.c \
-	$(NULL)
-!endif
 
 #LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
-!ifdef STANDALONE_IMAGE_LIB
 LIBRARY_SUFFIX = $(MOZ_BITS)$(VERSION_NUMBER)
-!else
-LIBRARY_SUFFIX = $(MOZ_BITS)
-!endif
 
-!ifdef STANDALONE_IMAGE_LIB
 MAKE_OBJ_TYPE=DLL
 #//------------------------------------------------------------------------
 #//
@@ -96,6 +77,8 @@ DEFFILE=$(DLL1NAME).def
 !endif
 
 
+
+
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
@@ -105,88 +88,43 @@ DEFFILE=$(DLL1NAME).def
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MAPFILE= $(DLLNAME).map
 
-!endif
 
 
 MODULE=img 
 DEPTH=..\..\.. 
-LOCAL_INCLUDES=-I../png -I. -I$(DEPTH)/dist/public/zlib 
+LOCAL_INCLUDES=-I../public_com -I.   
 LIBRARY_NAME=img 
-EXTRA_LIBS=$(DIST)/lib/libzlib.a $(DIST)/lib/libpng.a 
 
 ### STANDALONE_IMAGE_LIB
-!ifdef STANDALONE_IMAGE_LIB
-CPPSRCS=color.cpp colormap.cpp dither.cpp gif.cpp if.cpp ilclient.cpp il_util.cpp \
-    ilNetReader.cpp jpeg.cpp scale.cpp xbm.cpp ipng.cpp png_png.cpp xpcompat.cpp
-REQUIRES=zlib nspr jpeg util img png xpcom
+CPPSRCS=color.cpp colormap.cpp dither.cpp if.cpp ilclient.cpp il_util.cpp \
+    ilNetReader.cpp scale.cpp xpcompat.cpp  
+
+REQUIRES=nspr util img xpcom
+
 CPP_OBJS=.\$(OBJDIR)\color.obj .\$(OBJDIR)\colormap.obj \
-    .\$(OBJDIR)\dither.obj .\$(OBJDIR)\gif.obj .\$(OBJDIR)\if.obj \
+    .\$(OBJDIR)\dither.obj .\$(OBJDIR)\if.obj \
     .\$(OBJDIR)\ilclient.obj .\$(OBJDIR)\il_util.obj \
-    .\$(OBJDIR)\ilNetReader.obj .\$(OBJDIR)\jpeg.obj \
-    .\$(OBJDIR)\scale.obj .\$(OBJDIR)\xbm.obj \
-    .\$(OBJDIR)\ipng.obj .\$(OBJDIR)\png_png.obj .\$(OBJDIR)\xpcompat.obj \
-	
+    .\$(OBJDIR)\ilNetReader.obj \
+    .\$(OBJDIR)\scale.obj  \
+     .\$(OBJDIR)\xpcompat.obj \
+
+#
+#note: jpeg export directory needed for dithering in imglib.
+##
 !if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\zlib -I$(XPDIST)\public\nspr \
-    -I$(XPDIST)\public\jpeg -I$(XPDIST)\public\util -I$(XPDIST)\public\img \
+LINCS= -I$(XPDIST)\public\nspr  -I$(XPDIST)\public\jpeg \
+     -I$(XPDIST)\public\util -I$(XPDIST)\public\img \
+    -I$(XPDIST)\public\raptor  \
 !ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
 !endif
-    -I$(XPDIST)\public\png -I$(XPDIST)\public\xpcom \
-    -I$(XPDIST)\public\raptor
+    -I$(XPDIST)\public\xpcom 
 !endif
 
-### non-STANDALONE_IMAGE_LIB
-!else
-CPPSRCS=color.cpp colormap.cpp dither.cpp dummy_nc.cpp external.cpp gif.cpp if.cpp \
-   ilclient.cpp il_util.cpp jpeg.cpp scale.cpp xbm.cpp ipng.cpp png_png.cpp ilNetReader.cpp 
-REQUIRES=jtools java zlib nspr dbm jpeg util img png layer js xpcom
-EXPORTS=PIMGCB.h PPSIMGCB.h 
-JMC_HEADERS=$(JMC_GEN_DIR)\MIMGCB.h $(JMC_GEN_DIR)\MPSIMGCB.h 
-JMC_STUBS=$(JMC_GEN_DIR)\MIMGCB.c $(JMC_GEN_DIR)\MPSIMGCB.c 
-JMC_OBJS=.\$(OBJDIR)\MIMGCB.obj .\$(OBJDIR)\MPSIMGCB.obj 
-JMC_GEN=MIMGCB MPSIMGCB 
-JMC_GEN_FLAGS=-cimpl -noexc -module 
-CPP_OBJS=.\$(OBJDIR)\color.obj .\$(OBJDIR)\colormap.obj \
-    .\$(OBJDIR)\dither.obj .\$(OBJDIR)\dummy_nc.obj \
-    .\$(OBJDIR)\external.obj .\$(OBJDIR)\gif.obj .\$(OBJDIR)\if.obj \
-    .\$(OBJDIR)\ilclient.obj .\$(OBJDIR)\il_util.obj \
-    .\$(OBJDIR)\jpeg.obj .\$(OBJDIR)\scale.obj .\$(OBJDIR)\xbm.obj \
-    .\$(OBJDIR)\ipng.obj .\$(OBJDIR)\png_png.obj .\$(OBJDIR)\ilNetReader.obj
-!if "$(MOZ_BITS)" != "16"
-LINCS=-I$(XPDIST)\public\jtools -I$(XPDIST)\public\java \
-    -I$(XPDIST)\public\zlib -I$(XPDIST)\public\nspr \
-    -I$(XPDIST)\public\dbm -I$(XPDIST)\public\jpeg \
-    -I$(XPDIST)\public\util -I$(XPDIST)\public\img \
-    -I$(XPDIST)\public\png -I$(XPDIST)\public\layer \
-!ifdef NU_CACHE
-    -I$(XPDIST)\public\cache \
-!endif
-    -I$(XPDIST)\public\js -I$(XPDIST)\public\xpcom	\
-    -I$(XPDIST)\public\raptor
-!endif
-!endif
 
 include <$(DEPTH)\config\rules.mak> 
 
-!ifdef STANDALONE_IMAGE_LIB
 install:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
-!else
-$(JMC_GEN_DIR)\MIMGCB.h: $(JMCSRCDIR)\IMGCB.class
-    $(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
-$(JMC_GEN_DIR)\MIMGCB.c: $(JMCSRCDIR)\IMGCB.class
-    $(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
-$(JMC_GEN_DIR)\MPSIMGCB.h: $(JMCSRCDIR)\PSIMGCB.class
-    $(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
-$(JMC_GEN_DIR)\MPSIMGCB.c: $(JMCSRCDIR)\PSIMGCB.class
-    $(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-export:: $(LIBRARY)
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
-!endif
