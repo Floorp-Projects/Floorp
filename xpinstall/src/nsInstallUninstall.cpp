@@ -70,7 +70,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
 
 nsInstallUninstall::~nsInstallUninstall()
 {
-    MOZ_COUNT_CTOR(nsInstallUninstall);
+    MOZ_COUNT_DTOR(nsInstallUninstall);
 }
 
 

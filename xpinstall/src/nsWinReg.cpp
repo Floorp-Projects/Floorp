@@ -38,7 +38,7 @@ nsWinReg::nsWinReg(nsInstall* suObj)
 
 nsWinReg::~nsWinReg()
 {
-    MOZ_COUNT_CTOR(nsWinReg);
+    MOZ_COUNT_DTOR(nsWinReg);
 }
 
 PRInt32
