@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.18 2001/05/18 20:44:35 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.19 2001/06/23 00:01:17 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1470,7 +1470,7 @@ ssl_WriteV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 vectors,
     /* Make sure the first write is at least 8 KB, if possible. */
     KILL_VECTORS
     if (!vectors)
-	return 0;
+	return ssl_Send(fd, 0, 0, 0, timeout);
     GET_VECTOR;
     if (!vectors) {
 	return ssl_Send(fd, myIov.iov_base, myIov.iov_len, 0, timeout);
