@@ -20,16 +20,18 @@
 # 
 # Contributor(s): 
 # Jonathan Granrose (granrose@netscape.com)
-# 
 
-#
+
 # pkgcp.pl -
 #
 # Parse a package file and copy the specified files for a component
 # from the given source directory into the given destination directory
 # for packaging by the install builder.
 #
-#
+# Todo:
+#	- port to MacPerl
+#	- change warn()s to die()s to enforce updating package files.
+#	- change var names to standard form
 
 # load modules
 use Cwd;
@@ -46,14 +48,14 @@ $component        = "";		# current component being copied
 $PD               = "";		# file Path Delimiter ( /, \, or :)
 $altdest          = "";		# alternate file destination
 $line             = "";		# line being processed
-$srcdir           = "";		# directory being copied from
-$destdir          = "";		# destination being copied to
+$srcdir           = "";		# root directory being copied from
+$destdir          = "";		# root directory being copied to
 $package          = "";		# file listing files to copy
 $os               = "";  	# os type (MacOS, MSDOS, Unix)
 $verbose          = 0;		# shorthand for --debug 1
 $lineno           = 0;		# line # of package file for error text
 $debug            = 0;		# controls amount of debug output
-$batch            = 0;		# flag: are we in batch copy mode?
+$dirflag          = 0;		# flag: are we copying a directory?
 $help             = 0;		# flag: if set, print usage
 
 
@@ -122,11 +124,19 @@ LINE: while (<MANIFEST>) {
 	( $component eq "" ) &&
 		die "Error: item $_ outside a component ($package, $lineno).  Exiting...\n";
 
+	if ($line eq "") {
+		$line = $_;				# if $line not set, set it.
+	}
+
+	if ($os ne "MSDOS") {		# hack - need to fix for dos
+		$line =~ s/^$PD//;		# strip any leading path delimiter
+	}
+
 	# delete the file or directory following the '-'
 	/^-/	&& do {
-			s/^-//;		# strip leading '-'
-			($debug >= 10) && print "delete: $destdir$PD$component$PD$_\n";
-			do_delete ("$destdir$PD$component$PD$_");
+			$line =~ s/^-//;		# strip leading '-'
+			($debug >= 10) && print "delete: $destdir$PD$component$PD$line\n";
+			do_delete ("$destdir", "$component", "$line");
 			next LINE;
 	};
 
@@ -134,20 +144,16 @@ LINE: while (<MANIFEST>) {
 	/\,/	&& do {
 			/.*\,.*\,.*/ &&
 				die "Error: multiple commas not allowed ($package, $lineno): $_.\n";
-			($line, $altdest) = split (/\s*\,\s*/, $_, 2);
-			$line =~ s/$PD*$//;	# strip any trailing delimiter
+			($line, $altdest) = split (/\s*\,\s*/, $line, 2);
+			$line =~ s/$PD*$//;	# strip any trailing path delimiters
 			$altdest =~ s/$PD*$//;	# strip any trailing delimiter
-			($debug >= 10) && print "relocate: $line, $altdest.\n";
-		};
-
-	if ($line eq "") {
-		$line = $_;	# if $line not set, set it.
-	}
+			($debug >= 10) && print "relocate: $line => $altdest.\n";
+	};
 
 	# if it has wildcards, do recursive copy.
 	/(?:\*|\?)/	&& do {
 		($debug >= 10) && print "wildcard copy.\n";
-		do_batchcopy ("$srcdir$PD$line");
+		do_wildcard ("$srcdir$PD$line");
 		next LINE;
 	};
 
@@ -161,13 +167,13 @@ LINE: while (<MANIFEST>) {
 	# if it's a directory, do recursive copy.
  	(-d "$srcdir$PD$line") && do {
 		($debug >= 10) && print "directory copy.\n";
-		do_batchcopy ("$srcdir$PD$line");
+		do_copydir ("$srcdir$PD$line");
 		next LINE;
 	};
 
 	# if we hit this, it's either a file in the package file that is
 	# not in the src directory, or it is not a valid entry.
-	warn "Warning: package error or possible missing file: $_ ($package, $lineno).\n";
+	warn "Warning: package error or possible missing file: $line ($package, $lineno).\n";
 
 } # LINE
 
@@ -182,24 +188,24 @@ exit (0);
 #
 sub do_delete
 {
-	local ($target) = $_[0];
+	my ($targetpath) = $_[0];
+	my ($targetcomp) = $_[1];
+	my ($targetfile) = $_[2];
+	my ($target)     = "$targetpath$PD$targetcomp$PD$targetfile";
 
 	($debug >= 2) && print "do_delete():\n";
+	($debug >= 1) && print "-$targetfile\n";
 
-	if (-f $target) {
-		!(-w $target) &&
+	if ( -f $target ) {
+		(! -w $target ) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
-		if ($debug >= 1) {
-			print "-$target (file)\n";
-		}
+		($debug >= 4) && print " unlink($target)\n";
 		unlink ($target) ||
 			die "Error: unlink() failed: $!.  Exiting...\n";
-	} elsif (-d $target) {
-		!(-w $target) &&
+	} elsif ( -d $target ) {
+		(! -w $target ) &&
 			die "Error: delete failed: $target not writeable ($package, $component, $lineno).  Exiting...\n";
-		if ($debug >= 1) {
-			print "-$target (directory)\n";
-		}
+		($debug >= 4) && print " rmtree($target)\n";
 		rmtree ($target, 0, 0) ||
 			die "Error: rmtree() failed: $!.  Exiting...\n";
 	} else {
@@ -210,122 +216,178 @@ sub do_delete
 
 #
 # Copy an individual file from the srcdir to the destdir.
+#
 # This is called by both the individual and batch/recursive copy routines,
-# using $batch to check if called from do_batchcopy.
-# 
+# using $dirflag to check if called from do_copydir.  Batch copy can pass in
+# directories, so be sure to check first and break if it isn't a file.
+#
 sub do_copyfile
 {
-	local ($path)  = "";
-	my ($srcfile) = "";
+	my ($destpath)     = "";  # destination directory path
+	my ($destname)     = "";  # destination file name
+	my ($destsuffix)   = "";  # destination file name suffix
+	my ($altpath)      = "";  # alternate destination directory path
+	my ($altname)      = "";  # alternate destination file name
+	my ($altsuffix)    = "";  # alternate destination file name suffix
+	my ($srcpath)      = "";  # source file directory path
+	my ($srcname)      = "";  # source file name
+	my ($srcsuffix)    = "";  # source file name suffix
 	
 	($debug >= 2) && print "do_copyfile():\n";
 
-	# set srcfile correctly depending on how called
-	if ($batch) {
-		$srcfile = $File::Find::name;
+	# set srcname correctly depending on how called
+	if ( $dirflag ) {
+		($srcname, $srcpath, $srcsuffix) = fileparse("$File::Find::name", '\..*?$');
 	} else {
-		$srcfile = "$srcdir$PD$line";
+		($srcname, $srcpath, $srcsuffix) = fileparse("$srcdir$PD$line", '\..*?$');
 	}
-	# check that source file is readable
-	(!( -r $srcfile )) &&
-		die "Error: file $srcfile is not readable ($package, $component, $lineno).\n";
+
+	($debug >= 4) && print " fileparse(src): $srcpath $srcname $srcsuffix\n";
+
+	# return if srcname is a directory from do_copydir
+	if ( -d "$srcpath$srcname$srcsuffix" ) {
+		($debug >= 10) && print " return: $srcpath$srcname$srcsuffix is a directory\n";
+		return;
+	}
 
 	# set the destination path, if alternate destination given, use it.
-	if ($altdest ne "") {
-		if ($batch) {
-			$path = "$destdir$PD$component$PD$altdest$PD$File::Find::dir";
-			$path =~ s/$srcdir$PD$line$PD//;	# rm info added by find
-			$basefile = basename ($File::Find::name);
+	if ( $altdest ne "" ) {
+		if ( $dirflag ) {	# directory copy to altdest
+			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$altdest$PD$File::Find::name", '\..*?$');
+			# Todo: add MSDOS hack
+			$destpath =~ s/$srcdir$PD$line$PD//;	# rm info added by find
 			($debug >= 5) &&
-				print "recursive find w/altdest: $path $basefile\n";
-		} else {
-			$path = dirname ("$destdir$PD$component$PD$altdest");
-			$basefile = basename ($altdest);
+				print " dir copy to altdest: $destpath $destname $destsuffix\n";
+		} else {	# single file copy to altdest
+			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$altdest", '\..*?$');
 			($debug >= 5) &&
-				print "recursive find w/altdest: $path $basefile\n";
+				print " file copy to altdest: $destpath $destname $destsuffix\n";
 		}
 	} else {
-		if ($batch) {
-			$path = "$destdir$PD$component$PD$File::Find::dir";
+		if ( $dirflag ) {	# directory copy, no altdest
+			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$File::Find::name", '\..*?$');
 
 			# avert your eyes now, butt-ugly hack
-			if ($os eq "MSDOS") {
-				$path =~ s/\\/\//g;
+			if ( $os eq "MSDOS" ) {
+				$destpath =~ s/\\/\//g;
 				$srcdir =~ s/\\/\//g;
 				$PD = "/";
-				$path =~ s/$srcdir$PD//g;
-				$path =~ s/\//\\/g;
+				$destpath =~ s/$srcdir$PD//g;
+				$destpath =~ s/\//\\/g;
 				$srcdir =~ s/\//\\/g;
 				$PD = "\\";
 			} else {
-				$path =~ s/$srcdir$PD//;
+				$destpath =~ s/$srcdir$PD//;
 			}
 			# end stupid MSDOS hack
 
-			$basefile = basename ($File::Find::name);
 			($debug >= 5) &&
-				print "recursive find w/o altdest: $path $basefile\n";
-		} else {
-			$path = dirname ("$destdir$PD$component$PD$line");
-			$basefile = basename ($line);
+				print " dir copy w/o altdest: $destpath $destname $destsuffix\n";
+		} else {	# single file copy, no altdest
+			($destname, $destpath, $destsuffix) = fileparse("$destdir$PD$component$PD$line", '\..*?$');
 			($debug >= 5) &&
-				print "recursive find w/o altdest: $path $basefile\n";
+				print " file copy w/o altdest: $destpath $destname $destsuffix\n";
 		}
 	}
 
-	# create the directory path to the file if not there yet
-	if (!( -d $path)) {
-		mkpath ($path, 0, 0755) ||
+	# create the destination path if it doesn't exist
+	if (! -d "$destpath" ) {
+		($debug >= 5) && print " mkpath($destpath)\n";
+		mkpath ($destpath, 0, 0755) ||
 			die "Error: mkpath() failed: $!.  Exiting...\n";
 	}
 
-	if (-f $srcfile) {	# don't copy if it's a directory
-		if ($debug >= 1) {
-			if ($batch) {
-				print "$basefile\n";	# from unglob
+	# path exists, source and destination known, time to copy
+	if ((-f "$srcpath$srcname$srcsuffix") && (-r "$srcpath$srcname$srcsuffix")) {
+		if ( $debug >= 1 ) {
+			if ( $dirflag ) {
+				print "$destname$destsuffix\n";	# from unglob
 			} else {
-				print "$line\n";	# from single file
+				print "$line\n";		# from single file
 			}
-			if ($debug >= 3) {
-				print "copy\t$srcfile =>\n\t\t$path$PD$basefile\n";
+			if ( $debug >= 3 ) {
+				print " copy\t$srcpath$srcname$srcsuffix =>\n\t\t$destpath$destname$destsuffix\n";
 			}
 		}
-		copy ("$srcfile", "$path$PD$basefile") ||
-			die "Error: copy of file $srcdir$PD$line failed ($package, $component, $lineno): $!.  Exiting...\n";
+		copy ("$srcpath$srcname$srcsuffix", "$destpath$destname$destsuffix") ||
+			die "Error: copy of file $srcpath$srcname$srcsuffix failed ($package, $component, $lineno): $!.  Exiting...\n";
 
 		# if this is unix, set the dest file permissions
-		if ($os eq "") {
+		if ( $os eq "Unix" ) {
 			# read permissions
-			$st = stat($srcfile) ||
-				die "Error: can't stat $srcfile: $!  Exiting...\n";
+			$st = stat("$srcpath$srcname$srcsuffix") ||
+				die "Error: can't stat $srcpath$srcname$srcsuffix: $!  Exiting...\n";
 			# set permissions
-			($debug >= 2) && print "chmod ".$st->mode."\n";
-			chmod ($st->mode, "$path$PD$basefile");
+			($debug >= 2) && print " chmod ".$st->mode." $destpath$destname$destsuffix\n";
+			chmod ($st->mode, "$destpath$destname$destsuffix") ||
+				warn "Warning: chmod of $destpath$destname$destsuffix failed: $!.  Exiting...\n";
 		}
+	} else {
+		die "Error: file $srcpath$srcname$srcsuffix is not a file or is not readable ($package, $component, $lineno).\n";
 	}
 }
 
 
 #
-# Expand any wildcards, and recursively copy files and directories specified.
+# Expand any wildcards and copy files and/or directories
 #
-sub do_batchcopy
+# todo: pass individual files to do_copyfile, not do_copydir
+#
+sub do_wildcard
 {
 	my ($entry) = $_[0];
-	my (@list) = ();
+	my (@list)  = ();
+	my ($item)  = "";
 
-	($debug >= 2) && print "do_batchcopy():\n";
+	($debug >= 2) && print "do_wildcard():\n";
 
-	if ($entry =~ /(?:\*|\?)/) {		# it's a wildcard,
-		@list = glob($entry);		# expand it, and
-		foreach $entry (@list) {
-			do_batchcopy($entry);	# recursively copy results.
+	if ( $entry =~ /(?:\*|\?)/ ) {		# it's a wildcard,
+		@list = glob($entry);			# expand it
+		($debug >= 4) && print " glob: $entry => @list\n";
+
+		foreach $item ( @list ) {			# now copy each item in list
+			if ( -f $item ) {
+				($debug >= 10) && print " do_copyfile: $item\n";
+
+				# glob adds full path to item like find() in copydir so
+				# take advantage of existing code in copyfile by using
+				# $dirflag and $File::Find::name.
+
+				$File::Find::name = $item;
+				$dirflag = 1;
+				do_copyfile();
+				$dirflag = 0;
+				$File::Find::name = "";
+			} elsif ( -d $item ) {
+				($debug >= 10) && print " do_copydir($item)\n";
+				do_copydir ($item);
+			} else {
+				warn "Warning: $item is not a file or directory ($package, $component, $lineno).  Skipped...\n";
+			}
 		}
-	} else {
-		$batch = 1;			# flag for do_copyfile
-		find (\&do_copyfile, $entry);
-		$batch = 0;
 	}
+}
+
+#
+# Recursively copy directories specified.
+#
+sub do_copydir
+{
+	my ($entry) = $_[0];
+
+	$dirflag = 1;			# flag indicating directory copy in progress
+
+	($debug >= 2) && print "do_copydir():\n";
+
+	if (! -d "$entry" ) {
+		warn "Warning: $entry is not a directory ($package, $component, $lineno).  Skipped...\n";
+	}
+
+	($debug >= 4) && print " find($entry)\n";
+
+	find (\&do_copyfile, $entry);
+
+	$dirflag = 0;
 }
 
 
@@ -347,7 +409,7 @@ sub do_component
 	if ( -d "$destdir$PD$component" ) {
 		warn "Warning: component directory \"$component\" already exists in \"$destdir\".\n";
 	} else {
-		($debug >= 4) && print "mkdir $destdir$PD$component\n";
+		($debug >= 4) && print " mkdir $destdir$PD$component\n";
 		mkdir ("$destdir$PD$component", 0755) ||
 			die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
 	}
@@ -371,25 +433,32 @@ sub check_arguments
 
 	# make sure required variables are set:
 	# check source directory
-	if ($srcdir eq "") {
+	if ( $srcdir eq "" ) {
 		print "Error: source directory (--source) not specified.\n";
 		$exitval += 8;
-	} elsif (!(-d $srcdir) || !(-r $srcdir)) {
+	} elsif ((! -d $srcdir) || (! -r $srcdir)) {
 		print "Error: source directory \"$srcdir\" is not a directory or is unreadable.\n";
 		$exitval = 1;
 	}
 
 	# check destination directory
-	if ($destdir eq "") {
+	if ( $destdir eq "" ) {
 		print "Error: destination directory (--destination) not specified.\n";
 		$exitval += 8;
-	} elsif (!(-d $destdir) || !(-w $destdir)) {
+	} elsif ((! -d $destdir) || (! -w $destdir)) {
 		print "Error: destination directory \"$destdir\" is not a directory or is not writeable.\n";
 		$exitval += 2;
 	}
 
+	# check destdir not a subdir of srcdir
+	# hack - workaround for bug 14558 that should be fixed eventually.
+	if (0) {	# todo - write test
+		print "Error: destination directory must not be subdirectory of the source directory.\n";
+		$exitval += 32;
+	}
+
 	# check package file
-	if ($package eq "") {
+	if ( $package eq "" ) {
 		print "Error: package file (--file) not specified.\n";
 		$exitval += 8;
 	} elsif (!(-f $package) || !(-r $package)) {
@@ -405,19 +474,19 @@ sub check_arguments
 		$os = "MacOS";
 		$PD = ":";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print "OS: $os\n";
+		($debug >= 4) && print " OS: $os\n";
 		warn "Warning: MacOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
 		$PD = "\\";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print "OS: $os\n";
+		($debug >= 4) && print " OS: $os\n";
 		warn "Warning: MSDOS not fully implemented/tested.\n";
 	} elsif ( $os =~ /unix/i ) {
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
 		$PD = "/";
 		fileparse_set_fstype ($os);
-		($debug >= 4) && print "OS: Unix\n";
+		($debug >= 4) && print " OS: Unix\n";
 	} else {
 		print "Error: OS type \"$os\" unknown.\n";
 		$exitval += 16;
@@ -464,9 +533,11 @@ Options:
 		Specifies the directory in which to create the component
 		directories and copy the files specified in the file passed
 		via --file.
-		NOTE:	This MUST be an absolute path, relative paths
-			will not work!
 		Required.
+
+NOTE:	Source and destination directories must be absolute paths.
+	Relative paths will NOT work.  Also, the destination directory
+	must NOT be a subdirectory of the source directory.
 
 	-f, --file <package file>
 		Specifies the file listing the components to be created in
