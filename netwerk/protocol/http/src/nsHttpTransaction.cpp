@@ -238,12 +238,17 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     return NS_OK;
 }
 
-void
+nsresult
 nsHttpTransaction::ParseLine(char *line)
 {
     LOG(("nsHttpTransaction::ParseLine [%s]\n", line));
 
     if (!mHaveStatusLine) {
+        if (!mResponseHead)
+            mResponseHead = new nsHttpResponseHead();
+        if (!mResponseHead)
+            return NS_ERROR_OUT_OF_MEMORY;
+
         mResponseHead->ParseStatusLine(line);
         mHaveStatusLine = PR_TRUE;
         // XXX this should probably never happen
@@ -252,9 +257,11 @@ nsHttpTransaction::ParseLine(char *line)
     }
     else
         mResponseHead->ParseHeaderLine(line);
+
+    return NS_OK;
 }
 
-void
+nsresult
 nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
 {
     NS_PRECONDITION(!mHaveAllHeaders, "already have all headers");
@@ -269,19 +276,29 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
         else {
             // trim off the new line char and parse the line
             mLineBuf.Truncate(mLineBuf.Length() - 1);
-            ParseLine((char *) mLineBuf.get());
+            nsresult rv = ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
+            if (NS_FAILED(rv))
+                return rv;
             // stuff the segment into the line buf
             mLineBuf.Assign(segment, len);
         }
     }
     else
         mLineBuf.Append(segment, len);
-
+    
+    if (!mHaveStatusLine && mLineBuf.Last() == '\n') {
+        // status lines aren't foldable, so don't try. See bug 89365
+        nsresult rv = ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    
     // a line buf with only a new line char signifies the end of headers.
     if (mLineBuf.First() == '\n') {
         mHaveAllHeaders = PR_TRUE;
         mLineBuf.Truncate();
     }
+    return NS_OK;
 }
 
 nsresult
@@ -294,16 +311,11 @@ nsHttpTransaction::ParseHead(char *buf,
 
     LOG(("nsHttpTransaction::ParseHead [count=%u]\n", count));
 
+    nsresult rv = NS_OK;
+
     *countRead = 0;
 
     NS_PRECONDITION(!mHaveAllHeaders, "oops");
-    
-    // allocate the response head object if necessary
-    if (!mResponseHead) {
-        mResponseHead = new nsHttpResponseHead();
-        if (!mResponseHead)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     // if we don't have a status line and the line buf is empty, then
     // this must be the first time we've been called.
@@ -311,6 +323,14 @@ nsHttpTransaction::ParseHead(char *buf,
             PL_strncasecmp(buf, "HTTP", PR_MIN(count, 4)) != 0) {
         // XXX this check may fail for certain 0.9 content if we haven't
         // received at least 4 bytes of data.
+        
+        // allocate the response head object if necessary
+        if (!mResponseHead) {
+            mResponseHead = new nsHttpResponseHead();
+            if (!mResponseHead)
+                return NS_ERROR_OUT_OF_MEMORY;
+        }
+        
         mResponseHead->ParseStatusLine("");
         mHaveStatusLine = PR_TRUE;
         mHaveAllHeaders = PR_TRUE;
@@ -329,7 +349,9 @@ nsHttpTransaction::ParseHead(char *buf,
             len--;
 
         buf[len-1] = '\n';
-        ParseLineSegment(buf, len);
+        rv = ParseLineSegment(buf, len);
+        if (NS_FAILED(rv))
+            return rv;
 
         if (mHaveAllHeaders)
             return NS_OK;
@@ -345,10 +367,10 @@ nsHttpTransaction::ParseHead(char *buf,
         // ParseLineSegment if buf only contains a carriage return.
         if ((buf[len-1] == '\r') && (--len == 0))
             return NS_OK;
-        ParseLineSegment(buf, len);
+        rv = ParseLineSegment(buf, len);
     }
 
-    return NS_OK;
+    return rv;
 }
 
 // called on the socket thread
