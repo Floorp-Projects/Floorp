@@ -912,8 +912,19 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       if(theToken) {
         eHTMLTags theParentTag=mBodyContext->Last();
         theTag=(eHTMLTags)theToken->GetTypeID();
-        if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
-          (gHTMLElements[theParentTag].CanContain(theTag,mDTDMode)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
+        if(FindTagInSet(theTag, gLegalElements,
+                        NS_ARRAY_LENGTH(gLegalElements)) ||
+           (gHTMLElements[theParentTag].CanContain(theTag,mDTDMode) &&
+            // Here's a problem.  If theTag is legal in here, we don't move it
+            // out.  So if we're moving stuff out of here, the parent of theTag
+            // gets closed at this point.  But some things are legal
+            // _everywhere_ and hence would effectively close out misplaced
+            // content in tables.  This is undesirable, so treat them as
+            // illegal here so they'll be shipped out with their parents and
+            // siblings.  See bug 40855 for an explanation (that bug was for
+            // comments, but the same issues arise with whitespace, newlines,
+            // noscript, scripts, etc).
+            !gHTMLElements[theTag].HasSpecialProperty(kLegalOpen))) {
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
 
