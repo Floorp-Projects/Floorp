@@ -2,9 +2,11 @@
 
 <!DOCTYPE window
 [
+<!ENTITY quitApplicationCmd.label			"Exit"> 
+
 <!ENTITY tasksMenu.label				"Tasks">
 <!ENTITY navigatorCmd.label					"Navigator">  
-<!ENTITY messengerCmd.label					".Messenger">  
+<!ENTITY messengerCmd.label					"Messenger">  
 <!ENTITY addressBookCmd.label				"Address Book">  
 <!ENTITY bookmarkMenu.label					".Bookmarks"> 
 <!ENTITY addBookmarkCmd.label					".Add Bookmark">  
@@ -42,6 +44,10 @@
 
 <html:script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
+	<menu id="fileMenu">
+		<menuitem name="&quitApplicationCmd.label;" onclick="QuitApplication()"/>
+	</menu>
+	
 	<menu id="tasksMenu" name="&tasksMenu.label;">
 		<menuitem name="&navigatorCmd.label;" onclick="NavigatorWindow()"/>
 		<menuitem name="&messengerCmd.label;" onclick="MessengerWindow()"/>
