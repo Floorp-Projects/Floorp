@@ -827,7 +827,9 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
             // examine header
             if (headerStr.EqualsIgnoreCase("content-type")) {
-                mContentType = headerVal;
+                char *tmpString = headerVal.ToNewCString();
+                ParseContentType(tmpString);
+                nsCRT::free(tmpString);
             } else if (headerStr.EqualsIgnoreCase("content-length")) {
                 mContentLength = atoi(headerVal.get());
             } else if (headerStr.EqualsIgnoreCase("set-cookie")) {
@@ -882,6 +884,55 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
 	*_retval = done;
     return rv;
+}
+
+// This code is duplicated in nsHttpResponseHead.cpp.  If you change it
+// here, change it there, too!
+
+nsresult
+nsMultiMixedConv::ParseContentType(char *type)
+{
+    char *p = PL_strchr(type, '(');
+
+    if (p)
+        // we don't care about comments (although they are invalid here)
+        *p = 0;
+
+    // check if the content-type has additional fields...
+    if ((p = PL_strchr(type, ';')) != nsnull) {
+        char *p2, *p3;
+        // is there a charset field?
+        if ((p2 = PL_strcasestr(p, "charset=")) != nsnull) {
+            p2 += 8;
+
+            // check end of charset parameter
+            if ((p3 = PL_strchr(p2, ';')) == nsnull)
+                p3 = p2 + PL_strlen(p2);
+
+            // trim any trailing whitespace
+            do {
+                --p3;
+            } while ((*p3 == ' ') || (*p3 == '\t'));
+            *++p3 = 0; // overwrite first char after the charset field
+
+            mContentCharset = p2;
+        }
+    }
+    else
+        p = type + PL_strlen(type);
+
+    // trim any trailing whitespace
+    while (--p >= type && ((*p == ' ') || (*p == '\t')))
+        ;
+    *++p = 0; // overwrite first char after the media type
+
+    // force the content-type to lowercase
+    while (--p >= type)
+        *p = nsCRT::ToLower(*p);
+
+    mContentType = type;
+
+    return NS_OK;
 }
 
 char *

@@ -486,6 +486,9 @@ nsHttpResponseHead::ParseVersion(const char *str)
         mVersion = NS_HTTP_VERSION_1_0;
 }
 
+// This code is duplicated in nsMultiMixedConv.cpp.  If you change it
+// here, change it there, too!
+
 nsresult
 nsHttpResponseHead::ParseContentType(char *type)
 {
