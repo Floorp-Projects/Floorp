@@ -138,7 +138,14 @@ public:
     void GetResizeRect(nsRect* aRect);
     PRBool GetResized();    
     nsWindow* FindWidgetHit(Point aThePoint);
-    ptInWindow(PRInt32 aX,PRInt32 aY);
+    virtual PtInWindow(PRInt32 aX,PRInt32 aY);
+  
+    // Mac specific methods
+	  virtual void SetBounds(const Rect& aMacRect);
+    void MacRectToNSRect(const Rect& aMacRect, nsRect& aRect) const;
+    void nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
+
+
 
     char gInstanceClassName[256];
 protected:
@@ -196,7 +203,8 @@ protected:
   PRBool     	 			mVisible;
   PRBool      			mDisplayed;
 
-  void*       mClientData;
+  void*       			mClientData;
+  nsIWidget*				mParent;
 
   // Resize event management
   nsRect 						mResizeRect;
