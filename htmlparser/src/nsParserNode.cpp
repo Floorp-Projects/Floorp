@@ -57,6 +57,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
   mRecycler=aRecycler;
   mUseCount=0;
   mSkippedContent=0;
+  mGenericState=PR_FALSE;
 }
 
 static void RecycleTokens(nsITokenRecycler* aRecycler,nsDeque& aDeque) {
@@ -120,6 +121,7 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler
   if(mAttributes && (mAttributes->GetSize()))
     RecycleTokens(mRecycler,*mAttributes);
   mToken=aToken;
+  mGenericState=PR_FALSE;
   mUseCount=0;
   if(mSkippedContent) {
     mSkippedContent->Truncate();

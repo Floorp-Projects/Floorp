@@ -371,6 +371,7 @@ nsDTDContext::nsDTDContext() : mStack() {
   mTableStates=0;
   mHadBody=PR_FALSE; 
   mHadFrameset=PR_TRUE;
+  ResetCounters();
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -391,6 +392,31 @@ nsDTDContext::~nsDTDContext() {
     mTableStates=theState->mPrevious;
     delete theState;
   }
+}
+
+/**
+ * 
+ * @update	gess 11May2000
+ */
+void nsDTDContext::ResetCounters(void) {
+  memset(mCounters,0,sizeof(mCounters));
+}
+
+/**
+ * 
+ * @update	gess 11May2000
+ */
+PRInt32 nsDTDContext::IncrementCounter(eHTMLTags aTag) {
+  PRInt32 result=++mCounters[aTag];
+  return result;
+}
+
+/**
+ * 
+ * @update	gess 11May2000
+ */
+void nsDTDContext::ResetCounter(eHTMLTags aTag,PRInt32 aValue) {
+  mCounters[aTag]=aValue;
 }
 
 /**

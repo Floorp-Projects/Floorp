@@ -209,6 +209,10 @@ public:
   nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
   static  void    FreeNodeRecycler(void);
 
+  void            ResetCounters(void);
+  void            ResetCounter(eHTMLTags aTag,PRInt32 aNewValue);
+  PRInt32         IncrementCounter(eHTMLTags aTag);
+
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
@@ -218,6 +222,7 @@ public:
   static   CNodeRecycler* mNodeRecycler;
 
   CTableState *mTableStates;
+  PRInt32         mCounters[NS_HTML_TAG_MAX];
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };

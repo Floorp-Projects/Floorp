@@ -141,6 +141,14 @@ class nsIParserNode : public nsISupports {
      */
     virtual PRInt32 GetSourceLineNumber(void) const =0;
 
+    /**
+     * This pair of methods allows us to set a generic bit (for arbitrary use)
+     * on each node stored in the context.
+     * @update	gess 11May2000
+     */
+    virtual PRBool  GetGenericState(void) const =0;
+    virtual void    SetGenericState(PRBool aState) =0;
+
 };
 
 #endif

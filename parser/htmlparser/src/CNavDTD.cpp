@@ -372,7 +372,7 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
 
-
+    mBodyContext->ResetCounters();
     mDocType=aParserContext.mDocType;
     
     mTokenRecycler=0;
@@ -813,6 +813,22 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         START_TIMER()
       }
       break;
+
+    case eHTMLTag_counter:
+      {
+        PRInt32   theCount=mBodyContext->GetCount();
+        eHTMLTags theGrandParentTag=mBodyContext->TagAt(theCount-2);
+        PRInt32   theCounter=mBodyContext->IncrementCounter(theGrandParentTag);
+
+        nsString  theNumber;
+        theNumber.AppendInt(theCounter);
+        CTextToken theToken(theNumber);
+        PRInt32 theLineNumber=0;
+        nsCParserNode theNode(&theToken,theLineNumber);
+        result=mSink->AddLeaf(theNode);
+      }
+      break;
+
     default:
       break;
   }//switch 
@@ -2997,18 +3013,16 @@ CNavDTD::OpenContainer(const nsIParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       break;
   }
 
+  STOP_TIMER();
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
+
   if(isDefaultNode) {
-
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
-
       result=(mSink) ? mSink->OpenContainer(*aNode) : NS_OK; 
-
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
-      START_TIMER();
-
       mBodyContext->Push(aNode,aStyleStack);
   }
+
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
+  START_TIMER();
 
   return result;
 }

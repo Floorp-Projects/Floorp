@@ -421,6 +421,15 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       &gInTable,&gColgroupKids,eHTMLTag_unknown);
 
     Initialize( 
+      /*tag*/                             eHTMLTag_counter,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kPhrase, (kFlowEntity|kSelf), kNone,	
+      /*special props, prop-range*/       0,kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
       /*tag*/                             eHTMLTag_dd,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
