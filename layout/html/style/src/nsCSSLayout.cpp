@@ -113,7 +113,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
-        dx = kidPosition->mTopOffset.GetCoordValue();
+        dy = kidPosition->mTopOffset.GetCoordValue();
         break;
       }
       kid->MoveTo(origin.x + dx, origin.y + dy);
