@@ -3080,30 +3080,8 @@ then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
-	dnl ========================================================
-	dnl = GLE support
-	dnl = See http://www.SoftHome.net/pub/users/timj/gle/index.htm
-	dnl ========================================================
-    MOZ_GLE=
-    MOZ_GLE_LDFLAGS=
-
-	MOZ_ARG_ENABLE_BOOL(gle,
-	[  --enable-gle-support
-                          GLE support (for debugging gtk widgets) ],
-        MOZ_GLE=1
-        MOZ_GLE_LDFLAGS=-lgle
-        AC_DEFINE(MOZ_GLE),
-        MOZ_GLE=
-        MOZ_GLE_LDFLAGS= )
-
     MOZ_GTK_LDFLAGS=$GTK_LIBS
-
-    if test "$MOZ_GLE"; then
-        MOZ_GTK_LDFLAGS=`echo $MOZ_GTK_LDFLAGS | sed -e 's/-lgtk/-lgle -lgtk/'`
-    fi
-
     MOZ_GTK_CFLAGS=$GTK_CFLAGS
-
 fi
 
 if test "$MOZ_ENABLE_GTK2"
@@ -4693,8 +4671,6 @@ AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 AC_SUBST(MOZ_COMPONENT_NSPR_LIBS)
 AC_SUBST(MOZ_COMPONENT_XPCOM_LIBS)
 AC_SUBST(XPCOM_LIBS)
-
-AC_SUBST(MOZ_GLE)
 
 AC_SUBST(MOZ_BUILD_ROOT)
 AC_SUBST(MOZ_OS2_TOOLS)
