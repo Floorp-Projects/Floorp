@@ -180,11 +180,15 @@
                <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
                <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
             </box>
+            <box align="center">
+               <checkbox label="With Alarms" oncommand="unifinderShowEventsWithAlarmsOnly( event )"/>
+               <checkbox label="Today And Future" id="unifinder-future-events" oncommand="unifinderShowFutureEventsOnly( event )"/>
+            </box>
             <listbox id="unifinder-search-results-tree" seltype="multiple" onselect="unifinderClickEvent( this )" class="unifinder-tree-class" flex="1"/>
          </vbox>
        
    		<splitter collapse="before" persist="state hidden collapsed"
-              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
+          class="chromeclass-extrachrome sidebar-splitter" orient="horizontal">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
    		

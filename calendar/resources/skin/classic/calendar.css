@@ -997,7 +997,6 @@
    -moz-box-align       : center;
 }
 
-
 .week-view-hour-box-class
 {
    border-bottom        : 1px solid #2085c4;
@@ -1005,6 +1004,11 @@
    width                : 78px;
    height               : 50px;
    background-color     : white;
+}
+
+.week-view-hour-box-class[draggedover="true"]
+{
+   background-color     : #2085c4;
 }
 
 .week-view-hour-box-class-last-day

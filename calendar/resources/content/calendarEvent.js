@@ -156,7 +156,9 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
       
       this.gICalLib.addObserver( observer );
       
-      this.prepareAlarms( ); 
+      this.prepareAlarms( );
+
+      this.onlyFutureEvents = false;
 }
 
 
@@ -218,7 +220,7 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
    
    if( searchText != "" )
    {
-      var eventTable = this.getAllEvents();
+      var eventTable = this.getCurrentEvents();   
       
       for( var index = 0; index < eventTable.length; ++index )
       {
@@ -252,14 +254,28 @@ CalendarEventDataSource.prototype.search = function( searchText, fieldName )
                   }
                }
             }
-
          }
-         
       }
    }
    searchEventTable.sort( this.orderRawEventsByDate );
 
    return searchEventTable;
+}
+
+CalendarEventDataSource.prototype.searchBySql = function( Query )
+{
+   var eventDisplays = new Array();
+
+   var eventList = this.gICalLib.searchBySQL( Query );
+
+   while( eventList.hasMoreElements() )
+   {
+      eventDisplays[ eventDisplays.length ] = eventList.getNext().QueryInterface(Components.interfaces.oeIICalEvent);
+   }
+
+   eventDisplays.sort( this.orderRawEventsByDate );
+   
+   return eventDisplays;
 }
 
 /** PUBLIC
@@ -416,6 +432,19 @@ CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
 }
 
 
+CalendarEventDataSource.prototype.getCurrentEvents = function( )
+{
+   if( this.onlyFutureEvents == true )
+   {
+      return( this.getAllFutureEvents() );
+   }
+   else
+   {
+      return( this.getAllEvents() );
+   }
+      
+}
+
 /** PUBLIC
 *
 *   CalendarEventDataSource/getAllEvents.
@@ -427,7 +456,6 @@ CalendarEventDataSource.prototype.getNextEvents = function( EventsToGet )
 CalendarEventDataSource.prototype.getAllEvents = function( )
 {
    // clone the array in case the caller messes with it
-   
    var eventList = this.gICalLib.getAllEvents();
 
    var eventArray = new Array();
@@ -441,6 +469,29 @@ CalendarEventDataSource.prototype.getAllEvents = function( )
    eventArray.sort( this.orderRawEventsByDate );
 
    return eventArray;
+}
+
+
+CalendarEventDataSource.prototype.getEventsWithAlarms = function()
+{
+   //return( this.searchBySql( "SELECT * FROM VEVENT WHERE VALARM.DTSTART" ) );
+}
+
+
+CalendarEventDataSource.prototype.getAllFutureEvents = function()
+{
+   var Today = new Date();
+
+   var Year = Today.getYear() + 1900;
+
+   var Month = Today.getMonth();
+   Month++;
+   if( Month < 10 )
+      Month = "0"+Month;
+
+   var Day = Today.getDate();
+   
+   return( this.searchBySql( "SELECT * FROM VEVENT WHERE DTSTART >= '"+Year+""+Month+""+Day+"T000000'" ) );
 }
 
 /** PUBLIC

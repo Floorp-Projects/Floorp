@@ -998,6 +998,11 @@
    background-color     : white;
 }
 
+.week-view-hour-box-class[draggedover="true"]
+{
+   background-color     : #2085c4;
+}
+
 .week-view-hour-box-class-last-day
 {
    border-bottom        : 1px solid #2085c4;

@@ -167,7 +167,7 @@ function formatUnifinderEventTime( time )
 
 function unifinderRefesh()
 {
-   var eventTable = gEventSource.getAllEvents();
+   var eventTable = gEventSource.getCurrentEvents();
    
    refreshSearchTree( eventTable );
 
@@ -182,7 +182,7 @@ function unifinderRefesh()
 function refreshSearchTree( SearchEventTable )
 {
    gSearchEventTable = SearchEventTable;
-
+   
    refreshEventTree( gSearchEventTable, "unifinder-search-results-tree", false );
 }
 
@@ -337,7 +337,7 @@ function unifinderSearchKeyPress( searchTextItem, event )
    
    if ( searchTextItem.value == '' ) 
    {
-      gSearchEventTable = gEventSource.getAllEvents();
+      gSearchEventTable = gEventSource.getCurrentEvents();
    }
    else if ( searchTextItem.value == " " ) 
    {
@@ -349,6 +349,24 @@ function unifinderSearchKeyPress( searchTextItem, event )
       gSearchEventTable = gEventSource.search( searchText, FieldsToSearch );
    }
     
+   refreshSearchTree( gSearchEventTable );
+}
+
+
+function unifinderShowEventsWithAlarmsOnly()
+{
+   gSearchEventTable = gEventSource.getEventsWithAlarms();
+
+   refreshSearchTree( gSearchEventTable );
+}
+
+
+function unifinderShowFutureEventsOnly( event )
+{
+   gEventSource.onlyFutureEvents = (event.target.getAttribute( "checked" ) == "true" );
+   
+   gSearchEventTable = gEventSource.getCurrentEvents();
+
    refreshSearchTree( gSearchEventTable );
 }
 
