@@ -30,7 +30,7 @@ MODULE		= intl
 LIBRARY_NAME	= strres
 IS_COMPONENT	= 1
 
-CPPSRCS		= nsStringBundle.cpp
+CPPSRCS		= nsStringBundle.cpp nsAcceptLang.cpp
 
 EXTRA_DSO_LDOPTS =\
 		$(MOZ_NECKO_UTIL_LIBS) \
