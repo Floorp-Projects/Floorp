@@ -182,3 +182,22 @@ function goUpdateGlobalEditMenuItems()
 	goUpdateCommand('cmd_delete');
 }
 
+// This used to be BrowserNewEditorWindow in navigator.js
+function NewEditorWindow()
+{
+  dump("In NewEditorWindow()...\n");
+  // Open editor window with blank page
+  // Kludge to leverage openDialog non-modal!
+  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "resource:/res/html/empty_doc.html");
+}
+
+function NewEditorFromTemplate()
+{
+  dump("NOT IMPLEMENTED: Write NewEditorFromTemplate()!\n")
+}
+
+function NewEditorFromDraft()
+{
+  dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
+}
+
