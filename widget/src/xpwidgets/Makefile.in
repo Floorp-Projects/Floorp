@@ -38,7 +38,7 @@ CPPSRCS= \
 	nsBaseDragService.cpp    \
 	$(NULL)
 
-ifdef FOO_NEW_CLIPBOARD_SUPPORT
+ifdef NEW_CLIPBOARD_SUPPORT
 	CPPSRCS += nsBaseClipboard.cpp
 endif
 
