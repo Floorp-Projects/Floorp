@@ -61,6 +61,7 @@ struct nsGenericDOMDataNode {
                            const nsString& aNodeValue);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
   nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes) {
+    NS_ENSURE_ARG_POINTER(aAttributes);
     *aAttributes = nsnull;
     return NS_OK;
   }
@@ -70,30 +71,51 @@ struct nsGenericDOMDataNode {
                              nsIDOMNode** aNextSibling);
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
   nsresult    HasChildNodes(PRBool* aHasChildNodes) {
+    NS_ENSURE_ARG_POINTER(aHasChildNodes);
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
   nsresult    GetFirstChild(nsIDOMNode** aFirstChild) {
+    NS_ENSURE_ARG_POINTER(aFirstChild);
     *aFirstChild = nsnull;
     return NS_OK;
   }
   nsresult    GetLastChild(nsIDOMNode** aLastChild) {
+    NS_ENSURE_ARG_POINTER(aLastChild);
     *aLastChild = nsnull;
     return NS_OK;
   }
   nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                            nsIDOMNode** aReturn) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                            nsIDOMNode** aReturn) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+
+    /*
+     * Data nodes can't have children, i.e. aOldChild can't be a child of
+     * this node.
+     */
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
   nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+
+    /*
+     * Data nodes can't have children, i.e. aOldChild can't be a child of
+     * this node.
+     */
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
   nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
