@@ -356,7 +356,7 @@
     </menu> 
 
     <menu name="&viewMenu.label;">
-      <menuitem name="&toolbarsCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&toolbarsCmd.label;" onclick="toolbar.visible=true"/>
       <menuitem name="&sidebarCmd.label;" onclick="BrowserReload();"/>
       <separator />
       <menuitem name="&enlargeTextSizeCmd.label;" onclick="BrowserReload();"/>
