@@ -3790,7 +3790,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
 
 nsresult
-nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*        aPresShell, 
+nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
                                                  nsIPresContext*  aPresContext,
                                                  nsIFrameManager* aFrameManager,
                                                  nsIContent*      aContent,
@@ -3804,13 +3804,11 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*        aPresShell
 
   if (NS_SUCCEEDED(rv)) {
     // The placeholder frame gets a pseudo style context
-    nsCOMPtr<nsIStyleContext>  placeholderPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::placeholderPseudo,
-                                               aStyleContext,
-                                               PR_FALSE,
-                                               getter_AddRefs(placeholderPseudoStyle));
+    nsCOMPtr<nsIStyleContext>  placeholderStyle;
+    aPresContext->ResolveStyleContextForNonElement(aStyleContext, PR_FALSE,
+                                             getter_AddRefs(placeholderStyle));
     placeholderFrame->Init(aPresContext, aContent, aParentFrame,
-                           placeholderPseudoStyle, nsnull);
+                           placeholderStyle, nsnull);
   
     // Add mapping from absolutely positioned frame to its placeholder frame
     aFrameManager->SetPlaceholderFrameFor(aFrame, placeholderFrame);
@@ -12003,8 +12001,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // letter frame and will have the float property set on it; the text
   // frame shouldn't have that set).
   nsCOMPtr<nsIStyleContext> textSC;
-  aPresContext->ResolveStyleContextFor(aTextContent, aStyleContext, PR_FALSE,
-                                       getter_AddRefs(textSC));  
+  aPresContext->ResolveStyleContextForNonElement(aStyleContext, PR_FALSE,
+                                                 getter_AddRefs(textSC));  
   InitAndRestoreFrame(aPresContext, aState, aTextContent, 
                       letterFrame, textSC, nsnull, aTextFrame);
 
@@ -12013,8 +12011,9 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
 
   // Now make the placeholder
   nsIFrame* placeholderFrame;
-  CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aTextContent,
-                            letterFrame, aStyleContext, aParentFrame,
+  CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager,
+                            aTextContent, letterFrame,
+                            aStyleContext, aParentFrame,
                             &placeholderFrame);
 
   // See if we will need to continue the text frame (does it contain
@@ -12031,8 +12030,8 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     parentStyleContext = getter_AddRefs(aStyleContext->GetParent());
     if (parentStyleContext) {
       nsCOMPtr<nsIStyleContext> newSC;
-      aPresContext->ResolveStyleContextFor(aTextContent, parentStyleContext,
-                                           PR_FALSE, getter_AddRefs(newSC));
+      aPresContext->ResolveStyleContextForNonElement(parentStyleContext,
+                                              PR_FALSE, getter_AddRefs(newSC));
       if (newSC) {
         nextTextFrame->SetStyleContext(aPresContext, newSC);
       }
@@ -12059,6 +12058,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIPresShell* aPresShell, nsIPresContex
                                          nsIFrame* aParentFrame,
                                          nsFrameItems& aResult)
 {
+  NS_PRECONDITION(aTextContent->IsContentOfType(nsIContent::eTEXT),
+                  "aTextContent isn't text");
   nsCOMPtr<nsIContent> parentContent;
   aParentFrame->GetContent(getter_AddRefs(parentContent));
 
@@ -12099,8 +12100,8 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIPresShell* aPresShell, nsIPresContex
           letterFrame->Init(aPresContext, aTextContent, aParentFrame,
                             sc, nsnull);
           nsCOMPtr<nsIStyleContext> textSC;
-          aPresContext->ResolveStyleContextFor(aTextContent, sc, PR_FALSE,
-                                               getter_AddRefs(textSC));
+          aPresContext->ResolveStyleContextForNonElement(sc, PR_FALSE,
+                                                       getter_AddRefs(textSC));
           InitAndRestoreFrame(aPresContext, aState, aTextContent, 
                               letterFrame, textSC, nsnull, textFrame);          
           letterFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
@@ -12115,7 +12116,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsIPresShell* aPresShell, nsIPresContex
 
 nsresult
 nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
-  nsIPresShell* aPresShell, 
+  nsIPresShell*            aPresShell, 
   nsIPresContext*          aPresContext,
   nsFrameConstructorState& aState,
   nsIContent*              aBlockContent,
@@ -12176,7 +12177,7 @@ nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
 
 nsresult
 nsCSSFrameConstructor::WrapFramesInFirstLetterFrame(
-  nsIPresShell* aPresShell, 
+  nsIPresShell*            aPresShell, 
   nsIPresContext*          aPresContext,
   nsFrameConstructorState& aState,
   nsIFrame*                aParentFrame,

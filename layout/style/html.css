@@ -456,12 +456,6 @@ noembed, noscript, param {
   display: inherit;
 }
 
-*|*:placeholder-frame {
-  display: inline;
-  width: 0;
-  height: 0;
-}
-
 *|*:-moz-page, *|*:-moz-page-sequence {
   display: block;
   background: transparent;
