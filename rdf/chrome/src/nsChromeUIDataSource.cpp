@@ -274,13 +274,6 @@ nsChromeUIDataSource::GetAllResources(nsISimpleEnumerator** aResult)
 }
 
 NS_IMETHODIMP
-nsChromeUIDataSource::GetAllCommands(nsIRDFResource* source,
-                                     nsIEnumerator/*<nsIRDFResource>*/** result)
-{
-  return mComposite->GetAllCommands(source, result);
-}
-
-NS_IMETHODIMP
 nsChromeUIDataSource::GetAllCmds(nsIRDFResource* source,
                                         nsISimpleEnumerator/*<nsIRDFResource>*/** result)
 {

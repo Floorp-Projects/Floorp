@@ -343,11 +343,6 @@ public:
         return mInner->GetAllResources(aResult);
     }
 
-    NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                              nsIEnumerator/*<nsIRDFResource>*/** commands) {
-        return mInner->GetAllCommands(source, commands);
-    }
-
     NS_IMETHOD GetAllCmds(nsIRDFResource* source,
                               nsISimpleEnumerator/*<nsIRDFResource>*/** commands) {
         return mInner->GetAllCmds(source, commands);

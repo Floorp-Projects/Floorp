@@ -202,9 +202,6 @@ public:
         return mInner->GetAllResources(aResult);
     }
 
-    NS_IMETHOD GetAllCommands(nsIRDFResource* aSource,
-                              nsIEnumerator/*<nsIRDFResource>*/** aCommands);
-
     NS_IMETHOD GetAllCmds(nsIRDFResource* aSource,
                               nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands);
 
@@ -473,16 +470,6 @@ LocalStoreImpl::GetURI(char* *aURI)
     return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
-LocalStoreImpl::GetAllCommands(nsIRDFResource* aSource,
-                               nsIEnumerator/*<nsIRDFResource>*/** aCommands)
-{
-    // XXX Although this is the wrong thing to do, it works. I'll file a
-    // bug to fix it.
-    return NS_ERROR_FAILURE;
-}
 
 NS_IMETHODIMP
 LocalStoreImpl::GetAllCmds(nsIRDFResource* aSource,
