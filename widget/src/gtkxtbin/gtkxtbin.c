@@ -43,7 +43,7 @@
 
 #include "nslog.h"
 
-NS_IMPL_LOG(gtkxtbinLog, 0)
+NS_IMPL_LOG(gtkxtbinLog)
 #define PRINTF NS_LOG_PRINTF(gtkxtbinLog)
 #define FLUSH  NS_LOG_FLUSH(gtkxtbinLog)
 
