@@ -74,6 +74,7 @@ private:
     static nsIRDFResource* kRDF_Bag;
     static nsIRDFResource* kRDF_Seq;
     static nsIRDFResource* kRDF_Alt;
+    static nsIRDFLiteral* kOne;
 };
 
 
@@ -84,6 +85,7 @@ nsIRDFResource* RDFContainerUtilsImpl::kRDF_nextVal;
 nsIRDFResource* RDFContainerUtilsImpl::kRDF_Bag;
 nsIRDFResource* RDFContainerUtilsImpl::kRDF_Seq;
 nsIRDFResource* RDFContainerUtilsImpl::kRDF_Alt;
+nsIRDFLiteral*  RDFContainerUtilsImpl::kOne;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISupports interface
@@ -229,6 +231,36 @@ RDFContainerUtilsImpl::IsContainer(nsIRDFDataSource *aDataSource, nsIRDFResource
 
 
 NS_IMETHODIMP
+RDFContainerUtilsImpl::IsEmpty(nsIRDFDataSource* aDataSource, nsIRDFResource* aResource, PRBool* _retval)
+{
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+
+    // By default, say that we're an empty container. Even if we're not
+    // really even a container.
+    *_retval = PR_TRUE;
+
+    nsCOMPtr<nsIRDFNode> nextValNode;
+    rv = aDataSource->GetTarget(aResource, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_OK;
+
+    nsCOMPtr<nsIRDFLiteral> nextValLiteral;
+    rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
+    if (NS_FAILED(rv)) return rv;
+
+    if (nextValLiteral.get() != kOne)
+        *_retval = PR_FALSE;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
 RDFContainerUtilsImpl::IsBag(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource, PRBool *_retval)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
@@ -331,6 +363,7 @@ RDFContainerUtilsImpl::RDFContainerUtilsImpl()
             gRDFService->GetResource(RDF_NAMESPACE_URI "Bag",        &kRDF_Bag);
             gRDFService->GetResource(RDF_NAMESPACE_URI "Seq",        &kRDF_Seq);
             gRDFService->GetResource(RDF_NAMESPACE_URI "Alt",        &kRDF_Alt);
+            gRDFService->GetLiteral(NS_LITERAL_STRING("1"), &kOne);
         }
     }
 }
@@ -354,6 +387,7 @@ RDFContainerUtilsImpl::~RDFContainerUtilsImpl()
         NS_IF_RELEASE(kRDF_Bag);
         NS_IF_RELEASE(kRDF_Seq);
         NS_IF_RELEASE(kRDF_Alt);
+        NS_IF_RELEASE(kOne);
     }
 }
 

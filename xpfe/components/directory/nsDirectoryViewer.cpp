@@ -1316,6 +1316,32 @@ nsHTTPIndex::RemoveObserver(nsIRDFObserver *aObserver)
 	return(rv);
 }
 
+NS_IMETHODIMP 
+nsHTTPIndex::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  if (!mInner) {
+    *result = PR_FALSE;
+    return NS_OK;
+  }
+  return mInner->HasArcIn(aNode, aArc, result);
+}
+
+NS_IMETHODIMP 
+nsHTTPIndex::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    if (aArc == kNC_Child && isWellknownContainerURI(aSource)) {
+      *result = PR_TRUE;
+      return NS_OK;
+    }
+
+    if (mInner) {
+      return mInner->HasArcOut(aSource, aArc, result);
+    }
+
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHTTPIndex::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 {
@@ -1348,8 +1374,9 @@ nsHTTPIndex::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval
 		nsCOMPtr<nsISimpleEnumerator>	anonArcs;
 		rv = mInner->ArcLabelsOut(aSource, getter_AddRefs(anonArcs));
 		PRBool	hasResults = PR_TRUE;
-		while (NS_SUCCEEDED(rv) && (anonArcs->HasMoreElements(&hasResults) &&
-			(hasResults == PR_TRUE)))
+		while (NS_SUCCEEDED(rv) &&
+                       NS_SUCCEEDED(anonArcs->HasMoreElements(&hasResults)) &&
+                       hasResults == PR_TRUE)
 		{
 			nsCOMPtr<nsISupports>	anonArc;
 			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))

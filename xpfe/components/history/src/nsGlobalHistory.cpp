@@ -1314,6 +1314,49 @@ nsGlobalHistory::RemoveObserver(nsIRDFObserver* aObserver)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsGlobalHistory::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  NS_PRECONDITION(aNode != nsnull, "null ptr");
+  if (! aNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
+  if (resource && IsURLInHistory(resource)) {
+    *result = (aArc == kNC_child);
+  }
+  else {
+    *result = PR_FALSE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  NS_PRECONDITION(aSource != nsnull, "null ptr");
+  if (! aSource)
+    return NS_ERROR_NULL_POINTER;
+
+  if ((aSource == kNC_HistoryRoot) ||
+      (aSource == kNC_HistoryBySite) ||
+      (aSource == kNC_HistoryByDate)) {
+    *result = (aArc == kNC_child);
+  }
+  else if (IsURLInHistory(aSource)) {
+    // If the URL is in the history, then it'll have all the
+    // appropriate attributes.
+    *result = (aArc == kNC_Date ||
+               aArc == kNC_VisitCount ||
+               aArc == kNC_Name ||
+               aArc == kNC_Referrer);
+  }
+  else {
+    *result = PR_FALSE;
+  }
+  return NS_OK; 
+}
+
 NS_IMETHODIMP
 nsGlobalHistory::ArcLabelsIn(nsIRDFNode* aNode,
                              nsISimpleEnumerator** aLabels)

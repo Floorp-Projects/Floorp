@@ -1414,6 +1414,42 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* aObserver)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+InMemoryDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+    NS_AUTOLOCK(mDataSource->mLock);
+
+    Assertion* ass = GetReverseArcs(aNode);
+    while (ass) {
+        nsIRDFResource* elbow = ass->mProperty;
+        if (elbow == aArc) {
+            *result = PR_TRUE;
+            return NS_OK;
+        }
+        ass = ass->mInvNext;
+    }
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+InMemoryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    NS_AUTOLOCK(mDataSource->mLock);
+
+    Assertion* ass = GetForwardArcs(aSource);
+    while (ass) {
+        nsIRDFResource* elbow = ass->mProperty;
+        if (elbow == aArc) {
+            *result = PR_TRUE;
+            return NS_OK;
+        }
+        ass = ass->mNext;
+    }
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 InMemoryDataSource::ArcLabelsIn(nsIRDFNode* aTarget, nsISimpleEnumerator** aResult)
 {

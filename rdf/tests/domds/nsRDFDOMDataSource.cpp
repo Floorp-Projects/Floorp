@@ -1040,11 +1040,27 @@ nsRDFDOMDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 }
 
 
+NS_IMETHODIMP 
+nsRDFDOMDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+nsRDFDOMDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+  *result = (aArc == kNC_Name ||
+             aArc == kNC_Value ||
+             aArc == kNC_Type ||
+             aArc == kNC_Child);
+  return NS_OK;
+}
+
 /* nsISimpleEnumerator ArcLabelsIn (in nsIRDFNode aNode); */
 NS_IMETHODIMP
 nsRDFDOMDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 {
-    return NS_RDF_NO_VALUE;
+  return NS_RDF_NO_VALUE;
 }
 
 
@@ -1052,17 +1068,15 @@ nsRDFDOMDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval
 NS_IMETHODIMP
 nsRDFDOMDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **_retval)
 {
-
   nsresult rv=NS_OK;
   
   nsCOMPtr<nsISupportsArray> arcs;
   rv = NS_NewISupportsArray(getter_AddRefs(arcs));
-  
   if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_alecf_
   nsXPIDLCString sourceval;
   aSource->GetValue(getter_Copies(sourceval));
-  
-#ifdef DEBUG_alecf_
   printf("ArcLabelsOut(%s)\n", (const char*)sourceval);
 #endif
   

@@ -584,6 +584,82 @@ nsRegistryDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 }
 
 
+NS_IMETHODIMP 
+nsRegistryDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRegistryDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    NS_PRECONDITION(aSource != nsnull, "null ptr");
+    if (! aSource)
+        return NS_ERROR_NULL_POINTER;
+
+    PRInt32 key = GetKey(aSource);
+    if (key == -1) {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+
+    nsresult rv;
+
+    if (aArc == kSubkeys) {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+
+    if (key != nsIRegistry::Common) {
+        // XXX In hopes that we'll all be using nsISimpleEnumerator someday
+        nsCOMPtr<nsIEnumerator> values0;
+        rv = mRegistry->EnumerateValues(key, getter_AddRefs(values0));
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsISimpleEnumerator> values;
+        rv = NS_NewAdapterEnumerator(getter_AddRefs(values), values0);
+        if (NS_FAILED(rv)) return rv;
+
+        do {
+            PRBool hasMore;
+            rv = values->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = values->GetNext(getter_AddRefs(isupports));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRegistryValue> value = do_QueryInterface(isupports);
+            NS_ASSERTION(value != nsnull, "not a registry value");
+            if (! value)
+                return NS_ERROR_UNEXPECTED;
+
+            nsXPIDLCString valueStr;
+            rv = value->GetNameUTF8(getter_Copies(valueStr));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCAutoString propertyStr(kValuePrefix);
+            propertyStr += (const char*) valueStr;
+        
+            nsCOMPtr<nsIRDFResource> property;
+            rv = gRDF->GetResource(propertyStr, getter_AddRefs(property));
+            if (NS_FAILED(rv)) return rv;
+
+            if (aArc == property) {
+                *result = PR_TRUE;
+                return NS_OK;
+            }
+        } while (1);
+    }
+
+    *result = PR_FALSE;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsRegistryDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerator **_retval)
 {

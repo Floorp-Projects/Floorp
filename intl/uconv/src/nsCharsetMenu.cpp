@@ -201,59 +201,7 @@ public:
   NS_IMETHOD SetCurrentMailCharset(const PRUnichar * aCharset);
 
   //--------------------------------------------------------------------------
-  // Interface nsIRDFDataSource [declaration]
-
-  NS_IMETHOD GetURI(char ** uri);
-
-  NS_IMETHOD GetSource(nsIRDFResource* property, nsIRDFNode* target, 
-      PRBool tv, nsIRDFResource** source);
-
-  NS_IMETHOD GetSources(nsIRDFResource* property, nsIRDFNode* target, 
-      PRBool tv, nsISimpleEnumerator** sources);
-
-  NS_IMETHOD GetTarget(nsIRDFResource* source, nsIRDFResource* property, 
-      PRBool tv, nsIRDFNode** target);
-
-  NS_IMETHOD GetTargets(nsIRDFResource* source, nsIRDFResource* property, 
-      PRBool tv, nsISimpleEnumerator** targets);
-
-  NS_IMETHOD Assert(nsIRDFResource* aSource, nsIRDFResource* aProperty, 
-      nsIRDFNode* aTarget, PRBool aTruthValue);
-
-  NS_IMETHOD Unassert(nsIRDFResource* aSource, nsIRDFResource* aProperty, 
-      nsIRDFNode* aTarget);
-
-  NS_IMETHOD Change(nsIRDFResource* aSource, nsIRDFResource* aProperty, 
-      nsIRDFNode* aOldTarget, nsIRDFNode* aNewTarget);
-
-  NS_IMETHOD Move(nsIRDFResource* aOldSource, nsIRDFResource* aNewSource, 
-      nsIRDFResource* aProperty, nsIRDFNode* aTarget);
-
-  NS_IMETHOD HasAssertion(nsIRDFResource* source, nsIRDFResource* property, 
-      nsIRDFNode* target, PRBool tv, PRBool* hasAssertion);
-
-  NS_IMETHOD AddObserver(nsIRDFObserver* n);
-
-  NS_IMETHOD RemoveObserver(nsIRDFObserver* n);
-
-  NS_IMETHOD ArcLabelsIn( nsIRDFNode* node, nsISimpleEnumerator** labels);
-
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource* source, 
-      nsISimpleEnumerator** labels);
-
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor);
-
-  NS_IMETHOD GetAllCommands(nsIRDFResource* source, nsIEnumerator** commands);
-
-  NS_IMETHOD GetAllCmds(nsIRDFResource* source, 
-      nsISimpleEnumerator** commands);
-
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray* aSources, 
-      nsIRDFResource * aCommand, nsISupportsArray* aArguments, 
-      PRBool* aResult);
-
-  NS_IMETHOD DoCommand(nsISupportsArray* aSources, nsIRDFResource*   aCommand, 
-      nsISupportsArray* aArguments);
+  NS_DECL_NSIRDFDATASOURCE
 };
 
 //----------------------------------------------------------------------------
@@ -1272,6 +1220,18 @@ NS_IMETHODIMP nsCharsetMenu::AddObserver(nsIRDFObserver* n)
 NS_IMETHODIMP nsCharsetMenu::RemoveObserver(nsIRDFObserver* n)
 {
   return mInner->RemoveObserver(n);
+}
+
+NS_IMETHODIMP 
+nsCharsetMenu::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+  return mInner->HasArcIn(aNode, aArc, result);
+}
+
+NS_IMETHODIMP 
+nsCharsetMenu::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, PRBool *result)
+{
+  return mInner->HasArcOut(source, aArc, result);
 }
 
 NS_IMETHODIMP nsCharsetMenu::ArcLabelsIn(nsIRDFNode* node, 

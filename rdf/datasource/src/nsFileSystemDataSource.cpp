@@ -87,101 +87,45 @@ static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 class FileSystemDataSource : public nsIRDFFileSystemDataSource
 {
 private:
-	nsCOMPtr<nsISupportsArray> mObservers;
+    nsCOMPtr<nsISupportsArray> mObservers;
 
     static PRInt32 gRefCnt;
 
     // pseudo-constants
-	static nsIRDFResource		*kNC_FileSystemRoot;
-	static nsIRDFResource		*kNC_Child;
-	static nsIRDFResource		*kNC_Name;
-	static nsIRDFResource		*kNC_URL;
-	static nsIRDFResource		*kNC_FileSystemObject;
-	static nsIRDFResource		*kNC_pulse;
-	static nsIRDFResource		*kRDF_InstanceOf;
-	static nsIRDFResource		*kRDF_type;
+    static nsIRDFResource		*kNC_FileSystemRoot;
+    static nsIRDFResource		*kNC_Child;
+    static nsIRDFResource		*kNC_Name;
+    static nsIRDFResource		*kNC_URL;
+    static nsIRDFResource		*kNC_FileSystemObject;
+    static nsIRDFResource		*kNC_pulse;
+    static nsIRDFResource		*kRDF_InstanceOf;
+    static nsIRDFResource		*kRDF_type;
 
 #ifdef	XP_WIN
-	static nsIRDFResource		*kNC_IEFavoriteObject;
-	static nsIRDFResource		*kNC_IEFavoriteFolder;
-	static char			*ieFavoritesDir;
-	nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
+    static nsIRDFResource		*kNC_IEFavoriteObject;
+    static nsIRDFResource		*kNC_IEFavoriteFolder;
+    static char			*ieFavoritesDir;
+    nsCOMPtr<nsIUnicodeDecoder>	mUnicodeDecoder;
 #endif
 
 #ifdef	XP_BEOS
-	static nsIRDFResource		*kNC_NetPositiveObject;
-	static char			*netPositiveDir;
+    static nsIRDFResource		*kNC_NetPositiveObject;
+    static char			*netPositiveDir;
 #endif
 
 public:
 
-	NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-			FileSystemDataSource(void);
-	virtual		~FileSystemDataSource(void);
+    FileSystemDataSource(void);
+    virtual		~FileSystemDataSource(void);
 
-	// nsIRDFDataSource methods
-
-	NS_IMETHOD	GetURI(char **uri);
-	NS_IMETHOD	GetSource(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsIRDFResource **source /* out */);
-	NS_IMETHOD	GetSources(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsISimpleEnumerator **sources /* out */);
-	NS_IMETHOD	GetTarget(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsIRDFNode **target /* out */);
-	NS_IMETHOD	GetTargets(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsISimpleEnumerator **targets /* out */);
-	NS_IMETHOD	Assert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv);
-	NS_IMETHOD	Unassert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target);
-	NS_IMETHOD	Change(nsIRDFResource* aSource,
-				nsIRDFResource* aProperty,
-				nsIRDFNode* aOldTarget,
-				nsIRDFNode* aNewTarget);
-	NS_IMETHOD	Move(nsIRDFResource* aOldSource,
-				nsIRDFResource* aNewSource,
-				nsIRDFResource* aProperty,
-				nsIRDFNode* aTarget);
-	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				PRBool *hasAssertion /* out */);
-	NS_IMETHOD	ArcLabelsIn(nsIRDFNode *node,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	ArcLabelsOut(nsIRDFResource *source,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aResult);
-	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
-	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-
-	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
-				nsIEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD	GetAllCmds(nsIRDFResource* source,
-				nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-				PRBool* aResult);
-	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
-
+    // nsIRDFDataSource methods
+    NS_DECL_NSIRDFDATASOURCE
 
     // helper methods
     static PRBool isFileURI(nsIRDFResource* aResource);
+    static PRBool isDirURI(nsIRDFResource* aSource);
 
     static nsresult GetVolumeList(nsISimpleEnumerator **aResult);
     static nsresult GetFolderList(nsIRDFResource *source, PRBool allowHidden, PRBool onlyFirst, nsISimpleEnumerator **aResult);
@@ -248,6 +192,41 @@ FileSystemDataSource::isFileURI(nsIRDFResource *r)
 		}
 	}
 	return(isFileURIFlag);
+}
+
+PRBool
+FileSystemDataSource::isDirURI(nsIRDFResource* source)
+{
+    nsresult rv;
+    const char *uri = nsnull;
+    rv = source->GetValueConst(&uri);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    nsCOMPtr<nsIURI> fileURI;
+    if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
+	return(rv);
+    if (!fileURI) return PR_FALSE;
+
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull);
+    if (NS_FAILED(rv))
+	return PR_FALSE;
+    if (!channel) return PR_FALSE;
+
+    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(channel);
+    if (!fileChannel) return PR_FALSE;
+
+    nsCOMPtr<nsIFile> aDir;
+    rv = fileChannel->GetFile(getter_AddRefs(aDir));
+    if (NS_FAILED(rv))
+	return PR_FALSE;
+
+    PRBool isDirFlag = PR_FALSE;
+
+    rv = aDir->IsDirectory(&isDirFlag);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    return isDirFlag;
 }
 
 
@@ -743,6 +722,36 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 }
 
 
+NS_IMETHODIMP 
+FileSystemDataSource::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+FileSystemDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
+{
+    if (aSource == kNC_FileSystemRoot) {
+	*result = (aArc == kNC_Child || aArc == kNC_pulse);
+    }
+    else if (isFileURI(aSource)) {
+	if (aArc == kNC_pulse) {
+	    *result = PR_TRUE;
+	}
+	else if (isDirURI(aSource)) {
+#ifdef	XP_WIN
+	    *result = isValidFolder(aSource);
+#else
+	    *result = PR_TRUE;
+#endif
+	}
+    }
+    else {
+	*result = PR_FALSE;
+    }
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsIn(nsIRDFNode *node,
@@ -756,94 +765,63 @@ FileSystemDataSource::ArcLabelsIn(nsIRDFNode *node,
 
 NS_IMETHODIMP
 FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
-                             nsISimpleEnumerator **labels /* out */)
+				   nsISimpleEnumerator **labels /* out */)
 {
-	NS_PRECONDITION(source != nsnull, "null ptr");
-	if (! source)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+	return NS_ERROR_NULL_POINTER;
 
-	NS_PRECONDITION(labels != nsnull, "null ptr");
-	if (! labels)
-		return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(labels != nsnull, "null ptr");
+    if (! labels)
+	return NS_ERROR_NULL_POINTER;
 
-	nsresult rv;
+    nsresult rv;
 
-	if (source == kNC_FileSystemRoot)
-	{
-		nsCOMPtr<nsISupportsArray> array;
-		rv = NS_NewISupportsArray(getter_AddRefs(array));
-		if (NS_FAILED(rv)) return rv;
+    if (source == kNC_FileSystemRoot) {
+	nsCOMPtr<nsISupportsArray> array;
+	rv = NS_NewISupportsArray(getter_AddRefs(array));
+	if (NS_FAILED(rv)) return rv;
 
-		array->AppendElement(kNC_Child);
-		array->AppendElement(kNC_pulse);
+	array->AppendElement(kNC_Child);
+	array->AppendElement(kNC_pulse);
 
-		nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-		if (! result)
-			return NS_ERROR_OUT_OF_MEMORY;
+	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+	if (! result)
+	    return NS_ERROR_OUT_OF_MEMORY;
 
-		NS_ADDREF(result);
-		*labels = result;
-		return NS_OK;
-	}
-	else if (isFileURI(source))
-	{
-		const	char	*uri = nsnull;
-		rv = source->GetValueConst( &uri );
-		if (NS_FAILED(rv)) return rv;
+	NS_ADDREF(result);
+	*labels = result;
+	return NS_OK;
+    }
+    else if (isFileURI(source)) {
+	nsCOMPtr<nsISupportsArray> array;
+	rv = NS_NewISupportsArray(getter_AddRefs(array));
+	if (NS_FAILED(rv)) return rv;
 
-		nsCOMPtr<nsIURI>	fileURI;
-		if (NS_FAILED(rv = NS_NewURI(getter_AddRefs(fileURI), uri)))
-			return(rv);
-		if (!fileURI)	return(NS_ERROR_UNEXPECTED);
-
-		nsCOMPtr<nsIChannel>	channel;
-		if (NS_FAILED(rv = NS_OpenURI(getter_AddRefs(channel), fileURI, nsnull, nsnull)))
-			return(rv);
-		if (!channel)	return(NS_ERROR_UNEXPECTED);
-
-		nsCOMPtr<nsIFileChannel>	fileChannel = do_QueryInterface(channel);
-		if (!fileChannel)	return(NS_ERROR_UNEXPECTED);
-
-		nsCOMPtr<nsIFile>	aDir;
-		if (NS_FAILED(rv = fileChannel->GetFile(getter_AddRefs(aDir))))
-			return(rv);
-
-		PRBool		isDirFlag = PR_FALSE;
-
-		// ignore any errors from IsDirectory()
-		// so that non-existant file URLs don't confuse the template builder
-		nsresult	temprv;
-		temprv = aDir->IsDirectory(&isDirFlag);
-
-		nsCOMPtr<nsISupportsArray> array;
-		rv = NS_NewISupportsArray(getter_AddRefs(array));
-		if (NS_FAILED(rv)) return rv;
-
-		if (isDirFlag == PR_TRUE)
-		{
+	if (isDirURI(source)) {
 #ifdef	XP_WIN
-			if (isValidFolder(source) == PR_TRUE)
-			{
-				array->AppendElement(kNC_Child);
-			}
+	    if (isValidFolder(source) == PR_TRUE)
+	    {
+		array->AppendElement(kNC_Child);
+	    }
 #else
-			array->AppendElement(kNC_Child);
+	    array->AppendElement(kNC_Child);
 #endif
-			array->AppendElement(kNC_pulse);
-		}
-
-		array->AppendElement(kRDF_type);
-
-		nsISimpleEnumerator* result = new nsArrayEnumerator(array);
-		if (! result)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		NS_ADDREF(result);
-		*labels = result;
-		return NS_OK;
+	    array->AppendElement(kNC_pulse);
 	}
 
-	return NS_NewEmptyEnumerator(labels);
+	array->AppendElement(kRDF_type);
+
+	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+	if (! result)
+	    return NS_ERROR_OUT_OF_MEMORY;
+
+	NS_ADDREF(result);
+	*labels = result;
+	return NS_OK;
+    }
+
+    return NS_NewEmptyEnumerator(labels);
 }
 
 
