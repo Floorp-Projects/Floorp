@@ -46,7 +46,7 @@
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #define INITAL_REPEAT_DELAY 250
-#define REPEAT_DELAY        10
+#define REPEAT_DELAY        25
 #else
 #define INITAL_REPEAT_DELAY 250
 #define REPEAT_DELAY        50
@@ -55,6 +55,7 @@
 nsRepeatService* nsRepeatService::gInstance = nsnull;
 
 nsRepeatService::nsRepeatService()
+: mFirstCall(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -91,14 +92,14 @@ void nsRepeatService::Start(nsITimerCallback* aCallback)
   mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
 
   if (NS_OK == rv)  {
-    mRepeatTimer->Init(this, INITAL_REPEAT_DELAY);
+    mRepeatTimer->Init(this, INITAL_REPEAT_DELAY, PR_TRUE, NS_TYPE_REPEATING_SLACK);
+    mFirstCall = PR_TRUE;
   }
 
 }
 
 void nsRepeatService::Stop()
 {
-  //printf("Stopping repeat timer\n");
   if (mRepeatTimer) {
      mRepeatTimer->Cancel();
      mRepeatTimer = nsnull;
@@ -108,19 +109,14 @@ void nsRepeatService::Stop()
 
 NS_IMETHODIMP_(void) nsRepeatService::Notify(nsITimer *timer)
 {
-   // if the repeat delay is the initial one reset it.
-  if (mRepeatTimer) {
-     mRepeatTimer->Cancel();
-  }
-
   // do callback
   if (mCallback)
     mCallback->Notify(timer);
 
   // start timer again.
-  if (mRepeatTimer) {
-     mRepeatTimer = do_CreateInstance("@mozilla.org/timer;1");
-     mRepeatTimer->Init(this, REPEAT_DELAY);
+  if (mFirstCall) {
+     mRepeatTimer->SetDelay(REPEAT_DELAY);
+     mFirstCall = PR_FALSE;
   }
 
 }

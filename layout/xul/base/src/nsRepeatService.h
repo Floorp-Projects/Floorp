@@ -68,6 +68,7 @@ protected:
 private:
   nsCOMPtr<nsITimerCallback> mCallback;
   nsCOMPtr<nsITimer>         mRepeatTimer;
+  PRBool                     mFirstCall;
   static nsRepeatService* gInstance;
 
 }; // class nsRepeatService
