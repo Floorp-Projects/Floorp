@@ -92,29 +92,13 @@
       <treechildren>
        <treeitem uri="..." persist="open" open="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#open" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell>
-             <treeindentation />
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="left" style="list-style-image: none;" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="left" style="list-style-image: none;" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Description" align="left" style="list-style-image: none;" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" align="left" style="list-style-image: none;" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" align="left" style="list-style-image: none;" />
-           </treecell>
-           <treecell>
-             <titledbutton value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate" align="left" style="list-style-image: none;" />
-           </treecell>
-
+           <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#URL"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"/>
+           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+           <treecell value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
+           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
          </treerow>
        </treeitem>
       </treechildren>
@@ -131,35 +115,13 @@
 
   <treehead>
     <treerow>
-      <treecell onclick="return doSort('NameColumn');">
-	<observes element="NameColumn" attribute="sortActive"/>
-	<observes element="NameColumn" attribute="sortDirection"/>
-      &tree.header.name.label;</treecell>
-      <treecell onclick="return doSort('URLColumn');">
-	<observes element="URLColumn" attribute="sortActive"/>
-	<observes element="URLColumn" attribute="sortDirection"/>
-      &tree.header.url.label;</treecell>
-      <treecell onclick="return doSort('ShortcutURLColumn');">
-	<observes element="ShortcutURLColumn" attribute="sortActive"/>
-	<observes element="ShortcutURLColumn" attribute="sortDirection"/>
-      &tree.header.shortcut.label;</treecell>
-      <treecell onclick="return doSort('DescriptionColumn');">
-	<observes element="DescriptionColumn" attribute="sortActive"/>
-	<observes element="DescriptionColumn" attribute="sortDirection"/>
-      &tree.header.description.label;</treecell>
-      <treecell onclick="return doSort('LastVisitColumn');">
-	<observes element="LastVisitColumn" attribute="sortActive"/>
-	<observes element="LastVisitColumn" attribute="sortDirection"/>
-      &tree.header.lastvisit.label;</treecell>
-      <treecell onclick="return doSort('AddedOnColumn');">
-	<observes element="AddedOnColumn" attribute="sortActive"/>
-	<observes element="AddedOnColumn" attribute="sortDirection"/>
-      &tree.header.addedon.label;</treecell>
-      <treecell onclick="return doSort('LastModColumn');">
-	<observes element="LastModColumn" attribute="sortActive"/>
-	<observes element="LastModColumn" attribute="sortDirection"/>
-      &tree.header.lastmod.label;</treecell>
-
+      <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');"/>
+      <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');"/>
+      <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');"/>
+      <treecell onclick="return doSort('DescriptionColumn');" value="&tree.header.description.label;"/>
+      <treecell onclick="return doSort('LastVisitColumn');" value="&tree.header.lastvisit.label;"/>
+      <treecell onclick="return doSort('AddedOnColumn');" value="&tree.header.addedon.label;"/>
+      <treecell onclick="return doSort('LastModColumn');" value="&tree.header.lastmod.label;"/>
     </treerow>
   </treehead>
 </tree>
