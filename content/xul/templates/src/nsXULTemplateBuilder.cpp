@@ -242,7 +242,8 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kNC_Column);
 
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-	nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
+        nsServiceManager::ReleaseService(kRDFContainerUtilsCID, gRDFContainerUtils);
+        nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
         NS_RELEASE(gNameSpaceManager);
     }
 
