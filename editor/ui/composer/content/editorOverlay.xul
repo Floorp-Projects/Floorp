@@ -21,11 +21,6 @@
    - Contributor(s):
    -   Ryan Cassin (rcassin@supernova.org)
   -->
-<!-- Submenus shared between main window and context window -->
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<!-- items shared between editorOverlay menus and context popups -->
-<!-- Contains submenus shared by both window and popup menus -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -36,7 +31,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
-<script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 <script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
 
   <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
@@ -70,7 +64,7 @@
     <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save" modifiers="accel"/>
     <key id="closekb"        key="&fileclose.keybinding;"  observes="cmd_close"  modifiers="accel"/>
     <key id="printkb"        key="&fileprint.keybinding;"  observes="cmd_print"  modifiers="accel"/>
-    <key id="exitkb"         key="&fileexit.keybinding;"   observes="cmd_quit"  modifiers="accel"/>
+   	<key id="key_quit"/>
     <key id="key_undo"/>
     <key id="key_redo"/>
     <key id="key_cut"/>
@@ -114,7 +108,7 @@
 -->
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
     
-    <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
+    <command id="cmd_quit"         oncommand="goDoCommand('cmd_quit')"/>
   </commandset>
 
   <commandset id="composerMenuItems"
@@ -280,48 +274,43 @@
     <command id="Editor:Font:Size" fontsize=""/>
   </broadcasterset>
 
-  <!-- Editor menu items -->
+  <!-- File  menu items -->
+  <!-- Note: globalOverlay.xul uses menu_newEditor, but we want different menu item text
+             so we use our own id, value, and accesskey but connect to the same global key and broadcaster node
+   -->
   <menu id="fileMenu" value="&fileMenu.label;" accesskey="&filemenu.accesskey;">
-    <menupopup id="fileMenu_Popup">
-      <!-- Note: globalOverlay.xul uses menu_newEditor, but we want different menu item text
-                 so we use our own id, value, and accesskey but connect to the same global key and broadcaster node
-       -->
+    <menupopup id="menu_FilePopup">
       <menuitem id="menu_newBlankPage" value="&newBlankPageCmd.label;" accesskey="&newBlankPage.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
-        <menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
-          <menupopup id="menu_NewPopup">
-            <!-- From globalOverlay.xul -->
-<!-- Probably won't implement these
-            <menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
-            <menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
-            <menuseparator/>
--->
-            <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-          </menupopup>
-        </menu>
+      <menu id="menu_editNew" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
+        <menupopup id="menu_NewPopup">
+          <!-- From globalOverlay.xul -->
+          <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
+        </menupopup>
+      </menu>
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" value="&openFileCmd.label;"/>
       <menu accesskey="&filerecentmenu.accesskey;" value="&fileRecentMenu.label;" oncreate="BuildRecentMenu(false)">
-        <!-- Items appended at runtime -->
         <menupopup id="menupopup_RecentFiles"/>
+          <!-- menuitems appended at runtime -->
       </menu>
-      <menuseparator />
+      <menuseparator/>
       <menuitem accesskey="&fileclose.accesskey;"      key="closekb"        observes="cmd_close"/>
       <menuitem accesskey="&filesave.accesskey;"       key="savekb"         observes="cmd_save"/>
       <menuitem accesskey="&filesaveas.accesskey;"                          observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;"                   observes="cmd_saveAsCharset"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
       <menuseparator />
-      <!-- FRAME, LINK should go here, but nav must put them in global files -->
-      <menuitem id="menu_preview"      value="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
-      <!-- Editor needs a different menuItem and cmd node than other module's send page (we need to prompt for filesave) -->
-      <menuitem id="menu_editSendPage" accesskey="&sendPage.accesskey;"    observes="cmd_editSendPage"/>
-      <menuseparator />
-      <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
-      <menuitem accesskey="&fileprint.accesskey;" id="printMenuItem" key="printkb" observes="cmd_print" value="&printCmd.label;"/>
-      <menuseparator />
-      <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="cmd_quit"/>
+      <menuitem value="&previewCmd.label;"  accesskey="&filepreview.accesskey;" observes="cmd_preview"/>
+      <menuitem accesskey="&sendPage.accesskey;"       observes="cmd_editSendPage"/>
+      <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
+      <menuitem accesskey="&fileprint.accesskey;"      observes="cmd_print" value="&printCmd.label;"/>
+      <menuseparator/>
     </menupopup>
   </menu>
+
+      <!-- FRAME, LINK should go here, but nav must put them in global files first -->
+      <!-- Editor needs a different menuItem and cmd node than other module's send page (we need to prompt for filesave) -->
+      <!-- The Exit (or Quit) menu item is added at bottom from globalOverlay -->
 
   <menu id="editMenu" value="&editMenu.label;" accesskey="&editmenu.accesskey;">
     <menupopup id="edEditMenuPopup" oncreate="EditorInitEditMenu()">
