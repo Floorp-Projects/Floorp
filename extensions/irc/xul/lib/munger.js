@@ -74,7 +74,9 @@ function mng_munge (text, containerTag, eventDetails)
     var ary;
     
     if (!containerTag)
-        containerTag = document.createElement (tagName);
+        containerTag =
+            document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                      this.tagName);
 
     if (this.enabled)
     {
@@ -117,8 +119,9 @@ function mng_munge (text, containerTag, eventDetails)
                     this.munge (text.substr(0,startPos), containerTag,
                                 eventDetails);
                     
-                    var subTag = document.createElement
-                        (this.entries[entry].tagName);
+                    var subTag = document.createElementNS
+                        ("http://www.w3.org/TR/REC-html40",
+                         this.entries[entry].tagName);
 
                     subTag.setAttribute ("class", this.entries[entry].className);
                     subTag.appendChild (document.createTextNode (ary[1]));

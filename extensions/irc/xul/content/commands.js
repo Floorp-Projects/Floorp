@@ -61,10 +61,10 @@ function addCommands(commandObject)
          "specified.  Exits ChatZilla after disconnecting.");
 
     add ("clear", "onInputClear", "",
-         "Clear the current viewport, discarding *all* content.");
+         "Clear the current view, discarding *all* content.");
     
     add ("delete", "onInputDelete", "",
-         "Clear the current viewport, discarding *all* content, and drop it's " +
+         "Clear the current view, discarding *all* content, and drop it's " +
          "icon from the toolbar.");
 
     add ("hide", "onInputHide", "",

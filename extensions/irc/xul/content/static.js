@@ -238,7 +238,8 @@ function insertLink (matchText, containerTag)
     else
         href = matchText;
     
-    var anchor = document.createElement ("html:a");
+    var anchor = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                           "html:a");
     anchor.setAttribute ("href", href);
     anchor.setAttribute ("target", "other_window");
     if (matchText.length >= client.MAX_WORD_DISPLAY)
@@ -273,7 +274,8 @@ function insertSmiley (emoticon, containerTag)
 
     if (src)
     {
-        var img = document.createElement ("html:img");
+        var img = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                            "html:img");
         img.setAttribute ("src", client.IMAGEDIR + src);
         containerTag.appendChild (img);
     }
@@ -552,7 +554,8 @@ function newInlineText (data, className, tagName)
     if (typeof tagName == "undefined")
         tagName = "html:span";
     
-    var a = document.createElement (tagName);
+    var a = document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                      tagName);
     a.setAttribute ("class", className);
 
     switch (typeof data)
@@ -632,7 +635,9 @@ function addHistory (source, obj)
 {
     if (!source.messages)
     {
-        source.messages = document.createElement ("html:table");
+        source.messages =
+            document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                      "html:table");
         source.messages.setAttribute ("class", "chat-view");
         source.messages.setAttribute ("cellpadding", "0");
         source.messages.setAttribute ("cellspacing", "0");
@@ -921,7 +926,9 @@ function cli_display (message, msgtype)
     for (var l in ary)
     {
         msgData.appendChild(newInlineText (ary[l]));
-        msgData.appendChild (document.createElement ("html:br"));
+        msgData.appendChild
+            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                       "html:br"));
     }
 
     msgRow.appendChild (msgData);
@@ -963,7 +970,9 @@ function net_display (message, msgtype)
     for (var l in ary)
     {
         msgData.appendChild(newInlineText(ary[l]));
-        msgData.appendChild (document.createElement ("html:br"));
+        msgData.appendChild
+            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                       "html:br"));
     }
 
     msgRow.appendChild (msgData);
@@ -1057,7 +1066,9 @@ function user_display(message, msgtype, sourceNick)
                 client.munger.munge(ary[l], msgData, getObjectDetails (this));
             else
                 msgData.appendChild(newInlineText (ary[l]));
-            msgData.appendChild (document.createElement ("html:br"));
+            msgData.appendChild
+                (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                           "html:br"));
         }
 
         msgRow.appendChild (msgData);
@@ -1206,7 +1217,9 @@ function chan_display (message, msgtype, nick)
             client.munger.munge(ary[l], msgData, getObjectDetails (this));
         else
             msgData.appendChild(newInlineText (ary[l]));
-        msgData.appendChild (document.createElement ("html:br"));
+        msgData.appendChild
+            (document.createElementNS ("http://www.w3.org/TR/REC-html40",
+                                       "html:br"));
     }
 
     msgRow.appendChild (msgData);
