@@ -2143,6 +2143,18 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       result = PR_FALSE;
       break;
     }
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+                                 eReflowReason_Resize);
+    kidFrame->WillReflow(*aPresContext);
+    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+
+    // Did the child fit?
+    if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
+      // The child is too wide to fit in the available space, and it's
+      // not our first child
+      result = PR_FALSE;
+      break;
+    }
     nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                       eReflowReason_Resize);
     nsIHTMLReflow* htmlReflow;
@@ -2395,16 +2407,24 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
          (eStyleUnit_Percent==cellPosition->mWidth.GetUnit())) {
       // compute the width per column spanned
       PRInt32 colSpan = GetEffectiveColSpan(aCellFrame->GetColIndex(), aCellFrame);
+      if (PR_TRUE==gsDebug)
+        printf("for col %d with colspan %d\n",aCellFrame->GetColIndex(), colSpan);
       for (PRInt32 i=0; i<colSpan; i++)
       {
         // get the appropriate column frame
         nsTableColFrame *colFrame;
         GetColumnFrame(i+aCellFrame->GetColIndex(), colFrame);
+        if (PR_TRUE==gsDebug)
+          printf("  for col %d\n",i+aCellFrame->GetColIndex()); 
         if (nsTableColFrame::eWIDTH_SOURCE_CELL != colFrame->GetWidthSource()) 
         {
+          if (PR_TRUE==gsDebug)
+            printf("  width not yet set from a cell...\n");
           if ((1==colSpan) ||
               (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN != colFrame->GetWidthSource()))
           {
+            if (PR_TRUE==gsDebug)
+              printf("  colspan was 1 or width was not set from a span\n");
             // get the column style and set the width attribute
             nsIStyleContext *colSC;
             colFrame->GetStyleContext(aPresContext, colSC);
@@ -2415,17 +2435,29 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext  * aPresContext,
             {
               nscoord width = cellPosition->mWidth.GetCoordValue();
               colPosition->mWidth.SetCoordValue(width/colSpan);
+              if (PR_TRUE==gsDebug)
+                printf("  col fixed width set to %d ", (width/colSpan));
             }
             else
             {
               float width = cellPosition->mWidth.GetPercentValue();
               colPosition->mWidth.SetPercentValue(width/colSpan);
+              if (PR_TRUE==gsDebug)
+                printf("  col percent width set to %d ", (width/colSpan));
             }
             // set the column width-set-type
             if (1==colSpan)
+            {
               colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
+              if (PR_TRUE==gsDebug)
+                printf("  source=cell\n");
+            }
             else
+            {
               colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN);
+              if (PR_TRUE==gsDebug)
+                printf("  source=cell_with_span\n");
+            }
           }
         }
       }
