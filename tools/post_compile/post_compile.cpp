@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <getopt.h>
+#include <byteswap.h>
 
 //----------------------------------------------------------------------
 
@@ -236,11 +237,16 @@ enum eInstruction {
 const int kBaseFormatMask = (1<<5) -1;
 enum eFormat {
     kfNone, kfreg, kfrm32, kfrm32_r32, kfr32_rm32, 
-    kfmImm8   = 1 << 5,
-    kfmImm32  = 1 << 6,
+    kfmImm8     = 1 << 5,   // set on if imm8
+    kfmImm32    = 1 << 6,   // set on if imm32
+    kfmSize8    = 1 << 7,   // set on if 8 bit
+    kfmSize16   = 1 << 8,   // set on if 16 bit
 };
 
 typedef unsigned char   uchar;
+
+
+//********************************  Base OpCode Classes  **********************
 
 
 struct CInstruction {
@@ -261,10 +267,12 @@ struct CInstruction {
     long            fImm32;
 
     virtual void    output_text( void );
+    virtual void    optimize( void )    {}
     virtual int     generate_opcode( uchar *buffer );
 
     int             am_rm32( uchar *pCode, eFormat *format );
     int             am_rm32_reg( uchar *pCode, eFormat *format );
+    int             am_encode( uchar *buffer, eRegister reg1, eFormat format );
 };
 
 
@@ -304,6 +312,8 @@ struct CPop:CInstruction {
         fSize += am_rm32( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -329,6 +339,8 @@ struct CPush:CInstruction {
         fSize += am_rm32( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -339,6 +351,8 @@ struct CInc:CInstruction {
         fSize += am_rm32( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -349,6 +363,8 @@ struct CMov:CInstruction {
         fSize += am_rm32_reg( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -359,6 +375,8 @@ struct CCmp:CInstruction {
         fSize += am_rm32_reg( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -369,6 +387,8 @@ struct CAdd:CInstruction {
         fSize += am_rm32_reg( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -379,6 +399,9 @@ struct CSub:CInstruction {
         fSize += am_rm32_reg( pCode, &format );
         fFormat = format;
     }
+
+    virtual void    optimize( void );
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -389,6 +412,8 @@ struct CXor:CInstruction {
         fSize += am_rm32_reg( pCode, &format );
         fFormat = format;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -410,6 +435,8 @@ struct CNop:CInstruction {
         fInstr = knop;
         fSize = 1;
     }
+
+    virtual int     generate_opcode( uchar *buffer ) { buffer[0] = 0x90; return 1; }
 };
 
 
@@ -419,6 +446,8 @@ struct CRet:CInstruction {
         fInstr = kret;
         fSize = 1;
     }
+
+    virtual int     generate_opcode( uchar *buffer );
 };
 
 
@@ -430,6 +459,9 @@ struct CLea:CInstruction {
         fFormat = format;
     }
 };
+
+
+//*************************  Address Mode En/Decoding  ************************
 
 
 /*
@@ -452,13 +484,13 @@ int CInstruction::am_rm32( uchar *pCode, eFormat *format )
 
     if ((reg & 0xC0) == 0x80) // disp32
     {
-        fDisp32 = *(long*)pCode;
+        fDisp32 = bswap_32( *(long*)pCode );
         pCode += 4;
         isize += 4;
     }
     else if ((reg & 0xC0) == 0x40) // disp8
     {
-        fDisp32 = *pCode;
+        fDisp32 = *(char*)pCode;    // need it as a signed value
         pCode++;
         isize++;
     }
@@ -471,14 +503,14 @@ int CInstruction::am_rm32( uchar *pCode, eFormat *format )
 
     if (*format & kfmImm8)
     {
-        fImm32 = *pCode;
+        fImm32 = *(char*)pCode; // need it as a signed value
         pCode++;
         isize++;
     }
 
     if (*format & kfmImm32)
     {
-        fImm32 = *(long*)pCode;
+        fImm32 = bswap_32( *(long*)pCode );
         pCode+=4;
         isize+=4;
     }
@@ -494,83 +526,46 @@ int CInstruction::am_rm32_reg( uchar *pCode, eFormat *format )
 }
 
 
-#if 0
-/*
-*   theCode points to the first register field
-*/
-CInstruction *am_rm32_imm32( eInstruction instr, unsigned char *theCode )
+int CInstruction::am_encode( uchar *buffer, eRegister reg1, eFormat format )
 {
-    CInstruction    *retInstr = new CInstruction;
-    am_rm32( retInstr, theCode );
-    retInstr->src = kNoReg;     // imm32 is the src
-    retInstr->instr = instr;
-    retInstr->srcData = *(long*)(theCode + retInstr->isize-1);
-    retInstr->isize += 4;       // add one for the imm32
+    int     isize = 0;
+
+    if (fDisp32 == 0)
+    {
+        *buffer = 0xC0 | (reg1 << 3) | fReg2;
+        isize = 1;
+    }
+    else if ( (fDisp32 >= -128) && (fDisp32 <= 127) )
+    {
+        *buffer = 0x40 | (reg1 << 3) | fReg2;
+        *(buffer+1) = (uchar)fDisp32;
+        isize = 2;
+    }
+    else
+    {
+        *buffer = 0x40 | (reg1 << 3) | fReg2;
+        long bsDisp32 = bswap_32( fDisp32 );
+        memcpy( buffer+1, &bsDisp32, 4 );
+        isize = 5;
+    }
+
+    if (format & kfmImm8)
+    {
+        buffer[isize] = (uchar)fImm32;
+        isize++;
+    }
+    else if (format & kfmImm32)
+    {
+        long bsImm32 = bswap_32( fImm32 );
+        memcpy( buffer+isize, &bsImm32, 4 );
+        isize += 4;
+    }
+
+    return isize;
 }
 
 
-/*
-*   theCode points to the first register field
-*/
-CInstruction *am_rm32_imm8( eInstruction instr, unsigned char *theCode )
-{
-    CInstruction    *retInstr = new CInstruction;
-    am_rm32( retInstr, theCode );
-    retInstr->src = kNoReg;     // imm8 is the src
-    retInstr->instr = instr;
-    retInstr->srcData = *(theCode + retInstr->isize-1);
-    retInstr->isize += 1;       // add one for the imm8
-}
-
-
-CInstruction *am_rm32_reg( eInstruction instr, unsigned char *theCode )
-{
-    CInstruction    *retInstr = new CInstruction;
-    am_rm32( retInstr, theCode );
-    retInstr->instr = instr;
-}
-
-
-CInstruction *am_non_reg( eInstruction instr, eRegister reg )
-{
-    CInstruction    *retInstr = new CInstruction;
-    retInstr->isize = 1;
-    retInstr->instr = instr;
-    retInstr->src = reg;
-    retInstr->dest = kNoReg;
-}
-
-
-CInstruction *am_non_non( eInstruction instr ) 
-{
-    CInstruction    *retInstr = new CInstruction;
-    retInstr->isize = 1;
-    retInstr->instr = instr;
-    retInstr->src = kNoReg;
-    retInstr->dest = kNoReg;
-}
-
-
-CInstruction *am_imm8( eInstruction instr, unsigned char *theCode )
-{
-    CInstruction    *retInstr = new CInstruction;
-    retInstr->isize = 2;
-    retInstr->instr = instr;
-    retInstr->src = kNoReg;
-    retInstr->dest = kNoReg;
-    // ek need to get the imm8 data into the data structure
-}
-
-
-CInstruction *am_reg_rm32( eInstruction instr, unsigned char *theCode )
-{
-    CInstruction    *retInstr = new CInstruction;
-    am_rm32( retInstr, theCode );
-    retInstr->instr = instr;
-// ek need to reverse the src and dest
-}
-
-#endif
+//********************************** OpCode generators ************************
 
 
 /*
@@ -578,9 +573,253 @@ CInstruction *am_reg_rm32( eInstruction instr, unsigned char *theCode )
 */
 int CInstruction::generate_opcode( uchar *buffer )
 {
-    buffer[0] = 0xFF;
-    return 1;
+    buffer[0] = 0x90;   // make the default NOP
+    return 0;
 }
+
+
+int CPop::generate_opcode( uchar *buffer )
+{
+    if (fFormat == kfreg)
+    {
+        buffer[0] = 0x58 | fReg1;
+        return 1;
+    }
+}
+
+
+int CPush::generate_opcode( uchar *buffer )
+{
+    if (fFormat == kfreg)
+    {
+        buffer[0] = 0x50 | fReg1;
+        return 1;
+    }
+}
+
+
+int CRet::generate_opcode( uchar *buffer )
+{
+    if (fFormat == kfNone)
+    {
+        buffer[0] = 0xC3;
+        return 1;
+    }
+}
+
+
+int CMov::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+
+    if (format == kfrm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0xC6;
+        else
+            buffer[0] = 0xC7;
+    }
+    else if (format == kfrm32_r32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x88;
+        else
+            buffer[0] = 0x89;
+    }
+    else if (format == kfr32_rm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x8A;
+        else
+            buffer[0] = 0x8B;
+    }
+
+    isize += am_encode( &buffer[1], fReg1, fFormat );
+    return isize;
+}
+
+
+int CInc::generate_opcode( uchar *buffer )
+{
+    if (fFormat == kfreg)
+    {
+        buffer[0] = 0x40 | fReg1;
+        return 1;
+    }
+
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+ 
+    if (format == kfrm32)
+    {
+        if (kfmSize8 & fFormat)
+        {
+            buffer[0] = 0xFE;
+            isize += am_encode( &buffer[1], (eRegister)0, fFormat );
+        }
+        else if (kfmSize16 & fFormat)
+        {
+            buffer[0] = 0xFF;
+            isize += am_encode( &buffer[1], (eRegister)0, fFormat );
+        }
+        else
+        {
+            buffer[0] = 0xFF;
+            isize += am_encode( &buffer[1], (eRegister)6, fFormat );
+        }
+        return isize;
+    }
+ 
+    return isize;
+}
+
+
+int CCmp::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+
+    if (format == kfrm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x80;
+        else if (fFormat & kfmImm8)
+            buffer[0] = 0x83;
+        else
+            buffer[0] = 0x81;
+
+        isize += am_encode( &buffer[1], (eRegister)7, fFormat );
+        return isize;
+    }
+    else if (format == kfrm32_r32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x38;
+        else
+            buffer[0] = 0x39;
+    }
+    else if (format == kfr32_rm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x3A;
+        else
+            buffer[0] = 0x3B;
+    }
+
+    isize += am_encode( &buffer[1], fReg1, fFormat );
+    return isize;
+}
+
+
+int CXor::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+
+    if (format == kfrm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x80;
+        else if (fFormat & kfmImm8)
+            buffer[0] = 0x83;
+        else
+            buffer[0] = 0x81;
+
+        isize += am_encode( &buffer[1], (eRegister)6, fFormat );
+        return isize;
+    }
+    else if (format == kfrm32_r32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x30;
+        else
+            buffer[0] = 0x31;
+    }
+    else if (format == kfr32_rm32)
+    {
+        if (fFormat & kfmSize8)
+            buffer[0] = 0x32;
+        else
+            buffer[0] = 0x33;
+    }
+
+    isize += am_encode( &buffer[1], fReg1, fFormat );
+    return isize;
+}
+
+
+int CAdd::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+
+    if (format == kfrm32)
+    {
+        buffer[0] = 0x01;
+        isize += am_encode( &buffer[1], (eRegister)0, fFormat );
+        return isize;
+    }
+
+    return isize;
+}
+
+
+void CSub::optimize()
+{
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+    eFormat isize = (eFormat)((int)fFormat & (kfmSize8 | kfmSize16 ));
+ 
+    if (format == kfrm32)
+    {
+        if (kfmSize8 & isize)
+        {
+            fFormat = (eFormat)(format | kfmImm8 | kfmSize8);
+        }
+        else
+        {
+            if ( (fImm32 >= -128) && (fImm32 <= 127) )
+            {
+                fFormat =(eFormat)(format | kfmImm8 | isize);
+            }
+            else
+            {
+                fFormat =(eFormat)(format | kfmImm32 | isize);
+            }
+        }
+    }
+}
+
+
+int CSub::generate_opcode( uchar *buffer )
+{
+    int     isize = 1;
+    eFormat format = (eFormat)(kBaseFormatMask & (int)fFormat);
+ 
+    if (format == kfrm32)
+    {
+        if (kfmSize8 & fFormat)
+        {
+            buffer[0] = 0x80;
+            isize += am_encode( &buffer[1], (eRegister)5, fFormat );
+            return isize;
+        }
+        else
+        {
+            if (fFormat | kfmImm8)
+                buffer[0] = 0x83;
+            else
+                buffer[0] = 0x81;
+            isize += am_encode( &buffer[1], (eRegister)5, fFormat );
+            return isize;
+        }
+    }
+
+    return isize;
+}
+
+
+//*********************************** Mneumonic Outputers *********************
 
 
 void CInstruction::output_text( void )
@@ -668,6 +907,9 @@ CInstruction* get_next_instruction( uchar *pCode )
         case 0x83:
             switch (DIGIT_MAP[*reg])
             {
+                case 0:
+                    retInstr = new CAdd( reg, (eFormat)(kfrm32 | kfmImm8) );
+                    break;
                 case 5:
                     retInstr = new CSub( reg, (eFormat)(kfrm32 | kfmImm8) );
                     break;
@@ -713,7 +955,7 @@ CInstruction* get_next_instruction( uchar *pCode )
             switch (DIGIT_MAP[*reg])
             {
                 case 0:
-                    retInstr = new CInc( reg, kfrm32 );
+                    retInstr = new CInc( reg, eFormat(kfrm32 | kfmSize16) );
                     break;
                 case 6:
                     retInstr = new CPush( reg, kfrm32 );
