@@ -44,6 +44,7 @@
 <!-- For minimum versions -->
 <!ENTITY min-mysql-ver "3.23.41">
 <!ENTITY min-perl-ver "5.6.0">
+<!ENTITY min-perl-ver-win "5.8.1">
 <!ENTITY min-template-ver "2.08">
 <!ENTITY min-file-temp-ver "any">
 <!ENTITY min-appconfig-ver "1.52">

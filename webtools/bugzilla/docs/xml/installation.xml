@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.74 2004/07/23 22:02:37 bugreport%peshkin.net Exp $ -->
+<!-- $Id: installation.xml,v 1.75 2004/09/14 05:48:54 justdave%bugzilla.org Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -54,7 +54,8 @@
     <procedure>
       <step>
         <para><link linkend="install-perl">Install Perl</link>
-        (&min-perl-ver; or above)
+        (&min-perl-ver; or above for non-Windows platforms; &min-perl-ver-win;
+        for Windows)
         </para>
       </step>
       <step>

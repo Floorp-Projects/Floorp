@@ -24,7 +24,8 @@ Dependency Requirements
 Minimum software requirements:
 
   MySQL v3.23.41         (changed from 2.16)
-  Perl v5.6.0            (changed from 2.16)
+  Perl v5.6.0            (changed from 2.16)  (Non-Windows platforms)
+  ActiveState Perl v5.8.1                     (Windows only)
 
 Required Perl modules:
 
