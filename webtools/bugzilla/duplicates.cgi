@@ -191,13 +191,17 @@ $vars->{'changedsince'} = $changedsince;
 $vars->{'maxrows'} = $maxrows;
 $vars->{'openonly'} = $openonly;
 $vars->{'reverse'} = $reverse;
+$vars->{'format'} = $::FORM{'format'};
 $vars->{'product'} = $product;
 $vars->{'products'} = \@::legal_product;
 
-print "Content-type: text/html\n\n";
+
+my $format = ValidateOutputFormat($::FORM{'format'}, "duplicates", "reports");
+ 
+print "Content-Type: $format->{'contenttype'}\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("reports/duplicates.html.tmpl", $vars)
+$template->process("reports/$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());
 
 

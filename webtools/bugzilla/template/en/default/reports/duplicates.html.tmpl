@@ -20,18 +20,6 @@
   #%]
 
 [%# INTERFACE:
-  # bugs: list of hashes. May be empty. Each hash has nine members:
-  #   id: integer. The bug number
-  #   count: integer. The number of dupes
-  #   delta: integer. The change in count in the last $changedsince days
-  #   component: string. The bug's component
-  #   bug_severity: string. The bug's severity.
-  #   op_sys: string. The bug's reported OS.
-  #   target_milestone: string. The bug's TM.
-  #   short_desc: string. The bug's summary.
-  #   bug_status: string. The bug's status.
-  #   
-  # bug_ids: list of integers. May be empty. The IDs of the bugs in $bugs.
   # products: list of strings. The products this user can see.
   #  
   # sortby: string. the column on which we are sorting the buglist.
@@ -40,6 +28,9 @@
   # changedsince: integer. The number of days ago for the changedsince column.
   # openonly: boolean. True if we are only showing open bugs.    
   # product: string. Restrict to this product only.
+  #
+  # Additionally, you need to fulfill the interface to
+  # duplicates-table.html.tmpl.
   #%]
  
 [% IF product %]
@@ -56,99 +47,7 @@
   <a href="#params">Change parameters</a>
 </p>
 
-[%# *** Column Headers *** %]
-
-<table border>
-  <tr BGCOLOR="#CCCCCC">
-    [% FOREACH column = [ { name => "id", description => "Bug #" },
-                          { name => "count", description => "Dupe<br>Count" },
-                          { name => "delta", 
-                      description => "Change in last<br>$changedsince day(s)" },
-                          { name => "component", description => "Component" },
-                          { name => "bug_severity", description => "Severity" },
-                          { name => "op_sys", description => "Op Sys" }, 
-                          { name => "target_milestone", 
-                            description => "Target<br>Milestone" },
-                          { name => "short_desc", description => "Summary" } ] 
-     %]
-                          
-      [%# Small hack to keep delta column out if we don't need it %]
-      [% NEXT IF column.name == "delta" AND NOT dobefore %]                     
-
-      <td>
-        <center>
-          <b>
-            [% bug_ids_string = bug_ids.join(',') %]
-            <a href="duplicates.cgi?sortby=[% column.name %]
-              [% "&reverse=1" IF NOT reverse AND sortby == column.name %]
-              [% "&maxrows=$maxrows" IF maxrows %]
-              [% "&changedsince=$changedsince" IF changedsince %]
-              [% "&openonly=1" IF openonly %]
-              [% "&product=$product" IF product %]
-              [% "&bug_id=$bug_ids_string&sortvisible=1" IF sortvisible %]">
-              [% column.description %]</a>
-          </b>
-        </center>
-      </td>
-    [% END %]
-  </tr>
-  
-[% IF NOT sortby %]
-  [% sortby = "count"; reverse = "1" %]
-[% END %]
-
-[% IF sortby == "id" OR sortby == "count" OR sortby == "delta" %]
-  [%# Numeric sort %]
-  [% sortedbugs = bugs.nsort(sortby) %]
-[% ELSE %]
-  [% sortedbugs = bugs.sort(sortby) %]
-[% END %]
-
-[% IF reverse %]
-  [% bugs = sortedbugs.reverse %]
-[% ELSE %]
-  [% bugs = sortedbugs %]
-[% END %]
-
-[%# *** Buglist *** %]
-
-[%# We need to keep track of the bug IDs we are actually displaying, because
-  # if the user decides to sort the visible list, we need to know what that
-  # list actually is. %]
-[% vis_bug_ids = [] %]
-
-[% FOREACH bug = bugs %]
-  [% LAST IF loop.index() >= maxrows %]
-  [% vis_bug_ids.push(bug.id) %]      
-
-  <tr>
-    <td>
-      <center>
-        [% "<strike>" IF bug.resolution != "" %]
-        <A HREF="show_bug.cgi?id=[% bug.id %]">[% bug.id %]</a>
-        [% "</strike>" IF bug.resolution != "" %]
-      </center>
-    </td>
-
-    <td>
-      <center>
-        [% bug.count %]
-      </center>
-    </td>
-
-    [% IF dobefore %]
-      <td><center>[% bug.delta %]</center></td>
-    [% END %]
-
-    <td>[% bug.component %]</td>
-    <td><center>[% bug.bug_severity %]</center></td>
-    <td><center>[% bug.op_sys %]</center></td>
-    <td><center>[% bug.target_milestone %]</center></td>
-    <td>[% bug.short_desc FILTER html %]</td>
-  </tr>
-[% END %]
-
-</table>
+[% PROCESS "reports/duplicates-table.html.tmpl" %]
 
 <br>
 <br>
