@@ -28,3 +28,5 @@ ac_add_options --disable-necko-disk-cache
 ac_add_options --disable-oji
 ac_add_options --disable-view-source
 ac_add_options --disable-logging
+ac_add_options --disable-plugins
+ac_add_options --disable-cookies
