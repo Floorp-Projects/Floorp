@@ -2069,7 +2069,7 @@ nsresult nsWindow::SetIcon()
   static GdkBitmap *w_mask   = nsnull;
   static GdkPixmap *w_minipixmap = nsnull;
   static GdkBitmap *w_minimask = nsnull;
-  static nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  nsSpecialSystemDirectory sysDir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
 
   GtkStyle         *w_style;
 
