@@ -3765,7 +3765,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
             aRenderingContext.SetColor(colors[0]);
           } else {
             aRenderingContext.SetColor(MakeBevelColor(aSide, border_Style, bgColor->mBackgroundColor, sideColor, 
-                                       !MOZ_BG_BORDER(border_Style));
+                                       !MOZ_BG_BORDER(border_Style)));
           }
         }
       case NS_STYLE_BORDER_STYLE_DOTTED:
