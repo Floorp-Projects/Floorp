@@ -139,11 +139,11 @@ class NativeScript extends NativeFunction implements Script
         initPrototypeMethod(SCRIPT_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(SCRIPT_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -181,7 +181,7 @@ class NativeScript extends NativeFunction implements Script
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private static NativeScript realThis(Scriptable thisObj, IdFunction f)
+    private static NativeScript realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if (!(thisObj instanceof NativeScript))
             throw incompatibleCallError(f);

@@ -37,7 +37,7 @@ package org.mozilla.javascript.xmlimpl;
 
 import org.mozilla.javascript.*;
 
-class XMLCtor extends IdFunction
+class XMLCtor extends IdFunctionObject
 {
     private static final Object XMLCTOR_TAG = new Object();
 
@@ -233,11 +233,11 @@ class XMLCtor extends IdFunction
         initPrototypeMethod(XMLCTOR_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(XMLCTOR_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {

@@ -165,16 +165,22 @@ public class NativeArray extends IdScriptableObject
         initPrototypeMethod(ARRAY_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(ARRAY_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
-          case Id_constructor:
-            return jsConstructor(cx, scope, args, f, thisObj == null);
+          case Id_constructor: {
+            boolean inNewExpr = (thisObj == null);
+            if (!inNewExpr) {
+                // IdFunctionObject.construct will set up parent, proto
+                return f.construct(cx, scope, args);
+            }
+            return jsConstructor(cx, scope, args);
+          }
 
           case Id_toString:
             return toStringHelper(cx, scope, thisObj,
@@ -341,14 +347,9 @@ public class NativeArray extends IdScriptableObject
      * See ECMA 15.4.1,2
      */
     private static Object jsConstructor(Context cx, Scriptable scope,
-                                        Object[] args, IdFunction ctorObj,
-                                        boolean inNewExpr)
+                                        Object[] args)
         throws JavaScriptException
     {
-        if (!inNewExpr) {
-            // FunctionObject.construct will set up parent, proto
-            return ctorObj.construct(cx, scope, args);
-        }
         if (args.length == 0)
             return new NativeArray();
 

@@ -98,7 +98,7 @@ final class NativeString extends IdScriptableObject
         return super.getInstanceIdValue(id);
     }
 
-    protected void fillConstructorProperties(IdFunction ctor)
+    protected void fillConstructorProperties(IdFunctionObject ctor)
     {
         addIdFunctionProperty(ctor, STRING_TAG, ConstructorId_fromCharCode,
                               "fromCharCode", 1);
@@ -148,11 +148,11 @@ final class NativeString extends IdScriptableObject
         initPrototypeMethod(STRING_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(STRING_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -295,7 +295,7 @@ final class NativeString extends IdScriptableObject
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private static NativeString realThis(Scriptable thisObj, IdFunction f)
+    private static NativeString realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if (!(thisObj instanceof NativeString))
             throw incompatibleCallError(f);

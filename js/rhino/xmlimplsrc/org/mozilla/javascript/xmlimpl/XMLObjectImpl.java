@@ -388,11 +388,11 @@ abstract class XMLObjectImpl extends XMLObject
         int arity;
         switch (id) {
           case Id_constructor: {
-            IdFunction ctor;
+            IdFunctionObject ctor;
             if (this instanceof XML) {
                 ctor = new XMLCtor((XML)this, XMLOBJECT_TAG, id, 1);
             } else {
-                ctor = new IdFunction(this, XMLOBJECT_TAG, id, 1);
+                ctor = new IdFunctionObject(this, XMLOBJECT_TAG, id, 1);
             }
             initPrototypeConstructor(ctor);
             return;
@@ -454,12 +454,12 @@ abstract class XMLObjectImpl extends XMLObject
      * @return
      * @throws JavaScriptException
      */
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
         if (!f.hasTag(XMLOBJECT_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -629,7 +629,7 @@ abstract class XMLObjectImpl extends XMLObject
      * @param f
      * @return
      */
-    private XMLObjectImpl realThis(Scriptable thisObj, IdFunction f)
+    private XMLObjectImpl realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if(!(thisObj instanceof XMLObjectImpl))
             throw incompatibleCallError(f);

@@ -47,7 +47,7 @@ import java.lang.reflect.*;
 import java.io.*;
 import java.util.*;
 
-public final class JavaAdapter implements IdFunctionMaster
+public final class JavaAdapter implements IdFunctionCall
 {
     /**
      * Base class for interface with single method to function glue classes
@@ -168,8 +168,8 @@ public final class JavaAdapter implements IdFunctionMaster
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
         JavaAdapter obj = new JavaAdapter();
-        IdFunction ctor = new IdFunction(obj, FTAG, Id_JavaAdapter,
-                                         "JavaAdapter", 1, scope);
+        IdFunctionObject ctor = new IdFunctionObject(obj, FTAG, Id_JavaAdapter,
+                                                     "JavaAdapter", 1, scope);
         ctor.markAsConstructor(null);
         if (sealed) {
             ctor.sealObject();
@@ -177,7 +177,7 @@ public final class JavaAdapter implements IdFunctionMaster
         ctor.exportAsScopeProperty();
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {

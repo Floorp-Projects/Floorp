@@ -37,21 +37,21 @@
 
 package org.mozilla.javascript;
 
-public class IdFunction extends BaseFunction
+public class IdFunctionObject extends BaseFunction
 {
-    public IdFunction(IdFunctionMaster master, Object tag, int id, int arity)
+    public IdFunctionObject(IdFunctionCall idcall, Object tag, int id, int arity)
     {
-        this.master = master;
+        this.idcall = idcall;
         this.tag = tag;
         this.methodId = id;
         this.arity = arity;
         if (arity < 0) throw new IllegalArgumentException();
     }
 
-    public IdFunction(IdFunctionMaster master, Object tag, int id,
+    public IdFunctionObject(IdFunctionCall idcall, Object tag, int id,
                       String name, int arity, Scriptable scope)
     {
-        this(master, tag, id, arity);
+        this(idcall, tag, id, arity);
         initFunction(name, scope);
     }
 
@@ -106,7 +106,7 @@ public class IdFunction extends BaseFunction
                        Object[] args)
         throws JavaScriptException
     {
-        return master.execMethod(this, cx, scope, thisObj, args);
+        return idcall.execIdCall(this, cx, scope, thisObj, args);
     }
 
     public Scriptable createObject(Context cx, Scriptable scope)
@@ -131,9 +131,9 @@ public class IdFunction extends BaseFunction
             sb.append("() { ");
         }
         sb.append("[native code for ");
-        if (master instanceof Scriptable) {
-            Scriptable smaster = (Scriptable)master;
-            sb.append(smaster.getClassName());
+        if (idcall instanceof Scriptable) {
+            Scriptable sobj = (Scriptable)idcall;
+            sb.append(sobj.getClassName());
             sb.append('.');
         }
         sb.append(getFunctionName());
@@ -152,12 +152,12 @@ public class IdFunction extends BaseFunction
 
     public final RuntimeException unknown()
     {
-        // It is program error to call id-like methods for unknown or
-        // non-function id
-        return new RuntimeException("BAD FUNCTION ID="+methodId+" MASTER="+master);
+        // It is program error to call id-like methods for unknown function
+        return new IllegalArgumentException(
+            "BAD FUNCTION ID="+methodId+" MASTER="+idcall);
     }
 
-    private final IdFunctionMaster master;
+    private final IdFunctionCall idcall;
     private final Object tag;
     private final int methodId;
     private int arity;

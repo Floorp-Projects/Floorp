@@ -87,7 +87,7 @@ final class NativeDate extends IdScriptableObject
         return date;
     }
 
-    protected void fillConstructorProperties(IdFunction ctor)
+    protected void fillConstructorProperties(IdFunctionObject ctor)
     {
         addIdFunctionProperty(ctor, DATE_TAG, ConstructorId_now,
                               "now", 0);
@@ -153,11 +153,11 @@ final class NativeDate extends IdScriptableObject
         initPrototypeMethod(DATE_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(DATE_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -337,7 +337,7 @@ final class NativeDate extends IdScriptableObject
         }
     }
 
-    private static NativeDate realThis(Scriptable thisObj, IdFunction f)
+    private static NativeDate realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if (!(thisObj instanceof NativeDate))
             throw incompatibleCallError(f);

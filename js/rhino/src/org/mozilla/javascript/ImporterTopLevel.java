@@ -106,7 +106,7 @@ public class ImporterTopLevel extends IdScriptableObject
         // If seal is true then exportAsJSClass(cx, seal) would seal
         // this obj. Since this is scope as well, it would not allow
         // to add variables.
-        IdFunction ctor = exportAsJSClass(MAX_PROTOTYPE_ID, this, false);
+        IdFunctionObject ctor = exportAsJSClass(MAX_PROTOTYPE_ID, this, false);
         if (sealed) {
             ctor.sealObject();
         }
@@ -249,11 +249,11 @@ public class ImporterTopLevel extends IdScriptableObject
         initPrototypeMethod(IMPORTER_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(IMPORTER_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -269,7 +269,8 @@ public class ImporterTopLevel extends IdScriptableObject
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private static ImporterTopLevel realThis(Scriptable thisObj, IdFunction f)
+    private static ImporterTopLevel realThis(Scriptable thisObj,
+                                             IdFunctionObject f)
     {
         if (!(thisObj instanceof ImporterTopLevel))
             throw incompatibleCallError(f);

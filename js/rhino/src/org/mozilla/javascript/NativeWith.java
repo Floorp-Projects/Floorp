@@ -42,7 +42,7 @@ package org.mozilla.javascript;
  * It simply delegates every action to its prototype except
  * for operations on its parent.
  */
-public class NativeWith implements Scriptable, IdFunctionMaster {
+public class NativeWith implements Scriptable, IdFunctionCall {
 
     static void init(Context cx, Scriptable scope, boolean sealed) {
         NativeWith obj = new NativeWith();
@@ -50,7 +50,7 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
         obj.setParentScope(scope);
         obj.setPrototype(ScriptableObject.getObjectPrototype(scope));
 
-        IdFunction ctor = new IdFunction(obj, FTAG, Id_constructor,
+        IdFunctionObject ctor = new IdFunctionObject(obj, FTAG, Id_constructor,
                                          "With", 0, scope);
         ctor.markAsConstructor(obj);
         if (sealed) {
@@ -156,7 +156,7 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
         throw new IllegalStateException();
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
@@ -169,8 +169,8 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
 
     static boolean isWithFunction(Object functionObj)
     {
-        if (functionObj instanceof IdFunction) {
-            IdFunction f = (IdFunction)functionObj;
+        if (functionObj instanceof IdFunctionObject) {
+            IdFunctionObject f = (IdFunctionObject)functionObj;
             return f.hasTag(FTAG) && f.methodId() == Id_constructor;
         }
         return false;

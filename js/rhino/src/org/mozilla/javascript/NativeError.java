@@ -57,7 +57,7 @@ final class NativeError extends IdScriptableObject
         obj.exportAsJSClass(MAX_PROTOTYPE_ID, scope, sealed);
     }
 
-    static NativeError make(Context cx, Scriptable scope, IdFunction ctorObj,
+    static NativeError make(Context cx, Scriptable scope, IdFunctionObject ctorObj,
                             Object[] args)
     {
         Scriptable proto = (Scriptable)(ctorObj.get("prototype", ctorObj));
@@ -104,11 +104,11 @@ final class NativeError extends IdScriptableObject
         initPrototypeMethod(ERROR_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(ERROR_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {

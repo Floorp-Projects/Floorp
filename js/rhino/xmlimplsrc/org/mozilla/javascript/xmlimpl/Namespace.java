@@ -261,7 +261,7 @@ class Namespace extends IdScriptableObject
         initPrototypeMethod(NAMESPACE_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f,
+    public Object execIdCall(IdFunctionObject f,
                              Context cx,
                              Scriptable scope,
                              Scriptable thisObj,
@@ -269,7 +269,7 @@ class Namespace extends IdScriptableObject
         throws JavaScriptException
     {
         if (!f.hasTag(NAMESPACE_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         if (id == Id_constructor) {
@@ -280,7 +280,7 @@ class Namespace extends IdScriptableObject
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private Namespace realThis(Scriptable thisObj, IdFunction f)
+    private Namespace realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if(!(thisObj instanceof Namespace))
             throw incompatibleCallError(f);

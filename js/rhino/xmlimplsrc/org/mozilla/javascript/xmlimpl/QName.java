@@ -258,7 +258,7 @@ final class QName extends IdScriptableObject
         initPrototypeMethod(QNAME_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f,
+    public Object execIdCall(IdFunctionObject f,
                              Context cx,
                              Scriptable scope,
                              Scriptable thisObj,
@@ -266,7 +266,7 @@ final class QName extends IdScriptableObject
         throws JavaScriptException
     {
         if (!f.hasTag(QNAME_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         if (id == Id_constructor) {
@@ -277,7 +277,7 @@ final class QName extends IdScriptableObject
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private QName realThis(Scriptable thisObj, IdFunction f)
+    private QName realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if(!(thisObj instanceof QName))
             throw incompatibleCallError(f);

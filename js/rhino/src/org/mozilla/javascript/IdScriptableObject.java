@@ -38,12 +38,12 @@ package org.mozilla.javascript;
 import java.io.*;
 
 /**
-Base class for native object implementation that uses IdFunction to export its methods to script via <class-name>.prototype object.
+Base class for native object implementation that uses IdFunctionObject to export its methods to script via <class-name>.prototype object.
 
 Any descendant should implement at least the following methods:
     findInstanceIdInfo
     getInstanceIdName
-    execMethod
+    execIdCall
     methodArity
 
 To define non-function properties, the descendant should override
@@ -57,7 +57,7 @@ may override scopeInit or fillConstructorProperties methods.
 
 */
 public abstract class IdScriptableObject extends ScriptableObject
-    implements IdFunctionMaster
+    implements IdFunctionCall
 {
     private static final class PrototypeValues implements Serializable
     {
@@ -75,7 +75,7 @@ public abstract class IdScriptableObject extends ScriptableObject
         // The following helps to avoid creation of valueArray during runtime
         // initialization for common case of "constructor" property
         int constructorId;
-        private IdFunction constructor;
+        private IdFunctionObject constructor;
         private short constructorAttrs;
 
         PrototypeValues(IdScriptableObject obj, int maxId)
@@ -99,11 +99,10 @@ public abstract class IdScriptableObject extends ScriptableObject
                 throw new IllegalArgumentException(name);
 
             if (id == constructorId) {
-                if (!(value instanceof IdFunction)) {
-                    throw new IllegalArgumentException(
-                        "consructor should be initialized with IdFunction");
+                if (!(value instanceof IdFunctionObject)) {
+                    throw new IllegalArgumentException("consructor should be initialized with IdFunctionObject");
                 }
-                constructor = (IdFunction)value;
+                constructor = (IdFunctionObject)value;
                 constructorAttrs = (short)attributes;
                 return;
             }
@@ -135,7 +134,7 @@ public abstract class IdScriptableObject extends ScriptableObject
             }
         }
 
-        final IdFunction createPrecachedConstructor()
+        final IdFunctionObject createPrecachedConstructor()
         {
             if (constructorId != 0) throw new IllegalStateException();
             constructorId = obj.findPrototypeId("constructor");
@@ -567,7 +566,7 @@ public abstract class IdScriptableObject extends ScriptableObject
     /** Get id value.
      ** If id value is constant, descendant can call cacheIdValue to store
      ** value in the permanent cache.
-     ** Default implementation creates IdFunction instance for given id
+     ** Default implementation creates IdFunctionObject instance for given id
      ** and cache its value
      */
     protected Object getInstanceIdValue(int id)
@@ -586,15 +585,15 @@ public abstract class IdScriptableObject extends ScriptableObject
 
     /** 'thisObj' will be null if invoked as constructor, in which case
      ** instance of Scriptable should be returned. */
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         throw f.unknown();
     }
 
-    public final IdFunction exportAsJSClass(int maxPrototypeId,
-                                            Scriptable scope,
-                                            boolean sealed)
+    public final IdFunctionObject exportAsJSClass(int maxPrototypeId,
+                                                  Scriptable scope,
+                                                  boolean sealed)
     {
         // Set scope and prototype unless this is top level scope itself
         if (scope != this && scope != null) {
@@ -603,7 +602,7 @@ public abstract class IdScriptableObject extends ScriptableObject
         }
 
         activatePrototypeMap(maxPrototypeId);
-        IdFunction ctor = prototypeValues.createPrecachedConstructor();
+        IdFunctionObject ctor = prototypeValues.createPrecachedConstructor();
         if (sealed) {
             sealObject();
         }
@@ -634,11 +633,11 @@ public abstract class IdScriptableObject extends ScriptableObject
                                           int arity)
     {
         Scriptable scope = ScriptableObject.getTopLevelScope(this);
-        IdFunction f = newIdFunction(tag, id, name, arity, scope);
+        IdFunctionObject f = newIdFunction(tag, id, name, arity, scope);
         prototypeValues.initValue(id, name, f, DONTENUM);
     }
 
-    public final void initPrototypeConstructor(IdFunction f)
+    public final void initPrototypeConstructor(IdFunctionObject f)
     {
         int id = prototypeValues.constructorId;
         if (id == 0)
@@ -665,7 +664,7 @@ public abstract class IdScriptableObject extends ScriptableObject
         throw new IllegalStateException(name);
     }
 
-    protected void fillConstructorProperties(IdFunction ctor)
+    protected void fillConstructorProperties(IdFunctionObject ctor)
     {
     }
 
@@ -673,7 +672,7 @@ public abstract class IdScriptableObject extends ScriptableObject
                                          String name, int arity)
     {
         Scriptable scope = ScriptableObject.getTopLevelScope(obj);
-        IdFunction f = newIdFunction(tag, id, name, arity, scope);
+        IdFunctionObject f = newIdFunction(tag, id, name, arity, scope);
         f.addAsProperty(obj);
     }
 
@@ -683,7 +682,7 @@ public abstract class IdScriptableObject extends ScriptableObject
      * Possible usage would be to have a private function like realThis:
      * <pre>
      *  private static NativeSomething realThis(Scriptable thisObj,
-     *                                          IdFunction f)
+     *                                          IdFunctionObject f)
      *  {
      *      if (!(thisObj instanceof NativeSomething))
      *          throw incompatibleCallError(f);
@@ -698,17 +697,17 @@ public abstract class IdScriptableObject extends ScriptableObject
      * operator.
      * @throws RuntimeException if no more instanceof target can be found
      */
-    protected static EcmaError incompatibleCallError(IdFunction f)
+    protected static EcmaError incompatibleCallError(IdFunctionObject f)
     {
         throw ScriptRuntime.typeError1("msg.incompat.call",
                                        f.getFunctionName());
     }
 
-    private IdFunction newIdFunction(Object tag, int id, String name,
-                                     int arity, Scriptable scope)
+    private IdFunctionObject newIdFunction(Object tag, int id, String name,
+                                           int arity, Scriptable scope)
     {
-        IdFunction f = new IdFunction(this, tag, id, name, arity,
-                                      scope);
+        IdFunctionObject f = new IdFunctionObject(this, tag, id, name, arity,
+                                                  scope);
         if (isSealed()) { f.sealObject(); }
         return f;
     }

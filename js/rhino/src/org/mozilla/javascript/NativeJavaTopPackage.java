@@ -53,7 +53,7 @@ import java.lang.reflect.*;
  */
 
 public class NativeJavaTopPackage
-    extends NativeJavaPackage implements Function, IdFunctionMaster
+    extends NativeJavaPackage implements Function, IdFunctionCall
 {
 
     // we know these are packages so we can skip the class check
@@ -117,8 +117,8 @@ public class NativeJavaTopPackage
         }
 
         // getClass implementation
-        IdFunction getClass = new IdFunction(top, FTAG, Id_getClass,
-                                             "getClass", 1, scope);
+        IdFunctionObject getClass = new IdFunctionObject(top, FTAG, Id_getClass,
+                                                         "getClass", 1, scope);
 
         // We want to get a real alias, and not a distinct JavaPackage
         // with the same packageName, so that we share classes and top
@@ -137,7 +137,7 @@ public class NativeJavaTopPackage
         global.defineProperty("java", javaAlias, ScriptableObject.DONTENUM);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {

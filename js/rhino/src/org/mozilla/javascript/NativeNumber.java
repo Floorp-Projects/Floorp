@@ -66,7 +66,7 @@ final class NativeNumber extends IdScriptableObject
         return "Number";
     }
 
-    protected void fillConstructorProperties(IdFunction ctor)
+    protected void fillConstructorProperties(IdFunctionObject ctor)
     {
         final int attr = ScriptableObject.DONTENUM |
                          ScriptableObject.PERMANENT |
@@ -101,11 +101,11 @@ final class NativeNumber extends IdScriptableObject
         initPrototypeMethod(NUMBER_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(NUMBER_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -153,7 +153,7 @@ final class NativeNumber extends IdScriptableObject
         }
     }
 
-    private static double realThisValue(Scriptable thisObj, IdFunction f)
+    private static double realThisValue(Scriptable thisObj, IdFunctionObject f)
     {
         if (!(thisObj instanceof NativeNumber))
             throw incompatibleCallError(f);
@@ -164,7 +164,7 @@ final class NativeNumber extends IdScriptableObject
         return ScriptRuntime.numberToString(doubleValue, 10);
     }
 
-    private static String num_to(IdFunction f, Scriptable thisObj,
+    private static String num_to(IdFunctionObject f, Scriptable thisObj,
                                  Object[] args,
                                  int zeroArgMode, int oneArgMode,
                                  int precisionMin, int precisionOffset)

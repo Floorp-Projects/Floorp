@@ -2691,11 +2691,11 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         initPrototypeMethod(REGEXP_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(REGEXP_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -2720,7 +2720,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private static NativeRegExp realThis(Scriptable thisObj, IdFunction f)
+    private static NativeRegExp realThis(Scriptable thisObj, IdFunctionObject f)
     {
         if (!(thisObj instanceof NativeRegExp))
             throw incompatibleCallError(f);

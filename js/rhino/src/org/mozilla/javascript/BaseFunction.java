@@ -184,9 +184,9 @@ public class BaseFunction extends IdScriptableObject implements Function
         super.setInstanceIdValue(id, value);
     }
 
-    protected void fillConstructorProperties(IdFunction ctor)
+    protected void fillConstructorProperties(IdFunctionObject ctor)
     {
-        // Fix up bootstrapping problem: getPrototype of the IdFunction
+        // Fix up bootstrapping problem: getPrototype of the IdFunctionObject
         // can not return Function.prototype because Function object is not
         // yet defined.
         ctor.setPrototype(this);
@@ -208,11 +208,11 @@ public class BaseFunction extends IdScriptableObject implements Function
         initPrototypeMethod(FUNCTION_TAG, id, s, arity);
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (!f.hasTag(FUNCTION_TAG)) {
-            return super.execMethod(f, cx, scope, thisObj, args);
+            return super.execIdCall(f, cx, scope, thisObj, args);
         }
         int id = f.methodId();
         switch (id) {
@@ -247,7 +247,7 @@ public class BaseFunction extends IdScriptableObject implements Function
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private BaseFunction realFunction(Scriptable thisObj, IdFunction f)
+    private BaseFunction realFunction(Scriptable thisObj, IdFunctionObject f)
     {
         Object x = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (x instanceof BaseFunction) {

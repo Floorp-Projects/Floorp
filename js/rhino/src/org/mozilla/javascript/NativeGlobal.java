@@ -50,7 +50,7 @@ import org.mozilla.javascript.xml.XMLLib;
  * @author Mike Shaver
  */
 
-public class NativeGlobal implements Serializable, IdFunctionMaster
+public class NativeGlobal implements Serializable, IdFunctionCall
 {
 
     public static void init(Context cx, Scriptable scope, boolean sealed) {
@@ -103,7 +103,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
               default:
                   throw Kit.codeBug();
             }
-            IdFunction f = new IdFunction(obj, FTAG, id, name, arity, scope);
+            IdFunctionObject f = new IdFunctionObject(obj, FTAG, id, name,
+                                                      arity, scope);
             if (sealed) {
                 f.sealObject();
             }
@@ -147,8 +148,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                     ((ScriptableObject)errorProto).sealObject();
                 }
             }
-            IdFunction ctor = new IdFunction(obj, FTAG, Id_new_CommonError,
-                                             name, 1, scope);
+            IdFunctionObject ctor = new IdFunctionObject(obj, FTAG,
+                                                         Id_new_CommonError,
+                                                         name, 1, scope);
             ctor.markAsConstructor(errorProto);
             if (sealed) {
                 ctor.sealObject();
@@ -157,7 +159,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         }
     }
 
-    public Object execMethod(IdFunction f, Context cx, Scriptable scope,
+    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {
         if (f.hasTag(FTAG)) {
@@ -502,8 +504,8 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
 
     static boolean isEvalFunction(Object functionObj)
     {
-        if (functionObj instanceof IdFunction) {
-            IdFunction function = (IdFunction)functionObj;
+        if (functionObj instanceof IdFunctionObject) {
+            IdFunctionObject function = (IdFunctionObject)functionObj;
             if (function.hasTag(FTAG) && function.methodId() == Id_eval) {
                 return true;
             }
