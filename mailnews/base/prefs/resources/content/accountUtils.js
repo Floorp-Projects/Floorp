@@ -35,7 +35,6 @@ function getInvalidAccounts(accounts)
         var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
         try {
             if (!account.incomingServer.valid) {
-                dump("Found invalid server " + account.incomingServer + " in " + account + "!\n");
                 invalidAccounts[invalidAccounts.length] = account;
                 // skip to the next account
                 continue;
@@ -51,7 +50,6 @@ function getInvalidAccounts(accounts)
         for (var j=0; j<numIdentities; j++) {
             var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
             if (!identity.valid) {
-                dump("Found invalid identity " + identity + " in " + account + "\n");
                 invalidAccounts[invalidAccounts.length] = account;
                 continue;
             }
@@ -80,7 +78,6 @@ function verifyAccounts(wizardcallback) {
         var invalidAccounts = getInvalidAccounts(accounts);
         if (invalidAccounts.length > 0) {
             prefillAccount = invalidAccounts[0];
-            dump("prefillAccount = " + prefillAccount + "\n");
         } else {
         }
 
@@ -88,8 +85,7 @@ function verifyAccounts(wizardcallback) {
         // then kick off the account migration
         if (accountCount == invalidAccounts.length) {
             try {
-                  var messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator);  
-                  dump("attempt to UpgradePrefs.  If that fails, open the account wizard.\n");
+                  var messengerMigrator = Components.classes[messengerMigratorContractID].getService(Components.interfaces.nsIMessengerMigrator); 
                   messengerMigrator.UpgradePrefs();
                   // if there is a callback mechanism then inform parent window to shut itself down
                   if (wizardcallback){
@@ -140,7 +136,7 @@ function MsgAccountManager()
 {
     var server;
     try {
-        folderURI = GetSelectedFolderURI();
+        var folderURI = GetSelectedFolderURI();
         server = GetServer(folderURI);
     } catch (ex) { /* functions might not be defined */}
     
