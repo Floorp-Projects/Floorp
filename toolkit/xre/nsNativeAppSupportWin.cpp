@@ -342,7 +342,7 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
-    NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
+    NS_IMETHOD OnLastWindowClosing();
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
     NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
@@ -398,7 +398,7 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
-    static nsIDOMWindow *mInitialWindow;
+    static PRBool mInitialWindowActive;
     static PRBool mForceProfileStartup;
     static PRBool mSupportingDDEExec;
     static char mMutexName[];
@@ -743,7 +743,7 @@ int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
-nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
+PRBool nsNativeAppSupportWin::mInitialWindowActive = PR_FALSE;
 PRBool nsNativeAppSupportWin::mForceProfileStartup = PR_FALSE;
 PRBool nsNativeAppSupportWin::mSupportingDDEExec   = PR_FALSE;
 
@@ -945,7 +945,7 @@ struct MessageWindow {
                  if ( NS_SUCCEEDED( rv ) )
                      native->SetIsServerMode( PR_FALSE );
                  if ( !win )
-                     appShell->Quit();
+                     appShell->Quit(nsIAppShellService::eAttemptQuit);
              }
              break;
          }
@@ -1721,7 +1721,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // if initial hidden window is still being displayed, we need to ignore requests
     // because such requests might not function properly.  See bug 147223 for details
 
-    if (mInitialWindow) {
+    if (mInitialWindowActive) {
       return;
     }
 
@@ -1798,7 +1798,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
           nsCOMPtr<nsIDOMWindowInternal> win;
           GetMostRecentWindow( 0, getter_AddRefs( win ) );
           if (!win)
-            appShell->Quit();
+            appShell->Quit(nsIAppShellService::eAttemptQuit);
         }
       }
 
@@ -2519,7 +2519,7 @@ nsNativeAppSupportWin::StartServerMode() {
     if ( !newWindow ) {
         return NS_OK;
     }
-    mInitialWindow = newWindow;
+    mInitialWindowActive = PR_TRUE;
 
     // Hide this window by re-parenting it (to ensure it doesn't appear).
     ReParent( newWindow, (HWND)MessageWindow() );
@@ -2540,18 +2540,15 @@ nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
+nsNativeAppSupportWin::OnLastWindowClosing() {
 
     if ( !mServerMode )
         return NS_OK;
 
     // If the last window closed is our special "turbo" window made
     // in StartServerMode(), don't do anything.
-    nsCOMPtr<nsIDocShell> docShell;
-    ( void )aWindow->GetDocShell( getter_AddRefs( docShell ) );
-    nsCOMPtr<nsIDOMWindow> domWindow( do_GetInterface( docShell ) );
-    if ( domWindow == mInitialWindow ) {
-        mInitialWindow = nsnull;
+    if ( mInitialWindowActive ) {
+        mInitialWindowActive = PR_FALSE;
         return NS_OK;
     }
 
@@ -2584,7 +2581,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
                 nsCOMPtr<nsIAppShellService> appShell =
                     do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
                 if ( NS_SUCCEEDED( rv ) ) {
-                    appShell->Quit();
+                    appShell->Quit(nsIAppShellService::eAttemptQuit);
                 }
                 return NS_OK;
             }
@@ -2595,15 +2592,21 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
         PRBool showDialog = PR_TRUE;
         if ( NS_SUCCEEDED( rv ) )
             prefService->GetBoolPref( "browser.turbo.showDialog", &showDialog );
-        nsCOMPtr<nsIDOMWindowInternal> domWindowInt ( do_GetInterface( docShell ) );
-        if ( showDialog && domWindowInt ) {
-            nsCOMPtr<nsIDOMWindow> newWindow;
-            mShownTurboDialog = PR_TRUE;
-            mLastWindowIsConfirmation = PR_TRUE;
-            domWindowInt->OpenDialog( NS_LITERAL_STRING( "chrome://navigator/content/turboDialog.xul" ),
-                                      NS_LITERAL_STRING( "_blank" ),
-                                      NS_LITERAL_STRING( "chrome,modal,titlebar,centerscreen,dialog" ),
-                                      nsnull, getter_AddRefs( newWindow ) );
+
+        if ( showDialog ) {
+          /* show turbo dialog, unparented. at this point in the application
+             shutdown process the last window is largely torn down and
+             unsuitable for parenthood.
+          */
+          nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+          if ( wwatch ) {
+              nsCOMPtr<nsIDOMWindow> newWindow;
+              mShownTurboDialog = PR_TRUE;
+              mLastWindowIsConfirmation = PR_TRUE;
+              rv = wwatch->OpenWindow(0, "chrome://navigator/content/turboDialog.xul",
+                                      "_blank", "chrome,modal,titlebar,centerscreen,dialog",
+                                      0, getter_AddRefs(newWindow));
+          }
         }
     }
 
@@ -2650,7 +2653,7 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
     
         // Turn off turbo mode and quit the application.
         SetIsServerMode( PR_FALSE );
-        appShell->Quit();
+        appShell->Quit(nsIAppShellService::eAttemptQuit);
 
         // Done.  This app will now commence shutdown.
     }

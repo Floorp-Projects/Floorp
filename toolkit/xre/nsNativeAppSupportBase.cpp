@@ -130,7 +130,7 @@ nsNativeAppSupportBase::StartServerMode() {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportBase::OnLastWindowClosing(nsIXULWindow *aWindow) {
+nsNativeAppSupportBase::OnLastWindowClosing() {
     return NS_OK;
 }
 
