@@ -762,9 +762,9 @@ NS_IMETHODIMP
 nsNntpIncomingServer::StartPopulatingSubscribeDS()
 {
 	nsresult rv;
-	mInner = do_CreateInstance(kSubscribableServerCID,&rv);
-    if (NS_FAILED(rv)) return rv;
-    if (!mInner) return NS_ERROR_FAILURE;
+
+	NS_ASSERTION(mInner,"not initialized");
+	if (!mInner) return NS_ERROR_FAILURE;
 
     rv = SetIncomingServer(this);
     if (NS_FAILED(rv)) return rv;
@@ -777,9 +777,12 @@ nsNntpIncomingServer::StartPopulatingSubscribeDS()
 
 NS_IMETHODIMP
 nsNntpIncomingServer::SetSubscribeListener(nsISubscribeListener *aListener)
-{
-	NS_ASSERTION(mInner,"not initialized");
-	if (!mInner) return NS_ERROR_FAILURE;
+{	
+	nsresult rv;
+	mInner = do_CreateInstance(kSubscribableServerCID,&rv);
+    if (NS_FAILED(rv)) return rv;
+    if (!mInner) return NS_ERROR_FAILURE;
+
 	return mInner->SetSubscribeListener(aListener);
 }
 
