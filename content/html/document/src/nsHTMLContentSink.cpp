@@ -1918,7 +1918,7 @@ SinkContext::FlushTags(PRBool aNotify)
 #ifdef NS_DEBUG
         // Tracing code
         nsCOMPtr<nsIAtom> tag;
-        mStack[mStackPos].mContent->GetTag(*getter_AddRefs(tag));
+        mStack[stackPos].mContent->GetTag(*getter_AddRefs(tag));
         const PRUnichar* tagChar;
         tag->GetUnicode(&tagChar);
         nsDependentString str(tagChar);
