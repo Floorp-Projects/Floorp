@@ -107,6 +107,13 @@ typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 /* data is 0 terminated */
 typedef void (*XML_CommentHandler)(void *userData, const XML_Char *data);
 
+//#define EXTERNAL_ENTITY_SUPPORT
+#ifdef EXTERNAL_ENTITY_SUPPORT
+typedef int (*XML_ExternalDTDLoader)(const XML_Char * base, 
+                                     const XML_Char * systemId,
+                                     char ** data);
+#endif
+
 typedef void (*XML_StartCdataSectionHandler)(void *userData);
 typedef void (*XML_EndCdataSectionHandler)(void *userData);
 
@@ -270,6 +277,13 @@ XML_SetProcessingInstructionHandler(XML_Parser parser,
 void XMLPARSEAPI
 XML_SetCommentHandler(XML_Parser parser,
                       XML_CommentHandler handler);
+
+
+#ifdef EXTERNAL_ENTITY_SUPPORT
+void XMLPARSEAPI
+XML_SetExternalDTDLoader(XML_Parser parser,
+                         XML_ExternalDTDLoader loader);
+#endif
 
 void XMLPARSEAPI
 XML_SetCdataSectionHandler(XML_Parser parser,

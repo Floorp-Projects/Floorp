@@ -160,6 +160,9 @@ typedef struct {
   int complete;
   int standalone;
   const XML_Char *base;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  const XML_Char *systemId;
+#endif
   PREFIX defaultPrefix;
 } DTD;
 
@@ -270,6 +273,9 @@ typedef struct {
   XML_CharacterDataHandler characterDataHandler;
   XML_ProcessingInstructionHandler processingInstructionHandler;
   XML_CommentHandler commentHandler;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  XML_ExternalDTDLoader externalDTDLoader;
+#endif
   XML_StartCdataSectionHandler startCdataSectionHandler;
   XML_EndCdataSectionHandler endCdataSectionHandler;
   XML_DefaultHandler defaultHandler;
@@ -326,6 +332,9 @@ typedef struct {
 #define characterDataHandler (((Parser *)parser)->characterDataHandler)
 #define processingInstructionHandler (((Parser *)parser)->processingInstructionHandler)
 #define commentHandler (((Parser *)parser)->commentHandler)
+#ifdef EXTERNAL_ENTITY_SUPPORT
+#define externalDTDLoader (((Parser *)parser)->externalDTDLoader)
+#endif
 #define startCdataSectionHandler (((Parser *)parser)->startCdataSectionHandler)
 #define endCdataSectionHandler (((Parser *)parser)->endCdataSectionHandler)
 #define defaultHandler (((Parser *)parser)->defaultHandler)
@@ -406,6 +415,9 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
   characterDataHandler = 0;
   processingInstructionHandler = 0;
   commentHandler = 0;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  externalDTDLoader = 0;
+#endif
   startCdataSectionHandler = 0;
   endCdataSectionHandler = 0;
   defaultHandler = 0;
@@ -515,6 +527,9 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   XML_CharacterDataHandler oldCharacterDataHandler = characterDataHandler;
   XML_ProcessingInstructionHandler oldProcessingInstructionHandler = processingInstructionHandler;
   XML_CommentHandler oldCommentHandler = commentHandler;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  XML_ExternalDTDLoader oldExternalDTDLoader = externalDTDLoader;
+#endif
   XML_StartCdataSectionHandler oldStartCdataSectionHandler = startCdataSectionHandler;
   XML_EndCdataSectionHandler oldEndCdataSectionHandler = endCdataSectionHandler;
   XML_DefaultHandler oldDefaultHandler = defaultHandler;
@@ -537,6 +552,9 @@ XML_Parser XML_ExternalEntityParserCreate(XML_Parser oldParser,
   characterDataHandler = oldCharacterDataHandler;
   processingInstructionHandler = oldProcessingInstructionHandler;
   commentHandler = oldCommentHandler;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  externalDTDLoader = oldExternalDTDLoader;
+#endif
   startCdataSectionHandler = oldStartCdataSectionHandler;
   endCdataSectionHandler = oldEndCdataSectionHandler;
   defaultHandler = oldDefaultHandler;
@@ -660,6 +678,14 @@ void XML_SetCommentHandler(XML_Parser parser,
 {
   commentHandler = handler;
 }
+
+#ifdef EXTERNAL_ENTITY_SUPPORT
+void XML_SetExternalDTDLoader(XML_Parser parser,
+		              XML_ExternalDTDLoader loader)
+{
+  externalDTDLoader = loader;
+}
+#endif
 
 void XML_SetCdataSectionHandler(XML_Parser parser,
 				XML_StartCdataSectionHandler start,
@@ -1930,6 +1956,12 @@ prologProcessor(XML_Parser parser,
 		const char *end,
 		const char **nextPtr)
 {
+#ifdef EXTERNAL_ENTITY_SUPPORT
+  char * dtdData;
+  char * dtdNext;
+  int dtdLen;
+#endif
+
   for (;;) {
     const char *next;
     int tok = XmlPrologTok(encoding, s, end, &next);
@@ -1964,8 +1996,36 @@ prologProcessor(XML_Parser parser,
       }
       break;
     case XML_ROLE_DOCTYPE_SYSTEM_ID:
+#ifdef EXTERNAL_ENTITY_SUPPORT
+      dtd.systemId = poolStoreString(&dtd.pool, encoding,
+	                              s + encoding->minBytesPerChar,
+	 		              next - encoding->minBytesPerChar);
+      if (!dtd.systemId)
+	  return XML_ERROR_NO_MEMORY;
+      poolFinish(&dtd.pool);
+#endif
       hadExternalDoctype = 1;
       break;
+#ifdef EXTERNAL_ENTITY_SUPPORT
+    case XML_ROLE_DOCTYPE_CLOSE:
+      if (hadExternalDoctype == 1) {
+        // if no loader specified, just default (non-hacked) processing
+        if (externalDTDLoader) {
+          XmlPrologStateHack(&prologState);
+          hadExternalDoctype = 0;
+
+          dtdLen = externalDTDLoader(dtd.base, dtd.systemId, &dtdData);
+          if (dtdLen < 0) {
+              return XML_ERROR_NO_MEMORY;
+          }
+          // XXX better error processing
+          dtdNext = dtdData + dtdLen;
+          prologProcessor(parser, dtdData, dtdNext, &dtdNext);
+          // XXX better error processing
+        }
+      }
+      break;
+#endif
     case XML_ROLE_DOCTYPE_PUBLIC_ID:
     case XML_ROLE_ENTITY_PUBLIC_ID:
       if (!XmlIsPublicId(encoding, s, next, &eventPtr))

@@ -1101,3 +1101,10 @@ void XmlPrologStateInit(PROLOG_STATE *state)
 {
   state->handler = prolog0;
 }
+
+#ifdef EXTERNAL_ENTITY_SUPPORT
+void XmlPrologStateHack(PROLOG_STATE *state)
+{
+  state->handler = prolog1;
+}
+#endif
