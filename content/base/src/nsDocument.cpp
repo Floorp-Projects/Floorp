@@ -930,7 +930,17 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   NS_IF_RELEASE(mNameSpaceManager);
 
   if (aChannel) {
-    (void)aChannel->GetOriginalURI(&mDocumentURL);
+
+      nsCOMPtr<nsIURI> uri;
+      (void) aChannel->GetOriginalURI(getter_AddRefs(uri));
+      nsXPIDLCString scheme; 
+      (void)uri->GetScheme(getter_Copies(scheme));
+      if (scheme && ((0 == PL_strncmp((const char*)scheme, "chrome", 6)) ||
+                  (0 == PL_strncmp((const char*)scheme, "resource", 8))))
+            (void)aChannel->GetOriginalURI(&mDocumentURL);
+      else
+            (void)aChannel->GetURI(&mDocumentURL);
+
     nsCOMPtr<nsISupports> owner;
     aChannel->GetOwner(getter_AddRefs(owner));
     if (owner)
