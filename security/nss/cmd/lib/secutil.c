@@ -287,12 +287,10 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     }
 
     /* we have no password, so initialize database with one */
-    PR_fprintf(PR_STDERR, "In order to finish creating your database, you\n");
-    PR_fprintf(PR_STDERR, "must enter a password which will be used to\n");
-    PR_fprintf(PR_STDERR, "encrypt this key and any future keys.\n\n");
-    PR_fprintf(PR_STDERR, "The password must be at least 8 characters long,\n");
-    PR_fprintf(PR_STDERR, "and must contain at least one non-alphabetic ");
-    PR_fprintf(PR_STDERR, "character.\n\n");
+    PR_fprintf(PR_STDERR, 
+        "Enter a password which will be used to encrypt your keys.\n"
+     	"The password should be at least 8 characters long,\n"
+     	"and should contain at least one non-alphabetic character.\n\n");
 
     output = fopen(consoleName, "w");
     if (output == NULL) {
