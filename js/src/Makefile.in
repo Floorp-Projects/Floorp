@@ -260,6 +260,13 @@ OBJS		+= fdlibm/*.o
 endif
 endif
 
+ifeq ($(OS_ARCH),IRIX)
+ifndef GNU_CC
+jsapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.c Makefile.in
+	$(CC) -o $@ -c $(shell echo $(COMPILE_CFLAGS) | sed 's/-O\([23]\|fast\)/-O1/g') $<
+endif
+endif
+
 # On OS/2 we are already linking against fdlibm, so don't bother
 # creating jsmathtemp
 ifneq ($(OS_ARCH),OS2)
