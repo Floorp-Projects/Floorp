@@ -47,8 +47,4 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= src/fdlibm src
 
-ifdef MOZ_JAVA
-DIRS		+= jsj
-endif
-
 include $(topsrcdir)/config/rules.mk
