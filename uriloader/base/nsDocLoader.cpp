@@ -51,6 +51,11 @@
 /* Forward declarations.... */
 class nsDocLoaderImpl;
 
+#ifdef DEBUG
+#undef NOISY_CREATE_DOC
+#else
+#undef NOISY_CREATE_DOC
+#endif
 
 #if defined(DEBUG) || defined(FORCE_PR_LOG)
 PRLogModuleInfo* gDocLoaderLog = nsnull;
@@ -299,6 +304,15 @@ nsDocFactoryImpl::CreateDefaultDocument(nsIURL* aURL,
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
     nsIDocumentViewer* docv = nsnull;
+
+#ifdef NOISY_CREATE_DOC
+    if (nsnull != aURL) {
+        nsAutoString tmp;
+        aURL->ToString(tmp);
+        fputs(tmp, stdout);
+        printf(": creating document\n");
+    }
+#endif
 
     // Load the UA style sheet if we haven't already done that
     if (nsnull == gUAStyleSheet) {
