@@ -65,7 +65,6 @@
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
-#include "nsIFocusTracker.h"
 #include "nsICaret.h"
 #include "nsCSSPseudoElements.h"
 #include "nsILineBreaker.h"

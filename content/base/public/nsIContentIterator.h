@@ -40,8 +40,6 @@
 
 #include "nsISupports.h"
 
-
-class nsIFocusTracker;
 class nsIContent;
 class nsIDOMRange;
 

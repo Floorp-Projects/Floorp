@@ -47,7 +47,6 @@
 #include "nsIContent.h"
 #include "nsIDOMText.h"
 #include "nsISupportsArray.h"
-#include "nsIFocusTracker.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIComponentManager.h"

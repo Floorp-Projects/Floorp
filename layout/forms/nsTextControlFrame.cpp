@@ -415,7 +415,7 @@ public:
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
   // NSIFRAMESELECTION INTERFACES
-  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) ;
+  NS_IMETHOD Init(nsIPresShell *aShell, nsIContent *aLimiter) ;
   NS_IMETHOD ShutDown() ;
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGuiEvent) ;
   NS_IMETHOD HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent);
@@ -485,9 +485,8 @@ nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIP
   if (aSel && aShell)
   {
     mFrameSelection = aSel;//we are the owner now!
-    nsCOMPtr<nsIFocusTracker> tracker = do_QueryInterface(aShell);
     mLimiter = aLimiter;
-    mFrameSelection->Init(tracker, mLimiter);
+    mFrameSelection->Init(aShell, mLimiter);
     mPresShellWeak = do_GetWeakReference(aShell);
 #ifdef IBMBIDI
     mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
@@ -850,9 +849,9 @@ nsTextInputSelectionImpl::CheckVisibility(nsIDOMNode *node, PRInt16 startOffset,
 //nsTextInputSelectionImpl::FRAMESELECTIONAPIS
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::Init(nsIFocusTracker *aTracker, nsIContent *aLimiter)
+nsTextInputSelectionImpl::Init(nsIPresShell *aShell, nsIContent *aLimiter)
 {
-  return mFrameSelection->Init(aTracker, aLimiter);
+  return mFrameSelection->Init(aShell, aLimiter);
 }
 
 

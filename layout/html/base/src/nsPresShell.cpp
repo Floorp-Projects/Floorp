@@ -1056,7 +1056,7 @@ ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
 // ----------------------------------------------------------------------------
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
-                  public nsStubDocumentObserver, public nsIFocusTracker,
+                  public nsStubDocumentObserver,
                   public nsISelectionController, public nsIObserver,
                   public nsSupportsWeakReference
 {
@@ -1084,7 +1084,6 @@ public:
   NS_IMETHOD PopStackMemory();
   NS_IMETHOD AllocateStackMemory(size_t aSize, void** aResult);
 
-  NS_IMETHOD GetPresContext(nsPresContext** aResult);
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
@@ -1620,8 +1619,8 @@ PresShell::PresShell()
   new (this) nsFrameManager();
 }
 
-NS_IMPL_ISUPPORTS8(PresShell, nsIPresShell, nsIDocumentObserver,
-                   nsIViewObserver, nsIFocusTracker, nsISelectionController,
+NS_IMPL_ISUPPORTS7(PresShell, nsIPresShell, nsIDocumentObserver,
+                   nsIViewObserver, nsISelectionController,
                    nsISelectionDisplay, nsIObserver, nsISupportsWeakReference)
 
 PresShell::~PresShell()
@@ -1744,7 +1743,7 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
   }
 
-  result = mSelection->Init((nsIFocusTracker *) this, nsnull);
+  result = mSelection->Init(this, nsnull);
   if (NS_FAILED(result)) {
     mStyleSet = nsnull;
     return result;
@@ -2002,18 +2001,6 @@ void*
 PresShell::AllocateFrame(size_t aSize)
 {
   return mFrameArena.AllocateFrame(aSize);
-}
-
-NS_IMETHODIMP
-PresShell::GetPresContext(nsPresContext** aResult)
-{
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = mPresContext;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3252,7 +3239,7 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
   PRInt8  outsideLimit = -1;//search from beginning
   nsPeekOffsetStruct pos;
   pos.mAmount = eSelectLine;
-  pos.mTracker = this;
+  pos.mShell = this;
   pos.mContentOffset = 0;
   pos.mContentOffsetEnd = 0;
   pos.mScrollViewStop = PR_FALSE;//dont stop on scrolled views.

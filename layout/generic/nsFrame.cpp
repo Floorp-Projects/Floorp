@@ -1604,18 +1604,13 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (!shell || !selcon)
     return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIFocusTracker> tracker;
-  tracker = do_QueryInterface(shell, &rv);
-  if (NS_FAILED(rv) || !tracker)
-    return rv;
-
   // Use peek offset one way then the other:
   nsCOMPtr<nsIContent> startContent;
   nsCOMPtr<nsIDOMNode> startNode;
   nsCOMPtr<nsIContent> endContent;
   nsCOMPtr<nsIDOMNode> endNode;
   nsPeekOffsetStruct startpos;
-  startpos.SetData(tracker, 
+  startpos.SetData(shell,
                    0, 
                    aAmountBack,
                    eDirPrevious,
@@ -1629,7 +1624,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
   nsPeekOffsetStruct endpos;
-  endpos.SetData(tracker, 
+  endpos.SetData(shell,
                  0, 
                  aAmountForward,
                  eDirNext,
@@ -3178,10 +3173,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
       nsISupports *isupports = nsnull;
       nsIFrame *storeOldResultFrame = resultFrame;
       while ( !found ){
-        nsCOMPtr<nsPresContext> context;
-        result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
-        if (NS_FAILED(result))
-          return result;
+        nsPresContext *context = aPos->mShell->GetPresContext();
         nsPoint point;
         point.x = aPos->mDesiredX;
 
@@ -3270,8 +3262,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                       aPresContext, resultFrame, aPos->mScrollViewStop);
       }
       while ( !found ){
-        nsCOMPtr<nsPresContext> context;
-        result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
+        nsPresContext *context = aPos->mShell->GetPresContext();
 
         nsPoint point;
         point.x = aPos->mDesiredX;
@@ -3527,9 +3518,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
     // This doesn't seem very efficient since GetPosition
     // has to do a binary search.
 
-    nsCOMPtr<nsPresContext> context;
-    rv = aPos->mTracker->GetPresContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) return rv;
+    nsPresContext *context = aPos->mShell->GetPresContext();
     PRInt32 endoffset;
     rv = nextFrame->GetContentAndOffsetsFromPoint(context,
                                                   offsetPoint,
@@ -3554,7 +3543,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
 NS_IMETHODIMP
 nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
-  if (!aPos || !aPos->mTracker )
+  if (!aPos || !aPos->mShell)
     return NS_ERROR_NULL_POINTER;
   nsresult result = NS_ERROR_FAILURE; 
   PRInt32 endoffset;
@@ -3604,10 +3593,9 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
     }//drop into no amount
     case eSelectNoAmount:
     {
-      nsCOMPtr<nsPresContext> context;
-      result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
-      if (NS_FAILED(result) || !context)
-        return result;
+      nsPresContext *context = aPos->mShell->GetPresContext();
+      if (!context)
+        return NS_OK;
       result = GetContentAndOffsetsFromPoint(context,point,
                              getter_AddRefs(aPos->mResultContent),
                              aPos->mContentOffset,
@@ -3783,10 +3771,9 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
       if (eSelectBeginLine == aPos->mAmount)
       {
-        nsCOMPtr<nsPresContext> context;
-        result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
-        if (NS_FAILED(result) || !context)
-          return result;
+        nsPresContext *context = aPos->mShell->GetPresContext();
+        if (!context)
+          return NS_OK;
 
         while (firstFrame)
         {
