@@ -28,11 +28,8 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 
-native time(PRTime);
-
 %{C++
 #include "nscore.h" // for PRUnichar
-#include "prtime.h" // for PRTime
 %}
 
 [uuid(0F78DA50-8321-11d2-8EAC-00805F29F370)]
@@ -57,7 +54,7 @@ interface nsIRDFLiteral : nsIRDFNode {
 
 [uuid(E13A24E1-C77A-11d2-80BE-006097B76B8E)]
 interface nsIRDFDate : nsIRDFNode {
-    readonly attribute time Value;
+    readonly attribute long long Value;
     boolean EqualsDate(in nsIRDFDate aDate);
 };
 
@@ -185,7 +182,7 @@ interface nsIRDFService : nsISupports {
     nsIRDFResource GetResource(in string aURI);
     nsIRDFResource GetUnicodeResource(in wstring aURI);
     nsIRDFLiteral  GetLiteral(in wstring aValue);
-    nsIRDFDate     GetDateLiteral(in time aValue);
+    nsIRDFDate     GetDateLiteral(in long long aValue);
     nsIRDFInt      GetIntLiteral(in long aValue);
 
     void RegisterResource(in nsIRDFResource aResource, in boolean aReplace);
