@@ -344,17 +344,13 @@ XULPopupListenerImpl :: FindDocumentForNode ( nsIDOMNode* inElement, nsIDOMXULDo
   // get the document associated with this content element
   nsCOMPtr<nsIDocument> document;
   nsCOMPtr<nsIContent> content = do_QueryInterface(inElement);
-  if (!content)
-    return rv;
-
-  if (NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document)))) {
+  if ( !content || NS_FAILED(rv = content->GetDocument(*getter_AddRefs(document))) ) {
     NS_ERROR("Unable to retrieve the document.");
     return rv;
   }
 
-  // Turn the document into a XUL document so we can use getElementById
   nsCOMPtr<nsIDOMXULDocument> xulDocument = do_QueryInterface(document);
-  if (xulDocument == nsnull) {
+  if ( !xulDocument ) {
     NS_ERROR("Popup attached to an element that isn't in XUL!");
     return NS_ERROR_FAILURE;
   }
@@ -555,7 +551,7 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
   if ( self ) {
     // set the node in the document that triggered the tooltip and show it
     nsCOMPtr<nsIDOMXULDocument> doc;
-    self->FindDocumentForNode ( self->mPossibleTooltipNode, getter_AddRefs(doc) );
+    self->FindDocumentForNode ( self->mElement, getter_AddRefs(doc) );
     if ( doc ) {
       nsCOMPtr<nsIDOMElement> element ( do_QueryInterface(self->mPossibleTooltipNode) );
       if ( element ) {
