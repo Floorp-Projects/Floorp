@@ -2078,6 +2078,12 @@ nsresult nsMsgDBFolder::PromptForCachePassword(nsIMsgIncomingServer *server, nsI
         passwordCorrect = password.Equals(NS_ConvertUCS2toUTF8(passwordFound).get());
         if (!passwordCorrect)
           server->SetPassword("");
+        else
+        {
+          nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
+          if (accountManager)
+            accountManager->SetUserNeedsToAuthenticate(PR_FALSE);
+        }
       }
     }
   }

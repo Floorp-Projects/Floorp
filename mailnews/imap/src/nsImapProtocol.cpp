@@ -7442,10 +7442,12 @@ PRBool nsImapProtocol::TryToLogon()
       } // if login failed
       else  // login succeeded
       {
+        PRBool passwordAlreadyVerified;
         rv = m_hostSessionList->SetPasswordForHost(GetImapServerKey(), password);
-        rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapServerKey(), imapPasswordIsNew);
-        if (NS_SUCCEEDED(rv) && imapPasswordIsNew)
+        rv = m_hostSessionList->GetPasswordVerifiedOnline(GetImapServerKey(), passwordAlreadyVerified);
+        if (NS_SUCCEEDED(rv) && !passwordAlreadyVerified)
           m_hostSessionList->SetPasswordVerifiedOnline(GetImapServerKey());
+        imapPasswordIsNew = !passwordAlreadyVerified;
         if (imapPasswordIsNew) 
         {
           if (m_currentBiffState == nsIMsgFolder::nsMsgBiffState_Unknown)

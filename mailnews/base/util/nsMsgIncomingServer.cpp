@@ -786,13 +786,6 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
   nsresult rv;
   PRBool rememberPassword = PR_FALSE;
   
-  if (aPassword)
-  {
-    nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
-    if (accountManager)
-      accountManager->SetUserNeedsToAuthenticate(PR_FALSE);
-  }
-
   rv = GetRememberPassword(&rememberPassword);
   if (NS_FAILED(rv)) return rv;
   
@@ -953,6 +946,9 @@ nsMsgIncomingServer::StorePassword()
 
     rv = observerService->NotifyObservers(uri, "login-succeeded", NS_ConvertUTF8toUCS2(pwd).get());
     NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID);
+    if (accountManager)
+      accountManager->SetUserNeedsToAuthenticate(PR_FALSE);
     return rv;
 }
 
