@@ -171,9 +171,9 @@ nsHttpNTLMAuth::Init()
 
     PSecurityFunctionTable (*initFun)(void);
 
-    gLib = LoadLibrary("security.dll");
+    gLib = LoadLibrary("secur32.dll");
     if (!gLib) {
-        NS_ERROR("security.dll load failed");
+        NS_ERROR("failed to load secur32.dll");
         return NS_ERROR_UNEXPECTED;
     }
 
