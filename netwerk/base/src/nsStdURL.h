@@ -67,8 +67,8 @@ protected:
     nsresult ReconstructSpec(void);
 
     // Some handy functions 
-    nsresult DupString(char* *o_Destination, const char* i_Source);
-    nsresult ExtractString(char* i_Source, char* *o_Destination, PRUint32 start, PRUint32 length);
+    nsresult DupString(char* *o_Dest, const char* i_Src);
+    nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
 protected:
 
     char*       mScheme;
