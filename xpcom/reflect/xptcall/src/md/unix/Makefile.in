@@ -221,16 +221,26 @@ endif
 CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
 
+#
+# Linux/PPC
+#
 ifeq ($(OS_ARCH)$(OS_TEST),Linuxppc)
 CPPSRCS		:= xptcinvoke_ppc_linux.cpp xptcstubs_ppc_linux.cpp
 ASFILES		:= xptcinvoke_asm_ppc_linux.s xptcstubs_asm_ppc_linux.s
+AS		:= $(CC) -c -x assembler-with-cpp
 endif
 
+#
+# NetBSD/PPC
+#
 ifneq (,$(filter NetBSDmacppc NetBSDbebox NetBSDofppc NetBSDprep NetBSDamigappc,$(OS_ARCH)$(OS_TEST)))                           
 CPPSRCS		:= xptcinvoke_ppc_netbsd.cpp xptcstubs_ppc_netbsd.cpp
 ASFILES		:= xptcinvoke_asm_ppc_netbsd.s xptcstubs_asm_ppc_netbsd.s
 endif
 
+#
+# Darwin/PPC
+#
 ifeq ($(OS_ARCH),Darwin)
 ASFLAGS		+= -x assembler-with-cpp   # assumes $(AS) == $(CC)
 ifdef HAVE_GCC3_ABI

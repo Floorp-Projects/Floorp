@@ -189,7 +189,9 @@ PrepareAndDispatch(nsXPTCStubBase* self,
 // however, it's quick, dirty, and'll break when the ABI changes on
 // us, which is what we want ;-).
 
-#define STUB_ENTRY(n)                                       \
+#if __GXX_ABI_VERSION < 100
+// gcc-2 version
+# define STUB_ENTRY(n)                                       \
 __asm__ (                                                   \
         ".section \".text\" \n\t"                           \
         ".align 2 \n\t"                                     \
@@ -200,6 +202,46 @@ __asm__ (                                                   \
 	"li     11,"#n" \n\t"                               \
 	"b      SharedStub@local \n"                        \
 );
+#else
+// gcc-3 version
+//
+// As G++3 ABI contains the length of the functionname in the mangled
+// name, it is difficult to get a generic assembler mechanism like
+// in the G++ 2.95 case.
+// Create names would be like:
+// _ZN14nsXPTCStubBase5Stub1Ev
+// _ZN14nsXPTCStubBase6Stub12Ev
+// _ZN14nsXPTCStubBase7Stub123Ev
+// _ZN14nsXPTCStubBase8Stub1234Ev
+// etc.
+// Use assembler directives to get the names right...
+
+# define STUB_ENTRY(n)							\
+__asm__ (								\
+	".align	2 \n\t"							\
+	".if	"#n" < 10 \n\t"						\
+	".globl	_ZN14nsXPTCStubBase5Stub"#n"Ev \n\t"			\
+	".type	_ZN14nsXPTCStubBase5Stub"#n"Ev,@function \n\n"		\
+"_ZN14nsXPTCStubBase5Stub"#n"Ev: \n\t"					\
+									\
+	".elseif "#n" < 100 \n\t"					\
+	".globl	_ZN14nsXPTCStubBase6Stub"#n"Ev \n\t"			\
+	".type	_ZN14nsXPTCStubBase6Stub"#n"Ev,@function \n\n"		\
+"_ZN14nsXPTCStubBase6Stub"#n"Ev: \n\t"					\
+									\
+	".elseif "#n" < 1000 \n\t"					\
+	".globl	_ZN14nsXPTCStubBase7Stub"#n"Ev \n\t"			\
+	".type	_ZN14nsXPTCStubBase7Stub"#n"Ev,@function \n\n"		\
+"_ZN14nsXPTCStubBase7Stub"#n"Ev: \n\t"					\
+									\
+	".else \n\t"							\
+	".err	\"stub number "#n" >= 1000 not yet supported\"\n"	\
+	".endif \n\t"							\
+									\
+	"li	11,"#n" \n\t"						\
+	"b	SharedStub@local \n"					\
+);
+#endif
 
 #define SENTINEL_ENTRY(n)                            \
 nsresult nsXPTCStubBase::Sentinel##n()               \
