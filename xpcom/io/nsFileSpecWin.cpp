@@ -145,6 +145,11 @@ void nsFileSpecHelpers::NativeToUnix(nsSimpleCharString& ioPath)
 	// Convert '\' to '/'
 	for (; *cp; cp++)
     {
+      if(IsDBCSLeadByte(*cp) && *(cp+1) != nsnull)
+      {
+         cp++;
+         continue;
+      }
       if (*cp == '\\')
         *cp = '/';
     }
