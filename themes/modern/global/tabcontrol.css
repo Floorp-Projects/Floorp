@@ -84,10 +84,10 @@ tabpanel.light {
 }
 
 tabpanel {
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-  padding: 5px;
+  border-left 		: 1px solid threedhighlight;
+  border-top  		: 1px solid threedhighlight;
+  border-right		: 1px solid threeddarkshadow;
+  border-bottom		: 1px solid threeddarkshadow;
+  padding			: 5px;
 }
 

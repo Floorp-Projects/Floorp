@@ -7,7 +7,7 @@
     {
       behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
-      margin              : 0px 1px 0px 1px;
+      margin              : 0px 1px;
       border              : 1px solid transparent;
       background-color	  : transparent;
     }
@@ -16,18 +16,23 @@
     {
       behavior            : url("chrome://global/content/xulBindings.xml#buttonleft");
       min-width           : 0px;
-      margin              : 1px;
       border              : 1px solid transparent;
       background-color	  : transparent;
+      max-width			  : 14em;
     }
-    
+  
+  .button-toolbar
+    {
+  	  margin			  : 1px;
+  	  border			  : 0px;
+    }
+  	
   .button-toolbar-4
   	{
   	  margin			  : 0px 0px 1px 0px;	
   	}  
   
   .button-toolbar-1:hover, .button-toolbar-1:hover:active, 
-  .button-toolbar:hover, .button-toolbar:hover:active, 
   .button-toolbar-2:hover, .button-toolbar-2:hover:active,
    .button-toolbar-4:hover, .button-toolbar-4:hover:active
     {
@@ -37,7 +42,7 @@
   
   .button-toolbar:hover, .button-toolbar:hover:active
     {
-  	  border			  : 1px solid transparent;
+	  color				  : #0000FF;
   	  text-decoration	  : underline;  
     }
   
@@ -45,7 +50,7 @@
   .button-toolbar-1 > .button-internal-box,
   .button-toolbar-2 > .button-internal-box
     {
-      padding             : 2px 8px 2px 7px;
+      padding             : 2px 6px 2px 5px;
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
@@ -61,7 +66,6 @@
       padding             : 1px 4px 1px 3px;
       vertical-align      : middle;
       text-align          : center;
-      border              : 1px solid transparent;
     }
 
   .button-toolbar-4 > .button-internal-box
@@ -69,12 +73,12 @@
       padding			  : 0px 1px;
       vertical-align      : middle;
       text-align          : center;
-      border              : 1px solid transparent;
+      border              : 0px;
     }
   
   .button-toolbar:hover:active > .button-internal-box
     {
-	  padding			  : 1px 5px 1px 4px;
+	  padding			  : 1px 4px 1px 3px;
       color               : #FF0000;
     }
   
@@ -93,13 +97,12 @@
     {
       border              : 1px solid transparent;
       color               : #777777;
-      background-color	  : transparent
+      background-color	  : transparent;
     }
     
 /* internal frame */
   .button-toolbar-1:hover > .button-internal-box,
-  .button-toolbar-2:hover > .button-internal-box,
-  .button-toolbar-4:hover > .button-internal-box
+  .button-toolbar-2:hover > .button-internal-box
     {
       border-left         : 1px solid #FFFFFF;
       border-top          : 1px solid #FFFFFF;
@@ -116,7 +119,7 @@
   .button-toolbar-1:hover:active > .button-internal-box,
   .button-toolbar-2:hover:active > .button-internal-box
     {
-      padding             : 3px 7px 1px 8px;
+      padding             : 3px 5px 1px 6px;
       border-left         : 1px solid #444444 !important;
       border-top          : 1px solid #444444 !important;
       border-right        : 1px solid #AAAAAA !important;
@@ -127,10 +130,6 @@
     
   .button-toolbar-4:hover:active > .button-internal-box
     {
-      border-left         : 1px solid #9D9D9D !important;
-      border-top          : 1px solid #9D9D9D !important;
-      border-right        : 1px solid #FFFFFF !important;
-      border-bottom       : 1px solid #FFFFFF !important;
       padding			  : 0px 0px 0px 2px;
     }
 
@@ -141,7 +140,12 @@
     {
       text-align          : center;
     }
-    
+  
+  .button-toolbar-4 > .button-internal-box > .button-icon
+    { 
+  	  padding			  : 0px;
+    }
+  
   .button-toolbar-1[disabled="true"] > .button-internal-box,
   .button-toolbar-1[disabled="true"]:hover > .button-internal-box,
   .button-toolbar-1[disabled="true"]:hover:active > .button-internal-box,
@@ -150,12 +154,9 @@
   .button-toolbar[disabled="true"]:hover:active > .button-internal-box,
   .button-toolbar-2[disabled="true"] > .button-internal-box,
   .button-toolbar-2[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box,
-  .button-toolbar-4[disabled="true"] > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover > .button-internal-box,
-  .button-toolbar-4[disabled="true"]:hover:active > .button-internal-box
+  .button-toolbar-2[disabled="true"]:hover:active > .button-internal-box
     {
-      padding             : 2px 8px 2px 7px !important;
+      padding             : 2px 6px 2px 5px !important;
       border              : 1px solid transparent !important;
       color				  : #777777;
       background-color	  : transparent;

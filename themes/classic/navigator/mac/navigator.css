@@ -66,6 +66,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button 
   {
     list-style-image      : url("chrome://navigator/skin/back.gif");
+    min-width			  : 55px;
   }
 
 #back-button[disabled="true"],
@@ -93,6 +94,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button 
   {
     list-style-image      : url("chrome://navigator/skin/forward.gif");
+    min-width			  : 55px;
   }
 
 #forward-button[disabled="true"],
@@ -120,6 +122,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #stop-button 
   {
 	  list-style-image      : url("chrome://navigator/skin/stop.gif");
+	  min-width			    : 46px;
   } 
 
 #stop-button[disabled="true"],
@@ -142,6 +145,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #reload-button 
   {
   list-style-image        : url("chrome://navigator/skin/reload.gif");
+  min-width			      : 46px;
   }
 
 #reload-button:hover

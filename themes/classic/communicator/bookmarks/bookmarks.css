@@ -51,14 +51,12 @@ treeitem[status="new"] > treerow > .treecell-bookmark
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > .treecell-bookmark,
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"] > treerow > .treecell-bookmark,
 treeitem[container="true"][open="true"] > treerow > .treecell-bookmark
 {
  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > .treecell-bookmark
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] > treerow > .treecell-bookmark
 {
  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
@@ -115,3 +113,11 @@ treeitem > treerow > .treecell-bookmark {
   {
     border                : none;
   }
+
+/**** NEW: MAC IE 5 LOOK TO BOOKMARKS FOLDER*********/
+
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"] > treerow > .treecell-bookmark,
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavoriteFolder"][open="true"] > treerow > .treecell-bookmark
+{
+	 list-style-image: url("chrome://communicator/skin/bookmarks/iefolder.gif");
+}

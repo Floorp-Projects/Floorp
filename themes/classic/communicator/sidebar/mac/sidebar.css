@@ -38,7 +38,30 @@
   {
     font-weight           : bold;
   }
-  
+
+.sidebar-header-grippy
+  { /* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
+    list-style-image	: url("chrome://global/skin/grippy-short-vert-after.gif");
+  	background-color	: #DDDDDD;
+  	max-width			: 32px;
+  	height				: 4px;
+  }
+
+#sidebar-title-box[state="collapsed"] > .sidebar-header-grippy {
+/* This image still has to be added to the tree (8/8/00).  I'll do it after german's approval */
+    list-style-image	: url("chrome://global/skin/grippy-short-vert-before.gif"); 
+}
+
+#sidebar-panel-picker > .menu-right {
+    padding-left		: 0px;
+}
+#sidebar-panel-picker > .menu-text {
+    padding-left: 0px;
+}
+#sidebar-panel-picker > .menu-accel {
+    display: none;
+}
+
 /**
  * texttab folder lookalike e.g. for sidebar panel headers
  * MAC-TODO: reimplement "Modern" tabs which look like OS8.x/9.x tabs. 

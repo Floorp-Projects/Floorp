@@ -26,7 +26,7 @@ grippy:hover
 	  background-color      : #CCCCFF;
   }
 
-grippy[collapse="after"]
+splitter[state="collapsed"] > grippy
   {
 	  list-style-image      : url("chrome://global/skin/grippy-horizontal-after.gif");
   }  
@@ -65,20 +65,23 @@ splitter:hover:active
     {
       cursor              : n-resize;
       border-right		  : 0px;
-      border-top		  : 2px ridge #000000;
+      border-top		  : 2px groove #000000;
     }
+
+/**** NOTE *****/
+/* The images below are correct, even though their names are switched. */
 
   window[orient="vertical"] > splitter > grippy,
   window[orient="vertical"] > splitter > grippy[collapse="before"],
   box[orient="vertical"] > splitter > grippy,
   box[orient="vertical"] > splitter > grippy[collapse="before"]
     {
-      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
+      list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
     }
     
-  window[orient="vertical"] > splitter > grippy[collapse="after"],
-  box[orient="vertical"] > splitter > grippy[collapse="after"]
+  window[orient="vertical"] > splitter[state="collapsed"] > grippy,
+  box[orient="vertical"] > splitter[state="collapsed"] > grippy
     {
-      list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
+      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
     }
     

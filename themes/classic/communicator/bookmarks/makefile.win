@@ -35,6 +35,7 @@ install::
 	$(MAKE_INSTALL) bookmarks.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) iefavorite.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
+	$(MAKE_INSTALL) iefolder.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) personal-folder-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) personal-folder-open.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\bookmarks

@@ -6,6 +6,7 @@
   {
     behavior              : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
     border                : 1px solid transparent;
+    margin				  : 0px 2px;
   }
 
 .menubutton-dual[disabled="true"]
@@ -52,7 +53,7 @@
     border-top            : 1px solid #444444 !important;
     border-right          : 1px solid #AAAAAA !important;
     border-bottom         : 1px solid #AAAAAA !important;
-    padding               : 3px 7px 1px 8px;
+    padding               : 3px 2px 1px 1px;
     color				  : #FFFFFF;
     background-color	  : #666666 !important;
   } 
@@ -69,7 +70,7 @@
     margin                : 0px;
     border                : 1px solid transparent !important;
     min-width             : 0px;
-    padding               : 2px 8px 2px 7px;
+    padding               : 2px 1px 2px 2px;
     text-align            : center;
     color				  : #777777;
     background-color	  : transparent !important;

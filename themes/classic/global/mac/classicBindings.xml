@@ -146,5 +146,28 @@
       </xul:box>
     </content>
   </binding>
-  
+
+  <binding id="tab">
+    <content>
+      <xul:spring class="tab-image-left" inherits="selected"/>
+      <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected">
+	      <xul:image class="tab-left"/>
+    	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+      </xul:box>
+      <xul:spring class="tab-image-right" inherits="selected"/>
+    </content>
+  </binding>
+
+  <binding id="tabbox" extends="xul:box">
+    <content>
+      <xul:spring class="tab-border-top-left-cap"/>
+	  <xul:spring class="tab-border-top-left"/>
+	  <xul:box inherits="align">
+		  <children/>
+	  </xul:box>
+	  <xul:spring class="tab-border-top-right" flex="1"/>
+	  <xul:spring class="tab-border-top-right-cap"/>
+	</content>
+  </binding>
+
 </bindings>

@@ -60,20 +60,37 @@
     behavior                : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
     border                  : 1px solid transparent;
   }
+ 
+ menubutton.button-toolbar-4
+  {
+ 	margin					: 0px 0px 1px 0px;
+  }
   
-menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
+ menubutton.button-toolbar:hover, menubutton.button-toolbar-4:hover
   {
     border                  : 1px solid #000000;
     text-decoration			: none;
   }
   
-.menubutton-toolbar-single-internal-box
+menubutton.button-toolbar > .menubutton-toolbar-single-internal-box
   {
     border                  : 1px solid transparent;
     padding                 : 0px 4px 0px 4px;
   }  
-  
-menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box, menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
+
+menubutton.button-toolbar-4 > .menubutton-toolbar-single-internal-box
+  {
+  	border					: 0px;
+  	padding                 : 0px 4px 0px 4px;
+  }
+
+menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
+menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
+  {
+  	padding					: 0px 3px 0px 5px;
+  }
+ 
+menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box
   {
     border-left             : 1px solid #FFFFFF;
     border-top              : 1px solid #FFFFFF;
@@ -83,8 +100,6 @@ menubutton.button-toolbar:hover > .menubutton-toolbar-single-internal-box, menub
   
 menubutton.button-toolbar:hover:active > .menubutton-toolbar-single-internal-box,
 menubutton.button-toolbar[open="true"] > .menubutton-toolbar-single-internal-box,
-menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
-menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
   {
     border-left             : 1px solid #9D9D9D;
     border-top              : 1px solid #9D9D9D;

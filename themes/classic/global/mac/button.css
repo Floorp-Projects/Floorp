@@ -63,7 +63,8 @@
 	  border              : 1px solid #DDDDDD;	
     }
     
-  button.plain-extended:hover:active 
+  button.plain-extended:hover:active,
+  button.plain-extended:hover 
     {
       border              : 1px solid #000000;
     }
