@@ -97,14 +97,16 @@ to sort by that column.)";
 my @fields = split(/,/, $::FORM{'sort'});
 
 sub Compare {
-     my $info_a = eval("\\\%$a");
-     my $info_b = eval("\\\%$b");
      my $rval = 0;
      my $key;
 
      foreach $key (@fields) {
-          $rval = $$info_a{$key} cmp $$info_b{$key};
-          return $rval unless ($rval == 0);
+         if ($key eq 'date') {
+             $rval = $$b{$key} cmp $$a{$key};
+         } else {
+             $rval = $$a{$key} cmp $$b{$key};
+         }
+         return $rval unless ($rval == 0);
      }
      return $rval;
 }
@@ -116,9 +118,7 @@ my $total_removed = 0;
 # Calculate delta information
 #
 CHECKIN:
-foreach $checkin (@list) {
-     $info = eval("\\\%$checkin");
-
+foreach $info (@list) {
      $$info{added} = 0;
      $$info{removed} = 0;
 
