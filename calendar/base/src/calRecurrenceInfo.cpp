@@ -166,7 +166,9 @@ calRecurrenceInfo::GetRecurCount(PRInt32 *aRecurCount)
             return NS_ERROR_OUT_OF_MEMORY;
 
         struct icaltimetype next = icalrecur_iterator_next(recur_iter);
-        int count = 0;
+        // initialize to 1, not 0; we seem to always be 1 off here,
+        // need to figure out if iterator_next returns the "first" or not.
+        int count = 1;
         while (!icaltime_is_null_time(next)) {
             count++;
             next = icalrecur_iterator_next(recur_iter);
@@ -453,7 +455,7 @@ calRecurrenceInfo::GetOccurrencesBetween(calIItemBase *aItem,
     nsCAutoString tst, tend;
     mRecurStart->ToString(tst);
     aEndTime->ToString(tend);
-    fprintf (stderr, "RULE: [%s -> %s]: %s\n", tst.get(), tend.get(), ss);
+    fprintf (stderr, "RULE: [%s -> %s, %d]: %s\n", tst.get(), tend.get(), mIcalRecur->count, ss);
 
     struct icaltimetype rangestart, dtstart, dtend;
     aStartTime->ToIcalTime(&rangestart);
