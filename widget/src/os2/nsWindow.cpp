@@ -603,10 +603,9 @@ nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
 // the nsWindow procedure for all nsWindows in this toolkit
 MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-#if DEBUG_sobotka
-  if (msg == WM_BUTTON1DOWN || msg == WM_BUTTON1DBLCLK)
-      printf("\n++++++++++fnwpNSWindow processing click for 0x%lx <-------CLICK\n", hwnd);
-#endif
+    MRESULT popupHandlingResult;
+    if ( nsWindow::DealWithPopups(msg, &popupHandlingResult) )
+      return popupHandlingResult;
 
    // Get the nsWindow for this hwnd
    nsWindow *wnd = nsWindow::GetNSWindowPtr(hwnd);
