@@ -108,6 +108,8 @@ public:
   NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
   NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD           SetCursor(nsCursor aCursor);
+  NS_IMETHOD           Enable (PRBool aState);
+  NS_IMETHOD           IsEnabled (PRBool *aState);
   NS_IMETHOD           SetFocus(PRBool aRaise);
   NS_IMETHOD           GetAttention(void);
   NS_IMETHOD           Destroy();
@@ -126,6 +128,11 @@ public:
   // get the toplevel window for this widget
   virtual GtkWindow   *GetTopLevelWindow(void);
   NS_IMETHOD           Update(void);
+  virtual void         OnMotionNotifySignal(GdkEventMotion *aGdkMotionEvent);
+  virtual void         OnEnterNotifySignal(GdkEventCrossing *aGdkCrossingEvent);
+  virtual void         OnLeaveNotifySignal(GdkEventCrossing *aGdkCrossingEvent);
+  virtual void         OnButtonPressSignal(GdkEventButton *aGdkButtonEvent);
+  virtual void         OnButtonReleaseSignal(GdkEventButton *aGdkButtonEvent);
   virtual void         OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void         OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
   virtual void         InstallFocusInSignal(GtkWidget * aWidget);
@@ -145,6 +152,10 @@ public:
 
   // Return the GtkMozArea that is the nearest parent of this widget
   virtual GtkWidget *GetOwningWidget();
+
+  // Return the type of the window that is the toplevel mozilla window
+  // for this (possibly) inner window
+  nsWindowType GetOwningWindowType();
 
   // Return the Gdk window used for rendering
   virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
@@ -366,6 +377,8 @@ private:
 
   GtkWindow *mTransientParent;
 
+  PRBool       mLeavePending;
+  PRBool       mRestoreFocus;
 };
 
 //

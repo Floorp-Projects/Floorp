@@ -50,7 +50,8 @@
 
 #include <stdio.h>
 
-#include "gtk/gtk.h"
+#include <gtk/gtk.h>
+#include <gtk/gtkprivate.h>
 #include "nsGtkEventHandler.h"
 
 #include <gdk/gdkkeysyms.h>
@@ -755,11 +756,21 @@ handle_gdk_event (GdkEvent *event, gpointer data)
     if (!window)
       goto end;
 
-    // Get the grabbing widget, if there is one.  We will need this
-    // later.
-    GtkWidget *grabWidget;
-    grabWidget = gtk_grab_get_current();
-    PRBool grabIsRegularWidget = (grabWidget && !GTK_IS_MOZAREA(grabWidget));
+    // Find out if there's a grabbing widget.  If there is and it's a
+    // regular gtk widget, and our current event window is not the
+    // child of that grab widget, we need to rewrite the event to that
+    // gtk grabbing widget.
+    PRBool rewriteEvent = PR_FALSE;
+    GtkWidget *grabWidget = gtk_grab_get_current();
+    GtkWidget *owningWidget = window->GetOwningWidget();
+
+    if (grabWidget &&
+        !GTK_IS_MOZAREA(grabWidget) &&
+        !gdk_window_child_of_gdk_window(owningWidget->window,
+                                        grabWidget->window)) {
+      rewriteEvent = PR_TRUE;
+    }
+
 
     // There are a lot of events that are always dispatched to our
     // internal handler, no matter if there is a grab or not.
@@ -790,69 +801,44 @@ handle_gdk_event (GdkEvent *event, gpointer data)
       case GDK_3BUTTON_PRESS:
       case GDK_KEY_PRESS:
       case GDK_KEY_RELEASE:
-        // Always rewrite the event to the grab widget.  If it's a
-        // MozArea widget, the handler will get called as normal.
-        if (grabWidget &&
-            !gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
-                                            grabWidget->window)) {
+        // If we need to rewrite this to the nearest real gtk widget,
+        // do it here.
+        if (rewriteEvent) {
           gdk_window_unref(event->any.window);
-          event->any.window = grabWidget->window;
+          event->any.window = owningWidget->window;
           gdk_window_ref(event->any.window);
           gtk_main_do_event(event);
           break;
         }
 
         // Otherwise, just send it to our event handler
-        dispatch_superwin_event(event, window);
+        if (GTK_WIDGET_IS_SENSITIVE(owningWidget))
+          dispatch_superwin_event(event, window);
         break;
 
       case GDK_MOTION_NOTIFY:
       case GDK_BUTTON_RELEASE:
       case GDK_PROXIMITY_IN:
       case GDK_PROXIMITY_OUT:
-        // We only rewrite these events if the grab happens on a
-        // non-mozilla window.  Menus get really sad if we don't do it
-        // this way since they expect to get events on their native
-        // windows, no matter if there is a grab in effect or not.
-        if (grabIsRegularWidget &&
-            !gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
-                                            grabWidget->window)) {
-          // We rewrite the event to the nearest "real" widget so that
-          // the gtk mainloop doesn't get confuse-ed.
+        // See above.
+        if (rewriteEvent) {
           gdk_window_unref(event->any.window);
-          event->any.window = window->GetOwningWidget()->window;
+          event->any.window = owningWidget->window;
           gdk_window_ref(event->any.window);
           gtk_propagate_event(grabWidget, event);
-
-          if (event->type == GDK_BUTTON_RELEASE) {
-            // Always clear the button motion target when sending a
-            // button release event to a real gtk widget, otherwise
-            // mozilla will still think it has the grab.  This happens
-            // when there's a native gtk widget popup over a Mozilla
-            // area.
-            nsWidget::DropMotionTarget();
-          }
           break;
         }
 
-        dispatch_superwin_event(event, window);
+        if (GTK_WIDGET_IS_SENSITIVE(owningWidget))
+          dispatch_superwin_event(event, window);
         break;
 
       case GDK_ENTER_NOTIFY:
       case GDK_LEAVE_NOTIFY:
-        // We rewrite the event to the nearest "real" widget so that
-        // the gtk mainloop doesn't get confuse-ed.
-        if (grabWidget &&
-            gdk_window_child_of_gdk_window(window->GetOwningWidget()->window,
-                                           grabWidget->window)) {
-          gdk_window_unref(event->any.window);
-          event->any.window = window->GetOwningWidget()->window;
-          gdk_window_ref(event->any.window);
-          gtk_widget_event(grabWidget, event);
-          break;
-        }
-
-        // XXX these should track sensitivity!
+        // Always dispatch enter and leave notify events to the
+        // windows that they happened on so that state can be properly
+        // tracked.  The code that handles the enter and leave events
+        // tracks sensitivity as well.
         dispatch_superwin_event(event, window);
         break;
 

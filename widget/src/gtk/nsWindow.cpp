@@ -169,6 +169,26 @@ static void printDepth(int depth) {
 }
 #endif
 
+
+// This function will check if a button event falls inside of a
+// window's bounds.
+static PRBool
+ButtonEventInsideWindow (GdkWindow *window, GdkEventButton *aGdkButtonEvent)
+{
+  gint x, y;
+  gint width, height;
+  gdk_window_get_position(window, &x, &y);
+  gdk_window_get_size(window, &width, &height);
+
+  // This event is measured from the origin of the window itself, not
+  // from the origin of the screen.
+  if (aGdkButtonEvent->x >= x && aGdkButtonEvent->y >= y &&
+      aGdkButtonEvent->x <= width + x && aGdkButtonEvent->y <= height + y)
+    return TRUE;
+
+  return FALSE;
+}
+
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsWidget)
 
 //-------------------------------------------------------------------------
@@ -221,6 +241,9 @@ nsWindow::nsWindow()
                       sizeof(nsXICLookupEntry), PL_DHASH_MIN_SIZE);
   }
 #endif // USE_XIM
+
+  mLeavePending = PR_FALSE;
+  mRestoreFocus = PR_FALSE;
 
   // initialize globals
   if (!gGlobalsInitialized) {
@@ -858,8 +881,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
       sIsGrabbing = PR_TRUE;
       sGrabWindow = this;
-
-      SuppressModality(PR_TRUE);
     }
     gRollupConsumeRollupEvent = PR_TRUE;
 
@@ -876,7 +897,6 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
 
     gRollupListener = nsnull;
     gRollupWidget = nsnull;
-    SuppressModality(PR_FALSE);
   }
   
   return NS_OK;
@@ -1178,6 +1198,48 @@ GdkCursor *nsWindow::GtkCreateCursor(nsCursor aCursorType)
 }
 
 NS_IMETHODIMP
+nsWindow::Enable(PRBool aState)
+{
+  GtkWidget *top_mozarea = GetOwningWidget();
+  GtkWindow *top_window = GTK_WINDOW(gtk_widget_get_toplevel(top_mozarea));
+
+  if (aState) {
+    gtk_widget_set_sensitive(top_mozarea, TRUE);
+    // See if now that we're sensitive again check to see if we need
+    // to reset ourselves the default focus widget for the toplevel
+    // window.  We should only do that if there is no focus widget
+    // since someone else might have taken the focus while we were
+    // disabled, and stealing focus is rude!
+    if (mRestoreFocus && !top_window->focus_widget) {
+      gtk_window_set_focus(top_window, top_mozarea);
+    }
+    mRestoreFocus = PR_FALSE;
+  }
+  else {
+    // Setting the window insensitive below will remove the window
+    // focus widget so we will have to restore it when we are
+    // reenabled.  Of course, because of embedding, we might not
+    // actually _be_ the widget with focus, so keep that in mind.
+    if (top_window->focus_widget == top_mozarea) {
+      mRestoreFocus = PR_TRUE;
+    }
+    gtk_widget_set_sensitive(top_mozarea, FALSE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindow::IsEnabled(PRBool *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  *aState = !mMozArea || GTK_WIDGET_IS_SENSITIVE(mMozArea);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindow::SetFocus(PRBool aRaise)
 {
 #ifdef DEBUG_FOCUS
@@ -1401,7 +1463,7 @@ void nsWindow::HandleMozAreaFocusIn(void)
   // otherwise, dispatch our focus events
 #ifdef DEBUG_FOCUS
   printf("nsWindow::HandleMozAreaFocusIn %p\n", NS_STATIC_CAST(void *, this));
-#endif /* DEBUG_FOCUS */
+#endif
   // we only set the gJustGotActivate signal if we're the toplevel
   // window.  embedding handles activate semantics for us.
   if (mIsToplevel)
@@ -1422,7 +1484,7 @@ void nsWindow::HandleMozAreaFocusOut(void)
   // otherwise handle our focus out here.
 #ifdef DEBUG_FOCUS
   printf("nsWindow::HandleMozAreaFocusOut %p\n", NS_STATIC_CAST(void *, this));
-#endif /* DEBUG_FOCUS */
+#endif
   // if there's a window with focus, send a focus out event for that
   // window.
   if (sFocusWindow)
@@ -1462,6 +1524,107 @@ void nsWindow::HandleMozAreaFocusOut(void)
       focusWidget->LoseFocus();
     }
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWindow::OnMotionNotifySignal(GdkEventMotion *aGdkMotionEvent)
+{
+  // If there's a rollup widget and this window is not a popup window,
+  // drop the event.
+  if (gRollupWidget && GetOwningWindowType() != eWindowType_popup) {
+    return;
+  }
+
+  XEvent xevent;
+  GdkEvent gdk_event;
+  PRBool synthEvent = PR_FALSE;
+  while (XCheckWindowEvent(GDK_DISPLAY(),
+                           GDK_WINDOW_XWINDOW(mSuperWin->bin_window),
+                           ButtonMotionMask, &xevent)) {
+    synthEvent = PR_TRUE;
+  }
+  if (synthEvent) {
+    gdk_event.type = GDK_MOTION_NOTIFY;
+    gdk_event.motion.window = aGdkMotionEvent->window;
+    gdk_event.motion.send_event = aGdkMotionEvent->send_event;
+    gdk_event.motion.time = xevent.xmotion.time;
+    gdk_event.motion.x = xevent.xmotion.x;
+    gdk_event.motion.y = xevent.xmotion.y;
+    gdk_event.motion.pressure = aGdkMotionEvent->pressure;
+    gdk_event.motion.xtilt = aGdkMotionEvent->xtilt;
+    gdk_event.motion.ytilt = aGdkMotionEvent->ytilt;
+    gdk_event.motion.state = aGdkMotionEvent->state;
+    gdk_event.motion.is_hint = xevent.xmotion.is_hint;
+    gdk_event.motion.source = aGdkMotionEvent->source;
+    gdk_event.motion.deviceid = aGdkMotionEvent->deviceid;
+    gdk_event.motion.x_root = xevent.xmotion.x_root;
+    gdk_event.motion.y_root = xevent.xmotion.y_root;
+    nsWidget::OnMotionNotifySignal(&gdk_event.motion);
+  }
+  else {
+    nsWidget::OnMotionNotifySignal(aGdkMotionEvent);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWindow::OnEnterNotifySignal(GdkEventCrossing *aGdkCrossingEvent)
+{
+  if (GTK_WIDGET_SENSITIVE(GetOwningWidget())) {
+    nsWidget::OnEnterNotifySignal(aGdkCrossingEvent);
+    if (mMozArea)
+      GTK_PRIVATE_SET_FLAG(mMozArea, GTK_LEAVE_PENDING);
+    mLeavePending = PR_TRUE;
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWindow::OnLeaveNotifySignal(GdkEventCrossing *aGdkCrossingEvent)
+{
+  if (mLeavePending) {
+    if (mMozArea)
+      GTK_PRIVATE_UNSET_FLAG(mMozArea, GTK_LEAVE_PENDING);
+    mLeavePending = PR_FALSE;
+    nsWidget::OnLeaveNotifySignal(aGdkCrossingEvent);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWindow::OnButtonPressSignal(GdkEventButton *aGdkButtonEvent)
+{
+  // This widget has gotten a button press event.  If there's a rollup
+  // widget and we're not inside of a popup window we should pop up
+  // the rollup widget.  Also, if the event is our event but it
+  // happens outside of the bounds of the window we should roll up as
+  // well.
+  if (gRollupWidget && ((GetOwningWindowType() != eWindowType_popup) ||
+                        (mSuperWin->bin_window == aGdkButtonEvent->window &&
+                         !ButtonEventInsideWindow(aGdkButtonEvent->window,
+                                                  aGdkButtonEvent)))) {
+    gRollupListener->Rollup();
+    gRollupWidget = nsnull;
+    gRollupListener = nsnull;
+    return;
+  }
+
+  nsWidget::OnButtonPressSignal(aGdkButtonEvent);
+}
+
+//////////////////////////////////////////////////////////////////////
+/* virtual */ void
+nsWindow::OnButtonReleaseSignal(GdkEventButton *aGdkButtonEvent)
+{
+  // we only dispatch this event if there's a button motion target or
+  // if it's happening inside of a popup window while there is a
+  // rollup widget
+  if (!sButtonMotionTarget &&
+      (gRollupWidget && GetOwningWindowType() != eWindowType_popup)) {
+    return;
+  }
+  nsWidget::OnButtonReleaseSignal(aGdkButtonEvent);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1549,38 +1712,8 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   switch (event->any.type)
   {
   case GDK_MOTION_NOTIFY:
-  {
-    XEvent xevent;
-    GdkEvent gdk_event;
-    PRBool synthEvent = PR_FALSE;
-    while (XCheckWindowEvent(GDK_DISPLAY(),
-                             GDK_WINDOW_XWINDOW(mSuperWin->bin_window),
-                             ButtonMotionMask, &xevent)) {
-      synthEvent = PR_TRUE;
-    }
-    if (synthEvent) {
-      gdk_event.type = GDK_MOTION_NOTIFY;
-      gdk_event.motion.window = event->motion.window;
-      gdk_event.motion.send_event = event->motion.send_event;
-      gdk_event.motion.time = xevent.xmotion.time;
-      gdk_event.motion.x = xevent.xmotion.x;
-      gdk_event.motion.y = xevent.xmotion.y;
-      gdk_event.motion.pressure = event->motion.pressure;
-      gdk_event.motion.xtilt = event->motion.xtilt;
-      gdk_event.motion.ytilt = event->motion.ytilt;
-      gdk_event.motion.state = event->motion.state;
-      gdk_event.motion.is_hint = xevent.xmotion.is_hint;
-      gdk_event.motion.source = event->motion.source;
-      gdk_event.motion.deviceid = event->motion.deviceid;
-      gdk_event.motion.x_root = xevent.xmotion.x_root;
-      gdk_event.motion.y_root = xevent.xmotion.y_root;
-      OnMotionNotifySignal (&gdk_event.motion);
-    }
-    else {
-      OnMotionNotifySignal (&event->motion);
-    }
-  }
-  break;
+    OnMotionNotifySignal (&event->motion);
+    break;
   case GDK_BUTTON_PRESS:
   case GDK_2BUTTON_PRESS:
   case GDK_3BUTTON_PRESS:
@@ -1589,12 +1722,13 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
   case GDK_BUTTON_RELEASE:
     OnButtonReleaseSignal (&event->button);
     break;
+  case GDK_ENTER_NOTIFY:
+    OnEnterNotifySignal (&event->crossing);
+    break;
   case GDK_LEAVE_NOTIFY:
     OnLeaveNotifySignal (&event->crossing);
     break;
-  case GDK_ENTER_NOTIFY:
-    OnEnterNotifySignal ( &event->crossing );
-    break;
+
   default:
     break;
   }
@@ -1611,6 +1745,13 @@ nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
+
+  PRBool isEnabled;
+  // If this window is disabled, don't dispatch the delete event
+  win->IsEnabled(&isEnabled);
+  if (!isEnabled)
+    return TRUE;
+
   NS_ADDREF(win);
 
   // dispatch an "onclose" event. to delete immediately, call win->Destroy()
@@ -2754,6 +2895,21 @@ nsWindow::GetOwningWidget()
   return (GtkWidget *)mMozAreaClosestParent;
 }
 
+nsWindowType
+nsWindow::GetOwningWindowType(void)
+{
+  GtkWidget *widget = GetOwningWidget();
+
+  nsWindow *owningWindow;
+  owningWindow = (nsWindow *)gtk_object_get_data(GTK_OBJECT(widget),
+                                                 "nsWindow");
+
+  nsWindowType retval;
+  owningWindow->GetWindowType(retval);
+
+  return retval;
+}
+
 PRBool
 nsWindow::GrabInProgress(void)
 {
@@ -2765,9 +2921,7 @@ nsWindow *
 nsWindow::GetGrabWindow(void)
 {
   if (nsWindow::sIsGrabbing)
-  {
     return sGrabWindow;
-  }
   else
     return nsnull;
 }
