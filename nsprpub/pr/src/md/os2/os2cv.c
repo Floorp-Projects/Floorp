@@ -275,7 +275,9 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
 
     /* Wait for notification or timeout; don't really care which */
     rv = DosWaitEventSem(thred->md.blocked_sema.sem, msecs);
-    DosResetEventSem(thred->md.blocked_sema.sem, &count);
+    if (rv == NO_ERROR) {
+        DosResetEventSem(thred->md.blocked_sema.sem, &count);
+    }
 
     DosRequestMutexSem((lock->mutex), SEM_INDEFINITE_WAIT);
 
@@ -314,7 +316,9 @@ _PR_MD_WAIT_CV(_MDCVar *cv, _MDLock *lock, PRIntervalTime timeout )
             * non-signaled.  We assume this wait won't take long.
             */
            rv = DosWaitEventSem(thred->md.blocked_sema.sem, SEM_INDEFINITE_WAIT);
-           DosResetEventSem(thred->md.blocked_sema.sem, &count);
+           if (rv == NO_ERROR) {
+               DosResetEventSem(thred->md.blocked_sema.sem, &count);
+           }
            PR_ASSERT(rv == NO_ERROR);
        }
     }
