@@ -1200,7 +1200,6 @@ void nsFontMetricsXlib::RealizeFont()
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
   nscoord lineSpacing = nscoord((mFontHandle->ascent + mFontHandle->descent) * f);
-  // XXXldb Shouldn't we get mEmHeight from the metrics?
   mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
   if (lineSpacing > mEmHeight)
     mLeading = lineSpacing - mEmHeight;
@@ -1932,6 +1931,9 @@ nsFontXlib::LoadFont(void)
          ::XDisplayString(aDisplay), mName, (long)xlibFont));
 
   if (xlibFont) {
+    mMaxAscent = xlibFont->ascent;
+    mMaxDescent = xlibFont->descent;
+
     if (mCharSetInfo == &ISO106461) {
       mCCMap = GetMapFor10646Font(xlibFont);
       if (!mCCMap) {

@@ -120,6 +120,11 @@ public:
   PRUint16               mSize;
   PRInt16                mBaselineAdjust;
   PRBool                 mAlreadyCalledLoadFont;
+
+  // these values are not in app units, they need to be scaled with 
+  // nsIDeviceContext::GetDevUnitsToAppUnits()
+  PRInt16                mMaxAscent;
+  PRInt16                mMaxDescent;
 };
 
 class nsFontMetricsXlib : public nsIFontMetrics
