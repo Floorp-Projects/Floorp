@@ -1185,19 +1185,48 @@ sub RemoveVotes {
     if ($who) {
         $whopart = " AND votes.who = $who";
     }
-    SendSQL("SELECT profiles.login_name, votes.count " .
-            "FROM votes, profiles " .
+    SendSQL("SELECT profiles.login_name, profiles.userid, votes.count, " .
+            "products.votesperuser, products.maxvotesperbug " .
+            "FROM profiles " . 
+            "LEFT JOIN votes ON profiles.userid = votes.who " .
+            "LEFT JOIN bugs USING(bug_id) " .
+            "LEFT JOIN products USING(product)" .
             "WHERE votes.bug_id = $id " .
-            "AND profiles.userid = votes.who" .
             $whopart);
     my @list;
     while (MoreSQLData()) {
-        my ($name, $count) = (FetchSQLData());
-        push(@list, [$name, $count]);
+        my ($name, $userid, $count, $votesperuser, $maxvotesperbug) = (FetchSQLData());
+        push(@list, [$name, $userid, $count, $votesperuser, $maxvotesperbug]);
     }
     if (0 < @list) {
         foreach my $ref (@list) {
-            my ($name, $count) = (@$ref);
+            my ($name, $userid, $count, $votesperuser, $maxvotesperbug) = (@$ref);
+
+            # If this product allows voting and the user's votes are in
+            # the acceptable range, then don't do anything.
+            next if $votesperuser && $count <= $maxvotesperbug;
+
+            # If the user has more votes on this bug than this product
+            # allows, then reduce the number of votes so it fits
+            my $newvotes = $votesperuser ? $maxvotesperbug : 0;
+            if ($newvotes) {
+                SendSQL("UPDATE votes SET count = $newvotes " .
+                        "WHERE bug_id = $id AND who = $userid");
+                my $s = $newvotes == 1 ? "" : "s";
+                $count = ($count - $newvotes) . 
+                         "\n    You still have $newvotes vote$s on this bug";
+            } else {
+                SendSQL("DELETE FROM votes WHERE bug_id = $id AND who = $userid");
+                $count = "$count\n    You have no more votes remaining on this bug";
+            }
+
+            # Notice that we did not make sure that the user fit within the $votesperuser
+            # range.  This is considered to be an acceptable alternative to loosing votes
+            # during product moves.  Then next time the user attempts to change their votes,
+            # they will be forced to fit within the $votesperuser limit.
+
+            # Now lets send the e-mail to alert the user to the fact that their votes have
+            # been reduced or removed.
             my $sendmailparm = '-ODeliveryMode=deferred';
             if (Param('sendmailnow')) {
                $sendmailparm = '';
@@ -1214,7 +1243,6 @@ sub RemoveVotes {
                 close SENDMAIL;
             }
         }
-        SendSQL("DELETE FROM votes WHERE bug_id = $id" . $whopart);
         SendSQL("SELECT SUM(count) FROM votes WHERE bug_id = $id");
         my $v = FetchOneColumn();
         $v ||= 0;
