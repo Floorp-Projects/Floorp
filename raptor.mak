@@ -18,12 +18,17 @@ IGNORE_MANIFEST=1
 THIS_MAKEFILE=raptor.mak
 THAT_MAKEFILE=makefile.win
 
+!if !defined(MOZ_TOP)
+#enable builds from changed top level directories
+MOZ_TOP=mozilla
+!endif
+
 include <$(DEPTH)\config\config.mak>
 
 # This section is copied from rules.mak
 
 !if "$(WINOS)" == "WIN95"
-W95MAKE=$(MOZ_SRC)\ns\config\w95make.exe
+W95MAKE=$(MOZ_SRC)\$(MOZ_TOP)\config\w95make.exe
 W32OBJS = $(OBJS:.obj=.obj, )
 W32LOBJS = $(OBJS: .= +-.)
 !endif
@@ -99,11 +104,11 @@ install:: install_dist install_raptor
 depend:: depend_dist depend_raptor
 
 clobber:: clobber_dist clobber_raptor
-	cd $(MOZ_SRC)\ns
+	cd $(MOZ_SRC)\$(MOZ_TOP)
 	-rd /s /q dist
 
 clobber_all:: clobber_all_dist clobber_all_raptor
-	cd $(MOZ_SRC)\ns
+	cd $(MOZ_SRC)\$(MOZ_TOP)
 	-rd /s /q dist
 
 ######################################################################
@@ -127,47 +132,47 @@ $(DIST_DIRS) $(RAPTOR_DIRS)::
 pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_raptor 
 
 pull_lizard:
-	@cd $(MOZ_SRC)\.
-	$(CVSCO_LIZARD) ns/LICENSE
-	$(CVSCO_LIZARD) ns/LEGAL
-	$(CVSCO_LIZARD) ns/config
-	$(CVSCO_LIZARD) ns/lib/liblayer
-	$(CVSCO_LIZARD) ns/modules/zlib
-	$(CVSCO_LIZARD) ns/modules/libutil
-	$(CVSCO_LIZARD) ns/nsprpub
-	$(CVSCO_LIZARD) ns/sun-java
-	$(CVSCO_LIZARD) ns/nav-java
-	$(CVSCO_LIZARD) ns/js
-	$(CVSCO_LIZARD) ns/modules/security/freenav
-	$(CVSCO_XPCOM) ns/modules/libpref
+	cd $(MOZ_SRC)\.
+	$(CVSCO_LIZARD) $(MOZ_TOP)/LICENSE
+	$(CVSCO_LIZARD) $(MOZ_TOP)/LEGAL
+	$(CVSCO_LIZARD) $(MOZ_TOP)/config
+	$(CVSCO_LIZARD) $(MOZ_TOP)/lib/liblayer
+	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/zlib
+	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/libutil
+	$(CVSCO_LIZARD) $(MOZ_TOP)/nsprpub
+	$(CVSCO_LIZARD) $(MOZ_TOP)/sun-java
+	$(CVSCO_LIZARD) $(MOZ_TOP)/nav-java
+	$(CVSCO_LIZARD) $(MOZ_TOP)/js
+	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/security/freenav
+	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libpref
 
 pull_xpcom:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_XPCOM) ns/modules/libreg 
-	$(CVSCO_XPCOM) ns/xpcom
+	$(CVSCO_XPCOM) $(MOZ_TOP)/modules/libreg 
+	$(CVSCO_XPCOM) $(MOZ_TOP)/xpcom
 
 pull_imglib:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_IMGLIB) ns/jpeg
-	$(CVSCO_IMGLIB) ns/modules/libutil
-	$(CVSCO_IMGLIB) ns/modules/libimg 
+	$(CVSCO_IMGLIB) $(MOZ_TOP)/jpeg
+	$(CVSCO_IMGLIB) $(MOZ_TOP)/modules/libutil
+	$(CVSCO_IMGLIB) $(MOZ_TOP)/modules/libimg 
 
 pull_netlib:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_NETLIB) ns/lib/xp
-	$(CVSCO_NETLIB) ns/lib/libnet
-	$(CVSCO_NETLIB) ns/include
+	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/xp
+	$(CVSCO_NETLIB) $(MOZ_TOP)/lib/libnet
+	$(CVSCO_NETLIB) $(MOZ_TOP)/include
 
 pull_raptor:
 	@cd $(MOZ_SRC)\.
-	$(CVSCO_RAPTOR) ns/base
-	$(CVSCO_RAPTOR) ns/dom
-	$(CVSCO_RAPTOR) ns/gfx
-	$(CVSCO_RAPTOR) ns/htmlparser
-	$(CVSCO_RAPTOR) ns/layout
-	$(CVSCO_RAPTOR) ns/view
-	$(CVSCO_RAPTOR) ns/webshell
-	$(CVSCO_RAPTOR) ns/widget
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/base
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/dom
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/gfx
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/htmlparser
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/layout
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/view
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/webshell
+	$(CVSCO_RAPTOR) $(MOZ_TOP)/widget
 
 ######################################################################
 
@@ -175,7 +180,7 @@ pull_raptor:
 # which are imported by the raptor test programs.
 
 all_dist:
-    @cd $(MOZ_SRC)\ns
+    @cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f $(THIS_MAKEFILE) export_dist
     $(NMAKE) -f $(THIS_MAKEFILE) libs_dist
     $(NMAKE) -f $(THIS_MAKEFILE) install_dist
@@ -240,7 +245,7 @@ clobber_all_dist:: $(DIST_DIRS)
 # including the sample webshell viewer application.
 
 all_raptor:
-    cd $(MOZ_SRC)\ns
+    cd $(MOZ_SRC)\$(MOZ_TOP)
     $(NMAKE) -f $(THIS_MAKEFILE) export_raptor
     $(NMAKE) -f $(THIS_MAKEFILE) libs_raptor
     $(NMAKE) -f $(THIS_MAKEFILE) install_raptor
@@ -304,13 +309,13 @@ clobber_all_raptor:: $(RAPTOR_DIRS)
 # Build raptor Doc++ documentation
 DOCXX = $(MOZ_TOOLS)\bin\docxx
 DOCXX_RAPTOR = $(DOCXX) -H -A -p -f -B c:\fake_banner-file_name -j -a
-DOCXX_DESTDIR = $(MOZ_SRC)\ns\dist\documentation
+DOCXX_DESTDIR = $(MOZ_SRC)\$(MOZ_TOP)\dist\documentation
 
 doc_raptor:
     -rm -rf $(DOCXX_DESTDIR)
     -@mkdir $(DOCXX_DESTDIR)
     @for %d in (raptor xpcom img dom netlib) do \
-      $(DOCXX_RAPTOR) -d $(DOCXX_DESTDIR)\%d $(MOZ_SRC)\ns\dist\public\%d\*.h
+      $(DOCXX_RAPTOR) -d $(DOCXX_DESTDIR)\%d $(MOZ_SRC)\$(MOZ_TOP)\dist\public\%d\*.h
     @echo Documentation written to $(DOCXX_DESTDIR)
 
 ######################################################################
@@ -334,7 +339,7 @@ GZIP = gzip
 TARBALL = $(MOZ_SRC)\win-$(DATE).tar
 TARBALL_ZIP = $(MOZ_SRC)\win-$(DATE).zip
 
-TARFILES = ns README\\raptor
+TARFILES = mozilla README\\raptor
 
 tarballs: tarball_zip tarball_gz
 
