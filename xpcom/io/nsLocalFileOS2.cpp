@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "prproces.h"
 
 
@@ -605,7 +606,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	mResolvedPath.Assign(resolvePath);
     nsMemory::Free(resolvePath);
 
-    status = PR_GetFileInfo64(mResolvedPath, &mFileInfo64);
+    status = PR_GetFileInfo64(mResolvedPath.get(), &mFileInfo64);
     
     if ( status == PR_SUCCESS )
 		mDirty = PR_FALSE;
@@ -695,7 +696,7 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
         return rv; 
    
-    *_retval = PR_Open(mResolvedPath, flags, mode);
+    *_retval = PR_Open(mResolvedPath.get(), flags, mode);
     
     if (*_retval)
         return NS_OK;
@@ -711,7 +712,7 @@ nsLocalFile::OpenANSIFileDesc(const char *mode, FILE * *_retval)
     if (NS_FAILED(rv) && rv != NS_ERROR_FILE_NOT_FOUND)
         return rv; 
    
-    *_retval = fopen(mResolvedPath, mode);
+    *_retval = fopen(mResolvedPath.get(), mode);
     
     if (*_retval)
         return NS_OK;
@@ -759,7 +760,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 
     if (type == NORMAL_FILE_TYPE)
     {
-        PRFileDesc* file = PR_Open(mResolvedPath, PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes);
+        PRFileDesc* file = PR_Open(mResolvedPath.get(), PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, attributes);
         if (!file) return NS_ERROR_FILE_ALREADY_EXISTS;
           
         PR_Close(file);
@@ -860,7 +861,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*) nsMemory::Clone(mWorkingPath.get(), strlen(mWorkingPath)+1);
+    *_retval = (char*) nsMemory::Clone(mWorkingPath.get(), mWorkingPath.Length()+1);
     return NS_OK;
 }
 
@@ -1256,7 +1257,7 @@ nsLocalFile::Load(PRLibrary * *_retval)
     if (! isFile)
         return NS_ERROR_FILE_IS_DIRECTORY;
 
-    *_retval =  PR_LoadLibrary(mResolvedPath);
+    *_retval =  PR_LoadLibrary(mResolvedPath.get());
     
     if (*_retval)
         return NS_OK;
@@ -2065,7 +2066,7 @@ nsLocalFile::GetTarget(char **_retval)
 #endif
     ResolveAndStat(PR_TRUE);
  
-    *_retval = (char*) nsMemory::Clone( mResolvedPath.get(), strlen(mResolvedPath)+1 );
+    *_retval = (char*) nsMemory::Clone( mResolvedPath.get(), mResolvedPath.Length()+1 );
     return NS_OK;
 }
 
@@ -2161,7 +2162,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
                 // make sure we have a trailing slash
                 escPath += "/";
             }
-            *aURL = nsCRT::strdup((const char *)escPath);
+            *aURL = ToNewCString(escPath);
             rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }    
     }
@@ -2218,7 +2219,7 @@ NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
     if (path.CharAt(0) == '\\')
         path.Cut(0, 1);
 
-    rv = InitWithPath(path);
+    rv = InitWithPath(path.get());
     
     return rv;
 }
