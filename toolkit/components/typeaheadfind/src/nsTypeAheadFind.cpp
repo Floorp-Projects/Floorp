@@ -282,6 +282,8 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
   nsCOMPtr<nsIPresShell> startingPresShell (do_QueryReferent(mPresShell));
   if (!startingPresShell) {    
     nsCOMPtr<nsIDocShell> ds = do_QueryReferent(mDocShell);
+    NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
+
     ds->GetPresShell(getter_AddRefs(startingPresShell));
     mPresShell = do_GetWeakReference(startingPresShell);    
   }  
@@ -802,6 +804,8 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly, PRUint1
   nsCOMPtr<nsIPresShell> presShell (do_QueryReferent(mPresShell));
   if (!presShell) {    
     nsCOMPtr<nsIDocShell> ds (do_QueryReferent(mDocShell));
+    NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
+
     ds->GetPresShell(getter_AddRefs(presShell));
     mPresShell = do_GetWeakReference(presShell);    
   }  
