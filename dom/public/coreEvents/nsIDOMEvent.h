@@ -38,9 +38,9 @@ class nsIDOMEvent : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENT_IID; return iid; }
   enum {
-    BUBBLING_PHASE = 1,
-    CAPTURING_PHASE = 2,
-    AT_TARGET = 3,
+    CAPTURING_PHASE = 1,
+    AT_TARGET = 2,
+    BUBBLING_PHASE = 3,
     MOUSEDOWN = 1,
     MOUSEUP = 2,
     MOUSEOVER = 4,
