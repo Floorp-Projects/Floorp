@@ -77,6 +77,8 @@
 #include "nsITimer.h"
 #include "nsIPref.h"
 
+#include "nsIChromeRegistry.h"
+
 #ifdef	XP_MAC
 #include "Files.h"
 #endif
@@ -107,6 +109,10 @@ static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
 static NS_DEFINE_CID(kFileLocatorCID,              NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kPrefCID,                     NS_PREF_CID);
 
+static NS_DEFINE_CID(kStandardUrlCID,       NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kFileSpecCID,          NS_FILESPEC_CID);
+
 static const char kURINC_SearchEngineRoot[]                   = "NC:SearchEngineRoot";
 static const char kURINC_SearchResultsSitesRoot[]             = "NC:SearchResultsSitesRoot";
 static const char kURINC_LastSearchRoot[]                     = "NC:LastSearchRoot";
@@ -118,6 +124,63 @@ static const char kURINC_SearchCategoryEngineBasenamePrefix[] = "NC:SearchCatego
 static const char kURINC_FilterSearchURLsRoot[]       = "NC:FilterSearchURLsRoot";
 static const char kURINC_FilterSearchSitesRoot[]      = "NC:FilterSearchSitesRoot";
 static const char kSearchCommand[]                    = "http://home.netscape.com/NC-rdf#command?";
+
+//----------------------------------------------------------------------------------------
+static nsresult GetConvertedChromeURL(const char* uriStr, nsIFileSpec* *outSpec)
+//----------------------------------------------------------------------------------------
+{
+
+  nsresult rv;
+    
+  nsCOMPtr<nsIURI> uri;
+  uri = do_CreateInstance(kStandardUrlCID);
+  uri->SetSpec(uriStr);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIChromeRegistry> chromeRegistry =
+      do_GetService(kChromeRegistryCID, &rv);
+
+  nsXPIDLCString newSpec;  
+  if (NS_SUCCEEDED(rv)) {
+
+      rv = chromeRegistry->ConvertChromeURL(uri, getter_Copies(newSpec));
+      if (NS_FAILED(rv))
+          return rv;
+  }
+  const char *urlSpec = newSpec;
+  uri->SetSpec(urlSpec);
+
+  /* won't deal remote URI yet */
+  nsString fileStr; fileStr.AssignWithConversion("file");
+  nsString resStr; resStr.AssignWithConversion("res");
+  nsString resoStr; resoStr.AssignWithConversion("resource");
+  
+  char *uriScheme = nsnull;
+  uri->GetScheme(&uriScheme);
+  nsString tmpStr; tmpStr.AssignWithConversion(uriScheme);
+   
+  NS_ASSERTION(((tmpStr == fileStr) || (tmpStr == resStr) || (tmpStr == resoStr)), "won't deal remote URI yet! \n");
+   
+  if ((tmpStr != fileStr)) {
+       /* resolve to fileURL */
+       nsSpecialSystemDirectory dir(nsSpecialSystemDirectory::Moz_BinDirectory);
+       nsFileURL fileURL(dir); // file:///moz_0511/mozilla/...
+       
+       char *uriPath = nsnull;
+       uri->GetPath(&uriPath);
+       fileURL += uriPath;
+       urlSpec = fileURL.GetURLString();
+  }
+
+  nsCOMPtr<nsIFileSpec> dataFilesDir = do_GetService(kFileSpecCID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  *outSpec = dataFilesDir;
+  NS_ADDREF(*outSpec);
+
+  return dataFilesDir->SetURLString(urlSpec);
+}
+//////////////////////////////////////////////
 
 PR_CALLBACK int	searchModePrefCallback(const char *pref, void *aClosure);
 
@@ -3280,9 +3343,18 @@ InternetSearchDataSource::GetSearchFolder(nsFileSpec &spec)
 	if (NS_FAILED(rv) || !locator)	return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIFileSpec>	dirSpec;
-	if (NS_FAILED(rv = locator->GetFileLocation(nsSpecialFileSpec::App_SearchDirectory50,
-		getter_AddRefs(dirSpec))))			return(rv);
+	if (NS_FAILED(rv = GetConvertedChromeURL("chrome://communicator/locale/search/", 
+						 getter_AddRefs(dirSpec))))
+	    return rv;
+
 	if (NS_FAILED(rv = dirSpec->GetFileSpec(&spec)))	return(rv);
+
+#ifdef XP_MAC
+                spec += "Search Plugins";
+#else
+                spec += "searchplugins";
+#endif
+
 	return(NS_OK);
 }
 
@@ -3553,7 +3625,9 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 		{
 			continue;
 		}
-
+#if defined(DEBUG_tao)
+		printf("\n-->GetSearchEngineList=%s\n", childURL);
+#endif
 		nsAutoString	uri;
 		uri.AssignWithConversion(childURL);
 		PRInt32		len = uri.Length();
