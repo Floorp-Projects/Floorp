@@ -2849,6 +2849,21 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
       }
     }
         
+
+#ifdef DEBUG_dcone
+  // Dump all the frames and view to a a file
+  FILE * fd = fopen("dump.txt", "w");
+  if (fd) {
+    nsIFrame  *theFrame;
+    aPO->mPresShell->GetRootFrame(&theFrame);
+    fprintf(fd, "--------------- Frames ----------------\n");
+    nsCOMPtr<nsIRenderingContext> renderingContext;
+    mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
+    DumpFrames(fd, aPO->mPresContext, renderingContext, theFrame, 0);
+    fclose(fd);
+    }
+#endif
+
     // update the history from the old presentation shell
     nsCOMPtr<nsIFrameManager> fm;
     rv = aPO->mPresShell->GetFrameManager(getter_AddRefs(fm));
@@ -2860,6 +2875,9 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
   }
 
   aPO->mPresShell->EndObservingDocument();
+  // EndObserving document no longer does a reflow.. which history needs.. or we 
+  // get a blank page for text fields.  this will reflow.. fixes bug 84017.
+  aPO->mPresShell->StyleChangeReflow();
 
   return rv;
 }
