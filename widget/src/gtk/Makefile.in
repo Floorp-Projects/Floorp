@@ -113,3 +113,10 @@ INCLUDES	+= \
 
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
+ICON_FILES	= \
+		$(srcdir)/mozicon50.xpm \
+		$(srcdir)/mozicon16.xpm \
+		$(NULL)
+
+install::
+	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
