@@ -67,9 +67,6 @@
 <!ENTITY  formMethod            "Method">
 <!ENTITY  formName              "Name">
 <!ENTITY  formNo                "No.">
-<!ENTITY  formName              "Name">
-<!ENTITY  formAction            "Action">
-<!ENTITY  formMethod            "Method">
 <!ENTITY  formEncoding          "Encoding:">
 <!ENTITY  formTarget            "Target:">
 <!ENTITY  formFields            "Fields:">
