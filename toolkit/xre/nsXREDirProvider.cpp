@@ -65,7 +65,7 @@
 nsXREDirProvider::nsXREDirProvider(const nsACString& aProductName)
 {
   NS_INIT_ISUPPORTS();
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
   mProductDir.Assign(NS_LITERAL_CSTRING(".") + aProductName);
   ToLowerCase(mProductDir);
 #else
@@ -99,7 +99,7 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     rv = GetProductDirectory(getter_AddRefs(localFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) || defined(XP_MACOSX)
     rv = localFile->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
