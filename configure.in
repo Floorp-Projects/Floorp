@@ -416,7 +416,7 @@ fi
 rm -f include-test-*.h
 CFLAGS=$_SAVE_CFLAGS
 
-dnl Check cc for -Wall flag support (adds compiler warnings)
+dnl Check cc and cxx for -Wall flag support (adds compiler warnings)
 AC_MSG_CHECKING($CC for \"-Wall\" support)
 _SAVE_CFLAGS=$CFLAGS ; CFLAGS="$CFLAGS -Wall"
 AC_CACHE_VAL(ac_cv_cc_wall_flag,
@@ -426,10 +426,25 @@ AC_CACHE_VAL(ac_cv_cc_wall_flag,
                  [ac_cv_cc_wall_flag=false])])
 if test $ac_cv_cc_wall_flag = true ; then
   AC_MSG_RESULT(yes)
-  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -Wall"
 else
   AC_MSG_RESULT(no)
 fi  
+_SAVE_CC=$CC ; CC=$CXX
+AC_MSG_CHECKING($CXX for \"-Wall\" support)
+AC_CACHE_VAL(ac_cv_cxx_wall_flag,
+ [AC_TRY_COMPILE([],
+                 [int i;],
+                 [ac_cv_cxx_wall_flag=true],
+                 [ac_cv_cxx_wall_flag=false])])
+if test $ac_cv_cxx_wall_flag = true ; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi  
+if test $ac_cv_cc_wall_flag = true -a $ac_cv_cxx_wall_flag = true ; then
+  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -Wall"
+fi
+CC=$_SAVE_CC
 CFLAGS=$_SAVE_CFLAGS
 
 dnl Check cc for -pedantic flag support (adds compiler warnings)
