@@ -173,13 +173,6 @@ registers, or set the value of a single register."},
         }
     }    
 
-    static String widen(string& str)
-    {
-    	String s(str.size(), char16());
-    	std::transform(str.begin(), str.end(), s.begin(), JavaScript::widen);
-    	return s;
-    }
-
     void
     Shell::listen(Context* cx, InterpretStage stage)
     {
@@ -190,8 +183,8 @@ registers, or set the value of a single register."},
         if (!(mStopMask & stage))
             return;
 
-        static string lastLine("help\n");
-        string line;
+        static String lastLine(widenCString("help\n"));
+        String line;
         LineReader reader(mIn);
 
         do {            
@@ -204,14 +197,12 @@ registers, or set the value of a single register."},
         
             reader.readLine(line);
 
-            if (line == "\n")
+            if (line[0] == uni::lf)
                 line = lastLine;
             else
-            {
                 lastLine = line;
-            }
 
-        } while (doCommand(cx, widen(line)));
+        } while (doCommand(cx, line));
     }
 
 
