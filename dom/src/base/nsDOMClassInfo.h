@@ -232,7 +232,7 @@ public:
 };
 
 
-// Window scirptable helper
+// Window scriptable helper
 
 class nsWindowSH : public nsEventRecieverSH
 {
@@ -251,10 +251,9 @@ protected:
   static nsresult DefineInterfaceProperty(JSContext *cx, JSObject *obj,
                                           JSString *str);
 
-  nsresult doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
-                             nsIXPConnectWrappedNative *wrapper);
-  nsresult doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
-                              nsIXPConnectWrappedNative *wrapper);
+  nsresult doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
+                                 nsIXPConnectWrappedNative *wrapper,
+                                 PRUint32 accessMode);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
