@@ -31,7 +31,12 @@ public:
         : nsStringKey(i_Host), m_Port(i_port)
     {
     }
-  
+
+	 nsSocketKey(const nsStr& i_Host, const PRInt32 i_port)
+        : nsStringKey(i_Host), m_Port(i_port)
+    {
+    }
+
     virtual ~nsSocketKey(void) 
     {
     }
