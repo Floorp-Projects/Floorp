@@ -27,7 +27,6 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
   mFirstChild = aFrame;
   mChildCount = aCount;
   mState = LINE_IS_DIRTY | flags;
-  mFloaters = nsnull;
   mNext = nsnull;
   mBounds.SetRect(0,0,0,0);
   mCombinedArea.SetRect(0,0,0,0);
@@ -39,19 +38,16 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags)
 
 nsLineBox::~nsLineBox()
 {
-  if (nsnull != mFloaters) {
-    delete mFloaters;
-  }
 }
 
 static void
-ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
+ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
 {
   nsAutoString frameName;
-  PRInt32 j, i, n = aFloaters->Count();
-  for (i = 0; i < n; i++) {
-    for (j = aIndent; --j >= 0; ) fputs("  ", out);
-    nsPlaceholderFrame* ph = (nsPlaceholderFrame*) aFloaters->ElementAt(i);
+  nsFloaterCache* fc = aFloaters.Head();
+  while (fc) {
+    nsFrame::IndentBy(out, aIndent);
+    nsPlaceholderFrame* ph = fc->mPlaceholder;
     if (nsnull != ph) {
       fprintf(out, "placeholder@%p ", ph);
       nsIFrame* frame = ph->GetOutOfFlowFrame();
@@ -59,8 +55,13 @@ ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
         frame->GetFrameName(frameName);
         fputs(frameName, out);
       }
+      fprintf(out, " %s region={%d,%d,%d,%d}",
+              fc->mIsCurrentLineFloater ? "cl" : "bcl",
+              fc->mRegion.x, fc->mRegion.y,
+              fc->mRegion.width, fc->mRegion.height);
       fprintf(out, "\n");
     }
+    fc = fc->Next();
   }
 }
 
@@ -105,7 +106,7 @@ nsLineBox::List(FILE* out, PRInt32 aIndent) const
   }
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  if (nsnull != mFloaters) {
+  if (mFloaters.NotEmpty()) {
     fputs("> floaters <\n", out);
     ListFloaters(out, aIndent + 1, mFloaters);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -462,4 +463,129 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
 
   *aFrameFound = frame;
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsFloaterCacheList::~nsFloaterCacheList()
+{
+  nsFloaterCache* floater = mHead;
+  while (floater) {
+    nsFloaterCache* next = floater->mNext;
+    delete floater;
+    floater = next;
+  }
+}
+
+nsFloaterCache*
+nsFloaterCacheList::Tail() const
+{
+  nsFloaterCache* fc = mHead;
+  while (fc) {
+    if (!fc->mNext) {
+      break;
+    }
+    fc = fc->mNext;
+  }
+  return fc;
+}
+
+void
+nsFloaterCacheList::Append(nsFloaterCacheFreeList& aList)
+{
+  nsFloaterCache* tail = Tail();
+  if (tail) {
+    tail->mNext = aList.mHead;
+  }
+  else {
+    mHead = aList.mHead;
+  }
+  aList.mHead = nsnull;
+  aList.mTail = nsnull;
+}
+
+nsFloaterCache*
+nsFloaterCacheList::Find(nsIFrame* aOutOfFlowFrame)
+{
+  nsFloaterCache* fc = mHead;
+  while (fc) {
+    if (fc->mPlaceholder->GetOutOfFlowFrame() == aOutOfFlowFrame) {
+      break;
+    }
+    fc = fc->Next();
+  }
+  return fc;
+}
+
+void
+nsFloaterCacheList::Remove(nsFloaterCache* aElement)
+{
+  nsFloaterCache** fcp = &mHead;
+  nsFloaterCache* fc;
+  while (nsnull != (fc = *fcp)) {
+    if (fc == aElement) {
+      *fcp = fc->mNext;
+      break;
+    }
+    fcp = &fc->mNext;
+  }
+}
+
+//----------------------------------------------------------------------
+
+void
+nsFloaterCacheFreeList::Append(nsFloaterCacheList& aList)
+{
+  if (mTail) {
+    mTail->mNext = aList.mHead;
+  }
+  else {
+    mHead = aList.mHead;
+  }
+  mTail = aList.Tail();
+  aList.mHead = nsnull;
+}
+
+nsFloaterCache*
+nsFloaterCacheFreeList::Alloc()
+{
+  nsFloaterCache* fc = mHead;
+  if (mHead) {
+    if (mHead == mTail) {
+      mHead = mTail = nsnull;
+    }
+    else {
+      mHead = fc->mNext;
+    }
+    fc->mNext = nsnull;
+  }
+  else {
+    fc = new nsFloaterCache();
+  }
+  return fc;
+}
+
+void
+nsFloaterCacheFreeList::Append(nsFloaterCache* aFloater)
+{
+  aFloater->mNext = nsnull;
+  if (mTail) {
+    mTail->mNext = aFloater;
+    mTail = aFloater;
+  }
+  else {
+    mHead = mTail = aFloater;
+  }
+}
+
+//----------------------------------------------------------------------
+
+nsFloaterCache::nsFloaterCache()
+  : mPlaceholder(nsnull),
+    mIsCurrentLineFloater(PR_TRUE),
+    mMargins(0, 0, 0, 0),
+    mOffsets(0, 0, 0, 0),
+    mCombinedArea(0, 0, 0, 0),
+    mNext(nsnull)
+{
 }

@@ -24,15 +24,116 @@
 #include "nsILineIterator.h"
 
 // bits in nsLineBox.mState
-#define LINE_IS_DIRTY                 0x1
-#define LINE_IS_BLOCK                 0x2
+#define LINE_IS_DIRTY               0x1
+#define LINE_IS_BLOCK               0x2
+#define LINE_IS_IMPACTED_BY_FLOATER 0x4
 #ifdef BLOCK_DOES_FIRST_LINE
-#define LINE_IS_FIRST_LINE            0x4
+#define LINE_IS_FIRST_LINE          0x8
 #endif
-#define LINE_WAS_DIRTY                0x8
+#define LINE_WAS_DIRTY              0x10
 
 class nsISpaceManager;
 class nsLineBox;
+
+//----------------------------------------------------------------------
+
+class nsFloaterCache;
+class nsFloaterCacheList;
+class nsFloaterCacheFreeList;
+
+// State cached after reflowing a floater. This state is used during
+// incremental reflow when we avoid reflowing a floater.
+class nsFloaterCache {
+public:
+  nsFloaterCache();
+  ~nsFloaterCache() { }
+
+  nsFloaterCache* Next() const { return mNext; }
+
+  nsPlaceholderFrame* mPlaceholder;     // nsPlaceholderFrame
+
+  // This will be true if the floater was placed on the current line
+  // instead of below the current line.
+  PRBool mIsCurrentLineFloater;
+
+  nsMargin mMargins;                    // computed margins
+
+  nsMargin mOffsets;                    // computed offsets (relative pos)
+
+  // Region in the spacemanager impacted by this floater; the
+  // coordinates are relative to the containing block frame. The
+  // region includes the margins around the floater, but doesn't
+  // include the relative offsets.
+  nsRect mRegion;
+
+  // Combined area for the floater. This will not include the margins
+  // for the floater. Like mRegion, the coordinates are relative to
+  // the containing block frame.
+  nsRect mCombinedArea;
+
+protected:
+  nsFloaterCache* mNext;
+
+  friend class nsFloaterCacheList;
+  friend class nsFloaterCacheFreeList;
+};
+
+//----------------------------------------
+
+class nsFloaterCacheList {
+public:
+  nsFloaterCacheList() : mHead(nsnull) { }
+  ~nsFloaterCacheList();
+
+  PRBool IsEmpty() const {
+    return nsnull == mHead;
+  }
+
+  PRBool NotEmpty() const {
+    return nsnull != mHead;
+  }
+
+  nsFloaterCache* Head() const {
+    return mHead;
+  }
+
+  nsFloaterCache* Tail() const;
+
+  nsFloaterCache* Find(nsIFrame* aOutOfFlowFrame);
+
+  void Remove(nsFloaterCache* aElement);
+
+  void Append(nsFloaterCacheFreeList& aList);
+
+protected:
+  nsFloaterCache* mHead;
+
+  friend class nsFloaterCacheFreeList;
+};
+
+//---------------------------------------
+
+class nsFloaterCacheFreeList : public nsFloaterCacheList {
+public:
+  nsFloaterCacheFreeList() : mTail(nsnull) { }
+  ~nsFloaterCacheFreeList() { }
+
+  // Steal away aList's nsFloaterCache objects and put them on this
+  // free-list.
+  void Append(nsFloaterCacheList& aList);
+
+  void Append(nsFloaterCache* aFloaterCache);
+
+  // Allocate a new nsFloaterCache object
+  nsFloaterCache* Alloc();
+
+protected:
+  nsFloaterCache* mTail;
+
+  friend class nsFloaterCacheList;
+};
+
+//----------------------------------------------------------------------
 
 /**
  * The nsLineBox class represents a horizontal line of frames. It contains
@@ -90,6 +191,19 @@ public:
     else {
       ClearIsBlock();
     }
+  }
+
+  void SetLineIsImpactedByFloater(PRBool aValue) {
+    if (aValue) {
+      mState |= LINE_IS_IMPACTED_BY_FLOATER;
+    }
+    else {
+      mState &= ~LINE_IS_IMPACTED_BY_FLOATER;
+    }
+  }
+
+  PRBool IsImpactedByFloater() const {
+    return 0 != (LINE_IS_IMPACTED_BY_FLOATER & mState);
   }
 
 #ifdef BLOCK_DOES_FIRST_LINE
@@ -150,7 +264,7 @@ public:
   nsRect mBounds;
   nsRect mCombinedArea;
   nscoord mCarriedOutBottomMargin;/* XXX switch to 16 bits */
-  nsVoidArray* mFloaters;
+  nsFloaterCacheList mFloaters;
   nsLineBox* mNext;
   nscoord mMaxElementWidth;  // width part of max-element-size
 };

@@ -115,9 +115,6 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD MoveInSpaceManager(nsIPresContext* aPresContext,
-                                nsISpaceManager* aSpaceManager,
-                                nscoord aDeltaX, nscoord aDeltaY);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
@@ -144,6 +141,9 @@ public:
 
   nsIFrame* GetTopBlockChild();
 
+  nsresult UpdateSpaceManager(nsIPresContext* aPresContext,
+                              nsISpaceManager* aSpaceManager);
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();
@@ -165,10 +165,6 @@ protected:
   void SlideLine(nsIPresContext* aPresContext,
                  nsISpaceManager* aSpaceManager,
                  nsLineBox* aLine, nscoord aDY);
-
-  void SlideFloaters(nsIPresContext* aPresContext,
-                     nsISpaceManager* aSpaceManager,
-                     nsLineBox* aLine, nscoord aDY);
 
   PRBool DrainOverflowLines();
 
@@ -228,10 +224,6 @@ protected:
                       PRBool* aKeepReflowGoing,
                       PRBool aDamageDirtyArea = PR_FALSE);
 
-  virtual void DidReflowLine(nsBlockReflowState& aState,
-                             nsLineBox* aLine,
-                             PRBool aKeepReflowGoing);
-
   nsresult PlaceLine(nsBlockReflowState& aState,
                      nsLineLayout& aLineLayout,
                      nsLineBox* aLine,
@@ -248,8 +240,6 @@ protected:
 
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine);
-
-  void FindFloaters(nsLineBox* aLine);
 
   void DeleteLine(nsBlockReflowState& aState, nsLineBox* aLine);
 
@@ -339,6 +329,7 @@ protected:
 
   void PropogateReflowDamage(nsBlockReflowState& aState,
                              nsLineBox* aLine,
+                             const nsRect& aOldCombinedArea,
                              nscoord aDeltaY);
 
   nsresult ComputeTextRuns(nsIPresContext* aPresContext);
