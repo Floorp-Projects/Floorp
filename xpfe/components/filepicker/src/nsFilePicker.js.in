@@ -38,6 +38,8 @@
 const DEBUG = true; /* set to false to suppress debug messages */
 const FILEPICKER_PROGID   = "component://mozilla/filepicker";
 const FILEPICKER_CID      = Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}");
+const APPSHELL_SERV_PROGID= "component://netscape/appshell/appShellService";
+const nsIAppShellService  = Components.interfaces.nsIAppShellService;
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsIFileURL          = Components.interfaces.nsIFileURL;
 const nsISupports         = Components.interfaces.nsISupports;
@@ -133,8 +135,11 @@ nsFilePicker.prototype = {
     var parent;
     if (this.mParentWindow) {
       parent = this.mParentWindow;
-    } else {
+    } else if (window) {
       parent = window;
+    } else {
+      var appShellService = Components.classes[APPSHELL_SERV_PROGID].getService(nsIAppShellService);
+      parent = appShellService.GetHiddenWindow();
     }
 
     parent.openDialog("chrome://global/content/filepicker.xul",
