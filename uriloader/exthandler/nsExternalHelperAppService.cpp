@@ -68,11 +68,15 @@
 #include "nsIAppleFileDecoder.h"
 #endif // XP_MAC
 
+#include "nsIPluginHost.h"
+
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
+
 
 // forward declaration of a private helper function
 static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
@@ -1398,7 +1402,27 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const char *aFile
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMIMEInfo> info;
   rv = GetFromExtension(aFileExt, getter_AddRefs(info));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    /* Try the plugins */
+    const char* mimeType;
+    nsCOMPtr<nsIPluginHost> pluginHost (do_GetService(kPluginManagerCID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+      if (pluginHost->IsPluginEnabledForExtension(aFileExt, mimeType) == NS_OK)
+      {
+        *aContentType = nsCRT::strdup(mimeType);
+        rv = NS_OK;
+        return rv;
+      }
+      else 
+      {
+        rv = NS_ERROR_FAILURE;
+      }
+    }
+  }
+  if (NS_FAILED(rv)) {
+    return rv;
+  } /* endif */
+
   return info->GetMIMEType(aContentType);
 }
 
