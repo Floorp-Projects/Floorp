@@ -1488,22 +1488,30 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
   nsIContent* targetBeforeEvent = mCurrentTargetContent;
 
   if (mCurrentFocus) {
-    ChangeFocus(mCurrentFocus, PR_FALSE);
-
-    //fire blur
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent event;
-    event.eventStructType = NS_EVENT;
-    event.message = NS_BLUR_CONTENT;
-
-    mCurrentTargetContent = mCurrentFocus;
-    NS_ADDREF(mCurrentTargetContent);
-
-    if (nsnull != mPresContext) {
-      mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+    nsCOMPtr<nsIDocument> doc;
+    
+    // Make sure the content still has a document reference. If not,
+    // then we assume it is no longer in the content tree and should
+    // not receive the event.
+    nsresult result = mCurrentFocus->GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(result) && doc) {
+      ChangeFocus(mCurrentFocus, PR_FALSE);
+      
+      //fire blur
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsEvent event;
+      event.eventStructType = NS_EVENT;
+      event.message = NS_BLUR_CONTENT;
+      
+      mCurrentTargetContent = mCurrentFocus;
+      NS_ADDREF(mCurrentTargetContent);
+      
+      if (nsnull != mPresContext) {
+        mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+      }
+      
+      NS_IF_RELEASE(mCurrentTargetContent);
     }
-
-    NS_IF_RELEASE(mCurrentTargetContent);
   }
 
   if (nsnull != aContent) {
