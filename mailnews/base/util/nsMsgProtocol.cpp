@@ -367,13 +367,6 @@ NS_IMETHODIMP nsMsgProtocol::OpenOutputStream(nsIOutputStream **_retval)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgProtocol::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-  // we already know the content type...
-  observer->OnStartRequest(this, ctxt);
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgProtocol::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
 	// set the stream listener and then load the url

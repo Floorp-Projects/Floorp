@@ -185,11 +185,6 @@ nsHTTPChannel::Cancel(nsresult status)
     fl -> FireNotifications ();
   }
 
-  if (mOpenObserver && !mFiredOpenOnStopRequest)
-  {
-    mFiredOpenOnStopRequest = PR_TRUE;
-    mOpenObserver->OnStopRequest(this, mOpenContext, status, nsnull);
-  }
   return rv;
 }
 
@@ -274,24 +269,6 @@ nsHTTPChannel::OpenOutputStream(nsIOutputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    nsresult rv = NS_OK;
-
-    // parameter validation
-    if (!observer) return NS_ERROR_NULL_POINTER;
-
-    if (mResponseDataListener) {
-        rv = NS_ERROR_IN_PROGRESS;
-    } 
-
-    mOpenObserver = observer;
-    mOpenContext = ctxt;
-
-    return Open();
-}
-
-NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
 {
     nsresult rv = NS_OK;
@@ -311,22 +288,13 @@ nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
 
     mResponseContext = aContext;
 
-    if (!mOpenObserver)
-        Open();
+    Open();
     
     // If the data in the cache hasn't expired, then there's no need to talk
     // with the server.  Create a stream from the cache, synthesizing all the
     // various channel-related events.
     if (mCachedContentIsValid) {
         ReadFromCache();
-    } else if (mOpenObserver) {
-        // we were AsyncOpen()'d
-        NS_ASSERTION(mHTTPServerListener, "ResponseListener was not set!.");
-        if (mHTTPServerListener) {
-            rv = mHTTPServerListener->FireSingleOnData(listener, aContext);
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
     }
 
     return rv;
@@ -1297,10 +1265,7 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
             // The channel is being restarted by the HTTP protocol handler
             // and the cache data is usable, so start pumping the data from
             // the cache...
-            if (!mOpenObserver) {
-                rv = ReadFromCache();
-            }
-            return NS_OK;
+            return ReadFromCache();
         }
     }
 
@@ -1611,7 +1576,6 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   // for the original URL...
   //
   mResponseDataListener = 0;
-  mOpenObserver = 0;
 
   *aResult = channel;
   NS_ADDREF(*aResult);
@@ -1677,14 +1641,6 @@ nsresult nsHTTPChannel::ResponseCompleted(
     if (mLoadGroup)
         mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
 
-    //
-    // Finally, notify the OpenObserver that the request has completed.
-    //
-    if (mOpenObserver && !mFiredOpenOnStopRequest)
-    {
-        mFiredOpenOnStopRequest = PR_TRUE;
-        mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
-    }
 
     // Null out pointers that are no longer needed...
 
@@ -1734,7 +1690,6 @@ nsresult nsHTTPChannel::Abort()
   // for the original URL...
   //
   mResponseDataListener = 0;
-  mOpenObserver = 0;
 
   return NS_OK;
 }
@@ -1966,17 +1921,6 @@ nsHTTPChannel::FinishedResponseHeaders(void)
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPChannel::FinishedResponseHeaders [this=%x].\n",
             this));
-
-    if (mOpenObserver && !mFiredOpenOnStartRequest) {
-        rv = mOpenObserver->OnStartRequest(this, mOpenContext);
-        mFiredOpenOnStartRequest = PR_TRUE;
-
-        // We want to defer header completion notification until the 
-        // caller actually does an AsyncRead();
-        if (!mResponseDataListener)
-            return rv;
-    }
-
 
     // Notify the consumer that headers are available...
     OnHeadersAvailable();

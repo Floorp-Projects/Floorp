@@ -316,13 +316,6 @@ nsDataChannel::OpenOutputStream(nsIOutputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsDataChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    NS_NOTREACHED("nsDataChannel::AsyncOpen");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDataChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv;

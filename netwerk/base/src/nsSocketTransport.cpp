@@ -572,14 +572,6 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
       case eSocketState_WaitConnect:
         mStatus = doConnection(aSelectFlags);
-        if (NS_SUCCEEDED(mStatus) && mOpenObserver) {
-          mOpenObserver->OnStartRequest(this, mOpenContext);
-          NS_ASSERTION(mOperation == eSocketOperation_Connect, "bad state");
-          mCurrentState = gStateTable[mOperation][mCurrentState];
-          mOperation    = eSocketOperation_None;
-          done = PR_TRUE;
-          continue;
-        }
         break;
 
       case eSocketState_WaitReadWrite:
@@ -1311,16 +1303,6 @@ nsresult nsSocketTransport::CloseConnection (PRBool bNow)
     if (NS_SUCCEEDED(rv))
         mCurrentState = eSocketState_Closed;
 
-    if (mOpenObserver)
-    {
-        nsresult rv2 = mOpenObserver -> OnStopRequest (this, mOpenContext, rv, nsnull); // XXX need error message
-
-        if (NS_SUCCEEDED(rv))
-            rv = rv2;
-    
-        mOpenObserver = null_nsCOMPtr ();
-        mOpenContext  = null_nsCOMPtr ();
-    }
     return rv;
 }
 
@@ -1774,47 +1756,6 @@ NS_IMETHODIMP
 nsSocketTransport::SetURI(nsIURI* aURL)
 {
   return SetOriginalURI(aURL);
-}
-
-NS_IMETHODIMP
-nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-  nsresult rv = NS_OK;
-
-  // Enter the socket transport lock...
-  nsAutoMonitor mon(mMonitor);
-
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("+++ Entering nsSocketTransport::AsyncOpen() [%s:%d %x]\n", 
-          mHostName, mPort, this));
-
-  // If a read is already in progress then fail...
-  if (GetReadType() != eSocketRead_None) {
-    rv = NS_ERROR_IN_PROGRESS;
-  }
-
-  // Create a marshalling open observer to receive notifications...
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_NewAsyncStreamObserver(getter_AddRefs(mOpenObserver),
-                                   observer, NS_CURRENT_EVENTQ);
-  }
-
-  if (NS_SUCCEEDED(rv)) {
-    // Store the context used for this read...
-    mOpenContext = ctxt;
-
-    mOperation = eSocketOperation_Connect;
-    SetReadType(eSocketRead_None);
-
-    mLastActiveTime  = PR_IntervalNow ();
-    rv = mService->AddToWorkQ(this);
-  }
-
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("--- Leaving nsSocketTransport::AsyncOpen() [%s:%d %x]. rv = %x.\n",
-          mHostName, mPort, this, rv));
-
-  return rv;
 }
 
 NS_IMETHODIMP

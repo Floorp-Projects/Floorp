@@ -479,21 +479,6 @@ nsLDAPChannel::OpenOutputStream(nsIOutputStream* *result)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// Opens the channel asynchronously. The nsIStreamObserver's OnStartRequest
-// method is called back when the channel actually becomes open, providing 
-// the content type. Its OnStopRequest method is called when the channel
-// becomes closed.
-//
-// void asyncOpen(in nsIStreamObserver observer, 
-//                in nsISupports ctxt);
-NS_IMETHODIMP
-nsLDAPChannel::AsyncOpen(nsIStreamObserver* observer,
-			 nsISupports* ctxt)
-{
-  NS_NOTYETIMPLEMENTED("nsLDAPChannel::AsyncOpen");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // Reads asynchronously from the URL's specified source. Notifications
 // are provided to the stream listener on the thread of the specified
 // event queue.

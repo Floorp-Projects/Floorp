@@ -340,13 +340,6 @@ NS_IMETHODIMP nsMailtoChannel::OpenOutputStream(nsIOutputStream **_retval)
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-  // we already know the content type...
-  observer->OnStartRequest(this, ctxt);
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsMailtoChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
   return listener->OnStartRequest(this, ctxt);

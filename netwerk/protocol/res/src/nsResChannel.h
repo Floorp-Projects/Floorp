@@ -77,7 +77,6 @@ protected:
 
     enum State {
         QUIESCENT,
-        ASYNC_OPEN,
         ASYNC_READ,
         ASYNC_WRITE
     };

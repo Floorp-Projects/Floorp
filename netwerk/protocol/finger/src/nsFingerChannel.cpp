@@ -220,12 +220,6 @@ nsFingerChannel::OpenOutputStream(nsIOutputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFingerChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;

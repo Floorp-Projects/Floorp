@@ -222,13 +222,6 @@ nsCachedChromeChannel::OpenOutputStream(nsIOutputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt)
-{
-    NS_NOTREACHED("don't do that");
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     if (listener) {

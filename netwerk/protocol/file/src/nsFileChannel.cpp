@@ -281,13 +281,6 @@ nsFileChannel::OpenOutputStream(nsIOutputStream **result)
 }
 
 NS_IMETHODIMP
-nsFileChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    NS_NOTREACHED("nsFileChannel::AsyncOpen");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFileChannel::AsyncRead(nsIStreamListener *listener,
                          nsISupports *ctxt)
 {

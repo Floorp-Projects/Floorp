@@ -174,24 +174,6 @@ nsDateTimeChannel::OpenOutputStream(nsIOutputStream **_retval)
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    nsresult rv = NS_OK;
-
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = channel->SetNotificationCallbacks(mCallbacks);
-    if (NS_FAILED(rv)) return rv;
-
-    return channel->AsyncOpen(observer, ctxt);
-}
-
-NS_IMETHODIMP
 nsDateTimeChannel::AsyncRead(nsIStreamListener *aListener,
                              nsISupports *ctxt)
 {

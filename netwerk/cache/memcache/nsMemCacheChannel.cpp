@@ -446,14 +446,6 @@ nsMemCacheChannel::OpenOutputStream(nsIOutputStream* *aResult)
 }
 
 NS_IMETHODIMP
-nsMemCacheChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports *ctxt)
-{
-    // Not required
-    NS_NOTREACHED("nsMemCacheChannel::AsyncOpen");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsMemCacheChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsCOMPtr<nsIInputStream> inputStream;

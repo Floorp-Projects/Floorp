@@ -365,55 +365,6 @@ nsResChannel::OpenOutputStream(nsIOutputStream **result)
 }
 
 NS_IMETHODIMP
-nsResChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
-{
-    nsresult rv;
-
-#ifdef DEBUG
-    NS_ASSERTION(mInitiator == nsnull || mInitiator == PR_CurrentThread(),
-                 "wrong thread calling this routine");
-    mInitiator = PR_CurrentThread();
-#endif
-
-    switch (mState) {
-      case QUIESCENT:
-        if (mResolvedChannel)
-            return NS_ERROR_IN_PROGRESS;
-
-        // first time through
-        rv = mSubstitutions.Init();
-        if (NS_FAILED(rv)) return rv;
-        mState = ASYNC_OPEN;
-        break;
-
-      case ASYNC_OPEN:
-        break;
-      default:
-        return NS_ERROR_IN_PROGRESS;
-    }
-    NS_ASSERTION(mState == ASYNC_OPEN, "wrong state");
-
-    mUserObserver = observer;
-    mUserContext = ctxt;
-
-    do {
-        rv = EnsureNextResolvedChannel();
-        if (NS_FAILED(rv)) break;
-
-        if (mResolvedChannel)
-            rv = mResolvedChannel->AsyncOpen(this, nsnull);
-        // Later, this AsyncOpen will call back our OnStopRequest
-        // method. The action resumes there...
-    } while (NS_FAILED(rv));
-
-    if (NS_FAILED(rv)) {
-        (void)EndRequest(rv, nsnull);  // XXX need error message
-    }
-
-    return rv;
-}
-
-NS_IMETHODIMP
 nsResChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 {
     nsresult rv;
@@ -432,10 +383,6 @@ nsResChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
         // first time through
         rv = mSubstitutions.Init();
         if (NS_FAILED(rv)) return rv;
-        // fall through
-
-      case ASYNC_OPEN:
-        mState = ASYNC_READ;
         // fall through
 
       case ASYNC_READ:
@@ -487,10 +434,6 @@ nsResChannel::AsyncWrite(nsIInputStream *fromStream,
         // first time through
         rv = mSubstitutions.Init();
         if (NS_FAILED(rv)) return rv;
-        // fall through
-
-      case ASYNC_OPEN:
-        mState = ASYNC_READ;
         // fall through
 
       case ASYNC_READ:
@@ -743,8 +686,6 @@ nsResChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* context,
     if (NS_FAILED(aStatus) && aStatus != NS_BINDING_ABORTED) {
         // if we failed to process this channel, then try the next one:
         switch (mState) {
-          case ASYNC_OPEN:
-            return AsyncOpen(mUserObserver, mUserContext);
           case ASYNC_READ: 
             return AsyncRead(GetUserListener(), mUserContext);
           case ASYNC_WRITE:

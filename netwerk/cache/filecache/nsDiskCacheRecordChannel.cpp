@@ -317,14 +317,6 @@ nsDiskCacheRecordChannel::OpenOutputStream(nsIOutputStream* *aResult)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::AsyncOpen(nsIStreamObserver *observer, 
-                                    nsISupports *ctxt)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::AsyncOpen");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
                                     nsISupports *aContext)
 {
