@@ -31,7 +31,12 @@
 #include "nsIBaseWindow.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
 #include "nsIInterfaceRequestor.h"
+
+// utility classes
+#include "nsXPIDLString.h"
+#include "nsString.h"
 
 // include our gtk stuff here
 #include "gdksuperwin.h"
@@ -54,6 +59,7 @@ public:
   NS_IMETHOD SetNewBrowserCallback        (GtkMozEmbedChromeCB *aCallback, void *aData);
   NS_IMETHOD SetDestroyCallback           (GtkMozEmbedDestroyCB *aCallback, void *aData);
   NS_IMETHOD SetVisibilityCallback        (GtkMozEmbedVisibilityCB *aCallback, void *aData);
+  NS_IMETHOD GetLinkMessage               (const char **retval);
 
   NS_DECL_ISUPPORTS
 
@@ -77,6 +83,7 @@ private:
   void                      *mVisibilityCBData;
   nsRect                     mBounds;
   PRBool                     mVisibility;
+  nsXPIDLCString             mLinkMessage;
 };
 
 #endif /* __GtkMozEmbedChrome_h */
