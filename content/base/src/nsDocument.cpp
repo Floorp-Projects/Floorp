@@ -41,6 +41,7 @@
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetCollection.h"
 #include "nsDOMAttribute.h"
+#include "nsGenericElement.h"
 
 #include "nsCSSPropIDs.h"
 #include "nsCSSProps.h"
@@ -53,7 +54,6 @@
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
-#include "nsDocumentFragment.h"
 
 #include "nsINameSpaceManager.h"
 
@@ -512,6 +512,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMEventReceiverIID)) {
     nsIDOMEventReceiver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMNodeIID)) {
+    nsIDOMNode* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;

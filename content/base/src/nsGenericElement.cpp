@@ -312,10 +312,38 @@ nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
     return res;
   }
+  else if (nsnull == mDocument) {
+    // A standalone element (i.e. one without a parent or a document)
+    // implicitly has a document fragment as its parent according to
+    // the DOM.
+    nsIDOMDocumentFragment* docFrag;
+    nsIDOMNode *node, *ret;
+    // XXX If we don't have a document, how do we give the document
+    // fragment an owner document?
+    nsresult res = NS_NewDocumentFragment(&docFrag, nsnull);
+    if (NS_OK != res) {
+      return res;
+    }
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
+    if (NS_OK != res) {
+      return res;
+    }
+    res = docFrag->AppendChild(node, &ret);
+    NS_RELEASE(node);
+    if (NS_OK != res) {
+      return res;
+    }
+    NS_RELEASE(ret);
+    res = docFrag->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
+    NS_RELEASE(docFrag);
+    return res;
+  } 
   else {
-    *aParentNode = nsnull;
+    // If we don't have a parent, but we're in the document, we must
+    // be the root node of the document. The DOM says that the root
+    // is the document.
+    return mDocument->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
   }
-  return NS_OK;
 }
 
 nsresult
@@ -1426,24 +1454,38 @@ nsGenericContainerElement::InsertBefore(nsIDOMNode* aNewChild,
     res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
     NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
     if (NS_OK == res) {
-      if (nsnull == aRefChild) {
-        // Append the new child to the end
-        SetDocumentInChildrenOf(newContent, mDocument);
-        res = AppendChildTo(newContent, PR_TRUE);
-      }
-      else {
-        // Get the index of where to insert the new child
-        nsIContent* refContent = nsnull;
-        res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
-        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-        if (NS_OK == res) {
-          PRInt32 pos;
-          IndexOf(refContent, pos);
-          if (pos >= 0) {
-            SetDocumentInChildrenOf(newContent, mDocument);
-            res = InsertChildAt(newContent, pos, PR_TRUE);
+      nsIContent* oldParent;
+      res = newContent->GetParent(oldParent);
+      if (NS_OK == res) {
+        // Remove the element from the old parent if one exists
+        if (nsnull != oldParent) {
+          PRInt32 index;
+          oldParent->IndexOf(newContent, index);
+          if (-1 != index) {
+            oldParent->RemoveChildAt(index, PR_TRUE);
           }
-          NS_RELEASE(refContent);
+          NS_RELEASE(oldParent);
+        }
+
+        if (nsnull == aRefChild) {
+          // Append the new child to the end
+          SetDocumentInChildrenOf(newContent, mDocument);
+          res = AppendChildTo(newContent, PR_TRUE);
+        }
+        else {
+          // Get the index of where to insert the new child
+          nsIContent* refContent = nsnull;
+          res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+          NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+          if (NS_OK == res) {
+            PRInt32 pos;
+            IndexOf(refContent, pos);
+            if (pos >= 0) {
+              SetDocumentInChildrenOf(newContent, mDocument);
+              res = InsertChildAt(newContent, pos, PR_TRUE);
+            }
+            NS_RELEASE(refContent);
+          }
         }
       }
       NS_RELEASE(newContent);
@@ -1526,8 +1568,22 @@ nsGenericContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
           NS_RELEASE(docFrag);
         }
         else {
-          SetDocumentInChildrenOf(newContent, mDocument);
-          res = ReplaceChildAt(newContent, pos, PR_TRUE);
+          nsIContent* oldParent;
+          res = newContent->GetParent(oldParent);
+          if (NS_OK == res) {
+            // Remove the element from the old parent if one exists
+            if (nsnull != oldParent) {
+              PRInt32 index;
+              oldParent->IndexOf(newContent, index);
+              if (-1 != index) {
+                oldParent->RemoveChildAt(index, PR_TRUE);
+              }
+              NS_RELEASE(oldParent);
+            }
+           
+            SetDocumentInChildrenOf(newContent, mDocument);
+            res = ReplaceChildAt(newContent, pos, PR_TRUE);
+          }
         }
         NS_RELEASE(newContent);
       }
