@@ -40,10 +40,14 @@
 
 #include "nscore.h"
 
+class nsAString;
+class nsACString;
+
 class nsIComponentManager;
 class nsIComponentRegistrar;
 class nsIServiceManager;
 class nsIFile;
+class nsILocalFile;
 class nsIDirectoryServiceProvider;
 class nsIMemory;
 /**
@@ -53,10 +57,10 @@ class nsIMemory;
  * 
  * @status FROZEN
  *
- * @note Use <CODE>NS_NewLocalFile</CODE> to create the file object you
- *       supply as the bin directory path in this call. The function
- *       may be safely called before the rest of XPCOM or embedding has
- *       been initialised.
+ * @note Use <CODE>NS_NewLocalFile</CODE> or <CODE>NS_NewNativeLocalFile</CODE> 
+ *       to create the file object you supply as the bin directory path in this
+ *       call. The function may be safely called before the rest of XPCOM or 
+ *       embedding has been initialised.
  *
  * @param result           The service manager.  You may pass null.
  *
@@ -150,5 +154,38 @@ NS_GetComponentRegistrar(nsIComponentRegistrar* *result);
  */
 extern "C" NS_COM nsresult
 NS_GetMemoryManager(nsIMemory* *result);
+
+/**
+ * Public Method to create an instance of a nsILocalFile.  This function
+ * may be called prior to NS_InitXPCOM2.  
+ * 
+ * @status FROZEN
+ * 
+ *   @param filePath       
+ *       A string which specifies a full file path to a 
+ *       location.  Relative paths will be treated as an
+ *       error (NS_ERROR_FILE_UNRECOGNIZED_PATH).       
+ *       |NS_NewNativeLocalFile|'s path must be in the 
+ *       filesystem charset.
+ *   @param followLinks
+ *       This attribute will determine if the nsLocalFile will auto
+ *       resolve symbolic links.  By default, this value will be false
+ *       on all non unix systems.  On unix, this attribute is effectively
+ *       a noop.  
+  * @param result Interface pointer to a new instance of an nsILocalFile 
+ *
+ * @return NS_OK for success;
+ *         other error codes indicate a failure.
+ */
+
+extern "C" NS_COM nsresult
+NS_NewLocalFile(const nsAString &path, 
+                PRBool followLinks, 
+                nsILocalFile* *result);
+
+extern "C" NS_COM nsresult
+NS_NewNativeLocalFile(const nsACString &path, 
+                      PRBool followLinks, 
+                      nsILocalFile* *result);
 
 #endif

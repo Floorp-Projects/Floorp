@@ -52,7 +52,9 @@
 #include <signal.h>
 /* for nsTraceRefcnt::WalkTheStack() */
 #include "nsISupportsUtils.h"
+#ifndef MOZILLA_STRICT_API
 #include "nsTraceRefcnt.h"
+#endif
 
 #if defined(linux) && defined(__i386)
 #  define DebugBreak() { asm("int $3"); }
@@ -321,13 +323,17 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
       //
       ;
 
-    } else if ( strcmp(assertBehavior,"stack")==0 ) {
+    } 
+#ifndef XPCOM_GLUE
+    else if ( strcmp(assertBehavior,"stack")==0 ) {
 
       // walk the stack
       //
       nsTraceRefcnt::WalkTheStack(stderr);
 
-    } else if ( strcmp(assertBehavior,"abort")==0 ) {
+    } 
+#endif
+    else if ( strcmp(assertBehavior,"abort")==0 ) {
 
       // same as UNIX_CRASH_ON_ASSERT
       //

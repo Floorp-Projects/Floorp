@@ -265,6 +265,7 @@ nsThread::Init(nsIRunnable* runnable,
     PR_Unlock(mStartLock);
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p created\n", this));
+
     if (mThread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -436,6 +437,8 @@ nsThread::Shutdown()
         nsrefcnt cnt;
         NS_RELEASE2(gMainThread, cnt);
         NS_WARN_IF_FALSE(cnt == 0, "Main thread being held past XPCOM shutdown.");
+        
+        kIThreadSelfIndex = 0;
     }
 }
 

@@ -50,6 +50,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(xptiInterfaceInfoManager,
                               nsIInterfaceInfoSuperManager)
 
 static xptiInterfaceInfoManager* gInterfaceInfoManager = nsnull;
+#ifdef DEBUG
+static int gCallCount = 0;
+#endif
 
 // static
 xptiInterfaceInfoManager*
@@ -171,8 +174,10 @@ xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
     if(mAdditionalManagersLock)
         PR_DestroyLock(mAdditionalManagersLock);
 
+    gInterfaceInfoManager = nsnull;
 #ifdef DEBUG
     xptiInterfaceInfo::DEBUG_ShutdownNotification();
+    gCallCount = 0;
 #endif
 }
 
@@ -224,8 +229,7 @@ AppendFromDirServiceList(const char* codename, nsISupportsArray* aPath)
 PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
 {
 #ifdef DEBUG
-    static int callCount = 0;
-    NS_ASSERTION(!callCount++, "Expected only one call!");
+    NS_ASSERTION(!gCallCount++, "Expected only one call!");
 #endif
 
     nsCOMPtr<nsISupportsArray> searchPath;

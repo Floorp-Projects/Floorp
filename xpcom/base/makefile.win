@@ -101,7 +101,6 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsMemoryImpl.obj   \
         .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
-        .\$(OBJDIR)\nsIInterfaceRequestor.obj \
 #        .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsExceptionService.obj \
         .\$(OBJDIR)\nsTraceRefcnt.obj \

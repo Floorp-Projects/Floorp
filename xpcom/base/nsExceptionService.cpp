@@ -203,6 +203,7 @@ void nsExceptionService::Shutdown()
     PR_DestroyLock(lock);
     lock = nsnull;
   }
+  PR_SetThreadPrivate(tlsIndex, nsnull);
 }
 
 /* void setCurrentException (in nsIException error); */

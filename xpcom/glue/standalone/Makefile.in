@@ -70,7 +70,7 @@ include $(topsrcdir)/config/rules.mk
 export:: $(XPCOM_GLUE_SRC_CSRCS)
 	$(INSTALL) $^ .
 
-DEFINES		+= -D_IMPL_NS_COM_OFF 
+DEFINES		+= -D_IMPL_NS_COM_OFF -DXPCOM_GLUE
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN

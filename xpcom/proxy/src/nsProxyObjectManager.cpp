@@ -168,6 +168,13 @@ nsProxyObjectManager::GetInstance()
 }
 
 
+void
+nsProxyObjectManager::Shutdown()
+{
+    mInstance = nsnull;
+}
+
+
 // Helpers
 NS_IMETHODIMP 
 nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)

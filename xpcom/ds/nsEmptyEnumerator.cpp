@@ -104,4 +104,5 @@ NS_NewEmptyEnumerator(nsISimpleEnumerator** aResult)
 EmptyEnumeratorImpl::Shutdown()
 {
     delete gEmptyEnumerator;
+    gEmptyEnumerator = nsnull;
 }
