@@ -3430,9 +3430,12 @@ nsHTTPChannel::SetCacheAsFile(PRBool value)
 {
     if (!mCacheEntry)
         return NS_ERROR_NOT_AVAILABLE;
-    return mCacheEntry->SetStoragePolicy(value ? 
-                                         nsICache::STORE_ON_DISK_AS_FILE :
-                                         nsICache::STORE_ANYWHERE);
+    nsCacheStoragePolicy policy;
+    if (value)
+        policy = nsICache::STORE_ON_DISK_AS_FILE;
+    else
+        policy = nsICache::STORE_ANYWHERE;
+    return mCacheEntry->SetStoragePolicy(policy);
 }
 
 NS_IMETHODIMP
