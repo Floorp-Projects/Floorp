@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -48,6 +48,77 @@ nsRegisterItem::~nsRegisterItem()
     MOZ_COUNT_DTOR(nsRegisterItem);
 }
 
+#if defined (XP_MAC)
+static void SwapSlashColon(char * s)
+{
+	while (*s)
+	{
+		if (*s == '/')
+			*s++ = ':';
+		else if (*s == ':')
+			*s++ = '/';
+		else
+			*s++;
+	}
+} 
+#endif
+
+#ifdef XP_PC
+#include <windows.h>
+#endif
+
+static nsresult 
+hack_nsIFile2URL(nsIFile* file, char * *aURL)
+{
+    nsresult rv;
+    char* ePath;
+    rv = file->GetPath(&ePath);
+    if (NS_FAILED(rv)) return rv;
+#if defined (XP_PC)
+    // Replace \ with / to convert to an url
+    char* s = ePath;
+    while (*s) {
+#ifndef XP_OS2
+        // We need to call IsDBCSLeadByte because
+        // Japanese windows can have 0x5C in the sencond byte 
+        // of a Japanese character, for example 0x8F 0x5C is
+        // one Japanese character
+        if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+            s++;
+        } else 
+#endif
+            if (*s == '\\')
+                *s = '/';
+        s++;
+    }
+#endif
+#if defined( XP_MAC )
+    // Swap the / and colons to convert to an url
+    SwapSlashColon(ePath);
+#endif
+    // Escape the path with the directory mask
+    nsCAutoString tmp = ePath;
+    tmp.ReplaceChar(":", '|');
+    nsCAutoString escPath = "file://";
+	escPath += tmp;
+//    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
+//    if (NS_SUCCEEDED(rv)) {
+        PRBool dir;
+        rv = file->IsDirectory(&dir);
+        if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+            // make sure we have a trailing slash
+            escPath += "/";
+        }
+        *aURL = escPath.ToNewCString();
+        if (*aURL == nsnull) {
+            nsMemory::Free(ePath);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+//    }
+    nsMemory::Free(ePath);
+    return rv;
+}
+
 
 PRInt32 nsRegisterItem::Prepare()
 {
@@ -58,8 +129,8 @@ PRInt32 nsRegisterItem::Prepare()
         return nsInstall::DOES_NOT_EXIST;
 
     // if we're registering now we need to make sure we can construct a URL
-    if ( mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED) )
-    {
+//    if ( mInstall->GetChromeRegistry() && !(mChromeType & CHROME_DELAYED) )
+//    {
         // If not a directory then it's an archive and we need a jar: URL
         nsCOMPtr<nsIURI> pURL;
         PRBool isDir;
@@ -71,6 +142,9 @@ PRInt32 nsRegisterItem::Prepare()
             mURL = "jar:";
 
         nsXPIDLCString localURL;
+        nsresult rv = hack_nsIFile2URL(mChrome, getter_Copies(localURL));
+        mURL.Append(localURL);
+#if 0
         nsresult rv = NS_NewURI(getter_AddRefs(pURL), "file:");
         if (NS_SUCCEEDED(rv)) 
         {
@@ -85,13 +159,14 @@ PRInt32 nsRegisterItem::Prepare()
                 }
             }
         }
+#endif
 
         if (!localURL)
             return nsInstall::UNEXPECTED_ERROR;
 
         if (!isDir)
             mURL.Append("!/");
-    }
+//    }
 
     return nsInstall::SUCCESS;
 }
@@ -175,9 +250,9 @@ PRInt32 nsRegisterItem::Complete()
             PR_Seek(fd, 0, PR_SEEK_END);
             const char* location = (mChromeType & CHROME_PROFILE) ? "profile" : "install";
 
-            nsXPIDLCString path;
-            rv = mChrome->GetPath(getter_Copies(path));
-            if (NS_SUCCEEDED(rv) && path)
+//            nsXPIDLCString path;
+//            rv = mChrome->GetPath(getter_Copies(path));
+            if (NS_SUCCEEDED(rv)/* && path*/)
             {
                 PRInt32 written, actual;
                 char* installStr = nsnull;
@@ -186,8 +261,8 @@ PRInt32 nsRegisterItem::Complete()
                 // call can register all three types.
                 if (mChromeType & CHROME_SKIN)
                 {
-                    installStr = PR_smprintf("skin,%s,path,%s\n",
-                                             location, (const char*)path);
+                    installStr = PR_smprintf("skin,%s,url,%s\n",
+                                             location, (const char*)mURL);
                     if (installStr)
                     {
                         actual = strlen(installStr);
@@ -204,8 +279,8 @@ PRInt32 nsRegisterItem::Complete()
 
                 if (mChromeType & CHROME_LOCALE)
                 {
-                    installStr = PR_smprintf("locale,%s,path,%s\n",
-                                             location, (const char*)path);
+                    installStr = PR_smprintf("locale,%s,url,%s\n",
+                                             location, (const char*)mURL);
                     if (installStr)
                     {
                         actual = strlen(installStr);
@@ -222,8 +297,8 @@ PRInt32 nsRegisterItem::Complete()
 
                 if (mChromeType & CHROME_CONTENT)
                 {
-                    installStr = PR_smprintf("content,%s,path,%s\n",
-                                             location, (const char*)path);
+                    installStr = PR_smprintf("content,%s,url,%s\n",
+                                             location, (const char*)mURL);
                     if (installStr)
                     {
                         actual = strlen(installStr);
