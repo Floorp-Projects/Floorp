@@ -55,6 +55,7 @@
 #include "nsTextFormatter.h"
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIMsgLocalMailFolder.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -63,7 +64,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 // nsFolderCompactState
 //////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS4(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserver, nsIStreamListener, nsICopyMessageStreamListener)
+NS_IMPL_ISUPPORTS5(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserver, nsIStreamListener, nsICopyMessageStreamListener, nsIUrlListener)
 
 nsFolderCompactState::nsFolderCompactState()
 {
@@ -76,6 +77,7 @@ nsFolderCompactState::nsFolderCompactState()
   m_messageService = nsnull;
   m_compactAll = PR_FALSE;
   m_compactOfflineAlso = PR_FALSE;
+  m_parsingFolder=PR_FALSE;
   m_folderIndex =0;
 }
 
@@ -197,9 +199,26 @@ nsFolderCompactState::CompactHelper(nsIMsgFolder *folder)
    nsCOMPtr<nsIFileSpec> pathSpec;
    char *baseMessageURI;
 
-   rv = folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
-   NS_ENSURE_SUCCESS(rv,rv);
-
+   nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(folder, &rv);
+   if (NS_SUCCEEDED(rv) && localFolder)
+   {
+     rv=localFolder->GetDatabaseWOReparse(getter_AddRefs(db));
+     if (NS_FAILED(rv) || !db)
+     {
+       if (rv == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || rv == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+       {
+         m_folder =folder;  //will be used to compact
+         m_parsingFolder = PR_TRUE;
+         rv = localFolder->ParseFolder(m_window, this);
+       }
+       return rv;
+     }
+   }
+   else
+   {
+     rv=folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
+     NS_ENSURE_SUCCESS(rv,rv);
+   }
    rv = folder->GetPath(getter_AddRefs(pathSpec));
    NS_ENSURE_SUCCESS(rv,rv);
 
@@ -251,6 +270,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
   m_fileStream = new nsOutputFileStream(m_fileSpec);
   if (!m_fileStream) 
   {
+    m_folder->ThrowAlertMsg("compactFolderWriteFailed", m_window);
     rv = NS_ERROR_OUT_OF_MEMORY; 
   }
   else
@@ -272,6 +292,24 @@ void nsFolderCompactState::ShowCompactingStatusMsg()
   nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingFolder", getter_Copies(statusString));
   if (statusString && NS_SUCCEEDED(rv))
     ShowStatusMsg(statusString);
+}
+
+NS_IMETHODIMP nsFolderCompactState::OnStartRunningUrl(nsIURI *url)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFolderCompactState::OnStopRunningUrl(nsIURI *url, nsresult status)
+{
+  if (m_parsingFolder)
+  {
+    m_parsingFolder=PR_FALSE;
+    if (NS_SUCCEEDED(status))
+      status=CompactHelper(m_folder);
+    else if (m_compactAll)
+      CompactNextFolder();
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsFolderCompactState::StartCompacting()
@@ -356,6 +394,7 @@ nsFolderCompactState::FinishCompact()
   db=nsnull;
     // close down database of the original folder and remove the folder node
     // and all it's message node from the tree
+  dbFolderInfo=nsnull;
   m_folder->ForceDBClosed();
     // remove the old folder and database
   fileSpec.Delete(PR_FALSE);
@@ -367,18 +406,13 @@ nsFolderCompactState::FinishCompact()
  
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
-
   m_folder->GetMsgDatabase(m_window, getter_AddRefs(db));
   if (transferInfo && db)
   {
-    dbFolderInfo=nsnull;
     db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-    if (dbFolderInfo)
+    if(dbFolderInfo)
       dbFolderInfo->InitFromTransferInfo(transferInfo);
   }
-  db = nsnull;
-  dbFolderInfo=nsnull;
-  transferInfo=nsnull;
 
   m_folder->NotifyCompactCompleted();
 

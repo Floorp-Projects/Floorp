@@ -49,13 +49,14 @@
 
 class nsIMsgMessageService;
 
-class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener, public nsICopyMessageStreamListener
+class nsFolderCompactState : public nsIMsgFolderCompactor, public nsIStreamListener, public nsICopyMessageStreamListener, public nsIUrlListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSICOPYMESSAGESTREAMLISTENER
+  NS_DECL_NSIURLLISTENER
   NS_DECL_NSIMSGFOLDERCOMPACTOR
 
   nsFolderCompactState(void);
@@ -95,6 +96,7 @@ public:
   PRBool m_compactAll;  //flag for compact all
   PRBool m_compactOfflineAlso; //whether to compact offline also
   nsCOMPtr <nsISupportsArray> m_offlineFolderArray;
+  PRBool m_parsingFolder; //flag for parsing local folders;
 
 };
 
