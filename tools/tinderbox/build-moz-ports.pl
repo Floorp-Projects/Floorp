@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.15 $';
+$Version = '$Revision: 1.16 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -63,7 +63,7 @@ sub InitVars {
 sub ConditionalArgs {
     if ( $BuildClassic ) {
 	$FE = 'x';
-	$ConfigureArgs .= " --enable-fe=$FE";
+	$ConfigureArgs .= "--enable-fe=$FE ";
 	$BuildModule = 'Raptor';
 	$BuildTag = ''
 	    if ( $BuildTag eq '' );
@@ -349,8 +349,9 @@ sub GetSystemInfo {
 }
 
 sub BuildIt {
-    my($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp);
+    my($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp, $jflag);
     $comptmp = '';
+    $jflag = '';
 
     mkdir("$DirName", 0777);
     chdir("$DirName") || die "Couldn't enter $DirName";
@@ -358,6 +359,9 @@ sub BuildIt {
     $StartDir = getcwd();
     $LastTime = 0;
     $EarlyExit = 0;
+
+    # With only one it makes no sense to use this.
+    $jflag = "-j $cpus" if ( $cpus > 1 );
 
     print "Starting dir is : $StartDir\n";
 
@@ -436,7 +440,7 @@ sub BuildIt {
 	chdir($Topsrcdir) || die "chdir($Topsrcdir): $!\n";
 	print LOG "Build nspr\n";
 	open (BUILDNSPR, "gmake -C nsprpub $NSPRArgs export 2>&1 | ") || die "Build nspr: $!\n";
-	while(<BUILDNSPR>) {
+	while (<BUILDNSPR>) {
 		print LOG $_;
 		print $_;
 	}
@@ -475,8 +479,8 @@ sub BuildIt {
 
 	# If we are building depend, rebuild dependencies
 	if ( $BuildDepend ) {
-	    print LOG "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n";
-	    open ( MAKEDEPEND, "$Make MAKE='$Make -j $cpus' depend 2>&1 |\n");
+	    print LOG "$Make MAKE='$Make $jflag' depend 2>&1 |\n";
+	    open ( MAKEDEPEND, "$Make MAKE='$Make $jflag' depend 2>&1 |\n");
 	    while ( <MAKEDEPEND> ) {
 		print $_;
 		print LOG $_;
@@ -485,8 +489,8 @@ sub BuildIt {
 	    system("rm -rf dist");
 	} else {
 	    # Building clobber
-	    print LOG "$Make MAKE='$Make -j $cpus' $ClobberStr 2>&1 |\n";
-	    open( MAKECLOBBER, "$Make MAKE='$Make -j $cpus' $ClobberStr 2>&1 |");	    
+	    print LOG "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |\n";
+	    open( MAKECLOBBER, "$Make MAKE='$Make $jflag' $ClobberStr 2>&1 |");	    
 	    while ( <MAKECLOBBER> ) {
 	    	print $_;
 	    	print LOG $_;
@@ -505,8 +509,8 @@ sub BuildIt {
 
 	if ( $BuildClassic ) {
 	    # Build the BE only	    
-	    print LOG "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |\n";
-	    open( BEBUILD, "$Make MAKE='$Make -j $cpus' MOZ_FE= 2>&1 |");
+	    print LOG "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |\n";
+	    open( BEBUILD, "$Make MAKE='$Make $jflag' MOZ_FE= 2>&1 |");
 
 	    while ( <BEBUILD> ) {
 		print $_;
@@ -516,8 +520,8 @@ sub BuildIt {
 
 	    foreach $fe ( @felist ) {		   
 		# Now build each front end
-		print LOG "$Make MAKE='$Make -j $cpus' -C cmd/${fe}fe 2>&1 |\n";
-		open(FEBUILD, "$Make MAKE='$Make -j $cpus' -C cmd/${fe}fe 2>&1 |\n");
+		print LOG "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n";
+		open(FEBUILD, "$Make MAKE='$Make $jflag' -C cmd/${fe}fe 2>&1 |\n");
 		while (<FEBUILD>) {
 		    print $_;
 		    print LOG $_;
@@ -525,8 +529,8 @@ sub BuildIt {
 		close(FEBUILD);
 	    }
 	} else {
-		print LOG "$Make MAKE='$Make -j $cpus' $MakeOverrides 2>&1 |\n";
-		open(BUILD, "$Make MAKE='$Make -j $cpus' $MakeOverrides 2>&1 |\n");
+		print LOG "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n";
+		open(BUILD, "$Make MAKE='$Make $jflag' $MakeOverrides 2>&1 |\n");
 		while (<BUILD>) {
 		    print $_;
 		    print LOG $_;
@@ -700,6 +704,9 @@ sub ParseArgs {
 	}
 	elsif ( $ARGV[$i] eq '--nocompress' ) {
 	    $CVS = 'cvs -q';
+	}
+	elsif ( $ARGV[$i] eq '--nodeps' ) {
+	    $ConfigureArgs .= '--enable-md=no ';
 	}
 	elsif ( $ARGV[$i] eq '--noreport' ) {
 	    $ReportStatus = 0;
