@@ -1163,8 +1163,9 @@ nsTokenAllocator::nsTokenAllocator() {
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
     mTotals[i]=0;
-#endif
   }
+#endif
+
 }
 
 /**
