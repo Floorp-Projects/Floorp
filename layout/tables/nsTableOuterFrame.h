@@ -129,6 +129,7 @@ protected:
                                                    OuterTableReflowState& aState,
                                                    PRBool aIsInitialReflow);
 
+#if 0
   /** reflow the top captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Top captions are laid down
     * before the inner table.
@@ -149,6 +150,7 @@ protected:
                                                          nsSize*          aMaxElementSize,
                                                          nscoord          aYOffset,
                                                          OuterTableReflowState& aState);
+#endif
 
   nscoord       GetTopMarginFor(nsIPresContext* aCX,
                                 OuterTableReflowState& aState,
@@ -187,11 +189,11 @@ protected:
   virtual       void SetReflowState(OuterTableReflowState& aState, 
                                     nsIFrame*              aKidFrame);
 
-  virtual nsReflowStatus ReflowChild( nsIFrame*        aKidFrame,
-                                      nsIPresContext*  aPresContext,
-                                      nsReflowMetrics& aDesiredSize,
-                                      const nsSize&    aMaxSize,
-                                      nsSize*          aMaxElementSize,
+  virtual nsReflowStatus ReflowChild( nsIFrame*              aKidFrame,
+                                      nsIPresContext*        aPresContext,
+                                      nsReflowMetrics&       aDesiredSize,
+                                      const nsReflowState&   aKidReflowState,
+                                      nsSize*                aMaxElementSize,
                                       OuterTableReflowState& aState);
 
   /** overridden here to handle special caption-table relationship
