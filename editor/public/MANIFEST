@@ -22,3 +22,4 @@ nsEditorCID.h
 nsIContextLoader.h
 nsIHTMLEditor.h
 nsIEditRules.h
+nsIEditActionListener.h
