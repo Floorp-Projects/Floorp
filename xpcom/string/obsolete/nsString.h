@@ -472,7 +472,8 @@ public:
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
   void AppendWithConversion(PRUnichar aChar);
-  // Why no |AppendWithConversion(const PRUnichar*)|?
+  void AppendWithConversion(const PRUnichar*, PRInt32=-1);
+  // Why no |AppendWithConversion(const PRUnichar*, PRInt32)|? --- now I know, because implicit construction hid the need for this routine
   void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
   void AppendFloat( double aFloat );
 

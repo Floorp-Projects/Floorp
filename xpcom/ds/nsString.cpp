@@ -1072,6 +1072,19 @@ void nsCString::AppendWithConversion(PRUnichar aChar) {
   StrAppend(*this,temp,0,1);
 }
 
+void nsCString::AppendWithConversion( const PRUnichar* aBuffer, PRInt32 aLength )
+  {
+    nsStr temp;
+    nsStr::Initialize(temp, eTwoByte);
+    temp.mUStr = NS_CONST_CAST(PRUnichar*, aBuffer);
+
+    if ( aLength < 0 )
+      aLength = nsCharTraits<PRUnichar>::length(aBuffer);
+
+    if ( aLength > 0 )
+      StrAppend(*this, temp, 0, aLength);
+  }
+
 /**
  * Append the given integer to this string 
  * @update  gess 01/04/99
