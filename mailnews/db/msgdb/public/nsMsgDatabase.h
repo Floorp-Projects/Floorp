@@ -243,7 +243,7 @@ protected:
 	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsString2 &msgID);
 	nsMsgThread *	GetThreadContainingMsgHdr(nsMsgHdr *msgHdr);
 	// threading interfaces
-	virtual nsresult CreateNewThread(nsMsgKey key, nsMsgThread **newThread);
+	virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
 	virtual PRBool	ThreadBySubjectWithoutRe();
 	virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
 	virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
@@ -288,13 +288,16 @@ protected:
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
 	nsIMdbTable		    *m_mdbAllMsgHeadersTable;
+	nsIMdbTable			*m_mdbAllThreadsTable;
 	nsFileSpec		    m_dbName;
 	nsMsgKeySet		    *m_newSet;	// new messages since last open.
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
 	mdb_token			m_hdrRowScopeToken;
+	mdb_token			m_threadRowScopeToken;
 	mdb_token			m_hdrTableKindToken;
 	mdb_token			m_threadTableKindToken;
+	mdb_token			m_allThreadsTableKindToken;
 	mdb_token			m_subjectColumnToken;
 	mdb_token			m_senderColumnToken;
 	mdb_token			m_messageIdColumnToken;
