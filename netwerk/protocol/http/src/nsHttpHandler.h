@@ -92,6 +92,8 @@ public:
     PRUint16       MaxRequestAttempts()      { return mMaxRequestAttempts; }
     const char    *DefaultSocketType()       { return mDefaultSocketType.get(); /* ok to return null */ }
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
+    
+    PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
     nsHttpAuthCache     *AuthCache() { return &mAuthCache; }
     nsHttpConnectionMgr *ConnMgr()   { return mConnMgr; }
@@ -254,6 +256,9 @@ private:
     // mSendSecureXSiteReferrer: default is false, 
     // if true allow referrer headers between secure non-matching hosts
     PRPackedBool   mSendSecureXSiteReferrer;
+
+    // Persitent HTTPS caching flag
+    PRPackedBool   mEnablePersistentHttpsCaching;
 };
 
 //-----------------------------------------------------------------------------

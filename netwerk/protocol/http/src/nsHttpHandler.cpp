@@ -87,9 +87,11 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
 #define INTL_ACCEPT_CHARSET     "intl.charset.default"
 #define NETWORK_ENABLEIDN       "network.enableIDN"
+#define BROWSER_PREF_PREFIX     "browser.cache."
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
+#define BROWSER_PREF(_pref) BROWSER_PREF_PREFIX _pref
 
 //-----------------------------------------------------------------------------
 
@@ -143,6 +145,7 @@ nsHttpHandler::nsHttpHandler()
     , mUserAgentIsDirty(PR_TRUE)
     , mUseCache(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
+    , mEnablePersistentHttpsCaching(PR_FALSE)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -198,6 +201,7 @@ nsHttpHandler::Init()
             pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
             pbi->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
             pbi->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
+            pbi->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
         }
         PrefsChanged(prefBranch, nsnull);
     }
@@ -977,6 +981,14 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                 }
             }
         }
+    }
+
+    // enable Persistent caching for HTTPS - bug#205921    
+    if (PREF_CHANGED(BROWSER_PREF("disk_cache_ssl"))) {
+        cVar = PR_FALSE;
+        rv = prefs->GetBoolPref(BROWSER_PREF("disk_cache_ssl"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mEnablePersistentHttpsCaching = cVar;
     }
 
     //

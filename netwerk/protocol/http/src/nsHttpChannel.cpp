@@ -173,7 +173,7 @@ nsHttpChannel::Init(nsIURI *uri,
     NS_ADDREF(mConnectionInfo);
 
     // make sure our load flags include this bit if this is a secure channel.
-    if (usingSSL)
+    if (usingSSL && !gHttpHandler->IsPersistentHttpsCachingEnabled()) 
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
     // Set default request method
@@ -2512,7 +2512,8 @@ nsHttpChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
     mLoadFlags = aLoadFlags;
 
     // don't let anyone overwrite this bit if we're using a secure channel.
-    if (mConnectionInfo && mConnectionInfo->UsingSSL())
+    if (mConnectionInfo && mConnectionInfo->UsingSSL() 
+        && !gHttpHandler->IsPersistentHttpsCachingEnabled())
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
 
     return NS_OK;
