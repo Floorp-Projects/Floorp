@@ -2072,7 +2072,7 @@ BOOL nsWindow::OnChar( UINT aVirtualKeyCode )
 
   DispatchKeyEvent(NS_KEY_DOWN, aVirtualKeyCode, aVirtualKeyCode);
 
-  return TRUE;
+  return FALSE;
 }
 
 
