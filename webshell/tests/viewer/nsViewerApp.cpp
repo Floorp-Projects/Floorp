@@ -129,7 +129,7 @@ nsViewerApp::nsViewerApp()
   NS_INIT_REFCNT(); 
 
   char * text = PR_GetEnv("NGLAYOUT_HOME");
-  mStartURL = text ? text : "resource:/res/samples/test0.html";
+  mStartURL.AssignWithConversion(text ? text : "resource:/res/samples/test0.html");
 
   //rickg 20Nov98: For the sake of a good demo, pre-load a decent URL...
 //  mStartURL = text ? text : "http://developer.netscape.com/software/communicator/ngl/index.html";
@@ -487,7 +487,7 @@ AddTestDocsFromFile(nsWebCrawler* aCrawler, const nsString& aFileName)
 
     // Add non-empty lines to the test list
     if (0 != len) {
-      line = linebuf;
+      line.AssignWithConversion(linebuf);
       aCrawler->AddURL(line);
     }
   }
@@ -541,7 +541,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mInputFileName = argv[i];
+        mInputFileName.AssignWithConversion(argv[i]);
         mCrawler->SetExitOnDone(PR_TRUE);
         mCrawl = PR_TRUE;
       }
@@ -552,7 +552,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetEnableRegression(PR_TRUE);
-        mCrawler->SetRegressionDir(argv[i]);
+        mCrawler->SetRegressionDir(NS_ConvertASCIItoUCS2(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-o") == 0) {
         i++;
@@ -561,7 +561,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->SetOutputDir(argv[i]);
+        mCrawler->SetOutputDir(NS_ConvertASCIItoUCS2(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-d") == 0) {
         int delay;
@@ -625,7 +625,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->AddSafeDomain(argv[i]);
+        mCrawler->AddSafeDomain(NS_ConvertASCIItoUCS2(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-A") == 0) {
         i++;
@@ -633,7 +633,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           PrintHelpInfo(argv);
           exit(-1);
         }
-        mCrawler->AddAvoidDomain(argv[i]);
+        mCrawler->AddAvoidDomain(NS_ConvertASCIItoUCS2(argv[i]));
       }
       else if (PL_strcmp(argv[i], "-N") == 0) {
         int pages;
@@ -670,7 +670,7 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       break;
   }
   if (i < argc) {
-    mStartURL = argv[i];
+    mStartURL.AssignWithConversion(argv[i]);
 #if defined(XP_UNIX) || defined(XP_BEOS)
     if (argv[i][0] == '/') {
       mStartURL.Insert("file:", 0);
@@ -709,7 +709,7 @@ nsViewerApp::OpenWindow()
       for (int docnum = 0; docnum < mNumSamples; docnum++) {
         char url[500];
         PR_snprintf(url, 500, "%s/test%d.html", SAMPLES_BASE_URL, docnum);
-        mCrawler->AddURL(url);
+        mCrawler->AddURL(NS_ConvertASCIItoUCS2(url));
       }
     }
     mCrawler->Start();
@@ -761,7 +761,7 @@ nsViewerApp::ViewSource(nsString& aURL)
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->mDocShell->SetViewMode(nsIDocShell::viewSource);
-  bw->SetTitle(nsAutoString("View Source").GetUnicode());
+  bw->SetTitle(NS_ConvertASCIItoUCS2("View Source").GetUnicode());
   bw->SetVisibility(PR_TRUE);
   bw->GoTo(aURL.GetUnicode());
   NS_RELEASE(bw);
@@ -1019,7 +1019,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsComponentManager::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mUpdateChkBtn);
 #endif
   NS_CreateCheckButton(mRobotDialog, mUpdateChkBtn,rect,HandleRobotEvent,&font);
-  mUpdateChkBtn->SetLabel("Update Display (Visual)");
+  mUpdateChkBtn->SetLabel(NS_ConvertASCIItoUCS2("Update Display (Visual)"));
   mUpdateChkBtn->SetState(PR_TRUE);
   y += 24 + 2;
 
@@ -1033,7 +1033,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->SetLabel("Verfication Directory:");
+  label->SetLabel(NS_ConvertASCIItoUCS2("Verfication Directory:"));
   x += w + 1;
 
   // Create TextField
@@ -1050,7 +1050,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
     widget->SetBackgroundColor(textBGColor);
     widget->SetForegroundColor(textFGColor);
   }
-  nsString str(DEBUG_EMPTY);
+  nsString str; str.AssignWithConversion(DEBUG_EMPTY);
   PRUint32 size;
   mVerDirTxt->SetText(str,size);
 
@@ -1066,7 +1066,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->SetLabel("Stop after:");
+  label->SetLabel(NS_ConvertASCIItoUCS2("Stop after:"));
   x += w + 2;
 
   // Create TextField
@@ -1081,7 +1081,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   {
     widget->SetBackgroundColor(textBGColor);
     widget->SetForegroundColor(textFGColor);
-    mStopAfterTxt->SetText("5000",size);
+    mStopAfterTxt->SetText(NS_ConvertASCIItoUCS2("5000"),size);
   }
   x += 75 + 2;
 
@@ -1094,7 +1094,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
 #endif
   NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Left);
-  label->SetLabel("(page loads)");
+  label->SetLabel(NS_ConvertASCIItoUCS2("(page loads)"));
   y += txtHeight + 2;
   
 
@@ -1109,7 +1109,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mStartBtn);
 #endif
   NS_CreateButton(mRobotDialog,mStartBtn,rect,HandleRobotEvent,&font);
-  mStartBtn->SetLabel("Start");
+  mStartBtn->SetLabel(NS_ConvertASCIItoUCS2("Start"));
   
   xx += w + xx;
   // Create Cancel Button
@@ -1120,7 +1120,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
 #endif
   NS_CreateButton(mRobotDialog,mCancelBtn,rect,HandleRobotEvent,&font);
-  mCancelBtn->SetLabel("Cancel");
+  mCancelBtn->SetLabel(NS_ConvertASCIItoUCS2("Cancel"));
   
   NS_ShowWidget(mRobotDialog,PR_TRUE);
   NS_SetFocusToWidget(mStartBtn);
@@ -1145,7 +1145,13 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
           return rv;
         }
         nsVoidArray * gWorkList = new nsVoidArray();
-        gWorkList->AppendElement(new nsString(str));
+
+        {
+          nsString* tempStr = new nsString;
+          if ( tempStr )
+            tempStr->AssignWithConversion(str);
+          gWorkList->AppendElement(tempStr);
+        }
 #if defined(XP_PC) && defined(NS_DEBUG) && !defined(XP_OS2)
         DebugRobot( 
           gWorkList, 
@@ -1356,13 +1362,13 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
         NS_EnableWidget(mSiteNextBtn, gTop100Pointer < (gTop100LastPointer-1));
 
         if (gWinData && loadPage && oldIndex != gTop100Pointer) {
-          nsString urlStr(gTop100List[gTop100Pointer]);
+          nsString urlStr; urlStr.AssignWithConversion(gTop100List[gTop100Pointer]);
           mSiteLabel->SetLabel(urlStr);
           gWinData->GoTo(urlStr.GetUnicode());
         }
 
-        nsString str("");
-        str += gTop100Pointer;
+        nsAutoString str;
+        str.AppendInt(gTop100Pointer);
         PRUint32 size;
         mSiteIndexTxt->SetText(str, size);
       }
@@ -1434,9 +1440,9 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
       //mSiteDialog->SetLabel("Top 100 Site Walker");
     }
     //mSiteDialog->SetClientData(this);
-    nsAutoString titleStr("Top ");
-    titleStr += gTop100LastPointer;
-    titleStr += " Sites";
+    nsAutoString titleStr; titleStr.AssignWithConversion("Top ");
+    titleStr.AppendInt(gTop100LastPointer);
+    titleStr.AppendWithConversion(" Sites");
     mSiteDialog->SetTitle(titleStr);
 
     nscoord w  = 65;
@@ -1453,7 +1459,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 #endif
     NS_CreateLabel(mSiteDialog,label,rect,HandleSiteEvent,&font);
     label->SetAlignment(eAlign_Right);
-    label->SetLabel("Site:");
+    label->SetLabel(NS_ConvertASCIItoUCS2("Site:"));
     x += w + 1;
 
     w = 250;
@@ -1465,7 +1471,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 #endif
     NS_CreateLabel(mSiteDialog,mSiteLabel,rect,HandleSiteEvent,&font);
     mSiteLabel->SetAlignment(eAlign_Left);
-    mSiteLabel->SetLabel("");
+    mSiteLabel->SetLabel(nsAutoString());
 
     y += 34;
     w = 75;
@@ -1479,7 +1485,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSitePrevBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSitePrevBtn,rect,HandleSiteEvent,&font);
-    mSitePrevBtn->SetLabel("<< Previous");
+    mSitePrevBtn->SetLabel(NS_ConvertASCIItoUCS2("<< Previous"));
     x += spacing + w;
 
     // Create Next Button
@@ -1490,7 +1496,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteNextBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteNextBtn,rect,HandleSiteEvent,&font);
-    mSiteNextBtn->SetLabel("Next >>");
+    mSiteNextBtn->SetLabel(NS_ConvertASCIItoUCS2("Next >>"));
     x += spacing + w;
   
     // Create Cancel Button
@@ -1501,7 +1507,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteCancelBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
-    mSiteCancelBtn->SetLabel("Cancel");
+    mSiteCancelBtn->SetLabel(NS_ConvertASCIItoUCS2("Cancel"));
 
     /////////////////////////
     w  = 65;
@@ -1533,8 +1539,8 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     }
     NS_IF_RELEASE(lookAndFeel);
 
-    nsString str("");
-    str += 0;
+    nsString str;
+    str.AppendInt(0);
     PRUint32 size;
     mSiteIndexTxt->SetText(str,size);
 
@@ -1548,7 +1554,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteJumpBtn);
 #endif
     NS_CreateButton(mSiteDialog,mSiteJumpBtn,rect,HandleSiteEvent,&font);
-    mSiteJumpBtn->SetLabel("Jump to Index");
+    mSiteJumpBtn->SetLabel(NS_ConvertASCIItoUCS2("Jump to Index"));
   }
 
 
@@ -1559,7 +1565,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
   NS_EnableWidget(mSitePrevBtn,PR_FALSE);
  
   if (gWinData) {
-    nsString urlStr(gTop100List[gTop100Pointer]);
+    nsString urlStr; urlStr.AssignWithConversion(gTop100List[gTop100Pointer]);
     gWinData->GoTo(urlStr.GetUnicode());
     mSiteLabel->SetLabel(urlStr);
   }

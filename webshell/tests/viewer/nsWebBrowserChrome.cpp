@@ -332,7 +332,7 @@ NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 
    nsAutoString newTitle(aTitle);
 
-   newTitle.Append(" - Raptor");
+   newTitle.AppendWithConversion(" - Raptor");
    
    mBrowserWindow->SetTitle(newTitle.GetUnicode());
    return NS_OK;
@@ -403,7 +403,7 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
    if(mBrowserWindow->mLocation)
       {
       PRUint32 size;
-      nsAutoString tmp(spec);
+      nsAutoString tmp; tmp.AssignWithConversion(spec);
 
       mBrowserWindow->mLocation->SetText(tmp,size);
       }
@@ -449,8 +449,8 @@ void nsWebBrowserChrome::OnLoadStart(nsIChannel* aChannel)
 
       uri->GetSpec(getter_Copies(uriString));
 
-      nsAutoString url(uriString);
-      url.Append(": start");
+      nsAutoString url; url.AssignWithConversion(uriString);
+      url.AppendWithConversion(": start");
       PRUint32 size;
       mBrowserWindow->mStatus->SetText(url,size);
       }
@@ -468,7 +468,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel,
       uri->GetSpec(getter_Copies(uriString));
       }
    
-   nsAutoString msg(uriString);
+   nsAutoString msg; msg.AssignWithConversion(uriString);
 
    PRTime endLoadTime = PR_Now();
    if(mBrowserWindow->mShowLoadTimes)
@@ -487,7 +487,7 @@ void nsWebBrowserChrome::OnLoadFinished(nsIChannel* aChannel,
       {
       PRUint32 size;
 
-      msg.Append(" done.");
+      msg.AppendWithConversion(" done.");
 
       mBrowserWindow->mStatus->SetText(msg, size);
       }
@@ -508,8 +508,8 @@ void nsWebBrowserChrome::OnStatusConnecting(nsIChannel* aChannel)
       uri->GetSpec(getter_Copies(uriString));
       }
    
-   nsAutoString msg("Connecting to ");
-   msg.Append(uriString);
+   nsAutoString msg; msg.AssignWithConversion("Connecting to ");
+   msg.AppendWithConversion(uriString);
       
    PRUint32 size;
    mBrowserWindow->mStatus->SetText(msg,size);

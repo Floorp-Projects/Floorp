@@ -99,13 +99,13 @@ static nsresult PrintEditorOutput(nsIEditor* editor, PRInt32 aCommandID)
 	switch (aCommandID)
 	{
       case VIEWER_DISPLAYTEXT:
-        formatString = "text/plain";
+        formatString.AssignWithConversion("text/plain");
         flags = nsIDocumentEncoder::OutputFormatted;
         editor->OutputToString(outString, formatString, flags);
         break;
         
       case VIEWER_DISPLAYHTML:
-        formatString = "text/html";
+        formatString.AssignWithConversion("text/html");
         editor->OutputToString(outString, formatString, flags);
         break;
 	}
@@ -127,10 +127,10 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
     switch(aCommandID)
     {
       case VIEWER_EDIT_SET_BGCOLOR_RED:
-        htmlEditor->SetBodyAttribute("bgcolor", "red");
+        htmlEditor->SetBodyAttribute(NS_ConvertASCIItoUCS2("bgcolor"), NS_ConvertASCIItoUCS2("red"));
         break;
       case VIEWER_EDIT_SET_BGCOLOR_YELLOW:
-        htmlEditor->SetBodyAttribute("bgcolor", "yellow");
+        htmlEditor->SetBodyAttribute(NS_ConvertASCIItoUCS2("bgcolor"), NS_ConvertASCIItoUCS2("yellow"));
         break;
       case VIEWER_EDIT_INSERT_CELL:  
         tableEditor->InsertTableCell(1, PR_FALSE);

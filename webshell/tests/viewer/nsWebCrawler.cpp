@@ -452,7 +452,7 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
     char *inputFileName;
     char* file;
     (void)aURL->GetPath(&file);
-    nsAutoString inputFileFullPath(file);
+    nsAutoString inputFileFullPath; inputFileFullPath.AssignWithConversion(file);
     nsCRT::free(file);
     PRInt32 fileNameOffset = inputFileFullPath.RFindChar('/');
     if (-1==fileNameOffset)
@@ -482,10 +482,10 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
       *c++ = 'd';
       *c++ = '\0';
       aOutputName.Truncate();
-      aOutputName.Append(inputFileName);
+      aOutputName.AppendWithConversion(inputFileName);
     }
     nsAutoString outputFileName(mOutputDir);
-    outputFileName += inputFileName;
+    outputFileName.AppendWithConversion(inputFileName);
     PRInt32 bufLen = outputFileName.Length()+1;
     char *buf = new char[bufLen+1];
     outputFileName.ToCString(buf, bufLen);
@@ -882,7 +882,7 @@ OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
 {
   nsAutoString a;
   a.Append(aBaseName);
-  a.Append("/");
+  a.AppendWithConversion("/");
   a.Append(aOutputName);
   char* fn = a.ToNewCString();
   FILE* fp = fopen(fn, "r");

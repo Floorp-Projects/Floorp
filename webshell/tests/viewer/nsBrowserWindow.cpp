@@ -751,7 +751,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 #endif
 #ifdef ClientWallet
 #define WALLET_EDITOR_URL "file:///y|/walleted.html"
-  nsAutoString urlString(WALLET_EDITOR_URL);
+  nsAutoString urlString; urlString.AssignWithConversion(WALLET_EDITOR_URL);
 #endif
 #endif
 
@@ -825,10 +825,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
   case VIEWER_DEMO17:
     {
       PRIntn ix = aID - VIEWER_DEMO0;
-      nsAutoString url(SAMPLES_BASE_URL);
-      url.Append("/test");
-      url.Append(ix, 10);
-      url.Append(".html");
+      nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
+      url.AppendWithConversion("/test");
+      url.AppendInt(ix, 10);
+      url.AppendWithConversion(".html");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.GetUnicode());
     }
@@ -836,16 +836,16 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   case VIEWER_XPTOOLKITTOOLBAR1:
     {
-      nsAutoString url(SAMPLES_BASE_URL);
-      url.Append("/toolbarTest1.xul");
+      nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
+      url.AppendWithConversion("/toolbarTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.GetUnicode());
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
     {
-      nsAutoString url(SAMPLES_BASE_URL);
-      url.Append("/treeTest1.xul");
+      nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
+      url.AppendWithConversion("/treeTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
       webNav->LoadURI(url.GetUnicode());
       break;
@@ -975,14 +975,14 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    nsString urlString2 = nsString("");
+    nsString urlString2;
     res = walletservice->WALLET_Prefill(shell, (PRVCY_QPREFILL == aID));
     NS_RELEASE(walletservice);
   }
 
 #ifndef HTMLDialogs 
   if (aID == PRVCY_PREFILL) {
-    nsAutoString url("file:///y|/htmldlgs.htm");
+    nsAutoString url; url.AssignWithConversion("file:///y|/htmldlgs.htm");
     nsBrowserWindow* bw = nsnull;
     mApp->OpenWindow(PRUint32(~0), bw);
     bw->SetVisibility(PR_TRUE);
@@ -1079,19 +1079,20 @@ static PRBool GetFileFromFileSelector(nsIWidget* aParentWindow,
 {
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
-  nsString title("Open HTML");
+  nsString title; title.AssignWithConversion("Open HTML");
   nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
                                                    nsnull,
                                                    kIFileWidgetIID,
                                                    (void**)&fileWidget);
   if (NS_OK == rv) {
-    nsString titles[] = {"All Readable Files", "HTML Files",
-                         "XML Files", "Image Files", "All Files"};
-    nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
-                          "*.htm; *.html",
-                          "*.xml",
-                          "*.gif; *.jpg; *.jpeg; *.png",
-                          "*.*"};
+      // STRING USE WARNING: this section really needs to be looked at
+    nsString titles[] = {NS_ConvertASCIItoUCS2("All Readable Files"), NS_ConvertASCIItoUCS2("HTML Files"),
+                         NS_ConvertASCIItoUCS2("XML Files"), NS_ConvertASCIItoUCS2("Image Files"), NS_ConvertASCIItoUCS2("All Files")};
+    nsString filters[] = {NS_ConvertASCIItoUCS2("*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png"),
+                          NS_ConvertASCIItoUCS2("*.htm; *.html"),
+                          NS_ConvertASCIItoUCS2("*.xml"),
+                          NS_ConvertASCIItoUCS2("*.gif; *.jpg; *.jpeg; *.png"),
+                          NS_ConvertASCIItoUCS2("*.*")};
     fileWidget->SetFilterList(5, titles, filters);
 
     fileWidget->SetDisplayDirectory(aDisplayDirectory);
@@ -1122,7 +1123,7 @@ nsBrowserWindow::DoFileOpen()
     nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(nsString(fileURL.GetURLString()).GetUnicode());
+    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).GetUnicode());
     SetVisibility(PR_TRUE);
   }
 }
@@ -1310,7 +1311,8 @@ nsBrowserWindow::nsBrowserWindow()
 #if XXX
     gTitleSuffix = GetTitleSuffix();
 #endif
-    gTitleSuffix = new nsString(" - Raptor");
+    if ( gTitleSuffix = new nsString )
+      gTitleSuffix->AssignWithConversion(" - Raptor");
   }
   AddBrowser(this);
 }
@@ -1604,7 +1606,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   NS_CreateButton(mWindow,mBack,r,HandleBackEvent,&font);
   if (NS_OK == mBack->QueryInterface(kIWidgetIID,(void**)&widget))
   {
-    nsAutoString back("Back");
+    nsAutoString back; back.AssignWithConversion("Back");
     mBack->SetLabel(back);
     NS_RELEASE(widget);
   }
@@ -1627,7 +1629,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->Create(mWindow, r, HandleForwardEvent, NULL);
     widget->SetFont(font);
     widget->Show(PR_TRUE);
-    nsAutoString forward("Forward");
+    nsAutoString forward; forward.AssignWithConversion("Forward");
     mForward->SetLabel(forward);
     NS_RELEASE(widget);
   }
@@ -1664,7 +1666,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
             THROBBER_WIDTH, THROBBER_HEIGHT);
   mThrobber = nsThrobber::NewThrobber();
-  nsString throbberURL(THROBBER_AT);
+  nsString throbberURL; throbberURL.AssignWithConversion(THROBBER_AT);
   mThrobber->Init(mWindow, r, throbberURL, THROB_NUM);
   mThrobber->Show();
   return NS_OK;
@@ -1715,7 +1717,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   {
     widget->SetForegroundColor(NS_RGB(0, 0, 0));
     PRUint32 size;
-    mStatus->SetText("",size);
+    mStatus->SetText(nsAutoString(),size);
 
     nsITextWidget* textWidget = nsnull;
     if (NS_OK == mStatus->QueryInterface(kITextWidgetIID,(void**)&textWidget))
@@ -2151,15 +2153,15 @@ nsBrowserWindow::OnProgress(nsIChannel* channel, nsISupports *ctxt,
     if (nsnull != aURL) {
       char* str;
       aURL->GetSpec(&str);
-      url = str;
+      url.AssignWithConversion(str);
       nsCRT::free(str);
     }
-    url.Append(": progress ");
-    url.Append(aProgress, 10);
+    url.AppendWithConversion(": progress ");
+    url.AppendInt(aProgress, 10);
     if (0 != aProgressMax) {
-      url.Append(" (out of ");
-      url.Append(aProgressMax, 10);
-      url.Append(")");
+      url.AppendWithConversion(" (out of ");
+      url.AppendInt(aProgressMax, 10);
+      url.AppendWithConversion(")");
     }
     PRUint32 size;
     mStatus->SetText(url,size);
@@ -2180,7 +2182,7 @@ nsBrowserWindow::OnStatus(nsIChannel* channel, nsISupports *ctxt, const PRUnicha
 NS_IMETHODIMP
 nsBrowserWindow::Alert(const PRUnichar *text)
 {
-  nsCAutoString str(text);
+  nsCAutoString str; str.AssignWithConversion(text);
   printf("%cBrowser Window Alert: %s\n", '\007', str.GetBuffer());
 
   return NS_OK;
@@ -2190,7 +2192,7 @@ NS_IMETHODIMP
 nsBrowserWindow::Confirm(const PRUnichar *text,
                          PRBool *result)
 {
-  nsCAutoString str(text);
+  nsCAutoString str; str.AssignWithConversion(text);
   const char* msg= nsnull;
 
   msg = str.GetBuffer();
@@ -2226,7 +2228,7 @@ nsBrowserWindow::Prompt(const PRUnichar *text,
                         PRUnichar **result,
                         PRBool *_retval)
 {
-  nsCAutoString str(text);
+  nsCAutoString str; str.AssignWithConversion(text);
   const char* msg= nsnull;
   char buf[256];
 
@@ -2236,7 +2238,7 @@ nsBrowserWindow::Prompt(const PRUnichar *text,
 
     printf("%cPrompt: ", '\007');
     scanf("%s", buf);
-    nsAutoString response(buf);
+    nsAutoString response; response.AssignWithConversion(buf);
     *result = response.ToNewUnicode();
   }
   
@@ -2250,7 +2252,7 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
                                            PRUnichar **pwd,
                                            PRBool *_retval)
 {
-  nsCAutoString str(text);
+  nsCAutoString str; str.AssignWithConversion(text);
   const char* msg = nsnull;
   char buf[256];
 
@@ -2261,12 +2263,12 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
 
     printf("%cUser: ", '\007');
     scanf("%s", buf);
-    response.Assign(buf);
+    response.AssignWithConversion(buf);
     *user = response.ToNewUnicode();
 
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
-    response.Assign(buf);
+    response.AssignWithConversion(buf);
     *pwd = response.ToNewUnicode();
   }
 
@@ -2280,7 +2282,7 @@ nsBrowserWindow::PromptPassword(const PRUnichar *text,
                                 PRUnichar **pwd,
                                 PRBool *_retval)
 {
-  nsCAutoString str(text);
+  nsCAutoString str; str.AssignWithConversion(text);
   const char* msg = nsnull;
   char buf[256];
 
@@ -2289,7 +2291,7 @@ nsBrowserWindow::PromptPassword(const PRUnichar *text,
     printf("Browser Window: %s\n", msg);
     printf("%cPassword: ", '\007');
     scanf("%s", buf);
-    nsAutoString response(buf);
+    nsAutoString response; response.AssignWithConversion(buf);
     *pwd = response.ToNewUnicode();
   }
  
@@ -2453,9 +2455,9 @@ void nsBrowserWindow::DoPrintSetup()
     //return;
   }
 
-  nsString printHTML("resource:/res/samples/printsetup.html");
+  nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/printsetup.html");
   nsRect rect(0, 0, 375, 510);
-  nsString title("Print Setup");
+  nsString title; title.AssignWithConversion("Print Setup");
 
   nsXPBaseWindow * dialog = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
@@ -2483,8 +2485,8 @@ void nsBrowserWindow::DoPrintSetup()
   mPrintSetupInfo.mDocTitle         = PR_TRUE;
   mPrintSetupInfo.mDocLocation      = PR_TRUE;
 
-  mPrintSetupInfo.mHeaderText       = "Header Text";
-  mPrintSetupInfo.mFooterText       = "Footer Text";
+  mPrintSetupInfo.mHeaderText.AssignWithConversion("Header Text");
+  mPrintSetupInfo.mFooterText.AssignWithConversion("Footer Text");
 
   mPrintSetupInfo.mPageNum          = PR_TRUE;
   mPrintSetupInfo.mPageTotal        = PR_TRUE;
@@ -2536,9 +2538,9 @@ void nsBrowserWindow::DoTableInspector()
   nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
-    nsString printHTML("resource:/res/samples/printsetup.html");
+    nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/printsetup.html");
     nsRect rect(0, 0, 375, 510);
-    nsString title("Table Inspector");
+    nsString title; title.AssignWithConversion("Table Inspector");
 
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
@@ -2569,9 +2571,9 @@ void nsBrowserWindow::DoImageInspector()
   nsIDOMDocument* domDoc = GetDOMDocument(mDocShell);
 
   if (nsnull != domDoc) {
-    nsString printHTML("resource:/res/samples/image_props.html");
+    nsString printHTML; printHTML.AssignWithConversion("resource:/res/samples/image_props.html");
     nsRect rect(0, 0, 485, 124);
-    nsString title("Image Inspector");
+    nsString title; title.AssignWithConversion("Image Inspector");
 
     nsXPBaseWindow * xpWin = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull, kIXPBaseWindowIID, (void**) &xpWin);
@@ -3208,7 +3210,7 @@ nsBrowserWindow::GetStringPref(const char * aPrefName, nsString& aValue)
     char* prefCharVal;
     nsresult result = prefs->CopyCharPref(aPrefName, &prefCharVal);
     if (NS_SUCCEEDED(result)) {
-      aValue = prefCharVal;
+      aValue.AssignWithConversion(prefCharVal);
       PL_strfree(prefCharVal);
     }
   }

@@ -56,7 +56,7 @@ void nsBaseDialog::Initialize(nsIXPBaseWindow * aWindow)
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    doc->GetElementById("cancel", &mCancelBtn);
+    doc->GetElementById(NS_ConvertASCIItoUCS2("cancel"), &mCancelBtn);
     if (nsnull != mCancelBtn) {
       mWindow->AddEventListener(mCancelBtn);
     }
