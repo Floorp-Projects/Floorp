@@ -97,8 +97,7 @@ struct nsHTMLElement {
   PRBool          CanOmitEndTag(eHTMLTags aParent) const;
   PRBool          CanContainSelf() const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
-
-
+ 
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsStyleTag(eHTMLTags aTag) ;
@@ -126,6 +125,7 @@ extern nsHTMLElement gHTMLElements[];
 //special property bits...
 static const int kDiscardTag      = 0x0001; //tells us to toss this tag
 static const int kOmitEndTag      = 0x0002; //safely ignore end tag
+static const int kLegalOpen       = 0x0004; //Lets BODY, TITLE, SCRIPT to reopen
 
 
 #endif
