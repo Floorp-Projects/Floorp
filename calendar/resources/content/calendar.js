@@ -76,6 +76,8 @@
 *  G L O B A L     V A R I A B L E S
 */
 
+var gDateMade = "April 2nd, 2002";
+
 // turn on debuging
 
 var gDebugCalendar = false;
@@ -145,6 +147,8 @@ function calendarInit()
    gCalendarWindow.switchToMonthView( );
 
    update_date( );
+   	
+	checkMail();
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -607,9 +611,9 @@ function CalendarWindow( calendarDataSource )
          {
              if( calendarEvent )
              {
-                calendarWindow.setSelectedEvent( calendarEvent );
-                
                 calendarWindow.currentView.refreshEvents( );
+                
+                calendarWindow.setSelectedEvent( calendarEvent );
              }
          }
       },
@@ -633,6 +637,8 @@ function CalendarWindow( calendarDataSource )
         
         if( !gICalLib.batchMode )
         {
+            calendarWindow.currentView.refreshEvents( );
+            
             if ( nextEvent ) 
             {
                 calendarWindow.setSelectedEvent( nextEvent );
@@ -647,7 +653,6 @@ function CalendarWindow( calendarDataSource )
                    calendarWindow.currentView.hiliteSelectedDate( );
                 }
             }
-            calendarWindow.currentView.refreshEvents( );
         }
       },
       onAlarm : function( calendarEvent )
@@ -997,4 +1002,9 @@ CalendarView.prototype.refresh = function( ShowEvent )
 
    if(this.calendarWindow.currentView.doResize)
       this.calendarWindow.currentView.doResize();
+}
+
+function alertCalendarVersion()
+{
+   alert( "This calendar was made on "+gDateMade+". Please include this in your bug report." );
 }
