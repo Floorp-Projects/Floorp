@@ -2434,6 +2434,7 @@ nsresult nsExternalHelperAppService::AddDefaultMimeTypesToCache()
     mimeInfo->SetDescription(NS_ConvertASCIItoUCS2(defaultMimeEntries[index].mDescription).get());
     mimeInfo->SetMacType(defaultMimeEntries[index].mMactype);
     mimeInfo->SetMacCreator(defaultMimeEntries[index].mMacCreator);
+    mimeInfo->SetPreferredAction(nsIMIMEInfo::handleInternally);
     AddMimeInfoToCache(mimeInfo);
   }
 

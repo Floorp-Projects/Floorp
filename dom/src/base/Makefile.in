@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  oji \
 		  necko \
+		  mimetype \
 		  java \
 		  locale \
 		  uriloader \

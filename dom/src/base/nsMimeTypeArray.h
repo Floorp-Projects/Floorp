@@ -41,6 +41,8 @@
 
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
+#include "nsString2.h"
+#include "nsCOMPtr.h"
 
 class nsIDOMNavigator;
 
@@ -82,7 +84,27 @@ public:
 
 protected:
 	nsIDOMPlugin* mPlugin;
-	nsIDOMMimeType* mMimeType;
+	nsCOMPtr<nsIDOMMimeType> mMimeType;
+};
+
+class HelperMimeTypeImpl : public nsIDOMMimeType
+{
+public:
+	HelperMimeTypeImpl(const nsAString& aType)
+		: mType(aType)
+	{}
+
+	virtual ~HelperMimeTypeImpl() {}
+
+	NS_DECL_ISUPPORTS
+
+	NS_IMETHOD GetDescription(nsAString& aDescription);
+	NS_IMETHOD GetEnabledPlugin(nsIDOMPlugin** aEnabledPlugin);
+	NS_IMETHOD GetSuffixes(nsAString& aSuffixes);
+	NS_IMETHOD GetType(nsAString& aType);
+  
+private:
+	nsString mType;
 };
 
 #endif /* nsMimeTypeArray_h___ */
