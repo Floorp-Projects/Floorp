@@ -33,10 +33,12 @@ public:
   // nsICollection methods:
   NS_IMETHOD_(PRUint32) Count(void) const { return mCount; }
   NS_IMETHOD AppendElement(nsISupports *aElement) {
-    return InsertElementAt(aElement, mCount) ? NS_OK : NS_ERROR_FAILURE;
+    // XXX This incorrectly returns a PRBool instead of an nsresult.
+    return InsertElementAt(aElement, mCount);
   }
   NS_IMETHOD RemoveElement(nsISupports *aElement) {
-    return RemoveElement(aElement, 0) ? NS_OK : NS_ERROR_FAILURE;
+    // XXX This incorrectly returns a PRBool instead of an nsresult.
+    return RemoveElement(aElement, 0);
   }
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
   NS_IMETHOD Clear(void);
