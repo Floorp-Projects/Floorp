@@ -237,12 +237,7 @@ public:
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
-  NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
-  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
-
-  NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
+  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
@@ -326,7 +321,7 @@ public:
   NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
   // nsWebShell
-  PLEventQueue* GetEventQueue(void);
+  nsIEventQueue* GetEventQueue(void);
   void HandleLinkClickEvent(nsIContent *aContent,
                             nsLinkVerb aVerb,
                             const PRUnichar* aURLSpec,
@@ -352,7 +347,7 @@ protected:
   void InitFrameData(PRBool aCompleteInitScrolling);
   nsresult CheckForTrailingSlash(nsIURL* aURL);
 
-  PLEventQueue* mThreadEventQueue;
+  nsIEventQueue* mThreadEventQueue;
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
@@ -509,6 +504,7 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
+	mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
 	mWebShellType = nsWebShellContent;
@@ -530,6 +526,7 @@ nsWebShell::~nsWebShell()
   CancelRefreshURLTimers();
 
   NS_IF_RELEASE(mWindow);
+  NS_IF_RELEASE(mThreadEventQueue);
 
   ++mRefCnt; // hack will come back to this (pinkerton, scc)
   
@@ -1856,31 +1853,10 @@ nsWebShell::NewWebShell(PRUint32 aChromeMask,
 }
 
 NS_IMETHODIMP
-nsWebShell::CanCreateNewWebShell(PRBool& aResult)
-{
-  aResult = PR_TRUE;
-  if (nsnull != mContainer) {
-    return mContainer->CanCreateNewWebShell(aResult);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
+nsWebShell::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 {
   if (nsnull != mContainer) {
-    return mContainer->ChildShellAdded(aChildShell, frameNode);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
-{
-  if (nsnull != mContainer) {
-    return mContainer->SetNewWebShellInfo(aName, anURL, aOpenerShell, aChromeMask, aNewShell, anInnerShell);
+    return mContainer->ContentShellAdded(aChildShell, frameNode);
   }
   return NS_OK;
 }
@@ -1962,7 +1938,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    const PRUnichar* aTargetSpec,
                                    nsIPostData* aPostData)
 {
-  PLEventQueue* eventQueue;
+  nsIEventQueue* eventQueue;
 
   mHandler = aHandler;
   NS_ADDREF(aHandler);
@@ -1978,11 +1954,9 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
-
   eventQueue = aHandler->GetEventQueue();
-
-
-	PL_PostEvent(eventQueue, this);
+	eventQueue->PostEvent(this);
+	NS_RELEASE(eventQueue);
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
@@ -2077,9 +2051,10 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   return target;
 }
 
-PLEventQueue* nsWebShell::GetEventQueue(void)
+nsIEventQueue* nsWebShell::GetEventQueue(void)
 {
-  NS_PRECONDITION(nsnull != mThreadEventQueue, "PLEventQueue for thread is null");
+  NS_PRECONDITION(nsnull != mThreadEventQueue, "EventQueue for thread is null");
+	NS_ADDREF(mThreadEventQueue);
   return mThreadEventQueue;
 }
 

@@ -93,18 +93,10 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell) = 0;
   
-  // XXX dave sez: if kipp doesn't think NewWebShell should be part of
-  // this interface, then the next two methods probably shouldn't either.
-  // They should move to whereever NewWebShell moves.
-  NS_IMETHOD CanCreateNewWebShell(PRBool& aResult) = 0;
-  NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
-                                nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell) = 0;
-  
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult) = 0;
   
-  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode) = 0;
+  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode) = 0;
 
   /**
    * Notify the WebShellContainer that a contained webshell is
