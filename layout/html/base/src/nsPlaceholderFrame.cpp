@@ -55,6 +55,23 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
+// XXX Major hack...
+NS_IMETHODIMP
+nsPlaceholderFrame::DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus)
+{
+  // XXX Floated frame isn't in the block frame's list of children so make
+  // sure it gets a DidReflow notification
+  if (nsnull != mAnchoredItem) {
+    nsIHTMLReflow*  htmlReflow;
+    if (NS_SUCCEEDED(mAnchoredItem->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow))) {
+      htmlReflow->DidReflow(aPresContext, aStatus);
+    }
+  }
+
+  return nsFrame::DidReflow(aPresContext, aStatus);
+}
+
+// XXX Major hack...
 NS_IMETHODIMP
 nsPlaceholderFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
