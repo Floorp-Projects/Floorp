@@ -108,9 +108,12 @@ public class ImporterTopLevel extends ScriptableObject {
         Object plist = ScriptableObject.getProperty(start,"_packages_");
         if (plist == NOT_FOUND) 
             return result;
+        Object[] elements;
         Context cx = Context.enter();
-        Object[] elements = cx.getElements((Scriptable)plist);
-        Context.exit();
+        try {
+            elements = cx.getElements((Scriptable)plist);
+        }
+        finally { Context.exit(); }
         for (int i=0; i < elements.length; i++) {
             NativeJavaPackage p = (NativeJavaPackage) elements[i];
             Object v = p.getPkgProperty(name, start, false);
