@@ -197,6 +197,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 
     ws_info = (NPSetWindowCallbackStruct *)window->ws_info;
 
+#ifndef NO_X11
     if (This->window == (Window) window->window) {
         /* The page with the plugin is being resized.
            Save any UI information because the next time
@@ -226,6 +227,8 @@ NPP_SetWindow(NPP instance, NPWindow* window)
       makePixmap(This);
       makeWidget(This);
     }
+#endif  /* #ifndef NO_X11 */
+    
     return NPERR_NO_ERROR;
 }
 

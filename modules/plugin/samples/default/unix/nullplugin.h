@@ -64,8 +64,10 @@ Click OK to download Plugin."
 typedef struct _PluginInstance
 {
     uint16 mode;
+#ifndef NO_X11
     Window window;
     Display *display;
+#endif
     uint32 x, y;
     uint32 width, height;
     NPMIMEType type;
@@ -75,8 +77,10 @@ typedef struct _PluginInstance
     char *pluginsPageUrl;
     char *pluginsFileUrl;
     NPBool pluginsHidden;
+#ifndef NO_X11
     Visual* visual;
     Colormap colormap;
+#endif
     unsigned int depth;
     GtkWidget* dialogBox;
 
