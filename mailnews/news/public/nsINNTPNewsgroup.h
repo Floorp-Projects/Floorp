@@ -50,12 +50,18 @@ class nsINNTPNewsgroup : public nsISupports {
   NS_IMETHOD SetCategory(PRBool aCategory) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD GetFlag(PRInt32 *aFlag) = 0;
-  NS_IMETHOD SetFlag(PRInt32 aFlag) = 0;
+  NS_IMETHOD GetFlag(PRInt32 flag, PRBool *_retval) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD SetFlag(PRInt32 flag) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD IsSubscribed(PRBool *aIsSubscribed) = 0;
   NS_IMETHOD SetSubscribed(PRBool aSubscribed) = 0;
+
+  /*  <IDL>  */
+  NS_IMETHOD IsWantNewTotals(PRBool *aIsWantNewTotals) = 0;
+  NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
 };
 
 #endif /* __gen_nsINNTPNewsgroup_h__ */
