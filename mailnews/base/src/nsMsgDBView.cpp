@@ -3143,7 +3143,13 @@ PRInt32 nsMsgDBView::FindLevelInThread(nsIMsgDBHdr *msgHdr, nsMsgViewIndex start
 #ifdef DEBUG_bienvenu1
     NS_ASSERTION(PR_FALSE, "couldn't find parent of msg");
 #endif
-    return 1; // well, return level 1.
+    nsMsgKey msgKey;
+    msgHdr->GetMessageKey(&msgKey);
+    // check if this is a newly promoted thread root
+    if (threadParent == nsMsgKey_None || threadParent == msgKey)
+      return 0;
+    else
+      return 1; // well, return level 1.
   }
 }
 

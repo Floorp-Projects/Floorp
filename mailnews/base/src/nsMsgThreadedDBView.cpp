@@ -263,12 +263,13 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
     threadHdr->GetFlags(&threadFlags);
     if (numChildren != 0)	// not empty thread
     {
+      PRInt32 unusedRootIndex;
       if (pTotalHeaders)
         *pTotalHeaders += numChildren;
       if (unreadOnly)
         rv = threadHdr->GetFirstUnreadChild(getter_AddRefs(msgHdr));
       else
-        rv = threadHdr->GetChildAt(0, getter_AddRefs(msgHdr));
+        rv = threadHdr->GetRootHdr(&unusedRootIndex, getter_AddRefs(msgHdr));
       if (NS_SUCCEEDED(rv) && msgHdr != nsnull && WantsThisThread(threadHdr))
       {
         PRUint32 msgFlags;
