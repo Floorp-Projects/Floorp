@@ -406,6 +406,16 @@
           ]]>
         </body>
       </method>
+      <!-- if you have a search term element with no search term -->
+      <method name="saveTo">
+        <argument name="searchTerm"/>
+        <body>
+          <![CDATA[
+            this.internalSearchTerm = searchTerm;
+            this.save();
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
 </bindings>
