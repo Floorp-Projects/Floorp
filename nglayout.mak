@@ -101,6 +101,7 @@ DIST_DIRS =			\
   modules\plugin		\
   modules\oji		\
   base                          \
+  caps                          \
   lib\xp			\
   lib\libpwcac			\
   network			\
@@ -186,6 +187,7 @@ pull_lizard:
 	$(CVSCO_LIBPREF) $(MOZ_TOP)/modules/libpref
 	$(CVSCO_PLUGIN) $(MOZ_TOP)/modules/plugin
 	$(CVSCO_LIZARD) $(MOZ_TOP)/modules/oji
+	$(CVSCO_LIZARD) $(MOZ_TOP)/caps
 !if defined(NGPREFS)
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/wincom
 	$(CVSCO_LIZARD) $(MOZ_TOP)/cmd/winfe/defaults.h

@@ -67,6 +67,7 @@ DIRS =				\
   modules/oji		\
   modules/plugin		\
   base				\
+  caps				\
   lib/xp			\
   lib/libpwcac			\
   network			\
@@ -114,6 +115,7 @@ pull_lizard:
 	$(CVSCO_LIZARD) mozilla/sun-java; \
 	$(CVSCO_LIZARD) mozilla/nav-java; \
 	$(CVSCO_LIZARD) mozilla/js; \
+	$(CVSCO_LIZARD) mozilla/caps; \
 	$(CVSCO_LIZARD) mozilla/modules/security/freenav; \
 
 pull_xpcom:

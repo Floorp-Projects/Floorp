@@ -58,6 +58,7 @@ DIRS +=				\
   modules/oji		\
   modules/plugin		\
   base				\
+  caps				\
   lib/xp			\
   lib/libpwcac			\
   network			\
