@@ -119,7 +119,7 @@ obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 static JSPropertySpec object_props[] = {
     /* These two must come first; see object_props[slot].name usage below. */
     {js_proto_str, JSSLOT_PROTO,  JSPROP_PERMANENT, obj_getSlot,  obj_setSlot},
-    {js_parent_str,JSSLOT_PARENT, JSPROP_PERMANENT|JSPROP_READONLY,
+    {js_parent_str,JSSLOT_PARENT, JSPROP_READONLY|JSPROP_PERMANENT,
                                                     obj_getSlot,  obj_setSlot},
     {js_count_str, 0,             JSPROP_PERMANENT, obj_getCount, obj_getCount},
     {0,0,0,0,0}
@@ -882,7 +882,6 @@ obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSFunction *fun;
     jsval userid, value;
     jsid symid;
-    JSAtom *atom;
     uintN attrs;
 
     fun = js_ValueToFunction(cx, &argv[1], JS_FALSE);
@@ -892,15 +891,8 @@ obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Compute the unique int/atom symbol id needed by js_LookupProperty. */
     userid = argv[0];
-    if (JSVAL_IS_INT(userid)) {
-	symid = (jsid)userid;
-	atom = NULL;
-    } else {
-	atom = js_ValueToStringAtom(cx, userid);
-	if (!atom)
-	    return JS_FALSE;
-	symid = (jsid)atom;
-    }
+    if (!JS_ValueToId(cx, userid, &symid))
+        return JS_FALSE;
 
     if (!OBJ_CHECK_ACCESS(cx, obj, symid, JSACC_WATCH, &value, &attrs))
 	return JS_FALSE;
@@ -929,12 +921,13 @@ static JSBool
 obj_hasOwnProperty(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
+    jsid id;
     JSObject *obj2;
     JSProperty *prop;
-    JSAtom *atom;
 
-    atom = js_ValueToStringAtom(cx, *argv);
-    if (atom == NULL || !OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop))
+    if (!JS_ValueToId(cx, argv[0], &id))
+        return JS_FALSE;
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
     *rval = BOOLEAN_TO_JSVAL(prop && obj2 == obj);
     if (prop)
@@ -960,13 +953,12 @@ static JSBool
 obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                          jsval *rval)
 {
-    JSAtom *atom;
+    jsid id;
     uintN attrs;
 
-    atom = js_ValueToStringAtom(cx, *argv);
-    if (atom == NULL)
+    if (!JS_ValueToId(cx, argv[0], &id))
         return JS_FALSE;
-    if (!OBJ_GET_ATTRIBUTES(cx, obj, (jsid)atom, NULL, &attrs))
+    if (!OBJ_GET_ATTRIBUTES(cx, obj, id, NULL, &attrs))
         return JS_FALSE;
     *rval = BOOLEAN_TO_JSVAL((attrs & JSPROP_ENUMERATE) != 0);
     return JS_TRUE;
@@ -979,7 +971,7 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
     jsval fval;
-    JSAtom *atom;
+    jsid id;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -989,11 +981,10 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     }
 
-    atom = js_ValueToStringAtom(cx, argv[0]);
-    if (!atom)
+    if (!JS_ValueToId(cx, argv[0], &id))
 	return JS_FALSE;
 
-    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
+    return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
                                JSPROP_GETTER, NULL);
 }
@@ -1003,7 +994,7 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
     jsval fval;
-    JSAtom *atom;
+    jsid id;
 
     fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
@@ -1013,11 +1004,10 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     }
 
-    atom = js_ValueToStringAtom(cx, argv[0]);
-    if (!atom)
+    if (!JS_ValueToId(cx, argv[0], &id))
 	return JS_FALSE;
 
-    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
+    return OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID,
                                NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
                                JSPROP_SETTER, NULL);
 }
