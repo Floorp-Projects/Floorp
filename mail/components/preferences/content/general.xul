@@ -89,7 +89,7 @@
                   preference="mail.checkDefaultNews"                
                   accesskey="&setDefaultNewsClient.accesskey;"/>
 
-        <checkbox id="defaultFeedClient" label="&setDefaultFeedClient.label;" hidden="true"
+        <checkbox id="defaultFeedClient" label="&setDefaultFeedClient.label;"
                   preference="mail.checkDefaultFeed"                
                   accesskey="&setDefaultFeedClient.accesskey;"/>
       </hbox>
@@ -136,7 +136,6 @@
         </radiogroup>
       </hbox> 
     </groupbox>
-
 -->
 
     <groupbox>

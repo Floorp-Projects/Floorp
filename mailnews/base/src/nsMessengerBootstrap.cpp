@@ -91,14 +91,30 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
   if (NS_SUCCEEDED(rv) && found) {
     wwatch->OpenWindow(nsnull, "chrome://messenger/content/preferences/preferences.xul", "_blank",
                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
-  }
-
-  rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("mail"), PR_FALSE, &found);
-  if (NS_SUCCEEDED(rv) && found) {
-    wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
-                       "chrome,dialog=no,all", nsnull, getter_AddRefs(opened));
     aCmdLine->SetPreventDefault(PR_TRUE);
   }
+  
+  nsAutoString mailUrl; // -mail or -mail <some url> 
+  rv = aCmdLine->HandleFlagWithParam(NS_LITERAL_STRING("mail"), PR_FALSE, mailUrl);
+  if (NS_SUCCEEDED(rv)) 
+  {
+    nsCOMPtr<nsISupportsArray> argsArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create scriptable versions of our strings that we can store in our nsISupportsArray....
+    if (!mailUrl.IsEmpty())
+    {
+      nsCOMPtr<nsISupportsString> scriptableURL (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+      NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
+  
+      scriptableURL->SetData((mailUrl));
+      argsArray->AppendElement(scriptableURL);
+    }
+
+    wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
+                       "chrome,dialog=no,all", argsArray, getter_AddRefs(opened));
+    aCmdLine->SetPreventDefault(PR_TRUE);
+  } 
 
   return NS_OK;
 }
