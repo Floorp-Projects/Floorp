@@ -1161,11 +1161,12 @@ nsRect	sr,dr;
   dr = aDRect;
 	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
-  //return aImage->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 
-  // we have to output an image using the postscript image operator
-
-
+  mPSObj->colorimage(aImage,NS_PIXELS_TO_POINTS(sr.x),
+              NS_PIXELS_TO_POINTS(sr.y),
+              NS_PIXELS_TO_POINTS(dr.width),
+              NS_PIXELS_TO_POINTS(dr.height));
+  //return aImage->Draw(*this, mSurface, 0, 0, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 
   return NS_OK;
 }
@@ -1183,6 +1184,11 @@ nsRect	tr;
 	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
   //return aImage->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
+  mPSObj->colorimage(aImage,
+                        NS_PIXELS_TO_POINTS(tr.x),
+                        NS_PIXELS_TO_POINTS(tr.y), 
+                        NS_PIXELS_TO_POINTS(tr.width),
+                        NS_PIXELS_TO_POINTS(tr.height));
   return NS_OK;
 }
 
