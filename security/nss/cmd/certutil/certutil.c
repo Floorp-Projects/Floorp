@@ -695,22 +695,22 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
     SECStatus rv;
     CERTCertificate *cert = NULL;
     int64 timeBoundary;
-    SECCertUsage usage;
+    SECCertificateUsage usage;
     CERTVerifyLog reallog;
     CERTVerifyLog *log = NULL;
     
     switch (*certUsage) {
 	case 'C':
-	    usage = certUsageSSLClient;
+	    usage = certificateUsageSSLClient;
 	    break;
 	case 'V':
-	    usage = certUsageSSLServer;
+	    usage = certificateUsageSSLServer;
 	    break;
 	case 'S':
-	    usage = certUsageEmailSigner;
+	    usage = certificateUsageEmailSigner;
 	    break;
 	case 'R':
-	    usage = certUsageEmailRecipient;
+	    usage = certificateUsageEmailRecipient;
 	    break;
 	default:
 	    PORT_SetError (SEC_ERROR_INVALID_ARGS);
@@ -747,8 +747,8 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
 	    }
 	}
  
-	rv = CERT_VerifyCert(handle, cert, checkSig, usage,
-			     timeBoundary, pwdata, log);
+	rv = CERT_VerifyCertificate(handle, cert, checkSig, usage,
+			     timeBoundary, pwdata, log, &usage);
 	if ( log ) {
 	    if ( log->head == NULL ) {
 		fprintf(stdout, "%s: certificate is valid\n", progName);
