@@ -53,7 +53,9 @@ public class PreorderNodeIterator {
     }
 
     public Node getCurrentParent() {
-        return currentParent;
+        // Should not be used when stackTop == 0, 
+        // i.e. with start or its siblings
+        return stack[stackTop - 1];
     }
 
     public Node nextNode() {
@@ -62,34 +64,38 @@ public class PreorderNodeIterator {
         }
         else if (current.first != null) {
             stackPush(current);
-            currentParent = current;
             cachedPrev = null;
             current = current.first;
         }
         else {
-            cachedPrev = current;
-            current = current.next;
-            while (current == null && stackTop != 0) {
+            for (;;) {
+                cachedPrev = current;
+                current = current.next;
+                if (current != null) { break; }
+                if (stackTop == 0) {
+                    // Iteration end: clear cachedPrev that currently points
+                    // to the last sibling of start
+                    cachedPrev = null; break;
+                }
                 --stackTop;
                 current = stack[stackTop];
                 stack[stackTop] = null;
-
-                cachedPrev = current;
-                current = current.next;
             }
-            currentParent = (current == null) ? null : stack[stackTop - 1];
         }
         return current;
     }
 
     public void replaceCurrent(Node newNode) {
+        // Should not be used when stackTop == 0, 
+        // i.e. with start or its siblings
+        Node parent = stack[stackTop - 1];
         if (cachedPrev != null && cachedPrev.next == current) {
             // Check cachedPrev.next == current is necessary due to possible
             // tree mutations
-            currentParent.replaceChildAfter(cachedPrev, newNode);
+            parent.replaceChildAfter(cachedPrev, newNode);
         }
         else {
-            currentParent.replaceChild(current, newNode);
+            parent.replaceChild(current, newNode);
         }
         current = newNode;
     }
@@ -113,7 +119,6 @@ public class PreorderNodeIterator {
     private int stackTop;
 
     private Node current;
-    private Node currentParent;
 
 //cache previous sibling of current not to search for it when
 //replacing current
