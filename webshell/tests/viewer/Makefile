@@ -40,14 +40,7 @@ EX_LIBS = \
 	$(DIST)/bin/libgfxunix.so \
 	$(DIST)/bin/libraptorhtml.so \
 	$(DIST)/bin/libgmbaseunix.so \
-	$(DIST)/bin/libraptorhtmlbase_s.so \
-	$(DIST)/bin/libraptorhtmldoc_s.so \
-	$(DIST)/bin/libraptorhtmlforms_s.so \
 	$(DIST)/bin/libraptorhtmlpars.so \
-	$(DIST)/bin/libraptorhtmlstyle_s.so \
-	$(DIST)/bin/libraptorhtmltable_s.so \
-	$(DIST)/bin/libraptorlayout_s.so \
-	$(DIST)/bin/libraptorevents_s.so \
 	$(DIST)/bin/libraptorview.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libabouturl.so \
@@ -85,8 +78,6 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
-	$(DIST)/bin/libnglcsslay_s.so \
-	$(DIST)/bin/libnglhtmlcon_s.so \
 	$(NULL)
 
 ifeq ($(OS_ARCH),Linux)

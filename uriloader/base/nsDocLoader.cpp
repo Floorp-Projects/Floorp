@@ -494,8 +494,8 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(PRInt32 aStatus, const nsString& aMs
 
 
 /*******************************************
-/*  nsDocLoaderFactory
-/*******************************************/
+ *  nsDocLoaderFactory
+ *******************************************/
 
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCDocumentLoader, NS_DOCUMENTLOADER_CID);

@@ -202,8 +202,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
   }
 
   return res;
-
-    return NS_OK;  
 }  
 
 nsresult nsWidgetFactory::LockFactory(PRBool aLock)  

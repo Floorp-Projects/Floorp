@@ -271,7 +271,7 @@ void  nsTextAreaWidget::AggTextAreaWidget::SetPassword(PRBool aIsPassword)
 //--------------------------------------------------------------
 PRBool  nsTextAreaWidget::AggTextAreaWidget::SetReadOnly(PRBool aReadOnlyFlag)
 {
-  GET_OUTER()->SetReadOnly(aReadOnlyFlag);
+  return GET_OUTER()->SetReadOnly(aReadOnlyFlag);
 }
 
 //--------------------------------------------------------------

@@ -607,16 +607,14 @@ nsEventStatus PR_CALLBACK HandleEventApp(nsGUIEvent *aEvent)
             gTheViewer->Stop();
      
           }
-          return nsEventStatus_eConsumeDoDefault;
         }
+        return nsEventStatus_eConsumeDoDefault;
  
 
       default:
-          return(gTheViewer->DispatchMenuItem(aEvent));
         break;
     }
-
-    return(nsEventStatus_eIgnore);
+    return(gTheViewer->DispatchMenuItem(aEvent));
 }
 
 void ReleaseMemory()

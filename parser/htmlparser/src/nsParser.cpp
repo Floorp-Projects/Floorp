@@ -418,7 +418,7 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   }
 #endif
 
-  return anErrorCode;
+  return result;
 }
 
 /**
