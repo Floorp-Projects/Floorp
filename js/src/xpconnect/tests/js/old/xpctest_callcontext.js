@@ -36,9 +36,9 @@
 
 function nsNativeEcho()
 {
-    var obj = Components.classes.nsEcho.createInstance();
-    obj = obj.QueryInterface(Components.interfaces.nsIEcho);
-    return obj;
+    var clazz = Components.classes["@mozilla.org/js/xpc/test/Echo;1"];
+    var iface = Components.interfaces.nsIEcho;
+    return new clazz(iface);
 }    
 
 var e = nsNativeEcho();

@@ -44,7 +44,8 @@ AddTestData();
 StopTest();
 
 function SetupTest() {
-	CLASS = Components.classes.xpcTestObjectReadWrite.createInstance();
+	CONTRACTID = "@mozilla.org/js/xpc/test/ObjectReadWrite;1";
+	CLASS = Components.classes[CONTRACTID].createInstance();
 	IFACE = Components.interfaces.nsIXPCTestObjectReadWrite;
 
 	testObject = CLASS.QueryInterface(IFACE);

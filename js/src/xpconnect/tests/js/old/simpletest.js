@@ -1,4 +1,3 @@
-
 print("Components.interfaces.nsIJSID = " +
        Components.interfaces.nsIJSID);
 

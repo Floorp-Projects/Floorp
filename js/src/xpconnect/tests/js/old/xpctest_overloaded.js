@@ -1,4 +1,4 @@
-var clazz = Components.classes.nsOverloaded;
+var clazz = Components.classes["@mozilla.org/js/xpc/test/Overloaded;1"];
 var iface = Components.interfaces.nsIXPCTestOverloaded;
 
 foo = clazz.createInstance(iface);

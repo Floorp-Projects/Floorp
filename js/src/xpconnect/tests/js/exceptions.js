@@ -39,7 +39,7 @@
 
   StartTest( "Exceptions" );
 
-var CLASS = Components.classes.nsEcho;
+var CLASS = Components.classes["@mozilla.org/js/xpc/test/Echo;1"];
 var IFACE = Components.interfaces.nsIEcho;
 var nativeEcho = CLASS.createInstance(IFACE);
 

@@ -46,7 +46,8 @@ AddTestComment();
 StopTest();
 
 function SetupTest() {
-	CLASS = Components.classes.xpcTestCallJS.createInstance();
+	CONTRACTID = "@mozilla.org/js/xpc/test/CallJS;1";
+	CLASS = Components.classes[CONTRACTID].createInstance();
 	IFACE = Components.interfaces.nsIXPCTestCallJS;
 	ERROR = Components.results;
 

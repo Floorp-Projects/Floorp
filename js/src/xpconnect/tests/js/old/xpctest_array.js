@@ -1,5 +1,5 @@
 var iface = Components.interfaces.nsIXPCTestArray;
-var clazz = Components.classes.nsArrayTest;
+var clazz = Components.classes["@mozilla.org/js/xpc/test/ArrayTest;1"];
 
 var obj = clazz.createInstance(iface);
 

@@ -404,25 +404,6 @@ try {
 }    
 
 /***************************************************************************/
-// Components object test...
-// print(".......................................");
-
-// print("Components = "+Components);
-// print("Components.interfaces = "+Components.interfaces);
-// print("Components.interfaces.nsISupports = "+Components.interfaces.nsISupports);
-// print("Components.interfaces.nsISupports.name = "+Components.interfaces.nsISupports.name);
-// print("Components.interfaces.nsISupports.number = "+Components.interfaces.nsISupports.number);
-//
-// print("Components.interfaces.nsIEcho.number = "+Components.interfaces.nsIEcho.number);
-// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'] = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}']);
-// print("Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name = "+Components.interfaces['{CD2F2F40-C5D9-11d2-9838-006008962422}'].name);
-//
-// print("Components.classes = "+Components.classes);
-// print("Components.classes.nsIID = "+Components.classes.nsIID);
-// print("Components.classes.nsCID = "+Components.classes.nsCID);
-// print("Components.classes.nsCID.name = "+Components.classes.nsCID.name);
-
-/***************************************************************************/
 
 print(".......................................");
 print("simple speed tests...");

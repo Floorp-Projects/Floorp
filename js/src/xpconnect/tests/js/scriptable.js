@@ -44,7 +44,8 @@ AddTestData();
 StopTest();
 
 function SetupTest() {
-	CLASS = Components.classes.xpcTestScriptable.createInstance();
+	CONTRACTID = "@mozilla.org/js/xpc/test/Overloaded;1";
+	CLASS = Components.classes[CONTRACTID].createInstance();
 	IFACE = Components.interfaces.nsIXPCTestScriptable;
 
 	testObject = CLASS.QueryInterface(IFACE);
