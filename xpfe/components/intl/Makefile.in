@@ -54,4 +54,6 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+FORCE_STATIC_LIB=1
+
 include $(topsrcdir)/config/rules.mk
