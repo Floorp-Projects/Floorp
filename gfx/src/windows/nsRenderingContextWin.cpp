@@ -31,6 +31,8 @@ public:
   nsRect        mLocalClip;
   nsRect        mGlobalClip;
   HRGN          mClipRegion;
+  nscolor       mSolidColor;
+  HBRUSH        mSolidBrush;
 };
 
 GraphicsState :: GraphicsState()
@@ -40,6 +42,8 @@ GraphicsState :: GraphicsState()
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mGlobalClip = mLocalClip;
   mClipRegion = NULL;
+  mSolidColor = 0;
+  mSolidBrush = NULL;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -49,6 +53,8 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
 {
   mNext = &aState;
   mClipRegion = NULL;
+  mSolidColor = aState.mSolidColor;
+  mSolidBrush = NULL;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -57,6 +63,12 @@ GraphicsState :: ~GraphicsState()
   {
     ::DeleteObject(mClipRegion);
     mClipRegion = NULL;
+  }
+
+  if (NULL != mSolidBrush)
+  {
+    ::DeleteObject(mSolidBrush);
+    mSolidBrush = NULL;
   }
 }
 
@@ -69,11 +81,13 @@ nsRenderingContextWin :: nsRenderingContextWin()
   NS_INIT_REFCNT();
 
   //mFont = nsnull;
-  mDC = nsnull;
-  mMainDC = nsnull;
+  mDC = NULL;
+  mMainDC = NULL;
   mDCOwner = nsnull;
   mFontMetrics = nsnull;
   mFontCache = nsnull;
+  mOrigSolidBrush = NULL;
+  mBlackBrush = NULL;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -89,26 +103,32 @@ nsRenderingContextWin :: nsRenderingContextWin()
 
 nsRenderingContextWin :: ~nsRenderingContextWin()
 {
-  if (nsnull != mDCOwner)
-  {
-    //first try to get rid of a DC originally associated with the window
-    //but pushed over to a dest DC for offscreen rendering. if there is no
-    //rolled over DC, then the mDC is the one associated with the window.
-
-    if (nsnull != mMainDC)
-      ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mMainDC);
-    else if (nsnull != mDC)
-      ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
-  }
-
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mFontCache);
-  NS_IF_RELEASE(mDCOwner);
 
   //destroy the initial GraphicsState
 
   PopState();
+
+  //cleanup the DC so that we can just destroy objects
+  //in the graphics state without worrying that we are
+  //ruining the dc
+
+  if (NULL != mDC)
+  {
+    if (NULL != mOrigSolidBrush)
+    {
+      ::SelectObject(mDC, mOrigSolidBrush);
+      mOrigSolidBrush = NULL;
+    }
+
+    if (NULL != mBlackBrush)
+    {
+      ::DeleteObject(mBlackBrush);
+      mBlackBrush = NULL;
+    }
+  }
 
   if (nsnull != mStateCache)
   {
@@ -127,9 +147,23 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     mStateCache = nsnull;
   }
 
+  if (nsnull != mDCOwner)
+  {
+    //first try to get rid of a DC originally associated with the window
+    //but pushed over to a dest DC for offscreen rendering. if there is no
+    //rolled over DC, then the mDC is the one associated with the window.
+
+    if (nsnull != mMainDC)
+      ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mMainDC);
+    else if (nsnull != mDC)
+      ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
+  }
+
+  NS_IF_RELEASE(mDCOwner);
+
   mTMatrix = nsnull;
-  mDC = nsnull;
-  mMainDC = nsnull;
+  mDC = NULL;
+  mMainDC = NULL;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextWin, kRenderingContextIID)
@@ -159,6 +193,9 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   mInitialized = PR_TRUE;
 #endif
 
+  mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+  mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
+
   return NS_OK;
 }
 
@@ -181,6 +218,9 @@ nsresult nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 #ifdef NS_DEBUG
   mInitialized = PR_TRUE;
 #endif
+
+  mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+  mOrigSolidBrush = ::SelectObject(mDC, mBlackBrush);
 
   return NS_OK;
 }
@@ -227,6 +267,8 @@ void nsRenderingContextWin :: PushState()
     state->mLocalClip = mStates->mLocalClip;
     state->mGlobalClip = mStates->mGlobalClip;
     state->mClipRegion = nsnull;
+    state->mSolidColor = mStates->mSolidColor;
+    state->mSolidBrush = nsnull;
 
     mStates = state;
   }
@@ -250,10 +292,10 @@ void nsRenderingContextWin :: PopState()
 
     //kill the clip region we are popping off the stack
 
-    if (nsnull != oldstate->mClipRegion)
+    if (NULL != oldstate->mClipRegion)
     {
       ::DeleteObject(oldstate->mClipRegion);
-      oldstate->mClipRegion = nsnull;
+      oldstate->mClipRegion = NULL;
     }
 
     if (nsnull != mStates)
@@ -265,13 +307,34 @@ void nsRenderingContextWin :: PopState()
       //the clip rect has changed from state to state, so
       //install the previous clip rect
 
-      while ((nsnull != pstate) && (nsnull == pstate->mClipRegion))
+      while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
         pstate = pstate->mNext;
 
       if ((nsnull != pstate) && (pstate->mGlobalClip != oldstate->mGlobalClip))
         ::SelectClipRgn(mDC, pstate->mClipRegion);
       else
         ::SelectClipRgn(mDC, NULL);
+
+      pstate = mStates;
+
+      //if the solid brushes are different between the states,
+      //select the previous solid brush
+
+      while ((nsnull != pstate) && (NULL == pstate->mSolidBrush))
+        pstate = pstate->mNext;
+
+      if (nsnull != pstate)
+        ::SelectObject(mDC, pstate->mSolidBrush);
+      else
+        ::SelectObject(mDC, mBlackBrush);
+
+      //kill the solid brush we are popping off the stack
+
+      if (NULL != oldstate->mSolidBrush)
+      {
+        ::DeleteObject(oldstate->mSolidBrush);
+        oldstate->mSolidBrush = NULL;
+      }
     }
     else
       mTMatrix = nsnull;
@@ -419,9 +482,7 @@ void nsRenderingContextWin :: DrawRect(const nsRect& aRect)
 	nr.right = tr.x+tr.width;
 	nr.bottom = tr.y+tr.height;
 
-  HBRUSH brush = ::CreateSolidBrush(mColor);
-  ::FrameRect(mDC, &nr, brush);
-  ::DeleteObject(brush);
+  ::FrameRect(mDC, &nr, SetupSolidBrush());
 }
 
 void nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
@@ -434,9 +495,7 @@ void nsRenderingContextWin :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, n
 	nr.right = aX+aWidth;
 	nr.bottom = aY+aHeight;
 
-  HBRUSH brush = ::CreateSolidBrush(mColor);
-  ::FrameRect(mDC, &nr, brush);
-  ::DeleteObject(brush);
+  ::FrameRect(mDC, &nr, SetupSolidBrush());
 }
 
 void nsRenderingContextWin :: FillRect(const nsRect& aRect)
@@ -451,9 +510,7 @@ void nsRenderingContextWin :: FillRect(const nsRect& aRect)
 	nr.right = tr.x+tr.width;
 	nr.bottom = tr.y+tr.height;
 
-  HBRUSH brush = ::CreateSolidBrush(mColor);
-  ::FillRect(mDC, &nr, brush);
-  ::DeleteObject(brush);
+  ::FillRect(mDC, &nr, SetupSolidBrush());
 }
 
 void nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
@@ -467,9 +524,7 @@ void nsRenderingContextWin :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, n
 	nr.right = aX+aWidth;
 	nr.bottom = aY+aHeight;
 
-  HBRUSH brush = ::CreateSolidBrush(mColor);
-  ::FillRect(mDC, &nr, brush);
-  ::DeleteObject(brush);
+  ::FillRect(mDC, &nr, SetupSolidBrush());
 }
 
 void nsRenderingContextWin::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
@@ -539,15 +594,12 @@ void nsRenderingContextWin::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   // Fill the polygon
   int pfm = ::GetPolyFillMode(mDC);
   ::SetPolyFillMode(mDC, WINDING);
-  HBRUSH brush = ::CreateSolidBrush(mColor);
+  SetupSolidBrush();
   HPEN pen = ::CreatePen(PS_NULL, 0, 0);
   HPEN oldPen = ::SelectObject(mDC, pen);
-  HBRUSH oldBrush = ::SelectObject(mDC, brush);
   ::Polygon(mDC, pp0, int(aNumPoints));
-  ::SelectObject(mDC, oldBrush);
   ::SelectObject(mDC, oldPen);
   ::DeleteObject(pen);
-  ::DeleteObject(brush);
   ::SetPolyFillMode(mDC, pfm);
 
   // Release temporary storage if necessary
@@ -586,14 +638,12 @@ void nsRenderingContextWin :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth
 
   HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
   HPEN oldPen = ::SelectObject(mDC, newPen);
-  HBRUSH newBrush = ::CreateSolidBrush(mCurrentColor);
-  HBRUSH oldBrush = ::SelectObject(mDC, newBrush);
+
+  SetupSolidBrush();
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
   
-  ::SelectObject(mDC, oldBrush);
   ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newBrush);
   ::DeleteObject(newPen);
 }
 
@@ -658,8 +708,8 @@ float   anglerad,distance;
 
   HPEN newPen = ::CreatePen(PS_SOLID, 0, mColor);
   HPEN oldPen = ::SelectObject(mDC, newPen);
-  HBRUSH newBrush = ::CreateSolidBrush(mCurrentColor);
-  HBRUSH oldBrush = ::SelectObject(mDC, newBrush);
+
+  SetupSolidBrush();
 
   // figure out the the coordinates of the arc from the angle
   distance = (float)sqrt((float)(aWidth*aWidth + aHeight*aHeight));
@@ -681,11 +731,8 @@ float   anglerad,distance;
 
   ::Pie(mDC,aX,aY,aX+aWidth,aY+aHeight,sx,sy,ex,ey); 
 
-  ::SelectObject(mDC, oldBrush);
   ::SelectObject(mDC, oldPen);
-  ::DeleteObject(newBrush);
   ::DeleteObject(newPen);
-
 }
 
 void nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
@@ -793,7 +840,7 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
 
     //look for a cliprect somewhere in the stack...
 
-    while ((nsnull != pstate) && (nsnull == pstate->mClipRegion))
+    while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
       pstate = pstate->mNext;
 
     if (nsnull != pstate)
@@ -807,4 +854,33 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
     NS_ASSERTION(0, "attempt to blit with bad DCs");
 
   return NS_OK;
+}
+
+HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
+{
+  if (mCurrentColor != mStates->mSolidColor)
+  {
+    HBRUSH  tbrush = ::CreateSolidBrush(mColor);
+    HBRUSH  obrush = ::SelectObject(mDC, tbrush);
+
+    if ((NULL != obrush) && (NULL != mStates->mSolidBrush))
+      ::DeleteObject(obrush);
+
+    mStates->mSolidBrush = tbrush;
+  }
+
+  if (NULL == mStates->mSolidBrush)
+  {
+    GraphicsState *tstate = mStates->mNext;
+
+    while ((nsnull != tstate) && (NULL == tstate->mSolidBrush))
+      tstate = tstate->mNext;
+
+    if (nsnull == tstate)
+      return mBlackBrush;
+    else
+      return tstate->mSolidBrush;
+  }
+  else
+    return mStates->mSolidBrush;
 }

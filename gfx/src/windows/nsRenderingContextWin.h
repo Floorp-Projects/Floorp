@@ -124,8 +124,10 @@ public:
 
   virtual nsresult CopyOffScreenBits(nsRect &aBounds);
 
-protected:
+private:
+  HBRUSH SetupSolidBrush(void);
 
+protected:
   nscolor					  mCurrentColor;
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics	  *mFontMetrics;
@@ -139,6 +141,8 @@ protected:
   GraphicsState     *mStates;
   nsVoidArray       *mStateCache;
   nsIDeviceContext  *mContext;
+  HBRUSH            mOrigSolidBrush;
+  HBRUSH            mBlackBrush;
 
 #ifdef NS_DEBUG
   PRBool          mInitialized;
