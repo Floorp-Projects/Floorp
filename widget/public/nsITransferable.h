@@ -24,6 +24,7 @@
 
 class nsIDataFlavor;
 class nsISupportsArray;
+class nsIFormatConverter;
 
 // {8B5314BC-DB01-11d2-96CE-0060B0FB9956}
 #define NS_ITRANSFERABLE_IID      \
@@ -67,28 +68,13 @@ class nsITransferable : public nsISupports {
     NS_IMETHOD SetTransferData(nsIDataFlavor * aFlavor, void * aData, PRUint32 aDataLen) = 0;
 
   /**
-    * Convience method for setting string data into the transferable
+    * Add the data flavor, indicating that this transferable 
+    * can receive this type of flavor
     *
-    * @param  aFlavor the flavor of data to retrieve
-    * @param  aData the data
-    */
-    NS_IMETHOD SetTransferString(const nsString & aStr) = 0;
-
-  /**
-    * Convience method for getting string data from the transferable
-    *
-    * @param  aFlavor the flavor of data to retrieve
-    * @param  aData the data
-    */
-    NS_IMETHOD GetTransferString(nsString & aStr) = 0;
-
-  /**
-    * Initializes the data flavor 
-    *
-    * @param  aMimeType mime string
+    * @param  aDataFlavor a new data flavor to handle
     * @param  aHumanPresentableName human readable string for mime
     */
-    NS_IMETHOD AddDataFlavor(const nsString & aMimeType, const nsString & aHumanPresentableName) = 0;
+    NS_IMETHOD AddDataFlavor(nsIDataFlavor * aDataFlavor) = 0;
 
   /**
     * Returns whether the data is large
@@ -96,6 +82,18 @@ class nsITransferable : public nsISupports {
     * @return NS_OK is data set is larg, NS_ERROR_FAILURE if data set is small
     */
     NS_IMETHOD IsLargeDataSet() = 0;
+
+  /**
+    * Sets the converter for this transferable
+    *
+    */
+    NS_IMETHOD SetConverter(nsIFormatConverter * aConverter) = 0;
+
+  /**
+    * Gets the converter for this transferable
+    *
+    */
+    NS_IMETHOD GetConverter(nsIFormatConverter ** aConverter) = 0;
 
 };
 
