@@ -1895,6 +1895,9 @@ nsWebShellWindow::HandleUnknownContentType(nsIDocumentLoader* loader,
 //----------------------------------------
 nsCOMPtr<nsIDOMNode> nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount)
 {
+  if(!aParent)
+    return nsnull;
+    
   nsCOMPtr<nsIDOMNode> node;
   aParent->GetFirstChild(getter_AddRefs(node));
   while (node) {
