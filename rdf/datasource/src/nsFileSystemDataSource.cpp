@@ -315,6 +315,10 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
 	nsVoidArray		*array = nsnull;
 	nsresult		rv = NS_ERROR_FAILURE;
 
+	// we only have positive assertions in the file system data source.
+	if (! tv)
+		return rv;
+
 	if (peq(source, kNC_FileSystemRoot))
 	{
 		if (peq(property, kNC_Child))
@@ -396,6 +400,10 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 {
 	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_ERROR_FAILURE;
+
+	// we only have positive assertions in the file system data source.
+	if (! tv)
+		return rv;
 
 	*hasAssertion = PR_FALSE;
 	if (peq(source, kNC_FileSystemRoot) || isFileURI(source))
