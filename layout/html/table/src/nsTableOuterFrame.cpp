@@ -1154,7 +1154,7 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
 void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, 
                                                nsIFrame*       aChild)
 {
-  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
+  NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
 
   nsIFrame* nextInFlow;
    
@@ -1191,7 +1191,6 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
     // to capture the next-in-flow's next sibling (in case the
     // next-in-flow is the last next-in-flow for aChild AND the
     // next-in-flow is not the last child in parent)
-    NS_ASSERTION(parent->IsChild(aChild), "screwy flow");
     aChild->GetNextSibling(&nextSibling);
     NS_ASSERTION(nextSibling == nextInFlow, "unexpected sibling");
 

@@ -288,7 +288,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
     else
     {
 
-      rv = RemoveAFrame(objectFrame);
+      rv = mFrames.RemoveFrame(objectFrame);
     }
     break;
 
