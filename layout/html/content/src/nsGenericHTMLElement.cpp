@@ -1067,6 +1067,36 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
   nsresult ret = HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                 aFlags, aEventStatus);
 
+  //Need to check if we hit an imagemap area and if so see if we're handling
+  //the event on that map or on a link farther up the tree.  If we're on a
+  //link farther up, do nothing.
+  if (NS_SUCCEEDED(ret)) {
+    PRBool targetIsArea = PR_FALSE;
+
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm))) && esm) {
+      nsCOMPtr<nsIContent> target;
+      esm->GetEventTargetContent(aEvent, getter_AddRefs(target));
+      if (target) {
+        nsCOMPtr<nsIAtom> tag;
+        target->GetTag(*getter_AddRefs(tag));
+        if (tag && tag.get() == nsHTMLAtoms::area) {
+          targetIsArea = PR_TRUE;
+        }
+      }
+    }
+
+    if (targetIsArea) {
+      //We are over an area.  If our element is not one, then return without
+      //running anchor code.
+      nsCOMPtr<nsIAtom> tag;
+      GetTag(*getter_AddRefs(tag));
+      if (tag && tag.get() != nsHTMLAtoms::area) {
+        return ret;
+      }
+    }
+  }
+  
   if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     // If we're here, then aOuter should be an nsILink. We'll use the
@@ -1149,11 +1179,14 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
 
       case NS_MOUSE_ENTER_SYNTH:
       {
+#if 0
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(mContent, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+#endif
       }
       // Set the status bar the same for focus and mouseover
       case NS_FOCUS_CONTENT:
@@ -1168,21 +1201,22 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
         ret = TriggerLink(aPresContext, eLinkVerb_Replace,
                           baseURL, href, target, PR_FALSE);
         NS_IF_RELEASE(baseURL);
-        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
       case NS_MOUSE_EXIT_SYNTH:
       {
+#if 0
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
+#endif
 
         nsAutoString empty;
         ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
-        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
