@@ -409,6 +409,54 @@ U+FF11 U+FF12 U+FF13 U+FF21 U+FF22 U+FF23
   return NS_OK;
 }
 
+nsresult testAsciiEncoder()
+{
+  printf("\n[T5] HackyAsciiEncoder\n");
+
+  // create converter
+  nsIUnicodeEncoder * enc;
+  nsresult res = ccMan->GetUnicodeEncoder(NULL,&enc);
+  if (NS_FAILED(res)) {
+    printf("ERROR 0x%x: Cannot instantiate.\n",res);
+    return res;
+  } else {
+    printf("Instantiated.\n");
+  }
+
+  //test converter
+
+  PRInt32 srcL = TABLE_SIZE1;
+  PRInt32 destL = TABLE_SIZE1;
+  PRUnichar src [TABLE_SIZE1] = {(PRUnichar)0,(PRUnichar)255,(PRUnichar)13,(PRUnichar)127,(PRUnichar)128};
+  unsigned char dest [TABLE_SIZE1];
+
+  res=enc->Convert(src, 0, &srcL, (char *)dest, 0, &destL);
+  if (NS_FAILED(res)) {
+    printf("ERROR 0x%x: Convert().\n",res);
+  } else {
+    printf("Read %d, write %d.\n",srcL,destL);
+    printf("Converted:");
+
+    PRBool failed = PR_FALSE;
+    for (int i=0;i<TABLE_SIZE1;i++) {
+      printf(" %x->%d", src[i], dest[i]);
+      if (dest[i] != ((PRUint8)src[i])) failed = PR_TRUE;
+    }
+    printf("\n");
+
+    if (failed) {
+      printf("Test FAILED!!!\n");
+    } else {
+      printf("Test Passed.\n");
+    }
+  }
+
+  NS_RELEASE(enc);
+  return NS_OK;
+
+}
+
+
 nsresult run()
 {
   nsresult res;
@@ -423,6 +471,9 @@ nsresult run()
   if (NS_FAILED(res)) return res;
 
   res = testISO88597Decoder();
+  if (NS_FAILED(res)) return res;
+
+  res = testAsciiEncoder();
   if (NS_FAILED(res)) return res;
 
   return NS_OK;
