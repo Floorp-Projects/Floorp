@@ -157,15 +157,18 @@ namespace MetaData {
         case StmtNode::Namespace:
             {
                 NamespaceStmtNode *ns = checked_cast<NamespaceStmtNode *>(p);
-                ValidateAttributeExpression(cxt, env, ns->attributes);
-                Attribute *attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
+                Attribute *attr = NULL;
+                if (ns->attributes) {
+                    ValidateAttributeExpression(cxt, env, ns->attributes);
+                    attr = EvalAttributeExpression(env, CompilePhase, ns->attributes);
+                }
                 CompoundAttribute *a = Attribute::toCompoundAttribute(attr);
                 if (a->dynamic || a->prototype)
                     reportError(Exception::definitionError, "Illegal attribute", p->pos);
                 if ( ! ((a->memberMod == Attribute::NoModifier) || ((a->memberMod == Attribute::Static) && (env->getTopFrame()->kind == ClassKind))) )
                     reportError(Exception::definitionError, "Illegal attribute", p->pos);
                 Variable *v = new Variable(namespaceClass, OBJECT_TO_JS2VAL(new Namespace(ns->name)), true);
-                env->defineStaticMember(this, ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v);
+                defineStaticMember(env, ns->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
             }
             break;
         }   // switch (p->getKind())
@@ -494,6 +497,7 @@ namespace MetaData {
                 ValidateExpression(cxt, env, b->op2);
             }
             break;
+        case ExprNode::qualify:
         case ExprNode::identifier:
             {
 //                IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
@@ -511,9 +515,14 @@ namespace MetaData {
      */
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        EvalExprNode(env, phase, p);
-        bCon->emitOp(eReturnVoid);
-        return engine->interpret(this, phase, bCon);
+        BytecodeContainer *saveBacon = bCon;
+        bCon = new BytecodeContainer();
+        Reference *r = EvalExprNode(env, phase, p);
+        if (r) r->emitReadBytecode(bCon);
+        bCon->emitOp(eReturn);
+        js2val retval = engine->interpret(this, phase, bCon);
+        bCon = saveBacon;
+        return retval;
     }
 
     /*
@@ -731,57 +740,6 @@ namespace MetaData {
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->errorPos, multiname->name);
     }
 
-    void Environment::defineStaticMember(JS2Metadata *meta, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m)
-    {
-        NamespaceList publicNamespaceList;
-
-        Frame *localFrame = firstFrame;
-        if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
-            meta->reportError(Exception::definitionError, "Illegal definition", meta->errorPos);
-        if (namespaces->empty()) {
-            publicNamespaceList.push_back(meta->publicNamespace);
-            namespaces = &publicNamespaceList;
-        }
-        Multiname *mn = new Multiname(id, true);
-        mn->addNamespace(namespaces);
-
-
-        for (StaticBindingIterator b = localFrame->staticReadBindings.lower_bound(id),
-                end = localFrame->staticReadBindings.upper_bound(id); (b != end); b++) {
-            if (b->second->qname == qName)
-                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-        }
-
-        
-        Frame *regionalFrame = getRegionalFrame();
-        Frame *fr = firstFrame->nextFrame;
-        while (true) {
-            for (b = fr->staticReadBindings.lower_bound(id),
-                    end = fr->staticReadBindings.upper_bound(id); (b != end); b++) {
-                if ((b->second->qname == qName) && (b->second->content->kind != Forbidden))
-                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-            }
-            fr = fr->nextFrame;
-            if (fr == regionalFrame) break;
-        }
-        if (regionalFrame->kind == GlobalObjectKind) {
-            GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
-            DynamicPropertyIterator dp = gObj->dynamicProperties.find(id);
-            if (dp != gObj->dynamicProperties.end())
-                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-        }
-        
-        for (NamespaceListIterator nli = mn->nsList.begin(), end = mn->nsList.end(); (nli != end); nli++) {
-            QualifiedName qName(*nli, id);
-            StaticBinding *sb = new StaticBinding(qName, new HoistedVar());
-            const StaticBindingMap::value_type e(id, sb);
-            if ((access == ReadAccess) || (access == ReadWriteAccess))
-                regionalFrame->staticReadBindings.insert(e);
-            if ((access == WriteAccess) || (access == ReadWriteAccess))
-                regionalFrame->staticWriteBindings.insert(e);
-        }
-
-    }
 
 
 /************************************************************************************
@@ -834,6 +792,83 @@ namespace MetaData {
  *
  ************************************************************************************/
 
+    // - Define namespaces::id (for all namespaces or at least 'public') in the top frame 
+    //     unless it's there already. 
+    // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
+    // - Define a forbidden binding in all the lower frames.
+    // 
+    void JS2Metadata::defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos)
+    {
+        NamespaceList publicNamespaceList;
+
+        Frame *localFrame = env->getTopFrame();
+        if ((overrideMod != Attribute::NoOverride) || (xplicit && localFrame->kind != PackageKind))
+            reportError(Exception::definitionError, "Illegal definition", pos);
+        if ((namespaces == NULL) || namespaces->empty()) {
+            publicNamespaceList.push_back(publicNamespace);
+            namespaces = &publicNamespaceList;
+        }
+        Multiname *mn = new Multiname(id, true);
+        mn->addNamespace(namespaces);
+
+
+        for (StaticBindingIterator b = localFrame->staticReadBindings.lower_bound(id),
+                end = localFrame->staticReadBindings.upper_bound(id); (b != end); b++) {
+            if (mn->matches(b->second->qname))
+                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+        }
+        
+
+        // Check all frames below the current - up to the RegionalFrame
+        Frame *regionalFrame = env->getRegionalFrame();
+        if (localFrame != regionalFrame) {
+            Frame *fr = localFrame->nextFrame;
+            while (fr != regionalFrame) {
+                for (b = fr->staticReadBindings.lower_bound(id),
+                        end = fr->staticReadBindings.upper_bound(id); (b != end); b++) {
+                    if (mn->matches(b->second->qname) && (b->second->content->kind != StaticMember::Forbidden))
+                        reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+                }
+                fr = fr->nextFrame;
+            }
+        }
+        if (regionalFrame->kind == GlobalObjectKind) {
+            GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
+            DynamicPropertyIterator dp = gObj->dynamicProperties.find(id);
+            if (dp != gObj->dynamicProperties.end())
+                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
+        }
+        
+        for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
+            QualifiedName qName(*nli, id);
+            StaticBinding *sb = new StaticBinding(qName, new HoistedVar());
+            const StaticBindingMap::value_type e(id, sb);
+            if (access & ReadAccess)
+                regionalFrame->staticReadBindings.insert(e);
+            if (access & WriteAccess)
+                regionalFrame->staticWriteBindings.insert(e);
+        }
+        
+        StaticMember *forbidden = new StaticMember(StaticMember::Forbidden);
+        if (localFrame != regionalFrame) {
+            Frame *fr = localFrame->nextFrame;
+            while (fr != regionalFrame) {
+                for (NamespaceListIterator nli = mn->nsList.begin(), nlend = mn->nsList.end(); (nli != nlend); nli++) {
+                    QualifiedName qName(*nli, id);
+                    StaticBinding *sb = new StaticBinding(qName, forbidden);
+                    const StaticBindingMap::value_type e(id, sb);
+                    if (access & ReadAccess)
+                        fr->staticReadBindings.insert(e);
+                    if (access & WriteAccess)
+                        fr->staticWriteBindings.insert(e);
+                }
+                fr = fr->nextFrame;
+            }
+        }
+
+    }
+
+    
     // Define a hoisted var in the current frame (either Global or a Function)
     void JS2Metadata::defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p)
     {
@@ -1097,7 +1132,7 @@ namespace MetaData {
     {
         StaticMember *found = NULL;
         StaticBindingIterator b, end;
-        if ((access == ReadAccess) || (access == ReadWriteAccess)) {
+        if (access & ReadAccess) {
             b = container->staticReadBindings.lower_bound(multiname->name);
             end = container->staticReadBindings.upper_bound(multiname->name);
         }
@@ -1139,7 +1174,7 @@ namespace MetaData {
             if (result) return result;
         }
         InstanceBindingIterator b, end;
-        if ((access == ReadAccess) || (access == ReadWriteAccess)) {
+        if (access & ReadAccess) {
             b = c->instanceReadBindings.lower_bound(multiname->name);
             end = c->instanceReadBindings.upper_bound(multiname->name);
         }

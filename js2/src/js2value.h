@@ -137,7 +137,7 @@
 
 typedef uint32 js2val;
 enum Phase  { CompilePhase, RunPhase };
-enum Access { ReadAccess, WriteAccess, ReadWriteAccess };
+enum Access { ReadAccess = 0x1, WriteAccess = 0x2, ReadWriteAccess = ReadAccess | WriteAccess};
 
 
 #endif

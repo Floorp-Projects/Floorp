@@ -537,8 +537,6 @@ public:
     js2val lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase);
     void lexicalWrite(JS2Metadata *meta, Multiname *multiname, js2val newValue, bool createIfMissing, Phase phase);
 
-    void defineStaticMember(JS2Metadata *meta, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m);
-
 private:
     Frame *firstFrame;
 };
@@ -602,7 +600,6 @@ public:
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
     void ValidateTypeExpression(ExprNode *e);
     void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
-    void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
@@ -617,6 +614,9 @@ public:
 
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
+
+    void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
+    void defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
 
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
