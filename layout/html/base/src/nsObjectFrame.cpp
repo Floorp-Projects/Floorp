@@ -325,6 +325,7 @@ nsObjectFrame::Destroy(nsIPresContext* aPresContext)
     {
       inst->SetWindow(nsnull);
       inst->Stop();
+      NS_RELEASE(inst);
     }
   }
   return nsObjectFrameSuper::Destroy(aPresContext);
