@@ -10,6 +10,6 @@ interface CSSValue {
            attribute DOMString        cssText;
                                         // raises(DOMException) on setting
 
-  readonly attribute unsigned short   valueType;
+  readonly attribute unsigned short   cssValueType;
 };
 

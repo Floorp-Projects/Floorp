@@ -47,7 +47,7 @@ static NS_DEFINE_IID(kICSSValueIID, NS_IDOMCSSVALUE_IID);
 //
 enum CSSValue_slots {
   CSSVALUE_CSSTEXT = -1,
-  CSSVALUE_VALUETYPE = -2
+  CSSVALUE_CSSVALUETYPE = -2
 };
 
 /***********************************************************************/
@@ -82,12 +82,12 @@ GetCSSValueProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSVALUE_VALUETYPE:
+      case CSSVALUE_CSSVALUETYPE:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSVALUE_VALUETYPE, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_CSSVALUE_CSSVALUETYPE, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           PRUint16 prop;
-          rv = a->GetValueType(&prop);
+          rv = a->GetCssValueType(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = INT_TO_JSVAL(prop);
           }
@@ -209,7 +209,7 @@ JSClass CSSValueClass = {
 static JSPropertySpec CSSValueProperties[] =
 {
   {"cssText",    CSSVALUE_CSSTEXT,    JSPROP_ENUMERATE},
-  {"valueType",    CSSVALUE_VALUETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cssValueType",    CSSVALUE_CSSVALUETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
