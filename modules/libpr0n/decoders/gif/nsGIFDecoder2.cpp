@@ -497,12 +497,13 @@ int HaveDecodedRow(
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
-        if (decoder->mGIFStruct->is_transparent) {
+        if (decoder->mGIFStruct->is_transparent &&
+            (decoder->mGIFStruct->tpixel < cmapsize)) {
           gfx_color transColor = 0;
-            transColor |= cmap[decoder->mGIFStruct->tpixel].red;
-            transColor |= cmap[decoder->mGIFStruct->tpixel].green << 8;
-            transColor |= cmap[decoder->mGIFStruct->tpixel].blue << 16;
-            decoder->mImageFrame->SetTransparentColor(transColor);
+          transColor |= cmap[decoder->mGIFStruct->tpixel].red;
+          transColor |= cmap[decoder->mGIFStruct->tpixel].green << 8;
+          transColor |= cmap[decoder->mGIFStruct->tpixel].blue << 16;
+          decoder->mImageFrame->SetTransparentColor(transColor);
         }
 
         memset(decoder->mRGBLine, 0, bpr);
