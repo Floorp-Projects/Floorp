@@ -375,10 +375,7 @@ nsSaveViaTempStream::nsSaveViaTempStream(const nsFileSpec& inFileToSave)
 {
 	// Make sure the temp file's unique (in particular, different from the target file)
 	mTempFileSpec->MakeUnique();
-	open(
-		*mTempFileSpec,
-		(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE),
-    	0700 /*(octal)*/);
+	open(*mTempFileSpec, (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE), 0666);
 } // nsSaveViaTempStream::nsSaveViaTempStream
 
 //----------------------------------------------------------------------------------------
