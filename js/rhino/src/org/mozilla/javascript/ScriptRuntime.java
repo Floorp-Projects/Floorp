@@ -1698,23 +1698,35 @@ public class ScriptRuntime {
         return Undefined.instance;
     }
 
-    public static Object postIncrDecrElem(Object obj, Object index, Scriptable scope, boolean increment)
+    public static Object elemIncrDecr(Object obj, Object index,
+                                      Scriptable scope, int type)
     {
         Object value = getElem(obj, index, scope);
         if (value == Undefined.instance)
             return value;
+        boolean post = (type == Node.POST_INC || type == Node.POST_DEC);
         double number;
         if (value instanceof Number) {
             number = ((Number)value).doubleValue();
         } else {
             number = toNumber(value);
-            // convert result to number
-            value = new Double(number);
+            if (post) {
+                // convert result to number
+                value = new Double(number);
+            }
         }
-        if (increment) { ++number; }
-        else { --number; }
-        setElem(obj, index, new Double(number), scope);
-        return value;
+        if (type == Node.PRE_INC || type == Node.POST_INC) {
+            ++number;
+        } else {
+            --number;
+        }
+        Number result = new Double(number);
+        setElem(obj, index, result, scope);
+        if (post) {
+            return value;
+        } else {
+            return result;
+        }
     }
 
     public static Object toPrimitive(Object val) {

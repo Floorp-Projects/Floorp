@@ -2798,12 +2798,12 @@ class BodyCodegen
             generateCodeFromNode(getElemChild, node);
             generateCodeFromNode(getElemChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
-            cfw.addPush(isInc);
-            addScriptRuntimeInvoke("postIncrDecrElem",
+            cfw.addPush(node.getExistingIntProp(Node.INCRDECR_PROP));
+            addScriptRuntimeInvoke("elemIncrDecr",
                                    "(Ljava/lang/Object;"
                                    +"Ljava/lang/Object;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                   +"Z)Ljava/lang/Object;");
+                                   +"I)Ljava/lang/Object;");
             break;
           }
           default:

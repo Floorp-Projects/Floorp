@@ -46,6 +46,60 @@ package org.mozilla.javascript;
 
 public class Node
 {
+    public static final int
+        FUNCTION_PROP      =  1,
+        LOCAL_PROP         =  2,
+        LOCAL_BLOCK_PROP   =  3,
+        REGEXP_PROP        =  4,
+        CASES_PROP         =  5,
+        DEFAULT_PROP       =  6,
+        CASEARRAY_PROP     =  7,
+        SPECIAL_PROP_PROP  =  8,
+    /*
+        the following properties are defined and manipulated by the
+        optimizer -
+        TARGETBLOCK_PROP - the block referenced by a branch node
+        VARIABLE_PROP - the variable referenced by a BIND or NAME node
+        ISNUMBER_PROP - this node generates code on Number children and
+                        delivers a Number result (as opposed to Objects)
+        DIRECTCALL_PROP - this call node should emit code to test the function
+                          object against the known class and call diret if it
+                          matches.
+    */
+
+        TARGETBLOCK_PROP   =  9,
+        VARIABLE_PROP      = 10,
+        ISNUMBER_PROP      = 11,
+        DIRECTCALL_PROP    = 12,
+        SPECIALCALL_PROP   = 13,
+        SKIP_INDEXES_PROP  = 14, // array of skipped indexes of array literal
+        OBJECT_IDS_PROP    = 15, // array of properties for object literal
+        INCRDECR_PROP      = 16, // pre or post type of increment/decerement
+        LAST_PROP          = 16;
+
+    // values of SPECIAL_PROP_PROP
+    public static final int
+        SPECIAL_PROP_PROTO  = 1,
+        SPECIAL_PROP_PARENT = 2;
+
+    // values of ISNUMBER_PROP to specify
+    // which of the children are Number types
+    public static final int
+        BOTH = 0,
+        LEFT = 1,
+        RIGHT = 2;
+
+    public static final int    // values for SPECIALCALL_PROP
+        NON_SPECIALCALL  = 0,
+        SPECIALCALL_EVAL = 1,
+        SPECIALCALL_WITH = 2;
+
+    public static final int   // values for INCRDECR_PROP
+        PRE_INC = 0,
+        PRE_DEC = 1,
+        POST_INC = 2,
+        POST_DEC = 3;
+
     private static class NumberNode extends Node
     {
         NumberNode(double number)
@@ -361,49 +415,6 @@ public class Node
             last = newChild;
         child.next = null;
     }
-
-    public static final int
-        FUNCTION_PROP      =  1,
-        LOCAL_PROP         =  2,
-        LOCAL_BLOCK_PROP   =  3,
-        REGEXP_PROP        =  4,
-        CASES_PROP         =  5,
-        DEFAULT_PROP       =  6,
-        CASEARRAY_PROP     =  7,
-        SPECIAL_PROP_PROP  =  8,
-    /*
-        the following properties are defined and manipulated by the
-        optimizer -
-        TARGETBLOCK_PROP - the block referenced by a branch node
-        VARIABLE_PROP - the variable referenced by a BIND or NAME node
-        ISNUMBER_PROP - this node generates code on Number children and
-                        delivers a Number result (as opposed to Objects)
-        DIRECTCALL_PROP - this call node should emit code to test the function
-                          object against the known class and call diret if it
-                          matches.
-    */
-
-        TARGETBLOCK_PROP   =  9,
-        VARIABLE_PROP      = 10,
-        ISNUMBER_PROP      = 11,
-        DIRECTCALL_PROP    = 12,
-        SPECIALCALL_PROP   = 13,
-        SKIP_INDEXES_PROP  = 14, // array of skipped indexes of array literal
-        OBJECT_IDS_PROP    = 15; // array of properties for object literal
-
-    public static final int    // this value of the SPECIAL_PROP_PROP specifies
-        SPECIAL_PROP_PROTO  = 1,
-        SPECIAL_PROP_PARENT = 2;
-
-    public static final int    // this value of the ISNUMBER_PROP specifies
-        BOTH = 0,               // which of the children are Number types
-        LEFT = 1,
-        RIGHT = 2;
-
-    public static final int    // this value of the SPECIALCALL_PROP specifies
-        NON_SPECIALCALL  = 0,
-        SPECIALCALL_EVAL = 1,
-        SPECIALCALL_WITH = 2;
 
     private static final String propToString(int propType)
     {

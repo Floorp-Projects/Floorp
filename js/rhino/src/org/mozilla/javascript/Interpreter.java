@@ -64,84 +64,89 @@ public class Interpreter
     // various types of ++/--
         Icode_NAMEINC                   = -5,
         Icode_PROPINC                   = -6,
-        Icode_ELEMINC                   = -7,
-        Icode_VARINC                    = -8,
-        Icode_NAMEDEC                   = -9,
-        Icode_PROPDEC                   = -10,
-        Icode_ELEMDEC                   = -11,
-        Icode_VARDEC                    = -12,
+        Icode_VARINC                    = -7,
+        Icode_NAMEDEC                   = -8,
+        Icode_PROPDEC                   = -9,
+        Icode_VARDEC                    = -10,
+
+        Icode_ELEM_PRE_INC              = -11,
+        Icode_ELEM_PRE_DEC              = -12,
+        Icode_ELEM_POST_INC             = -13,
+        Icode_ELEM_POST_DEC             = -14,
 
     // helper codes to deal with activation
-        Icode_SCOPE                     = -13,
-        Icode_TYPEOFNAME                = -14,
+        Icode_SCOPE                     = -15,
+        Icode_TYPEOFNAME                = -16,
 
     // helper for function calls
-        Icode_NAME_FAST_THIS            = -15,
-        Icode_NAME_SLOW_THIS            = -16,
-        Icode_PUSH_PARENT               = -17,
+        Icode_NAME_FAST_THIS            = -17,
+        Icode_NAME_SLOW_THIS            = -18,
+        Icode_PUSH_PARENT               = -19,
 
     // Access to parent scope and prototype
-        Icode_GETPROTO                  = -18,
-        Icode_GETSCOPEPARENT            = -19,
-        Icode_SETPROTO                  = -20,
-        Icode_SETPARENT                 = -21,
+        Icode_GETPROTO                  = -20,
+        Icode_GETSCOPEPARENT            = -21,
+        Icode_SETPROTO                  = -22,
+        Icode_SETPARENT                 = -23,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = -22,
+        Icode_CLOSURE                   = -24,
 
     // Special calls
-        Icode_CALLSPECIAL               = -23,
+        Icode_CALLSPECIAL               = -25,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -24,
+        Icode_RETUNDEF                  = -26,
 
     // Exception handling implementation
-        Icode_CATCH                     = -25,
-        Icode_GOSUB                     = -26,
-        Icode_RETSUB                    = -27,
+        Icode_CATCH                     = -27,
+        Icode_GOSUB                     = -28,
+        Icode_RETSUB                    = -29,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -28,
+        Icode_LINE                      = -30,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -29,
-        Icode_INTNUMBER                 = -30,
+        Icode_SHORTNUMBER               = -31,
+        Icode_INTNUMBER                 = -32,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -31,
-        Icode_LITERAL_SET               = -32,
+        Icode_LITERAL_NEW               = -33,
+        Icode_LITERAL_SET               = -34,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -33,
+        Icode_SPARE_ARRAYLIT            = -35,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -34,
-        Icode_REG_IND_C1                = -35,
-        Icode_REG_IND_C2                = -36,
-        Icode_REG_IND_C3                = -37,
-        Icode_REG_IND_C4                = -38,
-        Icode_REG_IND_C5                = -39,
-        Icode_REG_IND1                  = -40,
-        Icode_REG_IND2                  = -41,
-        Icode_REG_IND4                  = -42,
+        Icode_REG_IND_C0                = -36,
+        Icode_REG_IND_C1                = -37,
+        Icode_REG_IND_C2                = -38,
+        Icode_REG_IND_C3                = -39,
+        Icode_REG_IND_C4                = -40,
+        Icode_REG_IND_C5                = -41,
+        Icode_REG_IND1                  = -42,
+        Icode_REG_IND2                  = -43,
+        Icode_REG_IND4                  = -44,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -43,
-        Icode_REG_STR_C1                = -44,
-        Icode_REG_STR_C2                = -45,
-        Icode_REG_STR_C3                = -46,
-        Icode_REG_STR1                  = -47,
-        Icode_REG_STR2                  = -48,
-        Icode_REG_STR4                  = -49,
+        Icode_REG_STR_C0                = -45,
+        Icode_REG_STR_C1                = -46,
+        Icode_REG_STR_C2                = -47,
+        Icode_REG_STR_C3                = -48,
+        Icode_REG_STR1                  = -49,
+        Icode_REG_STR2                  = -50,
+        Icode_REG_STR4                  = -51,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -50,
-        Icode_SETVAR1                   = -51,
+        Icode_GETVAR1                   = -52,
+        Icode_SETVAR1                   = -53,
 
     // Last icode
-        MIN_ICODE                       = -51;
+        MIN_ICODE                       = -53;
 
     static {
+        // Checks for byte code consistencies, good compiler can eliminate them
+
         if (Token.LAST_BYTECODE_TOKEN > 127) {
             String str = "Violation of Token.LAST_BYTECODE_TOKEN <= 127";
             System.err.println(str);
@@ -149,6 +154,16 @@ public class Interpreter
         }
         if (MIN_ICODE < -128) {
             String str = "Violation of Interpreter.MIN_ICODE >= -128";
+            System.err.println(str);
+            throw new IllegalStateException(str);
+        }
+
+        if (!(Icode_ELEM_PRE_INC - Node.PRE_INC == Icode_ELEM_PRE_INC
+              && Icode_ELEM_PRE_INC - Node.PRE_DEC == Icode_ELEM_PRE_DEC
+              && Icode_ELEM_PRE_INC - Node.POST_INC == Icode_ELEM_POST_INC
+              && Icode_ELEM_PRE_INC - Node.POST_DEC == Icode_ELEM_POST_DEC))
+        {
+            String str = "Violation of pre/post mapping into elem bytecodes";
             System.err.println(str);
             throw new IllegalStateException(str);
         }
@@ -838,59 +853,10 @@ public class Interpreter
                 break;
 
             case Token.INC :
-            case Token.DEC : {
+            case Token.DEC :
                 stackDelta = 1;
-                int childType = child.getType();
-                switch (childType) {
-                    case Token.GETVAR : {
-                        String name = child.getString();
-                        if (itsData.itsNeedsActivation) {
-                            iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
-                            stackChange(1);
-                            int op = (type == Token.INC)
-                                     ? Icode_PROPINC : Icode_PROPDEC;
-                            iCodeTop = addStringOp(op, name, iCodeTop);
-                        } else {
-                            int i = scriptOrFn.getParamOrVarIndex(name);
-                            int op = (type == Token.INC)
-                                     ? Icode_VARINC : Icode_VARDEC;
-                            iCodeTop = addVarOp(op, i, iCodeTop);
-                            stackChange(1);
-                        }
-                        break;
-                    }
-                    case Token.GETPROP :
-                    case Token.GETELEM : {
-                        Node getPropChild = child.getFirstChild();
-                        iCodeTop = generateICode(getPropChild, iCodeTop);
-                        getPropChild = getPropChild.getNext();
-                        if (childType == Token.GETPROP) {
-                            String property = getPropChild.getString();
-                            int op = (type == Token.INC)
-                                     ? Icode_PROPINC : Icode_PROPDEC;
-                            iCodeTop = addStringOp(op, property, iCodeTop);
-                        } else {
-                            iCodeTop = generateICode(getPropChild, iCodeTop);
-                            int op = (type == Token.INC)
-                                     ? Icode_ELEMINC : Icode_ELEMDEC;
-                            iCodeTop = addIcode(op, iCodeTop);
-                            stackChange(-1);
-                        }
-                        break;
-                    }
-                    default : {
-                        iCodeTop = addStringOp(type == Token.INC
-                                               ? Icode_NAMEINC
-                                               : Icode_NAMEDEC,
-                                               child.getString(), iCodeTop);
-                        itsStackDepth++;
-                        if (itsStackDepth > itsData.itsMaxStack)
-                            itsData.itsMaxStack = itsStackDepth;
-                        break;
-                    }
-                }
+                iCodeTop = visitIncDec(iCodeTop, node, child);
                 break;
-            }
 
             case Token.NUMBER : {
                 stackDelta = 1;
@@ -1198,6 +1164,62 @@ public class Interpreter
         iCodeTop = generateICode(child, iCodeTop);
         iCodeTop = addToken(Token.GETELEM, iCodeTop);
         stackChange(-1);
+        return iCodeTop;
+    }
+
+    private int visitIncDec(int iCodeTop, Node node, Node child)
+    {
+        int type = node.getType();
+        int childType = child.getType();
+        switch (childType) {
+          case Token.GETVAR : {
+            String name = child.getString();
+            if (itsData.itsNeedsActivation) {
+                iCodeTop = addIcode(Icode_SCOPE, iCodeTop);
+                stackChange(1);
+                int op = (type == Token.INC)
+                         ? Icode_PROPINC : Icode_PROPDEC;
+                iCodeTop = addStringOp(op, name, iCodeTop);
+            } else {
+                int i = scriptOrFn.getParamOrVarIndex(name);
+                int op = (type == Token.INC)
+                         ? Icode_VARINC : Icode_VARDEC;
+                iCodeTop = addVarOp(op, i, iCodeTop);
+                stackChange(1);
+            }
+            break;
+          }
+          case Token.GETPROP : {
+            Node object = child.getFirstChild();
+            iCodeTop = generateICode(object, iCodeTop);
+            String property = object.getNext().getString();
+            int op = (type == Token.INC)
+                     ? Icode_PROPINC : Icode_PROPDEC;
+            iCodeTop = addStringOp(op, property, iCodeTop);
+            break;
+          }
+          case Token.GETELEM : {
+            Node object = child.getFirstChild();
+            iCodeTop = generateICode(object, iCodeTop);
+            Node index = object.getNext();
+            iCodeTop = generateICode(index, iCodeTop);
+            int op = Icode_ELEM_PRE_INC
+                     - node.getExistingIntProp(Node.INCRDECR_PROP);
+            iCodeTop = addIcode(op, iCodeTop);
+            stackChange(-1);
+            break;
+          }
+          default : {
+            iCodeTop = addStringOp(type == Token.INC
+                                   ? Icode_NAMEINC
+                                   : Icode_NAMEDEC,
+                                   child.getString(), iCodeTop);
+            itsStackDepth++;
+            if (itsStackDepth > itsData.itsMaxStack)
+                itsData.itsMaxStack = itsStackDepth;
+            break;
+          }
+        }
         return iCodeTop;
     }
 
@@ -1592,12 +1614,14 @@ public class Interpreter
           case Icode_IFEQ_POP:         return "IFEQ_POP";
           case Icode_NAMEINC:          return "NAMEINC";
           case Icode_PROPINC:          return "PROPINC";
-          case Icode_ELEMINC:          return "ELEMINC";
           case Icode_VARINC:           return "VARINC";
           case Icode_NAMEDEC:          return "NAMEDEC";
           case Icode_PROPDEC:          return "PROPDEC";
-          case Icode_ELEMDEC:          return "ELEMDEC";
           case Icode_VARDEC:           return "VARDEC";
+          case Icode_ELEM_PRE_INC:     return "ELEM_PRE_INC";
+          case Icode_ELEM_PRE_DEC:     return "ELEM_PRE_DEC";
+          case Icode_ELEM_POST_INC:    return "ELEM_POST_INC";
+          case Icode_ELEM_POST_DEC:    return "ELEM_POST_DEC";
           case Icode_SCOPE:            return "SCOPE";
           case Icode_TYPEOFNAME:       return "TYPEOFNAME";
           case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
@@ -2466,15 +2490,17 @@ switch (op) {
                                                      op == Icode_PROPINC);
         continue Loop;
     }
-    case Icode_ELEMINC :
-    case Icode_ELEMDEC : {
+    case Icode_ELEM_PRE_INC:
+    case Icode_ELEM_PRE_DEC:
+    case Icode_ELEM_POST_INC:
+    case Icode_ELEM_POST_DEC: {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.postIncrDecrElem(lhs, rhs, scope,
-                                                         op == Icode_ELEMINC);
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, scope,
+                                                     Icode_ELEM_PRE_INC - op);
         continue Loop;
     }
     case Token.LOCAL_SAVE :

@@ -841,7 +841,17 @@ class IRFactory
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
             return new Node(Token.SETNAME, lvalueLeft, op);
 
-        } else if (childType == Token.GETPROP || childType == Token.GETELEM) {
+        } else if (childType == Token.GETELEM) {
+            Node n = new Node(nodeType, childNode);
+            int type;
+            if (nodeType == Token.INC) {
+                type = (post) ? Node.POST_INC : Node.PRE_INC;
+            } else {
+                type = (post) ? Node.POST_DEC : Node.PRE_DEC;
+            }
+            n.putIntProp(Node.INCRDECR_PROP, type);
+            return n;
+        } else if (childType == Token.GETPROP) {
             if (post) {
                 return new Node(nodeType, childNode);
             }
