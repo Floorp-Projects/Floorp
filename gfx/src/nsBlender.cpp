@@ -26,9 +26,10 @@
 
 static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 
-/** --------------------------------------------------------------------------
-* General constructor for a nsBlender object
-*/
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 nsBlender :: nsBlender()
 {
   NS_INIT_REFCNT();
@@ -48,6 +49,10 @@ nsBlender :: nsBlender()
   mSecondSrcSpan = 0;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 nsBlender::~nsBlender() 
 {
   NS_IF_RELEASE(mContext);
@@ -58,6 +63,10 @@ NS_IMPL_ISUPPORTS(nsBlender, kIBlenderIID);
 
 //------------------------------------------------------------
 
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 NS_IMETHODIMP
 nsBlender::Init(nsIDeviceContext *aContext)
 {
@@ -101,11 +110,13 @@ nsBlender::Init(nsIDeviceContext *aContext)
   mBlueShift = 3;
 #endif  
   
-  
-
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 NS_IMETHODIMP
 nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight,nsDrawingSurface aSrc,
                     nsDrawingSurface aDst, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
@@ -117,8 +128,6 @@ nsPixelFormat pixformat;
 nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
 
 
-
-
   SrcSurf = (nsIDrawingSurface *)aSrc;
   DstSurf = (nsIDrawingSurface *)aDst;
   SecondSrcSurf = (nsIDrawingSurface *)aSecondSrc;
@@ -126,7 +135,7 @@ nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
   mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
   if (NS_OK == SrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY)){
-    if (NS_OK == DstSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)){
+    if (NS_OK == DstSurf->Lock(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0)){
       if (SecondSrcSurf)
         SecondSrcSurf->Lock(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
 
@@ -156,34 +165,49 @@ nsIDrawingSurface   *SrcSurf, *DstSurf, *SecondSrcSurf;
   return result;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32 aHeight, nsIRenderingContext *aSrc,
                    nsIRenderingContext *aDest, PRInt32 aDX, PRInt32 aDY, float aSrcOpacity,
                    nsIRenderingContext *aSecondSrc, nscolor aSrcBackColor,
                    nscolor aSecondSrcBackColor)
 {
-  nsresult      result = NS_ERROR_FAILURE;
-  nsPoint       srcloc, maskloc;
-  nsPixelFormat pixformat;
-  nsDrawingSurface srcsurf;
+  nsresult          result = NS_ERROR_FAILURE;
+  PRUint32          width,height;
+  nsPixelFormat     pixformat;
+  nsDrawingSurface  srcsurf;
 
   mSrcBytes = mSecondSrcBytes = mDestBytes = nsnull;
 
+  aSrc->GetDrawingSurface(&srcsurf);
+  ((nsIDrawingSurface *)srcsurf)->GetDimensions(&width,&height);
+
+  if(aSY > (PRInt32)height)
+    return NS_OK;
+  
+  if ((aSY+aHeight) > (PRInt32)height)
+    aHeight = aHeight-aSY;
+
+
   if (NS_OK == aSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSrcBytes, &mSrcRowBytes, &mSrcSpan, NS_LOCK_SURFACE_READ_ONLY))
   {
-    if (NS_OK == aDest->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
+    if (NS_OK == aDest->LockDrawingSurface(aDX, aDY, aWidth, aHeight, (void **)&mDestBytes, &mDestRowBytes, &mDestSpan, 0))
     {
       if (aSecondSrc)
         aSecondSrc->LockDrawingSurface(aSX, aSY, aWidth, aHeight, (void **)&mSecondSrcBytes, &mSecondSrcRowBytes, &mSecondSrcSpan, NS_LOCK_SURFACE_READ_ONLY);
 
-      srcloc.x = 0;
-      srcloc.y = 0;
-
-      maskloc.x = 0;
-      maskloc.y = 0;
-
       aSrc->GetDrawingSurface(&srcsurf);
       ((nsIDrawingSurface *)srcsurf)->GetPixelFormat(&pixformat);
+      ((nsIDrawingSurface *)srcsurf)->GetDimensions(&width,&height);
 
+      if(aHeight > (PRInt32)height)
+        aHeight = height;
+
+      if (aSY > (PRInt32)height)
+        return NS_OK;
+        
       result = Blend(mSrcBytes, mSrcRowBytes, mSrcSpan,
                      mDestBytes, mDestRowBytes, mDestSpan,
                      mSecondSrcBytes, mSecondSrcRowBytes, mSecondSrcSpan,
@@ -195,13 +219,15 @@ NS_IMETHODIMP nsBlender::Blend(PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth, PRInt32
       if (aSecondSrc)
         aSecondSrc->UnlockDrawingSurface();
     }
-
     aSrc->UnlockDrawingSurface();
   }
-
   return result;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
+ */
 nsresult nsBlender::Blend(PRUint8 *aSrcBits, PRInt32 aSrcStride, PRInt32 aSrcBytes,
                                PRUint8 *aDestBits, PRInt32 aDestStride, PRInt32 aDestBytes,
                                PRUint8 *aSecondSrcBits, PRInt32 aSecondSrcStride, PRInt32 aSecondSrcBytes,
@@ -213,8 +239,7 @@ PRUint32 depth;
  
   mContext->GetDepth(depth);
   // now do the blend
-  switch (depth)
-  {
+  switch (depth){
     case 32:
         Do32Blend(aAlpha, aLines, aSrcBytes, aSrcBits, aDestBits,
                   aSecondSrcBits, aSrcStride, aDestStride, nsHighQual,
@@ -252,24 +277,18 @@ PRUint32 depth;
 }
 
 
-/** --------------------------------------------------------------------------
- * Blend two 32 bit image arrays
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
  */
 void
 nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
-PRUint8   *d1,*d2,*s1,*s2;
+PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
 PRUint32  val1,val2;
-PRInt32   x,y,temp1,numlines,xinc,yinc;
+PRInt32   x,y,temp1,numlines,numPixels,xinc,yinc;
+PRUint32  srccolor,secsrccolor,i;
+PRUint32  pixSColor,pixSSColor;
 
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
@@ -283,117 +302,80 @@ PRInt32   x,y,temp1,numlines,xinc,yinc;
   xinc = 1;
   yinc = 1;
 
-  for (y = 0; y < aNumlines; y++){
-    s2 = s1;
-    d2 = d1;
+  if (nsnull != aSecondSImage){
+    ss1 = (PRUint8 *)aSecondSImage;
+    srccolor = ((NS_GET_R(aSrcBackColor)<<16)) | ((NS_GET_G(aSrcBackColor) <<8)) | ((NS_GET_B(aSrcBackColor)));
+    secsrccolor = ((NS_GET_R(aSecondSrcBackColor)<<16)) | ((NS_GET_G(aSecondSrcBackColor) <<8)) | ((NS_GET_B(aSecondSrcBackColor)));
+  }else {
+    ss1 = nsnull;
+  }
+  
+  if(nsnull == ss1){
+    for(y = 0; y < aNumlines; y++){
+      s2 = s1;
+      d2 = d1;
+      for(x = 0; x < aNumbytes; x++){
+        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+        if(temp1>255){
+          temp1 = 255;
+        }
 
-    for (x = 0; x < aNumbytes; x++) {
-      temp1 = (((*d2) * val1) + ((*s2) * val2)) >> 8;
+        *d2 = (PRUint8)temp1; 
 
-      if (temp1 > 255)
-        temp1 = 255;
+        d2++;
+        s2++;
+      }
 
-      *d2 = (PRUint8)temp1;
-
-      d2++;
-      s2++;
+      s1 += aSLSpan;
+      d1 += aDLSpan;
     }
+  } else {
+    numPixels = aNumbytes/4;
+    for(y = 0; y < aNumlines; y++){
+      s2 = s1;
+      d2 = d1;
+      ss2=ss1;
+      for(x=0;x<numPixels;x++){
+        pixSColor =  *((PRUint32*)(s2))&0xFFFFFF;
+        pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF ;
 
-    s1 += aSLSpan;
-    d1 += aDLSpan;
+        if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
+          for(i=0;i<4;i++){
+            temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+            if(temp1>255){
+              temp1 = 255;
+            }
+            *d2 = (PRUint8)temp1; 
+            d2++;
+            s2++;
+            ss2++;
+          }
+        } else {
+          d2+=4;
+          s2+=4;
+          ss2+=4;
+        }
+      }
+     s1 += aSLSpan;
+     d1 += aDLSpan;
+     ss1+= aDLSpan;
+    }
   }
 }
 
-/** --------------------------------------------------------------------------
- * Blend two 24 bit image arrays using an 8 bit alpha mask
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- */
-void
-nsBlender::Do24BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
-{
-PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
-PRInt32   x,y;
-PRUint32  val1,val2;
-PRUint32  temp1,numlines,xinc,yinc;
-PRInt32   sspan,dspan,mspan;
 
-  sspan = aSLSpan;
-  dspan = aDLSpan;
-  mspan = aMLSpan;
-
-  // now go thru the image and blend (remember, its bottom upwards)
-  s1 = aSImage;
-  d1 = aDImage;
-  m1 = aMImage;
-
-  numlines = aNumlines;  
-  xinc = 1;
-  yinc = 1;
-
-  for (y = 0; y < aNumlines; y++){
-    s2 = s1;
-    d2 = d1;
-    m2 = m1;
-
-    for(x=0;x<aNumbytes;x++){
-      val1 = (*m2);
-      val2 = 255-val1;
-
-      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-      if(temp1>255)
-        temp1 = 255;
-      *d2 = (unsigned char)temp1;
-      d2++;
-      s2++;
-
-      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-      if(temp1>255)
-        temp1 = 255;
-      *d2 = (unsigned char)temp1;
-      d2++;
-      s2++;
-
-      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-      if(temp1>255)
-        temp1 = 255;
-      *d2 = (unsigned char)temp1;
-      d2++;
-      s2++;
-      m2++;
-     }
-    s1 += sspan;
-    d1 += dspan;
-    m1 += mspan;
-   }
-}
-
-/** --------------------------------------------------------------------------
- * Blend two 24 bit image arrays using a passed in blend value
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
  */
 void
 nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
-PRUint8   *d1,*d2,*s1,*s2,*ss1;
+PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
 PRUint32  val1,val2;
-PRInt32   x,y,temp1,numlines,xinc,yinc;
-PRUint16  srccolor,secsrccolor;
+PRInt32   x,y,temp1,numlines,numPixels,xinc,yinc;
+PRUint32  srccolor,secsrccolor,i;
+PRUint32  pixSColor,pixSSColor;
 
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
@@ -407,35 +389,64 @@ PRUint16  srccolor,secsrccolor;
   xinc = 1;
   yinc = 1;
 
-  if (nsnull != aSecondSImage)
-  {
+  if (nsnull != aSecondSImage){
     ss1 = (PRUint8 *)aSecondSImage;
-    srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
-               ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
-               ((NS_GET_B(aSrcBackColor) & 0xf8) >> 3);
-    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & 0xf8) << 8) |
-                  ((NS_GET_G(aSecondSrcBackColor) & 0xfc) << 3) |
-                  ((NS_GET_B(aSecondSrcBackColor) & 0xf8) >> 3);
-  }
-  else
+    srccolor = ((NS_GET_R(aSrcBackColor)<<16)) | ((NS_GET_G(aSrcBackColor) <<8)) | ((NS_GET_B(aSrcBackColor)));
+    secsrccolor = ((NS_GET_R(aSecondSrcBackColor)<<16)) | ((NS_GET_G(aSecondSrcBackColor) <<8)) | ((NS_GET_B(aSecondSrcBackColor)));
+  }else {
     ss1 = nsnull;
+  }
+  
+  if(nsnull == ss1){
+    for(y = 0; y < aNumlines; y++){
+      s2 = s1;
+      d2 = d1;
+      for(x = 0; x < aNumbytes; x++){
+        temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+        if(temp1>255){
+          temp1 = 255;
+        }
 
-  for(y = 0; y < aNumlines; y++){
-    s2 = s1;
-    d2 = d1;
+        *d2 = (PRUint8)temp1; 
 
-    for(x = 0; x < aNumbytes; x++){
-      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-      if(temp1>255)
-        temp1 = 255;
-      *d2 = (PRUint8)temp1; 
+        d2++;
+        s2++;
+      }
 
-      d2++;
-      s2++;
+      s1 += aSLSpan;
+      d1 += aDLSpan;
     }
+  } else {
+    numPixels = aNumbytes/3;
+    for(y = 0; y < aNumlines; y++){
+      s2 = s1;
+      d2 = d1;
+      ss2=ss1;
+      for(x=0;x<numPixels;x++){
+        pixSColor =  *((PRUint32*)(s2))&0xFFFFFF;
+        pixSSColor = *((PRUint32*)(ss2))&0xFFFFFF ;
 
-    s1 += aSLSpan;
-    d1 += aDLSpan;
+        if((pixSColor!=srccolor) || (pixSSColor!=secsrccolor)) {
+          for(i=0;i<3;i++){
+            temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
+            if(temp1>255){
+              temp1 = 255;
+            }
+            *d2 = (PRUint8)temp1; 
+            d2++;
+            s2++;
+            ss2++;
+          }
+        } else {
+          d2+=3;
+          s2+=3;
+          ss2+=3;
+        }
+      }
+     s1 += aSLSpan;
+     d1 += aDLSpan;
+     ss1+= aDLSpan;
+    }
   }
 }
 
@@ -448,17 +459,9 @@ PRUint16  srccolor,secsrccolor;
 #define BLUE16(x)   (((x) & mBlueMask) << mBlueShift)
 
 
-/** --------------------------------------------------------------------------
- * Blend two 16 bit image arrays using a passed in blend value
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
  */
 void
 nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
@@ -572,77 +575,14 @@ PRInt16     dspan,sspan,span;
   }
 }
 
-/** --------------------------------------------------------------------------
- * Blend two 8 bit image arrays using an 8 bit alpha mask
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
- */
-void
-nsBlender::Do8BlendWithMask(PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aMImage,PRInt32 aSLSpan,PRInt32 aDLSpan,PRInt32 aMLSpan,nsBlendQuality aBlendQuality)
-{
-PRUint8   *d1,*d2,*s1,*s2,*m1,*m2;
-PRInt32   x,y;
-PRUint32  val1,val2,temp1,numlines,xinc,yinc;
-PRInt32   sspan,dspan,mspan;
-
-  sspan = aSLSpan;
-  dspan = aDLSpan;
-  mspan = aMLSpan;
-
-  // now go thru the image and blend (remember, its bottom upwards)
-  s1 = aSImage;
-  d1 = aDImage;
-  m1 = aMImage;
-
-  numlines = aNumlines;  
-  xinc = 1;
-  yinc = 1;
-
-  for (y = 0; y < aNumlines; y++){
-    s2 = s1;
-    d2 = d1;
-    m2 = m1;
-
-    for(x=0;x<aNumbytes;x++){
-      val1 = (*m2);
-      val2 = 255-val1;
-
-      temp1 = (((*d2)*val1)+((*s2)*val2))>>8;
-      if(temp1>255)
-        temp1 = 255;
-      *d2 = (unsigned char)temp1;
-      d2++;
-      s2++;
-      m2++;
-    }
-    s1 += sspan;
-    d1 += dspan;
-    m1 += mspan;
-  }
-}
 
 //------------------------------------------------------------
 
 extern void inv_colormap(PRInt16 colors,PRUint8 *aCMap,PRInt16 bits,PRUint32 *dist_buf,PRUint8 *aRGBMap );
 
-/** --------------------------------------------------------------------------
- * Blend two 8 bit image arrays using a passed in blend value
- * @param aNumlines  Number of lines to blend
- * @param aNumberBytes Number of bytes per line to blend
- * @param aSImage Pointer to beginning of the source bytes
- * @param aDImage Pointer to beginning of the destination bytes
- * @param aMImage Pointer to beginning of the mask bytes
- * @param aSLSpan number of bytes per line for the source bytes
- * @param aDLSpan number of bytes per line for the destination bytes
- * @param aMLSpan number of bytes per line for the Mask bytes
- * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+/** ---------------------------------------------------
+ *  See documentation in nsBlender.h
+ *	@update 2/25/00 dwc
  */
 void
 nsBlender::Do8Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,IL_ColorSpace *aColorMap,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
