@@ -72,7 +72,7 @@ _PR_MD_SOCKET(int af, int type, int flags)
     {
         int rv = sock_errno();
         soclose(sock);
-		_PR_MD_MAP_SOCKET_ERROR(rv);
+        _PR_MD_MAP_SOCKET_ERROR(rv);
         return (PRInt32) -1;
     }
 
@@ -99,8 +99,8 @@ _MD_CloseSocket(PRInt32 osfd)
     PRInt32 rv = -1;
 
     rv = soclose((int) osfd );
-	if (rv < 0)
-		_PR_MD_MAP_SOCKET_ERROR(sock_errno());
+    if (rv < 0)
+        _PR_MD_MAP_SOCKET_ERROR(sock_errno());
 
     return rv;
 }
@@ -111,7 +111,7 @@ _MD_SocketAvailable(PRFileDesc *fd)
     PRInt32 result;
 
     if (ioctl(fd->secret->md.osfd, FIONREAD, (char *) &result, sizeof(result)) < 0) {
-		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, sock_errno());
+        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, sock_errno());
         return -1;
     }
     return result;
@@ -141,18 +141,18 @@ _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
                 && (!fd->secret->nonblocking))
             {
 #ifdef BSD_SELECT
-                if ((rv = select(osfd + 1, &rd, NULL, NULL,NULL)) == -1) {
+                if ((rv = _MD_SELECT(osfd + 1, &rd, NULL, NULL,NULL)) == -1) {
 #else
-                if ((rv = select(socks, 1, 0, 0, -1)) == -1) {
+                if ((rv = _MD_SELECT(socks, 1, 0, 0, -1)) == -1) {
 #endif
-					_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                    _PR_MD_MAP_SELECT_ERROR(sock_errno());
                     break;
-            } 
+                } 
             } 
             else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
+                _PR_MD_MAP_ACCEPT_ERROR(err);
                 break;
-        }
+            }
         }
         return(rv);
     } 
@@ -163,14 +163,14 @@ _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
             if (((err = sock_errno()) == EWOULDBLOCK) 
                 && (!fd->secret->nonblocking))
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
             }
             else
             {
                 _PR_MD_MAP_ACCEPT_ERROR(err);
             }
         }
-            return(rv);
+        return(rv);
     } 
     else 
     {
@@ -182,26 +182,25 @@ retry:
             {
 #ifdef BSD_SELECT
                 tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                    timeout - PR_SecondsToInterval(tv.tv_sec));
+                tv.tv_usec = PR_IntervalToMicroseconds(timeout - PR_SecondsToInterval(tv.tv_sec));
                 tvp = &tv;
-                rv = select(osfd + 1, &rd, NULL, NULL, tvp);
+                rv = _MD_SELECT(osfd + 1, &rd, NULL, NULL, tvp);
 #else
                 long lTimeout = PR_IntervalToMilliseconds(timeout); 
-                rv = select(socks, 1, 0, 0, lTimeout);
+                rv = _MD_SELECT(socks, 1, 0, 0, lTimeout);
 #endif
                 if (rv > 0) {
                     goto retry;
                 } 
                 else if (rv == 0) 
                 {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                     rv = -1;
                 } else {
-					_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                    _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 }
             } else {
-				_PR_MD_MAP_ACCEPT_ERROR(err);
+                _PR_MD_MAP_ACCEPT_ERROR(err);
             }
         }
     }
@@ -218,7 +217,11 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
     PRInt32 rv;
     int err, len;
 #ifdef BSD_SELECT
+#ifdef XP_OS2//_VACPP
+    fd_set wd;
+#else
     fd_set wd, ex;
+#endif  #vacpp
     struct timeval tv, *tvp;
 #else
     int socks[1]; 
@@ -236,17 +239,20 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
             else 
             {
                 tv.tv_sec = PR_IntervalToSeconds(timeout);
-                tv.tv_usec = PR_IntervalToMicroseconds(
-                timeout - PR_SecondsToInterval(tv.tv_sec));
+                tv.tv_usec = PR_IntervalToMicroseconds(timeout - PR_SecondsToInterval(tv.tv_sec));
                 tvp = &tv;
             }
 
             FD_ZERO(&wd);
             FD_SET(osfd, &wd);
+#ifdef XP_OS2//_VACPP
+            rv = _MD_SELECT(osfd + 1, NULL, &wd, NULL, tvp);
+#else
             FD_ZERO(&ex);
             FD_SET(osfd, &ex);
-            rv = select(osfd + 1, NULL, &wd, &ex, tvp);
-#else
+            rv = _MD_SELECT(osfd + 1, NULL, &wd, &ex, tvp);
+#endif  #vacpp
+#else #!bsd_select
             if (timeout == PR_INTERVAL_NO_TIMEOUT)
                 lTimeout = -1;
             else 
@@ -255,11 +261,38 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
             }
 	    
             socks[0] = osfd; 
-            rv = select(socks, 0, 1, 1, lTimeout);
+#ifdef XP_OS2//_VACPP
+            rv = _MD_SELECT(socks, 0, 1, 0, lTimeout);
+#else
+            rv = _MD_SELECT(socks, 0, 1, 1, lTimeout);
+#endif  #vacpp
 #endif
             if (rv > 0) 
             {
 #ifdef BSD_SELECT
+#ifdef XP_OS2//_VACPP
+                if (FD_ISSET(osfd, &wd))
+                {
+                    //DosSleep(0);
+                    len = sizeof(err);
+                    if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                           (char *) &err, &len) < 0)
+                    {  
+                        _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
+                        return -1;
+                    }
+
+                    if (err != 0)
+                    {
+                        _PR_MD_MAP_CONNECT_ERROR(err);
+                        return -1;
+                    }
+                    else
+                        return 0;   /* it's connected */
+                }
+                else
+                    return -1;
+#else
                if (FD_ISSET(osfd, &ex))
                {
                    DosSleep(0);
@@ -281,24 +314,37 @@ _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen,
                    /* it's connected */
                    return 0;
                }
-#else
-               if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
-                       (char *) &err, &len) < 0)
-               {  
-                   _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
-                   return -1;
-               }
-               else
-                  return 0; /* It's connected ! */
+#endif  #vacpp
+#else #!bsd_select
+                if (socks[0] == osfd)
+                {
+                  len = sizeof(err);
+                  if (getsockopt(osfd, SOL_SOCKET, SO_ERROR,
+                         (char *) &err, &len) < 0)
+                  {  
+                    _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
+                    return -1;
+                  }
+
+                  if (err != 0)
+                  {
+                    _PR_MD_MAP_CONNECT_ERROR(err);
+                    return -1;
+                  }
+                  else
+                    return 0;   /* it's connected */
+                }
+                else
+                  return -1;
 #endif
-            } 
+            }
             else if (rv == 0) 
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 return(-1);
             } else if (rv < 0) 
             {
-				_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 return(-1);
             }
         } 
@@ -364,7 +410,7 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
                timeout - PR_SecondsToInterval(tv.tv_sec));
                tvp = &tv;
            }
-           if ((rv = select(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
+           if ((rv = _MD_SELECT(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
 #else
             socks[0] = osfd; 
             if (timeout == PR_INTERVAL_NO_TIMEOUT) 
@@ -375,22 +421,22 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
             {
                 lTimeout = PR_IntervalToMilliseconds(timeout); 
             }
-            if ((rv = select(socks, 1, 0, 0, lTimeout)) == -1) 
+            if ((rv = _MD_SELECT(socks, 1, 0, 0, lTimeout)) == -1) 
 #endif
             {
-				_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 return -1;
             } 
             else if (rv == 0) 
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 rv = -1;
                 break;
             }
         } 
         else 
         {
-			_PR_MD_MAP_RECV_ERROR(err);
+            _PR_MD_MAP_RECV_ERROR(err);
             break;
         }
     } /* end while() */
@@ -433,7 +479,7 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                 }
                 FD_ZERO(&wd);
                 FD_SET(osfd, &wd);
-                if ((rv = select( osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
+                if ((rv = _MD_SELECT( osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
 #else
                 if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
                 {
@@ -444,21 +490,21 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                     lTimeout = PR_IntervalToMilliseconds(timeout); 
                 }
                 socks[0] = osfd; 
-                if ((rv = select( socks, 0, 1, 0, lTimeout)) == -1) {
+                if ((rv = _MD_SELECT( socks, 0, 1, 0, lTimeout)) == -1) {
 #endif
-					_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                    _PR_MD_MAP_SELECT_ERROR(sock_errno());
                     break;
-				}
+                }
                 if (rv == 0) 
                 {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                        return -1;
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    return -1;
                 }
             } 
             else {
-				_PR_MD_MAP_SEND_ERROR(err);
+                _PR_MD_MAP_SEND_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking)
@@ -481,7 +527,7 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
            }
            FD_ZERO(&wd);
            FD_SET(osfd, &wd);
-           if ((rv = select(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
+           if ((rv = _MD_SELECT(osfd + 1, NULL, &wd, NULL,tvp)) == -1) {
 #else
             if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
             {
@@ -492,15 +538,15 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                 lTimeout = PR_IntervalToMilliseconds(timeout); 
             }
             socks[0] = osfd; 
-            if ((rv = select(socks, 0, 1, 0,lTimeout)) == -1) {
+            if ((rv = _MD_SELECT(socks, 0, 1, 0,lTimeout)) == -1) {
 #endif
-				_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 break;
-			}
+            }
             if (rv == 0) 
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    return -1;
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                return -1;
             }
         }
     }
@@ -544,7 +590,7 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                }
                FD_ZERO(&wd);
                FD_SET(osfd, &wd);
-               if ((rv = select(osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
+               if ((rv = _MD_SELECT(osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
 #else
                 if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
                 {
@@ -555,21 +601,21 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                     lTimeout = PR_IntervalToMilliseconds(timeout);
                 }
                 socks[0] = osfd; 
-                if ((rv = select(socks, 0, 1, 0, lTimeout)) == -1) {
+                if ((rv = _MD_SELECT(socks, 0, 1, 0, lTimeout)) == -1) {
 #endif
-					_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                    _PR_MD_MAP_SELECT_ERROR(sock_errno());
                     break;
-				}
+                }
                 if (rv == 0) 
                 {
-					PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                        return -1;
+                    PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                    return -1;
                 }
             } 
             else {
-				_PR_MD_MAP_SENDTO_ERROR(err);
+                _PR_MD_MAP_SENDTO_ERROR(err);
                 return -1;
-        }
+            }
         }
         bytesSent += rv;
         if (fd->secret->nonblocking)
@@ -592,7 +638,7 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
            }
            FD_ZERO(&wd);
            FD_SET(osfd, &wd);
-           if ((rv = select( osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
+           if ((rv = _MD_SELECT( osfd + 1, NULL, &wd, NULL, tvp)) == -1) {
 #else
             if ( timeout == PR_INTERVAL_NO_TIMEOUT ) 
             {
@@ -603,15 +649,15 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
                 lTimeout = PR_IntervalToMilliseconds(timeout);  
             }
             socks[0] = osfd; 
-            if ((rv = select( socks, 0, 1, 0, lTimeout)) == -1) {
+            if ((rv = _MD_SELECT( socks, 0, 1, 0, lTimeout)) == -1) {
 #endif
-				_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 break;
-			}
+            }
             if (rv == 0) 
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    return -1;
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                return -1;
             }
         }
     }
@@ -640,20 +686,20 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
             && (!fd->secret->nonblocking))
         {
 #ifdef BSD_SELECT
-           if (timeout == PR_INTERVAL_NO_TIMEOUT) 
-           {
-               tvp = NULL;
-           } 
-           else 
-           {
-               tv.tv_sec = PR_IntervalToSeconds(timeout);
-               tv.tv_usec = PR_IntervalToMicroseconds(
-               timeout - PR_SecondsToInterval(tv.tv_sec));
-               tvp = &tv;
-           }
-           FD_ZERO(&rd);
-           FD_SET(osfd, &rd);
-           if ((rv = select(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
+            if (timeout == PR_INTERVAL_NO_TIMEOUT) 
+            {
+                tvp = NULL;
+            } 
+            else 
+            {
+                tv.tv_sec = PR_IntervalToSeconds(timeout);
+                tv.tv_usec = PR_IntervalToMicroseconds(
+                timeout - PR_SecondsToInterval(tv.tv_sec));
+                tvp = &tv;
+            }
+            FD_ZERO(&rd);
+            FD_SET(osfd, &rd);
+            if ((rv = _MD_SELECT(osfd + 1, &rd, NULL, NULL, tvp)) == -1) 
 #else
             if (timeout == PR_INTERVAL_NO_TIMEOUT) 
             {
@@ -664,14 +710,14 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
                 lTimeout = PR_IntervalToMilliseconds(timeout);  
             }
             socks[0] = osfd; 
-            if ((rv = select(socks, 1, 0, 0, lTimeout)) == -1) 
+            if ((rv = _MD_SELECT(socks, 1, 0, 0, lTimeout)) == -1) 
 #endif
             {
-				_PR_MD_MAP_SELECT_ERROR(sock_errno());
+                _PR_MD_MAP_SELECT_ERROR(sock_errno());
                 return -1;
             } else if (rv == 0) 
             {
-				PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
+                PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
                 rv = -1;
                 break;
             }
@@ -681,7 +727,7 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
         } 
         else 
         {
-			_PR_MD_MAP_RECVFROM_ERROR(err);
+            _PR_MD_MAP_RECVFROM_ERROR(err);
             break;
         }
     }
@@ -726,12 +772,12 @@ _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size, PRIntervalTi
 PRInt32
 _PR_MD_SHUTDOWN(PRFileDesc *fd, PRIntn how)
 {
-PRInt32 rv;
+    PRInt32 rv;
 
     rv = shutdown(fd->secret->md.osfd, how);
-	if (rv < 0)
-		_PR_MD_MAP_SHUTDOWN_ERROR(sock_errno());
-	return rv;
+    if (rv < 0)
+        _PR_MD_MAP_SHUTDOWN_ERROR(sock_errno());
+    return rv;
 }
 
 PRStatus
@@ -741,11 +787,11 @@ _PR_MD_GETSOCKNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *len)
 
     rv = getsockname((int)fd->secret->md.osfd, (struct sockaddr *)addr, (int *) len);
     if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETSOCKNAME_ERROR(sock_errno());
-		return PR_FAILURE;
-	}
+        return PR_SUCCESS;
+    else {
+        _PR_MD_MAP_GETSOCKNAME_ERROR(sock_errno());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -755,11 +801,11 @@ _PR_MD_GETPEERNAME(PRFileDesc *fd, PRNetAddr *addr, PRUint32 *len)
 
     rv = getpeername((int)fd->secret->md.osfd, (struct sockaddr *)addr, (int *) len);
     if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETPEERNAME_ERROR(sock_errno());
-		return PR_FAILURE;
-	}
+        return PR_SUCCESS;
+    else {
+        _PR_MD_MAP_GETPEERNAME_ERROR(sock_errno());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -769,11 +815,11 @@ _PR_MD_GETSOCKOPT(PRFileDesc *fd, PRInt32 level, PRInt32 optname, char* optval, 
 
     rv = getsockopt((int)fd->secret->md.osfd, level, optname, optval, optlen);
     if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
-		return PR_FAILURE;
-	}
+        return PR_SUCCESS;
+    else {
+        _PR_MD_MAP_GETSOCKOPT_ERROR(sock_errno());
+        return PR_FAILURE;
+    }
 }
 
 PRStatus
@@ -783,11 +829,11 @@ _PR_MD_SETSOCKOPT(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const char* op
 
     rv = setsockopt((int)fd->secret->md.osfd, level, optname, (char *) optval, optlen);
     if (rv==0)
-		return PR_SUCCESS;
-	else {
-		_PR_MD_MAP_SETSOCKOPT_ERROR(sock_errno());
-		return PR_FAILURE;
-	}
+        return PR_SUCCESS;
+    else {
+        _PR_MD_MAP_SETSOCKOPT_ERROR(sock_errno());
+        return PR_FAILURE;
+    }
 }
 
 void

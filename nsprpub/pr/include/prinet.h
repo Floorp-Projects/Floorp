@@ -91,7 +91,7 @@ struct sockaddr_dl;
  * socket headers.
  */
 #if defined(OS2) && !defined(INADDR_LOOPBACK)
-#define INADDR_LOOPBACK gethostid()
+#define INADDR_LOOPBACK 0x7f000001
 #endif
 
 /*
