@@ -223,9 +223,14 @@ ImageRendererImpl::SetDecodedRect(   IL_Pixmap* aImage,
 				                PRInt32 x1, PRInt32 y1,
                                 PRInt32 x2, PRInt32 y2)
 {
-  nsIImage         *img = (nsIImage *)aImage->client_data;
+  nsIImage         *img;
+  
+  if(aImage == NULL)
+      return NS_OK;
 
+  img= (nsIImage *)aImage->client_data;
   img->SetDecodedRect(x1, y1, x2, y2);
+
   return NS_OK;
 }
 
