@@ -86,6 +86,7 @@ viewer:Components:content.shlb
 viewer:Components:content.xpt
 viewer:Components:xuldoc.xpt
 viewer:Components:xultmpl.xpt
+viewer:Components:cookie.xpt 
 viewer:Components:Cookie.shlb 
 viewer:Components:appcomps.shlb 
 viewer:Components:Directory.xpt 

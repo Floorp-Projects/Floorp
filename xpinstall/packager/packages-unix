@@ -77,7 +77,7 @@ bin/components/search.xpt
 bin/components/autocomplete.xpt   
 bin/components/appshell.xpt
 bin/components/caps.xpt
-bin/components/cookieviewer.xpt
+bin/components/cookie.xpt
 bin/components/dom.xpt
 bin/components/editor.xpt
 bin/components/gfx.xpt
