@@ -1629,7 +1629,7 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
 #endif /* DEBUG */
 
   // Loop over lines:
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsAString::const_iterator lineStart (hunkStart);
   while (lineStart != strEnd)
   {
