@@ -21,6 +21,7 @@
 
 #include "nsISupports.idl"
 interface nsISHEntry;
+interface nsIGlobalHistory;
 
 
 
@@ -38,6 +39,13 @@ interface nsIDocShellHistory : nsISupports
   void AddChildSHEntry(in nsISHEntry aCloneReference,
                        in nsISHEntry aHistoryEntry,
                        in long aChildOffset);
+
+    /*
+     * The global history object used to store 
+     * the global history for the session.
+     */
+     attribute nsIGlobalHistory globalHistory;
+
 
 };
 

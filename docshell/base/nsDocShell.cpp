@@ -837,6 +837,14 @@ NS_IMETHODIMP nsDocShell::AddChild(nsIDocShellTreeItem *aChild)
    PRInt32 childCount = mChildren.Count();
    aChild->SetChildOffset(childCount-1);
 
+   /* Set the child's global history if the parent has one */
+   if (mGlobalHistory) {
+      nsCOMPtr<nsIDocShellHistory> dsHistoryChild(do_QueryInterface(aChild));
+      if (dsHistoryChild)
+ 	     dsHistoryChild->SetGlobalHistory(mGlobalHistory);
+   }
+ 
+
    PRInt32 childType = ~mItemType; // Set it to not us in case the get fails
    aChild->GetItemType(&childType);
    if(childType != mItemType)
@@ -1041,6 +1049,20 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
   return rv;
 }
 
+NS_IMETHODIMP nsDocShell::SetGlobalHistory(nsIGlobalHistory* aGlobalHistory)
+{
+    mGlobalHistory = aGlobalHistory; 
+    return NS_OK;
+}
+ 	
+NS_IMETHODIMP nsDocShell::GetGlobalHistory(nsIGlobalHistory** aGlobalHistory)
+{
+    NS_ENSURE_ARG_POINTER(aGlobalHistory);
+ 
+    *aGlobalHistory = mGlobalHistory;
+    NS_IF_ADDREF(*aGlobalHistory);
+    return NS_OK;
+}
 
 //*****************************************************************************
 // nsDocShell::nsIWebNavigation
@@ -1391,7 +1413,8 @@ NS_IMETHODIMP nsDocShell::Create()
 {
    NS_ENSURE_STATE(!mContentViewer);
    mPrefs = do_GetService(NS_PREF_PROGID);
-   mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
+   //GlobalHistory is now set in SetGlobalHistory
+ //  mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
 
    // i don't want to read this pref in every time we load a url
    // so read it in once here and be done with it...
