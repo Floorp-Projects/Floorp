@@ -351,10 +351,8 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) 
   nsresult result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_FALSE);
 
   if(NS_OK==result){
-
-    PRInt32 theIndex=mTextValue.FindCharInSet(" \r\n\t\b",0);
-    nsAutoString  buffer(mTextValue);
-    buffer.Truncate(theIndex);
+    nsAutoString  buffer;
+    buffer.Assign(mTextValue, mTextValue.FindCharInSet(" \r\n\t\b",0));
     mTypeID= nsHTMLTags::LookupTag(buffer);
     result=aScanner.GetChar(aChar); //eat the closing '>;
   }
