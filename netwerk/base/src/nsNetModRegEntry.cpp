@@ -18,60 +18,114 @@
 
 #include "nsNetModRegEntry.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 //////////////////////////////
 //// nsISupports
 //////////////////////////////
 NS_IMPL_ISUPPORTS(nsNetModRegEntry, nsINetModRegEntry::GetIID());
 
-NS_IMETHODIMP
-nsNetModRegEntry::QueryInterface(REFNSIID iid, void** result) {
-    if (result == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    *result = nsnull;
-    if (iid.Equals(nsINetModRegEntry::GetIID()) ||
-        iid.Equals(kISupportsIID)) {
-        *result = NS_STATIC_CAST(nsINetModRegEntry*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
 
 //////////////////////////////
 //// nsINetModRegEntry
 //////////////////////////////
 
 NS_IMETHODIMP
-nsNetModRegEntry::GetmNotify(nsINetNotify **aNotify) {
+nsNetModRegEntry::GetMNotify(nsINetNotify **aNotify) {
     *aNotify = mNotify;
+    NS_ADDREF(*aNotify);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetModRegEntry::GetmEventQ(nsIEventQueue **aEventQ) {
+nsNetModRegEntry::GetMEventQ(nsIEventQueue **aEventQ) {
     *aEventQ = mEventQ;
+    NS_ADDREF(*aEventQ);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNetModRegEntry::GetmTopic(char **aTopic) {
+nsNetModRegEntry::GetMTopic(char **aTopic) {
     PL_strcpy(*aTopic, mTopic);
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNetModRegEntry::GetMCID(nsCID **aMCID) {
+    *aMCID = mCID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal) {
+    nsresult rv = NS_OK;
+    PRBool retVal = PR_TRUE;
+
+    NS_ADDREF(aEntry);
+
+    char * topic = nsnull;
+    rv = aEntry->GetMTopic(&topic);
+    if (NS_FAILED(rv)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+    if (PL_strcmp(topic, mTopic)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+
+    nsINetNotify* notify = nsnull;
+    rv = aEntry->GetMNotify(&notify);
+    if (NS_FAILED(rv)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+    if (notify != mNotify) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+
+    nsIEventQueue* eventQ = nsnull;
+    rv = aEntry->GetMEventQ(&eventQ);
+    if (NS_FAILED(rv)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+    if (eventQ != mEventQ) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+
+    nsCID *cid = nsnull;
+    rv = aEntry->GetMCID(&cid);
+    if (NS_FAILED(rv)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+    if (!mCID->Equals(*cid)) {
+        retVal = PR_FALSE;
+        goto end;
+    }
+
+:end
+    NS_IF_RELEASE(notify);
+    NS_IF_RELEASE(eventQ);
+    *_retVal = retVal;
+    NS_RELEASE(aEntry);
+    return rv;
+}
+
 
 //////////////////////////////
 //// nsNetModRegEntry
 //////////////////////////////
 
-nsNetModRegEntry::nsNetModRegEntry(char *aTopic, nsIEventQueue *aEventQ, nsINetNotify *aNotify)
+nsNetModRegEntry::nsNetModRegEntry(const char *aTopic, nsIEventQueue *aEventQ, nsINetNotify *aNotify, nsCID aCID)
     : mEventQ(aEventQ), mNotify(aNotify) {
     NS_INIT_REFCNT();
     PL_strcpy(mTopic, aTopic);
     NS_ADDREF(mEventQ);
     NS_ADDREF(mNotify);
+    mCID = aCID;
 }
 
 nsNetModRegEntry::~nsNetModRegEntry() {
