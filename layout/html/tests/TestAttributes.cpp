@@ -82,11 +82,12 @@ void testAttributes(nsIHTMLContent* content) {
   }
   PRInt32 index;
   for (index = 0; index < na; index++) {
-    nsIAtom* name;
+    nsIAtom* name, *prefix = nsnull;
     PRInt32 nameSpaceID;
-    content->GetAttributeNameAt(index, nameSpaceID, name);
+    content->GetAttributeNameAt(index, nameSpaceID, name, prefix);
     allNames->AppendElement(name);
     NS_RELEASE(name);
+    NS_IF_RELEASE(prefix);
   }
 
   PRBool borderFound = PR_FALSE,heightFound = PR_FALSE,srcFound = PR_FALSE;
