@@ -86,17 +86,8 @@ button.PopupButton:active {
   border: 1px inset;
 }
 
-a[name] {
-  display: list-item; 
-  list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
-  list-style-position: inside;
-  line-height: 10px;
-  min-width: 10px;
-}
-
 titledbutton.PopupButton {
   min-width: 50px;
   min-height: 10px;
   list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
 }
-

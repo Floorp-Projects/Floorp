@@ -1,18 +1,17 @@
 var insertNew = true;
 var tagName = "anchor"
 var anchorElement = null;
+var nameInput;
 
 // dialog initialization code
 function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditoreditorShell found for NamedAnchor Properties dialog\n");
-
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  // GET EACH CONTROL -- E.G.:
-  dialog.nameInput = document.getElementById("name");
+  dump("EditorShell found for NamedAnchor Properties dialog\n");
+  dump(document+"\n");
+  nameInput = document.getElementById("nameInput");
+  dump(nameInput+"\n");
 
   // Get a single selected element of the desired type
   anchorElement = editorShell.GetSelectedElement(tagName);
@@ -21,7 +20,7 @@ function Startup()
     // We found an element and don't need to insert one
     insertNew = false;
     dump("Found existing anchor\n");
-    dialog.nameInput.value = anchorElement.getAttribute("name");
+    nameInput.value = anchorElement.getAttribute("name");
   } else {
     insertNew = true;
     // We don't have an element selected, 
@@ -29,12 +28,13 @@ function Startup()
     dump("Element not selected - calling createElementWithDefaults\n");
     anchorElement = editorShell.CreateElementWithDefaults(tagName);
     // Use the current selection as suggested name
-    name = editorShell.selectionAsText;
+    name = GetSelectionAsText();
     // Get 40 characters of the selected text and don't add "..."
     name = TruncateStringAtWordEnd(name, 40, false);
     // Replace whitespace with "_"
     name = ReplaceWhitespace(name, "_");
-    dialog.nameInput.value = name;
+    dump("Selection text for name: "+name+"\n");
+    nameInput.value = name;
   }
 
   if(!anchorElement)
@@ -43,12 +43,12 @@ function Startup()
     window.close();
   }
   
-  dialog.nameInput.focus();
+  nameInput.focus();
 }
 
 function onOK()
 {
-  name = dialog.nameInput.value;
+  name = nameInput.value;
   name = TrimString(name);
   if (name.length == 0) {
     dump("EMPTY ANCHOR STRING\n");

@@ -48,10 +48,10 @@ function Startup()
     // We must have a message
     window.close();
   }
-  title = window.arguments[2];
-  if (title.length > 0) {
-    // BUG 9722: Not implemented yet.
-    //document.title = title;
+  titleText = window.arguments[2];
+  if (titleText.length > 0) {
+    dump(titleText+" is the message dialog title\n");
+    window.title = titleText;
   }
   
   button1 = document.getElementById("button1");

@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\composer\content\default
 	$(MAKE_INSTALL) editor.properties          $(DIST)\bin\chrome\editor\composer\content\default
 	$(MAKE_INSTALL) EditorStyles1.css          $(DIST)\bin\chrome\editor\composer\content\default
+	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\composer\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorAppShell.xul
@@ -36,3 +37,4 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorInitPagePlain.html	
   rm -f $(DIST)\bin\chrome\editor\composer\content\default\editor.properties
   rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorStyles1.css
+  rm -f $(DIST)\bin\chrome\editor\composer\content\default\EditorContent.css

@@ -1,6 +1,9 @@
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
+var SelectionOnly=1; 
+var FormatedWithDoctype=2; 
+var FormatedWithoutDoctype=6; 
 
 function InitEditorShell()
 {
@@ -329,3 +332,7 @@ function onCancel()
   window.close();
 }
 
+function GetSelectionAsText()
+{
+  return editorShell.GetContentsAs("text/plain", SelectionOnly);
+}

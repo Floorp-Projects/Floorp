@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EditorInitPagePlain.html \
 	$(srcdir)/editor.properties \
 	$(srcdir)/EditorStyles1.css \
+	$(srcdir)/EditorContent.css \
 	$(NULL)
 
 install:: 
