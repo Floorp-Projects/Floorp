@@ -21,6 +21,7 @@ EXPORTS =				\
 	nslayout.h			\
 	nsICaret.h			\
 	nsIContent.h			\
+	nsIContentIterator.h    \
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
 	nsIDocumentObserver.h		\
