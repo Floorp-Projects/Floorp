@@ -67,11 +67,9 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   Pixmap img_x_pixmap=0, mask_x_pixmap = 0;
   fe_PixmapClientData *img_client_data, *mask_client_data = NULL;
   MozHTMLView *view = 0;
-  Display *dpy = 0;
-  Visual *visual = 0;
   unsigned int visual_depth;
-  Window window;
-  
+  fe_Drawable *fe_drawable;
+
   printf ("_IMGCB_NewPixmap\n");
 
   /* Allocate the client data structures for the IL_Pixmaps. */
@@ -93,9 +91,8 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   /* try to get the required display parameters from the html view */
   view = find_html_view(context);
   XP_ASSERT(view);
+  fe_drawable = view->drawable;
   visual_depth = gdk_visual_get_best_depth();
-  window = GDK_WINDOW_XWINDOW(view->scrolled_window->window);
-  dpy = GDK_WINDOW_XDISPLAY(view->scrolled_window->window);
   
   /* Override the image and mask dimensions with the requested target
      dimensions.  This instructs the image library to do any necessary
@@ -141,23 +138,22 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
   }
   
   /* Create an X pixmap for the image, and for the mask (if required.) */
-  img_x_pixmap = XCreatePixmap(dpy, window, img_header->width,
-                               img_header->height, visual_depth);
+  img_client_data->gdk_pixmap =
+    gdk_pixmap_new((GdkWindow *)fe_drawable->drawable,
+                   img_header->width,
+                   img_header->height,
+                   visual_depth);
   if (mask)
-    mask_x_pixmap = XCreatePixmap(dpy, window, mask_header->width,
-                                  mask_header->height, 1);
-  
-  /* Fill in the pixmap client_data.  We store the Display pointer for use
-     in DestroyPixmap, which can be called after the FE's display context
-     (MWContext) has been destroyed. */
-  img_client_data->pixmap = img_x_pixmap;
-  img_client_data->dpy = dpy;
+    mask_client_data->gdk_pixmap =
+      gdk_pixmap_new((GdkWindow *)fe_drawable->drawable,
+                     mask_header->width,
+                     mask_header->height,
+                     1);
+
+  /* Fill in the pixmap client_data. */
   image->client_data = (void *)img_client_data;
-  if (mask) {
-    mask_client_data->pixmap = mask_x_pixmap;
-    mask_client_data->dpy = dpy;
+  if (mask)
     mask->client_data = (void *)mask_client_data;
-  }
 }
 
 JMC_PUBLIC_API(void)
@@ -167,36 +163,45 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   uint32 widthBytes;
   MWContext *context = (MWContext *)dpy_cx; /* XXX This should be the FE's
                                                  display context. */
-  MozHTMLView *view = 0;
-  Display *dpy;
-  Visual *visual = 0;
-  Window window;
   unsigned int visual_depth;
-  unsigned int visual_pixmap_depth; /* Pixmap depth supported by visual. */
   unsigned int pixmap_depth;  /* Depth of the IL_Pixmap. */
+  Visual *visual;
   Pixmap x_pixmap;
-  fe_PixmapClientData *pixmap_client_data;
+  Display *dpy;
   XImage *x_image;
-  IL_ColorSpace *color_space = pixmap->header.color_space;
-  char *bits;
   GC gc;
   XGCValues gcv;
-  GdkVisual *gdk_visual;
+  IL_ColorSpace *color_space = pixmap->header.color_space;
+  char *bits;
+  fe_PixmapClientData *pixmap_client_data;
+  fe_Drawable *fe_drawable;
+  MozHTMLView *view = 0;
+  GdkVisual   *gdk_visual;
+  GdkPixmap   *gdk_pixmap;
+  GdkImage    *gdk_image;
+  GdkGC       *gdk_gc;
+  GdkGCValues *gdkgc_values;
+
 
   printf ("_IMGCB_UpdatePixmap\n");
 
   if (!context)
     return;
 
-  /* try to get the required display parameters from the html view */
+  /* get the client data */
+  pixmap_client_data = (fe_PixmapClientData *)pixmap->client_data;
   view = find_html_view(context);
   XP_ASSERT(view);
-  visual_pixmap_depth = visual_depth = gdk_visual_get_best_depth();
-  window = GDK_WINDOW_XWINDOW(view->scrolled_window->window);
-  dpy = GDK_WINDOW_XDISPLAY(view->scrolled_window->window);
-  gdk_visual = gdk_window_get_visual(view->scrolled_window->window);
+  fe_drawable = view->drawable;
+  gdk_visual = gdk_window_get_visual((GdkWindow *)fe_drawable->drawable);
+  if (gdk_visual == NULL) {
+    printf("Warning: gdk_visual in _IMGCB_UpdatePixmap is null.\n");
+    return;
+  }
   visual = GDK_VISUAL_XVISUAL(gdk_visual);
-  
+  /* try to get the required display parameters from the pixmap */
+  visual_depth = gdk_visual_get_best_depth();
+  dpy = GDK_WINDOW_XDISPLAY(pixmap_client_data->gdk_pixmap);
   
   /* Check for zero dimensions. */
   if (width == 0 || height == 0)
@@ -241,7 +246,7 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   }
   
   pixmap_client_data = (fe_PixmapClientData *)pixmap->client_data;
-  x_pixmap = pixmap_client_data->pixmap;
+  x_pixmap = GDK_WINDOW_XWINDOW(pixmap_client_data->gdk_pixmap);
   
   memset(&gcv, ~0, sizeof(XGCValues));
   gcv.function = GXcopy;
@@ -268,7 +273,18 @@ _IMGCB_ControlPixmapBits(IMGCB* img_cb, jint op, void* dpy_cx,
 JMC_PUBLIC_API(void)
 _IMGCB_DestroyPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap)
 {
+  fe_PixmapClientData *pixmap_client_data;
+
   printf ("_IMGCB_DestroyPixmap\n");
+  pixmap_client_data = (fe_PixmapClientData *)pixmap->client_data;
+  if (!pixmap_client_data)
+    return;
+  if (pixmap_client_data->gdk_pixmap)
+    gdk_pixmap_unref(pixmap_client_data->gdk_pixmap);
+  if (pixmap->bits) {
+    free(pixmap->bits);
+    pixmap->bits = NULL;
+  }
 }
 
 JMC_PUBLIC_API(void)
@@ -298,4 +314,7 @@ void
 FE_MochaImageGroupObserver(XP_Observable observable, XP_ObservableMsg message,
                            void *message_data, void *closure)
 {
-}   
+}
+
+
+
