@@ -47,7 +47,9 @@ include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
 
 ifeq ($(OS_TARGET),HP-UX)
+ifneq ($(OS_TEST),ia64)
 	ASFILES += ret_cr16.s
+endif
 endif
 
 #######################################################################
