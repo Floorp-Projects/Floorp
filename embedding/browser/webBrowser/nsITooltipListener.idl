@@ -25,14 +25,30 @@
  
 #include "nsISupports.idl"
 
+interface nsIDOMNode;
+
+//
+// nsITooltipTextProvider
+//
+// Interface implemented by a tooltip text provider service, returns
+// the text to display above a particular node (e.g. the TITLE tag).
+//
+[uuid(b128a1e6-44f3-4331-8fbe-5af360ff21ee)]
+interface nsITooltipTextProvider : nsISupports
+{
+    boolean getNodeText(in nsIDOMNode aNode, out wstring aText);
+};
+
+%{ C++
+#define NS_TOOLTIPTEXTPROVIDER_CONTRACTID \
+"@mozilla.org/embedcomp/tooltiptextprovider;1"
+%}
 
 //
 // nsITooltipListener interface
 //
 // Used to tell an embedding client when a tooltip should be displayed or hidden.
 //
-
-
 [uuid(44b78386-1dd2-11b2-9ad2-e4eee2ca1916)]
 interface nsITooltipListener : nsISupports
 {
@@ -48,10 +64,10 @@ interface nsITooltipListener : nsISupports
     //
     // Returning any result other than NS_OK will cause Gecko to
     // behave as if no tooltip was displayed (no auto-timeout, etc).
-  void OnShowTooltip ( in long aXCoords, in long aYCoords, in wstring aTipText ) ;
+  void onShowTooltip ( in long aXCoords, in long aYCoords, in wstring aTipText ) ;
   
     // Called when the tooltip should be hidden, either by a mouse move
     // or an auto-hide of the tooltip.
-  void OnHideTooltip ( ) ;
+  void onHideTooltip ( ) ;
 };
 
