@@ -784,10 +784,10 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     str = JSVAL_TO_STRING(id);
     prototypeAtom = cx->runtime->atomState.classPrototypeAtom;
     if (str == ATOM_TO_STRING(prototypeAtom)) {
-        JSObject *parentProto, *proto;
+        JSObject *proto, *parentProto;
         jsval pval;
 
-        parentProto = NULL;
+        proto = parentProto = NULL;
         if (fun->object != obj && fun->object) {
             /*
              * Clone of a function: make its prototype property value have the
