@@ -385,7 +385,7 @@ nsMsgAccountManagerDataSource::GetTargets(nsIRDFResource *source,
       }
     } else if (source == kNC_PageTitleSMTP) {
       if (property == kNC_Settings) {
-        nodes->AppendElement(kNC_PageTitleAdvanced);
+        //        nodes->AppendElement(kNC_PageTitleAdvanced);
       }
     }
     
