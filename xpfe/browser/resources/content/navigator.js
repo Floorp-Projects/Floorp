@@ -518,10 +518,10 @@
     if ( core ) {
         //core.ShowWindowWithArgs( "resource:/res/samples/openLocation.xul", window, appCoreName );
         var name = appCoreName.replace( /\./, /\_/ );
-        // Note: Use width/height one less than actual so resizing occurs.
-        //       This bypasses bug whereby dialog contents don't appear
-        //       till the dialog is resized.
-        window.openDialog( "chrome://navigator/content/openLocation.xul", name+"_openLocation", "chrome,width=419,height=189", appCoreName );
+        // Note: 
+        //  This been changed now that initrinisc sizing works.
+        //  we simply call opendialog without handing over concrete size params 
+        window.openDialog( "chrome://navigator/content/openLocation.xul", name+"_openLocation", "chrome", appCoreName );
     } else {
         dump("Error; can't create toolkitCore\n");
     }

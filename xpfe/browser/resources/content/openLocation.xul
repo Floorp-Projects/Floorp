@@ -1,50 +1,64 @@
 <?xml version="1.0"?> 
- <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
  
- <!DOCTYPE window> 
-            <!-- padding 0px is just a workaround for windows not displaying paddings correctly
-            take it out once this works! -->
+<!DOCTYPE window> 
+            
  
- <window style=" padding: 0px; width: 100%; height: 100%" 
-                    xmlns:html="http://www.w3.org/TR/REC-html40"
+<window
+         xmlns:html="http://www.w3.org/TR/REC-html40"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
          title="Open File or Location"
          onload="onLoad()"
-         class="dialog"> 
+         class="dialog"
+         align="vertical"> 
               
-              <html:script language="javascript" src="openLocation.js"/>
+   <html:script language="javascript" src="openLocation.js"/>
                    
-              <box align="horizontal" flex="100%" style="width:30em;">
-                      
-                      <html:div style="width: 45px; margin: 5px;">
-                              <html:img src="chrome://navigator/skin/questionl.gif" width="32" height="32" border="0"/>
-                      </html:div>
-                      <box align="vertical" flex="100%" style="height: 100%;">
-                  
-            <html:div style="width: 100%;">Enter the World Wide Web location (URL) you would like to open or </html:div><html:div style="width: 100%; margin-bottom: 0.5em;">use the Choose File... button to select a local file:</html:div>
            
-                              <box align="horizontal">
-                              <html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
-                              <titledbutton onclick="choose()" value="Choose File..." align="left"/>
-                              </box>
-                              
-                              <box align="horizontal" style="margin-bottom: 1em;">                             <html:input type="checkbox" id="dialog.newWindow"/>
-                              <html:label for="dialog.newWindow">Open in new window</html:label>
-                              <spring flex="100%"/> 
-                      </box>
-                      
-                    <spring flex="100%"/>
-                   
-                      <box align="horizontal">
-                                    <spring flex="100%"/>
-                            <titledbutton id="dialog.ok" value="OK" onclick="open()" align="left"/>
-                             <titledbutton id="dialog.cancel" value="Cancel" onclick="cancel()" align="left"/>
-                            <spring flex="100%"/>
-                      </box>
-                     
-        </box>
-                    
-           </box>
-
+           
+	<box align="horizontal" style="width: 36em; height: 100%;">
+		
+		<html:div style="width: 45px; margin: 5px;">
+			<html:img src="chrome://global/skin/question-icon.gif" width="32" height="32" border="0"/>
+		</html:div>
+		
+		<box align="vertical" flex="100%">
+		
+			<box align="vertical" style="margin-bottom: 1em;">	
+				<html:div flex="100%">
+					Enter the World Wide Web location (URL) you would like to open or
+				</html:div>
+				<html:div style="width: 100%; margin-bottom: 0.5em;">
+					use the Choose File... button to select a local file:
+				</html:div>
+			</box>
+			
+			<box align="horizontal"  flex="100%">
+				<html:input id="dialog.input" flex="100%" onkeyup="onTyping(event.which)"/>
+            <titledbutton onclick="choose()" value="Choose File..."/>
+			</box>
+			
+			<box align="horizontal"  flex="100%" style="margin-bottom: 1em; width: 100%;">
+				<html:input type="checkbox" id="dialog.newWindow"/>
+            	<html:label for="dialog.newWindow">Open in new window</html:label>
+           		<spring flex="100%"/> 
+			</box>
+			
+			<spring flex="100%"/>
+			
+			<box align="horizontal">
+				
+				<spring flex="100%"/>
+				
+				<titledbutton id="dialog.ok" value="OK" onclick="open()"/>
+            	<titledbutton id="dialog.cancel" value="Cancel" onclick="cancel()"/>
+				
+				<spring flex="100%"/>
+				
+			</box>
+			
+		</box>
+		
+	</box>
          
  </window>
