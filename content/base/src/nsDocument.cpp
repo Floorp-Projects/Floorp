@@ -75,6 +75,7 @@
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
 #include "nsDOMDocumentType.h"
+#include "nsTreeWalker.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsIServiceManager.h"
@@ -541,6 +542,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentRange)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentTraversal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
@@ -2188,6 +2190,30 @@ NS_IMETHODIMP
 nsDocument::CreateRange(nsIDOMRange** aReturn)
 {
   return NS_NewRange(aReturn);
+}
+
+NS_IMETHODIMP    
+nsDocument::CreateNodeIterator(nsIDOMNode *aRoot,
+                               PRUint32 aWhatToShow,
+                               nsIDOMNodeFilter *aFilter,
+                               PRBool aEntityReferenceExpansion,
+                               nsIDOMNodeIterator **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
+                             PRUint32 aWhatToShow,
+                             nsIDOMNodeFilter *aFilter,
+                             PRBool aEntityReferenceExpansion,
+                             nsIDOMTreeWalker **_retval)
+{
+  return NS_NewTreeWalker(aRoot,
+                          aWhatToShow,
+                          aFilter,
+                          aEntityReferenceExpansion,
+                          _retval);
 }
 
 

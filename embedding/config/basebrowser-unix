@@ -80,6 +80,7 @@ components/dom_events.xpt
 components/dom_html.xpt
 components/dom_range.xpt
 components/dom_stylesheets.xpt
+components/dom_traversal.xpt
 components/dom_views.xpt
 components/dom_xbl.xpt
 components/dom_xul.xpt

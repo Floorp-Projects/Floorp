@@ -179,6 +179,9 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XPathProcessor_id,
   eDOMClassInfo_NodeSet_id,
 
+  // DOM Traversal classes
+  eDOMClassInfo_TreeWalker_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
