@@ -57,7 +57,7 @@
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
           <treechildren>
-            <treeitem uri="...">
+            <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
               <treerow>
                 <treecell>
                   <treeindentation/><separator width="75%" align="center" class="groove" />
@@ -86,7 +86,10 @@
         </rule>
       </template>
 
-      <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecolgroup id="theColumns">
+      <treecol id="NameColumn" sortSeparators="true"
+      	rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  </treecolgroup>
 
   <treehead>
     <treerow id="headRow">
