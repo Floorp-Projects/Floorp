@@ -1490,6 +1490,7 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 	    // initialize ProcessInfoRec before calling GetProcessInformation() or die horribly.
 		pInfo.processName = nil;
 		pInfo.processAppSpec = &tempSpec;
+		pInfo.processInfoLength = sizeof(ProcessInfoRec);
 		if (!(err = GetProcessInformation(&psn, &pInfo)))
 		{
 			appFSSpec = *(pInfo.processAppSpec);
