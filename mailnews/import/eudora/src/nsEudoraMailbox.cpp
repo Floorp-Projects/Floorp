@@ -68,7 +68,11 @@ nsEudoraMailbox::~nsEudoraMailbox()
 nsresult nsEudoraMailbox::CreateTempFile( nsIFileSpec **ppSpec)
 {
 	*ppSpec = nsnull;
+	
 	nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+	
+	// nsSpecialSystemDirectory temp(nsSpecialSystemDirectory::Mac_DesktopDirectory);
+	
     temp += "impmail.txt";
 	temp.MakeUnique();
 	nsresult rv = NS_NewFileSpecWithSpec( temp, ppSpec);
@@ -108,6 +112,9 @@ nsresult nsEudoraMailbox::DeleteFile( nsIFileSpec *pSpec)
 
 	return( rv);
 }
+
+
+#define kComposeErrorStr	"X-Eudora-Compose-Error: *****" "\x0D\x0A"
 
 nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount)
 {
@@ -197,7 +204,11 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 	SimpleBuffer			body;
 	SimpleBuffer			copy;
 	PRInt32					written;
-
+	
+	
+	headers.m_convertCRs = PR_TRUE;
+	body.m_convertCRs = PR_TRUE;
+	
 	copy.Allocate( kCopyBufferSize);
 	readBuffer.Allocate( kMailReadBufferSize);
 	ReadFileState			state;
@@ -224,15 +235,13 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 		IMPORT_LOG0( "Reading first message\n");
 
 		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body))) {
-			IMPORT_LOG0( "Setting body and headers\n");
 			compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1);
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
 			compose.SetAttachments( &m_attachments);
 
-			IMPORT_LOG0( "Calling compose.SendMessage\n");
 			rv = compose.SendMessage( compositionFile);
 			if (NS_SUCCEEDED( rv)) {
-				IMPORT_LOG0( "Composed message in file: "); DUMP_FILENAME( compositionFile, PR_TRUE);
+				/* IMPORT_LOG0( "Composed message in file: "); DUMP_FILENAME( compositionFile, PR_TRUE); */
 				// copy the resulting file into the destination file!
 				rv = CopyComposedMessage( compositionFile, pDst, copy);
 				DeleteFile( compositionFile);
@@ -246,6 +255,11 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 			else {
 				IMPORT_LOG0( "*** Error composing message, writing raw message\n");
 				rv = WriteFromSep( pDst);
+				
+				rv = pDst->Write( kComposeErrorStr,
+									nsCRT::strlen( kComposeErrorStr),
+									&written );
+				
 				if (NS_SUCCEEDED( rv))
 					rv = pDst->Write( headers.m_pBuffer, headers.m_writeOffset - 1, &written);
 				if (NS_SUCCEEDED( rv) && (written == (headers.m_writeOffset - 1)))
@@ -274,6 +288,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 
 	if (deleteMailFile)
 		DeleteFile( pSrc);
+	
 	pSrc->Release();
 
 	return( rv);
@@ -458,18 +473,23 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& 
 	// Find the from separator - we should actually be positioned at the
 	// from separator, but for now, we'll verify this.
 	while (lineLen == -1) {
-		if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+		if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+			IMPORT_LOG0( "*** Error, FillMailBuffer FAILED in ReadNextMessage\n");
 			return( rv);
+		}
 		lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset);
-		
-
+	
 		if (lineLen == -1) {
 			while ((lineLen = FindStartLine( copy)) == -1) {
 				copy.m_writeOffset = copy.m_bytesInBuf;
-				if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+				if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+					IMPORT_LOG0( "*** Error, FillMailBuffer FAILED in ReadNextMessage, looking for next start line\n");
 					return( rv);
-				if (!copy.m_bytesInBuf)
+				}
+				if (!copy.m_bytesInBuf) {
+					IMPORT_LOG0( "*** Error, ReadNextMessage, looking for start of next line, got end of file.\n");
 					return( NS_ERROR_FAILURE);
+				}
 			}
 			copy.m_writeOffset += lineLen;
 			lineLen = -1;
@@ -479,52 +499,73 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& 
 	// Skip past the from line separator
 	while ((lineLen = FindStartLine( copy)) == -1) {
 		copy.m_writeOffset = copy.m_bytesInBuf;
-		if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+		if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+			IMPORT_LOG0( "*** Error, ReadNextMessage, FillMailBuffer failed looking for from sep\n");
 			return( rv);
-		if (!copy.m_bytesInBuf)
+		}
+		if (!copy.m_bytesInBuf) {
+			IMPORT_LOG0( "*** Error, ReadNextMessage, end of file looking for from sep\n");
 			return( NS_ERROR_FAILURE);
+		}
 	}
 	copy.m_writeOffset += lineLen;
-	if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+	if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+		IMPORT_LOG0( "*** Error, Unable to fill mail buffer after from sep.\n");
 		return( rv);
+	}
 
 	// This should be the headers...
 	PRInt32 endLen = -1;
 	while ((endLen = IsEndHeaders( copy)) == -1) {
 		while ((lineLen = FindNextEndLine( copy)) == -1) {
 			copy.m_writeOffset = copy.m_bytesInBuf;
-			if (!header.Write( copy.m_pBuffer, copy.m_writeOffset))
+			if (!header.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+				IMPORT_LOG0( "*** ERROR, writing headers\n");
 				return( NS_ERROR_FAILURE);
-			if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+			}
+			if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+				IMPORT_LOG0( "*** Error reading message headers\n");
 				return( rv);
-			if (!copy.m_bytesInBuf)
+			}
+			if (!copy.m_bytesInBuf) {
+				IMPORT_LOG0( "*** Error, end of file while reading headers\n");
 				return( NS_ERROR_FAILURE);
+			}
 		}
 		copy.m_writeOffset += lineLen;
 		if ((copy.m_writeOffset + 4) >= copy.m_bytesInBuf) {
-			if (!header.Write( copy.m_pBuffer, copy.m_writeOffset))
+			if (!header.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+				IMPORT_LOG0( "*** ERROR, writing headers 2\n");
 				return( NS_ERROR_FAILURE);
-			if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+			}
+			if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+				IMPORT_LOG0( "*** Error reading message headers 2\n");
 				return( rv);
+			}
 		}
 	}
 
-	if (!header.Write( copy.m_pBuffer, copy.m_writeOffset))
+	if (!header.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+		IMPORT_LOG0( "*** Error writing final headers\n");
 		return( NS_ERROR_FAILURE);
-	if (!header.Write( &endBuffer, 1))
+	}
+	if (!header.Write( &endBuffer, 1)) {
+		IMPORT_LOG0( "*** Error writing header trailing null\n");
 		return( NS_ERROR_FAILURE);
+	}
 
 
 	copy.m_writeOffset += endLen;
-	if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+	if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+		IMPORT_LOG0( "*** Error reading beginning of message body\n");
 		return( rv);
+	}
 	
 	EmptyAttachments();
 				
 	// Get the body!
 	// Read one line at a time here and look for the next separator
 	while ((lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset)) == -1) {
-		// TLR: FIXME: We MUST check for the attachment lines here!!!
 		// Debatable is whether or not to exclude these lines from the
 		// text of the message, I prefer not to in case the original
 		// attachment is actually missing.
@@ -536,10 +577,14 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& 
 					
 		while (((lineLen = FindStartLine( copy)) == -1) && copy.m_bytesInBuf) {
 			copy.m_writeOffset = copy.m_bytesInBuf;
-			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset))
+			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+				IMPORT_LOG0( "*** Error writing to message body\n");
 				return( NS_ERROR_FAILURE);
-			if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+			}
+			if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+				IMPORT_LOG0( "*** Error reading message body\n");
 				return( rv);
+			}
 		}
 		if (!copy.m_bytesInBuf)
 			break;
@@ -549,20 +594,31 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBuffer& 
 		// found the start of the next line
 		// make sure it's long enough to check for the from line
 		if ((copy.m_writeOffset + 2048) >= copy.m_bytesInBuf) {
-			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset))
+			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+				IMPORT_LOG0( "*** Error writing to message body 2\n");
 				return( NS_ERROR_FAILURE);
-			if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+			}
+			if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+				IMPORT_LOG0( "*** Error reading message body 2\n");
 				return( rv);
+			}
 		}
 	}
 	
 	// the start of the current line is a from, we-re done
-	if (!body.Write( copy.m_pBuffer, copy.m_writeOffset))
+	if (!body.Write( copy.m_pBuffer, copy.m_writeOffset)) {
+		IMPORT_LOG0( "*** Error writing final message body\n");
 		return( NS_ERROR_FAILURE);
-	if (!body.Write( &endBuffer, 1))
+	}
+	if (!body.Write( &endBuffer, 1)) {
+		IMPORT_LOG0( "*** Error writing body trailing null\n");
+		IMPORT_LOG2( "\tbody.m_size: %ld, body.m_writeOffset: %ld\n", body.m_size, body.m_writeOffset);
 		return( NS_ERROR_FAILURE);
-	if (NS_FAILED( rv = FillMailBuffer( pState, copy)))
+	}
+	if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
+		IMPORT_LOG0( "*** Error filling mail buffer for next read message\n");
 		return( rv);
+	}
 	
 	return( NS_OK);
 }
@@ -620,9 +676,14 @@ PRInt32 nsEudoraMailbox::FindNextEndLine( SimpleBuffer& data)
 PRInt32 nsEudoraMailbox::IsEndHeaders( SimpleBuffer& data)
 {
 	PRInt32 len = data.m_bytesInBuf - data.m_writeOffset;
-	if (len < 4)
+	if (len < 2)
 		return( -1);
 	const char *pChar = data.m_pBuffer + data.m_writeOffset;
+	if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0D))
+		return( 2);
+
+	if (len < 4)
+		return( -1);
 	if ((*pChar == 0x0D) && (*(pChar + 1) == 0x0A) &&
 		(*(pChar + 2) == 0x0D) && (*(pChar + 3) == 0x0A))
 		return( 4);
@@ -947,10 +1008,11 @@ void nsEudoraMailbox::EmptyAttachments( void)
 
 static char *eudoraAttachLines[] = {
 	"Attachment Converted:",
-	""
+	"Attachment converted:"
 };
 
 static PRInt32 eudoraAttachLen[] = {
+	21,
 	21,
 	0
 };
@@ -1034,3 +1096,41 @@ PRBool nsEudoraMailbox::AddAttachment( nsCString& fileName)
 
 	return( PR_TRUE);
 }
+
+PRBool SimpleBuffer::SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten)
+{
+	// Arg!!!!!  Mozilla can't handle plain CRs in any mail messages.  Particularly a 
+	// problem with Eudora since it doesn't give a rats a**
+	*pWritten = len;
+	PRInt32	sz = offset + len;
+	if (offset) {
+		if ((m_pBuffer[offset - 1] == 0x0D) && (*pData != 0x0A)) {
+			sz++;
+			if (!Grow( sz)) return( PR_FALSE);
+			m_pBuffer[offset] = 0x0A;
+			offset++;
+			(*pWritten)++;
+		}
+	}
+	while (len > 0) {
+		if ((*pData == 0x0D) && (*(pData + 1) != 0x0A)) {
+			sz++;
+			if (!Grow( sz)) return( PR_FALSE);
+			m_pBuffer[offset] = 0x0D;
+			offset++;
+			m_pBuffer[offset] = 0x0A;								
+			(*pWritten)++;
+		}
+		else {
+			m_pBuffer[offset] = *pData;
+		}
+		offset++;
+		pData++;
+		len--;
+	}
+	
+	m_pBuffer[offset] = *pData;
+	
+	return( PR_TRUE);
+}
+

@@ -40,7 +40,7 @@ typedef struct {
 class SimpleBuffer {
 public:
 	SimpleBuffer() {m_pBuffer = nsnull; m_size = 0; m_growBy = 4096; m_writeOffset = 0;
-					m_bytesInBuf = 0;}
+					m_bytesInBuf = 0; m_convertCRs = PR_FALSE;}
 	~SimpleBuffer() { if (m_pBuffer) delete [] m_pBuffer;}
 	
 	PRBool Allocate( PRInt32 sz) { 
@@ -64,19 +64,25 @@ public:
 		else { m_pBuffer = pOldBuffer; m_size = oldSize; return( PR_FALSE);}
 	}
 	
-	PRBool Write( PRInt32 offset, const char *pData, PRInt32 len) {
+	PRBool Write( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten) {
+		*pWritten = len;
 		if (!len) return( PR_TRUE);
 		if (!Grow( offset + len)) return( PR_FALSE);
+		if (m_convertCRs)
+			return( SpecialMemCpy( offset, pData, len, pWritten));
 		nsCRT::memcpy( m_pBuffer + offset, pData, len);
 		return( PR_TRUE);
 	}
 	
 	PRBool Write( const char *pData, PRInt32 len) { 
-		if (Write( m_writeOffset, pData, len)) { m_writeOffset += len; return( PR_TRUE);}
+		PRInt32 written;
+		if (Write( m_writeOffset, pData, len, &written)) { m_writeOffset += written; return( PR_TRUE);}
 		else return( PR_FALSE);
 	}
 
+	PRBool	SpecialMemCpy( PRInt32 offset, const char *pData, PRInt32 len, PRInt32 *pWritten);
 	
+	PRBool	m_convertCRs;
 	char *	m_pBuffer;
 	PRInt32	m_bytesInBuf;	// used when reading into this buffer
 	PRInt32	m_size;			// allocated size of buffer

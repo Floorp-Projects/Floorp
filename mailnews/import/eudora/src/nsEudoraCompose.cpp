@@ -424,7 +424,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	if (NS_FAILED( rv))
 		return( rv);
 	
-	IMPORT_LOG0( "Eudora Compose created necessary components\n");
+	// IMPORT_LOG0( "Eudora Compose created necessary components\n");
 
 	nsString	bodyType;
 	nsString	charSet;
@@ -460,7 +460,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	if (bodyType.Length())
 		pMimeType = bodyType.ToNewCString();
 	
-	IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
+	// IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 
 	rv = m_pMsgSend->CreateAndSendMessage(	nsnull,			// no editor shell
@@ -485,7 +485,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	SendListener *pListen = (SendListener *)m_pListener;
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG1( "*** Error, CreateAndSendMessage FAILED: 0x%lx\n", rv);
-		IMPORT_LOG1( "Headers: %s\n", m_pHeaders);
+		// IMPORT_LOG1( "Headers: %80s\n", m_pHeaders);
 	}
 	else {
 		// wait for the listener to get done!
@@ -509,8 +509,6 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 			rv = NS_ERROR_FAILURE;
 		}
 
-		
-		IMPORT_LOG0( " done with CreateAndSendMessage\n");
 	}
 
 	if (pMimeType)
@@ -519,7 +517,6 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	if (pListen->m_location) {
 		pMsg->FromFileSpec( pListen->m_location);
 		rv = NS_OK;
-		IMPORT_LOG0( "Eudora compose successful\n");
 	}
 	else {
 		rv = NS_ERROR_FAILURE;
