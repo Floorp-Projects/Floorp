@@ -121,7 +121,8 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 
   NS_NAMED_LITERAL_STRING(htmExt, "html");
   nsAutoString initialDir;
-  mDisplayDirectory->GetPath(initialDir);
+  if (mDisplayDirectory)
+    mDisplayDirectory->GetPath(initialDir);
 
   // If no display directory, re-use the last one.
   if(initialDir.IsEmpty()) {
@@ -326,19 +327,16 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-    // work around.  InitWithPath() will convert UCS2 to FS path !!!  corrupts unicode 
+    // XXX  InitWithPath() will convert UCS2 to FS path !!!  corrupts unicode 
     file->InitWithPath(mUnicodeFile);
     nsCOMPtr<nsIFile> dir;
     if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
-      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
-      if (localDir) {
+      mDisplayDirectory = do_QueryInterface(dir);
+      if (mDisplayDirectory) {
         nsAutoString newDir;
-        localDir->GetPath(newDir);
+        mDisplayDirectory->GetPath(newDir);
         if(!newDir.IsEmpty())
           mLastUsedUnicodeDirectory.Assign(newDir);
-        // Update mDisplayDirectory with this directory, also.
-        // Some callers rely on this.
-        mDisplayDirectory->InitWithPath(mLastUsedUnicodeDirectory);
       }
     }
 
@@ -487,31 +485,6 @@ NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
   mSelectedType = aFilterIndex + 1;
   return NS_OK;
 }
-
-//-------------------------------------------------------------------------
-//
-// Set the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsILocalFile *aDirectory)
-{
-  mDisplayDirectory = aDirectory;
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get the display directory
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
-{
-  *aDirectory = mDisplayDirectory;
-  NS_IF_ADDREF(*aDirectory);
-  return NS_OK;
-}
-
-
 
 //-------------------------------------------------------------------------
 void nsFilePicker::InitNative(nsIWidget *aParent,

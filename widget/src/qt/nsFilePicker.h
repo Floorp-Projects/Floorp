@@ -63,7 +63,6 @@ private:
 
 protected:
     QFileDialog *mDialog;
-    nsCOMPtr<nsILocalFile> mDisplayDirectory;
     nsCOMPtr<nsISupportsArray> mFiles;
 
     PRInt16   mMode;

@@ -81,8 +81,6 @@ public:
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString);
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension);
   NS_IMETHOD SetDefaultExtension(const nsAString& aDefaultExtension);
-  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
-  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
@@ -105,7 +103,6 @@ protected:
   nsString                      mFilterList;
   nsIUnicodeEncoder*            mUnicodeEncoder;
   nsIUnicodeDecoder*            mUnicodeDecoder;
-  nsCOMPtr<nsILocalFile>        mDisplayDirectory;
   PRInt16                       mSelectedType;
   nsCOMPtr <nsISupportsArray>   mFiles;
 

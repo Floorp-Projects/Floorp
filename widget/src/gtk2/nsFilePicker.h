@@ -69,7 +69,6 @@ protected:
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 
   nsCOMPtr<nsIWidget>    mParentWidget;
-  nsCOMPtr<nsILocalFile> mDisplayDirectory;
   nsCOMArray<nsILocalFile> mFiles;
 
   PRInt16   mMode;

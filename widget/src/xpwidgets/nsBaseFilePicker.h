@@ -45,6 +45,8 @@
 #include "nsIWidget.h"
 #include "nsISimpleEnumerator.h"
 
+#define BASEFILEPICKER_HAS_DISPLAYDIRECTORY 1
+
 class nsBaseFilePicker : public nsIFilePicker
 {
 public:
@@ -59,6 +61,10 @@ public:
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
+#ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
+  NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
+  NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+#endif
 
 protected:
 
@@ -66,6 +72,9 @@ protected:
                           PRInt16 aMode) = 0;
 
   nsIWidget *DOMWindowToWidget(nsIDOMWindow *dw);
+#ifdef BASEFILEPICKER_HAS_DISPLAYDIRECTORY 
+  nsCOMPtr<nsILocalFile> mDisplayDirectory;
+#endif
 };
 
 #endif // nsBaseFilePicker_h__
