@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.24 $ 
-# $Date: 2002/04/27 04:11:58 $ 
+# $Revision: 1.25 $ 
+# $Date: 2002/05/01 01:56:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -47,6 +47,7 @@ package TinderConfig;
 
 
 # How do we run the unzip command?
+# All log files are stored in compressed format.
 
 @GZIP = ("/opt/gnu/bin/gzip",);
 
@@ -54,7 +55,9 @@ package TinderConfig;
 
 
 # The GNU UUDECODE will use these arugments, Solaris uudecode is
-# different. 
+# different. UUDECODE is only used if the build machines send binary
+# files inside the build log messages.  This option is probably not
+# used by most tinderbox installations.
 
 @UUDECODE = ("/error/notinstalled/uudecode", "-o",);
 
@@ -160,6 +163,11 @@ $PopUpImpl = (
 #$DB_LEGEND_BORDER = "border rules=none";
 $DB_LEGEND_BORDER = "";
 
+# Should the vector of times, which represent the rows use a uniform
+# spacing or should we put one row for each time we have data for.
+
+$UNIFORM_ROW_SPACING = 1;
+
 # Spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
 
@@ -189,6 +197,15 @@ $SECONDS_AGO_ACCEPTABLE = (60 * 60 * 10);
 # faster clock then the server machine.
 
 $SECONDS_FROM_NOW_ACCEPTABLE = (60 * 10);
+
+# Setting this variable to true will enable extra characters in the
+# tinderbox output which are the same color as the background color.
+# This is helpful for users of text based browsers, since text based
+# browsers can not render cell colors additional information needs to
+# be encoded into the HTML page.  Some users may object to the use of
+# extra and perhaps unnneded characters in an already wide table.
+
+$ADD_TEXT_BROWSER_STRINGS = 0;
 
 
 @HeaderImpl = (
@@ -297,7 +314,10 @@ $FULL_LOG_TRIM_DAYS = 8;
 $LOG_PERFORMANCE = 0;
 
 # Define IP addresses/domain names which are allowed to run the
-# administrative functions.
+# administrative functions.  If set to '.*' then anyone who knows the
+# password can administrate the tree, if set to a network pattern then
+# users must run their browser on the correct IP address and know the
+# correct password to administrate the tree.
 
 #$ADMINISTRATIVE_NETWORK_PAT = ( 
 #                                '(^127\.0\.0\.[0-9\.]*$)|'.
