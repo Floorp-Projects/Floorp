@@ -68,7 +68,6 @@ tmTransactionManager::Init() {
 void
 tmTransactionManager::HandleTransaction(tmTransaction *aTrans) {
 
-  nsresult rv = NS_OK;
   PRUint32 action = aTrans->GetAction();
   PRUint32 ownerID = aTrans->GetOwnerID();
   tmQueue *queue = nsnull;
