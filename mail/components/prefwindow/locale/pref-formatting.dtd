@@ -1,4 +1,4 @@
-<!ENTITY pane.title                   "Send Format">
+<!ENTITY pane.title                   "Send Options">
 <!ENTITY pane.description             "Message formatting">
 <!ENTITY sendMail.label               "Send Format">
 <!ENTITY sendMaildesc.label           "When sending messages in HTML format and one or more recipients are not listed as being able to receive HTML:">

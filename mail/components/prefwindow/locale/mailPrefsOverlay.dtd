@@ -18,7 +18,7 @@
 <!ENTITY viewingMessages.label "Display">
 <!ENTITY address.label "Addressing">
 <!ENTITY composingMessages.label "Composition">
-<!ENTITY format.label "Send Format">
+<!ENTITY format.label "Send Options">
 <!ENTITY return.label "Return Receipts">
 <!ENTITY advanced.label "Advanced">
 <!ENTITY mailonly.label "General">

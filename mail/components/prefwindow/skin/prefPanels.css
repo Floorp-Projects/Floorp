@@ -69,7 +69,8 @@
   padding: 5px 5px;
 }
 
-.listBox {
+.listBox 
+{
   -moz-appearance: listbox;
   margin: 2px 4px;
   border: 2px solid;
@@ -79,3 +80,5 @@
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
 }
+
+

@@ -32,18 +32,33 @@
    *  Place all necessary modifications to pref tree here. 
    **/
   function Startup()
-    {
-      hPrefWindow = new nsPrefWindow('panelFrame');  
-      
-      if( !hPrefWindow )
-        throw "failed to create prefwindow";
+  {
+    hPrefWindow = new nsPrefWindow('panelFrame');  
+  
+    if( !hPrefWindow )
+      throw "failed to create prefwindow";
 
-      hPrefWindow.init();
+    hPrefWindow.init();
 
-      // If this call worked, we could center the window here:
-      // centerWindowOnScreen();
-      
-    }
+    var url = "chrome://messenger/content/pref-mailnews.xul";
+    if(window.arguments && window.arguments[0])
+      url = window.arguments[0];
+
+    // now make sure the right button is higlighted
+    // loop through each child of prefCategories and look for a url match
+    var index = 0; 
+    var prefsCategories = document.getElementById("prefsCategories");
+    for (var i = 0; i < prefsCategories.childNodes.length; i++)
+      if (url == prefsCategories.childNodes[i].getAttribute("url"))
+      {
+        index = i;
+        break;
+      }
+
+    var button = prefsCategories.childNodes[index];
+    button.click();
+    button.focus();
+  }
   
   function switchPage(aEvent)
   {
@@ -80,19 +95,6 @@
       <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
    </vbox>
   </hbox>
-
-   <script type="application/x-javascript">
-    <![CDATA[
-      if(window.arguments && window.arguments[0]) {
-        document.getElementById("panelFrame").setAttribute("src", window.arguments[0] );
-        document.getElementById("panelFrame").setAttribute("tag", window.arguments[0] );
-      }
-      else {
-        document.getElementById("panelFrame").setAttribute("src", "chrome://messenger/content/pref-mailnews.xul" );
-        document.getElementById("panelFrame").setAttribute("tag", "chrome://messenger/content/pref-mailnews.xul" );
-      }
-    ]]>
-    </script>
 
   <separator/>
      
