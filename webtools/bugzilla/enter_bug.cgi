@@ -98,6 +98,8 @@ if (!defined $product) {
            $vars->{'target'} = "enter_bug.cgi";
            $vars->{'format'} = $::FORM{'format'};
            
+           $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
+
            print "Content-type: text/html\n\n";
            $template->process("global/choose-classification.html.tmpl", $vars)
              || ThrowTemplateError($template->error());
