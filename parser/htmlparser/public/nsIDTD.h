@@ -204,7 +204,7 @@ public:
      * @param
      * @return
      */
-    NS_IMETHOD Terminate(nsIParser* aParser=nsnull) = 0;
+    NS_IMETHOD_(void) Terminate() = 0;
 
 /* XXX Temporary measure, pending further work by RickG  */
 
@@ -244,7 +244,7 @@ public:
     NS_IMETHOD WillInterruptParse(nsIContentSink* aSink = 0);\
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
-    NS_IMETHOD_(nsresult)  Terminate(nsIParser* aParser=nsnull);\
+    NS_IMETHOD_(void)  Terminate();\
     NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag, PRInt32* aIntTag) const ;\
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\
     NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity, PRInt32* aUnicode) const ;\

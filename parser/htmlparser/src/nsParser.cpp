@@ -67,6 +67,13 @@
 #include "nsExpatDriver.h"
 //#define rickgdebug 
 
+#define NS_PARSER_FLAG_DTD_VERIFICATION       0x00000001
+#define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
+#define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
+#define NS_PARSER_FLAG_PENDING_CONTINUE_EVENT 0x00000008
+#define NS_PARSER_FLAG_CAN_INTERRUPT          0x00000010
+#define NS_PARSER_FLAG_FLUSH_TOKENS           0x00000020
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
@@ -310,14 +317,10 @@ nsParser::nsParser(nsITokenObserver* anObserver) {
   mParserContext=0;
   mTokenObserver=anObserver;
   mStreamStatus=0;
-  mDTDVerification=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
-  mInternalState=NS_OK;
-  mObserversEnabled=PR_TRUE;
+  mInternalState=NS_OK;;
   mCommand=eViewNormal;
-  mParserEnabled=PR_TRUE; 
-  mPendingContinueEvent=PR_FALSE;
-  mCanInterrupt=PR_FALSE;
+  mFlags = NS_PARSER_FLAG_OBSERVERS_ENABLED | NS_PARSER_FLAG_PARSER_ENABLED;
  
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
@@ -368,7 +371,7 @@ nsParser::~nsParser() {
   //what may be several contexts...
   delete mParserContext;
 
-  if (mPendingContinueEvent) {
+  if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
     NS_ASSERTION(mEventQueue != nsnull,"Event queue is null"); 
     mEventQueue->RevokeEvents(this);
   }
@@ -426,12 +429,12 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsresult
 nsParser::PostContinueEvent()
 {
-  if ((! mPendingContinueEvent) && (mEventQueue)) {
+  if (!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) && mEventQueue) {
     nsParserContinueEvent* ev = new nsParserContinueEvent(NS_STATIC_CAST(nsIParser*, this));
     NS_ENSURE_TRUE(ev,NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(this);
     mEventQueue->PostEvent(ev);
-    mPendingContinueEvent = PR_TRUE;
+    mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   }
   return NS_OK;
 }
@@ -1309,14 +1312,14 @@ NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD,
 
 NS_IMETHODIMP 
 nsParser::CancelParsingEvents() {
-  if (mPendingContinueEvent) {
+  if (mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) {
     NS_ASSERTION(mEventQueue,"Event queue is null");
     // Revoke all pending continue parsing events 
     if (mEventQueue != nsnull) {
       mEventQueue->RevokeEvents(this);
     } 
 
-    mPendingContinueEvent=PR_FALSE;
+    mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
     /* Since we are taking this off of the queue, we need to do the NS_RELEASE
      * that nsParserContinueEvent::HandleEvent would have done.
      */
@@ -1450,24 +1453,21 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
  *  @return  should return NS_OK once implemented
  */
 nsresult nsParser::Terminate(void){
-  nsresult result=NS_OK;
-  if(mParserContext && mParserContext->mDTD) {
-    result=mParserContext->mDTD->Terminate(this);
-    if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
-      // XXX - [ until we figure out a way to break parser-sink circularity ]
-      // Hack - Hold a reference until we are completely done...
-      nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
-      mInternalState=result;
+  nsresult result = NS_OK;
+  if (mParserContext && mParserContext->mDTD) {
+    mParserContext->mDTD->Terminate();
+    // XXX - [ until we figure out a way to break parser-sink circularity ]
+    // Hack - Hold a reference until we are completely done...
+    nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
+    mInternalState = result = NS_ERROR_HTMLPARSER_STOPPARSING;
 
-      // CancelParsingEvents must be called to avoid leaking the nsParser object
-      // @see bug 108049
-      // If mPendingContinueEvents is PR_TRUE CancelParsingEvents will reset 
-      // the mPendingContinueEvent to PR_FALSE so DidBuildModel will call 
-      // DidBuildModel on the DTD. Note: The IsComplete() call inside of DidBuildModel
-      // looks at the mPendingContinueEvents flag.
-      CancelParsingEvents();
-      DidBuildModel(result);
-    }
+    // CancelParsingEvents must be called to avoid leaking the nsParser object
+    // @see bug 108049
+    // If NS_PARSER_FLAG_PENDING_CONTINUE_EVENT is set then CancelParsingEvents 
+    // will reset it so DidBuildModel will call DidBuildModel on the DTD. Note: 
+    // The IsComplete() call inside of DidBuildModel looks at the pendingContinueEvents flag.
+    CancelParsingEvents();
+    DidBuildModel(result);
   }
   return result;
 }
@@ -1488,7 +1488,7 @@ nsresult nsParser::ContinueParsing(){
   nsresult result=NS_OK;
   nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
 
-  mParserEnabled=PR_TRUE;
+  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
 
   PRBool isFinalChunk=(mParserContext && mParserContext->mStreamListenerState==eOnStop)? PR_TRUE:PR_FALSE;
   
@@ -1508,7 +1508,7 @@ nsresult nsParser::ContinueParsing(){
  *  @return  
  */
 void nsParser::BlockParser() {
-  mParserEnabled=PR_FALSE;
+  mFlags &= ~NS_PARSER_FLAG_PARSER_ENABLED;
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: nsParser::BlockParser(), this=%p\n", this));
   MOZ_TIMER_STOP(mParseTime);
 }
@@ -1523,7 +1523,7 @@ void nsParser::BlockParser() {
  *  @return  
  */
 void nsParser::UnblockParser() {
-  mParserEnabled=PR_TRUE;
+  mFlags |= NS_PARSER_FLAG_PARSER_ENABLED;
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::UnblockParser(), this=%p\n", this));
   MOZ_TIMER_START(mParseTime);
 }
@@ -1535,7 +1535,7 @@ void nsParser::UnblockParser() {
  *  @return  current state
  */
 PRBool nsParser::IsParserEnabled() {
-  return mParserEnabled;
+  return mFlags & NS_PARSER_FLAG_PARSER_ENABLED;
 }
 
 /**
@@ -1545,21 +1545,26 @@ PRBool nsParser::IsParserEnabled() {
  *  @return  complete state
  */
 PRBool nsParser::IsComplete() {
-  return (! mPendingContinueEvent);
+  return !(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT);
 }
 
 
 void nsParser::HandleParserContinueEvent() {
-  mPendingContinueEvent = PR_FALSE;
+  mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   ContinueParsing();
 }
 
 PRBool nsParser::CanInterrupt(void) {
-  return mCanInterrupt;
+  return mFlags & NS_PARSER_FLAG_CAN_INTERRUPT;
 }
 
 void nsParser::SetCanInterrupt(PRBool aCanInterrupt) {
-  mCanInterrupt = aCanInterrupt;
+  if (aCanInterrupt) {
+    mFlags |= NS_PARSER_FLAG_CAN_INTERRUPT;
+  }
+  else {
+    mFlags &= ~NS_PARSER_FLAG_CAN_INTERRUPT;
+  }
 }
 
 /**
@@ -1580,7 +1585,14 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
   nsresult result=kBadURL;
   mObserver = aListener;
   NS_IF_ADDREF(mObserver);
-  mDTDVerification=aVerifyEnabled;
+ 
+  if (aVerifyEnabled) {
+    mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
+  }
+  else {
+    mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
+  }
+
   if(aURL) {
     char* spec;
     nsresult rv = aURL->GetSpec(&spec);
@@ -1615,7 +1627,13 @@ nsresult nsParser::Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aVeri
  */
 nsresult nsParser::Parse(nsIInputStream& aStream,const nsAReadableString& aMimeType,PRBool aVerifyEnabled, void* aKey,nsDTDMode aMode){
 
-  mDTDVerification=aVerifyEnabled;
+  if (aVerifyEnabled) {
+    mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
+  }
+  else {
+    mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
+  }
+  
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
 
   //ok, time to create our tokenizer and begin the process
@@ -1678,7 +1696,14 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
   NS_ADDREF(me); 
 
   if(aSourceBuffer.Length() || mUnusedInput.Length()) { 
-    mDTDVerification=aVerifyEnabled; 
+    
+    if (aVerifyEnabled) {
+      mFlags |= NS_PARSER_FLAG_DTD_VERIFICATION;
+    }
+    else {
+      mFlags &= ~NS_PARSER_FLAG_DTD_VERIFICATION;
+    }
+    
     CParserContext* pc=0;
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  { 
@@ -1780,9 +1805,9 @@ nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
     
   //now it's time to try to build the model from this fragment
 
-  mObserversEnabled = PR_FALSE; //disable observers for fragments
+  mFlags &= ~NS_PARSER_FLAG_OBSERVERS_ENABLED; //disable observers for fragments
   result = Parse(theContext + aSourceBuffer,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE, aMode);
-  mObserversEnabled = PR_TRUE; //now reenable.
+  mFlags |= NS_PARSER_FLAG_OBSERVERS_ENABLED; //now reenable.
 
   return result;
 }
@@ -1814,7 +1839,8 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
 
   nsresult result=NS_OK;
 
-  if(mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+  if((mFlags & NS_PARSER_FLAG_PARSER_ENABLED) && 
+     mInternalState != NS_ERROR_HTMLPARSER_STOPPARSING) {
 
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: nsParser::ResumeParse(), this=%p\n", this));
@@ -1843,7 +1869,7 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
         //Only allow parsing to be interuptted in the subsequent call
         //to build model.
         SetCanInterrupt(aCanInterrupt); 
-        nsresult theTokenizerResult=Tokenize(aIsFinalChunk);   // kEOF==2152596456
+        nsresult theTokenizerResult = Tokenize(aIsFinalChunk);   // kEOF==2152596456
         result=BuildModel(); 
 
         if(result==NS_ERROR_HTMLPARSER_INTERRUPTED) {
@@ -2570,47 +2596,61 @@ PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
+  
+  nsITokenizer* theTokenizer = 0;
+    
+  nsresult result = 
+    (mParserContext && mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer) : NS_OK;
 
-  ++mMajorIteration; 
-
-  nsITokenizer* theTokenizer=0;
-  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
-
-  if(theTokenizer){    
-    PRBool flushTokens=PR_FALSE;
-
-    MOZ_TIMER_START(mTokenizeTime);
-
-    WillTokenize(aIsFinalChunk);
-    while(NS_SUCCEEDED(result)) {
-      mParserContext->mScanner->Mark();
-      ++mMinorIteration;
-      result=theTokenizer->ConsumeToken(*mParserContext->mScanner,flushTokens);
-      if(NS_FAILED(result)) {
-        mParserContext->mScanner->RewindToMark();
-        if(kEOF==result){
-          break;
-        }
-        else if(NS_ERROR_HTMLPARSER_STOPPARSING==result) {
-          result=Terminate();
-          break;
-        }
+  if (theTokenizer){ 
+    if (mFlags & NS_PARSER_FLAG_FLUSH_TOKENS) {
+      // For some reason tokens didn't get flushed ( probably
+      // the parser got blocked before all the tokens in the
+      // stack got handled ). Flush 'em now. Ref. bug 104856
+      if (theTokenizer->GetCount() == 0) {
+        mFlags &= ~NS_PARSER_FLAG_FLUSH_TOKENS; // reset since the tokens have been flushed.
       }
-      else if(flushTokens && mObserversEnabled) {
-        // I added the extra test of mObserversEnabled to fix Bug# 23931.
-        // Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
-        // Also remember to update the marked position.
+    }
+    else {
+      ++mMajorIteration; 
+   
+      PRBool flushTokens=PR_FALSE;
+
+      MOZ_TIMER_START(mTokenizeTime);
+
+      WillTokenize(aIsFinalChunk);
+      while (NS_SUCCEEDED(result)) {
         mParserContext->mScanner->Mark();
-        break; 
-      }
-    } 
-    DidTokenize(aIsFinalChunk);
+        ++mMinorIteration;
+        result=theTokenizer->ConsumeToken(*mParserContext->mScanner, flushTokens);
+        if (NS_FAILED(result)) {
+          mParserContext->mScanner->RewindToMark();
+          if (kEOF == result){
+            break;
+          }
+          else if(NS_ERROR_HTMLPARSER_STOPPARSING==result) {
+            result = Terminate();
+            break;
+          }
+        }
+        else if (flushTokens && (mFlags & NS_PARSER_FLAG_OBSERVERS_ENABLED)) {
+          // I added the extra test of NS_PARSER_FLAG_OBSERVERS_ENABLED to fix Bug# 23931.
+          // Flush tokens on seeing </SCRIPT> -- Ref: Bug# 22485 --
+          // Also remember to update the marked position.
+          mFlags |= NS_PARSER_FLAG_FLUSH_TOKENS;
+          mParserContext->mScanner->Mark();
+          break;
+        }
+      } 
+      DidTokenize(aIsFinalChunk);
 
-    MOZ_TIMER_STOP(mTokenizeTime);
-  }  
-  else{
-    result=mInternalState=NS_ERROR_HTMLPARSER_BADTOKENIZER;
+      MOZ_TIMER_STOP(mTokenizeTime);
+    }  
   }
+  else{
+    result = mInternalState = NS_ERROR_HTMLPARSER_BADTOKENIZER;
+  }
+  
   return result;
 }
 

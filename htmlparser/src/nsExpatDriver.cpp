@@ -881,10 +881,11 @@ nsExpatDriver::GetMostDerivedIID(void) const
   return NS_GET_IID(nsIDTD);
 }
 
-NS_IMETHODIMP  nsExpatDriver::Terminate(nsIParser* aParser)
+NS_IMETHODIMP_(void)
+nsExpatDriver::Terminate()
 {
   XML_BlockParser(mExpatParser); // XXX - not sure what happens to the unparsed data.
-  return mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
+  mInternalState = NS_ERROR_HTMLPARSER_STOPPARSING;
 }
 
 /*************************** Unused methods ***************************************/ 

@@ -723,8 +723,8 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
  * @param 
  * @return
  */
-nsresult  CViewSourceHTML::Terminate(nsIParser* aParser) {
-  return NS_ERROR_HTMLPARSER_STOPPARSING;
+NS_IMETHODIMP_(void)  
+CViewSourceHTML::Terminate() {
 }
 
 

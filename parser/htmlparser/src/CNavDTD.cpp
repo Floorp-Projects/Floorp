@@ -109,18 +109,20 @@ static char gShowCRC;
  ************************************************************************/
 
 
-#define NS_PARSER_FLAG_NONE                   0x00000000
-#define NS_PARSER_FLAG_HAS_OPEN_BODY          0x00000001
-#define NS_PARSER_FLAG_HAS_OPEN_FORM          0x00000002
-#define NS_PARSER_FLAG_HAS_OPEN_SCRIPT        0x00000004
-#define NS_PARSER_FLAG_HAD_BODY               0x00000008
-#define NS_PARSER_FLAG_HAD_FRAMESET           0x00000010
-#define NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE  0x00000020
-#define NS_PARSER_FLAG_REQUESTED_HEAD         0x00000040
-#define NS_PARSER_FLAG_IS_FORM_CONTAINER      0x00000080
-#define NS_PARSER_FLAG_SCRIPT_ENABLED         0x00000100
-#define NS_PARSER_FLAG_FRAMES_ENABLED         0x00000200
-#define NS_PARSER_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_NONE                   0x00000000
+#define NS_DTD_FLAG_HAS_OPEN_BODY          0x00000001
+#define NS_DTD_FLAG_HAS_OPEN_FORM          0x00000002
+#define NS_DTD_FLAG_HAS_OPEN_SCRIPT        0x00000004
+#define NS_DTD_FLAG_HAD_BODY               0x00000008
+#define NS_DTD_FLAG_HAD_FRAMESET           0x00000010
+#define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000020
+#define NS_DTD_FLAG_REQUESTED_HEAD         0x00000040
+#define NS_DTD_FLAG_IS_FORM_CONTAINER      0x00000080
+#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000100
+#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000200
+#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000800
+#define NS_DTD_FLAG_STOP_PARSING           0x00001000
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -180,8 +182,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mDocType(eHTML3_Quirks), // why not eHTML_Quirks?
     mParserCommand(eViewNormal),
     mSkipTarget(eHTMLTag_unknown),
-    mDTDState(NS_OK),
-    mFlags(NS_PARSER_FLAG_NONE),
+    mFlags(NS_DTD_FLAG_NONE),
 #ifdef ENABLE_CRC
     mComputedCRC32(0),
     mExpectedCRC32(0),
@@ -384,7 +385,7 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
   nsresult result=NS_OK;
 
   mFilename=aParserContext.mScanner->GetFilename();
-  mFlags = NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE; // residual style is always on. This will also reset the flags
+  mFlags = NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE; // residual style is always on. This will also reset the flags
   mLineNumber=1;
   mDTDMode=aParserContext.mDTDMode;
   mParserCommand=aParserContext.mParserCommand;
@@ -431,12 +432,12 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
         PRBool enabled;
         mSink->GetPref(eHTMLTag_frameset,enabled);
         if(enabled) {
-          mFlags |= NS_PARSER_FLAG_FRAMES_ENABLED;
+          mFlags |= NS_DTD_FLAG_FRAMES_ENABLED;
         }
         
         mSink->GetPref(eHTMLTag_script,enabled);
         if(enabled) {
-          mFlags |= NS_PARSER_FLAG_SCRIPT_ENABLED;
+          mFlags |= NS_DTD_FLAG_SCRIPT_ENABLED;
         }
       }
       
@@ -492,7 +493,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           }
 
           // always open a body if frames are disabled....
-          if(!(mFlags & NS_PARSER_FLAG_FRAMES_ENABLED)) {
+          if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
             theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
             mTokenizer->PushTokenFront(theToken);
           }
@@ -519,7 +520,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
           printf("\n");
 #endif
 
-          if(mDTDState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
+          if(!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
             CToken* theToken=mTokenizer->PopToken();
             if(theToken) { 
               result=HandleToken(theToken,aParser);
@@ -527,7 +528,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
             else break;
           }
           else {
-            result=mDTDState;
+            result = NS_ERROR_HTMLPARSER_STOPPARSING;
             break;
           }
 
@@ -572,7 +573,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
   if(aSink) { 
 
-    if((NS_OK==anErrorCode) && !(mFlags & (NS_PARSER_FLAG_HAD_BODY | NS_PARSER_FLAG_HAD_FRAMESET))) {
+    if((NS_OK==anErrorCode) && !(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET))) {
 
       mSkipTarget=eHTMLTag_unknown; //clear this in case we were searching earlier.
 
@@ -591,7 +592,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
               result=HandleToken(theEndToken,mParser);
             }
           }
-          if(mDTDState==NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT) {
+          if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
             // Create an end table token to flush tokens off the misplaced list...
             CHTMLToken* theTableToken=NS_STATIC_CAST(CHTMLToken*,mTokenAllocator->CreateTokenOfType(eToken_end,eHTMLTag_table));
             if(theTableToken) {
@@ -602,7 +603,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             eHTMLTags theTarget; 
 
             //now let's disable style handling to save time when closing remaining stack members...
-            mFlags &= ~NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE;
+            mFlags &= ~NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
 
             while(mBodyContext->GetCount() > 0) { 
               theTarget = mBodyContext->Last(); 
@@ -677,10 +678,10 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
   return result;
 }
 
-nsresult  
-CNavDTD::Terminate(nsIParser* aParser) 
+NS_IMETHODIMP_(void) 
+CNavDTD::Terminate() 
 { 
-  return mDTDState=NS_ERROR_HTMLPARSER_STOPPARSING; 
+  mFlags |= NS_DTD_FLAG_STOP_PARSING; 
 }
 
 /**
@@ -765,7 +766,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         return result;
       }
     }
-    else if(mFlags & NS_PARSER_FLAG_ALTERNATE_CONTENT) {
+    else if(mFlags & NS_DTD_FLAG_ALTERNATE_CONTENT) {
       if(theTag != mBodyContext->Last() || theType!=eToken_end) {
         // attribute source is a part of start token.
         if(theType!=eToken_attribute) {
@@ -789,7 +790,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         mScratch.SetCapacity(0);
       }
     }
-    else if(mDTDState==NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT) {
+    else if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
       // Included TD & TH to fix Bug# 20797
       static eHTMLTags gLegalElements[]={eHTMLTag_table,eHTMLTag_thead,eHTMLTag_tbody,
                                          eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tfoot};
@@ -799,7 +800,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
           (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
             
-          mDTDState=NS_OK; // reset the state since all the misplaced tokens are about to get handled.
+          mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
           result=HandleSavedTokens(mBodyContext->mContextTopIndex);
           mBodyContext->mContextTopIndex=-1; 
 
@@ -843,7 +844,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           }
         default:
           if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-            if(!(mFlags & (NS_PARSER_FLAG_HAD_BODY | NS_PARSER_FLAG_HAD_FRAMESET))) {
+            if(!(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET))) {
 
               //For bug examples from this code, see bugs: 18928, 20989.
 
@@ -923,7 +924,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
            IF_FREE(theToken, mTokenAllocator);
         }
         else if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
-          mDTDState=result;
+          mFlags |= NS_DTD_FLAG_STOP_PARSING;
         }
         else {
           return NS_OK;
@@ -1521,7 +1522,7 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
           mMisplacedContent.Push(mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag));      
         }
               
-        mDTDState=NS_ERROR_HTMLPARSER_MISPLACEDTABLECONTENT; // This state would help us in gathering all the misplaced elements
+        mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT; // This state would help us in gathering all the misplaced elements
       }//if
     }//if
 
@@ -1653,16 +1654,16 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             }
             break;
           case eHTMLTag_body:
-            if(mFlags & NS_PARSER_FLAG_HAS_OPEN_BODY) {
+            if(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY) {
               result=OpenContainer(theNode,theChildTag,PR_FALSE);
               isTokenHandled=PR_TRUE;
             }
             break;
           case eHTMLTag_head:
-            if(mFlags & (NS_PARSER_FLAG_HAD_BODY | NS_PARSER_FLAG_HAD_FRAMESET)) {
+            if(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET)) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,theNode);
               isTokenHandled=PR_TRUE;
-              mFlags |= NS_PARSER_FLAG_REQUESTED_HEAD;
+              mFlags |= NS_DTD_FLAG_REQUESTED_HEAD;
             }
             break;
           default:
@@ -1704,9 +1705,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          theHeadIsParent=(!(mFlags & NS_PARSER_FLAG_HAS_OPEN_BODY) ||
-                            (mFlags & NS_PARSER_FLAG_REQUESTED_HEAD));
-          mFlags |= NS_PARSER_FLAG_HAS_OPEN_SCRIPT;
+          theHeadIsParent=(!(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY) ||
+                            (mFlags & NS_DTD_FLAG_REQUESTED_HEAD));
+          mFlags |= NS_DTD_FLAG_HAS_OPEN_SCRIPT;
 
         default:
             break;
@@ -1906,7 +1907,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   switch(theChildTag) {
 
     case eHTMLTag_script:
-      mFlags &= ~NS_PARSER_FLAG_HAS_OPEN_SCRIPT;
+      mFlags &= ~NS_DTD_FLAG_HAS_OPEN_SCRIPT;
     case eHTMLTag_style:
     case eHTMLTag_link:
     case eHTMLTag_meta:
@@ -1916,7 +1917,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag,mTokenizer,mTokenAllocator,mLineNumber);
-      mFlags &= ~NS_PARSER_FLAG_REQUESTED_HEAD;
+      mFlags &= ~NS_DTD_FLAG_REQUESTED_HEAD;
       //ok to fall through...
 
     case eHTMLTag_form:
@@ -2041,7 +2042,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
         //eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_colgroup.In those cases the stack 
         //position, in the parser, should be synchronized with the sink. -- Ref: Bug 20087.
 
-        if (!(~mFlags & (NS_PARSER_FLAG_HAS_OPEN_FORM | NS_PARSER_FLAG_IS_FORM_CONTAINER))) anIndex++;
+        if (!(~mFlags & (NS_DTD_FLAG_HAS_OPEN_FORM | NS_DTD_FLAG_IS_FORM_CONTAINER))) anIndex++;
 
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
@@ -2838,7 +2839,7 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
 
   switch(aContainer) {
     case eHTMLTag_form:
-      result= !(~mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM); break;
+      result= !(~mFlags & NS_DTD_FLAG_HAS_OPEN_FORM); break;
     case eHTMLTag_map: 
       result=mOpenMapCount>0; break; 
     default:
@@ -2900,7 +2901,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
   // No need to open transient styles in head context - Fix for 41427
-  if((mFlags & NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE) && 
+  if((mFlags & NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE) && 
      eHTMLTag_newline!=aChildTag && mOpenHeadCount==0) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
@@ -2919,7 +2920,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
         }
       }
 
-      mFlags &= ~NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE;
+      mFlags &= ~NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
       for(;theLevel<theCount;theLevel++){
         nsEntryStack* theStack=mBodyContext->GetStylesAt(theLevel);
         if(theStack){
@@ -2960,7 +2961,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
           } //for
         } //if
       } //for
-      mFlags |= NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE;
+      mFlags |= NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE;
 
     } //if
 
@@ -2984,7 +2985,7 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
   nsresult result=NS_OK;
 
-  if(mFlags & NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE) {
+  if(mFlags & NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE) {
 
 #ifdef  ENABLE_RESIDUALSTYLE
 #if 0
@@ -3016,7 +3017,7 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::PopStyle(eHTMLTags aTag){
   nsresult result=0;
 
-  if(mFlags & NS_PARSER_FLAG_ENABLE_RESIDUAL_STYLE) {
+  if(mFlags & NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE) {
 #ifdef  ENABLE_RESIDUALSTYLE
     if(nsHTMLElement::IsResidualStyleTag(aTag)) {
       nsCParserNode* node=mBodyContext->PopStyle(aTag);
@@ -3141,9 +3142,9 @@ nsresult CNavDTD::OpenBody(const nsCParserNode *aNode){
 
   nsresult result = NS_OK;
   
-  if (!(mFlags & NS_PARSER_FLAG_HAD_FRAMESET)) {
+  if (!(mFlags & NS_DTD_FLAG_HAD_FRAMESET)) {
 
-    mFlags |= NS_PARSER_FLAG_HAD_BODY;
+    mFlags |= NS_DTD_FLAG_HAD_BODY;
 
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
@@ -3197,13 +3198,13 @@ nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
                                      eHTMLTag_tfoot,eHTMLTag_thead,
                                      eHTMLTag_col,eHTMLTag_colgroup};
   nsresult result=NS_OK;
-  if(!(mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
+  if(!(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
        
     // Check if the parent is a table, tbody, thead, tfoot, tr, col or
     // colgroup. If so, treat form as a leaf content. [ Ex. bug 92530 ]
     if(!FindTagInSet(mBodyContext->Last(),gTableElements,
                      sizeof(gTableElements)/sizeof(eHTMLTag_unknown))) {
-      mFlags |= NS_PARSER_FLAG_IS_FORM_CONTAINER;
+      mFlags |= NS_DTD_FLAG_IS_FORM_CONTAINER;
     }
 
     STOP_TIMER();
@@ -3215,7 +3216,7 @@ nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
     START_TIMER();
 
     if(NS_OK==result) {
-      mFlags |= NS_PARSER_FLAG_HAS_OPEN_FORM;
+      mFlags |= NS_DTD_FLAG_HAS_OPEN_FORM;
     }
   }
   mOpenFormCount++;
@@ -3233,9 +3234,9 @@ nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
 nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
 //  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
-  if(mFlags & NS_PARSER_FLAG_HAS_OPEN_FORM) {
+  if(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM) {
     if (mOpenFormCount == 1) {
-      mFlags &= ~NS_PARSER_FLAG_HAS_OPEN_FORM;
+      mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
 
       STOP_TIMER();
       MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
@@ -3245,7 +3246,7 @@ nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
       MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
       START_TIMER();
         
-      mFlags &= ~NS_PARSER_FLAG_IS_FORM_CONTAINER;
+      mFlags &= ~NS_DTD_FLAG_IS_FORM_CONTAINER;
     }
     --mOpenFormCount;
   }
@@ -3314,7 +3315,7 @@ nsresult CNavDTD::CloseMap(const nsIParserNode *aNode){
 nsresult CNavDTD::OpenFrameset(const nsCParserNode *aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
-  mFlags |= NS_PARSER_FLAG_HAD_FRAMESET;
+  mFlags |= NS_DTD_FLAG_HAD_FRAMESET;
 
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
@@ -3406,7 +3407,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
             // XXX - But what did we actually do in counting the heads?
             mOpenHeadCount=1; 
           }
-          mFlags |= NS_PARSER_FLAG_HAS_OPEN_BODY;
+          mFlags |= NS_DTD_FLAG_HAS_OPEN_BODY;
           CloseHead(aNode); //do this just in case someone left it open...
           result=OpenBody(aNode); 
         }
@@ -3457,19 +3458,19 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,eHTMLTags aTag,PRBool aClosedB
       // If the script is disabled noscript should not be
       // in the content model until the layout can somehow
       // turn noscript's display property to block <-- bug 67899
-      if(mFlags & NS_PARSER_FLAG_SCRIPT_ENABLED) {
+      if(mFlags & NS_DTD_FLAG_SCRIPT_ENABLED) {
         done=PR_FALSE;
         mScratch.Truncate();
-        mFlags |= NS_PARSER_FLAG_ALTERNATE_CONTENT;
+        mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
       }
       break;
        
     case eHTMLTag_iframe: // Bug 84491 
     case eHTMLTag_noframes:
       done=PR_FALSE;
-      if(mFlags & NS_PARSER_FLAG_FRAMES_ENABLED) {
+      if(mFlags & NS_DTD_FLAG_FRAMES_ENABLED) {
         mScratch.Truncate();
-        mFlags |= NS_PARSER_FLAG_ALTERNATE_CONTENT;
+        mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
       }
       break;
 
@@ -3547,7 +3548,7 @@ CNavDTD::CloseContainer(const nsCParserNode *aNode,eHTMLTags aTarget,PRBool aClo
     case eHTMLTag_noscript:
     case eHTMLTag_noframes:
       // switch from alternate content state to regular state
-      mFlags &= ~NS_PARSER_FLAG_ALTERNATE_CONTENT;
+      mFlags &= ~NS_DTD_FLAG_ALTERNATE_CONTENT;
       // falling thro' intentionally....
     case eHTMLTag_title:
     default:
@@ -3607,7 +3608,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
           alternate content. This fixes bug 25214.
          *************************************************************/
 
-        if(theTagIsStyle && !(mFlags & NS_PARSER_FLAG_ALTERNATE_CONTENT)) {
+        if(theTagIsStyle && !(mFlags & NS_DTD_FLAG_ALTERNATE_CONTENT)) {
 
           PRBool theTargetTagIsStyle=nsHTMLElement::IsResidualStyleTag(aTarget);
 
