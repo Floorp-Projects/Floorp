@@ -1,3 +1,6 @@
+file:///s:/mozilla/layout/html/tests/block/printing/127145-1.html
+file:///s:/mozilla/layout/html/tests/block/printing/127145-2.html
+file:///s:/mozilla/layout/html/tests/block/printing/127145-3.html
 file:///s:/mozilla/layout/html/tests/block/printing/145305-1.html
 file:///s:/mozilla/layout/html/tests/block/printing/145305-2.html
 file:///s:/mozilla/layout/html/tests/block/printing/145305-3.html
