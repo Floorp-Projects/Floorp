@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include "nsContextLoader.h"
+#include "nsIContextLoader.h"
 
 
 struct nsCtxTupple
