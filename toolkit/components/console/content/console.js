@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-var gConsole, gConsoleBundle;
+var gConsole, gConsoleBundle, gTextBoxEval;
 
 /* :::::::: Console Initialization ::::::::::::::: */
 
@@ -44,8 +44,7 @@ window.onload = function()
 {
   gConsole = document.getElementById("ConsoleBox");
   gConsoleBundle = document.getElementById("ConsoleBundle");
-  
-  top.controllers.insertControllerAt(0, ConsoleController);
+  gTextBoxEval = document.getElementById("TextboxEval")  
   
   updateSortCommand(gConsole.sortOrder);
   updateModeCommand(gConsole.mode);
@@ -98,18 +97,6 @@ function updateModeCommand(aMode)
   bc.setAttribute("checked", true);
 }
 
-function toggleToolbar(aEl)
-{
-  var bc = document.getElementById(aEl.getAttribute("observes"));
-  var truth = bc.getAttribute("checked");
-  bc.setAttribute("checked", truth != "true");
-  var toolbar = document.getElementById(bc.getAttribute("_toolbar"));
-  toolbar.setAttribute("hidden", truth);
-
-  document.persist(toolbar.id, "hidden");
-  document.persist(bc.id, "checked");
-}
-
 function copyItemToClipboard()
 {
   gConsole.copySelectedItem();
@@ -120,9 +107,9 @@ function isItemSelected()
   return gConsole.selectedItem != null;
 }
 
-function UpdateCopyMenu()
+function updateCopyMenu()
 {
-  goUpdateCommand("cmd_copy");
+  goSetCommandEnabled("cmd_copy", isItemSelected())
 }
 
 function onEvalKeyPress(aEvent)
@@ -133,7 +120,7 @@ function onEvalKeyPress(aEvent)
 
 function evaluateTypein()
 {
-  var code = document.getElementById("TextboxEval").value;
+  var code = gTextBoxEval.value;
   var iframe = document.getElementById("Evaluator");
   iframe.setAttribute("src", "javascript: " + code);
 }
@@ -148,76 +135,10 @@ function displayResult()
     // or could use appendMessage which doesn't persist
 }
 
-/* :::::::: Command Controller for the Window ::::::::::::::: */
-
-var ConsoleController = 
-{
-  isCommandEnabled: function (aCommand)
-  {
-    switch (aCommand) {
-      case "cmd_copy":
-        return isItemSelected();
-      default:
-        return false;
-    }
-  },
-  
-  supportsCommand: function (aCommand) 
-  {
-    switch (aCommand) {
-      case "cmd_copy":
-        return true;
-      default:
-        return false;
-    }
-  },
-  
-  doCommand: function (aCommand)
-  {
-    switch (aCommand) {
-      case "cmd_copy":
-        copyItemToClipboard();
-        break;
-      default:
-        break;
-    }
-  },
-  
-  onEvent: function (aEvent) 
-  {
-  }
-};
-
 // XXX DEBUG
-
 function debug(aText)
 {
   var csClass = Components.classes['@mozilla.org/consoleservice;1'];
   var cs = csClass.getService(Components.interfaces.nsIConsoleService);
   cs.logStringMessage(aText);
-}
-
-function getStackTrace()
-{
-  var frame = Components.stack.caller;
-  var str = "";
-  while (frame) {
-    if (frame.filename)
-      str += frame.filename + ", Line " + frame.lineNumber;
-    else
-      str += "[" + gConsoleBundle.getString("noFile") + "]";
-    
-    str += " --> ";
-    
-    if (frame.functionName)
-      str += frame.functionName;
-    else
-      str += "[" + gConsoleBundle.getString("noFunction") + "]";
-      
-    str += "\n";
-    
-    frame = frame.caller;
-  }
-  
-  return str;
 }
