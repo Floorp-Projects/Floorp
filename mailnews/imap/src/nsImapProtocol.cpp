@@ -7544,6 +7544,24 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
   m_channelListener = listener;
   nsCOMPtr<nsIImapUrl> imapUrl  (do_QueryInterface(m_url));
 
+  nsImapAction imapAction;
+  imapUrl->GetImapAction(&imapAction);
+
+  PRBool externalLink = PR_TRUE;
+  imapUrl->GetExternalLinkUrl(&externalLink);
+
+  if (externalLink)
+  {
+    // for security purposes, only allow imap urls originating from external sources
+    // perform a limited set of actions. 
+    // Currently the allowed set includes:
+    // 1) folder selection
+    // 2) message fetch
+    // 3) message part fetch
+
+    if (! (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapMsgFetch || imapAction == nsIImapUrl::nsImapOpenMimePart))
+      return NS_ERROR_FAILURE; // abort the running of this url....it failed a security check
+  }
   
   if (ReadFromLocalCache())
   {
@@ -7551,8 +7569,6 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
     return NS_OK;
   }
 
-  nsImapAction imapAction;
-  imapUrl->GetImapAction(&imapAction);
   // okay, it's not in the local cache, now check the memory cache...
   // but we can't download for offline use from the memory cache
   if (imapAction != nsIImapUrl::nsImapMsgDownloadForOffline)
@@ -7561,6 +7577,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
     if (NS_SUCCEEDED(rv))
       return rv;
   }
+
   SetupPartExtractorListener(imapUrl, m_channelListener);
   // if for some reason open cache entry failed then just default to opening an imap connection for the url
   return ReadFromImapConnection();
