@@ -673,7 +673,7 @@ nsAreaFrame::ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
   for (kidFrame = mAbsoluteFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     // Reflow the frame
     nsReflowStatus  kidStatus;
-    ReflowAbsoluteFrame(aPresContext, aReflowState, kidFrame, PR_FALSE,
+    ReflowAbsoluteFrame(aPresContext, reflowState, kidFrame, PR_FALSE,
                         kidStatus);
   }
 }
