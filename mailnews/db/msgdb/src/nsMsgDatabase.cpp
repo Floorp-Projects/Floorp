@@ -987,7 +987,9 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 	else
 		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
 	// even if we couldn't find the thread,we should try to remove the header.
+	nsIMdbRow* row = msgHdr->GetMDBRow();
 	ret = m_mdbAllMsgHeadersTable->CutRow(GetEnv(), msgHdr->GetMDBRow());
+	row->CutAllColumns(GetEnv());
 	return ret;
 }
 
@@ -1825,6 +1827,7 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 	err = m_mdbStore->GetRow(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
 	if (!hdrRow)	
 		err  = m_mdbStore->NewRowWithOid(GetEnv(), &allMsgHdrsTableOID, &hdrRow);
+
 	if (NS_FAILED(err)) 
 		return err;
     err = CreateMsgHdr(hdrRow, key, pnewHdr);
