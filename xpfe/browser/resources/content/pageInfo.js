@@ -53,11 +53,23 @@ var onLoadRegistry = [ ];
  */
 function onLoadPageInfo()
 {
+  var strbundle = document.getElementById("pageinfobundle");
+
   var page;
+  var docTitle;
   if ((window.arguments.length >= 1) && window.arguments[0])
+  {
     page = window.arguments[0];
+    docTitle = strbundle.getString("frameInfo.title");
+  }
   else
+  {
     page = window.opener.frames[0].document;
+    docTitle = strbundle.getString("pageInfo.title");
+  }
+
+  window.document.title = docTitle;
+  
   var root = document.getElementById("cont");
 
   makeDocument(page, root);
@@ -128,7 +140,7 @@ function makeDocument(page, root)
     }
   } else {
     try {
-      var pageInfoBundle = document.getElementById("bundle_pageInfo");
+      var pageInfoBundle = document.getElementById("pageinfobundle");
       lastModified = pageInfoBundle.getString("unknown");
     } catch(e) {
       lastModified = "Unknown";

@@ -4,23 +4,20 @@
 <!ENTITY mainWindow.titlemodifierseperator " - ">
 <!ENTITY mainWindow.preface "Info for: "> 
 
-<!ENTITY  pageInfo.title "Page Info"> 
-<!ENTITY  pageInfo.description "Information about the current page"> 
+<!ENTITY  pageInfo.generalTab    "General">
+<!ENTITY  pageInfo.pageTitle     "Title:"> 
+<!ENTITY  pageInfo.URL           "URL:"> 
+<!ENTITY  pageInfo.lastModified  "Last Modified:">
 
-<!ENTITY  pageInfo.generalTab "General">
-<!ENTITY  pageInfo.pageTitle "Title:"> 
-<!ENTITY  pageInfo.URL "URL:"> 
-<!ENTITY  pageInfo.lastModified "Last Modified:">
+<!ENTITY  pageInfo.formsTab      "Forms">
+<!ENTITY  pageInfo.formHeader    "Forms on this page">
+<!ENTITY  pageInfo.formAction    "Form Action">
+<!ENTITY  pageInfo.formMethod    "Method">
+<!ENTITY  pageInfo.formName      "Name">
 
-<!ENTITY  pageInfo.formsTab   "Forms">
-<!ENTITY  pageInfo.formHeader "Forms on this page">
-<!ENTITY  pageInfo.formAction "Form Action">
-<!ENTITY  pageInfo.formMethod "Method">
-<!ENTITY  pageInfo.formName "Name">
-
-<!ENTITY  pageInfo.imagesTab "Images">
-<!ENTITY  pageInfo.imageHeader "Images on this page">
-<!ENTITY  pageInfo.imageURL "Image URL">
-<!ENTITY  pageInfo.imageWidth "Width">
-<!ENTITY  pageInfo.imageHeight "Height">
-<!ENTITY  pageInfo.imageAltText "Alt Text">
+<!ENTITY  pageInfo.imagesTab     "Images">
+<!ENTITY  pageInfo.imageHeader   "Images on this page">
+<!ENTITY  pageInfo.imageURL      "Image URL">
+<!ENTITY  pageInfo.imageWidth    "Width">
+<!ENTITY  pageInfo.imageHeight   "Height">
+<!ENTITY  pageInfo.imageAltText  "Alt Text">
