@@ -1685,33 +1685,86 @@ void
 nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 {
   // Get parent frame info
-  PerFrameData* parentPFD = psd->mFrame;
-  nsIFrame* parentFrame = parentPFD->mFrame;
+  PerFrameData* spanFramePFD = psd->mFrame;
+  nsIFrame* spanFrame = spanFramePFD->mFrame;
 
   // Get the parent frame's font for all of the frames in this span
   const nsStyleFont* parentFont;
-  parentFrame->GetStyleData(eStyleStruct_Font,
-                            (const nsStyleStruct*&)parentFont);
+  spanFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)parentFont);
   nsIRenderingContext* rc = mBlockReflowState->rendContext;
   rc->SetFont(parentFont->mFont);
   nsCOMPtr<nsIFontMetrics> fm;
   rc->GetFontMetrics(*getter_AddRefs(fm));
 
-  // Compute the span's mZeroEffectiveSpanBox flag. Pre-mode shuts
-  // down most of this behavior.
   PRBool zeroEffectiveSpanBox = PR_FALSE;
   PRBool preMode = (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_PRE) ||
     (mStyleText->mWhiteSpace == NS_STYLE_WHITESPACE_MOZ_PRE_WRAP);
-  if (!preMode && !InStrictMode() &&
+
+  // See if the span is an empty continuation. It's an empty continuation iff:
+  // - it has a prev-in-flow
+  // - it has no next in flow
+  // - it's zero sized
+  nsIFrame* spanNextInFlow;
+  spanFrame->GetNextInFlow(&spanNextInFlow);
+  nsIFrame* spanPrevInFlow;
+  spanFrame->GetPrevInFlow(&spanPrevInFlow);
+  PRBool emptyContinuation = spanPrevInFlow && !spanNextInFlow &&
+    (0 == spanFramePFD->mBounds.width) && (0 == spanFramePFD->mBounds.height);
+
+#ifdef NOISY_VERTICAL_ALIGN
+  nsFrame::ListTag(stdout, spanFrame);
+  printf(": preMode=%s strictMode=%s w/h=%d,%d emptyContinuation=%s",
+         preMode ? "yes" : "no",
+         InStrictMode() ? "yes" : "no",
+         spanFramePFD->mBounds.width, spanFramePFD->mBounds.height,
+         emptyContinuation ? "yes" : "no");
+  if (psd != mRootSpan) {
+    printf(" bp=%d,%d,%d,%d margin=%d,%d,%d,%d",
+           spanFramePFD->mBorderPadding.top,
+           spanFramePFD->mBorderPadding.right,
+           spanFramePFD->mBorderPadding.bottom,
+           spanFramePFD->mBorderPadding.left,
+           spanFramePFD->mMargin.top,
+           spanFramePFD->mMargin.right,
+           spanFramePFD->mMargin.bottom,
+           spanFramePFD->mMargin.left);
+  }
+  printf("\n");
+#endif
+
+  // Compute the span's mZeroEffectiveSpanBox flag. What we are trying
+  // to determine is how we should treat the span: should it act
+  // "normally" according to css2 or should it effectively
+  // "disappear".
+  //
+  // In general, if the document being processed is in strict mode
+  // then it should act normally (with one exception). The exception
+  // case is when a span is continued and yet the span is empty
+  // (e.g. compressed whitespace). For this kind of span we treat it
+  // as if it were not there so that it doesn't impact the
+  // line-height.
+  //
+  // In compatability mode, we should sometimes make it disappear. The
+  // cases that matter are those where the span contains no real text
+  // elements that would provide an ascent and descent and
+  // height. However, if css style elements have been applied to the
+  // span (border/padding/margin) so that it's clear the document
+  // author is intending css2 behavior then we act as if strict mode
+  // is set.
+  //
+  // Finally, for pre-formatted content we don't bother doing this
+  // check because pre-formatted content is always formatted as it is
+  // found.
+  if (!preMode && (emptyContinuation || !InStrictMode()) &&
       ((psd == mRootSpan) ||
-       ((0 == parentPFD->mBorderPadding.top) &&
-        (0 == parentPFD->mBorderPadding.right) &&
-        (0 == parentPFD->mBorderPadding.bottom) &&
-        (0 == parentPFD->mBorderPadding.left) &&
-        (0 == parentPFD->mMargin.top) &&
-        (0 == parentPFD->mMargin.right) &&
-        (0 == parentPFD->mMargin.bottom) &&
-        (0 == parentPFD->mMargin.left)))) {
+       ((0 == spanFramePFD->mBorderPadding.top) &&
+        (0 == spanFramePFD->mBorderPadding.right) &&
+        (0 == spanFramePFD->mBorderPadding.bottom) &&
+        (0 == spanFramePFD->mBorderPadding.left) &&
+        (0 == spanFramePFD->mMargin.top) &&
+        (0 == spanFramePFD->mMargin.right) &&
+        (0 == spanFramePFD->mMargin.bottom) &&
+        (0 == spanFramePFD->mMargin.left)))) {
     // This code handles an issue with compatability with non-css
     // conformant browsers. In particular, there are some cases
     // where the font-size and line-height for a span must be
@@ -1750,7 +1803,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // provide initial values).
     baselineY = minY = maxY = 0;
 #ifdef NOISY_VERTICAL_ALIGN
-    nsFrame::ListTag(stdout, parentFrame);
+    nsFrame::ListTag(stdout, spanFrame);
     printf(": pass1 valign frames: topEdge=%d minLineHeight=%d zeroEffectiveSpanBox=%s\n",
            mTopEdge, mMinLineHeight,
            zeroEffectiveSpanBox ? "yes" : "no");
@@ -1765,8 +1818,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       psd->mTopLeading = 0;
       psd->mBottomLeading = 0;
       psd->mLogicalHeight = 0;
-      parentPFD->mAscent = 0;
-      parentPFD->mBounds.height = 0;
+      spanFramePFD->mAscent = 0;
+      spanFramePFD->mBounds.height = 0;
       baselineY = minY = maxY = 0;
     }
     else {
@@ -1774,9 +1827,9 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // is based on the line-height value, not the font-size. Also
       // compute the top leading.
       nscoord logicalHeight =
-        nsHTMLReflowState::CalcLineHeight(mPresContext, rc, parentFrame);
-      nscoord contentHeight = parentPFD->mBounds.height -
-        parentPFD->mBorderPadding.top - parentPFD->mBorderPadding.bottom;
+        nsHTMLReflowState::CalcLineHeight(mPresContext, rc, spanFrame);
+      nscoord contentHeight = spanFramePFD->mBounds.height -
+        spanFramePFD->mBorderPadding.top - spanFramePFD->mBorderPadding.bottom;
       nscoord leading = logicalHeight - contentHeight;
       psd->mTopLeading = leading / 2;
       psd->mBottomLeading = leading - psd->mTopLeading;
@@ -1787,20 +1840,20 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // there are child frames in this span that stick out of this area
       // then the minY and maxY are updated by the amount of logical
       // height that is outside this range.
-      minY = parentPFD->mBorderPadding.top - psd->mTopLeading;
+      minY = spanFramePFD->mBorderPadding.top - psd->mTopLeading;
       maxY = minY + psd->mLogicalHeight;
 
       // This is the distance from the top edge of the parents visual
       // box to the baseline. The span already computed this for us,
       // so just use it.
-      baselineY = parentPFD->mAscent;
+      baselineY = spanFramePFD->mAscent;
     }
 #ifdef NOISY_VERTICAL_ALIGN
-    nsFrame::ListTag(stdout, parentFrame);
+    nsFrame::ListTag(stdout, spanFrame);
     printf(": baseLine=%d logicalHeight=%d topLeading=%d h=%d bp=%d,%d zeroEffectiveSpanBox=%s\n",
            baselineY, psd->mLogicalHeight, psd->mTopLeading,
-           parentPFD->mBounds.height,
-           parentPFD->mBorderPadding.top, parentPFD->mBorderPadding.bottom,
+           spanFramePFD->mBounds.height,
+           spanFramePFD->mBorderPadding.top, spanFramePFD->mBorderPadding.bottom,
            zeroEffectiveSpanBox ? "yes" : "no");
 #endif
   }
@@ -2339,25 +2392,25 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
   nsRect spanCombinedArea;
   PerFrameData* pfd;
 
-  nscoord x0, y0, x1, y1;
+  nscoord minX, minY, maxX, maxY;
   if (nsnull != psd->mFrame) {
     // The minimum combined area for the frames in a span covers the
     // entire span frame.
     pfd = psd->mFrame;
-    x0 = 0;
-    y0 = 0;
-    x1 = pfd->mBounds.width;
-    y1 = pfd->mBounds.height;
+    minX = 0;
+    minY = 0;
+    maxX = pfd->mBounds.width;
+    maxY = pfd->mBounds.height;
   }
   else {
     // The minimum combined area for the frames that are direct
     // children of the block starts at the upper left corner of the
     // line and is sized to match the size of the line's bounding box
     // (the same size as the values returned from VerticalAlignFrames)
-    x0 = psd->mLeftEdge;
-    x1 = psd->mX;
-    y0 = mTopEdge;
-    y1 = mTopEdge + mFinalLineHeight;
+    minX = psd->mLeftEdge;
+    maxX = psd->mX;
+    minY = mTopEdge;
+    maxY = mTopEdge + mFinalLineHeight;
   }
 
   pfd = psd->mFirstFrame;
@@ -2397,19 +2450,19 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     if (r->width && r->height) {
       nscoord xl = x + r->x;
       nscoord xr = x + r->XMost();
-      if (xl < x0) {
-        x0 = xl;
+      if (xl < minX) {
+        minX = xl;
       }
-      if (xr > x1) {
-        x1 = xr;
+      if (xr > maxX) {
+        maxX = xr;
       }
       nscoord yt = y + r->y;
       nscoord yb = y + r->YMost();
-      if (yt < y0) {
-        y0 = yt;
+      if (yt < minY) {
+        minY = yt;
       }
-      if (yb > y1) {
-        y1 = yb;
+      if (yb > maxY) {
+        maxY = yb;
       }
       updatedCombinedArea = PR_TRUE;
     }
@@ -2419,14 +2472,14 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 
   // Compute aggregated combined area
   if (updatedCombinedArea) {
-    aCombinedArea.x = x0;
-    aCombinedArea.y = y0;
-    aCombinedArea.width = x1 - x0;
-    aCombinedArea.height = y1 - y0;
+    aCombinedArea.x = minX;
+    aCombinedArea.y = minY;
+    aCombinedArea.width = maxX - minX;
+    aCombinedArea.height = maxY - minY;
   }
   else {
     aCombinedArea.x = 0;
-    aCombinedArea.y = y0;
+    aCombinedArea.y = minY;
     aCombinedArea.width = 0;
     aCombinedArea.height = 0;
   }
@@ -2439,8 +2492,8 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     nsFrameState oldState;
     frame->GetFrameState(&oldState);
     nsFrameState newState = oldState & ~NS_FRAME_OUTSIDE_CHILDREN;
-    if ((x0 < 0) || (y0 < 0) ||
-        (x1 > pfd->mBounds.width) || (y1 > pfd->mBounds.height)) {
+    if ((minX < 0) || (minY < 0) ||
+        (maxX > pfd->mBounds.width) || (maxY > pfd->mBounds.height)) {
       newState |= NS_FRAME_OUTSIDE_CHILDREN;
     }
     if (newState != oldState) {
