@@ -169,6 +169,11 @@ ForkAndExec(
                 }
                 close(attr->stderrFd->secret->md.osfd);
             }
+            if (attr->currentDirectory) {
+                if (chdir(attr->currentDirectory) < 0) {
+                    _exit(1);  /* failed */
+                }
+            }
         }
 
         (void)execve(path, argv, envp);

@@ -382,21 +382,22 @@ PR_NewProcessAttr(void)
 PR_IMPLEMENT(void)
 PR_ResetProcessAttr(PRProcessAttr *attr)
 {
+    PR_FREEIF(attr->currentDirectory);
     memset(attr, 0, sizeof(*attr));
 }
 
 PR_IMPLEMENT(void)
 PR_DestroyProcessAttr(PRProcessAttr *attr)
 {
+    PR_FREEIF(attr->currentDirectory);
     PR_DELETE(attr);
 }
 
 PR_IMPLEMENT(void)
-PR_SetStdioRedirect(
+PR_ProcessAttrSetStdioRedirect(
     PRProcessAttr *attr,
     PRSpecialFD stdioFd,
-    PRFileDesc *redirectFd
-)
+    PRFileDesc *redirectFd)
 {
     switch (stdioFd) {
         case PR_StandardInput:
@@ -411,6 +412,40 @@ PR_SetStdioRedirect(
         default:
             PR_ASSERT(0);
     }
+}
+
+/*
+ * OBSOLETE
+ */
+PR_IMPLEMENT(void)
+PR_SetStdioRedirect(
+    PRProcessAttr *attr,
+    PRSpecialFD stdioFd,
+    PRFileDesc *redirectFd)
+{
+#if defined(DEBUG)
+    static PRBool warn = PR_TRUE;
+    if (warn) {
+        warn = _PR_Obsolete("PR_SetStdioRedirect()",
+                "PR_ProcessAttrSetStdioRedirect()");
+    }
+#endif
+    PR_ProcessAttrSetStdioRedirect(attr, stdioFd, redirectFd);
+}
+
+PR_IMPLEMENT(PRStatus)
+PR_ProcessAttrSetCurrentDirectory(
+    PRProcessAttr *attr,
+    const char *dir)
+{
+    PR_FREEIF(attr->currentDirectory);
+    attr->currentDirectory = PR_MALLOC(strlen(dir) + 1);
+    if (!attr->currentDirectory) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return PR_FAILURE;
+    }
+    strcpy(attr->currentDirectory, dir);
+    return PR_SUCCESS;
 }
 
 PR_IMPLEMENT(PRProcess*) PR_CreateProcess(
