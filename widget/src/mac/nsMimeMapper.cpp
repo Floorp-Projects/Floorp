@@ -79,8 +79,14 @@ nsMimeMapperMac :: MapMimeTypeToMacOSType ( const char* aMimeStr, PRBool inAddIf
   if ( !format ) {
     if ( PL_strcmp(aMimeStr, kTextMime) == 0 )
       format = 'TEXT';
-    if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
+    else if ( PL_strcmp(aMimeStr, kFileMime) == 0 )
       format = flavorTypeHFS;
+    else if ( PL_strcmp(aMimeStr, kPNGImageMime) == 0 )
+      format = 'PICT';
+    else if ( PL_strcmp(aMimeStr, kJPEGImageMime) == 0 )
+      format = 'PICT';
+    else if ( PL_strcmp(aMimeStr, kGIFImageMime) == 0 )
+      format = 'PICT';
 
     else if ( inAddIfNotPresent ) {
       // create the flavor based on the unique id in the lower two bytes and 'MZ' in the
