@@ -119,6 +119,9 @@ else  # OS2
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
 else  # WINNT
+ifeq ($(OS_ARCH),BeOS)
+SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
+else
 
 # Unix only
 ifdef LIB_IS_C_ONLY
@@ -138,6 +141,8 @@ SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
 endif # AIX
 endif # SunOS4
 endif # HPUX
+
+endif # BeOS
 endif # WINNT
 endif # OS2
 endif # MKSHLIB
@@ -386,9 +391,21 @@ ifdef MAPS
 endif
 ifdef PROGRAM
 	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
+ifeq ($(OS_ARCH),BeOS)
+	rm components add-ons lib
+	ln -sf $(DIST)/bin/components components
+	ln -sf $(DIST)/bin add-ons
+	ln -sf $(DIST)/bin lib
+endif
 endif
 ifdef SIMPLE_PROGRAMS
 	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
+ifeq ($(OS_ARCH),BeOS)
+	rm components add-ons lib
+	ln -sf $(DIST)/bin/components components
+	ln -sf $(DIST)/bin add-ons
+	ln -sf $(DIST)/bin lib
+endif
 endif
 	+$(LOOP_OVER_DIRS)
 endif
@@ -440,6 +457,18 @@ ifdef CPPSRCS
 CPP_PROG_LINK = 1
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+ifdef SHARED_LIBRARY
+#
+# BeOS specific section: link against dependant shared libs
+#
+BEOS_LIB_LIST = $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).dependencies)
+BEOS_LINK_LIBS = $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(topsrcdir)/dist/bin $(lib)))
+LDFLAGS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
+endif
+endif
+
 #
 # PROGRAM = Foo
 # creates OBJS, links with LIBS to create Foo
@@ -453,8 +482,20 @@ ifeq ($(OS_ARCH),WINNT)
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+ifeq ($(OS_ARCH),BeOS)
+ifdef BEOS_PROGRAM_RESOURCE
+	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
+	mimeset $@
+endif
+endif
 else
 	$(CC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+ifeq ($(OS_ARCH),BeOS)
+ifdef BEOS_PROGRAM_RESOURCE
+	xres -o $@ $(BEOS_PROGRAM_RESOURCE)
+	mimeset $@
+endif
+endif
 endif
 endif
 endif
