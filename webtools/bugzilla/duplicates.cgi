@@ -69,18 +69,18 @@ PutHeader("Most Frequently Reported Bugs");
 # Open today's record of dupes
 my $today = &days_ago(0);
 
-if (-e "data/mining/dupes$today.db")
+if (<data/duplicates/dupes$today*>)
 {
-  dbmopen(%dbmcount, "data/mining/dupes$today", 0644) || 
+  dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) || 
                             &die_politely("Can't open today's dupes file: $!");
 }
 else
 {
   # Try yesterday's, then (in case today's hasn't been created yet)
   $today = &days_ago(1);
-  if (-e "data/mining/dupes$today.db")
+  if (<data/duplicates/dupes$today*>)
   {
-    dbmopen(%dbmcount, "data/mining/dupes$today", 0644) || 
+    dbmopen(%dbmcount, "data/duplicates/dupes$today", 0644) || 
                         &die_politely("Can't open yesterday's dupes file: $!");
   }
   else
@@ -107,9 +107,9 @@ while (($key, $value) = each %count)
 # Try and open the database from "changedsince" days ago
 $before = &days_ago($changedsince);    
 
-if (-e "data/mining/dupes$before.db") 
+if (<data/duplicates/dupes$before*>) 
 {
-  dbmopen(%before, "data/mining/dupes$before", 0644) && ($dobefore = 1);
+  dbmopen(%before, "data/duplicates/dupes$before", 0644) && ($dobefore = 1);
 }
 
 print Param("mostfreqhtml");

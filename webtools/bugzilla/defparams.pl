@@ -297,7 +297,8 @@ DefParam("mostfreqhtml",
 
 <blockquote>The Most Frequent Bugs page lists the known open bugs which 
 are reported most frequently in recent builds of Mozilla. It is automatically
-generated from the Bugzilla database.
+generated from the Bugzilla database every 24 hours, by counting the number
+of direct and indirect duplicates of bugs.
 This information is provided in order to assist in minimizing
 the amount of duplicate bugs entered into Bugzilla which in turn cuts down
 on development time.

@@ -451,7 +451,7 @@ unless (-d 'data') {
     print "Creating data directory ...\n";
     mkdir 'data', 0770;
     if ($my_webservergroup eq "") {
-        chmod 0777, 'data';
+        chmod 1777, 'data';
     }
     open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
@@ -545,7 +545,7 @@ if ($my_webservergroup) {
     # make sure that contrib keeps the permissions it had (don't touch it)
     chmod 0770, 'data', 'shadow', 'graphs';
     chmod 0666, glob('data/*');
-    chmod 0777, glob('data/*/'); # directories stay executable
+    chmod 1777, glob('data/*/'); # directories stay executable
 }
 
 
@@ -2058,9 +2058,9 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # a Bugzilla with the old data format, and so upgrade their data files.
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
-    mkdir 'graphs', 0770; 
+    mkdir 'graphs', 1770; 
     if ($my_webservergroup eq "") {
-        chmod 0777, 'graphs';
+        chmod 1777, 'graphs';
     } 
     
     # Upgrade data format
@@ -2137,16 +2137,14 @@ unless (-d 'graphs') {
     }    
 }
 
-#
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
 # when email gets sent on a per-user basis.
-#
 if (!GetFieldDef('profiles', 'emailflags')) {
     AddField('profiles', 'emailflags', 'mediumtext');
 }
 
-# http://bugzilla.mozilla.org/show_bug.cgi?id=61637
-# upgrade older versions of bugzilla that have the old comments table
+# 2000-11-27 For Bugzilla 2.5 and later. Change table 'comments' to 
+# 'longdescs' - the new name of the comments table.
 if (&TableExists('comments')) {
     RenameField ('comments', 'when', 'bug_when');
     ChangeFieldType('comments', 'bug_id', 'mediumint not null');
@@ -2158,7 +2156,15 @@ if (&TableExists('comments')) {
     $dbh->do("ALTER TABLE comments RENAME longdescs");
 }
 
-#
+# 2001-04-08 Added a special directory for the duplicates stats.
+unless (-d 'data/duplicates') {
+    print "Creating duplicates directory...\n";
+    mkdir 'data/duplicates', 0770; 
+    if ($my_webservergroup eq "") {
+        chmod 1777, 'data/duplicates';
+    } 
+}
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #

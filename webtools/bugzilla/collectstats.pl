@@ -130,11 +130,11 @@ sub calculate_dupes {
     # Save % count here in a date-named file
     # so we can read it back in to do changed counters
     # First, delete it if it exists, so we don't add to the contents of an old file
-    if (-e "data/mining/dupes$today") {
-        system("rm -f data/mining/dupes$today");
+    if (<data/duplicates/dupes$today*>) {
+        system("rm -f data/duplicates/dupes$today*");
     }
    
-    dbmopen(%count, "data/mining/dupes$today", 0644) || die "Can't open DBM dupes file: $!";
+    dbmopen(%count, "data/duplicates/dupes$today", 0644) || die "Can't open DBM dupes file: $!";
 
     # Create a hash with key "a bug number", value "bug which that bug is a
     # direct dupe of" - straight from the duplicates table.
