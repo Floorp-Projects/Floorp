@@ -203,7 +203,7 @@ function loadData()
 		while ( year >= 100 )
 			year -= 100;
 		if ( year < 10 )
-			yeahr = "0" + year;
+			year = "0" + year;
 	
 		var month = parseInt( globals.document.vars.month.value );
 		month += 1;
