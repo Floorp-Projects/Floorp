@@ -40,12 +40,18 @@
 #include "nsLocalMessage.h"
 #include "nsMsgUtils.h"
 #include "nsLocalUtils.h"
+#include "nsIPop3IncomingServer.h"
+#include "nsIPop3Service.h"
+#include "nsIMsgIncomingServer.h"
+
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,10 +206,18 @@ nsresult nsMsgLocalMailFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **ch
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uriStr, getter_AddRefs(res));
 	if (NS_FAILED(rv))
+	{
+		delete[] uriStr;
 		return rv;
+	}
+
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
+	{
+		delete[] uriStr;
 		return rv;
+	}
+
 	delete[] uriStr;
 	folder->SetFlag(MSG_FOLDER_FLAG_MAIL);
 
@@ -416,6 +430,31 @@ nsMsgLocalMailFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **th
 		{
 			rv = mMailDatabase->GetThreadContainingMsgHdr(msgDBHdr, thread);
 		}
+	}
+	return rv;
+
+}
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
+{
+	if(!hasMessage)
+		return NS_ERROR_NULL_POINTER;
+
+	nsresult rv = GetDatabase();
+
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMsgDBHdr> msgDBHdr, msgDBHdrForKey;
+		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+		nsMsgKey key;
+		if(NS_SUCCEEDED(rv))
+			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
+		if(NS_SUCCEEDED(rv))
+			rv = msgDBHdr->GetMessageKey(&key);
+		if(NS_SUCCEEDED(rv))
+			rv = mMailDatabase->ContainsKey(key, hasMessage);
+		
 	}
 	return rv;
 
@@ -1118,6 +1157,30 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+	//Are we assured this is the server for this folder?
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = mailSession->GetCurrentServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIPop3IncomingServer> popServer;
+    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                (void **)&popServer);
+    if (NS_SUCCEEDED(rv)) {
+        rv = pop3Service->GetNewMail(nsnull,popServer,nsnull);
+    }
+    
+
+	return rv;
+}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
                          nsIDBChangeListener * aInstigator)
