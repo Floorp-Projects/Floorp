@@ -97,6 +97,20 @@ XPIDLSRCS	+= \
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_UNICHARUTIL_LIBS) \
+                $(TK_LIBS) \
+                $(MOZ_COMPONENT_LIBS) \
+                -lgkgfx \
+                $(NULL)
+
+GARBAGE		+= $(GFX_LCPPSRCS)
+
+include $(topsrcdir)/config/rules.mk
+
+export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
+	$(INSTALL) $^ .
+
 # nsMacWidget.rsrc is an AppleSingle encoded resource file.
 # For Mach-O, we want to decode it and copy it to a data-fork resource file 
 # that lives in the application directory.
@@ -111,20 +125,6 @@ $(RES_DEST): $(RES_SRC)
 	rm -rf $(RES_DEST).tmp
 
 libs:: $(RES_DEST)
-
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_UNICHARUTIL_LIBS) \
-                $(TK_LIBS) \
-                $(MOZ_COMPONENT_LIBS) \
-                -lgkgfx \
-                $(NULL)
-
-GARBAGE		+= $(GFX_LCPPSRCS)
-
-include $(topsrcdir)/config/rules.mk
-
-export:: $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
-	$(INSTALL) $^ .
 
 LOCAL_INCLUDES	= \
 	$(TK_CFLAGS) \
