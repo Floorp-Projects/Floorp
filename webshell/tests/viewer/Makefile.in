@@ -186,19 +186,19 @@ unix/xlib/libviewer_xlib_s.a:
 	@$(MAKE) -C $(@D) $(@F)
 
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/gtk/libviewer_gtk_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
+	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/motif/libviewer_motif_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS)
+	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/qt/libviewer_qt_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
+	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in unix/xlib/libviewer_xlib_s.a
-	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
+	$(CCC) $(CXXFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 ifdef MOZ_ENABLE_GTK
