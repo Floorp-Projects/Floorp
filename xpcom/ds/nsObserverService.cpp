@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corp.
  */
 
 #define NS_IMPL_IDS
@@ -91,7 +92,7 @@ nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverSe
     return NS_OK;
 }
 
-static PRBool
+static PRBool PR_CALLBACK 
 ReleaseObserverList(nsHashKey *aKey, void *aData, void* closure)
 {
     nsIObserverList* observerList = NS_STATIC_CAST(nsIObserverList*, aData);

@@ -14,6 +14,18 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 
 #include "prmem.h"
@@ -51,7 +63,7 @@ nsNativeComponentLoader::nsNativeComponentLoader() :
     NS_INIT_REFCNT();
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 nsDll_Destroy(nsHashKey *aKey, void *aData, void* closure)
 {
     nsDll* entry = NS_STATIC_CAST(nsDll*, aData);
@@ -289,7 +301,7 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
     return rv;
 }
 
-static nsresult
+static nsresult PR_CALLBACK
 nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -388,7 +400,7 @@ struct freeLibrariesClosure
     PRInt32 when;
 };
 
-static PRBool
+static PRBool PR_CALLBACK
 nsFreeLibraryEnum(nsHashKey *aKey, void *aData, void* closure) 
 {
     nsDll *dll = (nsDll *) aData;

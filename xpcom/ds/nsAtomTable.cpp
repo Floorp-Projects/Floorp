@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #include "nsAtomTable.h"
@@ -33,7 +34,7 @@ static nsrefcnt gAtoms;
 static struct PLHashTable* gAtomHashTable;
 
 #if defined(DEBUG) && (defined(XP_UNIX) || defined(XP_PC))
-static PRIntn
+static PRIntn PR_CALLBACK
 DumpAtomLeaks(PLHashEntry *he, PRIntn index, void *arg)
 {
   AtomImpl* atom = (AtomImpl*) he->value;

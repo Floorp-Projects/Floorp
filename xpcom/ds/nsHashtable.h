@@ -18,6 +18,16 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 04/20/2000   IBM Corp.       Added PR_CALLBACK for Optlink use in OS2
  */
 
 #ifndef nsHashtable_h__
@@ -39,7 +49,7 @@ public:
 
 // Enumerator callback function. Use
 
-typedef PRBool (*nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
+typedef PRBool (* PR_CALLBACK nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
 
 class NS_COM nsHashtable {
 protected:
@@ -82,7 +92,7 @@ public:
   PRBool RemoveAndDelete(nsHashKey *aKey);
 
 protected:
-  static PR_CALLBACK PRIntn CopyElement(PLHashEntry *he, PRIntn i, void *arg);
+  static PRIntn PR_CALLBACK CopyElement(PLHashEntry *he, PRIntn i, void *arg);
   
   nsHashtableCloneElementFunc   mCloneElementFun;
   void*                         mCloneElementClosure;

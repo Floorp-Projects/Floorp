@@ -18,6 +18,16 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 04/20/2000   IBM Corp.       Added PR_CALLBACK for Optlink use in OS2
  */
 
 #include "prmem.h"
@@ -28,16 +38,16 @@
 // Key operations
 //
 
-static PR_CALLBACK PLHashNumber _hashValue(const void *key) 
+static PLHashNumber PR_CALLBACK _hashValue(const void *key) 
 {
   return ((const nsHashKey *) key)->HashValue();
 }
 
-static PR_CALLBACK PRIntn _hashKeyCompare(const void *key1, const void *key2) {
+static PRIntn PR_CALLBACK _hashKeyCompare(const void *key1, const void *key2) {
   return ((const nsHashKey *) key1)->Equals((const nsHashKey *) key2);
 }
 
-static PR_CALLBACK PRIntn _hashValueCompare(const void *value1,
+static PRIntn PR_CALLBACK _hashValueCompare(const void *value1,
                                             const void *value2) {
   // We're not going to make any assumptions about value equality
   return 0;
@@ -47,19 +57,19 @@ static PR_CALLBACK PRIntn _hashValueCompare(const void *value1,
 // Memory callbacks
 //
 
-static PR_CALLBACK void *_hashAllocTable(void *pool, PRSize size) {
+static void * PR_CALLBACK _hashAllocTable(void *pool, PRSize size) {
   return PR_MALLOC(size);
 }
 
-static PR_CALLBACK void _hashFreeTable(void *pool, void *item) {
+static void  PR_CALLBACK _hashFreeTable(void *pool, void *item) {
   PR_DELETE(item);
 }
 
-static PR_CALLBACK PLHashEntry *_hashAllocEntry(void *pool, const void *key) {
+static PLHashEntry *  PR_CALLBACK _hashAllocEntry(void *pool, const void *key) {
   return PR_NEW(PLHashEntry);
 }
 
-static PR_CALLBACK void _hashFreeEntry(void *pool, PLHashEntry *entry, 
+static void  PR_CALLBACK _hashFreeEntry(void *pool, PLHashEntry *entry, 
                                        PRUintn flag) {
   if (flag == HT_FREE_ENTRY) {
     delete (nsHashKey *) (entry->key);
@@ -81,7 +91,7 @@ struct _HashEnumerateArgs {
   void* arg;
 };
 
-static PR_CALLBACK PRIntn _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
+static PRIntn  PR_CALLBACK _hashEnumerate(PLHashEntry *he, PRIntn i, void *arg)
 {
   _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
   return thunk->fn((nsHashKey *) he->key, he->value, thunk->arg)
@@ -194,7 +204,7 @@ void *nsHashtable::Remove(nsHashKey *aKey) {
 // XXX This method was called _hashEnumerateCopy, but it didn't copy the element!
 // I don't know how this was supposed to work since the elements are neither copied
 // nor refcounted.
-static PR_CALLBACK PRIntn _hashEnumerateShare(PLHashEntry *he, PRIntn i, void *arg)
+static PRIntn  PR_CALLBACK _hashEnumerateShare(PLHashEntry *he, PRIntn i, void *arg)
 {
   nsHashtable *newHashtable = (nsHashtable *)arg;
   newHashtable->Put((nsHashKey *) he->key, he->value);
@@ -218,7 +228,7 @@ void nsHashtable::Enumerate(nsHashtableEnumFunc aEnumFunc, void* closure) {
   PL_HashTableEnumerateEntries(hashtable, _hashEnumerate, &thunk);
 }
 
-static PR_CALLBACK PRIntn _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)
+static PRIntn  PR_CALLBACK _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *arg)
 {
   _HashEnumerateArgs* thunk = (_HashEnumerateArgs*)arg;
   if (thunk)
@@ -312,7 +322,7 @@ nsObjectHashtable::~nsObjectHashtable()
     Reset();
 }
 
-PR_CALLBACK PRIntn 
+PRIntn  PR_CALLBACK 
 nsObjectHashtable::CopyElement(PLHashEntry *he, PRIntn i, void *arg)
 {
   nsObjectHashtable *newHashtable = (nsObjectHashtable *)arg;
@@ -361,7 +371,7 @@ nsObjectHashtable::RemoveAndDelete(nsHashKey *aKey)
 ////////////////////////////////////////////////////////////////////////////////
 // nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
 
-static PR_CALLBACK PRBool
+static PRBool  PR_CALLBACK 
 _ReleaseElement(nsHashKey *aKey, void *aData, void* closure)
 {
     nsISupports* element = NS_STATIC_CAST(nsISupports*, aData);
@@ -404,7 +414,7 @@ nsSupportsHashtable::Remove(nsHashKey *aKey)
     return data;
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn  PR_CALLBACK 
 _hashEnumerateCopy(PLHashEntry *he, PRIntn i, void *arg)
 {
     nsHashtable *newHashtable = (nsHashtable *)arg;

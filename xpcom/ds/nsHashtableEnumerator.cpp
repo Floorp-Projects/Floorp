@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corp.
  */
 
 /*
@@ -92,7 +93,7 @@ nsHashtableEnumerator::nsHashtableEnumerator (nsHashtable *aHash,
     
 }
 
-PRBool
+PRBool PR_CALLBACK 
 hash_enumerator (nsHashKey *aKey, void *aObject, void *closure)
 {
     nsresult rv;

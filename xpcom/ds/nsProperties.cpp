@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #define NS_IMPL_IDS
@@ -49,7 +50,7 @@ nsProperties::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-PRBool
+PRBool PR_CALLBACK 
 nsProperties::ReleaseValues(nsHashKey* key, void* data, void* closure)
 {
     nsISupports* value = (nsISupports*)data;

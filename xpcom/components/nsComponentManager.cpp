@@ -19,6 +19,17 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      Added PR_CALLBACK for Optlink use in OS2
  */
 
 #include <stdlib.h>
@@ -138,10 +149,10 @@ nsCreateInstanceByProgID::operator()( const nsIID& aIID, void** aInstancePtr ) c
 	}
 
 /* prototypes for the Mac */
-PRBool
+PRBool PR_CALLBACK
 nsFactoryEntry_Destroy(nsHashKey *aKey, void *aData, void* closure);
 
-PRBool
+PRBool PR_CALLBACK
 nsCID_Destroy(nsHashKey *aKey, void *aData, void* closure);
 ////////////////////////////////////////////////////////////////////////////////
 // nsFactoryEntry
@@ -1809,7 +1820,7 @@ struct CanUnload_closure {
     nsIComponentLoader *native;
 };
 
-static PRBool
+static PRBool PR_CALLBACK
 CanUnload_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
     nsIComponentLoader *loader = (nsIComponentLoader *)aData;
@@ -1893,7 +1904,7 @@ struct AutoReg_closure {
     PRBool registered;
 };
 
-static PRBool
+static PRBool PR_CALLBACK
 AutoRegister_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
     nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
@@ -1910,7 +1921,7 @@ AutoRegister_enumerate(nsHashKey *key, void *aData, void *aClosure)
     return NS_SUCCEEDED(closure->status) ? PR_TRUE : PR_FALSE;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 RegisterDeferred_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
     nsIComponentLoader *loader = NS_STATIC_CAST(nsIComponentLoader *, aData);
@@ -2025,7 +2036,7 @@ nsComponentManagerImpl::AutoRegister(PRInt32 when, nsIFile *inDirSpec)
     return closure.status;
 }
 
-static PRBool
+static PRBool PR_CALLBACK
 AutoRegisterComponent_enumerate(nsHashKey *key, void *aData, void *aClosure)
 {
     PRBool didRegister;
