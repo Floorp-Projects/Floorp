@@ -750,6 +750,8 @@ public:
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
 
+    FunctionInstance *init;
+
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
 
@@ -1342,11 +1344,11 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
-    FunctionInstance *validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
+    FunctionInstance *validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, size_t pos);
 
-    void validateStatic(FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted);
-    void validateConstructor(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a);
-    void validateInstance(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final);
+    void validateStatic(Context *cxt, Environment *env, FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted, size_t pos);
+    void validateConstructor(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, size_t pos);
+    void validateInstance(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final, size_t pos);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
@@ -1364,7 +1366,7 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase, QualifiedName *qname);
 
     FrameVariable *makeFrameVariable(NonWithFrame *regionalFrame);
-    LocalMember *defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal);
+    LocalMember *defineHoistedVar(Environment *env, const String *id, js2val initVal, bool isVar, size_t pos);
     Multiname *defineLocalMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, LocalMember *m, size_t pos, bool enumerable);
     InstanceMember *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList &namespaces, 
                                                                     Attribute::OverrideModifier overrideMod, bool xplicit,

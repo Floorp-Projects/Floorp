@@ -85,20 +85,9 @@ namespace MetaData {
         }
     }
 
-    void JS2Metadata::validateStatic(FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted)
+    FunctionInstance *JS2Metadata::validateStaticFunction(Context *cxt, Environment *env, FunctionDefinition *fnDef, bool prototype, bool unchecked, size_t pos)
     {
-    }
-
-    void JS2Metadata::validateConstructor(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a)
-    {
-    }
-
-    void JS2Metadata::validateInstance(FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final)
-    {
-    }
-
-    FunctionInstance *JS2Metadata::validateStaticFunction(FunctionDefinition *fnDef, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
-    {
+        js2val compileThis = JS2VAL_VOID; 
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
         DEFINE_ROOTKEEPER(rk1, compileFrame);
         
@@ -139,6 +128,68 @@ namespace MetaData {
         }
         restoreCompilationUnit(oldData);
         return result;
+    }
+
+    void JS2Metadata::validateStatic(Context *cxt, Environment *env, FunctionDefinition *fnDef, CompoundAttribute *a, bool unchecked, bool hoisted, size_t pos)
+    {
+        Variable *v;
+        FunctionInstance *fnInst = NULL;
+        DEFINE_ROOTKEEPER(rk1, fnInst);
+        switch (fnDef->prefix) {
+        case FunctionName::normal:
+            fnInst = validateStaticFunction(cxt, env, fnDef, a->prototype, unchecked, pos);
+            if (hoisted)
+                defineHoistedVar(env, fnDef->name, OBJECT_TO_JS2VAL(fnInst), false, pos);
+            else {
+                v = new Variable(functionClass, OBJECT_TO_JS2VAL(fnInst), true);
+                defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, pos, true);
+            }
+            break;
+        case FunctionName::Get:
+        case FunctionName::Set:
+            if (a->prototype)
+                reportError(Exception::attributeError, "A getter or setter cannot have the prototype attribute", pos);
+            ASSERT(!(unchecked || hoisted));
+            // XXX shouldn't be using validateStaticFunction
+            fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+            v = new Variable(functionClass, OBJECT_TO_JS2VAL(fnInst), true);
+            defineLocalMember(env, fnDef->name, &a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, pos, true);
+            break;
+        }
+    }
+
+    void JS2Metadata::validateConstructor(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, size_t pos)
+    {
+        if (a->prototype)
+            reportError(Exception::attributeError, "A class constructor cannot have the prototype attribute", pos);
+        if (fnDef->prefix != FunctionName::normal)
+            reportError(Exception::syntaxError, "A class constructor cannot be a getter or a setter", pos);
+        // XXX shouldn't be using validateStaticFunction
+        c->init = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+    }
+
+    void JS2Metadata::validateInstance(Context *cxt, Environment *env, FunctionDefinition *fnDef, JS2Class *c, CompoundAttribute *a, bool final, size_t pos)
+    {
+        if (a->prototype)
+            reportError(Exception::attributeError, "An instance method cannot have the prototype attribute", pos);
+        // XXX shouldn't be using validateStaticFunction
+        FunctionInstance *fnInst = NULL;
+        DEFINE_ROOTKEEPER(rk1, fnInst);
+        fnInst = validateStaticFunction(cxt, env, fnDef, false, false, pos);
+        Multiname *mn = new Multiname(fnDef->name, a->namespaces);
+        InstanceMember *m;
+        switch (fnDef->prefix) {
+        case FunctionName::normal:
+            m = new InstanceMethod(mn, fnInst, final, true);
+            break;
+        case FunctionName::Set:
+            m = new InstanceSetter(mn, fnInst, objectClass, final, true);
+            break;
+        case FunctionName::Get:
+            m = new InstanceGetter(mn, fnInst, objectClass, final, true);
+            break;
+        }                            
+        defineInstanceMember(c, cxt, fnDef->name, a->namespaces, a->overrideMod, a->xplicit, m, pos);
     }
 
     /*
@@ -434,19 +485,19 @@ namespace MetaData {
                     if (topFrame->kind == ClassKind) {
                         switch (a->memberMod) {
                         case Attribute::Static:
-                            validateStatic(&f->function, a, false, false);
+                            validateStatic(cxt, env, &f->function, a, false, false, p->pos);
                             break;
                         case Attribute::NoModifier:
                             if (*f->function.name == *(checked_cast<JS2Class *>(topFrame))->name)
-                                validateConstructor(&f->function, checked_cast<JS2Class *>(topFrame), a);
+                                validateConstructor(cxt, env, &f->function, checked_cast<JS2Class *>(topFrame), a, p->pos);
                             else
-                                validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, false);
+                                validateInstance(cxt, env, &f->function, checked_cast<JS2Class *>(topFrame), a, false, p->pos);
                             break;
                         case Attribute::Virtual:
-                            validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, false);
+                            validateInstance(cxt, env, &f->function, checked_cast<JS2Class *>(topFrame), a, false, p->pos);
                             break;
                         case Attribute::Final:
-                            validateInstance(&f->function, checked_cast<JS2Class *>(topFrame), a, true);
+                            validateInstance(cxt, env, &f->function, checked_cast<JS2Class *>(topFrame), a, true, p->pos);
                             break;
                         }
                     }
@@ -471,7 +522,7 @@ namespace MetaData {
                                         && ((topFrame->kind == PackageKind)
                                                         || (topFrame->kind == BlockFrameKind)
                                                         || (topFrame->kind == ParameterFrameKind));
-                        validateStatic(&f->function, a, unchecked, hoisted);
+                        validateStatic(cxt, env, &f->function, a, unchecked, hoisted, p->pos);
                     }
                     
                     
@@ -570,7 +621,7 @@ namespace MetaData {
                                         && !immutable
                                         && (vs->attributes == NULL)
                                         && (vb->type == NULL)) {
-                            defineHoistedVar(env, name, p, true, JS2VAL_UNDEFINED);
+                            defineHoistedVar(env, name, JS2VAL_UNDEFINED, true, p->pos);
                         }
                         else {
                             a = Attribute::toCompoundAttribute(attr);
@@ -1913,7 +1964,7 @@ namespace MetaData {
         case ExprNode::functionLiteral:
             {
                 FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-                f->obj = validateStaticFunction(&f->function, JS2VAL_INACCESSIBLE, true, true, cxt, env);
+                f->obj = validateStaticFunction(cxt, env, &f->function, true, true, p->pos);
             }
             break;
         default:
@@ -3330,7 +3381,7 @@ doUnary:
     // will shadow a parameter with the same name for compatibility with ECMAScript Edition 3. 
     // If there are multiple function definitions, the initial value is the last function definition. 
     
-    LocalMember *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p, bool isVar, js2val initVal)
+    LocalMember *JS2Metadata::defineHoistedVar(Environment *env, const String *id, js2val initVal, bool isVar, size_t pos)
     {
         LocalMember *result = NULL;
         FrameListIterator regionalFrameEnd = env->getRegionalEnvironment();
@@ -3377,12 +3428,12 @@ rescan:
         }
         else {
             if (foundMultiple)
-                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
+                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
             else {
                 if ((bindingResult->accesses != ReadWriteAccess)
                         || ((bindingResult->content->memberKind != LocalMember::DynamicVariableMember)
                               && (bindingResult->content->memberKind != LocalMember::FrameVariableMember)))
-                    reportError(Exception::definitionError, "Illegal redefinition of {0}", p->pos, id);
+                    reportError(Exception::definitionError, "Illegal redefinition of {0}", pos, id);
                 else {
                     result = bindingResult->content;
                     writeLocalMember(result, initVal, true);
@@ -4453,7 +4504,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         : NonWithFrame(ClassKind), 
             super(super), 
             instanceInitOrder(NULL), 
-            complete(false), 
+            complete(false),
+            name(name),
             prototype(proto), 
             typeofString(name),
             privateNamespace(privateNamespace), 
@@ -4462,6 +4514,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             defaultValue(JS2VAL_NULL),
             call(NULL),
             construct(JS2Engine::defaultConstructor),
+            init(NULL),
             read(defaultReadProperty),
             readPublic(defaultReadPublicProperty),
             write(defaultWriteProperty),
