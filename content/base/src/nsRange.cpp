@@ -1311,6 +1311,9 @@ nsresult nsRange::OwnerGone(nsIContent* aDyingNode)
 
 nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
 {
+  // sanity check - null nodes shouldn't have enclosed ranges
+  if (!aParentNode) return NS_ERROR_UNEXPECTED;
+
   // quick return if no range list
   nsVoidArray *theRangeList;
   aParentNode->GetRangeList(theRangeList);
@@ -1353,6 +1356,9 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
 
 nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aRemovedNode)
 {
+  // sanity check - null nodes shouldn't have enclosed ranges
+  if (!aParentNode) return NS_ERROR_UNEXPECTED;
+
   // quick return if no range list
   nsVoidArray *theRangeList;
   aParentNode->GetRangeList(theRangeList);
@@ -1403,6 +1409,9 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
 
 nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, nsIContent* aReplacedNode)
 {
+  // sanity check - null nodes shouldn't have enclosed ranges
+  if (!aParentNode) return NS_ERROR_UNEXPECTED;
+
   // don't need to adjust ranges whose endpoints are in this parent,
   // but we do need to pop out any range endpoints inside the subtree
   // rooted by aReplacedNode.
@@ -1420,3 +1429,65 @@ nsresult nsRange::OwnerChildReplaced(nsIContent* aParentNode, PRInt32 aOffset, n
   return res;
 }
   
+
+nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged, PRInt32 aEndChanged, PRInt32 aReplaceLength)
+{
+  // sanity check - null nodes shouldn't have enclosed ranges
+  if (!aTextNode) return NS_ERROR_UNEXPECTED;
+
+  nsVoidArray *theRangeList;
+  aTextNode->GetRangeList(theRangeList);
+  // the caller already checked to see if there was a range list
+  
+  PRInt32  loop = 0;
+  nsRange *theRange;
+  nsIDOMNode *domNode;
+  nsresult res;
+  
+  res = GetDOMNodeFromContent(aTextNode, &domNode);
+  if (NS_SUCCEEDED(res))  return res;
+  if (!domNode) return NS_ERROR_UNEXPECTED;
+
+  // any ranges that are in the textNode may need to have offsets updated
+  while (theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) 
+  {
+    // sanity check - do range and content agree over ownership?
+    res = theRange->ContentOwnsUs(domNode);
+    NS_PRECONDITION(NS_SUCCEEDED(res), "range and content disagree over range ownership");
+    if (NS_SUCCEEDED(res))
+    { 
+      PRBool bStartPointInChangedText = false;
+      
+      if (theRange->mStartParent == domNode)
+      {
+        // if range start is inside changed text, position it after change
+        if ((aStartChanged <= theRange->mStartOffset) && (aEndChanged >= theRange->mStartOffset))
+        { 
+          theRange->mStartOffset = aStartChanged+aReplaceLength;
+          bStartPointInChangedText = true;
+        }
+        // else if text changed before start, adjust start offset
+        else if (aEndChanged <= theRange->mStartOffset) 
+          theRange->mStartOffset += aStartChanged + aReplaceLength - aEndChanged;
+      }
+      if (theRange->mEndParent == domNode)
+      {
+        // if range end is inside changed text, position it before change
+        if ((aStartChanged <= theRange->mEndOffset) && (aEndChanged >= theRange->mEndOffset)) 
+        {
+          theRange->mEndOffset = aStartChanged;
+          // hack: if BOTH range endpoints were inside the change, then they
+          // both get collapsed to the beginning of the change.  
+          if (bStartPointInChangedText) theRange->mStartOffset = aStartChanged;
+        }
+        // else if text changed before end, adjust end offset
+        else if (aEndChanged <= theRange->mEndOffset) 
+          theRange->mEndOffset += aStartChanged + aReplaceLength - aEndChanged;
+      }
+    }
+    loop++;
+  }
+  
+  NS_RELEASE(domNode);
+  return NS_OK;
+}

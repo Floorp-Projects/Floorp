@@ -23,6 +23,7 @@
 #include "nsIDOMRange.h"
 #include "nsXIFConverter.h"
 #include "nsSelectionRange.h"
+#include "nsRange.h"
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
@@ -193,8 +194,13 @@ nsGenericDOMDataNode::GetData(nsString& aData)
 nsresult    
 nsGenericDOMDataNode::SetData(const nsString& aData)
 {
-  mText = aData;
+  // inform any enclosed ranges of change
+  // we can lie and say we are deleting all the text, since in a total
+  // text replacement we should just collapse all the ranges.
+  if (mRangeList) nsRange::TextOwnerChanged(mContent, 0, mText.GetLength(), 0);
 
+  mText = aData;
+  
   // Notify the document that the text changed
   if (nsnull != mDocument) {
     mDocument->ContentChanged(mContent, nsnull);
@@ -282,6 +288,9 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // inform any enclosed ranges of change
+  if (mRangeList) nsRange::TextOwnerChanged(mContent, aOffset, endOffset, dataLength);
+  
   // Copy over appropriate data
   if (0 != aOffset) {
     mText.CopyTo(to, 0, aOffset);
