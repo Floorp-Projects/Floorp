@@ -76,9 +76,6 @@ icaltimetype ConvertFromPrtime( PRTime indate ) {
 
 PRTime ConvertToPrtime ( icaltimetype indate ) {
     PRExplodedTime ext;
-    
-    PR_ExplodeTime( PR_Now(), PR_LocalTimeParameters, &ext);
-
     ext.tm_year = indate.year;
     ext.tm_month = indate.month - 1;
     ext.tm_mday = indate.day;
@@ -86,8 +83,19 @@ PRTime ConvertToPrtime ( icaltimetype indate ) {
     ext.tm_min = indate.minute;
     ext.tm_sec = indate.second;
     ext.tm_usec = 0;
+    ext.tm_params.tp_gmt_offset = 0;
+    ext.tm_params.tp_dst_offset = 0;
 
     PRTime result = PR_ImplodeTime( &ext );
+    PR_ExplodeTime( result, PR_LocalTimeParameters, &ext);
+    ext.tm_year = indate.year;
+    ext.tm_month = indate.month - 1;
+    ext.tm_mday = indate.day;
+    ext.tm_hour = indate.hour;
+    ext.tm_min = indate.minute;
+    ext.tm_sec = indate.second;
+    ext.tm_usec = 0;
+    result = PR_ImplodeTime( &ext );
     PRInt64 usecpermsec;
     LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
     LL_DIV( result, result, usecpermsec );
