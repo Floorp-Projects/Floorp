@@ -116,7 +116,8 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 
     if (server) 
 		server->GetHostName(&popHost);
-    
+
+    if (!popHost) return NS_ERROR_FAILURE;
     
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
