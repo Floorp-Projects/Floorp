@@ -136,15 +136,6 @@ public:
      */
     NS_IMETHOD
     SetWindowSize(PRUint32 width, PRUint32 height) = 0;
-
-    /**
-     * Get the JavaScript window object corresponding to this plugin instance.
-     *
-     * @param outJSWindow - the resulting JavaScript window object
-     * @result - NS_OK if this operation was successful
-     */
-	NS_IMETHOD
-	GetJSWindow(JSObject* *outJSWindow) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
