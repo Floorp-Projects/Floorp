@@ -1,4 +1,10 @@
-  function setColorWell(menu,otherId,setbackground)
+function setColorWell(aPicker)
+{
+  var colorRef = aPicker.nextSibling;                // colour value is held here
+  colorRef.setAttribute( "value", aPicker.color );
+}
+
+  function setColorWellSr(menu,otherId,setbackground)
   {
     // Find the colorWell and colorPicker in the hierarchy.
     var colorWell = menu.firstChild;
@@ -13,26 +19,15 @@
     colorRef.setAttribute( "value", color );
   }
 
-  function getColorFromWellAndSetValue( menuid )
+  function getColorFromWellAndSetValue(aPickerId)
   {
-    var menu      = document.getElementById(menuid);  // picker container
-    var colorWell = menu.firstChild;                  // display for picker colour
-    var colorRef  = menu.nextSibling;                 // prefs JS sets this.
-    colorWell.style.backgroundColor = colorRef.getAttribute("value"); // set the well from prefs.
-    var color     = colorWell.style.backgroundColor;   
-    setColorFromPicker( null, color );
-
-
-	return color;
+    var picker = document.getElementById(aPickerId);
+    var colorRef  = picker.nextSibling;
+    var color = colorRef.getAttribute("value");
+    picker.color = color;
+    return color;
   }     
 
-  function setColorFromPicker(colorWell,color )
-  {
-    if (colorWell) {
-      colorWell.style.backgroundColor = color;
-    }
-  }
-  
   function Startup()
   {
     getColorFromWellAndSetValue("foregroundtextmenu");

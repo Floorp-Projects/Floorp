@@ -507,6 +507,55 @@
     </content>
   </binding>
 
+ <!-- NOTE: this should really extend menu, but doing this causes the menupopup to be ignored (bug) -->
+  <binding id="colorpickerButton" extends="xul:box">
+    <content>
+      <xul:menu class="colorpicker-button-menu" allowevents="true">
+        <xul:box class="colorpicker-button-colorbox"/>
+        <xul:menupopup class="colorpicker-button-menupopup"
+          oncreate="this.parentNode.parentNode.setAttribute('menuactive', 'true')"
+          ondestroy="this.parentNode.parentNode.setAttribute('menuactive', 'false')">
+          <xul:colorpicker inherits="palettename" allowevents="true"
+           onclick="this.parentNode.parentNode.parentNode.pickerClicked(event)"/>
+        </xul:menupopup>
+      </xul:menu>
+    </content>
+    
+    <implementation>
+      <property name="onchange"/>
+      
+      <property name="color">
+        <getter>
+          return this.getAttribute("color");
+        </getter>
+        <setter>
+          this.mColorBox.setAttribute("style", "background-color: " + val);
+          return this.setAttribute("color", val);
+        </setter>
+      </property>
+      <method name="initialize">
+        <body><![CDATA[
+          var change = this.getAttribute("onchange");
+          if (change) this.onchange = new Function("event", change);
+          
+          var menu = document.getAnonymousNodes(this)[0];
+          this.mPicker = menu.childNodes[1].childNodes[0];
+          this.mColorBox = menu.childNodes[0];
+        ]]></body>
+      </method>
+      <method name="pickerClicked">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          this.color = this.mPicker.color;
+          this.mPicker.parentNode.closePopup();
+          if (this.onchange) this.onchange(aEvent);
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="bindingattached">this.initialize()</handler>
+    </handlers>
+  </binding>
   
   <!-- XUL <statusbar> -->
   <binding id="statusbar" extends="xul:box"/>
