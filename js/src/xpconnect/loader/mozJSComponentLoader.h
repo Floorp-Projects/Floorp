@@ -111,6 +111,7 @@ private:
     nsresult   mError;
     JSBool     mPopNeeded;
     intN       mContextThread; 
+    uint32     mSavedOptions;
 };
 
 

@@ -1143,6 +1143,8 @@ JSCLAutoContext::JSCLAutoContext(JSRuntime* rt)
     }
     
     if (mContext) {
+        mSavedOptions = JS_GetOptions(mContext);
+        JS_SetOptions(mContext, mSavedOptions | JSOPTION_XML);
         mContextThread = JS_GetContextThread(mContext);
         if (mContextThread) {
             JS_BeginRequest(mContext);
@@ -1156,9 +1158,11 @@ JSCLAutoContext::JSCLAutoContext(JSRuntime* rt)
 
 JSCLAutoContext::~JSCLAutoContext()
 {
-    if (mContext && mContextThread) {
+    if (mContext) {
         JS_ClearNewbornRoots(mContext);
-        JS_EndRequest(mContext);
+        JS_SetOptions(mContext, mSavedOptions);
+        if (mContextThread)
+            JS_EndRequest(mContext);
     }
 
     if (mPopNeeded) {
