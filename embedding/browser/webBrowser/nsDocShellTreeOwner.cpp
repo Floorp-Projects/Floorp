@@ -47,8 +47,15 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMWindowCollection.h"
 #include "nsIFocusController.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWindowWatcher.h"
+#include "nsPIWindowWatcher.h"
+
+static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+
 
 
 //*****************************************************************************
@@ -64,7 +71,7 @@ nsDocShellTreeOwner::nsDocShellTreeOwner() :
    mOwnerRequestor(nsnull),
    mChromeListener(nsnull)
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsDocShellTreeOwner::~nsDocShellTreeOwner()
@@ -116,35 +123,177 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 NS_IMETHODIMP nsDocShellTreeOwner::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
-   NS_ENSURE_ARG_POINTER(aFoundItem);
-   *aFoundItem = nsnull;
+  NS_ENSURE_ARG(aName);
+  NS_ENSURE_ARG_POINTER(aFoundItem);
+  *aFoundItem = nsnull; // if we don't find one, we return NS_OK and a null result 
+  nsresult rv;
 
-   nsAutoString name(aName);
+  nsAutoString name(aName);
 
-   /* Special Cases */
-   if(name.Length() == 0)
-      return NS_OK;
-   if(name.EqualsIgnoreCase("_blank"))
-      return NS_OK;
-   if(name.EqualsIgnoreCase("_content"))
-      {
-      *aFoundItem = mWebBrowser->mDocShellAsItem;
-      NS_IF_ADDREF(*aFoundItem);
-      return NS_OK;
+  if (!mWebBrowser)
+    return NS_OK; // stymied
+
+  /* special cases */
+  if(name.IsEmpty())
+    return NS_OK;
+  if(name.EqualsIgnoreCase("_blank"))
+    return NS_OK;
+  if(name.EqualsIgnoreCase("_content")) {
+    *aFoundItem = mWebBrowser->mDocShellAsItem;
+    NS_IF_ADDREF(*aFoundItem);
+    return NS_OK;
+  }
+
+  // first, is it us?
+  {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsAutoString ourName;
+      domWindow->GetName(ourName);
+      if (name.EqualsIgnoreCase(ourName)) {
+        *aFoundItem = mWebBrowser->mDocShellAsItem;
+        NS_IF_ADDREF(*aFoundItem);
+        return NS_OK;
       }
+    }
+  }
 
-   if(mTreeOwner)
-      return mTreeOwner->FindItemWithName(aName, aRequestor, aFoundItem);
+  // next, check our children
+  rv = FindChildWithName(aName, PR_TRUE, aRequestor, aFoundItem);
+  if(NS_FAILED(rv) || *aFoundItem)
+    return rv;
 
-   NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
+  // next, if we have a parent and it isn't the requestor, ask it
+  nsCOMPtr<nsIDocShellTreeOwner> reqAsTreeOwner(do_QueryInterface(aRequestor));
 
-   NS_ENSURE_SUCCESS(mWebBrowserChrome->FindNamedBrowserItem(aName, aFoundItem),
-      NS_ERROR_FAILURE);
+  if(mTreeOwner) {
+    if (mTreeOwner != reqAsTreeOwner.get())
+      return mTreeOwner->FindItemWithName(aName, mWebBrowser->mDocShellAsItem.get(),
+                                          aFoundItem);
+    return NS_OK;
+  }
 
-   return NS_OK;
+  // finally, failing everything else, search all windows, if we're not already
+  if (mWebBrowser->mDocShellAsItem.get() != aRequestor)
+    return FindItemWithNameAcrossWindows(aName, aFoundItem);
+
+  return NS_OK; // failed
 }
 
- 
+nsresult nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, 
+   PRBool aRecurse, nsIDocShellTreeItem* aRequestor, 
+   nsIDocShellTreeItem **aFoundItem)
+{
+  if (!mWebBrowser)
+    return NS_OK;
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (!domWindow)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMWindowCollection> frames;
+  domWindow->GetFrames(getter_AddRefs(frames));
+  if (!frames)
+    return NS_OK;
+
+  PRUint32 ctr, count;
+  frames->GetLength(&count);
+  for (ctr = 0; ctr < count; ctr++) {
+    nsCOMPtr<nsIDOMWindow> frame;
+    frames->Item(ctr, getter_AddRefs(frame));
+    if (frame) {
+      nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(frame));
+      if (sgo) {
+        nsCOMPtr<nsIDocShell> docshell;
+        sgo->GetDocShell(getter_AddRefs(docshell));
+        if (docshell) {
+          nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docshell));
+          if (item && item.get() != aRequestor) {
+            rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem, aFoundItem);
+            if (NS_FAILED(rv) || *aFoundItem)
+              break;
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+nsresult nsDocShellTreeOwner::FindItemWithNameAcrossWindows(
+                const PRUnichar* aName,
+                nsIDocShellTreeItem** aFoundItem)
+{
+  // search for the item across the list of top-level windows
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+  if (!wwatch)
+    return NS_OK;
+
+  PRBool   more;
+  nsresult rv;
+
+  nsCOMPtr<nsISimpleEnumerator> windows;
+  wwatch->GetWindowEnumerator(getter_AddRefs(windows));
+
+  rv = NS_OK;
+  do {
+    windows->HasMoreElements(&more);
+    if (!more)
+      break;
+    nsCOMPtr<nsISupports> nextSupWindow;
+    windows->GetNext(getter_AddRefs(nextSupWindow));
+    if (nextSupWindow) {
+      // it's a DOM Window. cut straight to the ScriptGlobalObject.
+      nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nextSupWindow));
+      if (sgo) {
+        nsCOMPtr<nsIDocShell> docshell;
+        sgo->GetDocShell(getter_AddRefs(docshell));
+        if (docshell) {
+          nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docshell));
+          if (item) {
+            rv = item->FindItemWithName(aName, item, aFoundItem);
+            if (NS_FAILED(rv) || *aFoundItem)
+              break;
+          }
+        }
+      }
+    }
+  } while(1);
+
+  return rv;
+}
+
+void nsDocShellTreeOwner::AddToWatcher() {
+
+  if (mWebBrowser) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+      if (wwatch)
+        wwatch->AddWindow(domWindow);
+    }
+  }
+}
+
+void nsDocShellTreeOwner::RemoveFromWatcher() {
+
+  if (mWebBrowser) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsCOMPtr<nsPIWindowWatcher> wwatch(do_GetService(sWindowWatcherContractID));
+      if (wwatch)
+        wwatch->RemoveWindow(domWindow);
+    }
+  }
+}
+
+
 NS_IMETHODIMP nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
@@ -163,7 +312,7 @@ NS_IMETHODIMP nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** 
    if(mTreeOwner)
        return mTreeOwner->GetPrimaryContentShell(aShell);
 
-   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());  
+   *aShell = (mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShellAsItem.get());
    NS_IF_ADDREF(*aShell);
 
    return NS_OK;
@@ -247,25 +396,29 @@ NS_IMETHODIMP nsDocShellTreeOwner::ExitModalLoop(nsresult aStatus)
 NS_IMETHODIMP nsDocShellTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-   if(mTreeOwner)
-      return mTreeOwner->GetNewWindow(aChromeFlags, aDocShellTreeItem);
+  nsresult rv;
 
-   *aDocShellTreeItem = nsnull;
+  if(mTreeOwner)
+    return mTreeOwner->GetNewWindow(aChromeFlags, aDocShellTreeItem);
 
-   nsCOMPtr<nsIWebBrowser> webBrowser;
-   NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
-   aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_WITH_SIZE | nsIWebBrowserChrome::CHROME_WITH_POSITION);
-   mWebBrowserChrome->CreateBrowserWindow(aChromeFlags, -1, -1, -1, -1, getter_AddRefs(webBrowser));
-   NS_ENSURE_TRUE(webBrowser, NS_ERROR_FAILURE);
+  *aDocShellTreeItem = nsnull;
 
-   nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(webBrowser));
-   nsCOMPtr<nsIDocShell> docShell(do_GetInterface(webBrowserAsReq));
-   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mWebBrowserChrome, NS_ERROR_FAILURE);
+  aChromeFlags &= ~(nsIWebBrowserChrome::CHROME_WITH_SIZE | nsIWebBrowserChrome::CHROME_WITH_POSITION);
 
-   NS_ENSURE_SUCCESS(CallQueryInterface(docShell, aDocShellTreeItem),
-      NS_ERROR_FAILURE);
-
-   return NS_OK;
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  rv = mWebBrowserChrome->CreateBrowserWindow(PRUint32(aChromeFlags),
+                            -1, -1, -1, -1, // this is kind of a problem
+                            getter_AddRefs(webBrowser));
+  if (NS_SUCCEEDED(rv) && webBrowser) {
+    nsCOMPtr<nsIInterfaceRequestor> asreq(do_QueryInterface(webBrowser));
+    if (asreq) {
+      nsCOMPtr<nsIDocShell> asshell(do_GetInterface(asreq));
+      if (asshell)
+        rv = CallQueryInterface(asshell, aDocShellTreeItem);
+    }
+  }
+  return rv;
 }
 
 
@@ -491,13 +644,13 @@ nsDocShellTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 void nsDocShellTreeOwner::WebBrowser(nsWebBrowser* aWebBrowser)
 {
-    if ( !aWebBrowser ) {
-      if ( mChromeListener ) {
-        mChromeListener->RemoveChromeListeners();
-        NS_RELEASE(mChromeListener);
-      }
+  if ( !aWebBrowser ) {
+    if ( mChromeListener ) {
+      mChromeListener->RemoveChromeListeners();
+      NS_RELEASE(mChromeListener);
     }
-    mWebBrowser = aWebBrowser;
+  }
+  mWebBrowser = aWebBrowser;
 }
 
 nsWebBrowser* nsDocShellTreeOwner::WebBrowser()
