@@ -223,6 +223,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
   if (mNumIcons == 0)
     return NS_OK; // Nothing to do.
 
+  PRUint16 colorDepth = 0;
   while (mCurrIcon < mNumIcons) {
     if (mPos >= DIRENTRYOFFSET + (mCurrIcon*sizeof(mDirEntryArray)) && 
         mPos < DIRENTRYOFFSET + ((mCurrIcon+1)*sizeof(mDirEntryArray))) {
@@ -237,14 +238,17 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     if (aCount == 0)
       return NS_OK; // Need more data
 
+    IconDirEntry e;
     if (mPos == 22+mCurrIcon*sizeof(mDirEntryArray)) {
       mCurrIcon++;
-      if (mImageOffset == 0) {
-        ProcessDirEntry();
-        if (mDirEntry.mReserved != 0)
-          return NS_ERROR_FAILURE; // This ICO is garbage.
-        if ((mDirEntry.mWidth == PREFICONSIZE && mDirEntry.mHeight == PREFICONSIZE) || mCurrIcon == mNumIcons)
-          mImageOffset = mDirEntry.mImageOffset;
+      ProcessDirEntry(e);
+      if (e.mReserved != 0)
+        return NS_ERROR_FAILURE; // This ICO is garbage.
+      if ((e.mWidth == PREFICONSIZE && e.mHeight == PREFICONSIZE && e.mBitCount >= colorDepth)
+           || (mCurrIcon == mNumIcons && mImageOffset == 0)) {
+        mImageOffset = e.mImageOffset;
+        colorDepth = e.mBitCount;
+        memcpy(&mDirEntry, &e, sizeof(IconDirEntry));
       }
     }
   }
@@ -485,25 +489,25 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 }
 
 void
-nsICODecoder::ProcessDirEntry()
+nsICODecoder::ProcessDirEntry(IconDirEntry& aTarget)
 {
-  memset(&mDirEntry, 0, sizeof(mDirEntry));
-  DOCOPY(&mDirEntry.mWidth, mDirEntryArray);
-  DOCOPY(&mDirEntry.mHeight, mDirEntryArray+1);
-  DOCOPY(&mDirEntry.mColorCount, mDirEntryArray+2);
-  DOCOPY(&mDirEntry.mReserved, mDirEntryArray+3);
+  memset(&aTarget, 0, sizeof(aTarget));
+  DOCOPY(&aTarget.mWidth, mDirEntryArray);
+  DOCOPY(&aTarget.mHeight, mDirEntryArray+1);
+  DOCOPY(&aTarget.mColorCount, mDirEntryArray+2);
+  DOCOPY(&aTarget.mReserved, mDirEntryArray+3);
   
-  DOCOPY(&mDirEntry.mPlanes, mDirEntryArray+4);
-  mDirEntry.mPlanes = LITTLE_TO_NATIVE16(mDirEntry.mPlanes);
+  DOCOPY(&aTarget.mPlanes, mDirEntryArray+4);
+  aTarget.mPlanes = LITTLE_TO_NATIVE16(aTarget.mPlanes);
 
-  DOCOPY(&mDirEntry.mBitCount, mDirEntryArray+6);
-  mDirEntry.mBitCount = LITTLE_TO_NATIVE16(mDirEntry.mBitCount);
+  DOCOPY(&aTarget.mBitCount, mDirEntryArray+6);
+  aTarget.mBitCount = LITTLE_TO_NATIVE16(aTarget.mBitCount);
 
-  DOCOPY(&mDirEntry.mBytesInRes, mDirEntryArray+8);
-  mDirEntry.mBytesInRes = LITTLE_TO_NATIVE32(mDirEntry.mBytesInRes);
+  DOCOPY(&aTarget.mBytesInRes, mDirEntryArray+8);
+  aTarget.mBytesInRes = LITTLE_TO_NATIVE32(aTarget.mBytesInRes);
 
-  DOCOPY(&mDirEntry.mImageOffset, mDirEntryArray+12);
-  mDirEntry.mImageOffset = LITTLE_TO_NATIVE32(mDirEntry.mImageOffset);
+  DOCOPY(&aTarget.mImageOffset, mDirEntryArray+12);
+  aTarget.mImageOffset = LITTLE_TO_NATIVE32(aTarget.mImageOffset);
 }
 
 void nsICODecoder::ProcessInfoHeader() {
