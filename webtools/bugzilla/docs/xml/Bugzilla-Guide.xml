@@ -14,6 +14,7 @@
 <!ENTITY integration SYSTEM "integration.xml">
 <!ENTITY index SYSTEM "index.xml">
 <!ENTITY customization SYSTEM "customization.xml">
+<!ENTITY troubleshooting SYSTEM "troubleshooting.xml">
 <!ENTITY patches SYSTEM "patches.xml">
 <!ENTITY introduction SYSTEM "introduction.xml">
 <!ENTITY modules SYSTEM "modules.xml">
@@ -156,6 +157,9 @@
 <!-- Appendix: The Frequently Asked Questions -->
 &faq;
 
+<!-- Appendix: Troubleshooting -->
+&troubleshooting;
+
 <!-- Appendix: Custom Patches -->
 &patches;
 
@@ -194,3 +198,4 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
+
