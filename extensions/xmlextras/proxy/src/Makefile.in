@@ -1,15 +1,14 @@
-#!nmake
-#
-# The contents of this file are subject to the Netscape Public
+# 
+# The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/NPL/
-#
+# the License at http://www.mozilla.org/MPL/
+# 
 # Software distributed under the License is distributed on an "AS
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-#
+# 
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is Netscape
@@ -18,18 +17,21 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..\..\..\.. 
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-!if !defined(DISABLE_TESTS)
-DIRS=tests
-!endif
+include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME=xmlextrasproxy_s 
-MODULE=xmlextras
+ifdef ENABLE_TESTS
+DIRS += tests
+endif
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
+MODULE		= xmlextras
+LIBRARY_NAME	= xmlextrasproxy_s
 REQUIRES = xpcom \
 	   string \
 	   xpconnect \
@@ -45,20 +47,8 @@ CPPSRCS=					\
 	wsppropertybagwrapper.cpp		\
 	$(NULL)
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\wspproxy.obj		\
-	.\$(OBJDIR)\wspfactory.obj		\
-	.\$(OBJDIR)\wspcomplextypewrapper.obj	\
-	.\$(OBJDIR)\wsppropertybagwrapper.obj	\
-	$(NULL)
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
 
-EXPORTS =					\
-	$(NULL)
-
-include <$(DEPTH)\config\rules.mak>
-
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+include $(topsrcdir)/config/rules.mk

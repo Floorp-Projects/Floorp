@@ -1,4 +1,3 @@
-#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,47 +17,42 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#
 
-DEPTH=..\..\..\.. 
+DEPTH		= ../../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
-!if !defined(DISABLE_TESTS)
-DIRS=tests
-!endif
-
-LIBRARY_NAME=xmlextrasproxy_s 
-MODULE=xmlextras
-
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+include $(DEPTH)/config/autoconf.mk
 
 REQUIRES = xpcom \
 	   string \
+	   xmlextras \
 	   xpconnect \
 	   caps \
 	   js \
 	   necko \
 	   $(NULL)
 
-CPPSRCS=					\
-	wspproxy.cpp				\
-	wspfactory.cpp				\
-	wspcomplextypewrapper.cpp		\
-	wsppropertybagwrapper.cpp		\
-	$(NULL)
+XPIDLSRCS = .\nsIWSPProxyTest.idl \
+	    $(NULL)
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\wspproxy.obj		\
-	.\$(OBJDIR)\wspfactory.obj		\
-	.\$(OBJDIR)\wspcomplextypewrapper.obj	\
-	.\$(OBJDIR)\wsppropertybagwrapper.obj	\
-	$(NULL)
+CPPSRCS		= \
+		wspproxytest.cpp \
+		$(NULL)
 
-EXPORTS =					\
-	$(NULL)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
-include <$(DEPTH)\config\rules.mak>
+include $(topsrcdir)/config/config.mk
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+LIBS		= \
+		$(DIST)/lib/libxmlextrasproxy_s.$(LIB_SUFFIX) \
+		$(MOZ_JS_LIBS) \
+		$(XPCOM_LIBS) \
+		$(NSPR_LIBS) \
+		$(NULL)
 
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DUSE_NSREG

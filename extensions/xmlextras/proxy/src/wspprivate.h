@@ -65,6 +65,11 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBSERVICEPROXYFACTORY  
+
+  static nsresult MethodToPropertyName(const nsAReadableCString& aMethodName,
+                                       nsAWritableString& aPropertyName);
+  static void PropertyToMethodName(const nsAReadableString& aPropertyName,
+                                   nsAWritableCString& aMethodName);
 };
 
 class WSPProxy : public nsXPTCStubBase,
@@ -124,7 +129,8 @@ protected:
 class WSPComplexTypeWrapper : public nsIPropertyBag
 {
 public:
-  WSPComplexTypeWrapper();
+  WSPComplexTypeWrapper(nsISupports* aComplexTypeInstance,
+                        nsIInterfaceInfo* aInterfaceInfo);
   virtual ~WSPComplexTypeWrapper();
 
   NS_DECL_ISUPPORTS
@@ -134,6 +140,20 @@ public:
                          nsIInterfaceInfo* aInterfaceInfo,
                          WSPComplexTypeWrapper** aWrapper);
 
+  nsresult GetPropertyValue(PRUint32 aMethodIndex,
+                            const nsXPTMethodInfo* aMethodInfo,
+                            nsIVariant** _retval);
+
+protected:
+  nsresult ResultAsVariant(uint8 aTypeTag,
+                           nsXPTCVariant aResult,
+                           nsIInterfaceInfo* aInterfaceInfo,
+                           nsIVariant** aVariant);
+  nsresult ArrayResultAsVariant(uint8 aTypeTag,
+                                nsXPTCVariant aResult,
+                                PRUint32 aLength,
+                                nsIInterfaceInfo* aInterfaceInfo,
+                                nsIVariant** aVariant);
 protected:
   nsCOMPtr<nsISupports> mComplexTypeInstance;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
@@ -142,7 +162,8 @@ protected:
 class WSPPropertyBagWrapper : public nsXPTCStubBase
 {
 public:
-  WSPPropertyBagWrapper();
+  WSPPropertyBagWrapper(nsIPropertyBag* aPropertyBag,
+                        nsIInterfaceInfo* aInterfaceInfo);
   virtual ~WSPPropertyBagWrapper();
 
   NS_DECL_ISUPPORTS
@@ -156,10 +177,20 @@ public:
   static nsresult Create(nsIPropertyBag* aPropertyBag,
                          nsIInterfaceInfo* aInterfaceInfo,
                          WSPPropertyBagWrapper** aWrapper);
+protected:
+  nsresult VariantToResult(uint8 aTypeTag,
+                           void* aResult,
+                           nsIInterfaceInfo* aInterfaceInfo,
+                           nsIVariant* aProperty);
+  nsresult VariantToArrayResult(uint8 aTypeTag,
+                                nsXPTCMiniVariant* aResult,
+                                nsIInterfaceInfo* aInterfaceInfo,
+                                nsIVariant* aProperty);
 
 protected:
   nsCOMPtr<nsIPropertyBag> mPropertyBag;
   nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
+  const nsIID* mIID;
 };
 
 #endif // __wspprivate_h__

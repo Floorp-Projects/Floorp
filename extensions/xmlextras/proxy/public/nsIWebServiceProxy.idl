@@ -290,3 +290,6 @@ interface nsIWebServiceCallContext : nsISupports {
   void abort(in nsIException error);
 };
 
+%{ C++
+#define NS_WEBSERVICEPROXYFACTORY_CONTRACTID "@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"
+%} 

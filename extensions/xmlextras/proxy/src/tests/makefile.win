@@ -19,46 +19,45 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\.. 
+DEPTH=..\..\..\..\..
 
-!if !defined(DISABLE_TESTS)
-DIRS=tests
-!endif
+XPIDL_MODULE=wsproxytest
 
-LIBRARY_NAME=xmlextrasproxy_s 
-MODULE=xmlextras
-
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+XPIDLSRCS = .\nsIWSPProxyTest.idl \
+	    $(NULL)
 
 REQUIRES = xpcom \
 	   string \
+	   xmlextras \
 	   xpconnect \
 	   caps \
 	   js \
 	   necko \
 	   $(NULL)
 
-CPPSRCS=					\
-	wspproxy.cpp				\
-	wspfactory.cpp				\
-	wspcomplextypewrapper.cpp		\
-	wsppropertybagwrapper.cpp		\
-	$(NULL)
+include <$(DEPTH)/config/config.mak>
 
-CPP_OBJS=					\
-	.\$(OBJDIR)\wspproxy.obj		\
-	.\$(OBJDIR)\wspfactory.obj		\
-	.\$(OBJDIR)\wspcomplextypewrapper.obj	\
-	.\$(OBJDIR)\wsppropertybagwrapper.obj	\
-	$(NULL)
+MAKE_OBJ_TYPE = EXE
+PROG1 = .\$(OBJDIR)\wspproxytest.exe
 
-EXPORTS =					\
-	$(NULL)
+PROGRAMS = $(PROG1) \
+           $(NULL)
+
+LCFLAGS  = -DUSE_NSREG -GX
+
+LLIBS =                       \
+        $(DIST)\lib\xpcom.lib \
+        $(DIST)\lib\xmlextrasproxy_s.lib \
+        $(LIBNSPR)
+
+LINCS=-I..\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+install:: $(PROGRAMS)
+	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+
+$(PROG1): $(OBJDIR) wspproxytest.cpp
