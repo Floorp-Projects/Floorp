@@ -26,6 +26,8 @@
 #include "nsILocaleFactory.h"
 #include "nsLocaleCID.h"
 #ifdef XP_MAC
+#include "nsIMacLocale.h"
+#include <TextEncodingConverter.h>
 #elif defined(XP_PC)
 #include "nsIWin32Locale.h"
 #else
@@ -72,12 +74,15 @@ static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 // locale
 //
 static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 // case conversion
 //
 static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
 // platform specific
 //
 #ifdef XP_MAC
+static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIMacLocaleIID, NS_MACLOCALE_CID);
 #elif defined(XP_PC)
 static NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 static NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
@@ -89,6 +94,8 @@ static NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
 // global variable
 static PRBool g_verbose = PR_FALSE;
 static FILE *g_outfp = NULL;
+static char g_usage[] = " usage:\n-date\tdate time format test\n-col\tcollation test\n-sort\tsort test\n\
+-f file\tsort data file\n-o out file\tsort result file\n-case\tcase sensitive sort\n-locale\tlocale\n-v\tverbose\n";
 
 // Create a collation key, the memory is allocated using new which need to be deleted by a caller.
 //
@@ -126,56 +133,34 @@ static nsresult CreateCollationKey(nsICollation *t, nsCollationStrength strength
   return res;
 }
 
-#ifdef WIN32
-static wchar_t* new_wchar(const nsString& aString)
-{
-  wchar_t *wchstring;
-
-  wchstring = new wchar_t [aString.Length() + 1];
-  if (wchstring) {
-    for (int i = 0; i < aString.Length(); i++) {
-      wchstring[i] = aString[i];
-    }
-    wchstring[i] = 0;
-  }
-  return wchstring;
-}
-static void delete_wchar(wchar_t *wch_ptr)
-{
-  if (wch_ptr)
-    delete [] wch_ptr;
-}
-static PRInt32 TestCompare_wcscmp(nsString& string1, nsString& string2)
-{
-  wchar_t *wchstring1, *wchstring2;
-  PRInt32 wcscmpresult;
-  
-  wchstring1 = new_wchar(string1);
-  wchstring2 = new_wchar(string2);
-
-  wcscmpresult = (PRInt32) wcscmp(wchstring1, wchstring2);
-
-  delete [] wchstring1;
-  delete [] wchstring2;
-
-  delete_wchar(wchstring1);
-  delete_wchar(wchstring2);
-
-  return wcscmpresult;
-}
-#endif //WIN32
-
 static void DebugDump(nsString& aString, ostream& aStream) {
 #ifdef WIN32
-  char s[256];
+  char s[512];
   int len = WideCharToMultiByte(GetACP(), 0,
                                 (LPCWSTR ) aString.GetUnicode(),  aString.Length(),
-                                s, 256, NULL,  NULL);
+                                s, 512, NULL,  NULL);
   s[len] = '\0';
   aStream.flush();
   printf("%s\n", s);
+#elif defined(XP_MAC)
+	// Use TEC (Text Encoding Conversion Manager)
+  TextEncoding outEncoding;
+  TECObjectRef anEncodingConverter;
+  ByteCount oInputRead, oOutputLen;
+  char oOutputStr[512];
+  OSStatus err = 0;
+  err = UpgradeScriptInfoToTextEncoding	(smSystemScript/*smCurrentScript*/, kTextLanguageDontCare, kTextRegionDontCare, NULL, &outEncoding);
+  err = TECCreateConverter(&anEncodingConverter, kTextEncodingUnicodeV2_0, outEncoding);
+  err = TECConvertText(anEncodingConverter,
+                       (ConstTextPtr) aString.GetUnicode(), aString.Length() * sizeof(PRUnichar), &oInputRead,
+                       (TextPtr) oOutputStr, 512, &oOutputLen);
+  err = TECDisposeConverter(anEncodingConverter);
+  
+  oOutputStr[oOutputLen] = '\0';
+  aStream.flush();
+  printf("%s\n", oOutputStr);
 #else
-  aString.DebugDump(aStream);
+ aString.DebugDump(aStream);
 #endif
 }
 
@@ -249,11 +234,6 @@ static void TestCollation(nsILocale *locale)
         cout << "\tFailed!! return value != NS_OK\n";
       }
       cout << "case sensitive comparison (string1 vs string2): " << result << "\n";
-
-#ifdef WIN32
-// always asserts because WinAPI compare 'a' < 'A' whild wcscmp result is 'a' > 'A'
-//      NS_ASSERTION(result == TestCompare_wcscmp(string1, string2), "WIN32 the result did not match with wcscmp().");
-#endif //WIN32
 
       cout << "Test 3 - GetSortKeyLen():\n";
       res = t->GetSortKeyLen(kCollationCaseSensitive, string2, &keyLength1);
@@ -385,15 +365,15 @@ static void TestSortPrint1(nsString *string_array, int len)
 
 static void TestSortPrintToFile(nsString *string_array, int len)
 {
-  char cstr[4096];  //huge
+  char cstr[512];
   for (int i = 0; i < len; i++) {
 #ifdef WIN32
   int len = WideCharToMultiByte(GetACP(), 0,
                                 (LPCWSTR ) string_array[i].GetUnicode(),  string_array[i].Length(),
-                                cstr, 256, NULL,  NULL);
+                                cstr, 512, NULL,  NULL);
   cstr[len] = '\0';
 #else
-    string_array[i].ToCString(cstr, 4096);
+    string_array[i].ToCString(cstr, 512);
 #endif
     fprintf(g_outfp, "%s\n", cstr);
   }
@@ -403,10 +383,10 @@ static void TestSortPrintToFile(nsString *string_array, int len)
 static void DebugPrintCompResult(nsString string1, nsString string2, int result)
 {
 #ifdef WIN32
-  char s[256];
+  char s[512];
   int len = WideCharToMultiByte(GetACP(), 0,
                                 (LPCWSTR ) string1.GetUnicode(),  string1.Length(),
-                                s, 256, NULL,  NULL);
+                                s, 512, NULL,  NULL);
   s[len] = '\0';
   printf("%s ", s);
 
@@ -424,7 +404,7 @@ static void DebugPrintCompResult(nsString string1, nsString string2, int result)
 
   len = WideCharToMultiByte(GetACP(), 0,
                             (LPCWSTR ) string2.GetUnicode(),  string2.Length(),
-                            s, 256, NULL,  NULL);
+                            s, 512, NULL,  NULL);
   s[len] = '\0';
   printf(" %s\n", s);
 #else
@@ -524,11 +504,11 @@ static void TestSortPrint2(collation_rec *key_array, int len)
 static void SortTestFile(nsICollation* collationInst, FILE* fp)
 {
   nsString string_array[256]; 
-  char buf[256];
+  char buf[512];
   int i = 0;
 
   // read lines and put them to nsStrings
-  while (fgets(buf, 256, fp)) {
+  while (fgets(buf, 512, fp)) {
     if (*buf == '\n' || *buf == '\r')
       continue;
     // trim LF CR
@@ -541,8 +521,9 @@ static void SortTestFile(nsICollation* collationInst, FILE* fp)
       cp--;
     }
 #ifdef WIN32
-    wchar_t wcs[256];
-    int len = MultiByteToWideChar(GetACP(), 0, buf, strlen(buf), wcs, 256);
+    wchar_t wcs[512];
+    int len = MultiByteToWideChar(GetACP(), 0, buf, strlen(buf), wcs, 512);
+    wcs[len] = L'\0';
     string_array[i].SetString((PRUnichar *)wcs);
 #else
     string_array[i].SetString(buf);
@@ -803,11 +784,13 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 	nsILocaleFactory*	localeFactory;
   nsresult res;
 
-	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
-  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
+	res = nsComponentManager::CreateInstance(kLocaleFactoryCID, NULL, kILocaleFactoryIID, (void**)&localeFactory);
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "CreateInstance nsILocaleFactory failed\n";
 
+#ifndef XP_MAC
   res = localeFactory->NewLocale(localeName, locale);
-  if (NS_FAILED(res) || locale == nsnull) cout << "GetSystemLocale failed\n";
+  if (NS_FAILED(res) || locale == nsnull) cout << "NewLocale failed\n";
+#endif// No Mac implementation for NewLocale
 
 	localeFactory->Release();
 
@@ -817,6 +800,41 @@ static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 static void Test_nsLocale()
 {
 #ifdef XP_MAC
+  nsString localeName;
+  nsIMacLocale* macLocale;
+  short script, lang;
+  nsresult res;
+
+  if (NS_SUCCEEDED(res = nsComponentManager::CreateInstance(
+                         kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale))) {
+    
+    localeName.SetString("en-US");
+    res = macLocale->GetPlatformLocale(&localeName, &script, &lang);
+    printf("script for en-US is 0\n");
+    printf("result: script = %d lang = %d\n", script, lang);
+
+    localeName.SetString("en-GB");
+    res = macLocale->GetPlatformLocale(&localeName, &script, &lang);
+    printf("script for en-GB is 0\n");
+    printf("result: script = %d lang = %d\n", script, lang);
+
+    localeName.SetString("fr-FR");
+    res = macLocale->GetPlatformLocale(&localeName, &script, &lang);
+    printf("script for fr-FR is 0\n");
+    printf("result: script = %d lang = %d\n", script, lang);
+
+    localeName.SetString("de-DE");
+    res = macLocale->GetPlatformLocale(&localeName, &script, &lang);
+    printf("script for de-DE is 0\n");
+    printf("result: script = %d lang = %d\n", script, lang);
+
+    localeName.SetString("ja-JP");
+    res = macLocale->GetPlatformLocale(&localeName, &script, &lang);
+    printf("script for ja-JP is 1\n");
+    printf("result: script = %d lang = %d\n", script, lang);
+
+    macLocale->Release();
+  }
 #elif defined(XP_PC)
   nsString localeName;
   nsIWin32Locale* win32Locale;
@@ -912,36 +930,65 @@ static char* find_option(int argc, char** argv, char* arg)
   return NULL;
 }
 
+#ifdef XP_MAC
+#define kMaxArgs 16
+static char g_arg_array[kMaxArgs][256];
+static int make_args(char **argv)
+{
+  int argc = 0;
+  char *token;
+  char s[256];
+  char seps[] = " ,\t";
+	
+  strcpy(g_arg_array[argc], "LocaleSelfTest");
+  argc++;
+
+  printf("%s\ntype option(s) then hit return\n", g_usage);
+  if (gets(s)) {
+    token = strtok(s, seps);
+    while (token != NULL && argc < kMaxArgs) {
+      strcpy(g_arg_array[argc], token);
+      argv[argc] = g_arg_array[argc];
+      argc++;
+      token = strtok(NULL, seps);
+    }
+	  printf("\noptions specified: ");
+
+    for (int i = 0; i < argc; i++) {
+      printf("%s ", argv[i]);
+    }
+    printf("\n");
+  }
+  
+  return argc;
+}
+#endif//XP_MAC
+
 int main(int argc, char** argv) {
+#ifdef XP_MAC
+  char *mac_argv[kMaxArgs];
+  argc = make_args(mac_argv);
+  argv = mac_argv;
+#endif//XP_MAC
   nsILocale *locale = NULL;
   nsresult res; 
 
-#if 1
-	nsILocaleFactory*	localeFactory;
+	nsILocaleFactory*	localeFactory = nsnull;
 
-	res = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory);
-  if (NS_FAILED(res) || localeFactory == nsnull) cout << "FindFactory nsILocaleFactory failed\n";
+#ifndef XP_MAC
+	res = nsComponentManager::CreateInstance(kLocaleFactoryCID, NULL, kILocaleFactoryIID, (void**)&localeFactory);
+  if (NS_FAILED(res) || localeFactory == nsnull) cout << "CreateInstance nsILocaleFactory failed\n";
 
   res = localeFactory->GetApplicationLocale(&locale);
-  if (NS_FAILED(res) || locale == nsnull) cout << "GetSystemLocale failed\n";
+  if (NS_FAILED(res) || locale == nsnull) cout << "GetApplicationLocale failed\n";
 
 	localeFactory->Release();
-#endif//0
+#endif// No Mac implementation for GetApplicationLocale
   
   // --------------------------------------------
     nsCollationStrength strength = kCollationCaseInSensitive;
     FILE *fp = NULL;
 
-#ifdef XP_MAC
-    TestCollation(locale);
-    // open "sort.txt" in the same directory
-    fp = fopen("sort.txt", "r");
-    TestSort(locale, kCollationCaseInSensitive, fp);
-    if (fp != NULL) {
-      fclose(fp);
-    }
-    TestDateTimeFormat(locale);
-#else  
   if (argc == 1) {
     TestCollation(locale);
     TestSort(locale, kCollationCaseInSensitive, NULL);
@@ -951,8 +998,7 @@ int main(int argc, char** argv) {
     char *s;
     s = find_option(argc, argv, "-h");
     if (s) {
-      cout << argv[0] << " usage:\n-date\tdate time format test\n-col\tcollation test\n-sort\tsort test\n\
--f file\tsort data file\n-o out file\tsort result file\n-case\tcase sensitive sort\n-locale\tlocale\n-v\tverbose";
+      cout << argv[0] << g_usage;
       return 0;
     }
     s = find_option(argc, argv, "-v");
@@ -995,8 +1041,6 @@ int main(int argc, char** argv) {
       fclose(g_outfp);
     }
   }
-#endif//XP_MAC
-
   NS_IF_RELEASE(locale);
 
   // --------------------------------------------
