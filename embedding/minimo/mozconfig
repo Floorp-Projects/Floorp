@@ -16,6 +16,7 @@ ac_add_options --disable-profilelocking
 ac_add_options --enable-single-profile
 
 # disable features and skip various build steps
+ac_add_options --disable-extensions
 ac_add_options --disable-accessibility
 ac_add_options --disable-composer
 ac_add_options --enable-plaintext-editor-only
