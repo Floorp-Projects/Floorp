@@ -428,6 +428,45 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     NS_ADDREF(*aResult);
 #endif
 
+#ifdef XP_BEOS
+// I just copied UNIX version.
+// Makoto Hamanaka <VYA04230@nifty.com>
+
+    ns4xPlugin *plptr;
+
+    NPPluginFuncs callbacks;
+    memset((void*) &callbacks, 0, sizeof(callbacks));
+    callbacks.size = sizeof(callbacks);
+
+    NP_PLUGINSHUTDOWN pfnShutdown =
+        (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
+
+	// create the new plugin handler
+    *aResult = plptr = new ns4xPlugin(&callbacks, aLibrary, pfnShutdown, aServiceMgr);
+
+    if (*aResult == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult);
+
+	// we must init here because the plugin may call NPN functions
+	// when we call into the NP_Initialize entry point - NPN functions
+	// require that mBrowserManager be set up
+    plptr->Initialize();
+
+    NP_PLUGINUNIXINIT pfnInitialize =
+        (NP_PLUGINUNIXINIT)PR_FindSymbol(aLibrary, "NP_Initialize");
+
+    if (pfnInitialize == NULL)
+        return NS_ERROR_FAILURE;
+
+	if (pfnInitialize(&(ns4xPlugin::CALLBACKS),&callbacks) != NS_OK)
+		return NS_ERROR_FAILURE;
+
+    // now copy function table back to ns4xPlugin instance
+    memcpy((void*) &(plptr->fCallbacks), (void*)&callbacks, sizeof(callbacks));
+#endif
+
     return NS_OK;
 }
 
