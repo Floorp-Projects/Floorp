@@ -625,20 +625,25 @@ workbuf_extend(workbuf_t *wb) {
 
 	if (wb->ucs == wb->ucs_buf) {
 		wb->ucs = (PRUint32*)nsMemory::Alloc(sizeof(wb->ucs[0]) * newsize);
+		if (!wb->ucs)
+			return NS_ERROR_OUT_OF_MEMORY;
 		wb->cclass = (PRInt32*)nsMemory::Alloc(sizeof(wb->cclass[0]) * newsize);
-	} else {
-		wb->ucs = (PRUint32*)nsMemory::Realloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
-		wb->cclass = (PRInt32*)nsMemory::Realloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
-	}
-	if (wb->ucs == NULL || wb->cclass == NULL) {
-		if (wb->ucs)
+		if (!wb->cclass) {
 			nsMemory::Free(wb->ucs);
-		if (wb->cclass)
-			nsMemory::Free(wb->cclass);
-		return (NS_ERROR_OUT_OF_MEMORY);
+			wb->ucs = NULL;
+			return NS_ERROR_OUT_OF_MEMORY;
+		}
+	} else {
+		void* buf = nsMemory::Realloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
+		if (!buf)
+			return NS_ERROR_OUT_OF_MEMORY;
+		wb->ucs = (PRUint32*)buf;
+		buf = nsMemory::Realloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
+		if (!buf)
+			return NS_ERROR_OUT_OF_MEMORY;
+		wb->cclass = (PRInt32*)buf;
 	}
-	else
-		return (NS_OK);
+	return (NS_OK);
 }
 
 static nsresult
