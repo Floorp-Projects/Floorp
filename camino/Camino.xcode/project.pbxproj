@@ -119,7 +119,6 @@
 			children = (
 				82AC0D5E065A5F5100776B02,
 				82AC0D5D065A5F2300776B02,
-				F56DEF11020802A501FF5ADC,
 				F5F181C50208006F0124611D,
 				F5F181C60208006F0124611D,
 				F5F181C80208006F0124611D,
@@ -2686,7 +2685,6 @@
 				82AC0D66065A602200776B02,
 				3F44ACD005BDFB9F00CB4B08,
 				3F44ACD105BDFB9F00CB4B08,
-				3F44ACD205BDFB9F00CB4B08,
 				3F44ACD305BDFB9F00CB4B08,
 				3F44ACD405BDFB9F00CB4B08,
 				3F44ACD505BDFB9F00CB4B08,
@@ -2786,12 +2784,6 @@
 		};
 		3F44ACD105BDFB9F00CB4B08 = {
 			fileRef = 0FA8EF9C0423B21100A80166;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ACD205BDFB9F00CB4B08 = {
-			fileRef = F56DEF11020802A501FF5ADC;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -6627,7 +6619,6 @@
 			files = (
 				828FBD97065A986900B3D52A,
 				828FBD98065A986900B3D52A,
-				3F44AF0A05BDFBA000CB4B08,
 				3F44AF0B05BDFBA000CB4B08,
 				3F44AF0C05BDFBA000CB4B08,
 				3F44AF0D05BDFBA000CB4B08,
@@ -6691,12 +6682,6 @@
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44AF0A05BDFBA000CB4B08 = {
-			fileRef = F56DEF11020802A501FF5ADC;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		3F44AF0B05BDFBA000CB4B08 = {
 			fileRef = F5F181C50208006F0124611D;
@@ -11206,14 +11191,6 @@
 			lastKnownFileType = text.rtf;
 			name = Credits.rtf;
 			path = resources/application/Credits.rtf;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F56DEF11020802A501FF5ADC = {
-			isa = PBXFileReference;
-			lastKnownFileType = file;
-			name = urlbarhistory.xpt;
-			path = ../xpfe/components/urlbarhistory/public/_xpidlgen/urlbarhistory.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
