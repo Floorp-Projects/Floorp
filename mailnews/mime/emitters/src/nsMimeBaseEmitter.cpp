@@ -262,7 +262,8 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIPipe* /* aPipe */)
   if (mOutListener && mInputStream)
   {
       PRUint32 bytesAvailable = 0;
-      mInputStream->Available(&bytesAvailable);
+      rv = mInputStream->Available(&bytesAvailable);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Available failed");
       rv = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesAvailable);
   }
   else 
@@ -840,8 +841,10 @@ nsMimeBaseEmitter::Complete()
   if (mOutListener)
   {
     PRUint32 bytesInStream;
-    mInputStream->Available(&bytesInStream);
-    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
+    nsresult rv2 = mInputStream->Available(&bytesInStream);
+	NS_ASSERTION(NS_SUCCEEDED(rv2), "Available failed");
+    rv2 = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesInStream);
+	NS_ASSERTION(NS_SUCCEEDED(rv2), "OnDataAvailable failed");
   }
 
   return NS_OK;
