@@ -460,7 +460,7 @@ nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
     nsIServiceManager* mgr;
     nsresult rv = GetGlobalServiceManager(&mgr);
     if (NS_FAILED(rv)) return rv;
-    return mgr->ReleaseService(aClass, service, shutdownListener);
+    return mgr ? mgr->ReleaseService(aClass, service, shutdownListener) : NS_OK;
 }
 
 nsresult
