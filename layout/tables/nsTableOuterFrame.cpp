@@ -190,14 +190,17 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   PRBool  reflowMappedOK = PR_TRUE;
+  PRBool  isInitialReflow = PR_FALSE;
 
   aStatus = NS_FRAME_COMPLETE;
 
   // Set up our kids.  They're already present, on an overflow list, 
   // or there are none so we'll create them now
   MoveOverflowToChildList();
-  if (nsnull==mFirstChild)
+  if (nsnull==mFirstChild) {
     CreateChildFrames(aPresContext);
+    isInitialReflow = PR_TRUE;
+  }
   if (nsnull!=mPrevInFlow && nsnull==mInnerTableFrame)
   { // if I am a continuing frame, my inner table is my prev-in-flow's mInnerTableFrame's next-in-flow
     CreateInnerTableFrame(aPresContext);
@@ -217,7 +220,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   if (PR_FALSE==IsFirstPassValid())
   {
     mFirstPassValid = PR_TRUE;
-    aStatus = ResizeReflowCaptionsPass1(aPresContext, state);
+    aStatus = ResizeReflowCaptionsPass1(aPresContext, state, isInitialReflow);
 
   }
 
@@ -1033,11 +1036,14 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 
 nsReflowStatus
 nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
-                                             OuterTableReflowState& aState)
+                                             OuterTableReflowState& aState,
+                                             PRBool aIsInitialReflow)
 {
   if (nsnull!=mCaptionFrames)
   {
     PRInt32 numCaptions = mCaptionFrames->Count();
+    nsReflowReason  reflowReason = aIsInitialReflow ? eReflowReason_Initial :
+                                                      eReflowReason_Resize;
     for (PRInt32 captionIndex = 0; captionIndex < numCaptions; captionIndex++)
     {
       nsSize maxElementSize(0,0);
@@ -1046,7 +1052,8 @@ nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
       kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
       nsTableCaptionFrame *captionFrame = (nsTableCaptionFrame *)mCaptionFrames->ElementAt(captionIndex);
       nsReflowStatus  status;
-      nsReflowState   reflowState(captionFrame, aState.reflowState, maxSize, eReflowReason_Resize);
+      nsReflowState   reflowState(captionFrame, aState.reflowState, maxSize,
+                                  reflowReason);
       captionFrame->WillReflow(*aPresContext);
       captionFrame->Reflow(aPresContext, kidSize, reflowState, status);
       if (mMinCaptionWidth<maxElementSize.width)

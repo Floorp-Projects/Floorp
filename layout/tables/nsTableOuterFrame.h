@@ -126,7 +126,8 @@ protected:
   /** reflow the captions in an infinite space, caching the min/max sizes for each
     */
   virtual nsReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext,
-                                                   OuterTableReflowState& aState);
+                                                   OuterTableReflowState& aState,
+                                                   PRBool aIsInitialReflow);
 
   /** reflow the top captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Top captions are laid down
