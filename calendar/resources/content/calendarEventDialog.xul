@@ -309,7 +309,7 @@
                               </hbox>
                               
                               <hbox>
-                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" selected="false" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                                <radio group="repeat-until-group" id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
                               </hbox>    
                               
                             
