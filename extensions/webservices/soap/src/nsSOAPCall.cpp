@@ -97,30 +97,23 @@ NS_IMETHODIMP nsSOAPCall::SetTransportURI(const nsAString & aTransportURI)
 nsresult nsSOAPCall::GetTransport(nsISOAPTransport ** aTransport)
 {
   NS_ENSURE_ARG_POINTER(aTransport);
+  *aTransport = nsnull;
+
   nsresult rv;
   nsCOMPtr < nsIURI > uri;
-  nsCAutoString protocol;
-  nsCString transportURI(ToNewCString(mTransportURI));
 
-  rv = NS_NewURI(getter_AddRefs(uri), transportURI.get());
+  rv = NS_NewURI(getter_AddRefs(uri), mTransportURI);
   if (NS_FAILED(rv))
     return rv;
 
+  nsCAutoString protocol;
   uri->GetScheme(protocol);
 
   nsCAutoString transportContractid;
   transportContractid.Assign(NS_SOAPTRANSPORT_CONTRACTID_PREFIX);
   transportContractid.Append(protocol);
 
-  nsCOMPtr < nsISOAPTransport > transport =
-      do_GetService(transportContractid.get(), &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
-  *aTransport = transport.get();
-  NS_ADDREF(*aTransport);
-
-  return NS_OK;
+  return CallGetService(transportContractid.get(), aTransport);
 }
 
 /* nsISOAPResponse invoke (); */
