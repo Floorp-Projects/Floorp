@@ -157,48 +157,37 @@ nsresult
 nsTableRowGroupFrame::InitRepeatedFrame(nsIPresContext*       aPresContext,
                                         nsTableRowGroupFrame* aHeaderFooterFrame)
 {
-  nsIFrame* originalRowFrame;
-  nsIFrame* copyRowFrame = GetFirstFrame();
-
-  aHeaderFooterFrame->FirstChild(aPresContext, nsnull, &originalRowFrame);
-  while (copyRowFrame) {
-    // Set the row frame index
-    int rowIndex = ((nsTableRowFrame*)originalRowFrame)->GetRowIndex();
-    ((nsTableRowFrame*)copyRowFrame)->SetRowIndex(rowIndex);
+  nsTableRowFrame* copyRowFrame = GetFirstRow();
+  nsTableRowFrame* originalRowFrame = aHeaderFooterFrame->GetFirstRow();
+  while (copyRowFrame && originalRowFrame) {
+    int rowIndex = originalRowFrame->GetRowIndex();
+    copyRowFrame->SetRowIndex(rowIndex);
 
     // For each table cell frame set its column index
-    nsIFrame* originalCellFrame;
-    nsIFrame* copyCellFrame;
-    originalRowFrame->FirstChild(aPresContext, nsnull, &originalCellFrame);
-    copyRowFrame->FirstChild(aPresContext, nsnull, &copyCellFrame);
-    while (copyCellFrame) {
-      nsIAtom*  frameType;
-      copyCellFrame->GetFrameType(&frameType);
-
-      if (IS_TABLE_CELL(frameType)) {
+    nsTableCellFrame* originalCellFrame = originalRowFrame->GetFirstCell();
+    nsTableCellFrame* copyCellFrame     = copyRowFrame->GetFirstCell();
+    while (copyCellFrame && originalCellFrame) {
   #ifdef NS_DEBUG
-        nsIContent* content1;
-        nsIContent* content2;
-        originalCellFrame->GetContent(&content1);
-        copyCellFrame->GetContent(&content2);
-        NS_ASSERTION(content1 == content2, "cell frames have different content");
-        NS_IF_RELEASE(content1);
-        NS_IF_RELEASE(content2);
+      nsIContent* content1;
+      nsIContent* content2;
+      originalCellFrame->GetContent(&content1);
+      copyCellFrame->GetContent(&content2);
+      NS_ASSERTION(content1 == content2, "cell frames have different content");
+      NS_IF_RELEASE(content1);
+      NS_IF_RELEASE(content2);
   #endif
-        PRInt32 colIndex;
-        ((nsTableCellFrame*)originalCellFrame)->GetColIndex(colIndex);
-        ((nsTableCellFrame*)copyCellFrame)->InitCellFrame(colIndex);
-      }
-      NS_IF_RELEASE(frameType);
-
+      PRInt32 colIndex;
+      originalCellFrame->GetColIndex(colIndex);
+      copyCellFrame->InitCellFrame(colIndex);
+        
       // Move to the next cell frame
-      copyCellFrame->GetNextSibling(&copyCellFrame);
-      originalCellFrame->GetNextSibling(&originalCellFrame);
+      copyCellFrame     = copyCellFrame->GetNextCell();
+      originalCellFrame = originalCellFrame->GetNextCell();
     }
-
+    
     // Move to the next row frame
-    GetNextFrame(originalRowFrame, &originalRowFrame);
-    GetNextFrame(copyRowFrame, &copyRowFrame);
+    originalRowFrame = originalRowFrame->GetNextRow();
+    copyRowFrame = copyRowFrame->GetNextRow();
   }
 
   return NS_OK;
