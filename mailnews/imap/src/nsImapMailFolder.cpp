@@ -1061,7 +1061,6 @@ nsImapMailFolder::InTrash(nsIMsgFolder* folder)
 NS_IMETHODIMP
 nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders)
 {
-    PRBool inTrash = PR_FALSE;
     nsCOMPtr<nsIMsgFolder> curFolder;
     nsCOMPtr<nsISupports> folderSupport;
     nsCOMPtr<nsIUrlListener> urlListener;
