@@ -121,12 +121,6 @@ extern int
 XfeToolBoxItemGetIndex			(Widget			w,
 								 Widget			item);
 /*----------------------------------------------------------------------*/
-#if 0
-extern int
-XfeToolBoxTabGetIndex			(Widget			w,
-								 Widget			tab);
-/*----------------------------------------------------------------------*/
-#endif
 extern Widget
 XfeToolBoxItemGetByIndex		(Widget			w,
 								 Cardinal		index);

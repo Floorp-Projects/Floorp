@@ -2341,29 +2341,6 @@ XfeToolBoxItemGetIndex(Widget w,Widget item)
 	return -1;
 }
 /*----------------------------------------------------------------------*/
-#if 0
-/* extern */ int
-XfeToolBoxTabGetIndex(Widget w,Widget tab)
-{
-	XfeToolBoxPart *	tp = _XfeToolBoxPart(w);
-	Cardinal			i;
-	
-	assert( _XfeIsAlive(w) );
-	assert( XfeIsToolBox(w) );
-	assert( _XfeIsAlive(tab) );
-
-	for (i = 0; i < tp->item_count; i++)
-	{
-		if ((tab == tp->closed_tabs[i]) || (tab == tp->opened_tabs[i]))
-		{
-			return i;
-		}
-	}
-
-	return -1;
-}
-/*----------------------------------------------------------------------*/
-#endif
 /* extern */ Widget
 XfeToolBoxItemGetByIndex(Widget w,Cardinal index)
 {
