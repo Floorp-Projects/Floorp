@@ -2749,30 +2749,32 @@ nsDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 NS_IMETHODIMP
 nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 {
-  nsresult result=NS_OK;
+    nsresult result=NS_OK;
 
-  nsXIFConverter converter(aBuffer);
+    nsXIFConverter converter(aBuffer);
 
-  converter.SetSelection(aSelection);
+    converter.SetSelection(aSelection);
 
-  converter.AddStartTag("section"); 
-  converter.AddStartTag("section_head");
+    converter.AddStartTag("section"); 
+    converter.AddStartTag("section_head");
 
-  nsString charset = mCharacterSet;
+    nsString charset = mCharacterSet;
 
-  converter.BeginStartTag("document_info");
-  converter.AddAttribute(nsString("charset"),charset);
-  converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
+    converter.BeginStartTag("document_info");
+    converter.AddAttribute(nsString("charset"),charset);
+    converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
 
-  converter.AddEndTag("section_head");
-  converter.AddStartTag("section_body");
+    converter.AddEndTag("section_head");
+    converter.AddStartTag("section_body");
 
-  nsIHTMLDocument* htmldoc=nsnull;
-  result=this->QueryInterface(kIHTMLDocumentIID,(void**)&htmldoc);
-  if(NS_SUCCEEDED(result)) {
-    nsAutoString docTypeStr;
-    htmldoc->GetDocTypeStr(docTypeStr);
-    if(docTypeStr.Length()>0) converter.AddMarkupDeclaration(docTypeStr);
+    nsIHTMLDocument* htmldoc=nsnull;
+    result=this->QueryInterface(kIHTMLDocumentIID,(void**)&htmldoc);
+    if(NS_SUCCEEDED(result)) {
+      nsAutoString docTypeStr;
+      htmldoc->GetDocTypeStr(docTypeStr);
+      if(docTypeStr.Length()>0) converter.AddMarkupDeclaration(docTypeStr);
+      NS_RELEASE(htmldoc);
+    }
 
     nsIDOMElement* root = nsnull;
     result=GetDocumentElement(&root);
@@ -2816,10 +2818,8 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     #endif
         NS_RELEASE(root);
      }
-  }
   converter.AddEndTag("section_body");
   converter.AddEndTag("section");
-  NS_IF_RELEASE(htmldoc);
   return result;
 }
 
