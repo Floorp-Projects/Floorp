@@ -116,6 +116,10 @@ private:
   // Properties
   nsresult GetWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetMaxHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetMaxWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetMinHeight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+  nsresult GetMinWidth(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetLeft(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetTop(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetRight(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
@@ -233,6 +237,10 @@ private:
 static const nsCSSProperty queryableProperties[] = {
   eCSSProperty_width,
   eCSSProperty_height,
+  eCSSProperty_max_height,
+  eCSSProperty_max_width,
+  eCSSProperty_min_height,
+  eCSSProperty_min_width,
   eCSSProperty_left,
   eCSSProperty_top,
   eCSSProperty_right,
@@ -466,6 +474,14 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
       rv = GetWidth(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_height :
       rv = GetHeight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_max_height :
+      rv = GetMaxHeight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_max_width :
+      rv = GetMaxWidth(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_min_height :
+      rv = GetMinHeight(frame, *getter_AddRefs(val)); break;
+    case eCSSProperty_min_width :
+      rv = GetMinWidth(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_left :
       rv = GetLeft(frame, *getter_AddRefs(val)); break;
     case eCSSProperty_top :
@@ -2041,6 +2057,230 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition *positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+
+  if (positionData) {
+    nsIFrame *container = nsnull;
+    nsRect rect;
+    nscoord minHeight = 0;
+
+    if (positionData->mMinHeight.GetUnit() == eStyleUnit_Percent) {
+      container = GetContainingBlock(aFrame);
+      if (container) {
+        container->GetRect(rect);
+        minHeight = nscoord(rect.height * positionData->mMinHeight.GetPercentValue());
+      }
+    } else if (positionData->mMinHeight.GetUnit() == eStyleUnit_Coord) {
+      minHeight = positionData->mMinHeight.GetCoordValue();
+    }
+
+    switch (positionData->mMaxHeight.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(PR_MAX(minHeight, positionData->mMaxHeight.GetCoordValue()));
+        break;
+      case eStyleUnit_Percent:
+        if (!container) {
+          container = GetContainingBlock(aFrame);
+          if (container) {
+            container->GetRect(rect);
+          } else {
+            // no containing block
+            val->SetPercent(positionData->mMaxHeight.GetPercentValue());
+          }
+        }
+        if (container) {
+          val->SetTwips(PR_MAX(minHeight, rect.height * positionData->mMaxHeight.GetPercentValue()));
+        }
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        val->SetString(NS_LITERAL_STRING("none"));
+        break;
+    }
+  } else {
+    val->SetString(NS_LITERAL_STRING("none"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition *positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+
+  if (positionData) {
+    nsIFrame *container = nsnull;
+    nsRect rect;
+    nscoord minWidth = 0;
+
+    if (positionData->mMinWidth.GetUnit() == eStyleUnit_Percent) {
+      container = GetContainingBlock(aFrame);
+      if (container) {
+        container->GetRect(rect);
+        minWidth = nscoord(rect.width * positionData->mMinWidth.GetPercentValue());
+      }
+    } else if (positionData->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+      minWidth = positionData->mMinWidth.GetCoordValue();
+    }
+
+    switch (positionData->mMaxWidth.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(PR_MAX(minWidth, positionData->mMaxWidth.GetCoordValue()));
+        break;
+      case eStyleUnit_Percent:
+        if (!container) {
+          container = GetContainingBlock(aFrame);
+          if (container) {
+            container->GetRect(rect);
+          } else {
+            // no containing block
+            val->SetPercent(positionData->mMaxWidth.GetPercentValue());
+          }
+        }
+        if (container) {
+          val->SetTwips(PR_MAX(minWidth, rect.width * positionData->mMaxWidth.GetPercentValue()));
+        }
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        val->SetString(NS_LITERAL_STRING("none"));
+        break;
+    }
+  } else {
+    val->SetString(NS_LITERAL_STRING("none"));
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
+                                 nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition *positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+
+  if (positionData) {
+    nsIFrame *container = nsnull;
+    nsRect rect;
+    switch (positionData->mMinHeight.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(positionData->mMinHeight.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        container = GetContainingBlock(aFrame);
+        if (container) {
+          container->GetRect(rect);
+          val->SetTwips(rect.height * positionData->mMinHeight.GetPercentValue());
+        } else {
+          // no containing block
+          val->SetPercent(positionData->mMinHeight.GetPercentValue());
+        }
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        val->SetTwips(0);
+        break;
+    }
+  } else {
+    val->SetTwips(0);
+  }
+
+  return CallQueryInterface(val, &aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
+                                nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStylePosition *positionData = nsnull;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData, aFrame);
+
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+
+  if (positionData) {
+    nsIFrame *container = nsnull;
+    nsRect rect;
+    switch (positionData->mMinWidth.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(positionData->mMinWidth.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        container = GetContainingBlock(aFrame);
+        if (container) {
+          container->GetRect(rect);
+          val->SetTwips(rect.width * positionData->mMinWidth.GetPercentValue());
+        } else {
+          // no containing block
+          val->SetPercent(positionData->mMinWidth.GetPercentValue());
+        }
+        break;
+      case eStyleUnit_Inherit:
+        val->SetString(NS_LITERAL_STRING("inherit"));
+        break;
+      default:
+        val->SetTwips(0);
+        break;
+    }
+  } else {
+    val->SetTwips(0);
+  }
+
+  return CallQueryInterface(val, &aValue);
 }
 
 nsresult
