@@ -589,8 +589,15 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &rectVisibility);
 
-  if (rectVisibility == nsRectVisibility_kVisible)
+  if (rectVisibility == nsRectVisibility_kVisible) {
+    // This view says it is visible, but we need to check the parent view chain :(
+    while ((containingView = containingView->GetParent()) != nsnull) {
+      if (containingView->GetVisibility() == nsViewVisibility_kHide) {
+        return PR_FALSE;
+      }
+    }
     return PR_TRUE;
+  }
 
   *aIsOffscreen = rectVisibility != nsRectVisibility_kZeroAreaRect;
   return PR_FALSE;
