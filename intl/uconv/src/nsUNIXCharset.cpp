@@ -56,7 +56,7 @@ nsUNIXCharset::nsUNIXCharset()
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
 
-  char* locale = setlocale(LC_CTYPE, NULL);
+  char* locale = setlocale(LC_CTYPE, "");
   if(locale) 
   {
       nsAutoString propertyURL("resource:/res/unixcharset.properties");
@@ -101,7 +101,7 @@ nsUNIXCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar
 {
   nsCOMPtr<nsIPosixLocale> pPosixLocale;
   nsString charset("ISO-8859-1"), localeNameAsString(localeName);
-  char posix_locale[9];
+  char posix_locale[128];
 
   //
   // convert the locale name
