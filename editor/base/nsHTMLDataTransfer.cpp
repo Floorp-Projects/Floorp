@@ -259,7 +259,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     // but if not we want to delete _contents_ of cells and replace
     // with non-table elements.  Use cellSelectionMode bool to 
     // indicate results.
-    nsCOMPtr<nsISupports> isupports = nodeList->ElementAt(0);
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(0));
     nsCOMPtr<nsIDOMNode> firstNode( do_QueryInterface(isupports) );
     if (!nsHTMLEditUtils::IsTableElement(firstNode))
       cellSelectionMode = PR_FALSE;
@@ -315,7 +315,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
 
     // build up list of parents of first node in lst that are either:
     // lists, or tables.  
-    nsCOMPtr<nsISupports> isup = nodeList->ElementAt(0);
+    nsCOMPtr<nsISupports> isup = dont_AddRef(nodeList->ElementAt(0));
     nsCOMPtr<nsIDOMNode>  pNode( do_QueryInterface(isup) );
     nsCOMPtr<nsISupportsArray> listAndTableArray;
     res = NS_NewISupportsArray(getter_AddRefs(listAndTableArray));
@@ -344,7 +344,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
       nodeList->Count(&listCount);
       for (j=0; j<listCount; j++)
       {
-        nsCOMPtr<nsISupports> isupports = nodeList->ElementAt(j);
+        nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(j));
         nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
 
         NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
@@ -391,13 +391,13 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     // table or list contents outside the table or list.
     if (highWaterMark >= 0)
     {
-      nsCOMPtr<nsISupports> isupports = listAndTableArray->ElementAt(highWaterMark);
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(listAndTableArray->ElementAt(highWaterMark));
       nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
       nsCOMPtr<nsIDOMNode> replaceNode, tmp;
       if (nsHTMLEditUtils::IsTable(curNode))
       {
         // look upward from curNode for a piece of this table
-        isup  = nodeList->ElementAt(0);
+        isup  = dont_AddRef(nodeList->ElementAt(0));
         pNode = do_QueryInterface(isup);
         while (pNode)
         {
@@ -418,7 +418,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
       else // list case
       {
         // look upward from curNode for a piece of this list
-        isup  = nodeList->ElementAt(0);
+        isup  = dont_AddRef(nodeList->ElementAt(0));
         pNode = do_QueryInterface(isup);
         while (pNode)
         {
@@ -445,7 +445,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
         // so that we dont insert them twice.
         do
         {
-          isupports = nodeList->ElementAt(1);
+          isupports = dont_AddRef(nodeList->ElementAt(1));
           tmp = do_QueryInterface(isupports);
           if (tmp && nsHTMLEditUtils::IsDescendantOf(tmp, replaceNode))
             nodeList->RemoveElementAt(1);
@@ -461,7 +461,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
     nodeList->Count(&listCount);
     for (j=0; j<listCount; j++)
     {
-      nsCOMPtr<nsISupports> isupports = nodeList->ElementAt(j);
+      nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(j));
       nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
 
       NS_ENSURE_TRUE(curNode, NS_ERROR_FAILURE);
