@@ -462,9 +462,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
     if (docURL) {
       nsCAutoString url;
 
-      if (!aClearScopeHint) {
-        docURL->GetSpec(url);
-      }
+      docURL->GetSpec(url);
 
       if (/* aClearScopeHint || */ !url.Equals(NS_LITERAL_CSTRING("about:blank"))) {
         // aClearScopeHint is true, or the current document is *not*
