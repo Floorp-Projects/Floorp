@@ -49,6 +49,7 @@
 #include "nsNetUtil.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIParser.h"
+#include "nsICharsetAlias.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -187,9 +188,16 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
-        doc->SetDocumentCharacterSet(
-            NS_LossyConvertUTF16toASCII(mOutputFormat.mEncoding));
-        doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+        NS_LossyConvertUTF16toASCII charset(mOutputFormat.mEncoding);
+        nsCAutoString canonicalCharset;
+        nsCOMPtr<nsICharsetAlias> calias =
+            do_GetService("@mozilla.org/intl/charsetalias;1");
+
+        if (calias &&
+            NS_SUCCEEDED(calias->GetPreferred(charset, canonicalCharset))) {
+            doc->SetDocumentCharacterSet(canonicalCharset);
+            doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+        }
     }
     else {
         doc->SetDocumentCharacterSet(sourceDoc->GetDocumentCharacterSet());

@@ -71,6 +71,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
 #include "nsICSSLoader.h"
+#include "nsICharsetAlias.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -738,9 +739,16 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
-        doc->SetDocumentCharacterSet(
-            NS_LossyConvertUTF16toASCII(mOutputFormat.mEncoding));
-        doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+        NS_LossyConvertUTF16toASCII charset(mOutputFormat.mEncoding);
+        nsCAutoString canonicalCharset;
+        nsCOMPtr<nsICharsetAlias> calias =
+            do_GetService("@mozilla.org/intl/charsetalias;1");
+
+        if (calias &&
+            NS_SUCCEEDED(calias->GetPreferred(charset, canonicalCharset))) {
+            doc->SetDocumentCharacterSet(canonicalCharset);
+            doc->SetDocumentCharacterSetSource(kCharsetFromOtherComponent);
+        }
     }
 
     // Set the mime-type
