@@ -654,12 +654,13 @@ var MessageWindowController =
       case "cmd_synchronizeOffline":
         MsgSynchronizeOffline();
         return;
-			case "cmd_settingsOffline":
-				MsgSettingsOffline();
-				return;
-			case "cmd_nextUnreadMsg":
+      case "cmd_settingsOffline":
+        MsgSettingsOffline();
+        return;
+      case "cmd_nextUnreadMsg":
+      case "button_next":
         performNavigation(nsMsgNavigationType.nextUnreadMessage);
-				break;
+        break;
 			case "cmd_nextUnreadThread":      
         performNavigation(nsMsgNavigationType.nextUnreadThread);
 				break;
