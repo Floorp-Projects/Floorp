@@ -54,6 +54,10 @@ private:
 	nsDllStatus m_status;	// holds current status
     nsIModule *m_moduleObject;
 
+    // Cache frequently asked queries
+    char *m_persistentDescriptor;
+    char *m_nativePath;
+
     void Init(nsIFileSpec *dllSpec);
     void Init(const char *persistentDescriptor);
 
@@ -79,12 +83,16 @@ public:
 	void *FindSymbol(const char *symbol);
 	
     PRBool HasChanged(void);
+
+    // WARNING: DONT FREE string returned.
 	const char *GetNativePath(void);
+    // WARNING: DONT FREE string returned.
     const char *GetPersistentDescriptorString(void);
 	PRUint32 GetLastModifiedTime(void) { return(m_modDate); }
 	PRUint32 GetSize(void) { return(m_size); }
 	PRLibrary *GetInstance(void) { return (m_instance); }
-    nsresult GetDllSpec(nsIFileSpec **dllSpec);
 
+    // NS_RELEASE() is required to be done on objects returned
+    nsresult GetDllSpec(nsIFileSpec **dllSpec);
     nsresult GetModule(nsISupports *servMgr, nsIModule **mobj);
 };
