@@ -521,37 +521,21 @@ java_lang_String * getRegElement(JRIEnv *env,
 				}
 			}
 
-
-			// long length = 1 + strlen(value);  // 1 extra for the null char -- WRONG!
+			// Don't add the 1 to the length here, do it in the malloc
 			long length = strlen(value);
+			long bufLen = (extendLen ? len : lenShort);
 
-			if (extendLen == TRUE) {
-				rtnValue = (char *)malloc(sizeof(char) * length);
+			rtnValue = (char *)malloc(sizeof(char) * (length+1));
 
-				if (!rtnValue)
-					return NULL;
+			if (!rtnValue)
+				return NULL;
 				
-				strcpy(rtnValue, value);
+			strcpy(rtnValue, value);
 				
-				if (!noData) {
-					length = length + len;
-					rtnValue = (char *)realloc(rtnValue, sizeof(char) * length);
-					strncat(rtnValue, buffer, len);
-				}
-			} else {
-
-				rtnValue = (char *)malloc(sizeof(char) * length);
-
-				if (!rtnValue)
-					return NULL;
-
-				strcpy(rtnValue, value);
-
-				if (!noData) {
-					length = length + lenShort;
-					rtnValue = (char *)realloc(rtnValue, sizeof(char) * length);
-					strncat(rtnValue, buffer, lenShort);
-				}
+			if (!noData) {
+				length = length + bufLen;
+				rtnValue = (char *)realloc(rtnValue, sizeof(char) * (length+1));
+				strncat(rtnValue, buffer, bufLen);
 			}
 			
 			data = JRI_NewStringPlatform(env, rtnValue, length, NULL, 0);
