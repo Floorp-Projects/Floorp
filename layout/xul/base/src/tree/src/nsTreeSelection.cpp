@@ -66,8 +66,25 @@ struct nsOutlinerRange
   };
 
   void RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
+    // Do the start and end encompass us?
+    if (mMin >= aStart && mMax <= aEnd) {
+      // They do.  We should simply be excised from the list.
+      if (mPrev)
+        mPrev->mNext = mNext;
+      else
+        mSelection->mFirstRange = mNext;
+        
+      nsOutlinerRange* next = mNext;
+      if (next)
+        next->mPrev = mPrev;
+      mPrev = mNext = nsnull;
+      delete this;
+      if (next)
+        next->RemoveRange(aStart, aEnd);
+      return;
+    }
     // See if this range overlaps.
-    if (aStart >= mMin && aStart <= mMax) {
+    else if (aStart >= mMin && aStart <= mMax) {
       // We start within this range.
       // Do we also end within this range?
       if (aEnd >= mMin && aEnd <= mMax) {
@@ -95,25 +112,7 @@ struct nsOutlinerRange
       return; // We're done, since we contained the end.
     }
     else {
-      // Neither the start nor the end was contained inside us.
-      // Do the start and end encompass us instead?
-      if (mMin >= aStart && mMax <= aEnd) {
-        // They do.  We should simply be excised from the list.
-        if (mPrev)
-          mPrev->mNext = mNext;
-        else
-          mSelection->mFirstRange = mNext;
-        
-        nsOutlinerRange* next = mNext;
-        if (next)
-          next->mPrev = mPrev;
-        mPrev = mNext = nsnull;
-        delete this;
-        if (next)
-          next->RemoveRange(aStart, aEnd);
-        return;
-      }
-
+      // Neither the start nor the end was contained inside us, move on.
       if (mNext)
         mNext->RemoveRange(aStart, aEnd);
     }
@@ -408,7 +407,7 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
     mFirstRange->RemoveRange(start, end);
   }
 
-  nsOutlinerRange* range =  new nsOutlinerRange(this, start, end);
+  nsOutlinerRange* range = new nsOutlinerRange(this, start, end);
   range->Invalidate();
 
   if (aAugment && mFirstRange)
