@@ -28,7 +28,7 @@
 // DLL Entry Points:
 ////////////////////////////////////////////////////////////////////////////////
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory);
+NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory);
 
 extern "C" NS_EXPORT PRBool
 NSCanUnload(void);

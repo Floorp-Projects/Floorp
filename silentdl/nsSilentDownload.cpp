@@ -1453,7 +1453,7 @@ NSUnregisterSelf(const char *path)
 
 
 extern "C" NS_EXPORT nsresult
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
 {
 
     if (aFactory == NULL)
