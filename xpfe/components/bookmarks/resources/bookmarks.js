@@ -260,7 +260,7 @@ function doDelete(promptFlag)
 
 	if (promptFlag == true)
 	{
-		var ok = confirm("Delete the selected bookmark(s)?");
+		var ok = confirm("Delete the selected item(s)?");	// XXX localize
 		if (!ok)	return(false);
 	}
 
