@@ -3651,6 +3651,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
   if (!newHdr)
     return NS_ERROR_NULL_POINTER;
   
+  newHdr->SetThreadParent(nsMsgKey_None); // if we're undoing, could have a thread parent
   PRUint16 numReferences = 0;
   PRUint32 newHdrFlags = 0;
   
