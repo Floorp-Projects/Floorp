@@ -146,6 +146,7 @@
 
 #include "nsISizeOfHandler.h"
 #include "nsReadableUtils.h"
+#include "nsITimelineService.h"
 
 class nsIWebShell;
 
@@ -4965,6 +4966,7 @@ nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsIScriptContext* aContext)
 {
+    NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
     nsresult rv;
 
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
