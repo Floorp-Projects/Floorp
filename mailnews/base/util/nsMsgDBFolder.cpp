@@ -387,9 +387,11 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 			mIsCachable = PR_TRUE;
             if (folderInfo)
             {
-
-	            folderInfo->GetFlags((PRInt32 *)&mFlags);
-              mInitializedFromCache = PR_TRUE;
+              if (!mInitializedFromCache)
+              {
+                folderInfo->GetFlags((PRInt32 *)&mFlags);
+                mInitializedFromCache = PR_TRUE;
+              }
 
 				folderInfo->GetNumMessages(&mNumTotalMessages);
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);

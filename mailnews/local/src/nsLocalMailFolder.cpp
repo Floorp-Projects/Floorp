@@ -174,8 +174,10 @@ nsFolderCompactState::FinishCompact()
   nsCOMPtr<nsIMsgFolder> parentFolder;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
   nsFileSpec fileSpec;
+  PRUint32 flags;
 
     // get leaf name and database name of the folder
+  m_folder->GetFlags(&flags);
   rv = m_folder->GetPath(getter_AddRefs(pathSpec));
   pathSpec->GetFileSpec(&fileSpec);
 
@@ -223,6 +225,7 @@ nsFolderCompactState::FinishCompact()
   rv = parentFolder->AddSubfolder(&folderName, getter_AddRefs(child));
   if (child) 
   {
+    child->SetFlags(flags);
     nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
     nsCOMPtr<nsISupports> parentSupports = do_QueryInterface(parentFolder);
     if (childSupports && parentSupports)
@@ -1073,6 +1076,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
     rv = GetTrashFolder(getter_AddRefs(trashFolder));
     if (NS_SUCCEEDED(rv))
     {
+        PRUint32 flags;
+        nsXPIDLCString trashUri;
+        trashFolder->GetURI(getter_Copies(trashUri));
+        trashFolder->GetFlags(&flags);
         trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
         nsCOMPtr<nsIFolder> parent;
         rv = trashFolder->GetParent(getter_AddRefs(parent));
@@ -1093,6 +1100,19 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
                     if (trashSupport && parentSupport)
                       NotifyItemDeleted(parentSupport, trashSupport, "folderView");
                     parentFolder->CreateSubfolder(folderName.GetUnicode());
+                    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID,
+                                    &rv);  
+                    if (NS_FAILED(rv)) return rv;
+                    nsCOMPtr<nsIRDFResource> res;
+                    rv = rdfService->GetResource(trashUri,
+                                                 getter_AddRefs(res));
+                    if (NS_SUCCEEDED(rv))
+                    {
+                        nsCOMPtr<nsIMsgFolder> newfolder =
+                            do_QueryInterface(res);
+                        if (newfolder)
+                            newfolder->SetFlags(flags);
+                    }
                 }
             }
         }
