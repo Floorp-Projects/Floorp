@@ -148,7 +148,7 @@ nsHTMLDocument::nsHTMLDocument()
   mLayers = nsnull;
   mNamedItems = nsnull;
   mParser = nsnull;
-  nsHTMLAtoms::AddrefAtoms();
+  nsHTMLAtoms::AddRefAtoms();
   mDTDMode = eDTDMode_Nav;
   mCSSLoader = nsnull;
 
@@ -1768,7 +1768,7 @@ nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
   else if (nsnull != mAttrStyleSheet) {
     nsHTMLValue value;
   
-    if (nsGenericHTMLElement::ParseColor(aAlinkColor, value)) {
+    if (nsGenericHTMLElement::ParseColor(aAlinkColor, this, value)) {
       mAttrStyleSheet->SetActiveLinkColor(value.GetColorValue());
     }
   }
@@ -1813,7 +1813,7 @@ nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
   }
   else if (nsnull != mAttrStyleSheet) {
     nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aLinkColor, value)) {
+    if (nsGenericHTMLElement::ParseColor(aLinkColor, this, value)) {
       mAttrStyleSheet->SetLinkColor(value.GetColorValue());
     }
   }
@@ -1858,7 +1858,7 @@ nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
   }
   else if (nsnull != mAttrStyleSheet) {
     nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aVlinkColor, value)) {
+    if (nsGenericHTMLElement::ParseColor(aVlinkColor, this, value)) {
       mAttrStyleSheet->SetVisitedLinkColor(value.GetColorValue());
     }
   }
@@ -1903,7 +1903,7 @@ nsHTMLDocument::SetBgColor(const nsString& aBgColor)
   }
   else if (nsnull != mAttrStyleSheet) {
     nsHTMLValue value;
-    if (nsGenericHTMLElement::ParseColor(aBgColor, value)) {
+    if (nsGenericHTMLElement::ParseColor(aBgColor, this, value)) {
       mAttrStyleSheet->SetDocumentBackgroundColor(value.GetColorValue());
     }
   }
@@ -1949,7 +1949,7 @@ nsHTMLDocument::SetFgColor(const nsString& aFgColor)
   else if (nsnull != mAttrStyleSheet) {
     nsHTMLValue value;
   
-    if (nsGenericHTMLElement::ParseColor(aFgColor, value)) {
+    if (nsGenericHTMLElement::ParseColor(aFgColor, this, value)) {
       mAttrStyleSheet->SetDocumentForegroundColor(value.GetColorValue());
     }
   }
@@ -2507,15 +2507,11 @@ PRBool nsHTMLDocument::NodeIsBlock(nsIDOMNode * aNode)
   if (NS_OK != rv) {
     return isBlock;
   }
-  nsString tagName;
+  nsAutoString tagName;
   domElement->GetTagName(tagName);
   NS_RELEASE(domElement);
 
-  char * cStr = tagName.ToNewCString();
-
-  isBlock = IsBlockLevel(NS_TagToEnum(cStr), mIsPreTag);
-
-  delete[] cStr;
+  isBlock = IsBlockLevel(nsHTMLTags::LookupTag(tagName), mIsPreTag);
 
   return isBlock;
 }
