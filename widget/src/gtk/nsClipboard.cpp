@@ -42,7 +42,6 @@
 #include "nsTextFormatter.h"
 #include "nsVoidArray.h"
 
-
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 // unicode conversion
@@ -342,6 +341,7 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom)
 #ifdef DEBUG_CLIPBOARD
   g_print("    nsClipboard::DoRealConvert(%li)\n    {\n", type);
 #endif
+
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
 
@@ -363,33 +363,18 @@ PRBool nsClipboard::DoRealConvert(GdkAtom type, GdkAtom aSelectionAtom)
      set to FALSE by this point, so only poll X if we have to.  (pav)
   */
   if (mBlocking) {
-    gtk_grab_add(sWidget);
     // Now we need to wait until the callback comes in ...
     // i is in case we get a runaway (yuck).
 #ifdef DEBUG_CLIPBOARD
     g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
 
-    XEvent xevent;
-    while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
-
-    GdkEvent event;
-    event.selection.type = GDK_SELECTION_NOTIFY;
-    event.any.window = gdk_window_lookup(xevent.xany.window);
-    event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
-    event.selection.window = event.any.window;
-    event.selection.selection = xevent.xselection.selection;
-    event.selection.target = xevent.xselection.target;
-    event.selection.property = xevent.xselection.property;
-    event.selection.time = xevent.xselection.time;
-    
-    gtk_widget_event(sWidget, &event);
+    if (!FindSelectionNotifyEvent())
+      return PR_FALSE;
 
 #ifdef DEBUG_CLIPBOARD
     g_print("    }\n");
 #endif
-
-    gtk_grab_remove(sWidget);
   }
 
   if (mSelectionData.length > 0)
@@ -628,25 +613,43 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
   else if (type.Equals("UTF8_STRING")) {
     mSelectionData = *aSD;
 
-    static const PRUnichar unicodeFormatter[] = {
-      (PRUnichar)'%',
-      (PRUnichar)'s',
-      (PRUnichar)0,
-    };
-    // convert aSD->data (UTF8) to Unicode and place the unicode data in mSelectionData.data
-    PRUnichar *unicodeString = nsTextFormatter::smprintf(unicodeFormatter, aSD->data);
+    nsresult rv;
+    PRInt32 outUnicodeLen;
+    PRUnichar *unicodeData;
 
-    if (!unicodeString) // this would be bad wouldn't it?
-      return;
+    char *data = (char*)aSD->data;
+    PRInt32 numberOfBytes = (PRInt32)aSD->length;
 
-    int len = sizeof(unicodeString);
-    mSelectionData.data = g_new(guchar, len + 2);
-    memcpy(mSelectionData.data,
-           unicodeString,
-           len);
-    nsTextFormatter::smprintf_free(unicodeString);
+#ifdef DEBUG_CLIPBOARD
+    printf("UTF8_STRING is %s\nlength is %i\n", aSD->data, aSD->length);
+#endif
+
+    nsCOMPtr<nsIUnicodeDecoder> decoder;
+    // get the charset
+    nsAutoString platformCharset;
+    platformCharset.AssignWithConversion("UTF-8");
+
+    // get the decoder
+    nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID, &rv);
+    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+
+    decoder->GetMaxLength(data, numberOfBytes, &outUnicodeLen);   // |outUnicodeLen| is number of chars
+    if (outUnicodeLen) {
+      unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+      if ( unicodeData ) {
+        PRInt32 numberTmp = numberOfBytes;
+        rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
+        if (numberTmp != numberOfBytes)
+          printf("didn't consume all the bytes\n");
+
+        (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
+      }
+    } // if valid length
+
+
+    mSelectionData.data = NS_REINTERPRET_CAST(guchar*,unicodeData);
+    mSelectionData.length = outUnicodeLen * 2;
     mSelectionData.type = gdk_atom_intern(kUnicodeMime, FALSE);
-    mSelectionData.length = len;
 
   } else if (type.Equals("STRING")) {
 #ifdef DEBUG_CLIPBOARD
@@ -1134,6 +1137,7 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
 #ifdef DEBUG_CLIPBOARD
   g_print("    nsClipboard::GetTargets(%d)\n    {\n", aSelectionAtom);
 #endif
+
   // Set a flag saying that we're blocking waiting for the callback:
   mBlocking = PR_TRUE;
 
@@ -1149,30 +1153,14 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
 
   /* see comment in DoRealConvert for why we check for mBlocking here */
   if (mBlocking) {
-    gtk_grab_add(sWidget);
-    
     // Now we need to wait until the callback comes in ...
-    // i is in case we get a runaway (yuck).
 #ifdef DEBUG_CLIPBOARD
     g_print("      Waiting for the callback... mBlocking = %d\n", mBlocking);
 #endif /* DEBUG_CLIPBOARD */
-    
-    XEvent xevent;
-    while (!XCheckTypedWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), SelectionNotify, &xevent));
-    
-    GdkEvent event;
-    event.selection.type = GDK_SELECTION_NOTIFY;
-    event.any.window = gdk_window_lookup (xevent.xany.window);
-    event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
-    event.selection.window = event.any.window;
-    event.selection.selection = xevent.xselection.selection;
-    event.selection.target = xevent.xselection.target;
-    event.selection.property = xevent.xselection.property;
-    event.selection.time = xevent.xselection.time;
-    
-    gtk_widget_event(sWidget, &event);
-    
-    gtk_grab_remove(sWidget);
+
+    if (!FindSelectionNotifyEvent())
+      return PR_FALSE;
+
   }
 
 #ifdef DEBUG_CLIPBOARD
@@ -1183,4 +1171,86 @@ PRBool nsClipboard::GetTargets(GdkAtom aSelectionAtom)
     return PR_FALSE;
 
   return PR_TRUE;
+}
+
+
+void nsClipboard::SendClipPing()
+{
+#ifdef DEBUG_CLIPBOARD
+  printf("nsClipboard::SendClipPing()\n");
+#endif
+  XClientMessageEvent send_event;
+  send_event.type = ClientMessage;
+  send_event.message_type = XInternAtom(GDK_DISPLAY(), "_MOZ_CLIP_PING", PR_FALSE);
+  send_event.format = 32;
+  send_event.data.l[0] = CurrentTime;
+  send_event.window = GDK_WINDOW_XWINDOW(sWidget->window);
+
+  XSendEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), PR_FALSE, 0, (XEvent*)&send_event);
+  XSync(GDK_DISPLAY(), False);
+}
+
+
+static PRBool addEventBack(void* aElement, void *aData)
+{
+  if (aElement)
+    XPutBackEvent(GDK_DISPLAY(), (XEvent*)aElement);
+
+  return PR_TRUE;
+}
+
+PRBool nsClipboard::FindSelectionNotifyEvent()
+{
+  int i;
+
+  SendClipPing(); // send out the first message (convert should have already been called)
+
+  nsVoidArray a;
+
+  for (i = 0; i < 5; ++i) {
+    XEvent xevent;
+    //    XWindowEvent(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(sWidget->window), 0, &xevent);
+    XNextEvent(GDK_DISPLAY(), &xevent);
+
+    if (xevent.xany.window == GDK_WINDOW_XWINDOW(sWidget->window)) {
+      if (xevent.type == SelectionNotify) {
+        GdkEvent event;
+        event.selection.type = GDK_SELECTION_NOTIFY;
+        event.any.window = gdk_window_lookup(xevent.xany.window);
+        event.any.send_event = xevent.xany.send_event ? TRUE : FALSE;
+        event.selection.window = event.any.window;
+        event.selection.selection = xevent.xselection.selection;
+        event.selection.target = xevent.xselection.target;
+        event.selection.property = xevent.xselection.property;
+        event.selection.time = xevent.xselection.time;
+  
+        gtk_widget_event(sWidget, &event);
+
+        if (a.Count() != 0) {
+          a.EnumerateBackwards(addEventBack, nsnull);
+        }
+
+        return PR_TRUE;
+
+      } else if (xevent.type == ClientMessage) {
+#ifdef DEBUG_CLIPBOARD
+        printf("got client message %i\n", i);
+#endif
+
+        SendClipPing(); // send out the message again
+
+      } else {
+        printf("got strange event for clipboard window\n");
+      }
+    } else {
+      a.AppendElement(&xevent);
+      --i;  // (i only counts for our window)
+    }
+  }
+
+  if (a.Count() != 0) {
+    a.EnumerateBackwards(addEventBack, nsnull);
+  }
+
+  return PR_FALSE;
 }
