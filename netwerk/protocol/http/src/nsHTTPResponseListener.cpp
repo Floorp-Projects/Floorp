@@ -55,16 +55,7 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                             PRUint32 i_SourceOffset,
                             PRUint32 i_Length)
 {
-    // we should probably construct the stream only when we get the data... 
-    // but for now...
-    nsIStreamListener* syncListener;
-    nsIInputStream* inStr;
-    
-    /* Jud... getting some unresolved stuff here... noticed that 
-        nsSyncStreamListener isn't being exported!?! */
-    //nsresult rv = NS_NewSyncStreamListener(&syncListener, &inStr);
-    //if (NS_FAILED(rv)) 
-    //    return rv;
+    nsIInputStream* inStr = nsnull;
 
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
@@ -179,8 +170,21 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
     if (bHeadersDone)
     {
-        // TODO push extrabuffer up the stream too.. How? JUD?
+        nsresult rv;
+        nsIStreamListener* internalListener = nsnull;
 
+        // Get our end of the pipe between us and the user's GetInputStream()
+        rv = m_pConnection->GetResponseDataListener(&internalListener);
+        if (NS_SUCCEEDED(rv)) {
+            // post the data to the stream listener
+            // XXX this is the wrong data and offsets I think.
+            rv = internalListener->OnDataAvailable(context, i_pStream, i_SourceOffset, i_Length);
+            NS_RELEASE(internalListener);
+            if (NS_FAILED(rv))
+                return rv;
+        }
+
+        // do whatever we want for the event sink
         return pSink->OnDataAvailable(context, inStr, i_SourceOffset, i_Length);
     }
 

@@ -99,6 +99,9 @@ public:
 
     NS_IMETHOD              SetResponse(nsHTTPResponse* i_pResp) { if (i_pResp) m_pResponse = i_pResp; return NS_OK;};
 
+    NS_IMETHOD              GetResponseDataListener(nsIStreamListener* *aListener);
+
+
 private:
     nsCOMPtr<nsIURL>            m_pURL;
     PRBool                      m_bConnected; 
@@ -108,6 +111,8 @@ private:
     nsCOMPtr<nsIHTTPEventSink>  m_pEventSink;
     nsHTTPRequest*              m_pRequest;
     nsHTTPResponse*             m_pResponse;
+
+    nsIStreamListener*          m_pResponseDataListener;
 };
 
 #endif /* _nsHTTPConnection_h_ */

@@ -21,6 +21,8 @@
 
 #include "nsIProtocolConnection.h"
 #include "nsHTTPEnums.h"
+#include "nsIStreamListener.h"
+
 class nsIHTTPEventSink;
 /* 
     The nsIHTTPConnection class is the interface to an intance
@@ -67,6 +69,8 @@ public:
 
 		return NS_IHTTPConnection_IID; 
 	};
+
+    NS_IMETHOD          GetResponseDataListener(nsIStreamListener* *aListener) = 0;
 
 };
 
