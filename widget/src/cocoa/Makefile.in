@@ -70,11 +70,11 @@ CPPSRCS         =  \
 		nsMimeMapper.cpp \
 		nsSound.cpp \
 		nsTSMStrategy.cpp \
-		nsToolkit.cpp \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 
 CMMSRCS = \
+    nsToolkit.mm \
     nsAppShellCocoa.mm \
     nsCocoaWindow.mm \
     nsChildView.mm \

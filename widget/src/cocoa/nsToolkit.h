@@ -53,22 +53,21 @@
  * So on the Mac, the nsToolkit used to be a unique object, created once
  * at startup along with nsAppShell and passed to all the top-level
  * windows and it became a convenient place to throw in everything we
- * didn't know where else to put, like the NSPR event queue and
+ * didn't know where else to put, like the PLEvent queue and
  * the handling of global pointers on some special widgets (focused
  * widget, widget hit, widget pointed).
  *
  * All this has changed: the application now usually creates one copy of
  * the nsToolkit per window and the special widgets had to be moved
  * to the nsMacEventHandler. Also, to avoid creating several repeaters,
- * the NSPR event queue has been moved to a global object of its own:
- * the nsMacNSPREventQueueHandler declared below.
+ * the PLEvent queue has been moved to a global object of its own.
  *
  * If by any chance we support one day several threads for the UI
- * on the Mac, will have to create one instance of the NSPR
- * event queue per nsToolkit.
+ * on the Mac, will have to create one instance of the PLEvent queue
+ * per nsToolkit.
  */
 
-#include <MacTypes.h>
+struct PRThread;
 
 class nsToolkit : public nsIToolkit
 {
@@ -98,75 +97,6 @@ protected:
   bool          mInited;
   static bool   sInForeground;
 };
-
-
-class nsMacNSPREventQueueHandler : public Repeater
-{
-public:
-									nsMacNSPREventQueueHandler();
-	virtual					~nsMacNSPREventQueueHandler();
-
-	virtual	void		StartPumping();
-	virtual	PRBool	StopPumping();
-
-	// Repeater interface
-	virtual	void		RepeatAction(const EventRecord& inMacEvent);
-
-  PRBool          EventsArePending();
-  
-protected:
-
-	void						ProcessPLEventQueue();
-	
-protected:
-
-	nsrefcnt								mRefCnt;
-
-	nsCOMPtr<nsIEventQueueService>			mEventQueueService;
-};
-
-
-// class for low memory detection and handling
-class nsMacMemoryCushion : public Repeater
-{
-public:
-
-  enum {
-    kMemoryBufferSize       = 64 * 1024,  // 64k reserve, purgeable handle purged first
-    kMemoryReserveSize      = 32 * 1024   // 32k memory reserve, freed by the GrowZoneProc
-  };
-  
-                nsMacMemoryCushion();
-                ~nsMacMemoryCushion();
-                
-  OSErr         Init(Size bufferSize, Size reserveSize);
-
-
-  void          RepeatAction(const EventRecord &aMacEvent);
-
-protected:
-
-                // reallocate the memory buffer. Returns true on success
-  Boolean       RecoverMemoryBuffer(Size bufferSize);
-
-                // allocate or recover the memory reserve. Returns true on success
-  Boolean       RecoverMemoryReserve(Size reserveSize);
-
-
-public:
-
-  static pascal long  GrowZoneProc(Size amountNeeded);
-  
-  
-protected:
-
-  static Handle  sMemoryReserve;
-  
-  Handle         mBufferHandle;     // this is first to go
-
-};
-
-
 
 
 #endif  // TOOLKIT_H
