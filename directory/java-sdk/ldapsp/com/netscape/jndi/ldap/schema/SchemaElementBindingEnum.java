@@ -27,47 +27,47 @@ import java.util.*;
 
 class SchemaElementBindingEnum implements NamingEnumeration {
 
-	/**
-	 * Enumeration of schema name-object bindings packaged into Binding object.
-	 */
-	Enumeration m_schemaElementEnum;
-	
-	SchemaManager m_schemaMgr;
+    /**
+     * Enumeration of schema name-object bindings packaged into Binding object.
+     */
+    Enumeration m_schemaElementEnum;
+    
+    SchemaManager m_schemaMgr;
 
-	static final String _className = "javax.naming.directory.DirContext"; // for class name is bindings
+    static final String _className = "javax.naming.directory.DirContext"; // for class name is bindings
 
-	public SchemaElementBindingEnum(Enumeration schemaElementEnum, SchemaManager schemaMgr) {
-		m_schemaElementEnum = schemaElementEnum;
-		m_schemaMgr = schemaMgr;
-	}
+    public SchemaElementBindingEnum(Enumeration schemaElementEnum, SchemaManager schemaMgr) {
+        m_schemaElementEnum = schemaElementEnum;
+        m_schemaMgr = schemaMgr;
+    }
 
-	public Object next() throws NamingException{
-		return nextElement();
-	}
+    public Object next() throws NamingException{
+        return nextElement();
+    }
 
-	public Object nextElement() {
-		DirContext obj = null;
-		LDAPSchemaElement schemaElement = (LDAPSchemaElement) m_schemaElementEnum.nextElement();
-		if (schemaElement instanceof LDAPObjectClassSchema) {
-			obj = new SchemaObjectClass((LDAPObjectClassSchema) schemaElement, m_schemaMgr);
-		}
-		else if (schemaElement instanceof LDAPAttributeSchema) {
-			obj = new SchemaAttribute((LDAPAttributeSchema) schemaElement, m_schemaMgr);
-		}
-		else if (schemaElement instanceof LDAPMatchingRuleSchema) {
-			obj = new SchemaMatchingRule((LDAPMatchingRuleSchema) schemaElement, m_schemaMgr);
-		}
-		return new Binding(schemaElement.getName(), _className, obj, /*isRelative=*/true);
-	}
+    public Object nextElement() {
+        DirContext obj = null;
+        LDAPSchemaElement schemaElement = (LDAPSchemaElement) m_schemaElementEnum.nextElement();
+        if (schemaElement instanceof LDAPObjectClassSchema) {
+            obj = new SchemaObjectClass((LDAPObjectClassSchema) schemaElement, m_schemaMgr);
+        }
+        else if (schemaElement instanceof LDAPAttributeSchema) {
+            obj = new SchemaAttribute((LDAPAttributeSchema) schemaElement, m_schemaMgr);
+        }
+        else if (schemaElement instanceof LDAPMatchingRuleSchema) {
+            obj = new SchemaMatchingRule((LDAPMatchingRuleSchema) schemaElement, m_schemaMgr);
+        }
+        return new Binding(schemaElement.getName(), _className, obj, /*isRelative=*/true);
+    }
 
-	public boolean hasMore() throws NamingException{
-		return m_schemaElementEnum.hasMoreElements();
-	}
+    public boolean hasMore() throws NamingException{
+        return m_schemaElementEnum.hasMoreElements();
+    }
 
-	public boolean hasMoreElements() {
-		return m_schemaElementEnum.hasMoreElements();
-	}
+    public boolean hasMoreElements() {
+        return m_schemaElementEnum.hasMoreElements();
+    }
 
-	public void close() {}
+    public void close() {}
 }
 

@@ -47,10 +47,10 @@ class EventService implements Runnable{
         m_ldapSvc = ldapSvc;
     }
 
-	/**
-	 * Add change event listener
-	 */
-	synchronized void addListener (LdapContextImpl ctx, String name,
+    /**
+     * Add change event listener
+     */
+    synchronized void addListener (LdapContextImpl ctx, String name,
                       String filter,SearchControls jndiCtrls, NamingListener l)
                       throws NamingException{
         
@@ -59,43 +59,43 @@ class EventService implements Runnable{
 
         Debug.println(1, "ADD LISTENER");
 
-		// Create DN by appending the name to the current context
-		String base = ctx.getDN();
-		if (name.length() > 0) {
-			if (base.length() > 0) {
-				base = name + "," + base;
-			}
-			else {
-				base = name;
-			}
-		}
-				
+        // Create DN by appending the name to the current context
+        String base = ctx.getDN();
+        if (name.length() > 0) {
+            if (base.length() > 0) {
+                base = name + "," + base;
+            }
+            else {
+                base = name;
+            }
+        }
+                
         //Create search constraints
-		LDAPConnection ld = (LDAPConnection) m_ldapSvc.getConnection().clone();
-		LDAPSearchConstraints cons=ld.getSearchConstraints();
-		LDAPPersistSearchControl psearchCtrl = createSrchCtrl(l);
+        LDAPConnection ld = (LDAPConnection) m_ldapSvc.getConnection().clone();
+        LDAPSearchConstraints cons=ld.getSearchConstraints();
+        LDAPPersistSearchControl psearchCtrl = createSrchCtrl(l);
         cons.setServerControls(psearchCtrl);
 
         // return obj flag is ignored in this implementation
         boolean returnObjs = jndiCtrls.getReturningObjFlag();
         
-		// Attributes in jndiCtrls.getReturningAttributes() are ignored 
+        // Attributes in jndiCtrls.getReturningAttributes() are ignored 
         // This is because we are not returning objects in the NamingEvent
         // and thus listeners can not read attributes from the event.
         // Request only javaClassName to be able to determine object type
-		String[] attrs = new String[] { "javaclassname" }; 
-			
-		// Search scope
-		int scope = ProviderUtils.jndiSearchScopeToLdap(jndiCtrls.getSearchScope());
+        String[] attrs = new String[] { "javaclassname" }; 
+            
+        // Search scope
+        int scope = ProviderUtils.jndiSearchScopeToLdap(jndiCtrls.getSearchScope());
 
-		// Check if such change is already monitored, search for the event entry
-		for (int i=0; i < m_eventList.size(); i++) {
-		    EventEntry ee = (EventEntry) m_eventList.elementAt(i);
-		    if (ee.isEqualEvent(base, scope, filter, attrs, cons)) {
-		        event = ee;
-		        break;
-		    }
-		}
+        // Check if such change is already monitored, search for the event entry
+        for (int i=0; i < m_eventList.size(); i++) {
+            EventEntry ee = (EventEntry) m_eventList.elementAt(i);
+            if (ee.isEqualEvent(base, scope, filter, attrs, cons)) {
+                event = ee;
+                break;
+            }
+        }
         
         // If event entry does not exist, send an asynch persistent search
         // request and create a new event entry
@@ -126,34 +126,34 @@ class EventService implements Runnable{
             m_msgQueue.merge(sl);
         }
         
-		// Create new event if reqested change is not already monitored
-		if (m_monitorThread == null) {
-		    m_monitorThread = new Thread (this, "EventService");
-		    m_monitorThread.setDaemon(true);
-		    m_monitorThread.start();
-		}    
-	}
-	
-	/**
-	 * Remove change event listener
-	 */
-	 synchronized void removeListener(NamingListener listener)throws NamingException {
-	    boolean removed = false;
+        // Create new event if reqested change is not already monitored
+        if (m_monitorThread == null) {
+            m_monitorThread = new Thread (this, "EventService");
+            m_monitorThread.setDaemon(true);
+            m_monitorThread.start();
+        }    
+    }
+    
+    /**
+     * Remove change event listener
+     */
+     synchronized void removeListener(NamingListener listener)throws NamingException {
+        boolean removed = false;
 
         // Check and the listener against all event entries. If an event is
         // left with no listeners, abandon associated ldap request
         for(int i = m_eventList.size()-1; i>=0; i--) {
-	        EventEntry ee = (EventEntry)m_eventList.elementAt(i);
-	        if (ee.removeListener(listener)) {
-	            removed = true;
+            EventEntry ee = (EventEntry)m_eventList.elementAt(i);
+            if (ee.removeListener(listener)) {
+                removed = true;
 
                 // If no listeners left abandon persistant search and
                 // delete entry
-	            if (ee.isEmpty()) {
+                if (ee.isEmpty()) {
                     abandonRequest(ee.id);
-	                m_eventList.removeElement(ee);
-	            }
-	        }
+                    m_eventList.removeElement(ee);
+                }
+            }
         }
         
         // Stop the monitor thread if no events are left
@@ -162,11 +162,11 @@ class EventService implements Runnable{
         if (m_eventList.size() == 0) {
             m_monitorThread = null;
         }            
-	  
-	    if (!removed) {
-	        throw new NamingException("Listener not found");
-	    }
-	 }    
+      
+        if (!removed) {
+            throw new NamingException("Listener not found");
+        }
+     }    
 
     /**
      * Abandon LDAP request with the specified message ID
@@ -174,11 +174,11 @@ class EventService implements Runnable{
      private void abandonRequest(int id) {
         LDAPConnection ldc = m_ldapSvc.getConnection();
         try {
-	        ldc.abandon(id);
+            ldc.abandon(id);
         }
         catch (LDAPException ex) {}
      }
-	     
+         
      
     /**
      * Main monitor thread loop. Wait for persistent search change notifications
@@ -209,21 +209,21 @@ class EventService implements Runnable{
           
             synchronized (EventService.this) {
                 
-                EventEntry eventEntry = getEventEntry(msg.getId());                
+                EventEntry eventEntry = getEventEntry(msg.getID());                
 
                 // If no listeners, abandon this message id
                 if (eventEntry == null) {
-                    Debug.println(1, "Received ldap msg with unknown id="+msg.getId());
+                    Debug.println(1, "Received ldap msg with unknown id="+msg.getID());
 
                     if (! (msg instanceof LDAPResponse)) {
-                        abandonRequest(msg.getId());
+                        abandonRequest(msg.getID());
                     }                    
                     continue;
                 }
                 
                 // Check for error message ...
                 if (msg instanceof LDAPResponse) {
-			        processResponseMsg((LDAPResponse) msg, eventEntry);
+                    processResponseMsg((LDAPResponse) msg, eventEntry);
                 }
                     
                 // ... or referral ...
@@ -276,7 +276,7 @@ class EventService implements Runnable{
      */
     private void processSearchResultMsg(LDAPSearchResult res, EventEntry ee) {
         LDAPEntry modEntry = res.getEntry();
-	    	   
+               
         Debug.println(1, "Changed " + modEntry.getDN());
 
         /* Get any entry change controls. */
@@ -326,12 +326,12 @@ class EventService implements Runnable{
      * Find event entry by message ID
      */
     private EventEntry getEventEntry(int id) {
-	    for (int i=0; i < m_eventList.size(); i++) {
-		    EventEntry ee = (EventEntry) m_eventList.elementAt(i);
+        for (int i=0; i < m_eventList.size(); i++) {
+            EventEntry ee = (EventEntry) m_eventList.elementAt(i);
             if (ee.id == id) {
-		        return ee;
-		    }
-		}            
+                return ee;
+            }
+        }            
         return null;
     }
     
@@ -448,18 +448,18 @@ class EventService implements Runnable{
      * described with a set of search parameters, and a list of listeners
      */
     static private class EventEntry {
-	    
-	    LdapContextImpl ctx;
+        
+        LdapContextImpl ctx;
         String base, filter, attrs[];
-	    int scope;
-	    LDAPSearchConstraints cons;
+        int scope;
+        LDAPSearchConstraints cons;
         int id; // ldap message id
         Vector listeners   = new Vector(); // vector of NamingListener
-	    
+        
         /**
          * Constructor
          */
-	    EventEntry(int id, LdapContextImpl ctx, String base, int scope,
+        EventEntry(int id, LdapContextImpl ctx, String base, int scope,
                    String filter, String[] attrs, LDAPSearchConstraints cons) {
 
             this.id = id;
@@ -496,8 +496,8 @@ class EventService implements Runnable{
         /**
          * Check whether this event paramaters are matched
          */
-	    boolean isEqualEvent(String base, int scope, String filter,
-	                  String[] attrs, LDAPSearchConstraints cons) {
+        boolean isEqualEvent(String base, int scope, String filter,
+                      String[] attrs, LDAPSearchConstraints cons) {
         
             if (!this.base.equals(base) || this.scope != scope ||
                 !this.filter.equals(filter)) {

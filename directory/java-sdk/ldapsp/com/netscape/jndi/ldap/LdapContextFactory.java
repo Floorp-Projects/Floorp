@@ -25,23 +25,23 @@ import java.util.*;
 
 public class LdapContextFactory implements InitialContextFactory {
 
-	public Context getInitialContext(Hashtable env) throws NamingException {
-	    Hashtable ctxEnv = (Hashtable)env.clone();
+    public Context getInitialContext(Hashtable env) throws NamingException {
+        Hashtable ctxEnv = (Hashtable)env.clone();
 
-	    // Read system properties as well. Add a system property to the
-	    // env if it's name start with "java.naming." and it is not already
-	    // present in the env (env has precedence over the System properties)	    
-		for (Enumeration e = System.getProperties().keys(); e.hasMoreElements();) {
+        // Read system properties as well. Add a system property to the
+        // env if it's name start with "java.naming." and it is not already
+        // present in the env (env has precedence over the System properties)        
+        for (Enumeration e = System.getProperties().keys(); e.hasMoreElements();) {
             String key = (String) e.nextElement();
-			if (key.startsWith("java.naming.")) {
-			    if (ctxEnv.get(key) == null) {
-			        ctxEnv.put(key,System.getProperty(key));
-			    }
-			}
-		}
+            if (key.startsWith("java.naming.")) {
+                if (ctxEnv.get(key) == null) {
+                    ctxEnv.put(key,System.getProperty(key));
+                }
+            }
+        }
 
-		EventDirContext ctx = new LdapContextImpl(ctxEnv);
-		return ctx;
-	}
+        EventDirContext ctx = new LdapContextImpl(ctxEnv);
+        return ctx;
+    }
 }
 

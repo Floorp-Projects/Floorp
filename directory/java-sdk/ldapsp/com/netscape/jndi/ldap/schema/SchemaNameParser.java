@@ -23,9 +23,9 @@ import javax.naming.*;
 
 class SchemaNameParser implements NameParser {
 
-	private static SchemaNameParser m_parser;
-	
-	// A table with compound name syntax properties
+    private static SchemaNameParser m_parser;
+    
+    // A table with compound name syntax properties
     static Properties nameSyntax;
     static {
         nameSyntax = new Properties();
@@ -34,18 +34,18 @@ class SchemaNameParser implements NameParser {
         nameSyntax.put("jndi.syntax.ignorecase", "true");
     }
 
-	// Can not be constructed
-	private SchemaNameParser() {}
-	
-	// Shared instance must be used
-	public static SchemaNameParser getParser() {
-		if (m_parser == null) {
-			m_parser = new SchemaNameParser();
-		}
-		return m_parser;
-	}
-	
-	// implements parse
+    // Can not be constructed
+    private SchemaNameParser() {}
+    
+    // Shared instance must be used
+    public static SchemaNameParser getParser() {
+        if (m_parser == null) {
+            m_parser = new SchemaNameParser();
+        }
+        return m_parser;
+    }
+    
+    // implements parse
     public Name parse(String name) throws NamingException {
         return new CompoundName(name, nameSyntax);
     }

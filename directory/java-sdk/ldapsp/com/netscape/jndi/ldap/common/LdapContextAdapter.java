@@ -26,65 +26,65 @@ import java.util.Hashtable;
 public class LdapContextAdapter extends DirContextAdapter implements EventDirContext, LdapContext {
 
 /* LdapContext methods */
-	public ExtendedResponse extendedOperation(ExtendedRequest req)throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public ExtendedResponse extendedOperation(ExtendedRequest req)throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public Control[] getRequestControls() throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public Control[] getRequestControls() throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public Control[] getResponseControls() throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public Control[] getResponseControls() throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public Control[] getConnectControls() throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public Control[] getConnectControls() throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
     public LdapContext newInstance(Control[] reqCtls) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+        throw new OperationNotSupportedException();
+    }
 
-	public void reconnect(Control[] reqCtls) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void reconnect(Control[] reqCtls) throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
     public void setRequestControls(Control[] reqCtls) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
-	/**
-	 * Naming Event methods
-	 */
-	public void addNamingListener(String target, int scope, NamingListener l) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+        throw new OperationNotSupportedException();
+    }
+    /**
+     * Naming Event methods
+     */
+    public void addNamingListener(String target, int scope, NamingListener l) throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void addNamingListener(Name target, int scope, NamingListener l) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void addNamingListener(Name target, int scope, NamingListener l) throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void addNamingListener(String target, String filter, SearchControls ctls, NamingListener l)throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void addNamingListener(String target, String filter, SearchControls ctls, NamingListener l)throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void addNamingListener(Name target, String filter, SearchControls ctls, NamingListener l)throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void addNamingListener(Name target, String filter, SearchControls ctls, NamingListener l)throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void addNamingListener(String target, String filter, Object[] filtrArgs, SearchControls ctls, NamingListener l)throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void addNamingListener(String target, String filter, Object[] filtrArgs, SearchControls ctls, NamingListener l)throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void addNamingListener(Name target, String filter, Object[] filtrArgs, SearchControls ctls, NamingListener l)throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void addNamingListener(Name target, String filter, Object[] filtrArgs, SearchControls ctls, NamingListener l)throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void removeNamingListener(NamingListener l) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void removeNamingListener(NamingListener l) throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
     public boolean targetMustExist() {
-		return true;
+        return true;
     }
 }

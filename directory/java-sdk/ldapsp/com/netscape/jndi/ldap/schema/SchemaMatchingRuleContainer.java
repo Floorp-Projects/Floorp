@@ -28,70 +28,70 @@ import java.util.*;
 
 public class SchemaMatchingRuleContainer extends SchemaElementContainer {
 
-	public SchemaMatchingRuleContainer(SchemaManager schemaMgr) throws NamingException{
-		super(schemaMgr, MRULEDEF);
-	}
-	
-	/**
-	 * Ldap entry operations
-	 */
+    public SchemaMatchingRuleContainer(SchemaManager schemaMgr) throws NamingException{
+        super(schemaMgr, MRULEDEF);
+    }
+    
+    /**
+     * Ldap entry operations
+     */
 
-	public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Empty name for schema objectclass");
-		}
-		LDAPMatchingRuleSchema mrule = SchemaMatchingRule.parseDefAttributes(attrs);
-		m_schemaMgr.createMatchingRule(mrule);
-		return new SchemaMatchingRule(mrule, m_schemaMgr);
+    public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Empty name for schema objectclass");
+        }
+        LDAPMatchingRuleSchema mrule = SchemaMatchingRule.parseDefAttributes(attrs);
+        m_schemaMgr.createMatchingRule(mrule);
+        return new SchemaMatchingRule(mrule, m_schemaMgr);
 
-	}
+    }
 
-	public void removeSchemaElement(String name) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Can not delete schema object container");
-		}	
-		m_schemaMgr.removeMatchingRule(name);
-	}
+    public void removeSchemaElement(String name) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Can not delete schema object container");
+        }    
+        m_schemaMgr.removeMatchingRule(name);
+    }
 
-	/**
-	 * List Operations
-	 */
+    /**
+     * List Operations
+     */
 
-	public NamingEnumeration getNameList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementNameEnum(m_schemaMgr.getMatchingRuleNames());
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getNameList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementNameEnum(m_schemaMgr.getMatchingRuleNames());
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	public NamingEnumeration getBindingsList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementBindingEnum(m_schemaMgr.getMatchingRules(), m_schemaMgr);
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getBindingsList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementBindingEnum(m_schemaMgr.getMatchingRules(), m_schemaMgr);
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	/**
-	 * Lookup Operations
-	 */
+    /**
+     * Lookup Operations
+     */
 
-	public Object lookupSchemaElement(String name) throws NamingException {	
-		if (name.length() == 0) {
-			return this;
-		}
-		
-		// No caching; Always create a new object
-		LDAPAttributeSchema mrule = m_schemaMgr.getMatchingRule(name);
-		if (mrule == null) {
-			throw new NameNotFoundException(name);
-		}
-		return new SchemaAttribute(mrule, m_schemaMgr);
+    public Object lookupSchemaElement(String name) throws NamingException {    
+        if (name.length() == 0) {
+            return this;
+        }
+        
+        // No caching; Always create a new object
+        LDAPMatchingRuleSchema mrule = m_schemaMgr.getMatchingRule(name);
+        if (mrule == null) {
+            throw new NameNotFoundException(name);
+        }
+        return new SchemaMatchingRule(mrule, m_schemaMgr);
 
-	}
+    }
 }

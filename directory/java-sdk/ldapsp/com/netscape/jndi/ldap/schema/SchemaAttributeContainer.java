@@ -28,70 +28,70 @@ import java.util.*;
 
 public class SchemaAttributeContainer extends SchemaElementContainer {
 
-	public SchemaAttributeContainer(SchemaManager schemaMgr) throws NamingException{
-		super(schemaMgr, ATTRDEF);
-	}
-	
-	/**
-	 * Ldap entry operations
-	 */
+    public SchemaAttributeContainer(SchemaManager schemaMgr) throws NamingException{
+        super(schemaMgr, ATTRDEF);
+    }
+    
+    /**
+     * Ldap entry operations
+     */
 
-	public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Empty name for schema objectclass");
-		}
-		LDAPAttributeSchema attr = SchemaAttribute.parseDefAttributes(attrs);
-		m_schemaMgr.createAttribute(attr);
-		return new SchemaAttribute(attr, m_schemaMgr);
+    public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Empty name for schema objectclass");
+        }
+        LDAPAttributeSchema attr = SchemaAttribute.parseDefAttributes(attrs);
+        m_schemaMgr.createAttribute(attr);
+        return new SchemaAttribute(attr, m_schemaMgr);
 
-	}
+    }
 
-	public void removeSchemaElement(String name) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Can not delete schema object container");
-		}
-		m_schemaMgr.removeAttribute(name);
-	}
+    public void removeSchemaElement(String name) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Can not delete schema object container");
+        }
+        m_schemaMgr.removeAttribute(name);
+    }
 
-	/**
-	 * List Operations
-	 */
+    /**
+     * List Operations
+     */
 
-	public NamingEnumeration getNameList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementNameEnum(m_schemaMgr.getAttributeNames());
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getNameList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementNameEnum(m_schemaMgr.getAttributeNames());
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	public NamingEnumeration getBindingsList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementBindingEnum(m_schemaMgr.getAttributes(), m_schemaMgr);
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getBindingsList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementBindingEnum(m_schemaMgr.getAttributes(), m_schemaMgr);
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	/**
-	 * Lookup Operations
-	 */
+    /**
+     * Lookup Operations
+     */
 
-	public Object lookupSchemaElement(String name) throws NamingException {	
-		if (name.length() == 0) {
-			return this;
-		}
-		
-		// No caching; Always create a new object
-		LDAPAttributeSchema attr = m_schemaMgr.getAttribute(name);
-		if (attr == null) {
-			throw new NameNotFoundException(name);
-		}
-		return new SchemaAttribute(attr, m_schemaMgr);
+    public Object lookupSchemaElement(String name) throws NamingException {    
+        if (name.length() == 0) {
+            return this;
+        }
+        
+        // No caching; Always create a new object
+        LDAPAttributeSchema attr = m_schemaMgr.getAttribute(name);
+        if (attr == null) {
+            throw new NameNotFoundException(name);
+        }
+        return new SchemaAttribute(attr, m_schemaMgr);
 
-	}
+    }
 }

@@ -29,132 +29,132 @@ import java.util.*;
 
 public class SchemaDirContext extends DirContextAdapter {
 
-	public static final String CLASSDEF = "ClassDefinition";
-	public static final String ATTRDEF = "AttributeDefinition";
-	public static final String MRULEDEF = "MatchingRule";
-	
+    public static final String CLASSDEF = "ClassDefinition";
+    public static final String ATTRDEF = "AttributeDefinition";
+    public static final String MRULEDEF = "MatchingRule";
+    
 
-	String m_path;
+    String m_path;
 
-	public void close() throws NamingException {
-		; //NOP
-	}
+    public void close() throws NamingException {
+        ; //NOP
+    }
 
-	/**
-	 * Name operations
-	 */
+    /**
+     * Name operations
+     */
 
-	public String composeName(String name, String prefix) throws NamingException {
-		return name + "," + prefix;
-	}
+    public String composeName(String name, String prefix) throws NamingException {
+        return name + "," + prefix;
+    }
 
-	public Name composeName(Name name, Name prefix) throws NamingException {
-		String compoundName = composeName(name.toString(), prefix.toString());
-		return SchemaNameParser.getParser().parse(compoundName);
-	}
+    public Name composeName(Name name, Name prefix) throws NamingException {
+        String compoundName = composeName(name.toString(), prefix.toString());
+        return SchemaNameParser.getParser().parse(compoundName);
+    }
 
-	public String getNameInNamespace() throws NamingException {
-		return new String(m_path);
-	}
+    public String getNameInNamespace() throws NamingException {
+        return new String(m_path);
+    }
 
-	public NameParser getNameParser(String name) throws NamingException {
-		return SchemaNameParser.getParser();
-	}
+    public NameParser getNameParser(String name) throws NamingException {
+        return SchemaNameParser.getParser();
+    }
 
-	public NameParser getNameParser(Name name) throws NamingException {
-		return SchemaNameParser.getParser();
-	}
+    public NameParser getNameParser(Name name) throws NamingException {
+        return SchemaNameParser.getParser();
+    }
 
-	 
-	/**
-	 * Naming Bind operations
-	 */
+     
+    /**
+     * Naming Bind operations
+     */
 
-	public void bind(String name, Object obj) throws NamingException {
-		if (obj instanceof DirContext) {
-			createSubcontext(name, ((DirContext)obj).getAttributes(""));
-		}
-		else {
-			throw new IllegalArgumentException("Can not bind this type of object");
-		}	
-	}
+    public void bind(String name, Object obj) throws NamingException {
+        if (obj instanceof DirContext) {
+            createSubcontext(name, ((DirContext)obj).getAttributes(""));
+        }
+        else {
+            throw new IllegalArgumentException("Can not bind this type of object");
+        }    
+    }
 
-	public void bind(Name name, Object obj) throws NamingException {
-		bind(name.toString(), obj);
-	}
+    public void bind(Name name, Object obj) throws NamingException {
+        bind(name.toString(), obj);
+    }
 
-	public void rebind(String name, Object obj) throws NamingException {
-		try {
-			bind(name, obj);
-		}
-		catch (NameAlreadyBoundException ex) {
-			unbind(name);
-			bind(name, obj);
-		}
-	}
+    public void rebind(String name, Object obj) throws NamingException {
+        try {
+            bind(name, obj);
+        }
+        catch (NameAlreadyBoundException ex) {
+            unbind(name);
+            bind(name, obj);
+        }
+    }
 
-	public void rebind(Name name, Object obj) throws NamingException {
-		rebind(name.toString(), obj);
-	}
+    public void rebind(Name name, Object obj) throws NamingException {
+        rebind(name.toString(), obj);
+    }
 
-	public void rename(String oldName, String newName) throws NamingException {
-		throw new OperationNotSupportedException();
-	}
+    public void rename(String oldName, String newName) throws NamingException {
+        throw new OperationNotSupportedException();
+    }
 
-	public void rename(Name oldName, Name newName) throws NamingException {
-		rename(oldName.toString(), newName.toString());
-	}
+    public void rename(Name oldName, Name newName) throws NamingException {
+        rename(oldName.toString(), newName.toString());
+    }
 
-	public void unbind(String name) throws NamingException {
-		// In ldap every entry is naming context
-		destroySubcontext(name);
-	}
+    public void unbind(String name) throws NamingException {
+        // In ldap every entry is naming context
+        destroySubcontext(name);
+    }
 
-	public void unbind(Name name) throws NamingException {
-		// In ldap every entry is naming context
-		destroySubcontext(name);
-	}
+    public void unbind(Name name) throws NamingException {
+        // In ldap every entry is naming context
+        destroySubcontext(name);
+    }
 
-	/**
-	 * Empty enumeration for list operations
-	 */
-	class EmptyNamingEnumeration implements NamingEnumeration {
+    /**
+     * Empty enumeration for list operations
+     */
+    class EmptyNamingEnumeration implements NamingEnumeration {
 
-		public Object next() throws NamingException{
-			throw new NoSuchElementException("EmptyNamingEnumeration");				
-		}
+        public Object next() throws NamingException{
+            throw new NoSuchElementException("EmptyNamingEnumeration");                
+        }
 
-		public Object nextElement() {
-			throw new NoSuchElementException("EmptyNamingEnumeration");				
-		}
+        public Object nextElement() {
+            throw new NoSuchElementException("EmptyNamingEnumeration");                
+        }
 
-		public boolean hasMore() throws NamingException{
-			return false;
-		}
+        public boolean hasMore() throws NamingException{
+            return false;
+        }
 
-		public boolean hasMoreElements() {
-			return false;
-		}
+        public boolean hasMoreElements() {
+            return false;
+        }
 
-		public void close() {}
-	}
-	
-	static class SchemaObjectSubordinateNamePair {
-		SchemaDirContext schemaObj;
-		String subordinateName;
-		
-		public SchemaObjectSubordinateNamePair(SchemaDirContext object, String subordinateName) {
-			this.schemaObj = object;
-			this.subordinateName = subordinateName;
-		}
-		
-		public String toString() {
-			StringBuffer str = new StringBuffer("SchemaObjectSubordinateNamePair{obj:");
-			str.append(((schemaObj == null) ? "null" : schemaObj.toString()));
-			str.append(" name:");
-			str.append(subordinateName);
-			str.append("}");
-			return str.toString();
-		}
-	}	
+        public void close() {}
+    }
+    
+    static class SchemaObjectSubordinateNamePair {
+        SchemaDirContext schemaObj;
+        String subordinateName;
+        
+        public SchemaObjectSubordinateNamePair(SchemaDirContext object, String subordinateName) {
+            this.schemaObj = object;
+            this.subordinateName = subordinateName;
+        }
+        
+        public String toString() {
+            StringBuffer str = new StringBuffer("SchemaObjectSubordinateNamePair{obj:");
+            str.append(((schemaObj == null) ? "null" : schemaObj.toString()));
+            str.append(" name:");
+            str.append(subordinateName);
+            str.append("}");
+            return str.toString();
+        }
+    }    
 }

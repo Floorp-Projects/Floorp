@@ -27,34 +27,34 @@ import java.util.*;
 
 class SchemaElementNameEnum implements NamingEnumeration {
 
-	/**
-	 * Enumeration of schema object names packaged into NameClassPair.
-	 * The class in NameClassPair is DirContext
-	 */
-	Enumeration m_nameEnum; 
-	
-	static final String _className = "javax.naming.directory.DirContext"; // for class name is bindings";
+    /**
+     * Enumeration of schema object names packaged into NameClassPair.
+     * The class in NameClassPair is DirContext
+     */
+    Enumeration m_nameEnum; 
+    
+    static final String _className = "javax.naming.directory.DirContext"; // for class name is bindings";
 
-	public SchemaElementNameEnum(Enumeration nameEnum) {
-		m_nameEnum = nameEnum;
-	}
+    public SchemaElementNameEnum(Enumeration nameEnum) {
+        m_nameEnum = nameEnum;
+    }
 
-	public Object next() throws NamingException{
-		return nextElement();
-	}
+    public Object next() throws NamingException{
+        return nextElement();
+    }
 
-	public Object nextElement() {
-		String name = (String) m_nameEnum.nextElement();
-		return new NameClassPair(name, _className, /*isRelative=*/true);
-	}
+    public Object nextElement() {
+        String name = (String) m_nameEnum.nextElement();
+        return new NameClassPair(name, _className, /*isRelative=*/true);
+    }
 
-	public boolean hasMore() throws NamingException{
-		return m_nameEnum.hasMoreElements();
-	}
+    public boolean hasMore() throws NamingException{
+        return m_nameEnum.hasMoreElements();
+    }
 
-	public boolean hasMoreElements() {
-		return m_nameEnum.hasMoreElements();
-	}
+    public boolean hasMoreElements() {
+        return m_nameEnum.hasMoreElements();
+    }
 
-	public void close() {}
+    public void close() {}
 }

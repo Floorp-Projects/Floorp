@@ -28,70 +28,70 @@ import java.util.*;
 
 public class SchemaObjectClassContainer extends SchemaElementContainer {
 
-	public SchemaObjectClassContainer(SchemaManager schemaMgr) throws NamingException{
-		super(schemaMgr, CLASSDEF);
-	}
-	
-	/**
-	 * Ldap entry operations
-	 */
+    public SchemaObjectClassContainer(SchemaManager schemaMgr) throws NamingException{
+        super(schemaMgr, CLASSDEF);
+    }
+    
+    /**
+     * Ldap entry operations
+     */
 
-	public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Empty name for schema objectclass");
-		}
-		LDAPObjectClassSchema objclass = SchemaObjectClass.parseDefAttributes(attrs);
-		m_schemaMgr.createObjectClass(objclass);
-		return new SchemaObjectClass(objclass, m_schemaMgr);
+    public DirContext createSchemaElement(String name, Attributes attrs) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Empty name for schema objectclass");
+        }
+        LDAPObjectClassSchema objclass = SchemaObjectClass.parseDefAttributes(attrs);
+        m_schemaMgr.createObjectClass(objclass);
+        return new SchemaObjectClass(objclass, m_schemaMgr);
 
-	}
+    }
 
-	public void removeSchemaElement(String name) throws NamingException {
-		if (name.length() == 0) {
-			throw new NamingException("Can not delete schema object container");
-		}	
-		m_schemaMgr.removeObjectClass(name);
-	}
+    public void removeSchemaElement(String name) throws NamingException {
+        if (name.length() == 0) {
+            throw new NamingException("Can not delete schema object container");
+        }    
+        m_schemaMgr.removeObjectClass(name);
+    }
 
-	/**
-	 * List Operations
-	 */
+    /**
+     * List Operations
+     */
 
-	public NamingEnumeration getNameList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementNameEnum(m_schemaMgr.getObjectClassNames());
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getNameList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementNameEnum(m_schemaMgr.getObjectClassNames());
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	public NamingEnumeration getBindingsList(String name) throws NamingException {
-		SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
-		if (schemaObj == this) {
-			return new SchemaElementBindingEnum(m_schemaMgr.getObjectClasses(), m_schemaMgr);
-		}
-		else {
-			throw new NotContextException(name);
-		}
-	}
+    public NamingEnumeration getBindingsList(String name) throws NamingException {
+        SchemaDirContext schemaObj = (SchemaDirContext)lookup(name);
+        if (schemaObj == this) {
+            return new SchemaElementBindingEnum(m_schemaMgr.getObjectClasses(), m_schemaMgr);
+        }
+        else {
+            throw new NotContextException(name);
+        }
+    }
 
-	/**
-	 * Lookup Operations
-	 */
+    /**
+     * Lookup Operations
+     */
 
-	public Object lookupSchemaElement(String name) throws NamingException {	
-		if (name.length() == 0) {
-			return this;
-		}
-		
-		// No caching; Always create a new object
-		LDAPObjectClassSchema objclass = m_schemaMgr.getObjectClass(name);
-		if (objclass == null) {
-			throw new NameNotFoundException(name);
-		}
-		return new SchemaObjectClass(objclass, m_schemaMgr);
+    public Object lookupSchemaElement(String name) throws NamingException {    
+        if (name.length() == 0) {
+            return this;
+        }
+        
+        // No caching; Always create a new object
+        LDAPObjectClassSchema objclass = m_schemaMgr.getObjectClass(name);
+        if (objclass == null) {
+            throw new NameNotFoundException(name);
+        }
+        return new SchemaObjectClass(objclass, m_schemaMgr);
 
-	}
+    }
 }
