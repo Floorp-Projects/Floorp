@@ -28,7 +28,6 @@ XPIDLSRCS =                        \
        	.\nsICommonDialogs.idl  \
 		.\nsIDialogParamBlock.idl \
 	.\nsICmdLineService.idl	\
-	.\nsIQFAServices.idl \
         $(NULL)
 
 EXPORTS =                         \
