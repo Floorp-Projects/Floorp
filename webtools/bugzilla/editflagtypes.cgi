@@ -130,9 +130,11 @@ sub edit {
         $vars->{'type'}->{'exclusions'} = Bugzilla::FlagType::get_exclusions($::FORM{'id'});
     }
     # Otherwise set the target type (the minimal information about the type
-    # that the template needs to know) from the URL parameter.
+    # that the template needs to know) from the URL parameter and default
+    # the list of inclusions to all categories.
     else { 
-        $vars->{'type'} = { 'target_type' => $::FORM{'target_type'} }; 
+        $vars->{'type'} = { 'target_type' => $::FORM{'target_type'} , 
+                            'inclusions'  => ["__Any__:__Any__"] };
     }
     
     # Return the appropriate HTTP response headers.
