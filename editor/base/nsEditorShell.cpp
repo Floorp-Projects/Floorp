@@ -25,6 +25,7 @@
 #include "nsEditorShell.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIContentViewerFile.h"
 #include "pratom.h"
 #include "prprf.h"
@@ -1602,7 +1603,9 @@ nsEditorShell::UpdateWindowTitle()
         }
       }
     }
-    res = mContentAreaWebShell->SetTitle(windowCaption.GetUnicode());
+    nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaWebShell));
+    NS_ASSERTION(contentAreaAsWin, "This object should implement nsIBaseWindow");
+    res = contentAreaAsWin->SetTitle(windowCaption.GetUnicode());
   }
   return res;
 }
