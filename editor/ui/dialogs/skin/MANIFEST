@@ -23,3 +23,12 @@
 #skin directory
 
 EditorDialog.css
+EdImageMap.css
+images:checker.gif
+images:circletool.gif
+images:contrast.gif
+images:pointertool.gif
+images:polygontool.gif
+images:rectangletool.gif
+images:zoomin.gif
+images:zoomout.gif
