@@ -171,7 +171,7 @@ private:
 
 ColumnInfoCache::ColumnInfoCache(PRInt32 aNumColumns)
 {
-  if (PR_TRUE==gsDebug) printf("CIC constructor: aNumColumns %d\n", aNumColumns);
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("CIC constructor: aNumColumns %d\n", aNumColumns);
   mNumColumns = aNumColumns;
   for (PRInt32 i=0; i<NUM_COL_WIDTH_TYPES; i++)
   {
@@ -194,7 +194,7 @@ ColumnInfoCache::~ColumnInfoCache()
 void ColumnInfoCache::AddColumnInfo(const nsStyleUnit aType, 
                                     PRInt32 aColumnIndex)
 {
-  if (PR_TRUE==gsDebug) printf("CIC AddColumnInfo: adding col index %d of type %d\n", aColumnIndex, aType);
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("CIC AddColumnInfo: adding col index %d of type %d\n", aColumnIndex, aType);
   // a table may have more COLs than actual columns, so we guard against that here
   if (aColumnIndex<mNumColumns)
   {
@@ -260,6 +260,7 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
       aOutColumnIndexes = mColIndexes[eColWidthType_Proportional];
       break;
   }
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("CIC GetColumnsByType: found %d of type %d\n", aOutNumColumns, aType);
 }
 
 
@@ -1631,7 +1632,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull!=mTableLayoutStrategy)
       {
         if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: Re-init layout strategy\n");
-        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, mCellMap->GetColCount());
+        mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, GetColCount());
         mColumnWidthsValid=PR_TRUE; //so we don't do this a second time below
       }
     }
@@ -2006,6 +2007,7 @@ NS_METHOD nsTableFrame::IR_ColGroupInserted(nsIPresContext&        aPresContext,
                                             nsTableColGroupFrame * aInsertedFrame,
                                             PRBool                 aReplace)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupInserted for frame %p\n", aInsertedFrame);
   nsresult rv=NS_OK;
   PRBool adjustStartingColIndex=PR_FALSE;
   PRInt32 startingColIndex=0;
@@ -2070,6 +2072,7 @@ NS_METHOD nsTableFrame::IR_ColGroupAppended(nsIPresContext&        aPresContext,
                                             nsReflowStatus&        aStatus,
                                             nsTableColGroupFrame * aAppendedFrame)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupAppended for frame %p\n", aAppendedFrame);
   nsresult rv=NS_OK;
   PRInt32 startingColIndex=0;
   nsIFrame *childFrame=mFirstChild;
@@ -2152,6 +2155,7 @@ NS_METHOD nsTableFrame::IR_ColGroupRemoved(nsIPresContext&        aPresContext,
                                            nsReflowStatus&        aStatus,
                                            nsTableColGroupFrame * aDeletedFrame)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_ColGroupRemoved for frame %p\n", aDeletedFrame);
   nsresult rv=NS_OK;
   PRBool adjustStartingColIndex=PR_FALSE;
   PRInt32 startingColIndex=0;
@@ -2199,6 +2203,7 @@ NS_METHOD nsTableFrame::IR_RowGroupInserted(nsIPresContext&        aPresContext,
                                             nsTableRowGroupFrame * aInsertedFrame,
                                             PRBool                 aReplace)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupInserted for frame %p\n", aInsertedFrame);
   nsresult rv = AddFrame(aReflowState.reflowState, aInsertedFrame);
   if (NS_FAILED(rv))
     return rv;
@@ -2222,6 +2227,7 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
                                             nsReflowStatus&        aStatus,
                                             nsTableRowGroupFrame * aAppendedFrame)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupAppended for frame %p\n", aAppendedFrame);
   // hook aAppendedFrame into the child list
   nsresult rv = AddFrame(aReflowState.reflowState, aAppendedFrame);
   if (NS_FAILED(rv))
@@ -2239,7 +2245,9 @@ NS_METHOD nsTableFrame::IR_RowGroupAppended(nsIPresContext&        aPresContext,
   if (NS_FAILED(rv))
     return rv;
 
-  EnsureColumns(aPresContext);
+  // if we've added any columns, we need to rebuild the column cache
+  // XXX: it would be nice to have a mechanism to just extend the column cache, rather than rebuild it completely
+  InvalidateColumnCache();
 
   // if any column widths have to change due to this, rebalance column widths
   //XXX need to calculate this, but for now just do it
@@ -2254,6 +2262,7 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsReflowStatus&        aStatus,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
   nsresult rv = RemoveFrame(aDeletedFrame);
   InvalidateCellMap();
   InvalidateColumnCache();
@@ -2767,7 +2776,7 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext& aPresContext,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
-    mTableLayoutStrategy->Initialize(aMaxElementSize, mCellMap->GetColCount());
+    mTableLayoutStrategy->Initialize(aMaxElementSize, GetColCount());
     mColumnWidthsValid=PR_TRUE;
   }
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);

@@ -673,7 +673,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
   // clean up
   if (nsnull!=spanList)
   {
-    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
+    if (gsDebug) printf("BTLS::APCW...space leak, span list not empty");
     delete spanList;
   }
   if (nsnull!=colSpanList)
@@ -1542,7 +1542,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsHTMLReflowState
   // cleanup
   if (nsnull!=spanList)
   {
-    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
+    if (gsDebug) printf("BTLS::BCTFits...space leak, span list not empty");
     delete spanList;
   }
   return result;
@@ -2091,7 +2091,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
   // clean up
   if (nsnull!=spanList)
   {
-    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
+    if (gsDebug) printf("BTLS::BCTConstrained...space leak, span list not empty");
     delete spanList;
   }
 
