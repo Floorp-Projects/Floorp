@@ -591,7 +591,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
 		ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
 		if (NS_SUCCEEDED(ret))
 		{
-			nsIMdbThumb *thumb;
+			nsIMdbThumb *thumb = nsnull;
 			const char *pFilename = dbName->GetCString(); /* do not free */
 			char	*nativeFileName = PL_strdup(pFilename);
 			nsIMdbHeap* dbHeap = 0;
