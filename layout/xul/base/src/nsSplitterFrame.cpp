@@ -1262,7 +1262,9 @@ nsSplitterFrameInner::AddRemoveSpace(nscoord aDiff,
   aSpaceLeft = aDiff;
 }
 
-#define PR_ABS(x) (x < 0 ? -x : x)
+#ifndef PR_ABS
+#define PR_ABS(x) ((x) < 0 ? -(x) : (x))
+#endif
 
 /**
  * Ok if we want to resize a child we will know the actual size in pixels we want it to be.
