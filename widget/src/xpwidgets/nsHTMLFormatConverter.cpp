@@ -48,6 +48,7 @@
 
 // HTML convertor stuff
 #include "nsIParser.h"
+#include "nsIDTD.h"
 #include "nsParserCIID.h"
 #include "nsIContentSink.h"
 
@@ -314,7 +315,7 @@ nsHTMLFormatConverter::ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, n
 
   parser->SetContentSink(sink);
 
-  parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+  parser->Parse(aFromStr, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE, eDTDMode_fragment);
   
   return NS_OK;
 } // ConvertFromHTMLToUnicode
