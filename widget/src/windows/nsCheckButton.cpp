@@ -158,7 +158,7 @@ LPCTSTR nsCheckButton::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsCheckButton::WindowStyle()
 {
-    return BS_CHECKBOX | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS; 
+    return BS_CHECKBOX | WS_CHILD | WS_CLIPSIBLINGS; 
 }
 
 

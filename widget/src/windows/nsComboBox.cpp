@@ -220,7 +220,7 @@ LPCTSTR nsComboBox::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsComboBox::WindowStyle()
 {
-  return (CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS);
+  return (CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS);
 }
 
 //-------------------------------------------------------------------------

@@ -117,7 +117,7 @@ PRUint32  nsTextHelper::GetCaretPosition()
   if (start == end) {
     return start;
   }
-  return -1;
+  return PRUint32(-1);/* XXX is this right??? scary cast! */
 }
 
 //-------------------------------------------------------------------------
@@ -158,7 +158,7 @@ LPCTSTR nsTextHelper::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsTextHelper::WindowStyle()
 {
-    DWORD style = ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_NOHIDESEL;
+    DWORD style = ES_AUTOHSCROLL | WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS | ES_NOHIDESEL;
     if (mIsPassword)
       style = style | ES_PASSWORD;
 
