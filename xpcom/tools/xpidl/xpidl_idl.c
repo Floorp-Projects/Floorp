@@ -116,7 +116,7 @@ struct input_callback_data {
     int len;                    /* amount of data read into the buffer */
     int max;                    /* size of the buffer */
     struct input_callback_data *next; /* file from which we were included */
-    char f_raw : 2,             /* in a raw block when starting next block */
+    int  f_raw : 2,             /* in a raw block when starting next block */
          f_comment : 2,         /* in a comment when starting next block */
          f_include : 2;         /* in an #include when starting next block */
     char last_read[2];          /* last 1/2 chars read, for spanning blocks */
